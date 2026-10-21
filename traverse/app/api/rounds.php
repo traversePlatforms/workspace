@@ -1557,7 +1557,7 @@ $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
 if ($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true) || in_array($action, ['clickuppoll', 'metapoll'], true))
-    register_shutdown_function(function () { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } });
+    register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll') { try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll */
 $body = [];
 if ($isPost) {
     $raw = file_get_contents('php://input') ?: '';
@@ -4991,11 +4991,14 @@ if ($action === 'statspage') {
     $jobOfLead = []; foreach ($jobs as $j) $jobOfLead[(string) $j['lead']] = $j;
     $row = function (array $j) use ($leads) { $l = $leads[$j['lead']] ?? []; return ['id' => (string) $j['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'src' => (string) ($l['src'] ?? ''), 'date' => (string) $j['date'], 'slot' => (string) (jobSlot((string) $j['slot'])[1] ?? $j['slot']), 'crew' => (string) $j['crew'], 'price' => (int) $j['price'], 'paid' => jobPaidSoFar($j), 'owed' => jobOwed($j), 'done' => (string) ($j['done']['o'] ?? '')]; };
     /* 1. last week */
+    /* quoted: in the app or in Jen's ClickUp (2026-10-21: the app alone showed 9 of 40; 21 were quoted) */
+    $wasQuoted = fn($l) => !empty($l['quote']) || in_array($l['status'] ?? '', ['quoted', 'won'], true) || isset($jobOfLead[$l['id']]) || in_array(strtolower(trim((string) ($l['cus'] ?? ''))), ['quote sent', 'scheduled', 'completed'], true);
+    $qPrice = fn($l) => (int) ($l['quote']['price'] ?? 0) ?: (int) ($l['cud'] ?? 0);   /* the app's quote, else ClickUp's deal value */
     $lw = ['from' => $lastFrom, 'to' => $lastTo, 'jobs' => [], 'leads' => [], 'quotes' => 0, 'booked' => 0];
     foreach ($jobs as $j) if ($j['date'] >= $lastFrom && $j['date'] <= $lastTo) $lw['jobs'][] = $row($j);
     foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $ts($lastFrom) && (int) ($j['at'] ?? 0) <= $ts($lastTo, true)) $lw['booked']++;
     foreach ($leads as $l) { if (!$realLead($l)) continue; $at = (int) ($l['at'] ?? 0); if ($at >= $ts($lastFrom) && $at <= $ts($lastTo, true)) $lw['leads'][(string) ($l['src'] ?? 'other')] = ($lw['leads'][(string) ($l['src'] ?? 'other')] ?? 0) + 1;
-        $qa = (int) ($l['quote']['at'] ?? 0); if ($qa >= $ts($lastFrom) && $qa <= $ts($lastTo, true)) $lw['quotes']++; }
+        if ($at >= $ts($lastFrom) && $at <= $ts($lastTo, true) && $wasQuoted($l)) $lw['quotes']++; }   /* last week's leads quoted so far */
     /* 2. this week */
     $tw = ['from' => $thisFrom, 'to' => $thisTo, 'jobs' => [], 'holds' => []];
     foreach ($jobs as $j) if ($j['date'] >= $thisFrom && $j['date'] <= $thisTo) $tw['jobs'][] = $row($j);
@@ -5018,9 +5021,9 @@ if ($action === 'statspage') {
         $m = round((float) ($c['price'] ?? 0) * $per[$pl], 2); $mrr += $m; $plans[] = ['name' => (string) ($c['name'] ?? ''), 'plan' => $pl, 'monthly' => $m]; }
     /* 5. six weeks: booked work + quoted leads x the close rate + plan income */
     $cut = time() - 60 * 86400; $quoted = 0; $won = 0;
-    foreach ($leads as $l) { if (!$realLead($l)) continue; $qa = (int) ($l['quote']['at'] ?? 0); if (!$qa || $qa < $cut) continue; $quoted++; if (isset($jobOfLead[$l['id']]) || ($l['status'] ?? '') === 'won') $won++; }
+    foreach ($leads as $l) { if (!$realLead($l) || (int) ($l['at'] ?? 0) < $cut || !$wasQuoted($l)) continue; $quoted++; if (isset($jobOfLead[$l['id']]) || ($l['status'] ?? '') === 'won') $won++; }   /* leads of the last 60 days that were quoted, and how many booked */
     $close = $quoted ? $won / $quoted : 0.0;
-    $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (!$realLead($l) || isset($jobOfLead[$l['id']]) || in_array($l['status'] ?? '', ['lost', 'won'], true) || empty($l['quote']['price'])) continue; $pipe += (int) $l['quote']['price']; $pipeN++; }
+    $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (!$realLead($l) || isset($jobOfLead[$l['id']]) || in_array($l['status'] ?? '', ['lost', 'won'], true) || !$wasQuoted($l) || $qPrice($l) < 1) continue; $pipe += $qPrice($l); $pipeN++; }
     $weeks = [];
     for ($w = 0; $w < 6; $w++) {
         $f = $d((clone $mon)->modify('+' . (7 * $w) . ' days')); $t = $d((clone $mon)->modify('+' . (7 * $w + 6) . ' days'));
@@ -5043,6 +5046,40 @@ if ($action === 'statspage') {
     out(['ok' => true, 'web' => $web, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
          'proj' => ['weeks' => $weeks, 'close' => round($close, 3), 'quoted' => $quoted, 'won' => $won, 'pipe' => $pipe, 'pipeN' => $pipeN], 'doors' => $doors, 'canEdit' => $role === 'admin']);
 }
+/** the end-of-day reminder (2026-10-21): after 7 pm, once a day, a push to the admins when no one has typed the ad spend today */
+function adSpendReminder(): void {
+    global $basePeople, $acct, $sessionKey;
+    if (!feature('walkdesk') || !company()['a365']) return;
+    $tz = new DateTimeZone(appTz()); $now = new DateTime('now', $tz); if ((int) $now->format('G') < 19) return;
+    $today = $now->format('Y-m-d'); $f = DATA_DIR . '/ad-spend-reminded.txt';
+    if (trim((string) @file_get_contents($f)) === $today) return;
+    $j = json_decode((string) @file_get_contents(adSpendFile()), true);
+    if (is_array($j) && !empty($j['at']) && (new DateTime('@' . (int) $j['at']))->setTimezone($tz)->format('Y-m-d') === $today) { @file_put_contents($f, $today); return; }
+    @file_put_contents($f, $today);
+    $v = pushVapid(false); if (!$v) return;
+    $subs = pushSubs(); $payload = json_encode(['title' => 'End of day: ad spend', 'body' => 'Type today\'s Meta spend in Stats \u2192 Update ad spend. The ad report updates from it.', 'url' => './', 'tag' => 'adspend-' . $today, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true) && !boardHidden((string) $r['name'])) foreach (($subs[$r['id']] ?? []) as $d) { try { webpushSend($d['sub'], $payload, $v, 43200, ['urgency' => 'normal']); } catch (Throwable $e) {} }
+}
+/* the ad report (2026-10-21): Instant Form vs Messenger, as on the sheets of 19 and 20 Oct, from the app's own records and the typed spend */
+if ($action === 'adreport') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    $leads = leadsAll(); $real = fn($l) => !preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''));
+    $short = function ($n) { $p = preg_split('/\s+/', trim((string) $n)); return ($p[0] ?? 'Someone') . (isset($p[1]) && $p[1] !== '' ? ' ' . mb_substr($p[1], 0, 1) . '.' : ''); };
+    $jobOf = []; foreach (jobsAll() as $j) if (!$j['off']) $jobOf[(string) $j['lead']] = $j;
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $src = ['meta' => ['label' => 'Instant Form', 'jobs' => [], 'held' => [], 'leads' => 0], 'messenger' => ['label' => 'Messenger', 'jobs' => [], 'held' => [], 'leads' => 0]];
+    $web = [];
+    foreach ($leads as $l) {
+        if (!$real($l)) continue; $s = (string) ($l['src'] ?? '');
+        if ($s === 'a365web' && ($l['by'] ?? '') !== 'ClickUp') { $j = $jobOf[$l['id']] ?? null; $web[] = ['name' => $short($l['name']), 'came' => (string) ($l['came'] ?? ''), 'job' => $j ? ['price' => (int) $j['price'], 'date' => $j['date'], 'paid' => jobPaidSoFar($j), 'done' => ($j['done']['o'] ?? '') === 'done'] : null]; continue; }
+        if (!isset($src[$s])) continue;
+        $src[$s]['leads']++;
+        if (isset($jobOf[$l['id']])) { $j = $jobOf[$l['id']]; $src[$s]['jobs'][] = ['name' => $short($l['name']), 'price' => (int) $j['price'], 'date' => $j['date'], 'paid' => jobPaidSoFar($j), 'owed' => jobOwed($j), 'done' => ($j['done']['o'] ?? '') === 'done', 'future' => $j['date'] >= $today]; }
+        elseif (is_array($l['quote']['offer'] ?? null) && ($l['quote']['offer']['date'] ?? '') >= $today && ($l['status'] ?? '') !== 'lost') $src[$s]['held'][] = ['name' => $short($l['name']), 'price' => (int) ($l['quote']['price'] ?? 0), 'date' => (string) $l['quote']['offer']['date'], 'form' => !empty($l['sign'])];
+    }
+    foreach ($src as &$x) usort($x['jobs'], fn($a, $b) => strcmp($a['date'], $b['date'])); unset($x);
+    out(['ok' => true, 'today' => $today, 'ads' => adSpend(), 'src' => $src, 'web' => $web, 'spendAt' => (int) (json_decode((string) @file_get_contents(adSpendFile()), true)['at'] ?? 0)]);
+}
 if ($action === 'adspendsave') {   /* an admin types each ad's lifetime spend from Meta (until Meta shares it with the app) */
     if (!feature('walkdesk') || $role !== 'admin' || !$isPost) fail('Not allowed.', 403);
     $in = is_array($body['ads'] ?? null) ? $body['ads'] : []; $out = [];
@@ -5054,6 +5091,42 @@ if ($action === 'adspendsave') {   /* an admin types each ad's lifetime spend fr
     if (!$out) fail('Add at least one ad with a name and where its leads come from.');
     if (!writeJsonAtomic(adSpendFile(), ['ads' => $out, 'at' => time(), 'by' => $me])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+function squarePageOk(): bool { global $role, $session; return feature('walkdesk') && ($role === 'admin' || $role === 'office' || paysOn((string) ($session['c'] ?? ''))); }
+if ($action === 'squarepage') {   /* the Square page (2026-10-21) */
+    if (!squarePageOk()) fail('Not allowed.', 403);
+    $cfg = squareCfg();
+    if (!$cfg) out(['ok' => true, 'connected' => false]);
+    $pays = squarePaymentsSince(time() - 14 * 86400, 4);
+    if ($pays === null) out(['ok' => true, 'connected' => true, 'env' => (string) $cfg['env'], 'answer' => false]);
+    $leads = leadsAll(); $jobs = jobsAll(); $short = function ($n) { $p = preg_split('/\s+/', trim((string) $n)); return ($p[0] ?? '') . (isset($p[1]) && $p[1] !== '' ? ' ' . $p[1] : ''); };
+    /* what each payment is tied to in the app */
+    $tie = []; $tieOrder = [];
+    foreach ($jobs as $j) { if ($j['off']) continue; $nm = $short($leads[$j['lead']]['name'] ?? ($j['title'] ?? '')); $t = ['kind' => 'job', 'name' => $nm, 'date' => (string) $j['date'], 'job' => (string) $j['id']];
+        foreach (['sqcharge', 'sqpaid'] as $k) if (!empty($j[$k]['payment'])) $tie[(string) $j[$k]['payment']] = $t;
+        foreach ((array) ($j['sqparts'] ?? []) as $pp) if (!empty($pp['payment'])) $tie[(string) $pp['payment']] = $t + ['part' => true];
+        if (!empty($j['sqlink']['order'])) $tieOrder[(string) $j['sqlink']['order']] = $t; }
+    foreach ($leads as $l) { $t = ['kind' => 'lead', 'name' => $short($l['name'] ?? '')]; foreach (['sqpaid', 'sqafter'] as $k) if (!empty($l[$k]['payment']) && !isset($tie[(string) $l[$k]['payment']])) $tie[(string) $l[$k]['payment']] = $t; if (!empty($l['sign']['pay']['order']) && !isset($tieOrder[(string) $l['sign']['pay']['order']])) $tieOrder[(string) $l['sign']['pay']['order']] = $t + ['deposit' => true]; }
+    $conf = squareConfirmed(); $waiting = []; foreach (squareToConfirm($pays) as $x) $waiting[(string) $x['payment']] = $x;
+    $tz = new DateTimeZone(appTz()); $t0 = (new DateTime('today', $tz))->getTimestamp(); $t7 = time() - 7 * 86400;
+    $tot = ['today' => 0, 'week' => 0, 'all' => 0]; $list = [];
+    foreach ($pays as $p) {
+        $id = (string) ($p['id'] ?? ''); $at = (int) strtotime((string) ($p['created_at'] ?? ''));
+        $amt = (int) ($p['amount_money']['amount'] ?? 0); $back = (int) ($p['refunded_money']['amount'] ?? 0); $st = (string) ($p['status'] ?? '');
+        if ($st === 'COMPLETED') { $net = ($amt - $back) / 100; $tot['all'] += $net; if ($at >= $t7) $tot['week'] += $net; if ($at >= $t0) $tot['today'] += $net; }
+        $cu = squareCustInfo((string) ($p['customer_id'] ?? ''));
+        $who = $cu['name'] !== '' ? $cu['name'] : trim((string) ($p['card_details']['card']['cardholder_name'] ?? ''));
+        $c = $p['card_details']['card'] ?? []; $card = trim((string) ($c['card_brand'] ?? '') . ' ' . (isset($c['last_4']) ? 'ending ' . $c['last_4'] : ''));
+        $t = $tie[$id] ?? ($tieOrder[(string) ($p['order_id'] ?? '')] ?? null);
+        if (!$t && isset($conf[$id])) $t = ($conf[$id]['act'] ?? '') === 'ignore' ? ['kind' => 'aside'] : ['kind' => 'job', 'name' => $short($leads[$jobs[(string) ($conf[$id]['job'] ?? '')]['lead'] ?? '']['name'] ?? ''), 'date' => (string) ($jobs[(string) ($conf[$id]['job'] ?? '')]['date'] ?? '')];
+        if (!$t && isset($waiting[$id])) { $c0 = $waiting[$id]['cands'][0] ?? null; $t = ['kind' => 'confirm', 'name' => $c0 ? $short($c0['name']) : '']; }
+        $list[] = ['id' => $id, 'at' => $at, 'amt' => $amt / 100, 'back' => $back / 100, 'status' => $st, 'who' => $who, 'card' => $card, 'note' => mb_substr((string) ($p['note'] ?? ''), 0, 100), 'receipt' => (string) ($p['receipt_url'] ?? ''), 'tie' => $t ?: ['kind' => 'none']];
+    }
+    usort($list, fn($a, $b) => $b['at'] <=> $a['at']);
+    /* pay links sent and not paid */
+    $links = []; foreach ($jobs as $j) if (!$j['off'] && !empty($j['sqlink']['url']) && jobOwed($j) > 0) $links[] = ['name' => $short($leads[$j['lead']]['name'] ?? ''), 'owed' => jobOwed($j), 'date' => (string) $j['date'], 'at' => (int) ($j['sqlink']['at'] ?? 0)];
+    foreach ($leads as $l) if (($l['sign']['how'] ?? '') === 'link' && !empty($l['sign']['pay']['url']) && !a365DepositPaid($l, false) && !in_array($l['status'] ?? '', ['lost'], true)) $links[] = ['name' => $short($l['name'] ?? ''), 'owed' => (int) ($l['sign']['deposit'] ?? 0), 'date' => '', 'at' => (int) ($l['sign']['at'] ?? 0), 'deposit' => true];
+    out(['ok' => true, 'connected' => true, 'env' => (string) $cfg['env'], 'answer' => true, 'totals' => array_map(fn($v) => round($v, 2), $tot), 'payments' => $list, 'waiting' => count($waiting), 'links' => $links, 'canConfirm' => desk()]);
 }
 if ($action === 'squareconfirmlist') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
@@ -6015,7 +6088,7 @@ if ($action === 'leads') {
        Briefly narrowed to her own leads the same evening, then put back (Matthew: "lets leave the leads and pipeline in for nneka ... i want her
        to be able to at least do it"; she is told not to contact anyone until Brandon confirms). The 365 website's forms only when handed to her. */
     if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => (string) ($l['by'] ?? '') === $me || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by']))
-        || (($l['src'] ?? '') !== 'a365web' && (($l['status'] ?? 'new') !== 'new' || !empty($l['tries']))));
+        || ($l['src'] ?? '') !== 'a365web');   /* the whole list to call, untouched leads included (2026-10-21, Matthew: 'Nneka should still be able to see the list of people to call. She has just been notified by me and brandon to not make any calls yet. But allow her to see the list.'); website forms only when handed to her */
     /* the 365 website's forms are Matthew's (2026-10-20: "make sure website leads are not being forwarded to jen"): an office account sees one only
        when it is handed to them (owner), or sent to Jen (her office account; not a team lead's), or it came from Jen's own ClickUp list */
     if ($role === 'office') $leads = array_filter($leads, fn($l) => ($l['src'] ?? '') !== 'a365web' || in_array((string) ($l['owner'] ?? ''), meNames(), true) || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));

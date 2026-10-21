@@ -1533,7 +1533,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   /* the office dashboard (2026-10-08) */
   .wrap:has(> #view > .office){max-width:1560px}
   .office{display:grid;gap:18px}
-  @media (min-width:1100px){ .office{grid-template-columns:200px minmax(0,1fr);align-items:start} .office .omenu{position:sticky;top:76px;flex-direction:column;overflow:visible} }
+  @media (min-width:1100px){ .office{grid-template-columns:200px minmax(0,1fr);align-items:start} .office.nomenu{grid-template-columns:minmax(0,1fr)} .office .omenu{position:sticky;top:76px;flex-direction:column;overflow:visible} }
   .office .omenu{display:flex;gap:4px;overflow-x:auto;padding:4px 0}
   .office .omenu button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--ink);font:700 14px var(--sans);text-align:left;white-space:nowrap;cursor:pointer}
   .office .omenu button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
@@ -1551,6 +1551,22 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .office .okpi span{font-size:13px;color:var(--soft)}
   .office .okpi.tap{cursor:pointer}
   .stp .stcard{padding:14px 16px;margin:0}
+  .stp .stsq{display:block;width:100%;text-align:left;margin:0 0 12px;padding:12px 16px;border:1.5px solid var(--ember,#d6400c);cursor:pointer;font:inherit;color:inherit}
+  .stp .stsq b{display:block;color:var(--ember-ink,#a0340a)} .stp .stsq span{font-size:13.5px;color:var(--soft)}
+  .sqp .stcard{padding:14px 16px;margin:0 0 14px} .sqp .okpis{margin:6px 0 14px}
+  .sqp .sqstat{font-size:13.5px;color:var(--soft);margin:4px 0 8px} .sqp .sqday{font:800 12px var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--soft);margin:12px 0 4px}
+  .sqp .sqrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 0;border-bottom:1px solid var(--line,#e3ddd2)} .sqp .sqrow > div{flex:1;min-width:200px} .sqp .sqrow small{display:block;color:var(--soft);font-size:12.5px} .sqp .sqrow.off{opacity:.6}
+  .sqp .sqtag{padding:3px 9px;border-radius:999px;font-size:12.5px;background:var(--paper2,#f4efe6)} .sqp .sqtag.confirm{background:var(--ember,#d6400c);color:#fff} .sqp .sqtag.none{border:1px dashed var(--line,#d9d1c2)} .sqp .sqrec{font-size:12.5px}
+  .adrep{max-width:900px;margin:0 auto;padding:14px 16px 40px;background:#fff;color:#1d2a1c;font:14px/1.35 var(--sans)}
+  .adrep h1{font:800 26px/1.1 var(--sans);color:#2F5D2C;margin:8px 0 2px} .adrep .arsub{color:#5a6858;margin:0 0 10px}
+  .adrep h2{font:700 15px var(--sans);color:#2F5D2C;margin:14px 0 6px;padding-bottom:3px;border-bottom:2px solid #E4703A}
+  .adrep .arbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 6px;font-size:13px;color:#5a6858}
+  .adrep .arkpis{display:grid;grid-template-columns:1fr 1fr;gap:10px} .adrep .ark{border:1px solid #d9d1c2;border-radius:10px;padding:8px 12px} .adrep .ark.f{border-left:6px solid #4C7A3F} .adrep .ark.m{border-left:6px solid #E4703A}
+  .adrep .ark .t{font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.04em;color:#5a6858} .adrep .ark .n{font:800 26px/1.1 var(--sans);color:#2F5D2C} .adrep .ark.m .n{color:#E4703A} .adrep .ark .l{font-size:12.5px;color:#5a6858}
+  .adrep table{width:100%;border-collapse:collapse;font-size:13.5px} .adrep th,.adrep td{padding:4px 6px;border-bottom:1px solid #d9d1c2;text-align:right;vertical-align:top} .adrep th:first-child,.adrep td:first-child{text-align:left} .adrep thead th{background:#2F5D2C;color:#fff}
+  .adrep tr.artot td{font-weight:800;border-top:2px solid #2F5D2C} .adrep .artwo{display:grid;grid-template-columns:1fr 1fr;gap:12px} .adrep .arboth td{text-align:left} .adrep .arsmall{font-size:12px;color:#5a6858;margin-top:10px}
+  @media (max-width:640px){ .adrep .arkpis,.adrep .artwo{grid-template-columns:1fr} }
+  @media print{ body.dk-top #dnav,#dnav,header,.bar,#bar,#foot,.noprint,.toast{display:none!important} .adrep{max-width:none;padding:0;font-size:11.5px} .adrep h1{font-size:20px} body{background:#fff!important} @page{size:Letter;margin:.45in} }
   .stp .spgrid{display:grid;gap:14px;align-items:start}
   .stp .spcol{display:grid;gap:14px;align-items:start;min-width:0}
   .stp .spgrid > *{min-width:0}
@@ -7243,7 +7259,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
     [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', qqName(), function () { quickQuoteView(); }],
-     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }], ['book', 'Training', function () { trainingView(); }]].concat(S.doorsOn ? [['door', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }]] : [], commOk() ? [['users', 'Communities', function () { communitiesView(); }]] : [], S.resultsOn ? [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]] : []).concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
+     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }], ['book', 'Training', function () { trainingView(); }], ['card', 'Square', function () { squareView(); }]].concat(S.doorsOn ? [['door', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }]] : [], commOk() ? [['users', 'Communities', function () { communitiesView(); }]] : [], S.resultsOn ? [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]] : []).concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
     c2.appendChild(tc);
@@ -8469,6 +8485,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (adminView() && feat('hail') && cardOn('hail')) t.push(['Storm list', stormView]);
     if (adminView()) { t.push(['Pipeline', pipelineView]); t.push(['Customers', customersView]); }
     if (wdOn()) t.push(['Stats', statsPageView]);   /* 2026-10-20 */
+    if (squarePageOn()) t.push(['Square', squareView]);   /* 2026-10-21 */
     else if (asOffice()) { t.push(['Pipeline', pipelineView]); t.push([qqName(), function () { quickQuoteView(); }]); }
     else if (S.role === 'manager') t.push(['Leads', teamLeadsView]);
     if (walkerOn()) t.push(['My ' + vw() + 's', function () { myWalksView(); }]);
@@ -8867,7 +8884,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
       ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(S.doorsOn ? [['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : [], S.doorsOn && planOk() ? [['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]] : [], commOk() && !mgrOn() ? [['comm', 'Communities', communitiesView, ['communities']]] : [], S.resultsOn ? [['res', 'Results', function () { S.resultsBack = null; resultsView(); }, ['results']]] : [], mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Doors/Plan, Communities, Results by setting (2026-10-21) */   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
-    if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]];   /* the field crew (2026-10-19): no doors, no sales */
+    if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]].concat(squarePageOn() ? [['card', 'Square', squareView, ['square']]] : []);   /* the field crew (2026-10-19): no doors, no sales; + Square for those who take payments (2026-10-21) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
     if (adminView() && feat('hail') && cardOn('hail')) it.push(['storms', 'Storms', stormView, ['storm', 'stormday', 'hail', 'hailmap', 'roofset']]);
@@ -16081,6 +16098,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' || S.role === 'office' ? ['Pipeline', pipelineView, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
       S.role === 'admin' || S.role === 'office' ? ['Customers', customersView, false, null, ['customers', 'customer']] : null,
       wdOn() ? ['Stats', statsPageView, false, null, ['statspage']] : null,   /* 2026-10-20 */
+      squarePageOn() ? ['Square', squareView, false, null, ['square']] : null,   /* 2026-10-21 */
       ['Calendar', function () { S.calWho = S.me; calendarView(); }, false, null, ['calendar']],
       ['Team stats', teamView, false, null, ['team', 'stats']],
       ['Leaderboard', boardView, false, null, ['board']],
@@ -16111,7 +16129,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     document.body.classList.add('dk-top');
     view.textContent = '';
     var page = q('div', 'office stp'), body = q('div', 'obody');
-    if (planOk()) page.appendChild(officeMenu());
+    if (planOk()) page.appendChild(officeMenu()); else page.classList.add('nomenu');   /* no Office menu: the page takes the full width (2026-10-21: Nneka's, Jen's and Cai's stats were squeezed into the menu's column) */
     var hd = q('div', 'ohead'), ht = q('div'); ht.appendChild(q('h2', null, 'Stats')); var hs = q('small', null, 'Loading\u2026'); ht.appendChild(hs); hd.appendChild(ht); body.appendChild(hd);
     var kp = q('div', 'okpis'); body.appendChild(kp);
     var out = q('div'); out.appendChild(q('div', 'skel')); body.appendChild(out);
@@ -16122,22 +16140,32 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var card = function (title, sub, into) { var c = q('section', 'card stcard'), h = q('h3', null, title); if (sub) h.appendChild(q('small', null, sub)); c.appendChild(h); (into || out).appendChild(c); return c; };
     var table = function (c, head) { var w = q('div', 'stwrap'), t = document.createElement('table'), tr = document.createElement('tr'); head.forEach(function (x) { tr.appendChild(q('th', null, x)); }); var th = document.createElement('thead'); th.appendChild(tr); t.appendChild(th); var tb = document.createElement('tbody'); tb._h = head; t.appendChild(tb); w.appendChild(t); c.appendChild(w); return tb; };
     var tr = function (tb, cells, cls) { var r = document.createElement('tr'); if (cls) r.className = cls; cells.forEach(function (x, i) { var td = document.createElement('td'); if (i > 0 && tb._h && tb._h[i]) td.setAttribute('data-label', tb._h[i]); if (x && x.nodeType) td.appendChild(x); else if (Array.isArray(x)) { td.appendChild(document.createTextNode(x[0])); if (x[1]) td.appendChild(q('small', null, x[1])); } else td.textContent = x === null || x === undefined ? '' : String(x); r.appendChild(td); }); tb.appendChild(r); return r; };
-    var payTxt = function (j) { return j.owed > 0 ? (j.paid ? money0(j.paid) + ' in, ' + money0(j.owed) + ' owed' : money0(j.owed) + ' owed') : 'paid'; };
+    var pend = {};   /* job id -> Square payments waiting to be confirmed against it (2026-10-21, Jeremy's $350) */
+    var payTxt = function (j) { var t = j.owed > 0 ? (j.paid ? money0(j.paid) + ' in, ' + money0(j.owed) + ' owed' : money0(j.owed) + ' owed') : 'paid'; var pp = pend[j.id]; return pp ? [t, pp.map(function (x) { return money0(x.amt) + ' in Square to confirm'; }).join(', ')] : t; };
     var load = function () {
-      api('statspage').then(function (j) {
+      Promise.all([api('statspage'), api('squareconfirmlist').catch(function () { return null; })]).then(function (both) {
+        var j = both[0], sq = both[1];
         if (S.screen !== 'statspage' || !document.body.contains(page)) return;
+        pend = {}; var sqItems = (sq && sq.ok && sq.items) || [];
+        sqItems.forEach(function (x) { var c = (x.cands || [])[0]; if (c && c.job && !c.done) (pend[c.job] = pend[c.job] || []).push({ amt: x.amt, name: x.name }); });
         out.textContent = ''; kp.textContent = ''; out.className = 'spgrid';
         if (!j || !j.ok) { out.appendChild(q('div', 'msg', (j && j.error) || 'The stats need signal.')); hs.textContent = ''; return; }
         hs.textContent = 'From the app\u2019s own records, ' + new Date().toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' });
+        if (sqItems.length) {   /* Square payments the app could not place by itself: confirm them and every board counts them */
+          var sb2 = q('button', 'card stsq'); sb2.type = 'button';
+          sb2.appendChild(q('b', null, sqItems.length + (sqItems.length === 1 ? ' Square payment is' : ' Square payments are') + ' waiting to be confirmed'));
+          sb2.appendChild(q('span', null, sqItems.slice(0, 3).map(function (x) { return money0(x.amt) + (x.name ? ' from ' + x.name : ''); }).join(' \u00b7 ') + '. Until confirmed they are not counted as paid anywhere. Tap to confirm them on Jobs \u203a'));
+          sb2.addEventListener('click', function () { jobsView(); }); body.insertBefore(sb2, kp);
+        }
         var L = j.last, T = j.this;
         var done = L.jobs.filter(function (x) { return x.done === 'done'; });
         var doneV = done.reduce(function (a, x) { return a + x.price; }, 0), coll = L.jobs.reduce(function (a, x) { return a + x.paid; }, 0);
         var leadsIn = Object.keys(L.leads).reduce(function (a, k) { return a + L.leads[k]; }, 0);
         var twV = T.jobs.reduce(function (a, x) { return a + x.price; }, 0);
         [['Jobs done last week', done.length, [money0(doneV) + ' of work', L.jobs.length !== done.length ? (L.jobs.length - done.length) + ' on the board not marked done' : '']],
-         ['Leads in last week', leadsIn, [L.quotes + (L.quotes === 1 ? ' quote sent' : ' quotes sent'), L.booked + (L.booked === 1 ? ' job booked' : ' jobs booked')]],
+         ['Leads in last week', leadsIn, [L.quotes + ' quoted so far (app or ClickUp)', L.booked + (L.booked === 1 ? ' job booked' : ' jobs booked')]],
          ['Jobs this week', T.jobs.length, [money0(twV) + ' booked', T.holds.length ? T.holds.length + ' more held' : '']],
-         ['Close rate', null, [j.proj.won + ' of ' + j.proj.quoted + ' quoted in 60 days booked']]].forEach(function (x) {
+         ['Close rate', null, [j.proj.won + ' of ' + j.proj.quoted + ' leads quoted in 60 days booked']]].forEach(function (x) {
           var c = kpiCard(x[0]); kp.appendChild(c); kpiFill(c, x[1], x[2]);
           if (x[1] === null) c.querySelector('b').textContent = j.proj.quoted ? pct(j.proj.close) : '\u2013';
         });
@@ -16171,6 +16199,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           tr(tb3, [[a.label, a.asof ? 'spend as of ' + dayName(a.asof) : 'no spend typed in'], cur(a.spend), a.results + (a.src === 'messenger' ? ' chats' : ' leads'), a.leads, a.jobs, money0(a.booked), money0(a.paid), cur(a.perLead), cur(a.perJob)]); });
         tr(tb3, ['Both', cur(tot.sp), tot.res, tot.l, tot.jb, money0(tot.bk), money0(tot.pd), tot.res ? cur(tot.sp / tot.res) : '\u2013', tot.jb ? cur(tot.sp / tot.jb) : '\u2013'], 'sttot');
         c3.appendChild(q('p', 'stnote', 'Spend and Meta\u2019s counts are typed in from Meta (the app cannot read the ad account yet). Leads, jobs and money are counted by where each lead came from in the app, so a friend a customer sent is a referral, not an ad lead.'));
+        var arb = q('button', 'save', 'Open the ad report (save as PDF) \u203a'); arb.type = 'button'; arb.style.margin = '6px 0 10px'; arb.addEventListener('click', function () { adReportView(); }); c3.appendChild(arb);   /* 2026-10-21 */
         if (j.canEdit) c3.appendChild(adSpendEditor(j.adRows, load));
         if (j.web && j.web.n) {   /* the 365 website's own forms (2026-10-20): where each visitor came from, and what they told us */
           var tracked = j.web.n - j.web.before;
@@ -16188,7 +16217,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var tb5 = table(c5, ['Week', 'Booked', 'From quoted leads', 'Plans', 'Total']), gt = 0;
         P.weeks.forEach(function (w, i) { gt += w.total; tr(tb5, [[(i === 0 ? 'This week' : 'Week of ' + dayName(w.from)), w.jobs ? w.jobs + (w.jobs === 1 ? ' job' : ' jobs') : ''], money0(w.booked), money0(w.pipeline), money0(w.plans), money0(w.total)]); });
         tr(tb5, ['Six weeks', money0(P.weeks.reduce(function (a, w) { return a + w.booked; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.pipeline; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.plans; }, 0)), money0(gt)], 'sttot');
-        c5.appendChild(q('p', 'stnote', 'Booked: jobs on the board that week. Quoted leads: ' + P.pipeN + (P.pipeN === 1 ? ' lead' : ' leads') + ' with a price and no job yet (not lost), worth ' + money0(P.pipe) + ' together; times the close rate (' + (P.quoted ? pct(P.close) + ', ' + P.won + ' of ' + P.quoted + ' quoted in the last 60 days booked' : 'nothing quoted in 60 days') + '), spread evenly over the six weeks. Plans: ' + money0(j.plans.mrr) + ' a month, as weeks.'));
+        c5.appendChild(q('p', 'stnote', 'Booked: jobs on the board that week. Quoted leads: ' + P.pipeN + (P.pipeN === 1 ? ' lead' : ' leads') + ' quoted in the app or in Jen\u2019s ClickUp, with no job yet (not lost), worth ' + money0(P.pipe) + ' together; times the close rate (' + (P.quoted ? pct(P.close) + ', ' + P.won + ' of the ' + P.quoted + ' leads of the last 60 days that were quoted booked' : 'nothing quoted in 60 days') + '), spread evenly over the six weeks. Plans: ' + money0(j.plans.mrr) + ' a month, as weeks.'));
         /* 6. doors, the whole company */
         var c6 = card('Doors', 'the whole company', col);
         var tb6 = table(c6, ['', 'Doors knocked', 'Talked to', 'Quotes booked', 'People out']);
@@ -16197,6 +16226,94 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }, function () { if (S.screen === 'statspage') { out.textContent = ''; out.appendChild(q('div', 'msg', 'The stats need signal.')); } });
     };
     load();
+  }
+  /* the Square page (2026-10-21, Matthew: "anyone taking payments can check the squares status from there vs having to log into square") */
+  function squarePageOn() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office' || !!S.pays); }
+  function squareView() {
+    if (!squarePageOn()) return chooseView();
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'square'; setDock(null); foot.hidden = true;
+    setBar('back', { title: 'Square', sub: 'Payments, the last 14 days', back: chooseView, backLabel: asOffice() ? 'Home' : 'Field tools' });
+    document.body.classList.add('dk-top'); view.textContent = '';
+    var page = q('div', 'office sqp'), body = q('div', 'obody'); if (planOk()) page.appendChild(officeMenu()); else page.classList.add('nomenu'); page.appendChild(body); view.appendChild(page);
+    var out = q('div'); out.appendChild(q('div', 'skel')); body.appendChild(out);
+    var again = function () { squareView(); };
+    api('squarepage').then(function (j) {
+      out.textContent = '';
+      if (!j || !j.ok) { out.appendChild(q('div', 'msg', (j && j.error) || 'Square needs signal.')); return; }
+      if (!j.connected) { out.appendChild(q('div', 'msg', 'Square is not connected yet.')); return; }
+      if (!j.answer) { out.appendChild(q('div', 'msg', 'Square did not answer just now. Try again in a minute.')); return; }
+      var cur = function (n) { return '$' + Number(n || 0).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+      out.appendChild(q('div', 'sqstat', 'Square is connected' + (j.env === 'sandbox' ? ' (test mode)' : '') + ' \u00b7 checked ' + new Date().toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' })));
+      var kp = q('div', 'okpis'); out.appendChild(kp);
+      [['In today', j.totals.today], ['Last 7 days', j.totals.week], ['Last 14 days', j.totals.all]].forEach(function (x) { var c = kpiCard(x[0]); kp.appendChild(c); c.querySelector('b').textContent = cur(x[1]); c.querySelector('span').textContent = 'after refunds'; });
+      if (j.waiting && j.canConfirm) out.appendChild(squareConfirmCard(again));
+      else if (j.waiting) out.appendChild(q('div', 'msg', j.waiting + (j.waiting === 1 ? ' payment is' : ' payments are') + ' waiting for the office to confirm which job they belong to.'));
+      var lc = q('section', 'card stcard'); lc.appendChild(q('h3', null, 'Payments')); out.appendChild(lc);
+      if (!j.payments.length) lc.appendChild(q('div', 'msg soft', 'No payments in the last 14 days.'));
+      var day = '';
+      j.payments.forEach(function (p) {
+        var d = isoOf(new Date(p.at * 1000)); if (d !== day) { day = d; lc.appendChild(q('div', 'sqday', dayName(d))); }
+        var r = q('div', 'sqrow' + (p.status !== 'COMPLETED' ? ' off' : ''));
+        var l = q('div'); l.appendChild(q('b', null, (p.who || 'No name') + ' \u00b7 ' + cur(p.amt - p.back)));
+        var t = p.tie, tt = t.kind === 'job' ? (t.part ? 'Part payment for ' : 'Paid for ') + (t.name || 'a job') + (t.date ? ' (' + dayName(t.date) + ')' : '') : t.kind === 'lead' ? (t.deposit ? 'Deposit from ' : 'From ') + (t.name || 'a lead') : t.kind === 'confirm' ? 'Waiting to be confirmed' + (t.name ? ': likely ' + t.name : '') : t.kind === 'aside' ? 'Set aside: not one of ours' : 'Not tied to anything in the app';
+        l.appendChild(q('small', null, [new Date(p.at * 1000).toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }), p.card, p.back ? cur(p.back) + ' refunded' : '', p.status !== 'COMPLETED' ? p.status.toLowerCase() : '', p.note].filter(Boolean).join(' \u00b7 ')));
+        r.appendChild(l);
+        var tag = q('span', 'sqtag ' + t.kind, tt); r.appendChild(tag);
+        if (p.receipt) { var a = q('a', 'sqrec', 'Receipt'); a.href = p.receipt; a.target = '_blank'; a.rel = 'noopener'; r.appendChild(a); }
+        lc.appendChild(r);
+      });
+      var kc = q('section', 'card stcard'); kc.appendChild(q('h3', null, 'Pay links sent, not paid yet')); out.appendChild(kc);
+      if (!j.links.length) kc.appendChild(q('div', 'msg soft', 'None waiting.'));
+      j.links.forEach(function (x) { var r = q('div', 'sqrow'); var l = q('div'); l.appendChild(q('b', null, x.name + ' \u00b7 ' + cur(x.owed))); l.appendChild(q('small', null, (x.deposit ? 'Deposit link' : 'Balance link') + (x.at ? ' sent ' + ago(x.at) : '') + (x.date ? ' \u00b7 job ' + dayName(x.date) : ''))); r.appendChild(l); kc.appendChild(r); });
+    }, function () { out.textContent = ''; out.appendChild(q('div', 'msg', 'Square needs signal.')); });
+  }
+  /* the ad report (2026-10-21, Matthew: the Instant Form vs Messenger sheet in the app, current every day): built from the app's records and the
+     typed spend; Save as PDF prints it on one page */
+  function adReportView() {
+    if (!wdOn()) return chooseView();
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'adreport'; setDock(null); foot.hidden = true;
+    setBar('back', { title: 'Ad report', sub: 'Instant Form vs Messenger', back: statsPageView, backLabel: 'Stats' });
+    document.body.classList.add('dk-top'); view.textContent = '';
+    var page = q('div', 'adrep'); view.appendChild(page); page.appendChild(q('div', 'skel'));
+    api('adreport').then(function (j) {
+      page.textContent = '';
+      if (!j || !j.ok) { page.appendChild(q('div', 'msg', (j && j.error) || 'The report needs signal.')); return; }
+      var cur = function (n) { return '$' + Number(n || 0).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+      var bar = q('div', 'arbar noprint'), pb = q('button', 'save', 'Save as PDF'); pb.type = 'button'; pb.addEventListener('click', function () { window.print(); }); bar.appendChild(pb);
+      bar.appendChild(q('span', null, 'Spend as typed ' + (j.spendAt ? dayName(isoOf(new Date(j.spendAt * 1000))) : 'from Matthew\u2019s screenshots of 20 Oct') + '. Everything else is live from the app.')); page.appendChild(bar);
+      page.appendChild(q('h1', null, 'Instant Form vs Messenger'));
+      page.appendChild(q('p', 'arsub', ((CO.a365 && CO.a365.name) || '') + ' \u00b7 Meta ads \u00b7 as of ' + new Date().toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' \u00b7 internal'));
+      var A = {}; ['meta', 'messenger'].forEach(function (k) { var sp = 0, res = 0; (j.ads || []).forEach(function (a) { if (a.src === k) { sp += Number(a.spend) || 0; res += Number(a.results) || 0; } }); var s = j.src[k]; var bk = s.jobs.reduce(function (n, x) { return n + x.price; }, 0), pd = s.jobs.reduce(function (n, x) { return n + x.paid; }, 0), hv = s.held.reduce(function (n, x) { return n + x.price; }, 0); A[k] = { sp: sp, res: res, jobs: s.jobs.length, bk: bk, pd: pd, held: s.held, hv: hv, leads: s.leads, label: s.label }; });
+      var per = function (a) { return a.jobs ? a.sp / a.jobs : null; };
+      var kp = q('div', 'arkpis');
+      ['meta', 'messenger'].forEach(function (k) { var a = A[k], c = q('div', 'ark ' + (k === 'meta' ? 'f' : 'm')); c.appendChild(q('div', 't', a.label + ' \u00b7 cost per job')); c.appendChild(q('div', 'n', per(a) === null ? '\u2013' : cur(per(a)))); c.appendChild(q('div', 'l', cur(a.sp) + ' \u00f7 ' + a.jobs + (a.jobs === 1 ? ' job' : ' jobs') + (a.held.length ? ' \u00b7 ' + cur(a.sp / (a.jobs + a.held.length)) + ' if the ' + a.held.length + ' held book' : ''))); kp.appendChild(c); });
+      page.appendChild(kp);
+      var tbl = function (head, rows, cls) { var t = document.createElement('table'); if (cls) t.className = cls; if (head) { var th = document.createElement('thead'), tr0 = document.createElement('tr'); head.forEach(function (h) { tr0.appendChild(q('th', null, h)); }); th.appendChild(tr0); t.appendChild(th); } var tb = document.createElement('tbody'); rows.forEach(function (r) { var tr = document.createElement('tr'); if (r.cls) tr.className = r.cls; (r.c || r).forEach(function (x) { tr.appendChild(q('td', null, x)); }); tb.appendChild(tr); }); t.appendChild(tb); return t; };
+      var F = A.meta, M = A.messenger, pc = function (a, b) { return b ? Math.round(100 * a / b) + '%' : '\u2013'; };
+      page.appendChild(q('h2', null, 'The numbers'));
+      page.appendChild(tbl(['', 'Instant Form', 'Messenger'], [
+        ['Spent', cur(F.sp), cur(M.sp)],
+        ['Leads (Meta) / conversations', F.res + ' counted by Meta; ' + F.leads + ' in the app', M.res + ' conversations; ' + M.leads + ' in the app'],
+        ['Cost per lead / conversation', F.res ? cur(F.sp / F.res) : '\u2013', M.res ? cur(M.sp / M.res) : '\u2013'],
+        ['Jobs booked', String(F.jobs) + (F.held.length ? ' (+ ' + F.held.length + ' held)' : ''), String(M.jobs) + (M.held.length ? ' (+ ' + M.held.length + ' held)' : '')],
+        ['Lead \u2192 job', pc(F.jobs, F.leads) + ' (' + F.jobs + ' of ' + F.leads + ')', pc(M.jobs, M.res || M.leads) + ' (' + M.jobs + ' of ' + (M.res || M.leads) + ')'],
+        ['Value of jobs booked', '$' + F.bk.toLocaleString(LOCALE) + (F.hv ? ' ($' + (F.bk + F.hv).toLocaleString(LOCALE) + ' with held)' : ''), '$' + M.bk.toLocaleString(LOCALE) + (M.hv ? ' ($' + (M.bk + M.hv).toLocaleString(LOCALE) + ' with held)' : '')],
+        ['Booked value per $1 spent', F.sp ? cur(F.bk / F.sp) : '\u2013', M.sp ? cur(M.bk / M.sp) : '\u2013'],
+        ['Collected so far', '$' + F.pd.toLocaleString(LOCALE), '$' + M.pd.toLocaleString(LOCALE)],
+        { cls: 'artot', c: ['Cost per job', per(F) === null ? '\u2013' : cur(per(F)), per(M) === null ? '\u2013' : cur(per(M))] }]));
+      page.appendChild(q('h2', null, 'The customers each ad brought in'));
+      var two = q('div', 'artwo');
+      ['meta', 'messenger'].forEach(function (k) { var s = j.src[k], a = A[k]; var rows = s.jobs.map(function (x) { return [x.name, '$' + x.price, x.done ? (x.owed > 0 ? 'done \u00b7 $' + x.paid + ' in' : 'done, paid') : (dayName(x.date) + (x.paid ? ', $' + x.paid + ' in' : ''))]; }).concat(s.held.map(function (x) { return [x.name + ' (held)', '$' + x.price, dayName(x.date) + ' held' + (x.form ? ', form sent' : '')]; }));
+        rows.push({ cls: 'artot', c: [a.jobs + (a.jobs === 1 ? ' job' : ' jobs') + (a.held.length ? ' + ' + a.held.length + ' held' : ''), '$' + a.bk.toLocaleString(LOCALE) + (a.hv ? ' (+ $' + a.hv.toLocaleString(LOCALE) + ' held)' : ''), '$' + a.pd.toLocaleString(LOCALE) + ' in'] });
+        two.appendChild(tbl([a.label, 'Price', 'Status'], rows)); });
+      page.appendChild(two);
+      var T = { sp: F.sp + M.sp, jobs: F.jobs + M.jobs, bk: F.bk + M.bk, pd: F.pd + M.pd };
+      page.appendChild(q('h2', null, 'Both ads together'));
+      page.appendChild(tbl(null, [['Spent ' + cur(T.sp), 'Jobs ' + T.jobs, 'Booked $' + T.bk.toLocaleString(LOCALE), 'Collected $' + T.pd.toLocaleString(LOCALE), 'Cost per job ' + (T.jobs ? cur(T.sp / T.jobs) : '\u2013')]], 'arboth'));
+      if ((j.web || []).length) { page.appendChild(q('h2', null, 'Not from the ads: the 365 website'));
+        page.appendChild(tbl(null, j.web.map(function (w) { return [w.name, w.job ? '$' + w.job.price + ', ' + dayName(w.job.date) + (w.job.paid ? ', $' + w.job.paid + ' in' : '') : 'no job yet', w.came || 'from before the site noted where visitors came from']; }))); }
+      page.appendChild(q('p', 'arsmall', 'Spend and Meta\u2019s counts: typed in from Meta (Stats \u2192 Update ad spend) until both ads run on the ad account the app can read. Jobs, prices and payments: the app, live. Each customer is counted by where their lead came from in the app, so a friend a customer sent is a referral, not an ad lead. Held: a day offered with the quote, not booked yet.'));
+    }, function () { page.textContent = ''; page.appendChild(q('div', 'msg', 'The report needs signal.')); });
   }
   /* an admin types each ad's lifetime spend from Meta's Ads Manager (2026-10-20) */
   function adSpendEditor(rows, done) {
