@@ -42,7 +42,7 @@ documents, so where it disagrees with what is below, it wins.
 | Item | Against the old record |
 |---|---|
 | Riding lawn mower | Already recorded 2026-09-25 |
-| **Core aerator** | **Owned — bought 2026-09-30.** ⚑ The turf section below dates it 2026-09-25; that is wrong. Matthew: *“we had just bought the aerator today so we didn’t have it at first.”* It arrived **twelve days before the job it was bought for** |
+| **Core aerator** | **Owned — bought 2026-09-30.** ⚑ The turf section below dates it 2026-09-25; that is wrong. Matthew: *“we had just bought the aerator today so we didn’t have it at first.”* It arrived **twelve days before the job it was bought for**. **Model (Matthew, 2026-10-21): Bobcat AE26-HON** — walk-behind, Honda GX120, 26.5 in wide, tines up to 2.8 in deep, 3.75 × 7 in hole pattern, 0.5 gal tank, up to 40,400 sq ft/hr at 3.5 mph (Bobcat's spec page, new.bobcat.com/na/en/equipment/turf-renovation-equipment/aerators/ae26, read 2026-10-21). |
 | **Edger** | **New** — was nowhere in this file |
 | **Leaf blower** | **New** as an owned item |
 | **Power washer** | **New** — and no service currently sold uses it |
