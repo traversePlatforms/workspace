@@ -4817,6 +4817,9 @@ function squareCustInfo(string $cid): array {
 function squareToConfirm(array $pays): array {
     [$used, $usedOrders] = squarePayUsed(); $leads = leadsAll(); $out = [];
     $owing = []; foreach (jobsAll() as $j) if (!$j['off'] && jobOwed($j) > 0 && isset($leads[$j['lead']])) $owing[] = $j;
+    /* jobs marked paid by Square or card by hand, never tied to a Square payment (2026-10-20, Carlos Perez): a payment of the same amount within
+       three days of the job is offered as "already recorded", to link */
+    $unlinked = []; foreach (jobsAll() as $j) if (!$j['off'] && ($j['pay']['s'] ?? '') === 'paid' && in_array((string) ($j['pay']['how'] ?? ''), ['square', 'card'], true) && empty($j['sqpaid']['payment']) && empty($j['sqcharge']['payment']) && isset($leads[$j['lead']])) $unlinked[] = $j;
     $d10 = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
     foreach ($pays as $p) {
         $id = (string) ($p['id'] ?? '');
@@ -4836,6 +4839,13 @@ function squareToConfirm(array $pays): array {
             $owed = jobOwed($j);
             if ($net === $owed * 100) { $sc += 2; $why[] = 'the exact $' . $owed . ' owed'; } elseif ($net < $owed * 100) $why[] = 'less than the $' . $owed . ' owed'; else $why[] = 'more than the $' . $owed . ' owed';
             $cands[] = ['job' => (string) $j['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => $owed, 'price' => (int) $j['price'], 'date' => (string) $j['date'], 'score' => $sc, 'why' => $why];
+        }
+        $pat = (int) strtotime((string) ($p['created_at'] ?? ''));
+        foreach ($unlinked as $j) {
+            $jd = (int) strtotime((string) $j['date'] . ' 12:00:00');
+            if ($net !== (int) $j['price'] * 100 || abs($pat - $jd) > 4 * 86400) continue;
+            $l = $leads[$j['lead']];
+            $cands[] = ['job' => (string) $j['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => 0, 'price' => (int) $j['price'], 'date' => (string) $j['date'], 'score' => 2, 'done' => true, 'why' => ['already marked paid ($' . (int) $j['price'] . ', ' . ((string) ($j['pay']['how'] ?? '') === 'card' ? 'card' : 'Square') . ') with no Square payment tied to it', 'same amount, within days of the job']];
         }
         usort($cands, fn($a, $b) => $b['score'] <=> $a['score']);
         $card = trim((string) (($p['card_details']['card']['card_brand'] ?? '') . ' ' . ($p['card_details']['card']['last_4'] ?? '')));
@@ -4872,7 +4882,7 @@ if ($action === 'squareconfirm') {
     if (!feature('walkdesk') || !desk() || !$isPost) fail('Not allowed.', 403);
     $pid = (string) ($body['payment'] ?? ''); $act = (string) ($body['act'] ?? '');
     if (!preg_match('/^[A-Za-z0-9]{4,64}$/D', $pid)) fail('No such payment.');
-    if (!in_array($act, ['full', 'part', 'ignore'], true)) fail('Pick what to do with it.');
+    if (!in_array($act, ['full', 'part', 'ignore', 'link'], true)) fail('Pick what to do with it.');
     $clk = @fopen(squareConfirmFile() . '.lock', 'c'); if (!$clk || !flock($clk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     if (isset(squareConfirmed()[$pid])) fail('Someone already confirmed that payment.', 409);
     [$used] = squarePayUsed(); if (isset($used[$pid])) fail('That payment is already counted on a job.', 409);
@@ -4880,7 +4890,15 @@ if ($action === 'squareconfirm') {
     if (!is_array($p) || ($p['status'] ?? '') !== 'COMPLETED' || (string) ($p['location_id'] ?? '') !== (string) (squareCfg()['location'] ?? '')) fail('Square does not show that payment here.', 404);
     $net = (int) round(((int) ($p['amount_money']['amount'] ?? 0) - (int) ($p['refunded_money']['amount'] ?? 0)) / 100);
     $row = ['id' => $pid, 'payment' => $pid, 'act' => $act, 'amt' => $net, 'by' => $me, 'at' => time()]; $res = ['ok' => true];   /* id: readLines() keeps only rows that have one */
-    if ($act !== 'ignore') {
+    if ($act === 'link') {   /* the job was marked paid by hand: tie this payment to it, nothing owed changes (2026-10-20) */
+        $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
+        if (!$j || $j['off']) fail('No such job.', 404);
+        if (jobOwed($j) > 0) fail('That job still owes money: use Paid in full or Part payment.');
+        if (!empty($j['sqpaid']['payment']) || !empty($j['sqcharge']['payment'])) fail('That job already has its Square payment.', 409);
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'sqpaid' => ['payment' => $pid, 'amt' => $net, 'found' => 'linked by ' . $me, 'at' => time()], 'by' => $me, 'at' => time()]);
+        appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Square payment of $' . $net . ' linked to this paid job by ' . $me . '.', 'by' => $me, 'at' => time()]);
+        $row['job'] = $jid;
+    } elseif ($act !== 'ignore') {
         $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
         if (!$j || $j['off']) fail('No such job.', 404);
         $owed = jobOwed($j); if ($owed < 1) fail('That job is already paid.');

@@ -6689,21 +6689,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var act = function (kind, c, btn) {
             var ask = kind === 'full' ? 'Mark ' + c.name + '\u2019s job paid in full with this ' + money0(x.amt) + (Math.round(x.amt) !== c.owed ? ' (it showed ' + money0(c.owed) + ' owed)' : '') + '?'
               : kind === 'part' ? 'Record ' + money0(x.amt) + ' as a part payment on ' + c.name + '\u2019s job? ' + money0(c.owed - Math.round(x.amt)) + ' stays owed.'
+              : kind === 'link' ? 'Tie this ' + money0(x.amt) + ' payment to ' + c.name + '\u2019s job, already marked paid? Nothing owed changes.'
               : 'Set this ' + money0(x.amt) + ' payment aside as not one of ours? It will not be offered again.';
             if (!window.confirm(ask)) return;
             btn.disabled = true;
             api('squareconfirm', { body: { payment: x.payment, act: kind, job: c ? c.job : '' } }).then(function (r) {
               btn.disabled = false;
               if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
-              toast(kind === 'ignore' ? 'Set aside' : kind === 'full' ? 'Marked paid' : 'Part payment recorded', kind === 'part' ? money0(r.tot) + ' paid so far \u00b7 ' + money0(r.left) + ' left' : (x.name || ''), null);
+              toast(kind === 'ignore' ? 'Set aside' : kind === 'link' ? 'Linked' : kind === 'full' ? 'Marked paid' : 'Part payment recorded', kind === 'part' ? money0(r.tot) + ' paid so far \u00b7 ' + money0(r.left) + ' left' : (x.name || ''), null);
               if (redraw) redraw(); else draw();
             }).catch(function () { btn.disabled = false; toast('No signal', 'Not saved.', null); });
           };
           if (!(x.cands || []).length) row.appendChild(q('div', 'sqcnone', 'No job owing matches this person. Find their job and record it there, or set it aside.'));
           (x.cands || []).forEach(function (c) {
             var cr = q('div', 'sqccand');
-            var t = q('div'); t.appendChild(q('b', null, c.name + ' \u00b7 ' + money0(c.owed) + ' owed')); t.appendChild(q('small', null, 'Job ' + dayName(c.date) + ' \u00b7 ' + c.why.join(', '))); cr.appendChild(t);
+            var t = q('div'); t.appendChild(q('b', null, c.name + ' \u00b7 ' + (c.done ? 'already paid (' + money0(c.price) + ')' : money0(c.owed) + ' owed'))); t.appendChild(q('small', null, 'Job ' + dayName(c.date) + ' \u00b7 ' + c.why.join(', '))); cr.appendChild(t);
             var bs = q('div', 'sqcbtns');
+            if (c.done) { var bl = q('button', 'save', 'Already recorded: link it'); bl.type = 'button'; bl.addEventListener('click', function () { act('link', c, bl); }); bs.appendChild(bl); cr.appendChild(bs); row.appendChild(cr); return; }   /* marked paid by hand (2026-10-20) */
             var bf = q('button', 'save', 'Paid in full'); bf.type = 'button'; bf.addEventListener('click', function () { act('full', c, bf); }); bs.appendChild(bf);
             if (Math.round(x.amt) < c.owed) { var bp = q('button', null, 'Part payment'); bp.type = 'button'; bp.addEventListener('click', function () { act('part', c, bp); }); bs.appendChild(bp); }
             cr.appendChild(bs); row.appendChild(cr);
