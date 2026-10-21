@@ -2932,6 +2932,9 @@ if ($action === 'area') {
     $hrepOf = hailOn($role) ? loadSide('hailrep', $key, $only) : [];   /* measured on the ground (2026-10-12) */
     $hrecent = hailOn($role) ? hailRecentReports() : [];
     $roofOf = roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
+    /* everywhere else, only houses built in or after the aerial photo's year, so the lot preview can say why the house may not show
+       (2026-10-20, Matthew: "if its builts after 2023 we should probably state that as a reason for not having imagery") */
+    if (!roofDataOn($role)) { $photoYr = (int) (market()['naip']['year'] ?? 2023); $bldOf = array_filter(array_map(fn($v) => is_array($v) && (int) ($v['yb'] ?? 0) >= $photoYr ? ['yb' => (int) $v['yb']] : null, loadSide('year', $key, $only))); }
     $photoOf = roofDataOn($role) ? loadSide('photo', $key, $only) : [];
     $olOf = roofDataOn($role) ? loadSide('outline', $key, $only) : [];   /* the building's outline on the roof photo (2026-10-06, data-pipeline/door-territory/roofs/outline-photos.mjs) */
     $windOf = hailOn($role) ? loadSide('wind', $key, $only) : [];

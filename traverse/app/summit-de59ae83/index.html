@@ -14660,6 +14660,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     return naipItems[k];
   }
+  /* built in or after the photo's year (2026-10-20): say so, it is why the house may not show. The year built comes from the county, when known. */
+  function newBuild(d, year, short) {
+    var yb = +((d && d.bld && d.bld.yb) || (d && d.yb) || 0), py = +year || +((MK().naip || MK_CO.naip).year) || 0;
+    if (!yb || !py || yb < py) return '';
+    return 'Built ' + yb + (yb > py ? ', after the ' + py + ' photo' : ', the year of the photo') + (short ? ': house may not show' : ', so the house may not show in it yet.');
+  }
   function lotPreview(d) {
     if (LOT.id === d.id && LOT.el) { setTimeout(function () { if (LOT.map) LOT.map.invalidateSize(); }, 0); return LOT.el; }
     if (LOT.map) { try { LOT.map.remove(); } catch (e) {} }
@@ -14673,6 +14679,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var got = { photo: null, line: null, year: '' };
     function say() {
       if (got.photo === false) cap.textContent = 'Photo unavailable right now \u00b7 click for the full view';
+      else if (newBuild(d, got.year) && got.photo) cap.textContent = newBuild(d, got.year, true) + ' \u00b7 click to open';   /* 2026-10-20 */
       else if (got.line === true) cap.textContent = (got.year ? got.year + ' photo \u00b7 ' : '') + 'yellow = property line \u00b7 click to open';
       else if (got.line === false) cap.textContent = 'Property line unavailable \u00b7 click to open';
     }
@@ -14725,7 +14732,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     function setCap() {
       var parts = [];
       if (st.photo === false) parts.push('Aerial photo unavailable right now, so this is the street map. Google Maps has satellite.');
-      else if (st.photo) parts.push(st.year + ' aerial photo.');
+      else if (st.photo) { parts.push(st.year + ' aerial photo.'); if (newBuild(d, st.year)) parts.push(newBuild(d, st.year)); }   /* built in or after the photo's year (2026-10-20) */
       if (st.line === true) parts.push('Yellow = the property line from county records (can be off by a few feet).');
       else if (st.line === false) parts.push('The property line could not load; the orange dot is the middle of the lot.');
       if (parts.length) cap.textContent = parts.join(' ');
