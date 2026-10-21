@@ -447,7 +447,10 @@ function geoDevice(string $who, string $acctId, string $role): void {
     }
 }
 /** a lead the signed-in quote-only person made, or took on by phone or email (2026-10-15) */
-function qMine(array $l): bool { global $me; return (string) ($l['by'] ?? '') === $me || in_array($me, (array) ($l['qown'] ?? []), true) || ((string) ($l['owner'] ?? '') !== '' && (string) $l['owner'] === $me); }   /* + a lead handed to her as its owner (2026-10-20) */
+/** this sign-in's name, and the names of other sign-ins linked to the same person (2026-10-21, Matthew: Jen moves to her office login
+ *  "linked to her work" under her quote login, Jen): accounts file also[<id>] = [names]. Only an admin sets it. */
+function meNames(): array { global $me, $acct, $session; $n = [(string) $me]; foreach ((array) ($acct['also'][(string) ($session['c'] ?? '')] ?? []) as $x) if (is_string($x) && $x !== '' && !in_array($x, $n, true)) $n[] = $x; return $n; }
+function qMine(array $l): bool { $mine = meNames(); return in_array((string) ($l['by'] ?? ''), $mine, true) || (bool) array_intersect($mine, (array) ($l['qown'] ?? [])) || ((string) ($l['owner'] ?? '') !== '' && in_array((string) $l['owner'], $mine, true)); }   /* + linked sign-ins (2026-10-21) */   /* + a lead handed to her as its owner (2026-10-20) */
 const QUOTE_INBOX_FROM = 1792189222;   /* quoteInbox()'s cut-off (2026-10-16); up here because the role gate below the session check calls it before line 3690 has run (2026-10-18, Fable review) */
 function deviceName(): string {
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
@@ -3951,7 +3954,8 @@ function leadsAll(): array {
 function leadOk(string $id): bool { return (bool) preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id); }
 if ($action === 'myleads') {
     $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
-    $list = array_values(array_filter(leadsAll(), fn($l) => $l['owner'] === $who));
+    $whoAll = $who === $me ? meNames() : [$who];   /* leads handed to a linked sign-in are this person's too (2026-10-21) */
+    $list = array_values(array_filter(leadsAll(), fn($l) => in_array($l['owner'], $whoAll, true)));
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     out(['ok' => true, 'who' => $who, 'leads' => $list]);
 }
@@ -5949,7 +5953,7 @@ if ($action === 'leads') {
     if (!desk() && $role !== 'manager' && $role !== 'quote') fail('Not allowed.', 403);
     $leads = leadsAll();
     if ($role === 'quote') $leads = array_filter($leads, fn($l) => qMine($l) || quoteInbox($l));   /* her own customers, and her Leads to call (2026-10-16) */
-    foreach ($leads as &$ql) $ql['qinbox'] = quoteInbox($ql, $role === 'quote'); unset($ql);   /* in the quote account's Leads to call */
+    foreach ($leads as &$ql) $ql['qinbox'] = quoteInbox($ql, $role === 'quote' || count(meNames()) > 1); unset($ql);   /* + a sign-in linked to a quote login (Jen's office, 2026-10-21) */   /* in the quote account's Leads to call */
     $jobOf = []; foreach (jobsAll() as $jj) if (!$jj['off']) $jobOf[$jj['lead']] = $jj;   /* each lead's job and its money (2026-10-19, Jen checks before charging) */
     foreach ($leads as &$ql) if (isset($jobOf[$ql['id']])) { $jj = $jobOf[$ql['id']]; $ql['job'] = ['id' => $jj['id'], 'date' => $jj['date'], 'crew' => $jj['crew'], 'price' => (int) $jj['price'], 'owed' => jobOwed($jj), 'pay' => payLine($jj), 'card' => cardLine($jj, $ql), 'done' => $jj['done'] ? (string) $jj['done']['o'] : '']; } unset($ql);
     /* a manager sees the leads nobody owns yet and their own team's */
@@ -5963,7 +5967,7 @@ if ($action === 'leads') {
         || (($l['src'] ?? '') !== 'a365web' && (($l['status'] ?? 'new') !== 'new' || !empty($l['tries']))));
     /* the 365 website's forms are Matthew's (2026-10-20: "make sure website leads are not being forwarded to jen"): an office account sees one only
        when it is handed to them (owner), or sent to Jen (her office account; not a team lead's), or it came from Jen's own ClickUp list */
-    if ($role === 'office') $leads = array_filter($leads, fn($l) => ($l['src'] ?? '') !== 'a365web' || (string) ($l['owner'] ?? '') === $me || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
+    if ($role === 'office') $leads = array_filter($leads, fn($l) => ($l['src'] ?? '') !== 'a365web' || in_array((string) ($l['owner'] ?? ''), meNames(), true) || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));

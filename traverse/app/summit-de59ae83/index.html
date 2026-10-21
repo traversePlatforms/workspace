@@ -6797,7 +6797,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(nav);
     var only = q('label', 'schedonly'), oc = q('input'); oc.type = 'checkbox'; oc.checked = !!S.schedOpenOnly; only.appendChild(oc); only.appendChild(q('span', null, 'Open times only')); box.appendChild(only);
     var hold = q('div'); hold.appendChild(q('div', 'skel')); box.appendChild(hold);
-    if (asJobs) { var ob = q('button', 'lnk jboard', 'The old board: prices, addresses and the weather'); ob.type = 'button'; ob.addEventListener('click', function () { jobsBoard(); }); box.appendChild(ob); }
+    if (asJobs && !asOffice()) { var ob = q('button', 'lnk jboard', 'The old board: prices, addresses and the weather');   /* not for the office (2026-10-21, Matthew) */ ob.type = 'button'; ob.addEventListener('click', function () { jobsBoard(); }); box.appendChild(ob); }
     view.appendChild(box);
     api('schedview', { params: { from: wk, to: end } }).then(function (j) {
       hold.textContent = '';
@@ -11843,7 +11843,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var add = q('button', 'addlead', S.leadAdd ? 'Close the form' : '+ Add a lead'); add.type = 'button';
     add.addEventListener('click', function () { S.leadAdd = !S.leadAdd; drawPipe(); });
     top.appendChild(add);
-    var imp = q('button', 'addlead metaimp', 'Import leads from Meta'); imp.type = 'button';
+    var imp = q('button', 'addlead metaimp', 'Import leads from Meta'); imp.type = 'button'; if (asOffice()) imp.hidden = true;   /* not for the office: Facebook leads come in by themselves (2026-10-21, Matthew) */
     var fileIn = q('input'); fileIn.type = 'file'; fileIn.accept = '.csv,.tsv,.txt,text/csv,text/tab-separated-values'; fileIn.hidden = true; fileIn.id = 'metafile';
     imp.addEventListener('click', function () { fileIn.value = ''; fileIn.click(); });
     fileIn.addEventListener('change', function () { if (fileIn.files && fileIn.files[0]) readMetaFile(fileIn.files[0]); });
