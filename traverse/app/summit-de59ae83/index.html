@@ -3034,7 +3034,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function devClass() { var ua = navigator.userAgent || ''; return (/iPhone|iPad|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'm' : 'c'; }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -3073,7 +3073,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -3696,7 +3696,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.sid = null; officeReset(); clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -4693,6 +4693,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function walkerOn() { return feat('walkdesk') && !!S.walker; }
   /* an admin can look at the app as the office sees it (2026-10-14, Matthew: "as admin I can see exactly what Jen sees from my login"):
      S.viewAs = 'office' changes only what is shown; the admin's own rights stay, and Back to admin ends it */
+  function commOk() { return S.role === 'admin' || (S.role === 'office' && (!!S.runsTeam || !!S.commOn)); }   /* Communities: admins, office accounts that run a team or are set to it (2026-10-21) */
   function asOffice() { return feat('walkdesk') && (S.role === 'office' || (S.role === 'admin' && S.viewAs === 'office')); }
   /* the quote-only screen (Jen's): her account, or an admin looking at it (2026-10-15, Matthew: "make it so i see the quick quote") */
   function qView() { return S.role === 'quote' || (S.role === 'admin' && S.viewAs === 'quote' && feat('walkdesk')); }
@@ -7242,7 +7243,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
     [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', qqName(), function () { quickQuoteView(); }],
-     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }]].concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
+     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }], ['book', 'Training', function () { trainingView(); }]].concat(S.doorsOn ? [['door', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }]] : [], commOk() ? [['users', 'Communities', function () { communitiesView(); }]] : [], S.resultsOn ? [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]] : []).concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
     c2.appendChild(tc);
@@ -8865,7 +8866,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function dnavItems() {
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipelineView, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
-      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
+      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(S.doorsOn ? [['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : [], S.doorsOn && planOk() ? [['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]] : [], commOk() && !mgrOn() ? [['comm', 'Communities', communitiesView, ['communities']]] : [], S.resultsOn ? [['res', 'Results', function () { S.resultsBack = null; resultsView(); }, ['results']]] : [], mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Doors/Plan, Communities, Results by setting (2026-10-21) */   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
     if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]];   /* the field crew (2026-10-19): no doors, no sales */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (planOk()) it.push(['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]);   /* waits for the towns: a click in the first second used to land on Doors (2026-10-11) */
@@ -10925,6 +10926,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (a.walker && feat('walkdesk') && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Does ' + vw() + 's'));
     if (a.runsteam && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Runs a team'));
     if (a.wonlost && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Marks won and lost'));
+    if (a.role === 'office' && !a.off) [['doors', 'Knocks doors'], ['communities', 'Communities'], ['results', 'Results']].forEach(function (x) { if (a[x[0]]) meta.appendChild(q('span', 'tag teamtag', x[1])); });   /* 2026-10-21 */
     var tm = (S.acctTeams || []).filter(function (t) { return t.id === a.team; })[0];
     if (tm && !a.off) meta.appendChild(q('span', 'tag teamtag', tm.name));
     meta.appendChild(q('span', null, a.off ? 'Turned off · cannot sign in' : a.source === 'app' ? 'Added' + (a.by ? ' by ' + a.by : '') + (a.at ? ' · ' + fmtDay(a.at) : '') : 'Set up on the server'));
@@ -10970,6 +10972,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       if (adm && feat('walkdesk') && a.role === 'office') {   /* an office account that runs a team, and marks won and lost (2026-10-20) */
         btn(a.runsteam ? 'Stop running a team' : 'Runs a team', null, function () { acctCall('acctflag', { id: a.id, flag: 'runsteam', on: !a.runsteam }, function () { toast(a.runsteam ? a.name + ' no longer runs a team' : a.name + ' runs a team now', a.runsteam ? 'Their team stays as it is; an admin manages it.' : 'They add and manage the crew on their team, hand them leads, and see the team’s numbers.', null); }); });
+        [['doors', 'Knocks doors', 'Doors and Plan are on their screen.', 'Doors and Plan are off their screen.'], ['communities', 'Communities', 'Communities is on their screen.', 'Communities is off their screen.'], ['results', 'Results', 'Results is on their screen.', 'Results is off their screen.']].forEach(function (x) {   /* 2026-10-21, Matthew: Nneka knocks doors; Cai reaches out to HOAs and reads Results */
+          btn(a[x[0]] ? 'Stop: ' + x[1] : x[1], null, function () { acctCall('acctflag', { id: a.id, flag: x[0], on: !a[x[0]] }, function () { toast(a.name + (a[x[0]] ? ': ' + x[1] + ' off' : ': ' + x[1] + ' on'), a[x[0]] ? x[3] : x[2], null); }); });
+        });
         btn(a.wonlost ? 'Stop won and lost' : 'Marks won and lost', null, function () { acctCall('acctflag', { id: a.id, flag: 'wonlost', on: !a.wonlost }, function () { toast(a.wonlost ? a.name + ' no longer marks won and lost' : a.name + ' marks won and lost now', a.wonlost ? 'Calls and the signed form still move their leads along.' : 'Won makes the customer.', null); }); });
       }
       /* a new code: an admin may pick it, and change their own (2026-10-11, Matthew); a manager gives their crew a random one */
@@ -16071,7 +16076,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var it = [['Today', officeView, false, null, ['office']],
       ['Plan the doors', function () { withRegions(function () { var k = first(); if (k) planView(k); else start(); }); }, false, null, ['plan']],
       ['Territories', territoriesView, false, null, ['territories']],
-      (S.role === 'admin' || (S.role === 'office' && S.runsTeam)) && feat('communities') ? ['Communities', communitiesView, false, null, ['communities']] : null,   /* 2026-10-12: was on the phone's tools only */
+      commOk() && feat('communities') ? ['Communities', communitiesView, false, null, ['communities']] : null,   /* 2026-10-12: was on the phone's tools only */
       S.role === 'admin' && feat('hail') && cardOn('hail') ? ['Storm list', stormView, false, null, ['storm', 'stormday', 'hail']] : null,
       S.role === 'admin' || S.role === 'office' ? ['Pipeline', pipelineView, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
       S.role === 'admin' || S.role === 'office' ? ['Customers', customersView, false, null, ['customers', 'customer']] : null,
@@ -16476,7 +16481,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -16484,7 +16489,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

@@ -1864,7 +1864,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'doors' => $payload['r'] === 'office' && acctFlag('doors', (string) $payload['c']), 'communities' => $payload['r'] === 'office' && acctFlag('communities', (string) $payload['c']), 'results' => $payload['r'] === 'office' && acctFlag('results', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -2770,7 +2770,7 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -3531,7 +3531,7 @@ if ($action === 'others') {
     out(['ok' => true, 'homes' => $o]);
 }
 if ($action === 'communities') {
-    if ($role !== 'admin' && !($role === 'office' && mgr())) fail('Not allowed.', 403);   /* + an office account that runs a team (2026-10-20) */
+    if ($role !== 'admin' && !($role === 'office' && (mgr() || acctFlag('communities', (string) ($session['c'] ?? ''))))) fail('Not allowed.', 403);   /* + an office account that runs a team (2026-10-20), or set to Communities (Cai, 2026-10-21) */
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $hoa = json_decode((string) @file_get_contents(DATA_DIR . '/hoa-communities.json'), true)['places'] ?? [];
     $cwpp = cwppPlaces();
@@ -7625,7 +7625,7 @@ if ($action === 'acctflag') {   /* "Runs a team" / "Marks won and lost" on an of
     if (!feature('walkdesk')) fail('Not here.', 404);
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
-    $flag = (string) ($body['flag'] ?? ''); if (!in_array($flag, ['runsteam', 'wonlost'], true)) fail('No such setting.');
+    $flag = (string) ($body['flag'] ?? ''); if (!in_array($flag, ['runsteam', 'wonlost', 'doors', 'communities', 'results'], true)) fail('No such setting.');   /* + doors, communities, results (2026-10-21) */
     $acctLock = @fopen(accountsFile() . '.lock', 'c');
     if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
     $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
@@ -7674,7 +7674,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id'])];
+            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id']), 'doors' => acctFlag('doors', $r['id']), 'communities' => acctFlag('communities', $r['id']), 'results' => acctFlag('results', $r['id'])];
         }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
@@ -7757,7 +7757,10 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['source'] === 'app') { $p = $acct['people'][$t['code']]; unset($acct['people'][$t['code']]); $acct['people'][$code] = $p; }
         else { $acct['off'][$id] = ['by' => $me, 'at' => time(), 'why' => 'new code']; $acct['people'][$code] = [$t['name'], $t['role'], $me, time()]; }
         if ($tidWas !== '') { $acct['member'][codeId($code, $sessionKey)] = $tidWas; unset($acct['member'][$id]); }   /* the team goes with the person to their new code */
-        if (!empty($acct['walker'][$id])) { $acct['walker'][codeId($code, $sessionKey)] = 1; unset($acct['walker'][$id]); }   /* and so does doing walks (2026-10-14) */
+        /* and every per-person setting (walks 2026-10-14; all of them 2026-10-21: Nneka's Runs a team and Marks won and lost stayed on her old
+           code's id when she was given a new code on 20 Oct) */
+        $nid = codeId($code, $sessionKey);
+        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also'] as $mk) if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
