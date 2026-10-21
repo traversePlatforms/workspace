@@ -3765,7 +3765,7 @@ if ($action === 'money') {
 function quoteInbox(array $l, bool $mine = false): bool {
     if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold'], true) || !empty($l['quote'])) return false;   /* + hold: On hold is our Pipeline's stage; her list shows them as before (2026-10-17, Matthew: Jim was on there) */
     if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
-    if (($l['src'] ?? '') === 'a365web') { global $me; foreach ((array) ($l['tries'] ?? []) as $tr) if (($tr['by'] ?? '') === $me) return true; return false; }   /* the 365 website's forms are Matthew's to hand out (2026-10-20); one she has already reached out to stays hers (David Marshall: she texted him that day) */
+    if (($l['src'] ?? '') === 'a365web') return false;   /* the 365 website's forms go only to Matthew (2026-10-20: "website form leads which should only go to my app"), unless he hands one over (Send to Jen, or Jen as owner, above) */
     return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;   /* new leads only, since 16 Oct: back as it was (2026-10-17, Matthew: don't send Jen anything she didn't populate herself unless it is a new lead) */
 }
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
@@ -5682,11 +5682,10 @@ if ($action === 'leads') {
     foreach ($leads as &$ql) if (isset($jobOf[$ql['id']])) { $jj = $jobOf[$ql['id']]; $ql['job'] = ['id' => $jj['id'], 'date' => $jj['date'], 'crew' => $jj['crew'], 'price' => (int) $jj['price'], 'owed' => jobOwed($jj), 'pay' => payLine($jj), 'card' => cardLine($jj, $ql), 'done' => $jj['done'] ? (string) $jj['done']['o'] : '']; } unset($ql);
     /* a manager sees the leads nobody owns yet and their own team's */
     if (!desk() && $role === 'manager') $leads = array_filter($leads, fn($l) => $l['owner'] === '' || $l['owner'] === $me || sameTeam($l['owner']));
-    /* an office account that runs a team (Nneka) sees the whole Pipeline except the people nobody has contacted yet: those are Jen's first
-       call (2026-10-20, Matthew: "make sure that shes not seeing people (to call) that jen hasn't already contacted yet"). A lead shows once it
-       has a call try (hers in the app, or her ClickUp status), or when it is this person's or their team's (added by or handed to them). */
-    if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => (string) ($l['by'] ?? '') === $me || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by']))
-        || (($l['src'] ?? '') !== 'a365web' && (($l['status'] ?? 'new') !== 'new' || !empty($l['tries']))));   /* + the 365 website's forms only when handed to them (2026-10-20) */
+    /* an office account that runs a team (Nneka) sees only its own leads: the ones it added (a quote, a door) and the ones handed to it or its
+       team. Jen keeps the Facebook and Messenger leads (2026-10-20, Matthew: "Lets remove the leads from nnekas section for now. They want me
+       to leave the leads jen"); earlier the same day it saw the whole Pipeline less the people nobody had called. */
+    if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => (string) ($l['by'] ?? '') === $me || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by'])));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
