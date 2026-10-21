@@ -3895,7 +3895,10 @@ function leadsAll(): array {
         foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
-        if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) $leads[$u['id']][$ck] = $u['contact'][$ck];   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
+        if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) {
+            if ($ck === 'name' && trim((string) ($leads[$u['id']]['name'] ?? '')) !== '' && $leads[$u['id']]['name'] !== $u['contact']['name']) $leads[$u['id']]['names'][] = (string) $leads[$u['id']]['name'];   /* earlier names kept for matching payments (2026-10-20: "Jeremy Kaplan" became "Jeremy") */
+            $leads[$u['id']][$ck] = $u['contact'][$ck];
+        }   /* 2026-10-15: changed details */   /* SX-58: the deposit paid by Square link */
         if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job', 'facts', 'terms']));
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
@@ -4468,7 +4471,7 @@ function jobsAll(): array {
         $id = (string) $r['id'];
         if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
         $moved = false;
-        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
         if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
         if (!empty($r['del'])) $o[$id]['off'] = true;
         if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -4502,6 +4505,7 @@ function payLine(array $j): string {
     if ($s0 === 'plan') return 'Service plan';
     if ((int) ($j['price'] ?? 0) < 1) return 'Price to confirm';
     $owed = jobOwed($j);
+    if ($s0 === 'deposit' && !empty($p['part'])) return 'Paid $' . (int) ($p['amt'] ?? 0) . ' so far · $' . $owed . ' left';   /* part payments (2026-10-20) */
     return $s0 === 'deposit' ? 'Deposit $' . (int) ($p['amt'] ?? 0) . ' paid · $' . $owed . ' left' : 'Not paid yet · $' . $owed . ' due';
 }
 function cardLine(array $j, ?array $l): string { $cc = $l['sqcard'] ?? null; if (!empty($cc['id'])) return 'Card on file (' . trim((string) ($cc['brand'] ?? 'card') . ' ' . (string) ($cc['last4'] ?? '')) . ')'; return !empty($j['card']) ? 'Card on file' : 'No card on file'; }
@@ -4700,7 +4704,7 @@ function jobOpen(array $j): bool { global $role; return jobMine($j) || ($role ==
    Payments from this customer's Square profile, completed, that are not the deposit, not the job's pay link and not a charge the app already
    made; together they must cover what is owed. Returns the newest one, or null. */
 function jobKnownPays(array $j, array $l): array {
-    $ids = array_filter([(string) ($l['sqpaid']['payment'] ?? ''), (string) ($l['sqafter']['payment'] ?? ''), (string) ($j['sqcharge']['payment'] ?? ''), (string) ($j['sqpaid']['payment'] ?? '')]);
+    $ids = array_filter(array_merge([(string) ($l['sqpaid']['payment'] ?? ''), (string) ($l['sqafter']['payment'] ?? ''), (string) ($j['sqcharge']['payment'] ?? ''), (string) ($j['sqpaid']['payment'] ?? '')], array_map(fn($pp) => (string) ($pp['payment'] ?? ''), (array) ($j['sqparts'] ?? [])), array_keys(squareConfirmed())));
     $orders = array_filter([(string) ($l['sign']['pay']['order'] ?? ''), (string) ($j['sqlink']['order'] ?? '')]);
     return [$ids, $orders];
 }
@@ -4733,15 +4737,18 @@ function squarePayUsed(): array {
     static $u = null; if ($u !== null) return $u;
     $ids = []; $orders = [];
     foreach (leadsAll() as $l) { foreach (['sqpaid', 'sqafter'] as $k) if (!empty($l[$k]['payment'])) $ids[(string) $l[$k]['payment']] = 1; if (!empty($l['sign']['pay']['order'])) $orders[(string) $l['sign']['pay']['order']] = 1; }
-    foreach (jobsAll() as $j) { foreach (['sqcharge', 'sqpaid'] as $k) if (!empty($j[$k]['payment'])) $ids[(string) $j[$k]['payment']] = 1; if (!empty($j['sqlink']['order'])) $orders[(string) $j['sqlink']['order']] = 1; }
+    foreach (jobsAll() as $j) { foreach (['sqcharge', 'sqpaid'] as $k) if (!empty($j[$k]['payment'])) $ids[(string) $j[$k]['payment']] = 1; if (!empty($j['sqlink']['order'])) $orders[(string) $j['sqlink']['order']] = 1; foreach ((array) ($j['sqparts'] ?? []) as $pp) if (!empty($pp['payment'])) $ids[(string) $pp['payment']] = 1; }
+    foreach (squareConfirmed() as $pid => $r) if ($pid !== '') $ids[$pid] = 1;   /* confirmed or set aside by a person (2026-10-20) */
     return $u = [$ids, $orders];
 }
+/* a lead's full names, the one it has now and any it had before (2026-10-20: "Jeremy Kaplan" was shortened to "Jeremy" in the Quick quote) */
+function leadNameKeys(array $l): array { return array_values(array_filter(array_unique(array_map(fn($n) => nameKey((string) $n), array_merge([(string) ($l['name'] ?? '')], (array) ($l['names'] ?? [])))), fn($k) => strpos($k, ' ') !== false)); }
 function squareNameMatch(array $j, array $l, array $pays): ?array {
     static $claimed = [];
-    $owed = jobOwed($j) * 100; $key = nameKey((string) ($l['name'] ?? ''));
-    if ($owed < 100 || strpos($key, ' ') === false) return null;
+    $owed = jobOwed($j) * 100; $keys = leadNameKeys($l); $key = $keys[0] ?? '';
+    if ($owed < 100 || $key === '') return null;
     $leads = leadsAll(); $twins = 0;   /* two jobs owing the same amount under the same name: no telling which one paid */
-    foreach (jobsAll() as $o) if (!$o['off'] && jobOwed($o) * 100 === $owed && nameKey((string) ($leads[$o['lead']]['name'] ?? '')) === $key) $twins++;
+    foreach (jobsAll() as $o) if (!$o['off'] && jobOwed($o) * 100 === $owed && array_intersect(leadNameKeys($leads[$o['lead']] ?? []), $keys)) $twins++;
     if ($twins > 1) return null;
     [$used, $usedOrders] = squarePayUsed(); $from = (int) ($j['at'] ?? 0) - 3 * 86400; $hits = [];
     foreach ($pays as $py) {
@@ -4751,7 +4758,7 @@ function squareNameMatch(array $j, array $l, array $pays): ?array {
         if ((int) ($py['amount_money']['amount'] ?? 0) - (int) ($py['refunded_money']['amount'] ?? 0) !== $owed) continue;
         $names = [nameKey((string) ($py['card_details']['card']['cardholder_name'] ?? ''))];
         if (!empty($py['customer_id'])) $names[] = squareCustName((string) $py['customer_id']);
-        if (in_array($key, $names, true)) $hits[] = $py;
+        if (array_intersect($keys, $names)) $hits[] = $py;
     }
     if (count($hits) !== 1) return null;
     $hit = $hits[0]; $claimed[(string) $hit['id']] = 1;
@@ -4784,8 +4791,124 @@ function squareSweep(): array {
     $pays = squarePaymentsSince(max(time() - 45 * 86400, $from - 3 * 86400), 10);
     if ($pays === null) return ['ok' => false, 'error' => 'Square did not answer.'];
     $paid = 0;
-    foreach ($owing as [$j, $l]) { $f = squareBalancePaid($j, $l, $pays); if ($f) { jobSquareFound((string) $j['id'], $f, ($f['match'] ?? '') === 'name' ? 'by the Square check, matched by name and amount' : 'by the Square check'); $paid++; } }
-    return ['ok' => true, 'owing' => count($owing), 'paid' => $paid];
+    $took = [];
+    foreach ($owing as [$j, $l]) { $f = squareBalancePaid($j, $l, $pays); if ($f) { jobSquareFound((string) $j['id'], $f, ($f['match'] ?? '') === 'name' ? 'by the Square check, matched by name and amount' : 'by the Square check'); $took[$f['payment']] = 1; $paid++; } }
+    $conf = squareConfirmAlert(array_filter($pays, fn($p) => !isset($took[(string) ($p['id'] ?? '')]) && (int) strtotime((string) ($p['created_at'] ?? '')) >= time() - 14 * 86400));
+    return ['ok' => true, 'owing' => count($owing), 'paid' => $paid, 'toconfirm' => $conf];
+}
+/* ---- Square payments to confirm (2026-10-20, Matthew: "obviously inputting stuff manually would be best but we need to determine how we can
+ * automate it but do it with less errors"). The app counts a payment by itself only when it cannot be wrong: its own pay links and card
+ * charges (the order is ours), a linked Square customer paying what is owed, or the full name with the exact amount. Every other completed
+ * payment at our location in the last 14 days is offered here, with the jobs it most likely belongs to and why (same phone, same email, same
+ * name, the amount owed), for the office to confirm: paid in full, a part payment, or not ours. Who confirmed is kept. Jeremy Kaplan paid $350
+ * against $482 owed on 20 Oct and nothing said so; that is what this is for. ---- */
+function squareConfirmFile(): string { return DATA_DIR . '/square-confirm.log'; }
+function squareConfirmed(): array { $o = []; foreach (readLines(squareConfirmFile()) as $r) if (!empty($r['payment'])) $o[(string) $r['payment']] = $r; return $o; }
+function squareCustInfo(string $cid): array {
+    static $c = [];
+    if ($cid === '') return ['name' => '', 'phone' => '', 'email' => ''];
+    if (!isset($c[$cid])) { $cu = squareApi('GET', '/v2/customers/' . rawurlencode($cid))['customer'] ?? [];
+        $c[$cid] = ['name' => trim((string) ($cu['given_name'] ?? '') . ' ' . (string) ($cu['family_name'] ?? '')), 'phone' => substr((string) preg_replace('/\D/', '', (string) ($cu['phone_number'] ?? '')), -10), 'email' => strtolower(trim((string) ($cu['email_address'] ?? '')))]; }
+    return $c[$cid];
+}
+function squareToConfirm(array $pays): array {
+    [$used, $usedOrders] = squarePayUsed(); $leads = leadsAll(); $out = [];
+    $owing = []; foreach (jobsAll() as $j) if (!$j['off'] && jobOwed($j) > 0 && isset($leads[$j['lead']])) $owing[] = $j;
+    $d10 = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
+    foreach ($pays as $p) {
+        $id = (string) ($p['id'] ?? '');
+        if (($p['status'] ?? '') !== 'COMPLETED' || $id === '' || isset($used[$id]) || isset($usedOrders[(string) ($p['order_id'] ?? '')])) continue;
+        $net = (int) ($p['amount_money']['amount'] ?? 0) - (int) ($p['refunded_money']['amount'] ?? 0); if ($net < 100) continue;
+        $cu = squareCustInfo((string) ($p['customer_id'] ?? ''));
+        $name = $cu['name'] !== '' ? $cu['name'] : trim((string) ($p['card_details']['card']['cardholder_name'] ?? ''));
+        $em = $cu['email'] !== '' ? $cu['email'] : strtolower(trim((string) ($p['buyer_email_address'] ?? '')));
+        $nk = nameKey($name); $first = $nk !== '' ? explode(' ', $nk)[0] : ''; $cands = [];
+        foreach ($owing as $j) {
+            $l = $leads[$j['lead']]; $why = []; $sc = 0; $lk = nameKey((string) ($l['name'] ?? '')); $lks = leadNameKeys($l);
+            if (strlen($cu['phone']) === 10 && $cu['phone'] === $d10($l['phone'] ?? '')) { $sc += 3; $why[] = 'same phone'; }
+            if ($em !== '' && $em === strtolower(trim((string) ($l['email'] ?? '')))) { $sc += 3; $why[] = 'same email'; }
+            if ($nk !== '' && substr_count($nk, ' ') >= 1 && in_array($nk, $lks, true)) { $sc += 3; $why[] = $lk === $nk ? 'same name' : 'same name as the lead had before'; }
+            elseif ($first !== '' && $lk !== '' && explode(' ', $lk)[0] === $first) { $sc += 1; $why[] = 'same first name'; }
+            if ($sc < 1) continue;
+            $owed = jobOwed($j);
+            if ($net === $owed * 100) { $sc += 2; $why[] = 'the exact $' . $owed . ' owed'; } elseif ($net < $owed * 100) $why[] = 'less than the $' . $owed . ' owed'; else $why[] = 'more than the $' . $owed . ' owed';
+            $cands[] = ['job' => (string) $j['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => $owed, 'price' => (int) $j['price'], 'date' => (string) $j['date'], 'score' => $sc, 'why' => $why];
+        }
+        usort($cands, fn($a, $b) => $b['score'] <=> $a['score']);
+        $card = trim((string) (($p['card_details']['card']['card_brand'] ?? '') . ' ' . ($p['card_details']['card']['last_4'] ?? '')));
+        $out[] = ['payment' => $id, 'amt' => round($net / 100, 2), 'at' => (int) strtotime((string) ($p['created_at'] ?? '')), 'name' => $name, 'card' => $card, 'note' => mb_substr((string) ($p['note'] ?? ''), 0, 120), 'cands' => array_slice($cands, 0, 3)];
+    }
+    usort($out, fn($a, $b) => $b['at'] <=> $a['at']);
+    return $out;
+}
+/* from the 15-minute sweep: a push to the office and Matthew for each new payment to confirm (once each) */
+function squareConfirmAlert(array $pays): int {
+    $list = squareToConfirm($pays); $f = DATA_DIR . '/square-confirm-seen.json';
+    $seen = json_decode((string) @file_get_contents($f), true); if (!is_array($seen)) $seen = [];
+    $new = array_values(array_filter($list, fn($x) => !isset($seen[$x['payment']])));
+    foreach ($new as $x) { $seen[$x['payment']] = time(); a365Alert('Square payment to confirm', ($x['name'] !== '' ? $x['name'] : 'Someone') . ' paid $' . number_format($x['amt'], 2) . (!empty($x['cands']) ? ' · maybe ' . $x['cands'][0]['name'] . ' ($' . $x['cands'][0]['owed'] . ' owed)' : ''), true); }
+    if ($new) writeJsonAtomic($f, $seen);
+    return count($list);
+}
+/* a part payment on a job: paid so far plus this; paid in full once it covers the price */
+function jobAddPart(array $j, int $amt, string $how, string $by, ?array $sq = null): array {
+    $prev = ($j['pay']['s'] ?? '') === 'deposit' ? (int) ($j['pay']['amt'] ?? 0) : 0; $tot = $prev + $amt; $price = (int) $j['price'];
+    $pay = $tot >= $price ? ['s' => 'paid', 'how' => $how] : ['s' => 'deposit', 'amt' => $tot, 'how' => $how, 'part' => 1];
+    $row = ['id' => (string) $j['id'], 'pay' => $pay, 'by' => $by, 'at' => time()];
+    if ($sq) { $parts = (array) ($j['sqparts'] ?? []); $parts[] = $sq; $row['sqparts'] = $parts; }
+    appendLine(DATA_DIR . '/jobs.log', $row);
+    return ['tot' => $tot, 'left' => max(0, $price - $tot), 'paid' => $tot >= $price];
+}
+if ($action === 'squareconfirmlist') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!squareCfg()) out(['ok' => true, 'items' => [], 'note' => 'Square is not connected yet.']);
+    $pays = squarePaymentsSince(time() - 14 * 86400, 4); if ($pays === null) fail('Square did not answer. Try again in a minute.');
+    out(['ok' => true, 'items' => squareToConfirm($pays)]);
+}
+if ($action === 'squareconfirm') {
+    if (!feature('walkdesk') || !desk() || !$isPost) fail('Not allowed.', 403);
+    $pid = (string) ($body['payment'] ?? ''); $act = (string) ($body['act'] ?? '');
+    if (!preg_match('/^[A-Za-z0-9]{4,64}$/D', $pid)) fail('No such payment.');
+    if (!in_array($act, ['full', 'part', 'ignore'], true)) fail('Pick what to do with it.');
+    $clk = @fopen(squareConfirmFile() . '.lock', 'c'); if (!$clk || !flock($clk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    if (isset(squareConfirmed()[$pid])) fail('Someone already confirmed that payment.', 409);
+    [$used] = squarePayUsed(); if (isset($used[$pid])) fail('That payment is already counted on a job.', 409);
+    $p = squareApi('GET', '/v2/payments/' . rawurlencode($pid))['payment'] ?? null;
+    if (!is_array($p) || ($p['status'] ?? '') !== 'COMPLETED' || (string) ($p['location_id'] ?? '') !== (string) (squareCfg()['location'] ?? '')) fail('Square does not show that payment here.', 404);
+    $net = (int) round(((int) ($p['amount_money']['amount'] ?? 0) - (int) ($p['refunded_money']['amount'] ?? 0)) / 100);
+    $row = ['id' => $pid, 'payment' => $pid, 'act' => $act, 'amt' => $net, 'by' => $me, 'at' => time()]; $res = ['ok' => true];   /* id: readLines() keeps only rows that have one */
+    if ($act !== 'ignore') {
+        $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
+        if (!$j || $j['off']) fail('No such job.', 404);
+        $owed = jobOwed($j); if ($owed < 1) fail('That job is already paid.');
+        $row['job'] = $jid; $who = trim((string) (leadsAll()[$j['lead']]['name'] ?? ''));
+        if ($act === 'full') {
+            appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['payment' => $pid, 'amt' => $net, 'found' => 'confirmed by ' . $me, 'at' => time()], 'by' => $me, 'at' => time()]);
+            appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Square payment of $' . $net . ' confirmed as paid in full by ' . $me . ($net !== $owed ? ' (the job showed $' . $owed . ' owed)' : '') . '.', 'by' => $me, 'at' => time()]);
+            jobAftercare($jid, 'paid'); $res['paid'] = true;
+        } else {
+            if ($net >= $owed) fail('That covers the whole $' . $owed . ' balance: use Paid in full.');
+            $r = jobAddPart($j, $net, 'square', $me, ['payment' => $pid, 'amt' => $net, 'at' => time(), 'by' => $me]);
+            appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Square part payment of $' . $net . ' confirmed by ' . $me . ': $' . $r['tot'] . ' paid so far, $' . $r['left'] . ' left.', 'by' => $me, 'at' => time()]);
+            $res += $r;
+        }
+    }
+    appendLine(squareConfirmFile(), $row);
+    out($res);
+}
+/* a part payment taken another way (cash, check, Zelle...), by hand */
+if ($action === 'jobpart') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!desk() && !($role === 'quote' && jobOpen($j))) fail('Not allowed.', 403);
+    $owed = jobOwed($j); if ($owed < 1) fail('This job is already paid.');
+    $amt = (int) ($body['amt'] ?? 0); if ($amt < 1) fail('Give the amount they paid.');
+    if ($amt >= $owed) fail('That covers the whole $' . $owed . ' balance: use Mark it paid.');
+    $how = in_array($body['how'] ?? '', ['cash', 'check', 'zelle', 'venmo', 'card', 'square', 'other'], true) ? (string) $body['how'] : 'other';
+    $r = jobAddPart($j, $amt, $how, $me);
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Part payment of $' . $amt . ' (' . $how . ') recorded by ' . $me . ': $' . $r['tot'] . ' paid so far, $' . $r['left'] . ' left.', 'by' => $me, 'at' => time()]);
+    out(['ok' => true] + $r);
 }
 /* record it: the job paid by Square, a note, the office told, the aftercare */
 function jobSquareFound(string $jid, array $f, string $how): void {

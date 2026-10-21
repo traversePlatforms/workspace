@@ -1863,6 +1863,22 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .pterr .ptform{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}
   .pterr .ptform select{flex:1 1 160px;min-height:44px;border-radius:10px;border:1px solid rgba(22,32,28,.22);padding:0 10px;font:600 14px var(--sans);background:#fff}
   .pterr .ptform .save{min-height:44px}
+  /* Square payments to confirm, and the part payment row (2026-10-20) */
+  .sqconf{background:#fff8e6;border:1px solid #e8c873;border-radius:16px;padding:14px 16px;margin:0 0 14px}
+  .sqconf h3{margin:0 0 2px;font:800 17px var(--sans);color:#16201C}
+  .sqconf .sqcsub{margin:0 0 10px;color:#55635B;font-size:13.5px}
+  .sqcrow{border-top:1px solid rgba(22,32,28,.12);padding:10px 0}
+  .sqchd b{display:block;font:800 15px var(--sans);color:#16201C}
+  .sqchd small,.sqccand small{display:block;color:#55635B;font-size:12.5px}
+  .sqccand{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:8px 10px;background:#fff;border-radius:12px;border:1px solid rgba(22,32,28,.12)}
+  .sqccand b{font:700 14px var(--sans);color:#16201C}
+  .sqcbtns{display:flex;gap:6px;flex-wrap:wrap}
+  .sqcbtns button{min-height:40px;border-radius:10px;padding:0 12px;font:700 13px var(--sans);border:1.5px solid #cfd6d1;background:#fff;color:#16201C;cursor:pointer}
+  .sqcbtns button.save{background:var(--go);color:var(--on-go);border-color:var(--go)}
+  .sqcnone{color:#7a5a12;font-size:13px;margin:6px 0}
+  .jpart{margin-top:6px}
+  .jpart input{width:120px;min-height:40px;border-radius:10px;border:1px solid rgba(22,32,28,.22);padding:0 10px;font:600 14px var(--sans)}
+  .jpart button{min-height:40px;border-radius:10px;padding:0 12px;font:700 13px var(--sans);border:1.5px solid #cfd6d1;background:#fff;cursor:pointer}
   /* the Messenger preview (2026-10-20, Traverse only, look only) */
   .mpv .vbox{max-width:640px;background:var(--paper,#fff)}
   .mpv .mpsum{font:700 14px var(--sans);margin:0 0 12px;color:#16201C}
@@ -5791,6 +5807,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         api('jobpaid', { body: { id: jb.id, how: sel.value } }).then(function (j) { pb.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Marked paid', money0(owe) + (j.aftercare === 'sent' ? ' \u00b7 aftercare emailed' : ''), null); redraw(); }).catch(function () { pb.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
       });
       row.appendChild(sel); row.appendChild(pb); w.appendChild(row);
+      /* part of the balance (2026-10-20): what they paid now, the rest stays owed */
+      var pr = q('div', 'jpaid jpart'), pin = q('input'), pbt = q('button', null, 'Record a part payment'); pbt.type = 'button';
+      pin.type = 'number'; pin.min = '1'; pin.step = '1'; pin.inputMode = 'numeric'; pin.placeholder = 'Amount, $'; pin.setAttribute('aria-label', 'Part payment amount');
+      pbt.addEventListener('click', function () {
+        var a = Math.round(+pin.value || 0);
+        if (a < 1) { toast('Amount?', 'Type what they paid.', null); return; }
+        if (a >= owe) { toast('That is the whole balance', 'Use Mark it paid.', null); return; }
+        if (!window.confirm('Record ' + money0(a) + ' paid by ' + sel.options[sel.selectedIndex].text.toLowerCase() + '? ' + money0(owe - a) + ' stays owed.')) return;
+        pbt.disabled = true;
+        api('jobpart', { body: { id: jb.id, amt: a, how: sel.value } }).then(function (j) { pbt.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Part payment recorded', money0(j.tot) + ' paid so far \u00b7 ' + money0(j.left) + ' left', null); if (redraw) redraw(); }).catch(function () { pbt.disabled = false; toast('No signal', 'Not saved.', null); });
+      });
+      pr.appendChild(pin); pr.appendChild(pbt); w.appendChild(pr);
       var sl = q('button', 'lnk', 'Check Square for a payment'); sl.type = 'button';   /* paid straight in Square (2026-10-19, Kirk) */
       sl.addEventListener('click', function () { sl.disabled = true; api('squarelook', { body: { id: jb.id } }).then(function (j) { sl.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') : 'The job now shows paid.', null); redraw(); } else toast('No payment found', j.why || 'Nothing in Square covers the ' + money0(owe) + ' balance yet.', null); }).catch(function () { sl.disabled = false; toast('No signal', 'Try again.', null); }); });
       w.appendChild(sl);
@@ -6643,6 +6671,50 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* the schedule, to look at (2026-10-15): one row per arrival time, like the spreadsheet she knows; booked, held or open; this week
      and the next ones; nothing to change or download */
+  /* Square payments to confirm (2026-10-20, Matthew: automate the confirmations "but do it with less errors"): payments the app could not
+     place by itself, each with the jobs it most likely belongs to and why; a person says paid in full, a part payment, or not ours. */
+  function squareConfirmCard(redraw) {
+    var card = q('section', 'sqconf'); card.hidden = true;
+    var draw = function () {
+      api('squareconfirmlist').then(function (j) {
+        card.textContent = '';
+        if (!j || !j.ok || !(j.items || []).length) { card.hidden = true; return; }
+        card.hidden = false;
+        card.appendChild(q('h3', null, (j.items.length === 1 ? 'A Square payment' : j.items.length + ' Square payments') + ' to confirm'));
+        card.appendChild(q('p', 'sqcsub', 'Paid in Square, but the app could not tell for sure which job they are for. Check and confirm.'));
+        j.items.forEach(function (x) {
+          var row = q('div', 'sqcrow');
+          var hd = q('div', 'sqchd'); hd.appendChild(q('b', null, (x.name || 'Someone') + ' paid ' + money0(x.amt)));
+          hd.appendChild(q('small', null, dayName(isoOf(new Date(x.at * 1000))) + (x.card ? ' \u00b7 ' + x.card : '') + (x.note ? ' \u00b7 \u201c' + x.note + '\u201d' : ''))); row.appendChild(hd);
+          var act = function (kind, c, btn) {
+            var ask = kind === 'full' ? 'Mark ' + c.name + '\u2019s job paid in full with this ' + money0(x.amt) + (Math.round(x.amt) !== c.owed ? ' (it showed ' + money0(c.owed) + ' owed)' : '') + '?'
+              : kind === 'part' ? 'Record ' + money0(x.amt) + ' as a part payment on ' + c.name + '\u2019s job? ' + money0(c.owed - Math.round(x.amt)) + ' stays owed.'
+              : 'Set this ' + money0(x.amt) + ' payment aside as not one of ours? It will not be offered again.';
+            if (!window.confirm(ask)) return;
+            btn.disabled = true;
+            api('squareconfirm', { body: { payment: x.payment, act: kind, job: c ? c.job : '' } }).then(function (r) {
+              btn.disabled = false;
+              if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
+              toast(kind === 'ignore' ? 'Set aside' : kind === 'full' ? 'Marked paid' : 'Part payment recorded', kind === 'part' ? money0(r.tot) + ' paid so far \u00b7 ' + money0(r.left) + ' left' : (x.name || ''), null);
+              if (redraw) redraw(); else draw();
+            }).catch(function () { btn.disabled = false; toast('No signal', 'Not saved.', null); });
+          };
+          if (!(x.cands || []).length) row.appendChild(q('div', 'sqcnone', 'No job owing matches this person. Find their job and record it there, or set it aside.'));
+          (x.cands || []).forEach(function (c) {
+            var cr = q('div', 'sqccand');
+            var t = q('div'); t.appendChild(q('b', null, c.name + ' \u00b7 ' + money0(c.owed) + ' owed')); t.appendChild(q('small', null, 'Job ' + dayName(c.date) + ' \u00b7 ' + c.why.join(', '))); cr.appendChild(t);
+            var bs = q('div', 'sqcbtns');
+            var bf = q('button', 'save', 'Paid in full'); bf.type = 'button'; bf.addEventListener('click', function () { act('full', c, bf); }); bs.appendChild(bf);
+            if (Math.round(x.amt) < c.owed) { var bp = q('button', null, 'Part payment'); bp.type = 'button'; bp.addEventListener('click', function () { act('part', c, bp); }); bs.appendChild(bp); }
+            cr.appendChild(bs); row.appendChild(cr);
+          });
+          var ig = q('button', 'lnk', 'Not ours: set it aside'); ig.type = 'button'; ig.addEventListener('click', function () { act('ignore', null, ig); }); row.appendChild(ig);
+          card.appendChild(row);
+        });
+      }).catch(function () { card.hidden = true; });
+    };
+    draw(); return card;
+  }
   function schedView(wk, asJobs) {
     hideSplash(); hideToast(); S.signin = null; S.screen = asJobs ? 'jobs' : 'sched';
     var again = function (w) { schedView(w, asJobs); };   /* as Jobs, it stays Jobs (2026-10-18) */ foot.hidden = true; setDock(null);
@@ -6653,6 +6725,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('back', { title: asJobs ? 'Jobs' : 'Schedule', sub: 'Who is booked, and what is open', back: qView() ? function () { quickQuoteView(); } : chooseView, backLabel: qView() ? 'Quick quote' : 'Home' });
     view.textContent = '';
     var box = q('div', 'schedv');
+    if (asJobs && (adminView() || asOffice()) && feat('walkdesk')) box.appendChild(squareConfirmCard(function () { again(wk); }));   /* 2026-10-20 */
     var nav = q('div', 'schednav');
     var pv = q('button', null, '\u2039 Week before'), nx = q('button', null, 'Week after \u203a'); pv.type = nx.type = 'button';
     var end = jobAdd(wk, 6);
