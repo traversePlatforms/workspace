@@ -15,6 +15,7 @@ if (!(lat > 30 && lat < 45 && lon < -100 && lon > -110)) done({ ok: false, error
 const T = { ndvi: 0.36, short: 1, hardNdvi: 0.2, hardBright: 75 };
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const CHM = 'https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_global_v6_float/chm/';
+proj4.defs('EPSG:6428', '+proj=lcc +lat_0=37.8333333333333 +lon_0=-105.5 +lat_1=39.75 +lat_2=38.45 +x_0=914401.828803658 +y_0=304800.609601219 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs');   /* NAD83(2011) Colorado Central, US feet: DRCOG's land cover */
 for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);
 const get = async (u, o) => { for (let i = 0; i < 3; i++) { try { const r = await fetch(u, o); if (r.ok) return await r.json(); } catch {} await new Promise((r) => setTimeout(r, 800 * (i + 1))); } throw new Error('fetch ' + u.slice(0, 60)); };
 try {
@@ -55,5 +56,29 @@ try {
     if (ndvi <= T.hardNdvi && br > T.hardBright) hard++;
   }
   const m2 = res[0] * -res[1], sf = (c) => Math.round(c * m2 * 10.7639 / 100) * 100;
-  done({ ok: true, low: sf(low), high: sf(inside - hard), lot: sf(inside), d: (item.properties.datetime || '').slice(0, 10) });
+  /* DRCOG's 2020 land cover (1 ft, made from NAIP and DRAPP's leaf-off photos; Planetary Computer drcog-lulc), where it covers: turf/irrigated (6)
+     and tree canopy (5) inside the lot line. Better than the photo read under trees, worse on open lots (it counts every irrigated patch):
+     the app shows it on lots under trees only (2026-10-21, Matthew: "use drcogs images if they are better"). */
+  let turf = null, turfTrees = null;
+  try {
+    const lt = (await get('https://planetarycomputer.microsoft.com/api/sas/v1/token/drcog-lulc')).token;
+    const ls = await get('https://planetarycomputer.microsoft.com/api/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collections: ['drcog-lulc'], intersects: { type: 'Point', coordinates: [lon, lat] }, limit: 10 }) });
+    const li = (ls.features || []).filter((f) => /2020/.test(f.id))[0];
+    if (li) {
+      const la = Object.values(li.assets).find((a) => /tif/.test(a.type || '') || /.tif/.test(a.href));
+      const lim = await (await fromUrl(la.href + '?' + lt)).getImage(), le = 'EPSG:' + lim.geoKeys.ProjectedCSTypeGeoKey, lo0 = lim.getOrigin(), lr = lim.getResolution();
+      if (le === 'EPSG:6428') {
+        const lp = rings.map((r) => r.map(([a, b]) => { const [X, Y] = proj4('EPSG:4326', le, [a, b]); return [(X - lo0[0]) / lr[0], (Y - lo0[1]) / lr[1]]; }));
+        const lx = lp.flat().map((p) => p[0]), ly = lp.flat().map((p) => p[1]);
+        const a0 = Math.max(0, Math.floor(Math.min(...lx)) - 2), b0 = Math.max(0, Math.floor(Math.min(...ly)) - 2), a1 = Math.min(lim.getWidth(), Math.ceil(Math.max(...lx)) + 2), b1 = Math.min(lim.getHeight(), Math.ceil(Math.max(...ly)) + 2);
+        if (a1 > a0 && b1 > b0) {
+          const [Cl] = await lim.readRasters({ window: [a0, b0, a1, b1] }); const lw = a1 - a0, lh = b1 - b0, loc = lp.map((r) => r.map(([a, b]) => [a - a0, b - b0]));
+          let t6 = 0, t5 = 0; for (let y = 0; y < lh; y++) for (let x = 0; x < lw; x++) { if (!inRings(x + 0.5, y + 0.5, loc)) continue; const c = Cl[y * lw + x]; if (c === 6) t6++; else if (c === 5) t5++; }
+          const ft2 = Math.abs(lr[0] * lr[1]) * (1200 / 3937) ** 2 * 10.7639, r100 = (n) => Math.round(n * ft2 / 100) * 100;   /* US survey feet */
+          turf = r100(t6); turfTrees = r100(t6 + t5);
+        }
+      }
+    }
+  } catch (e) { /* no land cover here, or it did not answer: the range stands without it */ }
+  done({ ok: true, low: sf(low), high: sf(inside - hard), lot: sf(inside), d: (item.properties.datetime || '').slice(0, 10), turf, turfTrees, lulc: turf !== null ? 2020 : null });
 } catch (e) { done({ ok: false, error: String(e && e.message || e).slice(0, 120) }); }

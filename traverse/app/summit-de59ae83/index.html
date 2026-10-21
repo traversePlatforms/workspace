@@ -2021,6 +2021,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   /* the house lookup (2026-10-14) */
   .handx,.rangex{margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;display:grid;gap:4px}.handx b,.rangex b{font:800 14px var(--sans)}.handx > span{font-size:14px}.handx .lnk,.rangex .lnk{justify-self:start;background:none;border:0;padding:2px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
   .handx:has(.handop){border-style:dashed}.handf{display:grid;gap:6px}.handrow{display:flex;gap:8px;align-items:center}.handrow input{font:700 16px var(--sans);width:9em;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .rangex .rgturf{font-size:14px}.rangex .rgturf small{color:var(--soft)}.rangex .rgcred{font-size:11.5px}
   .rangex{background:var(--sunk)}.rangex .rgn{font:800 18px var(--sans)}.rangex small{color:var(--soft)}.rga{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.rga button{min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
   .hpanel .hlawn{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--sunk);display:grid;gap:3px}
   .hpanel .hlawn b{font:800 22px var(--sans)}.hpanel .hlawn > span{font-size:14px;color:var(--soft)}
@@ -6632,10 +6633,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var draw = function (rg) {
       body.textContent = '';
       body.appendChild(q('span', 'rgn', 'Between ' + fmtSq(rg.lo) + ' and ' + fmtSq(rg.hi)));
+      if (rg.turf) { var tl = q('span', 'rgturf'); tl.appendChild(q('b', null, 'DRCOG\u2019s land map: about ' + fmtSq(rg.turf) + ' of turf')); tl.appendChild(q('small', null, ' (' + (rg.lulc || 2020) + '; made from leaf-off photos, so it sees more lawn under trees' + (rg.tt && rg.tt > rg.turf ? '; with the tree canopy, ' + fmtSq(rg.tt) : '') + ')')); body.appendChild(tl); }   /* 2026-10-21 */
       body.appendChild(q('small', null, 'Low: the lawn the photo can see. High: the open ground (the lot without the house, drive and patio), which counts grass under the trees. Measure it to be sure.'));
       var acts = q('div', 'rga');
-      [['Price at ' + fmtSq(rg.lo), rg.lo], ['Price at ' + fmtSq(rg.hi), rg.hi]].forEach(function (o) { var b = q('button', null, o[0]); b.type = 'button'; b.addEventListener('click', function () { setQuoteSize(w, o[1]); }); acts.appendChild(b); });
+      [['Price at ' + fmtSq(rg.lo), rg.lo]].concat(rg.turf ? [['Price at ' + fmtSq(rg.turf) + ' (DRCOG)', rg.turf]] : []).concat([['Price at ' + fmtSq(rg.hi), rg.hi]]).forEach(function (o) { var b = q('button', null, o[0]); b.type = 'button'; b.addEventListener('click', function () { setQuoteSize(w, o[1]); }); acts.appendChild(b); });
       body.appendChild(acts);
+      if (rg.turf) body.appendChild(q('small', 'rgcred', 'Land cover: Denver Regional Council of Governments (DRCOG), 2020 Regional Land Use Land Cover.'));
     };
     if (h.range) { draw(h.range); return w; }
     body.appendChild(q('span', 'rgwait', 'Working out the range from the photo\u2026 (about 15 seconds)'));

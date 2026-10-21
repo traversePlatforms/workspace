@@ -4207,7 +4207,7 @@ function houseFacts(string $key, string $id): ?array {
         return ['region' => $key, 'id' => $id, 'address' => (string) $d['address'], 'town' => regionLabel($key), 'area' => (string) $a['name'], 'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'cen' => censusFor($key, $id),   /* 2026-10-21 */
-                'hand' => loadLawnHand($key)[$id] ?? null, 'range' => lawnRangeCache()[$key . '/' . $id] ?? null,   /* 2026-10-21 */
+                'hand' => loadLawnHand($key)[$id] ?? null, 'range' => (function ($r) { return $r && (int) ($r['v'] ?? 1) >= 2 ? $r : null; })(lawnRangeCache()[$key . '/' . $id] ?? null),   /* 2026-10-21 */
                 'yb' => is_array($y) ? ($y['yb'] ?? null) : null, 'bsf' => is_array($y) ? ($y['bsf'] ?? null) : null,
                 /* 2026-10-14 (Matthew: "is that all the information we have for the property?"): the rest the door lists carry */
                 'fire' => $d['fire'] ?? null, 'cg' => !empty($d['cg']), 'os' => $d['os'] ?? null, 'place' => $a['place'] ?? null,
@@ -7622,7 +7622,7 @@ if ($action === 'lawnrange') {
     $key = (string) ($_GET['region'] ?? ''); $id = (string) ($_GET['id'] ?? '');
     if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('No such house.', 404);
     $hf = houseFacts($key, $id); if (!$hf || !isset($hf['lat'], $hf['lon'])) fail('No such house.', 404);
-    $ck = $hf['region'] . '/' . $id; $have = lawnRangeCache()[$ck] ?? null; if ($have) out(['ok' => true, 'range' => $have]);
+    $ck = $hf['region'] . '/' . $id; $have = lawnRangeCache()[$ck] ?? null; if ($have && (int) ($have['v'] ?? 1) >= 2) out(['ok' => true, 'range' => $have]);   /* v2 (2026-10-21) adds DRCOG's turf */
     $script = dirname(__DIR__, 2) . '/sixfold-tools/prop-pull/lawn-range.mjs';
     if (PHP_SAPI === 'cli-server' && is_file(dirname(__DIR__, 2) . '/sixfold-private/lawn-range-stub.json')) { $res = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/lawn-range-stub.json'), true); }   /* the test server */
     else {
@@ -7639,7 +7639,8 @@ if ($action === 'lawnrange') {
     }
     if (!is_array($res)) fail('The measure took too long. Try again in a minute.', 504);
     if (empty($res['ok'])) fail((string) ($res['error'] ?? 'The measure did not work.'));
-    $rg = ['lo' => (int) $res['low'], 'hi' => (int) $res['high'], 'lot' => (int) ($res['lot'] ?? 0), 'd' => (string) ($res['d'] ?? ''), 'at' => time()];
+    $rg = ['lo' => (int) $res['low'], 'hi' => (int) $res['high'], 'lot' => (int) ($res['lot'] ?? 0), 'd' => (string) ($res['d'] ?? ''), 'at' => time(), 'v' => 2,
+           'turf' => isset($res['turf']) && $res['turf'] !== null ? (int) $res['turf'] : null, 'tt' => isset($res['turfTrees']) && $res['turfTrees'] !== null ? (int) $res['turfTrees'] : null, 'lulc' => $res['lulc'] ?? null];   /* DRCOG land cover where it covers (2026-10-21) */
     $lk = @fopen(DATA_DIR . '/lawn-range.json.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
     $all = lawnRangeCache(); $all[$ck] = $rg; @file_put_contents(DATA_DIR . '/lawn-range.json', json_encode($all, JSON_UNESCAPED_SLASHES), LOCK_EX);
     if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
