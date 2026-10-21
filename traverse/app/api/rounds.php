@@ -1152,6 +1152,54 @@ function loadCustomers(): array {
     }
     return $c;
 }
+/** a customer from a lead (Won makes the customer, 2026-10-15; shared since 2026-10-21): the one already tied to the lead; or someone already
+ *  a customer, not tied to a lead, with the same phone, email or name (Brian Skelton was a customer twice), now tied; or a new one from the
+ *  lead as it is now (details, house, quote, service). null when there is no such lead. */
+function custFromLead(string $lid, string $by): ?array {
+    $L = leadsAll()[$lid] ?? null; if (!$L) return null;
+    $cs = loadCustomers(); $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    foreach ($cs as $c) if (($c['lead'] ?? '') === $lid && ($c['status'] ?? 'active') !== 'ended') return ['id' => $c['id'], 'existing' => true];
+    $ld = substr((string) preg_replace('/\D/', '', (string) ($L['phone'] ?? '')), -10); $le = strtolower(trim((string) ($L['email'] ?? ''))); $ln = mb_strtolower(trim((string) ($L['name'] ?? '')));
+    foreach ($cs as $c) {
+        if (!empty($c['lead']) || ($c['status'] ?? 'active') === 'ended') continue;
+        $cd = substr((string) preg_replace('/\D/', '', (string) ($c['phone'] ?? '')), -10);
+        if ((strlen($ld) === 10 && $cd === $ld) || ($le !== '' && strtolower(trim((string) ($c['email'] ?? ''))) === $le) || ($ln !== '' && mb_strtolower(trim((string) ($c['name'] ?? ''))) === $ln)) {
+            appendLine(custDir() . '/customers.log', ['id' => $c['id'], 'by' => $by, 'at' => time(), 'f' => ['lead' => $lid]]);
+            return ['id' => $c['id'], 'existing' => true, 'linked' => true];
+        }
+    }
+    $LH = is_array($L['house'] ?? null) ? $L['house'] : null;
+    $f = ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0], 'start' => $today,
+          'name' => a365Clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => a365Clean($L['phone'] ?? '', 40), 'email' => a365Clean($L['email'] ?? '', 160),
+          'town' => a365Clean($LH ? streetCaseServer((string) $LH['town']) : ($L['town'] ?? ''), 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
+    if ($LH && !empty($LH['address'])) $f['address'] = streetCaseServer((string) $LH['address']);
+    if ($LH && empty($LH['typed']) && preg_match('/^[a-z0-9-]{1,40}$/D', (string) ($LH['region'] ?? '')) && preg_match('/^[a-z0-9-]{1,80}$/D', (string) ($LH['door'] ?? ''))) $f['door'] = $LH['region'] . '/' . $LH['door'];   /* the lead's house becomes the customer's property (2026-10-16) */
+    if (!empty($L['quote']['price'])) $f['price'] = (float) $L['quote']['price'];
+    else foreach (jobsAll() as $j) if (!$j['off'] && (string) $j['lead'] === $lid && (int) $j['price'] > 0) { $f['price'] = (float) $j['price']; break; }   /* booked with no quote saved: the job's price */
+    /* the service whose name the enquiry mentions ("Fire mitigation" -> fire), the most specific if several; else the first one */
+    $bestLen = 0;
+    foreach (company()['services'] as $sv) {
+        $word = substr(strtolower(strtok((string) $sv[1], ' &')), 0, 5);
+        if ($sv[0] !== 'other' && strlen($word) > 3 && strlen($word) > $bestLen && stripos((string) ($L['need'] ?? ''), $word) !== false) { $f['service'] = (string) $sv[0]; $bestLen = strlen($word); }
+    }
+    $id = 'c' . date('YmdHis') . bin2hex(random_bytes(3));
+    if (!appendLine(custDir() . '/customers.log', ['id' => $id, 'by' => $by, 'at' => time(), 'f' => $f])) return null;
+    return ['id' => $id];
+}
+/** every lead that is Won or has a job on the board, with no customer yet, gets one (2026-10-21, Matthew: Sreenivas and Joseph were booked
+ *  through the form and missing from Customers). Lost leads and test names are left alone. Returns how many it made or tied. */
+function ensureBookedCustomers(): int {
+    if (!feature('walkdesk')) return 0;
+    $has = []; foreach (loadCustomers() as $c) if (!empty($c['lead'])) $has[(string) $c['lead']] = 1;
+    $job = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead'])) $job[(string) $j['lead']] = 1;
+    $n = 0;
+    foreach (leadsAll() as $l) {
+        $id = (string) $l['id']; if (isset($has[$id]) || ($l['status'] ?? '') === 'lost' || preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''))) continue;
+        if (($l['status'] ?? '') !== 'won' && !isset($job[$id])) continue;
+        if (custFromLead($id, 'the app (booked)')) $n++;
+    }
+    return $n;
+}
 function loadVisits(): array {
     $v = [];
     foreach (custLines('visits.log') as $r) {
@@ -1507,6 +1555,9 @@ function tapTime(array $body): int {
 /* ---- routing ----------------------------------------------------------- */
 $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+/* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
+if ($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true) || in_array($action, ['clickuppoll', 'metapoll'], true))
+    register_shutdown_function(function () { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } });
 $body = [];
 if ($isPost) {
     $raw = file_get_contents('php://input') ?: '';
@@ -7319,33 +7370,9 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
     /* a won door booking or a won lead becomes a customer, carrying what we already know */
     if ($action === 'customerfrom') {
         $f = ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0], 'start' => $today];
-        if (!empty($body['lead'])) {
-            $lid = (string) $body['lead']; $L = null;
-            $L = leadsAll()[$lid] ?? null;   /* the lead as it is now: changed details, its house and its quote (2026-10-15, Won makes the customer) */
-            if (!$L) fail('No such lead.', 404);
-            foreach ($cs as $c) if (($c['lead'] ?? '') === $lid && ($c['status'] ?? 'active') !== 'ended') out(['ok' => true, 'id' => $c['id'], 'existing' => true]);
-            /* 2026-10-15 (Brian Skelton was a customer twice): someone already a customer, not yet linked to a lead, by phone, email or name */
-            $ld = substr(preg_replace('/\D/', '', (string) ($L['phone'] ?? '')), -10); $le = strtolower(trim((string) ($L['email'] ?? ''))); $ln = mb_strtolower(trim((string) ($L['name'] ?? '')));
-            foreach ($cs as $c) {
-                if (!empty($c['lead']) || ($c['status'] ?? 'active') === 'ended') continue;
-                $cd = substr(preg_replace('/\D/', '', (string) ($c['phone'] ?? '')), -10);
-                if ((strlen($ld) === 10 && $cd === $ld) || ($le !== '' && strtolower(trim((string) ($c['email'] ?? ''))) === $le) || ($ln !== '' && mb_strtolower(trim((string) ($c['name'] ?? ''))) === $ln)) {
-                    appendLine(custDir() . '/customers.log', ['id' => $c['id'], 'by' => $me, 'at' => time(), 'f' => ['lead' => $lid]]);
-                    out(['ok' => true, 'id' => $c['id'], 'existing' => true, 'linked' => true]);
-                }
-            }
-            $LH = is_array($L['house'] ?? null) ? $L['house'] : null;
-            $f += ['name' => $clean($L['name'] ?? '', 120) ?: 'Customer', 'phone' => $clean($L['phone'] ?? '', 40), 'email' => $clean($L['email'] ?? '', 160), 'town' => $clean($LH ? streetCaseServer((string) $LH['town']) : ($L['town'] ?? ''), 60), 'source' => (string) ($L['src'] ?? 'other'), 'lead' => $lid];
-            if ($LH && !empty($LH['address'])) $f['address'] = streetCaseServer((string) $LH['address']);
-            if ($LH && empty($LH['typed']) && preg_match('/^[a-z0-9-]{1,40}$/D', (string) ($LH['region'] ?? '')) && preg_match('/^[a-z0-9-]{1,80}$/D', (string) ($LH['door'] ?? ''))) $f['door'] = $LH['region'] . '/' . $LH['door'];   /* the lead's house becomes the customer's property (2026-10-16: Jeremy came over without it) */
-            if (!empty($L['quote']['price'])) $f['price'] = (float) $L['quote']['price'];
-            /* the service whose name the enquiry mentions ("Fire mitigation" -> fire), the most specific if several
-               ("Lawn aeration" -> aeration, as before); else the first one */
-            $bestLen = 0;
-            foreach (company()['services'] as $sv) {
-                $word = substr(strtolower(strtok((string) $sv[1], ' &')), 0, 5);
-                if ($sv[0] !== 'other' && strlen($word) > 3 && strlen($word) > $bestLen && stripos((string) ($L['need'] ?? ''), $word) !== false) { $f['service'] = (string) $sv[0]; $bestLen = strlen($word); }
-            }
+        if (!empty($body['lead'])) {   /* the shared maker since 2026-10-21 */
+            $r = custFromLead((string) $body['lead'], $me); if (!$r) fail('No such lead.', 404);
+            out(['ok' => true] + $r);
         } else {
             $key = (string) ($body['region'] ?? ''); $did = (string) ($body['id'] ?? '');
             $data = loadRegion($key); if (!$data) fail('No such region.', 404);
