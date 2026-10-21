@@ -242,6 +242,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .langsw{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:2;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:inherit;font:700 14px var(--sans);cursor:pointer}
   .lookrow > span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .lookrow .aseg{display:flex;gap:5px}
+  .hpanel .mapsl,.lpfacts .mapsl{color:var(--accent);font:700 13.5px var(--sans);text-decoration:none}.hpanel .mapsl{display:inline-block;margin:2px 0 8px}.door .cenl{font-size:13px}
   .lookrow .aseg4{flex-wrap:wrap;justify-content:flex-end}.lookrow .aseg4 button{padding:0 10px}
   .lookrow .aseg button{min-height:38px;border:1px solid var(--line);border-radius:11px;padding:0 13px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
   .lookrow .aseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
@@ -6535,6 +6536,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var a = r(sq * lo), b = r(sq * hi), mid = r((a + b) / 2);
     return { sq: sq, a: a, b: b, mid: mid, band: bandOf(mid), span: bandOf(a) !== bandOf(b) ? bandOf(a) + ' or ' + bandOf(b) : '', conf: conf, why: why, yr: L.yr || 2023 };
   }
+  /* the house lines every card shares (2026-10-21, Matthew: office, quotes, phones and admins see the same facts on a house) */
+  function lotLine(acres) { return acres.toFixed(2) + ' acres (' + fmtSq(Math.round(acres * 43560 / 100) * 100) + '): the whole property, with the house and driveway, not only lawn'; }
+  function lawnLevelLine(h) {
+    if (h.cg && !h.lawnfix) return 'Townhome lot: the HOA keeps the lawn';
+    var lv = lawnLevelOf(h); if (!lv) return '';
+    return LAWN[lv] + (h.lawnfix ? ' (the crew\u2019s answer)' : (h.lawn && h.lawn.yr && lv !== 'N' ? ' (' + h.lawn.yr + ' photo)' : ''));
+  }
+  function treeLine(t) {
+    if (!t || t.z2 == null) return '';
+    var pc = function (v) { return v == null ? '\u2014' : Math.round(v * 100) + '%'; }, lv = treeLevel({ trees: t });
+    return TREE_LV[lv] + ': 0\u20135 ft ' + pc(t.z1) + ' \u00b7 5\u201330 ft ' + pc(t.z2) + ' \u00b7 30\u2013100 ft ' + pc(t.z3) + (t.h ? ' \u00b7 tallest about ' + Math.round(t.h * 3.28) + ' ft' : '') + (t.src === 'lidar' ? ' (LiDAR' + (t.yr ? ' ' + t.yr : '') + ')' : ' (canopy map)');
+  }
+  function censusLine(c) {
+    if (!c) return '';
+    var p = []; if (c.o != null) p.push(c.o + '% owner-occupied'); if (c.i) p.push('household income about ' + kUsd(c.i)); if (c.v) p.push('home value about ' + kUsd(c.v)); if (c.y) p.push('houses built about ' + c.y);
+    return p.length ? (c.h ? 'The ' + Number(c.h).toLocaleString(LOCALE) + ' homes around it: ' : 'Around it: ') + p.join(' \u00b7 ') : '';
+  }
+  function mapsHref(h) { return h && h.lat != null && h.lon != null ? 'https://www.google.com/maps/search/?api=1&query=' + h.lat + ',' + h.lon : ''; }
+  function mapsLink(h) { var u = mapsHref(h); if (!u) return null; var a = q('a', 'lnk mapsl', 'Open in Maps \u203a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; return a; }
   function milesFromBase(h) {
     var B = CO.a365 && CO.a365.base; if (!B || h.lat == null) return null;
     var rad = Math.PI / 180, dl = (h.lat - B[0]) * rad, dn = (h.lon - B[1]) * rad;
@@ -6562,6 +6582,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(q('div', 'addr', streetCase(h.address)));
     box.appendChild(q('div', 'meta', h.lookup ? h.town + ' · not on the door lists' + (h.rent ? ': the owner lives elsewhere (likely rented)' : '') : h.town + ' · ' + streetCase(h.area)));
     if (h.owner) box.appendChild(q('div', 'meta', (h.rent ? 'Owner of record (the landlord, likely): ' : 'Owner of record: ') + ownerText(h.owner)));
+    var ml0 = mapsLink(h); if (ml0) box.appendChild(ml0);   /* map position (2026-10-21) */
     if (h.lat != null) {   /* the 2023 photo with the property line, as on the lead card (Matthew 2026-10-15) */
       var hp = q('div', 'lpmap hpmap'); hp.setAttribute('role', 'img'); hp.setAttribute('aria-label', 'Aerial photo of ' + streetCase(h.address)); box.appendChild(hp);
       hp.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres }); });
@@ -6578,12 +6599,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     big.appendChild(cf); box.appendChild(big);
     var facts = q('div', 'dwfacts');
     var fact = function (k, v) { if (!v) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
-    if (typeof h.acres === 'number') fact('Lot', h.acres.toFixed(2) + ' acres (' + fmtSq(Math.round(h.acres * 43560 / 100) * 100) + ')');
+    if (typeof h.acres === 'number') fact('Lot', lotLine(h.acres));
+    fact('Lawn level', lawnLevelLine(h));
+    fact('Trees', treeLine(h.trees));
+    if (h.val) fact('County value', fmtVal(h.val));
+    fact('Area (Census)', censusLine(h.cen));
     if (h.yb) fact('Built', h.yb + (h.bsf ? ' · house ' + fmtSq(h.bsf) : ''));
     var W = S.money && S.money.water && S.money.water.cards, wt = W && W.towns ? W.towns[h.region] : '';
     if (wt) fact('Water', wt);
     var mi = milesFromBase(h); if (mi != null) fact('Distance', mi.toFixed(0) + ' miles from Englewood' + (CO.a365 && CO.a365.radius && mi > CO.a365.radius ? ' (outside the ' + CO.a365.radius + '-mile area)' : ''));
-    if (h.val) fact('County value', fmtVal(h.val));
     if (h.checks && h.checks.length) fact('On the day', h.checks.map(function (c) { return (c.v === 'right' ? 'about right' : c.v) + (c.sq ? ' (' + fmtSq(c.sq) + ')' : '') + ', ' + String(c.by).split(' ')[0]; }).join('; '));
     box.appendChild(facts);
     if (lead) {
@@ -7260,15 +7284,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         big.appendChild(q('span', 'htag c-' + E.conf.toLowerCase(), E.conf === 'Good' ? 'Good to quote' : E.conf === 'Fair' ? 'Fair: ask them' : 'Check before quoting'));
         facts.appendChild(big);
         var row = function (k, v) { if (!v) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
-        if (typeof h.acres === 'number') row('Lot', h.acres.toFixed(2) + ' acres');
+        if (typeof h.acres === 'number') row('Lot', lotLine(h.acres));
+        row('Lawn level', lawnLevelLine(h));
         var mi = milesFromBase(h); if (mi != null) row('Distance', Math.round(mi) + ' mi from Englewood');
         if (h.yb) row('Built', String(h.yb));
         if (h.bsf) row('House', fmtSq(h.bsf));
-        var T = h.trees; if (T && T.z2 != null) row('Trees', (T.z2 >= 0.35 ? 'Lots' : T.z2 >= 0.15 ? 'Some' : 'Few') + ' near the house' + (T.h ? ', tallest about ' + Math.round(T.h * 3.28) + ' ft' : ''));
-        if (h.cg) row('Lawn', 'Townhome lot: the grass may be the HOA\u2019s');
+        row('Trees', treeLine(h.trees));
         if (h.owner) row(h.rent ? 'Owner (landlord?)' : 'Owner', ownerText(h.owner));
         if (h.os) row('New owner', 'since about ' + shortDate(h.os));
         if (h.val) row('County value', fmtVal(h.val));
+        row('Area (Census)', censusLine(h.cen));
+        if (mapsHref(h)) { var mr = q('div'); mr.appendChild(q('span', null, 'Map')); var mb = q('b'); mb.appendChild(mapsLink(h)); mr.appendChild(mb); facts.appendChild(mr); }
         var W = S.money && S.money.water && S.money.water.cards, wt = W && W.towns ? W.towns[h.region] : ''; if (wt) row('Water', wt);
         if (h.place && (h.place.n || typeof h.place === 'string')) row('Neighbourhood', h.place.n || h.place);
         if (h.fire >= 3) row('Wildfire', FIRE_WORD[h.fire]);
@@ -7503,7 +7529,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* the fertilizer of the day (2026-10-15): Jen picks the brand; this device remembers it */
       var fk = ''; try { fk = localStorage.getItem('fertBrand') || ''; } catch (e) {}
       st.fert = fertOf(P, fk) ? fertOf(P, fk).k : '';
-      var fRow = q('div', 'dwlen qfert');
+      var fRow = q('div', 'dwlen qfert'); if ((P.ferts || []).length < 2) fRow.hidden = true;   /* one fertilizer (2026-10-21) */
       { var sdh = q('div', 'dwsub', 'Seed today'), sdr = q('div', 'dwlen qseed'), sdb = q('button', null, P.seedName || 'Seed'); sdb.type = 'button'; sdb.setAttribute('aria-pressed', 'true'); sdb.disabled = true; sdr.appendChild(sdb); box.appendChild(sdh); box.appendChild(sdr); }
       if ((P.ferts || []).length > 1) {
         P.ferts.forEach(function (x) {
@@ -7556,7 +7582,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             else { big.appendChild(q('b', null, money0(price))); big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft')); }
             detail.textContent = ''; noteBox.textContent = '';
             var rows = [];
-            if (st.pkg === 'full' && st.sq) { rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName) rows.push(['Fertilizer', j.fertName + ' \u00b7 ' + j.fertLb + ' lb', '']); }
+            if (st.pkg === 'full' && st.sq) { rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName) rows.push(['Fertilizer', (j.fertName !== 'Fertilizer' ? j.fertName + ' \u00b7 ' : '') + j.fertLb + ' lb', '']); }
             if (rows.length || (price && j.left != null)) { var tb = q('div', 'qcost'); rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); tb.appendChild(d); });
               if (price && j.left != null) { var lf = q('div', 'qcrow qcleft'); var la = q('div'); la.appendChild(q('b', null, 'Left after expenses')); la.appendChild(q('small', null, 'After seed, fertilizer, the drive and the crew (' + (j.crewPct != null ? j.crewPct : 20) + '% of the price)')); lf.appendChild(la); lf.appendChild(q('span', null, money0(j.left))); tb.appendChild(lf); }   /* the total only (Matthew 2026-10-15) */
               detail.appendChild(tb); }
@@ -7581,12 +7607,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (st.pkg === 'full' && st.sq) {
           var rate = seedRateFor(price, ladder, P); seedLb = Math.round(st.sq / 1000 * rate * 10) / 10;
           var seedPer = P.seedBagLb ? P.seedBagCost / P.seedBagLb : 0;
-          rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + seedLb + ' lb \u00b7 ' + (Math.round(rate * 10) / 10) + ' lb per 1,000 sq ft' + (price > ladder ? ' (more: the price is up)' : price < ladder ? ' (less: the price is down)' : '') + (seedPer ? ' \u00b7 ' + money2(seedPer) + '/lb' : ''), seedPer ? money2(seedLb * seedPer) : '\u2014']);
-          if (seedPer) { cost += seedLb * seedPer; notes.push('Seed: 2 to 4 lb per 1,000 sq ft (Bryce), more seed when they pay more. Cost based on Brad’s SiteOne receipt, $' + P.seedBagCost + ' per ' + P.seedBagLb + ' lb bag.'); } else known = false;
+          rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + seedLb + ' lb \u00b7 ' + (Math.round(rate * 10) / 10) + ' lb per 1,000 sq ft' + (price > ladder ? ' (more: the price is up)' : price < ladder ? ' (less: the price is down)' : '') + (seedPer ? ' \u00b7 ' + money2(seedPer) + '/lb, using Brad\u2019s pricing from the receipt dated 24 Jul 2026' : ''), seedPer ? money2(seedLb * seedPer) : '\u2014']);
+          if (seedPer) { cost += seedLb * seedPer; notes.push('Seed: 2 to 4 lb per 1,000 sq ft (Bryce), more seed when they pay more. Using Brad’s pricing from ' + (P.seedSrc || 'his SiteOne receipt dated 24 Jul 2026') + ': $' + P.seedBagCost + ' per ' + P.seedBagLb + ' lb bag.'); } else known = false;
           var F = fertOf(P, st.fert);
           if (F) {
             var fRate = F.bagLb * 1000 / F.coverSq, fPer = F.bagCost / F.bagLb; fertLb = Math.round(st.sq / 1000 * fRate * 10) / 10;
-            rows.push(['Fertilizer', F.name + ' \u00b7 ' + fertLb + ' lb at the bag\u2019s rate (' + (Math.round(fRate * 10) / 10) + ' per 1,000 sq ft) \u00b7 ' + money2(fPer) + '/lb', money2(fertLb * fPer)]);
+            rows.push(['Fertilizer', (F.name !== 'Fertilizer' ? F.name + ' \u00b7 ' : '') + 'Brandon\u2019s price, $' + F.bagCost + ' for ' + F.bagLb + ' lb \u00b7 ' + fertLb + ' lb at the bag\u2019s rate (' + (Math.round(fRate * 10) / 10) + ' per 1,000 sq ft) \u00b7 ' + money2(fPer) + '/lb', money2(fertLb * fPer)]);
             cost += fertLb * fPer; notes.push('Fertilizer: ' + (F.src || F.name) + ' Goes down at the bag’s rate whatever the price (too much burns the lawn).');
           } else { rows.push(['Fertilizer', 'add one under Pricing', '\u2014']); known = false; }
         }
@@ -14769,6 +14795,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* a townhome lot (2026-10-13): the property line hugs the building and the HOA keeps the grass; the crew's answer still wins */
     if (d.cg && !d.lawnfix) { el.classList.add('lv-cg'); el.appendChild(document.createTextNode('Townhome: the HOA keeps the lawn')); if (tappable) el.setAttribute('aria-label', 'Townhome lot: the HOA keeps the lawn ' + DOT + ' tap to say what is really here'); return el; }
     el.appendChild(document.createTextNode(lv ? LAWN[lv] : 'Lawn?'));
+    if (lv && lv !== 'N' && !d.lawnfix && !(d.cg && !d.lawnfix) && d.lawn && d.lawn.sq) { var E0 = lawnEstimate(d); if (!E0.none) el.appendChild(document.createTextNode(' ' + DOT + ' about ' + fmtSq(E0.mid))); }   /* the size on the chip (2026-10-21) */
     if (d.lawnfix) el.appendChild(q('em', null, ' ' + DOT + ' crew'));
     else if (d.lawn && lv) el.appendChild(q('em', null, ' ' + DOT + ' ' + d.lawn.yr + ' photo'));
     return el;
@@ -15361,13 +15388,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
-    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + ' acres' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + ownerText(d.owner)));
+    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + '-acre lot (house and driveway included)' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + ownerText(d.owner)));
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);
+    var cl0 = censusLine(d.cen); if (cl0) card.appendChild(q('div', 'meta cenl', cl0 + ' (Census, the area not this house)'));   /* 2026-10-21 */
     var sw = scoreWhy(d); if (sw) card.appendChild(sw);   /* why the score (2026-10-08) */
     if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + markName(d.prevMark) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
     if (d.mark && d.mark.maybe) { var mb = q('div', 'meta st'); maybeNote(mb, d.mark); card.appendChild(mb); }

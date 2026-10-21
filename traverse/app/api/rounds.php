@@ -4175,6 +4175,13 @@ if ($action === 'calsave') {
  * only; never shown to customers (Matthew: customers must not know we hold this). A lead can be tied to its house, and keep what the
  * customer said about the lawn; Brad says on the day whether the size was right (lawncheck.log), which is how the ranges get better. */
 function sideDoor(string $kind, string $key, string $id) { $f = DATA_DIR . '/' . $kind . '-' . $key . '.json'; if (!is_readable($f)) return null; $j = json_decode((string) file_get_contents($f), true); return is_array($j) ? (($j['doors'] ?? $j)[$id] ?? null) : null; }
+/** the Census figures for a house's block group (census-<town>.json, ACS), or null (2026-10-21: shown on every house card) */
+function censusFor(string $key, string $id): ?array {
+    static $cache = [];
+    if (!array_key_exists($key, $cache)) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/census-' . basename($key) . '.json'), true); $cache[$key] = is_array($j) ? $j : null; }
+    $c = $cache[$key]; $b = $c['doors'][$id] ?? null;
+    return ($c && $b !== null && isset($c['bgs'][$b])) ? $c['bgs'][$b] + ['ver' => (string) ($c['ver'] ?? '')] : null;
+}
 function houseFacts(string $key, string $id): ?array {
     if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) return null;
     $k0 = $key; $isDoor = isset(doorIds($key)[$id]); if (!$isDoor) foreach (sharedWith($key) as $p) if (isset(doorIds($p)[$id])) { $isDoor = true; break; }
@@ -4184,6 +4191,7 @@ function houseFacts(string $key, string $id): ?array {
         $y = sideDoor('year', $key, $id);
         return ['region' => $key, 'id' => $id, 'address' => (string) $d['address'], 'town' => regionLabel($key), 'area' => (string) $a['name'], 'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
+                'cen' => censusFor($key, $id),   /* 2026-10-21 */
                 'yb' => is_array($y) ? ($y['yb'] ?? null) : null, 'bsf' => is_array($y) ? ($y['bsf'] ?? null) : null,
                 /* 2026-10-14 (Matthew: "is that all the information we have for the property?"): the rest the door lists carry */
                 'fire' => $d['fire'] ?? null, 'cg' => !empty($d['cg']), 'os' => $d['os'] ?? null, 'place' => $a['place'] ?? null,
@@ -4325,24 +4333,21 @@ if ($action === 'lawncheck') {
  * 1,000 sq ft (Bryce's range; CSU says 3 to 4 after aeration), more seed when the customer pays more. Costs and margins show once the
  * bag prices are filled in. Kept in a365-pricing.json beside the door files: the office reads it, an admin changes it; never public. */
 const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 399, 'power' => 0.5, 'seedLow' => 2, 'seedBase' => 3, 'seedHigh' => 4,
-    'seedBagCost' => 128.89, 'seedBagLb' => 50, 'seedName' => 'LESCO Tuf-Turf Seed Mixture',   /* SiteOne Englewood invoice 2026-07-24: 6 x LESCO Tuf-Turf 50 lb, $773.34 with tax */
+    'seedBagCost' => 128.89, 'seedBagLb' => 50, 'seedName' => '', 'seedSrc' => 'his SiteOne receipt dated 24 Jul 2026',   /* no brand shown (2026-10-21, Matthew) */   /* SiteOne Englewood invoice 2026-07-24: 6 x LESCO Tuf-Turf 50 lb, $773.34 with tax */
     'fertBagCost' => null, 'fertBagLb' => null, 'fertRate' => null, 'aerateOnly' => null, 'deposit' => 50,
     /* 2026-10-15 (Matthew): fertilizer from the bag (price per lb x the lb its label says covers the lawn), Jen picks the brand of the day;
        Bryce gave no rate per sq ft, only "$25 in fertilizer" on a $399 job. Travel: the drive from the storage at 333 W Hampden Ave,
        there and back, at an 18 mpg truck and the week's Denver gas price (EIA). */
-    'fertDefault' => 'lesco', 'mpg' => 18, 'roadFactor' => 1.3,
+    'fertDefault' => 'fert', 'mpg' => 18, 'roadFactor' => 1.3,
     'crewShare' => 0.2];   /* the crew: 20% of every job's price (Matthew, 2026-10-21: "a 20% employee cost to every job") */
-const A365_FERTS = [
-    ['k' => 'lesco', 'name' => 'LESCO 24-0-11 (SiteOne)', 'bagLb' => 50, 'bagCost' => 40, 'coverSq' => 12000,
-     'src' => 'Label: a 50 lb bag covers about 12,000 sq ft. Price: $40 for a 50 lb bag (Matthew, 21 Oct 2026).'],
-    ['k' => 'scotts', 'name' => 'Scotts Turf Builder Lawn Food 32-0-4', 'bagLb' => 12.5, 'bagCost' => 27.24, 'coverSq' => 5000,
-     'src' => 'Home Depot $27.24 for 12.5 lb (October 2026); the bag covers 5,000 sq ft.'],
-    ['k' => 'milorganite', 'name' => 'Milorganite 6-4-0', 'bagLb' => 32, 'bagCost' => 19.97, 'coverSq' => 2500,
-     'src' => 'Home Depot $19.97 for 32 lb (2026); the bag covers 2,500 sq ft. Has phosphorus.']];
+const A365_FERTS = [   /* one fertilizer at Brandon's price (2026-10-21, Matthew: "Remove the 3 fertilizers"); spread at the LESCO 24-0-11 label rate */
+    ['k' => 'fert', 'name' => 'Fertilizer', 'bagLb' => 50, 'bagCost' => 40, 'coverSq' => 12000,
+     'src' => 'Brandon’s price: $40 for a 50 lb bag (21 Oct 2026). Spread at 12,000 sq ft per bag, the LESCO 24-0-11 label rate.']];
 function a365Pricing(): array {
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     $o = A365_PRICING; if (is_array($j)) foreach ($o as $k => $v) if (array_key_exists($k, $j) && ($j[$k] === null || is_int($j[$k]) || is_float($j[$k]))) $o[$k] = $j[$k];
-    if (is_array($j) && is_string($j['seedName'] ?? null) && trim($j['seedName']) !== '') $o['seedName'] = trim($j['seedName']);   /* the seed in use, shown beside the fertilizer (2026-10-15) */
+    if (is_array($j) && is_string($j['seedName'] ?? null) && trim($j['seedName']) !== '') $o['seedName'] = trim($j['seedName']);
+    if (is_array($j) && is_string($j['seedSrc'] ?? null) && trim($j['seedSrc']) !== '') $o['seedSrc'] = trim($j['seedSrc']);   /* the seed in use, shown beside the fertilizer (2026-10-15) */
     $o['ferts'] = is_array($j) && !empty($j['ferts']) && is_array($j['ferts']) ? $j['ferts'] : A365_FERTS;
     if (is_array($j) && is_string($j['fertDefault'] ?? null)) $o['fertDefault'] = $j['fertDefault'];
     return $o;
