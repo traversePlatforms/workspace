@@ -2434,11 +2434,17 @@ function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? 
 function houseTown(array $h): string { return trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', (string) ($h['town'] ?? ''))); }
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
 function a365SignLink(string $id, string $k): string { return 'https://365aeration.com/sign/?s=' . $id . '-' . a365SignKey($id, $k); }
+/** extra work on a quote (2026-10-21, Matthew: "an extra line where jen can type in what she wants ... a price ... automatically added into the price
+    (the price should not be shown)"): up to 6 lines of {t: words, p: dollars or 0}; empty words are dropped */
+function a365Extras($in): array { $out = []; foreach (is_array($in) ? $in : [] as $x) { if (!is_array($x)) continue; $t = a365Clean((string) ($x['t'] ?? ''), 120); if ($t === '') continue; $p = (int) round((float) ($x['p'] ?? 0)); $out[] = ['t' => $t, 'p' => max(0, min(100000, $p))]; if (count($out) >= 6) break; } return $out; }
+/** the extra work in words, for the crew's job note: "Also: clear the front beds; haul the branches." (no prices) */
+function a365ExtrasNote(array $Q): string { $t = array_map(fn($x) => (string) $x['t'], a365Extras($Q['extras'] ?? [])); return $t ? 'Also: ' . implode('; ', $t) . '.' : ''; }
 function a365Agreement(array $l): array {
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null;
     $h = $l['house'] ?? null;
     $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
     $inc = $Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer'];
+    foreach (a365Extras($Q['extras'] ?? []) as $x) $inc[] = $x['t'];   /* the extra work, in her words (2026-10-21); its price is in the Price */
     $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how']] ?? $S2['how'];
     $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
     $day = $o ? a365Day((string) $o['date']) . ', arriving ' . a365Arrive((string) $o['slot']) : 'to be set';
@@ -2610,7 +2616,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
-            'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']], 'card' => false, 'note' => (string) ($S2['note'] ?? ''), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
+            'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
     }
     /* what was shown is kept with the signature, so the signed page never changes if the quote does later */
     $sg = ['name' => $name, 'at' => time(), 'version' => A365_SIGN_VERSION, 'hash' => $A['hash'], 'facts' => $A['facts'], 'terms' => $A['terms'],
@@ -4556,6 +4562,7 @@ if ($action === 'leadquote') {
     $sq = (int) ($body['sq'] ?? 0); if ($sq < 0 || $sq > 2000000) fail('That lawn size does not look right.');
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : null;
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => $sq, 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => $clean($body['note'] ?? '', 200), 'sent' => !empty($body['sent'])];
+    $ex = array_key_exists('extras', $body) ? a365Extras($body['extras']) : ($all[$id]['quote']['extras'] ?? []); if ($ex) $q['extras'] = $ex;   /* extra work (2026-10-21) */
     /* the day offered with the quote (2026-10-14): kept across re-saves unless changed or cleared; it holds that slot on the board */
     $prevOffer = $all[$id]['quote']['offer'] ?? null;
     if (array_key_exists('offer', $body)) {
@@ -6748,7 +6755,7 @@ function a365BookNoSign(string $lid, string $by): ?string {
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $lid, 'title' => trim((string) ($l['name'] ?? '')) ?: 'Customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
-            'pay' => $pay, 'card' => false, 'note' => trim('Booked without a signature. ' . (string) ($S2['note'] ?? '')), 'addr' => $addr ?: 'Ask the office', 'by' => $by, 'at' => time()])) $jid = $nj;
+            'pay' => $pay, 'card' => false, 'note' => trim('Booked without a signature. ' . (string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => $by, 'at' => time()])) $jid = $nj;
     }
     /* the agreement as it stood when they booked, kept like a signed form's (2026-10-18, Fable review): the page served it live, so a later
        price change showed on the "keep this for your records" page */
@@ -6800,6 +6807,7 @@ if ($action === 'signsend') {
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : ($q0[$k] ?? null);
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
           'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()]];
+    $ex = array_key_exists('extras', $body) ? a365Extras($body['extras']) : ($q0['extras'] ?? []); if ($ex) $q['extras'] = $ex;   /* extra work: on the form's Service line (2026-10-21) */
     $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 300)];
     $nosign = !empty($body['nosign']); if ($nosign) $sign['nosign'] = true;   /* no signature needed (2026-10-17) */
     if ($byLink && $depIn && is_array($S0['pay'] ?? null)) $sign['pay'] = $S0['pay'];   /* the paid order stays, so sqpaid still matches it (2026-10-18) */
