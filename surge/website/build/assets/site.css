@@ -723,6 +723,14 @@ img[data-person="matthew-sharpe"]{object-position:50% 34% !important}
 .ind-list{list-style:none;margin:1.8rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.75rem}
 .ind-list li{border:1px solid var(--line);padding:.85rem 1.3rem;font-weight:700;
   font-size:1rem;color:var(--white)}
+/* sectors (/about/), 2026-10-21: a card per sector, an icon, a name and one line */
+.sector-grid{list-style:none;margin:1.8rem 0 0;padding:0;display:grid;gap:1rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:900px){.sector-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media (max-width:520px){.sector-grid{grid-template-columns:minmax(0,1fr)}}
+.sector{display:grid;gap:.55rem;align-content:start;background:var(--ink);border:1px solid var(--line);border-top:3px solid var(--green);padding:1.3rem 1.2rem 1.4rem}
+.sector svg{width:2rem;height:2rem;fill:none;stroke:var(--green);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sector b{font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:1.35rem;letter-spacing:.01em;text-transform:uppercase;color:var(--white);line-height:1.1}
+.sector span{color:var(--soft);font-size:.95rem;line-height:1.45}
 
 /* ---- footer -------------------------------------------------------------- */
 footer{background:var(--black);color:var(--faint);font-size:.86rem;padding-block:2.8rem 3.6rem;border-top:3px solid var(--brand-green)}
