@@ -277,6 +277,13 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .lead .lhead .addr{flex:1}
   .lead .lage{font-size:12.5px;color:var(--soft);white-space:nowrap}
   .lead .lmsg{margin-top:8px;font-size:14px;line-height:1.45;white-space:pre-wrap;color:var(--ink)}
+  .lead .lweb{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+  .lead .lweb span{padding:3px 9px;border-radius:999px;background:var(--paper2,#f4efe6);font-size:13px}
+  .lead .lweb span.lpref{background:var(--ember,#d6400c);color:#fff;font-weight:700}
+  .lead .lsrcb{margin-left:6px;padding:0 6px;border:0;background:none;color:var(--soft);font:600 12.5px var(--sans);text-decoration:underline;cursor:pointer}
+  .lead .lsrcf{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .lead .lsrcf select,.lead .lsrcf input{min-height:38px;padding:0 8px;border:1px solid var(--line);border-radius:8px;font:14px var(--sans)}
+  .lead .lsrcf input{flex:1;min-width:140px}
   .lead .lnotes{margin-top:8px;font-size:13px;color:var(--soft)}
   .lead .lnotes div{margin-top:3px}
   .lcontact{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
@@ -4566,7 +4573,34 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var st = LEAD_ST.filter(function (x) { return x[0] === l.status; })[0];
     meta.appendChild(q('span', 'tag l-' + l.status, st ? st[1] : l.status));
     meta.appendChild(q('span', null, [l.need, l.town, LEAD_SRC[l.src] || l.src].filter(Boolean).join(' \u00b7 ')));
+    if (adminView() && wdOn() && S.screen === 'pipeline') {   /* where they came from, corrected by the admin (2026-10-20, Russ) */
+      var scb = q('button', 'lsrcb', 'change'); scb.type = 'button'; scb.title = 'Change where they came from'; meta.appendChild(scb);
+      scb.addEventListener('click', function () {
+        if (c.querySelector('.lsrcf')) return;
+        var fm = q('div', 'lsrcf'), sel = q('select'); sel.setAttribute('aria-label', 'Where they came from');
+        Object.keys(LEAD_SRC).filter(function (k) { return k !== 'website'; }).forEach(function (k) { var o = q('option', null, LEAD_SRC[k]); o.value = k; sel.appendChild(o); }); sel.value = l.src;
+        var why = q('input'); why.placeholder = 'Why, e.g. referred by Eric (optional)'; why.maxLength = 120; why.setAttribute('aria-label', 'Why');
+        var sv = q('button', 'save', 'Save'), cn = q('button', null, 'Cancel'); sv.type = 'button'; cn.type = 'button';
+        [sel, why, sv, cn].forEach(function (x) { fm.appendChild(x); }); meta.parentNode.insertBefore(fm, meta.nextSibling);
+        cn.addEventListener('click', function () { fm.remove(); });
+        sv.addEventListener('click', function () {
+          sv.disabled = true;
+          api('leadsrc', { body: { id: l.id, src: sel.value, why: why.value.trim() } }).then(function (r) {
+            sv.disabled = false;
+            if (r && r.ok) { toast('Saved', 'Now: ' + (LEAD_SRC[sel.value] || sel.value)); pipelineView(); } else toast('Not saved', (r && r.error) || 'Try again.');
+          }, function () { sv.disabled = false; toast('Not saved', 'Needs signal.'); });
+        });
+      });
+    }
     c.appendChild(meta);
+    if (l.pref || l.hear || l.came) {   /* the 365 website form (2026-10-20): how to reach them, how they heard of us, where they came from */
+      var HEAR = { facebook: 'Facebook or Instagram', google: 'Google search', nextdoor: 'Nextdoor', friend: 'A friend or neighbour', sign: 'A yard sign', card: 'A business card or flyer', truck: 'Our truck', other: 'Something else' };
+      var lw = q('div', 'lweb');
+      if (l.pref) lw.appendChild(q('span', 'lpref', 'Prefers ' + ({ call: 'a call', text: 'a text', email: 'email' }[l.pref] || l.pref)));
+      if (l.hear) lw.appendChild(q('span', null, 'Heard: ' + (HEAR[l.hear] || l.hear) + (l.hearNote ? ' (' + l.hearNote + ')' : '')));
+      if (l.came) lw.appendChild(q('span', null, 'Came from: ' + l.came));
+      c.appendChild(lw);
+    }
     var ct = q('div', 'lcontact');
     var tel = digits(l.phone);
     if (tel.length >= 10) {
@@ -16121,6 +16155,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tr(tb3, ['Both', cur(tot.sp), tot.res, tot.l, tot.jb, money0(tot.bk), money0(tot.pd), tot.res ? cur(tot.sp / tot.res) : '\u2013', tot.jb ? cur(tot.sp / tot.jb) : '\u2013'], 'sttot');
         c3.appendChild(q('p', 'stnote', 'Spend and Meta\u2019s counts are typed in from Meta (the app cannot read the ad account yet). Leads, jobs and money are counted by where each lead came from in the app, so a friend a customer sent is a referral, not an ad lead.'));
         if (j.canEdit) c3.appendChild(adSpendEditor(j.adRows, load));
+        if (j.web && j.web.n) {   /* the 365 website's own forms (2026-10-20): where each visitor came from, and what they told us */
+          var tracked = j.web.n - j.web.before;
+          c3.appendChild(q('p', 'stnote', '365 website forms: ' + j.web.n + (j.web.before ? ' (' + j.web.before + ' from before the site noted where visitors came from)' : '') + (tracked ? '. Where the rest came from:' : '.')));
+          var wsrc = q('div', 'stsrc'); Object.keys(j.web.came).forEach(function (k) { wsrc.appendChild(q('span', null, k + ' ' + j.web.came[k])); }); if (tracked) c3.appendChild(wsrc);
+          if (Object.keys(j.web.hear).length) { c3.appendChild(q('p', 'stnote', 'What they told us when asked how they heard about us:')); var whr = q('div', 'stsrc'); Object.keys(j.web.hear).forEach(function (k) { whr.appendChild(q('span', null, k + ' ' + j.web.hear[k])); }); c3.appendChild(whr); }
+        }
         /* 4. plans */
         var c4 = card('Monthly plans', j.plans.list.length ? money0(j.plans.mrr) + ' a month' : '');
         if (!j.plans.list.length) c4.appendChild(q('div', 'msg soft', 'No customers on an active monthly, quarterly or yearly plan yet. A customer shows here when their plan is set and they are active.'));

@@ -2147,6 +2147,35 @@ function a365Alert(string $title, string $text, bool $super = false, bool $newLe
         foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && (($r['role'] === 'office' && !($newLead && acctFlag('runsteam', $r['id']))) || ($super && $r['role'] === 'super'))) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
     } catch (Throwable $e) { error_log('rounds a365 alert: ' . $e->getMessage()); }
 }
+/* where a website visitor came from (2026-10-20, Matthew: "go ahead and do the website lead tracking"): the page notes, when they arrive, the
+   page that sent them (the browser's referrer, address only), the utm tags and whether the link carried Facebook's or Google's ad-click mark.
+   No cookies, nothing sent anywhere else. A QR code on our printed things wins; then an ad click; then the sending site; else typed in. */
+const A365_HEAR = ['facebook' => 'Facebook or Instagram', 'google' => 'Google search', 'nextdoor' => 'Nextdoor', 'friend' => 'A friend or neighbour', 'sign' => 'A yard sign', 'card' => 'A business card or flyer', 'truck' => 'Our truck', 'other' => 'Something else'];
+function a365Trk($t): array {
+    if (!is_array($t)) return [];
+    $o = [];
+    $ref = a365Clean($t['ref'] ?? '', 300); if ($ref !== '' && preg_match('#^https?://#i', $ref)) { $p = parse_url($ref); $o['ref'] = strtolower((string) ($p['host'] ?? '')) . (string) ($p['path'] ?? ''); }
+    foreach (['us' => 60, 'um' => 60, 'uc' => 100, 'land' => 200] as $k => $max) { $v = a365Clean($t[$k] ?? '', $max); if ($v !== '') $o[$k] = $v; }
+    if (!empty($t['fb'])) $o['fb'] = 1; if (!empty($t['g'])) $o['g'] = 1;
+    return $o;
+}
+function a365Came(array $t, string $qr): string {
+    if ($qr !== '') return 'QR code on our ' . (['card' => 'business card', 'yard' => 'yard sign', 'truck' => 'truck', 'car' => 'car'][$qr] ?? $qr);
+    $us = strtolower((string) ($t['us'] ?? '')); $host = (string) preg_replace('#/.*$#', '', (string) ($t['ref'] ?? ''));
+    if (!empty($t['fb']) || preg_match('/^(facebook|fb|instagram|ig|meta)/', $us)) return 'Facebook or Instagram ad link';
+    if (!empty($t['g']) || ($us === 'google' && preg_match('/cpc|paid|ad/', strtolower((string) ($t['um'] ?? ''))))) return 'Google ad';
+    if ($host !== '' && !preg_match('/(^|\.)365aeration\.com$/', $host)) {
+        if (preg_match('/(^|\.)(facebook|fb|messenger)\.com$/', $host)) return 'Facebook (a post, page or message link)';
+        if (preg_match('/(^|\.)instagram\.com$/', $host)) return 'Instagram (a post or profile link)';
+        if (preg_match('/(^|\.)google\./', $host)) return 'Google search';
+        if (preg_match('/(^|\.)(bing|duckduckgo|yahoo|ecosia)\./', $host)) return 'Another search engine (' . $host . ')';
+        if (preg_match('/(^|\.)nextdoor\.com$/', $host)) return 'Nextdoor';
+        if (preg_match('/(^|\.)linktr\.ee$/', $host)) return 'Linktree';
+        return 'A link on ' . $host;
+    }
+    if ($us !== '') return 'A link tagged ' . $us;
+    return 'Typed the address, a bookmark, or an app that hides the link';
+}
 if ($action === 'a365lead') {
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
     if (in_array($origin, A365_ORIGINS, true) || (PHP_SAPI === 'cli-server' && preg_match('#^http://127\.0\.0\.1(:\d+)?$#D', $origin))) {
@@ -2168,12 +2197,18 @@ if ($action === 'a365lead') {
     if ($phone === '' && $email === '') fail('Add a phone number or an email so we can reply.');
     if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
     if ($phone !== '' && strlen((string) preg_replace('/\D/', '', $phone)) < 10) fail('That phone number looks too short.');
-    if ($want !== 'question' && $street === '') fail('Add the street address so we can quote it.');
+    /* the address is optional since 2026-10-20 (Matthew: "add a way to put in the address on the website lead form as well make it optional") */
+    if ($contact === 'email' && $email === '') fail('Add your email, or pick another way for us to reach you.');
+    if (in_array($contact, ['call', 'text'], true) && $phone === '') fail('Add your phone number, or pick another way for us to reach you.');
+    $hear = isset(A365_HEAR[(string) ($body['hear'] ?? '')]) ? (string) $body['hear'] : ''; $hearNote = $hear !== '' ? a365Clean($body['hearNote'] ?? '', 120) : '';
     if (!throttleTake(rateFile('a365lead|' . visitorKey()), 5, 86400) || !throttleTake(rateFile('a365lead|site'), 300, 86400)) fail('We have had a lot of requests from here today. Please call or text us instead.', 429);
-    $lines = []; if ($contact !== '') $lines[] = 'Best way to reach them: ' . ['call' => 'a call', 'text' => 'a text', 'email' => 'email'][$contact]; if ($msg !== '') $lines[] = $msg;
+    $lines = []; if ($msg !== '') $lines[] = $msg;   /* the way to reach them is its own field since 2026-10-20 (pref), shown on the card */
     $qrFrom = in_array($body['from'] ?? '', ['card', 'yard', 'truck', 'car'], true) ? (string) $body['from'] : '';   /* which printed QR code brought them (2026-10-19) */
+    $trk = a365Trk($body['trk'] ?? null); $came = a365Came($trk, $qrFrom);
+    $extra = array_filter(['pref' => $contact, 'hear' => $hear, 'hearNote' => $hearNote, 'came' => $came, 'trk' => $trk ?: null], fn($v) => $v !== '' && $v !== null);
+    $said = array_filter([$contact !== '' ? 'prefers ' . ['call' => 'a call', 'text' => 'a text', 'email' => 'email'][$contact] : '', $hear !== '' ? 'heard about us: ' . A365_HEAR[$hear] . ($hearNote !== '' ? ' (' . $hearNote . ')' : '') : '', 'came from: ' . $came]);
     $row = ['id' => 'w' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'a365web', 'at' => time(), 'need' => $wants[$want], 'name' => $name, 'phone' => $phone, 'email' => $email,
-            'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''] + ($qrFrom !== '' ? ['qr' => $qrFrom] : []);   /* kept with the lead; not shown in the Pipeline yet */
+            'town' => trim($street . ($city !== '' ? ', ' . $city : '') . ($zip !== '' ? ' ' . $zip : '')), 'msg' => implode("\n", $lines), 'by' => ''] + ($qrFrom !== '' ? ['qr' => $qrFrom] : []) + $extra;   /* kept with the lead; not shown in the Pipeline yet */
     /* someone already in the Pipeline (2026-10-20, Matthew: "double check when a website lead comes in that it hasnt been made via messenger or meta
        ad lead"): an open lead with the same phone, email or full name keeps them, Facebook and Messenger ones first; the form goes on it as a note,
        so the person stays where they are (Jen's Facebook flow) and is not doubled. A lost or finished lead does not count: that is a new enquiry. */
@@ -2186,11 +2221,11 @@ if ($action === 'a365lead') {
     usort($hits, fn($a, $b) => (int) !in_array($a['src'] ?? '', ['meta', 'messenger'], true) <=> (int) !in_array($b['src'] ?? '', ['meta', 'messenger'], true));
     if ($hits) {
         $x = $hits[0]; $now = time();
-        appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'note' => 'Also sent the 365 website form: ' . $wants[$want] . ($street !== '' ? ', ' . $street . ($city !== '' ? ', ' . $city : '') : '') . ($lines ? '. ' . implode(' ', $lines) : '') . ' (as ' . ($name ?: 'no name') . ($phone !== '' ? ', ' . $phone : '') . ($email !== '' ? ', ' . $email : '') . ')', 'by' => 'website', 'at' => $now]);
+        appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'note' => 'Also sent the 365 website form: ' . $wants[$want] . ($street !== '' ? ', ' . $street . ($city !== '' ? ', ' . $city : '') : '') . ($lines ? '. ' . implode(' ', $lines) : '') . ($said ? '. ' . ucfirst(implode('; ', $said)) : '') . ' (as ' . ($name ?: 'no name') . ($phone !== '' ? ', ' . $phone : '') . ($email !== '' ? ', ' . $email : '') . ')', 'by' => 'website', 'at' => $now]);
         $fill = []; if (trim((string) ($x['phone'] ?? '')) === '' && $phone !== '') $fill['phone'] = $phone; if (trim((string) ($x['email'] ?? '')) === '' && $email !== '') $fill['email'] = $email;
         if ($fill) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'contact' => $fill, 'by' => 'website', 'at' => $now]);
         if (empty($x['house']) && $street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'house' => $h, 'by' => 'website', 'at' => $now]); }
-        if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (LEAD_SRC_NAME[$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true);
+        if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true);
         out(['ok' => true]);
     }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
@@ -3892,7 +3927,7 @@ function leadsAll(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) {
@@ -4942,7 +4977,12 @@ if ($action === 'statspage') {
         foreach ($td as $p) { $any = false; foreach ($p['days'] as $r) if ($r['date'] >= $f && $r['date'] <= $t) { $sum['doors'] += (int) $r['doors']; $sum['talked'] += (int) $r['booked'] + (int) $r['later'];   /* as the Office dashboard counts it */ $sum['booked'] += (int) $r['booked']; if ((int) $r['doors'] > 0) $any = true; } if ($any) $sum['people']++; }
         $doors[$k] = $sum;
     }
-    out(['ok' => true, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
+    $web = ['n' => 0, 'came' => [], 'hear' => [], 'before' => 0];
+    foreach ($leads as $l) { if (!$realLead($l) || ($l['src'] ?? '') !== 'a365web' || (string) ($l['by'] ?? '') === 'ClickUp') continue; $web['n']++;
+        if (empty($l['came'])) { $web['before']++; continue; } $web['came'][$l['came']] = ($web['came'][$l['came']] ?? 0) + 1;
+        if (!empty($l['hear'])) { $hl = A365_HEAR[$l['hear']] ?? $l['hear']; $web['hear'][$hl] = ($web['hear'][$hl] ?? 0) + 1; } }
+    arsort($web['came']); arsort($web['hear']);
+    out(['ok' => true, 'web' => $web, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
          'proj' => ['weeks' => $weeks, 'close' => round($close, 3), 'quoted' => $quoted, 'won' => $won, 'pipe' => $pipe, 'pipeN' => $pipeN], 'doors' => $doors, 'canEdit' => $role === 'admin']);
 }
 if ($action === 'adspendsave') {   /* an admin types each ad's lifetime spend from Meta (until Meta shares it with the app) */
@@ -5918,6 +5958,9 @@ if ($action === 'leads') {
        to be able to at least do it"; she is told not to contact anyone until Brandon confirms). The 365 website's forms only when handed to her. */
     if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => (string) ($l['by'] ?? '') === $me || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by']))
         || (($l['src'] ?? '') !== 'a365web' && (($l['status'] ?? 'new') !== 'new' || !empty($l['tries']))));
+    /* the 365 website's forms are Matthew's (2026-10-20: "make sure website leads are not being forwarded to jen"): an office account sees one only
+       when it is handed to them (owner), or sent to Jen (her office account; not a team lead's), or it came from Jen's own ClickUp list */
+    if ($role === 'office') $leads = array_filter($leads, fn($l) => ($l['src'] ?? '') !== 'a365web' || (string) ($l['owner'] ?? '') === $me || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
@@ -6177,6 +6220,16 @@ if ($action === 'metasetup' || $action === 'metapoll') {
  * when a new double appears. */
 function cuFile(): string { return dirname(__DIR__, 2) . '/sixfold-private/clickup.json'; }
 const LEAD_SRC_NAME = ['website' => 'Sixfold website', 'meta' => 'Facebook', 'nextdoor' => 'Nextdoor', 'phone' => 'phone', 'linktree' => 'Linktree', 'referral' => 'referral', 'other' => 'other', 'messenger' => 'Messenger', 'a365web' => '365 website', 'inperson' => 'in person', 'door' => 'at the door'];
+if ($action === 'leadsrc') {   /* where a lead came from, corrected by an admin (2026-10-20, Matthew: Russ "comes off as a referral"); the ClickUp sync sets it only when it makes the lead */
+    if (!feature('walkdesk') || $role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+    if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+    $src = (string) ($body['src'] ?? ''); if (!in_array($src, LEAD_SRC, true) || $src === 'website') fail('Pick where they came from.');
+    $was = (string) ($all[$id]['src'] ?? ''); if ($src === $was) out(['ok' => true, 'same' => true]);
+    $why = $clean($body['why'] ?? '', 120);
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'src' => $src, 'note' => 'Came from: ' . (LEAD_SRC_NAME[$was] ?? ($was ?: 'not set')) . ' → ' . (LEAD_SRC_NAME[$src] ?? $src) . ($why !== '' ? ' (' . $why . ')' : '') . '.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true]);
+}
 function cuCheckOk(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/clickup-check-ok.json'), true); return is_array($j['keys'] ?? null) ? $j['keys'] : []; }
 /** the sync check for the Pipeline: what still does not match, less what was left as it is */
 function cuCheckShown(): ?array {

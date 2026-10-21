@@ -69,6 +69,9 @@
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
   .err{color:#a1361b;font-weight:700;min-height:1px}
   .fine{font-size:13px;color:var(--soft);margin:0}
+  .hint{font-size:13.5px;color:var(--soft);margin:-6px 0 0;font-weight:400}
+  .opt{font-weight:400;color:var(--soft)}
+  [hidden]{display:none!important}
   .done{text-align:center;padding:30px 10px}
   .done b{display:block;font:800 26px 'Outfit',sans-serif;color:var(--green);margin-bottom:6px}
   footer{background:var(--green-d);color:#cfe0c8;padding:34px 0;font-size:15px}
@@ -147,23 +150,36 @@
       <label>Phone<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
       <label>Email<input name="email" type="email" autocomplete="email" maxlength="160"></label>
     </div>
-    <label>Street address<input name="street" autocomplete="address-line1" maxlength="120" placeholder="e.g. 1234 Elm St"></label>
-    <div class="row">
-      <label>City<input name="city" autocomplete="address-level2" maxlength="60"></label>
-      <label>ZIP<input name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10"></label>
-    </div>
-    <fieldset><legend>Best way to reach you</legend>
+    <fieldset><legend>How should we contact you?</legend>
       <div class="seg">
-        <label><input type="radio" name="contact" value="text" checked> Text</label>
+        <label><input type="radio" name="contact" value="text"> Text</label>
         <label><input type="radio" name="contact" value="call"> Call</label>
         <label><input type="radio" name="contact" value="email"> Email</label>
       </div>
     </fieldset>
+    <label><span>Street address <span class="opt">(optional)</span></span><input name="street" autocomplete="address-line1" maxlength="120" placeholder="e.g. 1234 Elm St"></label>
+    <div class="row">
+      <label><span>City <span class="opt">(optional)</span></span><input name="city" autocomplete="address-level2" maxlength="60"></label>
+      <label><span>ZIP <span class="opt">(optional)</span></span><input name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10"></label>
+    </div>
+    <p class="hint">Your address helps us get your quote ready and plan the visit, so we can help you sooner.</p>
+    <label><span>How did you hear about us? <span class="opt">(optional)</span></span><select name="hear">
+      <option value="">Choose one</option>
+      <option value="facebook">Facebook or Instagram</option>
+      <option value="google">Google search</option>
+      <option value="nextdoor">Nextdoor</option>
+      <option value="friend">A friend or neighbour</option>
+      <option value="sign">A yard sign</option>
+      <option value="card">A business card or flyer</option>
+      <option value="truck">Our truck</option>
+      <option value="other">Something else</option>
+    </select></label>
+    <label id="hearmore" hidden><span><span id="hearlab">Who sent you?</span> <span class="opt">(optional)</span></span><input name="hearNote" maxlength="120"></label>
     <label>Anything we should know? (optional)<textarea name="msg" rows="3" maxlength="1500" placeholder="Lawn size if you know it, gate codes, dogs, questions"></textarea></label>
     <div class="hp" aria-hidden="true"><label>Leave this empty<input name="hp" tabindex="-1" autocomplete="off"></label></div>
     <div class="err" id="qerr" role="alert"></div>
     <button class="btn main" type="submit" id="qbtn">Send my request</button>
-    <p class="fine">We use what you send only to answer your request. We don't sell or share it.</p>
+    <p class="fine">We use what you send, and which link brought you here, only to answer your request and to see which of our ads work. We don't sell or share it.</p>
   </form>
 </div></section>
 </main>
@@ -178,6 +194,18 @@
   /* the form goes into the office's lead list */
   var API = /^\/a365\//.test(location.pathname) ? '/api/rounds.php' : '/api/lead.php';   /* 2026-10-14: this site's own relay (api/lead.php) passes it to the app server to server; a browser posting to the app directly was stopped by its bot check. /a365/ is the test copy inside the app's test server */
   var f = document.getElementById('qf'), err = document.getElementById('qerr'), btn = document.getElementById('qbtn'), t0 = Date.now();
+  /* where they came from, noted when they arrive (2026-10-20): the sending page's address, utm tags, and whether the link was an ad click.
+     Kept for this visit only (sessionStorage), sent with the form, nothing else */
+  var trk = null;
+  try { trk = JSON.parse(sessionStorage.getItem('a365trk') || 'null'); } catch (e) {}
+  if (!trk) {
+    var sp = new URLSearchParams(location.search), ref = '';
+    try { var ru = document.referrer ? new URL(document.referrer) : null; if (ru && ru.host !== location.host) ref = ru.origin + ru.pathname; } catch (e) {}
+    trk = { ref: ref, us: sp.get('utm_source') || '', um: sp.get('utm_medium') || '', uc: sp.get('utm_campaign') || '', fb: sp.has('fbclid') ? 1 : 0, g: (sp.has('gclid') || sp.has('gbraid') || sp.has('wbraid')) ? 1 : 0, land: location.pathname };
+    try { sessionStorage.setItem('a365trk', JSON.stringify(trk)); } catch (e) {}
+  }
+  var hs = f.elements.hear, hm = document.getElementById('hearmore'), hl = document.getElementById('hearlab');
+  hs.addEventListener('change', function () { var k = hs.value; hm.hidden = !(k === 'friend' || k === 'other'); hl.textContent = k === 'friend' ? 'Who sent you?' : 'Where did you hear about us?'; });
   document.getElementById('yr').textContent = new Date().getFullYear();
   f.addEventListener('submit', function (e) {
     e.preventDefault(); err.textContent = '';
@@ -185,10 +213,13 @@
     var want = (f.querySelector('input[name=want]:checked') || {}).value || '';
     if (!v('name')) { err.textContent = 'Please add your name.'; f.elements.name.focus(); return; }
     if (!v('phone') && !v('email')) { err.textContent = 'Please add a phone number or an email so we can reply.'; f.elements.phone.focus(); return; }
-    if (want !== 'question' && !v('street')) { err.textContent = 'Please add your street address so we can quote your lawn.'; f.elements.street.focus(); return; }
+    var how = (f.querySelector('input[name=contact]:checked') || {}).value || '';
+    if (!how) { err.textContent = 'Please choose how we should contact you.'; f.querySelector('input[name=contact]').focus(); return; }
+    if (how === 'email' && !v('email')) { err.textContent = 'Please add your email, or choose text or call.'; f.elements.email.focus(); return; }
+    if (how !== 'email' && !v('phone')) { err.textContent = 'Please add your phone number, or choose email.'; f.elements.phone.focus(); return; }
     btn.disabled = true; btn.textContent = 'Sending…';
     var body = { want: want, name: v('name'), phone: v('phone'), email: v('email'), street: v('street'), city: v('city'), zip: v('zip'),
-      contact: (f.querySelector('input[name=contact]:checked') || {}).value || '', msg: v('msg'), hp: v('hp'), t: Date.now() - t0,
+      contact: how, hear: v('hear'), hearNote: hm.hidden ? '' : v('hearNote'), trk: trk, msg: v('msg'), hp: v('hp'), t: Date.now() - t0,
       from: (/[?&]from=(card|yard|truck|car)/.exec(location.search) || [])[1] || '' };   /* which printed QR brought them (2026-10-19) */
     fetch(API + '?action=a365lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })

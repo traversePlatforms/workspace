@@ -55,6 +55,11 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .form .seg label:has(input:checked) { border-color: var(--accent); background: rgba(47, 93, 44, .08); }
 .form .row.three { display: grid; grid-template-columns: 2fr 1.2fr .8fr; gap: 12px; }
 .form .q-err { color: #a1361b; font-weight: 700; min-height: 1px; margin: 0; }
+.form select { width: 100%; font: inherit; padding: 12px 13px; border: 1.5px solid rgba(22, 32, 28, .22); border-radius: 10px; background: #fff; color: inherit; }
+.form select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.form .opt { font-weight: 400; color: var(--text-soft); }
+.form .hint { font-size: 14px; color: var(--text-soft); margin: -4px 0 0; }
+.form [hidden] { display: none !important; }
 .form .q-done { text-align: center; padding: 28px 8px; }
 .form .q-done b { display: block; font: 800 26px var(--serif); color: var(--accent); margin-bottom: 6px; }
 .form div.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
