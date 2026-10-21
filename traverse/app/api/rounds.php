@@ -4642,6 +4642,9 @@ if ($action === 'myjobs') {
     $from = (new DateTime('today', new DateTimeZone(appTz())))->modify('-14 days')->format('Y-m-d');
     $leads = leadsAll(); $list = [];
     $want = (string) ($_GET['id'] ?? '');   /* a link to one job opens it whatever its date (Fable review 2026-10-14) */
+    /* the admin or the office opening one job by id: that job, whoever's crew it is (2026-10-20, Matthew: opening Jeremy's job said "not on
+       the list any more": the schedule's "Open the job" asked for the opener's own jobs, and the job was Brad's) */
+    if ($want !== '' && desk() && trim((string) ($_GET['who'] ?? '')) === '') { $wj = jobsAll()[$want] ?? null; if ($wj && !$wj['off']) out(['ok' => true, 'who' => (string) $wj['crew'], 'jobs' => [jobShow($wj, $leads)]]); }
     foreach (jobsAll() as $j) if (!$j['off'] && $j['crew'] === $who && ($j['date'] >= $from || $j['id'] === $want)) $list[] = jobShow($j, $leads);
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     out(['ok' => true, 'who' => $who, 'jobs' => $list]);
