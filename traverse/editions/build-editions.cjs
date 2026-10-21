@@ -467,19 +467,9 @@ return [
     console.log(key + ': made ' + E.priv + '/rounds-codes.php (open it to read your admin code)');
   }
 
-  // icons: the edition's fill from the brand kit
+  // icons: the edition's fill from the brand kit, in the shared app-icon design (2026-10-21, Matthew: 'Improve the looks of the mobile app icon across the board')
   const sharp = require(path.join(REPO, 'node_modules', 'sharp'));
-  const icon = (bleed) => {
-    const inner = bleed ? 'translate(13 13) scale(0.594)' : 'translate(8.5 8.5) scale(0.734)';
-    return Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
-      + '<rect width="64" height="64"' + (bleed ? '' : ' rx="14"') + ' fill="' + E.icon + '"/>'
-      + '<g transform="' + inner + '">' + mark(E.iconInk || '#ffffff', E.icon, E.iconInk || '#ffffff').replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</g></svg>');
-  };
-  const dir = path.join(OUT, app);
-  await sharp(icon(false), { density: 1200 }).resize(192, 192).png().toFile(path.join(dir, 'icon-192.png'));
-  await sharp(icon(false), { density: 1200 }).resize(512, 512).png().toFile(path.join(dir, 'icon-512.png'));
-  await sharp(icon(true), { density: 1200 }).resize(512, 512).png().toFile(path.join(dir, 'icon-maskable-512.png'));
-  await sharp(icon(true), { density: 1200 }).resize(180, 180).png().toFile(path.join(dir, 'apple-touch-icon.png'));
+  await require('./app-icon.cjs').writeAppIcons(sharp, path.join(OUT, app), { fill: E.icon, ink: E.iconInk || '#ffffff' });
 
   // upload packs, one per destination (bsdtar writes forward-slash zips; Compress-Archive's backslash paths don't extract on the host)
   const up = path.join(OUT, 'upload', key);

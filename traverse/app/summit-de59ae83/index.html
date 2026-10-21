@@ -8,7 +8,7 @@
    mobile", Profile > Layout > Phone): this page shows itself in a phone-wide frame in the middle of the screen. The frame holds the
    same address, so it is the same app and the same sign-in; inside it the screen really is phone-wide, so every phone rule applies.
    The <plaintext> written after the frame swallows the rest of this outer page unrun (an old, dependable way to stop a page). */
-try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Math.min(screen.width,screen.height)>=600){document.write('<style>html,body{margin:0;height:100%;background:#1b2330}body{display:flex;justify-content:center;align-items:stretch}iframe.phonef{width:430px;max-width:100%;height:100%;border:0;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 20px 60px rgba(0,0,0,.45)}</style><iframe class="phonef" title="App" allow="geolocation; camera; clipboard-write" src="'+location.href.replace(/"/g,'%22')+'"></iframe><plaintext style="display:none">')}}catch(e){}</script>
+try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.phone')];if(FRW&&window.self===window.top&&Math.min(screen.width,screen.height)>=600){document.write('<style>html,body{margin:0;height:100%;background:#1b2330}body{display:flex;justify-content:center;align-items:stretch}iframe.phonef{width:'+FRW+'px;max-width:100%;height:100%;border:0;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 20px 60px rgba(0,0,0,.45)}</style><iframe class="phonef" title="App" allow="geolocation; camera; clipboard-write" src="'+location.href.replace(/"/g,'%22')+'"></iframe><plaintext style="display:none">')}}catch(e){}</script>
 <meta name="robots" content="noindex, nofollow">
 <title>Sixfold Routes</title>
 <!-- home-screen app (2026-10-02): add it once from the browser's share menu and it
@@ -242,6 +242,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .langsw{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:2;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:inherit;font:700 14px var(--sans);cursor:pointer}
   .lookrow > span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
   .lookrow .aseg{display:flex;gap:5px}
+  .lookrow .aseg4{flex-wrap:wrap;justify-content:flex-end}.lookrow .aseg4 button{padding:0 10px}
   .lookrow .aseg button{min-height:38px;border:1px solid var(--line);border-radius:11px;padding:0 13px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
   .lookrow .aseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
   .insthost.ontools:not(:empty){display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:0 0 14px}
@@ -1269,6 +1270,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .dnav .dns .ic{width:16px;height:16px;opacity:.8}
   .dnav .dns input{width:190px;border:0;background:transparent;color:inherit;font:14px var(--sans);outline:none}
   .dnav .dns input::placeholder{color:inherit;opacity:.7}
+  @media (max-width:1400px){.dnav .dnl{gap:2px}.dnav .dnl button{padding:0 8px;font-size:13px}.dnav .dns{padding:0 10px}.dnav .dns input{width:110px}}   /* a tablet sideways or a small laptop: the menu fits (2026-10-21) */
   body.dnav-on .appbar{top:56px}
   body.dnav-on .plan .planbar{top:120px}
   body.dk-on #hdr,body.dk-on #dock{display:none!important}
@@ -1569,6 +1571,7 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .adrep h1{font:800 26px/1.1 var(--sans);color:#2F5D2C;margin:8px 0 2px} .adrep .arsub{color:#5a6858;margin:0 0 10px}
   .adrep h2{font:700 15px var(--sans);color:#2F5D2C;margin:14px 0 6px;padding-bottom:3px;border-bottom:2px solid #E4703A}
   .adrep .arbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 6px;font-size:13px;color:#5a6858}
+  .adrep .arback{background:none;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font:700 14px var(--sans);color:var(--ink);cursor:pointer}.adrep .arback:hover{border-color:var(--accent);color:var(--accent)}
   .adrep .arkpis{display:grid;grid-template-columns:1fr 1fr;gap:10px} .adrep .ark{border:1px solid #d9d1c2;border-radius:10px;padding:8px 12px} .adrep .ark.f{border-left:6px solid #4C7A3F} .adrep .ark.m{border-left:6px solid #E4703A}
   .adrep .ark .t{font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.04em;color:#5a6858} .adrep .ark .n{font:800 26px/1.1 var(--sans);color:#2F5D2C} .adrep .ark.m .n{color:#E4703A} .adrep .ark .l{font-size:12.5px;color:#5a6858}
   .adrep table{width:100%;border-collapse:collapse;font-size:13.5px} .adrep th,.adrep td{padding:4px 6px;border-bottom:1px solid #d9d1c2;text-align:right;vertical-align:top} .adrep th:first-child,.adrep td:first-child{text-align:left} .adrep thead th{background:#2F5D2C;color:#fff}
@@ -2101,7 +2104,8 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .qqcustbody{display:grid;gap:8px}.qqcustq{font:15px var(--sans);padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .qqcustlist{display:grid;gap:8px}.qqcrow{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
   .qqctop{display:grid;gap:1px}.qqctop small{color:var(--soft);font-size:12.5px}
-  .schedv{display:grid;gap:10px;width:min(1100px,calc(100vw - 32px));position:relative;left:50%;transform:translateX(-50%);padding:12px 0}
+  .schedv{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;width:min(1100px,calc(100vw - 32px));margin-left:calc(50% - min(550px,(100vw - 32px) / 2));padding:12px 0}   /* margins, not left + transform: the transformed box ran past the edge and phones zoomed out (2026-10-21) */
+  .schedv .lnk,.sblk .lnk{background:none;border:0;padding:4px 0;font:700 14px var(--sans);color:var(--accent);cursor:pointer;text-align:left}.schedv .lnk:hover,.sblk .lnk:hover{text-decoration:underline}.schedv .lnk.danger,.sblk .lnk.danger{color:var(--bad)}
   .schednav{display:flex;justify-content:space-between;align-items:center;gap:8px}.schednav button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:700 13.5px var(--sans);cursor:pointer}
   .schedonly{display:flex;gap:8px;align-items:center;font-size:14px}.schedonly input{width:18px;height:18px;accent-color:var(--accent)}
   .schedwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
@@ -2110,6 +2114,27 @@ try{if(localStorage.getItem('doorapp.phone')==='1'&&window.self===window.top&&Ma
   .schedt tr.past td,.schedt tr.closed td{color:var(--soft)}.schedt tr.edit{cursor:pointer}.schedt tr.edit:hover td{filter:brightness(.96)}.schedt td.sarea{cursor:pointer}.schedt .stown{padding:0;font:700 13.5px var(--sans)}.schedt td.sarea:hover{text-decoration:underline}
   .schedt tr.sedit td{background:var(--card);border-top:0;white-space:normal}.sedform{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:6px 0}.sedform>b{flex-basis:100%}.sedform label{display:grid;gap:3px;font-size:12.5px;font-weight:700}
   .sedform input,.sedform select{font:14px var(--sans);padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}.sedacts{display:flex;gap:12px;align-items:center}.sedacts .save{width:auto;padding:8px 16px;min-height:0}.sedform .ltrynote,.sedform .err{flex-basis:100%}.schedt tr.dayfirst td{border-top:2px solid var(--soft)}.schedt td.sdate{font-weight:700;white-space:pre-line;vertical-align:top}
+  @media (max-width:700px){
+    .schedv{width:auto;margin-left:0}
+    .schedwrap{overflow:visible;border:0;background:none;border-radius:0}
+    .schedt{min-width:0;display:block;font-size:14px}.schedt thead{display:none}.schedt tbody{display:block}
+    .schedt tr{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:10px 12px;margin:0 0 6px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+    .schedt tr.dayfirst{margin-top:14px}
+    .schedt td,.schedt tr.dayfirst td{display:block;border:0!important;padding:0;white-space:normal;background:none!important}
+    .schedt td:empty{display:none}
+    .schedt td.sdate{flex-basis:100%;font-weight:800;font-size:15px;white-space:pre-line;margin-bottom:4px;padding-bottom:6px;border-bottom:1px solid var(--line)!important}
+    .schedt td:nth-child(2){font-weight:800;min-width:74px}
+    .schedt td:nth-child(3){color:var(--soft);font-size:13px}
+    .schedt td:nth-child(4){font-weight:700;flex:1 1 auto}
+    .schedt td:nth-child(n+5){flex-basis:100%;font-size:13px;color:var(--soft)}
+    .schedt td:nth-child(n+6){flex-basis:auto}
+    .schedt tr.booked{background:#eef6ea}.schedt tr.held{background:#fff6e5}.schedt tr.closed{opacity:.75}
+    .schedt tr.sblocked{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(127,127,127,.08) 6px 12px)}
+    .schedt tr.sedit{border:0;background:none;padding:0}.schedt tr.sedit td{flex-basis:100%}
+    .schedt td[colspan]{flex-basis:100%}
+  }
+  @media (max-width:700px) and (prefers-color-scheme: dark){:root:not([data-theme="light"]) .schedt tr.booked{background:#1d3320}:root:not([data-theme="light"]) .schedt tr.held{background:#3a2e12}}
+  @media (max-width:700px){:root[data-theme="dark"] .schedt tr.booked{background:#1d3320}:root[data-theme="dark"] .schedt tr.held{background:#3a2e12}}
   .qseed button{font-size:12.5px}.qseed button:disabled{opacity:1;cursor:default}
   .qqsrc button{font-size:12.5px}
   .findform{display:flex;align-items:center;gap:8px;cursor:text}.findform input{flex:1;min-width:0;border:0;background:none;font:inherit;color:var(--ink);outline:none}
@@ -3673,12 +3698,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var comp = false; try { comp = framed || (Math.min(screen.width, screen.height) >= 600 && screen.width >= 1100 && !(window.matchMedia && matchMedia('(pointer: coarse)').matches)); } catch (e) {}
     if (comp && !tab) {
       var pm = q('div', 'lookrow'); pm.appendChild(q('span', null, 'Layout'));
-      var pms = q('div', 'aseg');
-      [[false, 'Desktop'], [true, 'Phone']].forEach(function (o) {
-        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(framed === o[0]));
+      var pms = q('div', 'aseg aseg4');
+      var fk = ''; try { fk = framed ? (localStorage.getItem('doorapp.phone') || '') : ''; } catch (e) {}
+      /* a tablet too (2026-10-21, Matthew: "build in a tablet feature like we did with phone"): upright 820 wide, sideways 1180 */
+      [['', 'Desktop'], ['tablet', 'Tablet'], ['tabletw', 'Tablet sideways'], ['1', 'Phone']].forEach(function (o) {
+        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(fk === o[0]));
         b.addEventListener('click', function () {
-          if (framed === o[0]) return;
-          try { if (o[0]) localStorage.setItem('doorapp.phone', '1'); else localStorage.removeItem('doorapp.phone'); } catch (e) {}
+          if (fk === o[0]) return;
+          try { if (o[0]) localStorage.setItem('doorapp.phone', o[0]); else localStorage.removeItem('doorapp.phone'); } catch (e) {}
           try { (framed ? window.top : window).location.reload(); } catch (e) { location.reload(); }
         });
         pms.appendChild(b);
@@ -16384,7 +16411,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       page.textContent = '';
       if (!j || !j.ok) { page.appendChild(q('div', 'msg', (j && j.error) || 'The report needs signal.')); return; }
       var cur = function (n) { return '$' + Number(n || 0).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
-      var bar = q('div', 'arbar noprint'), pb = q('button', 'save', 'Save as PDF'); pb.type = 'button'; pb.addEventListener('click', function () { window.print(); }); bar.appendChild(pb);
+      var bar = q('div', 'arbar noprint'), bk = q('button', 'arback', '\u2039 Back to Stats'), pb = q('button', 'save', 'Save as PDF'); bk.type = pb.type = 'button';
+      bk.addEventListener('click', function () { statsPageView(); }); bar.appendChild(bk);   /* the top menu hides the app bar on a computer (2026-10-21) */
+      pb.addEventListener('click', function () { window.print(); }); bar.appendChild(pb);
       bar.appendChild(q('span', null, 'Spend as typed ' + (j.spendAt ? dayName(isoOf(new Date(j.spendAt * 1000))) : 'from Matthew\u2019s screenshots of 20 Oct') + '. Everything else is live from the app.')); page.appendChild(bar);
       page.appendChild(q('h1', null, 'Instant Form vs Messenger'));
       page.appendChild(q('p', 'arsub', ((CO.a365 && CO.a365.name) || '') + ' \u00b7 Meta ads \u00b7 as of ' + new Date().toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' \u00b7 internal'));
