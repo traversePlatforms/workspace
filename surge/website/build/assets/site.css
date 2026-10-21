@@ -755,6 +755,9 @@ footer .fcol a[href="/book/"]{
   border:1px solid var(--brand-green);letter-spacing:.01em
 }
 footer .fcol a[href="/book/"]:hover{background:var(--brand-green);color:var(--black)}
+/* Apply beside it (2026-10-21, Matthew): the same outlined button, first, since the site is candidate-first */
+footer .fcol a.fapply{display:inline-block;margin:1.1rem .5rem 0 0;padding:.62rem 1.15rem;background:transparent;color:var(--brand-green);font-weight:700;border:1px solid var(--brand-green);letter-spacing:.01em}
+footer .fcol a.fapply:hover{background:var(--brand-green);color:var(--black)}
 /* ---- footer social rail — added 2026-09-11 ------------------------------------
    Not the generic round bubble row. The tiles are square (the site has no
    circles outside the team headshots) and each one sits on a green riser whose

@@ -889,6 +889,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       that disappears on someone else's schedule.
 - [ ] **SG-6 — Get team leaders into reviews and content.** The one-page field guide for
       capturing raw material already exists and has never been handed out.
+- [ ] **SG-7 — Update the website blog every 2 weeks (recurring, Matthew 2026-10-21).** A new or
+      refreshed post on surgeftw.com /blog/ every two weeks, starting from 21 Oct 2026; first due
+      **4 Nov 2026**, then 18 Nov, 2 Dec, and on. Surge rules apply in full: read
+      `surge/brand-voice-company.md` and `surge/brand/notes/RESTRICTED.md` first, research standard
+      and fact-check log, draft only — **publishing the post to the live site still needs his go**
+      (and the site itself is not launched yet; until then a post goes to staging).
 
 ## Cross-cutting
 
@@ -1219,6 +1225,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 | **15 Oct** | Brian Skelton's aeration job (SX-3b) |
 | **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
 | **1 Nov** | Kara's first monthly payment · **19 Nov** first monthly visit |
+| **4 Nov, then every 2 weeks** (18 Nov, 2 Dec, 16 Dec…) | **SG-7 — Surge blog update due.** Remind Matthew; offer a draft post (Surge voice spec + RESTRICTED.md first; draft only). |
 | **early Jan 2027**, then every quarter (Apr, Jul, Oct) | **SX-33 — re-pull the county parcel records** and rebuild the door lists, so a house that sold shows "new owner since" and the old owner's phone, email and notes are set aside (SX-35, built 2026-10-03). Matthew 2026-10-03: quarterly, as a reminder rather than automated. Run the gate (DEPLOY-ROUNDS.md "Refreshing the door lists") |
 
 **⚑ These are written here on purpose.** Session-scheduled reminders do not survive the
