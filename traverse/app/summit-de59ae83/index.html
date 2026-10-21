@@ -2088,7 +2088,14 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .qsteps input{flex:1;min-width:120px;font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .qdetail{display:grid;gap:3px;font-size:13.5px;color:var(--ink)}
   .sqbox{display:grid;gap:8px}.sqbox:empty{display:none}
-  .lpquote{grid-column:1/-1;margin-top:8px}
+  .lpquote{grid-column:1/-1;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:13px 16px;border:0;border-radius:14px;background:var(--accent);color:#fff;text-align:left;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .lpquote span{display:grid;gap:1px}.lpquote b{font:800 16px var(--sans)}.lpquote small{font:600 12.5px var(--sans);opacity:.85}.lpquote i{font-style:normal;font:800 24px/1 var(--sans)}
+  .lpquote:hover{filter:brightness(1.06)}.lpquote:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .qqgo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 12px}
+  .qqgob{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);text-align:left;cursor:pointer}
+  .qqgob span{display:grid;gap:1px}.qqgob b{font:800 15px var(--sans)}.qqgob small{font-size:12px;color:var(--soft)}.qqgob i{font-style:normal;font:800 20px/1 var(--sans);color:var(--soft)}
+  @media (max-width:520px){.qqgo{grid-template-columns:minmax(0,1fr)}}
+  @media (min-width:1100px){body.owide .hpanel.hpsplit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}body.owide .hpanel.hpsplit .hpr{position:sticky;top:12px}body.owide .hpanel.hpsplit .qbox{margin-top:0}}
   .lwho{display:grid;gap:6px;margin:0 0 12px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--card)}
   .lwhotop{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.lwhotop b{font:800 20px var(--sans)}.lwhosrc{font-size:12.5px;color:var(--soft)}
   .lwhomsg{font-size:13.5px;color:var(--soft);font-style:italic}
@@ -4739,7 +4746,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      lands on that person's calendar with an alert and everything they need for it. Admins and the office role book; the people
      ticked "Does walks" in Accounts go. They say how it went from the walk itself, which moves the lead along. */
   /* an Office account that also runs a team (2026-10-20, Nneka): a manager's powers over their own team, everything else the office's */
-  function qqName() { return (S.role === 'office' && S.runsTeam) || (adminView() && !qView()) ? 'Quote builder' : 'Quick quote'; }   /* admins too (2026-10-21, Matthew: 'so i can make quotes like jen does') */   /* Matthew 2026-10-20: "just call it quote builder on her page" */
+  function qqName() { return qView() ? 'Quick quote' : 'Quote builder'; }   /* the full app calls it Quote builder (2026-10-21, Matthew); Jen's quote-only account keeps Quick quote */   /* admins too (2026-10-21, Matthew: 'so i can make quotes like jen does') */   /* Matthew 2026-10-20: "just call it quote builder on her page" */
   function mgrOn() { return S.role === 'manager' || (S.role === 'office' && !!S.runsTeam); }
   function wdOn() { return feat('walkdesk') && (S.role === 'admin' || S.role === 'office'); }
   function walkerOn() { return feat('walkdesk') && !!S.walker; }
@@ -6623,7 +6630,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(lk);
       box.appendChild(askBox(lead, h, E, redraw));
     }
-    box.appendChild(quoteBox(h, lead, E, redraw, quick));   /* the quote generator (2026-10-14): after the questions, since Jen asks first */
+    var qb = quoteBox(h, lead, E, redraw, quick);   /* the quote generator (2026-10-14): after the questions, since Jen asks first */
+    var hl = q('div', 'hpl'); while (box.firstChild) hl.appendChild(box.firstChild);   /* the house on the left, the quote on the right on a computer (2026-10-21) */
+    var hr = q('div', 'hpr'); hr.appendChild(qb); box.appendChild(hl); box.appendChild(hr); box.classList.add('hpsplit');
     return box;
   }
   /* "Check with them": the questions, their answers kept on the lead, compared with ours as they are typed */
@@ -7123,14 +7132,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (quick && S.screen !== 'quickquote') { S.qqInboxOpen = false; S.qqCustOpen = false; }   /* coming to the Quick quote: both lists start folded (2026-10-17) */
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
-    setBar('back', { title: quick ? qqName() : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
+    setBar('back', { title: quick || !qView() ? qqName() : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
+    if (deskWide()) document.body.classList.add('owide');   /* a computer: the house beside the quote (2026-10-21) */
     view.textContent = '';
     if (lead) view.appendChild(leadWhoBox(lead));
     else if (quick) {
       if (S.viewAs) view.appendChild(viewAsBar());
       if (quickCanBook()) { var sch = q('button', 'qqsched', 'Schedule: the days you booked ›'); sch.type = 'button'; sch.addEventListener('click', function () { schedView(); }); view.appendChild(sch); }   /* on the page itself: a phone has no top menu (2026-10-15, Matthew could not find it) */
-      if (quickCanBook()) { view.appendChild(quickInbox()); view.appendChild(quickCustomers()); } view.appendChild(quickWhoBox());   /* Leads to call first (2026-10-16) */
+      if (quickCanBook() && qView()) { view.appendChild(quickInbox()); view.appendChild(quickCustomers()); }
+      else if (quickCanBook()) {   /* the full app: the Pipeline and Customers hold the lists, with everything on them (2026-10-21, Matthew) */
+        var gl = q('div', 'qqgo');
+        [['Leads to follow up', 'The Pipeline, with everything on each lead', function () { S.pipeStage = 'call'; pipelineView(); }], ['Customers', 'Everyone who has booked', function () { customersView(); }]].forEach(function (x) {
+          var b = q('button', 'qqgob'); b.type = 'button'; var t = q('span'); t.appendChild(q('b', null, x[0])); t.appendChild(q('small', null, x[1])); b.appendChild(t); b.appendChild(q('i', null, '\u203a')); b.addEventListener('click', x[2]); gl.appendChild(b);
+        });
+        view.appendChild(gl);
+      }
+      view.appendChild(quickWhoBox());   /* Leads to call first (2026-10-16) */
     }
     var box = q('div', 'search hlook');
     var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'houseq';
@@ -7270,7 +7288,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(pic); box.appendChild(facts);
     var open = leadHouseRow(l); open.classList.add('lpopen'); box.appendChild(open);
     if (CO.a365) {   /* the way in to the questions and the quote was only the address row (Matthew 2026-10-15: "to build a quote you have to click the address?") */
-      var bq = q('button', 'save jbook lpquote', l.quote ? 'Open the quote (' + money0(l.quote.price) + ') ›' : 'Build the quote ›'); bq.type = 'button';
+      var bq = q('button', 'lpquote'); bq.type = 'button';   /* Start the quote (2026-10-21, Matthew: "in a nicer button that looks better") */
+      var bqt = q('span'); bqt.appendChild(q('b', null, l.quote ? 'Open the quote \u00b7 ' + money0(l.quote.price) : 'Start the quote')); bqt.appendChild(q('small', null, l.quote ? 'Change it, send it or book it' : 'Price this lawn in the Quote builder')); bq.appendChild(bqt); bq.appendChild(q('i', null, '\u203a'));
       bq.addEventListener('click', function () { houseLookupView(l, l.house); }); box.appendChild(bq);
     }
     var go = function () {
@@ -7530,7 +7549,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var fk = ''; try { fk = localStorage.getItem('fertBrand') || ''; } catch (e) {}
       st.fert = fertOf(P, fk) ? fertOf(P, fk).k : '';
       var fRow = q('div', 'dwlen qfert'); if ((P.ferts || []).length < 2) fRow.hidden = true;   /* one fertilizer (2026-10-21) */
-      { var sdh = q('div', 'dwsub', 'Seed today'), sdr = q('div', 'dwlen qseed'), sdb = q('button', null, P.seedName || 'Seed'); sdb.type = 'button'; sdb.setAttribute('aria-pressed', 'true'); sdb.disabled = true; sdr.appendChild(sdb); box.appendChild(sdh); box.appendChild(sdr); }
+      { var sdh = q('div', 'dwsub', 'Seed today'), sdr = q('div', 'dwlen qseed'), sdb = q('button', null, P.seedName || 'Seed'); sdb.type = 'button'; sdb.setAttribute('aria-pressed', 'true'); sdb.disabled = true; sdr.appendChild(sdb); if (P.seedName) { box.appendChild(sdh); box.appendChild(sdr); } }   /* one unnamed seed: nothing to show (2026-10-21) */
       if ((P.ferts || []).length > 1) {
         P.ferts.forEach(function (x) {
           var b = q('button', null, x.name); b.type = 'button'; b.setAttribute('aria-pressed', String(st.fert === x.k));
@@ -12023,7 +12042,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
     if (S.leadAdd) holder.appendChild(leadForm());
     if (S.metaPrev) holder.appendChild(metaPreview());
-    if (!asOffice()) holder.appendChild(walksUp(S.qlist || []));   /* the office sees booked walks on its home */
+    /* the walks coming up list is gone from the Pipeline (2026-10-21, Matthew); booked walks show on the calendar and the office home */
     if (S.role === 'admin' && !asOffice() && S.cucheck && S.cucheck.items && S.cucheck.items.length) holder.appendChild(cuCheckBox(S.cucheck));
     /* stages */
     var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + (asOffice() ? OFFICE_ST : PIPE_ST).length + ',1fr)';
