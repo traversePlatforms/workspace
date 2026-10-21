@@ -2195,11 +2195,15 @@ function a365Norm(string $a): string {
     $out = []; foreach ($w as $x) { if (in_array($x, ['UNIT', 'APT', 'STE', 'SUITE', '#'], true)) break; $out[] = SEARCH_SYN[$x] ?? $x; }
     return implode(' ', $out);
 }
+/** an address without its direction words (N, S, E, W...): the door lists write "11663 SETTLERS DR" where people say "11663 N Settlers" (2026-10-21) */
+function a365NoDir(string $norm): string { $w = explode(' ', $norm); return implode(' ', array_values(array_filter($w, fn($x, $i) => $i === 0 || !in_array($x, ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH', 'EAST', 'WEST'], true), ARRAY_FILTER_USE_BOTH))); }
 /** the one house on our lists at this street address (the city they gave breaks a tie); null when none or unsure */
 function a365Match(string $street, string $city): ?array {
     $want = a365Norm($street); if (!preg_match('/^\d+ \S+/', $want)) return null;
     $hits = [];
     foreach (searchIndex() as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365Norm($p[4]) === $want) $hits[] = $p; }
+    if (!$hits) { $wd = a365NoDir($want); foreach (searchIndex() as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365NoDir(a365Norm($p[4])) === $wd) $hits[] = $p; } }   /* with or without N/S/E/W (2026-10-21) */
+    $listed = array_values(array_filter($hits, fn($p) => ($p[9] ?? '') !== 'L')); if ($listed) $hits = $listed;   /* the door-list house over a pulled-in copy of it */
     if (count($hits) > 1 && $city !== '') { $c = strtoupper(trim($city)); $hits = array_values(array_filter($hits, fn($p) => str_contains(strtoupper($p[1]), $c) || str_contains($c, strtoupper($p[1])))); }
     return count($hits) === 1 ? ['region' => $hits[0][0], 'door' => $hits[0][3], 'address' => $hits[0][4], 'town' => $hits[0][1]] : null;
 }
@@ -8323,6 +8327,11 @@ if ($action === 'search') {
         }
         if ($typed && count($cut) < count($words)) $hits = $find($cut);
     }
+    /* still nothing: without N / S / E / W (2026-10-21: "11663 N Settlers" against the list's "11663 SETTLERS DR") */
+    if (!$hits) { $nd = array_values(array_filter($words, fn($w, $i) => $i === 0 || !in_array($w, ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH', 'EAST', 'WEST'], true), ARRAY_FILTER_USE_BOTH)); if (count($nd) < count($words) && array_filter($nd, fn($x) => strlen($x) >= 3 && !ctype_digit($x) && !in_array($x, SEARCH_TYPES, true))) $hits = $find($nd); }
+    /* a pulled-in copy of a house that is on a door list stays out (the door-list house has the trees, the right lot and the history) */
+    $onList = []; foreach ($hits as $h0) if (empty($h0['lookup'])) $onList[strtoupper($h0['address']) . '|' . strtolower($h0['region'])] = 1;
+    $hits = array_values(array_filter($hits, fn($h0) => empty($h0['lookup']) || !isset($onList[strtoupper($h0['address']) . '|' . strtolower(str_replace(' ', '-', $h0['town']))])));
     usort($hits, fn($x, $y) => [$x['rank'], $x['address']] <=> [$y['rank'], $y['address']]);
     $more = count($hits) > 25;
     $hits = array_map(function ($h) { unset($h['rank']); return $h; }, array_slice($hits, 0, 25));
