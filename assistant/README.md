@@ -4,6 +4,8 @@ Matthew's own tool for both personal and business clerical work. It belongs to M
 
 **First part: email.** Every 10 minutes it checks each connected Gmail inbox and has Claude sort each new email: needs a reply, to do, calendar, waiting on others, for your information, receipt, newsletter, offer, or looks like spam. Where a reply is wanted, it writes a draft into that inbox's Gmail Drafts. **It never sends on its own.** Matthew reads each email in full in the assistant and replies there (2026-10-22): he can have Claude write or rewrite the reply, save it as a Gmail draft, or press **Send**, which asks "Send this reply to … from …?" first and sends from that inbox in the same thread.
 
+**Ask (2026-10-22).** A chat with the assistant, from the **Ask** button in the top bar. Claude can see the waiting list, search every inbox (Gmail search), read an email, write a reply as a Gmail draft, and take an email off the list. It has **no send tool**: a reply it writes comes with a **Review and send** button that opens the same reply sheet, so sending is always Matthew's Send plus yes. Code in `private/lib/chat.php`; the conversation is kept in `data/chat.json` (last 40 turns, 12 sent each time); **New chat** clears it.
+
 - Page: `https://traverseplatforms.com/a-e018bb82/`. Password only, after a one-time setup code.
 - Inboxes (connected 2026-10-22): personal Gmail, Traverse, contact@sixfoldcolorado.com (his alone) and Surge (his choice, after I flagged it as employer mail).
 - Claude: `claude-opus-5-5` through the official PHP SDK (`anthropic-ai/sdk`), with server-side fallbacks on. Sorting runs at effort `low` with a JSON schema; drafts run at `medium`.
@@ -17,7 +19,7 @@ Matthew's own tool for both personal and business clerical work. It belongs to M
 | SDK | `server/private/composer.json` | `assistant-private/vendor/` (`composer install` on the server) |
 | Data | never in the repo | `assistant-private/data/` (0700; config.json 0600) |
 
-Data files: `config.json` holds the password hash, the Anthropic key, the Google client and the settings. `accounts.json` holds each inbox's refresh token. `items.json` holds each email's summary for 21 days; the email itself stays in Gmail. `seen.json` lists message ids already sorted. `assistant.log` and `cron.log` are the logs.
+Data files: `config.json` holds the password hash, the Anthropic key, the Google client and the settings. `accounts.json` holds each inbox's refresh token. `items.json` holds each email's summary for 21 days; the email itself stays in Gmail. `chat.json` holds the Ask conversation. `seen.json` lists message ids already sorted. `assistant.log` and `cron.log` are the logs.
 
 **The 10-minute check.** The host has no `crontab` command. The check runs from the Facebook leads job (`traverse/app/tools/meta-leads.php`, every 5 minutes), every other round, in the background. It can move to its own job in SiteGround Site Tools later.
 

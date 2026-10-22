@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -123,6 +123,15 @@ if ($action === 'savedraft' || $action === 'send') {
     alog('reply sent', ['inbox' => $it['acct'], 'to' => addrOf($m['replyTo'] !== '' ? $m['replyTo'] : $m['from']), 'subject' => mb_substr($m['subject'], 0, 80)]);
     out(['ok' => true]);
 }
+/* the chat (2026-10-22): the conversation so far, a new message, or a fresh start */
+if ($action === 'chatlog') out(['ok' => true, 'turns' => jget('chat.json')['turns'] ?? []]);
+if ($action === 'chat') {
+    @set_time_limit(240);
+    $text = trim((string) ($body['text'] ?? ''));
+    if ($text === '' || mb_strlen($text) > 4000) out(['ok' => false, 'error' => $text === '' ? 'Say something first.' : 'That is too long for one message.']);
+    out(chatTurn($text));
+}
+if ($action === 'chatclear') { jput('chat.json', ['turns' => []]); out(['ok' => true]); }
 if ($action === 'done') {
     $key = (string) ($body['key'] ?? '');
     jedit('items.json', function ($all) use ($key) { if (isset($all[$key])) $all[$key]['status'] = 'done'; return $all; });

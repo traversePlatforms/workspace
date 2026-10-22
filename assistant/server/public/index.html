@@ -140,6 +140,25 @@
   .rnote input{flex:1;min-width:200px}
   .racts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .racts .small{flex:1;min-width:160px}
+  /* talking to the assistant (2026-10-22): a drawer on a computer, the whole screen on a phone */
+  @media (max-width:520px){.top .brand b{display:none}}
+  .chatbg{position:fixed;inset:0;z-index:19;background:rgba(10,16,28,.35);display:flex;justify-content:flex-end}
+  .chat{background:var(--bg);width:100%;max-width:560px;height:100%;display:flex;flex-direction:column;border-top:4px solid var(--flag)}
+  @media (min-width:600px){.chat{border-top:0;border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(0,0,0,.25)}}
+  .chat .shhead .shtitle{flex:1}
+  .chlog{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .msg{max-width:88%;padding:10px 13px;border-radius:14px;white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.5}
+  .msg.me{align-self:flex-end;background:var(--bar);color:var(--bar-ink);border-bottom-right-radius:4px}
+  .msg.ai{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.wait{color:var(--soft);font-style:italic}
+  .msg.bad{background:var(--hot-tint);color:var(--hot);border-color:transparent}
+  .msg .acts{margin-top:10px}
+  .chintro{color:var(--soft);display:grid;gap:10px;margin:auto 0 0}
+  .chintro b{color:var(--ink);font:700 17px var(--head)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips button{border-radius:999px;font-size:13.5px;font-weight:600}
+  .chform{display:flex;gap:8px;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--card)}
+  .chform textarea{min-height:46px;max-height:160px;resize:none;flex:1}
   .sign{max-width:380px;margin:12vh auto 0;padding:0 16px}
   .sign .panel{padding:22px}
   .sign .brand{margin:0 0 16px;color:var(--bar);--hole:var(--bg)}
@@ -162,7 +181,8 @@
     news: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/>', promo: '<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
     shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 8v5M12 16v.01"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
     refresh: '<path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/>', open: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>',
-    pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>', check: '<path d="M5 12l5 5 9-10"/>', back: '<path d="M15 6l-6 6 6 6"/>', arrow: '<path d="M9 6l6 6-6 6"/>'
+    pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>', check: '<path d="M5 12l5 5 9-10"/>', back: '<path d="M15 6l-6 6 6 6"/>', arrow: '<path d="M9 6l6 6-6 6"/>',
+    chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>', send: '<path d="M4 12l16-8-6 16-2.5-6.5z"/>', plus: '<path d="M12 5v14M5 12h14"/>'
   };
   function ico(n) { var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', 'ic'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = I[n]; return s; }
   var CAT = [['needs_reply', 'Needs a reply', 'reply'], ['action', 'To do', 'todo'], ['calendar', 'Calendar', 'cal'], ['spam_risk', 'Looks like a scam', 'shield'], ['waiting', 'Waiting on others', 'wait'], ['fyi', 'For your information', 'fyi'],
@@ -220,6 +240,7 @@
         api('check', {}).then(function (r) { if (!r.ok) { flash = ['bad', r.error || 'The check did not run.']; draw(); return; } flash = ['ok', checkSaid(r)]; home(); }, function () { chk.disabled = false; chk.lastChild.textContent = 'Check now'; });
       });
       if (j.setup.anthropic && j.accounts.length) inn.appendChild(chk);
+      if (j.setup.anthropic && j.accounts.length) { var ask = btn('Ask', 'chat'); ask.title = 'Talk to your assistant'; ask.addEventListener('click', openChat); inn.appendChild(ask); }
       var gs = btn(null, 'gear', 'iconbtn'); gs.title = 'Settings and inboxes'; gs.setAttribute('aria-label', 'Settings and inboxes'); gs.addEventListener('click', function () { S.view = 'settings'; draw(); }); inn.appendChild(gs);
     }
     return top;
@@ -314,7 +335,7 @@
   }
   /* the email in full, with a reply box: Claude can write it, it can be saved as a Gmail draft, and Send (after a yes) sends it from
      that inbox in the same thread. The email's text is shown as text, never as HTML. */
-  function openSheet(i, a, focusReply) {
+  function openSheet(i, a, focusReply, onSent) {
     var k = i.acct + ':' + i.id, old = document.getElementById('sheet'); if (old) old.remove();
     var bg = el('div', 'sheetbg'); bg.id = 'sheet'; bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true');
     var sh = el('div', 'sheet'); sh.style.setProperty('--c', colorOf(a)); bg.appendChild(sh);
@@ -322,7 +343,7 @@
     var ht = el('div', 'shtitle'); ht.appendChild(el('b', null, i.subject)); var mt = el('span', 'shmeta'); var d = el('span', 'dot'); d.style.setProperty('--c', colorOf(a)); mt.appendChild(d); mt.appendChild(document.createTextNode((a ? a.label : i.acct) + ' · ' + ago(i.date))); ht.appendChild(mt); hd.appendChild(ht);
     sh.appendChild(hd);
     var body = el('div', 'shbody'); body.appendChild(el('p', 'muted', 'Opening the email…')); sh.appendChild(body);
-    var dirty = false, close = function () { if (dirty && !confirm('Close without saving your reply?')) return; bg.remove(); document.removeEventListener('keydown', esc); document.body.style.overflow = ''; };
+    var dirty = false, close = function () { if (dirty && !confirm('Close without saving your reply?')) return; bg.remove(); document.removeEventListener('keydown', esc); document.body.style.overflow = document.getElementById('chat') ? 'hidden' : ''; };
     var esc = function (e) { if (e.key === 'Escape') close(); };
     x.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); }); document.addEventListener('keydown', esc);
     document.body.appendChild(bg); document.body.style.overflow = 'hidden';
@@ -359,10 +380,76 @@
           busy(false); if (!r.ok) { msg.textContent = r.error; return; }
           dirty = false; close(); flash = ['ok', 'Sent to ' + m.replyTo + '. It is in ' + (a ? a.label : 'that inbox') + '’s Gmail Sent.'];
           S.data.items = S.data.items.filter(function (y) { return y.acct + ':' + y.id !== k; }); draw();
+          if (onSent) onSent(m.replyTo);
         }, function () { busy(false); msg.textContent = 'No connection: not sent.'; });
       });
       if (focusReply) setTimeout(function () { ta.scrollIntoView({ block: 'center' }); ta.focus(); }, 60);
     }, function () { body.textContent = 'No connection.'; });
+  }
+  /* talking to the assistant (2026-10-22): Claude can look through the inboxes, read an email, write a reply as a Gmail draft and take
+     things off the list. It cannot send: a reply it writes comes with Review and send, which opens the reply sheet above. */
+  function said(box, text) {   /* Claude's answer as text, with **bold** kept; nothing in it is run as HTML */
+    String(text).split(/\*\*([^*\n]+)\*\*/).forEach(function (part, ix) { box.appendChild(ix % 2 ? el('b', null, part) : document.createTextNode(part)); });
+  }
+  function openChat() {
+    if (document.getElementById('chat')) return;
+    var bg = el('div', 'chatbg'); bg.id = 'chat'; bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true'); bg.setAttribute('aria-label', 'Talk to your assistant');
+    var ch = el('div', 'chat'); bg.appendChild(ch);
+    var hd = el('div', 'shhead'), x = btn(null, 'back', 'iconbtn'); x.setAttribute('aria-label', 'Close'); hd.appendChild(x);
+    var ht = el('div', 'shtitle'); ht.appendChild(el('b', null, 'Ask your assistant')); ht.appendChild(el('span', 'shmeta', 'Looks through all your inboxes. Never sends on its own.')); hd.appendChild(ht);
+    var fresh = btn('New chat', 'plus'); fresh.className = 'small'; hd.appendChild(fresh); ch.appendChild(hd);
+    var log = el('div', 'chlog'); ch.appendChild(log);
+    var f = el('form', 'chform'), ta = el('textarea'); ta.rows = 1; ta.placeholder = 'Ask about your email, or tell it what to do'; ta.setAttribute('aria-label', 'Your message');
+    var go = btn(null, 'send', 'go iconbtn'); go.type = 'submit'; go.setAttribute('aria-label', 'Send to the assistant'); f.appendChild(ta); f.appendChild(go); ch.appendChild(f);
+    var busy = false, byEmail = {}; S.data.accounts.forEach(function (a) { byEmail[a.email] = a; });
+    var close = function () { if (document.getElementById('sheet')) return; bg.remove(); document.removeEventListener('keydown', esc); document.body.style.overflow = ''; home(); };
+    var esc = function (e) { if (e.key === 'Escape') close(); };
+    x.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); }); document.addEventListener('keydown', esc);
+    var bottom = function () { log.scrollTop = log.scrollHeight; };
+    var intro = function () {
+      var b = el('div', 'chintro'); b.appendChild(el('b', null, 'What can I help with?'));
+      b.appendChild(el('div', null, 'I can find emails in any inbox, tell you what is waiting, read one through, and write a reply for you to check. You press Send yourself.'));
+      var c = el('div', 'chips');
+      ['What needs a reply today?', 'Anything from Jen this week?', 'Write a reply to the newest email that needs one'].forEach(function (s) { var sb = btn(s); sb.addEventListener('click', function () { ask(s); }); c.appendChild(sb); });
+      b.appendChild(c); log.appendChild(b);
+    };
+    var bubble = function (t) {
+      var m = el('div', 'msg ' + (t.role === 'user' ? 'me' : 'ai')); if (t.role === 'user') m.textContent = t.text; else said(m, t.text);
+      if (t.actions && t.actions.length) {
+        var acts = el('div', 'acts');
+        t.actions.forEach(function (ac) {
+          if (ac.type !== 'review' || !ac.item) return;
+          var rb = btn(ac.label, 'reply', 'go');
+          rb.addEventListener('click', function () { openSheet(ac.item, byEmail[ac.item.acct], true, function (to) { rb.disabled = true; rb.lastChild.textContent = 'Sent to ' + to; }); });
+          acts.appendChild(rb);
+        });
+        if (acts.childNodes.length) m.appendChild(acts);
+      }
+      log.appendChild(m); return m;
+    };
+    var ask = function (text) {
+      text = String(text || '').trim(); if (!text || busy) return;
+      var iv = log.querySelector('.chintro'); if (iv) iv.remove();
+      bubble({ role: 'user', text: text }); ta.value = ''; ta.style.height = '';
+      var w = el('div', 'msg ai wait', 'Looking…'); log.appendChild(w); bottom();
+      busy = true; go.disabled = true;
+      api('chat', { text: text }).then(function (r) {
+        busy = false; go.disabled = false; w.remove();
+        if (!r.ok) { var e = bubble({ role: 'assistant', text: r.error || 'No answer came back.' }); e.classList.add('bad'); bottom(); return; }
+        bubble({ role: 'assistant', text: r.reply, actions: r.actions }); bottom(); ta.focus();
+      }, function () { busy = false; go.disabled = false; w.textContent = 'No connection. Try again.'; w.classList.remove('wait'); w.classList.add('bad'); });
+    };
+    f.addEventListener('submit', function (e) { e.preventDefault(); ask(ta.value); });
+    ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && window.matchMedia('(pointer:fine)').matches) { e.preventDefault(); ask(ta.value); } });
+    ta.addEventListener('input', function () { ta.style.height = ''; ta.style.height = Math.min(ta.scrollHeight + 2, 160) + 'px'; });
+    fresh.addEventListener('click', function () { if (busy) return; api('chatclear', {}).then(function () { log.textContent = ''; intro(); ta.focus(); }); });
+    document.body.appendChild(bg); document.body.style.overflow = 'hidden';
+    log.appendChild(el('div', 'msg ai wait', 'Opening…'));
+    api('chatlog').then(function (r) {
+      log.textContent = '';
+      if (!r.ok || !r.turns || !r.turns.length) intro(); else r.turns.forEach(bubble);
+      bottom(); ta.focus();
+    }, function () { log.textContent = ''; intro(); });
   }
   function settings() {
     var j = S.data, wrap = el('div');
