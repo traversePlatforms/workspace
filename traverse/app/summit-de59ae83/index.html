@@ -2077,9 +2077,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hask .save{min-height:46px;border:0;border-radius:12px;background:var(--ink);color:var(--card);font:700 15px var(--sans);cursor:pointer}
   .hcheck{margin-top:6px;display:grid;gap:6px}.hcheck input{font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink)}
   /* the 365 office (2026-10-14): its colours, its home, the two-pane Pipeline */
-  body.a365{--bar:#21451f;--bar-soft:#b9cfb3;--ember:#4c9a3f;--ember-ink:#2e5e2c;--on-ember:#fff;--accent:#2e5e2c;--booked:#2e7a3c;--go:#2e5e2c;--moss-ink:#2e5e2c}
-  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317;--ember-ink:#9ccc8c;--moss-ink:#9ccc8c;--go:#7fc195;--on-go:#0a1a10;--ember:#5aa84b;--on-ember:#0a1a10}}   /* 2026-10-15: every green readable on dark (buttons, the price, the lines) */
-  :root[data-theme="dark"] body.a365{--accent:#9ccc8c;--booked:#86c47a;--bar:#173317;--ember-ink:#9ccc8c;--moss-ink:#9ccc8c;--go:#7fc195;--on-go:#0a1a10;--ember:#5aa84b;--on-ember:#0a1a10}
+  /* body.a365 (2026-10-15) gave the office the 365 greens inside the dark Sixfold app; the whole app is Sixfold 365 now, and in an edition it painted an office account green (TR-29, 2026-10-22), so it is gone */
   @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .schedt tr.booked td{background:#1d3320}:root:not([data-theme="light"]) .schedt tr.held td{background:#3a2e12}}:root[data-theme="dark"] .schedt tr.booked td{background:#1d3320}:root[data-theme="dark"] .schedt tr.held td{background:#3a2e12}   /* schedule rows on dark (2026-10-15) */
   .a365mk{width:38px;height:38px;display:block;border-radius:50%}.a365mk.dn{width:30px;height:30px}
   body.owide .wrap{max-width:1240px}
@@ -2323,7 +2321,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .ui2 .choose .hero .hs div:last-child b{color:var(--act,var(--ember))}.ui2 .choose .hero .hs div:last-child span{color:var(--soft)}
   .choose .tile,.ui2 .choose .tile{border-radius:16px}
   .choose .tile b{font:700 18px/1.2 var(--serif)}
-  .ui2 .choose .tile .ti{background:var(--bar)}
+  .ui2 .choose .tile .ti{background:var(--tile-bg,var(--bar));color:var(--tile-ink,var(--ember))}   /* --tile-bg: an edition's own colour on its icon tiles (TR-29) */
   .choose .tgrp,h2{letter-spacing:.08em}
   .ohero{border-bottom:5px solid var(--strip,transparent);border-radius:20px}
   .ohi{font:800 30px/1.12 var(--serif)}
@@ -7835,14 +7833,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* ---- the 365 office (2026-10-14, Matthew: Jen's screens in 365's colours, her own home, no doors or stats, and a Pipeline that
      uses a computer's width) ---- */
-  function a365Brand() { var on = asOffice() || qView(); document.body.classList.toggle('a365', on); return on; }
+  function a365Brand() { var on = asOffice() || qView(); document.body.classList.remove('a365'); return on; }   /* no palette of its own any more (2026-10-22) */
   function a365Mark(cls) { var i = q('img', cls || 'a365mk'); i.src = 'a365-badge.png'; i.alt = ''; return i; }
   /* the office home: find a house, who to contact next, what is booked with Brad */
   function officeHome() {
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools'; S.inOffice = false;
     foot.hidden = true; setDock(null);
-    setBar('tools', { title: (CO.a365 && CO.a365.name) || '365 Aeration', sub: 'Lead desk', avatar: true });
+    setBar('tools', { title: (CO.a365 && CO.a365.name) || CO.short || CO.name || 'Lead desk', sub: 'Lead desk', avatar: true });   /* an edition's office: its own name, not 365's (TR-29, 2026-10-22) */
     document.body.classList.add('owide'); if (deskWide()) document.body.classList.add('dk-top');   /* a computer: the top bar is enough */
     view.textContent = '';
     var box = q('div', 'ohome');
@@ -8233,7 +8231,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the price list, for an admin: every number the quote uses, with what it does */
   function a365PricingView() {
     hideToast(); S.signin = null; S.screen = 'pricing'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Pricing', sub: '365 Aeration quotes', back: chooseView, backLabel: 'Home' });
+    setBar('back', { title: 'Pricing', sub: ((CO.a365 && CO.a365.name) || CO.short || 'Our') + ' quotes', back: chooseView, backLabel: 'Home' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     loadPricing(function (P) {

@@ -204,8 +204,12 @@ const mark = (stroke, hole, end) => '<svg viewBox="0 0 64 64" aria-hidden="true"
   + '<circle cx="53" cy="17" r="8" fill="' + end + '"/></svg>';
 
 /* ------------------------------------------------------------------ the page */
+/* the face lift on the Traverse system (TR-29, 2026-10-22; mock-up claude.ai/artifact/Ak9Yhajc2ZKzUmyTtakU1D, Editions row): one navy bar and
+   page for all five, the edition's own colour on the header strip and the icon tiles (E.icon), flag-orange action buttons */
+const TRAV_FACE = { bar: '#13294b', deep: '#0c1c35', key: '#1e3a64', keyDown: '#284a7a', barSoft: '#c9d5e6', bg: '#f4f6f9', line: '#dce2ea', sunk: '#e9edf3',
+  card1: '#1e3a64', appbar: '#183258', tile: '#244677', dBar: '#0f1f39', dBg: '#0b1220', dCard: '#131d2e', dLine: '#24324a', dSunk: '#0e1726' };
 function page(E) {
-  const c = E.c;
+  const c = Object.assign({}, E.c, TRAV_FACE);   /* the edition keeps its accent, moss and dark accent; the bar and page are the kit's */
   let html = fs.readFileSync(path.join(APP, 'index.html'), 'utf8');
 
   // the API and the phone's saved state
@@ -253,7 +257,7 @@ function page(E) {
 
   // the edition's tokens, after the app's own (same selectors, later wins); company.json colours still win over these
   const dark = `--bg:${c.dBg}; --card:${c.dCard}; --ink:#e8edf5; --soft:#9aa8bc; --line:${c.dLine}; --sunk:${c.dSunk};
-      --bar:${c.dBar};
+      --bar:${c.dBar}; --bar-soft:#c9d5e6; --act:#ff7a45; --on-act:#0b1220;
       --ember:${c.dEmber || '#ff7a45'}; --ember-ink:${c.dEmberInk || '#ff7a45'}; --on-ember:${c.dOnEmber || '#0b1220'}; --moss-ink:${c.dAccent};
       --go:#6fcf9b; --on-go:#06140c; --go-tint:#133324;
       --later:#e8b04f; --later-tint:#3a2c10; --miss:#a7b3c4; --miss-tint:#1c2638; --bad:#f0786a;
@@ -271,6 +275,7 @@ function page(E) {
     --go:#1f7a4d; --on-go:#ffffff; --go-tint:#dcefe5;
     --later:#8a5a00; --later-tint:#f7ead0; --miss:#566476; --miss-tint:#e6eaf0; --bad:#b42318;
     --booked:#1f7a4d; --accent:${c.accent};
+    --act:#d6400c; --on-act:#ffffff; --strip:${E.icon}; --mark-ink:#ffffff; --tile-bg:${E.icon}; --tile-ink:${E.iconInk || '#ffffff'};
     --toast:#0f1b2d; --toast-ink:#ffffff;
     --shadow:0 1px 2px rgba(15,27,45,.06), 0 8px 22px -12px rgba(15,27,45,.24);
     --signin:${c.bar}; --signin-deep:${c.deep}; --signin-ink:#ffffff; --signin-soft:${c.barSoft}; --key:${c.key}; --key-down:${c.keyDown};
@@ -297,6 +302,8 @@ function page(E) {
   // a client must never find Sixfold in its page source (2026-10-12: a Spanish dictionary key slipped through)
   const left = min.match(/.{0,40}Sixfold.{0,20}/g);
   if (left) throw new Error("Sixfold is left in the page: " + left.join(" | "));
+  const left365 = min.match(/.{0,40}365 Aeration.{0,20}/g);   /* nor 365's name (TR-29, 2026-10-22: an office header fell back to it) */
+  if (left365) throw new Error("365 Aeration is left in the page: " + left365.join(" | "));
   return min;
 }
 
