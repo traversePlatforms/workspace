@@ -1,13 +1,13 @@
 {
-  "name": "Sixfold Routes",
-  "short_name": "Routes",
-  "description": "Sixfold routes and field tools.",
+  "name": "Sixfold 365",
+  "short_name": "Sixfold 365",
+  "description": "Sixfold 365: doors, leads, quotes and jobs.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0E1512",
-  "theme_color": "#1F2A25",
+  "background_color": "#2F5D2C",
+  "theme_color": "#2F5D2C",
   "icons": [
     {
       "src": "icon-192.png",

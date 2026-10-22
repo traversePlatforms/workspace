@@ -222,7 +222,7 @@ function page(E) {
   html = rep(html, '"Sixfold Routes":"Sixfold Rutas",', '', 1, 'Spanish title key');
   html = rep(html, '<title>Sixfold Routes</title>', '<title>' + E.name + '</title>', 1, 'title');
   // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
-  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Routes">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
+  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
   html = rep(html, "document.title = c.short ? c.short + ' Routes' : 'Routes';   /* 2026-10-12 (Matthew): Sixfold Routes, not Door rounds */",
     "document.title = c.name ? '" + E.name + " — ' + c.name : '" + E.name + "';", 1, 'doc title');
   html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Doors',", 1, 'tile');
@@ -232,16 +232,16 @@ function page(E) {
   html = rep(html, "  var QKEY = ", "  var TV_MARK = '" + mark('currentColor', 'var(--signin)', 'var(--ember)') + "';\n  var QKEY = ", 1, 'mark const');
 
   // colours hard-coded outside the tokens
-  html = rep(html, '<meta name="theme-color" content="#1F2A25">', '<meta name="theme-color" content="' + c.bar + '">', 1, 'theme-color');
+  html = rep(html, '<meta name="theme-color" content="#2F5D2C">', '<meta name="theme-color" content="' + c.bar + '">', 1, 'theme-color');
   html = rep(html, 'linear-gradient(160deg,#2E3F37,#16201C);color:#EDE7DC', 'linear-gradient(160deg,' + c.card1 + ',' + c.bar + ');color:#ffffff', 1, 'addinfo');
   html = rep(html, "['#E4703A', '#F2A35E', '#8AA07A', '#EDE7DC', '#B84C15']", "['#d6400c', '#f2a900', '" + c.accent + "', '#ffffff', '" + c.bar + "']", 1, 'confetti');
   html = rep(html, "fillColor: '#E4703A'", "fillColor: '#d6400c'", undefined, 'map pin');   // every pin (2026-10-19: the lot preview has its own)
   html = rep(html, "color: '#16201C', weight: 3", "color: '#0f1b2d', weight: 3", 1, 'map ring');
   html = rep(html, '.legend i.c{background:transparent;border:2.5px solid #16201C', '.legend i.c{background:transparent;border:2.5px solid #0f1b2d', 1, 'legend');
   // Sixfold's dark greens, hard-coded in the bar, card and tile gradients
-  html = rep(html, '#2B3B34', c.card1, 4, 'card gradients');
-  html = rep(html, '#26342D', c.appbar, 1, 'appbar gradient');
-  html = rep(html, '#33463D', c.tile, 1, 'tile gradient');
+  html = rep(html, '#3A6B36', c.card1, 4, 'card gradients');
+  html = rep(html, '#2A5427', c.appbar, 1, 'appbar gradient');
+  html = rep(html, '#447A40', c.tile, 1, 'tile gradient');
 
   // the sign-in background: Sixfold's contour lines become a survey grid
   html = html.replace(/  :root\{--topo:url\("data:image\/svg\+xml,[^"]*"\)\}/, () => {

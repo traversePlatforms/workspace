@@ -2505,7 +2505,7 @@ function a365Mail(string $to, string $subject, string $text, string $html): arra
     $bcc = (string) ($c['bcc'] ?? ''); if ($bcc !== '' && filter_var($bcc, FILTER_VALIDATE_EMAIL) && strcasecmp($bcc, $to) !== 0) { $w('RCPT TO:<' . $bcc . '>'); $read(); }
     $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
     $eol = "\r\n"; $bd = 'a3' . bin2hex(random_bytes(8));
-    $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) ($c['from_name'] ?? '365 Aeration & Seeding')) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
+    $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) ($c['from_name'] ?? (company()['a365']['name'] ?? '365 Aeration & Seeding'))) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
           'Message-ID: <' . bin2hex(random_bytes(12)) . '@365aeration.com>', 'MIME-Version: 1.0', 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
     $payload = implode($eol, $h) . $eol . $eol
         . '--' . $bd . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($text), 76, $eol)
