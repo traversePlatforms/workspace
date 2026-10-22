@@ -43,6 +43,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 .pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--chip);white-space:nowrap}
 .pill.s-signed{background:#d9f0e2;color:#1d6b3f}.pill.s-proposal,.pill.s-tour,.pill.s-toured{background:#e6eefc;color:#2b4f8f}.pill.s-no,.pill.s-notnow{color:var(--soft)}
 @media (prefers-color-scheme:dark){.pill.s-signed{background:#1f3b2a;color:#8fdcae}.pill.s-proposal,.pill.s-tour,.pill.s-toured{background:#1e2a40;color:#9fbaf0}}
+.callhow{background:var(--accent2);border-radius:9px;padding:8px 10px;margin:0 0 8px;font-size:14px}.callhow a{color:var(--accent);font-weight:700;white-space:nowrap}
 .reach{font-size:13px;color:var(--accent);margin-right:8px;letter-spacing:.05em}
 .due{font-size:12px;color:var(--soft);text-align:right}.due.late{color:var(--warn);font-weight:700}
 .detail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;align-self:start;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto}
@@ -160,7 +161,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
       var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.st === x[0])); b.addEventListener('click', function () { S.st = x[0]; draw(); }); sc.appendChild(b);
     });
     var so = el('div', 'chips'); so.style.marginBottom = '12px';
-    [['reach', 'Phone + email first'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
+    [['reach', 'Best contact first'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
     sc.appendChild(el('span', null, '  ')); [].slice.call(so.children).forEach(function (b) { sc.appendChild(b); });
     main.appendChild(sc);
     var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
@@ -170,7 +171,9 @@ main{max-width:1180px;margin:0 auto;padding:18px}
       var rows = inList.filter(function (l) { return (S.st === 'all' || l.status === S.st) && (!t || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(t) >= 0); });
       /* the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the email and phone numbers") */
       /* phone and email first, then phone only, then email only, then neither; the score within each (2026-10-21, Matthew) */
-      var grp = function (l) { return hasPhone(l) && hasMail(l) ? 3 : hasPhone(l) ? 2 : hasMail(l) ? 1 : 0; };
+      /* who the number reaches (2026-10-21, Matthew: "prioritize the ones that lead to a good person"): direct to a good person, a small
+         organisation's main line, a front desk, then email only, then neither */
+      var grp = function (l) { return l.callTier === 1 ? 6 : l.callTier === 2 ? 5 : l.callTier === 3 ? 4 : (l.callTier ? 0 : hasPhone(l) && hasMail(l) ? 3 : hasPhone(l) ? 2 : 0) + (hasMail(l) ? 1 : 0); };
       rows.sort(function (a, b) { return (S.sort === 'reach' ? grp(b) - grp(a) : 0) || (b.score || 0) - (a.score || 0) || a.name.localeCompare(b.name); });
       if (!rows.length) { list.appendChild(el('div', 'empty', 'Nobody here.')); return; }
       rows.forEach(function (l) {
@@ -201,10 +204,11 @@ main{max-width:1180px;margin:0 auto;padding:18px}
     s1.appendChild(seg); d.appendChild(s1);
     /* how to reach them */
     var s2 = el('div', 'sec'); s2.appendChild(el('h3', null, 'How to reach them'));
+    if (l.callHow) { var ch = el('div', 'callhow'); ch.appendChild(el('b', null, l.callHow)); if (l.phone) { ch.appendChild(document.createTextNode(' ')); var cp = el('a', null, l.phone); cp.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ch.appendChild(cp); } s2.appendChild(ch); }
     if (l.route) s2.appendChild(el('div', null, l.route));
     if (l.routeLink) { var a = el('a', null, 'Their page ›'); a.href = l.routeLink; a.target = '_blank'; a.rel = 'noopener'; s2.appendChild(a); }
     if (l.web) { var wn = el('div', null, l.web); wn.style.color = 'var(--soft)'; if (l.webLink) { wn.appendChild(document.createTextNode(' ')); var wl = el('a', null, 'Source ›'); wl.href = l.webLink; wl.target = '_blank'; wl.rel = 'noopener'; wn.appendChild(wl); } s2.appendChild(wn); }
-    if (l.phone) { var ph = el('div'); var pa = el('a', null, l.phone); pa.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ph.appendChild(pa); if (l.phoneNote) { var pn = el('small', null, ' · ' + l.phoneNote); pn.style.color = 'var(--soft)'; ph.appendChild(pn); } s2.appendChild(ph); }
+    if (l.phone && !l.callHow) { var ph = el('div'); var pa = el('a', null, l.phone); pa.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ph.appendChild(pa); if (l.phoneNote) { var pn = el('small', null, ' · ' + l.phoneNote); pn.style.color = 'var(--soft)'; ph.appendChild(pn); } s2.appendChild(ph); }
     if (l.site) { var sw = el('div'); var sa = el('a', null, l.site.replace(/^https?:\/\//, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; sw.appendChild(sa); s2.appendChild(sw); }
     if (l.addr) s2.appendChild(el('div', null, l.addr));
     var people = (l.contacts || []).concat(l.added || []);

@@ -95,7 +95,11 @@
      "pick": false,
      "phone": "+1 970 871 2522"
     }
-   ]
+   ],
+   "callTier": 1,
+   "callHow": "Direct to Todd Seip, Director of Public Relations (local 719 number)",
+   "phone": "719-584-4499",
+   "phoneNote": ""
   },
   {
    "id": "eeb00b1155",
@@ -192,204 +196,10 @@
      "phone": ""
     }
    ],
-   "phone": "719-421-7600",
-   "phoneNote": "Colorado Springs branch, 90 S Cascade Ave, Ste 100 (own site)"
-  },
-  {
-   "id": "661cff49c7",
-   "list": "new",
-   "name": "BOK Financial",
-   "kind": "Bank",
-   "score": 6,
-   "rank": 3,
-   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "Its giving excludes \"athletic programs\". Bill Sullivan is listed as President & CEO, Colorado Market: a marketing conversation, not a giving request.",
-   "webLink": "https://thestatement.bokf.com/Experts/Bill-Sullivan",
-   "contacts": [
-    {
-     "name": "Gilbert Gerst",
-     "pos": "Senior Vice President Community Development",
-     "email": "ggerst@bokf.com",
-     "conf": 84,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Jon Bartel",
-     "pos": "Senior Vice President",
-     "email": "jbartel@bokf.com",
-     "conf": 85,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Joe Crivelli",
-     "pos": "Senior Vice President",
-     "email": "jcrivelli@bokf.com",
-     "conf": 85,
-     "pick": false,
-     "phone": "+1 918 594 7794"
-    },
-    {
-     "name": "Anthony Martin",
-     "pos": "Senior Vice President",
-     "email": "amartin@bokf.com",
-     "conf": 83,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Cameron Reed",
-     "pos": "Managing Director",
-     "email": "c.reed@bokf.com",
-     "conf": 85,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Lester Byrd",
-     "pos": "Managing Director",
-     "email": "lbyrd@bokf.com",
-     "conf": 85,
-     "pick": false,
-     "phone": "+1 713 289 5876"
-    },
-    {
-     "name": "Molly Odgers",
-     "pos": "Managing Director",
-     "email": "modgers@bokf.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Jessica Johnson",
-     "pos": "Senior Director",
-     "email": "jessica.johnson@bokf.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Tammy Foy",
-     "pos": "Director",
-     "email": "tfoy@bokf.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Josh Mclaughlin",
-     "pos": "Managing Director",
-     "email": "jmclaughlin@bokf.com",
-     "conf": 84,
-     "pick": false,
-     "phone": "+1 214 576 0878"
-    }
-   ],
-   "phone": "303-863-4270",
-   "phoneNote": "Colorado commercial banking (no Colorado Springs office listed) (own site)"
-  },
-  {
-   "id": "fbe0b56cf6",
-   "list": "new",
-   "name": "Molson Coors",
-   "kind": "Beverage",
-   "score": 6,
-   "rank": 4,
-   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament at the Broadmoor.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
-   "web": "Gives mostly in Golden and Denver and to disaster relief.",
-   "webLink": "https://www.molsoncoorsblog.com/node/11806",
-   "contacts": [
-    {
-     "name": "Meghan Means",
-     "pos": "Marketing Director",
-     "email": "meghan.means@molsoncoors.com",
-     "conf": 97,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Brad Feinberg",
-     "pos": "Vice President of Marketing",
-     "email": "brad.feinberg@molsoncoors.com",
-     "conf": 96,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Mara Schäfer",
-     "pos": "Senior Marketing Director",
-     "email": "mara.schaefer@molsoncoors.com",
-     "conf": 96,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Sofia Colucci",
-     "pos": "Chief Marketing Officer",
-     "email": "sofia.colucci@molsoncoors.com",
-     "conf": 96,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Victor Teiosanu",
-     "pos": "Marketing Director",
-     "email": "victor.teiosanu@molsoncoors.com",
-     "conf": 95,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Vincent Ventura",
-     "pos": "Director of Consumer Communications",
-     "email": "vincent.ventura@molsoncoors.com",
-     "conf": 97,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Ștefania Bătrînca",
-     "pos": "Communications Director",
-     "email": "stefania.batrinca@molsoncoors.com",
-     "conf": 97,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Brian Erhardt",
-     "pos": "President",
-     "email": "brian.erhardt@molsoncoors.com",
-     "conf": 99,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Jennifer Schmid",
-     "pos": "Vice President",
-     "email": "jennifer.schmid@molsoncoors.com",
-     "conf": 96,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Pete Coors",
-     "pos": "Chairman",
-     "email": "pete.coors@molsoncoors.com",
-     "conf": 99,
-     "pick": false,
-     "phone": ""
-    }
-   ],
-   "phone": "303-279-6565",
-   "phoneNote": "head office, Golden (official filing)"
+   "phone": "970-384-3216",
+   "phoneNote": "",
+   "callTier": 1,
+   "callHow": "Direct to Alan Sandberg, Director of Marketing (head office area code). Colorado Springs branch: 719-421-7600"
   },
   {
    "id": "2bec4cd1b9",
@@ -397,7 +207,7 @@
    "name": "Coca-Cola",
    "kind": "Beverage",
    "score": 5,
-   "rank": 5,
+   "rank": 3,
    "why": "Colorado Springs Sports Corp member, 2026 (Essential) tier: pays to back local sport. Also a pouring-rights deal for Peak’s snack bar, if Peak has one.",
    "route": "To find",
    "routeLink": "",
@@ -486,8 +296,210 @@
      "phone": ""
     }
    ],
-   "phone": "719-257-5745",
-   "phoneNote": "Swire Coca-Cola distribution center, 1935 Cygnet Heights, Colorado Springs (own site)"
+   "phone": "801-816-5714",
+   "phoneNote": "",
+   "callTier": 1,
+   "callHow": "Direct to Michele McKillip, SVP Corporate Affairs (corporate affairs often handles sponsorships). Colorado Springs distribution center: 719-257-5745"
+  },
+  {
+   "id": "739ba8372e",
+   "list": "new",
+   "name": "McLane Company",
+   "kind": "Distribution",
+   "score": 5,
+   "rank": 4,
+   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
+   "web": "",
+   "webLink": "",
+   "contacts": [
+    {
+     "name": "Tom Sicola",
+     "pos": "Vp Of Marketing",
+     "email": "tom.sicola@mclaneco.com",
+     "conf": 99,
+     "pick": true,
+     "phone": "+1 254 742 3637"
+    },
+    {
+     "name": "Breann Hudson",
+     "pos": "Director of Marketing",
+     "email": "breann.hudson@mclaneco.com",
+     "conf": 97,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Taylor Bonales",
+     "pos": "Marketing Director",
+     "email": "taylor.skinner@mclaneco.com",
+     "conf": 96,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Marcelo Gaitan",
+     "pos": "Marketing Director",
+     "email": "marcelo.gaitan@mclaneco.com",
+     "conf": 95,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Diane Watts",
+     "pos": "Marketing Director",
+     "email": "diane.watts@mclaneco.com",
+     "conf": 95,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Vito Maurici",
+     "pos": "Senior Vice President",
+     "email": "vito.maurici@mclaneco.com",
+     "conf": 99,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Tony Frankenberger",
+     "pos": "CEO",
+     "email": "tony.frankenberger@mclaneco.com",
+     "conf": 99,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Nef García",
+     "pos": "Vice President of Government Relations",
+     "email": "neftali.garcia@mclaneco.com",
+     "conf": 97,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Ken Mason",
+     "pos": "Division President",
+     "email": "ken.mason@mclaneco.com",
+     "conf": 96,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Barry Taft",
+     "pos": "Director of Labor Relations",
+     "email": "barry.taft@mclaneco.com",
+     "conf": 99,
+     "pick": false,
+     "phone": ""
+    }
+   ],
+   "callTier": 1,
+   "callHow": "Direct to Tom Sicola, VP of Marketing (Texas head office)",
+   "phone": "254-742-3637",
+   "phoneNote": ""
+  },
+  {
+   "id": "ccc15dfbcc",
+   "list": "new",
+   "name": "Republic Services",
+   "kind": "Waste and recycling",
+   "score": 5,
+   "rank": 5,
+   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "",
+   "webLink": "",
+   "contacts": [
+    {
+     "name": "Jennifer Eldridge",
+     "pos": "Marketing Director",
+     "email": "jeldridge@republicservices.com",
+     "conf": 84,
+     "pick": true,
+     "phone": "+1 480 718 0119"
+    },
+    {
+     "name": "Michael Caprio",
+     "pos": "Regional President",
+     "email": "mcaprio@republicservices.com",
+     "conf": 85,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Casey Powers",
+     "pos": "Vice President",
+     "email": "cpowers@republicservices.com",
+     "conf": 85,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Bob Pickens",
+     "pos": "Vice President",
+     "email": "bpickens@republicservices.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Craig Mikolajchak",
+     "pos": "Vice President",
+     "email": "cmikolajchak@republicservices.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Chuck Helget",
+     "pos": "Director",
+     "email": "chelget@republicservices.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Holly Doyle",
+     "pos": "Director",
+     "email": "hdoyle@republicservices.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Rhett Gulledge",
+     "pos": "Executive Director",
+     "email": "rgulledge@republicservices.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Steve Derus",
+     "pos": "General Manager",
+     "email": "sderus@republicservices.com",
+     "conf": 83,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Tim Odonnell",
+     "pos": "Executive Director",
+     "email": "todonnell@republicservices.com",
+     "conf": 83,
+     "pick": false,
+     "phone": ""
+    }
+   ],
+   "callTier": 1,
+   "callHow": "Direct to Jennifer Eldridge, Marketing Director (Phoenix head office)",
+   "phone": "480-718-0119",
+   "phoneNote": ""
   },
   {
    "id": "1d9bbe3d0b",
@@ -513,7 +525,9 @@
     }
    ],
    "phone": "719-330-7448",
-   "phoneNote": "publisher of North magazine, 13395 Voyager Pkwy, Ste 130 (north Colorado Springs) (listings)"
+   "phoneNote": "",
+   "callTier": 2,
+   "callHow": "Main line (North magazine); ask for Dirk Hobbs, Division Manager. Pitch a media trade, not a cash buy"
   },
   {
    "id": "887b4d3f84",
@@ -546,49 +560,9 @@
     }
    ],
    "phone": "719-471-8183",
-   "phoneNote": "main line; email info@cscedc.com (own site)"
-  },
-  {
-   "id": "5d403ce2e4",
-   "list": "new",
-   "name": "Concept Restaurants",
-   "kind": "Restaurant group",
-   "score": 5,
-   "rank": 8,
-   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "A Gazette Q&A (undated) names co-owners Luke Travins and Dave Lux; ask at MacKenzie’s Chop House or Ritz Grill.",
-   "webLink": "https://gazette.com/?p=1156034",
-   "contacts": [
-    {
-     "name": "Erin Copeland",
-     "pos": "Vice President of Marketing",
-     "email": "erin@conceptrestaurants.com",
-     "conf": 94,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Amber Winston",
-     "pos": "Director of Marketing",
-     "email": "amber@conceptrestaurants.com",
-     "conf": 93,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "General inbox",
-     "pos": "general",
-     "email": "marketing@conceptrestaurants.com",
-     "conf": 95,
-     "pick": false,
-     "phone": ""
-    }
-   ],
-   "phone": "719-635-3536",
-   "phoneNote": "MacKenzie's Chop House, 128 S Tejon (named as a Concept restaurant in a Gazette Q&A); no corporate line found (listings)"
+   "phoneNote": "",
+   "callTier": 2,
+   "callHow": "Main line; small staff. Ask who handles events and member partnerships"
   },
   {
    "id": "91230011d5",
@@ -596,7 +570,7 @@
    "name": "Cumulus Media",
    "kind": "Radio",
    "score": 5,
-   "rank": 9,
+   "rank": 8,
    "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport. Media partner, as above.",
    "route": "To find",
    "routeLink": "",
@@ -686,7 +660,147 @@
     }
    ],
    "phone": "719-593-2700",
-   "phoneNote": "Colorado Springs stations, 6805 Corporate Dr #130; VP/Market Manager Scott Jones (Cumulus releases) (listings)"
+   "phoneNote": "",
+   "callTier": 2,
+   "callHow": "Colorado Springs stations; ask for Scott Jones, VP/Market Manager. Pitch a media trade (their airtime for Peak exposure), not ad sales"
+  },
+  {
+   "id": "fe084629d4",
+   "list": "new",
+   "name": "Altitude Movement",
+   "kind": "Fitness / movement",
+   "score": 4,
+   "rank": 9,
+   "why": "Colorado Springs Sports Corp member, 2026 (Essential) tier: pays to back local sport.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "",
+   "webLink": "",
+   "contacts": [],
+   "phone": "719-964-1798",
+   "phoneNote": "",
+   "callTier": 2,
+   "callHow": "Main line; small gym, ask for the owner"
+  },
+  {
+   "id": "d127e80d70",
+   "list": "new",
+   "name": "Hispanic Chamber of Commerce",
+   "kind": "Business network",
+   "score": 2,
+   "rank": 10,
+   "why": "Colorado Springs Sports Corp member, 2026 (Essential) tier: pays to back local sport. Host a member mixer at Peak.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "",
+   "webLink": "",
+   "contacts": [],
+   "phone": "719-231-5353",
+   "phoneNote": "",
+   "callTier": 2,
+   "callHow": "Main line; ask for Joe Aldaz, President & CEO"
+  },
+  {
+   "id": "fbe0b56cf6",
+   "list": "new",
+   "name": "Molson Coors",
+   "kind": "Beverage",
+   "score": 6,
+   "rank": 11,
+   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament at the Broadmoor.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
+   "web": "Gives mostly in Golden and Denver and to disaster relief.",
+   "webLink": "https://www.molsoncoorsblog.com/node/11806",
+   "contacts": [
+    {
+     "name": "Meghan Means",
+     "pos": "Marketing Director",
+     "email": "meghan.means@molsoncoors.com",
+     "conf": 97,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Brad Feinberg",
+     "pos": "Vice President of Marketing",
+     "email": "brad.feinberg@molsoncoors.com",
+     "conf": 96,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Mara Schäfer",
+     "pos": "Senior Marketing Director",
+     "email": "mara.schaefer@molsoncoors.com",
+     "conf": 96,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Sofia Colucci",
+     "pos": "Chief Marketing Officer",
+     "email": "sofia.colucci@molsoncoors.com",
+     "conf": 96,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Victor Teiosanu",
+     "pos": "Marketing Director",
+     "email": "victor.teiosanu@molsoncoors.com",
+     "conf": 95,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Vincent Ventura",
+     "pos": "Director of Consumer Communications",
+     "email": "vincent.ventura@molsoncoors.com",
+     "conf": 97,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Ștefania Bătrînca",
+     "pos": "Communications Director",
+     "email": "stefania.batrinca@molsoncoors.com",
+     "conf": 97,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Brian Erhardt",
+     "pos": "President",
+     "email": "brian.erhardt@molsoncoors.com",
+     "conf": 99,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Jennifer Schmid",
+     "pos": "Vice President",
+     "email": "jennifer.schmid@molsoncoors.com",
+     "conf": 96,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Pete Coors",
+     "pos": "Chairman",
+     "email": "pete.coors@molsoncoors.com",
+     "conf": 99,
+     "pick": false,
+     "phone": ""
+    }
+   ],
+   "phone": "303-279-6565",
+   "phoneNote": "",
+   "callTier": 3,
+   "callHow": "Head office front desk: ask for Meghan Means, Marketing Director"
   },
   {
    "id": "ecb6a9ef90",
@@ -694,7 +808,7 @@
    "name": "Ent Credit Union",
    "kind": "Credit union",
    "score": 5,
-   "rank": 10,
+   "rank": 12,
    "why": "Headquartered in Colorado Springs; about 1,300 staff (Gazette, 2021). Big local sponsor profile.",
    "route": "To find",
    "routeLink": "",
@@ -784,295 +898,9 @@
     }
    ],
    "phone": "800-525-9623",
-   "phoneNote": "main line; ask for marketing (own site)"
-  },
-  {
-   "id": "739ba8372e",
-   "list": "new",
-   "name": "McLane Company",
-   "kind": "Distribution",
-   "score": 5,
-   "rank": 11,
-   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
-   "web": "",
-   "webLink": "",
-   "contacts": [
-    {
-     "name": "Tom Sicola",
-     "pos": "Vp Of Marketing",
-     "email": "tom.sicola@mclaneco.com",
-     "conf": 99,
-     "pick": true,
-     "phone": "+1 254 742 3637"
-    },
-    {
-     "name": "Breann Hudson",
-     "pos": "Director of Marketing",
-     "email": "breann.hudson@mclaneco.com",
-     "conf": 97,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Taylor Bonales",
-     "pos": "Marketing Director",
-     "email": "taylor.skinner@mclaneco.com",
-     "conf": 96,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Marcelo Gaitan",
-     "pos": "Marketing Director",
-     "email": "marcelo.gaitan@mclaneco.com",
-     "conf": 95,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Diane Watts",
-     "pos": "Marketing Director",
-     "email": "diane.watts@mclaneco.com",
-     "conf": 95,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Vito Maurici",
-     "pos": "Senior Vice President",
-     "email": "vito.maurici@mclaneco.com",
-     "conf": 99,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Tony Frankenberger",
-     "pos": "CEO",
-     "email": "tony.frankenberger@mclaneco.com",
-     "conf": 99,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Nef García",
-     "pos": "Vice President of Government Relations",
-     "email": "neftali.garcia@mclaneco.com",
-     "conf": 97,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Ken Mason",
-     "pos": "Division President",
-     "email": "ken.mason@mclaneco.com",
-     "conf": 96,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Barry Taft",
-     "pos": "Director of Labor Relations",
-     "email": "barry.taft@mclaneco.com",
-     "conf": 99,
-     "pick": false,
-     "phone": ""
-    }
-   ]
-  },
-  {
-   "id": "36957bd59c",
-   "list": "new",
-   "name": "PCL Construction",
-   "kind": "Construction",
-   "score": 5,
-   "rank": 12,
-   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
-   "web": "",
-   "webLink": "",
-   "contacts": [
-    {
-     "name": "Alison Tucker",
-     "pos": "Vice President of Marketing",
-     "email": "atucker@pcl.com",
-     "conf": 93,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Kathryn Seymour",
-     "pos": "Marketing Director",
-     "email": "kseymour@pcl.com",
-     "conf": 75,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Richard Hewitt",
-     "pos": "Vice President",
-     "email": "rhewitt@pcl.com",
-     "conf": 93,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Andrew Moles",
-     "pos": "Vice President",
-     "email": "amoles@pcl.com",
-     "conf": 92,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Dale Koger",
-     "pos": "Vice President",
-     "email": "dkoger@pcl.com",
-     "conf": 92,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Paul Knowles",
-     "pos": "Vice President",
-     "email": "pknowles@pcl.com",
-     "conf": 92,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Sébastien Tremblay",
-     "pos": "Vice President and General Manager",
-     "email": "stremblay@pcl.com",
-     "conf": 75,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "David Hudock",
-     "pos": "Director of Government Relations",
-     "email": "dhudock@pcl.com",
-     "conf": 93,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Lee Clayton",
-     "pos": "SVP Global Strategic Initiatives",
-     "email": "lclayton@pcl.com",
-     "conf": 93,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Chris Robinson",
-     "pos": "Director of Labor Relations",
-     "email": "crobinson@pcl.com",
-     "conf": 91,
-     "pick": false,
-     "phone": "+1 416 201 9995"
-    }
-   ]
-  },
-  {
-   "id": "ccc15dfbcc",
-   "list": "new",
-   "name": "Republic Services",
-   "kind": "Waste and recycling",
-   "score": 5,
-   "rank": 13,
-   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "",
-   "webLink": "",
-   "contacts": [
-    {
-     "name": "Jennifer Eldridge",
-     "pos": "Marketing Director",
-     "email": "jeldridge@republicservices.com",
-     "conf": 84,
-     "pick": true,
-     "phone": "+1 480 718 0119"
-    },
-    {
-     "name": "Michael Caprio",
-     "pos": "Regional President",
-     "email": "mcaprio@republicservices.com",
-     "conf": 85,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Casey Powers",
-     "pos": "Vice President",
-     "email": "cpowers@republicservices.com",
-     "conf": 85,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Bob Pickens",
-     "pos": "Vice President",
-     "email": "bpickens@republicservices.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Craig Mikolajchak",
-     "pos": "Vice President",
-     "email": "cmikolajchak@republicservices.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Chuck Helget",
-     "pos": "Director",
-     "email": "chelget@republicservices.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Holly Doyle",
-     "pos": "Director",
-     "email": "hdoyle@republicservices.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Rhett Gulledge",
-     "pos": "Executive Director",
-     "email": "rgulledge@republicservices.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Steve Derus",
-     "pos": "General Manager",
-     "email": "sderus@republicservices.com",
-     "conf": 83,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Tim Odonnell",
-     "pos": "Executive Director",
-     "email": "todonnell@republicservices.com",
-     "conf": 83,
-     "pick": false,
-     "phone": ""
-    }
-   ]
+   "phoneNote": "",
+   "callTier": 3,
+   "callHow": "Front desk: ask for marketing (Kelly Utermoehlen, Director of Internal Communications, is the closest name found)"
   },
   {
    "id": "be7dda3bda",
@@ -1080,7 +908,7 @@
    "name": "T. Rowe Price",
    "kind": "Financial services",
    "score": 5,
-   "rank": 14,
+   "rank": 13,
    "why": "Large campus at 2220 Briargate Pkwy, near Chapel Hills Mall. Over 670 staff in 2008 (old figure). Group memberships first, sponsor second.",
    "route": "To find (HR / benefits for memberships)",
    "routeLink": "",
@@ -1170,7 +998,475 @@
     }
    ],
    "phone": "719-278-5600",
-   "phoneNote": "Colorado Springs campus, 2220 Briargate Pkwy (operations center, no walk-in) (own site)"
+   "phoneNote": "",
+   "callTier": 3,
+   "callHow": "Colorado Springs campus switchboard: ask who handles local community or employee programs (lead with group memberships)"
+  },
+  {
+   "id": "9ce6520ffe",
+   "list": "new",
+   "name": "Laborjack",
+   "kind": "Moving / labor",
+   "score": 3,
+   "rank": 14,
+   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "",
+   "webLink": "",
+   "contacts": [
+    {
+     "name": "Jon Emerick",
+     "pos": "VP of Strategic Alliances",
+     "email": "jon.emerick@laborjack.com",
+     "conf": 79,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Blake Craig",
+     "pos": "CEO",
+     "email": "blake@laborjack.com",
+     "conf": 85,
+     "pick": false,
+     "phone": ""
+    }
+   ],
+   "phone": "970-690-7709",
+   "phoneNote": "",
+   "callTier": 3,
+   "callHow": "Fort Collins office: ask for Jon Emerick, VP of Strategic Alliances"
+  },
+  {
+   "id": "a04ec8d03e",
+   "list": "new",
+   "name": "Cheyenne Mountain Resort",
+   "kind": "Resort",
+   "score": 5,
+   "rank": 15,
+   "why": "Colorado Springs Sports Corp member, 2026 (Summit) tier: pays to back local sport. Check first whether it runs its own courts (could be a competitor).",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "A 2023 travel guide lists pickleball courts at the resort: possibly a competitor. Check before pitching.",
+   "webLink": "https://coloradoavidgolfer.com/colorado-getaways-2023-cheyenne-mountain-resort/",
+   "contacts": [],
+   "phone": "719-583-4000",
+   "phoneNote": "",
+   "callTier": 3,
+   "callHow": "Front desk: ask for sales or marketing (check first whether they run their own pickleball courts)"
+  },
+  {
+   "id": "4596f07f38",
+   "list": "new",
+   "name": "Kaiser Permanente",
+   "kind": "Health insurer / care",
+   "score": 8,
+   "rank": 16,
+   "why": "Paid sponsor of the Colorado Chamber’s 2024 pickleball tournament (Pickle Hour and awards) at the Broadmoor.",
+   "route": "To find (statewide marketing; check for a Colorado Springs community contact)",
+   "routeLink": "",
+   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
+   "web": "Its rules exclude \"advertising activities\" and team sponsorships: a court sign will not qualify. Only a community-health event (e.g. free beginner clinics) might.",
+   "webLink": "https://about.kaiserpermanente.org/community-health/communities-we-serve/colorado-community/sponsorships-conferences-and-community-service",
+   "contacts": [
+    {
+     "name": "Colorado community sponsorships",
+     "pos": "Sponsorship inbox (rules exclude advertising)",
+     "email": "communityco@kp.org",
+     "conf": null,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Colorado community sponsorships",
+     "pos": "Sponsorship inbox (rules exclude advertising)",
+     "email": "communityco@kp.org",
+     "conf": null,
+     "pick": true
+    }
+   ]
+  },
+  {
+   "id": "661cff49c7",
+   "list": "new",
+   "name": "BOK Financial",
+   "kind": "Bank",
+   "score": 6,
+   "rank": 17,
+   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "Its giving excludes \"athletic programs\". Bill Sullivan is listed as President & CEO, Colorado Market: a marketing conversation, not a giving request.",
+   "webLink": "https://thestatement.bokf.com/Experts/Bill-Sullivan",
+   "contacts": [
+    {
+     "name": "Gilbert Gerst",
+     "pos": "Senior Vice President Community Development",
+     "email": "ggerst@bokf.com",
+     "conf": 84,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Jon Bartel",
+     "pos": "Senior Vice President",
+     "email": "jbartel@bokf.com",
+     "conf": 85,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Joe Crivelli",
+     "pos": "Senior Vice President",
+     "email": "jcrivelli@bokf.com",
+     "conf": 85,
+     "pick": false,
+     "phone": "+1 918 594 7794"
+    },
+    {
+     "name": "Anthony Martin",
+     "pos": "Senior Vice President",
+     "email": "amartin@bokf.com",
+     "conf": 83,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Cameron Reed",
+     "pos": "Managing Director",
+     "email": "c.reed@bokf.com",
+     "conf": 85,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Lester Byrd",
+     "pos": "Managing Director",
+     "email": "lbyrd@bokf.com",
+     "conf": 85,
+     "pick": false,
+     "phone": "+1 713 289 5876"
+    },
+    {
+     "name": "Molly Odgers",
+     "pos": "Managing Director",
+     "email": "modgers@bokf.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Jessica Johnson",
+     "pos": "Senior Director",
+     "email": "jessica.johnson@bokf.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Tammy Foy",
+     "pos": "Director",
+     "email": "tfoy@bokf.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Josh Mclaughlin",
+     "pos": "Managing Director",
+     "email": "jmclaughlin@bokf.com",
+     "conf": 84,
+     "pick": false,
+     "phone": "+1 214 576 0878"
+    }
+   ],
+   "phone": "",
+   "phoneNote": "",
+   "callTier": 4,
+   "callHow": "No good number: the Colorado line (303-863-4270) is commercial banking. Email Gilbert Gerst, SVP Community Development"
+  },
+  {
+   "id": "df789d75c8",
+   "list": "new",
+   "name": "OrangeTheory",
+   "kind": "Fitness",
+   "score": 6,
+   "rank": 18,
+   "why": "Colorado Springs Sports Corp member, 2026 (Premier and Essential) tier: pays to back local sport. Fitness, not racquet sport: a cross-promotion partner more than a buyer.",
+   "route": "To find (franchise: the local owner decides)",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "Owner names found are from 2013 (Stetson Hills studio): ask the studio.",
+   "webLink": "https://www.franchising.com/amp/news/20131202_orangetheory_fitness_set_to_open_first_southern_co.html",
+   "contacts": [
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "memberservices@orangetheory.com",
+     "conf": 99,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Marissa Fattore",
+     "pos": "Media Contact",
+     "email": "mfattore@orangetheory.com",
+     "conf": 94,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "social@orangetheory.com",
+     "conf": 84,
+     "pick": false,
+     "phone": ""
+    }
+   ]
+  },
+  {
+   "id": "3115280016",
+   "list": "new",
+   "name": "Chord Energy",
+   "kind": "Energy",
+   "score": 5,
+   "rank": 19,
+   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
+   "web": "",
+   "webLink": "",
+   "contacts": [
+    {
+     "name": "Gilbert Delarosa",
+     "pos": "Vice President of Marketing",
+     "email": "gilbert.delarosa@chordenergy.com",
+     "conf": 93,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Erika Pizano",
+     "pos": "Crude Oil Marketing Analyst",
+     "email": "erika.pizano@chordenergy.com",
+     "conf": 79,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Lindsey Holcombe",
+     "pos": "Senior Marketing Analyst",
+     "email": "lindsey.holcombe@chordenergy.com",
+     "conf": 79,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Krystal McClain",
+     "pos": "Marketing Analyst",
+     "email": "krystal.mcclain@chordenergy.com",
+     "conf": 78,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Kevin Kelly",
+     "pos": "Senior Vice President of Sustainability",
+     "email": "kevin.kelly@chordenergy.com",
+     "conf": 90,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Jenny Simpson",
+     "pos": "Board Member",
+     "email": "jenny.simpson@chordenergy.com",
+     "conf": 96,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Samantha Holroyd",
+     "pos": "Board Member",
+     "email": "samantha.holroyd@chordenergy.com",
+     "conf": 95,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Michael Lou",
+     "pos": "CCO",
+     "email": "michael.lou@chordenergy.com",
+     "conf": 91,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Melissa Folz",
+     "pos": "Managing Director",
+     "email": "melissa.folz@chordenergy.com",
+     "conf": 78,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Jason Weddle",
+     "pos": "Managing Director",
+     "email": "jason.weddle@chordenergy.com",
+     "conf": 76,
+     "pick": false,
+     "phone": ""
+    }
+   ]
+  },
+  {
+   "id": "5d403ce2e4",
+   "list": "new",
+   "name": "Concept Restaurants",
+   "kind": "Restaurant group",
+   "score": 5,
+   "rank": 20,
+   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://www.coloradospringssports.org/current-members",
+   "web": "A Gazette Q&A (undated) names co-owners Luke Travins and Dave Lux; ask at MacKenzie’s Chop House or Ritz Grill.",
+   "webLink": "https://gazette.com/?p=1156034",
+   "contacts": [
+    {
+     "name": "Erin Copeland",
+     "pos": "Vice President of Marketing",
+     "email": "erin@conceptrestaurants.com",
+     "conf": 94,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Amber Winston",
+     "pos": "Director of Marketing",
+     "email": "amber@conceptrestaurants.com",
+     "conf": 93,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "marketing@conceptrestaurants.com",
+     "conf": 95,
+     "pick": false,
+     "phone": ""
+    }
+   ],
+   "phone": "719-635-3536",
+   "phoneNote": "",
+   "callTier": 4,
+   "callHow": "Only a restaurant front desk (MacKenzie's Chop House). Email Erin Copeland, VP of Marketing, first"
+  },
+  {
+   "id": "36957bd59c",
+   "list": "new",
+   "name": "PCL Construction",
+   "kind": "Construction",
+   "score": 5,
+   "rank": 21,
+   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament.",
+   "route": "To find",
+   "routeLink": "",
+   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
+   "web": "",
+   "webLink": "",
+   "contacts": [
+    {
+     "name": "Alison Tucker",
+     "pos": "Vice President of Marketing",
+     "email": "atucker@pcl.com",
+     "conf": 93,
+     "pick": true,
+     "phone": ""
+    },
+    {
+     "name": "Kathryn Seymour",
+     "pos": "Marketing Director",
+     "email": "kseymour@pcl.com",
+     "conf": 75,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Richard Hewitt",
+     "pos": "Vice President",
+     "email": "rhewitt@pcl.com",
+     "conf": 93,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Andrew Moles",
+     "pos": "Vice President",
+     "email": "amoles@pcl.com",
+     "conf": 92,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Dale Koger",
+     "pos": "Vice President",
+     "email": "dkoger@pcl.com",
+     "conf": 92,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Paul Knowles",
+     "pos": "Vice President",
+     "email": "pknowles@pcl.com",
+     "conf": 92,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Sébastien Tremblay",
+     "pos": "Vice President and General Manager",
+     "email": "stremblay@pcl.com",
+     "conf": 75,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "David Hudock",
+     "pos": "Director of Government Relations",
+     "email": "dhudock@pcl.com",
+     "conf": 93,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Lee Clayton",
+     "pos": "SVP Global Strategic Initiatives",
+     "email": "lclayton@pcl.com",
+     "conf": 93,
+     "pick": false,
+     "phone": ""
+    },
+    {
+     "name": "Chris Robinson",
+     "pos": "Director of Labor Relations",
+     "email": "crobinson@pcl.com",
+     "conf": 91,
+     "pick": false,
+     "phone": "+1 416 201 9995"
+    }
+   ],
+   "callTier": 4,
+   "callHow": "No good number (the one found is a labour-relations director in Toronto). Email Alison Tucker, VP of Marketing",
+   "phone": "",
+   "phoneNote": ""
   },
   {
    "id": "61dce83cad",
@@ -1178,7 +1474,7 @@
    "name": "The Gazette",
    "kind": "Media",
    "score": 5,
-   "rank": 15,
+   "rank": 22,
    "why": "Colorado Springs Sports Corp member, 2026 (Summit) tier: pays to back local sport. Media partner: ad space in trade for exposure, or event coverage.",
    "route": "To find",
    "routeLink": "",
@@ -1267,8 +1563,10 @@
      "phone": ""
     }
    ],
-   "phone": "719-476-1645",
-   "phoneNote": "retail advertising (main line 719-632-5511), 30 E Pikes Peak Ave (own site)"
+   "phone": "719-632-5511",
+   "phoneNote": "",
+   "callTier": 4,
+   "callHow": "Main line; the ad lines sell ads, they don't buy. Ask for marketing or promotions and pitch a media trade"
   },
   {
    "id": "edf045f2f2",
@@ -1276,7 +1574,7 @@
    "name": "iHeart Media",
    "kind": "Radio",
    "score": 5,
-   "rank": 16,
+   "rank": 23,
    "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport. Media partner, as above.",
    "route": "To find",
    "routeLink": "",
@@ -1366,7 +1664,9 @@
     }
    ],
    "phone": "844-844-4432",
-   "phoneNote": "national advertising line (no local number found); Colorado Springs Market President Samantha Kumm (own site)"
+   "phoneNote": "",
+   "callTier": 4,
+   "callHow": "National ad sales line (sells ads). Ask for the Colorado Springs market president, Samantha Kumm, and pitch a media trade"
   },
   {
    "id": "2ad040c238",
@@ -1374,7 +1674,7 @@
    "name": "Progressive",
    "kind": "Insurance",
    "score": 4,
-   "rank": 17,
+   "rank": 24,
    "why": "Colorado Springs campus; about 1,500 staff in 2011 (old figure).",
    "route": "To find (HR / benefits for memberships)",
    "routeLink": "",
@@ -1462,7 +1762,11 @@
      "pick": false,
      "phone": "+1 419 722 9316"
     }
-   ]
+   ],
+   "callTier": 4,
+   "callHow": "No good number (the ones found are the CFO and CEO). Email first; Colorado Springs campus has no public line",
+   "phone": "",
+   "phoneNote": ""
   },
   {
    "id": "746b7adf85",
@@ -1470,7 +1774,7 @@
    "name": "USAA",
    "kind": "Insurance / banking",
    "score": 4,
-   "rank": 18,
+   "rank": 25,
    "why": "Large Colorado Springs campus; about 1,800 staff in 2017 (old figure). Military families: Peak’s neighbourhood.",
    "route": "To find (HR / benefits for memberships)",
    "routeLink": "",
@@ -1558,259 +1862,11 @@
      "pick": false,
      "phone": ""
     }
-   ]
-  },
-  {
-   "id": "9ce6520ffe",
-   "list": "new",
-   "name": "Laborjack",
-   "kind": "Moving / labor",
-   "score": 3,
-   "rank": 19,
-   "why": "Colorado Springs Sports Corp member, 2026 (Premier) tier: pays to back local sport.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "",
-   "webLink": "",
-   "contacts": [
-    {
-     "name": "Jon Emerick",
-     "pos": "VP of Strategic Alliances",
-     "email": "jon.emerick@laborjack.com",
-     "conf": 79,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Blake Craig",
-     "pos": "CEO",
-     "email": "blake@laborjack.com",
-     "conf": 85,
-     "pick": false,
-     "phone": ""
-    }
    ],
-   "phone": "970-690-7709",
-   "phoneNote": "Fort Collins office (no Colorado Springs office found) (listings)"
-  },
-  {
-   "id": "a04ec8d03e",
-   "list": "new",
-   "name": "Cheyenne Mountain Resort",
-   "kind": "Resort",
-   "score": 5,
-   "rank": 20,
-   "why": "Colorado Springs Sports Corp member, 2026 (Summit) tier: pays to back local sport. Check first whether it runs its own courts (could be a competitor).",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "A 2023 travel guide lists pickleball courts at the resort: possibly a competitor. Check before pitching.",
-   "webLink": "https://coloradoavidgolfer.com/colorado-getaways-2023-cheyenne-mountain-resort/",
-   "contacts": [],
-   "phone": "719-583-4000",
-   "phoneNote": "main line, 3225 Broadmoor Valley Rd (listings)"
-  },
-  {
-   "id": "fe084629d4",
-   "list": "new",
-   "name": "Altitude Movement",
-   "kind": "Fitness / movement",
-   "score": 4,
-   "rank": 21,
-   "why": "Colorado Springs Sports Corp member, 2026 (Essential) tier: pays to back local sport.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "",
-   "webLink": "",
-   "contacts": [],
-   "phone": "719-964-1798",
-   "phoneNote": "750 Garden of the Gods Rd #125 (listings)"
-  },
-  {
-   "id": "d127e80d70",
-   "list": "new",
-   "name": "Hispanic Chamber of Commerce",
-   "kind": "Business network",
-   "score": 2,
-   "rank": 22,
-   "why": "Colorado Springs Sports Corp member, 2026 (Essential) tier: pays to back local sport. Host a member mixer at Peak.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "",
-   "webLink": "",
-   "contacts": [],
-   "phone": "719-231-5353",
-   "phoneNote": "Colorado Springs Hispanic Chamber; President & CEO Joe Aldaz (listings)"
-  },
-  {
-   "id": "4596f07f38",
-   "list": "new",
-   "name": "Kaiser Permanente",
-   "kind": "Health insurer / care",
-   "score": 8,
-   "rank": 23,
-   "why": "Paid sponsor of the Colorado Chamber’s 2024 pickleball tournament (Pickle Hour and awards) at the Broadmoor.",
-   "route": "To find (statewide marketing; check for a Colorado Springs community contact)",
-   "routeLink": "",
-   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
-   "web": "Its rules exclude \"advertising activities\" and team sponsorships: a court sign will not qualify. Only a community-health event (e.g. free beginner clinics) might.",
-   "webLink": "https://about.kaiserpermanente.org/community-health/communities-we-serve/colorado-community/sponsorships-conferences-and-community-service",
-   "contacts": [
-    {
-     "name": "Colorado community sponsorships",
-     "pos": "Sponsorship inbox (rules exclude advertising)",
-     "email": "communityco@kp.org",
-     "conf": null,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Colorado community sponsorships",
-     "pos": "Sponsorship inbox (rules exclude advertising)",
-     "email": "communityco@kp.org",
-     "conf": null,
-     "pick": true
-    }
-   ]
-  },
-  {
-   "id": "df789d75c8",
-   "list": "new",
-   "name": "OrangeTheory",
-   "kind": "Fitness",
-   "score": 6,
-   "rank": 24,
-   "why": "Colorado Springs Sports Corp member, 2026 (Premier and Essential) tier: pays to back local sport. Fitness, not racquet sport: a cross-promotion partner more than a buyer.",
-   "route": "To find (franchise: the local owner decides)",
-   "routeLink": "",
-   "source": "https://www.coloradospringssports.org/current-members",
-   "web": "Owner names found are from 2013 (Stetson Hills studio): ask the studio.",
-   "webLink": "https://www.franchising.com/amp/news/20131202_orangetheory_fitness_set_to_open_first_southern_co.html",
-   "contacts": [
-    {
-     "name": "General inbox",
-     "pos": "general",
-     "email": "memberservices@orangetheory.com",
-     "conf": 99,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Marissa Fattore",
-     "pos": "Media Contact",
-     "email": "mfattore@orangetheory.com",
-     "conf": 94,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "General inbox",
-     "pos": "general",
-     "email": "social@orangetheory.com",
-     "conf": 84,
-     "pick": false,
-     "phone": ""
-    }
-   ]
-  },
-  {
-   "id": "3115280016",
-   "list": "new",
-   "name": "Chord Energy",
-   "kind": "Energy",
-   "score": 5,
-   "rank": 25,
-   "why": "Court sponsor, Colorado Chamber 2024 pickleball tournament.",
-   "route": "To find",
-   "routeLink": "",
-   "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
-   "web": "",
-   "webLink": "",
-   "contacts": [
-    {
-     "name": "Gilbert Delarosa",
-     "pos": "Vice President of Marketing",
-     "email": "gilbert.delarosa@chordenergy.com",
-     "conf": 93,
-     "pick": true,
-     "phone": ""
-    },
-    {
-     "name": "Erika Pizano",
-     "pos": "Crude Oil Marketing Analyst",
-     "email": "erika.pizano@chordenergy.com",
-     "conf": 79,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Lindsey Holcombe",
-     "pos": "Senior Marketing Analyst",
-     "email": "lindsey.holcombe@chordenergy.com",
-     "conf": 79,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Krystal McClain",
-     "pos": "Marketing Analyst",
-     "email": "krystal.mcclain@chordenergy.com",
-     "conf": 78,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Kevin Kelly",
-     "pos": "Senior Vice President of Sustainability",
-     "email": "kevin.kelly@chordenergy.com",
-     "conf": 90,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Jenny Simpson",
-     "pos": "Board Member",
-     "email": "jenny.simpson@chordenergy.com",
-     "conf": 96,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Samantha Holroyd",
-     "pos": "Board Member",
-     "email": "samantha.holroyd@chordenergy.com",
-     "conf": 95,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Michael Lou",
-     "pos": "CCO",
-     "email": "michael.lou@chordenergy.com",
-     "conf": 91,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Melissa Folz",
-     "pos": "Managing Director",
-     "email": "melissa.folz@chordenergy.com",
-     "conf": 78,
-     "pick": false,
-     "phone": ""
-    },
-    {
-     "name": "Jason Weddle",
-     "pos": "Managing Director",
-     "email": "jason.weddle@chordenergy.com",
-     "conf": 76,
-     "pick": false,
-     "phone": ""
-    }
-   ]
+   "callTier": 4,
+   "callHow": "No good number (communications directors in other states). Email Jennifer Escobar, VP of Brand Marketing",
+   "phone": "",
+   "phoneNote": ""
   },
   {
    "id": "c17c0b941f",

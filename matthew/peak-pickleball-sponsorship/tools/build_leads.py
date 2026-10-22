@@ -273,20 +273,27 @@ def reach(c): return int(has_email(c)) + int(has_phone(c))
 def _mine(c): return sorted([x for x in CONTACTS if x[0] == c or c.startswith(x[0]) or x[0] == _ALIAS.get(c)], key=lambda x: 0 if x[8] else 1)
 def best_email(c): e = [x for x in _mine(c) if x[3]]; return (e[0][3] + ((' (' + e[0][1] + (', ' + e[0][2] if e[0][2] and e[0][2] != 'general' else '') + ')') if e[0][1] else '')) if e else ''
 def best_phone(c):
+    if c in CQ: return CQ[c]['phone']
     if _PH.get(c): return _PH[c]['phone'] + ' (' + _PH[c]['note'].split(';')[0] + ')'
     p = [x for x in _mine(c) if len(x) > 9 and x[9] and x[9] != 'None']; return (str(p[0][9]) + ' (' + p[0][1] + ')') if p else ''
 # the order (2026-10-21, Matthew: "prioritize the list by numbers +email, then numbers, then email. and then ranking"): a phone and an
 # email first, then a phone only, then an email only, then neither; the score orders each group
-def group(c): return 3 if has_phone(c) and has_email(c) else 2 if has_phone(c) else 1 if has_email(c) else 0
-GROUP_NAME = {3: 'Phone and email', 2: 'Phone only', 1: 'Email only', 0: 'Neither yet'}
-RANKED = sorted(LEADS, key=lambda x: (-group(x[0]), -sum(sc(x[0])), x[0]))
-ws = sheet(wb, 'Sponsor leads', ['Order', 'Company', 'Kind', 'Best email', 'Best phone', 'Group', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
-           [(i + 1, c, k, best_email(c), best_phone(c), GROUP_NAME[group(c)], sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
-           [6, 30, 18, 40, 34, 16, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26, 16, 40], first=True)
+# then (2026-10-21, Matthew: "prioritize the ones that lead to a good person"): who the number reaches, judged in data/call-quality.json
+CQ = {k: v for k, v in json.loads((DATA / 'call-quality.json').read_text(encoding='utf-8')).items() if not k.startswith('_')}
+def group(c):
+    t = (CQ.get(c) or {}).get('tier')
+    if t in (1, 2, 3): return 5 - t          # 4 direct to a good person, 3 small-organisation main line, 2 front desk: ask by name
+    if has_email(c): return 1                # email first (no good number)
+    return 0
+GROUP_NAME = {4: 'Direct to a good person', 3: 'Main line, small organisation', 2: 'Front desk: ask by name', 1: 'Email first', 0: 'Neither yet'}
+RANKED = sorted(LEADS, key=lambda x: (-group(x[0]), -int(has_email(x[0])), -sum(sc(x[0])), x[0]))
+ws = sheet(wb, 'Sponsor leads', ['Order', 'Company', 'Kind', 'Best email', 'Best phone', 'How to call', 'Group', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
+           [(i + 1, c, k, best_email(c), best_phone(c), (CQ.get(c) or {}).get('how', ''), GROUP_NAME[group(c)], sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
+           [6, 30, 18, 40, 16, 60, 22, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26, 16, 40], first=True)
 dv = DataValidation(type='list', formula1='"Not contacted,Emailed,Called,Tour booked,Toured,Proposal sent,Signed,Not now,No"', allow_blank=True)
-ws.add_data_validation(dv); dv.add(f'P2:P{len(LEADS) + 1}')
+ws.add_data_validation(dv); dv.add(f'Q2:Q{len(LEADS) + 1}')
 for r in range(2, len(LEADS) + 2):
-    for col in 'PQRST': ws[f'{col}{r}'].fill = YEL
+    for col in 'QRSTU': ws[f'{col}{r}'].fill = YEL
 sheet(wb, 'Renewals (Peak sponsors)', ['Sponsor', 'Level', 'Where seen', 'Renews when', 'Contact', 'Status', 'Notes'], [(n, l, w, '', '', '', '') for n, l, w in RENEW], [34, 10, 60, 14, 26, 14, 30])
 sheet(wb, 'Employers 400+', ['Employer', 'Kind', 'Employees', 'Year of count', 'Source', 'Membership idea / notes'],
       EMP, [40, 20, 12, 12, 46, 70])
@@ -324,7 +331,7 @@ print('wrote', OUT, len(LEADS), 'leads,', len(EMP), 'employers,', len(PRICES), '
 import html, subprocess
 E = lambda t: html.escape(str(t))
 top = RANKED[:15]
-rows1 = ''.join(f'<tr><td class="n">{i + 1}</td><td><b>{E(c)}</b> <small>{("✉" if has_email(c) else "") + (" ☎" if has_phone(c) else "")}</small><br><small>{E(k)}</small></td><td class="n">{sum(sc(c))}</td><td>{E(w)}</td><td>{E(r)}</td></tr>' for i, (c, k, w, s0, r, l, p) in enumerate(top))
+rows1 = ''.join(f'<tr><td class="n">{i + 1}</td><td><b>{E(c)}</b><br><small>{E(k)}</small>{("<br><small><b>" + E(CQ[c]["how"]) + (": " + E(CQ[c]["phone"]) if CQ[c]["phone"] else "") + "</b></small>") if c in CQ else ""}</td><td class="n">{sum(sc(c))}</td><td>{E(w)}</td><td>{E(r)}</td></tr>' for i, (c, k, w, s0, r, l, p) in enumerate(top))
 lv = {}
 for n, l, w in RENEW: lv.setdefault(l, []).append(n)
 renew = ''.join(f'<p><b>{E(l)} ({len(v)}):</b> {E(", ".join(v))}</p>' for l, v in lv.items())
@@ -346,7 +353,7 @@ th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,
 </style></head><body>
 <div class="k">Peak Pickleball · corporate sponsorships · draft, nothing sent</div>
 <h1>Who to call first</h1>
-<p class="sub">{len(LEADS)} new companies. Ordered phone and email (☎ ✉) first, then phone only, then email only, then neither; within each group by a score out of 9: fit with sports, fitness and health (3), money (3), already sponsors local sport (2), near Peak (1). The score is our rating; change it as you learn. Full list, contacts columns and sources: Peak-Sponsor-Leads-2026-10.xlsx.</p>
+<p class="sub">{len(LEADS)} new companies. Ordered by who the phone reaches: a direct line to a good person first, then small organisations’ main lines, then front desks (ask by name), then email only, then neither; within each by a score out of 9: fit with sports, fitness and health (3), money (3), already sponsors local sport (2), near Peak (1). The score is our rating; change it as you learn. Full list, contacts columns and sources: Peak-Sponsor-Leads-2026-10.xlsx.</p>
 <table><tr><th class="n">#</th><th>Company</th><th class="n">Score</th><th>Why they fit</th><th>How to reach them</th></tr>{rows1}</table>
 <h2>Renewals: Peak\u2019s own sponsors</h2>
 <p>Ask Peak for each sponsor\u2019s renewal date and how each is doing. Keeping these is cheaper than finding new ones.</p>{renew}
@@ -406,6 +413,8 @@ for l in seed['leads']:
     if l['list'] == 'new' and l['name'] in PH:
         l['phone'] = PH[l['name']]['phone']; l['phoneNote'] = PH[l['name']]['note'] + ' (' + PH[l['name']]['kind'] + ')'
         if PH[l['name']].get('email'): l['contacts'] = l.get('contacts', []) + [{'name': 'General inbox', 'pos': 'general', 'email': PH[l['name']]['email'], 'conf': None, 'pick': not l.get('contacts')}]
+    if l['list'] == 'new' and l['name'] in CQ:
+        q = CQ[l['name']]; l['callTier'] = q['tier']; l['callHow'] = q['how']; l['phone'] = q['phone']; l['phoneNote'] = ''
     if l['name'] == 'Kaiser Permanente': l['contacts'] = l.get('contacts', []) + [{'name': 'Colorado community sponsorships', 'pos': 'Sponsorship inbox (rules exclude advertising)', 'email': 'communityco@kp.org', 'conf': None, 'pick': True}]
 seed['packages'] = [{'k': 'court', 'name': 'Court sponsor', 'price': 12000, 'per': 'year', 'note': 'Peak’s published price'}, {'k': 'title', 'name': 'Title sponsor', 'price': 24000, 'per': 'year', 'note': 'Peak’s published price'}]
 (DATA / 'desk-seed.json').write_text(json.dumps(seed, ensure_ascii=False, indent=1), encoding='utf-8')
