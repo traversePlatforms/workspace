@@ -223,9 +223,9 @@ def _rank(pos):
 CONTACTS = []
 for comp, d in HUN.items():
     ppl = sorted(d.get('emails') or [], key=lambda e: (_rank(e.get('pos')), -(e.get('conf') or 0)))
-    for i, e in enumerate(ppl):
-        if _rank(e.get('pos')) == 9: continue
-        CONTACTS.append((comp, ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip(), e.get('pos') or '', e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', e.get('li') or '', 'Ask for first' if i == 0 else ''))
+    for i, e in enumerate(ppl):   # everyone Hunter found; the best-matched role first (a general inbox shows as such)
+        nm = ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip()
+        CONTACTS.append((comp, nm or 'General inbox', e.get('pos') or ('' if nm else 'general'), e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', e.get('li') or '', 'Ask for first' if i == 0 else ''))
 
 # the local businesses Hunter searched (owners and managers first, then the general inbox)
 HLOC = json.loads((DATA / 'hunter-local-results.json').read_text(encoding='utf-8')) if (DATA / 'hunter-local-results.json').exists() else {}

@@ -86,6 +86,27 @@
      "email": "alan.katzen@uchealth.org",
      "conf": 82,
      "pick": false
+    },
+    {
+     "name": "Mary Romero",
+     "pos": "Executive Director",
+     "email": "mary.romero@uchealth.org",
+     "conf": 85,
+     "pick": false
+    },
+    {
+     "name": "Carolyn Paula",
+     "pos": "CCO",
+     "email": "paula.freund@uchealth.org",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Karen Schneider",
+     "pos": "Executive Director",
+     "email": "karen.schneider@uchealth.org",
+     "conf": 82,
+     "pick": false
     }
    ]
   },
@@ -216,6 +237,48 @@
      "email": "amartin@bokf.com",
      "conf": 83,
      "pick": false
+    },
+    {
+     "name": "Cameron Reed",
+     "pos": "Managing Director",
+     "email": "c.reed@bokf.com",
+     "conf": 85,
+     "pick": false
+    },
+    {
+     "name": "Lester Byrd",
+     "pos": "Managing Director",
+     "email": "lbyrd@bokf.com",
+     "conf": 85,
+     "pick": false
+    },
+    {
+     "name": "Molly Odgers",
+     "pos": "Managing Director",
+     "email": "modgers@bokf.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Jessica Johnson",
+     "pos": "Senior Director",
+     "email": "jessica.johnson@bokf.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Tammy Foy",
+     "pos": "Director",
+     "email": "tfoy@bokf.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Josh Mclaughlin",
+     "pos": "Managing Director",
+     "email": "jmclaughlin@bokf.com",
+     "conf": 84,
+     "pick": false
     }
    ]
   },
@@ -295,6 +358,13 @@
      "email": "jennifer.schmid@molsoncoors.com",
      "conf": 96,
      "pick": false
+    },
+    {
+     "name": "Pete Coors",
+     "pos": "Chairman",
+     "email": "pete.coors@molsoncoors.com",
+     "conf": 99,
+     "pick": false
     }
    ]
   },
@@ -311,7 +381,29 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "Owner names found are from 2013 (Stetson Hills studio): ask the studio.",
    "webLink": "https://www.franchising.com/amp/news/20131202_orangetheory_fitness_set_to_open_first_southern_co.html",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "memberservices@orangetheory.com",
+     "conf": 99,
+     "pick": true
+    },
+    {
+     "name": "Marissa Fattore",
+     "pos": "Media Contact",
+     "email": "mfattore@orangetheory.com",
+     "conf": 94,
+     "pick": false
+    },
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "social@orangetheory.com",
+     "conf": 84,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "a04ec8d03e",
@@ -341,7 +433,78 @@
    "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Gilbert Delarosa",
+     "pos": "Vice President of Marketing",
+     "email": "gilbert.delarosa@chordenergy.com",
+     "conf": 93,
+     "pick": true
+    },
+    {
+     "name": "Erika Pizano",
+     "pos": "Crude Oil Marketing Analyst",
+     "email": "erika.pizano@chordenergy.com",
+     "conf": 79,
+     "pick": false
+    },
+    {
+     "name": "Lindsey Holcombe",
+     "pos": "Senior Marketing Analyst",
+     "email": "lindsey.holcombe@chordenergy.com",
+     "conf": 79,
+     "pick": false
+    },
+    {
+     "name": "Krystal McClain",
+     "pos": "Marketing Analyst",
+     "email": "krystal.mcclain@chordenergy.com",
+     "conf": 78,
+     "pick": false
+    },
+    {
+     "name": "Kevin Kelly",
+     "pos": "Senior Vice President of Sustainability",
+     "email": "kevin.kelly@chordenergy.com",
+     "conf": 90,
+     "pick": false
+    },
+    {
+     "name": "Jenny Simpson",
+     "pos": "Board Member",
+     "email": "jenny.simpson@chordenergy.com",
+     "conf": 96,
+     "pick": false
+    },
+    {
+     "name": "Samantha Holroyd",
+     "pos": "Board Member",
+     "email": "samantha.holroyd@chordenergy.com",
+     "conf": 95,
+     "pick": false
+    },
+    {
+     "name": "Michael Lou",
+     "pos": "CCO",
+     "email": "michael.lou@chordenergy.com",
+     "conf": 91,
+     "pick": false
+    },
+    {
+     "name": "Melissa Folz",
+     "pos": "Managing Director",
+     "email": "melissa.folz@chordenergy.com",
+     "conf": 78,
+     "pick": false
+    },
+    {
+     "name": "Jason Weddle",
+     "pos": "Managing Director",
+     "email": "jason.weddle@chordenergy.com",
+     "conf": 76,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "1c5c2bf8c4",
@@ -434,6 +597,13 @@
      "email": "hcurtis@swirecc.com",
      "conf": 75,
      "pick": false
+    },
+    {
+     "name": "Beau Chandler",
+     "pos": "VP & GM",
+     "email": "bchandler@swirecc.com",
+     "conf": 75,
+     "pick": false
     }
    ]
   },
@@ -450,7 +620,15 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "Nothing found under this name; ask the Sports Corp who it is.",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Dirk Hobbs",
+     "pos": "Division Manager",
+     "email": "dhobbs@coloradomediagroup.com",
+     "conf": 67,
+     "pick": true
+    }
+   ]
   },
   {
    "id": "887b4d3f84",
@@ -494,6 +672,13 @@
      "email": "amber@conceptrestaurants.com",
      "conf": 93,
      "pick": false
+    },
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "marketing@conceptrestaurants.com",
+     "conf": 95,
+     "pick": false
     }
    ]
   },
@@ -510,7 +695,78 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "James Robinson",
+     "pos": "Vice President, Marketing",
+     "email": "james.robinson@cumulus.com",
+     "conf": 99,
+     "pick": true
+    },
+    {
+     "name": "Vinny Moses",
+     "pos": "Director of Marketing",
+     "email": "vmoses@cumulus.com",
+     "conf": 98,
+     "pick": false
+    },
+    {
+     "name": "Eric Mastel",
+     "pos": "Vice President",
+     "email": "eric.mastel@cumulus.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Donna Baker",
+     "pos": "Regional Vice President",
+     "email": "donna.baker@cumulus.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "John Kaufman",
+     "pos": "Senior Vice President of Revenue",
+     "email": "john.kaufman@cumulus.com",
+     "conf": 97,
+     "pick": false
+    },
+    {
+     "name": "Tish Boden",
+     "pos": "Vice President",
+     "email": "tish.boden@cumulus.com",
+     "conf": 97,
+     "pick": false
+    },
+    {
+     "name": "Tricia Gallenbeck",
+     "pos": "Vice President",
+     "email": "tricia.gallenbeck@cumulus.com",
+     "conf": 97,
+     "pick": false
+    },
+    {
+     "name": "Steve Holm",
+     "pos": "Vice President, Regional",
+     "email": "steve.holm@cumulus.com",
+     "conf": 96,
+     "pick": false
+    },
+    {
+     "name": "Chris Hoffman",
+     "pos": "Vice President, Adult Contemporary",
+     "email": "chris.hoffman@cumulus.com",
+     "conf": 96,
+     "pick": false
+    },
+    {
+     "name": "Dale Jackson",
+     "pos": "Talk Show Host",
+     "email": "dale.jackson@cumulus.com",
+     "conf": 96,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "ecb6a9ef90",
@@ -574,6 +830,27 @@
      "email": "bwinter@ent.com",
      "conf": 75,
      "pick": false
+    },
+    {
+     "name": "Marie Montana",
+     "pos": "Entrepreneur",
+     "email": "mmontana@ent.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Jean Chatelain",
+     "pos": "Entrepreneur",
+     "email": "jchatelain@ent.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Leanne Duran",
+     "pos": "Chief Risk Officer",
+     "email": "lduran@ent.com",
+     "conf": 75,
+     "pick": false
     }
    ]
   },
@@ -590,7 +867,78 @@
    "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Tom Sicola",
+     "pos": "Vp Of Marketing",
+     "email": "tom.sicola@mclaneco.com",
+     "conf": 99,
+     "pick": true
+    },
+    {
+     "name": "Breann Hudson",
+     "pos": "Director of Marketing",
+     "email": "breann.hudson@mclaneco.com",
+     "conf": 97,
+     "pick": false
+    },
+    {
+     "name": "Taylor Bonales",
+     "pos": "Marketing Director",
+     "email": "taylor.skinner@mclaneco.com",
+     "conf": 96,
+     "pick": false
+    },
+    {
+     "name": "Marcelo Gaitan",
+     "pos": "Marketing Director",
+     "email": "marcelo.gaitan@mclaneco.com",
+     "conf": 95,
+     "pick": false
+    },
+    {
+     "name": "Diane Watts",
+     "pos": "Marketing Director",
+     "email": "diane.watts@mclaneco.com",
+     "conf": 95,
+     "pick": false
+    },
+    {
+     "name": "Vito Maurici",
+     "pos": "Senior Vice President",
+     "email": "vito.maurici@mclaneco.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Tony Frankenberger",
+     "pos": "CEO",
+     "email": "tony.frankenberger@mclaneco.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Nef García",
+     "pos": "Vice President of Government Relations",
+     "email": "neftali.garcia@mclaneco.com",
+     "conf": 97,
+     "pick": false
+    },
+    {
+     "name": "Ken Mason",
+     "pos": "Division President",
+     "email": "ken.mason@mclaneco.com",
+     "conf": 96,
+     "pick": false
+    },
+    {
+     "name": "Barry Taft",
+     "pos": "Director of Labor Relations",
+     "email": "barry.taft@mclaneco.com",
+     "conf": 99,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "36957bd59c",
@@ -605,7 +953,78 @@
    "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Alison Tucker",
+     "pos": "Vice President of Marketing",
+     "email": "atucker@pcl.com",
+     "conf": 93,
+     "pick": true
+    },
+    {
+     "name": "Kathryn Seymour",
+     "pos": "Marketing Director",
+     "email": "kseymour@pcl.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Richard Hewitt",
+     "pos": "Vice President",
+     "email": "rhewitt@pcl.com",
+     "conf": 93,
+     "pick": false
+    },
+    {
+     "name": "Andrew Moles",
+     "pos": "Vice President",
+     "email": "amoles@pcl.com",
+     "conf": 92,
+     "pick": false
+    },
+    {
+     "name": "Dale Koger",
+     "pos": "Vice President",
+     "email": "dkoger@pcl.com",
+     "conf": 92,
+     "pick": false
+    },
+    {
+     "name": "Paul Knowles",
+     "pos": "Vice President",
+     "email": "pknowles@pcl.com",
+     "conf": 92,
+     "pick": false
+    },
+    {
+     "name": "Sébastien Tremblay",
+     "pos": "Vice President and General Manager",
+     "email": "stremblay@pcl.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "David Hudock",
+     "pos": "Director of Government Relations",
+     "email": "dhudock@pcl.com",
+     "conf": 93,
+     "pick": false
+    },
+    {
+     "name": "Lee Clayton",
+     "pos": "SVP Global Strategic Initiatives",
+     "email": "lclayton@pcl.com",
+     "conf": 93,
+     "pick": false
+    },
+    {
+     "name": "Chris Robinson",
+     "pos": "Director of Labor Relations",
+     "email": "crobinson@pcl.com",
+     "conf": 91,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "ccc15dfbcc",
@@ -620,7 +1039,78 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Jennifer Eldridge",
+     "pos": "Marketing Director",
+     "email": "jeldridge@republicservices.com",
+     "conf": 84,
+     "pick": true
+    },
+    {
+     "name": "Michael Caprio",
+     "pos": "Regional President",
+     "email": "mcaprio@republicservices.com",
+     "conf": 85,
+     "pick": false
+    },
+    {
+     "name": "Casey Powers",
+     "pos": "Vice President",
+     "email": "cpowers@republicservices.com",
+     "conf": 85,
+     "pick": false
+    },
+    {
+     "name": "Bob Pickens",
+     "pos": "Vice President",
+     "email": "bpickens@republicservices.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Craig Mikolajchak",
+     "pos": "Vice President",
+     "email": "cmikolajchak@republicservices.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Chuck Helget",
+     "pos": "Director",
+     "email": "chelget@republicservices.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Holly Doyle",
+     "pos": "Director",
+     "email": "hdoyle@republicservices.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Rhett Gulledge",
+     "pos": "Executive Director",
+     "email": "rgulledge@republicservices.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Steve Derus",
+     "pos": "General Manager",
+     "email": "sderus@republicservices.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Tim Odonnell",
+     "pos": "Executive Director",
+     "email": "todonnell@republicservices.com",
+     "conf": 83,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "be7dda3bda",
@@ -635,7 +1125,78 @@
    "source": "T. Rowe Price locations page and 2008 release (via search; see Fact-check)",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Bill Benintende",
+     "pos": "Vice President of Investments",
+     "email": "bill_benintende@troweprice.com",
+     "conf": 85,
+     "pick": true
+    },
+    {
+     "name": "Matt McCauley",
+     "pos": "Vice President of Investments",
+     "email": "matt.mccauley@troweprice.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Peter Foley",
+     "pos": "Vice President",
+     "email": "peter.foley@troweprice.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Kevin Baldes",
+     "pos": "Vice President, Relationship Management",
+     "email": "kevin.baldes@troweprice.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Taylor Pidgeon",
+     "pos": "Vice President, Retirement Plans",
+     "email": "taylor.pidgeon@troweprice.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Daniel Morris",
+     "pos": "Vice President of Retirement",
+     "email": "daniel.morris@troweprice.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "James Mathis",
+     "pos": "Director",
+     "email": "james.mathis@troweprice.com",
+     "conf": 85,
+     "pick": false
+    },
+    {
+     "name": "Kelly Hammond",
+     "pos": "Partner",
+     "email": "kelly.hammond@troweprice.com",
+     "conf": 85,
+     "pick": false
+    },
+    {
+     "name": "John Eiler",
+     "pos": "Partner",
+     "email": "john.eiler@troweprice.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Carsten Kutschera",
+     "pos": "Regional Director",
+     "email": "carsten.kutschera@troweprice.com",
+     "conf": 84,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "61dce83cad",
@@ -664,6 +1225,62 @@
      "email": "chris.reen@gazette.com",
      "conf": 92,
      "pick": false
+    },
+    {
+     "name": "Jim Oconnell",
+     "pos": "Lead Copy Editor",
+     "email": "jim.oconnell@gazette.com",
+     "conf": 98,
+     "pick": false
+    },
+    {
+     "name": "Brennen Kauffman",
+     "pos": "News Reporter",
+     "email": "brennen.kauffman@gazette.com",
+     "conf": 97,
+     "pick": false
+    },
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "advertisingresponse@gazette.com",
+     "conf": 96,
+     "pick": false
+    },
+    {
+     "name": "Grace Brajkovich",
+     "pos": "Multimedia Reporter",
+     "email": "grace.brajkovich@gazette.com",
+     "conf": 95,
+     "pick": false
+    },
+    {
+     "name": "Cleo Westin",
+     "pos": "News Reporter",
+     "email": "cleo.westin@gazette.com",
+     "conf": 94,
+     "pick": false
+    },
+    {
+     "name": "Stephanie Earls",
+     "pos": "Reporter",
+     "email": "stephanie.earls@gazette.com",
+     "conf": 94,
+     "pick": false
+    },
+    {
+     "name": "David Migoya",
+     "pos": "Senior Reporter",
+     "email": "david.migoya@gazette.com",
+     "conf": 94,
+     "pick": false
+    },
+    {
+     "name": "Chris Osher",
+     "pos": "Senior Investigative Reporter",
+     "email": "chris.osher@gazette.com",
+     "conf": 94,
+     "pick": false
     }
    ]
   },
@@ -680,7 +1297,78 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Kim Piet",
+     "pos": "Vice President of Partnerships",
+     "email": "kimpiet@iheartmedia.com",
+     "conf": 99,
+     "pick": true
+    },
+    {
+     "name": "Rachel Nelson",
+     "pos": "Marketing Partner",
+     "email": "rachelnelson@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Liliana Villarreal",
+     "pos": "Vice President, Music Marketing",
+     "email": "lilianavillarreal@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Cliff Chiet",
+     "pos": "Chief Marketing Officer",
+     "email": "cliffchiet@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Giselle Boling",
+     "pos": "Regional Marketing Director",
+     "email": "giselleboling@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Loraine Morrill",
+     "pos": "Director of Communications",
+     "email": "lorainemorrill@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Shaileen Santoro",
+     "pos": "Senior Vice President, Live Events",
+     "email": "shaileensantoro@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Linda Little",
+     "pos": "Regional President",
+     "email": "lindalittle@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Jessica Marventano",
+     "pos": "Executive Vice President",
+     "email": "jessicamarventano@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Wilmer Valderrama",
+     "pos": "CMO",
+     "email": "wilmervalderrama@iheartmedia.com",
+     "conf": 99,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "fe084629d4",
@@ -740,7 +1428,78 @@
    "source": "Insurance Journal 2011 (via search; see Fact-check)",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Charles Jarrett",
+     "pos": "Vice President And Chief Financial Officer",
+     "email": "chuck_jarrett@progressive.com",
+     "conf": 85,
+     "pick": true
+    },
+    {
+     "name": "Tricia Griffith",
+     "pos": "CEO",
+     "email": "tricia_griffith@progressive.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Matt Stafford",
+     "pos": "Agile Delivery Owner",
+     "email": "matt_stafford@progressive.com",
+     "conf": 62,
+     "pick": false
+    },
+    {
+     "name": "Mike Macfarlane",
+     "pos": "Consulting Vice President Vp Professional Sales",
+     "email": "mike_macfarlane@progressive.com",
+     "conf": 62,
+     "pick": false
+    },
+    {
+     "name": "Janice Tighe",
+     "pos": "President",
+     "email": "janice_tighe@progressive.com",
+     "conf": 62,
+     "pick": false
+    },
+    {
+     "name": "Patrick Nettles",
+     "pos": "Director",
+     "email": "patrick_nettles@progressive.com",
+     "conf": 81,
+     "pick": false
+    },
+    {
+     "name": "Jennifer Napolitano",
+     "pos": "Partner",
+     "email": "jnapoli@progressive.com",
+     "conf": 69,
+     "pick": false
+    },
+    {
+     "name": "Jennifer Napolitano",
+     "pos": "Partner",
+     "email": "jennifer_b_napolitano@progressive.com",
+     "conf": 67,
+     "pick": false
+    },
+    {
+     "name": "Aia Costanzo",
+     "pos": "Director",
+     "email": "rose_costanzo@progressive.com",
+     "conf": 62,
+     "pick": false
+    },
+    {
+     "name": "Ken Sloan",
+     "pos": "Partner",
+     "email": "ken_sloan@progressive.com",
+     "conf": 62,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "b2e7a91fdb",
@@ -785,7 +1544,78 @@
    "source": "Area Development 2017 (via search; see Fact-check)",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Jennifer Escobar",
+     "pos": "VP of Brand Marketing",
+     "email": "jennifer.escobar@usaa.com",
+     "conf": 75,
+     "pick": true
+    },
+    {
+     "name": "Roger Wildermuth",
+     "pos": "Director of Communications",
+     "email": "roger.wildermuth@usaa.com",
+     "conf": 84,
+     "pick": false
+    },
+    {
+     "name": "Anna Albert",
+     "pos": "Director of Communications",
+     "email": "anna.albert@usaa.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Danielle Long",
+     "pos": "Director of Employee Communications",
+     "email": "danielle.long@usaa.com",
+     "conf": 82,
+     "pick": false
+    },
+    {
+     "name": "Sheila Sanchez",
+     "pos": "Vice President",
+     "email": "sheila.sanchez@usaa.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Wayne Peacock",
+     "pos": "CEO",
+     "email": "wayne.peacock@usaa.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Stuart Parker",
+     "pos": "Chief Executive",
+     "email": "stuart.parker@usaa.com",
+     "conf": 82,
+     "pick": false
+    },
+    {
+     "name": "Chris Talley",
+     "pos": "Founder",
+     "email": "chris.talley@usaa.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Michael Bates",
+     "pos": "Executive Director Managing",
+     "email": "michael.bates@usaa.com",
+     "conf": 81,
+     "pick": false
+    },
+    {
+     "name": "Dana Hagood",
+     "pos": "Executive Director",
+     "email": "dana.hagood@usaa.com",
+     "conf": 81,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "a595a498f8",
@@ -845,7 +1675,22 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Lola Woloch",
+     "pos": "CEO",
+     "email": "lolaw@scwcc.com",
+     "conf": 99,
+     "pick": true
+    },
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "ceo@scwcc.com",
+     "conf": 98,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "6bd46d1027",
@@ -860,7 +1705,15 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Elizabeth Grzelak",
+     "pos": "President",
+     "email": "elizabeth@windstarstudios.com",
+     "conf": 90,
+     "pick": true
+    }
+   ]
   },
   {
    "id": "21e1869282",
@@ -905,7 +1758,36 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Jeff Dwire",
+     "pos": "Owner",
+     "email": "jeff@dwirex.com",
+     "conf": 92,
+     "pick": true
+    },
+    {
+     "name": "Adam Dilg",
+     "pos": "Project Management",
+     "email": "adam@dwirex.com",
+     "conf": 99,
+     "pick": false
+    },
+    {
+     "name": "Erik Vaishville",
+     "pos": "Land Development Manager",
+     "email": "erik@dwirex.com",
+     "conf": 97,
+     "pick": false
+    },
+    {
+     "name": "Wade Fothergill",
+     "pos": "Project Management",
+     "email": "wade@dwirex.com",
+     "conf": 93,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "d127e80d70",
