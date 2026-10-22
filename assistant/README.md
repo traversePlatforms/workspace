@@ -2,10 +2,10 @@
 
 Matthew's own tool for both personal and business clerical work. It belongs to Matthew, not to Surge, Sixfold or Traverse. Started 2026-10-22.
 
-**First part: email.** Every 10 minutes it checks each connected Gmail inbox and has Claude sort each new email: needs a reply, to do, calendar, waiting on others, for your information, receipt, newsletter, offer, or looks like spam. Where a reply is wanted, it writes a draft into that inbox's Gmail Drafts. **It never sends anything.** Matthew reads, edits and sends from Gmail.
+**First part: email.** Every 10 minutes it checks each connected Gmail inbox and has Claude sort each new email: needs a reply, to do, calendar, waiting on others, for your information, receipt, newsletter, offer, or looks like spam. Where a reply is wanted, it writes a draft into that inbox's Gmail Drafts. **It never sends on its own.** Matthew reads each email in full in the assistant and replies there (2026-10-22): he can have Claude write or rewrite the reply, save it as a Gmail draft, or press **Send**, which asks "Send this reply to … from …?" first and sends from that inbox in the same thread.
 
 - Page: `https://traverseplatforms.com/a-e018bb82/`. Password only, after a one-time setup code.
-- Inboxes Matthew chose: personal Gmail, Traverse, Sixfold / 365. Surge is not connected.
+- Inboxes (connected 2026-10-22): personal Gmail, Traverse, contact@sixfoldcolorado.com (his alone) and Surge (his choice, after I flagged it as employer mail).
 - Claude: `claude-opus-5-5` through the official PHP SDK (`anthropic-ai/sdk`), with server-side fallbacks on. Sorting runs at effort `low` with a JSON schema; drafts run at `medium`.
 
 ## Where things are
@@ -38,7 +38,7 @@ Data files: `config.json` holds the password hash, the Anthropic key, the Google
 
 ## Rules
 
-- Nothing is sent, posted or deleted. Drafts only. Gmail's scope is `gmail.modify`, which can read mail and write drafts but cannot delete mail for good.
+- Nothing is sent unless Matthew presses Send and says yes; nothing is posted or deleted. Gmail's scope is `gmail.modify`, which covers reading, drafts and sending but cannot delete mail for good. Each send is logged (inbox, recipient, subject) in assistant.log.
 - An email is someone else's words. The prompts tell Claude to treat it as data and never follow instructions inside it.
 - Keys are pasted into the page, never into chat, and are never returned to the page.
 - **Next parts**, not built yet:

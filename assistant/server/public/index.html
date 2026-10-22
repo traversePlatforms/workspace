@@ -117,6 +117,29 @@
   .acct .head b{font-size:15px}
   ol{padding-left:20px;margin:6px 0 10px} li{margin:0 0 6px}
   code{font-size:12.5px;background:var(--sunk);padding:2px 6px;border-radius:6px;word-break:break-all}
+  /* an email in full, and the reply box (2026-10-22) */
+  .row.tap{cursor:pointer}
+  .row.tap:hover{background:var(--sunk)}
+  .row.tap:focus-visible{outline:2px solid var(--btn);outline-offset:-2px}
+  .sheetbg{position:fixed;inset:0;z-index:20;background:rgba(10,16,28,.45);display:flex;justify-content:center;align-items:stretch}
+  .sheet{background:var(--bg);width:100%;max-width:820px;overflow:auto;display:flex;flex-direction:column;border-top:4px solid var(--c)}
+  @media (min-width:860px){.sheetbg{align-items:flex-start;padding:28px 16px}.sheet{border-radius:16px;max-height:calc(100vh - 56px);border-top-width:5px;box-shadow:0 20px 60px rgba(0,0,0,.35)}}
+  .shhead{position:sticky;top:0;z-index:1;display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--card);border-bottom:1px solid var(--line)}
+  .shtitle{display:grid;gap:2px;min-width:0}
+  .shtitle b{font:700 17px/1.25 var(--head)}
+  .shmeta{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--soft)}
+  .shbody{padding:14px 16px 24px;display:grid;gap:12px;align-content:start}
+  .shfrom{font-size:14px;display:grid;gap:2px;word-break:break-word}
+  .shsum{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:10px 12px;font-size:14px}
+  .shtext{white-space:pre-wrap;word-break:break-word;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:15px;line-height:1.55;max-height:45vh;overflow:auto}
+  .shbody>.btn{justify-self:start}
+  .reply{display:grid;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .rlabel{font:700 15px var(--head)}
+  .rtext{min-height:190px;font-size:15px;line-height:1.5;background:var(--bg)}
+  .rnote{display:flex;gap:8px;flex-wrap:wrap}
+  .rnote input{flex:1;min-width:200px}
+  .racts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .racts .small{flex:1;min-width:160px}
   .sign{max-width:380px;margin:12vh auto 0;padding:0 16px}
   .sign .panel{padding:22px}
   .sign .brand{margin:0 0 16px;color:var(--bar);--hole:var(--bg)}
@@ -273,18 +296,73 @@
     r.appendChild(el('div', 'subj', i.subject));
     if (i.summary) r.appendChild(el('div', 'sum', i.summary));
     if (i.todo) { var td = el('div', 'todo'); td.appendChild(ico('arrow')); td.appendChild(document.createTextNode(i.todo)); r.appendChild(td); }
+    /* tap the email to read it in full and reply here (2026-10-22) */
+    r.classList.add('tap'); r.tabIndex = 0; r.setAttribute('role', 'button'); r.setAttribute('aria-label', 'Read ' + i.subject + ' from ' + i.from);
+    r.addEventListener('click', function (e) { if (e.target.closest('.acts')) return; openSheet(i, a); });
+    r.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.target.closest('.acts')) openSheet(i, a); });
     var acts = el('div', 'acts');
-    if (i.draftId) { var dl = el('a', 'btn ready'); dl.appendChild(ico('check')); dl.appendChild(document.createTextNode('Draft ready')); dl.href = gmailUrl(i.acct, 'drafts'); dl.target = '_blank'; dl.rel = 'noopener'; acts.appendChild(dl); }
-    else if (i.category === 'needs_reply' || i.category === 'action') {   /* a draft button only where a reply is likely (2026-10-22) */
-      var dr = btn('Draft', 'pen');
-      dr.addEventListener('click', function () { dr.disabled = true; dr.lastChild.textContent = 'Writing…'; api('draft', { key: k }).then(function (x) { if (!x.ok) { flash = ['bad', x.error]; draw(); return; } flash = ['ok', 'Draft written: it is in ' + (a ? a.label : 'that inbox') + '’s Gmail drafts.']; home(); }); });
-      acts.appendChild(dr);
+    if (i.category === 'needs_reply' || i.category === 'action' || i.draftId) {
+      var rp = btn(i.draftId ? 'Reply · draft ready' : 'Reply', 'reply', i.draftId ? 'ready' : null);
+      rp.addEventListener('click', function () { openSheet(i, a, true); });
+      acts.appendChild(rp);
     }
     var op = el('a', 'btn'); op.appendChild(ico('open')); op.appendChild(document.createTextNode('Open')); op.href = gmailUrl(i.acct, 'all/' + encodeURIComponent(i.threadId)); op.target = '_blank'; op.rel = 'noopener'; acts.appendChild(op);
     var dn = btn('Done', 'check'); dn.title = 'Take it off this list (Gmail is not changed)';
     dn.addEventListener('click', function () { dn.disabled = true; api('done', { key: k }).then(function () { S.data.items = S.data.items.filter(function (x) { return x.acct + ':' + x.id !== k; }); draw(); }); });
     acts.appendChild(dn); r.appendChild(acts);
     return r;
+  }
+  /* the email in full, with a reply box: Claude can write it, it can be saved as a Gmail draft, and Send (after a yes) sends it from
+     that inbox in the same thread. The email's text is shown as text, never as HTML. */
+  function openSheet(i, a, focusReply) {
+    var k = i.acct + ':' + i.id, old = document.getElementById('sheet'); if (old) old.remove();
+    var bg = el('div', 'sheetbg'); bg.id = 'sheet'; bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true');
+    var sh = el('div', 'sheet'); sh.style.setProperty('--c', colorOf(a)); bg.appendChild(sh);
+    var hd = el('div', 'shhead'), x = btn(null, 'back', 'iconbtn'); x.setAttribute('aria-label', 'Back to the list'); hd.appendChild(x);
+    var ht = el('div', 'shtitle'); ht.appendChild(el('b', null, i.subject)); var mt = el('span', 'shmeta'); var d = el('span', 'dot'); d.style.setProperty('--c', colorOf(a)); mt.appendChild(d); mt.appendChild(document.createTextNode((a ? a.label : i.acct) + ' · ' + ago(i.date))); ht.appendChild(mt); hd.appendChild(ht);
+    sh.appendChild(hd);
+    var body = el('div', 'shbody'); body.appendChild(el('p', 'muted', 'Opening the email…')); sh.appendChild(body);
+    var dirty = false, close = function () { if (dirty && !confirm('Close without saving your reply?')) return; bg.remove(); document.removeEventListener('keydown', esc); document.body.style.overflow = ''; };
+    var esc = function (e) { if (e.key === 'Escape') close(); };
+    x.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); }); document.addEventListener('keydown', esc);
+    document.body.appendChild(bg); document.body.style.overflow = 'hidden';
+    api('open', { key: k }).then(function (m) {
+      body.textContent = '';
+      if (!m.ok) { body.appendChild(el('div', 'flash bad', m.error || 'Could not open it.')); return; }
+      var meta = el('div', 'shfrom'); meta.appendChild(el('div', null, 'From: ' + m.from)); meta.appendChild(el('div', 'muted', 'To: ' + m.to + (m.cc ? ' · Cc: ' + m.cc : ''))); body.appendChild(meta);
+      if (i.summary) { var sm = el('div', 'shsum'); sm.appendChild(el('b', null, 'In short: ')); sm.appendChild(document.createTextNode(i.summary)); body.appendChild(sm); }
+      body.appendChild(el('div', 'shtext', m.text || '(no text)'));
+      var op = el('a', 'btn small'); op.appendChild(ico('open')); op.appendChild(document.createTextNode('Open in Gmail')); op.href = gmailUrl(i.acct, 'all/' + encodeURIComponent(i.threadId)); op.target = '_blank'; op.rel = 'noopener'; body.appendChild(op);
+      /* the reply */
+      var rb = el('div', 'reply'); rb.appendChild(el('div', 'rlabel', 'Reply to ' + m.replyTo));
+      var ta = el('textarea', 'rtext'); ta.value = m.draft || ''; ta.placeholder = 'Write your reply, or press Write it for me.'; ta.rows = 10; rb.appendChild(ta);
+      ta.addEventListener('input', function () { dirty = true; });
+      var nr = el('div', 'rnote'), note = el('input'); note.placeholder = 'Tell it what to say (optional): e.g. Tuesday at 2 works, $49 a seat'; nr.appendChild(note);
+      var wr = btn(m.draft ? 'Rewrite it' : 'Write it for me', 'pen'); nr.appendChild(wr); rb.appendChild(nr);
+      var msg = el('div', 'small muted'), row = el('div', 'racts');
+      var sv = btn('Save draft', null), sd = btn('Send', 'reply', 'go'); row.appendChild(msg); row.appendChild(sv); row.appendChild(sd); rb.appendChild(row);
+      body.appendChild(rb);
+      var busy = function (on) { [wr, sv, sd].forEach(function (b) { b.disabled = on; }); };
+      wr.addEventListener('click', function () {
+        busy(true); msg.textContent = 'Writing…';
+        api('write', { key: k, note: note.value }).then(function (r) { busy(false); if (!r.ok) { msg.textContent = r.error; return; } ta.value = r.text; dirty = true; msg.textContent = 'Written. Read it over, change what you like, then send or save.'; ta.focus(); }, function () { busy(false); msg.textContent = 'No connection.'; });
+      });
+      sv.addEventListener('click', function () {
+        busy(true); msg.textContent = 'Saving…';
+        api('savedraft', { key: k, text: ta.value }).then(function (r) { busy(false); if (!r.ok) { msg.textContent = r.error; return; } dirty = false; i.draftId = i.draftId || 'saved'; msg.textContent = 'Saved as a draft in ' + (a ? a.label : 'that inbox') + '’s Gmail.'; }, function () { busy(false); msg.textContent = 'No connection.'; });
+      });
+      sd.addEventListener('click', function () {
+        if (!ta.value.trim()) { msg.textContent = 'The reply is empty.'; return; }
+        if (!confirm('Send this reply to ' + m.replyTo + ' from ' + m.inbox + '?')) return;
+        busy(true); msg.textContent = 'Sending…';
+        api('send', { key: k, text: ta.value, confirmed: true }).then(function (r) {
+          busy(false); if (!r.ok) { msg.textContent = r.error; return; }
+          dirty = false; close(); flash = ['ok', 'Sent to ' + m.replyTo + '. It is in ' + (a ? a.label : 'that inbox') + '’s Gmail Sent.'];
+          S.data.items = S.data.items.filter(function (y) { return y.acct + ':' + y.id !== k; }); draw();
+        }, function () { busy(false); msg.textContent = 'No connection: not sent.'; });
+      });
+      if (focusReply) setTimeout(function () { ta.scrollIntoView({ block: 'center' }); ta.focus(); }, 60);
+    }, function () { body.textContent = 'No connection.'; });
   }
   function settings() {
     var j = S.data, wrap = el('div');

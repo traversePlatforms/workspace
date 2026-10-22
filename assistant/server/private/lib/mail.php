@@ -48,15 +48,42 @@ function trimQuoted(string $t): string {
 }
 function addrOf(string $h): string { return preg_match('/<([^>]+)>/', $h, $m) ? strtolower(trim($m[1])) : strtolower(trim($h)); }
 function nameOf(string $h): string { $n = trim(preg_replace('/<[^>]+>/', '', $h) ?? '', " \"'"); return $n !== '' ? $n : addrOf($h); }
-/** a reply draft in the message's own thread; Gmail fills in From. Returns the draft id, or null. */
-function makeDraft(string $email, array $m, string $body): ?string {
+/** the reply as a raw RFC 2822 message in the original's thread (To the sender, or its Reply-To; Re: subject; In-Reply-To and References);
+    Gmail fills in From with the inbox's own address */
+function replyRaw(array $m, string $body): string {
     $to = $m['replyTo'] !== '' ? $m['replyTo'] : $m['from'];
     $subj = preg_match('/^\s*re:/i', $m['subject']) ? $m['subject'] : 'Re: ' . $m['subject'];
     $enc = fn($s) => preg_match('/[^\x20-\x7e]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s;
     $refs = trim($m['references'] . ' ' . $m['messageId']);
-    $raw = 'To: ' . str_replace(["\r", "\n"], ' ', $to) . "\r\n" . 'Subject: ' . $enc(str_replace(["\r", "\n"], ' ', $subj)) . "\r\n"
+    $one = fn($s) => str_replace(["\r", "\n"], ' ', $s);
+    return 'To: ' . $one($to) . "\r\n" . 'Subject: ' . $enc($one($subj)) . "\r\n"
         . ($m['messageId'] !== '' ? 'In-Reply-To: ' . $m['messageId'] . "\r\n" : '') . ($refs !== '' ? 'References: ' . $refs . "\r\n" : '')
         . "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($body));
-    $r = gmail($email, 'POST', 'drafts', ['message' => ['raw' => b64u($raw), 'threadId' => $m['threadId']]]);
+}
+/** a reply draft in the message's own thread. Returns the draft id, or null. */
+function makeDraft(string $email, array $m, string $body): ?string {
+    $r = gmail($email, 'POST', 'drafts', ['message' => ['raw' => b64u(replyRaw($m, $body)), 'threadId' => $m['threadId']]]);
     return ($r['_status'] ?? 0) === 200 ? (string) ($r['id'] ?? '') : null;
+}
+/** a draft's text as Gmail holds it now (Matthew may have edited it in Gmail); null when it is gone */
+function draftText(string $email, string $draftId): ?string {
+    $r = gmail($email, 'GET', 'drafts/' . rawurlencode($draftId) . '?format=full');
+    if (($r['_status'] ?? 0) !== 200) return null;
+    return partText((array) ($r['message']['payload'] ?? []), 'text/plain');
+}
+/** the draft rewritten with Matthew's edits; a new draft when the old one is gone. Returns the draft id. */
+function saveDraft(string $email, array $m, ?string $draftId, string $body): ?string {
+    if ($draftId) {
+        $r = gmail($email, 'PUT', 'drafts/' . rawurlencode($draftId), ['id' => $draftId, 'message' => ['raw' => b64u(replyRaw($m, $body)), 'threadId' => $m['threadId']]]);
+        if (($r['_status'] ?? 0) === 200) return (string) ($r['id'] ?? $draftId);
+    }
+    return makeDraft($email, $m, $body);
+}
+/** send the reply: as the saved draft when there is one (so Gmail drops the draft), else as a new message in the thread. Only ever called
+    from the page's Send button, after Matthew confirms. */
+function sendReply(string $email, array $m, ?string $draftId, string $body): array {
+    $did = saveDraft($email, $m, $draftId, $body);
+    if ($did) { $r = gmail($email, 'POST', 'drafts/send', ['id' => $did]); }
+    else { $r = gmail($email, 'POST', 'messages/send', ['raw' => b64u(replyRaw($m, $body)), 'threadId' => $m['threadId']]); }
+    return (($r['_status'] ?? 0) === 200) ? ['ok' => true, 'id' => (string) ($r['id'] ?? '')] : ['ok' => false, 'error' => 'Gmail did not send it: ' . ($r['error']['message'] ?? ('HTTP ' . ($r['_status'] ?? 0)))];
 }

@@ -80,6 +80,49 @@ if ($action === 'account') {   /* label, what the inbox is for, sign-off, on or 
 }
 if ($action === 'check') { @set_time_limit(280); out(checkAll()); }
 if ($action === 'draft') { @set_time_limit(120); out(draftNow((string) ($body['key'] ?? ''))); }
+/* replying from the assistant (2026-10-22, Matthew: "respond right in the assistant"): open the email in full with its draft, have Claude
+   write one, save it, or send it. Send happens only from the page's Send button after Matthew confirms; nothing else in this app sends. */
+function itemAndMessage(string $key): array {
+    $it = jget('items.json')[$key] ?? null;
+    if (!$it) out(['ok' => false, 'error' => 'That email is not in the list any more.']);
+    $acct = jget('accounts.json')[$it['acct']] ?? null;
+    if (!$acct) out(['ok' => false, 'error' => 'That inbox is not connected.']);
+    $m = readMessage($it['acct'], $it['id']);
+    if (!$m) out(['ok' => false, 'error' => 'Gmail did not send that email back. Try again in a minute.']);
+    return [$it, $acct, $m];
+}
+if ($action === 'open') {
+    [$it, $acct, $m] = itemAndMessage((string) ($body['key'] ?? ''));
+    $draft = !empty($it['draftId']) ? draftText($it['acct'], (string) $it['draftId']) : null;
+    if ($draft === null && !empty($it['draftId'])) jedit('items.json', function ($all) use ($it) { $k = $it['acct'] . ':' . $it['id']; if (isset($all[$k])) $all[$k]['draftId'] = null; return $all; });   /* sent or deleted in Gmail */
+    out(['ok' => true, 'from' => $m['from'], 'to' => $m['to'], 'cc' => $m['cc'], 'replyTo' => $m['replyTo'] !== '' ? $m['replyTo'] : $m['from'], 'subject' => $m['subject'], 'date' => $m['date'],
+        'text' => $m['text'] !== '' ? $m['text'] : $m['snippet'], 'draft' => $draft, 'inbox' => $it['acct'], 'signature' => $acct['signature'] ?? 'Matthew']);
+}
+if ($action === 'write') {   /* Claude writes (or rewrites, with Matthew's note) a reply; it comes back to the box, nothing is saved yet */
+    @set_time_limit(120);
+    [$it, $acct, $m] = itemAndMessage((string) ($body['key'] ?? ''));
+    $note = mb_substr(trim((string) ($body['note'] ?? '')), 0, 500);
+    $text = draftReply($m, $acct, trim(($it['todo'] ?? '') . ($note !== '' ? '. Matthew says: ' . $note : '')));
+    out($text === null ? ['ok' => false, 'error' => 'No reply came back. Try again in a minute.'] : ['ok' => true, 'text' => $text]);
+}
+if ($action === 'savedraft' || $action === 'send') {
+    $key = (string) ($body['key'] ?? ''); $text = rtrim((string) ($body['text'] ?? ''));
+    if (trim($text) === '') out(['ok' => false, 'error' => 'The reply is empty.']);
+    if (mb_strlen($text) > 20000) out(['ok' => false, 'error' => 'That reply is too long for here: send it from Gmail.']);
+    [$it, $acct, $m] = itemAndMessage($key);
+    if ($action === 'savedraft') {
+        $did = saveDraft($it['acct'], $m, $it['draftId'] ?? null, $text);
+        if (!$did) out(['ok' => false, 'error' => 'Gmail did not take the draft.']);
+        jedit('items.json', function ($all) use ($key, $did) { if (isset($all[$key])) $all[$key]['draftId'] = $did; return $all; });
+        out(['ok' => true]);
+    }
+    if (empty($body['confirmed'])) out(['ok' => false, 'error' => 'Not confirmed.']);
+    $r = sendReply($it['acct'], $m, $it['draftId'] ?? null, $text);
+    if (!$r['ok']) out($r);
+    jedit('items.json', function ($all) use ($key) { if (isset($all[$key])) { $all[$key]['status'] = 'done'; $all[$key]['sentAt'] = time(); $all[$key]['draftId'] = null; } return $all; });
+    alog('reply sent', ['inbox' => $it['acct'], 'to' => addrOf($m['replyTo'] !== '' ? $m['replyTo'] : $m['from']), 'subject' => mb_substr($m['subject'], 0, 80)]);
+    out(['ok' => true]);
+}
 if ($action === 'done') {
     $key = (string) ($body['key'] ?? '');
     jedit('items.json', function ($all) use ($key) { if (isset($all[$key])) $all[$key]['status'] = 'done'; return $all; });
