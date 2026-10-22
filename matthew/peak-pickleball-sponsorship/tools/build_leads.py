@@ -227,6 +227,8 @@ for comp, d in HUN.items():
         nm = ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip()
         CONTACTS.append((comp, nm or 'General inbox', e.get('pos') or ('' if nm else 'general'), e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', e.get('li') or '', 'Ask for first' if i == 0 else '', e.get('phone') or ''))
 
+CONTACTS.append(('Kaiser Permanente', 'Colorado community sponsorships', 'Sponsorship inbox (rules exclude advertising)', 'communityco@kp.org', None, None, '', '', 'Ask for first', ''))   # Kaiser's own page
+CONTACTS.append(('Colorado Springs Chamber & EDC', 'General inbox', 'general', 'info@cscedc.com', None, None, '', '', 'Ask for first', '719-471-8183'))   # the Chamber's contact page
 # the local businesses Hunter searched (owners and managers first, then the general inbox)
 HLOC = json.loads((DATA / 'hunter-local-results.json').read_text(encoding='utf-8')) if (DATA / 'hunter-local-results.json').exists() else {}
 _PRI_L = [r'owner|president|founder|ceo|principal', r'manager|director|marketing']
@@ -261,15 +263,28 @@ def sheet(wb, title, cols, rows, widths, first=False):
 
 wb = Workbook()
 def sc(c): return SCORE.get(c, (0, 0, 0, 0))
-RANKED = sorted(LEADS, key=lambda x: (-sum(sc(x[0])), x[0]))
 _PH = {k: v for k, v in json.loads((DATA / 'phones.json').read_text(encoding='utf-8')).items() if not k.startswith('_')}
-ws = sheet(wb, 'Sponsor leads', ['Rank', 'Company', 'Kind', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
-           [(i + 1, c, k, sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
-           [6, 30, 18, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26], first=True)
+# can Brandon reach them? an email and a phone first, then one of the two, then neither (2026-10-21, Matthew: "reorder our list and have
+# the places we have email and numbers"); the score orders each group
+_ALIAS = {'Coca-Cola': 'Swire Coca-Cola, USA'}
+def has_email(c): return any(x[3] for x in CONTACTS if x[0] == c or c.startswith(x[0]) or x[0] == _ALIAS.get(c)) or c == 'Kaiser Permanente' or bool((_PH.get(c) or {}).get('email'))
+def has_phone(c): return bool(_PH.get(c)) or any((x[9] if len(x) > 9 else '') for x in CONTACTS if x[0] == c or c.startswith(x[0]) or x[0] == _ALIAS.get(c))
+def reach(c): return int(has_email(c)) + int(has_phone(c))
+def _mine(c): return sorted([x for x in CONTACTS if x[0] == c or c.startswith(x[0]) or x[0] == _ALIAS.get(c)], key=lambda x: 0 if x[8] else 1)
+def best_email(c): e = [x for x in _mine(c) if x[3]]; return (e[0][3] + ((' (' + e[0][1] + (', ' + e[0][2] if e[0][2] and e[0][2] != 'general' else '') + ')') if e[0][1] else '')) if e else ''
+def best_phone(c):
+    if _PH.get(c): return _PH[c]['phone'] + ' (' + _PH[c]['note'].split(';')[0] + ')'
+    p = [x for x in _mine(c) if len(x) > 9 and x[9] and x[9] != 'None']; return (str(p[0][9]) + ' (' + p[0][1] + ')') if p else ''
+# the order: the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the
+# email and phone numbers"); ties go to the higher score
+RANKED = sorted(LEADS, key=lambda x: (-(sum(sc(x[0])) + reach(x[0])), -sum(sc(x[0])), x[0]))
+ws = sheet(wb, 'Sponsor leads', ['Order', 'Company', 'Kind', 'Best email', 'Best phone', 'Order points (score + email + phone)', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
+           [(i + 1, c, k, best_email(c), best_phone(c), sum(sc(c)) + reach(c), sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
+           [6, 30, 18, 40, 34, 10, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26, 16, 40], first=True)
 dv = DataValidation(type='list', formula1='"Not contacted,Emailed,Called,Tour booked,Toured,Proposal sent,Signed,Not now,No"', allow_blank=True)
-ws.add_data_validation(dv); dv.add(f'M2:M{len(LEADS) + 1}')
+ws.add_data_validation(dv); dv.add(f'P2:P{len(LEADS) + 1}')
 for r in range(2, len(LEADS) + 2):
-    for col in 'MNOPQ': ws[f'{col}{r}'].fill = YEL
+    for col in 'PQRST': ws[f'{col}{r}'].fill = YEL
 sheet(wb, 'Renewals (Peak sponsors)', ['Sponsor', 'Level', 'Where seen', 'Renews when', 'Contact', 'Status', 'Notes'], [(n, l, w, '', '', '', '') for n, l, w in RENEW], [34, 10, 60, 14, 26, 14, 30])
 sheet(wb, 'Employers 400+', ['Employer', 'Kind', 'Employees', 'Year of count', 'Source', 'Membership idea / notes'],
       EMP, [40, 20, 12, 12, 46, 70])
@@ -307,7 +322,7 @@ print('wrote', OUT, len(LEADS), 'leads,', len(EMP), 'employers,', len(PRICES), '
 import html, subprocess
 E = lambda t: html.escape(str(t))
 top = RANKED[:15]
-rows1 = ''.join(f'<tr><td class="n">{i + 1}</td><td><b>{E(c)}</b><br><small>{E(k)}</small></td><td class="n">{sum(sc(c))}</td><td>{E(w)}</td><td>{E(r)}</td></tr>' for i, (c, k, w, s0, r, l, p) in enumerate(top))
+rows1 = ''.join(f'<tr><td class="n">{i + 1}</td><td><b>{E(c)}</b> <small>{("✉" if has_email(c) else "") + (" ☎" if has_phone(c) else "")}</small><br><small>{E(k)}</small></td><td class="n">{sum(sc(c))}</td><td>{E(w)}</td><td>{E(r)}</td></tr>' for i, (c, k, w, s0, r, l, p) in enumerate(top))
 lv = {}
 for n, l, w in RENEW: lv.setdefault(l, []).append(n)
 renew = ''.join(f'<p><b>{E(l)} ({len(v)}):</b> {E(", ".join(v))}</p>' for l, v in lv.items())
@@ -329,7 +344,7 @@ th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,
 </style></head><body>
 <div class="k">Peak Pickleball · corporate sponsorships · draft, nothing sent</div>
 <h1>Who to call first</h1>
-<p class="sub">{len(LEADS)} new companies ranked by a score out of 9: fit with sports, fitness and health (3), money (3), already sponsors local sport (2), near Peak (1). The score is our rating; change it as you learn. Full list, contacts columns and sources: Peak-Sponsor-Leads-2026-10.xlsx.</p>
+<p class="sub">{len(LEADS)} new companies. Ordered by a score out of 9 plus a point each for an email (✉) and a phone (☎). The score: fit with sports, fitness and health (3), money (3), already sponsors local sport (2), near Peak (1). The score is our rating; change it as you learn. Full list, contacts columns and sources: Peak-Sponsor-Leads-2026-10.xlsx.</p>
 <table><tr><th class="n">#</th><th>Company</th><th class="n">Score</th><th>Why they fit</th><th>How to reach them</th></tr>{rows1}</table>
 <h2>Renewals: Peak\u2019s own sponsors</h2>
 <p>Ask Peak for each sponsor\u2019s renewal date and how each is doing. Keeping these is cheaper than finding new ones.</p>{renew}

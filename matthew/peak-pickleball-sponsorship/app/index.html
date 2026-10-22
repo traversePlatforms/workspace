@@ -43,6 +43,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 .pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--chip);white-space:nowrap}
 .pill.s-signed{background:#d9f0e2;color:#1d6b3f}.pill.s-proposal,.pill.s-tour,.pill.s-toured{background:#e6eefc;color:#2b4f8f}.pill.s-no,.pill.s-notnow{color:var(--soft)}
 @media (prefers-color-scheme:dark){.pill.s-signed{background:#1f3b2a;color:#8fdcae}.pill.s-proposal,.pill.s-tour,.pill.s-toured{background:#1e2a40;color:#9fbaf0}}
+.reach{font-size:13px;color:var(--accent);margin-right:8px;letter-spacing:.05em}
 .due{font-size:12px;color:var(--soft);text-align:right}.due.late{color:var(--warn);font-weight:700}
 .detail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;align-self:start;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto}
 @media (max-width:999px){.detail{position:fixed;inset:0;top:0;max-height:none;border-radius:0;z-index:20}}
@@ -86,7 +87,11 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 (function () {
   'use strict';
   var API = 'api/desk.php';
-  var S = { data: null, tab: 'pipe', list: 'new', st: 'all', q: '', sel: null };
+  var S = { data: null, tab: 'pipe', list: 'new', st: 'all', q: '', sel: null, sort: 'reach' };
+  /* can Brandon reach them: an email and a phone first (2026-10-21, Matthew: "have the places we have email and numbers") */
+  var hasMail = function (l) { return (l.contacts || []).concat(l.added || []).some(function (c) { return c.email; }); };
+  var hasPhone = function (l) { return !!l.phone || (l.contacts || []).concat(l.added || []).some(function (c) { return c.phone; }); };
+  var reach = function (l) { return (hasMail(l) ? 1 : 0) + (hasPhone(l) ? 1 : 0); };
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   var main = $('main');
@@ -154,18 +159,25 @@ main{max-width:1180px;margin:0 auto;padding:18px}
       var n = x[0] === 'all' ? inList.length : inList.filter(function (l) { return l.status === x[0]; }).length; if (!n && x[0] !== 'all') return;
       var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.st === x[0])); b.addEventListener('click', function () { S.st = x[0]; draw(); }); sc.appendChild(b);
     });
+    var so = el('div', 'chips'); so.style.marginBottom = '12px';
+    [['reach', 'Score + email + phone'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
+    sc.appendChild(el('span', null, '  ')); [].slice.call(so.children).forEach(function (b) { sc.appendChild(b); });
     main.appendChild(sc);
     var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
     function drawRows() {
       list.textContent = '';
       var t = S.q.trim().toLowerCase();
       var rows = inList.filter(function (l) { return (S.st === 'all' || l.status === S.st) && (!t || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(t) >= 0); });
+      /* the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the email and phone numbers") */
+      rows.sort(function (a, b) { return (S.sort === 'reach' ? ((b.score || 0) + reach(b)) - ((a.score || 0) + reach(a)) : 0) || (b.score || 0) - (a.score || 0) || a.name.localeCompare(b.name); });
       if (!rows.length) { list.appendChild(el('div', 'empty', 'Nobody here.')); return; }
       rows.forEach(function (l) {
         var r = el('button', 'row' + (S.sel === l.id ? ' on' : '')); r.type = 'button';
         var s = el('div', 'sc', l.score != null ? String(l.score) : '•'); if (l.score != null) s.appendChild(el('small', null, l.list === 'local' ? 'fit' : '/9')); r.appendChild(s);
         var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [l.kind, l.miles != null ? l.miles + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
-        var right = el('div'); right.style.textAlign = 'right'; right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
+        var right = el('div'); right.style.textAlign = 'right';
+        var mk = el('span', 'reach', (hasMail(l) ? '✉' : '') + (hasPhone(l) ? ' ☎' : '')); mk.title = (hasMail(l) ? 'Has an email' : 'No email') + ' · ' + (hasPhone(l) ? 'has a phone' : 'no phone'); right.appendChild(mk);
+        right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
         if (l.next && l.next.date) right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date)));
         r.appendChild(right);
         r.addEventListener('click', function () { S.sel = l.id; draw(); });
