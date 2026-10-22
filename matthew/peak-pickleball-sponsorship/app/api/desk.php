@@ -57,7 +57,7 @@ if ($action === 'signin') {
 }
 $ses = jread('sessions.json', []); $tokH = hash('sha256', (string) ($_COOKIE['peakdesk'] ?? '')); $me = $ses[$tokH] ?? null;
 if (!$me) fail('Signed out.', 401);
-$ME = (string) $me['name']; $ADMIN = $me['role'] === 'admin';
+$ME = (string) $me['name'];   /* the role is sent back to the page but gates nothing here: admin and seller have the same powers (2026-10-21) */
 if ($action === 'signout') { unset($ses[$tokH]); jwrite('sessions.json', $ses); setcookie('peakdesk', '', ['expires' => 1, 'path' => '/']); out(['ok' => true]); }
 if ($action === 'me') out(['ok' => true, 'name' => $ME, 'role' => $me['role']]);
 
