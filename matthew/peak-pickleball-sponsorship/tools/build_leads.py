@@ -24,8 +24,6 @@ UCH = 'https://www.aol.com/articles/uchealth-awards-218-000-grants-014454931.htm
 # --- sponsor leads: company, kind, why they fit, source, route in, priority (A best) ---
 SC_T = 'Colorado Springs Sports Corp member, 2026 ({}) tier: pays to back local sport'
 LEADS = [
-    ('Orthopedic Centers of Colorado', 'Sports medicine', SC_T.format('Premier') + '. Exclusive healthcare sponsor of Colorado Springs Sports & Social for 2026 (rec leagues). Pickleball players are its patients.', SC + ' ; ' + OCC26,
-     'Outreach request form on its site. Proposals due by 30 Sep for the next year; reviewed in Q4; "some exceptions may apply".', OCC, 'A'),
     ('Alpine Bank', 'Bank', SC_T.format('Summit') + '.', SC, 'Front Range sponsorship request form (to its Denver office; asks 60 days ahead). The form may be dated: confirm the current contact first.', ALP, 'A'),
     ('UCHealth (Memorial Hospital; Memorial North)', 'Hospital system', 'No. 4 employer in El Paso County (7,050 staff, 2024). Gives through community grants (southern Colorado grants announced in UCHealth news).', ACFR + ' ; ' + UCH,
      'Community and government affairs, southern Colorado (the senior director is named in UCHealth news releases). Also an employee-membership target (see Employers).', UCH, 'A'),
@@ -36,7 +34,6 @@ LEADS = [
     ('Laborjack', 'Moving / labor', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
     ('Republic Services', 'Waste and recycling', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
     ('KEG1', 'Not checked', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
-    ('Hotel Polaris', 'Hotel', SC_T.format('Premier') + '. Visiting teams and tournament guests.', SC, 'To find', '', 'B'),
     ('Cheyenne Mountain Resort', 'Resort', SC_T.format('Summit') + '. Check first whether it runs its own courts (could be a competitor).', SC, 'To find', '', 'C'),
     ('Coca-Cola', 'Beverage', SC_T.format('Essential') + '. Also a pouring-rights deal for Peak’s snack bar, if Peak has one.', SC, 'To find', '', 'B'),
     ('Windstar Studios', 'Not checked', SC_T.format('Summit') + '.', SC, 'To find', '', 'B'),
@@ -139,6 +136,63 @@ PITCH = [
     '- No member counts, visit numbers or follower counts in the pitch until Peak gives real ones.',
 ]
 
+PEAK_SP = 'https://www.peakpickleball.us/peak-sponsors/'
+SPR = 'https://springspickleball.com/become-a-sponsor/'
+WH = 'https://wellhub.com/en-us/search/partners/peak-pickleball-briargate/'
+# --- the ranking: our rating, not data. Fit with pickleball (sports, fitness, health) 0-3; money (size, known sponsor budgets) 0-3;
+#     already sponsors local sport 0-2 (Sports Corp Summit/Premier or a paid pickleball sponsor = 2, Essential = 1); near Peak 0-1 ---
+SCORE = {
+    'Kaiser Permanente': (3, 3, 2, 0), 'UCHealth (Memorial Hospital; Memorial North)': (3, 3, 1, 0), 'Alpine Bank': (1, 3, 2, 0),
+    'BOK Financial': (1, 3, 2, 0), 'OrangeTheory': (3, 1, 2, 0), 'Cheyenne Mountain Resort': (1, 3, 2, 0), 'Molson Coors': (1, 3, 2, 0),
+    'Concept Restaurants': (1, 2, 2, 0), 'Republic Services': (0, 3, 2, 0), 'Coca-Cola': (1, 3, 1, 0), 'The Gazette': (1, 2, 2, 0),
+    'Colorado Media Group': (1, 2, 2, 0), 'Cumulus Media': (1, 2, 2, 0), 'iHeart Media': (1, 2, 2, 0), 'Colorado Springs Chamber & EDC': (1, 2, 2, 0),
+    'PCL Construction': (0, 3, 2, 0), 'McLane Company': (0, 3, 2, 0), 'Climax Molybdenum': (0, 3, 2, 0), 'Chord Energy': (0, 3, 2, 0),
+    'T. Rowe Price': (1, 3, 0, 1), 'Ent Credit Union': (1, 3, 0, 1), 'USAA': (1, 3, 0, 0), 'Progressive': (1, 3, 0, 0),
+    'Neon Pig': (1, 1, 2, 0), 'Great Range Bison': (1, 1, 2, 0), 'Spartan Barbell': (2, 1, 1, 0), 'Spartan Strength Systems': (2, 1, 1, 0),
+    'Altitude Movement': (2, 1, 1, 0), 'Laborjack': (0, 1, 2, 0), 'KEG1': (0, 1, 2, 0), 'Windstar Studios': (0, 1, 2, 0),
+    'Southern Colorado Women\u2019s Chamber of Commerce': (0, 1, 2, 0), 'Baker and King': (0, 1, 1, 0), 'BCA': (0, 1, 1, 0),
+    'Dwire Earthmoving, LLC': (0, 1, 1, 0), 'Randy R Kilgore & Company': (0, 1, 1, 0), 'Summit Group Consultants': (0, 1, 1, 0),
+    'Mind Quest Puzzles and Games': (0, 1, 1, 0), 'Hispanic Chamber of Commerce': (0, 1, 1, 0),
+}
+# --- Peak's own sponsors (renewals) and who has dropped off ---
+RENEW = [(n, lvl, 'On Peak\u2019s sponsor page now') for lvl, names in [
+    ('Title', ['Phil Long Ford', 'Hotel Polaris', 'Medicare Mentors', 'KKTV', 'Rally Back Therapy', 'Whataburger', 'Dr. Electric', 'Joey\u2019s NY Pizza', 'Red Rock Pizzaria', 'Hi-Tech PDR']),
+    ('Court', ['Sign Shop Illuminated', 'Orthopedic Centers of Colorado', 'Stretch Lab', 'Prime IV', 'Air O Sport', 'The Cutting Edge Realtors', 'Choice Floors', 'Think Smart Tech', 'Sourdough & Co.', 'Integrity Bank & Trust', 'Monarch Merchandising', 'Salus Financial Advisors', 'Red Oak Exteriors', 'Denver Iconics', 'Asian Chamber of Commerce']),
+    ('Logo', ['Together Won', 'Health & Fitness Expo', 'Whistle Pig Brewing'])] for n in names]
+RENEW.append(('Roof Corp of Colorado Springs', 'Former', 'On Peak\u2019s sponsor page in Dec 2025 (Internet Archive), gone by Apr 2026: ask why, and re-pitch'))
+# --- Springs Pickleball (the local competitor) ---
+PRICES += [
+    ('Springs Pickleball (local competitor)', 'Colorado Springs, CO', '19 indoor courts, 2 sites', 'Court partnership, year round: signs, digital, memberships, events', '$5,000 to $35,000 / year (top = naming rights, both sites)', 5000, SPR, CHECKED),
+    ('Springs Pickleball (local competitor)', 'Colorado Springs, CO', '19 indoor courts, 2 sites', 'Court Partner: includes 4 memberships, paddles and gear', '$1,000 / month', 12000, SPR, CHECKED),
+    ('Springs Pickleball (local competitor)', 'Colorado Springs, CO', '19 indoor courts, 2 sites', 'League / weekly-night sponsor', 'From $1,500 per 6-month season', 3000, SPR, CHECKED),
+    ('Springs Pickleball (local competitor)', 'Colorado Springs, CO', '19 indoor courts, 2 sites', 'Event table at tournaments and socials', '$250 / $500 / $800 (15% off a season)', None, SPR, CHECKED),
+    ('Springs Pickleball (local competitor)', 'Colorado Springs, CO', '19 indoor courts, 2 sites', 'Tournament sponsor', '$250 to $15,000 per event', None, SPR, CHECKED),
+]
+IDEAS = [
+    ('Bundle memberships into court sponsorships', 'Springs Pickleball\u2019s $1,000/month Court Partner includes 4 memberships, paddles and gear. Peak\u2019s $12,000 court could include staff memberships: it costs Peak little and the sponsor\u2019s staff become players.'),
+    ('Cheaper ways in', 'Springs Pickleball starts at $250 (event tables) and $1,500 (a league season). Peak\u2019s lowest published step is $12,000. A league, tournament or event-table tier lets small local businesses start, then move up.'),
+    ('Category exclusivity', 'Springs Pickleball sells it as an add-on: one bank, one hospital, one car dealer. Charge for it, or use it to close.'),
+    ('Publish the audience', 'Springs Pickleball shows 20,000+ players, 4,000+ followers, 65+ at every Paddle Up night, 100\u2013300 at events. Peak needs its own real numbers on its sponsor sheet (visits, members, event counts, followers).'),
+    ('Tournaments and livestream', 'Springs Pickleball sells tournament tiers with livestream and social coverage. Peak\u2019s national events are a bigger story: sell them as their own packages.'),
+    ('Socials as sponsor space', 'Peak\u2019s Instagram has 918 followers against Springs Pickleball\u2019s 4,000+. Taking over and growing Peak\u2019s socials is what makes posts, stories and video worth selling to sponsors.'),
+]
+WELL = [
+    ('Where Peak sits', 'On Wellhub from the Titanium plan ($159.99 a month) only, per its Wellhub page. Employees on cheaper plans cannot use Peak.', WH),
+    ('What Wellhub users get', '24 indoor courts; beginner classes and a "Peak Pickleball University" track; open play, leagues, tournaments; members can reserve courts. Hours 7 am to 9 pm weekdays, 7 am to 8 pm weekends. No visit limits or rules listed.', WH),
+    ('Idea: a lower tier', 'Ask Peak whether it can join a lower Wellhub plan. More employees could walk in, which means more players for sponsors to reach. First ask Peak what Wellhub pays it, and how that would change on a lower plan.', ''),
+    ('Idea: Wellhub nights', 'A beginner clinic or league night for Wellhub users, presented by a sponsor (e.g. a health or fitness company): the sponsor gets the room, Peak gets new players.', ''),
+    ('Idea: direct employer plans', 'Wellhub only covers companies that buy it. A direct group plan (10% off for 1\u20135 staff, 20% for 6\u201350, 25% for 51+, as Pickleball Kingdom does; see the Claude Doc) reaches the rest, and the same companies are sponsor prospects.', ''),
+    ('Not known', 'What Wellhub pays Peak, how many Wellhub visits it gets, and which local employers offer Wellhub. Ask Peak.', ''),
+]
+FACTS += [
+    ('Peak\u2019s current sponsors (28) and levels', PEAK_SP, 'Verified', 'Page footer \u00a92026. OCC and Hotel Polaris are already Peak sponsors: moved from new leads to Renewals.'),
+    ('Roof Corp of Colorado Springs was a Peak sponsor', 'web.archive.org snapshots 2025-12-19 and 2026-04-16', 'Verified', 'On the December 2025 copy, not the April 2026 one or today\u2019s page.'),
+    ('Springs Pickleball packages and audience claims', SPR, 'Verified (their own claims)', 'Prices and audience are their marketing; no date on the page.'),
+    ('Peak on Wellhub from Titanium ($159.99/mo)', WH, 'Verified', 'Visit limits and per-visit pay are not on the page.'),
+    ('Contact tools: Hunter prices', 'https://hunter.io/pricing', 'Verified', 'Free 50 credits/month; Starter $49/month ($34 billed yearly). Emails only.'),
+    ('Contact tools: Apollo price', 'review sites (zeliq.com, joinvalley.co, docket.io), 2026', 'Unresolved', 'About $49\u2013$59 per user per month; Apollo\u2019s own page shows no prices to a script; credit allowances conflict.'),
+]
+
 thin = Side(style='thin', color='C9CFC9')
 HEAD = PatternFill('solid', fgColor='2F5D2C'); HFONT = Font(bold=True, color='FFFFFF')
 YEL = PatternFill('solid', fgColor='FFF4C2')
@@ -156,17 +210,22 @@ def sheet(wb, title, cols, rows, widths, first=False):
     return ws
 
 wb = Workbook()
-ws = sheet(wb, 'Sponsor leads', ['Company', 'Kind', 'Why they fit', 'Source', 'Route in', 'Route link', 'Priority', 'Status', 'Contact (name, role)', 'Next step / date', 'Notes'],
-           [(c, k, w, s, r, l, p, '', '', '', '') for c, k, w, s, r, l, p in sorted(LEADS, key=lambda x: (x[6], x[0]))],
-           [30, 18, 60, 40, 46, 30, 9, 14, 26, 22, 30], first=True)
+def sc(c): return SCORE.get(c, (0, 0, 0, 0))
+RANKED = sorted(LEADS, key=lambda x: (-sum(sc(x[0])), x[0]))
+ws = sheet(wb, 'Sponsor leads', ['Rank', 'Company', 'Kind', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes'],
+           [(i + 1, c, k, sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
+           [6, 30, 18, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26], first=True)
 dv = DataValidation(type='list', formula1='"Not contacted,Emailed,Called,Tour booked,Toured,Proposal sent,Signed,Not now,No"', allow_blank=True)
-ws.add_data_validation(dv); dv.add(f'H2:H{len(LEADS) + 1}')
+ws.add_data_validation(dv); dv.add(f'M2:M{len(LEADS) + 1}')
 for r in range(2, len(LEADS) + 2):
-    for col in 'HIJK': ws[f'{col}{r}'].fill = YEL
+    for col in 'MNOPQ': ws[f'{col}{r}'].fill = YEL
+sheet(wb, 'Renewals (Peak sponsors)', ['Sponsor', 'Level', 'Where seen', 'Renews when', 'Contact', 'Status', 'Notes'], [(n, l, w, '', '', '', '') for n, l, w in RENEW], [34, 10, 60, 14, 26, 14, 30])
 sheet(wb, 'Employers 400+', ['Employer', 'Kind', 'Employees', 'Year of count', 'Source', 'Membership idea / notes'],
       EMP, [40, 20, 12, 12, 46, 70])
 sheet(wb, 'What others charge', ['Venue', 'Where', 'Courts', 'What', 'Price as published', 'Per year ($)', 'Source', 'Checked'],
       PRICES, [36, 20, 26, 46, 26, 12, 50, 12])
+sheet(wb, 'Ideas to borrow', ['Idea', 'Why'], IDEAS, [34, 110])
+sheet(wb, 'Wellhub', ['What', 'Detail', 'Source'], WELL, [24, 100, 50])
 sheet(wb, 'Fact-check', ['Claim', 'Source', 'Result', 'Note'], FACTS, [50, 50, 26, 70])
 wp = wb.create_sheet('Pitch and tour invite'); wp.column_dimensions['A'].width = 110
 for t in PITCH:
@@ -174,7 +233,9 @@ for t in PITCH:
     if t and not t.startswith('-') and not t.startswith('[') and len(t) < 70 and not t.startswith('Hi') and not t.startswith('Subject') and not t.startswith('Could'): c.font = Font(bold=True)
 rd = wb.create_sheet('Read me', 0); rd.column_dimensions['A'].width = 110
 for t in ['Peak Pickleball: sponsor leads, employers and prices (built ' + CHECKED + ')', '',
-          'Sponsor leads: ' + str(len(LEADS)) + ' companies. A = best fit (local, sponsors sport, near Peak or sells to players). Yellow columns are Brandon’s to fill in.',
+          'Sponsor leads: ' + str(len(LEADS)) + ' new companies, ranked by a score out of 9 (fit with sports, fitness and health; money; already sponsors local sport; near Peak). The score is our rating, not data: change it as you learn. Yellow columns are Brandon\u2019s.',
+          'Renewals: Peak\u2019s own 28 sponsors, and one that dropped off (Roof Corp of Colorado Springs).',
+          'Ideas to borrow: what Springs Pickleball sells that Peak could. Wellhub: what Peak offers there, and ideas.',
           'Route in: how to reach them. "To find" means the next step is finding the marketing or community contact (website, call the front desk, LinkedIn by hand).',
           'Employers 400+: for group memberships and staff discounts. Counts with old years need confirming before you quote them.',
           'What others charge: published prices from other venues, each checked at its source. Peak’s own prices are on top for comparison.',
@@ -184,3 +245,48 @@ for t in ['Peak Pickleball: sponsor leads, employers and prices (built ' + CHECK
 rd['A1'].font = Font(bold=True, size=14)
 wb.save(OUT)
 print('wrote', OUT, len(LEADS), 'leads,', len(EMP), 'employers,', len(PRICES), 'prices')
+
+# --- the brief for Brandon (2026-10-21, Matthew: "whatever we build ... I do want some PDFs that i can share with brandon") ---
+import html, subprocess
+E = lambda t: html.escape(str(t))
+top = RANKED[:15]
+rows1 = ''.join(f'<tr><td class="n">{i + 1}</td><td><b>{E(c)}</b><br><small>{E(k)}</small></td><td class="n">{sum(sc(c))}</td><td>{E(w)}</td><td>{E(r)}</td></tr>' for i, (c, k, w, s0, r, l, p) in enumerate(top))
+lv = {}
+for n, l, w in RENEW: lv.setdefault(l, []).append(n)
+renew = ''.join(f'<p><b>{E(l)} ({len(v)}):</b> {E(", ".join(v))}</p>' for l, v in lv.items())
+pr = ''.join(f'<tr><td>{E(v)}</td><td>{E(c)}</td><td>{E(w)}</td><td>{E(p0)}</td></tr>' for v, wh, c, w, p0, py, src, ck in PRICES)
+ideas = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b in IDEAS)
+well = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b, c in WELL)
+emp = ''.join(f'<tr><td>{E(n)}</td><td class="n">{v:,}</td><td class="n">{y}</td></tr>' for n, k, v, y, s0, note in EMP)
+doc = f'''<!doctype html><html><head><meta charset="utf-8"><title>Peak sponsorships: brief for Brandon</title><style>
+@page {{ size: letter; margin: .45in .5in }} body{{font:10pt/1.35 Arial,Helvetica,sans-serif;color:#1d241f;margin:0}}
+h1{{font-size:19pt;margin:0 0 2px}} h2{{font-size:13pt;margin:14px 0 6px;border-bottom:2px solid #2F5D2C;padding-bottom:3px}}
+.k{{color:#2F5D2C;font:700 8pt Arial;letter-spacing:.08em;text-transform:uppercase}} .sub{{color:#555;margin:0 0 8px}}
+table{{width:100%;border-collapse:collapse;margin:4px 0 8px}} th,td{{border-bottom:1px solid #d5dbd5;padding:4px 5px;text-align:left;vertical-align:top}}
+th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,th.n{{text-align:right;white-space:nowrap}}
+.pg{{page-break-before:always}} li{{margin:0 0 4px}} p{{margin:4px 0}} .note{{color:#666;font-size:8pt;margin-top:10px}}
+</style></head><body>
+<div class="k">Peak Pickleball · corporate sponsorships · draft, nothing sent</div>
+<h1>Who to call first</h1>
+<p class="sub">{len(LEADS)} new companies ranked by a score out of 9: fit with sports, fitness and health (3), money (3), already sponsors local sport (2), near Peak (1). The score is our rating; change it as you learn. Full list, contacts columns and sources: Peak-Sponsor-Leads-2026-10.xlsx.</p>
+<table><tr><th class="n">#</th><th>Company</th><th class="n">Score</th><th>Why they fit</th><th>How to reach them</th></tr>{rows1}</table>
+<h2>Renewals: Peak\u2019s own sponsors</h2>
+<p>Ask Peak for each sponsor\u2019s renewal date and how each is doing. Keeping these is cheaper than finding new ones.</p>{renew}
+<div class="pg"></div>
+<div class="k">Peak Pickleball · corporate sponsorships</div>
+<h1>What others charge, and what to borrow</h1>
+<table><tr><th>Venue</th><th>Courts</th><th>What</th><th>Price as published</th></tr>{pr}</table>
+<h2>Ideas to borrow</h2><ul>{ideas}</ul>
+<div class="pg"></div>
+<div class="k">Peak Pickleball · memberships</div>
+<h1>Employers and Wellhub</h1>
+<h2>Employers with 400+ staff</h2>
+<p>For group memberships and staff discounts first; sponsorship second. Counts from 2008\u20132021 need confirming.</p>
+<table><tr><th>Employer</th><th class="n">Staff</th><th class="n">Year</th></tr>{emp}</table>
+<h2>Wellhub</h2><ul>{well}</ul>
+<p class="note">Sources: El Paso County 2024 financial report (employers); Colorado Springs Sports Corp 2026 member list; Colorado Chamber 2024 pickleball tournament; Peak\u2019s sponsor page and the Internet Archive; Springs Pickleball, Hudson Valley Pickleball and Pooler Recreation sponsor pages; Peak\u2019s Wellhub page. Checked {CHECKED}. Each row\u2019s link is in the spreadsheet.</p>
+</body></html>'''
+H = OUT.with_name('peak-sponsor-brief.html'); H.write_text(doc, encoding='utf-8')
+PDF = OUT.with_name('Peak-Sponsor-Brief-for-Brandon-2026-10.pdf')
+subprocess.run([r'C:\Program Files\Google\Chrome\Application\chrome.exe', '--headless=new', '--disable-gpu', '--no-pdf-header-footer', f'--print-to-pdf={PDF}', H.as_uri()], capture_output=True, timeout=120)
+print('wrote', PDF, PDF.exists())
