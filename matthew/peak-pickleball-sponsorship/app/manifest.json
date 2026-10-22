@@ -1,0 +1,16 @@
+{
+  "name": "Peak Sponsor Desk",
+  "short_name": "Peak Desk",
+  "description": "Peak Pickleball sponsor leads, calls and proposals.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1f5b46",
+  "theme_color": "#1f5b46",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
