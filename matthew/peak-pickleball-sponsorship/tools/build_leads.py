@@ -209,6 +209,24 @@ FACTS += [
     ('Contact tools: Apollo price', 'review sites (zeliq.com, joinvalley.co, docket.io), 2026', 'Unresolved', 'About $49\u2013$59 per user per month; Apollo\u2019s own page shows no prices to a script; credit allowances conflict.'),
 ]
 
+import json, re as _re
+DATA = Path(__file__).resolve().parent.parent / 'data'
+LOOK = json.loads((DATA / 'lookalikes.json').read_text(encoding='utf-8'))
+HUN = json.loads((DATA / 'hunter-results.json').read_text(encoding='utf-8'))
+# who to ask for, best first: sponsorship and community roles, then marketing, then communications, then the top person
+_PRI = [r'sponsor|partnership|alliance|community', r'marketing|brand|advertis', r'communication|public relations|corporate affairs', r'president|ceo|chief executive|owner']
+def _rank(pos):
+    pos = (pos or '').lower()
+    for i, rx in enumerate(_PRI):
+        if _re.search(rx, pos): return i
+    return 9
+CONTACTS = []
+for comp, d in HUN.items():
+    ppl = sorted(d.get('emails') or [], key=lambda e: (_rank(e.get('pos')), -(e.get('conf') or 0)))
+    for i, e in enumerate(ppl):
+        if _rank(e.get('pos')) == 9: continue
+        CONTACTS.append((comp, ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip(), e.get('pos') or '', e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', e.get('li') or '', 'Ask for first' if i == 0 else ''))
+
 thin = Side(style='thin', color='C9CFC9')
 HEAD = PatternFill('solid', fgColor='2F5D2C'); HFONT = Font(bold=True, color='FFFFFF')
 YEL = PatternFill('solid', fgColor='FFF4C2')
@@ -240,6 +258,8 @@ sheet(wb, 'Employers 400+', ['Employer', 'Kind', 'Employees', 'Year of count', '
       EMP, [40, 20, 12, 12, 46, 70])
 sheet(wb, 'What others charge', ['Venue', 'Where', 'Courts', 'What', 'Price as published', 'Per year ($)', 'Source', 'Checked'],
       PRICES, [36, 20, 26, 46, 26, 12, 50, 12])
+sheet(wb, 'Contacts (Hunter)', ['Company', 'Name', 'Position', 'Email', 'Hunter confidence %', 'Web sources', 'Last seen', 'LinkedIn', 'Pick'], CONTACTS, [26, 24, 36, 34, 12, 10, 12, 36, 14])
+sheet(wb, 'Local lookalikes', ['Business', 'Kind', 'Score', 'Miles from Peak', 'Chain / franchise', 'Address', 'Phone', 'Website', 'OpenStreetMap', 'Status', 'Notes'], [(r['name'], r['kind'], r['score'], r['miles'], 'yes' if r['chain'] else '', r['addr'], r['phone'], r['web'], r['osm'], '', '') for r in LOOK], [34, 26, 7, 9, 10, 32, 16, 34, 30, 14, 26])
 sheet(wb, 'Website pass', ['Company', 'Public route found', 'What it means for Peak', 'Source'], WEB, [30, 46, 80, 50])
 sheet(wb, 'Ideas to borrow', ['Idea', 'Why'], IDEAS, [34, 110])
 sheet(wb, 'Wellhub', ['What', 'Detail', 'Source'], WELL, [24, 100, 50])
@@ -252,6 +272,8 @@ rd = wb.create_sheet('Read me', 0); rd.column_dimensions['A'].width = 110
 for t in ['Peak Pickleball: sponsor leads, employers and prices (built ' + CHECKED + ')', '',
           'Sponsor leads: ' + str(len(LEADS)) + ' new companies, ranked by a score out of 9 (fit with sports, fitness and health; money; already sponsors local sport; near Peak). The score is our rating, not data: change it as you learn. Yellow columns are Brandon\u2019s.',
           'Renewals: Peak\u2019s own 28 sponsors, and one that dropped off (Roof Corp of Colorado Springs).',
+          'Contacts (Hunter): marketing, communications and executive staff Hunter found at 11 regional companies (21 Oct, free plan). "Ask for first" = the best-matched role. Hunter has no locations: for big companies, check the person covers Colorado.',
+          'Local lookalikes: ' + str(len(LOOK)) + ' businesses within 5 miles of Chapel Hills Mall in the same trades as Peak’s sponsors (OpenStreetMap, ODbL). Score: trade fit, distance, has a website. Peak’s current sponsors left out.',
           'Website pass: what the free search found for the top names (most public routes are charity budgets: ask for marketing).',
           'Ideas to borrow: what Springs Pickleball sells that Peak could. Wellhub: what Peak offers there, and ideas.',
           'Route in: how to reach them. "To find" means the next step is finding the marketing or community contact (website, call the front desk, LinkedIn by hand).',
@@ -276,6 +298,9 @@ pr = ''.join(f'<tr><td>{E(v)}</td><td>{E(c)}</td><td>{E(w)}</td><td>{E(p0)}</td>
 ideas = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b in IDEAS)
 well = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b, c in WELL)
 webrows = ''.join(f'<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td></tr>' for a, b, c, d in WEB)
+best = [c for c in CONTACTS if c[8]]
+hrows = ''.join(f'<tr><td><b>{E(c[0])}</b></td><td>{E(c[1])}</td><td>{E(c[2])}</td><td>{E(c[3])}</td><td class="n">{E(c[4])}%</td></tr>' for c in best)
+lrows = ''.join(f'<tr><td><b>{E(r["name"])}</b>{" <small>(chain)</small>" if r["chain"] else ""}</td><td>{E(r["kind"])}</td><td class="n">{r["miles"]}</td><td class="ph">{E(r["phone"]).replace("+1 ","").replace("+1-","")}</td></tr>' for r in LOOK[:30])
 emp = ''.join(f'<tr><td>{E(n)}</td><td class="n">{v:,}</td><td class="n">{y}</td></tr>' for n, k, v, y, s0, note in EMP)
 doc = f'''<!doctype html><html><head><meta charset="utf-8"><title>Peak sponsorships: brief for Brandon</title><style>
 @page {{ size: letter; margin: .45in .5in }} body{{font:10pt/1.35 Arial,Helvetica,sans-serif;color:#1d241f;margin:0}}
@@ -283,7 +308,7 @@ h1{{font-size:19pt;margin:0 0 2px}} h2{{font-size:13pt;margin:14px 0 6px;border-
 .k{{color:#2F5D2C;font:700 8pt Arial;letter-spacing:.08em;text-transform:uppercase}} .sub{{color:#555;margin:0 0 8px}}
 table{{width:100%;border-collapse:collapse;margin:4px 0 8px}} th,td{{border-bottom:1px solid #d5dbd5;padding:4px 5px;text-align:left;vertical-align:top}}
 th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,th.n{{text-align:right;white-space:nowrap}}
-.pg{{page-break-before:always}} li{{margin:0 0 4px}} p{{margin:4px 0}} .note{{color:#666;font-size:8pt;margin-top:10px}}
+.pg{{page-break-before:always}} td.ph{{white-space:nowrap}} li{{margin:0 0 4px}} p{{margin:4px 0}} .note{{color:#666;font-size:8pt;margin-top:10px}}
 </style></head><body>
 <div class="k">Peak Pickleball · corporate sponsorships · draft, nothing sent</div>
 <h1>Who to call first</h1>
@@ -303,13 +328,21 @@ th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,
 <p class="sub">Free sources only, checked {CHECKED}. Most public routes are charity budgets that don’t fit a for-profit court sign: ask for marketing instead.</p>
 <table><tr><th>Company</th><th>Public route</th><th>What it means</th></tr>{webrows}</table>
 <div class="pg"></div>
+<div class="k">Peak Pickleball · corporate sponsorships</div>
+<h1>Who to ask for</h1>
+<p class="sub">The best-matched marketing or communications person Hunter found at each regional company (free plan, {CHECKED}). Hunter gives no locations: at big companies, check the person covers Colorado. Everyone it found is on the spreadsheet’s Contacts tab.</p>
+<table><tr><th>Company</th><th>Name</th><th>Position</th><th>Email</th><th class="n">Confidence</th></tr>{hrows}</table>
+<h2>Local businesses like Peak’s sponsors (top 30 of {len(LOOK)})</h2>
+<p>Within 5 miles of Chapel Hills Mall, in the trades Peak’s sponsors are in. Owners decide; walk in or call. Full list with websites on the Local lookalikes tab.</p>
+<table><tr><th>Business</th><th>Kind</th><th class="n">Miles</th><th>Phone</th></tr>{lrows}</table>
+<div class="pg"></div>
 <div class="k">Peak Pickleball · memberships</div>
 <h1>Employers and Wellhub</h1>
 <h2>Employers with 400+ staff</h2>
 <p>For group memberships and staff discounts first; sponsorship second. Counts from 2008\u20132021 need confirming.</p>
 <table><tr><th>Employer</th><th class="n">Staff</th><th class="n">Year</th></tr>{emp}</table>
 <h2>Wellhub</h2><ul>{well}</ul>
-<p class="note">Sources: El Paso County 2024 financial report (employers); Colorado Springs Sports Corp 2026 member list; Colorado Chamber 2024 pickleball tournament; Peak\u2019s sponsor page and the Internet Archive; Springs Pickleball, Hudson Valley Pickleball and Pooler Recreation sponsor pages; Peak\u2019s Wellhub page. Checked {CHECKED}. Each row\u2019s link is in the spreadsheet.</p>
+<p class="note">Sources: Hunter.io (contacts, 21 Oct); OpenStreetMap contributors, ODbL (local businesses); El Paso County 2024 financial report (employers); Colorado Springs Sports Corp 2026 member list; Colorado Chamber 2024 pickleball tournament; Peak\u2019s sponsor page and the Internet Archive; Springs Pickleball, Hudson Valley Pickleball and Pooler Recreation sponsor pages; Peak\u2019s Wellhub page. Checked {CHECKED}. Each row\u2019s link is in the spreadsheet.</p>
 </body></html>'''
 H = OUT.with_name('peak-sponsor-brief.html'); H.write_text(doc, encoding='utf-8')
 PDF = OUT.with_name('Peak-Sponsor-Brief-for-Brandon-2026-10.pdf')
