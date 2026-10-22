@@ -261,6 +261,9 @@
       sec.appendChild(h); sec.appendChild(box); main.appendChild(sec);
     });
   }
+  /* Gmail through Google's account chooser (2026-10-22): a /mail/u/<address>/ link gave 'Temporary Error (404)' when that account was not
+     signed in to the browser (contact@sixfoldcolorado.com). The chooser signs it in if needed, then opens the email in the right account. */
+  function gmailUrl(email, frag) { return 'https://accounts.google.com/AccountChooser?Email=' + encodeURIComponent(email) + '&continue=' + encodeURIComponent('https://mail.google.com/mail/?authuser=' + email + '#' + frag); }
   function row(i, a) {
     var k = i.acct + ':' + i.id, r = el('div', 'row'); r.style.setProperty('--c', colorOf(a));
     var l1 = el('div', 'l1'); l1.appendChild(el('span', 'who', i.from));
@@ -270,14 +273,14 @@
     r.appendChild(el('div', 'subj', i.subject));
     if (i.summary) r.appendChild(el('div', 'sum', i.summary));
     if (i.todo) { var td = el('div', 'todo'); td.appendChild(ico('arrow')); td.appendChild(document.createTextNode(i.todo)); r.appendChild(td); }
-    var acts = el('div', 'acts'), mail = 'https://mail.google.com/mail/u/' + encodeURIComponent(i.acct);
-    if (i.draftId) { var dl = el('a', 'btn ready'); dl.appendChild(ico('check')); dl.appendChild(document.createTextNode('Draft ready')); dl.href = mail + '/#drafts'; dl.target = '_blank'; dl.rel = 'noopener'; acts.appendChild(dl); }
+    var acts = el('div', 'acts');
+    if (i.draftId) { var dl = el('a', 'btn ready'); dl.appendChild(ico('check')); dl.appendChild(document.createTextNode('Draft ready')); dl.href = gmailUrl(i.acct, 'drafts'); dl.target = '_blank'; dl.rel = 'noopener'; acts.appendChild(dl); }
     else if (i.category === 'needs_reply' || i.category === 'action') {   /* a draft button only where a reply is likely (2026-10-22) */
       var dr = btn('Draft', 'pen');
       dr.addEventListener('click', function () { dr.disabled = true; dr.lastChild.textContent = 'Writing…'; api('draft', { key: k }).then(function (x) { if (!x.ok) { flash = ['bad', x.error]; draw(); return; } flash = ['ok', 'Draft written: it is in ' + (a ? a.label : 'that inbox') + '’s Gmail drafts.']; home(); }); });
       acts.appendChild(dr);
     }
-    var op = el('a', 'btn'); op.appendChild(ico('open')); op.appendChild(document.createTextNode('Open')); op.href = mail + '/#all/' + encodeURIComponent(i.threadId); op.target = '_blank'; op.rel = 'noopener'; acts.appendChild(op);
+    var op = el('a', 'btn'); op.appendChild(ico('open')); op.appendChild(document.createTextNode('Open')); op.href = gmailUrl(i.acct, 'all/' + encodeURIComponent(i.threadId)); op.target = '_blank'; op.rel = 'noopener'; acts.appendChild(op);
     var dn = btn('Done', 'check'); dn.title = 'Take it off this list (Gmail is not changed)';
     dn.addEventListener('click', function () { dn.disabled = true; api('done', { key: k }).then(function () { S.data.items = S.data.items.filter(function (x) { return x.acct + ':' + x.id !== k; }); draw(); }); });
     acts.appendChild(dn); r.appendChild(acts);
