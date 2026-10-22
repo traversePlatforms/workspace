@@ -57,6 +57,9 @@ while true; do
   ( cd "$DT" && bash hotspot-watchdog2.sh "jobs/$PICK.sh" ) > "logs/watchdog-$STAMP.log" 2>&1 &
   wait $JP; RC=$?
   LAST="$PICK"
+  # a job that stopped in the middle of a step is not finished (2026-10-21: the refine ended mid "trees-parker" with exit 0 and was marked
+  # done with 39 towns left); its log's last line is then a step's start
+  if [ $RC -eq 0 ] && tail -1 "$OUT" | grep -q '^[0-9:]* start '; then log "$PICK ended in the middle of a step: not counted as finished"; RC=9; fi
   case $RC in
     0) touch "state/$PICK.done"; rm -f "state/$PICK.fails"; log "end $PICK: finished"; echo $(( $(cat "state/$PICK.units" 2>/dev/null || echo 0) + 1 )) > "state/$PICK.units";;
     3) rm -f "state/$PICK.fails"; log "end $PICK: one unit done, more left"; echo $(( $(cat "state/$PICK.units" 2>/dev/null || echo 0) + 1 )) > "state/$PICK.units";;
