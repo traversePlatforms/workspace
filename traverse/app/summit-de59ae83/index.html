@@ -2156,7 +2156,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .qqcustbody{display:grid;gap:8px}.qqcustq{font:15px var(--sans);padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .qqcustlist{display:grid;gap:8px}.qqcrow{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
   .qqctop{display:grid;gap:1px}.qqctop small{color:var(--soft);font-size:12.5px}
-  .schedv{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;width:min(1100px,calc(100vw - 32px));margin-left:calc(50% - min(550px,(100vw - 32px) / 2));padding:12px 0}   /* margins, not left + transform: the transformed box ran past the edge and phones zoomed out (2026-10-21) */
+  .schedv{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;width:min(1100px,calc(var(--vw,100vw) - 32px));margin-left:calc(50% - min(550px,(var(--vw,100vw) - 32px) / 2));padding:12px 0}   /* margins, not left + transform: the transformed box ran past the edge and phones zoomed out (2026-10-21) */
   .schedv .lnk,.sblk .lnk{background:none;border:0;padding:4px 0;font:700 14px var(--sans);color:var(--accent);cursor:pointer;text-align:left}.schedv .lnk:hover,.sblk .lnk:hover{text-decoration:underline}.schedv .lnk.danger,.sblk .lnk.danger{color:var(--bad)}
   .schednav{display:flex;justify-content:space-between;align-items:center;gap:8px}.schednav button{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:700 13.5px var(--sans);cursor:pointer}
   .schedonly{display:flex;gap:8px;align-items:center;font-size:14px}.schedonly input{width:18px;height:18px;accent-color:var(--accent)}
@@ -2343,6 +2343,65 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .tabnav button .ic{width:23px;height:23px}
   .tabnav button[aria-current="page"]{color:var(--act,var(--ember-ink))}
   body.has-tabs .wrap{padding-bottom:calc(98px + env(safe-area-inset-bottom,0px))}
+
+  /* ==== the face lift, stage 2 (2026-10-22, Matthew: "go ahead and run stage 2 of the facelift"): the lead card as in the mock-up (big name,
+     Call / Text / Email as a row of buttons, the details as tiles, Reached out? as a grid), the Jobs table in the new colours (its layout is
+     Jen's and stays), and on a computer 1280px and wider a side menu in place of the top bar. Tokens only, as stage 1. ==== */
+  .door.lead{border-radius:16px;padding:16px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(29,42,28,.08),0 6px 16px rgba(29,42,28,.05)}
+  .door.lead .lhead .addr{font:800 22px/1.15 var(--serif);letter-spacing:0}
+  .door.lead .meta{margin-top:4px}.door.lead .meta .tag{border-radius:999px;padding:3px 10px}
+  .door.lead .lcontact{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:12px}
+  .door.lead .lcontact>*{display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;margin:0;padding:0 8px;border:0;border-radius:10px;background:var(--bar);color:var(--bar-ink);font:700 15px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;cursor:pointer}
+  .door.lead .lcontact>a[href^="tel:"]{background:var(--act);color:var(--on-act)}
+  .door.lead .lcontact .ic{width:18px;height:18px;flex:none}
+  @media (max-width:599px){.door.lead .lcontact .lnum{display:none}}
+  .door.lead .ldetails{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+  .door.lead .lcopy{flex-direction:column;align-items:flex-start;gap:1px;min-width:0;padding:8px 10px;border-radius:10px;background:var(--bg)}
+  .door.lead .lcopy span{width:auto;font-size:12.5px}.door.lead .lcopy b{font:500 14px var(--mono);max-width:100%}
+  .door.lead .hrow{border:1px solid var(--line);background:var(--card)}
+  .door.lead button.save.jbook{width:100%;margin-top:12px;background:transparent!important;color:var(--accent)!important;border:2px solid var(--accent)!important}
+  .door.lead .qline{font-weight:700}
+  .door.lead .ltries{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  .door.lead .ltrybtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .door.lead .ltrybtns>span{grid-column:1/-1;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+  .door.lead .ltrybtns button{min-height:44px;padding:0 6px;border:1px solid var(--line);border-radius:10px;font:700 13.5px var(--sans);white-space:normal;line-height:1.15}
+  .door.lead .ltrybtns button[aria-pressed="true"],.door.lead .ltrybtns button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card));color:var(--accent)}
+  .door.lead .lrecall{border:0;background:color-mix(in srgb,var(--accent) 12%,var(--card))}
+  .door.lead .lrecallon{color:var(--accent)}
+  .door.lead .lnote{margin-top:12px}
+  /* the Jobs table: header in the bar colour, each day starts with a line, booked and held rows in the brand's tints */
+  .schedwrap{border-radius:16px;border-color:var(--line);box-shadow:0 1px 2px rgba(29,42,28,.06)}
+  .schedt th{background:var(--bar);color:var(--bar-ink);font-weight:700}
+  .schedt td.sdate{font:700 15px var(--serif)}
+  .schedt tr.booked td{background:color-mix(in srgb,var(--accent) 13%,var(--card))}
+  .schedt tr.held td{background:color-mix(in srgb,var(--strip,#F2C14E) 22%,var(--card))}
+  @media (min-width:700px){.schedt tr.dayfirst td{border-top:2px solid color-mix(in srgb,var(--bar) 70%,transparent)}}
+  @media (max-width:699px){.schedt tr.booked{border-left:5px solid var(--accent)}.schedt tr.held{border-left:5px solid var(--strip,#F2C14E)}}
+  /* a computer: the page colour runs to the bottom */
+  body.dnav-on{min-height:100vh}
+  .dnav .dnl button .ic{display:none}
+  /* a computer 1280px and wider: the menu down the left side, brand and search on top, your photo at the foot */
+  @media (min-width:1280px){
+    body.dnav-on{padding-left:232px;--vw:calc(100vw - 232px)}   /* --vw: the page width beside the menu (the Jobs frame is sized from it) */
+    .dnav{position:fixed;left:0;top:0;bottom:0;width:232px;height:auto;flex-direction:column;align-items:stretch;gap:10px;padding:18px 14px 16px;box-sizing:border-box;overflow-y:auto;border-right:5px solid var(--strip,transparent);box-shadow:none;background-position:left -260px top -60px}
+    .dnav .dnh{padding:2px 6px 10px}
+    .dnav .dnh b{font:800 21px var(--serif)}
+    .dnav .findsel{order:1;margin:0;width:100%}
+    .dnav .dns{order:2;padding:0 10px}.dnav .dns input{width:100%;min-width:0}
+    .dnav .dnl{order:3;flex-direction:column;gap:2px;margin-top:8px}
+    .dnav .dnl button{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;text-align:left;font-size:15px;opacity:.85}
+    .dnav .dnl button .ic{display:block;width:20px;height:20px;flex:none}
+    .dnav .dnl button.on{opacity:1;background:var(--bar-ink);color:var(--bar)}
+    .dnav .dnl button.on .ic{color:var(--act)}
+    .dnav .dnsp{order:4}
+    .dnav>:last-child{order:5;align-self:flex-start}
+    body.dnav-on .appbar{top:0}
+    body.dnav-on .plan .planbar{top:64px}
+    body.dnav-on.dk-top .plan .planbar{top:0}
+    body.dnav-on.dk-top .plan .plside{top:14px;max-height:calc(100vh - 34px)}
+    body.dnav-on .dhome,body.dnav-on .dbrowse{min-height:100vh}
+    body.dnav-on .dbrowse .db-towns,body.dnav-on .dbrowse .db-side{top:0;height:100vh}
+  }
 </style>
 </head>
 <body>
@@ -4801,7 +4860,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var ct = q('div', 'lcontact');
     var tel = digits(l.phone);
     if (tel.length >= 10) {
-      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
+      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call')); a1.appendChild(q('span', 'lnum', ' ' + fmtPhone(tel))); ct.appendChild(a1);
       if (smsOn()) ct.appendChild(smsButton({ kind: 'lead', id: l.id }, l.name || ''));
       else { var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
     }
@@ -5146,7 +5205,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var ct = q('div', 'lcontact');
     var tel = digits(L ? L.phone : H ? H.phone : '');
     if (tel.length >= 10) {
-      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
+      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call')); a1.appendChild(q('span', 'lnum', ' ' + fmtPhone(tel))); ct.appendChild(a1);
       var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
     }
     var em = L ? L.email : H ? H.email : '';
@@ -6165,7 +6224,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(q('div', 'meta', jobWhen(jb) + ' · ' + jb.addr));
     var ct = q('div', 'lcontact'), tel = digits(L ? L.phone : '');
     if (tel.length >= 10) {
-      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
+      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call')); a1.appendChild(q('span', 'lnum', ' ' + fmtPhone(tel))); ct.appendChild(a1);
       var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2);
     }
     var dest = H && H.lat ? H.lat + ',' + H.lon : jb.addr;
@@ -6685,7 +6744,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     top.appendChild(q('small', null, [l.need, addr, (LEAD_SRC[l.src] || l.src) + ' \u00b7 ' + ago(l.at)].filter(Boolean).join(' \u00b7 '))); c.appendChild(top);
     if (l.msg) c.appendChild(q('div', 'dwsub', String(l.msg).slice(0, 240)));
     var ct = q('div', 'lcontact'), tel = digits(l.phone);
-    if (tel.length >= 10) { var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1); var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
+    if (tel.length >= 10) { var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call')); a1.appendChild(q('span', 'lnum', ' ' + fmtPhone(tel))); ct.appendChild(a1); var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
     if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(l.email)); ct.appendChild(a3); }
     if (ct.children.length) c.appendChild(ct);
     c.appendChild(callTries(l));
@@ -7074,7 +7133,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (openRow) {
         var det = q('div', 'qqrd');
         var ct = q('div', 'lcontact'), tel = digits(l.phone);
-        if (tel.length >= 10) { var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1); var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
+        if (tel.length >= 10) { var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call')); a1.appendChild(q('span', 'lnum', ' ' + fmtPhone(tel))); ct.appendChild(a1); var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
         if (l.email) { var a3 = q('a'); a3.href = 'mailto:' + encodeURIComponent(l.email).replace(/%40/g, '@'); a3.appendChild(ico('mail', 2.2)); a3.appendChild(document.createTextNode(l.email)); ct.appendChild(a3); }
         if (ct.children.length) det.appendChild(ct);
         if (l.house) det.appendChild(q('div', 'dwsub', streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '')));
@@ -9485,6 +9544,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (planOk()) it.push(['office', 'Office', officeView, ['office']]);
     return it;
   }
+  var DNAV_ICO = { home: 'home', pipe: 'clip', jobs: 'cal', card: 'card', house: 'leaf', cal: 'clock', numbers: 'chart', doors: 'door', walks: 'route', team: 'users', office: 'table', plan: 'map', storms: 'hail' };
   function dnavOn() { return !!(DESK_MQ && DESK_MQ.matches) && !!S.me && S.screen !== 'signin'; }
   function dnavPaint() {
     var on = dnavOn();
@@ -9498,7 +9558,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       home.appendChild(ridge('mk')); home.appendChild(brandName((CO && (CO.short || CO.name)) || 'Doors'));   /* one brand for everyone (2026-10-21, Sixfold 365) */
       home.addEventListener('click', chooseView); dnav.appendChild(home);
       var links = q('div', 'dnl');
-      items.forEach(function (x) { var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('data-k', x[0]); b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = x[0] === 'office'; x[2](); }); links.appendChild(b); });
+      items.forEach(function (x) { var b = q('button'); b.appendChild(ico(DNAV_ICO[x[0]] || 'chev', 2)); b.appendChild(q('span', null, x[1])); b.type = 'button'; b.setAttribute('data-k', x[0]);   /* an icon for the side menu (face lift 2026-10-22); the top bar hides it */ b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = x[0] === 'office'; x[2](); }); links.appendChild(b); });
       dnav.appendChild(links);
       dnav.appendChild(q('span', 'dnsp'));
       var lab = q('label', 'dns'); lab.appendChild(ico('search', 2.2));
@@ -12263,7 +12323,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var ct = q('div', 'lcontact cct');
     var tel = digits(c.phone);
     if (tel.length >= 10) {
-      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); ct.appendChild(a1);
+      var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call')); a1.appendChild(q('span', 'lnum', ' ' + fmtPhone(tel))); ct.appendChild(a1);
       if (smsOn()) ct.appendChild(smsButton({ kind: 'customer', id: c.id }, c.name || ''));
       else { var a2 = q('a'); a2.href = 'sms:' + tel; a2.appendChild(ico('chat', 2.2)); a2.appendChild(document.createTextNode('Text')); ct.appendChild(a2); }
     }
@@ -14956,7 +15016,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (x.mark) m3.appendChild(q('span', 'tag', x.mark === 'booked' ? (x.mq ? 'Quote sent' : 'Walk booked') : x.mark === 'later' ? 'Not now' : x.mark === 'miss' ? 'No answer' : x.mark === 'nosolicit' ? 'No soliciting' : x.mark));
     c.appendChild(m3);
     var acts = q('div', 'lcontact');
-    if (x.phone) { var tel = digits(x.phone.n); var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call ' + fmtPhone(tel))); acts.appendChild(a1); }
+    if (x.phone) { var tel = digits(x.phone.n); var a1 = q('a'); a1.href = 'tel:' + tel; a1.appendChild(ico('phone', 2.2)); a1.appendChild(document.createTextNode('Call')); a1.appendChild(q('span', 'lnum', ' ' + fmtPhone(tel))); acts.appendChild(a1); }
     var op = q('button', 'lnk', x.phone ? 'Open the card' : (x.traced ? 'Open the card (no cleared number)' : 'Open the card to find a number')); op.type = 'button';
     op.addEventListener('click', function () {
       S.region = x.region; S.area = null; S.flash = x.id; S.openDoor = x.id; S.returnTo = function () { stormDayView(day); };
