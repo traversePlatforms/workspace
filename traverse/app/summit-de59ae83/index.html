@@ -4902,6 +4902,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(sfb);
     }
     if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));
+    else if (wdOn() && S.screen === 'pipeline' && l.status === 'quoted' && !l.sign && !l.signed && (adminView() || asOffice())) c.appendChild(recallRow(l));   /* quoted, call back on a day: Recall (2026-10-22) */
     else if (feat('walkdesk') && S.screen === 'calendar' && l.owner === S.me && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* a rep calling the leads handed to them (2026-10-20) */   /* call tries (2026-10-14) */
     if (l.msg) c.appendChild(q('div', 'lmsg', l.msg));
     if (l.notes && l.notes.length) {
@@ -6485,7 +6486,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      with no answer asks whether to move them to Couldn't reach, a folded list at the foot of the Pipeline. Anyone coming back through a
      form, a Facebook form or message, the crew's quick quote or a lead added again comes back with everything on it (the server). */
   var UNREACH_AT = 3;
-  function recallOf(l) { var r = l && l.recall; if (!r || !r.date || ['new', 'contacted'].indexOf(l.status || 'new') < 0) return null; var t = lastTry(l); return t && t.at > r.at ? null : r; }
+  function recallOf(l) { var r = l && l.recall; if (!r || !r.date || ['new', 'contacted', 'quoted'].indexOf(l.status || 'new') < 0 || l.sign || l.signed) return null;   /* + quoted (2026-10-22, Jen: Chad Kolbe, quoted, "wants to schedule after Halloween") */ var t = lastTry(l); return t && t.at > r.at ? null : r; }
   function recallRow(l) {
     var w = q('div', 'lrecall'), r = recallOf(l), today = todayISO();
     if (r) {
@@ -6623,7 +6624,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       row.appendChild(b);
     });
     box.appendChild(row); box.appendChild(vmBox);
-    if (unreachOk(l) && l.status !== 'hold' && last && (last.o === 'vm' || last.o === 'none')) box.appendChild(recallRow(l));   /* a day to call back: Recall (2026-10-21) */
+    if (unreachOk(l) && l.status !== 'hold') box.appendChild(recallRow(l));   /* any open lead, called or not (2026-10-22) */   /* a day to call back: Recall (2026-10-21) */
     if (asOffice() && last && last.o === 'talk') box.appendChild(outcomeBox(l));   /* after talking (2026-10-14) */
     if (t.length) {
       box.appendChild(q('div', 'ltryhist', 'Tried ' + t.length + '\u00d7 \u00b7 ' + t.slice(-3).reverse().map(function (x) { return tryWhen(x.at) + ' ' + TRY_N[x.o].toLowerCase() + ' (' + String(x.by).split(' ')[0] + ')'; }).join(' \u00b7 ') + (t.length > 3 ? ' \u00b7 \u2026' : '')));
@@ -6738,6 +6739,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Send to Jen (2026-10-16): a lead into the Quick quote's Leads to call; new ones from the website, Facebook forms and the crew go there by themselves */
   function toJenRow(l) {
     var r = q('div', 'qlinks tojen');
+    if (l.src === 'a365web') { r.appendChild(q('span', 'dwsub', '365 website lead: yours only. Jen and the office never see it, at any stage.')); return r; }   /* 2026-10-22 */
     if (l.qinbox) { r.appendChild(q('span', 'dwsub', 'In Jen\u2019s Leads to follow up')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
     var b = q('button', 'lnk', 'Send to Jen \u203a'); b.type = 'button';
     b.addEventListener('click', function () { b.disabled = true; api('tojen', { body: { id: l.id, on: true } }).then(function (j) { b.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent to Jen', (l.name || l.phone || 'The lead') + ' is in her Leads to call.', null); (S.leadRedraw || pipelineView)(); }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); }); });
@@ -12500,7 +12502,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (it.kind === 'door') { var x = it.x; return x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; }
     var st = it.x.status || 'new';
     var cs = asOffice() ? (st === 'quoted' && !it.x.sign ? 'quoted' : (OFFICE_MAP[st] || 'call')) : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
-    if (cs === 'call' && wdOn() && recallOf(it.x)) return 'recall';   /* a day set to call back (2026-10-21) */
+    if ((cs === 'call' || cs === 'quoted') && wdOn() && recallOf(it.x)) return 'recall';   /* a day set to call back (2026-10-21) */
     if (cs === 'call' && wdOn()) { var cg = callGroup(it.x); if (cg === 'vm' || cg === 'email' || cg === 'text') return cg; }   /* Left voicemail, Emailed, Texted (2026-10-15/16) */   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
     return cs;
   }

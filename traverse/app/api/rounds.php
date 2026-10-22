@@ -1166,6 +1166,7 @@ function loadCustomers(): array {
         foreach ($r['f'] as $k => $v) $c[$id][$k] = $v;
         $c[$id]['updated'] = (int) ($r['at'] ?? 0); $c[$id]['updatedBy'] = (string) ($r['by'] ?? '');
     }
+    if (webHide()) { $web = webLeadIds(); $c = array_filter($c, fn($x) => ($x['source'] ?? '') !== 'a365web' && !isset($web[(string) ($x['lead'] ?? '')])); }   /* a 365-website customer is Matthew's (2026-10-22) */
     return $c;
 }
 /** a customer from a lead (Won makes the customer, 2026-10-15; shared since 2026-10-21): the one already tied to the lead; or someone already
@@ -2167,7 +2168,7 @@ if ($action === 'squarehook') {
     if (!$sigOk) fail('Not allowed.', 403); $pay = $ev['data']['object']['payment'] ?? null;
     if ($pay && ($pay['status'] ?? '') === 'COMPLETED' && !empty($pay['order_id'])) {
         $order = (string) $pay['order_id'];
-        foreach (leadsAll() as $l) if (($l['sign']['pay']['order'] ?? '') === $order && ($l['sqpaid']['order'] ?? '') !== $order) { a365DepositPaid($l); a365Alert('Deposit paid', trim((string) ($l['name'] ?? '')) . ' · $' . (int) $l['sign']['deposit']); }
+        foreach (leadsAll() as $l) if (($l['sign']['pay']['order'] ?? '') === $order && ($l['sqpaid']['order'] ?? '') !== $order) { a365DepositPaid($l); a365Alert('Deposit paid', trim((string) ($l['name'] ?? '')) . ' · $' . (int) $l['sign']['deposit'], false, false, ($l['src'] ?? '') === 'a365web'); }
         $cust0 = (string) ($pay['customer_id'] ?? '');   /* a payment made straight in Square for a customer whose job still owes (2026-10-19) */
         if ($cust0 !== '') foreach (leadsAll() as $l0) if (($l0['sqcust'] ?? '') === $cust0 && ($l0['sign']['pay']['order'] ?? '') !== $order && ($j0 = jobForLead((string) $l0['id'])) && jobOwed($j0) > 0 && ($j0['sqlink']['order'] ?? '') !== $order) { $f0 = squareBalancePaid($j0, $l0); if ($f0) jobSquareFound((string) $j0['id'], $f0, 'by the Square webhook'); }
         foreach (jobsAll() as $j) if (!$j['off'] && ($j['sqlink']['order'] ?? '') === $order && ($j['pay']['s'] ?? '') !== 'paid') appendLine(DATA_DIR . '/jobs.log', ['id' => $j['id'], 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['order' => $order, 'payment' => (string) ($pay['id'] ?? ''), 'at' => time()], 'by' => 'Square', 'at' => time()]);
@@ -2213,12 +2214,12 @@ function a365Match(string $street, string $city): ?array {
    alert 20 times per day"): a new lead shows on the office home and in the Pipeline count. A customer booking online or saying yes
    to a quote still alerts. company.json a365.leadAlerts: true turns new-lead alerts back on. */
 function leadAlertsOn(): bool { return !empty(company()['a365']['leadAlerts']); }
-function a365Alert(string $title, string $text, bool $super = false, bool $newLead = false): void {   /* $newLead (2026-10-20): not to an office account that runs a team, which does not see new leads until someone has called */   /* $super: Matthew's phones too (2026-10-16: a push whenever someone signs on through the quote generator) */
+function a365Alert(string $title, string $text, bool $super = false, bool $newLead = false, bool $web = false): void {   /* $web (2026-10-22): about a 365-website lead, so Matthew's phones only */   /* $newLead (2026-10-20): not to an office account that runs a team, which does not see new leads until someone has called */   /* $super: Matthew's phones too (2026-10-16: a push whenever someone signs on through the quote generator) */
     global $basePeople, $acct, $sessionKey;
     try {
         $v = pushVapid(false); if (!$v) return;
         $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => 'a365-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && (($r['role'] === 'office' && !($newLead && acctFlag('runsteam', $r['id']))) || ($super && $r['role'] === 'super'))) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && (($r['role'] === 'office' && !$web && !($newLead && acctFlag('runsteam', $r['id']))) || (($super || $web) && $r['role'] === 'super'))) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
     } catch (Throwable $e) { error_log('rounds a365 alert: ' . $e->getMessage()); }
 }
 /* where a website visitor came from (2026-10-20, Matthew: "go ahead and do the website lead tracking"): the page notes, when they arrive, the
@@ -2303,7 +2304,7 @@ if ($action === 'a365lead') {
         if ($fill) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'contact' => $fill, 'by' => 'website', 'at' => $now]);
         if (empty($x['house']) && $street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'house' => $h, 'by' => 'website', 'at' => $now]); }
         if (($x['status'] ?? '') === 'unreached') leadRevive((string) $x['id'], 'sent the 365 website form', 'website');
-        if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true);
+        if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true, ($x['src'] ?? '') === 'a365web');
         out(['ok' => true]);
     }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
@@ -2336,13 +2337,15 @@ function offerUntil(array $l): ?int {
 function jobHolds(?array $leads = null): array {
     $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $out = [];
     $booked = []; foreach (jobsAll() as $j) if (!$j['off']) $booked[$j['lead']] = true;
-    foreach (($leads ?? leadsAll()) as $l) {
+    $pool = $leads ?? leadsAll(); $web = webHide() ? webLeadIds() : [];
+    if ($web) foreach (leadsAllRaw() as $wid => $wl) if (isset($web[$wid])) $pool[$wid] = $wl;   /* a 365-website lead's held time stays held, unnamed (2026-10-22) */
+    foreach ($pool as $l) {
         $o = $l['quote']['offer'] ?? null;
         /* held whatever the stage (2026-10-18, Fable review): the ClickUp pull moves a quoted lead to contacted / on hold / won every five
            minutes, and the day it still names was freed for anyone. Only lost, booked, released (72 h, taken off) or passed ends a hold. */
         if (!is_array($o) || $l['status'] === 'lost' || isset($booked[$l['id']]) || ($o['date'] ?? '') < $today) continue;
         $until = offerUntil($l); if ($until !== null && $until < time()) continue;   /* released after 72 hours */
-        $out[] = ['lead' => $l['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'], 'until' => $until, 'paid' => !empty($l['sign'])];
+        $out[] = ['lead' => $l['id'], 'name' => isset($web[$l['id']]) ? 'Held' : (trim((string) ($l['name'] ?? '')) ?: 'A customer'), 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'], 'until' => $until, 'paid' => !empty($l['sign'])];
     }
     return $out;
 }
@@ -2412,13 +2415,13 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         flock($lk, LOCK_UN);
         $sl = jobSlot((string) $off['slot']);
         pushName((string) $off['crew'], 'Job booked: ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : ''), $name . ' · ' . $addr . ' · $' . $Q['price'] . ' · booked online', './?job=' . $jid, 'job-' . $jid);
-        a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price'], true);
+        a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price'], true, false, ($l['src'] ?? '') === 'a365web');
         out(['ok' => true, 'booked' => ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])], 'phone' => $phone]);
     }
     flock($lk, LOCK_UN);
     if ($hadOffer) $acc['gone'] = 1;
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'accept' => $acc, 'note' => mb_substr('Said yes to the $' . $Q['price'] . ' quote on the website' . ($hadOffer ? ', but the day offered was gone. Call them to set a day.' : '. Call them to set a day.') . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()])) fail('Something went wrong saving that. Please call or text us.', 500);
-    a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''), true);
+    a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''), true, false, ($l['src'] ?? '') === 'a365web');
     out(['ok' => true, 'gone' => $hadOffer, 'phone' => $phone]);
 }
 
@@ -2627,7 +2630,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     flock($lk, LOCK_UN);
     $who = trim((string) ($l['name'] ?? '')) ?: $name;
     if ($jid && !$had) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
-    a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''), true);
+    a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''), true, false, ($l['src'] ?? '') === 'a365web');
     $ml = a365SendSigned($l, $sg, 'website');   /* the signed copy by email (2026-10-15) */
     out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
 }
@@ -2672,6 +2675,12 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
     if ($isPost && !in_array($action, ['area', 'signout'], true)) out(['ok' => false, 'why' => 'viewing', 'error' => 'Looking only: this is ' . $me . '\'s screen, so nothing is saved. Go back to your own screen to make changes.'], 409);
 }
 if (!defined('SIXFOLD_CLI') && !$viewing && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
+/* a 365-website lead, its job or its customer asked for by id from an account that does not see them: as if it were not there (2026-10-22) */
+if (webHide()) {
+    $wIds = webLeadIds(); $wJobs = []; foreach (jobsAll() as $wj) if (!empty($wj['web'])) $wJobs[(string) $wj['id']] = true;
+    $wCust = []; foreach (custLines('customers.log') as $wr) { $wl = (string) ($wr['f']['lead'] ?? ''); if (($wr['f']['source'] ?? '') === 'a365web' || ($wl !== '' && isset($wIds[$wl]))) $wCust[(string) ($wr['id'] ?? '')] = true; }
+    foreach (['id', 'lead', 'job', 'cid', 'customer'] as $wk) { $wv = $body[$wk] ?? ($_GET[$wk] ?? null); if (is_string($wv) && $wv !== '' && (isset($wIds[$wv]) || isset($wJobs[$wv]) || isset($wCust[$wv]))) fail('Not found.', 404); }
+}
 if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true) && !($action === 'squarecheck' && !empty($body['job']))) {   /* only her own leads (2026-10-15); a job's pay link is checked against the job (2026-10-19) */
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
     /* + her Leads to call (2026-10-18, Fable review): "They said yes" on a lead she did not make died here with Not allowed, while Reached out?
@@ -4001,7 +4010,17 @@ if ($action === 'teamsave' || $action === 'teammember') {
  * Website and Meta leads are nobody's until an admin or a manager assigns them (Matthew); then they are that person's,
  * on their calendar with a follow-up date they set. A door booking stays with whoever knocked. All in leadst.log rows:
  * {id, owner} and {id, follow: [date, time] | null}, alongside the existing status and note rows. */
-function leadsAll(): array {
+/* 365-website leads are Matthew's alone (2026-10-22, Matthew: "I just dont want jen to see anyone thats come from 365 website. That should
+   only be viewable by me, and when i move someone through the pipeline that are from the 365 website jen should still not see it"). For an
+   office, quote or manager account, every lead whose source is the 365 website is left out wherever leads are read, whatever its stage,
+   owner or hand-over (Send to Jen no longer shows one to her). Its jobs keep their time on the schedule, so nobody books over them, as
+   "Booked" without the name, address or note; its customer record, its Square payments and its alerts are left out too, and asking for one
+   by its id is refused. Admins (Matthew is the super admin) see everything; the crew still see their own jobs in full (Brad does the work);
+   the command-line jobs (ClickUp, Square, the morning email to Contact@) see everything. View-as follows the account looked through. */
+function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_string($role ?? null) && in_array($role, ['office', 'quote', 'manager'], true); }
+function webLeadIds(): array { static $ids = null; if ($ids === null) { $ids = []; foreach (leadsAllRaw() as $id => $l) if (($l['src'] ?? '') === 'a365web') $ids[$id] = true; } return $ids; }
+function leadsAll(): array { $all = leadsAllRaw(); return webHide() ? array_filter($all, fn($l) => ($l['src'] ?? '') !== 'a365web') : $all; }
+function leadsAllRaw(): array {
     $leads = [];
     foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null, 'quote' => null, 'recall' => null];
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
@@ -4787,7 +4806,20 @@ function jobsAll(): array {
         if (!empty($r['del'])) $o[$id]['off'] = true;
         if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
     }
+    if (webHide()) { $web = webLeadIds(); foreach ($o as &$wj) if (isset($web[(string) ($wj['lead'] ?? '')])) { $wj['title'] = 'Booked'; $wj['addr'] = ''; $wj['note'] = ''; $wj['card'] = null; $wj['aftercare'] = null; $wj['web'] = true; } unset($wj); }   /* a 365-website job: its time, not who (2026-10-22) */
     return $o;
+}
+/** the Square payments and orders of 365-website leads and their jobs, for leaving them off the office's Square lists (2026-10-22) */
+function webPays(): array {
+    $s = []; $web = webLeadIds();
+    foreach (jobsAll() as $j) { if (!isset($web[(string) ($j['lead'] ?? '')])) continue;
+        foreach (['sqcharge', 'sqpaid'] as $k) if (!empty($j[$k]['payment'])) $s[(string) $j[$k]['payment']] = true;
+        foreach ((array) ($j['sqparts'] ?? []) as $pp) if (!empty($pp['payment'])) $s[(string) $pp['payment']] = true;
+        if (!empty($j['sqlink']['order'])) $s['o:' . $j['sqlink']['order']] = true; }
+    foreach (leadsAllRaw() as $id => $l) { if (!isset($web[$id])) continue;
+        foreach (['sqpaid', 'sqafter'] as $k) { if (!empty($l[$k]['payment'])) $s[(string) $l[$k]['payment']] = true; if (!empty($l[$k]['order'])) $s['o:' . $l[$k]['order']] = true; }
+        if (!empty($l['sign']['pay']['order'])) $s['o:' . $l['sign']['pay']['order']] = true; }
+    return $s;
 }
 function jobSlot(string $k): ?array {
     foreach (jobSlots() as $s) if ($s[0] === $k) return $s;
@@ -5219,7 +5251,7 @@ function squareConfirmAlert(array $pays): int {
     $list = squareToConfirm($pays); $f = DATA_DIR . '/square-confirm-seen.json';
     $seen = json_decode((string) @file_get_contents($f), true); if (!is_array($seen)) $seen = [];
     $new = array_values(array_filter($list, fn($x) => !isset($seen[$x['payment']])));
-    foreach ($new as $x) { $seen[$x['payment']] = time(); a365Alert('Square payment to confirm', ($x['name'] !== '' ? $x['name'] : 'Someone') . ' paid $' . number_format($x['amt'], 2) . (!empty($x['cands']) ? ' · maybe ' . $x['cands'][0]['name'] . ' ($' . $x['cands'][0]['owed'] . ' owed)' : ''), true); }
+    foreach ($new as $x) { $seen[$x['payment']] = time(); a365Alert('Square payment to confirm', ($x['name'] !== '' ? $x['name'] : 'Someone') . ' paid $' . number_format($x['amt'], 2) . (!empty($x['cands']) ? ' · maybe ' . $x['cands'][0]['name'] . ' ($' . $x['cands'][0]['owed'] . ' owed)' : ''), true, false, !empty($x['cands']) && isset(webLeadIds()[(string) (jobsAll()[(string) $x['cands'][0]['job']]['lead'] ?? '')])); }
     if ($new) writeJsonAtomic($f, $seen);
     return count($list);
 }
@@ -5397,12 +5429,13 @@ if ($action === 'squarepage') {   /* the Square page (2026-10-21) */
     foreach ($leads as $l) { $t = ['kind' => 'lead', 'name' => $short($l['name'] ?? '')]; foreach (['sqpaid', 'sqafter'] as $k) if (!empty($l[$k]['payment']) && !isset($tie[(string) $l[$k]['payment']])) $tie[(string) $l[$k]['payment']] = $t; if (!empty($l['sign']['pay']['order']) && !isset($tieOrder[(string) $l['sign']['pay']['order']])) $tieOrder[(string) $l['sign']['pay']['order']] = $t + ['deposit' => true]; }
     $conf = squareConfirmed(); $waiting = []; foreach (squareToConfirm($pays) as $x) $waiting[(string) $x['payment']] = $x;
     $tz = new DateTimeZone(appTz()); $t0 = (new DateTime('today', $tz))->getTimestamp(); $t7 = time() - 7 * 86400;
-    $tot = ['today' => 0, 'week' => 0, 'all' => 0]; $list = [];
+    $tot = ['today' => 0, 'week' => 0, 'all' => 0]; $list = []; $wPay = webHide() ? webPays() : [];
     foreach ($pays as $p) {
         $id = (string) ($p['id'] ?? ''); $at = (int) strtotime((string) ($p['created_at'] ?? ''));
         $amt = (int) ($p['amount_money']['amount'] ?? 0); $back = (int) ($p['refunded_money']['amount'] ?? 0); $st = (string) ($p['status'] ?? '');
         if ($amt === 0 && $back === 0) continue;   /* a $0 card check is not a payment (2026-10-21) */
         if ($st === 'COMPLETED') { $net = ($amt - $back) / 100; $tot['all'] += $net; if ($at >= $t7) $tot['week'] += $net; if ($at >= $t0) $tot['today'] += $net; }
+        if ($wPay && (isset($wPay[$id]) || isset($wPay['o:' . ($p['order_id'] ?? '')]))) continue;   /* in the totals, not in the list (2026-10-22) */
         $cu = squareCustInfo((string) ($p['customer_id'] ?? ''));
         $who = $cu['name'] !== '' ? $cu['name'] : trim((string) ($p['card_details']['card']['cardholder_name'] ?? ''));
         $c = $p['card_details']['card'] ?? []; $card = trim((string) ($c['card_brand'] ?? '') . ' ' . (isset($c['last_4']) ? 'ending ' . $c['last_4'] : ''));
@@ -5423,6 +5456,7 @@ if ($action === 'squareconfirmlist') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     if (!squareCfg()) out(['ok' => true, 'items' => [], 'note' => 'Square is not connected yet.']);
     $pays = squarePaymentsSince(time() - 14 * 86400, 4); if ($pays === null) fail('Square did not answer. Try again in a minute.');
+    if (webHide() && ($wPay = webPays())) $pays = array_values(array_filter($pays, fn($p) => !isset($wPay[(string) ($p['id'] ?? '')]) && !isset($wPay['o:' . ($p['order_id'] ?? '')])));   /* 365-website payments are Matthew's (2026-10-22) */
     out(['ok' => true, 'items' => squareToConfirm($pays)]);
 }
 if ($action === 'squareconfirm') {
@@ -5484,7 +5518,7 @@ function jobSquareFound(string $jid, array $f, string $how): void {
     appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => 'square'], 'sqpaid' => ['payment' => $f['payment'], 'amt' => $f['amt'], 'found' => $how, 'at' => time()], 'by' => 'Square', 'at' => time()]);
     $who = trim((string) (leadsAll()[$j['lead']]['name'] ?? ($j['title'] ?? '')));
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Balance paid in Square: $' . $f['amt'] . ($f['last4'] !== '' ? ' on the ' . ($f['brand'] ?: 'card') . ' ending ' . $f['last4'] : '') . ' (found ' . $how . ').', 'by' => 'Square', 'at' => time()]);
-    a365Alert('Balance paid in Square', $who . ' · $' . $f['amt']);
+    a365Alert('Balance paid in Square', $who . ' · $' . $f['amt'], false, false, isset(webLeadIds()[(string) $j['lead']]));
     jobAftercare($jid, 'paid');
 }
 function jobOwed(array $j): int { $p = $j['pay'] ?? ['s' => 'unpaid']; if (in_array($p['s'] ?? '', ['paid', 'plan'], true)) return 0; return max(0, (int) $j['price'] - (($p['s'] ?? '') === 'deposit' ? (int) ($p['amt'] ?? 0) : 0)); }
@@ -6879,6 +6913,7 @@ if ($action === 'leadimport') {
 if ($action === 'tojen') {
     if (!desk() || !$isPost || !feature('walkdesk')) fail('Not allowed.', 403);
     $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null; if (!$l) fail('No such lead.', 404);
+    if (($l['src'] ?? '') === 'a365web' && !empty($body['on'])) fail('A 365 website lead stays yours: Jen never sees these.');   /* 2026-10-22 */
     $on = !empty($body['on']);
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'tojen' => $on, 'note' => $on ? 'Sent to the Quick quote\'s Leads to call.' : 'Taken back from the Quick quote\'s Leads to call.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
