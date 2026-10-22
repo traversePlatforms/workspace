@@ -23,6 +23,7 @@
   .err{color:var(--hi);font-weight:600;margin:8px 0 0}
   input,textarea{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
   textarea{min-height:70px}
+  input.key{-webkit-text-security:disc;font-family:ui-monospace,Consolas,monospace}
   label{display:grid;gap:4px;font-weight:600;font-size:13px;margin:0 0 10px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
@@ -150,7 +151,7 @@
     f.appendChild(el('p', 'small muted', 'Keys are saved on the server only and never shown again. Leave a box empty to keep what is saved.'));
     var fields = [['anthropic', 'Anthropic API key' + (j.setup.anthropic ? ' (saved)' : ''), 'sk-ant-…'], ['googleId', 'Google client ID' + (j.setup.google ? ' (saved)' : ''), '…apps.googleusercontent.com'], ['googleSecret', 'Google client secret' + (j.setup.google ? ' (saved)' : ''), 'GOCSPX-…']];
     var inp = {};
-    fields.forEach(function (x) { var l = el('label', null, x[1]), i = el('input'); i.type = 'password'; i.autocomplete = 'off'; i.placeholder = x[2]; inp[x[0]] = i; l.appendChild(i); f.appendChild(l); });
+    fields.forEach(function (x) { var l = el('label', null, x[1]), i = el('input'); i.type = 'text'; i.className = 'key'; i.name = 'k-' + x[0]; i.autocomplete = 'off'; i.spellcheck = false; i.setAttribute('autocapitalize', 'off'); i.setAttribute('data-lpignore', 'true'); i.setAttribute('data-1p-ignore', 'true'); i.placeholder = x[2]; inp[x[0]] = i; l.appendChild(i); f.appendChild(l); });   /* plain text boxes, dotted by CSS: a password box drew the browser's saved login into the key (2026-10-22) */
     var st = j.settings;
     var sk = el('label', 'row'), skc = el('input'); skc.type = 'checkbox'; skc.checked = !!st.skipTabs; skc.style.width = 'auto'; sk.appendChild(skc); sk.appendChild(document.createTextNode(' Leave Gmail’s Promotions, Social, Updates and Forums tabs alone')); f.appendChild(sk);
     var ad = el('label', 'row'), adc = el('input'); adc.type = 'checkbox'; adc.checked = !!st.autoDraft; adc.style.width = 'auto'; ad.appendChild(adc); ad.appendChild(document.createTextNode(' Write a reply draft for every email that needs one')); f.appendChild(ad);
