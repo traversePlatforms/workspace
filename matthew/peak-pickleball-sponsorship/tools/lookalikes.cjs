@@ -15,7 +15,7 @@ for (const e of j.elements) {
   if (!W[k] || !t.name) continue;
   if (SPONS.test(t.name)) continue;
   const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon; if (lat == null) continue;
-  const key = t.name.toLowerCase().replace(/(pre-?owned|automotive|colorado springs|certified|of colorado springs|llc|inc)/g, '').replace(/[^a-z0-9]/g, '') + '|' + W[k][1];   /* one row per business: 'Echopark' = 'EchoPark Automotive Colorado Springs' */ if (seen.has(key)) continue; seen.add(key);
+  const key = t.name.toLowerCase().replace(/\b(pre-?owned|automotive|colorado springs|certified|llc|inc)\b/g, '').replace(/[^a-z0-9]/g, '') + '|' + W[k][1];   /* one row per business: 'Echopark' = 'EchoPark Automotive Colorado Springs' */
   const d = mi(M, [lat, lon]), chain = !!(t.brand || t['brand:wikidata']);
   const score = W[k][0] * 2 + (d < 2 ? 2 : d < 3.5 ? 1 : 0) + ((t.website || t['contact:website']) ? 1 : 0);
   const addr = [t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' ') + (t['addr:city'] ? ', ' + t['addr:city'] : '');

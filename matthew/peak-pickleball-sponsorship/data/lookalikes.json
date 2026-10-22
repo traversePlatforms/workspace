@@ -66,6 +66,17 @@
   "osm": "https://www.openstreetmap.org/node/13062431207"
  },
  {
+  "name": "Action Potential Physical Therapy",
+  "kind": "Physical therapy",
+  "score": 9,
+  "miles": 1,
+  "chain": false,
+  "addr": "2435 Research Parkway, Colorado Springs",
+  "phone": "+1-719-260-8400",
+  "web": "https://www.prnpt.com/locations/200/action-potential-physical-therapy-colorado-springs-research-pkwy/colorado-springs/location-details",
+  "osm": "https://www.openstreetmap.org/node/13613233453"
+ },
+ {
   "name": "Wholistic Healing Experiences",
   "kind": "Massage / recovery",
   "score": 9,
@@ -119,6 +130,17 @@
   "phone": "",
   "web": "Strengthforhumans.com",
   "osm": "https://www.openstreetmap.org/node/12597670612"
+ },
+ {
+  "name": "Strength for Humans: Performance and Rehab",
+  "kind": "Physical therapy",
+  "score": 9,
+  "miles": 1.5,
+  "chain": false,
+  "addr": "6805 Corporate Drive",
+  "phone": "",
+  "web": "https://strengthforhumans.com/",
+  "osm": "https://www.openstreetmap.org/node/12769043301"
  },
  {
   "name": "Massage Therapist Man",
@@ -317,6 +339,17 @@
   "phone": "+1-719-623-1750",
   "web": "https://locations.massageenvy.com/colorado/colorado-springs/9235-north-union-boulevard.html",
   "osm": "https://www.openstreetmap.org/node/7154793320"
+ },
+ {
+  "name": "Action Potential Physical Therapy",
+  "kind": "Physical therapy",
+  "score": 8,
+  "miles": 2.6,
+  "chain": false,
+  "addr": "4105 Briargate Parkway, Colorado Springs",
+  "phone": "+1-719-600-2075",
+  "web": "https://www.prnpt.com/locations/409/Action-Potential-Physical-Therapy-Colorado-Springs-Briargate/Colorado-Springs/location-details",
+  "osm": "https://www.openstreetmap.org/node/13414925651"
  },
  {
   "name": "UCHealth Physical Therapy and Rehabilitation Clinic - Interquest",
@@ -616,6 +649,17 @@
   "osm": "https://www.openstreetmap.org/way/208620603"
  },
  {
+  "name": "U.S. Bank",
+  "kind": "Bank / credit union",
+  "score": 7,
+  "miles": 0.3,
+  "chain": true,
+  "addr": "1520 Briargate Boulevard, Colorado Springs",
+  "phone": "+1-719-528-3531",
+  "web": "https://www.usbank.com/locations/colorado/colorado-springs/1520-briargate-blvd-bank-atm/",
+  "osm": "https://www.openstreetmap.org/way/208620621"
+ },
+ {
   "name": "Complete Care Urgent Care",
   "kind": "Clinic",
   "score": 7,
@@ -660,6 +704,28 @@
   "osm": "https://www.openstreetmap.org/way/183687160"
  },
  {
+  "name": "State Farm",
+  "kind": "Insurance",
+  "score": 7,
+  "miles": 0.4,
+  "chain": true,
+  "addr": "8320 Razorback Road, Colorado Springs",
+  "phone": "+1-719-598-8211",
+  "web": "https://www.chrissutherlandagency.com",
+  "osm": "https://www.openstreetmap.org/way/208620590"
+ },
+ {
+  "name": "IHOP",
+  "kind": "Restaurant",
+  "score": 7,
+  "miles": 0.4,
+  "chain": true,
+  "addr": "8065 North Academy Boulevard, Colorado Springs",
+  "phone": "+1-719-264-0469",
+  "web": "https://restaurants.ihop.com/en-us/co/colorado-springs/breakfast-8065-n-academy-blvd-1820",
+  "osm": "https://www.openstreetmap.org/way/208620612"
+ },
+ {
   "name": "First Watch",
   "kind": "Restaurant",
   "score": 7,
@@ -680,6 +746,28 @@
   "phone": "+1-719-266-6680",
   "web": "http://amandascantina.com",
   "osm": "https://www.openstreetmap.org/way/211226288"
+ },
+ {
+  "name": "Bank of America",
+  "kind": "Bank / credit union",
+  "score": 7,
+  "miles": 0.4,
+  "chain": true,
+  "addr": "7808 North Academy Boulevard, Colorado Springs",
+  "phone": "+1-719-208-8937",
+  "web": "https://locators.bankofamerica.com/co/coloradosprings/financial-centers-colorado-springs-17044.html",
+  "osm": "https://www.openstreetmap.org/way/1110144073"
+ },
+ {
+  "name": "Chase",
+  "kind": "Bank / credit union",
+  "score": 7,
+  "miles": 0.4,
+  "chain": true,
+  "addr": "7685 North Academy Boulevard, Colorado Springs",
+  "phone": "",
+  "web": "https://locator.chase.com/co/colorado-springs/7685-n-academy-blvd",
+  "osm": "https://www.openstreetmap.org/way/1110144077"
  },
  {
   "name": "Snooze",
@@ -858,6 +946,17 @@
   "osm": "https://www.openstreetmap.org/way/206067319"
  },
  {
+  "name": "Huntington Bank",
+  "kind": "Bank / credit union",
+  "score": 7,
+  "miles": 0.8,
+  "chain": true,
+  "addr": "7239 North Academy Boulevard, Colorado Springs",
+  "phone": "+1-719-262-7050",
+  "web": "https://www.huntington.com/Community/branch-info?locationId=29548",
+  "osm": "https://www.openstreetmap.org/way/208620630"
+ },
+ {
   "name": "Wildcat Construction",
   "kind": "Home services / construction",
   "score": 7,
@@ -990,6 +1089,17 @@
   "osm": "https://www.openstreetmap.org/node/2623957688"
  },
  {
+  "name": "Louie's Pizza",
+  "kind": "Restaurant",
+  "score": 7,
+  "miles": 1.1,
+  "chain": false,
+  "addr": "2771 Briargate Boulevard, Colorado Springs",
+  "phone": "+1-719-260-5555",
+  "web": "https://louies-pizza.com",
+  "osm": "https://www.openstreetmap.org/node/7771039034"
+ },
+ {
   "name": "Fisk Team, eXp Realty",
   "kind": "Realtor",
   "score": 7,
@@ -1078,6 +1188,17 @@
   "osm": "https://www.openstreetmap.org/node/13613317427"
  },
  {
+  "name": "Farmers Insurance",
+  "kind": "Insurance",
+  "score": 7,
+  "miles": 1.1,
+  "chain": true,
+  "addr": "2465 Research Parkway, Colorado Springs",
+  "phone": "+1-719-434-5600",
+  "web": "https://agents.farmers.com/co/colorado-springs/brian-galetta/",
+  "osm": "https://www.openstreetmap.org/node/13613317428"
+ },
+ {
   "name": "Biaggi's",
   "kind": "Restaurant",
   "score": 7,
@@ -1155,6 +1276,17 @@
   "osm": "https://www.openstreetmap.org/node/11965820439"
  },
  {
+  "name": "Comfort Dental",
+  "kind": "Dentist",
+  "score": 7,
+  "miles": 1.2,
+  "chain": true,
+  "addr": "1634 York Road",
+  "phone": "+1-719-522-0800",
+  "web": "https://www.comfortdental.com/offices/NorthAcademy",
+  "osm": "https://www.openstreetmap.org/way/194438501"
+ },
+ {
   "name": "P.F. Chang's",
   "kind": "Restaurant",
   "score": 7,
@@ -1186,6 +1318,17 @@
   "phone": "+1-833-692-2745",
   "web": "https://basilandbarley.com",
   "osm": "https://www.openstreetmap.org/node/6465266824"
+ },
+ {
+  "name": "Planet Fitness",
+  "kind": "Fitness",
+  "score": 7,
+  "miles": 1.3,
+  "chain": true,
+  "addr": "1025 East Woodmen Road, Colorado Springs",
+  "phone": "+1-719-600-5999",
+  "web": "https://www.planetfitness.com/gyms/colorado-springs-e-woodmen-rd-co",
+  "osm": "https://www.openstreetmap.org/node/10689427074"
  },
  {
   "name": "Cura Psychology",
@@ -1230,6 +1373,17 @@
   "phone": "+1-719-896-5662",
   "web": "https://www.medicaresolutionscenter.com",
   "osm": "https://www.openstreetmap.org/node/13062638995"
+ },
+ {
+  "name": "Academy Bank",
+  "kind": "Bank / credit union",
+  "score": 7,
+  "miles": 1.3,
+  "chain": false,
+  "addr": "2835 Briargate Boulevard, Colorado Springs",
+  "phone": "+1-719-208-3940",
+  "web": "https://www.academybank.com/locations/co/colorado-springs/2835-briargate-blvd/",
+  "osm": "https://www.openstreetmap.org/way/197474503"
  },
  {
   "name": "Carrabba's Italian Grill",
@@ -1408,6 +1562,17 @@
   "osm": "https://www.openstreetmap.org/node/13431554648"
  },
  {
+  "name": "American Family Insurance",
+  "kind": "Insurance",
+  "score": 7,
+  "miles": 1.9,
+  "chain": true,
+  "addr": "6189 Lehman Drive, Colorado Springs",
+  "phone": "+1-719-592-0255",
+  "web": "https://www.amfam.com/agents/colorado/colorado-springs/andrew-holloman",
+  "osm": "https://www.openstreetmap.org/node/13735824985"
+ },
+ {
   "name": "Alpine Vision",
   "kind": "Eye care",
   "score": 7,
@@ -1549,6 +1714,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/node/7771124881"
+ },
+ {
+  "name": "The Joint Chiropractic",
+  "kind": "Chiropractic / alternative care",
+  "score": 7,
+  "miles": 3.3,
+  "chain": false,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/13289406161"
  },
  {
   "name": "Select Physical Therapy",
@@ -1980,6 +2156,17 @@
   "osm": "https://www.openstreetmap.org/node/8321947517"
  },
  {
+  "name": "First Bank",
+  "kind": "Bank / credit union",
+  "score": 6,
+  "miles": 1.1,
+  "chain": true,
+  "addr": "2790 Briargate Boulevard, Colorado Springs",
+  "phone": "+1-719-535-9000",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/206231105"
+ },
+ {
   "name": "Lemongrass Bistro",
   "kind": "Restaurant",
   "score": 6,
@@ -2033,6 +2220,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/way/205115849"
+ },
+ {
+  "name": "The Margarita at Pine Creek",
+  "kind": "Restaurant",
+  "score": 6,
+  "miles": 1.2,
+  "chain": false,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/217188830"
  },
  {
   "name": "Old Chicago",
@@ -2255,6 +2453,17 @@
   "osm": "https://www.openstreetmap.org/way/192573968"
  },
  {
+  "name": "Wells Fargo",
+  "kind": "Bank / credit union",
+  "score": 6,
+  "miles": 1.8,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/201071458"
+ },
+ {
   "name": "Farmers Insurance",
   "kind": "Insurance",
   "score": 6,
@@ -2308,6 +2517,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/way/197476183"
+ },
+ {
+  "name": "U.S. Bank",
+  "kind": "Bank / credit union",
+  "score": 6,
+  "miles": 1.9,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/220547766"
  },
  {
   "name": "Mama Poke Dumplings Sushi Noodle",
@@ -2374,6 +2594,17 @@
   "phone": "+1-719-896-4180",
   "web": "https://metamorphosispain.com",
   "osm": "https://www.openstreetmap.org/node/13735939142"
+ },
+ {
+  "name": "Perfect Teeth",
+  "kind": "Dentist",
+  "score": 6,
+  "miles": 2,
+  "chain": false,
+  "addr": "3574 Hartsel Drive, Colorado Springs",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/798985486"
  },
  {
   "name": "Emergency Dental of Colorado Springs",
@@ -2893,6 +3124,17 @@
   "osm": "https://www.openstreetmap.org/node/13950751788"
  },
  {
+  "name": "IHOP",
+  "kind": "Restaurant",
+  "score": 6,
+  "miles": 2.9,
+  "chain": true,
+  "addr": "1344 Republic Drive, Colorado Springs",
+  "phone": "+1-719-593-1223",
+  "web": "https://restaurants.ihop.com/en-us/co/colorado-springs/breakfast-1344-republic-drive-3705",
+  "osm": "https://www.openstreetmap.org/way/1109022587"
+ },
+ {
   "name": "Omelets Etc.",
   "kind": "Restaurant",
   "score": 6,
@@ -3001,6 +3243,17 @@
   "phone": "+1-719-368-3411",
   "web": "https://mission-bbq.com/locations-and-menu/colorado-springs-co/",
   "osm": "https://www.openstreetmap.org/node/12410917429"
+ },
+ {
+  "name": "Edward Jones",
+  "kind": "Financial advisor",
+  "score": 6,
+  "miles": 3,
+  "chain": true,
+  "addr": "7621 Austin Bluffs Parkway, Colorado Springs",
+  "phone": "+1-719-282-0539",
+  "web": "https://www.edwardjones.com/us-en/financial-advisor/adam-jardon",
+  "osm": "https://www.openstreetmap.org/node/13670343528"
  },
  {
   "name": "Reeves Maddox - State Farm",
@@ -3113,6 +3366,28 @@
   "osm": "https://www.openstreetmap.org/node/7176347797"
  },
  {
+  "name": "Dickey's Barbecue Pit",
+  "kind": "Restaurant",
+  "score": 6,
+  "miles": 3.1,
+  "chain": true,
+  "addr": "1252 Interquest Parkway, Colorado Springs",
+  "phone": "+1-719-598-1909",
+  "web": "https://www.dickeys.com/locations/colorado/colorado-springs/interquest",
+  "osm": "https://www.openstreetmap.org/node/7176347800"
+ },
+ {
+  "name": "Noodles & Company",
+  "kind": "Restaurant",
+  "score": 6,
+  "miles": 3.1,
+  "chain": true,
+  "addr": "1358 Interquest Parkway, Colorado Springs",
+  "phone": "+1-719-208-4550",
+  "web": "https://locations.noodles.com/co/colorado-springs/1358-interquest-parkway",
+  "osm": "https://www.openstreetmap.org/node/9634459347"
+ },
+ {
   "name": "Chase",
   "kind": "Bank / credit union",
   "score": 6,
@@ -3166,6 +3441,17 @@
   "phone": "+1-719-262-7100",
   "web": "https://www.cheddars.com/",
   "osm": "https://www.openstreetmap.org/way/163974906"
+ },
+ {
+  "name": "Ent Credit Union",
+  "kind": "Bank / credit union",
+  "score": 6,
+  "miles": 3.1,
+  "chain": false,
+  "addr": "1280 Interquest Parkway, Colorado Springs",
+  "phone": "+1-800-525-9623",
+  "web": "https://www.ent.com/our-locations/pikes-peak-region/interquest-service-center/",
+  "osm": "https://www.openstreetmap.org/way/689553257"
  },
  {
   "name": "Bank of Colorado",
@@ -3243,6 +3529,17 @@
   "phone": "",
   "web": "https://www.jaksbrewing.com/jaks-brewing---old-ranch",
   "osm": "https://www.openstreetmap.org/node/12205995008"
+ },
+ {
+  "name": "Wells Fargo",
+  "kind": "Bank / credit union",
+  "score": 6,
+  "miles": 3.2,
+  "chain": true,
+  "addr": "9649 Prominent Point, Colorado Springs",
+  "phone": "+1-719-522-2860",
+  "web": "https://www.wellsfargo.com/locator/bank/9649__PROMINENT__PT_COLORADO__SPRINGS_CO_80924/",
+  "osm": "https://www.openstreetmap.org/way/155311533"
  },
  {
   "name": "Vaqueros Mexican Restaurant & Taqueria",
@@ -3586,6 +3883,17 @@
   "osm": "https://www.openstreetmap.org/node/10827748891"
  },
  {
+  "name": "Thrive Health Systems Chiropractors of West Colorado Springs",
+  "kind": "Chiropractic / alternative care",
+  "score": 6,
+  "miles": 4.7,
+  "chain": false,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/10830666800"
+ },
+ {
   "name": "Elements Massage",
   "kind": "Massage / recovery",
   "score": 6,
@@ -3740,6 +4048,17 @@
   "osm": "https://www.openstreetmap.org/node/10689427073"
  },
  {
+  "name": "KeyBank",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 2.1,
+  "chain": true,
+  "addr": "3605 Hartsel Drive, Colorado Springs",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/197476164"
+ },
+ {
   "name": "Archdale Eyecare",
   "kind": "Eye care",
   "score": 5,
@@ -3762,6 +4081,17 @@
   "osm": "https://www.openstreetmap.org/way/798994288"
  },
  {
+  "name": "Louie's Pizza",
+  "kind": "Restaurant",
+  "score": 5,
+  "miles": 2.3,
+  "chain": false,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/2623957687"
+ },
+ {
   "name": "The Ultimate Health Center",
   "kind": "Clinic",
   "score": 5,
@@ -3771,6 +4101,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/node/5072552905"
+ },
+ {
+  "name": "American Family Insurance",
+  "kind": "Insurance",
+  "score": 5,
+  "miles": 2.3,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/11038209002"
  },
  {
   "name": "Happy Hour Donuts",
@@ -3993,6 +4334,17 @@
   "osm": "https://www.openstreetmap.org/node/13433768631"
  },
  {
+  "name": "UCHealth Medical Surgery",
+  "kind": "Doctor’s office",
+  "score": 5,
+  "miles": 2.6,
+  "chain": false,
+  "addr": "4050 Briargate Parkway, Colorado Springs",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/13433768634"
+ },
+ {
   "name": "UCHealth Neo Natal Intensive Care Unit",
   "kind": "Doctor’s office",
   "score": 5,
@@ -4147,6 +4499,17 @@
   "osm": "https://www.openstreetmap.org/node/2325068890"
  },
  {
+  "name": "Wells Fargo",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 3.1,
+  "chain": true,
+  "addr": "5190 North Academy Boulevard, Colorado Springs",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/7159756088"
+ },
+ {
   "name": "Navy Federal Credit Union",
   "kind": "Bank / credit union",
   "score": 5,
@@ -4191,6 +4554,28 @@
   "osm": "https://www.openstreetmap.org/node/12408378501"
  },
  {
+  "name": "Allstate",
+  "kind": "Insurance",
+  "score": 5,
+  "miles": 3.1,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/13143049010"
+ },
+ {
+  "name": "Chili's",
+  "kind": "Restaurant",
+  "score": 5,
+  "miles": 3.1,
+  "chain": true,
+  "addr": "1304 Interquest Parkway",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/917656938"
+ },
+ {
   "name": "Panbers Asian Bistro",
   "kind": "Restaurant",
   "score": 5,
@@ -4211,6 +4596,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/node/7771124864"
+ },
+ {
+  "name": "Edward Jones",
+  "kind": "Financial advisor",
+  "score": 5,
+  "miles": 3.2,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/7771124868"
  },
  {
   "name": "Springs Modern Dentistry",
@@ -4255,6 +4651,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/node/11935591063"
+ },
+ {
+  "name": "Air Academy Federal Credit Union",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 3.2,
+  "chain": false,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/193266744"
  },
  {
   "name": "Perfect Teeth",
@@ -4477,6 +4884,17 @@
   "osm": "https://www.openstreetmap.org/way/183680178"
  },
  {
+  "name": "Ent Credit Union",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 3.5,
+  "chain": false,
+  "addr": "4720 Flintridge Drive, Colorado Springs",
+  "phone": "+1-719-574-1100",
+  "web": "https://www.ent.com/our-locations/pikes-peak-region/flintridge-service-center/",
+  "osm": "https://www.openstreetmap.org/way/193971451"
+ },
+ {
   "name": "Three Delights Caribbean Grill",
   "kind": "Restaurant",
   "score": 5,
@@ -4486,6 +4904,28 @@
   "phone": "+1-719-599-5375",
   "web": "http://www.threedelights.com",
   "osm": "https://www.openstreetmap.org/node/2277846256"
+ },
+ {
+  "name": "Chase",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 3.6,
+  "chain": true,
+  "addr": "7390 Duryea Drive, Colorado Springs",
+  "phone": "+1-719-522-1399",
+  "web": "https://locator.chase.com/co/colorado-springs/7390-duryea-dr",
+  "osm": "https://www.openstreetmap.org/way/183680177"
+ },
+ {
+  "name": "Ent Credit Union",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 3.6,
+  "chain": false,
+  "addr": "4585 North Nevada Avenue, Colorado Springs",
+  "phone": "",
+  "web": "https://www.ent.com/our-locations/pikes-peak-region/university-service-center/",
+  "osm": "https://www.openstreetmap.org/way/910110535"
  },
  {
   "name": "Happy Time Korean BBQ",
@@ -4576,6 +5016,28 @@
   "osm": "https://www.openstreetmap.org/way/191019436"
  },
  {
+  "name": "Huntington Bank",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 3.7,
+  "chain": true,
+  "addr": "5470 East Woodmen Road, Colorado Springs",
+  "phone": "+1-719-262-7000",
+  "web": "https://www.huntington.com/Community/branch-info?locationId=29668",
+  "osm": "https://www.openstreetmap.org/way/191019462"
+ },
+ {
+  "name": "Ent Credit Union",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 3.7,
+  "chain": false,
+  "addr": "7339 Duryea Drive, Colorado Springs",
+  "phone": "+1-719-574-1100",
+  "web": "https://www.ent.com/our-locations/pikes-peak-region/duryea-service-center/",
+  "osm": "https://www.openstreetmap.org/way/769474489"
+ },
+ {
   "name": "Ivy's Chinese Cafe",
   "kind": "Restaurant",
   "score": 5,
@@ -4607,6 +5069,17 @@
   "phone": "+1-719-900-1590",
   "web": "https://toastique.com/cosridgeline",
   "osm": "https://www.openstreetmap.org/node/12459704157"
+ },
+ {
+  "name": "State Farm",
+  "kind": "Insurance",
+  "score": 5,
+  "miles": 3.8,
+  "chain": true,
+  "addr": "11550 Ridgeline Drive, Colorado Springs",
+  "phone": "+1-719-599-8200",
+  "web": "https://www.kevinwgood.com",
+  "osm": "https://www.openstreetmap.org/node/12459704171"
  },
  {
   "name": "Ridgeline Family Dentistry",
@@ -4717,6 +5190,17 @@
   "phone": "+1-719-396-0615",
   "web": "https://flylifefitness.com",
   "osm": "https://www.openstreetmap.org/node/12328224248"
+ },
+ {
+  "name": "Huntington Bank",
+  "kind": "Bank / credit union",
+  "score": 5,
+  "miles": 4.2,
+  "chain": true,
+  "addr": "4330 North Academy Boulevard, Colorado Springs",
+  "phone": "+1-719-262-7040",
+  "web": "https://www.huntington.com/Community/branch-info?locationId=29550",
+  "osm": "https://www.openstreetmap.org/way/193971534"
  },
  {
   "name": "ascent cycling",
@@ -4961,6 +5445,17 @@
   "osm": "https://www.openstreetmap.org/node/11965929151"
  },
  {
+  "name": "Comfort Dental",
+  "kind": "Dentist",
+  "score": 5,
+  "miles": 4.5,
+  "chain": true,
+  "addr": "3952 North Academy Boulevard, Colorado Springs",
+  "phone": "+1-719-591-1811",
+  "web": "https://comfortdental.com/office/co-austin-bluffs",
+  "osm": "https://www.openstreetmap.org/node/11965929152"
+ },
+ {
   "name": "Colorado Springs Cardiology",
   "kind": "Doctor’s office",
   "score": 5,
@@ -5170,6 +5665,17 @@
   "osm": "https://www.openstreetmap.org/node/2342938616"
  },
  {
+  "name": "Pizza Hut",
+  "kind": "Restaurant",
+  "score": 5,
+  "miles": 4.7,
+  "chain": true,
+  "addr": "4331 Centennial Boulevard, Colorado Springs",
+  "phone": "+1 719-634-6760",
+  "web": "https://locations.pizzahut.com/co/colorado-springs/4331-centennial-blvd",
+  "osm": "https://www.openstreetmap.org/node/10827748892"
+ },
+ {
   "name": "La Conchita Mexican Food",
   "kind": "Restaurant",
   "score": 5,
@@ -5190,6 +5696,17 @@
   "phone": "+1 719-638-8800",
   "web": "https://newchinakitchen2.com/",
   "osm": "https://www.openstreetmap.org/node/12798233307"
+ },
+ {
+  "name": "Bird Dog BBQ",
+  "kind": "Restaurant",
+  "score": 5,
+  "miles": 4.8,
+  "chain": false,
+  "addr": "5984 Stetson Hills Boulevard, Colorado Springs",
+  "phone": "+1 719-596-4900",
+  "web": "https://birddogbbq.com/",
+  "osm": "https://www.openstreetmap.org/node/7761681419"
  },
  {
   "name": "Springs Family and Cosmetic Dentistry",
@@ -5423,6 +5940,28 @@
   "osm": "https://www.openstreetmap.org/node/7159750029"
  },
  {
+  "name": "State Farm",
+  "kind": "Insurance",
+  "score": 4,
+  "miles": 3.7,
+  "chain": true,
+  "addr": "5490 Powers Center Point, Colorado Springs",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/12795230186"
+ },
+ {
+  "name": "Abba Eye Care",
+  "kind": "Eye care",
+  "score": 4,
+  "miles": 3.7,
+  "chain": false,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/201371241"
+ },
+ {
   "name": "Champ Dog Park",
   "kind": "Fitness",
   "score": 4,
@@ -5465,6 +6004,28 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/node/13009650337"
+ },
+ {
+  "name": "Village Inn",
+  "kind": "Restaurant",
+  "score": 4,
+  "miles": 4.1,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/194585582"
+ },
+ {
+  "name": "Wells Fargo",
+  "kind": "Bank / credit union",
+  "score": 4,
+  "miles": 4.1,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/200395280"
  },
  {
   "name": "24 Hour Fitness",
@@ -5665,6 +6226,17 @@
   "osm": "https://www.openstreetmap.org/node/5096404545"
  },
  {
+  "name": "Dickey's Barbecue Pit",
+  "kind": "Restaurant",
+  "score": 4,
+  "miles": 4.4,
+  "chain": true,
+  "addr": "4146 Austin Bluffs Parkway",
+  "phone": "+1-719-593-5039",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/7159640553"
+ },
+ {
   "name": "Permier Group Insurance",
   "kind": "Insurance",
   "score": 4,
@@ -5753,6 +6325,39 @@
   "osm": "https://www.openstreetmap.org/node/13458744601"
  },
  {
+  "name": "Wells Fargo",
+  "kind": "Bank / credit union",
+  "score": 4,
+  "miles": 4.4,
+  "chain": true,
+  "addr": "4110 North Academy Boulevard, Colorado Springs",
+  "phone": "+1-719-208-8163",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/13998796116"
+ },
+ {
+  "name": "Wells Fargo",
+  "kind": "Bank / credit union",
+  "score": 4,
+  "miles": 4.4,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/195066649"
+ },
+ {
+  "name": "Chase",
+  "kind": "Bank / credit union",
+  "score": 4,
+  "miles": 4.4,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/195066697"
+ },
+ {
   "name": "Golden Flame Hot Wings",
   "kind": "Restaurant",
   "score": 4,
@@ -5808,6 +6413,17 @@
   "osm": "https://www.openstreetmap.org/way/194585514"
  },
  {
+  "name": "U.S. Bank",
+  "kind": "Bank / credit union",
+  "score": 4,
+  "miles": 4.6,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/way/194585659"
+ },
+ {
   "name": "Eim Thai",
   "kind": "Restaurant",
   "score": 4,
@@ -5839,6 +6455,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/node/8397841885"
+ },
+ {
+  "name": "Pizza Hut",
+  "kind": "Restaurant",
+  "score": 4,
+  "miles": 4.7,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/10830666801"
  },
  {
   "name": "Pueblo Viejo",
@@ -5962,6 +6589,17 @@
   "osm": "https://www.openstreetmap.org/node/7761544240"
  },
  {
+  "name": "State Farm",
+  "kind": "Insurance",
+  "score": 4,
+  "miles": 4.9,
+  "chain": true,
+  "addr": "",
+  "phone": "",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/7761544241"
+ },
+ {
   "name": "U.S. Bank",
   "kind": "Bank / credit union",
   "score": 4,
@@ -5971,6 +6609,17 @@
   "phone": "",
   "web": "",
   "osm": "https://www.openstreetmap.org/node/7761589268"
+ },
+ {
+  "name": "Orangetheory Fitness",
+  "kind": "Fitness",
+  "score": 4,
+  "miles": 4.9,
+  "chain": true,
+  "addr": "5990 Stetson Hills Boulevard, Colorado Springs",
+  "phone": "+1 719-632-3777",
+  "web": "",
+  "osm": "https://www.openstreetmap.org/node/7761681423"
  },
  {
   "name": "Pikes Peak Endoscopy Center",
