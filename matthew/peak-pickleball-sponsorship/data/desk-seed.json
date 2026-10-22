@@ -43,70 +43,80 @@
      "pos": "Director Of Public Relations",
      "email": "todd.seip@uchealth.org",
      "conf": 85,
-     "pick": true
+     "pick": true,
+     "phone": "+1 719 584 4499"
     },
     {
      "name": "Dan Weaver",
      "pos": "Vice President of Communications",
      "email": "dan.weaver@uchealth.org",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": "+1 720 848 7852"
     },
     {
      "name": "Kelli Christensen",
      "pos": "Director of Public Relations",
      "email": "kelli.christensen@uchealth.org",
      "conf": 82,
-     "pick": false
+     "pick": false,
+     "phone": "+1 303 956 0160"
     },
     {
      "name": "Rebecca Craig",
      "pos": "CEO",
      "email": "rebecca.craig@uchealth.org",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 720 316 7561"
     },
     {
      "name": "Dani Andrade",
      "pos": "Vice President of Integration",
      "email": "danielle.andrade@uchealth.org",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 307 421 9315"
     },
     {
      "name": "Kevin Unger",
      "pos": "President",
      "email": "kevin.unger@uchealth.org",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Alan Katzen",
      "pos": "Vice President",
      "email": "alan.katzen@uchealth.org",
      "conf": 82,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Mary Romero",
      "pos": "Executive Director",
      "email": "mary.romero@uchealth.org",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Carolyn Paula",
      "pos": "CCO",
      "email": "paula.freund@uchealth.org",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Karen Schneider",
      "pos": "Executive Director",
      "email": "karen.schneider@uchealth.org",
      "conf": 82,
-     "pick": false
+     "pick": false,
+     "phone": "+1 970 871 2522"
     }
    ]
   },
@@ -129,70 +139,80 @@
      "pos": "Director Of Marketing",
      "email": "alansandberg@alpinebank.com",
      "conf": 83,
-     "pick": true
+     "pick": true,
+     "phone": "+1 970 384 3216"
     },
     {
      "name": "Bill White",
      "pos": "Senior Vice President",
      "email": "billwhite@alpinebank.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jamie Saff",
      "pos": "Executive Vice President",
      "email": "jamiesaff@alpinebank.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Katie Albia",
      "pos": "Vice President",
      "email": "katiealbia@alpinebank.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Scott Schlegel",
      "pos": "Vice President",
      "email": "scottschlegel@alpinebank.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "David Miller",
      "pos": "Bank Senior Vice President",
      "email": "davidmiller@alpinebank.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Mary Ryerson",
      "pos": "President",
      "email": "maryryerson@alpinebank.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Danny Craft",
      "pos": "Branch President",
      "email": "dannycraft@alpinebank.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Adonna Allen",
      "pos": "Market President",
      "email": "adonnaallen@alpinebank.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Gena Cooper",
      "pos": "Vice President",
      "email": "genacooper@alpinebank.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -215,70 +235,80 @@
      "pos": "Senior Vice President Community Development",
      "email": "ggerst@bokf.com",
      "conf": 84,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Jon Bartel",
      "pos": "Senior Vice President",
      "email": "jbartel@bokf.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Joe Crivelli",
      "pos": "Senior Vice President",
      "email": "jcrivelli@bokf.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": "+1 918 594 7794"
     },
     {
      "name": "Anthony Martin",
      "pos": "Senior Vice President",
      "email": "amartin@bokf.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Cameron Reed",
      "pos": "Managing Director",
      "email": "c.reed@bokf.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Lester Byrd",
      "pos": "Managing Director",
      "email": "lbyrd@bokf.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": "+1 713 289 5876"
     },
     {
      "name": "Molly Odgers",
      "pos": "Managing Director",
      "email": "modgers@bokf.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jessica Johnson",
      "pos": "Senior Director",
      "email": "jessica.johnson@bokf.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Tammy Foy",
      "pos": "Director",
      "email": "tfoy@bokf.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Josh Mclaughlin",
      "pos": "Managing Director",
      "email": "jmclaughlin@bokf.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": "+1 214 576 0878"
     }
    ]
   },
@@ -301,70 +331,80 @@
      "pos": "Marketing Director",
      "email": "meghan.means@molsoncoors.com",
      "conf": 97,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Brad Feinberg",
      "pos": "Vice President of Marketing",
      "email": "brad.feinberg@molsoncoors.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Mara Schäfer",
      "pos": "Senior Marketing Director",
      "email": "mara.schaefer@molsoncoors.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Sofia Colucci",
      "pos": "Chief Marketing Officer",
      "email": "sofia.colucci@molsoncoors.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Victor Teiosanu",
      "pos": "Marketing Director",
      "email": "victor.teiosanu@molsoncoors.com",
      "conf": 95,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Vincent Ventura",
      "pos": "Director of Consumer Communications",
      "email": "vincent.ventura@molsoncoors.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Ștefania Bătrînca",
      "pos": "Communications Director",
      "email": "stefania.batrinca@molsoncoors.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Brian Erhardt",
      "pos": "President",
      "email": "brian.erhardt@molsoncoors.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jennifer Schmid",
      "pos": "Vice President",
      "email": "jennifer.schmid@molsoncoors.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Pete Coors",
      "pos": "Chairman",
      "email": "pete.coors@molsoncoors.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -387,21 +427,24 @@
      "pos": "general",
      "email": "memberservices@orangetheory.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Marissa Fattore",
      "pos": "Media Contact",
      "email": "mfattore@orangetheory.com",
      "conf": 94,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "General inbox",
      "pos": "general",
      "email": "social@orangetheory.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -439,70 +482,80 @@
      "pos": "Vice President of Marketing",
      "email": "gilbert.delarosa@chordenergy.com",
      "conf": 93,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Erika Pizano",
      "pos": "Crude Oil Marketing Analyst",
      "email": "erika.pizano@chordenergy.com",
      "conf": 79,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Lindsey Holcombe",
      "pos": "Senior Marketing Analyst",
      "email": "lindsey.holcombe@chordenergy.com",
      "conf": 79,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Krystal McClain",
      "pos": "Marketing Analyst",
      "email": "krystal.mcclain@chordenergy.com",
      "conf": 78,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Kevin Kelly",
      "pos": "Senior Vice President of Sustainability",
      "email": "kevin.kelly@chordenergy.com",
      "conf": 90,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jenny Simpson",
      "pos": "Board Member",
      "email": "jenny.simpson@chordenergy.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Samantha Holroyd",
      "pos": "Board Member",
      "email": "samantha.holroyd@chordenergy.com",
      "conf": 95,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Michael Lou",
      "pos": "CCO",
      "email": "michael.lou@chordenergy.com",
      "conf": 91,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Melissa Folz",
      "pos": "Managing Director",
      "email": "melissa.folz@chordenergy.com",
      "conf": 78,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jason Weddle",
      "pos": "Managing Director",
      "email": "jason.weddle@chordenergy.com",
      "conf": 76,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -540,70 +593,80 @@
      "pos": "Marketing Director",
      "email": "apopescu@swirecc.com",
      "conf": 75,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Molly Hebert",
      "pos": "Marketing Director",
      "email": "mhebert@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Elisabeth Correa",
      "pos": "Director of Marketing",
      "email": "earellano@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Yousuf Ding",
      "pos": "Director of Product Marketing",
      "email": "yding@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Michele McKillip",
      "pos": "Senior Vice President, Corporate Affairs",
      "email": "mmckillip@swirecc.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 801 816 5714"
     },
     {
      "name": "Chad Hobbs",
      "pos": "Vice President, Revenue Management",
      "email": "chobbs@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Leandro Tane",
      "pos": "Vice President, Total Rewards",
      "email": "ltane@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Kimberly Snider",
      "pos": "Vice President",
      "email": "ksnider@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Heather Curtis",
      "pos": "Vice President",
      "email": "hcurtis@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Beau Chandler",
      "pos": "VP & GM",
      "email": "bchandler@swirecc.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -626,7 +689,8 @@
      "pos": "Division Manager",
      "email": "dhobbs@coloradomediagroup.com",
      "conf": 67,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -664,21 +728,24 @@
      "pos": "Vice President of Marketing",
      "email": "erin@conceptrestaurants.com",
      "conf": 94,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Amber Winston",
      "pos": "Director of Marketing",
      "email": "amber@conceptrestaurants.com",
      "conf": 93,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "General inbox",
      "pos": "general",
      "email": "marketing@conceptrestaurants.com",
      "conf": 95,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -701,70 +768,80 @@
      "pos": "Vice President, Marketing",
      "email": "james.robinson@cumulus.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Vinny Moses",
      "pos": "Director of Marketing",
      "email": "vmoses@cumulus.com",
      "conf": 98,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Eric Mastel",
      "pos": "Vice President",
      "email": "eric.mastel@cumulus.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Donna Baker",
      "pos": "Regional Vice President",
      "email": "donna.baker@cumulus.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "John Kaufman",
      "pos": "Senior Vice President of Revenue",
      "email": "john.kaufman@cumulus.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Tish Boden",
      "pos": "Vice President",
      "email": "tish.boden@cumulus.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Tricia Gallenbeck",
      "pos": "Vice President",
      "email": "tricia.gallenbeck@cumulus.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Steve Holm",
      "pos": "Vice President, Regional",
      "email": "steve.holm@cumulus.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": "+1 214 523 2780"
     },
     {
      "name": "Chris Hoffman",
      "pos": "Vice President, Adult Contemporary",
      "email": "chris.hoffman@cumulus.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Dale Jackson",
      "pos": "Talk Show Host",
      "email": "dale.jackson@cumulus.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -787,70 +864,80 @@
      "pos": "Director of Internal Communications",
      "email": "kutermoehlen@ent.com",
      "conf": 75,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Sofiane Atia",
      "pos": "Owner",
      "email": "satia@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jonah George",
      "pos": "Chief Executive Officer",
      "email": "jgeorge@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Gilbert Fornier",
      "pos": "Owner",
      "email": "gfornier@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Kevin Cap",
      "pos": "Vice President of Treasury",
      "email": "kcap@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Amber Lundy",
      "pos": "Vice President of Retail Delivery",
      "email": "alundy@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Barbara Winter",
      "pos": "Senior Vice President",
      "email": "bwinter@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Marie Montana",
      "pos": "Entrepreneur",
      "email": "mmontana@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jean Chatelain",
      "pos": "Entrepreneur",
      "email": "jchatelain@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Leanne Duran",
      "pos": "Chief Risk Officer",
      "email": "lduran@ent.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -873,70 +960,80 @@
      "pos": "Vp Of Marketing",
      "email": "tom.sicola@mclaneco.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": "+1 254 742 3637"
     },
     {
      "name": "Breann Hudson",
      "pos": "Director of Marketing",
      "email": "breann.hudson@mclaneco.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Taylor Bonales",
      "pos": "Marketing Director",
      "email": "taylor.skinner@mclaneco.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Marcelo Gaitan",
      "pos": "Marketing Director",
      "email": "marcelo.gaitan@mclaneco.com",
      "conf": 95,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Diane Watts",
      "pos": "Marketing Director",
      "email": "diane.watts@mclaneco.com",
      "conf": 95,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Vito Maurici",
      "pos": "Senior Vice President",
      "email": "vito.maurici@mclaneco.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Tony Frankenberger",
      "pos": "CEO",
      "email": "tony.frankenberger@mclaneco.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Nef García",
      "pos": "Vice President of Government Relations",
      "email": "neftali.garcia@mclaneco.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Ken Mason",
      "pos": "Division President",
      "email": "ken.mason@mclaneco.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Barry Taft",
      "pos": "Director of Labor Relations",
      "email": "barry.taft@mclaneco.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -959,70 +1056,80 @@
      "pos": "Vice President of Marketing",
      "email": "atucker@pcl.com",
      "conf": 93,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Kathryn Seymour",
      "pos": "Marketing Director",
      "email": "kseymour@pcl.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Richard Hewitt",
      "pos": "Vice President",
      "email": "rhewitt@pcl.com",
      "conf": 93,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Andrew Moles",
      "pos": "Vice President",
      "email": "amoles@pcl.com",
      "conf": 92,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Dale Koger",
      "pos": "Vice President",
      "email": "dkoger@pcl.com",
      "conf": 92,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Paul Knowles",
      "pos": "Vice President",
      "email": "pknowles@pcl.com",
      "conf": 92,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Sébastien Tremblay",
      "pos": "Vice President and General Manager",
      "email": "stremblay@pcl.com",
      "conf": 75,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "David Hudock",
      "pos": "Director of Government Relations",
      "email": "dhudock@pcl.com",
      "conf": 93,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Lee Clayton",
      "pos": "SVP Global Strategic Initiatives",
      "email": "lclayton@pcl.com",
      "conf": 93,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Chris Robinson",
      "pos": "Director of Labor Relations",
      "email": "crobinson@pcl.com",
      "conf": 91,
-     "pick": false
+     "pick": false,
+     "phone": "+1 416 201 9995"
     }
    ]
   },
@@ -1045,70 +1152,80 @@
      "pos": "Marketing Director",
      "email": "jeldridge@republicservices.com",
      "conf": 84,
-     "pick": true
+     "pick": true,
+     "phone": "+1 480 718 0119"
     },
     {
      "name": "Michael Caprio",
      "pos": "Regional President",
      "email": "mcaprio@republicservices.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Casey Powers",
      "pos": "Vice President",
      "email": "cpowers@republicservices.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Bob Pickens",
      "pos": "Vice President",
      "email": "bpickens@republicservices.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Craig Mikolajchak",
      "pos": "Vice President",
      "email": "cmikolajchak@republicservices.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Chuck Helget",
      "pos": "Director",
      "email": "chelget@republicservices.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Holly Doyle",
      "pos": "Director",
      "email": "hdoyle@republicservices.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Rhett Gulledge",
      "pos": "Executive Director",
      "email": "rgulledge@republicservices.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Steve Derus",
      "pos": "General Manager",
      "email": "sderus@republicservices.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Tim Odonnell",
      "pos": "Executive Director",
      "email": "todonnell@republicservices.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -1131,70 +1248,80 @@
      "pos": "Vice President of Investments",
      "email": "bill_benintende@troweprice.com",
      "conf": 85,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Matt McCauley",
      "pos": "Vice President of Investments",
      "email": "matt.mccauley@troweprice.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Peter Foley",
      "pos": "Vice President",
      "email": "peter.foley@troweprice.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Kevin Baldes",
      "pos": "Vice President, Relationship Management",
      "email": "kevin.baldes@troweprice.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Taylor Pidgeon",
      "pos": "Vice President, Retirement Plans",
      "email": "taylor.pidgeon@troweprice.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Daniel Morris",
      "pos": "Vice President of Retirement",
      "email": "daniel.morris@troweprice.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "James Mathis",
      "pos": "Director",
      "email": "james.mathis@troweprice.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Kelly Hammond",
      "pos": "Partner",
      "email": "kelly.hammond@troweprice.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": "+1 719 756 2288"
     },
     {
      "name": "John Eiler",
      "pos": "Partner",
      "email": "john.eiler@troweprice.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Carsten Kutschera",
      "pos": "Regional Director",
      "email": "carsten.kutschera@troweprice.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -1217,70 +1344,80 @@
      "pos": "Advertising Assistant",
      "email": "michelle.clark@gazette.com",
      "conf": 95,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Chris Reen",
      "pos": "Vice President",
      "email": "chris.reen@gazette.com",
      "conf": 92,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jim Oconnell",
      "pos": "Lead Copy Editor",
      "email": "jim.oconnell@gazette.com",
      "conf": 98,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Brennen Kauffman",
      "pos": "News Reporter",
      "email": "brennen.kauffman@gazette.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "General inbox",
      "pos": "general",
      "email": "advertisingresponse@gazette.com",
      "conf": 96,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Grace Brajkovich",
      "pos": "Multimedia Reporter",
      "email": "grace.brajkovich@gazette.com",
      "conf": 95,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Cleo Westin",
      "pos": "News Reporter",
      "email": "cleo.westin@gazette.com",
      "conf": 94,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Stephanie Earls",
      "pos": "Reporter",
      "email": "stephanie.earls@gazette.com",
      "conf": 94,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "David Migoya",
      "pos": "Senior Reporter",
      "email": "david.migoya@gazette.com",
      "conf": 94,
-     "pick": false
+     "pick": false,
+     "phone": "+1 719 636 0142"
     },
     {
      "name": "Chris Osher",
      "pos": "Senior Investigative Reporter",
      "email": "chris.osher@gazette.com",
      "conf": 94,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -1303,70 +1440,80 @@
      "pos": "Vice President of Partnerships",
      "email": "kimpiet@iheartmedia.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Rachel Nelson",
      "pos": "Marketing Partner",
      "email": "rachelnelson@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Liliana Villarreal",
      "pos": "Vice President, Music Marketing",
      "email": "lilianavillarreal@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Cliff Chiet",
      "pos": "Chief Marketing Officer",
      "email": "cliffchiet@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Giselle Boling",
      "pos": "Regional Marketing Director",
      "email": "giselleboling@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Loraine Morrill",
      "pos": "Director of Communications",
      "email": "lorainemorrill@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Shaileen Santoro",
      "pos": "Senior Vice President, Live Events",
      "email": "shaileensantoro@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Linda Little",
      "pos": "Regional President",
      "email": "lindalittle@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jessica Marventano",
      "pos": "Executive Vice President",
      "email": "jessicamarventano@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Wilmer Valderrama",
      "pos": "CMO",
      "email": "wilmervalderrama@iheartmedia.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -1434,70 +1581,80 @@
      "pos": "Vice President And Chief Financial Officer",
      "email": "chuck_jarrett@progressive.com",
      "conf": 85,
-     "pick": true
+     "pick": true,
+     "phone": "+1 440 395 2222"
     },
     {
      "name": "Tricia Griffith",
      "pos": "CEO",
      "email": "tricia_griffith@progressive.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 440 603 2100"
     },
     {
      "name": "Matt Stafford",
      "pos": "Agile Delivery Owner",
      "email": "matt_stafford@progressive.com",
      "conf": 62,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Mike Macfarlane",
      "pos": "Consulting Vice President Vp Professional Sales",
      "email": "mike_macfarlane@progressive.com",
      "conf": 62,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Janice Tighe",
      "pos": "President",
      "email": "janice_tighe@progressive.com",
      "conf": 62,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Patrick Nettles",
      "pos": "Director",
      "email": "patrick_nettles@progressive.com",
      "conf": 81,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Jennifer Napolitano",
      "pos": "Partner",
      "email": "jnapoli@progressive.com",
      "conf": 69,
-     "pick": false
+     "pick": false,
+     "phone": "+1 800 274 4055"
     },
     {
      "name": "Jennifer Napolitano",
      "pos": "Partner",
      "email": "jennifer_b_napolitano@progressive.com",
      "conf": 67,
-     "pick": false
+     "pick": false,
+     "phone": "+1 800 274 4055"
     },
     {
      "name": "Aia Costanzo",
      "pos": "Director",
      "email": "rose_costanzo@progressive.com",
      "conf": 62,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Ken Sloan",
      "pos": "Partner",
      "email": "ken_sloan@progressive.com",
      "conf": 62,
-     "pick": false
+     "pick": false,
+     "phone": "+1 419 722 9316"
     }
    ]
   },
@@ -1550,70 +1707,80 @@
      "pos": "VP of Brand Marketing",
      "email": "jennifer.escobar@usaa.com",
      "conf": 75,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Roger Wildermuth",
      "pos": "Director of Communications",
      "email": "roger.wildermuth@usaa.com",
      "conf": 84,
-     "pick": false
+     "pick": false,
+     "phone": "+1 916 717 1072"
     },
     {
      "name": "Anna Albert",
      "pos": "Director of Communications",
      "email": "anna.albert@usaa.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 210 290 1748"
     },
     {
      "name": "Danielle Long",
      "pos": "Director of Employee Communications",
      "email": "danielle.long@usaa.com",
      "conf": 82,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Sheila Sanchez",
      "pos": "Vice President",
      "email": "sheila.sanchez@usaa.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 210 498 7578"
     },
     {
      "name": "Wayne Peacock",
      "pos": "CEO",
      "email": "wayne.peacock@usaa.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 210 531 8722"
     },
     {
      "name": "Stuart Parker",
      "pos": "Chief Executive",
      "email": "stuart.parker@usaa.com",
      "conf": 82,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Chris Talley",
      "pos": "Founder",
      "email": "chris.talley@usaa.com",
      "conf": 83,
-     "pick": false
+     "pick": false,
+     "phone": "+1 210 498 1479"
     },
     {
      "name": "Michael Bates",
      "pos": "Executive Director Managing",
      "email": "michael.bates@usaa.com",
      "conf": 81,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Dana Hagood",
      "pos": "Executive Director",
      "email": "dana.hagood@usaa.com",
      "conf": 81,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -1651,14 +1818,16 @@
      "pos": "VP of Strategic Alliances",
      "email": "jon.emerick@laborjack.com",
      "conf": 79,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Blake Craig",
      "pos": "CEO",
      "email": "blake@laborjack.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -1681,14 +1850,16 @@
      "pos": "CEO",
      "email": "lolaw@scwcc.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "General inbox",
      "pos": "general",
      "email": "ceo@scwcc.com",
      "conf": 98,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -1711,7 +1882,8 @@
      "pos": "President",
      "email": "elizabeth@windstarstudios.com",
      "conf": 90,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -1764,28 +1936,32 @@
      "pos": "Owner",
      "email": "jeff@dwirex.com",
      "conf": 92,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Adam Dilg",
      "pos": "Project Management",
      "email": "adam@dwirex.com",
      "conf": 99,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Erik Vaishville",
      "pos": "Land Development Manager",
      "email": "erik@dwirex.com",
      "conf": 97,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "Wade Fothergill",
      "pos": "Project Management",
      "email": "wade@dwirex.com",
      "conf": 93,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -2158,14 +2334,16 @@
      "pos": "",
      "email": "mallory@peakpelvichealthco.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "general inbox",
      "pos": "general",
      "email": "info@peakpelvichealthco.com",
      "conf": 77,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -2188,7 +2366,8 @@
      "pos": "general",
      "email": "info@abcfamilychiropractic.com",
      "conf": 10,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -2211,28 +2390,32 @@
      "pos": "Occupational Therapy Manager",
      "email": "haileyb@cstherapycenter.com",
      "conf": 79,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "Craig Peterson",
      "pos": "",
      "email": "craigp@cstherapycenter.com",
      "conf": 65,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "general inbox",
      "pos": "general",
      "email": "info@cstherapycenter.com",
      "conf": 85,
-     "pick": false
+     "pick": false,
+     "phone": ""
     },
     {
      "name": "general inbox",
      "pos": "general",
      "email": "office@cstherapycenter.com",
      "conf": 50,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -2255,7 +2438,8 @@
      "pos": "Owner",
      "email": "kamber@revrehab.com",
      "conf": 75,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -2293,7 +2477,8 @@
      "pos": "Owner",
      "email": "dawn@wholistichealingexperiences.com",
      "conf": 79,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -2391,14 +2576,16 @@
      "pos": "general",
      "email": "referrals@manualedge.com",
      "conf": 10,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "general inbox",
      "pos": "general",
      "email": "letstalk@manualedge.com",
      "conf": 10,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -2766,7 +2953,8 @@
      "pos": "Manager",
      "email": "tiffanyb@lakesideautobrokers.com",
      "conf": 97,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -2819,7 +3007,8 @@
      "pos": "",
      "email": "pfaricy@faricy.com",
      "conf": 94,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -3277,7 +3466,8 @@
      "pos": "general",
      "email": "frontdesk@ourkwteam.com",
      "conf": 10,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -3360,7 +3550,8 @@
      "pos": "President",
      "email": "jane@morethanyourmoney.com",
      "conf": 85,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -3383,7 +3574,8 @@
      "pos": "General Manager",
      "email": "angie.martin@foundationprosofco.com",
      "conf": 95,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -3511,7 +3703,8 @@
      "pos": "general",
      "email": "info@wholelivingpilates.com",
      "conf": 81,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },
@@ -4479,14 +4672,16 @@
      "pos": "Customer Service",
      "email": "tracy@homesteadroofingcolorado.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": ""
     },
     {
      "name": "general inbox",
      "pos": "general",
      "email": "info@homesteadroofingcolorado.com",
      "conf": 95,
-     "pick": false
+     "pick": false,
+     "phone": ""
     }
    ]
   },
@@ -4524,7 +4719,8 @@
      "pos": "general",
      "email": "info@klausroofingcolorado.com",
      "conf": 99,
-     "pick": true
+     "pick": true,
+     "phone": ""
     }
    ]
   },

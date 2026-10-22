@@ -225,7 +225,7 @@ for comp, d in HUN.items():
     ppl = sorted(d.get('emails') or [], key=lambda e: (_rank(e.get('pos')), -(e.get('conf') or 0)))
     for i, e in enumerate(ppl):   # everyone Hunter found; the best-matched role first (a general inbox shows as such)
         nm = ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip()
-        CONTACTS.append((comp, nm or 'General inbox', e.get('pos') or ('' if nm else 'general'), e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', e.get('li') or '', 'Ask for first' if i == 0 else ''))
+        CONTACTS.append((comp, nm or 'General inbox', e.get('pos') or ('' if nm else 'general'), e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', e.get('li') or '', 'Ask for first' if i == 0 else '', e.get('phone') or ''))
 
 # the local businesses Hunter searched (owners and managers first, then the general inbox)
 HLOC = json.loads((DATA / 'hunter-local-results.json').read_text(encoding='utf-8')) if (DATA / 'hunter-local-results.json').exists() else {}
@@ -240,7 +240,7 @@ LOCAL_BEST = {}
 for comp, d in HLOC.items():
     ppl = sorted(d.get('emails') or [], key=lambda e: (_rank_l(e), -(e.get('conf') or 0)))
     for i, e in enumerate(ppl):
-        CONTACTS.append((comp + ' (local)', ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip() or 'general inbox', e.get('pos') or ('' if e.get('first') else 'general'), e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', '', 'Ask for first' if i == 0 else ''))
+        CONTACTS.append((comp + ' (local)', ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip() or 'general inbox', e.get('pos') or ('' if e.get('first') else 'general'), e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', '', 'Ask for first' if i == 0 else '', e.get('phone') or ''))
         if i == 0: LOCAL_BEST[comp] = e.get('v') or ''
 
 thin = Side(style='thin', color='C9CFC9')
@@ -274,7 +274,7 @@ sheet(wb, 'Employers 400+', ['Employer', 'Kind', 'Employees', 'Year of count', '
       EMP, [40, 20, 12, 12, 46, 70])
 sheet(wb, 'What others charge', ['Venue', 'Where', 'Courts', 'What', 'Price as published', 'Per year ($)', 'Source', 'Checked'],
       PRICES, [36, 20, 26, 46, 26, 12, 50, 12])
-sheet(wb, 'Contacts (Hunter)', ['Company', 'Name', 'Position', 'Email', 'Hunter confidence %', 'Web sources', 'Last seen', 'LinkedIn', 'Pick'], CONTACTS, [26, 24, 36, 34, 12, 10, 12, 36, 14])
+sheet(wb, 'Contacts (Hunter)', ['Company', 'Name', 'Position', 'Email', 'Hunter confidence %', 'Web sources', 'Last seen', 'LinkedIn', 'Pick', 'Phone'], CONTACTS, [26, 24, 36, 34, 12, 10, 12, 36, 14, 18])
 sheet(wb, 'Local lookalikes', ['Business', 'Kind', 'Score', 'Miles from Peak', 'Chain / franchise', 'Address', 'Phone', 'Email (Hunter)', 'Website', 'OpenStreetMap', 'Status', 'Notes'], [(r['name'], r['kind'], r['score'], r['miles'], 'yes' if r['chain'] else '', r['addr'], r['phone'], LOCAL_BEST.get(r['name'], ''), r['web'], r['osm'], '', '') for r in LOOK], [34, 26, 7, 9, 10, 32, 16, 32, 34, 30, 14, 26])
 sheet(wb, 'Website pass', ['Company', 'Public route found', 'What it means for Peak', 'Source'], WEB, [30, 46, 80, 50])
 sheet(wb, 'Ideas to borrow', ['Idea', 'Why'], IDEAS, [34, 110])
@@ -373,14 +373,14 @@ web_by = {w[0].split(' (')[0]: w for w in WEB}
 for i, (c, k, w, src, r, l, p) in enumerate(RANKED):
     f, m, sp, nr = sc(c)
     ALIAS = {'Coca-Cola': 'Swire Coca-Cola, USA'}   # the list's name -> the name Hunter was asked for
-    ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8])} for x in CONTACTS if x[0] == c or c.startswith(x[0]) or x[0] == ALIAS.get(c)]
+    ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8]), 'phone': x[9] if len(x) > 9 else ''} for x in CONTACTS if x[0] == c or c.startswith(x[0]) or x[0] == ALIAS.get(c)]
     wp = web_by.get(c) or web_by.get(c.split(' (')[0])
     seed['leads'].append({'id': _id('lead|' + c), 'list': 'new', 'name': c, 'kind': k, 'score': f + m + sp + nr, 'rank': i + 1, 'why': w, 'route': r, 'routeLink': l, 'source': src,
                           'web': wp[2] if wp else '', 'webLink': (wp[3] or '') if wp else '', 'contacts': ppl})
 for n, lvl, w in RENEW:
     seed['leads'].append({'id': _id('renew|' + n), 'list': 'renew', 'name': n, 'kind': lvl + ' sponsor' if lvl != 'Former' else 'Former sponsor', 'score': None, 'why': w, 'route': '', 'contacts': []})
 for r in LOOK[:150]:
-    ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8])} for x in CONTACTS if x[0] == r['name'] + ' (local)']
+    ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8]), 'phone': x[9] if len(x) > 9 else ''} for x in CONTACTS if x[0] == r['name'] + ' (local)']
     seed['leads'].append({'id': _id('local|' + r['name']), 'list': 'local', 'name': r['name'], 'kind': r['kind'], 'score': r['score'], 'miles': r['miles'], 'chain': r['chain'],
                           'why': f"{r['kind']}, {r['miles']} mi from Peak" + (' (chain or franchise)' if r['chain'] else ''), 'route': 'Walk in or call', 'phone': r['phone'], 'site': r['web'], 'addr': r['addr'], 'contacts': ppl})
 for l in seed['leads']:
