@@ -37,7 +37,7 @@ try {
   ok(t.ok, 'a tour books');
   let D2 = await b('data'); let L2 = D2.leads.find((l) => l.id === L.id);
   ok(L2.status === 'tour' && L2.notes.length === 1 && L2.next.what === 'call back' && L2.added[0].email === 'pat@example.com' && D2.tours.some((x) => x.tid === t.tid), 'booking the tour moved it to Tour booked; the note, next step and contact are kept');
-  ok((await b('packages', { packages: [{ name: 'X', price: 1 }] }))._status === 403, 'the seller cannot change the packages');
+  ok((await b('packages', { packages: [{ name: 'Court sponsor', price: 12000, per: 'year' }, { name: 'Title sponsor', price: 24000, per: 'year' }] })).ok, 'the seller can change the packages too (same powers as the admin, 2026-10-21)');
   const p = await b('proposal', { lead: L.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], to: 'Pat Test, Marketing', note: 'Two courts, one year' });
   ok(p.ok && p.total === 24500, 'a proposal: 2 courts + a banner = $24,500');
   D2 = await b('data'); L2 = D2.leads.find((l) => l.id === L.id);
@@ -66,7 +66,7 @@ try {
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${SELLER}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
   await waitFor(`!!document.querySelector('.row')`, 'pipeline');
   ok(await js(`document.querySelector('.row .nm b').textContent==='Kaiser Permanente'||[...document.querySelectorAll('.row .nm b')].some(b=>b.textContent==='Kaiser Permanente')`), 'the pipeline lists the ranked leads');
-  ok(await js(`[...document.querySelectorAll('.tabs button')].map(b=>b.textContent).join(',')==='Pipeline,Tours,Proposals,Report'`), 'the seller sees Pipeline, Tours, Proposals, Report (no Packages)');
+  ok(await js(`[...document.querySelectorAll('.tabs button')].map(b=>b.textContent).join(',')==='Pipeline,Tours,Proposals,Report,Packages'`), 'the seller sees every tab, Packages included');
   await js(`[...document.querySelectorAll('.row')].find(r=>/Kaiser/.test(r.textContent)).click()`); await sleep(300);
   ok(await js(`!!document.querySelector('.detail')&&/Proposal sent/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)`), 'the company opens beside the list, at Proposal sent');
   ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')`), 'a note with HTML in it shows as text, never as a picture or code');

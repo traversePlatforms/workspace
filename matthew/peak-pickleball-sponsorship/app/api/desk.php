@@ -3,7 +3,8 @@
  * this job"). Brandon works the sponsor leads: status from Not contacted to Signed, notes, next steps, tours at Peak, proposals, a report.
  * Storage: plain files outside the public folder. The leads start from seed.json (built by tools/build_leads.py); everything after is an
  * append-only log (events.log), replayed on each read, so no change is ever lost.
- * Sign-in: a 6-digit code per person (admin = Matthew, seller = Brandon); codes are kept hashed. Make one from the command line:
+ * Sign-in: a 6-digit code per person (admin = Matthew, seller = Brandon: the same screens and powers; only the admin controls who
+ * can sign in, and that is done on the server). Codes are kept hashed. Make one from the command line:
  *   php desk.php addaccount "Brandon" seller      (prints the code once) */
 declare(strict_types=1);
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
@@ -143,7 +144,9 @@ switch ($action) {
         out(['ok' => true, 'pid' => $pid, 'total' => $total]);
     }
     case 'packages': {
-        if (!$ADMIN) fail('Only an admin changes the packages.', 403); $pk = [];
+        /* the seller sets packages too (2026-10-21, Matthew: "brandons code gives as much permissions as mine does other then full control of the
+           application"); what stays the admin's is who can sign in (accounts are made on the server only) */
+        $pk = [];
         foreach ((array) ($body['packages'] ?? []) as $x) { if (!is_array($x)) continue; $nm = clean($x['name'] ?? '', 80); $pr = (int) round((float) ($x['price'] ?? 0)); if ($nm === '' || $pr < 0 || $pr > 1000000) continue; $pk[] = ['k' => substr(sha1($nm), 0, 6), 'name' => $nm, 'price' => $pr, 'per' => clean($x['per'] ?? 'year', 20), 'note' => clean($x['note'] ?? '', 160)]; }
         if (!$pk) fail('Keep at least one package.');
         logAdd(['t' => 'packages', 'packages' => $pk, 'by' => $ME, 'at' => time()]); out(['ok' => true]);

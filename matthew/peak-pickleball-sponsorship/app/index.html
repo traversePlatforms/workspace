@@ -133,7 +133,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
   /* ---- tabs ---- */
   function tabs() {
     var t = $('tabs'); t.textContent = '';
-    var T = [['pipe', 'Pipeline'], ['tours', 'Tours'], ['props', 'Proposals'], ['report', 'Report']]; if (S.data.me.role === 'admin') T.push(['pk', 'Packages']);
+    var T = [['pipe', 'Pipeline'], ['tours', 'Tours'], ['props', 'Proposals'], ['report', 'Report'], ['pk', 'Packages']];   /* everyone signed in (2026-10-21) */
     T.forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; if (S.tab === x[0]) b.setAttribute('aria-current', 'page'); b.addEventListener('click', function () { S.tab = x[0]; S.print = null; tabs(); draw(); window.scrollTo(0, 0); }); t.appendChild(b); });
   }
   function draw() {
@@ -367,7 +367,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
   /* ---- packages (admin) ---- */
   function drawPk() {
     main.appendChild(el('h2', null, 'Packages'));
-    main.appendChild(el('p', null, 'What a proposal can offer. Peak’s published prices are the court ($12,000 a year) and title ($24,000 a year) sponsorships; new tiers need Peak’s OK.')).style.color = 'var(--soft)';
+    main.appendChild(el('p', null, 'What a proposal can offer. Peak’s published prices are the court ($12,000 a year) and title ($24,000 a year) sponsorships; new tiers need Peak’s OK. Changes show in the next proposal; proposals already made keep their prices.')).style.color = 'var(--soft)';
     var box = el('div', 'card'), rows = [];
     var add = function (p) { var r = el('div', 'pkrow'); var n = el('input'); n.value = p.name || ''; n.placeholder = 'Name'; var pr = el('input'); pr.value = p.price != null ? p.price : ''; pr.placeholder = '$'; pr.inputMode = 'numeric'; var per = el('input'); per.value = p.per || ''; per.placeholder = 'per'; var x = el('button', 'btn ghost small', '×'); x.type = 'button'; x.addEventListener('click', function () { r.remove(); rows.splice(rows.indexOf(o), 1); }); var o = { n: n, pr: pr, per: per, note: p.note || '' }; rows.push(o); [n, pr, per, x].forEach(function (e) { r.appendChild(e); }); box.insertBefore(r, addb); };
     var addb = el('button', 'lnk', '+ Add a package'); addb.type = 'button'; addb.addEventListener('click', function () { add({}); }); box.appendChild(addb);
