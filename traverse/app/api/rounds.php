@@ -1116,6 +1116,7 @@ function loadDoorAssign(string $key): array {
 const SEARCH_SYN = ['DRIVE' => 'DR', 'ROAD' => 'RD', 'STREET' => 'ST', 'LANE' => 'LN', 'COURT' => 'CT', 'CIRCLE' => 'CIR',
     'AVENUE' => 'AVE', 'PLACE' => 'PL', 'TRAIL' => 'TRL', 'BOULEVARD' => 'BLVD', 'PARKWAY' => 'PKWY', 'TERRACE' => 'TER',
     'POINT' => 'PT', 'HEIGHTS' => 'HTS', 'HIGHWAY' => 'HWY', 'NORTH' => 'N', 'SOUTH' => 'S', 'EAST' => 'E', 'WEST' => 'W'];
+const SEARCH_DIRS = ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH', 'EAST', 'WEST'];   /* direction words a search tries again without (2026-10-21): a365NoDir() and 'search' */
 function searchIndex(): array {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $f = DATA_DIR . '/search-index.txt';
@@ -1571,7 +1572,7 @@ function tapTime(array $body): int {
 $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
-if ($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true) || in_array($action, ['clickuppoll', 'metapoll'], true))
+if (($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true)) || in_array($action, ['clickuppoll', 'metapoll'], true))   /* the polls run as GET too */
     register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll') { try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll */
 $body = [];
 if ($isPost) {
@@ -2196,7 +2197,7 @@ function a365Norm(string $a): string {
     return implode(' ', $out);
 }
 /** an address without its direction words (N, S, E, W...): the door lists write "11663 SETTLERS DR" where people say "11663 N Settlers" (2026-10-21) */
-function a365NoDir(string $norm): string { $w = explode(' ', $norm); return implode(' ', array_values(array_filter($w, fn($x, $i) => $i === 0 || !in_array($x, ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH', 'EAST', 'WEST'], true), ARRAY_FILTER_USE_BOTH))); }
+function a365NoDir(string $norm): string { $w = explode(' ', $norm); return implode(' ', array_values(array_filter($w, fn($x, $i) => $i === 0 || !in_array($x, SEARCH_DIRS, true), ARRAY_FILTER_USE_BOTH))); }
 /** the one house on our lists at this street address (the city they gave breaks a tie); null when none or unsure */
 function a365Match(string $street, string $city): ?array {
     $want = a365Norm($street); if (!preg_match('/^\d+ \S+/', $want)) return null;
@@ -4024,7 +4025,7 @@ function leadsAll(): array {
         /* back from Couldn't reach (2026-10-21): calls start again; the earlier ones are kept */
         if (!empty($u['back'])) { $leads[$u['id']]['oldTries'] = array_merge($leads[$u['id']]['oldTries'] ?? [], $leads[$u['id']]['tries']); $leads[$u['id']]['tries'] = []; $leads[$u['id']]['back'] = ['how' => (string) $u['back'], 'at' => (int) ($u['at'] ?? 0)]; $leads[$u['id']]['recall'] = null; }
         if (array_key_exists('recall', $u)) $leads[$u['id']]['recall'] = is_string($u['recall']) && $u['recall'] !== '' ? ['date' => $u['recall'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)] : null;   /* the day to call back (2026-10-21) */
-        if (!empty($u['untry'])) $leads[$u['id']]['tries'] =array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
+        if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
         if (!empty($u['try'])) $leads[$u['id']]['tries'][] = ['o' => (string) $u['try'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];   /* call tries (2026-10-14) */
         if (array_key_exists('owner', $u)) { $leads[$u['id']]['owner'] = (string) $u['owner']; $leads[$u['id']]['ownerBy'] = $u['by'] ?? null; }
         if (array_key_exists('follow', $u)) $leads[$u['id']]['follow'] = is_array($u['follow']) ? ['date' => (string) $u['follow'][0], 'time' => (string) ($u['follow'][1] ?? '')] : null;
@@ -4042,6 +4043,12 @@ function leadOk(string $id): bool { return (bool) preg_match('/^[wm]\d{14}[0-9a-
  * form, a Facebook form or message, the crew's quick quote, a lead added by hand, a move in Jen's ClickUp) brings that lead back: status
  * new, calls counted afresh (the earlier ones kept as oldTries), and a note saying how. */
 function contactKey(string $phone, string $email): array { return [substr((string) preg_replace('/\D/', '', $phone), -10), strtolower(trim($email))]; }
+/** every Couldn't-reach lead by its contact: 'p' . ten digits and 'e' . email => lead id, for the Facebook form feeds (metapoll, leadimport) */
+function unreachedWho(): array {
+    $who = [];
+    foreach (leadsAll() as $l) if (($l['status'] ?? '') === 'unreached') { [$ud, $ue] = contactKey((string) ($l['phone'] ?? ''), (string) ($l['email'] ?? '')); if (strlen($ud) === 10) $who['p' . $ud] = $l['id']; if ($ue !== '') $who['e' . $ue] = $l['id']; }
+    return $who;
+}
 function unreachedMatch(string $phone, string $email): ?array {
     [$d, $e] = contactKey($phone, $email); if (strlen($d) !== 10 && $e === '') return null;
     foreach (leadsAll() as $l) {
@@ -6573,7 +6580,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
         $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
     }
     $added = []; $errors = []; $mnotes = 0;
-    $unWho = []; foreach (leadsAll() as $l) if (($l['status'] ?? '') === 'unreached') { [$ud, $ue] = contactKey((string) ($l['phone'] ?? ''), (string) ($l['email'] ?? '')); if (strlen($ud) === 10) $unWho['p' . $ud] = $l['id']; if ($ue !== '') $unWho['e' . $ue] = $l['id']; }   /* Couldn't reach, then a new Facebook form (2026-10-21) */
+    $unWho = unreachedWho();   /* Couldn't reach, then a new Facebook form (2026-10-21) */
     foreach ($M['pages'] as $pi => $P) {
         $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since; $errBefore = count($errors);
         $forms = $gget($g . '/' . rawurlencode((string) $P['id']) . '/leadgen_forms?' . http_build_query(['fields' => 'id,name,status,questions{key,label}', 'limit' => 100, 'access_token' => $P['token']]));
@@ -6826,7 +6833,7 @@ if ($action === 'leadimport') {
         $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
     }
     $added = 0; $already = 0; $skipped = 0;
-    $unWho = []; foreach (leadsAll() as $l) if (($l['status'] ?? '') === 'unreached') { [$ud, $ue] = contactKey((string) ($l['phone'] ?? ''), (string) ($l['email'] ?? '')); if (strlen($ud) === 10) $unWho['p' . $ud] = $l['id']; if ($ue !== '') $unWho['e' . $ue] = $l['id']; }   /* Couldn't reach (2026-10-21) */
+    $unWho = unreachedWho();   /* Couldn't reach (2026-10-21) */
     foreach ($rows as $r) {
         if (!is_array($r)) { $skipped++; continue; }
         $ext = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', (string) ($r['ext'] ?? '')), 0, 64);
@@ -8514,7 +8521,7 @@ if ($action === 'search') {
         if ($typed && count($cut) < count($words)) $hits = $find($cut);
     }
     /* still nothing: without N / S / E / W (2026-10-21: "11663 N Settlers" against the list's "11663 SETTLERS DR") */
-    if (!$hits) { $nd = array_values(array_filter($words, fn($w, $i) => $i === 0 || !in_array($w, ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH', 'EAST', 'WEST'], true), ARRAY_FILTER_USE_BOTH)); if (count($nd) < count($words) && array_filter($nd, fn($x) => strlen($x) >= 3 && !ctype_digit($x) && !in_array($x, SEARCH_TYPES, true))) $hits = $find($nd); }
+    if (!$hits) { $nd = array_values(array_filter($words, fn($w, $i) => $i === 0 || !in_array($w, SEARCH_DIRS, true), ARRAY_FILTER_USE_BOTH)); if (count($nd) < count($words) && array_filter($nd, fn($x) => strlen($x) >= 3 && !ctype_digit($x) && !in_array($x, SEARCH_TYPES, true))) $hits = $find($nd); }
     /* a pulled-in copy of a house that is on a door list stays out (the door-list house has the trees, the right lot and the history) */
     $onList = []; foreach ($hits as $h0) if (empty($h0['lookup'])) $onList[strtoupper($h0['address']) . '|' . strtolower($h0['region'])] = 1;
     $hits = array_values(array_filter($hits, fn($h0) => empty($h0['lookup']) || !isset($onList[strtoupper($h0['address']) . '|' . strtolower(str_replace(' ', '-', $h0['town']))])));
