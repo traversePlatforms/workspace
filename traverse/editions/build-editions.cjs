@@ -26,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
-const { minifyPage } = require('./minify-page.cjs');
+const { minifyPage, buildStamp } = require('./minify-page.cjs');
 
 const REPO = path.resolve(__dirname, '..', '..');
 const SRC = path.join(REPO, 'traverse', 'app');
@@ -336,7 +336,8 @@ function api(E, name) {
 async function build(key) {
   const E = EDITIONS[key];
   const app = path.join('public_html', E.folder);
-  write(path.join(app, 'index.html'), page(E));
+  const pg = page(E); write(path.join(app, 'index.html'), pg);
+  write(path.join(app, 'version.txt'), buildStamp(pg) + '\n');   /* the build's stamp, goes up with the page (2026-10-22) */
   write(path.join(app, 'sw.js'), worker(E));
   write(path.join(app, 'manifest.json'), JSON.stringify({
     name: E.name, short_name: E.short, description: E.blurb,

@@ -36,8 +36,14 @@ function minifyPage(html) {
   /* HTML comments too, outside the scripts (2026-10-12): the page's header comment named Sixfold and its towns in every
      edition's source. The i18n markers are only read in the source, by sync-es.cjs. */
   html = html.split(/(<script(?:\s[^>]*)?>[\s\S]*?<\/script>)/).map((part, i) => i % 2 ? part : part.replace(/<!--[\s\S]*?-->\n?/g, '')).join('');
-  return html;
+  /* the build's stamp (2026-10-22): the page's own BUILD_ID, and the same twelve characters go in version.txt beside it (buildStamp() reads it
+     back out), so a phone running an older copy can tell. Every page that goes up must have its version.txt go up with it. */
+  const n = html.split('B1D:__BUILD__').length - 1;
+  if (n !== 1) throw new Error('minify-page: expected one B1D:__BUILD__ placeholder, found ' + n);
+  const stamp = require('crypto').createHash('sha1').update(html).digest('hex').slice(0, 12);
+  return html.replace('B1D:__BUILD__', 'B1D:' + stamp);
 }
+function buildStamp(min) { const m = /B1D:([0-9a-f]{12})/.exec(min); if (!m) throw new Error('no build stamp in the page'); return m[1]; }
 
 if (require.main === module) {
   const src = process.argv[2] ? path.resolve(process.argv[2]) : path.join(REPO, 'traverse', 'app', 'summit-de59ae83', 'index.html');
@@ -46,8 +52,9 @@ if (require.main === module) {
   const min = minifyPage(html);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, min);
+  fs.writeFileSync(path.join(path.dirname(out), 'version.txt'), buildStamp(min) + '\n');   /* goes up with the page */
   const gz = (s) => require('zlib').gzipSync(Buffer.from(s)).length;
   console.log(path.relative(REPO, out) + ': ' + html.length + ' -> ' + min.length + ' bytes (gzipped ' + gz(html) + ' -> ' + gz(min) + ')');
 }
 
-module.exports = { minifyPage };
+module.exports = { minifyPage, buildStamp };

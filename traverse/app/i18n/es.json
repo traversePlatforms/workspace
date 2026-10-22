@@ -2395,7 +2395,6 @@
  "The flags need signal.": "Las alertas necesitan señal.",
  "Could not load the flags.": "No se pudieron cargar las alertas.",
  "Leaderboard: rankings and the daily goal ›": "Clasificación: posiciones y la meta del día ›",
- "Results: which doors turn into jobs ›": "Resultados: qué puertas se vuelven trabajos ›",
  "Lawn to aerate": "Césped para airear",
  "No lawn to aerate": "Sin césped para airear",
  "Small lawn, mostly under trees": "Césped pequeño, casi todo bajo árboles",
@@ -2437,5 +2436,6 @@
  "This device": "Este dispositivo",
  " logged": " registrado",
  "Notifications are blocked for this app. On a computer: click the icon left of the web address and allow Notifications. iPhone: Settings, Notifications, the app. Android: hold the app icon, App info, Notifications.": "Las notificaciones están bloqueadas para esta app. En una computadora: haz clic en el icono a la izquierda de la dirección web y permite las notificaciones. iPhone: Ajustes, Notificaciones, la app. Android: mantén pulsado el icono de la app, Información de la app, Notificaciones.",
- "This browser cannot take alerts. Chrome or Edge on a computer or Android, Safari on a Mac, or the installed app on an iPhone, can.": "Este navegador no puede recibir alertas. Chrome o Edge en una computadora o en Android, Safari en una Mac, o la app instalada en un iPhone, sí pueden."
+ "This browser cannot take alerts. Chrome or Edge on a computer or Android, Safari on a Mac, or the installed app on an iPhone, can.": "Este navegador no puede recibir alertas. Chrome o Edge en una computadora o en Android, Safari en una Mac, o la app instalada en un iPhone, sí pueden.",
+ "Results: which houses turn into jobs ›": "Resultados: qué casas se vuelven trabajos ›"
 }
