@@ -1,0 +1,10 @@
+{
+    "name": "matthew/assistant",
+    "description": "Matthew's assistant: email first",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "anthropic-ai/sdk": "*"
+    },
+    "config": { "optimize-autoloader": true, "allow-plugins": { "php-http/discovery": true } }
+}

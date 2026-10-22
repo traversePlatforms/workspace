@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Assistant</title>
+<!-- Matthew's assistant (2026-10-22), first part: email. Every inbox sorted by what needs him, reply drafts waiting in Gmail, nothing
+     ever sent on its own. Talks only to api.php beside it. -->
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--ink:#14181f;--soft:#5d6675;--line:#e1e5eb;--act:#1f5fd6;--on-act:#fff;--hi:#c2410c;--ok:#1f7a4d;--tint:#eef3fd;color-scheme:light}
+  @media (prefers-color-scheme:dark){:root{--bg:#0f1217;--card:#181c23;--ink:#e9edf3;--soft:#9aa3b2;--line:#2a303a;--act:#6c9bff;--on-act:#0b1220;--hi:#fb923c;--ok:#6fcf9b;--tint:#1b2433;color-scheme:dark}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .wrap{max-width:880px;margin:0 auto;padding:16px 16px 60px}
+  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
+  header h1{font-size:22px;margin:0;flex:1}
+  button,.btn{font:inherit;font-weight:650;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  button.go,.btn.go{background:var(--act);border-color:var(--act);color:var(--on-act)}
+  button:disabled{opacity:.55;cursor:default}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 12px}
+  .muted{color:var(--soft)} .small{font-size:13px}
+  .err{color:var(--hi);font-weight:600;margin:8px 0 0}
+  input,textarea{font:inherit;width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+  textarea{min-height:70px}
+  label{display:grid;gap:4px;font-weight:600;font-size:13px;margin:0 0 10px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+  .chip{border-radius:999px;padding:6px 12px;font-size:13px}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
+  h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:18px 0 8px}
+  .item{display:grid;gap:4px}
+  .item .top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .item .who{font-weight:700} .item .subj{color:var(--soft)}
+  .item .when{margin-left:auto;font-size:12.5px;color:var(--soft)}
+  .tag{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--tint);color:var(--act)}
+  .tag.hi{background:color-mix(in srgb,var(--hi) 15%,transparent);color:var(--hi)}
+  .tag.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+  .todo{font-weight:600}
+  details summary{cursor:pointer;font-weight:700}
+  code{font-size:12.5px;background:var(--bg);padding:2px 6px;border-radius:6px;word-break:break-all}
+  .sign{max-width:380px;margin:12vh auto 0}
+  ol{padding-left:20px} li{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="muted">Loading…</p></div>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app'), S = { filter: 'all', data: null };
+  var CAT = [['needs_reply', 'Needs a reply'], ['action', 'To do'], ['calendar', 'Calendar'], ['waiting', 'Waiting on others'], ['fyi', 'For your information'],
+    ['receipt', 'Receipts'], ['newsletter', 'Newsletters'], ['promo', 'Offers'], ['spam_risk', 'Looks like spam or a scam']];
+  function el(t, cls, txt) { var e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function api(action, body) {
+    return fetch('api.php?action=' + action, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin' })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'The server sent nothing readable.' }; }).then(function (j) { j._status = r.status; return j; }); });
+  }
+  function ago(t) { var s = Math.round(Date.now() / 1000 - t); if (s < 90) return 'just now'; if (s < 3600) return Math.round(s / 60) + ' min ago'; if (s < 86400) return Math.round(s / 3600) + ' h ago'; return new Date(t * 1000).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }); }
+  var q = new URLSearchParams(location.search), flash = q.get('err') ? ['err', q.get('err')] : q.get('connected') ? ['ok', 'Inbox connected. Press Check now to sort it.'] : null;
+  if (flash) history.replaceState(null, '', location.pathname);
+
+  function signin(st) {
+    app.textContent = '';
+    var box = el('div', 'card sign'); box.appendChild(el('h1', null, 'Assistant'));
+    var f = el('form'), err = el('p', 'err');
+    var code = null;
+    if (st.needsPassword) { box.appendChild(el('p', 'muted', 'First time: the setup code Claude gave you, and the password you want from now on (12 characters or more).')); var lc = el('label', null, 'Setup code'); code = el('input'); code.autocomplete = 'one-time-code'; lc.appendChild(code); f.appendChild(lc); }
+    var lp = el('label', null, st.needsPassword ? 'New password' : 'Password'), pw = el('input'); pw.type = 'password'; pw.autocomplete = st.needsPassword ? 'new-password' : 'current-password'; lp.appendChild(pw); f.appendChild(lp);
+    var go = el('button', 'go', st.needsPassword ? 'Set password' : 'Sign in'); go.type = 'submit'; f.appendChild(go); f.appendChild(err);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); go.disabled = true; err.textContent = '';
+      (st.needsPassword ? api('firstpassword', { code: code.value.trim(), password: pw.value }) : api('signin', { password: pw.value })).then(function (j) {
+        go.disabled = false; if (j.ok) home(); else err.textContent = j.error || 'Not signed in.';
+      }, function () { go.disabled = false; err.textContent = 'No connection.'; });
+    });
+    box.appendChild(f); app.appendChild(box); (code || pw).focus();
+  }
+  function home() {
+    api('home').then(function (j) {
+      if (j._status === 401) return api('state').then(signin);
+      if (!j.ok) { app.textContent = j.error || 'Could not load.'; return; }
+      S.data = j; draw();
+    }, function () { app.textContent = 'No connection.'; });
+  }
+  function draw() {
+    var j = S.data; app.textContent = '';
+    var hd = el('header'); hd.appendChild(el('h1', null, 'Assistant'));
+    var chk = el('button', 'go', 'Check now'); chk.type = 'button';
+    chk.addEventListener('click', function () {
+      chk.disabled = true; chk.textContent = 'Checking…';
+      api('check', {}).then(function (r) {
+        if (!r.ok) { alert(r.error || 'The check did not run.'); chk.disabled = false; chk.textContent = 'Check now'; return; }
+        home();
+      }, function () { chk.disabled = false; chk.textContent = 'Check now'; });
+    });
+    var out = el('button', null, 'Sign out'); out.type = 'button'; out.addEventListener('click', function () { api('signout', {}).then(function () { api('state').then(signin); }); });
+    if (j.setup.anthropic && j.accounts.length) hd.appendChild(chk); hd.appendChild(out); app.appendChild(hd);
+    if (flash) { app.appendChild(el('p', flash[0] === 'err' ? 'err' : 'tag ok', flash[1])); flash = null; }
+    if (!j.setup.anthropic || !j.setup.google || !j.accounts.length) app.appendChild(setupCard(true));
+    /* the inboxes, as filters */
+    if (j.accounts.length) {
+      var chips = el('div', 'chips');
+      [['all', 'All inboxes']].concat(j.accounts.map(function (a) { return [a.email, a.label]; })).forEach(function (x) {
+        var b = el('button', 'chip', x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.filter === x[0])); b.title = x[0] === 'all' ? '' : x[0];
+        b.addEventListener('click', function () { S.filter = x[0]; draw(); }); chips.appendChild(b);
+      });
+      app.appendChild(chips);
+      j.accounts.forEach(function (a) { if (a.needsReconnect) app.appendChild(el('p', 'err', a.label + ' (' + a.email + ') needs connecting again: Google stopped the sign-in. Use Connect another inbox below and pick it.')); });
+    }
+    var items = j.items.filter(function (i) { return S.filter === 'all' || i.acct === S.filter; });
+    if (j.accounts.length && !items.length) app.appendChild(el('div', 'card muted', 'Nothing waiting. New email is sorted every 10 minutes, or press Check now.'));
+    var label = {}; j.accounts.forEach(function (a) { label[a.email] = a.label; });
+    CAT.forEach(function (c) {
+      var list = items.filter(function (i) { return i.category === c[0]; });
+      if (!list.length) return;
+      var low = ['newsletter', 'promo', 'receipt'].indexOf(c[0]) >= 0;
+      var holder = app;
+      if (low) { var d = el('details'); d.appendChild(el('summary', null, c[1] + ' · ' + list.length)); app.appendChild(d); holder = d; }
+      else app.appendChild(el('h2', null, c[1] + ' · ' + list.length));
+      list.forEach(function (i) { holder.appendChild(itemCard(i, label)); });
+    });
+    app.appendChild(setupCard(false));
+  }
+  function itemCard(i, label) {
+    var k = i.acct + ':' + i.id, c = el('div', 'card item');
+    var top = el('div', 'top'); top.appendChild(el('span', 'who', i.from)); if (i.priority === 'high') top.appendChild(el('span', 'tag hi', 'Soon'));
+    if (S.filter === 'all') top.appendChild(el('span', 'tag', label[i.acct] || i.acct)); top.appendChild(el('span', 'when', ago(i.date))); c.appendChild(top);
+    c.appendChild(el('div', 'subj', i.subject)); c.appendChild(el('div', null, i.summary));
+    if (i.todo) c.appendChild(el('div', 'todo', i.todo));
+    var row = el('div', 'row'), open = el('a', 'btn', 'Open in Gmail');
+    open.href = 'https://mail.google.com/mail/u/' + encodeURIComponent(i.acct) + '/#all/' + encodeURIComponent(i.threadId); open.target = '_blank'; open.rel = 'noopener';
+    row.appendChild(open);
+    if (i.draftId) { var dl = el('a', 'btn go', 'Draft ready in Gmail'); dl.href = 'https://mail.google.com/mail/u/' + encodeURIComponent(i.acct) + '/#drafts'; dl.target = '_blank'; dl.rel = 'noopener'; row.appendChild(dl); }
+    else if (['needs_reply', 'action', 'calendar', 'waiting', 'fyi'].indexOf(i.category) >= 0) {
+      var dr = el('button', null, 'Write a draft'); dr.type = 'button';
+      dr.addEventListener('click', function () { dr.disabled = true; dr.textContent = 'Writing…'; api('draft', { key: k }).then(function (r) { if (!r.ok) { alert(r.error); dr.disabled = false; dr.textContent = 'Write a draft'; return; } home(); }); });
+      row.appendChild(dr);
+    }
+    var dn = el('button', null, 'Done'); dn.type = 'button'; dn.title = 'Take it off this list (Gmail is not changed)';
+    dn.addEventListener('click', function () { dn.disabled = true; api('done', { key: k }).then(function () { S.data.items = S.data.items.filter(function (x) { return x.acct + ':' + x.id !== k; }); draw(); }); });
+    row.appendChild(dn); c.appendChild(row);
+    return c;
+  }
+  function setupCard(open) {
+    var j = S.data, d = el('details', 'card'); if (open) d.open = true;
+    d.appendChild(el('summary', null, 'Setup and inboxes'));
+    /* the keys */
+    var f = el('div');
+    f.appendChild(el('p', 'small muted', 'Keys are saved on the server only and never shown again. Leave a box empty to keep what is saved.'));
+    var fields = [['anthropic', 'Anthropic API key' + (j.setup.anthropic ? ' (saved)' : ''), 'sk-ant-…'], ['googleId', 'Google client ID' + (j.setup.google ? ' (saved)' : ''), '…apps.googleusercontent.com'], ['googleSecret', 'Google client secret' + (j.setup.google ? ' (saved)' : ''), 'GOCSPX-…']];
+    var inp = {};
+    fields.forEach(function (x) { var l = el('label', null, x[1]), i = el('input'); i.type = 'password'; i.autocomplete = 'off'; i.placeholder = x[2]; inp[x[0]] = i; l.appendChild(i); f.appendChild(l); });
+    var st = j.settings;
+    var sk = el('label', 'row'), skc = el('input'); skc.type = 'checkbox'; skc.checked = !!st.skipTabs; skc.style.width = 'auto'; sk.appendChild(skc); sk.appendChild(document.createTextNode(' Leave Gmail’s Promotions, Social, Updates and Forums tabs alone')); f.appendChild(sk);
+    var ad = el('label', 'row'), adc = el('input'); adc.type = 'checkbox'; adc.checked = !!st.autoDraft; adc.style.width = 'auto'; ad.appendChild(adc); ad.appendChild(document.createTextNode(' Write a reply draft for every email that needs one')); f.appendChild(ad);
+    var lv = el('label', null, 'How your drafts should sound'), voice = el('textarea'); voice.value = st.voice; lv.appendChild(voice); f.appendChild(lv);
+    var save = el('button', 'go', 'Save'); save.type = 'button'; var msg = el('span', 'small muted');
+    save.addEventListener('click', function () {
+      save.disabled = true;
+      api('setup', { anthropic: inp.anthropic.value, googleId: inp.googleId.value, googleSecret: inp.googleSecret.value, settings: { skipTabs: skc.checked, autoDraft: adc.checked, perRun: st.perRun, voice: voice.value } }).then(function (r) {
+        save.disabled = false; msg.textContent = r.ok ? 'Saved.' : (r.error || 'Not saved.'); if (r.ok) home();
+      });
+    });
+    var sr = el('div', 'row'); sr.appendChild(save); sr.appendChild(msg); f.appendChild(sr);
+    d.appendChild(f);
+    /* the Google steps, once */
+    if (!j.setup.google) {
+      var g = el('div', 'small');
+      g.appendChild(el('p', null, 'Google, one time (about 10 minutes, signed in as the Google account that will own the app):'));
+      var ol = el('ol');
+      ['console.cloud.google.com: make a new project called Assistant.', 'APIs & Services, Library: turn on the Gmail API.',
+        'OAuth consent screen: External; app name Assistant; your email; add the scope https://www.googleapis.com/auth/gmail.modify; then Publish app (In production). Google will warn the app is unverified: that is fine for your own use.',
+        'Credentials, Create credentials, OAuth client ID, Web application. Under Authorized redirect URIs add the address below.', 'Copy the client ID and client secret into the boxes above and press Save.'].forEach(function (t) { ol.appendChild(el('li', null, t)); });
+      g.appendChild(ol); var cd = el('code', null, j.setup.redirect); g.appendChild(cd); d.appendChild(g);
+    }
+    /* the inboxes */
+    d.appendChild(el('h2', null, 'Inboxes'));
+    j.accounts.forEach(function (a) { d.appendChild(acctCard(a)); });
+    var cn = el('button', null, j.accounts.length ? 'Connect another inbox' : 'Connect an inbox'); cn.type = 'button'; cn.disabled = !j.setup.google;
+    cn.addEventListener('click', function () { api('connect', {}).then(function (r) { if (r.ok) location.href = r.url; else alert(r.error); }); });
+    d.appendChild(cn);
+    if (j.setup.google) d.appendChild(el('p', 'small muted', 'Google will say the app is unverified: choose Advanced, then Go to Assistant. For a Google Workspace address (Traverse, Sixfold) you may first need to allow the app in that Workspace’s admin console: Security, API controls, App access control.'));
+    return d;
+  }
+  function acctCard(a) {
+    var c = el('div', 'card');
+    var top = el('div', 'top row'); top.appendChild(el('b', null, a.label)); top.appendChild(el('span', 'muted small', a.email + ' · ' + (a.lastCheck ? 'checked ' + ago(a.lastCheck) : 'not checked yet'))); c.appendChild(top);
+    var l1 = el('label', null, 'Name'), lab = el('input'); lab.value = a.label; l1.appendChild(lab);
+    var l2 = el('label', null, 'What this inbox is for (helps the sorting)'), ab = el('textarea'); ab.value = a.about; l2.appendChild(ab);
+    var l3 = el('label', null, 'Sign-off on drafts'), sg = el('input'); sg.value = a.signature; l3.appendChild(sg);
+    [l1, l2, l3].forEach(function (x) { c.appendChild(x); });
+    var row = el('div', 'row'), sv = el('button', null, 'Save'); sv.type = 'button';
+    sv.addEventListener('click', function () { sv.disabled = true; api('account', { email: a.email, label: lab.value, about: ab.value, signature: sg.value }).then(function () { home(); }); });
+    var on = el('button', null, a.on ? 'Pause' : 'Resume'); on.type = 'button'; on.addEventListener('click', function () { api('account', { email: a.email, on: !a.on }).then(home); });
+    var rm = el('button', null, 'Disconnect'); rm.type = 'button'; rm.addEventListener('click', function () { if (confirm('Disconnect ' + a.email + '? Its sorted list is kept until it ages out.')) api('account', { email: a.email, remove: true }).then(home); });
+    row.appendChild(sv); row.appendChild(on); row.appendChild(rm); c.appendChild(row);
+    return c;
+  }
+  api('state').then(function (st) { if (st.signedIn) home(); else signin(st); }, function () { app.textContent = 'No connection.'; });
+})();
+</script>
+</body>
+</html>

@@ -19,6 +19,10 @@ $mlArgs = array_slice($argv ?? [], 1);
 if (!$mlArgs && is_file(__DIR__ . '/clickup-leads.php')) passthru(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__DIR__ . '/clickup-leads.php'));
 /* the nightly Square check rides here too (2026-10-16): it runs once a night after 2 am and otherwise returns at once */
 if (!$mlArgs && is_file(__DIR__ . '/square-check.php')) passthru(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__DIR__ . '/square-check.php'));
+/* Matthew's own assistant (2026-10-22, not Sixfold's): its email check every other run, so every 10 minutes, in the background so it can never
+   hold this up. The host has no crontab command; it can move to its own Site Tools cron job later. */
+$mlAsst = dirname(__DIR__) . '/assistant-private/cron.php';
+if (!$mlArgs && is_file($mlAsst) && intdiv(time(), 300) % 2 === 0) exec(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg($mlAsst) . ' >> ' . escapeshellarg(dirname($mlAsst) . '/data/cron.log') . ' 2>&1 &');
 /* a setup still waiting on Meta (2026-10-19: the app was "API access restricted" after the developer-account check, so the new token
    could not be swapped): retried once an hour by itself; the setup deletes the file when it works, and this run then polls as usual */
 $mlPend = (getenv('SIXFOLD_PRIVATE_DIR') ?: dirname(__DIR__) . '/sixfold-private') . '/meta-setup.json';

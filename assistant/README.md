@@ -1,0 +1,48 @@
+# Matthew's assistant
+
+Matthew's own tool for both personal and business clerical work. It belongs to Matthew, not to Surge, Sixfold or Traverse. Started 2026-10-22.
+
+**First part: email.** Every 10 minutes it checks each connected Gmail inbox and has Claude sort each new email: needs a reply, to do, calendar, waiting on others, for your information, receipt, newsletter, offer, or looks like spam. Where a reply is wanted, it writes a draft into that inbox's Gmail Drafts. **It never sends anything.** Matthew reads, edits and sends from Gmail.
+
+- Page: `https://traverseplatforms.com/a-e018bb82/`. Password only, after a one-time setup code.
+- Inboxes Matthew chose: personal Gmail, Traverse, Sixfold / 365. Surge is not connected.
+- Claude: `claude-opus-5-5` through the official PHP SDK (`anthropic-ai/sdk`), with server-side fallbacks on. Sorting runs at effort `low` with a JSON schema; drafts run at `medium`.
+
+## Where things are
+
+| | Repo | Server (`~/www/traverseplatforms.com/`) |
+|---|---|---|
+| Page and its door | `server/public/index.html`, `api.php` | `public_html/a-e018bb82/` |
+| Code | `server/private/app.php`, `cron.php`, `lib/*.php` | `assistant-private/` (outside public_html, 0700) |
+| SDK | `server/private/composer.json` | `assistant-private/vendor/` (`composer install` on the server) |
+| Data | never in the repo | `assistant-private/data/` (0700; config.json 0600) |
+
+Data files: `config.json` holds the password hash, the Anthropic key, the Google client and the settings. `accounts.json` holds each inbox's refresh token. `items.json` holds each email's summary for 21 days; the email itself stays in Gmail. `seen.json` lists message ids already sorted. `assistant.log` and `cron.log` are the logs.
+
+**The 10-minute check.** The host has no `crontab` command. The check runs from the Facebook leads job (`traverse/app/tools/meta-leads.php`, every 5 minutes), every other round, in the background. It can move to its own job in SiteGround Site Tools later.
+
+## Setup (Matthew, once)
+
+1. Open the page, enter the setup code and choose a password (12+ characters).
+2. **Anthropic:** console.anthropic.com → API Keys → create a key → paste it in Setup and save. Usage is paid per use.
+3. **Google** (about 10 minutes, signed in as the Google account that will own the app):
+   - console.cloud.google.com → new project "Assistant".
+   - Turn on the Gmail API.
+   - OAuth consent screen:
+     - External.
+     - Add the scope `https://www.googleapis.com/auth/gmail.modify`.
+     - **Publish app (In production).** "Testing" signs you out every 7 days.
+   - Credentials → OAuth client ID → Web application. Under authorised redirect URIs, add the address Setup shows.
+   - Paste the client ID and client secret in Setup and save.
+4. **Connect an inbox** for each address. Google warns the app is unverified: choose Advanced, then Go to Assistant. For Traverse and Sixfold (Google Workspace), first allow the app in that Workspace's admin console: Security → API controls → App access control.
+
+## Rules
+
+- Nothing is sent, posted or deleted. Drafts only. Gmail's scope is `gmail.modify`, which can read mail and write drafts but cannot delete mail for good.
+- An email is someone else's words. The prompts tell Claude to treat it as data and never follow instructions inside it.
+- Keys are pasted into the page, never into chat, and are never returned to the page.
+- **Next parts**, not built yet:
+  - Socials through each platform's own API, with no Blotato.
+  - eBay listings through eBay's Sell API.
+  - Links to this workspace and to Claude Desktop.
+  - Each will post only after Matthew approves it.
