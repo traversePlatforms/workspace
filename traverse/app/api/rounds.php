@@ -4092,6 +4092,20 @@ if ($action === 'leadunreach') {
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => 'unreached', 'recall' => '', 'note' => 'Moved to Couldn\'t reach after ' . $n . ($n === 1 ? ' call' : ' calls') . ' with no answer.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'status' => 'unreached']);
 }
+/* Remove from leads (2026-10-22, Matthew: "we need to be able remove leads"): kept, never deleted. noreach and junk go under Couldn't reach
+   (and come back by themselves if they get in touch again, see leadRevive); notint is Lost. A lead with a job keeps it. */
+if ($action === 'leadremove') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
+    if (!$l) fail('No such lead.', 404);
+    $W = ['noreach' => ['unreached', 'Removed from the leads: could not reach them'], 'notint' => ['lost', 'Removed from the leads: not interested'], 'junk' => ['unreached', 'Removed from the leads: spam or a duplicate']];
+    $why = (string) ($body['why'] ?? ''); if (!isset($W[$why])) fail('Pick why.');
+    if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold', 'quoted'], true)) fail('Only a lead that is still open can be removed.');
+    if (jobForLead($id)) fail('That lead has a job booked. Cancel the job first.');
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => $W[$why][0], 'recall' => '', 'note' => $W[$why][1] . '.', 'removed' => $why, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'status' => $W[$why][0]]);
+}
 if ($action === 'myleads') {
     $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
     $whoAll = $who === $me ? meNames() : [$who];   /* leads handed to a linked sign-in are this person's too (2026-10-21) */
@@ -7555,6 +7569,14 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
                 $c['jobs'] = array_map(fn($j) => ['id' => (string) $j['id'], 'date' => (string) $j['date'], 'slot' => (string) $j['slot'], 'crew' => (string) $j['crew'], 'price' => (int) ($j['price'] ?? 0),
                     'pay' => $j['pay'] ?? ['s' => 'unpaid'], 'done' => $j['done'] ?? null, 'addr' => (string) ($j['addr'] ?? ''), 'sqcharge' => $j['sqcharge'] ?? null], $jByLead[(string) $c['lead']] ?? []);
                 usort($c['jobs'], fn($a, $b) => strcmp($b['date'], $a['date']));
+                /* a job marked Done counts as a visit (2026-10-22, Matthew: Randy showed his price but $0 logged and no last job): worked out here, so an
+                   undone job drops out by itself; a visit logged by hand the same day is not counted twice */
+                $vDay = array_flip(array_map(fn($v) => (string) ($v['date'] ?? ''), $done));
+                foreach ($c['jobs'] as $jb) {
+                    if (($jb['done']['o'] ?? '') !== 'done' || isset($vDay[$jb['date']])) continue;
+                    $c['spent'] += (float) $jb['price'];
+                    if ($c['last'] === null || $jb['date'] > $c['last']) $c['last'] = $jb['date'];
+                }
             }
             if (!empty($c['lead'])) { static $lAll = null; $lAll = $lAll ?? leadsAll(); $cl = $lAll[$c['lead']] ?? null;
                 if ($cl && !empty($cl['sqcard']['last4'])) $c['cof'] = ['brand' => (string) ($cl['sqcard']['brand'] ?? ''), 'last4' => (string) $cl['sqcard']['last4'], 'exp' => (string) ($cl['sqcard']['exp'] ?? '')];
@@ -7631,10 +7653,13 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         header('Content-Disposition: attachment; filename="sixfold-customers-' . date('Y-m-d') . '.csv"');
         $fh = fopen('php://output', 'w');
         fputcsv($fh, ['Name', 'Phone', 'Email', 'Address', 'Town', 'Service', 'Plan', 'Price', 'Customer since', 'Next due', 'Status', 'Visits done', 'Spent', 'Agreement', 'Notes', 'Door', 'Customer ID'], ',', '"', '');
+        $jDone = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead']) && (($j['done']['o'] ?? '') === 'done')) $jDone[(string) $j['lead']][] = $j;   /* done jobs count, as on the screen (2026-10-22) */
         foreach ($cs as $c) {
-            $done = array_filter($vs, fn($v) => (string) $v['cid'] === $c['id'] && ($v['status'] ?? 'done') === 'done');
+            $done = array_values(array_filter($vs, fn($v) => (string) $v['cid'] === $c['id'] && ($v['status'] ?? 'done') === 'done'));
+            $vDay = array_flip(array_map(fn($v) => (string) ($v['date'] ?? ''), $done)); $nDone = count($done); $spent = array_sum(array_map(fn($v) => (float) ($v['price'] ?? 0), $done));
+            foreach ($jDone[(string) ($c['lead'] ?? '')] ?? [] as $j) if (!isset($vDay[(string) $j['date']])) { $nDone++; $spent += (float) ($j['price'] ?? 0); }
             fputcsv($fh, array_map('csvSafe', [$c['name'] ?? '', $c['phone'] ?? '', $c['email'] ?? '', $c['address'] ?? '', $c['town'] ?? '', $c['service'] ?? '', $c['plan'] ?? '',
-                $c['price'] ?? '', $c['start'] ?? '', $c['next'] ?? '', $c['status'] ?? 'active', count($done), array_sum(array_map(fn($v) => (float) ($v['price'] ?? 0), $done)),
+                $c['price'] ?? '', $c['start'] ?? '', $c['next'] ?? '', $c['status'] ?? 'active', $nDone, $spent,
                 $c['agreement'] ?? '', $c['notes'] ?? '', $c['door'] ?? '', $c['id']]), ',', '"', '');
         }
         fclose($fh); exit;
@@ -8724,29 +8749,60 @@ if ($action === 'result') {
 if ($action === 'results') {
     if (!desk()) fail('Not allowed.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
-    $blank = ['knocked' => 0, 'talked' => 0, 'booked' => 0, 'quoted' => 0, 'won' => 0, 'lost' => 0, 'value' => 0];
-    $dims = ['fire' => [], 'lawn' => [], 'trees' => [], 'value' => [], 'town' => [], 'work' => []];
+    $blank = ['houses' => 0, 'knocked' => 0, 'leads' => 0, 'talked' => 0, 'booked' => 0, 'quoted' => 0, 'won' => 0, 'lost' => 0, 'value' => 0];
+    $dims = ['src' => [], 'fire' => [], 'lawn' => [], 'trees' => [], 'value' => [], 'town' => [], 'work' => []];
     $total = $blank;
     $add = function (string $dim, string $k, array $row) use (&$dims, $blank) {
         $cur = $dims[$dim][$k] ?? $blank;
         foreach ($row as $f => $v) $cur[$f] += $v;
         $dims[$dim][$k] = $cur;
     };
+    /* leads that came in some other way than a knock (ads, Messenger, the websites, a call, ClickUp), tied to their house so they are bucketed by the
+       same facts as the doors (2026-10-22, Matthew: "we take the info from each door card that we land from ads so we can still determine which
+       data turns into results"). The house saved on the lead first, else its address matched against the door lists; a lead with no house it can
+       be tied to still counts in the totals and under where it came from, and the page says how many. Door-made leads (at the door, in person)
+       are the knock itself, so they are not counted twice. */
+    $leads = leadsAll(); $jobOf = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead'])) $jobOf[(string) $j['lead']] = $j;
+    $leadAt = []; $unmatched = [];
+    $homeOf = function (string $key, string $id): ?string { if ($key === '' || $id === '') return null; if (isset(doorIds($key)[$id])) return $key; foreach (sharedWith($key) as $p) if (isset(doorIds($p)[$id])) return $p; return null; };
+    foreach ($leads as $l) {
+        $src = (string) ($l['src'] ?? 'other');
+        if (in_array($src, ['door', 'inperson'], true) || preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''))) continue;
+        $j = $jobOf[(string) $l['id']] ?? null; $st = (string) ($l['status'] ?? 'new');
+        $won = $j !== null || $st === 'won';
+        $row = ['houses' => 1, 'knocked' => 0, 'leads' => 1, 'talked' => (count($l['tries'] ?? []) > 0 || $st !== 'new') ? 1 : 0, 'booked' => $won ? 1 : 0,
+                'quoted' => (!empty($l['quote']) || in_array($st, ['quoted', 'won'], true) || $won || in_array(strtolower(trim((string) ($l['cus'] ?? ''))), ['quote sent', 'scheduled', 'completed'], true)) ? 1 : 0,
+                'won' => $won ? 1 : 0, 'lost' => $st === 'lost' ? 1 : 0, 'value' => $won ? ((int) ($j['price'] ?? 0) ?: (int) ($l['quote']['price'] ?? 0)) : 0];
+        $h = is_array($l['house'] ?? null) ? $l['house'] : null; $key = null; $did = '';
+        if ($h && empty($h['typed']) && !empty($h['region']) && !empty($h['door'])) { $key = $homeOf((string) $h['region'], (string) $h['door']); $did = (string) $h['door']; }
+        if (!$key) foreach ([$h ? trim((string) ($h['address'] ?? '') . ', ' . (string) ($h['town'] ?? ''), ', ') : '', (string) ($j['addr'] ?? ''), (string) ($l['town'] ?? '')] as $txt) {
+            if (!preg_match('/^\s*\d+\s+\S/', $txt)) continue;
+            $p = array_map('trim', explode(',', $txt)); $m = a365Match($p[0], $p[1] ?? '');
+            if ($m && ($key = $homeOf((string) $m['region'], (string) $m['door']))) { $did = (string) $m['door']; break; }
+        }
+        if ($key) $leadAt[$key][$did][] = ['src' => $src, 'row' => $row];
+        else { foreach ($row as $f => $v) $total[$f] += $v; $add('src', $src, $row); $unmatched[$src] = ($unmatched[$src] ?? 0) + 1; }
+    }
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
         if (!$data) continue;
         $marks = loadMarks($r['key']); $quoted = loadQuoted($r['key']); $res = loadResults($r['key']);
-        $lfix = loadLawnFix($r['key']); $work = loadWork($r['key']);
+        $lfix = loadLawnFix($r['key']); $work = loadWork($r['key']); $here = $leadAt[$r['key']] ?? [];
         foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
-            $m = $marks[$d['id']] ?? null;
-            if (!$m || $m['outcome'] === 'nosolicit') continue;
-            $booked = $m['outcome'] === 'booked';
-            $rs = $booked ? ($res[$d['id']] ?? null) : null;
-            $row = ['knocked' => 1, 'talked' => ($booked || $m['outcome'] === 'later') ? 1 : 0, 'booked' => $booked ? 1 : 0,
-                    'quoted' => ($booked && isset($quoted[$d['id']])) ? 1 : 0,
-                    'won' => ($rs && $rs['result'] === 'won') ? 1 : 0, 'lost' => ($rs && $rs['result'] === 'lost') ? 1 : 0,
-                    'value' => ($rs && $rs['result'] === 'won') ? (int) ($rs['value'] ?? 0) : 0];
+            $m = $marks[$d['id']] ?? null; $came = $here[$d['id']] ?? [];
+            if ((!$m || $m['outcome'] === 'nosolicit') && !$came) continue;
+            $row = $blank;
+            if ($m && $m['outcome'] !== 'nosolicit') {
+                $booked = $m['outcome'] === 'booked';
+                $rs = $booked ? ($res[$d['id']] ?? null) : null;
+                $row = ['houses' => 1, 'knocked' => 1, 'leads' => 0, 'talked' => ($booked || $m['outcome'] === 'later') ? 1 : 0, 'booked' => $booked ? 1 : 0,
+                        'quoted' => ($booked && isset($quoted[$d['id']])) ? 1 : 0,
+                        'won' => ($rs && $rs['result'] === 'won') ? 1 : 0, 'lost' => ($rs && $rs['result'] === 'lost') ? 1 : 0,
+                        'value' => ($rs && $rs['result'] === 'won') ? (int) ($rs['value'] ?? 0) : 0];
+            }
+            foreach ($came as $x) foreach ($x['row'] as $f => $v) $row[$f] = $f === 'leads' ? 1 : max($row[$f], $v);   /* one house counts once, knocked and came in or not */
             foreach ($row as $f => $v) $total[$f] += $v;
+            $add('src', $came ? ($row['knocked'] ? 'both' : (string) $came[0]['src']) : 'door', $row);
             $f = (int) ($d['fire'] ?? 0);
             $add('fire', ($f >= 1 && $f <= 5) ? (string) $f : 'x', $row);
             $add('lawn', lawnLevel($d, $lfix) ?? 'x', $row);
@@ -8759,7 +8815,7 @@ if ($action === 'results') {
             foreach ($wk as $t) $add('work', $t, $row);
         }
     }
-    out(['ok' => true, 'total' => $total, 'dims' => $dims]);
+    out(['ok' => true, 'total' => $total, 'dims' => $dims, 'unmatched' => $unmatched, 'srcNames' => LEAD_SRC_NAME]);
 }
 
 if ($action === 'note') {
