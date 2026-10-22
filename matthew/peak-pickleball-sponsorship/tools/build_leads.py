@@ -143,7 +143,7 @@ WH = 'https://wellhub.com/en-us/search/partners/peak-pickleball-briargate/'
 #     already sponsors local sport 0-2 (Sports Corp Summit/Premier or a paid pickleball sponsor = 2, Essential = 1); near Peak 0-1 ---
 SCORE = {
     'Kaiser Permanente': (3, 3, 2, 0), 'UCHealth (Memorial Hospital; Memorial North)': (3, 3, 1, 0), 'Alpine Bank': (1, 3, 2, 0),
-    'BOK Financial': (1, 3, 2, 0), 'OrangeTheory': (3, 1, 2, 0), 'Cheyenne Mountain Resort': (1, 3, 2, 0), 'Molson Coors': (1, 3, 2, 0),
+    'BOK Financial': (1, 3, 2, 0), 'OrangeTheory': (3, 1, 2, 0), 'Cheyenne Mountain Resort': (0, 3, 2, 0), 'Molson Coors': (1, 3, 2, 0),
     'Concept Restaurants': (1, 2, 2, 0), 'Republic Services': (0, 3, 2, 0), 'Coca-Cola': (1, 3, 1, 0), 'The Gazette': (1, 2, 2, 0),
     'Colorado Media Group': (1, 2, 2, 0), 'Cumulus Media': (1, 2, 2, 0), 'iHeart Media': (1, 2, 2, 0), 'Colorado Springs Chamber & EDC': (1, 2, 2, 0),
     'PCL Construction': (0, 3, 2, 0), 'McLane Company': (0, 3, 2, 0), 'Climax Molybdenum': (0, 3, 2, 0), 'Chord Energy': (0, 3, 2, 0),
@@ -168,7 +168,23 @@ PRICES += [
     ('Springs Pickleball (local competitor)', 'Colorado Springs, CO', '19 indoor courts, 2 sites', 'Event table at tournaments and socials', '$250 / $500 / $800 (15% off a season)', None, SPR, CHECKED),
     ('Springs Pickleball (local competitor)', 'Colorado Springs, CO', '19 indoor courts, 2 sites', 'Tournament sponsor', '$250 to $15,000 per event', None, SPR, CHECKED),
 ]
+WEB = [   # the website pass, 21 Oct (free sources only)
+    ('Kaiser Permanente', 'Email communityco@kp.org (Colorado sponsorships; up to 6 weeks)', 'Its rules exclude "advertising activities" and team sponsorships: a court sign will not qualify. Only a community-health event (e.g. free beginner clinics) might.', 'https://about.kaiserpermanente.org/community-health/communities-we-serve/colorado-community/sponsorships-conferences-and-community-service'),
+    ('UCHealth', 'Community and government affairs, southern Colorado', 'Its money goes out as grants to nonprofits. A sign at Peak is a marketing spend: ask for marketing, not community giving.', 'https://www.aol.com/articles/uchealth-awards-218-000-grants-014454931.html'),
+    ('Ent Credit Union', 'CommunityAdvocacy@Ent.com is for nonprofit grants', 'Ent says marketing sponsorships are handled separately, at the business level: ask for marketing. Ent is merging with Wings Credit Union.', 'https://www.ent.com/Community'),
+    ('BOK Financial', 'Online charitable applications', 'Its giving excludes "athletic programs". Bill Sullivan is listed as President & CEO, Colorado Market: a marketing conversation, not a giving request.', 'https://thestatement.bokf.com/Experts/Bill-Sullivan'),
+    ('Alpine Bank', 'Event sponsorship form (2017, Denver office, written for nonprofits)', 'Stale and not for a for-profit venue. Ask a Colorado Springs branch who handles marketing.', 'https://www.alpinebank.com/custom/fi/alpinebank/fb/disclosure/Sponsorship_Request_Form_Front-Range.pdf'),
+    ('Cheyenne Mountain Resort', 'Not looked for', 'A 2023 travel guide lists pickleball courts at the resort: possibly a competitor. Check before pitching.', 'https://coloradoavidgolfer.com/colorado-getaways-2023-cheyenne-mountain-resort/'),
+    ('Molson Coors', 'No public route found', 'Gives mostly in Golden and Denver and to disaster relief.', 'https://www.molsoncoorsblog.com/node/11806'),
+    ('Coca-Cola (Swire Coca-Cola, USA)', 'No public route found', 'Announced a $475M, 620,000 sq ft plant at Peak Innovation Park in Colorado Springs (Dec 2025), about 170 jobs: a local hook.', 'https://www.kktv.com/2025/12/11/swire-coca-cola-facility-coming-colorado-springs/'),
+    ('Concept Restaurants', 'No marketing contact found', 'A Gazette Q&A (undated) names co-owners Luke Travins and Dave Lux; ask at MacKenzie’s Chop House or Ritz Grill.', 'https://gazette.com/?p=1156034'),
+    ('OrangeTheory', 'Franchise: the studio owner decides', 'Owner names found are from 2013 (Stetson Hills studio): ask the studio.', 'https://www.franchising.com/amp/news/20131202_orangetheory_fitness_set_to_open_first_southern_co.html'),
+    ('Colorado Media Group', 'Not identified', 'Nothing found under this name; ask the Sports Corp who it is.', ''),
+    ('Orthopedic Centers of Colorado (current Peak sponsor)', 'Outreach form; 1-866-506-7200; info@occ-ortho.com', 'Open to "athletic partnerships"; proposals due 30 Sep, some exceptions. Already a Peak court sponsor: this is the renewal route.', 'https://occ-ortho.com/community-outreach-and-sponsorship/'),
+]
 IDEAS = [
+    ('Sell to marketing budgets, not charity', 'Most corporate "sponsorship request" pages are charity budgets for nonprofits, and several exclude advertising or athletics (Kaiser, BOK, Ent’s grants). A court sign at a for-profit club is advertising: Brandon needs the marketing or business-development person, and the pitch is reach and return, not giving.'),
+    ('Look like Peak’s current sponsors', 'Peak’s 28 sponsors are mostly local, owner-run businesses: car dealer, restaurants, home services, clinics, realtors, financial advisors. Owners decide fast. More of the same kind (other dealers, clinics, roofers, med spas near Chapel Hills) may close faster than big corporations.'),
     ('Bundle memberships into court sponsorships', 'Springs Pickleball\u2019s $1,000/month Court Partner includes 4 memberships, paddles and gear. Peak\u2019s $12,000 court could include staff memberships: it costs Peak little and the sponsor\u2019s staff become players.'),
     ('Cheaper ways in', 'Springs Pickleball starts at $250 (event tables) and $1,500 (a league season). Peak\u2019s lowest published step is $12,000. A league, tournament or event-table tier lets small local businesses start, then move up.'),
     ('Category exclusivity', 'Springs Pickleball sells it as an add-on: one bank, one hospital, one car dealer. Charge for it, or use it to close.'),
@@ -224,6 +240,7 @@ sheet(wb, 'Employers 400+', ['Employer', 'Kind', 'Employees', 'Year of count', '
       EMP, [40, 20, 12, 12, 46, 70])
 sheet(wb, 'What others charge', ['Venue', 'Where', 'Courts', 'What', 'Price as published', 'Per year ($)', 'Source', 'Checked'],
       PRICES, [36, 20, 26, 46, 26, 12, 50, 12])
+sheet(wb, 'Website pass', ['Company', 'Public route found', 'What it means for Peak', 'Source'], WEB, [30, 46, 80, 50])
 sheet(wb, 'Ideas to borrow', ['Idea', 'Why'], IDEAS, [34, 110])
 sheet(wb, 'Wellhub', ['What', 'Detail', 'Source'], WELL, [24, 100, 50])
 sheet(wb, 'Fact-check', ['Claim', 'Source', 'Result', 'Note'], FACTS, [50, 50, 26, 70])
@@ -235,6 +252,7 @@ rd = wb.create_sheet('Read me', 0); rd.column_dimensions['A'].width = 110
 for t in ['Peak Pickleball: sponsor leads, employers and prices (built ' + CHECKED + ')', '',
           'Sponsor leads: ' + str(len(LEADS)) + ' new companies, ranked by a score out of 9 (fit with sports, fitness and health; money; already sponsors local sport; near Peak). The score is our rating, not data: change it as you learn. Yellow columns are Brandon\u2019s.',
           'Renewals: Peak\u2019s own 28 sponsors, and one that dropped off (Roof Corp of Colorado Springs).',
+          'Website pass: what the free search found for the top names (most public routes are charity budgets: ask for marketing).',
           'Ideas to borrow: what Springs Pickleball sells that Peak could. Wellhub: what Peak offers there, and ideas.',
           'Route in: how to reach them. "To find" means the next step is finding the marketing or community contact (website, call the front desk, LinkedIn by hand).',
           'Employers 400+: for group memberships and staff discounts. Counts with old years need confirming before you quote them.',
@@ -257,6 +275,7 @@ renew = ''.join(f'<p><b>{E(l)} ({len(v)}):</b> {E(", ".join(v))}</p>' for l, v i
 pr = ''.join(f'<tr><td>{E(v)}</td><td>{E(c)}</td><td>{E(w)}</td><td>{E(p0)}</td></tr>' for v, wh, c, w, p0, py, src, ck in PRICES)
 ideas = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b in IDEAS)
 well = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b, c in WELL)
+webrows = ''.join(f'<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td></tr>' for a, b, c, d in WEB)
 emp = ''.join(f'<tr><td>{E(n)}</td><td class="n">{v:,}</td><td class="n">{y}</td></tr>' for n, k, v, y, s0, note in EMP)
 doc = f'''<!doctype html><html><head><meta charset="utf-8"><title>Peak sponsorships: brief for Brandon</title><style>
 @page {{ size: letter; margin: .45in .5in }} body{{font:10pt/1.35 Arial,Helvetica,sans-serif;color:#1d241f;margin:0}}
@@ -274,9 +293,15 @@ th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,
 <p>Ask Peak for each sponsor\u2019s renewal date and how each is doing. Keeping these is cheaper than finding new ones.</p>{renew}
 <div class="pg"></div>
 <div class="k">Peak Pickleball · corporate sponsorships</div>
-<h1>What others charge, and what to borrow</h1>
+<h1>What others charge</h1>
 <table><tr><th>Venue</th><th>Courts</th><th>What</th><th>Price as published</th></tr>{pr}</table>
+<div class="pg"></div>
+<div class="k">Peak Pickleball · corporate sponsorships</div>
+<h1>Ideas, and how to reach the top names</h1>
 <h2>Ideas to borrow</h2><ul>{ideas}</ul>
+<h2>Website pass</h2>
+<p class="sub">Free sources only, checked {CHECKED}. Most public routes are charity budgets that don’t fit a for-profit court sign: ask for marketing instead.</p>
+<table><tr><th>Company</th><th>Public route</th><th>What it means</th></tr>{webrows}</table>
 <div class="pg"></div>
 <div class="k">Peak Pickleball · memberships</div>
 <h1>Employers and Wellhub</h1>
