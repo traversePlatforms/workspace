@@ -48,3 +48,5 @@ Data files: `config.json` holds the password hash, the Anthropic key, the Google
   - eBay listings through eBay's Sell API.
   - Links to this workspace and to Claude Desktop.
   - Each will post only after Matthew approves it.
+
+**As an app (2026-10-22).** `manifest.json`, `sw.js` and the navy route-mark icons (made with `traverse/editions/app-icon.cjs`, fill #13294b) let Chrome or Edge install the page as its own window with a taskbar icon, and a phone add it to the home screen. The worker stores nothing; with no connection it shows a "No connection" screen.
