@@ -7759,11 +7759,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           notes.push('Gas price: ' + money2(trv.gas.price) + '/gal, the Denver weekly average' + (trv.gas.week ? ' for the week of ' + weekText(trv.gas.week) : '') + ' (U.S. Energy Information Administration). Drive from the Englewood storage at 333 W Hampden Ave and back in an 18 mpg truck; road miles estimated at ' + (P.roadFactor || 1.3) + ' × the straight-line distance.');
           cost += trv.cost;
         } else rows.push(['Drive', h && h.lat != null ? 'no gas price this week, so not in the price' : 'find the house to price the drive', '\u2014']);
+        /* the aerator's gas (2026-10-21, Matthew: "we work on data so the more of it we have the better") */
+        if (st.sq && P.aerSqHr && P.gas && P.gas.price) {
+          var aerGal = st.sq / (P.aerSqHr * (P.aerPace || 1)) * (P.aerGalHr || 0), aerCost = aerGal * P.gas.price;
+          rows.push(['Aerator gas', 'Bobcat AE26 \u00b7 ' + (Math.round(aerGal * 1000) / 1000) + ' gal at ' + ((P.aerPace || 1) < 1 ? Math.round(P.aerPace * 100) + '% of ' : '') + 'its top rate, ' + Number(P.aerSqHr).toLocaleString(LOCALE) + ' sq ft an hour', money2(aerCost)]);
+          cost += aerCost; notes.push('Aerator gas: the Bobcat AE26-HON\u2019s Honda GX120 burns about 0.26 gal an hour at full power (Honda: 1.0 L/h) and covers up to 40,400 sq ft an hour (Bobcat). Real jobs are slower, so this is the least it uses.');
+        }
         if (st.pkg === 'full' && !st.sq) lines.push('Type the lawn size to work out the seed and fertilizer.');
         var tb = q('div', 'qcost');
         rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); d.appendChild(q('span', null, r[2])); tb.appendChild(d); });
         if (price && rows.length) {
-          var t1 = q('div', 'qcrow qctot'); t1.appendChild(q('b', null, st.pkg === 'full' ? 'Seed, fertilizer and drive' : 'Drive')); t1.appendChild(q('span', null, known ? money2(cost) : '\u2014')); tb.appendChild(t1);
+          var t1 = q('div', 'qcrow qctot'); t1.appendChild(q('b', null, st.pkg === 'full' ? 'Seed, fertilizer, drive and aerator gas' : 'Drive and aerator gas')); t1.appendChild(q('span', null, known ? money2(cost) : '\u2014')); tb.appendChild(t1);
           var cs = P.crewShare != null ? Number(P.crewShare) : 0.2, crew = total * cs;   /* the crew: a share of every job's price (2026-10-21) */
           var tc = q('div', 'qcrow'); var tca = q('div'); tca.appendChild(q('b', null, 'Crew')); tca.appendChild(q('small', null, Math.round(cs * 100) + '% of the price')); tc.appendChild(tca); tc.appendChild(q('span', null, money2(crew))); tb.appendChild(tc);
           var t2 = q('div', 'qcrow qcleft'); t2.appendChild(q('b', null, 'Left after the crew')); t2.appendChild(q('span', null, known ? money0(total - cost - crew) : '\u2014')); tb.appendChild(t2);

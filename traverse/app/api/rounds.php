@@ -4365,7 +4365,10 @@ const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 39
        Bryce gave no rate per sq ft, only "$25 in fertilizer" on a $399 job. Travel: the drive from the storage at 333 W Hampden Ave,
        there and back, at an 18 mpg truck and the week's Denver gas price (EIA). */
     'fertDefault' => 'fert', 'mpg' => 18, 'roadFactor' => 1.3,
-    'crewShare' => 0.2];   /* the crew: 20% of every job's price (Matthew, 2026-10-21: "a 20% employee cost to every job") */
+    'crewShare' => 0.2,
+    /* the aerator's gas (2026-10-21, Matthew): Bobcat AE26-HON, Honda GX120 at 1.0 L/h at full power (0.2642 gal; Honda's figure as its dealers
+       publish it), up to 40,400 sq ft an hour (Bobcat). aerPace = the share of Bobcat's top rate a real job manages (1 = Bobcat's figure). */
+    'aerGalHr' => 0.2642, 'aerSqHr' => 40400, 'aerPace' => 1.0];   /* the crew: 20% of every job's price (Matthew, 2026-10-21: "a 20% employee cost to every job") */
 const A365_FERTS = [   /* one fertilizer at Brandon's price (2026-10-21, Matthew: "Remove the 3 fertilizers"); spread at the LESCO 24-0-11 label rate */
     ['k' => 'fert', 'name' => 'Fertilizer', 'bagLb' => 50, 'bagCost' => 40, 'coverSq' => 12000,
      'src' => 'Brandon’s price: $40 for a 50 lb bag (21 Oct 2026). Spread at 12,000 sq ft per bag, the LESCO 24-0-11 label rate.']];
@@ -4433,15 +4436,16 @@ if ($action === 'a365calc') {
         if ($F && $F['coverSq'] > 0) { $fertLb = round($sq / 1000 * ($F['bagLb'] * 1000 / $F['coverSq']), 1); $fName = (string) $F['name']; }
     }
     /* what is left after seed, fertilizer, the drive and the crew's share (2026-10-21): the total only, never the parts (Matthew 2026-10-15) */
-    $cost = $drive + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0) + $price * (float) ($P['crewShare'] ?? 0);
+    $gasNow = a365Gas(); $aerGas = ($sq > 0 && $gasNow && !empty($gasNow['price']) && (float) $P['aerSqHr'] > 0) ? $sq / ((float) $P['aerSqHr'] * max(0.05, (float) $P['aerPace'])) * (float) $P['aerGalHr'] * (float) $gasNow['price'] : 0.0;   /* the aerator's gas (2026-10-21) */
+    $cost = $drive + $aerGas + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0) + $price * (float) ($P['crewShare'] ?? 0);
     if ($fertLb > 0) foreach ($P['ferts'] as $f) if ($f['name'] === $fName && $f['bagLb'] > 0) $cost += $fertLb * $f['bagCost'] / $f['bagLb'];
-    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'left' => $price ? (int) round($price - $cost) : null]);
+    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'aerGas' => round($aerGas, 2), 'left' => $price ? (int) round($price - $cost) : null]);
 }
 if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
-            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1]];
+            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1], 'aerGalHr' => [0, 5], 'aerSqHr' => [1000, 500000], 'aerPace' => [0.05, 1]];
     $p = a365Pricing();
     foreach ($lim as $k => [$lo, $hi]) {
         if (!array_key_exists($k, $body)) continue;
