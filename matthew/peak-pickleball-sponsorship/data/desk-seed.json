@@ -14,7 +14,15 @@
    "source": "https://cochamber.com/event/2024-annual-pickleball-tournament",
    "web": "Its rules exclude \"advertising activities\" and team sponsorships: a court sign will not qualify. Only a community-health event (e.g. free beginner clinics) might.",
    "webLink": "https://about.kaiserpermanente.org/community-health/communities-we-serve/colorado-community/sponsorships-conferences-and-community-service",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Colorado community sponsorships",
+     "pos": "Sponsorship inbox (rules exclude advertising)",
+     "email": "communityco@kp.org",
+     "conf": null,
+     "pick": true
+    }
+   ]
   },
   {
    "id": "3dd3f486c9",
@@ -363,7 +371,71 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "Announced a $475M, 620,000 sq ft plant at Peak Innovation Park in Colorado Springs (Dec 2025), about 170 jobs: a local hook.",
    "webLink": "https://www.kktv.com/2025/12/11/swire-coca-cola-facility-coming-colorado-springs/",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "Andrei Popescu",
+     "pos": "Marketing Director",
+     "email": "apopescu@swirecc.com",
+     "conf": 75,
+     "pick": true
+    },
+    {
+     "name": "Molly Hebert",
+     "pos": "Marketing Director",
+     "email": "mhebert@swirecc.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Elisabeth Correa",
+     "pos": "Director of Marketing",
+     "email": "earellano@swirecc.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Yousuf Ding",
+     "pos": "Director of Product Marketing",
+     "email": "yding@swirecc.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Michele McKillip",
+     "pos": "Senior Vice President, Corporate Affairs",
+     "email": "mmckillip@swirecc.com",
+     "conf": 83,
+     "pick": false
+    },
+    {
+     "name": "Chad Hobbs",
+     "pos": "Vice President, Revenue Management",
+     "email": "chobbs@swirecc.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Leandro Tane",
+     "pos": "Vice President, Total Rewards",
+     "email": "ltane@swirecc.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Kimberly Snider",
+     "pos": "Vice President",
+     "email": "ksnider@swirecc.com",
+     "conf": 75,
+     "pick": false
+    },
+    {
+     "name": "Heather Curtis",
+     "pos": "Vice President",
+     "email": "hcurtis@swirecc.com",
+     "conf": 75,
+     "pick": false
+    }
+   ]
   },
   {
    "id": "1d9bbe3d0b",

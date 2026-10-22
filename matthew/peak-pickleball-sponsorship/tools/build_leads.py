@@ -372,7 +372,8 @@ seed = {'built': CHECKED, 'leads': []}
 web_by = {w[0].split(' (')[0]: w for w in WEB}
 for i, (c, k, w, src, r, l, p) in enumerate(RANKED):
     f, m, sp, nr = sc(c)
-    ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8])} for x in CONTACTS if x[0] == c or c.startswith(x[0])]
+    ALIAS = {'Coca-Cola': 'Swire Coca-Cola, USA'}   # the list's name -> the name Hunter was asked for
+    ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8])} for x in CONTACTS if x[0] == c or c.startswith(x[0]) or x[0] == ALIAS.get(c)]
     wp = web_by.get(c) or web_by.get(c.split(' (')[0])
     seed['leads'].append({'id': _id('lead|' + c), 'list': 'new', 'name': c, 'kind': k, 'score': f + m + sp + nr, 'rank': i + 1, 'why': w, 'route': r, 'routeLink': l, 'source': src,
                           'web': wp[2] if wp else '', 'webLink': (wp[3] or '') if wp else '', 'contacts': ppl})
@@ -382,6 +383,8 @@ for r in LOOK[:150]:
     ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8])} for x in CONTACTS if x[0] == r['name'] + ' (local)']
     seed['leads'].append({'id': _id('local|' + r['name']), 'list': 'local', 'name': r['name'], 'kind': r['kind'], 'score': r['score'], 'miles': r['miles'], 'chain': r['chain'],
                           'why': f"{r['kind']}, {r['miles']} mi from Peak" + (' (chain or franchise)' if r['chain'] else ''), 'route': 'Walk in or call', 'phone': r['phone'], 'site': r['web'], 'addr': r['addr'], 'contacts': ppl})
+for l in seed['leads']:
+    if l['name'] == 'Kaiser Permanente': l['contacts'] = l.get('contacts', []) + [{'name': 'Colorado community sponsorships', 'pos': 'Sponsorship inbox (rules exclude advertising)', 'email': 'communityco@kp.org', 'conf': None, 'pick': True}]
 seed['packages'] = [{'k': 'court', 'name': 'Court sponsor', 'price': 12000, 'per': 'year', 'note': 'Peak’s published price'}, {'k': 'title', 'name': 'Title sponsor', 'price': 24000, 'per': 'year', 'note': 'Peak’s published price'}]
 (DATA / 'desk-seed.json').write_text(json.dumps(seed, ensure_ascii=False, indent=1), encoding='utf-8')
 print('desk seed:', len(seed['leads']), 'leads')
