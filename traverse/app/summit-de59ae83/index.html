@@ -2017,6 +2017,19 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .lgiveup{font-size:13.5px;font-weight:700;margin-top:8px}
   .ltryfu{margin-top:8px}.ltryfu a{background:var(--card)}
   .ltrynote{font-size:12px;color:var(--soft);margin-top:6px}
+  /* Recall and Couldn't reach (2026-10-21) */
+  .lrecall{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin-top:10px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
+  .lrecall label{display:grid;gap:3px;font-size:12.5px;font-weight:700;color:var(--soft)}.lrecall input{min-height:38px;border:1.5px solid var(--line);border-radius:10px;padding:0 8px;background:var(--card);color:var(--ink);font:600 14px var(--sans)}
+  .lrecall .save{min-height:38px;padding:0 14px}.lrecallon{font-size:13.5px;font-weight:800;color:var(--ink);flex-basis:100%;display:flex;gap:12px;align-items:baseline}
+  .lunreach{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13.5px;font-weight:700;margin-top:8px}.lunreach .save{min-height:36px;padding:0 14px}
+  .lback{font-size:13px;font-weight:700;color:var(--booked);margin:6px 0 2px}
+  .amodal{position:fixed;inset:0;z-index:300;background:rgba(15,20,18,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+  .amodalbox{background:var(--card);color:var(--ink);border-radius:18px;padding:20px;max-width:420px;width:100%;box-shadow:var(--shadow)}
+  .amodalbox h2{font:800 18px var(--sans);margin:0 0 8px}.amodalbox p{margin:0 0 10px;font-size:15px;line-height:1.45}.amodalbox p.soft{font-size:13px;color:var(--soft)}
+  .amodalbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px}.amodalbtns .save{min-height:44px;padding:0 16px}
+  .amodalbox h2{text-transform:none;letter-spacing:normal;color:var(--ink)}.amodalbtns .lnk{min-height:44px;border:0;background:none;color:var(--ink);font:700 14px var(--sans);text-decoration:underline;cursor:pointer}
+  .amodalbox .save,.lrecall .save,.lunreach .save,.fqform .save,.fqdone .save{border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14px var(--sans);cursor:pointer}
+  .lrecall .lnk,.lunreach .lnk{border:0;background:none;color:var(--ink);font:700 13px var(--sans);text-decoration:underline;cursor:pointer;padding:0}
   .pipegrp{font:800 13px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:18px 2px 8px}
   /* the house lookup (2026-10-14) */
   .handx,.rangex{margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;display:grid;gap:4px}.handx b,.rangex b{font:800 14px var(--sans)}.handx > span{font-size:14px}.handx .lnk,.rangex .lnk{justify-self:start;background:none;border:0;padding:2px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}
@@ -2077,7 +2090,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .ocol{display:grid;gap:18px;align-content:start}
   .ocard{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
   .ocard h2{font:800 13px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--soft);margin:0 0 12px}
-  .onums{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+  .onums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
   .onum{border:1px solid var(--line);border-radius:14px;background:var(--bg);padding:10px 8px;text-align:left;cursor:pointer;color:var(--ink)}
   .onum b{display:block;font:800 24px var(--sans)}.onum span{font-size:12px;color:var(--soft)}
   .onum.ohot{border-color:var(--ember-ink);box-shadow:inset 0 0 0 1px var(--ember-ink)}
@@ -2175,6 +2188,13 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .dh-sbox .findsel{margin-left:auto;flex:none}
   .findsel{font:700 13px var(--sans);padding:6px 8px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer}
   .dnav .findsel{margin-right:6px;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)}.dnav .findsel option{color:#111}
+  /* the field quick quote (2026-10-21) */
+  .fqform label{display:grid;gap:4px;font-weight:700;font-size:13.5px;margin:10px 0 0}.fqform input{font:16px var(--sans);padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);width:100%;box-sizing:border-box}
+  .fqsay{font-size:13px;color:var(--soft);margin-top:6px;line-height:1.4}
+  .fqprice{display:flex;align-items:baseline;gap:10px;margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}.fqprice b{font:800 34px var(--sans)}.fqprice span{font-size:13.5px;color:var(--soft);font-weight:700}
+  .fqyes{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}.fqgo{margin-top:14px;width:100%;min-height:50px;font-size:16px}
+  .fqdone p{font-size:14.5px;line-height:1.45}.fqdone .save{margin-top:6px}.fqmine{margin-top:18px}.fqmine .orow{cursor:default}
+  .jreadymore{margin:4px 2px 0;justify-self:start}
   .handaddr label{display:grid;gap:4px;font-weight:700;font-size:13.5px;margin:10px 0 0}.handaddr input{font:15px var(--sans);padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}.handaddr .save{margin-top:12px}
   .hrow small{display:block;flex-basis:100%;color:var(--soft);font-size:12.5px;font-weight:500}
   .qqsched{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:50px;margin:0 0 12px;padding:10px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:700 15px var(--sans);cursor:pointer;text-align:left}.qqsched:hover{border-color:var(--accent)}
@@ -2610,8 +2630,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     SERVICE_L = {}; CO.services.forEach(function (p) { SERVICE_L[p[0]] = p[1]; });
     LEAD_NEED = CO.leadNeeds.slice();
     WORK = CO.extraWork.map(function (p) { return [p[0], p[1]]; }); WORK_LABEL = {}; WORK.forEach(function (w) { WORK_LABEL[w[0]] = w[1]; });
-    LEAD_ST = [['new', 'New'], ['contacted', 'Contacted'], ['walk', VW() + ' booked'], ['quoted', 'Quoted'], ['hold', 'On hold'], ['won', 'Won'], ['lost', 'Lost']];   /* + On hold (2026-10-17) */
-    PIPE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['email', 'Emailed'], ['text', 'Texted'], ['walk', VW() + ' booked'], ['quoted', 'Quote sent'], ['hold', 'On hold']];   /* + On hold (2026-10-17) */   /* no Won or Lost tabs (Matthew 2026-10-15): Won goes into Customers, Lost leaves the list; Person search finds both */
+    LEAD_ST = [['new', 'New'], ['contacted', 'Contacted'], ['walk', VW() + ' booked'], ['quoted', 'Quoted'], ['hold', 'On hold'], ['won', 'Won'], ['lost', 'Lost'], ['unreached', 'Couldn’t reach']];   /* + On hold (2026-10-17) */   /* + Couldn't reach (2026-10-21) */
+    PIPE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['recall', 'Recall'], ['email', 'Emailed'], ['text', 'Texted'], ['walk', VW() + ' booked'], ['quoted', 'Quote sent'], ['hold', 'On hold']];   /* + Recall (2026-10-21) */   /* + On hold (2026-10-17) */   /* no Won or Lost tabs (Matthew 2026-10-15): Won goes into Customers, Lost leaves the list; Person search finds both */
     CAP = [['walk', 'cal', 'Book the ' + vw()], ['phone', 'phone', 'Phone'], ['email', 'mail', 'Email'], ['photo', 'camera', 'Photos'], ['note', 'note', 'Note']];
     if (WORK.length) CAP.push(['work', 'list', 'Extra work']);
     if (feat('firecheck')) CAP.push(['fc', 'flame', 'Fire check']);
@@ -3117,7 +3137,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function devClass() { var ua = navigator.userAgent || ''; return (/iPhone|iPad|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'm' : 'c'; }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin';
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -3156,7 +3176,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -3781,7 +3801,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.sid = null; officeReset(); clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -3897,6 +3917,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
     }
     grp('In the field', [
+      S.fqOn && !asOffice() ? tile('button', 'leaf', 'Quick quote', 'Price a lawn on the spot. If they say yes, send it to the office.', null, function () { fieldQuoteView(); }) : null,   /* the field quick quote (2026-10-21) */
       asOffice() ? null : tile('button', 'door', 'Routes', 'Knock a neighbourhood. Works with no signal.', null, start),
       asOffice() ? null : tile('button', 'chart', 'My stats', 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
@@ -4686,6 +4707,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     }
     c.appendChild(meta);
+    /* Couldn't reach (2026-10-21): kept, with a way back; and a lead that came back says so, with the calls before */
+    if (l.status === 'unreached' && wdOn() && (adminView() || asOffice())) {
+      var un = q('div', 'lunreach'); un.appendChild(q('span', null, 'Couldn’t reach' + (l.statusAt ? ' since ' + ago(l.statusAt) : '') + ' · ' + (l.tries || []).length + ((l.tries || []).length === 1 ? ' call' : ' calls')));
+      var bb = q('button', 'save', 'Bring back'); bb.type = 'button';
+      bb.addEventListener('click', function () { bb.disabled = true; api('leadunreach', { body: { id: l.id, back: true } }).then(function (j) { bb.disabled = false; if (!j.ok) { toast('Not done', j.error || 'Try again.', null); return; } toast('Back in To call', l.name || l.phone || '', null); (S.leadRedraw || pipelineView)(); }).catch(function () { bb.disabled = false; toast('No signal', 'Try again.', null); }); });
+      un.appendChild(bb); c.appendChild(un);
+    }
+    if (l.back && l.back.at && wdOn()) { var ot = (l.oldTries || []).length; c.appendChild(q('div', 'lback', 'Back ' + ago(l.back.at) + ': ' + l.back.how + '. ' + (ot ? 'Tried ' + ot + (ot === 1 ? ' time' : ' times') + ' before.' : ''))); }
     if (l.pref || l.hear || l.came) {   /* the 365 website form (2026-10-20): how to reach them, how they heard of us, where they came from */
       var HEAR = { facebook: 'Facebook or Instagram', google: 'Google search', nextdoor: 'Nextdoor', friend: 'A friend or neighbour', sign: 'A yard sign', card: 'A business card or flyer', truck: 'Our truck', other: 'Something else' };
       var lw = q('div', 'lweb');
@@ -5308,22 +5337,35 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         fo.forEach(function (l) { var b = q('button', 'orow'); b.type = 'button'; var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name')); tx.appendChild(q('small', null, money0(l.quote.price) + (l.quote.offer ? ' \u00b7 held ' + dayName(l.quote.offer.date) + ', ' + slotLabel(l.quote.offer.slot) : ''))); b.appendChild(tx); b.appendChild(q('span', 'otag', 'Waiting')); b.addEventListener('click', function () { S.pipeStage = 'sent'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); }); fl0.appendChild(b); });
         ready.appendChild(fl0); return;
       }
-      var r = j.leads.filter(function (l) { return l.status === 'quoted'; }).sort(function (a, b) { return (acceptOf(b) ? 1 : 0) - (acceptOf(a) ? 1 : 0); });
+      /* said yes first, then the newest quotes; a quote with no price here (marked quoted in ClickUp) last (2026-10-21) */
+      var qAt = function (l) { return l.quote && l.quote.price ? (l.quote.at || 0) : 0; };
+      var r = j.leads.filter(function (l) { return l.status === 'quoted'; }).sort(function (a, b) { return (acceptOf(b) ? 1 : 0) - (acceptOf(a) ? 1 : 0) || qAt(b) - qAt(a) || (b.at || 0) - (a.at || 0); });
       /* folded until opened, and everyone in it (2026-10-17, Matthew: it pushed the week down; it drew only 12 of 13) */
       var rh = q('button', 'cfold jready'); rh.type = 'button'; var rOpen = !!S.jobsReadyOpen; rh.setAttribute('aria-expanded', String(rOpen)); rh.appendChild(ico('chev', 2.4)); rh.appendChild(document.createTextNode('Quoted, ready to book (' + r.length + ')'));
       ready.appendChild(rh);
       if (!r.length) { ready.appendChild(q('div', 'msg soft', 'Nobody waiting. A lead shows here once its quote is saved; book it from here or from the quote.')); return; }
       var list = q('div', 'olist'); list.hidden = !rOpen;
       rh.addEventListener('click', function () { S.jobsReadyOpen = !S.jobsReadyOpen; list.hidden = !S.jobsReadyOpen; rh.setAttribute('aria-expanded', String(!!S.jobsReadyOpen)); });
-      r.forEach(function (l) {
+      /* five at a time (2026-10-21, Matthew: "is 22 long, we need to make it so that the list isn't so long"): everyone who said yes, then
+         the newest quotes up to five; the rest behind Show more */
+      var row = function (l) {
         var b = q('button', 'orow'); b.type = 'button';
         var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name'));
-        tx.appendChild(q('small', null, [l.quote ? money0(l.quote.price) + ' · ' + JOB_PKG[l.quote.pkg] : '', l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town].filter(Boolean).join(' · '))); b.appendChild(tx);
+        tx.appendChild(q('small', null, [l.quote && l.quote.price ? money0(l.quote.price) + ' · ' + JOB_PKG[l.quote.pkg] : 'No price here yet', l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town, l.quote && l.quote.price && l.quote.at ? 'quoted ' + ago(l.quote.at) : ''].filter(Boolean).join(' · '))); b.appendChild(tx);
         if (acceptOf(l)) tx.appendChild(q('small', 'qyes', acceptText(acceptOf(l))));
         b.appendChild(q('span', 'otag' + (acceptOf(l) ? ' ohot' : ''), acceptOf(l) ? 'Said yes' : 'Book'));
         b.addEventListener('click', function () { jobBookView(l, null, null); });
-        list.appendChild(b);
-      });
+        return b;
+      };
+      var first = Math.max(5, r.filter(function (l) { return acceptOf(l); }).length);
+      r.slice(0, first).forEach(function (l) { list.appendChild(row(l)); });
+      if (r.length > first) {
+        var more = q('div', 'olist'); more.hidden = !S.jobsReadyAll;
+        r.slice(first).forEach(function (l) { more.appendChild(row(l)); });
+        var mb = q('button', 'lnk jreadymore', S.jobsReadyAll ? 'Show fewer' : 'Show ' + (r.length - first) + ' more'); mb.type = 'button';
+        mb.addEventListener('click', function () { S.jobsReadyAll = !S.jobsReadyAll; more.hidden = !S.jobsReadyAll; mb.textContent = S.jobsReadyAll ? 'Show fewer' : 'Show ' + (r.length - first) + ' more'; });
+        list.appendChild(more); list.appendChild(mb);
+      }
       ready.appendChild(list);
     }).catch(function () {});
   }
@@ -6287,6 +6329,70 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (last.o === 'vm') return 'vm';   /* its own section, not dropped to the bottom (Matthew 2026-10-15) */
     return tryDue(l) <= Date.now() ? 'today' : 'wait';
   }
+  /* ---- Recall and Couldn't reach (2026-10-21, Matthew: "Create a recall section, where voicemail people move to after jens set a date to
+     recall. Put up a notification if its there 3rd time that jen has called them, and ask her if she wants to remove the lead and if she
+     does store it into a Couldnt reach section thats hidden but stored in case they reconnect or redo an intake or messenger to our ad and
+     their info will pull up again"). A day to call back moves the lead to Recall until a call is logged after it; the third call in a row
+     with no answer asks whether to move them to Couldn't reach, a folded list at the foot of the Pipeline. Anyone coming back through a
+     form, a Facebook form or message, the crew's quick quote or a lead added again comes back with everything on it (the server). */
+  var UNREACH_AT = 3;
+  function recallOf(l) { var r = l && l.recall; if (!r || !r.date || ['new', 'contacted'].indexOf(l.status || 'new') < 0) return null; var t = lastTry(l); return t && t.at > r.at ? null : r; }
+  function recallRow(l) {
+    var w = q('div', 'lrecall'), r = recallOf(l), today = todayISO();
+    if (r) {
+      var on = q('div', 'lrecallon'); on.appendChild(q('span', null, (r.date <= today ? 'Recall today' : 'Recall ' + dayName(r.date)) + (r.by ? ' (set by ' + String(r.by).split(' ')[0] + ')' : ''))); w.appendChild(on);
+      var cl = q('button', 'lnk', 'Clear'); cl.type = 'button';
+      cl.addEventListener('click', function () { cl.disabled = true; api('leadrecall', { body: { id: l.id, date: '' } }).then(function (j) { cl.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Recall cleared', l.name || '', null); (S.leadRedraw || pipelineView)(); }).catch(function () { cl.disabled = false; toast('No signal', 'Try again.', null); }); });
+      on.appendChild(cl);
+    }
+    var lab = q('label', null, r ? 'Change the day' : 'Set a day to call back'), di = q('input'); di.type = 'date'; di.min = today; di.value = r ? r.date : jobAdd(today, 2); lab.appendChild(di); w.appendChild(lab);
+    var go = q('button', 'save', r ? 'Change' : 'Move to Recall'); go.type = 'button';
+    go.addEventListener('click', function () {
+      if (!di.value) { di.focus(); return; }
+      go.disabled = true;
+      api('leadrecall', { body: { id: l.id, date: di.value } }).then(function (j) {
+        go.disabled = false;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        toast('Moved to Recall', (l.name || l.phone || '') + ' · ' + (di.value <= todayISO() ? 'today' : dayName(di.value)), null);
+        (S.leadRedraw || pipelineView)();
+      }).catch(function () { go.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
+    });
+    w.appendChild(go);
+    return w;
+  }
+  function unreachMove(l, after) {
+    api('leadunreach', { body: { id: l.id } }).then(function (j) {
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not moved', j.error || 'Try again.', null); return; }
+      (after || S.leadRedraw || pipelineView)();
+      toast('Moved to Couldn’t reach', (l.name || l.phone || '') + '. If they come back through a form, Facebook or the crew, their lead comes back by itself.', function () {
+        api('leadunreach', { body: { id: l.id, back: true } }).then(function () { (after || S.leadRedraw || pipelineView)(); });
+      });
+    }).catch(function () { toast('No signal', 'Not moved. Try again when you have signal.', null); });
+  }
+  /* the notice on the third call with no answer: a box over the screen, not a phone dialog, so it reads the same on every device */
+  function unreachAsk(l, n) {
+    var old = document.getElementById('unreachask'); if (old) old.remove();
+    var bg = q('div', 'amodal'); bg.id = 'unreachask'; bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true');
+    var bx = q('div', 'amodalbox');
+    bx.appendChild(q('h2', null, ordinal(n) + ' call with no answer'));
+    bx.appendChild(q('p', null, 'That is ' + n + ' calls in a row to ' + (l.name || l.phone || 'this lead') + ' with no answer. Move them to Couldn’t reach?'));
+    bx.appendChild(q('p', 'soft', 'It comes off the lists but is kept. If they send a form, fill in the Facebook form, message the page or the crew quote them, their lead comes back with everything on it.'));
+    var row = q('div', 'amodalbtns');
+    var yes = q('button', 'save', 'Move to Couldn’t reach'); yes.type = 'button';
+    var no = q('button', 'lnk', 'Keep calling'); no.type = 'button';
+    var close = function () { bg.remove(); document.removeEventListener('keydown', esc); };
+    var esc = function (e) { if (e.key === 'Escape') close(); };
+    yes.addEventListener('click', function () { close(); unreachMove(l); });
+    no.addEventListener('click', close);
+    bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
+    document.addEventListener('keydown', esc);
+    row.appendChild(yes); row.appendChild(no); bx.appendChild(row); bg.appendChild(bx); document.body.appendChild(bg);
+    setTimeout(function () { try { yes.focus(); } catch (e) {} }, 30);
+  }
+  function ordinal(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+  function unreachOk(l) { return wdOn() && (adminView() || asOffice()) && ['new', 'contacted', 'hold'].indexOf(l.status || 'new') >= 0; }
   function tryWhen(ts) { var d = new Date(ts * 1000), today = isoOf(new Date()) === isoOf(d); return (today ? 'today' : dayName(isoOf(d))) + ' ' + fmtTime((d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()); }
   /* whose name and number a message carries (2026-10-14, Matthew: 365's customers never see Sixfold): the office, and leads from the
      365 page (Facebook, Messenger, its website), get 365 Aeration's; everything else the company's own */
@@ -6330,6 +6436,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
           (S.leadRedraw || pipelineView)();
           var n = miss + 1;
+          if ((o === 'none' || o === 'vm') && n >= UNREACH_AT && unreachOk(l)) { unreachAsk(l, n); return; }   /* the third call in a row with no answer (2026-10-21) */
           toast(TRY_N[o] + ' \u00b7 ' + (l.name || l.phone || ''), (o === 'email' || o === 'text') ? 'Logged. It waits under ' + (o === 'email' ? 'Emailed' : 'Texted') + ' until they reply.' : o === 'talk' ? (asOffice() ? 'Logged. Quote them from the house, then Yes, Call back or No.' : 'Logged. Book the ' + vw() + ' or move it on when you are ready.') : n >= LEAD_TRIES ? n + ' tries with no answer: send a last text or email, then mark it Lost.' : 'Try ' + n + ' of ' + LEAD_TRIES + '. It comes back to try again tomorrow.',
             function () { api('leadtry', { body: { id: l.id, o: 'undo' } }).then(function () { (S.leadRedraw || pipelineView)(); }); });
         }).catch(function () { b.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
@@ -6337,16 +6444,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       row.appendChild(b);
     });
     box.appendChild(row); box.appendChild(vmBox);
+    if (unreachOk(l) && l.status !== 'hold' && last && (last.o === 'vm' || last.o === 'none')) box.appendChild(recallRow(l));   /* a day to call back: Recall (2026-10-21) */
     if (asOffice() && last && last.o === 'talk') box.appendChild(outcomeBox(l));   /* after talking (2026-10-14) */
     if (t.length) {
       box.appendChild(q('div', 'ltryhist', 'Tried ' + t.length + '\u00d7 \u00b7 ' + t.slice(-3).reverse().map(function (x) { return tryWhen(x.at) + ' ' + TRY_N[x.o].toLowerCase() + ' (' + String(x.by).split(' ')[0] + ')'; }).join(' \u00b7 ') + (t.length > 3 ? ' \u00b7 \u2026' : '')));
       var due = tryDue(l);
-      if (due && miss < LEAD_TRIES) {
+      if (due && miss < LEAD_TRIES && !recallOf(l)) {   /* a recall day says when instead (2026-10-21) */
         var h = new Date(last.at * 1000).getHours();
         box.appendChild(q('div', 'ltrydue', (due <= Date.now() ? 'Try again today' : 'Try again ' + dayName(isoOf(new Date(due)))) + (h < 12 ? ': the last try was in the morning, so try the afternoon or evening.' : ': the last try was in the afternoon, so try the morning.')));
       }
     }
     var tel = digits(l.phone);
+    if (miss >= UNREACH_AT && unreachOk(l)) {   /* the notice can be put off; the move stays on the card (2026-10-21) */
+      var ur = q('div', 'lunreach'); ur.appendChild(q('span', null, miss + ' calls in a row with no answer.'));
+      var ub = q('button', 'lnk', 'Move to Couldn’t reach'); ub.type = 'button'; ub.addEventListener('click', function () { ub.disabled = true; unreachMove(l); });
+      ur.appendChild(ub); box.appendChild(ur);
+    }
     if (miss >= 1 && (tel.length >= 10 || l.email)) {
       var out = miss >= LEAD_TRIES;
       if (out) box.appendChild(q('div', 'lgiveup', miss + ' tries, no answer. Send a last text or email, then ' + (asOffice() ? 'close it.' : 'mark it Lost.')));
@@ -7221,6 +7334,126 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function addGmail(el) { if (onPhone()) return; [].forEach.call(el.querySelectorAll('a[href^="mailto:"]'), function (a) { a.hidden = true; if (a.nextSibling && a.nextSibling.classList && a.nextSibling.classList.contains('gmailbtn')) return; var g = q('a', 'gmailbtn'); g.href = gmailHref(a.getAttribute('href')); g.target = '_blank'; g.rel = 'noopener'; g.appendChild(ico('mail', 2.2)); g.appendChild(document.createTextNode('Open in Gmail')); a.parentNode.insertBefore(g, a.nextSibling); }); }
   function addSendNote(parent, el) { addGmail(el); var n = sendNote(el); if (n) parent.appendChild(n); }
   function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
+  /* ---- the field quick quote (2026-10-21, Matthew: "Christian needs access to a quick quote system. he just needs it so that he can give
+     the person a accurate estimate, so it needs limited functions. But he needs to be able to quote someone a price on the fly. And if the
+     person approved have him click a button that says send to office ... Give bris account the same functions") ----
+     Find the house, check the lawn size, read the price (worked out on the server as the office's quote builder does, for Aerate, seed &
+     feed). On a yes: their name and phone, then Send to office. No costs, forms, payments or schedule here: the office does those. */
+  function fieldQuoteView() {
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'fieldquote'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Quick quote', sub: 'Aerate, seed & feed', back: chooseView, backLabel: 'Home' });
+    view.textContent = '';
+    var box = q('div', 'search hlook fqbox');
+    var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'fqq';
+    var lab = q('label', 'sfield'); lab.appendChild(ico('search', 2.4)); lab.appendChild(inp); box.appendChild(lab);
+    var res = q('div', 'sres'), pan = q('div'); box.appendChild(res); box.appendChild(pan);
+    view.appendChild(box);
+    var mine = q('div', 'fqmine'); view.appendChild(mine);
+    var seq = 0, tm = null;
+    inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 400); });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); } });
+    function run() {
+      var v = inp.value.trim(); pan.textContent = ''; res.textContent = '';
+      if (v.replace(/[^A-Za-z0-9]/g, '').length < 3) { res.appendChild(q('div', 'msg soft', 'Type the house number and street.')); return; }
+      var my = ++seq; res.appendChild(q('div', 'msg soft', 'Searching…'));
+      api('search', { params: { q: v, lookup: 1 } }).then(function (j) {
+        if (my !== seq) return; res.textContent = '';
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work.')); return; }
+        if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, e.g. “1840 Ponderosa”.')); return; }
+        if (!j.results.length) {
+          res.appendChild(q('div', 'msg', 'No house on our lists matches “' + v + '”.'));
+          var tb = q('button', 'lnk qqsize', 'Quote it anyway: type the address and the lawn size ›'); tb.type = 'button';
+          tb.addEventListener('click', function () { res.textContent = ''; form(null, 0, 'Not on our lists: pace the lawn out or ask them, and type the size.', null, v); });
+          res.appendChild(tb); return;
+        }
+        j.results.forEach(function (r) {
+          var b = q('button', 'door drow srow'); b.type = 'button';
+          b.appendChild(q('div', 'addr', r.address)); b.appendChild(q('div', 'swhere', r.town));
+          b.addEventListener('click', function () { open(r.region, r.id); });
+          res.appendChild(b);
+        });
+        if (j.more) res.appendChild(q('div', 'msg soft', 'More match. Add more of the address.'));
+      }).catch(function () { if (my === seq) { res.textContent = ''; res.appendChild(q('div', 'msg', 'Search needs signal.')); } });
+    }
+    function open(region, id) {
+      res.textContent = ''; pan.textContent = ''; pan.appendChild(q('div', 'skel'));
+      api('fqhouse', { params: { region: region, id: id } }).then(function (j) {
+        pan.textContent = '';
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { pan.appendChild(q('div', 'msg bad', j.error || 'Could not open that house.')); return; }
+        form(j.house, j.sq, j.say, j.price, '');
+      }).catch(function () { pan.textContent = ''; pan.appendChild(q('div', 'msg', 'Opening a house needs signal.')); });
+    }
+    function form(h, sq, say, price, typed) {
+      pan.textContent = '';
+      var w = q('div', 'door hpanel fqform');
+      var again = q('button', 'lnk subnav', '‹ Another house'); again.type = 'button'; again.addEventListener('click', function () { pan.textContent = ''; inp.value = ''; try { inp.focus(); } catch (e) {} }); w.appendChild(again);
+      var ta = null, tt = null;
+      if (h) { w.appendChild(q('div', 'addr', streetCase(h.address))); w.appendChild(q('div', 'meta', h.town)); }
+      else {
+        var parts = String(typed || '').split(',');
+        var al = q('label', null, 'House number and street'); ta = q('input'); ta.maxLength = 120; ta.autocomplete = 'off'; ta.value = /^\d/.test(parts[0] || '') ? parts[0].trim() : ''; al.appendChild(ta); w.appendChild(al);
+        var tl = q('label', null, 'Town'); tt = q('input'); tt.maxLength = 60; tt.autocomplete = 'off'; tt.value = (parts[1] || '').trim(); tl.appendChild(tt); w.appendChild(tl);
+      }
+      var sl = q('label', null, 'Lawn size (sq ft)'), si = q('input'); si.type = 'number'; si.inputMode = 'numeric'; si.min = '100'; si.step = '100'; si.value = sq ? String(sq) : ''; si.setAttribute('aria-label', 'Lawn size in square feet'); sl.appendChild(si); w.appendChild(sl);
+      if (say) w.appendChild(q('div', 'fqsay', say));
+      var pr = q('div', 'fqprice'), pv = q('b', null, price ? money0(price) : '—'); pr.appendChild(pv); pr.appendChild(q('span', null, 'Aerate, seed & feed')); w.appendChild(pr);
+      var cur = price || 0, pt = null, pseq = 0;
+      var reprice = function () {
+        var n = parseInt(si.value, 10) || 0; cur = 0;
+        if (n < 100) { pv.textContent = '—'; return; }
+        var my = ++pseq; pv.textContent = '…';
+        api('fqcalc', { params: { sq: n, region: h ? h.region : '', id: h ? h.id : '' } }).then(function (j) { if (my !== pseq) return; if (j && j.ok) { cur = j.price; pv.textContent = money0(j.price); } else pv.textContent = (j && j.error) || '—'; }).catch(function () { if (my === pseq) pv.textContent = 'Needs signal'; });
+      };
+      si.addEventListener('input', function () { clearTimeout(pt); pt = setTimeout(reprice, 350); });
+      /* the yes */
+      var yes = q('div', 'fqyes'); yes.appendChild(q('div', 'dwh', 'If they say yes'));
+      var fld = function (label, type, ph, max) { var l = q('label', null, label), i = q('input'); i.type = type; i.placeholder = ph || ''; i.maxLength = max; i.autocomplete = 'off'; l.appendChild(i); yes.appendChild(l); return i; };
+      var ni = fld('Their name', 'text', '', 120), phi = fld('Their phone', 'tel', '', 40), ei = fld('Their email (if they give it)', 'email', '', 160), oi = fld('Anything for the office (optional)', 'text', 'e.g. gate code, best days', 300);
+      var er = q('div', 'err'), go = q('button', 'save fqgo', 'Send to office'); go.type = 'button';
+      go.addEventListener('click', function () {
+        er.textContent = '';
+        var n = parseInt(si.value, 10) || 0;
+        if (n < 100) { er.textContent = 'Type the lawn size.'; si.focus(); return; }
+        if (!h && !/^\d+[A-Za-z]?\s+\S/.test(ta.value.trim())) { er.textContent = 'Type the house number and street.'; ta.focus(); return; }
+        if (!h && tt.value.trim().length < 2) { er.textContent = 'Type the town.'; tt.focus(); return; }
+        if (!ni.value.trim()) { er.textContent = 'Add their name.'; ni.focus(); return; }
+        if (digits(phi.value).length < 10) { er.textContent = 'Add their phone number, so the office can reach them.'; phi.focus(); return; }
+        go.disabled = true; go.textContent = 'Sending…';
+        var body = { sq: n, name: ni.value.trim(), phone: phi.value.trim(), email: ei.value.trim(), note: oi.value.trim() };
+        if (h) { body.region = h.region; body.id = h.id; } else { body.address = ta.value.trim(); body.town = tt.value.trim(); }
+        api('fqsend', { body: body }).then(function (j) {
+          go.disabled = false; go.textContent = 'Send to office';
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { er.textContent = j.error || 'Not sent. Try again.'; return; }
+          pan.textContent = '';
+          var dn = q('div', 'door hpanel fqdone');
+          dn.appendChild(q('div', 'addr', 'Sent to the office'));
+          dn.appendChild(q('div', 'meta', body.name + ' · ' + money0(j.price) + ' · Aerate, seed & feed'));
+          dn.appendChild(q('p', null, 'The office sends them the form, takes the deposit and sets the day. Nothing else to do here.'));
+          var nx = q('button', 'save', 'Quote another house'); nx.type = 'button'; nx.addEventListener('click', function () { pan.textContent = ''; inp.value = ''; try { inp.focus(); } catch (e) {} window.scrollTo(0, 0); });
+          dn.appendChild(nx); pan.appendChild(dn); window.scrollTo(0, 0);
+          loadMine();
+        }).catch(function () { go.disabled = false; go.textContent = 'Send to office'; er.textContent = 'No signal. Not sent; try again when you have signal.'; });
+      });
+      yes.appendChild(er); yes.appendChild(go); w.appendChild(yes);
+      pan.appendChild(w);
+      if (!sq) setTimeout(function () { try { (ta && !ta.value ? ta : si).focus(); } catch (e) {} }, 30);
+    }
+    function loadMine() {
+      api('fqmine').then(function (j) {
+        mine.textContent = '';
+        if (!j || !j.ok || !j.sent.length) return;
+        mine.appendChild(q('h2', 'tgrp', 'Sent to the office · last two weeks'));
+        var ls = q('div', 'olist');
+        j.sent.forEach(function (x) { var r = q('div', 'orow'); var tx = q('span'); tx.appendChild(q('b', null, x.name || 'No name')); tx.appendChild(q('small', null, [money0(x.price), x.addr, ago(x.at)].filter(Boolean).join(' · '))); r.appendChild(tx); r.appendChild(q('span', 'otag', x.state)); ls.appendChild(r); });
+        mine.appendChild(ls);
+      }).catch(function () {});
+    }
+    loadMine();
+    setTimeout(function () { try { inp.focus(); } catch (e) {} }, 30);
+  }
   function houseLookupView(lead, open, typed, quick, sizeOpen) {
     if (quick && S.screen !== 'quickquote') { S.qqInboxOpen = false; S.qqCustOpen = false; }   /* coming to the Quick quote: both lists start folded (2026-10-17) */
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
@@ -7508,12 +7741,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       list.textContent = '';
       if (!j || !j.ok) { list.appendChild(q('div', 'msg', 'The leads need signal.')); return; }
       var open = j.leads.filter(function (l) { return ['new', 'contacted'].indexOf(l.status || 'new') >= 0; });
-      var G = { new: [], today: [], vm: [], talked: [], wait: [], out: [], email: [], text: [] }; open.forEach(function (l) { (G[callGroup(l)] || G.wait).push(l); });   /* emailed and texted are groups since 2026-10-16; one lead in them emptied this box (found 2026-10-20) */
+      var G = { new: [], today: [], vm: [], talked: [], wait: [], out: [], email: [], text: [], recall: [] }; open.forEach(function (l) { (recallOf(l) ? G.recall : (G[callGroup(l)] || G.wait)).push(l); });   /* emailed and texted are groups since 2026-10-16; one lead in them emptied this box (found 2026-10-20) */   /* + Recall (2026-10-21) */
       var web = open.filter(function (l) { return l.src === 'a365web' && !(l.tries || []).length; }).length;
-      [['new', 'Not tried yet'], ['today', 'Try again today'], ['vm', 'Left voicemail'], ['talked', 'Talked, not booked'], ['wait', 'Waiting']].forEach(function (k) {
+      [['new', 'Not tried yet'], ['today', 'Try again today'], ['vm', 'Left voicemail'], ['recall', 'Recall'], ['talked', 'Talked, not booked'], ['wait', 'Waiting']].forEach(function (k) {
         var b = q('button', 'onum' + (k[0] === 'new' && G.new.length ? ' ohot' : '')); b.type = 'button';
         b.appendChild(q('b', null, String(G[k[0]].length))); b.appendChild(q('span', null, k[1]));
-        b.addEventListener('click', function () { S.pipeStage = k[0] === 'vm' ? 'vm' : 'call'; pipelineView(); }); nums.appendChild(b);
+        b.addEventListener('click', function () { S.pipeStage = k[0] === 'vm' || k[0] === 'recall' ? k[0] : 'call'; pipelineView(); }); nums.appendChild(b);
       });
       if (web) list.appendChild(q('div', 'oweb', web + (web === 1 ? ' request' : ' requests') + ' from the website waiting for a first reply.'));
       wl.textContent = '';
@@ -7526,15 +7759,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.addEventListener('click', function () { S.pipeStage = 'sent'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
         wl.appendChild(b);
       });
-      var vmDue = G.vm.filter(function (l) { return tryDue(l) <= Date.now(); });
-      var next = G.new.concat(G.today, vmDue).sort(function (a, b) { return (a.at || 0) - (b.at || 0); }).slice(0, 7);   /* the longest waiting first (2026-10-21, Matthew: 'those who have been waiting for a day or so dont get further down the list') */
+      var vmDue = G.vm.filter(function (l) { return tryDue(l) <= Date.now(); }), rcDue = G.recall.filter(function (l) { return recallOf(l).date <= todayISO(); });
+      var next = G.new.concat(G.today, vmDue, rcDue).sort(function (a, b) { return (a.at || 0) - (b.at || 0); }).slice(0, 7);   /* the longest waiting first (2026-10-21, Matthew: 'those who have been waiting for a day or so dont get further down the list') */
       if (!next.length) list.appendChild(q('div', 'msg soft', 'Nobody waiting. New Facebook and website requests show here as they come in.'));
       next.forEach(function (l) {
         var b = q('button', 'orow'); b.type = 'button';
         var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || l.email || 'No name'));
         tx.appendChild(q('small', null, [l.need, leadAddr(l), LEAD_SRC[l.src] || l.src, ago(l.at)].filter(Boolean).join(' · '))); b.appendChild(tx);   /* + the address (2026-10-21) */
-        b.appendChild(q('span', 'otag' + (callGroup(l) !== 'new' ? ' again' : ''), callGroup(l) === 'vm' ? 'Voicemail' : callGroup(l) === 'today' ? 'Try again' : 'New'));
-        b.addEventListener('click', function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
+        b.appendChild(q('span', 'otag' + (callGroup(l) !== 'new' ? ' again' : ''), recallOf(l) ? 'Recall' : callGroup(l) === 'vm' ? 'Voicemail' : callGroup(l) === 'today' ? 'Try again' : 'New'));
+        b.addEventListener('click', function () { S.pipeStage = recallOf(l) ? 'recall' : callGroup(l) === 'vm' ? 'vm' : 'call'; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
         list.appendChild(b);
       });
     }).catch(function () { list.textContent = ''; list.appendChild(q('div', 'msg', 'The leads need signal.')); });
@@ -7605,7 +7838,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function money0(n) { return '$' + Math.round(n).toLocaleString(LOCALE); }
   /* a yes on the customer's quote page (2026-10-14), only while it is for the quote's current price */
   function acceptOf(l) { return l && l.accept && l.quote && l.accept.price === l.quote.price ? l.accept : null; }
-  function acceptText(a) { return (a.booked ? 'Booked online ' + ago(a.at) : 'Said yes online ' + ago(a.at) + (a.gone ? ': the day offered was gone, call them to set one' : ': call them to set a day')) + (a.note ? ' \u00b7 \u201c' + a.note + '\u201d' : ''); }
+  function acceptText(a) { if (a.field) return 'Said yes in person to ' + String(a.by || 'the crew').split(' ')[0] + ' ' + ago(a.at) + ': send the form, take the deposit and set a day' + (a.note ? ' · “' + a.note + '”' : '');   /* the crew's quick quote (2026-10-21) */
+    return (a.booked ?'Booked online ' + ago(a.at) : 'Said yes online ' + ago(a.at) + (a.gone ? ': the day offered was gone, call them to set one' : ': call them to set a day')) + (a.note ? ' \u00b7 \u201c' + a.note + '\u201d' : ''); }
   /* the day offered with a quote (2026-10-14) */
   var SLOT_LABEL = { s1: '9:30-10:00', s2: '10-12', s3: '12-2', s4: '3:00' }, SLOT_SAY = { s1: 'between 9:30 and 10:00', s2: 'between 10:00 and 12:00', s3: 'between 12:00 and 2:00', s4: 'around 3:00' };
   function longDay(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { weekday: 'long', month: 'long', day: 'numeric' }); }
@@ -11278,6 +11512,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (adm && feat('walkdesk') && a.role !== 'super' && a.role !== 'admin' && a.role !== 'office') btn(a.pays ? 'Stop payments' : 'Takes payments', null, function () {   /* 2026-10-19: a trusted feature, the admin decides */
         acctCall('paysset', { id: a.id, on: !a.pays }, function () { toast(a.pays ? a.name + ' no longer takes payments' : a.name + ' takes payments now', a.pays ? 'Charging a saved card and pay links are off for them. Cash they collect is still recorded.' : 'They can charge a saved card and make a Square pay link on their jobs.', null); });
       });
+      if (adm && feat('walkdesk') && CO.a365 && (a.role === 'crew' || a.role === 'manager')) btn(a.fq ? 'Stop: Quick quote' : 'Quick quote', null, function () {   /* the field quick quote (2026-10-21, Matthew: Christian and Bria) */
+        acctCall('acctflag', { id: a.id, flag: 'fq', on: !a.fq }, function () { toast(a.name + (a.fq ? ': Quick quote off' : ': Quick quote on'), a.fq ? 'The Quick quote is off their screen.' : 'They can price a lawn on the spot and send a yes to the office.', null); });
+      });
       if (adm && feat('walkdesk') && a.role === 'office') {   /* an office account that runs a team, and marks won and lost (2026-10-20) */
         btn(a.runsteam ? 'Stop running a team' : 'Runs a team', null, function () { acctCall('acctflag', { id: a.id, flag: 'runsteam', on: !a.runsteam }, function () { toast(a.runsteam ? a.name + ' no longer runs a team' : a.name + ' runs a team now', a.runsteam ? 'Their team stays as it is; an admin manages it.' : 'They add and manage the crew on their team, hand them leads, and see the team’s numbers.', null); }); });
         [['doors', 'Knocks doors', 'Doors and Plan are on their screen.', 'Doors and Plan are off their screen.'], ['communities', 'Communities', 'Communities is on their screen.', 'Communities is off their screen.'], ['results', 'Results', 'Results is on their screen.', 'Results is off their screen.']].forEach(function (x) {   /* 2026-10-21, Matthew: Nneka knocks doors; Cai reaches out to HOAs and reads Results */
@@ -12052,13 +12289,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (it.kind === 'door') { var x = it.x; return x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; }
     var st = it.x.status || 'new';
     var cs = asOffice() ? (st === 'quoted' && !it.x.sign ? 'quoted' : (OFFICE_MAP[st] || 'call')) : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
+    if (cs === 'call' && wdOn() && recallOf(it.x)) return 'recall';   /* a day set to call back (2026-10-21) */
     if (cs === 'call' && wdOn()) { var cg = callGroup(it.x); if (cg === 'vm' || cg === 'email' || cg === 'text') return cg; }   /* Left voicemail, Emailed, Texted (2026-10-15/16) */   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
     return cs;
   }
   /* the office's stages (2026-10-14, Matthew: no won/lost/quote/walk for Jen; she calls, quotes by phone, takes half as a deposit and
      sends a one-page form to sign) */
-  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['email', 'Emailed'], ['text', 'Texted'], ['quoted', 'Quoted'], ['sent', 'Form sent'], ['hold', 'On hold'], ['signed', 'Signed'], ['nosale', 'No sale']];   /* Quoted: a phone quote, no form yet (2026-10-16); On hold (2026-10-17) */
-  var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale', hold: 'hold' };
+  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['recall', 'Recall'], ['email', 'Emailed'], ['text', 'Texted'], ['quoted', 'Quoted'], ['sent', 'Form sent'], ['hold', 'On hold'], ['signed', 'Signed'], ['nosale', 'No sale']];   /* Quoted: a phone quote, no form yet (2026-10-16); On hold (2026-10-17) */   /* + Recall (2026-10-21) */
+  var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale', hold: 'hold', unreached: 'unreached' };   /* Couldn't reach: no tab, its own folded list (2026-10-21) */
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
   function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
   /* the Pipeline from the menu, a tile or an alert opens with no stage picked (2026-10-21, Matthew: "we dont want to open into clutterness,
@@ -12214,7 +12452,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.role === 'admin' && !asOffice() && S.cucheck && S.cucheck.items && S.cucheck.items.length) holder.appendChild(cuCheckBox(S.cucheck));
     /* stages */
     /* Walk booked only while someone is in it (2026-10-21, Matthew: "walk booked wouldn't really be used") */
-    var stList = (asOffice() ? OFFICE_ST : PIPE_ST).filter(function (st) { return st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; }); });
+    var stList = (asOffice() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()); });   /* Recall: the lead desk only (2026-10-21) */
     var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + stList.length + ',1fr)';
     stList.forEach(function (st) {
       var n = items.filter(function (it) { return pipeStage(it) === st[0] && (src === 'all' || pipeSrc(it) === src); }).length;
@@ -12265,6 +12503,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var due = shown.filter(function (it) { return tryDue(it.x) <= Date.now(); }).sort(function (a, b) { return lt2(a) - lt2(b); }), later = shown.filter(function (it) { return tryDue(it.x) > Date.now(); }).sort(function (a, b) { return lt2(a) - lt2(b); });
       groups = []; if (due.length) groups.push(['Call back today', due]); if (later.length) groups.push(['Voicemail left today, call back next', later]);
     }
+    if (stage === 'recall' && shown.length) {   /* by the day set: due first (2026-10-21) */
+      var rd = function (it) { return (recallOf(it.x) || {}).date || ''; }, td = todayISO();
+      var rdue = shown.filter(function (it) { return rd(it) <= td; }).sort(function (a, b) { return rd(a) < rd(b) ? -1 : rd(a) > rd(b) ? 1 : 0; }), rlater = shown.filter(function (it) { return rd(it) > td; }).sort(function (a, b) { return rd(a) < rd(b) ? -1 : rd(a) > rd(b) ? 1 : 0; });
+      groups = []; if (rdue.length) groups.push(['Call back today', rdue]); if (rlater.length) groups.push(['Coming up', rlater]);
+    }
     if (!stage) { /* nothing picked */ } else if (wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);   /* a computer: the list and the lead side by side */
     else groups.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
     /* won, not in Customers yet (2026-10-15: no Won tab any more; a won door from the crew, or a lead won before Won made the customer) */
@@ -12287,6 +12530,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         wp.appendChild(wh);
         if (wOpen) { wp.appendChild(q('div', 'ltrynote', 'Tap Make customer on each to put them in Customers.')); pend.forEach(function (it) { drawCard(it, wp); }); }
         holder.appendChild(wp);
+      }
+    }
+    /* Couldn't reach (2026-10-21): kept out of every stage, folded at the foot; opened only when asked */
+    if (wdOn() && (adminView() || asOffice())) {
+      var gone = items.filter(function (it) { return it.kind === 'lead' && it.x.status === 'unreached' && (src === 'all' || pipeSrc(it) === src); }).sort(function (a, b) { return (b.x.statusAt || 0) - (a.x.statusAt || 0); });
+      if (gone.length) {
+        var gs = q('section', 'wonpend unreachlist'), gOpen = !!S.unreachOpen;
+        var gh = q('button', 'cfold'); gh.type = 'button'; gh.setAttribute('aria-expanded', String(gOpen)); gh.appendChild(ico('chev', 2.4));
+        gh.appendChild(document.createTextNode('Couldn’t reach (' + gone.length + ')'));
+        gh.addEventListener('click', function () { S.unreachOpen = !gOpen; drawPipe(); });
+        gs.appendChild(gh);
+        if (gOpen) { gs.appendChild(q('div', 'ltrynote', 'Kept here, off the lists. Anyone who comes back through a form, Facebook or the crew moves back by themselves; Bring back moves them now.')); gone.forEach(function (it) { drawCard(it, gs); }); }
+        holder.appendChild(gs);
       }
     }
     if (S.pipeFocus && !deskWide()) { var fc = holder.querySelector('[data-id="' + S.pipeFocus + '"]'); if (fc) setTimeout(function () { fc.scrollIntoView({ block: 'start' }); }, 30); }
@@ -16953,7 +17209,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -16961,7 +17217,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

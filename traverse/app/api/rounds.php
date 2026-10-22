@@ -1879,7 +1879,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'doors' => $payload['r'] === 'office' && acctFlag('doors', (string) $payload['c']), 'communities' => $payload['r'] === 'office' && acctFlag('communities', (string) $payload['c']), 'results' => $payload['r'] === 'office' && acctFlag('results', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'doors' => $payload['r'] === 'office' && acctFlag('doors', (string) $payload['c']), 'communities' => $payload['r'] === 'office' && acctFlag('communities', (string) $payload['c']), 'results' => $payload['r'] === 'office' && acctFlag('results', (string) $payload['c']), 'fq' => in_array($payload['r'], ['crew', 'manager'], true) && !empty(company()['a365']) && acctFlag('fq', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -2290,7 +2290,7 @@ if ($action === 'a365lead') {
        so the person stays where they are (Jen's Facebook flow) and is not doubled. A lost or finished lead does not count: that is a new enquiry. */
     $wd = substr((string) preg_replace('/\D/', '', $phone), -10); $we = strtolower($email); $wn = nameKey($name); $hits = [];
     foreach (leadsAll() as $x) {
-        if (!in_array((string) ($x['status'] ?? 'new'), ['new', 'contacted', 'walk', 'quoted', 'hold'], true)) continue;
+        if (!in_array((string) ($x['status'] ?? 'new'), ['new', 'contacted', 'walk', 'quoted', 'hold', 'unreached'], true)) continue;   /* + Couldn't reach: they come back (2026-10-21) */
         $xd = substr((string) preg_replace('/\D/', '', (string) ($x['phone'] ?? '')), -10);
         if ((strlen($wd) === 10 && $xd === $wd) || ($we !== '' && strtolower((string) ($x['email'] ?? '')) === $we) || (substr_count($wn, ' ') >= 1 && nameKey((string) ($x['name'] ?? '')) === $wn)) $hits[] = $x;
     }
@@ -2301,6 +2301,7 @@ if ($action === 'a365lead') {
         $fill = []; if (trim((string) ($x['phone'] ?? '')) === '' && $phone !== '') $fill['phone'] = $phone; if (trim((string) ($x['email'] ?? '')) === '' && $email !== '') $fill['email'] = $email;
         if ($fill) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'contact' => $fill, 'by' => 'website', 'at' => $now]);
         if (empty($x['house']) && $street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'house' => $h, 'by' => 'website', 'at' => $now]); }
+        if (($x['status'] ?? '') === 'unreached') leadRevive((string) $x['id'], 'sent the 365 website form', 'website');
         if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true);
         out(['ok' => true]);
     }
@@ -2796,7 +2797,7 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -3887,7 +3888,7 @@ function quoteInbox(array $l, bool $mine = false): bool {
     return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;   /* new leads only, since 16 Oct: back as it was (2026-10-17, Matthew: don't send Jen anything she didn't populate herself unless it is a new lead) */
 }
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
-const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost', 'hold'];   /* + hold: on hold, parked on purpose (2026-10-17) */
+const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost', 'hold', 'unreached'];   /* + hold: on hold, parked on purpose (2026-10-17) */   /* + unreached: Couldn't reach (2026-10-21) */
 function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
 function readLines(string $f): array {
     $out = [];
@@ -4001,7 +4002,7 @@ if ($action === 'teamsave' || $action === 'teammember') {
  * {id, owner} and {id, follow: [date, time] | null}, alongside the existing status and note rows. */
 function leadsAll(): array {
     $leads = [];
-    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null, 'quote' => null];
+    foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null, 'quote' => null, 'recall' => null];
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
         if (!isset($leads[$u['id']])) continue;
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
@@ -4020,7 +4021,10 @@ function leadsAll(): array {
         if (!empty($u['signed']) && is_array($u['signed'])) $leads[$u['id']]['signed'] = array_intersect_key($u['signed'], array_flip(['name', 'at', 'version', 'job', 'facts', 'terms']));
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
-        if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
+        /* back from Couldn't reach (2026-10-21): calls start again; the earlier ones are kept */
+        if (!empty($u['back'])) { $leads[$u['id']]['oldTries'] = array_merge($leads[$u['id']]['oldTries'] ?? [], $leads[$u['id']]['tries']); $leads[$u['id']]['tries'] = []; $leads[$u['id']]['back'] = ['how' => (string) $u['back'], 'at' => (int) ($u['at'] ?? 0)]; $leads[$u['id']]['recall'] = null; }
+        if (array_key_exists('recall', $u)) $leads[$u['id']]['recall'] = is_string($u['recall']) && $u['recall'] !== '' ? ['date' => $u['recall'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)] : null;   /* the day to call back (2026-10-21) */
+        if (!empty($u['untry'])) $leads[$u['id']]['tries'] =array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
         if (!empty($u['try'])) $leads[$u['id']]['tries'][] = ['o' => (string) $u['try'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];   /* call tries (2026-10-14) */
         if (array_key_exists('owner', $u)) { $leads[$u['id']]['owner'] = (string) $u['owner']; $leads[$u['id']]['ownerBy'] = $u['by'] ?? null; }
         if (array_key_exists('follow', $u)) $leads[$u['id']]['follow'] = is_array($u['follow']) ? ['date' => (string) $u['follow'][0], 'time' => (string) ($u['follow'][1] ?? '')] : null;
@@ -4029,6 +4033,58 @@ function leadsAll(): array {
     return $leads;
 }
 function leadOk(string $id): bool { return (bool) preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id); }
+/* ---- Recall and Couldn't reach (2026-10-21, Matthew: "Create a recall section, where voicemail people move to after jens set a date to
+ * recall. Put up a notification if its there 3rd time that jen has called them, and ask her if she wants to remove the lead and if she does
+ * store it into a Couldnt reach section thats hidden but stored in case they reconnect or redo an intake or messenger to our ad and their
+ * info will pull up again") ----
+ * Recall: {id, recall: 'YYYY-MM-DD' | ''} on leadst.log. The lead waits under Recall until that day; a call logged after it was set ends it.
+ * Couldn't reach: status 'unreached', hidden from every list but its own. Anyone coming back with the same phone or email (the 365 website
+ * form, a Facebook form or message, the crew's quick quote, a lead added by hand, a move in Jen's ClickUp) brings that lead back: status
+ * new, calls counted afresh (the earlier ones kept as oldTries), and a note saying how. */
+function contactKey(string $phone, string $email): array { return [substr((string) preg_replace('/\D/', '', $phone), -10), strtolower(trim($email))]; }
+function unreachedMatch(string $phone, string $email): ?array {
+    [$d, $e] = contactKey($phone, $email); if (strlen($d) !== 10 && $e === '') return null;
+    foreach (leadsAll() as $l) {
+        if (($l['status'] ?? '') !== 'unreached') continue;
+        [$ld, $le] = contactKey((string) ($l['phone'] ?? ''), (string) ($l['email'] ?? ''));
+        if ((strlen($d) === 10 && $ld === $d) || ($e !== '' && $le === $e)) return $l;
+    }
+    return null;
+}
+function leadRevive(string $id, string $how, string $by, string $extra = ''): bool {
+    return appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => 'new', 'back' => $how, 'note' => mb_substr('Back from Couldn\'t reach: ' . $how . '.' . ($extra !== '' ? ' ' . $extra : ''), 0, 500), 'by' => $by, 'at' => time()]);
+}
+function missRun(array $tries): int { $n = 0; foreach ($tries as $t) $n = ($t['o'] ?? '') === 'talk' ? 0 : (in_array($t['o'] ?? '', ['none', 'vm'], true) ? $n + 1 : $n); return $n; }   /* calls in a row with no answer, as the page counts them */
+if ($action === 'leadrecall') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
+    if (!$l) fail('No such lead.', 404);
+    $date = (string) ($body['date'] ?? '');
+    if ($date !== '') {
+        $tz = new DateTimeZone(appTz());
+        if (!dateOk($date)) fail('That is not a real date.');
+        if ($date < (new DateTime('today', $tz))->format('Y-m-d')) fail('Pick today or a day ahead.');
+        if ($date > (new DateTime('today', $tz))->modify('+1 year')->format('Y-m-d')) fail('Pick a day within the year.');
+    }
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'recall' => $date, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'date' => $date]);
+}
+if ($action === 'leadunreach') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
+    if (!$l) fail('No such lead.', 404);
+    if (!empty($body['back'])) {   /* Bring back, from the Couldn't reach list */
+        if (($l['status'] ?? '') !== 'unreached') fail('That lead is not under Couldn\'t reach.');
+        if (!leadRevive($id, 'brought back by ' . $me, $me)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'status' => 'new']);
+    }
+    if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold'], true)) fail('Only a lead still being called goes to Couldn\'t reach.');
+    $n = missRun($l['tries']);
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'status' => 'unreached', 'recall' => '', 'note' => 'Moved to Couldn\'t reach after ' . $n . ($n === 1 ? ' call' : ' calls') . ' with no answer.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'status' => 'unreached']);
+}
 if ($action === 'myleads') {
     $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
     $whoAll = $who === $me ? meNames() : [$who];   /* leads handed to a linked sign-in are this person's too (2026-10-21) */
@@ -4440,6 +4496,106 @@ if ($action === 'a365calc') {
     $cost = $drive + $aerGas + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0) + $price * (float) ($P['crewShare'] ?? 0);
     if ($fertLb > 0) foreach ($P['ferts'] as $f) if ($f['name'] === $fName && $f['bagLb'] > 0) $cost += $fertLb * $f['bagCost'] / $f['bagLb'];
     out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'aerGas' => round($aerGas, 2), 'left' => $price ? (int) round($price - $cost) : null]);
+}
+/* ---- the field quick quote (2026-10-21, Matthew: "Christian needs access to a quick quote system. he just needs it so that he can give the
+ * person a accurate estimate, so it needs limited functions ... if the person approved have him click a button that says send to office. And
+ * the leads will come up on our end so we can do the documentation and the payments. Give bris account the same functions.") ----
+ * A crew account with the "Quick quote" setting (acctflag fq) finds the house, sees the lawn size we hold (and changes it if the lawn in front
+ * of them is bigger or smaller) and the price, worked out here exactly as the office's quote builder does for Aerate, seed & feed; never the
+ * costs. When the customer says yes: their name and phone, Send to office. That files (or finds) the lead, keeps the quote on it, marks it
+ * said yes in person, and alerts the office; the office sends the form and takes the payment from there. */
+function fqOn(): bool { global $role, $session; return !empty(company()['a365']) && ($role === 'admin' || (in_array($role, ['crew', 'manager'], true) && acctFlag('fq', (string) ($session['c'] ?? '')))); }
+/** the lawn to quote: a hand measure if there is one, else the middle of the photo's range (the quote builder's lawnEstimate) */
+function fqSize(array $h): array {
+    if (!empty($h['hand']['sq'])) return ['sq' => (int) $h['hand']['sq'], 'say' => 'Measured by hand.'];
+    $L = is_array($h['lawn'] ?? null) ? $h['lawn'] : []; $sq = (int) ($L['sq'] ?? 0); $tc = (float) ($h['trees']['z2'] ?? 0);
+    if (($L['lv'] ?? '') === 'N' || !$sq) return ['sq' => 0, 'say' => ($L['lv'] ?? '') === 'N' ? 'No green lawn in the 2023 photo. Look at it and type the size.' : 'No lawn size on file. Pace it out or ask them, and type it.'];
+    [$lo, $hi, $say] = (($L['lv'] ?? '') === 'T' || $tc >= 0.35) ? [0.95, 1.5, 'Lots of trees: the photo misses lawn under them. Look and change it if needed.'] : ($tc >= 0.2 ? [0.9, 1.25, 'Some trees over the lawn: check it.'] : [0.85, 1.0, 'Open lot: the photo is close.']);
+    $r = fn($x) => max(100, (int) round($x / 100) * 100); $a = $r($sq * $lo); $b = $r($sq * $hi);
+    if (!empty($h['yb']) && (int) $h['yb'] >= 2023) $say = 'The house is newer than the 2023 photo: check the lawn.';
+    return ['sq' => $r(($a + $b) / 2), 'say' => $say];
+}
+/** the price for Aerate, seed & feed: the quote builder's ladder plus the drive from the storage (a365calc), with the seed and fertilizer pounds */
+function fqPrice(int $sq, ?array $hf): array {
+    $P = a365Pricing(); $drive = 0.0; $B = company()['a365']['base'] ?? null; $gas = a365Gas();
+    if ($hf && isset($hf['lat'], $hf['lon']) && $B && $gas && !empty($gas['price'])) {
+        $rad = M_PI / 180; $dl = ($hf['lat'] - $B[0]) * $rad; $dn = ($hf['lon'] - $B[1]) * $rad;
+        $a = sin($dl / 2) ** 2 + cos($B[0] * $rad) * cos($hf['lat'] * $rad) * sin($dn / 2) ** 2; $mi = 3958.8 * 2 * atan2(sqrt($a), sqrt(1 - $a));
+        $drive = $mi * (float) ($P['roadFactor'] ?: 1.3) * 2 / (float) ($P['mpg'] ?: 18) * (float) $gas['price'];
+    }
+    $price = a365ListPrice($sq, $P) + (int) ceil($drive);
+    $seedLb = $sq > 0 ? round($sq / 1000 * max($P['seedLow'], min($P['seedHigh'], $P['seedBase'])), 1) : 0.0; $fertLb = 0.0;
+    $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null;
+    if ($F && $sq > 0 && $F['coverSq'] > 0) $fertLb = round($sq / 1000 * ($F['bagLb'] * 1000 / $F['coverSq']), 1);
+    return ['price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb];
+}
+if (in_array($action, ['fqhouse', 'fqcalc', 'fqsend', 'fqmine'], true) && (!feature('walkdesk') || !fqOn())) fail('Not allowed.', 403);
+if ($action === 'fqhouse') {
+    $h = houseFacts((string) ($_GET['region'] ?? ''), (string) ($_GET['id'] ?? ''));
+    if (!$h) fail('No such house.', 404);
+    $sz = fqSize($h);
+    out(['ok' => true, 'house' => ['region' => $h['region'], 'id' => $h['id'], 'address' => $h['address'], 'town' => $h['town']], 'sq' => $sz['sq'], 'say' => $sz['say'], 'price' => $sz['sq'] > 0 ? fqPrice($sz['sq'], $h)['price'] : null]);
+}
+if ($action === 'fqcalc') {
+    $sq = (int) ($_GET['sq'] ?? 0); if ($sq < 100 || $sq > 500000) fail('Type the lawn size in square feet.');
+    $reg = (string) ($_GET['region'] ?? ''); $hid = (string) ($_GET['id'] ?? '');
+    $h = $reg !== '' && $hid !== '' ? houseFacts($reg, $hid) : null;
+    out(['ok' => true, 'price' => fqPrice($sq, $h)['price']]);
+}
+if ($action === 'fqsend') {
+    if (!$isPost) fail('POST required', 405);
+    $sq = (int) ($body['sq'] ?? 0); if ($sq < 100 || $sq > 500000) fail('Type the lawn size in square feet.');
+    $name = $clean($body['name'] ?? '', 120); $phone = $clean($body['phone'] ?? '', 40); $email = $clean($body['email'] ?? '', 160); $note = $clean($body['note'] ?? '', 300);
+    if ($name === '') fail('Add their name.');
+    if (strlen((string) preg_replace('/\D/', '', $phone)) < 10) fail('Add their phone number, so the office can reach them.');
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+    $reg = (string) ($body['region'] ?? ''); $hid = (string) ($body['id'] ?? ''); $h = null; $house = null;
+    if ($reg !== '' || $hid !== '') {
+        $h = houseFacts($reg, $hid); if (!$h) fail('No such house.', 404);
+        $house = ['region' => $h['region'], 'door' => $h['id'], 'address' => $h['address'], 'town' => $h['town']]; $addr = streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($house));
+    } else {
+        $ta = $clean($body['address'] ?? '', 120); $tt = $clean($body['town'] ?? '', 60);
+        if (!preg_match('/^\d{1,6}[A-Za-z]?\s+\S/', $ta)) fail('Type the house number and street.');
+        if (mb_strlen($tt) < 2) fail('Type the town.');
+        $house = ['address' => $ta, 'town' => $tt, 'typed' => true]; $addr = $ta . ', ' . $tt;
+    }
+    if (!throttleTake(rateFile('fqsend|' . $me), 60, 86400)) fail('That is a lot of quotes sent today. Call the office.', 429);
+    $pr = fqPrice($sq, $h); $now = time();
+    $q = ['price' => $pr['price'], 'pkg' => 'full', 'sq' => $sq, 'seedLb' => $pr['seedLb'], 'fertLb' => $pr['fertLb'], 'note' => '', 'sent' => false, 'field' => $me];
+    $acc = ['price' => $pr['price'], 'note' => $note, 'by' => $me, 'field' => 1];
+    $say = 'Said yes in person to ' . $me . ': $' . $pr['price'] . ' for Aerate, seed & feed, lawn about ' . number_format($sq) . ' sq ft, ' . $addr . '.' . ($note !== '' ? ' "' . $note . '"' : '');
+    /* someone already here: the same phone or email on an open lead (or under Couldn't reach) keeps them, rather than a second lead */
+    [$d, $e] = contactKey($phone, $email); $ex = null;
+    foreach (leadsAll() as $x) {
+        if (!in_array((string) ($x['status'] ?? 'new'), ['new', 'contacted', 'walk', 'quoted', 'hold', 'unreached'], true) || !empty($x['signed'])) continue;
+        [$xd, $xe] = contactKey((string) ($x['phone'] ?? ''), (string) ($x['email'] ?? ''));
+        if ((strlen($d) === 10 && $xd === $d) || ($e !== '' && $xe === $e)) { $ex = $x; break; }
+    }
+    if ($ex) {
+        $id = (string) $ex['id'];
+        if (($ex['status'] ?? '') === 'unreached') leadRevive($id, 'said yes in person to ' . $me, $me);
+        $row = ['id' => $id, 'quote' => $q, 'accept' => $acc, 'status' => 'quoted', 'note' => mb_substr($say, 0, 500), 'by' => $me, 'at' => $now];
+        if (empty($ex['house']) || !empty($ex['house']['typed'])) $row['house'] = $house;
+        if (trim((string) ($ex['email'] ?? '')) === '' && $email !== '') $row['contact'] = ['email' => $email];
+    } else {
+        $id = 'm' . date('YmdHis') . bin2hex(random_bytes(3));
+        if (!appendLine(leadsDir() . '/leads.log', ['id' => $id, 'src' => 'door', 'at' => $now, 'need' => 'Aerate, seed & feed', 'name' => $name, 'phone' => $phone, 'email' => $email, 'town' => $addr, 'msg' => $note, 'by' => $me])) fail('Could not save that. Try again.', 500);
+        $row = ['id' => $id, 'house' => $house, 'quote' => $q, 'accept' => $acc, 'status' => 'quoted', 'note' => mb_substr($say, 0, 500), 'by' => $me, 'at' => $now];
+    }
+    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    a365Alert('Said yes to ' . $me, $name . ' · $' . $pr['price'] . ' · ' . $addr . ': send the form and take the deposit', true);
+    out(['ok' => true, 'id' => $id, 'price' => $pr['price'], 'had' => (bool) $ex]);
+}
+if ($action === 'fqmine') {   /* what they have sent to the office, the last two weeks */
+    $cut = time() - 14 * 86400; $jobOf = []; foreach (jobsAll() as $jj) if (!$jj['off']) $jobOf[(string) $jj['lead']] = $jj;
+    $list = [];
+    foreach (leadsAll() as $l) {
+        $a = $l['accept'] ?? null; if (!is_array($a) || ($a['by'] ?? '') !== $me || (int) ($a['at'] ?? 0) < $cut) continue;
+        $st = isset($jobOf[$l['id']]) ? 'Booked ' . deskWhen((string) $jobOf[$l['id']]['date'], '') : (!empty($l['signed']) ? 'Signed' : (!empty($l['sign']) ? 'Form sent' : (($l['status'] ?? '') === 'lost' ? 'Did not go ahead' : 'With the office')));
+        $list[] = ['name' => (string) ($l['name'] ?? ''), 'price' => (int) ($a['price'] ?? 0), 'at' => (int) $a['at'], 'addr' => $l['house'] ? streetCaseServer((string) $l['house']['address']) : (string) ($l['town'] ?? ''), 'state' => $st];
+    }
+    usort($list, fn($x, $y) => $y['at'] <=> $x['at']);
+    out(['ok' => true, 'sent' => array_slice($list, 0, 30)]);
 }
 if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
@@ -6243,6 +6399,7 @@ if ($action === 'leadadd') {
         $qd = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $qe = strtolower(trim((string) ($body['email'] ?? '')));
         foreach (leadsAll() as $ex) if ($ex['status'] !== 'lost' && ((strlen($qd) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ex['phone'] ?? '')), -10) === $qd) || ($qe !== '' && strtolower((string) ($ex['email'] ?? '')) === $qe))) {
             if (!qMine($ex)) appendLine(leadsDir() . '/leadst.log', ['id' => $ex['id'], 'qown' => $me, 'note' => 'Taken on by ' . $me . ' in the Quick quote.', 'by' => $me, 'at' => time()]);
+            if (($ex['status'] ?? '') === 'unreached') leadRevive((string) $ex['id'], 'taken on again in the Quick quote by ' . $me, $me);
             out(['ok' => true, 'id' => $ex['id'], 'had' => true]);
         }
     }
@@ -6254,6 +6411,12 @@ if ($action === 'leadadd') {
             'email' => $clean($body['email'] ?? '', 160), 'town' => $clean($body['town'] ?? '', 160), 'msg' => $clean($body['msg'] ?? '', 2000), 'by' => $me];
     if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Add at least a name, a phone number or an email.');
     if ($row['email'] !== '' && !filter_var($row['email'], FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+    /* someone under Couldn't reach, added again (2026-10-21): their lead comes back with everything on it, rather than a second one */
+    if ($ux = unreachedMatch($row['phone'], $row['email'])) {
+        $said = array_filter([$row['need'], $row['town'], $row['msg']]);
+        leadRevive((string) $ux['id'], 'added again by ' . $me, $me, $said ? 'New details: ' . implode('; ', $said) : '');   /* LEAD_SRC_NAME is declared further down the file, after this runs */
+        out(['ok' => true, 'id' => $ux['id'], 'back' => true]);
+    }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
     /* an address typed in finds its house (2026-10-14), as the website and Facebook leads do */
     if (feature('walkdesk') && preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => $me, 'at' => time()]); }
@@ -6337,6 +6500,7 @@ function metaMessenger(string $g, callable $gget, array $P, callable $digits, bo
         if ($lid !== '') {   /* someone we have: their messages as notes, the conversation tied to them */
             if (!isset($byConv[$cid])) { appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'mconv' => $cid, 'by' => 'Messenger', 'at' => time()]); $byConv[$cid] = $lid; }
             foreach (array_slice($mine, -5) as $m) { appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'note' => 'Facebook message: ' . $m['t'], 'by' => 'Messenger', 'at' => $m['at']]); $res['notes']++; }
+            if (($leads[$lid]['status'] ?? '') === 'unreached') { leadRevive($lid, 'sent a Facebook message', 'Messenger'); $leads[$lid]['status'] = 'new'; }   /* Couldn't reach, then wrote to us (2026-10-21) */
             continue;
         }
         $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'messenger', 'at' => $mine[0]['at'], 'need' => 'Facebook message', 'name' => $name, 'phone' => $phone, 'email' => $email,
@@ -6409,6 +6573,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
         $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
     }
     $added = []; $errors = []; $mnotes = 0;
+    $unWho = []; foreach (leadsAll() as $l) if (($l['status'] ?? '') === 'unreached') { [$ud, $ue] = contactKey((string) ($l['phone'] ?? ''), (string) ($l['email'] ?? '')); if (strlen($ud) === 10) $unWho['p' . $ud] = $l['id']; if ($ue !== '') $unWho['e' . $ue] = $l['id']; }   /* Couldn't reach, then a new Facebook form (2026-10-21) */
     foreach ($M['pages'] as $pi => $P) {
         $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since; $errBefore = count($errors);
         $forms = $gget($g . '/' . rawurlencode((string) $P['id']) . '/leadgen_forms?' . http_build_query(['fields' => 'id,name,status,questions{key,label}', 'limit' => 100, 'access_token' => $P['token']]));
@@ -6429,6 +6594,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
                     if ($name === '' && $phone === '' && $email === '') continue;
                     $d = $digits($phone); $who = strlen($d) === 10 ? 'p' . $d : ($email !== '' ? 'e' . strtolower($email) : '');
                     $seenExt[$ext] = true;
+                    if ($who !== '' && isset($unWho[$who])) { leadRevive($unWho[$who], 'filled in a Facebook form again', 'Facebook'); $added[] = ($name ?: $phone) . ' (back)'; unset($unWho[$who]); continue; }
                     if ($who !== '' && isset($seenWho[$who])) continue;
                     $msg = implode("
 ", array_merge($fv['extra'], !empty($L['ad_name']) ? ['Ad: ' . $L['ad_name']] : []));
@@ -6605,6 +6771,9 @@ if ($action === 'clickuppoll') {
         if ($cst === 'scheduled' && !jobForLead($id) && $cusChanged) $notes[] = $SCHED_NOTE;   /* a sale: Won, but nothing booked here yet */
         if ($proof && $tgt !== '') $tgt = 'won';
         if ($tgt === 'contacted' && $st === 'walk') $tgt = 'walk';
+        /* Couldn't reach is set here, not in ClickUp (2026-10-21): it holds until her ClickUp status changes; a change brings the lead back */
+        if ($st === 'unreached' && !$cusChanged && !$proof) $tgt = $st;
+        if ($st === 'unreached' && $tgt !== '' && $tgt !== $st) { $u['back'] = 'moved in Jen\'s ClickUp'; $u['recall'] = ''; $notes[] = 'Back from Couldn\'t reach.'; }
         if ($tgt !== '' && $tgt !== $st) { $u['status'] = $tgt; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $tgt . ')'; }
         $syncState[$id] = ['cst' => $cst, 'proof' => $proof, 'tgt' => $tgt, 'name' => (string) ($l['name'] ?? $name)];
         if ($deal && $deal !== (int) ($l['cud'] ?? 0)) { $u['cud'] = $deal; $notes[] = 'ClickUp deal value $' . number_format($deal) . '.'; }
@@ -6626,7 +6795,7 @@ if ($action === 'clickuppoll') {
     foreach ($taskDup as $d) $cuItems[] = ['key' => 'dup:' . $d['tid'], 'text' => 'A second ClickUp task for ' . ($d['lead'] ?: $d['name']) . ': only the first is followed. Jen can delete the extra one.'];
     foreach ($syncState as $lid => $x) if ($x['cst'] === 'scheduled' && !jobForLead((string) $lid)) $cuItems[] = ['key' => 'nojob:' . $lid, 'text' => $x['name'] . ': scheduled in ClickUp, so Won here, but there is no job on the board yet. Book the day on the Jobs board.'];
     foreach ($syncState as $lid => $x) if ($x['proof'] && $x['cst'] !== '' && !in_array($x['cst'], ['scheduled', 'completed'], true)) $cuItems[] = ['key' => 'proof:' . $lid . ':' . $x['cst'], 'text' => $x['name'] . ': ClickUp says ' . $x['cst'] . ', but the app has them booked or paid, so they stay Won. Jen can move the ClickUp task on.'];
-    foreach ($leadsNow as $l) if (empty($l['cu']) && !in_array((string) ($l['status'] ?? 'new'), ['lost', 'won'], true) && ($l['src'] ?? '') !== 'messenger') $cuItems[] = ['key' => 'app:' . $l['id'], 'text' => 'In the app, not in Jen\'s ClickUp: ' . (trim((string) ($l['name'] ?? '')) ?: (string) ($l['phone'] ?? 'a lead')) . ' (' . ((string) ($l['status'] ?? 'new')) . ', ' . (LEAD_SRC_NAME[$l['src'] ?? ''] ?? (string) ($l['src'] ?? '')) . ').'];
+    foreach ($leadsNow as $l) if (empty($l['cu']) && !in_array((string) ($l['status'] ?? 'new'), ['lost', 'won', 'unreached'], true) && ($l['src'] ?? '') !== 'messenger') $cuItems[] = ['key' => 'app:' . $l['id'], 'text' => 'In the app, not in Jen\'s ClickUp: ' . (trim((string) ($l['name'] ?? '')) ?: (string) ($l['phone'] ?? 'a lead')) . ' (' . ((string) ($l['status'] ?? 'new')) . ', ' . (LEAD_SRC_NAME[$l['src'] ?? ''] ?? (string) ($l['src'] ?? '')) . ').'];
     $cf2 = DATA_DIR . '/clickup-check.json'; $old2 = json_decode((string) @file_get_contents($cf2), true); $oldK = array_column((array) ($old2['items'] ?? []), 'key');
     writeJsonAtomic($cf2, ['at' => $now, 'items' => $cuItems]);
     $okK = array_flip(cuCheckOk()); $newI = array_values(array_filter($cuItems, fn($i) => !in_array($i['key'], $oldK, true) && !isset($okK[$i['key']])));
@@ -6657,6 +6826,7 @@ if ($action === 'leadimport') {
         $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
     }
     $added = 0; $already = 0; $skipped = 0;
+    $unWho = []; foreach (leadsAll() as $l) if (($l['status'] ?? '') === 'unreached') { [$ud, $ue] = contactKey((string) ($l['phone'] ?? ''), (string) ($l['email'] ?? '')); if (strlen($ud) === 10) $unWho['p' . $ud] = $l['id']; if ($ue !== '') $unWho['e' . $ue] = $l['id']; }   /* Couldn't reach (2026-10-21) */
     foreach ($rows as $r) {
         if (!is_array($r)) { $skipped++; continue; }
         $ext = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', (string) ($r['ext'] ?? '')), 0, 64);
@@ -6665,6 +6835,7 @@ if ($action === 'leadimport') {
         $name = $clean($r['name'] ?? '', 120);
         if ($name === '' && $phone === '' && $email === '') { $skipped++; continue; }
         $d = $digits($phone); $who = strlen($d) === 10 ? 'p' . $d : ($email !== '' ? 'e' . strtolower($email) : '');
+        if (!($ext !== '' && isset($seenExt[$ext])) && $who !== '' && isset($unWho[$who])) { leadRevive($unWho[$who], 'filled in a Facebook form again', $me); unset($unWho[$who]); $already++; continue; }
         if (($ext !== '' && isset($seenExt[$ext])) || ($who !== '' && isset($seenWho[$who]))) { $already++; continue; }
         $at = strtotime((string) ($r['at'] ?? '')); if (!$at || $at < 1704067200 || $at > time() + 86400) $at = time();
         $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'meta', 'at' => $at,
@@ -7856,18 +8027,18 @@ if ($action === 'acctflag') {   /* "Runs a team" / "Marks won and lost" on an of
     if (!feature('walkdesk')) fail('Not here.', 404);
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
-    $flag = (string) ($body['flag'] ?? ''); if (!in_array($flag, ['runsteam', 'wonlost', 'doors', 'communities', 'results'], true)) fail('No such setting.');   /* + doors, communities, results (2026-10-21) */
+    $flag = (string) ($body['flag'] ?? ''); if (!in_array($flag, ['runsteam', 'wonlost', 'doors', 'communities', 'results', 'fq'], true)) fail('No such setting.');   /* + fq: the field quick quote, on a crew account (2026-10-21) */   /* + doors, communities, results (2026-10-21) */
     $acctLock = @fopen(accountsFile() . '.lock', 'c');
     if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
     $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
-    if ($rows[$id]['role'] !== 'office') fail('Only an Office account takes this.');
+    if ($flag === 'fq' ? !in_array($rows[$id]['role'], ['crew', 'manager'], true) : $rows[$id]['role'] !== 'office') fail($flag === 'fq' ? 'The quick quote is for crew accounts.' : 'Only an Office account takes this.');
     if ($flag === 'runsteam' && !empty($body['on']) && (string) ($acct['member'][$id] ?? '') === '') fail('Put them on a team first.');
     $acct[$flag] = (array) ($acct[$flag] ?? []);
     if (!empty($body['on'])) $acct[$flag][$id] = 1; else unset($acct[$flag][$id]);
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
-    accountLog(['by' => $me, 'what' => ($flag === 'runsteam' ? 'runs a team' : 'marks won and lost') . (!empty($body['on']) ? '' : ': off'), 'name' => $rows[$id]['name'], 'id' => $id]);
+    accountLog(['by' => $me, 'what' => ($flag === 'runsteam' ? 'runs a team' : ($flag === 'fq' ? 'quick quote' : ($flag === 'wonlost' ? 'marks won and lost' : $flag))) . (!empty($body['on']) ? '' : ': off'), 'name' => $rows[$id]['name'], 'id' => $id]);
     out(['ok' => true]);
 }
 if ($action === 'walkerset') {
@@ -7905,7 +8076,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id']), 'doors' => acctFlag('doors', $r['id']), 'communities' => acctFlag('communities', $r['id']), 'results' => acctFlag('results', $r['id'])];
+            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id']), 'doors' => acctFlag('doors', $r['id']), 'communities' => acctFlag('communities', $r['id']), 'results' => acctFlag('results', $r['id']), 'fq' => acctFlag('fq', $r['id'])];
         }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
@@ -7991,7 +8162,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         /* and every per-person setting (walks 2026-10-14; all of them 2026-10-21: Nneka's Runs a team and Marks won and lost stayed on her old
            code's id when she was given a new code on 20 Oct) */
         $nid = codeId($code, $sessionKey);
-        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also'] as $mk) if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
+        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq'] as $mk) if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
@@ -8306,7 +8477,7 @@ if ($action === 'search') {
     $words = array_values(array_filter($words, fn($w, $i) => !in_array($w, ['CO', 'COLO', 'COLORADO', 'USA'], true) && !($i > 0 && preg_match('/^8[01]\d{3}$/D', $w)), ARRAY_FILTER_USE_BOTH));
     $named = array_filter($words, fn($w) => strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true));
     if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
-    $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && (desk() || $role === 'quote');
+    $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && (desk() || $role === 'quote' || fqOn());   /* + the field quick quote (2026-10-21) */
     if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 150, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
     $find = function (array $words) use ($withLookup, $LONGW): array {
         $hits = [];
