@@ -160,7 +160,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
       var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.st === x[0])); b.addEventListener('click', function () { S.st = x[0]; draw(); }); sc.appendChild(b);
     });
     var so = el('div', 'chips'); so.style.marginBottom = '12px';
-    [['reach', 'Score + email + phone'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
+    [['reach', 'Phone + email first'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
     sc.appendChild(el('span', null, '  ')); [].slice.call(so.children).forEach(function (b) { sc.appendChild(b); });
     main.appendChild(sc);
     var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
@@ -169,14 +169,16 @@ main{max-width:1180px;margin:0 auto;padding:18px}
       var t = S.q.trim().toLowerCase();
       var rows = inList.filter(function (l) { return (S.st === 'all' || l.status === S.st) && (!t || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(t) >= 0); });
       /* the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the email and phone numbers") */
-      rows.sort(function (a, b) { return (S.sort === 'reach' ? ((b.score || 0) + reach(b)) - ((a.score || 0) + reach(a)) : 0) || (b.score || 0) - (a.score || 0) || a.name.localeCompare(b.name); });
+      /* phone and email first, then phone only, then email only, then neither; the score within each (2026-10-21, Matthew) */
+      var grp = function (l) { return hasPhone(l) && hasMail(l) ? 3 : hasPhone(l) ? 2 : hasMail(l) ? 1 : 0; };
+      rows.sort(function (a, b) { return (S.sort === 'reach' ? grp(b) - grp(a) : 0) || (b.score || 0) - (a.score || 0) || a.name.localeCompare(b.name); });
       if (!rows.length) { list.appendChild(el('div', 'empty', 'Nobody here.')); return; }
       rows.forEach(function (l) {
         var r = el('button', 'row' + (S.sel === l.id ? ' on' : '')); r.type = 'button';
         var s = el('div', 'sc', l.score != null ? String(l.score) : '•'); if (l.score != null) s.appendChild(el('small', null, l.list === 'local' ? 'fit' : '/9')); r.appendChild(s);
         var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [l.kind, l.miles != null ? l.miles + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
         var right = el('div'); right.style.textAlign = 'right';
-        var mk = el('span', 'reach', (hasMail(l) ? '✉' : '') + (hasPhone(l) ? ' ☎' : '')); mk.title = (hasMail(l) ? 'Has an email' : 'No email') + ' · ' + (hasPhone(l) ? 'has a phone' : 'no phone'); right.appendChild(mk);
+        var mk = el('span', 'reach', (hasPhone(l) ? '☎' : '') + (hasMail(l) ? ' ✉' : '')); mk.title = (hasMail(l) ? 'Has an email' : 'No email') + ' · ' + (hasPhone(l) ? 'has a phone' : 'no phone'); right.appendChild(mk);
         right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
         if (l.next && l.next.date) right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date)));
         r.appendChild(right);

@@ -275,12 +275,14 @@ def best_email(c): e = [x for x in _mine(c) if x[3]]; return (e[0][3] + ((' (' +
 def best_phone(c):
     if _PH.get(c): return _PH[c]['phone'] + ' (' + _PH[c]['note'].split(';')[0] + ')'
     p = [x for x in _mine(c) if len(x) > 9 and x[9] and x[9] != 'None']; return (str(p[0][9]) + ' (' + p[0][1] + ')') if p else ''
-# the order: the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the
-# email and phone numbers"); ties go to the higher score
-RANKED = sorted(LEADS, key=lambda x: (-(sum(sc(x[0])) + reach(x[0])), -sum(sc(x[0])), x[0]))
-ws = sheet(wb, 'Sponsor leads', ['Order', 'Company', 'Kind', 'Best email', 'Best phone', 'Order points (score + email + phone)', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
-           [(i + 1, c, k, best_email(c), best_phone(c), sum(sc(c)) + reach(c), sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
-           [6, 30, 18, 40, 34, 10, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26, 16, 40], first=True)
+# the order (2026-10-21, Matthew: "prioritize the list by numbers +email, then numbers, then email. and then ranking"): a phone and an
+# email first, then a phone only, then an email only, then neither; the score orders each group
+def group(c): return 3 if has_phone(c) and has_email(c) else 2 if has_phone(c) else 1 if has_email(c) else 0
+GROUP_NAME = {3: 'Phone and email', 2: 'Phone only', 1: 'Email only', 0: 'Neither yet'}
+RANKED = sorted(LEADS, key=lambda x: (-group(x[0]), -sum(sc(x[0])), x[0]))
+ws = sheet(wb, 'Sponsor leads', ['Order', 'Company', 'Kind', 'Best email', 'Best phone', 'Group', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
+           [(i + 1, c, k, best_email(c), best_phone(c), GROUP_NAME[group(c)], sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
+           [6, 30, 18, 40, 34, 16, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26, 16, 40], first=True)
 dv = DataValidation(type='list', formula1='"Not contacted,Emailed,Called,Tour booked,Toured,Proposal sent,Signed,Not now,No"', allow_blank=True)
 ws.add_data_validation(dv); dv.add(f'P2:P{len(LEADS) + 1}')
 for r in range(2, len(LEADS) + 2):
@@ -344,7 +346,7 @@ th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,
 </style></head><body>
 <div class="k">Peak Pickleball · corporate sponsorships · draft, nothing sent</div>
 <h1>Who to call first</h1>
-<p class="sub">{len(LEADS)} new companies. Ordered by a score out of 9 plus a point each for an email (✉) and a phone (☎). The score: fit with sports, fitness and health (3), money (3), already sponsors local sport (2), near Peak (1). The score is our rating; change it as you learn. Full list, contacts columns and sources: Peak-Sponsor-Leads-2026-10.xlsx.</p>
+<p class="sub">{len(LEADS)} new companies. Ordered phone and email (☎ ✉) first, then phone only, then email only, then neither; within each group by a score out of 9: fit with sports, fitness and health (3), money (3), already sponsors local sport (2), near Peak (1). The score is our rating; change it as you learn. Full list, contacts columns and sources: Peak-Sponsor-Leads-2026-10.xlsx.</p>
 <table><tr><th class="n">#</th><th>Company</th><th class="n">Score</th><th>Why they fit</th><th>How to reach them</th></tr>{rows1}</table>
 <h2>Renewals: Peak\u2019s own sponsors</h2>
 <p>Ask Peak for each sponsor\u2019s renewal date and how each is doing. Keeping these is cheaper than finding new ones.</p>{renew}
