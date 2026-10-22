@@ -1,6 +1,7 @@
 # The Wi-Fi queue, in priority order (Matthew 2026-10-20). id|kind|what it does
 # kind: pipeline = rebuilds and uploads town files (one at a time); parcel = needs the state parcel map to answer from this network
 drapp3|parcel|The 3-inch photo trial: DRAPP 2022 (Douglas County, 3 inches) against NAIP, the app and DRCOG turf on the hand-measured lots and Douglas County towns; trial only, not uploaded
+onedrive|download|OneDrive move: the rest of the OneDrive Desktop (about 90 GB, Phone drop last) to Moved from OneDrive on this laptop; copies only; stops under 40 GB free
 refine|pipeline,parcel|Lawn refine: one town per unit (lawn fill, compact, trees, rebuild, upload)
 trees|pipeline|Trees for towns the refine does not cover: Sterling Ranch, Glendale
 values|pipeline,parcel|Home values: Idaho Springs, Elizabeth, Kiowa
