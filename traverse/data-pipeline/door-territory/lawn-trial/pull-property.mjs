@@ -4,8 +4,12 @@
 //   node pull-property.mjs --address "2707 S Osceola Way" --town "Denver"        (or --lat 39.66 --lon -105.03 with the address)
 // The same sources and rules as the towns: the state parcel layer (lot, acres, owner, county value), the 2023 NAIP photo and the
 // app's lawn classifier (lawn-mask.mjs, unchanged; the compact rule with no house outline: patches of 400 sq ft or more), the USFS
-// wildfire hazard class. No house outline and no trees: those need the big building and LiDAR files the towns are built from.
+// wildfire hazard class. No house outline: that needs the big building files the towns are built from.
+// Trees since 2026-10-22 (Matthew, after 3855 S Valentia Ct): the USGS laser survey, with the house outline taken from the laser
+// (pull-trees.mjs), so the house card can tell a wooded lot from an open one. The lot's acres from its outline when the county sends none.
 import { measure, STAC, json, patches, compactSqFt } from './lawn-mask.mjs';
+import { treesFor, lotAcres } from './pull-trees.mjs';
+import { fileURLToPath } from 'node:url';
 const A = {}; for (let i = 2; i < process.argv.length; i += 2) A[process.argv[i].replace(/^--/, '')] = process.argv[i + 1];
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const WHP = 'https://imagery.geoplatform.gov/iipp/rest/services/Fire_Aviation/USFS_EDW_RMRS_WildfireHazardPotentialClassified/ImageServer/getSamples';
@@ -62,6 +66,9 @@ try {
   /* 4. wildfire hazard (USFS WHP 2023): 1 very low .. 5 very high, 6 non-burnable, 7 water */
   let fire = null;
   try { const wj = await json(WHP + '?' + new URLSearchParams({ f: 'json', geometry: JSON.stringify({ points: [[lon, lat]], spatialReference: { wkid: 4326 } }), geometryType: 'esriGeometryMultipoint', returnFirstValueOnly: 'true' })); fire = wj.samples && wj.samples[0] ? +wj.samples[0].value : null; } catch {}
+  /* 5. trees: the laser survey, about 10-40 s; none rather than a wait past 45 s */
+  const trees = await treesFor(lat, lon, rings, fileURLToPath(new URL('./lidar-cache/', import.meta.url)), 45000);
+  const acres = at.landAcres > 0 ? +(+at.landAcres).toFixed(2) : lotAcres(rings);
   const address = norm(at.situsAdd) || norm(street);
-  done({ ok: true, door: { id: slug(address), address, acres: at.landAcres != null ? +(+at.landAcres).toFixed(2) : null, owner: String(at.owner || '').trim(), lat: +(+lat).toFixed(6), lon: +(+lon).toFixed(6), fire, lawn, trees: null, val: at.apprValTot > 0 ? Math.round(at.apprValTot) : null, town: town || (matched.split(',')[1] || '').trim(), sub: at.subName ? String(at.subName).trim() : null } });
+  done({ ok: true, door: { id: slug(address), address, acres, owner: String(at.owner || '').trim(), lat: +(+lat).toFixed(6), lon: +(+lon).toFixed(6), fire, lawn, trees, val: at.apprValTot > 0 ? Math.round(at.apprValTot) : null, town: town || (matched.split(',')[1] || '').trim(), sub: at.subName ? String(at.subName).trim() : null } });
 } catch (e) { done({ ok: false, error: 'The lookup failed: ' + String(e.message || e).slice(0, 160) }); }

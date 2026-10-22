@@ -4343,8 +4343,11 @@ if ($action === 'proppull') {
     $D = $res['door']; $id = (string) ($D['id'] ?? '');
     if (!preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('The lookup came back without an address.');
     $lw = is_array($D['lawn'] ?? null) && in_array($D['lawn']['lv'] ?? '', ['N', 'S', 'M', 'L', 'T'], true) ? ['lv' => $D['lawn']['lv'], 'sq' => (int) ($D['lawn']['sq'] ?? 0), 'yr' => (int) ($D['lawn']['yr'] ?? 0)] : null;
+    /* the laser tree reading (2026-10-22, pull-trees.mjs), the same shape as the towns' */
+    $sh = fn($v) => is_numeric($v) && $v >= 0 && $v <= 1 ? round((float) $v, 2) : null; $T0 = $D['trees'] ?? null;
+    $tr = is_array($T0) && $sh($T0['z2'] ?? null) !== null ? ['z1' => $sh($T0['z1'] ?? null), 'z2' => $sh($T0['z2']), 'z3' => $sh($T0['z3'] ?? null), 'h' => (int) ($T0['h'] ?? 0), 'src' => 'lidar', 'yr' => (int) ($T0['yr'] ?? 0), 'house' => 'laser'] : null;
     $door = ['id' => $id, 'address' => mb_substr((string) $D['address'], 0, 120), 'acres' => is_numeric($D['acres'] ?? null) ? (float) $D['acres'] : null, 'owner' => mb_substr((string) ($D['owner'] ?? ''), 0, 120),
-             'lat' => (float) ($D['lat'] ?? 0), 'lon' => (float) ($D['lon'] ?? 0), 'fire' => is_numeric($D['fire'] ?? null) ? (int) $D['fire'] : null, 'lawn' => $lw, 'trees' => null,
+             'lat' => (float) ($D['lat'] ?? 0), 'lon' => (float) ($D['lon'] ?? 0), 'fire' => is_numeric($D['fire'] ?? null) ? (int) $D['fire'] : null, 'lawn' => $lw, 'trees' => $tr,
              'val' => is_numeric($D['val'] ?? null) ? (int) $D['val'] : null, 'town' => mb_substr((string) (($D['town'] ?? '') ?: $town), 0, 60), 'pulled' => ['by' => $me, 'at' => time()]];
     $rf = DATA_DIR . '/' . LOOKED_UP . '.json';
     if (!is_file($rf)) writeJsonAtomic($rf, ['key' => LOOKED_UP, 'label' => 'Looked up', 'built' => date('Y-m-d'), 'areas' => []]);

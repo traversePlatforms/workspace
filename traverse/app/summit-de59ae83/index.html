@@ -6855,7 +6855,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (h.hand && h.hand.sq) { var hs = +h.hand.sq; return { sq: hs, a: hs, b: hs, mid: hs, band: bandOf(hs), span: '', conf: 'Good', why: ['measured ' + (HAND_SRC[h.hand.src] || 'by hand')], yr: (h.lawn && h.lawn.yr) || 2023, hand: true }; }   /* the size of record (2026-10-21) */
     var L = h.lawn || {}, sq = +L.sq || 0, T = h.trees || {}, tc = +T.z2 || 0;   /* the 5-30 ft ring only: 30-100 ft is mostly the neighbours' yards and street trees on a small lot (2026-10-21, Matthew: 9416 Desert Willow read 100% there) */
     var why = [], conf = 'Good', lo = 0.85, hi = 1.0;
-    if (L.lv === 'T' || tc >= 0.35) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('lots of trees, and the photo misses lawn under them'); }
+    /* no tree reading is not an open lot (2026-10-22, Matthew: 3855 S Valentia read "Good to quote" at 3,000 sq ft and measured 8,111 by hand;
+       pulled-in houses and towns without the tree scan have no reading, and the photo misses lawn under trees) */
+    if (!treesKnown(h)) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('trees not measured for this house, so the photo may miss lawn under them'); }
+    else if (L.lv === 'T' || tc >= 0.35) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('lots of trees, and the photo misses lawn under them'); }
     else if (tc >= 0.2) { conf = 'Fair'; lo = 0.9; hi = 1.25; why.push('some trees over the lawn'); }
     else why.push('open lot; the photo reads a little high on these');
     if (L.lv === 'N') { conf = 'Check'; why.push('no green lawn in the 2023 photo (brown then, rock, or new since)'); }
@@ -6907,7 +6910,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return n > E.b * 1.15 ? 'They say bigger than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : n < E.a * 0.85 ? 'They say smaller than our ' + fmtSq(E.a) + '–' + fmtSq(E.b) + '.' : 'Matches our estimate.';
   }
   /* a lot where the photo misses lawn: trees over it, no green read, or the estimate flagged (2026-10-21) */
-  function treeLot(h) { var T = h.trees || {}, L = h.lawn || {}; return (+T.z2 || 0) >= 0.2 || L.lv === 'N' || L.lv === 'T'; }
+  function treesKnown(h) { return !!(h.trees && isFinite(parseFloat(h.trees.z2))); }   /* a tree reading for the house (2026-10-22) */
+  function treeLot(h) { var T = h.trees || {}, L = h.lawn || {}; return !treesKnown(h) || (+T.z2 || 0) >= 0.2 || L.lv === 'N' || L.lv === 'T'; }
   function setQuoteSize(from, v) { var p = from.closest && from.closest('.hpanel'); var i = p && p.querySelector('.qbasis input'); if (!i) return; i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); try { i.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
   function handBox(h, redraw) {
     var w = q('div', 'handx'), m = h.hand;
@@ -6948,7 +6952,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return w;
   }
   function rangeBox(h) {
-    var w = q('div', 'rangex'); w.appendChild(q('b', null, 'Under trees: the photo misses lawn here'));
+    var w = q('div', 'rangex'); w.appendChild(q('b', null, treesKnown(h) ? 'Under trees: the photo misses lawn here' : 'Trees not measured here: the photo may miss lawn'));
     var body = q('div', 'rgb'); w.appendChild(body);
     var draw = function (rg) {
       body.textContent = '';
