@@ -7,12 +7,14 @@
 <title>Peak Sponsor Desk</title>
 <style>
 /* Peak Sponsor Desk (2026-10-21): the sponsor leads, tours, proposals and a report for Brandon. */
-:root{--bg:#f4f5f2;--card:#fff;--ink:#1c2420;--soft:#5d6862;--line:#dde2dc;--accent:#1f5b46;--accent2:#e8f1ec;--warn:#a5481c;--ok:#2f7d4f;--chip:#eef1ed;
+:root{--onaccent:#fff;--bg:#f4f5f2;--card:#fff;--ink:#1c2420;--soft:#5d6862;--line:#dde2dc;--accent:#1f5b46;--accent2:#e8f1ec;--warn:#a5481c;--ok:#2f7d4f;--chip:#eef1ed;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--card:#1b211e;--ink:#e7ece8;--soft:#9aa69f;--line:#2c3430;--accent:#5fb68f;--accent2:#1f2c26;--chip:#232b27;--warn:#e08a5c;--ok:#6cc58f}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--card:#1b211e;--ink:#e7ece8;--soft:#9aa69f;--line:#2c3430;--accent:#5fb68f;--accent2:#1f2c26;--onaccent:#0c1a12;--chip:#232b27;--warn:#e08a5c;--ok:#6cc58f}}
 *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans)}
 [hidden]{display:none!important}
 button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}   /* default link blue was unreadable on the dark background (2026-10-21) */
+button,a,.row{-webkit-tap-highlight-color:rgba(0,0,0,.08)}
 button{cursor:pointer}
 .bar{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:10px 18px;flex-wrap:wrap}
 .brand{font-weight:800;letter-spacing:.01em}.brand small{display:block;font-weight:500;color:var(--soft);font-size:12px}
@@ -24,13 +26,13 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 .signin{max-width:360px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center}
 .signin h1{margin:0 0 4px;font-size:22px}.signin p{color:var(--soft);margin:0 0 16px}
 .signin input{width:100%;font-size:28px;letter-spacing:.3em;text-align:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
-.btn{border:0;background:var(--accent);color:#fff;font-weight:700;padding:10px 16px;border-radius:10px}
+.btn{border:0;background:var(--accent);color:var(--onaccent);font-weight:700;padding:10px 16px;border-radius:10px}
 .btn.ghost{background:var(--chip);color:var(--ink)}
 .btn.small{padding:6px 11px;font-size:13.5px}
 .err{color:var(--warn);min-height:1.3em;margin:8px 0 0;font-size:14px}
 .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{border:1px solid var(--line);background:var(--card);padding:6px 11px;border-radius:999px;font-size:13.5px}
-.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
 .chips b{font-weight:800;margin-left:4px}
 .search{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
 .split{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
@@ -47,11 +49,12 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 .reach{font-size:13px;color:var(--accent);margin-right:8px;letter-spacing:.05em}
 .due{font-size:12px;color:var(--soft);text-align:right}.due.late{color:var(--warn);font-weight:700}
 .detail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;align-self:start;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto}
-@media (max-width:999px){.detail{position:fixed;inset:0;top:0;max-height:none;border-radius:0;z-index:20}}
+@media (max-width:999px){.detail{position:fixed;top:0;left:0;right:0;bottom:auto;height:100vh;height:100dvh;max-height:none;overflow-y:auto;border-radius:0;z-index:20;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}}   /* its own screen-tall box that scrolls inside (2026-10-21) */
+html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a company open on a phone: the list behind does not scroll (2026-10-21) */
 .detail h2{margin:0;font-size:19px}.detail .sub{color:var(--soft);font-size:13.5px;margin:2px 0 10px}
 .sec{border-top:1px solid var(--line);padding:12px 0 4px;margin-top:10px}.sec h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft)}
 .seg{display:flex;flex-wrap:wrap;gap:5px}.seg button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 9px;font-size:13px}
-.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
 .ct{display:grid;gap:2px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}.ct:last-child{border-bottom:0}.ct small{color:var(--soft)}
 .ct a{color:var(--accent);word-break:break-all}
 .form{display:grid;gap:7px}.form input,.form textarea,.form select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
@@ -154,6 +157,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
   }
   function draw() {
     main.textContent = '';
+    document.documentElement.classList.remove('lock');
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
     ({ pipe: drawPipe, tours: drawTours, props: drawProps, report: drawReport, pk: drawPk })[S.tab]();
   }
@@ -200,16 +204,16 @@ main{max-width:1180px;margin:0 auto;padding:18px}
         right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
         if (l.next && l.next.date) right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date)));
         r.appendChild(right);
-        r.addEventListener('click', function () { S.sel = l.id; draw(); });
+        r.addEventListener('click', function () { if (!S.sel) S.listY = window.scrollY; S.sel = l.id; draw(); });
         list.appendChild(r);
       });
     }
     drawRows();
-    if (S.sel && lead(S.sel)) split.appendChild(detail(lead(S.sel)));
+    if (S.sel && lead(S.sel)) { split.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
   }
   function detail(l) {
     var d = el('aside', 'detail');
-    var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); }); d.appendChild(cx);
+    var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); window.scrollTo(0, S.listY || 0); }); d.appendChild(cx);
     d.appendChild(el('h2', null, l.name));
     d.appendChild(el('div', 'sub', [l.kind, l.score != null ? 'score ' + l.score + (l.list === 'local' ? '' : '/9') : '', l.miles != null ? l.miles + ' mi from Peak' : ''].filter(Boolean).join(' · ')));
     if (l.why) d.appendChild(el('div', null, l.why));
