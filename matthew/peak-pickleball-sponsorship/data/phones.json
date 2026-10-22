@@ -1,0 +1,20 @@
+{
+ "_about": "Main or local phone lines for the 39 new leads (2026-10-21, Matthew: 'yeah go ahead and start 1 for all 39'). Only numbers from the company's own page, an official filing, or consistent listings; conflicts left out. 'src' says where.",
+ "Alpine Bank": {"phone": "719-421-7600", "note": "Colorado Springs branch, 90 S Cascade Ave, Ste 100", "src": "https://www.alpinebank.com/locations/colorado-springs.html", "kind": "own site"},
+ "BOK Financial": {"phone": "303-863-4270", "note": "Colorado commercial banking (no Colorado Springs office listed)", "src": "https://bokfinancial.com/location-and-contact-us/additional-contact-information/CO", "kind": "own site"},
+ "Coca-Cola": {"phone": "719-257-5745", "note": "Swire Coca-Cola distribution center, 1935 Cygnet Heights, Colorado Springs", "src": "https://www.swirecc.com/Colorado", "kind": "own site"},
+ "Ent Credit Union": {"phone": "800-525-9623", "note": "main line; ask for marketing", "src": "https://www.ent.com/contact-us", "kind": "own site"},
+ "Cheyenne Mountain Resort": {"phone": "719-583-4000", "note": "main line, 3225 Broadmoor Valley Rd", "src": "hotel and venue listings (consistent)", "kind": "listings"},
+ "Colorado Springs Chamber & EDC": {"phone": "719-471-8183", "note": "main line; email info@cscedc.com", "src": "https://coloradospringschamberedc.com/contact/", "kind": "own site", "email": "info@cscedc.com"},
+ "Concept Restaurants": {"phone": "719-635-3536", "note": "MacKenzie's Chop House, 128 S Tejon (named as a Concept restaurant in a Gazette Q&A); no corporate line found", "src": "Chamber directory and restaurant listings", "kind": "listings"},
+ "Cumulus Media": {"phone": "719-593-2700", "note": "Colorado Springs stations, 6805 Corporate Dr #130; VP/Market Manager Scott Jones (Cumulus releases)", "src": "BBB listings for the Colorado Springs stations", "kind": "listings"},
+ "The Gazette": {"phone": "719-476-1645", "note": "retail advertising (main line 719-632-5511), 30 E Pikes Peak Ave", "src": "https://gazette.com/contact-us/", "kind": "own site"},
+ "iHeart Media": {"phone": "844-844-4432", "note": "national advertising line (no local number found); Colorado Springs Market President Samantha Kumm", "src": "https://www.iheartmedia.com/advertising", "kind": "own site"},
+ "T. Rowe Price": {"phone": "719-278-5600", "note": "Colorado Springs campus, 2220 Briargate Pkwy (operations center, no walk-in)", "src": "https://troweprice.com/corporate/us/en/locations.html", "kind": "own site"},
+ "Molson Coors": {"phone": "303-279-6565", "note": "head office, Golden", "src": "SEC EDGAR filing, business phone", "kind": "official filing"},
+ "Colorado Media Group": {"phone": "719-330-7448", "note": "publisher of North magazine, 13395 Voyager Pkwy, Ste 130 (north Colorado Springs)", "src": "https://www.visitcos.com/directory/colorado-media-group-real-estate/", "kind": "listings"},
+ "Laborjack": {"phone": "970-690-7709", "note": "Fort Collins office (no Colorado Springs office found)", "src": "moving-company directory listings", "kind": "listings"},
+ "Altitude Movement": {"phone": "719-964-1798", "note": "750 Garden of the Gods Rd #125", "src": "Macaroni Kid Colorado Springs directory", "kind": "listings"},
+ "Hispanic Chamber of Commerce": {"phone": "719-231-5353", "note": "Colorado Springs Hispanic Chamber; President & CEO Joe Aldaz", "src": "chamber directory listings (consistent number)", "kind": "listings"},
+ "_not_found": "Kaiser Permanente (email route), UCHealth (use Hunter's direct numbers), Chord Energy, Climax Molybdenum, McLane, PCL, Republic Services, Progressive, USAA (head office only: use Hunter's contacts), OrangeTheory (local studios not listed), Neon Pig, Great Range Bison, Spartan Barbell, Spartan Strength Systems, Windstar Studios (partial only), Southern Colorado Women's Chamber (use Hunter's CEO email), Dwire Earthmoving (two listings disagree), Mind Quest (Palmer Lake store), Randy R Kilgore & Company, Summit Group Consultants, Baker and King, KEG1, BCA (not identified)"
+}

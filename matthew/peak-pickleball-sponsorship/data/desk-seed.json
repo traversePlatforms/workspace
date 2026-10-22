@@ -214,7 +214,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "719-421-7600",
+   "phoneNote": "Colorado Springs branch, 90 S Cascade Ave, Ste 100 (own site)"
   },
   {
    "id": "661cff49c7",
@@ -310,7 +312,9 @@
      "pick": false,
      "phone": "+1 214 576 0878"
     }
-   ]
+   ],
+   "phone": "303-863-4270",
+   "phoneNote": "Colorado commercial banking (no Colorado Springs office listed) (own site)"
   },
   {
    "id": "fbe0b56cf6",
@@ -406,7 +410,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "303-279-6565",
+   "phoneNote": "head office, Golden (official filing)"
   },
   {
    "id": "df789d75c8",
@@ -461,7 +467,9 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "A 2023 travel guide lists pickleball courts at the resort: possibly a competitor. Check before pitching.",
    "webLink": "https://coloradoavidgolfer.com/colorado-getaways-2023-cheyenne-mountain-resort/",
-   "contacts": []
+   "contacts": [],
+   "phone": "719-583-4000",
+   "phoneNote": "main line, 3225 Broadmoor Valley Rd (listings)"
   },
   {
    "id": "3115280016",
@@ -668,7 +676,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "719-257-5745",
+   "phoneNote": "Swire Coca-Cola distribution center, 1935 Cygnet Heights, Colorado Springs (own site)"
   },
   {
    "id": "1d9bbe3d0b",
@@ -692,7 +702,9 @@
      "pick": true,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "719-330-7448",
+   "phoneNote": "publisher of North magazine, 13395 Voyager Pkwy, Ste 130 (north Colorado Springs) (listings)"
   },
   {
    "id": "887b4d3f84",
@@ -707,7 +719,17 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [
+    {
+     "name": "General inbox",
+     "pos": "general",
+     "email": "info@cscedc.com",
+     "conf": null,
+     "pick": true
+    }
+   ],
+   "phone": "719-471-8183",
+   "phoneNote": "main line; email info@cscedc.com (own site)"
   },
   {
    "id": "5d403ce2e4",
@@ -747,7 +769,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "719-635-3536",
+   "phoneNote": "MacKenzie's Chop House, 128 S Tejon (named as a Concept restaurant in a Gazette Q&A); no corporate line found (listings)"
   },
   {
    "id": "91230011d5",
@@ -843,7 +867,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "719-593-2700",
+   "phoneNote": "Colorado Springs stations, 6805 Corporate Dr #130; VP/Market Manager Scott Jones (Cumulus releases) (listings)"
   },
   {
    "id": "ecb6a9ef90",
@@ -939,7 +965,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "800-525-9623",
+   "phoneNote": "main line; ask for marketing (own site)"
   },
   {
    "id": "739ba8372e",
@@ -1323,7 +1351,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "719-278-5600",
+   "phoneNote": "Colorado Springs campus, 2220 Briargate Pkwy (operations center, no walk-in) (own site)"
   },
   {
    "id": "61dce83cad",
@@ -1419,7 +1449,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "719-476-1645",
+   "phoneNote": "retail advertising (main line 719-632-5511), 30 E Pikes Peak Ave (own site)"
   },
   {
    "id": "edf045f2f2",
@@ -1515,7 +1547,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "844-844-4432",
+   "phoneNote": "national advertising line (no local number found); Colorado Springs Market President Samantha Kumm (own site)"
   },
   {
    "id": "fe084629d4",
@@ -1530,7 +1564,9 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [],
+   "phone": "719-964-1798",
+   "phoneNote": "750 Garden of the Gods Rd #125 (listings)"
   },
   {
    "id": "ee682c7406",
@@ -1829,7 +1865,9 @@
      "pick": false,
      "phone": ""
     }
-   ]
+   ],
+   "phone": "970-690-7709",
+   "phoneNote": "Fort Collins office (no Colorado Springs office found) (listings)"
   },
   {
    "id": "c17c0b941f",
@@ -1978,7 +2016,9 @@
    "source": "https://www.coloradospringssports.org/current-members",
    "web": "",
    "webLink": "",
-   "contacts": []
+   "contacts": [],
+   "phone": "719-231-5353",
+   "phoneNote": "Colorado Springs Hispanic Chamber; President & CEO Joe Aldaz (listings)"
   },
   {
    "id": "f1f528e778",

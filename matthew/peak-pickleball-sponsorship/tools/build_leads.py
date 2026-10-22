@@ -262,8 +262,9 @@ def sheet(wb, title, cols, rows, widths, first=False):
 wb = Workbook()
 def sc(c): return SCORE.get(c, (0, 0, 0, 0))
 RANKED = sorted(LEADS, key=lambda x: (-sum(sc(x[0])), x[0]))
-ws = sheet(wb, 'Sponsor leads', ['Rank', 'Company', 'Kind', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes'],
-           [(i + 1, c, k, sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
+_PH = {k: v for k, v in json.loads((DATA / 'phones.json').read_text(encoding='utf-8')).items() if not k.startswith('_')}
+ws = sheet(wb, 'Sponsor leads', ['Rank', 'Company', 'Kind', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
+           [(i + 1, c, k, sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
            [6, 30, 18, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26], first=True)
 dv = DataValidation(type='list', formula1='"Not contacted,Emailed,Called,Tour booked,Toured,Proposal sent,Signed,Not now,No"', allow_blank=True)
 ws.add_data_validation(dv); dv.add(f'M2:M{len(LEADS) + 1}')
@@ -383,7 +384,11 @@ for r in LOOK[:150]:
     ppl = [{'name': x[1], 'pos': x[2], 'email': x[3], 'conf': x[4], 'pick': bool(x[8]), 'phone': x[9] if len(x) > 9 else ''} for x in CONTACTS if x[0] == r['name'] + ' (local)']
     seed['leads'].append({'id': _id('local|' + r['name']), 'list': 'local', 'name': r['name'], 'kind': r['kind'], 'score': r['score'], 'miles': r['miles'], 'chain': r['chain'],
                           'why': f"{r['kind']}, {r['miles']} mi from Peak" + (' (chain or franchise)' if r['chain'] else ''), 'route': 'Walk in or call', 'phone': r['phone'], 'site': r['web'], 'addr': r['addr'], 'contacts': ppl})
+PH = {k: v for k, v in json.loads((DATA / 'phones.json').read_text(encoding='utf-8')).items() if not k.startswith('_')}
 for l in seed['leads']:
+    if l['list'] == 'new' and l['name'] in PH:
+        l['phone'] = PH[l['name']]['phone']; l['phoneNote'] = PH[l['name']]['note'] + ' (' + PH[l['name']]['kind'] + ')'
+        if PH[l['name']].get('email'): l['contacts'] = l.get('contacts', []) + [{'name': 'General inbox', 'pos': 'general', 'email': PH[l['name']]['email'], 'conf': None, 'pick': not l.get('contacts')}]
     if l['name'] == 'Kaiser Permanente': l['contacts'] = l.get('contacts', []) + [{'name': 'Colorado community sponsorships', 'pos': 'Sponsorship inbox (rules exclude advertising)', 'email': 'communityco@kp.org', 'conf': None, 'pick': True}]
 seed['packages'] = [{'k': 'court', 'name': 'Court sponsor', 'price': 12000, 'per': 'year', 'note': 'Peak’s published price'}, {'k': 'title', 'name': 'Title sponsor', 'price': 24000, 'per': 'year', 'note': 'Peak’s published price'}]
 (DATA / 'desk-seed.json').write_text(json.dumps(seed, ensure_ascii=False, indent=1), encoding='utf-8')

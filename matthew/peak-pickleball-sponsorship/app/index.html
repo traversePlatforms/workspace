@@ -190,7 +190,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
     if (l.route) s2.appendChild(el('div', null, l.route));
     if (l.routeLink) { var a = el('a', null, 'Their page ›'); a.href = l.routeLink; a.target = '_blank'; a.rel = 'noopener'; s2.appendChild(a); }
     if (l.web) { var wn = el('div', null, l.web); wn.style.color = 'var(--soft)'; if (l.webLink) { wn.appendChild(document.createTextNode(' ')); var wl = el('a', null, 'Source ›'); wl.href = l.webLink; wl.target = '_blank'; wl.rel = 'noopener'; wn.appendChild(wl); } s2.appendChild(wn); }
-    if (l.phone) { var ph = el('div'); var pa = el('a', null, l.phone); pa.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ph.appendChild(pa); s2.appendChild(ph); }
+    if (l.phone) { var ph = el('div'); var pa = el('a', null, l.phone); pa.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ph.appendChild(pa); if (l.phoneNote) { var pn = el('small', null, ' · ' + l.phoneNote); pn.style.color = 'var(--soft)'; ph.appendChild(pn); } s2.appendChild(ph); }
     if (l.site) { var sw = el('div'); var sa = el('a', null, l.site.replace(/^https?:\/\//, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; sw.appendChild(sa); s2.appendChild(sw); }
     if (l.addr) s2.appendChild(el('div', null, l.addr));
     var people = (l.contacts || []).concat(l.added || []);
