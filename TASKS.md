@@ -1146,6 +1146,14 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       was off, then build and patch the live roof files the same way (only changed doors). Also re-run Columbine's lawn shapes
       (1,580 failed in the 2026-10-18 internet drop).
 - [x] **TR-29 — The face lift for the five editions — DONE 22 Oct (live).** Navy bar and page for all five, each edition's colour on the header strip and icon tiles, flag-orange actions; the old 365 office palette removed (it painted an edition's office account green); office header uses the install's own name; builder now refuses a page with "365 Aeration" in it. Original spec: Same design as Sixfold's on the Traverse system: navy header for all five, each edition's colour on its icon tile and the header strip, flag-orange action buttons, Familjen Grotesk headings. build-editions.cjs needs its anchors updated with the new base colours. Matthew 21 Oct: "Prioritize sixfold app over the other editions since thats the one currently in use."
+- [ ] **TR-30 — Sharper, newer photos for lawn quotes: reach out and price them (Matthew 22 Oct: "add reaching out to those companies checking prices etc to the to do list").** Focus: Englewood and about 40 miles out. Nothing is bought, signed or sent without his go; I can draft each note. Who and what to ask:
+  - **DRCOG** (Josh Pendleton, jpendleton@drcog.org, 303-480-6784; or the thread Matthew already has open about the 2020 land map): DRAPP 2024 (flown spring 2024) resolution and bands, price through Sanborn, whether a business may use it in its own app, and when it turns free (past years are free once the next flight is out: is there a 2026 flight?).
+  - **Sanborn Geospatial** (sells current DRAPP): a quote for DRAPP 2024 over the 40-mile area at 3 inch and 6 inch, licence terms (Sanborn says no recurring fees), delivery format.
+  - **Nearmap**: a quote for Denver metro imagery (they fly big metros up to 3x a year, under 3 inch) WITH the AI Lawn Grass layer (square feet of lawn per property) and the API, and written permission to use it inside our app. Their support warns the licence can bar building derived data, so this is the question that decides it. A third-party site says ,000+/yr (not confirmed).
+  - **EagleView** and **Vexcel** (commercial side): price per property or per area for current Denver imagery; can it be used in our app. The state’s Vexcel imagery is for governments and their consultants only.
+  - **Go iLawn**: price for staff hand-measuring (a third-party site says about $50/month, not confirmed), how old its Denver photos are.
+  - **USDA NAIP**: whether Colorado 2025 was flown and when it is published (Planetary Computer has 2023 as the newest over Englewood).
+  - First, the free one: the 3-inch DRAPP 2022 trial from Douglas County is in the Wi-Fi queue (job drapp3, 22 Oct); its results say how much better a sharper photo is before anything is bought.
 
 ## Personal
 
