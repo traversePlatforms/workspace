@@ -17,3 +17,10 @@ https://claude.ai/artifact/MSvAAG6Eay4uGbN84RtCaH (private until shared).
   sponsors for 24 courts, so up to 9 courts may be open (confirm with Peak).
 - Agency commission norms: 15–20% on new deals, about 10% on renewals (trade commentary, not a survey).
 - Nothing gets built until the commission terms are in writing (the doc lists what to agree).
+
+## Step 1 lists (2026-10-21)
+
+`Peak-Sponsor-Leads-2026-10.xlsx` (built by `tools/build_leads.py`): 41 sponsor leads (8 A-priority), 14 employers with 400+
+staff, 5 checked outside prices, a short pitch + tour-invite draft (not sent), and a fact-check tab. Summary added to the Claude
+Doc as "Sponsor leads, employers and prices (21 Oct)". Most leads: Colorado Springs Sports Corp 2026 members. Contacts are
+mostly "to find"; a paid contact tool needs Matthew's go.
