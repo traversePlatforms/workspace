@@ -3824,7 +3824,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         sel.disabled = true; toast('Opening ' + sel.options[sel.selectedIndex].text, '', null);
         api('hop', { body: { to: to } }).then(function (k) {
           if (!k || !k.ok || !k.url || !k.pass) { sel.disabled = false; sel.value = j.here; toast('Not opened', (k && k.error) || 'Try again.', null); return; }
-          try { (window.self !== window.top ? window.top : window).location.href = k.url + '#hop=' + encodeURIComponent(k.pass); } catch (e) { location.href = k.url + '#hop=' + encodeURIComponent(k.pass); }
+          /* the whole window moves only when the frame around this page is its own layout preview; inside another page (Matthew's one-window
+             hub, 2026-10-22) only this frame moves, so the other tabs stay */
+          var ownFrame = false; try { ownFrame = window.self !== window.top && window.top.location.pathname === location.pathname; } catch (e) {}
+          try { (ownFrame ? window.top : window).location.href = k.url + '#hop=' + encodeURIComponent(k.pass); } catch (e) { location.href = k.url + '#hop=' + encodeURIComponent(k.pass); }
         }).catch(function () { sel.disabled = false; sel.value = j.here; toast('Not opened', 'No signal. Try again.', null); });
       });
     }).catch(function () { row.hidden = true; });
