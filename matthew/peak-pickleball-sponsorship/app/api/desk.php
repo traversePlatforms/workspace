@@ -86,7 +86,7 @@ function state(): array {
 function needLead(array $S, string $id): array { if (!preg_match('/^[a-z0-9]{6,24}$/', $id) || !isset($S['leads'][$id])) fail('No such lead.', 404); return $S['leads'][$id]; }
 function setStatus(string $id, string $st, string $by): void { logAdd(['t' => 'status', 'id' => $id, 'status' => $st, 'by' => $by, 'at' => time()]); }
 
-if ($action === 'data') { $S = state(); out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'leads' => array_values($S['leads']), 'tours' => $S['tours'], 'proposals' => $S['proposals'], 'packages' => $S['packages']]); }
+if ($action === 'data') { $S = state(); $sd = jread('seed.json', []); out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'leads' => array_values($S['leads']), 'tours' => $S['tours'], 'proposals' => $S['proposals'], 'packages' => $S['packages'], 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? []]); }
 if (!$isPost) fail('POST required', 405);
 $S = state();
 switch ($action) {

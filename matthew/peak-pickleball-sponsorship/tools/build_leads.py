@@ -418,6 +418,64 @@ for l in seed['leads']:
         if PH[l['name']].get('email'): l['contacts'] = l.get('contacts', []) + [{'name': 'General inbox', 'pos': 'general', 'email': PH[l['name']]['email'], 'conf': None, 'pick': not l.get('contacts')}]
     if l['list'] == 'new' and l['name'] in CQ:
         q = CQ[l['name']]; l['callTier'] = q['tier']; l['callHow'] = q['how']; l['phone'] = q['phone']; l['phoneNote'] = ''; l['callSrc'] = q.get('src', '')
+# two reading tabs on the desk (2026-10-21, Matthew: "one for What they are offering their sponsors already, and one for what we could
+# offer or do better ... fill it out with the info we have"); facts from the Claude Doc deep dive and the lists above. Rows: title, detail, source, link
+PARTNER = 'https://www.peakpickleball.us/partner-with-peak/'; MEMB = 'https://www.peakpickleball.us/membership/'
+_by = lambda lvl: [n for n, l, w in RENEW if l == lvl]
+seed['offer'] = [
+    {'h': 'The packages Peak publishes', 'p': 'From Peak’s Partner with Peak page, read 19 Oct 2026. Peak’s site has shown a bot check to automated readers since 20 Oct, so this is the last copy we could read.', 'rows': [
+        ['Court sponsor: $12,000 a year', 'A 6 by 3 ft sign on an inner court, membership medallions, 2 paddles and a group lesson for 4.', 'Partner with Peak', PARTNER],
+        ['Title sponsor: $24,000 a year', 'Premium visibility, membership medallions, VIP events and mentions.', 'Partner with Peak', PARTNER],
+        ['Logo sponsor: no price published', '3 logo sponsors are listed. What the tier costs and includes is not on the site.', 'Peak sponsors', PEAK_SP]]},
+    {'h': 'Who sponsors Peak now (28)', 'p': 'Mostly local, owner-run businesses: health and medical, restaurants, home services, money, plus a car dealer, a hotel and a TV station.', 'rows': [
+        ['Title (10)', ', '.join(_by('Title')), 'Peak sponsors', PEAK_SP],
+        ['Court (15)', ', '.join(_by('Court')), 'Peak sponsors', PEAK_SP],
+        ['Logo (3)', ', '.join(_by('Logo')), 'Peak sponsors', PEAK_SP],
+        ['Dropped off', 'Roof Corp of Colorado Springs: on the sponsors page in December 2025, gone by April 2026.', 'Internet Archive copies of the sponsors page', '']]},
+    {'h': 'Extras Peak already gives sponsors', 'p': 'Checked 20 Oct 2026.', 'rows': [
+        ['A QR code on every sign', 'Each sponsor’s sign and banner has its own code. Nothing on Peak’s site shows the scans being reported back to sponsors.', 'Peak sponsors', PEAK_SP],
+        ['Perks for members', 'Hotel Polaris gives members its lowest rates. Whistle Pig Brewing drinks come with the Unlimited ($159 a month) and Platinum ($199 a month) plans.', 'Peak membership page', MEMB],
+        ['Sponsor and networking events', 'Platinum members get private invites, so sponsors meet the members who pay the most.', 'Peak membership page', MEMB],
+        ['Event sponsorships', 'The Peak Performance charity tournament (15–17 May 2026, run by the Victory Pickleball Series for Give ’Em Heaven) sold title $10,000, Platinum $5,000, Gold $3,000, medal stand $2,500, volunteer shirts $1,000, championship court $1,500, regular court $750, balls $300. No sponsors are listed on the page.', 'tournament listing', 'https://pickleballtournaments.com/tournaments/peak-performance-a-victory-pickleball-series-benefit-tournament'],
+        ['Colorado Open', '14–16 Aug 2026, 204 players. Peak ran it and was its own title sponsor; no outside sponsors.', 'tournament listing', 'https://pickleballtournaments.com/tournaments/pikes-peak-or-bust-1'],
+        ['Give ’Em Heaven 1K Club', 'Started by Scott and Tina Wilson, separate from Peak. $1,000, $2,500 or $5,000 from people or businesses: challenge coins, a gala invite, impact reports and a plate on the Hero wall.', '1K Club', 'https://giveemheaven.us/1k-club']]},
+    {'h': 'What else sponsors could attach to', 'rows': [
+        ['Coming up: Veterans tournament', '5th Annual Veterans Pickleball Tournament, 6–8 Nov 2026, with an adaptive wheelchair division; proceeds to the Mt. Carmel Veterans Service Center. No outside sponsor listed.', 'Peak events', 'https://www.peakpickleball.us/events/'],
+        ['Wheelchair Nationals', 'The first USA Pickleball Wheelchair National Championships, 19–21 Jun 2026: 94 players, Numotion as title partner.', 'Denver Gazette', 'https://denvergazette.com/2026/07/22/tingstrom-family-turns-love-of-pickleball-into-avenue-for-veterans-wheelchair-athletes-more/'],
+        ['Golden Ticket qualifier', 'Colorado Springs’ first USA Pickleball Golden Ticket event, 9–13 Jul 2025; it launched the adaptive division.', 'KOAA', 'https://www.koaa.com/community/around-town/usa-pickleball-hosting-first-golden-ticket-tournament-in-colorado-springs'],
+        ['The Pickle Bowl', 'February 2025, 156 players, sponsored by Selkirk.', 'pickleballtournaments.com', 'https://pickleballtournaments.com/tournaments/the-pickle-bowl-at-peak-pickleball'],
+        ['Free veterans class', 'Weekly; about 60 veterans a session and more than 400 taught.', 'Denver Gazette', 'https://denvergazette.com/2026/07/22/tingstrom-family-turns-love-of-pickleball-into-avenue-for-veterans-wheelchair-athletes-more/'],
+        ['Peak Premier League', 'A drafted team league with a tryout combine, divisions and playoffs, Monday and Tuesday nights. No league sponsor named.', 'PPL page', 'https://www.peakpickleball.us/peak-premier-league/'],
+        ['Group bookings', '$40 a court, with $60 an hour add-ons for the kitchen, golf simulator and games. No corporate-events page.', 'Peak multi-court page', 'https://www.peakpickleball.us/multi-court-event/'],
+        ['Wellhub', 'Peak is on Wellhub from the Titanium plan ($159.99 a month) only.', 'Wellhub', WH],
+        ['The building', '24 courts: 4 championship courts with spectator seating, 19 recreational, a lesson court and 2 dink courts. Event room, sound system, golf simulator, Peak Fitness, Senior Club.', 'Peak About page', 'https://www.peakpickleball.us/about/']]},
+    {'h': 'Not known yet: ask Peak', 'rows': [
+        ['Audience numbers', 'The partner page promises “thousands of active members” but gives no member or visit count. Sponsors buy the audience, so this comes first.', '', ''],
+        ['Open courts', '24 courts and 15 court sponsors listed, so up to 9 may be open. Confirm which.', '', ''],
+        ['Who pays what', 'Which listed sponsors are paying, at what price, and when each renews; how many renewed after their first year.', '', ''],
+        ['Medallions and the logo tier', 'What the “membership medallions” are, and what the logo tier costs.', '', ''],
+        ['QR scans', 'Whether the sponsor QR codes count scans today, and whether we can see the numbers.', '', '']]},
+]
+seed['better'] = [
+    {'h': 'What others charge', 'p': 'Published prices, checked 21 Oct 2026. For scale: public projects sell a court’s naming for $10,000 to $20,000 for ten years (Owensboro, KY; Bowling Green, OH). Peak charges $12,000 every year, so it needs proof of traffic and results to hold that price.',
+     'cols': ['Venue', 'What', 'Price'], 'table': [[v + ' · ' + pl, wh, pt, s if s.startswith('http') else ''] for v, pl, ct, wh, pt, n, s, ck in PRICES if not v.startswith('Peak')]},
+    {'h': 'Ideas', 'rows': [[t, d, '', ''] for t, d in IDEAS]},
+    {'h': 'New things Peak could sell', 'p': 'The published packages are only court signs and title spots. Prices for anything new need Peak’s numbers and Peak’s OK first.', 'rows': [
+        ['Open courts', 'Up to 9 courts may be open. At $12,000 each, that is up to $108,000 a year.', '', ''],
+        ['Naming', 'The four championship courts, the dink courts, the Peak Fitness room, the golf simulator, the Senior Club.', '', ''],
+        ['Leagues and events', '“Peak Premier League presented by…”, the Colorado Open and other tournaments, the free Learn to Play class, corporate nights.', '', ''],
+        ['Cause sponsorships', 'Companies backing the veterans and adaptive programs, the way Numotion backed the Wheelchair Nationals.', '', ''],
+        ['Digital', 'The member email list, social posts, the website, the booking app, any screens in the building.', '', ''],
+        ['On site', 'Sampling tables and booth days (a medical or insurance sponsor checking blood pressure, say), giveaways, member-only offers through the QR codes.', '', '']]},
+    {'h': 'What keeps sponsors renewing', 'rows': [
+        ['Tracked QR codes', 'Each sponsor’s QR code goes through a link that counts scans by week and by court.', '', ''],
+        ['A monthly report', 'Scans, event attendance and photos, sent to each sponsor every month. In one ANA/IEG survey only 35% of sponsors always measure their sponsorships, so a report that does it for them is a big reason to renew.', 'ANA', 'https://ana.net/content/show/id/582'],
+        ['Start renewals early', 'Open the renewal talk 90 days before the end, with the report in hand. A renewal is far cheaper than a new sale.', '', ''],
+        ['Referrals', 'Ask each current sponsor for two referrals, and pitch their competitors any exclusivity they didn’t buy.', '', '']]},
+    {'h': 'Wellhub and employers', 'rows': [[t, d, 'Wellhub' if s else '', s] for t, d, s in WELL]},
+    {'h': 'Quick win', 'rows': [
+        ['Sponsor the Veterans tournament', 'It runs 6–8 Nov 2026 at Peak with no outside sponsor listed. A health, insurance or veteran-focused business backing it is the fastest proof.', 'Peak events', 'https://www.peakpickleball.us/events/']]},
+]
 seed['packages'] = [{'k': 'court', 'name': 'Court sponsor', 'price': 12000, 'per': 'year', 'note': 'Peak’s published price'}, {'k': 'title', 'name': 'Title sponsor', 'price': 24000, 'per': 'year', 'note': 'Peak’s published price'}]
 (DATA / 'desk-seed.json').write_text(json.dumps(seed, ensure_ascii=False, indent=1), encoding='utf-8')
 print('desk seed:', len(seed['leads']), 'leads')

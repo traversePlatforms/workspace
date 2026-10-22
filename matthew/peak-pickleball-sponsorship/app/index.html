@@ -63,6 +63,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
 .empty{padding:28px;text-align:center;color:var(--soft)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 10px}
 .card h3{margin:0 0 2px;font-size:16px}.card small{color:var(--soft)}
+.info{max-width:860px}.info h3{margin-bottom:6px}.info>p.soft,.info .soft{color:var(--soft);margin:0 0 8px}
+.irow{border-top:1px solid var(--line);padding:9px 0}.irow:first-of-type{border-top:0}.irow small.src{display:block;margin-top:3px;overflow-wrap:anywhere}
+.info table{width:100%;border-collapse:collapse;font-size:14px}.info th,.info td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}.info th{color:var(--soft);font-weight:650}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 14px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.kpi b{display:block;font-size:22px}.kpi span{color:var(--soft);font-size:13px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:50;font-size:14px}
@@ -152,14 +155,14 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   /* ---- tabs ---- */
   function tabs() {
     var t = $('tabs'); t.textContent = '';
-    var T = [['pipe', 'Pipeline'], ['tours', 'Tours'], ['props', 'Proposals'], ['report', 'Report'], ['pk', 'Packages']];   /* everyone signed in (2026-10-21) */
+    var T = [['pipe', 'Pipeline'], ['tours', 'Tours'], ['props', 'Proposals'], ['report', 'Report'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer']];   /* everyone signed in (2026-10-21) */
     T.forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; if (S.tab === x[0]) b.setAttribute('aria-current', 'page'); b.addEventListener('click', function () { S.tab = x[0]; S.print = null; tabs(); draw(); window.scrollTo(0, 0); }); t.appendChild(b); });
   }
   function draw() {
     main.textContent = '';
     document.documentElement.classList.remove('lock');
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
-    ({ pipe: drawPipe, tours: drawTours, props: drawProps, report: drawReport, pk: drawPk })[S.tab]();
+    ({ pipe: drawPipe, tours: drawTours, props: drawProps, report: drawReport, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.better); } })[S.tab]();
   }
   var lead = function (id) { return S.data.leads.filter(function (l) { return l.id === id; })[0]; };
   var stName = function (k) { return S.data.statuses[k] || k; };
@@ -405,6 +408,33 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var sv = el('button', 'btn small', 'Save packages'); sv.type = 'button'; sv.style.display = 'block'; sv.style.marginTop = '10px';
     sv.addEventListener('click', function () { save('packages', { packages: rows.map(function (o) { return { name: o.n.value, price: parseInt(String(o.pr.value).replace(/\D/g, ''), 10) || 0, per: o.per.value, note: o.note }; }) }, 'Packages saved'); });
     box.appendChild(sv); main.appendChild(box);
+  }
+
+  /* ---- the two reading tabs (2026-10-21, Matthew: "one for What they are offering their sponsors already, and one for what we could
+     offer or do better"); written by tools/build_leads.py into the seed. Each row: title, detail, source, link ---- */
+  function srcLine(name, url) {
+    if (!name && !url) return null;
+    var s = el('small', 'src', 'Source: ');
+    if (url) { var a = el('a', null, name || url); a.href = url; a.target = '_blank'; a.rel = 'noopener'; s.appendChild(a); } else s.appendChild(document.createTextNode(name));
+    return s;
+  }
+  function drawInfo(title, secs) {
+    main.appendChild(el('h2', null, title));
+    if (!secs || !secs.length) { main.appendChild(el('p', 'soft', 'Nothing here yet.')); return; }
+    secs.forEach(function (sec) {
+      var c = el('div', 'card info'); c.appendChild(el('h3', null, sec.h));
+      if (sec.p) c.appendChild(el('p', 'soft', sec.p));
+      if (sec.table) {
+        var t = el('table'), h = el('tr'); sec.cols.forEach(function (x) { h.appendChild(el('th', null, x)); }); t.appendChild(h);
+        sec.table.forEach(function (r) { var tr = el('tr'); tr.appendChild(el('td', null, r[0])); tr.appendChild(el('td', null, r[1])); var td = el('td', null, r[2]); if (r[3]) { td.appendChild(el('br')); var a = el('a', null, 'source'); a.href = r[3]; a.target = '_blank'; a.rel = 'noopener'; td.appendChild(a); } tr.appendChild(td); t.appendChild(tr); });
+        var tw = el('div', 'tw'); tw.appendChild(t); c.appendChild(tw);
+      }
+      (sec.rows || []).forEach(function (r) {
+        var d = el('div', 'irow'); d.appendChild(el('b', null, r[0])); d.appendChild(el('div', null, r[1]));
+        var s = srcLine(r[2], r[3]); if (s) d.appendChild(s); c.appendChild(d);
+      });
+      main.appendChild(c);
+    });
   }
 
   load();

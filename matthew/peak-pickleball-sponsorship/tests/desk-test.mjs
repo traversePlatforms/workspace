@@ -66,7 +66,7 @@ try {
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${SELLER}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
   await waitFor(`!!document.querySelector('.row')`, 'pipeline');
   ok(await js(`document.querySelector('.row .nm b').textContent==='Kaiser Permanente'||[...document.querySelectorAll('.row .nm b')].some(b=>b.textContent==='Kaiser Permanente')`), 'the pipeline lists the ranked leads');
-  ok(await js(`[...document.querySelectorAll('.tabs button')].map(b=>b.textContent).join(',')==='Pipeline,Tours,Proposals,Report,Packages'`), 'the seller sees every tab, Packages included');
+  ok(await js(`[...document.querySelectorAll('.tabs button')].map(b=>b.textContent).join(',')==='Pipeline,Tours,Proposals,Report,Packages,What Peak offers,What we could offer'`), 'the seller sees every tab, Packages and the two reading tabs included');
   await js(`[...document.querySelectorAll('.row')].find(r=>/Kaiser/.test(r.textContent)).click()`); await sleep(300);
   ok(await js(`!!document.querySelector('.detail')&&/Proposal sent/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)`), 'the company opens beside the list, at Proposal sent');
   ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')`), 'a note with HTML in it shows as text, never as a picture or code');
@@ -79,6 +79,11 @@ try {
   const pdf = await send('Page.printToPDF', { printBackground: true });
   writeFileSync(join(ROOT, 'tests', 'desk-proposal.pdf'), Buffer.from(pdf.data, 'base64'));
   ok(pdf.data.length > 5000, 'and it prints to PDF');
+  /* the two reading tabs */
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='What Peak offers').click()`); await sleep(200);
+  ok(await js(`/Court sponsor: .12,000 a year/.test(document.querySelector('main').textContent)&&/Phil Long Ford/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .info').length===5`), 'What Peak offers: packages, sponsors, five sections');
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='What we could offer').click()`); await sleep(200);
+  ok(await js(`/Springs Pickleball/.test(document.querySelector('main table').textContent)&&/Category exclusivity/.test(document.querySelector('main').textContent)&&[...document.querySelectorAll('main .src a')].every(a=>/^https:/.test(a.href))`), 'What we could offer: price table, ideas, sources are links');
   /* report */
   await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Report').click()`); await sleep(200);
   ok(await js(`/proposals out/.test(document.querySelector('main').textContent)`), 'the Report tab shows the numbers');

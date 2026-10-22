@@ -24,4 +24,10 @@ await js("[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==
 await js("[...document.querySelectorAll('main .btn')].find(b=>/Open the report/.test(b.textContent)).click()"); await sleep(400);
 await shot((process.env.DARK?'d':'m')+'3-report.png', true);
 console.log('overflow report:', await js('document.documentElement.scrollWidth'));
+await js("[...document.querySelectorAll('.printbar button')].find(b=>/Back/.test(b.textContent)).click()"); await sleep(300);
+for (const [n, t] of [['4-offer', 'What Peak offers'], ['5-better', 'What we could offer']]) {
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='${t}').click()`); await sleep(300); await js('window.scrollTo(0,0)');
+  await shot((process.env.DARK?'d':'m') + n + '.png', true);
+  console.log('overflow ' + n + ':', await js('document.documentElement.scrollWidth'));
+}
 ws.close(); chrome.kill(); process.exit(0);
