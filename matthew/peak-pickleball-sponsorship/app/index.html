@@ -73,6 +73,21 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 .paper th{background:#1f5b46;color:#fff;font-size:9pt}.paper td.n,.paper th.n{text-align:right;white-space:nowrap}.paper .tot td{font-weight:700;border-top:2px solid #111}
 .paper h2{font-size:13pt;margin:18px 0 6px;border-bottom:2px solid #1f5b46;padding-bottom:3px}.paper small,.paper .soft{color:#666}
 .printbar{max-width:820px;margin:0 auto 12px;display:flex;gap:10px}
+/* on a phone (2026-10-21, Matthew: "how well does this read on mobile"): one swipe row of tabs and of filters, names on two lines,
+   a narrower paper for the proposal and report */
+@media (max-width:640px){
+  .bar{padding:8px 12px;gap:4px 10px}.brand small{display:none}.who{font-size:12px}
+  .tabs{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs button{flex:none;padding:6px 10px}
+  main{padding:12px}
+  .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.chips::-webkit-scrollbar{display:none}.chips button{flex:none}
+  .controls .search{min-width:0}
+  .row{grid-template-columns:34px minmax(0,1fr) auto;gap:8px;padding:10px}
+  .nm b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}
+  .pill{font-size:11px;padding:2px 7px}.reach{display:block;margin:0 0 3px;text-align:right}
+  .detail{padding:14px 14px 28px}
+  .paper{padding:20px 16px;font-size:10.5pt}.paper h1{font-size:18pt}.paper th,.paper td{padding:5px 4px}
+}
+.tw{overflow-x:auto}
 @media print{@page{size:letter;margin:.5in} html,body{background:#fff!important} .bar,.printbar,.toast{display:none!important} main{padding:0;max-width:none} .paper{box-shadow:none;padding:0;max-width:none}}
 </style>
 </head>
@@ -212,15 +227,18 @@ main{max-width:1180px;margin:0 auto;padding:18px}
     if (l.site) { var sw = el('div'); var sa = el('a', null, l.site.replace(/^https?:\/\//, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; sw.appendChild(sa); s2.appendChild(sw); }
     if (l.addr) s2.appendChild(el('div', null, l.addr));
     var people = (l.contacts || []).concat(l.added || []);
-    people.forEach(function (p) {
+    people.sort(function (a, b) { return (b.pick ? 1 : 0) - (a.pick ? 1 : 0); });   /* the starred one first */
+    var more = null;
+    people.forEach(function (p, pi) {
+      if (pi === 3 && people.length > 4) { more = el('div'); more.hidden = true; var mb = el('button', 'lnk', 'Show ' + (people.length - 3) + ' more contacts'); mb.type = 'button'; mb.style.display = 'block'; mb.style.margin = '4px 0'; mb.addEventListener('click', function () { more.hidden = !more.hidden; mb.textContent = more.hidden ? 'Show ' + (people.length - 3) + ' more contacts' : 'Show fewer'; }); s2.appendChild(mb); s2.appendChild(more); }
       var ct = el('div', 'ct'); ct.appendChild(el('b', null, (p.name || 'General inbox') + (p.pick ? '  ★ ask for first' : '')));
       if (p.pos) ct.appendChild(el('small', null, p.pos));
       if (p.email) { var e = el('a', null, p.email); e.href = 'mailto:' + p.email; ct.appendChild(e); }
       if (p.phone) { var t = el('a', null, p.phone); t.href = 'tel:' + p.phone.replace(/[^\d+]/g, ''); ct.appendChild(t); }
       if (p.conf) ct.appendChild(el('small', null, 'Hunter confidence ' + p.conf + '%'));
-      s2.appendChild(ct);
+      (more || s2).appendChild(ct);
     });
-    var addc = el('button', 'lnk', '+ Add a contact'); addc.type = 'button'; s2.appendChild(addc);
+    var addc = el('button', 'lnk', '+ Add a contact'); addc.type = 'button'; addc.style.display = 'block'; addc.style.marginTop = '6px'; s2.appendChild(addc);
     var cf = el('div', 'form'); cf.hidden = true; s2.appendChild(cf);
     var cN = el('input'); cN.placeholder = 'Name'; var cP = el('input'); cP.placeholder = 'Role (e.g. Marketing Director)'; var cE = el('input'); cE.placeholder = 'Email'; cE.type = 'email'; var cT = el('input'); cT.placeholder = 'Phone';
     var cS = el('button', 'btn small', 'Save contact'); cS.type = 'button';
@@ -358,9 +376,11 @@ main{max-width:1180px;margin:0 auto;padding:18px}
     d.appendChild(el('div', 'k', 'Peak Pickleball · corporate sponsors'));
     d.appendChild(el('h1', null, 'Sponsor pipeline'));
     d.appendChild(el('div', 'soft', new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + ' · prepared by ' + D.me.name));
-    var t = el('table'), h = el('tr'); h.appendChild(el('th', null, 'Stage')); LISTS.forEach(function (x) { h.appendChild(el('th', 'n', x[1])); }); t.appendChild(h);
-    Object.keys(D.statuses).forEach(function (s) { var r = el('tr'); r.appendChild(el('td', null, D.statuses[s])); LISTS.forEach(function (x) { r.appendChild(el('td', 'n', String(L.filter(function (l) { return l.list === x[0] && l.status === s; }).length))); }); t.appendChild(r); });
-    d.appendChild(t);
+    var SHORT = { 'new': 'New leads', renew: 'Peak sponsors', local: 'Local', added: 'Added' };
+    var cols = LISTS.filter(function (x) { return x[0] !== 'added' || L.some(function (l) { return l.list === 'added'; }); });
+    var t = el('table'), h = el('tr'); h.appendChild(el('th', null, 'Stage')); cols.forEach(function (x) { h.appendChild(el('th', 'n', SHORT[x[0]])); }); t.appendChild(h);
+    Object.keys(D.statuses).forEach(function (s) { var r = el('tr'); r.appendChild(el('td', null, D.statuses[s])); cols.forEach(function (x) { r.appendChild(el('td', 'n', String(L.filter(function (l) { return l.list === x[0] && l.status === s; }).length))); }); t.appendChild(r); });
+    var tw = el('div', 'tw'); tw.appendChild(t); d.appendChild(tw);
     var sec = function (title, rows, cols) { d.appendChild(el('h2', null, title)); if (!rows.length) { d.appendChild(el('p', 'soft', 'None.')); return; } var tb = el('table'), hh = el('tr'); cols.forEach(function (c, i) { hh.appendChild(el('th', c[1] ? 'n' : null, c[0])); }); tb.appendChild(hh); rows.forEach(function (r) { var tr = el('tr'); r.forEach(function (v, i) { tr.appendChild(el('td', cols[i][1] ? 'n' : null, v)); }); tb.appendChild(tr); }); d.appendChild(tb); };
     sec('Tours coming up', D.tours.filter(function (x) { return x.date >= today(); }).sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); }).map(function (x) { return [fmtDay(x.date) + ', ' + fmtTime(x.time), (lead(x.lead) || {}).name || '', x.who || '']; }), [['When'], ['Company'], ['Who']]);
     sec('Proposals out', D.proposals.filter(function (p) { var l = lead(p.lead); return l && l.status === 'proposal'; }).map(function (p) { return [p.company, ago(p.at), money(p.total)]; }), [['Company'], ['Sent'], ['Total', 1]]);
