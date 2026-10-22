@@ -227,6 +227,22 @@ for comp, d in HUN.items():
         if _rank(e.get('pos')) == 9: continue
         CONTACTS.append((comp, ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip(), e.get('pos') or '', e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', e.get('li') or '', 'Ask for first' if i == 0 else ''))
 
+# the local businesses Hunter searched (owners and managers first, then the general inbox)
+HLOC = json.loads((DATA / 'hunter-local-results.json').read_text(encoding='utf-8')) if (DATA / 'hunter-local-results.json').exists() else {}
+_PRI_L = [r'owner|president|founder|ceo|principal', r'manager|director|marketing']
+def _rank_l(e):
+    pos = (e.get('pos') or '').lower()
+    if not e.get('first'): return 5   # a general inbox
+    for i, rx in enumerate(_PRI_L):
+        if _re.search(rx, pos): return i
+    return 3
+LOCAL_BEST = {}
+for comp, d in HLOC.items():
+    ppl = sorted(d.get('emails') or [], key=lambda e: (_rank_l(e), -(e.get('conf') or 0)))
+    for i, e in enumerate(ppl):
+        CONTACTS.append((comp + ' (local)', ((e.get('first') or '') + ' ' + (e.get('last') or '')).strip() or 'general inbox', e.get('pos') or ('' if e.get('first') else 'general'), e.get('v') or '', e.get('conf'), e.get('srcN'), e.get('lastSeen') or '', '', 'Ask for first' if i == 0 else ''))
+        if i == 0: LOCAL_BEST[comp] = e.get('v') or ''
+
 thin = Side(style='thin', color='C9CFC9')
 HEAD = PatternFill('solid', fgColor='2F5D2C'); HFONT = Font(bold=True, color='FFFFFF')
 YEL = PatternFill('solid', fgColor='FFF4C2')
@@ -259,7 +275,7 @@ sheet(wb, 'Employers 400+', ['Employer', 'Kind', 'Employees', 'Year of count', '
 sheet(wb, 'What others charge', ['Venue', 'Where', 'Courts', 'What', 'Price as published', 'Per year ($)', 'Source', 'Checked'],
       PRICES, [36, 20, 26, 46, 26, 12, 50, 12])
 sheet(wb, 'Contacts (Hunter)', ['Company', 'Name', 'Position', 'Email', 'Hunter confidence %', 'Web sources', 'Last seen', 'LinkedIn', 'Pick'], CONTACTS, [26, 24, 36, 34, 12, 10, 12, 36, 14])
-sheet(wb, 'Local lookalikes', ['Business', 'Kind', 'Score', 'Miles from Peak', 'Chain / franchise', 'Address', 'Phone', 'Website', 'OpenStreetMap', 'Status', 'Notes'], [(r['name'], r['kind'], r['score'], r['miles'], 'yes' if r['chain'] else '', r['addr'], r['phone'], r['web'], r['osm'], '', '') for r in LOOK], [34, 26, 7, 9, 10, 32, 16, 34, 30, 14, 26])
+sheet(wb, 'Local lookalikes', ['Business', 'Kind', 'Score', 'Miles from Peak', 'Chain / franchise', 'Address', 'Phone', 'Email (Hunter)', 'Website', 'OpenStreetMap', 'Status', 'Notes'], [(r['name'], r['kind'], r['score'], r['miles'], 'yes' if r['chain'] else '', r['addr'], r['phone'], LOCAL_BEST.get(r['name'], ''), r['web'], r['osm'], '', '') for r in LOOK], [34, 26, 7, 9, 10, 32, 16, 32, 34, 30, 14, 26])
 sheet(wb, 'Website pass', ['Company', 'Public route found', 'What it means for Peak', 'Source'], WEB, [30, 46, 80, 50])
 sheet(wb, 'Ideas to borrow', ['Idea', 'Why'], IDEAS, [34, 110])
 sheet(wb, 'Wellhub', ['What', 'Detail', 'Source'], WELL, [24, 100, 50])
@@ -298,9 +314,9 @@ pr = ''.join(f'<tr><td>{E(v)}</td><td>{E(c)}</td><td>{E(w)}</td><td>{E(p0)}</td>
 ideas = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b in IDEAS)
 well = ''.join(f'<li><b>{E(a)}.</b> {E(b)}</li>' for a, b, c in WELL)
 webrows = ''.join(f'<tr><td><b>{E(a)}</b></td><td>{E(b)}</td><td>{E(c)}</td></tr>' for a, b, c, d in WEB)
-best = [c for c in CONTACTS if c[8]]
+best = [c for c in CONTACTS if c[8] and not c[0].endswith(' (local)')]
 hrows = ''.join(f'<tr><td><b>{E(c[0])}</b></td><td>{E(c[1])}</td><td>{E(c[2])}</td><td>{E(c[3])}</td><td class="n">{E(c[4])}%</td></tr>' for c in best)
-lrows = ''.join(f'<tr><td><b>{E(r["name"])}</b>{" <small>(chain)</small>" if r["chain"] else ""}</td><td>{E(r["kind"])}</td><td class="n">{r["miles"]}</td><td class="ph">{E(r["phone"]).replace("+1 ","").replace("+1-","")}</td></tr>' for r in LOOK[:30])
+lrows = ''.join(f'<tr><td><b>{E(r["name"])}</b>{" <small>(chain)</small>" if r["chain"] else ""}{("<br><small>" + E(LOCAL_BEST[r["name"]]) + "</small>") if LOCAL_BEST.get(r["name"]) else ""}</td><td>{E(r["kind"])}</td><td class="n">{r["miles"]}</td><td class="ph">{E(r["phone"]).replace("+1 ","").replace("+1-","")}</td></tr>' for r in LOOK[:30])
 emp = ''.join(f'<tr><td>{E(n)}</td><td class="n">{v:,}</td><td class="n">{y}</td></tr>' for n, k, v, y, s0, note in EMP)
 doc = f'''<!doctype html><html><head><meta charset="utf-8"><title>Peak sponsorships: brief for Brandon</title><style>
 @page {{ size: letter; margin: .45in .5in }} body{{font:10pt/1.35 Arial,Helvetica,sans-serif;color:#1d241f;margin:0}}
@@ -333,7 +349,7 @@ th{{background:#2F5D2C;color:#fff;font-size:8.5pt}} td small{{color:#666}} td.n,
 <p class="sub">The best-matched marketing or communications person Hunter found at each regional company (free plan, {CHECKED}). Hunter gives no locations: at big companies, check the person covers Colorado. Everyone it found is on the spreadsheet’s Contacts tab.</p>
 <table><tr><th>Company</th><th>Name</th><th>Position</th><th>Email</th><th class="n">Confidence</th></tr>{hrows}</table>
 <h2>Local businesses like Peak’s sponsors (top 30 of {len(LOOK)})</h2>
-<p>Within 5 miles of Chapel Hills Mall, in the trades Peak’s sponsors are in. Owners decide; walk in or call. Full list with websites on the Local lookalikes tab.</p>
+<p>Within 5 miles of Chapel Hills Mall, in the trades Peak’s sponsors are in. Owners decide; walk in or call. Emails under a name come from Hunter (20 local businesses searched; 14 had one). Full list on the Local lookalikes tab.</p>
 <table><tr><th>Business</th><th>Kind</th><th class="n">Miles</th><th>Phone</th></tr>{lrows}</table>
 <div class="pg"></div>
 <div class="k">Peak Pickleball · memberships</div>

@@ -1,0 +1,134 @@
+[
+ {
+  "name": "Peak Pelvic Health",
+  "domain": "peakpelvichealthco.com",
+  "kind": "Physical therapy",
+  "miles": 0.7
+ },
+ {
+  "name": "ABC Family Chiropractic",
+  "domain": "abcfamilychiropractic.com",
+  "kind": "Chiropractic / alternative care",
+  "miles": 0.7
+ },
+ {
+  "name": "Colorado Springs Therapy Center North",
+  "domain": "cstherapycenter.com",
+  "kind": "Rehab / therapy",
+  "miles": 0.8
+ },
+ {
+  "name": "Revolution Rehabilitation, P.C.",
+  "domain": "revrehab.com",
+  "kind": "Chiropractic / alternative care",
+  "miles": 1
+ },
+ {
+  "name": "Wholistic Healing Experiences",
+  "domain": "wholistichealingexperiences.com",
+  "kind": "Massage / recovery",
+  "miles": 1.3
+ },
+ {
+  "name": "Maher Rehab Solutions",
+  "domain": "maherrehabsolutions.com",
+  "kind": "Rehab / therapy",
+  "miles": 1.3
+ },
+ {
+  "name": "Strength for Humans: Performance and Rehab",
+  "domain": "strengthforhumans.com",
+  "kind": "Physical therapy",
+  "miles": 1.5
+ },
+ {
+  "name": "Manual Edge Physiotherapist",
+  "domain": "manualedge.com",
+  "kind": "Physical therapy",
+  "miles": 1.9
+ },
+ {
+  "name": "Fitness Systems",
+  "domain": "fitnesssystems.biz",
+  "kind": "Sporting goods",
+  "miles": 3.1
+ },
+ {
+  "name": "Lakeside Auto Brokers",
+  "domain": "lakesideautobrokers.com",
+  "kind": "Car dealer",
+  "miles": 3.1
+ },
+ {
+  "name": "The Faricy Boys Chrysler Jeep",
+  "domain": "faricy.com",
+  "kind": "Car dealer",
+  "miles": 3.2
+ },
+ {
+  "name": "Rocky Mountain Auto Brokers",
+  "domain": "rockymountainautobrokers.com",
+  "kind": "Car dealer",
+  "miles": 3.2
+ },
+ {
+  "name": "Keller Williams Clients' Choice Realty",
+  "domain": "ourkwteam.com",
+  "kind": "Realtor",
+  "miles": 0.7
+ },
+ {
+  "name": "Colorado Farm Bureau Insurance",
+  "domain": "cfbinsurance.com",
+  "kind": "Insurance",
+  "miles": 0.7
+ },
+ {
+  "name": "The Front Range Team",
+  "domain": "coloradospringshomesearches.com",
+  "kind": "Realtor",
+  "miles": 0.7
+ },
+ {
+  "name": "More Than Your Money, Inc.",
+  "domain": "morethanyourmoney.com",
+  "kind": "Financial advisor",
+  "miles": 0.7
+ },
+ {
+  "name": "Foundation Professionals of Colorado",
+  "domain": "foundationprosofco.com",
+  "kind": "Home services / construction",
+  "miles": 0.7
+ },
+ {
+  "name": "Whole Living Pilattes",
+  "domain": "wholelivingpilates.com",
+  "kind": "Fitness",
+  "miles": 1
+ },
+ {
+  "name": "Homestead Roofing, Inc",
+  "domain": "homesteadroofingcolorado.com",
+  "kind": "Home services",
+  "miles": 4.1
+ },
+ {
+  "name": "Klaus Roofing",
+  "domain": "klausroofingcolorado.com",
+  "kind": "Home services",
+  "miles": 4.3
+ },
+ {
+  "name": "Prudential",
+  "domain": "prudential.com",
+  "kind": "Financial advisor",
+  "miles": 3.2
+ },
+ {
+  "name": "JAK's Taproom",
+  "domain": "jaksbrewing.com",
+  "kind": "Brewery",
+  "miles": 3.2
+ }
+]

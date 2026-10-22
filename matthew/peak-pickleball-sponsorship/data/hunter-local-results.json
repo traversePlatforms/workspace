@@ -1,0 +1,370 @@
+{
+ "Peak Pelvic Health": {
+  "domain": "peakpelvichealthco.com",
+  "kind": "Physical therapy",
+  "miles": 0.7,
+  "pattern": "{first}",
+  "emails": [
+   {
+    "v": "info@peakpelvichealthco.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 77,
+    "type": "generic",
+    "srcN": 1,
+    "lastSeen": "2026-10-02"
+   },
+   {
+    "v": "mallory@peakpelvichealthco.com",
+    "first": "Mallory",
+    "last": "Willis",
+    "pos": null,
+    "conf": 99,
+    "type": "personal",
+    "srcN": 2,
+    "lastSeen": "2026-10-21"
+   }
+  ],
+  "retried": true
+ },
+ "ABC Family Chiropractic": {
+  "domain": "abcfamilychiropractic.com",
+  "kind": "Chiropractic / alternative care",
+  "miles": 0.7,
+  "pattern": null,
+  "emails": [
+   {
+    "v": "info@abcfamilychiropractic.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 10,
+    "type": "generic",
+    "srcN": 3,
+    "lastSeen": "2025-12-23"
+   }
+  ],
+  "retried": true
+ },
+ "Colorado Springs Therapy Center North": {
+  "domain": "cstherapycenter.com",
+  "kind": "Rehab / therapy",
+  "miles": 0.8,
+  "pattern": "{first}{l}",
+  "emails": [
+   {
+    "v": "info@cstherapycenter.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 85,
+    "type": "generic",
+    "srcN": 6,
+    "lastSeen": "2026-09-24"
+   },
+   {
+    "v": "haileyb@cstherapycenter.com",
+    "first": "Hailey",
+    "last": "Burns",
+    "pos": "Occupational Therapy Manager",
+    "conf": 79,
+    "type": "personal",
+    "srcN": 1,
+    "lastSeen": "2025-03-26"
+   },
+   {
+    "v": "office@cstherapycenter.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 50,
+    "type": "generic",
+    "srcN": 12,
+    "lastSeen": "2026-08-29"
+   },
+   {
+    "v": "craigp@cstherapycenter.com",
+    "first": "Craig",
+    "last": "Peterson",
+    "pos": null,
+    "conf": 65,
+    "type": "personal",
+    "srcN": 1,
+    "lastSeen": "2025-10-31"
+   }
+  ],
+  "retried": true
+ },
+ "Revolution Rehabilitation, P.C.": {
+  "domain": "revrehab.com",
+  "kind": "Chiropractic / alternative care",
+  "miles": 1,
+  "pattern": "{first}",
+  "emails": [
+   {
+    "v": "kamber@revrehab.com",
+    "first": "Kamber",
+    "last": "Arbini",
+    "pos": "Owner",
+    "conf": 75,
+    "type": "personal",
+    "srcN": 1,
+    "lastSeen": "2026-09-06"
+   }
+  ]
+ },
+ "Wholistic Healing Experiences": {
+  "domain": "wholistichealingexperiences.com",
+  "kind": "Massage / recovery",
+  "miles": 1.3,
+  "pattern": "{first}",
+  "emails": [
+   {
+    "v": "dawn@wholistichealingexperiences.com",
+    "first": "Dawn",
+    "last": "Ramsden",
+    "pos": "Owner",
+    "conf": 79,
+    "type": "personal",
+    "srcN": 2,
+    "lastSeen": "2026-09-04"
+   }
+  ]
+ },
+ "Maher Rehab Solutions": {
+  "domain": "maherrehabsolutions.com",
+  "kind": "Rehab / therapy",
+  "miles": 1.3,
+  "pattern": null,
+  "emails": [],
+  "retried": true
+ },
+ "Strength for Humans: Performance and Rehab": {
+  "domain": "strengthforhumans.com",
+  "kind": "Physical therapy",
+  "miles": 1.5,
+  "pattern": null,
+  "emails": [],
+  "retried": true
+ },
+ "Manual Edge Physiotherapist": {
+  "domain": "manualedge.com",
+  "kind": "Physical therapy",
+  "miles": 1.9,
+  "pattern": "{f}{last}",
+  "emails": [
+   {
+    "v": "referrals@manualedge.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 10,
+    "type": "generic",
+    "srcN": 2,
+    "lastSeen": "2025-10-10"
+   },
+   {
+    "v": "letstalk@manualedge.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 10,
+    "type": "generic",
+    "srcN": 5,
+    "lastSeen": "2025-10-12"
+   }
+  ],
+  "retried": true
+ },
+ "Fitness Systems": {
+  "domain": "fitnesssystems.biz",
+  "kind": "Sporting goods",
+  "miles": 3.1,
+  "pattern": null,
+  "emails": [],
+  "retried": true
+ },
+ "Lakeside Auto Brokers": {
+  "domain": "lakesideautobrokers.com",
+  "kind": "Car dealer",
+  "miles": 3.1,
+  "pattern": "{first}{l}",
+  "emails": [
+   {
+    "v": "tiffanyb@lakesideautobrokers.com",
+    "first": "Tiffany",
+    "last": "Beacham",
+    "pos": "Manager",
+    "conf": 97,
+    "type": "personal",
+    "srcN": 1,
+    "lastSeen": "2025-08-16"
+   }
+  ]
+ },
+ "The Faricy Boys Chrysler Jeep": {
+  "domain": "faricy.com",
+  "kind": "Car dealer",
+  "miles": 3.2,
+  "pattern": "{f}{last}",
+  "emails": [
+   {
+    "v": "pfaricy@faricy.com",
+    "first": "Paul",
+    "last": "Faricy",
+    "pos": null,
+    "conf": 94,
+    "type": "personal",
+    "srcN": 4,
+    "lastSeen": "2026-09-11"
+   }
+  ]
+ },
+ "Rocky Mountain Auto Brokers": {
+  "domain": "rockymountainautobrokers.com",
+  "kind": "Car dealer",
+  "miles": 3.2,
+  "pattern": null,
+  "emails": [],
+  "retried": true
+ },
+ "Keller Williams Clients' Choice Realty": {
+  "domain": "ourkwteam.com",
+  "kind": "Realtor",
+  "miles": 0.7,
+  "pattern": null,
+  "emails": [
+   {
+    "v": "frontdesk@ourkwteam.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 10,
+    "type": "generic",
+    "srcN": 1,
+    "lastSeen": "2025-10-21"
+   }
+  ],
+  "retried": true
+ },
+ "The Front Range Team": {
+  "domain": "coloradospringshomesearches.com",
+  "kind": "Realtor",
+  "miles": 0.7,
+  "pattern": null,
+  "emails": [],
+  "retried": true
+ },
+ "More Than Your Money, Inc.": {
+  "domain": "morethanyourmoney.com",
+  "kind": "Financial advisor",
+  "miles": 0.7,
+  "pattern": "{first}",
+  "emails": [
+   {
+    "v": "jane@morethanyourmoney.com",
+    "first": "Jane",
+    "last": "Young",
+    "pos": "President",
+    "conf": 85,
+    "type": "personal",
+    "srcN": 29,
+    "lastSeen": "2026-10-21"
+   }
+  ]
+ },
+ "Foundation Professionals of Colorado": {
+  "domain": "foundationprosofco.com",
+  "kind": "Home services / construction",
+  "miles": 0.7,
+  "pattern": "{first}.{last}",
+  "emails": [
+   {
+    "v": "angie.martin@foundationprosofco.com",
+    "first": "Angie",
+    "last": "Martin",
+    "pos": "General Manager",
+    "conf": 95,
+    "type": "personal",
+    "srcN": 1,
+    "lastSeen": "2026-10-21"
+   }
+  ]
+ },
+ "Whole Living Pilattes": {
+  "domain": "wholelivingpilates.com",
+  "kind": "Fitness",
+  "miles": 1,
+  "pattern": "{first}",
+  "emails": [
+   {
+    "v": "info@wholelivingpilates.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 81,
+    "type": "generic",
+    "srcN": 5,
+    "lastSeen": "2026-09-17"
+   }
+  ],
+  "retried": true
+ },
+ "Homestead Roofing, Inc": {
+  "domain": "homesteadroofingcolorado.com",
+  "kind": "Home services",
+  "miles": 4.1,
+  "pattern": "{first}",
+  "emails": [
+   {
+    "v": "tracy@homesteadroofingcolorado.com",
+    "first": "Tracy",
+    "last": "Bookman",
+    "pos": "Customer Service",
+    "conf": 99,
+    "type": "personal",
+    "srcN": 8,
+    "lastSeen": "2026-10-21"
+   },
+   {
+    "v": "info@homesteadroofingcolorado.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 95,
+    "type": "generic",
+    "srcN": 13,
+    "lastSeen": "2026-10-19"
+   }
+  ],
+  "retried": true
+ },
+ "Klaus Roofing": {
+  "domain": "klausroofingcolorado.com",
+  "kind": "Home services",
+  "miles": 4.3,
+  "pattern": null,
+  "emails": [
+   {
+    "v": "info@klausroofingcolorado.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "conf": 99,
+    "type": "generic",
+    "srcN": 1,
+    "lastSeen": "2026-10-18"
+   }
+  ],
+  "retried": true
+ },
+ "JAK's Taproom": {
+  "domain": "jaksbrewing.com",
+  "kind": "Brewery",
+  "miles": 3.2,
+  "pattern": "{first}{last}",
+  "emails": [],
+  "retried": true
+ }
+}
