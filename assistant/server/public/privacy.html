@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Assistant privacy</title>
+<!-- The privacy page Google asks for before the assistant's sign-in can be published (2026-10-22). It describes what the code in
+     assistant/server does; change it whenever that changes. -->
+<style>
+  body{margin:0;background:#f5f6f8;color:#14181f;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:28px 16px 60px}
+  h1{font-size:26px;margin:0 0 4px} h2{font-size:18px;margin:26px 0 6px}
+  p,li{margin:0 0 10px} .muted{color:#5d6675}
+  @media (prefers-color-scheme:dark){body{background:#0f1217;color:#e9edf3}.muted{color:#9aa3b2}}
+</style>
+</head>
+<body>
+<main>
+<h1>Assistant: privacy</h1>
+<p class="muted">Last updated 22 October 2026</p>
+
+<p>Assistant is a private tool that Matthew Sharpe built for his own use. It sorts his own email accounts and writes reply drafts for him to review. It is not offered to the public, and only accounts he owns connect to it.</p>
+
+<h2>What it reads</h2>
+<p>When an inbox is connected with Google sign-in, Assistant reads new emails in that inbox: the sender, the recipients, the subject, the date and the text. It uses Gmail's <code>gmail.modify</code> permission. That permission lets it read mail and write drafts. Assistant never sends email and never deletes it.</p>
+
+<h2>What it does with it</h2>
+<ul>
+  <li>Each new email is sent to Anthropic's Claude API to be sorted: needs a reply, to do, for information, receipt, and so on. Where a reply is wanted, Claude writes a draft, which Assistant saves to that inbox's Gmail drafts for Matthew to edit and send himself.</li>
+  <li>Assistant keeps only a short summary of each email (who it is from, the subject, one line about it and how it was sorted) for 21 days. The email itself stays in Gmail.</li>
+  <li>Google sign-in tokens and the other keys are kept in a private folder on Assistant's own server. They are not shown on any page.</li>
+</ul>
+
+<h2>What it never does</h2>
+<ul>
+  <li>It does not sell, share or give away any email data, and it does not use it for advertising.</li>
+  <li>No person reads the email data except Matthew, for his own accounts.</li>
+  <li>Assistant's use of information received from Google APIs follows the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</li>
+</ul>
+
+<h2>Removing access</h2>
+<p>Disconnecting an inbox in Assistant deletes its sign-in token. Access can also be removed at any time from the Google account's security settings (Third-party apps with account access). Stored summaries are deleted after 21 days.</p>
+
+<h2>Contact</h2>
+<p>Matthew Sharpe: m.sharpe@traverseplatforms.com</p>
+</main>
+</body>
+</html>
