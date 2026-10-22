@@ -24,8 +24,8 @@ try {
   ok((await a('signin', { code: ADMIN })).role === 'admin', 'the admin signs in');
   ok((await b('signin', { code: SELLER })).role === 'seller', 'the seller signs in');
   const D = await b('data');
-  const L = D.leads.find((l) => l.list === 'new' && l.rank === 1);
-  ok(D.ok && D.leads.length >= 200 && L && L.name === 'Kaiser Permanente' && D.leads.some((l) => l.list === 'renew') && D.leads.some((l) => l.list === 'local'), `the seed loads: ${D.leads.length} leads, #1 ${L && L.name}, renewals and local businesses`);
+  const L = D.leads.find((l) => l.list === 'new' && l.name === 'Kaiser Permanente');   /* by name: the order changes as contacts are found */
+  ok(D.ok && D.leads.length >= 200 && L && D.leads.find((l) => l.list === 'new' && l.rank === 1) && D.leads.some((l) => l.list === 'renew') && D.leads.some((l) => l.list === 'local'), `the seed loads: ${D.leads.length} leads, #1 ${(D.leads.find((l) => l.list === 'new' && l.rank === 1) || {}).name}, renewals and local businesses`);
   ok((await b('status', { id: L.id, status: 'contacted' }, false))._status === 400, 'a post without the desk header is refused (a form on another site cannot post)');
   ok((await b('status', { id: L.id, status: 'contacted' })).ok, 'the seller marks it Contacted');
   ok((await b('note', { id: L.id, note: '<img src=x onerror=alert(1)> called the front desk' })).ok, 'a note saves');
