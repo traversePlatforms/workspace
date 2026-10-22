@@ -306,3 +306,6 @@ traverse/app/data/rounds/*-lookup.json
 
 # Peak Sponsor Desk local test data (2026-10-21)
 matthew/peak-pickleball-sponsorship/desk-data-local/
+
+# Python bytecode caches (build_leads.py, build_expenses.py leave them beside the scripts)
+__pycache__/
