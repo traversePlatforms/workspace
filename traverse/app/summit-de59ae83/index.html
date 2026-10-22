@@ -2329,9 +2329,9 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .onum b{font:800 28px/1.05 var(--serif)}
   .onum.ohot{background:var(--act,var(--ember-ink));border-color:var(--act,var(--ember-ink));box-shadow:none;color:var(--on-act,#fff)}.onum.ohot span{color:var(--on-act,#fff)}
   button.save:not(:disabled),a.save,.lookup .lookgo,.osearch button,.csrow button,.addlead:not(.metaimp){background:var(--act,var(--go))!important;color:var(--on-act,var(--on-go))!important;border-color:var(--act,var(--go))!important}
-  .pipeseg{display:flex!important;flex-wrap:nowrap;gap:8px;overflow-x:auto;scrollbar-width:none;margin:12px -14px 8px;padding:0 14px 2px}
+  .pipeseg{display:flex!important;flex-wrap:wrap;gap:8px;margin:12px 0 8px}   /* every stage in view, on two lines if it needs them (2026-10-22, Matthew: you had to scroll to see Quote sent and On hold) */
   .pipeseg::-webkit-scrollbar{display:none}
-  .pipeseg button{flex:none;flex-direction:row-reverse;align-items:center;gap:8px;min-height:42px;padding:0 14px;border-radius:999px;font-weight:700;font-size:14.5px}
+  .pipeseg button{flex:none;flex-direction:row-reverse;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:999px;font-weight:700;font-size:14px}
   .pipeseg button b{font-size:14px;line-height:1;min-width:24px;padding:3px 7px;border-radius:999px;background:var(--sunk);text-align:center}
   .pipeseg button[aria-pressed="true"]{background:var(--bar);border-color:var(--bar);color:var(--bar-ink)}
   .pipeseg button[aria-pressed="true"] b{background:var(--act,var(--ember-ink));color:var(--on-act,#fff)}
