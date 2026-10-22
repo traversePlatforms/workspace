@@ -223,7 +223,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     s1.appendChild(seg); d.appendChild(s1);
     /* how to reach them */
     var s2 = el('div', 'sec'); s2.appendChild(el('h3', null, 'How to reach them'));
-    if (l.callHow) { var ch = el('div', 'callhow'); ch.appendChild(el('b', null, l.callHow)); if (l.phone) { ch.appendChild(document.createTextNode(' ')); var cp = el('a', null, l.phone); cp.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ch.appendChild(cp); } s2.appendChild(ch); }
+    if (l.callHow) { var ch = el('div', 'callhow'); ch.appendChild(el('b', null, l.callHow)); if (l.phone) { ch.appendChild(document.createTextNode(' ')); var cp = el('a', null, l.phone); cp.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ch.appendChild(cp); } if (l.callSrc) { var cs = el('small', null, 'Source: ' + l.callSrc); cs.style.cssText = 'display:block;margin-top:4px;color:var(--soft);overflow-wrap:anywhere'; ch.appendChild(cs); } s2.appendChild(ch); }
     if (l.route) s2.appendChild(el('div', null, l.route));
     if (l.routeLink) { var a = el('a', null, 'Their page ›'); a.href = l.routeLink; a.target = '_blank'; a.rel = 'noopener'; s2.appendChild(a); }
     if (l.web) { var wn = el('div', null, l.web); wn.style.color = 'var(--soft)'; if (l.webLink) { wn.appendChild(document.createTextNode(' ')); var wl = el('a', null, 'Source ›'); wl.href = l.webLink; wl.target = '_blank'; wl.rel = 'noopener'; wn.appendChild(wl); } s2.appendChild(wn); }

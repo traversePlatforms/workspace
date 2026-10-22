@@ -29,14 +29,14 @@ LEADS = [
      'Community and government affairs, southern Colorado (the senior director is named in UCHealth news releases). Also an employee-membership target (see Employers).', UCH, 'A'),
     ('BOK Financial', 'Bank', SC_T.format('Premier') + '.', SC, 'To find', '', 'A'),
     ('Concept Restaurants', 'Restaurant group', SC_T.format('Premier') + '.', SC, 'To find', '', 'A'),
-    ('Neon Pig', 'Restaurant', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
+    ('Neon Pig', 'Creative agency', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
     ('OrangeTheory', 'Fitness', SC_T.format('Premier and Essential') + '. Fitness, not racquet sport: a cross-promotion partner more than a buyer.', SC, 'To find (franchise: the local owner decides)', '', 'B'),
     ('Laborjack', 'Moving / labor', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
     ('Republic Services', 'Waste and recycling', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
-    ('KEG1', 'Not checked', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
+    ('KEG1', 'Beverage distributor', SC_T.format('Premier') + '.', SC, 'To find', '', 'B'),
     ('Cheyenne Mountain Resort', 'Resort', SC_T.format('Summit') + '. Check first whether it runs its own courts (could be a competitor).', SC, 'To find', '', 'C'),
     ('Coca-Cola', 'Beverage', SC_T.format('Essential') + '. Also a pouring-rights deal for Peak’s snack bar, if Peak has one.', SC, 'To find', '', 'B'),
-    ('Windstar Studios', 'Not checked', SC_T.format('Summit') + '.', SC, 'To find', '', 'B'),
+    ('Windstar Studios', 'Video production', SC_T.format('Summit') + '.', SC, 'To find', '', 'B'),
     ('Baker and King', 'Not checked', SC_T.format('Essential') + '.', SC, 'To find', '', 'C'),
     ('BCA', 'Not checked', SC_T.format('Essential') + '.', SC, 'To find', '', 'C'),
     ('Dwire Earthmoving, LLC', 'Construction', SC_T.format('Essential') + '.', SC, 'To find', '', 'C'),
@@ -229,6 +229,10 @@ for comp, d in HUN.items():
 
 CONTACTS.append(('Kaiser Permanente', 'Colorado community sponsorships', 'Sponsorship inbox (rules exclude advertising)', 'communityco@kp.org', None, None, '', '', 'Ask for first', ''))   # Kaiser's own page
 CONTACTS.append(('Colorado Springs Chamber & EDC', 'General inbox', 'general', 'info@cscedc.com', None, None, '', '', 'Ask for first', '719-471-8183'))   # the Chamber's contact page
+# who each phone number reaches (data/call-quality.json); its 'people' were confirmed on the company's own page, so they list ahead of Hunter's
+# (2026-10-21, Matthew: "do it for all the companies, so that we can get the most accurate numbers")
+CQ = {k: v for k, v in json.loads((DATA / 'call-quality.json').read_text(encoding='utf-8')).items() if not k.startswith('_')}
+CONTACTS = [(c, p[0], p[1], p[2], None, None, '', '', 'Confirmed', p[3]) for c, q in CQ.items() for p in q.get('people', [])] + CONTACTS
 # the local businesses Hunter searched (owners and managers first, then the general inbox)
 HLOC = json.loads((DATA / 'hunter-local-results.json').read_text(encoding='utf-8')) if (DATA / 'hunter-local-results.json').exists() else {}
 _PRI_L = [r'owner|president|founder|ceo|principal', r'manager|director|marketing']
@@ -279,7 +283,6 @@ def best_phone(c):
 # the order (2026-10-21, Matthew: "prioritize the list by numbers +email, then numbers, then email. and then ranking"): a phone and an
 # email first, then a phone only, then an email only, then neither; the score orders each group
 # then (2026-10-21, Matthew: "prioritize the ones that lead to a good person"): who the number reaches, judged in data/call-quality.json
-CQ = {k: v for k, v in json.loads((DATA / 'call-quality.json').read_text(encoding='utf-8')).items() if not k.startswith('_')}
 def group(c):
     t = (CQ.get(c) or {}).get('tier')
     if t in (1, 2, 3): return 5 - t          # 4 direct to a good person, 3 small-organisation main line, 2 front desk: ask by name
@@ -288,7 +291,7 @@ def group(c):
 GROUP_NAME = {4: 'Direct to a good person', 3: 'Main line, small organisation', 2: 'Front desk: ask by name', 1: 'Email first', 0: 'Neither yet'}
 RANKED = sorted(LEADS, key=lambda x: (-group(x[0]), -int(has_email(x[0])), -sum(sc(x[0])), x[0]))
 ws = sheet(wb, 'Sponsor leads', ['Order', 'Company', 'Kind', 'Best email', 'Best phone', 'How to call', 'Group', 'Score /9', 'Fit /3', 'Money /3', 'Sponsors sport /2', 'Near Peak /1', 'Why they fit', 'Source', 'Route in', 'Route link', 'Status', 'Contact (name, role)', 'Email / phone', 'Next step / date', 'Notes', 'Main / local phone', 'Phone source'],
-           [(i + 1, c, k, best_email(c), best_phone(c), (CQ.get(c) or {}).get('how', ''), GROUP_NAME[group(c)], sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), ((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '') for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
+           [(i + 1, c, k, best_email(c), best_phone(c), (CQ.get(c) or {}).get('how', ''), GROUP_NAME[group(c)], sum(sc(c)), *sc(c), w, s, r, l, '', '', '', '', '', (_PH.get(c) or {}).get('phone', ''), (CQ.get(c) or {}).get('src') or (((_PH.get(c) or {}).get('note', '') + ' · ' + (_PH.get(c) or {}).get('src', '')) if _PH.get(c) else '')) for i, (c, k, w, s, r, l, p) in enumerate(RANKED)],
            [6, 30, 18, 40, 16, 60, 22, 8, 7, 8, 9, 8, 58, 36, 44, 28, 14, 26, 26, 20, 26, 16, 40], first=True)
 dv = DataValidation(type='list', formula1='"Not contacted,Emailed,Called,Tour booked,Toured,Proposal sent,Signed,Not now,No"', allow_blank=True)
 ws.add_data_validation(dv); dv.add(f'Q2:Q{len(LEADS) + 1}')
@@ -414,8 +417,7 @@ for l in seed['leads']:
         l['phone'] = PH[l['name']]['phone']; l['phoneNote'] = PH[l['name']]['note'] + ' (' + PH[l['name']]['kind'] + ')'
         if PH[l['name']].get('email'): l['contacts'] = l.get('contacts', []) + [{'name': 'General inbox', 'pos': 'general', 'email': PH[l['name']]['email'], 'conf': None, 'pick': not l.get('contacts')}]
     if l['list'] == 'new' and l['name'] in CQ:
-        q = CQ[l['name']]; l['callTier'] = q['tier']; l['callHow'] = q['how']; l['phone'] = q['phone']; l['phoneNote'] = ''
-    if l['name'] == 'Kaiser Permanente': l['contacts'] = l.get('contacts', []) + [{'name': 'Colorado community sponsorships', 'pos': 'Sponsorship inbox (rules exclude advertising)', 'email': 'communityco@kp.org', 'conf': None, 'pick': True}]
+        q = CQ[l['name']]; l['callTier'] = q['tier']; l['callHow'] = q['how']; l['phone'] = q['phone']; l['phoneNote'] = ''; l['callSrc'] = q.get('src', '')
 seed['packages'] = [{'k': 'court', 'name': 'Court sponsor', 'price': 12000, 'per': 'year', 'note': 'Peak’s published price'}, {'k': 'title', 'name': 'Title sponsor', 'price': 24000, 'per': 'year', 'note': 'Peak’s published price'}]
 (DATA / 'desk-seed.json').write_text(json.dumps(seed, ensure_ascii=False, indent=1), encoding='utf-8')
 print('desk seed:', len(seed['leads']), 'leads')
