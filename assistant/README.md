@@ -8,7 +8,7 @@ Matthew's own tool for both personal and business clerical work. It belongs to M
 
 - Page: `https://traverseplatforms.com/a-e018bb82/`. Password only, after a one-time setup code.
 - Inboxes (connected 2026-10-22): personal Gmail, Traverse, contact@sixfoldcolorado.com (his alone) and Surge (his choice, after I flagged it as employer mail).
-- Claude: `claude-opus-5-5` through the official PHP SDK (`anthropic-ai/sdk`), with server-side fallbacks on. Sorting runs at effort `low` with a JSON schema; drafts run at `medium`.
+- Claude: `claude-opus-5-5` through the official PHP SDK (`anthropic-ai/sdk`), with server-side fallbacks on. Sorting runs on `claude-haiku-5-5` (since 2026-10-22, about a hundredth of a cent an email; no fallback) at effort `low` with a JSON schema; drafts and Ask stay on Opus 5.5 at `medium`.
 
 ## Where things are
 
@@ -50,3 +50,7 @@ Data files: `config.json` holds the password hash, the Anthropic key, the Google
   - Each will post only after Matthew approves it.
 
 **As an app (2026-10-22).** `manifest.json`, `sw.js` and the navy route-mark icons (made with `traverse/editions/app-icon.cjs`, fill #13294b) let Chrome or Edge install the page as its own window with a taskbar icon, and a phone add it to the home screen. The worker stores nothing; with no connection it shows a "No connection" screen.
+
+**Spending (2026-10-22).** Every call adds its cost to `data/usage.json` (this month, by sorting, drafts and Ask), worked out from Anthropic's token counts at the prices in `lib/claude.php` (`C_PRICES`: update them if Anthropic changes prices). The main screen shows "$X of $100 used this month" and warns at 80%; Settings has the breakdown and the monthly credit figure (Max 5x: $100).
+
+**Which mail gets sorted.** Every 10 minutes, each inbox's mail from the last 3 days that is still in the Inbox, up to 20 per inbox per check, leaving out Gmail's Promotions, Social, Updates and Forums tabs (Settings). Done items leave the list; the rest drop off after 21 days. Ask can search all mail, not just the sorted list.

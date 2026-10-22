@@ -41,6 +41,7 @@ function settings(): array {
         'skipTabs' => true,        // leave Gmail's Promotions, Social, Updates and Forums tabs alone (they are rarely worth paying to sort)
         'autoDraft' => true,       // write a reply draft for every email that needs one
         'perRun' => 20,            // at most this many new emails per account per check
+        'budget' => 100,           // the monthly Anthropic API credits his Max plan gives (Max 5x: $100, 2026-10-22); the page warns near it
         'voice' => "Plain and short. No exclamation marks, no filler, no 'I hope this finds you well'. Say the thing, then stop.",
     ];
 }

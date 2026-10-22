@@ -162,6 +162,13 @@
   .chips button{border-radius:999px;font-size:13.5px;font-weight:600}
   .chform{display:flex;gap:8px;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--card)}
   .chform textarea{min-height:46px;max-height:160px;resize:none;flex:1}
+  /* this month's API spending (2026-10-22) */
+  .spendline{display:grid;gap:6px;width:100%;text-align:left;font-weight:600;font-size:13px;color:var(--soft);background:transparent;border-color:transparent;padding:8px 12px;margin:0 0 16px}
+  .spendbar{display:block;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+  .spendbar i{display:block;height:100%;background:var(--c-traverse);border-radius:99px}
+  .spendtab{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0 10px}
+  .spendtab td{padding:6px 0;border-top:1px solid var(--line)}
+  .spendtab td:last-child{text-align:right;font-variant-numeric:tabular-nums}
   .sign{max-width:380px;margin:12vh auto 0;padding:0 16px}
   .sign .panel{padding:22px}
   .sign .brand{margin:0 0 16px;color:var(--bar);--hole:var(--bg)}
@@ -200,6 +207,7 @@
       .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'The server sent nothing readable.' }; }).then(function (j) { j._status = r.status; return j; }); });
   }
   function ago(t) { var s = Math.round(Date.now() / 1000 - t); if (s < 90) return 'now'; if (s < 3600) return Math.round(s / 60) + 'm'; if (s < 86400) return Math.round(s / 3600) + 'h'; return new Date(t * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
+  function money(n) { n = +n || 0; return '$' + (n >= 10 ? n.toFixed(0) : n.toFixed(2)); }
   function plural(n, a, b) { return n + ' ' + (n === 1 ? a : b); }
   var q = new URLSearchParams(location.search), flash = q.get('err') ? ['bad', q.get('err')] : q.get('connected') ? ['ok', 'Inbox connected. Press Check now to sort it.'] : null;
   if (flash) history.replaceState(null, '', location.pathname);
@@ -293,6 +301,18 @@
       });
       (window.matchMedia('(min-width:1000px)').matches ? side : main).appendChild(ib);
     }
+    /* this month's Anthropic spending (2026-10-22): a line in the side column on a computer, under the list on a phone; a warning near the credits */
+    if (j.spend) {
+      var sp = j.spend, pct = sp.budget ? sp.usd / sp.budget : 0;
+      if (pct >= 0.8) main.insertBefore(el('div', 'flash bad', 'This month the assistant has used ' + money(sp.usd) + ' of your ' + money(sp.budget) + ' API credits. When they run out it stops until next month (it never charges your Max plan).'), main.children[1] || null);
+      var sl = el('button', 'spendline'); sl.type = 'button'; sl.title = 'Spending, in Settings';
+      sl.appendChild(el('span', null, money(sp.usd) + ' of ' + money(sp.budget) + ' used this month'));
+      var bar = el('span', 'spendbar'), fill = el('i'); fill.style.width = Math.min(100, pct * 100).toFixed(1) + '%'; bar.appendChild(fill); sl.appendChild(bar);
+      sl.addEventListener('click', function () { S.view = 'settings'; draw(); });
+      S.spendLine = sl;
+    }
+    if (S.spendLine && window.matchMedia('(min-width:1000px)').matches) { side.appendChild(el('div', 'sidehead', 'API credits')); side.appendChild(S.spendLine); }
+    else if (S.spendLine) setTimeout(function () { if (main.isConnected) main.appendChild(S.spendLine); }, 0);   /* on a phone, under the list */
     /* the list, by kind */
     var shown = inInbox.filter(function (i) { return S.cat === 'all' || (S.cat === 'low' ? LOW[i.category] : i.category === S.cat); });
     if (!shown.length) { main.appendChild(el('div', 'empty', j.accounts.length ? (S.cat === 'all' ? 'Nothing waiting. New email is sorted every 10 minutes, or press Check now.' : 'Nothing here.') : 'Connect an inbox in Settings.')); return; }
@@ -469,7 +489,19 @@
     var sk = el('label', 'tick'), skc = el('input'); skc.type = 'checkbox'; skc.checked = !!st.skipTabs; sk.appendChild(skc); sk.appendChild(document.createTextNode('Leave Gmail’s Promotions, Social, Updates and Forums tabs alone')); dp.appendChild(sk);
     var ad = el('label', 'tick'), adc = el('input'); adc.type = 'checkbox'; adc.checked = !!st.autoDraft; ad.appendChild(adc); ad.appendChild(document.createTextNode('Write a reply draft for every email that needs one')); dp.appendChild(ad);
     var lv = el('label', null, 'How your drafts should sound'), voice = el('textarea'); voice.value = st.voice; lv.appendChild(voice); dp.appendChild(lv);
+    dp.appendChild(el('p', 'small muted', 'Which mail gets sorted: every 10 minutes, each inbox’s new mail from the last 3 days that is still in the Inbox (not archived), up to ' + st.perRun + ' per inbox per check. With the box above ticked, Gmail’s Promotions, Social, Updates and Forums tabs are left out. Emails you mark Done leave the list; the rest drop off after 21 days.'));
     wrap.appendChild(dp);
+    /* spending (2026-10-22): what this month has cost, from Anthropic's own token counts on every call */
+    var sp = j.spend || { usd: 0, calls: 0, by: {}, budget: 100 }, pp = el('div', 'panel'); pp.appendChild(el('h2', null, 'Spending this month'));
+    pp.appendChild(el('p', 'muted small', money(sp.usd) + ' of your ' + money(sp.budget) + ' monthly API credits, over ' + plural(sp.calls, 'call', 'calls') + '. Worked out from the tokens Anthropic counts on each call, at its published prices; the Cost page at platform.claude.com is the official figure.'));
+    var tb = el('table', 'spendtab');
+    [['sort', 'Sorting new email (Claude Haiku 5.5)'], ['draft', 'Reply drafts (Claude Opus 5.5)'], ['chat', 'Ask (Claude Opus 5.5)']].forEach(function (x) {
+      var tr = el('tr'), n = sp.by[x[0] + 'Calls'] || 0; tr.appendChild(el('td', null, x[1] + (n ? ' · ' + n : ''))); tr.appendChild(el('td', null, money(sp.by[x[0]] || 0))); tb.appendChild(tr);
+    });
+    pp.appendChild(tb);
+    var lb = el('label', null, 'Monthly API credits ($)'), budget = el('input'); budget.type = 'number'; budget.min = '1'; budget.step = '1'; budget.value = sp.budget; budget.style.maxWidth = '140px'; lb.appendChild(budget); pp.appendChild(lb);
+    pp.appendChild(el('p', 'small muted', 'Max 5x gives $100 a month. The page warns at 80%. When the credits run out the assistant stops until next month; it never charges your Max plan.'));
+    wrap.appendChild(pp);
     /* keys */
     var kp = el('div', 'panel'); kp.appendChild(el('h2', null, 'Keys')); kp.appendChild(el('p', 'muted small', 'Saved on the server only and never shown again. Leave a box empty to keep what is saved.'));
     var inp = {};
@@ -486,7 +518,7 @@
     var save = btn('Save settings', null, 'go'), msg = el('span', 'small muted'), sr = el('div'); sr.style.cssText = 'display:flex;gap:10px;align-items:center;margin:0 0 18px';
     save.addEventListener('click', function () {
       save.disabled = true;
-      api('setup', { anthropic: inp.anthropic.value, googleId: inp.googleId.value, googleSecret: inp.googleSecret.value, settings: { skipTabs: skc.checked, autoDraft: adc.checked, perRun: st.perRun, voice: voice.value } }).then(function (r) {
+      api('setup', { anthropic: inp.anthropic.value, googleId: inp.googleId.value, googleSecret: inp.googleSecret.value, settings: { skipTabs: skc.checked, autoDraft: adc.checked, perRun: st.perRun, voice: voice.value, budget: +budget.value || 100 } }).then(function (r) {
         save.disabled = false; if (r.ok) { flash = ['ok', 'Saved.']; home(); } else msg.textContent = r.error || 'Not saved.';
       });
     });

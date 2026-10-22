@@ -107,6 +107,7 @@ function chatTurn(string $text): array {
     try {
         for ($step = 0; $step < 8; $step++) {
             $r = $c->beta->messages->create(model: C_MODEL, maxTokens: 16000, system: $system, tools: chatTools(), messages: $msgs, outputConfig: ['effort' => 'medium'], fallbacks: 'default', betas: C_BETAS);
+            trackUsage('chat', $r);
             if ($r->stopReason === 'refusal') { $reply = 'I can\'t help with that one.'; break; }
             $uses = []; $reply = '';
             foreach ($r->content as $b) { if ($b->type === 'text') $reply .= $b->text; if ($b->type === 'tool_use') $uses[] = $b; }

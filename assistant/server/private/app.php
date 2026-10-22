@@ -46,7 +46,7 @@ if ($action === 'home') {
     $items = array_values(array_filter(jget('items.json'), fn($i) => ($i['status'] ?? 'open') === 'open'));
     usort($items, fn($a, $b) => $b['date'] <=> $a['date']);
     $c = cfg();
-    out(['ok' => true, 'accounts' => $accts, 'items' => $items, 'settings' => settings(),
+    out(['ok' => true, 'accounts' => $accts, 'items' => $items, 'settings' => settings(), 'spend' => spendSummary(),
         'setup' => ['anthropic' => !empty($c['anthropicKey']), 'google' => !empty($c['googleClientId']) && !empty($c['googleClientSecret']), 'redirect' => gRedirect()]]);
 }
 if (!$isPost) out(['ok' => false, 'error' => 'POST needed.'], 405);
@@ -55,7 +55,7 @@ if ($action === 'setup') {   /* keys go in here, never through chat; an empty fi
         foreach (['anthropicKey' => 'anthropic', 'googleClientId' => 'googleId', 'googleClientSecret' => 'googleSecret'] as $k => $f) { $v = trim((string) ($body[$f] ?? '')); if ($v !== '') $c[$k] = $v; }
         if (isset($body['settings']) && is_array($body['settings'])) {
             $s = $body['settings'];
-            $c['settings'] = ['skipTabs' => !empty($s['skipTabs']), 'autoDraft' => !empty($s['autoDraft']), 'perRun' => max(1, min(50, (int) ($s['perRun'] ?? 20))),
+            $c['settings'] = ['skipTabs' => !empty($s['skipTabs']), 'autoDraft' => !empty($s['autoDraft']), 'perRun' => max(1, min(50, (int) ($s['perRun'] ?? 20))), 'budget' => max(1, min(10000, (float) ($s['budget'] ?? 100))),
                 'voice' => mb_substr(trim((string) ($s['voice'] ?? '')), 0, 1000) ?: settings()['voice']];
         }
         return $c;

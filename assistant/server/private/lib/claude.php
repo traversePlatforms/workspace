@@ -9,6 +9,33 @@ use Anthropic\Client;
 
 const C_MODEL = 'claude-opus-5-5';
 const C_BETAS = ['server-side-fallback-2026-07-01'];
+/* sorting moved to Claude Haiku 5.5 (2026-10-22, Matthew: "we can make the switch"): picking a label for an email is simple work, and
+   Haiku costs about a fortieth of Opus, which leaves his $100 a month of Max API credits for Ask and drafts. Haiku has no server-side
+   fallback, so its call sends none; a declined email is still caught by the refusal check below. */
+const C_SORT_MODEL = 'claude-haiku-5-5';
+/* what each call costs, dollars per million tokens (Anthropic's prices as of 2026-10-22; Haiku's rate is for prompts of 100K tokens or fewer,
+   which every email here is): in, out, cache read, cache write (5 minutes) */
+const C_PRICES = ['claude-opus-5-5' => [4.0, 20.0, 0.20, 5.0], 'claude-haiku-5-5' => [0.10, 0.50, 0.01, 0.125]];
+/** add one call's cost to this month's total (data/usage.json), by kind: sort, draft, chat */
+function trackUsage(string $kind, $r): void {
+    if (!is_object($r) || !isset($r->usage)) return;
+    try {
+        $u = $r->usage; $p = C_PRICES[(string) $r->model] ?? C_PRICES[C_MODEL];
+        $usd = ($u->inputTokens * $p[0] + $u->outputTokens * $p[1] + (int) $u->cacheReadInputTokens * $p[2] + (int) $u->cacheCreationInputTokens * $p[3]) / 1e6;
+        $month = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m');
+        jedit('usage.json', function ($all) use ($month, $kind, $usd) {
+            $m = $all[$month] ?? ['usd' => 0.0, 'calls' => 0, 'by' => []];
+            $m['usd'] += $usd; $m['calls']++; $m['by'][$kind] = ($m['by'][$kind] ?? 0.0) + $usd; $m['by'][$kind . 'Calls'] = ($m['by'][$kind . 'Calls'] ?? 0) + 1;
+            $all[$month] = $m; return array_slice($all, -13, null, true);
+        });
+    } catch (\Throwable $e) { /* the count is a convenience: never let it stop the work */ }
+}
+/** this month's spending, for the page */
+function spendSummary(): array {
+    $month = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m');
+    $m = jget('usage.json')[$month] ?? ['usd' => 0.0, 'calls' => 0, 'by' => []];
+    return ['month' => $month, 'usd' => round((float) $m['usd'], 4), 'calls' => (int) $m['calls'], 'by' => $m['by'], 'budget' => (float) settings()['budget']];
+}
 
 function claude(): ?Client {
     $key = (string) (cfg()['anthropicKey'] ?? '');
@@ -50,15 +77,14 @@ function sortEmail(array $m, array $acct): ?array {
         'draft' => ['type' => 'boolean']]];
     try {
         $r = $c->beta->messages->create(
-            model: C_MODEL,
+            model: C_SORT_MODEL,
             maxTokens: 4000,
             system: [['type' => 'text', 'text' => SORT_SYSTEM, 'cacheControl' => ['type' => 'ephemeral']]],
             messages: [['role' => 'user', 'content' => emailForClaude($m, $acct)]],
             outputConfig: ['effort' => 'low', 'format' => ['type' => 'json_schema', 'schema' => $schema]],
-            fallbacks: 'default',
-            betas: C_BETAS,
         );
     } catch (\Throwable $e) { alog('sort failed', ['id' => $m['id'], 'error' => mb_substr($e->getMessage(), 0, 200)]); return null; }
+    trackUsage('sort', $r);
     if ($r->stopReason === 'refusal') { alog('sort declined', ['id' => $m['id']]); return ['category' => 'fyi', 'priority' => 'normal', 'summary' => 'Not sorted (the model declined this one); open it yourself.', 'todo' => '', 'draft' => false]; }
     foreach ($r->content as $b) if ($b->type === 'text') { $j = json_decode($b->text, true); if (is_array($j) && isset($j['category'])) return $j; }
     return null;
@@ -81,6 +107,7 @@ function draftReply(array $m, array $acct, string $todo = ''): ?string {
             betas: C_BETAS,
         );
     } catch (\Throwable $e) { alog('draft failed', ['id' => $m['id'], 'error' => mb_substr($e->getMessage(), 0, 200)]); return null; }
+    trackUsage('draft', $r);
     if ($r->stopReason === 'refusal') return null;
     $out = '';
     foreach ($r->content as $b) if ($b->type === 'text') $out .= $b->text;
