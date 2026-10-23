@@ -2216,6 +2216,10 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .qoffer{display:grid;gap:6px;justify-items:start}
   /* a lead's house on its card (2026-10-14) */
   .ldetails{display:grid;gap:4px;margin-top:6px}
+  .laddc{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+  .laddf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
+  .laddf input{flex:1;min-width:180px;font:inherit;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  .laddf .err{width:100%}
   .lcopy{display:flex;gap:10px;align-items:baseline;text-align:left;border:0;background:none;padding:2px 0;cursor:copy;color:var(--ink);font:14px var(--sans)}
   .lcopy span{flex:none;width:44px;color:var(--soft);font-size:12.5px}.lcopy b{font-weight:700;overflow-wrap:anywhere;user-select:all}
   .lprop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px;padding:10px;border:1.5px solid var(--line);border-radius:14px;background:var(--card)}
@@ -4888,7 +4892,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       c.appendChild(dt);
     }
-    if (wdOn() && S.screen === 'pipeline') c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
+    if ((wdOn() || qView()) && String(l.id).indexOf('preview-') !== 0 && (tel.length < 10 || !l.email)) c.appendChild(leadAddRow(l, c, tel.length < 10, !l.email));   /* Add phone / Add email, every stage (2026-10-23, Matthew: Jen could not add Deano's email) */
+    if ((wdOn() && S.screen === 'pipeline') || qView()) c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
     if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));
     if (wdOn() && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
@@ -7824,11 +7829,38 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* on a lead in the Pipeline: its house, or the button to find it */
   /** where a lead lives: their house on our lists, or else the address as they typed it (2026-10-21) */
   function leadAddr(l) { return l.house ? streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '') : String(l.town || '').trim(); }
+  /* Add phone number / Add email on a lead that has none (2026-10-23, Matthew: "There should be an add email and add phone number for everyone
+     throughout all stages of the pipeline if they dont have an email or phone number already attached"). Saves through leadcontact. */
+  function leadAddRow(l, card, needPhone, needEmail) {
+    var w = q('div', 'laddc');
+    [[needPhone, 'phone', 'Add phone number', 'tel', 'Phone number'], [needEmail, 'email', 'Add email', 'email', 'Email address']].forEach(function (x) {
+      if (!x[0]) return;
+      var b = q('button', 'lnk', '+ ' + x[2]); b.type = 'button'; w.appendChild(b);
+      b.addEventListener('click', function () {
+        var f = q('div', 'laddf'), inp = q('input'), sv = q('button', 'save', 'Save'), er = q('div', 'err');
+        inp.type = x[3]; inp.placeholder = x[4]; inp.autocomplete = 'off'; if (x[1] === 'phone') inp.inputMode = 'tel'; sv.type = 'button';
+        f.appendChild(inp); f.appendChild(sv); f.appendChild(er); w.replaceChild(f, b);
+        setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
+        sv.addEventListener('click', function () {
+          var v = inp.value.trim(); if (!v) { er.textContent = x[1] === 'phone' ? 'Type the phone number first.' : 'Type the email first.'; return; }
+          var body = { id: l.id }; body[x[1]] = v; sv.disabled = true;
+          api('leadcontact', { body: body }).then(function (j) {
+            sv.disabled = false;
+            if (j._status === 401) return signinView('Signed out. Enter your code again.');
+            if (!j.ok) { er.textContent = j.error || 'Not saved. Try again.'; return; }
+            l[x[1]] = v; toast('Saved', (x[1] === 'phone' ? 'Phone ' : 'Email ') + v, null);
+            if (card.parentNode) card.parentNode.replaceChild(leadCard(l), card);
+          }).catch(function () { sv.disabled = false; er.textContent = 'No signal. Not saved, try again.'; });
+        });
+      });
+    });
+    return w;
+  }
   function leadHouseRow(l) {
     var typedOnly = !l.house && String(l.town || '').trim() !== '';   /* an address they gave that matches no house yet (Scott, 2026-10-21) */
     var b = q('button', 'hrow' + (l.house || typedOnly ? ' on' : '')); b.type = 'button';
     b.appendChild(ico('door', 2.2));
-    b.appendChild(q('span', null, l.house ? streetCase(l.house.address) + ', ' + l.house.town : typedOnly ? streetCase(String(l.town).trim()) : 'Find their house'));
+    b.appendChild(q('span', null, l.house ? streetCase(l.house.address) + ', ' + l.house.town : typedOnly ? streetCase(String(l.town).trim()) : '+ Add address'));   /* was "Find their house" (2026-10-23, Matthew: add address on every lead without one) */
     if (typedOnly) b.appendChild(q('small', null, 'As they gave it \u00b7 not matched to a house yet \u00b7 tap to look it up'));
     if (l.house && !l.house.region) b.appendChild(q('small', null, 'Not on our property lists yet \u00b7 quote by lawn size'));
     if (l.ask && l.ask.size) b.appendChild(q('small', null, 'They said: ' + l.ask.size));
