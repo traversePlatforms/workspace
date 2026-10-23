@@ -14,6 +14,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sixfold 365 · Land, Aeration &amp; Seeding</title>
 <meta name="robots" content="noindex">
+<meta name="description" content="Core aeration, overseeding, fertilizing and landscaping all over Colorado. Ask for a quote online, or call or text (720) 830-4553.">
+<link rel="icon" href="/assets/365-sixfold-badge.svg" type="image/svg+xml">
+<meta property="og:title" content="Sixfold 365 · Land, Aeration &amp; Seeding">
+<meta property="og:description" content="Core aeration, overseeding, fertilizing and landscaping all over Colorado.">
+<link rel="canonical" href="https://365aeration.com/"><meta property="og:url" content="https://365aeration.com/">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -128,7 +133,13 @@
   .seg input{width:auto;margin:0;accent-color:var(--forest)}
   .seg label:has(input:checked){border-color:var(--forest);background:#eef3e8}
   .fine{font-size:13px;color:var(--soft);margin:0}
-  .note{font-size:13px;color:var(--ember-d);font-weight:700;margin:0;text-align:center}
+  select{font:16px 'DM Sans',sans-serif;padding:12px 13px;border:1.5px solid #cfd8ca;border-radius:12px;background:#fff;color:var(--ink);width:100%}
+  .opt{font-weight:500;color:var(--soft)}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .err{color:#b3261e;font-weight:700;font-size:15px;min-height:0}
+  .err:empty{display:none}
+  .done{background:#eef3e8;border:1.5px solid var(--moss);border-radius:16px;padding:22px;font-size:17px}
+  .done b{display:block;font:800 22px 'Outfit',sans-serif;color:var(--forest);margin-bottom:6px}
 
   footer{background:var(--forest);color:#d5e1cf;padding:36px 0;font-size:15px;border-top:5px solid var(--ember)}
   footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
@@ -199,7 +210,6 @@
   </symbol>
 </svg>
 
-<div class="ribbon"><b>Example layout</b> · not live · the form on this page sends nothing</div>
 
 <header><div class="wrap">
   <a class="brand" href="#top"><svg role="img" aria-label="Sixfold 365 badge"><use href="#badge"/></svg><span><b>Sixfold 365</b><small>Land · Aeration &amp; Seeding</small></span></a>
@@ -286,22 +296,42 @@
     <p>Rather talk? Call or text us.</p>
     <a class="btn green" href="tel:+17208304553">(720) 830-4553</a>
   </div>
-  <form onsubmit="return false">
+  <form id="qf" novalidate>
     <fieldset><legend>What are you looking for? (pick any)</legend>
       <div class="seg">
-        <label><input type="checkbox" checked> Aeration, overseeding &amp; lawn keeping</label>
-        <label><input type="checkbox"> Landscaping, land clearing &amp; fire mitigation</label>
-        <label><input type="checkbox"> Just a question</label>
+        <label><input type="checkbox" name="w_lawn" checked> Aeration, overseeding &amp; lawn keeping</label>
+        <label><input type="checkbox" name="w_land"> Landscaping, land clearing &amp; fire mitigation</label>
+        <label><input type="checkbox" name="w_q"> Just a question</label>
       </div>
     </fieldset>
-    <label>Your name<input autocomplete="off"></label>
-    <div class="row"><label>Phone<input type="tel" autocomplete="off"></label><label>Email<input type="email" autocomplete="off"></label></div>
-    <label>Street address<input autocomplete="off" placeholder="e.g. 1234 Elm St"></label>
-    <div class="row"><label>City<input autocomplete="off"></label><label>ZIP<input autocomplete="off" inputmode="numeric"></label></div>
-    <label>Anything we should know? (optional)<textarea rows="3" placeholder="Lawn size if you know it, gate codes, dogs, questions"></textarea></label>
-    <button class="btn main" type="button">Send my request</button>
-    <p class="note">Example only: this button does nothing.</p>
-    <p class="fine">We use what you send only to answer your request. We don't sell or share it.</p>
+    <label>Your name<input name="name" autocomplete="name" maxlength="120" required></label>
+    <div class="row"><label>Phone<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label><label>Email<input name="email" type="email" autocomplete="email" maxlength="160"></label></div>
+    <fieldset><legend>How should we contact you?</legend>
+      <div class="seg">
+        <label><input type="radio" name="contact" value="text"> Text</label>
+        <label><input type="radio" name="contact" value="call"> Call</label>
+        <label><input type="radio" name="contact" value="email"> Email</label>
+      </div>
+    </fieldset>
+    <label><span>Street address <span class="opt">(optional)</span></span><input name="street" autocomplete="address-line1" maxlength="120" placeholder="e.g. 1234 Elm St"></label>
+    <div class="row"><label><span>City <span class="opt">(optional)</span></span><input name="city" autocomplete="address-level2" maxlength="60"></label><label><span>ZIP <span class="opt">(optional)</span></span><input name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10"></label></div>
+    <label><span>How did you hear about us? <span class="opt">(optional)</span></span><select name="hear">
+      <option value="">Choose one</option>
+      <option value="facebook">Facebook or Instagram</option>
+      <option value="google">Google search</option>
+      <option value="nextdoor">Nextdoor</option>
+      <option value="friend">A friend or neighbour</option>
+      <option value="sign">A yard sign</option>
+      <option value="card">A business card or flyer</option>
+      <option value="truck">Our truck</option>
+      <option value="other">Something else</option>
+    </select></label>
+    <label id="hearmore" hidden><span><span id="hearlab">Who sent you?</span> <span class="opt">(optional)</span></span><input name="hearNote" maxlength="120"></label>
+    <label>Anything we should know? (optional)<textarea name="msg" rows="3" maxlength="1500" placeholder="Lawn size if you know it, gate codes, dogs, questions"></textarea></label>
+    <div class="hp" aria-hidden="true"><label>Leave this empty<input name="hp" tabindex="-1" autocomplete="off"></label></div>
+    <div class="err" id="qerr" role="alert"></div>
+    <button class="btn main" type="submit" id="qbtn">Send my request</button>
+    <p class="fine">We use what you send, and which link brought you here, only to answer your request and to see which of our ads work. We don't sell or share it.</p>
   </form>
 </div></section>
 
@@ -309,8 +339,56 @@
 
 <footer><div class="wrap">
   <div class="fb"><svg aria-hidden="true"><use href="#badge"/></svg><div><b>Sixfold 365</b><br>Land · Aeration &amp; Seeding</div></div>
-  <div><a href="tel:+17208304553">(720) 830-4553</a> · <a href="mailto:contact@365aeration.com">contact@365aeration.com</a><br><span style="font-size:13px">Not tax or insurance advice: confirm your own position with your accountant and your carrier.</span></div>
+  <div><a href="tel:+17208304553">(720) 830-4553</a> · <a href="mailto:contact@365aeration.com">contact@365aeration.com</a><br><span style="font-size:13px">© <span id="yr">2026</span> Sixfold 365 · Not tax or insurance advice: confirm your own position with your accountant and your carrier.</span></div>
 </div></footer>
+
+<script>
+(function () {
+  /* the form goes into the office's lead list, the same way the 365 site's form does (2026-10-23, Phase 1 of the merge): this site's own
+     relay (api/lead.php) passes it to the app server to server. /a365/ is the test copy inside the app's test server. */
+  var API = /^\/a365\//.test(location.pathname) ? '/api/rounds.php' : '/api/lead.php';
+  var f = document.getElementById('qf'), err = document.getElementById('qerr'), btn = document.getElementById('qbtn'), t0 = Date.now();
+  /* where they came from, noted when they arrive: the sending page's address, utm tags, and whether the link was an ad click. Kept for this
+     visit only (sessionStorage), sent with the form, nothing else */
+  var trk = null;
+  try { trk = JSON.parse(sessionStorage.getItem('a365trk') || 'null'); } catch (e) {}
+  if (!trk) {
+    var sp = new URLSearchParams(location.search), ref = '';
+    try { var ru = document.referrer ? new URL(document.referrer) : null; if (ru && ru.host !== location.host) ref = ru.origin + ru.pathname; } catch (e) {}
+    trk = { ref: ref, us: sp.get('utm_source') || '', um: sp.get('utm_medium') || '', uc: sp.get('utm_campaign') || '', fb: sp.has('fbclid') ? 1 : 0, g: (sp.has('gclid') || sp.has('gbraid') || sp.has('wbraid')) ? 1 : 0, land: location.pathname };
+    try { sessionStorage.setItem('a365trk', JSON.stringify(trk)); } catch (e) {}
+  }
+  var hs = f.elements.hear, hm = document.getElementById('hearmore'), hl = document.getElementById('hearlab');
+  hs.addEventListener('change', function () { var k = hs.value; hm.hidden = !(k === 'friend' || k === 'other'); hl.textContent = k === 'friend' ? 'Who sent you?' : 'Where did you hear about us?'; });
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  f.addEventListener('submit', function (e) {
+    e.preventDefault(); err.textContent = '';
+    var v = function (n) { var el = f.elements[n]; return el ? String(el.value || '').trim() : ''; };
+    var lawn = f.elements.w_lawn.checked, land = f.elements.w_land.checked, qq = f.elements.w_q.checked;
+    if (!lawn && !land && !qq) { err.textContent = 'Please pick what you are looking for.'; f.elements.w_lawn.focus(); return; }
+    var want = lawn && land ? 'multiple' : lawn ? 'lawnall' : land ? 'land' : 'question';
+    if (!v('name')) { err.textContent = 'Please add your name.'; f.elements.name.focus(); return; }
+    if (!v('phone') && !v('email')) { err.textContent = 'Please add a phone number or an email so we can reply.'; f.elements.phone.focus(); return; }
+    var how = (f.querySelector('input[name=contact]:checked') || {}).value || '';
+    if (!how) { err.textContent = 'Please choose how we should contact you.'; f.querySelector('input[name=contact]').focus(); return; }
+    if (how === 'email' && !v('email')) { err.textContent = 'Please add your email, or choose text or call.'; f.elements.email.focus(); return; }
+    if (how !== 'email' && !v('phone')) { err.textContent = 'Please add your phone number, or choose email.'; f.elements.phone.focus(); return; }
+    var msg = v('msg'); if (qq && want !== 'question') msg = ('Also has a question. ' + msg).trim();
+    btn.disabled = true; btn.textContent = 'Sending…';
+    var body = { want: want, name: v('name'), phone: v('phone'), email: v('email'), street: v('street'), city: v('city'), zip: v('zip'),
+      contact: how, hear: v('hear'), hearNote: hm.hidden ? '' : v('hearNote'), trk: trk, msg: msg, hp: v('hp'), t: Date.now() - t0,
+      from: (/[?&]from=(card|yard|truck|car)/.exec(location.search) || [])[1] || '' };   /* which printed QR brought them */
+    fetch(API + '?action=a365lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+      .then(function (j) {
+        if (!j.ok) { btn.disabled = false; btn.textContent = 'Send my request'; err.textContent = j.error || 'That did not go through. Please call or text (720) 830-4553.'; return; }
+        var first = body.name.split(' ')[0];
+        f.innerHTML = '<div class="done"><b>Thanks, ' + first.replace(/[<>&"]/g, '') + '!</b>We have your request and will be in touch soon.<br>Need us sooner? Call or text <a href="tel:+17208304553">(720) 830-4553</a>.</div>';
+      })
+      .catch(function () { btn.disabled = false; btn.textContent = 'Send my request'; err.textContent = 'No connection. Please try again, or call or text (720) 830-4553.'; });
+  });
+})();
+</script>
 
 </body>
 </html>

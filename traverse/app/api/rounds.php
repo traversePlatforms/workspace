@@ -2275,7 +2275,9 @@ if ($action === 'a365lead') {
     if ((int) ($body['t'] ?? 0) < 3000) fail('That was very quick. Please try again.');
     $wants = ['aeration' => 'Aeration', 'both' => 'Aeration and overseeding', 'question' => 'A question',
               /* the merged Sixfold 365 site's form adds Sixfold's services (2026-10-20, Matthew: one site at 365aeration.com) */
-              'lawn' => 'Lawn care', 'landscaping' => 'Landscaping', 'clearing' => 'Land clearing', 'fire' => 'Fire mitigation', 'multiple' => 'More than one service'];
+              'lawn' => 'Lawn care', 'landscaping' => 'Landscaping', 'clearing' => 'Land clearing', 'fire' => 'Fire mitigation', 'multiple' => 'More than one service',
+              /* the form's two groups (2026-10-23, Matthew: aeration, overseeding and lawn keeping in one; landscaping, clearing and fire in another) */
+              'lawnall' => 'Aeration, overseeding or lawn keeping', 'land' => 'Landscaping, land clearing or fire mitigation'];
     $want = (string) ($body['want'] ?? ''); if (!isset($wants[$want])) fail('Choose what you are looking for.');
     $name = a365Clean($body['name'] ?? '', 120); $phone = a365Clean($body['phone'] ?? '', 40); $email = a365Clean($body['email'] ?? '', 160);
     $street = a365Clean($body['street'] ?? '', 120); $city = a365Clean($body['city'] ?? '', 60); $zip = a365Clean($body['zip'] ?? '', 10);
