@@ -39,10 +39,14 @@ $mxD = null;
 try { require $mxApi . '/rounds.php'; } catch (SixfoldOut $e) { $mxD = $e->body; }
 if (!is_array($mxD) || empty($mxD['ok'])) { fwrite(STDERR, 'sixfold morning: no digest (' . (is_array($mxD) ? ($mxD['error'] ?? '?') : 'nothing back') . ")\n"); exit(1); }
 
+/* 365-website leads are Matthew's only (2026-10-22), and this email goes to the shared Contact@ inbox: leave them out */
+$mxWeb = array_filter($mxD['leads'], fn($l) => ($l['src'] ?? '') === 'a365web');
+$mxD['leads'] = array_values(array_diff_key($mxD['leads'], $mxWeb)); $mxD['leadsNew'] = max(0, (int) $mxD['leadsNew'] - count($mxWeb));
+
 /* the email, plain text */
-$day = fn(string $iso) => $iso === '' ? '' : date('D j M', strtotime($iso . ' 12:00'));
+$day =fn(string $iso) => $iso === '' ? '' : date('D j M', strtotime($iso . ' 12:00'));
 $tel = function (string $p) { $d = preg_replace('/\D/', '', $p); if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1); return strlen($d) === 10 ? '(' . substr($d, 0, 3) . ') ' . substr($d, 3, 3) . '-' . substr($d, 6) : $p; };
-$src = ['website' => 'Website form', 'meta' => 'Meta ad', 'nextdoor' => 'Nextdoor', 'phone' => 'Phone call', 'linktree' => 'Linktree', 'referral' => 'Referral', 'other' => 'Other'];
+$src = ['website' => 'Website form', 'meta' => 'Meta ad', 'messenger' => 'Facebook Messenger', 'nextdoor' => 'Nextdoor', 'phone' => 'Phone call', 'linktree' => 'Linktree', 'referral' => 'Referral', 'other' => 'Other'];
 $plan = ['oneoff' => 'one-off', 'monthly' => 'monthly', 'quarterly' => 'quarterly', 'yearly' => 'yearly', 'custom' => 'custom'];
 $hm = function (string $t) { if ($t === '') return 'time to agree'; [$h, $m] = array_map('intval', explode(':', $t)); return ($h % 12 ?: 12) . ':' . str_pad((string) $m, 2, '0', STR_PAD_LEFT) . ($h < 12 ? ' am' : ' pm'); };
 $walksToday = array_values(array_filter($mxD['walks'], fn($w) => $w['date'] === $mxD['today']));
