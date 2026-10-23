@@ -2,3 +2,6 @@
 # Kept on disk (and in the OneDrive mirror), not in git.
 *.png
 sheet.html
+# yard v2 cache: photo windows of private lots (yard-scan-v2.mjs), same reason as the pictures
+yard-v2-cache/
+yard-v2-pics/
