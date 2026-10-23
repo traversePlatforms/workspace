@@ -2079,7 +2079,6 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   /* the 365 office (2026-10-14): its colours, its home, the two-pane Pipeline */
   /* body.a365 (2026-10-15) gave the office the 365 greens inside the dark Sixfold app; the whole app is Sixfold 365 now, and in an edition it painted an office account green (TR-29, 2026-10-22), so it is gone */
   @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .schedt tr.booked td{background:#1d3320}:root:not([data-theme="light"]) .schedt tr.held td{background:#3a2e12}}:root[data-theme="dark"] .schedt tr.booked td{background:#1d3320}:root[data-theme="dark"] .schedt tr.held td{background:#3a2e12}   /* schedule rows on dark (2026-10-15) */
-  .a365mk{width:38px;height:38px;display:block;border-radius:50%}.a365mk.dn{width:30px;height:30px}
   body.owide .wrap{max-width:1240px}
   .ohome{display:grid;gap:18px}
   .ohero{background:var(--bar);color:#fff;border-radius:22px;padding:22px 22px 20px;box-shadow:var(--shadow)}
@@ -7357,7 +7356,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     window.scrollTo(0, 0);
   }
   /* blocked-out time (2026-10-21, Matthew: "a way for jen to block out dates for brad and brandon"): part all, am (before noon) or pm */
-  function slotHalf(k) { return slotStart(k) < 720 ? 'am' : 'pm'; }
   function hhmmMin(t) { var m = /^(\d\d):(\d\d)$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : 720; }
   function blockHits(b, slot) {   /* any of the window in the blocked time (2026-10-21: "include a time slot"); old am / pm = before / after 12 */
     var p = b.part === 'am' ? 'before' : b.part === 'pm' ? 'after' : b.part, t = (b.part === 'am' || b.part === 'pm') ? 720 : hhmmMin(b.time);
@@ -7910,7 +7908,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- the 365 office (2026-10-14, Matthew: Jen's screens in 365's colours, her own home, no doors or stats, and a Pipeline that
      uses a computer's width) ---- */
   function a365Brand() { var on = asOffice() || qView(); document.body.classList.remove('a365'); return on; }   /* no palette of its own any more (2026-10-22) */
-  function a365Mark(cls) { var i = q('img', cls || 'a365mk'); i.src = 'a365-badge.png'; i.alt = ''; return i; }
   /* the office home: find a house, who to contact next, what is booked with Brad */
   function officeHome() {
     hideSplash(); hideToast();
@@ -9382,7 +9379,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* towns, by county, each with its doors-left-weighted score */
     var tq = q('input', 'db-tq'); tq.type = 'search'; tq.placeholder = 'Find a town'; tq.setAttribute('aria-label', 'Find a town'); towns.appendChild(tq);
     var tl = q('div', 'db-tl'); towns.appendChild(tl);
-    var townSc = function (rg) { var n = 0, s2 = 0; rg.areas.forEach(function (a) { var l = areaLeft(a); if (typeof a.sc === 'number' && l) { n += l; s2 += a.sc * l; } }); return n ? s2 / n : null; };
     var ctyOpen = {}; ctyOpen[(S.regions.filter(function (x) { return x.key === S.region; })[0] || {}).county || 'other'] = true;   /* folded by county (2026-10-17): the town on screen keeps its county open */
     var drawTowns = function () {
       tl.textContent = ''; var v = tq.value.trim().toUpperCase(), order = [];
@@ -13016,20 +13012,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       after(false);
       toast(date ? VW() + ' booked' : VW() + ' taken off', date ? d.address + ' · ' + fmtWalk(d.walk) : d.address, null);
     }).catch(function () { if (enqueueSave('walk', body)) after(true); });
-  }
-  /* the walks coming up, so the week can be planned by town */
-  function walksUp(list) {
-    var box = q('div', 'walkup'), today = todayISO();
-    var up = list.filter(function (x) { return !x.result && x.walk && x.walk.date >= today; })
-      .sort(function (a, b) { return (a.walk.date + (a.walk.time || '99')) < (b.walk.date + (b.walk.time || '99')) ? -1 : 1; });
-    var none = list.filter(function (x) { return !x.result && !x.walk; }).length;
-    box.appendChild(q('div', 'wl', VW() + 's coming up'));
-    if (!up.length) box.appendChild(q('div', 'wur soft', 'None booked yet.'));
-    up.forEach(function (x) {
-      var r = q('div', 'wur'); r.appendChild(q('b', null, fmtWalk(x.walk))); r.appendChild(q('span', null, x.address + ' · ' + x.town)); box.appendChild(r);
-    });
-    if (none) box.appendChild(q('div', 'wur soft', none + (none === 1 ? ' booked quote has' : ' booked quotes have') + ' no walk date yet.'));
-    return box;
   }
   function fireReport(d) {
     var last = d.fc[d.fc.length - 1], prev = d.fc.length > 1 ? d.fc[0] : null, n = fcCount(last);
