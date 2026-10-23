@@ -6316,8 +6316,34 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(q('div', 'dwh', 'How did it go?'));
     var owe = (jb.pay && jb.pay.s === 'paid') || (jb.pay && jb.pay.s === 'plan') ? 0 : jb.price - ((jb.pay && jb.pay.amt) || 0);
     var panel = null;
+    if (jb.ride) {   /* riding along with this crew (2026-10-23, Matthew: give Bria "the option to input how long it took her to do the job"): her own time; the crew still marks it done */
+      c.appendChild(q('div', 'ltrynote', 'Riding along with ' + jb.ride + ': ' + jb.ride.split(' ')[0] + ' marks the job done.'));
+      if (jb.done) c.appendChild(q('div', 'qline' + (jb.done.o === 'done' ? ' qyes' : ''), (jb.done.o === 'done' ? 'Done' : 'Could not do it') + ' \u00b7 ' + jb.done.by + ', ' + ago(jb.done.at)));
+      var mine = (jb.ridet || {})[S.me], rb = q('div', 'jdone');
+      rb.appendChild(q('div', 'jdq', mine && mine.mins ? 'Your time on this job: about ' + minsText(mine.mins) + '. Change it below.' : 'How long did you spend on this job? (an estimate)'));
+      var rrow = q('div', 'jdtime'), rh = q('select'), rm = q('select');
+      for (var h3 = 0; h3 <= 10; h3++) { var o4 = q('option', null, h3 + (h3 === 1 ? ' hour' : ' hours')); o4.value = String(h3); rh.appendChild(o4); }
+      for (var m3 = 0; m3 < 60; m3 += 5) { var o5 = q('option', null, m3 + ' min'); o5.value = String(m3); rm.appendChild(o5); }
+      rh.value = String(mine && mine.mins ? Math.min(10, Math.floor(mine.mins / 60)) : 0); rm.value = String(mine && mine.mins ? (mine.mins % 60) - (mine.mins % 5) : 0);
+      rh.setAttribute('aria-label', 'Hours'); rm.setAttribute('aria-label', 'Minutes'); rrow.appendChild(rh); rrow.appendChild(rm); rb.appendChild(rrow);
+      var rerr = q('div', 'err'); rb.appendChild(rerr);
+      var rsv = q('button', 'save', 'Save my time'); rsv.type = 'button'; rb.appendChild(rsv);
+      rsv.addEventListener('click', function () {
+        var mm = (+rh.value) * 60 + (+rm.value); if (mm < 5) { rerr.textContent = 'Add about how long it took (hours and minutes).'; return; }
+        rsv.disabled = true;
+        api('ridetime', { body: { id: jb.id, mins: mm } }).then(function (j) {
+          rsv.disabled = false;
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { rerr.textContent = j.error || 'Not saved. Try again.'; return; }
+          toast('Time saved', 'About ' + minsText(mm) + ' on ' + name, null); if (redraw) redraw();
+        }).catch(function () { rsv.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
+      });
+      c.appendChild(rb);
+      return c;
+    }
     if (jb.done) {
       c.appendChild(q('div', 'qline' + (jb.done.o === 'done' ? ' qyes' : ''), (jb.done.o === 'done' ? 'Done' + (jb.done.mins ? ' in about ' + minsText(jb.done.mins) : '') : 'Could not do it') + (jb.done.collected ? ' \u00b7 ' + money0(jb.done.collected) + ' collected' : '') + ' \u00b7 ' + jb.done.by + ', ' + ago(jb.done.at)));
+      if (jb.ridet) Object.keys(jb.ridet).forEach(function (rn) { if (jb.ridet[rn].mins) c.appendChild(q('div', 'ltrynote', rn + ' rode along: about ' + minsText(jb.ridet[rn].mins))); });   /* riders' own time (2026-10-23) */
       if (jb.done.note) c.appendChild(q('div', 'lmsg', jb.done.note));
       var un = q('button', 'lnk', 'Undo this'); un.type = 'button';
       un.addEventListener('click', function () { if (window.confirm('Undo \u201c' + (jb.done.o === 'done' ? 'Done' : 'Could not do it') + '\u201d?')) done('undo', {}); });

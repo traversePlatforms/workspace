@@ -2701,7 +2701,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -4817,6 +4817,7 @@ function jobsAll(): array {
             if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
             if (!empty($r['del'])) $o[$id]['off'] = true;
             if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
+            if (is_array($r['ridet'] ?? null) && ($rn = (string) ($r['ridet']['name'] ?? '')) !== '') $o[$id]['ridet'][$rn] = ['mins' => (int) ($r['ridet']['mins'] ?? 0), 'at' => (int) ($r['at'] ?? 0)];   /* a rider's own time (2026-10-23) */
         }
         $c = [$sig, $o];
     }
@@ -4856,7 +4857,7 @@ function blockAt(string $crew, string $date, string $slot): ?array {
 }
 function blocksAhead(): array { $t = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $o = array_map('blockNorm', array_values(array_filter(jobBlocks(), fn($b) => ($b['to'] ?? '') >= $t))); usort($o, fn($a, $b) => [$a['from'], $a['crew']] <=> [$b['from'], $b['crew']]); return $o; }
 function jobShow(array $j, ?array $leads = null): array {
-    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare']));
+    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
     $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
     $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
@@ -4867,7 +4868,7 @@ function jobShow(array $j, ?array $leads = null): array {
     }
     return $o;
 }
-if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'schedview', 'jobblockadd', 'jobblockdel'], true) && !feature('walkdesk')) fail('Not here.', 404);
+if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'ridetime', 'schedview', 'jobblockadd', 'jobblockdel'], true) && !feature('walkdesk')) fail('Not here.', 404);
 /* paid, and what is left (2026-10-19): "Deposit $50 paid · $249 left", "Paid in full (card charged)" */
 function payLine(array $j): string {
     $p = $j['pay'] ?? ['s' => 'unpaid']; $s0 = (string) ($p['s'] ?? 'unpaid');
@@ -5056,6 +5057,22 @@ if ($action === 'myjobs') {
     foreach (jobsAll() as $j) if (!$j['off'] && ($j['crew'] === $who || in_array($j['crew'], $rides, true)) && ($j['date'] >= $from || $j['id'] === $want)) $list[] = jobShow($j, $leads) + ($j['crew'] !== $who ? ['ride' => (string) $j['crew']] : []);
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     out(['ok' => true, 'who' => $who, 'jobs' => $list]);
+}
+/* a rider's own time on a job (2026-10-23, Matthew: "on brias app since we gave her crew permissions. can you give her the option to input how
+   long it took her to do the job"): someone set to ride with a crew (accounts "rides") saves how long THEY spent on one of that crew's jobs. It
+   does not mark the job done; the crew still does that with their own time. mins 0 takes it back off. */
+if ($action === 'ridetime') {
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $all = jobsAll();
+    if (!preg_match('/^j[0-9a-f]{12}$/D', $id) || !isset($all[$id]) || $all[$id]['off']) fail('No such job.', 404);
+    $rides = array_values(array_filter((array) (($acct['rides'] ?? [])[(string) ($session['c'] ?? '')] ?? []), 'is_string'));
+    if (!in_array((string) $all[$id]['crew'], $rides, true)) fail('Not allowed.', 403);
+    $mins = max(0, min(960, (int) ($body['mins'] ?? 0)));
+    if ($mins > 0 && $mins < 5) fail('Add about how long it took, in hours and minutes.');
+    if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $id, 'ridet' => ['name' => $me, 'mins' => $mins], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    $took = trim(($mins >= 60 ? intdiv($mins, 60) . ' h ' : '') . ($mins % 60 ? ($mins % 60) . ' min' : ''));
+    if ($mins > 0) appendLine(leadsDir() . '/leadst.log', ['id' => $all[$id]['lead'], 'note' => 'Rode along on the job (' . $all[$id]['crew'] . '): about ' . $took, 'by' => $me, 'at' => time()]);
+    out(['ok' => true]);
 }
 /* done, from the crew (or the office): done or could not; what was collected */
 if ($action === 'jobforecast') {
