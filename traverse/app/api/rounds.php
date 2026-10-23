@@ -783,27 +783,41 @@ function doorIds(string $key): array {
  *  "No answer" and an undo in the same second read in the wrong order). Rows from before this
  *  have no 'rt' and keep their file order. */
 function stamped(array $row): array { $row['rt'] = round(microtime(true), 4); return $row; }
+/* ---- reading the logs once (review 2026-10-22) -----------------------------------------
+ * Every loader re-opened and re-decoded its log on every call: leadsAll() 20-odd times for one Pipeline load, jobForLead() once per
+ * ClickUp task, the marks and phones logs twice per door list. A file is now decoded once per request and kept by its size and mtime
+ * (the stamp townSplit() keeps a town by), so a line appended in this request, or by another process, is seen on the next read, as
+ * before. The logs are append-only, so the stamp cannot stay the same across a change. */
+function fileSig(string $f): string { clearstatcache(true, $f); $s = @stat($f); return $s ? $s['size'] . ':' . $s['mtime'] : ''; }
+/** the rows of one JSONL file that decode to arrays, in file order */
+function jsonLines(string $f): array {
+    static $c = [];
+    $sig = fileSig($f); if ($sig === '') return [];
+    if (isset($c[$f]) && $c[$f][0] === $sig) return $c[$f][1];
+    $rows = [];
+    if (is_readable($f) && ($fh = @fopen($f, 'r'))) { while (($line = fgets($fh)) !== false) { $r = json_decode(trim($line), true); if (is_array($r)) $rows[] = $r; } fclose($fh); }
+    $c[$f] = [$sig, $rows];
+    return $rows;
+}
 function logRows(string $kind, string $key): array {
-    $read = static function (string $file): array {
-        $rows = [];
-        if (!is_readable($file) || !($fh = @fopen($file, 'r'))) return $rows;
-        while (($line = fgets($fh)) !== false) { $r = json_decode(trim($line), true); if (is_array($r)) $rows[] = $r; }
-        fclose($fh);
-        return $rows;
-    };
+    static $c = [];
     $partners = sharedWith($key);
+    $files = array_map(fn($p) => DATA_DIR . '/' . $kind . '-' . $p . '.log', array_merge($partners, [$key]));
+    $sig = implode('|', array_map('fileSig', $files)); $ck = $kind . '/' . $key;
+    if (isset($c[$ck]) && $c[$ck][0] === $sig) return $c[$ck][1];
     $mine = $partners ? doorIds($key) : [];
     $all = []; $seq = 0;
-    foreach ($partners as $p) foreach ($read(DATA_DIR . '/' . $kind . '-' . $p . '.log') as $r) {
+    foreach ($partners as $i => $p) foreach (jsonLines($files[$i]) as $r) {
         $hit = isset($r['id']) ? isset($mine[$r['id']])
              : (isset($r['ids']) && array_intersect_key(array_flip((array) $r['ids']), $mine));   /* area flags carry a list */
         if ($hit) { $r['_from'] = $p; $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r]; }
     }
-    foreach ($read(DATA_DIR . '/' . $kind . '-' . $key . '.log') as $r) $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r];
+    foreach (jsonLines(end($files)) as $r) $all[] = [(int) ($r['at'] ?? 0), (float) ($r['rt'] ?? 0), $seq++, $r];
     /* one total order (Fable): tap second, then unstamped before stamped, then receipt time,
        then file order — partner files first, because they hold the door's older history */
     usort($all, fn($a, $b) => $a[0] <=> $b[0] ?: ($a[1] > 0) <=> ($b[1] > 0) ?: $a[1] <=> $b[1] ?: $a[2] <=> $b[2]);
-    return array_map(function ($x) { unset($x[3]['rt']); return $x[3]; }, $all);
+    $c[$ck] = [$sig, $rows = array_map(function ($x) { unset($x[3]['rt']); return $x[3]; }, $all)];
+    return $rows;
 }
 /* ---- when a house sells (2026-10-03) ---------------------------------------
  * The door lists are rebuilt from county records every quarter. When the owner on the record
@@ -1152,12 +1166,7 @@ function searchIndex(): array {
 const CUST_PLANS = ['oneoff', 'monthly', 'quarterly', 'yearly', 'custom'];   /* quarterly: 2026-10-06, the pest industry's plan */
 const CUST_STATUS = ['active', 'paused', 'ended'];
 function custDir(): string { return dirname(DATA_DIR) . '/customers'; }
-function custLines(string $name): array {
-    $f = custDir() . '/' . $name; $out = [];
-    if (!is_readable($f)) return $out;
-    foreach (explode("\n", (string) file_get_contents($f)) as $ln) { $j = json_decode($ln, true); if (is_array($j)) $out[] = $j; }
-    return $out;
-}
+function custLines(string $name): array { return jsonLines(custDir() . '/' . $name); }   /* decoded once per request (review 2026-10-22) */
 function loadCustomers(): array {
     $c = [];
     foreach (custLines('customers.log') as $r) {
@@ -2335,6 +2344,9 @@ function offerUntil(array $l): ?int {
     return (int) ($o['at'] ?? ($l['quote']['at'] ?? 0)) + OFFER_HOLD_SECS;
 }
 function jobHolds(?array $leads = null): array {
+    /* the plain call once per request (review 2026-10-22): slotFree() asks for it per job, day and slot when the weather moves a day */
+    static $c = null; $sig = $leads === null ? fileSig(leadsDir() . '/leads.log') . '|' . fileSig(leadsDir() . '/leadst.log') . '|' . fileSig(DATA_DIR . '/jobs.log') . '|' . (int) webHide() : null;
+    if ($sig !== null && $c !== null && $c[0] === $sig) return $c[1];
     $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $out = [];
     $booked = []; foreach (jobsAll() as $j) if (!$j['off']) $booked[$j['lead']] = true;
     $pool = $leads ?? leadsAll(); $web = webHide() ? webLeadIds() : [];
@@ -2347,6 +2359,7 @@ function jobHolds(?array $leads = null): array {
         $until = offerUntil($l); if ($until !== null && $until < time()) continue;   /* released after 72 hours */
         $out[] = ['lead' => $l['id'], 'name' => isset($web[$l['id']]) ? 'Held' : (trim((string) ($l['name'] ?? '')) ?: 'A customer'), 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'], 'until' => $until, 'paid' => !empty($l['sign'])];
     }
+    if ($sig !== null) $c = [$sig, $out];
     return $out;
 }
 /** is this crew / day / slot free for this lead: no job there, and no other lead's offer holding it */
@@ -3510,9 +3523,9 @@ function hailRecentReports(): array {
     $sts = gmdate('Y-m-d\TH:i', time() - 14 * 86400) . 'Z'; $ets = gmdate('Y-m-d\TH:i') . 'Z';
     $csv = httpGetRaw('https://mesonet.agron.iastate.edu/cgi-bin/request/gis/lsr.py?state=CO&wfo=ALL&sts=' . $sts . '&ets=' . $ets . '&fmt=csv&justcsv=1', 12);
     if ($csv === null) return $mem = (array) ($c['r'] ?? []);   /* the archive did not answer: the last copy stands */
-    $lines = preg_split('/\r?\n/', trim($csv)); $h = str_getcsv((string) array_shift($lines)); $ix = array_flip($h); $r = [];
+    $lines = preg_split('/\r?\n/', trim($csv)); $h = str_getcsv((string) array_shift($lines), ',', '"', '\\'); $ix = array_flip($h); $r = [];   /* the escape named: PHP 8.4 logs a deprecation on every call without it (review 2026-10-22: 1,500 lines in the test log) */
     foreach ($lines as $l) {
-        $v = str_getcsv($l); if (($v[$ix['TYPECODE'] ?? -1] ?? '') !== 'H') continue;
+        $v = str_getcsv($l, ',', '"', '\\'); if (($v[$ix['TYPECODE'] ?? -1] ?? '') !== 'H') continue;
         $mag = (float) ($v[$ix['MAG']] ?? 0); $la = (float) ($v[$ix['LAT']] ?? 0); $lo = (float) ($v[$ix['LON']] ?? 0); if ($mag < 0.75 || !$la) continue;
         $t = (string) ($v[$ix['VALID']] ?? ''); if (strlen($t) < 12) continue;
         $dt = new DateTime(substr($t, 0, 4) . '-' . substr($t, 4, 2) . '-' . substr($t, 6, 2) . ' ' . substr($t, 8, 2) . ':' . substr($t, 10, 2), new DateTimeZone('UTC'));
@@ -3546,7 +3559,7 @@ if ($action === 'soil') {
     if (!$hit || time() - (int) ($hit['got'] ?? 0) > 3 * 3600) {
         $to = new DateTime('now', new DateTimeZone('America/Denver')); $from = (clone $to)->modify('-24 hours');
         $csv = httpGetRaw('https://coagmet.colostate.edu/data/hourly/' . $st . '.csv?from=' . $from->format('Y-m-d\TH:i') . '&to=' . $to->format('Y-m-d\TH:i') . '&fields=st5cm&units=us', 15);
-        $v = []; foreach (explode("\n", (string) $csv) as $l) { $p = str_getcsv(trim($l)); $x = isset($p[2]) ? (float) $p[2] : -999; if ($x > -100) $v[] = $x; }
+        $v = []; foreach (explode("\n", (string) $csv) as $l) { $p = str_getcsv(trim($l), ',', '"', '\\'); $x = isset($p[2]) ? (float) $p[2] : -999; if ($x > -100) $v[] = $x; }
         if ($v) { $hit = ['f' => round(array_sum($v) / count($v)), 'lo' => round(min($v)), 'hi' => round(max($v)), 'n' => count($v), 'got' => time()]; $cache[$st] = $hit; @file_put_contents($cf, json_encode($cache), LOCK_EX); }
     }
     if (!$hit) out(['ok' => true, 'none' => true, 'nearest' => $best[0][1], 'mi' => round($best[1]), 'down' => true]);
@@ -3900,14 +3913,7 @@ function quoteInbox(array $l, bool $mine = false): bool {
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
 const LEAD_STATUS = ['new', 'contacted', 'walk', 'quoted', 'won', 'lost', 'hold', 'unreached'];   /* + hold: on hold, parked on purpose (2026-10-17) */   /* + unreached: Couldn't reach (2026-10-21) */
 function leadsDir(): string { return dirname(DATA_DIR) . '/leads'; }
-function readLines(string $f): array {
-    $out = [];
-    if (!is_readable($f)) return $out;
-    $fh = @fopen($f, 'r'); if (!$fh) return $out;
-    while (($line = fgets($fh)) !== false) { $r = json_decode(trim($line), true); if (is_array($r) && isset($r['id'])) $out[] = $r; }
-    fclose($fh);
-    return $out;
-}
+function readLines(string $f): array { return array_values(array_filter(jsonLines($f), fn($r) => isset($r['id']))); }   /* the rows with an id; decoded once per request (review 2026-10-22) */
 function appendLine(string $f, array $row): bool {
     if (!is_dir(dirname($f)) && !@mkdir(dirname($f), 0750, true)) return false;
     return (bool) @file_put_contents($f, json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
@@ -4021,6 +4027,8 @@ function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_st
 function webLeadIds(): array { static $ids = null; if ($ids === null) { $ids = []; foreach (leadsAllRaw() as $id => $l) if (($l['src'] ?? '') === 'a365web') $ids[$id] = true; } return $ids; }
 function leadsAll(): array { $all = leadsAllRaw(); return webHide() ? array_filter($all, fn($l) => ($l['src'] ?? '') !== 'a365web') : $all; }
 function leadsAllRaw(): array {
+    static $c = null; $sig = fileSig(leadsDir() . '/leads.log') . '|' . fileSig(leadsDir() . '/leadst.log');   /* built once per request, again after a write (review 2026-10-22) */
+    if ($c !== null && $c[0] === $sig) return $c[1];
     $leads = [];
     foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null, 'quote' => null, 'recall' => null];
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
@@ -4050,6 +4058,7 @@ function leadsAllRaw(): array {
         if (array_key_exists('follow', $u)) $leads[$u['id']]['follow'] = is_array($u['follow']) ? ['date' => (string) $u['follow'][0], 'time' => (string) ($u['follow'][1] ?? '')] : null;
     }
     foreach ($leads as &$lx) if (!empty($lx['seen']) && ($lx['seen']['key'] ?? '') !== ($lx['sign']['key'] ?? null)) unset($lx['seen']); unset($lx);   /* opens of an older form do not count for a new one */
+    $c = [$sig, $leads];
     return $leads;
 }
 function leadOk(string $id): bool { return (bool) preg_match('/^[wm]\d{14}[0-9a-f]{6}$/D', $id); }
@@ -4796,15 +4805,20 @@ if ($action === 'leadquote') {
 function jobSlots(): array { return [['s1', '9:30-10:00', '09:30'], ['s2', '10-12', '10:00'], ['s3', '12-2', '12:00'], ['s4', '3:00', '15:00']]; }   /* functions, not consts: the calendar feed runs above this line */
 function jobClosed(): array { return [0]; }   /* Sunday */
 function jobsAll(): array {
-    $o = [];
-    foreach (readLines(DATA_DIR . '/jobs.log') as $r) {
-        $id = (string) $r['id'];
-        if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
-        $moved = false;
-        foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
-        if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
-        if (!empty($r['del'])) $o[$id]['off'] = true;
-        if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
+    static $c = null; $sig = fileSig(DATA_DIR . '/jobs.log');   /* the replay once per request, again after a write (review 2026-10-22); the hiding below runs every call, as it follows the role */
+    if ($c !== null && $c[0] === $sig) $o = $c[1];
+    else {
+        $o = [];
+        foreach (readLines(DATA_DIR . '/jobs.log') as $r) {
+            $id = (string) $r['id'];
+            if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
+            $moved = false;
+            foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+            if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
+            if (!empty($r['del'])) $o[$id]['off'] = true;
+            if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
+        }
+        $c = [$sig, $o];
     }
     if (webHide()) { $web = webLeadIds(); foreach ($o as &$wj) if (isset($web[(string) ($wj['lead'] ?? '')])) { $wj['title'] = 'Booked'; $wj['addr'] = ''; $wj['note'] = ''; $wj['card'] = null; $wj['aftercare'] = null; $wj['web'] = true; } unset($wj); }   /* a 365-website job: its time, not who (2026-10-22) */
     return $o;
@@ -4832,7 +4846,6 @@ function jobDays(): array { $j = json_decode((string) @file_get_contents(DATA_DI
    days), part = all | before | after a time ('time', HH:MM; "include a time slot"), an optional note. jobblocks.json beside jobdays.json.
    A window is blocked when any of it falls in the blocked time; an exact arrival time is a point. Old am / pm = before / after 12:00. */
 function jobBlocks(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/jobblocks.json'), true); return is_array($j) ? array_values(array_filter($j, 'is_array')) : []; }
-function slotHalf(string $slot): string { $s = jobSlot($slot); return $s && $s[2] < '12:00' ? 'am' : 'pm'; }
 function slotSpan(string $slot): array { $s = jobSlot($slot); $a = $s ? $s[2] : '00:00'; $e = ['s1' => '10:00', 's2' => '12:00', 's3' => '14:00', 's4' => '15:00'][$slot] ?? $a; return [$a, $e]; }
 function blockNorm(array $b): array { $p = (string) ($b['part'] ?? 'all'); if ($p === 'am') { $p = 'before'; $b['time'] = '12:00'; } elseif ($p === 'pm') { $p = 'after'; $b['time'] = '12:00'; } $b['part'] = in_array($p, ['before', 'after'], true) ? $p : 'all'; $b['time'] = (string) ($b['time'] ?? ''); return $b + ['note' => '']; }
 function blockHits(array $b, string $slot): bool { $b = blockNorm($b); if ($b['part'] === 'all') return true; [$a, $e] = slotSpan($slot); return $b['part'] === 'before' ? $a < $b['time'] : ($e > $b['time'] || $a >= $b['time']); }
@@ -4866,7 +4879,6 @@ function payLine(array $j): string {
     return $s0 === 'deposit' ? 'Deposit $' . (int) ($p['amt'] ?? 0) . ' paid · $' . $owed . ' left' : 'Not paid yet · $' . $owed . ' due';
 }
 function cardLine(array $j, ?array $l): string { $cc = $l['sqcard'] ?? null; if (!empty($cc['id'])) return 'Card on file (' . trim((string) ($cc['brand'] ?? 'card') . ' ' . (string) ($cc['last4'] ?? '')) . ')'; return !empty($j['card']) ? 'Card on file' : 'No card on file'; }
-function schedPay(?array $p): string { $p = $p ?: ['s' => 'unpaid']; if ($p['s'] === 'deposit') return 'Deposit paid $' . (int) ($p['amt'] ?? 0); if ($p['s'] === 'paid') return 'Paid in full'; if ($p['s'] === 'plan') return 'Service plan'; return 'Not paid yet'; }
 /* the schedule, to look at only (2026-10-15, Matthew: Jen on a quote-only account "needs a way to view scheduling"; she "has a strong
    attachment to that excel sheet"): each day's arrival times for each crew, booked / held / open, with the customer's name and town
    only: no prices, phones, emails or streets, and nothing can be changed or downloaded from here */
@@ -6660,8 +6672,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
                     $seenExt[$ext] = true;
                     if ($who !== '' && isset($unWho[$who])) { leadRevive($unWho[$who], 'filled in a Facebook form again', 'Facebook'); $added[] = ($name ?: $phone) . ' (back)'; unset($unWho[$who]); continue; }
                     if ($who !== '' && isset($seenWho[$who])) continue;
-                    $msg = implode("
-", array_merge($fv['extra'], !empty($L['ad_name']) ? ['Ad: ' . $L['ad_name']] : []));
+                    $msg = implode("\n", array_merge($fv['extra'], !empty($L['ad_name']) ? ['Ad: ' . $L['ad_name']] : []));
                     $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => 'meta', 'at' => $at, 'need' => a365Clean((string) ($F['name'] ?? ''), 60),
                             'name' => $name, 'phone' => $phone, 'email' => $email, 'town' => a365Clean($fv['town'], 160), 'msg' => a365Clean($msg, 2000), 'by' => 'Facebook', 'ext' => $ext, 'page' => a365Clean((string) $P['name'], 80)];
                     if (!appendLine(leadsDir() . '/leads.log', $row)) { $errors[] = 'could not save a lead'; continue; }
