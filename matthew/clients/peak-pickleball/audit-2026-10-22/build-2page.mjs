@@ -81,9 +81,9 @@ function healthGrid() {
 }
 /* G. the plan as a three-phase timeline */
 function planTimeline() {
-  const P = [['Weeks 1–2', 'Stop the leaks', ['Book-a-Court button', 'One set of prices, rules, hours', 'Privacy, terms, waiver pages', 'Fix broken links and listings', 'One name and tagline everywhere', 'Review link on the site']],
-    ['Month 1', 'Make yes easy', ['Fast, phone-first home page', 'Working corporate + scholarship forms', 'Schedules, lesson prices, app, Wellhub', 'Google markup and posts', 'Reply to every review', 'Facebook events']],
-    ['Ongoing', 'Grow', ['Weekly calendar, 4–5 posts', 'Reels reposted to TikTok, YouTube, Threads', 'Weekly posts in the 963-member group', 'Review requests after visits', '"Best of" nominations, press', 'Monthly results report']]];
+  const P = [['Fix the basics', '', ['Book-a-Court button', 'One set of prices, rules, hours', 'Privacy, terms, waiver pages', 'Fix broken links and listings', 'One name and tagline everywhere', 'Review link on the site']],
+    ['Make it easy to say yes', '', ['Fast, phone-first home page', 'Working corporate + scholarship forms', 'Schedules, lesson prices, app, Wellhub', 'Google markup and posts', 'Reply to every review', 'Facebook events']],
+    ['Grow', '', ['A regular posting calendar', 'Reels reposted to TikTok, YouTube, Threads', 'Regular posts in the 963-member group', 'Review requests after visits', '"Best of" nominations, press', 'A results report']]];
   return `<div class="plan">${P.map(([when, what, items], i) => `<div class="ph"><div class="phh"><span class="pn">${i + 1}</span><b>${when}</b><em>${what}</em></div><ul>${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('<div class="arrow">→</div>')}</div>`;
 }
 
@@ -167,9 +167,9 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
   <h3>Social: what we would change</h3>
   <ul class="f" style="columns:2;column-gap:16px">
     <li><b>Rename Instagram</b> to "Peak Pickleball | Colorado Springs" (no "Peak" in it today).</li>
-    <li><b>Post on a calendar,</b> 4–5 a week, offer and price in the first line.</li>
+    <li><b>Post on a calendar,</b> with the offer and price in the first line.</li>
     <li><b>Repost every reel</b> to Facebook, TikTok, YouTube Shorts and Threads: one Facebook reel reached 84,000 plays.</li>
-    <li><b>Run the 963-member group:</b> weekly open courts, sign-ups, results.</li>
+    <li><b>Run the 963-member group:</b> open courts, sign-ups, results.</li>
     <li><b>Claim a Facebook username;</b> fix the link page (it points to a Greensboro club's TikTok).</li>
     <li><b>One tagline everywhere</b>, not five ("top", "Colorado's largest", "nation's largest"…).</li>
   </ul>
