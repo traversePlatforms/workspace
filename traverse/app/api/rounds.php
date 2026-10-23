@@ -2348,7 +2348,8 @@ function a365WebMailFlush(): int {
     $sent = 0; $keep = [];
     try {
         $cfg = require $cf; require_once __DIR__ . '/smtp.php';
-        foreach (readLines($q) as $m) {
+        $rows = jsonLines($q); if (!$rows) { flock($lk, LOCK_UN); fclose($lk); return 0; }   /* jsonLines, not readLines: these rows have no id (fixed 2026-10-23) */
+        foreach ($rows as $m) {
             $res = smtp_send((array) ($cfg['smtp'] ?? []), (string) ($cfg['to'] ?? ''), (string) ($m['subject'] ?? 'Website lead'), (string) ($m['body'] ?? ''), ['X-Mailer: sixfold-app']);
             @file_put_contents(DATA_DIR . '/weblead-mail.log', json_encode(['at' => time(), 'ok' => !empty($res['ok']), 'stage' => $res['stage'] ?? null, 'queued' => (int) ($m['at'] ?? 0)]) . "\n", FILE_APPEND | LOCK_EX);
             if (!empty($res['ok'])) { $sent++; continue; }
