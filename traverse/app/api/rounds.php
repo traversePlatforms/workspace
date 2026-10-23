@@ -5037,7 +5037,11 @@ if ($action === 'myjobs') {
     /* the admin or the office opening one job by id: that job, whoever's crew it is (2026-10-20, Matthew: opening Jeremy's job said "not on
        the list any more": the schedule's "Open the job" asked for the opener's own jobs, and the job was Brad's) */
     if ($want !== '' && desk() && trim((string) ($_GET['who'] ?? '')) === '') { $wj = jobsAll()[$want] ?? null; if ($wj && !$wj['off']) out(['ok' => true, 'who' => (string) $wj['crew'], 'jobs' => [jobShow($wj, $leads)]]); }
-    foreach (jobsAll() as $j) if (!$j['off'] && $j['crew'] === $who && ($j['date'] >= $from || $j['id'] === $want)) $list[] = jobShow($j, $leads);
+    /* rides with (2026-10-22, Matthew: "Bria is also going out on some jobs with brad tomorrow can u give access to the crew portion. keep her current
+       access as well"): accounts "rides" {account id: [crew names]} adds those crews' jobs to this person's own list, to look at; the job's own
+       crew still marks it done (jobOpen is unchanged). Set on the server by the admin. */
+    $rides = $who === $me ? array_values(array_filter((array) (($acct['rides'] ?? [])[(string) ($session['c'] ?? '')] ?? []), 'is_string')) : [];
+    foreach (jobsAll() as $j) if (!$j['off'] && ($j['crew'] === $who || in_array($j['crew'], $rides, true)) && ($j['date'] >= $from || $j['id'] === $want)) $list[] = jobShow($j, $leads) + ($j['crew'] !== $who ? ['ride' => (string) $j['crew']] : []);
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     out(['ok' => true, 'who' => $who, 'jobs' => $list]);
 }
@@ -5103,11 +5107,13 @@ function jobKnownPays(array $j, array $l): array {
     $orders = array_filter([(string) ($l['sign']['pay']['order'] ?? ''), (string) ($j['sqlink']['order'] ?? '')]);
     return [$ids, $orders];
 }
-function squarePaymentsSince(int $from, int $pages = 4): ?array {   /* the payments at our location since a time; null when Square does not answer */
+function squarePaymentsSince(int $from, int $pages = 4, bool $allLocs = false): ?array {   /* the payments at our location since a time; null when Square does not answer */
+    /* $allLocs (2026-10-22, Matthew: Brian Skelton paid his $200 by an invoice made in the Square dashboard, which landed in the "Six Fold Colorado"
+       location; the balance check only read the 365 location and never saw it): every location the account can see */
     $cfg = squareCfg(); if (!$cfg) return null;
     $since = gmdate('Y-m-d\TH:i:s\Z', $from); $cur = ''; $out = [];
     for ($pg = 0; $pg < $pages; $pg++) {
-        $r = squareApi('GET', '/v2/payments?begin_time=' . rawurlencode($since) . '&location_id=' . rawurlencode((string) $cfg['location']) . '&limit=100' . ($cur !== '' ? '&cursor=' . rawurlencode($cur) : ''));
+        $r = squareApi('GET', '/v2/payments?begin_time=' . rawurlencode($since) . ($allLocs ? '' : '&location_id=' . rawurlencode((string) $cfg['location'])) . '&limit=100' . ($cur !== '' ? '&cursor=' . rawurlencode($cur) : ''));
         if (($r['_status'] ?? 0) !== 200 && empty($r['payments'])) return $pg ? $out : null;
         foreach (($r['payments'] ?? []) as $py) $out[] = $py;
         $cur = (string) ($r['cursor'] ?? ''); if ($cur === '') break;
@@ -5162,7 +5168,7 @@ function squareNameMatch(array $j, array $l, array $pays): ?array {
 function squareBalancePaid(array $j, array $l, ?array $pays = null): ?array {
     $cust = (string) ($l['sqcust'] ?? ''); $owed = jobOwed($j); $cfg = squareCfg();
     if ($owed < 1 || !$cfg) return null;
-    if ($pays === null) $pays = squarePaymentsSince(max(0, (int) ($j['at'] ?? time()) - 3 * 86400)) ?? [];
+    if ($pays === null) $pays = squarePaymentsSince(max(0, (int) ($j['at'] ?? time()) - 3 * 86400), 4, true) ?? [];
     if ($cust === '') return squareNameMatch($j, $l, $pays);   /* no Square customer linked: the name-and-amount match only */
     [$ids, $orders] = jobKnownPays($j, $l);
     $sum = 0; $hit = null;
@@ -5183,7 +5189,7 @@ function squareSweep(): array {
     $leads = leadsAll(); $owing = []; $from = time();
     foreach (jobsAll() as $j) { if ($j['off'] || jobOwed($j) < 1) continue; $l = $leads[$j['lead']] ?? null; if (!$l) continue; $owing[] = [$j, $l]; $from = min($from, (int) ($j['at'] ?? time())); }   /* every owing job now, not only Square-linked ones: the name-and-amount match covers the rest (2026-10-20) */
     if (!$owing) return ['ok' => true, 'owing' => 0, 'paid' => 0];
-    $pays = squarePaymentsSince(max(time() - 45 * 86400, $from - 3 * 86400), 10);
+    $pays = squarePaymentsSince(max(time() - 45 * 86400, $from - 3 * 86400), 10, true);
     if ($pays === null) return ['ok' => false, 'error' => 'Square did not answer.'];
     $paid = 0;
     $took = [];
