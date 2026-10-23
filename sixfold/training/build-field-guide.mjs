@@ -143,7 +143,7 @@ ${sections.map((s) => `<section class="section">
   <div class="shead"><span class="n">${s.n}</span><span><b>${esc(s.name)}</b><small>${esc(s.sub)}</small></span></div>
   ${s.lessons.map((l) => `<article class="lesson"><h2>${esc(l.title)}</h2>\n${body(l.lines)}</article>`).join('\n')}
 </section>`).join('\n')}
-<div class="foot"><span>Sixfold, LLC · 17890 Sierra Way, Monument, CO 80132 · (303) 915-1045</span><span>Internal · not legal advice</span></div>
+<div class="foot"><span>Sixfold, LLC · 17890 Sierra Way, Monument, CO 80132 · (720) 830-4553</span><span>Internal · not legal advice</span></div>
 </div></body></html>
 `;
 writeFileSync(join(HERE, 'field-guide.html'), html, 'utf8');

@@ -143,7 +143,7 @@ The five rules:
 
 Felling, stump grinding, slash piling, chipping and haul-off — in El Paso, Douglas and Teller counties and the Front Range foothills.
 
-**(303) 915-1045** · Contact@SixfoldColorado.com
+**(720) 830-4553** · contact@365aeration.com
 Sixfold, LLC · Monument, CO
 
 QR code to `linktr.ee/SixFoldColorado` — the decode-verified print-black variant from [brand/qr/](../brand/qr/), inlined as SVG so it scales without resampling. Do not swap it for a generated one; that folder's build script decodes every code it writes and this one passes down to 160 px.
@@ -271,7 +271,7 @@ The guide is a public education publication of a Colorado State University outre
 
 ### Unresolved
 
-- **The domain is printed nowhere.** `SixfoldColorado.com` is owned but resolves to nothing — there is no hosting. A URL on a printed piece that returns an error is worse than no URL, so the panel carries the phone number, the email and the QR code to `linktr.ee/SixFoldColorado`, which is live. **Put the domain on the piece as soon as it resolves**; it will need a reprint.
+- **The domain is printed nowhere.** `365aeration.com` is owned but resolves to nothing — there is no hosting. A URL on a printed piece that returns an error is worse than no URL, so the panel carries the phone number, the email and the QR code to `linktr.ee/SixFoldColorado`, which is live. **Put the domain on the piece as soon as it resolves**; it will need a reprint.
 - **Counties named.** The back panel says El Paso, Douglas and Teller "and the Front Range foothills" — rewritten 2026-08-25 when the base moved from Englewood to Monument, which put Arapahoe and Jefferson out of easy reach and brought El Paso and Teller in. That is a statement of where Sixfold works, not a boundary on what it will quote — the criterion is drive time from Monument, and a job outside those counties is a phone call, not a refusal. **The county strategy in the marketing plan was built around an Englewood base and needs Brandon's review**, not just a find-and-replace.
 - **Whether the Division of Insurance has adopted implementing rules** under HB25-1182 §(11). Not checked, here or previously. It would affect notice formatting, not any figure printed here.
 

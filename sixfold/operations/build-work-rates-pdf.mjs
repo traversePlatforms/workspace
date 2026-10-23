@@ -273,7 +273,7 @@ y -= 12;
 /* (303) 915-1045 is the current SixfoldColorado number. (720) 772-6146 is
    superseded and still sits in other files in this repo — do not copy a contact
    line out of a neighbouring file without checking it. */
-page.drawText('Sixfold LLC   ·   Contact@SixfoldColorado.com   ·   (303) 915-1045', {
+page.drawText('Sixfold LLC   ·   contact@365aeration.com   ·   (720) 830-4553', {
   x: ML, y, size: 8, font: body, color: MUTE });
 y -= 13;
 page.drawText('On a phone: save it first, then open it in a PDF app. Filling it inside an email preview does not save.', {

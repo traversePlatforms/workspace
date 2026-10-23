@@ -31,6 +31,8 @@ const root = resolve(here, '..');
    'dark'  — the document has no light palette, or is a proof of assets that
              only make sense on the dark ground. */
 const JOBS = [
+  /* 2026-10-23 (Sixfold 365 rebrand): the jobs for the door hanger, door flyers, the Sept flyers, launch flyers, aeration ad kit, content set,
+     planning sheets and the old Sixfold business cards were removed with their sources, which moved to sixfold/_archive-2026-10-23-rebrand/. */
   /* Path corrected 2026-09-14 — the review page is generated into `out/`, and the
      stale path here threw on job #1 and so blocked every other job in the list. */
   { src: 'brand/social/out/review.html',        out: 'brand/social/review.pdf',                   mode: 'dark'  },
@@ -64,10 +66,8 @@ const JOBS = [
   /* Three Letter flyers, one message each, NO offer on any of them — which is why
      they are not blocked the way launch-flyers.html is. scale 1: each page is a full
      8.5x11 sheet with its own @page, and 0.8 would float a shrunken flyer on a page. */
-  { src: 'marketing/flyers.html',               out: 'marketing/Sixfold-Flyers.pdf',              mode: 'light', scale: 1 },
   /* Door hanger, 4.25x11, front and back. Its own @page size, so scale MUST be 1.
      The top 2.6in is a keep-out for the vendor's die-cut hole. */
-  { src: 'marketing/door-hanger.html',          out: 'marketing/Sixfold-Door-Hanger.pdf',         mode: 'light', scale: 1 },
   /* The door-to-door leave-behind. TWO per Letter sheet, cut across the middle —
      ONE page, two identical 8.5x5.5 flyers. Own @page, so scale MUST be 1.
 
@@ -82,12 +82,6 @@ const JOBS = [
      the one thing on the page that would not have gone black. `content:url()` swaps
      it for sixfold-qr-print-black.png, which is pure black on white and the
      maximum-reliability variant. So mono is now cheaper AND scans better. */
-  { src: 'marketing/door-flyer.html', out: 'marketing/Sixfold-Door-Flyer-Mono.pdf', mode: 'light', scale: 1,
-    css: ':root{ --accent:#000000 !important } .qr{ content:url("../brand/qr/sixfold-qr-print-black.png") }' },
-  { src: 'marketing/door-flyer.html', out: 'marketing/Sixfold-Door-Flyer-Green.pdf', mode: 'light', scale: 1 },
-  { src: 'marketing/launch-flyers.html',        out: 'marketing/launch-flyers.pdf',               mode: 'light',
-    css: '.flyer, .board-col { break-inside: avoid-page; }' },
-  { src: 'marketing/marketing-plan.html',       out: 'marketing/marketing-plan.pdf',              mode: 'light' },
   /* The index that sits at the top of the Google Drive team folder. TWO pages by
      content, not by overflow: page 1 is what is in the folder, page 2 is what is
      deliberately not and why. Page 2 is the one that matters — it carries the
@@ -98,12 +92,8 @@ const JOBS = [
   { src: 'marketing/ad-script-kit.html',        out: 'marketing/Sixfold-Ad-Script-Kit.pdf',       mode: 'light' },
   /* The aeration companion to the kit above. Same style sheet, same light print
      register, and it goes to Brad the same way. */
-  { src: 'marketing/aeration-ad-kit.html',      out: 'marketing/Sixfold-Aeration-Ad-Kit.pdf',     mode: 'light' },
   /* The homeowner content set, six posts. Added 2026-09-25 — it had no PDF job
      before, only the designed HTML and its artifact. */
-  { src: 'content/content-set.html',            out: 'content/Sixfold-Content-Set.pdf',           mode: 'light' },
-  { src: 'marketing/minimum-viable-start.html', out: 'marketing/minimum-viable-start.pdf',        mode: 'light' },
-  { src: 'marketing/platform-sheet.html',       out: 'marketing/platform-sheet.pdf',              mode: 'light' },
   /* css: `ol.next li` is a two-column grid (number, text). A grid item that
      lands on a page boundary collapses its 1fr column to one word per line in
      Chrome's print layout — the last two pages came out as a ribbon of single
@@ -192,6 +182,8 @@ const JOBS = [
   { src: 'operations/job-closeout.html',        out: 'operations/job-closeout.pdf',               mode: 'light' },
   { src: 'operations/invoice-example.html',    out: 'operations/invoice-example.pdf',            mode: 'light' },
   { src: 'operations/work-rates.html',          out: 'operations/work-rates.pdf',                 mode: 'light' },
+  /* added 2026-10-23 (Sixfold 365 rebrand): one sheet here; a plain chrome --print-to-pdf gives it two */
+  { src: 'agreements/remote-signing.html',      out: 'agreements/remote-signing.pdf',             mode: 'light' },
   /* Event sign-up sheet. scale: 1 and ONE page are both the spec — the row height is
      0.54in on purpose (13.7mm, larger than wide-rule paper) because it is filled in
      standing up. If it ever renders at 2 pages, something grew; do not fix it by
@@ -206,28 +198,19 @@ const JOBS = [
   /* Two pages by content, not by overflow — 0.68 did not save it, so the scale is
      back near the default for readable type. */
   { src: 'operations/crew-shirt-spec.html',     out: 'operations/crew-shirt-spec.pdf',            mode: 'light', scale: 0.78 },
-  { src: 'operations/business-cards.html',      out: 'operations/business-cards.pdf',             mode: 'light', scale: 1 },
   /* The FedEx print file: two pages at exactly 3.75 x 2.25 in (trim + bleed), Pine
      bleeding to the edge. scale: 1 is the whole point — 0.8 would print the card at
      80% inside a full page. The @page rule in the source sets the size. */
   /* Four options as of 2026-09-28 pm — two palettes across two grounds — so the
      crew can pick. All from build-cards.mjs; the hand-written single card is gone. */
-  { src: 'operations/business-card-print/card-green-pine.html', out: 'operations/business-card-print/Sixfold-Card-Green-Pine.pdf', mode: 'dark',  scale: 1 },
-  { src: 'operations/business-card-print/card-green-bone.html', out: 'operations/business-card-print/Sixfold-Card-Green-Bone.pdf', mode: 'light', scale: 1 },
-  { src: 'operations/business-card-print/card-fire-pine.html',  out: 'operations/business-card-print/Sixfold-Card-Ember-Pine.pdf', mode: 'dark',  scale: 1 },
-  { src: 'operations/business-card-print/card-fire-bone.html',  out: 'operations/business-card-print/Sixfold-Card-Ember-Bone.pdf', mode: 'light', scale: 1 },
   /* THE CHOSEN CARD, 2026-09-29 — the cascading mark (casc-2-wide), the lockup
      grown, and the QR on the back. From build-card-final.mjs. This is the one to
      give a printer; the four above are the options it was chosen from. */
-  { src: 'operations/business-card-print/card-cascade-final.html', out: 'operations/business-card-print/Sixfold-Card-Cascade.pdf', mode: 'dark', scale: 1 },
   /* ONE CARD PER PERSON, 2026-10-01 (SX-4b). From build-card-person.mjs, which is
      the card above with the name, number and colourway lifted out. Brandon's is
      regenerated only as a regression check — his cards are printed. ⚑ Matthew's is
      the first card on a LIGHT ground, so it prints mode 'light'; giving it 'dark'
      renders Bone-on-Bone and the card comes out blank. */
-  { src: 'operations/business-card-print/card-brandon.html', out: 'operations/business-card-print/Sixfold-Card-Brandon-Long.pdf',   mode: 'dark',  scale: 1 },
-  { src: 'operations/business-card-print/card-brad.html',    out: 'operations/business-card-print/Sixfold-Card-Brad-McPherson.pdf', mode: 'dark',  scale: 1 },
-  { src: 'operations/business-card-print/card-matthew.html', out: 'operations/business-card-print/Sixfold-Card-Matthew-Sharpe.pdf', mode: 'light', scale: 1 },
   /* Vehicle magnets, 2026-09-16 — each page carries its own @page size (24.25 x
      12.25 / 18.25 in with bleed), which preferCSSPageSize honours; scale must be
      1 so an inch is an inch. Print-ready: the vendor gets the PDF as is. */
