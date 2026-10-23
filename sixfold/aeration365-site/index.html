@@ -1,155 +1,312 @@
 <!doctype html>
+<!--
+  LIVE as the 365aeration.com / aeration365.com homepage since 2026-10-23 (Matthew: "yeah go ahead and put it live"). Design source:
+  sixfold/site-merged-example/. Was: Sixfold 365: ONE-PAGE EXAMPLE of the two sites merged (2026-10-19, Matthew: "since we are merging brands ... the two sites
+  should be rebranded and merged. Can you just create a one page example for me to look at").
+  A look-and-feel example only. Not deployed, the form sends nothing, and nothing here changes either live site.
+  Copy is lifted from the two live pages (sixfold/site/index.html and sixfold/aeration365-site/index.html) and keeps
+  their fact-checks; nothing new is claimed. Brand: the combined badge (option C, light) as printed on the cards and
+  yard signs: Bone #EDE7DC, forest #2F5D2C, moss #4C7A3F, ember #E4703A, cream #FFF8EC; Outfit + DM Sans.
+  Open questions for Matthew are listed in the reply, not on the page: which phone number, which domain, the service area.
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>365 Aeration &amp; Seeding · Core aeration and overseeding, Denver metro</title>
-<meta name="description" content="Core aeration and overseeding for lawns across the Denver metro. Ask for a quote online, or call or text (720) 830-4553.">
-<link rel="icon" href="assets/365-icon.png">
-<meta property="og:title" content="365 Aeration &amp; Seeding">
-<meta property="og:description" content="Core aeration and overseeding across the Denver metro. Pull a plug. Grow a lawn.">
-<link rel="canonical" href="https://365aeration.com/"><meta property="og:url" content="https://365aeration.com/"><meta property="og:image" content="https://365aeration.com/assets/share-1200x630.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">
+<title>Sixfold 365 · Land, Aeration &amp; Seeding</title>
+<meta name="description" content="Core aeration, overseeding, fertilizing and landscaping all over Colorado. Ask for a quote online, or call or text (720) 830-4553.">
+<link rel="icon" href="/assets/365-sixfold-badge.svg" type="image/svg+xml">
+<meta property="og:title" content="Sixfold 365 · Land, Aeration &amp; Seeding">
+<meta property="og:description" content="Core aeration, overseeding, fertilizing and landscaping all over Colorado.">
+<link rel="canonical" href="https://365aeration.com/"><meta property="og:url" content="https://365aeration.com/">
+<meta property="og:type" content="website"><meta property="og:image" content="https://365aeration.com/assets/sixfold365-share-1200x630.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Sixfold 365: Land, Aeration &amp; Seeding"><meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{--green:#2e5e2c;--green-d:#21451f;--grass:#4c9a3f;--soil:#8a5a3b;--soil-d:#6b3f22;--sky:#cfe7f4;--cream:#fdf8ee;--ink:#1d2a1c;--soft:#5a6858;--line:#dfe6da;--sun:#f2c14e;--card:#ffffff}
+  :root{--bone:#EDE7DC;--cream:#FFF8EC;--ink:#1D2A1C;--forest:#2F5D2C;--forest-d:#244a22;--moss:#4C7A3F;--ember:#E4703A;--ember-d:#c95a27;--soft:#5a6858;--line:#d9d1c2}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;background:var(--cream);color:var(--ink);font:16px/1.55 'DM Sans',system-ui,sans-serif}
-  a{color:var(--green)}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
-  header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:68px}
-  header img{height:52px;width:auto;display:block}
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:999px;font:700 16px 'Outfit',sans-serif;text-decoration:none;border:0;cursor:pointer}
-  .btn.main{background:var(--green);color:#fff}.btn.main:hover{background:var(--green-d)}
-  .btn.ghost{background:#fff;color:var(--green);box-shadow:inset 0 0 0 2px var(--green)}
-  header .btn{min-height:42px;padding:0 16px;font-size:15px}
-  .hero{background:var(--sky);position:relative;overflow:hidden;padding:64px 0 120px;text-align:center}
-  .hero h1{font:800 clamp(38px,7vw,64px)/1.05 'Outfit',sans-serif;color:var(--green-d);margin:0 0 14px;letter-spacing:-.01em}
-  .hero p{font:500 clamp(17px,2.4vw,21px)/1.4 'DM Sans',sans-serif;color:#2d3b2c;margin:0 auto 26px;max-width:620px}
-  .hero .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .ground{position:absolute;left:0;right:0;bottom:0;height:78px;background:var(--soil)}
-  .ground::before{content:"";position:absolute;left:0;right:0;top:-10px;height:14px;background:var(--grass);border-radius:50% 50% 0 0/100% 100% 0 0}
-  .plug{position:absolute;bottom:14px;width:30px;height:52px;border-radius:15px;background:var(--soil-d)}
-  section{padding:56px 0}
-  h2{font:800 clamp(28px,4vw,38px)/1.15 'Outfit',sans-serif;color:var(--green-d);margin:0 0 10px}
-  .lede{color:var(--soft);margin:0 0 28px;max-width:640px}
-  .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px}
-  .card h3{font:700 22px 'Outfit',sans-serif;margin:0 0 8px;color:var(--green)}
+  body{margin:0;background:var(--bone);color:var(--ink);font:17px/1.55 'DM Sans',system-ui,sans-serif}
+  a{color:var(--forest)}
+  img{display:block;max-width:100%}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  .ribbon{background:var(--ink);color:#fff;text-align:center;font:600 13px/1.3 'DM Sans',sans-serif;padding:8px 16px;letter-spacing:.02em}
+  .ribbon b{color:var(--ember)}
+
+  /* header */
+  header{background:var(--cream);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  header .wrap{display:flex;align-items:center;gap:14px;height:76px}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--forest);margin-right:auto}
+  .brand svg{width:56px;height:56px;flex:none}
+  .brand b{display:block;font:800 22px/1 'Outfit',sans-serif;letter-spacing:.01em}
+  .brand small{display:block;font:700 11px/1.2 'Outfit',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--moss);margin-top:4px}
+  nav{display:flex;gap:22px}
+  nav a{font:600 15px 'DM Sans',sans-serif;text-decoration:none;color:var(--ink)}
+  nav a:hover{color:var(--forest)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 22px;border-radius:999px;font:700 16px 'Outfit',sans-serif;text-decoration:none;border:0;cursor:pointer}
+  .btn svg{width:18px;height:18px}
+  .btn.main{background:var(--ember);color:#fff}.btn.main:hover{background:var(--ember-d)}
+  .btn.green{background:var(--forest);color:var(--cream)}.btn.green:hover{background:var(--forest-d)}
+  .btn.ghost{background:transparent;color:var(--forest);box-shadow:inset 0 0 0 2px var(--forest)}
+  header .btn{min-height:44px;padding:0 18px;font-size:15px}
+
+  /* hero */
+  .hero{padding:56px 0 64px;position:relative;overflow:hidden}
+  .hero .wrap{display:grid;grid-template-columns:1.25fr .9fr;gap:40px;align-items:center}
+  .kicker{font:700 13px/1.2 'Outfit',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ember);margin:0 0 12px}
+  h1{font:700 clamp(20px,2.2vw,26px)/1.25 'Outfit',sans-serif;color:var(--moss);margin:0 0 14px}
+  .hero p.say{font:700 clamp(26px,3.2vw,38px)/1.15 'Outfit',sans-serif;margin:0 0 26px;max-width:600px;color:var(--forest);letter-spacing:-.01em}
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .badge-big{width:100%;max-width:400px;justify-self:center;filter:drop-shadow(0 14px 30px rgba(29,42,28,.16))}
+  .hero .wrap.stripw{display:block}
+  .strip{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:10px;margin:36px 0 0;padding:0;list-style:none}
+  .strip li{font:700 15px 'Outfit',sans-serif;color:#fff;border-radius:999px;padding:9px 18px;white-space:nowrap;flex:1;text-align:center}
+  .strip .c1{background:#2F5D2C}.strip .c2{background:#4C7A3F}.strip .c3{background:#6B7A23}.strip .c4{background:#9C7420}.strip .c5{background:#8A5A3B}.strip .c6{background:#C95A27}
+
+  section{padding:64px 0}
+  h2{font:800 clamp(30px,3.8vw,42px)/1.1 'Outfit',sans-serif;color:var(--forest);margin:0 0 12px;letter-spacing:-.01em}
+  h2::after{content:"";display:block;width:48px;height:4px;border-radius:2px;background:var(--ember);margin-top:14px}
+  .lede{color:var(--soft);margin:0 0 30px;max-width:660px;font-size:18px}
+
+  /* the lawn (leads) */
+  .lawn{background:var(--cream);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .lawn-top{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+  .photo{border-radius:20px;overflow:hidden;aspect-ratio:16/10;background:#cfd8c4}
+  .photo img{width:100%;height:100%;object-fit:cover;filter:saturate(.92)}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px}
+  .card h3{font:700 22px 'Outfit',sans-serif;margin:0 0 8px;color:var(--forest)}
   .card p{margin:0;color:#334132}
-  .know{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:8px}
+  .tags{margin-top:12px!important;font-size:14px;color:var(--soft)!important}
+  .tips{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:34px;padding-top:30px;border-top:1px dashed var(--line)}
   .tip{display:flex;gap:14px;align-items:flex-start}
-  .tip .dot{flex:none;width:40px;height:40px;border-radius:50%;background:var(--sky);display:grid;place-items:center;font:800 18px 'Outfit',sans-serif;color:var(--green)}
+  .tip .n{flex:none;width:40px;height:40px;border-radius:50%;background:var(--forest);color:var(--cream);display:grid;place-items:center;font:800 18px 'Outfit',sans-serif}
   .tip b{display:block;font:700 18px 'Outfit',sans-serif;margin-bottom:2px}
   .tip span{color:var(--soft);font-size:15px}
-  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;counter-reset:s}
-  .step{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px}
-  .step::before{counter-increment:s;content:counter(s);display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;font:800 16px 'Outfit',sans-serif;margin-bottom:10px}
+
+  /* land & trees */
+  .jobs{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .job{background:var(--cream);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column}
+  .job .photo{border-radius:0;aspect-ratio:3/2}
+  .job .body{padding:22px 22px 24px;display:flex;flex-direction:column;flex:1}
+  .job h3{font:700 22px 'Outfit',sans-serif;margin:0 0 8px;color:var(--forest)}
+  .job p{margin:0;color:#334132}
+  .job .more{margin-top:auto;padding-top:14px;font:700 15px 'Outfit',sans-serif}
+  .job .more a{text-decoration:none}
+  .job.fire{border-top:5px solid var(--ember)}
+  .job.fire h3{color:var(--ember-d)}
+
+  /* fire money */
+  .money{background:var(--forest);color:var(--cream)}
+  .money .wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}
+  .money h2{color:#fff}.money .kicker{color:#f3a77f}
+  .money p{color:#dfe8d9;margin:0 0 14px}
+  .stat{background:rgba(255,248,236,.08);border:1px solid rgba(255,248,236,.18);border-radius:20px;padding:26px}
+  .stat .big{font:800 72px/1 'Outfit',sans-serif;color:var(--ember)}
+  .stat .src{font-size:13px;color:#b9c9b2;margin:10px 0 0}
+  .aid{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .aid li{font:800 28px/1.1 'Outfit',sans-serif;color:var(--cream);padding-left:22px;position:relative}
+  .aid li::before{content:"";position:absolute;left:0;top:.38em;width:10px;height:10px;border-radius:50%;background:var(--ember)}
+
+  /* how + where */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+  .step{background:var(--cream);border:1px solid var(--line);border-radius:20px;padding:22px}
+  .step::before{counter-increment:s;content:counter(s);display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ember);color:#fff;font:800 17px 'Outfit',sans-serif;margin-bottom:10px}
   .step b{display:block;font:700 19px 'Outfit',sans-serif;margin-bottom:4px}
   .step span{color:var(--soft);font-size:15px}
-  .quote{background:var(--green);color:#fff}
-  .quote h2{color:#fff}.quote .lede{color:#dbe8d6}
-  .qgrid{display:grid;grid-template-columns:1fr 1.25fr;gap:32px;align-items:start}
-  .side p{color:#dbe8d6;margin:0 0 14px}
-  .side a.btn{background:#fff;color:var(--green)}
-  form{background:#fff;color:var(--ink);border-radius:22px;padding:24px;display:grid;gap:14px}
+  .where{margin-top:26px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .where div{border-left:4px solid var(--moss);padding:4px 0 4px 16px}
+  .where b{display:block;font:700 17px 'Outfit',sans-serif;color:var(--forest)}
+  .where span{color:var(--soft);font-size:15px}
+
+  /* quote */
+  .quote{background:var(--cream);border-top:1px solid var(--line)}
+  .qgrid{display:grid;grid-template-columns:1fr 1.25fr;gap:36px;align-items:start}
+  .side p{color:var(--soft);margin:0 0 14px}
+  form{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;display:grid;gap:14px}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   label{display:grid;gap:6px;font:700 14px 'DM Sans',sans-serif;color:#334132}
-  input,select,textarea{font:16px 'DM Sans',sans-serif;padding:12px 13px;border:1.5px solid #cfd8ca;border-radius:12px;background:#fff;color:var(--ink);width:100%}
-  input:focus,select:focus,textarea:focus{outline:3px solid #b9dcae;border-color:var(--green)}
+  input,textarea{font:16px 'DM Sans',sans-serif;padding:12px 13px;border:1.5px solid #cfd8ca;border-radius:12px;background:#fff;color:var(--ink);width:100%}
+  fieldset{border:0;padding:0;margin:0}
+  legend{font:700 14px 'DM Sans',sans-serif;color:#334132;margin-bottom:8px}
   .seg{display:flex;gap:8px;flex-wrap:wrap}
-  .seg label{display:flex;align-items:center;gap:8px;font-weight:500;border:1.5px solid #cfd8ca;border-radius:999px;padding:10px 14px;cursor:pointer}
-  .seg input{width:auto;margin:0;accent-color:var(--green)}
-  .seg label:has(input:checked){border-color:var(--green);background:#eef6ea}
-  fieldset{border:0;padding:0;margin:0;display:grid;gap:8px}
-  legend{font:700 14px 'DM Sans',sans-serif;color:#334132;margin-bottom:6px}
-  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-  .err{color:#a1361b;font-weight:700;min-height:1px}
+  .seg label{display:flex;align-items:center;gap:8px;font-weight:500;border:1.5px solid #cfd8ca;border-radius:999px;padding:9px 14px;cursor:pointer}
+  .seg input{width:auto;margin:0;accent-color:var(--forest)}
+  .seg label:has(input:checked){border-color:var(--forest);background:#eef3e8}
   .fine{font-size:13px;color:var(--soft);margin:0}
-  .hint{font-size:13.5px;color:var(--soft);margin:-6px 0 0;font-weight:400}
-  .opt{font-weight:400;color:var(--soft)}
-  [hidden]{display:none!important}
-  .done{text-align:center;padding:30px 10px}
-  .done b{display:block;font:800 26px 'Outfit',sans-serif;color:var(--green);margin-bottom:6px}
-  footer{background:var(--green-d);color:#cfe0c8;padding:34px 0;font-size:15px}
-  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
-  footer img{height:64px;width:64px}
+  select{font:16px 'DM Sans',sans-serif;padding:12px 13px;border:1.5px solid #cfd8ca;border-radius:12px;background:#fff;color:var(--ink);width:100%}
+  .opt{font-weight:500;color:var(--soft)}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .err{color:#b3261e;font-weight:700;font-size:15px;min-height:0}
+  .err:empty{display:none}
+  .done{background:#eef3e8;border:1.5px solid var(--moss);border-radius:16px;padding:22px;font-size:17px}
+  .done b{display:block;font:800 22px 'Outfit',sans-serif;color:var(--forest);margin-bottom:6px}
+
+  footer{background:var(--forest);color:#d5e1cf;padding:36px 0;font-size:15px;border-top:5px solid var(--ember)}
+  footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+  footer .fb{display:flex;gap:14px;align-items:center}
+  footer svg{width:70px;height:70px}
+  footer b{color:#fff;font:700 19px 'Outfit',sans-serif}
   footer a{color:#fff}
-  @media (max-width:760px){
-    .qgrid{grid-template-columns:1fr}
-    .row{grid-template-columns:1fr}
-    header img{height:36px}
+
+  @media (max-width:900px){
+    nav{display:none}
+    .hero .wrap,.money .wrap,.qgrid{grid-template-columns:1fr}
+    .badge-big{max-width:260px;order:-1}
+    .three,.jobs,.tips,.steps{grid-template-columns:1fr}
+    .lawn-top,.where,.row{grid-template-columns:1fr}
+    .lawn-top .photo:nth-child(2){display:none}
+    .strip{flex-wrap:wrap;justify-content:flex-start}.strip li{flex:none}
+  }
+  @media (max-width:520px){
+    header .wrap{height:66px}
+    .brand svg{width:44px;height:44px}
+    .brand b{font-size:19px}
     header .btn .long{display:none}
-    .hero{padding:44px 0 108px}
+    header .btn{white-space:nowrap;padding:0 14px;font-size:14px}
+    .brand small{display:none}
+    section{padding:48px 0}
   }
 </style>
 </head>
 <body>
+
+<!-- the combined badge, option C light, from aeration365-site/assets/365-sixfold-badge.svg; inlined so the page's Outfit font draws its lettering -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="badge" viewBox="0 0 1000 1000">
+    <defs>
+      <path id="b-top" d="M 162 500 A 338 338 0 0 1 838 500"/>
+      <path id="b-bot" d="M 68 500 A 432 432 0 0 0 932 500"/>
+      <clipPath id="b-disc"><circle cx="500" cy="500" r="292"/></clipPath>
+    </defs>
+    <circle cx="500" cy="500" r="470" fill="#FFF8EC"/>
+    <circle cx="500" cy="500" r="458" fill="none" stroke="#E4703A" stroke-width="4"/>
+    <circle cx="500" cy="500" r="308" fill="#2F5D2C"/>
+    <circle cx="500" cy="500" r="292" fill="#FFF8EC"/>
+    <g clip-path="url(#b-disc)"><g transform="translate(344.45 423.35) scale(3.05)">
+      <path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity="0.4"/>
+      <path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity="0.6"/>
+      <path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity="0.82"/>
+      <path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/>
+      <g fill="#4C7A3F"><rect x="20.4" y="77" width="3.2" height="7"/><path d="M22 69 L9.5 81.5 L34.5 81.5 Z"/><path d="M22 62 L12 74 L32 74 Z"/><path d="M22 55.5 L14.5 66.5 L29.5 66.5 Z"/></g>
+      <rect x="4" y="86" width="92" height="5" fill="#4C7A3F"/>
+      <g fill="none" stroke="#4C7A3F" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M94 91 L92.2 94.4 L94.6 98 L91.4 102 L93.4 106 L90 109.4 L89.8 113" stroke-width="2.56"/>
+        <path d="M90.5 91 L88.4 93.6 L85.4 95.2 L87.8 98.6 L82.4 101.4 L84.2 104.6 L79.6 108" stroke-width="2.16"/>
+        <path d="M86.5 91 L83.8 92.6 L85.8 95 L80.4 96.2 L77.6 99 L74 99.2 L71.5 101" stroke-width="1.76"/>
+        <path d="M96 91 L97.6 93.8 L95 96.2 L97.4 99.6 L94.8 102.4 L96 106" stroke-width="1.84"/>
+        <path d="M92.6 91 L90.6 94.6 L92.4 97.6 L89.4 100.6 L90.6 104.4 L88 107.4" stroke-width="1.68"/>
+        <path d="M87.8 98.6 L85.4 100.8 L86.6 103.4 L83 105.8 L83.8 109" stroke-width="1.44"/>
+        <path d="M91.4 102 L94.2 103.4 L93.4 106.2 L95.8 108.6" stroke-width="1.36"/>
+        <path d="M84.6 91 L82.4 92.6 L83.8 94.8 L78.4 95.6 L75.6 97.4 L72.4 97.6" stroke-width="1.28"/>
+        <path d="M85.8 95 L83.4 96.8 L84.4 99.4 L80.6 100.8" stroke-width="1.20"/>
+        <path d="M95 91 L96.6 94.2 L94.4 96.6 L96.4 100" stroke-width="1.36"/>
+      </g>
+    </g></g>
+    <text x="500" y="382" text-anchor="middle" font-family="Outfit, 'DM Sans', sans-serif" font-weight="800" font-size="74" letter-spacing="16" fill="#2F5D2C">SIXFOLD</text>
+    <circle cx="112" cy="500" r="20" fill="#E4703A"/>
+    <circle cx="888" cy="500" r="20" fill="#E4703A"/>
+    <text font-family="Outfit, 'DM Sans', sans-serif" font-weight="800" font-size="150" letter-spacing="38" fill="#2F5D2C"><textPath href="#b-top" startOffset="50%" text-anchor="middle">365</textPath></text>
+    <text font-family="Outfit, 'DM Sans', sans-serif" font-weight="700" font-size="56" letter-spacing="7" fill="#2F5D2C"><textPath href="#b-bot" startOffset="50%" text-anchor="middle">LAND · AERATION &amp; SEEDING</textPath></text>
+  </symbol>
+</svg>
+
+
 <header><div class="wrap">
-  <a href="#top" aria-label="365 Aeration &amp; Seeding"><img src="assets/365-horizontal.png" alt="365 Aeration &amp; Seeding"></a>
+  <a class="brand" href="#top"><svg role="img" aria-label="Sixfold 365 badge"><use href="#badge"/></svg><span><b>Sixfold 365</b><small>Land · Aeration &amp; Seeding</small></span></a>
+  <nav><a href="#lawn">Aeration</a><a href="#land">Land &amp; trees</a><a href="#fire">Fire mitigation</a><a href="#quote">Get a quote</a></nav>
   <a class="btn main" href="tel:+17208304553"><span class="long">Call or text&nbsp;</span>(720) 830-4553</a>
 </div></header>
 
 <main id="top">
-<div class="hero">
-  <div class="wrap">
-    <h1>Pull a plug.<br>Grow a lawn.</h1>
-    <p>Core aeration and overseeding for lawns across the Denver metro.</p>
+
+<div class="hero"><div class="wrap">
+  <div>
+    <p class="kicker">Land · Aeration &amp; Seeding</p>
+    <h1>From the lawn to the treeline, all year long.</h1>
+    <p class="say">Core aeration, overseeding, fertilizing and landscaping all over Colorado.</p>
     <div class="cta"><a class="btn main" href="#quote">Get a quote</a><a class="btn ghost" href="sms:+17208304553">Text us</a></div>
   </div>
-  <div class="ground"><i class="plug" style="left:12%"></i><i class="plug" style="left:27%"></i><i class="plug" style="left:70%"></i><i class="plug" style="left:86%"></i></div>
+  <svg class="badge-big" viewBox="0 0 1000 1000" role="img" aria-label="Sixfold 365: Land, Aeration &amp; Seeding"><use href="#badge"/></svg>
+</div>
+<div class="wrap stripw"><ul class="strip"><li class="c1">Core aeration</li><li class="c2">Overseeding</li><li class="c3">Fertilizer</li><li class="c4">Landscaping</li><li class="c5">Land clearing</li><li class="c6">Fire mitigation</li></ul></div>
 </div>
 
-<section><div class="wrap">
-  <h2>What we do</h2>
-  <p class="lede">Two jobs, done well, usually on the same visit.</p>
-  <div class="two">
-    <div class="card"><h3>Core aeration</h3><p>A machine pulls small plugs of soil out of the lawn, about two to three inches deep. On compacted ground, that lets water and fertilizer reach the roots instead of running off.</p></div>
-    <div class="card"><h3>Overseeding</h3><p>We spread grass seed straight after aerating, the order Colorado State University Extension describes for thickening a thin lawn.</p></div>
+<section class="lawn" id="lawn"><div class="wrap">
+  <p class="kicker">The lawn</p>
+  <h2>Pull a plug. Grow a lawn.</h2>
+  <p class="lede">Core aeration and overseeding, and the regular upkeep that goes with them.</p>
+  <div class="lawn-top">
+    <div class="photo"><img src="img/hero.png" alt="Soil plugs lying on a lawn after core aeration"></div>
+    <div class="photo"><img src="img/aerate.png" alt="A core aerator pulling plugs from a lawn"></div>
+  </div>
+  <div class="three">
+    <div class="card"><h3>Core aeration</h3><p>On compacted ground, water and fertilizer run off before they reach the roots. A machine pulls small plugs of soil out of the lawn to open it back up, so they soak in where the grass needs them.</p></div>
+    <div class="card"><h3>Overseeding</h3><p>We spread grass seed straight after aerating, while the holes are open.</p></div>
+    <div class="card"><h3>Keeping it</h3><p>Fertilizing, mowing and edging: the regular work that keeps a lawn the way you want it.</p><p class="tags">Fertilizer · Mowing · Edging</p></div>
   </div>
 </div></section>
 
-<section class="know"><div class="wrap">
-  <h2>Good to know</h2>
-  <div class="tips">
-    <div class="tip"><span class="dot">1</span><div><b>Water if you can</b><span>A little water a day or two before helps the machine go deeper. If you can't, no problem: we can run your sprinklers for a few minutes when we arrive.</span></div></div>
-    <div class="tip"><span class="dot">2</span><div><b>The plugs stay on the lawn</b><span>They look a little messy for a week or two, then break down back into the grass. That's part of the benefit.</span></div></div>
-    <div class="tip"><span class="dot">3</span><div><b>Spring and fall work best</b><span>Any time the ground isn't frozen, but not when it's hot and dry.</span></div></div>
+<section id="land"><div class="wrap">
+  <p class="kicker">Land &amp; trees</p>
+  <h2>Beds, brush and timber.</h2>
+  <p class="lede">From the beds by the house out to the tree line.</p>
+  <div class="jobs">
+    <div class="job">
+      <div class="photo"><img src="img/beds.webp" alt="A gravel bed with ornamental grasses alongside a concrete path"></div>
+      <div class="body"><h3>Landscaping</h3><p>Shrub and hedge trimming, plants and trees taken out, bed clean-up and haul-away.</p><p class="tags">Shrubs &amp; hedges · Plant removal · Bed clean-up · Haul-away</p><p class="more"><a href="#quote">Ask about landscaping →</a></p></div>
+    </div>
+    <div class="job">
+      <div class="photo"><img src="img/haul-truck.webp" alt="A truck bed loaded with slash and cut limbs, ready to haul off site"></div>
+      <div class="body"><h3>Land clearing</h3><p>A lot, a pasture or an easement taken back to usable ground, and left ready for whatever comes next.</p><p class="tags">Brush removal · Undergrowth · Dead fall · Chip, haul, or leave</p><p class="more"><a href="#quote">Ask about land clearing →</a></p></div>
+    </div>
+    <div class="job fire" id="fire">
+      <div class="photo"><img src="img/crew-felling.webp" alt="Two of the Sixfold crew taking down a pine with a rope"></div>
+      <div class="body"><h3>Fire mitigation</h3><p>Defensible space and fuel breaks around what you want protected, worked to Colorado State Forest Service standards for spacing and clearance.</p><p class="tags">Felling · Trimming · Slash &amp; chip · Defensible space</p><p class="more"><a href="#quote">Ask about fire mitigation →</a></p></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="money"><div class="wrap">
+  <div>
+    <p class="kicker">If it's fire mitigation</p>
+    <h2>Help with the money side.</h2>
+    <p>We help you find what's available for the work, work through the paperwork, and document the job so it counts.</p>
+  </div>
+  <div class="stat">
+    <ul class="aid"><li><b>Tax credits</b></li><li><b>Grants</b></li><li><b>Insurance premiums</b></li></ul>
+    <p class="src">Finding · navigation · documentation</p>
   </div>
 </div></section>
 
 <section><div class="wrap">
-  <h2>How it works</h2>
-  <div class="steps">
-    <div class="step"><b>Ask for a quote</b><span>Fill in the form below, or call or text us.</span></div>
-    <div class="step"><b>Get your price</b><span>We get back to you with a price for your lawn.</span></div>
-    <div class="step"><b>Pick a day</b><span>We book a day that suits you and let you know before we come.</span></div>
+  <p class="kicker">How it works</p>
+  <h2>Three steps, whatever the job.</h2>
+  <div class="steps" style="margin-top:26px">
+    <div class="step"><b>Ask for a quote</b></div>
+    <div class="step"><b>Get your price</b></div>
+    <div class="step"><b>Pick a day</b></div>
   </div>
 </div></section>
 
 <section class="quote" id="quote"><div class="wrap qgrid">
   <div class="side">
-    <h2>Get a quote</h2>
-    <p class="lede">Tell us where the lawn is and what you're after. Questions are welcome too.</p>
+    <p class="kicker">Get a quote</p>
+    <h2>Tell us about the property.</h2>
+    <p>Where it is and what you're after. Questions are always welcomed.</p>
     <p>Rather talk? Call or text us.</p>
-    <a class="btn" href="tel:+17208304553">(720) 830-4553</a>
+    <a class="btn green" href="tel:+17208304553">(720) 830-4553</a>
   </div>
   <form id="qf" novalidate>
-    <fieldset><legend>What are you looking for?</legend>
+    <fieldset><legend>What are you looking for? (pick any)</legend>
       <div class="seg">
-        <label><input type="radio" name="want" value="both" checked> Aeration and overseeding</label>
-        <label><input type="radio" name="want" value="aeration"> Aeration only</label>
-        <label><input type="radio" name="want" value="question"> Just a question</label>
+        <label><input type="checkbox" name="w_lawn" checked> Aeration, overseeding &amp; lawn keeping</label>
+        <label><input type="checkbox" name="w_land"> Landscaping, land clearing &amp; fire mitigation</label>
+        <label><input type="checkbox" name="w_q"> Just a question</label>
       </div>
     </fieldset>
     <label>Your name<input name="name" autocomplete="name" maxlength="120" required></label>
-    <div class="row">
-      <label>Phone<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
-      <label>Email<input name="email" type="email" autocomplete="email" maxlength="160"></label>
-    </div>
+    <div class="row"><label>Phone<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label><label>Email<input name="email" type="email" autocomplete="email" maxlength="160"></label></div>
     <fieldset><legend>How should we contact you?</legend>
       <div class="seg">
         <label><input type="radio" name="contact" value="text"> Text</label>
@@ -158,11 +315,7 @@
       </div>
     </fieldset>
     <label><span>Street address <span class="opt">(optional)</span></span><input name="street" autocomplete="address-line1" maxlength="120" placeholder="e.g. 1234 Elm St"></label>
-    <div class="row">
-      <label><span>City <span class="opt">(optional)</span></span><input name="city" autocomplete="address-level2" maxlength="60"></label>
-      <label><span>ZIP <span class="opt">(optional)</span></span><input name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10"></label>
-    </div>
-    <p class="hint">Your address helps us get your quote ready and plan the visit, so we can help you sooner.</p>
+    <div class="row"><label><span>City <span class="opt">(optional)</span></span><input name="city" autocomplete="address-level2" maxlength="60"></label><label><span>ZIP <span class="opt">(optional)</span></span><input name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10"></label></div>
     <label><span>How did you hear about us? <span class="opt">(optional)</span></span><select name="hear">
       <option value="">Choose one</option>
       <option value="facebook">Facebook or Instagram</option>
@@ -182,20 +335,22 @@
     <p class="fine">We use what you send, and which link brought you here, only to answer your request and to see which of our ads work. We don't sell or share it.</p>
   </form>
 </div></section>
+
 </main>
 
 <footer><div class="wrap">
-  <div style="display:flex;gap:14px;align-items:center"><img src="assets/365-badge.png" alt=""><div><b style="color:#fff;font:700 18px 'Outfit',sans-serif">365 Aeration &amp; Seeding</b><br>Core aeration and overseeding · Denver metro</div></div>
-  <div><a href="tel:+17208304553">(720) 830-4553</a> · <a href="mailto:contact@365aeration.com">contact@365aeration.com</a><br>© <span id="yr">2026</span> 365 Aeration &amp; Seeding</div>
+  <div class="fb"><svg aria-hidden="true"><use href="#badge"/></svg><div><b>Sixfold 365</b><br>Land · Aeration &amp; Seeding</div></div>
+  <div><a href="tel:+17208304553">(720) 830-4553</a> · <a href="mailto:contact@365aeration.com">contact@365aeration.com</a><br><span style="font-size:13px">© <span id="yr">2026</span> Sixfold 365 · Not tax or insurance advice: confirm your own position with your accountant and your carrier.</span></div>
 </div></footer>
 
 <script>
 (function () {
-  /* the form goes into the office's lead list */
-  var API = /^\/a365\//.test(location.pathname) ? '/api/rounds.php' : '/api/lead.php';   /* 2026-10-14: this site's own relay (api/lead.php) passes it to the app server to server; a browser posting to the app directly was stopped by its bot check. /a365/ is the test copy inside the app's test server */
+  /* the form goes into the office's lead list, the same way the 365 site's form does (2026-10-23, Phase 1 of the merge): this site's own
+     relay (api/lead.php) passes it to the app server to server. /a365/ is the test copy inside the app's test server. */
+  var API = /^\/a365\//.test(location.pathname) ? '/api/rounds.php' : '/api/lead.php';
   var f = document.getElementById('qf'), err = document.getElementById('qerr'), btn = document.getElementById('qbtn'), t0 = Date.now();
-  /* where they came from, noted when they arrive (2026-10-20): the sending page's address, utm tags, and whether the link was an ad click.
-     Kept for this visit only (sessionStorage), sent with the form, nothing else */
+  /* where they came from, noted when they arrive: the sending page's address, utm tags, and whether the link was an ad click. Kept for this
+     visit only (sessionStorage), sent with the form, nothing else */
   var trk = null;
   try { trk = JSON.parse(sessionStorage.getItem('a365trk') || 'null'); } catch (e) {}
   if (!trk) {
@@ -210,17 +365,20 @@
   f.addEventListener('submit', function (e) {
     e.preventDefault(); err.textContent = '';
     var v = function (n) { var el = f.elements[n]; return el ? String(el.value || '').trim() : ''; };
-    var want = (f.querySelector('input[name=want]:checked') || {}).value || '';
+    var lawn = f.elements.w_lawn.checked, land = f.elements.w_land.checked, qq = f.elements.w_q.checked;
+    if (!lawn && !land && !qq) { err.textContent = 'Please pick what you are looking for.'; f.elements.w_lawn.focus(); return; }
+    var want = lawn && land ? 'multiple' : lawn ? 'lawnall' : land ? 'land' : 'question';
     if (!v('name')) { err.textContent = 'Please add your name.'; f.elements.name.focus(); return; }
     if (!v('phone') && !v('email')) { err.textContent = 'Please add a phone number or an email so we can reply.'; f.elements.phone.focus(); return; }
     var how = (f.querySelector('input[name=contact]:checked') || {}).value || '';
     if (!how) { err.textContent = 'Please choose how we should contact you.'; f.querySelector('input[name=contact]').focus(); return; }
     if (how === 'email' && !v('email')) { err.textContent = 'Please add your email, or choose text or call.'; f.elements.email.focus(); return; }
     if (how !== 'email' && !v('phone')) { err.textContent = 'Please add your phone number, or choose email.'; f.elements.phone.focus(); return; }
+    var msg = v('msg'); if (qq && want !== 'question') msg = ('Also has a question. ' + msg).trim();
     btn.disabled = true; btn.textContent = 'Sending…';
     var body = { want: want, name: v('name'), phone: v('phone'), email: v('email'), street: v('street'), city: v('city'), zip: v('zip'),
-      contact: how, hear: v('hear'), hearNote: hm.hidden ? '' : v('hearNote'), trk: trk, msg: v('msg'), hp: v('hp'), t: Date.now() - t0,
-      from: (/[?&]from=(card|yard|truck|car)/.exec(location.search) || [])[1] || '' };   /* which printed QR brought them (2026-10-19) */
+      contact: how, hear: v('hear'), hearNote: hm.hidden ? '' : v('hearNote'), trk: trk, msg: msg, hp: v('hp'), t: Date.now() - t0,
+      from: (/[?&]from=(card|yard|truck|car)/.exec(location.search) || [])[1] || '' };   /* which printed QR brought them */
     fetch(API + '?action=a365lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
       .then(function (j) {
@@ -232,5 +390,6 @@
   });
 })();
 </script>
+
 </body>
 </html>
