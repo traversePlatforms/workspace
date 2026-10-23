@@ -6317,7 +6317,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var owe = (jb.pay && jb.pay.s === 'paid') || (jb.pay && jb.pay.s === 'plan') ? 0 : jb.price - ((jb.pay && jb.pay.amt) || 0);
     var panel = null;
     if (jb.ride) {   /* riding along with this crew (2026-10-23, Matthew: give Bria "the option to input how long it took her to do the job"): her own time; the crew still marks it done */
-      c.appendChild(q('div', 'ltrynote', 'Riding along with ' + jb.ride + ': ' + jb.ride.split(' ')[0] + ' marks the job done.'));
       if (jb.done) c.appendChild(q('div', 'qline' + (jb.done.o === 'done' ? ' qyes' : ''), (jb.done.o === 'done' ? 'Done' : 'Could not do it') + ' \u00b7 ' + jb.done.by + ', ' + ago(jb.done.at)));
       var mine = (jb.ridet || {})[S.me], rb = q('div', 'jdone');
       rb.appendChild(q('div', 'jdq', mine && mine.mins ? 'Your time on this job: about ' + minsText(mine.mins) + '. Change it below.' : 'How long did you spend on this job? (an estimate)'));
