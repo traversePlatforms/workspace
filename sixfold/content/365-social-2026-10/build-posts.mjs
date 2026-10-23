@@ -27,7 +27,7 @@ const POSTS = [
     prompt: 'Photograph of a residential lawn after watering where water is pooling on a compacted, slightly thin area near a sidewalk edge, the rest of the lawn green, overcast soft light, ground-level view, realistic and ordinary, not dramatic.' },
   { n: 5, slug: 'seed-in-holes', kicker: 'Aeration + overseeding', head: 'Seed goes down while the holes are open.', sub: 'We overseed right after aerating, so the seed lands in good contact with the soil.',
     prompt: 'Macro photograph of grass seed scattered on a lawn among small open aeration holes and soil cores, seeds resting in and around the holes, early morning light, shallow depth of field.' },
-  { n: 6, slug: 'book-now', kicker: 'Denver metro', head: 'Book your aeration and overseeding.', sub: 'Core aeration and overseeding for homes across the Denver metro. Call or text and we\u2019ll quote your lawn.',
+  { n: 6, slug: 'book-now', kicker: 'Denver metro', head: 'Book your aeration and overseeding.', sub: 'Core aeration and overseeding for homes across the Denver metro. Call or text for a free quote.',
     prompt: 'Photograph of an attractive, ordinary Denver-area suburban home with a green front lawn in autumn, a few trees turning gold and orange, clear blue sky, the lawn prominent in the foreground, eye-level view from the sidewalk.' },
 ];
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -50,7 +50,7 @@ function page(p, picUrl) {
   <div class="pic"></div><div class="fade"></div>
   <div class="badge"><img src="${BADGE}" alt=""></div>
   <div class="panel"><div class="kicker">${esc(p.kicker)}</div><h1>${esc(p.head)}</h1><div class="sub">${esc(p.sub)}</div>
-    <div class="foot"><span>365 Aeration &amp; Seeding</span><b>${PHONE}</b></div></div>
+    <div class="foot"><span>Free quote · call or text</span><b>${PHONE}</b></div></div>
 </body></html>`;
 }
 const only = (() => { const i = process.argv.indexOf('--only'); return i > 0 ? +process.argv[i + 1] : 0; })(), reuse = process.argv.includes('--reuse');

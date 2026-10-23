@@ -1,6 +1,7 @@
 # 365 Aeration & Seeding: six posts (DRAFT)
 
 **Status:** drafts only. Nothing posted or scheduled.
+**Free quote:** added to every post and caption, 2026-10-22 (Matthew: Brandon wants everything aimed at sales). Free-quote wording is approved for marketing (2026-09-25); only the website bars it.
 **For:** the 365 Aeration & Seeding Facebook page and Instagram. Single images, 1080 x 1350.
 **Made:** 2026-10-22. Matthew: "go ahead and produce those images ... avoid carousels for now"; "use the new logos".
 **Files:**
@@ -21,7 +22,7 @@ Suggested order: 1, 2, 3, 5, 4, 6. Facts first, the booking post last.
 
 Fall is one of the two best times of year to core aerate. The grass is still growing, and the ground isn't frozen or baked hard.
 
-If your lawn takes a beating every summer, this is the time to give it some air. Call or text (720) 830-4553.
+If your lawn takes a beating every summer, this is the time to give it some air. Call or text (720) 830-4553 for a free quote.
 
 #LawnAeration #DenverLawnCare #ColoradoLawns #FallLawnCare
 
@@ -31,7 +32,7 @@ Those little soil plugs on the lawn after aeration are supposed to be there. Hol
 
 They look a bit untidy for a couple of weeks, then break down back into the lawn.
 
-Questions? Call or text (720) 830-4553.
+Questions? Call or text (720) 830-4553 for a free quote.
 
 #CoreAeration #DenverLawnCare #LawnTips #ColoradoLawns
 
@@ -41,7 +42,7 @@ One thing that helps before we come out: give the lawn a good soak a couple of d
 
 Dry, hard ground won't give up a deep plug. Moist soil lets the tines go deeper, and that's the whole point.
 
-Book with us at (720) 830-4553.
+Call or text (720) 830-4553 for a free quote.
 
 #LawnAeration #LawnTips #DenverLawnCare #ColoradoLawns
 
@@ -51,7 +52,7 @@ Ever notice the same patch going brown first every summer? Often it's compacted 
 
 Core aeration opens the soil back up, so water and fertilizer can get down to the roots.
 
-Call or text (720) 830-4553.
+Call or text (720) 830-4553 for a free quote.
 
 #CoreAeration #DenverLawnCare #ColoradoLawns #LawnCare
 
@@ -59,15 +60,15 @@ Call or text (720) 830-4553.
 
 We overseed right after we aerate. The seed falls into the holes and gets good contact with the soil, which is what it needs to take.
 
-Aeration and overseeding in one visit. Call or text (720) 830-4553.
+Aeration and overseeding in one visit. Call or text (720) 830-4553 for a free quote.
 
 #Overseeding #LawnAeration #DenverLawnCare #ColoradoLawns
 
 ## 6. Book your aeration and overseeding
 
-Core aeration and overseeding for homes across the Denver metro. Tell us where you are and we'll quote your lawn.
+Core aeration and overseeding for homes across the Denver metro. Tell us where you are and we'll give you a free quote.
 
-Call or text (720) 830-4553.
+Call or text (720) 830-4553 for a free quote.
 
 #LawnAeration #Overseeding #DenverLawnCare #ColoradoLawns #FallLawnCare
 
@@ -75,7 +76,6 @@ Call or text (720) 830-4553.
 
 ## Lines left out, and why
 
-- **"Free quote."** The Sixfold rule keeps "free quote" off public pages, so the posts say "we'll quote your lawn".
 - **Any promise that the lawn will thicken or green up, or that seed will take.** It depends on water and weather, and the customer agreement says so.
 - **A price or a "starting at" figure.** There's no flat aeration rate; every lawn is quoted.
 - **Specific fall months.** No CSU source names months for the Front Range window.
