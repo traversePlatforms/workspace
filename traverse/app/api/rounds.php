@@ -2316,14 +2316,49 @@ if ($action === 'a365lead') {
         if (empty($x['house']) && $street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'house' => $h, 'by' => 'website', 'at' => $now]); }
         if (($x['status'] ?? '') === 'unreached') leadRevive((string) $x['id'], 'sent the 365 website form', 'website');
         if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true, ($x['src'] ?? '') === 'a365web');
+        a365WebMail($row + ['want' => $wants[$want], 'said' => $said], 'already in the app as ' . (trim((string) ($x['name'] ?? '')) ?: 'a lead') . ' (' . (['meta' => 'Facebook ad', 'messenger' => 'Messenger', 'a365web' => 'website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')) . '); the form went on that lead as a note');
         out(['ok' => true]);
     }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
     if ($street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    if (leadAlertsOn()) a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want], true, true);   /* + Matthew's phones: website forms are his to hand out (2026-10-20) */
+    if (leadAlertsOn()) a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want], true, true, true);   /* Matthew's phones only: website leads are his (2026-10-23: the office was still getting this push) */
+    a365WebMail($row + ['want' => $wants[$want], 'said' => $said], '');
     out(['ok' => true]);
 }
 
+/* every website form, also by email to Contact@SixfoldColorado.com (2026-10-23, Matthew: "we want the form to go to contact@sixfoldcolorado ...
+   Since i am handling leads from the website it can go to me on my sixfold email. if it goes to the other then jen sees it"; only he has that
+   mailbox). The form only queues it (weblead-mail-queue.jsonl), so the visitor never waits on Gmail; the 5-minute alerts job (pushcron) sends
+   the queue through the same Gmail login as the morning email (api/config.php + smtp.php, server only) and logs each try to weblead-mail.log
+   (the stage, never the password). A failed send stays queued and is tried again, for about a day. */
+function a365WebMail(array $r, string $already): void {
+    $line = fn($k, $v) => trim((string) $v) !== '' ? $k . ': ' . $v : '';
+    $body = implode("\n", array_filter([
+        'A new form on the website.',
+        $line('Name', $r['name'] ?? ''), $line('Phone', $r['phone'] ?? ''), $line('Email', $r['email'] ?? ''), $line('Looking for', $r['want'] ?? ''),
+        $line('Address', $r['town'] ?? ''), $line('Message', $r['msg'] ?? ''), ($r['said'] ?? []) ? 'Also: ' . implode('; ', (array) $r['said']) : '',
+        $already !== '' ? 'Note: ' . $already . '.' : 'It is in the app as a website lead (you only).',
+        'Open the app: https://traverseplatforms.com/summit-de59ae83/']));
+    appendLine(DATA_DIR . '/weblead-mail-queue.jsonl', ['at' => time(), 'subject' => 'Website lead: ' . ($r['name'] ?? '') . ' · ' . ($r['want'] ?? ''), 'body' => $body, 'tries' => 0]);
+}
+function a365WebMailFlush(): int {
+    $q = DATA_DIR . '/weblead-mail-queue.jsonl'; if (!is_file($q) || !filesize($q)) return 0;
+    $cf = __DIR__ . '/config.php'; if (!is_readable($cf) || !is_readable(__DIR__ . '/smtp.php')) return 0;
+    $lk = @fopen($q . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return 0;
+    $sent = 0; $keep = [];
+    try {
+        $cfg = require $cf; require_once __DIR__ . '/smtp.php';
+        foreach (readLines($q) as $m) {
+            $res = smtp_send((array) ($cfg['smtp'] ?? []), (string) ($cfg['to'] ?? ''), (string) ($m['subject'] ?? 'Website lead'), (string) ($m['body'] ?? ''), ['X-Mailer: sixfold-app']);
+            @file_put_contents(DATA_DIR . '/weblead-mail.log', json_encode(['at' => time(), 'ok' => !empty($res['ok']), 'stage' => $res['stage'] ?? null, 'queued' => (int) ($m['at'] ?? 0)]) . "\n", FILE_APPEND | LOCK_EX);
+            if (!empty($res['ok'])) { $sent++; continue; }
+            $m['tries'] = (int) ($m['tries'] ?? 0) + 1; if ($m['tries'] < 288) $keep[] = $m;   /* every 5 minutes for about a day */
+        }
+        writeTextAtomic($q, $keep ? implode("\n", array_map(fn($m) => json_encode($m, JSON_UNESCAPED_UNICODE), $keep)) . "\n" : '');
+    } catch (Throwable $e) { error_log('rounds weblead mail: ' . $e->getMessage()); }
+    flock($lk, LOCK_UN); fclose($lk);
+    return $sent;
+}
 /* ---- the customer's quote page (2026-10-14): 365aeration.com/q/?q=<lead>-<key> ----
  * Jen's quote text and email carry this link. The page shows their first name, the street, what is included and the price, and
  * the day Jen offered (Matthew: "have jen get dates before hand so it can be added into the quote so when they want the service
@@ -6375,6 +6410,7 @@ if ($action === 'stormcron') {
 if ($action === 'pushcron') {
     if (!defined('SIXFOLD_CLI')) fail('Not here.', 404);
     $dry = !empty($_REQUEST['dry']);
+    if (!$dry) a365WebMailFlush();   /* website forms by email to Contact@ (2026-10-23) */
     $sf = DATA_DIR . '/push-sent.json';
     $clk = @fopen($sf . '.lock', 'c');
     if (!$clk || !flock($clk, LOCK_EX | LOCK_NB)) out(['ok' => true, 'busy' => true]);
