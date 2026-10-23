@@ -64,25 +64,25 @@
   :root{--green:#2F5D2C;--green-d:#1E3D1C;--cream:#FFF8EC;--line:#E6DCC8;--act:#B84C15;--act-d:#9A3E10;--strip:#F2C14E}
   header{background:var(--green);border-bottom:5px solid var(--strip)}
   header .lock{display:flex;align-items:center;gap:10px;color:var(--cream);text-decoration:none}
-  header .lock svg{width:46px;height:44px;display:block}
+  header .lock svg,header .lock img{width:50px;height:50px;display:block}   /* the round Sixfold 365 badge, as on the homepage (2026-10-23) */
   header .lock span{font:800 22px/1 'Outfit',sans-serif;letter-spacing:.01em}
   header .lock b{color:var(--strip);font-weight:800}
   header a.call{color:var(--cream)}
   .band{background:var(--cream)}
   .ground{height:6px;background:var(--strip)}.ground::before{display:none}
   .btn{background:var(--act)}.btn:hover{background:var(--act-d)}
-  footer .fmark{width:56px;height:54px;color:var(--cream);display:block}
+  footer .fmark{width:60px;height:60px;color:var(--cream);display:block}
 </style>
 </head>
 <body>
 <header><div class="wrap">
-  <a href="/" class="lock" aria-label="Sixfold 365"><svg viewBox="0 0 100 96" aria-hidden="true"><path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity=".4"/><path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity=".6"/><path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity=".82"/><path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/><path d="M20.4 77H23.6V84H20.4Z M22 69 L9.5 81.5 L34.5 81.5Z M22 62 L12 74 L32 74Z M22 55.5 L14.5 66.5 L29.5 66.5Z M4 86H96V91H4Z" fill="currentColor"/></svg><span>SIXFOLD <b>365</b></span></a>
+  <a href="/" class="lock" aria-label="Sixfold 365"><img src="/assets/sixfold365-badge-256.png" alt=""><span>Sixfold <b>365</b></span></a>
   <a class="call" href="tel:+17208304553">(720) 830-4553</a>
 </div></header>
 <div class="band"><div class="wrap"><h1 id="hi">Your lawn quote</h1><p id="for">&nbsp;</p></div><div class="ground"></div></div>
 <main><div class="wrap" id="main"><div class="skel"></div></div></main>
 <footer><div class="wrap">
-  <svg class="fmark" viewBox="0 0 100 96" aria-hidden="true"><path d="M18 84 L36 48 L54 84 Z" fill="#E4703A" fill-opacity=".4"/><path d="M30 84 L50 38 L70 84 Z" fill="#E4703A" fill-opacity=".6"/><path d="M44 84 L66 26 L88 84 Z" fill="#E4703A" fill-opacity=".82"/><path d="M60 84 L79 14 L98 84 Z" fill="#E4703A"/><path d="M20.4 77H23.6V84H20.4Z M22 69 L9.5 81.5 L34.5 81.5Z M22 62 L12 74 L32 74Z M22 55.5 L14.5 66.5 L29.5 66.5Z M4 86H96V91H4Z" fill="currentColor"/></svg>
+  <img class="fmark" src="/assets/sixfold365-badge-256.png" alt="">
   <div>Questions? Call or text <a href="tel:+17208304553">(720) 830-4553</a><br><a href="mailto:contact@365aeration.com">contact@365aeration.com</a></div>
 </div></footer>
 <script>
