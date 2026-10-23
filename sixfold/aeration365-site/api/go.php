@@ -33,7 +33,7 @@ header('X-Content-Type-Options: nosniff');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sixfold 365 · Aeration &amp; Overseeding</title>
-<meta name="description" content="Core aeration and overseeding across the Denver metro. Get a quote, or call or text <?= $h($PHONE_SHOWN) ?>.">
+<meta name="description" content="Core aeration, overseeding, fertilizing and landscaping all over Colorado. Get a quote, or call or text <?= $h($PHONE_SHOWN) ?>.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="/assets/365-sixfold-badge.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,7 +65,7 @@ header('X-Content-Type-Options: nosniff');
   <h1>Aeration &amp; Overseeding</h1>
   <p class="tag">Core aeration · Overseeding · Fertilizer</p>
 <?php if ($piece === 'yard'): /* the yard signs stand on a customer's lawn, done or in progress (2026-10-21, Matthew) */ ?>
-  <p class="from">Your neighbour chose 365 for their lawn. Want yours done next?</p>
+  <p class="from">Your neighbour chose Sixfold 365 for their lawn. Want yours done next?</p>
 <?php else: ?>
   <p class="from">Thanks for scanning our <?= $h($FROM[$piece]) ?>.</p>
 <?php endif; ?>
