@@ -148,9 +148,8 @@ const FILES = [
   // worth doing "later if anyone asks" — this is that. These are PROOFS, not
   // print files: the crew is being asked to choose, and the print PDFs stay out
   // so nobody can order straight from the share.
-  ['operations/business-card-print/card-proof.png',
-   '09 Pick the look',
-   'Business cards - all four options, front and back.png'],
+  /* the old Sixfold business-card proof came out 2026-10-23: the cards were chosen long ago and replaced by the Sixfold 365 cards
+     (brand/combined-365-2026-10/print-ready/); the old sources are in _archive-2026-10-23-rebrand/ */
   ['brand/vehicle/proof.png',
    '09 Pick the look',
    'Vehicle magnets - GREEN set (aeration-led).png'],
