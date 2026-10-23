@@ -1,3 +1,22 @@
+# ------------------------------------------------- moved to Sixfold 365 (2026-10-23)
+# Matthew: "get rid of the sixfold stuff ... transition entirely to the new branding" (TASKS SX-71, Phase 2). Every page forwards
+# permanently to the matching place on https://365aeration.com/ (a one-page site for now, so sections: #lawn, #land, #fire, #quote).
+# The field app's old addresses here (home-screen shortcuts saved before the move on 2026-10-09) go to the app on traverseplatforms.com.
+# Left alone: Let's Encrypt (.well-known), the form's back end (api/), and Google's site-verification files (Search Console).
+# Undo: delete this block (backup of the file before it: .htaccess.pre-365-20261023).
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/(\.well-known|api)/ [OR]
+RewriteCond %{REQUEST_URI} ^/google[0-9a-f]+\.html$
+RewriteRule ^ - [L]
+RewriteRule ^(summit-de59ae83|tr-cb2e8587|ty-25604fff|ts-016064fc|tq-9cf8d9de|tg-3b0b89e7)(/.*)?$ https://traverseplatforms.com/$1$2 [R=301,L]
+RewriteRule ^services/aeration/?$ https://365aeration.com/#lawn [NE,R=301,L]
+RewriteRule ^services/(landscaping|land-clearing)/?$ https://365aeration.com/#land [NE,R=301,L]
+RewriteRule ^(services/fire-mitigation|who-pays|wildfire-guide)/?$ https://365aeration.com/#fire [NE,R=301,L]
+RewriteRule ^contact/?$ https://365aeration.com/#quote [NE,R=301,L]
+RewriteRule ^ https://365aeration.com/ [R=301,L]
+</IfModule>
+
 # Sixfold Colorado — site root.
 #
 # Written 2026-09-21 so it is not hand-typed on launch day. LAUNCH.md §2 used to
