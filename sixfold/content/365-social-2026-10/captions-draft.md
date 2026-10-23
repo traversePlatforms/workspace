@@ -1,6 +1,7 @@
 # 365 Aeration & Seeding: six posts (DRAFT)
 
 **Status:** drafts only. Nothing posted or scheduled.
+**Images stay seasonless; the season goes in the caption** (Matthew 2026-10-22: the images get reused over time). The fall lines below are for this fall only; swap them when reposting.
 **Free quote:** added to every post and caption, 2026-10-22 (Matthew: Brandon wants everything aimed at sales). Free-quote wording is approved for marketing (2026-09-25); only the website bars it.
 **For:** the 365 Aeration & Seeding Facebook page and Instagram. Single images, 1080 x 1350.
 **Made:** 2026-10-22. Matthew: "go ahead and produce those images ... avoid carousels for now"; "use the new logos".
@@ -22,7 +23,7 @@ Suggested order: 1, 2, 3, 5, 4, 6. Facts first, the booking post last.
 
 Fall is one of the two best times of year to core aerate. The grass is still growing, and the ground isn't frozen or baked hard.
 
-If your lawn takes a beating every summer, this is the time to give it some air. Call or text (720) 830-4553 for a free quote.
+If your lawn takes a beating every summer, this is the time to give it some air, before the ground freezes. Call or text (720) 830-4553 for a free quote.
 
 #LawnAeration #DenverLawnCare #ColoradoLawns #FallLawnCare
 
@@ -32,7 +33,7 @@ Those little soil plugs on the lawn after aeration are supposed to be there. Hol
 
 They look a bit untidy for a couple of weeks, then break down back into the lawn.
 
-Questions? Call or text (720) 830-4553 for a free quote.
+Fall aeration has to happen before the ground freezes. Call or text (720) 830-4553 for a free quote.
 
 #CoreAeration #DenverLawnCare #LawnTips #ColoradoLawns
 
@@ -42,7 +43,7 @@ One thing that helps before we come out: give the lawn a good soak a couple of d
 
 Dry, hard ground won't give up a deep plug. Moist soil lets the tines go deeper, and that's the whole point.
 
-Call or text (720) 830-4553 for a free quote.
+Book before the ground freezes. Call or text (720) 830-4553 for a free quote.
 
 #LawnAeration #LawnTips #DenverLawnCare #ColoradoLawns
 
@@ -52,7 +53,7 @@ Ever notice the same patch going brown first every summer? Often it's compacted 
 
 Core aeration opens the soil back up, so water and fertilizer can get down to the roots.
 
-Call or text (720) 830-4553 for a free quote.
+Book before the ground freezes. Call or text (720) 830-4553 for a free quote.
 
 #CoreAeration #DenverLawnCare #ColoradoLawns #LawnCare
 
@@ -60,7 +61,7 @@ Call or text (720) 830-4553 for a free quote.
 
 We overseed right after we aerate. The seed falls into the holes and gets good contact with the soil, which is what it needs to take.
 
-Aeration and overseeding in one visit. Call or text (720) 830-4553 for a free quote.
+Aeration and overseeding in one visit, before the ground freezes. Call or text (720) 830-4553 for a free quote.
 
 #Overseeding #LawnAeration #DenverLawnCare #ColoradoLawns
 
@@ -68,7 +69,7 @@ Aeration and overseeding in one visit. Call or text (720) 830-4553 for a free qu
 
 Core aeration and overseeding for homes across the Denver metro. Tell us where you are and we'll give you a free quote.
 
-Call or text (720) 830-4553 for a free quote.
+Book before the ground freezes. Call or text (720) 830-4553 for a free quote.
 
 #LawnAeration #Overseeding #DenverLawnCare #ColoradoLawns #FallLawnCare
 
@@ -91,5 +92,6 @@ Call or text (720) 830-4553 for a free quote.
 | Water a couple of days before for deep plugs | Verified | CSU PlantTalk 1505 |
 | Compacted soil sheds water; aeration helps water and fertilizer reach the roots | Verified | CSU PlantTalk 1505 |
 | Overseeding right after aeration; seed-to-soil contact | Verified | CSU Extension 7.241, *Renovating the Home Lawn* |
+| Aeration can't be done on frozen ground ("before the ground freezes", captions only) | Verified | CSU PlantTalk 1505 (not when the ground is frozen) |
 | Phone (720) 830-4553; Denver metro | Verified | 365aeration.com (live site, 22 Oct) |
 | The pictures | Not real photos | AI-generated illustrations, no people or results. Facebook may add an "AI info" label |

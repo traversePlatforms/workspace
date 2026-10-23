@@ -17,7 +17,7 @@ const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PHONE = '(720) 830-4553';
 const NOPEOPLE = ' No people, no hands, no text, no letters, no signs, no logos, no watermark. Natural, realistic colours; not oversaturated.';
 const POSTS = [
-  { n: 1, slug: 'fall-window', kicker: 'Fall lawn care', head: 'Spring and fall are the windows for aeration.', sub: 'Core aeration works best while the grass is growing and the ground isn\u2019t frozen or baked hard.',
+  { n: 1, slug: 'fall-window', kicker: 'When to aerate', head: 'Spring and fall are the windows for aeration.', sub: 'Core aeration works best while the grass is growing and the ground isn\u2019t frozen or baked hard.',
     prompt: 'Photograph of a healthy green residential front lawn in Colorado in autumn, golden afternoon light, a few yellow cottonwood leaves on the grass, a modest suburban house softly out of focus, foothills on the horizon, low camera angle with the lawn filling the lower half.' },
   { n: 2, slug: 'what-plugs', kicker: 'What are all those plugs?', head: 'They\u2019re meant to stay.', sub: 'Hollow tines pull cores 2\u20133 inches deep. They look untidy for a couple of weeks, then break down back into the lawn.',
     prompt: 'Macro photograph at grass level of several cylindrical soil cores (about 3 inches long) lying on a green lawn after core aeration, one open aeration hole visible in the foreground, soft morning light, shallow depth of field.' },
