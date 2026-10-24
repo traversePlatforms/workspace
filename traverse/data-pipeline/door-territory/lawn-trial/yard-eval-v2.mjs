@@ -21,6 +21,7 @@ export const KEY = [
   ['3247 OAK LEAF PL', 2556, 'whole property, grass only, evergreen left out', 'Matthew 2026-10-22'],
   ['7006 E 131ST WAY', 2137, 'back 450 + front 763 + 924, under the front trees; UNSEEN by v2 tuning (v2 775, DRCOG 3,208, app 1,100)', 'Matthew 2026-10-23'],
   ['7614 E 121ST PL', 2961, 'back 1,801 + front 854 + 306; UNSEEN by v2 tuning (v2 3,229, DRCOG 4,930, app 700)', 'Matthew 2026-10-23'],
+  ['579 E 76TH AVE', 3613, 'whole property 3,402 + 211 strip by the driveway, open lot; UNSEEN by v2 tuning (v2 1,636, DRCOG 280, app 2,100)', 'Matthew 2026-10-23'],
 ];
 const OFF = { struct: false, roofBuf: 0, ever: 'off', speck: 0, house: 0 };
 const VARIANTS = {
