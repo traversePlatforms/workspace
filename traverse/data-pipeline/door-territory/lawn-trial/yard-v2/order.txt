@@ -94,6 +94,3 @@ cs-southwest
 cripple-creek
 security-widefield
 fountain
-frisco
-mckinney
-plano
