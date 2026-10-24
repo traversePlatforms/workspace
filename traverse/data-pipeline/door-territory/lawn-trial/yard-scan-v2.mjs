@@ -49,19 +49,31 @@ export const V2 = { green: 'lated6g', gate: 0.2, struct: true, roofBuf: 2, ever:
 /* batch speed-ups (2026-10-24, for the whole-territory run): the photo and land-cover searches, the opened photo files and the laser
    surveys' ept.json are kept for the run, so neighbouring lots share them instead of asking again for every lot. A Planetary Computer
    token is renewed after 25 minutes, and the opened files with it (they carry the token in their address). */
-const tokens = {}, imgs = new Map(), stacSeen = new Map(), eptBounds = new Map();
+/* One token request at a time per collection (2026-10-24, the Azure test): 16 lots asking at once were refused, the land cover came
+   back empty for every lot and the lawns were measured without it. Lots waiting on a token share the one request; it is tried for up
+   to about a minute before a lot goes without. */
+const tokens = {}, tokenAsk = {}, imgs = new Map(), stacSeen = new Map(), eptBounds = new Map();
 async function token(c) {
   const t = tokens[c]; if (t && Date.now() - t.at < 25 * 60000) return t.v;
-  tokens[c] = { v: (await get(PC + '/sas/v1/token/' + c)).token, at: Date.now() }; for (const k of [...imgs.keys()]) if (k.startsWith(c + '|')) imgs.delete(k);
-  return tokens[c].v;
+  tokenAsk[c] ??= (async () => {
+    for (let i = 0; i < 8; i++) {
+      try { const r = await fetch(PC + '/sas/v1/token/' + c); if (r.ok) { const v = (await r.json()).token; if (v) return v; } } catch {}
+      await new Promise((ok) => setTimeout(ok, Math.min(2000 * 2 ** i, 15000)));
+    }
+    throw new Error('no token for ' + c);
+  })().then((v) => { tokens[c] = { v, at: Date.now() }; for (const k of [...imgs.keys()]) if (k.startsWith(c + '|')) imgs.delete(k); return v; })
+    .finally(() => { delete tokenAsk[c]; });
+  return tokenAsk[c];
 }
 function openImage(c, href) {
   const k = c + '|' + href.split('?')[0];
   if (!imgs.has(k)) { if (imgs.size > 60) imgs.delete(imgs.keys().next().value); imgs.set(k, fromUrl(href, { cacheSize: 300 }).then((t) => t.getImage())); }
   const p = imgs.get(k); p.catch(() => imgs.delete(k)); return p;
 }
-async function stacFind(key, body, lon, lat) {   /* the items a search would return for this point, from earlier answers when they cover it */
-  const seen = stacSeen.get(key) || [], hit = seen.filter((x) => x.bbox && lon >= x.bbox[0] && lon <= x.bbox[2] && lat >= x.bbox[1] && lat <= x.bbox[3]);
+async function stacFind(key, body, lon, lat, keep = () => true) {   /* the items a search would return for this point, from earlier answers when they cover it */
+  /* keep: only items that would be used count as an answer (2026-10-24: a kept 2018 land-cover tile, bigger than the 2020 ones,
+     answered for points no kept 2020 tile covered, and those lots got no land cover at all) */
+  const seen = stacSeen.get(key) || [], hit = seen.filter((x) => x.bbox && keep(x) && lon >= x.bbox[0] && lon <= x.bbox[2] && lat >= x.bbox[1] && lat <= x.bbox[3]);
   if (hit.length) return hit;
   const st = await get(PC + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, intersects: { type: 'Point', coordinates: [lon, lat] } }) });
   const fs2 = st.features || []; stacSeen.set(key, seen.concat(fs2.filter((x) => !seen.some((y) => y.id === x.id)))); return fs2;
@@ -83,7 +95,8 @@ async function naipWin(year, lon, lat, rings) {
 }
 async function drcogWin(lon, lat, rings) {
   try {
-    const li = (await stacFind('drcog', { collections: ['drcog-lulc'], limit: 10 }, lon, lat)).filter((f) => /2020/.test(f.id))[0]; if (!li) return null;
+    const is20 = (f) => /2020/.test(f.id);
+    const li = (await stacFind('drcog', { collections: ['drcog-lulc'], limit: 10 }, lon, lat, is20)).filter(is20)[0]; if (!li) return null;
     const as = Object.values(li.assets).find((x) => /tif/.test(x.type || '') || /\.tif/.test(x.href));
     return await windowOf(as.href + '?' + await token('drcog-lulc'), rings, 6, 'drcog-lulc');
   } catch { return null; }

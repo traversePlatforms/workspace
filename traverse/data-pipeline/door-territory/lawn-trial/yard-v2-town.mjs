@@ -11,7 +11,7 @@ import { yardSources, yardClassify, V2 } from './yard-scan-v2.mjs';
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith('--' + k + '=')); return a ? a.split('=')[1] : d; };
 const TOWN = arg('town'), MINS = +arg('mins', 45), CONC = +arg('conc', 6);
 if (!TOWN) { console.error('--town= needed'); process.exit(1); }
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
+const DATA = process.env.YV2_DATA || 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';   /* YV2_DATA: the cloud run's slim door files (2026-10-24) */
 const OUTD = new URL('./yard-v2/', import.meta.url); mkdirSync(OUTD, { recursive: true });
 const OUT = new URL(`${TOWN}.json`, OUTD);
 const PCD = new URL('./drcog-turf/', import.meta.url); mkdirSync(PCD, { recursive: true });
@@ -24,6 +24,9 @@ const inRings = (x, y, rr) => { let n = 0; for (const r of rr) if (inRing(x, y, 
 const acres = (ring) => { const k = Math.cos(ring[0][1] * Math.PI / 180) * 111320, m = 110540; let a = 0; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += (ring[j][0] * k) * (ring[i][1] * m) - (ring[i][0] * k) * (ring[j][1] * m); return Math.abs(a / 2) / 4046.86; };
 const doors = JSON.parse(readFileSync(`${DATA}/${TOWN}.json`, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => d.lat && d.lon);
 const out = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : { built: '', settings: V2, doors: {} };
+/* --redo-nodt: measure again the lots that went without DRCOG land cover (2026-10-24: a refused token left it out on 27-48% of the
+   lots in the first three towns). Only for towns DRCOG covers (Denver region); El Paso has none, so there it stays empty. */
+if (process.argv.includes('--redo-nodt')) for (const [id, v] of Object.entries(out.doors)) if (v && v.l != null && v.dt == null) delete out.doors[id];
 const todo = doors.filter((d) => !(d.id in out.doors));
 console.log(`${TOWN}: ${doors.length} doors, ${todo.length} to do, ${CONC} at a time`);
 if (!todo.length) process.exit(0);
