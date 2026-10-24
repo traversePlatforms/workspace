@@ -21,6 +21,9 @@ date_default_timezone_set('America/Denver');
 const SEND_HOUR = 6;
 $mxArgs = array_slice($argv ?? [], 1);
 $mxNow = in_array('--now', $mxArgs, true); $mxDry = in_array('--dry-run', $mxArgs, true);
+/* the end-of-day report rides on this hourly cron job (2026-10-23): SiteGround's command line can list cron jobs but not add them.
+   eod-report.php decides for itself whether it's time (8 pm, once a day) and exits at once otherwise. */
+if (!$mxNow && !$mxDry && is_file(__DIR__ . '/eod-report.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/eod-report.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/eod-cron.log') . ' 2>&1');
 $mxSite = dirname(__DIR__);
 $mxApi = getenv('SIXFOLD_API_DIR') ?: $mxSite . '/public_html/api';   /* the override is for the test copy only */
 $mxState = $mxSite . '/sixfold-data/digest';

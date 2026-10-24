@@ -5,19 +5,30 @@ declare(strict_types=1);
  *
  * Lives OUTSIDE public_html, in sixfold-tools/ beside morning-email.php, and works the same way: it loads the app (api/rounds.php)
  * from the command line so the report and the app can't disagree, and sends through the website form's mail setup.
- * TEST STAGE: no cron job yet, and it goes to the form's own inbox (config 'to', Matthew's) until he says who gets it.
+ * A SiteGround cron job runs it every hour; it sends once a day, at the first run at or after 8 pm Colorado time (an hour after
+ * the 7 pm ad-spend reminder, so the day's spend is usually in). Two separate emails, so neither sees the other's address:
+ * Brandon (Bincline@gmail.com) and Matthew's copy to the website form's inbox (config 'to', Contact@SixfoldColorado.com).
+ * Matthew 2026-10-23: "i want a copy of it, sent to my sixfold website, and do it to Bincline@gmail.com".
  *
- *   php .../eod-report.php --now        send now (marked TEST)
- *   php .../eod-report.php --dry-run    print it instead of sending
+ *   php .../eod-report.php                send if it's time and not sent today
+ *   php .../eod-report.php --now          send now, to both (whatever the time)
+ *   php .../eod-report.php --test         send now, to Matthew's copy only, marked TEST
+ *   php .../eod-report.php --dry-run      print it instead of sending (--dry-run --png: the picture)
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 date_default_timezone_set('America/Denver');
 
+const EOD_HOUR = 20;
+const EOD_BRANDON = 'Bincline@gmail.com';
 $eArgs = array_slice($argv ?? [], 1);
-$eDry = in_array('--dry-run', $eArgs, true);
-if (!$eDry && !in_array('--now', $eArgs, true)) { fwrite(STDERR, "eod: say --now or --dry-run (no schedule yet)\n"); exit(1); }
+$eDry = in_array('--dry-run', $eArgs, true); $eTest = in_array('--test', $eArgs, true);
 $eSite = dirname(__DIR__);
 $eApi = getenv('SIXFOLD_API_DIR') ?: $eSite . '/public_html/api';
+$eState = $eSite . '/sixfold-data/digest';
+if (!$eDry && !$eTest && !in_array('--now', $eArgs, true)) {
+    if ((int) date('G') < EOD_HOUR) exit(0);
+    if (trim((string) @file_get_contents($eState . '/eod-last-sent.txt')) === date('Y-m-d')) exit(0);
+}
 
 /* load the app as the morning email does; its functions stay usable after the digest answers */
 final class SixfoldOut extends Exception { public array $body; public function __construct(array $b) { parent::__construct('out'); $this->body = $b; } }
@@ -88,7 +99,8 @@ foreach (['meta' => 'Instant Form', 'messenger' => 'Messenger'] as $src => $labe
     $adRows[] = ['l' => $label, 'v' => $jn ? $usd(round($sp / $jn)) . ' per job' : 'no jobs yet', 's' => $usd(round($sp)) . ' spent · ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' worth ' . $usd($bk) . ' · ' . number_format($back, 2) . 'x back', 't' => $back >= 1 ? 'good' : 'bad'];
 }
 /* referrals on their own line, not in an ad's figures (Matthew 2026-10-23: Russ and Carlos, Eric's referrals, "make it a different subject") */
-$refJ = []; foreach ($leads as $l) if (($l['src'] ?? '') === 'referral' && isset($jobOf[$l['id']])) $refJ[] = $l;
+const EOD_NOT_REFERRAL = ['m20261016192625ffe257'];   /* Kara R.: not counted with the ad referrals (Matthew 2026-10-23) */
+$refJ = []; foreach ($leads as $l) if (($l['src'] ?? '') === 'referral' && isset($jobOf[$l['id']]) && !in_array($l['id'], EOD_NOT_REFERRAL, true)) $refJ[] = $l;
 if ($refJ) $adRows[] = ['l' => 'Referrals', 'v' => $usd(array_sum(array_map(fn($l) => (int) $jobOf[$l['id']]['price'], $refJ))), 's' => count($refJ) . (count($refJ) === 1 ? ' job' : ' jobs') . ', no ad spend · ' . implode(', ', array_map(fn($l) => $short($l['name'] ?? ''), $refJ)), 't' => 'good'];
 
 /* 4. the work: today's jobs and tomorrow's */
@@ -157,7 +169,7 @@ $R['sections'][] = ['title' => 'Needs attention', 'rows' => $sec, 'empty' => 'No
 $R['sections'][] = ['title' => 'Next six weeks', 'rows' => [
     ['l' => 'Expected', 'v' => $usd($six), 's' => $usd($bk6) . ' booked in ' . $plural($bk6n, 'job', 'jobs') . ' + open quotes at the close rate' . ($planN ? ' + plans' : '')],
     ['l' => 'Customers on monthly plans', 'v' => (string) $planN]]];
-$R['foot'] = 'TEST, sent to Matthew only. From the Sixfold 365 app, Square and the ad spend typed in Stats.';
+$R['foot'] = ($eTest ? 'TEST, sent to Matthew only. ' : '') . 'From the Sixfold 365 app, Square and the ad spend typed in Stats. Customer names are private: keep this inside the company.';
 
 /* the plain-text copy, for mail apps that show no pictures */
 $L = ['End of day, ' . $R['date'] . '.', ''];
@@ -170,7 +182,7 @@ foreach ($R['sections'] as $s) {
 }
 $L[] = ''; $L[] = '-- ' . $R['foot'];
 $body = implode("\n", $L);
-$subject = 'TEST End of day, ' . $day($T) . ': ' . ($money['answer'] ? $usd(round($money['today'], 2)) . ' in · ' : '') . count($bookedToday) . ' booked · ' . $doneN . ' done · ' . count($tomJobs) . ' tomorrow';
+$subject = ($eTest ? 'TEST ' : '') . 'End of day, ' . $day($T) . ': ' . ($money['answer'] ? $usd(round($money['today'], 2)) . ' in · ' : '') . count($bookedToday) . ' booked · ' . $doneN . ' done · ' . count($tomJobs) . ' tomorrow';
 
 require __DIR__ . '/eod-image.php';
 $png = eodImage($R, __DIR__ . '/eod-assets');
@@ -191,8 +203,14 @@ $mime = '--' . $b1 . $e . 'Content-Type: text/plain; charset=UTF-8' . $e . 'Cont
       . '--' . $b2 . '--' . $e . '--' . $b1 . '--' . $e;
 $eCfg = require $eApi . '/config.php';
 require_once $eApi . '/smtp.php';
-$eRes = smtp_send((array) ($eCfg['smtp'] ?? []), (string) $eCfg['to'], '[Sixfold 365] ' . $subject, $mime, ['X-Mailer: sixfold-app', 'Content-Type: multipart/alternative; boundary="' . $b1 . '"']);
-if (empty($eRes['ok'])) { fwrite(STDERR, 'eod: not sent (' . ($eRes['stage'] ?? '?') . ")\n"); exit(1); }
-echo "eod: sent \"$subject\"\n";
-exit(0);
+$to = $eTest ? [(string) $eCfg['to']] : [EOD_BRANDON, (string) $eCfg['to']];
+$fails = 0;
+foreach ($to as $addr) {
+    $eRes = smtp_send((array) ($eCfg['smtp'] ?? []), $addr, '[Sixfold 365] ' . $subject, $mime, ['X-Mailer: sixfold-app', 'Content-Type: multipart/alternative; boundary="' . $b1 . '"']);
+    $ok = !empty($eRes['ok']); if (!$ok) $fails++;
+    @file_put_contents($eState . '/eod.log', json_encode(['at' => time(), 'to' => $addr, 'ok' => $ok, 'stage' => $eRes['stage'] ?? null, 'subject' => $subject]) . "\n", FILE_APPEND | LOCK_EX);
+    echo $ok ? "eod: sent to $addr\n" : 'eod: NOT sent to ' . $addr . ' (' . ($eRes['stage'] ?? '?') . ")\n";
+}
+if (!$eTest && $fails < count($to)) @file_put_contents($eState . '/eod-last-sent.txt', date('Y-m-d'));   /* one got through: no resend to the other at the next hour */
+exit($fails ? 1 : 0);
 
