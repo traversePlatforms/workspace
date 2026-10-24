@@ -24,6 +24,9 @@ $mxNow = in_array('--now', $mxArgs, true); $mxDry = in_array('--dry-run', $mxArg
 /* the end-of-day report rides on this hourly cron job (2026-10-23): SiteGround's command line can list cron jobs but not add them.
    eod-report.php decides for itself whether it's time (8 pm, once a day) and exits at once otherwise. */
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/eod-report.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/eod-report.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/eod-cron.log') . ' 2>&1');
+/* the Peak Sponsor Desk's company look-ups ride on this hourly job too (2026-10-24, Matthew: "run company scans more frequently so that
+   peak leads updates"): 15 companies a run, each looked up again once a day; in the background, so this email never waits on it. */
+if (!$mxNow && !$mxDry && is_file(dirname(__DIR__) . '/public_html/peak-desk-28d38d/api/desk.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/public_html/peak-desk-28d38d/api/desk.php') . ' rescan 15 >> ' . escapeshellarg(dirname(__DIR__) . '/peak-desk-data/scan.log') . ' 2>&1 &');
 $mxSite = dirname(__DIR__);
 $mxApi = getenv('SIXFOLD_API_DIR') ?: $mxSite . '/public_html/api';   /* the override is for the test copy only */
 $mxState = $mxSite . '/sixfold-data/digest';

@@ -9,6 +9,7 @@ const LD = ROOT + '/desk-data-local', ORIGIN = 'http://127.0.0.1:8790', API = OR
 const code = (f) => readFileSync(join(LD, f), 'utf8').match(/(\d{6})/)[1];
 const ADMIN = code('test-admin-code.txt'), SELLER = code('test-seller-code.txt');
 const LOG = join(LD, 'events.log'), log0 = existsSync(LOG) ? readFileSync(LOG, 'utf8') : null;
+const SCANS = join(LD, 'scans.json'), scans0 = existsSync(SCANS) ? readFileSync(SCANS, 'utf8') : null;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, failN = 0; const ok = (c, m) => { if (c) { pass++; console.log('  ok  ' + m); } else { failN++; console.log('  FAIL ' + m); } };
 function client() { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}) }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; f.ck = () => ck; return f; }
@@ -46,7 +47,37 @@ try {
   ok((await a('lead', { name: 'Kaiser Permanente' })).error === 'That company is already on the list.', 'a company already on the list is not added twice');
   const nl = await a('lead', { name: 'Test Roofing Co', kind: 'Home services', why: 'test' });
   ok(nl.ok, 'the admin adds a company');
+  console.log('The 2026-10-24 list');
+  ok((await b('tourmove', { tid: t.tid, date: later(4), time: '14:00' })).ok && (await b('data')).tours.find((x) => x.tid === t.tid).date === later(4), 'a tour moves to another day');
+  ok((await b('tourout', { tid: t.tid, out: 'maybe' })).error === 'Pick how it went.', 'a tour outcome must be Toured or Did not show');
+  let D3 = await b('data'); let nk = D3.leads.find((l) => l.id === L.id).notes[0].k;
+  ok((await b('notedel', { id: L.id, nk })).ok && (await b('data')).leads.find((l) => l.id === L.id).notes.length === 0, 'a note is removed (the log keeps it)');
+  ok((await b('notedel', { id: L.id, nk })).error === 'No such note.', 'removing it twice is refused');
+  await b('note', { id: L.id, note: '<img src=x onerror=alert(1)> called the front desk' });
+  ok((await b('signed', { id: L.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }], start: 'x', months: 12 })).error === 'Pick the start date.', 'signed needs a start date');
+  ok((await b('signed', { id: L.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], start: today(), months: 12, who: 'Pat Test' })).ok, 'a sponsor is marked signed with what they bought');
+  D3 = await b('data'); let L3 = D3.leads.find((l) => l.id === L.id);
+  ok(L3.status === 'signed' && L3.signed.total === 24500 && L3.signed.months === 12, 'signing moved it to Signed: 2 courts + a banner, 12 months');
+  ok((await b('todo', { id: L.id, text: 'Logo on court 7' })).ok, 'a to-do for a signed sponsor');
+  let tk = (await b('data')).leads.find((l) => l.id === L.id).todos[0].k;
+  ok((await b('tododone', { id: L.id, k: tk, done: true })).ok && (await b('data')).leads.find((l) => l.id === L.id).todos[0].done === true, 'the to-do ticks off');
+  ok((await b('todo', { id: L.id, text: 'Monthly report' })).ok, 'a second to-do');
+  ok((await b('pl', { services: [{ name: 'Court sponsor', price: 12000, per: 'year', cost: 1500, costPer: 'year' }, { name: '', price: 5 }], running: [{ name: 'Hosting', amount: 20, per: 'month' }] })).ok, 'profit and loss saves');
+  D3 = await b('data');
+  ok(D3.pl.services.length === 1 && D3.pl.services[0].cost === 1500 && D3.pl.running[0].amount === 20, 'a service without a name is dropped; costs kept');
+  ok(D3.team && Object.keys(D3.team).length >= 2 && !('Claude Check' in D3.team), 'the team list: who can sign in, with what each did');
+  const ABC = D3.leads.find((l) => l.name === 'ABC Family Chiropractic');
+  ok((await b('site', { id: ABC.id, site: 'not a site' })).error === 'That website does not look right.', 'a bad website is refused');
+  const sc = await b('scan', { id: ABC.id });
+  ok(sc.ok && sc.scan.ok && sc.scan.phones.some((p) => p.phone === '(719) 266-6661'), 'looking up ABC Family reads its website: the phone' + (sc.scan && !sc.scan.ok ? ' (' + sc.scan.err + ')' : ''));
+  const ren = D3.leads.find((l) => l.list === 'renew');
+  ok((await b('scan', { id: ren.id })).error === 'Add their website first.', 'a company with no website asks for one');
+  ok((await b('site', { id: ren.id, site: 'http://127.0.0.1/' })).error === 'That website does not look right.' && (await b('site', { id: ren.id, site: 'localtest.me' })).ok && (await b('scan', { id: ren.id })).scan.err === 'not a public site', 'the server will not read its own or a private address');
+  ok((await b('scan', { id: ABC.id, hunter: true })).error === 'Hunter is not set up here.', 'Hunter is off without its key');
   ok((await b('tourdel', { tid: t.tid })).ok && !(await b('data')).tours.some((x) => x.tid === t.tid), 'a tour cancels');
+  const t2 = await b('tour', { lead: ABC.id, date: today(), time: '00:00', who: 'Dr Test' });
+  ok(t2.ok, 'a tour for ABC today');
+  writeFileSync(LOG, readFileSync(LOG, 'utf8') + JSON.stringify({ t: 'tour', tid: 'pasttest01', id: ABC.id, lead: ABC.id, date: later(-2), time: '10:00', who: '', note: '', by: 'Test', at: 1 }) + '\n');   /* a tour two days ago, written straight in: the desk refuses past dates */
   /* the screens */
   console.log('The screens');
   const PORT = 9397;
@@ -66,9 +97,10 @@ try {
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${SELLER}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
   await waitFor(`!!document.querySelector('.row')`, 'pipeline');
   ok(await js(`document.querySelector('.row .nm b').textContent==='Kaiser Permanente'||[...document.querySelectorAll('.row .nm b')].some(b=>b.textContent==='Kaiser Permanente')`), 'the pipeline lists the ranked leads');
-  ok(await js(`[...document.querySelectorAll('.tabs button')].map(b=>b.textContent).join(',')==='Pipeline,Tours,Proposals,Report,Packages,What Peak offers,What we could offer'`), 'the seller sees every tab, Packages and the two reading tabs included');
+  ok(await js(`[...document.querySelectorAll('.tabs button')].map(b=>b.textContent).join(',')==='Pipeline,Tours,Proposals,Signed,Profit & loss,Report,Packages,What Peak offers,What we could offer'`), 'the seller sees every tab, Signed and Profit & loss included');
   await js(`[...document.querySelectorAll('.row')].find(r=>/Kaiser/.test(r.textContent)).click()`); await sleep(300);
-  ok(await js(`!!document.querySelector('.detail')&&/Proposal sent/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)`), 'the company opens beside the list, at Proposal sent');
+  ok(await js(`!!document.querySelector('.detail')&&/Signed/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)&&/renews/.test(document.querySelector('.detail').textContent)`), 'the company opens beside the list, at Signed, with its renewal date');
+  ok(await js(`[...document.querySelectorAll('.detail .note .lnk')].some(b=>b.textContent==='Remove')&&/History/.test(document.querySelector('.detail').textContent)`), 'notes have a Remove link; status changes sit under History');
   ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')`), 'a note with HTML in it shows as text, never as a picture or code');
   ok(await js(`[...document.querySelectorAll('.detail .ct a')].some(a=>a.href==='mailto:pat@example.com')`), 'the contact\u2019s email is a tap-to-email link');
   await shot('desk-pipeline.png');
@@ -90,10 +122,43 @@ try {
   await js(`[...document.querySelectorAll('main .btn')].find(b=>/Open the report/.test(b.textContent)).click()`); await sleep(300);
   ok(await js(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/Proposals out/.test(document.querySelector('.paper').textContent)&&/Best new leads not contacted yet/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, proposals out, best new leads');
   const pdf2 = await send('Page.printToPDF', { printBackground: true }); writeFileSync(join(ROOT, 'tests', 'desk-report.pdf'), Buffer.from(pdf2.data, 'base64'));
+  /* the board */
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Pipeline').click()`); await sleep(250);
+  await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>b.textContent==='Board').click()`); await sleep(300);
+  ok(await js(`[...document.querySelectorAll('.bhead b')].map(b=>b.textContent).join(',')==='Contacted,Tour booked,Toured,Proposal sent,Signed'`), 'the board: a column for each stage');
+  ok(await js(`(()=>{const c=[...document.querySelectorAll('.bcol')].pop();return /Kaiser Permanente/.test(c.textContent)&&/\\$24,500 a yr/.test(c.querySelector('.bhead').textContent)})()`), 'Kaiser sits under Signed; the column adds up $24,500 a year');
+  await shot('desk-board.png');
+  /* looked up */
+  await js(`[...document.querySelectorAll('.bcard')].find(c=>/ABC Family/.test(c.textContent)).click()`); await sleep(300);
+  ok(await js(`(()=>{const f=document.querySelector('.detail .found');return !!f&&/\\(719\\) 266-6661/.test(f.textContent)&&/Contact page/.test(f.textContent)&&/Look up again/.test(f.textContent)})()`), 'a company shows what its website gave: phone, contact page, Look up again');
+  await shot('desk-lookup.png');
+  await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>b.textContent==='List').click()`); await sleep(200);
+  /* tours */
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Tours').click()`); await sleep(250);
+  ok(await js(`/Today/.test(document.querySelector('main').textContent)&&[...document.querySelectorAll('main button')].some(b=>b.textContent==='Add to my calendar')&&/How did it go\?/.test(document.querySelector('main').textContent)`), 'Tours: today’s tour with Add to my calendar; the past one asks how it went');
+  await shot('desk-tours.png');
+  await js(`[...document.querySelectorAll('main button')].find(b=>b.textContent==='They came: mark Toured').click()`); await sleep(500);
+  ok(await js(`/Past tours/.test(document.querySelector('main').textContent)&&!!document.querySelector('.pill.o-toured')`), 'marking it Toured files it under Past tours');
+  ok((await b('data')).leads.find((l) => l.name === 'ABC Family Chiropractic').status === 'toured', 'and moves ABC to Toured');
+  /* signed */
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Signed').click()`); await sleep(250);
+  ok(await js(`/Kaiser Permanente · \\$24,500 a year/.test(document.querySelector('main').textContent)&&/renews/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .todo').length===2&&document.querySelectorAll('main .todo.done').length===1`), 'Signed: Kaiser, $24,500 a year, renewal date, two to-dos with one ticked');
+  await shot('desk-signed.png');
+  /* profit and loss */
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Profit & loss').click()`); await sleep(250);
+  ok(await js(`/\\$10,500 a year \\(88%\\)/.test(document.querySelector('main').textContent)`), 'P&L: a court at $12,000 costing $1,500 leaves $10,500 a year (88%)');
+  ok(await js(`/\\$21,260/.test(document.querySelector('.numbers').textContent)&&/No cost entered for: Banner/.test(document.querySelector('.numbers').textContent)`), 'the numbers: $24,500 in, $3,000 to deliver, $240 running = $21,260 profit; flags the banner has no cost');
+  await shot('desk-pl.png');
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Report').click()`); await sleep(200);
+  ok(await js(`/Who is on the desk/.test(document.querySelector('main').textContent)`), 'the Report shows who is on the desk and what each did');
   /* phone */
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Pipeline').click()`); await sleep(300);
   ok(await js(`document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`), 'on a phone: no sideways scrolling');
+  await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>b.textContent==='Board').click()`); await sleep(250);
+  ok(await js(`document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`), 'the board on a phone: its columns swipe inside, the page does not');
+  await shot('desk-board-phone.png');
+  await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>b.textContent==='List').click()`); await sleep(250);
   await js(`document.querySelector('.row').click()`); await sleep(300);
   ok(await js(`getComputedStyle(document.querySelector('.detail')).position==='fixed'`), 'on a phone a company opens full screen');
   await shot('desk-phone.png');
@@ -102,6 +167,7 @@ try {
 finally {
   try { ws && ws.close(); } catch {} try { chrome && chrome.kill(); } catch {}
   if (log0 === null) { try { rmSync(LOG); } catch {} } else writeFileSync(LOG, log0);
+  if (scans0 === null) { try { rmSync(SCANS); } catch {} } else writeFileSync(SCANS, scans0);
   try { rmSync(join(LD, 'tries.json')); } catch {}
 }
 console.log(`desk ${pass}/${pass + failN}`); process.exit(failN ? 1 : 0);

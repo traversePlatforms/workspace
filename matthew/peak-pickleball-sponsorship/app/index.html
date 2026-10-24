@@ -98,6 +98,36 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   .paper{padding:20px 16px;font-size:10.5pt}.paper h1{font-size:18pt}.paper th,.paper td{padding:5px 4px}
 }
 .tw{overflow-x:auto}
+/* 2026-10-24 (Matthew's list): the board, look-ups, signed sponsors, tours, profit and loss */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:10px;overflow-x:auto;padding-bottom:6px}
+.bcol{background:var(--chip);border-radius:12px;padding:8px;min-height:120px;min-width:0}
+.bhead{display:flex;justify-content:space-between;gap:6px;align-items:baseline;padding:2px 4px 8px;font-size:13.5px}.bhead span{color:var(--soft);font-size:12.5px;white-space:nowrap}
+.bcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin:0 0 7px;cursor:pointer}
+.bcard:hover{border-color:var(--accent)}.bcard.on{box-shadow:inset 3px 0 0 var(--accent)}
+.bcard b{display:block;line-height:1.25}.bcard small{color:var(--soft);display:block;margin-top:2px}.bcard .due{text-align:left}
+.bcard select{margin-top:7px;width:100%;padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:var(--bg);font-size:13px}
+.bempty{color:var(--soft);font-size:13px;padding:6px 4px}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:flex;align-items:flex-start;justify-content:center;padding:5vh 12px;overflow:auto}
+.sheet{background:var(--card);border-radius:14px;max-width:520px;width:100%;padding:18px}.sheet h2{margin:0 0 10px;font-size:19px}
+.sheet label.lab{font-size:12.5px;color:var(--soft);font-weight:650;display:block}
+.todo{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:14px}.todo.done span{text-decoration:line-through;color:var(--soft)}.todo input{width:auto}.todo span{flex:1}
+.found .it{padding:3px 0;font-size:14px;overflow-wrap:anywhere}.found small{color:var(--soft)}.found h4{margin:8px 0 2px;font-size:12.5px;color:var(--soft)}
+.warnline{color:var(--warn);font-weight:650}
+.card>.ct{border-bottom:0}
+.newinfo{font-size:11px;font-weight:700;color:var(--accent);margin-right:6px}
+.daygrp{margin:14px 0 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft);font-weight:700}
+.pill.o-noshow{color:var(--warn)}.pill.o-toured{background:#d9f0e2;color:#1d6b3f}
+@media (prefers-color-scheme:dark){.pill.o-toured{background:#1f3b2a;color:#8fdcae}}
+.plrow,.rnrow{display:grid;gap:6px;align-items:center;margin:0 0 6px}
+.plrow{grid-template-columns:minmax(0,1.6fr) 96px 92px 96px 92px minmax(0,1.1fr) 34px}.rnrow{grid-template-columns:minmax(0,1fr) 110px 100px 34px}
+.plrow input,.plrow select,.rnrow input,.rnrow select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);min-width:0;width:100%}
+.plhead{font-size:12px;color:var(--soft);font-weight:650}.plm{font-size:13.5px}.plm.neg{color:var(--warn)}
+.numbers td.n{text-align:right;white-space:nowrap}.numbers tr.tot td{font-weight:800;border-top:2px solid var(--ink)}
+@media (max-width:640px){
+  .board{grid-auto-columns:78vw}
+  .plrow{grid-template-columns:1fr 1fr;padding:8px 0;border-bottom:1px dashed var(--line)}.plrow .nmc{grid-column:1/-1}.plhead{display:none}
+  .rnrow{grid-template-columns:1fr 90px 80px 30px}
+}
 @media print{@page{size:letter;margin:.5in} html,body{background:#fff!important} .bar,.printbar,.toast{display:none!important} main{padding:0;max-width:none} .paper{box-shadow:none;padding:0;max-width:none}}
 </style>
 </head>
@@ -113,10 +143,27 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
 (function () {
   'use strict';
   var API = 'api/desk.php';
-  var S = { data: null, tab: 'pipe', list: 'new', st: 'all', q: '', sel: null, sort: 'reach' };
+  var S = { data: null, tab: 'pipe', list: 'new', st: 'all', q: '', sel: null, sort: 'reach', view: 'list', due: false };
+  /* everyone known at a company: the seed's contacts, ones we added, and Hunter's when someone asked (2026-10-24) */
+  var peopleOf = function (l) { var h = (l.scan && l.scan.hunter && l.scan.hunter.people) || []; return (l.contacts || []).concat(l.added || [], h); };
+  var found = function (l, k) { return (l.scan && l.scan.ok && l.scan[k]) || []; };   /* what their website shows */
   /* can Brandon reach them: an email and a phone first (2026-10-21, Matthew: "have the places we have email and numbers") */
-  var hasMail = function (l) { return (l.contacts || []).concat(l.added || []).some(function (c) { return c.email; }); };
-  var hasPhone = function (l) { return !!l.phone || (l.contacts || []).concat(l.added || []).some(function (c) { return c.phone; }); };
+  var hasMail = function (l) { return peopleOf(l).some(function (c) { return c.email; }) || found(l, 'emails').length > 0; };
+  var hasPhone = function (l) { return !!l.phone || peopleOf(l).some(function (c) { return c.phone; }) || found(l, 'phones').length > 0; };
+  var milesOf = function (l) { return l.miles != null ? l.miles : (l.scan && l.scan.miles != null ? l.scan.miles : null); };
+  var LISTNAME = { 'new': 'New lead', renew: 'Peak sponsor', local: 'Local business', added: 'Added by us' };
+  /* money a year: lines priced a month count 12 times, a week 52, anything else once (2026-10-24) */
+  var perYear = function (per) { per = String(per || '').toLowerCase(); return /month/.test(per) ? 12 : /week/.test(per) ? 52 : 1; };
+  var yearlyOf = function (lines) { return (lines || []).reduce(function (n, x) { return n + x.price * x.qty * perYear(x.per); }, 0); };
+  var lastProp = function (l) { return S.data.proposals.filter(function (p) { return p.lead === l.id; }).sort(function (a, b) { return b.at - a.at; })[0]; };
+  var dealLines = function (l) { return l.signed && l.signed.lines.length ? l.signed.lines : ((lastProp(l) || {}).lines || []); };
+  var leadValue = function (l) { return yearlyOf(dealLines(l)); };
+  var fmtYear = function (iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };   /* signed and renewal dates: a year apart */
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var addMonths = function (iso, m) { var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1 + m, +p[2]); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  var daysTo = function (iso) { var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]), t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((d - t) / 86400000); };
+  var isDue = function (l) { return l.next && l.next.date && l.next.date <= today() && ['signed', 'no'].indexOf(l.status) < 0; };
+  var newInfo = function (l) { var c = (l.scan && l.scan.changes) || []; return c.length && c[c.length - 1].at > Date.now() / 1000 - 7 * 86400; };
   var reach = function (l) { return (hasMail(l) ? 1 : 0) + (hasPhone(l) ? 1 : 0); };
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -159,28 +206,38 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   /* ---- tabs ---- */
   function tabs() {
     var t = $('tabs'); t.textContent = '';
-    var T = [['pipe', 'Pipeline'], ['tours', 'Tours'], ['props', 'Proposals'], ['report', 'Report'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer']];   /* everyone signed in (2026-10-21) */
+    var T = [['pipe', 'Pipeline'], ['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed'], ['pl', 'Profit & loss'], ['report', 'Report'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer']];   /* everyone signed in (2026-10-21); Signed and Profit & loss 2026-10-24 */
     T.forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; if (S.tab === x[0]) b.setAttribute('aria-current', 'page'); b.addEventListener('click', function () { S.tab = x[0]; S.print = null; tabs(); draw(); window.scrollTo(0, 0); }); t.appendChild(b); });
   }
   function draw() {
     main.textContent = '';
     document.documentElement.classList.remove('lock');
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
-    ({ pipe: drawPipe, tours: drawTours, props: drawProps, report: drawReport, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.better); } })[S.tab]();
+    ({ pipe: drawPipe, tours: drawTours, props: drawProps, signed: drawSigned, pl: drawPl, report: drawReport, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.better); } })[S.tab]();
   }
   var lead = function (id) { return S.data.leads.filter(function (l) { return l.id === id; })[0]; };
   var stName = function (k) { return S.data.statuses[k] || k; };
 
   /* ---- pipeline ---- */
   function drawPipe() {
-    var D = S.data, c = el('div', 'controls');
+    var D = S.data, c = el('div', 'controls'), refresh = function () {};
+    /* List or Board (2026-10-24, Matthew: "build out pipeline section"): the board shows every company past Not contacted, one column a stage */
+    var vw = el('div', 'chips');
+    [['list', 'List'], ['board', 'Board']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.view === x[0])); b.addEventListener('click', function () { S.view = x[0]; S.sel = null; draw(); }); vw.appendChild(b); });
+    c.appendChild(vw);
     var lc = el('div', 'chips');
-    LISTS.forEach(function (x) { var n = D.leads.filter(function (l) { return l.list === x[0]; }).length; if (!n && x[0] === 'added') return; var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.list === x[0])); b.addEventListener('click', function () { S.list = x[0]; S.sel = null; draw(); }); lc.appendChild(b); });
+    if (S.view === 'list') LISTS.forEach(function (x) { var n = D.leads.filter(function (l) { return l.list === x[0]; }).length; if (!n && x[0] === 'added') return; var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.list === x[0] && !S.due)); b.addEventListener('click', function () { S.list = x[0]; S.due = false; S.sel = null; draw(); }); lc.appendChild(b); });
     c.appendChild(lc);
-    var q = el('input', 'search'); q.type = 'search'; q.placeholder = 'Search companies'; q.value = S.q; q.addEventListener('input', function () { S.q = q.value; drawRows(); }); c.appendChild(q);
+    var q = el('input', 'search'); q.type = 'search'; q.placeholder = 'Search companies'; q.value = S.q; q.addEventListener('input', function () { S.q = q.value; refresh(); }); c.appendChild(q);
     var add = el('button', 'btn ghost small', '+ Add a company'); add.type = 'button'; add.addEventListener('click', addForm); c.appendChild(add);
     main.appendChild(c);
-    var inList = D.leads.filter(function (l) { return l.list === S.list; });
+    if (S.view === 'board') {
+      var bs = el('div', 'split' + (S.sel ? ' open' : '')), left = el('div'); left.style.minWidth = '0'; bs.appendChild(left); main.appendChild(bs);
+      refresh = function () { left.textContent = ''; drawBoard(left); }; refresh();
+      if (S.sel && lead(S.sel)) { bs.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
+      return;
+    }
+    var inList = S.due ? D.leads.filter(isDue) : D.leads.filter(function (l) { return l.list === S.list; });
     var sc = el('div', 'chips'); sc.style.marginBottom = '12px';
     [['all', 'All']].concat(Object.keys(D.statuses).map(function (k) { return [k, D.statuses[k]]; })).forEach(function (x) {
       var n = x[0] === 'all' ? inList.length : inList.filter(function (l) { return l.status === x[0]; }).length; if (!n && x[0] !== 'all') return;
@@ -188,9 +245,13 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     });
     var so = el('div', 'chips'); so.style.marginBottom = '12px';
     [['reach', 'Best contact first'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
+    /* follow-ups due today or late, from every list (2026-10-24) */
+    var dueN = D.leads.filter(isDue).length;
+    if (dueN || S.due) { var db = el('button', null, 'Follow-ups due'); db.type = 'button'; db.appendChild(el('b', null, String(dueN))); db.setAttribute('aria-pressed', String(S.due)); db.addEventListener('click', function () { S.due = !S.due; S.st = 'all'; S.sel = null; draw(); }); so.appendChild(db); }
     sc.appendChild(el('span', null, '  ')); [].slice.call(so.children).forEach(function (b) { sc.appendChild(b); });
     main.appendChild(sc);
     var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
+    refresh = drawRows;
     function drawRows() {
       list.textContent = '';
       var t = S.q.trim().toLowerCase();
@@ -205,8 +266,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
       rows.forEach(function (l) {
         var r = el('button', 'row' + (S.sel === l.id ? ' on' : '')); r.type = 'button';
         var s = el('div', 'sc', l.score != null ? String(l.score) : '•'); if (l.score != null) s.appendChild(el('small', null, l.list === 'local' ? 'fit' : '/9')); r.appendChild(s);
-        var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [l.kind, l.miles != null ? l.miles + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
+        var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [S.due ? LISTNAME[l.list] : '', l.kind, milesOf(l) != null ? milesOf(l) + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
         var right = el('div'); right.style.textAlign = 'right';
+        if (newInfo(l)) { var ni = el('span', 'newinfo', 'New info'); ni.title = 'Their website changed this week (see Looked up)'; right.appendChild(ni); }
         var mk = el('span', 'reach', (hasPhone(l) ? '☎' : '') + (hasMail(l) ? ' ✉' : '')); mk.title = (hasMail(l) ? 'Has an email' : 'No email') + ' · ' + (hasPhone(l) ? 'has a phone' : 'no phone'); right.appendChild(mk);
         right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
         if (l.next && l.next.date) right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date)));
@@ -222,12 +284,23 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var d = el('aside', 'detail');
     var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); window.scrollTo(0, S.listY || 0); }); d.appendChild(cx);
     d.appendChild(el('h2', null, l.name));
-    d.appendChild(el('div', 'sub', [l.kind, l.score != null ? 'score ' + l.score + (l.list === 'local' ? '' : '/9') : '', l.miles != null ? l.miles + ' mi from Peak' : ''].filter(Boolean).join(' · ')));
+    d.appendChild(el('div', 'sub', [l.kind, l.score != null ? 'score ' + l.score + (l.list === 'local' ? '' : '/9') : '', milesOf(l) != null ? milesOf(l) + ' mi from Peak' : ''].filter(Boolean).join(' · ')));
     if (l.why) d.appendChild(el('div', null, l.why));
-    /* status */
+    /* status: Tour booked opens the tour form, Signed asks what they bought (2026-10-24) */
     var s1 = el('div', 'sec'); s1.appendChild(el('h3', null, 'Status')); var seg = el('div', 'seg');
-    Object.keys(S.data.statuses).forEach(function (k) { var b = el('button', null, S.data.statuses[k]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === k)); b.addEventListener('click', function () { if (l.status !== k) save('status', { id: l.id, status: k }, 'Marked ' + S.data.statuses[k]); }); seg.appendChild(b); });
+    Object.keys(S.data.statuses).forEach(function (k) { var b = el('button', null, S.data.statuses[k]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === k)); b.addEventListener('click', function () {
+      if (k === 'tour' && l.status !== 'tour') { tf.hidden = false; tf.scrollIntoView({ block: 'center' }); tD.focus(); return; }
+      if (k === 'signed') { signedForm(l); return; }
+      if (l.status !== k) save('status', { id: l.id, status: k }, 'Marked ' + S.data.statuses[k]);
+    }); seg.appendChild(b); });
     s1.appendChild(seg); d.appendChild(s1);
+    if (l.status === 'signed') {
+      var sg = el('div', 'sec'); sg.appendChild(el('h3', null, 'Signed'));
+      if (l.signed) { sg.appendChild(el('div', null, dealLines(l).map(function (x) { return (x.qty > 1 ? x.qty + ' × ' : '') + x.name; }).join(', ') + ' · ' + money(leadValue(l)) + ' a year')); sg.appendChild(el('small', null, 'From ' + fmtYear(l.signed.start) + ', renews ' + fmtYear(addMonths(l.signed.start, l.signed.months)))); }
+      else sg.appendChild(el('div', null, 'No details yet: what they bought, from when, for how long.'));
+      var se = el('button', 'lnk', l.signed ? 'Edit the details' : 'Add the details'); se.type = 'button'; se.style.display = 'block'; se.addEventListener('click', function () { signedForm(l); }); sg.appendChild(se);
+      d.appendChild(sg);
+    }
     /* how to reach them */
     var s2 = el('div', 'sec'); s2.appendChild(el('h3', null, 'How to reach them'));
     if (l.callHow) { var ch = el('div', 'callhow'); ch.appendChild(el('b', null, l.callHow)); if (l.phone) { ch.appendChild(document.createTextNode(' ')); var cp = el('a', null, l.phone); cp.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ch.appendChild(cp); } if (l.callSrc) { var cs = el('small', null, 'Source: ' + l.callSrc); cs.style.cssText = 'display:block;margin-top:4px;color:var(--soft);overflow-wrap:anywhere'; ch.appendChild(cs); } s2.appendChild(ch); }
@@ -237,7 +310,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     if (l.phone && !l.callHow) { var ph = el('div'); var pa = el('a', null, l.phone); pa.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ph.appendChild(pa); if (l.phoneNote) { var pn = el('small', null, ' · ' + l.phoneNote); pn.style.color = 'var(--soft)'; ph.appendChild(pn); } s2.appendChild(ph); }
     if (l.site) { var sw = el('div'); var sa = el('a', null, l.site.replace(/^https?:\/\//, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; sw.appendChild(sa); s2.appendChild(sw); }
     if (l.addr) s2.appendChild(el('div', null, l.addr));
-    var people = (l.contacts || []).concat(l.added || []);
+    var people = peopleOf(l).slice();
     people.sort(function (a, b) { return (b.pick ? 1 : 0) - (a.pick ? 1 : 0); });   /* the starred one first */
     var more = null;
     people.forEach(function (p, pi) {
@@ -257,6 +330,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     addc.addEventListener('click', function () { cf.hidden = !cf.hidden; });
     cS.addEventListener('click', function () { save('contact', { id: l.id, name: cN.value, pos: cP.value, email: cE.value, phone: cT.value }, 'Contact saved'); });
     d.appendChild(s2);
+    d.appendChild(scanSec(l));
     /* next step */
     var s3 = el('div', 'sec'); s3.appendChild(el('h3', null, 'Next step')); var nf = el('div', 'form'), two = el('div', 'two');
     var nD = el('input'); nD.type = 'date'; nD.value = l.next ? l.next.date : ''; var nW = el('input'); nW.placeholder = 'e.g. call back after the board meets'; nW.value = l.next ? l.next.what : '';
@@ -269,7 +343,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var tf = el('div', 'form'); tf.hidden = true; tf.style.marginTop = '8px'; s4.appendChild(tf);
     var tD = el('input'); tD.type = 'date'; tD.min = today(); var tH = el('input'); tH.type = 'time'; tH.step = 900; var tw = el('div', 'two'); tw.appendChild(tD); tw.appendChild(tH); tf.appendChild(tw);
     var tWho = el('input'); tWho.placeholder = 'Who is coming'; var tN = el('input'); tN.placeholder = 'Note (optional)'; var tS = el('button', 'btn small', 'Book the tour'); tS.type = 'button';
-    [tWho, tN, tS].forEach(function (x) { tf.appendChild(x); });
+    var tNo = el('button', 'lnk', 'Mark it Tour booked, no date yet'); tNo.type = 'button'; tNo.addEventListener('click', function () { save('status', { id: l.id, status: 'tour' }, 'Marked Tour booked'); });
+    [tWho, tN, tS, tNo].forEach(function (x) { tf.appendChild(x); });
     bt.addEventListener('click', function () { tf.hidden = !tf.hidden; });
     tS.addEventListener('click', function () { save('tour', { lead: l.id, date: tD.value, time: tH.value, who: tWho.value, note: tN.value }, 'Tour booked'); });
     bp.addEventListener('click', function () { proposalForm(l, s4); });
@@ -280,17 +355,19 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var s5 = el('div', 'sec'); s5.appendChild(el('h3', null, 'Notes')); var ta = el('textarea'); ta.rows = 2; ta.placeholder = 'What happened, what they said'; ta.style.width = '100%'; ta.style.padding = '8px'; ta.style.border = '1px solid var(--line)'; ta.style.borderRadius = '9px'; ta.style.background = 'var(--bg)';
     var nb = el('button', 'btn small', 'Save note'); nb.type = 'button'; nb.style.marginTop = '6px'; nb.addEventListener('click', function () { if (ta.value.trim()) save('note', { id: l.id, note: ta.value }, 'Note saved'); });
     s5.appendChild(ta); s5.appendChild(nb);
-    l.notes.slice().reverse().forEach(function (n) { var x = el('div', 'note', n.note); x.appendChild(el('small', null, n.by + ', ' + ago(n.at))); s5.appendChild(x); });
-    (l.log || []).slice().reverse().slice(0, 6).forEach(function (n) { var x = el('div', 'note', n.what); x.appendChild(el('small', null, n.by + ', ' + ago(n.at))); s5.appendChild(x); });
+    /* a note can be removed (2026-10-24, Matthew: "remove notes on abc family"); the log keeps it, the desk stops showing it */
+    l.notes.slice().reverse().forEach(function (n) { var x = el('div', 'note', n.note), sm = el('small', null, n.by + ', ' + ago(n.at) + ' · '), rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.style.fontSize = '12px'; rm.addEventListener('click', function () { if (confirm('Remove this note?')) save('notedel', { id: l.id, nk: n.k }, 'Note removed'); }); sm.appendChild(rm); x.appendChild(sm); s5.appendChild(x); });
     d.appendChild(s5);
+    /* status changes on their own, under the notes */
+    if ((l.log || []).length) { var s6 = el('div', 'sec'); s6.appendChild(el('h3', null, 'History')); l.log.slice().reverse().slice(0, 8).forEach(function (n) { var x = el('div', 'note', n.what); x.appendChild(el('small', null, n.by + ', ' + ago(n.at))); s6.appendChild(x); }); d.appendChild(s6); }
     return d;
   }
   function addForm() {
     var c = el('div', 'card'); c.appendChild(el('h3', null, 'Add a company')); var f = el('div', 'form');
-    var n = el('input'); n.placeholder = 'Company name'; var k = el('input'); k.placeholder = 'Kind (e.g. Car dealer)'; var w = el('input'); w.placeholder = 'Why they fit'; var p = el('input'); p.placeholder = 'Phone'; var s = el('input'); s.placeholder = 'Website';
+    var n = el('input'); n.placeholder = 'Company name'; var k = el('input'); k.placeholder = 'Kind (e.g. Car dealer)'; var w = el('input'); w.placeholder = 'Why they fit'; var p = el('input'); p.placeholder = 'Phone'; var s = el('input'); s.placeholder = 'Website (the desk looks them up from it)';
     var b = el('button', 'btn small', 'Add'); b.type = 'button';
     [n, k, w, p, s, b].forEach(function (x) { f.appendChild(x); }); c.appendChild(f);
-    b.addEventListener('click', function () { save('lead', { name: n.value, kind: k.value, why: w.value, phone: p.value, site: s.value }, 'Added').then(function (j) { if (j && j.ok) { S.list = 'added'; S.sel = j.id; draw(); } }); });
+    b.addEventListener('click', function () { save('lead', { name: n.value, kind: k.value, why: w.value, phone: p.value, site: s.value }, 'Added').then(function (j) { if (j && j.ok) { S.view = 'list'; S.due = false; S.list = 'added'; S.sel = j.id; draw(); if (s.value.trim() && lead(j.id)) lookUp(lead(j.id)); } }); });
     main.insertBefore(c, main.children[1]); n.focus();
   }
   function proposalForm(l, into) {
@@ -315,24 +392,77 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     into.appendChild(f);
   }
 
-  /* ---- tours ---- */
+  /* ---- tours (2026-10-24, Matthew: "update tour section"): companies marked Tour booked with no date yet, the tours ahead by day
+     (add to a phone calendar, move, cancel), tours past asking how they went, and the outcomes ---- */
   function drawTours() {
-    var T = S.data.tours.slice().sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
-    var up = T.filter(function (t) { return t.date >= today(); }), past = T.filter(function (t) { return t.date < today(); }).reverse();
+    var D = S.data, now = today();
+    var T = D.tours.slice().sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
+    var up = T.filter(function (t) { return t.date >= now; }), past = T.filter(function (t) { return t.date < now; }).reverse();
+    var ask = past.filter(function (t) { return !t.out; }), done = past.filter(function (t) { return t.out; });
+    var need = D.leads.filter(function (l) { return l.status === 'tour' && !up.some(function (t) { return t.lead === l.id; }); });
+    var k = el('div', 'kpis');
+    [[up.length, 'tours coming up'], [up.filter(function (t) { return daysTo(t.date) <= 7; }).length, 'in the next 7 days'], [need.length, 'booked with no date yet'], [ask.length, 'waiting on how it went']].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
+    main.appendChild(k);
+    if (need.length) { main.appendChild(el('h2', null, 'Tour booked, no date yet')); need.forEach(function (l) { main.appendChild(needCard(l)); }); }
     main.appendChild(el('h2', null, 'Tours coming up'));
-    if (!up.length) main.appendChild(el('div', 'empty', 'No tours booked. Book one from a company in the Pipeline.'));
-    up.forEach(function (t) { main.appendChild(tourCard(t, false)); });
-    if (past.length) { main.appendChild(el('h2', null, 'Past tours')); past.forEach(function (t) { main.appendChild(tourCard(t, true)); }); }
+    if (!up.length) main.appendChild(el('div', 'empty', 'No tours with a date. Book one from a company in the Pipeline.'));
+    var grp = '';
+    up.forEach(function (t) {
+      var n = daysTo(t.date), g = n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n <= 7 ? 'This week' : 'Later';
+      if (g !== grp) { grp = g; main.appendChild(el('div', 'daygrp', g)); }
+      main.appendChild(tourCard(t, 'up'));
+    });
+    if (ask.length) { main.appendChild(el('h2', null, 'How did it go?')); ask.forEach(function (t) { main.appendChild(tourCard(t, 'ask')); }); }
+    if (done.length) { main.appendChild(el('h2', null, 'Past tours')); done.forEach(function (t) { main.appendChild(tourCard(t, 'done')); }); }
   }
-  function tourCard(t, past) {
+  var openLead = function (l) { S.tab = 'pipe'; S.view = 'list'; S.due = false; S.list = l.list || 'new'; S.sel = l.id; tabs(); draw(); };
+  /* a date, a time and who is coming; books a new tour */
+  function tourForm(l, into, label) {
+    var f = el('div', 'form'); f.style.marginTop = '8px';
+    var tw = el('div', 'two'), d = el('input'), h = el('input'); d.type = 'date'; d.min = today(); h.type = 'time'; h.step = 900; tw.appendChild(d); tw.appendChild(h); f.appendChild(tw);
+    var who = el('input'); who.placeholder = 'Who is coming'; f.appendChild(who);
+    var go = el('button', 'btn small', label || 'Book the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tour', { lead: l.id, date: d.value, time: h.value, who: who.value }, 'Tour booked'); }); f.appendChild(go);
+    into.appendChild(f); return f;
+  }
+  function needCard(l) {
+    var c = el('div', 'card'); c.appendChild(el('h3', null, l.name));
+    c.appendChild(el('small', null, [l.kind, l.next && l.next.what ? 'Next: ' + (l.next.date ? fmtDay(l.next.date) + ', ' : '') + l.next.what : ''].filter(Boolean).join(' · ')));
+    tourForm(l, c, 'Book it');
+    var op = el('button', 'lnk', 'Open the company'); op.type = 'button'; op.style.marginTop = '6px'; op.addEventListener('click', function () { openLead(l); }); c.appendChild(op);
+    return c;
+  }
+  function tourCard(t, mode) {
     var l = lead(t.lead) || { name: 'A company', status: '' }, c = el('div', 'card');
     c.appendChild(el('h3', null, fmtDay(t.date) + ', ' + fmtTime(t.time) + ' · ' + l.name));
-    c.appendChild(el('small', null, [t.who, t.note, 'booked by ' + t.by].filter(Boolean).join(' · ')));
+    c.appendChild(el('small', null, [t.who ? 'Coming: ' + t.who : '', t.note, 'booked by ' + t.by].filter(Boolean).join(' · ')));
+    if (mode === 'done') { var pl = el('span', 'pill o-' + t.out, t.out === 'toured' ? 'Toured' : 'Did not show'); pl.style.marginLeft = '8px'; c.appendChild(pl); }
     var row = el('div', 'seg'); row.style.marginTop = '8px';
-    var op = el('button', null, 'Open the company'); op.type = 'button'; op.addEventListener('click', function () { S.tab = 'pipe'; S.list = l.list || 'new'; S.sel = l.id; tabs(); draw(); }); row.appendChild(op);
-    if (past && l.status === 'tour') { var dn = el('button', null, 'Mark toured'); dn.type = 'button'; dn.addEventListener('click', function () { save('status', { id: l.id, status: 'toured' }, 'Marked toured'); }); row.appendChild(dn); }
-    if (!past) { var cx = el('button', null, 'Cancel the tour'); cx.type = 'button'; cx.addEventListener('click', function () { if (confirm('Cancel the tour with ' + l.name + '?')) save('tourdel', { tid: t.tid }, 'Tour cancelled'); }); row.appendChild(cx); }
-    c.appendChild(row); return c;
+    var b = function (txt, fn) { var x = el('button', null, txt); x.type = 'button'; x.addEventListener('click', fn); row.appendChild(x); return x; };
+    if (mode === 'ask') {
+      b('They came: mark Toured', function () { save('tourout', { tid: t.tid, out: 'toured' }, 'Marked toured'); });
+      b('Did not show', function () { save('tourout', { tid: t.tid, out: 'noshow' }, 'Marked did not show'); });
+      var again = b('Book again', function () { again.disabled = true; tourForm(l, c, 'Book the new tour'); });
+    }
+    b('Open the company', function () { openLead(l); });
+    if (mode === 'up') {
+      b('Add to my calendar', function () { ics(t, l); });
+      var mv = b('Move', function () {
+        mv.disabled = true; var f = el('div', 'form'); f.style.marginTop = '8px'; var tw = el('div', 'two'), d = el('input'), h = el('input'); d.type = 'date'; d.min = today(); d.value = t.date; h.type = 'time'; h.step = 900; h.value = t.time; tw.appendChild(d); tw.appendChild(h); f.appendChild(tw);
+        var go = el('button', 'btn small', 'Move the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tourmove', { tid: t.tid, date: d.value, time: h.value }, 'Tour moved'); }); f.appendChild(go); c.appendChild(f);
+      });
+      b('Cancel the tour', function () { if (confirm('Cancel the tour with ' + l.name + '?')) save('tourdel', { tid: t.tid }, 'Tour cancelled'); });
+    }
+    c.appendChild(row);
+    return c;
+  }
+  /* a calendar file the phone opens (Peak's clock: Colorado) */
+  function ics(t, l) {
+    var esc = function (s) { return String(s || '').replace(/[\\,;]/g, function (m) { return '\\' + m; }).replace(/\n/g, '\\n'); };
+    var txt = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Peak Sponsor Desk//EN', 'BEGIN:VEVENT', 'UID:' + t.tid + '@peak-desk', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+      'DTSTART;TZID=America/Denver:' + t.date.replace(/-/g, '') + 'T' + t.time.replace(':', '') + '00', 'DURATION:PT1H', 'SUMMARY:' + esc('Peak tour: ' + l.name),
+      'LOCATION:' + esc('Peak Pickleball, Chapel Hills Mall, Colorado Springs'), 'DESCRIPTION:' + esc([t.who ? 'Coming: ' + t.who : '', t.note].filter(Boolean).join('\n')), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    var a = el('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/calendar' })); a.download = 'peak-tour-' + t.date + '.ics'; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
   }
 
   /* ---- proposals ---- */
@@ -373,7 +503,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   function drawReport() {
     var D = S.data, L = D.leads, k = el('div', 'kpis');
     var signed = L.filter(function (l) { return l.status === 'signed'; });
-    var signedVal = D.proposals.filter(function (p) { var l = lead(p.lead); return l && l.status === 'signed'; }).reduce(function (n, p) { return n + p.total; }, 0);
+    var signedVal = signed.reduce(function (n, l) { return n + leadValue(l); }, 0);   /* a year, from what they signed for (2026-10-24) */
     var open = D.proposals.filter(function (p) { var l = lead(p.lead); return l && l.status === 'proposal'; });
     var up = D.tours.filter(function (t) { return t.date >= today(); });
     var worked = L.filter(function (l) { return l.status !== 'new'; }).length;
@@ -381,6 +511,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     main.appendChild(k);
     var b = el('button', 'btn', 'Open the report · save as PDF'); b.type = 'button'; b.addEventListener('click', function () { S.print = { kind: 'report' }; draw(); window.scrollTo(0, 0); }); main.appendChild(b);
     main.appendChild(el('p', null, 'The report lists where every company stands, the tours ahead, proposals out and next steps due, ready to send.')).style.color = 'var(--soft)';
+    var tm = teamTable(); if (tm) { var tc = el('div', 'card info'); tc.style.marginTop = '14px'; tc.appendChild(el('h3', null, 'Who is on the desk')); tc.appendChild(tm); main.appendChild(tc); }
   }
   function printReport() {
     var D = S.data, L = D.leads; printBar(); var d = el('div', 'paper');
@@ -395,10 +526,242 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var sec = function (title, rows, cols) { d.appendChild(el('h2', null, title)); if (!rows.length) { d.appendChild(el('p', 'soft', 'None.')); return; } var tb = el('table'), hh = el('tr'); cols.forEach(function (c, i) { hh.appendChild(el('th', c[1] ? 'n' : null, c[0])); }); tb.appendChild(hh); rows.forEach(function (r) { var tr = el('tr'); r.forEach(function (v, i) { tr.appendChild(el('td', cols[i][1] ? 'n' : null, v)); }); tb.appendChild(tr); }); d.appendChild(tb); };
     sec('Tours coming up', D.tours.filter(function (x) { return x.date >= today(); }).sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); }).map(function (x) { return [fmtDay(x.date) + ', ' + fmtTime(x.time), (lead(x.lead) || {}).name || '', x.who || '']; }), [['When'], ['Company'], ['Who']]);
     sec('Proposals out', D.proposals.filter(function (p) { var l = lead(p.lead); return l && l.status === 'proposal'; }).map(function (p) { return [p.company, ago(p.at), money(p.total)]; }), [['Company'], ['Sent'], ['Total', 1]]);
-    sec('Signed', D.proposals.filter(function (p) { var l = lead(p.lead); return l && l.status === 'signed'; }).map(function (p) { return [p.company, money(p.total)]; }), [['Company'], ['Value', 1]]);
+    sec('Signed', L.filter(function (l) { return l.status === 'signed'; }).map(function (l) { return [l.name, l.signed ? fmtYear(addMonths(l.signed.start, l.signed.months)) : '', money(leadValue(l))]; }), [['Company'], ['Renews'], ['A year', 1]]);
     sec('Next steps', L.filter(function (l) { return l.next && l.next.date && ['signed', 'no'].indexOf(l.status) < 0; }).sort(function (a, b) { return a.next.date.localeCompare(b.next.date); }).map(function (l) { return [(l.next.date < today() ? 'Late: ' : '') + fmtDay(l.next.date), l.name, l.next.what || '', stName(l.status)]; }), [['Due'], ['Company'], ['What'], ['Stage']]);
     sec('Best new leads not contacted yet', L.filter(function (l) { return l.list === 'new' && l.status === 'new'; }).sort(function (a, b) { return (b.score || 0) - (a.score || 0); }).slice(0, 12).map(function (l) { return [l.name, l.kind || '', String(l.score)]; }), [['Company'], ['Kind'], ['Score', 1]]);
     main.appendChild(d);
+  }
+
+  /* ---- the board: one column a stage, every list (2026-10-24, Matthew: "build out pipeline section") ---- */
+  function drawBoard(into) {
+    var D = S.data, t = S.q.trim().toLowerCase(), stages = ['contacted', 'tour', 'toured', 'proposal', 'signed'];
+    var match = function (l) { return !t || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(t) >= 0; };
+    var b = el('div', 'board');
+    stages.forEach(function (k) {
+      var ls = D.leads.filter(function (l) { return l.status === k && match(l); });
+      ls.sort(function (a, b) { return ((a.next && a.next.date) || '9999').localeCompare((b.next && b.next.date) || '9999') || a.name.localeCompare(b.name); });
+      var val = ls.reduce(function (n, l) { return n + leadValue(l); }, 0);
+      var col = el('div', 'bcol'), h = el('div', 'bhead'); h.appendChild(el('b', null, stName(k))); h.appendChild(el('span', null, ls.length + (val ? ' · ' + money(val) + (k === 'signed' ? ' a yr' : '') : ''))); col.appendChild(h);
+      if (!ls.length) col.appendChild(el('div', 'bempty', 'None yet'));
+      ls.forEach(function (l) {
+        var c = el('div', 'bcard' + (S.sel === l.id ? ' on' : '')); c.tabIndex = 0; c.setAttribute('role', 'button');
+        c.appendChild(el('b', null, l.name)); c.appendChild(el('small', null, [l.kind, LISTNAME[l.list]].filter(Boolean).join(' · ')));
+        var v = leadValue(l); if (v) c.appendChild(el('small', null, money(v) + (k === 'signed' ? ' a year' : ' proposed')));
+        if (l.next && l.next.date) c.appendChild(el('small', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date) + (l.next.what ? ' · ' + l.next.what : '')));
+        var sel = el('select'); sel.setAttribute('aria-label', 'Move ' + l.name);
+        Object.keys(D.statuses).forEach(function (s) { var o = el('option', null, s === k ? D.statuses[s] : 'Move to ' + D.statuses[s]); o.value = s; if (s === k) o.selected = true; sel.appendChild(o); });
+        sel.addEventListener('click', function (e) { e.stopPropagation(); });
+        sel.addEventListener('change', function () { var to = sel.value; if (to === 'signed') { sel.value = k; signedForm(l); return; } save('status', { id: l.id, status: to }, 'Moved to ' + D.statuses[to]); });
+        c.appendChild(sel);
+        var open = function () { if (!S.sel) S.listY = window.scrollY; S.sel = l.id; draw(); };
+        c.addEventListener('click', open); c.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target === c) open(); });
+        col.appendChild(c);
+      });
+      b.appendChild(col);
+    });
+    into.appendChild(b);
+    var notYet = D.leads.filter(function (l) { return l.status === 'new'; }).length, off = D.leads.filter(function (l) { return l.status === 'notnow' || l.status === 'no'; }).length;
+    var p = el('p', null, notYet + ' not contacted yet (in the List view)' + (off ? ' · ' + off + ' marked Not now or No' : '') + '. A company joins the board when it is marked Contacted.'); p.style.color = 'var(--soft)'; p.style.fontSize = '13.5px'; into.appendChild(p);
+  }
+
+  /* ---- looked up: what the company's website shows, checked when added, on a tap, and every day by the server (2026-10-24, Matthew:
+     "take their added companies and run data pulls on them"; "run company scans more frequently") ---- */
+  var when = function (ts) { var d = new Date(ts * 1000); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); };
+  var plural = function (n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); };
+  var bizMail = function (l) { return (l.contacts || []).some(function (c) { return c.email && !/@(gmail|yahoo|outlook|hotmail|aol|icloud|me|msn|live|comcast|protonmail)\.(com|net)$/i.test(c.email); }); };
+  function scanSec(l) {
+    var s = l.scan, sec = el('div', 'sec found'), site = !!l.site, src = /https?:\/\//.test(l.callSrc || '');
+    sec.appendChild(el('h3', null, 'Looked up'));
+    if (!site) { var hint = el('div', null, src ? 'The desk checks every day that the phone above is still on the page it came from. Add their website to look them up too.' : 'Add their website and the desk looks them up: phones, emails, the address, their contact and community pages. It checks again every day.'); hint.style.cssText = 'color:var(--soft);font-size:14px'; sec.appendChild(hint); siteForm(sec, l); }
+    if (s && s.at) {
+      sec.appendChild(el('small', null, (s.site ? 'Their website' : 'The phone’s source page') + ', checked ' + when(s.at) + (s.site && !s.ok ? ': could not be read (' + s.err + ')' : '')));
+      if (s.ok) {
+        if (!s.phones.length && !s.emails.length) sec.appendChild(el('div', 'it', 'No phone or email shown on the site.'));
+        s.phones.forEach(function (p) { var d = el('div', 'it'), a = el('a', null, p.phone); a.href = 'tel:' + p.phone.replace(/\D/g, ''); d.appendChild(a); d.appendChild(el('small', null, ' · ' + p.where)); sec.appendChild(d); });
+        s.emails.forEach(function (p) { var d = el('div', 'it'), a = el('a', null, p.email); a.href = 'mailto:' + p.email; d.appendChild(a); d.appendChild(el('small', null, ' · ' + p.where)); sec.appendChild(d); });
+        if (s.addr) sec.appendChild(el('div', 'it', s.addr + (s.miles != null ? ' · ' + s.miles + ' mi from Peak' : '')));
+        var links = [];
+        if (s.pages && s.pages.contact) links.push(['Contact page', s.pages.contact]);
+        if (s.pages && s.pages.sponsor) links.push(['Community / sponsorship page', s.pages.sponsor]);
+        (s.social || []).forEach(function (u) { var m = u.match(/(facebook|instagram|linkedin|twitter|youtube|tiktok|x)\.com/i); links.push([m ? ({ x: 'X', linkedin: 'LinkedIn', youtube: 'YouTube', tiktok: 'TikTok' }[m[1].toLowerCase()] || m[1][0].toUpperCase() + m[1].slice(1).toLowerCase()) : 'Social', u]); });
+        if (links.length) { var lk = el('div', 'it'); links.forEach(function (x, i) { if (i) lk.appendChild(document.createTextNode(' · ')); var a = el('a', null, x[0] + ' ›'); a.href = x[1]; a.target = '_blank'; a.rel = 'noopener'; lk.appendChild(a); }); sec.appendChild(lk); }
+      }
+      if (s.srcCheck) { var ok = s.srcCheck.ok; sec.appendChild(el('div', ok === false ? 'it warnline' : 'it', ok === true ? 'The phone above is still on the page it came from.' : ok === false ? 'The phone above is no longer on the page it came from. Check it before calling.' : 'The phone’s source page could not be read (' + s.srcCheck.err + ').')); }
+      if (s.changes && s.changes.length) { sec.appendChild(el('h4', null, 'What changed')); s.changes.slice().reverse().slice(0, 5).forEach(function (c) { var d = el('div', 'it', c.what); d.appendChild(el('small', null, ' · ' + ago(c.at))); sec.appendChild(d); }); }
+    } else if (site || src) sec.appendChild(el('div', 'it', 'Not looked up yet.'));
+    if (s && s.hunter) sec.appendChild(el('small', null, 'Hunter, ' + ago(s.hunter.at) + ': ' + (s.hunter.people.length ? plural(s.hunter.people.length, 'person') + ' at ' + s.hunter.domain + ', listed under How to reach them' : 'nobody found at ' + s.hunter.domain)));
+    var row = el('div', 'seg'); row.style.marginTop = '8px';
+    if (site || src) { var lb = el('button', null, s && s.at ? 'Look up again' : 'Look them up'); lb.type = 'button'; lb.addEventListener('click', function () { lookUp(l, false, lb); }); row.appendChild(lb); }
+    var left = S.data.hunterLeft;
+    if (left != null && (site || bizMail(l))) { var hb = el('button', null, 'Find people (Hunter, ' + left + ' left this month)'); hb.type = 'button'; hb.disabled = left < 1; hb.addEventListener('click', function () { if (confirm('Use 1 of the ' + left + ' Hunter searches left this month on ' + l.name + '? A search that finds nobody is free.')) lookUp(l, true, hb); }); row.appendChild(hb); }
+    if (site) { var cw = el('button', null, 'Change website'); cw.type = 'button'; cw.addEventListener('click', function () { cw.remove(); siteForm(sec, l); }); row.appendChild(cw); }
+    if (row.children.length) sec.appendChild(row);
+    return sec;
+  }
+  function siteForm(into, l) {
+    var f = el('div', 'form'); f.style.marginTop = '6px'; var i = el('input'); i.placeholder = 'Their website, e.g. example.com'; i.value = l.site || ''; var b = el('button', 'btn small', 'Save and look up'); b.type = 'button';
+    b.addEventListener('click', function () { b.disabled = true; api('site', { id: l.id, site: i.value }).then(function (j) { if (!j.ok) { b.disabled = false; toast(j.error || 'Not saved.'); return; } lookUp(l, false, b); }); });
+    f.appendChild(i); f.appendChild(b); into.appendChild(f);
+  }
+  function lookUp(l, hunter, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = hunter ? 'Asking Hunter…' : 'Looking them up… (up to half a minute)'; }
+    return api('scan', { id: l.id, hunter: !!hunter }).then(function (j) {
+      if (j._status === 401) return signin('Signed out. Enter your code again.');
+      if (!j.ok) toast(j.error || 'Could not look them up.');
+      else if (hunter) toast(j.found ? 'Hunter found ' + plural(j.found, 'person') : 'Hunter found nobody there (free)');
+      else { var s = j.scan; toast(!s.site ? 'Checked the phone’s source page' : !s.ok ? 'Their website could not be read: ' + s.err : 'Found ' + plural(s.phones.length, 'phone') + ', ' + plural(s.emails.length, 'email') + (s.addr ? ' and the address' : '')); }
+      load();
+    }).catch(function () { toast('No connection.'); if (btn) btn.disabled = false; });
+  }
+
+  /* ---- a sheet over the page (the signed form) ---- */
+  function sheet(title) {
+    var bg = el('div', 'sheet-bg'), s = el('div', 'sheet'), x = el('button', 'lnk close', 'Close ×'); x.type = 'button';
+    var close = function () { bg.remove(); }; x.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
+    s.appendChild(x); s.appendChild(el('h2', null, title)); bg.appendChild(s); document.body.appendChild(bg); return { box: s, close: close };
+  }
+  /* what a sponsor bought, from when, for how long (2026-10-24, Matthew: "Add a signed on section") */
+  function signedForm(l) {
+    var sh = sheet('Signed: ' + l.name), f = el('div', 'form'), have = dealLines(l), picks = [], named = {};
+    f.appendChild(el('label', 'lab', 'What they bought' + (!l.signed && have.length ? ' (from the last proposal)' : '')));
+    var row = function (name, price, per, qty, on) {
+      var r = el('label'); r.style.cssText = 'display:flex;gap:8px;align-items:center';
+      var cb = el('input'); cb.type = 'checkbox'; cb.style.width = 'auto'; cb.checked = on; var q = el('input'); q.type = 'number'; q.min = 1; q.max = 50; q.value = qty; q.style.width = '64px';
+      r.appendChild(cb); r.appendChild(el('span', null, name + ' · ' + money(price) + (per ? ' a ' + per : ''))); r.appendChild(q); f.appendChild(r);
+      picks.push({ name: name, price: price, per: per, cb: cb, q: q });
+    };
+    S.data.packages.forEach(function (p) { var got = have.filter(function (x) { return x.name === p.name; })[0]; named[p.name] = 1; row(p.name, got ? got.price : p.price, p.per, got ? got.qty : 1, !!got); });
+    have.filter(function (x) { return !named[x.name]; }).forEach(function (x) { row(x.name, x.price, x.per, x.qty, true); });
+    var ex = el('div', 'two'), eN = el('input'), eP = el('input'); eN.placeholder = 'Other line (optional)'; eP.placeholder = '$ a year'; eP.inputMode = 'numeric'; ex.appendChild(eN); ex.appendChild(eP); f.appendChild(ex);
+    var two = el('div', 'two'), a = el('div'), b = el('div'), st = el('input'), mo = el('input');
+    st.type = 'date'; st.value = l.signed ? l.signed.start : today(); mo.type = 'number'; mo.min = 1; mo.max = 60; mo.value = l.signed ? l.signed.months : 12;
+    a.appendChild(el('label', 'lab', 'Starts')); a.appendChild(st); b.appendChild(el('label', 'lab', 'For how many months')); b.appendChild(mo); two.appendChild(a); two.appendChild(b); f.appendChild(two);
+    var who = el('input'); who.placeholder = 'Who signed (name, role)'; var pick = (l.contacts || []).filter(function (x) { return x.pick; })[0];
+    who.value = l.signed ? l.signed.who : (pick && pick.name && pick.name !== 'general inbox' ? pick.name + (pick.pos ? ', ' + pick.pos : '') : ''); f.appendChild(who);
+    var nt = el('textarea'); nt.rows = 2; nt.placeholder = 'Anything agreed (logo files, when signs go up, payment terms)'; nt.value = l.signed ? l.signed.note : ''; f.appendChild(nt);
+    var go = el('button', 'btn', l.status === 'signed' ? 'Save' : 'Mark Signed'); go.type = 'button'; f.appendChild(go);
+    go.addEventListener('click', function () {
+      var lines = picks.filter(function (x) { return x.cb.checked; }).map(function (x) { return { name: x.name, price: x.price, qty: +x.q.value || 1, per: x.per }; });
+      var ep = parseInt(String(eP.value).replace(/\D/g, ''), 10); if (eN.value.trim() && ep >= 0) lines.push({ name: eN.value.trim(), price: ep, qty: 1, per: 'year' });
+      go.disabled = true;
+      save('signed', { id: l.id, lines: lines, start: st.value, months: +mo.value || 12, who: who.value, note: nt.value }, 'Saved: ' + l.name + ' signed').then(function (j) { go.disabled = false; if (j && j.ok) sh.close(); });
+    });
+    sh.box.appendChild(f);
+  }
+
+  /* ---- signed sponsors: what they bought, renewals, and what we owe them (2026-10-24) ---- */
+  function drawSigned() {
+    var D = S.data, L = D.leads.filter(function (l) { return l.status === 'signed'; });
+    var renewOf = function (l) { return l.signed ? addMonths(l.signed.start, l.signed.months) : ''; };
+    L.sort(function (a, b) { return (renewOf(a) || '9999').localeCompare(renewOf(b) || '9999') || a.name.localeCompare(b.name); });
+    var k = el('div', 'kpis'), yr = L.reduce(function (n, l) { return n + leadValue(l); }, 0);
+    var soon = L.filter(function (l) { var r = renewOf(l); return r && daysTo(r) <= 90; }).length, todo = L.reduce(function (n, l) { return n + (l.todos || []).filter(function (x) { return !x.done; }).length; }, 0);
+    [[String(L.length), 'sponsors signed'], [money(yr), 'a year, all of them'], [String(soon), 'renewals in the next 90 days'], [String(todo), 'to-dos open']].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
+    main.appendChild(k);
+    main.appendChild(el('h2', null, 'Signed sponsors'));
+    if (!L.length) { main.appendChild(el('div', 'empty', 'No sponsors signed yet. When one signs, mark it Signed on its company in the Pipeline and add what they bought.')); return; }
+    L.forEach(function (l) {
+      var c = el('div', 'card'), v = leadValue(l), r = renewOf(l);
+      c.appendChild(el('h3', null, l.name + (v ? ' · ' + money(v) + ' a year' : '')));
+      var lines = dealLines(l);
+      c.appendChild(el('small', null, lines.length ? lines.map(function (x) { return (x.qty > 1 ? x.qty + ' × ' : '') + x.name; }).join(', ') + (!l.signed ? ' (from the last proposal)' : '') : 'What they bought is not filled in yet'));
+      if (l.signed) {
+        var n = daysTo(r), rl = el('div', null, 'From ' + fmtYear(l.signed.start) + ' · renews ' + fmtYear(r) + (n < 0 ? ' (' + (-n) + ' days ago)' : ' (in ' + n + ' days)') + (l.signed.who ? ' · signed by ' + l.signed.who : ''));
+        rl.style.fontSize = '14px'; if (n <= 60) rl.className = 'warnline'; c.appendChild(rl);
+        if (l.signed.note) c.appendChild(el('div', 'note', l.signed.note));
+      }
+      var pk = (l.contacts || []).concat(l.added || []).filter(function (x) { return x.pick; })[0] || (l.added || [])[0];
+      if (pk) { var ct = el('div', 'ct'); ct.appendChild(el('b', null, pk.name || 'General inbox')); if (pk.email) { var e = el('a', null, pk.email); e.href = 'mailto:' + pk.email; ct.appendChild(e); } if (pk.phone) { var t = el('a', null, pk.phone); t.href = 'tel:' + pk.phone.replace(/[^\d+]/g, ''); ct.appendChild(t); } c.appendChild(ct); }
+      /* what we owe them: logo up, banner, posts, the monthly report... typed in per sponsor */
+      var td = el('div', 'sec'); td.appendChild(el('h3', null, 'To do for them'));
+      (l.todos || []).forEach(function (x) {
+        var r2 = el('label', 'todo' + (x.done ? ' done' : '')), cb = el('input'); cb.type = 'checkbox'; cb.checked = x.done; cb.addEventListener('change', function () { save('tododone', { id: l.id, k: x.k, done: cb.checked }); });
+        var rm = el('button', 'lnk', '×'); rm.type = 'button'; rm.title = 'Remove'; rm.setAttribute('aria-label', 'Remove ' + x.text); rm.addEventListener('click', function (e) { e.preventDefault(); save('tododel', { id: l.id, k: x.k }); });
+        r2.appendChild(cb); r2.appendChild(el('span', null, x.text)); r2.appendChild(rm); td.appendChild(r2);
+      });
+      var af = el('div', 'two'), ai = el('input'), ab = el('button', 'btn small ghost', 'Add'); ai.placeholder = 'e.g. logo on court 7 sign'; ab.type = 'button'; ai.style.cssText = 'padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg)';
+      af.style.gridTemplateColumns = '1fr auto'; ab.addEventListener('click', function () { if (ai.value.trim()) save('todo', { id: l.id, text: ai.value }, 'Added'); }); af.appendChild(ai); af.appendChild(ab); td.appendChild(af);
+      c.appendChild(td);
+      var row = el('div', 'seg'); row.style.marginTop = '10px';
+      var ed = el('button', null, l.signed ? 'Edit the details' : 'Add the details'); ed.type = 'button'; ed.addEventListener('click', function () { signedForm(l); }); row.appendChild(ed);
+      var op = el('button', null, 'Open the company'); op.type = 'button'; op.addEventListener('click', function () { openLead(l); }); row.appendChild(op);
+      c.appendChild(row); main.appendChild(c);
+    });
+  }
+
+  /* ---- profit and loss (2026-10-24, Matthew: "based on services we offer and how much it costs to run vs what are charge"): each service's
+     price against its cost to run, the running costs, and what the signed sponsors add up to. Every cost is typed in; nothing is guessed. ---- */
+  function drawPl() {
+    var D = S.data;
+    var M = D.pl ? JSON.parse(JSON.stringify(D.pl)) : { services: D.packages.map(function (p) { return { name: p.name, price: p.price, per: /month/i.test(p.per) ? 'month' : 'year', cost: null, costPer: 'year' }; }), running: [] };
+    var yr = function (amt, per) { return (amt || 0) * (per === 'month' ? 12 : 1); };   /* a one-off counts in the year it is paid */
+    main.appendChild(el('h2', null, 'Profit & loss'));
+    var intro = el('p', null, 'What each service brings in against what it costs to run, and what the signed sponsors add up to. Type in the costs; the page does the sums. Only the prices from the Packages tab are filled in to start.'); intro.style.color = 'var(--soft)'; main.appendChild(intro);
+    var PER = [['year', 'a year'], ['month', 'a month'], ['once', 'one-off']];
+    var selOf = function (opts, v, fn) { var s = el('select'); opts.forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; if (o[0] === v) x.selected = true; s.appendChild(x); }); s.addEventListener('change', function () { fn(s.value); }); return s; };
+    var numIn = function (v, ph, fn) { var i = el('input'); i.inputMode = 'numeric'; i.placeholder = ph; i.value = v == null ? '' : v; i.addEventListener('input', function () { var d = String(i.value).replace(/[^\d]/g, ''); fn(d === '' ? null : +d); }); return i; };
+    /* services */
+    var c1 = el('div', 'card'); c1.appendChild(el('h3', null, 'Services: what we charge and what each costs to run'));
+    var hd = el('div', 'plrow plhead'); ['Service', 'We charge $', '', 'Costs $', '', 'Margin', ''].forEach(function (x) { hd.appendChild(el('div', null, x)); }); c1.appendChild(hd);
+    var sBox = el('div'); c1.appendChild(sBox);
+    var sRow = function (x) {
+      var r = el('div', 'plrow'), n = el('input'); n.className = 'nmc'; n.placeholder = 'Service'; n.value = x.name; n.addEventListener('input', function () { x.name = n.value; calc(); });
+      var mg = el('div', 'plm');
+      var rm = el('button', 'btn ghost small', '×'); rm.type = 'button'; rm.setAttribute('aria-label', 'Remove'); rm.addEventListener('click', function () { M.services.splice(M.services.indexOf(x), 1); r.remove(); calc(); });
+      [n, numIn(x.price, 'charge', function (v) { x.price = v; calc(); }), selOf(PER, x.per, function (v) { x.per = v; calc(); }), numIn(x.cost, 'cost', function (v) { x.cost = v; calc(); }), selOf(PER, x.costPer, function (v) { x.costPer = v; calc(); }), mg, rm].forEach(function (e) { r.appendChild(e); });
+      x._mg = mg; sBox.appendChild(r);
+    };
+    M.services.forEach(sRow);
+    var as = el('button', 'lnk', '+ Add a service'); as.type = 'button'; as.addEventListener('click', function () { var x = { name: '', price: null, per: 'year', cost: null, costPer: 'year' }; M.services.push(x); sRow(x); calc(); }); c1.appendChild(as);
+    main.appendChild(c1);
+    /* running costs */
+    var c2 = el('div', 'card'); c2.appendChild(el('h3', null, 'Running costs')); var c2s = el('small', null, 'What it costs to keep going whatever is sold: tools, printing, travel, time.'); c2s.style.display = 'block'; c2s.style.marginBottom = '8px'; c2.appendChild(c2s);
+    var rBox = el('div'); c2.appendChild(rBox);
+    var rRow = function (x) {
+      var r = el('div', 'rnrow'), n = el('input'); n.placeholder = 'What'; n.value = x.name; n.addEventListener('input', function () { x.name = n.value; calc(); });
+      var rm = el('button', 'btn ghost small', '×'); rm.type = 'button'; rm.setAttribute('aria-label', 'Remove'); rm.addEventListener('click', function () { M.running.splice(M.running.indexOf(x), 1); r.remove(); calc(); });
+      [n, numIn(x.amount, '$', function (v) { x.amount = v || 0; calc(); }), selOf([['month', 'a month'], ['year', 'a year']], x.per, function (v) { x.per = v; calc(); }), rm].forEach(function (e) { r.appendChild(e); });
+      rBox.appendChild(r);
+    };
+    M.running.forEach(rRow);
+    var ar = el('button', 'lnk', '+ Add a cost'); ar.type = 'button'; ar.addEventListener('click', function () { var x = { name: '', amount: 0, per: 'month' }; M.running.push(x); rRow(x); }); c2.appendChild(ar);
+    main.appendChild(c2);
+    var sv = el('button', 'btn', 'Save'); sv.type = 'button'; sv.style.marginBottom = '14px';
+    sv.addEventListener('click', function () { save('pl', { services: M.services.map(function (x) { return { name: x.name, price: x.price, per: x.per, cost: x.cost, costPer: x.costPer }; }), running: M.running }, 'Saved'); });
+    main.appendChild(sv);
+    /* the numbers */
+    var c3 = el('div', 'card numbers info'); main.appendChild(c3);
+    function calc() {
+      M.services.forEach(function (x) {
+        if (!x._mg) return; var ch = yr(x.price, x.per), co = yr(x.cost, x.costPer);
+        x._mg.className = 'plm'; x._mg.textContent = x.cost == null || x.price == null ? 'add the cost' : money(ch - co) + ' a year' + (ch ? ' (' + Math.round((ch - co) / ch * 100) + '%)' : '');
+        if (x.cost != null && x.price != null && ch - co < 0) x._mg.className = 'plm neg';
+      });
+      var svc = function (nm) { nm = nm.trim().toLowerCase(); return M.services.filter(function (x) { return x.name.trim().toLowerCase() === nm; })[0]; };
+      var sum = function (L) { var rev = 0, cost = 0, miss = {}; L.forEach(function (l) { dealLines(l).forEach(function (x) { rev += x.price * x.qty * perYear(x.per); var s = svc(x.name); if (s && s.cost != null) cost += yr(s.cost, s.costPer) * x.qty; else miss[x.name] = 1; }); }); return { rev: rev, cost: cost, miss: Object.keys(miss) }; };
+      var signed = D.leads.filter(function (l) { return l.status === 'signed'; }), open = D.leads.filter(function (l) { return l.status === 'proposal'; });
+      var A = sum(signed), O = sum(open), run = M.running.reduce(function (n, x) { return n + yr(x.amount, x.per); }, 0), profit = A.rev - A.cost - run;
+      c3.textContent = ''; c3.appendChild(el('h3', null, 'The numbers, a year'));
+      var t = el('table'), add = function (a, b, cls) { var r = el('tr', cls || null); r.appendChild(el('td', null, a)); r.appendChild(el('td', 'n', b)); t.appendChild(r); };
+      add('Brought in by ' + plural(signed.length, 'signed sponsor'), money(A.rev));
+      add('Cost to deliver what they bought', '−' + money(A.cost));
+      add('Running costs', '−' + money(run));
+      add('Profit', (profit < 0 ? '−' : '') + money(Math.abs(profit)) + (A.rev ? ' (' + Math.round(profit / A.rev * 100) + '%)' : ''), 'tot');
+      add('Profit a month', (profit < 0 ? '−' : '') + money(Math.round(Math.abs(profit) / 12)));
+      var tw = el('div', 'tw'); tw.appendChild(t); c3.appendChild(tw);
+      if (A.miss.length) c3.appendChild(el('p', 'warnline', 'No cost entered for: ' + A.miss.join(', ') + '. Add it under Services (same name) for a true profit.'));
+      if (open.length) c3.appendChild(el('p', null, 'If the ' + plural(open.length, 'open proposal') + ' all signed: ' + money(O.rev) + ' more brought in, ' + money(O.rev - O.cost) + ' more profit a year' + (O.miss.length ? ' (no cost entered for ' + O.miss.join(', ') + ')' : '') + '.'));
+      if (!signed.length) c3.appendChild(el('p', null, 'No sponsors signed yet; this fills in as they sign.')).style.color = 'var(--soft)';
+    }
+    calc();
+  }
+
+  /* ---- who is on the desk and what each has done (2026-10-24) ---- */
+  function teamTable() {
+    var T = S.data.team || {}, names = Object.keys(T); if (!names.length) return null;
+    var t = el('table'), h = el('tr'); ['Person', 'Notes', 'Status changes', 'Tours', 'Proposals', 'Signed', 'Last on'].forEach(function (x, i) { h.appendChild(el('th', i ? 'n' : null, x)); }); t.appendChild(h);
+    names.forEach(function (n) { var a = T[n] || {}, r = el('tr'); [n, a.note || 0, a.status || 0, a.tour || 0, a.proposal || 0, a.signed || 0, a.last ? ago(a.last) : 'not yet'].forEach(function (v, i) { r.appendChild(el('td', i ? 'n' : null, String(v))); }); t.appendChild(r); });
+    var tw = el('div', 'tw'); tw.appendChild(t); return tw;
   }
 
   /* ---- packages (anyone signed in since 2026-10-21: Brandon's code has the same powers as Matthew's) ---- */
