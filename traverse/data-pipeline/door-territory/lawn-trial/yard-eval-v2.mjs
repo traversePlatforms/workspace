@@ -28,6 +28,7 @@ export const KEY = [
   ['6431 S CEDAR ST', 2614, 'back lawn only (front looks like rock/dry in Google now), 2D, Littleton; UNSEEN (v2 4,263, DRCOG 4,801, app 500)', 'Matthew 2026-10-23'],
   ['6916 S ELATI ST', 2554, 'front 1,323 + side 556 + back strip 675, heavy canopy, ROUGH (he found it hard), Littleton; UNSEEN (v2 2,680, DRCOG 2,573, app 5,800 from 2021)', 'Matthew 2026-10-23'],
   ['600 HIDDENBROOK CT', 2231, 'back 1,691 + front 290 + 130 + 120, Highlands Ranch method-check lot; UNSEEN (v2 1,744, DRCOG 3,767, app 1,900)', 'Matthew 2026-10-23'],
+  ['9267 CANYON WREN CT', 4637, 'front 1,169 + back 3,468 incl. under tree shade, Highlands Ranch check lot; UNSEEN (v2 3,444, DRCOG 3,627, app 400)', 'Matthew 2026-10-23'],
 ];
 const OFF = { struct: false, roofBuf: 0, ever: 'off', speck: 0, house: 0 };
 const VARIANTS = {
