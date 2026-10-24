@@ -66,12 +66,15 @@ $toConfirm = is_array($pays) ? count(squareToConfirm(array_values(array_filter($
 /* no lead counts (Matthew 2026-10-23): form leads come in by themselves but Messenger ones only when Jen types them in, so lead
    numbers mislead; leads count here once they are jobs */
 $quotedToday = 0; $quotedVal = 0;
-foreach ($leads as $l) if ((int) ($l['quote']['at'] ?? 0) >= $t0) { $quotedToday++; $quotedVal += (int) ($l['quote']['price'] ?? 0); }
+/* a quote counts on the day it was first sent; a revised one is not new (audit 2026-10-23: Pat S. was quoted the day before) */
+$qFirst = []; foreach (readLines(leadsDir() . '/leadst.log') as $u) if (!empty($u['quote']) && !isset($qFirst[$u['id']])) $qFirst[$u['id']] = (int) ($u['at'] ?? 0);
+foreach ($leads as $l) if (!empty($l['quote']) && ($qFirst[$l['id']] ?? 0) >= $t0) { $quotedToday++; $quotedVal += (int) ($l['quote']['price'] ?? 0); }
 $bookedToday = []; $bookedBy = [];
 foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) { $bookedToday[] = $j; $s = $srcName[$leads[$j['lead']]['src'] ?? 'other'] ?? 'Other'; $bookedBy[$s] = ($bookedBy[$s] ?? 0) + 1; }
 arsort($bookedBy);
-$cut = $now - 60 * 86400; $q60 = 0; $w60 = 0;
-foreach ($leads as $l) { if ((int) ($l['at'] ?? 0) < $cut || !$wasQuoted($l)) continue; $q60++; if (isset($jobOf[$l['id']]) || ($l['status'] ?? '') === 'won') $w60++; }
+/* close rate on leads 1 to 8 weeks old: a lead quoted this week hasn't had time to answer (audit 2026-10-23: 5 of 33 under a week, 9 of 19 older) */
+$cut = $now - 60 * 86400; $young = $now - 7 * 86400; $q60 = 0; $w60 = 0;
+foreach ($leads as $l) { if ((int) ($l['at'] ?? 0) < $cut || (int) ($l['at'] ?? 0) > $young || !$wasQuoted($l)) continue; $q60++; if (isset($jobOf[$l['id']]) || ($l['status'] ?? '') === 'won') $w60++; }
 $close = $q60 ? $w60 / $q60 : 0.0;
 $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (isset($jobOf[$l['id']]) || in_array($l['status'] ?? '', ['lost', 'won'], true) || !$wasQuoted($l) || $qPrice($l) < 1) continue; $pipe += $qPrice($l); $pipeN++; }
 
@@ -104,8 +107,9 @@ $unsigned = array_values(array_filter($leads, fn($l) => !empty($l['sign']) && em
 /* 6. six weeks ahead: booked + open quotes x close rate + plans (the Stats page's formula) */
 $mrr = 0.0; $planN = 0; $per = ['monthly' => 1, 'quarterly' => 1 / 3, 'yearly' => 1 / 12];
 foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); if (($c['status'] ?? 'active') !== 'active' || !isset($per[$pl])) continue; $mrr += (float) ($c['price'] ?? 0) * $per[$pl]; $planN++; }
-$sixTo = (clone $mon)->modify('+41 days')->format('Y-m-d'); $bk6 = 0; $bk6n = 0;
-foreach ($jobs as $j) if ($j['date'] >= $mon->format('Y-m-d') && $j['date'] <= $sixTo) { $bk6 += (int) $j['price']; $bk6n++; }
+/* from tomorrow on: work already done this week isn't ahead (audit 2026-10-23) */
+$sixTo = (clone $today)->modify('+42 days')->format('Y-m-d'); $bk6 = 0; $bk6n = 0;
+foreach ($jobs as $j) if ($j['date'] > $T && $j['date'] <= $sixTo) { $bk6 += (int) $j['price']; $bk6n++; }
 $six = $bk6 + round($pipe * $close) + round($mrr * 12 / 52 * 6);
 
 /* the report as data: the picture in the email and the plain-text copy are both drawn from this (2026-10-23, Matthew: "can we make
@@ -127,7 +131,7 @@ $sec[] = ['l' => 'Deposits sent, not paid', 'v' => $usd($depOpen), 's' => $plura
 $R['sections'][] = ['title' => 'Money', 'rows' => $sec];
 $sec = $bookedToday ? [['l' => 'Booked today, by source', 'v' => $usd($bookedVal), 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($bookedBy), $bookedBy))]] : [];
 $sec[] = ['l' => 'Quotes sent today', 'v' => (string) $quotedToday, 's' => $quotedVal ? 'worth ' . $usd($quotedVal) : ''];
-$sec[] = ['l' => 'Close rate, last 60 days', 'v' => round($close * 100) . '%', 's' => $w60 . ' of ' . $q60 . ' quoted leads booked'];
+$sec[] = ['l' => 'Close rate', 'v' => round($close * 100) . '%', 's' => $w60 . ' of ' . $q60 . ' leads booked, leads 1 to 8 weeks old'];
 $sec[] = ['l' => 'Open quotes', 'v' => $usd($pipe), 's' => $plural($pipeN, 'quote', 'quotes')];
 $R['sections'][] = ['title' => 'Sales', 'rows' => $sec];
 $R['sections'][] = ['title' => 'Ads', 'note' => 'Spend as last typed in Stats' . ($spendAt ? ', ' . date('D j M g:i a', $spendAt) : '') . ((!$spendAt || $spendAt < $t0) ? '. Today\'s spend not typed in yet.' : ''), 'rows' => $adRows];
