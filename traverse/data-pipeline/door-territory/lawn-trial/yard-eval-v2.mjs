@@ -25,6 +25,7 @@ export const KEY = [
   ['3852 PRIMROSE LN', 3461, 'back 3,061 incl. under the tree edges + front 400 beside the driveway, Castle Rock; UNSEEN by v2 tuning (v2 3,940, DRCOG 3,703, app 1,200)', 'Matthew 2026-10-23'],
   ['375 LEFTHAND CANYON DR', 34123, 'FIELD not a watered lawn: nearly the whole 0.8-acre lot, Boulder; UNSEEN (v2 43, DRCOG turf 0, app 1,500); score apart from lawns', 'Matthew 2026-10-23'],
   ['6049 W ROXBURY PL', 3131, 'back 1,867 + front 1,264 (2D; an 815 3D trace of the front not counted), heavy trees, Columbine; UNSEEN (v2 3,035, DRCOG 1,841, app 300)', 'Matthew 2026-10-23'],
+  ['6431 S CEDAR ST', 2614, 'back lawn only (front looks like rock/dry in Google now), 2D, Littleton; UNSEEN (v2 4,263, DRCOG 4,801, app 500)', 'Matthew 2026-10-23'],
 ];
 const OFF = { struct: false, roofBuf: 0, ever: 'off', speck: 0, house: 0 };
 const VARIANTS = {
