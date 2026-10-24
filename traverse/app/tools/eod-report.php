@@ -13,6 +13,7 @@ declare(strict_types=1);
  *   php .../eod-report.php                send if it's time and not sent today
  *   php .../eod-report.php --now          send now, to both (whatever the time)
  *   php .../eod-report.php --test         send now, to Matthew's copy only, marked TEST
+ *   php .../eod-report.php --now --brandon   send now, to Brandon only
  *   php .../eod-report.php --dry-run      print it instead of sending (--dry-run --png: the picture)
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
@@ -203,7 +204,7 @@ $mime = '--' . $b1 . $e . 'Content-Type: text/plain; charset=UTF-8' . $e . 'Cont
       . '--' . $b2 . '--' . $e . '--' . $b1 . '--' . $e;
 $eCfg = require $eApi . '/config.php';
 require_once $eApi . '/smtp.php';
-$to = $eTest ? [(string) $eCfg['to']] : [EOD_BRANDON, (string) $eCfg['to']];
+$to = $eTest ? [(string) $eCfg['to']] : (in_array('--brandon', $eArgs, true) ? [EOD_BRANDON] : [EOD_BRANDON, (string) $eCfg['to']]);   /* --brandon: his copy only (a resend) */
 $fails = 0;
 foreach ($to as $addr) {
     $eRes = smtp_send((array) ($eCfg['smtp'] ?? []), $addr, '[Sixfold 365] ' . $subject, $mime, ['X-Mailer: sixfold-app', 'Content-Type: multipart/alternative; boundary="' . $b1 . '"']);

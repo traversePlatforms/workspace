@@ -19,6 +19,8 @@ export const KEY = [
   ['9554 PENSTEMON CT', 5746, 'UPPER LIMIT only', 'Matthew 2026-10-02'],
   ['6595 ZINNIA ST', 3225, 'whole property incl. under a tree', 'Matthew 2026-10-22'],
   ['3247 OAK LEAF PL', 2556, 'whole property, grass only, evergreen left out', 'Matthew 2026-10-22'],
+  ['7006 E 131ST WAY', 2137, 'back 450 + front 763 + 924, under the front trees; UNSEEN by v2 tuning (v2 775, DRCOG 3,208, app 1,100)', 'Matthew 2026-10-23'],
+  ['7614 E 121ST PL', 2961, 'back 1,801 + front 854 + 306; UNSEEN by v2 tuning (v2 3,229, DRCOG 4,930, app 700)', 'Matthew 2026-10-23'],
 ];
 const OFF = { struct: false, roofBuf: 0, ever: 'off', speck: 0, house: 0 };
 const VARIANTS = {
