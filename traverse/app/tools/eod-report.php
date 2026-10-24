@@ -77,23 +77,23 @@ $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (isset($jobOf[$l['id']]) || i
 
 /* 3. ads: lifetime spend as typed in Stats, against the leads and jobs each ad's leads became */
 $ads = adSpend(); $spendAt = (int) (json_decode((string) @file_get_contents(adSpendFile()), true)['at'] ?? 0);
-$adLines = [];
+$adRows = [];
 foreach (['meta' => 'Instant Form', 'messenger' => 'Messenger'] as $src => $label) {
     $sp = 0.0; foreach ($ads as $a) if (($a['src'] ?? '') === $src) $sp += (float) $a['spend'];
     $jn = 0; $bk = 0; foreach ($leads as $l) if (($l['src'] ?? '') === $src && isset($jobOf[$l['id']])) { $jn++; $bk += (int) $jobOf[$l['id']]['price']; }
-    $adLines[] = '- ' . $label . ': ' . $usd(round($sp, 2)) . ' spent, ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' booked worth ' . $usd($bk) . ($jn ? ' (' . $usd(round($sp / $jn, 2)) . ' of ads per job, ' . number_format($bk / max(0.01, $sp), 2) . 'x back)' : '');
+    $back = $sp > 0 ? $bk / $sp : 0;
+    $adRows[] = ['l' => $label, 'v' => $jn ? $usd(round($sp / $jn)) . ' per job' : 'no jobs yet', 's' => $usd(round($sp)) . ' spent · ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' worth ' . $usd($bk) . ' · ' . number_format($back, 2) . 'x back', 't' => $back >= 1 ? 'good' : 'bad'];
 }
 
 /* 4. the work: today's jobs and tomorrow's */
 $todayJobs = array_values(array_filter($jobs, fn($j) => $j['date'] === $T)); usort($todayJobs, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
 $tomJobs = array_values(array_filter($jobs, fn($j) => $j['date'] === $tomD)); usort($tomJobs, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
-$doneN = 0; $doneVal = 0; $crewMins = 0; $couldNot = []; $openN = 0; $workLines = [];
+$doneN = 0; $doneVal = 0; $crewMins = 0; $couldNot = []; $openN = 0;
 foreach ($todayJobs as $j) {
     $o = (string) ($j['done']['o'] ?? '');
     $m = (int) ($j['done']['mins'] ?? 0); foreach ((array) ($j['ridet'] ?? []) as $r) $m += (int) $r['mins'];
     if ($o === 'done') { $doneN++; $doneVal += (int) $j['price']; $crewMins += $m; }
     elseif ($o === 'could not') $couldNot[] = $j; else $openN++;
-    $workLines[] = '- ' . $nameOfJob($j) . ' · ' . $j['crew'] . ' · ' . $usd((int) $j['price']) . ' · ' . ($o === 'done' ? 'done' . ($m ? ', ' . $dur($m) . ' crew time' : '') : ($o === 'could not' ? 'NOT DONE: ' . mb_substr((string) ($j['done']['note'] ?? ''), 0, 120) : 'not marked yet'));
 }
 $holdsTom = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] === $tomD));
 
@@ -108,59 +108,84 @@ $sixTo = (clone $mon)->modify('+41 days')->format('Y-m-d'); $bk6 = 0; $bk6n = 0;
 foreach ($jobs as $j) if ($j['date'] >= $mon->format('Y-m-d') && $j['date'] <= $sixTo) { $bk6 += (int) $j['price']; $bk6n++; }
 $six = $bk6 + round($pipe * $close) + round($mrr * 12 / 52 * 6);
 
-/* the email */
+/* the report as data: the picture in the email and the plain-text copy are both drawn from this (2026-10-23, Matthew: "can we make
+   that into an image that gets posted in the email so it opens up right away"). A row: l label, v value on the right, s small line
+   under it, t tone (good / bad / warn) */
 $day = fn(string $iso) => date('D j M', strtotime($iso . ' 12:00'));
-$L = [];
-$L[] = 'End of day, ' . $day($T) . '.';
-$L[] = '';
-$L[] = 'MONEY';
-if (!$money['answer']) $L[] = '- Square did not answer, so no payment figures tonight.';
-else {
-    $L[] = '- In today: ' . $usd(round($money['today'], 2)) . ' (' . $money['n'] . ($money['n'] === 1 ? ' payment' : ' payments') . ')';
-    $L[] = '- This week: ' . $usd(round($money['week'], 2)) . ' · This month: ' . $usd(round($money['month'], 2));
+$plural = fn(int $n, string $one, string $many) => $n . ' ' . ($n === 1 ? $one : $many);
+$bookedVal = array_sum(array_map(fn($j) => (int) $j['price'], $bookedToday)); $tomVal = array_sum(array_map(fn($j) => (int) $j['price'], $tomJobs));
+$R = ['date' => $day($T), 'kpis' => [
+    ['Money in today', $money['answer'] ? $usd(round($money['today'])) : '?', $money['answer'] ? $plural($money['n'], 'payment', 'payments') : 'Square did not answer'],
+    ['Jobs booked', (string) count($bookedToday), $bookedToday ? $usd($bookedVal) : 'none today'],
+    ['Jobs done', (string) $doneN, $doneN ? $usd($doneVal) : ($todayJobs ? 'of ' . count($todayJobs) : 'none scheduled')],
+    ['Tomorrow', (string) count($tomJobs), $tomJobs ? $usd($tomVal) : 'nothing booked'],
+], 'sections' => []];
+$sec = [];
+if ($money['answer']) { $sec[] = ['l' => 'This week', 'v' => $usd(round($money['week']))]; $sec[] = ['l' => 'This month', 'v' => $usd(round($money['month']))]; }
+$sec[] = ['l' => 'Owed on finished jobs', 'v' => $usd($owedDone), 's' => $plural($owedDoneN, 'job', 'jobs'), 't' => $owedDone ? 'warn' : ''];
+$sec[] = ['l' => 'Deposits sent, not paid', 'v' => $usd($depOpen), 's' => $plural($depOpenN, 'customer', 'customers')];
+$R['sections'][] = ['title' => 'Money', 'rows' => $sec];
+$sec = $bookedToday ? [['l' => 'Booked today, by source', 'v' => $usd($bookedVal), 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($bookedBy), $bookedBy))]] : [];
+$sec[] = ['l' => 'Quotes sent today', 'v' => (string) $quotedToday, 's' => $quotedVal ? 'worth ' . $usd($quotedVal) : ''];
+$sec[] = ['l' => 'Close rate, last 60 days', 'v' => round($close * 100) . '%', 's' => $w60 . ' of ' . $q60 . ' quoted leads booked'];
+$sec[] = ['l' => 'Open quotes', 'v' => $usd($pipe), 's' => $plural($pipeN, 'quote', 'quotes')];
+$R['sections'][] = ['title' => 'Sales', 'rows' => $sec];
+$R['sections'][] = ['title' => 'Ads', 'note' => 'Spend as last typed in Stats' . ($spendAt ? ', ' . date('D j M g:i a', $spendAt) : '') . ((!$spendAt || $spendAt < $t0) ? '. Today\'s spend not typed in yet.' : ''), 'rows' => $adRows];
+$sec = [];
+foreach ($todayJobs as $j) { $o = (string) ($j['done']['o'] ?? ''); $m = (int) ($j['done']['mins'] ?? 0); foreach ((array) ($j['ridet'] ?? []) as $r) $m += (int) $r['mins'];
+    $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => $j['crew'] . ' · ' . ($o === 'done' ? 'done' . ($m ? ' · ' . $dur($m) : '') : ($o === 'could not' ? 'not done: ' . mb_substr((string) ($j['done']['note'] ?? ''), 0, 90) : 'not marked yet')), 't' => $o === 'could not' ? 'bad' : ($o === 'done' ? '' : 'warn')]; }
+if ($doneN && $crewMins) $sec[] = ['l' => 'Per crew hour', 'v' => $usd(round($doneVal / ($crewMins / 60))), 's' => $usd($doneVal) . ' of work in ' . $dur($crewMins)];
+$R['sections'][] = ['title' => 'Today\'s jobs', 'rows' => $sec, 'empty' => 'None scheduled.'];
+$sec = [];
+foreach ($tomJobs as $j) $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => (jobSlot((string) $j['slot'])[1] ?? $j['slot']) . ' · ' . $j['crew']];
+foreach ($holdsTom as $h) $sec[] = ['l' => $short($h['name']), 'v' => 'held', 's' => 'not signed yet · ' . $h['crew'], 't' => 'warn'];
+$R['sections'][] = ['title' => 'Tomorrow', 'rows' => $sec, 'empty' => 'Nothing booked.'];
+$sec = [];
+$list = fn(array $xs, callable $f) => implode(', ', array_map($f, array_slice($xs, 0, 8))) . (count($xs) > 8 ? ' and ' . (count($xs) - 8) . ' more' : '');
+if ($stale) $sec[] = ['l' => 'Quotes, no answer in 3+ days', 'v' => (string) count($stale), 's' => $list($stale, fn($l) => $short($l['name'] ?? '') . ' ' . $usd($qPrice($l))), 't' => 'warn'];
+if ($unsigned) $sec[] = ['l' => 'Agreements sent, not signed', 'v' => (string) count($unsigned), 's' => $list($unsigned, fn($l) => $short($l['name'] ?? '')), 't' => 'warn'];
+if ($toConfirm) $sec[] = ['l' => 'Square payments not tied to a job', 'v' => (string) $toConfirm, 't' => 'warn'];
+if ($couldNot) $sec[] = ['l' => 'Jobs not done today, to rebook', 'v' => (string) count($couldNot), 't' => 'bad'];
+$R['sections'][] = ['title' => 'Needs attention', 'rows' => $sec, 'empty' => 'Nothing.'];
+$R['sections'][] = ['title' => 'Next six weeks', 'rows' => [
+    ['l' => 'Expected', 'v' => $usd($six), 's' => $usd($bk6) . ' booked in ' . $plural($bk6n, 'job', 'jobs') . ' + open quotes at the close rate' . ($planN ? ' + plans' : '')],
+    ['l' => 'Customers on monthly plans', 'v' => (string) $planN]]];
+$R['foot'] = 'TEST, sent to Matthew only. From the Sixfold 365 app, Square and the ad spend typed in Stats.';
+
+/* the plain-text copy, for mail apps that show no pictures */
+$L = ['End of day, ' . $R['date'] . '.', ''];
+foreach ($R['kpis'] as [$k, $v, $s]) $L[] = $k . ': ' . $v . ' (' . $s . ')';
+foreach ($R['sections'] as $s) {
+    $L[] = ''; $L[] = strtoupper($s['title']);
+    if (!empty($s['note'])) $L[] = $s['note'];
+    if (!$s['rows']) $L[] = '- ' . ($s['empty'] ?? 'Nothing.');
+    foreach ($s['rows'] as $r) $L[] = '- ' . $r['l'] . ': ' . $r['v'] . (($r['s'] ?? '') !== '' ? ' (' . $r['s'] . ')' : '');
 }
-$L[] = '- Owed on finished jobs: ' . $usd($owedDone) . ' (' . $owedDoneN . ($owedDoneN === 1 ? ' job' : ' jobs') . ')';
-$L[] = '- Deposits sent, not paid yet: ' . $usd($depOpen) . ' (' . $depOpenN . ')';
-$L[] = '';
-$L[] = 'SALES TODAY';
-$L[] = '- Jobs booked: ' . count($bookedToday) . ($bookedToday ? ' worth ' . $usd(array_sum(array_map(fn($j) => (int) $j['price'], $bookedToday))) . ' (' . implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($bookedBy), $bookedBy)) . ')' : '');
-$L[] = '- Quotes sent: ' . $quotedToday . ($quotedVal ? ' worth ' . $usd($quotedVal) : '');
-$L[] = '- Close rate, last 60 days: ' . round($close * 100) . '% (' . $w60 . ' of ' . $q60 . ' quoted leads booked)';
-$L[] = '- Open quotes: ' . $pipeN . ' worth ' . $usd($pipe);
-$L[] = '';
-$L[] = 'ADS (spend as last typed in Stats' . ($spendAt ? ', ' . date('D j M g:i a', $spendAt) : '') . ')';
-foreach ($adLines as $x) $L[] = $x;
-if (!$spendAt || $spendAt < $t0) $L[] = '- Today\'s spend has not been typed in yet, so these are the figures from the last update.';
-$L[] = '';
-$L[] = 'TODAY\'S JOBS (' . count($todayJobs) . ': ' . $doneN . ' done, ' . count($couldNot) . ' not done, ' . $openN . ' not marked)';
-if (!$todayJobs) $L[] = '- None scheduled.';
-foreach ($workLines as $x) $L[] = $x;
-if ($doneN) $L[] = '- Finished work: ' . $usd($doneVal) . ($crewMins ? ' for ' . $dur($crewMins) . ' of crew time (' . $usd(round($doneVal / ($crewMins / 60))) . ' per crew hour)' : '');
-$L[] = '';
-$L[] = 'TOMORROW (' . count($tomJobs) . ($tomJobs ? ' jobs worth ' . $usd(array_sum(array_map(fn($j) => (int) $j['price'], $tomJobs))) : ' jobs') . ')';
-if (!$tomJobs && !$holdsTom) $L[] = '- Nothing booked.';
-foreach ($tomJobs as $j) $L[] = '- ' . (jobSlot((string) $j['slot'])[1] ?? $j['slot']) . ' · ' . $nameOfJob($j) . ' · ' . $j['crew'] . ' · ' . $usd((int) $j['price']);
-foreach ($holdsTom as $h) $L[] = '- Held (not signed yet): ' . $short($h['name']) . ' · ' . $h['crew'];
-$L[] = '';
-$L[] = 'NEEDS ATTENTION';
-$any = false;
-if ($stale) { $any = true; $L[] = '- ' . count($stale) . (count($stale) === 1 ? ' quote' : ' quotes') . ' with no answer after 3 days: ' . implode(', ', array_map(fn($l) => $short($l['name'] ?? '') . ' ' . $usd($qPrice($l)), array_slice($stale, 0, 8))) . (count($stale) > 8 ? ' and ' . (count($stale) - 8) . ' more' : ''); }
-if ($unsigned) { $any = true; $L[] = '- ' . count($unsigned) . (count($unsigned) === 1 ? ' agreement' : ' agreements') . ' sent, not signed: ' . implode(', ', array_map(fn($l) => $short($l['name'] ?? ''), array_slice($unsigned, 0, 8))); }
-if ($toConfirm) { $any = true; $L[] = '- ' . $toConfirm . ' Square ' . ($toConfirm === 1 ? 'payment' : 'payments') . ' not tied to a job yet'; }
-if ($couldNot) { $any = true; $L[] = '- ' . count($couldNot) . (count($couldNot) === 1 ? ' job' : ' jobs') . ' not done today, to rebook'; }
-if (!$any) $L[] = '- Nothing.';
-$L[] = '';
-$L[] = 'NEXT SIX WEEKS';
-$L[] = '- Expected: about ' . $usd($six) . ' (' . $usd($bk6) . ' booked in ' . $bk6n . ($bk6n === 1 ? ' job' : ' jobs') . ', plus open quotes at the close rate' . ($planN ? ', plus ' . $planN . ' monthly plans' : '') . ')';
-$L[] = '- Customers on monthly plans: ' . $planN;
-$L[] = '';
-$L[] = '-- TEST of the end-of-day report, sent to Matthew only. Figures come from the Sixfold 365 app, Square and the ad spend typed in Stats.';
+$L[] = ''; $L[] = '-- ' . $R['foot'];
 $body = implode("\n", $L);
 $subject = 'TEST End of day, ' . $day($T) . ': ' . ($money['answer'] ? $usd(round($money['today'], 2)) . ' in · ' : '') . count($bookedToday) . ' booked · ' . $doneN . ' done · ' . count($tomJobs) . ' tomorrow';
 
-if ($eDry) { echo "Subject: $subject\n\n$body\n"; exit(0); }
+require __DIR__ . '/eod-image.php';
+$png = eodImage($R, __DIR__ . '/eod-assets');
+if (in_array('--png', $eArgs, true)) { file_put_contents('php://stdout', $png); exit(0); }
+if ($eDry) { echo "Subject: $subject\n\n$body\n\n[picture: " . strlen($png) . " bytes]\n"; exit(0); }
+
+/* the email: the picture first (HTML with the picture attached inline, so it shows on opening), the plain text for the rest */
+$alt = 'End of day ' . $R['date'] . ': ' . implode(' · ', array_map(fn($k) => $k[0] . ' ' . $k[1], $R['kpis']));
+$b1 = 'alt' . bin2hex(random_bytes(8)); $b2 = 'rel' . bin2hex(random_bytes(8)); $cid = 'eod' . bin2hex(random_bytes(6)) . '@sixfold365';
+$html = '<!doctype html><html><body style="margin:0;padding:0;background:#ffffff"><div style="max-width:600px;margin:0 auto">'
+      . '<img src="cid:' . $cid . '" width="600" alt="' . htmlspecialchars($alt, ENT_QUOTES) . '" style="display:block;width:100%;max-width:600px;height:auto;border:0">'
+      . '</div></body></html>';
+$e = "\r\n"; $b64 = fn(string $s) => chunk_split(base64_encode($s), 76, "\r\n");
+$mime = '--' . $b1 . $e . 'Content-Type: text/plain; charset=UTF-8' . $e . 'Content-Transfer-Encoding: base64' . $e . $e . $b64($body)
+      . '--' . $b1 . $e . 'Content-Type: multipart/related; boundary="' . $b2 . '"' . $e . $e
+      . '--' . $b2 . $e . 'Content-Type: text/html; charset=UTF-8' . $e . 'Content-Transfer-Encoding: base64' . $e . $e . $b64($html)
+      . '--' . $b2 . $e . 'Content-Type: image/png; name="end-of-day.png"' . $e . 'Content-Transfer-Encoding: base64' . $e . 'Content-ID: <' . $cid . '>' . $e . 'Content-Disposition: inline; filename="end-of-day.png"' . $e . $e . $b64($png)
+      . '--' . $b2 . '--' . $e . '--' . $b1 . '--' . $e;
 $eCfg = require $eApi . '/config.php';
 require_once $eApi . '/smtp.php';
-$eRes = smtp_send((array) ($eCfg['smtp'] ?? []), (string) $eCfg['to'], '[Sixfold 365] ' . $subject, $body, ['X-Mailer: sixfold-app']);
+$eRes = smtp_send((array) ($eCfg['smtp'] ?? []), (string) $eCfg['to'], '[Sixfold 365] ' . $subject, $mime, ['X-Mailer: sixfold-app', 'Content-Type: multipart/alternative; boundary="' . $b1 . '"']);
 if (empty($eRes['ok'])) { fwrite(STDERR, 'eod: not sent (' . ($eRes['stage'] ?? '?') . ")\n"); exit(1); }
 echo "eod: sent \"$subject\"\n";
+exit(0);
+

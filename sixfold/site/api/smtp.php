@@ -181,13 +181,22 @@ function smtp_send(array $smtp, string $to, string $subject, string $body, array
         // hop that is not 8-bit clean. The body is a few hundred bytes.
         'Content-Transfer-Encoding: base64',
     ];
+    // A caller that passes its own Content-Type (the end-of-day report's picture
+    // email, 2026-10-23) sends a finished MIME body: no plain-text defaults, no
+    // second encoding. Every other caller is unchanged.
+    $ownMime = false;
     foreach ($extraHeaders as $h) {
         $h = trim(preg_replace('/[\r\n]+/', ' ', (string) $h));
-        if ($h !== '') { $headers[] = $h; }
+        if ($h === '') { continue; }
+        if (stripos($h, 'Content-Type:') === 0) { $ownMime = true; }
+        $headers[] = $h;
+    }
+    if ($ownMime) {
+        $headers = array_values(array_filter($headers, static fn($x) => $x !== 'Content-Type: text/plain; charset=UTF-8' && $x !== 'Content-Transfer-Encoding: base64'));
     }
 
     $payload = implode($eol, $headers) . $eol . $eol
-             . chunk_split(base64_encode($body), 76, $eol);
+             . ($ownMime ? $body : chunk_split(base64_encode($body), 76, $eol));
 
     // Dot-stuffing. base64 output can never begin a line with a dot, so this is
     // belt and braces — but a bare "." on its own line ends DATA early and
