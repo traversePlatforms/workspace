@@ -46,11 +46,29 @@ const unb64 = (s, T) => { const b = Buffer.from(s, 'base64'); const ab = b.buffe
 /* the winning settings (see yard-v2-results-2026-10-23.md); yard-eval-v2.mjs scores the others */
 export const V2 = { green: 'lated6g', gate: 0.2, struct: true, roofBuf: 2, ever: 'lidar', everLow: 0.2, everGnd: 0.15, speck: 5, house: 25, fill: 12 };
 
-const tokens = {};
-async function token(c) { if (!tokens[c]) tokens[c] = (await get(PC + '/sas/v1/token/' + c)).token; return tokens[c]; }
+/* batch speed-ups (2026-10-24, for the whole-territory run): the photo and land-cover searches, the opened photo files and the laser
+   surveys' ept.json are kept for the run, so neighbouring lots share them instead of asking again for every lot. A Planetary Computer
+   token is renewed after 25 minutes, and the opened files with it (they carry the token in their address). */
+const tokens = {}, imgs = new Map(), stacSeen = new Map(), eptBounds = new Map();
+async function token(c) {
+  const t = tokens[c]; if (t && Date.now() - t.at < 25 * 60000) return t.v;
+  tokens[c] = { v: (await get(PC + '/sas/v1/token/' + c)).token, at: Date.now() }; for (const k of [...imgs.keys()]) if (k.startsWith(c + '|')) imgs.delete(k);
+  return tokens[c].v;
+}
+function openImage(c, href) {
+  const k = c + '|' + href.split('?')[0];
+  if (!imgs.has(k)) { if (imgs.size > 60) imgs.delete(imgs.keys().next().value); imgs.set(k, fromUrl(href, { cacheSize: 300 }).then((t) => t.getImage())); }
+  const p = imgs.get(k); p.catch(() => imgs.delete(k)); return p;
+}
+async function stacFind(key, body, lon, lat) {   /* the items a search would return for this point, from earlier answers when they cover it */
+  const seen = stacSeen.get(key) || [], hit = seen.filter((x) => x.bbox && lon >= x.bbox[0] && lon <= x.bbox[2] && lat >= x.bbox[1] && lat <= x.bbox[3]);
+  if (hit.length) return hit;
+  const st = await get(PC + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, intersects: { type: 'Point', coordinates: [lon, lat] } }) });
+  const fs2 = st.features || []; stacSeen.set(key, seen.concat(fs2.filter((x) => !seen.some((y) => y.id === x.id)))); return fs2;
+}
 /* a raster window around the lot, kept as plain numbers: { epsg, o, rs, x0, y0, w, h, bands: [Uint8/16Array...] } */
-async function windowOf(href, rings, pad) {
-  const im = await (await fromUrl(href)).getImage();
+async function windowOf(href, rings, pad, c) {
+  const im = c ? await openImage(c, href) : await (await fromUrl(href)).getImage();
   const epsg = 'EPSG:' + im.geoKeys.ProjectedCSTypeGeoKey, o = im.getOrigin(), rs = im.getResolution();
   const P = rings.flat().map(([lo, la]) => { const [X, Y] = proj4('EPSG:4326', epsg, [lo, la]); return [(X - o[0]) / rs[0], (Y - o[1]) / rs[1]]; });
   const x0 = Math.floor(Math.min(...P.map((p) => p[0]))) - pad, y0 = Math.floor(Math.min(...P.map((p) => p[1]))) - pad, x1 = Math.ceil(Math.max(...P.map((p) => p[0]))) + pad, y1 = Math.ceil(Math.max(...P.map((p) => p[1]))) + pad;
@@ -58,17 +76,16 @@ async function windowOf(href, rings, pad) {
   return { epsg, o, rs, x0, y0, w: x1 - x0, h: y1 - y0, bands: Array.from(bands, (b) => Uint8Array.from(b)) };
 }
 async function naipWin(year, lon, lat, rings) {
-  const st = await get(PC + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collections: ['naip'], intersects: { type: 'Point', coordinates: [lon, lat] }, query: { 'naip:year': { eq: String(year) } }, limit: 3 }) });
-  const item = (st.features || []).sort((a, b) => a.properties.gsd - b.properties.gsd)[0]; if (!item) return null;
-  try { const w = await windowOf(item.assets.image.href + '?' + await token('naip'), rings, 8); w.date = item.properties.datetime ? item.properties.datetime.slice(0, 10) : String(year); return w; }
+  const items = await stacFind('naip' + year, { collections: ['naip'], query: { 'naip:year': { eq: String(year) } }, limit: 3 }, lon, lat);
+  const item = items.slice().sort((a, b) => a.properties.gsd - b.properties.gsd)[0]; if (!item) return null;
+  try { const w = await windowOf(item.assets.image.href + '?' + await token('naip'), rings, 8, 'naip'); w.date = item.properties.datetime ? item.properties.datetime.slice(0, 10) : String(year); return w; }
   catch (e) { return { err: String(e.message).slice(0, 80) }; }
 }
 async function drcogWin(lon, lat, rings) {
   try {
-    const ls = await get(PC + '/stac/v1/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ collections: ['drcog-lulc'], intersects: { type: 'Point', coordinates: [lon, lat] }, limit: 10 }) });
-    const li = (ls.features || []).filter((f) => /2020/.test(f.id))[0]; if (!li) return null;
+    const li = (await stacFind('drcog', { collections: ['drcog-lulc'], limit: 10 }, lon, lat)).filter((f) => /2020/.test(f.id))[0]; if (!li) return null;
     const as = Object.values(li.assets).find((x) => /tif/.test(x.type || '') || /\.tif/.test(x.href));
-    return await windowOf(as.href + '?' + await token('drcog-lulc'), rings, 6);
+    return await windowOf(as.href + '?' + await token('drcog-lulc'), rings, 6, 'drcog-lulc');
   } catch { return null; }
 }
 /* the laser, per 1 m cell: height and split-pulse from lidar.mjs, plus where the returns sit (ground / 0.3-2.5 m / above 2.5 m) */
@@ -92,7 +109,8 @@ async function nodesFor(p, box) {
 async function laserWin(lon, lat, box, cell, cacheDir) {
   const bounds = new Map();
   for (const p of SURVEYS) {
-    let b = null; try { const e = await get(BASE + p + '/ept.json'); b = e.boundsConforming || e.bounds; } catch {}
+    if (!eptBounds.has(p)) { let e = null; try { e = await get(BASE + p + '/ept.json'); } catch {} eptBounds.set(p, e ? e.boundsConforming || e.bounds : null); }
+    const b = eptBounds.get(p);
     const [X, Y] = merc(lon, lat); if (!b || X < b[0] || X > b[3] || Y < b[1] || Y > b[4]) continue;
     const G = await L.heightGrid(p, box, cell, cacheDir); if (!G.hgt.some((v) => !Number.isNaN(v))) continue;
     /* heightGrid has cached every tile it read; read them again for where the returns sit */

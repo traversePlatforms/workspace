@@ -1,10 +1,12 @@
 # The Wi-Fi queue, in priority order (Matthew 2026-10-20). id|kind|what it does
 # kind: pipeline = rebuilds and uploads town files (one at a time); parcel = needs the state parcel map to answer from this network
+yardv2|parcel|Yard v2 lawn sizes for every house, lead towns first (lawn-trial/yard-v2/order.txt); not uploaded until build-yard-v2.mjs
 drapp3|parcel|The 3-inch photo trial: DRAPP 2022 (Douglas County, 3 inches) against NAIP, the app and DRCOG turf on the hand-measured lots and Douglas County towns; trial only, not uploaded
 onedrive|download|OneDrive move: the rest of the OneDrive Desktop (about 90 GB, Phone drop last) to Moved from OneDrive on this laptop; copies only; stops under 40 GB free
-refine|pipeline,parcel|Lawn refine: one town per unit (lawn fill, compact, trees, rebuild, upload)
 trees|pipeline|Trees for towns the refine does not cover: Sterling Ranch, Glendale
 values|pipeline,parcel|Home values: Idaho Springs, Elizabeth, Kiowa
 yearbuilt|pipeline|Year built for every town in a county whose assessor files we hold (Douglas, Adams, El Paso, Weld, Boulder, Denver), then upload
 drcogturf|parcel|DRCOG turf for every Highlands Ranch house (lot lines + DRCOG 2020 land cover); trial layer, not uploaded
-secondlook|pipeline,parcel|Second look at no-green lawns in the July 2021 photo: houses we are visiting first, then whole towns nearest Englewood
+# parked 2026-10-24 (yard v2 replaces the old lawn method; un-comment to run again):
+#refine|pipeline,parcel|Lawn refine: one town per unit (lawn fill, compact, trees, rebuild, upload)
+#secondlook|pipeline,parcel|Second look at no-green lawns in the July 2021 photo: houses we are visiting first, then whole towns nearest Englewood
