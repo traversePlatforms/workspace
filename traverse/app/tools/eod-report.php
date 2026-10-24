@@ -63,14 +63,13 @@ foreach ($leads as $l) if (($l['sign']['how'] ?? '') === 'link' && !empty($l['si
 $toConfirm = is_array($pays) ? count(squareToConfirm(array_values(array_filter($pays, fn($p) => (int) strtotime((string) ($p['created_at'] ?? '')) >= $now - 14 * 86400)))) : 0;
 
 /* 2. sales today */
-$newBy = []; $newN = 0; $quotedToday = 0; $quotedVal = 0; $lostToday = 0;
-foreach ($leads as $l) {
-    if ((int) ($l['at'] ?? 0) >= $t0) { $s = $srcName[$l['src'] ?? 'other'] ?? ucfirst((string) ($l['src'] ?? 'Other')); $newBy[$s] = ($newBy[$s] ?? 0) + 1; $newN++; }
-    if ((int) ($l['quote']['at'] ?? 0) >= $t0) { $quotedToday++; $quotedVal += (int) ($l['quote']['price'] ?? 0); }
-    if (($l['status'] ?? '') === 'lost' && (int) ($l['statusAt'] ?? 0) >= $t0) $lostToday++;
-}
-arsort($newBy);
-$bookedToday = []; foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) $bookedToday[] = $j;
+/* no lead counts (Matthew 2026-10-23): form leads come in by themselves but Messenger ones only when Jen types them in, so lead
+   numbers mislead; leads count here once they are jobs */
+$quotedToday = 0; $quotedVal = 0;
+foreach ($leads as $l) if ((int) ($l['quote']['at'] ?? 0) >= $t0) { $quotedToday++; $quotedVal += (int) ($l['quote']['price'] ?? 0); }
+$bookedToday = []; $bookedBy = [];
+foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) { $bookedToday[] = $j; $s = $srcName[$leads[$j['lead']]['src'] ?? 'other'] ?? 'Other'; $bookedBy[$s] = ($bookedBy[$s] ?? 0) + 1; }
+arsort($bookedBy);
 $cut = $now - 60 * 86400; $q60 = 0; $w60 = 0;
 foreach ($leads as $l) { if ((int) ($l['at'] ?? 0) < $cut || !$wasQuoted($l)) continue; $q60++; if (isset($jobOf[$l['id']]) || ($l['status'] ?? '') === 'won') $w60++; }
 $close = $q60 ? $w60 / $q60 : 0.0;
@@ -80,9 +79,9 @@ $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (isset($jobOf[$l['id']]) || i
 $ads = adSpend(); $spendAt = (int) (json_decode((string) @file_get_contents(adSpendFile()), true)['at'] ?? 0);
 $adLines = [];
 foreach (['meta' => 'Instant Form', 'messenger' => 'Messenger'] as $src => $label) {
-    $sp = 0.0; $res = 0; foreach ($ads as $a) if (($a['src'] ?? '') === $src) { $sp += (float) $a['spend']; $res += (int) ($a['results'] ?? 0); }
-    $jn = 0; $bk = 0; $todayN = 0; foreach ($leads as $l) if (($l['src'] ?? '') === $src) { if ((int) ($l['at'] ?? 0) >= $t0) $todayN++; if (isset($jobOf[$l['id']])) { $jn++; $bk += (int) $jobOf[$l['id']]['price']; } }
-    $adLines[] = '- ' . $label . ': ' . $usd(round($sp, 2)) . ' spent, ' . $res . ' results' . ($res ? ' (' . $usd(round($sp / $res, 2)) . ' each)' : '') . ', ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' booked worth ' . $usd($bk) . ($jn ? ' (' . $usd(round($sp / $jn, 2)) . ' of ads per job)' : '') . '; ' . $todayN . ' new today';
+    $sp = 0.0; foreach ($ads as $a) if (($a['src'] ?? '') === $src) $sp += (float) $a['spend'];
+    $jn = 0; $bk = 0; foreach ($leads as $l) if (($l['src'] ?? '') === $src && isset($jobOf[$l['id']])) { $jn++; $bk += (int) $jobOf[$l['id']]['price']; }
+    $adLines[] = '- ' . $label . ': ' . $usd(round($sp, 2)) . ' spent, ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' booked worth ' . $usd($bk) . ($jn ? ' (' . $usd(round($sp / $jn, 2)) . ' of ads per job, ' . number_format($bk / max(0.01, $sp), 2) . 'x back)' : '');
 }
 
 /* 4. the work: today's jobs and tomorrow's */
@@ -99,7 +98,6 @@ foreach ($todayJobs as $j) {
 $holdsTom = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] === $tomD));
 
 /* 5. needs attention */
-$unreached = array_values(array_filter($leads, fn($l) => ($l['status'] ?? '') === 'new' && empty($l['tries']) && (int) ($l['at'] ?? 0) < $now - 86400));
 $stale = array_values(array_filter($leads, fn($l) => !empty($l['quote']) && !isset($jobOf[$l['id']]) && !in_array($l['status'] ?? '', ['lost', 'won'], true) && (int) ($l['quote']['at'] ?? 0) < $now - 3 * 86400));
 $unsigned = array_values(array_filter($leads, fn($l) => !empty($l['sign']) && empty($l['signed']) && !isset($jobOf[$l['id']]) && ($l['status'] ?? '') !== 'lost'));
 
@@ -125,10 +123,8 @@ $L[] = '- Owed on finished jobs: ' . $usd($owedDone) . ' (' . $owedDoneN . ($owe
 $L[] = '- Deposits sent, not paid yet: ' . $usd($depOpen) . ' (' . $depOpenN . ')';
 $L[] = '';
 $L[] = 'SALES TODAY';
-$L[] = '- New leads: ' . $newN . ($newBy ? ' (' . implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($newBy), $newBy)) . ')' : '');
+$L[] = '- Jobs booked: ' . count($bookedToday) . ($bookedToday ? ' worth ' . $usd(array_sum(array_map(fn($j) => (int) $j['price'], $bookedToday))) . ' (' . implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($bookedBy), $bookedBy)) . ')' : '');
 $L[] = '- Quotes sent: ' . $quotedToday . ($quotedVal ? ' worth ' . $usd($quotedVal) : '');
-$L[] = '- Jobs booked: ' . count($bookedToday) . ($bookedToday ? ' worth ' . $usd(array_sum(array_map(fn($j) => (int) $j['price'], $bookedToday))) : '');
-$L[] = '- Lost: ' . $lostToday;
 $L[] = '- Close rate, last 60 days: ' . round($close * 100) . '% (' . $w60 . ' of ' . $q60 . ' quoted leads booked)';
 $L[] = '- Open quotes: ' . $pipeN . ' worth ' . $usd($pipe);
 $L[] = '';
@@ -148,7 +144,6 @@ foreach ($holdsTom as $h) $L[] = '- Held (not signed yet): ' . $short($h['name']
 $L[] = '';
 $L[] = 'NEEDS ATTENTION';
 $any = false;
-if ($unreached) { $any = true; $L[] = '- ' . count($unreached) . ' new ' . (count($unreached) === 1 ? 'lead' : 'leads') . ' not called after a day: ' . implode(', ', array_map(fn($l) => $short($l['name'] ?? ''), array_slice($unreached, 0, 8))) . (count($unreached) > 8 ? ' and ' . (count($unreached) - 8) . ' more' : ''); }
 if ($stale) { $any = true; $L[] = '- ' . count($stale) . (count($stale) === 1 ? ' quote' : ' quotes') . ' with no answer after 3 days: ' . implode(', ', array_map(fn($l) => $short($l['name'] ?? '') . ' ' . $usd($qPrice($l)), array_slice($stale, 0, 8))) . (count($stale) > 8 ? ' and ' . (count($stale) - 8) . ' more' : ''); }
 if ($unsigned) { $any = true; $L[] = '- ' . count($unsigned) . (count($unsigned) === 1 ? ' agreement' : ' agreements') . ' sent, not signed: ' . implode(', ', array_map(fn($l) => $short($l['name'] ?? ''), array_slice($unsigned, 0, 8))); }
 if ($toConfirm) { $any = true; $L[] = '- ' . $toConfirm . ' Square ' . ($toConfirm === 1 ? 'payment' : 'payments') . ' not tied to a job yet'; }
@@ -161,7 +156,7 @@ $L[] = '- Customers on monthly plans: ' . $planN;
 $L[] = '';
 $L[] = '-- TEST of the end-of-day report, sent to Matthew only. Figures come from the Sixfold 365 app, Square and the ad spend typed in Stats.';
 $body = implode("\n", $L);
-$subject = 'TEST End of day, ' . $day($T) . ': ' . ($money['answer'] ? $usd(round($money['today'], 2)) . ' in · ' : '') . $newN . ($newN === 1 ? ' lead' : ' leads') . ' · ' . $doneN . ' done · ' . count($tomJobs) . ' tomorrow';
+$subject = 'TEST End of day, ' . $day($T) . ': ' . ($money['answer'] ? $usd(round($money['today'], 2)) . ' in · ' : '') . count($bookedToday) . ' booked · ' . $doneN . ' done · ' . count($tomJobs) . ' tomorrow';
 
 if ($eDry) { echo "Subject: $subject\n\n$body\n"; exit(0); }
 $eCfg = require $eApi . '/config.php';
