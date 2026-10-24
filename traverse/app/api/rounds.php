@@ -5364,6 +5364,25 @@ function qrScans(): ?array {
     return $j['pieces'] ?? [];
 }
 function jobPaidSoFar(array $j): int { $p = $j['pay'] ?? []; $s0 = (string) ($p['s'] ?? 'unpaid'); return $s0 === 'paid' ? (int) $j['price'] : ($s0 === 'deposit' ? (int) ($p['amt'] ?? 0) : 0); }
+/** close rates, ad leads and the rest apart (2026-10-24, Matthew: "the stats page says 47% close rate which cant be right"; it was 9 of 19,
+ *  and 5 of the 9 were referrals, in-person and website customers, who all booked, while Instant Form leads booked 3 of 10). Quoted leads
+ *  1 to 8 weeks old (a lead quoted this week hasn't had time to answer). Each group's open quotes are expected at its own rate. */
+function closeRates(array $leads, array $jobOfLead): array {
+    $wasQuoted = fn($l) => !empty($l['quote']) || in_array($l['status'] ?? '', ['quoted', 'won'], true) || isset($jobOfLead[$l['id']]) || in_array(strtolower(trim((string) ($l['cus'] ?? ''))), ['quote sent', 'scheduled', 'completed'], true);
+    $qPrice = fn($l) => (int) ($l['quote']['price'] ?? 0) ?: (int) ($l['cud'] ?? 0);
+    $grp = fn($l) => in_array($l['src'] ?? '', ['meta', 'messenger'], true) ? 'ads' : 'warm';
+    $G = ['ads' => ['quoted' => 0, 'won' => 0, 'pipe' => 0, 'pipeN' => 0], 'warm' => ['quoted' => 0, 'won' => 0, 'pipe' => 0, 'pipeN' => 0]];
+    $cut = time() - 60 * 86400; $young = time() - 7 * 86400;
+    foreach ($leads as $l) {
+        if (!$wasQuoted($l)) continue; $g = $grp($l); $at = (int) ($l['at'] ?? 0);
+        if ($at >= $cut && $at <= $young) { $G[$g]['quoted']++; if (isset($jobOfLead[$l['id']]) || ($l['status'] ?? '') === 'won') $G[$g]['won']++; }
+        if (!isset($jobOfLead[$l['id']]) && !in_array($l['status'] ?? '', ['lost', 'won'], true) && $qPrice($l) > 0) { $G[$g]['pipe'] += $qPrice($l); $G[$g]['pipeN']++; }
+    }
+    $all = ['quoted' => $G['ads']['quoted'] + $G['warm']['quoted'], 'won' => $G['ads']['won'] + $G['warm']['won']];
+    $allClose = $all['quoted'] ? $all['won'] / $all['quoted'] : 0.0; $exp = 0.0;
+    foreach ($G as $k => &$x) { $x['close'] = $x['quoted'] ? round($x['won'] / $x['quoted'], 3) : null; $exp += $x['pipe'] * ($x['close'] ?? $allClose); } unset($x);   /* no history in a group yet: the overall rate */
+    return ['groups' => $G, 'quoted' => $all['quoted'], 'won' => $all['won'], 'close' => round($allClose, 3), 'pipe' => $G['ads']['pipe'] + $G['warm']['pipe'], 'pipeN' => $G['ads']['pipeN'] + $G['warm']['pipeN'], 'expected' => round($exp)];
+}
 if ($action === 'statspage') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz);
@@ -5405,18 +5424,14 @@ if ($action === 'statspage') {
     $plans = []; $mrr = 0.0; $per = ['monthly' => 1, 'quarterly' => 1 / 3, 'yearly' => 1 / 12];
     foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); if (($c['status'] ?? 'active') !== 'active' || !isset($per[$pl])) continue;
         $m = round((float) ($c['price'] ?? 0) * $per[$pl], 2); $mrr += $m; $plans[] = ['name' => (string) ($c['name'] ?? ''), 'plan' => $pl, 'monthly' => $m]; }
-    /* 5. six weeks: booked work + quoted leads x the close rate + plan income */
-    /* close rate on leads 1 to 8 weeks old (2026-10-23 audit, Matthew: the Stats page matches the end-of-day report): a lead quoted this week
-       hasn't had time to answer, and counting it pulled the rate from 47% to 27% */
-    $cut = time() - 60 * 86400; $young = time() - 7 * 86400; $quoted = 0; $won = 0;
-    foreach ($leads as $l) { if (!$realLead($l) || (int) ($l['at'] ?? 0) < $cut || (int) ($l['at'] ?? 0) > $young || !$wasQuoted($l)) continue; $quoted++; if (isset($jobOfLead[$l['id']]) || ($l['status'] ?? '') === 'won') $won++; }   /* leads of the last 60 days that were quoted, and how many booked */
-    $close = $quoted ? $won / $quoted : 0.0;
-    $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (!$realLead($l) || isset($jobOfLead[$l['id']]) || in_array($l['status'] ?? '', ['lost', 'won'], true) || !$wasQuoted($l) || $qPrice($l) < 1) continue; $pipe += $qPrice($l); $pipeN++; }
+    /* 5. six weeks: booked work + open quotes x each group's close rate (closeRates) + plan income */
+    $CR = closeRates(array_filter($leads, $realLead), $jobOfLead);
+    ['quoted' => $quoted, 'won' => $won, 'close' => $close, 'pipe' => $pipe, 'pipeN' => $pipeN] = $CR;
     $weeks = [];
     for ($w = 0; $w < 6; $w++) {
         $f = $d((clone $mon)->modify('+' . (7 * $w) . ' days')); $t = $d((clone $mon)->modify('+' . (7 * $w + 6) . ' days'));
         $bk = 0; $bn = 0; foreach ($jobs as $j) if ($j['date'] >= $f && $j['date'] <= $t) { $bk += (int) $j['price']; $bn++; }
-        $exp = round($pipe * $close / 6); $planW = round($mrr * 12 / 52);
+        $exp = round($CR['expected'] / 6); $planW = round($mrr * 12 / 52);
         $weeks[] = ['from' => $f, 'to' => $t, 'booked' => $bk, 'jobs' => $bn, 'pipeline' => (int) $exp, 'plans' => (int) $planW, 'total' => (int) ($bk + $exp + $planW)];
     }
     /* 6. doors, the whole company: last week and this week */
@@ -5439,7 +5454,7 @@ if ($action === 'statspage') {
         $s0 = $sc[$pk] ?? []; $qr['pieces'][] = ['key' => $pk, 'label' => $plabel, 'scans' => (int) ($s0['total'] ?? 0), 'week' => (int) ($s0['week'] ?? 0), 'last' => (int) ($s0['last'] ?? 0), 'leads' => $ln, 'jobs' => $jn, 'booked' => $bk];
     }
     out(['ok' => true, 'qr' => $qr, 'web' => $web, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
-         'proj' => ['weeks' => $weeks, 'close' => round($close, 3), 'quoted' => $quoted, 'won' => $won, 'pipe' => $pipe, 'pipeN' => $pipeN], 'doors' => $doors, 'canEdit' => $role === 'admin']);
+         'proj' => ['weeks' => $weeks, 'close' => round($close, 3), 'quoted' => $quoted, 'won' => $won, 'pipe' => $pipe, 'pipeN' => $pipeN, 'groups' => $CR['groups'], 'expected' => $CR['expected']], 'doors' => $doors, 'canEdit' => $role === 'admin']);
 }
 /** the end-of-day reminder (2026-10-21): after 7 pm, once a day, a push to the admins when no one has typed the ad spend today */
 function adSpendReminder(): void {

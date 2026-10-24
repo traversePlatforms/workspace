@@ -54,7 +54,6 @@ $leads = array_filter(leadsAll(), $real);
 $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && $real($leads[$j['lead']] ?? ['name' => '']));
 $jobOf = []; foreach ($jobs as $j) $jobOf[(string) $j['lead']] = $j;
 $nameOfJob = fn($j) => $short($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''));
-$wasQuoted = fn($l) => !empty($l['quote']) || in_array($l['status'] ?? '', ['quoted', 'won'], true) || isset($jobOf[$l['id']]) || in_array(strtolower(trim((string) ($l['cus'] ?? ''))), ['quote sent', 'scheduled', 'completed'], true);
 $qPrice = fn($l) => (int) ($l['quote']['price'] ?? 0) ?: (int) ($l['cud'] ?? 0);
 
 /* 1. money: Square, net of refunds */
@@ -84,11 +83,9 @@ foreach ($leads as $l) if (!empty($l['quote']) && ($qFirst[$l['id']] ?? 0) >= $t
 $bookedToday = []; $bookedBy = [];
 foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) { $bookedToday[] = $j; $s = $srcName[$leads[$j['lead']]['src'] ?? 'other'] ?? 'Other'; $bookedBy[$s] = ($bookedBy[$s] ?? 0) + 1; }
 arsort($bookedBy);
-/* close rate on leads 1 to 8 weeks old: a lead quoted this week hasn't had time to answer (audit 2026-10-23: 5 of 33 under a week, 9 of 19 older) */
-$cut = $now - 60 * 86400; $young = $now - 7 * 86400; $q60 = 0; $w60 = 0;
-foreach ($leads as $l) { if ((int) ($l['at'] ?? 0) < $cut || (int) ($l['at'] ?? 0) > $young || !$wasQuoted($l)) continue; $q60++; if (isset($jobOf[$l['id']]) || ($l['status'] ?? '') === 'won') $w60++; }
-$close = $q60 ? $w60 / $q60 : 0.0;
-$pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (isset($jobOf[$l['id']]) || in_array($l['status'] ?? '', ['lost', 'won'], true) || !$wasQuoted($l) || $qPrice($l) < 1) continue; $pipe += $qPrice($l); $pipeN++; }
+/* close rates, ad leads and the rest apart, the app's own closeRates() so the report and the Stats page agree (2026-10-24) */
+$CR = closeRates($leads, $jobOf); $pipe = $CR['pipe']; $pipeN = $CR['pipeN'];
+$crLine = fn(array $g) => $g['quoted'] ? $g['won'] . ' of ' . $g['quoted'] . ' quoted booked' : 'none quoted yet';
 
 /* 3. ads: lifetime spend as typed in Stats, against the leads and jobs each ad's leads became */
 $ads = adSpend(); $spendAt = (int) (json_decode((string) @file_get_contents(adSpendFile()), true)['at'] ?? 0);
@@ -126,7 +123,7 @@ foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); if ((
 /* from tomorrow on: work already done this week isn't ahead (audit 2026-10-23) */
 $sixTo = (clone $today)->modify('+42 days')->format('Y-m-d'); $bk6 = 0; $bk6n = 0;
 foreach ($jobs as $j) if ($j['date'] > $T && $j['date'] <= $sixTo) { $bk6 += (int) $j['price']; $bk6n++; }
-$six = $bk6 + round($pipe * $close) + round($mrr * 12 / 52 * 6);
+$six = $bk6 + $CR['expected'] + round($mrr * 12 / 52 * 6);
 
 /* the report as data: the picture in the email and the plain-text copy are both drawn from this (2026-10-23, Matthew: "can we make
    that into an image that gets posted in the email so it opens up right away"). A row: l label, v value on the right, s small line
@@ -147,7 +144,7 @@ $sec[] = ['l' => 'Deposits sent, not paid', 'v' => $usd($depOpen), 's' => $plura
 $R['sections'][] = ['title' => 'Money', 'rows' => $sec];
 $sec = $bookedToday ? [['l' => 'Booked today, by source', 'v' => $usd($bookedVal), 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($bookedBy), $bookedBy))]] : [];
 $sec[] = ['l' => 'Quotes sent today', 'v' => (string) $quotedToday, 's' => $quotedVal ? 'worth ' . $usd($quotedVal) : ''];
-$sec[] = ['l' => 'Close rate', 'v' => round($close * 100) . '%', 's' => $w60 . ' of ' . $q60 . ' leads booked, leads 1 to 8 weeks old'];
+foreach ([['ads', 'Close rate, ad leads'], ['warm', 'Close rate, referrals and other']] as [$gk, $gl]) { $g = $CR['groups'][$gk]; $sec[] = ['l' => $gl, 'v' => $g['quoted'] ? round($g['close'] * 100) . '%' : '–', 's' => $crLine($g) . ', leads 1 to 8 weeks old']; }
 $sec[] = ['l' => 'Open quotes', 'v' => $usd($pipe), 's' => $plural($pipeN, 'quote', 'quotes')];
 $R['sections'][] = ['title' => 'Sales', 'rows' => $sec];
 $R['sections'][] = ['title' => 'Ads and referrals', 'note' => 'Spend as last typed in Stats' . ($spendAt ? ', ' . date('D j M g:i a', $spendAt) : '') . ((!$spendAt || $spendAt < $t0) ? '. Today\'s spend not typed in yet.' : ''), 'rows' => $adRows];
@@ -168,7 +165,7 @@ if ($toConfirm) $sec[] = ['l' => 'Square payments not tied to a job', 'v' => (st
 if ($couldNot) $sec[] = ['l' => 'Jobs not done today, to rebook', 'v' => (string) count($couldNot), 't' => 'bad'];
 $R['sections'][] = ['title' => 'Needs attention', 'rows' => $sec, 'empty' => 'Nothing.'];
 $R['sections'][] = ['title' => 'Next six weeks', 'rows' => [
-    ['l' => 'Expected', 'v' => $usd($six), 's' => $usd($bk6) . ' booked in ' . $plural($bk6n, 'job', 'jobs') . ' + open quotes at the close rate' . ($planN ? ' + plans' : '')],
+    ['l' => 'Expected', 'v' => $usd($six), 's' => $usd($bk6) . ' booked in ' . $plural($bk6n, 'job', 'jobs') . ' + open quotes at each group\'s close rate' . ($planN ? ' + plans' : '')],
     ['l' => 'Customers on monthly plans', 'v' => (string) $planN]]];
 $R['foot'] = ($eTest ? 'TEST, sent to Matthew only. ' : '') . 'From the Sixfold 365 app, Square and the ad spend typed in Stats. Customer names are private: keep this inside the company.';
 

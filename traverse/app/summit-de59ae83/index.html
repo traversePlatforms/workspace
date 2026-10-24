@@ -8097,6 +8097,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function fertOf(P, k) { var L = P.ferts || []; return L.filter(function (x) { return x.k === k; })[0] || L.filter(function (x) { return x.k === P.fertDefault; })[0] || L[0] || null; }
   function money2(n) { return '$' + (Math.round(n * 100) / 100).toFixed(2); }
   function weekText(iso) { if (!iso) return ''; var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }); }
+  /* the close rate in two groups (2026-10-24): ad leads (Instant Form, Messenger) and the rest (referrals, phone, in person, website) */
+  function closeLines(P) {
+    var G = P.groups; if (!G) return [P.won + ' of ' + P.quoted + ' quoted leads booked'];
+    var one = function (g, name) { return name + ': ' + (g.quoted ? g.won + ' of ' + g.quoted + ' quoted booked (' + Math.round(g.close * 100) + '%)' : 'none quoted yet'); };
+    return [one(G.ads, 'Ad leads'), one(G.warm, 'Referrals, phone, in person, website'), 'leads 1 to 8 weeks old'];
+  }
   function money0(n) { return '$' + Math.round(n).toLocaleString(LOCALE); }
   /* a yes on the customer's quote page (2026-10-14), only while it is for the quote's current price */
   function acceptOf(l) { return l && l.accept && l.quote && l.accept.price === l.quote.price ? l.accept : null; }
@@ -17003,9 +17009,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         [['Jobs done last week', done.length, [money0(doneV) + ' of work', L.jobs.length !== done.length ? (L.jobs.length - done.length) + ' on the board not marked done' : '']],
          ['Leads in last week', leadsIn, [L.quotes + ' quoted so far (app or ClickUp)', L.booked + (L.booked === 1 ? ' job booked' : ' jobs booked')]],
          ['Jobs this week', T.jobs.length, [money0(twV) + ' booked', T.holds.length ? T.holds.length + ' more held' : '']],
-         ['Close rate', null, [j.proj.won + ' of ' + j.proj.quoted + ' quoted leads booked, leads 1 to 8 weeks old']]].forEach(function (x) {
+         ['Close rate, ad leads', null, closeLines(j.proj)]].forEach(function (x) {
           var c = kpiCard(x[0]); kp.appendChild(c); kpiFill(c, x[1], x[2]);
-          if (x[1] === null) c.querySelector('b').textContent = j.proj.quoted ? pct(j.proj.close) : '\u2013';
+          if (x[1] === null) { var ga = (j.proj.groups || {}).ads; c.querySelector('b').textContent = ga ? (ga.quoted ? pct(ga.close) : '\u2013') : (j.proj.quoted ? pct(j.proj.close) : '\u2013'); }
         });
         /* 1. last week */
         var c1 = card('Last week', rng(L.from, L.to));
@@ -17055,7 +17061,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var tb5 = table(c5, ['Week', 'Booked', 'From quoted leads', 'Plans', 'Total']), gt = 0;
         P.weeks.forEach(function (w, i) { gt += w.total; tr(tb5, [[(i === 0 ? 'This week' : 'Week of ' + dayName(w.from)), w.jobs ? w.jobs + (w.jobs === 1 ? ' job' : ' jobs') : ''], money0(w.booked), money0(w.pipeline), money0(w.plans), money0(w.total)]); });
         tr(tb5, ['Six weeks', money0(P.weeks.reduce(function (a, w) { return a + w.booked; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.pipeline; }, 0)), money0(P.weeks.reduce(function (a, w) { return a + w.plans; }, 0)), money0(gt)], 'sttot');
-        c5.appendChild(q('p', 'stnote', 'Booked: jobs on the board that week. Quoted leads: ' + P.pipeN + (P.pipeN === 1 ? ' lead' : ' leads') + ' quoted in the app or in Jen\u2019s ClickUp, with no job yet (not lost), worth ' + money0(P.pipe) + ' together; times the close rate (' + (P.quoted ? pct(P.close) + ', ' + P.won + ' of the ' + P.quoted + ' quoted leads 1 to 8 weeks old booked' : 'no quoted leads 1 to 8 weeks old') + '), spread evenly over the six weeks. Plans: ' + money0(j.plans.mrr) + ' a month, as weeks.'));
+        c5.appendChild(q('p', 'stnote', 'Booked: jobs on the board that week. Quoted leads: ' + P.pipeN + (P.pipeN === 1 ? ' lead' : ' leads') + ' quoted in the app or in Jen\u2019s ClickUp, with no job yet (not lost), worth ' + money0(P.pipe) + ' together; each at its own group\u2019s close rate (' + closeLines(P).join('; ') + '), spread evenly over the six weeks. Plans: ' + money0(j.plans.mrr) + ' a month, as weeks.'));
         /* 6. doors, the whole company */
         /* the printed QR codes (2026-10-21) */
         if (j.qr) {
