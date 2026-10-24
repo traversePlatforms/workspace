@@ -27,6 +27,7 @@ export const KEY = [
   ['6049 W ROXBURY PL', 3131, 'back 1,867 + front 1,264 (2D; an 815 3D trace of the front not counted), heavy trees, Columbine; UNSEEN (v2 3,035, DRCOG 1,841, app 300)', 'Matthew 2026-10-23'],
   ['6431 S CEDAR ST', 2614, 'back lawn only (front looks like rock/dry in Google now), 2D, Littleton; UNSEEN (v2 4,263, DRCOG 4,801, app 500)', 'Matthew 2026-10-23'],
   ['6916 S ELATI ST', 2554, 'front 1,323 + side 556 + back strip 675, heavy canopy, ROUGH (he found it hard), Littleton; UNSEEN (v2 2,680, DRCOG 2,573, app 5,800 from 2021)', 'Matthew 2026-10-23'],
+  ['600 HIDDENBROOK CT', 2231, 'back 1,691 + front 290 + 130 + 120, Highlands Ranch method-check lot; UNSEEN (v2 1,744, DRCOG 3,767, app 1,900)', 'Matthew 2026-10-23'],
 ];
 const OFF = { struct: false, roofBuf: 0, ever: 'off', speck: 0, house: 0 };
 const VARIANTS = {
