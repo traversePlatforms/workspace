@@ -5406,8 +5406,10 @@ if ($action === 'statspage') {
     foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); if (($c['status'] ?? 'active') !== 'active' || !isset($per[$pl])) continue;
         $m = round((float) ($c['price'] ?? 0) * $per[$pl], 2); $mrr += $m; $plans[] = ['name' => (string) ($c['name'] ?? ''), 'plan' => $pl, 'monthly' => $m]; }
     /* 5. six weeks: booked work + quoted leads x the close rate + plan income */
-    $cut = time() - 60 * 86400; $quoted = 0; $won = 0;
-    foreach ($leads as $l) { if (!$realLead($l) || (int) ($l['at'] ?? 0) < $cut || !$wasQuoted($l)) continue; $quoted++; if (isset($jobOfLead[$l['id']]) || ($l['status'] ?? '') === 'won') $won++; }   /* leads of the last 60 days that were quoted, and how many booked */
+    /* close rate on leads 1 to 8 weeks old (2026-10-23 audit, Matthew: the Stats page matches the end-of-day report): a lead quoted this week
+       hasn't had time to answer, and counting it pulled the rate from 47% to 27% */
+    $cut = time() - 60 * 86400; $young = time() - 7 * 86400; $quoted = 0; $won = 0;
+    foreach ($leads as $l) { if (!$realLead($l) || (int) ($l['at'] ?? 0) < $cut || (int) ($l['at'] ?? 0) > $young || !$wasQuoted($l)) continue; $quoted++; if (isset($jobOfLead[$l['id']]) || ($l['status'] ?? '') === 'won') $won++; }   /* leads of the last 60 days that were quoted, and how many booked */
     $close = $quoted ? $won / $quoted : 0.0;
     $pipe = 0; $pipeN = 0; foreach ($leads as $l) { if (!$realLead($l) || isset($jobOfLead[$l['id']]) || in_array($l['status'] ?? '', ['lost', 'won'], true) || !$wasQuoted($l) || $qPrice($l) < 1) continue; $pipe += $qPrice($l); $pipeN++; }
     $weeks = [];

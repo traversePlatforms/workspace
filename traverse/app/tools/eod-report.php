@@ -87,6 +87,9 @@ foreach (['meta' => 'Instant Form', 'messenger' => 'Messenger'] as $src => $labe
     $back = $sp > 0 ? $bk / $sp : 0;
     $adRows[] = ['l' => $label, 'v' => $jn ? $usd(round($sp / $jn)) . ' per job' : 'no jobs yet', 's' => $usd(round($sp)) . ' spent · ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' worth ' . $usd($bk) . ' · ' . number_format($back, 2) . 'x back', 't' => $back >= 1 ? 'good' : 'bad'];
 }
+/* referrals on their own line, not in an ad's figures (Matthew 2026-10-23: Russ and Carlos, Eric's referrals, "make it a different subject") */
+$refJ = []; foreach ($leads as $l) if (($l['src'] ?? '') === 'referral' && isset($jobOf[$l['id']])) $refJ[] = $l;
+if ($refJ) $adRows[] = ['l' => 'Referrals', 'v' => $usd(array_sum(array_map(fn($l) => (int) $jobOf[$l['id']]['price'], $refJ))), 's' => count($refJ) . (count($refJ) === 1 ? ' job' : ' jobs') . ', no ad spend · ' . implode(', ', array_map(fn($l) => $short($l['name'] ?? ''), $refJ)), 't' => 'good'];
 
 /* 4. the work: today's jobs and tomorrow's */
 $todayJobs = array_values(array_filter($jobs, fn($j) => $j['date'] === $T)); usort($todayJobs, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
@@ -134,7 +137,7 @@ $sec[] = ['l' => 'Quotes sent today', 'v' => (string) $quotedToday, 's' => $quot
 $sec[] = ['l' => 'Close rate', 'v' => round($close * 100) . '%', 's' => $w60 . ' of ' . $q60 . ' leads booked, leads 1 to 8 weeks old'];
 $sec[] = ['l' => 'Open quotes', 'v' => $usd($pipe), 's' => $plural($pipeN, 'quote', 'quotes')];
 $R['sections'][] = ['title' => 'Sales', 'rows' => $sec];
-$R['sections'][] = ['title' => 'Ads', 'note' => 'Spend as last typed in Stats' . ($spendAt ? ', ' . date('D j M g:i a', $spendAt) : '') . ((!$spendAt || $spendAt < $t0) ? '. Today\'s spend not typed in yet.' : ''), 'rows' => $adRows];
+$R['sections'][] = ['title' => 'Ads and referrals', 'note' => 'Spend as last typed in Stats' . ($spendAt ? ', ' . date('D j M g:i a', $spendAt) : '') . ((!$spendAt || $spendAt < $t0) ? '. Today\'s spend not typed in yet.' : ''), 'rows' => $adRows];
 $sec = [];
 foreach ($todayJobs as $j) { $o = (string) ($j['done']['o'] ?? ''); $m = (int) ($j['done']['mins'] ?? 0); foreach ((array) ($j['ridet'] ?? []) as $r) $m += (int) $r['mins'];
     $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => $j['crew'] . ' · ' . ($o === 'done' ? 'done' . ($m ? ' · ' . $dur($m) : '') : ($o === 'could not' ? 'not done: ' . mb_substr((string) ($j['done']['note'] ?? ''), 0, 90) : 'not marked yet')), 't' => $o === 'could not' ? 'bad' : ($o === 'done' ? '' : 'warn')]; }
