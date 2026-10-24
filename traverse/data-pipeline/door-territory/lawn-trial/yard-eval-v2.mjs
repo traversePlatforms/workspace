@@ -23,6 +23,7 @@ export const KEY = [
   ['7614 E 121ST PL', 2961, 'back 1,801 + front 854 + 306; UNSEEN by v2 tuning (v2 3,229, DRCOG 4,930, app 700)', 'Matthew 2026-10-23'],
   ['579 E 76TH AVE', 3613, 'whole property 3,402 + 211 strip by the driveway, open lot; UNSEEN by v2 tuning (v2 1,636, DRCOG 280, app 2,100)', 'Matthew 2026-10-23'],
   ['3852 PRIMROSE LN', 3461, 'back 3,061 incl. under the tree edges + front 400 beside the driveway, Castle Rock; UNSEEN by v2 tuning (v2 3,940, DRCOG 3,703, app 1,200)', 'Matthew 2026-10-23'],
+  ['375 LEFTHAND CANYON DR', 34123, 'FIELD not a watered lawn: nearly the whole 0.8-acre lot, Boulder; UNSEEN (v2 43, DRCOG turf 0, app 1,500); score apart from lawns', 'Matthew 2026-10-23'],
 ];
 const OFF = { struct: false, roofBuf: 0, ever: 'off', speck: 0, house: 0 };
 const VARIANTS = {
