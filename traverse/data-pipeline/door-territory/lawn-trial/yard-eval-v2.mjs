@@ -30,6 +30,7 @@ export const KEY = [
   ['600 HIDDENBROOK CT', 2231, 'back 1,691 + front 290 + 130 + 120, Highlands Ranch method-check lot; UNSEEN (v2 1,744, DRCOG 3,767, app 1,900)', 'Matthew 2026-10-23'],
   ['9267 CANYON WREN CT', 4637, 'front 1,169 + back 3,468 incl. under tree shade, Highlands Ranch check lot; UNSEEN (v2 3,444, DRCOG 3,627, app 400)', 'Matthew 2026-10-23'],
   ['852 HUGHES LN', 1385, 'side 745 (partly past the lot line) + front 640, ROUGH, heavy trees, back under canopy not traced?; HR check lot; UNSEEN (v2 2,411, DRCOG 2,390, app 2,200)', 'Matthew 2026-10-23'],
+  ['9416 DESERT WILLOW TRL', 1473, 'front 766 (part past the lot line) + back 707 under trees where 3D showed lawn, HR check lot; UNSEEN (v2 1,399, DRCOG 1,152, app 430)', 'Matthew 2026-10-23'],
 ];
 const OFF = { struct: false, roofBuf: 0, ever: 'off', speck: 0, house: 0 };
 const VARIANTS = {
