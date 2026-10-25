@@ -8,6 +8,9 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+/* throwaway Chrome profiles are removed when the script ends (2026-10-25: 10,717 were left in Temp, about 170 GB) */
+const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
+process.on('exit', () => { for (const d of cdpDirs) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const TOOLS = process.env.BRANDPACK_TOOLS || 'C:/Users/SURGEI~1/AppData/Local/Temp/claude/c--Users-Surge-Inc-Desktop-claude-test-2/db3e1153-072f-46a3-b860-134f689b5a09/scratchpad/brandpack-tools';
@@ -87,7 +90,7 @@ const LOGOS = [
   { dir: D.one, name: '365-Badge-1colour-White', svg: mono('#FFFFFF', 'w'), dark: true },
 ];
 const tmp = mkdtempSync(join(tmpdir(), 'bp-'));
-const chrome = (args) => execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-pdf-header-footer', '--allow-file-access-from-files', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', ...args], { stdio: 'ignore' });
+const chrome = (args) => execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-pdf-header-footer', '--allow-file-access-from-files', `--user-data-dir=${cdpDir()}`, '--virtual-time-budget=8000', ...args], { stdio: 'ignore' });
 function toSvgOutlined(pdfPath) {
   const doc = mupdf.Document.openDocument(readFileSync(pdfPath), 'application/pdf'), page = doc.loadPage(0);
   const buf = new mupdf.Buffer(), w = new mupdf.DocumentWriter(buf, 'svg', 'text=path'), dev = w.beginPage(page.getBounds());

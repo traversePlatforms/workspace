@@ -4,11 +4,14 @@
      2  top arc: SIXFOLD smaller, 365 larger               (bottom kept)   [1+2 replaced the bottom-arc tries, Matthew 2026-10-16]
      3  inside the disc: SIXFOLD above the mark             (mark a little smaller, roots kept)
    Writes name-<n>-<a|b|c>.svg/.png and sixfold-name-options.html. The ridge and the colours are build.mjs's, copied. */
-import { writeFileSync, readFileSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+/* throwaway Chrome profiles are removed when the script ends (2026-10-25: 10,717 were left in Temp, about 170 GB) */
+const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
+process.on('exit', () => { for (const d of cdpDirs) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const src = readFileSync(join(HERE, 'build.mjs'), 'utf8');
@@ -52,7 +55,7 @@ for (const n of Object.keys(PLACES)) for (const k of Object.keys(COLOURS)) {
   const svg = badge(COLOURS[k], PLACES[n], `n${n}${k}`), f = join(HERE, `name-${n}-${k}`);
   writeFileSync(f + '.svg', svg);
   writeFileSync(f + '.html', `<!doctype html><html><head><meta charset="utf-8">${FONT}<style>html,body{margin:0;background:transparent}svg{display:block}</style></head><body>${svg}</body></html>`);
-  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--default-background-color=00000000', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--window-size=1000,1000', '--virtual-time-budget=6000', `--screenshot=${f}.png`, 'file:///' + (f + '.html').replace(/\\/g, '/')], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--default-background-color=00000000', `--user-data-dir=${cdpDir()}`, '--window-size=1000,1000', '--virtual-time-budget=6000', `--screenshot=${f}.png`, 'file:///' + (f + '.html').replace(/\\/g, '/')], { stdio: 'ignore' });
 }
 const rows = Object.entries(PLACES).map(([n, p]) => `<section><h2>${p.title}</h2><p>${p.note}</p><div class="row">${Object.entries(COLOURS).map(([k, o]) => `<figure><img src="name-${n}-${k}.png" alt=""><figcaption>${o.name}</figcaption></figure>`).join('')}</div></section>`).join('\n');
 writeFileSync(join(HERE, 'sixfold-name-options.html'), `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Sixfold name in the badge</title>${FONT}

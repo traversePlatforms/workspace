@@ -1,11 +1,14 @@
 /* Combined Sixfold + 365 badge drafts (2026-10-15, Brandon via Matthew: keep the Sixfold Ridge mark with the orange and the roots,
    "365" across the top and "Land aeration and seeding" around the bottom, wrapped in a circle like the 365 badge is now).
    Writes option-a/b/c.svg + .html and renders PNGs with headless Chrome:  node build.mjs */
-import { writeFileSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+/* throwaway Chrome profiles are removed when the script ends (2026-10-25: 10,717 were left in Temp, about 170 GB) */
+const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
+process.on('exit', () => { for (const d of cdpDirs) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 /* the Ridge mark, as in sixfold/brand/sixfold-mark-ridge.svg (viewBox 0 0 100 116) */
@@ -67,7 +70,7 @@ for (const o of OPTIONS) {
   const svg = badge(o);
   writeFileSync(join(HERE, `option-${o.id}.svg`), svg);
   writeFileSync(join(HERE, `option-${o.id}.html`), `<!doctype html><html><head><meta charset="utf-8">${FONT}<style>html,body{margin:0;background:transparent}svg{display:block}</style></head><body>${svg}</body></html>`);
-  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--default-background-color=00000000', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--window-size=1000,1000', '--virtual-time-budget=6000', `--screenshot=${join(HERE, `option-${o.id}.png`)}`, 'file:///' + join(HERE, `option-${o.id}.html`).replace(/\\/g, '/')], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--default-background-color=00000000', `--user-data-dir=${cdpDir()}`, '--window-size=1000,1000', '--virtual-time-budget=6000', `--screenshot=${join(HERE, `option-${o.id}.png`)}`, 'file:///' + join(HERE, `option-${o.id}.html`).replace(/\\/g, '/')], { stdio: 'ignore' });
 }
 /* one page to look at them side by side, on light and dark */
 const cards = OPTIONS.map((o) => `<figure><div class="on light">${badge(o).replace(/id="(top|bot|disc)-/g, 'id="$1-L').replace(/#(top|bot|disc)-/g, '#$1-L')}</div><div class="on dark">${badge(o).replace(/id="(top|bot|disc)-/g, 'id="$1-D').replace(/#(top|bot|disc)-/g, '#$1-D')}</div><figcaption><b>${o.name}</b><span>${o.note}</span></figcaption></figure>`).join('\n');

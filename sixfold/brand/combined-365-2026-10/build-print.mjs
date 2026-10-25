@@ -4,12 +4,15 @@
    truck magnet (24 x 12 in), car magnet for the Tesla (18 x 12 in). Rendered at 100 px per inch (cards 300) for review, plus one page with
    everything. Print-ready files with bleed come after a pick.
    Needs: QR_DEPS = a node_modules with qrcode, jsqr, pngjs.   node build-print.mjs */
-import { readFileSync, writeFileSync, mkdirSync, mkdtempSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+/* throwaway Chrome profiles are removed when the script ends (2026-10-25: 10,717 were left in Temp, about 170 GB) */
+const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
+process.on('exit', () => { for (const d of cdpDirs) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
 const HERE = dirname(fileURLToPath(import.meta.url)), OUT = join(HERE, 'print');
 mkdirSync(OUT, { recursive: true });
 const req = createRequire(join(process.env.QR_DEPS || '', 'x.js'));
@@ -87,7 +90,7 @@ const shots = [];
 const render = (name, html, w, h) => {
   const f = join(OUT, name + '.html'), p = join(OUT, name + '.png');
   writeFileSync(f, html);
-  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, `--window-size=${Math.round(w)},${Math.round(h)}`, '--virtual-time-budget=6000', `--screenshot=${p}`, 'file:///' + f.replace(/\\/g, '/')], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', `--user-data-dir=${cdpDir()}`, `--window-size=${Math.round(w)},${Math.round(h)}`, '--virtual-time-budget=6000', `--screenshot=${p}`, 'file:///' + f.replace(/\\/g, '/')], { stdio: 'ignore' });
   shots.push(name);
 };
 for (const k of ['a', 'b', 'c']) {
@@ -151,7 +154,7 @@ body { font-family: 'DM Sans', sans-serif; -webkit-print-color-adjust: exact; pr
 </body></html>`;
   const f = join(PR, `365-Card-${p.file}.html`), pdf = join(PR, `365-Card-${p.file}.pdf`);
   writeFileSync(f, html);
-  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${cdpDir()}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
 }
 console.log('print-ready cards:', PEOPLE.map((p) => `365-Card-${p.file}.pdf`).join(', '));
 
@@ -168,13 +171,13 @@ for (const [file, o] of [['365-Yard-Sign-C', {}],
   html = html.replace('html,body{margin:0;padding:0}', 'html,body{padding:0}html{margin:0}body{margin:0.125in}');
   const f = join(PR, file + '.html'), pdf = join(PR, file + '.pdf');
   writeFileSync(f, html);
-  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${cdpDir()}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf}`, 'file:///' + f.split('\\').join('/')], { stdio: 'ignore' });
   console.log('print-ready yard sign: ' + file + '.pdf');
   /* exactly 24 x 18 in, no bleed (2026-10-18: FedEx's sign tool fitted the 24.25 x 18.25 file inside its 24 x 18 and filled the gaps white) */
   const fx = html.replace('@page{size:24.25in 18.25in;margin:0}', '@page{size:24in 18in;margin:0}').replace('body{margin:0.125in}', 'body{margin:0}');
   const f2 = join(PR, file + '-24x18.html'), pdf2 = join(PR, file + '-24x18.pdf');
   writeFileSync(f2, fx);
-  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf2}`, 'file:///' + f2.split('\\').join('/')], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${cdpDir()}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf2}`, 'file:///' + f2.split('\\').join('/')], { stdio: 'ignore' });
   console.log('print-ready yard sign: ' + file + '-24x18.pdf');
   /* the 12 x 18 in sign, FedEx's smaller size (2026-10-18, Matthew): the same layout at two thirds (16 x 12 in), centred on an 18 x 12 in
      page with the ground colour running edge to edge */
@@ -183,6 +186,6 @@ for (const [file, o] of [['365-Yard-Sign-C', {}],
   h12 = h12.replace('html,body{margin:0;padding:0}', 'html,body{padding:0}html{margin:0}body{margin:0 auto}');
   const f3 = join(PR, file + '-18x12.html'), pdf3 = join(PR, file + '-18x12.pdf');
   writeFileSync(f3, h12);
-  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${mkdtempSync(join(tmpdir(), 'cdp-'))}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf3}`, 'file:///' + f3.split('\\').join('/')], { stdio: 'ignore' });
+  execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-pdf-header-footer', `--user-data-dir=${cdpDir()}`, '--virtual-time-budget=8000', `--print-to-pdf=${pdf3}`, 'file:///' + f3.split('\\').join('/')], { stdio: 'ignore' });
   console.log('print-ready yard sign: ' + file + '-18x12.pdf');
 }

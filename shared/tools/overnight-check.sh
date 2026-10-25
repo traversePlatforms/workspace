@@ -99,6 +99,9 @@ done <<< "$TASKS"
 GD=$(tail -1 "$LOGDIR/gdrive.log" 2>/dev/null); say "  info  Drive backup log: ${GD:-none}"
 
 # 5. This computer's disk
+# throwaway Chrome profiles from test and print scripts (cdp-*), more than a day old (2026-10-25: 10,717 had piled up, about 170 GB)
+SWEPT=$(find "$LOCALAPPDATA/Temp" -maxdepth 1 -type d -name 'cdp-*' -mtime +1 2>/dev/null | head -2000 | while IFS= read -r d; do rm -rf "$d" 2>/dev/null && echo x; done | wc -l)
+[ "$SWEPT" -gt 0 ] && say "  info  removed $SWEPT old test-browser folders from Temp"
 FREE=$(df -Pm /c | awk 'NR==2{print int($4/1024)}'); [ "$FREE" -lt 20 ] && bad "C: has only ${FREE} GB free" || ok "C: ${FREE} GB free"
 
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
