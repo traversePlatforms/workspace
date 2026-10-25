@@ -1131,27 +1131,37 @@ const SEARCH_SYN = ['DRIVE' => 'DR', 'ROAD' => 'RD', 'STREET' => 'ST', 'LANE' =>
     'AVENUE' => 'AVE', 'PLACE' => 'PL', 'TRAIL' => 'TRL', 'BOULEVARD' => 'BLVD', 'PARKWAY' => 'PKWY', 'TERRACE' => 'TER',
     'POINT' => 'PT', 'HEIGHTS' => 'HTS', 'HIGHWAY' => 'HWY', 'NORTH' => 'N', 'SOUTH' => 'S', 'EAST' => 'E', 'WEST' => 'W'];
 const SEARCH_DIRS = ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH', 'EAST', 'WEST'];   /* direction words a search tries again without (2026-10-21): a365NoDir() and 'search' */
-function searchIndex(): array {
+/* Written to disk a town at a time and read back a line at a time (2026-10-25): built whole in memory, the 98 MB index (600,000+ houses
+   after the all-sizes towns) ran past the 768 MB limit on every rebuild ("Allowed memory size exhausted", line 1152, six times on 25 Oct),
+   and Denver's fix adds 50,000 more. Every caller only loops over it, so a generator serves them all. */
+function searchIndex(): iterable {
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $f = DATA_DIR . '/search-index.txt';
     $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); $newest = max($newest, (int) @filemtime(DATA_DIR . '/' . $r['key'] . '-lookup.json')); }
     if (!is_readable($f) || (int) @filemtime($f) < $newest) {
-        $out = '';
-        foreach (($idx['regions'] ?? []) as $r) {
-            if (!empty($r['admin'])) continue;   /* the cached index is shared by everyone, so admin-only towns stay out of search */
-            $data = loadRegion($r['key']); if (!$data) continue;
-            foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
-                $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
-                    $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', '']) . "\n";
+        $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp'; $w = @fopen($tmp, 'w');
+        if ($w) {
+            foreach (($idx['regions'] ?? []) as $r) {
+                if (!empty($r['admin'])) continue;   /* the cached index is shared by everyone, so admin-only towns stay out of search */
+                $data = loadRegion($r['key']); $out = '';
+                if ($data) foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+                    $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
+                        $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', '']) . "\n";
+                }
+                $data = null;
+                $lk = json_decode((string) @file_get_contents(DATA_DIR . '/' . $r['key'] . '-lookup.json'), true);   /* read directly: lookupDoors() would keep every town in memory */
+                foreach ((is_array($lk['doors'] ?? null) ? $lk['doors'] : []) as $d) $out .= implode("\t", [$r['key'], ((string) ($d['town'] ?? '')) ?: $r['label'], $r['key'] === 'looked-up' ? 'Pulled in on request' : 'Not on the door lists',$d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
+                    $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', 'L']) . "\n";   /* the office lookup (2026-10-14) */
+                $lk = null;
+                if ($out !== '' && @fwrite($w, $out) === false) { $ok = false; break; }
             }
-            foreach (lookupDoors($r['key']) as $d) $out .= implode("\t", [$r['key'], ((string) ($d['town'] ?? '')) ?: $r['label'], $r['key'] === 'looked-up' ? 'Pulled in on request' : 'Not on the door lists',$d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
-                $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', 'L']) . "\n";   /* the office lookup (2026-10-14) */
+            fclose($w);
+            if (($ok ?? true) === false || !@rename($tmp, $f)) @unlink($tmp);   /* a half-written index never replaces the old one */
         }
-        $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp';
-        if (@file_put_contents($tmp, $out, LOCK_EX) !== false) { if (!@rename($tmp, $f)) { @unlink($tmp); } }
-        return explode("\n", rtrim($out, "\n"));
     }
-    return explode("\n", rtrim((string) file_get_contents($f), "\n"));
+    $h = @fopen($f, 'r'); if (!$h) return;
+    while (($line = fgets($h)) !== false) { $line = rtrim($line, "\r\n"); if ($line !== '') yield $line; }
+    fclose($h);
 }
 /* ---- customers (2026-10-04) ------------------------------------------------------------------
  * Matthew: "we need a CRM ... something that can store this info and be used to rebuild data."
@@ -4063,12 +4073,22 @@ if ($action === 'teamsave' || $action === 'teammember') {
    the command-line jobs (ClickUp, Square, the morning email to Contact@) see everything. View-as follows the account looked through. */
 function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_string($role ?? null) && in_array($role, ['office', 'quote', 'manager'], true); }
 function webLeadIds(): array { static $ids = null; if ($ids === null) { $ids = []; foreach (leadsAllRaw() as $id => $l) if (($l['src'] ?? '') === 'a365web') $ids[$id] = true; } return $ids; }
+/* Facebook form names as the Pipeline shows them (2026-10-25, Matthew: "rename facebook leads ... lead 1 and lead 2"): the second form's own
+   name, "365 Aeration and Seeding 's form created on Mon Oct 19, 2026 3:51pm", was read as the day the lead came in. The service word stays
+   in the label (it picks the service on the quote). */
+function metaFormLabel(string $n): string {
+    if (stripos($n, 'form created on Mon Oct 19, 2026') !== false) return 'Facebook ad (form 2) · Aeration & seeding';   /* stored cut to 60 characters, so no time */
+    if (strcasecmp(trim($n), '365 Aeration Lead Form') === 0) return 'Facebook ad (form 1) · Aeration';
+    if (preg_match("/\s*'s form created on /i", $n)) return 'Facebook ad form · ' . trim((string) preg_replace("/\s*'s form created on .*$/i", '', $n));
+    return $n;
+}
 function leadsAll(): array { $all = leadsAllRaw(); return webHide() ? array_filter($all, fn($l) => ($l['src'] ?? '') !== 'a365web') : $all; }
 function leadsAllRaw(): array {
     static $c = null; $sig = fileSig(leadsDir() . '/leads.log') . '|' . fileSig(leadsDir() . '/leadst.log');   /* built once per request, again after a write (review 2026-10-22) */
     if ($c !== null && $c[0] === $sig) return $c[1];
     $leads = [];
     foreach (readLines(leadsDir() . '/leads.log') as $l) $leads[$l['id']] = $l + ['status' => 'new', 'notes' => [], 'statusAt' => null, 'statusBy' => null, 'owner' => '', 'ownerBy' => null, 'follow' => null, 'tries' => [], 'house' => null, 'ask' => null, 'quote' => null, 'recall' => null];
+    foreach ($leads as &$x) if (($x['src'] ?? '') === 'meta') $x['need'] = metaFormLabel((string) ($x['need'] ?? '')); unset($x);
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
         if (!isset($leads[$u['id']])) continue;
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
