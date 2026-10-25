@@ -47,6 +47,25 @@ try {
   }
   if (!P) done({ ok: false, error: 'No property record at that address (the state parcel map has none there).' });
   const at = P.attributes, rings = P.geometry.rings;
+  /* the house's point goes inside its lot (2026-10-25, 2195 E Nichols Dr): the Census point sits on the street, ~40 m off, so the card's
+     photo framed the neighbour and no property line drew (the app asks for the parcel under the point). The lot's centre when it is
+     inside the lot, else the middle of the lot's widest row. */
+  {
+    const R = rings[0], inR = (x, y) => { let ins = false; for (let i = 0, k = R.length - 1; i < R.length; k = i++) { const [xi, yi] = R[i], [xj, yj] = R[k]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) ins = !ins; } return ins; };
+    let a = 0, cx = 0, cy = 0;
+    for (let i = 0, j = R.length - 1; i < R.length; j = i++) { const f = R[j][0] * R[i][1] - R[i][0] * R[j][1]; a += f; cx += (R[j][0] + R[i][0]) * f; cy += (R[j][1] + R[i][1]) * f; }
+    if (a) { cx /= 3 * a; cy /= 3 * a; }
+    if (!a || !inR(cx, cy)) {
+      const ys = R.map((p) => p[1]), y0 = Math.min(...ys), y1 = Math.max(...ys); let best = 0;
+      for (let s = 1; s < 20; s++) {
+        const y = y0 + (y1 - y0) * s / 20, xs = [];
+        for (let i = 0, k = R.length - 1; i < R.length; k = i++) { const [xi, yi] = R[i], [xj, yj] = R[k]; if ((yi > y) !== (yj > y)) xs.push(xi + (y - yi) * (xj - xi) / (yj - yi)); }
+        xs.sort((p, q) => p - q);
+        for (let i = 0; i + 1 < xs.length; i += 2) if (xs[i + 1] - xs[i] > best) { best = xs[i + 1] - xs[i]; cx = (xs[i] + xs[i + 1]) / 2; cy = y; }
+      }
+    }
+    if (inR(cx, cy)) { lon = cx; lat = cy; }
+  }
   /* 3. the lawn: the 2023 photo (2021 when 2023 does not cover it), the app's classifier */
   let item = null;
   for (const yr of ['2023', '2021']) {
