@@ -6,8 +6,10 @@
 // Output: yard-v2/<town>.json { built, settings, doors: { id: { l, s, u, o, t, dt, lot, sv, ph } | { big } | { shared } | null } }
 //   l lawn (sq ft) · s seen in the photo · u filled under tree crowns · o open ground · t tree crown · dt DRCOG turf · lot · sv laser survey
 //   ph photo date. null = no lot line at the door's point. Nothing reaches the app until build-yard-v2.mjs puts it in the door files.
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
 import { yardSources, yardClassify, V2 } from './yard-scan-v2.mjs';
+/* tmp + rename (2026-10-25): the cloud disk filled overnight and left arvada.json cut short and 89 empty parcel files */
+const writeSafe = (f, s) => { const tmp = new URL(f.href + '.tmp'); writeFileSync(tmp, s); renameSync(tmp, f); };
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith('--' + k + '=')); return a ? a.split('=')[1] : d; };
 const TOWN = arg('town'), MINS = +arg('mins', 45), CONC = +arg('conc', 6);
 if (!TOWN) { console.error('--town= needed'); process.exit(1); }
@@ -44,7 +46,7 @@ async function fetchCell(c) {
     if (!j.exceededTransferLimit && (j.features || []).length < 2000) break;
     off += (j.features || []).length;
   }
-  pc.cells[c] = feats; writeFileSync(PCACHE, JSON.stringify(pc));
+  pc.cells[c] = feats; writeSafe(PCACHE, JSON.stringify(pc));
   return feats;
 }
 const withTimeout = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('timed out')), ms))]);
@@ -59,7 +61,7 @@ async function one(d, lots, pkCount) {
 }
 let done = 0, err = 0, nolot = 0; const t0 = Date.now();
 const byCell = {}; for (const d of todo) (byCell[cellOf(d.lat, d.lon)] = byCell[cellOf(d.lat, d.lon)] || []).push(d);
-const save = () => { out.built = new Date().toISOString().slice(0, 10); writeFileSync(OUT, JSON.stringify(out)); };
+const save = () => { out.built = new Date().toISOString().slice(0, 10); writeSafe(OUT, JSON.stringify(out)); };
 for (const c of Object.keys(byCell)) {   /* area by area, saved after each: a stop loses at most one area */
   if (Date.now() - t0 > MINS * 60000) break;
   const lots = await fetchCell(c), q = byCell[c].slice();
