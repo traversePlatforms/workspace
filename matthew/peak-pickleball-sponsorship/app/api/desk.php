@@ -46,6 +46,8 @@ function state(): array {
             case 'next': if (isset($L[$id])) $L[$id]['next'] = $r['next']; break;
             case 'contact': if (isset($L[$id])) $L[$id]['added'][] = $r['contact'] + ['by' => $r['by']]; break;
             case 'site': if (isset($L[$id])) $L[$id]['site'] = $r['site']; break;
+            case 'leaddel': if (isset($L[$id])) $L[$id]['off'] = ['at' => $r['at'], 'by' => $r['by']]; break;   /* removed from the desk; the log keeps it (2026-10-24) */
+            case 'leadback': if (isset($L[$id])) unset($L[$id]['off']); break;
             case 'signed': if (isset($L[$id])) $L[$id]['signed'] = $r['signed'] + ['by' => $r['by'], 'at' => $r['at']]; break;
             case 'todo': if (isset($L[$id])) $L[$id]['todos'][] = ['k' => $r['k'], 'text' => $r['text'], 'done' => false, 'by' => $r['by'], 'at' => $r['at']]; break;
             case 'tododone': if (isset($L[$id])) foreach ($L[$id]['todos'] as &$x) { if ($x['k'] === $r['k']) $x['done'] = (bool) $r['done']; } unset($x); break;
@@ -110,7 +112,22 @@ $ME = (string) $me['name'];   /* the role is sent back to the page but gates not
 if ($action === 'signout') { unset($ses[$tokH]); jwrite('sessions.json', $ses); setcookie('peakdesk', '', ['expires' => 1, 'path' => '/']); out(['ok' => true]); }
 if ($action === 'me') out(['ok' => true, 'name' => $ME, 'role' => $me['role']]);
 
-function needLead(array $S, string $id): array { if (!preg_match('/^[a-z0-9]{6,24}$/', $id) || !isset($S['leads'][$id])) fail('No such lead.', 404); return $S['leads'][$id]; }
+function needLead(array $S, string $id, bool $removedOk = false): array {
+    if (!preg_match('/^[a-z0-9]{6,24}$/', $id) || !isset($S['leads'][$id])) fail('No such lead.', 404);
+    if (!$removedOk && !empty($S['leads'][$id]['off'])) fail('That company was removed. Bring it back first.', 409);
+    return $S['leads'][$id];
+}
+function sameName(array $S, string $n): ?array { foreach ($S['leads'] as $l) if (strtolower(trim($l['name'])) === strtolower(trim($n))) return $l; return null; }
+function newLead(string $ME, array $body): array {   /* a company we add, as a lead or as a sponsor already signed */
+    $site = clean($body['site'] ?? '', 160); if ($site !== '' && !preg_match('#^(https?://)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(/\S*)?$#i', $site)) fail('That website does not look right.');
+    $n = clean($body['name'] ?? '', 100);
+    $id = substr(sha1('added|' . $n . '|' . microtime()), 0, 10);
+    return ['id' => $id, 'list' => 'added', 'name' => $n, 'kind' => clean($body['kind'] ?? '', 60), 'score' => null, 'why' => clean($body['why'] ?? '', 400), 'route' => '', 'phone' => clean($body['phone'] ?? '', 40), 'site' => $site, 'by' => $ME];
+}
+function nameFree(array $S, string $n): void {
+    if ($n === '') fail('Give the company name.');
+    $x = sameName($S, $n); if ($x) fail(!empty($x['off']) ? 'That company was removed. Bring it back from Removed companies.' : 'That company is already on the list.');
+}
 function needTour(array $S, string $tid): array { foreach ($S['tours'] as $t) if ($t['tid'] === $tid) return $t; fail('No such tour.', 404); return []; }
 function setStatus(string $id, string $st, string $by): void { logAdd(['t' => 'status', 'id' => $id, 'status' => $st, 'by' => $by, 'at' => time()]); }
 function lines($in): array {   /* package lines for a proposal or a signed deal */
@@ -128,7 +145,8 @@ if ($action === 'data') {
     $S = state(); $sd = jread('seed.json', []);
     /* who can sign in (names only) with what each has done; the read-only check account is left out */
     $people = []; foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) if ($a['name'] !== 'Claude Check') $people[$a['name']] = $S['team'][$a['name']] ?? [];
-    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'leads' => array_values($S['leads']), 'tours' => $S['tours'], 'proposals' => $S['proposals'], 'packages' => $S['packages'], 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? [], 'pl' => $S['pl'], 'team' => $people, 'hunterLeft' => hunterLeft()]);
+    $removed = []; foreach ($S['leads'] as $l) if (!empty($l['off'])) $removed[] = ['id' => $l['id'], 'name' => $l['name'], 'list' => $l['list'], 'status' => $l['status'], 'at' => $l['off']['at'], 'by' => $l['off']['by']];
+    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'leads' => array_values(array_filter($S['leads'], fn($l) => empty($l['off']))), 'removed' => $removed, 'tours' => $S['tours'], 'proposals' => $S['proposals'], 'packages' => $S['packages'], 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? [], 'pl' => $S['pl'], 'team' => $people, 'hunterLeft' => hunterLeft()]);
 }
 if (!$isPost) fail('POST required', 405);
 $S = state();
@@ -160,12 +178,33 @@ switch ($action) {
         logAdd(['t' => 'contact', 'id' => $id, 'contact' => $c, 'by' => $ME, 'at' => time()]); out(['ok' => true]);
     }
     case 'lead': {
-        $n = clean($body['name'] ?? '', 100); if ($n === '') fail('Give the company name.');
-        foreach ($S['leads'] as $l) if (strtolower($l['name']) === strtolower($n)) fail('That company is already on the list.');
-        $site = clean($body['site'] ?? '', 160); if ($site !== '' && !preg_match('#^(https?://)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(/\S*)?$#i', $site)) fail('That website does not look right.');
-        $id = substr(sha1('added|' . $n . '|' . microtime()), 0, 10);
-        $lead = ['id' => $id, 'list' => 'added', 'name' => $n, 'kind' => clean($body['kind'] ?? '', 60), 'score' => null, 'why' => clean($body['why'] ?? '', 400), 'route' => '', 'phone' => clean($body['phone'] ?? '', 40), 'site' => $site, 'by' => $ME];
-        logAdd(['t' => 'lead', 'id' => $id, 'lead' => $lead, 'by' => $ME, 'at' => time()]); out(['ok' => true, 'id' => $id]);
+        nameFree($S, clean($body['name'] ?? '', 100)); $lead = newLead($ME, $body);
+        logAdd(['t' => 'lead', 'id' => $lead['id'], 'lead' => $lead, 'by' => $ME, 'at' => time()]); out(['ok' => true, 'id' => $lead['id']]);
+    }
+    case 'sponsor': {
+        /* a sponsor we just got, in one step: the company, who to deal with, what they bought (2026-10-24, Matthew: "Add function to add
+           sponsors as we get them") */
+        nameFree($S, clean($body['name'] ?? '', 100));
+        $d = (string) ($body['start'] ?? ''); if (!okDay($d)) fail('Pick the start date.');
+        $m = (int) ($body['months'] ?? 12); if ($m < 1 || $m > 60) fail('Give the length in months (1 to 60).');
+        $c = ['name' => clean($body['cname'] ?? '', 80), 'pos' => clean($body['cpos'] ?? '', 80), 'email' => clean($body['cemail'] ?? '', 120), 'phone' => clean($body['cphone'] ?? '', 40)];
+        if ($c['email'] !== '' && !filter_var($c['email'], FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+        $lead = newLead($ME, $body); $id = $lead['id']; $lines = lines($body['lines'] ?? []); $now = time();
+        logAdd(['t' => 'lead', 'id' => $id, 'lead' => $lead, 'by' => $ME, 'at' => $now]);
+        if ($c['name'] !== '' || $c['email'] !== '' || $c['phone'] !== '') logAdd(['t' => 'contact', 'id' => $id, 'contact' => $c, 'by' => $ME, 'at' => $now]);
+        logAdd(['t' => 'signed', 'id' => $id, 'signed' => ['lines' => $lines, 'total' => array_sum(array_map(fn($x) => $x['price'] * $x['qty'], $lines)), 'start' => $d, 'months' => $m, 'who' => clean($body['who'] ?? '', 120), 'note' => clean($body['note'] ?? '', 600)], 'by' => $ME, 'at' => $now]);
+        setStatus($id, 'signed', $ME);
+        out(['ok' => true, 'id' => $id]);
+    }
+    case 'leaddel': {
+        /* take a company or sponsor off the desk (2026-10-24, Matthew: "Add function to remove sponsors/ companies"); its notes, history
+           and proposals stay in the log, and it can be brought back */
+        $id = (string) ($body['id'] ?? ''); needLead($S, $id);
+        logAdd(['t' => 'leaddel', 'id' => $id, 'by' => $ME, 'at' => time()]); out(['ok' => true]);
+    }
+    case 'leadback': {
+        $id = (string) ($body['id'] ?? ''); $L = needLead($S, $id, true); if (empty($L['off'])) fail('That company is on the desk already.');
+        logAdd(['t' => 'leadback', 'id' => $id, 'by' => $ME, 'at' => time()]); out(['ok' => true]);
     }
     case 'site': {
         $id = (string) ($body['id'] ?? ''); needLead($S, $id); $site = clean($body['site'] ?? '', 160);

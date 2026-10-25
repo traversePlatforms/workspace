@@ -76,6 +76,19 @@ try {
   ok((await b('site', { id: ren.id, site: 'http://127.0.0.1/' })).error === 'That website does not look right.' && (await b('site', { id: ren.id, site: 'localtest.me' })).ok && (await b('scan', { id: ren.id })).scan.err === 'not a public site', 'the server will not read its own or a private address');
   ok((await b('scan', { id: ABC.id, hunter: true })).error === 'Hunter is not set up here.', 'Hunter is off without its key');
   ok((await b('tourdel', { tid: t.tid })).ok && !(await b('data')).tours.some((x) => x.tid === t.tid), 'a tour cancels');
+  console.log('Add and remove (2026-10-24)');
+  ok((await b('sponsor', { name: 'Kaiser Permanente', start: today(), months: 12 })).error === 'That company is already on the list.', 'adding a sponsor already on the desk is refused');
+  const sp = await b('sponsor', { name: 'Test Sponsor Co', kind: 'Dentist', cname: 'Sam Test', cpos: 'Owner', cemail: 'sam@example.com', start: today(), months: 6, lines: [] });
+  ok(sp.ok, 'a new sponsor is added in one step');
+  let D4 = await b('data'); let SP = D4.leads.find((l) => l.id === sp.id);
+  ok(SP && SP.status === 'signed' && SP.signed.months === 6 && SP.added[0].email === 'sam@example.com' && SP.list === 'added', 'it is Signed, with its contact and its 6 months');
+  ok((await b('leaddel', { id: sp.id })).ok, 'a sponsor is removed');
+  D4 = await b('data');
+  ok(!D4.leads.some((l) => l.id === sp.id) && D4.removed.some((x) => x.id === sp.id && x.name === 'Test Sponsor Co'), 'it leaves the desk and shows under Removed');
+  ok((await b('note', { id: sp.id, note: 'x' })).error === 'That company was removed. Bring it back first.', 'a removed company takes no changes');
+  ok((await b('lead', { name: 'test sponsor co' })).error === 'That company was removed. Bring it back from Removed companies.', 'adding it again points to Removed companies');
+  ok((await b('leadback', { id: sp.id })).ok && (await b('data')).leads.find((l) => l.id === sp.id).status === 'signed', 'brought back, still Signed');
+  ok((await b('leaddel', { id: sp.id })).ok, 'removed again (for the screens)');
   const t2 = await b('tour', { lead: ABC.id, date: today(), time: '00:00', who: 'Dr Test' });
   ok(t2.ok, 'a tour for ABC today');
   writeFileSync(LOG, readFileSync(LOG, 'utf8') + JSON.stringify({ t: 'tour', tid: 'pasttest01', id: ABC.id, lead: ABC.id, date: later(-2), time: '10:00', who: '', note: '', by: 'Test', at: 1 }) + '\n');   /* a tour two days ago, written straight in: the desk refuses past dates */
@@ -152,6 +165,23 @@ try {
   await shot('desk-pl.png');
   await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Report').click()`); await sleep(200);
   ok(await js(`/Who is on the desk/.test(document.querySelector('main').textContent)`), 'the Report shows who is on the desk and what each did');
+  /* add a sponsor, remove, bring back */
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Signed').click()`); await sleep(250);
+  await js(`[...document.querySelectorAll('main button')].find(b=>b.textContent==='+ Add a sponsor').click()`); await sleep(250);
+  ok(await js(`!!document.querySelector('.sheet')&&/Add a sponsor/.test(document.querySelector('.sheet h2').textContent)`), 'Signed: + Add a sponsor opens the form');
+  await js(`(()=>{const i=document.querySelector('.sheet input');i.value='kaiser permanente';i.dispatchEvent(new Event('input'));return 1})()`); await sleep(100);
+  ok(await js(`/already on the desk/.test(document.querySelector('.sheet').textContent)`), 'typing a company already on the desk offers to mark that one signed');
+  await js(`(()=>{const i=document.querySelector('.sheet input');i.value='Sheet Sponsor LLC';i.dispatchEvent(new Event('input'));[...document.querySelectorAll('.sheet button')].find(b=>b.textContent==='Add the sponsor').click();return 1})()`); await sleep(700);
+  ok(await js(`!document.querySelector('.sheet')&&/Sheet Sponsor LLC/.test(document.querySelector('main').textContent)`), 'the new sponsor is added and listed under Signed');
+  await shot('desk-add-sponsor.png');
+  await js(`(()=>{const c=[...document.querySelectorAll('main .card')].find(c=>/Sheet Sponsor LLC/.test(c.textContent));[...c.querySelectorAll('button')].find(b=>b.textContent==='Remove').click();return 1})()`); await sleep(700);
+  ok(await js(`!/Sheet Sponsor LLC/.test(document.querySelector('main').textContent)`), 'Remove takes it off the Signed list');
+  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Pipeline').click()`); await sleep(250);
+  await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>/^Removed/.test(b.textContent)).click()`); await sleep(250);
+  ok(await js(`/Sheet Sponsor LLC/.test(document.querySelector('main .list').textContent)&&/Test Sponsor Co/.test(document.querySelector('main .list').textContent)`), 'the Pipeline lists Removed companies');
+  await js(`(()=>{const r=[...document.querySelectorAll('main .row')].find(r=>/Sheet Sponsor LLC/.test(r.textContent));r.querySelector('button').click();return 1})()`); await sleep(700);
+  ok((await b('data')).leads.some((l) => l.name === 'Sheet Sponsor LLC'), 'Bring back puts it on the desk again');
+  await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>/^New leads/.test(b.textContent)).click()`); await sleep(250);
   /* phone */
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Pipeline').click()`); await sleep(300);

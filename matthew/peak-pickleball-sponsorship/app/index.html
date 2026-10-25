@@ -227,6 +227,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     c.appendChild(vw);
     var lc = el('div', 'chips');
     if (S.view === 'list') LISTS.forEach(function (x) { var n = D.leads.filter(function (l) { return l.list === x[0]; }).length; if (!n && x[0] === 'added') return; var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.list === x[0] && !S.due)); b.addEventListener('click', function () { S.list = x[0]; S.due = false; S.sel = null; draw(); }); lc.appendChild(b); });
+    if (S.view === 'list' && (D.removed || []).length) { var rb = el('button', null, 'Removed'); rb.type = 'button'; rb.appendChild(el('b', null, String(D.removed.length))); rb.setAttribute('aria-pressed', String(S.list === 'removed' && !S.due)); rb.addEventListener('click', function () { S.list = 'removed'; S.due = false; S.sel = null; draw(); }); lc.appendChild(rb); }
     c.appendChild(lc);
     var q = el('input', 'search'); q.type = 'search'; q.placeholder = 'Search companies'; q.value = S.q; q.addEventListener('input', function () { S.q = q.value; refresh(); }); c.appendChild(q);
     var add = el('button', 'btn ghost small', '+ Add a company'); add.type = 'button'; add.addEventListener('click', addForm); c.appendChild(add);
@@ -237,6 +238,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
       if (S.sel && lead(S.sel)) { bs.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
       return;
     }
+    if (S.list === 'removed' && !S.due) return drawRemoved();
     var inList = S.due ? D.leads.filter(isDue) : D.leads.filter(function (l) { return l.list === S.list; });
     var sc = el('div', 'chips'); sc.style.marginBottom = '12px';
     [['all', 'All']].concat(Object.keys(D.statuses).map(function (k) { return [k, D.statuses[k]]; })).forEach(function (x) {
@@ -279,6 +281,18 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     }
     drawRows();
     if (S.sel && lead(S.sel)) { split.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
+  }
+  /* companies taken off the desk, newest first, each with Bring back (2026-10-24) */
+  function drawRemoved() {
+    var R = (S.data.removed || []).slice().sort(function (a, b) { return b.at - a.at; }), list = el('div', 'list');
+    if (!R.length) { S.list = 'new'; return draw(); }
+    R.forEach(function (x) {
+      var r = el('div', 'row'); r.style.cursor = 'default'; r.appendChild(el('div', 'sc', '–'));
+      var nm = el('div', 'nm'); nm.appendChild(el('b', null, x.name)); nm.appendChild(el('small', null, [LISTNAME[x.list], stName(x.status), 'removed by ' + x.by + ', ' + ago(x.at)].filter(Boolean).join(' · '))); r.appendChild(nm);
+      var bb = el('button', 'btn small ghost', 'Bring back'); bb.type = 'button'; bb.addEventListener('click', function () { save('leadback', { id: x.id }, 'Back on the desk: ' + x.name); }); r.appendChild(bb);
+      list.appendChild(r);
+    });
+    main.appendChild(list);
   }
   function detail(l) {
     var d = el('aside', 'detail');
@@ -360,6 +374,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     d.appendChild(s5);
     /* status changes on their own, under the notes */
     if ((l.log || []).length) { var s6 = el('div', 'sec'); s6.appendChild(el('h3', null, 'History')); l.log.slice().reverse().slice(0, 8).forEach(function (n) { var x = el('div', 'note', n.what); x.appendChild(el('small', null, n.by + ', ' + ago(n.at))); s6.appendChild(x); }); d.appendChild(s6); }
+    var rmv = el('button', 'lnk', 'Remove this company from the desk'); rmv.type = 'button'; rmv.style.cssText = 'color:var(--warn);margin-top:14px;display:block'; rmv.addEventListener('click', function () { removeLead(l); }); d.appendChild(rmv);
     return d;
   }
   function addForm() {
@@ -635,10 +650,26 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var close = function () { bg.remove(); }; x.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
     s.appendChild(x); s.appendChild(el('h2', null, title)); bg.appendChild(s); document.body.appendChild(bg); return { box: s, close: close };
   }
-  /* what a sponsor bought, from when, for how long (2026-10-24, Matthew: "Add a signed on section") */
+  /* what a sponsor bought, from when, for how long (2026-10-24, Matthew: "Add a signed on section"). With no company given it adds a new
+     sponsor in one step: the company, who to deal with, what they bought (2026-10-24, Matthew: "add sponsors as we get them") */
   function signedForm(l) {
-    var sh = sheet('Signed: ' + l.name), f = el('div', 'form'), have = dealLines(l), picks = [], named = {};
-    f.appendChild(el('label', 'lab', 'What they bought' + (!l.signed && have.length ? ' (from the last proposal)' : '')));
+    var isNew = !l; l = l || { id: '', name: '', status: '', contacts: [] };
+    var sh = sheet(isNew ? 'Add a sponsor' : 'Signed: ' + l.name), f = el('div', 'form'), have = isNew ? [] : dealLines(l), picks = [], named = {};
+    var inp = function (ph, type) { var i = el('input'); i.placeholder = ph; if (type) i.type = type; f.appendChild(i); return i; };
+    if (isNew) {
+      var cN = inp('Company name'), warn = el('div'); f.appendChild(warn);
+      /* already on the desk: mark that one signed instead of adding it twice */
+      cN.addEventListener('input', function () {
+        warn.textContent = ''; var t = cN.value.trim().toLowerCase(); if (!t) return;
+        var hit = S.data.leads.filter(function (x) { return x.name.trim().toLowerCase() === t; })[0], gone = (S.data.removed || []).filter(function (x) { return x.name.trim().toLowerCase() === t; })[0];
+        if (hit) { warn.className = 'warnline'; warn.appendChild(document.createTextNode(hit.name + ' is already on the desk. ')); var mb = el('button', 'lnk', 'Mark that one signed'); mb.type = 'button'; mb.addEventListener('click', function () { sh.close(); signedForm(hit); }); warn.appendChild(mb); }
+        else if (gone) { warn.className = 'warnline'; warn.textContent = gone.name + ' was removed. Bring it back from Removed companies in the Pipeline, then mark it signed.'; }
+      });
+      var cK = inp('Kind (e.g. Car dealer)'), cS = inp('Website (the desk looks them up from it)'), cP = inp('Company phone');
+      f.appendChild(el('label', 'lab', 'Who we deal with'));
+      var pN = inp('Name'), pR = inp('Role (e.g. Marketing Director)'), pE = inp('Email', 'email'), pP = inp('Phone');
+    }
+    f.appendChild(el('label', 'lab', 'What they bought' + (!isNew && !l.signed && have.length ? ' (from the last proposal)' : '')));
     var row = function (name, price, per, qty, on) {
       var r = el('label'); r.style.cssText = 'display:flex;gap:8px;align-items:center';
       var cb = el('input'); cb.type = 'checkbox'; cb.style.width = 'auto'; cb.checked = on; var q = el('input'); q.type = 'number'; q.min = 1; q.max = 50; q.value = qty; q.style.width = '64px';
@@ -654,14 +685,25 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var who = el('input'); who.placeholder = 'Who signed (name, role)'; var pick = (l.contacts || []).filter(function (x) { return x.pick; })[0];
     who.value = l.signed ? l.signed.who : (pick && pick.name && pick.name !== 'general inbox' ? pick.name + (pick.pos ? ', ' + pick.pos : '') : ''); f.appendChild(who);
     var nt = el('textarea'); nt.rows = 2; nt.placeholder = 'Anything agreed (logo files, when signs go up, payment terms)'; nt.value = l.signed ? l.signed.note : ''; f.appendChild(nt);
-    var go = el('button', 'btn', l.status === 'signed' ? 'Save' : 'Mark Signed'); go.type = 'button'; f.appendChild(go);
+    var go = el('button', 'btn', isNew ? 'Add the sponsor' : l.status === 'signed' ? 'Save' : 'Mark Signed'); go.type = 'button'; f.appendChild(go);
     go.addEventListener('click', function () {
       var lines = picks.filter(function (x) { return x.cb.checked; }).map(function (x) { return { name: x.name, price: x.price, qty: +x.q.value || 1, per: x.per }; });
       var ep = parseInt(String(eP.value).replace(/\D/g, ''), 10); if (eN.value.trim() && ep >= 0) lines.push({ name: eN.value.trim(), price: ep, qty: 1, per: 'year' });
+      var deal = { lines: lines, start: st.value, months: +mo.value || 12, who: who.value, note: nt.value };
       go.disabled = true;
-      save('signed', { id: l.id, lines: lines, start: st.value, months: +mo.value || 12, who: who.value, note: nt.value }, 'Saved: ' + l.name + ' signed').then(function (j) { go.disabled = false; if (j && j.ok) sh.close(); });
+      if (!isNew) return save('signed', Object.assign({ id: l.id }, deal), 'Saved: ' + l.name + ' signed').then(function (j) { go.disabled = false; if (j && j.ok) sh.close(); });
+      if (!who.value.trim() && pN.value.trim()) deal.who = pN.value.trim() + (pR.value.trim() ? ', ' + pR.value.trim() : '');
+      save('sponsor', Object.assign({ name: cN.value, kind: cK.value, site: cS.value, phone: cP.value, cname: pN.value, cpos: pR.value, cemail: pE.value, cphone: pP.value }, deal), 'Added: ' + cN.value.trim()).then(function (j) {
+        go.disabled = false; if (!j || !j.ok) return;
+        sh.close(); if (cS.value.trim() && lead(j.id)) lookUp(lead(j.id));
+      });
     });
-    sh.box.appendChild(f);
+    sh.box.appendChild(f); if (isNew) cN.focus();
+  }
+  /* take a company or sponsor off the desk; it can come back from Removed companies (2026-10-24, Matthew: "remove sponsors/ companies") */
+  function removeLead(l) {
+    if (!confirm('Remove ' + l.name + ' from the desk?\n\nIts notes, history and proposals are kept, and you can bring it back from Removed companies in the Pipeline.')) return;
+    save('leaddel', { id: l.id }, 'Removed: ' + l.name).then(function (j) { if (j && j.ok && S.sel === l.id) { S.sel = null; draw(); } });
   }
 
   /* ---- signed sponsors: what they bought, renewals, and what we owe them (2026-10-24) ---- */
@@ -673,8 +715,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var soon = L.filter(function (l) { var r = renewOf(l); return r && daysTo(r) <= 90; }).length, todo = L.reduce(function (n, l) { return n + (l.todos || []).filter(function (x) { return !x.done; }).length; }, 0);
     [[String(L.length), 'sponsors signed'], [money(yr), 'a year, all of them'], [String(soon), 'renewals in the next 90 days'], [String(todo), 'to-dos open']].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
     main.appendChild(k);
-    main.appendChild(el('h2', null, 'Signed sponsors'));
-    if (!L.length) { main.appendChild(el('div', 'empty', 'No sponsors signed yet. When one signs, mark it Signed on its company in the Pipeline and add what they bought.')); return; }
+    var hd = el('div', 'controls'); hd.appendChild(el('h2', null, 'Signed sponsors')).style.margin = '0 auto 0 0';
+    var ad = el('button', 'btn small', '+ Add a sponsor'); ad.type = 'button'; ad.addEventListener('click', function () { signedForm(null); }); hd.appendChild(ad); main.appendChild(hd);
+    if (!L.length) { main.appendChild(el('div', 'empty', 'No sponsors signed yet. Add one with + Add a sponsor, or mark a company Signed in the Pipeline.')); return; }
     L.forEach(function (l) {
       var c = el('div', 'card'), v = leadValue(l), r = renewOf(l);
       c.appendChild(el('h3', null, l.name + (v ? ' · ' + money(v) + ' a year' : '')));
@@ -700,6 +743,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
       var row = el('div', 'seg'); row.style.marginTop = '10px';
       var ed = el('button', null, l.signed ? 'Edit the details' : 'Add the details'); ed.type = 'button'; ed.addEventListener('click', function () { signedForm(l); }); row.appendChild(ed);
       var op = el('button', null, 'Open the company'); op.type = 'button'; op.addEventListener('click', function () { openLead(l); }); row.appendChild(op);
+      var rv = el('button', null, 'Remove'); rv.type = 'button'; rv.addEventListener('click', function () { removeLead(l); }); row.appendChild(rv);
       c.appendChild(row); main.appendChild(c);
     });
   }

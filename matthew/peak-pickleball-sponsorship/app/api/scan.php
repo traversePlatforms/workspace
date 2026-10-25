@@ -308,6 +308,7 @@ function rescanDue(int $max, int $ageH = 20): int {
     if (!flock($lk, LOCK_EX | LOCK_NB)) { echo date('c') . " rescan: one is already running\n"; return 0; }
     $S = state(); $sc = jread('scans.json', []); $due = [];
     foreach ($S['leads'] as $id => $L) {
+        if (!empty($L['off'])) continue;   /* removed from the desk */
         $web = siteOf($L) !== '' || srcUrl($L) !== ''; $at = (int) ($sc[$id]['at'] ?? 0);
         $webDue = $web && $at <= time() - $ageH * 3600;
         if (!$webDue && !regDue($sc[$id] ?? null)) continue;   /* every lead gets its state filing checked once a month, website or not */
