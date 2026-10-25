@@ -16,7 +16,7 @@ if (!$preview) @file_put_contents("$dir/scans.csv", gmdate('c') . ",$piece\n", F
 
 /* ---- fill these in when they exist; an empty one hides its button ---- */
 $LINKS = [
-  'facebook' => '',   /* the 365 Aeration & Seeding Facebook page, e.g. https://www.facebook.com/... */
+  'facebook' => 'https://www.facebook.com/1418675127985724',   /* the Sixfold 365 Page (was 365 Aeration and Seeding); no username set, so by id (2026-10-25) */
   'reviews'  => '',   /* a Google review profile, once 365 has one (only then is a reviews button shown) */
 ];
 $PHONE = '+17208304553'; $PHONE_SHOWN = '(720) 830-4553';
