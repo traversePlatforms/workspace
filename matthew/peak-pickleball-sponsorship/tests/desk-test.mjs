@@ -70,6 +70,7 @@ try {
   ok((await b('site', { id: ABC.id, site: 'not a site' })).error === 'That website does not look right.', 'a bad website is refused');
   const sc = await b('scan', { id: ABC.id });
   ok(sc.ok && sc.scan.ok && sc.scan.phones.some((p) => p.phone === '(719) 266-6661'), 'looking up ABC Family reads its website: the phone' + (sc.scan && !sc.scan.ok ? ' (' + sc.scan.err + ')' : ''));
+  ok(sc.scan && sc.scan.reg && sc.scan.reg.at > 0 && sc.scan.reg.none === true, 'the state filing is checked too: ABC Family has none under that exact name');
   const ren = D3.leads.find((l) => l.list === 'renew');
   ok((await b('scan', { id: ren.id })).error === 'Add their website first.', 'a company with no website asks for one');
   ok((await b('site', { id: ren.id, site: 'http://127.0.0.1/' })).error === 'That website does not look right.' && (await b('site', { id: ren.id, site: 'localtest.me' })).ok && (await b('scan', { id: ren.id })).scan.err === 'not a public site', 'the server will not read its own or a private address');

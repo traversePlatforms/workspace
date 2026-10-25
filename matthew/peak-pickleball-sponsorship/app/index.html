@@ -590,6 +590,21 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
       if (s.changes && s.changes.length) { sec.appendChild(el('h4', null, 'What changed')); s.changes.slice().reverse().slice(0, 5).forEach(function (c) { var d = el('div', 'it', c.what); d.appendChild(el('small', null, ' · ' + ago(c.at))); sec.appendChild(d); }); }
     } else if (site || src) sec.appendChild(el('div', 'it', 'Not looked up yet.'));
     if (s && s.hunter) sec.appendChild(el('small', null, 'Hunter, ' + ago(s.hunter.at) + ': ' + (s.hunter.people.length ? plural(s.hunter.people.length, 'person') + ' at ' + s.hunter.domain + ', listed under How to reach them' : 'nobody found at ' + s.hunter.domain)));
+    /* the company's filing with the Colorado Secretary of State (2026-10-24): legal name, standing, the registered agent when a person */
+    var rg = s && s.reg;
+    if (rg && rg.at) {
+      sec.appendChild(el('h4', null, 'State business filing'));
+      if (rg.legal) {
+        var rd = el('div', 'it', rg.legal + (rg.status ? ' · ' + rg.status : '') + (rg.formed ? ' · formed ' + rg.formed.slice(0, 4) : '') + (rg.city ? ' · ' + rg.city : '') + (rg.viaTrade ? ' (uses this name as a trade name)' : ''));
+        if (rg.id) { rd.appendChild(document.createTextNode(' ')); var ra = el('a', null, 'State record ›'); ra.href = 'https://www.coloradosos.gov/biz/BusinessEntityDetail.do?masterFileId=' + encodeURIComponent(rg.id); ra.target = '_blank'; ra.rel = 'noopener'; rd.appendChild(ra); }
+        sec.appendChild(rd);
+      }
+      if (rg.agent) sec.appendChild(el('div', 'it', 'Registered agent: ' + rg.agent + '. At a small business this is often the owner; worth asking for by name.'));
+      (rg.trade || []).forEach(function (p) { sec.appendChild(el('div', 'it', 'Trade name filed by ' + p + '.')); });
+      if (rg.many) sec.appendChild(el('div', 'it', rg.many + ' active filings share this name and none is in the Springs area, so none is matched.'));
+      if (rg.none) sec.appendChild(el('div', 'it', 'No active filing under this exact name; it may trade under another legal name.'));
+      sec.appendChild(el('small', null, 'Colorado Secretary of State open data, checked ' + ago(rg.at) + '.'));
+    }
     var row = el('div', 'seg'); row.style.marginTop = '8px';
     if (site || src) { var lb = el('button', null, s && s.at ? 'Look up again' : 'Look them up'); lb.type = 'button'; lb.addEventListener('click', function () { lookUp(l, false, lb); }); row.appendChild(lb); }
     var left = S.data.hunterLeft;

@@ -250,15 +250,53 @@ function hunterFind(string $domain): array {
     return $out;
 }
 
-/* one look-up, merged into scans.json under a lock (the hourly job and a tap can meet) */
+/* The Colorado Secretary of State's business filings (2026-10-24, Matthew: "go ahead"): open data at data.colorado.gov, refreshed daily.
+   Business entities (4ykn-tg5h) and trade names (u7sb-g482), matched on the exact name only (LLC, Inc and the like set aside): an
+   active filing, and when several share the name, the one in the Springs area or none. The registered agent, when a person, is often
+   the owner at a small business; that is all it is said to be. */
+function regNorm(string $s): string {
+    $s = strtoupper($s); $s = preg_replace('/,?\s*(DELINQUENT|DISSOLVED|EXPIRED|VOLUNTARILY|ADMINISTRATIVELY)\b.*$/', '', $s); $s = str_replace('&', ' AND ', $s);
+    $s = preg_replace('/[^A-Z0-9 ]+/', ' ', $s); $s = preg_replace('/\b(THE|LLC|L L C|INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|LTD|PC|P C|PLLC|LLP|LP|DBA)\b/', ' ', $s);
+    return trim(preg_replace('/\s+/', ' ', $s));
+}
+function regTitle(string $s): string { return ucwords(strtolower(trim(preg_replace('/\s+/', ' ', $s)))); }
+function regFind(array $L): array {
+    $out = ['at' => time()]; $n = regNorm(preg_replace('/\s*\(.*?\)\s*/', ' ', (string) $L['name']));
+    if (strlen($n) < 4) return $out + ['none' => true];
+    $first = str_replace("'", "''", implode(' ', array_slice(explode(' ', $n), 0, 2)));
+    $q = fn(string $ds, string $where, string $sel) => scanJson("https://data.colorado.gov/resource/$ds.json?" . http_build_query(['$where' => $where, '$select' => $sel, '$limit' => '50']));
+    $E = $q('4ykn-tg5h', "upper(entityname) like '$first%'", 'entityname,entitystatus,entityid,principalcity,entityformdate,agentfirstname,agentlastname,agentorganizationname');
+    $T = $q('u7sb-g482', "upper(tradenamedescription) like '$first%'", 'tradenamedescription,entitystatus,entityid,registrantorganization,firstname,lastname,city');
+    if ($E === null || $T === null) return ['at' => 0, 'err' => 'the state data did not answer'];   /* tried again next run */
+    $local = '/colorado springs|monument|fountain|peyton|falcon|manitou|woodland park|security|widefield|black forest/i';
+    $good = fn($x) => (bool) preg_match('/good|exists|active/i', (string) ($x['entitystatus'] ?? ''));
+    $e = array_values(array_filter($E, fn($x) => regNorm((string) ($x['entityname'] ?? '')) === $n && $good($x)));
+    $t = array_values(array_filter($T, fn($x) => regNorm((string) ($x['tradenamedescription'] ?? '')) === $n && $good($x)));
+    $ent = count($e) === 1 ? $e[0] : null;
+    if (!$ent && count($e) > 1) { $loc = array_values(array_filter($e, fn($x) => preg_match($local, (string) ($x['principalcity'] ?? '')))); if (count($loc) === 1) $ent = $loc[0]; else $out['many'] = count($e); }
+    if ($ent) {
+        $out += ['legal' => preg_replace('/,?\s*(Delinquent|Dissolved).*$/i', '', (string) $ent['entityname']), 'status' => (string) $ent['entitystatus'], 'id' => (string) $ent['entityid'], 'city' => regTitle((string) ($ent['principalcity'] ?? '')), 'formed' => substr((string) ($ent['entityformdate'] ?? ''), 0, 10)];
+        $local2 = preg_match($local, (string) ($ent['principalcity'] ?? ''));
+        if (!empty($ent['agentlastname']) && ($L['list'] !== 'new' || $local2)) $out['agent'] = regTitle(($ent['agentfirstname'] ?? '') . ' ' . $ent['agentlastname']);   /* a big company's agent sits at head office: no use to Brandon */
+        elseif (!empty($ent['agentorganizationname'])) $out['agentOrg'] = true;
+    }
+    foreach ($t as $x) if (!empty($x['lastname']) && (empty($x['city']) || preg_match($local, (string) $x['city']))) $out['trade'][] = regTitle(($x['firstname'] ?? '') . ' ' . $x['lastname']);
+    if (!$ent && empty($out['many']) && empty($out['trade'])) { $tr = array_values(array_filter($t, fn($x) => !empty($x['registrantorganization']))); if ($tr) $out += ['legal' => (string) $tr[0]['registrantorganization'], 'id' => (string) $tr[0]['entityid'], 'viaTrade' => true]; else $out['none'] = true; }
+    return $out;
+}
+function regDue(?array $cur): bool { return empty($cur['reg']['at']) || $cur['reg']['at'] < time() - 30 * 86400; }
+
+/* one look-up, merged into scans.json under a lock (the hourly job and a tap can meet); the state filing rides along once a month */
 function scanAndSave(array $L, string $what = 'site'): array {
     $id = (string) $L['id']; $prev = jread('scans.json', [])[$id] ?? null;
-    $new = $what === 'hunter' ? null : scanSite($L, $prev);
+    $new = $what === 'hunter' || (siteOf($L) === '' && srcUrl($L) === '') ? null : scanSite($L, $prev);
     $hun = $what === 'hunter' ? hunterFind(hunterDomain($L)) : null;
+    $reg = $what !== 'hunter' && regDue($prev) ? regFind($L) : null;
     $fh = fopen(DATA_DIR . '/scans.lock', 'c'); flock($fh, LOCK_EX);
     $all = jread('scans.json', []); $cur = $all[$id] ?? null;
-    if ($new) { $new['changes'] = scanChanges($cur, $new); if (isset($cur['hunter'])) $new['hunter'] = $cur['hunter']; if (!empty($cur['firstAt'])) $new['firstAt'] = $cur['firstAt']; else $new['firstAt'] = $new['at']; $cur = $new; }
+    if ($new) { $new['changes'] = scanChanges($cur, $new); foreach (['hunter', 'reg'] as $k) if (isset($cur[$k])) $new[$k] = $cur[$k]; $new['firstAt'] = !empty($cur['firstAt']) ? $cur['firstAt'] : $new['at']; $cur = $new; }
     if ($hun) { $cur = ($cur ?? ['at' => 0]); $cur['hunter'] = $hun; }
+    if ($reg) { $cur = ($cur ?? ['at' => 0]); $cur['reg'] = $reg; }
     $all[$id] = $cur; jwrite('scans.json', $all);
     flock($fh, LOCK_UN); fclose($fh);
     return $cur;
@@ -270,15 +308,17 @@ function rescanDue(int $max, int $ageH = 20): int {
     if (!flock($lk, LOCK_EX | LOCK_NB)) { echo date('c') . " rescan: one is already running\n"; return 0; }
     $S = state(); $sc = jread('scans.json', []); $due = [];
     foreach ($S['leads'] as $id => $L) {
-        if (siteOf($L) === '' && srcUrl($L) === '') continue;
-        $at = (int) ($sc[$id]['at'] ?? 0); if ($at > time() - $ageH * 3600) continue;
-        $due[] = [$at, $L['list'] === 'added' ? 0 : 1, $id];
+        $web = siteOf($L) !== '' || srcUrl($L) !== ''; $at = (int) ($sc[$id]['at'] ?? 0);
+        $webDue = $web && $at <= time() - $ageH * 3600;
+        if (!$webDue && !regDue($sc[$id] ?? null)) continue;   /* every lead gets its state filing checked once a month, website or not */
+        $due[] = [$webDue ? $at : (int) ($sc[$id]['reg']['at'] ?? 0), $L['list'] === 'added' ? 0 : 1, $id];
     }
     sort($due);
     $n = 0; $t0 = time();
     foreach (array_slice($due, 0, $max) as [, , $id]) {
         $r = scanAndSave($S['leads'][$id]); $n++;
-        echo date('c') . " $id " . ($r['ok'] ? count($r['phones']) . ' phones ' . count($r['emails']) . ' emails' : ($r['site'] !== '' ? 'not read: ' . $r['err'] : 'source page only')) . "\n";
+        $rg = $r['reg'] ?? []; $rgs = !empty($rg['agent']) || !empty($rg['trade']) ? 'filing + person' : (!empty($rg['legal']) ? 'filing' : (!empty($rg['err']) ? 'filing not read' : 'no filing'));
+        echo date('c') . " $id " . (!isset($r['site']) ? 'no website' : (!empty($r['ok']) ? count($r['phones']) . ' phones ' . count($r['emails']) . ' emails' : ($r['site'] !== '' ? 'not read: ' . $r['err'] : 'source page only'))) . " · $rgs\n";
         if (time() - $t0 > 600) break;
     }
     hunterLeft(true);
