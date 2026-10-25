@@ -359,6 +359,10 @@
     trk = { ref: ref, us: sp.get('utm_source') || '', um: sp.get('utm_medium') || '', uc: sp.get('utm_campaign') || '', fb: sp.has('fbclid') ? 1 : 0, g: (sp.has('gclid') || sp.has('gbraid') || sp.has('wbraid')) ? 1 : 0, land: location.pathname };
     try { sessionStorage.setItem('a365trk', JSON.stringify(trk)); } catch (e) {}
   }
+  /* an address typed on a QR page (/card, /yard ...) arrives as ?street=&city= and starts the form with it; the lead is matched to its
+     house when it lands, as any typed address is (2026-10-25, Matthew: the card page's address box) */
+  (function () { var p = new URLSearchParams(location.search), s = (p.get('street') || '').slice(0, 120), c = (p.get('city') || '').slice(0, 60);
+    if (s && !f.elements.street.value) f.elements.street.value = s; if (c && !f.elements.city.value) f.elements.city.value = c; })();
   var hs = f.elements.hear, hm = document.getElementById('hearmore'), hl = document.getElementById('hearlab');
   hs.addEventListener('change', function () { var k = hs.value; hm.hidden = !(k === 'friend' || k === 'other'); hl.textContent = k === 'friend' ? 'Who sent you?' : 'Where did you hear about us?'; });
   document.getElementById('yr').textContent = new Date().getFullYear();
