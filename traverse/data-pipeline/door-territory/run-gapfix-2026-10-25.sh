@@ -16,6 +16,7 @@ pull() { node build-walklist-co.mjs --county="$1" --lat="$2" --lon="$3" --radius
 
 fix() {   # fix <town> <Municipality> then "COUNTY lat lon radius" pieces
   local t=$1 muni=$2; shift 2
+  [ -f "logs-upload/gapfix-$t-2026-10-25.done" ] && { echo "$(date +%T) $t already fixed, skipped"; return 0; }   # safe to run again
   echo "$(date +%T) == $t"
   cp "$t.csv" "$t.csv.bak-gapfix-2026-10-25"; cp "$t-areas.json" "$t-areas.json.bak-gapfix-2026-10-25" 2>/dev/null
   local OLD; OLD=$(rows "$t.csv.bak-gapfix-2026-10-25"); local outs="" i=0
