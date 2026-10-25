@@ -183,6 +183,26 @@ try {
   ok((await b('data')).leads.some((l) => l.name === 'Sheet Sponsor LLC'), 'Bring back puts it on the desk again');
   await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>/^New leads/.test(b.textContent)).click()`); await sleep(250);
   /* phone */
+  /* Peak's own sponsor records (2026-10-25, Nneka's tracker); only when the local records file is there (it is not in git) */
+  if (existsSync(LD + '/peak-records.json')) {
+    const PR = JSON.parse(readFileSync(LD + '/peak-records.json', 'utf8')).leads;
+    await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Pipeline').click()`); await sleep(250);
+    await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>b.textContent==='List').click()`); await sleep(200);
+    await js(`[...document.querySelectorAll('.controls .chips button')].find(b=>/^Peak sponsors/.test(b.textContent)).click()`); await sleep(300);
+    ok(await js(`document.querySelectorAll('.list .row').length`) === PR.length, `Peak sponsors lists every sponsor on Peak's tracker (${PR.length})`);
+    const nAct = PR.filter((e) => /^active/i.test(e.peak[0].status)).length;
+    await js(`[...document.querySelectorAll('main .chips button')].find(b=>/^Active\\d/.test(b.textContent)).click()`); await sleep(300);
+    ok(await js(`document.querySelectorAll('.list .row').length`) === nAct && await js(`[...document.querySelectorAll('.list .row')].every(r=>/Active/.test(r.querySelector('.pill').textContent))`), `the Active filter shows the ${nAct} active sponsors`);
+    await js(`[...document.querySelectorAll('main .chips button')].find(b=>/^All Peak sponsors/.test(b.textContent)).click()`); await sleep(250);
+    ok(await js(`/Active/.test(document.querySelector('.list .row .pill').textContent)`), 'active sponsors sort first');
+    await js(`[...document.querySelectorAll('.list .row')].find(r=>/Petrali/.test(r.textContent)).click()`); await sleep(300);
+    ok(await js(`/On Peak’s tracker/.test(document.querySelector('.detail').textContent) && !!document.querySelector('.detail .chk')`), 'a sponsor shows its Peak record and what to check');
+    await shot('desk-peak-sponsor.png');
+    await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
+    await js(`[...document.querySelectorAll('.list .row')].find(r=>/Rally Back/.test(r.textContent)).click()`); await sleep(300);
+    ok(await js(`document.querySelectorAll('.detail .kv').length`) === 2, 'a sponsor with two agreements shows both (Rally Back: tenant and sponsor)');
+    await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
+  }
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Pipeline').click()`); await sleep(300);
   ok(await js(`document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`), 'on a phone: no sideways scrolling');

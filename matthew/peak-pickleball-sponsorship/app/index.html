@@ -118,6 +118,11 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
 .daygrp{margin:14px 0 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft);font-weight:700}
 .pill.o-noshow{color:var(--warn)}.pill.o-toured{background:#d9f0e2;color:#1d6b3f}
 @media (prefers-color-scheme:dark){.pill.o-toured{background:#1f3b2a;color:#8fdcae}}
+/* Peak's own sponsor standing (2026-10-25) */
+.pill.pk-a{background:#d9f0e2;color:#1d6b3f}.pill.pk-p{background:#fff2d9;color:#8a5a00}.pill.pk-i{color:var(--soft)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:8px 0 0;font-size:14px}.kv dt{color:var(--soft)}.kv dd{margin:0;overflow-wrap:anywhere}
+.chk{background:#fff2d9;color:#8a5a00;padding:6px 9px;border-radius:8px;margin-top:8px;font-size:14px}
+@media (prefers-color-scheme:dark){.pill.pk-a{background:#1f3b2a;color:#8fdcae}.pill.pk-p,.chk{background:#3a2c12;color:#f0c46a}}
 .plrow,.rnrow{display:grid;gap:6px;align-items:center;margin:0 0 6px}
 .plrow{grid-template-columns:minmax(0,1.6fr) 96px 92px 96px 92px minmax(0,1.1fr) 34px}.rnrow{grid-template-columns:minmax(0,1fr) 110px 100px 34px}
 .plrow input,.plrow select,.rnrow input,.rnrow select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);min-width:0;width:100%}
@@ -165,6 +170,12 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   var isDue = function (l) { return l.next && l.next.date && l.next.date <= today() && ['signed', 'no'].indexOf(l.status) < 0; };
   var newInfo = function (l) { var c = (l.scan && l.scan.changes) || []; return c.length && c[c.length - 1].at > Date.now() / 1000 - 7 * 86400; };
   var reach = function (l) { return (hasMail(l) ? 1 : 0) + (hasPhone(l) ? 1 : 0); };
+  /* Peak's own record of a sponsor, the live one first (2026-10-25, Nneka's tracker) */
+  var pkOf = function (l) { return (l.peak && l.peak[0]) || null; };
+  var pkShort = function (s) { s = String(s || '').toLowerCase(); return s.indexOf('active') === 0 ? 'Active' : s.indexOf('pending') === 0 ? 'Pending' : 'Inactive'; };
+  var pkCls = function (s) { return { Active: 'pk-a', Pending: 'pk-p', Inactive: 'pk-i' }[pkShort(s)]; };
+  var pkRank = function (l) { var p = pkOf(l); return !p ? 3 : { Active: 0, Pending: 1, Inactive: 2 }[pkShort(p.status)]; };
+  var fmtD = function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(s) ? fmtYear(s) : s; };
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   var main = $('main');
@@ -245,6 +256,15 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
       var n = x[0] === 'all' ? inList.length : inList.filter(function (l) { return l.status === x[0]; }).length; if (!n && x[0] !== 'all') return;
       var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.st === x[0])); b.addEventListener('click', function () { S.st = x[0]; draw(); }); sc.appendChild(b);
     });
+    /* Peak sponsors: their standing on Peak's own tracker (2026-10-25) */
+    if (S.list === 'renew' && !S.due) {
+      var pc = el('div', 'chips'); pc.style.marginBottom = '12px';
+      [['all', 'All Peak sponsors'], ['Active', 'Active'], ['Pending', 'Pending'], ['Inactive', 'Inactive']].forEach(function (x) {
+        var n = x[0] === 'all' ? inList.length : inList.filter(function (l) { return pkOf(l) && pkShort(pkOf(l).status) === x[0]; }).length; if (!n && x[0] !== 'all') return;
+        var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String((S.pk || 'all') === x[0])); b.addEventListener('click', function () { S.pk = x[0]; S.sel = null; draw(); }); pc.appendChild(b);
+      });
+      main.appendChild(pc);
+    }
     var so = el('div', 'chips'); so.style.marginBottom = '12px';
     [['reach', 'Best contact first'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
     /* follow-ups due today or late, from every list (2026-10-24) */
@@ -257,21 +277,23 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     function drawRows() {
       list.textContent = '';
       var t = S.q.trim().toLowerCase();
-      var rows = inList.filter(function (l) { return (S.st === 'all' || l.status === S.st) && (!t || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(t) >= 0); });
+      var rows = inList.filter(function (l) { return (S.st === 'all' || l.status === S.st) && (!t || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(t) >= 0) && (S.list !== 'renew' || S.due || !S.pk || S.pk === 'all' || (pkOf(l) && pkShort(pkOf(l).status) === S.pk)); });
       /* the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the email and phone numbers") */
       /* phone and email first, then phone only, then email only, then neither; the score within each (2026-10-21, Matthew) */
       /* who the number reaches (2026-10-21, Matthew: "prioritize the ones that lead to a good person"): direct to a good person, a small
          organisation's main line, a front desk, then email only, then neither */
       var grp = function (l) { return l.callTier === 1 ? 6 : l.callTier === 2 ? 5 : l.callTier === 3 ? 4 : (l.callTier ? 0 : hasPhone(l) && hasMail(l) ? 3 : hasPhone(l) ? 2 : 0) + (hasMail(l) ? 1 : 0); };
-      rows.sort(function (a, b) { return (S.sort === 'reach' ? grp(b) - grp(a) : 0) || (b.score || 0) - (a.score || 0) || a.name.localeCompare(b.name); });
+      rows.sort(function (a, b) { return (S.list === 'renew' && !S.due ? pkRank(a) - pkRank(b) : 0) || (S.sort === 'reach' ? grp(b) - grp(a) : 0) || (b.score || 0) - (a.score || 0) || a.name.localeCompare(b.name); });
       if (!rows.length) { list.appendChild(el('div', 'empty', 'Nobody here.')); return; }
       rows.forEach(function (l) {
         var r = el('button', 'row' + (S.sel === l.id ? ' on' : '')); r.type = 'button';
         var s = el('div', 'sc', l.score != null ? String(l.score) : '•'); if (l.score != null) s.appendChild(el('small', null, l.list === 'local' ? 'fit' : '/9')); r.appendChild(s);
-        var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [S.due ? LISTNAME[l.list] : '', l.kind, milesOf(l) != null ? milesOf(l) + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
+        var sign = pkOf(l) && pkOf(l).signage && !/^not (yet )?(confirmed|installed)/i.test(pkOf(l).signage) ? pkOf(l).signage : '';
+        var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [S.due ? LISTNAME[l.list] : '', l.kind, sign, milesOf(l) != null ? milesOf(l) + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
         var right = el('div'); right.style.textAlign = 'right';
         if (newInfo(l)) { var ni = el('span', 'newinfo', 'New info'); ni.title = 'Their website changed this week (see Looked up)'; right.appendChild(ni); }
         var mk = el('span', 'reach', (hasPhone(l) ? '☎' : '') + (hasMail(l) ? ' ✉' : '')); mk.title = (hasMail(l) ? 'Has an email' : 'No email') + ' · ' + (hasPhone(l) ? 'has a phone' : 'no phone'); right.appendChild(mk);
+        if (pkOf(l)) { var pp = el('span', 'pill ' + pkCls(pkOf(l).status), pkShort(pkOf(l).status)); pp.title = 'On Peak’s tracker'; right.appendChild(pp); right.appendChild(document.createTextNode(' ')); }
         right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
         if (l.next && l.next.date) right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date)));
         r.appendChild(right);
@@ -294,12 +316,32 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     });
     main.appendChild(list);
   }
+  /* Peak's own record for a sponsor (2026-10-25, Nneka's tracker): standing, signage, contract, money and what still needs checking */
+  function peakSec(l) {
+    var s = el('div', 'sec'); s.appendChild(el('h3', null, 'On Peak’s tracker'));
+    l.peak.forEach(function (p, i) {
+      if (i) { var hr = el('div'); hr.style.cssText = 'border-top:1px dashed var(--line);margin:10px 0'; s.appendChild(hr); }
+      var top = el('div'); top.appendChild(el('span', 'pill ' + pkCls(p.status), p.status || 'No status')); if (p.type) top.appendChild(document.createTextNode(' ' + p.type)); s.appendChild(top);
+      var dl = el('dl', 'kv'), m = function (v) { return typeof v === 'number' ? money(v) : v; };
+      var add = function (k, v) { if (v === undefined || v === null || v === '') return; dl.appendChild(el('dt', null, k)); dl.appendChild(el('dd', null, String(v))); };
+      add('Signage', p.signage); add('Planned signage', p.planned);
+      add('To do', p.action && p.action !== 'None' ? p.action + (p.install ? ' (' + p.install + ')' : '') : '');
+      add('Contract', [p.start ? fmtD(p.start) : '', p.end ? fmtD(p.end) : ''].filter(Boolean).join(' to '));
+      add('Agreement', m(p.value)); add('Paid so far', p.paid === undefined ? '' : m(p.paid) + (typeof p.paid === 'number' ? ' (year not confirmed)' : ''));
+      add('Payments', p.freq); add('Recurring invoice', p.invoice); add('Notes', [p.ops, p.history].filter(Boolean).join(' ')); add('Activation budget', p.budget);
+      s.appendChild(dl);
+      if (p.verify) s.appendChild(el('div', 'chk', 'To check: ' + p.verify));
+    });
+    var src = el('small', null, 'From Peak’s sponsorship tracker, sent by Nneka on 25 Oct 2026.'); src.style.cssText = 'display:block;color:var(--soft);margin-top:8px'; s.appendChild(src);
+    return s;
+  }
   function detail(l) {
     var d = el('aside', 'detail');
     var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); window.scrollTo(0, S.listY || 0); }); d.appendChild(cx);
     d.appendChild(el('h2', null, l.name));
     d.appendChild(el('div', 'sub', [l.kind, l.score != null ? 'score ' + l.score + (l.list === 'local' ? '' : '/9') : '', milesOf(l) != null ? milesOf(l) + ' mi from Peak' : ''].filter(Boolean).join(' · ')));
     if (l.why) d.appendChild(el('div', null, l.why));
+    if (l.peak) d.appendChild(peakSec(l));
     /* status: Tour booked opens the tour form, Signed asks what they bought (2026-10-24) */
     var s1 = el('div', 'sec'); s1.appendChild(el('h3', null, 'Status')); var seg = el('div', 'seg');
     Object.keys(S.data.statuses).forEach(function (k) { var b = el('button', null, S.data.statuses[k]); b.type = 'button'; b.setAttribute('aria-pressed', String(l.status === k)); b.addEventListener('click', function () {

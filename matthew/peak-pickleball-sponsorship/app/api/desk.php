@@ -34,6 +34,18 @@ function state(): array {
     $seed = jread('seed.json', ['leads' => [], 'packages' => []]);
     $base = ['status' => 'new', 'notes' => [], 'next' => null, 'log' => [], 'added' => [], 'todos' => [], 'signed' => null];
     $L = []; foreach ($seed['leads'] as $l) $L[$l['id']] = $l + $base;
+    /* Peak's own sponsor records (2026-10-25, Nneka's tracker: active, pending and inactive sponsors, signage, contract dates and money).
+       Kept in peak-records.json beside the seed, so a seed rebuild never drops them; a record's lead moves to the Peak sponsors list, a
+       sponsor the desk lacked is added there, and its tracker emails join the contacts once. */
+    foreach ((jread('peak-records.json', ['leads' => []])['leads'] ?? []) as $p) {
+        $id = (string) ($p['id'] ?? ''); if (!preg_match('/^[0-9a-f]{10}$/', $id) || !is_array($p['peak'] ?? null)) continue;
+        if (!isset($L[$id])) $L[$id] = ['id' => $id, 'list' => 'renew', 'name' => (string) ($p['name'] ?? ''), 'kind' => '', 'score' => null, 'why' => '', 'route' => '', 'contacts' => []] + $base;
+        $L[$id]['list'] = 'renew'; $L[$id]['peak'] = $p['peak'];
+        if (!empty($p['kind'])) $L[$id]['kind'] = (string) $p['kind'];
+        if (isset($p['why'])) $L[$id]['why'] = (string) $p['why'];
+        $have = array_map(fn($c) => strtolower((string) ($c['email'] ?? '')), $L[$id]['contacts'] ?? []);
+        foreach (($p['contacts'] ?? []) as $c) if (!empty($c['email']) && !in_array(strtolower($c['email']), $have, true)) { $L[$id]['contacts'][] = $c; $have[] = strtolower($c['email']); }
+    }
     $tours = []; $props = []; $pk = $seed['packages'] ?? []; $pl = null; $team = [];
     foreach (logRows() as $r) {
         $id = (string) ($r['id'] ?? ''); $t = (string) ($r['t'] ?? '');
