@@ -4933,7 +4933,8 @@ function jobsAll(): array {
         $o = [];
         foreach (readLines(DATA_DIR . '/jobs.log') as $r) {
             $id = (string) $r['id'];
-            if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0)]; continue; }
+            if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0), 'cnotes' => []]; continue; }
+            if (is_array($r['cnote'] ?? null)) { $o[$id]['cnotes'][] = ['t' => (string) ($r['cnote']['t'] ?? ''), 'by' => (string) ($r['cnote']['by'] ?? ''), 'at' => (int) ($r['cnote']['at'] ?? 0)]; continue; }   /* notes on the job from the crew or office (2026-10-26) */
             $moved = false;
             foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
             if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
@@ -4943,7 +4944,7 @@ function jobsAll(): array {
         }
         $c = [$sig, $o];
     }
-    if (webHide()) { $web = webLeadIds(); foreach ($o as &$wj) if (isset($web[(string) ($wj['lead'] ?? '')])) { $wj['title'] = 'Booked'; $wj['addr'] = ''; $wj['note'] = ''; $wj['card'] = null; $wj['aftercare'] = null; $wj['web'] = true; } unset($wj); }   /* a 365-website job: its time, not who (2026-10-22) */
+    if (webHide()) { $web = webLeadIds(); foreach ($o as &$wj) if (isset($web[(string) ($wj['lead'] ?? '')])) { $wj['title'] = 'Booked'; $wj['addr'] = ''; $wj['note'] = ''; $wj['cnotes'] = []; $wj['card'] = null; $wj['aftercare'] = null; $wj['web'] = true; } unset($wj); }   /* a 365-website job: its time, not who (2026-10-22) */
     return $o;
 }
 /** the Square payments and orders of 365-website leads and their jobs, for leaving them off the office's Square lists (2026-10-22) */
@@ -4982,6 +4983,7 @@ function jobShow(array $j, ?array $leads = null): array {
     $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
     $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
+    $o['cnotes'] = array_values((array) ($j['cnotes'] ?? []));   /* notes on the job (2026-10-26) */
     $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
     if ($l) {
         if (!empty($l['sqcard']['id'])) { $o['cof'] = ['brand' => (string) ($l['sqcard']['brand'] ?? ''), 'last4' => (string) ($l['sqcard']['last4'] ?? ''), 'exp' => (string) ($l['sqcard']['exp'] ?? '')]; $o['card'] = true; }   /* saved on Square when they paid the deposit (2026-10-15) */
@@ -5781,6 +5783,22 @@ if ($action === 'aftercare') {
     if (!jobOpen($j)) fail('Not allowed.', 403);
     $r = jobAftercare($jid, 'by hand: ' . $me, true);
     out(['ok' => $r['ok'], 'stage' => $r['stage'], 'to' => $r['to'] ?? '', 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : $r['error'])]);
+}
+/* notes on a job (2026-10-26, Matthew: "i need brad to be able to add notes to his jobs ... theres someone that wants extra work done ... he needs
+   to be able to put that info in his job and it needs to alert me"): the crew on the job (or the office) adds a note; each is kept with who
+   and when, and Matthew's phones get it at once (the office's too, unless it is one of Matthew's own leads). */
+if ($action === 'jobcnote') {
+    if (!$isPost) fail('POST required', 405);
+    $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!preg_match('/^j[0-9a-f]{12}$/D', $jid) || !$j || $j['off']) fail('No such job.', 404);
+    if (!jobMine($j) && $role !== 'quote') fail('Not allowed.', 403);
+    $t = trim((string) preg_replace('/[\x00-\x09\x0b-\x1f\x7f]+/', ' ', (string) ($body['note'] ?? ''))); $t = mb_substr($t, 0, 1000);
+    if ($t === '') fail('Write the note first.');
+    if (!throttleTake(rateFile('cnote|' . (string) ($session['c'] ?? $me)), 60, 3600)) fail('That is a lot of notes in an hour. Wait a little and try again.', 429);
+    if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'cnote' => ['t' => $t, 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    $lj = leadsAllRaw()[(string) ($j['lead'] ?? '')] ?? null; $who = trim((string) ($lj['name'] ?? ($j['title'] ?? ''))) ?: 'a job';
+    a365Alert('Job note from ' . strtok($me, ' '), $who . ': ' . mb_substr($t, 0, 160), true, false, $lj ? webLead($lj) : false);
+    out(['ok' => true, 'notes' => jobsAll()[$jid]['cnotes'] ?? []]);
 }
 if ($action === 'jobphoto') {
     if (!$isPost) fail('POST required', 405);
