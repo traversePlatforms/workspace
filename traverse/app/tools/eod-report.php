@@ -112,12 +112,13 @@ if (is_array($mf) && !empty($mf['pages'][0]['token'])) {
 $ads = adSpend(); $spendAt = (int) (json_decode((string) @file_get_contents(adSpendFile()), true)['at'] ?? 0);
 $adRows = [];
 foreach (['meta' => 'Instant Form', 'messenger' => 'Messenger'] as $src => $label) {
-    $sp = 0.0; foreach ($ads as $a) if (($a['src'] ?? '') === $src) $sp += (float) $a['spend'];
+    $sp = 0.0; $mres = 0; foreach ($ads as $a) if (($a['src'] ?? '') === $src) { $sp += (float) $a['spend']; $mres += (int) ($a['results'] ?? 0); }   /* Meta's own results beside the spend (2026-10-26) */
     $jn = 0; $bk = 0; foreach ($leads as $l) if (($l['src'] ?? '') === $src && isset($jobOf[$l['id']])) { $jn++; $bk += (int) $jobOf[$l['id']]['price']; }
     $ln = 0; $lw = 0; foreach ($leads as $l) if (($l['src'] ?? '') === $src) { $ln++; if ((int) ($l['at'] ?? 0) >= $now - 7 * 86400) $lw++; }
-    if ($src === 'messenger' && $msgr !== null) { $ln = $msgr['all']; $lw = $msgr['week']; }   /* the chats on Facebook, not only those typed in (2026-10-26) */   /* leads and cost per lead (2026-10-26) */
+    if ($src === 'messenger' && $msgr !== null) { $ln = $msgr['all']; $lw = $msgr['week']; }
+    if ($mres > 0) $ln = $mres;   /* the count Meta shows with that spend, so the cost each matches Meta's */   /* the chats on Facebook, not only those typed in (2026-10-26) */   /* leads and cost per lead (2026-10-26) */
     $back = $sp > 0 ? $bk / $sp : 0;
-    $adRows[] = ['l' => $label, 'v' => $jn ? $usd(round($sp / $jn)) . ' per job' : 'no jobs yet', 's' => $usd(round($sp)) . ' spent · ' . $ln . ($ln === 1 ? ($src === 'messenger' ? ' chat' : ' lead') : ($src === 'messenger' ? ' chats' : ' leads')) . ($ln && $sp > 0 ? ' (' . $usd(round($sp / $ln)) . ' each)' : '') . ', ' . $lw . ' in the last 7 days' . ($src === 'messenger' ? ($msgr !== null ? ' (chats on Facebook)' : ' (as typed in)') : '') . ' · ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' worth ' . $usd($bk) . ' · ' . number_format($back, 2) . 'x back', 't' => $back >= 1 ? 'good' : 'bad'];
+    $adRows[] = ['l' => $label, 'v' => $jn ? $usd(round($sp / $jn)) . ' per job' : 'no jobs yet', 's' => $usd(round($sp)) . ' spent · ' . $ln . ($src === 'messenger' ? ($ln === 1 ? ' conversation' : ' conversations') : ($ln === 1 ? ' lead' : ' leads')) . ($mres > 0 ? ' on Meta' : '') . ($ln && $sp > 0 ? ' (' . $usd(round($sp / $ln, 2)) . ' each)' : '') . ', ' . $lw . ' in the last 7 days' . ($src === 'messenger' ? ($msgr !== null ? ' (chats on Facebook)' : ' (as typed in)') : '') . ' · ' . $jn . ($jn === 1 ? ' job' : ' jobs') . ' worth ' . $usd($bk) . ' · ' . number_format($back, 2) . 'x back', 't' => $back >= 1 ? 'good' : 'bad'];
 }
 /* referrals on their own line, not in an ad's figures (Matthew 2026-10-23: Russ and Carlos, Eric's referrals, "make it a different subject") */
 const EOD_NOT_REFERRAL = ['m20261016192625ffe257'];   /* Kara R.: not counted with the ad referrals (Matthew 2026-10-23) */
@@ -153,10 +154,7 @@ foreach ($leads as $l) {
 /* where follow-up slips (2026-10-26, Brandon via Matthew: "find the holes in our system process ... for example how many quotes we have sent out
    that havent been double backed on"). Counted from the calls, texts and emails logged in the app; one not logged counts as not done. */
 $tryAfter = function (array $l, int $since): bool { foreach ((array) ($l['tries'] ?? []) as $t) if ((int) ($t['at'] ?? 0) > $since) return true; return false; };
-$noFollow = []; $vmOld = []; $txtOld = []; $speed = ['hour' => 0, 'day' => 0, 'later' => 0, 'never' => 0];
-/* how long a new lead waits for its first call, text or email (2026-10-26, Matthew: "add an average time it takes to contact a lead. but dont include me i just started"): leads of the last 7 days that are not his, first try by anyone but him */
-const EOD_LEAVE_OUT = 'Matthew Sharpe';
-$firstGaps = []; $saidNo = []; $gaveUp = 0;
+$noFollow = []; $vmOld = []; $txtOld = []; $speed = ['hour' => 0, 'day' => 0, 'later' => 0, 'never' => 0]; $saidNo = []; $gaveUp = 0;
 foreach ($leads as $l) {
     $st = (string) ($l['status'] ?? 'new');
     /* quotes given 2+ days ago with no call, text or email logged since */
@@ -170,10 +168,6 @@ foreach ($leads as $l) {
         $lt = end($l['tries']) ?: null;
         if ($lt && $lt['o'] === 'vm' && (int) $lt['at'] < $now - 86400) $vmOld[] = $l;
         if ($lt && in_array($lt['o'], ['text', 'email'], true) && (int) $lt['at'] < $now - 2 * 86400) $txtOld[] = $l;
-    }
-    if ((int) ($l['at'] ?? 0) >= $wk0 && !webLead($l) && ($l['src'] ?? '') !== 'messenger') {   /* Messenger leads are typed in after the chat, so their clock starts late */
-        $ft = null; foreach ((array) ($l['tries'] ?? []) as $t) if ((string) ($t['by'] ?? '') !== EOD_LEAVE_OUT) $ft = $ft === null ? (int) $t['at'] : min($ft, (int) $t['at']);
-        if ($ft !== null && $ft >= (int) $l['at']) $firstGaps[] = $ft - (int) $l['at'];
     }
     /* said no or gave up, in the last 7 days (2026-10-26, Matthew: "include a lost section or people that said no") */
     if ((int) ($l['statusAt'] ?? 0) >= $wk0) {
@@ -191,11 +185,11 @@ foreach ($leads as $l) {
 /* 4. the work: today's jobs and tomorrow's */
 $todayJobs = array_values(array_filter($jobs, fn($j) => $j['date'] === $T)); usort($todayJobs, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
 $tomJobs = array_values(array_filter($jobs, fn($j) => $j['date'] === $tomD)); usort($tomJobs, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
-$doneN = 0; $doneVal = 0; $crewMins = 0; $couldNot = []; $openN = 0;
+$doneN = 0; $doneVal = 0; $crewMins = 0; $timedVal = 0; $couldNot = []; $openN = 0;
 foreach ($todayJobs as $j) {
     $o = (string) ($j['done']['o'] ?? '');
     $m = (int) ($j['done']['mins'] ?? 0); foreach ((array) ($j['ridet'] ?? []) as $r) $m += (int) $r['mins'];
-    if ($o === 'done') { $doneN++; $doneVal += (int) $j['price']; $crewMins += $m; }
+    if ($o === 'done') { $doneN++; $doneVal += (int) $j['price']; $crewMins += $m; if ($m > 0) $timedVal += (int) $j['price']; }   /* per crew hour: only jobs with time logged (2026-10-26) */
     elseif ($o === 'could not') $couldNot[] = $j; else $openN++;
 }
 $holdsTom = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] === $tomD));
@@ -258,7 +252,7 @@ $R['sections'][] = ['title' => 'Ads and referrals', 'note' => 'Spend as last typ
 $sec = [];
 foreach ($todayJobs as $j) { $o = (string) ($j['done']['o'] ?? ''); $m = (int) ($j['done']['mins'] ?? 0); foreach ((array) ($j['ridet'] ?? []) as $r) $m += (int) $r['mins'];
     $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => $j['crew'] . ' · ' . ($o === 'done' ? 'done' . ($m ? ' · ' . $dur($m) : '') : ($o === 'could not' ? 'not done: ' . mb_substr((string) ($j['done']['note'] ?? ''), 0, 90) : 'not marked yet')), 't' => $o === 'could not' ? 'bad' : ($o === 'done' ? '' : 'warn')]; }
-if ($doneN && $crewMins) $sec[] = ['l' => 'Per crew hour', 'v' => $usd(round($doneVal / ($crewMins / 60))), 's' => $usd($doneVal) . ' of work in ' . $dur($crewMins)];
+if ($doneN && $crewMins) $sec[] = ['l' => 'Per crew hour', 'v' => $usd(round($timedVal / ($crewMins / 60))), 's' => $usd($timedVal) . ' of work in ' . $dur($crewMins) . ($timedVal < $doneVal ? ' (jobs with time logged)' : '')];
 $R['sections'][] = ['title' => 'Today\'s jobs', 'rows' => $sec, 'empty' => 'None scheduled.'];
 $sec = [];
 foreach ($tomJobs as $j) $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => (jobSlot((string) $j['slot'])[1] ?? $j['slot']) . ' · ' . $j['crew']];
@@ -269,15 +263,10 @@ $list = fn(array $xs, callable $f) => implode(', ', array_map($f, array_slice($x
 $names = fn(array $xs, bool $price = false) => $list($xs, fn($l) => $short($l['name'] ?? '') . ($price ? ' ' . $usd($qPrice($l)) : ''));
 $spTot = array_sum($speed);
 if ($noFollow) $sec[] = ['l' => 'Quotes with no follow-up', 'v' => (string) count($noFollow), 's' => 'price given 2+ days ago, no call, text or email logged since · ' . $names($noFollow, true), 't' => 'warn'];
-$hm = function (int $sec) { $m = (int) round($sec / 60); return $m < 60 ? $m . ' min' : intdiv($m, 60) . ' h' . ($m % 60 ? ' ' . ($m % 60) . ' min' : ''); };
-if ($firstGaps) { sort($firstGaps); $sec[] = ['l' => 'Average time to first contact', 'v' => $hm((int) (array_sum($firstGaps) / count($firstGaps))), 's' => 'last 7 days, ' . $plural(count($firstGaps), 'lead', 'leads') . ' with a call, text or email logged · half reached within ' . $hm($firstGaps[intdiv(count($firstGaps), 2)]) . ' · Matthew\'s leads and calls left out', 't' => array_sum($firstGaps) / count($firstGaps) > 3600 ? 'warn' : 'good']; }
-else $sec[] = ['l' => 'Average time to first contact', 'v' => '–', 's' => 'no first calls, texts or emails logged for last week\'s leads (Matthew\'s left out)', 't' => 'warn'];
 if ($vmOld) $sec[] = ['l' => 'Voicemails not followed up in a day', 'v' => (string) count($vmOld), 's' => $names($vmOld), 't' => 'warn'];
 if ($txtOld) $sec[] = ['l' => 'Texts or emails with no reply, no next try', 'v' => (string) count($txtOld), 's' => 'two days or more · ' . $names($txtOld), 't' => 'warn'];
-if ($formList) $sec[] = ['l' => 'Signing forms sent, not signed', 'v' => (string) count($formList), 's' => $names($formList), 't' => 'warn'];   /* the same ones as under Quotes waiting */
 if ($depOpenN) $sec[] = ['l' => 'Deposit links sent, not paid', 'v' => $usd($depOpen), 's' => $plural($depOpenN, 'customer has', 'customers have') . ' the deposit link and ' . ($depOpenN === 1 ? 'has' : 'have') . ' not paid yet', 't' => 'warn'];
 if ($owedDoneN) $sec[] = ['l' => 'Jobs done, not paid in full', 'v' => $usd($owedDone), 's' => $plural($owedDoneN, 'job', 'jobs'), 't' => 'warn'];
-if ($toConfirm) $sec[] = ['l' => 'Square payments not tied to a job', 'v' => (string) $toConfirm, 't' => 'warn'];
 if ($couldNot) $sec[] = ['l' => 'Jobs not done today, to rebook', 'v' => (string) count($couldNot), 't' => 'bad'];
 $R['sections'][] = ['title' => 'Where follow-up slips', 'note' => 'From the calls, texts and emails logged in the app: one not logged counts as not done.', 'rows' => $sec, 'empty' => 'Nothing slipping today.'];
 $R['sections'][] = ['title' => 'Next six weeks', 'rows' => [
