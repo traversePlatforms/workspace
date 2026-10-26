@@ -324,3 +324,7 @@ traverse/data-pipeline/door-territory/lawn-trial/yard-v2/*.finished
 
 # Matthew's pay review and tax figures (2026-10-25): personal, kept off git and GitHub; the Drive backup does not cover personal/ either
 personal/pay/
+
+# public copies without notes (2026-10-26, shared/tools/minify-public.cjs)
+matthew/peak-pickleball-sponsorship/dist/
+sixfold/aeration365-site-dist/
