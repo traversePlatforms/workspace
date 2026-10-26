@@ -10,6 +10,13 @@ local C = Config.Colors
 local METAL = Color3.fromRGB(140, 148, 170) -- a little lighter (2026-10-18, Matthew: "a little brighter")
 local METAL_DARK = Color3.fromRGB(84, 92, 116)
 local HAZARD = Color3.fromRGB(255, 196, 60)
+-- the Gear Bay, Upgrade Lab and furniture shop were too bright (2026-10-25, Matthew: "the lighting is off there"): three
+-- ceiling spotlights on a pale floor, white neon lamp panels and glowing stands made a hot spot. Now the floor matches the deck,
+-- the lamps are a softer grey and the lights about half as strong; the coloured neon edges and rings still mark the shops.
+local SHOP_FLOOR = Color3.fromRGB(138, 146, 170) -- was 176, 184, 204; the deck tiles are 150/136
+local SHOP_LAMP = Color3.fromRGB(176, 184, 200) -- was C.Trim (232, 238, 248) neon
+local SHOP_LIGHT = { brightness = 1.1, range = 20 } -- was 2.5 (Gear Bay) / 2.2 (shops), range 24
+local STAND_GLOW = 0.8 -- the light inside each display stand, was 1.6 (Gear Bay) / 1.4 (Upgrade Lab)
 
 local Decor = {}
 
@@ -23,6 +30,14 @@ local function part(parent, props)
 	for k, v in pairs(props) do
 		if k ~= "ClassName" then
 			p[k] = v
+		end
+	end
+	-- lag on the iPad (2026-10-25): glowing, see-through, small and paper-thin pieces cast no shadow. Nobody notices those shadows, but
+	-- the tablet still draws every one. A piece can still ask for a shadow with CastShadow = true.
+	if props.CastShadow == nil then
+		local sz = props.Size
+		if props.Material == Enum.Material.Neon or (props.Transparency or 0) > 0 or (sz and (math.max(sz.X, sz.Y, sz.Z) < 2 or math.min(sz.X, sz.Y, sz.Z) <= 0.3)) then
+			p.CastShadow = false
 		end
 	end
 	p.Parent = parent
@@ -306,7 +321,7 @@ local function flame(parent, scale)
 	f.LightEmission = 1
 	f.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.6 * scale), NumberSequenceKeypoint.new(1, 0) })
 	f.Lifetime = NumberRange.new(0.3, 0.6)
-	f.Rate = 40
+	f.Rate = 24 -- was 40 (2026-10-25, lag on the iPad); a launch still turns it up to 260
 	f.Speed = NumberRange.new(5, 9)
 	f.EmissionDirection = Enum.NormalId.Left -- a quarter-turned cylinder's -X points down
 	f.Parent = parent
@@ -487,8 +502,7 @@ local function gearBay(folder, at)
 	local m = Instance.new("Model")
 	m.Name = "GearBay"
 	m.Parent = folder
-	local LIGHT_METAL = Color3.fromRGB(176, 184, 204)
-	part(m, { Name = "BayFloor", Size = Vector3.new(46, 0.5, 22), Color = LIGHT_METAL, Material = Enum.Material.DiamondPlate, CFrame = at * CFrame.new(0, 0.45, 0) })
+	part(m, { Name = "BayFloor", Size = Vector3.new(46, 0.5, 22), Color = SHOP_FLOOR, Material = Enum.Material.DiamondPlate, CFrame = at * CFrame.new(0, 0.45, 0) })
 	part(m, { Name = "BayEdge", Size = Vector3.new(46, 0.2, 0.6), Color = C.Orange, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 0.75, -10.8) })
 	part(m, { Name = "BayBackWall", Size = Vector3.new(46, 16, 1.5), Color = METAL, Material = Enum.Material.Metal, CFrame = at * CFrame.new(0, 8, 11) })
 	part(m, { Name = "BayWallStripe", Size = Vector3.new(46, 0.6, 1.7), Color = C.Blue, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 4, 11) })
@@ -499,12 +513,12 @@ local function gearBay(folder, at)
 	end
 	local roof = part(m, { Name = "BayRoof", Size = Vector3.new(48, 0.8, 13), Color = METAL_DARK, CFrame = at * CFrame.new(0, 16.6, 4.6) })
 	for _, x in ipairs({ -13, 0, 13 }) do
-		local lamp = part(m, { Name = "BayLamp", Size = Vector3.new(5, 0.3, 2), Color = C.Trim, Material = Enum.Material.Neon, CFrame = roof.CFrame * CFrame.new(x, -0.5, -4) })
+		local lamp = part(m, { Name = "BayLamp", Size = Vector3.new(5, 0.3, 2), Color = SHOP_LAMP, Material = Enum.Material.Neon, CFrame = roof.CFrame * CFrame.new(x, -0.5, -4) })
 		local sl = Instance.new("SpotLight")
 		sl.Face = Enum.NormalId.Bottom
 		sl.Angle = 70
-		sl.Range = 24
-		sl.Brightness = 2.5
+		sl.Range = SHOP_LIGHT.range
+		sl.Brightness = SHOP_LIGHT.brightness
 		sl.Parent = lamp
 	end
 	-- the sign
@@ -531,9 +545,9 @@ local function gearBay(folder, at)
 		local stand = part(m, { Name = "GearStand", Shape = Enum.PartType.Cylinder, Size = Vector3.new(3.2, 5, 5), Color = METAL_DARK, CFrame = at * CFrame.new(x, 2.3, -1) * CFrame.Angles(0, 0, math.rad(90)) })
 		part(m, { Name = "StandRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 5.3, 5.3), Color = def.kind == "weapon" and C.Orange or C.Blue, Material = Enum.Material.Neon,
 			CFrame = at * CFrame.new(x, 3.95, -1) * CFrame.Angles(0, 0, math.rad(90)) })
-		local beam = part(m, { Name = "HoloBeam", Shape = Enum.PartType.Cylinder, Size = Vector3.new(4, 3.4, 3.4), Color = C.Blue, Material = Enum.Material.Neon, Transparency = 0.75, CanCollide = false, CastShadow = false,
+		local beam = part(m, { Name = "HoloBeam", Shape = Enum.PartType.Cylinder, Size = Vector3.new(4, 3.4, 3.4), Color = C.Blue, Material = Enum.Material.Neon, Transparency = 0.82, CanCollide = false, CastShadow = false,
 			CFrame = at * CFrame.new(x, 6, -1) * CFrame.Angles(0, 0, math.rad(90)) })
-		glow(beam, def.kind == "weapon" and C.Orange or C.Blue, 14, 1.6)
+		glow(beam, def.kind == "weapon" and C.Orange or C.Blue, 12, STAND_GLOW)
 		local show = GearTools.display(id, at * CFrame.new(x, 7.2, -1), m)
 		show:SetAttribute("SpinSpeed", 45)
 		local tag = part(m, { Name = "StandTag", Size = Vector3.new(6, 1.6, 0.3), Color = C.Dark, CFrame = at * CFrame.new(x, 1.6, -3.7) * CFrame.Angles(math.rad(-20), 0, 0) })
@@ -596,8 +610,7 @@ local function standTag(m, at, title, price, color)
 end
 
 local function shopShell(m, at, width, accent, title)
-	local FLOOR = Color3.fromRGB(176, 184, 204)
-	part(m, { Name = "ShopFloor", Size = Vector3.new(width, 0.5, 22), Color = FLOOR, Material = Enum.Material.Plastic, CFrame = at * CFrame.new(0, 0.45, 0) })
+	part(m, { Name = "ShopFloor", Size = Vector3.new(width, 0.5, 22), Color = SHOP_FLOOR, Material = Enum.Material.Plastic, CFrame = at * CFrame.new(0, 0.45, 0) })
 	part(m, { Name = "ShopEdge", Size = Vector3.new(width, 0.2, 0.6), Color = accent, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 0.75, -10.8) })
 	part(m, { Name = "ShopBackWall", Size = Vector3.new(width, 16, 1.5), Color = METAL, CFrame = at * CFrame.new(0, 8, 11) })
 	part(m, { Name = "ShopWallStripe", Size = Vector3.new(width, 0.6, 1.7), Color = accent, Material = Enum.Material.Neon, CFrame = at * CFrame.new(0, 4, 11) })
@@ -607,12 +620,12 @@ local function shopShell(m, at, width, accent, title)
 	end
 	local roof = part(m, { Name = "ShopRoof", Size = Vector3.new(width + 2, 0.8, 13), Color = METAL_DARK, CFrame = at * CFrame.new(0, 16.6, 4.6) })
 	for x = -width / 2 + 8, width / 2 - 8, 12 do
-		local lamp = part(m, { Name = "ShopLamp", Size = Vector3.new(5, 0.3, 2), Color = C.Trim, Material = Enum.Material.Neon, CFrame = roof.CFrame * CFrame.new(x, -0.5, -4) })
+		local lamp = part(m, { Name = "ShopLamp", Size = Vector3.new(5, 0.3, 2), Color = SHOP_LAMP, Material = Enum.Material.Neon, CFrame = roof.CFrame * CFrame.new(x, -0.5, -4) })
 		local sl = Instance.new("SpotLight")
 		sl.Face = Enum.NormalId.Bottom
 		sl.Angle = 70
-		sl.Range = 24
-		sl.Brightness = 2.2
+		sl.Range = SHOP_LIGHT.range
+		sl.Brightness = SHOP_LIGHT.brightness
 		sl.Parent = lamp
 	end
 	local sign = part(m, { Name = "ShopSign", Size = Vector3.new(26, 3.6, 0.4), Color = C.Dark, CFrame = at * CFrame.new(0, 13.4, 10.1) })
@@ -670,7 +683,7 @@ local function upgradeLab(folder, at)
 		part(m, { Name = "PodRing", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.25, 6.3, 6.3), Color = GREEN, Material = Enum.Material.Neon, CFrame = at * CFrame.new(x, 1.75, -1) * CFrame.Angles(0, 0, math.rad(90)) })
 		local beam = part(m, { Name = "PodBeam", Shape = Enum.PartType.Cylinder, Size = Vector3.new(7, 5, 5), Color = GREEN, Material = Enum.Material.Neon, Transparency = 0.82, CanCollide = false, CastShadow = false,
 			CFrame = at * CFrame.new(x, 5.5, -1) * CFrame.Angles(0, 0, math.rad(90)) })
-		glow(beam, GREEN, 14, 1.4)
+		glow(beam, GREEN, 12, STAND_GLOW)
 		local g = Instance.new("BillboardGui") -- a big floating symbol in each pod
 		g.Size = UDim2.fromScale(4, 4)
 		g.LightInfluence = 0
@@ -850,9 +863,9 @@ local function asteroids(folder)
 		rock.Name = "Asteroid" .. i
 		rock.Parent = folder
 		local core = part(rock, { Name = "Core", Size = Vector3.new(s, s * rng:NextNumber(0.6, 1), s * rng:NextNumber(0.7, 1)), Color = Color3.fromRGB(110 + rng:NextInteger(0, 30), 100, 95), Material = Enum.Material.Slate,
-			CanCollide = false, CFrame = CFrame.new(pos) * CFrame.Angles(rng:NextNumber(0, 3), rng:NextNumber(0, 3), 0) })
+			CanCollide = false, CastShadow = false, CFrame = CFrame.new(pos) * CFrame.Angles(rng:NextNumber(0, 3), rng:NextNumber(0, 3), 0) })
 		for _ = 1, 3 do
-			part(rock, { Name = "Lump", Size = Vector3.new(s, s, s) * rng:NextNumber(0.35, 0.6), Color = core.Color, Material = Enum.Material.Slate, CanCollide = false,
+			part(rock, { Name = "Lump", Size = Vector3.new(s, s, s) * rng:NextNumber(0.35, 0.6), Color = core.Color, Material = Enum.Material.Slate, CanCollide = false, CastShadow = false,
 				CFrame = core.CFrame * CFrame.new(rng:NextNumber(-s / 3, s / 3), rng:NextNumber(-s / 3, s / 3), rng:NextNumber(-s / 3, s / 3)) * CFrame.Angles(rng:NextNumber(0, 3), rng:NextNumber(0, 3), 0) })
 		end
 		rock.PrimaryPart = core

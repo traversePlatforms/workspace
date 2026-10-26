@@ -97,17 +97,38 @@ end
 -- ---------- disco balls: spin and throw coloured light while the base's party is on ----------
 local PARTY = { Color3.fromRGB(255, 90, 160), Color3.fromRGB(90, 200, 255), Color3.fromRGB(255, 220, 90), Color3.fromRGB(140, 255, 140), Color3.fromRGB(190, 120, 255) }
 local clock = 0
-RunService.RenderStepped:Connect(function(dt)
-	clock += dt
+-- lag on the iPad (2026-10-25): the bases and their disco balls are looked up twice a second, not searched for every frame,
+-- and a ball that is off is left alone instead of having its lights rewritten each frame
+local bases, balls, lookedAt = {}, {}, -1
+local function findBalls()
+	table.clear(bases)
 	for _, m in ipairs(station:GetChildren()) do
 		if m:IsA("Model") and m:GetAttribute("BaseIndex") then
 			local f = m:FindFirstChild("Furniture")
 			local ball = f and f:FindFirstChild("DiscoBall", true)
 			if ball then
-				local on = m:GetAttribute("Disco") == true
-				if on then
-					ball.CFrame = ball.CFrame * CFrame.Angles(0, dt * 1.5, 0)
-				end
+				table.insert(bases, m)
+				balls[m] = ball
+			end
+		end
+	end
+end
+local wasOn = {} -- [ball] = true while its party lights are on
+RunService.RenderStepped:Connect(function(dt)
+	clock += dt
+	if clock - lookedAt > 0.5 then
+		lookedAt = clock
+		findBalls()
+	end
+	for _, m in ipairs(bases) do
+		local ball = balls[m]
+		if ball and ball.Parent then
+			local on = m:GetAttribute("Disco") == true
+			if on then
+				ball.CFrame = ball.CFrame * CFrame.Angles(0, dt * 1.5, 0)
+			end
+			if on or wasOn[ball] then
+				wasOn[ball] = on or nil
 				for i, l in ipairs(ball:GetChildren()) do
 					if l:IsA("SpotLight") then
 						l.Brightness = on and 4 or 0
@@ -162,8 +183,13 @@ for i = 1, 140 do
 	s.Parent = skyFolder
 	table.insert(twinkle, { part = s, phase = rng:NextNumber(0, 6.28), speed = rng:NextNumber(0.8, 2.2) })
 end
+local lastTwinkle = 0
 RunService.Heartbeat:Connect(function()
 	local t = os.clock()
+	if t - lastTwinkle < 0.1 then -- 10 times a second is plenty for a slow twinkle (2026-10-25, lag on the iPad)
+		return
+	end
+	lastTwinkle = t
 	for i = 1, #twinkle, 2 do -- half of them twinkle
 		local tw = twinkle[i]
 		tw.part.Transparency = 0.15 + 0.55 * (0.5 + 0.5 * math.sin(t * tw.speed + tw.phase))

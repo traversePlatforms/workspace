@@ -609,6 +609,44 @@ local function telescope()
 	end)
 end
 
+-- ---------- a little screen shake for the Meteor Shower (2026-10-25, Matthew) ----------
+-- Small on purpose so it cannot make anyone feel sick: the camera slides a few tenths of a stud (it never turns) and settles in
+-- about half a second. Runs just after Roblox's own camera each frame, so it never fights it, and leaves the telescope alone.
+-- Sizes and the off switch are in Config.ScreenShake.
+local SS = Config.ScreenShake
+local shakeAmp = 0
+local function shake(amount)
+	if SS and SS.enabled and amount > 0 then
+		shakeAmp = math.min(SS.max, shakeAmp + amount)
+	end
+end
+RunService:BindToRenderStep("StarStationShake", Enum.RenderPriority.Camera.Value + 1, function(dt)
+	if shakeAmp < 0.005 then
+		shakeAmp = 0
+		return
+	end
+	local cam = workspace.CurrentCamera
+	if cam and cam.CameraType ~= Enum.CameraType.Scriptable then
+		local t = os.clock() * SS.speed
+		local cf = cam.CFrame
+		cam.CFrame = cf + cf.RightVector * (math.noise(t, 1.7) * 2 * shakeAmp) + cf.UpVector * (math.noise(t, 9.3) * 2 * shakeAmp)
+	end
+	shakeAmp *= math.exp(-SS.decay * dt)
+end)
+-- a meteor landed: the sparkle burst, and a bump if it came down near you
+local function meteorLanded(pos)
+	burst(pos, C.Blue)
+	local cam = workspace.CurrentCamera
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	local from = hrp and hrp.Position or (cam and cam.CFrame.Position)
+	if SS and from then
+		local d = (pos - from).Magnitude
+		if d < SS.radius then
+			shake(SS.meteor * (1 - d / SS.radius))
+		end
+	end
+end
+
 FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 	if kind == "burst" then
 		burst(a, b)
@@ -623,6 +661,9 @@ FX.OnClientEvent:Connect(function(kind, a, b, c, d)
 	elseif kind == "shower" then
 		shout("METEOR SHOWER!", C.Blue, 3)
 		sfx("shower")
+		shake(SS and SS.start or 0)
+	elseif kind == "meteor" then
+		meteorLanded(a)
 	elseif kind == "swing" then
 		swing(a, b, c)
 	elseif kind == "blast" then
@@ -751,19 +792,29 @@ end
 critters.ChildAdded:Connect(track)
 
 local keep = { Eye = true, Pupil = true, Nose = true, Smile = true }
+-- lag on the iPad (2026-10-25): only critters near the camera bob (far ones are too small to see it), and rainbow colours
+-- change 20 times a second instead of every frame, from a list of parts made once per critter
+local BOB_RANGE = 140 -- studs from the camera
+local RAINBOW_EVERY = 1 / 20
+local rainbowParts = {} -- [model] = { parts to recolour }
+local rainbowClock = 0
 local t = 0
 RunService.RenderStepped:Connect(function(dt)
 	t += dt
+	local cam = workspace.CurrentCamera
+	local camPos = cam and cam.CFrame.Position or Vector3.zero
 	-- critters on pedestals bob gently (left alone the moment the server moves them)
 	for _, m in ipairs(critters:GetChildren()) do
 		local body = m:IsA("Model") and m.PrimaryPart
-		if body and body.Anchored and m:GetAttribute("OnPedestal") then
+		if body and body.Anchored and m:GetAttribute("OnPedestal") and (bobbers[m] or (body.Position - camPos).Magnitude < BOB_RANGE) then
 			local rec = bobbers[m]
 			if not rec then
 				rec = { origin = m:GetPivot(), phase = math.random() * 6 }
 				bobbers[m] = rec
 			end
-			m:PivotTo(rec.origin * CFrame.new(0, math.sin(t * 2 + rec.phase) * 0.35, 0) * CFrame.Angles(0, math.sin(t * 0.8 + rec.phase) * 0.25, 0))
+			if (rec.origin.Position - camPos).Magnitude < BOB_RANGE then
+				m:PivotTo(rec.origin * CFrame.new(0, math.sin(t * 2 + rec.phase) * 0.35, 0) * CFrame.Angles(0, math.sin(t * 0.8 + rec.phase) * 0.25, 0))
+			end
 		elseif bobbers[m] then
 			bobbers[m] = nil
 		end
@@ -792,16 +843,29 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 	end
 	-- rainbow critters cycle through the colours
+	rainbowClock += dt
+	if rainbowClock < RAINBOW_EVERY then
+		return
+	end
+	rainbowClock = 0
 	for m in pairs(rainbows) do
 		if m.Parent then
 			local h = (t * 0.25) % 1
 			local body = m.PrimaryPart
 			local by, bh = body and body.Position.Y or 0, body and body.Size.Y or 1
-			for _, p in ipairs(m:GetDescendants()) do
-				if p:IsA("BasePart") and not keep[p.Name] then
-					-- the hue shifts with height, so a Rainbow critter wears a whole rainbow at once, top to bottom (2026-10-18)
-					p.Color = Color3.fromHSV((h + (p.Position.Y - by) / bh * 0.35) % 1, 0.55, 1)
+			local list = rainbowParts[m]
+			if not list then
+				list = {}
+				for _, p in ipairs(m:GetDescendants()) do
+					if p:IsA("BasePart") and not keep[p.Name] then
+						table.insert(list, p)
+					end
 				end
+				rainbowParts[m] = list
+			end
+			for _, p in ipairs(list) do
+				-- the hue shifts with height, so a Rainbow critter wears a whole rainbow at once, top to bottom (2026-10-18)
+				p.Color = Color3.fromHSV((h + (p.Position.Y - by) / bh * 0.35) % 1, 0.55, 1)
 			end
 			local tag = m.PrimaryPart and m.PrimaryPart:FindFirstChild("Tag")
 			local nameL = tag and tag:FindFirstChild("CritterName")
@@ -810,6 +874,7 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		else
 			rainbows[m] = nil
+			rainbowParts[m] = nil
 		end
 	end
 end)

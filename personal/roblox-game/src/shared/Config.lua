@@ -270,6 +270,18 @@ Config.MeteorEvery = 600 -- then every 10 minutes
 Config.MeteorSeconds = 30
 Config.MeteorPerSecond = 3
 Config.MeteorStarBonus = 2 -- shower stars are worth double
+-- the screen shakes a little in a Meteor Shower (2026-10-25, Matthew): a short rumble when it starts, and a bump when a meteor
+-- lands near you (harder the closer it is). Kept small on purpose so it can't make anyone feel sick: the camera only slides a
+-- few tenths of a stud, never turns, and settles in about half a second. enabled = false switches it off.
+Config.ScreenShake = {
+	enabled = true,
+	start = 0.35, -- studs of wobble when the shower starts
+	meteor = 0.3, -- studs of wobble for a meteor landing right next to you
+	radius = 80, -- meteors farther away than this don't shake the screen
+	max = 0.45, -- never more than this, however many land at once
+	decay = 6, -- how fast it settles (higher = shorter)
+	speed = 18, -- how fast it wobbles
+}
 
 -- Black Hole Night: the lights go out and the Void Creeper roams; hide in a locker. Set to false to switch it off.
 Config.BlackHoleNight = true

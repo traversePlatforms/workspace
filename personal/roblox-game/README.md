@@ -38,7 +38,8 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 - Rarities: Common, Rare, Epic, Legendary, **Cosmic**. Hammy the Star Cat is Cosmic, the rarest.
 - **Mutations:** any critter can land **Golden** (8%: costs 1.5x, earns 2x) or **Rainbow** (1.5%: costs 3x, earns 5x).
 - **Stardust stars** float around the deck: run through one to grab it (worth 5, or 3 seconds of your income, whichever is more).
-- **Meteor Shower:** 3 minutes in, then every 10 minutes, blue stars rain down for 30 seconds, worth double.
+- **Meteor Shower:** 3 minutes in, then every 10 minutes, blue stars rain down for 30 seconds, worth double. The screen gives a short, small rumble when it starts and a bump when a meteor lands near you (sizes and an off switch in `Config.ScreenShake`).
+- **Earnings on the tag:** critters on the launch pad belt show a third line in green, "+30 Stardust/s": what they earn every second once they're in your base. It stays on while you carry one over your head.
 - Feel: critters bob on their pedestals, sparkles when you grab one, confetti when it lands home, "+income" over your base, a red THIEF! alarm when you're robbed, and a glowing beam guiding you home while you carry.
 
 - **Collection Book** (button bottom-left): every critter, found ones in colour, the rest as ???, plus which Golden/Rainbow versions you have had.
@@ -52,6 +53,21 @@ Everything to tune is in `src/shared/Config.lua`: critter names, colours, prices
 
 - **Dad's surprise critter:** the `surprise` entry in `Config.lua`. Give it a name and colours, then set `enabled = true`.
 - **Nolan-only critters:** put Nolan's Roblox user ID (a number, from his profile page link) in `Config.ExclusiveUserId`. Don't put his username in the game.
+
+## Will it lag on the iPad? How to check
+
+Studio on a PC is far faster than a tablet, so "smooth in Studio" proves little. What to look at:
+
+1. **Device Emulator** (Test tab → Device → pick an iPad). Shows the iPad's screen shape and touch buttons, so it's good for checking that labels are readable. It does **not** slow the game down to iPad speed.
+2. **Lower Studio's graphics** to roughly tablet level: File → Studio Settings → Rendering → Editor Quality Level → Level 3 or so, then play. Closer to what an iPad draws.
+3. **Stats overlay** while playing: View tab → Stats section → **Summary** and **Render** (hover a button to see its shortcut; Shift+F5 in Studio *stops* the play-test, so use the buttons). Watch **FPS**: 60 is smooth, under 30 feels laggy. Rendering shows draw calls and triangles: if they jump when you walk somewhere, that spot is the heavy one.
+4. **MicroProfiler** (Ctrl+F6, or in the Roblox app on the iPad: Settings → Micro Profiler → On). Each bar is one frame. At 60 FPS a frame has 16.7 ms. Bars that are tall, orange or red are frames that ran over. Press Ctrl+P to pause and hover the widest blocks: "Render" means too much to draw, "Physics" means moving parts, and script names under Heartbeat/RenderStepped mean a script doing too much each frame.
+5. **Developer Console** (F9 in Studio; on the iPad open it from the Roblox menu or type `/console` in chat). **Memory** tab: under about 1,000 MB on the client is comfortable for a tablet; well over 1,500 MB risks crashes on older iPads. **Scripts** tab: a script that sits above about 3-5% activity all the time is worth a look. **ScriptProfiler** tab: record 10 seconds of play and it lists which functions took the most time.
+6. **The real test** is playing on the iPad itself: the MicroProfiler and Developer Console both work in the Roblox app there.
+
+The thresholds above are rules of thumb, not Roblox limits. Things that usually make a game lag on a tablet: lots of lights (especially many at once in one place), shadows on lots of parts, parts that move every frame, big see-through parts stacked in front of each other, lots of particles, and scripts that do heavy work every frame.
+
+Also worth a look in Studio (the Rojo build doesn't set these, so they're whatever Studio picks): **Lighting → Technology** (Future is the heaviest; ShadowMap or Voxel is lighter on a tablet) and **Workspace → StreamingEnabled** (leave it off for this game: the client scripts expect the whole station to be there, and the station is small enough that streaming wouldn't save much).
 
 ## Working on the code with Claude (Rojo)
 

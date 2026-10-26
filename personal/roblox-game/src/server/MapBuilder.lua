@@ -18,6 +18,14 @@ local function part(parent, props)
 			p[k] = v
 		end
 	end
+	-- lag on the iPad (2026-10-25): glowing, see-through, small and paper-thin pieces cast no shadow. Nobody notices those shadows, but
+	-- the tablet still draws every one. A piece can still ask for a shadow with CastShadow = true.
+	if props.CastShadow == nil then
+		local sz = props.Size
+		if props.Material == Enum.Material.Neon or (props.Transparency or 0) > 0 or (sz and (math.max(sz.X, sz.Y, sz.Z) < 2 or math.min(sz.X, sz.Y, sz.Z) <= 0.3)) then
+			p.CastShadow = false
+		end
+	end
 	p.Parent = parent
 	return p
 end

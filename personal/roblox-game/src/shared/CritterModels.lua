@@ -293,7 +293,8 @@ function CritterModels.build(def, cframe, mut)
 		local sparkle = Instance.new("ParticleEmitter")
 		sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 		sparkle.Color = ColorSequence.new(def.glow or rarity.color)
-		sparkle.Rate = def.rarity == "Cosmic" and 18 or (def.rarity == "Mythic" and 12 or 8)
+		-- a third fewer sparkles than before (2026-10-25, lag on the iPad: every base full of Legendaries added up)
+		sparkle.Rate = def.rarity == "Cosmic" and 12 or (def.rarity == "Mythic" and 8 or 5)
 		sparkle.Lifetime = NumberRange.new(0.8, 1.4)
 		sparkle.Speed = NumberRange.new(1, 3)
 		sparkle.Size = NumberSequence.new(0.35)
@@ -354,7 +355,7 @@ function CritterModels.build(def, cframe, mut)
 			ColorSequenceKeypoint.new(0.66, Color3.fromRGB(120, 220, 255)),
 			ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 140, 255)),
 		}) or ColorSequence.new(mut.color)
-		shine.Rate = 10
+		shine.Rate = 7 -- was 10 (2026-10-25, lag on the iPad)
 		shine.Lifetime = NumberRange.new(0.6, 1.2)
 		shine.Speed = NumberRange.new(0.5, 2)
 		shine.Size = NumberSequence.new(0.3)
@@ -371,6 +372,41 @@ function CritterModels.setInfo(model, text)
 	if info then
 		info.Text = text
 	end
+end
+
+-- a third line on the name tag, in green: the Stardust it earns every second once it's in your base (2026-10-25, Nolan
+-- wanted to see it on the launch pad belt). Main.server.lua passes the number the income loop pays (Config.statsOf), so
+-- the tag and the payout can't disagree. Stays on while the critter is carried over your head.
+local RATE_GREEN = Color3.fromRGB(140, 255, 170)
+function CritterModels.setRate(model, text)
+	local body = model.PrimaryPart
+	local tag = body and body:FindFirstChild("Tag")
+	if not tag then
+		return
+	end
+	local rate = tag:FindFirstChild("Rate")
+	if not rate then
+		tag.Size = UDim2.fromOffset(220, 88) -- was 60 high: name and price keep the same size, the new line goes under them
+		local nameL, info = tag:FindFirstChild("CritterName"), tag:FindFirstChild("Info")
+		if nameL then
+			nameL.Size = UDim2.new(1, 0, 0.4, 0)
+		end
+		if info then
+			info.Position = UDim2.new(0, 0, 0.4, 0)
+			info.Size = UDim2.new(1, 0, 0.3, 0)
+		end
+		rate = Instance.new("TextLabel")
+		rate.Name = "Rate"
+		rate.Position = UDim2.new(0, 0, 0.7, 0)
+		rate.Size = UDim2.new(1, 0, 0.3, 0)
+		rate.BackgroundTransparency = 1
+		rate.Font = Enum.Font.GothamBold
+		rate.TextScaled = true
+		rate.TextColor3 = RATE_GREEN
+		rate.TextStrokeTransparency = 0.3
+		rate.Parent = tag
+	end
+	rate.Text = text
 end
 
 return CritterModels

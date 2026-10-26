@@ -94,6 +94,25 @@ RunService.RenderStepped:Connect(function(dt)
 	end
 end)
 
+-- lag on the iPad (2026-10-25): anything this script moves every frame stops casting a shadow. A shadow that moves has to be
+-- redrawn every frame, and the asteroids, light drones, UFO and spinning shop displays were doing that all the time.
+local function noShadow(obj)
+	if obj:IsA("BasePart") then
+		obj.CastShadow = false
+	end
+	for _, d in ipairs(obj:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.CastShadow = false
+		end
+	end
+end
+for _, s in ipairs(spinners) do
+	noShadow(s.obj)
+end
+for _, b in ipairs(bobbers) do
+	noShadow(b.obj)
+end
+
 -- shooting stars
 local rng = Random.new()
 task.spawn(function()

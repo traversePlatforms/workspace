@@ -225,6 +225,7 @@ local function attach(player, model, crit, from)
 	w.Part1 = body
 	w.Parent = body
 	CritterModels.setInfo(model, from and "STOLEN! Run home!" or "Take it home!")
+	CritterModels.setRate(model, "+" .. addCommas(crit.income) .. " Stardust/s") -- still showing over your head while you carry it
 	state[player].carrying = { model = model, crit = crit, from = from }
 	player:SetAttribute("Carrying", crit.name) -- the guide beam home
 	return true
@@ -632,6 +633,7 @@ local function spawnOnPad()
 	local y = map.padY + radiusOf(def) + 0.4
 	local model = CritterModels.build(def, CFrame.new(map.padStart, y, 0) * FACING, crit.mut)
 	CritterModels.setInfo(model, addCommas(crit.price) .. " Stardust")
+	CritterModels.setRate(model, "+" .. addCommas(crit.income) .. " Stardust/s") -- what it earns once it is in your base (Nolan, 2026-10-25)
 	local item = { model = model, crit = crit, x = map.padStart, y = y, t = 0, taken = false }
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = "Grab (" .. addCommas(crit.price) .. ")"
@@ -716,11 +718,16 @@ local function makeStar(pos, shower)
 	s.CanQuery = false
 	s.CanTouch = false
 	s.CFrame = CFrame.new(pos)
-	local light = Instance.new("PointLight")
-	light.Color = s.Color
-	light.Range = 9
-	light.Brightness = 1.6
-	light.Parent = s
+	s.CastShadow = false
+	-- only the everyday stars carry a light (2026-10-25, lag on the iPad): a shower can have about 75 stars out at once, and a
+	-- light on each one is a lot for a tablet to draw. The neon glows on its own.
+	if not shower then
+		local light = Instance.new("PointLight")
+		light.Color = s.Color
+		light.Range = 8
+		light.Brightness = 1.6
+		light.Parent = s
+	end
 	s.Parent = starFolder
 	return s
 end
@@ -783,7 +790,7 @@ local function meteorStar()
 	tw.Completed:Connect(function()
 		if s.Parent then
 			s:SetAttribute("Ready", true)
-			FX:FireAllClients("burst", land, Config.Colors.Blue)
+			FX:FireAllClients("meteor", land) -- a burst, and a little screen shake for anyone close (FX.client.lua)
 			task.delay(25, function() -- uncollected shower stars fade away
 				if s.Parent then
 					stars[s] = nil
