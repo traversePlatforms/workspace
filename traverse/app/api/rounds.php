@@ -2542,7 +2542,7 @@ function a365Agreement(array $l): array {
     $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
     $inc = $Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer'];
     foreach (a365Extras($Q['extras'] ?? []) as $x) $inc[] = $x['t'];   /* the extra work, in her words (2026-10-21); its price is in the Price */
-    $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how']] ?? $S2['how'];
+    $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other', 'none' => 'no deposit'][$S2['how']] ?? $S2['how'];
     $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
     $day = $o ? a365Day((string) $o['date']) . ', arriving ' . a365Arrive((string) $o['slot']) : 'to be set';
     $facts = [['Customer', trim((string) ($l['name'] ?? ''))]];
@@ -2552,7 +2552,7 @@ function a365Agreement(array $l): array {
     $em = trim((string) ($l['email'] ?? ''));
     if ($em !== '' && filter_var($em, FILTER_VALIDATE_EMAIL)) $facts[] = ['Email', $em];
     $facts = array_merge($facts, [['Address', $addr], ['Service', implode(', ', $inc)], ['Day', $day],
-              ['Price', '$' . number_format((int) $Q['price'])], $due ? ['Deposit (non-refundable), to pay now', '$' . number_format((int) $S2['deposit'])] : ['Deposit paid (non-refundable)', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')'],
+              ['Price', '$' . number_format((int) $Q['price'])], ($S2['how'] ?? '') === 'none' ? ['Deposit', 'None'] : ($due ? ['Deposit (non-refundable), to pay now', '$' . number_format((int) $S2['deposit'])] : ['Deposit paid (non-refundable)', '$' . number_format((int) $S2['deposit']) . ' (' . $how . ')']),
               ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]]);
     if (($S2['how'] ?? '') === 'link' && !empty($l['savecard']['yes'])) $facts[] = ['Card on file', a365SaveText((int) $Q['price'] - (int) $S2['deposit'])];   /* their choice when they paid (2026-10-15) */
     $ph = a365Phone($l);
@@ -2563,6 +2563,7 @@ function a365Agreement(array $l): array {
               'To reschedule or cancel, call or text ' . $ph . ' at least 24 hours before your day.',
               'The appointment is not confirmed until the deposit is paid.',   /* Matthew 2026-10-15 */
               'The deposit is non-refundable.'];
+    if (($S2['how'] ?? '') === 'none') $terms = array_values(array_filter($terms, fn($t) => stripos($t, 'deposit') === false));   /* no deposit taken (2026-10-26): no deposit rules on the form */
     $consents = ['I have read this agreement and I agree to its terms.', 'I agree to sign it electronically by typing my name.'];
     $consent = implode(' ', $consents);
     $text = implode("\n", array_map(fn($x) => $x[0] . ': ' . $x[1], $facts)) . "\n" . implode("\n", $terms) . "\n" . $consent;
@@ -2707,13 +2708,13 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $ex = jobForLead($l['id']);
     if ($ex && !$ex['done']) {
         $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
-        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']], 'by' => 'website', 'at' => time()]);
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']] : ['s' => 'unpaid'], 'by' => 'website', 'at' => time()]);
     } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= $today0) {
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
-            'pay' => ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
+            'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']] : ['s' => 'unpaid'], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
     }
     /* what was shown is kept with the signature, so the signed page never changes if the quote does later */
     $sg = ['name' => $name, 'at' => time(), 'version' => A365_SIGN_VERSION, 'hash' => $A['hash'], 'facts' => $A['facts'], 'terms' => $A['terms'],
@@ -7293,16 +7294,18 @@ if ($action === 'signsend') {
     $byLink = $depIn ? ($S0['how'] ?? '') === 'link' : ($body['how'] ?? '') === 'link';   /* SX-58: the customer pays the deposit on the form, by Square link */
     if ($S0 && !$depIn && ($S0['how'] ?? '') !== 'link' && $byLink) fail('The $' . (int) $S0['deposit'] . ' deposit was already taken (' . ucfirst((string) $S0['how']) . '). Keep that; a Square link would ask them to pay it again.');
     if ($byLink && !$depIn && !squareFor()) fail('Square is not connected yet.');
-    if (empty($body['taken']) && !$byLink && !$depIn) fail('The form goes out only after they said yes and you took the deposit.');
+    $noDep = !$depIn && ($body['how'] ?? '') === 'none';   /* no deposit (2026-10-26, Jen: Marc and Zane said no to the deposit, and the form would not go without one) */
+    if (empty($body['taken']) && !$byLink && !$depIn && !$noDep) fail('The form goes out only after they said yes and you took the deposit.');
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
     $pkg = (string) ($body['pkg'] ?? 'full'); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick what is included.');
-    $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true)) fail('Say how they paid the deposit.');
+    $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other', 'none'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
     if ($depIn) { $dep = (int) $S0['deposit']; if ($dep > $price) fail('The $' . $dep . ' deposit is already ' . ($linkPaid ? 'paid' : 'in') . '; the price cannot be less than that.'); }
     elseif (isset($body['deposit']) && $body['deposit'] !== '' && $body['deposit'] !== null) {   /* Jen can change it (Matthew 2026-10-15) */
         if (!is_numeric($body['deposit']) || (int) $body['deposit'] < 0 || (int) $body['deposit'] > $price) fail('The deposit has to be between $0 and the price.');
         $dep = (int) $body['deposit'];
     }
+    if ($noDep) $dep = 0;
     $crew = (string) ($body['crew'] ?? ''); $date = (string) ($body['date'] ?? ''); $slot = (string) ($body['slot'] ?? '');
     if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the job.');
     if (!dateOk($date) || $date < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
@@ -7327,7 +7330,7 @@ if ($action === 'signsend') {
         $sign['pay'] = $pl;
     }
     $row = ['id' => $id, 'quote' => $q, 'sign' => $sign, 'status' => 'quoted',
-            'note' => mb_substr('Quoted $' . $price . ' by phone; deposit $' . $dep . ($byLink ? ($depIn ? ' already paid by Square link' : ' to pay by Square link on the form') : ($depIn ? ' already in (' : ' taken (') . ucfirst($how) . ')') . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
+            'note' => mb_substr('Quoted $' . $price . ' by phone; ' . ($how === 'none' ? 'no deposit' : 'deposit $' . $dep . ($byLink ? ($depIn ? ' already paid by Square link' : ' to pay by Square link on the form') : ($depIn ? ' already in (' : ' taken (') . ucfirst($how) . ')')) . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
     if ($nosign) $row['note'] = str_replace('Form sent;', 'Form sent (no signature needed);', $row['note']);
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     if (!empty($L['confirmed'])) { $A2 = a365Agreement(leadsAll()[$id]); appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'confirmed' => ['facts' => $A2['facts'], 'terms' => $A2['terms'], 'hash' => $A2['hash'], 'version' => A365_SIGN_VERSION] + $L['confirmed'], 'by' => $me, 'at' => time()]); }   /* sent again on purpose: the kept copy follows the new form (2026-10-18) */

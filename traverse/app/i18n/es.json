@@ -2494,5 +2494,10 @@
  "Job added, done and paid": "Trabajo agregado, hecho y pagado",
  "Book it as done and paid": "Agregarlo como hecho y pagado",
  "quoted ": "cotizado ",
- "no quote saved": "sin cotización guardada"
+ "no quote saved": "sin cotización guardada",
+ "No deposit": "Sin depósito",
+ "No deposit · they pay ": "Sin depósito · pagan ",
+ " when the work is done": " cuando se termine el trabajo",
+ "No deposit. Type the price.": "Sin depósito. Escribe el precio.",
+ " · no deposit, paid when the work is done": " · sin depósito, se paga cuando se termine el trabajo"
 }
