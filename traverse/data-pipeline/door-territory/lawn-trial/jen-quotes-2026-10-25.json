@@ -1,0 +1,360 @@
+{
+ "made": "2026-10-25",
+ "note": "Lawn size on each Jen quote tied to a house (and hand measures) vs the app photo estimate and yard v2. Quote sizes can be partial yards or the app default, so this is a check set, not calibration. Summary over 32: app photo median lean -37% (within 25%: 12), yard v2 lean -2% (within 25%: 10).",
+ "rows": [
+  {
+   "address": "7341 JAY ST",
+   "town": "westminster",
+   "kind": "Jen quote size",
+   "jen": 1000,
+   "appPhoto": 0,
+   "yardV2": null,
+   "v2UnderTrees": null,
+   "lot": null
+  },
+  {
+   "address": "6267 BLACK HILLS CT",
+   "town": "looked-up",
+   "kind": "Jen quote size",
+   "jen": 400,
+   "appPhoto": 300,
+   "yardV2": 323,
+   "v2UnderTrees": 0,
+   "lot": 7287
+  },
+  {
+   "address": "7845 BRADBURN BLVD",
+   "town": "westminster",
+   "kind": "Jen quote size",
+   "jen": 2200,
+   "appPhoto": 900,
+   "yardV2": 3305,
+   "v2UnderTrees": 1873,
+   "lot": 18148
+  },
+  {
+   "address": "11630 BLACKMOOR ST",
+   "town": "parker",
+   "kind": "Jen quote size",
+   "jen": 2100,
+   "appPhoto": 2100,
+   "yardV2": 1733,
+   "v2UnderTrees": 194,
+   "lot": 7632
+  },
+  {
+   "address": "4200 E COUNTY LINE RD",
+   "town": "erie",
+   "kind": "Jen quote size",
+   "jen": 11000,
+   "appPhoto": 0,
+   "yardV2": 2992,
+   "v2UnderTrees": 1442,
+   "lot": 40709
+  },
+  {
+   "address": "13695 W CENTER DR",
+   "town": "lakewood",
+   "kind": "Jen quote size",
+   "jen": 2100,
+   "appPhoto": 1400,
+   "yardV2": 3186,
+   "v2UnderTrees": 1345,
+   "lot": 11345
+  },
+  {
+   "address": "5905 HAYWAGON LN",
+   "town": "franktown",
+   "kind": "Jen quote size",
+   "jen": 1000,
+   "appPhoto": 1100,
+   "yardV2": 495,
+   "v2UnderTrees": 0,
+   "lot": 6652
+  },
+  {
+   "address": "559 W PRESTWICK WAY",
+   "town": "castle-rock",
+   "kind": "Jen quote size",
+   "jen": 7050,
+   "appPhoto": 1500,
+   "yardV2": 6222,
+   "v2UnderTrees": 280,
+   "lot": 13789
+  },
+  {
+   "address": "2763 RAVENHILL CIR",
+   "town": "highlands-ranch",
+   "kind": "Jen quote size",
+   "jen": 900,
+   "appPhoto": 700,
+   "yardV2": 1464,
+   "v2UnderTrees": 732,
+   "lot": 8288
+  },
+  {
+   "address": "5123 S XENOPHON CT",
+   "town": "dakota-ridge",
+   "kind": "Jen quote size",
+   "jen": 900,
+   "appPhoto": 700,
+   "yardV2": 2422,
+   "v2UnderTrees": 1238,
+   "lot": 14101
+  },
+  {
+   "address": "5661 S FLORENCE ST",
+   "town": "greenwood-village",
+   "kind": "Jen quote size",
+   "jen": 3500,
+   "appPhoto": 1100,
+   "yardV2": 5414,
+   "v2UnderTrees": 3897,
+   "lot": 12346
+  },
+  {
+   "address": "9416 DESERT WILLOW TRL",
+   "town": "highlands-ranch",
+   "kind": "Jen quote size",
+   "jen": 1100,
+   "appPhoto": 400,
+   "yardV2": 1399,
+   "v2UnderTrees": 1195,
+   "lot": 6598
+  },
+  {
+   "address": "3185 WARD CT",
+   "town": "wheat-ridge",
+   "kind": "Jen quote size",
+   "jen": 400,
+   "appPhoto": 300,
+   "yardV2": 3714,
+   "v2UnderTrees": 3455,
+   "lot": 9171
+  },
+  {
+   "address": "5305 E NEBRASKA WAY",
+   "town": "looked-up",
+   "kind": "Jen quote size",
+   "jen": 500,
+   "appPhoto": 400,
+   "yardV2": 2820,
+   "v2UnderTrees": 2196,
+   "lot": 7987
+  },
+  {
+   "address": "18656 E 40TH PL",
+   "town": "denver",
+   "kind": "Jen quote size",
+   "jen": 720,
+   "appPhoto": 200,
+   "yardV2": 280,
+   "v2UnderTrees": 0,
+   "lot": 2820
+  },
+  {
+   "address": "6595 ZINNIA ST",
+   "town": "arvada",
+   "kind": "hand measure",
+   "incl": "trees",
+   "jen": 3225,
+   "appPhoto": 1600,
+   "yardV2": 2088,
+   "v2UnderTrees": 624,
+   "lot": 6437
+  },
+  {
+   "address": "8207 E GEDDES AVE",
+   "town": "centennial",
+   "kind": "Jen quote size",
+   "jen": 2000,
+   "appPhoto": 1600,
+   "yardV2": 3401,
+   "v2UnderTrees": 3175,
+   "lot": 10226
+  },
+  {
+   "address": "385 STARLIGHT RD",
+   "town": "thornton",
+   "kind": "Jen quote size",
+   "jen": 3300,
+   "appPhoto": 2400,
+   "yardV2": 3660,
+   "v2UnderTrees": 1152,
+   "lot": 10140
+  },
+  {
+   "address": "22939 Nampeyo Rd",
+   "town": "",
+   "kind": "Jen quote size",
+   "jen": 38850,
+   "appPhoto": 0,
+   "yardV2": null,
+   "v2UnderTrees": null,
+   "lot": null
+  },
+  {
+   "address": "96 PRAIRIE FALCON PKWY",
+   "town": "brighton",
+   "kind": "Jen quote size",
+   "jen": 1000,
+   "appPhoto": 800,
+   "yardV2": 980,
+   "v2UnderTrees": 936,
+   "lot": 10323
+  },
+  {
+   "address": "2864 N YOSEMITE ST",
+   "town": "denver",
+   "kind": "Jen quote size",
+   "jen": 700,
+   "appPhoto": 500,
+   "yardV2": 0,
+   "v2UnderTrees": 0,
+   "lot": 4564
+  },
+  {
+   "address": "3247 OAK LEAF PL",
+   "town": "highlands-ranch",
+   "kind": "hand measure",
+   "incl": "grass",
+   "jen": 2556,
+   "appPhoto": 1300,
+   "yardV2": 2885,
+   "v2UnderTrees": 1722,
+   "lot": 9375
+  },
+  {
+   "address": "7006 E 131ST WAY",
+   "town": "thornton",
+   "kind": "Jen quote size",
+   "jen": 2000,
+   "appPhoto": 1100,
+   "yardV2": 775,
+   "v2UnderTrees": 344,
+   "lot": 7266
+  },
+  {
+   "address": "3855 S VALENTIA CT",
+   "town": "looked-up",
+   "kind": "hand measure",
+   "incl": "beds",
+   "jen": 8111,
+   "appPhoto": 3000,
+   "yardV2": 6286,
+   "v2UnderTrees": 3283,
+   "lot": 13423
+  },
+  {
+   "address": "8730 W 88TH PL",
+   "town": "westminster",
+   "kind": "Jen quote size",
+   "jen": 2000,
+   "appPhoto": 500,
+   "yardV2": 1959,
+   "v2UnderTrees": 603,
+   "lot": 7965
+  },
+  {
+   "address": "16767 E BELLEVIEW PL",
+   "town": "centennial",
+   "kind": "Jen quote size",
+   "jen": 4700,
+   "appPhoto": 4700,
+   "yardV2": 1485,
+   "v2UnderTrees": 581,
+   "lot": 12099
+  },
+  {
+   "address": "5860 HIDDEN OAKS CT",
+   "town": "the-pinery",
+   "kind": "Jen quote size",
+   "jen": 5000,
+   "appPhoto": 200,
+   "yardV2": 2293,
+   "v2UnderTrees": 1184,
+   "lot": 33325
+  },
+  {
+   "address": "3495 ELK RUN DR",
+   "town": "castle-rock",
+   "kind": "Jen quote size",
+   "jen": 4500,
+   "appPhoto": 2400,
+   "yardV2": 5490,
+   "v2UnderTrees": 1593,
+   "lot": 16340
+  },
+  {
+   "address": "10356 VIENNA ST",
+   "town": "parker",
+   "kind": "Jen quote size",
+   "jen": 1200,
+   "appPhoto": 1300,
+   "yardV2": 1518,
+   "v2UnderTrees": 54,
+   "lot": 5651
+  },
+  {
+   "address": "4633 W TUFTS CIR",
+   "town": "denver",
+   "kind": "Jen quote size",
+   "jen": 4500,
+   "appPhoto": 800,
+   "yardV2": 6426,
+   "v2UnderTrees": 3875,
+   "lot": 13810
+  },
+  {
+   "address": "4910 N IDALIA ST",
+   "town": "denver",
+   "kind": "Jen quote size",
+   "jen": 2700,
+   "appPhoto": 200,
+   "yardV2": 54,
+   "v2UnderTrees": 0,
+   "lot": 5834
+  },
+  {
+   "address": "12963 W 80TH PL",
+   "town": "arvada",
+   "kind": "Jen quote size",
+   "jen": 3200,
+   "appPhoto": 2000,
+   "yardV2": 2756,
+   "v2UnderTrees": 388,
+   "lot": 17847
+  },
+  {
+   "address": "9941 SILVER MAPLE RD",
+   "town": "highlands-ranch",
+   "kind": "Jen quote size",
+   "jen": 3000,
+   "appPhoto": 800,
+   "yardV2": 2077,
+   "v2UnderTrees": 1195,
+   "lot": 7933
+  },
+  {
+   "address": "2195 E NICHOLS DR",
+   "town": "looked-up",
+   "kind": "hand measure",
+   "incl": "trees",
+   "jen": 3035,
+   "appPhoto": 800,
+   "yardV2": 689,
+   "v2UnderTrees": 172,
+   "lot": 6211
+  },
+  {
+   "address": "8338 ZIRCON ST",
+   "town": "arvada",
+   "kind": "Jen quote size",
+   "jen": 400,
+   "appPhoto": 400,
+   "yardV2": 108,
+   "v2UnderTrees": 0,
+   "lot": 6609
+  }
+ ]
+}

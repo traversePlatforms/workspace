@@ -7,3 +7,15 @@ RewriteRule ^ https://365aeration.com%{REQUEST_URI} [L,R=301]
 RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Browser safety headers (2026-10-25, security check: none were sent). frame-ancestors, not X-Frame-Options SAMEORIGIN: the
+# Sixfold app on traverseplatforms.com shows the signed forms in a frame on computers. Deploy backups never sit beside live files.
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Content-Security-Policy "frame-ancestors 'self' https://traverseplatforms.com"
+Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
+<FilesMatch "\.(pre|before)-|\.(bak|old|orig|tgz|zip|sql)$">
+  Require all denied
+</FilesMatch>

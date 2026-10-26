@@ -11,6 +11,11 @@ RewriteRule ^ https://traverseplatforms.com%{REQUEST_URI} [R=301,L]
 <FilesMatch "\.(md|mjs|log|sh|map)$">
   Require all denied
 </FilesMatch>
+# 2026-10-25 (security check): deploy backups left beside live files still ran (an old rounds.php skipped rules added since).
+# They now live in ~/upload-backups/; this refuses any that slip back in.
+<FilesMatch "\.(pre|before)-|\.(bak|old|orig|tgz|zip|sql)$">
+  Require all denied
+</FilesMatch>
 RedirectMatch 404 /\.(?!well-known)
 <IfModule mod_headers.c>
 Header set X-Robots-Tag "noindex, nofollow"
@@ -18,6 +23,7 @@ Header set Cache-Control "private, no-cache"
 Header always set X-Content-Type-Options "nosniff"
 Header always set X-Frame-Options "SAMEORIGIN"
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Strict-Transport-Security "max-age=31536000"
 </IfModule>
 
 # 2026-10-15 (Matthew: "put the traverseplatforms.com homepage and pages private for now"): the marketing pages need a password;
