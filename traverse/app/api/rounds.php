@@ -2743,7 +2743,7 @@ if ($action === 'sitelead') {
     if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Empty.');
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that.', 500);
     if (preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    if (leadAlertsOn()) a365Alert('New website enquiry', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''), false, true);
+    a365Alert('New website lead (yours)', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''), false, true, true);   /* Matthew's phones, always (2026-10-26, Matthew: "I need the app to send me a notification every time a new lead comes into my pipeline"); it went to the office before */
     out(['ok' => true, 'id' => $row['id']]);
 }
 
@@ -4120,6 +4120,22 @@ function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_st
 function metaMineFrom(): int { static $t = null; if ($t === null) { $d = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) (company()['metaMine'] ?? '')) ? (string) company()['metaMine'] : ''; $t = $d !== '' ? (int) strtotime($d . ' 00:00:00 America/Denver') : 0; } return $t; }
 function webLead(array $l): bool { if (!empty($l['jenkeep'])) return false;   /* reached out to the office themselves: theirs now (2026-10-26) */
     $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom()); }
+/* the nudge (2026-10-26, Matthew: "i get in the zone and forget to look after awhile and these people need to be contacted right away"): one of
+   his leads still untouched 15 minutes after it came in (new, no call, text or email logged, no quote, no call-back day) gets one more alert
+   on his phones. Once per lead; leads over a day old are left alone. Run by the 5-minute Facebook job (metapoll). */
+const MINE_REMIND_SECS = 15 * 60;
+function mineReminders(): void {
+    $f = leadsDir() . '/reminded.json'; $done = json_decode((string) @file_get_contents($f), true); if (!is_array($done)) $done = [];
+    $now = time(); $n0 = count($done); $done = array_filter($done, fn($t) => (int) $t > $now - 7 * 86400); $changed = count($done) !== $n0;
+    foreach (leadsAllRaw() as $id => $l) {
+        if (!webLead($l) || isset($done[$id]) || (string) ($l['status'] ?? 'new') !== 'new' || !empty($l['tries']) || !empty($l['quote']) || !empty($l['recall'])) continue;
+        $age = $now - (int) ($l['at'] ?? 0); if ($age < MINE_REMIND_SECS || $age > 86400) continue;
+        $src = ($l['src'] ?? '') === 'a365web' ? 'website' : 'Facebook ad';
+        a365Alert('Still waiting: ' . (trim((string) ($l['name'] ?? '')) ?: 'a new lead'), 'Came in ' . (int) floor($age / 60) . ' minutes ago from the ' . $src . ' and nobody has reached out yet.', false, false, true);
+        $done[$id] = $now; $changed = true;
+    }
+    if ($changed) writeJsonAtomic($f, $done);
+}
 function webLeadIds(): array { static $ids = null; if ($ids === null) { $ids = []; foreach (leadsAllRaw() as $id => $l) if (webLead($l)) $ids[$id] = true; } return $ids; }
 /* Facebook form names as the Pipeline shows them (2026-10-25, Matthew: "rename facebook leads ... lead 1 and lead 2"): the second form's own
    name, "365 Aeration and Seeding 's form created on Mon Oct 19, 2026 3:51pm", was read as the day the lead came in. The service word stays
@@ -6655,7 +6671,7 @@ if ($action === 'leadadd') {
             if ($role === 'quote') $row['qown'] = $me;   /* her Quick quote login sees it as hers */
             if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
             if (($mine['status'] ?? '') === 'unreached') leadRevive((string) $mine['id'], 'reached out to ' . $me . ' ' . $how, $me);
-            if (leadAlertsOn()) a365Alert('Your lead reached out to ' . strtok($me, ' '), (trim((string) ($mine['name'] ?? '')) ?: 'Someone') . ' · ' . $how . '. ' . strtok($me, ' ') . ' has them now.', false, false, true);
+            a365Alert('Your lead reached out to ' . strtok($me, ' '), (trim((string) ($mine['name'] ?? '')) ?: 'Someone') . ' · ' . $how . '. ' . strtok($me, ' ') . ' has them now.', false, false, true);
             out(['ok' => true, 'id' => (string) $mine['id'], 'had' => true, 'kept' => true]);
         }
     }
@@ -6827,6 +6843,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
         out(['ok' => true, 'pages' => array_map(fn($p) => $p['name'], $M['pages'])]);
     }
     $M = json_decode((string) @file_get_contents(metaFile()), true);
+    if ($action === 'metapoll') mineReminders();   /* first, so website leads are nudged even if the Facebook side is down (2026-10-26) */
     if (!is_array($M) || empty($M['pages'])) out(['ok' => true, 'added' => 0, 'note' => 'not set up']);
     $g = $graphBase($M);
     $digits = fn($p) => substr(preg_replace('/\D/', '', (string) $p), -10);
@@ -6877,7 +6894,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
     if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)), false, true);
-    if ($mineAdded && leadAlertsOn()) a365Alert(count($mineAdded) === 1 ? 'New Facebook ad lead (yours)' : count($mineAdded) . ' new Facebook ad leads (yours)', implode(', ', array_slice($mineAdded, 0, 4)), false, true, true);
+    if ($mineAdded) a365Alert(count($mineAdded) === 1 ? 'New Facebook ad lead (yours)' : count($mineAdded) . ' new Facebook ad leads (yours)', implode(', ', array_slice($mineAdded, 0, 4)), false, true, true);
     $added = array_merge($added, $mineAdded);
     out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors, 'mnotes' => $mnotes]);
 }
