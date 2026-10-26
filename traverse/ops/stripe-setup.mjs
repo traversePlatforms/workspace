@@ -16,8 +16,9 @@
 import { readFileSync } from 'node:fs'; import { homedir } from 'node:os'; import { join } from 'node:path';
 const keyFile = process.env.STRIPE_KEYFILE || join(homedir(), '.ssh', 'stripe-test.json');
 const K = JSON.parse(readFileSync(keyFile, 'utf8')).secret;
-if (!/^sk_(test|live)_/.test(K)) throw new Error('no Stripe secret key in ' + keyFile);
-const LIVE = K.startsWith('sk_live_');
+if (!/^[sr]k_(test|live)_/.test(K))   /* rk_: a restricted key (live, 2026-10-26) */
+   throw new Error('no Stripe secret key in ' + keyFile);
+const LIVE = /^[sr]k_live_/.test(K);
 
 async function api(method, path, params) {
   const body = params ? new URLSearchParams(flat(params)).toString() : undefined;
