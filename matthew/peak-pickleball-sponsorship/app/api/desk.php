@@ -109,6 +109,9 @@ if ($action === 'signin') {
     $tries = jread('tries.json', []); $now = time();
     $mine = array_values(array_filter($tries[$ip] ?? [], fn($t) => $t > $now - 900));
     if (count($mine) >= 10) fail('Too many tries. Wait 15 minutes.', 429);
+    /* the whole desk pauses after 100 wrong codes in an hour from anywhere, so many addresses can't share the guessing (security check 2026-10-25) */
+    $recent = 0; foreach ($tries as $k => $ts) { $tries[$k] = array_values(array_filter((array) $ts, fn($t) => $t > $now - 3600)); if (!$tries[$k]) unset($tries[$k]); else $recent += count($tries[$k]); }
+    if ($recent >= 100) fail('Sign-in is paused for a while after too many wrong codes. Try again later.', 429);
     $code = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
     $acc = jread('accounts.json', ['codes' => []]); $a = $acc['codes'][codeHash($code)] ?? null;
     if (!$a || strlen($code) !== 6) { $mine[] = $now; $tries[$ip] = $mine; jwrite('tries.json', $tries); fail('That code did not work.', 401); }

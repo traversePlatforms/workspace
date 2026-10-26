@@ -23,13 +23,14 @@ await js("document.querySelector('.row').click()"); await sleep(500);
 await shot((process.env.DARK?'d':'m')+'2-company.png', true);
 console.log('overflow list/company:', await js('document.documentElement.scrollWidth') + ' vs ' + await js('document.documentElement.clientWidth'));
 await js("document.querySelector('.detail .close').click()"); await sleep(300);
-await js("[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='Report').click()"); await sleep(300);
+await js("document.querySelector('.tabs [data-tab=more]').click()"); await sleep(300);   /* the report sits under More since 2026-10-25 */
+await js("document.querySelector('.subchips [data-sub=report]').click()"); await sleep(300);
 await js("[...document.querySelectorAll('main .btn')].find(b=>/Open the report/.test(b.textContent)).click()"); await sleep(400);
 await shot((process.env.DARK?'d':'m')+'3-report.png', true);
 console.log('overflow report:', await js('document.documentElement.scrollWidth'));
 await js("[...document.querySelectorAll('.printbar button')].find(b=>/Back/.test(b.textContent)).click()"); await sleep(300);
 for (const [n, t] of [['4-offer', 'What Peak offers'], ['5-better', 'What we could offer']]) {
-  await js(`[...document.querySelectorAll('.tabs button')].find(b=>b.textContent==='${t}').click()`); await sleep(300); await js('window.scrollTo(0,0)');
+  await js(`[...document.querySelectorAll('.subchips button')].find(b=>b.textContent==='${t}').click()`); await sleep(300); await js('window.scrollTo(0,0)');
   await shot((process.env.DARK?'d':'m') + n + '.png', true);
   console.log('overflow ' + n + ':', await js('document.documentElement.scrollWidth'));
 }

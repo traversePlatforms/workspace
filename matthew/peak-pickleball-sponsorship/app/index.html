@@ -87,7 +87,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
    a narrower paper for the proposal and report */
 @media (max-width:640px){
   .bar{padding:8px 12px;gap:4px 10px}.brand small{display:none}.who{font-size:12px}
-  .tabs{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tabs button{flex:none;padding:6px 10px}
+  .tabs{order:3;width:100%;display:flex;flex-wrap:wrap;gap:4px}.tabs button{flex:1 1 auto;padding:6px 6px;font-size:13px;white-space:nowrap;text-align:center}   /* six sections on two rows, all in view (2026-10-25) */
   main{padding:12px}
   .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.chips::-webkit-scrollbar{display:none}.chips button{flex:none}
   .controls .search{min-width:0}
@@ -133,6 +133,21 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   .plrow{grid-template-columns:1fr 1fr;padding:8px 0;border-bottom:1px dashed var(--line)}.plrow .nmc{grid-column:1/-1}.plhead{display:none}
   .rnrow{grid-template-columns:1fr 90px 80px 30px}
 }
+/* the sections (2026-10-25): a count on each tab, the section's name and line, its chips; the stage chips and the sort sit under them */
+.tabs button .tn{font-weight:700;font-size:11.5px;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--chip);color:var(--soft)}
+.tabs button[aria-current="page"] .tn{background:var(--card);color:var(--accent)}
+.shead{margin:0 0 12px}.shtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.shead h1{margin:0 auto 0 0;font-size:21px}
+.sdesc{color:var(--soft);margin:2px 0 10px;font-size:14px}
+.subchips button{font-weight:650}.chips button.warnc b{color:var(--warn)}.chips button.warnc[aria-pressed="true"] b{color:inherit}
+.stagechips{margin:0 0 12px;align-items:center}.chiplab{font-size:11.5px;color:var(--soft);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:2px;flex:none}
+.stagechips button{padding:4px 10px;font-size:13px}
+.sortby{display:flex;gap:6px;align-items:center;font-size:13.5px;color:var(--soft)}.sortby select{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+@media (max-width:640px){
+  .tabs button .tn{margin-left:4px;padding:0 6px}
+  .chips.subchips{flex-wrap:wrap;overflow:visible}   /* a section's own chips are few: they wrap, every one in view; the stage chips swipe */
+  .shead h1{font-size:19px}.sdesc{font-size:13.5px;margin-bottom:8px}
+  .controls{gap:8px}.controls .search{flex:1 1 150px}.sortby span{display:none}.sortby select{max-width:44vw}
+}
 @media print{@page{size:letter;margin:.5in} html,body{background:#fff!important} .bar,.printbar,.toast{display:none!important} main{padding:0;max-width:none} .paper{box-shadow:none;padding:0;max-width:none}}
 </style>
 </head>
@@ -148,7 +163,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
 (function () {
   'use strict';
   var API = 'api/desk.php';
-  var S = { data: null, tab: 'pipe', list: 'new', st: 'all', q: '', sel: null, sort: 'reach', view: 'list', due: false };
+  var S = { data: null, tab: 'lists', sub: {}, st: {}, qs: {}, sort: {}, q: '', sel: null };   /* the chips, stage, search and sort are kept per section (2026-10-25) */
   /* everyone known at a company: the seed's contacts, ones we added, and Hunter's when someone asked (2026-10-24) */
   var peopleOf = function (l) { var h = (l.scan && l.scan.hunter && l.scan.hunter.people) || []; return (l.contacts || []).concat(l.added || [], h); };
   var found = function (l, k) { return (l.scan && l.scan.ok && l.scan[k]) || []; };   /* what their website shows */
@@ -214,82 +229,177 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     return api(action, body).then(function (j) { if (j._status === 401) { signin('Signed out. Enter your code again.'); return j; } if (!j.ok) { toast(j.error || 'Not saved.'); return j; } if (msg) toast(msg); return new Promise(function (res) { load(function () { draw(); res(j); }); }); });
   }
 
+  /* ---- the sections (2026-10-25, Matthew: "better organized there lists, board, new leads, peak sponsors, local business added by us.
+     Then more stuff under that just needs to be organized better"): five places in his order and a small More. Each has a line saying
+     what is in it, a count on its tab, its own chips under the header, and its own search, sort and stage filter.
+     Where the old tabs went: Pipeline's List = Lists (with Follow-ups due and Removed) and the three list sections; Pipeline's Board,
+     Tours, Proposals and Signed = Board; Report, Profit & loss, Packages and the two reading tabs = More. ---- */
+  var SECS = [
+    ['lists', 'Lists', 'Every company on the desk in one list: search them all, see the follow-ups due, bring back a removed company.'],
+    ['board', 'Board', 'Where each deal stands, from Contacted to Signed, with the tours, proposals and signed sponsors.'],
+    ['new', 'New leads', 'The companies we researched as new sponsors, the ones a call reaches best at the top.'],
+    ['peak', 'Peak sponsors', 'Every sponsor on Peak’s own tracker, active ones first.'],
+    ['local', 'Local businesses', 'Added by us: local businesses from our research and companies added on the desk.'],
+    ['more', 'More', 'The report, profit and loss, packages, and what Peak offers sponsors.']
+  ];
+  var SUBS = {
+    lists: [['all', 'All companies'], ['due', 'Follow-ups due'], ['removed', 'Removed']],
+    board: [['stages', 'Stages'], ['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
+    peak: [['all', 'All'], ['Active', 'Active'], ['Pending', 'Pending'], ['Inactive', 'Inactive']],
+    local: [['all', 'All'], ['local', 'From our research'], ['added', 'Added on the desk']],
+    more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer']]
+  };
+  var SORTS = {
+    lists: [['name', 'Name A to Z'], ['reach', 'Best contact first'], ['next', 'Next step soonest']],
+    'new': [['reach', 'Best contact first'], ['score', 'Score'], ['name', 'Name A to Z']],
+    peak: [['peak', 'Active first'], ['end', 'Contract ends soonest'], ['name', 'Name A to Z']],
+    local: [['reach', 'Best contact first'], ['score', 'Fit score'], ['miles', 'Nearest first'], ['name', 'Name A to Z']]
+  };
+  var SEARCH = { lists: 'Search every company', 'new': 'Search new leads', peak: 'Search Peak sponsors', local: 'Search local businesses', board: 'Search the board' };
+  var STAGES = ['contacted', 'tour', 'toured', 'proposal', 'signed'];
+  var onBoard = function (l) { return STAGES.indexOf(l.status) >= 0; };
+  /* each company lives in exactly one of the three list sections: its list decides */
+  var secOf = function (l) { return l.list === 'renew' ? 'peak' : l.list === 'new' ? 'new' : 'local'; };
+  var subOf = function (t) { return S.sub[t] || (SUBS[t] ? SUBS[t][0][0] : ''); };
+  var sortOf = function (t) { return S.sort[t] || (SORTS[t] ? SORTS[t][0][0] : 'reach'); };
+  var upTours = function () { return S.data.tours.filter(function (t) { return t.date >= today(); }); };
+  function tabCount(t) {
+    var L = S.data.leads;
+    if (t === 'lists') return L.length;
+    if (t === 'board') return L.filter(onBoard).length;
+    if (t === 'more') return null;
+    return L.filter(function (l) { return secOf(l) === t; }).length;
+  }
+  function subCount(t, k) {
+    var D = S.data, L = D.leads;
+    if (t === 'lists') return k === 'all' ? L.length : k === 'due' ? L.filter(isDue).length : (D.removed || []).length;
+    if (t === 'board') return k === 'stages' ? L.filter(onBoard).length : k === 'tours' ? upTours().length : k === 'props' ? D.proposals.length : L.filter(function (l) { return l.status === 'signed'; }).length;
+    if (t === 'peak' || t === 'local') return sectionLeads(t, k).length;
+    return null;
+  }
+  function sectionLeads(t, sub) {
+    var L = S.data.leads;
+    if (t === 'lists') return sub === 'due' ? L.filter(isDue) : L.slice();
+    var mine = L.filter(function (l) { return secOf(l) === t; });
+    if (t === 'peak' && sub && sub !== 'all') return mine.filter(function (l) { return pkOf(l) && pkShort(pkOf(l).status) === sub; });
+    if (t === 'local' && sub && sub !== 'all') return mine.filter(function (l) { return l.list === sub; });
+    return mine;
+  }
+
   /* ---- tabs ---- */
   function tabs() {
     var t = $('tabs'); t.textContent = '';
-    var T = [['pipe', 'Pipeline'], ['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed'], ['pl', 'Profit & loss'], ['report', 'Report'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer']];   /* everyone signed in (2026-10-21); Signed and Profit & loss 2026-10-24 */
-    T.forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; if (S.tab === x[0]) b.setAttribute('aria-current', 'page'); b.addEventListener('click', function () { S.tab = x[0]; S.print = null; tabs(); draw(); window.scrollTo(0, 0); }); t.appendChild(b); });
+    SECS.forEach(function (x) {
+      var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(el('span', 'tl', x[1]));
+      var n = S.data ? tabCount(x[0]) : null; if (n != null) b.appendChild(el('b', 'tn', String(n)));
+      if (S.tab === x[0]) b.setAttribute('aria-current', 'page');
+      b.addEventListener('click', function () { go(x[0]); }); t.appendChild(b);
+    });
   }
+  /* open a section (and one of its chips); the address keeps the place, so a reload on the phone comes back to it */
+  function go(t, sub) { S.tab = t; if (sub) S.sub[t] = sub; S.print = null; S.sel = null; remember(); tabs(); draw(); window.scrollTo(0, 0); }
+  function remember() { try { history.replaceState(null, '', '#' + S.tab + (SUBS[S.tab] ? '/' + subOf(S.tab) : '')); } catch (e) {} }
   function draw() {
     main.textContent = '';
     document.documentElement.classList.remove('lock');
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
-    ({ pipe: drawPipe, tours: drawTours, props: drawProps, signed: drawSigned, pl: drawPl, report: drawReport, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.better); } })[S.tab]();
+    S.q = S.qs[S.tab] || '';
+    main.setAttribute('data-section', S.tab);
+    secHead();
+    var sub = subOf(S.tab);
+    ({ lists: drawLists, board: drawBoardSec, 'new': drawLeadList, peak: drawLeadList, local: drawLeadList, more: drawMore })[S.tab](sub);
+  }
+  /* the section's name, its one line, and its chips */
+  function secHead() {
+    var x = SECS.filter(function (s) { return s[0] === S.tab; })[0], h = el('div', 'shead'), top = el('div', 'shtop');
+    top.appendChild(el('h1', null, x[1]));
+    if (S.tab === 'local') { var add = el('button', 'btn ghost small', '+ Add a company'); add.type = 'button'; add.addEventListener('click', addForm); top.appendChild(add); }
+    h.appendChild(top); h.appendChild(el('p', 'sdesc', x[2]));
+    if (SUBS[S.tab]) {
+      var sc = el('div', 'chips subchips'), cur = subOf(S.tab);
+      SUBS[S.tab].forEach(function (s) {
+        var n = subCount(S.tab, s[0]);
+        if (n === 0 && cur !== s[0] && (s[0] === 'removed' || S.tab === 'peak')) return;   /* an empty Removed or Pending stays out of the way */
+        var b = el('button', s[0] === 'due' && n ? 'warnc' : null, s[1]); b.type = 'button'; b.setAttribute('data-sub', s[0]);
+        if (n != null) b.appendChild(el('b', null, String(n)));
+        b.setAttribute('aria-pressed', String(cur === s[0]));
+        b.addEventListener('click', function () { S.sub[S.tab] = s[0]; S.st[S.tab] = 'all'; S.sel = null; remember(); draw(); });
+        sc.appendChild(b);
+      });
+      h.appendChild(sc);
+    }
+    main.appendChild(h);
   }
   var lead = function (id) { return S.data.leads.filter(function (l) { return l.id === id; })[0]; };
   var stName = function (k) { return S.data.statuses[k] || k; };
+  var openDetail = function (split) { if (S.sel && lead(S.sel)) { split.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); } };
+  var searchBox = function (into, redraw) { var q = el('input', 'search'); q.type = 'search'; q.placeholder = SEARCH[S.tab] || 'Search'; q.value = S.q; q.addEventListener('input', function () { S.q = S.qs[S.tab] = q.value; redraw(); }); into.appendChild(q); return q; };
 
-  /* ---- pipeline ---- */
-  function drawPipe() {
-    var D = S.data, c = el('div', 'controls'), refresh = function () {};
-    /* List or Board (2026-10-24, Matthew: "build out pipeline section"): the board shows every company past Not contacted, one column a stage */
-    var vw = el('div', 'chips');
-    [['list', 'List'], ['board', 'Board']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.view === x[0])); b.addEventListener('click', function () { S.view = x[0]; S.sel = null; draw(); }); vw.appendChild(b); });
-    c.appendChild(vw);
-    var lc = el('div', 'chips');
-    if (S.view === 'list') LISTS.forEach(function (x) { var n = D.leads.filter(function (l) { return l.list === x[0]; }).length; if (!n && x[0] === 'added') return; var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.list === x[0] && !S.due)); b.addEventListener('click', function () { S.list = x[0]; S.due = false; S.sel = null; draw(); }); lc.appendChild(b); });
-    if (S.view === 'list' && (D.removed || []).length) { var rb = el('button', null, 'Removed'); rb.type = 'button'; rb.appendChild(el('b', null, String(D.removed.length))); rb.setAttribute('aria-pressed', String(S.list === 'removed' && !S.due)); rb.addEventListener('click', function () { S.list = 'removed'; S.due = false; S.sel = null; draw(); }); lc.appendChild(rb); }
-    c.appendChild(lc);
-    var q = el('input', 'search'); q.type = 'search'; q.placeholder = 'Search companies'; q.value = S.q; q.addEventListener('input', function () { S.q = q.value; refresh(); }); c.appendChild(q);
-    var add = el('button', 'btn ghost small', '+ Add a company'); add.type = 'button'; add.addEventListener('click', addForm); c.appendChild(add);
+  /* ---- Lists: every company, the follow-ups due, the removed ones ---- */
+  function drawLists(sub) { if (sub === 'removed') return drawRemoved(); drawLeadList(sub); }
+  /* ---- Board: the stage columns, and the tours, proposals and signed sponsors ---- */
+  function drawBoardSec(sub) {
+    if (sub === 'tours') return drawTours();
+    if (sub === 'props') return drawProps();
+    if (sub === 'signed') return drawSigned();
+    /* one column a stage, every list (2026-10-24, Matthew: "build out pipeline section") */
+    var c = el('div', 'controls'), bs = el('div', 'split' + (S.sel ? ' open' : '')), left = el('div'), refresh = function () { left.textContent = ''; drawBoard(left); };
+    searchBox(c, function () { refresh(); }); main.appendChild(c);
+    left.style.minWidth = '0'; bs.appendChild(left); main.appendChild(bs);
+    refresh(); openDetail(bs);
+  }
+  /* ---- More: the rarely used pages ---- */
+  function drawMore(sub) {
+    ({ report: drawReport, pl: drawPl, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.better); } })[sub]();
+  }
+
+  /* ---- a list of companies: New leads, Peak sponsors, Local businesses, and Lists (all, or follow-ups due) ---- */
+  function drawLeadList(sub) {
+    var D = S.data, t = S.tab, inList = sectionLeads(t, sub), st = S.st[t] || 'all', due = t === 'lists' && sub === 'due';
+    var c = el('div', 'controls'); searchBox(c, function () { drawRows(); });
+    if (!due && SORTS[t]) {
+      var lab = el('label', 'sortby'); lab.appendChild(el('span', null, 'Sort')); var sel = el('select'); sel.setAttribute('aria-label', 'Sort');
+      SORTS[t].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; sel.appendChild(x); }); sel.value = sortOf(t);
+      sel.addEventListener('change', function () { S.sort[t] = sel.value; drawRows(); }); lab.appendChild(sel); c.appendChild(lab);
+    }
     main.appendChild(c);
-    if (S.view === 'board') {
-      var bs = el('div', 'split' + (S.sel ? ' open' : '')), left = el('div'); left.style.minWidth = '0'; bs.appendChild(left); main.appendChild(bs);
-      refresh = function () { left.textContent = ''; drawBoard(left); }; refresh();
-      if (S.sel && lead(S.sel)) { bs.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
-      return;
-    }
-    if (S.list === 'removed' && !S.due) return drawRemoved();
-    var inList = S.due ? D.leads.filter(isDue) : D.leads.filter(function (l) { return l.list === S.list; });
-    var sc = el('div', 'chips'); sc.style.marginBottom = '12px';
-    [['all', 'All']].concat(Object.keys(D.statuses).map(function (k) { return [k, D.statuses[k]]; })).forEach(function (x) {
-      var n = x[0] === 'all' ? inList.length : inList.filter(function (l) { return l.status === x[0]; }).length; if (!n && x[0] !== 'all') return;
-      var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(S.st === x[0])); b.addEventListener('click', function () { S.st = x[0]; draw(); }); sc.appendChild(b);
+    /* the stage each company is at: only the stages someone is in */
+    var sc = el('div', 'chips stagechips'); sc.appendChild(el('span', 'chiplab', 'Stage'));
+    [['all', 'Any']].concat(Object.keys(D.statuses).map(function (k) { return [k, D.statuses[k]]; })).forEach(function (x) {
+      var n = x[0] === 'all' ? inList.length : inList.filter(function (l) { return l.status === x[0]; }).length; if (!n && x[0] !== 'all' && st !== x[0]) return;
+      var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('data-st', x[0]); b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(st === x[0])); b.addEventListener('click', function () { S.st[t] = x[0]; S.sel = null; draw(); }); sc.appendChild(b);
     });
-    /* Peak sponsors: their standing on Peak's own tracker (2026-10-25) */
-    if (S.list === 'renew' && !S.due) {
-      var pc = el('div', 'chips'); pc.style.marginBottom = '12px';
-      [['all', 'All Peak sponsors'], ['Active', 'Active'], ['Pending', 'Pending'], ['Inactive', 'Inactive']].forEach(function (x) {
-        var n = x[0] === 'all' ? inList.length : inList.filter(function (l) { return pkOf(l) && pkShort(pkOf(l).status) === x[0]; }).length; if (!n && x[0] !== 'all') return;
-        var b = el('button', null, x[1]); b.type = 'button'; b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String((S.pk || 'all') === x[0])); b.addEventListener('click', function () { S.pk = x[0]; S.sel = null; draw(); }); pc.appendChild(b);
-      });
-      main.appendChild(pc);
-    }
-    var so = el('div', 'chips'); so.style.marginBottom = '12px';
-    [['reach', 'Best contact first'], ['score', 'Score only']].forEach(function (x) { var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(S.sort === x[0])); b.addEventListener('click', function () { S.sort = x[0]; draw(); }); so.appendChild(b); });
-    /* follow-ups due today or late, from every list (2026-10-24) */
-    var dueN = D.leads.filter(isDue).length;
-    if (dueN || S.due) { var db = el('button', null, 'Follow-ups due'); db.type = 'button'; db.appendChild(el('b', null, String(dueN))); db.setAttribute('aria-pressed', String(S.due)); db.addEventListener('click', function () { S.due = !S.due; S.st = 'all'; S.sel = null; draw(); }); so.appendChild(db); }
-    sc.appendChild(el('span', null, '  ')); [].slice.call(so.children).forEach(function (b) { sc.appendChild(b); });
     main.appendChild(sc);
     var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
-    refresh = drawRows;
+    /* the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the email and phone numbers") */
+    /* phone and email first, then phone only, then email only, then neither; the score within each (2026-10-21, Matthew) */
+    /* who the number reaches (2026-10-21, Matthew: "prioritize the ones that lead to a good person"): direct to a good person, a small
+       organisation's main line, a front desk, then email only, then neither */
+    var grp = function (l) { return l.callTier === 1 ? 6 : l.callTier === 2 ? 5 : l.callTier === 3 ? 4 : (l.callTier ? 0 : hasPhone(l) && hasMail(l) ? 3 : hasPhone(l) ? 2 : 0) + (hasMail(l) ? 1 : 0); };
+    var endOf = function (l) { var p = pkOf(l); return p && /^\d{4}-\d{2}-\d{2}$/.test(p.end || '') ? p.end : '9999'; };
+    var nextOf = function (l) { return (l.next && l.next.date) || '9999'; };
+    var byName = function (a, b) { return a.name.localeCompare(b.name); };
+    var ORDER = {
+      reach: function (a, b) { return grp(b) - grp(a) || (b.score || 0) - (a.score || 0) || byName(a, b); },
+      score: function (a, b) { return (b.score || 0) - (a.score || 0) || byName(a, b); },
+      name: byName,
+      next: function (a, b) { return nextOf(a).localeCompare(nextOf(b)) || byName(a, b); },
+      peak: function (a, b) { return pkRank(a) - pkRank(b) || grp(b) - grp(a) || byName(a, b); },
+      end: function (a, b) { return endOf(a).localeCompare(endOf(b)) || pkRank(a) - pkRank(b) || byName(a, b); },
+      miles: function (a, b) { var x = milesOf(a), y = milesOf(b); return (x == null ? 1e9 : x) - (y == null ? 1e9 : y) || byName(a, b); }
+    };
     function drawRows() {
       list.textContent = '';
-      var t = S.q.trim().toLowerCase();
-      var rows = inList.filter(function (l) { return (S.st === 'all' || l.status === S.st) && (!t || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(t) >= 0) && (S.list !== 'renew' || S.due || !S.pk || S.pk === 'all' || (pkOf(l) && pkShort(pkOf(l).status) === S.pk)); });
-      /* the score plus a point each for an email and a phone (2026-10-21, Matthew: "order it by the rank also in conjunction with the email and phone numbers") */
-      /* phone and email first, then phone only, then email only, then neither; the score within each (2026-10-21, Matthew) */
-      /* who the number reaches (2026-10-21, Matthew: "prioritize the ones that lead to a good person"): direct to a good person, a small
-         organisation's main line, a front desk, then email only, then neither */
-      var grp = function (l) { return l.callTier === 1 ? 6 : l.callTier === 2 ? 5 : l.callTier === 3 ? 4 : (l.callTier ? 0 : hasPhone(l) && hasMail(l) ? 3 : hasPhone(l) ? 2 : 0) + (hasMail(l) ? 1 : 0); };
-      rows.sort(function (a, b) { return (S.list === 'renew' && !S.due ? pkRank(a) - pkRank(b) : 0) || (S.sort === 'reach' ? grp(b) - grp(a) : 0) || (b.score || 0) - (a.score || 0) || a.name.localeCompare(b.name); });
-      if (!rows.length) { list.appendChild(el('div', 'empty', 'Nobody here.')); return; }
+      var q = S.q.trim().toLowerCase();
+      var rows = inList.filter(function (l) { return (st === 'all' || l.status === st) && (!q || (l.name + ' ' + (l.kind || '')).toLowerCase().indexOf(q) >= 0); });
+      rows.sort(due ? ORDER.next : ORDER[sortOf(t)] || ORDER.reach);   /* follow-ups: the oldest due first */
+      if (!rows.length) { list.appendChild(el('div', 'empty', q ? 'No company here matches “' + S.q.trim() + '”.' : due ? 'No follow-ups due. Next steps with a date show here on the day.' : 'Nobody here.')); return; }
       rows.forEach(function (l) {
-        var r = el('button', 'row' + (S.sel === l.id ? ' on' : '')); r.type = 'button';
+        var r = el('button', 'row' + (S.sel === l.id ? ' on' : '')); r.type = 'button'; r.setAttribute('data-id', l.id);
         var s = el('div', 'sc', l.score != null ? String(l.score) : '•'); if (l.score != null) s.appendChild(el('small', null, l.list === 'local' ? 'fit' : '/9')); r.appendChild(s);
         var sign = pkOf(l) && pkOf(l).signage && !/^not (yet )?(confirmed|installed)/i.test(pkOf(l).signage) ? pkOf(l).signage : '';
-        var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [S.due ? LISTNAME[l.list] : '', l.kind, sign, milesOf(l) != null ? milesOf(l) + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
+        var where = t === 'lists' ? LISTNAME[l.list] : t === 'local' && sub === 'all' && l.list === 'added' ? 'Added on the desk' : '';
+        var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [where, l.kind, sign, milesOf(l) != null ? milesOf(l) + ' mi' : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
         var right = el('div'); right.style.textAlign = 'right';
         if (newInfo(l)) { var ni = el('span', 'newinfo', 'New info'); ni.title = 'Their website changed this week (see Looked up)'; right.appendChild(ni); }
         var mk = el('span', 'reach', (hasPhone(l) ? '☎' : '') + (hasMail(l) ? ' ✉' : '')); mk.title = (hasMail(l) ? 'Has an email' : 'No email') + ' · ' + (hasPhone(l) ? 'has a phone' : 'no phone'); right.appendChild(mk);
@@ -302,12 +412,12 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
       });
     }
     drawRows();
-    if (S.sel && lead(S.sel)) { split.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
+    openDetail(split);
   }
   /* companies taken off the desk, newest first, each with Bring back (2026-10-24) */
   function drawRemoved() {
     var R = (S.data.removed || []).slice().sort(function (a, b) { return b.at - a.at; }), list = el('div', 'list');
-    if (!R.length) { S.list = 'new'; return draw(); }
+    if (!R.length) { S.sub.lists = 'all'; remember(); return draw(); }
     R.forEach(function (x) {
       var r = el('div', 'row'); r.style.cursor = 'default'; r.appendChild(el('div', 'sc', '–'));
       var nm = el('div', 'nm'); nm.appendChild(el('b', null, x.name)); nm.appendChild(el('small', null, [LISTNAME[x.list], stName(x.status), 'removed by ' + x.by + ', ' + ago(x.at)].filter(Boolean).join(' · '))); r.appendChild(nm);
@@ -420,12 +530,14 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     return d;
   }
   function addForm() {
-    var c = el('div', 'card'); c.appendChild(el('h3', null, 'Add a company')); var f = el('div', 'form');
+    var old = main.querySelector('.addcard'); if (old) { old.remove(); return; }   /* a second tap closes it */
+    var c = el('div', 'card addcard'); c.appendChild(el('h3', null, 'Add a company')); var f = el('div', 'form');
     var n = el('input'); n.placeholder = 'Company name'; var k = el('input'); k.placeholder = 'Kind (e.g. Car dealer)'; var w = el('input'); w.placeholder = 'Why they fit'; var p = el('input'); p.placeholder = 'Phone'; var s = el('input'); s.placeholder = 'Website (the desk looks them up from it)';
     var b = el('button', 'btn small', 'Add'); b.type = 'button';
     [n, k, w, p, s, b].forEach(function (x) { f.appendChild(x); }); c.appendChild(f);
-    b.addEventListener('click', function () { save('lead', { name: n.value, kind: k.value, why: w.value, phone: p.value, site: s.value }, 'Added').then(function (j) { if (j && j.ok) { S.view = 'list'; S.due = false; S.list = 'added'; S.sel = j.id; draw(); if (s.value.trim() && lead(j.id)) lookUp(lead(j.id)); } }); });
-    main.insertBefore(c, main.children[1]); n.focus();
+    /* a company we add lives under Local businesses › Added on the desk */
+    b.addEventListener('click', function () { save('lead', { name: n.value, kind: k.value, why: w.value, phone: p.value, site: s.value }, 'Added').then(function (j) { if (j && j.ok) { S.tab = 'local'; S.sub.local = 'added'; S.st.local = 'all'; S.qs.local = ''; S.sel = j.id; remember(); tabs(); draw(); if (s.value.trim() && lead(j.id)) lookUp(lead(j.id)); } }); });
+    var hd = main.querySelector('.shead'); main.insertBefore(c, hd ? hd.nextSibling : main.firstChild); n.focus();
   }
   function proposalForm(l, into) {
     var old = into.querySelector('.propf'); if (old) { old.remove(); return; }
@@ -462,7 +574,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     main.appendChild(k);
     if (need.length) { main.appendChild(el('h2', null, 'Tour booked, no date yet')); need.forEach(function (l) { main.appendChild(needCard(l)); }); }
     main.appendChild(el('h2', null, 'Tours coming up'));
-    if (!up.length) main.appendChild(el('div', 'empty', 'No tours with a date. Book one from a company in the Pipeline.'));
+    if (!up.length) main.appendChild(el('div', 'empty', 'No tours with a date. Open a company and use Book a tour.'));
     var grp = '';
     up.forEach(function (t) {
       var n = daysTo(t.date), g = n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n <= 7 ? 'This week' : 'Later';
@@ -472,7 +584,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     if (ask.length) { main.appendChild(el('h2', null, 'How did it go?')); ask.forEach(function (t) { main.appendChild(tourCard(t, 'ask')); }); }
     if (done.length) { main.appendChild(el('h2', null, 'Past tours')); done.forEach(function (t) { main.appendChild(tourCard(t, 'done')); }); }
   }
-  var openLead = function (l) { S.tab = 'pipe'; S.view = 'list'; S.due = false; S.list = l.list || 'new'; S.sel = l.id; tabs(); draw(); };
+  var openLead = function (l) { var t = secOf(l); S.tab = t; if (SUBS[t]) S.sub[t] = 'all'; S.st[t] = 'all'; S.qs[t] = ''; S.print = null; S.sel = l.id; remember(); tabs(); draw(); window.scrollTo(0, 0); };   /* to the section it lives in (2026-10-25) */
   /* a date, a time and who is coming; books a new tour */
   function tourForm(l, into, label) {
     var f = el('div', 'form'); f.style.marginTop = '8px';
@@ -525,8 +637,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   /* ---- proposals ---- */
   function drawProps() {
     var P = S.data.proposals.slice().sort(function (a, b) { return b.at - a.at; });
-    main.appendChild(el('h2', null, 'Proposals'));
-    if (!P.length) { main.appendChild(el('div', 'empty', 'No proposals yet. Make one from a company in the Pipeline.')); return; }
+    if (!P.length) { main.appendChild(el('div', 'empty', 'No proposals yet. Open a company and use Make a proposal.')); return; }
     P.forEach(function (p) {
       var l = lead(p.lead) || {}, c = el('div', 'card'); c.appendChild(el('h3', null, p.company + ' · ' + money(p.total)));
       c.appendChild(el('small', null, p.lines.map(function (x) { return (x.qty > 1 ? x.qty + ' × ' : '') + x.name; }).join(', ') + ' · ' + ago(p.at) + ' by ' + p.by + (l.status ? ' · ' + stName(l.status) : '')));
@@ -618,7 +729,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     });
     into.appendChild(b);
     var notYet = D.leads.filter(function (l) { return l.status === 'new'; }).length, off = D.leads.filter(function (l) { return l.status === 'notnow' || l.status === 'no'; }).length;
-    var p = el('p', null, notYet + ' not contacted yet (in the List view)' + (off ? ' · ' + off + ' marked Not now or No' : '') + '. A company joins the board when it is marked Contacted.'); p.style.color = 'var(--soft)'; p.style.fontSize = '13.5px'; into.appendChild(p);
+    var p = el('p', null, notYet + ' not contacted yet (in New leads, Peak sponsors and Local businesses)' + (off ? ' · ' + off + ' marked Not now or No' : '') + '. A company joins the board when it is marked Contacted.'); p.style.color = 'var(--soft)'; p.style.fontSize = '13.5px'; into.appendChild(p);
   }
 
   /* ---- looked up: what the company's website shows, checked when added, on a tap, and every day by the server (2026-10-24, Matthew:
@@ -705,7 +816,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
         warn.textContent = ''; var t = cN.value.trim().toLowerCase(); if (!t) return;
         var hit = S.data.leads.filter(function (x) { return x.name.trim().toLowerCase() === t; })[0], gone = (S.data.removed || []).filter(function (x) { return x.name.trim().toLowerCase() === t; })[0];
         if (hit) { warn.className = 'warnline'; warn.appendChild(document.createTextNode(hit.name + ' is already on the desk. ')); var mb = el('button', 'lnk', 'Mark that one signed'); mb.type = 'button'; mb.addEventListener('click', function () { sh.close(); signedForm(hit); }); warn.appendChild(mb); }
-        else if (gone) { warn.className = 'warnline'; warn.textContent = gone.name + ' was removed. Bring it back from Removed companies in the Pipeline, then mark it signed.'; }
+        else if (gone) { warn.className = 'warnline'; warn.textContent = gone.name + ' was removed. Bring it back from Lists › Removed, then mark it signed.'; }
       });
       var cK = inp('Kind (e.g. Car dealer)'), cS = inp('Website (the desk looks them up from it)'), cP = inp('Company phone');
       f.appendChild(el('label', 'lab', 'Who we deal with'));
@@ -744,7 +855,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   }
   /* take a company or sponsor off the desk; it can come back from Removed companies (2026-10-24, Matthew: "remove sponsors/ companies") */
   function removeLead(l) {
-    if (!confirm('Remove ' + l.name + ' from the desk?\n\nIts notes, history and proposals are kept, and you can bring it back from Removed companies in the Pipeline.')) return;
+    if (!confirm('Remove ' + l.name + ' from the desk?\n\nIts notes, history and proposals are kept, and you can bring it back from Lists › Removed.')) return;
     save('leaddel', { id: l.id }, 'Removed: ' + l.name).then(function (j) { if (j && j.ok && S.sel === l.id) { S.sel = null; draw(); } });
   }
 
@@ -759,7 +870,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     main.appendChild(k);
     var hd = el('div', 'controls'); hd.appendChild(el('h2', null, 'Signed sponsors')).style.margin = '0 auto 0 0';
     var ad = el('button', 'btn small', '+ Add a sponsor'); ad.type = 'button'; ad.addEventListener('click', function () { signedForm(null); }); hd.appendChild(ad); main.appendChild(hd);
-    if (!L.length) { main.appendChild(el('div', 'empty', 'No sponsors signed yet. Add one with + Add a sponsor, or mark a company Signed in the Pipeline.')); return; }
+    if (!L.length) { main.appendChild(el('div', 'empty', 'No sponsors signed yet. Add one with + Add a sponsor, or mark a company Signed from its page.')); return; }
     L.forEach(function (l) {
       var c = el('div', 'card'), v = leadValue(l), r = renewOf(l);
       c.appendChild(el('h3', null, l.name + (v ? ' · ' + money(v) + ' a year' : '')));
@@ -796,8 +907,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     var D = S.data;
     var M = D.pl ? JSON.parse(JSON.stringify(D.pl)) : { services: D.packages.map(function (p) { return { name: p.name, price: p.price, per: /month/i.test(p.per) ? 'month' : 'year', cost: null, costPer: 'year' }; }), running: [] };
     var yr = function (amt, per) { return (amt || 0) * (per === 'month' ? 12 : 1); };   /* a one-off counts in the year it is paid */
-    main.appendChild(el('h2', null, 'Profit & loss'));
-    var intro = el('p', null, 'What each service brings in against what it costs to run, and what the signed sponsors add up to. Type in the costs; the page does the sums. Only the prices from the Packages tab are filled in to start.'); intro.style.color = 'var(--soft)'; main.appendChild(intro);
+    var intro = el('p', null, 'What each service brings in against what it costs to run, and what the signed sponsors add up to. Type in the costs; the page does the sums. Only the prices from Packages (under More) are filled in to start.'); intro.style.color = 'var(--soft)'; main.appendChild(intro);
     var PER = [['year', 'a year'], ['month', 'a month'], ['once', 'one-off']];
     var selOf = function (opts, v, fn) { var s = el('select'); opts.forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; if (o[0] === v) x.selected = true; s.appendChild(x); }); s.addEventListener('change', function () { fn(s.value); }); return s; };
     var numIn = function (v, ph, fn) { var i = el('input'); i.inputMode = 'numeric'; i.placeholder = ph; i.value = v == null ? '' : v; i.addEventListener('input', function () { var d = String(i.value).replace(/[^\d]/g, ''); fn(d === '' ? null : +d); }); return i; };
@@ -867,7 +977,6 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
 
   /* ---- packages (anyone signed in since 2026-10-21: Brandon's code has the same powers as Matthew's) ---- */
   function drawPk() {
-    main.appendChild(el('h2', null, 'Packages'));
     main.appendChild(el('p', null, 'What a proposal can offer. Peak’s published prices are the court ($12,000 a year) and title ($24,000 a year) sponsorships; new tiers need Peak’s OK. Changes show in the next proposal; proposals already made keep their prices.')).style.color = 'var(--soft)';
     var box = el('div', 'card'), rows = [];
     var add = function (p) { var r = el('div', 'pkrow'); var n = el('input'); n.value = p.name || ''; n.placeholder = 'Name'; var pr = el('input'); pr.value = p.price != null ? p.price : ''; pr.placeholder = '$'; pr.inputMode = 'numeric'; var per = el('input'); per.value = p.per || ''; per.placeholder = 'per'; var x = el('button', 'btn ghost small', '×'); x.type = 'button'; x.addEventListener('click', function () { r.remove(); rows.splice(rows.indexOf(o), 1); }); var o = { n: n, pr: pr, per: per, note: p.note || '' }; rows.push(o); [n, pr, per, x].forEach(function (e) { r.appendChild(e); }); box.insertBefore(r, addb); };
@@ -905,6 +1014,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     });
   }
 
+  (function () { var h = (location.hash || '').slice(1).split('/'); if (SECS.some(function (x) { return x[0] === h[0]; })) { S.tab = h[0]; if (h[1] && SUBS[h[0]] && SUBS[h[0]].some(function (x) { return x[0] === h[1]; })) S.sub[h[0]] = h[1]; } })();
   load();
 })();
 </script>
