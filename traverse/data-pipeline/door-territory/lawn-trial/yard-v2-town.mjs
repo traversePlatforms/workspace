@@ -34,7 +34,10 @@ console.log(`${TOWN}: ${doors.length} doors, ${todo.length} to do, ${CONC} at a 
 if (!todo.length) process.exit(0);
 const pc = existsSync(PCACHE) ? JSON.parse(readFileSync(PCACHE, 'utf8')) : { cells: {} };
 const lats = doors.map((d) => d.lat), lons = doors.map((d) => d.lon), S = 0.008;
-const la0 = Math.min(...lats) - 0.002, lo0 = Math.min(...lons) - 0.002;
+/* origin on a fixed 0.008° grid (2026-10-26): it was the town's lowest house, so new houses to the south or west (the 25 Oct gap fix)
+   shifted every cell and the saved cells answered for the wrong ground. A cache saved on another origin starts again. */
+const la0 = Math.floor((Math.min(...lats) - 0.002) / S) * S, lo0 = Math.floor((Math.min(...lons) - 0.002) / S) * S;
+if (!pc.o || pc.o[0] !== la0 || pc.o[1] !== lo0) pc.cells = {}, pc.o = [la0, lo0];
 const cellOf = (lat, lon) => Math.floor((lat - la0) / S) + ':' + Math.floor((lon - lo0) / S);
 async function fetchCell(c) {
   if (pc.cells[c]) return pc.cells[c];
