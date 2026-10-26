@@ -6637,6 +6637,7 @@ if ($action === 'leads') {
     if ($role === 'office') $leads = array_filter($leads, fn($l) => !webLead($l) || in_array((string) ($l['owner'] ?? ''), meNames(), true) || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
+    if ($isSuper) foreach ($list as &$ml) $ml['mine'] = webLead($ml); unset($ml);   /* Matthew's own leads, for his To contact view (2026-10-26) */
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
     if (!empty($_REQUEST['count'])) out(['ok' => true, 'new' => $new]);
     out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' ? ['cucheck' => cuCheckShown()] : []));   /* the ClickUp sync check (2026-10-17) */
