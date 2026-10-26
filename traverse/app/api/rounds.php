@@ -107,7 +107,9 @@ function company(): array {
             'oneDevice' => true,
             /* 365 Aeration & Seeding (2026-10-14, Sixfold's aeration brand): its name and phone for what customers see, and the base and radius
                of its service area. null = no aeration brand (every other install) */
-            'a365' => null];
+            'a365' => null,
+            /* Matthew's own Facebook ad leads from this date on (2026-10-26, YYYY-MM-DD, Denver): see webLead(). '' = none (every other install) */
+            'metaMine' => ''];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -2505,13 +2507,13 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         flock($lk, LOCK_UN);
         $sl = jobSlot((string) $off['slot']);
         pushName((string) $off['crew'], 'Job booked: ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : ''), $name . ' · ' . $addr . ' · $' . $Q['price'] . ' · booked online', './?job=' . $jid, 'job-' . $jid);
-        a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price'], true, false, ($l['src'] ?? '') === 'a365web');
+        a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price'], true, false, webLead($l));
         out(['ok' => true, 'booked' => ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])], 'phone' => $phone]);
     }
     flock($lk, LOCK_UN);
     if ($hadOffer) $acc['gone'] = 1;
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'accept' => $acc, 'note' => mb_substr('Said yes to the $' . $Q['price'] . ' quote on the website' . ($hadOffer ? ', but the day offered was gone. Call them to set a day.' : '. Call them to set a day.') . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()])) fail('Something went wrong saving that. Please call or text us.', 500);
-    a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''), true, false, ($l['src'] ?? '') === 'a365web');
+    a365Alert('Quote accepted: set a day', $name . ' · $' . $Q['price'] . ($hadOffer ? ' · the day offered was gone' : ''), true, false, webLead($l));
     out(['ok' => true, 'gone' => $hadOffer, 'phone' => $phone]);
 }
 
@@ -2720,7 +2722,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     flock($lk, LOCK_UN);
     $who = trim((string) ($l['name'] ?? '')) ?: $name;
     if ($jid && !$had) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
-    a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''), true, false, ($l['src'] ?? '') === 'a365web');
+    a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''), true, false, webLead($l));
     $ml = a365SendSigned($l, $sg, 'website');   /* the signed copy by email (2026-10-15) */
     out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
 }
@@ -3994,7 +3996,7 @@ if ($action === 'money') {
 function quoteInbox(array $l, bool $mine = false): bool {
     if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold'], true) || !empty($l['quote'])) return false;   /* + hold: On hold is our Pipeline's stage; her list shows them as before (2026-10-17, Matthew: Jim was on there) */
     if (!empty($l['tojen']) || ($mine && qMine($l))) return true;
-    if (($l['src'] ?? '') === 'a365web') return false;   /* the 365 website's forms go only to Matthew (2026-10-20: "website form leads which should only go to my app"), unless he hands one over (Send to Jen, or Jen as owner, above) */
+    if (webLead($l)) return false;   /* + his Facebook ad leads (2026-10-26); the 365 website's forms go only to Matthew (2026-10-20: "website form leads which should only go to my app"), unless he hands one over (Send to Jen, or Jen as owner, above) */
     return ($l['src'] ?? '') !== 'messenger' && (int) ($l['at'] ?? 0) >= QUOTE_INBOX_FROM;   /* new leads only, since 16 Oct: back as it was (2026-10-17, Matthew: don't send Jen anything she didn't populate herself unless it is a new lead) */
 }
 const LEAD_SRC = ['website', 'meta', 'nextdoor', 'phone', 'linktree', 'referral', 'other', 'messenger', 'a365web', 'inperson', 'door'];   /* + door: a house the crew added at the door (2026-10-16) */   /* + in person (2026-10-15) */   /* messenger + the 365 Aeration site (2026-10-14) */
@@ -4111,7 +4113,13 @@ if ($action === 'teamsave' || $action === 'teammember') {
    by its id is refused. Admins (Matthew is the super admin) see everything; the crew still see their own jobs in full (Brad does the work);
    the command-line jobs (ClickUp, Square, the morning email to Contact@) see everything. View-as follows the account looked through. */
 function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_string($role ?? null) && in_array($role, ['office', 'quote', 'manager'], true); }
-function webLeadIds(): array { static $ids = null; if ($ids === null) { $ids = []; foreach (leadsAllRaw() as $id => $l) if (($l['src'] ?? '') === 'a365web') $ids[$id] = true; } return $ids; }
+/* Matthew's own leads (2026-10-26, Matthew: "Brandon wants me to handle all the intake ads ... so that jen and I dont get crossed up"): the
+   365-website form, and the Facebook lead-form leads that came in on or after company.json "metaMine" (a date, Denver time; set to
+   2026-10-26: "only new leads from today"). Messenger stays Jen's, and so do the Facebook leads from before. He takes them end to end; the
+   office sees their jobs as Booked only, as for website leads. */
+function metaMineFrom(): int { static $t = null; if ($t === null) { $d = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) (company()['metaMine'] ?? '')) ? (string) company()['metaMine'] : ''; $t = $d !== '' ? (int) strtotime($d . ' 00:00:00 America/Denver') : 0; } return $t; }
+function webLead(array $l): bool { $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom()); }
+function webLeadIds(): array { static $ids = null; if ($ids === null) { $ids = []; foreach (leadsAllRaw() as $id => $l) if (webLead($l)) $ids[$id] = true; } return $ids; }
 /* Facebook form names as the Pipeline shows them (2026-10-25, Matthew: "rename facebook leads ... lead 1 and lead 2"): the second form's own
    name, "365 Aeration and Seeding 's form created on Mon Oct 19, 2026 3:51pm", was read as the day the lead came in. The service word stays
    in the label (it picks the service on the quote). */
@@ -4121,7 +4129,7 @@ function metaFormLabel(string $n): string {
     if (preg_match("/\s*'s form created on /i", $n)) return 'Facebook ad form · ' . trim((string) preg_replace("/\s*'s form created on .*$/i", '', $n));
     return $n;
 }
-function leadsAll(): array { $all = leadsAllRaw(); return webHide() ? array_filter($all, fn($l) => ($l['src'] ?? '') !== 'a365web') : $all; }
+function leadsAll(): array { $all = leadsAllRaw(); return webHide() ? array_filter($all, fn($l) => !webLead($l)) : $all; }
 function leadsAllRaw(): array {
     static $c = null; $sig = fileSig(leadsDir() . '/leads.log') . '|' . fileSig(leadsDir() . '/leadst.log');   /* built once per request, again after a write (review 2026-10-22) */
     if ($c !== null && $c[0] === $sig) return $c[1];
@@ -6588,10 +6596,10 @@ if ($action === 'leads') {
        Briefly narrowed to her own leads the same evening, then put back (Matthew: "lets leave the leads and pipeline in for nneka ... i want her
        to be able to at least do it"; she is told not to contact anyone until Brandon confirms). The 365 website's forms only when handed to her. */
     if ($role === 'office' && mgr()) $leads = array_filter($leads, fn($l) => (string) ($l['by'] ?? '') === $me || (string) ($l['owner'] ?? '') === $me || (($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])) || (($l['by'] ?? '') !== '' && sameTeam((string) $l['by']))
-        || ($l['src'] ?? '') !== 'a365web');   /* the whole list to call, untouched leads included (2026-10-21, Matthew: 'Nneka should still be able to see the list of people to call. She has just been notified by me and brandon to not make any calls yet. But allow her to see the list.'); website forms only when handed to her */
+        || !webLead($l));   /* the whole list to call, untouched leads included (2026-10-21, Matthew: 'Nneka should still be able to see the list of people to call. She has just been notified by me and brandon to not make any calls yet. But allow her to see the list.'); website forms only when handed to her */
     /* the 365 website's forms are Matthew's (2026-10-20: "make sure website leads are not being forwarded to jen"): an office account sees one only
        when it is handed to them (owner), or sent to Jen (her office account; not a team lead's), or it came from Jen's own ClickUp list */
-    if ($role === 'office') $leads = array_filter($leads, fn($l) => ($l['src'] ?? '') !== 'a365web' || in_array((string) ($l['owner'] ?? ''), meNames(), true) || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
+    if ($role === 'office') $leads = array_filter($leads, fn($l) => !webLead($l) || in_array((string) ($l['owner'] ?? ''), meNames(), true) || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
@@ -6628,6 +6636,14 @@ if ($action === 'crewlead') {
 }
 if ($action === 'leadadd') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    /* the heads-up (2026-10-26): a phone number or email that belongs to one of Matthew's leads (website or his Facebook ads) is not added
+       again by the office; they call back on the 365 number, which rings Jen */
+    if (webHide()) {
+        $md = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $me2 = strtolower(trim((string) ($body['email'] ?? '')));
+        foreach (leadsAllRaw() as $ml) if (webLead($ml) && ($ml['status'] ?? '') !== 'lost'
+            && ((strlen($md) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ml['phone'] ?? '')), -10) === $md) || ($me2 !== '' && strtolower((string) ($ml['email'] ?? '')) === $me2)))
+            out(['ok' => false, 'why' => 'matthew', 'error' => 'This is one of Matthew\'s leads (from a Facebook ad or the website), so he is looking after them. Please pass them to Matthew.'], 409);
+    }
     if ($role === 'quote') {
         $qd = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $qe = strtolower(trim((string) ($body['email'] ?? '')));
         foreach (leadsAll() as $ex) if ($ex['status'] !== 'lost' && ((strlen($qd) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ex['phone'] ?? '')), -10) === $qd) || ($qe !== '' && strtolower((string) ($ex['email'] ?? '')) === $qe))) {
@@ -6805,7 +6821,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
         $d = $digits($l['phone'] ?? ''); if (strlen($d) === 10) $seenWho['p' . $d] = true;
         $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $seenWho['e' . $e] = true;
     }
-    $added = []; $errors = []; $mnotes = 0;
+    $added = []; $mineAdded = []; $errors = []; $mnotes = 0;   /* $mineAdded: Matthew's own Facebook leads (webLead), alerted to his phones only (2026-10-26) */
     $unWho = unreachedWho();   /* Couldn't reach, then a new Facebook form (2026-10-21) */
     foreach ($M['pages'] as $pi => $P) {
         $since = (int) ($P['last'] ?? (time() - 86400)); $newest = $since; $errBefore = count($errors);
@@ -6835,7 +6851,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
                     if (!appendLine(leadsDir() . '/leads.log', $row)) { $errors[] = 'could not save a lead'; continue; }
                     if ($who !== '') $seenWho[$who] = true;
                     if ($fv['street'] !== '') { $h = a365Match($fv['street'], $fv['city']); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'Facebook', 'at' => time()]); }
-                    $added[] = ($name ?: $phone) . ' (' . $P['name'] . ')';
+                    if (webLead($row)) $mineAdded[] = ($name ?: $phone) . ' (' . $P['name'] . ')'; else $added[] = ($name ?: $phone) . ' (' . $P['name'] . ')';
                 }
                 $url = (string) ($r['paging']['next'] ?? '');
             }
@@ -6846,6 +6862,8 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
     if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)), false, true);
+    if ($mineAdded && leadAlertsOn()) a365Alert(count($mineAdded) === 1 ? 'New Facebook ad lead (yours)' : count($mineAdded) . ' new Facebook ad leads (yours)', implode(', ', array_slice($mineAdded, 0, 4)), false, true, true);
+    $added = array_merge($added, $mineAdded);
     out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors, 'mnotes' => $mnotes]);
 }
 /* ---- ClickUp (2026-10-16, Matthew: "attach clickup to our app to take the leads [Jen] is filing into our app"; "run a scan for
@@ -7087,7 +7105,7 @@ if ($action === 'leadimport') {
 if ($action === 'tojen') {
     if (!desk() || !$isPost || !feature('walkdesk')) fail('Not allowed.', 403);
     $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null; if (!$l) fail('No such lead.', 404);
-    if (($l['src'] ?? '') === 'a365web' && !empty($body['on'])) fail('A 365 website lead stays yours: Jen never sees these.');   /* 2026-10-22 */
+    if (webLead($l) && !empty($body['on'])) fail('Your website and Facebook ad leads stay yours: Jen never sees these.');   /* 2026-10-22 */
     $on = !empty($body['on']);
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'tojen' => $on, 'note' => $on ? 'Sent to the Quick quote\'s Leads to call.' : 'Taken back from the Quick quote\'s Leads to call.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
