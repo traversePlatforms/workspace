@@ -38,6 +38,14 @@ $chrome = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:Pro
 while ((Get-DesktopCount) -lt $layout.Count) { New-Desktop | Out-Null }
 for ($i = 0; $i -lt $layout.Count; $i++) { Get-Desktop $i | Set-DesktopName -Name $layout[$i].Name }
 
+# each desktop's wallpaper: its name in the company's colours (made 2026-10-25, in Pictures\Desktop wallpapers)
+$walls = "$env:USERPROFILE\Pictures\Desktop wallpapers"
+$wfile = @('1-build', '2-sixfold365', '3-surge', '4-traverse', '5-personal')
+for ($i = 0; $i -lt $layout.Count; $i++) {
+    $w = Join-Path $walls ($wfile[$i] + '.png')
+    if (Test-Path $w) { Set-DesktopWallpaper -Desktop (Get-Desktop $i) -Path $w }
+}
+
 if (-not $NoBrowsers -and $chrome) {
     $start = Get-CurrentDesktop
     for ($i = 0; $i -lt $layout.Count; $i++) {

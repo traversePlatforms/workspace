@@ -74,7 +74,7 @@ This is a WP Appearance → Menus change — not something I can do without admi
 
 ## Source trail
 
-- July 2026 audit screenshots: `Desktop/previous website look/` (39 images, 23 & 30 Jul).
+- July 2026 audit screenshots: `Desktop/Surge/previous website look/` (39 images, 23 & 30 Jul).
 - Interim restore (superseded): `.wpress` dated 2025-08-05, in the old backup already on file — see
   `surge-wordpress-backup` memory.
 - **Authoritative source for this pass:** `Documents/surge/surgeftw-com-20260812-235352-uq7z5qsgfmvz.wpress`

@@ -1,6 +1,6 @@
 # surgeftw.com — restored WordPress vs. the July 2026 audit screenshots
 
-Compiled 2026-09-04. Source material: the 39 screenshots in `Desktop/previous website look/`
+Compiled 2026-09-04. Source material: the 39 screenshots in `Desktop/Surge/previous website look/`
 (two audit passes, 23 Jul 2026 and 30 Jul 2026), against the site as it's actually live right now
 — the Aug-2025 `.wpress` database restored into WordPress on SiteGround. Live pages read via direct
 fetch the same day.
