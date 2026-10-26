@@ -1085,7 +1085,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-25 — Review the homepage screenshots (Matthew).** Added 2026-10-13. "The real app" section: Roofing on a computer and a
       phone, names and addresses masked (traverse/videos/tools/shots.mjs, local test copy only). The map still shows that
       neighbourhood's real street names.
-- [ ] **TR-26 — Founder offer (Matthew to decide).** Added 2026-10-13. Today: a 14-day free pilot + 30% off Pro for 12 months.
+- [x] **TR-26 — Founder offer — DECIDED 26 Oct:** 25% off for the first 12 months on any plan, list price locked while they stay, 14-day pilot (new pricing, commit c1df8da). Was: Added 2026-10-13. Today: a 14-day free pilot + 30% off Pro for 12 months.
       Options raised: shorter trial, deeper discount, or a founder price locked for as long as they stay subscribed.
 - [x] **TR-27 — Booking emails need a Gmail app password + privacy@ alias (Matthew).** ✅ App password in place 2026-10-13, test email sent (Google accepted it); ✅ privacy@traverseplatforms.com added as an alias the same day (beside hello@, support@, billing@). Added 2026-10-13. Until the app password is in
       traverse-site-private/site-config.php, demo bookings are saved and shown on the manage page but nobody is emailed.
@@ -1094,7 +1094,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       when they cancel; who owns what (their customers and notes are theirs; the door data is Traverse's); payment and seats; and the
       data-protection side (the Colorado Privacy Act question flagged earlier). The app now backs it up: only Traverse's super admin
       downloads the door list, 500 at a time, and every download is logged. An attorney should draft or review it.
-- [~] **TR-13 — Billing (Stripe).** ✅ **Built 2026-10-10, commit afd2580, NOT uploaded, off everywhere.** Admin-only
+- [~] **TR-13 — Billing (Stripe).** **26 Oct: reworked for the new plans (Solo/Crew/Team per company, people included, Roofing/Solar uplift); Stripe TEST prices traverse_v2_*; live mode still waits on live keys (from a file, never chat).** ✅ **Built 2026-10-10, commit afd2580, NOT uploaded, off everywhere.** Admin-only
       Billing tile: Duo / Crew / Pro, monthly or yearly, seats, second edition on Pro ($20), founding companies get a 14-day
       pilot once + the 30%-off coupon on Pro. Pays on Stripe Checkout; Manage billing = Stripe's portal. Webhook
       `?action=billinghook` (signature checked, this install's events only, repeats ignored) keeps plan/seats/status in
