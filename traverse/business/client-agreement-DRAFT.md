@@ -136,7 +136,7 @@ The Client will not, and will not let anyone else:
 
 **9.1 Fees.** The Client will pay the fees on the Order Form. Unless the Order Form says otherwise, fees are billed in advance, monthly or yearly, through Traverse's payment processor (currently Stripe), and charged to the payment method on file.
 
-**9.2 Seats.** Fees are per Seat, except a Duo plan, which covers up to [2] Authorized Users. The Client may add Seats at any time; added Seats are billed pro-rata for the rest of the billing period. If more people can sign in than the Client has paid for, Traverse may [notify the Client and] bill the extra Seats from the date they were added.
+**9.2 Seats.** Each plan includes a number of Authorized Users (Solo 1, Crew up to 5, Team up to 12). Each Authorized User beyond that is an extra Seat at the Order Form price. The Client may add Seats at any time; added Seats are billed pro-rata for the rest of the billing period. If more people can sign in than the Client has paid for, Traverse may [notify the Client and] bill the extra Seats from the date they were added.
 
 > **Business choice (9.2):** the app currently only warns when people exceed paid seats; it never locks anyone out or bills automatically. Pick "warn only", "warn, then bill after [14] days", or "bill automatically".
 
@@ -259,12 +259,12 @@ Traverse will give notice before suspending where practical, will limit the susp
 | **Client contact and notice email** | [ ] |
 | **Billing email** | [ ] |
 | **Edition** | [Roofing / Yards / Solar / Pest / Security] |
-| **Second edition** (Pro only) | [None / name] at $20 per person a month |
-| **Plan** | [Duo: up to 2 people / Crew / Pro] |
-| **Seats** | [ ] (Duo: up to [2]) |
+| **Second edition** | [None / name] at $99 a month |
+| **Plan** | [Solo: 1 person / Crew: up to 5 people / Team: up to 12 people] |
+| **Seats** | [ ] (people beyond those the plan includes) |
 | **Billing** | [Monthly / Yearly], in advance, by card through Stripe |
-| **Fees** | [Duo $129 a month or $99 a month billed yearly / Crew $45 a person a month or $35 billed yearly / Pro $89 a person a month or $69 billed yearly] |
-| **Founding client** | [Yes / No]. If yes: a free 14-day pilot, then 30% off Pro for the first 12 months |
+| **Fees** | [Solo $99 a month or $79 a month billed yearly / Crew $249 a month or $199 billed yearly, extra people $45 or $35 each / Team $549 a month or $449 billed yearly, extra people $39 or $29 each]. Roofing and Solar editions: [+$50 a month on Crew and Team / +$20 on Solo] |
+| **Founding client** | [Yes / No]. If yes: a free 14-day pilot, then 25% off for the first 12 months, and the list price on this Order Form does not rise while the subscription continues |
 | **Start date** | [ ] |
 | **Initial Subscription Term** | [1 month / 12 months], renewing under §10.2 |
 | **Install address** | Provided by Traverse at setup |

@@ -1,0 +1,40 @@
+# traverseplatforms.com (2026-10-09). Out of search until Matthew opens it (sample pricing, placeholder contact).
+# Not cached by SiteGround's Dynamic Cache, so an upload shows at once.
+# The apps live here too (moved from sixfoldcolorado.com 2026-10-09), so the same guards Sixfold's site had: no logs,
+# scripts or source maps served, nothing starting with a dot, and the browser safety headers.
+# One address: www goes to the bare domain (2026-10-10), so links, saved apps and sign-ins all sit on the same name.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^www\.traverseplatforms\.com$ [NC]
+RewriteRule ^ https://traverseplatforms.com%{REQUEST_URI} [R=301,L]
+</IfModule>
+<FilesMatch "\.(md|mjs|log|sh|map)$">
+  Require all denied
+</FilesMatch>
+# 2026-10-25 (security check): deploy backups left beside live files still ran (an old rounds.php skipped rules added since).
+# They now live in ~/upload-backups/; this refuses any that slip back in.
+<FilesMatch "\.(pre|before)-|\.(bak|old|orig|tgz|zip|sql)$">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.(?!well-known)
+<IfModule mod_headers.c>
+Header set X-Robots-Tag "noindex, nofollow"
+Header set Cache-Control "private, no-cache"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
+
+# 2026-10-15 (Matthew: "put the traverseplatforms.com homepage and pages private for now"): the marketing pages need a password;
+# the apps (summit-de59ae83, the five editions), api/ and maps/ do not, so crews and the office are not affected.
+# The password file is outside public_html (traverse-site-private/.htpasswd); Matthew has the password.
+<If "%{REQUEST_URI} =~ m#^/(index\.html)?$# || %{REQUEST_URI} =~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation|shots)(/|$)# || %{REQUEST_URI} =~ m#^/og\.png$#">
+  AuthType Basic
+  AuthName "Traverse Platforms (private for now)"
+  AuthUserFile /home/customer/www/traverseplatforms.com/traverse-site-private/.htpasswd
+  Require valid-user
+</If>
+# Since 2026-10-15 the marketing pages are private: plain files are served by the host's front server, which skips
+# this password rule, so after uploading the site run on the server:
+#   chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots -type f -exec chmod 600 {} \;

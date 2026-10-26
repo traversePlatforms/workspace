@@ -9,7 +9,7 @@
 
 ## 1. What the client gets
 
-- **A right to use the Service**, for its own staff, during the subscription. Plans are per seat (one seat per person who can sign in).
+- **A right to use the Service**, for its own staff, during the subscription. Plans are per company with a number of people included (Solo 1, Crew up to 5, Team up to 12); each person beyond that is an extra seat.
 - **Door data:** property records, scores and layers shown per door, inside the app. The client may *use* it to plan and knock. It does not *own* it.
 - **Support access:** Traverse keeps one administrator sign-in in every install (the "super admin") for support. The client cannot change or remove it. This should be disclosed plainly.
 
@@ -61,7 +61,7 @@ The client chooses how it sells and is responsible for doing so lawfully. The ag
 
 ## 7. Money
 
-- **Billing:** subscription billed through Stripe; per seat; monthly or yearly. There is a founding-client price, and the trial terms come from the app's billing settings.
+- **Billing:** subscription billed through Stripe; per company with people included, extra seats per person; monthly or yearly. There is a founding-client price, and the trial terms come from the app's billing settings.
 - **Seats:** the app warns when people exceed paid seats. Whether to bill the overage automatically is a business decision; it currently warns only.
 - **Non-payment:** decide when access is suspended and when data is deleted.
 - **Questions for counsel:** taxes, refunds and price changes on renewal.

@@ -25,28 +25,10 @@ for (const [name, page] of [['homepage', home], ['editions page', eds]]) {
   if (/href="\/[^"]/.test(page)) throw new Error('the ' + name + ' links to a path on this domain');
 }
 
-const htaccess = `# traverseplatforms.com (2026-10-09). Out of search until Matthew opens it (sample pricing, placeholder contact).
-# Not cached by SiteGround's Dynamic Cache, so an upload shows at once.
-# The apps live here too (moved from sixfoldcolorado.com 2026-10-09), so the same guards Sixfold's site had: no logs,
-# scripts or source maps served, nothing starting with a dot, and the browser safety headers.
-# One address: www goes to the bare domain (2026-10-10), so links, saved apps and sign-ins all sit on the same name.
-<IfModule mod_rewrite.c>
-RewriteEngine On
-RewriteCond %{HTTP_HOST} ^www\\.traverseplatforms\\.com$ [NC]
-RewriteRule ^ https://traverseplatforms.com%{REQUEST_URI} [R=301,L]
-</IfModule>
-<FilesMatch "\\.(md|mjs|log|sh|map)$">
-  Require all denied
-</FilesMatch>
-RedirectMatch 404 /\\.(?!well-known)
-<IfModule mod_headers.c>
-Header set X-Robots-Tag "noindex, nofollow"
-Header set Cache-Control "private, no-cache"
-Header always set X-Content-Type-Options "nosniff"
-Header always set X-Frame-Options "SAMEORIGIN"
-Header always set Referrer-Policy "strict-origin-when-cross-origin"
-</IfModule>
-`;
+/* the live .htaccess is kept in site-src/htaccess.txt (2026-10-26): the template that was here had fallen behind it (no password
+   block from 15 Oct, no security rules from 25 Oct), so a rebuild would have taken both off the live site. Edit that file. */
+const htaccess = fs.readFileSync(path.join(here, 'site-src', 'htaccess.txt'), 'utf8');
+if (!/AuthUserFile/.test(htaccess) || !/Strict-Transport-Security/.test(htaccess)) throw new Error('site-src/htaccess.txt lost the password or security rules');
 fs.rmSync(path.join(here, 'site'), { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'editions'), { recursive: true });
 fs.writeFileSync(path.join(OUT, 'index.html'), home);

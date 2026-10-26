@@ -49,7 +49,7 @@ Questions: **billing@traverseplatforms.com** or (303) 596-9515.
 
 | Claim | Matches | Result |
 |---|---|---|
-| Yearly about 20% less | Homepage and billing.php display prices ($35 vs $45, $69 vs $89, $99 vs $129 a month) | Verified: 21–23% |
+| Yearly about 20% less | Homepage and billing.php display prices, 26 Oct plans ($79 vs $99, $199 vs $249, $449 vs $549 a month; extra people $35 vs $45, $29 vs $39) | Verified: 18–26% |
 | Faults: 30 days to fix, then pro-rata refund | Subscription agreement §14.1 | Matches the draft |
 | Removed core feature: refund | Subscription agreement §2.6 | Matches the draft |
 | 14-day founding pilot, once | billing.php (trial_days 14, once per install) | Verified |

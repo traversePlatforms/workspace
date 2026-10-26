@@ -8162,13 +8162,13 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal'], true)) {
         billingLog(['what' => 'portal', 'by' => $me]);
         out(['ok' => true, 'url' => (string) $r['url']]);
     }
-    if (in_array($b['status'] ?? '', array_merge(BILLING_GOOD, ['past_due', 'unpaid']), true)) fail('There is a plan already. Change it in Manage billing.');
+    if (in_array($b['status'] ?? '', array_merge(BILLING_GOOD, ['past_due', 'unpaid']), true)) fail('There is a plan already. To change it, email billing@traverseplatforms.com.');
     $plan = (string) ($body['plan'] ?? ''); $iv = (string) ($body['interval'] ?? ''); $seats = (int) ($body['seats'] ?? 0); $addon = !empty($body['addon']);
     $cf = billingCheckoutFields($bc, $b, $plan, $iv, $seats, $addon, $back);
     if (isset($cf['error'])) fail($cf['error']);
     $r = stripeCall($bc, 'POST', '/v1/checkout/sessions', $cf['fields']);
     if (isset($r['error']) || empty($r['url'])) fail($r['error'] ?? 'Stripe did not open the payment page.', 502);
-    billingLog(['what' => 'checkout', 'by' => $me, 'plan' => $plan, 'interval' => $iv, 'seats' => $plan === 'duo' ? 1 : $seats, 'addon' => $addon, 'session' => (string) ($r['id'] ?? '')]);
+    billingLog(['what' => 'checkout', 'by' => $me, 'plan' => $plan, 'interval' => $iv, 'seats' => $seats, 'addon' => $addon, 'session' => (string) ($r['id'] ?? '')]);
     out(['ok' => true, 'url' => (string) $r['url']]);
 }
 

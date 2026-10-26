@@ -5,11 +5,19 @@ declare(strict_types=1);
  * nothing here answers a request on its own.
  *
  * ---- WHAT IT DOES ------------------------------------------------------------------------
- * The install's admin opens Billing, picks a plan (Duo, Crew or Pro; monthly or yearly; how many people; Pro can add a
- * second edition) and is sent to Stripe Checkout to pay. Stripe tells this install what happened through its webhook
+ * The install's admin opens Billing, picks a plan (Solo, Crew or Team; monthly or yearly; how many people; a second
+ * edition if wanted) and is sent to Stripe Checkout to pay. Stripe tells this install what happened through its webhook
  * (rounds.php ?action=billinghook, the Stripe-Signature checked), and the plan, seats, status and renewal date are kept
- * in sixfold-data/rounds/billing.json. Changing the card, the plan or the seats, invoices and cancelling all happen in
- * Stripe's own customer portal ("Manage billing").
+ * in sixfold-data/rounds/billing.json. The card, invoices and cancelling happen in Stripe's own customer portal
+ * ("Manage billing"). Plan and seat changes go through Traverse (billing@): the portal cannot change a subscription
+ * made of several prices.
+ *
+ * ---- THE PLANS (Matthew 2026-10-26, traverse/research/pricing-2026-10-26/PRICING-RECOMMENDATION.md) ------------------
+ * Per company, users included: Solo 1 person, Crew up to 5, Team up to 12; each person past that is an extra seat.
+ * Roofing and Solar installs carry the edition uplift (+$20 on Solo, +$50 on Crew and Team). A second edition is a flat
+ * add-on. One subscription = the plan's base price (quantity 1) + extra seats (quantity = people past the included) +
+ * the uplift (quantity 1, where it applies) + the second edition (quantity 1, if picked). Founding companies: a coupon
+ * on the whole subscription (25% off for 12 months) and the free pilot once.
  *
  * ---- WHAT IT DOES NOT DO ------------------------------------------------------------------
  *   - It never locks anyone out. Past due, cancelled or more people than paid seats: the admin sees a warning and
@@ -31,23 +39,27 @@ declare(strict_types=1);
  * <mock_file>.requests.log and a canned answer comes back; the webhook secret is then 'whsec_mock'.
  */
 
-const BILLING_PLANS = ['duo', 'crew', 'pro'];
+const BILLING_PLANS = ['solo', 'crew', 'team'];
+const BILLING_PRICE_KEYS = ['solo', 'crew', 'team', 'crew_extra', 'team_extra', 'uplift_solo', 'uplift', 'addon'];
 const BILLING_GOOD = ['active', 'trialing'];
 const BILLING_SEATS_MAX = 500;
 
 function billingConfigDefaults(): array {
+    $two = fn($m, $y) => ['month' => $m, 'year' => $y];
     return [
         'secret_key' => '',              /* sk_live_... or sk_test_... */
         'webhook_secret' => '',          /* whsec_... from this install's webhook endpoint */
         'install' => '',                 /* this install's key; empty = the data folder's name */
-        /* Stripe price ids, one per plan and interval. Duo is per crew (quantity 1); Crew, Pro and the add-on per person. */
-        'prices' => ['duo' => ['month' => '', 'year' => ''], 'crew' => ['month' => '', 'year' => ''],
-                     'pro' => ['month' => '', 'year' => ''], 'addon' => ['month' => '', 'year' => '']],
+        /* Stripe price ids, one per key and interval (traverse/ops/stripe-setup.mjs prints them): the three plans' base prices,
+           the extra seat on Crew and on Team, the edition uplift (Solo's and the others'), the second edition */
+        'prices' => array_fill_keys(BILLING_PRICE_KEYS, $two('', '')),
         /* what the Billing screen shows, US dollars per month (year = per month, billed yearly). Keep it equal to Stripe. */
-        'display' => ['duo' => ['month' => 129, 'year' => 99], 'crew' => ['month' => 45, 'year' => 35],
-                      'pro' => ['month' => 89, 'year' => 69], 'addon' => ['month' => 20, 'year' => 20]],
-        'duo_people' => 2,               /* Duo covers one- and two-person crews */
-        /* a founding company: a free pilot before the first charge, and a coupon on Pro (30% off for the first year) */
+        'display' => ['solo' => $two(99, 79), 'crew' => $two(249, 199), 'team' => $two(549, 449),
+                      'crew_extra' => $two(45, 35), 'team_extra' => $two(39, 29),
+                      'uplift_solo' => $two(20, 20), 'uplift' => $two(50, 50), 'addon' => $two(99, 99)],
+        'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* people each plan covers before extra seats */
+        'uplift_on' => null,             /* the Roofing/Solar uplift: null = from the edition (features roof, solar or hail) */
+        /* a founding company: a free pilot before the first charge, and a coupon on the whole plan (25% off for the first year) */
         'founding' => false, 'trial_days' => 14, 'founding_coupon' => '',
         'return_url' => '',              /* where Stripe sends people back; empty = the page they came from */
         'timeout' => 20,
@@ -67,7 +79,7 @@ function billingConfig(?string $apiDir = null): array {
     if ($cfg['install'] === '') $cfg['install'] = basename(dirname(DATA_DIR));
     if (!empty($cfg['mock_file'])) {
         if ($cfg['webhook_secret'] === '') $cfg['webhook_secret'] = 'whsec_mock';
-        foreach (['duo', 'crew', 'pro', 'addon'] as $p) foreach (['month', 'year'] as $i)
+        foreach (BILLING_PRICE_KEYS as $p) foreach (['month', 'year'] as $i)
             if (($cfg['prices'][$p][$i] ?? '') === '') $cfg['prices'][$p][$i] = 'price_mock_' . $p . '_' . $i;
     }
     return $cfg;
@@ -140,10 +152,23 @@ function billingSeatsUsed(array $rows): int {
     foreach ($rows as $r) if (empty($r['off']) && !preg_match('/^(Claude|Fable)\b/i', (string) ($r['name'] ?? ''))) $n++;
     return $n;
 }
-/** seats the plan pays for: Duo covers duo_people, Crew and Pro their quantity */
+/** seats the plan pays for: the people it includes plus the extra seats (kept together in billing.json 'seats') */
 function billingSeatsPaid(array $b, array $c): int {
     if (!in_array($b['status'] ?? '', BILLING_GOOD, true) && ($b['status'] ?? '') !== 'past_due') return 0;
-    return ($b['plan'] ?? '') === 'duo' ? (int) $c['duo_people'] : (int) ($b['seats'] ?? 0);
+    return max((int) ($b['seats'] ?? 0), (int) ($c['included'][$b['plan'] ?? ''] ?? 0));
+}
+/** does this install carry the edition uplift? Roofing and Solar (their data: hail, roofs, sun), unless the config says */
+function billingUplift(array $c): bool {
+    if ($c['uplift_on'] !== null) return (bool) $c['uplift_on'];
+    return function_exists('feature') && (feature('roof') || feature('solar') || feature('hail'));
+}
+/** what a plan costs a month for this many people, in dollars, as the Billing screen and Stripe add it up */
+function billingMonthly(array $c, string $plan, string $iv, int $seats, bool $addon): int {
+    $d = $c['display']; $extra = max(0, $seats - (int) ($c['included'][$plan] ?? 0));
+    $m = (int) ($d[$plan][$iv] ?? 0) + ($plan !== 'solo' ? $extra * (int) ($d[$plan . '_extra'][$iv] ?? 0) : 0);
+    if (billingUplift($c)) $m += (int) ($d[$plan === 'solo' ? 'uplift_solo' : 'uplift'][$iv] ?? 0);
+    if ($addon) $m += (int) ($d['addon'][$iv] ?? 0);
+    return $m;
 }
 /** what the admin sees: the subscription, seats used against seats paid, and the one warning that applies */
 function billingState(array $c, array $rows): array {
@@ -152,7 +177,7 @@ function billingState(array $c, array $rows): array {
     $warn = null;
     if ($st === 'past_due' || $st === 'unpaid') $warn = 'The last payment did not go through. Update the card in Manage billing.';
     elseif ($st === 'canceled') $warn = 'The plan was cancelled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . '. Pick a plan to carry on.';
-    elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ' people can sign in and the plan pays for ' . $paid . '. Add seats in Manage billing, or remove people in Accounts.';
+    elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ' people can sign in and the plan covers ' . $paid . '. Email billing@traverseplatforms.com to add seats, or remove people in Accounts.';
     elseif (!empty($b['cancel_at_end']) && !empty($b['period_end'])) $warn = 'The plan ends on ' . date('j M Y', (int) $b['period_end']) . ' (cancelled in Stripe). Manage billing turns it back on.';
     return [
         'ready' => billingConfigured($c), 'mock' => !empty($c['mock_file']),
@@ -160,9 +185,10 @@ function billingState(array $c, array $rows): array {
         'addon' => !empty($b['addon']), 'status' => $st ?: null, 'trialEnd' => $b['trial_end'] ?? null, 'periodEnd' => $b['period_end'] ?? null,
         'cancelAtEnd' => !empty($b['cancel_at_end']), 'portal' => !empty($b['customer']), 'pending' => !empty($b['pending']) && !$st,
         'warn' => $warn, 'founding' => !empty($c['founding']), 'trialDays' => !empty($c['founding']) ? (int) $c['trial_days'] : 0,
-        'display' => $c['display'], 'duoPeople' => (int) $c['duo_people'],
+        'display' => $c['display'], 'included' => $c['included'], 'uplift' => billingUplift($c),
+        'monthly' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon'])) : null,
         'offer' => array_values(array_filter(BILLING_PLANS, fn($p) => ($c['prices'][$p]['month'] ?? '') !== '' || ($c['prices'][$p]['year'] ?? '') !== '')),
-        'intervals' => array_values(array_filter(['month', 'year'], fn($i) => ($c['prices']['pro'][$i] ?? '') !== '' || ($c['prices']['crew'][$i] ?? '') !== '' || ($c['prices']['duo'][$i] ?? '') !== '')),
+        'intervals' => array_values(array_filter(['month', 'year'], function ($i) use ($c) { foreach (BILLING_PLANS as $p) if (($c['prices'][$p][$i] ?? '') !== '') return true; return false; })),
     ];
 }
 /** where Stripe sends people back: the config's return_url, else the page they came from on this same host (no query) */
@@ -178,29 +204,34 @@ function billingBack(array $c, string $from): ?string {
 function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int $seats, bool $addon, string $back): array {
     if (!in_array($plan, BILLING_PLANS, true)) return ['error' => 'Pick a plan.'];
     if (!in_array($iv, ['month', 'year'], true)) return ['error' => 'Pick monthly or yearly.'];
+    $ivWord = $iv === 'year' ? 'yearly' : 'monthly';
     $price = (string) ($c['prices'][$plan][$iv] ?? '');
-    if ($price === '') return ['error' => 'That plan is not offered ' . ($iv === 'year' ? 'yearly' : 'monthly') . ' yet.'];
-    $qty = $plan === 'duo' ? 1 : $seats;
-    if ($qty < 1 || $qty > BILLING_SEATS_MAX) return ['error' => 'Seats: 1 to ' . BILLING_SEATS_MAX . '.'];
+    if ($price === '') return ['error' => 'That plan is not offered ' . $ivWord . ' yet.'];
+    if ($seats < 1 || $seats > BILLING_SEATS_MAX) return ['error' => 'People: 1 to ' . BILLING_SEATS_MAX . '.'];
+    $inc = (int) ($c['included'][$plan] ?? 1);
+    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one person. Crew covers up to ' . (int) $c['included']['crew'] . '.'];
     $f = ['mode' => 'subscription', 'client_reference_id' => $c['install'],
           'success_url' => $back . (str_contains($back, '?') ? '&' : '?') . 'billing=done',
           'cancel_url' => $back . (str_contains($back, '?') ? '&' : '?') . 'billing=cancel',
-          'line_items' => [['price' => $price, 'quantity' => $qty]],
-          'metadata' => ['install' => $c['install'], 'plan' => $plan, 'interval' => $iv],
+          'line_items' => [['price' => $price, 'quantity' => 1]],
+          'metadata' => ['install' => $c['install'], 'plan' => $plan, 'interval' => $iv, 'seats' => (string) max($seats, $inc)],
           'subscription_data' => ['metadata' => ['install' => $c['install']]]];
     /* the agreement, on Stripe's page under the pay button (2026-10-13; draft pages until the review is done) */
     $f['custom_text'] = ['submit' => ['message' => 'By subscribing you agree to the Traverse Subscription Agreement (traverseplatforms.com/terms) and Privacy Policy (traverseplatforms.com/privacy).']];
-    if ($addon) {
-        if ($plan !== 'pro') return ['error' => 'A second edition goes with Pro.'];
-        $ap = (string) ($c['prices']['addon'][$iv] ?? '');
-        if ($ap === '') return ['error' => 'The second edition is not offered ' . ($iv === 'year' ? 'yearly' : 'monthly') . ' yet.'];
-        $f['line_items'][] = ['price' => $ap, 'quantity' => $qty];
-    }
+    $add = function (string $key, int $qty) use (&$f, $c, $iv, $ivWord): ?string {
+        $p = (string) ($c['prices'][$key][$iv] ?? '');
+        if ($p === '') return $key;
+        $f['line_items'][] = ['price' => $p, 'quantity' => $qty];
+        return null;
+    };
+    if ($seats > $inc && $add($plan . '_extra', $seats - $inc)) return ['error' => 'Extra people are not offered ' . $ivWord . ' yet.'];
+    if (billingUplift($c) && $add($plan === 'solo' ? 'uplift_solo' : 'uplift', 1)) return ['error' => 'This edition is not offered ' . $ivWord . ' yet.'];
+    if ($addon && $add('addon', 1)) return ['error' => 'The second edition is not offered ' . $ivWord . ' yet.'];
     if (!empty($b['customer'])) $f['customer'] = (string) $b['customer'];
     /* the pilot only once: a company that has had a subscription here does not get another free trial */
     if (!empty($c['founding']) && (int) $c['trial_days'] > 0 && empty($b['subscription']) && empty($b['had_trial'])) $f['subscription_data']['trial_period_days'] = (int) $c['trial_days'];
-    /* Stripe takes a coupon or a promotion-code box, not both */
-    if (!empty($c['founding']) && $plan === 'pro' && $c['founding_coupon'] !== '') $f['discounts'] = [['coupon' => (string) $c['founding_coupon']]];
+    /* Stripe takes a coupon or a promotion-code box, not both; the founding coupon covers the whole plan (2026-10-26) */
+    if (!empty($c['founding']) && $c['founding_coupon'] !== '') $f['discounts'] = [['coupon' => (string) $c['founding_coupon']]];
     else $f['allow_promotion_codes'] = 'true';
     return ['fields' => $f];
 }
@@ -227,15 +258,17 @@ function billingTakeEvent(array $c, array $ev): string {
             if (!empty($b['subscription']) && ($o['id'] ?? '') !== $b['subscription'] && in_array($b['status'] ?? '', BILLING_GOOD, true) && $type !== 'customer.subscription.created') { $did = 'old subscription'; return $b; }
             $b['subscription'] = (string) ($o['id'] ?? ''); $b['customer'] = (string) ($o['customer'] ?? ($b['customer'] ?? ''));
             $b['status'] = $type === 'customer.subscription.deleted' ? 'canceled' : (string) ($o['status'] ?? '');
-            $plan = null; $iv = null; $seats = 0; $addon = false; $end = null;
+            $plan = null; $iv = null; $extra = 0; $addon = false; $uplift = false; $end = null;
             foreach ((array) ($o['items']['data'] ?? []) as $it) {
                 $p = billingPriceOf($c, (string) ($it['price']['id'] ?? ''));
                 if (!$p) continue;
                 if ($p[0] === 'addon') { $addon = true; continue; }
-                [$plan, $iv] = $p; $seats = (int) ($it['quantity'] ?? 1);
+                if (str_starts_with($p[0], 'uplift')) { $uplift = true; continue; }
+                if (str_ends_with($p[0], '_extra')) { $extra = (int) ($it['quantity'] ?? 0); continue; }
+                [$plan, $iv] = $p;
                 if (!empty($it['current_period_end'])) $end = (int) $it['current_period_end'];   /* newer API versions keep it on the item */
             }
-            if ($plan) { $b['plan'] = $plan; $b['interval'] = $iv; $b['seats'] = $seats; $b['addon'] = $addon; }
+            if ($plan) { $b['plan'] = $plan; $b['interval'] = $iv; $b['seats'] = (int) ($c['included'][$plan] ?? 1) + $extra; $b['addon'] = $addon; $b['uplift'] = $uplift; }
             $b['period_end'] = (int) ($o['current_period_end'] ?? $end ?? 0) ?: null;
             $b['trial_end'] = !empty($o['trial_end']) ? (int) $o['trial_end'] : null;
             if (!empty($o['trial_end'])) $b['had_trial'] = true;
