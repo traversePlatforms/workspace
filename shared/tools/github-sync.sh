@@ -8,7 +8,7 @@
 set -eu
 REPO="/c/Users/Surge Inc/Desktop/claude test 2"
 MIRROR="$LOCALAPPDATA/ProjectBackup/github-mirror"
-REMOTE="https://github.com/TraversePlatforms/workspace.git"
+REMOTE="https://github.com/traversePlatforms/workspace.git"
 KEEP_OFF=(surge/brand/notes/ surge/brand/photos/restricted-boards-DO-NOT-PUBLISH/)
 export PATH="$PATH:$APPDATA/Python/Python313/Scripts:/c/Users/Surge Inc/AppData/Roaming/Python/Python313/Scripts"
 
