@@ -2764,6 +2764,16 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
     if ($action === 'taplog') out(['ok' => true, 'kept' => 0]);   /* their tap log stays theirs */
     if ($isPost && !in_array($action, ['area', 'signout'], true)) out(['ok' => false, 'why' => 'viewing', 'error' => 'Looking only: this is ' . $me . '\'s screen, so nothing is saved. Go back to your own screen to make changes.'], 409);
 }
+/* Claude Check only looks (2026-10-26, Matthew: "Make a read-only role"; it was a full admin). By name, as boardHidden() does, so a rename
+   can only take rights away. Page loads from this list, plus loading doors and signing out; everything else is refused. */
+if (!$viewing && $realMe === 'Claude Check') {
+    $roOk = ['me', 'signout', 'regions', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
+        'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
+        'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays'];
+    if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
+        out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
+}
 if (!defined('SIXFOLD_CLI') && !$viewing && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
 /* a 365-website lead, its job or its customer asked for by id from an account that does not see them: as if it were not there (2026-10-22) */
 if (webHide()) {

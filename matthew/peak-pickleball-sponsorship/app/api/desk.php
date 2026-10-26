@@ -163,6 +163,7 @@ if ($action === 'data') {
     $removed = []; foreach ($S['leads'] as $l) if (!empty($l['off'])) $removed[] = ['id' => $l['id'], 'name' => $l['name'], 'list' => $l['list'], 'status' => $l['status'], 'at' => $l['off']['at'], 'by' => $l['off']['by']];
     out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'leads' => array_values(array_filter($S['leads'], fn($l) => empty($l['off']))), 'removed' => $removed, 'tours' => $S['tours'], 'proposals' => $S['proposals'], 'packages' => $S['packages'], 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? [], 'pl' => $S['pl'], 'team' => $people, 'hunterLeft' => hunterLeft()]);
 }
+if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);   /* read-only check account (2026-10-26): everything below saves */
 if (!$isPost) fail('POST required', 405);
 $S = state();
 switch ($action) {
