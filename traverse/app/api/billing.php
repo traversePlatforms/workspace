@@ -59,8 +59,10 @@ function billingConfigDefaults(): array {
                       'uplift_solo' => $two(20, 20), 'uplift' => $two(50, 50), 'addon' => $two(99, 99)],
         'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* people each plan covers before extra seats */
         'uplift_on' => null,             /* the Roofing/Solar uplift: null = from the edition (features roof, solar or hail) */
-        /* a founding company: a free pilot before the first charge, and a coupon on the whole plan (25% off for the first year) */
-        'founding' => false, 'trial_days' => 14, 'founding_coupon' => '',
+        /* a founding company: a free pilot before the first charge, and a coupon on the whole plan (25% off for the first year).
+           On by default (Matthew 2026-10-26: "since we have no users currently every one is going to be a founder"). founding_pct is
+           what the coupon takes off, for the screen's struck-through prices; keep it equal to the Stripe coupon. */
+        'founding' => true, 'founding_pct' => 25, 'trial_days' => 14, 'founding_coupon' => '',
         'return_url' => '',              /* where Stripe sends people back; empty = the page they came from */
         'timeout' => 20,
         'mock_file' => null,
@@ -79,6 +81,7 @@ function billingConfig(?string $apiDir = null): array {
     if ($cfg['install'] === '') $cfg['install'] = basename(dirname(DATA_DIR));
     if (!empty($cfg['mock_file'])) {
         if ($cfg['webhook_secret'] === '') $cfg['webhook_secret'] = 'whsec_mock';
+        if ($cfg['founding_coupon'] === '') $cfg['founding_coupon'] = 'coupon_mock';
         foreach (BILLING_PRICE_KEYS as $p) foreach (['month', 'year'] as $i)
             if (($cfg['prices'][$p][$i] ?? '') === '') $cfg['prices'][$p][$i] = 'price_mock_' . $p . '_' . $i;
     }
@@ -184,7 +187,7 @@ function billingState(array $c, array $rows): array {
         'plan' => $b['plan'] ?? null, 'interval' => $b['interval'] ?? null, 'seats' => $paid, 'used' => $used,
         'addon' => !empty($b['addon']), 'status' => $st ?: null, 'trialEnd' => $b['trial_end'] ?? null, 'periodEnd' => $b['period_end'] ?? null,
         'cancelAtEnd' => !empty($b['cancel_at_end']), 'portal' => !empty($b['customer']), 'pending' => !empty($b['pending']) && !$st,
-        'warn' => $warn, 'founding' => !empty($c['founding']), 'trialDays' => !empty($c['founding']) ? (int) $c['trial_days'] : 0,
+        'warn' => $warn, 'founding' => !empty($c['founding']), 'foundingPct' => !empty($c['founding']) && $c['founding_coupon'] !== '' ? (int) $c['founding_pct'] : 0, 'trialDays' => !empty($c['founding']) ? (int) $c['trial_days'] : 0,
         'display' => $c['display'], 'included' => $c['included'], 'uplift' => billingUplift($c),
         'monthly' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon'])) : null,
         'offer' => array_values(array_filter(BILLING_PLANS, fn($p) => ($c['prices'][$p]['month'] ?? '') !== '' || ($c['prices'][$p]['year'] ?? '') !== '')),

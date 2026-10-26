@@ -2464,5 +2464,9 @@
  "Extra people are not offered ": "Las personas extra no se ofrecen ",
  "This edition is not offered ": "Esta edición no se ofrece ",
  " yet.": " todavía.",
- "There is a plan already. To change it, email billing@traverseplatforms.com.": "Ya hay un plan. Para cambiarlo, escribe a billing@traverseplatforms.com."
+ "There is a plan already. To change it, email billing@traverseplatforms.com.": "Ya hay un plan. Para cambiarlo, escribe a billing@traverseplatforms.com.",
+ "Founding company: ": "Empresa fundadora: ",
+ "% off for the first year, and your price never goes up while you stay.": "% de descuento el primer año, y tu precio no sube mientras sigas con nosotros.",
+ "The founding price, for your first 12 months; then ": "El precio de fundador, por tus primeros 12 meses; luego ",
+ " a month. Stripe shows the discount on the next page.": " al mes. Stripe muestra el descuento en la siguiente página."
 }
