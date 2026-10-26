@@ -17,6 +17,9 @@
            - surge/clients (client material is kept out of git)
          It is built in a temp folder and moved in whole, so Drive never uploads a half-written file. The newest 7 are kept.
 
+      1c. The GitHub copy (github.com/traversePlatforms/workspace, private) via shared\tools\github-sync.sh, which leaves out
+         Surge's restricted notes. Its failure is logged, not fatal.
+
       2. Once a week (or when it has never run): a plain mirror of the photo and video originals and the _archive payload,
          which git ignores and nothing else holds: surge/brand/videos, surge/brand/photos, traverse/videos, _archive.
 
@@ -97,6 +100,12 @@ try {
     # keep the newest $Keep
     $old = Get-ChildItem -LiteralPath $Dest -Filter "core-*.7z" | Sort-Object Name -Descending | Select-Object -Skip $Keep
     foreach ($o in $old) { Remove-Item -LiteralPath $o.FullName -Force; Say ("removed old {0}" -f $o.Name) }
+
+    # 1c. GitHub copy (2026-10-25, Matthew): github-sync.sh strips Surge's notes and pushes. A failure here (offline, sign-in)
+    # is logged but does not fail the backup.
+    $bash = "C:\Program Files\Git\bin\bash.exe"
+    $gh = & $bash (Join-Path $Project "shared\tools\github-sync.sh") 2>&1 | Select-Object -Last 3
+    if ($LASTEXITCODE -eq 0) { Say ("GitHub sync ok: " + ($gh -join ' ')) } else { Say ("GitHub sync FAILED (exit $LASTEXITCODE): " + ($gh -join ' ')) }
 
     # 2. weekly media mirror
     $mark = Join-Path $Dest "media-last-run.txt"
