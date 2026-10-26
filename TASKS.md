@@ -909,6 +909,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 - [ ] **X-1 — Account inventory** (read the section above — inventory, not passwords).
       Underpins X-4 and X-5.
+      **2026-10-25: mostly in place.** The inventory is Home Base (every account, owning login, sub, domain, per company).
+      Bitwarden (free) set up: Chrome passwords from every profile imported into a folder per company, export files
+      deleted, extension in each profile, Chrome saving off. Still open: four plain-text login files on the Desktop go into
+      Bitwarden (then deleted); optional free Bitwarden organization to share the 365 logins with Jen. Same night: project on
+      GitHub (github-sync.sh, Surge notes stripped, daily in the 6 PM backup), one Windows desktop per company, Desktop sorted.
       **⚑ Aliases belong in it, not just mailboxes.** 2026-10-01: `M.Sharpe@SixfoldColorado.com`
       turned out to be an alias on `Contact@`, which is invisible from outside and changes who
       can read mail sent to it. An inventory that lists mailboxes but not their aliases misses
