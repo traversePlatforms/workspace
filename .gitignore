@@ -314,3 +314,13 @@ __pycache__/
 shared/tools/make-image-log.jsonl
 sixfold/content/365-social-2026-10/.render/
 surge/drafts/fb-ig-set-2026-10/.render/
+
+# exported lead lists: names, phones, emails (2026-10-23) - kept on disk + Drive backup, not in git
+sixfold/leads-archive/*.csv
+
+# yard v2 results per town (2026-10-24): lawn figures per house, large; order.txt stays tracked
+traverse/data-pipeline/door-territory/lawn-trial/yard-v2/*.json
+traverse/data-pipeline/door-territory/lawn-trial/yard-v2/*.finished
+
+# Matthew's pay review and tax figures (2026-10-25): personal, kept off git and GitHub; the Drive backup does not cover personal/ either
+personal/pay/
