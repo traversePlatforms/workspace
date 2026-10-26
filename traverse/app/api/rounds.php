@@ -4118,7 +4118,8 @@ function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_st
    2026-10-26: "only new leads from today"). Messenger stays Jen's, and so do the Facebook leads from before. He takes them end to end; the
    office sees their jobs as Booked only, as for website leads. */
 function metaMineFrom(): int { static $t = null; if ($t === null) { $d = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) (company()['metaMine'] ?? '')) ? (string) company()['metaMine'] : ''; $t = $d !== '' ? (int) strtotime($d . ' 00:00:00 America/Denver') : 0; } return $t; }
-function webLead(array $l): bool { $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom()); }
+function webLead(array $l): bool { if (!empty($l['jenkeep'])) return false;   /* reached out to the office themselves: theirs now (2026-10-26) */
+    $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom()); }
 function webLeadIds(): array { static $ids = null; if ($ids === null) { $ids = []; foreach (leadsAllRaw() as $id => $l) if (webLead($l)) $ids[$id] = true; } return $ids; }
 /* Facebook form names as the Pipeline shows them (2026-10-25, Matthew: "rename facebook leads ... lead 1 and lead 2"): the second form's own
    name, "365 Aeration and Seeding 's form created on Mon Oct 19, 2026 3:51pm", was read as the day the lead came in. The service word stays
@@ -4144,7 +4145,7 @@ function leadsAllRaw(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) {
@@ -6636,13 +6637,27 @@ if ($action === 'crewlead') {
 }
 if ($action === 'leadadd') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
-    /* the heads-up (2026-10-26): a phone number or email that belongs to one of Matthew's leads (website or his Facebook ads) is not added
-       again by the office; they call back on the 365 number, which rings Jen */
+    /* one of Matthew's leads (website or his Facebook ads) reached out to the office (2026-10-26, Matthew: "if one of the leads contacts her
+       via phone/call/text/email she can keep that lead so we arent transferring people back and fourth. She will just add them in the system
+       and confirm they reach out one of those ways"): the same phone or email asks how they reached her ('came': call, text, email), then the
+       lead is hers (jenkeep), everything on it kept, and Matthew's phones get a note. Never a second lead for the same person. */
     if (webHide()) {
-        $md = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $me2 = strtolower(trim((string) ($body['email'] ?? '')));
+        $md = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $me2 = strtolower(trim((string) ($body['email'] ?? ''))); $mine = null;
         foreach (leadsAllRaw() as $ml) if (webLead($ml) && ($ml['status'] ?? '') !== 'lost'
-            && ((strlen($md) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ml['phone'] ?? '')), -10) === $md) || ($me2 !== '' && strtolower((string) ($ml['email'] ?? '')) === $me2)))
-            out(['ok' => false, 'why' => 'matthew', 'error' => 'This is one of Matthew\'s leads (from a Facebook ad or the website), so he is looking after them. Please pass them to Matthew.'], 409);
+            && ((strlen($md) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ml['phone'] ?? '')), -10) === $md) || ($me2 !== '' && strtolower((string) ($ml['email'] ?? '')) === $me2))) { $mine = $ml; break; }
+        if ($mine) {
+            $came = (string) ($body['came'] ?? '');
+            if (!in_array($came, ['call', 'text', 'email'], true)) out(['ok' => false, 'why' => 'matthew', 'error' => 'This is one of Matthew\'s leads (from a Facebook ad or the website). If they reached out to you, say how and they are yours.'], 409);
+            $how = ['call' => 'by phone', 'text' => 'by text', 'email' => 'by email'][$came];
+            $said = array_filter([$clean($body['need'] ?? '', 60), $clean($body['town'] ?? '', 160), $clean($body['msg'] ?? '', 2000)]);
+            $row = ['id' => (string) $mine['id'], 'jenkeep' => ['came' => $came, 'by' => $me, 'at' => time()],
+                    'note' => 'Reached out to ' . $me . ' ' . $how . ', so ' . $me . ' has this lead now (it was Matthew\'s).' . ($said ? ' New details: ' . implode('; ', $said) : ''), 'by' => $me, 'at' => time()];
+            if ($role === 'quote') $row['qown'] = $me;   /* her Quick quote login sees it as hers */
+            if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+            if (($mine['status'] ?? '') === 'unreached') leadRevive((string) $mine['id'], 'reached out to ' . $me . ' ' . $how, $me);
+            if (leadAlertsOn()) a365Alert('Your lead reached out to ' . strtok($me, ' '), (trim((string) ($mine['name'] ?? '')) ?: 'Someone') . ' · ' . $how . '. ' . strtok($me, ' ') . ' has them now.', false, false, true);
+            out(['ok' => true, 'id' => (string) $mine['id'], 'had' => true, 'kept' => true]);
+        }
     }
     if ($role === 'quote') {
         $qd = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $qe = strtolower(trim((string) ($body['email'] ?? '')));
