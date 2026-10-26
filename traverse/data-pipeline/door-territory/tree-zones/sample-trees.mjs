@@ -32,7 +32,7 @@ const TOWNS = { walden: 'elpaso', monument: 'elpaso', 'palmer-lake': 'elpaso', '
   'bow-mar': 'drcog2', 'columbine-valley': 'drcog2', 'glendale': 'drcog2', 'dove-valley': 'drcog2', 'morrison': 'drcog2', 'twin-lakes': 'drcog2', 'foxfield': 'drcog2', 'stonegate': 'douglas', 'sherrelwood': 'drcog2', 'welby': 'drcog2', 'roxborough-park': 'douglas', 'evergreen': 'drcog2', 'the-pinery': 'douglas', 'watkins': 'drcog2', 'perry-park': 'douglas', 'idaho-springs': 'drcog2', 'lochbuie': 'drcog2', 'black-hawk': 'drcog2', 'elizabeth': 'elbert', 'central-city': 'drcog2', 'dacono': 'drcog2', 'gunbarrel': 'drcog1', 'frederick': 'drcog2', 'bennett': 'drcog2', 'fort-lupton': 'drcog2', 'niwot': 'drcog1', 'firestone': 'drcog2', 'hudson': 'drcog2', 'nederland': 'drcog1', 'kiowa': 'elbert', 'strasburg': 'drcog2', 'platteville': 'drcog2', 'mead': 'drcog1', 'keenesburg': 'drcog2', 'byers': 'drcog2', 'lyons': 'drcog1',   /* batch 4, 2026-10-16 */   /* 2026-10-14: the 365 area; lidar.mjs already notes drcog2 covers Denver and Arvada, drcog1 Boulder */
   'cs-northeast': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southeast': 'elpaso', 'cs-southwest': 'elpaso', 'security-widefield': 'elpaso', fountain: 'elpaso' };   /* Springs (2026-10-12): El Paso county scan, as Monument; 8-door check before the overnight run */   /* Yards' new towns (2026-10-11): both read 8 of 8 sample doors in CO_DRCOG_2_2020 */
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
-const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
+const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9), BLD = arg('buildings', 'buildings');
 /* --mail: measure the mailing-list properties (../mail/mail-properties.csv, owners who live
    elsewhere) instead of the doors. Same cache, same key: the two sets never share a parcel. */
 const MAIL = process.argv.includes('--mail');
@@ -68,12 +68,15 @@ for (const [town, county] of (ONLY && !TOWNS[ONLY] && TOWNS[BASE(ONLY)] ? [[ONLY
     : JSON.parse(readFileSync(p, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => typeof d.la === 'number');   /* neighbourhood order = good tile reuse */
   /* --redo-canopy (2026-10-09): measure again the doors whose figures came from the canopy map, now that Teller has laser scans */
   const REDO_CANOPY = process.argv.includes('--redo-canopy');
-  const todo = all.filter((d) => { const c = cache[`${d.la},${d.lo}`]; return !c || (REDO_CANOPY && c.src === 'canopy'); }).slice(0, LIMIT);
+  /* --redo-outline (2026-10-26, Matthew: "go ahead with 1 on the cloud machine"): measure again the doors the Microsoft outline set missed
+     (103,514), with --buildings=buildings-ovt, the Overture 2026-10-21.0 outlines (OpenStreetMap, Esri, Microsoft) cut to the same tiles */
+  const REDO_OUTLINE = process.argv.includes('--redo-outline');
+  const todo = all.filter((d) => { const c = cache[`${d.la},${d.lo}`]; return !c || (REDO_CANOPY && c.src === 'canopy') || (REDO_OUTLINE && c.err === 'no house outline'); }).slice(0, LIMIT);
   if (!todo.length) { console.log(`${town}: all ${all.length} measured`); continue; }
   const lats = todo.map((d) => d.la), lons = todo.map((d) => d.lo);
   const bbox = [Math.min(...lons) - 0.003, Math.min(...lats) - 0.003, Math.max(...lons) + 0.003, Math.max(...lats) + 0.003];
   const parcels = await townParcels(bbox);
-  const blds = await loadBuildings(join(HERE, 'buildings'), bbox);
+  const blds = await loadBuildings(join(HERE, BLD), bbox);
   const cell = 0.004, key = (x, y) => `${Math.floor(x / cell)},${Math.floor(y / cell)}`;
   const pgrid = new Map(), bgrid = new Map();
   for (const pc of parcels) for (let gx = Math.floor(pc.bb[0] / cell); gx <= Math.floor(pc.bb[2] / cell); gx++) for (let gy = Math.floor(pc.bb[1] / cell); gy <= Math.floor(pc.bb[3] / cell); gy++) {
@@ -103,6 +106,7 @@ for (const [town, county] of (ONLY && !TOWNS[ONLY] && TOWNS[BASE(ONLY)] ? [[ONLY
             cache[k] = { ...(await measure(d.la, d.lo, pc.rings, house)), src: 'canopy' };
           }
           delete cache[k].px; delete cache[k].n; delete cache[k].shift; delete cache[k].roof;
+          if (BLD !== 'buildings') cache[k].ol = BLD;   /* which outline set found the house */
         }
       } catch (e) { errs++; if (errs <= 5) console.log('   ', d.a, e.message.slice(0, 120)); continue; }   /* not cached: retried next run */
       done++;
