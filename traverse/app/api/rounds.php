@@ -1134,7 +1134,9 @@ const SEARCH_DIRS = ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH
 /* Written to disk a town at a time and read back a line at a time (2026-10-25): built whole in memory, the 98 MB index (600,000+ houses
    after the all-sizes towns) ran past the 768 MB limit on every rebuild ("Allowed memory size exhausted", line 1152, six times on 25 Oct),
    and Denver's fix adds 50,000 more. Every caller only loops over it, so a generator serves them all. */
-function searchIndex(): iterable {
+/** the index file, rebuilt first when a town or lookup file is newer; null when there is none to read (split out 2026-10-25) */
+function searchIndexFile(): ?string {
+    static $memo = false; if ($memo !== false) return $memo;   /* a search reads the index up to three times a request: the freshness check (index.json + a stat per town) once */
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $f = DATA_DIR . '/search-index.txt';
     $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); $newest = max($newest, (int) @filemtime(DATA_DIR . '/' . $r['key'] . '-lookup.json')); }
@@ -1142,7 +1144,7 @@ function searchIndex(): iterable {
         $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp'; $w = @fopen($tmp, 'w');
         if ($w) {
             foreach (($idx['regions'] ?? []) as $r) {
-                if (!empty($r['admin'])) continue;   /* the cached index is shared by everyone, so admin-only towns stay out of search */
+                if (!empty($r['admin']) || regionHidden($r['key'])) continue;   /* the cached index is shared by everyone, so admin-only towns stay out of search; a town this company hides too (review 2026-10-25: its lookup list was going in) */
                 $data = loadRegion($r['key']); $out = '';
                 if ($data) foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
                     $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
@@ -1159,8 +1161,35 @@ function searchIndex(): iterable {
             if (($ok ?? true) === false || !@rename($tmp, $f)) @unlink($tmp);   /* a half-written index never replaces the old one */
         }
     }
+    return $memo = (is_readable($f) ? $f : null);
+}
+function searchIndex(): iterable {
+    $f = searchIndexFile(); if ($f === null) return;
     $h = @fopen($f, 'r'); if (!$h) return;
     while (($line = fgets($h)) !== false) { $line = rtrim($line, "\r\n"); if ($line !== '') yield $line; }
+    fclose($h);
+}
+/** only the index lines that contain $needle (any case), read in 4 MB blocks (Fable review 2026-10-25): the PHP loop over every one of the
+ *  1,000,000 lines was most of a search's time (0.5 s a pass on half the live index here, two or three passes a search, two in a365Match).
+ *  Every line that can match must contain the longest street word (the search) or the house number (a365Match), so stripos picks the
+ *  few candidate lines at C speed and only those are compared, with the same comparison as before. */
+function searchIndexGrep(string $needle): iterable {
+    $f = searchIndexFile(); if ($f === null || $needle === '') return;
+    $h = @fopen($f, 'r'); if (!$h) return;
+    $rest = '';
+    do {
+        $chunk = fread($h, 1 << 22); $eof = $chunk === false || $chunk === '' || feof($h);
+        $buf = $rest . (string) $chunk;
+        if ($eof) { $buf .= "\n"; $rest = ''; }
+        else { $cut = strrpos($buf, "\n"); if ($cut === false) { $rest = $buf; continue; } $rest = substr($buf, $cut + 1); $buf = substr($buf, 0, $cut + 1); }
+        $pos = 0; $len = strlen($buf);
+        while ($pos < $len && ($i = stripos($buf, $needle, $pos)) !== false) {
+            $s = strrpos($buf, "\n", $i - $len); $s = $s === false ? 0 : $s + 1;   /* the line around the hit */
+            $e = strpos($buf, "\n", $i); if ($e === false) $e = $len;
+            $line = rtrim(substr($buf, $s, $e - $s), "\r"); if ($line !== '') yield $line;
+            $pos = $e + 1;
+        }
+    } while (!$eof);
     fclose($h);
 }
 /* ---- customers (2026-10-04) ------------------------------------------------------------------
@@ -2220,10 +2249,10 @@ function a365Norm(string $a): string {
 function a365NoDir(string $norm): string { $w = explode(' ', $norm); return implode(' ', array_values(array_filter($w, fn($x, $i) => $i === 0 || !in_array($x, SEARCH_DIRS, true), ARRAY_FILTER_USE_BOTH))); }
 /** the one house on our lists at this street address (the city they gave breaks a tie); null when none or unsure */
 function a365Match(string $street, string $city): ?array {
-    $want = a365Norm($street); if (!preg_match('/^\d+ \S+/', $want)) return null;
-    $hits = [];
-    foreach (searchIndex() as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365Norm($p[4]) === $want) $hits[] = $p; }
-    if (!$hits) { $wd = a365NoDir($want); foreach (searchIndex() as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365NoDir(a365Norm($p[4])) === $wd) $hits[] = $p; } }   /* with or without N/S/E/W (2026-10-21) */
+    $want = a365Norm($street); if (!preg_match('/^(\d+) \S+/', $want, $hm)) return null;
+    $hits = [];   /* only lines carrying the house number are compared (review 2026-10-25); the comparison itself is unchanged */
+    foreach (searchIndexGrep($hm[1]) as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365Norm($p[4]) === $want) $hits[] = $p; }
+    if (!$hits) { $wd = a365NoDir($want); foreach (searchIndexGrep($hm[1]) as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365NoDir(a365Norm($p[4])) === $wd) $hits[] = $p; } }   /* with or without N/S/E/W (2026-10-21) */
     $listed = array_values(array_filter($hits, fn($p) => ($p[9] ?? '') !== 'L')); if ($listed) $hits = $listed;   /* the door-list house over a pulled-in copy of it */
     if (count($hits) > 1 && $city !== '') { $c = strtoupper(trim($city)); $hits = array_values(array_filter($hits, fn($p) => str_contains(strtoupper($p[1]), $c) || str_contains($c, strtoupper($p[1])))); }
     return count($hits) === 1 ? ['region' => $hits[0][0], 'door' => $hits[0][3], 'address' => $hits[0][4], 'town' => $hits[0][1]] : null;
@@ -6509,6 +6538,31 @@ if ($action === 'pushcron') {
     out(['ok' => true, 'dry' => $dry, 'pushed' => $pushed, 'phones' => array_sum(array_map('count', $subs))]);
 }
 
+/* ---- Nearest me (2026-10-25, Matthew: "There is no nearest me section in the planning. Should be added."; the leads to visit) ----
+ * The Plan has the leads already (the leads action, with its own who-sees-what rules); this only answers where their houses stand,
+ * read from each town's small positions file, so the page can sort them by distance from the phone. Positions, nothing else. */
+if ($action === 'houseposs') {
+    if (!desk() && $role !== 'manager') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $by = [];
+    foreach (array_slice((array) ($body['houses'] ?? []), 0, 500) as $h) {
+        $k = (string) ($h['region'] ?? ''); $id = (string) ($h['door'] ?? '');
+        if (preg_match('/^[a-z0-9-]{1,40}$/D', $k) && preg_match('/^[a-z0-9-]{1,80}$/D', $id)) $by[$k][$id] = true;
+    }
+    $pos = [];
+    foreach ($by as $k => $ids) {
+        if (!regionAvailable($k)) continue;
+        $split = townSplit($k); $tp = [];
+        if ($split) $tp = townPositions($split);
+        elseif ($data = loadRegion($k)) { foreach ($data['areas'] as $a0) foreach ($a0['doors'] as $d0) if (isset($ids[$d0['id']], $d0['lat'], $d0['lon'])) $tp[$d0['id']] = [(float) $d0['lat'], (float) $d0['lon']]; unset($data); }
+        foreach ($ids as $id => $_) {
+            if (isset($tp[$id])) { $pos[$k . '/' . $id] = $tp[$id]; continue; }
+            foreach (lookupDoors($k) as $d0) if (($d0['id'] ?? '') === $id && isset($d0['lat'], $d0['lon'])) { $pos[$k . '/' . $id] = [(float) $d0['lat'], (float) $d0['lon']]; break; }   /* an office lookup house */
+        }
+        unset($tp);
+    }
+    out(['ok' => true, 'pos' => (object) $pos]);
+}
 if ($action === 'leads') {
     if (!desk() && $role !== 'manager' && $role !== 'quote') fail('Not allowed.', 403);
     $leads = leadsAll();
@@ -8661,7 +8715,10 @@ if ($action === 'search') {
     if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 150, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
     $find = function (array $words) use ($withLookup, $LONGW): array {
         $hits = [];
-        foreach (searchIndex() as $line) {
+        /* the longest street word has to be in every line that matches (as a token start in the address or as the town's name), so only
+           the lines carrying it are compared (review 2026-10-25); street types are never the word (their long form may be in the record) */
+        $need = ''; foreach ($words as $w) if (strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true) && strlen($w) > strlen($need)) $need = $w;
+        foreach ($need !== '' ? searchIndexGrep($need) : searchIndex() as $line) {
             $p = explode("\t", $line); if (count($p) < 9) continue;
             $look = ($p[9] ?? '') === 'L'; if ($look && !$withLookup) continue;
             $aw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $p[4]));

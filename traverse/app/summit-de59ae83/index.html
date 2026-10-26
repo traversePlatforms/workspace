@@ -1503,6 +1503,11 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .plan .plcolsb{margin-left:auto}
   .plan .plcols{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;padding:12px 14px;margin:0 0 10px}
   .plan .plcols small{flex-basis:100%}
+  .plan .plnear{display:flex;flex-direction:column;gap:8px;padding:12px 14px;margin:0 0 10px}
+  .plan .plnear > .back{align-self:flex-start}
+  .plan .plnearrow{display:flex;gap:10px;align-items:flex-start}
+  .plan .plnearrow .door{flex:1;min-width:0;margin:0}
+  .plan .plneard{flex:none;min-width:52px;padding-top:12px;font-weight:700;font-variant-numeric:tabular-nums}
   .plan .plcols label{font-size:14px;cursor:pointer}
   .plan .planfilt .xchip{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--bg)}
   .plan .planfilt .xchip .ic{width:14px;height:14px}
@@ -16652,6 +16657,69 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       planLoad(want.slice(0, 40));
     }).catch(function () { planDraw(); toast('No signal', 'The search needs signal.', null); });
   }
+  /* ---- Nearest me (2026-10-25, Matthew: "There is no nearest me section in the planning. Should be added."; the leads to visit) ----
+     Open leads (new, contacted, walk, quoted) tied to a house, closest to where you stand first. One location fix when it opens,
+     not tracking; Update my location fixes again. The leads come from the leads action (its who-sees-what rules), the positions
+     from houseposs. Leads not tied to a house can't be placed, so they are counted, not listed. */
+  var NEAR_ST = ['new', 'contacted', 'walk', 'quoted'];
+  function planNearBox() {
+    var P = S.plan, box = q('div', 'card plnear');
+    var tb = q('button', 'back', P.nearOpen ? 'Hide nearest me' : 'Nearest me: leads to visit'); tb.type = 'button'; tb.setAttribute('aria-expanded', String(!!P.nearOpen));
+    tb.addEventListener('click', function () { P.nearOpen = !P.nearOpen; if (P.nearOpen && !P.near) planNearLoad(); planDraw(); });
+    box.appendChild(tb);
+    if (!P.nearOpen) return box;
+    var N = P.near || {};
+    S.leadRedraw = function () { if (S.screen === 'plan' && S.plan === P) { P.near = null; planNearLoad(); planDraw(); } else pipelineView(); };
+    if (N.busy) { box.appendChild(q('div', 'msg', N.say)); return box; }
+    if (N.err) box.appendChild(q('div', 'msg bad', N.err));
+    if (N.list) {
+      if (!N.list.length) box.appendChild(q('div', 'msg', 'No open leads tied to a house right now.'));
+      else box.appendChild(q('small', 'soft', N.list.length + (N.list.length === 1 ? ' open lead' : ' open leads') + ', closest first. Straight-line miles from where you are.'));
+      N.list.slice(0, P.nearAll ? N.list.length : 10).forEach(function (it) {
+        var row = q('div', 'plnearrow');
+        row.appendChild(q('div', 'plneard', (it.d < 0.1 ? '<0.1' : it.d < 10 ? it.d.toFixed(1) : Math.round(it.d)) + ' mi'));
+        row.appendChild(leadCard(it.l));
+        box.appendChild(row);
+      });
+      if (N.list.length > 10) {
+        var mb = q('button', 'back', P.nearAll ? 'Show the closest 10' : 'Show all ' + N.list.length); mb.type = 'button';
+        mb.addEventListener('click', function () { P.nearAll = !P.nearAll; planDraw(); }); box.appendChild(mb);
+      }
+      if (N.noHouse) box.appendChild(q('small', 'soft', N.noHouse + (N.noHouse === 1 ? ' open lead is' : ' open leads are') + ' not tied to a house, so ' + (N.noHouse === 1 ? 'it is' : 'they are') + ' not on this list. Link the house on the lead to place it.'));
+    }
+    var ub = q('button', 'back', 'Update my location'); ub.type = 'button';
+    ub.addEventListener('click', function () { P.near = null; planNearLoad(); planDraw(); });
+    box.appendChild(ub);
+    return box;
+  }
+  function planNearLoad() {
+    var P = S.plan; P.near = { busy: true, say: 'Finding where you are…' };
+    var redraw = function () { if (S.screen === 'plan' && S.plan === P) planDraw(); };
+    var mi = function (a, b) {
+      var rad = Math.PI / 180, dl = (b[0] - a[0]) * rad, dn = (b[1] - a[1]) * rad;
+      var x = Math.sin(dl / 2) * Math.sin(dl / 2) + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dn / 2) * Math.sin(dn / 2);
+      return 3958.8 * 2 * Math.asin(Math.sqrt(x));
+    };
+    locate(function (ok) {
+      if (!ok) { P.near = { err: S.geoErr === 'DENIED' ? 'Location is off for this app. Turn it on in the phone’s settings, then tap Update my location.' : S.geoErr }; return redraw(); }
+      var here = [S.here.lat, S.here.lon];
+      P.near = { busy: true, say: 'Loading the leads…' }; redraw();
+      api('leads').then(function (j) {
+        if (!j || !j.ok) throw new Error((j && j.error) || 'Could not load the leads.');
+        var open = j.leads.filter(function (l) { return NEAR_ST.indexOf(l.status) >= 0 && !l.removed; });
+        var placed = open.filter(function (l) { return l.house && l.house.region && l.house.door; });
+        if (!placed.length) { P.near = { list: [], noHouse: open.length }; return redraw(); }
+        return api('houseposs', { body: { houses: placed.map(function (l) { return { region: l.house.region, door: l.house.door }; }) } }).then(function (k) {
+          if (!k || !k.ok) throw new Error((k && k.error) || 'Could not place the houses.');
+          var list = [];
+          placed.forEach(function (l) { var p = k.pos[l.house.region + '/' + l.house.door]; if (p) list.push({ l: l, d: mi(here, p) }); });
+          list.sort(function (a, b) { return a.d - b.d; });
+          P.near = { list: list, noHouse: open.length - list.length };
+          redraw();
+        });
+      }).catch(function (e) { P.near = { err: (e && e.message) || 'The leads need signal.' }; redraw(); });
+    });
+  }
   function planDraw() {
     var P = S.plan, r = planTown(), cols = planCols();
     if (P.qFocus) { P.qFocus = false; setTimeout(function () { var i = view.querySelector('.plsearch'); if (i) { i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch (e) {} } }, 0); }
@@ -16679,6 +16747,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (P.failed) head.appendChild(q('div', 'msg bad', P.failed + (P.failed === 1 ? ' neighbourhood' : ' neighbourhoods') + ' did not load. Load the next neighbourhoods tries again.'));
     if (P.saved) head.appendChild(q('div', 'msg', 'Slow or no signal: some neighbourhoods are this device\u2019s saved copy and may be behind.'));
     wrap.appendChild(head);
+    wrap.appendChild(planNearBox());
     var hide = planHidden();
     if (P.colsOpen) {   /* which columns show, remembered on this device */
       var cp = q('div', 'card plcols'); cp.appendChild(q('small', 'soft', 'Columns to show (remembered on this device)'));

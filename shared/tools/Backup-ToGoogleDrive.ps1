@@ -104,8 +104,13 @@ try {
     # 1c. GitHub copy (2026-10-25, Matthew): github-sync.sh strips Surge's notes and pushes. A failure here (offline, sign-in)
     # is logged but does not fail the backup.
     $bash = "C:\Program Files\Git\bin\bash.exe"
-    $gh = & $bash (Join-Path $Project "shared\tools\github-sync.sh") 2>&1 | Select-Object -Last 3
-    if ($LASTEXITCODE -eq 0) { Say ("GitHub sync ok: " + ($gh -join ' ')) } else { Say ("GitHub sync FAILED (exit $LASTEXITCODE): " + ($gh -join ' ')) }
+    # Under $ErrorActionPreference = 'Stop', PowerShell 5.1 throws on the first line a native command writes to stderr once 2>&1 is on,
+    # and git push always reports there ("To https://...", "Everything up-to-date"): that throw would land in the catch below and skip
+    # the media mirror. So the preference is eased for this one call (review 2026-10-25).
+    $eap = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    $gh = & $bash (Join-Path $Project "shared\tools\github-sync.sh") 2>&1 | ForEach-Object { "$_" } | Select-Object -Last 3
+    $ghExit = $LASTEXITCODE; $ErrorActionPreference = $eap
+    if ($ghExit -eq 0) { Say ("GitHub sync ok: " + ($gh -join ' ')) } else { Say ("GitHub sync FAILED (exit $ghExit): " + ($gh -join ' ')) }
 
     # 2. weekly media mirror
     $mark = Join-Path $Dest "media-last-run.txt"

@@ -50,8 +50,8 @@ $usd = fn($v) => '$' . number_format((float) $v, (float) $v == floor((float) $v)
 $dur = fn(int $m) => $m < 1 ? '' : trim(($m >= 60 ? intdiv($m, 60) . ' h ' : '') . ($m % 60 ? ($m % 60) . ' min' : ''));
 $srcName = ['meta' => 'Instant Form', 'messenger' => 'Messenger', 'a365web' => 'Website', 'website' => 'Website', 'phone' => 'Phone', 'referral' => 'Referral', 'nextdoor' => 'Nextdoor', 'linktree' => 'Linktree', 'other' => 'Other'];
 
-$leads = array_filter(leadsAll(), $real);
-$jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && $real($leads[$j['lead']] ?? ['name' => '']));
+$allLeads = leadsAll(); $leads = array_filter($allLeads, $real);
+$jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && $real($allLeads[$j['lead']] ?? ['name' => '']));   /* a test lead's job is a test job too (review 2026-10-25: looked up in the filtered list, it was kept) */
 $jobOf = []; foreach ($jobs as $j) $jobOf[(string) $j['lead']] = $j;
 $nameOfJob = fn($j) => $short($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''));
 $qPrice = fn($l) => (int) ($l['quote']['price'] ?? 0) ?: (int) ($l['cud'] ?? 0);
