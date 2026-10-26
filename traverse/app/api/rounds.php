@@ -5368,6 +5368,8 @@ function squareCustInfo(string $cid): array {
 function squareToConfirm(array $pays): array {
     [$used, $usedOrders] = squarePayUsed(); $leads = leadsAll(); $out = [];
     $owing = []; foreach (jobsAll() as $j) if (!$j['off'] && jobOwed($j) > 0 && isset($leads[$j['lead']])) $owing[] = $j;
+    $withJob = []; foreach (jobsAll() as $j) if (!$j['off']) $withJob[(string) $j['lead']] = true;
+    $noJob = array_values(array_filter($leads, fn($l) => !isset($withJob[$l['id']]) && !in_array($l['status'] ?? 'new', ['lost', 'unreached'], true)));   /* leads with no job on the board (2026-10-26) */
     /* jobs marked paid by Square or card by hand, never tied to a Square payment (2026-10-20, Carlos Perez): a payment of the same amount within
        three days of the job is offered as "already recorded", to link */
     $unlinked = []; foreach (jobsAll() as $j) if (!$j['off'] && ($j['pay']['s'] ?? '') === 'paid' && in_array((string) ($j['pay']['how'] ?? ''), ['square', 'card'], true) && empty($j['sqpaid']['payment']) && empty($j['sqcharge']['payment']) && isset($leads[$j['lead']])) $unlinked[] = $j;
@@ -5397,6 +5399,20 @@ function squareToConfirm(array $pays): array {
             if ($net !== (int) $j['price'] * 100 || abs($pat - $jd) > 4 * 86400) continue;
             $l = $leads[$j['lead']];
             $cands[] = ['job' => (string) $j['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => 0, 'price' => (int) $j['price'], 'date' => (string) $j['date'], 'score' => 2, 'done' => true, 'why' => ['already marked paid ($' . (int) $j['price'] . ', ' . ((string) ($j['pay']['how'] ?? '') === 'card' ? 'card' : 'Square') . ') with no Square payment tied to it', 'same amount, within days of the job']];
+        }
+        /* someone with no job on the board yet (2026-10-26, Marc S.: told no deposit, the job done, paid in full by a link made in Square; with no
+           job there was nothing to tie it to and nowhere to send a full pay link from): their lead, matched firmly (phone, email or full name),
+           offered as "book it as done and paid" */
+        foreach ($noJob as $l) {
+            $why = []; $sc = 0; $lks = leadNameKeys($l);
+            if (strlen($cu['phone']) === 10 && $cu['phone'] === $d10($l['phone'] ?? '')) { $sc += 3; $why[] = 'same phone'; }
+            if ($em !== '' && $em === strtolower(trim((string) ($l['email'] ?? '')))) { $sc += 3; $why[] = 'same email'; }
+            if ($nk !== '' && substr_count($nk, ' ') >= 1 && in_array($nk, $lks, true)) { $sc += 3; $why[] = 'same name'; }
+            if ($sc < 3) continue;
+            $qp = (int) ($l['quote']['price'] ?? 0);
+            if ($qp && $net === $qp * 100) { $sc += 2; $why[] = 'the exact $' . $qp . ' quoted'; }
+            $why[] = 'no job on the board yet';
+            $cands[] = ['lead' => (string) $l['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => (int) round($net / 100), 'price' => $qp, 'date' => '', 'score' => $sc, 'nojob' => true, 'why' => $why];
         }
         usort($cands, fn($a, $b) => $b['score'] <=> $a['score']);
         $card = trim((string) (($p['card_details']['card']['card_brand'] ?? '') . ' ' . ($p['card_details']['card']['last_4'] ?? '')));
@@ -5639,7 +5655,7 @@ if ($action === 'squareconfirm') {
     if (!feature('walkdesk') || !desk() || !$isPost) fail('Not allowed.', 403);
     $pid = (string) ($body['payment'] ?? ''); $act = (string) ($body['act'] ?? '');
     if (!preg_match('/^[A-Za-z0-9]{4,64}$/D', $pid)) fail('No such payment.');
-    if (!in_array($act, ['full', 'part', 'ignore', 'link'], true)) fail('Pick what to do with it.');
+    if (!in_array($act, ['full', 'part', 'ignore', 'link', 'newjob'], true)) fail('Pick what to do with it.');
     $clk = @fopen(squareConfirmFile() . '.lock', 'c'); if (!$clk || !flock($clk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     if (isset(squareConfirmed()[$pid])) fail('Someone already confirmed that payment.', 409);
     [$used] = squarePayUsed(); if (isset($used[$pid])) fail('That payment is already counted on a job.', 409);
@@ -5647,7 +5663,23 @@ if ($action === 'squareconfirm') {
     if (!is_array($p) || ($p['status'] ?? '') !== 'COMPLETED' || (string) ($p['location_id'] ?? '') !== (string) (squareCfg()['location'] ?? '')) fail('Square does not show that payment here.', 404);
     $net = (int) round(((int) ($p['amount_money']['amount'] ?? 0) - (int) ($p['refunded_money']['amount'] ?? 0)) / 100);
     $row = ['id' => $pid, 'payment' => $pid, 'act' => $act, 'amt' => $net, 'by' => $me, 'at' => time()]; $res = ['ok' => true];   /* id: readLines() keeps only rows that have one */
-    if ($act === 'link') {   /* the job was marked paid by hand: tie this payment to it, nothing owed changes (2026-10-20) */
+    if ($act === 'newjob') {   /* no job on the board yet (2026-10-26, Marc S.): book it for the day it was paid, done and paid in full, this payment tied to it */
+        $lid = (string) ($body['lead'] ?? ''); $l = leadOk($lid) ? (leadsAll()[$lid] ?? null) : null;
+        if (!$l || in_array($l['status'] ?? '', ['lost', 'unreached'], true)) fail('No such lead.', 404);
+        foreach (jobsAll() as $jx) if (!$jx['off'] && $jx['lead'] === $lid) fail('They have a job on the board already: use that one.', 409);
+        $crews = jobCrewList(); if (!$crews) fail('Nobody does jobs yet: add a crew first.');
+        $crew = in_array((string) ($body['crew'] ?? ''), $crews, true) ? (string) $body['crew'] : $crews[0];
+        $pat = (int) strtotime((string) ($p['created_at'] ?? '')) ?: time(); $day = (new DateTime('@' . $pat))->setTimezone(new DateTimeZone(appTz()))->format('Y-m-d');
+        $q = (array) ($l['quote'] ?? []); $h = $l['house'] ?? null; $jid = 'j' . bin2hex(random_bytes(6)); $t = time();
+        $job = ['id' => $jid, 'lead' => $lid, 'title' => trim((string) ($l['name'] ?? '')) ?: 'Job', 'crew' => $crew, 'date' => $day, 'slot' => jobSlots()[2][0], 'price' => $net,
+                'pkg' => (string) ($q['pkg'] ?? 'full'), 'scope' => 'all', 'seedLb' => $q['seedLb'] ?? null, 'fertLb' => $q['fertLb'] ?? null, 'pay' => ['s' => 'paid', 'how' => 'square'], 'card' => false, 'note' => '',
+                'addr' => $h ? streetCaseServer((string) $h['address']) . ', ' . $h['town'] : (string) ($l['town'] ?? ''), 'by' => $me, 'at' => $t, 'payat' => $pat];
+        if (!appendLine(DATA_DIR . '/jobs.log', $job) || !appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'done' => ['o' => 'done', 'note' => '', 'mins' => 0, 'collected' => 0], 'by' => $me, 'at' => $t + 1])
+            || !appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'sqpaid' => ['payment' => $pid, 'amt' => $net, 'found' => 'booked from the payment by ' . $me, 'at' => $t + 2], 'by' => $me, 'at' => $t + 2])) fail('Could not save that. Try again.', 500);
+        appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'note' => 'Job added from their Square payment of $' . $net . ': done and paid in full.', 'by' => $me, 'at' => $t + 3] + (($l['status'] ?? '') !== 'won' ? ['status' => 'won'] : []));
+        ensureBookedCustomers();
+        $row['job'] = $jid; $res['job'] = $jid; $res['date'] = $day; $res['crew'] = $crew;
+    } elseif ($act === 'link') {   /* the job was marked paid by hand: tie this payment to it, nothing owed changes (2026-10-20) */
         $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
         if (!$j || $j['off']) fail('No such job.', 404);
         if (jobOwed($j) > 0) fail('That job still owes money: use Paid in full or Part payment.');
