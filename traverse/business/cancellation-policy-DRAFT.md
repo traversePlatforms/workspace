@@ -22,7 +22,7 @@ A yearly plan costs about 20% less than paying month to month, and it is paid on
 
 ### The founding-company pilot
 
-Founding companies get a free 14-day pilot, once. If you cancel before the pilot ends, you are not charged. If you don't, your plan starts and is billed when the pilot ends.
+Founding companies get a free 7-day pilot, once. If you cancel before the pilot ends, you are not charged. If you don't, your plan starts and is billed when the pilot ends.
 
 ### Seats
 
@@ -52,7 +52,7 @@ Questions: **billing@traverseplatforms.com** or (303) 596-9515.
 | Yearly about 20% less | Homepage and billing.php display prices, 26 Oct plans ($79 vs $99, $199 vs $249, $449 vs $549 a month; extra people $35 vs $45, $29 vs $39) | Verified: 18–26% |
 | Faults: 30 days to fix, then pro-rata refund | Subscription agreement §14.1 | Matches the draft |
 | Removed core feature: refund | Subscription agreement §2.6 | Matches the draft |
-| 14-day founding pilot, once | billing.php (trial_days 14, once per install) | Verified |
+| 7-day founding pilot, once | billing.php (trial_days 7, once per install; changed from 14 on 2026-10-26, Matthew) | Verified |
 | Added seats pro-rata | Stripe customer portal set to create prorations (traverse/ops/stripe-setup.mjs) | Verified |
 | Pause after 14 days unpaid | Subscription agreement §9.4; the app itself never locks anyone out today | **Business choice; the app does not enforce it yet** |
 | Manage billing path in the app | index.html Office → Setup → Billing; billingportal action | Verified |

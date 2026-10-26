@@ -264,7 +264,7 @@ Traverse will give notice before suspending where practical, will limit the susp
 | **Seats** | [ ] (people beyond those the plan includes) |
 | **Billing** | [Monthly / Yearly], in advance, by card through Stripe |
 | **Fees** | [Solo $99 a month or $79 a month billed yearly / Crew $249 a month or $199 billed yearly, extra people $45 or $35 each / Team $549 a month or $449 billed yearly, extra people $39 or $29 each]. Roofing and Solar editions: [+$50 a month on Crew and Team / +$20 on Solo] |
-| **Founding client** | [Yes / No]. If yes: a free 14-day pilot, then 25% off for the first 12 months, and the list price on this Order Form does not rise while the subscription continues |
+| **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): a free 7-day pilot, then the founding prices on this Order Form (about 25% off, in whole dollars) for the first 12 months, and the list price on this Order Form does not rise while the subscription continues |
 | **Start date** | [ ] |
 | **Initial Subscription Term** | [1 month / 12 months], renewing under §10.2 |
 | **Install address** | Provided by Traverse at setup |

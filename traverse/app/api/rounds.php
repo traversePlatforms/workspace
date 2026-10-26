@@ -8166,6 +8166,8 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal'], true)) {
     $plan = (string) ($body['plan'] ?? ''); $iv = (string) ($body['interval'] ?? ''); $seats = (int) ($body['seats'] ?? 0); $addon = !empty($body['addon']);
     $cf = billingCheckoutFields($bc, $b, $plan, $iv, $seats, $addon, $back);
     if (isset($cf['error'])) fail($cf['error']);
+    $ce = billingFoundingCoupon($bc, $cf['fields']);   /* the founding discount, made for this checkout (2026-10-26) */
+    if ($ce !== null) fail($ce, 502);
     $r = stripeCall($bc, 'POST', '/v1/checkout/sessions', $cf['fields']);
     if (isset($r['error']) || empty($r['url'])) fail($r['error'] ?? 'Stripe did not open the payment page.', 502);
     billingLog(['what' => 'checkout', 'by' => $me, 'plan' => $plan, 'interval' => $iv, 'seats' => $seats, 'addon' => $addon, 'session' => (string) ($r['id'] ?? '')]);

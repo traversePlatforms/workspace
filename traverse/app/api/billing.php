@@ -59,10 +59,13 @@ function billingConfigDefaults(): array {
                       'uplift_solo' => $two(20, 20), 'uplift' => $two(50, 50), 'addon' => $two(99, 99)],
         'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* people each plan covers before extra seats */
         'uplift_on' => null,             /* the Roofing/Solar uplift: null = from the edition (features roof, solar or hail) */
-        /* a founding company: a free pilot before the first charge, and a coupon on the whole plan (25% off for the first year).
-           On by default (Matthew 2026-10-26: "since we have no users currently every one is going to be a founder"). founding_pct is
-           what the coupon takes off, for the screen's struck-through prices; keep it equal to the Stripe coupon. */
-        'founding' => true, 'founding_pct' => 25, 'trial_days' => 14, 'founding_coupon' => '',
+        /* a founding company (Matthew 2026-10-26): a free 7-day pilot before the first charge, and about 25% off for the first 12
+           months. Every price is taken down by founding_pct and ROUNDED TO WHOLE DOLLARS ("people seeing cents on a price just feels
+           weird"): Crew $199 -> $149. Each checkout gets its own Stripe coupon for exactly the dollars between the list total and the
+           founding total, 12 months, one use, so Stripe charges what the screen shows. On for every company that signs up within a
+           year of the first customer: put that date + 1 year in founding_until (YYYY-MM-DD) once the first customer signs; after it
+           the offer stops by itself. Empty = no end date yet. */
+        'founding' => true, 'founding_pct' => 25, 'founding_until' => '', 'trial_days' => 7,
         'return_url' => '',              /* where Stripe sends people back; empty = the page they came from */
         'timeout' => 20,
         'mock_file' => null,
@@ -81,7 +84,6 @@ function billingConfig(?string $apiDir = null): array {
     if ($cfg['install'] === '') $cfg['install'] = basename(dirname(DATA_DIR));
     if (!empty($cfg['mock_file'])) {
         if ($cfg['webhook_secret'] === '') $cfg['webhook_secret'] = 'whsec_mock';
-        if ($cfg['founding_coupon'] === '') $cfg['founding_coupon'] = 'coupon_mock';
         foreach (BILLING_PRICE_KEYS as $p) foreach (['month', 'year'] as $i)
             if (($cfg['prices'][$p][$i] ?? '') === '') $cfg['prices'][$p][$i] = 'price_mock_' . $p . '_' . $i;
     }
@@ -165,13 +167,37 @@ function billingUplift(array $c): bool {
     if ($c['uplift_on'] !== null) return (bool) $c['uplift_on'];
     return function_exists('feature') && (feature('roof') || feature('solar') || feature('hail'));
 }
-/** what a plan costs a month for this many people, in dollars, as the Billing screen and Stripe add it up */
-function billingMonthly(array $c, string $plan, string $iv, int $seats, bool $addon): int {
+/** is the founding offer on today? (on, and not past founding_until) */
+function billingFoundingOn(array $c): bool {
+    if (empty($c['founding'])) return false;
+    $until = (string) ($c['founding_until'] ?? '');
+    return $until === '' || date('Y-m-d') <= $until;
+}
+/** what a plan costs a month for this many people, in dollars, as the Billing screen and Stripe add it up. $founding: each part's
+   founding price (list less founding_pct, rounded to whole dollars), summed part by part as the screen shows them */
+function billingMonthly(array $c, string $plan, string $iv, int $seats, bool $addon, bool $founding = false): int {
     $d = $c['display']; $extra = max(0, $seats - (int) ($c['included'][$plan] ?? 0));
-    $m = (int) ($d[$plan][$iv] ?? 0) + ($plan !== 'solo' ? $extra * (int) ($d[$plan . '_extra'][$iv] ?? 0) : 0);
-    if (billingUplift($c)) $m += (int) ($d[$plan === 'solo' ? 'uplift_solo' : 'uplift'][$iv] ?? 0);
-    if ($addon) $m += (int) ($d['addon'][$iv] ?? 0);
+    $p = function (string $k) use ($d, $iv, $founding, $c): int {
+        $v = (int) ($d[$k][$iv] ?? 0);
+        return $founding ? (int) round($v * (100 - (int) $c['founding_pct']) / 100) : $v;
+    };
+    $m = $p($plan) + ($plan !== 'solo' ? $extra * $p($plan . '_extra') : 0);
+    if (billingUplift($c)) $m += $p($plan === 'solo' ? 'uplift_solo' : 'uplift');
+    if ($addon) $m += $p('addon');
     return $m;
+}
+/** the founding coupon for one checkout: exactly the dollars between list and founding, on each bill for 12 months, one use.
+   Fills $f['discounts']; returns an error message or null. */
+function billingFoundingCoupon(array $c, array &$f): ?string {
+    if (empty($f['_founding'])) return null;
+    [$plan, $iv, $seats, $addon] = $f['_founding']; unset($f['_founding']);
+    $off = (billingMonthly($c, $plan, $iv, $seats, $addon) - billingMonthly($c, $plan, $iv, $seats, $addon, true)) * ($iv === 'year' ? 12 : 1);
+    if ($off <= 0) { $f['allow_promotion_codes'] = 'true'; return null; }
+    $r = stripeCall($c, 'POST', '/v1/coupons', ['amount_off' => $off * 100, 'currency' => 'usd', 'duration' => 'repeating', 'duration_in_months' => 12,
+        'max_redemptions' => 1, 'name' => 'Founding company, first 12 months', 'metadata' => ['install' => $c['install'], 'plan' => $plan, 'interval' => $iv]]);
+    if (isset($r['error']) || empty($r['id'])) return $r['error'] ?? 'Stripe did not make the founding discount.';
+    $f['discounts'] = [['coupon' => (string) $r['id']]];
+    return null;
 }
 /** what the admin sees: the subscription, seats used against seats paid, and the one warning that applies */
 function billingState(array $c, array $rows): array {
@@ -187,7 +213,8 @@ function billingState(array $c, array $rows): array {
         'plan' => $b['plan'] ?? null, 'interval' => $b['interval'] ?? null, 'seats' => $paid, 'used' => $used,
         'addon' => !empty($b['addon']), 'status' => $st ?: null, 'trialEnd' => $b['trial_end'] ?? null, 'periodEnd' => $b['period_end'] ?? null,
         'cancelAtEnd' => !empty($b['cancel_at_end']), 'portal' => !empty($b['customer']), 'pending' => !empty($b['pending']) && !$st,
-        'warn' => $warn, 'founding' => !empty($c['founding']), 'foundingPct' => !empty($c['founding']) && $c['founding_coupon'] !== '' ? (int) $c['founding_pct'] : 0, 'trialDays' => !empty($c['founding']) ? (int) $c['trial_days'] : 0,
+        'warn' => $warn, 'founding' => billingFoundingOn($c), 'foundingPct' => billingFoundingOn($c) ? (int) $c['founding_pct'] : 0,
+        'foundingUntil' => billingFoundingOn($c) ? ((string) ($c['founding_until'] ?? '') ?: null) : null, 'trialDays' => billingFoundingOn($c) ? (int) $c['trial_days'] : 0,
         'display' => $c['display'], 'included' => $c['included'], 'uplift' => billingUplift($c),
         'monthly' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon'])) : null,
         'offer' => array_values(array_filter(BILLING_PLANS, fn($p) => ($c['prices'][$p]['month'] ?? '') !== '' || ($c['prices'][$p]['year'] ?? '') !== '')),
@@ -232,9 +259,10 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if ($addon && $add('addon', 1)) return ['error' => 'The second edition is not offered ' . $ivWord . ' yet.'];
     if (!empty($b['customer'])) $f['customer'] = (string) $b['customer'];
     /* the pilot only once: a company that has had a subscription here does not get another free trial */
-    if (!empty($c['founding']) && (int) $c['trial_days'] > 0 && empty($b['subscription']) && empty($b['had_trial'])) $f['subscription_data']['trial_period_days'] = (int) $c['trial_days'];
-    /* Stripe takes a coupon or a promotion-code box, not both; the founding coupon covers the whole plan (2026-10-26) */
-    if (!empty($c['founding']) && $c['founding_coupon'] !== '') $f['discounts'] = [['coupon' => (string) $c['founding_coupon']]];
+    if (billingFoundingOn($c) && (int) $c['trial_days'] > 0 && empty($b['subscription']) && empty($b['had_trial'])) $f['subscription_data']['trial_period_days'] = (int) $c['trial_days'];
+    /* Stripe takes a coupon or a promotion-code box, not both. The founding coupon is made per checkout by billingFoundingCoupon()
+       (the caller runs it before opening Checkout): what it takes off depends on the plan, people and add-ons picked. */
+    if (billingFoundingOn($c)) $f['_founding'] = [$plan, $iv, max($seats, $inc), $addon];
     else $f['allow_promotion_codes'] = 'true';
     return ['fields' => $f];
 }
