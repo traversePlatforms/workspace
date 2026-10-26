@@ -4119,7 +4119,7 @@ function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_st
    2026-10-26: "only new leads from today"). Messenger stays Jen's, and so do the Facebook leads from before. He takes them end to end; the
    office sees their jobs as Booked only, as for website leads. */
 function metaMineFrom(): int { static $t = null; if ($t === null) { $d = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) (company()['metaMine'] ?? '')) ? (string) company()['metaMine'] : ''; $t = $d !== '' ? (int) strtotime($d . ' 00:00:00 America/Denver') : 0; } return $t; }
-function webLead(array $l): bool { if (!empty($l['jenkeep'])) return false;   /* reached out to the office themselves: theirs now (2026-10-26) */
+function webLead(array $l): bool { if (!empty($l['jenkeep']) || !empty($l['tojen'])) return false;   /* reached out to the office themselves: theirs now (2026-10-26); handed to Jen: hers (2026-10-26, Matthew: David Marshall) */
     $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom()); }
 /* the nudge (2026-10-26, Matthew: "i get in the zone and forget to look after awhile and these people need to be contacted right away"): one of
    his leads still untouched 15 minutes after it came in (new, no call, text or email logged, no quote, no call-back day) gets one more alert
