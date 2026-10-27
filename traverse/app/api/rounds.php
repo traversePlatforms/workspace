@@ -109,7 +109,9 @@ function company(): array {
                of its service area. null = no aeration brand (every other install) */
             'a365' => null,
             /* Matthew's own Facebook ad leads from this date on (2026-10-26, YYYY-MM-DD, Denver): see webLead(). '' = none (every other install) */
-            'metaMine' => ''];
+            'metaMine' => '',
+            /* who Matthew can send his own leads to (2026-10-27, Matthew: 'I need to also be able to send some leads to cai'): account names; see mhand */
+            'handTo' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -129,6 +131,7 @@ function company(): array {
     $c['alerts'] = is_array($c['alerts']) ? array_values(array_filter(array_map(fn($e) => is_string($e) ? trim($e) : '', $c['alerts']), fn($e) => $e !== '' && strlen($e) <= 60)) : null;
     if (!is_array($c['market'])) $c['market'] = null;
     $c['oneDevice'] = $c['oneDevice'] !== false;
+    $c['handTo'] = array_values(array_filter(array_map(fn($n) => is_string($n) ? trim($n) : '', (array) $c['handTo']), fn($n) => $n !== '' && mb_strlen($n) <= 60));
     $a = is_array($c['a365']) ? $c['a365'] : null;
     $c['a365'] = $a ? ['name' => mb_substr((string) ($a['name'] ?? ''), 0, 60), 'phone' => mb_substr((string) ($a['phone'] ?? ''), 0, 30),
         'base' => (is_array($a['base'] ?? null) && count($a['base']) === 2) ? [(float) $a['base'][0], (float) $a['base'][1]] : null, 'radius' => (float) ($a['radius'] ?? 0),
@@ -2952,7 +2955,7 @@ if (!defined('SIXFOLD_CLI') && !$viewing && in_array($role, ['office', 'quote'],
 /* one of Matthew's leads asked for by id from an account that does not see it: as if it were not there (2026-10-22). Since 2026-10-27 only
    a lead with no job: a booked one, its job and its customer are the office's to see and manage (Matthew), see leadsAll() */
 if (webHide()) {
-    $wIds = array_diff_key(webLeadIds(), webJobbedIds());
+    $wIds = array_diff_key(webLeadIds(), webJobbedIds()); $wRaw = leadsAllRaw(); foreach (array_keys($wIds) as $wk0) if (sentToMe($wRaw[$wk0] ?? [])) unset($wIds[$wk0]);   /* + sent to them (2026-10-27) */
     foreach (['id', 'lead', 'job', 'cid', 'customer'] as $wk) { $wv = $body[$wk] ?? ($_GET[$wk] ?? null); if (is_string($wv) && $wv !== '' && isset($wIds[$wv])) fail('Not found.', 404); }
 }
 if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true) && !($action === 'squarecheck' && !empty($body['job']))) {   /* only her own leads (2026-10-15); a job's pay link is checked against the job (2026-10-19) */
@@ -4350,7 +4353,9 @@ function metaFormLabel(string $n): string {
    customer list etc. I just dont want them shown in her pipeline. She needs to be able to see and manage the schedule so she doesnt book
    someone on my slot, and she know whats info to give brad"): a lead with a job is read everywhere but the Pipeline lists (leads, myleads),
    which leave his leads out themselves; a lead with no job stays out of everything. */
-function leadsAll(): array { $all = leadsAllRaw(); if (!webHide()) return $all; $jobbed = webJobbedIds(); return array_filter($all, fn($l, $id) => !webLead($l) || isset($jobbed[$id]), ARRAY_FILTER_USE_BOTH); }
+function leadsAll(): array { $all = leadsAllRaw(); if (!webHide()) return $all; $jobbed = webJobbedIds(); return array_filter($all, fn($l, $id) => !webLead($l) || isset($jobbed[$id]) || sentToMe($l), ARRAY_FILTER_USE_BOTH); }
+/* one of Matthew's leads he sent to this person (2026-10-27, Matthew: Cai; action mhand): theirs to see and work, in their Pipeline too; nobody else's */
+function sentToMe(array $l): bool { return !empty($l['mhand']) && (string) ($l['owner'] ?? '') !== '' && in_array((string) $l['owner'], meNames(), true); }
 function webJobbedIds(): array { $web = webLeadIds(); $o = []; foreach (jobsAll() as $j) if (!$j['off'] && isset($web[(string) ($j['lead'] ?? '')])) $o[(string) $j['lead']] = true; return $o; }
 function leadsAllRaw(): array {
     static $c = null; $sig = fileSig(leadsDir() . '/leads.log') . '|' . fileSig(leadsDir() . '/leadst.log');   /* built once per request, again after a write (review 2026-10-22) */
@@ -4366,7 +4371,7 @@ function leadsAllRaw(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'mhand', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) {
@@ -4464,7 +4469,7 @@ if ($action === 'leadremove') {
 if ($action === 'myleads') {
     $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
     $whoAll = $who === $me ? meNames() : [$who];   /* leads handed to a linked sign-in are this person's too (2026-10-21) */
-    $list = array_values(array_filter(leadsAll(), fn($l) => in_array($l['owner'], $whoAll, true) && !(webHide() && webLead($l))));   /* never Matthew's (2026-10-27) */
+    $list = array_values(array_filter(leadsAll(), fn($l) => in_array($l['owner'], $whoAll, true) && !(webHide() && webLead($l) && !sentToMe($l))));   /* never Matthew's, unless he sent it to them (2026-10-27) */
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     out(['ok' => true, 'who' => $who, 'leads' => $list]);
 }
@@ -6860,7 +6865,8 @@ if ($action === 'houseposs') {
 if ($action === 'leads') {
     if (!desk() && $role !== 'manager' && $role !== 'quote') fail('Not allowed.', 403);
     $leads = leadsAll();
-    if (webHide()) $leads = array_filter($leads, fn($l) => !webLead($l));   /* Matthew's leads never in their Pipeline, booked or not (2026-10-27) */
+    if (webHide()) $leads = array_filter($leads, fn($l) => !webLead($l) || sentToMe($l));   /* Matthew's leads never in their Pipeline, booked or not, unless he sent it to them (2026-10-27) */
+    $handTo = $isSuper ? array_values(array_filter(company()['handTo'], 'activeName')) : [];
     if ($role === 'quote') $leads = array_filter($leads, fn($l) => qMine($l) || quoteInbox($l));   /* her own customers, and her Leads to call (2026-10-16) */
     foreach ($leads as &$ql) $ql['qinbox'] = quoteInbox($ql, $role === 'quote' || count(meNames()) > 1); unset($ql);   /* + a sign-in linked to a quote login (Jen's office, 2026-10-21) */   /* in the quote account's Leads to call */
     $jobOf = []; foreach (jobsAll() as $jj) if (!$jj['off']) $jobOf[$jj['lead']] = $jj;   /* each lead's job and its money (2026-10-19, Jen checks before charging) */
@@ -6882,7 +6888,7 @@ if ($action === 'leads') {
     if ($isSuper) foreach ($list as &$ml) $ml['mine'] = webLead($ml); unset($ml);   /* Matthew's own leads, for his To contact view (2026-10-26) */
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
     if (!empty($_REQUEST['count'])) out(['ok' => true, 'new' => $new]);
-    out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' ? ['cucheck' => cuCheckShown()] : []));   /* the ClickUp sync check (2026-10-17) */
+    out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' ? ['cucheck' => cuCheckShown()] : []) + ($handTo ? ['handTo' => $handTo] : []));   /* + who his own leads can go to (2026-10-27) */   /* the ClickUp sync check (2026-10-17) */
 }
 if ($action === 'cucheckok') {   /* Leave it, on the Pipeline's ClickUp check */
     if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
@@ -7396,6 +7402,19 @@ if ($action === 'leadimport') {
 /* how a call went (2026-10-14, Sixfold's lead desk): No answer, Left voicemail, Talked to them. Each try is kept with who and when;
  * the page works out when to try again and when to give up (after 4). Talking to them moves a New lead to Contacted. */
 /* Send to Jen (2026-10-16): any open lead into her Leads to call, or back out (on false) */
+/* Matthew sends one of his own leads to someone on the company's handTo list, or takes it back (2026-10-27, Matthew: 'I need to also be able to
+   send some leads to cai'). It becomes theirs (owner) and only theirs: Jen and the rest of the office still never see it until it is booked. */
+if ($action === 'mhand') {
+    if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAllRaw()[$id] ?? null) : null; if (!$l) fail('No such lead.', 404);
+    if (!webLead($l)) fail('Only your own website and Facebook ad leads go this way. Use Owner for the others.');
+    $to = trim((string) ($body['to'] ?? ''));
+    if ($to !== '' && (!in_array($to, company()['handTo'], true) || !activeName($to))) fail('Pick someone from the list.');
+    $was = (string) ($l['owner'] ?? '');
+    if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'owner' => $to, 'mhand' => $to !== '', 'note' => $to !== '' ? 'Sent to ' . $to . '.' : 'Taken back' . ($was !== '' ? ' from ' . $was : '') . '.', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    if ($to !== '') pushName($to, 'New lead from ' . strtok($me, ' '), (trim((string) ($l['name'] ?? '')) ?: 'A lead') . (trim((string) ($l['town'] ?? '')) !== '' ? ' · ' . trim((string) $l['town']) : '') . ' is in your Pipeline.', './', 'mhand-' . $id);
+    out(['ok' => true]);
+}
 if ($action === 'tojen') {
     if (!desk() || !$isPost || !feature('walkdesk')) fail('Not allowed.', 403);
     $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null; if (!$l) fail('No such lead.', 404);

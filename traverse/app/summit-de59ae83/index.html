@@ -4961,7 +4961,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if ((wdOn() || qView()) && String(l.id).indexOf('preview-') !== 0 && (tel.length < 10 || !l.email)) c.appendChild(leadAddRow(l, c, tel.length < 10, !l.email));   /* Add phone / Add email, every stage (2026-10-23, Matthew: Jen could not add Deano's email) */
     if ((wdOn() && S.screen === 'pipeline') || qView()) c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
     if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));
-    if (wdOn() && CO.a365 && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
+    if (wdOn() && CO.a365 && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */
+    if (S.role === 'admin' && S.screen === 'pipeline' && (l.mine || l.src === 'a365web') && ((S.handTo || []).length || l.mhand) && ['won', 'lost'].indexOf(l.status || 'new') < 0) c.appendChild(handRow(l));   /* Send to Cai (2026-10-27) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote && l.quote.pkg === 'job') c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + ((l.quote.items || []).filter(function (x) { return x.id !== 'min' && x.id !== 'adj'; }).map(function (x) { return x.t; }).join(', ') || 'the job') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));   /* a kit quote (2026-10-27) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
@@ -6873,9 +6874,27 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function signSendView(l, pre) { pre = pre || {}; pre.sign = true; jobBookView(l, null, pre); }
   /* Send to Jen (2026-10-16): a lead into the Quick quote's Leads to call; new ones from the website, Facebook forms and the crew go there by themselves */
+  /* Send to Cai (2026-10-27, Matthew: 'I need to also be able to send some leads to cai'): one of his own leads to someone on the company's
+     handTo list. It is theirs then, in their Pipeline; Jen and the rest of the office still never see it until it is booked. */
+  function handRow(l) {
+    var r = q('div', 'qlinks tojen'), nm = l.name || l.phone || 'The lead';
+    var send = function (b, to) {
+      b.disabled = true;
+      api('mhand', { body: { id: l.id, to: to } }).then(function (j) { b.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        toast(to ? 'Sent to ' + to.split(' ')[0] : 'Taken back', to ? nm + ' is in their Pipeline.' : nm + ' is yours only again.', null); (S.leadRedraw || pipelineView)(); })
+        .catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); });
+    };
+    if (l.mhand && l.owner) {
+      r.appendChild(q('span', 'dwsub', 'With ' + l.owner + '. Only they see it.'));
+      var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { send(tb, ''); }); r.appendChild(tb);
+      return r;
+    }
+    (S.handTo || []).forEach(function (n) { var b = q('button', 'lnk', 'Send to ' + n.split(' ')[0] + ' ›'); b.type = 'button'; b.addEventListener('click', function () { send(b, n); }); r.appendChild(b); });
+    return r;
+  }
   function toJenRow(l) {
     var r = q('div', 'qlinks tojen');
-    if (l.src === 'a365web') { r.appendChild(q('span', 'dwsub', '365 website lead: yours only. Jen and the office never see it, at any stage.')); return r; }   /* 2026-10-22 */
+    if (l.src === 'a365web' || l.mine) { r.appendChild(q('span', 'dwsub', (l.src === 'a365web' ? '365 website lead' : 'Your Facebook ad lead') + ': yours. Never in Jen’s or the office’s Pipeline; once it is booked, they see the job.')); return r; }   /* 2026-10-22; booked jobs shown to the office 2026-10-27 */
     if (l.qinbox && CO.a365) { r.appendChild(q('span', 'dwsub', 'In Jen\u2019s Leads to follow up')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
     var b = q('button', 'lnk', 'Send to Jen \u203a'); b.type = 'button';
     b.addEventListener('click', function () { b.disabled = true; api('tojen', { body: { id: l.id, on: true } }).then(function (j) { b.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent to Jen', (l.name || l.phone || 'The lead') + ' is in her Leads to call.', null); (S.leadRedraw || pipelineView)(); }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); }); });
@@ -13129,7 +13148,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     Promise.all([api('quotes'), api('leads'), deskLoad()]).then(function (rs) {
       if (rs[0]._status === 401 || rs[1]._status === 401) return signinView('Signed out. Enter your code again.');
       if (!rs[0].ok || !rs[1].ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', (rs[0].error || rs[1].error) || 'Could not load the pipeline.')); return; }
-      S.qlist = rs[0].quotes || []; S.pleads = rs[1].leads || []; S.cucheck = rs[1].cucheck || null;   /* the ClickUp sync check (2026-10-17) */
+      S.qlist = rs[0].quotes || []; S.pleads = rs[1].leads || []; S.cucheck = rs[1].cucheck || null; S.handTo = rs[1].handTo || [];   /* the ClickUp sync check (2026-10-17) */
       drawPipe();
       if (!asOffice() && S.role === 'admin') api('customers').then(function (cj) { if (!cj || !cj.ok) return; var cl = {}, cd = {}; cj.customers.forEach(function (c) { if (c.lead) cl[c.lead] = 1; if (c.door) cd[c.door] = 1; }); S.custLinks = { lead: cl, door: cd }; if (S.screen === 'pipeline') drawPipe(); }).catch(function () {});
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
