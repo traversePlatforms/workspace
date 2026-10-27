@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- Traverse email signature (2026-10-26, Matthew: "I need to create a signature for traverse so that every email can end with that").
+     For Gmail (M.Sharpe@TraversePlatforms.com): open this page in Chrome, select the signature in the box, copy, and paste into
+     Gmail > Settings > See all settings > General > Signature. The logo is hosted at traverseplatforms.com/brand/ (public, not behind
+     the site password). Add the website line once the site opens. The prospect desk uses the plain-text version below. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traverse Email Signature</title>
+<style>
+  :root { --bg: #f4f6f9; --card: #ffffff; --ink: #0f1b2d; --muted: #566476; --line: #dce2ea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0e1520; --card: #ffffff; --ink: #e8edf3; --muted: #a9b4c2; --line: #2a3546; } }
+  :root[data-theme="dark"] { --bg: #0e1520; --card: #ffffff; --ink: #e8edf3; --muted: #a9b4c2; --line: #2a3546; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 6px; } p, li { color: var(--muted); }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin: 16px 0 24px; overflow-x: auto; }
+  pre { background: var(--card); color: #0f1b2d; border: 1px solid var(--line); border-radius: 14px; padding: 16px; white-space: pre-wrap; font: 14px/1.5 ui-monospace, Consolas, monospace; }
+  button { font: 600 15px system-ui, sans-serif; padding: 10px 16px; border-radius: 10px; border: 1px solid #13294b; background: #13294b; color: #fff; cursor: pointer; }
+  ol { padding-left: 20px; }
+</style></head><body><main>
+<h1>Traverse email signature</h1>
+<p>For your Traverse Gmail. Press the button (or select the signature below and copy), then paste it into Gmail.</p>
+<button type="button" id="copy">Copy the signature</button> <span id="msg" style="color:var(--muted);font-size:14px"></span>
+<div class="box" id="sig"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#0f1b2d">
+  <tr>
+    <td style="vertical-align:top;padding:2px 14px 0 0"><img src="https://traverseplatforms.com/brand/traverse-mark-144.png" width="48" height="48" alt="Traverse" style="display:block;border:0;border-radius:10px"></td>
+    <td style="vertical-align:top;border-left:2px solid #D6400C;padding:0 0 0 14px">
+      <div style="font-size:15px;font-weight:bold;color:#13294B;line-height:20px">Matthew Sharpe</div>
+      <div style="font-size:13px;color:#566476;line-height:19px">Owner, Traverse Platforms LLC</div>
+      <div style="font-size:13px;line-height:19px"><a href="tel:+13035969515" style="color:#13294B;text-decoration:none">(303) 596-9515</a> <span style="color:#9aa5b3">&middot;</span> <a href="mailto:M.Sharpe@TraversePlatforms.com" style="color:#13294B;text-decoration:none">M.Sharpe@TraversePlatforms.com</a></div>
+      <div style="font-size:12px;color:#8590a0;line-height:18px">333 W Hampden Ave, Suite 300, Englewood, CO 80110</div>
+    </td>
+  </tr>
+</table></div>
+<p><b>Put it in Gmail:</b></p>
+<ol>
+  <li>Open Gmail signed in as M.Sharpe@TraversePlatforms.com.</li>
+  <li>Gear icon (top right) &rarr; <b>See all settings</b> &rarr; <b>General</b> tab &rarr; scroll to <b>Signature</b>.</li>
+  <li><b>Create new</b>, name it <b>Traverse</b>, and paste into the box.</li>
+  <li>Under <b>Signature defaults</b>, set it for <b>new emails</b> and <b>replies/forwards</b>.</li>
+  <li>Scroll to the bottom and press <b>Save Changes</b>.</li>
+</ol>
+<p><b>Plain-text version</b> (the prospect desk ends every email with this, and adds the address line itself):</p>
+<pre>Matthew Sharpe
+Owner, Traverse Platforms LLC
+(303) 596-9515 · M.Sharpe@TraversePlatforms.com</pre>
+<p>When the website opens, add a line with traverseplatforms.com.</p>
+</main>
+<script>
+document.getElementById('copy').addEventListener('click', async function () {
+  var el = document.getElementById('sig'), msg = document.getElementById('msg');
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([el.innerHTML], { type: 'text/html' }), 'text/plain': new Blob([el.innerText], { type: 'text/plain' }) })]);
+    msg.textContent = 'Copied. Paste it into Gmail.';
+  } catch (e) {
+    var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    msg.textContent = 'Selected. Press Ctrl+C, then paste it into Gmail.';
+  }
+});
+</script>
+</body></html>
