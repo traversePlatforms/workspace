@@ -2477,9 +2477,34 @@ function jobHolds(?array $leads = null): array {
     if ($sig !== null) $c = [$sig, $out];
     return $out;
 }
+/* ---- work hours (2026-10-27, Matthew: "a way for me and/or employees to add their work schedule times to their profile. Like if i am
+ * available 9-6 m-f ... so when we assign jobs no one assigns on hours someone doesnt work") ----
+ * Accounts file hours[<account id>] = {"0".."6" (Sunday = 0): null (off) or ["HH:MM", "HH:MM"]}; the person sets their own, an admin
+ * anyone's, a team runner their team's. None set = no limit, as before. A booking, a held day, a weather move or a walk outside them is
+ * refused with the reason; what is already booked stays where it is. */
+const HOURS_DAYS = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+function hoursOf(string $name): ?array { global $TEAM, $acct; $id = (string) ($TEAM['byName'][$name]['id'] ?? ''); $h = $id !== '' ? (($acct['hours'] ?? [])[$id] ?? null) : null; return is_array($h) && $h ? $h : null; }
+function hoursText(array $d): string { $f = function ($t) { $h = (int) substr($t, 0, 2); $m = substr($t, 3, 2); return ($h % 12 ?: 12) . ($m !== '00' ? ':' . $m : ''); }; return $f($d[0]) . '–' . $f($d[1]); }
+/** why this person can't be booked from $start to $end (HH:MM; null start = any time that day) on $date; null when they can */
+function hoursWhy(string $who, string $date, ?string $start, ?string $end = null): ?string {
+    $h = hoursOf($who); if (!$h || !dateOk($date)) return null;
+    $w = (int) (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('w'); $d = $h[(string) $w] ?? null; $first = strtok($who, ' ');
+    if (!is_array($d) || count($d) !== 2) return $first . ' doesn\'t work ' . HOURS_DAYS[$w] . '.';
+    if ($start === null) return null;
+    $end = $end ?? $start;
+    if ($start < $d[0] || $start >= $d[1] || $end > $d[1]) return $first . ' works ' . hoursText($d) . ' on ' . HOURS_DAYS[$w] . '.';
+    return null;
+}
+function hoursSlotWhy(string $crew, string $date, string $slot): ?string { if (!jobSlot($slot)) return null; [$a, $e] = slotSpan($slot); return hoursWhy($crew, $date, $a, $e); }
+/** every crew's hours for the board and day pickers, by name */
+function hoursAll(array $names): array { $o = []; foreach ($names as $n) { $h = hoursOf((string) $n); if ($h) $o[(string) $n] = $h; } return $o; }
 /** is this crew / day / slot free for this lead: no job there, and no other lead's offer holding it */
 function slotFree(string $crew, string $date, string $slot, string $lead, string $exceptJob = ''): ?string {
     if ($bk = blockAt($crew, $date, $slot)) return strtok($crew, ' ') . ' is blocked off ' . blockPartText($bk) . ($bk['note'] !== '' ? ' (' . $bk['note'] . ')' : '') . '.';   /* 2026-10-21 */
+    if ($hw = hoursSlotWhy($crew, $date, $slot)) {   /* outside their work hours (2026-10-27); a job already there keeps its place when anything else on it changes */
+        $ex = $exceptJob !== '' ? (jobsAll()[$exceptJob] ?? null) : null;
+        if (!$ex || $ex['crew'] !== $crew || $ex['date'] !== $date || $ex['slot'] !== $slot) return $hw;
+    }
     foreach (jobsAll() as $j) if (!$j['off'] && $j['id'] !== $exceptJob && $j['crew'] === $crew && $j['date'] === $date && $j['slot'] === $slot) return $crew . ' already has a job then: ' . $j['title'] . '.';
     foreach (jobHolds() as $h) if ($h['lead'] !== $lead && $h['crew'] === $crew && $h['date'] === $date && $h['slot'] === $slot) return 'That time is held for ' . $h['name'] . '\'s quote.';
     return null;
@@ -2954,7 +2979,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -2972,7 +2997,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'hours', 'hoursset'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -5250,7 +5275,7 @@ if ($action === 'schedview') {
     foreach ($rows as &$rw) { if (($rw['town'] ?? '') !== '') continue; $lid = ($rw['kind'] ?? '') === 'booked' ? (string) ($JA[$rw['id'] ?? '']['lead'] ?? '') : (string) ($rw['lead'] ?? ($rw['hold'] ?? '')); if ($lid !== '' && isset($leads[$lid]) && ($role !== 'quote' || qMine($leads[$lid]) || webLead($leads[$lid]))) $rw['tl'] = $lid; } unset($rw);
     foreach ($rows as &$rw) { if (desk() && ($rw['kind'] ?? '') === 'held' && !empty($rw['lead'])) $rw['hold'] = $rw['lead']; unset($rw['lead']); } unset($rw);   /* held: 'hold' = the lead, for move or take off (2026-10-16) */
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
-    out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead()]);
+    out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead(), 'hours' => hoursAll(jobCrewList())]);   /* + work hours (2026-10-27) */
 }
 /* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
 if ($action === 'jobs') {
@@ -5267,7 +5292,7 @@ if ($action === 'jobs') {
         $list = array_map(fn($j) => ['id' => $j['id'], 'date' => $j['date'], 'crew' => $j['crew'], 'slot' => $j['slot'], 'slotLabel' => $j['slotLabel'] ?? '', 'title' => 'Booked', 'who' => ['name' => 'Booked'], 'price' => 0, 'pkg' => 'full', 'scope' => 'all', 'pay' => ['s' => 'unpaid'], 'card' => false, 'done' => null, 'lead' => qMine($leads[$j['lead']] ?? []) ? $j['lead'] : ''], $list);
         $holds = array_map(fn($h) => qMine($leads[$h['lead']] ?? []) ? $h : ['lead' => '', 'name' => 'Held', 'crew' => $h['crew'], 'date' => $h['date'], 'slot' => $h['slot'], 'until' => $h['until'], 'paid' => $h['paid']], $holds);
     }
-    out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead()]);
+    out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead(), 'hours' => hoursAll(jobCrewList())]);   /* + work hours (2026-10-27) */
 }
 /* each crew's area for a day ("the town of the day" in Randy's sheet) */
 if ($action === 'jobday') {
@@ -5316,6 +5341,33 @@ if ($action === 'jobblockadd' || $action === 'jobblockdel') {
     if ($bb['crew'] !== $me) pushName($bb['crew'], ($nb ? 'Blocked off: ' : 'Free again: ') . $when, ($bb['note'] !== '' ? $bb['note'] . ' · ' : '') . ($nb ? 'set' : 'taken off') . ' by ' . $me, './', 'block-' . $bb['id']);
     usort($booked, fn($a, $b) => strcmp($a['date'], $b['date']));
     out(['ok' => true, 'blocks' => blocksAhead(), 'booked' => $booked, 'held' => $held]);
+}
+/* work hours, read and set (2026-10-27): anyone reads their own, the desk and Jen anyone's (they book); the person, an admin, or a team
+   runner for their team changes them. hours: null clears them (no limit). */
+if ($action === 'hours' || $action === 'hoursset') {
+    $who = trim((string) ($body['who'] ?? ($_GET['who'] ?? ''))) ?: $me;
+    if (!activeName($who)) fail('No such person.', 404);
+    $mayEdit = $who === $me || $role === 'admin' || (mgr() && sameTeam($who));
+    if ($action === 'hours') { if ($who !== $me && !$mayEdit && !desk() && $role !== 'quote') fail('Not allowed.', 403); out(['ok' => true, 'who' => $who, 'hours' => hoursOf($who), 'edit' => $mayEdit]); }
+    if (!$isPost) fail('POST required', 405);
+    if (!$mayEdit) fail('Only ' . strtok($who, ' ') . ', an admin or their team\'s manager changes these.', 403);
+    $in = $body['hours'] ?? null; $new = null;
+    if (is_array($in)) {
+        $new = [];
+        for ($d = 0; $d < 7; $d++) {
+            $v = $in[(string) $d] ?? ($in[$d] ?? null);
+            if ($v === null || $v === false || $v === '') { $new[(string) $d] = null; continue; }
+            if (!is_array($v) || count($v) !== 2 || !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', (string) $v[0]) || !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/D', (string) $v[1])) fail('Times are like 09:00 and 18:00 (' . HOURS_DAYS[$d] . ').');
+            if ($v[0] >= $v[1]) fail('On ' . HOURS_DAYS[$d] . ' the start is not before the end.');
+            $new[(string) $d] = [(string) $v[0], (string) $v[1]];
+        }
+    }
+    $al = @fopen(accountsFile() . '.lock', 'c'); if (!$al || !flock($al, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts(); $pid = (string) ($TEAM['byName'][$who]['id'] ?? ''); if ($pid === '') fail('No such person.', 404);
+    $acct['hours'] = (array) ($acct['hours'] ?? []); if ($new === null) unset($acct['hours'][$pid]); else $acct['hours'][$pid] = $new;
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    accountLog(['by' => $me, 'what' => $new === null ? 'work hours cleared' : 'work hours', 'name' => $who, 'id' => $pid]);
+    out(['ok' => true, 'who' => $who, 'hours' => $new]);
 }
 /* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
 if ($action === 'jobsave') {
@@ -6647,6 +6699,10 @@ if ($action === 'deskwalk') {
     $note = array_key_exists('note', $body) ? $clean($body['note'], 500) : (string) ($have['note'] ?? '');
     if ($kind === 'door' && $addr === '') $addr = $title . ', ' . regionLabel($key);
     if ($addr === '') fail('Add the address, so ' . ($walker !== '' ? $walker : 'whoever goes') . ' knows where to go.');
+    if ($walker !== '' && (!$have || $walker !== $have['walker'] || $date !== $have['date'] || $time !== (string) $have['time'] || $mins !== (int) ($have['mins'] ?? 60))) {   /* outside their work hours (2026-10-27); one already booked stays */
+        $wEnd = $time !== '' ? sprintf('%02d:%02d', intdiv(deskMin($time) + $mins, 60), (deskMin($time) + $mins) % 60) : null;
+        if ($hw = hoursWhy($walker, $date, $time !== '' ? $time : null, $wEnd)) fail($hw, 409);
+    }
     if (empty($body['force']) && $walker !== '' && $time !== '') {
         $cl = deskClashes($walker, $date, $time, $mins, $have ? $id : '', $kind === 'door' ? $key . ':' . $door : '');
         if ($cl) out(['ok' => false, 'clash' => $cl, 'error' => $walker . ' already has something then.']);

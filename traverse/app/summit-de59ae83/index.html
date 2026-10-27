@@ -1684,6 +1684,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .billadd{display:flex;align-items:center;gap:6px;font-size:14.5px}.billsum{padding-top:6px;border-top:1px solid var(--line)}.billsum b,.billtot{font:800 18px var(--sans)}
   .pipemode{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}.pipemode button{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14.5px var(--sans);cursor:pointer}.pipemode button[aria-pressed=true]{background:var(--go);color:var(--on-go);border-color:var(--go)}   /* To contact / Full pipeline (2026-10-26) */
   .jnotes{display:grid;gap:8px;margin-top:12px}.jnlist{display:grid;gap:6px}.jnrow{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.jntext{white-space:pre-wrap;font-size:15px}.jnin{width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit}   /* job notes (2026-10-26) */
+  .hoursform .hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.hoursform .hrow>b{min-width:7em}.hoursform .hoff{display:flex;align-items:center;gap:4px}.hoursform .htimes{display:flex;align-items:center;gap:6px}.hoursform .htimes[hidden]{display:none}   /* work hours (2026-10-27) */
   .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
   .keepbg{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,15,.5)}.keepbox{width:100%;max-width:420px;display:grid;gap:10px;padding:18px}.keepbox b{font:800 18px var(--sans)}.keeprow{display:grid;gap:8px}   /* Matthew's lead reached out to the office (2026-10-26) */
@@ -3940,6 +3941,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var lgs = q('div', 'aseg noi18n');
     [['en', 'English'], ['es', 'Español']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(LANG === o[0])); b.setAttribute('lang', o[0]); b.addEventListener('click', function () { if (LANG !== o[0]) setLang(o[0]); }); lgs.appendChild(b); });
     lg.appendChild(lgs);
+    if (feat('walkdesk')) {   /* work hours (2026-10-27): nobody books you outside them */
+      var hr = q('div', 'lookrow'); hr.appendChild(q('span', null, 'Work hours'));
+      var hrr = q('div', 'pushr'), hs = q('small', null, '…'), hb = q('button', 'lnk', 'Set my hours ›'); hb.type = 'button'; hb.addEventListener('click', function () { hoursView(S.me, profileView); });
+      hrr.appendChild(hs); hrr.appendChild(hb); hr.appendChild(hrr); box.appendChild(hr);
+      api('hours').then(function (j) { hs.textContent = j && j.ok ? hoursSummary(j.hours) : ''; }).catch(function () { hs.textContent = ''; });
+    }
     if (S.super) box.appendChild(editionRow());
     box.appendChild(q('div', 'sub2', 'The app records which screens and buttons you use, so the company can see what helps. Never what you type. Your code works on one phone and one computer at a time; signing in on another phone signs this one out.'));   /* the tap log (2026-10-12) */
     box.appendChild(q('h2', 'tgrp', 'This device'));
@@ -5507,10 +5514,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           rowsOf.forEach(function (s) {
             var jb = jobs.filter(function (x) { return x.crew === crew && x.slot === s.k; })[0];
             var hd = !jb && (j.holds || []).filter(function (h) { return h.crew === crew && h.date === iso && h.slot === s.k; })[0];
-            if (S.jobOpenOnly && (jb || hd || past)) return;
+            var hof = !jb && !hd && !past ? hoursOff(j.hours, iso, crew, s.k) : null;   /* outside their work hours (2026-10-27) */
+            if (S.jobOpenOnly && (jb || hd || past || hof)) return;
             if (past && !jb && !hd) return;   /* a past day: what was booked, not every empty time (2026-10-17) */
-            if (hd) nHeld++; else if (!jb) nOpen++;
-            var tr = q('tr', jb ? 'booked edit' + (jb.done ? ' done' : '') : hd ? 'held edit' : past ? 'past' : 'open edit');
+            if (hd) nHeld++; else if (!jb && !hof) nOpen++;
+            var tr = q('tr', jb ? 'booked edit' + (jb.done ? ' done' : '') : hd ? 'held edit' : past ? 'past' : hof ? 'sblocked' : 'open edit');
             var c0 = q('td', 'sdate' + (first && !area ? ' snone' : ''), first ? (area || (past ? '' : 'Set the town')) : ''); tr.appendChild(c0);
             if (first && !past) { c0.classList.add('sarea'); c0.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; c0.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(iso, crew, area, jobsView); }); }
             first = false;
@@ -5524,6 +5532,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               tr.appendChild(q('td', null, hd.name)); tr.appendChild(q('td', null, hd.paid ? 'Held: deposit paid, waiting to sign' : 'Held: offered with the quote'));
               ['', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); });
               tr.title = 'Open the lead'; tr.addEventListener('click', function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + hd.lead; S.pipeFocus = hd.lead; pipelineView(); });
+            } else if (hof) {
+              tr.appendChild(q('td', null, 'Not working')); [hof, '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); });
             } else {
               tr.appendChild(q('td', past ? null : 'sopen', past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); });
               if (!past) { tr.title = 'Book a lead at this time'; tr.addEventListener('click', function () { jobPickView({ date: iso, crew: crew, slot: s.k, slotLabel: s.label }); }); }
@@ -5874,6 +5884,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (t) return t;
       var h = (W.data.holds || []).filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && x.lead !== myLead; })[0];
       if (!h) { var bk = blockOn(W.data.blocks, iso, crew, slot); if (bk) return { title: 'Off', who: { name: 'Off' + (bk.note ? ': ' + bk.note : '') } }; }   /* blocked off (2026-10-21) */
+      if (!h && !(job && job.crew === crew && job.date === iso && job.slot === slot)) { var ho = hoursOff(W.data.hours, iso, crew, slot); if (ho) return { title: ho, who: { name: ho } }; }   /* outside their work hours (2026-10-27); this job's own time stays */
       return h ? { title: 'Held: ' + h.name, who: { name: 'Held: ' + h.name } } : null;
     }
     function drawStrip() {
@@ -7633,6 +7644,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               var past = d < today;
               if (S.schedOpenOnly && (r || past)) return;
               var bk = !r ? blockOn(j.blocks, d, crew, s.k) : null; if (bk && S.schedOpenOnly) return;   /* blocked off (2026-10-21) */
+              if (!r && !bk) { var hof = hoursOff(j.hours, d, crew, s.k); if (hof) { if (S.schedOpenOnly) return; bk = { note: hof }; } }   /* outside their work hours (2026-10-27): shown as Off */
               var tr = q('tr', (r ? r.kind : bk ? 'sblocked' : past ? 'past' : 'open') + (firstOfDay ? ' dayfirst' : ''));
               var dc = q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : ''); tr.appendChild(dc); firstOfDay = false;
               if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { again(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
@@ -7667,6 +7679,60 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return p === 'before' ? a < t : (e > t || a >= t);
   }
   function blockOn(list, iso, crew, slot) { return (list || []).filter(function (b) { return b.crew === crew && iso >= b.from && iso <= b.to && blockHits(b, slot); })[0] || null; }
+  /* work hours (2026-10-27, Matthew: "so when we assign jobs no one assigns on hours someone doesnt work"): a time outside someone's hours, as
+     the server refuses it; null when they work then or set no hours. map = the board's hours {name: {"0".."6": null | ["09:00", "18:00"]}} */
+  var HOURS_DAY = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+  function hoursSpan(d) { var f = function (t) { var m = hhmmMin(t), h = Math.floor(m / 60), mm = m % 60; return (h % 12 || 12) + (mm ? ':' + (mm < 10 ? '0' : '') + mm : ''); }; return f(d[0]) + '–' + f(d[1]); }
+  function hoursOff(map, iso, crew, slot) {
+    var h = map && map[crew]; if (!h) return null;
+    var w = jobDow(iso), d = h[String(w)];
+    if (!d || d.length !== 2) return 'Off ' + HOURS_DAY[w];
+    var a = slotStart(slot), e = { s1: 600, s2: 720, s3: 840, s4: 900 }[slot]; if (e == null) e = a;
+    return (a < hhmmMin(d[0]) || a >= hhmmMin(d[1]) || e > hhmmMin(d[1])) ? 'Works ' + hoursSpan(d) : null;
+  }
+  function hoursSummary(h) {
+    if (!h) return 'Not set: any time';
+    var days = [1, 2, 3, 4, 5, 6, 0], short = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], out = [], run = null;
+    days.forEach(function (w) { var d = h[String(w)], k = d ? hoursSpan(d) : 'off'; if (run && run.k === k) run.to = w; else { run = { k: k, from: w, to: w }; out.push(run); } });
+    return out.filter(function (r) { return r.k !== 'off'; }).map(function (r) { return short[r.from] + (r.to !== r.from ? '–' + short[r.to] : '') + ' ' + r.k; }).join(', ') || 'Off every day';
+  }
+  /* the hours editor: your own from the profile; an admin (or a team runner for their team) anyone's from Accounts */
+  function hoursView(who, back) {
+    hideToast(); S.signin = null; S.screen = 'hours'; foot.hidden = true; setDock(null);
+    who = who || S.me; back = back || profileView;
+    setBar('back', { title: who === S.me ? 'My work hours' : who + '’s work hours', sub: 'Nobody gets booked outside them', back: back, backLabel: 'Back' });
+    view.textContent = ''; var f = q('div', 'card jnform hoursform'); f.appendChild(q('div', 'skel')); view.appendChild(f);
+    api('hours', { params: who === S.me ? {} : { who: who } }).then(function (j) {
+      f.textContent = '';
+      if (!j || !j.ok) { f.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load them.')); return; }
+      f.appendChild(q('div', 'sub2', 'For each day: the times ' + (who === S.me ? 'you work' : strtokName(who) + ' works') + ', or Off. Jobs, walks and held days can’t be booked outside them. With no hours set, any time can be booked. Jobs already booked stay where they are.'));
+      var h = j.hours || null, rows = {};
+      [1, 2, 3, 4, 5, 6, 0].forEach(function (w) {
+        var d = h ? h[String(w)] : ['09:00', '18:00'], r = q('div', 'hrow'); r.appendChild(q('b', null, HOURS_DAY[w].replace(/s$/, '')));
+        var off = q('label', 'hoff'), ck = q('input'); ck.type = 'checkbox'; ck.checked = !d; off.appendChild(ck); off.appendChild(q('span', null, 'Off'));
+        var a = q('input'), e = q('input'); a.type = e.type = 'time'; a.step = e.step = 900; a.value = d ? d[0] : '09:00'; e.value = d ? d[1] : '18:00'; a.setAttribute('aria-label', 'Start'); e.setAttribute('aria-label', 'End');
+        var tw = q('span', 'htimes'); tw.appendChild(a); tw.appendChild(q('span', null, 'to')); tw.appendChild(e); tw.hidden = ck.checked;
+        ck.addEventListener('change', function () { tw.hidden = ck.checked; });
+        if (!j.edit) { ck.disabled = a.disabled = e.disabled = true; }
+        r.appendChild(off); r.appendChild(tw); f.appendChild(r); rows[w] = { ck: ck, a: a, e: e };
+      });
+      if (!h) f.appendChild(q('div', 'sub2', 'No hours set yet: the times above are a starting point and nothing is limited until you save.'));
+      if (!j.edit) { f.appendChild(q('div', 'sub2', 'Only ' + strtokName(who) + ', an admin or their team’s manager changes these.')); return; }
+      var err = q('div', 'err'), row2 = q('div', 'row2'), sv = q('button', 'save', 'Save'), cl = q('button', 'lnk', 'Clear: any time'); sv.type = cl.type = 'button';
+      var send = function (hours, btn) {
+        btn.disabled = true; err.textContent = '';
+        api('hoursset', { body: { who: who, hours: hours } }).then(function (k) { btn.disabled = false; if (!k.ok) { err.textContent = k.error || 'Not saved.'; return; } toast('Work hours saved', hoursSummary(k.hours), null); back(); }).catch(function () { btn.disabled = false; err.textContent = 'No signal: nothing was saved.'; });
+      };
+      sv.addEventListener('click', function () {
+        var out = {}, bad = '';
+        Object.keys(rows).forEach(function (w) { var x = rows[w]; if (x.ck.checked) out[w] = null; else { if (!x.a.value || !x.e.value || x.a.value >= x.e.value) bad = bad || 'On ' + HOURS_DAY[w] + ' the start must be before the end.'; out[w] = [x.a.value, x.e.value]; } });
+        if (bad) { err.textContent = bad; return; } send(out, sv);
+      });
+      cl.addEventListener('click', function () { if (window.confirm('Clear the hours? Any time can be booked again.')) send(null, cl); });
+      row2.appendChild(sv); row2.appendChild(cl); f.appendChild(err); f.appendChild(row2);
+    }).catch(function () { f.textContent = ''; f.appendChild(q('div', 'msg bad', 'No connection.')); });
+  }
+  function strtokName(n) { return String(n || '').split(' ')[0]; }
   function timeText(t) { var m = hhmmMin(t), h = Math.floor(m / 60), mm = m % 60; return (h % 12 || 12) + (mm ? ':' + (mm < 10 ? '0' : '') + mm : '') + (h < 12 ? ' am' : ' pm'); }
   function blockWhen(b) { var p = b.part === 'am' ? 'before' : b.part === 'pm' ? 'after' : b.part, t = (b.part === 'am' || b.part === 'pm') ? '12:00' : b.time; return dayName(b.from) + (b.to !== b.from ? ' to ' + dayName(b.to) : '') + (p === 'before' || p === 'after' ? ', ' + p + ' ' + timeText(t) : ', all day'); }
   function schedBlocks(box, J, done) {
@@ -12326,6 +12392,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (adm && feat('walkdesk') && a.role !== 'super') btn(a.walker ? 'Stop ' + vw() + 's' : 'Does ' + vw() + 's', null, function () {   /* the walk desk (2026-10-14) */
         acctCall('walkerset', { id: a.id, on: !a.walker }, function () { toast(a.walker ? a.name + ' no longer does ' + vw() + 's' : a.name + ' does ' + vw() + 's now', a.walker ? 'Walks already booked with them stay booked.' : 'The office can book ' + vw() + 's with them.', null); });
       });
+      if (feat('walkdesk') && a.role !== 'super') btn('Work hours', null, function () { hoursView(a.name, accountsView); });   /* 2026-10-27: admins anyone's, a team runner their crew's */
       if (adm && feat('walkdesk') && a.role !== 'super' && a.role !== 'admin' && a.role !== 'office') btn(a.pays ? 'Stop payments' : 'Takes payments', null, function () {   /* 2026-10-19: a trusted feature, the admin decides */
         acctCall('paysset', { id: a.id, on: !a.pays }, function () { toast(a.pays ? a.name + ' no longer takes payments' : a.name + ' takes payments now', a.pays ? 'Charging a saved card and pay links are off for them. Cash they collect is still recorded.' : 'They can charge a saved card and make a Square pay link on their jobs.', null); });
       });
