@@ -904,6 +904,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       `surge/brand-voice-company.md` and `surge/brand/notes/RESTRICTED.md` first, research standard
       and fact-check log, draft only — **publishing the post to the live site still needs his go**
       (and the site itself is not launched yet; until then a post goes to staging).
+- [ ] **SG-8 — Move Surge's Facebook page (and Instagram) out of the 365 business portfolio
+      into Surge's own (Matthew 2026-10-27).** He added Surge to Sixfold's 365 portfolio so Surge
+      can post through the same Meta connection (Pipeline system user) for now, because he has
+      hit Meta's limit on new business portfolios. Workspace rule: Surge and Sixfold stay
+      separate. Today anyone with 365 admin can manage Surge's page, and a restriction on the
+      365 portfolio would take Surge down too. **When he has time:** free up or get a Surge
+      portfolio, move the page and Instagram there, then give Surge its own app, system user
+      and token (`~/.ssh/surge-meta.json`) and take Surge off Pipeline. No date.
 
 ## Cross-cutting
 
