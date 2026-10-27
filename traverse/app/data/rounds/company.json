@@ -39,7 +39,7 @@
     "roof": false,
     "crew": true
   },
-  "townGroups": ["north-douglas", "thornton", "erie", "commerce-city", "centennial", "south-denver", "englewood", "walden", "aurora"],
+  "townGroups": ["north-douglas", "cs-northeast", "cs-southeast", "security-widefield", "fountain", "arvada", "centennial", "thornton", "windsor", "erie", "commerce-city", "denver", "cs-northwest", "cs-southwest", "boulder", "aurora", "south-denver", "englewood", "littleton", "lakewood", "greenwood-village", "cherry-hills-village", "sheridan", "lone-tree", "wheat-ridge", "edgewater", "golden", "westminster", "broomfield", "northglenn", "federal-heights", "brighton", "louisville", "lafayette", "superior", "longmont", "ken-caryl", "columbine", "holly-hills", "four-square-mile", "cherry-creek", "dakota-ridge", "acres-green", "inverness", "meridian", "berkley", "sterling-ranch", "derby", "bow-mar", "columbine-valley", "glendale", "dove-valley", "morrison", "twin-lakes", "foxfield", "stonegate", "sherrelwood", "welby", "roxborough-park", "evergreen", "the-pinery", "watkins", "perry-park", "idaho-springs", "lochbuie", "elizabeth", "dacono", "gunbarrel", "frederick", "bennett", "fort-lupton", "niwot", "firestone", "hudson", "nederland", "kiowa", "strasburg", "platteville", "mead", "keenesburg", "byers", "lyons", "walden"],
   "best": "yards",
   "card": {
     "lawn": true,

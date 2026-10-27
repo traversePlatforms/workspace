@@ -33,6 +33,15 @@ const SRC = path.join(REPO, 'traverse', 'app');
 const APP = path.join(SRC, 'summit-de59ae83');
 const DATA = path.join(SRC, 'data', 'rounds');
 const OUT = path.join(__dirname, 'dist');
+/* every Colorado town group (2026-10-26, Matthew: "Yes i want the editions updated with all the new info. towns. measurements, scans, house
+   information etc."): each edition shows them all; the metro groups outside Colorado (metros/*.json, Texas tabled) never. What each
+   edition carries per door is still its own keep() filter and card settings. */
+function coloradoGroups() {
+  const metroDir = path.join(__dirname, '..', 'data-pipeline', 'door-territory', 'metros');
+  const metro = new Set(fs.readdirSync(metroDir).filter((x) => /^[a-z0-9-]+.json$/.test(x)).map((x) => { const m = JSON.parse(fs.readFileSync(path.join(metroDir, x), 'utf8')); return m.group || m.key; }));
+  const g = []; for (const r of JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8')).regions) if (r.group && !metro.has(r.group) && !r.metro && !g.includes(r.group)) g.push(r.group);
+  return g;
+}
 
 /* ---------------------------------------------------------------- the editions */
 const COMMON_BG = { '--ink': '#0f1b2d', '--soft': '#566476', '--card': '#ffffff' };
@@ -59,7 +68,7 @@ const EDITIONS = {
         best: 'roof',   // best doors first: this trade's walking order (2026-10-07)
         alerts: ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning'],
-        townGroups: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the five Front Range hail towns measured (Denver after the packed side files and the lighter scorer)
+        townGroups: coloradoGroups(),   /* was: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the five Front Range hail towns measured (Denver after the packed side files and the lighter scorer)
         features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true, billing: true },   // billing on in Roofing first, Stripe TEST mode (Matthew 2026-10-13)
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });
@@ -76,7 +85,7 @@ const EDITIONS = {
          bg: '#f3f6f2', line: '#dbe3d9', sunk: '#e8eee6', card1: '#285c32', appbar: '#24552d', tile: '#2f6b39',
          dBg: '#0b130d', dCard: '#142019', dLine: '#26382b', dSunk: '#0f1a12', dBar: '#11301a', dAccent: '#9fd1a5' },
     // lawn, trees, fire, funding and water; none of the storm or roof layers
-    keep: (f) => !/^(hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|security-)/.test(f),
+    keep: (f) => !/^(hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|security-(?!widefield\b))/.test(f),   /* the town Security-Widefield is not the Security edition's data (2026-10-26) */
     money: true, extraRegions: null,
     company: () => ({
       name: 'Example Lawn & Land Co', short: 'Example Lawn', tagline: 'Lawn care and yard work',
@@ -90,7 +99,7 @@ const EDITIONS = {
       // storm and tornado warnings for the crew's safety, freeze and frost for the lawn, and fire weather + nearby wildfires for the fuel-reduction work (Matthew 2026-10-13: Yards still sells fire mitigation; reverses the 2026-10-06 'no fire alerts')
       best: 'yards',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory', 'Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Wildfires'],
-      townGroups: ['north-douglas', 'thornton', 'erie', 'commerce-city', 'centennial', 'south-denver', 'englewood', 'walden', 'aurora'],   // +Aurora 2026-10-12 (Matthew asked for it); +Walden 2026-10-12 (a Sixfold job's neighbourhood); +South Denver and Englewood 2026-10-12 (a Sixfold rep there);   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); +4 towns with lawn and trees measured 2026-10-12 (research/markets/yards-markets-2026-10.md)
+      townGroups: coloradoGroups(),   /* was: ['north-douglas', 'thornton', 'erie', 'commerce-city', 'centennial', 'south-denver', 'englewood', 'walden', 'aurora'] */   // +Aurora 2026-10-12 (Matthew asked for it); +Walden 2026-10-12 (a Sixfold job's neighbourhood); +South Denver and Englewood 2026-10-12 (a Sixfold rep there);   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); +4 towns with lawn and trees measured 2026-10-12 (research/markets/yards-markets-2026-10.md)
       features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false },
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
       links: { googleReview: '' }
@@ -119,7 +128,7 @@ const EDITIONS = {
                   ['hassolar', 'Already has solar'], ['ev', 'Electric car in the driveway'], ['bill', 'Mentioned a high bill']],
       best: 'solar',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas', 'arvada', 'centennial', 'thornton', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the El Paso towns now measured for sun (Matthew: every relevant town in)
+      townGroups: coloradoGroups(),   /* was: ['north-douglas', 'arvada', 'centennial', 'thornton', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the El Paso towns now measured for sun (Matthew: every relevant town in)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: true, solar: true },
       links: { googleReview: '' }
@@ -148,7 +157,7 @@ const EDITIONS = {
                   ['firewood', 'Firewood against the house'], ['water', 'Standing water'], ['otherco', 'Already has a pest company']],
       best: 'pest',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas', 'windsor', 'erie', 'commerce-city'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
+      townGroups: coloradoGroups(),   /* was: ['north-douglas', 'windsor', 'erie', 'commerce-city'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: true },
       card: { lawn: false, trees: true, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: true },
       links: { googleReview: '' }
@@ -176,7 +185,7 @@ const EDITIONS = {
                   ['otherco', 'Already has a provider'], ['dog', 'Dog at home'], ['newmove', 'Just moved in']],
       best: 'security',   // best doors first: this trade's walking order (2026-10-07)
       alerts: ['Severe Thunderstorm Warning', 'Tornado Warning'],   // safety only (Matthew 2026-10-06)
-      townGroups: ['north-douglas', 'denver', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'boulder'],   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
+      townGroups: coloradoGroups(),   /* was: ['north-douglas', 'denver', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'boulder'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
       features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: false, security: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: false, security: true },
       links: { googleReview: '' }
@@ -423,6 +432,11 @@ async function build(key) {
       if (E.extraRegions) idx.regions = idx.regions.concat(JSON.parse(fs.readFileSync(path.join(__dirname, E.extraRegions), 'utf8')).regions);
       // the API reads each town's county from docs/money.json; write it into the edition's own index too
       for (const reg of idx.regions) if (!reg.county && money.counties[reg.key]) reg.county = money.counties[reg.key];
+      /* the towns added since money.json was written (2026-10-26, all Colorado towns): the county the assessor table checked for each town
+         (data-pipeline/door-territory/assessor/town-county.json, five doors per town against the state parcel map); a town over two
+         counties takes the first */
+      const TC = JSON.parse(fs.readFileSync(path.join(REPO, 'traverse', 'data-pipeline', 'door-territory', 'assessor', 'town-county.json'), 'utf8'));
+      for (const reg of idx.regions) if (!reg.county && Array.isArray(TC[reg.key]) && TC[reg.key][0]) reg.county = String(TC[reg.key][0]).toLowerCase().replace(/[^a-z]/g, '');
       const missing = idx.regions.filter((reg) => !reg.county).map((reg) => reg.key);
       if (missing.length) throw new Error('towns with no county: ' + missing.join(' '));
       buf = Buffer.from(JSON.stringify(idx));
