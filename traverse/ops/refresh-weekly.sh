@@ -63,7 +63,7 @@ if [ $UPLOAD = 1 ]; then
       CH=$(awk 'NR==FNR { s[$2] = $1; next } s[$2] != $1 { print $2 }' "$SAVE/srv.md5" "$SAVE/loc.md5" | tr '\n' ' ')
       [ -n "${CH// /}" ] || continue
       $SG "cd ~/www/traverseplatforms.com/$d/rounds && tar -czf ~/upload-backups/weekly-$d-$(echo $pat | tr -dc a-z)-before-$STAMP.tgz \$(ls $pat 2>/dev/null) 2>/dev/null; true" < /dev/null
-      tar -cf - $CH | $SG "cd ~/www/traverseplatforms.com/$d/rounds && tar -xf -" || fail "$d: upload failed"
+      tar -cf - $CH | $SG "~/bin/safe-extract.sh ~/www/traverseplatforms.com/$d/rounds - > /dev/null" || fail "$d: upload failed"   # rename into place (2026-10-27)
       $SG "cd ~/www/traverseplatforms.com/$d/rounds && md5sum $CH" < /dev/null | sed 's/ [ *]*/  /' | LC_ALL=C sort -k2 > "$SAVE/after.md5"
       md5sum $CH | sed 's/ [ *]*/  /' | LC_ALL=C sort -k2 > "$SAVE/want.md5"
       diff -q "$SAVE/want.md5" "$SAVE/after.md5" > /dev/null || fail "$d: md5 mismatch after upload"

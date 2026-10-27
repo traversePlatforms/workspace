@@ -17,7 +17,7 @@ echo "$(date +%T) $LABEL: files $(echo $FILES | wc -w)"
 [ -z "$FILES" ] && exit 1
 TMPI="$(mktemp)"; cp index.json "$TMPI"
 $SG "cd ~/www/traverseplatforms.com/sixfold-data/rounds && tar -czf ~/upload-backups/before-$LABEL.tgz index.json company.json \$(for t in $NEW; do ls \$t.json \$t-lookup.json 2>/dev/null; done) && echo backed-up" < /dev/null || exit 1
-tar -cf - $FILES | $SG 'cd ~/www/traverseplatforms.com/sixfold-data/rounds && tar -xf - && echo extracted' || exit 1
+tar -cf - $FILES | $SG '~/bin/safe-extract.sh ~/www/traverseplatforms.com/sixfold-data/rounds - > /dev/null && echo extracted' || exit 1   # rename into place (2026-10-27, code review item 9)
 cat "$TMPI" | $SG "cat > /tmp/index-local.json && cd ~/www/traverseplatforms.com/sixfold-data/rounds && NEW='$NEW' python3 - <<'PY'
 import json, os
 new = set(os.environ['NEW'].split())

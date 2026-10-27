@@ -79,7 +79,7 @@ if [ $UPLOAD = 1 ]; then
     [ -n "${CH// /}" ] || { say "$d: no change"; continue; }
     say "$d: uploading $CH"
     $SG "cd ~/www/traverseplatforms.com/$d/rounds && tar -czf ~/upload-backups/permits-$d-before-$STAMP.tgz permit-*.json" < /dev/null || fail "$d: backup failed"
-    tar -cf - $CH | $SG "cd ~/www/traverseplatforms.com/$d/rounds && tar -xf -" || fail "$d: upload failed"
+    tar -cf - $CH | $SG "~/bin/safe-extract.sh ~/www/traverseplatforms.com/$d/rounds - > /dev/null" || fail "$d: upload failed"   # rename into place (2026-10-27)
     $SG "cd ~/www/traverseplatforms.com/$d/rounds && md5sum $CH" < /dev/null | LC_ALL=C sort -k2 > "$SAVE/after.md5"
     md5sum $CH | sed 's/ \*/  /' | LC_ALL=C sort -k2 > "$SAVE/want.md5"
     diff -q "$SAVE/want.md5" "$SAVE/after.md5" > /dev/null || fail "$d: md5 mismatch after upload (backup ~/upload-backups/permits-$d-before-$STAMP.tgz)"
