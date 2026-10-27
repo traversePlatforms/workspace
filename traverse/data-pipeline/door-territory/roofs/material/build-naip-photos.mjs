@@ -12,6 +12,8 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '..', '..', '..', '..', 'app', 'data', 'rounds');
 const TOWNS = ['black-forest', 'monument', 'palmer-lake', 'castle-rock', 'franktown', 'sedalia', 'larkspur', 'woodland-park', 'divide', 'florissant', 'cripple-creek', 'highlands-ranch', 'parker', 'castle-pines', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'];   /* + the Front Range Roofing towns (2026-10-10) */
+/* towns named on the command line replace the list (2026-10-26, the editions' new towns) */
+const named = process.argv.slice(2).filter((a) => !a.startsWith('--')); if (named.length) TOWNS.splice(0, TOWNS.length, ...named);
 const GROW = 1.6;
 let total = 0;
 for (const town of TOWNS) {
