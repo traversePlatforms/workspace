@@ -150,6 +150,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   .controls{gap:8px}.controls .search{flex:1 1 150px}.sortby span{display:none}.sortby select{max-width:44vw}
 }
 @media print{@page{size:letter;margin:.5in} html,body{background:#fff!important} .bar,.printbar,.toast{display:none!important} main{padding:0;max-width:none} .paper{box-shadow:none;padding:0;max-width:none}}
+/* finger-sized targets on touch screens (device QA D2/D3, 2026-10-27): at least 40 px tall; desktop density unchanged */
+@media (pointer:coarse),(max-width:640px){.chips button,.tabs button,.seg button,.btn,.btn.small{min-height:40px}.who .lnk,#signout{min-height:40px;padding:0 6px}}
 </style>
 </head>
 <body>

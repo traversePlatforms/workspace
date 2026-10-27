@@ -149,11 +149,11 @@ try {
   await js(`[...document.querySelectorAll('.subchips button')].find(b=>b.textContent==='Look').click()`); await sleep(400);
   const bgSum = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
   await js(`document.querySelector('[data-look="dark"]').click()`); await sleep(300);
-  ok(await js(`document.documentElement.getAttribute('data-theme')==='dark'&&localStorage.getItem('sixfold.theme')==='dark'`) && (await js(bgSum)) < 120, 'More, Look: Dark turns the desk dark and saves the shared setting');
+  ok(await js(`document.documentElement.getAttribute('data-theme')==='dark'&&localStorage.getItem('peakdesk.theme')==='dark'&&localStorage.getItem('sixfold.theme')===null`) && (await js(bgSum)) < 120, 'More, Look: Dark turns the desk dark and saves the desk’s own setting (not the field app’s)');
   await tab('board'); await sleep(400); await shot('desk-dark-board.png'); await tab('more');
   await js(`[...document.querySelectorAll('.subchips button')].find(b=>b.textContent==='Look').click()`); await sleep(400);
   await js(`document.querySelector('[data-look="auto"]').click()`); await sleep(300);
-  ok(await js(`!document.documentElement.hasAttribute('data-theme')&&localStorage.getItem('sixfold.theme')===null`) && (await js(bgSum)) > 600, 'Look: Auto follows the device again (light here)');
+  ok(await js(`!document.documentElement.hasAttribute('data-theme')&&localStorage.getItem('peakdesk.theme')===null`) && (await js(bgSum)) > 600, 'Look: Auto follows the device again (light here)');
   /* chips belong to their own section */
   await tab('new');
   ok(await js(`!document.querySelector('.subchips')&&!!document.querySelector('.stagechips')&&![...document.querySelectorAll('main button')].some(b=>/^(Board|Removed|Follow-ups due|Active)/.test(b.textContent))`), 'New leads shows its stage chips and none of another section\u2019s');
