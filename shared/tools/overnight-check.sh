@@ -104,5 +104,9 @@ SWEPT=$(find "$LOCALAPPDATA/Temp" -maxdepth 1 -type d -name 'cdp-*' -mtime +1 2>
 [ "$SWEPT" -gt 0 ] && say "  info  removed $SWEPT old test-browser folders from Temp"
 FREE=$(df -Pm /c | awk 'NR==2{print int($4/1024)}'); [ "$FREE" -lt 20 ] && bad "C: has only ${FREE} GB free" || ok "C: ${FREE} GB free"
 
+# 6. The crews' job photos, copied once a day by address (2026-10-26, Matthew: "go ahead and set up the nightly copy")
+JP=$(bash "$REPO/traverse/ops/pull-job-photos.sh" 2>&1 | tail -1)
+case "$JP" in *FAILED*) bad "$JP";; *) say "  info  $JP";; esac
+
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"
