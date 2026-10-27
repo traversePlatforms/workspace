@@ -109,6 +109,15 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   .pill{font-size:11px;padding:2px 7px}.reach{display:block;margin:0 0 3px;text-align:right}
   .detail{padding:14px 16px 28px}
   .shead h1{font-size:19px}.form .two{grid-template-columns:1fr}
+  /* device QA 2026-10-27: a sideways chip row shows it has more (edge fade, D5); inside a card (the Email tab) the rows wrap instead */
+  .chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent);padding-right:24px}
+  .card .chips{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;padding-right:0}
+}
+/* finger-sized targets on touch screens (device QA D1/D2, 2026-10-27): at least 40 px tall, desktop density unchanged */
+@media (pointer:coarse),(max-width:640px){
+  .chips button,.tabs button,.seg button,.btn,.btn.small,.dh-chip{min-height:40px}
+  .who .lnk,#signout{min-height:40px;padding:0 6px}
+  .pick input[type=checkbox]{width:22px;height:22px}
 }
 </style>
 </head>
@@ -215,6 +224,17 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     opts.forEach(function (o) { var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-k', o[0]); if (o[2] != null) b.appendChild(el('b', null, String(o[2]))); b.setAttribute('aria-pressed', String(cur === o[0])); b.addEventListener('click', function () { pick(o[0]); }); c.appendChild(b); });
     return c;
   }
+  /* the Prospects filter in words, for the Email tab and the Queue confirm (2026-10-27, device QA D6: the Email tab used to open with every
+     company ticked, so one press of Queue could line up all of them) */
+  function listDesc(f, q) {
+    var bits = [];
+    if (f.grade && f.grade !== 'all') bits.push(f.grade + '-ranked');
+    bits.push(f.trade && f.trade !== 'all' ? trName(f.trade) : 'all-trade');
+    bits.push('companies');
+    if (f.where && f.where !== 'all') bits.push((WHERE.filter(function (w) { return w[0] === f.where; })[0] || [0, f.where])[1].toLowerCase());
+    if (q && q.trim()) bits.push('matching “' + q.trim() + '”');
+    return bits.join(' ');
+  }
   function matchBase(l, f) {
     return (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where) && (!f.grade || f.grade === 'all' || (l.grade || 'C') === f.grade);
   }
@@ -271,7 +291,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     }
     q.addEventListener('input', function () { S.q = q.value; S.shown = 150; filter(); drawRows(); });
     sel.addEventListener('change', function () { S.sort = sel.value; filter(); drawRows(); });
-    mail.addEventListener('click', function () { S.em.ticks = {}; rows.forEach(function (l) { if (!l.nomail) S.em.ticks[l.id] = true; }); S.em.from = 'list'; S.em.preview = null; go('email'); });
+    mail.addEventListener('click', function () { S.em.ticks = {}; rows.forEach(function (l) { if (!l.nomail) S.em.ticks[l.id] = true; }); S.em.from = 'list'; S.em.desc = listDesc(f, S.q); S.em.preview = null; go('email'); });
     filter(); drawRows();
     if (S.sel && lead(S.sel)) { split.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
   }
@@ -411,14 +431,14 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       card.appendChild(chipRow('Trade', [['all', 'All']].concat(Object.keys(D.trades).map(function (t) { return [t, D.trades[t], elig.filter(function (l) { return l.trade === t && (!em.fresh || !(l.sent || []).length); }).length]; })), em.trade, function (t) { em.trade = t; em.ticks = {}; em.preview = null; draw(); }));
       card.appendChild(chipRow('Where', [['all', 'All']].concat(WHERE), em.where, function (t) { em.where = t; em.ticks = {}; em.preview = null; draw(); }));
       card.appendChild(chipRow('Only', [['fresh', 'Not emailed yet'], ['any', 'Include ones already emailed']], em.fresh ? 'fresh' : 'any', function (t) { em.fresh = t === 'fresh'; em.ticks = {}; em.preview = null; draw(); }));
-      if (!Object.keys(em.ticks).length) pool.forEach(function (l) { em.ticks[l.id] = true; });
+      /* nothing is ticked here until you tick it (device QA D6, 2026-10-27); "Email these" on a filtered Prospects list brings its own ticks */
     }
     pool.sort(function (a, b) { return whereRank(a) - whereRank(b) || a.name.localeCompare(b.name); });
     var picked = function () { return pool.filter(function (l) { return em.ticks[l.id]; }); };
     var cnt = el('p', null); card.appendChild(cnt);
     var tb = el('div', 'controls'); var all = el('button', 'btn ghost small', 'Tick all'); all.type = 'button'; var none = el('button', 'btn ghost small', 'Untick all'); none.type = 'button'; tb.appendChild(all); tb.appendChild(none); card.appendChild(tb);
     var pl = el('div', 'list'); card.appendChild(pl);
-    var refreshCount = function () { var n = picked().length; cnt.textContent = n + ' of ' + pool.length + ' companies ticked' + (pool.length < D.leads.filter(function (l) { return !l.queued; }).length ? '. Companies with no usable email, asked not to be emailed, knocked off or customers are left out.' : '.'); go2.disabled = !n; };
+    var refreshCount = function () { var n = picked().length; cnt.textContent = (n ? n + ' of ' + pool.length + ' companies ticked' + (pool.length < D.leads.filter(function (l) { return !l.queued; }).length ? '. Companies with no usable email, asked not to be emailed, knocked off or customers are left out.' : '.') : 'Nothing ticked yet. Tick the companies below, or on the Prospects tab pick a filter (for example Fit A, In our towns) and press Email these.'); go2.disabled = !n; };
     function drawPicks() {
       pl.textContent = '';
       if (!pool.length) { pl.appendChild(el('div', 'empty', 'No company here can be emailed.')); return; }
@@ -455,7 +475,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       var why = el('p', 'help', noAddr ? 'Add your postal address in Settings to turn sending on.' : 'They go out at most ' + set.cap + ' a day, weekdays 8 am to 5 pm: about ' + days + (days === 1 ? ' working day.' : ' working days.') + ' You can stop the queue any time.');
       if (noAddr || !j.messages.length) send.disabled = true;
       send.addEventListener('click', function () {
-        if (!confirm('Queue ' + j.messages.length + ' emails? Each goes on its own from ' + Q.mailbox + ', starting at the next send window.')) return;
+        var who = em.from === 'one' ? 'this company' : em.from === 'list' && em.desc ? em.desc : listDesc({ trade: em.trade, where: em.where }, '') + (em.fresh ? ' not emailed yet' : '');
+        if (!confirm('Queue ' + j.messages.length + (j.messages.length === 1 ? ' email' : ' emails') + ' to ' + who + '? Each goes on its own from ' + Q.mailbox + ', at most ' + set.cap + ' a day, starting at the next send window.')) return;
         send.disabled = true;
         save('queue', { ids: j.messages.map(function (m) { return m.id; }), tpl: em.tpl }, null).then(function (r) { if (r && r.ok) { em.ticks = {}; em.from = null; em.preview = null; draw(); toast(r.queued + ' emails queued'); } else send.disabled = false; });
       });
