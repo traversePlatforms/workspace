@@ -1684,6 +1684,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .billadd{display:flex;align-items:center;gap:6px;font-size:14.5px}.billsum{padding-top:6px;border-top:1px solid var(--line)}.billsum b,.billtot{font:800 18px var(--sans)}
   .pipemode{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}.pipemode button{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14.5px var(--sans);cursor:pointer}.pipemode button[aria-pressed=true]{background:var(--go);color:var(--on-go);border-color:var(--go)}   /* To contact / Full pipeline (2026-10-26) */
   .jnotes{display:grid;gap:8px;margin-top:12px}.jnlist{display:grid;gap:6px}.jnrow{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.jntext{white-space:pre-wrap;font-size:15px}.jnin{width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit}   /* job notes (2026-10-26) */
+  .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
+  .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
   .keepbg{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,15,.5)}.keepbox{width:100%;max-width:420px;display:grid;gap:10px;padding:18px}.keepbox b{font:800 18px var(--sans)}.keeprow{display:grid;gap:8px}   /* Matthew's lead reached out to the office (2026-10-26) */
   .billwas{color:var(--soft);font-weight:700;font-size:.62em;text-decoration:line-through}   /* the list price, struck, beside the founding price (2026-10-26) */
   .billgo{min-height:46px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 15px var(--sans);cursor:pointer}.billgo:disabled{opacity:.5;cursor:default}.billgo.billrf{background:none;border:1.5px solid var(--fire-h);color:var(--fire-h)}
@@ -4174,6 +4176,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
+        CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and colour, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* the quote and agreement kit (2026-10-27) */
         kitOnC() ? tile('button', 'calc', 'Prices and terms', 'What a quote adds up from the house, the usual deposit, and your agreement terms.', 'Admin only', kitPricesView) : null,
@@ -6310,6 +6313,108 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     w.appendChild(ta); w.appendChild(sv); w.appendChild(say);
     return w;
   }
+  /* Brad's two lines (2026-10-27, Matthew: "brad needs two lines added to his jobs, what would be work they want done and another would be
+     work he suggests"): the crew on the job, the office or Jen; they go in the follow-up email two days after the job */
+  function jobWorkBox(jb, redraw) {
+    var w = q('div', 'jwork'); w.appendChild(q('div', 'dwh', 'Extra work'));
+    var mk = function (label, val, ph) { var lb = q('label', 'jwl', label), ta = q('textarea', 'jnin'); ta.rows = 2; ta.maxLength = 500; ta.value = val || ''; ta.placeholder = ph; lb.appendChild(ta); w.appendChild(lb); return ta; };
+    var wa = mk('Work they want done', jb.want, 'Anything they asked about: trimming, a second area, gutters…');
+    var su = mk('Work I’d suggest', jb.suggest, 'What you noticed that would help the property');
+    var sv = q('button', 'save', 'Save'); sv.type = 'button';
+    sv.addEventListener('click', function () {
+      sv.disabled = true;
+      api('jobwork', { body: { id: jb.id, want: wa.value.trim(), suggest: su.value.trim() } }).then(function (j) {
+        sv.disabled = false;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        jb.want = j.want; jb.suggest = j.suggest; toast('Saved', CO.a365 ? 'It goes in their follow-up email' : 'On the job', null);
+      }).catch(function () { sv.disabled = false; toast('No signal', 'What you wrote is kept. Tap Save again when you have signal.', null); });
+    });
+    w.appendChild(sv);
+    if (CO.a365) w.appendChild(q('div', 'sub2', 'Both are optional. They go in the customer’s follow-up email, two days after the job, with a way to ask us for a price.'));
+    return w;
+  }
+  /* the follow-up email on the job (2026-10-27): due, sent, or why not; Don't send for this job; Send now (only once an admin has switched
+     follow-up emails on). The office and Jen. */
+  function jobFollowBox(jb, redraw) {
+    var F = jb.fuState; if (!F) return null;
+    var w = q('div', 'jfollow'); w.appendChild(q('div', 'dwh', 'Follow-up email'));
+    w.appendChild(q('div', 'qline' + (F.s === 'sent' ? ' qyes' : ''), F.text));
+    if (F.off10) w.appendChild(q('div', 'qline qyes', F.off10));
+    if (F.s !== 'sent') {
+      var ckL = q('label', 'cpck'), ck = q('input'); ck.type = 'checkbox'; ck.checked = !!F.no; ckL.appendChild(ck); ckL.appendChild(q('span', null, 'Don’t send it for this job'));
+      ck.addEventListener('change', function () {
+        ck.disabled = true;
+        api('followupjob', { body: { id: jb.id, no: ck.checked } }).then(function (j) { ck.disabled = false; if (!j.ok) { ck.checked = !ck.checked; toast('Not saved', j.error || 'Try again.', null); return; } jb.fuState = j.fuState; redraw(); }).catch(function () { ck.disabled = false; ck.checked = !ck.checked; toast('No signal', 'Not saved.', null); });
+      });
+      w.appendChild(ckL);
+      if (F.on && !F.no && jb.done && jb.done.o === 'done') {
+        var sn = q('button', 'lnk', 'Send now'); sn.type = 'button';
+        sn.addEventListener('click', function () {
+          if (!window.confirm('Send the follow-up email to ' + ((jb.who && jb.who.email) || 'them') + ' now?')) return;
+          sn.disabled = true;
+          api('followupsend', { body: { id: jb.id } }).then(function (j) { sn.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Follow-up emailed', j.to, null); redraw(); }).catch(function () { sn.disabled = false; toast('No signal', 'Nothing was sent. Try again.', null); });
+        });
+        w.appendChild(sn);
+      }
+    }
+    if (S.role === 'admin') { var st = q('button', 'lnk', 'Follow-up email settings ›'); st.type = 'button'; st.addEventListener('click', function () { followupMailView(); }); w.appendChild(st); }
+    return w;
+  }
+  /* the company switch, the preview and Send me a test (2026-10-27): admins. Off until Matthew turns it on. */
+  function followupMailView() {
+    hideToast(); S.signin = null; S.screen = 'followupmail'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Follow-up email', sub: 'Two days after each job', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = ''; var holder = q('div', 'card jnform fumail'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('followup').then(function (j) {
+      holder.textContent = '';
+      if (!j || !j.ok) { holder.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      var row = q('div', 'lookrow'); row.appendChild(q('span', null, 'Send follow-up emails 2 days after a job'));
+      var seg = q('div', 'aseg');
+      [[false, 'Off'], [true, 'On']].forEach(function (o) {
+        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!j.on === o[0]));
+        b.addEventListener('click', function () {
+          if (!!j.on === o[0]) return;
+          if (o[0] && !window.confirm('Turn on follow-up emails? From now on each 365 job marked done gets this email two days later (9 am to 6 pm), once nothing is owed. Jobs done more than two days ago are not sent.')) return;
+          api('followupset', { body: { on: o[0] } }).then(function (k) { if (!k.ok) { toast('Not saved', k.error || 'Try again.', null); return; } toast(o[0] ? 'Follow-up emails on' : 'Follow-up emails off', '', null); followupMailView(); }).catch(function () { toast('No signal', 'Not saved.', null); });
+        });
+        seg.appendChild(b);
+      });
+      row.appendChild(seg); holder.appendChild(row);
+      holder.appendChild(q('div', 'sub2', j.on ? 'On since ' + new Date(j.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + (j.by ? ', by ' + j.by : '') + '. Each job card shows when its email is due, and has Don’t send and Send now.' : 'Off: nothing is sent and nothing is saved up. Turning it on sends no backlog: only jobs marked done from then on (or in the two days before) get one.'));
+      if (!j.mail) holder.appendChild(q('div', 'msg bad', 'The 365 mailbox is not set up on the server yet, so no email can go, even when this is on. The preview still works.'));
+      if (!j.review) holder.appendChild(q('div', 'msg bad', 'No Google review link is set, so nothing will be sent until one is.'));
+      holder.appendChild(q('div', 'sub2', 'In it: thanks; an honest Google review; what the crew noted on the job (Work they want done, Work I’d suggest) with a way to ask for a price; ' + (j.plans ? 'your ' + j.plans + ' saved ' + (j.plans === 1 ? 'plan' : 'plans') : 'one line about monthly plans (no plans are saved yet)') + '; and 10% off their next service, for every customer. The 10% is never tied to the review.'));
+      holder.appendChild(q('h2', 'tgrp', 'Your email, for tests'));
+      var eRow = q('div', 'jnrow'), eIn = q('input'); eIn.type = 'email'; eIn.value = j.email || ''; eIn.placeholder = 'you@yourcompany.com'; eIn.setAttribute('aria-label', 'Your email, for tests');
+      var eSv = q('button', 'save', 'Save'); eSv.type = 'button';
+      eSv.addEventListener('click', function () { api('followupset', { body: { email: eIn.value.trim() } }).then(function (k) { if (!k.ok) { toast('Not saved', k.error || 'Try again.', null); return; } j.email = k.email; toast('Saved', 'Tests go to ' + (k.email || 'nobody'), null); }).catch(function () { toast('No signal', 'Not saved.', null); }); });
+      eRow.appendChild(eIn); eRow.appendChild(eSv); holder.appendChild(eRow);
+      holder.appendChild(q('h2', 'tgrp', 'Preview'));
+      if (!(j.jobs || []).length) { holder.appendChild(q('div', 'msg soft', 'No 365 job marked done in the last 60 days to preview with.')); return; }
+      var sel = q('select'); sel.setAttribute('aria-label', 'Preview for a job');
+      j.jobs.forEach(function (x) { var op = q('option', null, fmtD(x.date) + ' · ' + x.name + (x.state ? ' · ' + x.state.text.replace(/^Follow-up email: /, '') : '')); op.value = x.id; sel.appendChild(op); });
+      holder.appendChild(sel);
+      var pv = q('div', 'fupv'); holder.appendChild(pv);
+      var tb = q('button', 'lnk', 'Send me a test'); tb.type = 'button';
+      var show = function () {
+        pv.textContent = ''; pv.appendChild(q('div', 'skel'));
+        api('followuppreview', { params: { id: sel.value } }).then(function (p) {
+          pv.textContent = '';
+          if (!p.ok) { pv.appendChild(q('div', 'msg bad', p.error || 'Could not make the preview.')); return; }
+          pv.appendChild(q('div', 'sub2', 'To ' + (p.to || 'nobody: no email on file') + ' · Subject: ' + p.subject));
+          var fr = document.createElement('iframe'); fr.className = 'fuframe'; fr.setAttribute('sandbox', ''); fr.setAttribute('title', 'The email as it would look'); fr.srcdoc = p.html; pv.appendChild(fr);
+          var pre = q('pre', 'futext noi18n', p.text); pv.appendChild(pre);
+        }).catch(function () { pv.textContent = ''; pv.appendChild(q('div', 'msg bad', 'No connection.')); });
+      };
+      tb.addEventListener('click', function () {
+        if (!j.email) { toast('Your email first', 'Save your own email above: the test goes only to you.', null); return; }
+        tb.disabled = true;
+        api('followuptest', { body: { id: sel.value } }).then(function (k) { tb.disabled = false; toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || 'Try again.'), null); }).catch(function () { tb.disabled = false; toast('No signal', 'Try again.', null); });
+      });
+      sel.addEventListener('change', show); holder.appendChild(tb); holder.appendChild(q('div', 'sub2', 'The test goes only to your own email, marked [Test]. Nothing is recorded on the job or the customer.')); show();
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
+  }
   /* photos on a job (2026-10-19, Matthew: "there also should be a spot to add photos") */
   function jobPhotoBox(jb, redraw) {
     var w = q('div', 'jphotos'); w.appendChild(q('div', 'dwh', 'Photos'));
@@ -6425,6 +6530,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var ns = q('div', 'lnotes'); L.notes.forEach(function (n) { ns.appendChild(q('div', null, n.note + ' — ' + n.by + ', ' + ago(n.at))); }); c.appendChild(ns);
     }
     c.appendChild(jobNotesBox(jb, redraw));   /* notes (2026-10-26) */
+    c.appendChild(jobWorkBox(jb, redraw));   /* Brad's two lines (2026-10-27) */
     if (!qView()) c.appendChild(jobPhotoBox(jb, redraw));   /* photos (2026-10-19); Jen's account cannot open them */
     c.appendChild(q('div', 'dwh', 'How did it go?'));
     var owe = (jb.pay && jb.pay.s === 'paid') || (jb.pay && jb.pay.s === 'plan') ? 0 : jb.price - ((jb.pay && jb.pay.amt) || 0);
@@ -6486,7 +6592,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       c.appendChild(st); c.appendChild(panel);
     }
-    if (qView() || wdOn()) { var afb = jobAfterBox(jb, owe, redraw); if (qView()) c.insertBefore(afb, sqBox.nextSibling); else c.appendChild(afb); }   /* the balance and the aftercare (2026-10-19); for Jen up under the price, not at the bottom */
+    if (qView() || wdOn()) { var afb = jobAfterBox(jb, owe, redraw); if (qView()) c.insertBefore(afb, sqBox.nextSibling); else c.appendChild(afb); var fub = jobFollowBox(jb, redraw); if (fub) afb.parentNode.insertBefore(fub, afb.nextSibling); }   /* the balance and the aftercare (2026-10-19); for Jen up under the price, not at the bottom */   /* + the follow-up email (2026-10-27) */
     if (wdOn()) {
       var ch = q('button', 'lnk', 'Change the booking ›'); ch.type = 'button';
       ch.addEventListener('click', function () { jobBookView(null, jb, null); });
@@ -6504,12 +6610,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         row.appendChild(hs); row.appendChild(ms); panel.appendChild(row);
         if (owe > 0) { var gl = q('label', 'jgot', 'Collected at the door ($), if they paid you'); gi = q('input'); gi.inputMode = 'numeric'; gi.maxLength = 6; gi.placeholder = 'Collected $'; gl.appendChild(gi); panel.appendChild(gl); }
         var nt = q('textarea'); nt.rows = 3; nt.maxLength = 1000; nt.placeholder = 'Additional notes (optional): anything different, what you saw, what they asked'; panel.appendChild(nt);
+        /* Brad's two lines on Done too, optional (2026-10-27) */
+        var wl = q('label', 'jwl', 'Work they want done (optional)'), wt = q('textarea'); wt.rows = 2; wt.maxLength = 500; wt.value = jb.want || ''; wl.appendChild(wt); panel.appendChild(wl);
+        var sl2 = q('label', 'jwl', 'Work I’d suggest (optional)'), st2 = q('textarea'); st2.rows = 2; st2.maxLength = 500; st2.value = jb.suggest || ''; sl2.appendChild(st2); panel.appendChild(sl2);
         panel.appendChild(err);
         var sv = q('button', 'save', 'Save: job done'); sv.type = 'button'; panel.appendChild(sv);
         sv.addEventListener('click', function () {
           var mins = (+hs.value) * 60 + (+ms.value);
           if (mins < 5 && !wdOn() && !qView()) { err.textContent = 'Add about how long it took (hours and minutes).'; return; }
-          done('done', { mins: mins, note: nt.value.trim(), collected: gi ? parseInt(String(gi.value).replace(/\D/g, ''), 10) || 0 : 0 }, sv, err);
+          done('done', { mins: mins, note: nt.value.trim(), collected: gi ? parseInt(String(gi.value).replace(/\D/g, ''), 10) || 0 : 0, want: wt.value.trim(), suggest: st2.value.trim() }, sv, err);
         });
       } else {
         panel.appendChild(q('div', 'jdq', 'What happened? (required)'));
@@ -6525,7 +6634,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     function done(o, x, btn, err) {
       if (btn) btn.disabled = true;
-      api('jobdone', { body: { id: jb.id, outcome: o, note: x.note || '', mins: x.mins || 0, collected: x.collected || 0 } }).then(function (j) {
+      api('jobdone', { body: Object.assign({ id: jb.id, outcome: o, note: x.note || '', mins: x.mins || 0, collected: x.collected || 0 }, x.want != null ? { want: x.want, suggest: x.suggest } : {}) }).then(function (j) {
         if (btn) btn.disabled = false;
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { if (err) err.textContent = j.error || 'Not saved. Try again.'; else toast('Not saved', j.error || 'Try again.', null); return; }
@@ -9727,7 +9836,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      A screen opened from the Office keeps the Office menu beside it, and Office stays lit in the top bar, until another place is
      picked from the top bar or Home. Computers only (a phone has no side menu). Each screen draws as it always has; whatever it
      puts in the page is moved into the frame as it lands, so nothing about the screens themselves changed. */
-  var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1 };
+  var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1, followupmail: 1 };
   function officeFramed() { return !!S.inOffice && !!OFFICE_SCREENS[S.screen] && S.screen !== 'office' && dnavOn(); }
   var officeObs = window.MutationObserver ? new MutationObserver(function () { officeFrame(); }) : null;
   function officeFrame() {
@@ -12859,6 +12968,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var r = q('div', 'cpayrow'), w = q('div', 'cpw');
       w.appendChild(q('b', null, fmtD(j.date) + (j.crew ? ' \u00b7 ' + j.crew.split(' ')[0] : '') + (j.done ? ' \u00b7 done' : '')));
       w.appendChild(q('small', null, (j.price ? money0(j.price) : 'Price to confirm') + ' \u00b7 ' + jobPayText(j)));
+      if (j.want) w.appendChild(q('small', 'cpwork', 'Work they want done: ' + j.want));   /* Brad's two lines and the follow-up email (2026-10-27) */
+      if (j.suggest) w.appendChild(q('small', 'cpwork', 'Work suggested: ' + j.suggest));
+      if (j.fuState) w.appendChild(q('small', 'cpwork', j.fuState.text + (j.fuState.off10 ? ' \u00b7 ' + j.fuState.off10 : '')));
       r.appendChild(w);
       r.appendChild(q('span', 'cbal ' + (left > 0 ? 'owe' : 'ok'), !j.price && p.s !== 'paid' ? '\u2013' : left > 0 ? money0(left) + ' due' : 'Paid'));
       var ob = q('button', 'lnk', 'Open'); ob.type = 'button'; ob.addEventListener('click', function () { jobView(j.id, function () { customerView(c.id); }, j.crew); }); r.appendChild(ob);
@@ -12981,6 +13093,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     tags.appendChild(q('span', 'tag cplan', (PLAN_L[c.plan] || 'One-off job') + ' · ' + (SERVICE_L[c.service] || '')));
     tags.appendChild(q('span', 'tag cstat ' + (c.status || 'active'), STATUS_L[c.status || 'active']));
     if (c.overdue) tags.appendChild(q('span', 'tag cover', 'Overdue'));
+    if (c.offer10) tags.appendChild(q('span', 'tag coff10', '10% off offered ' + fmtD(c.offer10)));   /* in the follow-up email (2026-10-27): for quoting their next service */
     head.appendChild(tags);
     var figs = q('div', 'cfigs');
     [[c.price ? money(c.price) : '–', c.plan === 'monthly' ? 'a month' : c.plan === 'quarterly' ? 'a quarter' : c.plan === 'yearly' ? 'a year' : 'price'], [money(c.spent), 'logged'], [c.next ? fmtD(c.next) : '–', 'next due'], [c.last ? fmtD(c.last) : 'none yet', 'last visit']].forEach(function (x) {
@@ -17607,6 +17720,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' ? ['Usage', usageView, false, null, ['usage']] : null,   /* the tap log (2026-10-12) */
       S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : mgrOn() ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
+      S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
       S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */

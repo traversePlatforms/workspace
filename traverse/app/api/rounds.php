@@ -461,6 +461,8 @@ function geoDevice(string $who, string $acctId, string $role): void {
 function meNames(): array { global $me, $acct, $session; $n = [(string) $me]; foreach ((array) ($acct['also'][(string) ($session['c'] ?? '')] ?? []) as $x) if (is_string($x) && $x !== '' && !in_array($x, $n, true)) $n[] = $x; return $n; }
 function qMine(array $l): bool { $mine = meNames(); return in_array((string) ($l['by'] ?? ''), $mine, true) || (bool) array_intersect($mine, (array) ($l['qown'] ?? [])) || ((string) ($l['owner'] ?? '') !== '' && in_array((string) $l['owner'], $mine, true)); }   /* + linked sign-ins (2026-10-21) */   /* + a lead handed to her as its owner (2026-10-20) */
 const QUOTE_INBOX_FROM = 1792189222;   /* quoteInbox()'s cut-off (2026-10-16); up here because the role gate below the session check calls it before line 3690 has run (2026-10-18, Fable review) */
+const FU_DAYS = 2;    /* the follow-up email: days after Done (2026-10-27), see followupState() */
+const FU_TRIES = 3;   /* and how many tries before it waits for Send now */
 function deviceName(): string {
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
     if (stripos($ua, 'iPad') !== false) return 'iPad';
@@ -1215,6 +1217,8 @@ const CUST_PLANS = ['oneoff', 'monthly', 'quarterly', 'yearly', 'custom'];   /* 
 const CUST_STATUS = ['active', 'paused', 'ended'];
 function custDir(): string { return dirname(DATA_DIR) . '/customers'; }
 function custLines(string $name): array { return jsonLines(custDir() . '/' . $name); }   /* decoded once per request (review 2026-10-22) */
+/** the saved plans (2026-10-27): customers/plans.log, one line per change, later lines win. The plan box and the follow-up email read this one list. */
+function planTemplates(): array { $o = []; foreach (custLines('plans.log') as $r) { $k = (string) ($r['id'] ?? ''); if ($k === '') continue; if (!empty($r['del'])) { unset($o[$k]); continue; } $o[$k] = $r; } return array_values($o); }
 function loadCustomers(): array {
     $c = [];
     foreach (custLines('customers.log') as $r) {
@@ -1644,7 +1648,7 @@ $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
 if (($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true)) || in_array($action, ['clickuppoll', 'metapoll'], true))   /* the polls run as GET too */
-    register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll') { try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll */
+    register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll') { try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } try { followupSweep(); } catch (Throwable $e) { error_log('rounds: follow-up emails: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll; + the follow-up emails (2026-10-27) */
 $body = [];
 if ($isPost) {
     $raw = file_get_contents('php://input') ?: '';
@@ -2062,7 +2066,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -2755,6 +2759,9 @@ function a365MimeH(string $s): string { return preg_match('/[\x80-\xFF]/', $s) ?
 function a365Mail(string $to, string $subject, string $text, string $html): array {
     $c = a365MailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     if (!$c) return $fail('config', 'no 365 mailbox set up yet (sixfold-private/a365-mail.json)');
+    /* a test copy only (2026-10-27, the follow-up email's tests): "dryrun": true in the mailbox file writes each message to a365-dryrun.log
+       beside it and sends nothing. Never set on a live install. */
+    if (!empty($c['dryrun'])) return appendLine(dirname(__DIR__, 2) . '/sixfold-private/a365-dryrun.log', ['at' => time(), 'to' => $to, 'subject' => $subject, 'text' => $text, 'html' => $html]) ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('dryrun', 'could not write the dry-run log');
     $fp = @stream_socket_client('tcp://smtp.gmail.com:587', $errno, $errstr, 20); if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
     stream_set_timeout($fp, 20);
     $read = function () use ($fp): array { $lines = []; while (true) { $l = @fgets($fp, 2048); if ($l === false) return [0, 'connection closed']; $lines[] = rtrim($l, "\r\n"); if (strlen($l) < 4 || $l[3] !== '-') break; } $last = (string) end($lines); return [(int) substr($last, 0, 3), implode(' | ', $lines)]; };
@@ -2947,7 +2954,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -2965,7 +2972,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -5147,7 +5154,7 @@ function jobsAll(): array {
             if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0), 'cnotes' => []]; continue; }
             if (is_array($r['cnote'] ?? null)) { $o[$id]['cnotes'][] = ['t' => (string) ($r['cnote']['t'] ?? ''), 'by' => (string) ($r['cnote']['by'] ?? ''), 'at' => (int) ($r['cnote']['at'] ?? 0)]; continue; }   /* notes on the job from the crew or office (2026-10-26) */
             $moved = false;
-            foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts'] as $k) if (array_key_exists($k, $r)) { if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+            foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts', 'want', 'suggest', 'fu', 'funo'] as $k) if (array_key_exists($k, $r)) {   /* + Brad's two lines and the follow-up email (2026-10-27) */ if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
             if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
             if (!empty($r['del'])) $o[$id]['off'] = true;
             if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -5191,8 +5198,9 @@ function blockAt(string $crew, string $date, string $slot): ?array {
 }
 function blocksAhead(): array { $t = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $o = array_map('blockNorm', array_values(array_filter(jobBlocks(), fn($b) => ($b['to'] ?? '') >= $t))); usort($o, fn($a, $b) => [$a['from'], $a['crew']] <=> [$b['from'], $b['crew']]); return $o; }
 function jobShow(array $j, ?array $leads = null): array {
-    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet']));
+    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet', 'want', 'suggest', 'funo']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
+    if ($fs = followupState($j)) $o['fuState'] = $fs;   /* the follow-up email: due, sent, or why not (2026-10-27) */
     $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
     $o['cnotes'] = array_values((array) ($j['cnotes'] ?? []));   /* notes on the job (2026-10-26) */
     $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
@@ -5203,7 +5211,7 @@ function jobShow(array $j, ?array $leads = null): array {
     }
     return $o;
 }
-if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'ridetime', 'schedview', 'jobblockadd', 'jobblockdel'], true) && !feature('walkdesk')) fail('Not here.', 404);
+if (in_array($action, ['jobs', 'jobsave', 'jobday', 'myjobs', 'jobdone', 'ridetime', 'schedview', 'jobblockadd', 'jobblockdel', 'jobwork'], true) && !feature('walkdesk')) fail('Not here.', 404);
 /* paid, and what is left (2026-10-19): "Deposit $50 paid · $249 left", "Paid in full (card charged)" */
 function payLine(array $j): string {
     $p = $j['pay'] ?? ['s' => 'unpaid']; $s0 = (string) ($p['s'] ?? 'unpaid');
@@ -5993,6 +6001,150 @@ function jobAftercare(string $jid, string $why, bool $again = false): array {
           . '</div></body></html>';
     return $rec(a365Mail($to, 'Your lawn after today: a few tips from ' . $name, $text, $html));
 }
+/* ---- the follow-up email, two days after a job (2026-10-27, Matthew: "all of our customers that we have done jobs for needs to get an email
+ * from us 2 days after weve completed the job that has a way for them to leave us reviews. Brad is also going to add in the notes what extra
+ * jobs he notices on the property that we could recommend in the email ... And in that email we need to suggest the monthly or package
+ * services. So brad needs two lines added to his jobs, what would be work they want done and another would be work he suggests.") ----
+ * Once per job, from the 365 mailbox as the aftercare is, two days after the job is marked Done, between 9 am and 6 pm, for a 365 job with an
+ * email on file, once nothing is owed (as the aftercare waits). In it: thanks; an honest Google review (the company's review link); what the
+ * crew noted on the job (Work they want done, Work I'd suggest), each with a way to ask for a price; the saved plans (customers/plans.log, the
+ * plan box's list), or one line about monthly plans; and 10% off the next service, for every customer. The discount never depends on a
+ * review (Google does not allow rewards for reviews; Matthew chose "discount for everyone"), so the two are separate paragraphs and nothing
+ * ties them. OFF until an admin turns it on (followup.json): while off nothing is sent or saved up, and once on only jobs marked done after it
+ * was turned on, or in the two days before, get one, so turning it on sends no backlog. Sent by the 5-minute job (metapoll, followupSweep). */
+/* FU_DAYS, FU_TRIES: defined at the top, beside QUOTE_INBOX_FROM (the job board reads them before this line runs) */
+function followupCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/followup.json'), true); return ['on' => !empty($j['on']), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? '')]; }
+function followupReview(): string { $r = (string) (company()['links']['googleReview'] ?? ''); return preg_match('#^https://[^\s<>"]{8,300}$#D', $r) ? $r : ''; }
+/** the day it goes: two days after the day the job was marked done (the install's clock) */
+function followupDue(array $j): ?string {
+    if (($j['done']['o'] ?? '') !== 'done') return null;
+    $tz = new DateTimeZone(appTz()); $at = (int) ($j['done']['at'] ?? 0);
+    $d = $at > 0 ? (new DateTime('@' . $at))->setTimezone($tz) : new DateTime((string) $j['date'] . ' 12:00', $tz);
+    return $d->modify('+' . FU_DAYS . ' days')->format('Y-m-d');
+}
+function fuDay(string $ymd): string { return (new DateTime($ymd . ' 12:00', new DateTimeZone(appTz())))->format('D j M'); }
+function fuDayOf(int $ts): string { return (new DateTime('@' . $ts))->setTimezone(new DateTimeZone(appTz()))->format('j M'); }
+function fuWhy(string $st): string { return ['config' => 'the 365 mailbox is not set up yet', 'noemail' => 'no email', 'noreview' => 'no Google review link is set', 'switch' => 'follow-up emails are switched off'][$st] ?? ('the mail server refused it: ' . $st); }
+function fuMoney($p): string { $p = (float) $p; return '$' . (abs($p - round($p)) < 0.005 ? number_format($p, 0) : number_format($p, 2)); }
+/** where a job's follow-up email stands, for the job card and the customer page; null when it is not a 365 job */
+function followupState(array $j): ?array {
+    if (empty(company()['a365']) || !jobIs365($j)) return null;
+    $fu = is_array($j['fu'] ?? null) ? $j['fu'] : null; $due = followupDue($j); $cfg = followupCfg();
+    $to = trim((string) ((leadsAll()[$j['lead']] ?? [])['email'] ?? ''));
+    $o = ['due' => $due, 'on' => $cfg['on'], 'no' => !empty($j['funo'])];
+    if ($fu && !empty($fu['ok'])) return $o + ['s' => 'sent', 'text' => 'Follow-up email: sent ' . fuDayOf((int) $fu['at']) . ' to ' . $fu['to'], 'off10' => '10% off offered ' . fuDayOf((int) $fu['at'])];
+    if (!$due) return $o + ['s' => 'notdone', 'text' => 'Follow-up email: goes ' . FU_DAYS . ' days after the job is marked done'];
+    if (!empty($j['funo'])) return $o + ['s' => 'off', 'text' => 'Follow-up email: not sent: Don\'t send is on for this job'];
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $o + ['s' => 'noemail', 'text' => 'Follow-up email: not sent: no email'];
+    if (!$cfg['on']) return $o + ['s' => 'switch', 'text' => 'Follow-up email: due ' . fuDay($due) . ', but follow-up emails are switched off'];
+    if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400) return $o + ['s' => 'old', 'text' => 'Follow-up email: not sent: the job was done before follow-up emails were switched on'];
+    if (jobOwed($j) > 0) return $o + ['s' => 'owed', 'text' => 'Follow-up email: due ' . fuDay($due) . ', once the $' . jobOwed($j) . ' balance is paid'];
+    if ($fu) return $o + ['s' => 'failed', 'text' => 'Follow-up email: not sent (' . fuWhy((string) ($fu['stage'] ?? '')) . ')' . ((int) ($fu['n'] ?? 1) >= FU_TRIES ? '. Tried ' . FU_TRIES . ' times: use Send now' : '. It tries again within the hour')];
+    return $o + ['s' => 'due', 'text' => 'Follow-up email: due ' . fuDay($due)];
+}
+/** the email itself: [subject, text, html]. Plain, short, the 365 brand only. */
+function followupBuild(array $j, array $l): array {
+    $co = company()['a365'] ?? []; $name = (string) (($co['name'] ?? '') ?: '365 Aeration & Seeding'); $ph = a365Phone($l);
+    $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
+    $crew = trim((string) strtok((string) $j['crew'], ' ')) ?: 'Our crew';
+    $day = (new DateTime((string) $j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j');
+    $rv = followupReview(); $want = trim((string) ($j['want'] ?? '')); $sug = trim((string) ($j['suggest'] ?? ''));
+    $per = ['monthly' => ' a month', 'quarterly' => ' a quarter', 'yearly' => ' a year', 'custom' => ' a visit'];
+    $plans = [];
+    foreach (planTemplates() as $p) {
+        $pn = trim((string) ($p['name'] ?? '')); if ($pn === '') continue;
+        $pr = isset($p['price']) && $p['price'] !== null && (float) $p['price'] > 0 ? fuMoney($p['price']) . ($per[(string) ($p['plan'] ?? 'monthly')] ?? '') : '';
+        $reg = $pr !== '' && isset($p['listPrice']) && (float) $p['listPrice'] > (float) $p['price'] ? 'regular ' . fuMoney($p['listPrice']) : '';
+        $plans[] = ['name' => $pn, 'price' => $pr, 'reg' => $reg, 'every' => !empty($p['every']) ? 'Visits every ' . (int) $p['every'] . ' weeks.' : '',
+                    'inc' => array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string) ($p['includes'] ?? ''))), fn($x) => $x !== ''))];
+    }
+    $ask = 'reply to this email or call or text ' . $ph;
+    $noted = []; if ($want !== '') $noted[] = ['Work you mentioned wanting', $want]; if ($sug !== '') $noted[] = ['Work ' . $crew . ' would suggest', $sug];
+    $planLine = fn($p) => $p['name'] . ($p['price'] !== '' ? ': ' . $p['price'] . ($p['reg'] !== '' ? ' (' . $p['reg'] . ')' : '') . '.' : '.') . ($p['every'] !== '' ? ' ' . $p['every'] : '');
+    /* the text version */
+    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks for having us out on " . $day . ".\n\n";
+    if ($rv !== '') $t .= "If you have a minute, we'd appreciate an honest Google review:\n" . $rv . "\n\n";
+    if ($noted) $t .= $crew . " made a note of a few things while on your property:\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\nIf you'd like a price on any of it, " . $ask . ".\n\n";
+    if ($plans) { $t .= ($plans && count($plans) > 1 ? 'Our plans' : 'Our plan') . "\n"; foreach ($plans as $p) $t .= '- ' . $planLine($p) . ($p['inc'] ? ' Includes: ' . implode('; ', $p['inc']) . '.' : '') . "\n"; $t .= 'If a plan sounds useful, ' . $ask . " and we'll talk it through.\n\n"; }
+    else $t .= 'We also offer monthly lawn plans. If you would like to hear about them, ' . $ask . ".\n\n";
+    $t .= "10% off your next service\nAs a thank-you for being our customer, you get 10% off your next service with us. Mention it when you book.\n\nThanks again,\n" . $name . "\n" . $ph . "\n";
+    /* the HTML version: the aftercare's look */
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8'); $tel = preg_replace('/\D/', '', $ph);
+    $box = 'background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin:0 0 16px';
+    $askH = 'reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>';
+    $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.45">'
+       . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
+       . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>'
+       . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 16px">Thanks for having us out on ' . $e($day) . '.</p>';
+    if ($rv !== '') $h .= '<p style="margin:0 0 10px">If you have a minute, we&#39;d appreciate an honest Google review:</p><p style="margin:0 0 18px"><a href="' . $e($rv) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Leave a Google review</a></p>';
+    if ($noted) $h .= '<div style="' . $box . '"><div style="font-weight:700;margin:0 0 8px">' . $e($crew) . ' made a note of a few things while on your property</div><ul style="margin:0 0 10px;padding-left:20px">'
+       . implode('', array_map(fn($n) => '<li style="margin:0 0 6px"><b>' . $e($n[0]) . ':</b> ' . nl2br($e($n[1])) . '</li>', $noted)) . '</ul><div>If you&#39;d like a price on any of it, ' . $askH . '.</div></div>';
+    if ($plans) { $h .= '<div style="' . $box . '"><div style="font-weight:700;margin:0 0 8px">' . (count($plans) > 1 ? 'Our plans' : 'Our plan') . '</div>';
+        foreach ($plans as $p) $h .= '<div style="margin:0 0 10px"><b>' . $e($p['name']) . '</b>' . ($p['price'] !== '' ? ': ' . $e($p['price']) . ($p['reg'] !== '' ? ' <span style="color:#5a6858">(' . $e($p['reg']) . ')</span>' : '') : '') . ($p['every'] !== '' ? '<br>' . $e($p['every']) : '')
+            . ($p['inc'] ? '<ul style="margin:4px 0 0;padding-left:20px">' . implode('', array_map(fn($x) => '<li>' . $e($x) . '</li>', $p['inc'])) . '</ul>' : '') . '</div>';
+        $h .= '<div>If a plan sounds useful, ' . $askH . ' and we&#39;ll talk it through.</div></div>'; }
+    else $h .= '<p style="margin:0 0 16px">We also offer monthly lawn plans. If you would like to hear about them, ' . $askH . '.</p>';
+    $h .= '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin:0 0 18px"><div style="font-weight:700;margin:0 0 4px">10% off your next service</div>As a thank-you for being our customer, you get 10% off your next service with us. Mention it when you book.</div>'
+       . '<p style="margin:0 0 4px">Thanks again,</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a></p>'
+       . '</div></body></html>';
+    return ['Thanks from ' . $name, $t, $h];
+}
+/** send one job's follow-up email (the 5-minute job, or Send now). Records it on the job, the lead and the customer; a failure alerts the office. */
+function jobFollowup(string $jid, string $why, bool $byHand = false): array {
+    $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) return ['ok' => false, 'stage' => 'nojob', 'error' => 'No such job.'];
+    if (!empty($j['fu']['ok'])) return ['ok' => true, 'stage' => 'already', 'error' => '', 'to' => (string) ($j['fu']['to'] ?? '')];
+    if (($j['done']['o'] ?? '') !== 'done') return ['ok' => false, 'stage' => 'notdone', 'error' => 'The job is not marked done yet.'];
+    if (!jobIs365($j)) return ['ok' => false, 'stage' => 'brand', 'error' => 'This is not a 365 job.'];
+    if (!followupCfg()['on']) return ['ok' => false, 'stage' => 'switch', 'error' => 'Follow-up emails are switched off. An admin turns them on under Follow-up email.'];
+    if (!empty($j['funo'])) return ['ok' => false, 'stage' => 'no', 'error' => 'Don\'t send is on for this job. Turn it off first.'];
+    if (!$byHand && jobOwed($j) > 0) return ['ok' => false, 'stage' => 'owed', 'error' => 'There is still a balance.'];
+    if (!a365MailCfg()) return ['ok' => false, 'stage' => 'config', 'error' => 'The 365 mailbox is not set up yet, so nothing was emailed.'];   /* nothing tried, nothing noted (as the aftercare) */
+    if (followupReview() === '') return ['ok' => false, 'stage' => 'noreview', 'error' => 'No Google review link is set, so nothing was emailed.'];
+    $l = leadsAll()[$j['lead']] ?? []; $to = trim((string) ($l['email'] ?? ''));
+    $who = trim((string) ($l['name'] ?? ($j['title'] ?? ''))) ?: 'a customer';
+    $rec = function (array $r) use ($jid, $j, $l, $to, $why, $who) {
+        $now = time(); $day = (new DateTime('@' . $now))->setTimezone(new DateTimeZone(appTz()))->format('Y-m-d');
+        $n = $r['ok'] ? 1 : (int) ($j['fu']['n'] ?? 0) + 1;
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'fu' => ['ok' => $r['ok'], 'stage' => $r['stage'], 'to' => $to, 'why' => $why, 'at' => $now, 'n' => $n] + ($r['ok'] ? ['off10' => $day] : []), 'by' => 'follow-up', 'at' => $now]);
+        appendLine(DATA_DIR . '/a365-mail.log', ['at' => $now, 'lead' => (string) $j['lead'], 'job' => $jid, 'what' => 'followup', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
+        appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => $r['ok'] ? 'Follow-up email sent to ' . $to . ': the review link, the crew\'s notes, the plans and 10% off their next service.' : 'Follow-up email NOT sent (' . fuWhy((string) $r['stage']) . ').', 'by' => 'follow-up', 'at' => $now]);
+        if ($r['ok']) { foreach (loadCustomers() as $c) if ((string) ($c['lead'] ?? '') === (string) $j['lead'] && (string) $j['lead'] !== '') appendLine(custDir() . '/customers.log', ['id' => $c['id'], 'by' => 'follow-up', 'at' => $now, 'f' => ['offer10' => $day]]); }   /* "10% off offered 29 Oct" on the customer, for quoting the next service */
+        elseif ($n === 1 || $n >= FU_TRIES) a365Alert('Follow-up email not sent', $who . ': ' . fuWhy((string) $r['stage']), true, false, webLead($l));
+        return $r + ['to' => $to];
+    };
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
+    [$subject, $text, $html] = followupBuild($j, $l);
+    return $rec(a365Mail($to, $subject, $text, $html));
+}
+/** the 5-minute job's part (metapoll): every job whose follow-up is due, 9 am to 6 pm, at most ten a run; a failure tries again after an hour, three times */
+function followupSweep(?int $now = null): array {
+    $now = $now ?? time(); $out = ['ok' => true, 'sent' => 0, 'tried' => 0, 'skipped' => ''];
+    if (!feature('walkdesk') || empty(company()['a365'])) return ['skipped' => 'not here'] + $out;
+    $cfg = followupCfg(); if (!$cfg['on']) return ['skipped' => 'switched off'] + $out;
+    $tz = new DateTimeZone(appTz()); $at = (new DateTime('@' . $now))->setTimezone($tz); $h = (int) $at->format('G');
+    if ($h < 9 || $h >= 18) return ['skipped' => 'outside 9 am to 6 pm'] + $out;
+    if (!a365MailCfg()) return ['skipped' => 'no 365 mailbox'] + $out;
+    if (followupReview() === '') return ['skipped' => 'no review link'] + $out;
+    $lk = @fopen(DATA_DIR . '/followup.json.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['skipped' => 'busy'] + $out;
+    $today = $at->format('Y-m-d'); $leads = leadsAll();
+    foreach (jobsAll() as $jid => $j) {
+        if ($out['tried'] >= 10) break;
+        if ($j['off'] || ($j['done']['o'] ?? '') !== 'done' || !empty($j['funo']) || !empty($j['fu']['ok'])) continue;
+        $due = followupDue($j); if ($due === null || $due > $today) continue;
+        if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400) continue;   /* done before it was switched on: never sent */
+        if (!jobIs365($j) || jobOwed($j) > 0) continue;
+        $fu = is_array($j['fu'] ?? null) ? $j['fu'] : null;
+        if ($fu) {
+            $em = trim((string) ($leads[$j['lead']]['email'] ?? ''));
+            if (($fu['stage'] ?? '') === 'noemail' && !filter_var($em, FILTER_VALIDATE_EMAIL)) continue;   /* noted once; it goes when an email is added */
+            if (($fu['stage'] ?? '') !== 'noemail' && ((int) ($fu['n'] ?? 1) >= FU_TRIES || $now - (int) ($fu['at'] ?? 0) < 3600)) continue;
+        }
+        $r = jobFollowup((string) $jid, 'two days after the job'); $out['tried']++; if (!empty($r['ok'])) $out['sent']++;
+    }
+    flock($lk, LOCK_UN);
+    return $out;
+}
 /* marked paid another way (cash, check, Zelle): the desk, or Jen on her own customer */
 if ($action === 'jobpaid') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
@@ -6028,6 +6180,77 @@ if ($action === 'aftercare') {
     if (!jobOpen($j)) fail('Not allowed.', 403);
     $r = jobAftercare($jid, 'by hand: ' . $me, true);
     out(['ok' => $r['ok'], 'stage' => $r['stage'], 'to' => $r['to'] ?? '', 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : $r['error'])]);
+}
+/* Brad's two lines on a job (2026-10-27): Work they want done, Work I'd suggest. The crew on the job, the office, or Jen on a job she
+   manages; about 500 characters each; Matthew's phones hear about a new line from the crew, as with a job note */
+if ($action === 'jobwork') {
+    if (!$isPost) fail('POST required', 405);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!preg_match('/^j[0-9a-f]{12}$/D', $jid) || !$j || $j['off']) fail('No such job.', 404);
+    if (!jobOpen($j)) fail('Not allowed.', 403);
+    $row = ['id' => $jid];
+    foreach (['want', 'suggest'] as $k) if (array_key_exists($k, $body)) { $v = $clean($body[$k], 500); if ($v !== (string) ($j[$k] ?? '')) $row[$k] = $v; }
+    if (count($row) === 1) out(['ok' => true, 'same' => true, 'want' => (string) ($j['want'] ?? ''), 'suggest' => (string) ($j['suggest'] ?? '')]);
+    if (!appendLine(DATA_DIR . '/jobs.log', $row + ['by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    if (!desk() && $role !== 'quote' && trim(($row['want'] ?? '') . ($row['suggest'] ?? '')) !== '') {
+        $lj = leadsAllRaw()[(string) ($j['lead'] ?? '')] ?? null; $who = trim((string) ($lj['name'] ?? ($j['title'] ?? ''))) ?: 'a job';
+        a365Alert('Work noted by ' . strtok($me, ' '), $who . ': ' . mb_substr(trim(($row['want'] ?? '') !== '' ? 'wants ' . $row['want'] : '') . (($row['suggest'] ?? '') !== '' ? ' · suggests ' . $row['suggest'] : ''), 0, 160), true, false, $lj ? webLead($lj) : false);
+    }
+    $j2 = jobsAll()[$jid];
+    out(['ok' => true, 'want' => (string) ($j2['want'] ?? ''), 'suggest' => (string) ($j2['suggest'] ?? '')]);
+}
+/* the follow-up email on a job: Don't send, and Send now (2026-10-27). The office, or Jen on a job she manages. Send now only while the
+   company switch is on: nothing reaches a customer until Matthew turns it on. */
+if ($action === 'followupjob' || $action === 'followupsend') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!desk() && !($role === 'quote' && qJob($j))) fail('Not allowed.', 403);
+    if ($action === 'followupjob') {
+        $no = !empty($body['no']);
+        if ($no !== !empty($j['funo'])) { if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'funo' => $no, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+            appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => $no ? 'Follow-up email set to not send, by ' . $me . '.' : 'Follow-up email back on, by ' . $me . '.', 'by' => $me, 'at' => time()]); }
+        out(['ok' => true, 'fuState' => followupState(jobsAll()[$jid])]);
+    }
+    $r = jobFollowup($jid, 'Send now: ' . $me, true);
+    out(['ok' => (bool) $r['ok'], 'stage' => $r['stage'], 'to' => $r['to'] ?? '', 'error' => $r['ok'] ? '' : (string) $r['error'], 'fuState' => followupState(jobsAll()[$jid])]);
+}
+/* the company switch, the preview and Send me a test (2026-10-27): admins. The test goes only to the email this admin saved for themselves. */
+if (in_array($action, ['followup', 'followupset', 'followuppreview', 'followuptest'], true)) {
+    if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $myId = (string) ($session['c'] ?? ''); $myMail = (string) (($acct['email'] ?? [])[$myId] ?? '');
+    if ($action === 'followupset') {
+        if (!$isPost) fail('POST required', 405);
+        if (array_key_exists('email', $body)) {   /* this admin's own address, for tests; kept with their account */
+            $em = trim((string) $body['email']); if ($em !== '' && !filter_var($em, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+            $al = @fopen(accountsFile() . '.lock', 'c'); if (!$al || !flock($al, LOCK_EX)) fail('Could not save that. Try again.', 500);
+            $acct = loadAccounts(); $acct['email'] = (array) ($acct['email'] ?? []); if ($em === '') unset($acct['email'][$myId]); else $acct['email'][$myId] = $em;
+            if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+            out(['ok' => true, 'email' => $em]);
+        }
+        $on = !empty($body['on']); $cfg = followupCfg();
+        $lk = @fopen(DATA_DIR . '/followup.json.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+        if (!writeJsonAtomic(DATA_DIR . '/followup.json', ['on' => $on, 'at' => $on ? ($cfg['on'] ? $cfg['at'] : time()) : 0, 'by' => $me, 'changed' => time()])) fail('Could not save that. Try again.', 500);   /* turned on: the time it was, so no backlog */
+        accountLog(['by' => $me, 'what' => $on ? 'follow-up emails on' : 'follow-up emails off']);
+        out(['ok' => true] + followupCfg());
+    }
+    if ($action === 'followup') {
+        $leads = leadsAll(); $since = (new DateTime('today', new DateTimeZone(appTz())))->modify('-60 days')->format('Y-m-d'); $list = [];
+        foreach (jobsAll() as $j) if (!$j['off'] && ($j['done']['o'] ?? '') === 'done' && $j['date'] >= $since && jobIs365($j)) $list[] = ['id' => $j['id'], 'date' => $j['date'], 'name' => trim((string) ($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'A customer', 'state' => followupState($j)];
+        usort($list, fn($a, $b) => strcmp($b['date'], $a['date']));
+        out(['ok' => true] + followupCfg() + ['mail' => (bool) a365MailCfg(), 'review' => followupReview(), 'email' => $myMail, 'plans' => count(planTemplates()), 'jobs' => array_slice($list, 0, 80)]);
+    }
+    $jid = (string) ($_GET['id'] ?? ($body['id'] ?? '')); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off'] || !jobIs365($j)) fail('Pick a 365 job.', 404);
+    $l = leadsAll()[$j['lead']] ?? [];
+    [$subject, $text, $html] = followupBuild($j, $l);
+    if ($action === 'followuppreview') out(['ok' => true, 'subject' => $subject, 'text' => $text, 'html' => $html, 'to' => (string) ($l['email'] ?? ''), 'state' => followupState($j)]);
+    if (!$isPost) fail('POST required', 405);
+    if ($myMail === '') fail('Save your own email first: the test goes only to you.');
+    if (!throttleTake(rateFile('futest|' . $myId), 20, 3600)) fail('That is a lot of tests in an hour. Wait a little.', 429);
+    $r = a365Mail($myMail, '[Test] ' . $subject, "TEST: this is what " . trim((string) ($l['name'] ?? 'the customer')) . " would get.\n\n" . $text, $html);   /* nothing recorded on the job or the customer */
+    out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
 }
 /* notes on a job (2026-10-26, Matthew: "i need brad to be able to add notes to his jobs ... theres someone that wants extra work done ... he needs
    to be able to put that info in his job and it needs to alert me"): the crew on the job (or the office) adds a note; each is kept with who
@@ -6173,6 +6396,7 @@ if ($action === 'jobdone') {
     if ($o === 'could not' && $role !== 'quote' && mb_strlen($note) < 5) fail('Say what happened, so the office knows why and can rebook it.');
     $took = $mins > 0 ? trim(($mins >= 60 ? intdiv($mins, 60) . ' h ' : '') . ($mins % 60 ? ($mins % 60) . ' min' : '')) : '';
     $row = ['id' => $id, 'done' => $o === 'undo' ? null : ['o' => $o, 'note' => $note, 'collected' => max(0, $got), 'mins' => $o === 'done' ? $mins : 0, 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()];
+    foreach (['want', 'suggest'] as $wk) if ($o !== 'undo' && array_key_exists($wk, $body)) { $wv = $clean($body[$wk], 500); if ($wv !== (string) ($j[$wk] ?? '')) $row[$wk] = $wv; }   /* Brad's two lines, optional on Done (2026-10-27) */
     if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
     if ($o === 'done') custPlanAdvance((string) ($j['lead'] ?? ''), (string) ($j['date'] ?? ''));
     if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
@@ -8042,6 +8266,10 @@ if ($action === 'squarenightly') {   /* sixfold-tools/square-check.php, command 
     $sw = squareSweep();   /* balances paid straight in Square (2026-10-19) */
     out(squareNightly() + ['swept' => $sw]);
 }
+if ($action === 'followupsweep') {   /* the follow-up emails by hand from the command line (2026-10-27); now= a time, for the tests */
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    out(followupSweep(isset($_GET['now']) ? (int) $_GET['now'] : null));
+}
 if ($action === 'squaresweep') {   /* sixfold-tools/square-check.php every 15 minutes, command line only (2026-10-19) */
     if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
     @set_time_limit(120);
@@ -8068,7 +8296,7 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
        one line per change, later lines win; the office makes and removes them, as she does customers */
     if ($action === 'plantemplates' || $action === 'plantemplatesave') {
         $pf = custDir() . '/plans.log';
-        $plans = function () use ($pf) { $o = []; foreach (custLines('plans.log') as $r) { $k = (string) ($r['id'] ?? ''); if ($k === '') continue; if (!empty($r['del'])) { unset($o[$k]); continue; } $o[$k] = $r; } return array_values($o); };
+        $plans = fn() => planTemplates();   /* the same list the follow-up email offers (2026-10-27) */
         if ($action === 'plantemplatesave') {
             if (!$isPost) fail('POST required', 405);
             $pid = (string) ($body['id'] ?? '');
@@ -8138,7 +8366,8 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
             if (!empty($c['lead'])) {   /* their jobs and payments (2026-10-16, Matthew: no slot for deposits on the customer) */
                 static $jByLead = null; if ($jByLead === null) { $jByLead = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead'])) $jByLead[(string) $j['lead']][] = $j; }
                 $c['jobs'] = array_map(fn($j) => ['id' => (string) $j['id'], 'date' => (string) $j['date'], 'slot' => (string) $j['slot'], 'crew' => (string) $j['crew'], 'price' => (int) ($j['price'] ?? 0),
-                    'pay' => $j['pay'] ?? ['s' => 'unpaid'], 'done' => $j['done'] ?? null, 'addr' => (string) ($j['addr'] ?? ''), 'sqcharge' => $j['sqcharge'] ?? null], $jByLead[(string) $c['lead']] ?? []);
+                    'pay' => $j['pay'] ?? ['s' => 'unpaid'], 'done' => $j['done'] ?? null, 'addr' => (string) ($j['addr'] ?? ''), 'sqcharge' => $j['sqcharge'] ?? null,
+                    'want' => (string) ($j['want'] ?? ''), 'suggest' => (string) ($j['suggest'] ?? ''), 'fuState' => followupState($j)], $jByLead[(string) $c['lead']] ?? []);   /* + Brad's two lines and the follow-up email (2026-10-27) */
                 usort($c['jobs'], fn($a, $b) => strcmp($b['date'], $a['date']));
                 /* a job marked Done counts as a visit (2026-10-22, Matthew: Randy showed his price but $0 logged and no last job): worked out here, so an
                    undone job drops out by itself; a visit logged by hand the same day is not counted twice */
@@ -8784,7 +9013,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         /* and every per-person setting (walks 2026-10-14; all of them 2026-10-21: Nneka's Runs a team and Marks won and lost stayed on her old
            code's id when she was given a new code on 20 Oct) */
         $nid = codeId($code, $sessionKey);
-        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq'] as $mk) if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
+        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq', 'email', 'hours', 'rides'] as $mk)   /* + the test email, work hours and rides with (2026-10-27) */ if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
