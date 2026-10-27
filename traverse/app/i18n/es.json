@@ -2502,5 +2502,11 @@
  " · no deposit, paid when the work is done": " · sin depósito, se paga cuando se termine el trabajo",
  "My pipeline (": "Mi embudo (",
  "Form sent": "Formulario enviado",
- "Nothing open right now. New Facebook ad and website leads show here the moment they come in.": "Nada abierto ahora. Los nuevos clientes de anuncios de Facebook y de la página web aparecen aquí en cuanto llegan."
+ "Nothing open right now. New Facebook ad and website leads show here the moment they come in.": "Nada abierto ahora. Los nuevos clientes de anuncios de Facebook y de la página web aparecen aquí en cuanto llegan.",
+ "Data credits": "Créditos de los datos",
+ "Map and property data: county assessor records; building outlines © OpenStreetMap contributors (ODbL) and Microsoft (ODbL); aerial photos USDA NAIP; laser scans USGS 3DEP; land cover DRCOG; weather NWS/NOAA; soil temperature CSU CoAgMET.": "Datos de mapas y propiedades: registros del tasador del condado; contornos de edificios © colaboradores de OpenStreetMap (ODbL) y Microsoft (ODbL); fotos aéreas USDA NAIP; escaneos láser USGS 3DEP; cobertura del suelo DRCOG; clima NWS/NOAA; temperatura del suelo CSU CoAgMET.",
+ "OpenStreetMap copyright": "Derechos de autor de OpenStreetMap",
+ "ODbL licence": "Licencia ODbL",
+ ", after our photo: measure by hand": ", después de nuestra foto: mídelo a mano",
+ ", under trees": ", bajo los árboles"
 }

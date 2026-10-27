@@ -163,6 +163,25 @@ function lawnOf(d) {
   const lv = c.t > 0.6 && s < 1500 ? 'T' : s < 300 ? 'N' : s < 1200 ? 'S' : s < 3000 ? 'M' : 'L';
   return { lv, sq: Math.round(s / 100) * 100, yr: +String(c.d).slice(0, 4) };
 }
+/* Yard v2 (2026-10-26, lawn-trial/build-yard-v2.mjs): the late-summer photo + laser + DRCOG turf, with lawn under trees, measured over the
+   whole territory. Median miss on hand-measured lawns it was not tuned on: 24%, against 73% for the figure above
+   (lawn-trial/yard-v2-switch-check-2026-10-26.md). It replaces lawnOf() wherever it has a reading; big and shared lots keep the old one.
+   T lots carry rng, the lawn the photo can see up to what may be under the trees. */
+const YARD_V2 = join(HERE, 'lawn-trial', 'yard-v2-lawn.json');
+const yardV2 = existsSync(YARD_V2) ? JSON.parse(readFileSync(YARD_V2, 'utf8')) : {};
+/* nb (2026-10-26): the county says the house was built in or after the photo's year, so the photo shows a building site: the card
+   says to measure by hand instead of giving a size (year-<town>.json, assessor year built; Matthew: "show built after our photo") */
+const yearOf = {};
+function builtYear(key, id) {
+  if (!(key in yearOf)) { const p = join(HERE, '..', '..', 'app', 'data', 'rounds', `year-${key}.json`); yearOf[key] = existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')).doors || {}) : {}; }
+  const y = yearOf[key][id]; return y && y.yb ? +y.yb : null;
+}
+function lawnFor(d, key, id) {
+  const L = yardV2[key + '/' + id] ? { ...yardV2[key + '/' + id] } : lawnOf(d);
+  if (!L) return null;
+  const yb = builtYear(key, id); if (yb && yb >= (L.yr || 2023)) L.nb = yb;
+  return L;
+}
 
 /* Trees near the house, from tree-zones/sample-trees.mjs (2026-10-02). Tree-cover share of
    the lot in the state defensible-space zones: z1 0-5 ft, z2 5-30 ft, z3 30-100 ft; h =
@@ -270,7 +289,7 @@ for (const [key, label, fileName, group] of SOURCES) {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnOf(d), trees: treesOf(d), val: valueOf(d), ...(commonGround(d, key) ? { cg: 1 } : {}) };
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), ...(commonGround(d, key) ? { cg: 1 } : {}) };
     }),
   }));
   built.push({ key, label, group, j, areas });
