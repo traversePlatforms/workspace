@@ -301,7 +301,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     if (l.email) { var ea = el('a', null, l.email); ea.href = 'mailto:' + l.email; ct.appendChild(ea); if (l.emailSrc) ct.appendChild(el('small', null, 'Email from ' + l.emailSrc + (l.emailOk === 'yes' ? ', the address takes mail' : ''))); }
     if (l.emailOk === 'no') ct.appendChild(el('small', 'warnline', 'That email’s domain cannot take mail. Find another.'));
     if (l.unsub) ct.appendChild(el('small', 'warnline', 'Asked not to be emailed. The desk will not email them again.'));
-    if (l.site) { var sa = el('a', null, l.site.replace(/^https?:\/\//, '').replace(/\/$/, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; ct.appendChild(sa); }
+    if (l.site) { var sa = el('a', null, l.site.replace(/^https?:\/\//, '').replace(/\/$/, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; ct.appendChild(sa); if (l.siteDead) ct.appendChild(el('small', 'warnline', 'This website did not load when we checked (' + (l.siteWhy || 'no answer') + '). They may have closed or moved; a call is the better way in.')); }
     if (l.record) { var ra = el('a', null, 'State business record ›'); ra.href = l.record; ra.target = '_blank'; ra.rel = 'noopener'; ct.appendChild(ra); }
     if (!l.phone && !l.email) ct.appendChild(el('small', null, 'No phone or email yet. Add one below when you find it.'));
     s2.appendChild(ct);

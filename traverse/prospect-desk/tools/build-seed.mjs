@@ -17,6 +17,13 @@ const head = parse(lines[0]); const col = (r, k) => { const i = head.indexOf(k);
 const phoneFmt = (p) => { let d = String(p).replace(/\D/g, ''); if (d.length === 11 && d[0] === '1') d = d.slice(1); return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : ''; };
 const okMail = (e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,24}$/i.test(e) ? e.toLowerCase() : '';
 const TRADES = new Set(['roofing', 'roofing solar', 'solar', 'pest', 'security', 'yards']);
+/* where (2026-10-26, Matthew: "what do we define as towns next to us?"): the prospect list set it on 11 Oct, when we covered far fewer
+   towns, so Lakewood, Aurora, Westminster and others were "next to" us. Now: "in our towns" = the company's city is a town in the app
+   today (app/data/rounds/index.json, plus Colorado Springs for its four parts); "next to our towns" = the old list's nearby cities that
+   are still not covered (Peyton, Falcon, Severance, Timnath, ...); everything else "elsewhere in Colorado". */
+const COVERED = new Set(JSON.parse(readFileSync(join(HERE, '..', '..', 'app', 'data', 'rounds', 'index.json'), 'utf8')).regions
+  .map((r) => String(r.label).toUpperCase().replace(/ (NORTHEAST|NORTHWEST|SOUTHEAST|SOUTHWEST)$/, '')).concat(['COLORADO SPRINGS']));
+const whereNow = (city, old) => COVERED.has(String(city).toUpperCase()) ? 'in our towns' : (old === 'elsewhere in Colorado' || !old ? 'elsewhere in Colorado' : 'next to our towns');
 const seen = new Set(), leads = []; let dup = 0;
 for (const r of lines.slice(1).map(parse)) {
   const rec = col(r, 'record'), m = rec.match(/masterFileId=(\d+)/);
@@ -26,11 +33,13 @@ for (const r of lines.slice(1).map(parse)) {
   const e1 = okMail(col(r, 'email')), e2 = okMail(col(r, 'site_email')), e3 = okMail(col(r, 'found_email'));
   const email = e1 || e2 || e3;
   const l = {
-    id, name: col(r, 'company'), trade, type: col(r, 'type'), city: col(r, 'city'), zip: col(r, 'zip'), formed: col(r, 'formed'), where: col(r, 'where'), record: rec,
+    id, name: col(r, 'company'), trade, type: col(r, 'type'), city: col(r, 'city'), zip: col(r, 'zip'), formed: col(r, 'formed'), where: whereNow(col(r, 'city'), col(r, 'where')), record: rec,
     phone: phoneFmt(col(r, 'phone')) || phoneFmt(col(r, 'found_phone')),
     email, emailSrc: email ? (e1 ? 'places' : e2 ? 'their site' : 'their site (found)') : '', emailOk: email ? col(r, 'email_ok') : '',
     site: col(r, 'website') || col(r, 'found_site'), place: col(r, 'place_name'), cat: col(r, 'cat')
   };
+  /* the website check (2026-10-26, Matthew saw dead links): site_alive no = it did not load, with why */
+  if (l.site && col(r, 'site_alive') === 'no') { l.siteDead = true; l.siteWhy = col(r, 'site_why'); }
   Object.assign(l, rank(l, (k) => col(r, k) === 'yes'));
   leads.push(l);
 }
@@ -51,7 +60,7 @@ function rank(l, sig) {
   if (l.phone && mail) add(10, 'phone and email'); else if (l.phone || mail) add(5, l.phone ? 'phone' : 'email');
   const yr = parseInt(l.formed, 10), age = yr ? new Date().getFullYear() - yr : 0;
   if (age >= 3) add(5, `in business since ${yr}`);
-  if (l.site) add(5, 'has a website');
+  if (l.site && !l.siteDead) add(5, 'has a website');
   add(l.trade === 'yards' ? 10 : 15, l.trade === 'yards' ? 'lawn and yard' : 'a door-to-door trade');
   const score = Math.min(100, s);
   return { score, grade: score >= 60 ? 'A' : score >= 40 ? 'B' : 'C', why };
@@ -61,4 +70,5 @@ writeFileSync(OUT, JSON.stringify({ built: new Date().toISOString().slice(0, 10)
 const n = (f) => leads.filter(f).length;
 console.log(`${leads.length} companies (${dup} repeats left out) -> ${OUT}`);
 console.log(`phone ${n((l) => l.phone)}, email ${n((l) => l.email)}, either ${n((l) => l.phone || l.email)}, website ${n((l) => l.site)}, email cannot take mail ${n((l) => l.emailOk === 'no')}`);
+console.log(`where: in our towns ${n((l) => l.where === 'in our towns')}, next to ${n((l) => l.where === 'next to our towns')}, elsewhere ${n((l) => l.where === 'elsewhere in Colorado')}; websites that did not load ${n((l) => l.siteDead)}`);
 console.log(`rank: A ${n((l) => l.grade === 'A')}, B ${n((l) => l.grade === 'B')}, C ${n((l) => l.grade === 'C')}; A with a phone or email ${n((l) => l.grade === 'A' && (l.phone || l.email))}`);
