@@ -3157,100 +3157,127 @@ if ($action === 'regions') {
     $regions = [];
     $today = (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d');
     /* a ready-made answer (2026-10-09, Matthew: the app ran slowly; this answer took 1.5 s in an edition every time): built once and
-       kept until something it reads changes (any door file, log or settings file in the data folder, by name, size and time), the
-       day turns, or the code changes. One per kind of viewer: what it shows differs only by admin or not and whether crew see scores. */
+       kept until something it reads changes, the day turns, or the code changes. One per kind of viewer: what it shows differs only by
+       admin or not and whether crew see scores. */
     $rkind = ($role === 'admin' ? 'a' : 'c') . (crewSees($role) ? '1' : '0') . ((TERRITORIES_OPEN || $role === 'admin') ? 't' : 'n');
-    $rsig = [$today, (string) @filemtime(__FILE__)];
-    /* files written on timers that the towns answer never reads (Fable review 2026-10-09: the alerts cron rewrote alerts-cache.json
-       every few minutes, so the kept answer rarely lived past ten) */
-    $rskip = array_flip(['alerts-cache.json', 'push-sent.json', 'push.log', 'storms-recent.json', 'climate-cache.json', 'secmap-cache.json', 'storm-refresh.json', 'calendar.log']);
-    foreach (array_merge(glob(DATA_DIR . '/*.json') ?: [], glob(DATA_DIR . '/*.log') ?: [], glob(DATA_DIR . '/docs/*.json') ?: []) as $rf) {
-        $bn = basename($rf); if (strpos($bn, 'regions-cache-') === 0 || strpos($bn, 'best-') === 0 || isset($rskip[$bn])) continue;
-        $rsig[] = $bn . ':' . (string) @filesize($rf) . ':' . (string) @filemtime($rf);
+    /* per town (2026-10-27, code review item 1): any mark, note or photo in any town used to throw the whole answer away, and the next
+       phone decoded every town again (3.4 s of json_decode for 98 towns on a laptop, done once per kind). Now each town's part is kept
+       in town-cache/<town>/regions-<kind>.json, keyed on what that part reads: its door file, its own and its partners' marks, lawn-fix,
+       assign and area-flag logs, its trade-points side files, and the few files every town reads (customers, company, cwpp). A mark
+       rebuilds one town. The whole answer is still kept for the common case where nothing changed, keyed on every town key together,
+       and a lock stops two phones rebuilding at once (the second gets what the first built). */
+    $bestT = crewSees($role) ? company()['best'] : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
+    $gsig = implode('|', [$today, (string) @filemtime(__FILE__), $rkind, fileSig(custDir() . '/customers.log'), fileSig(DATA_DIR . '/company.json'), fileSig(DATA_DIR . '/cwpp.json')]);
+    $tsigs = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $k = (string) $r['key']; $tp = [$gsig, fileSig((string) regionFile($k))];
+        foreach (array_merge(sharedWith($k), [$k]) as $p) foreach (['marks', 'lawnfix', 'assign', 'areaflags'] as $lg) $tp[] = fileSig(DATA_DIR . '/' . $lg . '-' . $p . '.log');
+        if ($bestT) { foreach (['hail', 'wind', 'year', 'roof', 'solar', 'permit', 'census', 'pest', 'security'] as $sd) $tp[] = fileSig(DATA_DIR . '/' . $sd . '-' . $k . '.json'); $tp[] = fileSig(DATA_DIR . '/permit-index.json'); }
+        $tsigs[$k] = md5(implode('|', $tp));
     }
-    $cf0 = custDir() . '/customers.log'; $rsig[] = 'customers:' . (string) @filesize($cf0) . ':' . (string) @filemtime($cf0);   /* customers leave the counts (2026-10-13) */
-    $rsig = md5(implode('|', $rsig)); $rcache = DATA_DIR . '/regions-cache-' . $rkind . '.json';
+    $rsig = md5(implode('|', [$gsig, fileSig(DATA_DIR . '/index.json'), fileSig(DATA_DIR . '/docs/money.json'), json_encode($tsigs)]));
+    $rcache = DATA_DIR . '/regions-cache-' . $rkind . '.json';
     /* the kept answer is sent as the text it was written as (2026-10-09, speed): decoding 1.7 MB of JSON and encoding it again
        took 160 ms of every request. The file is {"sig":...,"regions":[...]}, written whole or not at all (writeTextAtomic),
        so a matching head and a closing ]} is the whole check. */
-    $rc = (string) @file_get_contents($rcache); $rhead = '{"sig":"' . $rsig . '","regions":';
-    if (strncmp($rc, $rhead, strlen($rhead)) === 0 && substr($rc, -2) === ']}') sendJson('{"ok":true,"regions":' . substr($rc, strlen($rhead), -1) . ',"cached":true}');
-    unset($rc);
+    $rhead = '{"sig":"' . $rsig . '","regions":';
+    $sendKept = function () use ($rcache, $rhead): void {
+        $rc = (string) @file_get_contents($rcache);
+        if (strncmp($rc, $rhead, strlen($rhead)) === 0 && substr($rc, -2) === ']}') sendJson('{"ok":true,"regions":' . substr($rc, strlen($rhead), -1) . ',"cached":true}');
+    };
+    $sendKept();
+    $rlock = @fopen(DATA_DIR . '/regions-cache-' . $rkind . '.lock', 'c');
+    if ($rlock && flock($rlock, LOCK_EX)) $sendKept();   /* waited while another phone built it: send that */
     $segT = []; $segB = [];                  /* SX-54: conversations and quotes per kind of door, across every town */
     /* the county each town is in, from the funding sheet (one list to keep up to date) */
     $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
     foreach (($idx['regions'] ?? []) as $r) {
-        $data = loadRegion($r['key']);
-        if (!$data || empty($data['areas'])) continue;   /* no neighbourhoods (the pulled-in houses, 2026-10-16): search only, not a town */
-        $marks = loadMarks($r['key']);
-        $aflags = loadAreaFlags($r['key']);
-        $lfix = loadLawnFix($r['key']); $custOpen ??= customerDoors();
-        $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];
-        $aday = $assign ? assignDays($r['key']) : [];
-        /* best neighbourhoods (2026-10-07): each door's points for this edition's trade, cached per town */
-        $bestT = crewSees($role) ? company()['best'] : null; $bq = null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data, $bq) : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
-        $areas = [];
-        foreach ($data['areas'] as $a) {
-            /* A no-answer is NOT a finished door — nobody was home. It is counted
-               separately so a second pass round the neighbourhood is visible
-               rather than something someone has to remember to plan. */
-            /* hot / vhot: high (4) and very high (5) fire-hazard doors STILL TO KNOCK.
-               A finished door is not a reason to send anyone back, so a neighbourhood
-               sinks down the hazard sort as its high-hazard doors get done. A no-answer
-               still needs a knock, so it still counts. Class 6 never counts as safe;
-               it simply is not counted as high. */
-            /* due: a Not-now door whose come-back date has arrived. It is open again,
-               so a due high-hazard door counts towards the hazard sort as well. */
-            /* retry: a no-answer that has rested MISS_REST_DAYS, back on the list. noanswer is
-               now only the ones still resting. */
-            $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0; $retry = 0;
-            $treeA = 0; $treeH = 0;                  /* trees against / heavy at doors STILL TO KNOCK, for the trees sort */
-            $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
-            $lawnL = 0; $lawnM = 0; $lawnS = 0; $cgN = 0;   /* cgN: townhome lots, the HOA keeps the lawn (2026-10-13) */      /* large / medium / small lawns STILL TO KNOCK, for the lawn sort (small: 2026-10-12, aeration) */
-            $bestN = 0; $bestS = 0;                  /* doors still to knock with reasons for this trade, and their points (2026-10-07) */
-            $scSum = 0; $scN = 0; $sc8 = 0;         /* their 1-10 door scores: the average and how many are 8 or more (2026-10-09) */
-            $all3 = 0;                               /* still to knock with all three: high fire, large or medium lawn, trees against or heavy (2026-10-04) */
-            $aseg = [];                              /* SX-54: doors still to knock, per kind of door */
-            foreach ($a['doors'] as $d) {
-                $m = freshMark($d, $marks[$d['id']] ?? null);
-                $f = (int) ($d['fire'] ?? 0);
-                if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
-                $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
-                /* a no-answer still counts as needing a knock (SX-9b rule), even during its 2-day rest */
-                $open = (!$m || $m['outcome'] === 'miss' || $isDue) && !isset($custOpen[$r['key'] . '/' . $d['id']]);   /* an active customer is not a door to knock (2026-10-13) */
-                if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
-                if (!empty($d['cg'])) $cgN++;
-                if ($open && empty($d['cg'])) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; elseif ($lv === 'S') $lawnS++; }
-                if ($open) { $tl = treeLevel($d); if ($tl === 'against') $treeA++; elseif ($tl === 'heavy') $treeH++; }
-                if ($open && ($f === 4 || $f === 5) && in_array(lawnLevel($d, $lfix), ['L', 'M'], true) && in_array(treeLevel($d), ['against', 'heavy'], true)) $all3++;
-                if ($open && $bp !== null) {
-                    $pt = (int) ($bp[(string) $d['id']] ?? 0);
-                    if ($bestT === 'yards') { $pt += (!empty($d['cg']) && !isset($lfix[$d['id']])) ? -3 : yardsLawnPts(lawnLevel($d, $lfix)); }   /* a townhome lot is no owner's lawn, unless the crew says otherwise (2026-10-13) */   /* live: crews correct lawns */
-                    if ($pt > 0) { $bestN++; $bestS += $pt; }
-                    if ($bq !== null) { $s10 = doorScore10($bestT, $pt, $bq[(string) $d['id']] ?? [0, 0.5]); $scSum += $s10; $scN++; if ($s10 >= 8) $sc8++; }
-                }
-                $seg = (in_array($f, [3, 4, 5], true) ? (string) $f : 'x') . (lawnLevel($d, $lfix) ?: 'x');
-                if ($open) $aseg[$seg] = ($aseg[$seg] ?? 0) + 1;
-                if ($m && in_array($m['outcome'], ['booked', 'later'], true)) { $segT[$seg] = ($segT[$seg] ?? 0) + 1; if ($m['outcome'] === 'booked') $segB[$seg] = ($segB[$seg] ?? 0) + 1; }
-                if (!$m) continue;
-                if ($m['outcome'] === 'booked') $booked++;
-                if ($isDue) $due++;
-                elseif ($m['outcome'] === 'miss' && missRetry($m) <= $today) $retry++;
-                elseif ($m['outcome'] === 'miss') $noanswer++;
-                else $done++;
+        $tcf = DATA_DIR . '/town-cache/' . $r['key'] . '/regions-' . $rkind . '.json';
+        $tc = json_decode((string) @file_get_contents($tcf), true);
+        if (!is_array($tc) || ($tc['sig'] ?? '') !== $tsigs[$r['key']]) $tc = null;
+        if ($tc === null) {
+            $tT = []; $tB = [];
+            $data = loadRegion($r['key']);
+            if (!$data || empty($data['areas'])) {   /* no neighbourhoods (the pulled-in houses, 2026-10-16): search only, not a town */
+                if (is_dir(dirname($tcf)) || @mkdir(dirname($tcf), 0700, true)) writeJsonAtomic($tcf, ['sig' => $tsigs[$r['key']], 'skip' => true]);
+                continue;
             }
-            $areas[] = areaCompact(['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
-                        'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
-                        'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
-                        'la' => $nll ? round($sla / $nll, 4) : null, 'lo' => $nll ? round($slo / $nll, 4) : null,   /* 4 places: about 10 m, plenty for a neighbourhood's centre */
-                        'lawnL' => $lawnL, 'lawnM' => $lawnM, 'lawnS' => $lawnS, 'cg' => $cgN, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
-                        'who' => $assign[$a['name']] ?? null,   /* the streets come from ?action=streets, one town at a time */
-                        'on' => $aday[$a['name']] ?? null,      /* the day it is assigned for (2026-10-12) */
-                        'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
-                        '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []));
+            $marks = loadMarks($r['key']);
+            $aflags = loadAreaFlags($r['key']);
+            $lfix = loadLawnFix($r['key']); $custOpen ??= customerDoors();
+            $assign = (TERRITORIES_OPEN || $role === 'admin') ? loadAssign($r['key']) : [];
+            $aday = $assign ? assignDays($r['key']) : [];
+            /* best neighbourhoods (2026-10-07): each door's points for this edition's trade, cached per town */
+            $bq = null; $bp = $bestT ? bestTownPoints($bestT, $r['key'], $data, $bq) : null;
+            $areas = [];
+            foreach ($data['areas'] as $a) {
+                /* A no-answer is NOT a finished door — nobody was home. It is counted
+                   separately so a second pass round the neighbourhood is visible
+                   rather than something someone has to remember to plan. */
+                /* hot / vhot: high (4) and very high (5) fire-hazard doors STILL TO KNOCK.
+                   A finished door is not a reason to send anyone back, so a neighbourhood
+                   sinks down the hazard sort as its high-hazard doors get done. A no-answer
+                   still needs a knock, so it still counts. Class 6 never counts as safe;
+                   it simply is not counted as high. */
+                /* due: a Not-now door whose come-back date has arrived. It is open again,
+                   so a due high-hazard door counts towards the hazard sort as well. */
+                /* retry: a no-answer that has rested MISS_REST_DAYS, back on the list. noanswer is
+                   now only the ones still resting. */
+                $done = 0; $noanswer = 0; $hot = 0; $vhot = 0; $due = 0; $booked = 0; $retry = 0;
+                $treeA = 0; $treeH = 0;                  /* trees against / heavy at doors STILL TO KNOCK, for the trees sort */
+                $sla = 0.0; $slo = 0.0; $nll = 0;        /* centre point, for "nearest neighbourhood" */
+                $lawnL = 0; $lawnM = 0; $lawnS = 0; $cgN = 0;   /* cgN: townhome lots, the HOA keeps the lawn (2026-10-13) */      /* large / medium / small lawns STILL TO KNOCK, for the lawn sort (small: 2026-10-12, aeration) */
+                $bestN = 0; $bestS = 0;                  /* doors still to knock with reasons for this trade, and their points (2026-10-07) */
+                $scSum = 0; $scN = 0; $sc8 = 0;         /* their 1-10 door scores: the average and how many are 8 or more (2026-10-09) */
+                $all3 = 0;                               /* still to knock with all three: high fire, large or medium lawn, trees against or heavy (2026-10-04) */
+                $aseg = [];                              /* SX-54: doors still to knock, per kind of door */
+                foreach ($a['doors'] as $d) {
+                    $m = freshMark($d, $marks[$d['id']] ?? null);
+                    $f = (int) ($d['fire'] ?? 0);
+                    if (isset($d['lat'], $d['lon']) && is_numeric($d['lat']) && is_numeric($d['lon'])) { $sla += $d['lat']; $slo += $d['lon']; $nll++; }
+                    $isDue = $m && $m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= $today;
+                    /* a no-answer still counts as needing a knock (SX-9b rule), even during its 2-day rest */
+                    $open = (!$m || $m['outcome'] === 'miss' || $isDue) && !isset($custOpen[$r['key'] . '/' . $d['id']]);   /* an active customer is not a door to knock (2026-10-13) */
+                    if ($open && ($f === 4 || $f === 5)) { $hot++; if ($f === 5) $vhot++; }
+                    if (!empty($d['cg'])) $cgN++;
+                    if ($open && empty($d['cg'])) { $lv = lawnLevel($d, $lfix); if ($lv === 'L') $lawnL++; elseif ($lv === 'M') $lawnM++; elseif ($lv === 'S') $lawnS++; }
+                    if ($open) { $tl = treeLevel($d); if ($tl === 'against') $treeA++; elseif ($tl === 'heavy') $treeH++; }
+                    if ($open && ($f === 4 || $f === 5) && in_array(lawnLevel($d, $lfix), ['L', 'M'], true) && in_array(treeLevel($d), ['against', 'heavy'], true)) $all3++;
+                    if ($open && $bp !== null) {
+                        $pt = (int) ($bp[(string) $d['id']] ?? 0);
+                        if ($bestT === 'yards') { $pt += (!empty($d['cg']) && !isset($lfix[$d['id']])) ? -3 : yardsLawnPts(lawnLevel($d, $lfix)); }   /* a townhome lot is no owner's lawn, unless the crew says otherwise (2026-10-13) */   /* live: crews correct lawns */
+                        if ($pt > 0) { $bestN++; $bestS += $pt; }
+                        if ($bq !== null) { $s10 = doorScore10($bestT, $pt, $bq[(string) $d['id']] ?? [0, 0.5]); $scSum += $s10; $scN++; if ($s10 >= 8) $sc8++; }
+                    }
+                    $seg = (in_array($f, [3, 4, 5], true) ? (string) $f : 'x') . (lawnLevel($d, $lfix) ?: 'x');
+                    if ($open) $aseg[$seg] = ($aseg[$seg] ?? 0) + 1;
+                    if ($m && in_array($m['outcome'], ['booked', 'later'], true)) { $tT[$seg] = ($tT[$seg] ?? 0) + 1; if ($m['outcome'] === 'booked') $tB[$seg] = ($tB[$seg] ?? 0) + 1; }
+                    if (!$m) continue;
+                    if ($m['outcome'] === 'booked') $booked++;
+                    if ($isDue) $due++;
+                    elseif ($m['outcome'] === 'miss' && missRetry($m) <= $today) $retry++;
+                    elseif ($m['outcome'] === 'miss') $noanswer++;
+                    else $done++;
+                }
+                $areas[] = areaCompact(['name' => $a['name'], 'avg' => $a['avg'], 'total' => count($a['doors']),
+                            'done' => $done, 'noanswer' => $noanswer, 'hot' => $hot, 'vhot' => $vhot, 'due' => $due, 'retry' => $retry, 'booked' => $booked,
+                            'nosol' => flagSummary(flagsOver($a['doors'], $aflags)),
+                            'la' => $nll ? round($sla / $nll, 4) : null, 'lo' => $nll ? round($slo / $nll, 4) : null,   /* 4 places: about 10 m, plenty for a neighbourhood's centre */
+                            'lawnL' => $lawnL, 'lawnM' => $lawnM, 'lawnS' => $lawnS, 'cg' => $cgN, 'treeA' => $treeA, 'treeH' => $treeH, 'all3' => $all3, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
+                            'who' => $assign[$a['name']] ?? null,   /* the streets come from ?action=streets, one town at a time */
+                            'on' => $aday[$a['name']] ?? null,      /* the day it is assigned for (2026-10-12) */
+                            'cwpp' => !empty($a['place']['n']) ? (cwppPlaces()[strtolower((string) $a['place']['n'])] ?? null) : null,
+                            '_seg' => $aseg] + ($bp !== null ? ['bestN' => $bestN, 'bestS' => $bestS] : []) + ($scN ? ['sc' => round($scSum / $scN, 1), 'sc8' => $sc8, 'scn' => $scN] : []));
+            }
+            $tc = ['sig' => $tsigs[$r['key']], 'areas' => $areas, 'segT' => $tT, 'segB' => $tB];
+            if (is_dir(dirname($tcf)) || @mkdir(dirname($tcf), 0700, true)) writeJsonAtomic($tcf, $tc);
+            unset($data, $bp, $areas, $marks);   /* free this town before the next is read (2026-10-08): two big towns at once passed 96 MB */
         }
-        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $areas];
-        unset($data, $bp, $areas);   /* free this town before the next is read (2026-10-08): two big towns at once passed 96 MB */
+        if (!empty($tc['skip'])) continue;
+        foreach (($tc['segT'] ?? []) as $sg => $c) $segT[$sg] = ($segT[$sg] ?? 0) + $c;
+        foreach (($tc['segB'] ?? []) as $sg => $c) $segB[$sg] = ($segB[$sg] ?? 0) + $c;
+        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $tc['areas']];
+        unset($tc);
     }
     /* ---- our own odds (SX-54, 2026-10-04) ----
        Expected quotes from the doors still to knock: each door counts at the rate doors like it
