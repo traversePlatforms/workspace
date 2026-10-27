@@ -347,3 +347,6 @@ sixfold/brand/job-photos/**
 sixfold/content/365-social-2026-10/job-photo-posts/*.png
 sixfold/content/365-social-2026-10/job-photo-posts/*.html
 sixfold/content/365-social-2026-10/job-photo-posts/*.mjs
+
+# Regenerable pipeline caches (2026-10-27, code review item 4): untracked; the files stay on disk and the Drive backup carries them
+traverse/data-pipeline/door-territory/*-cache.json
