@@ -5835,8 +5835,10 @@ if ($action === 'statspage') {
     }
     /* 4. monthly plans: active customers on a recurring plan, and what they bring in a month */
     $plans = []; $mrr = 0.0; $per = ['monthly' => 1, 'quarterly' => 1 / 3, 'yearly' => 1 / 12];
-    foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); if (($c['status'] ?? 'active') !== 'active' || !isset($per[$pl])) continue;
-        $m = round((float) ($c['price'] ?? 0) * $per[$pl], 2); $mrr += $m; $plans[] = ['name' => (string) ($c['name'] ?? ''), 'plan' => $pl, 'monthly' => $m]; }
+    /* a custom schedule with visits every N weeks is priced per visit (the plan box: "Price per visit"), so it counts 52/12/N visits a month;
+       monthly, quarterly and yearly are priced per period whatever the weeks (2026-10-27, packages readiness) */
+    foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); $wk = (int) ($c['every'] ?? 0); if (($c['status'] ?? 'active') !== 'active' || !(isset($per[$pl]) || ($pl === 'custom' && $wk > 0))) continue;
+        $m = round((float) ($c['price'] ?? 0) * ($per[$pl] ?? 52 / 12 / max(1, $wk)), 2); $mrr += $m; $plans[] = ['name' => (string) ($c['name'] ?? ''), 'plan' => $pl, 'monthly' => $m] + ($wk > 0 ? ['every' => $wk] : []); }
     /* 5. six weeks: booked work + open quotes x each group's close rate (closeRates) + plan income */
     $CR = closeRates(array_filter($leads, $realLead), $jobOfLead);
     ['quoted' => $quoted, 'won' => $won, 'close' => $close, 'pipe' => $pipe, 'pipeN' => $pipeN] = $CR;

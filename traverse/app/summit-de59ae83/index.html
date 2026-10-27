@@ -17973,8 +17973,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         /* 4. plans */
         var col = q('div', 'spcol'); out.appendChild(col);   /* plans and doors stacked, beside six weeks */
         var c4 = card('Monthly plans', j.plans.list.length ? money0(j.plans.mrr) + ' a month' : '', col);
-        if (!j.plans.list.length) c4.appendChild(q('div', 'msg soft', 'No customers on an active monthly, quarterly or yearly plan yet. A customer shows here when their plan is set and they are active.'));
-        else { var tb4 = table(c4, ['Customer', 'Plan', 'A month']); j.plans.list.forEach(function (p) { tr(tb4, [p.name, p.plan, cur(p.monthly)]); }); tr(tb4, [j.plans.list.length + ' on a plan', '', cur(j.plans.mrr)], 'sttot'); }
+        if (!j.plans.list.length) c4.appendChild(q('div', 'msg soft', 'No customers on an active monthly, quarterly, yearly or every-few-weeks plan yet. A customer shows here when their plan is set and they are active.'));
+        else { var tb4 = table(c4, ['Customer', 'Plan', 'A month']); j.plans.list.forEach(function (p) { tr(tb4, [p.name, (PLAN_L[p.plan] || p.plan) + (p.every ? ', visits every ' + p.every + ' weeks' : ''), cur(p.monthly)]); });   /* + custom plans priced per visit, every N weeks (2026-10-27) */ tr(tb4, [j.plans.list.length + ' on a plan', '', cur(j.plans.mrr)], 'sttot'); }
         /* 5. six weeks */
         var P = j.proj, c5 = card('Six weeks ahead', 'booked work + quoted leads \u00d7 the close rate + plan income');
         var tb5 = table(c5, ['Week', 'Booked', 'From quoted leads', 'Plans', 'Total']), gt = 0;
