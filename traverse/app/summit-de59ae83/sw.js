@@ -19,7 +19,7 @@
 
    ⚑ Bump SHELL_V when this file changes. The browser re-checks this file on every visit
    (registered with updateViaCache: 'none'); flush SiteGround's cache after uploading it. */
-const SHELL_V = 'rounds-shell-2026-10-06a';
+const SHELL_V = 'rounds-shell-2026-10-27a';
 const API = 'rounds-api';
 /* every install on one domain shares Cache Storage (the Traverse editions sit beside this app on sixfoldcolorado.com): on
    activate, only our own old copies go, never another install's (review 2026-10-06: this used to delete every other cache) */
@@ -27,7 +27,7 @@ const OURS = 'rounds-';
 const TIMEOUT = 6000;
 const AREA_MAX = 40;
 const MAX_AGE = 7 * 86400 * 1000;
-const SHELL = ['./', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const SHELL = ['./', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './es.json'];   /* es.json: the Spanish dictionary, out of the page (2026-10-27) */
 const KEEP = /\/api\/rounds\.php\?(?:.*&)?action=(me|regions|area|money|customers|company)(?:&|$)/;   /* customers: admins' list opens with no signal (2026-10-04); company: the install's name and lists */
 
 self.addEventListener('install', (e) => {

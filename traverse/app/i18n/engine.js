@@ -4,7 +4,9 @@
    'es'), every text the app puts on screen is swapped for its Spanish as it appears: whole phrases first, then the pieces
    the code joins together ("New owner since " + a date), then the parts of a " · " line, then month names next to a number.
    What people type (addresses, owners, notes, names) is not in the dictionary, so it is left alone; inputs and textareas are
-   never touched. The dictionary is i18n/es.json, copied into the page between the markers below by i18n/sync-es.cjs.
+   never touched. The dictionary is i18n/es.json, copied beside the page as es.json by i18n/sync-es.cjs and fetched only on a
+   Spanish device (2026-10-27, code review item 7b: it was 50 KB of every English page load); sw.js keeps it for offline. The page
+   stays hidden until it lands (at most 3 s, then English rather than a blank screen); late, it still translates.
    Statutory text (roofing-law cancellation windows, the insurance and tax-credit paragraphs) is deliberately left out of the
    dictionary and stays in English until a bilingual person has reviewed a translation. */
 var LANG = 'en';
@@ -15,8 +17,13 @@ var i18nT = function (t) { return t; };
 (function () {
   document.documentElement.setAttribute('lang', LANG === 'es' ? 'es' : 'en');
   if (LANG !== 'es') return;
-  var el = document.getElementById('i18n-es'); if (!el) return;
-  var D; try { D = JSON.parse(el.textContent); } catch (e) { return; }
+  var de = document.documentElement, hold = document.createElement('style'), shown = false;
+  hold.textContent = 'html.i18n-wait body{visibility:hidden}'; (document.head || de).appendChild(hold); de.classList.add('i18n-wait');
+  var show = function () { if (!shown) { shown = true; de.classList.remove('i18n-wait'); } };
+  setTimeout(show, 3000);
+  fetch('es.json', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (D) { if (D) setup(D); show(); }, show);
+  function setup(D) {
   var EXACT = Object.create(null), PRE = [], FRAG = Object.create(null), fragKeys = [];
   Object.keys(D).forEach(function (k) {
     var v = D[k], t = k.trim(); EXACT[k] = v; if (t && !(t in EXACT)) EXACT[t] = v.trim();
@@ -92,4 +99,5 @@ var i18nT = function (t) { return t; };
     }).observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title', 'aria-label'] });
   };
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+  }
 })();

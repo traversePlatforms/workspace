@@ -232,7 +232,6 @@ function page(E) {
   if (/'(sixfold|doorapp)[.-]/.test(html)) throw new Error('a Sixfold storage key is left in the page');
 
   // the product's name (the client's name comes from company.json, as for every install)
-  html = rep(html, '"Sixfold Routes":"Sixfold Rutas",', '', 1, 'Spanish title key');
   html = rep(html, '<title>Sixfold Routes</title>', '<title>' + E.name + '</title>', 1, 'title');
   // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
   html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
@@ -324,6 +323,17 @@ function page(E) {
   return min;
 }
 
+/* ---------------------------------------------------------- Spanish dictionary */
+/* beside the page since 2026-10-27 (code review item 7b), so the page's own swaps and its Sixfold check no longer see it: entries
+   naming Sixfold or 365 Aeration are left out here (the page used to drop "Sixfold Routes"), and the same check runs on the file */
+function spanish() {
+  const d = JSON.parse(fs.readFileSync(path.join(APP, 'es.json'), 'utf8')), out = {};
+  for (const k of Object.keys(d)) if (!/Sixfold|365 Aeration/.test(k + d[k])) out[k] = d[k];
+  const s = JSON.stringify(out);
+  if (/Sixfold|365 Aeration/.test(s)) throw new Error('Sixfold is left in es.json');
+  return s;
+}
+
 /* ------------------------------------------------------------- offline worker */
 function worker(E) {
   let sw = fs.readFileSync(path.join(APP, 'sw.js'), 'utf8');
@@ -356,6 +366,7 @@ async function build(key) {
   const pg = page(E); write(path.join(app, 'index.html'), pg);
   write(path.join(app, 'version.txt'), buildStamp(pg) + '\n');   /* the build's stamp, goes up with the page (2026-10-22) */
   write(path.join(app, 'sw.js'), worker(E));
+  write(path.join(app, 'es.json'), spanish());
   write(path.join(app, 'manifest.json'), JSON.stringify({
     name: E.name, short_name: E.short, description: E.blurb,
     start_url: './', scope: './', display: 'standalone', orientation: 'portrait',
