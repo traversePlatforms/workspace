@@ -12968,10 +12968,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     holder.appendChild(ed);
     holder.appendChild(custDocs(c));
-    /* visits */
-    holder.appendChild(q('h2', null, 'Visits · ' + (c.visits || []).length));
+    /* visits: the ones logged here, and Jobs board jobs marked Done (2026-10-27, Matthew: Marc's job was done and paid, in the figures and
+       under Jobs and payments, but not here; Brian showed one only because his was typed in by hand). As the totals count them: a done visit
+       logged by hand on the job's day stands for the job; a booked one on that day was the job's booking, so the done job shows instead. */
+    var hand = c.visits || [], doneDay = {}, jobDay = {};
+    hand.forEach(function (v) { if ((v.status || 'done') === 'done') doneDay[v.date] = 1; });
+    var fromJobs = (c.jobs || []).filter(function (j) { return j.done && j.done.o === 'done' && !doneDay[j.date]; });
+    fromJobs.forEach(function (j) { jobDay[j.date] = 1; });
+    var vrows = hand.filter(function (v) { return !(v.status === 'booked' && jobDay[v.date]); }).map(function (v) { return { v: v, d: v.date || '' }; })
+      .concat(fromJobs.map(function (j) { return { j: j, d: j.date || '' }; }));
+    vrows.sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; });
+    holder.appendChild(q('h2', null, 'Visits · ' + vrows.length));
     holder.appendChild(visitForm(c));
-    (c.visits || []).forEach(function (v) {
+    vrows.forEach(function (x) {
+      if (x.j) {
+        var j = x.j, jr = q('div', 'door cvisit');
+        var jt = q('div', 'd-top'); jt.appendChild(q('div', 'addr', fmtD(j.date) + ' · ' + (SERVICE_L[c.service] || 'Job'))); if (j.price) jt.appendChild(q('span', 'vprice', money(j.price))); jr.appendChild(jt);
+        jr.appendChild(q('div', 'meta', 'Done · Jobs board' + (j.crew ? ' · ' + j.crew.split(' ')[0] : '') + ' · ' + jobPayText(j)));
+        var jo = q('button', 'lnk', 'Open'); jo.type = 'button'; jo.addEventListener('click', function () { jobView(j.id, function () { customerView(c.id); }, j.crew); }); jr.appendChild(jo);
+        holder.appendChild(jr);
+        return;
+      }
+      var v = x.v;
       var r = q('div', 'door cvisit' + (v.status === 'booked' ? ' booked' : ''));
       var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', fmtD(v.date) + ' · ' + (SERVICE_L[v.service] || v.service))); if (v.price != null) top.appendChild(q('span', 'vprice', money(v.price))); r.appendChild(top);
       r.appendChild(q('div', 'meta', (v.status === 'booked' ? 'Booked' : 'Done') + (v.by ? ' · ' + v.by : '') + (v.note ? ' · ' + v.note : '')));
