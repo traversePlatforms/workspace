@@ -68,13 +68,17 @@ function rank(l, sig) {
   if (sig('sig_hiring')) add(10, 'hiring salespeople');
   if (sig('sig_size')) add(5, 'several crews, trucks or locations');
   if (l.where === 'in our towns') add(20, 'in our towns'); else if (l.where === 'next to our towns') add(10, 'next to our towns');
-  const mail = l.email && l.emailOk !== 'no';
+  /* dead site, dead or doubtful email (2026-10-26, Matthew: "make sure their rating is adjusted for it"): an email that cannot take mail
+     or may bounce earns nothing; a website that no longer loads takes points off (they may have closed) */
+  const mail = l.email && l.emailOk !== 'no' && !l.emailWarn;
+  if (l.siteDead) add(-10, 'website down' + (l.siteWhy ? ' (' + l.siteWhy + ')' : '') + ': may have closed');
+  if (l.email && !mail) why.push(l.emailWarn ? 'email may bounce (no points)' : 'email cannot take mail (no points)');
   if (l.phone && mail) add(10, 'phone and email'); else if (l.phone || mail) add(5, l.phone ? 'phone' : 'email');
   const yr = parseInt(l.formed, 10), age = yr ? new Date().getFullYear() - yr : 0;
   if (age >= 3) add(5, `in business since ${yr}`);
   if (l.site && !l.siteDead) add(5, 'has a website');
   add(l.trade === 'yards' ? 10 : 15, l.trade === 'yards' ? 'lawn and yard' : 'a door-to-door trade');
-  const score = Math.min(100, s);
+  const score = Math.max(0, Math.min(100, s));
   return { score, grade: score >= 60 ? 'A' : score >= 40 ? 'B' : 'C', why };
 }
 mkdirSync(dirname(OUT), { recursive: true });
