@@ -9,13 +9,13 @@ const fs = require('fs'); const path = require('path');
 const { marked } = require(require.resolve('marked', { paths: [__dirname, process.env.MARKED_DIR || __dirname] }));
 const DRAFT = false;   /* reviewed (Matthew 2026-10-26: "The attorney confirmed everything was fine") */
 const BIZ = path.join(__dirname, '..', 'business'), OUT = path.join(__dirname, 'site-src');
-const DATE = '26 October 2026';
+const DATE = '26 October 2026';   /* a page changed later carries its own date (p.date) */
 
 const PAGES = [
   { dir: 'terms', md: 'client-agreement.md', start: '# Traverse Subscription Agreement', end: null, title: 'Subscription agreement' },   /* the client copy (2026-10-26) */
   { dir: 'terms-of-use', md: 'terms-of-use-DRAFT.md', start: '## Terms of Use', end: '## Questions for counsel', title: 'Terms of use' },
   { dir: 'privacy', md: 'privacy-policy-DRAFT.md', start: '## Privacy Policy', end: '## Fact-check log', title: 'Privacy policy' },
-  { dir: 'cancellation', md: 'cancellation-policy-DRAFT.md', start: '## Cancellation and Refund Policy', end: '## Fact-check log', title: 'Cancellation and refunds' }
+  { dir: 'cancellation', md: 'cancellation-policy-DRAFT.md', start: '## Cancellation and Refund Policy', end: '## Fact-check log', title: 'Cancellation and refunds', date: '27 October 2026' }   /* the money-back guarantee replaced the pilot (2026-10-27) */
 ];
 
 function publicText(src, p) {
@@ -24,7 +24,7 @@ function publicText(src, p) {
   let t = src.slice(i, j).replace(/\n---\s*$/, '').trim().replace(/^# /, '## ');
   t = t.replace(/^> \*\*(Counsel note|Business choice)[\s\S]*?(?=\n(?!>)|$)/gm, '');               /* the notes for counsel */
   const fill = [
-    ['[ENTITY]', 'Traverse Platforms LLC'], ['[DATE]', DATE], ['Version [1]', 'Version 1'],
+    ['[ENTITY]', 'Traverse Platforms LLC'], ['[DATE]', p.date || DATE], ['Version [1]', 'Version 1'],
     [/\[In addition, for each property record extracted[^\]]*\]/g, ''],                                  /* optional clause, left out */
     ['[For yearly plans, notice must be given at least [30] days before renewal.]', 'For yearly plans, notice must be given at least 30 days before renewal.'],
     ['[If required, the parties will sign Traverse\'s Data Processing Addendum (Exhibit C), which then forms part of this Agreement.]', 'If required, the parties will sign Traverse\'s Data Processing Addendum (Exhibit C), which then forms part of this Agreement.'],

@@ -120,15 +120,15 @@ The Client will not, and will not let anyone else:
 **9.2 Seats.** Each plan includes a number of Authorized Users (Solo 1, Crew up to 5, Team up to 12). Each Authorized User beyond that is an extra Seat at the Order Form price. The Client may add Seats at any time; added Seats are billed pro-rata for the rest of the billing period. If more people can sign in than the Client has paid for, Traverse may notify the Client and bill the extra Seats from the date they were added.
 
 
-**9.3 Founding clients and pilots.** If the Order Form gives a founding-client discount or free pilot, those terms apply as stated there. A free pilot is offered once per client; at its end the subscription starts and is billed unless the Client cancels before the pilot ends.
+**9.3 Setup and the money-back guarantee.** The first payment is charged when the Client subscribes. Traverse then sets up the Client's Install (its towns, branding, sign-in codes, prices and terms) within 2 business days (Monday to Friday, except US federal holidays), or longer only while Traverse is waiting on something it needs from the Client, and tells the Client the day the Install is live (the **"Go-Live Date"**). If the Client is not satisfied, it may cancel by email to **billing@traverseplatforms.com** at any time before the Go-Live Date or within 7 days after it, and Traverse will refund that first payment in full and end the subscription. The guarantee applies once per client, to its first subscription.
 
 **9.4 Late payment.** If a payment fails or is late, Traverse will notify the Client. If it is not paid within 14 days of that notice, Traverse may suspend the Service under §11 until payment is made.
 
 **9.5 Taxes.** Fees exclude taxes. The Client pays any sales, use or similar taxes on its purchase, other than taxes on Traverse's income.
 
-**9.6 Price changes.** Traverse may change its prices for any renewal by giving at least 30 days' notice before the renewal date. Founding-client discounts last for the period stated on the Order Form.
+**9.6 Price changes.** Traverse may change its prices for any renewal by giving at least 30 days' notice before the renewal date. For a founding client, the list price on its Order Form is locked in: it does not increase while the subscription continues without a break. The founding-client discount itself lasts only for the period stated on the Order Form (the first 12 months); after that the Client pays that locked-in list price.
 
-**9.7 Refunds.** Fees are non-refundable except as this Agreement expressly provides (§2.6, §10.4, §14.1).
+**9.7 Refunds.** Fees are non-refundable except as this Agreement expressly provides (§2.6, §9.3, §10.4, §14.1).
 
 
 ### 10. Term and ending
@@ -240,14 +240,15 @@ Traverse will give notice before suspending where practical, will limit the susp
 | **Seats** | [ ] (people beyond those the plan includes) |
 | **Billing** | [Monthly / Yearly], in advance, by card through Stripe |
 | **Fees** | [Solo $99 a month or $79 a month billed yearly / Crew $249 a month or $199 billed yearly, extra people $45 or $35 each / Team $549 a month or $449 billed yearly, extra people $39 or $29 each]. Roofing and Solar editions: [+$50 a month on Crew and Team / +$20 on Solo] |
-| **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): a free 7-day pilot, then the founding prices on this Order Form (about 25% off, in whole dollars) for the first 12 months, and the list price on this Order Form does not rise while the subscription continues |
+| **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): the founding prices on this Order Form (about 25% off, in whole dollars) for the first 12 months, and the list price on this Order Form is locked in for as long as the subscription continues without a break (§9.6) |
+| **Setup and guarantee** | Install set up within 2 business days of the first payment; 7-day money-back guarantee from the Go-Live Date (§9.3) |
 | **Start date** | [ ] |
 | **Initial Subscription Term** | [1 month / 12 months], renewing under §10.2 |
 | **Install address** | Provided by Traverse at setup |
 | **Optional features** (Client's own accounts and cost) | Texting (Twilio) · JobNimbus · Phone lookups |
 | **Special terms** | [None] |
 
-This Order Form is governed by the Traverse Subscription Agreement version 1, dated 26 October 2026, which the Client has read and accepts.
+This Order Form is governed by the Traverse Subscription Agreement version 2, dated 27 October 2026, which the Client has read and accepts.
 
 Signed for **Traverse Platforms LLC**: ______________________ Name: Matthew Sharpe Title: Owner Date: ________
 
