@@ -100,7 +100,7 @@
   function lookNow() { var t = store('sixfold.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; }
   function lookFrames() {
     var t = lookNow();
-    Object.keys(iframes).forEach(function (id) { try { var d = iframes[id].contentDocument.documentElement; if (t === 'auto') d.removeAttribute('data-theme'); else d.setAttribute('data-theme', t); } catch (e) {} });
+    Object.keys(iframes).forEach(function (id) { if (id === 'peak') return;   /* the Peak desk keeps its own look: others use it (Matthew 2026-10-26) */ try { var d = iframes[id].contentDocument.documentElement; if (t === 'auto') d.removeAttribute('data-theme'); else d.setAttribute('data-theme', t); } catch (e) {} });
   }
   var lk = document.createElement('button'); lk.className = 'tool'; lk.type = 'button'; lk.id = 'look';
   function lookPaint() { var t = lookNow(); lk.title = 'Look: ' + LOOKS[t][0] + '. Click to change'; lk.setAttribute('aria-label', lk.title); lk.innerHTML = svg(LOOKS[t][1]); }

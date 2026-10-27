@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<script>/* the look (2026-10-26): the field app's own setting (localStorage "sixfold.theme": light, dark, or auto when absent), shared by every Traverse page on this site and updated live when another page changes it */(function(){function a(){try{var t=localStorage.getItem("sixfold.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}catch(e){}}a();window.__lookApply=a;window.addEventListener("storage",function(e){if(!e.key||e.key==="sixfold.theme"){a();if(window.__lookChanged)window.__lookChanged()}})})();</script>
+<script>/* the look (2026-10-26): the desk's own setting (localStorage "peakdesk.theme": light, dark, or auto when absent = this device's own light or dark), each person's choice, not tied to the Traverse app; updated live across this desk's open tabs */(function(){function a(){try{var t=localStorage.getItem("peakdesk.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}catch(e){}}a();window.__lookApply=a;window.addEventListener("storage",function(e){if(!e.key||e.key==="peakdesk.theme"){a();if(window.__lookChanged)window.__lookChanged()}})})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Peak Sponsor Desk</title>
@@ -351,16 +351,16 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   }
   /* ---- More: the rarely used pages ---- */
   /* the look (2026-10-26, Matthew: "assistant peak desk and prospects need to have a dark mode also"): Auto follows the device; Light or
-     Dark is the setting the Traverse field app keeps ('sixfold.theme'), so the pages in the hub change together */
+     Dark is kept for this desk only ('peakdesk.theme'; Matthew 2026-10-26: "since others use it its better to have the choice") */
   function drawLook() {
     var c = el('div', 'card'); c.appendChild(el('h3', null, 'Look'));
     var seg = el('div', 'seg'); c.appendChild(seg);
-    var p = el('p', null, 'Auto follows this device. Light or Dark changes the field app, the assistant and the prospects desk too.'); p.style.color = 'var(--soft)'; p.style.fontSize = '13px'; c.appendChild(p);
-    var cur = function () { try { var t = localStorage.getItem('sixfold.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } };
+    var p = el('p', null, 'Auto follows this device\u2019s own light or dark setting. Your choice here is kept on this device for the Peak desk only.'); p.style.color = 'var(--soft)'; p.style.fontSize = '13px'; c.appendChild(p);
+    var cur = function () { try { var t = localStorage.getItem('peakdesk.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } };
     var paint = function () { [].forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-look') === cur())); }); };
     [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) {
       var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-look', o[0]);
-      b.addEventListener('click', function () { try { if (o[0] === 'auto') localStorage.removeItem('sixfold.theme'); else localStorage.setItem('sixfold.theme', o[0]); } catch (e) {} if (window.__lookApply) window.__lookApply(); paint(); });
+      b.addEventListener('click', function () { try { if (o[0] === 'auto') localStorage.removeItem('peakdesk.theme'); else localStorage.setItem('peakdesk.theme', o[0]); } catch (e) {} if (window.__lookApply) window.__lookApply(); paint(); });
       seg.appendChild(b);
     });
     paint(); main.appendChild(c);
