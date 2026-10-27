@@ -7224,7 +7224,9 @@ if ($action === 'leadtry') {
     $tn = $clean($body['note'] ?? '', 400);
     if ($o === 'vm' && $tn === '') fail('Add what you said in the voicemail, for whoever calls next.');
     if ($tn !== '') $row['note'] = mb_substr(($o === 'vm' ? 'Voicemail: ' : ($o === 'talk' ? 'Talked: ' : ($o === 'email' ? 'Emailed: ' : ($o === 'text' ? 'Texted: ' : 'No answer: ')))) . $tn, 0, 500);
-    if ($o === 'talk' && $all[$id]['status'] === 'new') $row['status'] = 'contacted';
+    /* reached out = Contacted (2026-10-26, Matthew: "when u call someone under their name it says contacted but when u text them it still
+       says new"): talked, texted, emailed or left a voicemail; only a no-answer with nothing left keeps New (as ClickUp's "contacted - vm / sms") */
+    if (in_array($o, ['talk', 'text', 'email', 'vm'], true) && $all[$id]['status'] === 'new') $row['status'] = 'contacted';
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
 }
