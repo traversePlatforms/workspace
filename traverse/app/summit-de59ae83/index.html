@@ -1684,6 +1684,9 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .billadd{display:flex;align-items:center;gap:6px;font-size:14.5px}.billsum{padding-top:6px;border-top:1px solid var(--line)}.billsum b,.billtot{font:800 18px var(--sans)}
   .pipemode{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}.pipemode button{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14.5px var(--sans);cursor:pointer}.pipemode button[aria-pressed=true]{background:var(--go);color:var(--on-go);border-color:var(--go)}   /* To contact / Full pipeline (2026-10-26) */
   .jnotes{display:grid;gap:8px;margin-top:12px}.jnlist{display:grid;gap:6px}.jnrow{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.jntext{white-space:pre-wrap;font-size:15px}.jnin{width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit}   /* job notes (2026-10-26) */
+  .bellbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}.bellbtn .ic{width:22px;height:22px}.bellbtn .bcount{position:absolute;top:2px;right:0;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#c0392b;color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center}.bellbtn .bcount[hidden]{display:none}
+  .alerts{display:grid;gap:10px}.alist{display:grid;gap:8px}.arow{display:flex;align-items:flex-start;gap:6px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.arow.unread{border-left:4px solid var(--accent,#2e5e2c)}.arow .abody{flex:1;display:grid;gap:2px;text-align:left;padding:10px 12px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer}.arow .abody span{color:var(--ink)}.arow .abody small{color:var(--soft)}.arow:not(.unread) .abody b{font-weight:600}.arow .ax{border:0;background:transparent;color:var(--soft);padding:10px;cursor:pointer}
+  .pnudge{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 14px;border-radius:10px;background:var(--sunk);font-size:14px}.pnudge[hidden]{display:none}.pnudge.bar{border-radius:0;margin:0}body:not(.dnav-on) .pnudge.bar{display:none}   /* the in-app alerts (2026-10-27) */
   .hoursform .hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.hoursform .hrow>b{min-width:7em}.hoursform .hoff{display:flex;align-items:center;gap:4px}.hoursform .htimes{display:flex;align-items:center;gap:6px}.hoursform .htimes[hidden]{display:none}   /* work hours (2026-10-27) */
   .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
@@ -3097,7 +3100,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     table: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M9.5 9.5v10"/>',
     home: '<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/>',   /* the phone menu bar (2026-10-21) */
     mobile: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>',
-    refresh: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>'
+    refresh: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>',
+    bell: '<path d="M6 9.5a6 6 0 0 1 12 0c0 5.5 2.5 7.5 2.5 7.5h-17S6 15 6 9.5"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/>'   /* the in-app alerts (2026-10-27) */
   };
   function ico(name, sw) {
     var w = document.createElement('span');
@@ -3195,6 +3199,77 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var raw = q('div', 'ulist'); rows.slice(0, 50).forEach(function (r) { var x = q('div', 'urow'); x.appendChild(q('span', null, new Date(r.at * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' \u00b7 ' + r.w + ' \u00b7 ' + r.s + (r.t ? ' \u00b7 ' + r.t : ' (opened)'))); raw.appendChild(x); }); holder.appendChild(raw);
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
   }
+  /* ---- the bell (2026-10-27, Matthew: alerts "into the website application for those who dont have it on the phone or dont have it as a
+     desktop app"): every alert the app pushes, and the follow-ups that come due, in a list in any browser; the number is what is unread ---- */
+  var BELL_N = 0;
+  function bellBtn() {
+    var b = q('button', 'bellbtn'); b.type = 'button'; b.setAttribute('aria-label', 'Alerts' + (BELL_N ? ': ' + BELL_N + ' new' : ''));
+    b.appendChild(ico('bell', 2.2)); var n = q('span', 'bcount', BELL_N > 99 ? '99+' : String(BELL_N)); n.hidden = !BELL_N; b.appendChild(n);
+    b.addEventListener('click', function () { alertsView(); });
+    if (bellBtn.who !== S.me) { bellBtn.who = S.me; BELL_N = 0; n.hidden = true; setTimeout(bellRefresh, 400); }   /* signed in, or someone else did: their own count */
+    return b;
+  }
+  function bellPaint() { [].forEach.call(document.querySelectorAll('.bellbtn'), function (b) { var n = b.querySelector('.bcount'); n.textContent = BELL_N > 99 ? '99+' : String(BELL_N); n.hidden = !BELL_N; b.setAttribute('aria-label', 'Alerts' + (BELL_N ? ': ' + BELL_N + ' new' : '')); }); }
+  function bellRefresh() {
+    if (!S.me || S.offline || document.visibilityState === 'hidden') return;
+    api('alertcount').then(function (j) { if (j && j.ok) { BELL_N = j.unread || 0; bellPaint(); } }).catch(function () {});
+  }
+  setInterval(bellRefresh, 60000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') bellRefresh(); });
+  function alertOpen(x) {
+    var u = String(x.u || ''), m;
+    if ((m = /[?&]job=(j[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return jobView(m[1], alertsView, wdOn() ? '' : S.me);
+    if ((m = /[?&]walk=(v[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return walkView(m[1], alertsView);
+    if ((m = /[?&]lead=([wm]\d{14}[0-9a-f]{6})\b/.exec(u))) { if (qView()) return quickQuoteView(); if (asOffice() || S.role === 'admin') { S.pipeStage = null; S.pipeSel = 'lead:' + m[1]; S.pipeFocus = m[1]; return pipelineView(); } return teamLeadsView(); }
+    if (x.k === 'lead' && !qView() && (asOffice() || S.role === 'admin')) return pipeOpen();
+    if (x.k === 'lead' && qView()) return quickQuoteView();
+  }
+  /* "Get alerts in this browser": a computer where push is off gets one line; an iPhone browser is told the list is how it gets them */
+  function pushNudge(where) {
+    var p = pushSupport(), box = q('div', 'pnudge ' + where); box.hidden = true;
+    var dismissed = false; try { dismissed = localStorage.getItem('doorapp.nudge') === '1'; } catch (e) {}
+    if (!p.ok) { if (p.reason === 'ios-not-installed' && where === 'list') { box.appendChild(q('span', null, 'On an iPhone, phone alerts only come to the app added to the Home Screen. This list works in any browser.')); box.hidden = false; } return box; }
+    if (dismissed && where !== 'list') return box;
+    pushStatus().then(function (st) {
+      if (st === 'on') return;
+      box.textContent = ''; box.hidden = false;
+      if (st === 'blocked') { box.appendChild(q('span', null, pushInstructions('blocked'))); return; }
+      box.appendChild(q('span', null, p.ios ? 'Get alerts on this iPhone too: they come to the app on your Home Screen.' : 'Get alerts in this browser, even with the app closed.'));
+      var on = q('button', 'lnk', 'Turn on'); on.type = 'button';
+      on.addEventListener('click', function () { pushEnable().then(function (r) { return r === 'retry' ? pushEnable() : r; }).then(function (r) { if (r === 'on') { toast('Alerts on', 'They come to this browser now', null); box.hidden = true; } else if (r === 'no-key') toast('One moment', 'Getting ready. Tap again.', null); else toast('Not turned on', r === 'blocked' ? pushInstructions('blocked') : r === 'dismissed' ? 'Tap Allow when the browser asks.' : pushInstructions(r), null); }); });
+      box.appendChild(on); pushPrepare();
+      if (where !== 'list') { var x = q('button', 'lnk', 'Not now'); x.type = 'button'; x.addEventListener('click', function () { try { localStorage.setItem('doorapp.nudge', '1'); } catch (e) {} box.hidden = true; }); box.appendChild(x); }
+    });
+    return box;
+  }
+  function alertsView() {
+    hideToast(); S.signin = null; S.screen = 'alerts'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Alerts', sub: 'New leads, follow-ups, jobs and payments', back: chooseView, backLabel: 'Home' });
+    view.textContent = ''; var w = q('div', 'alerts'); view.appendChild(w);
+    w.appendChild(pushNudge('list'));
+    var list = q('div', 'alist'); list.appendChild(q('div', 'skel')); w.appendChild(list);
+    var draw = function (j) {
+      list.textContent = '';
+      if (!j || !j.ok) { list.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load your alerts.')); return; }
+      BELL_N = j.unread || 0; bellPaint();
+      var items = j.items || [];
+      if (!items.length) { list.appendChild(q('div', 'msg soft', 'Nothing here. New leads, follow-ups that come due, job notes and payments show up here as they happen.')); return; }
+      var acts = q('div', 'aacts');
+      var ra = q('button', 'lnk', 'Mark all read'); ra.type = 'button'; ra.addEventListener('click', function () { api('alertread', { body: {} }).then(function () { load(); }).catch(function () {}); });
+      var ca = q('button', 'lnk danger', 'Clear all'); ca.type = 'button'; ca.addEventListener('click', function () { if (window.confirm('Clear every alert?')) api('alertclear', { body: {} }).then(function () { load(); }).catch(function () {}); });
+      if (j.unread) acts.appendChild(ra); acts.appendChild(ca); list.appendChild(acts);
+      items.forEach(function (x) {
+        var r = q('div', 'arow' + (x.r ? '' : ' unread')), b = q('button', 'abody'); b.type = 'button';
+        b.appendChild(q('b', null, x.t)); if (x.b) b.appendChild(q('span', null, x.b)); b.appendChild(q('small', null, ago(x.at)));
+        b.addEventListener('click', function () { if (!x.r) api('alertread', { body: { id: x.id } }).catch(function () {}); x.r = true; BELL_N = Math.max(0, BELL_N - 1); bellPaint(); if (alertOpen(x) === undefined && S.screen === 'alerts') load(); });
+        var cx = q('button', 'ax'); cx.type = 'button'; cx.setAttribute('aria-label', 'Clear this alert'); cx.appendChild(ico('close', 2.4));
+        cx.addEventListener('click', function () { api('alertclear', { body: { id: x.id } }).then(function (k) { if (k && k.ok) { BELL_N = k.unread || 0; bellPaint(); } r.remove(); }).catch(function () {}); });
+        r.appendChild(b); r.appendChild(cx); list.appendChild(r);
+      });
+    };
+    var load = function () { api('alertlist').then(draw).catch(function () { draw(null); }); };
+    load();
+  }
   function setBar(mode, o) {
     o = o || {};
     if (S.screen !== S._foldScreen) { S._foldScreen = S.screen;   /* folds start closed on every screen (2026-10-17, Matthew: not remembered after a refresh, leaving or coming back) */
@@ -3212,6 +3287,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var sb = q('button', 'srchbtn'); sb.type = 'button'; sb.setAttribute('aria-label', 'Find an address');
       sb.appendChild(ico('search', 2.4)); sb.addEventListener('click', function () { searchView(renderAreas); });
       b.appendChild(sb);
+      if (S.me && !dnavOn()) b.appendChild(bellBtn());   /* the in-app alerts (2026-10-27) */
       b.appendChild(avatarBtn(chooseView, 'Field tools' + (S.me ? ' — signed in as ' + S.me : '')));
       return;
     }
@@ -3226,6 +3302,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     t.appendChild(brandName(o.title || ''));
     if (o.sub) t.appendChild(q('span', null, o.sub));
     b.appendChild(t);
+    if (S.me && !dnavOn()) b.appendChild(bellBtn());   /* the in-app alerts (2026-10-27); a computer has it in the top bar */
     if (o.avatar) b.appendChild(avatarBtn(profileView, 'Your profile: photo, alerts, look and sign out'));
     if (typeof o.count === 'number') {
       var c = q('div', 'count'); c.id = 'barCount';
@@ -10044,7 +10121,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (findMulti()) dnav.appendChild(findSel(function (k) { inp.placeholder = FIND_PH[k]; inp.setAttribute('aria-label', FIND_PH[k]); try { inp.focus(); } catch (e) {} }));   /* Address, Customer, Person (2026-10-15) */
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inp.value.trim()) { var v = inp.value.trim(); inp.value = ''; inp.blur(); findGo(v, chooseView); } });   /* the office: its House lookup, rented homes too (2026-10-14) */
       lab.appendChild(inp); dnav.appendChild(lab);
+      dnav.appendChild(bellBtn());   /* the in-app alerts (2026-10-27) */
       dnav.appendChild(avatarBtn(profileView, 'Your profile: photo, alerts, look and sign out'));
+      if (!dnav._nudge) { dnav._nudge = pushNudge('bar'); dnav.parentNode.insertBefore(dnav._nudge, dnav.nextSibling); }   /* Get alerts in this browser, once (2026-10-27) */
+      bellRefresh();
     }
     var cur = S.screen;
     [].forEach.call(dnav.querySelectorAll('.dnl button'), function (b) {

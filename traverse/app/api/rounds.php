@@ -403,6 +403,7 @@ function adminAlert(string $title, string $text, string $tag): void {
     global $basePeople, $acct, $sessionKey;
     try {
         $v = pushVapid(false); if (!$v) return;
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true)) feedAdd((string) $r['name'], $title, $text, './', $tag);   /* the in-app list too (2026-10-27) */
         $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => $tag, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true)) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
     } catch (Throwable $e) { error_log('rounds admin alert: ' . $e->getMessage()); }
@@ -2300,12 +2301,49 @@ function a365Match(string $street, string $city): ?array {
    alert 20 times per day"): a new lead shows on the office home and in the Pipeline count. A customer booking online or saying yes
    to a quote still alerts. company.json a365.leadAlerts: true turns new-lead alerts back on. */
 function leadAlertsOn(): bool { return !empty(company()['a365']['leadAlerts']); }
-function a365Alert(string $title, string $text, bool $super = false, bool $newLead = false, bool $web = false): void {   /* $web (2026-10-22): about a 365-website lead, so Matthew's phones only */   /* $newLead (2026-10-20): not to an office account that runs a team, which does not see new leads until someone has called */   /* $super: Matthew's phones too (2026-10-16: a push whenever someone signs on through the quote generator) */
+/* ---- alerts inside the app (2026-10-27, Matthew: "notification for things that require immediate attention, maybe notifications for follow
+ * ups, new leads etc. I need to see if we can add it into the website application for those who dont have it on the phone") ----
+ * Every alert the app pushes also goes in that person's own list (the bell), whether or not any of their devices took the push, so the list
+ * matches the pushes and works in any browser. Plus kinds worked out when the list is read (feedDerive): a call-back or follow-up day reached,
+ * a quote with no answer after a day, a done job still owing. One small JSON file per person (alerts/, by a hash of the name), newest first,
+ * 100 at most, 30 days. A derived alert comes once: cleared, it stays cleared. Who gets what follows who sees what: Jen's accounts never get
+ * Matthew's unbooked leads, and a lead he sent to someone goes to that person. */
+function feedFile(string $name): string { return DATA_DIR . '/alerts/' . substr(hash('sha256', 'feed|' . $name), 0, 24) . '.json'; }
+function feedLoad(string $name): array { $j = json_decode((string) @file_get_contents(feedFile($name)), true); return ['items' => array_values(array_filter((array) ($j['items'] ?? []), 'is_array')), 'seen' => (array) ($j['seen'] ?? [])]; }
+/** change one person's list under its lock: $fn(array $feed): array */
+function feedEdit(string $name, callable $fn): void {
+    if ($name === '') return;
+    try {
+        $f = feedFile($name); if (!is_dir(dirname($f)) && !@mkdir(dirname($f), 0750, true)) return;
+        $lk = @fopen($f . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) return;
+        $fd = $fn(feedLoad($name)); $cut = time() - 30 * 86400;
+        $fd['items'] = array_slice(array_values(array_filter($fd['items'], fn($x) => (int) ($x['at'] ?? 0) >= $cut)), 0, 100);
+        $fd['seen'] = array_filter($fd['seen'], fn($t) => (int) $t >= $cut);
+        writeJsonAtomic($f, ['items' => $fd['items'], 'seen' => (object) $fd['seen']]);
+        flock($lk, LOCK_UN);
+    } catch (Throwable $e) { error_log('rounds feed: ' . $e->getMessage()); }
+}
+/** one alert into one person's list. $once: a derived alert, added only the first time its tag is seen; otherwise the same tag replaces the older one, as a push does */
+function feedAdd(string $name, string $title, string $body, string $url = './', string $tag = '', string $kind = '', bool $once = false): void {
+    if ($once && $tag !== '' && isset(feedLoad($name)['seen'][$tag])) return;   /* seen before: no write */
+    feedEdit($name, function (array $fd) use ($title, $body, $url, $tag, $kind, $once) {
+        if ($once && $tag !== '' && isset($fd['seen'][$tag])) return $fd;
+        if ($tag !== '') { $fd['items'] = array_values(array_filter($fd['items'], fn($x) => ($x['tag'] ?? '') !== $tag)); $fd['seen'][$tag] = time(); }
+        array_unshift($fd['items'], ['id' => bin2hex(random_bytes(5)), 't' => mb_substr($title, 0, 140), 'b' => mb_substr($body, 0, 400), 'u' => mb_substr($url, 0, 200), 'tag' => $tag, 'k' => $kind, 'at' => time(), 'r' => false]);
+        return $fd;
+    });
+}
+function a365Alert(string $title, string $text, bool $super = false, bool $newLead = false, bool $web = false, bool $push = true, string $url = './'): void {   /* $web (2026-10-22): about a 365-website lead, so Matthew's phones only */   /* $newLead (2026-10-20): not to an office account that runs a team, which does not see new leads until someone has called */   /* $super: Matthew's phones too (2026-10-16: a push whenever someone signs on through the quote generator) */   /* $push false (2026-10-27): the in-app list only (new leads while their pushes are off); $url: what the alert opens */
     global $basePeople, $acct, $sessionKey;
     try {
+        $to = []; $tag = 'a365-' . time() . '-' . bin2hex(random_bytes(2));
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && (($r['role'] === 'office' && !$web && !($newLead && acctFlag('runsteam', $r['id']))) || (($super || $web) && $r['role'] === 'super'))) $to[] = $r;
+        foreach ($to as $r) feedAdd((string) $r['name'], $title, $text, $url, $tag, $newLead ? 'lead' : '');   /* the in-app list (2026-10-27) */
+        if ($newLead && !$web) foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'quote') feedAdd((string) $r['name'], $title, $text, $url, $tag, 'lead');   /* Jen's quote login gets new leads in her Leads to call: in her list too, never pushed */
+        if (!$push) return;
         $v = pushVapid(false); if (!$v) return;
-        $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => 'a365-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && (($r['role'] === 'office' && !$web && !($newLead && acctFlag('runsteam', $r['id']))) || (($super || $web) && $r['role'] === 'super'))) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
+        $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => $url, 'tag' => 'a365-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        foreach ($to as $r) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
     } catch (Throwable $e) { error_log('rounds a365 alert: ' . $e->getMessage()); }
 }
 /* where a website visitor came from (2026-10-20, Matthew: "go ahead and do the website lead tracking"): the page notes, when they arrive, the
@@ -2392,13 +2430,13 @@ if ($action === 'a365lead') {
         if ($fill) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'contact' => $fill, 'by' => 'website', 'at' => $now]);
         if (empty($x['house']) && $street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'house' => $h, 'by' => 'website', 'at' => $now]); }
         if (($x['status'] ?? '') === 'unreached') leadRevive((string) $x['id'], 'sent the 365 website form', 'website');
-        if (leadAlertsOn()) a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true, ($x['src'] ?? '') === 'a365web');
+        a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true, ($x['src'] ?? '') === 'a365web', leadAlertsOn());   /* the in-app list always; pushed only with leadAlerts (2026-10-27) */
         a365WebMail($row + ['want' => $wants[$want], 'said' => $said], 'already in the app as ' . (trim((string) ($x['name'] ?? '')) ?: 'a lead') . ' (' . (['meta' => 'Facebook ad', 'messenger' => 'Messenger', 'a365web' => 'website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')) . '); the form went on that lead as a note');
         out(['ok' => true]);
     }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
     if ($street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    if (leadAlertsOn()) a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want], true, true, true);   /* Matthew's phones only: website leads are his (2026-10-23: the office was still getting this push) */
+    a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want], true, true, true, leadAlertsOn());   /* Matthew's phones only: website leads are his (2026-10-23: the office was still getting this push) */
     a365WebMail($row + ['want' => $wants[$want], 'said' => $said], '');
     out(['ok' => true]);
 }
@@ -2979,7 +3017,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -2997,7 +3035,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'hours', 'hoursset'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -5841,6 +5879,7 @@ function adSpendReminder(): void {
     $j = json_decode((string) @file_get_contents(adSpendFile()), true);
     if (is_array($j) && !empty($j['at']) && (new DateTime('@' . (int) $j['at']))->setTimezone($tz)->format('Y-m-d') === $today) { @file_put_contents($f, $today); return; }
     @file_put_contents($f, $today);
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true) && !boardHidden((string) $r['name'])) feedAdd((string) $r['name'], 'End of day: ad spend', "Type today's Meta spend in Stats, Update ad spend.", './', 'adspend-' . $today);   /* the in-app list too (2026-10-27) */
     $v = pushVapid(false); if (!$v) return;
     $subs = pushSubs(); $payload = json_encode(['title' => 'End of day: ad spend', 'body' => 'Type today\'s Meta spend in Stats \u2192 Update ad spend. The ad report updates from it.', 'url' => './', 'tag' => 'adspend-' . $today, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true) && !boardHidden((string) $r['name'])) foreach (($subs[$r['id']] ?? []) as $d) { try { webpushSend($d['sub'], $payload, $v, 43200, ['urgency' => 'normal']); } catch (Throwable $e) {} }
@@ -6573,6 +6612,7 @@ function pushDevices(string $name): int { global $TEAM; $pid = (string) ($TEAM['
 /** one alert to everything one person turned alerts on for; how many phones and computers took it */
 function pushName(string $name, string $title, string $text, string $url, string $tag): array {
     global $TEAM;
+    feedAdd($name, $title, $text, $url, $tag);   /* the in-app list too (2026-10-27) */
     $pid = (string) ($TEAM['byName'][$name]['id'] ?? ''); $devs = $pid === '' ? [] : (pushSubs()[$pid] ?? []);
     if (!$devs) return ['devices' => 0, 'sent' => 0];
     $v = pushVapid(false); if (!$v) return ['devices' => count($devs), 'sent' => 0];
@@ -7048,6 +7088,51 @@ if ($action === 'pushlatest') {
     $best = null; foreach ($sent as $id => $s) if (($s['at'] ?? 0) > time() - 3 * 3600 && (!$best || $s['at'] > $best[1]['at'])) $best = [$id, $s];
     out(['ok' => true, 'alert' => $best ? ['title' => $best[1]['title'], 'body' => $best[1]['body'], 'url' => './', 'tag' => (string) $best[0], 'id' => (string) $best[0]] : null]);
 }
+/** the alerts worked out when the list is read (2026-10-27), for the signed-in person, from what they see (leadsAll follows the role):
+    a call-back (Recall) or follow-up day reached, a quote with no answer after a day, a done job still owing (the office and Jen) */
+function feedDerive(): void {
+    global $me, $role, $isSuper;
+    $tz = new DateTimeZone(appTz()); $today = (new DateTime('today', $tz))->format('Y-m-d'); $mine = meNames(); $now = time();
+    $jobLead = []; foreach (jobsAll() as $j) if (!$j['off']) $jobLead[(string) $j['lead']] = true;
+    foreach (leadsAll() as $id => $l) {
+        if (in_array((string) ($l['status'] ?? 'new'), ['lost', 'won', 'unreached'], true)) continue;
+        $own = (string) ($l['owner'] ?? '');
+        $forMe = $own !== '' ? in_array($own, $mine, true) : ($role === 'office' ? !webLead($l) : ($role === 'quote' ? (qMine($l) || quoteInbox($l, true)) : ($role === 'admin' && $isSuper && webLead($l))));
+        if (!$forMe) continue;
+        $nm = trim((string) ($l['name'] ?? '')) ?: (trim((string) ($l['phone'] ?? '')) ?: 'A lead'); $u = './?lead=' . $id;
+        $rc = (string) ($l['recall']['date'] ?? ''); if ($rc !== '' && $rc <= $today) feedAdd($me, 'Call back: ' . $nm, 'Their call-back day (' . fuDay($rc) . ') has come.', $u, 'due-recall-' . $id . '-' . $rc, 'due', true);
+        $fd = (string) ($l['follow']['date'] ?? ''); if ($fd !== '' && $fd <= $today) feedAdd($me, 'Follow up: ' . $nm, 'Their follow-up day (' . fuDay($fd) . ') has come.', $u, 'due-follow-' . $id . '-' . $fd, 'due', true);
+        $Q = $l['quote'] ?? null;
+        if (is_array($Q) && ($l['status'] ?? '') === 'quoted' && empty($l['accept']) && empty($l['sign']) && !isset($jobLead[$id]) && $now - (int) ($Q['at'] ?? $now) >= 86400)
+            feedAdd($me, 'Quote with no answer: ' . $nm, '$' . (int) ($Q['price'] ?? 0) . ' quote sent ' . fuDayOf((int) $Q['at']) . '; no answer yet.', $u, 'due-quote-' . $id . '-' . (int) $Q['at'], 'due', true);
+    }
+    if (feature('walkdesk') && in_array($role, ['office', 'quote'], true)) {
+        $leads = leadsAll();
+        foreach (jobsAll() as $j) {
+            if ($j['off'] || ($j['done']['o'] ?? '') !== 'done' || jobOwed($j) < 1 || $now - (int) ($j['done']['at'] ?? $now) < 86400 || !isset($leads[(string) $j['lead']])) continue;
+            if ($role === 'quote' && !qJob($j)) continue;
+            $nm = trim((string) ($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'A customer';
+            feedAdd($me, 'Balance to collect: ' . $nm, '$' . jobOwed($j) . ' still owed on the job done ' . fuDay((string) $j['date']) . '.', './?job=' . $j['id'], 'due-owe-' . $j['id'], 'due', true);
+        }
+    }
+}
+/* the bell: the list, the unread count, read and clear (2026-10-27). Each person their own. */
+if (in_array($action, ['alertlist', 'alertcount', 'alertread', 'alertclear'], true)) {
+    if (in_array($action, ['alertlist', 'alertcount'], true)) {
+        $dk = rateFile('feedderive|' . $me); if ($action === 'alertlist' || time() - (int) @filemtime($dk) >= 120) { @touch($dk); try { feedDerive(); } catch (Throwable $e) { error_log('rounds feed derive: ' . $e->getMessage()); } }   /* the count every 2 minutes at most */
+        $fd = feedLoad($me); $un = count(array_filter($fd['items'], fn($x) => empty($x['r'])));
+        if ($action === 'alertcount') out(['ok' => true, 'unread' => $un]);
+        out(['ok' => true, 'unread' => $un, 'items' => array_map(fn($x) => array_diff_key($x, ['tag' => 1]), $fd['items'])]);
+    }
+    if (!$isPost) fail('POST required', 405);
+    $aid = (string) ($body['id'] ?? '');
+    feedEdit($me, function (array $fd) use ($action, $aid) {
+        if ($action === 'alertread') { foreach ($fd['items'] as &$x) if ($aid === '' || ($x['id'] ?? '') === $aid) $x['r'] = true; unset($x); }
+        else $fd['items'] = $aid === '' ? [] : array_values(array_filter($fd['items'], fn($x) => ($x['id'] ?? '') !== $aid));   /* the seen tags stay, so a cleared due alert does not come back */
+        return $fd;
+    });
+    $fd = feedLoad($me); out(['ok' => true, 'unread' => count(array_filter($fd['items'], fn($x) => empty($x['r'])))]);
+}
 if ($action === 'stormcron') {
     if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
     if (!feature('hail')) out(['ok' => true, 'note' => 'Hail is off for this company.']);
@@ -7089,6 +7174,11 @@ if ($action === 'pushcron') {
                  . (!empty($w['hail']) ? ' · hail up to ' . rtrim(rtrim(number_format((float) $w['hail'], 2), '0'), '.') . ' in' : '') . (!empty($w['wind']) ? ' · gusts ' . strtolower((string) $w['wind']) : '');
         $payload = json_encode(['title' => $ev, 'body' => $bodyTxt, 'url' => './', 'tag' => substr(sha1($id), 0, 16), 'id' => $id, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $ttl = max(60, min(6 * 3600, $ends - time()));
+        if (!$dry) foreach ($byId as $p) {   /* the in-app list (2026-10-27): everyone it is for, devices or not */
+            if ($storm && !($stormAll || ($stormAdmins && $p['role'] === 'admin'))) continue;
+            $mine = array_keys($townsOf[$p['name']] ?? []); if ($mine && !array_intersect($mine, $towns)) continue;
+            feedAdd((string) $p['name'], $ev, $bodyTxt, './', 'wx-' . substr(sha1($id), 0, 16), 'weather');
+        }
         $to = 0; $ok = 0; $gone = 0;
         foreach ($subs as $pid => $devs) {
             $p = $byId[$pid] ?? null;
@@ -7440,7 +7530,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
     }
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
-    if ($added && leadAlertsOn()) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)), false, true);
+    if ($added) a365Alert(count($added) === 1 ? 'New Facebook lead' : count($added) . ' new Facebook leads', implode(', ', array_slice($added, 0, 4)), false, true, false, leadAlertsOn());   /* the in-app list always (2026-10-27) */
     if ($mineAdded) a365Alert(count($mineAdded) === 1 ? 'New Facebook ad lead (yours)' : count($mineAdded) . ' new Facebook ad leads (yours)', implode(', ', array_slice($mineAdded, 0, 4)), false, true, true);
     $added = array_merge($added, $mineAdded);
     out(['ok' => true, 'added' => count($added), 'who' => $added, 'errors' => $errors, 'mnotes' => $mnotes]);
@@ -7491,6 +7581,7 @@ function superAlert(string $title, string $text): void {
     global $basePeople, $acct, $sessionKey;
     try {
         $v = pushVapid(false); if (!$v) return;
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'super') feedAdd((string) $r['name'], $title, $text);   /* the in-app list too (2026-10-27) */
         $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => './', 'tag' => 'dupes-' . time(), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'super') foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'normal']);
     } catch (Throwable $e) { error_log('rounds super alert: ' . $e->getMessage()); }
