@@ -344,3 +344,5 @@ traverse/data-pipeline/door-territory/group1/out/
 sixfold/brand/job-photos/**
 !sixfold/brand/job-photos/**/
 !sixfold/brand/job-photos/**/*.md
+sixfold/content/365-social-2026-10/job-photo-posts/*.png
+sixfold/content/365-social-2026-10/job-photo-posts/*.html
