@@ -25,15 +25,40 @@ for (const r of lines.slice(1).map(parse)) {
   const trade = TRADES.has(col(r, 'trade')) ? col(r, 'trade') : 'roofing';
   const e1 = okMail(col(r, 'email')), e2 = okMail(col(r, 'site_email')), e3 = okMail(col(r, 'found_email'));
   const email = e1 || e2 || e3;
-  leads.push({
+  const l = {
     id, name: col(r, 'company'), trade, type: col(r, 'type'), city: col(r, 'city'), zip: col(r, 'zip'), formed: col(r, 'formed'), where: col(r, 'where'), record: rec,
     phone: phoneFmt(col(r, 'phone')) || phoneFmt(col(r, 'found_phone')),
     email, emailSrc: email ? (e1 ? 'places' : e2 ? 'their site' : 'their site (found)') : '', emailOk: email ? col(r, 'email_ok') : '',
     site: col(r, 'website') || col(r, 'found_site'), place: col(r, 'place_name'), cat: col(r, 'cat')
-  });
+  };
+  Object.assign(l, rank(l, (k) => col(r, k) === 'yes'));
+  leads.push(l);
+}
+/* The rank (2026-10-26, Matthew: "are we also able to rank these leads for the traverse leads like we did for peak?"): points for
+   what makes a company likely to buy a door-knocking app, from what we can see. Our judgement, not a measurement: the weights are
+   here to change. Signals come from the company's own website (the cloud look-up's sig_* columns): they say they knock doors or
+   canvass, offer storm/free inspections, hire salespeople, or show size. Then where they work (our towns have the richest data),
+   whether we can reach them, how long they have been in business, and the trade (door-to-door-heavy trades first). */
+function rank(l, sig) {
+  const why = []; let s = 0;
+  const add = (n, t) => { s += n; why.push(t); };
+  if (sig('sig_d2d')) add(30, 'their site mentions door-to-door or canvassing');
+  if (sig('sig_storm')) add(15, 'storm or free-inspection work');
+  if (sig('sig_hiring')) add(10, 'hiring salespeople');
+  if (sig('sig_size')) add(5, 'several crews, trucks or locations');
+  if (l.where === 'in our towns') add(20, 'in our towns'); else if (l.where === 'next to our towns') add(10, 'next to our towns');
+  const mail = l.email && l.emailOk !== 'no';
+  if (l.phone && mail) add(10, 'phone and email'); else if (l.phone || mail) add(5, l.phone ? 'phone' : 'email');
+  const yr = parseInt(l.formed, 10), age = yr ? new Date().getFullYear() - yr : 0;
+  if (age >= 3) add(5, `in business since ${yr}`);
+  if (l.site) add(5, 'has a website');
+  add(l.trade === 'yards' ? 10 : 15, l.trade === 'yards' ? 'lawn and yard' : 'a door-to-door trade');
+  const score = Math.min(100, s);
+  return { score, grade: score >= 60 ? 'A' : score >= 40 ? 'B' : 'C', why };
 }
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify({ built: new Date().toISOString().slice(0, 10), from: IN.split(/[\\/]/).pop(), leads }));
 const n = (f) => leads.filter(f).length;
 console.log(`${leads.length} companies (${dup} repeats left out) -> ${OUT}`);
 console.log(`phone ${n((l) => l.phone)}, email ${n((l) => l.email)}, either ${n((l) => l.phone || l.email)}, website ${n((l) => l.site)}, email cannot take mail ${n((l) => l.emailOk === 'no')}`);
+console.log(`rank: A ${n((l) => l.grade === 'A')}, B ${n((l) => l.grade === 'B')}, C ${n((l) => l.grade === 'C')}; A with a phone or email ${n((l) => l.grade === 'A' && (l.phone || l.email))}`);

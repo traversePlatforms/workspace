@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* the look (2026-10-26): the field app's own setting (localStorage "sixfold.theme": light, dark, or auto when absent), shared by every Traverse page on this site and updated live when another page changes it */(function(){function a(){try{var t=localStorage.getItem("sixfold.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}catch(e){}}a();window.__lookApply=a;window.addEventListener("storage",function(e){if(!e.key||e.key==="sixfold.theme"){a();if(window.__lookChanged)window.__lookChanged()}})})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Traverse Prospects</title>
@@ -14,7 +15,7 @@
    colours: benchmark navy for the desk, flagging-tape orange for the one action on a screen. */
 :root{--onaccent:#fff;--bg:#f4f6f9;--card:#fff;--ink:#0f1b2d;--soft:#566476;--line:#dce2ea;--accent:#13294b;--accent2:#e6ecf5;--flag:#d6400c;--onflag:#fff;--warn:#b42318;--ok:#1f7a4d;--chip:#edf1f6;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d131c;--card:#151d29;--ink:#e8eef6;--soft:#9ba9ba;--line:#263243;--accent:#9fbbe6;--accent2:#1c2838;--onaccent:#0d131c;--flag:#ff7a45;--onflag:#1a0d06;--chip:#1c2533;--warn:#ff8a80;--ok:#5cc98f}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d131c;--card:#1b2535;--ink:#e8eef6;--soft:#9ba9ba;--line:#3e4f68;--accent:#9fbbe6;--accent2:#24344e;--onaccent:#0d131c;--flag:#ff7a45;--onflag:#1a0d06;--chip:#273449;--warn:#ff8a80;--ok:#5cc98f;color-scheme:dark}}:root[data-theme="dark"]{--bg:#0d131c;--card:#1b2535;--ink:#e8eef6;--soft:#9ba9ba;--line:#3e4f68;--accent:#9fbbe6;--accent2:#24344e;--onaccent:#0d131c;--flag:#ff7a45;--onflag:#1a0d06;--chip:#273449;--warn:#ff8a80;--ok:#5cc98f;color-scheme:dark}
 *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans)}
 [hidden]{display:none!important}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -57,8 +58,12 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 .nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nm small{color:var(--soft)}
 .pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--chip);white-space:nowrap}
 .pill.s-customer,.pill.s-pilot{background:#ddf3e7;color:#1f7a4d}.pill.s-talking,.pill.s-demo{background:#e6ecf5;color:#13294b}.pill.s-emailed,.pill.s-called{background:#fde6dc;color:#9a3008}.pill.s-no,.pill.s-notnow{color:var(--soft)}
-@media (prefers-color-scheme:dark){.pill.s-customer,.pill.s-pilot{background:#123323;color:#5cc98f}.pill.s-talking,.pill.s-demo{background:#1c2838;color:#9fbbe6}.pill.s-emailed,.pill.s-called{background:#3a1a0c;color:#ff9a6b}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.s-customer,:root:not([data-theme="light"]) .pill.s-pilot{background:#123323;color:#5cc98f}:root:not([data-theme="light"]) .pill.s-talking,:root:not([data-theme="light"]) .pill.s-demo{background:#1c2838;color:#9fbbe6}:root:not([data-theme="light"]) .pill.s-emailed,:root:not([data-theme="light"]) .pill.s-called{background:#3a1a0c;color:#ff9a6b}}:root[data-theme="dark"] .pill.s-customer,:root[data-theme="dark"] .pill.s-pilot{background:#123323;color:#5cc98f}:root[data-theme="dark"] .pill.s-talking,:root[data-theme="dark"] .pill.s-demo{background:#1c2838;color:#9fbbe6}:root[data-theme="dark"] .pill.s-emailed,:root[data-theme="dark"] .pill.s-called{background:#3a1a0c;color:#ff9a6b}
 .reach{font-size:13px;color:var(--accent);margin-right:8px;letter-spacing:.05em}
+/* the fit rank (2026-10-26): A navy-filled, B outlined, C quiet */
+.grade{display:inline-block;min-width:22px;text-align:center;font-size:12px;font-weight:800;padding:2px 6px;border-radius:7px;margin-right:6px;border:1px solid var(--accent);color:var(--accent)}
+.grade.g-A{background:var(--accent);color:var(--onaccent)}.grade.g-C{border-color:var(--line);color:var(--soft)}
+.fitwhy{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--soft);margin:8px 0 2px}.fitwhy .grade{flex:none}
 .due{font-size:12px;color:var(--soft);text-align:right}.due.late{color:var(--warn);font-weight:700}
 .more{display:block;width:100%;padding:12px;border:0;border-top:1px solid var(--line);background:var(--card);color:var(--accent);font-weight:700}
 .detail{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;align-self:start;position:sticky;top:76px;max-height:calc(100vh - 92px);overflow:auto}
@@ -78,7 +83,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 12px}
 .card h3{margin:0 0 6px;font-size:16px}.card small,.soft{color:var(--soft)}
 .warnbox{background:#fde6dc;color:#7a2606;border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:14.5px}
-@media (prefers-color-scheme:dark){.warnbox{background:#3a1a0c;color:#ffb38f}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .warnbox{background:#3a1a0c;color:#ffb38f}}:root[data-theme="dark"] .warnbox{background:#3a1a0c;color:#ffb38f}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 12px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.kpi b{display:block;font-size:22px}.kpi span{color:var(--soft);font-size:13px}
 .pick{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:14px}
@@ -118,7 +123,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 (function () {
   'use strict';
   var API = 'api/desk.php';
-  var S = { data: null, tab: 'list', f: { trade: 'all', where: 'all', reach: 'any', st: 'open' }, q: '', sort: 'best', sel: null, shown: 150,
+  var S = { data: null, tab: 'list', f: { trade: 'all', where: 'all', reach: 'any', st: 'open', grade: 'all' }, q: '', sort: 'fit', sel: null, shown: 150,
             em: { trade: 'all', where: 'all', fresh: true, ticks: null, tpl: 'auto', shown: 200, preview: null } };
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -210,7 +215,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     return c;
   }
   function matchBase(l, f) {
-    return (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where);
+    return (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where) && (!f.grade || f.grade === 'all' || (l.grade || 'C') === f.grade);
   }
   function matchReach(l, r) { return r === 'all' ? true : r === 'any' ? reachN(l) > 0 : r === 'phone' ? !!l.phone : r === 'email' ? !!l.email : reachN(l) === 0; }
   function matchSt(l, st) { return st === 'open' ? !isOff(l) : st === 'off' ? isOff(l) : l.status === st; }
@@ -224,13 +229,15 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     var cnt = function (pred) { return L.filter(pred).length; };
     main.appendChild(chipRow('Trade', [['all', 'All']].concat(Object.keys(D.trades).map(function (k) { return [k, D.trades[k], cnt(function (l) { return l.trade === k && matchReach(l, f.reach) && matchSt(l, f.st); })]; })), f.trade, function (k) { f.trade = k; S.sel = null; S.shown = 150; draw(); }));
     main.appendChild(chipRow('Where', [['all', 'All']].concat(WHERE.map(function (w) { return [w[0], w[1], cnt(function (l) { return l.where === w[0] && (f.trade === 'all' || l.trade === f.trade) && matchReach(l, f.reach) && matchSt(l, f.st); })]; })), f.where, function (k) { f.where = k; S.sel = null; S.shown = 150; draw(); }));
+    /* the rank (2026-10-26): A best fit, then B and C; the reasons are on each company */
+    main.appendChild(chipRow('Fit', [['all', 'All'], ['A', 'A: best fit'], ['B', 'B'], ['C', 'C']].map(function (o) { return o[0] === 'all' ? o : o.concat([cnt(function (l) { return (l.grade || 'C') === o[0] && (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where) && matchReach(l, f.reach) && matchSt(l, f.st); })]); }), f.grade, function (k) { f.grade = k; S.sel = null; S.shown = 150; draw(); }));
     main.appendChild(chipRow('Reach', [['any', 'Phone or email'], ['phone', 'Phone'], ['email', 'Email'], ['none', 'Nothing yet'], ['all', 'All']].map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, o[0]) && matchSt(l, f.st); })]); }), f.reach, function (k) { f.reach = k; S.sel = null; S.shown = 150; draw(); }));
     var stOpts = [['open', 'Still on the list']].concat(Object.keys(D.statuses).filter(function (k) { return OFF.indexOf(k) < 0; }).map(function (k) { return [k, D.statuses[k]]; })).concat([['off', 'Knocked off']]);
     var stRow = chipRow('Stage', stOpts.map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, f.reach) && matchSt(l, o[0]); })]); }).filter(function (o) { return o[2] || o[0] === f.st || o[0] === 'open'; }), f.st, function (k) { f.st = k; S.sel = null; S.shown = 150; draw(); });
     main.appendChild(stRow);
     var c = el('div', 'controls'); var q = el('input', 'search'); q.type = 'search'; q.placeholder = 'Search name or town'; q.value = S.q; c.appendChild(q);
     var lab = el('label', 'sortby'); lab.appendChild(el('span', null, 'Sort')); var sel = el('select'); sel.setAttribute('aria-label', 'Sort');
-    [['best', 'Our towns and best contact first'], ['name', 'Name A to Z'], ['next', 'Next step soonest'], ['new', 'Newest companies first']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; sel.appendChild(x); }); sel.value = S.sort;
+    [['fit', 'Best fit first'], ['best', 'Our towns and best contact first'], ['name', 'Name A to Z'], ['next', 'Next step soonest'], ['new', 'Newest companies first']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; sel.appendChild(x); }); sel.value = S.sort;
     lab.appendChild(sel); c.appendChild(lab); main.appendChild(c);
     var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
     var rows = [];
@@ -239,7 +246,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       rows = L.filter(function (l) { return matchBase(l, f) && matchReach(l, f.reach) && matchSt(l, f.st) && (!qq || (l.name + ' ' + l.city + ' ' + (l.person || '')).toLowerCase().indexOf(qq) >= 0); });
       var byName = function (a, b) { return a.name.localeCompare(b.name); };
       var nx = function (l) { return (l.next && l.next.date) || '9999'; };
-      rows.sort({ best: function (a, b) { return whereRank(a) - whereRank(b) || reachN(b) - reachN(a) || byName(a, b); }, name: byName, next: function (a, b) { return nx(a).localeCompare(nx(b)) || byName(a, b); }, 'new': function (a, b) { return String(b.formed || '').localeCompare(String(a.formed || '')) || byName(a, b); } }[S.sort]);
+      rows.sort({ fit: function (a, b) { return (b.score || 0) - (a.score || 0) || whereRank(a) - whereRank(b) || reachN(b) - reachN(a) || byName(a, b); }, best: function (a, b) { return whereRank(a) - whereRank(b) || reachN(b) - reachN(a) || byName(a, b); }, name: byName, next: function (a, b) { return nx(a).localeCompare(nx(b)) || byName(a, b); }, 'new': function (a, b) { return String(b.formed || '').localeCompare(String(a.formed || '')) || byName(a, b); } }[S.sort]);
       mail.textContent = 'Email these (' + rows.filter(function (l) { return !l.nomail; }).length + ')';
     }
     function drawRows() {
@@ -250,6 +257,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
         r.appendChild(el('div', 'tr', SHORT[l.trade] || '•'));
         var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [l.city, l.where === 'in our towns' ? '' : l.where, l.person].filter(Boolean).join(' · '))); r.appendChild(nm);
         var right = el('div'); right.style.textAlign = 'right';
+        if (l.grade) { var gb = el('span', 'grade g-' + l.grade, l.grade); gb.title = 'Fit ' + l.grade + ' (' + (l.score || 0) + ' points)'; right.appendChild(gb); }
         var mk = el('span', 'reach', (l.phone ? '☎' : '') + (l.email ? ' ✉' : '')); mk.title = (l.email ? 'Has an email' : 'No email') + ' · ' + (l.phone ? 'has a phone' : 'no phone'); right.appendChild(mk);
         right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
         if (l.next && l.next.date) right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date)));
@@ -272,6 +280,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); window.scrollTo(0, S.listY || 0); }); d.appendChild(cx);
     d.appendChild(el('h2', null, l.name));
     d.appendChild(el('div', 'sub', [trName(l.trade), [l.city, l.zip].filter(Boolean).join(' '), l.where, l.formed ? 'since ' + l.formed : '', l.added ? 'added on the desk' : ''].filter(Boolean).join(' · ')));
+    if (l.grade) { var fw = el('div', 'fitwhy'); fw.appendChild(el('span', 'grade g-' + l.grade, l.grade)); fw.appendChild(el('span', null, 'Fit ' + (l.score || 0) + ' of 100' + ((l.why || []).length ? ': ' + l.why.join(', ') : ''))); d.appendChild(fw); }
     /* status: the working stages, then the two that knock it off the list */
     var s1 = el('div', 'sec'); s1.appendChild(el('h3', null, 'Status'));
     var seg = el('div', 'seg'), seg2 = el('div', 'seg off'); seg2.style.marginTop = '6px';
@@ -451,9 +460,25 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   }
 
   /* ---- Settings: the address and signature every email carries, the daily cap, the templates ---- */
+  /* the look (2026-10-26, Matthew: "assistant peak desk and prospects need to have a dark mode also"): Auto follows the device; Light or
+     Dark is the same setting the field app keeps ('sixfold.theme'), so every Traverse page in the hub changes together */
+  function lookCard() {
+    var c = el('div', 'card look'); c.appendChild(el('h3', null, 'Look'));
+    var seg = el('div', 'seg'); c.appendChild(seg);
+    c.appendChild(el('p', 'help', 'Auto follows this device. Light or Dark changes the field app, the assistant and the desks too.'));
+    var cur = function () { try { var t = localStorage.getItem('sixfold.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } };
+    var paint = function () { [].forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-look') === cur())); }); };
+    [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) {
+      var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-look', o[0]);
+      b.addEventListener('click', function () { try { if (o[0] === 'auto') localStorage.removeItem('sixfold.theme'); else localStorage.setItem('sixfold.theme', o[0]); } catch (e) {} if (window.__lookApply) window.__lookApply(); paint(); });
+      seg.appendChild(b);
+    });
+    paint(); return c;
+  }
   function drawSettings() {
     var D = S.data, set = D.settings;
     head('Settings', 'What every email carries, how many go out a day, and the wording for each trade.');
+    main.appendChild(lookCard());
     var c = el('div', 'card'); c.appendChild(el('h3', null, 'Every email')); var f = el('div', 'form'); c.appendChild(f);
     var la = el('label', null, 'Postal address (needed by law in every email; sending stays off without it)'); var ad = el('textarea'); ad.rows = 2; ad.value = set.address; ad.placeholder = 'e.g. Traverse Platforms LLC, PO Box 123, Denver, CO 80202'; la.appendChild(ad); f.appendChild(la);
     var ls = el('label', null, 'Signature'); var sg = el('textarea'); sg.rows = 3; sg.value = set.signature; ls.appendChild(sg); f.appendChild(ls);

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* the look (2026-10-26): the field app's own setting (localStorage "sixfold.theme": light, dark, or auto when absent), shared by every Traverse page on this site and updated live when another page changes it */(function(){function a(){try{var t=localStorage.getItem("sixfold.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}catch(e){}}a();window.__lookApply=a;window.addEventListener("storage",function(e){if(!e.key||e.key==="sixfold.theme"){a();if(window.__lookChanged)window.__lookChanged()}})})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Peak Sponsor Desk</title>
@@ -13,7 +14,7 @@
 /* Peak Sponsor Desk (2026-10-21): the sponsor leads, tours, proposals and a report for Brandon. */
 :root{--onaccent:#fff;--bg:#f4f5f2;--card:#fff;--ink:#1c2420;--soft:#5d6862;--line:#dde2dc;--accent:#1f5b46;--accent2:#e8f1ec;--warn:#a5481c;--ok:#2f7d4f;--chip:#eef1ed;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--card:#1b211e;--ink:#e7ece8;--soft:#9aa69f;--line:#2c3430;--accent:#5fb68f;--accent2:#1f2c26;--onaccent:#0c1a12;--chip:#232b27;--warn:#e08a5c;--ok:#6cc58f}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--card:#212925;--ink:#e7ece8;--soft:#9aa69f;--line:#4a5650;--accent:#5fb68f;--accent2:#284035;--onaccent:#0c1a12;--chip:#2d3732;--warn:#e08a5c;--ok:#6cc58f;color-scheme:dark}}:root[data-theme="dark"]{--bg:#121614;--card:#212925;--ink:#e7ece8;--soft:#9aa69f;--line:#4a5650;--accent:#5fb68f;--accent2:#284035;--onaccent:#0c1a12;--chip:#2d3732;--warn:#e08a5c;--ok:#6cc58f;color-scheme:dark}
 *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans)}
 [hidden]{display:none!important}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -48,7 +49,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 .nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nm small{color:var(--soft)}
 .pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--chip);white-space:nowrap}
 .pill.s-signed{background:#d9f0e2;color:#1d6b3f}.pill.s-proposal,.pill.s-tour,.pill.s-toured{background:#e6eefc;color:#2b4f8f}.pill.s-no,.pill.s-notnow{color:var(--soft)}
-@media (prefers-color-scheme:dark){.pill.s-signed{background:#1f3b2a;color:#8fdcae}.pill.s-proposal,.pill.s-tour,.pill.s-toured{background:#1e2a40;color:#9fbaf0}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.s-signed{background:#1f3b2a;color:#8fdcae}:root:not([data-theme="light"]) .pill.s-proposal,:root:not([data-theme="light"]) .pill.s-tour,:root:not([data-theme="light"]) .pill.s-toured{background:#1e2a40;color:#9fbaf0}}:root[data-theme="dark"] .pill.s-signed{background:#1f3b2a;color:#8fdcae}:root[data-theme="dark"] .pill.s-proposal,:root[data-theme="dark"] .pill.s-tour,:root[data-theme="dark"] .pill.s-toured{background:#1e2a40;color:#9fbaf0}
 .callhow{background:var(--accent2);border-radius:9px;padding:8px 10px;margin:0 0 8px;font-size:14px}.callhow a{color:var(--accent);font-weight:700;white-space:nowrap}
 .reach{font-size:13px;color:var(--accent);margin-right:8px;letter-spacing:.05em}
 .due{font-size:12px;color:var(--soft);text-align:right}.due.late{color:var(--warn);font-weight:700}
@@ -117,12 +118,12 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
 .newinfo{font-size:11px;font-weight:700;color:var(--accent);margin-right:6px}
 .daygrp{margin:14px 0 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft);font-weight:700}
 .pill.o-noshow{color:var(--warn)}.pill.o-toured{background:#d9f0e2;color:#1d6b3f}
-@media (prefers-color-scheme:dark){.pill.o-toured{background:#1f3b2a;color:#8fdcae}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.o-toured{background:#1f3b2a;color:#8fdcae}}:root[data-theme="dark"] .pill.o-toured{background:#1f3b2a;color:#8fdcae}
 /* Peak's own sponsor standing (2026-10-25) */
 .pill.pk-a{background:#d9f0e2;color:#1d6b3f}.pill.pk-p{background:#fff2d9;color:#8a5a00}.pill.pk-i{color:var(--soft)}
 .kv{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:8px 0 0;font-size:14px}.kv dt{color:var(--soft)}.kv dd{margin:0;overflow-wrap:anywhere}
 .chk{background:#fff2d9;color:#8a5a00;padding:6px 9px;border-radius:8px;margin-top:8px;font-size:14px}
-@media (prefers-color-scheme:dark){.pill.pk-a{background:#1f3b2a;color:#8fdcae}.pill.pk-p,.chk{background:#3a2c12;color:#f0c46a}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.pk-a{background:#1f3b2a;color:#8fdcae}:root:not([data-theme="light"]) .pill.pk-p,:root:not([data-theme="light"]) .chk{background:#3a2c12;color:#f0c46a}}:root[data-theme="dark"] .pill.pk-a{background:#1f3b2a;color:#8fdcae}:root[data-theme="dark"] .pill.pk-p,:root[data-theme="dark"] .chk{background:#3a2c12;color:#f0c46a}
 .plrow,.rnrow{display:grid;gap:6px;align-items:center;margin:0 0 6px}
 .plrow{grid-template-columns:minmax(0,1.6fr) 96px 92px 96px 92px minmax(0,1.1fr) 34px}.rnrow{grid-template-columns:minmax(0,1fr) 110px 100px 34px}
 .plrow input,.plrow select,.rnrow input,.rnrow select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);min-width:0;width:100%}
@@ -240,14 +241,14 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     ['new', 'New leads', 'The companies we researched as new sponsors, the ones a call reaches best at the top.'],
     ['peak', 'Peak sponsors', 'Every sponsor on Peak’s own tracker, active ones first.'],
     ['local', 'Local businesses', 'Added by us: local businesses from our research and companies added on the desk.'],
-    ['more', 'More', 'The report, profit and loss, packages, and what Peak offers sponsors.']
+    ['more', 'More', 'The report, profit and loss, packages, what Peak offers sponsors, and the look (light or dark).']
   ];
   var SUBS = {
     lists: [['all', 'All companies'], ['due', 'Follow-ups due'], ['removed', 'Removed']],
     board: [['stages', 'Stages'], ['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
     peak: [['all', 'All'], ['Active', 'Active'], ['Pending', 'Pending'], ['Inactive', 'Inactive']],
     local: [['all', 'All'], ['local', 'From our research'], ['added', 'Added on the desk']],
-    more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer']]
+    more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['look', 'Look']]
   };
   var SORTS = {
     lists: [['name', 'Name A to Z'], ['reach', 'Best contact first'], ['next', 'Next step soonest']],
@@ -349,8 +350,23 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     refresh(); openDetail(bs);
   }
   /* ---- More: the rarely used pages ---- */
+  /* the look (2026-10-26, Matthew: "assistant peak desk and prospects need to have a dark mode also"): Auto follows the device; Light or
+     Dark is the setting the Traverse field app keeps ('sixfold.theme'), so the pages in the hub change together */
+  function drawLook() {
+    var c = el('div', 'card'); c.appendChild(el('h3', null, 'Look'));
+    var seg = el('div', 'seg'); c.appendChild(seg);
+    var p = el('p', null, 'Auto follows this device. Light or Dark changes the field app, the assistant and the prospects desk too.'); p.style.color = 'var(--soft)'; p.style.fontSize = '13px'; c.appendChild(p);
+    var cur = function () { try { var t = localStorage.getItem('sixfold.theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } };
+    var paint = function () { [].forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-look') === cur())); }); };
+    [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) {
+      var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-look', o[0]);
+      b.addEventListener('click', function () { try { if (o[0] === 'auto') localStorage.removeItem('sixfold.theme'); else localStorage.setItem('sixfold.theme', o[0]); } catch (e) {} if (window.__lookApply) window.__lookApply(); paint(); });
+      seg.appendChild(b);
+    });
+    paint(); main.appendChild(c);
+  }
   function drawMore(sub) {
-    ({ report: drawReport, pl: drawPl, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.better); } })[sub]();
+    ({ report: drawReport, pl: drawPl, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.better); }, look: drawLook })[sub]();
   }
 
   /* ---- a list of companies: New leads, Peak sponsors, Local businesses, and Lists (all, or follow-ups due) ---- */

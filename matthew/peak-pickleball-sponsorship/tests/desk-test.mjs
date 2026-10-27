@@ -144,7 +144,16 @@ try {
   ok((await tabN('board')) === DS.leads.filter((l) => BOARD.includes(l.status)).length && await js(`document.querySelector('.shead h1').textContent==='Board'&&document.querySelector('.subchips [data-sub="stages"]').getAttribute('aria-pressed')==='true'`), 'Board opens on its stages; its tab counts the companies past Not contacted');
   ok((await subN('tours')) === DS.tours.filter((x) => x.date >= today()).length && (await subN('props')) === DS.proposals.length && (await subN('signed')) === DS.leads.filter((l) => l.status === 'signed').length, 'Board\u2019s chips count the tours coming up, the proposals and the signed sponsors');
   await tab('more');
-  ok(await js(`[...document.querySelectorAll('.subchips button')].map(b=>b.textContent).join(',')==='Report,Profit & loss,Packages,What Peak offers,What we could offer'&&!document.querySelector('.tabs [data-tab="more"] .tn')`), 'More holds the report, profit and loss, packages and the two reading pages');
+  ok(await js(`[...document.querySelectorAll('.subchips button')].map(b=>b.textContent).join(',')==='Report,Profit & loss,Packages,What Peak offers,What we could offer,Look'&&!document.querySelector('.tabs [data-tab="more"] .tn')`), 'More holds the report, profit and loss, packages the two reading pages and the look');
+  /* the look (2026-10-26): More, Look sets Auto / Light / Dark, the Traverse field app's shared key */
+  await js(`[...document.querySelectorAll('.subchips button')].find(b=>b.textContent==='Look').click()`); await sleep(400);
+  const bgSum = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
+  await js(`document.querySelector('[data-look="dark"]').click()`); await sleep(300);
+  ok(await js(`document.documentElement.getAttribute('data-theme')==='dark'&&localStorage.getItem('sixfold.theme')==='dark'`) && (await js(bgSum)) < 120, 'More, Look: Dark turns the desk dark and saves the shared setting');
+  await tab('board'); await sleep(400); await shot('desk-dark-board.png'); await tab('more');
+  await js(`[...document.querySelectorAll('.subchips button')].find(b=>b.textContent==='Look').click()`); await sleep(400);
+  await js(`document.querySelector('[data-look="auto"]').click()`); await sleep(300);
+  ok(await js(`!document.documentElement.hasAttribute('data-theme')&&localStorage.getItem('sixfold.theme')===null`) && (await js(bgSum)) > 600, 'Look: Auto follows the device again (light here)');
   /* chips belong to their own section */
   await tab('new');
   ok(await js(`!document.querySelector('.subchips')&&!!document.querySelector('.stagechips')&&![...document.querySelectorAll('main button')].some(b=>/^(Board|Removed|Follow-ups due|Active)/.test(b.textContent))`), 'New leads shows its stage chips and none of another section\u2019s');
