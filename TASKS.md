@@ -1071,6 +1071,10 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       Plan and figures: traverse/research/markets/yards-markets-2026-10.md.
 - [ ] **TR-21 — The prospect list.** 9,102 active Colorado companies by trade (state register, matched by name):
       traverse/research/prospects/prospects.csv (off git). Needs phone/website lookup before any outreach; nothing sent.
+      **26 Oct: 8,867 companies, 985 with a phone or email (prospects-contacts-2026-10-26.csv); the Prospect Desk is LIVE at
+      /prospects-47bfe6/ (hub tab 4; traverse/prospect-desk/README.md).** Email to many is built but OFF until Matthew adds a postal
+      address in the desk's Settings (CAN-SPAM); he presses Queue himself. Re-seed with the cloud step3 CSV when it finishes
+      (`tools/push-seed.sh`).
 - [ ] **TR-22 — Lawn colour (greenness), next growing season.** Tabled by Matthew 2026-10-12 "for the upcoming season". It is
       live only for the 734 large lawns of the SX-31 trial (lawn photo: this summer vs last, browned/greener than neighbours).
       **May 2027:** run `node ndvi-trial.mjs --month=2027-06` (SX-42; May–Sept only, winter refused), widen to every medium and

@@ -329,3 +329,7 @@ personal/pay/
 # public copies without notes (2026-10-26, shared/tools/minify-public.cjs)
 matthew/peak-pickleball-sponsorship/dist/
 sixfold/aeration365-site-dist/
+# Traverse Prospect Desk (2026-10-26): the seed and the desk's own data hold company contact details; dist = the minified upload copy
+traverse/prospect-desk/desk-data-local/
+traverse/prospect-desk/dist/
+traverse/research/prospects/prospects-step3*.csv
