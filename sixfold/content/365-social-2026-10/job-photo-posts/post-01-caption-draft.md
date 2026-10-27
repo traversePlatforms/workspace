@@ -1,6 +1,6 @@
 # Job-photo post 01: "Letting the lawn breathe" (DRAFT)
 
-**Status:** draft only. Nothing posted, scheduled or boosted.
+**Status:** POSTED 2026-10-27 at 3:00 pm Mountain, on Matthew's go ("schedule the post for 3 pm mountain time"), to Facebook (https://www.facebook.com/122111709747510685/posts/122111709735510685) and Instagram (https://www.instagram.com/p/DfAxd24H2Mr/). The call line went out as "Message us, or text or call (720) 830-4553, for a quote." (his change at 2:57 pm). Not boosted.
 **For:** the 365 Aeration & Seeding Facebook page and Instagram.
 **Image:** `post-01.png` (1080x1350), built by `post-01.html` from Brad's drone photo of the Highlands Ranch job on 16 Oct
 (the 16 Oct job folder in `sixfold/brand/job-photos/`, photo taken 22 Oct 18:37; the address stays out of git). The customer gave
