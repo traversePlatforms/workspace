@@ -19,6 +19,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inRing, inRings, loadBuildings, pickHouse, townParcels } from '../tree-zones/zones.mjs';
 import { heightGrid, PROJECT, PROJECT_YEAR, setMemoMax } from '../tree-zones/lidar.mjs';
+import { SURVEY } from '../tree-zones/town-surveys.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DT = join(HERE, '..'), TZ = join(DT, 'tree-zones');
@@ -26,6 +27,10 @@ const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'solar-cache.json');
 const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso', 'arvada': 'drcog2', 'centennial': 'drcog2', 'thornton': 'drcog2', 'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller' };   /* teller: 2026-10-08, the downloaded USGS files (tree-zones/teller-grids.mjs) */
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
+/* --all-towns (2026-10-26, the editions' new towns): every town sample-trees reads, with its laser survey; towns with no survey are left out.
+   --buildings=<dir under tree-zones>: another outline set in the same tiles (the cloud run uses buildings-ovt, Overture's, which has more houses) */
+if (process.argv.includes('--all-towns')) for (const [t, c] of Object.entries(SURVEY)) if (!(t in TOWNS) && PROJECT[c]) TOWNS[t] = c;
+const BLDDIR = arg('buildings', 'buildings');
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
 const SQFT = 10.7639;
 const median = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
@@ -124,7 +129,7 @@ async function sample() {
     const lats = todo.map((d) => d.la), lons = todo.map((d) => d.lo);
     const bbox = [Math.min(...lons) - 0.003, Math.min(...lats) - 0.003, Math.max(...lons) + 0.003, Math.max(...lats) + 0.003];
     const parcels = await townParcels(bbox);
-    const blds = await loadBuildings(join(TZ, 'buildings'), bbox);
+    const blds = await loadBuildings(join(TZ, BLDDIR), bbox);
     const cell = 0.004, key = (x, y) => `${Math.floor(x / cell)},${Math.floor(y / cell)}`;
     const pgrid = new Map(), bgrid = new Map();
     for (const pc of parcels) for (let gx = Math.floor(pc.bb[0] / cell); gx <= Math.floor(pc.bb[2] / cell); gx++) for (let gy = Math.floor(pc.bb[1] / cell); gy <= Math.floor(pc.bb[3] / cell); gy++) {

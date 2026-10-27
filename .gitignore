@@ -335,3 +335,7 @@ traverse/prospect-desk/desk-data-local/
 traverse/prospect-desk/dist/
 traverse/research/prospects/prospects-step3*.csv
 traverse/data-pipeline/door-territory/lawn-trial/yard-v2-lawn.json
+traverse/data-pipeline/door-territory/group1/door-points.json
+traverse/data-pipeline/door-territory/group1/build-walklist*.mjs
+traverse/data-pipeline/door-territory/group1/raw/
+traverse/data-pipeline/door-territory/group1/out/

@@ -22,6 +22,9 @@ const MAIN = /^DRAPP\/DRAPP2020\/Imagery\/[NS]\d+[EW]\d+[a-d]\.tif$/;
 const INDEX = join(HERE, 'photo-index.json');
 proj4.defs('EPSG:6342', '+proj=utm +zone=13 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');   /* NAD83(2011) / UTM 13N */
 const TOWNS = ['castle-rock', 'larkspur', 'sedalia', 'franktown', 'monument', 'palmer-lake', 'black-forest', 'highlands-ranch', 'parker', 'castle-pines', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'];   /* + the Front Range Roofing towns (2026-10-10) */
+/* --all-towns (2026-10-26, the editions' new towns): every town in the door index; doors outside the photos' coverage (El Paso, Teller)
+   simply find no file */
+if (process.argv.includes('--all-towns')) for (const r of JSON.parse(readFileSync(join(DATA, 'index.json'), 'utf8')).regions) if (!TOWNS.includes(r.key) && !r.metro) TOWNS.push(r.key);
 
 async function listKeys() {
   const keys = []; let token = '';

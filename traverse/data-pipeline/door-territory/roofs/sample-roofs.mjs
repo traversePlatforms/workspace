@@ -22,6 +22,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inRing, inRings, merc, loadBuildings, pickHouse, townParcels } from '../tree-zones/zones.mjs';
 import { heightGrid, PROJECT, PROJECT_YEAR, setMemoMax } from '../tree-zones/lidar.mjs';
+import { SURVEY } from '../tree-zones/town-surveys.mjs';
 import proj4 from '../tree-zones/node_modules/proj4/dist/proj4-src.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -30,6 +31,10 @@ const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const CACHE = join(HERE, 'roof-cache.json');
 const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'arvada': 'drcog2', 'centennial': 'drcog2', 'thornton': 'drcog2', 'erie': 'drcog2', 'commerce-city': 'drcog2', 'denver': 'drcog2', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso', 'woodland-park': 'teller', divide: 'teller', florissant: 'teller', 'cripple-creek': 'teller' };   /* teller: 2026-10-08, the downloaded USGS files (tree-zones/teller-grids.mjs) */
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
+/* --all-towns (2026-10-26, the editions' new towns): every town sample-trees reads, with its laser survey; towns with no survey are left out.
+   --buildings=<dir under tree-zones>: another outline set in the same tiles (the cloud run uses buildings-ovt, Overture's, which has more houses) */
+if (process.argv.includes('--all-towns')) for (const [t, c] of Object.entries(SURVEY)) if (!(t in TOWNS) && PROJECT[c]) TOWNS[t] = c;
+const BLDDIR = arg('buildings', 'buildings');
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9);
 /* 2026-10-19: --fix=small re-measures roofs read off a shed-sized outline (under 600 sq ft); --fix=all also the doors with no outline
    or an outline the scan said was off. --fix looks up each door's lot by itself (light on the state parcel service) instead of
@@ -213,7 +218,7 @@ async function sample() {
     const lats = todo.map((d) => d.la), lons = todo.map((d) => d.lo);
     const bbox = [Math.min(...lons) - 0.003, Math.min(...lats) - 0.003, Math.max(...lons) + 0.003, Math.max(...lats) + 0.003];
     const parcels = FIX ? await pointParcels(todo) : await townParcels(bbox);
-    const blds = await loadBuildings(join(TZ, 'buildings'), bbox);
+    const blds = await loadBuildings(join(TZ, BLDDIR), bbox);
     const cell = 0.004, key = (x, y) => `${Math.floor(x / cell)},${Math.floor(y / cell)}`;
     const pgrid = new Map(), bgrid = new Map();
     for (const pc of parcels) for (let gx = Math.floor(pc.bb[0] / cell); gx <= Math.floor(pc.bb[2] / cell); gx++) for (let gy = Math.floor(pc.bb[1] / cell); gy <= Math.floor(pc.bb[3] / cell); gy++) {

@@ -1,0 +1,1866 @@
+{
+ "ccd": [
+  {
+   "county": "Weld",
+   "name": "Ault CCD",
+   "census": 3181,
+   "doors": 0,
+   "gap": 3181
+  },
+  {
+   "county": "Weld",
+   "name": "Erie-Frederick CCD",
+   "census": 20264,
+   "doors": 15747,
+   "gap": 4517
+  },
+  {
+   "county": "Weld",
+   "name": "Fort Lupton CCD",
+   "census": 3823,
+   "doors": 2649,
+   "gap": 1174
+  },
+  {
+   "county": "Weld",
+   "name": "Greeley CCD",
+   "census": 34644,
+   "doors": 0,
+   "gap": 34644
+  },
+  {
+   "county": "Weld",
+   "name": "Grover CCD",
+   "census": 200,
+   "doors": 0,
+   "gap": 200
+  },
+  {
+   "county": "Weld",
+   "name": "Johnstown-Milliken CCD",
+   "census": 13781,
+   "doors": 1840,
+   "gap": 11941
+  },
+  {
+   "county": "Weld",
+   "name": "Keenesburg-Hudson CCD",
+   "census": 5667,
+   "doors": 3320,
+   "gap": 2347
+  },
+  {
+   "county": "Weld",
+   "name": "Kersey-Gill CCD",
+   "census": 1783,
+   "doors": 0,
+   "gap": 1783
+  },
+  {
+   "county": "Weld",
+   "name": "La Salle-Gilcrest CCD",
+   "census": 1841,
+   "doors": 0,
+   "gap": 1841
+  },
+  {
+   "county": "Weld",
+   "name": "Platteville CCD",
+   "census": 1650,
+   "doors": 526,
+   "gap": 1124
+  },
+  {
+   "county": "Weld",
+   "name": "Raymer CCD",
+   "census": 233,
+   "doors": 0,
+   "gap": 233
+  },
+  {
+   "county": "Weld",
+   "name": "Windsor CCD",
+   "census": 13918,
+   "doors": 8653,
+   "gap": 5265
+  },
+  {
+   "county": "Adams",
+   "name": "Brighton CCD",
+   "census": 37104,
+   "doors": 32600,
+   "gap": 4504
+  },
+  {
+   "county": "Adams",
+   "name": "Commerce City CCD",
+   "census": 8557,
+   "doors": 4943,
+   "gap": 3614
+  },
+  {
+   "county": "Adams",
+   "name": "East Adams CCD",
+   "census": 3577,
+   "doors": 1861,
+   "gap": 1716
+  },
+  {
+   "county": "Adams",
+   "name": "North Aurora CCD",
+   "census": 9903,
+   "doors": 9926,
+   "gap": 0
+  },
+  {
+   "county": "Adams",
+   "name": "West Adams CCD",
+   "census": 79931,
+   "doors": 60368,
+   "gap": 19563
+  },
+  {
+   "county": "Arapahoe",
+   "name": "East Arapahoe CCD",
+   "census": 14991,
+   "doors": 12428,
+   "gap": 2563
+  },
+  {
+   "county": "Arapahoe",
+   "name": "South Aurora CCD",
+   "census": 102333,
+   "doors": 70979,
+   "gap": 31354
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Southwest Arapahoe CCD",
+   "census": 61491,
+   "doors": 48160,
+   "gap": 13331
+  },
+  {
+   "county": "Boulder",
+   "name": "Bald Mountain CCD",
+   "census": 6037,
+   "doors": 371,
+   "gap": 5666
+  },
+  {
+   "county": "Boulder",
+   "name": "Boulder CCD",
+   "census": 27790,
+   "doors": 19118,
+   "gap": 8672
+  },
+  {
+   "county": "Boulder",
+   "name": "Lafayette-Louisville CCD",
+   "census": 25505,
+   "doors": 20200,
+   "gap": 5305
+  },
+  {
+   "county": "Boulder",
+   "name": "Longmont CCD",
+   "census": 34908,
+   "doors": 24140,
+   "gap": 10768
+  },
+  {
+   "county": "Boulder",
+   "name": "Upper St. Vrain CCD",
+   "census": 1303,
+   "doors": 0,
+   "gap": 1303
+  },
+  {
+   "county": "Broomfield",
+   "name": "Broomfield CCD",
+   "census": 21787,
+   "doors": 18325,
+   "gap": 3462
+  },
+  {
+   "county": "Denver",
+   "name": "Denver CCD",
+   "census": 177246,
+   "doors": 132464,
+   "gap": 44782
+  },
+  {
+   "county": "Douglas",
+   "name": "Castle Rock CCD",
+   "census": 19595,
+   "doors": 16311,
+   "gap": 3284
+  },
+  {
+   "county": "Douglas",
+   "name": "Parker CCD",
+   "census": 45501,
+   "doors": 44332,
+   "gap": 1169
+  },
+  {
+   "county": "Douglas",
+   "name": "Sedalia CCD",
+   "census": 49999,
+   "doors": 43516,
+   "gap": 6483
+  },
+  {
+   "county": "El Paso",
+   "name": "Black Forest-Peyton CCD",
+   "census": 34921,
+   "doors": 14416,
+   "gap": 20505
+  },
+  {
+   "county": "El Paso",
+   "name": "Cheyenne Mountain CCD",
+   "census": 3990,
+   "doors": 2240,
+   "gap": 1750
+  },
+  {
+   "county": "El Paso",
+   "name": "Colorado Springs CCD",
+   "census": 118634,
+   "doors": 83022,
+   "gap": 35612
+  },
+  {
+   "county": "El Paso",
+   "name": "Elsmere CCD",
+   "census": 26415,
+   "doors": 15060,
+   "gap": 11355
+  },
+  {
+   "county": "El Paso",
+   "name": "Fountain CCD",
+   "census": 27805,
+   "doors": 12985,
+   "gap": 14820
+  },
+  {
+   "county": "El Paso",
+   "name": "Monument CCD",
+   "census": 6538,
+   "doors": 2268,
+   "gap": 4270
+  },
+  {
+   "county": "El Paso",
+   "name": "Pikes Peak CCD",
+   "census": 1968,
+   "doors": 233,
+   "gap": 1735
+  },
+  {
+   "county": "El Paso",
+   "name": "Southeastern El Paso CCD",
+   "census": 6503,
+   "doors": 37,
+   "gap": 6466
+  },
+  {
+   "county": "Jefferson",
+   "name": "Central Jefferson CCD",
+   "census": 10421,
+   "doors": 2898,
+   "gap": 7523
+  },
+  {
+   "county": "Jefferson",
+   "name": "Golden CCD",
+   "census": 11801,
+   "doors": 4528,
+   "gap": 7273
+  },
+  {
+   "county": "Jefferson",
+   "name": "Northeast Jefferson CCD",
+   "census": 151340,
+   "doors": 125701,
+   "gap": 25639
+  },
+  {
+   "county": "Jefferson",
+   "name": "South Jefferson CCD",
+   "census": 10585,
+   "doors": 310,
+   "gap": 10275
+  }
+ ],
+ "places": [
+  {
+   "county": "Weld",
+   "name": "Grover town",
+   "census": 62,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 62
+  },
+  {
+   "county": "Weld",
+   "name": "Dacono city",
+   "census": 1789,
+   "doors": 1375,
+   "ourTowns": {
+    "dacono": 1375
+   },
+   "gap": 414
+  },
+  {
+   "county": "Weld",
+   "name": "Windsor town",
+   "census": 13107,
+   "doors": 11451,
+   "ourTowns": {
+    "windsor": 11451
+   },
+   "gap": 1656
+  },
+  {
+   "county": "Weld",
+   "name": "Johnstown town",
+   "census": 5924,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 5924
+  },
+  {
+   "county": "Weld",
+   "name": "Lochbuie town",
+   "census": 2405,
+   "doors": 2723,
+   "ourTowns": {
+    "lochbuie": 2723
+   },
+   "gap": 0
+  },
+  {
+   "county": "Weld",
+   "name": "Raymer (New Raymer) town",
+   "census": 32,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 32
+  },
+  {
+   "county": "Weld",
+   "name": "Hudson town",
+   "census": 447,
+   "doors": 200,
+   "ourTowns": {
+    "hudson": 200
+   },
+   "gap": 247
+  },
+  {
+   "county": "Boulder",
+   "name": "Longmont city",
+   "census": 29657,
+   "doors": 22362,
+   "ourTowns": {
+    "longmont": 22362
+   },
+   "gap": 7295
+  },
+  {
+   "county": "Weld",
+   "name": "Eaton town",
+   "census": 2078,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 2078
+  },
+  {
+   "county": "Weld",
+   "name": "Kersey town",
+   "census": 270,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 270
+  },
+  {
+   "county": "Douglas",
+   "name": "Parker town",
+   "census": 16888,
+   "doors": 17319,
+   "ourTowns": {
+    "parker": 17319
+   },
+   "gap": 0
+  },
+  {
+   "county": "El Paso",
+   "name": "Fountain city",
+   "census": 9248,
+   "doors": 6815,
+   "ourTowns": {
+    "fountain": 6815
+   },
+   "gap": 2433
+  },
+  {
+   "county": "El Paso",
+   "name": "Monument town",
+   "census": 3739,
+   "doors": 2141,
+   "ourTowns": {
+    "monument": 2141
+   },
+   "gap": 1598
+  },
+  {
+   "county": "El Paso",
+   "name": "Calhan town",
+   "census": 211,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 211
+  },
+  {
+   "county": "El Paso",
+   "name": "Colorado Springs city",
+   "census": 145198,
+   "doors": 105501,
+   "ourTowns": {
+    "black-forest": 5517,
+    "cs-northeast": 21136,
+    "cs-southeast": 23942,
+    "cs-northwest": 28359,
+    "cs-southwest": 26547
+   },
+   "gap": 39697
+  },
+  {
+   "county": "El Paso",
+   "name": "Manitou Springs city",
+   "census": 1943,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 1943
+  },
+  {
+   "county": "El Paso",
+   "name": "Palmer Lake town",
+   "census": 1050,
+   "doors": 315,
+   "ourTowns": {
+    "monument": 68,
+    "palmer-lake": 247
+   },
+   "gap": 735
+  },
+  {
+   "county": "El Paso",
+   "name": "Ramah town",
+   "census": 59,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 59
+  },
+  {
+   "county": "El Paso",
+   "name": "Green Mountain Falls town",
+   "census": 422,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 422
+  },
+  {
+   "county": "Douglas",
+   "name": "Lone Tree city",
+   "census": 3487,
+   "doors": 3718,
+   "ourTowns": {
+    "lone-tree": 3718
+   },
+   "gap": 0
+  },
+  {
+   "county": "Douglas",
+   "name": "Castle Rock town",
+   "census": 23760,
+   "doors": 22408,
+   "ourTowns": {
+    "castle-rock": 18721,
+    "sedalia": 687,
+    "franktown": 2275,
+    "castle-pines": 725
+   },
+   "gap": 1352
+  },
+  {
+   "county": "Boulder",
+   "name": "Louisville city",
+   "census": 6358,
+   "doors": 5179,
+   "ourTowns": {
+    "louisville": 5179
+   },
+   "gap": 1179
+  },
+  {
+   "county": "Jefferson",
+   "name": "Morrison town",
+   "census": 140,
+   "doors": 49,
+   "ourTowns": {
+    "morrison": 49
+   },
+   "gap": 91
+  },
+  {
+   "county": "Jefferson",
+   "name": "Edgewater city",
+   "census": 1365,
+   "doors": 1040,
+   "ourTowns": {
+    "edgewater": 1040
+   },
+   "gap": 325
+  },
+  {
+   "county": "Jefferson",
+   "name": "Mountain View town",
+   "census": 234,
+   "doors": 4,
+   "ourTowns": {
+    "wheat-ridge": 4
+   },
+   "gap": 230
+  },
+  {
+   "county": "Weld",
+   "name": "Keenesburg town",
+   "census": 713,
+   "doors": 598,
+   "ourTowns": {
+    "keenesburg": 598
+   },
+   "gap": 115
+  },
+  {
+   "county": "Weld",
+   "name": "Nunn town",
+   "census": 178,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 178
+  },
+  {
+   "county": "Boulder",
+   "name": "Boulder city",
+   "census": 22032,
+   "doors": 16527,
+   "ourTowns": {
+    "boulder": 16527
+   },
+   "gap": 5505
+  },
+  {
+   "county": "Boulder",
+   "name": "Lyons town",
+   "census": 665,
+   "doors": 233,
+   "ourTowns": {
+    "lyons": 233
+   },
+   "gap": 432
+  },
+  {
+   "county": "Boulder",
+   "name": "Nederland town",
+   "census": 656,
+   "doors": 97,
+   "ourTowns": {
+    "nederland": 97
+   },
+   "gap": 559
+  },
+  {
+   "county": "Boulder",
+   "name": "Jamestown town",
+   "census": 140,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 140
+  },
+  {
+   "county": "Jefferson",
+   "name": "Arvada city",
+   "census": 40251,
+   "doors": 35852,
+   "ourTowns": {
+    "arvada": 34592,
+    "westminster": 1260
+   },
+   "gap": 4399
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Bennett town",
+   "census": 1008,
+   "doors": 1182,
+   "ourTowns": {
+    "bennett": 1182
+   },
+   "gap": 0
+  },
+  {
+   "county": "Weld",
+   "name": "Berthoud town",
+   "census": 4541,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 4541
+  },
+  {
+   "county": "Weld",
+   "name": "Ault town",
+   "census": 776,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 776
+  },
+  {
+   "county": "Adams",
+   "name": "Brighton city",
+   "census": 10832,
+   "doors": 10828,
+   "ourTowns": {
+    "brighton": 10828
+   },
+   "gap": 4
+  },
+  {
+   "county": "Weld",
+   "name": "Erie town",
+   "census": 11258,
+   "doors": 11474,
+   "ourTowns": {
+    "erie": 11474
+   },
+   "gap": 0
+  },
+  {
+   "county": "Weld",
+   "name": "Fort Lupton city",
+   "census": 2404,
+   "doors": 2520,
+   "ourTowns": {
+    "fort-lupton": 2520
+   },
+   "gap": 0
+  },
+  {
+   "county": "Weld",
+   "name": "Garden City town",
+   "census": 49,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 49
+  },
+  {
+   "county": "Weld",
+   "name": "Gilcrest town",
+   "census": 256,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 256
+  },
+  {
+   "county": "Weld",
+   "name": "Greeley city",
+   "census": 26475,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 26475
+  },
+  {
+   "county": "Boulder",
+   "name": "Broomfield city",
+   "census": 21787,
+   "doors": 18325,
+   "ourTowns": {
+    "broomfield": 18325
+   },
+   "gap": 3462
+  },
+  {
+   "county": "Weld",
+   "name": "La Salle town",
+   "census": 1050,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 1050
+  },
+  {
+   "county": "Weld",
+   "name": "Mead town",
+   "census": 1924,
+   "doors": 1838,
+   "ourTowns": {
+    "mead": 1838
+   },
+   "gap": 86
+  },
+  {
+   "county": "Adams",
+   "name": "Northglenn city",
+   "census": 10086,
+   "doors": 8110,
+   "ourTowns": {
+    "northglenn": 8110
+   },
+   "gap": 1976
+  },
+  {
+   "county": "Weld",
+   "name": "Pierce town",
+   "census": 414,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 414
+  },
+  {
+   "county": "Weld",
+   "name": "Severance town",
+   "census": 3385,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3385
+  },
+  {
+   "county": "Adams",
+   "name": "Thornton city",
+   "census": 37878,
+   "doors": 33431,
+   "ourTowns": {
+    "thornton": 33431
+   },
+   "gap": 4447
+  },
+  {
+   "county": "Douglas",
+   "name": "Larkspur town",
+   "census": 28,
+   "doors": 27,
+   "ourTowns": {
+    "larkspur": 27
+   },
+   "gap": 1
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Columbine Valley town",
+   "census": 789,
+   "doors": 600,
+   "ourTowns": {
+    "littleton": 1,
+    "columbine-valley": 599
+   },
+   "gap": 189
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Foxfield town",
+   "census": 256,
+   "doors": 255,
+   "ourTowns": {
+    "foxfield": 255
+   },
+   "gap": 1
+  },
+  {
+   "county": "Denver",
+   "name": "Glendale city",
+   "census": 93,
+   "doors": 31,
+   "ourTowns": {
+    "glendale": 31
+   },
+   "gap": 62
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Sheridan city",
+   "census": 1324,
+   "doors": 998,
+   "ourTowns": {
+    "sheridan": 998
+   },
+   "gap": 326
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Centennial city",
+   "census": 35792,
+   "doors": 30284,
+   "ourTowns": {
+    "centennial": 30284
+   },
+   "gap": 5508
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Bow Mar town",
+   "census": 375,
+   "doors": 268,
+   "ourTowns": {
+    "bow-mar": 268
+   },
+   "gap": 107
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Cherry Hills Village city",
+   "census": 2372,
+   "doors": 1780,
+   "ourTowns": {
+    "englewood": 1,
+    "cherry-hills-village": 1779
+   },
+   "gap": 592
+  },
+  {
+   "county": "Douglas",
+   "name": "Castle Pines city",
+   "census": 4423,
+   "doors": 5024,
+   "ourTowns": {
+    "sedalia": 417,
+    "castle-pines": 4607
+   },
+   "gap": 0
+  },
+  {
+   "county": "Adams",
+   "name": "Denver city",
+   "census": 177246,
+   "doors": 132464,
+   "ourTowns": {
+    "denver": 105486,
+    "south-denver": 26975,
+    "lakewood": 3
+   },
+   "gap": 44782
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Aurora city",
+   "census": 98142,
+   "doors": 79194,
+   "ourTowns": {
+    "parker": 1,
+    "centennial": 3,
+    "aurora": 79190
+   },
+   "gap": 18948
+  },
+  {
+   "county": "Adams",
+   "name": "Commerce City city",
+   "census": 20639,
+   "doors": 17203,
+   "ourTowns": {
+    "commerce-city": 17203
+   },
+   "gap": 3436
+  },
+  {
+   "county": "Adams",
+   "name": "Federal Heights city",
+   "census": 1218,
+   "doors": 927,
+   "ourTowns": {
+    "federal-heights": 927
+   },
+   "gap": 291
+  },
+  {
+   "county": "Jefferson",
+   "name": "Westminster city",
+   "census": 32739,
+   "doors": 25772,
+   "ourTowns": {
+    "arvada": 1130,
+    "westminster": 24642
+   },
+   "gap": 6967
+  },
+  {
+   "county": "Weld",
+   "name": "Evans city",
+   "census": 5101,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 5101
+  },
+  {
+   "county": "Weld",
+   "name": "Milliken town",
+   "census": 3140,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3140
+  },
+  {
+   "county": "Weld",
+   "name": "Platteville town",
+   "census": 801,
+   "doors": 526,
+   "ourTowns": {
+    "platteville": 526
+   },
+   "gap": 275
+  },
+  {
+   "county": "Weld",
+   "name": "Firestone town",
+   "census": 5155,
+   "doors": 3287,
+   "ourTowns": {
+    "firestone": 3287
+   },
+   "gap": 1868
+  },
+  {
+   "county": "Weld",
+   "name": "Frederick town",
+   "census": 5738,
+   "doors": 4675,
+   "ourTowns": {
+    "frederick": 4675
+   },
+   "gap": 1063
+  },
+  {
+   "county": "Boulder",
+   "name": "Lafayette city",
+   "census": 9378,
+   "doors": 7308,
+   "ourTowns": {
+    "lafayette": 7308
+   },
+   "gap": 2070
+  },
+  {
+   "county": "Boulder",
+   "name": "Ward town",
+   "census": 74,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 74
+  },
+  {
+   "county": "Jefferson",
+   "name": "Lakewood city",
+   "census": 41527,
+   "doors": 35500,
+   "ourTowns": {
+    "lakewood": 35491,
+    "wheat-ridge": 6,
+    "edgewater": 3
+   },
+   "gap": 6027
+  },
+  {
+   "county": "Jefferson",
+   "name": "Golden city",
+   "census": 4491,
+   "doors": 3461,
+   "ourTowns": {
+    "golden": 3461
+   },
+   "gap": 1030
+  },
+  {
+   "county": "Jefferson",
+   "name": "Wheat Ridge city",
+   "census": 10537,
+   "doors": 7686,
+   "ourTowns": {
+    "arvada": 2,
+    "lakewood": 7,
+    "wheat-ridge": 7675,
+    "edgewater": 2
+   },
+   "gap": 2851
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Littleton city",
+   "census": 12763,
+   "doors": 9071,
+   "ourTowns": {
+    "littleton": 9071
+   },
+   "gap": 3692
+  },
+  {
+   "county": "Jefferson",
+   "name": "Lakeside town",
+   "census": 6,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 6
+  },
+  {
+   "county": "Boulder",
+   "name": "Superior town",
+   "census": 3816,
+   "doors": 3106,
+   "ourTowns": {
+    "superior": 3106
+   },
+   "gap": 710
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Englewood city",
+   "census": 9966,
+   "doors": 7199,
+   "ourTowns": {
+    "englewood": 6896,
+    "cherry-hills-village": 75,
+    "sheridan": 228
+   },
+   "gap": 2767
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Greenwood Village city",
+   "census": 4277,
+   "doors": 3509,
+   "ourTowns": {
+    "greenwood-village": 3509
+   },
+   "gap": 768
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Deer Trail town",
+   "census": 409,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 409
+  },
+  {
+   "county": "Jefferson",
+   "name": "Idledale CDP",
+   "census": 161,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 161
+  },
+  {
+   "county": "El Paso",
+   "name": "Gleneagle CDP",
+   "census": 2257,
+   "doors": 737,
+   "ourTowns": {
+    "monument": 737
+   },
+   "gap": 1520
+  },
+  {
+   "county": "Jefferson",
+   "name": "Coal Creek CDP",
+   "census": 1260,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 1260
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Four Square Mile CDP",
+   "census": 2786,
+   "doors": 1509,
+   "ourTowns": {
+    "four-square-mile": 1509
+   },
+   "gap": 1277
+  },
+  {
+   "county": "Jefferson",
+   "name": "Kittredge CDP",
+   "census": 364,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 364
+  },
+  {
+   "county": "Boulder",
+   "name": "Bark Ranch CDP",
+   "census": 98,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 98
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Dove Valley CDP",
+   "census": 842,
+   "doors": 673,
+   "ourTowns": {
+    "dove-valley": 673
+   },
+   "gap": 169
+  },
+  {
+   "county": "Boulder",
+   "name": "Valmont CDP",
+   "census": 20,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 20
+  },
+  {
+   "county": "Douglas",
+   "name": "Sterling Ranch CDP",
+   "census": 1573,
+   "doors": 2805,
+   "ourTowns": {
+    "sterling-ranch": 2805
+   },
+   "gap": 0
+  },
+  {
+   "county": "Douglas",
+   "name": "Westcreek CDP",
+   "census": 127,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 127
+  },
+  {
+   "county": "Adams",
+   "name": "Berkley CDP",
+   "census": 2877,
+   "doors": 2044,
+   "ourTowns": {
+    "berkley": 2044
+   },
+   "gap": 833
+  },
+  {
+   "county": "Boulder",
+   "name": "Glendale CDP",
+   "census": 24,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 24
+  },
+  {
+   "county": "Jefferson",
+   "name": "Aspen Park CDP",
+   "census": 317,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 317
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Byers CDP",
+   "census": 497,
+   "doors": 261,
+   "ourTowns": {
+    "byers": 261
+   },
+   "gap": 236
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Inverness CDP",
+   "census": 213,
+   "doors": 5,
+   "ourTowns": {
+    "inverness": 5
+   },
+   "gap": 208
+  },
+  {
+   "county": "Douglas",
+   "name": "Castle Pines Village CDP",
+   "census": 1829,
+   "doors": 1742,
+   "ourTowns": {
+    "sedalia": 521,
+    "castle-pines": 1221
+   },
+   "gap": 87
+  },
+  {
+   "county": "Boulder",
+   "name": "Niwot CDP",
+   "census": 1184,
+   "doors": 1255,
+   "ourTowns": {
+    "niwot": 1255
+   },
+   "gap": 0
+  },
+  {
+   "county": "Boulder",
+   "name": "Lazy Acres CDP",
+   "census": 361,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 361
+  },
+  {
+   "county": "Jefferson",
+   "name": "East Pleasant View CDP",
+   "census": 188,
+   "doors": 88,
+   "ourTowns": {
+    "lakewood": 82,
+    "golden": 6
+   },
+   "gap": 100
+  },
+  {
+   "county": "Jefferson",
+   "name": "Applewood CDP",
+   "census": 2992,
+   "doors": 1307,
+   "ourTowns": {
+    "lakewood": 1307
+   },
+   "gap": 1685
+  },
+  {
+   "county": "Boulder",
+   "name": "Sunshine CDP",
+   "census": 114,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 114
+  },
+  {
+   "county": "Boulder",
+   "name": "Eldora CDP",
+   "census": 480,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 480
+  },
+  {
+   "county": "Boulder",
+   "name": "Altona CDP",
+   "census": 282,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 282
+  },
+  {
+   "county": "Weld",
+   "name": "Aristocrat Ranchettes CDP",
+   "census": 325,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 325
+  },
+  {
+   "county": "Douglas",
+   "name": "Meridian Village CDP",
+   "census": 1030,
+   "doors": 970,
+   "ourTowns": {
+    "parker": 970
+   },
+   "gap": 60
+  },
+  {
+   "county": "Jefferson",
+   "name": "Brook Forest CDP",
+   "census": 200,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 200
+  },
+  {
+   "county": "Boulder",
+   "name": "Leyner CDP",
+   "census": 0,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 0
+  },
+  {
+   "county": "Adams",
+   "name": "North Washington CDP",
+   "census": 180,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 180
+  },
+  {
+   "county": "Jefferson",
+   "name": "Fairmount CDP",
+   "census": 3677,
+   "doors": 994,
+   "ourTowns": {
+    "arvada": 687,
+    "wheat-ridge": 1,
+    "golden": 306
+   },
+   "gap": 2683
+  },
+  {
+   "county": "El Paso",
+   "name": "Stratmoor CDP",
+   "census": 1648,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 1648
+  },
+  {
+   "county": "Boulder",
+   "name": "Bonanza Mountain Estates CDP",
+   "census": 28,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 28
+  },
+  {
+   "county": "Jefferson",
+   "name": "West Pleasant View CDP",
+   "census": 1312,
+   "doors": 502,
+   "ourTowns": {
+    "lakewood": 86,
+    "golden": 416
+   },
+   "gap": 810
+  },
+  {
+   "county": "Adams",
+   "name": "Welby CDP",
+   "census": 4263,
+   "doors": 2709,
+   "ourTowns": {
+    "welby": 2709
+   },
+   "gap": 1554
+  },
+  {
+   "county": "Jefferson",
+   "name": "Genesee CDP",
+   "census": 1510,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 1510
+  },
+  {
+   "county": "El Paso",
+   "name": "Rock Creek Park CDP",
+   "census": 36,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 36
+  },
+  {
+   "county": "Douglas",
+   "name": "The Pinery CDP",
+   "census": 3974,
+   "doors": 4257,
+   "ourTowns": {
+    "franktown": 104,
+    "parker": 2,
+    "the-pinery": 4151
+   },
+   "gap": 0
+  },
+  {
+   "county": "El Paso",
+   "name": "Woodmoor CDP",
+   "census": 3375,
+   "doors": 2793,
+   "ourTowns": {
+    "monument": 2793
+   },
+   "gap": 582
+  },
+  {
+   "county": "Jefferson",
+   "name": "Evergreen CDP",
+   "census": 3667,
+   "doors": 2854,
+   "ourTowns": {
+    "evergreen": 2854
+   },
+   "gap": 813
+  },
+  {
+   "county": "Douglas",
+   "name": "Franktown CDP",
+   "census": 157,
+   "doors": 133,
+   "ourTowns": {
+    "franktown": 133
+   },
+   "gap": 24
+  },
+  {
+   "county": "El Paso",
+   "name": "Cimarron Hills CDP",
+   "census": 5800,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 5800
+  },
+  {
+   "county": "Douglas",
+   "name": "Acres Green CDP",
+   "census": 1045,
+   "doors": 916,
+   "ourTowns": {
+    "acres-green": 916
+   },
+   "gap": 129
+  },
+  {
+   "county": "Boulder",
+   "name": "Pine Brook Hill CDP",
+   "census": 362,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 362
+  },
+  {
+   "county": "Douglas",
+   "name": "Perry Park CDP",
+   "census": 730,
+   "doors": 780,
+   "ourTowns": {
+    "perry-park": 780
+   },
+   "gap": 0
+  },
+  {
+   "county": "Boulder",
+   "name": "Allenspark CDP",
+   "census": 895,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 895
+  },
+  {
+   "county": "Boulder",
+   "name": "Mountain Meadows CDP",
+   "census": 101,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 101
+  },
+  {
+   "county": "Douglas",
+   "name": "Sierra Ridge CDP",
+   "census": 858,
+   "doors": 833,
+   "ourTowns": {
+    "parker": 833
+   },
+   "gap": 25
+  },
+  {
+   "county": "El Paso",
+   "name": "Cascade-Chipita Park CDP",
+   "census": 778,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 778
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Strasburg CDP",
+   "census": 912,
+   "doors": 922,
+   "ourTowns": {
+    "strasburg": 922
+   },
+   "gap": 0
+  },
+  {
+   "county": "Douglas",
+   "name": "Meridian CDP",
+   "census": 542,
+   "doors": 398,
+   "ourTowns": {
+    "meridian": 398
+   },
+   "gap": 144
+  },
+  {
+   "county": "El Paso",
+   "name": "Fort Carson CDP",
+   "census": 3033,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3033
+  },
+  {
+   "county": "Adams",
+   "name": "Todd Creek CDP",
+   "census": 1781,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 1781
+  },
+  {
+   "county": "Douglas",
+   "name": "Grand View Estates CDP",
+   "census": 197,
+   "doors": 103,
+   "ourTowns": {
+    "parker": 103
+   },
+   "gap": 94
+  },
+  {
+   "county": "Douglas",
+   "name": "Highlands Ranch CDP",
+   "census": 32159,
+   "doors": 26784,
+   "ourTowns": {
+    "highlands-ranch": 26737,
+    "littleton": 47
+   },
+   "gap": 5375
+  },
+  {
+   "county": "Adams",
+   "name": "Derby CDP",
+   "census": 2138,
+   "doors": 1453,
+   "ourTowns": {
+    "commerce-city": 1,
+    "derby": 1452
+   },
+   "gap": 685
+  },
+  {
+   "county": "El Paso",
+   "name": "Ellicott CDP",
+   "census": 120,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 120
+  },
+  {
+   "county": "Adams",
+   "name": "Shaw Heights CDP",
+   "census": 1774,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 1774
+  },
+  {
+   "county": "Adams",
+   "name": "Sherrelwood CDP",
+   "census": 5055,
+   "doors": 4139,
+   "ourTowns": {
+    "sherrelwood": 4139
+   },
+   "gap": 916
+  },
+  {
+   "county": "Weld",
+   "name": "Briggsdale CDP",
+   "census": 31,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 31
+  },
+  {
+   "county": "El Paso",
+   "name": "Black Forest CDP",
+   "census": 5512,
+   "doors": 2889,
+   "ourTowns": {
+    "black-forest": 2450,
+    "walden": 439
+   },
+   "gap": 2623
+  },
+  {
+   "county": "Boulder",
+   "name": "Hidden Lake CDP",
+   "census": 56,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 56
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Cherry Creek CDP",
+   "census": 3287,
+   "doors": 2749,
+   "ourTowns": {
+    "cherry-creek": 2749
+   },
+   "gap": 538
+  },
+  {
+   "county": "Douglas",
+   "name": "Stonegate CDP",
+   "census": 2878,
+   "doors": 2529,
+   "ourTowns": {
+    "stonegate": 2529
+   },
+   "gap": 349
+  },
+  {
+   "county": "Boulder",
+   "name": "Gold Hill CDP",
+   "census": 129,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 129
+  },
+  {
+   "county": "Douglas",
+   "name": "Louviers CDP",
+   "census": 136,
+   "doors": 33,
+   "ourTowns": {
+    "sedalia": 33
+   },
+   "gap": 103
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Watkins CDP",
+   "census": 305,
+   "doors": 101,
+   "ourTowns": {
+    "watkins": 101
+   },
+   "gap": 204
+  },
+  {
+   "county": "Boulder",
+   "name": "Paragon Estates CDP",
+   "census": 309,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 309
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Comanche Creek CDP",
+   "census": 43,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 43
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Aetna Estates CDP",
+   "census": 34,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 34
+  },
+  {
+   "county": "Boulder",
+   "name": "Seven Hills CDP",
+   "census": 26,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 26
+  },
+  {
+   "county": "Jefferson",
+   "name": "Ken Caryl CDP",
+   "census": 11465,
+   "doors": 9996,
+   "ourTowns": {
+    "ken-caryl": 9996
+   },
+   "gap": 1469
+  },
+  {
+   "county": "Denver",
+   "name": "Holly Hills CDP",
+   "census": 928,
+   "doors": 904,
+   "ourTowns": {
+    "holly-hills": 904
+   },
+   "gap": 24
+  },
+  {
+   "county": "El Paso",
+   "name": "Security-Widefield CDP",
+   "census": 13469,
+   "doors": 6185,
+   "ourTowns": {
+    "security-widefield": 6175,
+    "fountain": 10
+   },
+   "gap": 7284
+  },
+  {
+   "county": "Adams",
+   "name": "Twin Lakes CDP",
+   "census": 2944,
+   "doors": 2472,
+   "ourTowns": {
+    "twin-lakes": 2472
+   },
+   "gap": 472
+  },
+  {
+   "county": "Boulder",
+   "name": "Eldorado Springs CDP",
+   "census": 153,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 153
+  },
+  {
+   "county": "Boulder",
+   "name": "Tall Timber CDP",
+   "census": 124,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 124
+  },
+  {
+   "county": "Boulder",
+   "name": "St. Ann Highlands CDP",
+   "census": 179,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 179
+  },
+  {
+   "county": "Boulder",
+   "name": "Sugarloaf CDP",
+   "census": 236,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 236
+  },
+  {
+   "county": "El Paso",
+   "name": "Peyton CDP",
+   "census": 46,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 46
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Peoria CDP",
+   "census": 32,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 32
+  },
+  {
+   "county": "Jefferson",
+   "name": "Dakota Ridge CDP",
+   "census": 11643,
+   "doors": 10341,
+   "ourTowns": {
+    "dakota-ridge": 10341
+   },
+   "gap": 1302
+  },
+  {
+   "county": "Boulder",
+   "name": "Gunbarrel CDP",
+   "census": 2878,
+   "doors": 2688,
+   "ourTowns": {
+    "gunbarrel": 2688
+   },
+   "gap": 190
+  },
+  {
+   "county": "Douglas",
+   "name": "Roxborough Park CDP",
+   "census": 3361,
+   "doors": 3360,
+   "ourTowns": {
+    "roxborough-park": 3360
+   },
+   "gap": 1
+  },
+  {
+   "county": "Jefferson",
+   "name": "Columbine CDP",
+   "census": 8768,
+   "doors": 7933,
+   "ourTowns": {
+    "littleton": 575,
+    "columbine": 7358
+   },
+   "gap": 835
+  },
+  {
+   "county": "Douglas",
+   "name": "Stepping Stone CDP",
+   "census": 1005,
+   "doors": 1042,
+   "ourTowns": {
+    "parker": 1042
+   },
+   "gap": 0
+  },
+  {
+   "county": "Douglas",
+   "name": "Sedalia CDP",
+   "census": 27,
+   "doors": 37,
+   "ourTowns": {
+    "sedalia": 37
+   },
+   "gap": 0
+  },
+  {
+   "county": "Arapahoe",
+   "name": "Brick Center CDP",
+   "census": 66,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 66
+  },
+  {
+   "county": "Jefferson",
+   "name": "Indian Hills CDP",
+   "census": 481,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 481
+  },
+  {
+   "county": "Boulder",
+   "name": "Crisman CDP",
+   "census": 113,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 113
+  },
+  {
+   "county": "El Paso",
+   "name": "Air Force Academy CDP",
+   "census": 633,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 633
+  }
+ ]
+}
