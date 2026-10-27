@@ -265,7 +265,15 @@ function page(E) {
   if (html.indexOf("stroke='%23EDE7DC'") >= 0) throw new Error('the contour background is still in');
 
   // the edition's tokens, after the app's own (same selectors, later wins); company.json colours still win over these
-  const dark = `--bg:${c.dBg}; --card:${c.dCard}; --ink:#e8edf5; --soft:#9aa8bc; --line:${c.dLine}; --sunk:${c.dSunk};
+  /* dark contrast (2026-10-26, Matthew: "in door mode ... the outline of things need to be more apparent ... isnt blended together"):
+     cards are lifted off the page (x1.18) and borders brightened, keeping each palette's hue, until a border is about 2:1 against a card
+     (it was about 1.35:1). The palettes above stay as designed; this runs on every edition, the default one included. */
+  const lum = (h) => h.replace('#', '').match(/../g).map((x) => parseInt(x, 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))).reduce((t, v, i) => t + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const lift = (h, f) => '#' + h.replace('#', '').match(/../g).map((x) => Math.min(255, Math.round(parseInt(x, 16) * f)).toString(16).padStart(2, '0')).join('');
+  const dCardUp = lift(c.dCard, 1.18); let dLineUp = c.dLine;
+  for (let f = 1.05; ratio(dLineUp, dCardUp) < 1.95 && f < 3; f += 0.05) dLineUp = lift(c.dLine, f);
+  const dark = `--bg:${c.dBg}; --card:${dCardUp}; --ink:#e8edf5; --soft:#9aa8bc; --line:${dLineUp}; --sunk:${c.dSunk};
       --bar:${c.dBar}; --bar-soft:#c9d5e6; --act:#ff7a45; --on-act:#0b1220;
       --ember:${c.dEmber || '#ff7a45'}; --ember-ink:${c.dEmberInk || '#ff7a45'}; --on-ember:${c.dOnEmber || '#0b1220'}; --moss-ink:${c.dAccent};
       --go:#6fcf9b; --on-go:#06140c; --go-tint:#133324;
