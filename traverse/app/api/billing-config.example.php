@@ -41,10 +41,12 @@ return [
         'uplift'      => ['month' => 'price_...', 'year' => 'price_...'],
         'addon'       => ['month' => 'price_...', 'year' => 'price_...'],
     ],
-    // A founding company: a free pilot of trial_days before the first charge (once), and founding_coupon on the whole plan.
+    // A founding company: founding_pct off the whole plan for 12 months (a coupon made per checkout). No trial: the card is charged at
+    // checkout, the app is set up within setup_days business days, and the money-back guarantee runs guarantee_days from go-live (2026-10-27).
     'founding'        => false,
-    'trial_days'      => 14,
-    'founding_coupon' => 'traverse-founding-25',
+    'founding_pct'    => 25,
+    'setup_days'      => 2,
+    'guarantee_days'  => 7,
     // Where Stripe sends people back after paying or managing billing. Empty = the app page they came from.
     'return_url'      => '',
 ];

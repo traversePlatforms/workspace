@@ -2050,6 +2050,12 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest',
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
+/* "Mark live" from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, the guarantee starts */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli') {
+    $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
+    $b = billingLoad();
+    out($e === null ? ['ok' => true, 'liveAt' => $b['live_at'] ?? null] : ['ok' => false, 'error' => $e]);
+}
 
 /* ---- calendar sync (Matthew 2026-10-11): a person's calendar as an iCalendar feed ----
  * Google Calendar and Apple Calendar subscribe to a link and fetch it themselves (Google every few hours, Apple as set on the
@@ -8433,13 +8439,24 @@ function acctTaken(array $rows, string $name, string $except = ''): bool {
 }
 /* ---- billing (2026-10-10, api/billing.php): the admin sees the plan, pays through Stripe Checkout, manages it in Stripe's portal.
  * Nothing here locks anyone out. */
-if (in_array($action, ['billing', 'billingcheckout', 'billingportal'], true)) {
+if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billinglive', 'billingrefund'], true)) {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!feature('billing')) fail('Billing is not on for this install.', 403);
     $bc = billingConfig(__DIR__);
     $rows = acctRows($basePeople, $acct, $sessionKey);
-    if ($action === 'billing') out(['ok' => true] + billingState($bc, $rows));
+    if ($action === 'billing') out(['ok' => true, 'super' => $isSuper] + billingState($bc, $rows));
     if (!$isPost) fail('POST required', 405);
+    /* go-live and the money-back guarantee (2026-10-27): only Traverse (the super admin) marks an app live or refunds */
+    if ($action === 'billinglive' || $action === 'billingrefund') {
+        if (!$isSuper) fail('Only Traverse does this.', 403);
+        if ($action === 'billinglive') { $e = billingMarkLive($bc, $me); if ($e !== null) fail($e); out(['ok' => true, 'super' => true] + billingState($bc, $rows)); }
+        if (!billingConfigured($bc)) fail('Billing is not set up yet: the Stripe keys are missing.', 503);
+        if (!billingRefundable($bc, billingLoad())) fail('Refunds are only for a paid plan within the money-back guarantee.');
+        if (empty($body['confirm'])) fail('Confirm the refund first.');
+        $r = billingRefundCancel($bc, $me);
+        if (isset($r['error'])) fail($r['error'], 502);
+        out(['ok' => true, 'super' => true, 'amount' => $r['amount']] + billingState($bc, $rows));
+    }
     if (!billingConfigured($bc)) fail('Billing is not set up yet: the Stripe keys are missing.', 503);
     $back = billingBack($bc, (string) ($body['back'] ?? ''));
     if ($back === null) fail('Open Billing from the app and try again.');

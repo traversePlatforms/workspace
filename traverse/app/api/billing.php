@@ -17,7 +17,14 @@ declare(strict_types=1);
  * Roofing and Solar installs carry the edition uplift (+$20 on Solo, +$50 on Crew and Team). A second edition is a flat
  * add-on. One subscription = the plan's base price (quantity 1) + extra seats (quantity = people past the included) +
  * the uplift (quantity 1, where it applies) + the second edition (quantity 1, if picked). Founding companies: a coupon
- * on the whole subscription (25% off for 12 months) and the free pilot once.
+ * on the whole subscription (25% off for 12 months).
+ *
+ * ---- SETUP AND THE MONEY-BACK GUARANTEE (Matthew 2026-10-27, replacing the free 7-day pilot) -------------------------------
+ * The card is charged at checkout (no trial). Stripe's first "active" subscription event records paid_at; Traverse then sets
+ * the company's app up within setup_days business days (towns, branding, sign-in codes, prices, terms) and the super admin
+ * presses "Mark live" (or runs traverse/ops/billing-mark-live.php), which records live_at. The money-back guarantee runs
+ * guarantee_days from live_at. Refunds are never automatic: only the super admin's "Refund and cancel" (refunds the latest
+ * charge in full and cancels the subscription), allowed from payment until the guarantee ends.
  *
  * ---- WHAT IT DOES NOT DO ------------------------------------------------------------------
  *   - It never locks anyone out. Past due, cancelled or more people than paid seats: the admin sees a warning and
@@ -59,13 +66,15 @@ function billingConfigDefaults(): array {
                       'uplift_solo' => $two(20, 20), 'uplift' => $two(50, 50), 'addon' => $two(99, 99)],
         'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* people each plan covers before extra seats */
         'uplift_on' => null,             /* the Roofing/Solar uplift: null = from the edition (features roof, solar or hail) */
-        /* a founding company (Matthew 2026-10-26): a free 7-day pilot before the first charge, and about 25% off for the first 12
-           months. Every price is taken down by founding_pct and ROUNDED TO WHOLE DOLLARS ("people seeing cents on a price just feels
+        /* a founding company (Matthew 2026-10-26): about 25% off for the first 12 months (the free 7-day pilot it also had was
+           replaced on 2026-10-27 by the money-back guarantee below; trial_days stays 0). Every price is taken down by founding_pct and ROUNDED TO WHOLE DOLLARS ("people seeing cents on a price just feels
            weird"): Crew $199 -> $149. Each checkout gets its own Stripe coupon for exactly the dollars between the list total and the
            founding total, 12 months, one use, so Stripe charges what the screen shows. On for every company that signs up within a
            year of the first customer: put that date + 1 year in founding_until (YYYY-MM-DD) once the first customer signs; after it
            the offer stops by itself. Empty = no end date yet. */
-        'founding' => true, 'founding_pct' => 25, 'founding_until' => '', 'trial_days' => 7,
+        'founding' => true, 'founding_pct' => 25, 'founding_until' => '', 'trial_days' => 0,
+        /* set up within setup_days business days of paying; money back for guarantee_days from the day the app is live (2026-10-27) */
+        'setup_days' => 2, 'guarantee_days' => 7,
         'return_url' => '',              /* where Stripe sends people back; empty = the page they came from */
         'timeout' => 20,
         'mock_file' => null,
@@ -199,6 +208,51 @@ function billingFoundingCoupon(array $c, array &$f): ?string {
     $f['discounts'] = [['coupon' => (string) $r['id']]];
     return null;
 }
+/** the money-back guarantee's last moment (unix), or null while the app is still being set up / not paid */
+function billingGuaranteeUntil(array $c, array $b): ?int {
+    return !empty($b['live_at']) ? (int) $b['live_at'] + (int) $c['guarantee_days'] * 86400 : null;
+}
+/** may the super admin refund and cancel now? From payment, through setup, until the guarantee ends; once only */
+function billingRefundable(array $c, array $b): bool {
+    if (!in_array($b['status'] ?? '', BILLING_GOOD, true) || empty($b['paid_at']) || !empty($b['refunded']) || empty($b['subscription'])) return false;
+    $until = billingGuaranteeUntil($c, $b);
+    return $until === null || time() <= $until;
+}
+/** "Mark live": the company's app is set up; the guarantee starts now. Returns an error or null */
+function billingMarkLive(array $c, string $by): ?string {
+    $why = function (array $b): ?string {
+        if (!in_array($b['status'] ?? '', BILLING_GOOD, true) || empty($b['paid_at'])) return 'There is no paid plan to mark live yet.';
+        if (!empty($b['live_at'])) return 'Already live since ' . date('j M Y', (int) $b['live_at']) . '.';
+        return null;
+    };
+    if (($err = $why(billingLoad())) !== null) return $err;   /* a refusal writes nothing */
+    billingSave(function (array $b) use ($by, $why, &$err) {
+        if (($err = $why($b)) !== null) return $b;
+        $b['live_at'] = time(); $b['live_by'] = $by; return $b;
+    });
+    if ($err === null) billingLog(['what' => 'live', 'by' => $by]);
+    return $err;
+}
+/** "Refund and cancel" (super admin only, within the guarantee): refunds the latest charge in full, then cancels the subscription
+   at once. Returns ['ok' => true, 'amount' => cents] or ['error' => ...] */
+function billingRefundCancel(array $c, string $by): array {
+    $b = billingLoad();
+    if (!billingRefundable($c, $b)) return ['error' => 'Refunds are only for a paid plan within the money-back guarantee.'];
+    $ch = stripeCall($c, 'GET', '/v1/charges', ['customer' => (string) $b['customer'], 'limit' => 1]);
+    if (isset($ch['error'])) return ['error' => $ch['error']];
+    $charge = (array) (($ch['data'] ?? [])[0] ?? []);
+    if (!$charge && !empty($c['mock_file'])) $charge = ['id' => 'ch_mock', 'amount' => 0, 'refunded' => false];
+    if (empty($charge['id'])) return ['error' => 'Stripe shows no charge to refund.'];
+    if (empty($charge['refunded'])) {
+        $r = stripeCall($c, 'POST', '/v1/refunds', ['charge' => (string) $charge['id'], 'reason' => 'requested_by_customer', 'metadata' => ['install' => $c['install'], 'why' => 'money-back guarantee']]);
+        if (isset($r['error'])) return ['error' => $r['error']];
+    }
+    $x = stripeCall($c, 'DELETE', '/v1/subscriptions/' . rawurlencode((string) $b['subscription']));
+    if (isset($x['error'])) return ['error' => 'Refunded, but cancelling failed: ' . $x['error'] . ' Cancel it in Stripe.'];
+    billingSave(function (array $b) use ($by) { $b['refunded'] = ['at' => time(), 'by' => $by]; $b['status'] = 'canceled'; $b['ended'] = time(); return $b; });
+    billingLog(['what' => 'refund', 'by' => $by, 'charge' => (string) $charge['id'], 'amount' => (int) ($charge['amount'] ?? 0)]);
+    return ['ok' => true, 'amount' => (int) ($charge['amount'] ?? 0)];
+}
 /** what the admin sees: the subscription, seats used against seats paid, and the one warning that applies */
 function billingState(array $c, array $rows): array {
     $b = billingLoad(); $used = billingSeatsUsed($rows); $paid = billingSeatsPaid($b, $c);
@@ -214,7 +268,10 @@ function billingState(array $c, array $rows): array {
         'addon' => !empty($b['addon']), 'status' => $st ?: null, 'trialEnd' => $b['trial_end'] ?? null, 'periodEnd' => $b['period_end'] ?? null,
         'cancelAtEnd' => !empty($b['cancel_at_end']), 'portal' => !empty($b['customer']), 'pending' => !empty($b['pending']) && !$st,
         'warn' => $warn, 'founding' => billingFoundingOn($c), 'foundingPct' => billingFoundingOn($c) ? (int) $c['founding_pct'] : 0,
-        'foundingUntil' => billingFoundingOn($c) ? ((string) ($c['founding_until'] ?? '') ?: null) : null, 'trialDays' => billingFoundingOn($c) ? (int) $c['trial_days'] : 0,
+        'foundingUntil' => billingFoundingOn($c) ? ((string) ($c['founding_until'] ?? '') ?: null) : null,
+        'setupDays' => (int) $c['setup_days'], 'guaranteeDays' => (int) $c['guarantee_days'],
+        'paidAt' => $b['paid_at'] ?? null, 'liveAt' => $b['live_at'] ?? null, 'guaranteeUntil' => billingGuaranteeUntil($c, $b),
+        'refunded' => !empty($b['refunded']), 'refundable' => billingRefundable($c, $b),
         'display' => $c['display'], 'included' => $c['included'], 'uplift' => billingUplift($c),
         'monthly' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon'])) : null,
         'offer' => array_values(array_filter(BILLING_PLANS, fn($p) => ($c['prices'][$p]['month'] ?? '') !== '' || ($c['prices'][$p]['year'] ?? '') !== '')),
@@ -258,8 +315,7 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if (billingUplift($c) && $add($plan === 'solo' ? 'uplift_solo' : 'uplift', 1)) return ['error' => 'This edition is not offered ' . $ivWord . ' yet.'];
     if ($addon && $add('addon', 1)) return ['error' => 'The second edition is not offered ' . $ivWord . ' yet.'];
     if (!empty($b['customer'])) $f['customer'] = (string) $b['customer'];
-    /* the pilot only once: a company that has had a subscription here does not get another free trial */
-    if (billingFoundingOn($c) && (int) $c['trial_days'] > 0 && empty($b['subscription']) && empty($b['had_trial'])) $f['subscription_data']['trial_period_days'] = (int) $c['trial_days'];
+    /* no trial (2026-10-27): the card is charged at checkout; the money-back guarantee covers the first days instead */
     /* Stripe takes a coupon or a promotion-code box, not both. The founding coupon is made per checkout by billingFoundingCoupon()
        (the caller runs it before opening Checkout): what it takes off depends on the plan, people and add-ons picked. */
     if (billingFoundingOn($c)) $f['_founding'] = [$plan, $iv, max($seats, $inc), $addon];
@@ -305,6 +361,10 @@ function billingTakeEvent(array $c, array $ev): string {
             if (!empty($o['trial_end'])) $b['had_trial'] = true;
             $b['cancel_at_end'] = !empty($o['cancel_at_period_end']);
             if ($type === 'customer.subscription.deleted') $b['ended'] = (int) ($o['ended_at'] ?? time());
+            /* the setup clock (2026-10-27): the first time a subscription is paid and running, it starts; a new subscription starts it again */
+            if (in_array($b['status'], BILLING_GOOD, true) && ($b['paid_sub'] ?? '') !== $b['subscription']) {
+                $b['paid_sub'] = $b['subscription']; $b['paid_at'] = time(); unset($b['live_at'], $b['live_by'], $b['refunded']);
+            }
             unset($b['pending']); $did = $b['status'];
         } elseif ($type === 'invoice.payment_failed' || $type === 'invoice.paid') {
             $b['last_invoice'] = ['paid' => $type === 'invoice.paid', 'amount' => (int) ($o['amount_due'] ?? 0), 'at' => time()];

@@ -729,7 +729,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .chead{border-radius:20px;padding:16px;color:var(--bar-ink);background:var(--topo) center/560px 360px,linear-gradient(150deg,#3A6B36 0%,var(--bar) 75%);margin-bottom:12px}
   .chead .cname{font:400 24px/1.15 var(--serif)}
   .chead .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
-  .chead .cfigs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+  .chead .cfigs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.cplanbox{margin:12px 0}.cplanbox .cpl{font-weight:700;margin-top:4px}
   .chead .cfigs div{background:var(--bar-lift);border-radius:12px;padding:8px 9px;min-width:0}
   .chead .cfigs b{display:block;font-size:16px;color:var(--ember);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chead .cfigs span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--bar-soft)}
@@ -1686,7 +1686,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .jnotes{display:grid;gap:8px;margin-top:12px}.jnlist{display:grid;gap:6px}.jnrow{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.jntext{white-space:pre-wrap;font-size:15px}.jnin{width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit}   /* job notes (2026-10-26) */
   .keepbg{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,15,.5)}.keepbox{width:100%;max-width:420px;display:grid;gap:10px;padding:18px}.keepbox b{font:800 18px var(--sans)}.keeprow{display:grid;gap:8px}   /* Matthew's lead reached out to the office (2026-10-26) */
   .billwas{color:var(--soft);font-weight:700;font-size:.62em;text-decoration:line-through}   /* the list price, struck, beside the founding price (2026-10-26) */
-  .billgo{min-height:46px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 15px var(--sans);cursor:pointer}.billgo:disabled{opacity:.5;cursor:default}
+  .billgo{min-height:46px;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 15px var(--sans);cursor:pointer}.billgo:disabled{opacity:.5;cursor:default}.billgo.billrf{background:none;border:1.5px solid var(--fire-h);color:var(--fire-h)}
   .coform .save{min-height:46px;min-width:9em;border:0;border-radius:12px;background:var(--go);color:var(--on-go);font:700 14.5px var(--sans);cursor:pointer}
   .coform input[type=color]{width:52px;height:36px;padding:2px;border-radius:8px}
   /* the quote and agreement kit (2026-10-27, TR-33) */
@@ -11532,6 +11532,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       location.href = r.url;
     }).catch(function () { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Try again when you have signal.'; });
   }
+  /* Traverse-only Billing actions (Mark live, Refund and cancel): redraw with what the server answers */
+  function billAct(btn, msg, action, body, holder) {
+    btn.disabled = true; msg.className = 'sub2'; msg.textContent = 'Working…';
+    api(action, { body: body }).then(function (r) {
+      if (!r.ok) { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = r.error || 'That did not go through.'; return; }
+      drawBilling(holder, r);
+      if (action === 'billingrefund') toast('Refunded and cancelled', (r.amount ? money2(r.amount / 100) + ' goes back to the card. ' : '') + 'Stripe sends the receipt.', null);
+    }).catch(function () { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Try again when you have signal.'; });
+  }
   function drawBilling(holder, j) {
     holder.textContent = '';
     if (!j.ready) holder.appendChild(q('div', 'msg bad', 'Billing isn’t set up yet: the Stripe keys still need adding on the server.'));
@@ -11546,16 +11555,35 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (j.status) {
       var c = q('div', 'card billcard'), P = BILL_PLAN[j.plan] || ['Plan', '', ''];
       var head = q('div', 'billhead'); head.appendChild(q('b', null, P[0] + (j.addon ? ' + second edition' : '')));
-      var label = { active: 'Active', trialing: 'Free pilot', past_due: 'Payment failed', unpaid: 'Unpaid', canceled: 'Cancelled', incomplete: 'Payment not finished', incomplete_expired: 'Payment not finished', paused: 'Paused' }[j.status] || j.status;
+      var label = { active: 'Active', trialing: 'Active', past_due: 'Payment failed', unpaid: 'Unpaid', canceled: 'Cancelled', incomplete: 'Payment not finished', incomplete_expired: 'Payment not finished', paused: 'Paused' }[j.status] || j.status;
       head.appendChild(q('span', 'billst ' + (j.status === 'active' || j.status === 'trialing' ? 'ok' : 'bad'), label));
       c.appendChild(head);
       var lines = [];
       if (j.interval) lines.push(j.interval === 'year' ? 'Paid yearly' : 'Paid monthly');
       if (live) lines.push(j.used + ' of ' + j.seats + ' people the plan covers');
       if (live && j.monthly) lines.push(money(j.monthly) + ' a month' + (j.interval === 'year' ? ', billed yearly' : '') + (j.founding ? ', before the founding discount' : ''));
-      if (j.status === 'trialing' && j.trialEnd) lines.push('Pilot ends ' + billDate(j.trialEnd) + '; the card is charged then.');
-      else if (live && j.periodEnd) lines.push((j.cancelAtEnd ? 'Ends ' : 'Renews ') + billDate(j.periodEnd));
+      if (live && j.periodEnd) lines.push((j.cancelAtEnd ? 'Ends ' : 'Renews ') + billDate(j.periodEnd));
       lines.forEach(function (t) { c.appendChild(q('div', 'sub2', t)); });
+      /* setup, then the money-back guarantee (Matthew 2026-10-27, replacing the free pilot): set up within setupDays business days of
+         paying; money back for guaranteeDays from the day the app is live. Only Traverse marks it live or refunds. */
+      var good = j.status === 'active' || j.status === 'trialing';
+      if (good && j.paidAt && !j.liveAt) c.appendChild(q('div', 'billfd', 'Setting up your app (up to ' + j.setupDays + ' business days)'));
+      if (good && j.liveAt) c.appendChild(q('div', 'billfd', 'Live since ' + billDate(j.liveAt) + (j.guaranteeUntil && j.guaranteeUntil * 1000 > Date.now() ? ' · money-back guarantee until ' + billDate(j.guaranteeUntil) + ' (' + j.guaranteeDays + ' days)' : '')));
+      if (j.refunded) c.appendChild(q('div', 'sub2', 'Refunded under the money-back guarantee.'));
+      if (j.super && good && j.paidAt && !j.liveAt) {
+        var lb = q('button', 'billgo', 'Mark live'); lb.type = 'button'; var lm = q('div', 'sub2', 'Traverse only: the app is set up. The money-back guarantee starts now.');
+        lb.addEventListener('click', function () { billAct(lb, lm, 'billinglive', {}, holder); });
+        c.appendChild(lb); c.appendChild(lm);
+      }
+      if (j.super && j.refundable) {
+        var rb = q('button', 'billgo billrf', 'Refund and cancel'); rb.type = 'button'; var rm = q('div', 'sub2', 'Traverse only, within the money-back guarantee: refunds the last payment in full and ends the plan now.');
+        rb.disabled = !j.ready;
+        rb.addEventListener('click', function () {
+          if (!window.confirm('Refund the last payment in full and cancel the plan now? This cannot be undone.')) return;
+          billAct(rb, rm, 'billingrefund', { confirm: true }, holder);
+        });
+        c.appendChild(rb); c.appendChild(rm);
+      }
       if (j.warn) c.appendChild(q('div', 'msg bad', j.warn));
       if (j.portal) {
         var mb = q('button', 'billgo', 'Manage billing'); mb.type = 'button'; var mm = q('div', 'sub2');
@@ -11619,7 +11647,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         plans.appendChild(b);
       });
       if (j.uplift) plans.appendChild(q('small', 'sub2', 'Prices include this edition’s data: +' + money(per('uplift')) + ' a month on Crew and Team, +' + money(per('uplift_solo')) + ' on Solo.'));
-      if (off) plans.appendChild(q('small', 'billfd', 'Founding company: ' + j.foundingPct + '% off for the first year, and your price never goes up while you stay.' + (j.foundingUntil ? ' Open to companies that sign up by ' + new Date(j.foundingUntil + 'T12:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) + '.' : '')));
+      if (off) plans.appendChild(q('small', 'billfd', 'Founding company: ' + j.foundingPct + '% off for the first year, and your price is locked in for life as long as you’re with us.' + (j.foundingUntil ? ' Open to companies that sign up by ' + new Date(j.foundingUntil + 'T12:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) + '.' : '')));
       opts.textContent = '';
       if (st.plan !== 'solo') {
         var l = q('label', 'billseat', 'People'); var n = q('input'); n.type = 'number'; n.min = '1'; n.max = '500'; n.value = String(st.seats);
@@ -11645,7 +11673,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (off) sum.appendChild(q('div', 'sub2', 'The founding price, for your first 12 months; then ' + money(m) + ' a month. Stripe shows the discount on the next page.'));
       /* the agreement (2026-10-13) */
       var agr = q('div', 'sub2'); agr.appendChild(document.createTextNode('By choosing a plan you agree to the ')); var la = q('a', null, 'Subscription Agreement'); la.href = 'https://traverseplatforms.com/terms/'; la.target = '_blank'; la.rel = 'noopener'; agr.appendChild(la); agr.appendChild(document.createTextNode(' and ')); var lp = q('a', null, 'Privacy Policy'); lp.href = 'https://traverseplatforms.com/privacy/'; lp.target = '_blank'; lp.rel = 'noopener'; agr.appendChild(lp); agr.appendChild(document.createTextNode('.')); sum.appendChild(agr);
-      if (j.trialDays) sum.appendChild(q('div', 'sub2', 'Free for the first ' + j.trialDays + ' days; the card is charged after that. Cancel before then and nothing is charged.'));
+      if (j.guaranteeDays) sum.appendChild(q('div', 'sub2', 'The card is charged today. We set your app up within ' + j.setupDays + ' business days, and you get a ' + j.guaranteeDays + '-day money-back guarantee from the day it is live.'));
       sum.appendChild(q('div', 'sub2', 'Prices in US dollars. Stripe takes the card; this app never sees it.'));
     }
     go.disabled = !j.ready;
@@ -12823,6 +12851,56 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else if (c.inSquare) box.appendChild(q('div', 'sub2', 'In your Square customer list.'));
     return box;
   }
+  /* the service plan, its own box under the name (2026-10-27, Matthew: "Edit" read as fixing the customer's details, so a monthly plan
+     was hard to find). Saves only plan, price and next visit; the Edit form keeps the same fields. */
+  function custPlanBox(c, redraw) {
+    var box = q('div', 'cplanbox'), rec = c.plan && c.plan !== 'oneoff';
+    var per = { monthly: 'a month', quarterly: 'a quarter', yearly: 'a year' };
+    var save = function (body, btn, err, done) {
+      btn.disabled = true; err.textContent = ''; body.id = c.id;
+      api('customersave', { body: body }).then(function (j) {
+        btn.disabled = false;
+        if (!j.ok) { err.textContent = j.error || 'Could not save that.'; return; }
+        S.custPlanOpen = null; toast(done, c.name || '', null); customerView(c.id);
+      }).catch(function () { btn.disabled = false; err.textContent = 'No signal. Try again when you have signal.'; });
+    };
+    if (S.custPlanOpen === c.id) {
+      var fm = q('div', 'phf cform');
+      fm.appendChild(q('div', 'wl', rec ? 'Change the plan' : 'Start a plan'));
+      var lp = q('label', null, 'Plan'), pl = q('select');
+      [['monthly', 'Monthly plan'], ['quarterly', 'Quarterly plan'], ['yearly', 'Yearly plan'], ['custom', 'Custom schedule']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; pl.appendChild(op); });
+      pl.value = rec ? c.plan : 'monthly'; lp.appendChild(pl); fm.appendChild(lp);
+      var lpr = q('label'), pt = document.createTextNode(''), pr = q('input'); pr.type = 'number'; pr.min = 0; pr.step = 1; pr.inputMode = 'decimal'; pr.value = rec && c.price != null ? c.price : '';
+      var priceLabel = function () { pt.textContent = pl.value === 'monthly' ? 'Price a month ($)' : pl.value === 'quarterly' ? 'Price a quarter ($)' : pl.value === 'yearly' ? 'Price a year ($)' : 'Price per visit ($)'; };
+      priceLabel(); pl.addEventListener('change', priceLabel); lpr.appendChild(pt); lpr.appendChild(pr); fm.appendChild(lpr);
+      var ln = q('label', null, 'Next visit'), nx = q('input'); nx.type = 'date'; nx.value = c.next || ''; ln.appendChild(nx); fm.appendChild(ln);
+      fm.appendChild(q('div', 'sub2', 'When a visit is logged, the next visit moves on by the plan.'));
+      var err = q('div', 'err'); fm.appendChild(err);
+      var sv = q('button', 'save', rec ? 'Save the plan' : 'Start the plan'); sv.type = 'button';
+      sv.addEventListener('click', function () {
+        if (sv.disabled) return;
+        if (pr.value === '' || !(Number(pr.value) > 0)) { err.textContent = 'Add the price.'; return; }
+        save({ plan: pl.value, price: pr.value, next: nx.value }, sv, err, rec ? 'Plan saved' : 'Plan started');
+      });
+      fm.appendChild(sv);
+      var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.custPlanOpen = null; redraw(); }); fm.appendChild(cx);
+      box.appendChild(fm);
+      return box;
+    }
+    var open = function () { S.custPlanOpen = c.id; redraw(); };
+    if (!rec) {
+      var st = q('button', 'addlead', '+ Start a monthly plan'); st.type = 'button'; st.addEventListener('click', open); box.appendChild(st);
+      return box;
+    }
+    box.appendChild(q('div', 'wl', 'Service plan'));
+    box.appendChild(q('div', 'cpl', (PLAN_L[c.plan] || 'Plan') + (c.price ? ' · ' + money(c.price) + (per[c.plan] ? ' ' + per[c.plan] : ' a visit') : '') + (c.next ? ' · next visit ' + fmtD(c.next) : '')));
+    var acts = q('div', 'aacts cacts'), err2 = q('div', 'err');
+    var ch = q('button', 'lnk', 'Change plan'); ch.type = 'button'; ch.addEventListener('click', open); acts.appendChild(ch);
+    var en = q('button', 'lnk danger', 'End plan'); en.type = 'button';
+    en.addEventListener('click', function () { if (!window.confirm('End ' + (c.name || 'this customer') + '’s plan? Their visits and history stay.')) return; save({ plan: 'oneoff' }, en, err2, 'Plan ended'); });
+    acts.appendChild(en); box.appendChild(acts); box.appendChild(err2);
+    return box;
+  }
   function drawCustomer(holder0, c) {
     holder0.textContent = '';
     /* two columns on a computer (2026-10-15, Matthew: the page was "so dragged out"): the customer on the left at a readable width, their property on the right */
@@ -12845,6 +12923,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     head.appendChild(figs);
     holder.appendChild(head);
+    holder.appendChild(custPlanBox(c, function () { drawCustomer(holder0, c); }));
     holder.appendChild(custPay(c));   /* their jobs, deposits and balances (2026-10-16) */
     /* contact */
     var ct = q('div', 'lcontact cct');
