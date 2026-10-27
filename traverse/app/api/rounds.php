@@ -2919,7 +2919,7 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
 /* Claude Check only looks (2026-10-26, Matthew: "Make a read-only role"; it was a full admin). By name, as boardHidden() does, so a rename
    can only take rights away. Page loads from this list, plus loading doors and signing out; everything else is refused. */
 if (!$viewing && $realMe === 'Claude Check') {
-    $roOk = ['me', 'signout', 'regions', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
+    $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit'];   /* kit: the quote kit's prices and setup, read only (2026-10-27) */
@@ -3149,7 +3149,7 @@ if ($action === 'streets') {
     out(['ok' => true, 'region' => $key, 'streets' => $out]);
 }
 
-if ($action === 'regions') {
+if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-27, code review item 3): just the answer's signature, so a phone that has the towns skips the 4.7 MB answer when nothing changed; never kept by sw.js */
     if (!is_readable(DATA_DIR . '/index.json')) {
         fail('The door lists are not on this server yet. Sign in as admin and open ?action=diag to see where it looked.', 503);
     }
@@ -3177,13 +3177,14 @@ if ($action === 'regions') {
     }
     $rsig = md5(implode('|', [$gsig, fileSig(DATA_DIR . '/index.json'), fileSig(DATA_DIR . '/docs/money.json'), json_encode($tsigs)]));
     $rcache = DATA_DIR . '/regions-cache-' . $rkind . '.json';
+    if ($action === 'regionsig') sendJson('{"ok":true,"sig":"' . $rsig . '"}');   /* a few stat calls per town; the phone compares it with the answer it has */
     /* the kept answer is sent as the text it was written as (2026-10-09, speed): decoding 1.7 MB of JSON and encoding it again
        took 160 ms of every request. The file is {"sig":...,"regions":[...]}, written whole or not at all (writeTextAtomic),
        so a matching head and a closing ]} is the whole check. */
     $rhead = '{"sig":"' . $rsig . '","regions":';
-    $sendKept = function () use ($rcache, $rhead): void {
+    $sendKept = function () use ($rcache, $rhead, $rsig): void {
         $rc = (string) @file_get_contents($rcache);
-        if (strncmp($rc, $rhead, strlen($rhead)) === 0 && substr($rc, -2) === ']}') sendJson('{"ok":true,"regions":' . substr($rc, strlen($rhead), -1) . ',"cached":true}');
+        if (strncmp($rc, $rhead, strlen($rhead)) === 0 && substr($rc, -2) === ']}') sendJson('{"ok":true,"sig":"' . $rsig . '","regions":' . substr($rc, strlen($rhead), -1) . ',"cached":true}');
     };
     $sendKept();
     $rlock = @fopen(DATA_DIR . '/regions-cache-' . $rkind . '.lock', 'c');
@@ -3301,7 +3302,7 @@ if ($action === 'regions') {
     unset($rg);
     $rtxt = (string) json_encode($regions, JSON_UNESCAPED_SLASHES);   /* encoded once, for the file and the answer alike */
     writeTextAtomic($rcache, $rhead . $rtxt . '}');
-    sendJson('{"ok":true,"regions":' . $rtxt . '}');
+    sendJson('{"ok":true,"sig":"' . $rsig . '","regions":' . $rtxt . '}');
 }
 
 if ($action === 'area') {

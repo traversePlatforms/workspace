@@ -2939,6 +2939,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (j.why === 'viewing') { j.error = 'Looking only. To save from here, tap Make changes on the blue bar.'; setTimeout(function () { toast('Looking only', 'To save from ' + ((S.viewing && S.viewing.name) || 'their') + '\u2019s screen, tap Make changes on the blue bar. It saves as you.', null); }, 0); }
           if (r.status === 401 && j.why === 'elsewhere') S.outWhy = j.error;   /* one device at a time (2026-10-12): say why, on the sign-in screen */
           if (action === 'regions' && j.ok && j.regions) j.regions.forEach(areaFill);   /* before trimCard, which takes away the parts an edition does not have */
+          if (action === 'regions' && j.ok && j.regions) S.regionsSig = (!fromSaved && j.sig) || '';   /* the answer's signature (2026-10-27): refresh() asks only for it next time; a saved offline copy never counts as current */
           if (TRIM_ACTIONS[action]) trimCard(j);
           /* every town's name for the alerts (2026-10-07): TOWN_NAME only knew Sixfold's eleven */
           if (action === 'regions' && j.ok && j.regions) j.regions.forEach(function (rg) { if (rg && rg.key && rg.label && !TOWN_NAME[rg.key]) TOWN_NAME[rg.key] = rg.label; });
@@ -17884,14 +17885,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
 
   function refresh() {
     /* with towns already in hand (2026-10-09, speed): draw them now and quietly redraw if the fresh answer differs, as areaBack does */
-    var had = S.regions && S.regions.length ? JSON.stringify(S.regions) : '';   /* the whole answer, so a count that changes 5 to 6 still redraws */
+    /* the signature first (2026-10-27, code review item 3): with towns in hand, a tiny regionsig answer says whether anything changed,
+       so the 4.7 MB answer is fetched and parsed only when it did; no JSON.stringify of the whole list twice to find out. regionsig is
+       never kept by sw.js, so with no signal it fails and the saved copy of the full answer is used as before. */
+    var had = !!(S.regions && S.regions.length), oldSig = had ? (S.regionsSig || '') : '';
     if (had) renderAreas();
-    return api('regions').then(function (j) {
-      if (!j.ok) { if (j._status === 401) return signinView(); return; }
-      S.regions = j.regions;
-      if (had && (JSON.stringify(j.regions) === had || (S.screen !== 'areas' && S.screen !== 'state'))) return;
-      var y = window.scrollY; renderAreas(); if (had) window.scrollTo(0, y);   /* no town picked: the Colorado overview */
-    });
+    var full = function () {
+      return api('regions').then(function (j) {
+        if (!j.ok) { if (j._status === 401) return signinView(); return; }
+        S.regions = j.regions;
+        if (had && ((oldSig && j.sig === oldSig) || (S.screen !== 'areas' && S.screen !== 'state'))) return;
+        var y = window.scrollY; renderAreas(); if (had) window.scrollTo(0, y);   /* no town picked: the Colorado overview */
+      });
+    };
+    if (!oldSig) return full();
+    return api('regionsig').then(function (s) {
+      if (s && s._status === 401) return signinView();
+      if (s && s.ok && s.sig === oldSig) return;   /* nothing changed: the towns on screen are current */
+      return full();
+    }, full);
   }
 
   function start() { countPhotos(); S.region = null; flush().then(refresh); }   /* Matthew 2026-10-04: Door rounds opens on Colorado, every county and town */
