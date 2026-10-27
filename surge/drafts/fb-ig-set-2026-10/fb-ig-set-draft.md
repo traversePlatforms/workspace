@@ -78,6 +78,18 @@ Apply at surgeftw.com/careers.
 #SalesTraining #Coaching #SalesCareers #Hiring
 
 ## 6. Learn sales from people who've done it
+
+**POSTED 2026-10-27, 3:21 pm MT, Surge Inc Facebook page, on Matthew's go ("Lets get this posted on facebook"):** https://www.facebook.com/122132474889469299/posts/122132475039469299. Image: posts/surge-post-6-now-hiring-b.png (layout B). Caption as posted (his wording):
+
+> Focused on personal and professional development, we're hiring.
+>
+> What do you want to get better at this year?
+>
+> Apply at surgeftw.com/careers.
+>
+> #Hiring #SalesJobs #SalesCareers #DenverJobs
+
+Instagram (@surge.ftw) waits on the account being connected (2FA). The draft caption below is the earlier version.
 Photo: `Team/IMG_0505-scaled.png` (the team in the corridor)
 
 We're hiring. You'd be coached every morning, by trainers who started as reps themselves, and there's a clear path to career growth.
