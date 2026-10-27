@@ -952,6 +952,16 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 - [ ] **X-6 — Content plan, schedule, and start posting.** Both entities, separate voices,
       never blended. ⚑ **Standing rule: I draft and stage, nothing gets posted or scheduled
       without your explicit go each time.**
+      **2026-10-27: posting works; first two posts are live.**
+      - Sixfold 365 job-photo post 1 went to Facebook and Instagram @365aeration.
+      - Surge post 6 went to the Surge Inc Facebook page.
+      - Both went out via the Meta Pipeline connection.
+      **Next (Matthew): schedule out about a month of posts for those socials.**
+      - Slots: Tuesday and Thursday at 3 pm Mountain, for Sixfold 365 and for Surge. That's about 8–9 slots each over a month.
+      - Sixfold source: job-photo posts 2–9 and the calendar in `sixfold/content/365-social-2026-10/job-photo-posts/`. More can come from the nightly job photos.
+      - Surge source: posts 1–5 in layout B, from `surge/drafts/fb-ig-set-2026-10/`. More need writing, under the voice spec and RESTRICTED.md.
+      - Build an approval calendar plus a server runner. Each post goes out only after his go, though he can approve a whole week or month at once.
+      - Surge's Instagram waits on @surge.ftw being connected (2FA). The portfolio split is SG-8.
 - [ ] **X-7 — Ad budget and cost-per-lead discipline.** Currently $50/day on one Meta ad with no
       review date set. Do this *with* the first week's numbers rather than before them.
 - [ ] **X-8 — Weekly analytics pull** across everything running. **Do this last** — it's a
