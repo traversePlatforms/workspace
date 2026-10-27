@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Your quote</title>
+<style>
+  /* a company's quote page (2026-10-27, TR-33): the lines and price from the app's quote builder, the day if one was offered, and a Yes button
+     (a365quote / a365accept, the same actions as Sixfold's 365 page), in the company's own name and colour. */
+  :root{--brand:#13294b;--ink:#15202d;--soft:#566476;--line:#dce2ea;--card:#fff;--bg:#f4f6f9;--ok:#e9f5ee;--okline:#bfe0cc;--bad:#b42318}
+  @media (prefers-color-scheme:dark){:root{--ink:#e8eef6;--soft:#a6b3c3;--line:#33415a;--card:#172131;--bg:#0e1520;--ok:#13291d;--okline:#2c5a3e;--bad:#ff8a80}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px}
+  header{background:var(--brand);color:#fff}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px}
+  header b{font-size:20px} header a{color:#fff;font-weight:700;text-decoration:none;white-space:nowrap}
+  .band{padding:24px 0 6px}.band h1{font-size:clamp(26px,6vw,36px);line-height:1.15;margin:0 0 4px}.band p{margin:0;color:var(--soft)}
+  main .wrap{display:grid;gap:16px;padding-top:14px;padding-bottom:40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+  .card h2{font-size:20px;margin:0 0 12px}
+  table{width:100%;border-collapse:collapse;font-size:16px} td{padding:8px 0;border-bottom:1px solid var(--line)} td.r{text-align:right;font-weight:700;white-space:nowrap;padding-left:12px}
+  .total{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}.total b{font-size:30px}
+  .muted{color:var(--soft);font-size:14px;margin:0}.big{font-size:20px;font-weight:700;margin:0 0 6px}
+  textarea{width:100%;font:16px system-ui,sans-serif;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+  .h{font-weight:700;font-size:15px;margin:12px 0 6px}
+  .btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:14px;border:0;border-radius:999px;background:var(--brand);color:#fff;font:700 17px system-ui,sans-serif;cursor:pointer;text-decoration:none}
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn:focus-visible,textarea:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+  .err{color:var(--bad);font-weight:700;font-size:14px;margin-top:10px;min-height:1px}
+  .ok{background:var(--ok);border-color:var(--okline)}
+  .skel{height:200px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+  footer{padding:20px 0 36px;color:var(--soft);font-size:14px}
+</style>
+</head>
+<body>
+<header><div class="wrap"><b id="co">Your quote</b><a id="call" href="#" hidden></a></div></header>
+<div class="band"><div class="wrap"><h1 id="hi">Your quote</h1><p id="for"></p></div></div>
+<main><div class="wrap" id="main"><div class="skel"></div></div></main>
+<footer><div class="wrap" id="foot"></div></footer>
+<script>
+(function () {
+  var API = '../api/rounds.php';
+  var key = (/[?&]q=([A-Za-z0-9-]+)/.exec(location.search) || [])[1] || '';
+  var main = document.getElementById('main'), B = { name: '', phone: '' };
+  function el(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t != null) e.textContent = t; return e; }
+  function money(n) { return (n < 0 ? '−$' : '$') + Math.abs(Number(n)).toLocaleString('en-US'); }
+  function tel(p) { return 'tel:' + String(p || '').replace(/[^\d+]/g, ''); }
+  function callLine() { return B.phone ? 'Call or text ' + B.phone + '.' : 'Reply to the message this link came in.'; }
+  function sorry(msg) { main.textContent = ''; var c = el('div', 'card'); c.appendChild(el('h2', null, 'We could not open this quote')); c.appendChild(el('p', 'muted', msg)); if (B.phone) { var a = el('a', 'btn', 'Call or text ' + B.phone); a.href = tel(B.phone); c.appendChild(a); } main.appendChild(c); }
+  function brand(j) {
+    B = j || B; if (!B.name) return;
+    document.title = 'Your quote · ' + B.name; document.getElementById('co').textContent = B.name;
+    if (/^#[0-9a-f]{6}$/i.test(B.color || '')) document.documentElement.style.setProperty('--brand', B.color);
+    var c = document.getElementById('call'); if (B.phone) { c.hidden = false; c.textContent = B.phone; c.href = tel(B.phone); }
+    document.getElementById('foot').textContent = B.name + (B.phone ? ' · ' + B.phone : '') + (B.email ? ' · ' + B.email : '');
+  }
+  fetch(API + '?action=kitbrand', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { if (j && j.ok) brand(j); load(); }).catch(load);
+  function load() {
+    if (!/^[wm]\d{14}[0-9a-f]{6}-[0-9a-f]{16}$/.test(key)) { sorry('This link looks incomplete. Ask us to send it again.'); return; }
+    fetch(API + '?action=a365quote&q=' + encodeURIComponent(key), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (Q) {
+      if (!Q || !Q.ok) { sorry((Q && Q.error) || 'Something went wrong. ' + callLine()); return; }
+      document.getElementById('hi').textContent = Q.first ? 'Hi ' + Q.first + ', here’s your quote' : 'Your quote';
+      document.getElementById('for').textContent = Q.street ? 'For ' + Q.street : (B.name ? 'From ' + B.name : '');
+      main.textContent = '';
+      var q = el('div', 'card'); q.appendChild(el('h2', null, 'What’s included'));
+      if (Q.items && Q.items.length) { var t = el('table'); Q.items.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('td', null, x.t)); tr.appendChild(el('td', 'r', money(x.amt))); t.appendChild(tr); }); q.appendChild(t); }
+      var pr = el('div', 'total'); pr.appendChild(el('span', 'muted', 'Quoted ' + Q.date)); pr.appendChild(el('b', null, money(Q.price))); q.appendChild(pr);
+      if (Q.note) q.appendChild(el('p', 'muted', Q.note));
+      main.appendChild(q);
+      if (Q.booked) main.appendChild(booked(Q.booked)); else if (Q.accepted) main.appendChild(thanks(Q, true, false)); else main.appendChild(book(Q));
+    }).catch(function () { sorry('We could not reach our system just now. Try again in a minute. ' + callLine()); });
+  }
+  function booked(Bk) { var c = el('div', 'card ok'); c.appendChild(el('h2', null, 'You’re booked')); c.appendChild(el('p', 'big', Bk.day + (Bk.arrive ? ', arriving ' + Bk.arrive : '') + '.')); c.appendChild(el('p', 'muted', 'Need to change it? ' + callLine())); return c; }
+  function thanks(Q, before, gone) {
+    var c = el('div', 'card ok'); c.appendChild(el('h2', null, before ? 'You said yes' : 'Thanks' + (Q.first ? ', ' + Q.first : '') + '!'));
+    c.appendChild(el('p', null, gone ? 'That time was just taken, sorry. We’ll be in touch with another day.' : 'We’ll be in touch to set your day.'));
+    c.appendChild(el('p', 'muted', 'Need us sooner? ' + callLine())); return c;
+  }
+  function book(Q) {
+    var c = el('div', 'card');
+    if (Q.offer) { c.appendChild(el('h2', null, 'Your day')); c.appendChild(el('p', 'big', Q.offer.day + (Q.offer.arrive ? ', arriving ' + Q.offer.arrive : '') + '.')); c.appendChild(el('p', 'muted', 'Book it with the button below. Need a different day? ' + callLine())); }
+    else { c.appendChild(el('h2', null, 'Ready to go ahead?')); c.appendChild(el('p', 'muted', 'Say yes and we’ll be in touch to set your day.')); }
+    c.appendChild(el('div', 'h', 'Anything we should know? (optional)'));
+    var nt = el('textarea'); nt.rows = 3; nt.maxLength = 300; nt.setAttribute('aria-label', 'Anything we should know'); c.appendChild(nt);
+    var label = Q.offer ? 'Book it' : 'Yes, go ahead';
+    var go = el('button', 'btn', label); go.type = 'button'; c.appendChild(go);
+    var err = el('div', 'err'); err.setAttribute('role', 'alert'); c.appendChild(err);
+    go.addEventListener('click', function () {
+      err.textContent = ''; go.disabled = true; go.textContent = 'Sending…';
+      fetch(API + '?action=a365accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: key, note: nt.value }) })
+        .then(function (r) { return r.json(); }).then(function (j) {
+          if (!j || !j.ok) { go.disabled = false; go.textContent = label; err.textContent = (j && j.error) || 'That did not go through. Try again.'; return; }
+          c.replaceWith(j.booked ? booked(j.booked) : thanks(Q, false, !!j.gone)); window.scrollTo(0, 0);
+        }).catch(function () { go.disabled = false; go.textContent = label; err.textContent = 'No connection. Try again.'; });
+    });
+    return c;
+  }
+})();
+</script>
+</body>
+</html>

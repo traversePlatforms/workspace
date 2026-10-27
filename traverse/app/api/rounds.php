@@ -242,6 +242,10 @@ function workTags(): array { return array_keys(workLabels()); }
 function agentHeader(): string { $c = company(); return 'User-Agent: DoorApp/1.0 (' . preg_replace('/[\r\n]+/', ' ', (string) ($c['email'] ?: ($c['site'] ?: 'no contact set'))) . ')'; }
 date_default_timezone_set(appTz());   /* review 2026-10-03: the export's date() used the host's zone; the market's since 2026-10-11 */
 const COOKIE     = 'sfr';
+/* the quote and agreement kit (2026-10-27, TR-33): up here, because the customer pages run before the kit helpers further down */
+const APP_DIR = 'summit-de59ae83';   /* the install's page folder; build-editions swaps it per edition */
+const KIT_SIGN_VERSION = 'kit-v1-2026-10-27';
+const KIT_UNITS = ['lawn' => 'per 1,000 sq ft of lawn', 'roofsq' => 'per roofing square (100 sq ft of roof)', 'roofft' => 'per sq ft of roof', 'visit' => 'per visit', 'each' => 'per item', 'flat' => 'flat'];
 const MAX_TRIES  = 8;      // wrong codes per address per window
 const TRY_WINDOW = 900;    // 15 minutes
 const SITE_TRIES = 60;     // wrong codes from ALL addresses per hour before new sign-ins pause
@@ -2127,7 +2131,8 @@ if ($action === 'calfeed') {
 function squareCfg(): ?array {
     static $c = false;
     if ($c === false) { $j = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/square.json'), true);
-        $c = is_array($j) && !empty($j['token']) && !empty($j['location']) && in_array($j['env'] ?? '', ['sandbox', 'production'], true) ? $j : null; }
+        $c = is_array($j) && !empty($j['token']) && !empty($j['location']) && in_array($j['env'] ?? '', ['sandbox', 'production'], true) ? $j : null;
+        if ($c && !empty($c['oauth']) && (int) ($c['expires'] ?? 0) < time() + 7 * 86400) $c = squareOauthRefresh($c) ?? $c; }   /* Connect Square tokens last 30 days: renewed a week before (2026-10-27) */
     return $c;
 }
 function squareApi(string $method, string $path, ?array $body = null): array {
@@ -2166,9 +2171,11 @@ function a365DepositPaid(array $l, bool $ask = true): bool {
     $order = (string) ($S2['pay']['order'] ?? ''); if ($order === '') return false;
     if (($l['sqpaid']['order'] ?? '') === $order) return true;
     if (!$ask) return false;
-    [$paid, $pid] = squareOrderPaid($order);
-    if ($paid) { appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'sqpaid' => ['order' => $order, 'payment' => $pid, 'amt' => (int) $S2['deposit'], 'at' => time()], 'note' => 'Deposit $' . (int) $S2['deposit'] . ' paid by Square link.', 'by' => 'Square', 'at' => time()]); a365AfterPaid($l['id']); }
-    if ($paid && !empty($S2['nosign'])) a365BookNoSign((string) $l['id'], 'Square');   /* no signature needed: paid is booked (2026-10-17) */
+    $stripe = ($S2['pay']['kind'] ?? '') === 'stripe';   /* a kit install's own Stripe (2026-10-27) */
+    [$paid, $pid] = $stripe ? stripeSessionPaid($order) : squareOrderPaid($order);
+    $via = $stripe ? 'Stripe' : 'Square';
+    if ($paid) { appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'sqpaid' => ['order' => $order, 'payment' => $pid, 'amt' => (int) $S2['deposit'], 'at' => time()], 'note' => 'Deposit $' . (int) $S2['deposit'] . ' paid by ' . $via . ' link.', 'by' => $via, 'at' => time()]); if (!$stripe) a365AfterPaid($l['id']); }
+    if ($paid && !empty($S2['nosign'])) a365BookNoSign((string) $l['id'], $via);   /* no signature needed: paid is booked (2026-10-17) */
     return $paid;
 }
 /* the words they agree to when they tick the box (2026-10-15, Matthew: "is there a way for them to save their card on file, if they wanna use the card for the finished payment") */
@@ -2191,7 +2198,7 @@ function squareCustomer(array $l): string {
 /* once per deposit payment: the customer list, then the card from that payment when they ticked the box (Square allows it within a day of the payment) */
 function a365AfterPaid(string $lid): void {
     $l = leadsAll()[$lid] ?? null; $pid = (string) ($l['sqpaid']['payment'] ?? '');
-    if (!$l || $pid === '' || ($l['sqafter']['payment'] ?? '') === $pid) return;
+    if (!$l || $pid === '' || ($l['sqafter']['payment'] ?? '') === $pid || ($l['sign']['pay']['kind'] ?? '') === 'stripe') return;   /* Stripe deposits: no Square customer or card (2026-10-27) */
     $cid = squareCustomer($l); $card = null; $why = '';
     if ($cid !== '' && !empty($l['savecard']['yes'])) {
         $r = squareApi('POST', '/v2/cards', ['idempotency_key' => 'card-' . substr(sha1($pid), 0, 32), 'source_id' => $pid, 'card' => ['customer_id' => $cid, 'reference_id' => $lid]]);
@@ -2409,7 +2416,7 @@ function a365WebMailFlush(): int {
  * to set one. Never the lawn size, the seed, the photo or anything else we measured, and never Sixfold. The key is a keyed hash
  * of the lead, so the same link always shows that lead's latest quote; a yes counts only for the price it was given to. */
 function a365QuoteKey(string $id): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365quote|' . $id, $sessionKey), 0, 16); }
-function a365QuoteLink(string $id): string { return 'https://365aeration.com/q/?q=' . $id . '-' . a365QuoteKey($id); }
+function a365QuoteLink(string $id): string { return (kitOn() ? kitBase() . 'q.html?q=' : 'https://365aeration.com/q/?q=') . $id . '-' . a365QuoteKey($id); }   /* a kit install: its own q.html (2026-10-27) */
 function a365Arrive(string $slot): string { $w = ['s1' => 'between 9:30 and 10:00', 's2' => 'between 10:00 and 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$slot] ?? ''; if ($w === '' && ($sl = jobSlot($slot))) $w = 'at ' . $sl[1]; return $w; }
 function a365Day(string $date): string { return (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'); }
 /** the live job for a lead, if any */
@@ -2461,7 +2468,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST'); header('Access-Control-Allow-Headers: Content-Type');
     }
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
-    if (!feature('walkdesk') || !company()['a365']) fail('Not here.', 404);
+    if (!feature('walkdesk') || (!company()['a365'] && !kitOn())) fail('Not here.', 404);   /* + a kit install's own q.html (2026-10-27) */
     header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
     if (!isset($TEAM)) $TEAM = teamInfo($basePeople, $acct, $sessionKey);   /* the crew list (walkerList, pushName) is built after the session check; this page comes before it */
     if (!throttleTake(rateFile('a365quote|' . visitorKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
@@ -2480,6 +2487,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         $acc = $l['accept'] ?? null; if ($acc && (int) ($acc['price'] ?? 0) !== (int) $Q['price']) $acc = null;   /* a yes to an older price */
         $off = $job ? null : offerLive($l);
         out(['ok' => true, 'first' => $first, 'street' => $street, 'pkg' => $Q['pkg'], 'price' => (int) $Q['price'], 'date' => date('F j, Y', (int) $Q['at']),
+             'items' => kitOn() ? array_values(array_map(fn($x) => ['t' => (string) $x['t'], 'amt' => (int) $x['amt']], (array) ($Q['items'] ?? []))) : null, 'note' => kitOn() ? (string) ($Q['note'] ?? '') : null,
              'offer' => $off ? ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])] : null,
              'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone]);
     }
@@ -2527,16 +2535,155 @@ const A365_SIGN_VERSION = 'v4-draft-2026-10-16';   /* v4: their phone and email 
 /* the number a customer is told to call or text (2026-10-20, Matthew: "for josephs form in particular can u change the number to mine"):
    the lead's own form phone (fphone) when one is set, else 365's. And a house's town without an internal label: a property pulled in by
    itself carries one in brackets ("Brighton (Barnes)"), which reached Joseph's form. */
-function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? '')); return $f !== '' ? $f : (string) (company()['a365']['phone'] ?? ''); }
+function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? '')); return $f !== '' ? $f : (string) (company()['a365']['phone'] ?? company()['phone'] ?? ''); }   /* a kit install: the company's own phone (2026-10-27) */
 function houseTown(array $h): string { return trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', (string) ($h['town'] ?? ''))); }
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
-function a365SignLink(string $id, string $k): string { return 'https://365aeration.com/sign/?s=' . $id . '-' . a365SignKey($id, $k); }
+function a365SignLink(string $id, string $k): string { return (kitOn() ? kitBase() . 'sign.html?s=' : 'https://365aeration.com/sign/?s=') . $id . '-' . a365SignKey($id, $k); }   /* a kit install: its own sign.html (2026-10-27) */
+/* ---- the quote and agreement kit for every install but Sixfold (2026-10-27, TR-33; Matthew: "Everything we built in terms of the quote
+ * generator, the agreements, square apps we mostly manually integrated. So how do we prepare that for other companies?").
+ * Sixfold (company a365) keeps its own aeration pricing and its 365aeration.com pages, untouched. Every other install (the five editions,
+ * client installs) gets:
+ *   price rules     set by the company's admin (kit.json in the data folder): $ per 1,000 sq ft of lawn, per roofing square, per sq ft of
+ *                   roof, per visit, per item, flat; optional add-ons; a minimum. The quote prices a house from its card's measurements.
+ *   the agreement   the same one-page form, deposit and signature flow as Sixfold's (signsend / a365sign / a365signed below), with the
+ *                   company's own name, phone and terms (editable; plain starter terms per trade), on the install's own sign.html.
+ *   payments        the deposit by the company's own Square (Connect Square, or its own token pasted) or its own Stripe key, kept in the
+ *                   install's private folder and never shown back.
+ * Customer pages: <install folder>/q.html (the quote) and sign.html (the form), same address as the app. */
+function kitOn(): bool { return feature('walkdesk') && !company()['a365']; }
+/** the install's page address, for links customers open: the host this request came to (traverseplatforms.com from the command line) */
+function kitBase(): string {
+    $h = (string) ($_SERVER['HTTP_HOST'] ?? ''); if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) $h = 'traverseplatforms.com';
+    $s = PHP_SAPI === 'cli-server' ? 'http' : 'https';
+    return $s . '://' . $h . '/' . APP_DIR . '/';
+}
+function kitTrade(): string { $b = (string) (company()['best'] ?? ''); return $b !== '' ? $b : 'job'; }
+/* the units a price rule can use */
+/** starter rules, so the price screen is never blank; the company changes them */
+function kitStarterRules(string $t): array {
+    $r = ['roof' => [['id' => 'r1', 'label' => 'Roof replacement', 'unit' => 'roofsq', 'rate' => 450, 'opt' => false], ['id' => 'r2', 'label' => 'Tear-off, extra layer', 'unit' => 'roofsq', 'rate' => 60, 'opt' => true], ['id' => 'r3', 'label' => 'Gutters', 'unit' => 'flat', 'rate' => 900, 'opt' => true]],
+          'yards' => [['id' => 'y1', 'label' => 'Lawn service', 'unit' => 'lawn', 'rate' => 25, 'opt' => false], ['id' => 'y2', 'label' => 'Extra visit', 'unit' => 'visit', 'rate' => 60, 'opt' => true]],
+          'solar' => [['id' => 's1', 'label' => 'Site survey', 'unit' => 'flat', 'rate' => 0, 'opt' => false], ['id' => 's2', 'label' => 'Panels installed', 'unit' => 'each', 'rate' => 900, 'opt' => false]],
+          'pest' => [['id' => 'p1', 'label' => 'Treatment', 'unit' => 'visit', 'rate' => 120, 'opt' => false], ['id' => 'p2', 'label' => 'Initial clean-out', 'unit' => 'flat', 'rate' => 150, 'opt' => true]],
+          'security' => [['id' => 'g1', 'label' => 'Installation', 'unit' => 'flat', 'rate' => 199, 'opt' => false], ['id' => 'g2', 'label' => 'Extra sensors', 'unit' => 'each', 'rate' => 45, 'opt' => true]]];
+    return $r[$t] ?? [['id' => 'j1', 'label' => 'The job', 'unit' => 'flat', 'rate' => 0, 'opt' => false]];
+}
+/** starter terms in plain words (no legal claims, no refund rules a company has not set); the company edits them */
+function kitStarterTerms(string $t): array {
+    $mid = ['roof' => 'If we find damage once work starts that changes the job, we will show you and agree any change with you before doing it.',
+            'yards' => 'Please let us know about sprinklers, shallow pipes or invisible dog fences, so they can be marked before we start.',
+            'solar' => 'The final design depends on the site survey; any change to the work or the price is agreed with you in writing first.',
+            'pest' => 'Please keep children and pets away from treated areas until they are dry.',
+            'security' => 'We will walk you through the system and how to use it before we leave.'][$t] ?? '';
+    return array_values(array_filter(['We will do the work listed above at this address on the day shown, arriving in the time shown.', $mid,
+        'If the weather stops us, we will contact you to move the day.', 'To reschedule or cancel, call or text {phone} at least 24 hours before your day.',
+        'The balance is due when the work is done.']));
+}
+function kitCfg(): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/kit.json'), true); $j = is_array($j) ? $j : [];
+    $t = kitTrade(); $rules = [];
+    foreach ((array) ($j['rules'] ?? []) as $r) if (is_array($r) && isset(KIT_UNITS[$r['unit'] ?? '']) && trim((string) ($r['label'] ?? '')) !== '')
+        $rules[] = ['id' => preg_match('/^[a-z0-9]{1,12}$/', (string) ($r['id'] ?? '')) ? (string) $r['id'] : 'x' . count($rules), 'label' => mb_substr(trim((string) $r['label']), 0, 60), 'unit' => (string) $r['unit'], 'rate' => max(0, min(100000, round((float) ($r['rate'] ?? 0), 2))), 'opt' => !empty($r['opt'])];
+    $terms = array_values(array_filter(array_map(fn($x) => mb_substr(trim((string) $x), 0, 400), (array) ($j['terms'] ?? [])), fn($x) => $x !== ''));
+    return ['rules' => $rules ?: kitStarterRules($t), 'rulesSet' => (bool) $rules, 'min' => max(0, min(100000, (int) ($j['min'] ?? 0))), 'depositPct' => max(0, min(100, (int) ($j['depositPct'] ?? 50))),
+            'terms' => $terms ?: kitStarterTerms($t), 'termsSet' => (bool) $terms, 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? '')];
+}
+/** price a house: measures {lawn sq ft, roof sq ft, roof squares, visits}, picks {ruleId: {on, qty}} -> [items [{id,t,amt,qty,unit}], total] */
+function kitPrice(array $cfg, array $m, array $picks): array {
+    $lawn = max(0, (float) ($m['lawn'] ?? 0)); $roof = max(0, (float) ($m['roof'] ?? 0)); $sqs = isset($m['sqs']) && (float) $m['sqs'] > 0 ? (float) $m['sqs'] : $roof / 100; $visits = max(1, (int) ($m['visits'] ?? 1));
+    $items = []; $sum = 0;
+    foreach ($cfg['rules'] as $r) {
+        $p = is_array($picks[$r['id']] ?? null) ? $picks[$r['id']] : [];
+        $on = array_key_exists('on', $p) ? !empty($p['on']) : !$r['opt']; if (!$on) continue;
+        $qty = ['lawn' => $lawn / 1000, 'roofsq' => $sqs, 'roofft' => $roof, 'visit' => $visits, 'each' => max(0, min(10000, (int) ($p['qty'] ?? 1))), 'flat' => 1][$r['unit']];
+        $amt = (int) round($r['rate'] * $qty);
+        $items[] = ['id' => $r['id'], 't' => $r['label'], 'amt' => $amt, 'qty' => round($qty, 2), 'unit' => $r['unit']];
+        $sum += $amt;
+    }
+    $total = max($cfg['min'], $sum);
+    if ($total > $sum && $items) $items[] = ['id' => 'min', 't' => 'Minimum charge', 'amt' => $total - $sum, 'qty' => 1, 'unit' => 'flat'];
+    return [$items, $total];
+}
+/** what the customer's pages show at the top: the company's own name, phone, email and colour (never Traverse's, never Sixfold's) */
+function kitBrand(): array { $c = company(); return ['name' => (string) $c['name'], 'phone' => (string) $c['phone'], 'email' => (string) $c['email'], 'color' => (string) ($c['brand'] ?: ($c['colors']['--bar'] ?? '')), 'site' => (string) $c['site']]; }
+/** the one-page agreement for a kit install: the work quoted, the day, the price and the deposit, then the company's terms */
+function kitAgreement(array $l): array {
+    $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $h = $l['house'] ?? null;
+    $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
+    $work = array_values(array_filter(array_map(fn($x) => in_array($x['id'] ?? '', ['min', 'adj'], true) ? '' : (string) $x['t'], (array) ($Q['items'] ?? []))));   /* the work, not the minimum or an adjustment */
+    foreach (a365Extras($Q['extras'] ?? []) as $x) $work[] = $x['t'];
+    $none = ($S2['how'] ?? '') === 'none'; $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
+    $payWord = ['link' => 'card', 'square' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how'] ?? ''] ?? (string) ($S2['how'] ?? '');
+    $facts = [['Customer', trim((string) ($l['name'] ?? ''))]];
+    $pd = substr((string) preg_replace('/\D/', '', (string) ($l['phone'] ?? '')), -10);
+    if (strlen($pd) === 10) $facts[] = ['Phone', '(' . substr($pd, 0, 3) . ') ' . substr($pd, 3, 3) . '-' . substr($pd, 6)];
+    $em = trim((string) ($l['email'] ?? '')); if ($em !== '' && filter_var($em, FILTER_VALIDATE_EMAIL)) $facts[] = ['Email', $em];
+    $facts = array_merge($facts, [['Address', $addr ?: 'To be confirmed'], ['Work', $work ? implode(', ', $work) : 'The work quoted'],
+        ['Day', $o ? a365Day((string) $o['date']) . ', arriving ' . a365Arrive((string) $o['slot']) : 'to be set'], ['Price', '$' . number_format((int) $Q['price'])],
+        $none ? ['Deposit', 'None'] : ($due ? ['Deposit, to pay now', '$' . number_format((int) $S2['deposit'])] : ['Deposit paid', '$' . number_format((int) $S2['deposit']) . ' (' . $payWord . ')']),
+        ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]]);
+    $ph = a365Phone($l) ?: 'us';
+    $terms = array_map(fn($t) => str_replace('{phone}', $ph, $t), kitCfg()['terms']);
+    if (!$none && (int) $S2['deposit'] > 0) array_splice($terms, min(count($terms), 4), 0, ['The day is confirmed once the deposit is paid.']);
+    $consents = ['I have read this agreement and I agree to its terms.', 'I agree to sign it electronically by typing my name.'];
+    $consent = implode(' ', $consents);
+    $text = implode("\n", array_map(fn($x) => $x[0] . ': ' . $x[1], $facts)) . "\n" . implode("\n", $terms) . "\n" . $consent;
+    return ['facts' => $facts, 'terms' => $terms, 'consent' => $consent, 'consents' => $consents, 'hash' => hash('sha256', KIT_SIGN_VERSION . "\n" . $text)];
+}
+/* ---- payments for a kit install: the company's own Square or Stripe (2026-10-27) ----
+ * Square: <private>/square.json (the same file Sixfold's Square uses: token, location, env), written by Connect Square (OAuth through Traverse's
+ * Square app, api/square-oauth.php) or by the admin pasting the company's own access token. Stripe: <private>/stripe-pay.json {secret}: the
+ * company's own key, for deposits only (Traverse's own Stripe, for the subscription, is billing.php and never this). Neither is ever shown back. */
+function stripePayCfg(): ?array {
+    static $c = false;
+    if ($c === false) { $j = json_decode((string) @file_get_contents(pushPrivDir() . '/stripe-pay.json'), true);
+        $c = is_array($j) && preg_match('/^(sk|rk)_(live|test)_[A-Za-z0-9]{8,}$/', (string) ($j['secret'] ?? '')) ? $j : null; }
+    return $c;
+}
+function stripePayApi(string $method, string $path, array $fields = []): array {
+    $c = stripePayCfg(); if (!$c || !function_exists('curl_init')) return ['_status' => 0, 'error' => ['message' => 'Stripe is not connected.']];
+    $base = getenv('TRAVERSE_STRIPEPAY_BASE') ?: 'https://api.stripe.com';   /* the override is for the test copy only */
+    $q = http_build_query($fields);
+    $h = curl_init(rtrim($base, '/') . $path . ($method === 'GET' && $q !== '' ? '?' . $q : ''));
+    curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_USERPWD => (string) $c['secret'] . ':', CURLOPT_HTTPHEADER => ['Stripe-Version: 2024-06-20']]);
+    if ($method !== 'GET' && $q !== '') curl_setopt($h, CURLOPT_POSTFIELDS, $q);
+    $raw = curl_exec($h); $code = (int) curl_getinfo($h, CURLINFO_HTTP_CODE); curl_close($h);
+    $j = is_string($raw) ? (json_decode($raw, true) ?: []) : []; $j['_status'] = $code; return $j;
+}
+/** may this person make deposit links? Square as before; Stripe with a live key, or a test key for an admin (testing) */
+function payLinkOk(): bool { global $role; if (squareFor()) return true; $s = stripePayCfg(); return (bool) $s && (str_contains((string) $s['secret'], '_live_') || $role === 'admin'); }
+/** a deposit link: Square when connected, else Stripe Checkout. Same shape as squareLink, plus kind */
+function payLink(string $name, int $cents, string $back, string $email = ''): array {
+    if (squareCfg()) return squareLink($name, $cents, $back, $email) + ['kind' => 'square'];
+    $f = ['mode' => 'payment', 'success_url' => $back . (str_contains($back, '?') ? '&' : '?') . 'paid=1', 'cancel_url' => $back,
+          'line_items[0][price_data][currency]' => 'usd', 'line_items[0][price_data][product_data][name]' => $name, 'line_items[0][price_data][unit_amount]' => (string) $cents, 'line_items[0][quantity]' => '1'];
+    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) $f['customer_email'] = $email;
+    $r = stripePayApi('POST', '/v1/checkout/sessions', $f);
+    if (empty($r['id']) || empty($r['url'])) return ['err' => 'Stripe did not make the link' . (!empty($r['error']['message']) ? ': ' . $r['error']['message'] : '') . '.'];
+    return ['id' => (string) $r['id'], 'url' => (string) $r['url'], 'order' => (string) $r['id'], 'amt' => intdiv($cents, 100), 'env' => !empty($r['livemode']) ? 'production' : 'sandbox', 'at' => time(), 'kind' => 'stripe'];
+}
+/** has a Stripe deposit session been paid? [paid, payment id] */
+function stripeSessionPaid(string $sid): array {
+    if (!preg_match('/^cs_(live|test)_[A-Za-z0-9]{10,200}$/D', $sid)) return [false, ''];
+    $r = stripePayApi('GET', '/v1/checkout/sessions/' . $sid);
+    $paid = ($r['payment_status'] ?? '') === 'paid';
+    return [$paid, $paid ? (string) ($r['payment_intent'] ?? $sid) : ''];
+}
+/** how a deposit paid by link shows on the job: Square, or card (Stripe) */
+function payHowOf(array $S2): string { return ($S2['how'] ?? '') === 'link' ? ((($S2['pay']['kind'] ?? '') === 'stripe') ? 'card' : 'square') : (string) ($S2['how'] ?? ''); }
+/* Connect Square (OAuth through Traverse's own Square app): the app's id and secret live in traverse-shared/square-app.json beside every install's
+   folders, made when Traverse's Square developer account exists. Until then the button says it is not available yet. */
+function squareAppCfg(): ?array {
+    $j = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/traverse-shared/square-app.json'), true);
+    return is_array($j) && preg_match('/^sq0idp-[A-Za-z0-9_-]{10,}$/', (string) ($j['app_id'] ?? '')) && strlen((string) ($j['secret'] ?? '')) >= 20 ? $j : null;
+}
 /** extra work on a quote (2026-10-21, Matthew: "an extra line where jen can type in what she wants ... a price ... automatically added into the price
     (the price should not be shown)"): up to 6 lines of {t: words, p: dollars or 0}; empty words are dropped */
 function a365Extras($in): array { $out = []; foreach (is_array($in) ? $in : [] as $x) { if (!is_array($x)) continue; $t = a365Clean((string) ($x['t'] ?? ''), 120); if ($t === '') continue; $p = (int) round((float) ($x['p'] ?? 0)); $out[] = ['t' => $t, 'p' => max(0, min(100000, $p))]; if (count($out) >= 6) break; } return $out; }
 /** the extra work in words, for the crew's job note: "Also: clear the front beds; haul the branches." (no prices) */
 function a365ExtrasNote(array $Q): string { $t = array_map(fn($x) => (string) $x['t'], a365Extras($Q['extras'] ?? [])); return $t ? 'Also: ' . implode('; ', $t) . '.' : ''; }
 function a365Agreement(array $l): array {
+    if (kitOn()) return kitAgreement($l);   /* every install but Sixfold: the company's own work, terms and name (2026-10-27) */
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null;
     $h = $l['house'] ?? null;
     $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
@@ -2616,7 +2763,7 @@ function a365Mail(string $to, string $subject, string $text, string $html): arra
 function a365SendSigned(array $l, array $sg, string $by): array {
     $to = trim((string) ($l['email'] ?? ''));
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'stage' => 'noemail', 'error' => 'No email on the lead.'];
-    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = a365Phone($l);
+    $co = company()['a365']; $name = (string) ($co['name'] ?? (kitOn() ? company()['name'] : '365 Aeration & Seeding')); $ph = a365Phone($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $when = (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a');
     $link = a365SignLink((string) $l['id'], (string) $l['sign']['key']);
@@ -2646,7 +2793,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
     if (in_array($origin, A365_ORIGINS, true)) { header('Access-Control-Allow-Origin: ' . $origin); header('Vary: Origin'); header('Access-Control-Allow-Methods: GET, POST'); header('Access-Control-Allow-Headers: Content-Type'); }
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { http_response_code(204); exit; }
-    if (!feature('walkdesk') || !company()['a365']) fail('Not here.', 404);
+    if (!feature('walkdesk') || (!company()['a365'] && !kitOn())) fail('Not here.', 404);   /* + a kit install's own sign.html (2026-10-27) */
     header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
     if (!isset($TEAM)) $TEAM = teamInfo($basePeople, $acct, $sessionKey);
     if (!throttleTake(rateFile('a365sign|' . visitorKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
@@ -2657,7 +2804,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $l = $all[$sm[1]];
     if ($l['status'] === 'lost') fail('This form is no longer open. Please call or text us.', 410);
     if (empty($l['signed']) && ($l['sign']['how'] ?? '') === 'link' && a365DepositPaid($l)) $l = leadsAll()[$l['id']];   /* SX-58: back from Square */
-    $payOut = ($l['sign']['how'] ?? '') === 'link' ? ['amount' => (int) $l['sign']['deposit'], 'paid' => a365DepositPaid($l, false), 'url' => a365DepositPaid($l, false) ? null : (string) ($l['sign']['pay']['url'] ?? '')] : null;
+    $payOut = ($l['sign']['how'] ?? '') === 'link' ? ['amount' => (int) $l['sign']['deposit'], 'paid' => a365DepositPaid($l, false), 'url' => a365DepositPaid($l, false) ? null : (string) ($l['sign']['pay']['url'] ?? ''), 'via' => (($l['sign']['pay']['kind'] ?? '') === 'stripe') ? 'Stripe' : 'Square'] : null;
     $A = a365Agreement($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $signedOut = fn($sg) => $sg ? ['name' => (string) $sg['name'], 'when' => (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a')] : null;
@@ -2708,13 +2855,13 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $ex = jobForLead($l['id']);
     if ($ex && !$ex['done']) {
         $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
-        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']] : ['s' => 'unpaid'], 'by' => 'website', 'at' => time()]);
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'by' => 'website', 'at' => time()]);
     } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= $today0) {
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
-            'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => $S2['how'] === 'link' ? 'square' : (string) $S2['how']] : ['s' => 'unpaid'], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
+            'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
     }
     /* what was shown is kept with the signature, so the signed page never changes if the quote does later */
     $sg = ['name' => $name, 'at' => time(), 'version' => A365_SIGN_VERSION, 'hash' => $A['hash'], 'facts' => $A['facts'], 'terms' => $A['terms'],
@@ -2728,6 +2875,8 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
 }
 
+/* the company's own name, phone and colour for a kit install's customer pages (q.html, sign.html), before sign-in (2026-10-27) */
+if ($action === 'kitbrand') { if (!kitOn()) fail('Not here.', 404); header('Cache-Control: no-store'); out(['ok' => true] + kitBrand()); }
 /* ---- the Sixfold website's contact form (2026-10-14) ----
  * Matthew: "make sure the website contact forms lead to the app". sixfoldcolorado.com's form used to write the lead straight into
  * the app's files, which only worked while the app lived on the same server; since the move to traverseplatforms.com (2026-10-09)
@@ -2773,7 +2922,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays'];
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit'];   /* kit: the quote kit's prices and setup, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -4427,7 +4576,7 @@ if ($action === 'calsave') {
  * (the page turns both into a range and a confidence), the lot, year built and house size where the county gives them. The office
  * only; never shown to customers (Matthew: customers must not know we hold this). A lead can be tied to its house, and keep what the
  * customer said about the lawn; Brad says on the day whether the size was right (lawncheck.log), which is how the ranges get better. */
-function sideDoor(string $kind, string $key, string $id) { $f = DATA_DIR . '/' . $kind . '-' . $key . '.json'; if (!is_readable($f)) return null; $j = json_decode((string) file_get_contents($f), true); return is_array($j) ? (($j['doors'] ?? $j)[$id] ?? null) : null; }
+function sideDoor(string $kind, string $key, string $id) { $f = DATA_DIR . '/' . $kind . '-' . $key . '.json'; if (!is_readable($f)) return null; $j = json_decode((string) file_get_contents($f), true); if (!is_array($j)) return null; $v = ($j['doors'] ?? $j)[$id] ?? null; return is_string($v) ? json_decode($v, true) : $v; }   /* an edition's packed file: JSON text per door (2026-10-27) */
 /** the Census figures for a house's block group (census-<town>.json, ACS), or null (2026-10-21: shown on every house card) */
 function censusFor(string $key, string $id): ?array {
     static $cache = [];
@@ -4447,6 +4596,7 @@ function houseFacts(string $key, string $id): ?array {
                 'cen' => censusFor($key, $id),   /* 2026-10-21 */
                 'hand' => loadLawnHand($key)[$id] ?? null, 'range' => (function ($r) { return $r && (int) ($r['v'] ?? 1) >= 2 ? $r : null; })(lawnRangeCache()[$key . '/' . $id] ?? null),   /* 2026-10-21 */
                 'yb' => is_array($y) ? ($y['yb'] ?? null) : null, 'bsf' => is_array($y) ? ($y['bsf'] ?? null) : null,
+                'roof' => (function ($r) { return is_array($r) ? array_intersect_key($r, array_flip(['sq', 'sqs', 'pitch', 'flat'])) : null; })(sideDoor('roof', $key, $id)),   /* the quote kit prices a roof (2026-10-27) */
                 /* 2026-10-14 (Matthew: "is that all the information we have for the property?"): the rest the door lists carry */
                 'fire' => $d['fire'] ?? null, 'cg' => !empty($d['cg']), 'os' => $d['os'] ?? null, 'place' => $a['place'] ?? null,
                 'mark' => (function () use ($key, $d, $id) { $m = freshMark($d, loadMarks($key)[$id] ?? null); return $m ? ['o' => (string) ($m['outcome'] ?? ''), 'by' => (string) ($m['by'] ?? ''), 'at' => (int) ($m['at'] ?? 0)] : null; })(),
@@ -5760,7 +5910,7 @@ function jobAftercare(string $jid, string $why, bool $again = false): array {
         return $r + ['to' => $to];
     };
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
-    $co = company()['a365']; $name = (string) ($co['name'] ?? '365 Aeration & Seeding'); $ph = a365Phone($l);
+    $co = company()['a365']; $name = (string) ($co['name'] ?? (kitOn() ? company()['name'] : '365 Aeration & Seeding')); $ph = a365Phone($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $owed = jobOwed($j); $cg = $j['sqcharge'] ?? null; $link = (string) ($j['sqlink']['url'] ?? '');
     $tips = ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'];
@@ -7255,7 +7405,7 @@ function a365BookNoSign(string $lid, string $by): ?string {
     $l = leadsAll()[$lid] ?? null;
     if (!$l || empty($l['sign']['nosign']) || !empty($l['confirmed']) || !empty($l['signed'])) { flock($lk, LOCK_UN); return null; }
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $jid = null; $had = false;
-    $dep = (int) $S2['deposit']; $howP = $S2['how'] === 'link' ? 'square' : (string) $S2['how'];
+    $dep = (int) $S2['deposit']; $howP = payHowOf($S2);
     $pay = $dep <= 0 ? ['s' => 'unpaid'] : ($dep >= (int) $Q['price'] ? ['s' => 'paid', 'how' => $howP] : ['s' => 'deposit', 'amt' => $dep, 'how' => $howP]);
     $today0 = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
     $ex = jobForLead($lid);
@@ -7295,11 +7445,11 @@ if ($action === 'signsend') {
     $depIn = $S0 && (!empty($L['confirmed']) || $linkPaid);
     $byLink = $depIn ? ($S0['how'] ?? '') === 'link' : ($body['how'] ?? '') === 'link';   /* SX-58: the customer pays the deposit on the form, by Square link */
     if ($S0 && !$depIn && ($S0['how'] ?? '') !== 'link' && $byLink) fail('The $' . (int) $S0['deposit'] . ' deposit was already taken (' . ucfirst((string) $S0['how']) . '). Keep that; a Square link would ask them to pay it again.');
-    if ($byLink && !$depIn && !squareFor()) fail('Square is not connected yet.');
+    if ($byLink && !$depIn && !payLinkOk()) fail(kitOn() ? 'Payments are not connected yet: connect Square or Stripe in Company.' : 'Square is not connected yet.');
     $noDep = !$depIn && ($body['how'] ?? '') === 'none';   /* no deposit (2026-10-26, Jen: Marc and Zane said no to the deposit, and the form would not go without one) */
     if (empty($body['taken']) && !$byLink && !$depIn && !$noDep) fail('The form goes out only after they said yes and you took the deposit.');
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
-    $pkg = (string) ($body['pkg'] ?? 'full'); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick what is included.');
+    $pkg = (string) ($body['pkg'] ?? (kitOn() ? 'job' : 'full')); if (!in_array($pkg, kitOn() ? ['job'] : ['full', 'aerate'], true)) fail('Pick what is included.');   /* a kit install: the quoted work (2026-10-27) */
     $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other', 'none'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
     if ($depIn) { $dep = (int) $S0['deposit']; if ($dep > $price) fail('The $' . $dep . ' deposit is already ' . ($linkPaid ? 'paid' : 'in') . '; the price cannot be less than that.'); }
@@ -7322,12 +7472,13 @@ if ($action === 'signsend') {
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
           'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()]];
     $ex = array_key_exists('extras', $body) ? a365Extras($body['extras']) : ($q0['extras'] ?? []); if ($ex) $q['extras'] = $ex;   /* extra work: on the form's Service line (2026-10-21) */
+    if (kitOn() && !empty($q0['items']) && (int) ($q0['price'] ?? 0) === $price) { $q['items'] = $q0['items']; if (isset($q0['measures'])) $q['measures'] = $q0['measures']; }   /* the quote's lines stay on the form while the price is the one quoted (2026-10-27) */
     $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 300)];
     $nosign = !empty($body['nosign']); if ($nosign) $sign['nosign'] = true;   /* no signature needed (2026-10-17) */
     if ($byLink && $depIn && is_array($S0['pay'] ?? null)) $sign['pay'] = $S0['pay'];   /* the paid order stays, so sqpaid still matches it (2026-10-18) */
     elseif ($byLink) {
         if ($dep < 1) fail('A Square link needs a deposit of at least $1.');
-        $pl = squareLink('Deposit: ' . (string) (company()['a365']['name'] ?? 'Aeration'), $dep * 100, a365SignLink($id, $sign['key']), (string) ($L['email'] ?? ''));
+        $pl = kitOn() ? payLink('Deposit: ' . company()['name'], $dep * 100, a365SignLink($id, $sign['key']), (string) ($L['email'] ?? '')) : squareLink('Deposit: ' . (string) (company()['a365']['name'] ?? 'Aeration'), $dep * 100, a365SignLink($id, $sign['key']), (string) ($L['email'] ?? ''));   /* a kit install: Square or Stripe (2026-10-27) */
         if (!empty($pl['err'])) fail($pl['err'], 502);
         $sign['pay'] = $pl;
     }
@@ -7344,7 +7495,8 @@ function squareFor(): bool { global $role; $c = squareCfg(); return (bool) $c &&
 /* is Square on, and has a lead's deposit or a job's balance been paid? (the office's Check button) */
 if ($action === 'squarestate') {   /* anyone signed in: the crew's job card offers the balance link */
     if (!feature('walkdesk')) fail('Not here.', 404);
-    $c = squareCfg(); out(['ok' => true, 'on' => squareFor(), 'env' => $c ? $c['env'] : null]);
+    $c = squareCfg(); $sp = stripePayCfg();
+    out(['ok' => true, 'on' => squareFor(), 'env' => $c ? $c['env'] : null, 'pay' => kitOn() ? payLinkOk() : squareFor(), 'payKind' => $c ? 'square' : ($sp ? 'stripe' : null), 'payEnv' => $c ? $c['env'] : ($sp ? (str_contains((string) $sp['secret'], '_live_') ? 'production' : 'sandbox') : null)]);   /* + pay: a kit install's deposit link by Square or Stripe (2026-10-27) */
 }
 if ($action === 'squarecheck') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
@@ -9513,6 +9665,157 @@ function brandColors(string $hex): array {
                         '--signin-soft' => $at(0.85, $s * 0.45), '--key' => $at(0.28), '--key-down' => $at(0.35)],
             'dark' => ['--bg' => $at(0.06, $s * 0.5), '--card' => $at(0.1, $s * 0.45), '--line' => $at(0.2, $s * 0.35), '--sunk' => $at(0.08, $s * 0.45), '--bar' => $at(0.12, $s * 0.5),
                        '--moss-ink' => $at(0.75, $s * 0.55), '--accent' => $at(0.75, $s * 0.55)]];
+}
+/* ---- the kit's screens (2026-10-27, TR-33): price rules and terms (Company), payments (Square / Stripe), the setup checklist, quoting a lead.
+ *   kit         GET   rules, minimum, deposit %, terms (the company's or the starters), units; payments state; the admin's setup checklist
+ *   kitset      POST  admin: rules [{id,label,unit,rate,opt}] (20 at most), min, depositPct, terms [lines] (15 at most; [] = the starters)
+ *   kitquote    POST  office/admin/quote: price a lead's house from measures {lawn, roof, sqs, visits} and picks {ruleId: {on, qty}}, optional
+ *                     price (an adjustment line makes up the difference), note, sent, offer (a held day, as leadquote) -> the lead's quote
+ *   payset      POST  admin: {kind: square, token, env, location?} | {kind: stripe, secret} | {kind: off, which}; tested against Square or
+ *                     Stripe before it is kept; never shown back
+ *   squareoauth GET   admin: the Connect Square address (Traverse's Square app), or ready:false until that app exists */
+function kitPayState(): array {
+    $sq = json_decode((string) @file_get_contents(pushPrivDir() . '/square.json'), true); $sp = stripePayCfg();
+    return ['square' => is_array($sq) && !empty($sq['token']) ? ['on' => true, 'how' => !empty($sq['oauth']) ? 'connected' : 'pasted', 'env' => (string) ($sq['env'] ?? ''), 'loc' => (string) ($sq['locName'] ?? '')] : ['on' => false],
+            'stripe' => $sp ? ['on' => true, 'live' => str_contains((string) $sp['secret'], '_live_'), 'acct' => (string) ($sp['acct'] ?? '')] : ['on' => false],
+            'oauthReady' => (bool) squareAppCfg()];
+}
+function kitSetup(): array {
+    global $basePeople, $acct, $sessionKey, $session;
+    $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true); $loc = is_array($loc) ? $loc : [];
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true); $towns = count((array) ($idx['regions'] ?? []));
+    $people = count(array_filter(acctRows($basePeople, $acct, $sessionKey), fn($r) => !$r['off'] && !preg_match('/^Claude Check/i', (string) $r['name'])));
+    $cfg = kitCfg(); $pay = kitPayState(); $mine = count(pushSubs()[(string) ($session['c'] ?? '')] ?? []);
+    $bill = json_decode((string) @file_get_contents(DATA_DIR . '/billing.json'), true);
+    $s = [['company', !empty($loc['name']) && !empty($loc['phone']), !empty($loc['name']) ? (string) $loc['name'] : ''],
+          ['colour', !empty($loc['color']), ''],
+          ['towns', $towns > 0, $towns . ' towns'],
+          ['people', $people >= 2, $people . ' sign-ins'],
+          ['prices', $cfg['rulesSet'], count($cfg['rules']) . ' price lines'],
+          ['terms', $cfg['termsSet'], ''],
+          ['payments', $pay['square']['on'] || $pay['stripe']['on'], $pay['square']['on'] ? 'Square' : ($pay['stripe']['on'] ? 'Stripe' : '')],
+          ['alerts', $mine > 0, $mine ? $mine . ' device' . ($mine === 1 ? '' : 's') : '']];
+    if (feature('billing')) $s[] = ['plan', is_array($bill) && in_array((string) ($bill['status'] ?? ''), ['active', 'trialing'], true), ''];
+    return array_map(fn($x) => ['k' => $x[0], 'done' => (bool) $x[1], 'info' => $x[2]], $s);
+}
+/** renew a Connect Square token with Traverse's Square app; the file is rewritten; null when it could not */
+function squareOauthRefresh(array $c): ?array {
+    $app = squareAppCfg(); if (!$app || empty($c['refresh']) || !function_exists('curl_init')) return null;
+    $h = curl_init('https://connect.squareup.com/oauth2/token');
+    curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_POST => true, CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Square-Version: 2025-01-23'],
+        CURLOPT_POSTFIELDS => json_encode(['client_id' => $app['app_id'], 'client_secret' => $app['secret'], 'grant_type' => 'refresh_token', 'refresh_token' => $c['refresh']])]);
+    $r = json_decode((string) curl_exec($h), true) ?: []; curl_close($h);
+    if (empty($r['access_token'])) { error_log('rounds: Square token renewal failed'); return null; }
+    $c['token'] = (string) $r['access_token']; $c['expires'] = (int) strtotime((string) ($r['expires_at'] ?? '+30 days')); if (!empty($r['refresh_token'])) $c['refresh'] = (string) $r['refresh_token'];
+    writeJsonAtomic(dirname(__DIR__, 2) . '/sixfold-private/square.json', $c);
+    return $c;
+}
+/** a Square call with a token that is not saved yet (payset), against the real Square or the test copy's stand-in */
+function squareTry(string $token, string $env, string $path): array {
+    $base = getenv('KIT_SQUARE_BASE') ?: ($env === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com');
+    $h = curl_init(rtrim($base, '/') . $path);
+    curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token, 'Square-Version: 2025-01-23', 'Content-Type: application/json']]);
+    $raw = curl_exec($h); $code = (int) curl_getinfo($h, CURLINFO_HTTP_CODE); curl_close($h);
+    $j = is_string($raw) ? (json_decode($raw, true) ?: []) : []; $j['_status'] = $code; return $j;
+}
+if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], true)) {
+    if (!kitOn()) fail('Not here.', 404);
+    if ($action === 'kit') {
+        if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+        out(['ok' => true, 'units' => KIT_UNITS, 'trade' => kitTrade()] + kitCfg() + ['pay' => $role === 'admin' ? kitPayState() : ['square' => ['on' => (bool) squareCfg()], 'stripe' => ['on' => (bool) stripePayCfg()]], 'setup' => $role === 'admin' ? kitSetup() : null]);
+    }
+    if (!$isPost && $action !== 'squareoauth') fail('POST required', 405);
+    if ($action === 'kitquote') {
+        if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+        $id = (string) ($body['id'] ?? ''); $all = leadsAll();
+        if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
+        if (!empty($all[$id]['signed']) && $role !== 'admin') fail('They already signed for this price. Change the job on the Jobs board.', 409);
+        $m0 = is_array($body['measures'] ?? null) ? $body['measures'] : [];
+        $mz = fn($k, $max) => isset($m0[$k]) && is_numeric($m0[$k]) && (float) $m0[$k] >= 0 && (float) $m0[$k] <= $max ? round((float) $m0[$k], 1) : 0;
+        $measures = ['lawn' => $mz('lawn', 2000000), 'roof' => $mz('roof', 500000), 'sqs' => $mz('sqs', 5000), 'visits' => max(1, (int) $mz('visits', 365))];
+        [$items, $total] = kitPrice(kitCfg(), $measures, is_array($body['picks'] ?? null) ? $body['picks'] : []);
+        if (isset($body['price']) && is_numeric($body['price']) && (int) $body['price'] > 0) {   /* the price they agreed, when it differs: an adjustment line */
+            $ov = min(100000, (int) $body['price']); if ($ov !== $total) { $items[] = ['id' => 'adj', 't' => $ov > $total ? 'Adjustment' : 'Discount', 'amt' => $ov - $total, 'qty' => 1, 'unit' => 'flat']; $total = $ov; }
+        }
+        if ($total < 1) fail('This comes to $0. Set your prices in Company, or type the price.');
+        $q = ['price' => $total, 'pkg' => 'job', 'sq' => (int) $measures['lawn'], 'items' => $items, 'measures' => $measures, 'note' => $clean($body['note'] ?? '', 300), 'sent' => !empty($body['sent'])];
+        $prevOffer = $all[$id]['quote']['offer'] ?? null;
+        if (array_key_exists('offer', $body)) {
+            $o = $body['offer'];
+            if (!is_array($o)) $q['offer'] = null;
+            else {
+                $oc = (string) ($o['crew'] ?? ''); $od = (string) ($o['date'] ?? ''); $os = (string) ($o['slot'] ?? '');
+                if (!in_array($oc, jobCrewList(), true)) fail('Pick who does the job.');
+                if (!dateOk($od) || $od < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
+                if (!jobSlot($os)) fail('Pick an arrival time.');
+                if ($why = slotFree($oc, $od, $os, $id)) fail($why, 409);
+                $q['offer'] = ['crew' => $oc, 'date' => $od, 'slot' => $os, 'at' => time()];
+            }
+        } elseif (is_array($prevOffer)) $q['offer'] = $prevOffer;
+        $row = ['id' => $id, 'quote' => $q, 'by' => $me, 'at' => time()];
+        if (in_array($all[$id]['status'], ['new', 'contacted', 'walk'], true)) $row['status'] = 'quoted';
+        if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'price' => $total, 'items' => $items, 'link' => a365QuoteLink($id), 'status' => $row['status'] ?? $all[$id]['status']]);
+    }
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($action === 'kitset') {
+        $rules = [];
+        foreach (array_slice((array) ($body['rules'] ?? []), 0, 20) as $i => $r) {
+            if (!is_array($r)) continue; $lab = $clean($r['label'] ?? '', 60); if ($lab === '') continue;
+            $u = (string) ($r['unit'] ?? ''); if (!isset(KIT_UNITS[$u])) fail('Pick how "' . $lab . '" is priced.');
+            if (!is_numeric($r['rate'] ?? null) || (float) $r['rate'] < 0 || (float) $r['rate'] > 100000) fail('Give "' . $lab . '" a price between $0 and $100,000.');
+            $rid = preg_match('/^[a-z0-9]{1,12}$/', (string) ($r['id'] ?? '')) ? (string) $r['id'] : 'x' . substr(bin2hex(random_bytes(3)), 0, 6);
+            $rules[] = ['id' => $rid, 'label' => $lab, 'unit' => $u, 'rate' => round((float) $r['rate'], 2), 'opt' => !empty($r['opt'])];
+        }
+        $terms = array_values(array_filter(array_map(fn($t) => $clean($t, 400), array_slice((array) ($body['terms'] ?? []), 0, 15)), fn($t) => $t !== ''));
+        $j = ['rules' => $rules, 'min' => max(0, min(100000, (int) ($body['min'] ?? 0))), 'depositPct' => max(0, min(100, (int) ($body['depositPct'] ?? 50))), 'terms' => $terms, 'by' => $me, 'at' => time()];
+        if (!writeJsonAtomic(DATA_DIR . '/kit.json', $j)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true] + kitCfg());
+    }
+    if ($action === 'payset') {
+        $kind = (string) ($body['kind'] ?? '');
+        if ($kind === 'off') {
+            $w = (string) ($body['which'] ?? ''); if (!in_array($w, ['square', 'stripe'], true)) fail('Which one?');
+            @unlink(pushPrivDir() . '/' . ($w === 'square' ? 'square.json' : 'stripe-pay.json'));
+            out(['ok' => true, 'pay' => kitPayState()]);
+        }
+        if ($kind === 'square') {
+            $tok = trim((string) ($body['token'] ?? '')); $env = (string) ($body['env'] ?? 'production');
+            if (!preg_match('/^[A-Za-z0-9_-]{20,300}$/', $tok)) fail('That does not look like a Square access token (Square Developer: your app, Credentials, Access token).');
+            if (!in_array($env, ['production', 'sandbox'], true)) fail('Live or test?');
+            $r = squareTry($tok, $env, '/v2/locations');
+            if (($r['_status'] ?? 0) !== 200 || empty($r['locations'])) fail('Square did not accept that token' . (!empty($r['errors'][0]['detail']) ? ': ' . $r['errors'][0]['detail'] : '') . '.');
+            $want = (string) ($body['location'] ?? ''); $locs = array_values(array_filter($r['locations'], fn($x) => ($x['status'] ?? 'ACTIVE') === 'ACTIVE'));
+            $loc = null; foreach ($locs as $x) if ($want !== '' && ($x['id'] ?? '') === $want) $loc = $x; $loc = $loc ?? ($locs[0] ?? null);
+            if (!$loc) fail('That Square account has no active location.');
+            $j = ['token' => $tok, 'location' => (string) $loc['id'], 'locName' => mb_substr((string) ($loc['name'] ?? ''), 0, 60), 'env' => $env, 'how' => 'pasted', 'by' => $me, 'at' => time()];
+            if (getenv('KIT_SQUARE_BASE') && $env === 'sandbox') $j['api'] = (string) getenv('KIT_SQUARE_BASE');   /* the test copy's stand-in */
+            if (!writeJsonAtomic(pushPrivDir() . '/square.json', $j)) fail('Could not save that. Try again.', 500);
+            @chmod(pushPrivDir() . '/square.json', 0600);
+            out(['ok' => true, 'pay' => kitPayState()]);
+        }
+        if ($kind === 'stripe') {
+            $sec = trim((string) ($body['secret'] ?? ''));
+            if (!preg_match('/^(sk|rk)_(live|test)_[A-Za-z0-9]{8,}$/', $sec)) fail('That does not look like a Stripe secret key (it starts sk_live_ or rk_live_).');
+            $base = getenv('TRAVERSE_STRIPEPAY_BASE') ?: 'https://api.stripe.com';
+            $h = curl_init(rtrim($base, '/') . '/v1/account'); curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_USERPWD => $sec . ':']);
+            $raw = curl_exec($h); $code = (int) curl_getinfo($h, CURLINFO_HTTP_CODE); curl_close($h); $a = is_string($raw) ? (json_decode($raw, true) ?: []) : [];
+            if ($code !== 200) fail('Stripe did not accept that key' . (!empty($a['error']['message']) ? ': ' . $a['error']['message'] : '') . '.');
+            $j = ['secret' => $sec, 'acct' => mb_substr((string) ($a['business_profile']['name'] ?? ($a['settings']['dashboard']['display_name'] ?? '')), 0, 60), 'by' => $me, 'at' => time()];
+            if (!writeJsonAtomic(pushPrivDir() . '/stripe-pay.json', $j)) fail('Could not save that. Try again.', 500);
+            @chmod(pushPrivDir() . '/stripe-pay.json', 0600);
+            out(['ok' => true, 'pay' => kitPayState()]);
+        }
+        fail('Square or Stripe?');
+    }
+    if ($action === 'squareoauth') {
+        $app = squareAppCfg();
+        if (!$app) out(['ok' => true, 'ready' => false]);
+        $nonce = bin2hex(random_bytes(16));
+        if (!writeJsonAtomic(pushPrivDir() . '/square-oauth-state.json', ['nonce' => $nonce, 'at' => time(), 'back' => kitBase(), 'by' => $me])) fail('Could not start that. Try again.', 500);
+        $scope = 'MERCHANT_PROFILE_READ PAYMENTS_READ PAYMENTS_WRITE ORDERS_READ ORDERS_WRITE CUSTOMERS_READ CUSTOMERS_WRITE';
+        out(['ok' => true, 'ready' => true, 'url' => 'https://connect.squareup.com/oauth2/authorize?' . http_build_query(['client_id' => $app['app_id'], 'scope' => $scope, 'session' => 'false', 'state' => basename(pushPrivDir()) . '.' . $nonce])]);
+    }
 }
 const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site', 'review'];
 if ($action === 'companyset') {

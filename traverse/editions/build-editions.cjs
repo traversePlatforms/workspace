@@ -366,11 +366,14 @@ async function build(key) {
       { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
     ]
   }, null, 2) + '\n');
+  /* the customer's quote and agreement pages (2026-10-27, TR-33): the company's own q.html and sign.html beside its app, talking to its own API */
+  for (const pg of ['q.html', 'sign.html']) write(path.join(app, pg), rep(fs.readFileSync(path.join(APP, pg), 'utf8'), "'../api/rounds.php'", "'../api/" + E.api + "-rounds.php'", 1, pg + ' api'));
   write(path.join(app, '.htaccess'), fs.readFileSync(path.join(APP, '.htaccess'), 'utf8')
     .replace('<IfModule mod_headers.c>', '<IfModule mod_headers.c>\nHeader set X-Robots-Tag "noindex, nofollow"'));
 
   let r = api(E, 'rounds.php');
   r = rep(r, "const COOKIE     = 'sfr';", "const COOKIE     = '" + E.cookie + "';", 1, 'cookie');
+  r = rep(r, "const APP_DIR = 'summit-de59ae83';", "const APP_DIR = '" + E.folder + "';", 1, 'app dir');   /* the quote and sign pages' address (2026-10-27, TR-33) */
   // the codes file's fallback beside the API (a local checkout) is named per install: public_html/api/rounds-codes.php is
   // Sixfold's changeover copy, and an edition whose private folder was missing would otherwise sign Sixfold's codes in
   // and share its session key (review 2026-10-06)

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Your agreement</title>
+<style>
+  /* a company's one-page agreement (2026-10-27, TR-33): the same form, deposit and signature as Sixfold's 365 page, in the company's own name
+     and colour (from kitbrand), at the company's own app address. Light and dark follow the device. */
+  :root{--brand:#13294b;--ink:#15202d;--soft:#566476;--line:#dce2ea;--card:#fff;--bg:#f4f6f9;--ok:#e9f5ee;--okline:#bfe0cc;--bad:#b42318}
+  @media (prefers-color-scheme:dark){:root{--ink:#e8eef6;--soft:#a6b3c3;--line:#33415a;--card:#172131;--bg:#0e1520;--ok:#13291d;--okline:#2c5a3e;--bad:#ff8a80}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  a{color:var(--brand)}
+  @media (prefers-color-scheme:dark){a{color:#9fbbe6}}
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px}
+  header{background:var(--brand);color:#fff}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px}
+  header b{font-size:20px}
+  header a{color:#fff;font-weight:700;text-decoration:none;white-space:nowrap}
+  .band{padding:24px 0 6px}.band h1{font-size:clamp(26px,6vw,36px);line-height:1.15;margin:0 0 4px}.band p{margin:0;color:var(--soft)}
+  main .wrap{display:grid;gap:16px;padding-top:14px;padding-bottom:40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+  .card h2{font-size:20px;margin:0 0 12px}
+  dl{margin:0;display:grid;grid-template-columns:minmax(110px,40%) 1fr;gap:8px 14px}
+  dt{color:var(--soft);font-size:15px} dd{margin:0;font-weight:700}
+  ol{margin:0;padding-left:20px;display:grid;gap:8px}
+  .muted{color:var(--soft);font-size:14px;margin:0}.big{font-size:20px;font-weight:700;margin:0 0 6px}
+  label.name{display:grid;gap:6px;font-weight:700;font-size:15px;margin-top:12px}
+  label.name input{font:20px system-ui,sans-serif;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+  label.agree{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:15px}
+  label.agree input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--brand)}
+  .btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;margin-top:14px;border:0;border-radius:999px;background:var(--brand);color:#fff;font:700 17px system-ui,sans-serif;cursor:pointer;text-decoration:none}
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+  .btn:focus-visible,input:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+  .err{color:var(--bad);font-weight:700;font-size:14px;margin-top:10px;min-height:1px}
+  .ok{background:var(--ok);border-color:var(--okline)}
+  .sig{font:italic 700 26px Georgia,serif}
+  .skel{height:200px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+  footer{padding:20px 0 36px;color:var(--soft);font-size:14px}
+  @media print{header,footer,.noprint{display:none}.card{border:0;padding:0}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><b id="co">Your agreement</b><a id="call" href="#" hidden></a></div></header>
+<div class="band"><div class="wrap"><h1 id="hi">Your agreement</h1><p id="sub"></p></div></div>
+<main><div class="wrap" id="main"><div class="skel"></div></div></main>
+<footer><div class="wrap" id="foot"></div></footer>
+<script>
+(function () {
+  var API = '../api/rounds.php';
+  var key = (/[?&]s=([A-Za-z0-9-]+)/.exec(location.search) || [])[1] || '';
+  var main = document.getElementById('main'), B = { name: '', phone: '' };
+  function el(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t != null) e.textContent = t; return e; }
+  function tel(p) { return 'tel:' + String(p || '').replace(/[^\d+]/g, ''); }
+  function callLine() { return B.phone ? 'Questions? Call or text ' + B.phone + '.' : 'Questions? Reply to the message this link came in.'; }
+  function sorry(msg) { main.textContent = ''; var c = el('div', 'card'); c.appendChild(el('h2', null, 'We could not open this form')); c.appendChild(el('p', 'muted', msg)); if (B.phone) { var a = el('a', 'btn', 'Call or text ' + B.phone); a.href = tel(B.phone); c.appendChild(a); } main.appendChild(c); }
+  function brand(j) {
+    B = j || B; if (!B.name) return;
+    document.title = 'Your agreement · ' + B.name;
+    document.getElementById('co').textContent = B.name; document.getElementById('sub').textContent = B.name;
+    if (/^#[0-9a-f]{6}$/i.test(B.color || '')) document.documentElement.style.setProperty('--brand', B.color);
+    var c = document.getElementById('call'); if (B.phone) { c.hidden = false; c.textContent = B.phone; c.href = tel(B.phone); }
+    var f = document.getElementById('foot'); f.textContent = B.name + (B.phone ? ' · ' + B.phone : '') + (B.email ? ' · ' + B.email : '');
+  }
+  fetch(API + '?action=kitbrand', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { if (j && j.ok) brand(j); load(); }).catch(load);
+  function details(A) { var c = el('div', 'card'); c.appendChild(el('h2', null, 'What we agreed')); var dl = el('dl'); A.facts.forEach(function (f) { dl.appendChild(el('dt', null, f[0])); dl.appendChild(el('dd', null, f[1])); }); c.appendChild(dl); return c; }
+  function terms(A) { var c = el('div', 'card'); c.appendChild(el('h2', null, 'The details')); var ol = el('ol'); A.terms.forEach(function (t) { ol.appendChild(el('li', null, t)); }); c.appendChild(ol); return c; }
+  function printBtn() { var p = el('button', 'btn ghost noprint', 'Print or save a copy'); p.type = 'button'; p.addEventListener('click', function () { window.print(); }); return p; }
+  function signedCard(sg, booked, mailed) {
+    var c = el('div', 'card ok'); c.appendChild(el('h2', null, booked ? 'Signed. You’re booked' : 'Signed'));
+    if (booked) c.appendChild(el('p', 'big', booked.day + (booked.arrive ? ', arriving ' + booked.arrive : '') + '.'));
+    c.appendChild(el('p', 'sig', sg.name)); c.appendChild(el('p', 'muted', 'Signed electronically on ' + sg.when + '.'));
+    if (mailed) c.appendChild(el('p', 'muted', 'A copy has been emailed to ' + mailed + '.'));
+    c.appendChild(printBtn()); return c;
+  }
+  function load() {
+    if (!/^[wm]\d{14}[0-9a-f]{6}-[0-9a-f]{16}$/.test(key)) { sorry('This link looks incomplete. Ask us to send it again.'); return; }
+    fetch(API + '?action=a365sign&s=' + encodeURIComponent(key) + (/[?&]staff=1\b/.test(location.search) ? '&staff=1' : ''), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (A) {
+      if (!A || !A.ok) { sorry((A && A.error) || 'Something went wrong. ' + callLine()); return; }
+      document.getElementById('hi').textContent = (A.first ? A.first + ', here’s your ' : 'Your ') + (A.nosign ? 'booking' : 'agreement');
+      main.textContent = '';
+      if (A.moved) { var mv = el('div', 'card ok'); mv.appendChild(el('h2', null, 'Your day has moved')); mv.appendChild(el('p', 'big', A.moved.day + (A.moved.arrive ? ', arriving ' + A.moved.arrive : '') + '.')); mv.appendChild(el('p', 'muted', 'We moved it for the weather. ' + callLine())); main.appendChild(mv); }
+      main.appendChild(details(A)); main.appendChild(terms(A));
+      if (A.view) { var vc = el('div', 'card'); vc.appendChild(el('p', 'muted', callLine())); vc.appendChild(printBtn()); main.appendChild(vc); return; }
+      if (A.signed) { main.appendChild(signedCard(A.signed, null)); return; }
+      if (A.nosign) {
+        if (A.pay && !A.pay.paid && A.pay.url) main.appendChild(payCard(A, 'Your day is booked as soon as it’s paid.'));
+        var nc = el('div', 'card' + (A.confirmed ? ' ok' : ''));
+        nc.appendChild(el('h2', null, A.confirmed ? 'You’re booked' : 'Almost done'));
+        if (A.confirmed && A.booked) nc.appendChild(el('p', 'big', A.booked.day + (A.booked.arrive ? ', arriving ' + A.booked.arrive : '') + '.'));
+        nc.appendChild(el('p', 'muted', A.confirmed ? 'No signature needed. This page is your confirmation, so keep it for your records.' : 'No signature needed. Your day is held until the deposit is paid.'));
+        nc.appendChild(el('p', 'muted', callLine())); nc.appendChild(printBtn()); main.appendChild(nc); return;
+      }
+      if (A.pay && !A.pay.paid && A.pay.url) main.appendChild(payCard(A, 'You come straight back here to sign.'));
+      else if (A.pay && A.pay.paid) { var ok = el('div', 'card ok'); ok.appendChild(el('h2', null, 'Deposit paid')); ok.appendChild(el('p', 'muted', 'Thank you. $' + A.pay.amount + ' received. Now sign below.')); main.appendChild(ok); }
+      signBox(A);
+    }).catch(function () { sorry('We could not reach our system just now. Try again in a minute. ' + callLine()); });
+  }
+  function payCard(A, after) {
+    var pc = el('div', 'card noprint'); pc.appendChild(el('h2', null, 'Pay your deposit'));
+    pc.appendChild(el('p', null, 'Pay the $' + A.pay.amount + ' deposit by card on ' + (A.pay.via || 'our payment') + '’s secure page. ' + after));
+    var sv = null;
+    if (A.save && A.pay.via !== 'Stripe') { var sl = el('label', 'agree'); sv = el('input'); sv.type = 'checkbox'; sv.checked = !!A.save.on; sl.appendChild(sv); sl.appendChild(el('span', null, A.save.text + ' (Optional.)')); pc.appendChild(sl); }
+    var pb = el('a', 'btn', 'Pay $' + A.pay.amount + ' deposit'); pb.href = A.pay.url; pc.appendChild(pb);
+    if (sv) pb.addEventListener('click', function (e) { e.preventDefault(); var go2 = function () { location.href = A.pay.url; }; fetch(API + '?action=a365savecard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, save: sv.checked }) }).then(go2, go2); });
+    var rf = el('button', 'btn ghost', 'I paid: refresh'); rf.type = 'button'; rf.addEventListener('click', function () { location.reload(); }); pc.appendChild(rf);
+    return pc;
+  }
+  function signBox(A) {
+    var c = el('div', 'card noprint'); c.appendChild(el('h2', null, 'Sign'));
+    var nl = el('label', 'name', 'Type your full name'); var ni = el('input'); ni.autocomplete = 'name'; ni.maxLength = 120; nl.appendChild(ni); c.appendChild(nl);
+    var boxes = (A.consents && A.consents.length ? A.consents : [A.consent]).map(function (t) { var al = el('label', 'agree'); var ai = el('input'); ai.type = 'checkbox'; al.appendChild(ai); al.appendChild(el('span', null, t)); c.appendChild(al); return ai; });
+    var go = el('button', 'btn', 'Sign'); go.type = 'button'; c.appendChild(go);
+    if (A.pay && !A.pay.paid) { go.disabled = true; c.appendChild(el('p', 'muted', 'Signing opens once the deposit is paid.')); }
+    var err = el('div', 'err'); err.setAttribute('role', 'alert'); c.appendChild(err);
+    go.addEventListener('click', function () {
+      err.textContent = '';
+      if (ni.value.trim().length < 3) { err.textContent = 'Type your full name to sign.'; ni.focus(); return; }
+      if (boxes.some(function (b) { return !b.checked; })) { err.textContent = boxes.length > 1 ? 'Tick both boxes to agree.' : 'Tick the box to agree.'; return; }
+      go.disabled = true; go.textContent = 'Signing…';
+      fetch(API + '?action=a365signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, name: ni.value.trim(), agree: true, read: true }) })
+        .then(function (r) { return r.json(); }).then(function (j) {
+          if (!j || !j.ok) { go.disabled = false; go.textContent = 'Sign'; err.textContent = (j && j.error) || 'That did not go through. Try again. ' + callLine(); return; }
+          c.replaceWith(signedCard(j.signed, j.booked, j.mailed)); window.scrollTo(0, 0);
+        }).catch(function () { go.disabled = false; go.textContent = 'Sign'; err.textContent = 'No connection. Try again.'; });
+    });
+    main.appendChild(c);
+  }
+})();
+</script>
+</body>
+</html>
