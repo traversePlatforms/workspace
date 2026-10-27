@@ -1220,7 +1220,7 @@ function loadCustomers(): array {
         foreach ($r['f'] as $k => $v) $c[$id][$k] = $v;
         $c[$id]['updated'] = (int) ($r['at'] ?? 0); $c[$id]['updatedBy'] = (string) ($r['by'] ?? '');
     }
-    if (webHide()) { $web = webLeadIds(); $c = array_filter($c, fn($x) => ($x['source'] ?? '') !== 'a365web' && !isset($web[(string) ($x['lead'] ?? '')])); }   /* a 365-website customer is Matthew's (2026-10-22) */
+    /* a 365-website customer was Matthew's only (2026-10-22); on the office's customer list since 2026-10-27 (Matthew), see leadsAll() */
     return $c;
 }
 /** a customer from a lead (Won makes the customer, 2026-10-15; shared since 2026-10-21): the one already tied to the lead; or someone already
@@ -2949,11 +2949,11 @@ if (!$viewing && $realMe === 'Claude Check') {
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
 if (!defined('SIXFOLD_CLI') && !$viewing && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
-/* a 365-website lead, its job or its customer asked for by id from an account that does not see them: as if it were not there (2026-10-22) */
+/* one of Matthew's leads asked for by id from an account that does not see it: as if it were not there (2026-10-22). Since 2026-10-27 only
+   a lead with no job: a booked one, its job and its customer are the office's to see and manage (Matthew), see leadsAll() */
 if (webHide()) {
-    $wIds = webLeadIds(); $wJobs = []; foreach (jobsAll() as $wj) if (!empty($wj['web'])) $wJobs[(string) $wj['id']] = true;
-    $wCust = []; foreach (custLines('customers.log') as $wr) { $wl = (string) ($wr['f']['lead'] ?? ''); if (($wr['f']['source'] ?? '') === 'a365web' || ($wl !== '' && isset($wIds[$wl]))) $wCust[(string) ($wr['id'] ?? '')] = true; }
-    foreach (['id', 'lead', 'job', 'cid', 'customer'] as $wk) { $wv = $body[$wk] ?? ($_GET[$wk] ?? null); if (is_string($wv) && $wv !== '' && (isset($wIds[$wv]) || isset($wJobs[$wv]) || isset($wCust[$wv]))) fail('Not found.', 404); }
+    $wIds = array_diff_key(webLeadIds(), webJobbedIds());
+    foreach (['id', 'lead', 'job', 'cid', 'customer'] as $wk) { $wv = $body[$wk] ?? ($_GET[$wk] ?? null); if (is_string($wv) && $wv !== '' && isset($wIds[$wv])) fail('Not found.', 404); }
 }
 if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck'], true) && !($action === 'squarecheck' && !empty($body['job']))) {   /* only her own leads (2026-10-15); a job's pay link is checked against the job (2026-10-19) */
     $qlid = (string) ($body['id'] ?? ($body['lead'] ?? '')); $qL = leadsAll()[$qlid] ?? null;
@@ -4346,7 +4346,12 @@ function metaFormLabel(string $n): string {
     if (preg_match("/\s*'s form created on /i", $n)) return 'Facebook ad form · ' . trim((string) preg_replace("/\s*'s form created on .*$/i", '', $n));
     return $n;
 }
-function leadsAll(): array { $all = leadsAllRaw(); return webHide() ? array_filter($all, fn($l) => !webLead($l)) : $all; }
+/* once one of Matthew's leads is booked, the office sees it like any other (2026-10-27, Matthew: "show my jobs in full on her schedule,
+   customer list etc. I just dont want them shown in her pipeline. She needs to be able to see and manage the schedule so she doesnt book
+   someone on my slot, and she know whats info to give brad"): a lead with a job is read everywhere but the Pipeline lists (leads, myleads),
+   which leave his leads out themselves; a lead with no job stays out of everything. */
+function leadsAll(): array { $all = leadsAllRaw(); if (!webHide()) return $all; $jobbed = webJobbedIds(); return array_filter($all, fn($l, $id) => !webLead($l) || isset($jobbed[$id]), ARRAY_FILTER_USE_BOTH); }
+function webJobbedIds(): array { $web = webLeadIds(); $o = []; foreach (jobsAll() as $j) if (!$j['off'] && isset($web[(string) ($j['lead'] ?? '')])) $o[(string) $j['lead']] = true; return $o; }
 function leadsAllRaw(): array {
     static $c = null; $sig = fileSig(leadsDir() . '/leads.log') . '|' . fileSig(leadsDir() . '/leadst.log');   /* built once per request, again after a write (review 2026-10-22) */
     if ($c !== null && $c[0] === $sig) return $c[1];
@@ -4459,7 +4464,7 @@ if ($action === 'leadremove') {
 if ($action === 'myleads') {
     $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
     $whoAll = $who === $me ? meNames() : [$who];   /* leads handed to a linked sign-in are this person's too (2026-10-21) */
-    $list = array_values(array_filter(leadsAll(), fn($l) => in_array($l['owner'], $whoAll, true)));
+    $list = array_values(array_filter(leadsAll(), fn($l) => in_array($l['owner'], $whoAll, true) && !(webHide() && webLead($l))));   /* never Matthew's (2026-10-27) */
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     out(['ok' => true, 'who' => $who, 'leads' => $list]);
 }
@@ -5145,12 +5150,12 @@ function jobsAll(): array {
         }
         $c = [$sig, $o];
     }
-    if (webHide()) { $web = webLeadIds(); foreach ($o as &$wj) if (isset($web[(string) ($wj['lead'] ?? '')])) { $wj['title'] = 'Booked'; $wj['addr'] = ''; $wj['note'] = ''; $wj['cnotes'] = []; $wj['card'] = null; $wj['aftercare'] = null; $wj['web'] = true; } unset($wj); }   /* a 365-website job: its time, not who (2026-10-22) */
+    /* a 365-website job showed the office only its time (2026-10-22); in full since 2026-10-27 (Matthew), see leadsAll() */
     return $o;
 }
 /** the Square payments and orders of 365-website leads and their jobs, for leaving them off the office's Square lists (2026-10-22) */
 function webPays(): array {
-    $s = []; $web = webLeadIds();
+    $s = []; $web = array_diff_key(webLeadIds(), webJobbedIds());   /* only leads with no job: a booked one's payments are the office's too (2026-10-27) */
     foreach (jobsAll() as $j) { if (!isset($web[(string) ($j['lead'] ?? '')])) continue;
         foreach (['sqcharge', 'sqpaid'] as $k) if (!empty($j[$k]['payment'])) $s[(string) $j[$k]['payment']] = true;
         foreach ((array) ($j['sqparts'] ?? []) as $pp) if (!empty($pp['payment'])) $s[(string) $pp['payment']] = true;
@@ -5224,12 +5229,12 @@ if ($action === 'schedview') {
     if ($role === 'quote') {   /* quote-only accounts: their own customers by name and movable; anyone else's slot only says taken (2026-10-15) */
         $rows = array_map(function ($r) use ($leads) {
             $lid = $r['kind'] === 'booked' ? (string) (jobsAll()[$r['id']]['lead'] ?? '') : (string) ($r['lead'] ?? '');
-            if ($lid !== '' && qMine($leads[$lid] ?? [])) { if ($r['kind'] !== 'held') unset($r['lead']); else $r['hold'] = $lid; $r['mine'] = true; return $r; }   /* her own held time keeps a handle to move it (2026-10-16) */
+            if ($lid !== '' && (qMine($leads[$lid] ?? []) || ($r['kind'] === 'booked' && webLead($leads[$lid] ?? [])))) { if ($r['kind'] !== 'held') unset($r['lead']); else $r['hold'] = $lid; $r['mine'] = true; return $r; }   /* her own held time keeps a handle to move it (2026-10-16) */
             return ['date' => $r['date'], 'slot' => $r['slot'], 'crew' => $r['crew'], 'kind' => $r['kind'], 'name' => $r['kind'] === 'held' ? 'Held' : 'Booked', 'town' => '', 'what' => '', 'pay' => '', 'src' => '', 'card' => '', 'done' => ''];
         }, $rows);
     }
     $JA = jobsAll();   /* no town: 'tl' = the lead, to add one (2026-10-16, Jen); the quote account only on her own */
-    foreach ($rows as &$rw) { if (($rw['town'] ?? '') !== '') continue; $lid = ($rw['kind'] ?? '') === 'booked' ? (string) ($JA[$rw['id'] ?? '']['lead'] ?? '') : (string) ($rw['lead'] ?? ($rw['hold'] ?? '')); if ($lid !== '' && isset($leads[$lid]) && ($role !== 'quote' || qMine($leads[$lid]))) $rw['tl'] = $lid; } unset($rw);
+    foreach ($rows as &$rw) { if (($rw['town'] ?? '') !== '') continue; $lid = ($rw['kind'] ?? '') === 'booked' ? (string) ($JA[$rw['id'] ?? '']['lead'] ?? '') : (string) ($rw['lead'] ?? ($rw['hold'] ?? '')); if ($lid !== '' && isset($leads[$lid]) && ($role !== 'quote' || qMine($leads[$lid]) || webLead($leads[$lid]))) $rw['tl'] = $lid; } unset($rw);
     foreach ($rows as &$rw) { if (desk() && ($rw['kind'] ?? '') === 'held' && !empty($rw['lead'])) $rw['hold'] = $rw['lead']; unset($rw['lead']); } unset($rw);   /* held: 'hold' = the lead, for move or take off (2026-10-16) */
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
     out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead()]);
@@ -5304,7 +5309,7 @@ if ($action === 'jobsave') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     if ($role === 'quote') {   /* from the schedule: move or cancel one of her own booked jobs, nothing else (2026-10-15) */
         $qj = jobsAll()[(string) ($body['id'] ?? '')] ?? null;
-        if (!$qj || $qj['off'] || !qMine(leadsAll()[$qj['lead']] ?? [])) fail('Not allowed.', 403);
+        if (!$qj || $qj['off'] || !qJob($qj)) fail('Not allowed.', 403);
         $body = array_intersect_key($body, array_flip(['id', 'date', 'slot', 'crew', 'del']));
     }
     if (!$isPost) fail('POST required', 405);
@@ -5365,7 +5370,7 @@ if ($action === 'jobsave') {
 if ($action === 'myjobs') {
     if ($role === 'quote') {   /* Jen opens one of her own customers' jobs from her schedule (2026-10-19) */
         $qj = jobsAll()[(string) ($_GET['id'] ?? '')] ?? null;
-        if (!$qj || $qj['off'] || !qMine(leadsAll()[$qj['lead']] ?? [])) fail('Not allowed.', 403);
+        if (!$qj || $qj['off'] || !qJob($qj)) fail('Not allowed.', 403);
         out(['ok' => true, 'who' => $me, 'jobs' => [jobShow($qj)]]);
     }
     $who = trim((string) ($_GET['who'] ?? '')); if ($who === '' || !desk()) $who = $me;
@@ -5452,7 +5457,9 @@ function jobPhotosAll(): array {
 function jobPhotos(string $jid): array { return array_values(jobPhotosAll()[$jid] ?? []); }
 function jobMine(array $j): bool { global $me; return $j['crew'] === $me || desk(); }
 /* who may settle a job's balance and send its aftercare: the crew on it, the desk, or Jen on her own customer (2026-10-19) */
-function jobOpen(array $j): bool { global $role; return jobMine($j) || ($role === 'quote' && qMine(leadsAll()[$j['lead']] ?? [])); }
+function jobOpen(array $j): bool { global $role; return jobMine($j) || ($role === 'quote' && qJob($j)); }
+/* a job the quote account manages: her own customer's, or one of Matthew's booked jobs (2026-10-27, Matthew: she manages the schedule and tells Brad) */
+function qJob(array $j): bool { $l = leadsAll()[(string) ($j['lead'] ?? '')] ?? []; return qMine($l) || webLead($l); }
 /* a balance paid straight in Square (2026-10-19: Jen charged Kirk's card in the Square dashboard; the app only knew its own links and charges).
    Payments from this customer's Square profile, completed, that are not the deposit, not the job's pay link and not a charge the app already
    made; together they must cover what is owed. Returns the newest one, or null. */
@@ -6853,6 +6860,7 @@ if ($action === 'houseposs') {
 if ($action === 'leads') {
     if (!desk() && $role !== 'manager' && $role !== 'quote') fail('Not allowed.', 403);
     $leads = leadsAll();
+    if (webHide()) $leads = array_filter($leads, fn($l) => !webLead($l));   /* Matthew's leads never in their Pipeline, booked or not (2026-10-27) */
     if ($role === 'quote') $leads = array_filter($leads, fn($l) => qMine($l) || quoteInbox($l));   /* her own customers, and her Leads to call (2026-10-16) */
     foreach ($leads as &$ql) $ql['qinbox'] = quoteInbox($ql, $role === 'quote' || count(meNames()) > 1); unset($ql);   /* + a sign-in linked to a quote login (Jen's office, 2026-10-21) */   /* in the quote account's Leads to call */
     $jobOf = []; foreach (jobsAll() as $jj) if (!$jj['off']) $jobOf[$jj['lead']] = $jj;   /* each lead's job and its money (2026-10-19, Jen checks before charging) */
