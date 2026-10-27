@@ -7,21 +7,21 @@
 'use strict';
 const fs = require('fs'); const path = require('path');
 const { marked } = require(require.resolve('marked', { paths: [__dirname, process.env.MARKED_DIR || __dirname] }));
-const DRAFT = true;
+const DRAFT = false;   /* reviewed (Matthew 2026-10-26: "The attorney confirmed everything was fine") */
 const BIZ = path.join(__dirname, '..', 'business'), OUT = path.join(__dirname, 'site-src');
-const DATE = '13 October 2026';
+const DATE = '26 October 2026';
 
 const PAGES = [
-  { dir: 'terms', md: 'client-agreement-DRAFT.md', start: '## Traverse Subscription Agreement', end: '## Questions for counsel', title: 'Subscription agreement' },
+  { dir: 'terms', md: 'client-agreement.md', start: '# Traverse Subscription Agreement', end: null, title: 'Subscription agreement' },   /* the client copy (2026-10-26) */
   { dir: 'terms-of-use', md: 'terms-of-use-DRAFT.md', start: '## Terms of Use', end: '## Questions for counsel', title: 'Terms of use' },
   { dir: 'privacy', md: 'privacy-policy-DRAFT.md', start: '## Privacy Policy', end: '## Fact-check log', title: 'Privacy policy' },
   { dir: 'cancellation', md: 'cancellation-policy-DRAFT.md', start: '## Cancellation and Refund Policy', end: '## Fact-check log', title: 'Cancellation and refunds' }
 ];
 
 function publicText(src, p) {
-  const i = src.indexOf(p.start), j = src.indexOf(p.end, i);
+  const i = src.indexOf(p.start), j = p.end ? src.indexOf(p.end, i) : src.length;
   if (i < 0 || j < 0) throw new Error(p.md + ': markers not found');
-  let t = src.slice(i, j).replace(/\n---\s*$/, '').trim();
+  let t = src.slice(i, j).replace(/\n---\s*$/, '').trim().replace(/^# /, '## ');
   t = t.replace(/^> \*\*(Counsel note|Business choice)[\s\S]*?(?=\n(?!>)|$)/gm, '');               /* the notes for counsel */
   const fill = [
     ['[ENTITY]', 'Traverse Platforms LLC'], ['[DATE]', DATE], ['Version [1]', 'Version 1'],

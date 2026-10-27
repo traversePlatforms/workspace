@@ -28,7 +28,7 @@ const ws = new WebSocket(w); await new Promise((r) => (ws.onopen = r));
 let id = 0; const pend = new Map(); ws.onmessage = (m) => { const x = JSON.parse(m.data); if (x.id && pend.has(x.id)) { pend.get(x.id)(x.result); pend.delete(x.id); } };
 const send = (m, p = {}) => new Promise((res) => { const i = ++id; pend.set(i, res); ws.send(JSON.stringify({ id: i, method: m, params: p })); });
 await send('Page.enable'); await send('Page.navigate', { url: 'file:///' + htmlFile.replace(/\\/g, '/') }); await sleep(1500);
-const foot = `<div style="font:7.5pt Segoe UI,Arial,sans-serif;color:#6b7785;width:100%;padding:0 0.85in;display:flex;justify-content:space-between"><span>DRAFT for counsel · not legal advice · ${title.replace(/</g, '')}</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`;
+const foot = `<div style="font:7.5pt Segoe UI,Arial,sans-serif;color:#6b7785;width:100%;padding:0 0.85in;display:flex;justify-content:space-between"><span>${/DRAFT/.test(basename(src)) ? 'DRAFT for counsel · not legal advice · ' : 'Traverse Platforms LLC · '}${title.replace(/</g, '')}</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`;
 const r = await send('Page.printToPDF', { printBackground: true, preferCSSPageSize: true, displayHeaderFooter: true, headerTemplate: '<div></div>', footerTemplate: foot });
 writeFileSync(out, Buffer.from(r.data, 'base64'));
 console.log('wrote ' + out + ' (' + Math.round(Buffer.from(r.data, 'base64').length / 1024) + ' KB)');
