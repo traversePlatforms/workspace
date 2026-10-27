@@ -77,7 +77,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
       --later:#E2AA5C; --later-tint:#3B2C12; --miss:#B4BEB7; --miss-tint:#222C27; --bad:#E0715C;
       --booked:#7FC195; --accent:#A9C196;
       --fire-vh:#F0806A; --fire-h:#F2A35E; --fire-m:#E0B85E; --fire-low:#9AA79E; --fire-on:#0E1512;
-      --toast:#EDE7DC; --toast-ink:#16201C;
+      --toast:#EDE7DC; --toast-ink:#16201C; --toast-link:#9A3B0C;
       --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
     }
   }
@@ -91,7 +91,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
       --later:#E2AA5C; --later-tint:#3B2C12; --miss:#B4BEB7; --miss-tint:#222C27; --bad:#E0715C;
       --booked:#7FC195; --accent:#A9C196;
       --fire-vh:#F0806A; --fire-h:#F2A35E; --fire-m:#E0B85E; --fire-low:#9AA79E; --fire-on:#0E1512;
-      --toast:#EDE7DC; --toast-ink:#16201C;
+      --toast:#EDE7DC; --toast-ink:#16201C; --toast-link:#9A3B0C;
       --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);
     }
   *{box-sizing:border-box}
@@ -1269,6 +1269,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .dnav .dnh b{font:600 19px var(--serif);white-space:nowrap}
   .dnav .dnl{display:flex;gap:4px}
   .dnav .dnl button{min-height:40px;padding:0 12px;border:0;border-radius:10px;background:none;color:inherit;opacity:.78;font:700 14px var(--sans);cursor:pointer}
+  .dnav .dnl button{white-space:nowrap}   /* "Quote builder" wrapped onto two lines on an iPad sideways (device QA F9, 2026-10-27) */
+  @media (max-width:1280px){.dnav{gap:8px;padding:0 12px}.dnav .dnl button{padding:0 6px;font-size:12.5px}.dnav .dns input{width:96px}}
   .dnav .dnl button:hover{opacity:1;background:rgba(255,255,255,.08)}
   .dnav .dnl button.on{opacity:1;background:rgba(255,255,255,.16)}
   .dnav .dnsp{flex:1}
@@ -1657,8 +1659,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .fbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:var(--go);color:var(--on-go);font:800 11px var(--sans)}
   .dscore{flex:none;align-self:center;min-width:26px;height:24px;padding:0 6px;box-sizing:border-box;border-radius:8px;display:inline-grid;place-items:center;font:800 13.5px var(--sans);font-variant-numeric:tabular-nums}
   .dscore{display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
-  .dscore.hi{background:#1f8a4c;color:#fff}
-  .dscore.top{background:#1f8a4c;color:#fff;box-shadow:0 0 0 2px #f2c230,0 0 12px 1px rgba(242,194,48,.75)}
+  .dscore.hi{background:#1b7a43;color:#fff}   /* device QA F6: was #1f8a4c, 4.2:1 with white */
+  .dscore.top{background:#1b7a43;color:#fff;box-shadow:0 0 0 2px #f2c230,0 0 12px 1px rgba(242,194,48,.75)}
   .dscore.mid{background:#f2c230;color:#3a2b00}
   .dscore.lo{background:#c8372d;color:#fff}
   .dscore.star{padding:0 7px 0 5px}
@@ -1878,8 +1880,17 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   body:not(.has-dock) .toast{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
   body.has-tabs:not(.has-dock) .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}   /* above the phone menu bar (2026-10-21) */
   .toast.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+  /* device QA 2026-10-27 */
+  /* F1: the lead card's Start the quote sits on the accent, which is a light colour in dark mode: dark text there, not white (1.95:1) */
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lpquote{color:var(--bg)}}:root[data-theme="dark"] .lpquote{color:var(--bg)}
+  /* F2: the door card's Quote sent stayed a white button in dark mode */
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .acts button[data-k="sent"],:root:not([data-theme="light"]) .mdb.sent{background:var(--card)}}:root[data-theme="dark"] .acts button[data-k="sent"],:root[data-theme="dark"] .mdb.sent{background:var(--card)}
+  /* F4: a link button anywhere looks like a link, not a grey browser button (zero specificity: every styled .lnk still wins) */
+  :where(button.lnk){background:none;border:0;padding:6px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;text-align:left}
+  /* F5: finger-sized on touch screens; desktop density unchanged */
+  @media (pointer:coarse){.toast button{min-height:40px;min-width:52px}.findsel,.fbar .search input,.fbar select{min-height:42px}.pipesrc button{min-height:40px}button.lnk.subnav{min-height:40px}}
   .toast span{flex:1;min-width:0;overflow-wrap:anywhere}
-  .toast button{border:0;background:transparent;color:var(--ember);font-weight:700;cursor:pointer;padding:6px 8px;font-size:14px}
+  .toast button{border:0;background:transparent;color:var(--toast-link,var(--ember));font-weight:700;cursor:pointer;padding:6px 8px;font-size:14px}
   .burst{position:fixed;width:0;height:0;z-index:30;pointer-events:none}
   .burst i{position:absolute;left:0;top:0;width:var(--s);height:var(--s);border-radius:2px;background:var(--c);animation:fly .8s cubic-bezier(.15,.7,.3,1) forwards}
   @keyframes fly{from{transform:translate(-50%,-50%);opacity:1}to{transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(.4);opacity:0}}
@@ -3397,6 +3408,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function fillInstall(host) {
     host.textContent = '';
     var onTools = host.classList.contains('ontools'), kind = phoneKind();
+    try { if (window.top !== window.self) return; } catch (e) { return; }   /* inside the hub (a frame): the hub is the installed app (device QA D7, 2026-10-27) */
     try {
       if (localStorage.getItem('sixfold.installed') === '1') return;
       if (onTools && +(localStorage.getItem('sixfold.installNo') || 0) > Date.now()) return;
@@ -11741,6 +11753,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'Building a quote needs signal.')); });
   }
   /* Prices and terms (admin): the price lines, the minimum, the usual deposit, and the agreement's terms */
+  /* the kit screens with no signal: say so and offer Try again (device QA F8, 2026-10-27) */
+  function kitRetry(again) { var m = q('div', 'msg'); m.appendChild(document.createTextNode('Needs signal. ')); var b = q('button', 'lnk', 'Try again'); b.type = 'button'; b.addEventListener('click', function () { again(); }); m.appendChild(b); return m; }
   function kitPricesView() {
     hideToast(); S.signin = null; S.screen = 'kitprices'; foot.hidden = true; setDock(null);
     setBar('back', { title: 'Prices and terms', sub: 'Your quotes and your one-page agreement', back: kitSetupView, backLabel: 'Setup' });
@@ -11781,7 +11795,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
       }
       sb.addEventListener('click', function () { save(false); });
-    }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'Needs signal.')); });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitPricesView)); });
   }
   /* Payments (admin): the company's own Square (Connect, or its token pasted) or Stripe, for deposits on the form; never shown back */
   function kitPayView() {
@@ -11815,7 +11829,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       box.appendChild(q('div', 'sub2', 'With both, deposit links use Square. Keys are kept on the server and never shown again.'));
       box.appendChild(msg);
-    }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'Needs signal.')); });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitPayView)); });
   }
   /* back from Square's Connect page: ?square=connected (or why not) */
   function kitSquareReturn() {
@@ -11848,7 +11862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (st[2]) row.appendChild(q('span', 'kitgo', '›'));
         box.appendChild(row);
       });
-    }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'Needs signal.')); });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitSetupView)); });
   }
   function companyView() {
     hideToast(); S.signin = null; S.screen = 'company'; foot.hidden = true; setDock(null);

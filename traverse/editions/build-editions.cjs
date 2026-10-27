@@ -278,7 +278,7 @@ function page(E) {
       --go:#6fcf9b; --on-go:#06140c; --go-tint:#133324;
       --later:#e8b04f; --later-tint:#3a2c10; --miss:#a7b3c4; --miss-tint:#1c2638; --bad:#f0786a;
       --booked:#6fcf9b; --accent:${c.dAccent};
-      --toast:#e8edf5; --toast-ink:#0f1b2d;
+      --toast:#e8edf5; --toast-ink:#0f1b2d; --toast-link:#a8320a;
       --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 24px -12px rgba(0,0,0,.6);`;
   const tokens = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
@@ -292,7 +292,7 @@ function page(E) {
     --later:#8a5a00; --later-tint:#f7ead0; --miss:#566476; --miss-tint:#e6eaf0; --bad:#b42318;
     --booked:#1f7a4d; --accent:${c.accent};
     --act:#d6400c; --on-act:#ffffff; --strip:${E.icon}; --mark-ink:#ffffff; --tile-bg:${E.icon}; --tile-ink:${E.iconInk || '#ffffff'};
-    --toast:#0f1b2d; --toast-ink:#ffffff;
+    --toast:#0f1b2d; --toast-ink:#ffffff; --toast-link:#ff7a45;
     --shadow:0 1px 2px rgba(15,27,45,.06), 0 8px 22px -12px rgba(15,27,45,.24);
     --signin:${c.bar}; --signin-deep:${c.deep}; --signin-ink:#ffffff; --signin-soft:${c.barSoft}; --key:${c.key}; --key-down:${c.keyDown};
     --serif:"Familjen Grotesk","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
