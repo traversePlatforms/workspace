@@ -279,6 +279,7 @@ traverse/data-pipeline/door-territory/metros/out/
 # Prospect lists (2026-10-11): company names from the state register, some of them people's names; the script is tracked, its output is not
 traverse/research/prospects/prospects.csv
 traverse/research/prospects/prospects-contacts-*.csv
+traverse/research/prospects/prospects-socials*.csv
 traverse/research/prospects/prospects-summary.json
 traverse/research/prospects/websites.json
 traverse/data-pipeline/door-territory/logs-aurora/

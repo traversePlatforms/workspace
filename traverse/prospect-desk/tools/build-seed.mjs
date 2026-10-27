@@ -23,6 +23,10 @@ const TRADES = new Set(['roofing', 'roofing solar', 'solar', 'pest', 'security',
    are still not covered (Peyton, Falcon, Severance, Timnath, ...); everything else "elsewhere in Colorado". */
 const COVERED = new Set(JSON.parse(readFileSync(join(HERE, '..', '..', 'app', 'data', 'rounds', 'index.json'), 'utf8')).regions
   .map((r) => String(r.label).toUpperCase().replace(/ (NORTHEAST|NORTHWEST|SOUTHEAST|SOUTHWEST)$/, '')).concat(['COLORADO SPRINGS']));
+/* social pages (2026-10-26, Matthew: "is it possible we can attach socials to these prospects"): prospects-socials.csv beside the input
+   (record, socials: space-separated links), from Overture's open places data and the links on each company's own website */
+const SOCIALS = new Map();
+{ const f = join(dirname(IN), 'prospects-socials.csv'); try { for (const line of readFileSync(f, 'utf8').split(/\r?\n/).slice(1)) { if (!line.trim()) continue; const [rec, s] = parse(line); if (rec && s) SOCIALS.set(rec, s.split(' ').filter(Boolean).slice(0, 8)); } } catch {} }
 const whereNow = (city, old) => COVERED.has(String(city).toUpperCase()) ? 'in our towns' : (old === 'elsewhere in Colorado' || !old ? 'elsewhere in Colorado' : 'next to our towns');
 const seen = new Set(), leads = []; let dup = 0;
 for (const r of lines.slice(1).map(parse)) {
@@ -40,6 +44,14 @@ for (const r of lines.slice(1).map(parse)) {
   };
   /* the website check (2026-10-26, Matthew saw dead links): site_alive no = it did not load, with why */
   if (l.site && col(r, 'site_alive') === 'no') { l.siteDead = true; l.siteWhy = col(r, 'site_why'); }
+  /* an email on the dead site's own domain (2026-10-26, Matthew: "if a companies website is down, its likely that their email attached to
+     the domain is probably down"): a parked, suspended or vanished domain = do not email; otherwise it may bounce, so call first */
+  const host = (u) => { try { return new URL(/^https?:/i.test(u) ? u : 'https://' + u).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } };
+  if (l.siteDead && l.email && l.email.split('@')[1] === host(l.site)) {
+    if (/parked|suspended|no such domain/.test(l.siteWhy || '')) { l.emailOk = 'no'; l.emailWhy = 'their website’s domain is parked or gone'; }
+    else l.emailWarn = true;
+  }
+  const soc = SOCIALS.get(rec); if (soc) l.socials = soc;
   Object.assign(l, rank(l, (k) => col(r, k) === 'yes'));
   leads.push(l);
 }
@@ -70,5 +82,5 @@ writeFileSync(OUT, JSON.stringify({ built: new Date().toISOString().slice(0, 10)
 const n = (f) => leads.filter(f).length;
 console.log(`${leads.length} companies (${dup} repeats left out) -> ${OUT}`);
 console.log(`phone ${n((l) => l.phone)}, email ${n((l) => l.email)}, either ${n((l) => l.phone || l.email)}, website ${n((l) => l.site)}, email cannot take mail ${n((l) => l.emailOk === 'no')}`);
-console.log(`where: in our towns ${n((l) => l.where === 'in our towns')}, next to ${n((l) => l.where === 'next to our towns')}, elsewhere ${n((l) => l.where === 'elsewhere in Colorado')}; websites that did not load ${n((l) => l.siteDead)}`);
+console.log(`where: in our towns ${n((l) => l.where === 'in our towns')}, next to ${n((l) => l.where === 'next to our towns')}, elsewhere ${n((l) => l.where === 'elsewhere in Colorado')}; websites that did not load ${n((l) => l.siteDead)}; emails skipped (domain parked/gone) ${n((l) => l.emailWhy)}, emails that may bounce ${n((l) => l.emailWarn)}; with social pages ${n((l) => l.socials)}`);
 console.log(`rank: A ${n((l) => l.grade === 'A')}, B ${n((l) => l.grade === 'B')}, C ${n((l) => l.grade === 'C')}; A with a phone or email ${n((l) => l.grade === 'A' && (l.phone || l.email))}`);

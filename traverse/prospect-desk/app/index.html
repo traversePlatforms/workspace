@@ -63,6 +63,7 @@ main{max-width:1180px;margin:0 auto;padding:18px}
 /* the fit rank (2026-10-26): A navy-filled, B outlined, C quiet */
 .grade{display:inline-block;min-width:22px;text-align:center;font-size:12px;font-weight:800;padding:2px 6px;border-radius:7px;margin-right:6px;border:1px solid var(--accent);color:var(--accent)}
 .grade.g-A{background:var(--accent);color:var(--onaccent)}.grade.g-C{border-color:var(--line);color:var(--soft)}
+.socials{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0}.socials .soc{font-size:13px;font-weight:650;padding:3px 10px;border-radius:999px;background:var(--chip);text-decoration:none}
 .fitwhy{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--soft);margin:8px 0 2px}.fitwhy .grade{flex:none}
 .due{font-size:12px;color:var(--soft);text-align:right}.due.late{color:var(--warn);font-weight:700}
 .more{display:block;width:100%;padding:12px;border:0;border-top:1px solid var(--line);background:var(--card);color:var(--accent);font-weight:700}
@@ -184,7 +185,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   var SECS = [['list', 'Prospects'], ['due', 'Follow-ups'], ['email', 'Email'], ['settings', 'Settings']];
   function tabCount(t) {
     var L = S.data.leads;
-    if (t === 'list') return L.filter(function (l) { return !isOff(l) && reachN(l); }).length;
+    if (t === 'list') return L.filter(function (l) { return !isOff(l) && (reachN(l) || hasSoc(l)); }).length;
     if (t === 'due') return L.filter(isDue).length;
     if (t === 'email') return S.data.queue.waiting || null;
     return null;
@@ -217,7 +218,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   function matchBase(l, f) {
     return (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where) && (!f.grade || f.grade === 'all' || (l.grade || 'C') === f.grade);
   }
-  function matchReach(l, r) { return r === 'all' ? true : r === 'any' ? reachN(l) > 0 : r === 'phone' ? !!l.phone : r === 'email' ? !!l.email : reachN(l) === 0; }
+  var hasSoc = function (l) { return !!(l.socials && l.socials.length); };   /* a social page is a way in too (2026-10-26) */
+  function matchReach(l, r) { return r === 'all' ? true : r === 'any' ? (reachN(l) > 0 || hasSoc(l)) : r === 'phone' ? !!l.phone : r === 'email' ? !!l.email : r === 'social' ? hasSoc(l) : (reachN(l) === 0 && !hasSoc(l)); }
   function matchSt(l, st) { return st === 'open' ? !isOff(l) : st === 'off' ? isOff(l) : l.status === st; }
 
   /* ---- Prospects ---- */
@@ -231,7 +233,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     main.appendChild(chipRow('Where', [['all', 'All']].concat(WHERE.map(function (w) { return [w[0], w[1], cnt(function (l) { return l.where === w[0] && (f.trade === 'all' || l.trade === f.trade) && matchReach(l, f.reach) && matchSt(l, f.st); })]; })), f.where, function (k) { f.where = k; S.sel = null; S.shown = 150; draw(); }));
     /* the rank (2026-10-26): A best fit, then B and C; the reasons are on each company */
     main.appendChild(chipRow('Fit', [['all', 'All'], ['A', 'A: best fit'], ['B', 'B'], ['C', 'C']].map(function (o) { return o[0] === 'all' ? o : o.concat([cnt(function (l) { return (l.grade || 'C') === o[0] && (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where) && matchReach(l, f.reach) && matchSt(l, f.st); })]); }), f.grade, function (k) { f.grade = k; S.sel = null; S.shown = 150; draw(); }));
-    main.appendChild(chipRow('Reach', [['any', 'Phone or email'], ['phone', 'Phone'], ['email', 'Email'], ['none', 'Nothing yet'], ['all', 'All']].map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, o[0]) && matchSt(l, f.st); })]); }), f.reach, function (k) { f.reach = k; S.sel = null; S.shown = 150; draw(); }));
+    main.appendChild(chipRow('Reach', [['any', 'Any way in'], ['phone', 'Phone'], ['email', 'Email'], ['social', 'Social page'], ['none', 'Nothing yet'], ['all', 'All']].map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, o[0]) && matchSt(l, f.st); })]); }), f.reach, function (k) { f.reach = k; S.sel = null; S.shown = 150; draw(); }));
     var stOpts = [['open', 'Still on the list']].concat(Object.keys(D.statuses).filter(function (k) { return OFF.indexOf(k) < 0; }).map(function (k) { return [k, D.statuses[k]]; })).concat([['off', 'Knocked off']]);
     var stRow = chipRow('Stage', stOpts.map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, f.reach) && matchSt(l, o[0]); })]); }).filter(function (o) { return o[2] || o[0] === f.st || o[0] === 'open'; }), f.st, function (k) { f.st = k; S.sel = null; S.shown = 150; draw(); });
     main.appendChild(stRow);
@@ -299,9 +301,17 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     if (l.person) ct.appendChild(el('b', null, 'Ask for ' + l.person));
     if (l.phone) { var pa = el('a', null, l.phone); pa.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ct.appendChild(pa); }
     if (l.email) { var ea = el('a', null, l.email); ea.href = 'mailto:' + l.email; ct.appendChild(ea); if (l.emailSrc) ct.appendChild(el('small', null, 'Email from ' + l.emailSrc + (l.emailOk === 'yes' ? ', the address takes mail' : ''))); }
-    if (l.emailOk === 'no') ct.appendChild(el('small', 'warnline', 'That email’s domain cannot take mail. Find another.'));
+    if (l.emailOk === 'no') ct.appendChild(el('small', 'warnline', l.emailWhy ? 'Not emailed: ' + l.emailWhy + '. Call or message them instead.' : 'That email’s domain cannot take mail. Find another.'));
+    else if (l.emailWarn) ct.appendChild(el('small', 'warnline', 'Their website is down, so this email may bounce. Call first if you can.'));
     if (l.unsub) ct.appendChild(el('small', 'warnline', 'Asked not to be emailed. The desk will not email them again.'));
     if (l.site) { var sa = el('a', null, l.site.replace(/^https?:\/\//, '').replace(/\/$/, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; ct.appendChild(sa); if (l.siteDead) ct.appendChild(el('small', 'warnline', 'This website did not load when we checked (' + (l.siteWhy || 'no answer') + '). They may have closed or moved; a call is the better way in.')); }
+    /* their social pages (2026-10-26): from open places data and the links on their own website; opened by hand, never messaged by the desk */
+    if (l.socials && l.socials.length) {
+      var SN = [[/facebook|fb\.com/i, 'Facebook'], [/instagram/i, 'Instagram'], [/linkedin/i, 'LinkedIn'], [/nextdoor/i, 'Nextdoor'], [/youtube/i, 'YouTube'], [/tiktok/i, 'TikTok'], [/x\.com|twitter/i, 'X'], [/yelp/i, 'Yelp'], [/g\.page|goo\.gl|maps\.app/i, 'Google']];
+      var so = el('div', 'socials'); var seen = {};
+      l.socials.forEach(function (u) { var nm = 'Page'; for (var i = 0; i < SN.length; i++) if (SN[i][0].test(u)) { nm = SN[i][1]; break; } if (seen[nm]) return; seen[nm] = 1; var a = el('a', 'soc', nm + ' ›'); a.href = /^https?:/.test(u) ? u : 'https://' + u; a.target = '_blank'; a.rel = 'noopener'; so.appendChild(a); });
+      ct.appendChild(so);
+    }
     if (l.record) { var ra = el('a', null, 'State business record ›'); ra.href = l.record; ra.target = '_blank'; ra.rel = 'noopener'; ct.appendChild(ra); }
     if (!l.phone && !l.email) ct.appendChild(el('small', null, 'No phone or email yet. Add one below when you find it.'));
     s2.appendChild(ct);
