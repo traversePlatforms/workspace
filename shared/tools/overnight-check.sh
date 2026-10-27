@@ -108,5 +108,9 @@ FREE=$(df -Pm /c | awk 'NR==2{print int($4/1024)}'); [ "$FREE" -lt 20 ] && bad "
 JP=$(bash "$REPO/traverse/ops/pull-job-photos.sh" 2>&1 | tail -1)
 case "$JP" in *FAILED*) bad "$JP";; *) say "  info  $JP";; esac
 
+# 7. The cloud machine's stages: copy back, build and upload each one when it finishes (2026-10-26)
+CF=$(bash "$REPO/traverse/ops/run-cloud-finishers.sh" 2>&1 | tail -1)
+case "$CF" in *FAILED*) bad "$CF";; *) say "  info  $CF";; esac
+
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"
