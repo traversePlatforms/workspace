@@ -111,7 +111,35 @@
   });
   window.__lookChanged = function () { lookFrames(); lookPaint(); };   /* changed in a tab or another window */
   lookPaint();
-  bar.appendChild(lk); bar.appendChild(rl); bar.appendChild(op);
+  /* alerts in the hub (2026-10-26, Matthew: "can i still get notification from the hub app?"): the bell signs this device up with the
+     field app's own sign-up (api/rounds.php pushkey / pushsubscribe, the field app's sign-in), but through the hub's worker, so a tap opens
+     the hub. On an iPhone it works once the hub is on the Home Screen (Apple allows alerts only there). Second tap: send a test. */
+  var API = '/api/rounds.php';
+  var bell = document.createElement('button'); bell.className = 'tool'; bell.type = 'button'; bell.id = 'bell';
+  var BELL = '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>';
+  function bellPaint(on, why) { bell.innerHTML = svg(BELL + (on ? '' : '<path d="M3 3l18 18"/>')); bell.title = on ? 'Alerts are on for this device. Click to send a test.' : (why || 'Turn on alerts for this device'); bell.setAttribute('aria-label', bell.title); bell.setAttribute('data-on', on ? '1' : '0'); }
+  function b64u(s) { var p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+  function post(action, body) { return fetch(API + '?action=' + action, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); }); }
+  var pushOk = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  function bellState() {
+    if (!pushOk) { bellPaint(false, /iPhone|iPad/.test(navigator.userAgent) ? 'On an iPhone, add the hub to the Home Screen first (Share, Add to Home Screen), then turn alerts on here' : 'This browser cannot show alerts'); return; }
+    navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (s) { bellPaint(!!s && Notification.permission === 'granted'); }).catch(function () { bellPaint(false); });
+  }
+  bell.addEventListener('click', function () {
+    if (!pushOk) { alert(bell.title); return; }
+    if (bell.getAttribute('data-on') === '1') { post('pushtest').then(function (j) { alert(j.ok && j.sent ? 'Test sent. It should arrive in a few seconds.' : (j.error || 'The test did not go out.')); }); return; }
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') { alert(perm === 'denied' ? 'Alerts are blocked for this app. Allow them in the device settings, then try again.' : 'Tap Allow when asked, to turn alerts on.'); return; }
+      return fetch(API + '?action=pushkey', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (k) {
+        if (!k || !k.ok) throw new Error((k && k.error) || 'no key');
+        return navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(k.publicKey) }); });
+      }).then(function (sub) { return post('pushsubscribe', { subscription: sub.toJSON(), device: (/iPhone/.test(navigator.userAgent) ? 'iPhone' : /iPad/.test(navigator.userAgent) ? 'iPad' : /Android/.test(navigator.userAgent) ? 'Android' : 'Computer') + ' hub' }); })
+        .then(function (j) { if (j && j._status === 401) { alert('Sign in to the Field app tab first, then turn alerts on.'); return; } if (!j || !j.ok) throw new Error((j && j.error) || 'not saved'); bellPaint(true); alert('Alerts are on for this device.'); })
+        .catch(function (e) { alert('Could not turn alerts on: ' + (e && e.message ? e.message : 'try again')); bellState(); });
+    });
+  });
+  bellState();
+  bar.appendChild(bell); bar.appendChild(lk); bar.appendChild(rl); bar.appendChild(op);
   show(store('hub.tab') || APPS[0].id);
 })();
 </script>
