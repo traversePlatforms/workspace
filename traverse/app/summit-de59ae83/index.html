@@ -6321,12 +6321,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       w.appendChild(q('div', 'dwh', 'Balance ' + money0(owe)));
       var row = q('div', 'jpaid'), sel = q('select'), pb = q('button', 'save', 'Mark it paid'); pb.type = 'button'; sel.setAttribute('aria-label', 'How they paid');
       [['cash', 'Cash'], ['check', 'Check'], ['zelle', 'Zelle'], ['venmo', 'Venmo'], ['card', 'Card'], ['other', 'Other']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; sel.appendChild(op); });
+      /* the check number and the day it came in, for the receipt (2026-10-27, Matthew: Zane paid by check and needs a receipt for his HOA) */
+      var pdRow = q('div', 'jpaid jpinfo'), ckNo = q('input'), rcvd = q('input');
+      ckNo.type = 'text'; ckNo.maxLength = 20; ckNo.placeholder = 'Check number (optional)'; ckNo.setAttribute('aria-label', 'Check number');
+      rcvd.type = 'date'; rcvd.max = todayISO(); rcvd.setAttribute('aria-label', 'Date received'); rcvd.title = 'Date received (optional)';
+      var pdL = q('span', 'sub2', 'Date received (optional)');
+      pdRow.appendChild(ckNo); pdRow.appendChild(pdL); pdRow.appendChild(rcvd);
+      var pdShow = function () { pdRow.hidden = sel.value !== 'check' && sel.value !== 'cash'; ckNo.hidden = sel.value !== 'check'; };
+      sel.addEventListener('change', pdShow);
+      var pdBody = function (b) { if (sel.value === 'check' && ckNo.value.trim()) b.checkno = ckNo.value.trim(); if ((sel.value === 'check' || sel.value === 'cash') && rcvd.value) b.received = rcvd.value; return b; };
       pb.addEventListener('click', function () {
         if (!window.confirm('Mark the ' + money0(owe) + ' balance paid by ' + sel.options[sel.selectedIndex].text.toLowerCase() + '?')) return;
         pb.disabled = true;
-        api('jobpaid', { body: { id: jb.id, how: sel.value } }).then(function (j) { pb.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Marked paid', money0(owe) + (j.aftercare === 'sent' ? ' \u00b7 aftercare emailed' : ''), null); redraw(); }).catch(function () { pb.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
+        api('jobpaid', { body: pdBody({ id: jb.id, how: sel.value }) }).then(function (j) { pb.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Marked paid', money0(owe) + (j.aftercare === 'sent' ? ' \u00b7 aftercare emailed' : ''), null); redraw(); }).catch(function () { pb.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
       });
-      row.appendChild(sel); row.appendChild(pb); w.appendChild(row);
+      row.appendChild(sel); row.appendChild(pb); w.appendChild(row); w.appendChild(pdRow); pdShow();
       /* part of the balance (2026-10-20): what they paid now, the rest stays owed */
       var pr = q('div', 'jpaid jpart'), pin = q('input'), pbt = q('button', null, 'Record a part payment'); pbt.type = 'button';
       pin.type = 'number'; pin.min = '1'; pin.step = '1'; pin.inputMode = 'numeric'; pin.placeholder = 'Amount, $'; pin.setAttribute('aria-label', 'Part payment amount');
@@ -6336,7 +6345,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (a >= owe) { toast('That is the whole balance', 'Use Mark it paid.', null); return; }
         if (!window.confirm('Record ' + money0(a) + ' paid by ' + sel.options[sel.selectedIndex].text.toLowerCase() + '? ' + money0(owe - a) + ' stays owed.')) return;
         pbt.disabled = true;
-        api('jobpart', { body: { id: jb.id, amt: a, how: sel.value } }).then(function (j) { pbt.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Part payment recorded', money0(j.tot) + ' paid so far \u00b7 ' + money0(j.left) + ' left', null); if (redraw) redraw(); }).catch(function () { pbt.disabled = false; toast('No signal', 'Not saved.', null); });
+        api('jobpart', { body: pdBody({ id: jb.id, amt: a, how: sel.value }) }).then(function (j) { pbt.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Part payment recorded', money0(j.tot) + ' paid so far \u00b7 ' + money0(j.left) + ' left', null); if (redraw) redraw(); }).catch(function () { pbt.disabled = false; toast('No signal', 'Not saved.', null); });
       });
       pr.appendChild(pin); pr.appendChild(pbt); w.appendChild(pr);
       var sl = q('button', 'lnk', 'Check Square for a payment'); sl.type = 'button';   /* paid straight in Square (2026-10-19, Kirk) */
@@ -6447,6 +6456,29 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
     }
     if (S.role === 'admin') { var st = q('button', 'lnk', 'Follow-up email settings ›'); st.type = 'button'; st.addEventListener('click', function () { followupMailView(); }); w.appendChild(st); }
+    return w;
+  }
+  /* receipts (2026-10-27, Matthew: "build in a way for us to send receipts to people, in situations like when we take a paper check"): any job
+     with money on it. Receipt opens the printable page (print, or save as PDF); Email receipt sends it to the email on file, after a yes. */
+  function jobPaidAny(j) { var p = j.pay || {}; return (j.price || 0) > 0 && (p.s === 'paid' || (p.s === 'deposit' && (p.amt || 0) > 0)); }
+  function receiptOpen(id) { window.open(API + '?action=receipt&id=' + encodeURIComponent(id), '_blank', 'noopener'); }
+  function jobReceiptBox(jb, redraw) {
+    if (!jobPaidAny(jb)) return null;
+    var w = q('div', 'jreceipt'); w.appendChild(q('div', 'dwh', 'Receipt'));
+    if (jb.rcpt) w.appendChild(q('div', 'qline qyes', 'Receipt emailed ' + new Date(jb.rcpt.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + ' to ' + jb.rcpt.to));
+    var r = q('div', 'lcontact'), op = q('button', 'lnk', 'Receipt'); op.type = 'button'; op.addEventListener('click', function () { receiptOpen(jb.id); }); r.appendChild(op);
+    var to = (jb.who && jb.who.email) || '';
+    if (to) {
+      var em = q('button', 'lnk', jb.rcpt ? 'Email the receipt again' : 'Email receipt'); em.type = 'button';
+      em.addEventListener('click', function () {
+        if (!window.confirm('Email the receipt to ' + to + '?')) return;
+        em.disabled = true;
+        api('receiptmail', { body: { id: jb.id } }).then(function (j) { em.disabled = false; if (!j.ok) { toast('Not emailed', j.error || 'Try again.', null); return; } jb.rcpt = j.rcpt; toast('Receipt emailed', j.to, null); if (redraw) redraw(); }).catch(function () { em.disabled = false; toast('No signal', 'Nothing was emailed. Try again.', null); });
+      });
+      r.appendChild(em);
+    }
+    w.appendChild(r);
+    if (!to) w.appendChild(q('div', 'ltrynote', 'No email on file: print the receipt or save it as a PDF to send.'));
     return w;
   }
   /* the company switch, the preview and Send me a test (2026-10-27): admins. Off until Matthew turns it on. */
@@ -6680,7 +6712,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       c.appendChild(st); c.appendChild(panel);
     }
-    if (qView() || wdOn()) { var afb = jobAfterBox(jb, owe, redraw); if (qView()) c.insertBefore(afb, sqBox.nextSibling); else c.appendChild(afb); var fub = jobFollowBox(jb, redraw); if (fub) afb.parentNode.insertBefore(fub, afb.nextSibling); }   /* the balance and the aftercare (2026-10-19); for Jen up under the price, not at the bottom */   /* + the follow-up email (2026-10-27) */
+    if (qView() || wdOn()) { var afb = jobAfterBox(jb, owe, redraw); if (qView()) c.insertBefore(afb, sqBox.nextSibling); else c.appendChild(afb); var fub = jobFollowBox(jb, redraw); if (fub) afb.parentNode.insertBefore(fub, afb.nextSibling); var rcb = jobReceiptBox(jb, redraw); if (rcb) afb.parentNode.insertBefore(rcb, afb.nextSibling); }   /* the balance and the aftercare (2026-10-19); for Jen up under the price, not at the bottom */   /* + the follow-up email (2026-10-27) */
     if (wdOn()) {
       var ch = q('button', 'lnk', 'Change the booking ›'); ch.type = 'button';
       ch.addEventListener('click', function () { jobBookView(null, jb, null); });
@@ -13121,6 +13153,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       r.appendChild(w);
       r.appendChild(q('span', 'cbal ' + (left > 0 ? 'owe' : 'ok'), !j.price && p.s !== 'paid' ? '\u2013' : left > 0 ? money0(left) + ' due' : 'Paid'));
       var ob = q('button', 'lnk', 'Open'); ob.type = 'button'; ob.addEventListener('click', function () { jobView(j.id, function () { customerView(c.id); }, j.crew); }); r.appendChild(ob);
+      if (jobPaidAny(j)) { var rb = q('button', 'lnk', 'Receipt'); rb.type = 'button'; rb.addEventListener('click', function () { receiptOpen(j.id); }); r.appendChild(rb); }   /* 2026-10-27 */
       box.appendChild(r);
     });
     if (!jobs.length) box.appendChild(q('div', 'msg soft', c.lead ? 'No job booked yet. When one is, its deposit and balance show here.' : 'Deposits show here for customers who came through the Pipeline. For this one, log payments with the visits below.'));

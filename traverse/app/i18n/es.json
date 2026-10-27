@@ -2692,5 +2692,15 @@
  "Balance to collect: ": "Saldo por cobrar: ",
  "Job not done: ": "Trabajo sin hacer: ",
  "Job note from ": "Nota del trabajo de ",
- "Follow-up email not sent": "Correo de seguimiento no enviado"
+ "Follow-up email not sent": "Correo de seguimiento no enviado",
+ "Receipt": "Recibo",
+ "Email receipt": "Enviar recibo por correo",
+ "Email the receipt again": "Enviar el recibo otra vez",
+ "Receipt emailed": "Recibo enviado",
+ "Receipt emailed ": "Recibo enviado el ",
+ "Not emailed": "No se envió",
+ "Nothing was emailed. Try again.": "No se envió nada. Inténtalo otra vez.",
+ "No email on file: print the receipt or save it as a PDF to send.": "No hay correo registrado: imprime el recibo o guárdalo como PDF para enviarlo.",
+ "Check number (optional)": "Número de cheque (opcional)",
+ "Date received (optional)": "Fecha en que se recibió (opcional)"
 }
