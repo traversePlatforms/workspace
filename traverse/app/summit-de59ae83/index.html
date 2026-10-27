@@ -2753,6 +2753,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function vw() { return VW().toLowerCase(); }
   function setCompany(c) {
     CO = Object.assign({}, CO_DEFAULT, c || {});
+    if (typeof FILT !== 'undefined') FILT.forEach(function (x) { if (x[0] === 'lawn') x[2] = CO.a365 ? 'Lawn to aerate' : 'Has a lawn'; });   /* aeration is 365's word; the editions say what the filter does (2026-10-26) */
     if (!Array.isArray(CO.services) || !CO.services.length) CO.services = CO_DEFAULT.services;
     if (!Array.isArray(CO.extraWork)) CO.extraWork = [];
     if (!Array.isArray(CO.leadNeeds)) CO.leadNeeds = CO_DEFAULT.leadNeeds;
@@ -4110,9 +4111,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(q('h2', 'tgrp', 'Office'));
       /* the dashboard (2026-10-08): above the fold-out groups, one tap */
       var otl = q('div', 'tgrid');
-      if (S.super) otl.appendChild(tile('button', 'users', 'See through their eyes', 'Open the app as the office, Jen, a manager, a door rep or a crew, looking only. No signing out and in.', 'Traverse only', vaPicker));
+      if (S.super) otl.appendChild(tile('button', 'users', 'See through their eyes', (CO.a365 ? 'Open the app as the office, Jen, a manager, a door rep or a crew, looking only. No signing out and in.' : 'Open the app as the office, a manager, a door rep or a crew, looking only. No signing out and in.'), 'Traverse only', vaPicker));
       if (S.super && !S.viewing && CO.a365) otl.appendChild(tile('button', 'chat', 'Messenger preview', 'Facebook messages as they would come into the Pipeline. Looking only: nothing is saved.', 'Traverse only', msgPreview));   /* 2026-10-20 */
-      else if (feat('walkdesk')) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
+      else if (feat('walkdesk') && CO.a365) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
       otl.appendChild(tile('button', 'chart', 'Office dashboard', 'Today and this week, the map of best doors left, the team, walks and live radar.', 'Admin only', officeView)); box.appendChild(otl);
       officeGroup(box, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way Jen does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
@@ -6820,7 +6821,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function toJenRow(l) {
     var r = q('div', 'qlinks tojen');
     if (l.src === 'a365web') { r.appendChild(q('span', 'dwsub', '365 website lead: yours only. Jen and the office never see it, at any stage.')); return r; }   /* 2026-10-22 */
-    if (l.qinbox) { r.appendChild(q('span', 'dwsub', 'In Jen\u2019s Leads to follow up')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
+    if (l.qinbox && CO.a365) { r.appendChild(q('span', 'dwsub', 'In Jen\u2019s Leads to follow up')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
     var b = q('button', 'lnk', 'Send to Jen \u203a'); b.type = 'button';
     b.addEventListener('click', function () { b.disabled = true; api('tojen', { body: { id: l.id, on: true } }).then(function (j) { b.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent to Jen', (l.name || l.phone || 'The lead') + ' is in her Leads to call.', null); (S.leadRedraw || pipelineView)(); }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); }); });
     r.appendChild(b); return r;
@@ -8077,8 +8078,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var wc = q('section', 'ocard'); wc.appendChild(q('h2', null, 'Forms out, not signed yet')); var wl = q('div', 'olist'); wl.appendChild(q('div', 'skel')); wc.appendChild(wl);   /* 2026-10-14: no walks for the office */
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
-    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }], ['door', qqName(), function () { quickQuoteView(); }],
-     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }], ['book', 'Training', function () { trainingView(); }], ['card', 'Square', function () { squareView(); }]].concat(S.doorsOn ? [['door', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }]] : [], commOk() ? [['users', 'Communities', function () { communitiesView(); }]] : [], S.resultsOn ? [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]] : []).concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : []).forEach(function (x) {
+    [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }]].concat(quickCanBook() ? [['door', qqName(), function () { quickQuoteView(); }]] : [], [
+     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }], ['book', 'Training', function () { trainingView(); }], ['card', 'Square', function () { squareView(); }]].concat(S.doorsOn ? [['door', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }]] : [], commOk() ? [['users', 'Communities', function () { communitiesView(); }]] : [], S.resultsOn ? [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]] : []).concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : [])).forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
     c2.appendChild(tc);
@@ -9359,7 +9360,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (adminView() && wdOn()) t.push(['House lookup', function () { houseLookupView(null); }]);   /* the admin's House lookup on the computer too: its address box searches doors (2026-10-22) */
     if (adminView() && feat('communities')) t.push(['Communities', communitiesView]);
     if (adminView() && feat('skiptrace')) t.push(['Skip trace', skipView]);   /* on the computer as on the phone (2026-10-22) */
-    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365) t.push(['Sample door', sampleView]);   /* not on Sixfold (2026-10-17) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk')) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
+    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365) t.push(['Sample door', sampleView]);   /* not on Sixfold (2026-10-17) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk') && CO.a365) { t.push(['See Jen\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
   }
   function areaLeft(a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }
@@ -9436,6 +9437,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var last = null; try { last = JSON.parse(localStorage.getItem('sixfold.desk.last') || 'null'); } catch (e) {}
       var lr = last && S.regions.filter(function (r) { return r.key === last.r; })[0], la = lr && lr.areas.filter(function (a) { return a.name === last.a; })[0];
       /* a good place to start is the best neighbourhood; what is assigned has its own card (2026-10-11, Matthew) */
+      if (la && !areaLeft(la)) { la = null; last = null; }   /* a finished neighbourhood is not where to pick up (2026-10-26, Matthew: Old Corral Rd, 0 of 1 left) */
       if (!la) { var nb0 = nearBest(all, 1)[0]; if (nb0) { lr = nb0[0]; la = nb0[1]; } }
       var ccEl = null;
       if (la) {
@@ -9745,8 +9747,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   hdr.parentNode.insertBefore(dnav, hdr);
   function dnavItems() {
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
-    if (asOffice()) return [['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipeOpen, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
-      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(S.doorsOn ? [['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : [], S.doorsOn && planOk() ? [['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]] : [], commOk() && !mgrOn() ? [['comm', 'Communities', communitiesView, ['communities']]] : [], S.resultsOn ? [['res', 'Results', function () { S.resultsBack = null; resultsView(); }, ['results']]] : [], mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : []);   /* + Doors/Plan, Communities, Results by setting (2026-10-21) */   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
+    if (asOffice()) return ([['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipeOpen, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
+      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(S.doorsOn ? [['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : [], S.doorsOn && planOk() ? [['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]] : [], commOk() && !mgrOn() ? [['comm', 'Communities', communitiesView, ['communities']]] : [], S.resultsOn ? [['res', 'Results', function () { S.resultsBack = null; resultsView(); }, ['results']]] : [], mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : [])).filter(function (x) { return x[0] !== 'house' || quickCanBook(); });   /* + Doors/Plan, Communities, Results by setting (2026-10-21) */   /* no Quote builder where 365's quote engine is not (editions, 2026-10-26) */   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
     if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]].concat(squarePageOn() ? [['card', 'Square', squareView, ['square']]] : []);   /* the field crew (2026-10-19): no doors, no sales; + Square for those who take payments (2026-10-21) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', 'Doors', function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (S.fqOn && !asOffice() && !adminView()) it.push(['fq', 'Quick quote', function () { fieldQuoteView(); }, ['fieldquote']]);   /* the field quick quote in the computer menu (2026-10-22) */
@@ -9756,7 +9758,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (adminView() && wdOn()) it.push(['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']]);   /* the jobs board (2026-10-14) */
     if (adminView()) it.push(['card', 'Customers', customersView, ['customers', 'customer']]);
     if (adminView() && quickCanBook()) it.push(['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']]);   /* Jen's quote builder in the admin's menu (2026-10-21) */   /* in the top bar, not only under Office (Matthew 2026-10-15) */
-    if (asOffice()) it.push(['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']]);
+    if (asOffice() && quickCanBook()) it.push(['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']]);
     else if (S.role === 'manager') it.push(['pipe', 'Leads', teamLeadsView, ['teamleads']]);
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
     if (walkerOn() && !wdOn()) it.push(['jobs', 'My jobs', function () { myJobsView(); }, ['myjobs', 'job']]);
@@ -9975,7 +9977,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function deskSize() {
     var g = view.querySelector('.desk'); if (!g) return;
     var ob = document.getElementById('offbar');
-    g.style.top = ((dnav.hidden ? 0 : dnav.offsetHeight) + (hdr.hidden ? 0 : hdr.offsetHeight) + (ob && !ob.hidden ? ob.offsetHeight : 0)) + 'px';
+    /* the menu down the left side (a computer 1280px and wider) is as tall as the window: it sits beside the workspace, not above it
+       (2026-10-26, Matthew: "when i click open in the workspace nothing populates": top was the window's height, so the panel had none) */
+    var side = !dnav.hidden && dnav.offsetHeight > dnav.offsetWidth * 1.5;
+    g.style.top = ((dnav.hidden || side ? 0 : dnav.offsetHeight) + (hdr.hidden ? 0 : hdr.offsetHeight) + (ob && !ob.hidden ? ob.offsetHeight : 0)) + 'px';
+    g.style.left = side ? dnav.offsetWidth + 'px' : '';
     g.style.bottom = (dock.hidden ? 0 : dock.offsetHeight) + 'px';   /* both bars are hidden in the workspace (offsetHeight 0) */
     if (S.desk && S.desk.map) S.desk.map.invalidateSize();
   }
@@ -10194,6 +10200,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function orderOk(v) { return v === 'street' || v === 'near' || v === 'route' || ((v === 'best' || v === 'bestnear') && !!bestTrade() && (v === 'best' || crewSees())); }
   function filtLoad() { if (S.filt) return; S.filt = {}; try { S.filt = JSON.parse(localStorage.getItem('sixfold.rounds.filters') || '{}') || {}; } catch (e) {} }
   function filtSave() { try { localStorage.setItem('sixfold.rounds.filters', JSON.stringify(S.filt || {})); } catch (e) {} }
+  if (CO) FILT.forEach(function (x) { if (x[0] === 'lawn') x[2] = CO.a365 ? 'Lawn to aerate' : 'Has a lawn'; });
   function filtOn() { filtLoad(); if (S.region === SAMPLE_KEY) return []; return FILT.filter(function (x) { return S.filt[x[0]] && x[3](); }); }
   function matchOn() { return filtOn().length > 0; }
   function matchWords() { return filtOn().map(function (x) { return x[2].toLowerCase(); }).join(' and '); }
