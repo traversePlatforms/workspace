@@ -339,3 +339,8 @@ traverse/data-pipeline/door-territory/group1/door-points.json
 traverse/data-pipeline/door-territory/group1/build-walklist*.mjs
 traverse/data-pipeline/door-territory/group1/raw/
 traverse/data-pipeline/door-territory/group1/out/
+
+# Sixfold job photos for content (2026-10-26): customer houses by address; storage only, not in git (Drive backup carries them)
+sixfold/brand/job-photos/**
+!sixfold/brand/job-photos/**/
+!sixfold/brand/job-photos/**/*.md
