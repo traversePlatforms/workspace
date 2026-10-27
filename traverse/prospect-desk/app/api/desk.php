@@ -81,13 +81,20 @@ function state(): array {
 function secret(): string { $f = DATA_DIR . '/secret.key'; $s = @file_get_contents($f); if (!$s) { $s = bin2hex(random_bytes(32)); file_put_contents($f, $s); @chmod($f, 0600); } return trim($s); }
 function unsubToken(string $id): string { return substr(hash_hmac('sha256', 'unsub|' . $id, secret()), 0, 20); }
 function firstName(string $person): string { $p = preg_split('/\s+/', trim($person)) ?: []; $f = $p[0] ?? ''; return preg_match('/^[A-Za-z][A-Za-z\'-]{1,30}$/', $f) ? $f : ''; }
+/* the name as people say it (2026-10-27, Matthew's review: "Colorado hail map for Verity Roofing LLC"): the register's legal suffix off
+   (LLC, Inc, Corp, Co, Ltd, PLLC ...), and an ALL-CAPS name in normal case ("FULL CURL ROOFING LLC" -> "Full Curl Roofing") */
+function spokenName(string $n): string {
+    $n = trim(preg_replace('/[\s,.]+(l\.?\s?l\.?\s?c\.?|inc\.?|incorporated|corp\.?|corporation|co\.?|company|ltd\.?|limited|p\.?l\.?l\.?c\.?|l\.?l\.?l\.?p\.?|l\.?l\.?p\.?)\s*$/i', '', trim($n)), " ,.\t");
+    if ($n !== '' && $n === strtoupper($n) && preg_match('/[A-Z]{3,}/', $n)) $n = preg_replace_callback('/\b([A-Z])([A-Z\']*)\b/', fn($m) => $m[1] . strtolower($m[2]), $n);
+    return $n;
+}
 function fill(string $s, array $l): string {
-    return strtr($s, ['{company}' => (string) $l['name'], '{city}' => (string) ($l['city'] ?: 'your area'), '{trade}' => strtolower(TRADES[$l['trade']] ?? 'your trade'), '{first}' => firstName((string) $l['person']) ?: 'there']);
+    return strtr($s, ['{company}' => spokenName((string) $l['name']), '{city}' => (string) ($l['city'] ?: 'your area'), '{trade}' => strtolower(TRADES[$l['trade']] ?? 'your trade'), '{first}' => firstName((string) $l['person']) ?: 'there']);
 }
 /** one company's message: the template filled in, the signature, the address, the unsubscribe line */
 function render(array $l, array $tpl, array $set, string $unsubUrl): array {
     $t = $tpl[$l['trade']] ?? reset($tpl);
-    $body = fill((string) $t['body'], $l) . "\n" . trim((string) $set['signature']) . ($set['address'] !== '' ? "\n" . trim((string) $set['address']) : '')
+    $body = rtrim(fill((string) $t['body'], $l)) . "\n\n" . trim((string) $set['signature'])   /* a blank line before the signature */ . ($set['address'] !== '' ? "\n" . trim((string) $set['address']) : '')
           . "\n\nIf you would rather not get emails from me, reply \"no thanks\" or use this link: " . $unsubUrl;
     return ['id' => $l['id'], 'to' => (string) $l['email'], 'subject' => fill((string) $t['subject'], $l), 'body' => $body];
 }
