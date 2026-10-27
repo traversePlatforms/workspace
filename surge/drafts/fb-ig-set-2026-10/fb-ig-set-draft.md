@@ -80,7 +80,7 @@ Apply at surgeftw.com/careers.
 ## 6. Learn sales from people who've done it
 Photo: `Team/IMG_0505-scaled.png` (the team in the corridor)
 
-We're hiring. You'd be coached every morning, by trainers who started as reps themselves, and there's a clear path from rep to trainer.
+We're hiring. You'd be coached every morning, by trainers who started as reps themselves, and there's a clear path to career growth.
 
 What do you want to get better at this year?
 
@@ -92,13 +92,15 @@ Apply at surgeftw.com/careers.
 
 ## Flags (please check)
 
-1. **Post 6 photo:** confirm nobody in the group shot has left Surge. Dylan Conger has, and I can't tell who's who from faces.
+1. ~~**Post 6 photo:** confirm nobody in the group shot has left Surge.~~ **Cleared 2026-10-27: Matthew confirmed everyone in the photo still works at Surge.** Dylan Conger has, and I can't tell who's who from faces.
 2. **Platform changes from the spec:**
    - Captions are 40-60 words, not the 150-200 the spec sets for LinkedIn. Short works better on Facebook and Instagram.
    - Each still ends on a question, then a call or apply line, because Brandon wants posts aimed at sales.
    - **Links:** on Facebook, put the link in the first comment. On Instagram, links in captions don't click, so point to the bio link.
 3. **Post 1 photo** shows the MIND OVER MATTER and GRIT prints. The spec's §5 warns against motivational-wall texture. It's small here and the bullpen is the subject, but it's your call.
 4. **Post 6 is recruiting copy.** It follows §5: no earnings, no team-building, no scale claims. The 10-21 "high earning potential" clearance covers the website only, not social, so it isn't used here.
+
+**2026-10-27, post 6 wording (Matthew):** "a clear path from rep to trainer" became "a clear path to career growth" on the image and in the caption. That extends the 21 Oct website-only clearance of growth wording (RESTRICTED.md, "grow your career") to this social post, on his instruction. Layout B is now the Surge look (build-posts.mjs).
 
 ## Lines left out, and why
 

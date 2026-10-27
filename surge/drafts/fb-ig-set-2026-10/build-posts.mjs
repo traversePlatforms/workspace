@@ -27,7 +27,7 @@ const POSTS = [
   { n: 5, accent: 'a trainer earns.', slug: 'day-one-last', photo: 'Office and work/IMG_7637.jpg', pos: '50% 45%', foot: APPLY,
     kicker: 'Who teaches day one', head: 'Day one is the last thing a trainer earns.', sub: 'Trainers start by teaching week two and work backwards. The first day is the hardest to teach.' },
   { n: 6, accent: 'who\u2019ve done it.', slug: 'now-hiring', photo: 'Team/IMG_0505-scaled.png', pos: '50% 50%', foot: APPLY,
-    kicker: 'Now hiring', head: 'Learn sales from people who\u2019ve done it.', sub: 'Coaching every morning, trainers who started as reps, and a clear path from rep to trainer.' },
+    kicker: 'Now hiring', head: 'Learn sales from people who\u2019ve done it.', sub: 'Coaching every morning, trainers who started as reps, and a clear path to career growth.' },
 ];
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 function page(p) {
