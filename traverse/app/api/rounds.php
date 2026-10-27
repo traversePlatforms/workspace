@@ -1301,11 +1301,24 @@ function customerDoors(): array {
 }
 /* next visit after a done one: a month or a year on, kept inside the month (Fable 2026-10-04: PHP's
    '+1 month' turns 31 Jan into 3 Mar and skips February; 29 Feb + a year becomes 28 Feb) */
-function nextDue(string $date, string $plan): string {
+function nextDue(string $date, string $plan, int $weeks = 0): string {
+    if ($weeks > 0) return (new DateTime($date))->modify('+' . ($weeks * 7) . ' days')->format('Y-m-d');   /* visits every N weeks, billed by the plan (2026-10-27, Jen's $74 plan: every 6-8 weeks) */
     [$y, $m, $d] = array_map('intval', explode('-', $date));
     if ($plan === 'yearly') $y++; else { $m += $plan === 'quarterly' ? 3 : 1; while ($m > 12) { $m -= 12; $y++; } }
     $last = (int) (new DateTime(sprintf('%04d-%02d-01', $y, $m)))->format('t');
     return sprintf('%04d-%02d-%02d', $y, $m, min($d, $last));
+}
+/* a plan visit marked Done on the Jobs board moves the customer's next visit on, as a visit logged by hand does (2026-10-27, Matthew:
+   only hand-logged visits moved it). Never earlier than it already is; undoing the job leaves the date for the office to set. */
+function custPlanAdvance(string $lead, string $date): void {
+    if ($lead === '' || !dateOk($date)) return;
+    foreach (loadCustomers() as $c) {
+        if ((string) ($c['lead'] ?? '') !== $lead || ($c['status'] ?? 'active') !== 'active') continue;
+        $plan = (string) ($c['plan'] ?? 'oneoff'); $wk = (int) ($c['every'] ?? 0);
+        if (!in_array($plan, ['monthly', 'quarterly', 'yearly'], true) && !($plan === 'custom' && $wk > 0)) continue;
+        $cand = nextDue($date, $plan, $wk);
+        if (empty($c['next']) || $cand > $c['next']) appendLine(custDir() . '/customers.log', ['id' => $c['id'], 'by' => 'Jobs board', 'at' => time(), 'f' => ['next' => $cand]]);
+    }
 }
 function dateOk(string $d): bool { return (bool) preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $d, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]); }
 /* ---- the walk (SX-51, 2026-10-04) ------------------------------------------------------
@@ -2931,7 +2944,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -6149,6 +6162,7 @@ if ($action === 'jobdone') {
     $took = $mins > 0 ? trim(($mins >= 60 ? intdiv($mins, 60) . ' h ' : '') . ($mins % 60 ? ($mins % 60) . ' min' : '')) : '';
     $row = ['id' => $id, 'done' => $o === 'undo' ? null : ['o' => $o, 'note' => $note, 'collected' => max(0, $got), 'mins' => $o === 'done' ? $mins : 0, 'by' => $me, 'at' => time()], 'by' => $me, 'at' => time()];
     if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
+    if ($o === 'done') custPlanAdvance((string) ($j['lead'] ?? ''), (string) ($j['date'] ?? ''));
     if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
     if ($o === 'could not' && !empty(company()['a365'])) a365Alert('Job not done: ' . ((string) ($j['title'] ?? '') ?: 'a customer'), $me . ': ' . mb_substr($note, 0, 140));   /* the office rebooks it */
     $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ['stage' => 'waiting'];   /* nothing owed: the aftercare email now */
@@ -7306,6 +7320,7 @@ if ($action === 'clickuppoll') {
         if ($cst === 'completed' && ($cj = jobForLead($id)) && empty($cj['done']) && empty($cj['cudone']) && (string) $cj['date'] <= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) {
             appendLine(DATA_DIR . '/jobs.log', ['id' => (string) $cj['id'], 'done' => ['o' => 'done', 'note' => 'Marked completed in Jen\'s ClickUp.', 'collected' => 0, 'mins' => 0, 'by' => 'ClickUp', 'at' => $now], 'cudone' => $now, 'by' => 'ClickUp', 'at' => $now]);
             appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'note' => 'Job done (completed in Jen\'s ClickUp).', 'by' => 'ClickUp', 'at' => $now]);
+            custPlanAdvance((string) $id, (string) $cj['date']);
             if (jobOwed($cj) < 1) jobAftercare((string) $cj['id'], 'done');
             $moved[] = (string) ($l['name'] ?? $name) . ' (job done)';
         }
@@ -8013,15 +8028,37 @@ if ($action === 'squarecheckrun' || $action === 'squareok') {   /* the Payments 
     writeJsonAtomic(DATA_DIR . '/square-check-ok.json', ['keys' => array_slice($keys, -500), 'by' => $me, 'at' => time()]);
     out(['ok' => true, 'sqcheck' => squareCheckShown()]);
 }
-if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget', 'custdoc', 'custdocadd', 'custdocdel'], true)) {
+if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimport', 'visitsave', 'customersexport', 'backup', 'backups', 'backupget', 'custdoc', 'custdocadd', 'custdocdel', 'plantemplates', 'plantemplatesave'], true)) {
     /* the office (Jen, 2026-10-14, Matthew: "in case she needs to call one or edit something she forgot to put in"): the list, editing a
        customer, making one from a lead, adding and editing visits. Removing a visit, imports, the download and backups stay the admin's. */
-    $officeCust = $role === 'office' && feature('walkdesk') && in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'custdoc', 'custdocadd'], true);
+    $officeCust = $role === 'office' && feature('walkdesk') && in_array($action, ['customers', 'customersave', 'customerfrom', 'visitsave', 'custdoc', 'custdocadd', 'plantemplates', 'plantemplatesave'], true);
     /* the quote account makes a customer from one of her own leads (2026-10-16, won without the form), nothing else here */
     $quoteCust = $role === 'quote' && feature('walkdesk') && $action === 'customerfrom' && qMine(leadsAll()[(string) ($body['lead'] ?? '')] ?? []);
     if ($role !== 'admin' && !$officeCust && !$quoteCust) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz))->format('Y-m-d');
+    /* saved plans (2026-10-27, Matthew: Jen's $74 lawn plan, picked for the next customer instead of typed again): customers/plans.log,
+       one line per change, later lines win; the office makes and removes them, as she does customers */
+    if ($action === 'plantemplates' || $action === 'plantemplatesave') {
+        $pf = custDir() . '/plans.log';
+        $plans = function () use ($pf) { $o = []; foreach (custLines('plans.log') as $r) { $k = (string) ($r['id'] ?? ''); if ($k === '') continue; if (!empty($r['del'])) { unset($o[$k]); continue; } $o[$k] = $r; } return array_values($o); };
+        if ($action === 'plantemplatesave') {
+            if (!$isPost) fail('POST required', 405);
+            $pid = (string) ($body['id'] ?? '');
+            if ($pid !== '' && !preg_match('/^p\d{14}[0-9a-f]{6}$/D', $pid)) fail('No such plan.', 404);
+            if (!empty($body['del'])) { if ($pid === '') fail('No such plan.', 404); if (!appendLine($pf, ['id' => $pid, 'del' => true, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500); out(['ok' => true, 'plans' => $plans()]); }
+            $row = ['id' => $pid !== '' ? $pid : 'p' . date('YmdHis') . bin2hex(random_bytes(3)), 'name' => $clean($body['name'] ?? '', 80)];
+            if (mb_strlen($row['name']) < 2) fail('Name the plan to save it.');
+            $row['plan'] = (string) ($body['plan'] ?? 'monthly'); if (!in_array($row['plan'], ['monthly', 'quarterly', 'yearly', 'custom'], true)) fail('Pick the plan.');
+            foreach (['price' => 'The price', 'listPrice' => 'The regular price'] as $k => $say) { $p = $body[$k] ?? ''; if ($p === '' || $p === null) $row[$k] = null; elseif (!is_numeric($p) || $p < 0 || $p > 1000000) fail($say . ' should be a number of dollars.'); else $row[$k] = round((float) $p, 2); }
+            $w = $body['every'] ?? ''; if ($w === '' || $w === null) $row['every'] = null; elseif (!is_numeric($w) || (float) $w != (int) $w || $w < 1 || $w > 52) fail('Visits every 1 to 52 weeks.'); else $row['every'] = (int) $w;
+            $row['includes'] = $clean($body['includes'] ?? '', 2000); $row['by'] = $me; $row['at'] = time();
+            if (!is_dir(custDir())) @mkdir(custDir(), 0750, true);
+            if (!appendLine($pf, $row)) fail('Could not save that. Try again.', 500);
+            out(['ok' => true, 'id' => $row['id'], 'plans' => $plans()]);
+        }
+        out(['ok' => true, 'plans' => $plans()]);
+    }
     /* the whole list, with each customer's visits and what is due */
     /* documents on a customer (2026-10-15, Matthew: "customers should have their signed service agreement that people can click and it
        can load up"): PDFs kept outside the web folder, shown only to people who may see customers */
@@ -8193,6 +8230,11 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         if (array_key_exists('plan', $in)) { $f['plan'] = (string) $in['plan']; if (!in_array($f['plan'], CUST_PLANS, true)) fail('Pick the plan.'); }
         if (array_key_exists('status', $in)) { $f['status'] = (string) $in['status']; if (!in_array($f['status'], CUST_STATUS, true)) fail('Pick active, paused or ended.'); }
         if (array_key_exists('price', $in)) { $p = $in['price']; if ($p === '' || $p === null) $f['price'] = null; elseif (!is_numeric($p) || $p < 0 || $p > 1000000) fail('The price should be a number of dollars.'); else $f['price'] = round((float) $p, 2); }
+        /* the plan's own details (2026-10-27, Jen's $74 plan: regular price, visits every few weeks, what it includes) */
+        if (array_key_exists('listPrice', $in)) { $p = $in['listPrice']; if ($p === '' || $p === null) $f['listPrice'] = null; elseif (!is_numeric($p) || $p < 0 || $p > 1000000) fail('The regular price should be a number of dollars.'); else $f['listPrice'] = round((float) $p, 2); }
+        if (array_key_exists('every', $in)) { $w = $in['every']; if ($w === '' || $w === null) $f['every'] = null; elseif (!is_numeric($w) || (float) $w != (int) $w || $w < 1 || $w > 52) fail('Visits every 1 to 52 weeks.'); else $f['every'] = (int) $w; }
+        if (array_key_exists('planName', $in)) $f['planName'] = $clean($in['planName'], 80);
+        if (array_key_exists('includes', $in)) $f['includes'] = $clean($in['includes'], 2000);
         foreach (['start', 'next', 'reviewAsked'] as $k) if (array_key_exists($k, $in)) { $d = (string) $in[$k]; if ($d !== '' && !dateOk($d)) fail('That is not a real date.'); $f[$k] = $d; }   /* reviewAsked 2026-10-13 */
         if (array_key_exists('agreement', $in)) { $u = trim((string) $in['agreement']); if ($u !== '' && !preg_match('#^https://[^\s<>"]{4,500}$#D', $u)) fail('The agreement link should start with https://'); $f['agreement'] = $u; }
         if ($isNew) $f += ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0]];
@@ -8311,8 +8353,9 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
         /* next due becomes a month (or a year) after this visit, unless that is earlier than it already is:
            a mow a day early still moves it on, and last month's visit typed in late never pulls it back */
         /* quarterly too (review 2026-10-06: the pest plan was in CUST_PLANS and nextDue, but a done visit never moved it on) */
-        if ($status === 'done' && in_array($c['plan'] ?? '', ['monthly', 'quarterly', 'yearly'], true)) {
-            $cand = nextDue($date, (string) $c['plan']);
+        $wk = (int) ($c['every'] ?? 0);   /* or every N weeks when the plan says so (2026-10-27) */
+        if ($status === 'done' && (in_array($c['plan'] ?? '', ['monthly', 'quarterly', 'yearly'], true) || (($c['plan'] ?? '') === 'custom' && $wk > 0))) {
+            $cand = nextDue($date, (string) $c['plan'], $wk);
             if (empty($c['next']) || $cand > $c['next']) { $next = $cand; $write($cid, ['next' => $next]); }
         }
         out(['ok' => true, 'vid' => $vid, 'next' => $next]);

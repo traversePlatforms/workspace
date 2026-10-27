@@ -729,7 +729,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .chead{border-radius:20px;padding:16px;color:var(--bar-ink);background:var(--topo) center/560px 360px,linear-gradient(150deg,#3A6B36 0%,var(--bar) 75%);margin-bottom:12px}
   .chead .cname{font:400 24px/1.15 var(--serif)}
   .chead .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
-  .chead .cfigs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.cplanbox{margin:12px 0}.cplanbox .cpl{font-weight:700;margin-top:4px}
+  .chead .cfigs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.cplanbox{margin:12px 0}.cplanbox .cpl{font-weight:700;margin-top:4px}.cplanbox .cpck{display:flex;gap:8px;align-items:center;font-size:13.5px}.cplanbox .cpck input{width:auto}
   .chead .cfigs div{background:var(--bar-lift);border-radius:12px;padding:8px 9px;min-width:0}
   .chead .cfigs b{display:block;font-size:16px;color:var(--ember);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chead .cfigs span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--bar-soft)}
@@ -12852,35 +12852,77 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return box;
   }
   /* the service plan, its own box under the name (2026-10-27, Matthew: "Edit" read as fixing the customer's details, so a monthly plan
-     was hard to find). Saves only plan, price and next visit; the Edit form keeps the same fields. */
+     was hard to find). Then the plan's own details (same day, Jen's $74 lawn plan): its name, the regular price beside theirs, visits every
+     few weeks however it is billed, what it includes, and saved plans to pick for the next customer. Nothing is charged from here yet. */
   function custPlanBox(c, redraw) {
     var box = q('div', 'cplanbox'), rec = c.plan && c.plan !== 'oneoff';
     var per = { monthly: 'a month', quarterly: 'a quarter', yearly: 'a year' };
-    var save = function (body, btn, err, done) {
+    var save = function (body, btn, err, done, after) {
       btn.disabled = true; err.textContent = ''; body.id = c.id;
       api('customersave', { body: body }).then(function (j) {
-        btn.disabled = false;
-        if (!j.ok) { err.textContent = j.error || 'Could not save that.'; return; }
-        S.custPlanOpen = null; toast(done, c.name || '', null); customerView(c.id);
+        if (!j.ok) { btn.disabled = false; err.textContent = j.error || 'Could not save that.'; return; }
+        var finish = function (extra) { btn.disabled = false; S.custPlanOpen = null; toast(done, (c.name || '') + (extra || ''), null); customerView(c.id); };
+        if (after) after(finish); else finish();
       }).catch(function () { btn.disabled = false; err.textContent = 'No signal. Try again when you have signal.'; });
     };
     if (S.custPlanOpen === c.id) {
-      var fm = q('div', 'phf cform');
+      var fm = q('div', 'phf cform'), picked = null;
       fm.appendChild(q('div', 'wl', rec ? 'Change the plan' : 'Start a plan'));
-      var lp = q('label', null, 'Plan'), pl = q('select');
+      var tplBox = q('div'); fm.appendChild(tplBox);
+      var fld = function (label, type, val, attrs) {
+        var lb = q('label', null, label), el = type === 'textarea' ? q('textarea') : q('input');
+        if (type !== 'textarea') el.type = type; el.value = val == null ? '' : val; if (attrs) for (var k in attrs) el[k] = attrs[k];
+        lb.appendChild(el); fm.appendChild(lb); return el;
+      };
+      var nm = fld('Plan name', 'text', rec ? c.planName : '', { maxLength: 80, placeholder: 'For example: Lawn care plan' });
+      var lp = q('label', null, 'Billed'), pl = q('select');
       [['monthly', 'Monthly plan'], ['quarterly', 'Quarterly plan'], ['yearly', 'Yearly plan'], ['custom', 'Custom schedule']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; pl.appendChild(op); });
       pl.value = rec ? c.plan : 'monthly'; lp.appendChild(pl); fm.appendChild(lp);
       var lpr = q('label'), pt = document.createTextNode(''), pr = q('input'); pr.type = 'number'; pr.min = 0; pr.step = 1; pr.inputMode = 'decimal'; pr.value = rec && c.price != null ? c.price : '';
       var priceLabel = function () { pt.textContent = pl.value === 'monthly' ? 'Price a month ($)' : pl.value === 'quarterly' ? 'Price a quarter ($)' : pl.value === 'yearly' ? 'Price a year ($)' : 'Price per visit ($)'; };
       priceLabel(); pl.addEventListener('change', priceLabel); lpr.appendChild(pt); lpr.appendChild(pr); fm.appendChild(lpr);
-      var ln = q('label', null, 'Next visit'), nx = q('input'); nx.type = 'date'; nx.value = c.next || ''; ln.appendChild(nx); fm.appendChild(ln);
-      fm.appendChild(q('div', 'sub2', 'When a visit is logged, the next visit moves on by the plan.'));
+      var lst = fld('Regular price, if theirs is lower ($)', 'number', rec ? c.listPrice : '', { min: 0, step: 1, inputMode: 'decimal' });
+      var ev = fld('Visit every (weeks)', 'number', rec ? c.every : '', { min: 1, max: 52, step: 1, inputMode: 'numeric', placeholder: 'Empty: once each billing period' });
+      var nx = fld('Next visit', 'date', c.next || '');
+      var inc = fld('What it includes', 'textarea', rec ? c.includes : '', { rows: 6, maxLength: 2000 });
+      fm.appendChild(q('div', 'sub2', 'When a visit is done (logged here, or marked Done on the Jobs board), the next visit moves on by the plan.'));
+      var ckL = q('label', 'cpck'), ck = q('input'), ckT = q('span', null, 'Save this plan to use for other customers'); ck.type = 'checkbox'; ckL.appendChild(ck); ckL.appendChild(ckT); fm.appendChild(ckL);
+      var fill = function (p) {
+        picked = p; nm.value = p ? p.name || '' : ''; pl.value = p ? p.plan || 'monthly' : 'monthly'; priceLabel();
+        pr.value = p && p.price != null ? p.price : ''; lst.value = p && p.listPrice != null ? p.listPrice : ''; ev.value = p && p.every ? p.every : ''; inc.value = p ? p.includes || '' : '';
+        ck.checked = false; ckT.textContent = p ? 'Also update the saved plan with these details' : 'Save this plan to use for other customers';
+        drawTpls();
+      };
+      var drawTpls = function () {
+        tplBox.textContent = ''; var list = S.planTpls || [];
+        if (!list.length) return;
+        var lb = q('label', null, 'Start from a saved plan'), sel = q('select'), o0 = q('option', null, '– A new plan –'); o0.value = ''; sel.appendChild(o0);
+        list.forEach(function (p) { var o = q('option', null, p.name); o.value = p.id; sel.appendChild(o); });
+        sel.value = picked ? picked.id : ''; sel.addEventListener('change', function () { fill(list.filter(function (p) { return p.id === sel.value; })[0] || null); });
+        lb.appendChild(sel); tplBox.appendChild(lb);
+        if (picked) {
+          var rm = q('button', 'lnk danger', 'Remove this saved plan'); rm.type = 'button';
+          rm.addEventListener('click', function () {
+            if (!window.confirm('Remove the saved plan “' + picked.name + '”? Customers already on it keep their plan.')) return;
+            api('plantemplatesave', { body: { id: picked.id, del: true } }).then(function (j) { if (!j.ok) { toast('Not removed', j.error || 'Try again.', null); return; } S.planTpls = j.plans || []; picked = null; drawTpls(); toast('Saved plan removed', '', null); }).catch(function () { toast('No signal', 'Not removed. Try again when you have signal.', null); });
+          });
+          tplBox.appendChild(rm);
+        }
+      };
+      drawTpls();
+      if (!S.planTpls) api('plantemplates').then(function (j) { if (j && j.ok) { S.planTpls = j.plans || []; drawTpls(); } }).catch(function () {});
       var err = q('div', 'err'); fm.appendChild(err);
       var sv = q('button', 'save', rec ? 'Save the plan' : 'Start the plan'); sv.type = 'button';
       sv.addEventListener('click', function () {
         if (sv.disabled) return;
         if (pr.value === '' || !(Number(pr.value) > 0)) { err.textContent = 'Add the price.'; return; }
-        save({ plan: pl.value, price: pr.value, next: nx.value }, sv, err, rec ? 'Plan saved' : 'Plan started');
+        if (ck.checked && nm.value.trim().length < 2) { err.textContent = 'Name the plan to save it for other customers.'; return; }
+        var body = { plan: pl.value, price: pr.value, listPrice: lst.value, every: ev.value, next: nx.value, planName: nm.value.trim(), includes: inc.value };
+        save(body, sv, err, rec ? 'Plan saved' : 'Plan started', ck.checked ? function (finish) {
+          var tb = { name: body.planName, plan: body.plan, price: body.price, listPrice: body.listPrice, every: body.every, includes: body.includes }; if (picked) tb.id = picked.id;
+          api('plantemplatesave', { body: tb }).then(function (j) { if (j && j.ok) { S.planTpls = j.plans || S.planTpls; finish(' · saved for other customers'); } else finish(' · the saved plan was not stored: ' + ((j && j.error) || 'try again')); })
+            .catch(function () { finish(' · the saved plan was not stored (no signal)'); });
+        } : null);
       });
       fm.appendChild(sv);
       var cx = q('button', 'tolink', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', function () { S.custPlanOpen = null; redraw(); }); fm.appendChild(cx);
@@ -12893,7 +12935,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return box;
     }
     box.appendChild(q('div', 'wl', 'Service plan'));
-    box.appendChild(q('div', 'cpl', (PLAN_L[c.plan] || 'Plan') + (c.price ? ' · ' + money(c.price) + (per[c.plan] ? ' ' + per[c.plan] : ' a visit') : '') + (c.next ? ' · next visit ' + fmtD(c.next) : '')));
+    box.appendChild(q('div', 'cpl', (c.planName || PLAN_L[c.plan] || 'Plan') + (c.price ? ' · ' + money(c.price) + (per[c.plan] ? ' ' + per[c.plan] : ' a visit') : '') + (c.listPrice > c.price ? ' (regular ' + money(c.listPrice) + ')' : '')));
+    var when = [c.planName ? PLAN_L[c.plan] : '', c.every ? 'Visits every ' + c.every + ' weeks' : '', c.next ? 'Next visit ' + fmtD(c.next) : ''].filter(Boolean).join(' · ');
+    if (when) box.appendChild(q('div', 'sub2', when));
+    if (c.includes) box.appendChild(q('div', 'lmsg', c.includes));
+    box.appendChild(q('div', 'sub2', 'Not charged automatically yet: take each payment as you do now.'));
     var acts = q('div', 'aacts cacts'), err2 = q('div', 'err');
     var ch = q('button', 'lnk', 'Change plan'); ch.type = 'button'; ch.addEventListener('click', open); acts.appendChild(ch);
     var en = q('button', 'lnk danger', 'End plan'); en.type = 'button';
