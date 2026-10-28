@@ -237,6 +237,10 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .lookup .lksub{font-size:12.5px;color:var(--soft)}
   .lookup .lktip{font-size:13px;font-weight:700;color:var(--later)}
   .lookrow{display:flex;align-items:center;gap:10px;margin:18px 4px 0}
+  /* export to another program (2026-10-28) */
+  .crmx{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .crmrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 8px}
+  .crmrow select{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:600 14px var(--sans);padding:0 8px;min-width:0}
   /* work hours on the profile, and Team hours (2026-10-28) */
   .hrcard{margin:18px 4px 0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
   .hrh{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
@@ -13035,6 +13039,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var ex = q('div', 'cexp'); if (S.role !== 'admin') ex.hidden = true;
     ex.appendChild(q('div', 'wl', 'Keep a copy'));
     var a1 = q('a', 'adminlink', 'Download customers (spreadsheet)'); a1.href = API + '?action=customersexport'; a1.setAttribute('download', ''); ex.appendChild(a1);
+    /* export to another program (2026-10-28, Matthew: "we should offer more exports then just that one. That way people have options"):
+       each file in the import layout that program documents (crmexport in the API) */
+    var cx = q('div', 'crmx'); cx.appendChild(q('div', 'wl', 'Export to another program'));
+    var cxSet = q('select'), cxFmt = q('select'); cxSet.setAttribute('aria-label', 'What to export'); cxFmt.setAttribute('aria-label', 'Program');
+    [['customers', 'Customers'], ['doors', 'Doors booked at the door']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; cxSet.appendChild(op); });
+    var CRMX = [['generic', 'Any CRM (generic file)'], ['housecallpro', 'Housecall Pro'], ['yardbook', 'Yardbook'], ['gorilladesk', 'GorillaDesk'], ['highlevel', 'HighLevel (GoHighLevel)'], ['quickbooks', 'QuickBooks Online'], ['hubspot', 'HubSpot'], ['google', 'Google Contacts'], ['jobber', 'Jobber']];
+    if (feat('roof')) CRMX.push(['jobnimbus', 'JobNimbus']);
+    CRMX.forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; cxFmt.appendChild(op); });
+    var cxGo = q('a', 'adminlink crmgo'); cxGo.setAttribute('download', ''); cxGo.appendChild(ico('table')); var cxTxt = q('span'); cxGo.appendChild(cxTxt);
+    var cxNote = q('div', 'sub2');
+    var CXN = { generic: 'Works with any program that lets you match columns when importing: Housecall Pro, LawnPro, GorillaDesk, HubSpot, HighLevel, Pipedrive, Zoho, Salesforce, QuickBooks.',
+      housecallpro: 'In Housecall Pro: Customers, Import. Check the matched columns before you finish.', yardbook: 'Yardbook needs a ZIP code on every row: rows without one won’t import, so add them first.',
+      gorilladesk: 'In GorillaDesk: Customers, Import, then match each column.', highlevel: 'In HighLevel: Contacts, Import. Match the address columns by hand; tick “Don’t import data for unmapped columns”.',
+      quickbooks: 'QuickBooks takes up to 1,000 rows per file and needs every name to be different: repeated names get the street added.', hubspot: 'In HubSpot: Contacts, Import, From a file. HubSpot matches people by email.',
+      google: 'In Google Contacts: Import, then choose this file (up to 3,000 at a time).', jobber: 'In Jobber: Clients, Import clients.', jobnimbus: 'In JobNimbus: Contacts, Import.' };
+    var cxPaint = function () {
+      var f = cxFmt.value, s = cxSet.value;
+      cxGo.href = f === 'jobber' ? API + '?action=jobber' : f === 'jobnimbus' ? API + '?action=jobnimbus' : API + '?action=crmexport&fmt=' + f + '&set=' + s;
+      cxSet.disabled = f === 'jobber' || f === 'jobnimbus'; if (cxSet.disabled) cxSet.value = 'doors';
+      cxTxt.textContent = 'Download for ' + cxFmt.options[cxFmt.selectedIndex].text.replace(/ \(.*\)$/, '');
+      cxNote.textContent = (CXN[f] || '') + (s === 'doors' ? ' Door rows use the county owner of record as written, and have no ZIP.' : '');
+    };
+    cxSet.addEventListener('change', cxPaint); cxFmt.addEventListener('change', cxPaint);
+    var cxRow = q('div', 'crmrow'); cxRow.appendChild(cxSet); cxRow.appendChild(cxFmt); cx.appendChild(cxRow); cx.appendChild(cxGo); cx.appendChild(cxNote); ex.appendChild(cx); cxPaint();
     var a2 = q('a', 'adminlink', 'Download a full backup'); a2.href = API + '?action=backup'; a2.setAttribute('download', ''); ex.appendChild(a2);
     ex.appendChild(q('div', 'sub2', 'The backup is every log the app keeps (doors, numbers, notes, walks, results, leads, customers and visits) in one file. Save one somewhere safe each week. To rebuild, each log goes back where it came from on the server. Sign-in codes and photos are not in it.'));
     /* the nightly copies on the server: any of the last 30 nights can be downloaded */

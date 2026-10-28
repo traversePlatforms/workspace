@@ -10682,6 +10682,115 @@ if ($action === 'jobber') {
     exit;
 }
 
+/* ---- export to other programs (2026-10-28, Matthew: "We currently export to jobber, but maybe we should offer more exports then just that
+ * one. That way people have options") -------------------------------------------------------------------------------------------------
+ * Customers or booked doors, in the import layout each program documents (vendor help pages read 28 Oct 2026; sources in the commit and
+ * TASKS): a generic CRM file for the ones that map columns at import (Housecall Pro, LawnPro, GorillaDesk, HubSpot, HighLevel, Pipedrive,
+ * Zoho, Salesforce, QuickBooks, JobNimbus), and the exact headings for Yardbook (fixed, case-sensitive), GorillaDesk, Housecall Pro,
+ * HighLevel, QuickBooks Online (unique Full Name, 1,000 rows a file), HubSpot and Google Contacts (the template's own headings). Admin only.
+ * Door rows use the county owner of record as written (not split into first/last: county order varies); a previous owner's phone,
+ * email or note is left out, as in the Jobber file. The door data has no ZIP; a ZIP is taken from a customer's typed address when it has one. */
+const CRM_FORMATS = ['generic' => 'Any CRM (generic)', 'housecallpro' => 'Housecall Pro', 'yardbook' => 'Yardbook', 'gorilladesk' => 'GorillaDesk',
+    'highlevel' => 'HighLevel (GoHighLevel)', 'quickbooks' => 'QuickBooks Online', 'hubspot' => 'HubSpot', 'google' => 'Google Contacts'];
+function crmE164(string $p): string { $d = preg_replace('/\D/', '', $p); if (strlen($d) === 10) return '+1' . $d; if (strlen($d) === 11 && $d[0] === '1') return '+' . $d; return $p; }
+function crmRows(string $set): array {
+    $rows = []; $st = (string) (market()['state'] ?? 'CO'); $src = company()['short'] . ' (Traverse)';
+    if ($set === 'customers') {
+        foreach (loadCustomers() as $c) {
+            $full = trim((string) ($c['name'] ?? '')); if ($full === '') continue;
+            $isCo = (bool) preg_match('/\b(LLC|INC|CORP|COMPANY|LTD|HOA|ASSOCIATION|CHURCH|SCHOOL)\b/i', $full);
+            $sp = $isCo ? ['', ''] : array_pad(preg_split('/\s+/', $full, 2), 2, '');
+            $addr = trim((string) ($c['address'] ?? '')); $zip = preg_match('/\b(\d{5})(?:-\d{4})?\s*$/', $addr, $zm) ? $zm[1] : '';
+            $street = trim((string) preg_replace('/,?\s*(CO|Colorado)?\s*\d{5}(-\d{4})?\s*$/i', '', $addr));
+            $town0 = trim((string) ($c['town'] ?? '')); if ($town0 !== '' && preg_match('/^(.*\S)\s*,\s*' . preg_quote($town0, '/') . '\s*,?\s*(CO|Colorado)?$/i', $street, $tm)) $street = $tm[1];   /* "1234 Elm St, Centennial" → the street only */
+            $tags = array_values(array_filter([(string) ($c['service'] ?? ''), ($c['status'] ?? 'active') !== 'active' ? (string) $c['status'] : '']));   /* the plan's code (oneoff, monthly) is left out */
+            $rows[] = ['full' => $full, 'first' => $sp[0], 'last' => $sp[1], 'company' => $isCo ? $full : '', 'isCo' => $isCo, 'phone' => (string) ($c['phone'] ?? ''), 'email' => (string) ($c['email'] ?? ''),
+                'street' => $street, 'city' => (string) ($c['town'] ?? ''), 'state' => $st, 'zip' => $zip, 'country' => 'US', 'notes' => (string) ($c['notes'] ?? ''), 'tags' => $tags,
+                'source' => $src, 'status' => (string) ($c['status'] ?? 'active'), 'created' => (string) ($c['start'] ?? '')];
+        }
+        return $rows;
+    }
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $data = loadRegion($r['key']); if (!$data) continue;
+        $marks = loadMarks($r['key']); $phones = loadPhones($r['key']); $emails = loadEmails($r['key']); $notes = loadNotes($r['key']);
+        foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
+            $m = freshMark($d, $marks[$d['id']] ?? null); if (!$m || $m['outcome'] !== 'booked') continue;
+            $p = $phones[$d['id']] ?? null; if ($p && ownerAge($d, $p) === 'prev') $p = null;
+            $em = $emails[$d['id']] ?? null; if ($em && ownerAge($d, $em) === 'prev') $em = null;
+            $n = $notes[$d['id']] ?? null; if ($n && ownerAge($d, $n) === 'prev') $n = null;
+            $owner = trim((string) ($d['owner'] ?? '')); if (preg_match('/^unavailable$/i', $owner)) $owner = '';
+            $isCo = (bool) preg_match('/\b(LLC|L\.L\.C|INC|CORP|CORPORATION|COMPANY|LTD|LLLP|LP|PARTNERSHIP|TRUST)\b/i', $owner);
+            $note = 'Booked at the door by ' . ($m['by'] ?: 'crew') . ' on ' . date('M j, Y', (int) $m['at']) . '.' . ($p && ($p['source'] ?? '') !== 'door' ? ' Phone was looked up, not given: check the Do Not Call lists before calling.' : '') . ($n ? ' Door note: ' . $n['note'] : '');
+            $rows[] = ['full' => $owner, 'first' => $isCo ? '' : $owner, 'last' => '', 'company' => $isCo ? $owner : '', 'isCo' => $isCo, 'phone' => (string) ($p['phone'] ?? ''), 'email' => (string) ($em['email'] ?? ''),
+                'street' => (string) $d['address'], 'city' => (string) ($r['label'] ?? ''), 'state' => $st, 'zip' => '', 'country' => 'US', 'notes' => $note, 'tags' => [$src, (string) ($r['label'] ?? $r['key'])],
+                'source' => $src, 'status' => 'Booked', 'created' => date('Y-m-d', (int) $m['at'])];
+        }
+    }
+    return $rows;
+}
+if ($action === 'crmexport') {
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $fmt = (string) ($_GET['fmt'] ?? ''); $set = ($_GET['set'] ?? '') === 'doors' ? 'doors' : 'customers';
+    if (!isset(CRM_FORMATS[$fmt])) fail('Pick a program.');
+    $rows = crmRows($set);
+    exportLog(['what' => ($set === 'doors' ? 'bookings' : 'customers') . ' for ' . CRM_FORMATS[$fmt]]);
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . preg_replace('/[^a-z0-9-]+/', '-', strtolower(company()['short'])) . '-' . $set . '-for-' . $fmt . '-' . date('Y-m-d') . '.csv"');
+    $fh = fopen('php://output', 'w'); fwrite($fh, "\xEF\xBB\xBF");   /* UTF-8 mark: Excel and the importers read accents right */
+    /* csvSafe quotes a leading + (spreadsheet formulas), which spoiled +1 phone numbers ("'+17205550199"); a bare international phone
+       number can't be a formula, so it goes through as is (2026-10-28, found in the local test) */
+    $put = function (array $line) use ($fh) { fputcsv($fh, array_map(fn($v) => is_string($v) && preg_match('/^\+\d{8,15}$/D', $v) ? $v : csvSafe($v), $line), ',', '"', ''); };
+    $addr1 = fn($x) => trim($x['street'] . ($x['city'] !== '' ? ', ' . $x['city'] : '') . ($x['state'] !== '' ? ', ' . $x['state'] : '') . ($x['zip'] !== '' ? ' ' . $x['zip'] : ''));
+    $first = fn($x) => $x['first'] !== '' ? $x['first'] : ($x['company'] !== '' ? $x['company'] : $x['full']);
+    switch ($fmt) {
+        case 'generic':
+            $put(['First Name', 'Last Name', 'Full Name', 'Company', 'Email', 'Phone', 'Mobile', 'Street', 'Street 2', 'City', 'State', 'ZIP', 'Country', 'Notes', 'Tags', 'Lead Source', 'Status', 'Created Date']);
+            foreach ($rows as $x) $put([$x['first'], $x['last'], $x['full'], $x['company'], $x['email'], crmE164($x['phone']), '', $x['street'], '', $x['city'], $x['state'], $x['zip'], $x['country'], $x['notes'], implode(', ', $x['tags']), $x['source'], $x['status'], $x['created']]);
+            break;
+        case 'housecallpro':   /* help.housecallpro.com 6584603 (23 Jan 2026): service address as one field; tags comma-separated */
+            $put(['Display name', 'First name', 'Last name', 'Company', 'Service address', 'Mobile number', 'Emails', 'Lead source', 'Customer notes', 'Tags', 'Type']);
+            foreach ($rows as $x) $put([$x['full'], $x['first'], $x['last'], $x['company'], $addr1($x), $x['phone'], $x['email'], $x['source'], $x['notes'], implode(', ', $x['tags']), $x['isCo'] ? 'business' : 'homeowner']);
+            break;
+        case 'yardbook':   /* support.yardbook.com + its sample_customer_import.csv: fixed, case-sensitive headings; first name, street, city, ZIP required */
+            $put(['contact_first_name', 'address_line1', 'city', 'zip_code', 'contact_last_name', 'business_name', 'email', 'phone', 'mobile', 'address_line2', 'state', 'country', 'tags', 'note']);
+            foreach ($rows as $x) $put([$first($x), $x['street'], $x['city'], $x['zip'], $x['last'], $x['company'], $x['email'], $x['phone'], '', '', $x['state'], $x['country'], implode(', ', $x['tags']), $x['notes']]);
+            break;
+        case 'gorilladesk':   /* intercom.help/gorilladesk 2845405 (23 Aug 2024): first name required; tags separated by semicolons */
+            $put(['Status', 'First name', 'Last name', 'Email', 'Company', 'Top Note', 'Phone (Mobile)', 'Address Line 1', 'Address Line 2', 'City', 'State', 'Zip', 'Customer Tag']);
+            foreach ($rows as $x) $put(['active', $first($x), $x['last'], $x['email'], $x['company'], $x['notes'], $x['phone'], $x['street'], '', $x['city'], $x['state'], $x['zip'], implode('; ', $x['tags'])]);
+            break;
+        case 'highlevel':   /* help.gohighlevel.com 155000005143 (25 Feb 2026): E.164 phones, comma tags; the address columns are mapped by hand at import */
+            $put(['First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Tags', 'Address', 'City', 'State', 'Postal Code', 'Source', 'Notes']);
+            foreach ($rows as $x) $put([$first($x), $x['last'], $x['email'], crmE164($x['phone']), $x['company'], implode(', ', $x['tags']), $x['street'], $x['city'], $x['state'], $x['zip'], $x['source'], mb_substr($x['notes'], 0, 5000)]);
+            break;
+        case 'quickbooks':   /* QuickBooks "import customers" (2 Sep 2026): Full Name unique and 100 characters at most, no colons or quotes; 1,000 rows a file */
+            $put(['Full Name', 'Company', 'Email', 'Phone', 'Mobile', 'Street', 'City', 'State', 'Postal Code', 'Country']);
+            $seen = [];
+            foreach ($rows as $x) {
+                $nm = trim(str_replace([':', '"', "\t", "\n", "\r"], ' ', $x['full'] !== '' ? $x['full'] : $x['street']));
+                if (isset($seen[strtolower($nm)])) $nm .= ' (' . $x['street'] . ')'; $nm = mb_substr($nm, 0, 100); $seen[strtolower($nm)] = 1;
+                $put([$nm, $x['company'], $x['email'], mb_substr($x['phone'], 0, 21), '', $x['street'], $x['city'], $x['state'], $x['zip'], 'United States']);
+            }
+            break;
+        case 'hubspot':   /* knowledge.hubspot.com default contact properties (21 Sep 2026): phones +1, email is the de-duplicating key */
+            $put(['First name', 'Last name', 'Email', 'Phone number', 'Mobile phone number', 'Street address', 'City', 'State/Region', 'Postal code', 'Country/Region', 'Company name', 'Lead status']);
+            foreach ($rows as $x) $put([$first($x), $x['last'], $x['email'], crmE164($x['phone']), '', $x['street'], $x['city'], $x['state'], $x['zip'], 'United States', $x['company'], $x['status'] === 'Booked' ? 'OPEN' : '']);
+            break;
+        case 'google':   /* the Google Contacts import template's own heading row (support.google.com/contacts/answer/15147365) */
+            $H = ['Name Prefix', 'First Name', 'Middle Name', 'Last Name', 'Name Suffix', 'Phonetic First Name', 'Phonetic Middle Name', 'Phonetic Last Name', 'Nickname', 'File As', 'E-mail 1 - Label', 'E-mail 1 - Value', 'Phone 1 - Label', 'Phone 1 - Value', 'Address 1 - Label', 'Address 1 - Country', 'Address 1 - Street', 'Address 1 - Extended Address', 'Address 1 - City', 'Address 1 - Region', 'Address 1 - Postal Code', 'Address 1 - PO Box', 'Organization Name', 'Organization Title', 'Organization Department', 'Birthday', 'Event 1 - Label', 'Event 1 - Value', 'Relation 1 - Label', 'Relation 1 - Value', 'Website 1 - Label', 'Website 1 - Value', 'Custom Field 1 - Label', 'Custom Field 1 - Value', 'Notes', 'Labels'];
+            $put($H);
+            foreach ($rows as $x) { $v = array_fill_keys($H, '');
+                $v['First Name'] = $first($x); $v['Last Name'] = $x['last']; $v['E-mail 1 - Label'] = $x['email'] !== '' ? 'Home' : ''; $v['E-mail 1 - Value'] = $x['email'];
+                $v['Phone 1 - Label'] = $x['phone'] !== '' ? 'Mobile' : ''; $v['Phone 1 - Value'] = $x['phone']; $v['Address 1 - Label'] = 'Home'; $v['Address 1 - Country'] = 'United States';
+                $v['Address 1 - Street'] = $x['street']; $v['Address 1 - City'] = $x['city']; $v['Address 1 - Region'] = $x['state']; $v['Address 1 - Postal Code'] = $x['zip'];
+                $v['Organization Name'] = $x['company']; $v['Notes'] = $x['notes']; $v['Labels'] = company()['short'];
+                $put(array_values($v)); }
+            break;
+    }
+    fclose($fh); exit;
+}
+
 /* ---- the Company screen (2026-10-08): a client install's own name, contact details and brand colour ----
  * Kept in company-local.json beside company.json in the data folder: the server makes it and a data refresh never ships one,
  * so an upload of new door data can't undo what the client's admin set. company() lays it over company.json. The brand
