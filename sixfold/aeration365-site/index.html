@@ -148,6 +148,11 @@
   footer svg{width:70px;height:70px}
   footer b{color:#fff;font:700 19px 'Outfit',sans-serif}
   footer a{color:#fff}
+  /* where to find us (2026-10-28, Matthew: "add the social footer"): text labels, 44 px taps, icons drawn in the text colour */
+  footer .soc{order:3;display:flex;gap:6px 20px;flex-wrap:wrap;width:100%;padding-top:14px;border-top:1px solid rgba(255,255,255,.18)}
+  footer .soc a{display:inline-flex;align-items:center;gap:8px;min-height:44px;text-decoration:none;font-weight:500}
+  footer .soc a:hover,footer .soc a:focus-visible{text-decoration:underline}
+  footer .soc svg{width:22px;height:22px;fill:currentColor;flex:none}
 
   @media (max-width:900px){
     nav{display:none}
@@ -340,6 +345,11 @@
 
 <footer><div class="wrap">
   <div class="fb"><svg aria-hidden="true"><use href="#badge"/></svg><div><b>Sixfold 365</b><br>Land · Aeration &amp; Seeding</div></div>
+  <nav class="soc" aria-label="Sixfold 365 online">
+    <a href="https://www.facebook.com/1418675127985724" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.5 1.6-1.5h1.7V4.4c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.3H7.4V14h2.7v8z"/></svg>Facebook</a>
+    <a href="https://www.instagram.com/365aeration/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 0 0 0-9.6zm0 7.9a3.1 3.1 0 1 1 0-6.2 3.1 3.1 0 0 1 0 6.2zM17.1 5.8a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zM12 3.6c2.7 0 3 0 4.1.1 2.8.1 4.1 1.4 4.2 4.2.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c-.1 2.8-1.4 4.1-4.2 4.2-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1C5 20.2 3.8 18.9 3.7 16.1 3.6 15 3.6 14.7 3.6 12s0-3 .1-4.1C3.8 5.1 5.1 3.8 7.9 3.7 9 3.6 9.3 3.6 12 3.6zM12 2C9.3 2 8.9 2 7.8 2.1 4 2.2 2.2 4 2.1 7.8 2 8.9 2 9.3 2 12s0 3.1.1 4.2C2.2 20 4 21.8 7.8 21.9c1.1.1 1.5.1 4.2.1s3.1 0 4.2-.1c3.8-.1 5.6-1.9 5.7-5.7.1-1.1.1-1.5.1-4.2s0-3.1-.1-4.2C21.8 4 20 2.2 16.2 2.1 15.1 2 14.7 2 12 2z"/></svg>Instagram</a>
+    <a href="https://g.page/r/CdxyzSzq9tvEEBM" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></svg>Google reviews</a>
+  </nav>
   <div><a href="tel:+17208304553">(720) 830-4553</a> · <a href="mailto:contact@365aeration.com">contact@365aeration.com</a><br><span style="font-size:13px">© <span id="yr">2026</span> Sixfold 365 · Not tax or insurance advice: confirm your own position with your accountant and your carrier.</span></div>
 </div></footer>
 
