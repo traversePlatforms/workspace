@@ -110,6 +110,9 @@ function company(): array {
             'a365' => null,
             /* Matthew's own Facebook ad leads from this date on (2026-10-26, YYYY-MM-DD, Denver): see webLead(). '' = none (every other install) */
             'metaMine' => '',
+            /* ...and up to this time (2026-10-28, YYYY-MM-DD HH:MM, Denver; Matthew: 'switch the intake leads back to jen'): from it on they are the
+               office's again. '' = no end */
+            'metaMineTo' => '',
             /* who Matthew can send his own leads to (2026-10-27, Matthew: 'I need to also be able to send some leads to cai'): account names; see mhand */
             'handTo' => []];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
@@ -4507,7 +4510,10 @@ function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_st
    office sees their jobs as Booked only, as for website leads. */
 function metaMineFrom(): int { static $t = null; if ($t === null) { $d = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) (company()['metaMine'] ?? '')) ? (string) company()['metaMine'] : ''; $t = $d !== '' ? (int) strtotime($d . ' 00:00:00 America/Denver') : 0; } return $t; }
 function webLead(array $l): bool { if (!empty($l['jenkeep']) || !empty($l['tojen'])) return false;   /* reached out to the office themselves: theirs now (2026-10-26); handed to Jen: hers (2026-10-26, Matthew: David Marshall) */
-    $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom()); }
+    $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom() && (metaMineTo() === 0 || (int) ($l['at'] ?? 0) < metaMineTo())); }
+/* the end of that (2026-10-28, Matthew: "switch the intake leads back to jen ... give her any of the ones i havent called, texted or emailed yet.
+   Leave website leads to me"): company.json "metaMineTo", set just before the first Facebook lead he had not reached; the ones he had stay his */
+function metaMineTo(): int { static $t = null; if ($t === null) { $d = (string) (company()['metaMineTo'] ?? ''); $t = preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $d) ? (int) strtotime($d . ':00 America/Denver') : 0; } return $t; }
 /* the nudge (2026-10-26, Matthew: "i get in the zone and forget to look after awhile and these people need to be contacted right away"): one of
    his leads still untouched 15 minutes after it came in (new, no call, text or email logged, no quote, no call-back day) gets one more alert
    on his phones. Once per lead; leads over a day old are left alone. Run by the 5-minute Facebook job (metapoll). */
