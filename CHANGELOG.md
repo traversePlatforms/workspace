@@ -61,4 +61,11 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 **Laptop**
 - **Power:** both power plans are set to never sleep, and closing the lid on the charger does nothing (Armoury Crate kept switching plans).
-- **Background jobs:** the Google Drive backup was rerun (last night's was cut off). Fable reviewed the day's code.
+- **Background jobs:** the Google Drive backup was rerun (last night's was cut off).
+
+**Code review (Fable, evening)** — all of today's code; 4 bugs fixed and deployed, none of which could have sent, charged or exposed anything. Report: traverse/CODE-REVIEW-2026-10-27-evening.md.
+- A signed-out web hit could start the newsletter and follow-up sweeps (now command-line only).
+- The unsubscribe page said "unsubscribed" when it hadn't saved (over the hourly limit).
+- The post runner could repost the first pictures if a run died halfway (it now saves after each post).
+- The grocery list hammered Kroger when a product disappeared (now one try per 10 minutes).
+- **Left for Matthew:** unsubscribe on a plain link click (email scanners could trigger it), and Jen's quote login sees every crew follow-up.
