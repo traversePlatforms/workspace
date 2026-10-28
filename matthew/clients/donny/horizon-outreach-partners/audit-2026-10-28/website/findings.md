@@ -268,3 +268,11 @@ Dates come from the site's own page records (raw/wpjson-pages.json, wpjson-posts
    - A "what the job is" section with real team photos, and one form system feeding one inbox.
    - The HOPE recruiting site built on the same facts, under one settled legal name.
 3. **Grow:** recruiting-focused posts (day in the life, training), measurement with consent (analytics and Meta Pixel plus a cookie banner), and monthly reporting.
+
+## Search and indexing (added 28 Oct, Matthew: "How is the SEO ... also how is the indexing for the google search")
+- [M] Google search "Horizon Outreach Partners" (in quotes), logged out, Denver location, 2026-10-28 15:47Z (social/captures/google-search-horizon-outreach-partners.txt): the AI Overview describes Horizon correctly and cites the site and Instagram, but **horizonoutreachpartners.com is not among the ten organic results on page 1** (all 4 mentions of the domain are inside the AI Overview block). Organic page 1: the Houston "HORIZON OUTREACH" Facebook, horizoncounseling.co, Horizon Work Partners, Horizon Partners profiles (RocketReach, Craft, Tracxn), a HubSpot partner, a YouTube clip. "People also search for": "Horizon outreach partners reviews". Results vary by location; a Charlotte searcher may see a different order.
+- [M] DNS TXT has two google-site-verification records (Search Console or Google Workspace, which uses the same record type; can't tell from outside). No verification meta tags in the page.
+- [M] robots.txt lists 3 sitemaps: sitemap.xml (Jetpack: sitemap-1.xml 11 URLs, image-sitemap-1.xml 62 images), news-sitemap.xml (1), sitemap_index.xml (Rank Math: page 8, post 3, elementskit_template 1 = the header template, category 1 = Uncategorized).
+- [M] Robots meta: main pages index,follow; /author/donnyparada1088/ is noindex (Rank Math); /category/uncategorized/ and /?elementskit_template=header are index.
+- [I] "Sales jobs Charlotte"-type searches were not run; no page names a job, pay or the city in its title or headings, so there is nothing to match.
+- [M] Handles: Instagram @horizonhopeinc, X @Horizon_opsales, Facebook no username (profile.php?id=61590111627482, site links a share URL with tracking codes), LinkedIn /company/horizon-outreach-partners (site links the numeric /company/117484175/), WordPress author /author/donnyparada1088/.

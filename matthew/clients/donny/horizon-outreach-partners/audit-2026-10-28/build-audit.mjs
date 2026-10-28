@@ -171,7 +171,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
       <li><b>Hard to read and find:</b> white on the brand orange is 2.23:1 (4.5:1 needed), Submit 1.87:1; no main heading on any of the 8 pages. <span class="fix">Dark text on orange; one heading per page.</span></li>
     </ul>
   </div>
-  <div class="foot">Sources: our checks of horizonoutreachpartners.com on 28 Oct 2026: 13 pages, 49 links, phone 390 px and tablet 820/1180 px; speed is our own Chrome test as an iPhone on Wi-Fi, typical 4G (20 Mbps) and a weak signal (1.6 Mbps), not Lighthouse; page sizes from Chrome's network log. Nothing was submitted. <span class="pg">1 / 4</span></div>
+  <div class="foot">Sources: our checks of horizonoutreachpartners.com on 28 Oct 2026: 13 pages, 49 links, phone 390 px and tablet 820/1180 px; speed is our own Chrome test as an iPhone on Wi-Fi, typical 4G (20 Mbps) and a weak signal (1.6 Mbps), not Lighthouse; page sizes from Chrome's network log. Nothing was submitted. <span class="pg">1 / 5</span></div>
 </div>
 
 <div class="page">
@@ -211,7 +211,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
       <tr><td>AlohaProduce Co</td><td>Communications Representative</td><td>$3,750–$4,425 / month</td></tr>
       <tr><td>Azalea Acquisitions</td><td>Sales Management Trainee</td><td>$700–$1,600 / week</td></tr>
       <tr><td>Horizon Outreach Partners</td><td>no live post found under the name (LinkedIn 0, SimplyHired 0)</td><td>none on the site or social</td></tr></table></div>
-  <div class="foot">Sources: our checks of horizonoutreachpartners.com, Instagram, Facebook, X and LinkedIn on 28 Oct 2026 (logged out); SimplyHired and LinkedIn job searches 28 Oct; USPTO reg. 4391024; Glassdoor figures are from a search listing and approximate. Indeed and Glassdoor refused automated reads, so their pages need a check in a browser. <span class="pg">2 / 4</span></div>
+  <div class="foot">Sources: our checks of horizonoutreachpartners.com, Instagram, Facebook, X and LinkedIn on 28 Oct 2026 (logged out); SimplyHired and LinkedIn job searches 28 Oct; USPTO reg. 4391024; Glassdoor figures are from a search listing and approximate. Indeed and Glassdoor refused automated reads, so their pages need a check in a browser. <span class="pg">2 / 5</span></div>
 </div>
 
 <div class="page">
@@ -253,7 +253,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
     <tr><td>X</td><td>Horizon</td><td>@Horizon_opsales</td><td>Professional Services</td></tr>
     <tr><td>LinkedIn</td><td>Horizon</td><td>/company/horizon-outreach-partners</td><td>Marketing Services, "Public Company"</td></tr>
     <tr><td>Google</td><td>Horizon</td><td>2459 Wilkinson Blvd Ste 321</td><td>Business to business service</td></tr></table>
-  <div class="foot">Sources: Instagram, Facebook, X, LinkedIn, Google Maps, BBB, TikTok, YouTube and Threads, viewed logged out on 28 Oct 2026; counts a platform hides when logged out (older posts, first-post dates) were not estimated. Houston figures from its own Instagram and X profiles. <span class="pg">3 / 4</span></div>
+  <div class="foot">Sources: Instagram, Facebook, X, LinkedIn, Google Maps, BBB, TikTok, YouTube and Threads, viewed logged out on 28 Oct 2026; counts a platform hides when logged out (older posts, first-post dates) were not estimated. Houston figures from its own Instagram and X profiles. <span class="pg">3 / 5</span></div>
 </div>
 
 <div class="page">
@@ -285,7 +285,52 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
   </div>
   <h3>How we can help: the plan</h3>
   ${planTimeline()}
-  <div class="foot">Sources: indeed.com/hire/resources/howtohub/job-flagged-on-indeed and /indeed-rules-and-policies-for-employers, viewed 28 Oct 2026; USPTO trademark search; RDAP domain records; Instagram, X and TikTok handle checks; workforstudents.com; N.C. Gen. Stat. 131F-2 and 131F-16. Full audit, evidence and fact-check logs available on request. <span class="pg">4 / 4</span></div>
+  <div class="foot">Sources: indeed.com/hire/resources/howtohub/job-flagged-on-indeed and /indeed-rules-and-policies-for-employers, viewed 28 Oct 2026; USPTO trademark search; RDAP domain records; Instagram, X and TikTok handle checks; workforstudents.com; N.C. Gen. Stat. 131F-2 and 131F-16. Full audit, evidence and fact-check logs available on request. <span class="pg">4 / 5</span></div>
+</div>
+
+<div class="page">
+  <div class="ptitle">Search: how Google finds Horizon</div>
+  <div class="row">
+    <div class="card"><h2>Searching the company's own name</h2><p class="sub">Google, "Horizon Outreach Partners" in quotes, 28 Oct (searched from Denver; results vary by place)</p>
+      <ul class="f" style="font-size:8.4pt">
+        <li><b>Google's AI summary at the top gets Horizon right:</b> Charlotte address, phone, services, and a note not to confuse it with the Houston nonprofit. It cites the website and Instagram.</li>
+        <li><b>But the website is not in the ten regular results on page 1.</b> They go to other "Horizon" companies: the Houston nonprofit's Facebook, Horizon Counseling, Horizon Work Partners, an investment bank, a HubSpot partner and others.</li>
+        <li><b>Google suggests "Horizon outreach partners reviews"</b> as a related search. There are none to find: the Google profile has reviews turned off, and there is no Indeed, Glassdoor or BBB page we could confirm.</li>
+        <li>A search for the job (for example "sales jobs Charlotte") has nothing on the site to match: no page names a job, a pay range or the city in its title or headings.</li>
+      </ul></div>
+    <div class="card"><h2>What Google is being sent</h2><p class="sub">The site's own indexing settings, checked 28 Oct</p>
+      <table class="t"><tr><th>Check</th><th>Finding</th></tr>
+        <tr><td>Google verification</td><td>2 Google records on the domain (Search Console or the Google email setup; ask which)</td></tr>
+        <tr><td>Sitemaps</td><td>3 listed, from 2 plugins at once (Jetpack and Rank Math)</td></tr>
+        <tr><td>Sent to Google that shouldn't be</td><td>a page-header template, the empty "Uncategorized" page, 62 images including the theme's demo pictures</td></tr>
+        <tr><td>Old address</td><td>a blog post's old address still listed by search engines, now a 404</td></tr>
+        <tr><td>Page titles</td><td>"Home - Horizon", "Contact - Horizon"… no city, no job</td></tr>
+        <tr><td>Main headings</td><td>none on any of the 8 main pages</td></tr>
+        <tr><td>Job markup for Google Jobs</td><td>none, so roles can't appear in Google's job search</td></tr>
+        <tr><td>Business markup</td><td>name "Horizon" and a logo only: no address, phone or profiles</td></tr>
+        <tr><td>Image descriptions</td><td>23 of 40 images have none</td></tr></table></div>
+  </div>
+  <h3>Search: what is wrong, and the fix</h3>
+  <div class="row" style="margin-bottom:4px">
+    <ul class="f">
+      <li><b>"Horizon" is too common to rank for.</b> Dozens of Horizons and a same-name nonprofit outrank it. <span class="fix">Use the full name plus Charlotte in titles, headings, the Google profile and every account.</span></li>
+      <li><b>Nothing targets job seekers.</b> <span class="fix">A careers page per role ("Field Sales Jobs in Charlotte, NC"), with Google job markup so each role shows free in Google's job search.</span></li>
+      <li><b>Search Console status unknown.</b> <span class="fix">Confirm Search Console (and add Bing Webmaster Tools); submit one sitemap; watch which pages are indexed.</span></li>
+    </ul>
+    <ul class="f">
+      <li><b>Mixed signals to Google:</b> two sitemap plugins, template and demo files listed, an old 404. <span class="fix">One sitemap, junk taken out, the old address redirected.</span></li>
+      <li><b>Business details not marked up.</b> <span class="fix">Full company markup: legal name, address, phone, hours, links to each account.</span></li>
+      <li><b>No reviews anywhere searchers look.</b> <span class="fix">Sort out why Google reviews are off; claim Indeed and Glassdoor; ask happy staff and clients for honest reviews (never paid or scripted).</span></li>
+    </ul>
+  </div>
+  <div class="card"><h2>Usernames and links: one company, mismatched handles</h2><p class="sub">Like many new accounts, Horizon's addresses don't match its name. Pick one name and claim it everywhere before HOPE adds more</p>
+    <table class="t"><tr><th>Account</th><th>Address today</th><th>Problem</th><th>Fix</th></tr>
+      <tr><td>Instagram</td><td>@horizonhopeinc</td><td>Doesn't match the name; "inc" may not match the company type</td><td>@horizonoutreachpartners looked free (confirm signed in)</td></tr>
+      <tr><td>X</td><td>@Horizon_opsales</td><td>"opsales" appears nowhere else; 0 followers</td><td>Rename to the shared name (X allows 15 characters)</td></tr>
+      <tr><td>Facebook</td><td>facebook.com/profile.php?id=61590111627482</td><td>No username; the site links a long share URL with tracking codes</td><td>Claim a username; link the clean address</td></tr>
+      <tr><td>LinkedIn</td><td>/company/horizon-outreach-partners</td><td>Good address, but the site links the numbered one, which hits the sign-in wall</td><td>Link the named address</td></tr>
+      <tr><td>Website author page</td><td>/author/donnyparada1088/</td><td>The owner's personal username, public on every page</td><td>Change the author name and address</td></tr></table></div>
+  <div class="foot">Sources: Google search for "Horizon Outreach Partners" (in quotes) on 28 Oct 2026, logged out, from a Denver location; the site's robots.txt, sitemaps and page code; Google public DNS records; logged-out checks of each account. Rankings vary by location and day. <span class="pg">5 / 5</span></div>
 </div>
 </body></html>`;
 writeFileSync(new URL('./horizon-audit.html', import.meta.url), html);
