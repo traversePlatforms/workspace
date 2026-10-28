@@ -76,6 +76,10 @@ function krRefresh(array $list): array {
     if (!krReady()) return $list;
     $stale = []; foreach ($list['items'] as $it) if (!empty($it['pick']['productId']) && (int) ($it['pick']['at'] ?? 0) < time() - 6 * 3600) $stale[$it['pick']['productId']] = true;
     if (!$stale) return $list;
+    /* one try every 10 minutes at most (review 2026-10-27 evening): the page polls every 5 seconds, and a picked product Kroger no longer
+       returns (or Kroger being down) meant a Kroger call on every poll, from every open phone, against the API's daily quota */
+    if ((int) (jget('kroger-refresh.json')['at'] ?? 0) > time() - 600) return $list;
+    jput('kroger-refresh.json', ['at' => time()]);
     $j = krGet('filter.productId=' . rawurlencode(implode(',', array_slice(array_keys($stale), 0, 50))) . '&filter.limit=50'); if (!$j) return $list;
     $fresh = []; foreach ((array) ($j['data'] ?? []) as $p) { $s = krShape($p); if ($s) $fresh[$s['productId']] = $s; }
     if (!$fresh) return $list;
