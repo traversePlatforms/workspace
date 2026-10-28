@@ -11104,7 +11104,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      neighbourhoods; the town picker at the top still switches, and lists Colorado first. */
   var COUNTY_NAME = { elpaso: 'El Paso County', douglas: 'Douglas County', teller: 'Teller County', comtest: 'Commercial test (admins only)',
     /* the Front Range towns and one-off jobs (2026-10-11): the server already sent these keys; they showed as Other towns */
-    adams: 'Adams County', arapahoe: 'Arapahoe County', jefferson: 'Jefferson County', weld: 'Weld County', denver: 'Denver', boulder: 'Boulder County', park: 'Park County' };
+    adams: 'Adams County', arapahoe: 'Arapahoe County', jefferson: 'Jefferson County', weld: 'Weld County', denver: 'Denver', boulder: 'Boulder County', park: 'Park County',
+    /* Group 2 (Larimer, Mesa, Pueblo) and three live counties that showed as Other towns (2026-10-28) */
+    larimer: 'Larimer County', mesa: 'Mesa County', pueblo: 'Pueblo County', broomfield: 'Broomfield', clearcreek: 'Clear Creek County', elbert: 'Elbert County' };
   function townSum(r) {
     return r.areas.reduce(function (t, a) {
       t.total += a.total; t.done += a.done + (a.noanswer || 0); t.left += a.total - a.done - (a.noanswer || 0);
