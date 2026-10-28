@@ -7030,10 +7030,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var QTOLD_FROM = 1793226701;   /* quotes saved before this went live have no given record: they keep the old wording, never Price ready (2026-10-28) */
   function quoteOld(l) { return !!(l.quote && !quoteGiven(l) && (l.quote.at || 0) < QTOLD_FROM); }
   function quoteState(l) { return l.quote && l.quote.sent ? 'Quote sent: ' : quoteGiven(l) ? 'Quote given (' + (TOLD_HOW[l.qtold.how] || l.qtold.how) + ' ' + ago(l.qtold.at) + '): ' : quoteOld(l) ? 'Quote saved: ' : 'Price ready, not given yet: '; }
-  function quoteMsg(l) {
-    var Q = l.quote, B = leadBrand(l), st = l.house ? streetCase(l.house.address) : '';
+  function quoteMsg(l, Q, street) {
+    Q = Q || l.quote; var B = leadBrand(l), st = street != null ? street : l.house ? streetCase(l.house.address) : '';
     var what = Q.pkg === 'other' ? (Q.svc || 'the work we discussed') : Q.pkg === 'aerate' ? 'core aeration' : Q.pkg === 'job' ? 'the job' : 'core aeration, overseeding and fertilizer';
     return 'Hi ' + greetName(l.name) + ', this is ' + myName() + ' with ' + B.name + '. Here is your quote' + (st ? ' for ' + st : '') + ': ' + money0(Q.price) + ' for ' + what + '. Reply here' + (B.phone ? ' or call ' + B.phone : '') + ' to pick a day.';
+  }
+  /* the quote went out from the Quote builder (2026-10-28): save the price first if it isn't saved yet, then log it as given */
+  function quoteSendLog(lead, how, ensure) {
+    return Promise.resolve(ensure()).then(function (ok) {
+      if (!ok) return;
+      return api('leadtry', { body: { id: lead.id, steps: [how], quote: 1 } }).then(function (j) {
+        if (!j.ok) { toast('Not logged', j.error || 'Try again.', null); return; }
+        lead.qtold = { price: lead.quote.price, how: how, at: Math.floor(Date.now() / 1000), by: S.me };
+        toast(how === 'msgr' ? 'Copied: paste it in Messenger' : how === 'email' ? 'Quote emailed' : 'Quote texted', money0(lead.quote.price) + ' \u00b7 ' + (lead.name || '') + ' \u00b7 logged on the lead', null);
+      });
+    }).catch(function () { toast('No signal', 'Not logged. Try again when you have signal.', null); });
   }   /* + emailed, texted (2026-10-16) */
   function missCount(l) { var n = 0; (l.tries || []).forEach(function (t) { n = t.o === 'talk' ? 0 : (t.o === 'none' || t.o === 'vm') ? n + 1 : n; }); return n; }   /* an email or a text is not a missed call */
   function lastTry(l) { var t = l.tries || []; return t.length ? t[t.length - 1] : null; }
@@ -9048,7 +9059,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var yes0 = q('button', 'save jbook', 'They said yes: take the deposit \u203a'); yes0.type = 'button';
           yes0.addEventListener('click', function () { signSendView(lead, { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, extras: st.cur.extras || [] }); });
           acts.appendChild(yes0); acts.appendChild(sv0);
-          acts.appendChild(q('div', 'ltrynote', 'Quote it on the phone. If they say yes, take half as a deposit, then send the one-page form to sign. If not, nothing is sent.'));
+          /* Text the quote straight from here (2026-10-28, Jen texts every quote): saves it if needed, then logs it as given */
+          var cur0 = function () { return { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '' }; };
+          var ensure0 = function () {
+            var c0 = cur0(); if (lead.quote && lead.quote.price === c0.price && lead.quote.pkg === c0.pkg && (lead.quote.svc || '') === c0.svc) return true;
+            return api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, svc: c0.svc, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false, extras: st.cur.extras || [] } }).then(function (j) {
+              if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return false; }
+              lead.quote = { price: st.cur.price, pkg: st.pkg, svc: c0.svc, sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, extras: st.cur.extras || [], by: S.me, at: Math.floor(Date.now() / 1000), link: j.link }; return true;
+            });
+          };
+          var srow = q('div', 'lcontact qbsend'), stel = digits(lead.phone), smsg = quoteMsg(lead, cur0(), h.address ? streetCase(h.address) : '');
+          if (stel.length >= 10) { var sa0 = q('a'); sa0.href = 'sms:' + stel + '?&body=' + encodeURIComponent(smsg); sa0.appendChild(ico('chat', 2.2)); sa0.appendChild(document.createTextNode('Text the quote')); sa0.addEventListener('click', function () { quoteSendLog(lead, 'text', ensure0); }); srow.appendChild(sa0); }
+          var sm0 = q('button', 'lnk', 'Copy for Messenger'); sm0.type = 'button';
+          sm0.addEventListener('click', function () { var go = function () { quoteSendLog(lead, 'msgr', ensure0); }; try { navigator.clipboard.writeText(smsg).then(go, function () { window.prompt('Copy this, then paste it in Messenger:', smsg); go(); }); } catch (e) { window.prompt('Copy this, then paste it in Messenger:', smsg); go(); } });
+          srow.appendChild(sm0); acts.appendChild(srow);
+          if (lead.qtold && lead.quote && +lead.qtold.price === +st.cur.price) acts.appendChild(q('div', 'dwsub', 'Quote given ' + (TOLD_HOW[lead.qtold.how] || '') + ' ' + ago(lead.qtold.at)));
+          acts.appendChild(q('div', 'ltrynote', 'Text the quote or Copy for Messenger saves it and logs it on the lead as given. If they say yes, take half as a deposit, then send the one-page form to sign.'));
         } else if (lead) {
           var save = function (sent) {
             api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: sent, extras: st.cur.extras || [] } }).then(function (j) {
@@ -9066,8 +9092,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
-          if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); row.appendChild(a); }
-          if (lead.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); row.appendChild(e); }
+          var ensure1 = function () {   /* 2026-10-28: logged as given; saved first when this price isn't */
+            if (lead.quote && lead.quote.price === st.cur.price && lead.quote.pkg === st.pkg) return true;
+            return api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false, extras: st.cur.extras || [] } }).then(function (j) {
+              if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return false; }
+              lead.quote = { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, extras: st.cur.extras || [], by: S.me, at: Math.floor(Date.now() / 1000), link: j.link }; if (j.status) lead.status = j.status; return true;
+            });
+          };
+          if (tel.length >= 10) { var a = q('a'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); a.addEventListener('click', function () { quoteSendLog(lead, 'text', ensure1); }); row.appendChild(a); }
+          var mq = q('button', 'lnk', 'Copy for Messenger'); mq.type = 'button';
+          mq.addEventListener('click', function () { var go = function () { quoteSendLog(lead, 'msgr', ensure1); }; try { navigator.clipboard.writeText(msg).then(go, function () { window.prompt('Copy this, then paste it in Messenger:', msg); go(); }); } catch (x) { window.prompt('Copy this, then paste it in Messenger:', msg); go(); } });
+          if (lead.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); e.addEventListener('click', function () { quoteSendLog(lead, 'email', ensure1); }); row.appendChild(e); }
+          row.appendChild(mq);
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
           row.appendChild(ms); acts.appendChild(row); addSendNote(acts, row);
           if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'other' ? (lead.quote.svc || 'another service') : lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
