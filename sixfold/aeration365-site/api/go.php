@@ -14,7 +14,7 @@ if (isset($_GET['vcf'])) {
   header('Content-Disposition: attachment; filename="Sixfold-365.vcf"');
   header('Cache-Control: no-store, max-age=0');
   echo implode("\r\n", ['BEGIN:VCARD', 'VERSION:3.0', 'FN:Sixfold 365', 'ORG:Sixfold 365', 'TEL;TYPE=WORK,VOICE:+17208304553',
-    'EMAIL;TYPE=WORK:contact@365aeration.com', 'URL:https://365aeration.com/', 'NOTE:Core aeration\, overseeding and fertilizer. Serving the Denver metro.', 'END:VCARD']) . "\r\n";
+    'EMAIL;TYPE=WORK:M.Sharpe@SixfoldColorado.com', 'URL:https://365aeration.com/', 'NOTE:Core aeration\, overseeding and fertilizer. Serving the Denver metro.', 'END:VCARD']) . "\r\n";
   exit;
 }
 $dir = dirname(__DIR__, 2) . '/scan-log';
@@ -30,7 +30,8 @@ $LINKS = [
   'nextdoor'  => 'https://nextdoor.com/pages/six-fold-colorado-englewood-co/',   /* still named Six Fold Colorado there (2026-10-25) */
   'reviews'  => 'https://g.page/r/CdxyzSzq9tvEEBM/review',   /* Sixfold's Google profile, still named Sixfold Colorado (2026-10-25, Matthew: add a review button) */
 ];
-$PHONE = '+17208304553'; $PHONE_SHOWN = '(720) 830-4553'; $EMAIL = 'contact@365aeration.com';
+/* calls and texts go to Jen; email to Matthew (2026-10-28, Matthew: "email can come to me the call and text can go to jen") */
+$PHONE = '+17208304553'; $PHONE_SHOWN = '(720) 830-4553'; $EMAIL = 'M.Sharpe@SixfoldColorado.com';
 /* job photos: drop .jpg/.webp files in img/work/ and they show in a strip; none yet, so nothing shows. Our own jobs only, no stock people,
    no recognisable house fronts without the owner's say-so */
 $PHOTOS = glob(dirname(__DIR__) . '/img/work/*.{jpg,jpeg,webp}', GLOB_BRACE) ?: [];
