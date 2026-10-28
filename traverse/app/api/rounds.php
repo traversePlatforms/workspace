@@ -3093,7 +3093,9 @@ if ($action === 'nlunsub') {
     header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
     $tk = (string) ($_GET['t'] ?? ''); $ok = false; $em = '';
     if (preg_match('/^([A-Za-z0-9_-]{4,400})\.([0-9a-f]{20})$/D', $tk, $m)) { $em = strtolower((string) b64u_dec($m[1])); $ok = filter_var($em, FILTER_VALIDATE_EMAIL) && hash_equals(nlToken($em), $tk); }
-    if ($ok && throttleTake(rateFile('nlunsub|' . clientKey()), 30, 3600)) {
+    /* past the throttle (30 an hour from one address): say so and save nothing; the page used to say "You are unsubscribed" while nothing was saved (review 2026-10-27 evening) */
+    $busy = $ok && !throttleTake(rateFile('nlunsub|' . clientKey()), 30, 3600);
+    if ($ok && !$busy) {
         $f = DATA_DIR . '/newsletter-unsub.json'; $lk = @fopen($f . '.lock', 'c');
         if ($lk && flock($lk, LOCK_EX)) { $u = nlUnsubs(); if (!isset($u[$em])) { $u[$em] = ['at' => time(), 'how' => ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' ? 'one-click' : 'link']; writeJsonAtomic($f, $u); } flock($lk, LOCK_UN); }
     }
@@ -3101,7 +3103,7 @@ if ($action === 'nlunsub') {
     header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribed</title></head><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c"><div style="max-width:520px;margin:60px auto;padding:0 18px">'
        . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($nm) . '</div>'
-       . ($ok ? '<p>You are unsubscribed. ' . $e($em) . ' will not get our newsletter again.</p><p style="color:#5a6858;font-size:14px">If that was a mistake, reply to any of our emails and we will add you back.</p>' : '<p>This unsubscribe link does not look right. Reply to the email and we will take you off the list.</p>')
+       . ($busy ? '<p>Too many requests from your network just now, so this was not saved. Try the link again in an hour, or reply to the email and we will take you off the list.</p>' : ($ok ? '<p>You are unsubscribed. ' . $e($em) . ' will not get our newsletter again.</p><p style="color:#5a6858;font-size:14px">If that was a mistake, reply to any of our emails and we will add you back.</p>' : '<p>This unsubscribe link does not look right. Reply to the email and we will take you off the list.</p>'))
        . '</div></body></html>';
     exit;
 }
