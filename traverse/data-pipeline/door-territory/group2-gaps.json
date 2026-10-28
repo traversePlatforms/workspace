@@ -1,0 +1,476 @@
+{
+ "ccd": [
+  {
+   "geoid": "0810190209",
+   "county": "Pueblo",
+   "name": "Avondale CCD",
+   "census": 971,
+   "doors": 0,
+   "gap": 971
+  },
+  {
+   "geoid": "0810190722",
+   "county": "Pueblo",
+   "name": "Colorado City-Rye CCD",
+   "census": 2089,
+   "doors": 0,
+   "gap": 2089
+  },
+  {
+   "geoid": "0810191805",
+   "county": "Pueblo",
+   "name": "Huerfano Valley CCD",
+   "census": 284,
+   "doors": 0,
+   "gap": 284
+  },
+  {
+   "geoid": "0810192660",
+   "county": "Pueblo",
+   "name": "Northeast Pueblo CCD",
+   "census": 314,
+   "doors": 0,
+   "gap": 314
+  },
+  {
+   "geoid": "0810192983",
+   "county": "Pueblo",
+   "name": "Pueblo CCD",
+   "census": 40474,
+   "doors": 0,
+   "gap": 40474
+  },
+  {
+   "geoid": "0810193002",
+   "county": "Pueblo",
+   "name": "Pueblo West CCD",
+   "census": 11797,
+   "doors": 0,
+   "gap": 11797
+  },
+  {
+   "geoid": "0810193154",
+   "county": "Pueblo",
+   "name": "St. Charles Mesa CCD",
+   "census": 3281,
+   "doors": 0,
+   "gap": 3281
+  },
+  {
+   "geoid": "0806990285",
+   "county": "Larimer",
+   "name": "Berthoud CCD",
+   "census": 6987,
+   "doors": 0,
+   "gap": 6987
+  },
+  {
+   "geoid": "0806991235",
+   "county": "Larimer",
+   "name": "Estes Park CCD",
+   "census": 7314,
+   "doors": 0,
+   "gap": 7314
+  },
+  {
+   "geoid": "0806991330",
+   "county": "Larimer",
+   "name": "Fort Collins CCD",
+   "census": 48641,
+   "doors": 0,
+   "gap": 48641
+  },
+  {
+   "geoid": "0806992299",
+   "county": "Larimer",
+   "name": "Livermore CCD",
+   "census": 4110,
+   "doors": 0,
+   "gap": 4110
+  },
+  {
+   "geoid": "0806992337",
+   "county": "Larimer",
+   "name": "Loveland CCD",
+   "census": 39709,
+   "doors": 1914,
+   "gap": 37795
+  },
+  {
+   "geoid": "0806993610",
+   "county": "Larimer",
+   "name": "Timnath-Wellington CCD",
+   "census": 11777,
+   "doors": 885,
+   "gap": 10892
+  },
+  {
+   "geoid": "0807790665",
+   "county": "Mesa",
+   "name": "Clifton CCD",
+   "census": 8504,
+   "doors": 0,
+   "gap": 8504
+  },
+  {
+   "geoid": "0807790703",
+   "county": "Mesa",
+   "name": "Collbran CCD",
+   "census": 1411,
+   "doors": 0,
+   "gap": 1411
+  },
+  {
+   "geoid": "0807790950",
+   "county": "Mesa",
+   "name": "De Beque CCD",
+   "census": 248,
+   "doors": 0,
+   "gap": 248
+  },
+  {
+   "geoid": "0807791425",
+   "county": "Mesa",
+   "name": "Fruita CCD",
+   "census": 9352,
+   "doors": 0,
+   "gap": 9352
+  },
+  {
+   "geoid": "0807791501",
+   "county": "Mesa",
+   "name": "Glade Park-Gateway CCD",
+   "census": 1404,
+   "doors": 0,
+   "gap": 1404
+  },
+  {
+   "geoid": "0807791596",
+   "county": "Mesa",
+   "name": "Grand Junction CCD",
+   "census": 31160,
+   "doors": 0,
+   "gap": 31160
+  },
+  {
+   "geoid": "0807793857",
+   "county": "Mesa",
+   "name": "Whitewater-Kannah Creek CCD",
+   "census": 996,
+   "doors": 0,
+   "gap": 996
+  }
+ ],
+ "places": [
+  {
+   "geoid": "0866895",
+   "ccd": "0810190722",
+   "cdp": false,
+   "county": "Pueblo",
+   "name": "Rye town",
+   "census": 79,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 79
+  },
+  {
+   "geoid": "0827425",
+   "ccd": "0806991330",
+   "cdp": false,
+   "county": "Larimer",
+   "name": "Fort Collins city",
+   "census": 45054,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 45054
+  },
+  {
+   "geoid": "0819355",
+   "ccd": "0807790950",
+   "cdp": false,
+   "county": "Mesa",
+   "name": "De Beque town",
+   "census": 115,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 115
+  },
+  {
+   "geoid": "0825115",
+   "ccd": "0806991235",
+   "cdp": false,
+   "county": "Larimer",
+   "name": "Estes Park town",
+   "census": 3200,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3200
+  },
+  {
+   "geoid": "0883230",
+   "ccd": "0806993610",
+   "cdp": false,
+   "county": "Larimer",
+   "name": "Wellington town",
+   "census": 3917,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3917
+  },
+  {
+   "geoid": "0815605",
+   "ccd": "0807790703",
+   "cdp": false,
+   "county": "Mesa",
+   "name": "Collbran town",
+   "census": 103,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 103
+  },
+  {
+   "geoid": "0828745",
+   "ccd": "0807791425",
+   "cdp": false,
+   "county": "Mesa",
+   "name": "Fruita city",
+   "census": 4729,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 4729
+  },
+  {
+   "geoid": "0856970",
+   "ccd": "0807790665",
+   "cdp": false,
+   "county": "Mesa",
+   "name": "Palisade town",
+   "census": 704,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 704
+  },
+  {
+   "geoid": "0807795",
+   "ccd": "0810192660",
+   "cdp": false,
+   "county": "Pueblo",
+   "name": "Boone town",
+   "census": 182,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 182
+  },
+  {
+   "geoid": "0806255",
+   "ccd": "0806990285",
+   "cdp": false,
+   "county": "Larimer",
+   "name": "Berthoud town",
+   "census": 4541,
+   "doors": 53,
+   "ourTowns": {
+    "g1-berthoud": 53
+   },
+   "gap": 4488
+  },
+  {
+   "geoid": "0831660",
+   "ccd": "0807791596",
+   "cdp": false,
+   "county": "Mesa",
+   "name": "Grand Junction city",
+   "census": 22076,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 22076
+  },
+  {
+   "geoid": "0846465",
+   "ccd": "0806992337",
+   "cdp": false,
+   "county": "Larimer",
+   "name": "Loveland city",
+   "census": 26064,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 26064
+  },
+  {
+   "geoid": "0877510",
+   "ccd": "0806993610",
+   "cdp": false,
+   "county": "Larimer",
+   "name": "Timnath town",
+   "census": 3069,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3069
+  },
+  {
+   "geoid": "0862000",
+   "ccd": "0810192983",
+   "cdp": false,
+   "county": "Pueblo",
+   "name": "Pueblo city",
+   "census": 38301,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 38301
+  },
+  {
+   "geoid": "0807245",
+   "ccd": "0810193154",
+   "cdp": true,
+   "county": "Pueblo",
+   "name": "Blende CDP",
+   "census": 300,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 300
+  },
+  {
+   "geoid": "0856035",
+   "ccd": "0807791596",
+   "cdp": true,
+   "county": "Mesa",
+   "name": "Orchard Mesa CDP",
+   "census": 2605,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 2605
+  },
+  {
+   "geoid": "0845750",
+   "ccd": "0807791425",
+   "cdp": true,
+   "county": "Mesa",
+   "name": "Loma CDP",
+   "census": 327,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 327
+  },
+  {
+   "geoid": "0806602",
+   "ccd": "0810192983",
+   "cdp": true,
+   "county": "Pueblo",
+   "name": "Beulah Valley CDP",
+   "census": 428,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 428
+  },
+  {
+   "geoid": "0828800",
+   "ccd": "0807790665",
+   "cdp": true,
+   "county": "Mesa",
+   "name": "Fruitvale CDP",
+   "census": 3173,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3173
+  },
+  {
+   "geoid": "0804165",
+   "ccd": "0810190209",
+   "cdp": true,
+   "county": "Pueblo",
+   "name": "Avondale CDP",
+   "census": 137,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 137
+  },
+  {
+   "geoid": "0863320",
+   "ccd": "0806992299",
+   "cdp": true,
+   "county": "Larimer",
+   "name": "Red Feather Lakes CDP",
+   "census": 819,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 819
+  },
+  {
+   "geoid": "0843220",
+   "ccd": "0806991330",
+   "cdp": true,
+   "county": "Larimer",
+   "name": "Laporte CDP",
+   "census": 754,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 754
+  },
+  {
+   "geoid": "0815935",
+   "ccd": "0810190722",
+   "cdp": true,
+   "county": "Pueblo",
+   "name": "Colorado City CDP",
+   "census": 730,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 730
+  },
+  {
+   "geoid": "0815165",
+   "ccd": "0807790665",
+   "cdp": true,
+   "county": "Mesa",
+   "name": "Clifton CDP",
+   "census": 4982,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 4982
+  },
+  {
+   "geoid": "0863375",
+   "ccd": "0807791596",
+   "cdp": true,
+   "county": "Mesa",
+   "name": "Redlands CDP",
+   "census": 3615,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 3615
+  },
+  {
+   "geoid": "0862220",
+   "ccd": "0810193002",
+   "cdp": true,
+   "county": "Pueblo",
+   "name": "Pueblo West CDP",
+   "census": 11721,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 11721
+  },
+  {
+   "geoid": "0881305",
+   "ccd": "0810190209",
+   "cdp": true,
+   "county": "Pueblo",
+   "name": "Vineland CDP",
+   "census": 174,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 174
+  },
+  {
+   "geoid": "0867445",
+   "ccd": "0810193154",
+   "cdp": true,
+   "county": "Pueblo",
+   "name": "Salt Creek CDP",
+   "census": 345,
+   "doors": 0,
+   "ourTowns": {},
+   "gap": 345
+  }
+ ]
+}

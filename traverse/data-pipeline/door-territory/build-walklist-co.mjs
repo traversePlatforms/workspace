@@ -71,7 +71,7 @@ const arg = (k, d) => {
   return hit ? hit.split('=').slice(1).join('=') : d;
 };
 
-async function getJSON(url, tries = 3) {
+async function getJSON(url, tries = 6)   /* Group 2 copy: 6 tries, 3 s steps (gis.colorado.gov answered a Larimer page with HTTP 500 on 28 Oct) */ {
   for (let i = 0; i < tries; i++) {
     try {
       const r = await fetch(url, { headers: UA });
@@ -81,7 +81,7 @@ async function getJSON(url, tries = 3) {
       return j;
     } catch (e) {
       if (i === tries - 1) throw e;
-      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+      await new Promise((r) => setTimeout(r, 3000 * (i + 1)));
     }
   }
 }
