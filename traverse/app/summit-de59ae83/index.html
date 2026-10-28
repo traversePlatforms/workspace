@@ -2371,6 +2371,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .jexact{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1.5px dashed var(--line);border-radius:10px;font:600 13.5px var(--sans);color:var(--soft)}.jexact.on{border-style:solid;border-color:#2f5d2c;color:var(--ink)}.jexact input{font:15px var(--sans);padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}.jexact b{color:var(--ink)}
   .jnums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .jnums input{width:100%}
+  .jsvc{display:grid;gap:4px;margin:4px 0 10px;font-weight:600;font-size:14px}.jsvc input{width:100%;font-weight:400}   /* Another service: what it is (2026-10-28) */
   .jpaymore{display:grid;gap:6px}
   .jgot{display:grid;gap:4px;font-size:13px;margin-top:8px}.jgot input{font:16px var(--sans);padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);max-width:160px}
   .jpick{display:grid;gap:10px}.jpick input[type=search]{font:16px var(--sans);padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
@@ -5525,7 +5526,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      times (9:30-10:00, 12:00, 12-2, 3:00) and a town for the day; each job carries the price, what is included, how it is paid
      and whether a card is on file, and the notes (gate codes). The month's booked total sits at the top. Sunday is closed.
      The crew are the people marked "Does walks" (Brad for now); a booked job goes on their calendar with an alert. */
-  var JOB_PKG = { full: 'Aerate, seed & feed', aerate: 'Aerate only', plan: 'Service plan' };
+  var JOB_PKG = { full: 'Aerate, seed & feed', aerate: 'Aerate only', plan: 'Service plan', other: 'Another service' };   /* + Another service: a fall cleanup, a one-off (2026-10-28) */
+  function jobPkgLabel(j) { return j && j.pkg === 'other' ? (j.svc || 'Another service') : JOB_PKG[(j && j.pkg) || 'full'] || JOB_PKG.full; }
   var JOB_SCOPE = { all: 'Whole lawn', front: 'Front yard only', back: 'Back yard only' };
   var JOB_PAY = { unpaid: 'Not paid yet', deposit: 'Deposit paid', paid: 'Paid in full', plan: 'Service plan' };
   var JOB_HOW = { square: 'Square', card: 'Card', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', check: 'Check', other: 'Other' };
@@ -5634,7 +5636,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             if (jb) {
               tr.appendChild(q('td', null, jobName(jb)));
               tr.appendChild(q('td', null, (jb.price ? money0(jb.price) : 'Price to confirm') + ' \u00b7 ' + jobPayText(jb) + (jb.done ? ' \u00b7 ' + (jb.done.o === 'done' ? 'Done' : 'Not done') : '')));
-              tr.appendChild(q('td', 'saddr', jb.addr || '')); tr.appendChild(q('td', null, JOB_PKG[jb.pkg] + (jb.scope !== 'all' ? ' \u00b7 ' + JOB_SCOPE[jb.scope] : ''))); tr.appendChild(q('td', null, jb.card ? 'Card on file' : 'No card'));
+              tr.appendChild(q('td', 'saddr', jb.addr || '')); tr.appendChild(q('td', null, jobPkgLabel(jb) + (jb.scope !== 'all' ? ' \u00b7 ' + JOB_SCOPE[jb.scope] : ''))); tr.appendChild(q('td', null, jb.card ? 'Card on file' : 'No card'));
               tr.title = 'Open the job'; tr.addEventListener('click', function () { jobView(jb.id, jobsView, jb.crew); });
             } else if (hd) {
               tr.appendChild(q('td', null, hd.name)); tr.appendChild(q('td', null, hd.paid ? 'Held: deposit paid, waiting to sign' : 'Held: offered with the quote'));
@@ -5828,14 +5830,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     pre = pre || {};
     var OFFER = !!pre.offer;   /* offer mode (2026-10-14): only the crew, day and time, saved on the quote */
     var SIGN = !!pre.sign;   /* the phone quote said yes (2026-10-14): price, half as deposit, the day, then the one-page form */
-    var back = SIGN && qqFor(lead) ? quickBack : SIGN && qView() ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
+    var back = pre.back ? pre.back : SIGN && qqFor(lead) ? quickBack : SIGN && qView() ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
     var who = job ? (job.who || {}) : lead, title = job ? jobName(job) : (lead.name || lead.phone || lead.email || 'Lead');
     setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && (qView() || qqFor(lead)) ? 'Quick quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });
     view.textContent = '';
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
     var P = job ? JSON.parse(JSON.stringify(job)) : {
-      crew: pre.crew || '', date: pre.date || '', slot: pre.slot || '', price: pre.price || qt.price || '', pkg: pre.pkg || qt.pkg || 'full', scope: 'all',
+      crew: pre.crew || '', date: pre.date || '', slot: pre.slot || '', price: pre.price || qt.price || '', pkg: pre.pkg || qt.pkg || 'full', svc: pre.svc || '', scope: 'all',
       seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb != null ? qt.seedLb : '', fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb != null ? qt.fertLb : '',
       pay: { s: 'unpaid' }, card: false, note: (acceptOf(lead) && acceptOf(lead).note) || '', addr: house ? streetCase(house.address) + ', ' + house.town : (lead.town || '')
     };
@@ -5864,6 +5866,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var scRow = q('div', 'dwlen'); box.appendChild(scRow);
     var pr = q('div', 'jnums');
     var numIn = function (lab, v, unit) { var l = q('label', null, lab); var i = q('input'); i.inputMode = 'decimal'; i.maxLength = 7; i.value = v === null || v === undefined ? '' : v; l.appendChild(i); if (unit) l.appendChild(q('small', null, ' ' + unit)); pr.appendChild(l); return i; };
+    var svcL = q('label', 'jsvc', 'What service? (for example: Fall cleanup)'), svcIn = q('input'); svcIn.maxLength = 80; svcIn.value = P.svc || ''; svcL.appendChild(svcIn); box.insertBefore(svcL, scRow);
     var priceIn = numIn('Price ($)', P.price), seedIn = numIn('Seed (lb)', P.seedLb), fertIn = numIn('Fertilizer (lb)', P.fertLb);
     box.appendChild(pr);
     var tbdL = q('label', 'jtbd'), tbdC = q('input'); tbdC.type = 'checkbox'; tbdC.checked = !!job && !job.price; tbdL.appendChild(tbdC); tbdL.appendChild(q('span', null, 'Price to confirm (book it now, add the price later)')); if (!SIGN && !OFFER) box.appendChild(tbdL);
@@ -5898,7 +5901,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         host.appendChild(b);
       });
     };
-    chips(pkRow, JOB_PKG, function () { return P.pkg; }, function (k) { P.pkg = k; if (k === 'plan' && P.pay.s === 'unpaid') { P.pay = { s: 'plan' }; drawPay(); } });
+    chips(pkRow, JOB_PKG, function () { return P.pkg; }, function (k) { P.pkg = k; if (k === 'plan' && P.pay.s === 'unpaid') { P.pay = { s: 'plan' }; drawPay(); } svcPaint(); });
+    function svcPaint() { var o = P.pkg === 'other'; svcL.hidden = !o; seedIn.parentNode.hidden = o; fertIn.parentNode.hidden = o; if (o) setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); }   /* Another service: what it is; no seed or fertilizer */
+    svcPaint();
     chips(scRow, JOB_SCOPE, function () { return P.scope; }, function (k) { P.scope = k; });
     chips(cardRow, { yes: 'Card on file', no: 'No card on file: call to pay' }, function () { return P.card ? 'yes' : 'no'; }, function (k) { P.card = k === 'yes'; });
     function drawPay() {
@@ -6081,7 +6086,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!ai.value.trim()) { err.textContent = 'Add the address.'; return; }
       var price = Math.round(num(priceIn) || 0), tbd = tbdC.checked && price < 1; if (price < 1 && !tbd) { err.textContent = 'Give the job a price, or tick Price to confirm.'; return; }
       if (P.pay.s === 'deposit' && !(P.pay.amt > 0 && P.pay.amt < price)) { err.textContent = 'The deposit should be more than $0 and less than the price.'; return; }
-      var body = { tbd: tbd ? 1 : 0, crew: P.crew, date: P.date, slot: P.slot, price: tbd ? 0 : price, pkg: P.pkg, scope: P.scope, seedLb: num(seedIn), fertLb: num(fertIn), pay: P.pay, card: P.card ? 1 : 0, note: nt.value, addr: ai.value };
+      var body = { tbd: tbd ? 1 : 0, crew: P.crew, date: P.date, slot: P.slot, price: tbd ? 0 : price, pkg: P.pkg, svc: P.pkg === 'other' ? svcIn.value.trim() : '', scope: P.scope, seedLb: num(seedIn), fertLb: num(fertIn), pay: P.pay, card: P.card ? 1 : 0, note: nt.value, addr: ai.value };
       if (job) body.id = job.id; else body.lead = lead.id;
       sv.disabled = true;
       api('jobsave', { body: body }).then(function (j) {
@@ -6502,7 +6507,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function fuBookForm(jb, done, cancel) {
     var f = q('div', 'phf fuform'); f.appendChild(q('div', 'wl', 'Book a follow-up'));
     var fl = function (label, el) { var lb = q('label', null, label); lb.appendChild(el); f.appendChild(lb); return el; };
-    var sv = q('select'); [[jb.pkg || 'full', 'Same as this job (' + (JOB_PKG[jb.pkg] || 'Aerate, seed & feed') + ')'], ['aerate', 'Aerate only'], ['full', 'Aerate, seed & feed'], ['other', 'Another service']].forEach(function (o, i) { if (i > 0 && o[0] === (jb.pkg || 'full')) return; var op = q('option', null, o[1]); op.value = i === 0 ? '=' + o[0] : o[0]; sv.appendChild(op); });
+    var sv = q('select'); [[jb.pkg || 'full', 'Same as this job (' + jobPkgLabel(jb) + ')'], ['aerate', 'Aerate only'], ['full', 'Aerate, seed & feed'], ['other', 'Another service']].forEach(function (o, i) { if (i > 0 && o[0] === (jb.pkg || 'full')) return; var op = q('option', null, o[1]); op.value = i === 0 ? '=' + o[0] : o[0]; sv.appendChild(op); });
     fl('Service', sv); var ot = q('input'); ot.maxLength = 80; ot.placeholder = 'Which service'; var otl = fl('Other service', ot); otl.parentNode.hidden = true;
     sv.addEventListener('change', function () { otl.parentNode.hidden = sv.value !== 'other'; });
     var mode = q('div', 'aseg'), byDay = q('button', null, 'A day and time'), byMonth = q('button', null, 'Just a month'); byDay.type = byMonth.type = 'button'; mode.appendChild(byDay); mode.appendChild(byMonth); f.appendChild(mode);
@@ -6768,7 +6773,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     var facts = q('div', 'dwfacts');
     var fact = function (k, v) { if (!v && v !== 0) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
-    fact('Doing', JOB_PKG[jb.pkg] + (jb.scope !== 'all' ? ' · ' + JOB_SCOPE[jb.scope] : ''));
+    fact('Doing', jobPkgLabel(jb) + (jb.scope !== 'all' ? ' · ' + JOB_SCOPE[jb.scope] : ''));
     fact('Price', jb.price ? money0(jb.price) : 'To confirm');
     fact('Payment', jobPayText(jb));
     fact('Collect', jobCollect(jb));
@@ -6964,7 +6969,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.appendChild(ico('leaf', 2.2));
         var tx = q('span');
         tx.appendChild(q('b', null, jobWhen(x) + ' · ' + jobName(x)));
-        tx.appendChild(q('small', null, [x.addr, JOB_PKG[x.pkg], 'Collect ' + jobCollect(x), x.done ? (x.done.o === 'done' ? 'Done' : 'Not done') : ''].filter(Boolean).join(' · ')));
+        tx.appendChild(q('small', null, [x.addr, jobPkgLabel(x), 'Collect ' + jobCollect(x), x.done ? (x.done.o === 'done' ? 'Done' : 'Not done') : ''].filter(Boolean).join(' · ')));
         b.appendChild(tx);
         b.addEventListener('click', function () { jobView(x.id, function () { myJobsView(who); }, who); });
         return b;
@@ -13596,11 +13601,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .concat(fromJobs.map(function (j) { return { j: j, d: j.date || '' }; }));
     vrows.sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; });
     holder.appendChild(q('h2', null, 'Visits · ' + vrows.length));
+    if (feat('walkdesk') && (S.role === 'admin' || asOffice())) {   /* book a job for a customer with no lead (2026-10-28, Matthew: Leann's fall cleanup "is just floating") */
+      var bj = q('button', 'addlead', '+ Book a job'); bj.type = 'button';
+      bj.addEventListener('click', function () { bj.disabled = true; api('custjob', { body: { id: c.id } }).then(function (j) { bj.disabled = false; if (!j || !j.ok) { toast('Not done', (j && j.error) || 'Try again.', null); return; }
+        jobBookView(j.lead, null, { pkg: c.service === 'other' ? 'other' : 'full', price: c.price || '', back: function () { customerView(c.id); } }); }).catch(function () { bj.disabled = false; toast('No signal', 'Try again.', null); }); });
+      holder.appendChild(bj);
+    }
     holder.appendChild(visitForm(c));
     vrows.forEach(function (x) {
       if (x.j) {
         var j = x.j, jr = q('div', 'door cvisit');
-        var jt = q('div', 'd-top'); jt.appendChild(q('div', 'addr', fmtD(j.date) + ' · ' + (SERVICE_L[c.service] || 'Job'))); if (j.price) jt.appendChild(q('span', 'vprice', money(j.price))); jr.appendChild(jt);
+        var jt = q('div', 'd-top'); jt.appendChild(q('div', 'addr', fmtD(j.date) + ' · ' + (j.pkg === 'other' ? jobPkgLabel(j) : (SERVICE_L[c.service] || 'Job')))); if (j.price) jt.appendChild(q('span', 'vprice', money(j.price))); jr.appendChild(jt);
         jr.appendChild(q('div', 'meta', 'Done · Jobs board' + (j.crew ? ' · ' + j.crew.split(' ')[0] : '') + ' · ' + jobPayText(j)));
         var jo = q('button', 'lnk', 'Open'); jo.type = 'button'; jo.addEventListener('click', function () { jobView(j.id, function () { customerView(c.id); }, j.crew); }); jr.appendChild(jo);
         holder.appendChild(jr);
