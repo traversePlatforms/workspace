@@ -77,38 +77,38 @@
   }
  },
  "commerce-city": {
-  "doors": 17059,
+  "doors": 17204,
   "structural_data": true,
-  "crops": 17059,
-  "usable_crops": 16057,
-  "county": 13875,
-  "imagery": 2234,
-  "guess": 924,
-  "labelled": 16109,
-  "share": 0.998,
+  "crops": 17204,
+  "usable_crops": 16202,
+  "county": 13971,
+  "imagery": 2339,
+  "guess": 869,
+  "labelled": 16310,
+  "share": 0.999,
   "by_class": {
-   "asphalt": 15556,
+   "asphalt": 15711,
    "metal": 3,
-   "tile": 1465,
+   "tile": 1456,
    "flat": 5,
    "shake": 4
   }
  },
  "erie": {
-  "doors": 9587,
+  "doors": 11477,
   "structural_data": true,
-  "crops": 9587,
-  "usable_crops": 7538,
-  "county": 5259,
-  "imagery": 2810,
-  "guess": 1041,
-  "labelled": 8069,
-  "share": 0.95,
+  "crops": 11477,
+  "usable_crops": 10326,
+  "county": 6453,
+  "imagery": 2641,
+  "guess": 1690,
+  "labelled": 9094,
+  "share": 0.94,
   "by_class": {
-   "asphalt": 8614,
-   "metal": 4,
+   "asphalt": 10226,
    "shake": 7,
-   "tile": 482,
+   "metal": 4,
+   "tile": 544,
    "flat": 3
   }
  },
@@ -125,18 +125,1507 @@
   "by_class": {}
  },
  "denver": {
-  "doors": 40127,
+  "doors": 105486,
   "structural_data": true,
-  "crops": 40127,
-  "usable_crops": 37399,
+  "crops": 105486,
+  "usable_crops": 104406,
   "county": 0,
-  "imagery": 15474,
-  "guess": 20806,
-  "labelled": 15474,
-  "share": 0.904,
+  "imagery": 28565,
+  "guess": 73030,
+  "labelled": 28565,
+  "share": 0.963,
   "by_class": {
-   "asphalt": 32946,
-   "tile": 3334
+   "tile": 5097,
+   "asphalt": 96498
+  }
+ },
+ "morrison": {
+  "doors": 49,
+  "structural_data": false,
+  "crops": 49,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "acres-green": {
+  "doors": 916,
+  "structural_data": true,
+  "crops": 916,
+  "usable_crops": 916,
+  "county": 916,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 916,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 888,
+   "shake": 24,
+   "tile": 4
+  }
+ },
+ "aurora": {
+  "doors": 82458,
+  "structural_data": false,
+  "crops": 82458,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "bennett": {
+  "doors": 1182,
+  "structural_data": true,
+  "crops": 1182,
+  "usable_crops": 858,
+  "county": 1173,
+  "imagery": 1,
+  "guess": 8,
+  "labelled": 1174,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 1180,
+   "metal": 1,
+   "tile": 1
+  }
+ },
+ "berkley": {
+  "doors": 2044,
+  "structural_data": true,
+  "crops": 2044,
+  "usable_crops": 2039,
+  "county": 2035,
+  "imagery": 3,
+  "guess": 5,
+  "labelled": 2038,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 2004,
+   "metal": 3,
+   "tile": 17,
+   "flat": 11,
+   "shake": 8
+  }
+ },
+ "boulder": {
+  "doors": 16527,
+  "structural_data": true,
+  "crops": 16527,
+  "usable_crops": 16519,
+  "county": 281,
+  "imagery": 3962,
+  "guess": 11362,
+  "labelled": 4243,
+  "share": 0.944,
+  "by_class": {
+   "tile": 594,
+   "asphalt": 15011
+  }
+ },
+ "bow-mar": {
+  "doors": 268,
+  "structural_data": false,
+  "crops": 268,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "brighton": {
+  "doors": 10830,
+  "structural_data": true,
+  "crops": 10830,
+  "usable_crops": 10094,
+  "county": 10354,
+  "imagery": 330,
+  "guess": 135,
+  "labelled": 10684,
+  "share": 0.999,
+  "by_class": {
+   "asphalt": 10468,
+   "shake": 133,
+   "tile": 217,
+   "flat": 1
+  }
+ },
+ "broomfield": {
+  "doors": 18325,
+  "structural_data": false,
+  "crops": 18325,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "byers": {
+  "doors": 261,
+  "structural_data": false,
+  "crops": 261,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "cherry-creek": {
+  "doors": 2749,
+  "structural_data": false,
+  "crops": 2749,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "cherry-hills-village": {
+  "doors": 1904,
+  "structural_data": false,
+  "crops": 1904,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "columbine": {
+  "doors": 7358,
+  "structural_data": false,
+  "crops": 7358,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "columbine-valley": {
+  "doors": 599,
+  "structural_data": false,
+  "crops": 599,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "cs-northwest": {
+  "doors": 28359,
+  "structural_data": true,
+  "crops": 28359,
+  "usable_crops": 28262,
+  "county": 0,
+  "imagery": 9635,
+  "guess": 16976,
+  "labelled": 9635,
+  "share": 0.938,
+  "by_class": {
+   "asphalt": 24463,
+   "tile": 2148
+  }
+ },
+ "cs-southwest": {
+  "doors": 26547,
+  "structural_data": true,
+  "crops": 26547,
+  "usable_crops": 26523,
+  "county": 0,
+  "imagery": 6920,
+  "guess": 18035,
+  "labelled": 6920,
+  "share": 0.94,
+  "by_class": {
+   "asphalt": 23838,
+   "tile": 1117
+  }
+ },
+ "dacono": {
+  "doors": 1375,
+  "structural_data": true,
+  "crops": 1375,
+  "usable_crops": 1273,
+  "county": 1105,
+  "imagery": 56,
+  "guess": 200,
+  "labelled": 1161,
+  "share": 0.99,
+  "by_class": {
+   "asphalt": 1359,
+   "metal": 1,
+   "tile": 1
+  }
+ },
+ "dakota-ridge": {
+  "doors": 10341,
+  "structural_data": false,
+  "crops": 10341,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "derby": {
+  "doors": 1452,
+  "structural_data": true,
+  "crops": 1452,
+  "usable_crops": 1452,
+  "county": 1441,
+  "imagery": 0,
+  "guess": 11,
+  "labelled": 1441,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 1451,
+   "tile": 1
+  }
+ },
+ "dove-valley": {
+  "doors": 673,
+  "structural_data": false,
+  "crops": 673,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "edgewater": {
+  "doors": 1045,
+  "structural_data": false,
+  "crops": 1045,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "englewood": {
+  "doors": 6899,
+  "structural_data": false,
+  "crops": 6899,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "evergreen": {
+  "doors": 2854,
+  "structural_data": false,
+  "crops": 2854,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "federal-heights": {
+  "doors": 927,
+  "structural_data": true,
+  "crops": 927,
+  "usable_crops": 927,
+  "county": 769,
+  "imagery": 25,
+  "guess": 122,
+  "labelled": 794,
+  "share": 0.988,
+  "by_class": {
+   "asphalt": 913,
+   "metal": 3
+  }
+ },
+ "firestone": {
+  "doors": 3287,
+  "structural_data": true,
+  "crops": 3287,
+  "usable_crops": 3217,
+  "county": 3267,
+  "imagery": 9,
+  "guess": 10,
+  "labelled": 3276,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 3279,
+   "tile": 6,
+   "metal": 1
+  }
+ },
+ "fort-lupton": {
+  "doors": 2520,
+  "structural_data": true,
+  "crops": 2520,
+  "usable_crops": 1826,
+  "county": 2436,
+  "imagery": 52,
+  "guess": 24,
+  "labelled": 2488,
+  "share": 0.997,
+  "by_class": {
+   "asphalt": 2489,
+   "tile": 6,
+   "shake": 14,
+   "metal": 2,
+   "flat": 1
+  }
+ },
+ "four-square-mile": {
+  "doors": 1509,
+  "structural_data": false,
+  "crops": 1509,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "foxfield": {
+  "doors": 255,
+  "structural_data": false,
+  "crops": 255,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "frederick": {
+  "doors": 4675,
+  "structural_data": true,
+  "crops": 4675,
+  "usable_crops": 4148,
+  "county": 4654,
+  "imagery": 15,
+  "guess": 5,
+  "labelled": 4669,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 4674
+  }
+ },
+ "g1-allenspark": {
+  "doors": 82,
+  "structural_data": false,
+  "crops": 82,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-altona": {
+  "doors": 179,
+  "structural_data": false,
+  "crops": 179,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-aristocrat-ranchettes": {
+  "doors": 399,
+  "structural_data": false,
+  "crops": 399,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-aspen-park": {
+  "doors": 269,
+  "structural_data": false,
+  "crops": 269,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-ault": {
+  "doors": 273,
+  "structural_data": false,
+  "crops": 273,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-ault-rural": {
+  "doors": 142,
+  "structural_data": false,
+  "crops": 142,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-bald-mountain-rural": {
+  "doors": 1661,
+  "structural_data": false,
+  "crops": 1661,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-berthoud": {
+  "doors": 53,
+  "structural_data": false,
+  "crops": 53,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-brook-forest": {
+  "doors": 91,
+  "structural_data": false,
+  "crops": 91,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-central-jefferson-rural": {
+  "doors": 3620,
+  "structural_data": false,
+  "crops": 3620,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-coal-creek": {
+  "doors": 544,
+  "structural_data": false,
+  "crops": 544,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-eaton": {
+  "doors": 1308,
+  "structural_data": false,
+  "crops": 1308,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-eldora": {
+  "doors": 26,
+  "structural_data": false,
+  "crops": 26,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-eldorado-springs": {
+  "doors": 93,
+  "structural_data": false,
+  "crops": 93,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-evans": {
+  "doors": 2921,
+  "structural_data": false,
+  "crops": 2921,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-genesee": {
+  "doors": 1104,
+  "structural_data": false,
+  "crops": 1104,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-gilcrest": {
+  "doors": 48,
+  "structural_data": false,
+  "crops": 48,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-golden-rural": {
+  "doors": 2545,
+  "structural_data": false,
+  "crops": 2545,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-greeley": {
+  "doors": 14463,
+  "structural_data": false,
+  "crops": 14463,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-greeley-rural": {
+  "doors": 1310,
+  "structural_data": false,
+  "crops": 1310,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-idledale": {
+  "doors": 44,
+  "structural_data": false,
+  "crops": 44,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-indian-hills": {
+  "doors": 185,
+  "structural_data": false,
+  "crops": 185,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-johnstown": {
+  "doors": 3093,
+  "structural_data": false,
+  "crops": 3093,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-johnstown-milliken-rural": {
+  "doors": 1543,
+  "structural_data": false,
+  "crops": 1543,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-kersey": {
+  "doors": 158,
+  "structural_data": false,
+  "crops": 158,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-kittredge": {
+  "doors": 236,
+  "structural_data": false,
+  "crops": 236,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-la-salle": {
+  "doors": 466,
+  "structural_data": false,
+  "crops": 466,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-lazy-acres": {
+  "doors": 330,
+  "structural_data": false,
+  "crops": 330,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-milliken": {
+  "doors": 1684,
+  "structural_data": false,
+  "crops": 1684,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-north-washington": {
+  "doors": 60,
+  "structural_data": false,
+  "crops": 60,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-nunn": {
+  "doors": 95,
+  "structural_data": false,
+  "crops": 95,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-paragon-estates": {
+  "doors": 277,
+  "structural_data": false,
+  "crops": 277,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-pierce": {
+  "doors": 156,
+  "structural_data": false,
+  "crops": 156,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-pine-brook-hill": {
+  "doors": 352,
+  "structural_data": false,
+  "crops": 352,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-severance": {
+  "doors": 2694,
+  "structural_data": false,
+  "crops": 2694,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-shaw-heights": {
+  "doors": 1011,
+  "structural_data": false,
+  "crops": 1011,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-south-jefferson-rural": {
+  "doors": 6896,
+  "structural_data": false,
+  "crops": 6895,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-st-ann-highlands": {
+  "doors": 88,
+  "structural_data": false,
+  "crops": 88,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-sugarloaf": {
+  "doors": 88,
+  "structural_data": false,
+  "crops": 88,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "g1-todd-creek": {
+  "doors": 1651,
+  "structural_data": false,
+  "crops": 1651,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "glendale": {
+  "doors": 31,
+  "structural_data": false,
+  "crops": 31,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "golden": {
+  "doors": 4935,
+  "structural_data": false,
+  "crops": 4935,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "greenwood-village": {
+  "doors": 3510,
+  "structural_data": false,
+  "crops": 3510,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "gunbarrel": {
+  "doors": 2688,
+  "structural_data": true,
+  "crops": 2688,
+  "usable_crops": 2687,
+  "county": 89,
+  "imagery": 632,
+  "guess": 1785,
+  "labelled": 721,
+  "share": 0.932,
+  "by_class": {
+   "tile": 124,
+   "asphalt": 2382
+  }
+ },
+ "holly-hills": {
+  "doors": 904,
+  "structural_data": false,
+  "crops": 904,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "hudson": {
+  "doors": 200,
+  "structural_data": true,
+  "crops": 200,
+  "usable_crops": 194,
+  "county": 176,
+  "imagery": 9,
+  "guess": 13,
+  "labelled": 185,
+  "share": 0.99,
+  "by_class": {
+   "asphalt": 192,
+   "metal": 5,
+   "tile": 1
+  }
+ },
+ "idaho-springs": {
+  "doors": 84,
+  "structural_data": false,
+  "crops": 84,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "inverness": {
+  "doors": 5,
+  "structural_data": false,
+  "crops": 5,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "keenesburg": {
+  "doors": 598,
+  "structural_data": true,
+  "crops": 598,
+  "usable_crops": 488,
+  "county": 582,
+  "imagery": 6,
+  "guess": 4,
+  "labelled": 588,
+  "share": 0.99,
+  "by_class": {
+   "asphalt": 589,
+   "shake": 2,
+   "metal": 1
+  }
+ },
+ "ken-caryl": {
+  "doors": 9996,
+  "structural_data": false,
+  "crops": 9996,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "lafayette": {
+  "doors": 7308,
+  "structural_data": true,
+  "crops": 7308,
+  "usable_crops": 7300,
+  "county": 15,
+  "imagery": 2770,
+  "guess": 4452,
+  "labelled": 2785,
+  "share": 0.99,
+  "by_class": {
+   "tile": 127,
+   "asphalt": 7110
+  }
+ },
+ "lakewood": {
+  "doors": 39332,
+  "structural_data": false,
+  "crops": 39332,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "littleton": {
+  "doors": 9984,
+  "structural_data": false,
+  "crops": 9984,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "lochbuie": {
+  "doors": 2723,
+  "structural_data": true,
+  "crops": 2723,
+  "usable_crops": 2219,
+  "county": 1975,
+  "imagery": 92,
+  "guess": 618,
+  "labelled": 2067,
+  "share": 0.986,
+  "by_class": {
+   "metal": 6,
+   "asphalt": 2617,
+   "tile": 62
+  }
+ },
+ "lone-tree": {
+  "doors": 3718,
+  "structural_data": true,
+  "crops": 3718,
+  "usable_crops": 3589,
+  "county": 3023,
+  "imagery": 143,
+  "guess": 516,
+  "labelled": 3166,
+  "share": 0.99,
+  "by_class": {
+   "tile": 1895,
+   "asphalt": 1713,
+   "shake": 54,
+   "metal": 20
+  }
+ },
+ "longmont": {
+  "doors": 22371,
+  "structural_data": true,
+  "crops": 22371,
+  "usable_crops": 22033,
+  "county": 175,
+  "imagery": 7389,
+  "guess": 14196,
+  "labelled": 7564,
+  "share": 0.973,
+  "by_class": {
+   "asphalt": 21234,
+   "shake": 1,
+   "tile": 525
+  }
+ },
+ "louisville": {
+  "doors": 5179,
+  "structural_data": true,
+  "crops": 5179,
+  "usable_crops": 5151,
+  "county": 38,
+  "imagery": 2032,
+  "guess": 2993,
+  "labelled": 2070,
+  "share": 0.978,
+  "by_class": {
+   "tile": 72,
+   "asphalt": 4991
+  }
+ },
+ "lyons": {
+  "doors": 233,
+  "structural_data": true,
+  "crops": 233,
+  "usable_crops": 233,
+  "county": 1,
+  "imagery": 86,
+  "guess": 135,
+  "labelled": 87,
+  "share": 0.953,
+  "by_class": {
+   "tile": 13,
+   "asphalt": 209
+  }
+ },
+ "mead": {
+  "doors": 1838,
+  "structural_data": true,
+  "crops": 1838,
+  "usable_crops": 1490,
+  "county": 1804,
+  "imagery": 4,
+  "guess": 27,
+  "labelled": 1808,
+  "share": 0.998,
+  "by_class": {
+   "asphalt": 1809,
+   "tile": 23,
+   "shake": 1,
+   "metal": 2
+  }
+ },
+ "meridian": {
+  "doors": 398,
+  "structural_data": true,
+  "crops": 398,
+  "usable_crops": 373,
+  "county": 312,
+  "imagery": 15,
+  "guess": 61,
+  "labelled": 327,
+  "share": 0.975,
+  "by_class": {
+   "tile": 376,
+   "asphalt": 12
+  }
+ },
+ "nederland": {
+  "doors": 97,
+  "structural_data": true,
+  "crops": 97,
+  "usable_crops": 96,
+  "county": 0,
+  "imagery": 21,
+  "guess": 63,
+  "labelled": 21,
+  "share": 0.866,
+  "by_class": {
+   "asphalt": 84
+  }
+ },
+ "niwot": {
+  "doors": 1255,
+  "structural_data": true,
+  "crops": 1255,
+  "usable_crops": 1248,
+  "county": 120,
+  "imagery": 170,
+  "guess": 870,
+  "labelled": 290,
+  "share": 0.924,
+  "by_class": {
+   "tile": 247,
+   "asphalt": 913
+  }
+ },
+ "northglenn": {
+  "doors": 8110,
+  "structural_data": true,
+  "crops": 8110,
+  "usable_crops": 8109,
+  "county": 8099,
+  "imagery": 4,
+  "guess": 7,
+  "labelled": 8103,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 7857,
+   "flat": 162,
+   "tile": 62,
+   "shake": 29
+  }
+ },
+ "perry-park": {
+  "doors": 780,
+  "structural_data": true,
+  "crops": 780,
+  "usable_crops": 753,
+  "county": 725,
+  "imagery": 29,
+  "guess": 24,
+  "labelled": 754,
+  "share": 0.997,
+  "by_class": {
+   "asphalt": 641,
+   "shake": 34,
+   "tile": 65,
+   "flat": 23,
+   "metal": 15
+  }
+ },
+ "platteville": {
+  "doors": 526,
+  "structural_data": true,
+  "crops": 526,
+  "usable_crops": 526,
+  "county": 515,
+  "imagery": 3,
+  "guess": 7,
+  "labelled": 518,
+  "share": 0.998,
+  "by_class": {
+   "asphalt": 524,
+   "tile": 1
+  }
+ },
+ "roxborough-park": {
+  "doors": 3360,
+  "structural_data": true,
+  "crops": 3360,
+  "usable_crops": 3294,
+  "county": 3271,
+  "imagery": 10,
+  "guess": 75,
+  "labelled": 3281,
+  "share": 0.999,
+  "by_class": {
+   "tile": 914,
+   "asphalt": 2296,
+   "shake": 67,
+   "flat": 68,
+   "metal": 11
+  }
+ },
+ "sheridan": {
+  "doors": 1252,
+  "structural_data": false,
+  "crops": 1252,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "sherrelwood": {
+  "doors": 4139,
+  "structural_data": true,
+  "crops": 4139,
+  "usable_crops": 4139,
+  "county": 4136,
+  "imagery": 3,
+  "guess": 0,
+  "labelled": 4139,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 4122,
+   "tile": 1,
+   "flat": 13,
+   "shake": 3
+  }
+ },
+ "south-denver": {
+  "doors": 26975,
+  "structural_data": true,
+  "crops": 26975,
+  "usable_crops": 26703,
+  "county": 0,
+  "imagery": 7925,
+  "guess": 17961,
+  "labelled": 7925,
+  "share": 0.96,
+  "by_class": {
+   "asphalt": 25210,
+   "tile": 676
+  }
+ },
+ "sterling-ranch": {
+  "doors": 2805,
+  "structural_data": true,
+  "crops": 2805,
+  "usable_crops": 839,
+  "county": 2550,
+  "imagery": 2,
+  "guess": 0,
+  "labelled": 2552,
+  "share": 0.91,
+  "by_class": {
+   "asphalt": 2550,
+   "tile": 2
+  }
+ },
+ "stonegate": {
+  "doors": 2529,
+  "structural_data": true,
+  "crops": 2529,
+  "usable_crops": 2529,
+  "county": 2392,
+  "imagery": 100,
+  "guess": 37,
+  "labelled": 2492,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 1546,
+   "shake": 800,
+   "tile": 182,
+   "metal": 1
+  }
+ },
+ "strasburg": {
+  "doors": 922,
+  "structural_data": true,
+  "crops": 922,
+  "usable_crops": 916,
+  "county": 672,
+  "imagery": 81,
+  "guess": 161,
+  "labelled": 753,
+  "share": 0.991,
+  "by_class": {
+   "asphalt": 910,
+   "tile": 4
+  }
+ },
+ "superior": {
+  "doors": 3106,
+  "structural_data": true,
+  "crops": 3106,
+  "usable_crops": 2779,
+  "county": 644,
+  "imagery": 868,
+  "guess": 1204,
+  "labelled": 1512,
+  "share": 0.874,
+  "by_class": {
+   "tile": 712,
+   "asphalt": 2004
+  }
+ },
+ "the-pinery": {
+  "doors": 4151,
+  "structural_data": true,
+  "crops": 4151,
+  "usable_crops": 4119,
+  "county": 4070,
+  "imagery": 29,
+  "guess": 42,
+  "labelled": 4099,
+  "share": 0.998,
+  "by_class": {
+   "shake": 622,
+   "asphalt": 3005,
+   "tile": 503,
+   "flat": 3,
+   "metal": 8
+  }
+ },
+ "twin-lakes": {
+  "doors": 2472,
+  "structural_data": true,
+  "crops": 2472,
+  "usable_crops": 2390,
+  "county": 2469,
+  "imagery": 1,
+  "guess": 2,
+  "labelled": 2470,
+  "share": 1.0,
+  "by_class": {
+   "asphalt": 2468,
+   "flat": 2,
+   "shake": 1,
+   "tile": 1
+  }
+ },
+ "walden": {
+  "doors": 470,
+  "structural_data": true,
+  "crops": 470,
+  "usable_crops": 451,
+  "county": 0,
+  "imagery": 90,
+  "guess": 330,
+  "labelled": 90,
+  "share": 0.894,
+  "by_class": {
+   "asphalt": 309,
+   "tile": 111
+  }
+ },
+ "watkins": {
+  "doors": 101,
+  "structural_data": false,
+  "crops": 101,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "welby": {
+  "doors": 2709,
+  "structural_data": true,
+  "crops": 2709,
+  "usable_crops": 2686,
+  "county": 2556,
+  "imagery": 20,
+  "guess": 129,
+  "labelled": 2576,
+  "share": 0.999,
+  "by_class": {
+   "asphalt": 2693,
+   "tile": 4,
+   "shake": 6,
+   "flat": 2
+  }
+ },
+ "westminster": {
+  "doors": 26249,
+  "structural_data": true,
+  "crops": 26249,
+  "usable_crops": 26151,
+  "county": 13708,
+  "imagery": 7293,
+  "guess": 5074,
+  "labelled": 21001,
+  "share": 0.993,
+  "by_class": {
+   "tile": 1498,
+   "asphalt": 23184,
+   "shake": 1362,
+   "metal": 6,
+   "flat": 25
+  }
+ },
+ "wheat-ridge": {
+  "doors": 7693,
+  "structural_data": false,
+  "crops": 7693,
+  "usable_crops": 0,
+  "county": 0,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 0,
+  "share": 0.0,
+  "by_class": {}
+ },
+ "windsor": {
+  "doors": 11452,
+  "structural_data": true,
+  "crops": 11452,
+  "usable_crops": 10207,
+  "county": 8548,
+  "imagery": 1491,
+  "guess": 1155,
+  "labelled": 10039,
+  "share": 0.977,
+  "by_class": {
+   "asphalt": 11070,
+   "tile": 75,
+   "metal": 7,
+   "shake": 40,
+   "flat": 2
   }
  }
 }

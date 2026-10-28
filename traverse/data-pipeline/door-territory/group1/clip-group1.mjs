@@ -1,4 +1,6 @@
-/* Group 1, after each pull (2026-10-26): keep the rows inside the target's Census boundary (pieces-<key>.json) that are not already a
+/* ⚑ SUPERSEDED 2026-10-28: the 20 m test below dropped real next-door houses on small lots (and condo units sharing a point). The live
+   Group 1 door lists come from reclip-group1.mjs (parcel numbers). Kept for the record; do not use for new pulls.
+   Group 1, after each pull (2026-10-26): keep the rows inside the target's Census boundary (pieces-<key>.json) that are not already a
    door in any town of ours (door-points.json: [lat, lon] of every door, within 20 m) nor in a Group 1 target pulled before this one
    (out/*.csv), so a rural sweep never repeats a place. Writes out/<key>.csv in the walk-list layout.
      node clip-group1.mjs <key> <raw csv>                                                                                         */

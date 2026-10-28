@@ -11,7 +11,8 @@
     "sedalia"
   ],
   "franktown": [
-    "castle-rock"
+    "castle-rock",
+    "the-pinery"
   ],
   "sedalia": [
     "castle-pines",
@@ -32,13 +33,106 @@
   "cs-northwest": [
     "black-forest"
   ],
-  "denver": [
-    "south-denver"
-  ],
-  "south-denver": [
-    "denver"
-  ],
   "walden": [
     "black-forest"
+  ],
+  "parker": [
+    "aurora",
+    "meridian",
+    "stonegate",
+    "the-pinery"
+  ],
+  "the-pinery": [
+    "franktown",
+    "parker"
+  ],
+  "stonegate": [
+    "parker"
+  ],
+  "englewood": [
+    "cherry-hills-village",
+    "sheridan"
+  ],
+  "cherry-hills-village": [
+    "englewood"
+  ],
+  "sheridan": [
+    "englewood"
+  ],
+  "littleton": [
+    "bow-mar",
+    "columbine",
+    "columbine-valley"
+  ],
+  "bow-mar": [
+    "littleton"
+  ],
+  "columbine": [
+    "littleton"
+  ],
+  "columbine-valley": [
+    "littleton"
+  ],
+  "lakewood": [
+    "dakota-ridge",
+    "edgewater",
+    "golden"
+  ],
+  "golden": [
+    "lakewood"
+  ],
+  "arvada": [
+    "westminster"
+  ],
+  "westminster": [
+    "arvada"
+  ],
+  "dakota-ridge": [
+    "lakewood"
+  ],
+  "greenwood-village": [
+    "cherry-creek"
+  ],
+  "cherry-creek": [
+    "greenwood-village"
+  ],
+  "meridian": [
+    "parker"
+  ],
+  "commerce-city": [
+    "derby"
+  ],
+  "derby": [
+    "commerce-city"
+  ],
+  "edgewater": [
+    "lakewood"
+  ],
+  "aurora": [
+    "centennial",
+    "parker"
+  ],
+  "centennial": [
+    "aurora"
+  ],
+  "g1-golden-rural": [
+    "g1-bald-mountain-rural"
+  ],
+  "evergreen": [
+    "g1-central-jefferson-rural",
+    "g1-kittredge"
+  ],
+  "g1-central-jefferson-rural": [
+    "evergreen"
+  ],
+  "g1-kittredge": [
+    "evergreen"
+  ],
+  "g1-coal-creek": [
+    "g1-bald-mountain-rural"
+  ],
+  "g1-bald-mountain-rural": [
+    "g1-coal-creek",
+    "g1-golden-rural"
   ]
 }

@@ -293,5 +293,129 @@
  ],
  "woodland-park": [
   "Teller"
+ ],
+ "g1-greeley": [
+  "Weld"
+ ],
+ "g1-johnstown": [
+  "Weld"
+ ],
+ "g1-evans": [
+  "Weld"
+ ],
+ "g1-berthoud": [
+  "Weld",
+  "Larimer"
+ ],
+ "g1-severance": [
+  "Weld"
+ ],
+ "g1-milliken": [
+  "Weld"
+ ],
+ "g1-eaton": [
+  "Weld"
+ ],
+ "g1-todd-creek": [
+  "Adams"
+ ],
+ "g1-shaw-heights": [
+  "Adams"
+ ],
+ "g1-genesee": [
+  "Jefferson"
+ ],
+ "g1-coal-creek": [
+  "Jefferson"
+ ],
+ "g1-la-salle": [
+  "Weld"
+ ],
+ "g1-allenspark": [
+  "Boulder"
+ ],
+ "g1-ault": [
+  "Weld"
+ ],
+ "g1-indian-hills": [
+  "Jefferson"
+ ],
+ "g1-eldora": [
+  "Boulder"
+ ],
+ "g1-pierce": [
+  "Weld"
+ ],
+ "g1-deer-trail": [
+  "Arapahoe"
+ ],
+ "g1-kittredge": [
+  "Jefferson"
+ ],
+ "g1-pine-brook-hill": [
+  "Boulder"
+ ],
+ "g1-lazy-acres": [
+  "Boulder"
+ ],
+ "g1-aristocrat-ranchettes": [
+  "Weld"
+ ],
+ "g1-aspen-park": [
+  "Jefferson"
+ ],
+ "g1-paragon-estates": [
+  "Boulder"
+ ],
+ "g1-altona": [
+  "Boulder"
+ ],
+ "g1-kersey": [
+  "Weld"
+ ],
+ "g1-gilcrest": [
+  "Weld"
+ ],
+ "g1-sugarloaf": [
+  "Boulder"
+ ],
+ "g1-brook-forest": [
+  "Jefferson"
+ ],
+ "g1-north-washington": [
+  "Adams"
+ ],
+ "g1-st-ann-highlands": [
+  "Boulder"
+ ],
+ "g1-nunn": [
+  "Weld"
+ ],
+ "g1-idledale": [
+  "Jefferson"
+ ],
+ "g1-eldorado-springs": [
+  "Boulder"
+ ],
+ "g1-south-jefferson-rural": [
+  "Jefferson"
+ ],
+ "g1-central-jefferson-rural": [
+  "Jefferson"
+ ],
+ "g1-bald-mountain-rural": [
+  "Boulder"
+ ],
+ "g1-golden-rural": [
+  "Jefferson"
+ ],
+ "g1-ault-rural": [
+  "Weld"
+ ],
+ "g1-johnstown-milliken-rural": [
+  "Weld"
+ ],
+ "g1-greeley-rural": [
+  "Weld"
  ]
 }
