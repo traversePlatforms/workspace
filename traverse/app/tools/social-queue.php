@@ -25,6 +25,10 @@ if (!$due) exit;
 $tok = (string) (json_decode((string) @file_get_contents($tf), true)['system_token'] ?? ''); if ($tok === '') { $say('no token'); exit; }
 $V = 'https://graph.facebook.com/v21.0/';
 $call = function (string $method, string $path, array $f = []) use ($V) {
+    if (($fk = getenv('SOCIAL_QUEUE_FAKE')) !== false && $fk !== '') {   /* the tests only (review 2026-10-27 evening): canned answers from a file, nothing reaches Meta; "die" = Meta hung */
+        $fake = json_decode((string) file_get_contents($fk), true); if (!empty($fake['die'][$path])) throw new RuntimeException('fake: Meta hung on ' . $path);
+        return (array) ($fake['by'][$path] ?? ['error' => ['message' => 'fake: no answer for ' . $path]]);
+    }
     $ch = curl_init(); $url = $V . $path;
     if ($method === 'GET') { $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($f); } else { curl_setopt($ch, CURLOPT_POST, true); curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($f)); }
     curl_setopt_array($ch, [CURLOPT_URL => $url, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 120]);
@@ -39,11 +43,20 @@ $ready = function (string $id, string $pt) use ($call) {
     for ($i = 0; $i < 30; $i++) { $s = $call('GET', $id, ['fields' => 'status_code', 'access_token' => $pt]); $c = (string) ($s['status_code'] ?? ''); if ($c === 'FINISHED') return true; if ($c === 'ERROR') return false; sleep(4); }
     return false;
 };
+/* the file after each post, not once at the end (review 2026-10-27 evening): a run that died half way (killed, a restart, Meta hanging
+   past the process limit) left every post "approved" and the next run posted the first ones again. Merged into the file as it is now, so
+   a post added or held by hand while a run was going is kept: only the posts this run took out of "approved" are written over. */
+$save = function () use ($qf, &$q) {
+    $cur = json_decode((string) @file_get_contents($qf), true); if (!is_array($cur)) $cur = $q;
+    $mine = []; foreach ($q as $x) if (isset($x['id']) && ($x['status'] ?? '') !== 'approved') $mine[(string) $x['id']] = $x;
+    foreach ($cur as &$c) if (isset($c['id'], $mine[(string) $c['id']]) && ($c['status'] ?? '') === 'approved') { $c['status'] = $mine[(string) $c['id']]['status']; $c['result'] = $mine[(string) $c['id']]['result'] ?? null; } unset($c);
+    $t = $qf . '.tmp'; file_put_contents($t, json_encode($cur, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); rename($t, $qf);
+};
 foreach ($due as $i) {
     $p = &$q[$i]; $res = [];
-    if ($now - (int) $p['at'] > 6 * 3600) { $p['status'] = 'missed'; $say("{$p['id']}: missed (more than 6 hours late), not posted"); unset($p); continue; }
+    if ($now - (int) $p['at'] > 6 * 3600) { $p['status'] = 'missed'; $say("{$p['id']}: missed (more than 6 hours late), not posted"); unset($p); $save(); continue; }
     $pg = $pages[(string) ($p['page'] ?? '')] ?? null;
-    if (!$pg) { $p['status'] = 'failed'; $p['result'] = ['error' => 'page not reachable: ' . ($p['page'] ?? '')]; $say("{$p['id']}: page not reachable"); unset($p); continue; }
+    if (!$pg) { $p['status'] = 'failed'; $p['result'] = ['error' => 'page not reachable: ' . ($p['page'] ?? '')]; $say("{$p['id']}: page not reachable"); unset($p); $save(); continue; }
     $pt = (string) $pg['access_token']; $ok = true;
     $fb = $p['fb'] ?? null;
     if (is_array($fb) && ($fb['type'] ?? '') === 'photo') {
@@ -76,6 +89,5 @@ foreach ($due as $i) {
     }
     $p['status'] = $ok ? 'posted' : 'failed'; $p['result'] = $res + ['at' => date('c')];
     $say("{$p['id']}: {$p['status']} " . json_encode($res, JSON_UNESCAPED_SLASHES));
-    unset($p);
+    unset($p); $save();
 }
-$t = $qf . '.tmp'; file_put_contents($t, json_encode($q, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); rename($t, $qf);
