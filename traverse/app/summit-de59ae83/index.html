@@ -8690,6 +8690,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      or type her own; seed goes down at 2 to 4 lb per 1,000 sq ft, more when the customer pays more (Bryce: "everything based on
      what they're paying"). Costs show once the bag prices are in. The customer never sees our lawn figures, only the price. */
   function a365Price(sq, P) { var x = P.anchorPrice * Math.pow(Math.max(sq, 1) / P.anchorSq, P.power); return Math.max(P.minPrice, Math.round(x / 100) * 100 - 1); }
+  /* aerate only (2026-10-28, Matthew): the full list price (drive included) less the seed at the base rate and the default fertilizer; as a365AerOnly() in the API */
+  function a365AerOnly(sq, P, drive) {
+    if (!sq) return 0;
+    var seed = P.seedBagLb ? sq / 1000 * P.seedBase * P.seedBagCost / P.seedBagLb : 0, F = null;
+    (P.ferts || []).forEach(function (f) { if (f.k === P.fertDefault) F = f; }); if (!F && P.ferts && P.ferts.length) F = P.ferts[0];
+    var fert = F && F.coverSq > 0 && F.bagLb > 0 ? sq / F.coverSq * F.bagCost : 0;
+    return Math.max(1, Math.round(a365Price(sq, P) + Math.ceil(drive || 0) - seed - fert));
+  }
   function seedRateFor(price, ladder, P) { return Math.max(P.seedLow, Math.min(P.seedHigh, P.seedBase * price / Math.max(ladder, 1))); }
   function loadPricing(then, fresh) {
     if (S.a365p && !fresh) return then(S.a365p);
@@ -8810,8 +8818,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       function clearInfl() { st.inflBase = null; if (inflIn) { inflIn.value = ''; inflNote.textContent = 'Internal: the customer only sees the final price.'; } }   /* the numbers first, then the controls (Matthew 2026-10-15) */
       var HIDE = !!P.hidden || asOffice() || qView();   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
       var trv = HIDE ? null : a365Travel(h, P), calcSeq = 0, calcT = null;
-      /* the list price: the ladder plus the drive (in whole dollars); aerate only has no list price, Jen types hers (Matthew 2026-10-15) */
-      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'aerate' ? 0 : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
+      /* the list price: the ladder plus the drive (in whole dollars); aerate only = that less seed and fertilizer (2026-10-28, Matthew; was: no list price, Jen typed hers) */
+      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'aerate' ? a365AerOnly(st.sq || 0, P, trv ? trv.cost : 0) : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
       dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
       up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
       own.addEventListener('input', function () { clearInfl(); var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
@@ -8825,8 +8833,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             if (!j || !j.ok) { big.textContent = ''; big.appendChild(q('div', 'msg', (j && j.error) || 'Could not work out the price.')); return; }
             st.srvLadder = j.ladder; var price = j.price, ladder = j.ladder, exS = exSum(), total = price ? price + exS : 0;
             big.textContent = '';
-            if (!price) { big.appendChild(q('b', null, '$\u2014')); big.appendChild(q('span', null, 'Aerate only: type your price below')); }
-            else { big.appendChild(q('b', null, money0(total))); big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft')); if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work')); }
+            if (!price) { big.appendChild(q('b', null, '$\u2014')); big.appendChild(q('span', null, 'Type the lawn size to work out the price')); }
+            else { big.appendChild(q('b', null, money0(total))); big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + (st.pkg === 'aerate' ? ' (aerate only: the full price less seed and fertilizer)' : '') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft')); if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work')); }
             detail.textContent = ''; noteBox.textContent = '';
             var rows = [];
             if (st.pkg === 'full' && st.sq) { rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName) rows.push(['Fertilizer', (j.fertName !== 'Fertilizer' ? j.fertName + ' \u00b7 ' : '') + j.fertLb + ' lb', '']); }
@@ -8844,11 +8852,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (HIDE) { if (!st.cur) st.cur = { price: 0, seedLb: 0, fertLb: 0 }; paintHidden(); return; }
         var ladder = ladderFor(), price = st.price || ladder, exS = exSum(), total = price ? price + exS : 0;
         big.textContent = '';
-        if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, 'Aerate only: type your price below')); }
+        if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, 'Type the lawn size to work out the price')); }
         else {
           big.appendChild(q('b', null, money0(total)));
           if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work'));
-          big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft' + (trv ? ', drive included' : '')));
+          big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + (st.pkg === 'aerate' ? ' (aerate only: the full price less seed and fertilizer)' : '') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft' + (trv ? ', drive included' : '')));
         }
         detail.textContent = '';
         var lines = [], notes = [], rows = [];   /* rows: [what, how much of it, $]; lines: anything else; notes: where the numbers come from */

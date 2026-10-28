@@ -5051,6 +5051,16 @@ if ($action === 'a365pricing') {
 /* the quote worked out here, for anyone who must not see how (the office, quote-only accounts, an admin looking as the office):
    the price for the lawn and the drive, and the seed and fertilizer pounds; never the costs or the formula */
 function a365ListPrice(int $sq, array $P): int { $x = $P['anchorPrice'] * pow(max($sq, 1) / $P['anchorSq'], $P['power']); return (int) max($P['minPrice'], round($x / 100) * 100 - 1); }
+/* aerate only (2026-10-28, Matthew: "shouldnt we just do the quote cost minus seed and fertilizer?"): the full list price (drive included)
+   less the seed at the base rate and the default fertilizer that job would use, at today's bag prices; whole dollars. Jen can still type hers. */
+function a365AerOnly(int $sq, array $P, float $drive): int {
+    if ($sq <= 0) return 0;
+    $full =a365ListPrice($sq, $P) + (int) ceil($drive);
+    $seed = $P['seedBagLb'] ? $sq / 1000 * (float) $P['seedBase'] * (float) $P['seedBagCost'] / (float) $P['seedBagLb'] : 0.0;
+    $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null;
+    $fert = ($F && $F['coverSq'] > 0 && $F['bagLb'] > 0) ? $sq / (float) $F['coverSq'] * (float) $F['bagCost'] : 0.0;
+    return max(1, (int) round($full - $seed - $fert));
+}
 if ($action === 'a365calc') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     $P = a365Pricing(); $sq = max(0, min(1000000, (int) ($_GET['sq'] ?? 0))); $pkg = ($_GET['pkg'] ?? 'full') === 'aerate' ? 'aerate' : 'full';
@@ -5064,7 +5074,7 @@ if ($action === 'a365calc') {
             $drive = $mi * (float) ($P['roadFactor'] ?: 1.3) * 2 / (float) ($P['mpg'] ?: 18) * (float) $gas['price']; $hasDrive = true;
         }
     }
-    $ladder = $pkg === 'aerate' ? 0 : a365ListPrice($sq, $P) + (int) ceil($drive);
+    $ladder = $pkg === 'aerate' ? ($sq > 0 ? a365AerOnly($sq, $P, $drive) : 0) : a365ListPrice($sq, $P) + (int) ceil($drive);   /* aerate only: the full price less seed and fertilizer (2026-10-28) */
     $want = (int) ($_GET['price'] ?? 0); $price = $want > 0 ? min($want, 100000) : $ladder;
     $seedLb = 0.0; $fertLb = 0.0; $fName = '';
     if ($pkg === 'full' && $sq > 0) {
