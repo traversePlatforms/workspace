@@ -1146,6 +1146,41 @@ function loadDoorAssign(string $key): array {
 const SEARCH_SYN = ['DRIVE' => 'DR', 'ROAD' => 'RD', 'STREET' => 'ST', 'LANE' => 'LN', 'COURT' => 'CT', 'CIRCLE' => 'CIR',
     'AVENUE' => 'AVE', 'PLACE' => 'PL', 'TRAIL' => 'TRL', 'BOULEVARD' => 'BLVD', 'PARKWAY' => 'PKWY', 'TERRACE' => 'TER',
     'POINT' => 'PT', 'HEIGHTS' => 'HTS', 'HIGHWAY' => 'HWY', 'NORTH' => 'N', 'SOUTH' => 'S', 'EAST' => 'E', 'WEST' => 'W'];
+/* every spelling of a street type, direction, ordinal or common street word, mapped to one form (2026-10-28, Matthew: "people put dr instead
+   of drive ... if they are typing an address and we have the property that its going to show up no matter what different ways it gets
+   put in"). Applied to BOTH the search and the address on file, so "Mtn" finds MOUNTAIN and "Mountain" finds MTN. USPS Publication 28
+   standard abbreviations, plus spellings people type (DRV, CRT, PKY, AV). */
+const SEARCH_CANON = [
+    'DRIVE' => 'DR', 'DRV' => 'DR', 'DRI' => 'DR', 'ROAD' => 'RD', 'STREET' => 'ST', 'STR' => 'ST', 'STRT' => 'ST', 'LANE' => 'LN', 'COURT' => 'CT', 'CRT' => 'CT', 'CRT.' => 'CT',
+    'CIRCLE' => 'CIR', 'CIRC' => 'CIR', 'CIRCL' => 'CIR', 'CRCL' => 'CIR', 'CRCLE' => 'CIR', 'AVENUE' => 'AVE', 'AV' => 'AVE', 'AVEN' => 'AVE', 'AVN' => 'AVE', 'AVNUE' => 'AVE',
+    'PLACE' => 'PL', 'TRAIL' => 'TRL', 'TR' => 'TRL', 'TRAILS' => 'TRL', 'BOULEVARD' => 'BLVD', 'BOUL' => 'BLVD', 'BOULV' => 'BLVD', 'BLV' => 'BLVD',
+    'PARKWAY' => 'PKWY', 'PKY' => 'PKWY', 'PARKWY' => 'PKWY', 'PKWAY' => 'PKWY', 'TERRACE' => 'TER', 'TERR' => 'TER', 'POINT' => 'PT', 'HEIGHTS' => 'HTS', 'HT' => 'HTS',
+    'HIGHWAY' => 'HWY', 'HIGHWY' => 'HWY', 'HIWAY' => 'HWY', 'HWAY' => 'HWY', 'SQUARE' => 'SQ', 'SQR' => 'SQ', 'CROSSING' => 'XING', 'CRSSNG' => 'XING', 'CROSSROAD' => 'XRD',
+    'EXPRESSWAY' => 'EXPY', 'FREEWAY' => 'FWY', 'TURNPIKE' => 'TPKE', 'ALLEY' => 'ALY', 'BYPASS' => 'BYP', 'CAUSEWAY' => 'CSWY', 'COVE' => 'CV', 'CRESCENT' => 'CRES',
+    'CREEK' => 'CRK', 'CANYON' => 'CYN', 'MOUNTAIN' => 'MTN', 'MOUNTAINS' => 'MTNS', 'MOUNT' => 'MT', 'RIDGE' => 'RDG', 'RIDGES' => 'RDGS', 'VIEW' => 'VW', 'VIEWS' => 'VWS',
+    'VISTA' => 'VIS', 'VALLEY' => 'VLY', 'MEADOW' => 'MDW', 'MEADOWS' => 'MDWS', 'SPRING' => 'SPG', 'SPRINGS' => 'SPGS', 'HILL' => 'HL', 'HILLS' => 'HLS', 'HOLLOW' => 'HOLW',
+    'LAKE' => 'LK', 'LAKES' => 'LKS', 'GLEN' => 'GLN', 'GROVE' => 'GRV', 'GARDEN' => 'GDN', 'GARDENS' => 'GDNS', 'ESTATE' => 'EST', 'ESTATES' => 'ESTS', 'FOREST' => 'FRST',
+    'HARBOR' => 'HBR', 'HAVEN' => 'HVN', 'ISLAND' => 'IS', 'JUNCTION' => 'JCT', 'KNOLL' => 'KNL', 'KNOLLS' => 'KNLS', 'LANDING' => 'LNDG', 'MANOR' => 'MNR', 'MILL' => 'ML',
+    'ORCHARD' => 'ORCH', 'OVERLOOK' => 'OVLK', 'PASSAGE' => 'PSGE', 'PATH' => 'PATH', 'PINES' => 'PNES', 'PLAINS' => 'PLNS', 'PLAZA' => 'PLZ', 'PRAIRIE' => 'PR', 'RANCH' => 'RNCH',
+    'SHORE' => 'SHR', 'SHORES' => 'SHRS', 'STATION' => 'STA', 'SUMMIT' => 'SMT', 'TRACE' => 'TRCE', 'VILLAGE' => 'VLG', 'BLUFF' => 'BLF', 'BLUFFS' => 'BLFS', 'BRANCH' => 'BR',
+    'BROOK' => 'BRK', 'CENTER' => 'CTR', 'CLIFF' => 'CLF', 'CLIFFS' => 'CLFS', 'COMMON' => 'CMN', 'CORNER' => 'COR', 'FIELD' => 'FLD', 'FIELDS' => 'FLDS', 'FORK' => 'FRK',
+    'GATEWAY' => 'GTWY', 'GREEN' => 'GRN', 'MESA' => 'MESA', 'PARK' => 'PARK', 'PEAK' => 'PK', 'POINTE' => 'PTE', 'RIVER' => 'RIV', 'ROW' => 'ROW', 'RUN' => 'RUN', 'WAY' => 'WAY',
+    'NORTH' => 'N', 'SOUTH' => 'S', 'EAST' => 'E', 'WEST' => 'W', 'NORTHEAST' => 'NE', 'NORTHWEST' => 'NW', 'SOUTHEAST' => 'SE', 'SOUTHWEST' => 'SW',
+    'FIRST' => '1ST', 'SECOND' => '2ND', 'THIRD' => '3RD', 'FOURTH' => '4TH', 'FIFTH' => '5TH', 'SIXTH' => '6TH', 'SEVENTH' => '7TH', 'EIGHTH' => '8TH', 'NINTH' => '9TH', 'TENTH' => '10TH',
+    'SAINT' => 'ST', 'FORT' => 'FT'];
+function srchCanon(string $w): string { return SEARCH_CANON[$w] ?? $w; }
+/** a word that is a type, direction or common street word (any spelling): never the word the index is filtered on, since the record may spell it the other way */
+function srchDescriptor(string $w): bool { static $v = null; if ($v === null) $v = array_flip(array_values(SEARCH_CANON)); return isset(SEARCH_CANON[$w]) || isset($v[$w]); }
+/** how many wrong letters a street word may have in the forgiving pass: none under 4 letters, one up to 7, two from 8 */
+function srchTol(string $w): int { $n = strlen($w); return $n < 4 ? 0 : ($n < 8 ? 1 : 2); }
+/** close enough for the forgiving pass: within srchTol letters, where two neighbouring letters swapped ("carbiou", "johsnon") count as one slip */
+function srchClose(string $w, string $x): bool {
+    $t = srchTol($w); if ($t === 0) return $w === $x;
+    if (levenshtein($w, $x) <= $t) return true;
+    if (strlen($w) !== strlen($x)) return false;
+    $d = []; for ($i = 0, $n = strlen($w); $i < $n; $i++) if ($w[$i] !== $x[$i]) { $d[] = $i; if (count($d) > 2) return false; }
+    return count($d) === 2 && $d[1] === $d[0] + 1 && $w[$d[0]] === $x[$d[1]] && $w[$d[1]] === $x[$d[0]];
+}
 const SEARCH_DIRS = ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW', 'NORTH', 'SOUTH', 'EAST', 'WEST'];   /* direction words a search tries again without (2026-10-21): a365NoDir() and 'search' */
 /* Written to disk a town at a time and read back a line at a time (2026-10-25): built whole in memory, the 98 MB index (600,000+ houses
    after the all-sizes towns) ran past the 768 MB limit on every rebuild ("Allowed memory size exhausted", line 1152, six times on 25 Oct),
@@ -3132,7 +3167,7 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
 /* Claude Check only looks (2026-10-26, Matthew: "Make a read-only role"; it was a full admin). By name, as boardHidden() does, so a rename
    can only take rights away. Page loads from this list, plus loading doors and signing out; everything else is refused. */
 if (!$viewing && $realMe === 'Claude Check') {
-    $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
+    $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
@@ -5545,6 +5580,17 @@ if ($action === 'hours' || $action === 'hoursset') {
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
     accountLog(['by' => $me, 'what' => $new === null ? 'work hours cleared' : 'work hours', 'name' => $who, 'id' => $pid]);
     out(['ok' => true, 'who' => $who, 'hours' => $new]);
+}
+/* everyone's work hours, for everyone signed in (2026-10-28, Matthew: "something that shows everyones schedule to everyone so people know
+   where to fill in gaps"): name, role and the week; the check accounts left out. Read only. */
+if ($action === 'hoursall') {
+    $people = [];
+    foreach ($TEAM['byName'] as $name => $p) {
+        if (boardHidden((string) $name)) continue;
+        $people[] = ['name' => (string) $name, 'role' => (string) ($p['role'] ?? ''), 'hours' => hoursOf((string) $name)];
+    }
+    usort($people, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+    out(['ok' => true, 'people' => $people, 'me' => $me]);
 }
 /* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
 if ($action === 'jobsave') {
@@ -9942,7 +9988,7 @@ if ($action === 'search') {
     $q = (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $q);
     $words = array_values(array_filter(explode(' ', $q), fn($w) => $w !== ''));
     if (strlen(implode('', $words)) < 3) out(['ok' => true, 'q' => $q, 'results' => []]);
-    $words = array_slice(array_map(fn($w) => SEARCH_SYN[$w] ?? $w, $words), 0, 6);
+    $words = array_slice(array_map('srchCanon', $words), 0, 6);   /* every spelling to one form (2026-10-28; was SEARCH_SYN, long forms only) */
     $LONGW = array_flip(SEARCH_SYN);   /* 2026-10-15: "point" became PT and missed CANYON POINT CIR; the long form in the records matches too */
     /* a street name has to be in it (Fable 2026-10-04): "DRIVE" or "100" alone matched a whole class of
        streets or house numbers, and a loop of them could pull every address in every town. A number with a
@@ -9961,7 +10007,7 @@ if ($action === 'search') {
         $hits = [];
         /* the longest street word has to be in every line that matches (as a token start in the address or as the town's name), so only
            the lines carrying it are compared (review 2026-10-25); street types are never the word (their long form may be in the record) */
-        $need = ''; foreach ($words as $w) if (strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true) && strlen($w) > strlen($need)) $need = $w;
+        $need = ''; foreach ($words as $w) if (strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true) && !srchDescriptor($w) && strlen($w) > strlen($need)) $need = $w;   /* + never a word the record may spell another way (MTN / MOUNTAIN), 2026-10-28 */
         foreach ($need !== '' ? searchIndexGrep($need) : searchIndex() as $line) {
             $p = explode("\t", $line); if (count($p) < 9) continue;
             $look = ($p[9] ?? '') === 'L'; if ($look && !$withLookup) continue;
@@ -9969,7 +10015,7 @@ if ($action === 'search') {
             $tw = explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', strtoupper($p[1])));
             $ok = true; $exactNo = false; $streetHit = false;
             foreach ($words as $w) {
-                $m = false; foreach ($aw as $i => $x) { if ($x !== '' && (strncmp($x, $w, strlen($w)) === 0 || (isset($LONGW[$w]) && $x === $LONGW[$w]))) { $m = true; if (!ctype_digit($w)) $streetHit = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
+                $m = false; foreach ($aw as $i => $x) { if ($x !== '' && (strncmp($x, $w, strlen($w)) === 0 || (isset($LONGW[$w]) && $x === $LONGW[$w]) || (($xc = srchCanon($x)) !== $x && strncmp($xc, $w, strlen($w)) === 0))) {   /* + the record's word in its standard form (2026-10-28) */ $m = true; if (!ctype_digit($w)) $streetHit = true; if ($i === 0 && $x === $w && ctype_digit($w)) $exactNo = true; break; } }
                 if (!$m && !ctype_digit($w)) foreach ($tw as $x) if ($x !== '' && $x === $w) { $m = true; break; }   /* the town's name */
                 if (!$m) { $ok = false; break; }
             }
@@ -9996,6 +10042,32 @@ if ($action === 'search') {
     }
     /* still nothing: without N / S / E / W (2026-10-21: "11663 N Settlers" against the list's "11663 SETTLERS DR") */
     if (!$hits) { $nd = array_values(array_filter($words, fn($w, $i) => $i === 0 || !in_array($w, SEARCH_DIRS, true), ARRAY_FILTER_USE_BOTH)); if (count($nd) < count($words) && array_filter($nd, fn($x) => strlen($x) >= 3 && !ctype_digit($x) && !in_array($x, SEARCH_TYPES, true))) $hits = $find($nd); }
+    /* still nothing, and a house number was typed: a forgiving pass over only the houses with that exact number (2026-10-28, Matthew:
+       "no matter what different ways it gets put in"). Each street word may be a letter or two off ("colombine" → COLUMBINE, "mountian"
+       → MOUNTAIN), or the words may be joined or split ("pinecrest" → PINE CREST); types and directions are left out of the comparison. */
+    if (!$hits && $words && preg_match('/^\d{1,6}[A-Z]?$/D', $words[0])) {
+        $num = $words[0]; $skip = array_merge(SEARCH_TYPES, ['N', 'S', 'E', 'W', 'NE', 'NW', 'SE', 'SW']);
+        $qn = array_values(array_filter(array_slice($words, 1), fn($w) => !ctype_digit($w) && !in_array($w, $skip, true)));
+        if ($qn) {
+            $qj = implode('', $qn);
+            foreach (searchIndexGrep($num) as $line) {
+                $p = explode("\t", $line); if (count($p) < 9) continue;
+                $look = ($p[9] ?? '') === 'L'; if ($look && !$withLookup) continue;
+                $aw = array_values(array_filter(explode(' ', (string) preg_replace('/[^A-Z0-9 ]+/', ' ', $p[4])), fn($x) => $x !== ''));
+                if (!$aw || $aw[0] !== $num) continue;
+                $raw = array_values(array_filter(array_slice($aw, 1), fn($x) => !in_array($x, $skip, true) && !in_array(srchCanon($x), $skip, true)));
+                if (!$raw) continue;
+                $can = array_map('srchCanon', $raw); $both = array_unique(array_merge($raw, $can));
+                $ok = true;
+                foreach ($qn as $w) { $m = false; foreach ($both as $x) if (srchClose($w, $x) || (strlen($w) >= 4 && strncmp($x, $w, strlen($w)) === 0)) { $m = true; break; } if (!$m) { $ok = false; break; } }
+                if (!$ok) foreach ([implode('', $raw), implode('', $can)] as $rj) if (srchClose($qj, $rj)) { $ok = true; break; }   /* joined or split words */
+                if (!$ok) continue;
+                $hits[] = ['rank' => 2, 'region' => $p[0], 'town' => $p[1], 'area' => $p[2], 'id' => $p[3], 'address' => $p[4],
+                           'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : [])];
+                if (count($hits) > 100) break;
+            }
+        }
+    }
     /* a pulled-in copy of a house that is on a door list stays out (the door-list house has the trees, the right lot and the history) */
     $onList = []; foreach ($hits as $h0) if (empty($h0['lookup'])) $onList[strtoupper($h0['address']) . '|' . strtolower($h0['region'])] = 1;
     $hits = array_values(array_filter($hits, fn($h0) => empty($h0['lookup']) || !isset($onList[strtoupper($h0['address']) . '|' . strtolower(str_replace(' ', '-', $h0['town']))])));

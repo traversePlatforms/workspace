@@ -237,6 +237,25 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .lookup .lksub{font-size:12.5px;color:var(--soft)}
   .lookup .lktip{font-size:13px;font-weight:700;color:var(--later)}
   .lookrow{display:flex;align-items:center;gap:10px;margin:18px 4px 0}
+  /* work hours on the profile, and Team hours (2026-10-28) */
+  .hrcard{margin:18px 4px 0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  .hrh{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .hrsum{margin:6px 0 12px;font-weight:600;color:var(--ink)}
+  .hrbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hrbtn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 15px var(--sans);cursor:pointer}
+  .hrbtn .ic{width:20px;height:20px}.hrbtn.hrmain{background:var(--accent);border-color:var(--accent);color:#fff}
+  .thaxis{position:relative;height:18px;margin:10px 0 2px 86px;margin-right:64px;font-size:11px;color:var(--soft)}.thaxis span{position:absolute;transform:translateX(-50%)}
+  .thday{border-top:1px solid var(--line);padding:10px 0}
+  .thhead{display:flex;align-items:center;gap:8px;margin-bottom:6px}.thhead b{font-size:15px}
+  .thtag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--ink)}
+  .thtag.thwarn{background:color-mix(in srgb,var(--later) 22%,transparent)}.thtag.thbad{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
+  .thgap{font-size:13px;font-weight:600;color:var(--bad);margin:0 0 6px}
+  .throw{display:grid;grid-template-columns:80px 1fr 58px;align-items:center;gap:6px;min-height:26px}
+  .thname{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .thline{position:relative;height:12px;border-radius:6px;background:var(--sunk)}
+  .thbar{position:absolute;top:0;bottom:0;border-radius:6px;background:var(--accent)}.thbar.thme{background:var(--ink)}
+  .thtime{font-size:12px;color:var(--soft);text-align:right;white-space:nowrap}
+  .thoff{font-size:12.5px;color:var(--soft);margin-top:4px}
   /* calendar sync (2026-10-11) */
   .calsyncbtn{display:block;width:100%;margin:10px 0 0;min-height:44px;border:1px dashed var(--line);border-radius:12px;background:transparent;color:var(--ink);font:700 14px var(--sans);cursor:pointer}
   .calsync{padding:12px 16px 18px;overflow-y:auto;display:grid;gap:10px}.calsync p{margin:0;line-height:1.45}
@@ -4021,11 +4040,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var lgs = q('div', 'aseg noi18n');
     [['en', 'English'], ['es', 'Español']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(LANG === o[0])); b.setAttribute('lang', o[0]); b.addEventListener('click', function () { if (LANG !== o[0]) setLang(o[0]); }); lgs.appendChild(b); });
     lg.appendChild(lgs);
-    if (feat('walkdesk')) {   /* work hours (2026-10-27): nobody books you outside them */
-      var hr = q('div', 'lookrow'); hr.appendChild(q('span', null, 'Work hours'));
-      var hrr = q('div', 'pushr'), hs = q('small', null, '…'), hb = q('button', 'lnk', 'Set my hours ›'); hb.type = 'button'; hb.addEventListener('click', function () { hoursView(S.me, profileView); });
-      hrr.appendChild(hs); hrr.appendChild(hb); hr.appendChild(hrr); box.appendChild(hr);
-      api('hours').then(function (j) { hs.textContent = j && j.ok ? hoursSummary(j.hours) : ''; }).catch(function () { hs.textContent = ''; });
+    if (feat('walkdesk')) {   /* work hours (2026-10-27): nobody books you outside them; real buttons and everyone's hours (2026-10-28, Matthew: "make the button visual") */
+      var hr = q('div', 'hrcard'); hr.appendChild(q('div', 'hrh', 'Work hours'));
+      var hs = q('div', 'hrsum', '…'); hr.appendChild(hs);
+      var hbs = q('div', 'hrbtns'), hb = q('button', 'hrbtn hrmain'), tb = q('button', 'hrbtn'); hb.type = tb.type = 'button';
+      hb.appendChild(ico('clock')); hb.appendChild(q('span', null, 'Set my hours')); tb.appendChild(ico('users')); tb.appendChild(q('span', null, 'Team hours'));
+      hb.addEventListener('click', function () { hoursView(S.me, profileView); }); tb.addEventListener('click', function () { teamHoursView(profileView); });
+      hbs.appendChild(hb); hbs.appendChild(tb); hr.appendChild(hbs); box.appendChild(hr);
+      api('hours').then(function (j) { hs.textContent = j && j.ok ? (j.hours ? hoursSummary(j.hours) : 'Not set yet: any time can be booked') : ''; }).catch(function () { hs.textContent = ''; });
     }
     if (S.super) box.appendChild(editionRow());
     box.appendChild(q('div', 'sub2', 'The app records which screens and buttons you use, so the company can see what helps. Never what you type. Your code works on one phone and one computer at a time; signing in on another phone signs this one out.'));   /* the tap log (2026-10-12) */
@@ -7963,6 +7985,46 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var days = [1, 2, 3, 4, 5, 6, 0], short = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], out = [], run = null;
     days.forEach(function (w) { var d = h[String(w)], k = d ? hoursSpan(d) : 'off'; if (run && run.k === k) run.to = w; else { run = { k: k, from: w, to: w }; out.push(run); } });
     return out.filter(function (r) { return r.k !== 'off'; }).map(function (r) { return short[r.from] + (r.to !== r.from ? '–' + short[r.to] : '') + ' ' + r.k; }).join(', ') || 'Off every day';
+  }
+  /* everyone's work hours, day by day (2026-10-28, Matthew: "something that shows everyones schedule to everyone so people know where to fill
+     in gaps"): a bar per person on a 6 am to 9 pm line, how many are on, and the hours nobody covers between the first start and the last end */
+  function teamHoursView(back) {
+    hideToast(); S.signin = null; S.screen = 'teamhours'; foot.hidden = true; setDock(null);
+    back = back || profileView;
+    setBar('back', { title: 'Team hours', sub: 'Who works when, so gaps get filled', back: back, backLabel: 'Back' });
+    view.textContent = ''; var f = q('div', 'card thcard'); f.appendChild(q('div', 'skel')); view.appendChild(f);
+    api('hoursall').then(function (j) {
+      f.textContent = '';
+      if (!j || !j.ok) { f.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load them.')); return; }
+      var people = j.people || [], set = people.filter(function (p) { return p.hours; }), unset = people.filter(function (p) { return !p.hours; });
+      var A = 6 * 60, Z = 21 * 60, pct = function (m) { return Math.max(0, Math.min(100, (m - A) / (Z - A) * 100)); };
+      var clock = function (m) { var h = Math.floor(m / 60), mm = m % 60; return (h % 12 || 12) + (mm ? ':' + (mm < 10 ? '0' : '') + mm : '') + (h < 12 ? ' am' : ' pm'); };
+      f.appendChild(q('div', 'sub2', 'Each bar is someone’s working hours, 6 am to 9 pm. Set yours under Profile, Set my hours.'));
+      var axis = q('div', 'thaxis'); [6, 9, 12, 15, 18, 21].forEach(function (h) { var t = q('span', null, (h % 12 || 12) + (h < 12 ? 'a' : 'p')); t.style.left = pct(h * 60) + '%'; axis.appendChild(t); });
+      f.appendChild(axis);
+      if (!set.length) f.appendChild(q('div', 'msg', 'Nobody has set their hours yet.'));
+      [1, 2, 3, 4, 5, 6, 0].forEach(function (w) {
+        if (!set.length) return;
+        var on = [], off = [];
+        set.forEach(function (p) { var d = p.hours[String(w)]; if (d && d.length === 2) on.push({ p: p, a: hhmmMin(d[0]), e: hhmmMin(d[1]), d: d }); else off.push(p); });
+        on.sort(function (x, y) { return x.a - y.a || x.e - y.e; });
+        var day = q('div', 'thday'), head = q('div', 'thhead'); head.appendChild(q('b', null, HOURS_DAY[w].replace(/s$/, '')));
+        head.appendChild(on.length === 0 ? q('span', 'thtag thbad', 'Nobody on') : on.length === 1 ? q('span', 'thtag thwarn', '1 on') : q('span', 'thtag', on.length + ' on'));
+        day.appendChild(head);
+        if (on.length) {   /* hours nobody covers between the first start and the last end */
+          var gaps = [], end = on[0].e; on.forEach(function (x) { if (x.a > end) gaps.push([end, x.a]); end = Math.max(end, x.e); });
+          if (gaps.length) day.appendChild(q('div', 'thgap', 'Nobody on ' + gaps.map(function (g) { return clock(g[0]) + '–' + clock(g[1]); }).join(', ')));
+        }
+        on.forEach(function (x) {
+          var r = q('div', 'throw'), nm = q('span', 'thname', x.p.name === j.me ? 'You' : strtokName(x.p.name)); nm.title = x.p.name;
+          var line = q('div', 'thline'), b = q('div', 'thbar' + (x.p.name === j.me ? ' thme' : '')); b.style.left = pct(x.a) + '%'; b.style.width = Math.max(2, pct(x.e) - pct(x.a)) + '%';
+          line.appendChild(b); r.appendChild(nm); r.appendChild(line); r.appendChild(q('span', 'thtime', hoursSpan(x.d))); day.appendChild(r);
+        });
+        if (off.length) day.appendChild(q('div', 'thoff', 'Off: ' + off.map(function (p) { return p.name === j.me ? 'you' : strtokName(p.name); }).join(', ')));
+        f.appendChild(day);
+      });
+      if (unset.length) f.appendChild(q('div', 'sub2', 'No hours set yet, so any time can be booked: ' + unset.map(function (p) { return p.name === j.me ? 'you' : p.name; }).join(', ') + '.'));
+    }).catch(function () { f.textContent = ''; f.appendChild(q('div', 'msg bad', 'No signal. Try again.')); });
   }
   /* the hours editor: your own from the profile; an admin (or a team runner for their team) anyone's from Accounts */
   function hoursView(who, back) {
