@@ -7298,7 +7298,7 @@ function crewReminders(?int $now = null): array {
     $rec = json_decode((string) @file_get_contents($f), true); if (!is_array($rec)) $rec = [];
     $today = $at->format('Y-m-d'); $hm = $at->format('H:i'); $sent = 0; $changed = false; $leads = leadsAllRaw();
     foreach (jobsAll() as $jid => $j) {
-        if ($j['off'] || !empty($j['done']) || (string) $j['crew'] === '' || $j['date'] > $today) continue;
+        if ($j['off'] || !empty($j['done']) || (string) $j['crew'] === '' || $j['date'] > $today || $j['date'] < '2026-10-27') continue;   /* from the day it started: no backlog of older jobs */
         $d1 = (new DateTime($j['date'] . ' 12:00', $tz))->modify('+1 day')->format('Y-m-d');
         if ($today > (new DateTime($j['date'] . ' 12:00', $tz))->modify('+4 days')->format('Y-m-d')) continue;   /* long gone: the office has it */
         $r = $rec[$jid] ?? []; $due1 = $today > $j['date'] || $hm >= '19:00'; $due2 = $today > $d1 || ($today === $d1 && $hm >= '09:00');
