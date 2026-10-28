@@ -2088,6 +2088,12 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .ltrybtns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .ltrybtns span{font-size:12.5px;font-weight:700;color:var(--soft);margin-right:2px}
   .ltrybtns button{min-height:38px;border:1.5px solid var(--line);border-radius:999px;padding:0 13px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+  /* ticked steps, voicemail quick picks, Save, the quote in writing (2026-10-28) */
+  .ltrybtns button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+  .lvmpick{display:flex;gap:6px;flex-wrap:wrap}.lvmpick button{min-height:34px;border:1.5px dashed var(--line);border-radius:999px;padding:0 11px;background:var(--card);color:var(--ink);font:600 12.5px var(--sans);cursor:pointer}
+  .ltold{display:flex;gap:8px;align-items:center;margin-top:8px;font:600 14px var(--sans)}.ltold input{width:20px;height:20px}
+  .ltrysave{display:flex;gap:10px;align-items:center;margin-top:8px}.ltrysave .save{min-height:40px;padding:0 22px}
+  .ltryq{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}.ltryq span{font-size:12.5px;font-weight:700;color:var(--soft)}.ltryq a{display:inline-flex;gap:5px;align-items:center}
   .ltryhist{font-size:13px;color:var(--ink);margin-top:8px;line-height:1.45}
   .ltrydue{font-size:13px;color:var(--soft);margin-top:4px;line-height:1.4}
   .lwarn{font-size:13px;font-weight:700;color:var(--ember-ink,#9a3412);margin-bottom:8px}
@@ -5081,8 +5087,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));
     if (wdOn() && CO.a365 && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */
     if (S.role === 'admin' && S.screen === 'pipeline' && (l.mine || l.src === 'a365web') && ((S.handTo || []).length || l.mhand) && ['won', 'lost'].indexOf(l.status || 'new') < 0) c.appendChild(handRow(l));   /* Send to Cai (2026-10-27) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
-    else if (wdOn() && S.screen === 'pipeline' && l.quote && l.quote.pkg === 'job') c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + ((l.quote.items || []).filter(function (x) { return x.id !== 'min' && x.id !== 'adj'; }).map(function (x) { return x.t; }).join(', ') || 'the job') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));   /* a kit quote (2026-10-27) */
-    else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'other' ? (l.quote.svc || 'another service') : l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
+    else if (wdOn() && S.screen === 'pipeline' && l.quote && l.quote.pkg === 'job') c.appendChild(q('div', 'qline', quoteState(l) + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + ((l.quote.items || []).filter(function (x) { return x.id !== 'min' && x.id !== 'adj'; }).map(function (x) { return x.t; }).join(', ') || 'the job') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));   /* a kit quote (2026-10-27) */
+    else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', quoteState(l) + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'other' ? (l.quote.svc || 'another service') : l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
     /* the deposit and the one-page form straight from the card (2026-10-20, Matthew: Joseph Barnes said yes on the phone, "how can i build a quote
        and send it to him from my super admin page"): an open lead with no form yet; the office also has it after a logged talk */
@@ -5098,7 +5104,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(sfb);
     }
     if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));
-    else if (wdOn() && S.screen === 'pipeline' && l.status === 'quoted' && !l.sign && !l.signed && (adminView() || asOffice())) c.appendChild(recallRow(l));   /* quoted, call back on a day: Recall (2026-10-22) */
+    else if (wdOn() && S.screen === 'pipeline' && l.status === 'quoted' && !l.sign && !l.signed && (adminView() || asOffice())) c.appendChild(callTries(l));   /* quoted: calls, texts and the call-back day still get logged (2026-10-28; Recall since 2026-10-22) */
     else if (feat('walkdesk') && S.screen === 'calendar' && l.owner === S.me && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* a rep calling the leads handed to them (2026-10-20) */   /* call tries (2026-10-14) */
     if (l.msg) c.appendChild(q('div', 'lmsg', l.msg));
     if (l.notes && l.notes.length) {
@@ -7017,7 +7023,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      misses in a row it says to send a last text or email and mark it Lost. The text and email open on the person's own phone,
      filled in; nothing is sent by the app. */
   var LEAD_TRIES = 4;
-  var TRY_N = { none: 'No answer', vm: 'Left voicemail', talk: 'Talked to them', email: 'Emailed them', text: 'Texted them' };   /* + emailed, texted (2026-10-16) */
+  var TRY_N = { none: 'No answer', vm: 'Left voicemail', talk: 'Talked to them', email: 'Emailed them', text: 'Texted them', msgr: 'Messaged on Facebook' };   /* + Messenger (2026-10-28) */
+  var TOLD_HOW = { text: 'texted', msgr: 'in Messenger', email: 'emailed', talk: 'on the phone', vm: 'in a voicemail' };
+  /* the saved price went out: through the quote link, or logged as given at this price (2026-10-28, Jen: everyone gets it in writing) */
+  function quoteGiven(l) { return !!(l.quote && (l.quote.sent || (l.qtold && +l.qtold.price === +l.quote.price))); }
+  var QTOLD_FROM = 1793226701;   /* quotes saved before this went live have no given record: they keep the old wording, never Price ready (2026-10-28) */
+  function quoteOld(l) { return !!(l.quote && !quoteGiven(l) && (l.quote.at || 0) < QTOLD_FROM); }
+  function quoteState(l) { return l.quote && l.quote.sent ? 'Quote sent: ' : quoteGiven(l) ? 'Quote given (' + (TOLD_HOW[l.qtold.how] || l.qtold.how) + ' ' + ago(l.qtold.at) + '): ' : quoteOld(l) ? 'Quote saved: ' : 'Price ready, not given yet: '; }
+  function quoteMsg(l) {
+    var Q = l.quote, B = leadBrand(l), st = l.house ? streetCase(l.house.address) : '';
+    var what = Q.pkg === 'other' ? (Q.svc || 'the work we discussed') : Q.pkg === 'aerate' ? 'core aeration' : Q.pkg === 'job' ? 'the job' : 'core aeration, overseeding and fertilizer';
+    return 'Hi ' + greetName(l.name) + ', this is ' + myName() + ' with ' + B.name + '. Here is your quote' + (st ? ' for ' + st : '') + ': ' + money0(Q.price) + ' for ' + what + '. Reply here' + (B.phone ? ' or call ' + B.phone : '') + ' to pick a day.';
+  }   /* + emailed, texted (2026-10-16) */
   function missCount(l) { var n = 0; (l.tries || []).forEach(function (t) { n = t.o === 'talk' ? 0 : (t.o === 'none' || t.o === 'vm') ? n + 1 : n; }); return n; }   /* an email or a text is not a missed call */
   function lastTry(l) { var t = l.tries || []; return t.length ? t[t.length - 1] : null; }
   function tryDue(l) {
@@ -7028,7 +7045,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function callGroup(l) {
     var last = lastTry(l); if (!last) return 'new';
     if (last.o === 'talk') return 'talked';
-    if (last.o === 'email' || last.o === 'text') return last.o;   /* waiting on a reply: their own sections (2026-10-16) */
+    if (last.o === 'email' || last.o === 'text' || last.o === 'msgr') return last.o === 'msgr' ? 'text' : last.o;   /* waiting on a reply: their own sections (2026-10-16); Messenger sits with Texted or messaged */
     if (missCount(l) >= LEAD_TRIES) return 'out';
     if (last.o === 'vm') return 'vm';   /* its own section, not dropped to the bottom (Matthew 2026-10-15) */
     return tryDue(l) <= Date.now() ? 'today' : 'wait';
@@ -7145,41 +7162,74 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return last ? hi + 'We have tried you a few times about your ' + nd + ' request. If you would still like a quote, reply here' + (B.phone ? ' or call us at ' + B.phone : '') + '. If not, no problem, we will stop calling.'
       : hi + 'I just tried calling about your ' + nd + ' request. When is a good time to talk? You can also reply here.';
   }
-  function callTries(l) {
+  function callTries(l, again) {   /* again: what to redraw after a save (her Waiting to sign list, 2026-10-28) */
     var box = q('div', 'ltries'), t = l.tries || [], miss = missCount(l), last = lastTry(l);
     if (last && last.by !== S.me && Date.now() / 1000 - last.at < 7200) box.appendChild(q('div', 'lwarn', last.by + ' called ' + ago(last.at) + ': ' + TRY_N[last.o].toLowerCase() + '.'));
-    var row = q('div', 'ltrybtns'); row.appendChild(q('span', null, 'Reached out?'));
+    /* several steps in one entry (2026-10-28, Matthew: Jen quotes, texts, calls and leaves a voicemail): tick what you did, at most one call
+       result, then Save; Undo on the toast takes the whole entry back */
+    var row = q('div', 'ltrybtns'); row.appendChild(q('span', null, 'Reached out? Tick what you did'));
+    var pick = {}, CALL = ['none', 'vm', 'talk'], btns = {}, tel = digits(l.phone), redraw = again || S.leadRedraw || pipelineView;
     var vmBox = q('div', 'lvm'); vmBox.hidden = true;
-    ['none', 'vm', 'talk', 'email', 'text'].forEach(function (o) {
-      var b = q('button', null, TRY_N[o]); b.type = 'button';
+    var vt = q('textarea'); vt.rows = 2; vt.maxLength = 400; vt.placeholder = 'What you said in the voicemail (for whoever calls next)'; vt.setAttribute('aria-label', 'What you said in the voicemail');
+    var vp = q('div', 'lvmpick');
+    [['Left my name and number'], ['Asked them to call back about their quote'], ['Gave them the price'], ['Box full: could not leave one', 1]].forEach(function (x) {
+      var b = q('button', null, x[0]); b.type = 'button';
       b.addEventListener('click', function () {
-        if (b.disabled) return;
-        if (o === 'vm' && !b.dataset.note) {   /* 2026-10-14: what the voicemail said, for whoever calls next */
-          vmBox.hidden = false; vmBox.textContent = '';
-          var vt = q('textarea'); vt.rows = 2; vt.maxLength = 400; vt.placeholder = 'What you said in the voicemail (for whoever calls next)'; vt.setAttribute('aria-label', 'What you said in the voicemail');
-          var vs = q('button', 'save', 'Save the voicemail'); vs.type = 'button';
-          vs.addEventListener('click', function () { var v = vt.value.trim(); if (!v) { vt.focus(); return; } b.dataset.note = v; b.click(); });
-          vmBox.appendChild(vt); vmBox.appendChild(vs); setTimeout(function () { try { vt.focus(); } catch (e) {} }, 30);
-          return;
-        }
-        b.disabled = true;
-        var tb = { id: l.id, o: o }; if (o === 'vm') { tb.note = b.dataset.note; delete b.dataset.note; }
-        api('leadtry', { body: tb }).then(function (j) {
-          b.disabled = false;
-          if (j._status === 401) return signinView('Signed out. Enter your code again.');
-          if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
-          (S.leadRedraw || pipelineView)();
-          var n = miss + 1;
-          if ((o === 'none' || o === 'vm') && n >= UNREACH_AT && unreachOk(l)) { unreachAsk(l, n); return; }   /* the third call in a row with no answer (2026-10-21) */
-          toast(TRY_N[o] + ' \u00b7 ' + (l.name || l.phone || ''), (o === 'email' || o === 'text') ? 'Logged. It waits under ' + (o === 'email' ? 'Emailed' : 'Texted') + ' until they reply.' : o === 'talk' ? (asOffice() ? 'Logged. Quote them from the house, then Yes, Call back or No.' : 'Logged. Book the ' + vw() + ' or move it on when you are ready.') : n >= LEAD_TRIES ? n + ' tries with no answer: send a last text or email, then mark it Lost.' : 'Try ' + n + ' of ' + LEAD_TRIES + '. It comes back to try again tomorrow.',
-            function () { api('leadtry', { body: { id: l.id, o: 'undo' } }).then(function () { (S.leadRedraw || pipelineView)(); }); });
-        }).catch(function () { b.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
+        if (x[1]) { delete pick.vm; pick.none = 1; vt.value = 'Voicemail box full, could not leave a message'; }   /* not a voicemail: a no-answer with the reason */
+        else vt.value = vt.value.trim() ? vt.value.trim().replace(/[.\s]*$/, '. ') + x[0] : x[0];
+        paint();
+      });
+      vp.appendChild(b);
+    });
+    vmBox.appendChild(vp); vmBox.appendChild(vt);
+    var toldL = q('label', 'ltold'), toldC = q('input'); toldC.type = 'checkbox'; toldL.appendChild(toldC);
+    toldL.appendChild(document.createTextNode(l.quote ? ' The quote (' + money0(l.quote.price) + ') was in it' : '')); toldL.hidden = true;
+    var acts = q('div', 'ltrysave'), sv = q('button', 'save', 'Save'), err = q('div', 'err'); sv.type = 'button'; acts.appendChild(sv); acts.appendChild(err); acts.hidden = true;
+    var paint = function () {
+      Object.keys(btns).forEach(function (k) { btns[k].setAttribute('aria-pressed', String(!!pick[k])); });
+      vmBox.hidden = !(pick.vm || (pick.none && vt.value.trim()));
+      toldL.hidden = !(l.quote && !l.signed && !quoteGiven(l) && (pick.text || pick.msgr || pick.email || pick.talk || pick.vm));
+      acts.hidden = !Object.keys(pick).length; err.textContent = '';
+    };
+    ['none', 'vm', 'talk', 'text', 'msgr', 'email'].forEach(function (o) {
+      var b = q('button', null, TRY_N[o]); b.type = 'button'; btns[o] = b;
+      b.addEventListener('click', function () {
+        if (pick[o]) delete pick[o]; else { if (CALL.indexOf(o) >= 0) CALL.forEach(function (c) { delete pick[c]; }); pick[o] = 1; }
+        if (o === 'vm' && pick.vm) setTimeout(function () { try { vt.focus(); } catch (e) {} }, 30);
+        paint();
       });
       row.appendChild(b);
     });
-    box.appendChild(row); box.appendChild(vmBox);
-    if (unreachOk(l) && l.status !== 'hold') box.appendChild(recallRow(l));   /* any open lead, called or not (2026-10-22) */   /* a day to call back: Recall (2026-10-21) */
-    if (asOffice() && last && last.o === 'talk') box.appendChild(outcomeBox(l));   /* after talking (2026-10-14) */
+    var send = function (steps, note, quote, btn, after) {
+      btn.disabled = true;
+      return api('leadtry', { body: { id: l.id, steps: steps, note: note, quote: quote ? 1 : 0 } }).then(function (j) {
+        btn.disabled = false;
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        redraw();
+        var call = steps.filter(function (s) { return CALL.indexOf(s) >= 0; })[0], n = miss + (call === 'none' || call === 'vm' ? 1 : 0);
+        if (call && call !== 'talk' && n >= UNREACH_AT && unreachOk(l)) { unreachAsk(l, n); return; }   /* the third call in a row with no answer (2026-10-21) */
+        toast(after || steps.map(function (s) { return TRY_N[s]; }).join(' + ') + ' \u00b7 ' + (l.name || l.phone || ''), call === 'talk' ? (asOffice() && l.status !== 'quoted' ? 'Logged. Quote them from the house, then Yes, Call back or No.' : 'Logged.') : call ? 'Logged. It comes back tomorrow if they do not call back.' : 'Logged. It waits under Texted or messaged until they reply.',
+          function () { api('leadtry', { body: { id: l.id, o: 'undo' } }).then(function () { redraw(); }); });
+      }).catch(function () { btn.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
+    };
+    sv.addEventListener('click', function () {
+      var steps = Object.keys(pick), note = (pick.vm || pick.none) ? vt.value.trim() : '';
+      if (pick.vm && !note) { err.textContent = 'Add what you said in the voicemail, or tap one of the quick ones.'; vt.focus(); return; }
+      send(steps, note, !toldL.hidden && toldC.checked, sv);
+    });
+    box.appendChild(row); box.appendChild(vmBox); box.appendChild(toldL); box.appendChild(acts);
+    /* the quote in writing, logged as it goes (2026-10-28, Jen: "If I generate a quote ... I was either texting it to them or sending to them in the Facebook chat") */
+    if (l.quote && l.quote.price && !l.signed && !l.sign) {
+      var qr = q('div', 'ltryq'); qr.appendChild(q('span', null, quoteGiven(l) ? 'Send it again:' : 'Send the quote:'));
+      var msg = quoteMsg(l);
+      if (tel.length >= 10) { var qa = q('a', 'lnk'); qa.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); qa.appendChild(ico('chat', 2.2)); qa.appendChild(document.createTextNode('Text the quote')); qa.addEventListener('click', function () { send(['text'], '', true, qa, 'Quote texted \u00b7 ' + (l.name || l.phone || '')); }); qr.appendChild(qa); }
+      var qm = q('button', 'lnk', 'Copy for Messenger'); qm.type = 'button';
+      qm.addEventListener('click', function () { try { navigator.clipboard.writeText(msg).then(function () { send(['msgr'], '', true, qm, 'Copied: paste it in Messenger \u00b7 ' + (l.name || '')); }, function () { window.prompt('Copy this, then paste it in Messenger:', msg); send(['msgr'], '', true, qm); }); } catch (e) { window.prompt('Copy this, then paste it in Messenger:', msg); send(['msgr'], '', true, qm); } });
+      qr.appendChild(qm); box.appendChild(qr);
+    }
+    if ((unreachOk(l) && l.status !== 'hold') || (l.status === 'quoted' && !l.sign && !l.signed && (adminView() || asOffice()))) box.appendChild(recallRow(l));   /* + quoted: call back on a day (2026-10-22, now inside the box) */   /* any open lead, called or not (2026-10-22) */   /* a day to call back: Recall (2026-10-21) */
+    if (asOffice() && last && last.o === 'talk' && l.status !== 'quoted') box.appendChild(outcomeBox(l));   /* a quoted lead has They said yes on its card */   /* after talking (2026-10-14) */
     if (t.length) {
       box.appendChild(q('div', 'ltryhist', 'Tried ' + t.length + '\u00d7 \u00b7 ' + t.slice(-3).reverse().map(function (x) { return tryWhen(x.at) + ' ' + TRY_N[x.o].toLowerCase() + ' (' + String(x.by).split(' ')[0] + ')'; }).join(' \u00b7 ') + (t.length > 3 ? ' \u00b7 \u2026' : '')));
       var due = tryDue(l);
@@ -7778,7 +7828,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (l.status === 'won') return q('span', 'qqpill ok', 'Won \u00b7 no form');
       if (l.sign && l.sqpaid && l.sign.pay && l.sqpaid.order === l.sign.pay.order) return q('span', 'qqpill warn', 'Paid \u00b7 not signed');
       if (l.sign) return l.seen && l.seen.n ? q('span', 'qqpill warn', 'Opened ' + l.seen.n + '\u00d7') : q('span', 'qqpill muted', 'Not opened');
-      return q('span', 'qqpill muted', 'Quoted \u00b7 no form');
+      return quoteGiven(l) ? q('span', 'qqpill muted', 'Quote given \u00b7 no form') : quoteOld(l) ? q('span', 'qqpill muted', 'Quoted \u00b7 no form') : q('span', 'qqpill warn', 'Price ready');   /* 2026-10-28 */
     }
     function qqRow(l, cust) {
       var openRow = S.qqOpenRow === l.id, o = l.quote && l.quote.offer;
@@ -7798,7 +7848,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (l.house) det.appendChild(q('div', 'dwsub', streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '')));
         if (l.status === 'won' && !l.signed && !l.confirmed) det.appendChild(q('div', 'qline qyes', 'Won without the form \u00b7 in Customers'));
         else if (l.sign) det.appendChild(signLine(l));
-        else det.appendChild(q('div', 'qline', 'Quoted ' + money0(l.quote.price) + ' \u00b7 no form sent'));
+        else det.appendChild(q('div', 'qline', quoteState(l) + money0(l.quote.price) + ' \u00b7 no form sent'));
+        if (!cust && !l.sign && l.status === 'quoted') det.appendChild(callTries(l, function () { load(); }));   /* her calls and texts after the quote (2026-10-28) */
         if (l.job) {   /* the job and where its money stands (2026-10-19, Matthew: check before charging) */
           var jl = q('div', 'qline' + (l.job.owed < 1 ? ' qyes' : ''), 'Job ' + dayName(l.job.date) + ' \u00b7 ' + (l.job.price ? money0(l.job.price) + ' \u00b7 ' : '') + l.job.pay + ' \u00b7 ' + l.job.card + (l.job.done === 'done' ? ' \u00b7 done' : l.job.done ? ' \u00b7 not done' : ''));
           det.appendChild(jl);

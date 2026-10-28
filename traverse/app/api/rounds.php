@@ -4597,7 +4597,7 @@ function leadsAllRaw(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'mhand', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'mhand', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src', 'qtold'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) {
@@ -8351,18 +8351,34 @@ if ($action === 'leadtry') {
         if (!appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'untry' => end($mine)['at'], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
         out(['ok' => true]);
     }
-    if (!in_array($o, ['none', 'vm', 'talk', 'email', 'text'], true)) fail('Say how it went.');   /* + emailed, texted (2026-10-16) */
-    $row = ['id' => $id, 'try' => $o, 'by' => $me, 'at' => time()];
+    /* several steps in one entry (2026-10-28, Matthew: Jen quotes, texts, calls and leaves a voicemail in one go): steps = what she did, at most
+       one call result (no answer, voicemail, talked), written in that order with one time stamp so Undo takes the whole entry back. A single o
+       (pages from before) is one step. + msgr: messaged on Facebook. quote: the saved price went out with it (Text the quote, Copy for Messenger,
+       or ticked), kept as qtold so the lead reads Quote given instead of Price ready. */
+    $steps = isset($body['steps']) && is_array($body['steps']) ? array_values(array_unique(array_map('strval', $body['steps']))) : [$o];
+    $CALL = ['none', 'vm', 'talk'];
+    if (!$steps || count($steps) > 6 || array_diff($steps, ['none', 'vm', 'talk', 'email', 'text', 'msgr'])) fail('Say how it went.');
+    if (count(array_intersect($steps, $CALL)) > 1) fail('Pick one call result: no answer, voicemail or talked.');
+    usort($steps, fn($a, $b) => (int) in_array($a, $CALL, true) <=> (int) in_array($b, $CALL, true));   /* the texts first, the call last: the call is what decides the next step */
     /* 2026-10-14 (Matthew: "If she left a voicemail she should leave a note as to what the voicemail says incase someone else picks up
        that lead later on"): required for a voicemail, and kept on the lead's notes */
     $tn = $clean($body['note'] ?? '', 400);
-    if ($o === 'vm' && $tn === '') fail('Add what you said in the voicemail, for whoever calls next.');
-    if ($tn !== '') $row['note'] = mb_substr(($o === 'vm' ? 'Voicemail: ' : ($o === 'talk' ? 'Talked: ' : ($o === 'email' ? 'Emailed: ' : ($o === 'text' ? 'Texted: ' : 'No answer: ')))) . $tn, 0, 500);
+    if (in_array('vm', $steps, true) && $tn === '') fail('Add what you said in the voicemail, for whoever calls next.');
+    $t = time(); $rows = [];
+    foreach ($steps as $s) $rows[] = ['id' => $id, 'try' => $s, 'by' => $me, 'at' => $t];
+    $k = count($rows) - 1; $o = $steps[$k];
+    if ($tn !== '') $rows[$k]['note'] = mb_substr(($o === 'vm' ? 'Voicemail: ' : ($o === 'talk' ? 'Talked: ' : ($o === 'email' ? 'Emailed: ' : ($o === 'text' ? 'Texted: ' : ($o === 'msgr' ? 'Messaged: ' : 'No answer: '))))) . $tn, 0, 500);
     /* reached out = Contacted (2026-10-26, Matthew: "when u call someone under their name it says contacted but when u text them it still
-       says new"): talked, texted, emailed or left a voicemail; only a no-answer with nothing left keeps New (as ClickUp's "contacted - vm / sms") */
-    if (in_array($o, ['talk', 'text', 'email', 'vm'], true) && $all[$id]['status'] === 'new') $row['status'] = 'contacted';
-    if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
-    out(['ok' => true]);
+       says new"): talked, texted, messaged, emailed or left a voicemail; only a no-answer with nothing left keeps New (as ClickUp's "contacted - vm / sms") */
+    if (array_intersect($steps, ['talk', 'text', 'email', 'vm', 'msgr']) && $all[$id]['status'] === 'new') $rows[0]['status'] = 'contacted';
+    if (!empty($body['quote'])) {
+        $Q = $all[$id]['quote'] ?? null; if (!$Q || empty($Q['price'])) fail('There is no quote saved to give them.');
+        $how = ''; foreach (['text', 'msgr', 'email', 'talk', 'vm'] as $h) if (in_array($h, $steps, true)) { $how = $h; break; }
+        if ($how === '') fail('Say how they got the price: texted, messaged, emailed, talked or a voicemail.');
+        $rows[$k]['qtold'] = ['price' => (int) $Q['price'], 'how' => $how, 'at' => $t, 'by' => $me];
+    }
+    foreach ($rows as $r) if (!appendLine(leadsDir() . '/leadst.log', $r)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'steps' => $steps]);
 }
 /* ---- the phone quote (2026-10-14, Matthew: Jen calls; no answer, voicemail or talked; she quotes from our lawn data; "the customer
  * either denies it and nothing is sent over or that are good with the quote then she takes in half the deposit and sents over a short
@@ -8376,7 +8392,7 @@ if ($action === 'leadoutcome') {
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     $o = (string) ($body['o'] ?? ''); if (!in_array($o, ['no', 'later'], true)) fail('No, or call back later?');
     $note = $clean($body['note'] ?? '', 400); if ($note === '') fail($o === 'no' ? 'Say why it did not go ahead.' : 'Add a note: what they said, and when to call back.');
-    $row = ['id' => $id, 'status' => $o === 'no' ? 'lost' : 'contacted', 'note' => mb_substr(($o === 'no' ? 'No sale: ' : 'Call back: ') . $note, 0, 500), 'by' => $me, 'at' => time()];
+    $row = ['id' => $id, 'status' => $o === 'no' ? 'lost' : ($all[$id]['status'] === 'quoted' ? 'quoted' : 'contacted'), 'note' => mb_substr(($o === 'no' ? 'No sale: ' : 'Call back: ') . $note, 0, 500), 'by' => $me, 'at' => time()];   /* a quoted lead stays Quoted (2026-10-28) */
     $fd = (string) ($body['follow'] ?? ''); if ($o === 'later' && dateOk($fd)) $row['follow'] = [$fd, ''];
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'status' => $row['status']]);
