@@ -132,6 +132,10 @@ for (const t of metroTowns()) SOURCES.push([t.key, t.label, t.areas, t.group]); 
 /* Group 1 towns (2026-10-26, Matthew: "que up group 1"): group1/registered.json lists them once their door lists are built ({ key, label,
    lat, lon, county }); each is its own town group, so the editions and Sixfold pick it up with every other Colorado group */
 const G1_REG = join(HERE, 'group1', 'registered.json'), G1 = existsSync(G1_REG) ? JSON.parse(readFileSync(G1_REG, 'utf8')) : [];
+/* Group 2 (2026-10-28, Larimer, Mesa, Pueblo; Matthew: "we are almost at a million properties so i wanna hit it"): group2/registered.json,
+   the same shape, added after Group 1 */
+const G2_REG = join(HERE, 'group2', 'registered.json');
+if (existsSync(G2_REG)) G1.push(...JSON.parse(readFileSync(G2_REG, 'utf8')).filter((t) => !G1.some((u) => u.key === t.key)));
 for (const t of G1) if (existsSync(join(HERE, t.key + '-areas.json'))) SOURCES.push([t.key, t.label, t.key + '-areas.json', t.key]);
 
 /* same slug rule as build-walk-tool.mjs, so a door has one id everywhere */

@@ -19,7 +19,7 @@ const KEYF = join(HERE, '..', 'census-key.txt');
 const KEY = process.env.CENSUS_KEY || (existsSync(KEYF) ? readFileSync(KEYF, 'utf8').trim() : '');
 const YEAR = 2024, VER = 'ACS 5-year 2020–2024';
 /* Adams, Arapahoe, Boulder, Broomfield, Denver, Douglas, El Paso, Jefferson, Larimer, Teller, Weld */
-const COUNTIES = ['001', '005', '013', '014', '031', '035', '041', '059', '069', '119', '123'];
+const COUNTIES = ['001', '005', '013', '014', '031', '035', '041', '059', '069', '119', '123', '077', '101'];   /* + Mesa, Pueblo (Group 2, 2026-10-28) */
 const VARS = ['B25003_001E', 'B25003_002E', 'B19013_001E', 'B25035_001E', 'B25077_001E', 'B25039_002E', 'B25002_001E', 'B25002_003E', 'B25024_001E', 'B25024_002E'];
 const TIGER = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/11/query';
 
@@ -36,9 +36,15 @@ if (MDEF) COUNTIES.splice(0, COUNTIES.length, ...MCOUNTIES.map((c) => c.countyFi
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const val = (x) => { const n = +x; return Number.isFinite(n) && n >= 0 ? n : null; };   /* the API's -666666666 etc. = not available */
 
-if (!existsSync(CACHE) || process.argv.includes('--fetch')) {
+/* a county on the list with no block group in the cache (2026-10-28, Mesa and Pueblo for Group 2) is fetched and added; the counties
+   already in the cache are kept as they are (--fetch still re-fetches every county) */
+const OLD = existsSync(CACHE) && !process.argv.includes('--fetch') ? JSON.parse(readFileSync(CACHE, 'utf8')) : null;
+const MISSING = OLD ? COUNTIES.filter((c) => !Object.keys(OLD.bgs).some((id) => id.startsWith(STATE_FIPS + c))) : COUNTIES.slice();
+if (OLD && MISSING.length) COUNTIES.splice(0, COUNTIES.length, ...MISSING);
+if (!OLD || MISSING.length) {
   if (!KEY) throw new Error('no Census key: census-key.txt');
-  const bgs = {};
+  const bgs = OLD ? { ...OLD.bgs } : {};
+  if (OLD) console.log('adding counties to the cache:', MISSING.join(' '));
   for (const c of COUNTIES) {
     const u = `https://api.census.gov/data/${YEAR}/acs/acs5?get=${VARS.join(',')}&for=block%20group:*&in=state:${STATE_FIPS}&in=county:${c}&key=${KEY}`;
     const j = await (await fetch(u)).json(), h = j[0];
@@ -56,7 +62,7 @@ if (!existsSync(CACHE) || process.argv.includes('--fetch')) {
     }
     console.log(`  county ${c}: ${j.length - 1} block groups`); await sleep(300);
   }
-  const shapes = [];
+  const shapes = OLD ? OLD.shapes.slice() : [];
   for (const c of COUNTIES) {
     for (let off = 0; ; off += 1000) {
       const q = new URLSearchParams({ where: `STATE='${STATE_FIPS}' AND COUNTY='${c}'`, outFields: 'GEOID', outSR: '4326', maxAllowableOffset: '0.0002', resultOffset: String(off), resultRecordCount: '1000', f: 'geojson' });

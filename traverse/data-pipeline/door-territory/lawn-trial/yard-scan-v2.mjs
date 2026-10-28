@@ -31,9 +31,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const L = await import('../tree-zones/lidar.mjs');
 const PC = 'https://planetarycomputer.microsoft.com/api', SQFT = 10.7639;
-const SURVEYS = ['CO_DRCOG_2_2020', 'CO_DRCOG_1_2020', 'CO_DRCOG_3_2020', 'CO_Eastern_ElPaso_2018', 'CO_Eastern_B1_2018'];
+/* + Group 2 (2026-10-28): Larimer's and Pueblo's surveys, after the old ones so no measured town changes (tree-zones/lidar.mjs PROJECT) */
+const SURVEYS = ['CO_DRCOG_2_2020', 'CO_DRCOG_1_2020', 'CO_DRCOG_3_2020', 'CO_Eastern_ElPaso_2018', 'CO_Eastern_B1_2018', 'CO_CameronPkFire_1_2021', 'CO_NWCO_2_2020', 'CO_Eastern_B5_2018'];
 const BASE = 'https://s3-us-west-2.amazonaws.com/usgs-lidar-public/';
-const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10, CO_DRCOG_1_2020: 10, CO_Eastern_B1_2018: 9 };
+const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10, CO_DRCOG_1_2020: 10, CO_Eastern_B1_2018: 9, CO_CameronPkFire_1_2021: 9, CO_NWCO_2_2020: 11, CO_Eastern_B5_2018: 10 };
 for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);
 proj4.defs('EPSG:6428', '+proj=lcc +lat_0=37.8333333333333 +lon_0=-105.5 +lat_1=39.75 +lat_2=38.45 +x_0=914401.828803658 +y_0=304800.609601219 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs');
 const get = async (u, o) => { for (let i = 0; i < 3; i++) { try { const r = await fetch(u, o); if (r.ok) return await r.json(); } catch {} await new Promise((ok) => setTimeout(ok, 1200 * (i + 1))); } throw new Error('fetch failed ' + u.slice(0, 70)); };

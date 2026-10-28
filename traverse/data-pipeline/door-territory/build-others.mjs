@@ -13,6 +13,9 @@ const pdf = readFileSync(join(HERE, 'build-walklist-pdf.mjs'), 'utf8');
 const NON_RESIDENTIAL = new RegExp(pdf.match(/const NON_RESIDENTIAL = \/(.+)\/i?;/)[1], 'i');
 const src = readFileSync(join(HERE, 'build-rounds-data.mjs'), 'utf8');
 const TOWNS = [...src.matchAll(/\['([a-z0-9-]+)', '[^']+', '([a-z0-9-]+)-areas\.json'/g)].map((m) => [m[1], m[2]]);
+/* the registered towns (2026-10-28): Group 1 and Group 2 come from group1/ and group2/registered.json, not from the list in
+   build-rounds-data, so the pattern above never saw them */
+for (const g of ['group1', 'group2']) { const f = join(HERE, g, 'registered.json'); if (existsSync(f)) for (const t of JSON.parse(readFileSync(f, 'utf8'))) if (!TOWNS.some(([k]) => k === t.key)) TOWNS.push([t.key, t.key]); }
 const want = process.argv.slice(2);
 const parse = (l) => l.replace(/^"|"$/g, '').split('","');
 const code = (why) => /PO box/i.test(why) ? 'p' : /would not geocode|not be checked|unknown/i.test(why) ? 'u' : 'r';

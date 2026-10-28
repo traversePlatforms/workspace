@@ -47,7 +47,9 @@ const hits = (a, b) => a[0] < b[2] && a[3] > b[0] && a[1] < b[3] && a[4] > b[1];
 export let MAX_DEPTH = +(process.env.LIDAR_MAX_DEPTH || 0);
 /* per survey: the depth whose tiles give ~1 m spacing (El Paso depth 9 ~ 175 m tiles; Douglas
    depth 10 ~ 120 m). Checked 2026-10-02: same answers as full depth on the test lots, ~10x less download. */
-const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10, CO_DRCOG_1_2020: 10, CO_Eastern_B1_2018: 9 };
+/* Group 2 (2026-10-28): Larimer and Pueblo surveys, depth chosen for ~180-220 m tiles as El Paso (group2/probe-lidar-g2.mjs) */
+const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10, CO_DRCOG_1_2020: 10, CO_Eastern_B1_2018: 9,
+  CO_CameronPkFire_1_2021: 9, CO_NWCO_2_2020: 11, CO_DRCOG_3_2020: 10, CO_Eastern_B5_2018: 10 };
 export function setMaxDepth(n) { MAX_DEPTH = n; }
 async function nodesFor(p, box) {
   const e = await eptInfo(p), root = e.bounds, out = [];
@@ -113,6 +115,13 @@ async function loadTile(p, key, cacheDir) {
    Returns { x0, y1, cell, w, h, hgt: Float32Array (NaN = no data), multi: Uint8Array (1 =
    split-pulse returns, i.e. vegetation), top: Float32Array elevations } — row 0 is the north edge. */
 export async function heightGrid(p, box, cell, cacheDir) {
+  /* several surveys, 'A|B|C' (2026-10-28, Group 2: no one survey covers a Larimer town): the first one with returns in the box wins,
+     and the grid carries that survey's year */
+  if (p.includes('|')) {
+    let G = null;
+    for (const s of p.split('|')) { G = await heightGrid(s, box, cell, cacheDir); if (G.hgt.some((v) => !Number.isNaN(v))) return { ...G, yr: G.yr || PROJECT_YEAR[s] || null, survey: s }; }
+    return G;
+  }
   const w = Math.ceil((box[2] - box[0]) / cell), h = Math.ceil((box[3] - box[1]) / cell);
   const top = new Float32Array(w * h).fill(-Infinity), gnd = new Float32Array(w * h).fill(Infinity), multi = new Uint8Array(w * h);
   let yr = null;
@@ -190,8 +199,15 @@ function tellerCells(box, cell, w, h, top, gnd, multi, cacheDir) {
 /* keyed by the label the town lists use: the county where that was all (elpaso, douglas), else the survey block itself
    (2026-10-07, the editions' towns: drcog2 covers Arvada, Centennial, Thornton, Erie, Denver and Commerce City; drcog1 Boulder;
    eastern-b1 Windsor; 2026-10-08 teller: Woodland Park, Divide, Florissant, Cripple Creek from the downloaded files) */
-export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020', drcog2: 'CO_DRCOG_2_2020', drcog1: 'CO_DRCOG_1_2020', 'eastern-b1': 'CO_Eastern_B1_2018', teller: TELLER };
-export const PROJECT_YEAR = { CO_Eastern_ElPaso_2018: 2018, CO_DRCOG_2_2020: 2020, CO_DRCOG_1_2020: 2020, CO_Eastern_B1_2018: 2018 };
+export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_2020', drcog2: 'CO_DRCOG_2_2020', drcog1: 'CO_DRCOG_1_2020', 'eastern-b1': 'CO_Eastern_B1_2018', teller: TELLER,
+  /* Group 2 (2026-10-28, group2/probe-lidar-g2.mjs on the cloud copy): Larimer is covered in patches by four surveys (Loveland's west
+     side, Estes Park, Berthoud, Timnath, Red Feather, Livermore; NOT Fort Collins, Wellington or Laporte), newest first; Pueblo by
+     Eastern B5 around Colorado City, Beulah and Rye only (not the city of Pueblo or Pueblo West). Mesa has no survey in the cloud copy:
+     its towns are keyed 'mesa', which has no entry here, so trees come from the canopy map and roofs and sun are skipped. A door
+     outside every survey gets the canopy map for trees and no roof or sun reading. */
+  larimer: 'CO_CameronPkFire_1_2021|CO_NWCO_2_2020|CO_DRCOG_3_2020|CO_Eastern_B1_2018|CO_DRCOG_2_2020', pueblo: 'CO_Eastern_B5_2018' };
+export const PROJECT_YEAR = { CO_Eastern_ElPaso_2018: 2018, CO_DRCOG_2_2020: 2020, CO_DRCOG_1_2020: 2020, CO_Eastern_B1_2018: 2018,
+  CO_CameronPkFire_1_2021: 2021, CO_NWCO_2_2020: 2020, CO_DRCOG_3_2020: 2020, CO_Eastern_B5_2018: 2018 };
 
 /* ---- the measurement on LiDAR -------------------------------------------------------
    Same zones as zones.mjs. The building outline is first slid (up to 4 m each way) to
@@ -265,7 +281,7 @@ export async function measureLidar(lat, lon, lotRings, house, others, project, c
   const share = (z) => (n[z] ? +(t[z] / n[z]).toFixed(2) : null);
   const ringArea = (rr) => { let a = 0; for (let i = 0, j = rr.length - 1; i < rr.length; j = i++) a += (rr[j][0] + rr[i][0]) * (rr[j][1] - rr[i][1]); return Math.abs(a / 2); };
   const res = { z1: share('z1'), z2: share('z2'), z3: share('z3'), n: [n.z1, n.z2, n.z3], h: Math.round(tallest), hs: Math.round(ringArea(H) * k * k * 10.7639),
-    src: 'lidar', yr: PROJECT_YEAR[project] || null, roof: +roofH.toFixed(1), shift: [+(best[0] * k).toFixed(1), +(best[1] * k).toFixed(1)] };
+    src: 'lidar', yr: (project.includes('|') ? G.yr : PROJECT_YEAR[project]) || null, roof: +roofH.toFixed(1), shift: [+(best[0] * k).toFixed(1), +(best[1] * k).toFixed(1)] };
   if (debug) Object.assign(res, { G, H, zoneOf, treeOf });
   return res;
 }
