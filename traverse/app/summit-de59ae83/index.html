@@ -8,7 +8,7 @@
    mobile", Profile > Layout > Phone): this page shows itself in a phone-wide frame in the middle of the screen. The frame holds the
    same address, so it is the same app and the same sign-in; inside it the screen really is phone-wide, so every phone rule applies.
    The <plaintext> written after the frame swallows the rest of this outer page unrun (an old, dependable way to stop a page). */
-try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.phone')];if(FRW&&window.self===window.top&&Math.min(screen.width,screen.height)>=600){document.write('<style>html,body{margin:0;height:100%;background:#1b2330}body{display:flex;justify-content:center;align-items:stretch}iframe.phonef{width:'+FRW+'px;max-width:100%;height:100%;border:0;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 20px 60px rgba(0,0,0,.45)}</style><iframe class="phonef" title="App" allow="geolocation; camera; clipboard-write" src="'+location.href.replace(/"/g,'%22')+'"></iframe><plaintext style="display:none">')}}catch(e){}</script>
+try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.phone')];var OWNF=false;try{OWNF=window.self!==window.top&&window.parent.location.pathname===location.pathname}catch(e){}if(FRW&&!OWNF&&Math.min(screen.width,screen.height)>=600){document.write('<style>html,body{margin:0;height:100%;background:#1b2330}body{display:flex;justify-content:center;align-items:stretch}iframe.phonef{width:'+FRW+'px;max-width:100%;height:100%;border:0;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 20px 60px rgba(0,0,0,.45)}</style><iframe class="phonef" title="App" allow="geolocation; camera; clipboard-write" src="'+location.href.replace(/"/g,'%22')+'"></iframe><plaintext style="display:none">')}}catch(e){}</script>
 <meta name="robots" content="noindex, nofollow">
 <title>Sixfold Routes</title>
 <!-- home-screen app (2026-10-02): add it once from the browser's share menu and it
@@ -3966,8 +3966,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (!k || !k.ok || !k.url || !k.pass) { sel.disabled = false; sel.value = j.here; toast('Not opened', (k && k.error) || 'Try again.', null); return; }
           /* the whole window moves only when the frame around this page is its own layout preview; inside another page (Matthew's one-window
              hub, 2026-10-22) only this frame moves, so the other tabs stay */
-          var ownFrame = false; try { ownFrame = window.self !== window.top && window.top.location.pathname === location.pathname; } catch (e) {}
-          try { (ownFrame ? window.top : window).location.href = k.url + '#hop=' + encodeURIComponent(k.pass); } catch (e) { location.href = k.url + '#hop=' + encodeURIComponent(k.pass); }
+          var ownFrame = false; try { ownFrame = window.self !== window.top && window.parent.location.pathname === location.pathname; } catch (e) {}
+          try { (ownFrame ? window.parent : window).location.href = k.url + '#hop=' + encodeURIComponent(k.pass); } catch (e) { location.href = k.url + '#hop=' + encodeURIComponent(k.pass); }
         }).catch(function () { sel.disabled = false; sel.value = j.here; toast('Not opened', 'No signal. Try again.', null); });
       });
     }).catch(function () { row.hidden = true; });
@@ -4038,7 +4038,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tab = false; try { tab = Math.min(screen.width, screen.height) >= 600 && !!(window.matchMedia && matchMedia('(pointer: coarse)').matches); } catch (e) {}
     var deskSet = false; try { deskSet = localStorage.getItem('doorapp.desk') === '1'; } catch (e) {}
     /* a computer: a wide screen with a mouse, or this page inside its own phone frame (2026-10-12) */
-    var framed = false; try { framed = window.self !== window.top && window.top.location.pathname === location.pathname; } catch (e) {}
+    var framed = false; try { framed = window.self !== window.top && window.parent.location.pathname === location.pathname; } catch (e) {}   /* parent, not top: inside the hub the app is already a frame (2026-10-27) */
     var comp = false; try { comp = framed || (Math.min(screen.width, screen.height) >= 600 && screen.width >= 1100 && !(window.matchMedia && matchMedia('(pointer: coarse)').matches)); } catch (e) {}
     if (comp && !tab) {
       var pm = q('div', 'lookrow'); pm.appendChild(q('span', null, 'Layout'));
@@ -4050,7 +4050,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.addEventListener('click', function () {
           if (fk === o[0]) return;
           try { if (o[0]) localStorage.setItem('doorapp.phone', o[0]); else localStorage.removeItem('doorapp.phone'); } catch (e) {}
-          try { (framed ? window.top : window).location.reload(); } catch (e) { location.reload(); }
+          try { (framed ? window.parent : window).location.reload(); } catch (e) { location.reload(); }
         });
         pms.appendChild(b);
       });
