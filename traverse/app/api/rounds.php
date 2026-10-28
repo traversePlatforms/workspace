@@ -5881,6 +5881,10 @@ function squareToConfirm(array $pays): array {
        three days of the job is offered as "already recorded", to link */
     $unlinked = []; foreach (jobsAll() as $j) if (!$j['off'] && ($j['pay']['s'] ?? '') === 'paid' && in_array((string) ($j['pay']['how'] ?? ''), ['square', 'card'], true) && empty($j['sqpaid']['payment']) && empty($j['sqcharge']['payment']) && isset($leads[$j['lead']])) $unlinked[] = $j;
     $d10 = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
+    /* done visits on customer cards not tied to a payment yet (2026-10-28, Leann's fall cleanup) */
+    $custs = []; foreach (loadCustomers() as $c) $custs[(string) $c['id']] = $c;
+    $vlinked = []; foreach (squareConfirmed() as $r) if (!empty($r['visit'])) $vlinked[(string) $r['visit']] = 1;
+    $visits = array_filter(loadVisits(), fn($v) => ($v['status'] ?? '') === 'done' && (int) ($v['price'] ?? 0) > 0 && empty($v['sqpay']) && !isset($vlinked[(string) $v['vid']]) && isset($custs[(string) ($v['cid'] ?? '')]));
     foreach ($pays as $p) {
         $id = (string) ($p['id'] ?? '');
         if (($p['status'] ?? '') !== 'COMPLETED' || $id === '' || isset($used[$id]) || isset($usedOrders[(string) ($p['order_id'] ?? '')])) continue;
@@ -5901,6 +5905,18 @@ function squareToConfirm(array $pays): array {
             $cands[] = ['job' => (string) $j['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => $owed, 'price' => (int) $j['price'], 'date' => (string) $j['date'], 'score' => $sc, 'why' => $why];
         }
         $pat = (int) strtotime((string) ($p['created_at'] ?? ''));
+        foreach ($visits as $v) {   /* the exact amount, within 4 days of the visit, the customer matched */
+            $c = $custs[(string) $v['cid']]; $vp = (int) $v['price']; $vd = (int) strtotime((string) ($v['date'] ?? '') . ' 12:00:00');
+            if ($net !== $vp * 100 || !$vd || abs($pat - $vd) > 4 * 86400) continue;
+            $why = []; $sc = 0; $ck = nameKey((string) ($c['name'] ?? ''));
+            if (strlen($cu['phone']) === 10 && $cu['phone'] === $d10($c['phone'] ?? '')) { $sc += 3; $why[] = 'same phone'; }
+            if ($em !== '' && $em === strtolower(trim((string) ($c['email'] ?? '')))) { $sc += 3; $why[] = 'same email'; }
+            if ($nk !== '' && substr_count($nk, ' ') >= 1 && $nk === $ck) { $sc += 3; $why[] = 'same name'; }
+            elseif ($first !== '' && $ck !== '' && explode(' ', $ck)[0] === $first) { $sc += 1; $why[] = 'same first name'; }
+            if ($sc < 1) continue;
+            $sc += 2; $why[] = 'the exact $' . $vp . ' for the visit'; if (abs($pat - $vd) <= 86400) { $sc += 1; $why[] = 'paid the day of the visit'; }
+            $cands[] = ['visit' => (string) $v['vid'], 'name' => (string) ($c['name'] ?? ''), 'owed' => 0, 'price' => $vp, 'date' => (string) $v['date'], 'score' => $sc, 'isvisit' => true, 'svc' => mb_substr(trim((string) ($v['note'] ?? '')), 0, 60), 'why' => $why];
+        }
         foreach ($unlinked as $j) {
             $jd = (int) strtotime((string) $j['date'] . ' 12:00:00');
             if ($net !== (int) $j['price'] * 100 || abs($pat - $jd) > 4 * 86400) continue;
@@ -6173,7 +6189,7 @@ if ($action === 'squareconfirm') {
     if (!feature('walkdesk') || !desk() || !$isPost) fail('Not allowed.', 403);
     $pid = (string) ($body['payment'] ?? ''); $act = (string) ($body['act'] ?? '');
     if (!preg_match('/^[A-Za-z0-9]{4,64}$/D', $pid)) fail('No such payment.');
-    if (!in_array($act, ['full', 'part', 'ignore', 'link', 'newjob'], true)) fail('Pick what to do with it.');
+    if (!in_array($act, ['full', 'part', 'ignore', 'link', 'newjob', 'visit'], true)) fail('Pick what to do with it.');
     $clk = @fopen(squareConfirmFile() . '.lock', 'c'); if (!$clk || !flock($clk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     if (isset(squareConfirmed()[$pid])) fail('Someone already confirmed that payment.', 409);
     [$used] = squarePayUsed(); if (isset($used[$pid])) fail('That payment is already counted on a job.', 409);
@@ -6198,6 +6214,13 @@ if ($action === 'squareconfirm') {
         appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'note' => 'Job added from their Square payment of $' . $net . ': done and paid in full.', 'by' => $me, 'at' => $t + 3] + (($l['status'] ?? '') !== 'won' ? ['status' => 'won'] : []));
         ensureBookedCustomers();
         $row['job'] = $jid; $res['job'] = $jid; $res['date'] = $day; $res['crew'] = $crew;
+    } elseif ($act === 'visit') {   /* a visit logged on a customer card (2026-10-28, Leann's $50 fall cleanup): the payment is for it; the visit line is copied forward with it, who logged the visit unchanged */
+        $vid = (string) ($body['visit'] ?? ''); $V = loadVisits()[$vid] ?? null;
+        if (!$V || ($V['status'] ?? '') !== 'done') fail('No such visit.', 404);
+        if (!empty($V['sqpay'])) fail('That visit already has its Square payment.', 409);
+        foreach (squareConfirmed() as $r) if (($r['visit'] ?? '') === $vid) fail('That visit already has its Square payment.', 409);
+        if (!appendLine(custDir() . '/visits.log', array_merge($V, ['sqpay' => ['payment' => $pid, 'amt' => $net, 'by' => $me, 'at' => time()]]))) fail('Could not save that. Try again.', 500);
+        $row['visit'] = $vid; $res['visit'] = $vid;
     } elseif ($act === 'link') {   /* the job was marked paid by hand: tie this payment to it, nothing owed changes (2026-10-20) */
         $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
         if (!$j || $j['off']) fail('No such job.', 404);

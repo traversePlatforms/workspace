@@ -7894,6 +7894,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             var ask = kind === 'full' ? 'Mark ' + c.name + '\u2019s job paid in full with this ' + money0(x.amt) + (Math.round(x.amt) !== c.owed ? ' (it showed ' + money0(c.owed) + ' owed)' : '') + '?'
               : kind === 'part' ? 'Record ' + money0(x.amt) + ' as a part payment on ' + c.name + '\u2019s job? ' + money0(c.owed - Math.round(x.amt)) + ' stays owed.'
               : kind === 'link' ? 'Tie this ' + money0(x.amt) + ' payment to ' + c.name + '\u2019s job, already marked paid? Nothing owed changes.'
+              : kind === 'visit' ? 'Tie this ' + money0(x.amt) + ' payment to ' + c.name + '\u2019s visit on ' + dayName(c.date) + (c.svc ? ' (' + c.svc + ')' : '') + '? It shows as paid on that visit.'
               : kind === 'newjob' ? c.name + ' has no job on the board yet. Add one for the day they paid, marked done and paid in full with this ' + money0(x.amt) + '? You can change the crew or day on the job after.'
               : 'Set this ' + money0(x.amt) + ' payment aside as not one of ours? It will not be offered again.';
             var svc = '';
@@ -7902,16 +7903,20 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (!svc) return;
             } else if (!window.confirm(ask)) return;
             btn.disabled = true;
-            api('squareconfirm', { body: { payment: x.payment, act: kind, job: c ? c.job || '' : '', lead: c ? c.lead || '' : '', svc: svc } }).then(function (r) {
+            api('squareconfirm', { body: { payment: x.payment, act: kind, job: c ? c.job || '' : '', lead: c ? c.lead || '' : '', visit: c ? c.visit || '' : '', svc: svc } }).then(function (r) {
               btn.disabled = false;
               if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
-              toast(kind === 'ignore' ? 'Set aside' : kind === 'newjob' ? 'Job added, done and paid' : kind === 'link' ? 'Linked' : kind === 'full' ? 'Marked paid' : 'Part payment recorded', kind === 'part' ? money0(r.tot) + ' paid so far \u00b7 ' + money0(r.left) + ' left' : (x.name || ''), null);
+              toast(kind === 'ignore' ? 'Set aside' : kind === 'visit' ? 'Linked to the visit' : kind === 'newjob' ? 'Job added, done and paid' : kind === 'link' ? 'Linked' : kind === 'full' ? 'Marked paid' : 'Part payment recorded', kind === 'part' ? money0(r.tot) + ' paid so far \u00b7 ' + money0(r.left) + ' left' : (x.name || ''), null);
               if (redraw) redraw(); else draw();
             }).catch(function () { btn.disabled = false; toast('No signal', 'Not saved.', null); });
           };
           if (!(x.cands || []).length) row.appendChild(q('div', 'sqcnone', 'No job owing matches this person. Find their job and record it there, or set it aside.'));
           (x.cands || []).forEach(function (c) {
             var cr = q('div', 'sqccand');
+            if (c.isvisit) {   /* a visit on their customer card (2026-10-28) */
+              var tv = q('div'); tv.appendChild(q('b', null, c.name + ' \u00b7 visit ' + dayName(c.date) + (c.svc ? ' (' + c.svc + ')' : '') + ' \u00b7 ' + money0(c.price))); tv.appendChild(q('small', null, c.why.join(', '))); cr.appendChild(tv);
+              var bsv = q('div', 'sqcbtns'), bv = q('button', 'save', 'It\u2019s for this visit: link it'); bv.type = 'button'; bv.addEventListener('click', function () { act('visit', c, bv); }); bsv.appendChild(bv); cr.appendChild(bsv); row.appendChild(cr); return;
+            }
             var t = q('div'); t.appendChild(q('b', null, c.name + ' \u00b7 ' + (c.nojob ? (c.price ? 'quoted ' + money0(c.price) : 'no quote saved') : c.done ? 'already paid (' + money0(c.price) + ')' : money0(c.owed) + ' owed'))); t.appendChild(q('small', null, (c.nojob ? '' : 'Job ' + dayName(c.date) + ' \u00b7 ') + c.why.join(', '))); cr.appendChild(t);
             var bs = q('div', 'sqcbtns');
             if (c.nojob) { var bn = q('button', 'save', 'Book it as done and paid'); bn.type = 'button'; bn.addEventListener('click', function () { act('newjob', c, bn); }); bs.appendChild(bn); cr.appendChild(bs); row.appendChild(cr); return; }   /* no job on the board yet (2026-10-26, Marc S.) */
@@ -13682,7 +13687,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var v = x.v;
       var r = q('div', 'door cvisit' + (v.status === 'booked' ? ' booked' : ''));
       var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', fmtD(v.date) + ' · ' + (SERVICE_L[v.service] || v.service))); if (v.price != null) top.appendChild(q('span', 'vprice', money(v.price))); r.appendChild(top);
-      r.appendChild(q('div', 'meta', (v.status === 'booked' ? 'Booked' : 'Done') + (v.by ? ' · ' + v.by : '') + (v.note ? ' · ' + v.note : '')));
+      r.appendChild(q('div', 'meta', (v.status === 'booked' ? 'Booked' : 'Done') + (v.by ? ' · ' + v.by : '') + (v.note ? ' · ' + v.note : '') + (v.sqpay ? ' · paid (Square)' : '')));   /* + paid, once its Square payment is tied to it (2026-10-28) */
       var del = q('button', 'lnk danger', 'Remove'); del.type = 'button';
       del.addEventListener('click', function () { if (!window.confirm('Remove this visit from ' + c.name + '’s history?')) return; api('visitsave', { body: { cid: c.id, vid: v.vid, del: true } }).then(function (j) { if (!j.ok) { toast('Not removed', j.error || 'Try again.', null); return; } customerView(c.id); }).catch(function () { toast('No signal', 'Not removed. Try again when you have signal.', null); }); });
       if (S.role === 'admin') r.appendChild(del);   /* removing a visit is the admin's */
