@@ -1650,7 +1650,7 @@ $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
 if (($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true)) || in_array($action, ['clickuppoll', 'metapoll'], true))   /* the polls run as GET too */
-    register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll') { try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } try { followupSweep(); } catch (Throwable $e) { error_log('rounds: follow-up emails: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll; + the follow-up emails (2026-10-27) */
+    register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll') { try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } try { followupSweep(); } catch (Throwable $e) { error_log('rounds: follow-up emails: ' . $e->getMessage()); } try { nlSweep(); } catch (Throwable $e) { error_log('rounds: newsletter: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll; + the follow-up emails (2026-10-27) */
 $body = [];
 if ($isPost) {
     $raw = file_get_contents('php://input') ?: '';
@@ -2068,7 +2068,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron', 'nlsweep'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -2820,12 +2820,12 @@ function a365MailCfg(): ?array {
 }
 function a365MimeH(string $s): string { return preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s; }
 /** one message through Gmail as 365's mailbox, text and HTML; never throws. [ok, stage, error] */
-function a365Mail(string $to, string $subject, string $text, string $html): array {
+function a365Mail(string $to, string $subject, string $text, string $html, array $extra = []): array {   /* $extra: more header lines, e.g. List-Unsubscribe on the newsletter (2026-10-28) */
     $c = a365MailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     if (!$c) return $fail('config', 'no 365 mailbox set up yet (sixfold-private/a365-mail.json)');
     /* a test copy only (2026-10-27, the follow-up email's tests): "dryrun": true in the mailbox file writes each message to a365-dryrun.log
        beside it and sends nothing. Never set on a live install. */
-    if (!empty($c['dryrun'])) return appendLine(dirname(__DIR__, 2) . '/sixfold-private/a365-dryrun.log', ['at' => time(), 'to' => $to, 'subject' => $subject, 'text' => $text, 'html' => $html]) ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('dryrun', 'could not write the dry-run log');
+    if (!empty($c['dryrun'])) return appendLine(dirname(__DIR__, 2) . '/sixfold-private/a365-dryrun.log', ['at' => time(), 'to' => $to, 'subject' => $subject, 'text' => $text, 'html' => $html, 'headers' => $extra]) ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('dryrun', 'could not write the dry-run log');
     $fp = @stream_socket_client('tcp://smtp.gmail.com:587', $errno, $errstr, 20); if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
     stream_set_timeout($fp, 20);
     $read = function () use ($fp): array { $lines = []; while (true) { $l = @fgets($fp, 2048); if ($l === false) return [0, 'connection closed']; $lines[] = rtrim($l, "\r\n"); if (strlen($l) < 4 || $l[3] !== '-') break; } $last = (string) end($lines); return [(int) substr($last, 0, 3), implode(' | ', $lines)]; };
@@ -2847,6 +2847,7 @@ function a365Mail(string $to, string $subject, string $text, string $html): arra
     $eol = "\r\n"; $bd = 'a3' . bin2hex(random_bytes(8));
     $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) ($c['from_name'] ?? (company()['a365']['name'] ?? '365 Aeration & Seeding'))) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
           'Message-ID: <' . bin2hex(random_bytes(12)) . '@365aeration.com>', 'MIME-Version: 1.0', 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
+    foreach ($extra as $xh) if (is_string($xh) && preg_match('/^[A-Za-z-]{2,40}: [^\r\n]{1,900}$/D', $xh)) $h[] = $xh;
     $payload = implode($eol, $h) . $eol . $eol
         . '--' . $bd . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($text), 76, $eol)
         . '--' . $bd . $eol . 'Content-Type: text/html; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($html), 76, $eol)
@@ -2993,6 +2994,117 @@ if ($action === 'sitelead') {
     out(['ok' => true, 'id' => $row['id']]);
 }
 
+/* ---- the monthly newsletter (2026-10-28, Matthew: the 1st of each month, to customers only; Claude drafts each issue, Matthew approves it) ----
+ * Issues in newsletter.json (subject, preheader, body in a little plain markup), each sent only once approved, on its date (the 1st of the
+ * next month, 9 am Denver), by the 5-minute job, about one a second, picking up where it stopped; one log line per person
+ * (newsletter-sent-<issue>.log) and a summary to Matthew at the end. To every customer with an email who has not unsubscribed; never leads.
+ * Every email carries a one-click unsubscribe link (signed, public, nlunsub) and the postal mailing address (CAN-SPAM); with no address saved,
+ * or no 365 mailbox, nothing is approved or sent. An issue can be loaded from a JSON file dropped in newsletter-inbox/ (picked up by the
+ * same job, as a draft) or saved by an admin through nlsave. */
+function nlFile(): string { return DATA_DIR . '/newsletter.json'; }
+function nlLoad(): array { $j = json_decode((string) @file_get_contents(nlFile()), true); return ['issues' => array_values(array_filter((array) ($j['issues'] ?? []), 'is_array')), 'address' => (string) ($j['address'] ?? '')]; }
+function nlEdit(callable $fn): array { $lk = @fopen(nlFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) return nlLoad(); $d = $fn(nlLoad()); writeJsonAtomic(nlFile(), $d); flock($lk, LOCK_UN); return $d; }
+function nlAddress(): string { $a = trim(nlLoad()['address']); return $a !== '' ? $a : trim((string) (company()['a365']['postal'] ?? '')); }
+function nlUnsubs(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/newsletter-unsub.json'), true); return is_array($j) ? $j : []; }
+function nlToken(string $email): string { global $sessionKey; $e = strtolower(trim($email)); return b64u($e) . '.' . substr(hash_hmac('sha256', 'nlunsub|' . $e, $sessionKey), 0, 20); }
+function nlUnsubUrl(string $email): string { $h = (string) ($_SERVER['HTTP_HOST'] ?? ''); if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) $h = 'traverseplatforms.com'; return (PHP_SAPI === 'cli-server' ? 'http' : 'https') . '://' . $h . '/api/' . basename(__FILE__) . '?action=nlunsub&t=' . nlToken($email); }
+/** who it goes to: customers with an email, one per address, not unsubscribed, no test names */
+function nlRecipients(): array {
+    $un = nlUnsubs(); $o = [];
+    foreach (loadCustomers() as $c) {
+        $e = strtolower(trim((string) ($c['email'] ?? ''))); if ($e === '' || !filter_var($e, FILTER_VALIDATE_EMAIL) || isset($un[$e]) || isset($o[$e])) continue;
+        if (preg_match('/\btest\b|claude/i', (string) ($c['name'] ?? ''))) continue;
+        $o[$e] = ['email' => $e, 'name' => trim((string) ($c['name'] ?? '')), 'cid' => (string) $c['id']];
+    }
+    return array_values($o);
+}
+/** the first of next month at 9 am, the install's clock */
+function nlNextFirst(?int $now = null): int { $tz = new DateTimeZone(appTz()); $d = (new DateTime('@' . ($now ?? time())))->setTimezone($tz); return (new DateTime($d->format('Y-m-01') . ' 09:00', $tz))->modify('+1 month')->getTimestamp(); }
+/** one issue as [subject, text, html] for one person. Markup: # heading, ## smaller heading, - list lines, [text](https://link), **bold**, ![alt](https://image) on its own line (two at most) */
+function nlRender(array $is, string $to, bool $test = false): array {
+    $co = company()['a365'] ?? []; $name = (string) (($co['name'] ?? '') ?: (company()['name'] ?? '')); $ph = (string) ($co['phone'] ?? (company()['phone'] ?? '')); $web = (string) ($co['web'] ?? '');
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
+    $inline = function (string $t) use ($e) { $t = $e($t); $t = preg_replace('/\*\*(.+?)\*\*/', '<b>$1</b>', $t); return preg_replace_callback('/\[([^\]]{1,200})\]\((https:\/\/[^\s)]{4,500})\)/', fn($m) => '<a href="' . $m[2] . '" style="color:#2e5e2c">' . $m[1] . '</a>', $t); };
+    $plain = fn(string $t) => preg_replace('/\[([^\]]{1,200})\]\((https:\/\/[^\s)]{4,500})\)/', '$1 ($2)', str_replace('**', '', $t));
+    $h = ''; $t = ''; $imgs = 0;
+    foreach (preg_split('/\n\s*\n/', str_replace("\r\n", "\n", trim((string) ($is['body'] ?? '')))) as $blk) {
+        $blk = trim($blk); if ($blk === '') continue;
+        if (preg_match('/^!\[([^\]]{0,200})\]\((https:\/\/[^\s)]{4,500})\)$/D', $blk, $m)) { if (++$imgs <= 2) $h .= '<p style="margin:0 0 16px"><img src="' . $e($m[2]) . '" alt="' . $e($m[1]) . '" style="max-width:100%;height:auto;border-radius:12px;display:block"></p>'; continue; }
+        if (preg_match('/^(#{1,2}) (.+)$/D', $blk, $m)) { $h .= '<div style="font-size:' . ($m[1] === '#' ? '20' : '17') . 'px;font-weight:800;color:#21451f;margin:6px 0 10px">' . $inline($m[2]) . '</div>'; $t .= mb_strtoupper($plain($m[2])) . "\n\n"; continue; }
+        $lines = explode("\n", $blk);
+        if (count(array_filter($lines, fn($l) => preg_match('/^\s*- /', $l))) === count($lines)) { $h .= '<ul style="margin:0 0 16px;padding-left:20px">' . implode('', array_map(fn($l) => '<li style="margin:0 0 6px">' . $inline(preg_replace('/^\s*- /', '', $l)) . '</li>', $lines)) . '</ul>'; $t .= implode("\n", array_map($plain, $lines)) . "\n\n"; continue; }
+        $h .= '<p style="margin:0 0 16px">' . implode('<br>', array_map($inline, $lines)) . '</p>'; $t .= $plain($blk) . "\n\n";
+    }
+    $un = nlUnsubUrl($to); $addr = nlAddress();
+    $why = 'You are getting this because you are a ' . $name . ' customer.';
+    $text = ($test ? "[TEST: what each customer gets]\n\n" : '') . trim($t) . "\n\n--\n" . $name . ($ph !== '' ? ' · ' . $ph : '') . ($web !== '' ? ' · ' . $web : '') . "\n" . $why . "\nUnsubscribe: " . $un . "\n" . $addr . "\n";
+    $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
+          . '<div style="display:none;max-height:0;overflow:hidden;opacity:0">' . $e((string) ($is['pre'] ?? '')) . '</div>'
+          . '<div style="max-width:600px;margin:0 auto;padding:24px 18px"><div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:16px">' . $e($name) . '</div>' . $h
+          . '<div style="margin-top:28px;padding-top:14px;border-top:1px solid #dfe6da;color:#5a6858;font-size:12px;line-height:1.5">' . $e($name) . ($ph !== '' ? ' · ' . $e($ph) : '') . ($web !== '' ? ' · ' . $e($web) : '') . '<br>' . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</div>'
+          . '</div></body></html>';
+    return [($test ? '[Test] ' : '') . (string) ($is['subject'] ?? ''), $text, $html, ['List-Unsubscribe: <' . $un . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']];
+}
+/** an issue from a file or an admin: subject, preheader, body; a new draft (never approved by loading it) */
+function nlClean(array $in): array {
+    $c = fn($v, $n) => mb_substr(trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", (string) $v))), 0, $n);
+    return ['subject' => $c($in['subject'] ?? '', 150), 'pre' => $c($in['pre'] ?? ($in['preheader'] ?? ''), 200), 'body' => $c($in['body'] ?? '', 20000)];
+}
+/** the 5-minute job's part (metapoll): drafts dropped in newsletter-inbox/, then approved issues whose time has come, about one a second for 45 seconds a run */
+function nlSweep(?int $now = null, int $budget = 45): array {
+    if (!feature('walkdesk') || empty(company()['a365'])) return ['skipped' => 'not here'];
+    $now = $now ?? time(); $out = ['imported' => 0, 'sent' => 0];
+    foreach ((glob(DATA_DIR . '/newsletter-inbox/*.json') ?: []) as $f) {   /* a draft from a file: imported once, the file renamed */
+        $in = json_decode((string) @file_get_contents($f), true); @rename($f, $f . '.imported');
+        if (!is_array($in) || trim((string) ($in['subject'] ?? '')) === '') continue;
+        $is = nlClean($in) + ['id' => 'n' . bin2hex(random_bytes(5)), 'by' => 'file ' . basename($f), 'at' => $now, 'approved' => null, 'sent' => null];
+        nlEdit(function ($d) use ($is) { $d['issues'][] = $is; return $d; }); $out['imported']++;
+    }
+    $lk = @fopen(DATA_DIR . '/newsletter-send.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return $out + ['skipped' => 'busy'];
+    $d = nlLoad(); $t0 = microtime(true);
+    foreach ($d['issues'] as $is) {
+        $ap = $is['approved'] ?? null; $sent = $is['sent'] ?? null;
+        if (!is_array($ap) || (int) ($ap['for'] ?? 0) > $now || (is_array($sent) && !empty($sent['done']))) continue;
+        if (!a365MailCfg()) return $out + ['skipped' => 'no 365 mailbox'];
+        if (nlAddress() === '') return $out + ['skipped' => 'no mailing address'];
+        $id = (string) $is['id']; $logf = DATA_DIR . '/newsletter-sent-' . preg_replace('/[^a-z0-9]/', '', $id) . '.log';
+        if (!is_array($sent)) { $sent = ['start' => $now, 'queue' => array_column(nlRecipients(), 'email'), 'n' => 0, 'ok' => 0, 'bad' => 0, 'done' => false]; nlEdit(function ($dd) use ($id, $sent) { foreach ($dd['issues'] as &$x) if ($x['id'] === $id) $x['sent'] = $sent; unset($x); return $dd; }); }
+        $done = []; foreach (readLines($logf) as $r) $done[strtolower((string) $r['id'])] = true;   /* 'id' = the address: resumable */
+        $un = nlUnsubs();
+        foreach ((array) $sent['queue'] as $em) {
+            if (isset($done[$em])) continue;
+            if (microtime(true) - $t0 > $budget) break 2;
+            if (isset($un[$em])) { appendLine($logf, ['id' => $em, 'ok' => false, 'stage' => 'unsubscribed', 'at' => time()]); $done[$em] = true; continue; }
+            [$s, $tx, $ht, $hd] = nlRender($is, $em);
+            $r = a365Mail($em, $s, $tx, $ht, $hd);
+            appendLine($logf, ['id' => $em, 'ok' => $r['ok'], 'stage' => $r['stage'], 'at' => time()]); $done[$em] = true; $out['sent'] += $r['ok'] ? 1 : 0;
+            if (PHP_SAPI === 'cli' && !getenv('NL_FAST')) usleep(1000000);   /* NL_FAST: the test copy only */   /* about one a second */
+        }
+        $ok = 0; $bad = 0; foreach (readLines($logf) as $r) { if (!empty($r['ok'])) $ok++; else $bad++; }
+        $fin = count(array_diff((array) $sent['queue'], array_keys($done))) === 0;
+        nlEdit(function ($dd) use ($id, $ok, $bad, $fin) { foreach ($dd['issues'] as &$x) if ($x['id'] === $id) { $x['sent']['ok'] = $ok; $x['sent']['bad'] = $bad; $x['sent']['n'] = $ok + $bad; if ($fin) { $x['sent']['done'] = true; $x['sent']['end'] = time(); } } unset($x); return $dd; });
+        if ($fin) a365Alert('Newsletter sent: ' . (string) $is['subject'], $ok . ' sent' . ($bad ? ', ' . $bad . ' not sent (see the Newsletter screen)' : '') . '.', true, false, true);   /* the summary to Matthew */
+    }
+    flock($lk, LOCK_UN);
+    return $out;
+}
+/* unsubscribe: the link in every newsletter, public, one click; a plain page saying it is done (and the one-click POST mail apps send) */
+if ($action === 'nlunsub') {
+    header('Cache-Control: no-store'); header('X-Robots-Tag: noindex');
+    $tk = (string) ($_GET['t'] ?? ''); $ok = false; $em = '';
+    if (preg_match('/^([A-Za-z0-9_-]{4,400})\.([0-9a-f]{20})$/D', $tk, $m)) { $em = strtolower((string) b64u_dec($m[1])); $ok = filter_var($em, FILTER_VALIDATE_EMAIL) && hash_equals(nlToken($em), $tk); }
+    if ($ok && throttleTake(rateFile('nlunsub|' . clientKey()), 30, 3600)) {
+        $f = DATA_DIR . '/newsletter-unsub.json'; $lk = @fopen($f . '.lock', 'c');
+        if ($lk && flock($lk, LOCK_EX)) { $u = nlUnsubs(); if (!isset($u[$em])) { $u[$em] = ['at' => time(), 'how' => ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' ? 'one-click' : 'link']; writeJsonAtomic($f, $u); } flock($lk, LOCK_UN); }
+    }
+    $nm = (string) ((company()['a365']['name'] ?? '') ?: company()['name']); $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribed</title></head><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c"><div style="max-width:520px;margin:60px auto;padding:0 18px">'
+       . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($nm) . '</div>'
+       . ($ok ? '<p>You are unsubscribed. ' . $e($em) . ' will not get our newsletter again.</p><p style="color:#5a6858;font-size:14px">If that was a mistake, reply to any of our emails and we will add you back.</p>' : '<p>This unsubscribe link does not look right. Reply to the email and we will take you off the list.</p>')
+       . '</div></body></html>';
+    exit;
+}
 /* everything past here needs a session */
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
@@ -3018,7 +3130,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -6407,6 +6519,61 @@ if ($action === 'receipt' || $action === 'receiptmail') {
     appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'rcpt' => ['to' => $to, 'at' => time(), 'by' => $me], 'by' => $me, 'at' => time()]);
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Receipt emailed to ' . $to . ' by ' . $me . '.', 'by' => $me, 'at' => time()]);
     out(['ok' => true, 'to' => $to, 'rcpt' => ['to' => $to, 'at' => time(), 'by' => $me]]);
+}
+/* the Newsletter screen (2026-10-28): admins. Issues, the mailing address, a preview, Send me a test, Approve for the 1st, Unapprove, add someone back */
+if (in_array($action, ['nlist', 'nlsave', 'nldel', 'nlpreview', 'nltest', 'nlapprove', 'nlsettings', 'nlresub'], true)) {
+    if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $myMail = (string) (($acct['email'] ?? [])[(string) ($session['c'] ?? '')] ?? '');
+    $issue = function (string $id) { foreach (nlLoad()['issues'] as $x) if (($x['id'] ?? '') === $id) return $x; fail('No such issue.', 404); };
+    $view = function () use ($myMail) {
+        $d = nlLoad(); $n = count(nlRecipients());
+        return ['ok' => true, 'issues' => array_reverse(array_map(fn($x) => $x + ['sentInfo' => is_array($x['sent'] ?? null) ? array_diff_key($x['sent'], ['queue' => 1]) + ['of' => count((array) ($x['sent']['queue'] ?? []))] : null], $d['issues'])),
+                'address' => nlAddress(), 'recipients' => $n, 'unsubs' => count(nlUnsubs()), 'mail' => (bool) a365MailCfg(), 'email' => $myMail, 'nextFirst' => nlNextFirst()];
+    };
+    if ($action === 'nlist') out($view());
+    if ($action === 'nlpreview') { [$s, $t, $h] = nlRender($issue((string) ($_GET['id'] ?? '')), $myMail ?: 'you@example.com'); out(['ok' => true, 'subject' => $s, 'text' => $t, 'html' => $h, 'recipients' => count(nlRecipients())]); }
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? '');
+    if ($action === 'nlsave') {   /* new, or a change to a draft; an approved issue is unapproved first */
+        $in = nlClean($body); if ($in['subject'] === '') fail('Give the issue a subject.'); if ($in['body'] === '') fail('Write the body.');
+        if ($id !== '') { $x = $issue($id); if (!empty($x['approved'])) fail('Unapprove it before changing it.'); if (!empty($x['sent'])) fail('This issue has gone out.'); }
+        $nid = $id !== '' ? $id : 'n' . bin2hex(random_bytes(5));
+        nlEdit(function ($d) use ($nid, $in, $id, $me) { if ($id === '') $d['issues'][] = $in + ['id' => $nid, 'by' => $me, 'at' => time(), 'approved' => null, 'sent' => null]; else foreach ($d['issues'] as &$x) if ($x['id'] === $id) $x = array_merge($x, $in, ['by' => $me, 'at' => time()]); unset($x); return $d; });
+        out($view() + ['id' => $nid]);
+    }
+    if ($action === 'nldel') { $x = $issue($id); if (!empty($x['sent'])) fail('This issue has gone out; it stays on the list.'); nlEdit(function ($d) use ($id) { $d['issues'] = array_values(array_filter($d['issues'], fn($y) => $y['id'] !== $id)); return $d; }); out($view()); }
+    if ($action === 'nlsettings') {
+        $a = mb_substr(trim((string) preg_replace('/[\x00-\x09\x0B-\x1F\x7F]/', ' ', str_replace("\r\n", "\n", (string) ($body['address'] ?? '')))), 0, 300);
+        nlEdit(function ($d) use ($a) { $d['address'] = $a; return $d; }); accountLog(['by' => $me, 'what' => 'newsletter mailing address']); out($view());
+    }
+    if ($action === 'nlresub') {   /* an admin adds someone back who unsubscribed */
+        $em = strtolower(trim((string) ($body['email'] ?? ''))); $f = DATA_DIR . '/newsletter-unsub.json'; $lk = @fopen($f . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that.', 500);
+        $u = nlUnsubs(); if (!isset($u[$em])) fail('That address is not unsubscribed.'); unset($u[$em]); writeJsonAtomic($f, $u); accountLog(['by' => $me, 'what' => 'newsletter: added back', 'email' => $em]); out($view());
+    }
+    $x = $issue($id);
+    if ($action === 'nltest') {
+        if ($myMail === '') fail('Save your own email first (Follow-up email screen): the test goes only to you.');
+        if (!throttleTake(rateFile('nltest|' . (string) ($session['c'] ?? '')), 20, 3600)) fail('That is a lot of tests in an hour.', 429);
+        [$s, $t, $h, $hd] = nlRender($x, $myMail, true); $r = a365Mail($myMail, $s, $t, $h, $hd);
+        out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
+    }
+    if ($action === 'nlapprove') {
+        if (!empty($x['sent'])) fail('This issue has gone out.');
+        if (!empty($body['on'])) {
+            if (nlAddress() === '') fail('Add the business mailing address first: the law (CAN-SPAM) needs one in every newsletter, so nothing is approved or sent without it.');
+            if (trim((string) $x['subject']) === '' || trim((string) $x['body']) === '') fail('The issue needs a subject and a body.');
+            $for = nlNextFirst(); foreach (nlLoad()['issues'] as $y) if ($y['id'] !== $id && (int) ($y['approved']['for'] ?? 0) === $for && empty($y['sent'])) fail('Another issue is already approved for that day. Unapprove it first.');
+            $ap = ['for' => $for, 'by' => $me, 'at' => time()];
+        } else $ap = null;
+        nlEdit(function ($d) use ($id, $ap) { foreach ($d['issues'] as &$y) if ($y['id'] === $id) $y['approved'] = $ap; unset($y); return $d; });
+        accountLog(['by' => $me, 'what' => $ap ? 'newsletter approved' : 'newsletter unapproved', 'issue' => $id]);
+        out($view());
+    }
+}
+if ($action === 'nlsweep') {   /* the newsletter by hand from the command line (2026-10-28); now= a time, for the tests */
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    out(['ok' => true] + nlSweep(isset($_GET['now']) ? (int) $_GET['now'] : null));
 }
 /* Brad's two lines on a job (2026-10-27): Work they want done, Work I'd suggest. The crew on the job, the office, or Jen on a job she
    manages; about 500 characters each; Matthew's phones hear about a new line from the crew, as with a job note */

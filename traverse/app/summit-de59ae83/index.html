@@ -4264,6 +4264,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
+        CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and colour, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* the quote and agreement kit (2026-10-27) */
@@ -6582,6 +6583,58 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     w.appendChild(r);
     if (!to) w.appendChild(q('div', 'ltrynote', 'No email on file: print the receipt or save it as a PDF to send.'));
     return w;
+  }
+  /* the Newsletter screen (2026-10-28, Matthew: the 1st of each month to customers only; Claude drafts each issue, Matthew approves it): the
+     issues, each with a preview, Send me a test, the number it goes to, and Approve for the 1st at 9 am / Unapprove; the mailing address
+     every email must carry; nothing goes without approval, the address and the 365 mailbox */
+  function newsletterView(openId) {
+    hideToast(); S.signin = null; S.screen = 'newsletter'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Newsletter', sub: 'The 1st of each month, to customers', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = ''; var w = q('div', 'card jnform nlview'); w.appendChild(q('div', 'skel')); view.appendChild(w);
+    var fmtAt = function (t) { return new Date(t * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+    api('nlist').then(function (j) {
+      w.textContent = '';
+      if (!j || !j.ok) { w.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      w.appendChild(q('div', 'sub2', 'Goes to ' + j.recipients + (j.recipients === 1 ? ' customer' : ' customers') + ' with an email (never leads), less ' + j.unsubs + ' who unsubscribed. Only an approved issue goes, on its day, about one email a second.'));
+      if (!j.mail) w.appendChild(q('div', 'msg bad', 'The 365 mailbox is not set up on the server yet, so nothing can be sent. Previews work.'));
+      if (!j.address) w.appendChild(q('div', 'msg bad', 'No mailing address yet. The law (CAN-SPAM) needs the business’s postal address in every newsletter, so nothing is approved or sent until it is saved below.'));
+      w.appendChild(q('h2', 'tgrp', 'Mailing address'));
+      var ad = q('textarea'); ad.rows = 2; ad.maxLength = 300; ad.value = j.address || ''; ad.placeholder = 'Street, city, state, ZIP (or a PO box)'; ad.setAttribute('aria-label', 'Mailing address'); w.appendChild(ad);
+      var adS = q('button', 'lnk', 'Save the address'); adS.type = 'button'; adS.addEventListener('click', function () { api('nlsettings', { body: { address: ad.value.trim() } }).then(function (k) { if (!k.ok) { toast('Not saved', k.error || '', null); return; } toast('Saved', 'The mailing address', null); newsletterView(); }).catch(function () { toast('No signal', 'Not saved.', null); }); }); w.appendChild(adS);
+      w.appendChild(q('h2', 'tgrp', 'Issues'));
+      var nw = q('button', 'addlead', '+ New issue'); nw.type = 'button'; nw.addEventListener('click', function () { nw.hidden = true; w.insertBefore(nlForm(null), nw.nextSibling); }); w.appendChild(nw);
+      if (!j.issues.length) w.appendChild(q('div', 'msg soft', 'No issues yet. Start one, or a draft dropped on the server shows up here within five minutes.'));
+      j.issues.forEach(function (x) {
+        var c = q('div', 'door lead nlrow'); c.appendChild(q('div', 'addr', x.subject || '(no subject)'));
+        var si = x.sentInfo, st = si ? (si.done ? 'Sent ' + fmtAt(si.end) + ': ' + si.ok + ' sent' + (si.bad ? ', ' + si.bad + ' not sent' : '') : 'Sending: ' + si.n + ' of ' + si.of) : x.approved ? 'Approved for ' + fmtAt(x.approved.for) + ' by ' + strtokName(x.approved.by) : 'Draft' + (x.by ? ' by ' + x.by : '');
+        c.appendChild(q('div', 'meta', st)); if (x.pre) c.appendChild(q('div', 'sub2', x.pre));
+        var acts = q('div', 'aacts'), pv = q('div', 'fupv'); var b = function (t, fn, cls) { var bt = q('button', 'lnk' + (cls ? ' ' + cls : ''), t); bt.type = 'button'; bt.addEventListener('click', fn); acts.appendChild(bt); return bt; };
+        b('Preview', function () { pv.textContent = ''; api('nlpreview', { params: { id: x.id } }).then(function (p) { if (!p.ok) { pv.appendChild(q('div', 'msg bad', p.error || '')); return; } pv.appendChild(q('div', 'sub2', 'Subject: ' + p.subject + ' · to ' + p.recipients + ' customers')); var fr = document.createElement('iframe'); fr.className = 'fuframe'; fr.setAttribute('sandbox', ''); fr.title = 'The newsletter as it would look'; fr.srcdoc = p.html; pv.appendChild(fr); }).catch(function () {}); });
+        b('Send me a test', function () { if (!j.email) { toast('Your email first', 'Save it on the Follow-up email screen: the test goes only to you.', null); return; } api('nltest', { body: { id: x.id } }).then(function (k) { toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || ''), null); }).catch(function () {}); });
+        if (!si) {
+          if (!x.approved) {
+            b('Change', function () { c.appendChild(nlForm(x)); });
+            b('Approve for ' + new Date(j.nextFirst * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + ', 9 am', function () { if (!window.confirm('Approve “' + x.subject + '”? It goes to ' + j.recipients + ' customers on ' + fmtAt(j.nextFirst) + '.')) return; api('nlapprove', { body: { id: x.id, on: true } }).then(function (k) { if (!k.ok) { toast('Not approved', k.error || '', null); return; } toast('Approved', 'Goes ' + fmtAt(j.nextFirst), null); newsletterView(); }).catch(function () {}); });
+            b('Delete', function () { if (!window.confirm('Delete this draft?')) return; api('nldel', { body: { id: x.id } }).then(function (k) { if (!k.ok) { toast('Not deleted', k.error || '', null); return; } newsletterView(); }).catch(function () {}); }, 'danger');
+          } else b('Unapprove', function () { api('nlapprove', { body: { id: x.id, on: false } }).then(function (k) { if (!k.ok) { toast('Not done', k.error || '', null); return; } toast('Unapproved', 'It will not go out', null); newsletterView(); }).catch(function () {}); });
+        }
+        c.appendChild(acts); c.appendChild(pv); w.appendChild(c);
+      });
+      w.appendChild(q('h2', 'tgrp', 'Add someone back'));
+      var rr = q('div', 'jnrow'), re = q('input'); re.type = 'email'; re.placeholder = 'Their email'; re.setAttribute('aria-label', 'Email to add back');
+      var rb = q('button', 'lnk', 'Add back'); rb.type = 'button'; rb.addEventListener('click', function () { api('nlresub', { body: { email: re.value.trim() } }).then(function (k) { toast(k.ok ? 'Added back' : 'Not done', k.ok ? re.value.trim() : (k.error || ''), null); if (k.ok) newsletterView(); }).catch(function () {}); });
+      rr.appendChild(re); rr.appendChild(rb); w.appendChild(rr); w.appendChild(q('div', 'sub2', 'Only for someone who asks to get it again: unsubscribed people stay off otherwise.'));
+    }).catch(function () { w.textContent = ''; w.appendChild(q('div', 'msg bad', 'No connection.')); });
+  }
+  function nlForm(x) {
+    var f = q('div', 'phf nlform'), sb = q('input'), pr = q('input'), bd = q('textarea'), err = q('div', 'err');
+    sb.maxLength = 150; sb.value = x ? x.subject : ''; pr.maxLength = 200; pr.value = x ? x.pre || '' : ''; bd.rows = 14; bd.maxLength = 20000; bd.value = x ? x.body : '';
+    [['Subject', sb], ['Preheader (the line after the subject in the inbox)', pr], ['Body', bd]].forEach(function (p) { var lb = q('label', null, p[0]); lb.appendChild(p[1]); f.appendChild(lb); });
+    f.appendChild(q('div', 'sub2', 'Simple formatting: # heading, ## smaller heading, a blank line between paragraphs, lines starting "- " for a list, [words](https://link) for a link, **bold**, and up to two images on their own line as ![what it shows](https://image-address).'));
+    var row = q('div', 'row2'), sv = q('button', 'save', 'Save'), cx = q('button', null, 'Cancel'); sv.type = cx.type = 'button'; row.appendChild(sv); row.appendChild(cx); f.appendChild(err); f.appendChild(row);
+    sv.addEventListener('click', function () { sv.disabled = true; api('nlsave', { body: { id: x ? x.id : '', subject: sb.value, pre: pr.value, body: bd.value } }).then(function (k) { sv.disabled = false; if (!k.ok) { err.textContent = k.error || 'Not saved.'; return; } toast('Saved', sb.value, null); newsletterView(); }).catch(function () { sv.disabled = false; err.textContent = 'No signal: nothing was saved.'; }); });
+    cx.addEventListener('click', function () { newsletterView(); });
+    return f;
   }
   /* the company switch, the preview and Send me a test (2026-10-27): admins. Off until Matthew turns it on. */
   function followupMailView() {
@@ -10155,7 +10208,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      A screen opened from the Office keeps the Office menu beside it, and Office stays lit in the top bar, until another place is
      picked from the top bar or Home. Computers only (a phone has no side menu). Each screen draws as it always has; whatever it
      puts in the page is moved into the frame as it lands, so nothing about the screens themselves changed. */
-  var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1, followupmail: 1 };
+  var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1, followupmail: 1, newsletter: 1 };
   function officeFramed() { return !!S.inOffice && !!OFFICE_SCREENS[S.screen] && S.screen !== 'office' && dnavOn(); }
   var officeObs = window.MutationObserver ? new MutationObserver(function () { officeFrame(); }) : null;
   function officeFrame() {
@@ -18047,6 +18100,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : mgrOn() ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
+      S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
       S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */
