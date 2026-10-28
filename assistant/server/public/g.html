@@ -5,139 +5,234 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#13294b">
+<meta name="theme-color" content="#4b1f78">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Groceries">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="gro-icon-180.png">
+<link rel="icon" href="raccoon.svg" type="image/svg+xml">
+<link rel="manifest" href="gro-manifest.json">
 <title>Groceries</title>
 <!-- The shared grocery list (2026-10-27, Matthew: "Something simple that we can add remove and check off. Something my girlfriend and I can
-     share."). Matthew opens it from the assistant (signed in); she opens it with the private link ?t=..., which reaches this list only.
-     It refreshes itself every few seconds, so a change on one phone shows on the other. -->
+     share."). Matthew opens it from the assistant (signed in); Claire signs in here with her own password, which opens this list only.
+     King Soopers prices (Federal & Belleview) on picked items, and an estimated total. Refreshes every few seconds. -->
 <style>
-  :root{--bg:#f4f6f9;--card:#fff;--ink:#0f1b2d;--soft:#566476;--faint:#8592a3;--line:#dce2ea;--btn:#d6400c;--on-btn:#fff;--bar:#13294b;--ok:#1f7a3a}
-  @media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#18253b;--ink:#e8edf5;--soft:#a3b0c2;--faint:#7d8a9c;--line:#3d5070;--btn:#ff7a45;--on-btn:#0b1220;--bar:#0e1b30;--ok:#5fcf7f;color-scheme:dark}}
+  :root{--bg:#f6f2fb;--card:#fff;--ink:#1e1430;--soft:#5f5470;--faint:#8b80a0;--line:#e3dbef;--btn:#7b3fc4;--on-btn:#fff;--bar:#4b1f78;--ok:#7b3fc4;--sale:#c0392b}   /* purple: Claire's favourite (Matthew 2026-10-27) */
+  @media (prefers-color-scheme:dark){:root{--bg:#140c1f;--card:#22162f;--ink:#efe8f8;--soft:#b6a8c9;--faint:#8c7fa0;--line:#40305a;--btn:#b48cf0;--on-btn:#140c1f;--bar:#2e1450;--ok:#b48cf0;--sale:#ff8a7a;color-scheme:dark}}
   *{box-sizing:border-box}
+  a{color:var(--btn)}
   body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
   header{background:var(--bar);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
   header h1{margin:0;font-size:20px}
+  header .brand{display:flex;align-items:center;gap:10px}
+  header .brand img{width:46px;height:46px;flex:none}
+  .login .rac{display:block;width:96px;height:96px;margin:0 auto 10px}
   header .sub{font-size:12px;color:#c9d5e6}
   header button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:8px 12px;font:600 14px system-ui,sans-serif;cursor:pointer;min-height:40px}
   main{max-width:560px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
-  form{display:flex;gap:8px;margin-bottom:14px}
-  input[type=text]{flex:1;min-width:0;font:16px system-ui,sans-serif;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+  form.addf{display:flex;gap:8px;margin-bottom:10px}
+  input[type=text],input[type=password]{flex:1;min-width:0;font:16px system-ui,sans-serif;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   .add{background:var(--btn);color:var(--on-btn);border:0;border-radius:10px;padding:0 18px;font:700 16px system-ui,sans-serif;cursor:pointer;min-height:48px}
+  .total{display:flex;justify-content:space-between;align-items:baseline;margin:4px 4px 12px;font-size:14px;color:var(--soft)}
+  .total b{font-size:18px;color:var(--ink)}
   ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  li{display:flex;align-items:center;gap:10px;padding:4px 6px 4px 12px;border-top:1px solid var(--line);min-height:52px}
+  li{display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-top:1px solid var(--line);min-height:56px}
   li:first-child{border-top:0}
   li label{flex:1;min-width:0;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:44px}
   li label>span{min-width:0;overflow-wrap:anywhere}
   li input[type=checkbox]{width:24px;height:24px;flex:none;accent-color:var(--ok)}
   li.done .txt{text-decoration:line-through;color:var(--faint)}
   li .by{font-size:11px;color:var(--faint);display:block}
-  li .x{background:none;border:0;color:var(--faint);font-size:22px;line-height:1;width:44px;height:44px;cursor:pointer;border-radius:8px}
+  .pr{flex:none;text-align:right;background:none;border:0;color:var(--ink);font:600 15px system-ui,sans-serif;cursor:pointer;padding:6px 4px;min-width:64px;min-height:44px}
+  .pr small{display:block;font-weight:400;font-size:11px;color:var(--faint)}
+  .pr .sale{color:var(--sale)}
+  .pr .was{text-decoration:line-through;color:var(--faint);font-weight:400;font-size:12px}
+  .pr.find{color:var(--btn);font-size:13px}
+  li .x{background:none;border:0;color:var(--faint);font-size:22px;line-height:1;width:40px;height:44px;cursor:pointer;border-radius:8px;flex:none}
   li .x:hover{color:var(--btn)}
   .h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:18px 4px 6px;display:flex;justify-content:space-between;align-items:center}
   .h button{background:none;border:0;color:var(--btn);font:600 13px system-ui,sans-serif;cursor:pointer;padding:6px;text-transform:none;letter-spacing:0}
-  .empty{color:var(--soft);text-align:center;padding:28px 12px}
-  .msg{color:var(--btn);font-size:14px;min-height:20px;margin:-6px 4px 8px}
-  .share{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14px;color:var(--soft)}
-  .share b{color:var(--ink)}
-  .share .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  .share button{background:var(--bar);color:#fff;border:0;border-radius:8px;padding:10px 14px;font:600 14px system-ui,sans-serif;cursor:pointer;min-height:44px}
-  .share button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
-  .name{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--soft);margin:-4px 4px 12px}
-  .name input{flex:none;width:140px;padding:6px 8px;font-size:14px}
-  .gone{padding:40px 16px;text-align:center;color:var(--soft)}
+  .empty{color:var(--soft);justify-content:center}
+  .msg{color:var(--btn);font-size:14px;min-height:20px;margin:0 4px 6px}
+  .panel{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14px;color:var(--soft)}
+  .panel b{color:var(--ink)}
+  .panel form{display:flex;gap:8px;margin-top:10px}
+  .panel button,.login button{background:var(--bar);color:#fff;border:0;border-radius:8px;padding:10px 14px;font:600 14px system-ui,sans-serif;cursor:pointer;min-height:44px}
+  .login{max-width:360px;margin:40px auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+  .login h2{margin:0 0 6px;font-size:20px}
+  .login p{color:var(--soft);margin:0 0 14px;font-size:14px}
+  .login form{display:grid;gap:10px}
+  .pick{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:5}
+  .pickbox{background:var(--card);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+  .pickbox h3{margin:0 0 4px;font-size:17px}
+  .pickbox .s{color:var(--soft);font-size:13px;margin-bottom:10px}
+  .pickbox form{display:flex;gap:8px;margin-bottom:10px}
+  .opt{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:12px 4px;color:var(--ink);font:15px system-ui,sans-serif;cursor:pointer}
+  .opt small{display:block;color:var(--faint);font-size:12px}
+  .opt .p{flex:none;font-weight:700;text-align:right}
+  .pickfoot{display:flex;justify-content:space-between;margin-top:12px}
+  .pickfoot button{background:none;border:0;color:var(--btn);font:600 14px system-ui,sans-serif;cursor:pointer;padding:8px}
+  .foot{font-size:12px;color:var(--faint);text-align:center;margin-top:18px}
+  .foot button{background:none;border:0;color:var(--soft);text-decoration:underline;font:12px system-ui,sans-serif;cursor:pointer}
 </style>
 </head>
 <body>
-<header><div><h1>Groceries</h1><div class="sub" id="sub">Shared list</div></div><button type="button" id="back" hidden>Assistant</button></header>
-<main id="main">
-  <form id="f" autocomplete="off"><input type="text" id="t" placeholder="Add an item" aria-label="Add an item" maxlength="120" enterkeyhint="done"><button class="add" type="submit">Add</button></form>
-  <div class="msg" id="msg" role="status"></div>
-  <div class="name" id="namebox" hidden>Your name on the list: <input type="text" id="who" maxlength="20" placeholder="Your name"></div>
-  <ul id="todo"></ul>
-  <div id="donebox" hidden><div class="h"><span>Checked off</span><button type="button" id="clear">Clear checked</button></div><ul id="done"></ul></div>
-  <div class="share" id="share" hidden></div>
-</main>
+<header><div class="brand"><img src="raccoon.svg" alt=""><div><h1>Groceries</h1><div class="sub" id="sub">Shared list</div></div></div><button type="button" id="back" hidden>Assistant</button></header>
+<main id="main"></main>
 <script>
 (function () {
-  var T = new URLSearchParams(location.search).get('t') || '';
-  var rev = -1, owner = false, busy = 0;
-  var $ = function (id) { return document.getElementById(id); };
-  var msg = function (s) { $('msg').textContent = s || ''; };
-  var who = function () { try { return localStorage.getItem('groWho') || ''; } catch (e) { return ''; } };
-  function api(action, body) {
-    var url = 'api.php?action=' + action + (T && !body ? '&t=' + encodeURIComponent(T) : '');
-    var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ t: T, who: who() }, body)) } : {};
-    return fetch(url, Object.assign({ credentials: 'same-origin', cache: 'no-store' }, o)).then(function (r) { return r.json().then(function (j) { j._status = r.status; return j; }); });
+  var rev = -1, owner = false, busy = 0, timer = null, store = '', prices = false, items = [];
+  var main = document.getElementById('main');
+  var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  var money = function (n) { return '$' + Number(n).toFixed(2); };
+  var cost = function (p) { return p ? (p.promo != null ? p.promo : p.price) : null; };
+  function api(action, body, q) {
+    var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
+    return fetch('api.php?action=' + action + (q || ''), Object.assign({ credentials: 'same-origin', cache: 'no-store' }, o))
+      .then(function (r) { return r.json().then(function (j) { j._status = r.status; return j; }); });
   }
-  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  /* sign in: Claire's own password (grocery list only) */
+  function login(err) {
+    clearInterval(timer); timer = null; main.textContent = '';
+    document.getElementById('back').hidden = true; document.getElementById('sub').textContent = 'Shared list';
+    var b = el('div', 'login'), rac = el('img', 'rac'); rac.src = 'raccoon.svg'; rac.alt = ''; b.appendChild(rac); b.appendChild(el('h2', null, 'Sign in'));
+    b.appendChild(el('p', null, 'Enter your password to open the grocery list.'));
+    var f = el('form'), pw = el('input'), go = el('button', null, 'Sign in'), m = el('div', 'msg', err || '');
+    pw.type = 'password'; pw.autocomplete = 'current-password'; pw.placeholder = 'Password'; pw.setAttribute('aria-label', 'Password'); go.type = 'submit';
+    f.appendChild(pw); f.appendChild(go); b.appendChild(f); b.appendChild(m);
+    var a = el('p', null, 'Matthew? '); var al = el('a', null, 'Sign in to the assistant'); al.href = './'; a.appendChild(al); a.style.marginTop = '14px'; b.appendChild(a);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); go.disabled = true; m.textContent = '';
+      api('grologin', { password: pw.value }).then(function (j) { go.disabled = false; if (!j.ok) { m.textContent = j.error || 'Try again.'; return; } start(); }, function () { go.disabled = false; m.textContent = 'No connection. Try again.'; });
+    });
+    main.appendChild(b); pw.focus();
+  }
+  function shell() {
+    main.textContent = '';
+    var f = el('form', 'addf'), t = el('input'), a = el('button', 'add', 'Add');
+    f.autocomplete = 'off'; t.type = 'text'; t.id = 't'; t.placeholder = 'Add an item'; t.setAttribute('aria-label', 'Add an item'); t.maxLength = 120; t.setAttribute('enterkeyhint', 'done'); a.type = 'submit';
+    f.appendChild(t); f.appendChild(a); main.appendChild(f);
+    f.addEventListener('submit', function (e) { e.preventDefault(); var v = t.value.trim(); if (!v) return; t.value = ''; change('groadd', { text: v }); t.focus(); });
+    main.appendChild(el('div', 'msg')).id = 'msg';
+    var tot = el('div', 'total'); tot.id = 'total'; main.appendChild(tot);
+    var ul = el('ul'); ul.id = 'todo'; main.appendChild(ul);
+    var db = el('div'); db.id = 'donebox'; db.hidden = true;
+    var h = el('div', 'h'); h.appendChild(el('span', null, 'Checked off')); var cl = el('button', null, 'Clear checked'); cl.type = 'button'; cl.addEventListener('click', function () { change('groclear', {}); }); h.appendChild(cl);
+    db.appendChild(h); var dl = el('ul'); dl.id = 'done'; db.appendChild(dl); main.appendChild(db);
+    var pn = el('div', 'panel'); pn.id = 'panel'; pn.hidden = true; main.appendChild(pn);
+    var ft = el('div', 'foot'); ft.id = 'foot'; main.appendChild(ft);
+  }
+  var msg = function (s) { var m = document.getElementById('msg'); if (m) m.textContent = s || ''; };
+  function priceBtn(it) {
+    var b = el('button', 'pr'); b.type = 'button';
+    var p = it.pick;
+    if (p && p.price != null) {
+      if (p.promo != null) { b.appendChild(el('span', 'sale', money(p.promo))); b.appendChild(el('small', 'was', money(p.price))); }
+      else b.appendChild(document.createTextNode(money(p.price)));
+      if (p.size) b.appendChild(el('small', null, p.size));
+      b.title = p.desc; b.setAttribute('aria-label', 'Price for ' + it.text + ': ' + p.desc + '. Change');
+    } else { b.className = 'pr find'; b.textContent = prices ? 'Find price' : ''; if (!prices) b.hidden = true; }
+    b.addEventListener('click', function () { picker(it); });
+    return b;
+  }
   function row(it) {
     var li = el('li', it.done ? 'done' : ''), lb = el('label'), cb = el('input'), sp = el('span');
     cb.type = 'checkbox'; cb.checked = !!it.done;
     cb.addEventListener('change', function () { change('groset', { id: it.id, done: cb.checked }); });
     sp.appendChild(el('span', 'txt', it.text));
-    if (it.by) sp.appendChild(el('span', 'by', (it.done && it.doneBy ? 'Checked by ' + it.doneBy : 'Added by ' + it.by)));
+    var by = it.done && it.doneBy ? 'Checked by ' + it.doneBy : (it.by ? 'Added by ' + it.by : '');
+    if (it.pick && it.pick.desc) by = it.pick.desc + (by ? ' · ' + by : '');
+    if (by) sp.appendChild(el('span', 'by', by));
     lb.appendChild(cb); lb.appendChild(sp); li.appendChild(lb);
+    li.appendChild(priceBtn(it));
     var x = el('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + it.text);
     x.addEventListener('click', function () { change('grodel', { id: it.id }); });
     li.appendChild(x);
     return li;
   }
   function draw(j) {
-    rev = j.rev; owner = !!j.owner;
-    var todo = j.items.filter(function (i) { return !i.done; }), done = j.items.filter(function (i) { return i.done; });
-    $('todo').textContent = ''; $('done').textContent = '';
-    if (!todo.length) { var e = el('li', 'empty', done.length ? 'Everything is checked off.' : 'Nothing on the list yet.'); $('todo').appendChild(e); }
-    todo.forEach(function (i) { $('todo').appendChild(row(i)); });
-    done.forEach(function (i) { $('done').appendChild(row(i)); });
-    $('donebox').hidden = !done.length;
-    $('sub').textContent = todo.length ? todo.length + ' to get' : 'Shared list';
-    $('back').hidden = !owner; $('namebox').hidden = owner;
-    if (owner && $('share').hidden) shareBox();
+    rev = j.rev; owner = !!j.owner; store = j.store || ''; prices = !!j.prices; items = j.items;
+    var todo = items.filter(function (i) { return !i.done; }), done = items.filter(function (i) { return i.done; });
+    var T = document.getElementById('todo'), D = document.getElementById('done');
+    T.textContent = ''; D.textContent = '';
+    if (!todo.length) { var e = el('li', 'empty'); e.appendChild(el('span', null, done.length ? 'Everything is checked off.' : 'Nothing on the list yet.')); T.appendChild(e); }
+    todo.forEach(function (i) { T.appendChild(row(i)); });
+    done.forEach(function (i) { D.appendChild(row(i)); });
+    document.getElementById('donebox').hidden = !done.length;
+    var sum = 0, priced = 0; todo.forEach(function (i) { var c = cost(i.pick); if (c != null) { sum += c; priced++; } });
+    var tot = document.getElementById('total'); tot.textContent = '';
+    if (prices && todo.length) {
+      var l = el('span', null, store + (priced < todo.length ? ' · ' + (todo.length - priced) + ' without a price' : ''));
+      var r = el('span'); r.appendChild(document.createTextNode('About ')); r.appendChild(el('b', null, money(sum)));
+      tot.appendChild(l); tot.appendChild(r);
+    }
+    document.getElementById('sub').textContent = todo.length ? todo.length + ' to get' : 'Shared list';
+    document.getElementById('back').hidden = !owner;
+    var ft = document.getElementById('foot'); ft.textContent = '';
+    if (prices) ft.appendChild(el('div', null, 'Prices from ' + store + ', checked every few hours. Shelf prices can differ.'));
+    if (!owner) { var so = el('button', null, 'Sign out of ' + (j.who || 'the list')); so.type = 'button'; so.addEventListener('click', function () { api('grologout', {}).then(function () { login(); }); }); ft.appendChild(so); }
+    if (owner && document.getElementById('panel').hidden) claireBox();
   }
-  function load() { if (busy) return; api('gro').then(function (j) { if (!j.ok) { gone(j); return; } if (j.rev !== rev) draw(j); }).catch(function () {}); }
+  function claireBox() {
+    var s = document.getElementById('panel'); s.hidden = false; s.textContent = '';
+    s.appendChild(el('b', null, 'Claire’s login'));
+    var info = el('div', null, 'Give Claire a password for the grocery list. It opens only this list, nothing else in your assistant. She signs in at traverseplatforms.com/a-e018bb82/g.html and stays signed in on her phone.');
+    s.appendChild(info);
+    api('grousers').then(function (j) { if (j.ok && j.users.some(function (u) { return u.name === 'Claire'; })) info.appendChild(el('div', null, 'Claire has a password. Setting a new one signs her out until she uses it.')); });
+    var f = el('form'), pw = el('input'), go = el('button', null, 'Set password'); pw.type = 'password'; pw.autocomplete = 'new-password'; pw.placeholder = 'Her password (8+ characters)'; pw.setAttribute('aria-label', 'Claire’s password'); go.type = 'submit';
+    f.appendChild(pw); f.appendChild(go); s.appendChild(f);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); go.disabled = true;
+      api('gropass', { name: 'Claire', password: pw.value }).then(function (j) { go.disabled = false; if (!j.ok) { msg(j.error || 'Not saved.'); return; } pw.value = ''; msg('Claire’s password is set. Tell her in person or by text.'); claireBox(); }, function () { go.disabled = false; msg('No connection. Try again.'); });
+    });
+  }
+  /* pick the product for an item, from the store's matches */
+  function picker(it) {
+    var bg = el('div', 'pick'), bx = el('div', 'pickbox');
+    bx.appendChild(el('h3', null, 'Price for “' + it.text + '”'));
+    bx.appendChild(el('div', 's', store + '. Pick the one you buy; it’s remembered next time.'));
+    var f = el('form'), q = el('input'), go = el('button', 'add', 'Search'); q.type = 'text'; q.value = it.text; q.setAttribute('aria-label', 'Search'); go.type = 'submit';
+    f.appendChild(q); f.appendChild(go); bx.appendChild(f);
+    var res = el('div'); bx.appendChild(res);
+    var foot = el('div', 'pickfoot'), none = el('button', null, 'No price for this'), close = el('button', null, 'Close');
+    none.type = close.type = 'button'; foot.appendChild(it.pick ? none : el('span')); foot.appendChild(close); bx.appendChild(foot);
+    var shut = function () { bg.remove(); };
+    close.addEventListener('click', shut); bg.addEventListener('click', function (e) { if (e.target === bg) shut(); });
+    none.addEventListener('click', function () { shut(); change('gropick', { id: it.id }); });
+    var search = function () {
+      res.textContent = ''; res.appendChild(el('div', 's', 'Looking at the store…'));
+      api('grosearch', null, '&q=' + encodeURIComponent(q.value.trim())).then(function (j) {
+        res.textContent = '';
+        if (!j.ok) { res.appendChild(el('div', 's', j.error || 'Try again.')); return; }
+        if (!j.results.length) { res.appendChild(el('div', 's', 'Nothing found. Try other words.')); return; }
+        j.results.forEach(function (p) {
+          var o = el('button', 'opt'); o.type = 'button';
+          var l = el('span'); l.appendChild(document.createTextNode(p.desc)); if (p.size) l.appendChild(el('small', null, p.size)); o.appendChild(l);
+          var r = el('span', 'p', p.price == null ? 'no price' : money(cost(p))); if (p.promo != null) r.appendChild(el('small', null, 'on sale, was ' + money(p.price))); o.appendChild(r);
+          o.addEventListener('click', function () { shut(); change('gropick', { id: it.id, productId: p.productId }); });
+          res.appendChild(o);
+        });
+      }, function () { res.textContent = ''; res.appendChild(el('div', 's', 'No connection. Try again.')); });
+    };
+    f.addEventListener('submit', function (e) { e.preventDefault(); search(); });
+    bg.appendChild(bx); document.body.appendChild(bg); search();
+  }
+  function load() { if (busy) return; api('gro').then(function (j) { if (j._status === 401) { login(); return; } if (j.ok && j.rev !== rev) draw(j); }).catch(function () {}); }
   function change(action, body) {
     busy++; msg('');
-    api(action, body).then(function (j) { busy--; if (!j.ok) { if (j._status === 401) gone(j); else msg(j.error || 'Not saved. Try again.'); return; } draw(j); })
+    api(action, body).then(function (j) { busy--; if (j._status === 401) { login(); return; } if (!j.ok) { msg(j.error || 'Not saved. Try again.'); return; } draw(j); })
       .catch(function () { busy--; msg('No connection. Try again.'); load(); });
   }
-  function gone(j) {
-    $('main').textContent = '';
-    var g = el('div', 'gone', T ? (j && j.error ? j.error : 'This link no longer works.') : 'Sign in to your assistant first. ');
-    if (!T) { var a = el('a', null, 'Open the assistant'); a.href = './'; g.appendChild(a); }
-    $('main').appendChild(g);
-    clearInterval(timer);
+  function start() {
+    api('gro').then(function (j) {
+      if (j._status === 401) { login(); return; }
+      if (!j.ok) { login(j.error); return; }
+      shell(); rev = -1; draw(j);
+      if (!timer) timer = setInterval(function () { if (!document.hidden) load(); }, 5000);
+    }, function () { main.textContent = ''; main.appendChild(el('div', 'login', 'No connection. Pull down to try again.')); });
   }
-  function shareBox() {
-    var s = $('share'); s.hidden = false; s.textContent = '';
-    s.appendChild(el('b', null, 'Share this list'));
-    s.appendChild(el('div', null, 'Send this link to your girlfriend. It opens only the grocery list, nothing else in your assistant. On her iPhone: open it in Safari, then Share → Add to Home Screen.'));
-    var r = el('div', 'row'), c = el('button', null, 'Copy her link'), n = el('button', 'alt', 'Make a new link');
-    c.type = n.type = 'button';
-    var link = function (t) { return location.origin + location.pathname.replace(/[^/]*$/, '') + 'g.html?t=' + t; };
-    c.addEventListener('click', function () {
-      api('groshare', {}).then(function (j) { if (!j.ok) { msg(j.error || 'Try again.'); return; } var u = link(j.t);
-        (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { msg('Link copied. Text it to her.'); }, function () { window.prompt('Copy her link:', u); }); });
-    });
-    n.addEventListener('click', function () {
-      if (!confirm('Make a new link? The old one stops working, so you will need to send her the new one.')) return;
-      api('groshare', { renew: true }).then(function (j) { if (j.ok) msg('New link made. Copy it and send it to her.'); });
-    });
-    r.appendChild(c); r.appendChild(n); s.appendChild(r);
-  }
-  $('f').addEventListener('submit', function (e) {
-    e.preventDefault(); var v = $('t').value.trim(); if (!v) return;
-    $('t').value = ''; change('groadd', { text: v }); $('t').focus();
-  });
-  $('clear').addEventListener('click', function () { change('groclear', {}); });
-  $('back').addEventListener('click', function () { location.href = './'; });
-  $('who').value = who();
-  $('who').addEventListener('change', function () { try { localStorage.setItem('groWho', $('who').value.trim()); } catch (e) {} });
-  load();
-  var timer = setInterval(function () { if (!document.hidden) load(); }, 5000);
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+  document.getElementById('back').addEventListener('click', function () { location.href = './'; });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && timer) load(); });
+  start();
 })();
 </script>
 </body>

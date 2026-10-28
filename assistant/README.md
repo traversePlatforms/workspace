@@ -57,8 +57,8 @@ Data files: `config.json` holds the password hash, the Anthropic key, the Google
 
 **The hub (2026-10-22).** `assistant/hub/` goes to `public_html/hub-cc1f31de/`: one installable window with three tabs: the field app (`/summit-de59ae83/`), the assistant and the Peak desk. They are all on traverseplatforms.com, so each loads in a frame (the apps send `X-Frame-Options: SAMEORIGIN`, which allows it) with its own sign-in. A tab loads when first opened and then stays loaded. Alt+1/2/3 switch tabs. To add an app, add a line to `APPS` in its index.html. The field app's edition switch moves only its own tab when it is inside the hub (the `ownFrame` check, 2026-10-22).
 
-**Groceries (2026-10-27).** A shared grocery list: add, check off, edit, remove, and clear checked.
-- Matthew opens it from the Groceries button in the top bar (signed in).
-- His girlfriend opens `g.html?t=<token>`, a private link that reaches only the list. On the list page, Matthew copies her link; Make a new link turns the old one off.
-- Data: `data/groceries.json`. Token: `groToken` in config.json. Code: `lib/groceries.php`; the page is `public/g.html`.
-- The page refreshes every 5 seconds while open, so changes show on both phones.
+**Groceries (2026-10-27).** A shared grocery list, purple with a raccoon logo (Claire's favourite colour): add, check off, edit, remove, and clear checked.
+- **Who gets in:** Matthew from the Groceries button (signed in). Claire with her own grocery-only password: Matthew sets it on the list page, and she signs in at `g.html`. Her sign-in is a signed cookie kept 180 days that opens only the list. Setting a new password signs her old devices out.
+- **Prices:** King Soopers Federal & Belleview (store 62000109), through Kroger's Products API with Matthew's keys in `data/kroger.json` (0600, never sent to the page; his copy is `~/.ssh/kroger.json`). Tap Find price to pick the product; picks are remembered by the item's words (`data/gro-picks.json`). Prices refresh when they're over 6 hours old. The total uses the sale price when there is one.
+- **Files:** data `data/groceries.json`; code `lib/groceries.php` and `lib/kroger.php`; page `public/g.html` plus `raccoon.svg`, `gro-icon-*.png` and `gro-manifest.json`.
+

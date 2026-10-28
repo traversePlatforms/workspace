@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Raccoon">
+  <!-- The grocery list's raccoon (2026-10-27, Matthew: "add a racoon are our logo make it cute"). Drawn by hand, no outside art. -->
+  <circle cx="24" cy="27" r="14" fill="#8b8f9a"/><circle cx="76" cy="27" r="14" fill="#8b8f9a"/>
+  <circle cx="24" cy="28" r="7.5" fill="#3b3442"/><circle cx="76" cy="28" r="7.5" fill="#3b3442"/>
+  <ellipse cx="50" cy="57" rx="39" ry="33" fill="#a3a8b2"/>
+  <ellipse cx="50" cy="34" rx="4.5" ry="10" fill="#6a6474"/>
+  <ellipse cx="29" cy="41" rx="11" ry="5.5" fill="#fbf9fd"/><ellipse cx="71" cy="41" rx="11" ry="5.5" fill="#fbf9fd"/>
+  <path d="M14 56 C14 44 26 45 34 47 C42 49 46 52 50 52 C54 52 58 49 66 47 C74 45 86 44 86 56 C86 66 76 67 68 64 C60 61 55 60 50 60 C45 60 40 61 32 64 C24 67 14 66 14 56 Z" fill="#2f2937"/>
+  <circle cx="34" cy="55" r="7" fill="#fff"/><circle cx="66" cy="55" r="7" fill="#fff"/>
+  <circle cx="35" cy="56" r="4.6" fill="#1b1720"/><circle cx="67" cy="56" r="4.6" fill="#1b1720"/>
+  <circle cx="36.6" cy="54.2" r="1.7" fill="#fff"/><circle cx="68.6" cy="54.2" r="1.7" fill="#fff"/>
+  <ellipse cx="50" cy="72" rx="17" ry="12.5" fill="#fbf9fd"/>
+  <ellipse cx="50" cy="65.5" rx="5.5" ry="3.8" fill="#2f2937"/>
+  <path d="M44 73 Q47 77 50 73 Q53 77 56 73" fill="none" stroke="#2f2937" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="23" cy="68" r="5" fill="#f4a3c4" opacity=".75"/><circle cx="77" cy="68" r="5" fill="#f4a3c4" opacity=".75"/>
+</svg>
