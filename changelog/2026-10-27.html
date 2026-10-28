@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day: Tuesday 27 October 2026</title>
+<!-- Matthew's end-of-day change log (started 2026-10-27, Matthew: "an end of day document ... all the changes weve done here on the sites apps
+     etc ... make it similar to what we do with brandon in terms of visuals"). Same layout as Brandon's end-of-day picture: a header band,
+     number tiles two by two, then sections with plain rows. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;break-inside:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="head">
+  <div><div class="tag">End of day</div><h1>Tuesday 27 October 2026</h1><div class="d">Everything we changed today across the apps, sites and posts</div></div>
+  <div class="d">Sixfold 365 · Traverse · Surge · Your assistant</div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><b>45</b><span>Changes saved</span><small>Each one recorded in the change history</small></div>
+  <div class="kpi"><b>3</b><span>Posts live</span><small>Sixfold 365 on Facebook and Instagram, Surge on Facebook</small></div>
+  <div class="kpi"><b>6</b><span>Apps updated</span><small>Sixfold 365 and the five Traverse editions, every upload checked</small></div>
+  <div class="kpi warn"><b>9</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+
+<h2>Sixfold 365 app <span class="n">18</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Monthly plans</div><div class="v"><span class="pill live">Live</span>"+ Start a monthly plan" on every customer. It holds a plan name, price a month, regular price, visits every N weeks and what's included. Saved plans can be reused for the next customer, and the next visit moves on when a job is done. <em>Not charged automatically yet.</em></div></div>
+  <div class="row"><div class="k">Visits list</div><div class="v"><span class="pill live">Live</span>Jobs marked Done on the Jobs board now show under Visits. Marc's paid job was missing before.</div></div>
+  <div class="row"><div class="k">Your booked leads</div><div class="v"><span class="pill live">Live</span>Jen and the office see your booked jobs in full: schedule, customers, payments. Your leads still never show in her Pipeline.</div></div>
+  <div class="row"><div class="k">Send to Cai</div><div class="v"><span class="pill live">Live</span>A button on your own leads that hands one to Cai only.</div></div>
+  <div class="row"><div class="k">Brad's job lines</div><div class="v"><span class="pill live">Live</span>"Work they want done" and "Work I'd suggest" on every job.</div></div>
+  <div class="row"><div class="k">2-day follow-up email</div><div class="v"><span class="pill off">Built, off</span>Review link, Brad's suggestions, your plans, and 10% off the next service for every customer. Waiting on the wording from you and Jen.</div></div>
+  <div class="row"><div class="k">Work hours</div><div class="v"><span class="pill live">Live</span>Everyone sets their hours on Profile. Bookings outside someone's hours are refused.</div></div>
+  <div class="row"><div class="k">Alerts in the app</div><div class="v"><span class="pill live">Live</span>A bell with a list: new leads, follow-ups due, quotes with no answer, balances owing.</div></div>
+  <div class="row"><div class="k">Crew alerts</div><div class="v"><span class="pill live">Live</span>New job or moved job alerts, plus "not marked done" reminders at 7 pm and 9 am.</div></div>
+  <div class="row"><div class="k">Brad's follow-up booking</div><div class="v"><span class="pill live">Live</span>Brad books the next visit (a day or a month) from his job. It shows as "needs Jen" until she confirms.</div></div>
+  <div class="row"><div class="k">Aftercare any time</div><div class="v"><span class="pill live">Live</span>Jen can send aftercare whenever she likes, with ready-to-send email and text while there's no mailbox.</div></div>
+  <div class="row"><div class="k">Receipts</div><div class="v"><span class="pill live">Live</span>A Receipt button on paid jobs, a check number on payments, and Email receipt. Zane's receipt was made by hand for his HOA.</div></div>
+  <div class="row"><div class="k">Do-it-yourself price</div><div class="v"><span class="pill live">Live</span>Staff-only comparison in the Quote builder. <em>Usually shows DIY as cheaper; review it before use.</em></div></div>
+  <div class="row"><div class="k">Newsletter</div><div class="v"><span class="pill off">Built, off</span>Newsletter screen with approval, an unsubscribe link and the 1st-of-month send. The November draft is loaded.</div></div>
+  <div class="row"><div class="k">Seed price</div><div class="v"><span class="pill live">Live</span>$90 for a 50 lb bag.</div></div>
+  <div class="row"><div class="k">Phone and tablet view</div><div class="v"><span class="pill live">Live</span>Profile → Layout now works inside the hub.</div></div>
+  <div class="row"><div class="k">Device fixes</div><div class="v"><span class="pill live">Live</span>Dark-mode text, bigger tap targets on phones, and buttons that fit on an iPad.</div></div>
+  <div class="row"><div class="k">Stats</div><div class="v"><span class="pill live">Live</span>Plans with a visit every few weeks now count toward the monthly figure.</div></div>
+</div>
+
+<h2>Traverse <span class="n">5</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Money-back guarantee</div><div class="v"><span class="pill live">Live</span>The free pilot is gone. It's now setup within 2 business days, then 7 days money-back from go-live. You have Mark live and Refund buttons.</div></div>
+  <div class="row"><div class="k">Website + agreement</div><div class="v"><span class="pill live">Live</span>The site carries the guarantee. Agreement version 2 and the redline are on your Desktop. <em>The attorney still needs to OK version 2.</em></div></div>
+  <div class="row"><div class="k">Prospect emails</div><div class="v"><span class="pill live">Live</span>Template version 4 ("Worth a look?", "locked in for life as long as you're with us"), cleaner company names, Email tab starts with nothing ticked.</div></div>
+  <div class="row"><div class="k">Device check</div><div class="v"><span class="pill live">Done</span>389 screens checked on phones, tablets and desktop; the problems found were fixed.</div></div>
+  <div class="row"><div class="k">Speed + clean-up</div><div class="v"><span class="pill live">Live</span>Spanish text loads only on Spanish phones, and old server backups were packed up.</div></div>
+</div>
+
+<h2>Posts, content and social <span class="n">9</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Sixfold 365 post 1</div><div class="v"><span class="pill posted">Posted</span>"Letting the lawn breathe" went to Facebook and Instagram at 3:00 pm.</div></div>
+  <div class="row"><div class="k">Surge post 6</div><div class="v"><span class="pill posted">Posted</span>"Learn sales from people who've done it" went to the Surge Inc Facebook page at 3:21 pm.</div></div>
+  <div class="row"><div class="k">Saturday carousel</div><div class="v"><span class="pill live">Scheduled</span>Six lawn photos go to Sixfold 365 Instagram on Sat 31 Oct at 2:00 pm.</div></div>
+  <div class="row"><div class="k">Facebook photos</div><div class="v"><span class="pill live">Live</span>Six job photos added to the Sixfold 365 page with location data removed, and no feed post.</div></div>
+  <div class="row"><div class="k">Posting runner</div><div class="v"><span class="pill live">Live</span>Approved posts go out from the server at their time, even with the laptop off.</div></div>
+  <div class="row"><div class="k">Surge look</div><div class="v"><span class="pill live">Done</span>Surge posts have their own layout, so they don't look like Sixfold's.</div></div>
+  <div class="row"><div class="k">Surge connected</div><div class="v"><span class="pill live">Done</span>The Surge Inc page can now be posted to. <em>Instagram waits on the 2FA code.</em></div></div>
+  <div class="row"><div class="k">Client journey</div><div class="v"><span class="pill live">Done</span>Editable doc with a flowchart from ad to repeat customer, including calls, texts and voicemail.</div></div>
+  <div class="row"><div class="k">Photo ledger</div><div class="v"><span class="pill live">Done</span>Tracks which job photos are set aside for posts, so the photo days don't use them.</div></div>
+</div>
+
+<h2>Email and admin <span class="n">5</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Your signature</div><div class="v">A new Sixfold 365 signature with your (303) number. It goes in the admin console footer; you replaced the old one.</div></div>
+  <div class="row"><div class="k">Lead emails</div><div class="v">Six follow-up emails, one per lead, in your wording, ready in Notepad. <em>Sent by you; nothing sent by me.</em></div></div>
+  <div class="row"><div class="k">Note to Jen</div><div class="v">Step-by-step for setting up the $74 monthly plan herself.</div></div>
+  <div class="row"><div class="k">Randy's quote</div><div class="v">A plan for the double and triple aeration quote. <em>Needs your extra-pass, sod and native seed prices.</em></div></div>
+  <div class="row"><div class="k">Laptop sleep</div><div class="v">Armoury Crate had switched you to a 5-minute sleep plan. Both plans are now set to never sleep.</div></div>
+</div>
+
+<h2>Your assistant <span class="n">1</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Grocery list</div><div class="v"><span class="pill live">Live</span>A purple shared list with a raccoon logo. Claire has her own login that opens only the list. King Soopers prices from Federal &amp; Belleview come with a total and a smarter search.</div></div>
+</div>
+
+<h2>Running tonight</h2>
+<div class="card">
+  <div class="row"><div class="k">Cloud machine</div><div class="v">Group 1 stages A and B are done. The roof material scan is running town by town (13 done so far); results upload by themselves.</div></div>
+  <div class="row"><div class="k">Google Drive backup</div><div class="v">Running now. Last night's run was cut off.</div></div>
+  <div class="row"><div class="k">Code review</div><div class="v">Fable is going through all of today's code. The report will be in traverse/CODE-REVIEW-2026-10-27-evening.md.</div></div>
+  <div class="row"><div class="k">OneDrive move</div><div class="v">Parked until things are quieter, as you asked.</div></div>
+</div>
+
+<h2>Waiting on you <span class="n">9</span></h2>
+<div class="card wait">
+  <div class="row"><div class="k">365 email login</div><div class="v">Aftercare, follow-ups, receipts and the newsletter can't email until the contact@365aeration.com login is saved.</div></div>
+  <div class="row"><div class="k">Mailing address</div><div class="v">The newsletter needs a postal address in its footer before it can be approved.</div></div>
+  <div class="row"><div class="k">Newsletter</div><div class="v">Read and approve the November issue (goes 1 Nov, 9 am).</div></div>
+  <div class="row"><div class="k">2-day email</div><div class="v">The wording, once you've talked to Jen.</div></div>
+  <div class="row"><div class="k">DIY comparison</div><div class="v">Keep, change or hide it, since it usually shows DIY as cheaper.</div></div>
+  <div class="row"><div class="k">Attorney</div><div class="v">Send the version 2 redline before the site opens Wednesday evening.</div></div>
+  <div class="row"><div class="k">Monthly plan terms</div><div class="v">Minimum term, how long $74 holds, first charge date, Square location (with Brandon).</div></div>
+  <div class="row"><div class="k">Thursday posts</div><div class="v">Approve Sixfold post 2 and a Surge post for Thu 29 Oct, 3 pm.</div></div>
+  <div class="row"><div class="k">Surge Instagram</div><div class="v">Link @surge.ftw once the 2FA code arrives.</div></div>
+</div>
+
+<div class="foot">Saved on your Desktop in "End of Day Reports" and in the workspace's changelog/ folder, which is backed up. The running list of every day is CHANGELOG.md.</div>
+</div>
+</body>
+</html>
