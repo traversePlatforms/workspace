@@ -2068,7 +2068,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron'], true)) {
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -2607,7 +2607,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'accept' => $acc, 'status' => 'won', 'note' => mb_substr('Booked online: ' . a365Day($off['date']) . ', arriving ' . a365Arrive((string) $off['slot']) . ', $' . $Q['price'] . '.' . ($note !== '' ? ' "' . $note . '"' : ''), 0, 500), 'by' => 'website', 'at' => time()]);
         flock($lk, LOCK_UN);
         $sl = jobSlot((string) $off['slot']);
-        pushName((string) $off['crew'], 'Job booked: ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : ''), $name . ' · ' . $addr . ' · $' . $Q['price'] . ' · booked online', './?job=' . $jid, 'job-' . $jid);
+        crewJobAlert((string) $off['crew'], $jid, 'new', 'booked online');   /* 2026-10-28 */
         a365Alert('Booked online', $name . ' · ' . deskWhen((string) $off['date'], '') . ($sl ? ', ' . $sl[1] : '') . ' with ' . $off['crew'] . ' · $' . $Q['price'], true, false, webLead($l));
         out(['ok' => true, 'booked' => ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])], 'phone' => $phone]);
     }
@@ -2965,7 +2965,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     if (!appendLine(leadsDir() . '/leadst.log', ['id' => $l['id'], 'signed' => $sg, 'status' => 'won', 'note' => mb_substr('Signed by ' . $name . ($had ? '; it was already booked, deposit added to the job.' : ($jid ? '; job booked.' : '; the day was no longer free, so set a new one.')), 0, 500), 'by' => 'website', 'at' => time()])) { flock($lk, LOCK_UN); fail('Something went wrong saving that. Please call or text us.', 500); }
     flock($lk, LOCK_UN);
     $who = trim((string) ($l['name'] ?? '')) ?: $name;
-    if ($jid && !$had) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'] . ' · deposit paid', './?job=' . $jid, 'job-' . $jid); }
+    if ($jid && !$had) crewJobAlert((string) $o['crew'], $jid, 'new', 'deposit paid');   /* 2026-10-28 */
     a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''), true, false, webLead($l));
     $ml = a365SendSigned($l, $sg, 'website');   /* the signed copy by email (2026-10-15) */
     out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
@@ -5466,8 +5466,10 @@ if ($action === 'jobsave') {
     if (!$have && in_array($l['status'], ['new', 'contacted', 'walk', 'quoted'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $lead, 'status' => 'won', 'by' => $me, 'at' => time()]);
     $sl = jobSlot($slot); $when = deskWhen($date, '') . ', ' . $sl[1];
     $al = null;
-    if ($crew !== $me && (!$have || $crew !== $have['crew'] || $date !== $have['date'] || $slot !== $have['slot'])) $al = pushName($crew, ($have ? 'Job moved: ' : 'Job booked: ') . $when, $title . ' · ' . $addr . ' · $' . $price, './?job=' . $id, 'job-' . $id);
-    if ($have && $have['crew'] !== $crew && $have['crew'] !== $me) pushName($have['crew'], 'Job handed to ' . $crew, $title . ' · ' . deskWhen($have['date'], ''), './', 'job-' . $id);
+    /* the crew's alerts (2026-10-28, Matthew: "for crew people they will get a notification when a new job is added to their schedule"): new to them (booked, or handed over), moved on their day, and off the old crew's schedule */
+    if (!$have || $crew !== $have['crew']) $al = crewJobAlert($crew, $id, 'new');
+    elseif ($date !== $have['date'] || $slot !== $have['slot']) $al = crewJobAlert($crew, $id, 'moved', 'was ' . deskWhen($have['date'], '') . ', ' . slotWords((string) $have['slot']));
+    if ($have && $have['crew'] !== $crew) crewJobAlert((string) $have['crew'], $id, 'off', 'now with ' . strtok($crew, ' '));
     out(['ok' => true, 'id' => $id, 'alert' => $al]);
 }
 /* the crew's own jobs, with everything for each */
@@ -6752,6 +6754,15 @@ function pushName(string $name, string $title, string $text, string $url, string
     foreach ($devs as $d) { $r = webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']); if ($r['ok']) $ok++; }
     return ['devices' => count($devs), 'sent' => $ok];
 }
+/* a job on someone's schedule, for their alerts (2026-10-28): 'New job: Kara Smith' / 'Thu 30 Oct, morning · 1 Main St'; the old crew hears it is off theirs. Never to whoever did it. */
+function slotWords(string $slot): string { $w = ['s1' => 'morning', 's2' => 'morning', 's3' => 'midday', 's4' => 'afternoon'][$slot] ?? ''; if ($w === '' && ($sl = jobSlot($slot))) $w = $sl[1]; return $w; }
+function crewJobAlert(string $crew, string $jid, string $kind, string $extra = ''): ?array {
+    global $me; $j = jobsAll()[$jid] ?? null; if (!$j || $crew === '' || $crew === $me) return null;
+    $name = trim((string) ((leadsAllRaw()[(string) ($j['lead'] ?? '')] ?? [])['name'] ?? ($j['title'] ?? ''))) ?: 'a customer';
+    $when = deskWhen((string) $j['date'], '') . ', ' . slotWords((string) $j['slot']);
+    if ($kind === 'off') return pushName($crew, 'Off your schedule: ' . $name, $when . ($extra !== '' ? ' · ' . $extra : ''), './', 'job-' . $jid . '-off');
+    return pushName($crew, ($kind === 'moved' ? 'Job moved: ' : 'New job: ') . $name . ', ' . $when, trim((string) ($j['addr'] ?? '')) . ($extra !== '' ? ' · ' . $extra : ''), './?job=' . $jid, 'job-' . $jid);
+}
 function deskWhen(string $date, string $time): string {
     return (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('D j M') . ($time !== '' ? ', ' . (new DateTime('2000-01-01 ' . $time))->format('g:i a') : '');
 }
@@ -7243,6 +7254,10 @@ function feedDerive(): void {
             /* aftercare not sent on a done 365 job of the last two weeks (2026-10-28): Jen's to send, by Send aftercare */
             if (!$j['off'] && ($j['done']['o'] ?? '') === 'done' && empty($j['aftercare']['ok']) && $now - (int) ($j['done']['at'] ?? 0) < 14 * 86400 && isset($leads[(string) $j['lead']]) && ($role !== 'quote' || qJob($j)) && !empty(company()['a365']) && jobIs365($j) && (!a365MailCfg() || !empty($j['aftercare'])))
                 feedAdd($me, 'Aftercare to send: ' . (trim((string) ($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'A customer'), 'The job is done and the aftercare has not gone. Open the job and tap Send aftercare.', './?job=' . $j['id'], 'due-after-' . $j['id'], 'due', true);
+            /* not marked done or could-not by noon the day after (2026-10-28): the crew had their two reminders (7 pm, 9 am), now it is the office's */
+            $yday = (new DateTime('today', new DateTimeZone(appTz())))->modify('-1 day')->format('Y-m-d');
+            if (!$j['off'] && empty($j['done']) && ($j['date'] < $yday || ($j['date'] === $yday && (int) (new DateTime('now', new DateTimeZone(appTz())))->format('G') >= 12)) && $j['date'] >= (new DateTime('today', new DateTimeZone(appTz())))->modify('-14 days')->format('Y-m-d') && isset($leads[(string) $j['lead']]) && ($role !== 'quote' || qJob($j)))
+                feedAdd($me, 'Not marked done: ' . (trim((string) ($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'A customer'), strtok((string) $j['crew'], ' ') . '\'s job on ' . fuDay((string) $j['date']) . ' is not marked Done or Could not.', './?job=' . $j['id'], 'due-unmarked-' . $j['id'], 'due', true);
             if ($j['off'] || ($j['done']['o'] ?? '') !== 'done' || jobOwed($j) < 1 || $now - (int) ($j['done']['at'] ?? $now) < 86400 || !isset($leads[(string) $j['lead']])) continue;
             if ($role === 'quote' && !qJob($j)) continue;
             $nm = trim((string) ($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'A customer';
@@ -7272,10 +7287,43 @@ if ($action === 'stormcron') {
     if (!feature('hail')) out(['ok' => true, 'note' => 'Hail is off for this company.']);
     out(['ok' => true] + stormRefresh(!empty($_GET['force'])));
 }
+/* the crew's "not marked done" reminders (2026-10-28, Matthew: "a notification when they haven't marked a job done"): a job still not marked
+   Done or Could not by 7 pm on its day gets one reminder to its crew, and one more at 9 am the next day; then they stop and the office's list
+   takes over (feedDerive: Not marked done). Each fires once (crew-reminders.json). Someone with work hours is not pushed outside them: it waits
+   for their next start; a 7 pm one still waiting when the 9 am one is due goes as the one. Run by the 5-minute alerts job (pushcron). */
+function crewReminders(?int $now = null): array {
+    if (!feature('walkdesk')) return ['sent' => 0];
+    $now = $now ?? time(); $tz = new DateTimeZone(appTz()); $at = (new DateTime('@' . $now))->setTimezone($tz);
+    $f = DATA_DIR . '/crew-reminders.json'; $lk = @fopen($f . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['sent' => 0, 'busy' => true];
+    $rec = json_decode((string) @file_get_contents($f), true); if (!is_array($rec)) $rec = [];
+    $today = $at->format('Y-m-d'); $hm = $at->format('H:i'); $sent = 0; $changed = false; $leads = leadsAllRaw();
+    foreach (jobsAll() as $jid => $j) {
+        if ($j['off'] || !empty($j['done']) || (string) $j['crew'] === '' || $j['date'] > $today) continue;
+        $d1 = (new DateTime($j['date'] . ' 12:00', $tz))->modify('+1 day')->format('Y-m-d');
+        if ($today > (new DateTime($j['date'] . ' 12:00', $tz))->modify('+4 days')->format('Y-m-d')) continue;   /* long gone: the office has it */
+        $r = $rec[$jid] ?? []; $due1 = $today > $j['date'] || $hm >= '19:00'; $due2 = $today > $d1 || ($today === $d1 && $hm >= '09:00');
+        $want = $due2 && empty($r['r2']) ? 'r2' : ($due1 && empty($r['r1']) && empty($r['r2']) ? 'r1' : '');
+        if ($want === '') continue;
+        $h = hoursOf((string) $j['crew']);   /* their hours: inside them now, or wait */
+        if ($h) { $w = (int) $at->format('w'); $dh = $h[(string) $w] ?? null; if (!is_array($dh) || $hm < $dh[0] || $hm >= $dh[1]) continue; }
+        $name = trim((string) ($leads[(string) $j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'a customer';
+        pushName((string) $j['crew'], 'Not marked done: ' . $name, deskWhen((string) $j['date'], '') . ', ' . slotWords((string) $j['slot']) . '. Mark it Done, or Could not do it, on the job.', './?job=' . $jid, 'remind-' . $jid);
+        $rec[$jid] = $r + ['r1' => $now] + ($want === 'r2' ? ['r2' => $now] : []); $sent++; $changed = true;
+    }
+    foreach ($rec as $k => $v) if (max((int) ($v['r1'] ?? 0), (int) ($v['r2'] ?? 0)) < $now - 30 * 86400) { unset($rec[$k]); $changed = true; }
+    if ($changed) writeJsonAtomic($f, $rec);
+    flock($lk, LOCK_UN);
+    return ['sent' => $sent];
+}
+if ($action === 'remindcron') {   /* the reminders by hand from the command line (2026-10-28); now= a time, for the tests */
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    out(['ok' => true] + crewReminders(isset($_GET['now']) ? (int) $_GET['now'] : null));
+}
 if ($action === 'pushcron') {
     if (!defined('SIXFOLD_CLI')) fail('Not here.', 404);
     $dry = !empty($_REQUEST['dry']);
     if (!$dry) a365WebMailFlush();   /* website forms by email to Contact@ (2026-10-23) */
+    if (!$dry) { try { crewReminders(); } catch (Throwable $e) { error_log('rounds crew reminders: ' . $e->getMessage()); } }   /* 2026-10-28 */
     $sf = DATA_DIR . '/push-sent.json';
     $clk = @fopen($sf . '.lock', 'c');
     if (!$clk || !flock($clk, LOCK_EX | LOCK_NB)) out(['ok' => true, 'busy' => true]);
@@ -8010,7 +8058,7 @@ function a365BookNoSign(string $lid, string $by): ?string {
         'note' => 'Booked with no signature needed' . ($had ? '; the job was already on the board, deposit added.' : ($jid ? '; job booked.' : '; the day was taken: set a new one on the Jobs board.')), 'by' => $by, 'at' => time()]);
     flock($lk, LOCK_UN);
     $who = trim((string) ($l['name'] ?? '')) ?: 'A customer';
-    if ($jid && !$had && $o) { $sl = jobSlot((string) $o['slot']); pushName((string) $o['crew'], 'Job booked: ' . deskWhen((string) $o['date'], '') . ($sl ? ', ' . $sl[1] : ''), $who . ' · $' . $Q['price'], './?job=' . $jid, 'job-' . $jid); }
+    if ($jid && !$had && $o) crewJobAlert((string) $o['crew'], $jid, 'new');   /* 2026-10-28 */
     a365Alert($jid ? 'Booked (no signature)' : 'Booked (no signature): set a new day', $who . ' · $' . $Q['price'] . ($jid && $o ? ' · ' . deskWhen((string) $o['date'], '') : ''), true);
     return $jid;
 }
