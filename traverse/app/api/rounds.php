@@ -2617,7 +2617,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
         $acc = $l['accept'] ?? null; if ($acc && (int) ($acc['price'] ?? 0) !== (int) $Q['price']) $acc = null;   /* a yes to an older price */
         $off = $job ? null : offerLive($l);
-        out(['ok' => true, 'first' => $first, 'street' => $street, 'pkg' => $Q['pkg'], 'price' => (int) $Q['price'], 'date' => date('F j, Y', (int) $Q['at']),
+        out(['ok' => true, 'first' => $first, 'street' => $street, 'pkg' => $Q['pkg'], 'svc' => (string) ($Q['svc'] ?? ''), 'price' => (int) $Q['price'], 'date' => date('F j, Y', (int) $Q['at']),
              'items' => kitOn() ? array_values(array_map(fn($x) => ['t' => (string) $x['t'], 'amt' => (int) $x['amt']], (array) ($Q['items'] ?? []))) : null, 'note' => kitOn() ? (string) ($Q['note'] ?? '') : null,
              'offer' => $off ? ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])] : null,
              'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone]);
@@ -2638,7 +2638,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $jid = 'j' . bin2hex(random_bytes(6));
         $row = ['id' => $jid, 'lead' => $l['id'], 'title' => $name, 'crew' => (string) $off['crew'], 'date' => (string) $off['date'], 'slot' => (string) $off['slot'], 'price' => (int) $Q['price'],
-                'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => $note, 'addr' => $addr ?: 'Ask the office',
+                'pkg' => (string) $Q['pkg'], 'svc' => (string) ($Q['svc'] ?? ''), 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => $note, 'addr' => $addr ?: 'Ask the office',
                 'by' => 'website', 'at' => time()];
         if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
         $acc['booked'] = $jid;
@@ -2818,7 +2818,7 @@ function a365Agreement(array $l): array {
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null;
     $h = $l['house'] ?? null;
     $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
-    $inc = $Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer'];
+    $inc = $Q['pkg'] === 'other' ? [trim((string) ($Q['svc'] ?? '')) ?: 'The work we discussed'] : ($Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer']);   /* a custom quote lists its own service (2026-10-28) */
     foreach (a365Extras($Q['extras'] ?? []) as $x) $inc[] = $x['t'];   /* the extra work, in her words (2026-10-21); its price is in the Price */
     $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other', 'none' => 'no deposit'][$S2['how']] ?? $S2['how'];
     $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
@@ -2995,7 +2995,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
-            'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
+            'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'svc' => (string) ($Q['svc'] ?? ''), 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
             'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
     }
     /* what was shown is kept with the signature, so the signed page never changes if the quote does later */
@@ -5098,7 +5098,7 @@ function a365AerOnly(int $sq, array $P, float $drive): int {
 }
 if ($action === 'a365calc') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
-    $P = a365Pricing(); $sq = max(0, min(1000000, (int) ($_GET['sq'] ?? 0))); $pkg = ($_GET['pkg'] ?? 'full') === 'aerate' ? 'aerate' : 'full';
+    $P = a365Pricing(); $sq = max(0, min(1000000, (int) ($_GET['sq'] ?? 0))); $pkg = in_array($_GET['pkg'] ?? 'full', ['aerate', 'other'], true) ? (string) $_GET['pkg'] : 'full';   /* + other: a custom quote, no list price (2026-10-28) */
     $drive = 0.0; $hasDrive = false;
     $reg = (string) ($_GET['region'] ?? ''); $hid = (string) ($_GET['id'] ?? '');
     if ($reg !== '' && $hid !== '' && preg_match('/^[a-z0-9-]{1,80}$/D', $hid)) {
@@ -5109,7 +5109,7 @@ if ($action === 'a365calc') {
             $drive = $mi * (float) ($P['roadFactor'] ?: 1.3) * 2 / (float) ($P['mpg'] ?: 18) * (float) $gas['price']; $hasDrive = true;
         }
     }
-    $ladder = $pkg === 'aerate' ? ($sq > 0 ? a365AerOnly($sq, $P, $drive) : 0) : a365ListPrice($sq, $P) + (int) ceil($drive);   /* aerate only: the full price less seed and fertilizer (2026-10-28) */
+    $ladder = $pkg === 'other' ? 0 : ($pkg === 'aerate' ? ($sq > 0 ? a365AerOnly($sq, $P, $drive) : 0) : a365ListPrice($sq, $P) + (int) ceil($drive));   /* aerate only: the full price less seed and fertilizer (2026-10-28) */
     $want = (int) ($_GET['price'] ?? 0); $price = $want > 0 ? min($want, 100000) : $ladder;
     $seedLb = 0.0; $fertLb = 0.0; $fName = '';
     if ($pkg === 'full' && $sq > 0) {
@@ -5290,7 +5290,7 @@ if ($action === 'qwon') {
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . (($h['town'] ?? '') !== '' ? ', ' . streetCaseServer(houseTown($h)) : '') : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6)); $name = trim((string) ($l['name'] ?? '')) ?: 'Customer';
         if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $id, 'title' => $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
-            'price' => $price, 'pkg' => (string) ($l['quote']['pkg'] ?? 'full'), 'scope' => 'all', 'seedLb' => $l['quote']['seedLb'] ?? null, 'fertLb' => $l['quote']['fertLb'] ?? null,
+            'price' => $price, 'pkg' => (string) ($l['quote']['pkg'] ?? 'full'), 'svc' => (string) ($l['quote']['svc'] ?? ''), 'scope' => 'all', 'seedLb' => $l['quote']['seedLb'] ?? null, 'fertLb' => $l['quote']['fertLb'] ?? null,
             'pay' => $pay, 'card' => false, 'note' => 'Won without the form (' . $me . ').', 'addr' => $addr !== '' ? $addr : 'Ask the office', 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
         $jid = $nj;
     }
@@ -5346,10 +5346,11 @@ if ($action === 'leadquote') {
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     if (!empty($all[$id]['signed']) && $role !== 'admin') fail('They already signed for this price. Change the job on the Jobs board.', 409);   /* Fable review 2026-10-14 */
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the quote a price.');
-    $pkg = (string) ($body['pkg'] ?? ''); if (!in_array($pkg, ['full', 'aerate'], true)) fail('Pick the package.');
+    $pkg = (string) ($body['pkg'] ?? ''); if (!in_array($pkg, ['full', 'aerate', 'other'], true)) fail('Pick the package.');
+    $svc = $pkg === 'other' ? $clean($body['svc'] ?? '', 80) : ''; if ($pkg === 'other' && $svc === '') fail('Say what the service is (for example: Native seed, double aeration).');   /* a custom quote (2026-10-28) */
     $sq = (int) ($body['sq'] ?? 0); if ($sq < 0 || $sq > 2000000) fail('That lawn size does not look right.');
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : null;
-    $q = ['price' => $price, 'pkg' => $pkg, 'sq' => $sq, 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => $clean($body['note'] ?? '', 200), 'sent' => !empty($body['sent'])];
+    $q = ['price' => $price, 'pkg' => $pkg, 'svc' => $svc, 'sq' => $sq, 'seedLb' => $pkg === 'other' ? null : $num('seedLb', 5000), 'fertLb' => $pkg === 'other' ? null : $num('fertLb', 5000), 'note' => $clean($body['note'] ?? '', 200), 'sent' => !empty($body['sent'])];
     $ex = array_key_exists('extras', $body) ? a365Extras($body['extras']) : ($all[$id]['quote']['extras'] ?? []); if ($ex) $q['extras'] = $ex;   /* extra work (2026-10-21) */
     /* the day offered with the quote (2026-10-14): kept across re-saves unless changed or cleared; it holds that slot on the board */
     $prevOffer = $all[$id]['quote']['offer'] ?? null;
@@ -6188,8 +6189,9 @@ if ($action === 'squareconfirm') {
         $crew = in_array((string) ($body['crew'] ?? ''), $crews, true) ? (string) $body['crew'] : $crews[0];
         $pat = (int) strtotime((string) ($p['created_at'] ?? '')) ?: time(); $day = (new DateTime('@' . $pat))->setTimezone(new DateTimeZone(appTz()))->format('Y-m-d');
         $q = (array) ($l['quote'] ?? []); $h = $l['house'] ?? null; $jid = 'j' . bin2hex(random_bytes(6)); $t = time();
+        if (empty($q['pkg']) && ($nsvc = $clean($body['svc'] ?? '', 80)) !== '') $q = ['pkg' => 'other', 'svc' => $nsvc];   /* no quote: the work they name, as Another service (2026-10-28, Leann's fall cleanup) */
         $job = ['id' => $jid, 'lead' => $lid, 'title' => trim((string) ($l['name'] ?? '')) ?: 'Job', 'crew' => $crew, 'date' => $day, 'slot' => jobSlots()[2][0], 'price' => $net,
-                'pkg' => (string) ($q['pkg'] ?? 'full'), 'scope' => 'all', 'seedLb' => $q['seedLb'] ?? null, 'fertLb' => $q['fertLb'] ?? null, 'pay' => ['s' => 'paid', 'how' => 'square'], 'card' => false, 'note' => '',
+                'pkg' => (string) ($q['pkg'] ?? 'full'), 'svc' => (string) ($q['svc'] ?? ''), 'scope' => 'all', 'seedLb' => $q['seedLb'] ?? null, 'fertLb' => $q['fertLb'] ?? null, 'pay' => ['s' => 'paid', 'how' => 'square'], 'card' => false, 'note' => '',
                 'addr' => $h ? streetCaseServer((string) $h['address']) . ', ' . $h['town'] : (string) ($l['town'] ?? ''), 'by' => $me, 'at' => $t, 'payat' => $pat];
         if (!appendLine(DATA_DIR . '/jobs.log', $job) || !appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'done' => ['o' => 'done', 'note' => '', 'mins' => 0, 'collected' => 0], 'by' => $me, 'at' => $t + 1])
             || !appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'sqpaid' => ['payment' => $pid, 'amt' => $net, 'found' => 'booked from the payment by ' . $me, 'at' => $t + 2], 'by' => $me, 'at' => $t + 2])) fail('Could not save that. Try again.', 500);
@@ -8398,7 +8400,7 @@ function a365BookNoSign(string $lid, string $by): ?string {
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $lid, 'title' => trim((string) ($l['name'] ?? '')) ?: 'Customer', 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
-            'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
+            'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'svc' => (string) ($Q['svc'] ?? ''), 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
             'pay' => $pay, 'card' => false, 'note' => trim('Booked without a signature. ' . (string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => $by, 'at' => time()])) $jid = $nj;
     }
     /* the agreement as it stood when they booked, kept like a signed form's (2026-10-18, Fable review): the page served it live, so a later

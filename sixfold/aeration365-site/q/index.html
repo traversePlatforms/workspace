@@ -107,11 +107,12 @@
   if (!/^[wm]\d{14}[0-9a-f]{6}-[0-9a-f]{16}$/.test(key)) { sorry('This link looks incomplete. Call or text us and we will send it again.'); return; }
   fetch(API + '?action=a365quote&q=' + encodeURIComponent(key), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (Q) {
     if (!Q || !Q.ok) { sorry((Q && Q.error) || 'Something went wrong. Call or text us.'); return; }
-    document.getElementById('hi').textContent = Q.first ? 'Hi ' + Q.first + ', here’s your lawn quote' : 'Your lawn quote';
+    var kind = Q.pkg === 'other' ? 'quote' : 'lawn quote';   /* a custom quote ("Another service", 2026-10-28) isn't always the lawn */
+    document.getElementById('hi').textContent = Q.first ? 'Hi ' + Q.first + ', here’s your ' + kind : 'Your ' + kind;
     document.getElementById('for').textContent = Q.street ? 'For ' + Q.street : 'From Sixfold 365';
     main.textContent = '';
     var q = el('div', 'card'); q.appendChild(el('h2', null, 'What’s included'));
-    var ul = el('ul', 'inc'); (INC[Q.pkg] || INC.full).forEach(function (x) { ul.appendChild(el('li', null, x)); }); q.appendChild(ul);
+    var ul = el('ul', 'inc'); (Q.pkg === 'other' ? [Q.svc || 'The work we discussed'] : (INC[Q.pkg] || INC.full)).forEach(function (x) { ul.appendChild(el('li', null, x)); }); q.appendChild(ul);
     var pr = el('div', 'price'); pr.appendChild(el('b', null, money(Q.price))); pr.appendChild(el('span', null, 'Quoted ' + Q.date)); q.appendChild(pr);
     main.appendChild(q);
     if (Q.booked) main.appendChild(booked(Q.booked));

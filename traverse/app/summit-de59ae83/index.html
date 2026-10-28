@@ -5082,7 +5082,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (wdOn() && CO.a365 && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */
     if (S.role === 'admin' && S.screen === 'pipeline' && (l.mine || l.src === 'a365web') && ((S.handTo || []).length || l.mhand) && ['won', 'lost'].indexOf(l.status || 'new') < 0) c.appendChild(handRow(l));   /* Send to Cai (2026-10-27) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote && l.quote.pkg === 'job') c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + ((l.quote.items || []).filter(function (x) { return x.id !== 'min' && x.id !== 'adj'; }).map(function (x) { return x.t; }).join(', ') || 'the job') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));   /* a kit quote (2026-10-27) */
-    else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
+    else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', (l.quote.sent ? 'Quote sent: ' : 'Quote saved: ') + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'other' ? (l.quote.svc || 'another service') : l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
     /* the deposit and the one-page form straight from the card (2026-10-20, Matthew: Joseph Barnes said yes on the phone, "how can i build a quote
        and send it to him from my super admin page"): an open lead with no form yet; the office also has it after a logged talk */
@@ -5700,7 +5700,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var row = function (l) {
         var b = q('button', 'orow'); b.type = 'button';
         var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || 'No name'));
-        tx.appendChild(q('small', null, [l.quote && l.quote.price ? money0(l.quote.price) + ' · ' + JOB_PKG[l.quote.pkg] : 'No price here yet', l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town, l.quote && l.quote.price && l.quote.at ? 'quoted ' + ago(l.quote.at) : ''].filter(Boolean).join(' · '))); b.appendChild(tx);
+        tx.appendChild(q('small', null, [l.quote && l.quote.price ? money0(l.quote.price) + ' · ' + jobPkgLabel(l.quote) : 'No price here yet', l.house ? streetCase(l.house.address) + ', ' + l.house.town : l.town, l.quote && l.quote.price && l.quote.at ? 'quoted ' + ago(l.quote.at) : ''].filter(Boolean).join(' · '))); b.appendChild(tx);
         if (acceptOf(l)) tx.appendChild(q('small', 'qyes', acceptText(acceptOf(l))));
         b.appendChild(q('span', 'otag' + (acceptOf(l) ? ' ohot' : ''), acceptOf(l) ? 'Said yes' : 'Book'));
         b.addEventListener('click', function () { jobBookView(l, null, null); });
@@ -5837,7 +5837,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
     var P = job ? JSON.parse(JSON.stringify(job)) : {
-      crew: pre.crew || '', date: pre.date || '', slot: pre.slot || '', price: pre.price || qt.price || '', pkg: pre.pkg || qt.pkg || 'full', svc: pre.svc || '', scope: 'all',
+      crew: pre.crew || '', date: pre.date || '', slot: pre.slot || '', price: pre.price || qt.price || '', pkg: pre.pkg || qt.pkg || 'full', svc: pre.svc || qt.svc || '', scope: 'all',
       seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb != null ? qt.seedLb : '', fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb != null ? qt.fertLb : '',
       pay: { s: 'unpaid' }, card: false, note: (acceptOf(lead) && acceptOf(lead).note) || '', addr: house ? streetCase(house.address) + ', ' + house.town : (lead.town || '')
     };
@@ -5872,7 +5872,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tbdL = q('label', 'jtbd'), tbdC = q('input'); tbdC.type = 'checkbox'; tbdC.checked = !!job && !job.price; tbdL.appendChild(tbdC); tbdL.appendChild(q('span', null, 'Price to confirm (book it now, add the price later)')); if (!SIGN && !OFFER) box.appendChild(tbdL);
     if (!job && acceptOf(lead)) box.appendChild(q('div', 'qline qyes', acceptText(acceptOf(lead))));
     if (qt.price && !job && kitOnC()) box.appendChild(q('div', 'dwsub', 'From the quote: ' + money0(qt.price) + (((lead.quote && lead.quote.items) || []).filter(function (x) { return x.id !== 'min' && x.id !== 'adj'; }).map(function (x) { return x.t; }).join(', ').replace(/^(.)/, ' · $1')) + '.'));   /* a kit quote's lines (2026-10-27) */
-    else if (qt.price && !job) box.appendChild(q('div', 'dwsub', 'From the quote: ' + money0(qt.price) + ' · ' + JOB_PKG[qt.pkg] + (qt.sq ? ' · ' + Number(qt.sq).toLocaleString(LOCALE) + ' sq ft' : '') + '. Front yard only? Lower the price and the seed here.'));
+    else if (qt.price && !job) box.appendChild(q('div', 'dwsub', 'From the quote: ' + money0(qt.price) + ' · ' + jobPkgLabel(qt) + (qt.sq ? ' · ' + Number(qt.sq).toLocaleString(LOCALE) + ' sq ft' : '') + '. Front yard only? Lower the price and the seed here.'));
     box.appendChild(q('div', 'dwh', 'Payment'));
     var payRow = q('div', 'dwlen'); box.appendChild(payRow);
     var payMore = q('div', 'jpaymore'); box.appendChild(payMore);
@@ -7711,14 +7711,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).then(function (r) {
       return h && h.region && h.id ? api('leadhouse', { body: { id: id, region: h.region, door: h.id } }) : { ok: true };   /* (id set above) */
     }).then(function () {
-      return api('leadquote', { body: { id: id, price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false, extras: st.cur.extras || [] } });
+      return api('leadquote', { body: { id: id, price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false, extras: st.cur.extras || [] } });
     }).then(function (qj) {
       if (!qj || !qj.ok) throw new Error((qj && qj.error) || 'Could not save the quote.');
       return api('leads');
     }).then(function (L2) {
       var lead = ((L2 && L2.leads) || []).filter(function (l) { return l.id === id; })[0];
       if (!lead) throw new Error('The lead did not come back. Find it in the Pipeline.');
-      var pre = { price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, extras: st.cur.extras || [] };
+      var pre = { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, extras: st.cur.extras || [] };
       S.qqBack = { lead: id, h: { region: h && h.region, id: h && h.id, address: (h && h.address) || '' }, st: { sq: st.sq || 0, pkg: st.pkg, price: st.price != null ? st.price : null, extras: st.extras.map(function (x) { return { t: x.t, p: x.p }; }) }, pre: pre };   /* Back from here returns to this quote, filled in (Matthew 2026-10-15) */
       signSendView(lead, pre);
       toast(had === 'updated' ? 'Using their lead, details updated' : had ? 'Using their lead' : 'Added as a lead', (lead.name || '') + (lead.email ? ' \u00b7 ' + lead.email : '') + ' \u00b7 ' + money0(st.cur.price), null);
@@ -7845,9 +7845,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               : kind === 'link' ? 'Tie this ' + money0(x.amt) + ' payment to ' + c.name + '\u2019s job, already marked paid? Nothing owed changes.'
               : kind === 'newjob' ? c.name + ' has no job on the board yet. Add one for the day they paid, marked done and paid in full with this ' + money0(x.amt) + '? You can change the crew or day on the job after.'
               : 'Set this ' + money0(x.amt) + ' payment aside as not one of ours? It will not be offered again.';
-            if (!window.confirm(ask)) return;
+            var svc = '';
+            if (kind === 'newjob' && !c.price) {   /* no quote saved: say what the work was, so the job isn't called Aerate, seed & feed (2026-10-28) */
+              svc = String(window.prompt(c.name + ' has no quote saved. What was the work? (for example: Fall cleanup)\n\nThe job goes on the board for the day they paid, done and paid with this ' + money0(x.amt) + '.', '') || '').trim();
+              if (!svc) return;
+            } else if (!window.confirm(ask)) return;
             btn.disabled = true;
-            api('squareconfirm', { body: { payment: x.payment, act: kind, job: c ? c.job || '' : '', lead: c ? c.lead || '' : '' } }).then(function (r) {
+            api('squareconfirm', { body: { payment: x.payment, act: kind, job: c ? c.job || '' : '', lead: c ? c.lead || '' : '', svc: svc } }).then(function (r) {
               btn.disabled = false;
               if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
               toast(kind === 'ignore' ? 'Set aside' : kind === 'newjob' ? 'Job added, done and paid' : kind === 'link' ? 'Linked' : kind === 'full' ? 'Marked paid' : 'Part payment recorded', kind === 'part' ? money0(r.tot) + ' paid so far \u00b7 ' + money0(r.left) + ' left' : (x.name || ''), null);
@@ -8080,6 +8084,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var openB = q('button', 'lnk', 'Block out days'); openB.type = 'button'; hd.appendChild(openB); box.appendChild(hd);
     var list = J.blocks || [];
     if (!list.length) box.appendChild(q('div', 'ltrynote', 'Nobody is blocked off. Block out a day, a run of days or half a day, and nothing can be offered or booked for that person then.'));
+    var lb = box;   /* the list folds away (2026-10-28, Matthew: the board already shows who is off); open it to take one off */
+    if (list.length) { var sh = q('button', 'lnk', 'See days off (' + list.length + ')'); sh.type = 'button'; box.appendChild(sh); lb = q('div'); lb.hidden = true; box.appendChild(lb); sh.addEventListener('click', function () { lb.hidden = !lb.hidden; sh.textContent = (lb.hidden ? 'See' : 'Hide') + ' days off (' + list.length + ')'; }); }
     list.forEach(function (b) {
       var row = q('div', 'sblkrow'); var t = q('div'); t.appendChild(q('b', null, String(b.crew).split(' ')[0] + ' \u00b7 ' + blockWhen(b))); t.appendChild(q('small', null, (b.note ? b.note + ' \u00b7 ' : '') + 'set by ' + b.by)); row.appendChild(t);
       var x = q('button', 'lnk danger', 'Take off'); x.type = 'button';
@@ -8088,7 +8094,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         x.disabled = true;
         api('jobblockdel', { body: { id: b.id } }).then(function (r) { x.disabled = false; if (r._status === 401) return signinView('Signed out. Enter your code again.'); if (!r.ok) { toast('Not taken off', r.error || 'Try again.', null); return; } toast('Free again', String(b.crew).split(' ')[0] + ' \u00b7 ' + blockWhen(b), null); done(); }).catch(function () { x.disabled = false; toast('No signal', 'Nothing was changed.', null); });
       });
-      row.appendChild(x); box.appendChild(row);
+      row.appendChild(x); lb.appendChild(row);
     });
     var f = q('div', 'sblkform'); f.hidden = true; box.appendChild(f);
     openB.addEventListener('click', function () { f.hidden = !f.hidden; });
@@ -8810,7 +8816,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     function draw(P) {
       var B0 = quick && !lead && S.qqBack, saved = (lead && lead.quote) || (B0 && (B0.h.id ? (B0.h.region === h.region && B0.h.id === h.id) : (!h.id && B0.h.address === (h.address || ''))) ? B0.st : null);   /* back from the deposit screen: her size, package and price (2026-10-15) */
       var said = lead && lead.ask && lead.ask.size ? (function () { var m = /([\d,.]+)/.exec(String(lead.ask.size).replace(/\b(a |one )?half( of)?( an?)?\b/i, '0.5 ')); if (!m) return 0; var n = parseFloat(m[1].replace(/,/g, '')); if (/acre/i.test(lead.ask.size)) n *= 43560; return n > 200 ? Math.round(n / 100) * 100 : 0; })() : 0;
-      var st = { sq: saved && saved.sq ? saved.sq : (E.none ? said || 0 : E.mid), pkg: saved ? saved.pkg : 'full', price: saved ? saved.price : null,
+      var st = { sq: saved && saved.sq ? saved.sq : (E.none ? said || 0 : E.mid), pkg: saved ? saved.pkg : 'full', svc: saved && saved.svc ? saved.svc : '', price: saved ? saved.price : null,
         extras: saved && saved.extras ? saved.extras.map(function (x) { return { t: x.t, p: x.p || 0 }; }) : [] };   /* extra work (2026-10-21) */
       /* a saved quote's price already has the extra work in it: start from the price without it */
       if (saved && saved.price && st.extras.length && !(B0 && saved === B0.st)) st.price = Math.max(1, saved.price - st.extras.reduce(function (n, x) { return n + (x.p || 0); }, 0));
@@ -8825,12 +8831,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (said) chip('They said', said);
       box.appendChild(basis); box.appendChild(chips);
       var pk = q('div', 'dwlen');
-      [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only']].forEach(function (o) {
+      [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only']].concat(quick ? [] : [['other', 'Another service']]).forEach(function (o) {   /* + Another service: a custom quote with your own price (2026-10-28), not on the Quick quote */
         var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(st.pkg === o[0]));
-        b.addEventListener('click', function () { st.pkg = o[0]; st.price = null; clearInfl(); [].forEach.call(pk.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paint(); });
+        b.addEventListener('click', function () { st.pkg = o[0]; st.price = null; clearInfl(); [].forEach.call(pk.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); svcL.hidden = st.pkg !== 'other'; if (st.pkg === 'other') setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); paint(); });
         pk.appendChild(b);
       });
       box.appendChild(pk);
+      var svcL = q('label', 'jsvc', 'What service? (for example: Native seed, double aeration)'), svcIn = q('input'); svcIn.id = 'qb-svc'; svcIn.maxLength = 80; svcIn.value = st.svc || ''; svcL.appendChild(svcIn); svcL.hidden = st.pkg !== 'other'; box.appendChild(svcL);
+      svcIn.addEventListener('input', function () { st.svc = svcIn.value; });
       /* the fertilizer of the day (2026-10-15): Jen picks the brand; this device remembers it */
       var fk = ''; try { fk = localStorage.getItem('fertBrand') || ''; } catch (e) {}
       st.fert = fertOf(P, fk) ? fertOf(P, fk).k : '';
@@ -8889,7 +8897,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var HIDE = !!P.hidden || asOffice() || qView();   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
       var trv = HIDE ? null : a365Travel(h, P), calcSeq = 0, calcT = null;
       /* the list price: the ladder plus the drive (in whole dollars); aerate only = that less seed and fertilizer (2026-10-28, Matthew; was: no list price, Jen typed hers) */
-      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'aerate' ? a365AerOnly(st.sq || 0, P, trv ? trv.cost : 0) : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
+      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'other' ? 0 : st.pkg === 'aerate' ? a365AerOnly(st.sq || 0, P, trv ? trv.cost : 0) : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
       dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
       up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
       own.addEventListener('input', function () { clearInfl(); var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
@@ -8903,7 +8911,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             if (!j || !j.ok) { big.textContent = ''; big.appendChild(q('div', 'msg', (j && j.error) || 'Could not work out the price.')); return; }
             st.srvLadder = j.ladder; var price = j.price, ladder = j.ladder, exS = exSum(), total = price ? price + exS : 0;
             big.textContent = '';
-            if (!price) { big.appendChild(q('b', null, '$\u2014')); big.appendChild(q('span', null, 'Type the lawn size to work out the price')); }
+            if (!price) { big.appendChild(q('b', null, '$\u2014')); big.appendChild(q('span', null, st.pkg === 'other' ? 'Another service: type your price below' : 'Type the lawn size to work out the price')); }
             else { big.appendChild(q('b', null, money0(total))); big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + (st.pkg === 'aerate' ? ' (aerate only: the full price less seed and fertilizer)' : '') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft')); if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work')); }
             detail.textContent = ''; noteBox.textContent = '';
             var rows = [];
@@ -8921,7 +8929,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (HIDE) { if (!st.cur) st.cur = { price: 0, seedLb: 0, fertLb: 0 }; paintHidden(); return; }
         var ladder = ladderFor(), price = st.price || ladder, exS = exSum(), total = price ? price + exS : 0;
         big.textContent = '';
-        if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, 'Type the lawn size to work out the price')); }
+        if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, st.pkg === 'other' ? 'Another service: type your price below' : 'Type the lawn size to work out the price')); }
         else {
           big.appendChild(q('b', null, money0(total)));
           if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work'));
@@ -8970,25 +8978,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       function drawActs() {
         acts.textContent = '';
-        if (!st.cur.price) { acts.appendChild(q('div', 'ltrynote', 'Type the aerate-only price to save or book it.')); return; }
+        if (!st.cur.price) { acts.appendChild(q('div', 'ltrynote', st.pkg === 'other' ? 'Type your price to save the quote.' : 'Type the price to save or book it.')); return; }
+        if (st.pkg === 'other' && !String(st.svc || '').trim()) { acts.appendChild(q('div', 'ltrynote', 'Say what the service is to save the quote.')); return; }
         if (lead && asOffice()) {   /* the phone-quote flow (2026-10-14): nothing goes to the customer until they said yes and paid the deposit */
           var sv0 = q('button', 'lnk', 'Save this quote on the lead'); sv0.type = 'button';
           sv0.addEventListener('click', function () {
-            api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false, extras: st.cur.extras || [] } }).then(function (j) {
+            api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: false, extras: st.cur.extras || [] } }).then(function (j) {
               if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
-              lead.quote = { price: st.cur.price, pkg: st.pkg, sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, extras: st.cur.extras || [], by: S.me, at: Math.floor(Date.now() / 1000), link: j.link };
+              lead.quote = { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, extras: st.cur.extras || [], by: S.me, at: Math.floor(Date.now() / 1000), link: j.link };
               toast('Quote saved', money0(st.cur.price) + ' \u00b7 ' + (lead.name || ''), null);
             }).catch(function () { toast('No signal', 'Not saved.', null); });
           });
           var yes0 = q('button', 'save jbook', 'They said yes: take the deposit \u203a'); yes0.type = 'button';
-          yes0.addEventListener('click', function () { signSendView(lead, { price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, extras: st.cur.extras || [] }); });
+          yes0.addEventListener('click', function () { signSendView(lead, { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, extras: st.cur.extras || [] }); });
           acts.appendChild(yes0); acts.appendChild(sv0);
           acts.appendChild(q('div', 'ltrynote', 'Quote it on the phone. If they say yes, take half as a deposit, then send the one-page form to sign. If not, nothing is sent.'));
         } else if (lead) {
           var save = function (sent) {
-            api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: sent, extras: st.cur.extras || [] } }).then(function (j) {
+            api('leadquote', { body: { id: lead.id, price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, sent: sent, extras: st.cur.extras || [] } }).then(function (j) {
               if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
-              lead.quote = { price: st.cur.price, pkg: st.pkg, sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, extras: st.cur.extras || [], sent: sent, by: S.me, at: Math.floor(Date.now() / 1000), link: j.link || (lead.quote && lead.quote.link) };
+              lead.quote = { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb, extras: st.cur.extras || [], sent: sent, by: S.me, at: Math.floor(Date.now() / 1000), link: j.link || (lead.quote && lead.quote.link) };
               if (j.status) lead.status = j.status;
               toast(sent ? 'Quote marked sent' : 'Quote saved', money0(st.cur.price) + ' · ' + (lead.name || ''), null);
               drawActs();
@@ -9005,7 +9014,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (lead.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your lawn quote from ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); row.appendChild(e); }
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
           row.appendChild(ms); acts.appendChild(row); addSendNote(acts, row);
-          if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
+          if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'other' ? (lead.quote.svc || 'another service') : lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
           if (lk && wdOn()) {   /* the day offered (2026-10-14): one tap on their page books it */
             var ob = q('div', 'qoffer');
             if (lead.quote.offer) {
