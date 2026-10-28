@@ -1688,6 +1688,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .alerts{display:grid;gap:10px}.alist{display:grid;gap:8px}.arow{display:flex;align-items:flex-start;gap:6px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.arow.unread{border-left:4px solid var(--accent,#2e5e2c)}.arow .abody{flex:1;display:grid;gap:2px;text-align:left;padding:10px 12px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer}.arow .abody span{color:var(--ink)}.arow .abody small{color:var(--soft)}.arow:not(.unread) .abody b{font-weight:600}.arow .ax{border:0;background:transparent;color:var(--soft);padding:10px;cursor:pointer}
   .pnudge{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 14px;border-radius:10px;background:var(--sunk);font-size:14px}.pnudge[hidden]{display:none}.pnudge.bar{border-radius:0;margin:0}body:not(.dnav-on) .pnudge.bar{display:none}   /* the in-app alerts (2026-10-27) */
   .hoursform .hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.hoursform .hrow>b{min-width:7em}.hoursform .hoff{display:flex;align-items:center;gap:4px}.hoursform .htimes{display:flex;align-items:center;gap:6px}.hoursform .htimes[hidden]{display:none}   /* work hours (2026-10-27) */
+  .fubook{margin-top:10px}.fuform,.fuconf{display:grid;gap:8px;margin-top:8px}.fudays{display:flex;flex-wrap:wrap;gap:8px}.fudays[hidden]{display:none}.fuform label[hidden]{display:none}.tosched{display:grid;gap:8px;margin:0 0 12px}.tosched[hidden]{display:none}.fubline{background:#fff4dc;color:#6b4a00}tr.sfub td{background:#fff8e6}   /* crew follow-ups (2026-10-28) */
   .afpanel{display:grid;gap:8px;margin:8px 0}.afpanel[hidden]{display:none}.aftext{width:100%;box-sizing:border-box;font:13px/1.45 inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:inherit}   /* aftercare by hand (2026-10-28) */
   .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
@@ -3222,6 +3223,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if ((m = /[?&]job=(j[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return jobView(m[1], alertsView, wdOn() ? '' : S.me);
     if ((m = /[?&]walk=(v[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return walkView(m[1], alertsView);
     if ((m = /[?&]lead=([wm]\d{14}[0-9a-f]{6})\b/.exec(u))) { if (qView()) return quickQuoteView(); if (asOffice() || S.role === 'admin') { S.pipeStage = null; S.pipeSel = 'lead:' + m[1]; S.pipeFocus = m[1]; return pipelineView(); } return teamLeadsView(); }
+    if (/[?&]tosched=1/.test(u) && feat('walkdesk')) return qView() ? schedView() : jobsView();   /* To schedule (2026-10-28) */
     if (x.k === 'lead' && !qView() && (asOffice() || S.role === 'admin')) return pipeOpen();
     if (x.k === 'lead' && qView()) return quickQuoteView();
   }
@@ -5535,6 +5537,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var box = q('div', 'jbox');
     if (S.viewAs) box.appendChild(viewAsBar());
     var top = q('div', 'jtop'); box.appendChild(top);
+    box.appendChild(toschedBox(jobsBoard));   /* follow-ups the crew booked, to confirm (2026-10-28) */
     var nav = q('div', 'jnav');
     var pv = q('button', null, '‹ Week before'), tw = q('button', null, 'This week'), nx = q('button', null, 'Week after ›');
     pv.type = tw.type = nx.type = 'button';
@@ -6461,6 +6464,74 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (CO.a365) w.appendChild(q('div', 'sub2', 'Both are optional. They go in the customer’s follow-up email, two days after the job, with a way to ask us for a price.'));
     return w;
   }
+  /* Book a follow-up from the job (2026-10-28, Matthew: "if he does an aeration job and they wanna book an aeration for spring he should be
+     allowed to take the booking there. That info needs to get back to jen"): a day and time, or just a month; Jen confirms */
+  var FUB_SLOTS = [['s1', '9:30-10:00'], ['s2', '10-12'], ['s3', '12-2'], ['s4', '3:00']];
+  function fuBookBox(jb) {
+    var w = q('div', 'fubook'), open = q('button', 'lnk', '+ Book a follow-up'); open.type = 'button'; w.appendChild(open);
+    open.addEventListener('click', function () { open.hidden = true; w.appendChild(fuBookForm(jb, function () { w.textContent = ''; w.appendChild(q('div', 'qline qyes', 'Follow-up booked. Jen has been told and confirms it.')); }, function () { w.textContent = ''; w.appendChild(fuBookBox(jb)); })); });
+    return w;
+  }
+  function fuBookForm(jb, done, cancel) {
+    var f = q('div', 'phf fuform'); f.appendChild(q('div', 'wl', 'Book a follow-up'));
+    var fl = function (label, el) { var lb = q('label', null, label); lb.appendChild(el); f.appendChild(lb); return el; };
+    var sv = q('select'); [[jb.pkg || 'full', 'Same as this job (' + (JOB_PKG[jb.pkg] || 'Aerate, seed & feed') + ')'], ['aerate', 'Aerate only'], ['full', 'Aerate, seed & feed'], ['other', 'Another service']].forEach(function (o, i) { if (i > 0 && o[0] === (jb.pkg || 'full')) return; var op = q('option', null, o[1]); op.value = i === 0 ? '=' + o[0] : o[0]; sv.appendChild(op); });
+    fl('Service', sv); var ot = q('input'); ot.maxLength = 80; ot.placeholder = 'Which service'; var otl = fl('Other service', ot); otl.parentNode.hidden = true;
+    sv.addEventListener('change', function () { otl.parentNode.hidden = sv.value !== 'other'; });
+    var mode = q('div', 'aseg'), byDay = q('button', null, 'A day and time'), byMonth = q('button', null, 'Just a month'); byDay.type = byMonth.type = 'button'; mode.appendChild(byDay); mode.appendChild(byMonth); f.appendChild(mode);
+    var dayBox = q('div', 'fudays'), dt = q('input'), sl = q('select'); dt.type = 'date'; dt.min = isoOf(new Date(Date.now() + 86400000)); dt.setAttribute('aria-label', 'Day');
+    FUB_SLOTS.forEach(function (s) { var op = q('option', null, s[1]); op.value = s[0]; sl.appendChild(op); }); sl.setAttribute('aria-label', 'Arrival time');
+    dayBox.appendChild(dt); dayBox.appendChild(sl); f.appendChild(dayBox);
+    var mBox = q('div', 'fudays'), mo = q('input'); mo.type = 'month'; mo.min = todayISO().slice(0, 7); mo.setAttribute('aria-label', 'Month'); mo.placeholder = 'YYYY-MM'; mBox.appendChild(mo); f.appendChild(mBox);
+    var M = 'day'; var paint = function () { byDay.setAttribute('aria-pressed', String(M === 'day')); byMonth.setAttribute('aria-pressed', String(M === 'month')); dayBox.hidden = M !== 'day'; mBox.hidden = M !== 'month'; };
+    byDay.addEventListener('click', function () { M = 'day'; paint(); }); byMonth.addEventListener('click', function () { M = 'month'; paint(); }); paint();
+    var nt = q('textarea'); nt.rows = 2; nt.maxLength = 500; nt.placeholder = 'Anything Jen should know'; fl('Notes', nt);
+    var agL = q('label', 'cpck'), ag = q('input'); ag.type = 'checkbox'; agL.appendChild(ag); agL.appendChild(q('span', null, 'Customer already agreed to the price')); f.appendChild(agL);
+    var pr = q('input'); pr.type = 'number'; pr.min = 1; pr.step = 1; pr.inputMode = 'numeric'; pr.value = jb.price || ''; var prl = fl('Price they agreed to ($)', pr).parentNode; prl.hidden = true;
+    ag.addEventListener('change', function () { prl.hidden = !ag.checked; });
+    var err = q('div', 'err'), row = q('div', 'row2'), go = q('button', 'save', 'Book it'), cx = q('button', null, 'Cancel'); go.type = cx.type = 'button'; row.appendChild(go); row.appendChild(cx); f.appendChild(err); f.appendChild(row);
+    f.appendChild(q('div', 'sub2', 'Jen gets it to confirm. Nothing goes to the customer.'));
+    cx.addEventListener('click', function () { if (cancel) cancel(); });
+    go.addEventListener('click', function () {
+      var b = { job: jb.id, pkg: sv.value.charAt(0) === '=' ? sv.value.slice(1) : sv.value, other: ot.value.trim(), note: nt.value.trim(), agreed: ag.checked, price: pr.value };
+      if (M === 'day') { if (!dt.value) { err.textContent = 'Pick the day, or choose Just a month.'; return; } b.date = dt.value; b.slot = sl.value; } else { if (!mo.value) { err.textContent = 'Pick the month.'; return; } b.month = mo.value; }
+      go.disabled = true; err.textContent = '';
+      api('fubook', { body: b }).then(function (j) { go.disabled = false; if (j._status === 401) return signinView('Signed out. Enter your code again.'); if (!j.ok) { err.textContent = j.error || 'Not booked. Try again.'; return; } toast('Follow-up booked', (j.when || j.month || '') + ' · Jen confirms it', null); if (done) done(j); }).catch(function () { go.disabled = false; err.textContent = 'No signal: nothing was booked.'; });
+    });
+    return f;
+  }
+  /* Jen confirms (2026-10-28): the final day, time and price; or takes it off */
+  function fuConfirmForm(x, after) {
+    var f = q('div', 'phf fuconf'), dt = q('input'), sl = q('select'), pr = q('input'), err = q('div', 'err');
+    dt.type = 'date'; dt.min = todayISO(); dt.value = x.date || (x.month ? x.month + '-01' : ''); dt.setAttribute('aria-label', 'Day');
+    FUB_SLOTS.forEach(function (s) { var op = q('option', null, s[1]); op.value = s[0]; sl.appendChild(op); }); if (x.slot && /^s[1-4]$/.test(x.slot)) sl.value = x.slot; sl.setAttribute('aria-label', 'Arrival time');
+    pr.type = 'number'; pr.min = 1; pr.step = 1; pr.inputMode = 'numeric'; pr.value = x.price || ''; pr.placeholder = 'Price $'; pr.setAttribute('aria-label', 'Price');
+    var r = q('div', 'fudays'); r.appendChild(dt); r.appendChild(sl); r.appendChild(pr); f.appendChild(r); f.appendChild(err);
+    var row = q('div', 'row2'), ok = q('button', 'save', 'Confirm'), rm = q('button', 'lnk danger', 'Take it off'); ok.type = rm.type = 'button'; row.appendChild(ok); row.appendChild(rm); f.appendChild(row);
+    ok.addEventListener('click', function () {
+      if (!dt.value) { err.textContent = 'Pick the day.'; return; } if (!(+pr.value > 0)) { err.textContent = 'Give the job its price.'; return; }
+      ok.disabled = true; err.textContent = '';
+      api('fuconfirm', { body: { id: x.id, date: dt.value, slot: sl.value, price: pr.value, crew: x.crew } }).then(function (j) { ok.disabled = false; if (!j.ok) { err.textContent = j.error || 'Not saved.'; return; } toast('Follow-up confirmed', x.name, null); if (after) after(); }).catch(function () { ok.disabled = false; err.textContent = 'No signal: nothing was saved.'; });
+    });
+    rm.addEventListener('click', function () { if (!window.confirm('Take the follow-up for ' + x.name + ' off?')) return; api('fuconfirm', { body: { id: x.id, del: true } }).then(function (j) { if (!j.ok) { err.textContent = j.error || 'Not done.'; return; } toast('Taken off', x.name, null); if (after) after(); }).catch(function () { err.textContent = 'No signal.'; }); });
+    return f;
+  }
+  /* the To schedule list: month-only follow-ups and the crew's day bookings waiting for Jen; on the Jobs page and Jen's Schedule */
+  function toschedBox(redraw) {
+    var w = q('div', 'tosched'); w.hidden = true;
+    api('tosched').then(function (j) {
+      if (!j || !j.ok || !(j.items || []).length) return;
+      w.hidden = false; w.appendChild(q('h2', 'tgrp', 'To schedule · ' + j.items.length));
+      j.items.forEach(function (x) {
+        var c = q('div', 'door lead tsrow'); c.appendChild(q('div', 'addr', x.name));
+        c.appendChild(q('div', 'meta', (x.kind === 'month' ? x.monthText : x.when) + ' · ' + x.what + ' · booked by ' + strtokName(x.by) + (x.kind === 'day' ? ' (on ' + strtokName(x.crew) + '’s schedule, needs Jen)' : '')));
+        if (x.note) c.appendChild(q('div', 'lmsg', x.note));
+        var op = q('button', 'lnk', 'Confirm ›'); op.type = 'button'; op.addEventListener('click', function () { op.hidden = true; c.appendChild(fuConfirmForm(x, redraw)); }); c.appendChild(op);
+        w.appendChild(c);
+      });
+    }).catch(function () {});
+    return w;
+  }
   /* the follow-up email on the job (2026-10-27): due, sent, or why not; Don't send for this job; Send now (only once an admin has switched
      follow-up emails on). The office and Jen. */
   function jobFollowBox(jb, redraw) {
@@ -6681,6 +6752,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     c.appendChild(jobNotesBox(jb, redraw));   /* notes (2026-10-26) */
     c.appendChild(jobWorkBox(jb, redraw));   /* Brad's two lines (2026-10-27) */
+    if (jb.fub && jb.fub.needs) { c.appendChild(q('div', 'qline fubline', 'Booked by ' + strtokName(jb.fub.by) + ' · needs Jen' + (jb.fub.what ? ' · ' + jb.fub.what : ''))); if (qView() || wdOn()) { var fcb = q('div'); fcb.appendChild(fuConfirmForm({ id: jb.id, kind: 'day', name: jobName(jb), date: jb.date, slot: jb.slot, price: jb.price, crew: jb.crew }, redraw)); c.appendChild(fcb); } }   /* a follow-up the crew booked (2026-10-28) */
+    if (!qView() && jb.lead) c.appendChild(fuBookBox(jb));   /* Book a follow-up (2026-10-28) */
     if (!qView()) c.appendChild(jobPhotoBox(jb, redraw));   /* photos (2026-10-19); Jen's account cannot open them */
     c.appendChild(q('div', 'dwh', 'How did it go?'));
     var owe = (jb.pay && jb.pay.s === 'paid') || (jb.pay && jb.pay.s === 'plan') ? 0 : jb.price - ((jb.pay && jb.pay.amt) || 0);
@@ -6765,6 +6838,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var sl2 = q('label', 'jwl', 'Work I’d suggest (optional)'), st2 = q('textarea'); st2.rows = 2; st2.maxLength = 500; st2.value = jb.suggest || ''; sl2.appendChild(st2); panel.appendChild(sl2);
         panel.appendChild(err);
         var sv = q('button', 'save', 'Save: job done'); sv.type = 'button'; panel.appendChild(sv);
+        if (jb.lead && !qView()) panel.appendChild(fuBookBox(jb));   /* book the next one while there (2026-10-28) */
         sv.addEventListener('click', function () {
           var mins = (+hs.value) * 60 + (+ms.value);
           if (mins < 5 && !wdOn() && !qView()) { err.textContent = 'Add about how long it took (hours and minutes).'; return; }
@@ -7747,6 +7821,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var box = q('div', 'schedv');
     if (asJobs && (adminView() || asOffice()) && feat('walkdesk')) box.appendChild(squareConfirmCard(function () { again(wk); }));   /* 2026-10-20 */
+    if (feat('walkdesk')) box.appendChild(toschedBox(function () { again(wk); }));   /* follow-ups the crew booked, to confirm (2026-10-28) */
     var nav = q('div', 'schednav');
     var pv = q('button', null, '\u2039 Week before'), nx = q('button', null, 'Week after \u203a'); pv.type = nx.type = 'button';
     var end = jobAdd(wk, 6);
@@ -7788,10 +7863,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               var dc = q('td', 'sdate', firstOfDay ? dayName(d) + (area ? '\n' + area : '') : ''); tr.appendChild(dc); firstOfDay = false;
               if (!past && !qView()) { dc.classList.add('sarea'); dc.title = 'Set ' + String(crew).split(' ')[0] + '\u2019s town for this day'; (function (dd, cc, aa) { dc.addEventListener('click', function (e) { e.stopPropagation(); jobAreaAsk(dd, cc, aa, function () { again(wk); }); }); })(d, crew, area); }   /* the date once per day, the crew's town under it, as in the sheet */
               tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
-              if (r && r.mine) tr.classList.add('smine');   /* not .mine: that is the chip style */
+              if (r && r.mine) tr.classList.add('smine');
+              if (r && r.fub) tr.classList.add('sfub');   /* booked by the crew, needs Jen (2026-10-28) */   /* not .mine: that is the chip style */
               if (r && r.kind === 'held' && r.hold) { tr.classList.add('edit'); tr.title = 'Not signed yet: move or take off'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }   /* held, not signed (2026-10-16) */
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }
-              if (r) { tr.appendChild(q('td', null, r.name)); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { again(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
+              if (r) { tr.appendChild(q('td', null, r.name + (r.fub ? ' · ' + r.fub : ''))); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { again(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
               else if (bk) { tr.appendChild(q('td', null, 'Off')); [bk.note || 'Blocked off', '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               bd.appendChild(tr); n++;
@@ -13180,12 +13256,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j.want) w.appendChild(q('small', 'cpwork', 'Work they want done: ' + j.want));   /* Brad's two lines and the follow-up email (2026-10-27) */
       if (j.suggest) w.appendChild(q('small', 'cpwork', 'Work suggested: ' + j.suggest));
       if (j.fuState) w.appendChild(q('small', 'cpwork', j.fuState.text + (j.fuState.off10 ? ' \u00b7 ' + j.fuState.off10 : '')));
+      if (j.fub) w.appendChild(q('small', 'cpwork', j.fub));   /* booked by the crew (2026-10-28) */
       r.appendChild(w);
       r.appendChild(q('span', 'cbal ' + (left > 0 ? 'owe' : 'ok'), !j.price && p.s !== 'paid' ? '\u2013' : left > 0 ? money0(left) + ' due' : 'Paid'));
       var ob = q('button', 'lnk', 'Open'); ob.type = 'button'; ob.addEventListener('click', function () { jobView(j.id, function () { customerView(c.id); }, j.crew); }); r.appendChild(ob);
       if (jobPaidAny(j)) { var rb = q('button', 'lnk', 'Receipt'); rb.type = 'button'; rb.addEventListener('click', function () { receiptOpen(j.id); }); r.appendChild(rb); }   /* 2026-10-27 */
       box.appendChild(r);
     });
+    (c.tosched || []).forEach(function (t) { box.appendChild(q('div', 'qline fubline', t)); });   /* a month the crew booked, for Jen to schedule (2026-10-28) */
     if (!jobs.length) box.appendChild(q('div', 'msg soft', c.lead ? 'No job booked yet. When one is, its deposit and balance show here.' : 'Deposits show here for customers who came through the Pipeline. For this one, log payments with the visits below.'));
     else box.appendChild(q('div', 'sub2', 'Deposits paid ' + money0(dep) + ' \u00b7 balance due ' + money0(owe) + (owe > 0 && c.cof ? ' \u00b7 open the job to charge it to their card' : '')));
     if (c.cof) box.appendChild(q('div', 'sub2', 'Card on file: ' + (c.cof.brand || 'Card') + ' ending ' + c.cof.last4 + (c.cof.exp ? ' (exp ' + c.cof.exp + ')' : '') + ', saved in Square.'));

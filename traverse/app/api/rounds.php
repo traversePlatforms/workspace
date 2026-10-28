@@ -3018,7 +3018,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3036,7 +3036,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'tosched', 'fuconfirm', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -5218,7 +5218,7 @@ function jobsAll(): array {
             if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0), 'cnotes' => []]; continue; }
             if (is_array($r['cnote'] ?? null)) { $o[$id]['cnotes'][] = ['t' => (string) ($r['cnote']['t'] ?? ''), 'by' => (string) ($r['cnote']['by'] ?? ''), 'at' => (int) ($r['cnote']['at'] ?? 0)]; continue; }   /* notes on the job from the crew or office (2026-10-26) */
             $moved = false;
-            foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts', 'want', 'suggest', 'fu', 'funo', 'rcpt', 'payinfo'] as $k) if (array_key_exists($k, $r)) {   /* + Brad's two lines and the follow-up email (2026-10-27) */ if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+            foreach (['crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts', 'want', 'suggest', 'fu', 'funo', 'rcpt', 'payinfo', 'fub'] as $k) if (array_key_exists($k, $r)) {   /* + Brad's two lines and the follow-up email (2026-10-27) */ if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
             if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
             if (!empty($r['del'])) $o[$id]['off'] = true;
             if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -5262,7 +5262,7 @@ function blockAt(string $crew, string $date, string $slot): ?array {
 }
 function blocksAhead(): array { $t = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $o = array_map('blockNorm', array_values(array_filter(jobBlocks(), fn($b) => ($b['to'] ?? '') >= $t))); usort($o, fn($a, $b) => [$a['from'], $a['crew']] <=> [$b['from'], $b['crew']]); return $o; }
 function jobShow(array $j, ?array $leads = null): array {
-    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet', 'want', 'suggest', 'funo', 'rcpt', 'payinfo']));
+    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet', 'want', 'suggest', 'funo', 'rcpt', 'payinfo', 'fub']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
     if ($fs = followupState($j)) $o['fuState'] = $fs;   /* the follow-up email: due, sent, or why not (2026-10-27) */
     $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
@@ -5314,6 +5314,7 @@ if ($action === 'schedview') {
     foreach ($rows as &$rw) { if (($rw['town'] ?? '') !== '') continue; $lid = ($rw['kind'] ?? '') === 'booked' ? (string) ($JA[$rw['id'] ?? '']['lead'] ?? '') : (string) ($rw['lead'] ?? ($rw['hold'] ?? '')); if ($lid !== '' && isset($leads[$lid]) && ($role !== 'quote' || qMine($leads[$lid]) || webLead($leads[$lid]))) $rw['tl'] = $lid; } unset($rw);
     foreach ($rows as &$rw) { if (desk() && ($rw['kind'] ?? '') === 'held' && !empty($rw['lead'])) $rw['hold'] = $rw['lead']; unset($rw['lead']); } unset($rw);   /* held: 'hold' = the lead, for move or take off (2026-10-16) */
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
+    foreach ($rows as &$rw) if (($rw['kind'] ?? '') === 'booked' && !empty($JA[$rw['id'] ?? '']['fub']['needs'])) $rw['fub'] = 'Booked by ' . strtok((string) $JA[$rw['id']]['fub']['by'], ' ') . ' · needs Jen'; unset($rw);   /* a follow-up the crew booked, to confirm (2026-10-28) */
     out(['ok' => true, 'rows' => $rows, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'days' => $days, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead(), 'hours' => hoursAll(jobCrewList())]);   /* + work hours (2026-10-27) */
 }
 /* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
@@ -6417,6 +6418,109 @@ if ($action === 'jobwork') {
     }
     $j2 = jobsAll()[$jid];
     out(['ok' => true, 'want' => (string) ($j2['want'] ?? ''), 'suggest' => (string) ($j2['suggest'] ?? '')]);
+}
+/* ---- a follow-up booked by the crew (2026-10-28, Matthew: "Brad also needs the ability to book a follow up appointment for a job that he
+ * works. So if he does an aeration job and they wanna book an aeration for spring he should be allowed to take the booking there. That info
+ * needs to get back to jen"; he chose: Brad picks a date (or just a month), Jen confirms) ----
+ * From his job: the service (the job's package, aerate only, or another one he names), a day and arrival time or just a month, notes, and
+ * the price if the customer already agreed to it. A day makes a job on his schedule (work hours and free times apply), marked "Booked by
+ * Brad · needs Jen" (fub.needs); a month goes on Jen's To schedule list (tosched.log). Jen's office and quote logins get an alert, the lead
+ * a note, the customer page shows it. Jen's Confirm sets the final day, time and price. Nothing goes to the customer. */
+function toschedAll(): array { $o = []; foreach (readLines(DATA_DIR . '/tosched.log') as $r) { $k = (string) $r['id']; if (isset($o[$k])) { $o[$k] = array_merge($o[$k], $r); continue; } $o[$k] = $r; } return array_filter($o, fn($x) => empty($x['del']) && empty($x['job'])); }
+function jenAlert(string $title, string $text, string $url, bool $web = false): void {   /* Jen's office login (a365Alert's office) and her quote login, pushed and listed */
+    global $basePeople, $acct, $sessionKey;
+    a365Alert($title, $text, false, false, $web, true, $url);
+    if (!$web) foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'quote') pushName((string) $r['name'], $title, $text, $url, 'fub-' . md5($url . $title));
+}
+function fubPkgText(string $pkg, string $other): string { return $pkg === 'other' ? ($other !== '' ? $other : 'Another service') : (['full' => 'Aerate, seed & feed', 'aerate' => 'Aerate only', 'plan' => 'Service plan'][$pkg] ?? 'Aerate, seed & feed'); }
+if ($action === 'fubook') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!preg_match('/^j[0-9a-f]{12}$/D', $jid) || !$j || $j['off']) fail('No such job.', 404);
+    if (!jobMine($j)) fail('Not allowed.', 403);
+    $L = leadsAll()[(string) $j['lead']] ?? null; if (!$L) fail('This job has no lead to book on.', 404);
+    $pkg = in_array($body['pkg'] ?? '', ['full', 'aerate', 'plan', 'other'], true) ? (string) $body['pkg'] : (string) ($j['pkg'] ?? 'full');
+    $other = $clean($body['other'] ?? '', 80); if ($pkg === 'other' && $other === '') fail('Say what the other service is.');
+    $note = $clean($body['note'] ?? '', 500); $agreed = !empty($body['agreed']);
+    $price = $agreed ? (int) round((float) ($body['price'] ?? $j['price'])) : 0; if ($agreed && ($price < 1 || $price > 100000)) fail('Give the price they agreed to.');
+    $crew = (string) $j['crew']; $who = trim((string) ($L['name'] ?? ($j['title'] ?? ''))) ?: 'a customer'; $by = strtok($me, ' ');
+    $what = fubPkgText($pkg, $other) . ($agreed ? ', $' . $price . ' agreed' : ', price to confirm');
+    $date = (string) ($body['date'] ?? ''); $month = (string) ($body['month'] ?? '');
+    $tz = new DateTimeZone(appTz()); $today = (new DateTime('today', $tz))->format('Y-m-d');
+    if ($date !== '') {
+        if (!dateOk($date) || $date <= $today) fail('Pick a day after today.');
+        if (in_array((int) (new DateTime($date . ' 12:00', $tz))->format('w'), jobClosed(), true)) fail('That is a closed day (Sunday).');
+        $slot = (string) ($body['slot'] ?? ''); if (!jobSlot($slot)) fail('Pick an arrival time.');
+        $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+        if ($why = slotFree($crew, $date, $slot, (string) $j['lead'])) fail($why, 409);   /* free, and inside their work hours */
+        $nid = 'j' . bin2hex(random_bytes(6));
+        $row = ['id' => $nid, 'lead' => (string) $j['lead'], 'title' => $who, 'crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'pkg' => $pkg === 'other' ? 'full' : $pkg, 'scope' => (string) ($j['scope'] ?? 'all'),
+                'seedLb' => null, 'fertLb' => null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => mb_substr(($pkg === 'other' ? $other . '. ' : '') . $note, 0, 300), 'addr' => (string) $j['addr'],
+                'fub' => ['by' => $me, 'at' => time(), 'from' => $jid, 'needs' => true, 'agreed' => $agreed, 'what' => $what], 'by' => $me, 'at' => time()];
+        if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
+        flock($lk, LOCK_UN);
+        $when = deskWhen($date, '') . ', ' . slotWords($slot);
+        appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => mb_substr('Follow-up booked by ' . $me . ' from the job: ' . $when . ', ' . $what . '. Needs Jen to confirm.' . ($note !== '' ? ' "' . $note . '"' : ''), 0, 600), 'by' => $me, 'at' => time()]);
+        jenAlert('Follow-up booked by ' . $by . ': confirm it', $who . ' · ' . $when . ' · ' . $what, './?job=' . $nid);
+        out(['ok' => true, 'id' => $nid, 'when' => $when]);
+    }
+    if (!preg_match('/^(20\d\d)-(0[1-9]|1[0-2])$/D', $month, $mm) || $month < substr($today, 0, 7)) fail('Pick a day and time, or a month.');
+    $fid = 'f' . bin2hex(random_bytes(6));
+    $mText = (new DateTime($month . '-01 12:00', $tz))->format('F Y');
+    if (!appendLine(DATA_DIR . '/tosched.log', ['id' => $fid, 'lead' => (string) $j['lead'], 'from' => $jid, 'crew' => $crew, 'month' => $month, 'pkg' => $pkg, 'other' => $other, 'note' => $note, 'price' => $price, 'agreed' => $agreed, 'what' => $what, 'name' => $who, 'addr' => (string) $j['addr'], 'scope' => (string) ($j['scope'] ?? 'all'), 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => mb_substr('Follow-up wanted, booked by ' . $me . ' from the job: ' . $mText . ', ' . $what . '. On Jen\'s To schedule list.' . ($note !== '' ? ' "' . $note . '"' : ''), 0, 600), 'by' => $me, 'at' => time()]);
+    jenAlert('Follow-up to schedule: ' . $who, $mText . ' · ' . $what . ' · booked by ' . $by, './?tosched=1');
+    out(['ok' => true, 'id' => $fid, 'month' => $mText]);
+}
+/* Jen's To schedule list and the crew's bookings waiting for her, and her Confirm (the final day, time and price) or Remove */
+if ($action === 'tosched' || $action === 'fuconfirm') {
+    if (!feature('walkdesk')) fail('Not here.', 404);
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    $leads = leadsAll();
+    if ($action === 'tosched') {
+        $items = [];
+        foreach (toschedAll() as $x) if (isset($leads[(string) $x['lead']])) $items[] = ['id' => $x['id'], 'kind' => 'month', 'name' => (string) $x['name'], 'month' => (string) $x['month'], 'monthText' => (new DateTime($x['month'] . '-01 12:00'))->format('F Y'), 'what' => (string) $x['what'], 'note' => (string) $x['note'], 'price' => (int) $x['price'], 'agreed' => !empty($x['agreed']), 'crew' => (string) $x['crew'], 'by' => (string) $x['by'], 'at' => (int) $x['at'], 'addr' => (string) $x['addr']];
+        foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['fub']['needs']) && isset($leads[(string) $j['lead']])) $items[] = ['id' => $j['id'], 'kind' => 'day', 'name' => trim((string) ($leads[$j['lead']]['name'] ?? $j['title'])), 'date' => $j['date'], 'slot' => $j['slot'], 'when' => deskWhen($j['date'], '') . ', ' . slotWords((string) $j['slot']), 'what' => (string) ($j['fub']['what'] ?? ''), 'note' => (string) ($j['note'] ?? ''), 'price' => (int) $j['price'], 'agreed' => !empty($j['fub']['agreed']), 'crew' => (string) $j['crew'], 'by' => (string) $j['fub']['by'], 'at' => (int) $j['fub']['at'], 'addr' => (string) $j['addr']];
+        usort($items, fn($a, $b) => $a['at'] <=> $b['at']);
+        out(['ok' => true, 'items' => $items, 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'crews' => jobCrewList()]);
+    }
+    if (!$isPost) fail('POST required', 405);
+    $id = (string) ($body['id'] ?? ''); $T = toschedAll()[$id] ?? null; $J = jobsAll()[$id] ?? null;
+    if ($J && ($J['off'] || empty($J['fub']['needs']))) $J = null;
+    if (!$T && !$J) fail('That one is already confirmed or gone.', 404);
+    $lead = (string) ($T['lead'] ?? $J['lead']); if (!isset($leads[$lead])) fail('Not found.', 404);
+    $who = trim((string) ($leads[$lead]['name'] ?? '')) ?: 'a customer';
+    if (!empty($body['del'])) {
+        if ($T) appendLine(DATA_DIR . '/tosched.log', ['id' => $id, 'del' => 1, 'by' => $me, 'at' => time()]);
+        else { appendLine(DATA_DIR . '/jobs.log', ['id' => $id, 'del' => 1, 'by' => $me, 'at' => time()]); crewJobAlert((string) $J['crew'], $id, 'off', 'taken off by ' . strtok($me, ' ')); }
+        appendLine(leadsDir() . '/leadst.log', ['id' => $lead, 'note' => 'The follow-up the crew booked was taken off by ' . $me . '.', 'by' => $me, 'at' => time()]);
+        out(['ok' => true]);
+    }
+    $crew = (string) ($body['crew'] ?? ($T['crew'] ?? $J['crew'])); if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the job.');
+    $date = (string) ($body['date'] ?? ''); $slot = (string) ($body['slot'] ?? '');
+    $tz = new DateTimeZone(appTz());
+    if (!dateOk($date) || $date < (new DateTime('today', $tz))->format('Y-m-d')) fail('Pick the day (today or later).');
+    if (in_array((int) (new DateTime($date . ' 12:00', $tz))->format('w'), jobClosed(), true) && empty($body['force'])) fail('That is a closed day (Sunday).');
+    if (!jobSlot($slot)) fail('Pick an arrival time.');
+    $price = (int) round((float) ($body['price'] ?? 0)); if ($price < 1 || $price > 100000) fail('Give the job its price.');
+    $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    if ($why = slotFree($crew, $date, $slot, $lead, $J ? $id : '')) fail($why, 409);
+    if ($J) {
+        $fub = $J['fub']; $fub['needs'] = false; $fub['ok'] = $me; $fub['okAt'] = time();
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $id, 'crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'fub' => $fub, 'by' => $me, 'at' => time()]); $jid = $id;
+        if ($crew !== $J['crew']) { crewJobAlert($crew, $jid, 'new'); crewJobAlert((string) $J['crew'], $jid, 'off', 'now with ' . strtok($crew, ' ')); }
+        elseif ($date !== $J['date'] || $slot !== $J['slot']) crewJobAlert($crew, $jid, 'moved', 'confirmed by ' . strtok($me, ' '));
+    } else {
+        $jid = 'j' . bin2hex(random_bytes(6));
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'lead' => $lead, 'title' => $who, 'crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'pkg' => $T['pkg'] === 'other' ? 'full' : (string) $T['pkg'], 'scope' => (string) ($T['scope'] ?? 'all'),
+            'seedLb' => null, 'fertLb' => null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => mb_substr(($T['pkg'] === 'other' ? $T['other'] . '. ' : '') . (string) $T['note'], 0, 300), 'addr' => (string) $T['addr'],
+            'fub' => ['by' => (string) $T['by'], 'at' => (int) $T['at'], 'from' => (string) $T['from'], 'needs' => false, 'agreed' => !empty($T['agreed']), 'what' => (string) $T['what'], 'ok' => $me, 'okAt' => time()], 'by' => $me, 'at' => time()]);
+        appendLine(DATA_DIR . '/tosched.log', ['id' => $id, 'job' => $jid, 'by' => $me, 'at' => time()]);
+        crewJobAlert($crew, $jid, 'new', 'follow-up confirmed by ' . strtok($me, ' '));
+    }
+    flock($lk, LOCK_UN);
+    appendLine(leadsDir() . '/leadst.log', ['id' => $lead, 'note' => 'Follow-up confirmed by ' . $me . ': ' . deskWhen($date, '') . ', ' . slotWords($slot) . ' with ' . $crew . ', $' . $price . '.', 'by' => $me, 'at' => time()]);
+    out(['ok' => true, 'id' => $jid]);
 }
 /* the follow-up email on a job: Don't send, and Send now (2026-10-27). The office, or Jen on a job she manages. Send now only while the
    company switch is on: nothing reaches a customer until Matthew turns it on. */
@@ -8696,7 +8800,9 @@ if (in_array($action, ['customers', 'customersave', 'customerfrom', 'customerimp
                 static $jByLead = null; if ($jByLead === null) { $jByLead = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead'])) $jByLead[(string) $j['lead']][] = $j; }
                 $c['jobs'] = array_map(fn($j) => ['id' => (string) $j['id'], 'date' => (string) $j['date'], 'slot' => (string) $j['slot'], 'crew' => (string) $j['crew'], 'price' => (int) ($j['price'] ?? 0),
                     'pay' => $j['pay'] ?? ['s' => 'unpaid'], 'done' => $j['done'] ?? null, 'addr' => (string) ($j['addr'] ?? ''), 'sqcharge' => $j['sqcharge'] ?? null,
-                    'want' => (string) ($j['want'] ?? ''), 'suggest' => (string) ($j['suggest'] ?? ''), 'fuState' => followupState($j), 'rcpt' => $j['rcpt'] ?? null], $jByLead[(string) $c['lead']] ?? []);   /* + Brad's two lines and the follow-up email (2026-10-27) */
+                    'want' => (string) ($j['want'] ?? ''), 'suggest' => (string) ($j['suggest'] ?? ''), 'fuState' => followupState($j), 'rcpt' => $j['rcpt'] ?? null, 'fub' => !empty($j['fub']) ? ('Follow-up booked by ' . strtok((string) $j['fub']['by'], ' ') . (!empty($j['fub']['needs']) ? ' · needs Jen' : ' · confirmed')) : ''], $jByLead[(string) $c['lead']] ?? []);
+                static $tsByLead = null; if ($tsByLead === null) { $tsByLead = []; foreach (toschedAll() as $x) $tsByLead[(string) $x['lead']][] = 'To schedule: ' . (new DateTime($x['month'] . '-01 12:00'))->format('F Y') . ', ' . $x['what'] . ' (booked by ' . strtok((string) $x['by'], ' ') . ')'; }
+                if (!empty($tsByLead[(string) $c['lead']])) $c['tosched'] = $tsByLead[(string) $c['lead']];   /* a follow-up the crew booked for a month (2026-10-28) */   /* + Brad's two lines and the follow-up email (2026-10-27) */
                 usort($c['jobs'], fn($a, $b) => strcmp($b['date'], $a['date']));
                 /* a job marked Done counts as a visit (2026-10-22, Matthew: Randy showed his price but $0 logged and no last job): worked out here, so an
                    undone job drops out by itself; a visit logged by hand the same day is not counted twice */
