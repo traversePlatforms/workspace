@@ -11,7 +11,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url)), DT = process.argv[2];
-if (!DT || !existsSync(join(DT, 'build-rounds-data.mjs'))) throw new Error('usage: node prep-stageb.mjs <door-territory dir>');
+if (!DT || !existsSync(join(DT, 'build-walklist-pdf.mjs'))) throw new Error('usage: node prep-stageb.mjs <door-territory dir>');
 const SKIP = new Set(['g2-berthoud']);
 const LASER = { Larimer: 'larimer', Pueblo: 'pueblo', Mesa: 'mesa' };
 const T = JSON.parse(readFileSync(join(HERE, 'targets.json'), 'utf8'));
