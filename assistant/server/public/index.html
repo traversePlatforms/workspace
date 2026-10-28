@@ -257,6 +257,7 @@
       });
       if (j.setup.anthropic && j.accounts.length) inn.appendChild(chk);
       if (j.setup.anthropic && j.accounts.length) { var ask = btn('Ask', 'chat'); ask.title = 'Talk to your assistant'; ask.addEventListener('click', openChat); inn.appendChild(ask); }
+      var gr = btn('Groceries', null); gr.title = 'The shared grocery list'; gr.addEventListener('click', function () { location.href = 'g.html'; }); inn.appendChild(gr);   /* 2026-10-27 */
       var gs = btn(null, 'gear', 'iconbtn'); gs.title = 'Settings and inboxes'; gs.setAttribute('aria-label', 'Settings and inboxes'); gs.addEventListener('click', function () { S.view = 'settings'; draw(); }); inn.appendChild(gs);
     }
     return top;

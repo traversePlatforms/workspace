@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -36,6 +36,8 @@ if ($action === 'firstpassword') {
     $e = firstPassword((string) ($body['code'] ?? ''), (string) ($body['password'] ?? ''));
     out($e === null ? ['ok' => true] : ['ok' => false, 'error' => $e]);
 }
+/* the shared grocery list: signed in, or with its private link (lib/groceries.php) */
+if (in_array($action, ['gro', 'groadd', 'groset', 'groedit', 'grodel', 'groclear', 'groshare'], true)) groAction($action, $body, $isPost);
 if (!signedIn()) out(['ok' => false, 'error' => 'Signed out.'], 401);
 
 if ($action === 'signout') { $_SESSION = []; session_destroy(); out(['ok' => true]); }
