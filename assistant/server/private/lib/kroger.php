@@ -38,12 +38,37 @@ function krGet(string $query): ?array {
     $tok = krToken(); if (!$tok) return null;
     return krHttp('GET', 'https://api.kroger.com/v1/products?' . $query . '&filter.locationId=' . KR_STORE, ['Authorization: Bearer ' . $tok, 'Accept: application/json']);
 }
-/** up to 8 matches at the store, priced first */
+/* Kroger's search is literal (2026-10-27, Matthew: "chunky peanut butter" found 2; the jars say "crunchy", which finds 50). When a search
+   comes back thin, it also tries the usual other words for the same thing and a broader search, then ranks by how many of the words
+   asked for (or their other words) are in the product name. */
+const KR_ALSO = ['chunky' => 'crunchy', 'crunchy' => 'chunky', 'soda' => 'pop', 'pop' => 'soda', 'hamburger' => 'ground beef', 'hamburger buns' => 'hamburger buns',
+    'tp' => 'toilet paper', 'paper towels' => 'paper towel', 'chips' => 'potato chips', 'oj' => 'orange juice', 'pb' => 'peanut butter', 'mac and cheese' => 'macaroni cheese',
+    'catsup' => 'ketchup', 'scallions' => 'green onions', 'green onions' => 'scallions', 'cilantro' => 'cilantro', 'garbanzo' => 'chickpeas', 'chickpeas' => 'garbanzo'];
+function krFind(string $q, int $limit): array {
+    $j = krGet('filter.term=' . rawurlencode($q) . '&filter.limit=' . $limit);
+    return $j ? array_values(array_filter(array_map('krShape', (array) ($j['data'] ?? [])), fn($p) => $p && $p['productId'] !== '')) : [];
+}
+/** up to 12 matches at the store: closest name first, priced before unpriced */
 function krSearch(string $q): ?array {
-    $j = krGet('filter.term=' . rawurlencode($q) . '&filter.limit=12'); if (!$j) return null;
-    $o = array_values(array_filter(array_map('krShape', (array) ($j['data'] ?? [])), fn($p) => $p && $p['productId'] !== ''));
-    usort($o, fn($a, $b) => ($b['price'] !== null) <=> ($a['price'] !== null));
-    return array_slice($o, 0, 8);
+    if (!krToken()) return null;
+    $q = trim(preg_replace('/\s+/', ' ', mb_strtolower($q)));
+    $found = []; $order = 0;
+    $add = function (array $list) use (&$found, &$order) { foreach ($list as $p) if (!isset($found[$p['productId']])) $found[$p['productId']] = $p + ['_o' => $order++]; };
+    $add(krFind($q, 30));
+    $words = array_values(array_filter(explode(' ', $q), 'strlen'));
+    $alt = $q; foreach (KR_ALSO as $a => $b) if (preg_match('/\b' . preg_quote($a, '/') . '\b/u', $q)) $alt = preg_replace('/\b' . preg_quote($a, '/') . '\b/u', $b, $alt);
+    if (count($found) < 8 && $alt !== $q) $add(krFind($alt, 30));
+    if (count($found) < 8 && count($words) > 1) $add(krFind(implode(' ', array_slice($words, 1)), 30));   /* broader: without the first word */
+    $want = []; foreach ($words as $w) { $want[] = [$w, KR_ALSO[$w] ?? $w]; }
+    $score = function (array $p) use ($want, $q, $alt) {
+        $d = mb_strtolower($p['desc']); $s = 0;
+        foreach ($want as [$w, $x]) if (preg_match('/\b(' . preg_quote($w, '/') . '|' . preg_quote($x, '/') . ')/u', $d)) $s += 2;
+        if (str_contains($d, $q) || str_contains($d, $alt)) $s += 1;   /* the words together, as asked */
+        return $s;
+    };
+    $o = array_values($found);
+    usort($o, fn($a, $b) => [$score($b), $b['price'] !== null, $a['_o']] <=> [$score($a), $a['price'] !== null, $b['_o']]);   /* ties keep Kroger's own order */
+    return array_map(function ($p) { unset($p['_o']); return $p; }, array_slice($o, 0, 12));
 }
 function krProduct(string $pid): ?array { $j = krGet('filter.productId=' . rawurlencode($pid)); $p = $j['data'][0] ?? null; return is_array($p) ? krShape($p) : null; }
 /** refresh picked prices older than 6 hours (one call for up to 50 products); the list as stored after */

@@ -61,8 +61,10 @@
   .login h2{margin:0 0 6px;font-size:20px}
   .login p{color:var(--soft);margin:0 0 14px;font-size:14px}
   .login form{display:grid;gap:10px}
-  .pick{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:5}
-  .pickbox{background:var(--card);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+  .pick{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:5;overscroll-behavior:contain}
+  html.locked,html.locked body{overflow:hidden}
+  html.locked body{position:fixed;left:0;right:0}   /* iPhone Safari ignores overflow on body alone */   /* the picker open: the list behind stays still (2026-10-27, Matthew: scrolling moved the background) */
+  .pickbox{background:var(--card);width:100%;max-width:560px;max-height:85vh;max-height:85dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
   .pickbox h3{margin:0 0 4px;font-size:17px}
   .pickbox .s{color:var(--soft);font-size:13px;margin-bottom:10px}
   .pickbox form{display:flex;gap:8px;margin-bottom:10px}
@@ -195,7 +197,7 @@
     var res = el('div'); bx.appendChild(res);
     var foot = el('div', 'pickfoot'), none = el('button', null, 'No price for this'), close = el('button', null, 'Close');
     none.type = close.type = 'button'; foot.appendChild(it.pick ? none : el('span')); foot.appendChild(close); bx.appendChild(foot);
-    var shut = function () { bg.remove(); };
+    var shut = function () { bg.remove(); document.documentElement.classList.remove('locked'); document.body.style.top = ''; window.scrollTo(0, keepY); };
     close.addEventListener('click', shut); bg.addEventListener('click', function (e) { if (e.target === bg) shut(); });
     none.addEventListener('click', function () { shut(); change('gropick', { id: it.id }); });
     var search = function () {
@@ -214,7 +216,7 @@
       }, function () { res.textContent = ''; res.appendChild(el('div', 's', 'No connection. Try again.')); });
     };
     f.addEventListener('submit', function (e) { e.preventDefault(); search(); });
-    bg.appendChild(bx); document.body.appendChild(bg); search();
+    var keepY = window.scrollY; bg.appendChild(bx); document.body.appendChild(bg); document.body.style.top = -keepY + 'px'; document.documentElement.classList.add('locked'); search();
   }
   function load() { if (busy) return; api('gro').then(function (j) { if (j._status === 401) { login(); return; } if (j.ok && j.rev !== rev) draw(j); }).catch(function () {}); }
   function change(action, body) {
