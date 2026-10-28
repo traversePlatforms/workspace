@@ -15,17 +15,19 @@ const hbar = (x, y, w, h, fill) => { if (w <= 0) return ''; const r = Math.min(4
 const sq = (x, y, w, h, fill) => w > 0 ? `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>` : '';
 const vbar = (x, y0, w, h, fill) => { if (h <= 0) return ''; const r = Math.min(4, h, w / 2), y = y0 - h; return `<path d="M${x},${y0}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y0}Z" fill="${fill}"/>`; };
 
-/* A. seconds until each page finishes loading on a slowed phone (own lab test; website/speed/speed-summary-2026-10-28.csv) */
+/* A. home page on a phone at three connection speeds: when the text shows and when the main photo arrives (retest 28 Oct after Matthew:
+   "I feel like it loads fine on my phone"; website/speed-retest/speed-retest-*.csv, two runs each, empty cache, same figures both runs) */
 function speedChart() {
-  const rows = [['Home page', 29.8, 28.9], ['Our Team', 24.7, 23.7], ['About Us', 21.6], ['Business Growth Hub', 20.8], ['Contact', 14.8], ['Privacy', 13.9], ['Terms', 13.4], ['Apply', 12.7]];
-  const W = 330, L = 104, R = 44, top = 8, bh = 10, gap = 7, max = 30, sx = (v) => L + v / max * (W - L - R);
-  const H = top + rows.length * (bh + gap);
-  let s = `<svg viewBox="0 0 ${W} ${H + 14}" width="100%" role="img" aria-label="Seconds until each page finishes loading on a phone">`;
-  for (const v of [0, 10, 20, 30]) s += `<line x1="${sx(v)}" x2="${sx(v)}" y1="${top - 4}" y2="${H - gap + 2}" stroke="${C.grid}"/>` + t(sx(v), H + 8, v + ' s', { anchor: 'middle', size: 7.5, fill: C.muted });
-  rows.forEach(([name, v, lo], i) => {
-    const y = top + i * (bh + gap);
-    s += t(L - 6, y + bh - 2, name, { anchor: 'end', size: 8.5, fill: C.ink }) + hbar(sx(0), y, sx(v) - sx(0), bh, C.main);
-    s += t(sx(v) + 4, y + bh - 2, (lo ? lo + '–' : '') + v + ' s', { size: 8.2, fill: C.ink, weight: 600 });
+  const rows = [['Wi-Fi', 0.2, 0.4], ['Typical 4G', 0.4, 2.6], ['Weak signal', 1.5, 29.6]];
+  const W = 330, L = 70, R = 44, top = 6, bh = 9, pair = 2 * bh + 2, gap = 12, max = 30, sx = (v) => L + v / max * (W - L - R);
+  const H = top + rows.length * (pair + gap);
+  let s = `<svg viewBox="0 0 ${W} ${H + 12}" width="100%" role="img" aria-label="Home page on a phone: seconds until the text shows and until the main photo arrives, by connection">`;
+  for (const v of [0, 10, 20, 30]) s += `<line x1="${sx(v)}" x2="${sx(v)}" y1="${top - 3}" y2="${H - gap + 2}" stroke="${C.grid}"/>` + t(sx(v), H + 6, v + ' s', { anchor: 'middle', size: 7.5, fill: C.muted });
+  rows.forEach(([name, txt, photo], i) => {
+    const y = top + i * (pair + gap);
+    s += t(L - 6, y + pair / 2 + 3, name, { anchor: 'end', size: 8.5, fill: C.ink });
+    s += hbar(sx(0), y, Math.max(2, sx(txt) - sx(0)), bh, C.light) + t(Math.max(sx(txt), sx(0) + 2) + 4, y + bh - 1, txt + ' s', { size: 8, fill: C.ink2 });
+    s += hbar(sx(0), y + bh + 2, Math.max(2, sx(photo) - sx(0)), bh, C.main) + t(Math.max(sx(photo), sx(0) + 2) + 4, y + 2 * bh + 1, photo + ' s', { size: 8.2, fill: C.ink, weight: 600 });
   });
   return s + '</svg>';
 }
@@ -141,16 +143,16 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
 
 <div class="page">
   <div class="top"><h1>Horizon Outreach Partners and Events: online presence audit</h1><div class="by">28 October 2026<br>Prepared by Matthew Sharpe</div></div>
-  <p class="lead">Horizon has a clean, secure website, one consistent address and phone, and posts on four accounts every weekday. But the site recruits without ever saying what the job is, hides its only apply form two clicks deep, and is slow on phones; the four accounts reach <b>41 followers</b> between them. Most fixes are setup work, not ad spend.</p>
+  <p class="lead">Horizon has a clean, secure website, one consistent address and phone, and posts on four accounts every weekday. But the site recruits without ever saying what the job is, hides its only apply form two clicks deep, and sends phones far more than they need; the four accounts reach <b>41 followers</b> between them. Most fixes are setup work, not ad spend.</p>
   <div class="kpis">
     <div class="k bad"><b>0</b><span>Apply or Jobs links on the home page or menu</span></div>
-    <div class="k bad"><b>29 s</b><span>for the home page to finish loading on a slowed phone (our test)</span></div>
+    <div class="k bad"><b>5.5 MB</b><span>home page download on a phone; the photo alone is 2 MB</span></div>
     <div class="k bad"><b>0</b><span>tap-to-call or tap-to-text links on 13 pages</span></div>
     <div class="k"><b>41</b><span>followers across Instagram, Facebook, X and LinkedIn</span></div>
     <div class="k bad"><b>0</b><span>Google reviews: posting is turned off on the profile</span></div>
   </div>
   <div class="row">
-    <div class="card"><h2>Slow on phones</h2><p class="sub">Seconds until each page finishes loading. Our lab test: Chrome as a phone on a slowed connection, 28 Oct (not a Lighthouse score)</p>${speedChart()}</div>
+    <div class="card"><h2>Fine on a good signal, slow on a weak one</h2><p class="sub">Home page on a phone, empty cache, 28 Oct (our test, not a Lighthouse score). The text and button show fast everywhere; the 2 MB photo is what drags</p><div class="legend"><span><i style="background:${C.light}"></i>Text and button show</span><span><i style="background:${C.main}"></i>Main photo arrives</span></div>${speedChart()}<p class="sub" style="margin-top:3px">The Apply page is done in 1.8 s on 4G.</p></div>
     <div class="card"><h2>Heavy pages, and the chat window's share</h2><p class="sub">What each page sends to a phone. The chat window alone is 1.52 MB on every page</p><div class="legend"><span><i style="background:${C.other}"></i>Chat window</span><span><i style="background:${C.main}"></i>Everything else</span></div>${weightChart()}<p class="sub" style="margin-top:3px">The home photo is a 1.99 MB PNG; 7 font families add about 700 KB.</p></div>
   </div>
   <div class="right"><b class="h">What Horizon does right:</b> HTTPS everywhere with automatic certificate renewal · the same address, phone and email on every page and on Facebook · a short apply form (4 fields, right phone keyboards, every field labelled) · text-to-apply, which suits field recruiting · no ad or analytics trackers · posting on all four accounts every weekday · real team photos on social, no income or "be your own boss" claims in anything we could see.</div>
@@ -169,7 +171,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
       <li><b>Hard to read and find:</b> white on the brand orange is 2.23:1 (4.5:1 needed), Submit 1.87:1; no main heading on any of the 8 pages. <span class="fix">Dark text on orange; one heading per page.</span></li>
     </ul>
   </div>
-  <div class="foot">Sources: our checks of horizonoutreachpartners.com on 28 Oct 2026: 13 pages, 49 links, phone 390 px and tablet 820/1180 px; speed is our own throttled Chrome test (150 ms delay, 1.6 Mbps, 4× slower processor), not Lighthouse. Nothing was submitted. <span class="pg">1 / 4</span></div>
+  <div class="foot">Sources: our checks of horizonoutreachpartners.com on 28 Oct 2026: 13 pages, 49 links, phone 390 px and tablet 820/1180 px; speed is our own Chrome test as an iPhone on Wi-Fi, typical 4G (20 Mbps) and a weak signal (1.6 Mbps), not Lighthouse; page sizes from Chrome's network log. Nothing was submitted. <span class="pg">1 / 4</span></div>
 </div>
 
 <div class="page">

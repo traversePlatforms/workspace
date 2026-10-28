@@ -130,6 +130,22 @@ Measured in headless Chrome at 390×844 (phone), 820×1180 (iPad Air portrait) a
 
 Chat window share: 1,516 KB on every page.
 
+**Retest, 28 Oct afternoon (Matthew: "I feel like it loads fine on my phone").** iPhone 390×844, empty cache, two runs per setting, office Wi-Fi underneath. Script: scratchpad hop-web/speed2.mjs. Evidence: website/speed-retest/ (CSV plus screenshots at 2 s and 4 s).
+
+| Home page | Text and button show | Main photo arrives | Everything done |
+|---|---|---|---|
+| Wi-Fi (no slowing) | 0.2 s | 0.4 s | 0.9 s |
+| Typical 4G (40 ms, 20 Mbps, CPU 2×) | 0.4 s | 2.6 s | 2.8 s |
+| Weak signal (150 ms, 1.6 Mbps, CPU 4×, same as the first test) | 1.5 s | 29.6–29.7 s | 30 s |
+
+The Apply page finishes in 0.8 s on Wi-Fi and 1.8 s on 4G.
+
+**What changed in the conclusion:**
+- On a phone, the first screen is the headline, the text and the "Let's Connect!" button; the 2 MB photo sits below it (screens at 4 s). So the page is usable in under 2 s even on a weak signal.
+- The first test's "29 s" was the last file on a weak signal. It was true, but it overstated how slow the page feels, so it was taken out of the PDF's headline.
+- What stands is the size: about 5.5 MB to a phone (Chrome network log, first test). That costs data and battery and drags on a weak signal.
+- The retest's own MB column under-counts, because browsers report 0 bytes for files from other servers (the chat window) without a Timing-Allow-Origin header. Use the first test's sizes.
+
 **Clicks per task from the home page** [M]
 
 | Task | Desktop | Phone | Result |
