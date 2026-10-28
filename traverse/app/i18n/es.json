@@ -2702,5 +2702,22 @@
  "Nothing was emailed. Try again.": "No se envió nada. Inténtalo otra vez.",
  "No email on file: print the receipt or save it as a PDF to send.": "No hay correo registrado: imprime el recibo o guárdalo como PDF para enviarlo.",
  "Check number (optional)": "Número de cheque (opcional)",
- "Date received (optional)": "Fecha en que se recibió (opcional)"
+ "Date received (optional)": "Fecha en que se recibió (opcional)",
+ "Send aftercare": "Enviar cuidados",
+ "Send again": "Enviar otra vez",
+ "Text it or copy it instead": "Mejor mandarlo por texto o copiarlo",
+ "No email on file": "No hay correo registrado",
+ "Text it, or copy it, instead.": "Mándalo por texto, o cópialo.",
+ "Aftercare emailed": "Cuidados enviados por correo",
+ "Marked sent": "Marcado como enviado",
+ "Not marked": "No se marcó",
+ "Not marked. Try again.": "No se marcó. Inténtalo otra vez.",
+ "The aftercare, ready to send. Email opens your own email with it filled in; Text opens your phone with a short version. Either one marks the job.": "Los cuidados, listos para enviar. Correo abre tu propio correo ya lleno; Texto abre tu teléfono con una versión corta. Cualquiera de los dos marca el trabajo.",
+ "I sent it another way": "Lo mandé de otra forma",
+ "No email or phone on file: copy it and send it however you reach them.": "No hay correo ni teléfono registrado: cópialo y mándalo como te comuniques con ellos.",
+ "Aftercare not sent yet. You can send it any time, before or after the job is marked done.": "Los cuidados todavía no se enviaron. Puedes enviarlos cuando quieras, antes o después de marcar el trabajo como hecho.",
+ "Aftercare not sent yet. Tap Send aftercare to email or text it from your own phone or email.": "Los cuidados todavía no se enviaron. Toca Enviar cuidados para mandarlos por correo o texto desde tu propio teléfono o correo.",
+ "Aftercare sent by ": "Cuidados enviados por ",
+ "Aftercare emailed to ": "Cuidados enviados por correo a ",
+ "Aftercare to send: ": "Cuidados por enviar: "
 }

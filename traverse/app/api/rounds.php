@@ -3036,7 +3036,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -6065,12 +6065,12 @@ function jobIs365(array $j): bool {
     global $TEAM; $byQuote = (($TEAM['byName'][(string) ($l['by'] ?? '')]['role'] ?? '') === 'quote');   /* made in Jen's Quick quote */
     return in_array((string) ($l['src'] ?? ''), ['a365web', 'meta', 'messenger'], true) || !empty($l['sign']) || !empty($l['qown']) || !empty($l['quote']) || $byQuote;
 }
-function jobAftercare(string $jid, string $why, bool $again = false): array {
+function jobAftercare(string $jid, string $why, bool $again = false, bool $byHand = false): array {   /* $byHand (2026-10-28, Matthew: "make sure that jen can send the aftercare stuff no matter what time"): Send aftercare, whatever the job's done status */
     global $me;
     $j = jobsAll()[$jid] ?? null;
     if (!$j || $j['off']) return ['ok' => false, 'stage' => 'nojob', 'error' => 'No such job.'];
     if (!$again && !empty($j['aftercare']['ok'])) return ['ok' => true, 'stage' => 'already', 'error' => ''];
-    if (($j['done']['o'] ?? '') !== 'done') return ['ok' => false, 'stage' => 'notdone', 'error' => 'The job is not marked done yet.'];
+    if (!$byHand && ($j['done']['o'] ?? '') !== 'done') return ['ok' => false, 'stage' => 'notdone', 'error' => 'The job is not marked done yet.'];
     if (!jobIs365($j)) return ['ok' => false, 'stage' => 'brand', 'error' => 'This is not a 365 job.'];
     if (!a365MailCfg()) return ['ok' => false, 'stage' => 'config', 'error' => 'No 365 mailbox: aftercare goes from Jen\'s own email or phone.'];   /* 2026-10-19: nothing tried, nothing noted */
     $l = leadsAll()[$j['lead']] ?? [];
@@ -6281,8 +6281,22 @@ if ($action === 'aftercare') {
     $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
     if (!$j || $j['off']) fail('No such job.', 404);
     if (!jobOpen($j)) fail('Not allowed.', 403);
-    $r = jobAftercare($jid, 'by hand: ' . $me, true);
+    $r = jobAftercare($jid, 'by hand: ' . $me, true, true);
     out(['ok' => $r['ok'], 'stage' => $r['stage'], 'to' => $r['to'] ?? '', 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : $r['error'])]);
+}
+/* aftercare sent by hand (2026-10-28, Matthew: "Marking the job as done when brad does it is causing some aftercare issues. make sure that
+   jen can send the aftercare stuff no matter what time"): with no 365 mailbox (none on the server yet), Send aftercare shows the text with
+   Email and Text buttons that open her own email or phone; using one records it on the job and the lead. Any time, done or not, paid or not. */
+if ($action === 'aftercaremark') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!desk() && !($role === 'quote' && qJob($j))) fail('Not allowed.', 403);
+    $how = in_array($body['how'] ?? '', ['email', 'text', 'other'], true) ? (string) $body['how'] : 'other';
+    $l = leadsAll()[$j['lead']] ?? []; $to = $how === 'email' ? trim((string) ($l['email'] ?? '')) : ($how === 'text' ? trim((string) ($l['phone'] ?? '')) : '');
+    if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'aftercare' => ['ok' => true, 'stage' => 'manual', 'how' => $how, 'to' => $to, 'by' => $me, 'why' => 'by hand: ' . $me, 'at' => time()], 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Aftercare sent by ' . $me . ($how === 'other' ? '.' : ' (by ' . $how . ').'), 'by' => $me, 'at' => time()]);
+    out(['ok' => true, 'aftercare' => jobsAll()[$jid]['aftercare'] ?? null]);
 }
 /* ---- receipts (2026-10-27, Matthew: "one of our jobs Zane paid with a check. He needs a receipt to show to his hoa ... build in a way for
  * us to send receipts to people, in situations like when we take a paper check") ----
@@ -6605,6 +6619,11 @@ if ($action === 'jobdone') {
     if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
     if ($o === 'could not' && !empty(company()['a365'])) a365Alert('Job not done: ' . ((string) ($j['title'] ?? '') ?: 'a customer'), $me . ': ' . mb_substr($note, 0, 140));   /* the office rebooks it */
     $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ['stage' => 'waiting'];   /* nothing owed: the aftercare email now */
+    /* never lost (2026-10-28): when it cannot go by itself (no 365 mailbox yet, or no email for them), the office is told it is Jen's to send */
+    if ($o === 'done' && !empty(company()['a365']) && jobIs365($j) && empty(jobsAll()[$id]['aftercare']['ok']) && (!a365MailCfg() || in_array($af['stage'] ?? '', ['noemail', 'config'], true))) {
+        $LA = leadsAll()[$j['lead']] ?? [];
+        a365Alert('Aftercare to send: ' . (trim((string) ($LA['name'] ?? ($j['title'] ?? ''))) ?: 'a customer'), strtok($me, ' ') . ' marked the job done. Open the job and tap Send aftercare.', false, false, false, true, './?job=' . $id);
+    }
     if ($o === 'done' && jobOwed($j) > 0 && $got < jobOwed($j)) {   /* a balance to collect: tell whoever quoted them (2026-10-19) */
         $L0 = leadsAll()[$j['lead']] ?? []; $own = '';
         if ((($TEAM['byName'][(string) ($L0['by'] ?? '')]['role'] ?? '') === 'quote')) $own = (string) $L0['by'];
@@ -7221,6 +7240,9 @@ function feedDerive(): void {
     if (feature('walkdesk') && in_array($role, ['office', 'quote'], true)) {
         $leads = leadsAll();
         foreach (jobsAll() as $j) {
+            /* aftercare not sent on a done 365 job of the last two weeks (2026-10-28): Jen's to send, by Send aftercare */
+            if (!$j['off'] && ($j['done']['o'] ?? '') === 'done' && empty($j['aftercare']['ok']) && $now - (int) ($j['done']['at'] ?? 0) < 14 * 86400 && isset($leads[(string) $j['lead']]) && ($role !== 'quote' || qJob($j)) && !empty(company()['a365']) && jobIs365($j) && (!a365MailCfg() || !empty($j['aftercare'])))
+                feedAdd($me, 'Aftercare to send: ' . (trim((string) ($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'A customer'), 'The job is done and the aftercare has not gone. Open the job and tap Send aftercare.', './?job=' . $j['id'], 'due-after-' . $j['id'], 'due', true);
             if ($j['off'] || ($j['done']['o'] ?? '') !== 'done' || jobOwed($j) < 1 || $now - (int) ($j['done']['at'] ?? $now) < 86400 || !isset($leads[(string) $j['lead']])) continue;
             if ($role === 'quote' && !qJob($j)) continue;
             $nm = trim((string) ($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''))) ?: 'A customer';

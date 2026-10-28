@@ -1688,6 +1688,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .alerts{display:grid;gap:10px}.alist{display:grid;gap:8px}.arow{display:flex;align-items:flex-start;gap:6px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.arow.unread{border-left:4px solid var(--accent,#2e5e2c)}.arow .abody{flex:1;display:grid;gap:2px;text-align:left;padding:10px 12px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer}.arow .abody span{color:var(--ink)}.arow .abody small{color:var(--soft)}.arow:not(.unread) .abody b{font-weight:600}.arow .ax{border:0;background:transparent;color:var(--soft);padding:10px;cursor:pointer}
   .pnudge{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 14px;border-radius:10px;background:var(--sunk);font-size:14px}.pnudge[hidden]{display:none}.pnudge.bar{border-radius:0;margin:0}body:not(.dnav-on) .pnudge.bar{display:none}   /* the in-app alerts (2026-10-27) */
   .hoursform .hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.hoursform .hrow>b{min-width:7em}.hoursform .hoff{display:flex;align-items:center;gap:4px}.hoursform .htimes{display:flex;align-items:center;gap:6px}.hoursform .htimes[hidden]{display:none}   /* work hours (2026-10-27) */
+  .afpanel{display:grid;gap:8px;margin:8px 0}.afpanel[hidden]{display:none}.aftext{width:100%;box-sizing:border-box;font:13px/1.45 inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:inherit}   /* aftercare by hand (2026-10-28) */
   .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
   .keepbg{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,15,.5)}.keepbox{width:100%;max-width:420px;display:grid;gap:10px;padding:18px}.keepbox b{font:800 18px var(--sans)}.keeprow{display:grid;gap:8px}   /* Matthew's lead reached out to the office (2026-10-26) */
@@ -6315,6 +6316,34 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return { subject: 'Your lawn after today: notes from ' + a.B.name,
              body: 'Hi ' + a.first + ',\n\nThanks for having us! Here\u2019s what we did:\n\n' + a.did.map(function (t) { return '- ' + t; }).join('\n') + '\n\nA few notes:\n\n' + a.notes.map(function (t) { return '- ' + t; }).join('\n') + '\n\n' + a.bal + ' Thanks so much for your business, cheers to a healthy lawn!' + mailSig(a.B) };
   }
+  /* the short text version of the aftercare (2026-10-28): what fits a text message; the email keeps every note */
+  function aftercareShort(jb, owe) {
+    var a = afParts(jb, owe), seeded = jb.pkg !== 'aerate';
+    var tips = seeded ? 'Leave the plugs on the lawn. Water lightly and often to keep the soil moist while the seed comes up (up to 2 weeks). Don’t mow for 4 to 7 days, and no fertilizer or weed killer for 2 months.' : 'Leave the plugs on the lawn and give it a good watering soon.';
+    return 'Hi ' + a.first + ', this is ' + myName() + ' with ' + a.B.name + '. Thanks for having us! ' + tips + ' ' + a.bal + (a.B.phone ? ' Questions: call or text ' + a.B.phone + '.' : '');
+  }
+  function aftercareLine(A, isDone, owe) {
+    if (A && A.ok) return A.stage === 'manual' ? 'Aftercare sent by ' + strtokName(A.by) + ' ' + fmtSentDay(A.at) + (A.how && A.how !== 'other' ? ' (by ' + A.how + ')' : '') : 'Aftercare emailed to ' + A.to + ', ' + fmtSentDay(A.at);
+    if (A && !A.ok) return 'Aftercare not sent yet (' + afWhy(A.stage) + '). Tap Send aftercare.';
+    if (!S.a365mail) return isDone ? 'Aftercare not sent yet. Tap Send aftercare to email or text it from your own phone or email.' : 'Aftercare not sent yet. You can send it any time, before or after the job is marked done.';
+    return isDone ? (owe > 0 ? 'The aftercare email goes once the balance is settled, or tap Send aftercare now.' : 'The aftercare email goes now that it is done, or tap Send aftercare.') : 'The aftercare email goes after the job is marked done and paid, or tap Send aftercare any time.';
+  }
+  function fmtSentDay(t) { return t ? new Date(t * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) : ''; }
+  /* by hand: the whole aftercare to copy, and Email / Text from her own email or phone; using either marks the job */
+  function afManual(jb, owe, box, redraw) {
+    box.textContent = '';
+    var em = aftercareMail(jb, owe), to = (jb.who && jb.who.email) || '', tel = digits(jb.who && jb.who.phone), short = aftercareShort(jb, owe);
+    var mark = function (how) { api('aftercaremark', { body: { id: jb.id, how: how } }).then(function (j) { if (j && j.ok) { jb.aftercare = j.aftercare; toast('Marked sent', 'Aftercare by ' + how, null); setTimeout(function () { if (redraw) redraw(); }, 1500); } else toast('Not marked', (j && j.error) || 'Try again.', null); }).catch(function () { toast('No signal', 'Not marked. Try again.', null); }); };
+    box.appendChild(q('div', 'sub2', 'The aftercare, ready to send. Email opens your own email with it filled in; Text opens your phone with a short version. Either one marks the job.'));
+    var ta = q('textarea', 'aftext noi18n'); ta.readOnly = true; ta.rows = 12; ta.value = 'Subject: ' + em.subject + '\n\n' + em.body; box.appendChild(ta);
+    var r = q('div', 'lcontact');
+    if (to) { var am = q('a'); am.href = 'mailto:' + encodeURIComponent(to).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(em.subject) + '&body=' + encodeURIComponent(em.body); am.appendChild(ico('mail', 2.2)); am.appendChild(document.createTextNode('Email')); am.addEventListener('click', function () { mark('email'); }); r.appendChild(am); }
+    if (tel.length >= 10) { var at = q('a'); at.href = 'sms:' + tel + '?&body=' + encodeURIComponent(short); at.appendChild(ico('chat', 2.2)); at.appendChild(document.createTextNode('Text')); at.addEventListener('click', function () { mark('text'); }); r.appendChild(at); }
+    var cp = q('button', 'lnk', 'Copy'); cp.type = 'button'; cp.addEventListener('click', function () { copyText(em.subject + '\n\n' + em.body, 'The aftercare: paste it into your own email'); }); r.appendChild(cp);
+    var ms = q('button', 'lnk', 'I sent it another way'); ms.type = 'button'; ms.addEventListener('click', function () { mark('other'); }); r.appendChild(ms);
+    addGmail(r); box.appendChild(r);
+    if (!to && tel.length < 10) box.appendChild(q('div', 'ltrynote', 'No email or phone on file: copy it and send it however you reach them.'));
+  }
   function jobAfterBox(jb, owe, redraw) {
     var w = q('div', 'jafter');
     if (owe > 0) {
@@ -6362,22 +6391,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       w.appendChild(q('div', 'ltrynote', 'For money taken another way.' + ((S.pays || wdOn()) ? ' The card on file and the pay link are above.' : ' An admin can let you charge cards and make pay links (Takes payments, in Accounts).')));
     }
     w.appendChild(q('div', 'dwh', 'Aftercare'));
+    /* Send aftercare at any time (2026-10-28, Matthew: "make sure that jen can send the aftercare stuff no matter what time that way she can do
+       it regardless if it coming from brad"): done or not, paid or not. With the 365 mailbox it emails; without one (none on the server yet)
+       it opens the text with Email and Text buttons for her own email or phone, and using one marks it sent. */
     var A = jb.aftercare, isDone = !!(jb.done && jb.done.o === 'done');
-    if (!S.a365mail) w.appendChild(q('div', 'ltrynote', isDone ? 'Send the care tips from your own email or as a text. The balance line is filled in for you.' : 'The aftercare buttons show once the job is marked done.'));   /* no mailbox: by hand, like the quotes (2026-10-19) */
-    else w.appendChild(q('div', 'qline' + (A && A.ok ? ' qyes' : ''), A ? (A.ok ? 'Aftercare emailed to ' + A.to + ', ' + ago(A.at) : 'Aftercare email not sent: ' + afWhy(A.stage) + '.') : isDone ? (owe > 0 ? 'The aftercare email goes once the balance is settled: the card charged, marked paid, or a pay link made (the link goes in it).' : 'The aftercare email goes now that it is done.') : 'The aftercare email goes after the job is marked done and the balance is settled.'));
-    if (isDone) {
-      var r2 = q('div', 'lcontact');
-      var se = q('button', 'lnk', A && A.ok ? 'Email it again' : 'Send the aftercare email now'); se.type = 'button';
-      se.addEventListener('click', function () { se.disabled = true; api('aftercare', { body: { id: jb.id } }).then(function (j) { se.disabled = false; if (!j.ok) toast('Not emailed', j.error || afWhy(j.stage), null); else toast('Aftercare emailed', j.to, null); redraw(); }).catch(function () { se.disabled = false; toast('No signal', 'Try again.', null); }); });
-      if (S.a365mail) r2.appendChild(se);
-      var tel = digits(jb.who && jb.who.phone);
-      if (tel.length >= 10) { var at = q('a'); at.href = 'sms:' + tel + '?&body=' + encodeURIComponent(aftercareText(jb, owe)); at.appendChild(ico('chat', 2.2)); at.appendChild(document.createTextNode(S.a365mail ? 'Text it instead' : 'Text it')); r2.appendChild(at); }
-      var em = aftercareMail(jb, owe), to = (jb.who && jb.who.email) || '';
-      if (to) { var am = q('a'); am.href = 'mailto:' + encodeURIComponent(to).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(em.subject) + '&body=' + encodeURIComponent(em.body); am.appendChild(ico('mail', 2.2)); am.appendChild(document.createTextNode('Email it from my email')); r2.appendChild(am); }
-      var cpb = q('button', 'lnk', 'Copy the email'); cpb.type = 'button'; cpb.addEventListener('click', function () { copyText(em.subject + '\n\n' + em.body, 'The aftercare email: paste it into your own email'); }); r2.appendChild(cpb);
-      addGmail(r2);   /* on a computer the mail link opens Gmail */
-      w.appendChild(r2);
-    }
+    w.appendChild(q('div', 'qline' + (A && A.ok ? ' qyes' : ''), aftercareLine(A, isDone, owe)));
+    var r2 = q('div', 'lcontact'), panel = q('div', 'afpanel');
+    var se = q('button', 'save', A && A.ok ? 'Send again' : 'Send aftercare'); se.type = 'button';
+    se.addEventListener('click', function () {
+      if (!S.a365mail) { if (!panel.childNodes.length) afManual(jb, owe, panel, redraw); panel.hidden = !panel.hidden; return; }
+      var to = (jb.who && jb.who.email) || '';
+      if (!to) { afManual(jb, owe, panel, redraw); panel.hidden = false; toast('No email on file', 'Text it, or copy it, instead.', null); return; }
+      if (!window.confirm('Email the aftercare to ' + to + ' now?')) return;
+      se.disabled = true;
+      api('aftercare', { body: { id: jb.id } }).then(function (j) { se.disabled = false; if (!j.ok) { toast('Not emailed', (j.error || afWhy(j.stage)) + '. Use Email or Text below.', null); afManual(jb, owe, panel, redraw); panel.hidden = false; return; } toast('Aftercare emailed', j.to, null); redraw(); }).catch(function () { se.disabled = false; toast('No signal', 'Try again.', null); });
+    });
+    r2.appendChild(se); w.appendChild(r2); panel.hidden = true; w.appendChild(panel);
+    if (S.a365mail) { var mb = q('button', 'lnk', 'Text it or copy it instead'); mb.type = 'button'; mb.addEventListener('click', function () { if (!panel.childNodes.length) afManual(jb, owe, panel, redraw); panel.hidden = !panel.hidden; }); r2.appendChild(mb); }
     return w;
   }
   /* notes on a job (2026-10-26, Matthew: "i need brad to be able to add notes to his jobs ... someone wants extra work done ... it needs to
