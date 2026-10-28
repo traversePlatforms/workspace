@@ -62,3 +62,5 @@ Data files: `config.json` holds the password hash, the Anthropic key, the Google
 - **Prices:** King Soopers Federal & Belleview (store 62000109), through Kroger's Products API with Matthew's keys in `data/kroger.json` (0600, never sent to the page; his copy is `~/.ssh/kroger.json`). Tap Find price to pick the product; picks are remembered by the item's words (`data/gro-picks.json`). Prices refresh when they're over 6 hours old. The total uses the sale price when there is one.
 - **Files:** data `data/groceries.json`; code `lib/groceries.php` and `lib/kroger.php`; page `public/g.html` plus `raccoon.svg`, `gro-icon-*.png` and `gro-manifest.json`.
 
+
+**Caching (27 Oct):** SiteGround's front server hands plain files out with a 6-month cache and skips .htaccess. So `g.html`, `gro-manifest.json` and `index.html` are **chmod 600** on the server. Apache then serves them with "private, no-cache", so an upload shows at once. **Every upload of these files must chmod 600 again** (a new file lands 644).
