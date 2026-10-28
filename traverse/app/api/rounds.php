@@ -4880,7 +4880,12 @@ const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 39
     'crewShare' => 0.2,
     /* the aerator's gas (2026-10-21, Matthew): Bobcat AE26-HON, Honda GX120 at 1.0 L/h at full power (0.2642 gal; Honda's figure as its dealers
        publish it), up to 40,400 sq ft an hour (Bobcat). aerPace = the share of Bobcat's top rate a real job manages (1 = Bobcat's figure). */
-    'aerGalHr' => 0.2642, 'aerSqHr' => 40400, 'aerPace' => 1.0];   /* the crew: 20% of every job's price (Matthew, 2026-10-21: "a 20% employee cost to every job") */
+    'aerGalHr' => 0.2642, 'aerSqHr' => 40400, 'aerPace' => 1.0,
+    /* the do-it-yourself comparison's retail prices (2026-10-28, Matthew: "what the job would cost if someone did the job themselves"); staff only */
+    'diyAer4h' => 79, 'diyAerDay' => 113, 'diySeedLb' => 7.00, 'diyFertBag' => 27.24, 'diyFertLb' => 12.5, 'diyFertCover' => 5000,
+    'diyAerSrc' => 'Home Depot Classen CA-18, per Hunker, 27 Jul 2026 (prices vary by store; 15% optional damage protection and tax extra)',
+    'diySeedSrc' => 'Scotts Drought Tolerant Mix (Kentucky bluegrass + tall fescue), 10 lb $69.97 at Home Depot, seen 27 Oct 2026',
+    'diyFertSrc' => 'Scotts Turf Builder Lawn Food at Home Depot, $27.24 for 12.5 lb covering 5,000 sq ft, seen 27 Oct 2026'];   /* the crew: 20% of every job's price (Matthew, 2026-10-21: "a 20% employee cost to every job") */
 const A365_FERTS = [   /* one fertilizer at Brandon's price (2026-10-21, Matthew: "Remove the 3 fertilizers"); spread at the LESCO 24-0-11 label rate */
     ['k' => 'fert', 'name' => 'Fertilizer', 'bagLb' => 50, 'bagCost' => 40, 'coverSq' => 12000,
      'src' => 'Brandon’s price: $40 for a 50 lb bag (21 Oct 2026). Spread at 12,000 sq ft per bag, the LESCO 24-0-11 label rate.']];
@@ -4888,7 +4893,8 @@ function a365Pricing(): array {
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     $o = A365_PRICING; if (is_array($j)) foreach ($o as $k => $v) if (array_key_exists($k, $j) && ($j[$k] === null || is_int($j[$k]) || is_float($j[$k]))) $o[$k] = $j[$k];
     if (is_array($j) && is_string($j['seedName'] ?? null) && trim($j['seedName']) !== '') $o['seedName'] = trim($j['seedName']);
-    if (is_array($j) && is_string($j['seedSrc'] ?? null) && trim($j['seedSrc']) !== '') $o['seedSrc'] = trim($j['seedSrc']);   /* the seed in use, shown beside the fertilizer (2026-10-15) */
+    if (is_array($j) && is_string($j['seedSrc'] ?? null) && trim($j['seedSrc']) !== '') $o['seedSrc'] = trim($j['seedSrc']);
+    foreach (['diyAerSrc', 'diySeedSrc', 'diyFertSrc'] as $sk) if (is_array($j) && is_string($j[$sk] ?? null) && trim($j[$sk]) !== '') $o[$sk] = trim($j[$sk]);   /* 2026-10-28 */   /* the seed in use, shown beside the fertilizer (2026-10-15) */
     $o['ferts'] = is_array($j) && !empty($j['ferts']) && is_array($j['ferts']) ? $j['ferts'] : A365_FERTS;
     if (is_array($j) && is_string($j['fertDefault'] ?? null)) $o['fertDefault'] = $j['fertDefault'];
     return $o;
@@ -4918,7 +4924,7 @@ function a365Gas(): ?array {
 if (in_array($action, ['a365pricing', 'a365pricingset', 'a365calc', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
 if ($action === 'a365pricing') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
-    if ($role === 'office' || $role === 'quote') { $pp = a365Pricing(); out(['ok' => true, 'pricing' => ['hidden' => true, 'seedName' => $pp['seedName'], 'fertDefault' => $pp['fertDefault'], 'ferts' => array_map(fn($f) => ['k' => $f['k'], 'name' => $f['name']], $pp['ferts'])]]); }   /* the math stays here (Matthew 2026-10-15: "hide the internal math") */
+    if ($role === 'office' || $role === 'quote') { $pp = a365Pricing(); out(['ok' => true, 'pricing' => ['hidden' => true, 'seedName' => $pp['seedName'], 'fertDefault' => $pp['fertDefault'], 'ferts' => array_map(fn($f) => ['k' => $f['k'], 'name' => $f['name']], $pp['ferts'])] + array_intersect_key($pp, array_flip(['diyAer4h', 'diyAerDay', 'diySeedLb', 'diyFertBag', 'diyFertLb', 'diyFertCover', 'diyAerSrc', 'diySeedSrc', 'diyFertSrc']))]); }   /* + the retail prices for the do-it-yourself comparison: public prices, not our math (2026-10-28) */   /* the math stays here (Matthew 2026-10-15: "hide the internal math") */
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     out(['ok' => true, 'pricing' => a365Pricing(), 'gas' => a365Gas(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
 }
@@ -5057,8 +5063,9 @@ if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
-            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1], 'aerGalHr' => [0, 5], 'aerSqHr' => [1000, 500000], 'aerPace' => [0.05, 1]];
-    $p = a365Pricing();
+            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1], 'diyAer4h' => [0, 10000], 'diyAerDay' => [0, 10000], 'diySeedLb' => [0, 1000], 'diyFertBag' => [0, 10000], 'diyFertLb' => [0.1, 1000], 'diyFertCover' => [100, 1000000], 'aerGalHr' => [0, 5], 'aerSqHr' => [1000, 500000], 'aerPace' => [0.05, 1]];
+    $jw = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true); $p = array_merge(is_array($jw) ? $jw : [], a365Pricing());   /* merged into what is there: keys this screen does not know stay (2026-10-28) */
+    foreach (['diyAerSrc', 'diySeedSrc', 'diyFertSrc'] as $sk) if (array_key_exists($sk, $body)) { $sv0 = $clean($body[$sk] ?? '', 240); if ($sv0 !== '') $p[$sk] = $sv0; }
     foreach ($lim as $k => [$lo, $hi]) {
         if (!array_key_exists($k, $body)) continue;
         $v = $body[$k];

@@ -1688,6 +1688,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .alerts{display:grid;gap:10px}.alist{display:grid;gap:8px}.arow{display:flex;align-items:flex-start;gap:6px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.arow.unread{border-left:4px solid var(--accent,#2e5e2c)}.arow .abody{flex:1;display:grid;gap:2px;text-align:left;padding:10px 12px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer}.arow .abody span{color:var(--ink)}.arow .abody small{color:var(--soft)}.arow:not(.unread) .abody b{font-weight:600}.arow .ax{border:0;background:transparent;color:var(--soft);padding:10px;cursor:pointer}
   .pnudge{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 14px;border-radius:10px;background:var(--sunk);font-size:14px}.pnudge[hidden]{display:none}.pnudge.bar{border-radius:0;margin:0}body:not(.dnav-on) .pnudge.bar{display:none}   /* the in-app alerts (2026-10-27) */
   .hoursform .hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.hoursform .hrow>b{min-width:7em}.hoursform .hoff{display:flex;align-items:center;gap:4px}.hoursform .htimes{display:flex;align-items:center;gap:6px}.hoursform .htimes[hidden]{display:none}   /* work hours (2026-10-27) */
+  .qdiy{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}.qdiysay{font-weight:700;margin:8px 0 4px}.qdiysrc{display:grid;gap:2px;color:var(--soft)}   /* do it yourself (2026-10-28) */
   .fubook{margin-top:10px}.fuform,.fuconf{display:grid;gap:8px;margin-top:8px}.fudays{display:flex;flex-wrap:wrap;gap:8px}.fudays[hidden]{display:none}.fuform label[hidden]{display:none}.tosched{display:grid;gap:8px;margin:0 0 12px}.tosched[hidden]{display:none}.fubline{background:#fff4dc;color:#6b4a00}tr.sfub td{background:#fff8e6}   /* crew follow-ups (2026-10-28) */
   .afpanel{display:grid;gap:8px;margin:8px 0}.afpanel[hidden]{display:none}.aftext{width:100%;box-sizing:border-box;font:13px/1.45 inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:inherit}   /* aftercare by hand (2026-10-28) */
   .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
@@ -8780,6 +8781,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (price && j.left != null) { var lf = q('div', 'qcrow qcleft'); var la = q('div'); la.appendChild(q('b', null, 'Left after expenses')); la.appendChild(q('small', null, 'After seed, fertilizer, the drive and the crew (' + (j.crewPct != null ? j.crewPct : 20) + '% of the price)')); lf.appendChild(la); lf.appendChild(q('span', null, money0(j.left + exS * (1 - (j.crewPct != null ? j.crewPct : 20) / 100)))); tb.appendChild(lf); }   /* the total only (Matthew 2026-10-15) */
               detail.appendChild(tb); }
             if (st.pkg === 'full' && !st.sq) detail.appendChild(q('div', null, 'Type the lawn size to work out the seed and fertilizer.'));
+            if (price && st.sq) detail.appendChild(diyPanel(P, st.sq, st.pkg, j.seedLb || 0, price));   /* do it yourself (2026-10-28), staff only */
             st.cur = { price: total, base: price, seedLb: j.seedLb, fertLb: j.fertLb, extras: exList() }; st.sum = { rows: rows, cost: 0, known: false, ladder: ladder, left: j.left };
             drawActs();
           }).catch(function () { if (my === calcSeq) { big.textContent = ''; big.appendChild(q('div', 'msg', 'Working out the price needs signal.')); } });
@@ -8833,6 +8835,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         detail.appendChild(tb);
         lines.forEach(function (t) { detail.appendChild(q('div', null, t)); });
         noteBox.textContent = ''; notes.forEach(function (t) { noteBox.appendChild(q('div', null, t)); });
+        if (price && st.sq) detail.appendChild(diyPanel(P, st.sq, st.pkg, seedLb, price));   /* do it yourself (2026-10-28), staff only */
         st.cur = { price: total, base: price, seedLb: seedLb, fertLb: fertLb, extras: exList() }; st.sum = { rows: rows, cost: cost, known: known, ladder: ladder, crew: price && rows.length ? total * (P.crewShare != null ? Number(P.crewShare) : 0.2) : 0 };
         drawActs();
       }
@@ -8919,6 +8922,34 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return box;
   }
   /* the price list, for an admin: every number the quote uses, with what it does */
+  /* do it yourself (2026-10-28, Matthew: "an alternate quote ... showing what the job would cost if someone did the job themselves. buying the
+     seed, buying the fertilizer, renting the aerator ... so they can see what the savings are by going with us (if there is any)"). Staff only:
+     in the Quote builder under the price, never on the customer's quote page. Retail prices and their sources are in the price settings. */
+  function diyCalc(P, sq, pkg, seedLb, price) {
+    var aer = sq <= 10000 ? (+P.diyAer4h || 0) : (+P.diyAerDay || 0), lines = [['Aerator rental, ' + (sq <= 10000 ? '4 hours (up to 10,000 sq ft)' : 'a full day (over 10,000 sq ft)'), aer]];
+    if (pkg !== 'aerate') {
+      lines.push(['Seed, ' + seedLb + ' lb at ' + money2(+P.diySeedLb || 0) + '/lb', Math.round(seedLb * (+P.diySeedLb || 0) * 100) / 100]);
+      var bags = Math.ceil(sq / (+P.diyFertCover || 5000));
+      lines.push(['Fertilizer, ' + bags + (bags === 1 ? ' bag' : ' bags') + ' (' + (+P.diyFertLb || 0) + ' lb, covers ' + Number(+P.diyFertCover || 0).toLocaleString(LOCALE) + ' sq ft each)', Math.round(bags * (+P.diyFertBag || 0) * 100) / 100]);
+    }
+    var tot = Math.round(lines.reduce(function (a, x) { return a + x[1]; }, 0) * 100) / 100;
+    return { lines: lines, total: tot, price: price, save: Math.round((tot - price) * 100) / 100 };
+  }
+  function diyPanel(P, sq, pkg, seedLb, price) {
+    var D = diyCalc(P, sq, pkg, seedLb, price), w = q('div', 'qdiy');
+    w.appendChild(q('div', 'dwh', 'If they did it themselves'));
+    var tb = q('div', 'qcost');
+    D.lines.forEach(function (x) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, x[0])); d.appendChild(a); d.appendChild(q('span', null, money2(x[1]))); tb.appendChild(d); });
+    [['Do-it-yourself total', money2(D.total)], ['Our price', money0(D.price)]].forEach(function (x) { var d = q('div', 'qcrow qcleft'); var a = q('div'); a.appendChild(q('b', null, x[0])); d.appendChild(a); d.appendChild(q('span', null, x[1])); tb.appendChild(d); });
+    w.appendChild(tb);
+    w.appendChild(q('div', 'qdiysay', D.save > 0 ? 'You save ' + money0(Math.round(D.save)) + ' with us.' : D.save < 0 ? 'Doing it yourself costs about ' + money0(Math.round(-D.save)) + ' less, before your time and a truck to haul the aerator.' : 'About the same either way, before your time and a truck to haul the aerator.'));
+    var src = q('div', 'qdiysrc');
+    [['Aerator', P.diyAerSrc], pkg !== 'aerate' ? ['Seed', P.diySeedSrc] : null, pkg !== 'aerate' ? ['Fertilizer', P.diyFertSrc] : null].filter(Boolean).forEach(function (x) { if (x[1]) src.appendChild(q('small', null, x[0] + ': ' + x[1])); });
+    src.appendChild(q('small', null, 'Retail prices: check before quoting; stores vary.'));
+    w.appendChild(src);
+    w.appendChild(q('div', 'sub2', 'For you, not the customer: it never shows on their quote page.'));
+    return w;
+  }
   function a365PricingView() {
     hideToast(); S.signin = null; S.screen = 'pricing'; foot.hidden = true; setDock(null);
     setBar('back', { title: 'Pricing', sub: ((CO.a365 && CO.a365.name) || CO.short || 'Our') + ' quotes', back: chooseView, backLabel: 'Home' });
@@ -8960,6 +8991,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var ad = q('button', 'lnk', '+ Add a fertilizer'); ad.type = 'button'; ad.addEventListener('click', function () { FL.push({ name: '', bagLb: '', bagCost: '', coverSq: '' }); drawFerts(); }); fBox.appendChild(ad);
       };
       drawFerts();
+      f.appendChild(q('div', 'dwh', 'Do it yourself: retail prices'));   /* the Quote builder's comparison (2026-10-28) */
+      f.appendChild(q('div', 'lsub', 'What a homeowner would pay at the store, for the comparison under the price on each quote. Staff only.'));
+      var srcField = function (k, label) { var lb = q('label', null, label), i = q('input'); i.value = P[k] || ''; i.maxLength = 240; lb.appendChild(i); f.appendChild(lb); F[k] = i; };
+      field('diyAer4h', 'Aerator rental, 4 hours ($)', 'Up to 10,000 sq ft'); field('diyAerDay', 'Aerator rental, a day ($)', 'Over 10,000 sq ft'); srcField('diyAerSrc', 'Aerator: where the price is from');
+      field('diySeedLb', 'Seed, per lb ($)'); srcField('diySeedSrc', 'Seed: where the price is from');
+      field('diyFertBag', 'Fertilizer bag ($)'); field('diyFertLb', 'Fertilizer bag weight (lb)'); field('diyFertCover', 'One bag covers (sq ft)'); srcField('diyFertSrc', 'Fertilizer: where the price is from');
+      f.appendChild(q('small', 'sub2', 'Retail prices: check before quoting; stores vary.'));
       f.appendChild(q('div', 'dwh', 'Travel'));
       field('mpg', 'Truck miles per gallon', 'Matthew: 18 for now');
       field('roadFactor', 'Road miles per straight-line mile', 'Roads are longer than the straight line; 1.3 is a usual allowance');
