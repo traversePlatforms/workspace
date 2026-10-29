@@ -101,6 +101,7 @@ traverse/app/data/rounds/*.log
 # Owner history across door-list rebuilds (SX-35): named owners and every previous owner.
 # Not rebuildable — the OneDrive mirror is its only backup.
 traverse/data-pipeline/door-territory/owner-history.json
+traverse/data-pipeline/door-territory/owner-history.json.*
 
 # Lawn outlines for the door app (SX-38): regenerable with lawn-trial/build-lawn-outlines.mjs, ~18 MB
 traverse/app/data/rounds/lawnmask-*.json

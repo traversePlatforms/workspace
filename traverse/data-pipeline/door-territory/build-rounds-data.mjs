@@ -11,10 +11,10 @@
    Run:  node build-walklist-pdf.mjs <each csv>   # the sidecars
          node build-rounds-data.mjs                                            */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isSale } from './owner-names.mjs';
+import { recordOwner, isHistoryKey } from './owner-names.mjs';
 import { metroTowns } from './metros/registry.mjs';   /* towns outside Colorado from metros/<metro>.json (2026-10-11) */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -360,26 +360,22 @@ if (owner.size) console.log(`${owner.size} doors were listed by two towns: each 
  * trust, or a record written differently is not a sale. The first build only records owners. */
 /* ⚑ gitignored, like every list of named people here — and unlike them it CANNOT be rebuilt:
    lose it and sale detection starts over. The OneDrive mirror is its backup. */
+/* ⚑ 2026-10-29: keyed '<town>|<door id>' (owner-names.mjs historyKey). Keyed by the id alone, the same street address in two
+   towns shared one entry and every rebuild flagged both doors (1,545 doors carried a false "new owner" on 28 Oct, Plano to Longmont).
+   migrate-owner-history-2026-10-29.mjs re-keyed the old file; an old-format file stops the build rather than starting over. */
 const OWNERS = join(HERE, 'owner-history.json');
 const hist = existsSync(OWNERS) ? JSON.parse(readFileSync(OWNERS, 'utf8')) : {};
 const firstOwnerBuild = !existsSync(OWNERS);
+{ const k0 = Object.keys(hist).find((k) => !isHistoryKey(k));
+  if (k0 !== undefined) { console.error('owner-history.json has entries keyed by address alone: run node migrate-owner-history-2026-10-29.mjs first'); process.exit(1); } }
 const buildDay = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
-const dayShift = (day, n) => { const t = new Date(day + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 let newOwners = 0;
 for (const b of built) for (const ar of b.areas) for (const d of ar.doors) {
-  const h = hist[d.id];
-  if (!h) { hist[d.id] = { o: d.owner, since: null, seen: buildDay }; continue; }
-  if (isSale(h.o, d.owner)) {   /* owner-names.mjs */
-    const known = h.seen && h.seen < buildDay;
-    (h.prev ||= []).push({ o: h.o, until: buildDay });
-    h.since = buildDay;
-    h.oa = known ? dayShift(h.seen, -45) : dayShift(buildDay, -150);
-    newOwners++;
-  }
-  h.o = d.owner; h.seen = buildDay;
-  if (h.since) { d.os = h.since; d.oa = h.oa || dayShift(h.since, -150); }
+  const r = recordOwner(hist, b.key, d.id, d.owner, buildDay);   /* owner-names.mjs */
+  if (r.sale) newOwners++;
+  if (r.os) { d.os = r.os; d.oa = r.oa; }
 }
-writeFileSync(OWNERS, JSON.stringify(hist), 'utf8');
+writeFileSync(OWNERS + '.tmp', JSON.stringify(hist), 'utf8'); renameSync(OWNERS + '.tmp', OWNERS);
 console.log(firstOwnerBuild ? `owner history started: ${Object.keys(hist).length} doors recorded (changes are detected from the next rebuild)` : `${newOwners} doors have a new owner since the last rebuild`);
 
 const index = [];

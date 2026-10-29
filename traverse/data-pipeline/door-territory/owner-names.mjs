@@ -19,3 +19,28 @@ export function isSale(was, now) {
   const a = ownerNames(was), b = ownerNames(now);
   return a.size > 0 && b.size > 0 && ![...b].some((t) => a.has(t));
 }
+
+/* owner-history.json key: the town AND the door id (2026-10-29). Keyed by the id alone (the street address), "100 Main St" in
+   Plano and in Longmont shared one entry, so every rebuild compared one town's owner with the other's and flagged both as a
+   new owner (1,545 doors carried one on 28 Oct). Within a town an id is unique (build-rounds-data adds 'x' on a repeat). A door that moves to
+   another town starts a fresh history there: no flag, at worst a sale is caught one rebuild late. */
+export const historyKey = (town, id) => town + '|' + id;
+export const isHistoryKey = (k) => k.includes('|');
+
+const dayShift = (day, n) => { const t = new Date(day + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+/* one door at one build: records the owner, notes a sale, and returns { sale, os, oa } (os/oa null when no sale is on record).
+   The rules are build-rounds-data's (2026-10-03); moved here so owner-history-test.mjs checks the code the build runs. */
+export function recordOwner(hist, town, id, owner, buildDay) {
+  const k = historyKey(town, id), h = hist[k];
+  if (!h) { hist[k] = { o: owner, since: null, seen: buildDay }; return { sale: false, os: null, oa: null }; }
+  let sale = false;
+  if (isSale(h.o, owner)) {
+    const known = h.seen && h.seen < buildDay;
+    (h.prev ||= []).push({ o: h.o, until: buildDay });
+    h.since = buildDay;
+    h.oa = known ? dayShift(h.seen, -45) : dayShift(buildDay, -150);
+    sale = true;
+  }
+  h.o = owner; h.seen = buildDay;
+  return h.since ? { sale, os: h.since, oa: h.oa || dayShift(h.since, -150) } : { sale, os: null, oa: null };
+}

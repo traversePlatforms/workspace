@@ -754,6 +754,13 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       it's the new owner's" (no sale dates in county data). Fable review fixes in (name-check bug,
       sale window, offline sign-out, stale saved copies). Detection starts from the re-pull after
       the first build. Needed before the January re-pull (SX-33).
+      **29 Oct: false "new owner" flags fixed (Matthew's go, 28 Oct).** owner-history.json was keyed by street address alone, so the
+      same address in two towns (Plano and Longmont, etc.) shared one entry and every rebuild flagged both: 1,549 doors flagged
+      locally, 1,545 of them false. Now keyed town + door id (owner-names.mjs recordOwner, owner-history-test.mjs); the old file
+      was re-keyed by migrate-owner-history-2026-10-29.mjs (single-town entries kept, the 1,036 addresses on two or more towns'
+      lists dropped, so those doors start fresh). 4 flags remain, all real single-town changes seen 17 Oct. Live: Sixfold 1,278 →
+      4, editions 1,314 → 4 each; door counts unchanged. Nothing had been hidden: no marks, notes, phones, emails, leads or
+      customers on any falsely flagged door, on Sixfold or the editions. Backup: owner-history.json.before-ownerfix-20261029.
 - [x] **SX-32 — One town per door: ✅ LIVE 2026-10-03, verified signed in (Claude Check code), rides with SX-28.** 958 doors were in two
       town lists (all of Palmer Lake inside Monument; Castle Rock overlapping Franktown and Sedalia),
       each copy with its own marks. Each door now belongs to the nearest town; everything recorded under
