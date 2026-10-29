@@ -2505,6 +2505,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   @media (min-width:1280px){
     body.dnav-on{padding-left:232px;--vw:calc(100vw - 232px)}   /* --vw: the page width beside the menu (the Jobs frame is sized from it) */
     .dnav{position:fixed;left:0;top:0;bottom:0;width:232px;height:auto;flex-direction:column;align-items:stretch;gap:10px;padding:18px 14px 16px;box-sizing:border-box;overflow-y:auto;border-right:5px solid var(--strip,transparent);box-shadow:none;background-position:left -260px top -60px}
+    .dnav>*{flex-shrink:0}   /* 2026-10-29 (Matthew): items kept their size, so a long menu scrolls on its own instead of squeezing under the account button */
+    .dnav{overscroll-behavior:contain}
     .dnav .dnh{padding:2px 6px 10px}
     .dnav .dnh b{font:800 21px var(--serif)}
     .dnav .findsel{order:1;margin:0;width:100%}
@@ -10666,8 +10668,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
     if (walkerOn() && !wdOn()) it.push(['jobs', 'My jobs', function () { myJobsView(); }, ['myjobs', 'job']]);
     it.push(['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]);
-    if (planOk()) it.push(['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]);
-    else it.push(['team', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);
+    if (CO.a365 && adminView()) it.push(['numbers', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);   /* his pipeline in the computer menu (2026-10-29: it was a phone tile only) */
+    if (planOk()) it.push(['team', 'Team', teamView, ['team', 'board', 'territories', 'accounts'].concat(CO.a365 && adminView() ? [] : ['stats'])]);
+    else if (!(CO.a365 && adminView())) it.push(['team', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);
     if (planOk()) it.push(['office', 'Office', officeView, ['office']]);
     return it;
   }
@@ -19027,7 +19030,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       wdOn() ? ['Stats', statsPageView, false, null, ['statspage']] : null,   /* 2026-10-20 */
       squarePageOn() ? ['Square', squareView, false, null, ['square']] : null,   /* 2026-10-21 */
       ['Calendar', function () { S.calWho = S.me; calendarView(); }, false, null, ['calendar']],
-      ['Team stats', teamView, false, null, ['team', 'stats']],
+      CO.a365 && adminView() ? ['My stats', function () { statsView(S.me, chooseView); }, false, null, ['stats']] : null,   /* his pipeline on a computer too (2026-10-29: it was a phone tile only) */
+      ['Team stats', teamView, false, null, CO.a365 && adminView() ? ['team'] : ['team', 'stats']],
       ['Leaderboard', boardView, false, null, ['board']],
       ['Training', trainingView, false, null, ['training']],
       S.role === 'admin' ? ['Results', resultsView, false, null, ['results']] : null,
