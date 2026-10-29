@@ -4353,7 +4353,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     grp('In the field', [
       S.fqOn && !asOffice() ? tile('button', 'leaf', 'Quick quote', 'Price a lawn on the spot. If they say yes, send it to the office.', null, function () { fieldQuoteView(); }) : null,   /* the field quick quote (2026-10-21) */
       asOffice() ? null : tile('button', 'door', 'Routes', 'Knock a neighbourhood. Works with no signal.', null, start),
-      asOffice() ? null : tile('button', 'chart', 'My stats', 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
+      asOffice() ? null : tile('button', 'chart', 'My stats', CO.a365 && adminView() ? 'Your leads, quotes, jobs landed and sales.' : 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
       tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView),
       radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colours mean.', null, function () { hailMapView(null, chooseView); }) : null,
@@ -4837,7 +4837,70 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     };
     draw(); return box;
   }
+  /* My stats for a Sixfold admin = the pipeline, not doors (2026-10-29, Matthew: "should remove doors because i will never do door to door,
+     but should have the data from my pipeline and it should show jobs ive landed and sold"). His leads: the website's and his Facebook ones
+     (the server's mine flag) and the ones he added himself; how far each got; the jobs they became and what they sold for. */
+  function pipeStatsView(back) {
+    hideToast(); S.signin = null; S.screen = 'stats';
+    foot.hidden = true; setDock(null);
+    setBar('back', { title: 'My stats', sub: 'Your pipeline', back: back || chooseView, backLabel: 'Back' });
+    view.textContent = '';
+    var holder = q('div', 'pstats'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    var d0 = new Date(), iso = function (n) { var d = new Date(d0.getTime() + n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    Promise.all([api('leads'), api('jobs', { params: { from: iso(-60), to: iso(0) } }), api('jobs', { params: { from: iso(1), to: iso(61) } })]).then(function (r) {
+      holder.textContent = '';
+      var L = r[0]; if (L._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!L.ok) { holder.appendChild(q('div', 'msg bad', L.error || 'Could not load your leads.')); return; }
+      var jobs = [].concat((r[1] && r[1].jobs) || [], (r[2] && r[2].jobs) || []), jobOf = {};
+      jobs.forEach(function (j) { var lid = j.lead || (j.who && j.who.lead); if (lid && !jobOf[lid]) jobOf[lid] = j; });
+      var mine = (L.leads || []).filter(function (l) { return l.mine || (l.by === S.me && !l.tojen); });
+      var since = Date.now() / 1000 - 30 * 86400;
+      var sum = function (list) {
+        var o = { leads: list.length, reached: 0, quoted: 0, won: 0, sold: 0 };
+        list.forEach(function (l) {
+          var st = l.status || 'new', jb = jobOf[l.id];
+          if (st !== 'new' && st !== 'unreached') o.reached++;
+          if ((l.quote && l.quote.price) || st === 'quoted' || st === 'won') o.quoted++;
+          if (st === 'won' || jb) { o.won++; o.sold += jb ? (+jb.price || 0) : ((l.quote && +l.quote.price) || 0); }
+        });
+        return o;
+      };
+      var pct = function (a, b) { return b ? Math.round(100 * a / b) + '%' : '\u2013'; };
+      [['Last 30 days', mine.filter(function (l) { return (l.at || 0) >= since; })], ['All time', mine]].forEach(function (p) {
+        var o = sum(p[1]), card = q('div', 'stoday');
+        card.appendChild(q('h3', null, p[0]));
+        var g = q('div', 'stgrid');
+        [[o.leads, 'Leads'], [o.quoted, 'Quoted'], [o.won, 'Jobs landed', 'hl'], [money0(o.sold), 'Sold']].forEach(function (c) {
+          var x = q('div', c[2] || null); x.appendChild(q('b', null, String(c[0]))); x.appendChild(q('span', null, c[1])); g.appendChild(x);
+        });
+        card.appendChild(g);
+        card.appendChild(q('div', 'stcmp', 'Reached ' + pct(o.reached, o.leads) + ' \u00b7 quoted ' + pct(o.quoted, o.leads) + ' \u00b7 closed ' + pct(o.won, o.leads) + ' of leads' + (o.won ? ' \u00b7 average job ' + money0(o.sold / o.won) : '')));
+        holder.appendChild(card);
+      });
+      var won = mine.filter(function (l) { return l.status === 'won' || jobOf[l.id]; });
+      won.sort(function (a, b) { var ja = jobOf[a.id], jb = jobOf[b.id]; return String(jb ? jb.date : '').localeCompare(String(ja ? ja.date : '')) || (b.at || 0) - (a.at || 0); });
+      holder.appendChild(q('h2', null, 'Jobs you landed'));
+      if (!won.length) holder.appendChild(q('div', 'msg', 'No jobs landed from your leads yet.'));
+      won.forEach(function (l) {
+        var jb = jobOf[l.id], row = q('div', 'stday');
+        row.appendChild(q('b', null, l.name || 'Customer'));
+        var paid = jb && jb.pay ? (jb.pay.s === 'paid' ? 'paid' : jb.pay.s === 'deposit' ? 'deposit in' : 'not paid yet') : '';
+        row.appendChild(q('span', null, jb ? (dayName(jb.date) + (jb.done ? ' \u00b7 done' : ' \u00b7 booked') + (paid ? ' \u00b7 ' + paid : '')) : 'won, no job on the board'));
+        row.appendChild(q('em', null, money0(jb ? (+jb.price || 0) : ((l.quote && +l.quote.price) || 0))));
+        holder.appendChild(row);
+      });
+      var open = mine.filter(function (l) { return l.status !== 'won' && l.status !== 'lost' && !jobOf[l.id]; });
+      if (open.length) {
+        holder.appendChild(q('h2', null, 'Still open'));
+        var byst = {}; open.forEach(function (l) { var k = (l.quote && l.quote.price) || l.status === 'quoted' ? 'Quoted' : (l.status === 'new' ? 'Not reached yet' : (l.status === 'unreached' ? 'Couldn\u2019t reach' : 'Talking')); byst[k] = (byst[k] || 0) + 1; });
+        var qv = open.reduce(function (s, l) { return s + ((l.quote && +l.quote.price) || 0); }, 0);
+        holder.appendChild(q('div', 'stcmp', Object.keys(byst).map(function (k) { return byst[k] + ' ' + k.toLowerCase(); }).join(' \u00b7 ') + (qv ? ' \u00b7 ' + money0(qv) + ' quoted and waiting' : '')));
+      }
+      holder.appendChild(q('div', 'sub2', 'Your leads: the website\u2019s and your Facebook ones, and the ones you added. Jobs from the board, two months back and ahead.'));
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
+  }
   function statsView(name, back) {
+    if (name === S.me && CO.a365 && adminView()) return pipeStatsView(back);   /* 2026-10-29: the pipeline, not doors */
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
     setBar('back', { title: name === S.me ? 'My stats' : name, sub: S.statTab === 'doors' ? 'Doors you worked, last 30 days' : 'Last 30 days · chart: last 14', back: back || chooseView, backLabel: 'Back' });
