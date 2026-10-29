@@ -1,0 +1,1624 @@
+{
+ "made": "2026-10-29",
+ "settings": {
+  "v2": {
+   "green": "lated6g",
+   "gate": 0.2,
+   "struct": true,
+   "roofBuf": 2,
+   "ever": "lidar",
+   "everLow": 0.2,
+   "everGnd": 0.15,
+   "speck": 5,
+   "house": 25,
+   "fill": 12
+  },
+  "A": {
+   "green": "lated6g",
+   "gate": 0.2,
+   "struct": true,
+   "roofBuf": 2,
+   "ever": "lidar",
+   "everLow": 0.2,
+   "everGnd": 0.15,
+   "speck": 4,
+   "house": 25,
+   "fill": 8
+  },
+  "B": {
+   "green": "lated6g",
+   "gate": 0.2,
+   "struct": true,
+   "roofBuf": 2,
+   "ever": "lidar",
+   "everLow": 0.2,
+   "everGnd": 0.15,
+   "speck": 4,
+   "house": 25,
+   "fill": 12
+  },
+  "v1 4m": {
+   "green": "v1",
+   "struct": false,
+   "roofBuf": 0,
+   "ever": "off",
+   "speck": 0,
+   "house": 0,
+   "fill": 4
+  }
+ },
+ "rows": [
+  {
+   "addr": "3855 S VALENTIA CT",
+   "town": "denver",
+   "id": "3855-s-valentia-ct",
+   "hand": 8111,
+   "set": "tuned",
+   "use": "core",
+   "incl": "whole property incl. beds and grass under tree edges (log incl=beds); back yard alone 5,843 incl. under trees",
+   "who": "Matthew 22 Oct",
+   "lot": 13423,
+   "crownShare": 0.31,
+   "old": 0,
+   "oldRaw": 0,
+   "card": {
+    "lv": "L",
+    "sq": 6300,
+    "yr": 2023
+   },
+   "cardNum": 6300,
+   "v2lawn": 6286,
+   "v2seen": 3003,
+   "v2under": 3283,
+   "v2card": {
+    "lv": "L",
+    "sq": 6300,
+    "yr": 2023
+   },
+   "v2cardNum": 6300,
+   "A": 6222,
+   "B": 6631,
+   "v1_4m": 7093,
+   "territoryRaw": {
+    "l": 6286,
+    "s": 3003,
+    "u": 3283,
+    "o": 10032,
+    "t": 4133,
+    "dt": 6824,
+    "lot": 13423,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.891354,39.647283"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "11663 SETTLERS DR",
+   "town": "parker",
+   "id": "11663-settlers-dr",
+   "hand": 10473,
+   "set": "tuned",
+   "use": "core",
+   "incl": "whole lawn, Google Earth",
+   "who": "Jen 21 Oct",
+   "lot": 16533,
+   "crownShare": 0.28,
+   "old": 200,
+   "oldRaw": 226,
+   "card": {
+    "lv": "L",
+    "sq": 4600,
+    "yr": 2023
+   },
+   "cardNum": 4600,
+   "v2lawn": 4575,
+   "v2seen": 2723,
+   "v2under": 1851,
+   "v2card": {
+    "lv": "L",
+    "sq": 4600,
+    "yr": 2023
+   },
+   "v2cardNum": 4600,
+   "A": 5952,
+   "B": 6071,
+   "v1_4m": 9440,
+   "territoryRaw": {
+    "l": 4575,
+    "s": 2723,
+    "u": 1851,
+    "o": 11862,
+    "t": 4553,
+    "dt": 8148,
+    "lot": 16533,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.762832,39.531872"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "2787 RUSSET SKY CT",
+   "town": "castle-rock",
+   "id": "2787-russet-sky-ct",
+   "hand": 3898,
+   "set": "tuned",
+   "use": "core",
+   "incl": "total lawn, Google Maps",
+   "who": "Matthew 2 Oct",
+   "lot": 14833,
+   "crownShare": 0.07,
+   "old": 4000,
+   "oldRaw": 4032,
+   "card": {
+    "lv": "L",
+    "sq": 4200,
+    "yr": 2023
+   },
+   "cardNum": 4200,
+   "v2lawn": 4198,
+   "v2seen": 3681,
+   "v2under": 517,
+   "v2card": {
+    "lv": "L",
+    "sq": 4200,
+    "yr": 2023
+   },
+   "v2cardNum": 4200,
+   "A": 4575,
+   "B": 4596,
+   "v1_4m": 6663,
+   "territoryRaw": {
+    "l": 4198,
+    "s": 3681,
+    "u": 517,
+    "o": 9020,
+    "t": 1044,
+    "dt": 6663,
+    "lot": 14833,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.829266,39.391991"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "1648 MARSH HAWK CIR",
+   "town": "castle-rock",
+   "id": "1648-marsh-hawk-cir",
+   "hand": 2344,
+   "set": "tuned",
+   "use": "core",
+   "incl": "total lawn, Google Maps",
+   "who": "Matthew 2 Oct",
+   "lot": 8880,
+   "crownShare": 0.24,
+   "old": 1400,
+   "oldRaw": 1393,
+   "card": {
+    "lv": "M",
+    "sq": 2300,
+    "yr": 2023
+   },
+   "cardNum": 2300,
+   "v2lawn": 2325,
+   "v2seen": 1227,
+   "v2under": 1098,
+   "v2card": {
+    "lv": "M",
+    "sq": 2300,
+    "yr": 2023
+   },
+   "v2cardNum": 2300,
+   "A": 2723,
+   "B": 2885,
+   "v1_4m": 4230,
+   "territoryRaw": {
+    "l": 2325,
+    "s": 1227,
+    "u": 1098,
+    "o": 4855,
+    "t": 2164,
+    "dt": 3229,
+    "lot": 8880,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.873631,39.383164"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "7378 UPTON CT",
+   "town": "franktown",
+   "id": "7378-upton-ct",
+   "hand": 2595,
+   "set": "tuned",
+   "use": "core",
+   "incl": "watered lawn only (acreage lot)",
+   "who": "Matthew 2 Oct",
+   "lot": 52269,
+   "crownShare": 0.07,
+   "old": 2500,
+   "oldRaw": 2453,
+   "card": {
+    "lv": "L",
+    "sq": 3300,
+    "yr": 2023
+   },
+   "cardNum": 3300,
+   "v2lawn": 3337,
+   "v2seen": 2917,
+   "v2under": 420,
+   "v2card": {
+    "lv": "L",
+    "sq": 3300,
+    "yr": 2023
+   },
+   "v2cardNum": 3300,
+   "A": 3961,
+   "B": 3961,
+   "v1_4m": 15199,
+   "territoryRaw": {
+    "l": 3337,
+    "s": 2917,
+    "u": 420,
+    "o": 37114,
+    "t": 3864,
+    "dt": 11657,
+    "lot": 52269,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.783467,39.363266"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "6595 ZINNIA ST",
+   "town": "arvada",
+   "id": "6595-zinnia-st",
+   "hand": 3225,
+   "set": "tuned",
+   "use": "core",
+   "incl": "whole property incl. grass under a tree (log incl=trees)",
+   "who": "Matthew 22 Oct",
+   "lot": 6437,
+   "crownShare": 0.18,
+   "old": 1600,
+   "oldRaw": 1551,
+   "card": {
+    "lv": "M",
+    "sq": 2100,
+    "yr": 2023
+   },
+   "cardNum": 2100,
+   "v2lawn": 2088,
+   "v2seen": 1464,
+   "v2under": 624,
+   "v2card": {
+    "lv": "M",
+    "sq": 2100,
+    "yr": 2023
+   },
+   "v2cardNum": 2100,
+   "A": 2110,
+   "B": 2196,
+   "v1_4m": 3165,
+   "territoryRaw": {
+    "l": 2088,
+    "s": 1464,
+    "u": 624,
+    "o": 3821,
+    "t": 1173,
+    "dt": 2906,
+    "lot": 6437,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.147013,39.816522"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "3247 OAK LEAF PL",
+   "town": "highlands-ranch",
+   "id": "3247-oak-leaf-pl",
+   "hand": 2556,
+   "set": "tuned",
+   "use": "core",
+   "incl": "grass only, front evergreen left out (log incl=grass)",
+   "who": "Matthew 22 Oct",
+   "lot": 9375,
+   "crownShare": 0.32,
+   "old": 1300,
+   "oldRaw": 1340,
+   "card": {
+    "lv": "M",
+    "sq": 1300,
+    "yr": 2023
+   },
+   "cardNum": 1300,
+   "v2lawn": 2885,
+   "v2seen": 1163,
+   "v2under": 1722,
+   "v2card": {
+    "lv": "M",
+    "sq": 2900,
+    "yr": 2023
+   },
+   "v2cardNum": 2900,
+   "A": 3132,
+   "B": 3294,
+   "v1_4m": 4984,
+   "territoryRaw": {
+    "l": 2885,
+    "s": 1163,
+    "u": 1722,
+    "o": 5802,
+    "t": 2992,
+    "dt": 3154,
+    "lot": 9375,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.026386,39.531238",
+    "shared": 2
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "9554 PENSTEMON CT",
+   "town": "black-forest",
+   "id": "9554-penstemon-ct",
+   "hand": 5746,
+   "set": "tuned",
+   "use": "upper",
+   "incl": "upper limit only",
+   "who": "Matthew 2 Oct",
+   "lot": 14908,
+   "crownShare": 0.15,
+   "old": 400,
+   "oldRaw": 442,
+   "card": {
+    "lv": "M",
+    "sq": 2600,
+    "yr": 2021
+   },
+   "cardNum": 2600,
+   "v2lawn": 2551,
+   "v2seen": 2013,
+   "v2under": 538,
+   "v2card": {
+    "lv": "M",
+    "sq": 2600,
+    "yr": 2021
+   },
+   "v2cardNum": 2600,
+   "A": 3025,
+   "B": 3025,
+   "v1_4m": 5780,
+   "territoryRaw": {
+    "l": 2551,
+    "s": 2013,
+    "u": 538,
+    "o": 11216,
+    "t": 2282,
+    "dt": null,
+    "lot": 14908,
+    "sv": "CO_Eastern_ElPaso_2018",
+    "ph": "2023-10-08",
+    "pk": "-104.762922,38.968834"
+   },
+   "survey": "CO_Eastern_ElPaso_2018",
+   "photo": "2023-10-08"
+  },
+  {
+   "addr": "7006 E 131ST WAY",
+   "town": "thornton",
+   "id": "7006-e-131st-way",
+   "hand": 2137,
+   "set": "unseen",
+   "use": "core",
+   "incl": "back 450 + front 763 + 924 under the front trees",
+   "who": "Matthew 23 Oct",
+   "lot": 7266,
+   "crownShare": 0.14,
+   "old": 1100,
+   "oldRaw": 1139,
+   "card": {
+    "lv": "S",
+    "sq": 800,
+    "yr": 2023
+   },
+   "cardNum": 800,
+   "v2lawn": 775,
+   "v2seen": 431,
+   "v2under": 344,
+   "v2card": {
+    "lv": "S",
+    "sq": 800,
+    "yr": 2023
+   },
+   "v2cardNum": 800,
+   "A": 958,
+   "B": 958,
+   "v1_4m": 2906,
+   "territoryRaw": {
+    "l": 775,
+    "s": 431,
+    "u": 344,
+    "o": 3197,
+    "t": 1044,
+    "dt": 3208,
+    "lot": 7266,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.905929,39.932879"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "7614 E 121ST PL",
+   "town": "thornton",
+   "id": "7614-e-121st-pl",
+   "hand": 2961,
+   "set": "unseen",
+   "use": "core",
+   "incl": "back 1,801 + front 854 + 306",
+   "who": "Matthew 23 Oct",
+   "lot": 10624,
+   "crownShare": 0.15,
+   "old": 700,
+   "oldRaw": 749,
+   "card": {
+    "lv": "L",
+    "sq": 3200,
+    "yr": 2023
+   },
+   "cardNum": 3200,
+   "v2lawn": 3229,
+   "v2seen": 2820,
+   "v2under": 409,
+   "v2card": {
+    "lv": "L",
+    "sq": 3200,
+    "yr": 2023
+   },
+   "v2cardNum": 3200,
+   "A": 3477,
+   "B": 3477,
+   "v1_4m": 4639,
+   "territoryRaw": {
+    "l": 3229,
+    "s": 2820,
+    "u": 409,
+    "o": 6125,
+    "t": 1561,
+    "dt": 4930,
+    "lot": 10624,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.899107,39.916723"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "579 E 76TH AVE",
+   "town": "welby",
+   "id": "579-e-76th-ave",
+   "hand": 3613,
+   "set": "unseen",
+   "use": "core",
+   "incl": "whole property 3,402 + 211 strip by the drive, open lot",
+   "who": "Matthew 23 Oct",
+   "lot": 12217,
+   "crownShare": 0.05,
+   "old": 2100,
+   "oldRaw": 2149,
+   "card": {
+    "lv": "M",
+    "sq": 1600,
+    "yr": 2023
+   },
+   "cardNum": 1600,
+   "v2lawn": 1636,
+   "v2seen": 1572,
+   "v2under": 65,
+   "v2card": {
+    "lv": "M",
+    "sq": 1600,
+    "yr": 2023
+   },
+   "v2cardNum": 1600,
+   "A": 1905,
+   "B": 1905,
+   "v1_4m": 4478,
+   "territoryRaw": {
+    "l": 1636,
+    "s": 1572,
+    "u": 65,
+    "o": 7545,
+    "t": 592,
+    "dt": 280,
+    "lot": 12217,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.979494,39.834281"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "3852 PRIMROSE LN",
+   "town": "castle-rock",
+   "id": "3852-primrose-ln",
+   "hand": 3461,
+   "set": "unseen",
+   "use": "core",
+   "incl": "back 3,061 incl. under tree edges + front 400",
+   "who": "Matthew 23 Oct",
+   "lot": 9322,
+   "crownShare": 0.36,
+   "old": 1200,
+   "oldRaw": 1203,
+   "card": {
+    "lv": "L",
+    "sq": 3900,
+    "yr": 2023
+   },
+   "cardNum": 3900,
+   "v2lawn": 3940,
+   "v2seen": 1432,
+   "v2under": 2508,
+   "v2card": {
+    "lv": "L",
+    "sq": 3900,
+    "yr": 2023
+   },
+   "v2cardNum": 3900,
+   "A": 3875,
+   "B": 4133,
+   "v1_4m": 5177,
+   "territoryRaw": {
+    "l": 3940,
+    "s": 1432,
+    "u": 2508,
+    "o": 6361,
+    "t": 3380,
+    "dt": 3703,
+    "lot": 9322,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.903658,39.414333"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "6049 W ROXBURY PL",
+   "town": "columbine",
+   "id": "6049-w-roxbury-pl",
+   "hand": 3131,
+   "set": "unseen",
+   "use": "core",
+   "incl": "back 1,867 + front 1,264, heavy trees",
+   "who": "Matthew 23 Oct",
+   "lot": 12411,
+   "crownShare": 0.65,
+   "old": 300,
+   "oldRaw": 328,
+   "card": {
+    "lv": "S",
+    "sq": 300,
+    "yr": 2023
+   },
+   "cardNum": 300,
+   "v2lawn": 3035,
+   "v2seen": 118,
+   "v2under": 2917,
+   "v2card": {
+    "lv": "L",
+    "sq": 3000,
+    "yr": 2023
+   },
+   "v2cardNum": 3000,
+   "A": 1981,
+   "B": 3305,
+   "v1_4m": 2971,
+   "territoryRaw": {
+    "l": 3035,
+    "s": 118,
+    "u": 2917,
+    "o": 9515,
+    "t": 8019,
+    "dt": 1841,
+    "lot": 12411,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.064320,39.586762",
+    "shared": 2
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "6431 S CEDAR ST",
+   "town": "littleton",
+   "id": "6431-s-cedar-st",
+   "hand": 2614,
+   "set": "unseen",
+   "use": "partial",
+   "incl": "BACK lawn only (front looked like rock/dry)",
+   "who": "Matthew 23 Oct",
+   "lot": 10645,
+   "crownShare": 0.34,
+   "old": 500,
+   "oldRaw": 503,
+   "card": {
+    "lv": "S",
+    "sq": 500,
+    "yr": 2023
+   },
+   "cardNum": 500,
+   "v2lawn": 4263,
+   "v2seen": 2454,
+   "v2under": 1808,
+   "v2card": {
+    "lv": "L",
+    "sq": 4300,
+    "yr": 2023
+   },
+   "v2cardNum": 4300,
+   "A": 4887,
+   "B": 5145,
+   "v1_4m": 6028,
+   "territoryRaw": {
+    "l": 4263,
+    "s": 2454,
+    "u": 1808,
+    "o": 8116,
+    "t": 3595,
+    "dt": 4801,
+    "lot": 10645,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.005833,39.599872",
+    "shared": 2
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "6916 S ELATI ST",
+   "town": "littleton",
+   "id": "6916-s-elati-st",
+   "hand": 2554,
+   "set": "unseen",
+   "use": "core",
+   "incl": "front + side + back strip, heavy canopy, rough",
+   "who": "Matthew 23 Oct",
+   "lot": 10387,
+   "crownShare": 0.52,
+   "old": 5800,
+   "oldRaw": 5809,
+   "card": {
+    "lv": "M",
+    "sq": 2700,
+    "yr": 2023
+   },
+   "cardNum": 2700,
+   "v2lawn": 2680,
+   "v2seen": 1055,
+   "v2under": 1625,
+   "v2card": {
+    "lv": "M",
+    "sq": 2700,
+    "yr": 2023
+   },
+   "v2cardNum": 2700,
+   "A": 3122,
+   "B": 4166,
+   "v1_4m": 4811,
+   "territoryRaw": {
+    "l": 2680,
+    "s": 1055,
+    "u": 1625,
+    "o": 7965,
+    "t": 5425,
+    "dt": 2573,
+    "lot": 10387,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.997190,39.593120"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "600 HIDDENBROOK CT",
+   "town": "highlands-ranch",
+   "id": "600-hiddenbrook-ct",
+   "hand": 2231,
+   "set": "unseen",
+   "use": "core",
+   "incl": "back 1,691 + front 290 + 130 + 120",
+   "who": "Matthew 23 Oct",
+   "lot": 11700,
+   "crownShare": 0.11,
+   "old": 1900,
+   "oldRaw": 1938,
+   "card": {
+    "lv": "M",
+    "sq": 1700,
+    "yr": 2023
+   },
+   "cardNum": 1700,
+   "v2lawn": 1744,
+   "v2seen": 1464,
+   "v2under": 280,
+   "v2card": {
+    "lv": "M",
+    "sq": 1700,
+    "yr": 2023
+   },
+   "v2cardNum": 1700,
+   "A": 1981,
+   "B": 2185,
+   "v1_4m": 4478,
+   "territoryRaw": {
+    "l": 1744,
+    "s": 1464,
+    "u": 280,
+    "o": 5856,
+    "t": 1292,
+    "dt": 3767,
+    "lot": 11700,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.996227,39.518451"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "9267 CANYON WREN CT",
+   "town": "highlands-ranch",
+   "id": "9267-canyon-wren-ct",
+   "hand": 4637,
+   "set": "unseen",
+   "use": "core",
+   "incl": "front 1,169 + back 3,468 incl. under tree shade",
+   "who": "Matthew 23 Oct",
+   "lot": 10290,
+   "crownShare": 0.4,
+   "old": 400,
+   "oldRaw": 382,
+   "card": {
+    "lv": "L",
+    "sq": 3400,
+    "yr": 2023
+   },
+   "cardNum": 3400,
+   "v2lawn": 3444,
+   "v2seen": 1313,
+   "v2under": 2131,
+   "v2card": {
+    "lv": "L",
+    "sq": 3400,
+    "yr": 2023
+   },
+   "v2cardNum": 3400,
+   "A": 3423,
+   "B": 3843,
+   "v1_4m": 5328,
+   "territoryRaw": {
+    "l": 3444,
+    "s": 1313,
+    "u": 2131,
+    "o": 7513,
+    "t": 4090,
+    "dt": 3627,
+    "lot": 10290,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.941455,39.548237"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "852 HUGHES LN",
+   "town": "highlands-ranch",
+   "id": "852-hughes-ln",
+   "hand": 1385,
+   "set": "unseen",
+   "use": "core",
+   "incl": "side 745 (partly past the lot line) + front 640, rough; back under canopy maybe not traced",
+   "who": "Matthew 23 Oct",
+   "lot": 8826,
+   "crownShare": 0.43,
+   "old": 2200,
+   "oldRaw": 2200,
+   "card": {
+    "lv": "M",
+    "sq": 2400,
+    "yr": 2023
+   },
+   "cardNum": 2400,
+   "v2lawn": 2411,
+   "v2seen": 635,
+   "v2under": 1776,
+   "v2card": {
+    "lv": "M",
+    "sq": 2400,
+    "yr": 2023
+   },
+   "v2cardNum": 2400,
+   "A": 2486,
+   "B": 2723,
+   "v1_4m": 4672,
+   "territoryRaw": {
+    "l": 2411,
+    "s": 635,
+    "u": 1776,
+    "o": 5576,
+    "t": 3757,
+    "dt": 2390,
+    "lot": 8826,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-104.978843,39.533429"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "9416 DESERT WILLOW TRL",
+   "town": "highlands-ranch",
+   "id": "9416-desert-willow-trl",
+   "hand": 1473,
+   "set": "unseen",
+   "use": "core",
+   "incl": "front 766 (part past the lot line) + back 707 under trees",
+   "who": "Matthew 23 Oct",
+   "lot": 6598,
+   "crownShare": 0.3,
+   "old": 400,
+   "oldRaw": 434,
+   "card": {
+    "lv": "M",
+    "sq": 1400,
+    "yr": 2023
+   },
+   "cardNum": 1400,
+   "v2lawn": 1399,
+   "v2seen": 205,
+   "v2under": 1195,
+   "v2card": {
+    "lv": "M",
+    "sq": 1400,
+    "yr": 2023
+   },
+   "v2cardNum": 1400,
+   "A": 1345,
+   "B": 1615,
+   "v1_4m": 2120,
+   "territoryRaw": {
+    "l": 1399,
+    "s": 205,
+    "u": 1195,
+    "o": 3186,
+    "t": 1948,
+    "dt": 1152,
+    "lot": 6598,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.011054,39.545789"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "2195 E NICHOLS DR",
+   "town": "centennial",
+   "id": "2195-e-nichols-dr",
+   "hand": 3035,
+   "set": "unseen",
+   "use": "core",
+   "incl": "front-left 848 + back 1,858 almost all under one big tree + side 329 (log incl=trees)",
+   "who": "Matthew 25 Oct",
+   "lot": 6211,
+   "crownShare": 0.39,
+   "old": 800,
+   "oldRaw": 763,
+   "card": {
+    "lv": "S",
+    "sq": 800,
+    "yr": 2023
+   },
+   "cardNum": 800,
+   "v2lawn": 689,
+   "v2seen": 517,
+   "v2under": 172,
+   "v2card": {
+    "lv": "T",
+    "sq": 700,
+    "yr": 2023,
+    "rng": [
+     700,
+     2000
+    ]
+   },
+   "v2cardNum": 1350,
+   "A": 1722,
+   "B": 2454,
+   "v1_4m": 2992,
+   "territoryRaw": null,
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "9353 PIKE WAY",
+   "town": "arvada",
+   "id": "9353-pike-way",
+   "hand": 1880,
+   "set": "unseen",
+   "use": "core",
+   "incl": "back 1,165 to the grass edge under fence-line trees + front 451 + drive strip 121 + bed-edge grass 81 + 62 (may overlap: true ~1,820-1,880) (log incl=trees)",
+   "who": "Matthew 29 Oct",
+   "lot": 8547,
+   "crownShare": 0.11,
+   "old": 200,
+   "oldRaw": 170,
+   "card": {
+    "lv": "M",
+    "sq": 1400,
+    "yr": 2023
+   },
+   "cardNum": 1400,
+   "v2lawn": 1367,
+   "v2seen": 1163,
+   "v2under": 205,
+   "v2card": {
+    "lv": "M",
+    "sq": 1400,
+    "yr": 2023
+   },
+   "v2cardNum": 1400,
+   "A": 1636,
+   "B": 1636,
+   "v1_4m": 2390,
+   "territoryRaw": {
+    "l": 1367,
+    "s": 1163,
+    "u": 205,
+    "o": 3315,
+    "t": 947,
+    "dt": 2056,
+    "lot": 8547,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.182757,39.867316"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "12405 W 19TH PL",
+   "town": "lakewood",
+   "id": "12405-w-19th-pl",
+   "hand": 4300,
+   "set": "unseen",
+   "use": "quote",
+   "incl": "\"about 4,300\", remote quote",
+   "who": "Jen 25 Oct",
+   "lot": 13197,
+   "crownShare": 0.4,
+   "old": 700,
+   "oldRaw": 666,
+   "card": {
+    "lv": "L",
+    "sq": 4800,
+    "yr": 2023
+   },
+   "cardNum": 4800,
+   "v2lawn": 4790,
+   "v2seen": 1281,
+   "v2under": 3509,
+   "v2card": {
+    "lv": "L",
+    "sq": 4800,
+    "yr": 2023
+   },
+   "v2cardNum": 4800,
+   "A": 4435,
+   "B": 5350,
+   "v1_4m": 5586,
+   "territoryRaw": {
+    "l": 4790,
+    "s": 1281,
+    "u": 3509,
+    "o": 8482,
+    "t": 5285,
+    "dt": 3165,
+    "lot": 13197,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.138221,39.746543"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "155 EVERETT ST",
+   "town": "lakewood",
+   "id": "155-everett-st",
+   "hand": 2000,
+   "set": "unseen",
+   "use": "quote",
+   "incl": "remote quote",
+   "who": "Jen 25 Oct",
+   "lot": 12314,
+   "crownShare": 0.39,
+   "old": 2600,
+   "oldRaw": 2569,
+   "card": {
+    "lv": "L",
+    "sq": 3800,
+    "yr": 2023
+   },
+   "cardNum": 3800,
+   "v2lawn": 3789,
+   "v2seen": 1238,
+   "v2under": 2551,
+   "v2card": {
+    "lv": "L",
+    "sq": 3800,
+    "yr": 2023
+   },
+   "v2cardNum": 3800,
+   "A": 4865,
+   "B": 5619,
+   "v1_4m": 6760,
+   "territoryRaw": {
+    "l": 3789,
+    "s": 1238,
+    "u": 2551,
+    "o": 8762,
+    "t": 4779,
+    "dt": 4467,
+    "lot": 12314,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.096886,39.719732"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "1539 HARLAN ST",
+   "town": "lakewood",
+   "id": "1539-harlan-st",
+   "hand": 1500,
+   "set": "unseen",
+   "use": "quote",
+   "incl": "back 1,250 + front, \"might be turf\"",
+   "who": "Jen 25 Oct",
+   "lot": 5554,
+   "crownShare": 0.49,
+   "old": 500,
+   "oldRaw": 457,
+   "card": {
+    "lv": "T",
+    "sq": 500,
+    "yr": 2023,
+    "rng": [
+     500,
+     1900
+    ]
+   },
+   "cardNum": 1200,
+   "v2lawn": 484,
+   "v2seen": 65,
+   "v2under": 420,
+   "v2card": {
+    "lv": "T",
+    "sq": 500,
+    "yr": 2023,
+    "rng": [
+     500,
+     1900
+    ]
+   },
+   "v2cardNum": 1200,
+   "A": 398,
+   "B": 570,
+   "v1_4m": 1658,
+   "territoryRaw": {
+    "l": 484,
+    "s": 65,
+    "u": 420,
+    "o": 3305,
+    "t": 2745,
+    "dt": 527,
+    "lot": 5554,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.062725,39.741406"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  },
+  {
+   "addr": "2644 S HOYT ST",
+   "town": "lakewood",
+   "id": "2644-s-hoyt-st",
+   "hand": 2700,
+   "set": "unseen",
+   "use": "quote",
+   "incl": "\"about 2,700, hard to tell with trees\"",
+   "who": "Jen 25 Oct",
+   "lot": 8234,
+   "crownShare": 0.49,
+   "old": 1100,
+   "oldRaw": 1119,
+   "card": {
+    "lv": "M",
+    "sq": 2600,
+    "yr": 2023
+   },
+   "cardNum": 2600,
+   "v2lawn": 2594,
+   "v2seen": 291,
+   "v2under": 2303,
+   "v2card": {
+    "lv": "M",
+    "sq": 2600,
+    "yr": 2023
+   },
+   "v2cardNum": 2600,
+   "A": 1905,
+   "B": 2831,
+   "v1_4m": 2454,
+   "territoryRaw": {
+    "l": 2594,
+    "s": 291,
+    "u": 2303,
+    "o": 5457,
+    "t": 4015,
+    "dt": 1475,
+    "lot": 8234,
+    "sv": "CO_DRCOG_2_2020",
+    "ph": "2023-09-25",
+    "pk": "-105.102740,39.668743"
+   },
+   "survey": "CO_DRCOG_2_2020",
+   "photo": "2023-09-25"
+  }
+ ],
+ "summary": {
+  "all core": {
+   "n": 19,
+   "old": {
+    "n": 19,
+    "medAbs": 0.653279399017625,
+    "medSigned": -0.5038759689922481,
+    "worst": 1.2709475332811278,
+    "within25": 3
+   },
+   "card": {
+    "n": 19,
+    "medAbs": 0.26676730644813457,
+    "medSigned": -0.23800986104885702,
+    "worst": -0.9041839667837751,
+    "within25": 8
+   },
+   "v2": {
+    "n": 19,
+    "medAbs": 0.23800986104885702,
+    "medSigned": -0.04955872369314324,
+    "worst": 0.7328519855595668,
+    "within25": 10
+   },
+   "v2 raw": {
+    "n": 19,
+    "medAbs": 0.2250030822340032,
+    "medSigned": -0.05023761031907671,
+    "worst": -0.7729818780889621,
+    "within25": 10
+   },
+   "A": {
+    "n": 19,
+    "medAbs": 0.23289360128220934,
+    "medSigned": -0.11205737337516809,
+    "worst": 0.7949458483754512,
+    "within25": 10
+   },
+   "B": {
+    "n": 19,
+    "medAbs": 0.19416353655013002,
+    "medSigned": 0.05557329926541041,
+    "worst": 0.9660649819494584,
+    "within25": 11
+   },
+   "v1 4m": {
+    "n": 19,
+    "medAbs": 0.4392396469789545,
+    "medSigned": 0.4392396469789545,
+    "worst": 4.857032755298651,
+    "within25": 7
+   }
+  },
+  "tuned (in-sample)": {
+   "n": 7,
+   "old": {
+    "n": 7,
+    "medAbs": 0.49139280125195617,
+    "medSigned": -0.49139280125195617,
+    "worst": -1,
+    "within25": 2
+   },
+   "card": {
+    "n": 7,
+    "medAbs": 0.27167630057803466,
+    "medSigned": -0.22327703119220813,
+    "worst": -0.5607753270314141,
+    "within25": 3
+   },
+   "v2": {
+    "n": 7,
+    "medAbs": 0.22327703119220813,
+    "medSigned": -0.01877133105802048,
+    "worst": -0.5607753270314141,
+    "within25": 4
+   },
+   "v2 raw": {
+    "n": 7,
+    "medAbs": 0.2250030822340032,
+    "medSigned": -0.008105802047781569,
+    "worst": -0.5631624176453738,
+    "within25": 4
+   },
+   "A": {
+    "n": 7,
+    "medAbs": 0.23289360128220934,
+    "medSigned": 0.16168941979522183,
+    "worst": 0.5263969171483622,
+    "within25": 4
+   },
+   "B": {
+    "n": 7,
+    "medAbs": 0.2887323943661972,
+    "medSigned": 0.17906618778860955,
+    "worst": 0.5263969171483622,
+    "within25": 3
+   },
+   "v1 4m": {
+    "n": 7,
+    "medAbs": 0.7093381221139046,
+    "medSigned": 0.7093381221139046,
+    "worst": 4.857032755298651,
+    "within25": 3
+   }
+  },
+  "unseen (out-of-sample)": {
+   "n": 12,
+   "old": {
+    "n": 12,
+    "medAbs": 0.732426958174097,
+    "medSigned": -0.6908623743221187,
+    "worst": 1.2709475332811278,
+    "within25": 1
+   },
+   "card": {
+    "n": 12,
+    "medAbs": 0.2610432276921524,
+    "medSigned": -0.2466645049925136,
+    "worst": -0.9041839667837751,
+    "within25": 5
+   },
+   "v2": {
+    "n": 12,
+    "medAbs": 0.2466645049925136,
+    "medSigned": -0.14378429237100013,
+    "worst": 0.7328519855595668,
+    "within25": 6
+   },
+   "v2 raw": {
+    "n": 12,
+    "medAbs": 0.2377830880508513,
+    "medSigned": -0.13426268682695208,
+    "worst": -0.7729818780889621,
+    "within25": 6
+   },
+   "A": {
+    "n": 12,
+    "medAbs": 0.24210172206161024,
+    "medSigned": -0.12092230370886065,
+    "worst": 0.7949458483754512,
+    "within25": 6
+   },
+   "B": {
+    "n": 12,
+    "medAbs": 0.1828493646398235,
+    "medSigned": 0.017477371282189742,
+    "worst": 0.9660649819494584,
+    "within25": 8
+   },
+   "v1 4m": {
+    "n": 12,
+    "medAbs": 0.3995449521745498,
+    "medSigned": 0.3995449521745498,
+    "worst": 2.3732851985559567,
+    "within25": 4
+   }
+  },
+  "tree-heavy (crowns >= 25% of lot)": {
+   "n": 10,
+   "old": {
+    "n": 10,
+    "medAbs": 0.8202962667526783,
+    "medSigned": -0.732426958174097,
+    "worst": 1.2709475332811278,
+    "within25": 0
+   },
+   "card": {
+    "n": 10,
+    "medAbs": 0.3790800538500454,
+    "medSigned": -0.24502216882017136,
+    "worst": -0.9041839667837751,
+    "within25": 4
+   },
+   "v2": {
+    "n": 10,
+    "medAbs": 0.17893116035353757,
+    "medSigned": -0.045699195765447384,
+    "worst": 0.7328519855595668,
+    "within25": 6
+   },
+   "v2 raw": {
+    "n": 10,
+    "medAbs": 0.18170119439640062,
+    "medSigned": -0.04044937047413433,
+    "worst": -0.7729818780889621,
+    "within25": 6
+   },
+   "A": {
+    "n": 10,
+    "medAbs": 0.24735040210757003,
+    "medSigned": -0.1598955447008467,
+    "worst": 0.7949458483754512,
+    "within25": 5
+   },
+   "B": {
+    "n": 10,
+    "medAbs": 0.19279840748429072,
+    "medSigned": 0.0759876000739815,
+    "worst": 0.9660649819494584,
+    "within25": 6
+   },
+   "v1 4m": {
+    "n": 10,
+    "medAbs": 0.2941292045548212,
+    "medSigned": 0.2941292045548212,
+    "worst": 2.3732851985559567,
+    "within25": 5
+   }
+  },
+  "open (crowns < 25%)": {
+   "n": 9,
+   "old": {
+    "n": 9,
+    "medAbs": 0.4187655687794077,
+    "medSigned": -0.4187655687794077,
+    "worst": -0.8936170212765957,
+    "within25": 3
+   },
+   "card": {
+    "n": 9,
+    "medAbs": 0.2553191489361702,
+    "medSigned": -0.23800986104885702,
+    "worst": -0.6256434253626579,
+    "within25": 4
+   },
+   "v2": {
+    "n": 9,
+    "medAbs": 0.2553191489361702,
+    "medSigned": -0.23800986104885702,
+    "worst": -0.6256434253626579,
+    "within25": 4
+   },
+   "v2 raw": {
+    "n": 9,
+    "medAbs": 0.27287234042553193,
+    "medSigned": -0.21828776333482744,
+    "worst": -0.6373420683200749,
+    "within25": 4
+   },
+   "A": {
+    "n": 9,
+    "medAbs": 0.17426545086119555,
+    "medSigned": -0.11205737337516809,
+    "worst": -0.5517080018717829,
+    "within25": 5
+   },
+   "B": {
+    "n": 9,
+    "medAbs": 0.23080204778156996,
+    "medSigned": -0.020618556701030927,
+    "worst": -0.5517080018717829,
+    "within25": 5
+   },
+   "v1 4m": {
+    "n": 9,
+    "medAbs": 0.5667004390408645,
+    "medSigned": 0.5667004390408645,
+    "worst": 4.857032755298651,
+    "within25": 2
+   }
+  },
+  "unseen tree-heavy": {
+   "n": 7,
+   "old": {
+    "n": 7,
+    "medAbs": 0.7364085667215815,
+    "medSigned": -0.7284453496266123,
+    "worst": 1.2709475332811278,
+    "within25": 0
+   },
+   "card": {
+    "n": 7,
+    "medAbs": 0.26676730644813457,
+    "medSigned": -0.04955872369314324,
+    "worst": -0.9041839667837751,
+    "within25": 3
+   },
+   "v2": {
+    "n": 7,
+    "medAbs": 0.12684195319271888,
+    "medSigned": -0.04183966783775152,
+    "worst": 0.7328519855595668,
+    "within25": 4
+   },
+   "v2 raw": {
+    "n": 7,
+    "medAbs": 0.13839930655879804,
+    "medSigned": -0.03066113062919195,
+    "worst": -0.7729818780889621,
+    "within25": 4
+   },
+   "A": {
+    "n": 7,
+    "medAbs": 0.26180720293293075,
+    "medSigned": -0.08689748811948404,
+    "worst": 0.7949458483754512,
+    "within25": 3
+   },
+   "B": {
+    "n": 7,
+    "medAbs": 0.1914332784184514,
+    "medSigned": 0.09640190088255261,
+    "worst": 0.9660649819494584,
+    "within25": 5
+   },
+   "v1 4m": {
+    "n": 7,
+    "medAbs": 0.4392396469789545,
+    "medSigned": 0.4392396469789545,
+    "worst": 2.3732851985559567,
+    "within25": 3
+   }
+  },
+  "unseen open": {
+   "n": 5,
+   "old": {
+    "n": 5,
+    "medAbs": 0.48525970987365463,
+    "medSigned": -0.48525970987365463,
+    "worst": -0.8936170212765957,
+    "within25": 1
+   },
+   "card": {
+    "n": 5,
+    "medAbs": 0.2553191489361702,
+    "medSigned": -0.2553191489361702,
+    "worst": -0.6256434253626579,
+    "within25": 2
+   },
+   "v2": {
+    "n": 5,
+    "medAbs": 0.2553191489361702,
+    "medSigned": -0.2553191489361702,
+    "worst": -0.6256434253626579,
+    "within25": 2
+   },
+   "v2 raw": {
+    "n": 5,
+    "medAbs": 0.27287234042553193,
+    "medSigned": -0.27287234042553193,
+    "worst": -0.6373420683200749,
+    "within25": 2
+   },
+   "A": {
+    "n": 5,
+    "medAbs": 0.17426545086119555,
+    "medSigned": -0.12978723404255318,
+    "worst": -0.5517080018717829,
+    "within25": 3
+   },
+   "B": {
+    "n": 5,
+    "medAbs": 0.17426545086119555,
+    "medSigned": -0.12978723404255318,
+    "worst": -0.5517080018717829,
+    "within25": 3
+   },
+   "v1 4m": {
+    "n": 5,
+    "medAbs": 0.3598502573701451,
+    "medSigned": 0.3598502573701451,
+    "worst": 1.0071716718960109,
+    "within25": 1
+   }
+  },
+  "Jen quotes (check only)": {
+   "n": 4,
+   "old": {
+    "n": 4,
+    "medAbs": 0.6296296296296295,
+    "medSigned": -0.6296296296296295,
+    "worst": -0.8372093023255814,
+    "within25": 0
+   },
+   "card": {
+    "n": 4,
+    "medAbs": 0.15813953488372093,
+    "medSigned": 0.03962101636520241,
+    "worst": 0.9,
+    "within25": 3
+   },
+   "v2": {
+    "n": 4,
+    "medAbs": 0.15813953488372093,
+    "medSigned": 0.03962101636520241,
+    "worst": 0.9,
+    "within25": 3
+   },
+   "v2 raw": {
+    "n": 4,
+    "medAbs": 0.3956434108527132,
+    "medSigned": 0.037347114556416885,
+    "worst": 0.8945,
+    "within25": 2
+   },
+   "A": {
+    "n": 4,
+    "medAbs": 0.5145555555555555,
+    "medSigned": -0.13152454780361758,
+    "worst": 1.4325,
+    "within25": 1
+   },
+   "B": {
+    "n": 4,
+    "medAbs": 0.43209302325581395,
+    "medSigned": 0.1463522825150732,
+    "worst": 1.8095,
+    "within25": 2
+   },
+   "v1 4m": {
+    "n": 4,
+    "medAbs": 0.2022015503875969,
+    "medSigned": 0.2022015503875969,
+    "worst": 2.38,
+    "within25": 2
+   }
+  }
+ }
+}
