@@ -20,7 +20,7 @@ const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const SITE = '365aeration.com', SERVICES = 'Core aeration \u00b7 Overseeding \u00b7 Fertilizer', GO = 'https://365aeration.com/card/';
 const PEOPLE = [
   { name: 'Brandon Long', title: 'CEO \u00b7 Business inquiries', phone: '(303) 915-1045', email: 'B.Long@365Aeration.com' },
-  { name: 'Jen McPherson', title: 'Booking & quotes', phone: '(720) 830-4553', email: 'J.McPherson@365Aeration.com' },   /* her own address (Matthew, 29 Oct), was contact@ */
+  { name: 'Jenn McPherson', title: 'Booking & quotes', phone: '(720) 830-4553', email: 'J.McPherson@365Aeration.com' },   /* her own address (Matthew, 29 Oct), was contact@ */
 ];
 /* the badge and the QR exactly as build-print.mjs draws them */
 const bsrc = readFileSync(join(HERE, 'build.mjs'), 'utf8');
