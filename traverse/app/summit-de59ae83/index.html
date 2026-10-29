@@ -1740,6 +1740,20 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   button.kitstep{cursor:pointer}.kitstep span:nth-child(2){display:grid;gap:2px;flex:1;min-width:0}.kitstep small{color:var(--soft)}
   .kitck{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);font-weight:800}.kitstep.done .kitck{border-color:var(--go);background:var(--go);color:var(--on-go)}
   .kitgo{flex:none;font-size:20px;color:var(--soft)}
+  /* Import and Your costs (2026-10-29) */
+  .impkinds{display:grid;gap:6px}.impkinds .kitstep[aria-pressed=true]{border-color:var(--go)}.impkinds .kitstep[aria-pressed=true] .kitck{border-color:var(--go);background:var(--go);color:var(--on-go)}
+  .impmap{display:grid;gap:6px}.impcol{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px}
+  .impcol>div{display:grid;gap:2px;min-width:0}.impcol small{color:var(--soft);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .impv select{min-height:38px;max-width:100%;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans)}
+  .impmode{display:flex;flex-wrap:wrap;gap:6px}.impmode button{min-height:38px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}.impmode button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+  .impv .kitopt{display:flex!important;align-items:center;gap:8px;font-weight:400}
+  .impcounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.impcount{display:grid;gap:2px;padding:10px 12px;border-radius:12px;background:var(--sunk)}.impcount b{font:800 22px var(--sans)}.impcount small{color:var(--soft)}.impcount.bad b{color:var(--bad)}.impcounts .sub2{grid-column:1/-1}
+  .impprev,.imphist{display:grid;gap:6px}.improw{display:grid;gap:3px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.improw>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .improw small{color:var(--soft)}.improw .impwarn{color:var(--bad)}.improw.look{border-color:var(--bad)}.imprn{font-size:12px;color:var(--soft)}.impact{background:var(--sunk);color:var(--ink)}.impact.add{background:#e6f2df;color:#21451f}.impact.look{background:var(--bad);color:#fff}
+  .costrule{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px}.costhd{display:grid;gap:2px}.costhd small{color:var(--soft)}.costex{justify-self:start;background:#fff3cd;color:#5c4400}
+  .costmats{display:grid;gap:6px}.costmat{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.costmat input{width:5.5em}.costmat input:first-child{flex:1 1 12em;width:auto}.costlab{font-size:12.5px;color:var(--soft);white-space:nowrap}
+  .costv .kitbtns{align-items:center}.costv .kitrate{width:8em}.costneg{color:var(--bad)!important}
+  .costq{display:grid;gap:2px;margin-top:6px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;font-size:13.5px}.costq b{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--soft)}.costq small{color:var(--soft)}.costq.costneg span{color:var(--bad)}
   .jnform label{display:grid;gap:3px;font-size:13px;font-weight:700}
   .jnform input{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line,#ccd);border-radius:8px;background:var(--card,#fff);color:inherit}
   .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
@@ -4302,6 +4316,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* the quote and agreement kit (2026-10-27) */
         kitOnC() ? tile('button', 'calc', 'Prices and terms', 'What a quote adds up from the house, the usual deposit, and your agreement terms.', 'Admin only', kitPricesView) : null,
         kitOnC() ? tile('button', 'card', 'Payments', 'Connect your own Square or Stripe for deposits on your forms.', 'Admin only', kitPayView) : null,
+        kitOnC() ? tile('button', 'clip', 'Import', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', 'Admin only', function () { importView(); }) : null,   /* 2026-10-29 */
+        costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
         feat('billing') ? tile('button', 'card', 'Billing', 'Your Traverse plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10 */
         CO.a365 ? null : tile('button', 'door', 'Sample door', 'One made-up door with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew) */
     }
@@ -12341,7 +12357,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     K.rules.forEach(function (r) {
       var p = picks[r.id] || {}, on = 'on' in p ? !!p.on : !r.opt; if (!on) return;
       var qty = { lawn: lawn / 1000, roofsq: sqs, roofft: roof, visit: visits, each: Math.max(0, parseInt(p.qty, 10) || 0), flat: 1 }[r.unit];
-      var amt = Math.round(r.rate * qty); items.push({ id: r.id, t: r.label, amt: amt }); sum += amt;
+      var amt = Math.round(r.rate * qty); items.push({ id: r.id, t: r.label, amt: amt, qty: qty }); sum += amt;   /* qty: for Your costs (2026-10-29) */
     });
     var total = Math.max(K.min || 0, sum); if (total > sum && items.length) items.push({ id: 'min', t: 'Minimum charge', amt: total - sum });
     return { items: items, total: total };
@@ -12352,8 +12368,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var box = q('div', 'card jnform coform kitq'); box.appendChild(q('div', 'skel')); view.appendChild(box);
     var hp = lead.house && lead.house.region && lead.house.door ? api('a365house', { params: { region: lead.house.region, id: lead.house.door } }).catch(function () { return null; }) : Promise.resolve(null);
-    Promise.all([kitLoad(), hp]).then(function (res) {
-      var K = res[0], H = res[1] && res[1].ok ? res[1].house : null;
+    var cp = costsOnC() ? api('costs', { params: lead.house && lead.house.region && lead.house.door ? { region: lead.house.region, id: lead.house.door } : {} }).catch(function () { return null; }) : Promise.resolve(null);   /* Your costs (2026-10-29): staff only */
+    Promise.all([kitLoad(), hp, cp]).then(function (res) {
+      var K = res[0], H = res[1] && res[1].ok ? res[1].house : null, Kc = res[2];
       box.textContent = '';
       if (!K || !K.ok) { box.appendChild(q('div', 'msg bad', (K && K.error) || 'Could not load your prices.')); return; }
       if (!K.rulesSet) {
@@ -12394,6 +12411,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         P0.items.forEach(function (x) { var r0 = q('div', 'kitline'); r0.appendChild(q('span', null, x.t)); r0.appendChild(q('b', null, money0(x.amt))); sumBox.appendChild(r0); });
         if (o && o !== P0.total) { var ra = q('div', 'kitline'); ra.appendChild(q('span', null, o > P0.total ? 'Adjustment' : 'Discount')); ra.appendChild(q('b', null, (o > P0.total ? '' : '−') + money0(Math.abs(o - P0.total)))); sumBox.appendChild(ra); }
         var tt = q('div', 'kitline kittotal'); tt.appendChild(q('span', null, 'Total')); tt.appendChild(q('b', null, money0(o || P0.total))); sumBox.appendChild(tt);
+        if (Kc && Kc.ok) sumBox.appendChild(costsQuoteLine(Kc, P0, o || P0.total));   /* estimated cost and margin, staff only (2026-10-29) */
       }
       function body(sent) { var o = parseInt(String(ov.value).replace(/\D/g, ''), 10) || 0; var b = { id: lead.id, measures: m, picks: picks, note: nt.value, sent: !!sent }; if (o) b.price = o; return b; }
       function sendPanel(j) {
@@ -12537,7 +12555,439 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (st[2]) row.appendChild(q('span', 'kitgo', '›'));
         box.appendChild(row);
       });
+      /* Import and Your costs (2026-10-29): beside the checklist, not steps on it */
+      box.appendChild(q('div', 'dwh', 'Bring your data, check your prices'));
+      [[true, 'Import customers, leads and past work', 'From a spreadsheet: your old software, Excel or Google Sheets. Every import can be undone.', function () { importView(); }],
+       [costsOnC(), 'Your costs' + (feat('costs') ? '' : ' (testing: only Traverse sees this)'), 'Labour, materials, drive and overhead for each price line: what it costs you, and a suggested price.', costsView]].forEach(function (x) {
+        if (!x[0]) return; var row = q('button', 'kitstep'); row.type = 'button'; row.addEventListener('click', x[3]);
+        row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[1])); tx.appendChild(q('small', null, x[2])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
+      });
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitSetupView)); });
+  }
+  /* ---- Import (2026-10-29, Matthew: part of onboarding; Traverse also offers to do the import for clients during the 2-day setup, so it has to
+     be reliable for us too) ----
+     One screen in Setup for the editions and client installs (Sixfold 365 keeps its own Customers import). Pick what the file is (customers
+     with their plans, leads, past work), pick the file (CSV or tab-separated; Excel's byte-order mark, quoted commas and CRLF are fine), check
+     which column is which (guessed from the headings; change any, or skip it), look at what each row will do, then import. Someone already
+     here is updated or skipped, never added twice. Every import can be undone. The server checks every row (importcheck) before anything is
+     saved (importrun), 500 rows a call. */
+  var IMP_KIND = {
+    customers: ['Customers', 'Your customers and their plans: how often, the price, the next visit.', 'customers'],
+    leads: ['Leads', 'People still to call or quote. They go into the Pipeline.', 'leads'],
+    work: ['Past work', 'Jobs you already did. Each goes on the customer’s record as a done visit (not scheduled, not charged).', 'past-work']
+  };
+  /* each kind's fields: [key, what the admin sees, headings that pick it (lower case, words only), an example for the template] */
+  var IMP_WHO = [['name', 'Name', ['name', 'full name', 'customer', 'customer name', 'client', 'client name', 'contact', 'contact name', 'homeowner'], 'Pat Example'],
+    ['first', 'First name', ['first', 'first name', 'firstname', 'given name'], ''], ['last', 'Last name', ['last', 'last name', 'lastname', 'surname', 'family name'], ''],
+    ['phone', 'Phone', ['phone', 'phone number', 'mobile', 'cell', 'cell phone', 'mobile phone', 'telephone', 'tel', 'primary phone', 'home phone', 'phone 1', 'phone1'], '(303) 555-0100'],
+    ['email', 'Email', ['email', 'e mail', 'email address', 'primary email', 'e mail address'], 'pat@example.com'],
+    ['address', 'Street address', ['address', 'street', 'street address', 'service address', 'property address', 'address 1', 'address line 1', 'address1', 'location', 'job address', 'site address'], '123 Main St'],
+    ['town', 'City or town', ['city', 'town', 'service city', 'locality'], 'Castle Rock'], ['zip', 'ZIP', ['zip', 'zip code', 'postal code', 'postcode', 'post code', 'zipcode'], '80104']];
+  var IMP_F = {
+    customers: IMP_WHO.concat([['service', 'Service', ['service', 'service type', 'services', 'program', 'product', 'job type', 'work type'], ''],
+      ['status', 'Status (active, paused, ended)', ['status', 'customer status', 'active'], 'active'],
+      ['often', 'How often (plan)', ['frequency', 'how often', 'plan', 'service plan', 'schedule', 'recurrence', 'interval', 'plan frequency', 'billing frequency', 'visit frequency'], 'every 6 weeks'],
+      ['every', 'Every N weeks (number)', ['every n weeks', 'weeks between', 'interval weeks', 'every weeks'], ''],
+      ['planName', 'Plan name', ['plan name', 'package', 'program name', 'plan type', 'package name'], 'Lawn plan'],
+      ['price', 'Price (per visit or per month)', ['price', 'amount', 'rate', 'plan price', 'price per visit', 'charge', 'fee', 'recurring price', 'recurring amount', 'monthly price'], '74'],
+      ['listPrice', 'Regular price', ['regular price', 'list price', 'full price'], ''],
+      ['start', 'Customer since', ['start', 'start date', 'since', 'customer since', 'created', 'date added', 'signup date', 'sign up date', 'created date'], '2025-04-01'],
+      ['next', 'Next visit', ['next', 'next visit', 'next service', 'next due', 'next date', 'next service date', 'next appointment', 'due date', 'next visit date'], '2026-11-10'],
+      ['notes', 'Notes', ['notes', 'note', 'comments', 'comment', 'description', 'memo', 'details'], 'Gate code 1234']]),
+    leads: IMP_WHO.concat([['need', 'What they want', ['what they want', 'service', 'interested in', 'need', 'service wanted', 'product', 'request', 'service requested', 'project', 'project type'], 'Quote'],
+      ['source', 'Where they came from', ['where they came from', 'source', 'lead source', 'channel', 'how heard', 'how did you hear', 'referral source', 'origin', 'how did you hear about us'], 'Referral'],
+      ['status', 'Status (new, contacted, quoted, won, lost)', ['status', 'stage', 'lead status', 'pipeline stage', 'deal stage'], 'new'],
+      ['owner', 'Owner (one of your people)', ['owner', 'assigned to', 'rep', 'sales rep', 'salesperson', 'assigned', 'lead owner', 'assignee'], ''],
+      ['date', 'Date the lead came in', ['date the lead came in', 'date', 'created', 'created date', 'created time', 'date created', 'submitted', 'lead date', 'created at', 'created on'], '2026-10-20'],
+      ['ext', 'Lead ID in the old system', ['id', 'lead id', 'external id', 'record id'], ''],
+      ['notes', 'Notes', ['notes', 'note', 'comments', 'comment', 'message', 'description', 'memo', 'details'], 'Call after 5']]),
+    work: IMP_WHO.concat([['date', 'Date of the job', ['date of the job', 'date', 'service date', 'job date', 'visit date', 'completed', 'completed date', 'date completed', 'completion date', 'scheduled date', 'appointment date', 'date of service'], '2026-06-14'],
+      ['service', 'Service', ['service', 'service type', 'job type', 'work', 'work type', 'job', 'product', 'description of work'], ''],
+      ['price', 'Price', ['price', 'amount', 'total', 'invoice total', 'charge', 'revenue', 'job total', 'paid', 'invoice amount'], '129'],
+      ['crew', 'Crew', ['crew', 'technician', 'tech', 'employee', 'assigned to', 'performed by', 'worker', 'team', 'crew lead'], ''],
+      ['notes', 'Notes', ['notes', 'note', 'comments', 'comment', 'description', 'memo', 'details', 'job notes'], '']])
+  };
+  function impOnC() { return kitOnC() && S.role === 'admin'; }
+  function impHead(h) { return String(h || '').replace(/^﻿/, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  /* the separator the first line uses most (comma, tab or semicolon: Excel in some countries saves semicolons); the same reader as Meta's */
+  function impParse(text) {
+    var first = text.split(/\r?\n/)[0] || '', sep = ',', best = -1;
+    [',', '\t', ';'].forEach(function (s) { var n = first.split(s).length; if (n > best) { best = n; sep = s; } });
+    var rows = [], row = [], cell = '', inQ = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (inQ) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else inQ = false; } else cell += ch; continue; }
+      if (ch === '"' && cell.trim() === '') { cell = ''; inQ = true; continue; }
+      if (ch === sep) { row.push(cell); cell = ''; continue; }
+      if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(function (c) { return c.trim() !== ''; })) rows.push(row); row = []; continue; }
+      cell += ch;
+    }
+    row.push(cell); if (row.some(function (c) { return c.trim() !== ''; })) rows.push(row);
+    return rows;
+  }
+  /* each column's field from its heading: the exact words first, then a heading that contains one; each field once */
+  function impGuess(kind, head) {
+    var F = IMP_F[kind], used = {}, map = head.map(function () { return ''; });
+    head.forEach(function (h, i) { var n = impHead(h); F.some(function (f) { if (!used[f[0]] && f[2].indexOf(n) >= 0) { map[i] = f[0]; used[f[0]] = true; return true; } return false; }); });
+    head.forEach(function (h, i) {
+      if (map[i]) return; var n = ' ' + impHead(h) + ' ';
+      F.some(function (f) { if (!used[f[0]] && f[2].some(function (w) { return w.length >= 4 && n.indexOf(' ' + w + ' ') >= 0; })) { map[i] = f[0]; used[f[0]] = true; return true; } return false; });
+    });
+    return map;
+  }
+  function impIsMeta(head) { var h = head.map(function (x) { return impHead(x).replace(/ /g, '_'); }); return (h.indexOf('full_name') >= 0 || h.indexOf('phone_number') >= 0) && ['leadgen_id', 'ad_name', 'form_name', 'campaign_name', 'is_organic', 'adset_name'].some(function (k) { return h.indexOf(k) >= 0; }); }
+  /* the rows as the server takes them: {field: value}; first + last make the name; "123 Main St, Castle Rock, CO 80104" in one column is split */
+  function impRowsOf(P) {
+    if (P.meta) return metaRows(P.table).map(function (r) { return { ext: r.ext, date: r.at, name: r.name, phone: r.phone, email: r.email, town: r.town, need: r.need, notes: r.msg }; });
+    var hasTown = P.map.indexOf('town') >= 0;
+    return P.table.slice(1).map(function (r) {
+      var o = {}; P.map.forEach(function (f, i) { if (!f) return; var v = String(r[i] == null ? '' : r[i]).trim(); if (v) o[f] = o[f] ? o[f] + ' ' + v : v; });
+      if (!o.name && (o.first || o.last)) o.name = ((o.first || '') + ' ' + (o.last || '')).trim();
+      if (o.address && !hasTown && o.address.indexOf(',') > 0) { var p = o.address.split(','); o.address = p.shift().trim(); o.town = p.join(',').replace(/\b[A-Z]{2}\s*\d{5}(-\d{4})?\s*$/, '').replace(/\d{5}(-\d{4})?\s*$/, '').replace(/,\s*$/, '').trim().replace(/,\s*[A-Za-z]{2}$/, ''); }
+      return o;
+    });
+  }
+  function impTemplate(kind) {
+    var F = IMP_F[kind].filter(function (f) { return f[0] !== 'first' && f[0] !== 'last'; });
+    var esc = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [F.map(function (f) { return esc(f[1].replace(/ \(.*\)$/, '')); }).join(','), F.map(function (f) { return esc(f[3]); }).join(',')];
+    impSave(lines.join('\r\n'), 'import-template-' + IMP_KIND[kind][2] + '.csv');
+  }
+  function impSave(text, name) {
+    var blob = new Blob(['﻿' + text], { type: 'text/csv' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.parentNode.removeChild(a); }, 1000);
+  }
+  /* send the rows 500 (or, to check, 5,000) at a time; one import id for the whole file */
+  function impSend(P, dry, progress) {
+    var rows = impRowsOf(P), size = dry ? 5000 : 500, at = 0, tot = { added: 0, updated: 0, skipped: 0, look: 0, made: 0 }, res = [], id = null;
+    var step = function () {
+      if (at >= rows.length) return Promise.resolve({ ok: true, id: id, counts: tot, rows: res, n: rows.length });
+      var chunk = rows.slice(at, at + size), from = at; at += size; progress(Math.min(at, rows.length), rows.length);
+      return api(dry ? 'importcheck' : 'importrun', { body: { kind: P.kind, rows: chunk, mode: P.mode, owner: P.owner || '', makeMissing: P.makeMissing, src: P.meta ? 'meta' : '', file: P.file, id: id || '' } }).then(function (j) {
+        if (!j.ok) return Object.assign(j, { partial: { id: id, counts: tot, rows: res, n: from } });
+        if (j.id) id = j.id;
+        Object.keys(tot).forEach(function (k) { tot[k] += j.counts[k] || 0; });
+        j.rows.forEach(function (x) { x.i += from; res.push(x); });
+        return step();
+      });
+    };
+    return step();
+  }
+  var IMP_ACT = { add: 'Add', update: 'Update', skip: 'Skip', look: 'Needs a look' };
+  function importView(kind) {
+    if (!impOnC()) return chooseView();
+    hideToast(); S.signin = null; S.screen = 'kitimport'; foot.hidden = true; setDock(null);
+    if (kind || !S.imp || S.imp.done) S.imp = { kind: kind || (S.imp && S.imp.kind) || 'customers', mode: 'update', owner: '', makeMissing: true };   /* a finished import starts afresh; one half done carries on */
+    setBar('back', { title: 'Import', sub: 'Customers, leads and past work from a spreadsheet', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp impv'); view.appendChild(box);
+    impDraw(box);
+  }
+  function impDraw(box) {
+    var P = S.imp; box.textContent = '';
+    var redraw = function () { impDraw(box); };
+    if (!P.table) {   /* step 1: what it is, and the file */
+      box.appendChild(q('div', 'dwh', 'What are you importing?'));
+      var kr = q('div', 'impkinds');
+      Object.keys(IMP_KIND).forEach(function (k) {
+        var b = q('button', 'kitstep'); b.type = 'button'; b.setAttribute('aria-pressed', String(P.kind === k));
+        b.appendChild(q('span', 'kitck', P.kind === k ? '✓' : '')); var tx = q('span'); tx.appendChild(q('b', null, IMP_KIND[k][0])); tx.appendChild(q('small', null, IMP_KIND[k][1])); b.appendChild(tx);
+        b.addEventListener('click', function () { P.kind = k; redraw(); }); kr.appendChild(b);
+      });
+      box.appendChild(kr);
+      var tl = q('button', 'lnk', 'Download the ' + IMP_KIND[P.kind][0].toLowerCase() + ' template (.csv)'); tl.type = 'button'; tl.addEventListener('click', function () { impTemplate(P.kind); }); box.appendChild(tl);
+      if (P.kind === 'customers') box.appendChild(q('div', 'sub2', 'Plans go on the same rows: how often (weekly, every 6 weeks, monthly, quarterly, seasonal, one-time), the price and the next visit. A file of just plans works too: each row finds its customer and their plan is updated.'));
+      if (P.kind === 'leads') box.appendChild(q('div', 'sub2', 'Any leads spreadsheet. A Facebook Leads Center file works here too.'));
+      if (P.kind === 'work') box.appendChild(q('div', 'sub2', 'One row per job: who (name, phone, email or address), the date, the service and the price. A customer we cannot find is added for it.'));
+      var fl = q('label', null, 'Your file (.csv or .txt, saved from Excel, Google Sheets or your old software)'); var inp = q('input'); inp.type = 'file'; inp.accept = '.csv,.tsv,.txt,text/csv,text/plain'; inp.id = 'impFile'; fl.appendChild(inp); box.appendChild(fl);
+      var msg = q('div', 'msg bad'); msg.hidden = true; box.appendChild(msg);
+      inp.addEventListener('change', function () {
+        var file = inp.files && inp.files[0]; if (!file) return;
+        var fr = new FileReader();
+        fr.onload = function () {
+          var text = decodeLeadFile(fr.result);
+          if (text === null) { msg.hidden = false; msg.textContent = 'That is an Excel workbook. In Excel: File, Save As, CSV UTF-8. Then pick that file.'; return; }
+          var table = impParse(text).map(function (r) { return r.map(function (c) { return String(c).replace(/ /g, ' '); }); });
+          if (table.length < 2) { msg.hidden = false; msg.textContent = 'That file has no rows under the headings. The first row should be the column headings.'; return; }
+          var w = table[0].length; table.forEach(function (r) { while (r.length < w) r.push(''); });
+          P.file = file.name; P.table = table; P.meta = P.kind === 'leads' && impIsMeta(table[0]); P.map = impGuess(P.kind, table[0]); P.check = null; P.done = null; redraw();
+        };
+        fr.onerror = function () { msg.hidden = false; msg.textContent = 'Could not read that file. Try saving it again.'; };
+        fr.readAsArrayBuffer(file);
+      });
+      impHistory(box);
+      return;
+    }
+    var F = IMP_F[P.kind], n = P.table.length - 1;
+    box.appendChild(q('div', 'sub2', IMP_KIND[P.kind][0] + ' from ' + P.file + ' · ' + n + (n === 1 ? ' row' : ' rows')));
+    if (P.done) return impDone(box, redraw);
+    if (!P.check) {   /* step 2: which column is which */
+      if (P.meta) box.appendChild(q('div', 'msg', 'A Facebook Leads Center file: read the way Meta writes it (name, phone, email, city, the form’s answers in the notes). Leads already in the Pipeline are left out.'));
+      else {
+        box.appendChild(q('div', 'dwh', 'Which column is which?'));
+        box.appendChild(q('div', 'sub2', 'Guessed from your headings. Change any that are wrong; Skip leaves a column out.'));
+        var tb = q('div', 'impmap');
+        P.table[0].forEach(function (h, i) {
+          var row = q('div', 'impcol'); var hd = q('div'); hd.appendChild(q('b', null, String(h).trim() || 'Column ' + (i + 1)));
+          var ex = ''; for (var k = 1; k < Math.min(P.table.length, 6) && !ex; k++) ex = String(P.table[k][i] || '').trim();
+          hd.appendChild(q('small', null, ex ? 'e.g. ' + ex.slice(0, 60) : 'empty')); row.appendChild(hd);
+          var sel = q('select'); sel.setAttribute('aria-label', 'Field for ' + (String(h).trim() || 'column ' + (i + 1)));
+          var o0 = q('option', null, 'Skip'); o0.value = ''; sel.appendChild(o0);
+          F.forEach(function (f) { var o = q('option', null, f[1]); o.value = f[0]; if (P.map[i] === f[0]) o.selected = true; sel.appendChild(o); });
+          sel.addEventListener('change', function () { var v = sel.value; if (v) P.map = P.map.map(function (x, j) { return j !== i && x === v ? '' : x; }); P.map[i] = v; redraw(); });
+          row.appendChild(sel); tb.appendChild(row);
+        });
+        box.appendChild(tb);
+        var need = P.kind === 'work' ? [['date', 'the date']] : [];
+        var hasWho = ['name', 'first', 'last', 'phone', 'email', 'address'].some(function (f) { return P.map.indexOf(f) >= 0; });
+        if (!hasWho) need.push(['', 'a name, phone, email or address']);
+        if (P.kind === 'customers' && P.map.indexOf('name') < 0 && P.map.indexOf('first') < 0) need.push(['', 'the name']);
+        var miss = need.filter(function (x) { return !x[0] || P.map.indexOf(x[0]) < 0; });
+        if (miss.length) box.appendChild(q('div', 'msg bad', 'Pick the column with ' + miss.map(function (x) { return x[1]; }).join(' and ') + '.'));
+      }
+      box.appendChild(q('div', 'dwh', P.kind === 'leads' ? 'Someone already in the Pipeline' : P.kind === 'work' ? 'A job already on their record' : 'Someone already a customer'));
+      box.appendChild(q('div', 'sub2', 'Found by their house, else phone, else email, else name and address. Never added twice.'));
+      var mr = q('div', 'dwlen impmode');
+      [['update', P.kind === 'leads' ? 'Update status, owner and notes' : P.kind === 'work' ? 'Update the price and notes' : 'Update them from the file'], ['skip', 'Leave them as they are']].forEach(function (m) {
+        var b = q('button', null, m[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(P.mode === m[0])); b.addEventListener('click', function () { P.mode = m[0]; redraw(); }); mr.appendChild(b);
+      });
+      box.appendChild(mr);
+      if (P.kind === 'leads') {
+        var ol = q('label', null, 'Owner for leads with none in the file'); var os = q('select'); var on = q('option', null, 'Nobody (the Pipeline’s new leads)'); on.value = ''; os.appendChild(on);
+        (S.impPeople || []).forEach(function (nm) { var o = q('option', null, nm); o.value = nm; if (P.owner === nm) o.selected = true; os.appendChild(o); });
+        os.addEventListener('change', function () { P.owner = os.value; }); ol.appendChild(os); box.appendChild(ol);
+      }
+      if (P.kind === 'work') {
+        var ml = q('label', 'kitopt'); var mc = q('input'); mc.type = 'checkbox'; mc.checked = P.makeMissing !== false; mc.addEventListener('change', function () { P.makeMissing = mc.checked; });
+        ml.appendChild(mc); ml.appendChild(document.createTextNode(' Add a customer for a job whose customer is not here yet')); box.appendChild(ml);
+      }
+      var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
+      var br = q('div', 'kitbtns'); var ck = q('button', 'save', 'Check the rows'); ck.type = 'button'; ck.disabled = !!(box.querySelector('.msg.bad:not([hidden])'));
+      var bk = q('button', 'lnk', 'Pick another file'); bk.type = 'button'; bk.addEventListener('click', function () { P.table = null; redraw(); });
+      br.appendChild(ck); br.appendChild(bk); box.appendChild(br);
+      ck.addEventListener('click', function () {
+        ck.disabled = true; err.hidden = true;
+        impSend(P, true, function (a, b) { ck.textContent = 'Checking… ' + a + ' of ' + b; }).then(function (j) {
+          ck.disabled = false; ck.textContent = 'Check the rows';
+          if (!j.ok) { err.hidden = false; err.textContent = j.error || 'Could not check it.'; return; }
+          P.check = j; redraw();
+        }).catch(function () { ck.disabled = false; ck.textContent = 'Check the rows'; err.hidden = false; err.textContent = 'Needs signal. Nothing was saved.'; });
+      });
+      return;
+    }
+    /* step 3: what each row will do */
+    var C = P.check.counts;
+    box.appendChild(q('div', 'dwh', 'What will happen'));
+    box.appendChild(impCounts(C, P.kind, true));
+    var warned = P.check.rows.filter(function (x) { return x.warn && x.warn.length; }).length;
+    if (warned) box.appendChild(q('div', 'sub2', warned + (warned === 1 ? ' row imports' : ' rows import') + ' with a note (below): they go in, with what could not be read left out.'));
+    box.appendChild(impTable(P, P.check.rows, 25));
+    var err2 = q('div', 'msg bad'); err2.hidden = true; box.appendChild(err2);
+    var br2 = q('div', 'kitbtns'); var go = q('button', 'save', 'Import ' + (C.added + C.updated) + (C.added + C.updated === 1 ? ' row' : ' rows')); go.type = 'button'; go.disabled = !(C.added + C.updated);
+    var ch = q('button', 'lnk', 'Change the columns'); ch.type = 'button'; ch.addEventListener('click', function () { P.check = null; redraw(); });
+    br2.appendChild(go); br2.appendChild(ch); box.appendChild(br2);
+    go.addEventListener('click', function () {
+      go.disabled = true; err2.hidden = true;
+      impSend(P, false, function (a, b) { go.textContent = 'Importing… ' + a + ' of ' + b; }).then(function (j) {
+        if (!j.ok) { err2.hidden = false; err2.textContent = (j.error || 'The import stopped.') + (j.partial && j.partial.id ? ' The rows before row ' + (j.partial.n + 2) + ' went in; Undo this import below takes them back.' : ''); if (j.partial && j.partial.id) { P.done = j.partial; P.done.stopped = true; redraw(); } else { go.disabled = false; go.textContent = 'Import'; } return; }
+        P.done = j; S.custs = null; redraw();
+      }).catch(function () { err2.hidden = false; err2.textContent = 'Needs signal. Some rows may have gone in: see Earlier imports in Import to undo it.'; go.disabled = false; });
+    });
+  }
+  function impCounts(C, kind, will) {
+    var d = q('div', 'impcounts');
+    [['added', will ? 'to add' : 'added'], ['updated', will ? 'to update' : 'updated'], ['skipped', will ? 'to skip (already here)' : 'skipped (already here)'], ['look', 'need a look (not imported)']].forEach(function (x) {
+      var c = q('div', 'impcount' + (x[0] === 'look' && C.look ? ' bad' : '')); c.appendChild(q('b', null, String(C[x[0]] || 0))); c.appendChild(q('small', null, x[1])); d.appendChild(c);
+    });
+    if (kind === 'work' && C.made) d.appendChild(q('div', 'sub2', C.made + (C.made === 1 ? ' customer' : ' customers') + (will ? ' will be' : ' were') + ' added for jobs whose customer was not here.'));
+    return d;
+  }
+  function impTable(P, res, first) {
+    var rows = impRowsOf(P), wrap = q('div', 'impprev');
+    var show = res.filter(function (x) { return x.i < first || x.act === 'look' || (x.warn && x.warn.length); }).slice(0, 200);
+    show.forEach(function (x) {
+      var r = rows[x.i] || {}, d = q('div', 'improw ' + x.act);
+      var top = q('div'); top.appendChild(q('span', 'imprn', 'Row ' + (x.i + 2))); top.appendChild(q('b', null, r.name || r.phone || r.email || '(no name)'));
+      top.appendChild(q('span', 'tag impact ' + x.act, IMP_ACT[x.act])); d.appendChild(top);
+      var place = [r.address, r.town].filter(Boolean).join(', '); if (place || r.date) d.appendChild(q('small', null, [r.date, place].filter(Boolean).join(' · ')));
+      if (x.why) d.appendChild(q('small', 'impwhy', x.why));
+      (x.warn || []).forEach(function (w) { d.appendChild(q('small', 'impwarn', w)); });
+      wrap.appendChild(d);
+    });
+    if (res.length > show.length) wrap.appendChild(q('div', 'sub2', 'The first ' + first + ' rows and every row with a problem are shown; the other ' + (res.length - show.length) + ' look fine.'));
+    return wrap;
+  }
+  function impDone(box, redraw) {
+    var P = S.imp, D = P.done;
+    box.appendChild(q('div', 'dwh', D.stopped ? 'Stopped part way' : 'Imported'));
+    box.appendChild(impCounts(D.counts, P.kind, false));
+    box.appendChild(impTable(P, D.rows, 0));
+    var bad = D.rows.filter(function (x) { return x.act === 'look' || (x.warn && x.warn.length); });
+    var br = q('div', 'kitbtns');
+    if (bad.length) {
+      var dl = q('button', 'lnk', 'Download the rows that need a look (.csv)'); dl.type = 'button';
+      dl.addEventListener('click', function () {
+        var esc = function (v) { v = String(v == null ? '' : v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+        var lines = [['Row', 'What happened', 'Why'].concat(P.table[0]).map(esc).join(',')];
+        bad.forEach(function (x) { lines.push([x.i + 2, IMP_ACT[x.act], [x.why].concat(x.warn || []).filter(Boolean).join('; ')].concat(P.table[x.i + 1] || []).map(esc).join(',')); });
+        impSave(lines.join('\r\n'), 'import-needs-a-look-' + todayISO() + '.csv');
+      });
+      box.appendChild(dl);
+    }
+    var see = q('button', 'save', P.kind === 'leads' ? 'See the Pipeline' : 'See the customers'); see.type = 'button';
+    see.addEventListener('click', function () { S.imp = null; if (P.kind === 'leads') pipelineView(); else customersView(); });
+    var ag = q('button', 'lnk', 'Import another file'); ag.type = 'button'; ag.addEventListener('click', function () { S.imp = { kind: P.kind, mode: P.mode, owner: P.owner, makeMissing: P.makeMissing }; redraw(); });
+    br.appendChild(see); br.appendChild(ag); box.appendChild(br);
+    if (D.id) { var un = q('button', 'lnk danger', 'Undo this import'); un.type = 'button'; un.addEventListener('click', function () { impUndo(D.id, function () { S.imp = { kind: P.kind, mode: P.mode }; redraw(); }); }); box.appendChild(un); }
+  }
+  function impUndo(id, after) {
+    if (!window.confirm('Undo this import? Everything it added comes out, and what it changed goes back, unless someone has worked on it since.')) return;
+    api('importundo', { body: { id: id } }).then(function (j) {
+      if (!j.ok) { toast('Not undone', j.error || 'Try again.', null); return; }
+      S.custs = null; toast('Import undone', j.removed + ' taken out' + (j.reverted ? ', ' + j.reverted + ' put back as they were' : '') + (j.kept ? ', ' + j.kept + ' kept (worked on since)' : ''), null); after();
+    }).catch(function () { toast('No signal', 'Nothing was undone.', null); });
+  }
+  function impHistory(box) {
+    var h = q('div', 'imphist'); box.appendChild(h);
+    api('imports').then(function (j) {
+      if (!j || !j.ok) return; S.impPeople = j.people || [];
+      if (!j.imports.length) return;
+      h.appendChild(q('div', 'dwh', 'Earlier imports'));
+      j.imports.slice(0, 10).forEach(function (x) {
+        var d = q('div', 'improw'); var top = q('div'); top.appendChild(q('b', null, (IMP_KIND[x.kind] || [x.kind])[0] + ' · ' + (x.file || 'a file')));
+        if (x.undone) top.appendChild(q('span', 'tag impact skip', 'Undone'));
+        d.appendChild(top);
+        d.appendChild(q('small', null, new Date(x.at * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' · ' + x.by + ' · ' + x.added + ' added, ' + x.updated + ' updated, ' + x.skipped + ' skipped, ' + x.look + ' needed a look' + (x.made ? ', ' + x.made + ' customers added' : '')));
+        if (x.undone) d.appendChild(q('small', null, 'Undone by ' + x.undone.by + ': ' + x.undone.removed + ' taken out' + (x.undone.kept ? ', ' + x.undone.kept + ' kept' : '')));
+        else { var u = q('button', 'lnk danger', 'Undo this import'); u.type = 'button'; u.addEventListener('click', function () { impUndo(x.id, function () { importView(); }); }); d.appendChild(u); }
+        h.appendChild(d);
+      });
+    }).catch(function () {});
+  }
+  /* ---- Your costs (2026-10-29, Matthew: pricing from the client's own costs, testable by him before clients see it) ----
+     Each price line's labour (an hourly cost and crew minutes per unit) and materials (cost per pack, units a pack covers), the company's
+     overhead and target margin, and the drive (cost per mile from a base address). Shows the cost per unit and a suggested price per unit,
+     which the admin applies to the price line or overrides. Each quote then shows the office a staff-only line: estimated cost and margin;
+     never on the homeowner's quote or form. Behind features.costs (not set by the build yet) and always on for Traverse's own sign-in. */
+  function costsOnC() { return kitOnC() && (S.role === 'admin' || S.role === 'office') && (feat('costs') || (S.super && !S.viewing)); }
+  function costsUnitC(c, ovh, mar) {
+    var lab = (+c.hour || 0) * (+c.mins || 0) / 60, mat = 0;
+    (c.mats || []).forEach(function (m) { if (+m.covers > 0) mat += (+m.cost || 0) / +m.covers; });
+    var cost = (lab + mat) * (1 + (+ovh || 0) / 100);
+    return { labour: lab, materials: mat, cost: cost, suggest: +mar < 100 ? cost / (1 - (+mar || 0) / 100) : null };
+  }
+  function money2(n) { n = +n || 0; return '$' + n.toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  var COST_UNIT = { lawn: '1,000 sq ft of lawn', roofsq: 'roofing square', roofft: 'sq ft of roof', visit: 'visit', each: 'item', flat: 'job' };
+  function costsView() {
+    if (!costsOnC() || S.role !== 'admin') return chooseView();
+    hideToast(); S.signin = null; S.screen = 'kitcosts'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Your costs', sub: 'Price from what each job costs you', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp costv'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('costs').then(function (K) {
+      box.textContent = ''; if (!K || !K.ok) { box.appendChild(q('div', 'msg bad', (K && K.error) || 'Could not load it.')); return; }
+      if (!feat('costs')) box.appendChild(q('div', 'msg', 'Testing: only Traverse’s own sign-in sees this. This company’s people see it once features.costs is turned on for the install.'));
+      var st = { mile: K.mile, overhead: K.overhead, margin: K.margin, rules: {} };
+      K.rules.forEach(function (r) { st.rules[r.id] = { hour: r.hour, mins: r.mins, mats: r.mats.map(function (m) { return Object.assign({}, m); }) }; });
+      var paints = [];
+      var repaint = function () { paints.forEach(function (f) { f(); }); };
+      var numIn = function (label, val, hint, set, cls) { var l = q('label', cls || null, label); var i = q('input'); i.inputMode = 'decimal'; i.value = val === null || val === undefined ? '' : String(val); i.addEventListener('input', function () { set(parseFloat(String(i.value).replace(/[^\d.]/g, '')) || 0); repaint(); }); l.appendChild(i); if (hint) l.appendChild(q('small', 'sub2', hint)); return l; };
+      if (!K.set) box.appendChild(q('div', 'msg', 'These are example numbers for your trade, not yours. Replace them with what you pay, then Save.'));
+      box.appendChild(q('div', 'dwh', 'For the whole company'));
+      var gr = q('div', 'kitm');
+      gr.appendChild(numIn('Overhead (%)', st.overhead, 'Rent, insurance, phones, the office: added on top of labour and materials.', function (v) { st.overhead = v; }));
+      gr.appendChild(numIn('Target margin (%)', st.margin, 'The share of the price you keep after costs. 35% margin: a $100 job costs you $65.', function (v) { st.margin = v; }));
+      gr.appendChild(numIn('Drive cost per mile ($)', st.mile, 'Fuel and wear. Each quote adds the round trip from your base to the house.', function (v) { st.mile = v; }));
+      box.appendChild(gr);
+      var bl = q('label', null, 'Your base (yard, shop or office)'); var bi = q('input'); bi.placeholder = '123 Main St, Town'; bi.value = ''; bl.appendChild(bi);
+      bl.appendChild(q('small', 'sub2', K.base ? 'Now: ' + K.base.label + '. Type a new address to change it.' : 'Optional. An address on your house lists, or stand there and use Where I am now.')); box.appendChild(bl);
+      var baseNew = undefined;
+      var br0 = q('div', 'kitbtns'); var here = q('button', 'lnk', 'Where I am now'); here.type = 'button';
+      here.addEventListener('click', function () { if (!navigator.geolocation) return toast('No location here', 'Type the address instead.', null); navigator.geolocation.getCurrentPosition(function (p) { baseNew = { lat: p.coords.latitude, lon: p.coords.longitude, label: 'Where you stood on ' + fmtD(todayISO()) }; bi.value = ''; toast('Got it', 'Save to keep it as your base.', null); }, function () { toast('Location not allowed', 'Type the address instead.', null); }, { enableHighAccuracy: true, timeout: 15000 }); });
+      br0.appendChild(here);
+      if (K.base) { var rmb = q('button', 'lnk', 'No base'); rmb.type = 'button'; rmb.addEventListener('click', function () { baseNew = null; bi.value = ''; toast('Base cleared', 'Save to keep that: quotes will leave the drive out.', null); }); br0.appendChild(rmb); }
+      box.appendChild(br0);
+      box.appendChild(q('div', 'dwh', 'Each price line'));
+      box.appendChild(q('div', 'sub2', 'Labour: what an hour of one person costs you (pay, taxes, workers’ comp) and the crew minutes one unit takes: two people for 30 minutes is 60. Materials: what a pack costs and how many units it covers.'));
+      K.rules.forEach(function (r) {
+        var c = st.rules[r.id], card = q('div', 'costrule');
+        var hd = q('div', 'costhd'); hd.appendChild(q('b', null, r.label)); hd.appendChild(q('small', null, 'Priced per ' + (COST_UNIT[r.unit] || r.unit) + ' · now ' + money2(r.rate)));
+        if (r.example) hd.appendChild(q('span', 'tag costex', 'Example numbers: replace with yours'));
+        card.appendChild(hd);
+        var lr = q('div', 'kitm');
+        lr.appendChild(numIn('Labour ($ per hour, one person)', c.hour, '', function (v) { c.hour = v; }));
+        lr.appendChild(numIn('Crew minutes per ' + (COST_UNIT[r.unit] || 'unit'), c.mins, '', function (v) { c.mins = v; }));
+        card.appendChild(lr);
+        var ml = q('div', 'costmats'); card.appendChild(ml);
+        var drawMats = function () {
+          ml.textContent = '';
+          c.mats.forEach(function (m, i) {
+            var row = q('div', 'costmat');
+            var nm = q('input'); nm.value = m.name; nm.placeholder = 'Material (e.g. seed bag)'; nm.maxLength = 60; nm.setAttribute('aria-label', 'Material'); nm.addEventListener('input', function () { m.name = nm.value; });
+            var co = q('input'); co.inputMode = 'decimal'; co.value = m.cost; co.setAttribute('aria-label', 'Cost per pack ($)'); co.addEventListener('input', function () { m.cost = parseFloat(String(co.value).replace(/[^\d.]/g, '')) || 0; repaint(); });
+            var cv = q('input'); cv.inputMode = 'decimal'; cv.value = m.covers; cv.setAttribute('aria-label', 'Units one pack covers'); cv.addEventListener('input', function () { m.covers = parseFloat(String(cv.value).replace(/[^\d.]/g, '')) || 0; repaint(); });
+            var del = q('button', 'lnk', 'Remove'); del.type = 'button'; del.addEventListener('click', function () { c.mats.splice(i, 1); drawMats(); repaint(); });
+            row.appendChild(nm); row.appendChild(q('span', 'costlab', '$ a pack')); row.appendChild(co); row.appendChild(q('span', 'costlab', 'covers')); row.appendChild(cv); row.appendChild(q('span', 'costlab', (COST_UNIT[r.unit] || 'unit') + (/ of /.test(COST_UNIT[r.unit] || '') ? '' : 's'))); row.appendChild(del);
+            ml.appendChild(row);
+          });
+          var add = q('button', 'lnk', '+ Add a material'); add.type = 'button'; add.addEventListener('click', function () { if (c.mats.length >= 12) return; c.mats.push({ name: '', cost: 0, covers: 1 }); drawMats(); }); ml.appendChild(add);
+        };
+        drawMats();
+        var out = q('div', 'kitsum costout'); card.appendChild(out);
+        var ar = q('div', 'kitbtns'); var use = q('button', 'save', ''); use.type = 'button';
+        var own = q('input', 'kitrate'); own.inputMode = 'decimal'; own.placeholder = 'Your own price'; own.setAttribute('aria-label', 'Your own price per unit ($)');
+        var setOwn = q('button', 'lnk', 'Use my price'); setOwn.type = 'button';
+        ar.appendChild(use); ar.appendChild(own); ar.appendChild(setOwn); card.appendChild(ar);
+        var cur = null;
+        paints.push(function () {
+          cur = costsUnitC(c, st.overhead, st.margin); out.textContent = '';
+          [['Labour', cur.labour], ['Materials', cur.materials], ['Overhead (' + st.overhead + '%)', cur.cost - cur.labour - cur.materials]].forEach(function (x) { var l = q('div', 'kitline'); l.appendChild(q('span', null, x[0] + ' per ' + (COST_UNIT[r.unit] || 'unit'))); l.appendChild(q('b', null, money2(x[1]))); out.appendChild(l); });
+          var t = q('div', 'kitline kittotal'); t.appendChild(q('span', null, 'Your cost per ' + (COST_UNIT[r.unit] || 'unit'))); t.appendChild(q('b', null, money2(cur.cost))); out.appendChild(t);
+          var sg = q('div', 'kitline'); sg.appendChild(q('span', null, 'Suggested price (' + st.margin + '% margin)')); sg.appendChild(q('b', null, cur.suggest === null ? '—' : money2(cur.suggest))); out.appendChild(sg);
+          if (r.rate > 0 && cur.cost > 0) { var mg = (r.rate - cur.cost) / r.rate; out.appendChild(q('div', 'sub2' + (mg < 0 ? ' costneg' : ''), 'At your price now (' + money2(r.rate) + '), you keep ' + Math.round(mg * 100) + '%.')); }
+          use.textContent = cur.suggest ? 'Use ' + money2(cur.suggest) : 'Use the suggestion'; use.disabled = !cur.suggest;
+        });
+        var apply = function (rate) {
+          use.disabled = true; setOwn.disabled = true;
+          save(true).then(function (ok) { if (!ok) { use.disabled = false; setOwn.disabled = false; return; }
+            return api('costsapply', { body: { rule: r.id, rate: Math.round(rate * 100) / 100 } }).then(function (j) {
+              if (!j.ok) { toast('Not changed', j.error || 'Try again.', null); use.disabled = false; setOwn.disabled = false; return; }
+              S.kit = null; toast('Price changed', r.label + ': ' + money2(rate) + ' per ' + (COST_UNIT[r.unit] || 'unit') + '. New quotes use it.', null); costsView();
+            });
+          }).catch(function () { use.disabled = false; setOwn.disabled = false; toast('No signal', 'Nothing was changed.', null); });
+        };
+        use.addEventListener('click', function () { if (cur && cur.suggest) apply(cur.suggest); });
+        setOwn.addEventListener('click', function () { var v = parseFloat(String(own.value).replace(/[^\d.]/g, '')); if (!(v >= 0) || own.value.trim() === '') return toast('Type your price', 'Dollars per ' + (COST_UNIT[r.unit] || 'unit') + '.', null); apply(v); });
+        box.appendChild(card);
+      });
+      var pl = q('button', 'lnk', 'Your price lines are in Prices and terms ›'); pl.type = 'button'; pl.addEventListener('click', kitPricesView); box.appendChild(pl);
+      var msg = q('div', 'sub2'); var row3 = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row3.appendChild(sb); box.appendChild(row3); box.appendChild(msg);
+      function save(quiet) {
+        sb.disabled = true; msg.textContent = 'Saving…';
+        var b = { mile: st.mile, overhead: st.overhead, margin: st.margin, rules: st.rules };
+        if (bi.value.trim()) b.base = { text: bi.value.trim() }; else if (baseNew !== undefined) b.base = baseNew;
+        return api('costsset', { body: b }).then(function (j) {
+          sb.disabled = false;
+          if (!j.ok) { msg.textContent = j.error || 'Not saved.'; toast('Not saved', j.error || 'Try again.', null); return false; }
+          msg.textContent = ''; if (!quiet) { toast('Saved', 'Your costs and suggested prices are up to date.', null); costsView(); }
+          return true;
+        }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; return false; });
+      }
+      sb.addEventListener('click', function () { save(false); });
+      repaint();
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(costsView)); });
+  }
+  /* the staff-only line on a quote (kitQuoteView): what the picked lines cost, plus the drive to this house, and what is left */
+  function costsQuoteLine(Kc, P0, total, picks) {
+    var d = q('div', 'costq'); if (!Kc || !Kc.ok) return d;
+    var by = {}; Kc.rules.forEach(function (r) { by[r.id] = r; });
+    var cost = 0, none = [];
+    P0.items.forEach(function (x) { var r = by[x.id]; if (!r) return; if (!(r.cost > 0)) { none.push(r.label); return; } cost += r.cost * (x.qty || 0); });
+    var drive = Kc.drive ? Kc.drive.cost : 0; cost += drive;
+    var left = total - cost, pct = total > 0 ? Math.round(left / total * 100) : 0;
+    d.appendChild(q('b', null, 'Staff only · never on their quote'));
+    d.appendChild(q('span', null, 'Estimated cost ' + money0(cost) + (drive ? ' (drive ' + money0(drive) + ', ' + Kc.drive.miles + ' mi there and back)' : Kc.base ? '' : ' (no drive: set your base in Your costs)') + ' · margin ' + pct + '% (' + money0(left) + ')'));
+    if (left < 0) d.classList.add('costneg');
+    if (none.length) d.appendChild(q('small', null, 'No costs set for: ' + none.join(', ') + '.'));
+    return d;
   }
   function companyView() {
     hideToast(); S.signin = null; S.screen = 'company'; foot.hidden = true; setDock(null);
@@ -13069,7 +13519,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     holder.appendChild(add);
     if (S.custAdd) holder.appendChild(customerForm(null, function (id) { S.custAdd = false; customerView(id); }));
     var imp = q('button', 'addlead', S.custImport ? 'Close the import' : 'Import customers (spreadsheet)'); imp.type = 'button';
-    imp.addEventListener('click', function () { S.custImport = !S.custImport; drawCustomers(holder); });
+    imp.addEventListener('click', function () { if (kitOnC()) return importView('customers'); S.custImport = !S.custImport; drawCustomers(holder); });   /* the editions: the Import screen (2026-10-29) */
+    if (kitOnC()) imp.textContent = 'Import (spreadsheet)';
     if (S.role === 'admin') holder.appendChild(imp);   /* imports are the admin's (2026-10-14) */
     var pyb = q('button', 'addlead', 'Payments received (for taxes)'); pyb.type = 'button'; pyb.addEventListener('click', function () { paymentsView(); });
     if (S.role === 'admin') holder.appendChild(pyb);   /* money records: the admin's (2026-10-16) */
@@ -18276,7 +18727,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
-      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay']] : null,   /* the quote and agreement kit (2026-10-27) */
+      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */
     it.forEach(function (x) {
       var lit = x[4].indexOf(S.screen) >= 0;
