@@ -11,7 +11,7 @@ This Subscription Agreement (the **"Agreement"**) is between **Traverse Platform
 - **"Edition"**: the trade version of the Service named on the Order Form (for example Roofing, Yards, Solar, Pest or Security).
 - **"Install"**: the separate copy of the Service Traverse runs for the Client, with its own web address, sign-ins and data.
 - **"Order Form"**: the order (Exhibit A, or an online checkout that references this Agreement) stating the Edition, plan, Seats, fees and Subscription Term.
-- **"Seat"**: one Authorized User who can sign in. A Seat may not be shared between people.
+- **"Seat"**: one Authorized User who can sign in, including the Client's admin account. A Seat may not be shared between people. Traverse's Support Account is not a Seat.
 - **"Service"**: the Traverse field-sales software provided over the internet, including the Install, the Door Data shown in it, its features, and the Documentation.
 - **"Subscription Term"**: the initial term on the Order Form and each renewal.
 - **"Support Account"**: the administrator sign-in Traverse keeps in every Install (described in §2.5).
@@ -23,9 +23,9 @@ This Subscription Agreement (the **"Agreement"**) is between **Traverse Platform
 
 **2.2 Your own Install.** Traverse provides the Service to the Client as its own Install. Client Data is kept in the Client's Install and is not shown to any other Traverse client.
 
-**2.3 Sign-ins.** Each Authorized User needs their own sign-in. Sign-ins may not be shared, lent or used by more than one person. A sign-in works on one phone or tablet and one computer at a time. The Client is responsible for keeping sign-in codes confidential, for giving and removing access, and for telling Traverse promptly if it suspects unauthorized use.
+**2.3 Sign-ins.** Each Authorized User needs their own sign-in. Sign-ins may not be shared, lent or used by more than one person. A sign-in works on one phone, one tablet and one computer at a time. The Client is responsible for keeping sign-in codes confidential, for giving and removing access, and for telling Traverse promptly if it suspects unauthorized use.
 
-**2.4 Terms of Use.** Each Authorized User must accept Traverse's Terms of Use before using the Service. The Client is responsible for its Authorized Users' compliance with this Agreement and the Terms of Use, and for anything done under their sign-ins.
+**2.4 Terms of Use.** Each Authorized User must accept Traverse's Terms of Use in the Service before using it, and accept them again when Traverse changes their version. The Client's admins are also asked to accept this Agreement in the Service. The Client is responsible for its Authorized Users' compliance with this Agreement and the Terms of Use, and for anything done under their sign-ins.
 
 **2.5 Support Account.** Traverse keeps one administrator sign-in, marked "Traverse", in every Install, to provide support, keep the Service running and secure, and check compliance with §3 and §4. The Client cannot change or remove it. Traverse will use it only for those purposes and will treat what it sees as Confidential Information.
 
@@ -34,7 +34,7 @@ This Subscription Agreement (the **"Agreement"**) is between **Traverse Platform
 
 **2.7 Coverage.** The Service covers the towns and areas listed in the Edition at the time of use. Coverage and the data available differ by town. Traverse does not promise any particular town, data layer or level of coverage unless the Order Form says so.
 
-**2.8 Third-Party Services.** Some features work only with a Third-Party Service the Client chooses to use, under that provider's own terms and at the Client's cost (for example Stripe for payment, Twilio for texting, JobNimbus or Jobber for CRM, BatchData for phone lookups). Traverse is not responsible for Third-Party Services. If the Client connects one, the Client authorizes Traverse to exchange the necessary data with it.
+**2.8 Third-Party Services.** Some features work only with a Third-Party Service the Client chooses to use, under that provider's own terms and at the Client's cost (for example Stripe for payment, Square, Stripe or the Client's own pay links for the deposits it takes from homeowners, Twilio for texting, JobNimbus or Jobber for CRM, and third-party data and service providers for phone lookups). Traverse is not responsible for Third-Party Services. If the Client connects one, the Client authorizes Traverse to exchange the necessary data with it.
 
 ### 3. Door Data licence
 
@@ -63,7 +63,8 @@ The Client will not, and will not let anyone else:
 2. resell, sublicense, time-share or provide the Service to anyone other than its Authorized Users;
 3. use the Service to build a competing product, or access it to benchmark for a competitor;
 4. test, probe or interfere with the Service's security or operation, or upload anything harmful;
-5. use the Service in breach of any law, or to harass, deceive or harm anyone.
+5. use the Service in breach of any law, or to harass, deceive or harm anyone;
+6. hold more than one plan or Install for the same company, book several plans to get extra Seats, or otherwise abuse plans and Seats.
 
 ### 5. Client Data
 
@@ -117,25 +118,25 @@ The Client will not, and will not let anyone else:
 
 **9.1 Fees.** The Client will pay the fees on the Order Form. Unless the Order Form says otherwise, fees are billed in advance, monthly or yearly, through Traverse's payment processor (currently Stripe), and charged to the payment method on file.
 
-**9.2 Seats.** Each plan includes a number of Authorized Users (Solo 1, Crew up to 5, Team up to 12). Each Authorized User beyond that is an extra Seat at the Order Form price. The Client may add Seats at any time; added Seats are billed pro-rata for the rest of the billing period. If more people can sign in than the Client has paid for, Traverse may notify the Client and bill the extra Seats from the date they were added.
+**9.2 Seats.** One plan per company. Each plan includes one admin account plus a number of other Authorized Users (Solo 1, Crew up to 5, Team up to 12; Company as stated on the Order Form). Each Authorized User beyond that is an extra Seat at the Order Form price. To add or remove Seats, the Client asks Traverse at **billing@traverseplatforms.com**; Seats are not changed automatically. Added Seats are billed pro-rata for the rest of the billing period, and removed Seats come off from the next bill. If more people can sign in than the Client has paid for, Traverse may notify the Client and bill the extra Seats from the date they were added. Booking several plans to get extra Seats, or other abuse of plans and Seats, may lead to suspension under §11 or termination under §10.3, without a refund.
 
 
-**9.3 Setup and the money-back guarantee.** The first payment is charged when the Client subscribes. Traverse then sets up the Client's Install (its towns, branding, sign-in codes, prices and terms) within 2 business days (Monday to Friday, except US federal holidays), or longer only while Traverse is waiting on something it needs from the Client, and tells the Client the day the Install is live (the **"Go-Live Date"**). If the Client is not satisfied, it may cancel by email to **billing@traverseplatforms.com** at any time before the Go-Live Date or within 7 days after it, and Traverse will refund that first payment in full and end the subscription. The guarantee applies once per client, to its first subscription.
+**9.3 Setup and the money-back guarantee.** There is no free trial. The first payment is charged when the Client subscribes. Traverse then sets up the Client's Install (its towns, branding, sign-in codes, prices and terms) within 2 business days (Monday to Friday, except US federal holidays), or longer only while Traverse is waiting on something it needs from the Client, and tells the Client the day the Install is live (the **"Go-Live Date"**). If the Client is not satisfied, it may cancel by email to **billing@traverseplatforms.com** at any time before the Go-Live Date or within 7 days after it, and Traverse will refund that first payment in full and end the subscription. The guarantee applies once per client, to its first subscription. Traverse makes all refunds, to the payment method used.
 
 **9.4 Late payment.** If a payment fails or is late, Traverse will notify the Client. If it is not paid within 14 days of that notice, Traverse may suspend the Service under §11 until payment is made.
 
 **9.5 Taxes.** Fees exclude taxes. The Client pays any sales, use or similar taxes on its purchase, other than taxes on Traverse's income.
 
-**9.6 Price changes.** Traverse may change its prices for any renewal by giving at least 30 days' notice before the renewal date. For a founding client, the list price on its Order Form is locked in: it does not increase while the subscription continues without a break. The founding-client discount itself lasts only for the period stated on the Order Form (the first 12 months); after that the Client pays that locked-in list price.
+**9.6 Price changes.** Traverse may change its prices for any renewal by giving at least 30 days' notice before the renewal date. For a founding client, the list price on its Order Form is locked in: it does not increase while the subscription continues without a break. The founding-client discount itself lasts only for the period stated on the Order Form (the first 12 months); after that the Client pays that locked-in list price. A founding client also keeps every feature of the Service its plan includes, at no extra charge, while the subscription continues without a break. If the subscription ends and the Client later subscribes again, the terms and prices current at that time apply.
 
-**9.7 Refunds.** Fees are non-refundable except as this Agreement expressly provides (§2.6, §9.3, §10.4, §14.1).
+**9.7 Refunds.** Fees are non-refundable except as this Agreement expressly provides (§2.6, §9.3, §10.4, §14.1), and except a charge made by mistake that the Client reports to **billing@traverseplatforms.com** within 60 days.
 
 
 ### 10. Term and ending
 
 **10.1 Term.** This Agreement starts on the Effective Date and continues until every Subscription Term has ended.
 
-**10.2 Renewal.** Each Subscription Term renews automatically for the same length (monthly or yearly) unless either party gives notice of non-renewal before the end of the current term. The Client can cancel in the app's billing page, or by email to **billing@traverseplatforms.com**. For yearly plans, notice must be given at least 30 days before renewal.
+**10.2 Renewal.** Each Subscription Term renews automatically for the same length (monthly or yearly) unless either party gives notice of non-renewal before the end of the current term. The Client can turn off renewal at any time before the renewal date, by email to **billing@traverseplatforms.com** or, where the Install has it, in the app (Setup › Billing). The plan then runs to the end of the term already paid for.
 
 **10.3 Ending for breach.** Either party may end this Agreement by written notice if the other materially breaches it and does not fix the breach within 30 days of notice. Traverse may end it immediately for a breach of §3.2 or §4.
 
@@ -236,19 +237,19 @@ Traverse will give notice before suspending where practical, will limit the susp
 | **Billing email** | [ ] |
 | **Edition** | [Roofing / Yards / Solar / Pest / Security] |
 | **Second edition** | [None / name] at $99 a month |
-| **Plan** | [Solo: 1 person / Crew: up to 5 people / Team: up to 12 people] |
-| **Seats** | [ ] (people beyond those the plan includes) |
+| **Plan** | [Solo: an admin account plus 1 person / Crew: an admin account plus up to 5 people / Team: an admin account plus up to 12 people]. One plan per company |
+| **Seats** | [ ] (people beyond those the plan includes; changed by asking Traverse at billing@traverseplatforms.com) |
 | **Billing** | [Monthly / Yearly], in advance, by card through Stripe |
 | **Fees** | [Solo $99 a month or $79 a month billed yearly / Crew $249 a month or $199 billed yearly, extra people $45 or $35 each / Team $549 a month or $449 billed yearly, extra people $39 or $29 each]. Roofing and Solar editions: [+$50 a month on Crew and Team / +$20 on Solo] |
-| **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): the founding prices on this Order Form (about 25% off, in whole dollars) for the first 12 months, and the list price on this Order Form is locked in for as long as the subscription continues without a break (§9.6) |
-| **Setup and guarantee** | Install set up within 2 business days of the first payment; 7-day money-back guarantee from the Go-Live Date (§9.3) |
+| **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): the founding prices on this Order Form (about 25% off, in whole dollars) for the first 12 months, and the list price on this Order Form is locked in, with every feature the plan includes, for as long as the subscription continues without a break (§9.6) |
+| **Setup and guarantee** | No free trial. Install set up within 2 business days of the first payment; 7-day money-back guarantee from the Go-Live Date (§9.3) |
 | **Start date** | [ ] |
 | **Initial Subscription Term** | [1 month / 12 months], renewing under §10.2 |
 | **Install address** | Provided by Traverse at setup |
-| **Optional features** (Client's own accounts and cost) | Texting (Twilio) · JobNimbus · Phone lookups |
+| **Optional features** (Client's own accounts and cost) | Texting (Twilio) · JobNimbus · Phone lookups · Deposits (Square, Stripe or the Client's own pay links) |
 | **Special terms** | [None] |
 
-This Order Form is governed by the Traverse Subscription Agreement version 2, dated 27 October 2026, which the Client has read and accepts.
+This Order Form is governed by the Traverse Subscription Agreement version 3, dated 29 October 2026, which the Client has read and accepts.
 
 Signed for **Traverse Platforms LLC**: ______________________ Name: Matthew Sharpe Title: Owner Date: ________
 
@@ -261,7 +262,7 @@ Signed for **the Client**: ______________________ Name: ______________ Title: __
 What the Service does today (checked against the code, 2026-10-13):
 
 - **A separate Install per client**, with its own web address, sign-ins, data folder and phone-alert key. One client's data is never shown in another client's Install.
-- **Sign-in codes** of six digits, chosen by the client's admins, with simple patterns (runs such as 123456, or one digit repeated) refused. One phone or tablet and one computer per sign-in at a time.
+- **Sign-in codes** of six digits, chosen by the client's admins, with simple patterns (runs such as 123456, or one digit repeated) refused. One phone, one tablet and one computer per sign-in at a time.
 - **Roles:** crew, manager (their own team only) and admin, with Traverse's Support Account above them. Every rule is enforced on the server, not only hidden in the app.
 - **Downloads:** the door list can be downloaded only by Traverse's Support Account, at most 500 doors at a time. Every download in the Service is logged and visible to the client's admins.
 - **Shared sign-in flags:** marks too far apart for the time between them, and frequent phone switches, are flagged to admins. The Service does not collect users' phone location.

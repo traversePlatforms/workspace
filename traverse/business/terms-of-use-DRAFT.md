@@ -1,6 +1,6 @@
 # Traverse — Terms of Use (DRAFT)
 
-**Status: draft for Matthew and his attorney (TR-18). Not reviewed by counsel. Not published, not shown in the app.**
+**Status: published on traverseplatforms.com/terms-of-use/ (behind the site password) since 2026-10-26 after the attorney's review; version 2 (2026-10-29) adds the in-app acceptance step and the one-plan-per-company rule, not yet reviewed by counsel. The in-app acceptance step is being built (2026-10-29).**
 Written 2026-10-12. These are the terms each **person** who signs in agrees to. The **company** that pays signs the client
 agreement ([client-contract-outline-DRAFT.md](client-contract-outline-DRAFT.md)); its §2 already bans shared sign-ins, and that
 agreement should say these terms bind the company's staff.
@@ -17,17 +17,17 @@ agreement should say these terms bind the company's staff.
 
 ## Terms of Use
 
-**Last updated: [DATE] · Version [1]**
+**Last updated: [DATE] · Version 2**
 
 These terms are between you and [ENTITY] ("Traverse", "we"). You can use Traverse because the company you work for or with
-("your company") has a subscription. By signing in you agree to these terms. If you do not agree, do not sign in.
+("your company") has a subscription. The app asks you to accept these terms when you first sign in, and again whenever we change their version. You need to accept them to use Traverse. If you do not agree, do not use the app. Your company's admins are also asked to accept our [subscription agreement](../terms/) for the company.
 
 ### 1. Your sign-in is yours
 
 - Your sign-in code is for **you alone**. Do not share it, lend it, post it or let anyone else use it, including someone else
   at your company. Each person needs their own sign-in from your company's admin.
-- **One phone and one computer at a time.** Your code works on one phone or tablet and one computer at once. Signing in on
-  another phone signs the first one out, and that phone is told why.
+- **One phone, one tablet and one computer at a time.** Your code works on one phone, one tablet and one computer at once.
+  Signing in on another phone signs the first one out, and that phone is told why.
 - Tell your company's admin straight away if you think someone else has your code. They can give you a new one.
 - You are responsible for what is done with your sign-in until you report it.
 
@@ -79,6 +79,9 @@ do not tell a homeowner an estimate is a measurement.
 We or your company may suspend or end a sign-in that breaks these terms, including a shared sign-in. Shared sign-ins can also
 be billed to your company as extra seats under its agreement with us.
 
+Each company may have one plan and one account. Booking several plans to get extra seats, or other abuse of plans and seats,
+can lead to the company's account being suspended or banned, without a refund.
+
 ### 7. The service
 
 We work to keep the app available and accurate but provide it **as it is**, without promises that it will always be available,
@@ -86,7 +89,8 @@ error-free or suited to a particular purpose, to the extent the law allows. [Lim
 
 ### 8. Changes
 
-We may update these terms. When we do, the app shows the new version and asks you to agree before you carry on.
+We may update these terms. When we do, the app shows the new version and asks you to accept it before you carry on. The app
+records who accepted, which version, and when.
 
 ### 9. Law and contact
 
@@ -110,9 +114,11 @@ These terms are governed by the laws of the State of Colorado. [Venue: counsel.]
 
 | Claim | Checked against | Result |
 |---|---|---|
-| One phone + one computer at a time; the other is told why | `traverse/app/api/rounds.php` (devClass, startSession, the 'x' list), onedev-test 11/11, 2026-10-12 | Verified (built today; live once uploaded) |
+| One phone + one tablet + one computer at a time (was one phone or tablet + one computer; three-device rule being built 2026-10-29); the other is told why | `traverse/app/api/rounds.php` (devClass, startSession, the 'x' list), onedev-test 11/11, 2026-10-12 | Verified (built today; live once uploaded) |
 | Location used only on the phone, not sent or stored | `index.html`: `S.here` is used for the map marker and stop order only; no API call sends it (grep 2026-10-12) | Verified |
 | Screens/buttons recorded, never typing | tap log (taplog action), Profile note | Verified |
 | Downloads and heavy viewing logged | exportLog, VIEW_STEP | Verified |
 | Shared-sign-in flags from door addresses and times | `flags` action (town centres less 10 mi, over 70 mph, crew and managers only) | Verified |
+| Accepted in the app at sign-in, again on a new version; admins also accept the subscription agreement | Matthew 2026-10-29; the acceptance step is being built today | **Live once that step ships** |
+| One plan per company; plan or seat abuse can mean suspension or a ban without refund | Matthew 2026-10-29; client agreement §4.6, §9.2 | Business decision |
 | [ENTITY] not filed | client-contract-outline fact-check log, Matthew 2026-10-11 | As stated by Matthew |

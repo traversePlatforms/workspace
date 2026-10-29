@@ -35,9 +35,9 @@ const ED = {
     name: 'Roofing', colour: '#4e6680', ink: '#ffffff', deep: '#4e6680',
     line: 'Find the roofs the last storm hit, and know the roof before you knock.',
     who: 'roofing and storm-restoration companies that canvass after hail and wind.',
-    door: ['Hail at the house, storm by storm since 2020', 'Damaging wind nearby, with the date', 'Roof size and pitch', 'Roof material', 'Year built and remodelled, so you know the roof’s age', 'Past re-roofs, where known', 'A close-up photo of the roof with its outline', 'Owner, home value and the area’s risk ratings'],
+    door: ['Hail at the house, storm by storm since 2020', 'Damaging wind nearby, with the date', 'Roof size and pitch', 'Roof material, where on record', 'Year built and remodelled, where on record, for the roof’s age', 'Past re-roofs, where known', 'A close-up photo of the roof with its outline', 'Owner, home value and the area’s risk ratings'],
     rank: 'The biggest hail on the roof, damaging wind, the roof’s age and size, and no re-roof since the storm, then the owner’s ability to pay.',
-    tools: [['Storm list', 'Every door a storm day reached, biggest hail first.'], ['Hail layer', 'A storm’s path drawn over your neighbourhood map.'], ['Storm alerts', 'A phone alert when severe weather reaches your towns.'], ['JobNimbus', 'Booked doors go straight into JobNimbus.']],
+    tools: [['Storm list', 'The doors each storm day reached, biggest hail first.'], ['Hail layer', 'A storm’s path drawn over your neighbourhood map.'], ['Storm alerts', 'A phone alert when severe weather reaches your towns.'], ['JobNimbus', 'Booked doors go straight into JobNimbus.']],
     sample: [['Biggest hail', '1.75 in · 14 May'], ['Roof', '3,300 sq ft · 6/12'], ['Material', 'Asphalt'], ['Built', '2004 · no re-roof since']], score: 10,
   },
   yards: {
@@ -53,7 +53,7 @@ const ED = {
     name: 'Solar', colour: '#f2a900', ink: '#0f1b2d', deep: '#8a5a00',
     line: 'Know how much sun a roof gets, and what it’s worth, before the first conversation.',
     who: 'residential solar installers and their sales teams.',
-    door: ['Sun-facing roof area, by direction', 'Shade from tall trees on the sunny side', 'Room for panels, the system size and a year’s output', 'The power company and its average price', 'Houses that already have solar, where it is on record, so you skip them', 'Roof size, pitch and year built', 'Owner, home value and the area’s figures'],
+    door: ['Sun-facing roof area, by direction', 'Shade from tall trees on the sunny side', 'Room for panels, the system size and a year’s output', 'The power company and its average price', 'Houses that already have solar, where it is on record, so you skip them', 'Roof size and pitch, and the year built where on record', 'Owner, home value and the area’s figures'],
     rank: 'A year’s output and open sun, houses that already have solar moved down, then the owner’s ability to pay.',
     tools: [['Solar columns', 'Output, panels and shade in the planning table.'], ['Territories', 'Draw territories on the map and assign them.'], ['Follow-ups', 'Customers and the follow-ups that are due.'], ['Office dashboard', 'The whole team’s day on one screen.']],
     sample: [['Solar a year', '11,400 kWh'], ['Panels', '26 · 10.4 kW'], ['Shade', 'Open'], ['Power company', 'Xcel Energy']], score: 9,
@@ -77,7 +77,7 @@ const ED = {
     sample: [['Crime within 1 mile', '4 in 90 days'], ['New owner', 'Bought in March'], ['Owner lives', 'Out of state'], ['Lot', '1.2 acres']], score: 8,
   },
 };
-const ALL = ['Every house in the towns you work', 'Neighbourhoods crews can claim', 'A 1 to 10 score on every door', 'The map, in photo or street view', 'Calendars and booked walks', 'Knock to signed job', 'Teams and managers', 'Training built in', 'Works with no signal'];
+const ALL = ['The homes in the towns you work', 'Neighbourhoods crews can claim', 'A 1 to 10 score on every door', 'The map, in photo or street view', 'Calendars and booked walks', 'Knock to signed job', 'Teams and managers', 'Training built in', 'Works with no signal', 'Quotes signed on the phone, with a deposit link', 'Voice notes and routes', 'Bring your current leads and customers', 'Your name and colours'];
 
 /* Matthew 2026-10-06: never say where the data comes from. Refuse the build if a source word slips in. */
 const SOURCE_WORDS = /\b(NOAA|NWS|MRMS|radar|county|assessor|LiDAR|laser|aerial|satellite|USGS|USDA|NAIP|FEMA|census|PVWatts|EIA|FBI|police|public record|permit|national weather|no answer|do not call)\b/i;

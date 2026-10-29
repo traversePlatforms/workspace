@@ -13,9 +13,9 @@ const DATE = '26 October 2026';   /* a page changed later carries its own date (
 
 const PAGES = [
   { dir: 'terms', md: 'client-agreement.md', start: '# Traverse Subscription Agreement', end: null, title: 'Subscription agreement' },   /* the client copy (2026-10-26) */
-  { dir: 'terms-of-use', md: 'terms-of-use-DRAFT.md', start: '## Terms of Use', end: '## Questions for counsel', title: 'Terms of use' },
-  { dir: 'privacy', md: 'privacy-policy-DRAFT.md', start: '## Privacy Policy', end: '## Fact-check log', title: 'Privacy policy' },
-  { dir: 'cancellation', md: 'cancellation-policy-DRAFT.md', start: '## Cancellation and Refund Policy', end: '## Fact-check log', title: 'Cancellation and refunds', date: '27 October 2026' }   /* the money-back guarantee replaced the pilot (2026-10-27) */
+  { dir: 'terms-of-use', md: 'terms-of-use-DRAFT.md', start: '## Terms of Use', end: '## Questions for counsel', title: 'Terms of use', date: '29 October 2026' },   /* version 2: accepted in the app, one plan per company (2026-10-29) */
+  { dir: 'privacy', md: 'privacy-policy-DRAFT.md', start: '## Privacy Policy', end: '## Fact-check log', title: 'Privacy policy', date: '29 October 2026' },   /* signature records, deposits, three devices (2026-10-29) */
+  { dir: 'cancellation', md: 'cancellation-policy-DRAFT.md', start: '## Cancellation and Refund Policy', end: '## Fact-check log', title: 'Cancellation and refunds', date: '29 October 2026' }   /* the money-back guarantee replaced the pilot (2026-10-27); no trial, seats, founding features (2026-10-29) */
 ];
 
 function publicText(src, p) {

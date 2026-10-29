@@ -1,6 +1,6 @@
 # Traverse Cancellation and Refund Policy (DRAFT)
 
-**Status: first draft, 2026-10-13; setup and money-back guarantee added 2026-10-27 (replacing the founding pilot), for review with the subscription agreement (§9 and §10 there say the same in contract terms). Not reviewed by a lawyer. Shown on traverseplatforms.com/cancellation/ marked as a draft while the site is unlisted.**
+**Status: first draft, 2026-10-13; setup and money-back guarantee added 2026-10-27 (replacing the founding pilot); approved by Matthew 2026-10-28; no free trial, refunds by Traverse, seats (admin plus the plan's people, changed through billing@), founding features and the Billing path added 2026-10-29, for review with the subscription agreement (§9 and §10 there say the same in contract terms). Not reviewed by a lawyer. Shown on traverseplatforms.com/cancellation/ marked as a draft while the site is unlisted.**
 
 ## Cancellation and Refund Policy
 
@@ -23,15 +23,17 @@ A yearly plan costs about 20% less than paying month to month, and it is paid on
 
 ### Setup and the 7-day money-back guarantee
 
-Your card is charged when you subscribe. We set up your company's app (your towns, branding, sign-in codes, prices and terms) within 2 business days, and tell you the day it is live. If Traverse isn't right for you, email billing@traverseplatforms.com before your app is live or within 7 days after, and we refund your first payment in full and end your plan. This is once per company, on its first plan.
+There is no free trial. Your card is charged when you subscribe. We set up your company's app (your towns, branding, sign-in codes, prices and terms) within 2 business days of your payment, and tell you the day it is live. If Traverse isn't right for you, email billing@traverseplatforms.com before your app is live or within 7 days after, and we refund your first payment in full and end your plan. This is once per company, on its first plan.
+
+Traverse makes every refund, back to the payment method you used.
 
 ### Founding companies
 
-Companies that sign up in our first year get about 25% off their first 12 months, and their price is locked in for life as long as they're with us.
+Companies that sign up in our first year get about 25% off their first 12 months. Their price is locked in, and they keep every feature, for as long as they stay with us. If a company leaves and comes back, the terms current then apply.
 
 ### Seats
 
-Adding a person adds a seat, billed for the rest of the current period. Removing a person takes effect from your next bill.
+One plan per company. Every plan includes one admin account plus its people: Solo 1 person, Crew up to 5, Team up to 12. To add or remove seats, email **billing@traverseplatforms.com**; seats don't change on their own. An added seat is billed for the rest of the current period. A removed seat comes off from your next bill.
 
 ### If a payment fails
 
@@ -39,7 +41,7 @@ We email your billing contact. If the payment is still not made 14 days after th
 
 ### How to cancel
 
-- In the app: **Office → Setup → Billing → Manage billing** (admins only).
+- In the app, where your app has Billing: **Setup › Billing › Manage billing** (admins only).
 - Or email **billing@traverseplatforms.com** from your account's billing email.
 
 ### Your records after you cancel
@@ -60,7 +62,10 @@ Questions: **billing@traverseplatforms.com** or (303) 596-9515.
 | Charged at checkout; set up within 2 business days; 7-day money-back from go-live, once | Matthew 2026-10-27 (replaces the free 7-day pilot); billing.php: no trial at checkout, paid_at on the first paid subscription event, live_at from Traverse's Mark live, refund only by Traverse within the window; subscription agreement §9.3 | Verified against the code; **attorney to confirm the wording** |
 | Founding: about 25% off 12 months, price locked in for life while they stay | billing.php founding_pct 25 (coupon for 12 months); subscription agreement §9.6 and Order Form (list price does not increase while the subscription continues without a break) | Matches; Matthew's phrase (27 Oct) |
 | Added seats pro-rata | Stripe customer portal set to create prorations (traverse/ops/stripe-setup.mjs) | Verified |
+| Seats: admin plus the plan's people; changed through billing@, not automatic | Matthew 2026-10-29 (admin account decided today); billing.php: plan and seat changes go through Traverse, the portal cannot change a subscription | Matches the policy; **the app's seat count is being changed to leave the admin account out (29 Oct)** |
+| No free trial; refunds only by Traverse | Matthew 2026-10-27; billing.php: no trial at checkout, refund super-only | Verified |
+| Founding: keep every feature while they stay; current terms on return | Matthew 2026-10-29 | Business decision |
 | Pause after 14 days unpaid | Subscription agreement §9.4; the app itself never locks anyone out today | **Business choice; the app does not enforce it yet** |
-| Manage billing path in the app | index.html Office → Setup → Billing; billingportal action | Verified |
+| Manage billing path in the app | index.html Setup group → Billing tile (feat billing: TraverseRoofing only as of 2026-10-29); billingportal action | Verified; other editions email billing@ |
 | 30 days to download, backups overwritten in 30 more | Subscription agreement §10.5; nightly backups keep the newest 30 | Matches the draft |
 | 60 days to report a mistaken charge | Business choice | **Matthew to confirm** |

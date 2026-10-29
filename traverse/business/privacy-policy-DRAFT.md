@@ -1,6 +1,6 @@
 # Traverse Privacy Policy (DRAFT)
 
-**Status: first draft, 2026-10-13, for review with the subscription agreement. Not reviewed by a lawyer. Shown on traverseplatforms.com/privacy/ marked as a draft while the site is unlisted.**
+**Status: first draft, 2026-10-13; approved by Matthew 2026-10-28 (no draft label on the page). 2026-10-29: signature records, the three-device rule and clients' own deposit providers added. Shown on traverseplatforms.com/privacy/ while the site is behind its password.**
 
 > **Counsel note:** written from what the website and the app actually collect, checked against the code on 2026-10-13. Every factual line about the product is in the fact-check log at the end. The Colorado Privacy Act questions are the same ones in the subscription agreement's §8.1 (controller or processor, the public-records exclusion, whether door data licensing is a "sale").
 
@@ -38,11 +38,15 @@ Questions or requests: **privacy@traverseplatforms.com**, or (303) 596-9515.
 
 **Payments.** Billing is handled by Stripe. We receive the plan, the number of seats and whether a payment succeeded. We never see or store card numbers.
 
+**Deposits clients take.** Clients can take deposits from homeowners through their own payment providers: Square, Stripe, or the pay links they add (for example Venmo, Cash App, PayPal or Zelle). Those payments go to the client under that provider's terms. We receive whether a deposit was paid, never card numbers.
+
 ### 3. Homeowners
 
 **What the app shows about a property.** Traverse shows information about homes so that companies can plan their work: the property's address, the owner's name as it appears in public government records, lot and building details, the home's assessed value, and estimates worked out from published sources (for example roof size, lawn size, storm history and solar potential). Much of it is an estimate and may be out of date. Traverse scores houses, not people.
 
 **What Traverse does not add.** We do not add phone numbers or email addresses to the property information. A phone number appears only when a homeowner gives it to a client at the door, or when a client chooses to use a phone-lookup service and pays for it.
+
+**Signing an agreement online.** When you sign a client's quote or agreement on your phone or computer, we record your name as you sign it, the time, your internet (IP) address and your device (the browser and kind of device), as a record of the signature. That record belongs to the client, like the rest of its data (section 4).
 
 **Notes from a visit.** If a client's representative visits your home, what they record (for example your answer, or a phone number you give them) belongs to that client and is handled under section 4.
 
@@ -59,6 +63,7 @@ We do not sell the personal information of our website visitors or app users. We
 - **SiteGround** hosts the website and the app, in the United States.
 - **Google Workspace** carries our email.
 - **Stripe** processes subscription payments.
+- **Square or Stripe**, when a client connects its own account to take deposits, receives the payment details the homeowner enters there.
 - **Twilio** sends text messages, when a client turns texting on; texts go from that client's own number.
 - **JobNimbus**, when a client connects it, receives the bookings the client sends it.
 - **A phone-lookup provider**, when a client turns lookups on and pays for them.
@@ -77,7 +82,7 @@ We may also disclose information when the law requires it, to protect people's s
 
 ### 7. Security
 
-Each client has its own copy of Traverse with its own sign-ins. Sign-in codes are six digits, chosen by the client's admins, and each code works on one phone and one computer at a time. Roles limit what each person sees, and the limits are enforced on our server. Only Traverse can download the door list, at most 500 doors at a time, and every download is logged. The site and app use HTTPS. Records are backed up every night.
+Each client has its own copy of Traverse with its own sign-ins. Sign-in codes are six digits, chosen by the client's admins, and each code works on one phone, one tablet and one computer at a time. Roles limit what each person sees, and the limits are enforced on our server. Only Traverse can download the door list, at most 500 doors at a time, and every download is logged. The site and app use HTTPS. Records are backed up every night.
 
 No system is perfectly secure. If we learn of unauthorized access to personal information we hold, we will tell the affected client, and the people affected where the law requires.
 
@@ -108,7 +113,9 @@ If we change this policy, we will post the new version here with its date, and t
 | Stripe: no card data reaches Traverse | billing.php (Stripe Checkout and portal only) | Verified |
 | No phone numbers or emails added to door data; skip trace only when a client turns it on | Door data builders carry none (sixfold-door-territory notes: "No phone numbers, ever"); skiptrace feature is Sixfold only | Verified |
 | Each client has its own copy; data never shown to another | build-editions.cjs / clients.cjs (separate folders) | Verified |
-| Codes six digits, one phone + one computer, 500-door download cap, nightly backups | rounds.php; TASKS TR-10 | Verified |
+| Signature record: signer's name, time, IP address and device | rounds.php signing (ip and ua kept with the signature), 2026-10-29 | Verified |
+| Clients' own deposit providers (Square, Stripe, pay links) | Setup › Payments tile ("Connect your own Square or Stripe for deposits"); pay links being built 2026-10-29 | Verified for Square and Stripe; **pay links live once built** |
+| Codes six digits, one phone + one tablet + one computer (three-device rule being built 2026-10-29), 500-door download cap, nightly backups | rounds.php; TASKS TR-10 | Verified |
 | Service providers listed | The app's integrations (SiteGround, Workspace, Stripe, Twilio, JobNimbus, phone lookups, map and radar tiles) | Verified against the code |
 | 45-day answer window, rights list | Colorado Privacy Act general shape | **Counsel to confirm** |
 | Retention of 24 months for bookings | Business choice, bracketed | **Matthew to decide** |
