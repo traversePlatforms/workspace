@@ -8,6 +8,35 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-10-28 (Wednesday)
+
+**Sixfold 365 app** (live on Sixfold and the five Traverse editions unless marked)
+- **Ad leads:** Facebook ad-form leads are Jen's again from 27 Oct 5 pm; Matthew keeps the ones he had contacted and every website lead.
+- **Jen's lead logging:** several steps in one entry (texted, messaged, emailed, one call result); the buttons stay on quoted leads; one-tap voicemail notes; "Price ready" vs "Quote given (texted)".
+- **Text the quote / Copy for Messenger:** on the lead card and in the Quote builder; logs the quote as given.
+- **Custom quotes:** "Another service" with your own price in the Pipeline quote box; carries to the job, agreement and quote page.
+- **Aerate-only price** in the Quote builder; **DIY comparison removed.**
+- **One-off jobs:** "Another service" jobs and "+ Book a job" from a customer card.
+- **Square:** payments can be tied to a visit on a customer card; Leann's $50 linked to her 27 Oct fall cleanup (her 4 Nov job stays unpaid).
+- **Send to Jen** replaces Send to Cai on Matthew's own leads.
+- **Schedule:** days-off list folded behind "See days off". **Work hours** card and **Team hours** view.
+- **Exports** in seven CRMs' import layouts plus a general CRM file. **Address search** that handles any spelling.
+
+**Doors and data**
+- **Group 1 re-clip** by parcel number live (70,488 doors); measured layers uploaded.
+- **Group 2:** 43 towns, 159,290 doors live on Sixfold and the editions; Sixfold now 1,091,895 doors. Lawn/trees/roof/sun measuring on the cloud machine (about Friday); close-up roof photos after.
+
+**Traverse launch**
+- Launch checklist page; first prospect emails moved to 10 am Thu 29 Oct with a hold; FAQ edits; Draft label off privacy and cancellation; screenshots retaken; "Send yourself a test" on the Prospect Desk; Website tab in the Hub. Opening the site waits on Matthew's go.
+
+**365 website:** social footer (Facebook, Instagram, Google reviews, Nextdoor); QR pages' email to Matthew, call/text to Jen; quote page shows custom services.
+
+**Clients and admin:** Horizon online-presence audit (5 pages); lead close rates and leaks double-checked; Randy's native seed pricing; Home Base rows.
+
+**Running overnight:** Group 2 measuring; new-owner flag fix (rebuild + upload); roof material diagnosis (no live changes); 8 am launch pre-check.
+
+---
+
 ## 2026-10-27 (Tuesday)
 
 **Sixfold 365 app** (live on Sixfold and the five Traverse editions unless marked)

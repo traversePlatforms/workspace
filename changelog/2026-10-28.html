@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day: Wednesday 28 October 2026</title>
+<!-- Matthew's end-of-day change log (started 2026-10-27, Matthew: "an end of day document ... all the changes weve done here on the sites apps
+     etc ... make it similar to what we do with brandon in terms of visuals"). Same layout as Brandon's end-of-day picture: a header band,
+     number tiles two by two, then sections with plain rows. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="head">
+  <div><div class="tag">End of day</div><h1>Wednesday 28 October 2026</h1><div class="d">Everything we changed today across the apps, sites and data</div></div>
+  <div class="d">Sixfold 365 · Traverse · Clients · Your admin</div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><b>36</b><span>Changes saved</span><small>Each one recorded in the change history</small></div>
+  <div class="kpi"><b>1,091,895</b><span>Doors in Sixfold</span><small>Past a million: Group 2 (Larimer, Mesa, Pueblo) went live tonight</small></div>
+  <div class="kpi"><b>10</b><span>Apps and sites updated</span><small>Sixfold 365, five editions, both websites, the email desk and the Hub; every upload checked</small></div>
+  <div class="kpi warn"><b>5</b><span>Waiting on you</span><small>Listed at the bottom; three before 10 am</small></div>
+</div>
+
+<h2>Sixfold 365 app <span class="n">13</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Ad leads</div><div class="v"><span class="pill live">Live</span>Facebook ad-form leads are Jen's again from 27 Oct 5 pm. You keep the ones you'd already contacted, and every website lead.</div></div>
+  <div class="row"><div class="k">Jen's lead logging</div><div class="v"><span class="pill live">Live</span>She ticks everything she did (texted, messaged, emailed, plus one call result) and saves once. The buttons stay on quoted leads, voicemail has one-tap notes, and leads read "Price ready" or "Quote given (texted)".</div></div>
+  <div class="row"><div class="k">Text the quote</div><div class="v"><span class="pill live">Live</span>On the lead card and in the Quote builder: opens Messages with the price written in, or copies it for Messenger, and logs the quote as given.</div></div>
+  <div class="row"><div class="k">Custom quotes</div><div class="v"><span class="pill live">Live</span>"Another service" in the Pipeline quote box, with your own price (Randy's native seed). It carries onto the job, the agreement and the quote page.</div></div>
+  <div class="row"><div class="k">Aerate-only price</div><div class="v"><span class="pill live">Live</span>The Quote builder now prices aerate only: the full price less seed and fertilizer.</div></div>
+  <div class="row"><div class="k">DIY comparison</div><div class="v"><span class="pill live">Removed</span>Taken out of the Quote builder, as you asked.</div></div>
+  <div class="row"><div class="k">One-off jobs</div><div class="v"><span class="pill live">Live</span>"Another service" jobs (a fall cleanup), and "+ Book a job" from a customer card.</div></div>
+  <div class="row"><div class="k">Square + visits</div><div class="v"><span class="pill live">Live</span>Payments can be matched to a visit on a customer card. Leann's $50 is tied to her 27 Oct fall cleanup, and her 4 Nov job stays unpaid.</div></div>
+  <div class="row"><div class="k">Send to Jen</div><div class="v"><span class="pill live">Live</span>Replaces Send to Cai on your own leads.</div></div>
+  <div class="row"><div class="k">Schedule</div><div class="v"><span class="pill live">Live</span>The days-off list folds behind "See days off".</div></div>
+  <div class="row"><div class="k">Work hours</div><div class="v"><span class="pill live">Live</span>A proper Work hours card on Profile, and Team hours: everyone's week, gaps and who's off.</div></div>
+  <div class="row"><div class="k">Exports</div><div class="v"><span class="pill live">Live</span>Customers or door bookings in the exact import layout of Housecall Pro, Yardbook, GorillaDesk, HighLevel, QuickBooks, HubSpot or Google Contacts, or as a general CRM file.</div></div>
+  <div class="row"><div class="k">Address search</div><div class="v"><span class="pill live">Live</span>Finds a house however it's typed: Mtn or Mountain, Dr or Drive, a letter off or two swapped.</div></div>
+</div>
+
+<h2>Doors and data <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Group 1 re-clip</div><div class="v"><span class="pill live">Live</span>Rebuilt by parcel number (70,488 doors). Lawn, trees, roof and sun for the added doors were measured and uploaded tonight.</div></div>
+  <div class="row"><div class="k">Group 2</div><div class="v"><span class="pill live">Live</span>43 towns in Larimer, Mesa and Pueblo, 159,290 doors, on Sixfold and all five editions. <em>Lawn, trees, roof and sun are still being measured (about Friday).</em></div></div>
+  <div class="row"><div class="k">Roof photos</div><div class="v"><span class="pill off">Queued</span>Group 2's close-up roof photos come after its measuring, so the doors could go live sooner.</div></div>
+</div>
+
+<h2>Traverse launch <span class="n">8</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Launch checklist</div><div class="v"><span class="pill live">Live</span>A checklist page for what has to happen before the first email, the first week, and normal startup practice.</div></div>
+  <div class="row"><div class="k">First emails</div><div class="v"><span class="pill live">Set</span>Moved to 10 am Thu 29 Oct. A hold stops anything going earlier, even if you queue first thing.</div></div>
+  <div class="row"><div class="k">FAQ</div><div class="v"><span class="pill live">Live</span>Your edits: a million properties, offline, crews' devices, setup. The accuracy and shared-sign-in questions are gone.</div></div>
+  <div class="row"><div class="k">Legal pages</div><div class="v"><span class="pill live">Live</span>The Draft label is off the privacy and cancellation pages. The attorney also approved agreement version 2.</div></div>
+  <div class="row"><div class="k">Screenshots</div><div class="v"><span class="pill live">Live</span>Retaken with the current look and made-up addresses.</div></div>
+  <div class="row"><div class="k">Send yourself a test</div><div class="v"><span class="pill live">Live</span>A box on the Prospect Desk's Email page. Your test landed in Gmail's Promotions tab.</div></div>
+  <div class="row"><div class="k">Open the site</div><div class="v"><span class="pill off">Ready</span>Staged and checked. It runs when you say "open it".</div></div>
+  <div class="row"><div class="k">Hub</div><div class="v"><span class="pill live">Live</span>A Website tab for traverseplatforms.com (Alt+5).</div></div>
+</div>
+
+<h2>365 website <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Social footer</div><div class="v"><span class="pill live">Live</span>Facebook, Instagram, Google reviews and Nextdoor links.</div></div>
+  <div class="row"><div class="k">QR pages</div><div class="v"><span class="pill live">Live</span>Email goes to you (M.Sharpe@SixfoldColorado.com); call and text go to Jen.</div></div>
+  <div class="row"><div class="k">Quote page</div><div class="v"><span class="pill live">Live</span>Shows a custom service by name.</div></div>
+</div>
+
+<h2>Clients and your admin <span class="n">4</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Horizon audit</div><div class="v"><span class="pill live">Done</span>Donny's site, company and socials, a 5-page PDF, including phone and tablet, speed (retested: you were right), search and indexing.</div></div>
+  <div class="row"><div class="k">Lead numbers</div><div class="v">Close rates, cost per lead and leaks, double-checked after Jen's note. Quotes she texts weren't visible to the app, which the new logging fixes.</div></div>
+  <div class="row"><div class="k">Randy</div><div class="v">Native seed and double or triple aeration prices for 3,000 and 3,500 sq ft.</div></div>
+  <div class="row"><div class="k">Home Base</div><div class="v">Your website row updated; the Prospect Desk and launch checklist added.</div></div>
+</div>
+
+<h2>Running tonight</h2>
+<div class="card">
+  <div class="row"><div class="k">Cloud machine</div><div class="v">Group 2 lawn, trees, roof and sun, then the roof photos. Results upload by themselves.</div></div>
+  <div class="row"><div class="k">New-owner flags</div><div class="v">Fixing about 500 doors wrongly marked "new owner" (the same address in two towns), then rebuilding and uploading with checks.</div></div>
+  <div class="row"><div class="k">Roof material</div><div class="v">Finding why the roof-material model makes no calls. A written diagnosis waits for you; nothing goes live.</div></div>
+  <div class="row"><div class="k">8 am pre-check</div><div class="v">A read-only launch check opens on your screen at 8: site, FAQ, hold, sending login, queue.</div></div>
+  <div class="row"><div class="k">Server backup</div><div class="v">2:45 am, as every night.</div></div>
+</div>
+
+<h2>Waiting on you <span class="n">5</span></h2>
+<div class="card wait">
+  <div class="row"><div class="k">Before 10 am</div><div class="v">Say "open it" so prospects can reach the site.</div></div>
+  <div class="row"><div class="k">Before 10 am</div><div class="v">Fix the roofing email's "864,000 Colorado homes" (now over a million) in Prospects → Settings, or tell me to.</div></div>
+  <div class="row"><div class="k">Before 10 am</div><div class="v">Queue a first batch of 10 to 20 companies.</div></div>
+  <div class="row"><div class="k">Demo</div><div class="v">Book a test demo after the site opens, and narrow the demo hours to times you can take a call.</div></div>
+  <div class="row"><div class="k">Google profile</div><div class="v">Option 1 waits on the $50 card hold.</div></div>
+</div>
+
+<div class="foot">Saved on your Desktop in "End of Day Reports" and in the workspace's changelog/ folder, which is backed up. The running list of every day is CHANGELOG.md.</div>
+</div>
+</body>
+</html>
+
