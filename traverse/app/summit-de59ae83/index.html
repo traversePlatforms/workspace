@@ -5883,7 +5883,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var payRow = q('div', 'dwlen'); box.appendChild(payRow);
     var payMore = q('div', 'jpaymore'); box.appendChild(payMore);
     var cardRow = q('div', 'dwlen'); box.appendChild(cardRow);
-    var nl = q('label', null, 'Notes for the crew (optional)'); var nt = q('textarea'); nt.rows = 2; nt.maxLength = 300; nt.value = P.note || ''; nt.placeholder = 'Gate code, dog, where the sprinklers are'; nl.appendChild(nt); box.appendChild(nl);
+    var nl = q('label', null, 'Notes for the crew (optional)'); var nt = q('textarea'); nt.rows = 3; nt.maxLength = 1000;   /* was 300 (2026-10-29, Matthew hit the limit on Alberto Guzman's job) */ nt.value = P.note || ''; nt.placeholder = 'Gate code, dog, where the sprinklers are'; nl.appendChild(nt); box.appendChild(nl);
     var err = q('div', 'err'); box.appendChild(err);
     var sv = q('button', 'save', SIGN ? 'Send the form \u203a' : OFFER ? 'Put this day in the quote' : job ? 'Save the change' : 'Book the job'); sv.type = 'button'; box.appendChild(sv);
     if (OFFER) { [al, pkRow, scRow, pr, payRow, payMore, cardRow, nl].forEach(function (x) { x.hidden = true; }); [].forEach.call(box.querySelectorAll('.dwh'), function (x) { if (/What is included|Payment/.test(x.textContent)) x.hidden = true; }); [].forEach.call(box.querySelectorAll('.dwsub,.qline'), function (x) { if (x.parentNode === box) x.hidden = true; }); }
@@ -6523,7 +6523,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var mBox = q('div', 'fudays'), mo = q('input'); mo.type = 'month'; mo.min = todayISO().slice(0, 7); mo.setAttribute('aria-label', 'Month'); mo.placeholder = 'YYYY-MM'; mBox.appendChild(mo); f.appendChild(mBox);
     var M = 'day'; var paint = function () { byDay.setAttribute('aria-pressed', String(M === 'day')); byMonth.setAttribute('aria-pressed', String(M === 'month')); dayBox.hidden = M !== 'day'; mBox.hidden = M !== 'month'; };
     byDay.addEventListener('click', function () { M = 'day'; paint(); }); byMonth.addEventListener('click', function () { M = 'month'; paint(); }); paint();
-    var nt = q('textarea'); nt.rows = 2; nt.maxLength = 500; nt.placeholder = 'Anything Jen should know'; fl('Notes', nt);
+    var nt = q('textarea'); nt.rows = 2; nt.maxLength = 1000; nt.placeholder = 'Anything Jen should know'; fl('Notes', nt);
     var agL = q('label', 'cpck'), ag = q('input'); ag.type = 'checkbox'; agL.appendChild(ag); agL.appendChild(q('span', null, 'Customer already agreed to the price')); f.appendChild(agL);
     var pr = q('input'); pr.type = 'number'; pr.min = 1; pr.step = 1; pr.inputMode = 'numeric'; pr.value = jb.price || ''; var prl = fl('Price they agreed to ($)', pr).parentNode; prl.hidden = true;
     ag.addEventListener('change', function () { prl.hidden = !ag.checked; });

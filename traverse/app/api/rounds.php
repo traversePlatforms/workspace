@@ -5646,7 +5646,7 @@ if ($action === 'jobsave') {
     if ($pay['s'] === 'deposit') { $pay['amt'] = (int) ($payIn['amt'] ?? 0); if ($pay['amt'] < 1 || $pay['amt'] >= $price) fail('Give the deposit amount (less than the price).'); }
     if (in_array($pay['s'], ['deposit', 'paid'], true)) $pay['how'] = in_array($payIn['how'] ?? '', ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true) ? $payIn['how'] : 'other';
     $card = array_key_exists('card', $body) ? !empty($body['card']) : (bool) ($have['card'] ?? false);
-    $note = array_key_exists('note', $body) ? $clean($body['note'], 300) : (string) ($have['note'] ?? '');
+    $note = array_key_exists('note', $body) ? $clean($body['note'], 1000) : (string) ($have['note'] ?? '');   /* crew notes: was 300 (2026-10-29) */
     $l = $leads[$lead]; $house = $l['house'] ?? null;
     $addr = array_key_exists('addr', $body) ? $clean($body['addr'], 160) : (string) ($have['addr'] ?? ($house ? streetCaseServer((string) $house['address']) . ', ' . $house['town'] : (string) ($l['town'] ?? '')));
     if ($addr === '') fail('Add the address.');
@@ -6712,7 +6712,7 @@ if ($action === 'fubook') {
     $L = leadsAll()[(string) $j['lead']] ?? null; if (!$L) fail('This job has no lead to book on.', 404);
     $pkg = in_array($body['pkg'] ?? '', ['full', 'aerate', 'plan', 'other'], true) ? (string) $body['pkg'] : (string) ($j['pkg'] ?? 'full');
     $other = $clean($body['other'] ?? '', 80); if ($pkg === 'other' && $other === '') fail('Say what the other service is.');
-    $note = $clean($body['note'] ?? '', 500); $agreed = !empty($body['agreed']);
+    $note = $clean($body['note'] ?? '', 1000); $agreed = !empty($body['agreed']);
     $price = $agreed ? (int) round((float) ($body['price'] ?? $j['price'])) : 0; if ($agreed && ($price < 1 || $price > 100000)) fail('Give the price they agreed to.');
     $crew = (string) $j['crew']; $who = trim((string) ($L['name'] ?? ($j['title'] ?? ''))) ?: 'a customer'; $by = strtok($me, ' ');
     $what = fubPkgText($pkg, $other) . ($agreed ? ', $' . $price . ' agreed' : ', price to confirm');
@@ -6726,7 +6726,7 @@ if ($action === 'fubook') {
         if ($why = slotFree($crew, $date, $slot, (string) $j['lead'])) fail($why, 409);   /* free, and inside their work hours */
         $nid = 'j' . bin2hex(random_bytes(6));
         $row = ['id' => $nid, 'lead' => (string) $j['lead'], 'title' => $who, 'crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'pkg' => $pkg, 'svc' => $pkg === 'other' ? $other : '', 'scope' => (string) ($j['scope'] ?? 'all'),   /* "Another service" is a real type now (2026-10-28) */
-                'seedLb' => null, 'fertLb' => null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => mb_substr($note, 0, 300), 'addr' => (string) $j['addr'],
+                'seedLb' => null, 'fertLb' => null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => mb_substr($note, 0, 1000), 'addr' => (string) $j['addr'],
                 'fub' => ['by' => $me, 'at' => time(), 'from' => $jid, 'needs' => true, 'agreed' => $agreed, 'what' => $what], 'by' => $me, 'at' => time()];
         if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
         flock($lk, LOCK_UN);
@@ -6784,7 +6784,7 @@ if ($action === 'tosched' || $action === 'fuconfirm') {
     } else {
         $jid = 'j' . bin2hex(random_bytes(6));
         appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'lead' => $lead, 'title' => $who, 'crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'pkg' => (string) $T['pkg'], 'svc' => $T['pkg'] === 'other' ? (string) ($T['other'] ?? '') : '', 'scope' => (string) ($T['scope'] ?? 'all'),
-            'seedLb' => null, 'fertLb' => null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => mb_substr((string) $T['note'], 0, 300), 'addr' => (string) $T['addr'],
+            'seedLb' => null, 'fertLb' => null, 'pay' => ['s' => 'unpaid'], 'card' => false, 'note' => mb_substr((string) $T['note'], 0, 1000), 'addr' => (string) $T['addr'],
             'fub' => ['by' => (string) $T['by'], 'at' => (int) $T['at'], 'from' => (string) $T['from'], 'needs' => false, 'agreed' => !empty($T['agreed']), 'what' => (string) $T['what'], 'ok' => $me, 'okAt' => time()], 'by' => $me, 'at' => time()]);
         appendLine(DATA_DIR . '/tosched.log', ['id' => $id, 'job' => $jid, 'by' => $me, 'at' => time()]);
         crewJobAlert($crew, $jid, 'new', 'follow-up confirmed by ' . strtok($me, ' '));
@@ -8496,7 +8496,7 @@ if ($action === 'signsend') {
           'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()]];
     $ex = array_key_exists('extras', $body) ? a365Extras($body['extras']) : ($q0['extras'] ?? []); if ($ex) $q['extras'] = $ex;   /* extra work: on the form's Service line (2026-10-21) */
     if (kitOn() && !empty($q0['items']) && (int) ($q0['price'] ?? 0) === $price) { $q['items'] = $q0['items']; if (isset($q0['measures'])) $q['measures'] = $q0['measures']; }   /* the quote's lines stay on the form while the price is the one quoted (2026-10-27) */
-    $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 300)];
+    $sign = ['key' => bin2hex(random_bytes(6)), 'deposit' => $dep, 'how' => $how, 'note' => $clean($body['note'] ?? '', 1000)];
     $nosign = !empty($body['nosign']); if ($nosign) $sign['nosign'] = true;   /* no signature needed (2026-10-17) */
     if ($byLink && $depIn && is_array($S0['pay'] ?? null)) $sign['pay'] = $S0['pay'];   /* the paid order stays, so sqpaid still matches it (2026-10-18) */
     elseif ($byLink) {
