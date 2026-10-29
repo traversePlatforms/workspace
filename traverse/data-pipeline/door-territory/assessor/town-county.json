@@ -417,5 +417,134 @@
  ],
  "g1-greeley-rural": [
   "Weld"
+ ],
+ "g2-fort-collins": [
+  "Larimer"
+ ],
+ "g2-loveland": [
+  "Larimer"
+ ],
+ "g2-wellington": [
+  "Larimer"
+ ],
+ "g2-estes-park": [
+  "Larimer"
+ ],
+ "g2-timnath": [
+  "Larimer"
+ ],
+ "g2-red-feather-lakes": [
+  "Larimer"
+ ],
+ "g2-laporte": [
+  "Larimer"
+ ],
+ "g2-fort-collins-rural": [
+  "Larimer"
+ ],
+ "g2-loveland-rural": [
+  "Larimer"
+ ],
+ "g2-timnath-wellington-rural": [
+  "Larimer"
+ ],
+ "g2-estes-park-rural": [
+  "Larimer"
+ ],
+ "g2-berthoud-rural": [
+  "Larimer"
+ ],
+ "g2-livermore-rural": [
+  "Larimer"
+ ],
+ "g2-grand-junction": [
+  "Mesa"
+ ],
+ "g2-clifton": [
+  "Mesa"
+ ],
+ "g2-fruita": [
+  "Mesa"
+ ],
+ "g2-redlands": [
+  "Mesa"
+ ],
+ "g2-fruitvale": [
+  "Mesa"
+ ],
+ "g2-orchard-mesa": [
+  "Mesa"
+ ],
+ "g2-palisade": [
+  "Mesa"
+ ],
+ "g2-loma": [
+  "Mesa"
+ ],
+ "g2-grand-junction-rural": [
+  "Mesa"
+ ],
+ "g2-fruita-rural": [
+  "Mesa"
+ ],
+ "g2-clifton-rural": [
+  "Mesa"
+ ],
+ "g2-collbran-rural": [
+  "Mesa"
+ ],
+ "g2-glade-park-gateway-rural": [
+  "Mesa"
+ ],
+ "g2-whitewater-kannah-creek-rural": [
+  "Mesa"
+ ],
+ "g2-de-beque-rural": [
+  "Mesa"
+ ],
+ "g2-pueblo": [
+  "Pueblo"
+ ],
+ "g2-pueblo-west": [
+  "Pueblo"
+ ],
+ "g2-colorado-city": [
+  "Pueblo"
+ ],
+ "g2-beulah-valley": [
+  "Pueblo"
+ ],
+ "g2-salt-creek": [
+  "Pueblo"
+ ],
+ "g2-blende": [
+  "Pueblo"
+ ],
+ "g2-boone": [
+  "Pueblo"
+ ],
+ "g2-vineland": [
+  "Pueblo"
+ ],
+ "g2-pueblo-rural": [
+  "Pueblo"
+ ],
+ "g2-pueblo-west-rural": [
+  "Pueblo"
+ ],
+ "g2-st-charles-mesa-rural": [
+  "Pueblo"
+ ],
+ "g2-colorado-city-rye-rural": [
+  "Pueblo"
+ ],
+ "g2-avondale-rural": [
+  "Pueblo"
+ ],
+ "g2-northeast-pueblo-rural": [
+  "Pueblo"
+ ],
+ "g2-huerfano-valley-rural": [
+  "Pueblo"
  ]
 }

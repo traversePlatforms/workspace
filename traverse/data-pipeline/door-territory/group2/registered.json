@@ -1,0 +1,303 @@
+[
+ {
+  "key": "g2-fort-collins",
+  "label": "Fort Collins",
+  "lat": 40.55575,
+  "lon": -105.0722,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-loveland",
+  "label": "Loveland",
+  "lat": 40.40731,
+  "lon": -105.06097,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-wellington",
+  "label": "Wellington",
+  "lat": 40.70057,
+  "lon": -105.00745,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-estes-park",
+  "label": "Estes Park",
+  "lat": 40.36765,
+  "lon": -105.53499,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-timnath",
+  "label": "Timnath",
+  "lat": 40.54129,
+  "lon": -104.96094,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-red-feather-lakes",
+  "label": "Red Feather Lakes",
+  "lat": 40.80571,
+  "lon": -105.5908,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-laporte",
+  "label": "Laporte",
+  "lat": 40.63773,
+  "lon": -105.14231,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-fort-collins-rural",
+  "label": "Fort Collins (rural)",
+  "lat": 40.58649,
+  "lon": -105.12738,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-loveland-rural",
+  "label": "Loveland (rural)",
+  "lat": 40.41854,
+  "lon": -105.19702,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-timnath-wellington-rural",
+  "label": "Timnath-Wellington (rural)",
+  "lat": 40.73158,
+  "lon": -105.17789,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-estes-park-rural",
+  "label": "Estes Park (rural)",
+  "lat": 40.40574,
+  "lon": -105.55272,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-berthoud-rural",
+  "label": "Berthoud (rural)",
+  "lat": 40.3228,
+  "lon": -105.14943,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-livermore-rural",
+  "label": "Livermore (rural)",
+  "lat": 40.73731,
+  "lon": -105.68297,
+  "county": "Larimer"
+ },
+ {
+  "key": "g2-grand-junction",
+  "label": "Grand Junction",
+  "lat": 39.08643,
+  "lon": -108.56769,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-clifton",
+  "label": "Clifton",
+  "lat": 39.07998,
+  "lon": -108.46286,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-fruita",
+  "label": "Fruita",
+  "lat": 39.15292,
+  "lon": -108.74073,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-redlands",
+  "label": "Redlands",
+  "lat": 39.08872,
+  "lon": -108.65377,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-fruitvale",
+  "label": "Fruitvale",
+  "lat": 39.09225,
+  "lon": -108.47733,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-orchard-mesa",
+  "label": "Orchard Mesa",
+  "lat": 39.03749,
+  "lon": -108.51932,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-palisade",
+  "label": "Palisade",
+  "lat": 39.1089,
+  "lon": -108.35349,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-loma",
+  "label": "Loma",
+  "lat": 39.20712,
+  "lon": -108.80706,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-grand-junction-rural",
+  "label": "Grand Junction (rural)",
+  "lat": 39.08089,
+  "lon": -108.60799,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-fruita-rural",
+  "label": "Fruita (rural)",
+  "lat": 39.23574,
+  "lon": -108.75546,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-clifton-rural",
+  "label": "Clifton (rural)",
+  "lat": 39.09033,
+  "lon": -108.41092,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-collbran-rural",
+  "label": "Collbran (rural)",
+  "lat": 39.12207,
+  "lon": -107.85097,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-glade-park-gateway-rural",
+  "label": "Glade Park-Gateway (rural)",
+  "lat": 38.8545,
+  "lon": -108.71628,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-whitewater-kannah-creek-rural",
+  "label": "Whitewater-Kannah Creek (rural)",
+  "lat": 38.98067,
+  "lon": -108.37877,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-de-beque-rural",
+  "label": "De Beque (rural)",
+  "lat": 39.24278,
+  "lon": -108.2895,
+  "county": "Mesa"
+ },
+ {
+  "key": "g2-pueblo",
+  "label": "Pueblo",
+  "lat": 38.25238,
+  "lon": -104.5911,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-pueblo-west",
+  "label": "Pueblo West",
+  "lat": 38.3474,
+  "lon": -104.72811,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-colorado-city",
+  "label": "Colorado City",
+  "lat": 37.93117,
+  "lon": -104.84302,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-beulah-valley",
+  "label": "Beulah Valley",
+  "lat": 38.0674,
+  "lon": -104.97789,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-salt-creek",
+  "label": "Salt Creek",
+  "lat": 38.24068,
+  "lon": -104.58637,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-blende",
+  "label": "Blende",
+  "lat": 38.24822,
+  "lon": -104.57481,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-boone",
+  "label": "Boone",
+  "lat": 38.25043,
+  "lon": -104.25841,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-vineland",
+  "label": "Vineland",
+  "lat": 38.24438,
+  "lon": -104.45934,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-pueblo-rural",
+  "label": "Pueblo (rural)",
+  "lat": 38.20915,
+  "lon": -104.74805,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-pueblo-west-rural",
+  "label": "Pueblo West (rural)",
+  "lat": 38.38967,
+  "lon": -104.76682,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-st-charles-mesa-rural",
+  "label": "St. Charles Mesa (rural)",
+  "lat": 38.20931,
+  "lon": -104.53874,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-colorado-city-rye-rural",
+  "label": "Colorado City-Rye (rural)",
+  "lat": 38.0162,
+  "lon": -104.83013,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-avondale-rural",
+  "label": "Avondale (rural)",
+  "lat": 38.21411,
+  "lon": -104.39462,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-northeast-pueblo-rural",
+  "label": "Northeast Pueblo (rural)",
+  "lat": 38.33447,
+  "lon": -104.33322,
+  "county": "Pueblo"
+ },
+ {
+  "key": "g2-huerfano-valley-rural",
+  "label": "Huerfano Valley (rural)",
+  "lat": 37.98421,
+  "lon": -104.36278,
+  "county": "Pueblo"
+ }
+]
