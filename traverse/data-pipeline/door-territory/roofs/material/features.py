@@ -4,7 +4,9 @@ For every crop in cache/crops/<town>/: the roof pixels (inside the house outline
 out vegetation by NDVI and deep shadow by brightness), then colour, infrared and texture statistics over them,
 plus the roof's size and pitch (roof-<town>.json, LiDAR) and the year built (year-<town>.json) where those exist.
 Writes cache/features-<town>.csv, one row per door (id, the label if the county has one, the numbers).
-  python features.py [town ...]           (all towns when none given; a town is skipped if its csv is newer than its crop index)
+  python features.py [town ...]           (all towns when none given; a town is skipped if its csv is newer than its crop index,
+                                           except that a year-/roof- file newer than the csv has its columns re-filled)
+  python features.py --struct [town ...]  only re-fill the county/LiDAR columns of existing csvs (no crops needed)
 """
 import sys, json, gzip, io, csv, time
 from pathlib import Path
@@ -29,6 +31,12 @@ CLASS_OF = {
     'Wood Shake': 'shake',
     'Preformed Metal': 'metal', 'Formed Seam Metal': 'metal', 'Copper Metal': 'metal',
     'Built Up Rock': 'flat', 'Elastomeric Sgl Ply': 'flat',
+    # Weld's names for the same materials (2026-10-29): until now 3,100 Group 1 county records were dropped as unknown.
+    # Slate has no class here and stays out. Training reads Douglas only, so the model is unchanged.
+    'Asphalt': 'asphalt', 'Comp Shingle Heavy': 'asphalt', 'Shingle Comp': 'asphalt', 'Roll': 'asphalt',
+    'Wood Shingle': 'shake', 'Shake': 'shake',
+    'Metal': 'metal', 'Metal Ribbed': 'metal',
+    'Rubber Membrane': 'flat', 'Tar and Gravel': 'flat', 'Built-Up': 'flat', 'Flat': 'flat',
 }
 
 
@@ -204,17 +212,66 @@ def features(a, h, meta):
     return out
 
 
+def struct_of(id_, year, roof):
+    """The columns that come from the county (year-<town>.json) and the LiDAR (roof-<town>.json), not from the photo."""
+    y = year.get(id_, {}); r = roof.get(id_, {})
+    return {'mat': y.get('mat', ''), 'cls': CLASS_OF.get(y.get('mat', ''), ''),
+            'yb': y.get('yb', np.nan), 'rm': y.get('rm', np.nan), 'bsf': y.get('bsf', np.nan),
+            'sq': r.get('sq', np.nan), 'pitch': r.get('pitch', np.nan), 'deg': r.get('deg', np.nan),
+            'flat': (1 if r['flat'] else 0) if 'flat' in r else np.nan, 'rh': r.get('h', np.nan), 'fp': r.get('fp', np.nan)}
+
+
+def load_struct(town):
+    yf = DATA / f'year-{town}.json'; year = json.loads(yf.read_text())['doors'] if yf.exists() else {}
+    rf = DATA / f'roof-{town}.json'; roof = json.loads(rf.read_text())['doors'] if rf.exists() else {}
+    return year, roof
+
+
+def struct_newer(town, outf):
+    """year-/roof-<town>.json written after the features csv: its county and LiDAR columns are stale (2026-10-29: the cloud
+    queue made Group 1's csvs before the laptop's year files reached it, so every row had no year built and no county label)."""
+    return [p.name for p in (DATA / f'year-{town}.json', DATA / f'roof-{town}.json') if p.exists() and p.stat().st_mtime > outf.stat().st_mtime]
+
+
+def refresh_struct(town):
+    """Re-fill only the county and LiDAR columns of an existing features csv from the current year-/roof- files. The photo
+    columns are left exactly as they are, so the crops (deleted after each town on the cloud machine) are not needed."""
+    outf = CACHE / f'features-{town}.csv'
+    year, roof = load_struct(town)
+    with open(outf, newline='', encoding='utf-8') as fh:
+        rd = csv.DictReader(fh); keys = list(rd.fieldnames); rows = list(rd)
+    for k in struct_of('', {}, {}):
+        if k not in keys: keys.append(k)
+    for r in rows:
+        r.update({k: ('' if isinstance(v, float) and np.isnan(v) else v) for k, v in struct_of(r['id'], year, roof).items()})
+    tmp = outf.with_suffix('.tmp')
+    with open(tmp, 'w', newline='', encoding='utf-8') as fh:
+        w = csv.DictWriter(fh, fieldnames=keys, restval='')
+        w.writeheader(); w.writerows(rows)
+    tmp.replace(outf)
+    n_yb = sum(1 for r in rows if r['yb'] != ''); n_lab = sum(1 for r in rows if r['cls'])
+    print(f'{town}: county/LiDAR columns refreshed on {len(rows)} rows (year built {n_yb}, county roof label {n_lab}); photo columns unchanged')
+
+
 def run(town):
     idxf = CACHE / f'crops-{town}.json'
     outf = CACHE / f'features-{town}.csv'
+    if '--struct' in sys.argv:
+        if outf.exists(): refresh_struct(town)
+        else: print(town, 'no features csv to refresh')
+        return
     if not idxf.exists():
         print(town, 'no crops yet'); return
     if outf.exists() and outf.stat().st_mtime > idxf.stat().st_mtime and '--force' not in sys.argv:
-        print(town, 'features up to date'); return
+        stale = struct_newer(town, outf)
+        if stale:
+            print(town, 'photo features up to date;', ', '.join(stale), 'newer than the csv'); refresh_struct(town)
+        else:
+            print(town, 'features up to date')
+        return
     idx = json.loads(idxf.read_text())
     houses = json.loads((CACHE / f'houses-{town}.json').read_text())
-    yf = DATA / f'year-{town}.json'; year = json.loads(yf.read_text())['doors'] if yf.exists() else {}
-    rf = DATA / f'roof-{town}.json'; roof = json.loads(rf.read_text())['doors'] if rf.exists() else {}
+    year, roof = load_struct(town)
     rows = []; t0 = time.time(); keys = None
     for id_, meta in idx.items():
         if 'err' in meta or not (CACHE / 'crops' / town / (safe(id_) + '.npy.gz')).exists():
@@ -224,12 +281,10 @@ def run(town):
         except Exception as e:
             print('  bad crop', id_, e); continue
         f = features(a, houses[id_], meta)
-        y = year.get(id_, {}); r = roof.get(id_, {})
-        f['yb'] = y.get('yb', np.nan); f['rm'] = y.get('rm', np.nan); f['bsf'] = y.get('bsf', np.nan)
-        f['sq'] = r.get('sq', np.nan); f['pitch'] = r.get('pitch', np.nan); f['deg'] = r.get('deg', np.nan)
-        f['flat'] = (1 if r['flat'] else 0) if 'flat' in r else np.nan; f['rh'] = r.get('h', np.nan); f['fp'] = r.get('fp', np.nan)
+        s = struct_of(id_, year, roof)
+        f.update({k: v for k, v in s.items() if k not in ('mat', 'cls')})
         f['item_date'] = meta['item'].split('_')[4] if 'item' in meta else ''
-        row = {'id': id_, 'town': town, 'mat': y.get('mat', ''), 'cls': CLASS_OF.get(y.get('mat', ''), '')}
+        row = {'id': id_, 'town': town, 'mat': s['mat'], 'cls': s['cls']}
         row.update(f)
         rows.append(row)
     if not rows:

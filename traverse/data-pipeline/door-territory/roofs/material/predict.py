@@ -5,7 +5,8 @@ Writes app/data/rounds/material-<town>.json:
 Where Douglas County's assessor has the material it is used as is (src county, p 1). Everywhere else the model's
 call is written only when its probability clears that class's threshold (model-report.json, from the held-out
 cross-validation), and only for crops with enough clear roof pixels. Houses below the threshold are left out.
-  python predict.py [town ...]
+  python predict.py [town ...]   (stops, writing nothing, for a town whose county has assessor data but no year file here;
+                                  --no-year-ok overrides)
 """
 import json, pickle, sys, time
 from pathlib import Path
@@ -20,9 +21,18 @@ GUESS_CLASSES = ('asphalt', 'tile')
 GUESS_MIN = 0.6
 CACHE = HERE / 'cache'
 DATA = HERE.parents[3] / 'app' / 'data' / 'rounds'   # was site/, before the 2026-10-06 reorganisation
+# the counties whose assessor files ../../assessor/build-year.mjs reads (its COUNTY_KEY), and each town's counties
+YEAR_COUNTIES = {'El Paso', 'Douglas', 'Adams', 'Boulder', 'Denver', 'Weld'}
+_tc = HERE.parents[1] / 'assessor' / 'town-county.json'
+TOWN_COUNTY = {k: v for k, v in (json.loads(_tc.read_text()) if _tc.exists() else {}).items() if isinstance(v, list)}
+
+
+def expects_year(town):
+    return any(c in YEAR_COUNTIES for c in TOWN_COUNTY.get(town, []))
 
 
 def main(towns):
+    failed = []
     with open(CACHE / 'model.pkl', 'rb') as f:
         M = pickle.load(f)
     model, cols, classes, th = M['model'], M['features'], M['classes'], M['thresholds']
@@ -36,17 +46,30 @@ def main(towns):
             print(town, 'no features'); continue
         df = pd.read_csv(f)
         yf = DATA / f'year-{town}.json'
-        county = {k: CLASS_OF[v['mat']] for k, v in (json.loads(yf.read_text())['doors'].items() if yf.exists() else []) if v.get('mat') in CLASS_OF}
+        ydoors = json.loads(yf.read_text())['doors'] if yf.exists() else {}
+        county = {k: CLASS_OF[v['mat']] for k, v in ydoors.items() if v.get('mat') in CLASS_OF}
         doors = {}
         for id_, cls in county.items():
             doors[id_] = {'m': cls, 'p': 1, 'src': 'county'}
+        # 2026-10-29: a town in a county whose assessor files build-year.mjs reads must have its year file here before predicting.
+        # The cloud queue ran Group 1 without them (they are built on the laptop from raw/), wrote empty files for towns
+        # with full county roof records (Greeley: 20,011), and the log read like a model failure. Now it stops instead.
+        if not yf.exists() and expects_year(town) and '--no-year-ok' not in sys.argv:
+            print(f'{town}: STOPPED, {yf.name} is missing but {"/".join(TOWN_COUNTY.get(town, []))} County has assessor data: '
+                  f'build it on the laptop (assessor/build-year.mjs) and copy it here, then run features.py and predict.py again. Nothing written.')
+            failed.append(town); continue
         # no building outline means the window is a 6 m disc on the parcel point, which can sit on trees or lawn: skipped
         ok = df[(df.roof_px >= MIN_PX) & (df.nofp == 0)].reset_index(drop=True)
+        n_clear = len(ok)
         # the chosen model leans on year built and the LiDAR roof size; the Teller towns have neither, and the
         # imagery-only model reached 90% precision in no class, so they get no imagery calls (see README)
-        has_struct = (DATA / f'year-{town}.json').exists() and (DATA / f'roof-{town}.json').exists()
+        has_struct = yf.exists() and (DATA / f'roof-{town}.json').exists()
+        if has_struct and len(df) and df['yb'].notna().sum() == 0 and any(v.get('yb') for v in ydoors.values()):
+            # features made before the year file arrived: the model would see no year built at all (off its training path)
+            print(f'{town}: features csv has no year built though {yf.name} exists; run features.py {town} (it re-fills the columns) -> imagery skipped this run')
+            has_struct = False
         if not has_struct:
-            print(f'{town}: no year/roof data, imagery-only model reaches no threshold -> no imagery calls')
+            print(f'{town}: {n_clear} crops clear enough, but no year/roof data: the imagery-only model reaches no threshold -> no imagery calls')
             ok = ok.iloc[0:0]
         if len(ok):
             P = np.zeros((len(ok), len(classes)))
@@ -65,19 +88,21 @@ def main(towns):
         n_county = sum(1 for d in doors.values() if d['src'] == 'county'); n_guess = sum(1 for d in doors.values() if d['src'] == 'guess'); n_img = len(doors) - n_county - n_guess
         by_cls = {}
         for d in doors.values(): by_cls[d['m']] = by_cls.get(d['m'], 0) + 1
-        out = {'source': 'County assessor roof material where the county records it (county: Douglas; Adams for Thornton and Commerce City; Boulder and Weld for Erie) + USDA NAIP 2023 0.3 m imagery classifier (imagery: tested 96%+ right; guess: its best guess below that); see operations/door-territory/roofs/material/README.md',
+        out = {'source': 'County assessor roof material where the county records it (county: Douglas, Adams, Boulder, Weld) + USDA NAIP 2023 0.3 m imagery classifier (imagery: tested 96%+ right; guess: its best guess below that); see operations/door-territory/roofs/material/README.md',
                'built': built, 'classes': {'asphalt': 'composition shingle or roll', 'tile': 'concrete or clay tile', 'shake': 'wood shake', 'metal': 'metal', 'flat': 'built-up or membrane'},
                'thresholds': usable, 'doors': doors}
         (DATA / f'material-{town}.json').write_text(json.dumps(out, separators=(',', ':')))
-        summary[town] = {'doors': n_doors, 'structural_data': has_struct, 'crops': int(len(df)), 'usable_crops': int(len(ok)), 'county': n_county, 'imagery': n_img, 'guess': n_guess, 'labelled': len(doors) - n_guess, 'share': round(len(doors) / max(n_doors, 1), 3), 'by_class': by_cls}
-        print(f'{town}: {n_doors} doors, {len(ok)} usable crops, county {n_county}, imagery {n_img}, guess {n_guess}, total {len(doors)} ({summary[town]["share"]:.0%}) {by_cls}')
+        summary[town] = {'doors': n_doors, 'structural_data': has_struct, 'crops': int(len(df)), 'clear_crops': int(n_clear), 'usable_crops': int(len(ok)), 'county': n_county, 'imagery': n_img, 'guess': n_guess, 'labelled': len(doors) - n_guess, 'share': round(len(doors) / max(n_doors, 1), 3), 'by_class': by_cls}
+        print(f'{town}: {n_doors} doors, {n_clear} clear crops, {len(ok)} given to the model, county {n_county}, imagery {n_img}, guess {n_guess}, total {len(doors)} ({summary[town]["share"]:.0%}) {by_cls}')
     # merged into the towns already recorded: a run for some towns used to wipe the rest (2026-10-11)
     cov = HERE / 'coverage.json'
     allcov = json.loads(cov.read_text()) if cov.exists() else {}
     allcov.update(summary)
     cov.write_text(json.dumps(allcov, indent=1))
-    return summary
+    return summary, failed
 
 
 if __name__ == '__main__':
-    main([t for t in sys.argv[1:] if not t.startswith('--')] or TOWNS)
+    _, failed = main([t for t in sys.argv[1:] if not t.startswith('--')] or TOWNS)
+    # non-zero so a queue does not mark the town done or delete its crops
+    sys.exit(2 if failed else 0)

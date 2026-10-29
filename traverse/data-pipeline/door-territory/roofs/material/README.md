@@ -194,6 +194,9 @@ node fetch.mjs [--town=x]       # NAIP crops -> cache/crops/<town>/ (fetches onl
 python features.py [town ...]   # -> cache/features-<town>.csv (skips a town whose csv is newer than its crop index; --force)
 python train.py                 # -> cache/model.pkl, model-report.json (about 6 min)
 python predict.py               # -> app/data/rounds/material-<town>.json, coverage.json
+   # year-<town>.json must be in app/data/rounds first wherever the county has assessor data (built on the laptop by
+   # assessor/build-year.mjs); predict.py stops without it, and features.py re-fills a csv's county columns when it arrives
+   # (python features.py --struct <town> does only that). See ROOF-MATERIAL-DIAGNOSIS-2026-10-29.md.
 python look.py <town> [n] [start] [out.png] ["Concrete Tile" | pred:asphalt]   # spot-check sheet, delete after looking
 ```
 
