@@ -2620,7 +2620,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         out(['ok' => true, 'first' => $first, 'street' => $street, 'pkg' => $Q['pkg'], 'svc' => (string) ($Q['svc'] ?? ''), 'price' => (int) $Q['price'], 'date' => date('F j, Y', (int) $Q['at']),
              'items' => kitOn() ? array_values(array_map(fn($x) => ['t' => (string) $x['t'], 'amt' => (int) $x['amt']], (array) ($Q['items'] ?? []))) : null, 'note' => kitOn() ? (string) ($Q['note'] ?? '') : null,
              'offer' => $off ? ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])] : null,
-             'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone]);
+             'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone, 'ways' => payWays()]);   /* + other ways to pay, an edition (2026-10-29) */
     }
     if (!$isPost) fail('POST required', 405);
     if (!throttleTake(rateFile('a365accept|' . visitorKey()), 10, 86400)) fail('We have had a lot of answers from here today. Please call or text us.', 429);
@@ -2743,8 +2743,8 @@ function kitAgreement(array $l): array {
     $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
     $work = array_values(array_filter(array_map(fn($x) => in_array($x['id'] ?? '', ['min', 'adj'], true) ? '' : (string) $x['t'], (array) ($Q['items'] ?? []))));   /* the work, not the minimum or an adjustment */
     foreach (a365Extras($Q['extras'] ?? []) as $x) $work[] = $x['t'];
-    $none = ($S2['how'] ?? '') === 'none'; $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
-    $payWord = ['link' => 'card', 'square' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other'][$S2['how'] ?? ''] ?? (string) ($S2['how'] ?? '');
+    $none = ($S2['how'] ?? '') === 'none'; $due = (($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false)) || ($S2['how'] ?? '') === 'ways';   /* + another way, on the form (2026-10-29) */
+    $payWord = ['link' => 'card', 'square' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'cashapp' => 'Cash App', 'paypal' => 'PayPal', 'check' => 'check', 'other' => 'other', 'ways' => 'another way'][$S2['how'] ?? ''] ?? (string) ($S2['how'] ?? '');
     $facts = [['Customer', trim((string) ($l['name'] ?? ''))]];
     $pd = substr((string) preg_replace('/\D/', '', (string) ($l['phone'] ?? '')), -10);
     if (strlen($pd) === 10) $facts[] = ['Phone', '(' . substr($pd, 0, 3) . ') ' . substr($pd, 3, 3) . '-' . substr($pd, 6)];
@@ -2820,7 +2820,7 @@ function a365Agreement(array $l): array {
     $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
     $inc = $Q['pkg'] === 'other' ? [trim((string) ($Q['svc'] ?? '')) ?: 'The work we discussed'] : ($Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer']);   /* a custom quote lists its own service (2026-10-28) */
     foreach (a365Extras($Q['extras'] ?? []) as $x) $inc[] = $x['t'];   /* the extra work, in her words (2026-10-21); its price is in the Price */
-    $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'check', 'other' => 'other', 'none' => 'no deposit'][$S2['how']] ?? $S2['how'];
+    $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'cashapp' => 'Cash App', 'paypal' => 'PayPal', 'check' => 'check', 'other' => 'other', 'none' => 'no deposit'][$S2['how']] ?? $S2['how'];
     $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
     $day = $o ? a365Day((string) $o['date']) . ', arriving ' . a365Arrive((string) $o['slot']) : 'to be set';
     $facts = [['Customer', trim((string) ($l['name'] ?? ''))]];
@@ -2864,17 +2864,29 @@ function a365Mail(string $to, string $subject, string $text, string $html, array
     /* a test copy only (2026-10-27, the follow-up email's tests): "dryrun": true in the mailbox file writes each message to a365-dryrun.log
        beside it and sends nothing. Never set on a live install. */
     if (!empty($c['dryrun'])) return appendLine(dirname(__DIR__, 2) . '/sixfold-private/a365-dryrun.log', ['at' => time(), 'to' => $to, 'subject' => $subject, 'text' => $text, 'html' => $html, 'headers' => $extra]) ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('dryrun', 'could not write the dry-run log');
-    $fp = @stream_socket_client('tcp://smtp.gmail.com:587', $errno, $errstr, 20); if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
+    /* the sending itself is smtpSend now (2026-10-29, Setup › Email for the editions): for 365, Gmail on 587 as 365aeration.com, exactly as before */
+    return smtpSend(['host' => 'smtp.gmail.com', 'port' => 587, 'user' => (string) $c['user'], 'pass' => (string) $c['pass'], 'domain' => '365aeration.com', 'bcc' => (string) ($c['bcc'] ?? ''),
+                     'from_name' => (string) ($c['from_name'] ?? (company()['a365']['name'] ?? '365 Aeration & Seeding'))], $to, $subject, $text, $html, $extra);
+}
+/** one message over SMTP with a login, text and HTML; never throws. $c: host, port (587 STARTTLS, 465 TLS from the start), user, pass, from_name,
+ *  domain (EHLO and Message-ID), bcc. [ok, stage, error]. Only the test server may talk to 127.0.0.1 without TLS (the mock mail server). */
+function smtpSend(array $c, string $to, string $subject, string $text, string $html, array $extra = []): array {
+    $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
+    $host = (string) $c['host']; $port = (int) $c['port']; $dom = (string) ($c['domain'] ?? 'localhost');
+    $plain = PHP_SAPI === 'cli-server' && $host === '127.0.0.1';
+    $fp = @stream_socket_client(($port === 465 && !$plain ? 'ssl://' : 'tcp://') . $host . ':' . $port, $errno, $errstr, 20); if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
     stream_set_timeout($fp, 20);
     $read = function () use ($fp): array { $lines = []; while (true) { $l = @fgets($fp, 2048); if ($l === false) return [0, 'connection closed']; $lines[] = rtrim($l, "\r\n"); if (strlen($l) < 4 || $l[3] !== '-') break; } $last = (string) end($lines); return [(int) substr($last, 0, 3), implode(' | ', $lines)]; };
     $w = function (string $cmd) use ($fp) { @fwrite($fp, $cmd . "\r\n"); };
     $quit = function () use ($fp) { @fwrite($fp, "QUIT\r\n"); @fclose($fp); };
     [$code, $rep] = $read(); if ($code !== 220) { $quit(); return $fail('greeting', $rep); }
-    $w('EHLO 365aeration.com'); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('ehlo', $rep); }
-    $w('STARTTLS'); [$code, $rep] = $read(); if ($code !== 220) { $quit(); return $fail('starttls', $rep); }
-    $cm = STREAM_CRYPTO_METHOD_TLS_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
-    if (@stream_socket_enable_crypto($fp, true, $cm) !== true) { $quit(); return $fail('starttls', 'TLS negotiation failed'); }
-    $w('EHLO 365aeration.com'); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('ehlo-tls', $rep); }
+    $w('EHLO ' . $dom); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('ehlo', $rep); }
+    if ($port !== 465 && !$plain) {
+        $w('STARTTLS'); [$code, $rep] = $read(); if ($code !== 220) { $quit(); return $fail('starttls', $rep); }
+        $cm = STREAM_CRYPTO_METHOD_TLS_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
+        if (@stream_socket_enable_crypto($fp, true, $cm) !== true) { $quit(); return $fail('starttls', 'TLS negotiation failed'); }
+        $w('EHLO ' . $dom); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('ehlo-tls', $rep); }
+    }
     $w('AUTH LOGIN'); [$code, $rep] = $read(); if ($code !== 334) { $quit(); return $fail('auth', $rep); }
     $w(base64_encode((string) $c['user'])); [$code, $rep] = $read(); if ($code !== 334) { $quit(); return $fail('auth', $rep); }
     $w(base64_encode((string) $c['pass'])); [$code, $rep] = $read(); if ($code !== 235) { $quit(); return $fail('auth', $rep); }
@@ -2883,8 +2895,8 @@ function a365Mail(string $to, string $subject, string $text, string $html, array
     $bcc = (string) ($c['bcc'] ?? ''); if ($bcc !== '' && filter_var($bcc, FILTER_VALIDATE_EMAIL) && strcasecmp($bcc, $to) !== 0) { $w('RCPT TO:<' . $bcc . '>'); $read(); }
     $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
     $eol = "\r\n"; $bd = 'a3' . bin2hex(random_bytes(8));
-    $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) ($c['from_name'] ?? (company()['a365']['name'] ?? '365 Aeration & Seeding'))) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
-          'Message-ID: <' . bin2hex(random_bytes(12)) . '@365aeration.com>', 'MIME-Version: 1.0', 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
+    $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) $c['from_name']) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
+          'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $dom . '>', 'MIME-Version: 1.0', 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
     foreach ($extra as $xh) if (is_string($xh) && preg_match('/^[A-Za-z-]{2,40}: [^\r\n]{1,900}$/D', $xh)) $h[] = $xh;
     $payload = implode($eol, $h) . $eol . $eol
         . '--' . $bd . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($text), 76, $eol)
@@ -2894,8 +2906,134 @@ function a365Mail(string $to, string $subject, string $text, string $html, array
     @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
     return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
 }
+/* ---- the install's own email, Setup › Email (2026-10-29, Matthew: email for the editions: the company connects its own address, and the
+ * automatic emails can be switched on or off and reworded) ----
+ * The admin picks Gmail, Outlook / Microsoft 365 or Other (server and port), types the address, the sender name and an APP PASSWORD (made in
+ * their Google or Microsoft account; never their normal password). A test email to that address must go before anything is kept. Kept in the
+ * install's private folder, <private>/mail.json {kind, host, port, user, pass, from_name, by, at}: never in public_html, never in git, never
+ * sent back to the page (the screen shows "connected as x@y"). The server signs in to their mail server and sends as them; nothing logs in
+ * to their inbox. EHLO and Message-ID use the address's own domain. Sixfold 365 keeps its own Gmail mailbox (a365-mail.json) and a365Mail,
+ * unchanged: sendMail() goes there when the install is 365, and the Email screen is not on 365.
+ * The automatic messages an edition sends, each with a switch and its own subject and words (<data>/mail-templates.json):
+ *   signed   the signed agreement copy: by itself when a customer signs, and from "Email them the signed copy"
+ *   receipt  the receipt: when someone presses Email receipt on a paid job
+ * (365's aftercare, follow-up and newsletter run on 365 only: jobIs365 and the 365 checks keep them off the editions.)
+ * The words are the company's; the part that is the record (the agreement as signed, the receipt itself) is always added below them and
+ * cannot be switched off or reworded. Email not connected = nothing is sent and the screen says so. */
+const MAIL_KINDS = ['gmail' => ['Gmail or Google Workspace', 'smtp.gmail.com', 587], 'outlook' => ['Outlook or Microsoft 365', 'smtp.office365.com', 587]];
+const MAIL_TPL = [
+    'signed' => ['label' => 'Signed agreement copy', 'when' => 'Goes by itself when a customer signs their form, and when the office presses Email them the signed copy.',
+                 'ph' => ['first_name', 'customer_name', 'company', 'phone', 'date', 'time', 'price', 'link'],
+                 'subject' => 'Your signed agreement with {company}',
+                 'body' => "Hi {first_name},\n\nThanks for booking with {company}. Here is a copy of the agreement you signed on {date}. You can view or print it any time: {link}\n\nQuestions or changes: call or text {phone}.\n\n{company}",
+                 'fixed' => 'Always added below your words: what was agreed, the terms, who signed and when, and the link to view or print it. It is the customer\'s copy of what they signed, so it cannot be left out.'],
+    'receipt' => ['label' => 'Receipt', 'when' => 'Goes when someone presses Email receipt on a paid job.',
+                  'ph' => ['first_name', 'customer_name', 'company', 'phone', 'date', 'price', 'paid', 'balance', 'receipt_no'],
+                  'subject' => 'Your receipt from {company} (No. {receipt_no})',
+                  'body' => "Hi {first_name},\n\nThank you for your payment. Your receipt is below.\n\n{company}",
+                  'fixed' => 'Always added below your words: the receipt itself (the work, the total, each payment and the balance).']];
+const MAIL_PH = ['first_name' => 'their first name', 'customer_name' => 'their full name', 'company' => 'your company name', 'phone' => 'your phone number',
+                 'date' => 'the day (signed, or the day of the work)', 'time' => 'the time they signed', 'price' => 'the price', 'link' => 'the link to their agreement',
+                 'paid' => 'what they have paid', 'balance' => 'what is left to pay', 'receipt_no' => 'the receipt number'];
+function mailOwnFile(): string { return pushPrivDir() . '/mail.json'; }
+function mailOwnCfg(): ?array {
+    $j = json_decode((string) @file_get_contents(mailOwnFile()), true);
+    return is_array($j) && !empty($j['user']) && !empty($j['pass']) && !empty($j['host']) && !empty($j['port']) ? $j : null;
+}
+/** the install's sender: Sixfold 365's own mailbox (as before), or an edition's connected address */
+function mailCfg(): ?array { return !empty(company()['a365']) ? a365MailCfg() : mailOwnCfg(); }
+function mailDomain(string $addr): string { $d = strtolower(substr((string) strrchr($addr, '@'), 1)); return preg_match('/^([a-z0-9-]+\.)+[a-z]{2,}$/', $d) ? $d : 'localhost'; }
+/** one email from the install: 365 through a365Mail exactly as before; an edition from its connected address */
+function sendMail(string $to, string $subject, string $text, string $html, array $extra = []): array {
+    if (!empty(company()['a365'])) return a365Mail($to, $subject, $text, $html, $extra);
+    $c = mailOwnCfg(); if (!$c) return ['ok' => false, 'stage' => 'config', 'error' => 'Email is not connected yet (Setup, Email).'];
+    return smtpSend($c + ['domain' => mailDomain((string) $c['user'])], $to, $subject, $text, $html, $extra);
+}
+/** what the Email screen shows: never the password */
+function mailState(): array {
+    $c = mailOwnCfg();
+    return $c ? ['on' => true, 'kind' => (string) ($c['kind'] ?? 'other'), 'user' => (string) $c['user'], 'name' => (string) ($c['from_name'] ?? ''), 'host' => (string) $c['host'], 'port' => (int) $c['port'], 'at' => (int) ($c['at'] ?? 0), 'by' => (string) ($c['by'] ?? '')] : ['on' => false];
+}
+/** each message's switch and words, the defaults where the company has not changed them */
+function mailTpls(): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/mail-templates.json'), true); $j = is_array($j) ? $j : []; $out = [];
+    foreach (MAIL_TPL as $k => $d) {
+        $m = is_array($j[$k] ?? null) ? $j[$k] : [];
+        $out[$k] = ['on' => array_key_exists('on', $m) ? !empty($m['on']) : true, 'subject' => (string) (($m['subject'] ?? '') ?: $d['subject']), 'body' => (string) (($m['body'] ?? '') ?: $d['body']),
+                    'custom' => !empty($m['subject']) || !empty($m['body'])];
+    }
+    return $out;
+}
+/** is this message going out? connected, and switched on */
+function mailOn(string $k): bool { return (bool) mailOwnCfg() && !empty(mailTpls()[$k]['on']); }
+/** the {words} in a subject or body that this message cannot fill ([] = all fine) */
+function mailUnknown(string $k, string $s): array { preg_match_all('/\{([A-Za-z_]+)\}/', $s, $m); return array_values(array_unique(array_diff($m[1], MAIL_TPL[$k]['ph']))); }
+/** the company's words, filled: [subject, text, html]. Values are plain text; the HTML escapes them and makes https links clickable. */
+function mailRender(array $t, array $v): array {
+    $map = []; foreach ($v as $k => $x) $map['{' . $k . '}'] = (string) $x;
+    $subject = trim((string) preg_replace('/[\r\n\t]+/', ' ', strtr((string) $t['subject'], $map)));
+    $text = trim(strtr(str_replace("\r", '', (string) $t['body']), $map));
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
+    $html = implode('', array_map(fn($p) => '<p style="margin:0 0 14px">' . preg_replace('#https://[^\s<>"\']+#', '<a href="$0">$0</a>', nl2br($e(trim($p)))) . '</p>', array_filter(preg_split('/\n\s*\n/', $text), fn($p) => trim($p) !== '')));
+    return [mb_substr($subject, 0, 200), $text, $html];
+}
+function mailFirst(string $n): string { return ucfirst(strtolower((string) (preg_split('/\s+/', trim($n))[0] ?? ''))); }
+/** the signed copy for an edition: the company's words, then the agreement as signed (always). $t: the words to use (a preview), else the saved ones */
+function kitSignedMail(array $l, array $sg, ?array $t = null): array {
+    $B = kitBrand(); $name = $B['name']; $ph = a365Phone($l) ?: $B['phone']; $tz = new DateTimeZone(appTz());
+    $at = (new DateTime('@' . (int) $sg['at']))->setTimezone($tz); $when = $at->format('F j, Y \a\t g:i a');
+    $link = !empty($l['sign']['key']) ? a365SignLink((string) $l['id'], (string) $l['sign']['key']) : kitBase() . 'sign.html';
+    $v = ['first_name' => mailFirst((string) ($l['name'] ?? '')) ?: 'there', 'customer_name' => trim((string) ($l['name'] ?? '')), 'company' => $name, 'phone' => $ph, 'date' => $at->format('F j, Y'),
+          'time' => $at->format('g:i a'), 'price' => '$' . number_format((int) ($l['quote']['price'] ?? 0)), 'link' => $link];
+    [$subject, $text, $intro] = mailRender($t ?? mailTpls()['signed'], $v);
+    $facts = (array) ($sg['facts'] ?? []); $terms = array_values((array) ($sg['terms'] ?? []));
+    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); $col = preg_match('/^#[0-9a-f]{6}$/i', $B['color']) ? $B['color'] : '#13294b';
+    $text .= "\n\n----\nYour signed agreement with " . $name . "\n\n" . implode("\n", array_map(fn($f) => $f[0] . ': ' . $f[1], $facts)) . "\n\n" . implode("\n", array_map(fn($x, $i) => ($i + 1) . '. ' . $x, $terms, array_keys($terms)))
+           . "\n\nSigned electronically by " . $sg['name'] . ' on ' . $when . ".\nView or print it any time: " . $link . "\n";
+    $rows = implode('', array_map(fn($f) => '<tr><td style="padding:6px 12px 6px 0;color:#566476;vertical-align:top">' . $e($f[0]) . '</td><td style="padding:6px 0;font-weight:700">' . $e($f[1]) . '</td></tr>', $facts));
+    $lis = implode('', array_map(fn($x) => '<li style="margin:0 0 6px">' . $e($x) . '</li>', $terms));
+    $html = '<!doctype html><html><body style="margin:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;color:#15202d;font-size:15px;line-height:1.5"><div style="max-width:600px;margin:0 auto;padding:24px 18px">'
+          . '<div style="font-size:20px;font-weight:800;color:' . $col . ';margin-bottom:14px">' . $e($name) . '</div>' . $intro
+          . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin:6px 0 14px"><div style="font-weight:800;margin-bottom:8px">What we agreed</div><table style="border-collapse:collapse;font-size:15px">' . $rows . '</table></div>'
+          . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;margin-bottom:8px">The details</div><ol style="margin:0;padding-left:20px;font-size:15px">' . $lis . '</ol></div>'
+          . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin-bottom:18px"><div style="font-size:22px;font-style:italic;font-weight:700">' . $e($sg['name']) . '</div><div style="color:#566476;font-size:14px;margin-top:4px">Signed electronically on ' . $e($when) . '.</div></div>'
+          . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:' . $col . ';color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">View or print your agreement</a></p>'
+          . '</div></body></html>';
+    return [$subject, $text, $html];
+}
+/** the receipt email for an edition: the company's words, then the receipt (always) */
+function kitReceiptMail(array $j, array $l, ?array $t = null): array {
+    [, $rt, $rh] = receiptBuild($j, $l); $B = kitBrand(); $tz = new DateTimeZone(appTz());
+    $owed = jobOwed($j); $total = (int) ($j['price'] ?? 0); $m = fn($n) => '$' . number_format((float) $n, 2);
+    $v = ['first_name' => mailFirst((string) ($l['name'] ?? ($j['title'] ?? ''))) ?: 'there', 'customer_name' => trim((string) ($l['name'] ?? ($j['title'] ?? ''))), 'company' => $B['name'], 'phone' => a365Phone($l) ?: $B['phone'],
+          'date' => (new DateTime((string) $j['date'] . ' 12:00', $tz))->format('F j, Y'), 'price' => $m($total), 'paid' => $m($total - $owed), 'balance' => $m($owed), 'receipt_no' => strtoupper(substr((string) $j['id'], 0, 8))];
+    [$subject, $text, $intro] = mailRender($t ?? mailTpls()['receipt'], $v);
+    $p = strpos($rh, '<div class="wrap">'); $html = $p === false ? $rh : substr($rh, 0, $p + 18) . '<div style="margin:0 0 18px;font-size:15px">' . $intro . '</div>' . substr($rh, $p + 18);
+    return [$subject, $text . "\n\n----\n" . $rt, $html];
+}
+/** made-up customer for the Email screen's Preview and Send me a test */
+function mailSample(string $k, array $t): array {
+    $tz = new DateTimeZone(appTz()); $today = (new DateTime('now', $tz))->format('Y-m-d');
+    $l = ['id' => 'w00000000000000sample', 'name' => 'Alex Sample', 'phone' => '', 'email' => 'alex@example.com', 'quote' => ['price' => 4800, 'items' => [['t' => ucfirst(kitTrade()) . ' work', 'amt' => 4800]]]];
+    if ($k === 'receipt') return kitReceiptMail(['id' => 'jsample000000', 'lead' => '', 'title' => 'Alex Sample', 'price' => 4800, 'pay' => ['s' => 'paid', 'how' => 'cash'], 'date' => $today, 'addr' => '123 Sample St, Your Town, ' . market()['state'], 'pkg' => 'job'], $l, $t);
+    $terms = array_map(fn($x) => str_replace('{phone}', kitBrand()['phone'] ?: 'us', $x), kitCfg()['terms']);
+    $sg = ['name' => 'Alex Sample', 'at' => time(), 'facts' => [['Customer', 'Alex Sample'], ['Address', '123 Sample St'], ['Work', ucfirst(kitTrade()) . ' work'], ['Price', '$4,800'], ['Deposit paid', '$1,200 (card)'], ['Balance due when the work is done', '$3,600']], 'terms' => $terms];
+    return kitSignedMail($l, $sg, $t);
+}
+/** a failed send in plain words, for the person setting it up */
+function mailWhy(array $r, string $kind, string $host, int $port): string {
+    $st = (string) $r['stage']; $said = mb_substr(trim((string) $r['error']), 0, 160);
+    if ($st === 'connect') return 'Could not reach the mail server (' . $host . ':' . $port . '). Check the server name and port.';
+    if (in_array($st, ['greeting', 'ehlo', 'starttls', 'ehlo-tls'], true)) return 'The mail server did not start a secure connection (' . $said . ').';
+    if ($st === 'auth') return 'The mail server did not accept that address and app password. Check that it is an app password (not your normal password)'
+        . ($kind === 'gmail' ? ', that 2-Step Verification is on for this Google account, and that you copied all 16 letters.' : ($kind === 'outlook' ? ', and that 2-Step Verification is on. Some Microsoft 365 business accounts have SMTP sign-in turned off: whoever runs your Microsoft 365 can turn on Authenticated SMTP for this mailbox.' : '.'))
+        . ($said !== '' ? ' (The server said: ' . $said . ')' : '');
+    if ($st === 'from') return 'The mail server would not send as this address (' . $said . ').';
+    return 'The mail server did not take the test email (' . $said . ').';
+}
 /** the signed agreement to the customer: what they saw, who signed and when, the link to view or print it; a note on the lead either way */
 function a365SendSigned(array $l, array $sg, string $by): array {
+    if (kitOn()) return kitSendSigned($l, $sg, $by);   /* an edition: its own email, words and switch (2026-10-29) */
     $to = trim((string) ($l['email'] ?? ''));
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'stage' => 'noemail', 'error' => 'No email on the lead.'];
     $co = company()['a365']; $name = (string) ($co['name'] ?? (kitOn() ? company()['name'] : '365 Aeration & Seeding')); $ph = a365Phone($l);
@@ -2922,6 +3060,17 @@ function a365SendSigned(array $l, array $sg, string $by): array {
     $r = a365Mail($to, 'Your signed agreement with ' . $name, $text, $html);
     appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $l['id'], 'what' => 'signed', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
+    return $r + ['to' => $to];
+}
+/** an edition's signed copy (2026-10-29): from its connected address, its words, its switch; a note on the lead either way, as 365's */
+function kitSendSigned(array $l, array $sg, string $by): array {
+    $to = trim((string) ($l['email'] ?? ''));
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'stage' => 'noemail', 'error' => 'No email on the lead.'];
+    if (!mailOwnCfg()) $r = ['ok' => false, 'stage' => 'config', 'error' => 'Email is not connected yet.'];
+    elseif (!mailOn('signed')) $r = ['ok' => false, 'stage' => 'off', 'error' => 'Signed-copy emails are switched off in Setup, Email.'];
+    else { [$s, $t, $h] = kitSignedMail($l, $sg); $r = sendMail($to, $s, $t, $h); }
+    appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'lead' => (string) $l['id'], 'what' => 'signed', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . (['config' => 'email is not connected yet', 'off' => 'signed-copy emails are switched off'][$r['stage']] ?? $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
     return $r + ['to' => $to];
 }
 if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savecard') {
@@ -2968,9 +3117,9 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
         $cf = $l['confirmed'] ?? null; $jb = $cf && !empty($cf['job']) ? (jobsAll()[(string) $cf['job']] ?? null) : null;
         out(['ok' => true, 'nosign' => true, 'moved' => $moved, 'first' => $first, 'facts' => $cf['facts'] ?? $A['facts'], 'terms' => $cf['terms'] ?? $A['terms'], 'consent' => '',   /* the copy kept at booking (2026-10-18) */ 'consents' => [], 'pay' => $payOut,
              'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null,
-             'confirmed' => (bool) $cf, 'booked' => $jb && !$jb['off'] ? ['day' => a365Day((string) $jb['date']), 'arrive' => a365Arrive((string) $jb['slot'])] : null, 'phone' => a365Phone($l)]);
+             'confirmed' => (bool) $cf, 'booked' => $jb && !$jb['off'] ? ['day' => a365Day((string) $jb['date']), 'arrive' => a365Arrive((string) $jb['slot'])] : null, 'phone' => a365Phone($l), 'ways' => payWays(), 'waysDue' => waysDue($l)]);
     }
-    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => a365Phone($l)]);
+    if ($action === 'a365sign') out(['ok' => true, 'moved' => $moved, 'first' => $first, 'facts' => ($sgd['facts'] ?? null) ?: $A['facts'], 'terms' => ($sgd['terms'] ?? null) ?: $A['terms'], 'consent' => $A['consent'], 'consents' => $A['consents'], 'pay' => $payOut, 'save' => $payOut && !$payOut['paid'] ? ['text' => a365SaveText((int) $l['quote']['price'] - (int) $l['sign']['deposit']), 'on' => !empty($l['savecard']['yes'])] : null, 'signed' => $signedOut($l['signed'] ?? null), 'phone' => a365Phone($l), 'ways' => payWays(), 'waysDue' => waysDue($l)]);   /* + other ways to pay (2026-10-29) */
     if (!$isPost) fail('POST required', 405);
     if (!empty($l['signed'])) out(['ok' => true, 'signed' => $signedOut($l['signed'])]);   /* already signed: say so again */
     $name = a365Clean($body['name'] ?? '', 120);
@@ -2990,13 +3139,13 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $ex = jobForLead($l['id']);
     if ($ex && !$ex['done']) {
         $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
-        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'by' => 'website', 'at' => time()]);
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => depositTaken($S2) > 0 ? ['s' => 'deposit', 'amt' => depositTaken($S2), 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'by' => 'website', 'at' => time()]);
     } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= $today0) {
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
         if (appendLine(DATA_DIR . '/jobs.log', ['id' => $nj, 'lead' => $l['id'], 'title' => trim((string) ($l['name'] ?? '')) ?: $name, 'crew' => (string) $o['crew'], 'date' => (string) $o['date'], 'slot' => (string) $o['slot'],
             'price' => (int) $Q['price'], 'pkg' => (string) $Q['pkg'], 'svc' => (string) ($Q['svc'] ?? ''), 'scope' => 'all', 'seedLb' => $Q['seedLb'] ?? null, 'fertLb' => $Q['fertLb'] ?? null,
-            'pay' => (int) $S2['deposit'] > 0 ? ['s' => 'deposit', 'amt' => (int) $S2['deposit'], 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
+            'pay' => depositTaken($S2) > 0 ? ['s' => 'deposit', 'amt' => depositTaken($S2), 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'card' => false, 'note' => trim((string) ($S2['note'] ?? '') . ' ' . a365ExtrasNote($Q)), 'addr' => $addr ?: 'Ask the office', 'by' => 'website', 'at' => time()])) $jid = $nj;
     }
     /* what was shown is kept with the signature, so the signed page never changes if the quote does later */
     $sg = ['name' => $name, 'at' => time(), 'version' => A365_SIGN_VERSION, 'hash' => $A['hash'], 'facts' => $A['facts'], 'terms' => $A['terms'],
@@ -3007,7 +3156,7 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     if ($jid && !$had) crewJobAlert((string) $o['crew'], $jid, 'new', 'deposit paid');   /* 2026-10-28 */
     a365Alert($jid ? 'Signed and booked' : 'Signed: set a new day', $who . ' · $' . $Q['price'] . ($jid ? ' · ' . deskWhen((string) $o['date'], '') : ''), true, false, webLead($l));
     $ml = a365SendSigned($l, $sg, 'website');   /* the signed copy by email (2026-10-15) */
-    out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null]);
+    out(['ok' => true, 'signed' => $signedOut($sg), 'mailed' => $ml['ok'] ? $ml['to'] : null, 'booked' => $jid ? ['day' => a365Day((string) $o['date']), 'arrive' => a365Arrive((string) $o['slot'])] : null, 'ways' => payWays(), 'waysDue' => waysDue($l)]);
 }
 
 /* the company's own name, phone and colour for a kit install's customer pages (q.html, sign.html), before sign-in (2026-10-27) */
@@ -4962,7 +5111,7 @@ if ($action === 'a365mailsigned') {   /* "Email them the signed copy" on a signe
     if (!$l || empty($l['signed']) || empty($l['sign'])) fail('This lead has no signed form.', 404);
     $sg = $l['signed'] + ['facts' => [], 'terms' => []];
     $r = a365SendSigned($l, $sg, $me);
-    if (!$r['ok']) fail($r['stage'] === 'noemail' ? 'There is no email on the lead. Add it first.' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet.' : 'It did not send (' . $r['stage'] . '). Try again.'));
+    if (!$r['ok']) fail($r['stage'] === 'noemail' ? 'There is no email on the lead. Add it first.' : ($r['stage'] === 'config' ? (kitOn() ? 'Email is not connected yet: an admin connects it in Setup, Email.' : 'The 365 mailbox is not set up yet.') : ($r['stage'] === 'off' ? $r['error'] : 'It did not send (' . $r['stage'] . '). Try again.')));   /* + an edition: not connected, or switched off (2026-10-29) */
     out(['ok' => true, 'to' => $r['to']]);
 }
 if ($action === 'leadcontact') {
@@ -5278,7 +5427,7 @@ if ($action === 'qwon') {
     $pin = is_array($body['pay'] ?? null) ? $body['pay'] : []; $ps = in_array($pin['s'] ?? '', ['unpaid', 'deposit', 'paid'], true) ? $pin['s'] : 'unpaid';
     $pay = ['s' => $ps];
     if ($ps === 'deposit') { $pay['amt'] = (int) ($pin['amt'] ?? 0); if ($pay['amt'] < 1 || $pay['amt'] >= $price) fail('Give the deposit amount (less than the $' . $price . ' price).'); }
-    if ($ps !== 'unpaid') $pay['how'] = in_array($pin['how'] ?? '', ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true) ? $pin['how'] : 'other';
+    if ($ps !== 'unpaid') $pay['how'] = in_array($pin['how'] ?? '', ['square', 'card', 'cash', 'zelle', 'venmo', 'cashapp', 'paypal', 'check', 'other'], true) ? $pin['how'] : 'other';
     $payTxt = $ps === 'paid' ? 'Paid in full ($' . $price . ', ' . $pay['how'] . ').' : ($ps === 'deposit' ? 'Deposit $' . $pay['amt'] . ' (' . $pay['how'] . ').' : 'Not paid yet.');
     $lk = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     $jid = null; $ex = jobForLead($id);
@@ -5644,7 +5793,7 @@ if ($action === 'jobsave') {
     if ($wp0) $payIn = (int) $wp0['amt'] >= $price ? ['s' => 'paid', 'how' => $wp0['how'] ?? 'other'] : ['s' => 'deposit', 'amt' => (int) $wp0['amt'], 'how' => $wp0['how'] ?? 'other'];
     $pay = ['s' => in_array($payIn['s'] ?? '', ['unpaid', 'deposit', 'paid', 'plan'], true) ? $payIn['s'] : 'unpaid'];
     if ($pay['s'] === 'deposit') { $pay['amt'] = (int) ($payIn['amt'] ?? 0); if ($pay['amt'] < 1 || $pay['amt'] >= $price) fail('Give the deposit amount (less than the price).'); }
-    if (in_array($pay['s'], ['deposit', 'paid'], true)) $pay['how'] = in_array($payIn['how'] ?? '', ['square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other'], true) ? $payIn['how'] : 'other';
+    if (in_array($pay['s'], ['deposit', 'paid'], true)) $pay['how'] = in_array($payIn['how'] ?? '', ['square', 'card', 'cash', 'zelle', 'venmo', 'cashapp', 'paypal', 'check', 'other'], true) ? $payIn['how'] : 'other';
     $card = array_key_exists('card', $body) ? !empty($body['card']) : (bool) ($have['card'] ?? false);
     $note = array_key_exists('note', $body) ? $clean($body['note'], 1000) : (string) ($have['note'] ?? '');   /* crew notes: was 300 (2026-10-29) */
     $l = $leads[$lead]; $house = $l['house'] ?? null;
@@ -6257,7 +6406,7 @@ if ($action === 'jobpart') {
     $owed = jobOwed($j); if ($owed < 1) fail('This job is already paid.');
     $amt = (int) ($body['amt'] ?? 0); if ($amt < 1) fail('Give the amount they paid.');
     if ($amt >= $owed) fail('That covers the whole $' . $owed . ' balance: use Mark it paid.');
-    $how = in_array($body['how'] ?? '', ['cash', 'check', 'zelle', 'venmo', 'card', 'square', 'other'], true) ? (string) $body['how'] : 'other';
+    $how = in_array($body['how'] ?? '', ['cash', 'check', 'zelle', 'venmo', 'cashapp', 'paypal', 'card', 'square', 'other'], true) ? (string) $body['how'] : 'other';
     $r = jobAddPart($j, $amt, $how, $me, null, payInfo($body, $how));
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Part payment of $' . $amt . ' (' . $how . ') recorded by ' . $me . ': $' . $r['tot'] . ' paid so far, $' . $r['left'] . ' left.', 'by' => $me, 'at' => time()]);
     out(['ok' => true] + $r);
@@ -6473,7 +6622,7 @@ if ($action === 'jobpaid') {
     if (!$j || $j['off']) fail('No such job.', 404);
     if (!desk() && !($role === 'quote' && jobOpen($j))) fail('Not allowed.', 403);
     if (jobOwed($j) < 1) fail('This job is already paid.');
-    $how = in_array($body['how'] ?? '', ['cash', 'check', 'zelle', 'venmo', 'card', 'square', 'other'], true) ? (string) $body['how'] : 'other';
+    $how = in_array($body['how'] ?? '', ['cash', 'check', 'zelle', 'venmo', 'cashapp', 'paypal', 'card', 'square', 'other'], true) ? (string) $body['how'] : 'other';
     $pi = payInfo($body, $how);   /* the check number and the day it came in (2026-10-27, receipts) */
     if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => $how], 'by' => $me, 'at' => time()] + ($pi ? ['payinfo' => $pi] : []))) fail('Could not save that. Try again.', 500);
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Balance of $' . jobOwed($j) . ' marked paid (' . $how . ') by ' . $me . '.', 'by' => $me, 'at' => time()]);
@@ -6535,7 +6684,7 @@ function jobPayments(array $j): array {
         if ($now === $paid) continue;
         $how = (string) ($p['how'] ?? 'other'); $cg = $r['sqcharge'] ?? null; $sp = $r['sqpaid'] ?? null; $pi = is_array($r['payinfo'] ?? null) ? $r['payinfo'] : [];
         $label = is_array($cg) ? 'Card on file' . (!empty($cg['last4']) ? ' (' . (((string) ($cg['brand'] ?? '')) ?: 'card') . ' ending ' . $cg['last4'] . ')' : '')
-               : (is_array($sp) ? 'Paid online (Square)' : (['square' => 'Card (Square)', 'card' => 'Card', 'cash' => 'Cash', 'check' => 'Check', 'zelle' => 'Zelle', 'venmo' => 'Venmo'][$how] ?? 'Other'));
+               : (is_array($sp) ? 'Paid online (Square)' : (['square' => 'Card (Square)', 'card' => 'Card', 'cash' => 'Cash', 'check' => 'Check', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'cashapp' => 'Cash App', 'paypal' => 'PayPal'][$how] ?? 'Other'));
         if ($how === 'check' && !empty($pi['no'])) $label .= ' No. ' . $pi['no'];
         $out[] = ['amt' => $now - $paid, 'how' => $label, 'kind' => $paid === 0 && $s0 === 'deposit' && empty($p['part']) ? 'Deposit' : ($s0 === 'paid' && $paid === 0 ? 'Paid' : 'Payment'), 'date' => (string) ($pi['date'] ?? ''), 'at' => (int) ($r['at'] ?? 0)];
         $paid = $now;
@@ -6609,8 +6758,10 @@ if ($action === 'receipt' || $action === 'receiptmail') {
     if (!$isPost) fail('POST required', 405);
     $to = trim((string) ($l['email'] ?? '')); if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) fail('There is no email address for them. Add one to the lead or print the receipt instead.');
     if (!throttleTake(rateFile('receipt|' . (string) ($session['c'] ?? $me)), 30, 3600)) fail('That is a lot of receipts in an hour. Wait a little.', 429);
-    [$subject, $text, $html] = receiptBuild($j, $l);
-    $r = a365Mail($to, $subject, $text, $html);
+    if (kitOn() && !mailOwnCfg()) fail('Email is not connected yet, so nothing was emailed. Print the receipt instead; an admin connects email in Setup, Email.');   /* an edition: its own email, words and switch (2026-10-29) */
+    if (kitOn() && !mailOn('receipt')) fail('Emailing receipts is switched off in Setup, Email. Print the receipt instead.');
+    [$subject, $text, $html] = kitOn() ? kitReceiptMail($j, $l) : receiptBuild($j, $l);
+    $r = kitOn() ? sendMail($to, $subject, $text, $html) : a365Mail($to, $subject, $text, $html);
     appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $j['lead'], 'job' => $jid, 'what' => 'receipt', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
     if (!$r['ok']) fail($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed. Print the receipt instead.' : 'Not emailed: ' . $r['error'], 502);
     appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'rcpt' => ['to' => $to, 'at' => time(), 'by' => $me], 'by' => $me, 'at' => time()]);
@@ -8428,7 +8579,7 @@ function a365BookNoSign(string $lid, string $by): ?string {
     $l = leadsAll()[$lid] ?? null;
     if (!$l || empty($l['sign']['nosign']) || !empty($l['confirmed']) || !empty($l['signed'])) { flock($lk, LOCK_UN); return null; }
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $jid = null; $had = false;
-    $dep = (int) $S2['deposit']; $howP = payHowOf($S2);
+    $dep = depositTaken($S2); $howP = payHowOf($S2);   /* a deposit to pay another way is not in yet (2026-10-29) */
     $pay = $dep <= 0 ? ['s' => 'unpaid'] : ($dep >= (int) $Q['price'] ? ['s' => 'paid', 'how' => $howP] : ['s' => 'deposit', 'amt' => $dep, 'how' => $howP]);
     $today0 = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
     $ex = jobForLead($lid);
@@ -8467,13 +8618,14 @@ if ($action === 'signsend') {
     $linkPaid = $S0 && ($S0['how'] ?? '') === 'link' && a365DepositPaid($L, false);
     $depIn = $S0 && (!empty($L['confirmed']) || $linkPaid);
     $byLink = $depIn ? ($S0['how'] ?? '') === 'link' : ($body['how'] ?? '') === 'link';   /* SX-58: the customer pays the deposit on the form, by Square link */
-    if ($S0 && !$depIn && ($S0['how'] ?? '') !== 'link' && $byLink) fail('The $' . (int) $S0['deposit'] . ' deposit was already taken (' . ucfirst((string) $S0['how']) . '). Keep that; a Square link would ask them to pay it again.');
+    if ($S0 && !$depIn && !in_array($S0['how'] ?? '', ['link', 'ways'], true) && $byLink) fail('The $' . (int) $S0['deposit'] . ' deposit was already taken (' . ucfirst((string) $S0['how']) . '). Keep that; a Square link would ask them to pay it again.');
     if ($byLink && !$depIn && !payLinkOk()) fail(kitOn() ? 'Payments are not connected yet: connect Square or Stripe in Company.' : 'Square is not connected yet.');
     $noDep = !$depIn && ($body['how'] ?? '') === 'none';   /* no deposit (2026-10-26, Jen: Marc and Zane said no to the deposit, and the form would not go without one) */
-    if (empty($body['taken']) && !$byLink && !$depIn && !$noDep) fail('The form goes out only after they said yes and you took the deposit.');
+    $byWays = !$depIn && ($body['how'] ?? '') === 'ways';   /* they pay the deposit on the form another way: Venmo, Cash App, PayPal, Zelle, the company's link (2026-10-29) */
+    if (empty($body['taken']) && !$byLink && !$depIn && !$noDep && !$byWays) fail('The form goes out only after they said yes and you took the deposit.');
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
     $pkg = (string) ($body['pkg'] ?? (kitOn() ? 'job' : 'full')); if (!in_array($pkg, kitOn() ? ['job'] : ['full', 'aerate'], true)) fail('Pick what is included.');   /* a kit install: the quoted work (2026-10-27) */
-    $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'check', 'other', 'none'], true)) fail('Say how they paid the deposit.');
+    $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'cashapp', 'paypal', 'check', 'other', 'none', 'ways'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
     if ($depIn) { $dep = (int) $S0['deposit']; if ($dep > $price) fail('The $' . $dep . ' deposit is already ' . ($linkPaid ? 'paid' : 'in') . '; the price cannot be less than that.'); }
     elseif (isset($body['deposit']) && $body['deposit'] !== '' && $body['deposit'] !== null) {   /* Jen can change it (Matthew 2026-10-15) */
@@ -8481,6 +8633,9 @@ if ($action === 'signsend') {
         $dep = (int) $body['deposit'];
     }
     if ($noDep) $dep = 0;
+    if ($how === 'ways' && !kitOn()) fail('Say how they paid the deposit.');
+    if ($byWays && !payWays()) fail('Add your other ways to pay first (Setup, Payments).');
+    if ($byWays && $dep < 1) fail('Paying the deposit another way on the form needs a deposit of at least $1.');
     $crew = (string) ($body['crew'] ?? ''); $date = (string) ($body['date'] ?? ''); $slot = (string) ($body['slot'] ?? '');
     if (!in_array($crew, jobCrewList(), true)) fail('Pick who does the job.');
     if (!dateOk($date) || $date < (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) fail('Pick today or a later day.');
@@ -8506,12 +8661,12 @@ if ($action === 'signsend') {
         $sign['pay'] = $pl;
     }
     $row = ['id' => $id, 'quote' => $q, 'sign' => $sign, 'status' => 'quoted',
-            'note' => mb_substr('Quoted $' . $price . ' by phone; ' . ($how === 'none' ? 'no deposit' : 'deposit $' . $dep . ($byLink ? ($depIn ? ' already paid by Square link' : ' to pay by Square link on the form') : ($depIn ? ' already in (' : ' taken (') . ucfirst($how) . ')')) . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
+            'note' => mb_substr('Quoted $' . $price . ' by phone; ' . ($how === 'none' ? 'no deposit' : 'deposit $' . $dep . ($byLink ? ($depIn ? ' already paid by Square link' : ' to pay by Square link on the form') : ($how === 'ways' ? ' to pay on the form another way (' . implode(', ', array_column(payWays(), 'label')) . '; the office records it when it comes in)' : ($depIn ? ' already in (' : ' taken (') . ucfirst($how) . ')'))) . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
     if ($nosign) $row['note'] = str_replace('Form sent;', 'Form sent (no signature needed);', $row['note']);
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
     if (!empty($L['confirmed'])) { $A2 = a365Agreement(leadsAll()[$id]); appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'confirmed' => ['facts' => $A2['facts'], 'terms' => $A2['terms'], 'hash' => $A2['hash'], 'version' => A365_SIGN_VERSION] + $L['confirmed'], 'by' => $me, 'at' => time()]); }   /* sent again on purpose: the kept copy follows the new form (2026-10-18) */
     $bookedJob = $nosign && (!$byLink || $depIn) ? a365BookNoSign($id, $me) : null;   /* the deposit is in already: booked now */
-    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink && !$depIn, 'paid' => $depIn, 'nosign' => $nosign, 'booked' => (bool) $bookedJob]);
+    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink && !$depIn, 'byWays' => $how === 'ways', 'paid' => $depIn && $how !== 'ways', 'nosign' => $nosign, 'booked' => (bool) $bookedJob]);
 }
 /** may this person make pay links? With SANDBOX keys only an admin (testing): a test link sent to a real customer takes no money */
 function squareFor(): bool { global $role; $c = squareCfg(); return (bool) $c && ($c['env'] === 'production' || $role === 'admin'); }
@@ -8519,7 +8674,7 @@ function squareFor(): bool { global $role; $c = squareCfg(); return (bool) $c &&
 if ($action === 'squarestate') {   /* anyone signed in: the crew's job card offers the balance link */
     if (!feature('walkdesk')) fail('Not here.', 404);
     $c = squareCfg(); $sp = stripePayCfg();
-    out(['ok' => true, 'on' => squareFor(), 'env' => $c ? $c['env'] : null, 'pay' => kitOn() ? payLinkOk() : squareFor(), 'payKind' => $c ? 'square' : ($sp ? 'stripe' : null), 'payEnv' => $c ? $c['env'] : ($sp ? (str_contains((string) $sp['secret'], '_live_') ? 'production' : 'sandbox') : null)]);   /* + pay: a kit install's deposit link by Square or Stripe (2026-10-27) */
+    out(['ok' => true, 'on' => squareFor(), 'env' => $c ? $c['env'] : null, 'pay' => kitOn() ? payLinkOk() : squareFor(), 'payKind' => $c ? 'square' : ($sp ? 'stripe' : null), 'payEnv' => $c ? $c['env'] : ($sp ? (str_contains((string) $sp['secret'], '_live_') ? 'production' : 'sandbox') : null), 'ways' => payWays()]);   /* + ways: other ways to pay, for the job card (2026-10-29) */   /* + pay: a kit install's deposit link by Square or Stripe (2026-10-27) */
 }
 if ($action === 'squarecheck') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
@@ -8822,7 +8977,7 @@ if ($action === 'a365signview') {
    was entered. Square references come from the job (balance charged to the saved card, a pay link paid) and from the lead (the deposit
    paid by link, dated when Square took it). A Square deposit on a lead with no job yet is listed on its own. A job cancelled after a
    deposit keeps the deposit (it is non-refundable) and says so. Square's fees are not taken off: Square's own reports list them. */
-const PAY_HOW = ['square' => 'Square', 'card' => 'Card', 'cash' => 'Cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'check' => 'Check', 'other' => 'Other'];
+const PAY_HOW = ['square' => 'Square', 'card' => 'Card', 'cash' => 'Cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'cashapp' => 'Cash App', 'paypal' => 'PayPal', 'check' => 'Check', 'other' => 'Other'];
 function paymentsAll(): array {
     $leads = leadsAll(); $tz = new DateTimeZone(appTz()); $st = []; $used = []; $out = [];
     foreach (readLines(DATA_DIR . '/jobs.log') as $r) {
@@ -10914,7 +11069,8 @@ function kitSetup(): array {
           ['people', $people >= 2, $people . ' sign-ins'],
           ['prices', $cfg['rulesSet'], count($cfg['rules']) . ' price lines'],
           ['terms', $cfg['termsSet'], ''],
-          ['payments', $pay['square']['on'] || $pay['stripe']['on'], $pay['square']['on'] ? 'Square' : ($pay['stripe']['on'] ? 'Stripe' : '')],
+          ['payments', $pay['square']['on'] || $pay['stripe']['on'] || payWays(), implode(', ', array_merge($pay['square']['on'] ? ['Square'] : ($pay['stripe']['on'] ? ['Stripe'] : []), array_column(payWays(), 'label')))],   /* + other ways to pay (2026-10-29) */
+          ['email', (bool) mailOwnCfg(), (string) (mailOwnCfg()['user'] ?? '')],   /* Setup, Email (2026-10-29) */
           ['alerts', $mine > 0, $mine ? $mine . ' device' . ($mine === 1 ? '' : 's') : '']];
     if (feature('billing')) $s[] = ['plan', is_array($bill) && in_array((string) ($bill['status'] ?? ''), ['active', 'trialing'], true), ''];
     return array_map(fn($x) => ['k' => $x[0], 'done' => (bool) $x[1], 'info' => $x[2]], $s);
@@ -11037,6 +11193,139 @@ if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], tr
         $scope = 'MERCHANT_PROFILE_READ PAYMENTS_READ PAYMENTS_WRITE ORDERS_READ ORDERS_WRITE CUSTOMERS_READ CUSTOMERS_WRITE';
         out(['ok' => true, 'ready' => true, 'url' => 'https://connect.squareup.com/oauth2/authorize?' . http_build_query(['client_id' => $app['app_id'], 'scope' => $scope, 'session' => 'false', 'state' => basename(pushPrivDir()) . '.' . $nonce])]);
     }
+}
+/* ---- Setup › Email's actions (2026-10-29; what it is: above smtpSend, "the install's own email"). Admins of an edition; not on 365.
+ *   mail        GET   connected or not (address, sender name, provider; never the password), each automatic message with its switch, words,
+ *                     the {words} it can use and its defaults, and where tests go
+ *   mailset     POST  {kind: gmail|outlook|other, host?, port?, user, name, pass}: a test email to that address first, kept only when it went.
+ *                     An empty pass while connected as the same address and server keeps the saved one (to change the sender name)
+ *   mailoff     POST  disconnect: the file is deleted
+ *   mailtpl     POST  {key, on} | {key, subject, body} | {key, reset}
+ *   mailpreview POST  {key, subject, body}: what is typed (not saved yet), filled with a made-up customer
+ *   mailtest    POST  {key, subject, body}: that, marked [Test], to the admin's own email (Accounts), else the connected address */
+if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest'], true)) {
+    if (!kitOn()) fail('Not here.', 404);   /* Sixfold 365 keeps its own mailbox */
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $myMail = (string) (($acct['email'] ?? [])[(string) ($session['c'] ?? '')] ?? '');
+    $tplOut = function () { $T = mailTpls(); $o = [];
+        foreach (MAIL_TPL as $k => $d) $o[] = ['key' => $k, 'label' => $d['label'], 'when' => $d['when'], 'fixed' => $d['fixed'], 'ph' => array_map(fn($p) => [$p, MAIL_PH[$p]], $d['ph']),
+            'on' => $T[$k]['on'], 'subject' => $T[$k]['subject'], 'body' => $T[$k]['body'], 'custom' => $T[$k]['custom'], 'defSubject' => $d['subject'], 'defBody' => $d['body']];
+        return $o; };
+    $words = function () use ($body): array {   /* the typed subject and body for a preview or test: checked as a save would be */
+        $k = (string) ($body['key'] ?? ''); if (!isset(MAIL_TPL[$k])) fail('Which message?');
+        $s = trim((string) preg_replace('/[\r\n\t]+/', ' ', (string) ($body['subject'] ?? ''))); $b = trim(str_replace("\r", '', (string) ($body['body'] ?? '')));
+        if (mb_strlen($s) > 150) fail('The subject is 150 characters at most.'); if (mb_strlen($b) > 4000) fail('The words are 4,000 characters at most.');
+        if ($bad = mailUnknown($k, $s . ' ' . $b)) fail('{' . implode('}, {', $bad) . '} is not something this message can fill in. It can use: {' . implode('}, {', MAIL_TPL[$k]['ph']) . '}.');
+        return [$k, ['subject' => $s !== '' ? $s : MAIL_TPL[$k]['subject'], 'body' => $b !== '' ? $b : MAIL_TPL[$k]['body']], $s, $b];
+    };
+    if ($action === 'mail') out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut(), 'testTo' => $myMail ?: (mailOwnCfg()['user'] ?? ''), 'company' => (string) company()['name']]);
+    if (!$isPost) fail('POST required', 405);
+    if ($action === 'mailoff') { @unlink(mailOwnFile()); appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'disconnected', 'by' => $me]); out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut()]); }
+    if ($action === 'mailset') {
+        if (!throttleTake(rateFile('mailset|' . (string) ($session['c'] ?? $me)), 12, 3600)) fail('That is a lot of tries in an hour. Wait a little and check the steps.', 429);
+        $kind = (string) ($body['kind'] ?? ''); if (!isset(MAIL_KINDS[$kind]) && $kind !== 'other') fail('Pick Gmail, Outlook or Other.');
+        $user = strtolower(trim((string) ($body['user'] ?? ''))); if (strlen($user) > 120 || !filter_var($user, FILTER_VALIDATE_EMAIL)) fail('Type the email address you send from.');
+        $name = trim((string) preg_replace('/[\x00-\x1f\x7f"<>\\\\]+/', ' ', (string) ($body['name'] ?? ''))); if ($name === '') $name = (string) company()['name']; if (mb_strlen($name) > 60) fail('The sender name is 60 characters at most.');
+        if ($kind === 'other') {
+            $host = strtolower(trim((string) ($body['host'] ?? ''))); $port = (int) ($body['port'] ?? 0); $test = PHP_SAPI === 'cli-server' && $host === '127.0.0.1';
+            if (!$test && !preg_match('/^(?=.{4,100}$)([a-z0-9-]+\.)+[a-z]{2,}$/D', $host)) fail('Type the mail server, like smtp.yourprovider.com (your email provider lists it as the SMTP or outgoing server).');
+            if (!$test && !in_array($port, [465, 587, 2525, 25], true)) fail('The port is 587 (most providers) or 465. Your provider lists it beside the SMTP server.');
+            if (!$test) { $ips = @gethostbynamel($host) ?: []; if (!$ips) fail('Could not find that mail server. Check the name.');
+                foreach ($ips as $ip) if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) fail('That mail server is not one the app can use.'); }   /* never a machine inside the host's own network */
+        } else [, $host, $port] = MAIL_KINDS[$kind];
+        $pass = (string) preg_replace('/\s+/', '', (string) ($body['pass'] ?? '')); $old = mailOwnCfg();
+        if ($pass === '' && $old && strcasecmp((string) $old['user'], $user) === 0 && $old['host'] === $host && (int) $old['port'] === $port) $pass = (string) $old['pass'];
+        if ($pass === '') fail('Paste the app password' . ($kind === 'gmail' ? ' (16 letters)' : '') . '. Your normal password will not work.');
+        if (strlen($pass) < 8 || strlen($pass) > 200) fail('That does not look like an app password.');
+        $c = ['kind' => $kind, 'host' => $host, 'port' => $port, 'user' => $user, 'pass' => $pass, 'from_name' => $name];
+        $co = (string) company()['name'];
+        $tt = "This is a test from your Traverse app.\n\nIf you are reading it, " . $co . "'s email is connected: signed agreements and receipts can now go to your customers from " . $user . ".\n";
+        $r = smtpSend($c + ['domain' => mailDomain($user)], $user, 'Test: ' . $co . ' email is connected', $tt, '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#15202d"><p>This is a test from your Traverse app.</p><p>If you are reading it, ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . '&#39;s email is connected: signed agreements and receipts can now go to your customers from ' . htmlspecialchars($user, ENT_QUOTES, 'UTF-8') . '.</p></body></html>');
+        appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'connect test', 'to' => $user, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300), 'by' => $me]);
+        if (!$r['ok']) fail(mailWhy($r, $kind, $host, $port));
+        if (!writeJsonAtomic(mailOwnFile(), $c + ['by' => $me, 'at' => time()])) fail('The test went, but the setting could not be saved. Try again.', 500);
+        @chmod(mailOwnFile(), 0600);
+        out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut(), 'sentTo' => $user]);
+    }
+    if ($action === 'mailtpl') {
+        $k = (string) ($body['key'] ?? ''); if (!isset(MAIL_TPL[$k])) fail('Which message?');
+        $j = json_decode((string) @file_get_contents(DATA_DIR . '/mail-templates.json'), true); $j = is_array($j) ? $j : []; $m = is_array($j[$k] ?? null) ? $j[$k] : [];
+        if (array_key_exists('on', $body)) $m['on'] = !empty($body['on']);
+        if (!empty($body['reset'])) { unset($m['subject'], $m['body']); }
+        elseif (array_key_exists('subject', $body) || array_key_exists('body', $body)) { [, , $s, $b] = $words(); $m['subject'] = $s; $m['body'] = $b; }   /* empty = the default */
+        $j[$k] = $m + ['by' => $me, 'at' => time()]; $j[$k]['by'] = $me; $j[$k]['at'] = time();
+        if (!writeJsonAtomic(DATA_DIR . '/mail-templates.json', $j)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut()]);
+    }
+    [$k, $t] = $words();
+    [$s, $tx, $ht] = mailSample($k, $t);
+    if ($action === 'mailpreview') out(['ok' => true, 'subject' => $s, 'text' => $tx, 'html' => $ht]);
+    /* mailtest */
+    if (!mailOwnCfg()) fail('Connect your email first (above).');
+    if (!throttleTake(rateFile('mailtest|' . (string) ($session['c'] ?? $me)), 20, 3600)) fail('That is a lot of tests in an hour. Wait a little.', 429);
+    $to = $myMail ?: (string) mailOwnCfg()['user'];
+    $r = sendMail($to, '[Test] ' . $s, "TEST: this is what a customer would get, filled in with a made-up customer.\n\n" . $tx, $ht);
+    appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'test ' . $k, 'to' => $to, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300), 'by' => $me]);
+    if (!$r['ok']) fail('Not sent: ' . mailWhy($r, (string) (mailOwnCfg()['kind'] ?? 'other'), (string) mailOwnCfg()['host'], (int) mailOwnCfg()['port']), 502);
+    out(['ok' => true, 'to' => $to]);
+}
+/* ---- other ways customers can pay (2026-10-29, Matthew: Venmo, Cash App, PayPal, Zelle and the company's own pay link, beside the card link) ----
+ * Set by an edition's admin on the Payments screen, kept in <data>/payways.json: the details a customer is shown, so nothing secret. Shown on
+ * the customer's quote page (q.html) and form (sign.html), on the job card's balance, and as a deposit choice on the form ("On the form,
+ * another way": they can sign at once, and the job starts unpaid until the office records the deposit). None of these can tell the app a
+ * payment came in: the office marks it paid (Cash App and PayPal are on Mark it paid and Record a part payment, beside Venmo and Zelle).
+ *   payways     GET   admin: what is saved, and the list as customers see it
+ *   paywaysset  POST  admin: {venmo, cashapp, paypal, zelle, zelleName, link, linkLabel}; empty = off */
+function payWaysCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/payways.json'), true); return is_array($j) ? $j : []; }
+/** the ways turned on, as the customer sees them: [{k, label, show, url|null, name?}] (Zelle has no link: its details are to copy) */
+function payWays(): array {
+    if (!kitOn()) return [];
+    $c = payWaysCfg(); $o = [];
+    if (!empty($c['venmo'])) $o[] = ['k' => 'venmo', 'label' => 'Venmo', 'show' => '@' . $c['venmo'], 'url' => 'https://venmo.com/u/' . rawurlencode((string) $c['venmo'])];
+    if (!empty($c['cashapp'])) $o[] = ['k' => 'cashapp', 'label' => 'Cash App', 'show' => '$' . $c['cashapp'], 'url' => 'https://cash.app/$' . rawurlencode((string) $c['cashapp'])];
+    if (!empty($c['paypal'])) $o[] = ['k' => 'paypal', 'label' => 'PayPal', 'show' => 'paypal.me/' . $c['paypal'], 'url' => 'https://paypal.me/' . rawurlencode((string) $c['paypal'])];
+    if (!empty($c['zelle'])) $o[] = ['k' => 'zelle', 'label' => 'Zelle', 'show' => (string) $c['zelle'], 'name' => (string) ($c['zelleName'] ?? ''), 'url' => null];
+    if (!empty($c['link'])) $o[] = ['k' => 'link', 'label' => (string) (($c['linkLabel'] ?? '') ?: 'Pay online'), 'show' => (string) parse_url((string) $c['link'], PHP_URL_HOST), 'url' => (string) $c['link']];
+    return $o;
+}
+/** a deposit "on the form, another way" is not in until the office records it: what counts as taken when the job is made */
+function depositTaken(array $S2): int { return ($S2['how'] ?? '') === 'ways' ? 0 : (int) ($S2['deposit'] ?? 0); }
+/** still owed on a form whose deposit is paid another way: the deposit, until the office records a payment on the job */
+function waysDue(array $l): int {
+    if (!kitOn() || ($l['sign']['how'] ?? '') !== 'ways') return 0;
+    $j = jobForLead((string) $l['id']); if ($j && (($j['pay']['s'] ?? 'unpaid') !== 'unpaid')) return 0;
+    return (int) ($l['sign']['deposit'] ?? 0);
+}
+if ($action === 'payways' || $action === 'paywaysset') {
+    if (!kitOn()) fail('Not here.', 404);
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($action === 'payways') out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
+    if (!$isPost) fail('POST required', 405);
+    $g = fn($k) => trim((string) preg_replace('/[\x00-\x1f\x7f]+/', '', (string) ($body[$k] ?? '')));
+    $c = [];
+    $v = (string) preg_replace('#^(https?://)?(www\.)?venmo\.com/(u/)?#i', '', ltrim($g('venmo'), '@'));
+    if ($v !== '' && !preg_match('/^[A-Za-z0-9_-]{5,30}$/D', $v)) fail('That Venmo username does not look right: 5 to 30 letters, numbers, - or _ (it is after the @ in your Venmo profile).'); $c['venmo'] = $v;
+    $v = (string) preg_replace('#^(https?://)?cash\.app/#i', '', $g('cashapp')); $v = ltrim($v, '$');
+    if ($v !== '' && !preg_match('/^(?=.*[A-Za-z])[A-Za-z0-9_-]{1,20}$/D', $v)) fail('That $Cashtag does not look right: up to 20 letters and numbers, with at least one letter.'); $c['cashapp'] = $v;
+    $v = (string) preg_replace('#^(https?://)?(www\.)?paypal\.me/#i', '', $g('paypal')); $v = rtrim($v, '/');
+    if ($v !== '' && !preg_match('/^[A-Za-z0-9]{1,20}$/D', $v)) fail('That PayPal.Me name does not look right: up to 20 letters and numbers (paypal.me/yourname).'); $c['paypal'] = $v;
+    $v = $g('zelle');
+    if ($v !== '') {
+        $d = (string) preg_replace('/\D/', '', $v); if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1);
+        if (filter_var($v, FILTER_VALIDATE_EMAIL) && strlen($v) <= 120) $v = strtolower($v);
+        elseif (strlen($d) === 10 && !preg_match('/[A-Za-z@]/', $v)) $v = '(' . substr($d, 0, 3) . ') ' . substr($d, 3, 3) . '-' . substr($d, 6);
+        else fail('For Zelle, type the email address or US phone number your Zelle is set up with.');
+    }
+    $c['zelle'] = $v; $c['zelleName'] = $v !== '' ? mb_substr($g('zelleName'), 0, 60) : '';
+    $v = $g('link');
+    if ($v !== '') {
+        $pu = parse_url($v);
+        if (strlen($v) > 300 || !preg_match('#^https://[^\s<>"\']+$#D', $v) || !filter_var($v, FILTER_VALIDATE_URL) || empty($pu['host']) || !str_contains((string) $pu['host'], '.')) fail('Your own pay link has to be a full web address starting with https:// (copy it from your invoice or payment page).');
+    }
+    $c['link'] = $v; $lb = $g('linkLabel'); if (mb_strlen($lb) > 40) fail('The pay link\'s name is 40 characters at most.'); $c['linkLabel'] = $v !== '' ? $lb : '';
+    $c['by'] = $me; $c['at'] = time();
+    if (!writeJsonAtomic(DATA_DIR . '/payways.json', $c)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
 }
 const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site', 'review'];
 if ($action === 'companyset') {
