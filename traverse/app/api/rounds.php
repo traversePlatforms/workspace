@@ -1281,7 +1281,9 @@ function planTemplates(): array { $o = []; foreach (custLines('plans.log') as $r
 function loadCustomers(): array {
     $c = [];
     foreach (custLines('customers.log') as $r) {
-        $id = (string) ($r['id'] ?? ''); if ($id === '' || !is_array($r['f'] ?? null)) continue;
+        $id = (string) ($r['id'] ?? '');
+        if ($id !== '' && !empty($r['del'])) { unset($c[$id]); continue; }   /* taken back by Undo this import (2026-10-29): the lines stay, the customer goes */
+        if ($id === '' || !is_array($r['f'] ?? null)) continue;
         if (!isset($c[$id])) $c[$id] = ['id' => $id, 'created' => (int) ($r['at'] ?? 0), 'createdBy' => (string) ($r['by'] ?? '')];
         foreach ($r['f'] as $k => $v) $c[$id][$k] = $v;
         $c[$id]['updated'] = (int) ($r['at'] ?? 0); $c[$id]['updatedBy'] = (string) ($r['by'] ?? '');
@@ -4954,6 +4956,7 @@ function leadsAllRaw(): array {
     foreach ($leads as &$x) if (($x['src'] ?? '') === 'meta') $x['need'] = metaFormLabel((string) ($x['need'] ?? '')); unset($x);
     foreach (readLines(leadsDir() . '/leadst.log') as $u) {
         if (!isset($leads[$u['id']])) continue;
+        if (!empty($u['undone'])) { unset($leads[$u['id']]); continue; }   /* taken back by Undo this import (2026-10-29): the lines stay, the lead goes */
         if (!empty($u['status'])) { $leads[$u['id']]['status'] = $u['status']; $leads[$u['id']]['statusAt'] = $u['at']; $leads[$u['id']]['statusBy'] = $u['by']; }
         if (!empty($u['note'])) $leads[$u['id']]['notes'][] = ['note' => $u['note'], 'by' => $u['by'], 'at' => $u['at']];
         if (!empty($u['quote']) && is_array($u['quote'])) $leads[$u['id']]['quote'] = $u['quote'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365QuoteLink((string) $u['id'])];   /* 2026-10-14, the quote generator; the link is the customer's quote page */
@@ -9727,6 +9730,388 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
     }
 }
 
+/* ---- Import (2026-10-29, Matthew: part of onboarding; "Traverse also offers to do the import for clients during the 2-day setup, so make it
+ * reliable for us too") ----------------------------------------------------------------------------------------------------------------------
+ * One Import screen in Setup, for the editions and client installs (not Sixfold 365, whose Customers screen keeps its own import, unchanged).
+ * Three kinds: customers (their plans are columns on the same rows), leads (into the Pipeline, with an owner) and past work (job history,
+ * as done visits on the customer's record). The page reads the file (CSV or tab-separated, Excel's byte-order mark, quoted commas, CRLF),
+ * the admin maps each column to a field, and the rows come here already mapped, 500 a call.
+ *   importcheck POST  {kind, rows, mode, owner, makeMissing}: what each row would do, nothing saved (the preview)
+ *   importrun   POST  the same, saved; {id} from the first call carries on in the next ones, so one file is one import
+ *   imports     GET   the last imports: who, when, the file, the counts, undone or not
+ *   importundo  POST  {id}: takes back exactly what that import added and puts back what it changed (where nobody has changed it since)
+ * Someone already here is found by their house (door), else phone, else email, else name + address, and is updated or skipped as the admin
+ * picks: never a second copy, so the same file imported again changes nothing. Every line written carries the import's id ('imp');
+ * customers/imports.log keeps one line per call (who, when, counts). Admin only (Traverse's own sign-in is an admin). */
+const IMP_KINDS = ['customers', 'leads', 'work'];
+function impOn(): bool { return feature('walkdesk') && !company()['a365']; }
+function impLogFile(): string { return custDir() . '/imports.log'; }
+function impIdOk(string $id): bool { return (bool) preg_match('/^i\d{14}[0-9a-f]{6}$/D', $id); }
+/** ten digits, a leading US 1 dropped; '' when it is not a phone number */
+function impDigits($p): string { $d = (string) preg_replace('/\D/', '', (string) $p); if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1); return strlen($d) === 10 ? $d : ''; }
+function impEmail($e): string { $e = strtolower(trim((string) $e)); return $e !== '' && filter_var($e, FILTER_VALIDATE_EMAIL) ? $e : ''; }
+/** a person by name and street: lower case, single spaces, the street as the house search writes it ('' when either is missing) */
+function impNameKey(string $name, string $street): string { $n = trim((string) preg_replace('/\s+/u', ' ', mb_strtolower($name))); $a = a365Norm($street); return $n !== '' && $a !== '' ? $n . '|' . $a : ''; }
+/** a date as old software writes it: 2026-10-05, 10/5/2026, 10/5/26, Oct 5 2026, 5 October 2026, or an Excel day number; '' when not a date */
+function impDate($v): string {
+    $v = trim((string) $v); if ($v === '') return ''; $d = '';
+    if (preg_match('/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:[ T].*)?$/', $v, $m)) $d = sprintf('%04d-%02d-%02d', $m[1], $m[2], $m[3]);
+    elseif (preg_match('#^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4}|\d{2})(?:\s.*)?$#', $v, $m)) { $y = (int) $m[3]; if ($y < 100) $y += $y < 70 ? 2000 : 1900; $d = sprintf('%04d-%02d-%02d', $y, $m[1], $m[2]); }   /* month first, as US software writes it */
+    elseif (preg_match('/^\d{5}(\.\d+)?$/', $v) && (int) $v > 20000 && (int) $v < 80000) $d = gmdate('Y-m-d', ((int) $v - 25569) * 86400);   /* a date cell Excel saved as its day number */
+    elseif (preg_match('/[a-z]{3}/i', $v) && preg_match('/\d/', $v) && ($t = strtotime($v)) !== false) $d = date('Y-m-d', $t);
+    return $d !== '' && dateOk($d) ? $d : '';
+}
+/** dollars: "$1,250.00" -> 1250.0; null when empty; false when not a sensible amount */
+function impMoney($v): float|false|null {
+    $s = str_replace([',', '$', ' ', 'USD', 'usd'], '', trim((string) $v)); if ($s === '') return null;
+    return is_numeric($s) && (float) $s >= 0 && (float) $s <= 1000000 ? round((float) $s, 2) : false;
+}
+/** "how often" in words -> [plan, every N weeks or null, plan name when the words say it]; null when not understood */
+function impOften(string $v): ?array {
+    $s = strtolower(trim($v)); if ($s === '') return null;
+    if (in_array($s, CUST_PLANS, true)) return [$s, null, ''];
+    if (preg_match('/^(one[- ]?(time|off)|once|single( visit)?|none|n\/a|no plan|job)$/', $s)) return ['oneoff', null, ''];
+    if (preg_match('/\bevery\s+(\d{1,2})\s*(weeks?|wks?)\b/', $s, $m) || preg_match('/^(\d{1,2})\s*(weeks?|wks?)$/', $s, $m)) return ['custom', max(1, min(52, (int) $m[1])), ''];
+    if (preg_match('/\b(bi-?weekly|every other week|fortnight)/', $s)) return ['custom', 2, ''];
+    if (preg_match('/\bweekly\b|\bevery week\b/', $s)) return ['custom', 1, ''];
+    if (preg_match('/\bevery\s+(\d{1,2})\s*months?\b/', $s, $m)) { $n = (int) $m[1]; return $n === 1 ? ['monthly', null, ''] : ($n === 3 ? ['quarterly', null, ''] : ($n === 12 ? ['yearly', null, ''] : ['custom', min(52, $n * 4), ''])); }
+    if (preg_match('/\b(bi-?monthly|every other month)\b/', $s)) return ['custom', 8, ''];
+    if (str_contains($s, 'month')) return ['monthly', null, ''];
+    if (str_contains($s, 'quarter')) return ['quarterly', null, ''];
+    if (preg_match('/\b(year|annual)/', $s)) return ['yearly', null, ''];
+    if (preg_match('/season|spring|summer|fall|autumn|winter/', $s)) return ['custom', null, 'Seasonal'];
+    return null;
+}
+/** one of the company's services by its key, its name, or a name that contains the other; null when none fits */
+/** where a service the company does not list goes: Other when it has one, else its first service */
+function impSvOther(): string { return in_array('other', custServices(), true) ? 'other' : custServices()[0]; }
+function impService(string $v): ?string {
+    $s = mb_strtolower(trim($v)); if ($s === '') return null;
+    foreach (company()['services'] as $sv) if ($s === mb_strtolower((string) $sv[0]) || $s === mb_strtolower((string) $sv[1])) return (string) $sv[0];
+    foreach (company()['services'] as $sv) {
+        if ($sv[0] === 'other') continue; $lab = mb_strtolower((string) $sv[1]); $w = strtok($lab, ' &,/');
+        if (str_contains($s, $lab) || (mb_strlen($s) >= 4 && str_contains($lab, $s)) || ($w !== false && mb_strlen($w) >= 4 && str_contains($s, $w))) return (string) $sv[0];
+    }
+    return null;
+}
+/** a customer status in words; null when not understood */
+function impStatus(string $v): ?string {
+    $s = strtolower(trim($v)); if ($s === '') return null;
+    if (preg_match('/^(active|current|yes|y|on|open)$/', $s)) return 'active';
+    if (preg_match('/pause|hold|suspend/', $s)) return 'paused';
+    if (preg_match('/^(ended|inactive|former|no|n|off|closed)$|cancel|lost|stopp|end/', $s)) return 'ended';
+    return null;
+}
+/** where a lead came from, in words -> the app's source; '' when not understood (it goes in as Other, with the words kept) */
+function impSource(string $v): string {
+    $s = strtolower(trim($v)); if ($s === '') return '';
+    if (in_array($s, LEAD_SRC, true) && $s !== 'a365web') return $s;
+    foreach (['meta' => 'facebook|meta|instagram|\bfb\b|\big\b', 'nextdoor' => 'nextdoor', 'messenger' => 'messenger', 'referral' => 'refer|friend|neighbo|word of mouth',
+              'door' => 'door|knock|canvass|d2d', 'phone' => 'phone|call|inbound', 'linktree' => 'linktree', 'inperson' => 'in person|event|show|fair|booth|walk-?in',
+              'website' => 'web|google|online|form|seo|yelp|angi|homeadvisor|thumbtack'] as $k => $re) if (preg_match('/' . $re . '/', $s)) return $k;
+    return '';
+}
+/** a lead status in words; null when not understood */
+function impLeadStatus(string $v): ?string {
+    $s = strtolower(trim($v)); if ($s === '') return null;
+    foreach (['won' => '\bwon\b|sold|closed[ -]?won|customer|signed|booked', 'lost' => 'lost|dead|closed[ -]?lost|not interested|declin|junk|spam',
+              'quoted' => 'quot|estimat|proposal|bid', 'hold' => 'hold|later|nurtur|follow[ -]?up later', 'walk' => 'walk|appointment|inspection|visit set',
+              'contacted' => 'contact|called|working|in progress|attempt|left (a )?(voice|message)', 'new' => '^new$|^open$|^lead$|uncontacted|fresh'] as $k => $re) if (preg_match('/' . $re . '/', $s)) return $k;
+    return null;
+}
+/** the one listed house at each street address, as a365Match decides, in ONE read of the house index for the whole call:
+ *  $want = [i => [street, city]] -> [i => ['region', 'door', 'address', 'town']]. a365Match reads the index once per address. */
+function impHouses(array $want): array {
+    $exact = []; $loose = []; $nums = [];
+    foreach ($want as $i => $w) { $n = a365Norm((string) $w[0]); if (!preg_match('/^(\d+) \S+/', $n, $m)) continue; $exact[$n][] = $i; $loose[a365NoDir($n)][] = $i; $nums[$m[1]] = true; }
+    if (!$exact) return [];
+    $hitE = []; $hitL = [];
+    foreach (searchIndex() as $line) {
+        $p = explode("\t", $line, 6); if (count($p) < 5) continue;
+        $sp = strpos($p[4], ' '); if ($sp === false || !isset($nums[substr($p[4], 0, $sp)])) continue;
+        $full = explode("\t", $line); if (($full[9] ?? '') === 'L') continue;   /* a door-list house only: a customer's property must be one of the doors */
+        $n = a365Norm($p[4]);
+        if (isset($exact[$n])) $hitE[$n][] = $full;
+        $nd = a365NoDir($n); if (isset($loose[$nd])) $hitL[$nd][] = $full;
+    }
+    $out = [];
+    foreach ($want as $i => $w) {
+        $n = a365Norm((string) $w[0]); if (!isset($exact[$n])) continue;
+        $hits = $hitE[$n] ?? ($hitL[a365NoDir($n)] ?? []);
+        $hits = array_values(array_unique($hits, SORT_REGULAR));
+        if (count($hits) > 1 && trim((string) $w[1]) !== '') { $c = strtoupper(trim((string) $w[1])); $hits = array_values(array_filter($hits, fn($p) => str_contains(strtoupper($p[1]), $c) || str_contains($c, strtoupper($p[1])))); }
+        if (count($hits) === 1) $out[$i] = ['region' => $hits[0][0], 'door' => $hits[0][3], 'address' => $hits[0][4], 'town' => $hits[0][1]];
+    }
+    return $out;
+}
+if (in_array($action, ['importcheck', 'importrun', 'imports', 'importundo'], true)) {
+    if (!impOn()) fail('Not here.', 404);
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $impLog = fn() => jsonLines(impLogFile());
+    if ($action === 'imports') {
+        $by = [];
+        foreach ($impLog() as $r) {
+            $id = (string) ($r['id'] ?? ''); if (!impIdOk($id)) continue;
+            if (!empty($r['undone'])) { if (isset($by[$id])) $by[$id]['undone'] = ['by' => (string) ($r['by'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'removed' => (int) ($r['removed'] ?? 0), 'reverted' => (int) ($r['reverted'] ?? 0), 'kept' => (int) ($r['kept'] ?? 0)]; continue; }
+            $by[$id] ??= ['id' => $id, 'kind' => (string) ($r['kind'] ?? ''), 'file' => (string) ($r['file'] ?? ''), 'mode' => (string) ($r['mode'] ?? ''), 'by' => (string) ($r['by'] ?? ''), 'at' => (int) ($r['at'] ?? 0),
+                          'rows' => 0, 'added' => 0, 'updated' => 0, 'skipped' => 0, 'look' => 0, 'made' => 0, 'undone' => null];
+            foreach (['rows', 'added', 'updated', 'skipped', 'look', 'made'] as $k) $by[$id][$k] += (int) ($r[$k] ?? 0);
+        }
+        out(['ok' => true, 'imports' => array_slice(array_reverse(array_values($by)), 0, 30), 'people' => array_values(array_filter(array_keys($TEAM['byName'] ?? []), fn($n) => !preg_match('/^Claude Check/i', (string) $n)))]);   /* who can own imported leads */
+    }
+    if (!$isPost) fail('POST required', 405);
+    /* ---- take an import back ---- */
+    if ($action === 'importundo') {
+        $id = (string) ($body['id'] ?? ''); if (!impIdOk($id)) fail('No such import.', 404);
+        $mine = array_values(array_filter($impLog(), fn($r) => ($r['id'] ?? '') === $id));
+        if (!$mine) fail('No such import.', 404);
+        foreach ($mine as $r) if (!empty($r['undone'])) fail('That import was already undone.', 409);
+        $now = time(); $removed = 0; $reverted = 0; $kept = 0;
+        /* customers it added, and the ones it changed */
+        $cLines = custLines('customers.log'); $addedC = []; $updC = [];
+        foreach ($cLines as $r) if (($r['imp'] ?? '') === $id) { if (!empty($r['new'])) $addedC[(string) $r['id']] = true; elseif (is_array($r['was'] ?? null) && is_array($r['f'] ?? null)) $updC[] = $r; }
+        $touched = [];   /* an added customer someone has worked on since (any line, visit or document not from this import) stays */
+        $byImport = fn(array $r) => isset($r['imp']) || isset($r['undo']);   /* lines an import or an undo wrote: not someone working on it */
+        foreach ($cLines as $r) if (isset($addedC[(string) ($r['id'] ?? '')]) && !$byImport($r)) $touched[(string) $r['id']] = true;
+        /* visits: the newest line of each one this import wrote; a visit someone changed since stays */
+        $vLast = []; foreach (custLines('visits.log') as $r) { $vid = (string) ($r['vid'] ?? ''); if ($vid !== '') $vLast[$vid] = $r; }
+        foreach ($vLast as $vid => $r) {
+            if (!empty($r['del'])) continue;
+            if (($r['imp'] ?? '') !== $id) { if (isset($addedC[(string) ($r['cid'] ?? '')]) && !$byImport($r)) $touched[(string) $r['cid']] = true; continue; }
+            if (is_array($r['was'] ?? null)) { $w = $r['was']; $w['undo'] = $id; $w['by'] = $me; $w['at'] = $now; appendLine(custDir() . '/visits.log', $w); $reverted++; }
+            else { appendLine(custDir() . '/visits.log', ['vid' => $vid, 'cid' => (string) ($r['cid'] ?? ''), 'del' => true, 'undo' => $id, 'by' => $me, 'at' => $now]); $removed++; }
+        }
+        /* leads it added, and the ones it changed */
+        $addedL = []; foreach (jsonLines(leadsDir() . '/leads.log') as $r) if (($r['imp'] ?? '') === $id && leadOk((string) ($r['id'] ?? ''))) $addedL[(string) $r['id']] = true;
+        $updL = []; $touchedL = [];
+        foreach (jsonLines(leadsDir() . '/leadst.log') as $r) {
+            $lid = (string) ($r['id'] ?? '');
+            if (($r['imp'] ?? '') === $id) { if (is_array($r['was'] ?? null) && !isset($addedL[$lid])) $updL[] = $r; continue; }
+            if (isset($addedL[$lid]) && !$byImport($r)) $touchedL[$lid] = true;   /* a call logged, a note, a quote: someone worked it */
+        }
+        foreach (array_keys($addedL) as $lid) if (jobForLead($lid)) $touchedL[$lid] = true;
+        $goneL = [];
+        foreach (array_keys($addedL) as $lid) {
+            if (isset($touchedL[$lid])) { $kept++; continue; }
+            appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'undone' => $id, 'by' => $me, 'at' => $now]); $goneL[$lid] = true; $removed++;
+        }
+        $Lnow = leadsAllRaw();
+        foreach (array_reverse($updL) as $r) {
+            $lid = (string) $r['id']; $L = $Lnow[$lid] ?? null; if (!$L) continue; $back = ['id' => $lid, 'undo' => $id, 'by' => $me, 'at' => $now]; $n = 0;
+            if (isset($r['status'], $r['was']['status']) && ($L['status'] ?? '') === $r['status'] && in_array((string) $r['was']['status'], LEAD_STATUS, true)) { $back['status'] = (string) $r['was']['status']; $n++; }
+            if (array_key_exists('owner', $r) && array_key_exists('owner', $r['was']) && (string) ($L['owner'] ?? '') === (string) $r['owner']) { $back['owner'] = (string) $r['was']['owner']; $n++; }
+            if ($n) { $back['note'] = 'Import undone: put back as it was.'; appendLine(leadsDir() . '/leadst.log', $back); $reverted++; }
+        }
+        /* a customer the app made by itself from a Won lead this import added (ensureBookedCustomers), nothing else on it: goes with the lead */
+        if ($goneL) { $cnt = []; foreach ($cLines as $r) $cnt[(string) ($r['id'] ?? '')] = ($cnt[(string) ($r['id'] ?? '')] ?? 0) + 1;
+            foreach (loadCustomers() as $c) if (isset($goneL[(string) ($c['lead'] ?? '')]) && ($c['createdBy'] ?? '') === 'the app (booked)' && ($cnt[$c['id']] ?? 0) === 1) { appendLine(custDir() . '/customers.log', ['id' => $c['id'], 'del' => true, 'undo' => $id, 'by' => $me, 'at' => $now]); $removed++; } }
+        $cs = loadCustomers();
+        foreach (array_keys($addedC) as $cid) {
+            if (!isset($cs[$cid])) continue;
+            if (isset($touched[$cid])) { $kept++; continue; }
+            appendLine(custDir() . '/customers.log', ['id' => $cid, 'del' => true, 'undo' => $id, 'by' => $me, 'at' => $now]); $removed++;
+        }
+        $cs = loadCustomers();
+        foreach (array_reverse($updC) as $r) {   /* a field goes back only while it still holds what the import put there */
+            $cid = (string) $r['id']; if (!isset($cs[$cid])) continue; $f = [];
+            foreach ($r['f'] as $k => $v) if (($cs[$cid][$k] ?? null) === $v) $f[$k] = $r['was'][$k] ?? null;
+            if ($f) { appendLine(custDir() . '/customers.log', ['id' => $cid, 'by' => $me, 'at' => $now, 'undo' => $id, 'f' => $f]); $reverted++; foreach ($f as $k => $v) $cs[$cid][$k] = $v; }
+        }
+        appendLine(impLogFile(), ['id' => $id, 'undone' => true, 'removed' => $removed, 'reverted' => $reverted, 'kept' => $kept, 'by' => $me, 'at' => $now]);
+        out(['ok' => true, 'removed' => $removed, 'reverted' => $reverted, 'kept' => $kept]);
+    }
+    /* ---- check or run one call's rows ---- */
+    $kind = (string) ($body['kind'] ?? ''); if (!in_array($kind, IMP_KINDS, true)) fail('Pick what you are importing.');
+    $rows = $body['rows'] ?? null; if (!is_array($rows) || !$rows) fail('Nothing to import.');
+    $dry = $action === 'importcheck';
+    if (count($rows) > ($dry ? 5000 : 500)) fail($dry ? 'Check 5,000 at a time.' : 'Import 500 at a time.');
+    $mode = ($body['mode'] ?? 'update') === 'skip' ? 'skip' : 'update';
+    $impId = (string) ($body['id'] ?? '');
+    if (!$dry) {
+        if ($impId !== '') { $known = false; foreach ($impLog() as $r) if (($r['id'] ?? '') === $impId) { if (!empty($r['undone'])) fail('That import was undone. Start it again.', 409); $known = true; } if (!impIdOk($impId) || !$known) fail('No such import.', 404); }
+        else $impId = 'i' . date('YmdHis') . bin2hex(random_bytes(3));
+    }
+    $owner0 = trim((string) ($body['owner'] ?? '')); if ($owner0 !== '' && !activeName($owner0)) fail('Pick an owner from your people, or nobody.');
+    $makeMissing = !array_key_exists('makeMissing', $body) || !empty($body['makeMissing']);
+    $now = time(); $seq = 0;
+    $newId = function (string $p) use (&$seq, $dry): string { $seq++; return $p . date('YmdHis') . ($dry ? sprintf('%06x', $seq) : bin2hex(random_bytes(3))); };
+    $put = function (string $file, array $row) use ($dry): void { if ($dry) return; if (!appendLine($file, $row)) fail('Could not save that. Try again.', 500); };
+    $S = fn($r, string $k, int $max) => $clean(is_scalar($r[$k] ?? null) ? (string) $r[$k] : '', $max);
+    /* the houses, read once for the whole call */
+    $want = []; foreach ($rows as $i => $r) if (is_array($r) && $S($r, 'address', 160) !== '') $want[$i] = [$S($r, 'address', 160), $S($r, 'town', 60)];
+    $houses = $want ? impHouses($want) : [];
+    $res = []; $cnt = ['added' => 0, 'updated' => 0, 'skipped' => 0, 'look' => 0, 'made' => 0];
+    $look = function (int $i, string $why) use (&$res, &$cnt) { $res[] = ['i' => $i, 'act' => 'look', 'why' => $why, 'warn' => []]; $cnt['look']++; };
+    /* customers already here, by house, phone, email and name + street; an ended customer loses a tie to a current one */
+    $cs = loadCustomers(); $ix = ['door' => [], 'phone' => [], 'email' => [], 'name' => [], 'only' => []];
+    $ixAdd = function (array $c) use (&$ix, &$cs) {
+        $ended = ($c['status'] ?? 'active') === 'ended';
+        $keys = ['door' => (string) ($c['door'] ?? ''), 'phone' => impDigits($c['phone'] ?? ''), 'email' => impEmail($c['email'] ?? ''), 'name' => impNameKey((string) ($c['name'] ?? ''), (string) ($c['address'] ?? ''))];
+        foreach ($keys as $k => $v) if ($v !== '' && (!isset($ix[$k][$v]) || (($cs[$ix[$k][$v]]['status'] ?? 'active') === 'ended' && !$ended))) $ix[$k][$v] = $c['id'];
+        $on = trim((string) preg_replace('/\s+/u', ' ', mb_strtolower((string) ($c['name'] ?? '')))); if ($on !== '') $ix['only'][$on] = isset($ix['only'][$on]) && $ix['only'][$on] !== $c['id'] ? '' : $c['id'];   /* two of the same name: no match by name alone */
+    };
+    foreach ($cs as $c) $ixAdd($c);
+    $findC = function (?array $h, string $ph, string $em, string $name, string $street) use (&$ix): ?array {
+        if ($h && isset($ix['door'][$h['region'] . '/' . $h['door']])) return [$ix['door'][$h['region'] . '/' . $h['door']], 'house'];
+        if ($ph !== '' && isset($ix['phone'][$ph])) return [$ix['phone'][$ph], 'phone'];
+        if ($em !== '' && isset($ix['email'][$em])) return [$ix['email'][$em], 'email'];
+        $nk = impNameKey($name, $h ? (string) $h['address'] : $street); if ($nk !== '' && isset($ix['name'][$nk])) return [$ix['name'][$nk], 'name and address'];
+        $nk = impNameKey($name, $street); if ($nk !== '' && isset($ix['name'][$nk])) return [$ix['name'][$nk], 'name and address'];
+        if ($ph === '' && $em === '' && $street === '' && !$h) { $on = trim((string) preg_replace('/\s+/u', ' ', mb_strtolower($name))); if ($on !== '' && !empty($ix['only'][$on])) return [$ix['only'][$on], 'name']; }   /* a row with only a name: the one customer of that name */
+        return null;
+    };
+    /* who the row is: name, phone, email, street, town, house; the problems found on the way */
+    $who = function (array $r, int $i, array &$warn) use ($S, $houses): array {
+        $name = $S($r, 'name', 120); if ($name === '') $name = trim($S($r, 'first', 60) . ' ' . $S($r, 'last', 60));
+        $phRaw = $S($r, 'phone', 40); $ph = impDigits($phRaw); if ($phRaw !== '' && $ph === '') $warn[] = 'Phone "' . $phRaw . '" is not 10 digits: left out';
+        $emRaw = $S($r, 'email', 160); $em = impEmail($emRaw); if ($emRaw !== '' && $em === '') $warn[] = 'Email "' . $emRaw . '" does not look right: left out';
+        $street = $S($r, 'address', 160); $town = $S($r, 'town', 60); if ($town === '') $town = $S($r, 'zip', 10);
+        $h = $houses[$i] ?? null;
+        return ['name' => $name, 'phRaw' => $ph !== '' ? $phRaw : '', 'ph' => $ph, 'em' => $em, 'street' => $street, 'town' => $town, 'h' => $h];
+    };
+    $doorKey = fn(?array $h) => $h ? $h['region'] . '/' . $h['door'] : '';
+    /* a customer's fields from the row (the ones present and readable) */
+    $custFields = function (array $r, array $W, array &$warn) use ($S, $doorKey): array {
+        $f = ['name' => $W['name']];
+        if ($W['phRaw'] !== '') $f['phone'] = $W['phRaw'];
+        if ($W['em'] !== '') $f['email'] = $W['em'];
+        if ($W['h']) { $f['address'] = streetCaseServer((string) $W['h']['address']); $f['town'] = (string) $W['h']['town']; $f['door'] = $doorKey($W['h']); }
+        else { if ($W['street'] !== '') $f['address'] = $W['street']; if ($W['town'] !== '') $f['town'] = $W['town']; }
+        $notes = $S($r, 'notes', 2000);
+        $svRaw = $S($r, 'service', 80);
+        if ($svRaw !== '') { $sv = impService($svRaw); if ($sv !== null) $f['service'] = $sv; else { $f['service'] = impSvOther(); $warn[] = 'Service "' . $svRaw . '" is not one of yours: set to ' . (array_column(company()['services'], 1, 0)[$f['service']] ?? $f['service']); $notes = trim($notes . "\nService in the old system: " . $svRaw); } }
+        $stRaw = $S($r, 'status', 40); if ($stRaw !== '') { $st = impStatus($stRaw); if ($st !== null) $f['status'] = $st; else $warn[] = 'Status "' . $stRaw . '" not understood: left as it is'; }
+        $ofRaw = $S($r, 'often', 60);
+        if ($ofRaw !== '') { $of = impOften($ofRaw); if ($of) { $f['plan'] = $of[0]; if ($of[1]) $f['every'] = $of[1]; if ($of[2] !== '' && $S($r, 'planName', 80) === '') $f['planName'] = $of[2]; } else $warn[] = 'How often "' . $ofRaw . '" not understood: no plan set'; }
+        $evRaw = $S($r, 'every', 10); if ($evRaw !== '') { if (ctype_digit($evRaw) && (int) $evRaw >= 1 && (int) $evRaw <= 52) { $f['every'] = (int) $evRaw; if (!isset($f['plan']) || $f['plan'] === 'oneoff') $f['plan'] = 'custom'; } else $warn[] = 'Every "' . $evRaw . '" weeks is not 1 to 52: left out'; }
+        if (($pn = $S($r, 'planName', 80)) !== '') $f['planName'] = $pn;
+        foreach (['price' => 'Price', 'listPrice' => 'Regular price'] as $k => $say) { $raw = $S($r, $k, 30); $m = impMoney($raw); if ($m === false) $warn[] = $say . ' "' . $raw . '" is not an amount: left out'; elseif ($m !== null) $f[$k] = $m; }
+        foreach (['start' => 'Start date', 'next' => 'Next visit'] as $k => $say) { $raw = $S($r, $k, 40); if ($raw === '') continue; $d = impDate($raw); if ($d !== '') $f[$k] = $d; else $warn[] = $say . ' "' . $raw . '" is not a date: left out'; }
+        if ($notes !== '') $f['notes'] = $notes;
+        return $f;
+    };
+    /* a new customer: added to the log and to the index, so a later row for the same person finds them */
+    $addCust = function (array $f) use ($newId, $put, $me, $now, &$impId, &$cs, $ixAdd): string {
+        $f += ['status' => 'active', 'plan' => 'oneoff', 'service' => custServices()[0]]; $f['source'] = 'import';
+        $cid = $newId('c'); $put(custDir() . '/customers.log', ['id' => $cid, 'by' => $me, 'at' => $now, 'imp' => $impId, 'new' => true, 'f' => $f]);
+        $cs[$cid] = ['id' => $cid] + $f; $ixAdd($cs[$cid]); return $cid;
+    };
+    if ($kind === 'customers') {
+        foreach ($rows as $i => $r) {
+            if (!is_array($r)) { $look($i, 'Not a row'); continue; }
+            $warn = []; $W = $who($r, $i, $warn);
+            if (mb_strlen($W['name']) < 2) { $look($i, 'No name'); continue; }
+            if ($W['street'] === '') $warn[] = 'No address';
+            elseif (!$W['h']) $warn[] = 'House not found on your lists: added without one (find it on the customer card)';
+            $f = $custFields($r, $W, $warn);
+            $hit = $findC($W['h'], $W['ph'], $W['em'], $W['name'], $W['street']);
+            if (!$hit) { $addCust($f); $res[] = ['i' => $i, 'act' => 'add', 'warn' => $warn]; $cnt['added']++; continue; }
+            [$cid, $how] = $hit; $c = $cs[$cid];
+            if ($mode === 'skip') { $res[] = ['i' => $i, 'act' => 'skip', 'why' => 'Already a customer (same ' . $how . ')', 'warn' => $warn]; $cnt['skipped']++; continue; }
+            if (!empty($c['door']) || (isset($f['door']) && isset($ix['door'][$f['door']]) && $ix['door'][$f['door']] !== $cid)) unset($f['door']);   /* their house stays; a house that is someone else's is not taken */
+            if (!empty($c['door']) && !isset($f['door'])) { unset($f['address'], $f['town']); }   /* the house they are tied to keeps its address */
+            $ch = []; $was = [];
+            foreach ($f as $k => $v) { $o = $c[$k] ?? null; if ($o === $v || (is_numeric($v) && is_numeric($o) && (float) $v === (float) $o) || ($k === 'phone' && impDigits($o) === impDigits($v)) || ($k === 'email' && $o !== null && impEmail($o) === $v)) continue; $ch[$k] = $v; $was[$k] = $o; }   /* the same number written another way is the same */
+            if (!$ch) { $res[] = ['i' => $i, 'act' => 'skip', 'why' => 'Already a customer (same ' . $how . '), nothing new', 'warn' => $warn]; $cnt['skipped']++; continue; }
+            $put(custDir() . '/customers.log', ['id' => $cid, 'by' => $me, 'at' => $now, 'imp' => $impId, 'was' => $was, 'f' => $ch]);
+            $cs[$cid] = array_merge($c, $ch); $ixAdd($cs[$cid]);
+            $res[] = ['i' => $i, 'act' => 'update', 'why' => 'Already a customer (same ' . $how . '): ' . implode(', ', array_keys($ch)) . ' updated', 'warn' => $warn]; $cnt['updated']++;
+        }
+    }
+    if ($kind === 'work') {
+        $vs = loadVisits(); $vKey = []; foreach ($vs as $v) $vKey[(string) $v['cid'] . '|' . (string) ($v['date'] ?? '') . '|' . (string) ($v['service'] ?? '')] = $v;
+        foreach ($rows as $i => $r) {
+            if (!is_array($r)) { $look($i, 'Not a row'); continue; }
+            $warn = []; $W = $who($r, $i, $warn);
+            $dRaw = $S($r, 'date', 40); $date = impDate($dRaw);
+            if ($dRaw === '') { $look($i, 'No date'); continue; }
+            if ($date === '') { $look($i, 'Date "' . $dRaw . '" is not a date'); continue; }
+            if ($date > $today) { $look($i, 'Date ' . $date . ' is after today: past work only'); continue; }
+            $hit = $findC($W['h'], $W['ph'], $W['em'], $W['name'], $W['street']); $made = false;
+            if (!$hit) {
+                if (!$makeMissing) { $look($i, 'No customer with that name, phone, email or address'); continue; }
+                if (mb_strlen($W['name']) < 2) { $look($i, 'No customer found, and no name to add one'); continue; }
+                $cw = []; $f = $custFields(array_intersect_key($r, array_flip(['service'])), $W, $cw);
+                if ($W['street'] !== '' && !$W['h']) $warn[] = 'House not found on your lists: customer added without one';
+                $cid = $addCust($f); $made = true; $cnt['made']++;
+            } else $cid = $hit[0];
+            $svRaw = $S($r, 'service', 80); $sv = $svRaw !== '' ? impService($svRaw) : null; $note = $S($r, 'notes', 600);
+            if ($sv === null) { $sv = $svRaw !== '' ? impSvOther() : (string) ($cs[$cid]['service'] ?? custServices()[0]); if ($svRaw !== '') { $warn[] = 'Service "' . $svRaw . '" is not one of yours: set to ' . (array_column(company()['services'], 1, 0)[$sv] ?? $sv); $note = trim('Service in the old system: ' . $svRaw . '. ' . $note); } }
+            $pRaw = $S($r, 'price', 30); $price = impMoney($pRaw); if ($price === false) { $warn[] = 'Price "' . $pRaw . '" is not an amount: left out'; $price = null; }
+            $crew = $S($r, 'crew', 80);
+            $row = ['cid' => $cid, 'date' => $date, 'service' => $sv, 'status' => 'done', 'price' => $price, 'note' => mb_substr(trim($note . ($crew !== '' ? ($note !== '' ? ' · ' : '') . 'Crew: ' . $crew : '')), 0, 600), 'src' => 'import'];
+            if ($crew !== '') $row['crew'] = $crew;
+            $k = $cid . '|' . $date . '|' . $sv; $old = $vKey[$k] ?? null;
+            if ($old) {
+                $same = ($old['price'] ?? null) == $price && (string) ($old['note'] ?? '') === $row['note'];
+                if ($mode === 'skip' || $same) { $res[] = ['i' => $i, 'act' => 'skip', 'why' => 'This visit is already on their record' . ($same ? '' : ' (left as it is)'), 'warn' => $warn]; $cnt['skipped']++; continue; }
+                $new = ['vid' => (string) $old['vid']] + $row + ['by' => $me, 'at' => $now, 'imp' => $impId, 'was' => array_diff_key($old, ['was' => 1, 'undo' => 1])];
+                $put(custDir() . '/visits.log', $new); $vKey[$k] = $new;
+                $res[] = ['i' => $i, 'act' => 'update', 'why' => 'This visit was already on their record: price and note updated', 'warn' => $warn]; $cnt['updated']++; continue;
+            }
+            $new = ['vid' => $newId('v')] + $row + ['by' => $me, 'at' => $now, 'imp' => $impId];
+            $put(custDir() . '/visits.log', $new); $vKey[$k] = $new;
+            $res[] = ['i' => $i, 'act' => 'add', 'why' => $made ? 'New customer added for it' : '', 'warn' => $warn]; $cnt['added']++;
+        }
+    }
+    if ($kind === 'leads') {
+        $L = leadsAllRaw(); $lx = ['ext' => [], 'phone' => [], 'email' => [], 'name' => [], 'only' => []];
+        $lxAdd = function (array $l) use (&$lx) {
+            foreach (['ext' => (string) ($l['ext'] ?? ''), 'phone' => impDigits($l['phone'] ?? ''), 'email' => impEmail($l['email'] ?? ''), 'name' => impNameKey((string) ($l['name'] ?? ''), (string) ($l['town'] ?? ''))] as $k => $v)
+                if ($v !== '' && !isset($lx[$k][$v])) $lx[$k][$v] = (string) $l['id'];
+            $on = trim((string) preg_replace('/\s+/u', ' ', mb_strtolower((string) ($l['name'] ?? '')))); if ($on !== '') $lx['only'][$on] = isset($lx['only'][$on]) && $lx['only'][$on] !== (string) $l['id'] ? '' : (string) $l['id'];
+        };
+        foreach ($L as $l) $lxAdd($l);
+        foreach ($rows as $i => $r) {
+            if (!is_array($r)) { $look($i, 'Not a row'); continue; }
+            $warn = []; $W = $who($r, $i, $warn);
+            if ($W['name'] === '' && $W['ph'] === '' && $W['em'] === '') { $look($i, 'No name, phone or email'); continue; }
+            $place = trim($W['street'] . ($W['town'] !== '' && stripos($W['street'], $W['town']) === false ? ($W['street'] !== '' ? ', ' : '') . $W['town'] : ''));
+            $ext = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', $S($r, 'ext', 80)), 0, 64);
+            $hitId = ($ext !== '' ? ($lx['ext'][$ext] ?? null) : null) ?? ($W['ph'] !== '' ? ($lx['phone'][$W['ph']] ?? null) : null) ?? ($W['em'] !== '' ? ($lx['email'][$W['em']] ?? null) : null) ?? (($nk = impNameKey($W['name'], $place)) !== '' ? ($lx['name'][$nk] ?? null) : null)
+                ?? ($W['ph'] === '' && $W['em'] === '' && $place === '' && $ext === '' && ($on = trim((string) preg_replace('/\s+/u', ' ', mb_strtolower($W['name'])))) !== '' && !empty($lx['only'][$on]) ? $lx['only'][$on] : null);
+            $stRaw = $S($r, 'status', 40); $st = $stRaw !== '' ? impLeadStatus($stRaw) : null; if ($stRaw !== '' && $st === null) $warn[] = 'Status "' . $stRaw . '" not understood: left as New';
+            $owRaw = $S($r, 'owner', 80); $ow = $owner0;
+            if ($owRaw !== '') { $hitOw = null; foreach (array_keys($TEAM['byName'] ?? []) as $nm) if (mb_strtolower($nm) === mb_strtolower($owRaw) || mb_strtolower(strtok($nm, ' ')) === mb_strtolower($owRaw)) { $hitOw = $nm; break; }
+                if ($hitOw) $ow = $hitOw; else $warn[] = 'Owner "' . $owRaw . '" is not one of your people: ' . ($owner0 !== '' ? 'given to ' . $owner0 : 'no owner'); }
+            $note = $S($r, 'notes', 1800);
+            if ($hitId) {
+                $l = $L[$hitId] ?? null;
+                if ($mode === 'skip' || !$l) { $res[] = ['i' => $i, 'act' => 'skip', 'why' => 'Already in the Pipeline', 'warn' => $warn]; $cnt['skipped']++; continue; }
+                $u = ['id' => $hitId, 'by' => $me, 'at' => $now, 'imp' => $impId]; $was = []; $what = [];
+                if ($st !== null && $st !== ($l['status'] ?? 'new')) { $u['status'] = $st; $was['status'] = (string) ($l['status'] ?? 'new'); $what[] = 'status'; }
+                if ($ow !== '' && $ow !== (string) ($l['owner'] ?? '')) { $u['owner'] = $ow; $was['owner'] = (string) ($l['owner'] ?? ''); $what[] = 'owner'; }
+                $nl = array_column((array) ($l['notes'] ?? []), 'note');
+                if ($note !== '' && !in_array('Imported: ' . $note, $nl, true) && !str_contains((string) ($l['msg'] ?? ''), $note)) { $u['note'] = 'Imported: ' . $note; $what[] = 'note'; }
+                if (!$what) { $res[] = ['i' => $i, 'act' => 'skip', 'why' => 'Already in the Pipeline, nothing new', 'warn' => $warn]; $cnt['skipped']++; continue; }
+                if ($was) $u['was'] = $was;
+                $put(leadsDir() . '/leadst.log', $u);
+                if (isset($u['status'])) $L[$hitId]['status'] = $st; if (isset($u['owner'])) $L[$hitId]['owner'] = $ow; if (isset($u['note'])) $L[$hitId]['notes'][] = ['note' => $u['note']];
+                $res[] = ['i' => $i, 'act' => 'update', 'why' => 'Already in the Pipeline: ' . implode(', ', $what) . ' updated', 'warn' => $warn]; $cnt['updated']++; continue;
+            }
+            $srcRaw = $S($r, 'source', 60); $src = (string) ($body['src'] ?? '') === 'meta' ? 'meta' : impSource($srcRaw);
+            $msg = $note; if ($srcRaw !== '' && $src === '') $msg = trim($msg . "\nSource in the old system: " . $srcRaw); if ($stRaw !== '' && $st !== null && $st !== 'new') $msg = trim($msg . "\nStatus in the old system: " . $stRaw);
+            $at = $now; $dRaw = $S($r, 'date', 40); if ($dRaw !== '') { $t = strtotime($dRaw); $d = impDate($dRaw); if ($t !== false && $t > 946684800 && $t <= $now + 86400) $at = $t; elseif ($d !== '') $at = (int) strtotime($d . ' 12:00'); else $warn[] = 'Date "' . $dRaw . '" is not a date: today used'; }
+            $lid = $newId('m');
+            $row = ['id' => $lid, 'src' => $src ?: 'other', 'at' => $at, 'need' => $S($r, 'need', 60), 'name' => $W['name'], 'phone' => $W['phRaw'], 'email' => $W['em'], 'town' => mb_substr($place, 0, 160), 'msg' => mb_substr($msg, 0, 2000), 'by' => $me, 'imp' => $impId];
+            if ($ext !== '') $row['ext'] = $ext;
+            $put(leadsDir() . '/leads.log', $row);
+            if ($st !== null && $st !== 'new') $put(leadsDir() . '/leadst.log', ['id' => $lid, 'status' => $st, 'by' => $me, 'at' => $now, 'imp' => $impId]);
+            if ($ow !== '') $put(leadsDir() . '/leadst.log', ['id' => $lid, 'owner' => $ow, 'by' => $me, 'at' => $now, 'imp' => $impId]);
+            if ($W['h']) $put(leadsDir() . '/leadst.log', ['id' => $lid, 'house' => $W['h'], 'by' => $me, 'at' => $now, 'imp' => $impId]);   /* their house, as + Add a lead finds it */
+            elseif ($W['street'] !== '') $warn[] = 'House not found on your lists';
+            $L[$lid] = $row + ['status' => $st ?? 'new', 'owner' => $ow, 'notes' => []]; $lxAdd($L[$lid]);
+            $res[] = ['i' => $i, 'act' => 'add', 'warn' => $warn]; $cnt['added']++;
+        }
+    }
+    if (!$dry) {
+        if (!is_dir(custDir())) @mkdir(custDir(), 0750, true);
+        appendLine(impLogFile(), ['id' => $impId, 'kind' => $kind, 'file' => $clean($body['file'] ?? '', 120), 'mode' => $mode, 'rows' => count($rows)] + $cnt + ['by' => $me, 'at' => $now]);
+    }
+    out(['ok' => true, 'id' => $dry ? null : $impId, 'counts' => $cnt, 'rows' => $res]);
+}
+
 if ($action === 'matfix') {
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $id = (string) ($body['id'] ?? ''); $m = (string) ($body['m'] ?? '');
@@ -11590,6 +11975,124 @@ if ($action === 'payways' || $action === 'paywaysset') {
     $c['by'] = $me; $c['at'] = time();
     if (!writeJsonAtomic(DATA_DIR . '/payways.json', $c)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
+}
+/* ---- Your costs (2026-10-29, Matthew: pricing from the client's own costs, "testable by Matthew before clients see it") ------------------
+ * Sixfold's own engine (A365_PRICING: seed and fertilizer by the bag, the drive from a base address, the crew's share, the margin shown to
+ * staff only) made general for the editions. For each price line in Prices and terms the admin sets what one unit costs them:
+ *   labour   $ per crew-hour and crew minutes per unit (two people for 30 minutes = 60 crew minutes)
+ *   materials item, cost per pack, and how many units one pack covers (a seed bag covers 12 x 1,000 sq ft; a bundle of shingles 1/3 square)
+ * and, for the company: overhead % on top of labour and materials, the target margin % (the share of the price kept), and the drive: $ per
+ * mile and a base address (optional), so each quote adds the round trip to that house (straight line x 1.3, as Sixfold's quote does).
+ * Cost per unit = (labour + materials) x (1 + overhead); suggested price per unit = cost / (1 - margin). The admin applies it to the price
+ * line or types their own. Each quote shows the office a staff-only line: estimated cost and margin. Never on the homeowner's quote or form
+ * pages: nothing of it is saved on the quote. costs.json in the data folder, apart from kit.json, so saving Prices and terms never touches it.
+ * GATED FOR TESTING: on where company.json features.costs is true (build-editions.cjs does not set it yet), and always for Traverse's own
+ * sign-in (super; not while viewing as someone else), so Matthew tries it on any live edition before clients see it.
+ *   costs       GET   admin and office: the settings, each price line's cost and suggested price; ?region=&id= adds that house's drive
+ *   costsset    POST  admin: {mile, overhead, margin, base: {text} | {lat, lon} | null, rules: {ruleId: {hour, mins, mats: [{name, cost, covers}]}}}
+ *   costsapply  POST  admin: {rule, rate}: the price line's price per unit in Prices and terms */
+function costsOn(): bool { global $isSuper; return kitOn() && (feature('costs') || !empty($isSuper)); }
+/** example costs per trade, for the starter price lines (kitStarterRules ids), so the screen is never blank; labelled as examples to replace */
+function costsStarter(string $t): array {
+    $r = ['roof' => ['r1' => ['hour' => 32, 'mins' => 120, 'mats' => [['Shingles (bundle)', 45, 0.33], ['Underlayment (roll)', 90, 10], ['Nails, drip edge, vents', 25, 1]]],
+                     'r2' => ['hour' => 32, 'mins' => 40, 'mats' => [['Disposal (dumpster share)', 35, 1]]],
+                     'r3' => ['hour' => 32, 'mins' => 480, 'mats' => [['Gutters and downspouts', 350, 1]]]],
+          'yards' => ['y1' => ['hour' => 25, 'mins' => 4, 'mats' => [['Fertilizer (bag)', 45, 12.5]]],
+                      'y2' => ['hour' => 25, 'mins' => 45, 'mats' => []]],
+          'solar' => ['s1' => ['hour' => 40, 'mins' => 120, 'mats' => []],
+                      's2' => ['hour' => 40, 'mins' => 90, 'mats' => [['Panel', 220, 1], ['Racking and wiring, per panel', 90, 1]]]],
+          'pest' => ['p1' => ['hour' => 25, 'mins' => 45, 'mats' => [['Concentrate (bottle)', 60, 8]]],
+                     'p2' => ['hour' => 25, 'mins' => 90, 'mats' => [['Concentrate (bottle)', 60, 4]]]],
+          'security' => ['g1' => ['hour' => 30, 'mins' => 180, 'mats' => [['Panel and hub', 150, 1]]],
+                         'g2' => ['hour' => 30, 'mins' => 15, 'mats' => [['Door or window sensor', 18, 1]]]]];
+    $rules = $r[$t] ?? ['j1' => ['hour' => 25, 'mins' => 60, 'mats' => []]];
+    foreach ($rules as &$x) $x['mats'] = array_map(fn($m) => ['name' => $m[0], 'cost' => $m[1], 'covers' => $m[2]], $x['mats']); unset($x);
+    return ['mile' => 0.7, 'overhead' => 15, 'margin' => 35, 'rules' => $rules];
+}
+/** one price line's cost per unit and suggested price per unit, from its labour and materials and the company's overhead and margin */
+function costsUnit(array $c, float $overhead, float $margin): array {
+    $lab = (float) $c['hour'] * (float) $c['mins'] / 60; $mat = 0.0;
+    foreach ($c['mats'] as $m) if ((float) $m['covers'] > 0) $mat += (float) $m['cost'] / (float) $m['covers'];
+    $cost = ($lab + $mat) * (1 + $overhead / 100);
+    return ['labour' => round($lab, 2), 'materials' => round($mat, 2), 'cost' => round($cost, 2), 'suggest' => $margin < 100 ? round($cost / (1 - $margin / 100), 2) : null];
+}
+function costsCfg(): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/costs.json'), true); $j = is_array($j) ? $j : [];
+    $st = costsStarter(kitTrade()); $saved = is_array($j['rules'] ?? null) ? $j['rules'] : [];
+    $num = fn($v, $d, $lo, $hi) => is_numeric($v) ? max($lo, min($hi, (float) $v)) : $d;
+    $mile = $num($j['mile'] ?? null, $st['mile'], 0, 20); $ovh = $num($j['overhead'] ?? null, $st['overhead'], 0, 500); $mar = $num($j['margin'] ?? null, $st['margin'], 0, 95);
+    $rules = [];
+    foreach (kitCfg()['rules'] as $kr) {
+        $c = is_array($saved[$kr['id']] ?? null) ? $saved[$kr['id']] : null; $ex = !$c; $c = $c ?? ($st['rules'][$kr['id']] ?? ['hour' => 0, 'mins' => 0, 'mats' => []]);
+        $c = ['hour' => $num($c['hour'] ?? 0, 0, 0, 1000), 'mins' => $num($c['mins'] ?? 0, 0, 0, 100000),
+              'mats' => array_values(array_map(fn($m) => ['name' => mb_substr((string) ($m['name'] ?? ''), 0, 60), 'cost' => $num($m['cost'] ?? 0, 0, 0, 100000), 'covers' => $num($m['covers'] ?? 0, 0, 0, 100000)], array_filter((array) ($c['mats'] ?? []), 'is_array')))];
+        $rules[] = ['id' => $kr['id'], 'label' => $kr['label'], 'unit' => $kr['unit'], 'rate' => $kr['rate'], 'example' => $ex] + $c + costsUnit($c, $ovh, $mar);
+    }
+    $b = is_array($j['base'] ?? null) && isset($j['base']['lat'], $j['base']['lon']) ? ['label' => (string) ($j['base']['label'] ?? ''), 'lat' => (float) $j['base']['lat'], 'lon' => (float) $j['base']['lon']] : null;
+    return ['mile' => $mile, 'overhead' => $ovh, 'margin' => $mar, 'base' => $b, 'road' => 1.3, 'rules' => $rules, 'set' => (bool) $j, 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? '')];
+}
+/** the round trip from the base to a house: [miles there and back, dollars]; null without a base or the house's place */
+function costsDrive(array $cfg, ?array $h): ?array {
+    $B = $cfg['base']; if (!$B || !$h || !isset($h['lat'], $h['lon'])) return null;
+    $rad = M_PI / 180; $dl = ((float) $h['lat'] - $B['lat']) * $rad; $dn = ((float) $h['lon'] - $B['lon']) * $rad;
+    $a = sin($dl / 2) ** 2 + cos($B['lat'] * $rad) * cos((float) $h['lat'] * $rad) * sin($dn / 2) ** 2; $mi = 3958.8 * 2 * atan2(sqrt($a), sqrt(1 - $a)) * $cfg['road'] * 2;
+    return ['miles' => round($mi, 1), 'cost' => round($mi * $cfg['mile'], 2)];
+}
+if (in_array($action, ['costs', 'costsset', 'costsapply'], true)) {
+    if (!costsOn()) fail('Not here.', 404);
+    if ($action === 'costs') {
+        if (!desk()) fail('Not allowed.', 403);
+        $cfg = costsCfg(); $reg = (string) ($_GET['region'] ?? ''); $hid = (string) ($_GET['id'] ?? '');
+        if ($reg !== '' && $hid !== '') $cfg['drive'] = costsDrive($cfg, houseFacts($reg, $hid));
+        out(['ok' => true, 'units' => KIT_UNITS] + $cfg);
+    }
+    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    if ($action === 'costsapply') {
+        $rid = (string) ($body['rule'] ?? ''); $rate = $body['rate'] ?? null;
+        if (!is_numeric($rate) || (float) $rate < 0 || (float) $rate > 100000) fail('A price between $0 and $100,000.');
+        $k = json_decode((string) @file_get_contents(DATA_DIR . '/kit.json'), true); $k = is_array($k) ? $k : [];
+        if (empty($k['rules'])) $k['rules'] = kitCfg()['rules'];   /* still the starter lines: they become the company's, with this price */
+        $hit = false; foreach ($k['rules'] as &$r) if (is_array($r) && (string) ($r['id'] ?? '') === $rid) { $r['rate'] = round((float) $rate, 2); $hit = true; } unset($r);
+        if (!$hit) fail('That price line is not there any more.', 404);
+        $k['by'] = $me; $k['at'] = time();
+        if (!writeJsonAtomic(DATA_DIR . '/kit.json', $k)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true] + costsCfg());
+    }
+    if ($action === 'costsset') {
+        $old = json_decode((string) @file_get_contents(DATA_DIR . '/costs.json'), true); $old = is_array($old) ? $old : [];
+        $n = function ($v, string $say, float $hi) { if ($v === '' || $v === null) return 0.0; if (!is_numeric($v) || (float) $v < 0 || (float) $v > $hi) fail($say); return round((float) $v, 4); };
+        $j = ['mile' => $n($body['mile'] ?? 0, 'Cost per mile: a number of dollars, 20 at most.', 20), 'overhead' => $n($body['overhead'] ?? 0, 'Overhead: 0 to 500%.', 500),
+              'margin' => $n($body['margin'] ?? 0, 'Target margin: 0 to 95%.', 95), 'base' => $old['base'] ?? null, 'rules' => []];
+        $ids = array_column(kitCfg()['rules'], 'label', 'id');
+        foreach ((array) ($body['rules'] ?? []) as $rid => $c) {
+            if (!isset($ids[$rid]) || !is_array($c)) continue; $say = '"' . $ids[$rid] . '": ';
+            $mats = [];
+            foreach (array_slice(array_values(array_filter((array) ($c['mats'] ?? []), 'is_array')), 0, 12) as $m) {
+                $nm = $clean($m['name'] ?? '', 60); if ($nm === '' && (float) ($m['cost'] ?? 0) == 0) continue;
+                $mats[] = ['name' => $nm ?: 'Material', 'cost' => $n($m['cost'] ?? 0, $say . 'a material cost between $0 and $100,000.', 100000), 'covers' => $n($m['covers'] ?? 0, $say . 'how many units a pack covers, 0 to 100,000.', 100000)];
+                if (end($mats)['covers'] <= 0) fail($say . 'say how many units one "' . end($mats)['name'] . '" covers.');
+            }
+            $j['rules'][$rid] = ['hour' => $n($c['hour'] ?? 0, $say . 'labour between $0 and $1,000 an hour.', 1000), 'mins' => $n($c['mins'] ?? 0, $say . 'crew minutes per unit, 0 to 100,000.', 100000), 'mats' => $mats];
+        }
+        foreach ((array) ($old['rules'] ?? []) as $rid => $c) if (!isset($j['rules'][$rid]) && isset($ids[$rid])) $j['rules'][$rid] = $c;   /* lines not sent keep what they had */
+        if (array_key_exists('base', $body)) {
+            $b = $body['base'];
+            if ($b === null || $b === '' || (is_array($b) && trim((string) ($b['text'] ?? '')) === '' && !isset($b['lat']))) $j['base'] = null;
+            elseif (is_array($b) && isset($b['lat'], $b['lon'])) {   /* "Where I am now", from the phone or computer */
+                if (!is_numeric($b['lat']) || !is_numeric($b['lon']) || abs((float) $b['lat']) > 90 || abs((float) $b['lon']) > 180) fail('That place could not be read.');
+                $j['base'] = ['label' => $clean($b['label'] ?? '', 120) ?: 'Where you stood when you saved it', 'lat' => round((float) $b['lat'], 5), 'lon' => round((float) $b['lon'], 5)];
+            } elseif (is_array($b)) {   /* an address on the door lists */
+                $txt = $clean($b['text'] ?? '', 160); $parts = array_map('trim', explode(',', $txt, 2));
+                $h = a365Match($parts[0], $parts[1] ?? ''); $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
+                if (!$hf || !isset($hf['lat'], $hf['lon'])) fail('That address is not on your house lists. Type it as "123 Main St, Town", or use Where I am now while you are there.');
+                $j['base'] = ['label' => streetCaseServer((string) $hf['address']) . ', ' . (string) $hf['town'], 'lat' => round((float) $hf['lat'], 5), 'lon' => round((float) $hf['lon'], 5)];
+            }
+        }
+        $j['by'] = $me; $j['at'] = time();
+        if (!writeJsonAtomic(DATA_DIR . '/costs.json', $j)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true] + costsCfg());
+    }
 }
 const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site', 'review'];
 if ($action === 'companyset') {
