@@ -8834,9 +8834,17 @@ if ($action === 'signsend') {
        its amount and method; a deposit taken by hand cannot be turned into a pay link. The price and the day can still change. */
     $S0 = is_array($L['sign'] ?? null) ? $L['sign'] : null;
     $linkPaid = $S0 && ($S0['how'] ?? '') === 'link' && a365DepositPaid($L, false);
+    /* a booking made with no signature and no deposit, sent again with a deposit or for another day (2026-10-29, Jen via Matthew: Roy
+       rescheduled, "I'm going to make sure we get one because he's rescheduling a couple days out and I don't want him to flake again";
+       "make it a thing so she doesnt have to ask again"). Nothing was paid, so it is reopened: the old job comes off the board, the booking
+       mark is cleared, and the new form holds the new day like any new customer's (booked when the deposit comes in, or at once with none). */
+    $reJob = !empty($L['confirmed']) && empty($L['signed']) && $S0 && (int) ($S0['deposit'] ?? 0) === 0 && !$linkPaid ? jobForLead($id) : null;
+    $reopen = $reJob && !$reJob['done'] && (($reJob['pay']['s'] ?? 'unpaid') === 'unpaid') && (((int) ($body['deposit'] ?? 0)) > 0
+        || (string) ($body['date'] ?? '') !== $reJob['date'] || (string) ($body['slot'] ?? '') !== $reJob['slot'] || (string) ($body['crew'] ?? '') !== $reJob['crew']);
+    if ($reopen) $L['confirmed'] = null;
     $depIn = $S0 && (!empty($L['confirmed']) || $linkPaid);
     $byLink = $depIn ? ($S0['how'] ?? '') === 'link' : ($body['how'] ?? '') === 'link';   /* SX-58: the customer pays the deposit on the form, by Square link */
-    if ($S0 && !$depIn && !in_array($S0['how'] ?? '', ['link', 'ways'], true) && $byLink) fail('The $' . (int) $S0['deposit'] . ' deposit was already taken (' . ucfirst((string) $S0['how']) . '). Keep that; a Square link would ask them to pay it again.');
+    if ($S0 && !$depIn && !in_array($S0['how'] ?? '', ['link', 'ways', 'none'], true) && $byLink) fail('The $' . (int) $S0['deposit'] . ' deposit was already taken (' . ucfirst((string) $S0['how']) . '). Keep that; a Square link would ask them to pay it again.');
     if ($byLink && !$depIn && !payLinkOk()) fail(kitOn() ? 'Payments are not connected yet: connect Square or Stripe in Company.' : 'Square is not connected yet.');
     $noDep = !$depIn && ($body['how'] ?? '') === 'none';   /* no deposit (2026-10-26, Jen: Marc and Zane said no to the deposit, and the form would not go without one) */
     $byWays = !$depIn && ($body['how'] ?? '') === 'ways';   /* they pay the deposit on the form another way: Venmo, Cash App, PayPal, Zelle, the company's link (2026-10-29) */
@@ -8862,7 +8870,7 @@ if ($action === 'signsend') {
     /* booked without a signature already (2026-10-18): the job stays where it is; a new day is set on the Jobs board, as for a signed form */
     $exJob = !empty($L['confirmed']) ? jobForLead($id) : null;
     if ($exJob && !$exJob['done'] && ($exJob['crew'] !== $crew || $exJob['date'] !== $date || $exJob['slot'] !== $slot)) fail('They are booked already. Change the day on the Jobs board instead.', 409);
-    if ($why = slotFree($crew, $date, $slot, $id, $exJob ? (string) $exJob['id'] : '')) fail($why, 409);
+    if ($why = slotFree($crew, $date, $slot, $id, $exJob ? (string) $exJob['id'] : ($reopen ? (string) $reJob['id'] : ''))) fail($why, 409);
     $q0 = is_array($L['quote'] ?? null) ? $L['quote'] : [];
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : ($q0[$k] ?? null);
     $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
@@ -8881,10 +8889,18 @@ if ($action === 'signsend') {
     $row = ['id' => $id, 'quote' => $q, 'sign' => $sign, 'status' => 'quoted',
             'note' => mb_substr('Quoted $' . $price . ' by phone; ' . ($how === 'none' ? 'no deposit' : 'deposit $' . $dep . ($byLink ? ($depIn ? ' already paid by Square link' : ' to pay by Square link on the form') : ($how === 'ways' ? ' to pay on the form another way (' . implode(', ', array_column(payWays(), 'label')) . '; the office records it when it comes in)' : ($depIn ? ' already in (' : ' taken (') . ucfirst($how) . ')'))) . '. Form sent; ' . deskWhen($date, '') . ', ' . jobSlot($slot)[1] . ' held with ' . $crew . '.', 0, 500), 'by' => $me, 'at' => time()];
     if ($nosign) $row['note'] = str_replace('Form sent;', 'Form sent (no signature needed);', $row['note']);
+    if ($reopen) {   /* the old booking off the board, the booking mark cleared (see $reJob above) */
+        $jl = @fopen(DATA_DIR . '/jobs.log.lock', 'c'); if ($jl) flock($jl, LOCK_EX);
+        $was = a365Day((string) $reJob['date']) . ', ' . a365Arrive((string) $reJob['slot']) . ' with ' . strtok((string) $reJob['crew'], ' ');
+        $okDel = appendLine(DATA_DIR . '/jobs.log', ['id' => (string) $reJob['id'], 'del' => true, 'note' => 'Taken off for a new form (' . $was . ').', 'by' => $me, 'at' => time()]);
+        if ($jl) flock($jl, LOCK_UN);
+        if (!$okDel) fail('Could not save that. Try again.', 500);
+        appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'confirmed' => null, 'note' => 'Booking reopened for a new form: ' . $was . ' taken off the board.', 'by' => $me, 'at' => time()]);
+    }
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
-    if (!empty($L['confirmed'])) { $A2 = a365Agreement(leadsAll()[$id]); appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'confirmed' => ['facts' => $A2['facts'], 'terms' => $A2['terms'], 'hash' => $A2['hash'], 'version' => A365_SIGN_VERSION] + $L['confirmed'], 'by' => $me, 'at' => time()]); }   /* sent again on purpose: the kept copy follows the new form (2026-10-18) */
+    if (!empty($L['confirmed']) && !$reopen) { $A2 = a365Agreement(leadsAll()[$id]); appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'confirmed' => ['facts' => $A2['facts'], 'terms' => $A2['terms'], 'hash' => $A2['hash'], 'version' => A365_SIGN_VERSION] + $L['confirmed'], 'by' => $me, 'at' => time()]); }   /* sent again on purpose: the kept copy follows the new form (2026-10-18) */
     $bookedJob = $nosign && (!$byLink || $depIn) ? a365BookNoSign($id, $me) : null;   /* the deposit is in already: booked now */
-    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink && !$depIn, 'byWays' => $how === 'ways', 'paid' => $depIn && $how !== 'ways', 'nosign' => $nosign, 'booked' => (bool) $bookedJob]);
+    out(['ok' => true, 'link' => a365SignLink($id, $sign['key']), 'deposit' => $dep, 'balance' => $price - $dep, 'byLink' => $byLink && !$depIn, 'byWays' => $how === 'ways', 'paid' => $depIn && $how !== 'ways', 'nosign' => $nosign, 'reopened' => (bool) $reopen, 'booked' => (bool) $bookedJob]);
 }
 /** may this person make pay links? With SANDBOX keys only an admin (testing): a test link sent to a real customer takes no money */
 function squareFor(): bool { global $role; $c = squareCfg(); return (bool) $c && ($c['env'] === 'production' || $role === 'admin'); }
