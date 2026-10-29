@@ -380,3 +380,7 @@ traverse/app/data/rounds/*.json
 !traverse/app/data/rounds/index.json
 !traverse/app/data/rounds/roof-damage-defaults.json
 !traverse/app/data/rounds/training.json
+
+# Sixfold concert ad: the job photos (customer backyards) and version B, which embeds them, stay local like the other job-photo pieces (2026-10-29)
+sixfold/marketing/christmas-concert-ad-2026/photos/
+sixfold/marketing/christmas-concert-ad-2026/concert-ad-b.*
