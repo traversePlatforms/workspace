@@ -6,7 +6,7 @@
    bots can add a few counts, so treat the numbers as a rough guide.
    The page: the quote button first and biggest, then call, text, and Facebook and reviews once their links are filled in below.
    The quote form is the homepage's, opened with ?from=<piece> so the lead carries where it came from. */
-$ok = ['yard', 'truck', 'car', 'card'];
+$ok = ['yard', 'truck', 'car', 'card', 'concert'];   /* concert: the Christmas concert programme ad (2026-10-29) */
 if (!in_array($piece ?? '', $ok, true)) $piece = 'unknown';
 /* "Save contact" (2026-10-25): the company's card for the phone's contacts, not counted as a scan */
 if (isset($_GET['vcf'])) {
@@ -35,7 +35,7 @@ $PHONE = '+17208304553'; $PHONE_SHOWN = '(720) 830-4553'; $EMAIL = 'M.Sharpe@Six
 /* job photos: drop .jpg/.webp files in img/work/ and they show in a strip; none yet, so nothing shows. Our own jobs only, no stock people,
    no recognisable house fronts without the owner's say-so */
 $PHOTOS = glob(dirname(__DIR__) . '/img/work/*.{jpg,jpeg,webp}', GLOB_BRACE) ?: [];
-$FROM = ['card' => 'business card', 'yard' => 'yard sign', 'truck' => 'truck', 'car' => 'car', 'unknown' => 'QR code'];
+$FROM = ['card' => 'business card', 'yard' => 'yard sign', 'truck' => 'truck', 'car' => 'car', 'concert' => 'ad in the concert program', 'unknown' => 'QR code'];
 
 $q = $piece === 'unknown' ? '' : '?from=' . rawurlencode($piece);
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
