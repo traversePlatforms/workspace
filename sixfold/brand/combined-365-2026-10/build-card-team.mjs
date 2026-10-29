@@ -20,7 +20,7 @@ const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const SITE = '365aeration.com', SERVICES = 'Core aeration \u00b7 Overseeding \u00b7 Fertilizer', GO = 'https://365aeration.com/card/';
 const PEOPLE = [
   { name: 'Brandon Long', title: 'CEO \u00b7 Business inquiries', phone: '(303) 915-1045', email: 'B.Long@365Aeration.com' },
-  { name: 'Jen McPherson', title: 'Booking & quotes', phone: '(720) 830-4553', email: 'contact@365aeration.com' },
+  { name: 'Jen McPherson', title: 'Booking & quotes', phone: '(720) 830-4553', email: 'J.McPherson@365Aeration.com' },   /* her own address (Matthew, 29 Oct), was contact@ */
 ];
 /* the badge and the QR exactly as build-print.mjs draws them */
 const bsrc = readFileSync(join(HERE, 'build.mjs'), 'utf8');
@@ -53,12 +53,15 @@ ${only ? `.page:not(.${only}){display:none}` : ''}
 </style></head><body>`;
 const pages = `<div class="page front"><div class="safe" style="display:flex;align-items:center;justify-content:center"><div style="width:1.62in;height:1.62in">${printBadge('b')}</div></div></div>
 <div class="page back"><div class="safe" style="display:flex;align-items:center;gap:0.14in">
-  <div style="flex:1;display:flex;flex-direction:column;gap:0.07in;min-width:0">
+  <div style="flex:1;display:flex;flex-direction:column;gap:0.11in;min-width:0">
     ${PEOPLE.map(person).join('\n    ')}
-    <div><div style="font-size:0.1in;font-weight:700;color:${t.acc}">${SITE}</div>
-    <div style="font-size:0.09in;color:${t.soft};margin-top:0.015in;white-space:nowrap">${SERVICES}</div></div>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:0.03in;flex:none"><div style="width:0.9in;height:0.9in">${q}</div><div class="o" style="font-weight:700;font-size:0.09in;color:${t.acc};text-align:center;line-height:1.15">Scan for more<br>information</div></div>
+  <!-- the website and services sit under the code (2026-10-29, Matthew: "move the website and stuff to the right maybe? so the left doesnt seem so long") -->
+  <!-- the code stays 0.95 in like the other cards (about 19 mm of modules; qr-in-print: 20 mm is the floor in the hand), so the caption
+       is one line and the services two -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0.025in;flex:none;width:1.3in;text-align:center"><div style="width:0.95in;height:0.95in">${q}</div><div class="o" style="font-weight:700;font-size:0.09in;color:${t.acc};line-height:1.15">Scan for more info</div>
+    <div style="font-size:0.1in;font-weight:700;color:${t.acc};margin-top:0.03in">${SITE}</div>
+    <div style="font-size:0.09in;color:${t.soft};line-height:1.2">Core aeration · Overseeding<br>Fertilizer</div></div>
 </div></div>
 </body></html>`;
 const f = join(PR, '365-Card-Brandon-Jen.html'), pdf = join(PR, '365-Card-Brandon-Jen.pdf');
