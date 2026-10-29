@@ -1,4 +1,4 @@
-# Traverse launch checklist (28 Oct 2026; emails start Thu 29 Oct, 8 am)
+# Traverse launch checklist (28 Oct 2026; emails start Thu 29 Oct, 10 am)
 
 Checked live tonight unless marked otherwise. **Bold = has to happen before the first email goes out.**
 
@@ -10,7 +10,7 @@ Checked live tonight unless marked otherwise. **Bold = has to happen before the 
 | 2 | **Look over the new screenshots (TR-25)** | Matthew | live, waiting |
 | 3 | **Privacy policy and cancellation policy still show "Draft"** to visitors. Did the attorney cover them? If yes, the label comes off; if not, decide whether to launch with them as they are | Matthew decides, Claude edits | open |
 | 4 | **Postal address in Prospect Desk → Settings** (CAN-SPAM: every commercial email needs one; the desk refuses to queue without it). LLC mailing address, PO box or virtual mailbox; it is printed in every email | Matthew | **not set** |
-| 5 | **Open the site** (`bash traverse/ops/open-site.sh`): password off, the 7 public pages listable by Google, robots.txt + sitemap.xml, cache flushed, checked as a visitor; `open-site.sh undo` puts it back | Claude, on Matthew's go | staged and dry-run checked; **every template links people to traverseplatforms.com and the demo page, so this must be done before 8 am** |
+| 5 | **Open the site** (`bash traverse/ops/open-site.sh`): password off, the 7 public pages listable by Google, robots.txt + sitemap.xml, cache flushed, checked as a visitor; `open-site.sh undo` puts it back | Claude, on Matthew's go | staged and dry-run checked; **every template links people to traverseplatforms.com and the demo page, so this must be done before 10 am** |
 | 6 | **Send yourself one test from the Prospect Desk** (to a personal Gmail and an Outlook/Hotmail address): check it lands in the inbox, not spam, and the unsubscribe link works | Matthew | open |
 | 7 | **Queue a small first batch (10–20)**, not the full 40: a three-week-old domain sending cold email should start small and build up | Matthew presses Queue | open |
 | 8 | **Book one demo yourself on your phone** after the site opens, and cancel it from the email link: proves booking, confirmation email and cancel end to end | Matthew | open |
