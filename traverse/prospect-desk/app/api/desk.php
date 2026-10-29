@@ -202,6 +202,11 @@ $action = (string) ($_GET['action'] ?? '');
 /* ---- unsubscribe: no sign-in (the link in every email, and the one-click button mail apps show) ---- */
 if ($action === 'unsub') {
     $id = (string) ($_GET['id'] ?? ''); $tk = (string) ($_GET['t'] ?? '');
+    if ($id === 'testmsg' && hash_equals(unsubToken($id), $tk)) {   /* the link in a test email (2026-10-28): it works, and takes nobody off */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') { header('Content-Type: text/plain; charset=utf-8'); echo 'Test: nobody unsubscribed.'; exit; }
+        header('Content-Type: text/html; charset=utf-8'); header('X-Robots-Tag: noindex');
+        echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Traverse</title><body style="margin:0;font:16px/1.5 system-ui,sans-serif;background:#f4f6f9;color:#0f1b2d;display:grid;place-items:center;min-height:100vh;padding:16px;text-align:center"><div><p style="font-size:20px;font-weight:700;margin:0 0 6px">The unsubscribe link works</p><p style="margin:0">This was a test email, so nobody was taken off the list. On a real email this page tells the company they are unsubscribed.</p></div>'; exit;
+    }
     $S = state(); $ok = preg_match('/^[a-z0-9]{6,24}$/', $id) && isset($S['leads'][$id]) && hash_equals(unsubToken($id), $tk);
     if ($ok && empty($S['leads'][$id]['unsub'])) logAdd(['t' => 'unsub', 'id' => $id, 'by' => 'the company', 'at' => time()]);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') { header('Content-Type: text/plain; charset=utf-8'); echo $ok ? 'Unsubscribed.' : 'Link not recognised.'; exit; }
@@ -354,6 +359,21 @@ switch ($action) {
         jwrite('queue.json', $Q); flock($lk, LOCK_UN);
         logAdd(['t' => 'queued', 'n' => count($msgs), 'by' => $ME, 'at' => time()]);
         out(['ok' => true, 'queued' => count($msgs), 'skipped' => $skip, 'waiting' => count($Q)]);
+    }
+    case 'sendtest': {
+        /* one message to yourself, exactly as a company gets it (2026-10-28, Matthew: "how do i send myself an email from the prospects desk") */
+        if ($me['role'] !== 'admin') fail('Only an admin can send a test.', 403);
+        $to = strtolower(clean($body['to'] ?? '', 120)); if (!filter_var($to, FILTER_VALIDATE_EMAIL)) fail('Type the address to send the test to.');
+        $tr = (string) ($body['trade'] ?? ''); if (!isset(TRADES[$tr], $S['templates'][$tr])) fail('Pick the trade whose message you want to see.');
+        if (trim((string) $S['settings']['address']) === '') fail('Add your postal address in Settings first.');
+        $n = 0; foreach (logRows() as $r) if (($r['t'] ?? '') === 'test' && (int) $r['at'] > time() - 86400) $n++;
+        if ($n >= 10) fail('That is 10 tests in a day already. Try again tomorrow.');
+        $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => 'Denver', 'trade' => $tr, 'person' => '', 'email' => $to];
+        $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u);
+        $r = mailSend($to, $m['subject'], $m['body'], ['List-Unsubscribe: <' . $u . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']);
+        logAdd(['t' => 'test', 'to' => $to, 'trade' => $tr, 'ok' => $r['ok'], 'by' => $ME, 'at' => time()]);
+        if (!$r['ok']) fail('The test did not go out (' . $r['stage'] . '): ' . mb_substr((string) $r['error'], 0, 160));
+        out(['ok' => true, 'to' => $to, 'subject' => $m['subject']]);
     }
     case 'queueclear': {
         /* stop: everything still waiting comes off; what was sent stays sent */

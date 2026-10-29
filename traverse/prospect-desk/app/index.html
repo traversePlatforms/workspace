@@ -413,6 +413,21 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     var k = el('div', 'kpis');
     [[Q.waiting, 'waiting to send'], [Q.sentToday + ' of ' + set.cap, 'sent today'], [D.leads.filter(function (l) { return (l.sent || []).length; }).length, 'companies emailed so far']].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
     main.appendChild(k);
+    /* send yourself a test (2026-10-28): one message as a company gets it, to your own inbox, straight away */
+    if (D.me && D.me.role === 'admin') {
+      var tc = el('div', 'card'); tc.appendChild(el('h3', null, 'Send yourself a test'));
+      tc.appendChild(el('p', 'help', 'One message, exactly as a company gets it (for a sample company), sent to the address you type right now. Try a Gmail and an Outlook or Hotmail address: check it lands in the inbox, not spam, and that the unsubscribe link opens. A test takes nobody off the list and does not count toward the daily cap.'));
+      var tr0 = el('div', 'controls'); var ti = el('input'); ti.type = 'email'; ti.placeholder = 'you@gmail.com'; ti.setAttribute('aria-label', 'Send the test to'); ti.style.cssText = 'padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);min-width:0;flex:1 1 220px';
+      try { ti.value = localStorage.getItem('desk.testto') || ''; } catch (e) {}
+      var ts = el('select'); ts.setAttribute('aria-label', 'Which trade\u2019s message'); ts.style.cssText = 'padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);max-width:100%';
+      Object.keys(D.trades).filter(function (t) { return D.templates[t]; }).forEach(function (t) { var o = el('option', null, D.trades[t] + ' message'); o.value = t; ts.appendChild(o); });
+      var tb0 = el('button', 'btn', 'Send the test'); tb0.type = 'button';
+      tb0.addEventListener('click', function () {
+        var to = ti.value.trim(); if (!to) { ti.focus(); return; } try { localStorage.setItem('desk.testto', to); } catch (e) {}
+        tb0.disabled = true; api('sendtest', { to: to, trade: ts.value }).then(function (j) { tb0.disabled = false; toast(j.ok ? 'Test sent to ' + j.to + ': check the inbox (and spam)' : (j.error || 'The test did not go out.')); }).catch(function () { tb0.disabled = false; toast('No connection.'); });
+      });
+      tr0.appendChild(ti); tr0.appendChild(ts); tr0.appendChild(tb0); tc.appendChild(tr0); main.appendChild(tc);
+    }
     if (Q.waiting) {
       var qc = el('div', 'card'); qc.appendChild(el('h3', null, 'Next in line'));
       Q.next.forEach(function (m) { qc.appendChild(el('div', 'rec', m.name)).appendChild(el('small', null, ' · ' + m.to)); });
