@@ -356,3 +356,13 @@ sixfold/content/365-social-2026-10/job-photo-posts/*.mjs
 
 # Regenerable pipeline caches (2026-10-27, code review item 4): untracked; the files stay on disk and the Drive backup carries them
 traverse/data-pipeline/door-territory/*-cache.json
+
+# Every town's door list holds owner names (2026-10-29: new towns were slipping past the one-name-per-line list above). Ignore every JSON
+# here except the files meant to be tracked; a new tracked file needs its own "!" line.
+traverse/app/data/rounds/*.json
+!traverse/app/data/rounds/company.json
+!traverse/app/data/rounds/cwpp.json
+!traverse/app/data/rounds/hoa-communities.json
+!traverse/app/data/rounds/index.json
+!traverse/app/data/rounds/roof-damage-defaults.json
+!traverse/app/data/rounds/training.json
