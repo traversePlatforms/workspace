@@ -3,11 +3,13 @@
 // For each door: the lot line from the state parcel layer (fetched by area, the cells shared with drcog-turf-town.mjs), then yardSources
 // + yardClassify with the V2 settings, several lots at a time. Run by the Wi-Fi queue (jobs/yardv2.sh), a slice per run; resumes.
 //   node yard-v2-town.mjs --town=thornton [--mins=45] [--conc=6]     exit 0 = town finished, 3 = more left
-// Output: yard-v2/<town>.json { built, settings, doors: { id: { l, s, u, o, t, dt, lot, sv, ph } | { big } | { shared } | null } }
+// Output: yard-v2/<town>.json { built, settings, doors: { id: { l, s, u, o, t, dt, lot, sv, ph, pk, lk } | { big } | { shared } | null } }
 //   l lawn (sq ft) · s seen in the photo · u filled under tree crowns · o open ground · t tree crown · dt DRCOG turf · lot · sv laser survey
 //   ph photo date. null = no lot line at the door's point. Nothing reaches the app until build-yard-v2.mjs puts it in the door files.
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { yardSources, yardClassify, V2 } from './yard-scan-v2.mjs';
+import { markShared } from './build-yard-v2.mjs';
 /* tmp + rename (2026-10-25): the cloud disk filled overnight and left arvada.json cut short and 89 empty parcel files */
 const writeSafe = (f, s) => { const tmp = new URL(f.href + '.tmp'); writeFileSync(tmp, s); renameSync(tmp, f); };
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith('--' + k + '=')); return a ? a.split('=')[1] : d; };
@@ -57,9 +59,11 @@ async function one(d, lots, pkCount) {
   const rings = lots.find((rr) => inRings(d.lon, d.lat, rr));
   if (!rings) { out.doors[d.id] = null; return 'nolot'; }
   const pk = rings[0][0].map((v) => v.toFixed(6)).join(',');
+  /* lk (2026-10-29): the whole lot line. pk alone, the first corner, is shared by neighbouring lots drawn from the same corner */
+  const lk = createHash('md5').update(JSON.stringify(rings)).digest('hex').slice(0, 16);
   if (acres(rings[0]) > 5) { out.doors[d.id] = { big: 1 }; return 'big'; }   /* acreage, open space, a park: not one yard, and slow to read */
   const S0 = await withTimeout(yardSources(rings), 180000), R = yardClassify(S0, V2);
-  out.doors[d.id] = { l: R.lawn, s: R.seen, u: R.under, o: R.open, t: R.trees, dt: R.drcogTurf ?? null, lot: R.lot, sv: R.survey || null, ph: R.photo23 || null, pk };
+  out.doors[d.id] = { l: R.lawn, s: R.seen, u: R.under, o: R.open, t: R.trees, dt: R.drcogTurf ?? null, lot: R.lot, sv: R.survey || null, ph: R.photo23 || null, pk, lk };
   return 'ok';
 }
 let done = 0, err = 0, nolot = 0; const t0 = Date.now();
@@ -76,9 +80,9 @@ for (const c of Object.keys(byCell)) {   /* area by area, saved after each: a st
   }));
   save(); console.log(`area ${c}: ${byCell[c].length} homes · ${done} this run · ${(done / ((Date.now() - t0) / 1000)).toFixed(2)} a second · ${err} errors`);
 }
-/* homes sharing one lot (townhomes, condos): the yard is the complex's, not theirs */
-const byPk = {}; for (const v of Object.values(out.doors)) if (v && v.pk) byPk[v.pk] = (byPk[v.pk] || 0) + 1;
-for (const v of Object.values(out.doors)) if (v && v.pk) { if (byPk[v.pk] > 1) v.shared = byPk[v.pk]; else delete v.shared; }
+/* homes sharing one lot (townhomes, condos): the yard is the complex's, not theirs (build-yard-v2.mjs markShared; until 29 Oct it was
+   the first corner alone, which joined neighbouring houses) */
+markShared(out.doors);
 save();
 const left = doors.filter((d) => !(d.id in out.doors)).length;
 console.log(`slice done: ${done} (no lot ${nolot}, errors ${err}) in ${((Date.now() - t0) / 60000).toFixed(1)} min; ${left} left`);

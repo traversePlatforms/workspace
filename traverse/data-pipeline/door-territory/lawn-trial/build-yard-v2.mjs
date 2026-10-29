@@ -9,8 +9,11 @@
        rng on T lots: [l, l + 60% of the crowns the fill did not reach], capped at the open ground: lawn under trees the photo cannot see
    Doors with no v2 reading (big, shared, not measured) are left out: build-rounds-data keeps the old figure for them.
    Hand measures stay on top: the server lays lawnhand-<town>.log over every card (loadLawnHand), whatever the photo says.
-   Also writes yard-v2-switch-check-2026-10-26.md: old app figure vs v2 on five towns and on every hand-measured lawn.
-     node build-yard-v2.mjs                                                                                                       */
+   Shared lots are worked out here again from the readings (markShared), so a yard-v2/<town>.json flagged by an older rule is read right.
+   The switch record, yard-v2-switch-check-2026-10-26.md (old app figure vs v2 on five towns and every hand-measured lawn), was written
+   once on 26 Oct and is never written again: since the switch the door files hold v2, so a routine run compared v2 with itself and the
+   overnight finishers overwrote the record with "old 27% · new 24%" (29 Oct). --check writes the same tables to yard-v2-check-<date>.md.
+     node build-yard-v2.mjs [--check]                                                                                             */
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,19 +29,42 @@ export function yardLawn(v) {
   if (tree) out.rng = [r100(v.l), r100(Math.min(Math.max(v.o || 0, v.l), v.l + 0.6 * Math.max(0, (v.t || 0) - (v.u || 0))))];
   return out;
 }
+/* Homes sharing one lot (townhomes, condos): the yard is the complex's, not theirs, so they get no v2 figure. Sets v.shared = how many
+   doors are on the lot, in place, for one town's doors.
+   Until 29 Oct the test was the lot line's first corner alone (pk). Neighbouring lots are often drawn from the same corner, so ordinary
+   houses next door to each other counted as one lot: 3247 Oak Leaf Pl, 6049 W Roxbury Pl and 6431 S Cedar St, and 102,614 doors flagged
+   territory-wide where about 8,800 share a lot. Now one lot means the same whole lot line (lk, kept by yard-v2-town.mjs from 29 Oct),
+   or, for readings made before lk: the same first corner and lot area, and at least two of the doors with the same open ground and tree
+   crowns (one lot read twice gives the same figures; neighbours with the same corner and the same rounded area do not). Checked against
+   the whole lot lines in the three towns with parcel cells on this laptop (Highlands Ranch, Thornton, Westminster, 72,000 doors): every
+   really shared lot still flagged, 2 single houses flagged where there were 7,694. */
+export function markShared(doors) {
+  const g = {};
+  for (const v of Object.values(doors)) if (v && v.pk) { delete v.shared; (g[v.pk + '|' + v.lot] = g[v.pk + '|' + v.lot] || []).push(v); }
+  for (const vs of Object.values(g)) {
+    if (vs.length < 2) continue;
+    if (vs.every((v) => v.lk)) { const c = {}; for (const v of vs) c[v.lk] = (c[v.lk] || 0) + 1; for (const v of vs) if (c[v.lk] > 1) v.shared = c[v.lk]; continue; }
+    const seen = new Set(); let one = false;
+    for (const v of vs) for (const k of [v.lk ? 'k' + v.lk : null, 'r' + v.o + '|' + v.t]) { if (!k) continue; if (seen.has(k)) one = true; seen.add(k); }
+    if (one) for (const v of vs) v.shared = vs.length;
+  }
+  return doors;
+}
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const out = {}, per = {}; let n = 0;
+  const out = {}, per = {}; let n = 0, nShared = 0;
   for (const f of readdirSync(join(HERE, 'yard-v2')).filter((f) => f.endsWith('.json'))) {
-    const town = f.slice(0, -5), doors = JSON.parse(readFileSync(join(HERE, 'yard-v2', f), 'utf8')).doors || {};
-    for (const [id, v] of Object.entries(doors)) { const L = yardLawn(v); if (L) { out[town + '/' + id] = L; n++; per[town] = (per[town] || 0) + 1; } }
+    const town = f.slice(0, -5), doors = markShared(JSON.parse(readFileSync(join(HERE, 'yard-v2', f), 'utf8')).doors || {});
+    for (const [id, v] of Object.entries(doors)) { if (v && v.shared) nShared++; const L = yardLawn(v); if (L) { out[town + '/' + id] = L; n++; per[town] = (per[town] || 0) + 1; } }
   }
   writeFileSync(join(HERE, 'yard-v2-lawn.json'), JSON.stringify(out));
-  console.log(`yard-v2-lawn.json: ${n} doors in ${Object.keys(per).length} towns`);
+  console.log(`yard-v2-lawn.json: ${n} doors in ${Object.keys(per).length} towns (${nShared} on shared lots left out)`);
+  if (!process.argv.includes('--check')) process.exit(0);
 
   /* ---- the check: the app's current figure (door files) against v2 ---- */
   const old = (town) => { const p = join(APP, town + '.json'); if (!existsSync(p)) return {}; const m = {}; for (const a of JSON.parse(readFileSync(p, 'utf8')).areas || []) for (const d of a.doors) m[d.id] = d.lawn; return m; };
   const LV = ['L', 'M', 'S', 'N', 'T'];
-  const lines = ['# Yard v2 switch check, 26 Oct 2026', '', 'Old = the lawn figure the app shows today (lawn-cache, 2023 photo + canopy, compact rule). New = yard v2 (build-yard-v2.mjs). Hand measures win over both on the cards.', ''];
+  const today = new Date().toISOString().slice(0, 10);
+  const lines = [`# Yard v2 check, ${today}`, '', 'Old = the lawn figure the door files hold now: yard v2 since 26 Oct, the old photo figure only where v2 has no reading, so Old equals New on most lots. New = yard v2 (build-yard-v2.mjs). Hand measures win over both on the cards. The switch record, old photo figure against v2, is yard-v2-switch-check-2026-10-26.md.', ''];
   lines.push('## Five towns', '', '| Town | Doors with both | Old L/M/S/N/T | New L/M/S/N/T | Median old sq ft | Median new sq ft |', '|---|---|---|---|---|---|');
   const med = (a) => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
   for (const town of ['denver', 'highlands-ranch', 'castle-rock', 'thornton', 'cs-southeast']) {
@@ -65,6 +91,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   }
   const mm = (a) => a.length ? Math.round(med(a) * 100) + '%' : '—';
   lines.push('', `Median miss, all: old ${mm(missO)} (${missO.length}) · new ${mm(missN)} (${missN.length}). Unseen only (not used to tune v2): old ${mm(missOu)} (${missOu.length}) · new ${mm(missNu)} (${missNu.length}). On T lots the new figure is the middle of the range.`);
-  writeFileSync(join(HERE, 'yard-v2-switch-check-2026-10-26.md'), lines.join('\n') + '\n');
+  writeFileSync(join(HERE, `yard-v2-check-${today}.md`), lines.join('\n') + '\n');
   console.log(lines.slice(-30).join('\n'));
 }
