@@ -194,8 +194,8 @@ function feature(string $k): bool { return !empty(company()['features'][$k]); }
    install is built without an aeration brand (company.json a365); Sixfold has one. See "the editions' roles" further down. */
 function edition(): bool { return company()['a365'] === null; }
 /* the terms each person accepts (2026-10-29): bump a version when its text changes and everyone is asked again. See "the terms" further down. */
-const TERMS_VERSION = '2026-10-26';       /* Terms of Use + Privacy Policy, as published 26 October 2026 */
-const AGREEMENT_VERSION = '2026-10-26';   /* the Subscription Agreement (admins), as published 26 October 2026 */
+const TERMS_VERSION = '2026-10-29';       /* Terms of Use v2 + Privacy Policy, as published 29 October 2026 */
+const AGREEMENT_VERSION = '2026-10-29';   /* the Subscription Agreement v3 (admins), as published 29 October 2026 */
 const TERMS_LINKS = ['terms' => 'https://traverseplatforms.com/terms-of-use/', 'privacy' => 'https://traverseplatforms.com/privacy/', 'agreement' => 'https://traverseplatforms.com/terms/'];
 /* who sees the card's trade parts (2026-10-08): admins, and everyone signed in where the company sets features.crew (the editions,
    and Sixfold for its yard parts). These began as an admin-only preview inside Sixfold. Office tools (accounts, JobNimbus) stay admin. */
