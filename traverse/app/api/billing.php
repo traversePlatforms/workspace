@@ -13,7 +13,9 @@ declare(strict_types=1);
  * made of several prices.
  *
  * ---- THE PLANS (Matthew 2026-10-26, traverse/research/pricing-2026-10-26/PRICING-RECOMMENDATION.md) ------------------
- * Per company, users included: Solo 1 person, Crew up to 5, Team up to 12; each person past that is an extra seat.
+ * Per company, users included: Solo 1 person, Crew up to 5, Team up to 12; each person past that is an extra seat. Since 2026-10-29
+ * (Matthew: "every plan includes ONE admin account free plus the workers it lists") those are the WORKERS: every plan also carries one
+ * admin free (billingFreeAdmin), so Solo is 1 admin + 1 worker, Crew 1 + 5, Team 1 + 12; a second admin is a seat. Prices unchanged.
  * Roofing and Solar installs carry the edition uplift (+$20 on Solo, +$50 on Crew and Team). A second edition is a flat
  * add-on. One subscription = the plan's base price (quantity 1) + extra seats (quantity = people past the included) +
  * the uplift (quantity 1, where it applies) + the second edition (quantity 1, if picked). Founding companies: a coupon
@@ -64,7 +66,7 @@ function billingConfigDefaults(): array {
         'display' => ['solo' => $two(99, 79), 'crew' => $two(249, 199), 'team' => $two(549, 449),
                       'crew_extra' => $two(45, 35), 'team_extra' => $two(39, 29),
                       'uplift_solo' => $two(20, 20), 'uplift' => $two(50, 50), 'addon' => $two(99, 99)],
-        'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* people each plan covers before extra seats */
+        'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* workers each plan covers before extra seats, besides the one free admin (2026-10-29) */
         'uplift_on' => null,             /* the Roofing/Solar uplift: null = from the edition (features roof, solar or hail) */
         /* a founding company (Matthew 2026-10-26): about 25% off for the first 12 months (the free 7-day pilot it also had was
            replaced on 2026-10-27 by the money-back guarantee below; trial_days stays 0). Every price is taken down by founding_pct and ROUNDED TO WHOLE DOLLARS ("people seeing cents on a price just feels
@@ -163,9 +165,21 @@ function stripeSigValid(string $secret, string $payload, string $header, ?int $n
 /** the people who count as seats: every sign-in that is on, except the test sign-ins (names starting Claude or Fable) and Traverse's own
     super sign-in (2026-10-29, Matthew: a Solo customer showed over its seats on day one because of it) */
 function billingSeatsUsed(array $rows): int {
-    $n = 0;
-    foreach ($rows as $r) if (empty($r['off']) && ($r['role'] ?? '') !== 'super' && !preg_match('/^(Claude|Fable)\b/i', (string) ($r['name'] ?? ''))) $n++;
+    $n = 0; $free = billingFreeAdmin($rows);
+    foreach ($rows as $id => $r) if (empty($r['off']) && ($r['role'] ?? '') !== 'super' && !preg_match('/^(Claude|Fable)\b/i', (string) ($r['name'] ?? '')) && (string) ($r['id'] ?? $id) !== $free) $n++;
     return $n;
+}
+/** the one admin every plan includes free (2026-10-29, Matthew: "every plan includes ONE admin account free plus the workers it lists"):
+    the oldest admin that is on, a codes-file line before one added in the app, then by when it was added. Any other admin is a seat.
+    '' = no admin to leave out. */
+function billingFreeAdmin(array $rows): string {
+    $best = null;
+    foreach ($rows as $id => $r) {
+        if (!empty($r['off']) || ($r['role'] ?? '') !== 'admin' || preg_match('/^(Claude|Fable)\b/i', (string) ($r['name'] ?? ''))) continue;
+        $k = [($r['source'] ?? '') === 'server' ? 0 : 1, (int) ($r['at'] ?? 0)];
+        if ($best === null || $k < $best[0]) $best = [$k, (string) ($r['id'] ?? $id)];
+    }
+    return $best ? $best[1] : '';
 }
 /** seats the plan pays for: the people it includes plus the extra seats (kept together in billing.json 'seats') */
 function billingSeatsPaid(array $b, array $c): int {
@@ -261,7 +275,7 @@ function billingState(array $c, array $rows): array {
     $warn = null;
     if ($st === 'past_due' || $st === 'unpaid') $warn = 'The last payment did not go through. Update the card in Manage billing.';
     elseif ($st === 'canceled') $warn = 'The plan was cancelled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . '. Pick a plan to carry on.';
-    elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ' people can sign in and the plan covers ' . $paid . '. Email billing@traverseplatforms.com to add seats, or remove people in Accounts.';
+    elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ($used === 1 ? ' worker' : ' workers') . ' can sign in and the plan covers ' . $paid . ', besides your one admin. Email billing@traverseplatforms.com to add seats, or remove people in Accounts.';
     elseif (!empty($b['cancel_at_end']) && !empty($b['period_end'])) $warn = 'The plan ends on ' . date('j M Y', (int) $b['period_end']) . ' (cancelled in Stripe). Manage billing turns it back on.';
     return [
         'ready' => billingConfigured($c), 'mock' => !empty($c['mock_file']),
@@ -297,7 +311,7 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if ($price === '') return ['error' => 'That plan is not offered ' . $ivWord . ' yet.'];
     if ($seats < 1 || $seats > BILLING_SEATS_MAX) return ['error' => 'People: 1 to ' . BILLING_SEATS_MAX . '.'];
     $inc = (int) ($c['included'][$plan] ?? 1);
-    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one person. Crew covers up to ' . (int) $c['included']['crew'] . '.'];
+    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one admin and one worker. Crew covers up to ' . (int) $c['included']['crew'] . ' workers.'];
     $f = ['mode' => 'subscription', 'client_reference_id' => $c['install'],
           'success_url' => $back . (str_contains($back, '?') ? '&' : '?') . 'billing=done',
           'cancel_url' => $back . (str_contains($back, '?') ? '&' : '?') . 'billing=cancel',
@@ -340,8 +354,13 @@ function billingTakeEvent(array $c, array $ev): string {
         if ($type === 'checkout.session.completed') {
             $b['customer'] = (string) ($o['customer'] ?? ($b['customer'] ?? ''));
             if (!empty($o['subscription'])) $b['subscription'] = (string) $o['subscription'];
-            $b['pending'] = true; $did = 'checkout';
+            $b['pending'] = true; $b['pending_at'] = time(); unset($b['checkout']); $did = 'checkout';   /* when (2026-10-29): a second checkout waits for this one */
         } elseif (in_array($type, ['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'], true)) {
+            /* one subscription per company (2026-10-29): a second subscription made while one is active is never taken as the plan; the first
+               stands, it is listed under 'second', and rounds.php emails Traverse to cancel and refund it in Stripe */
+            if ($type === 'customer.subscription.created' && !empty($b['subscription']) && ($o['id'] ?? '') !== $b['subscription'] && in_array($b['status'] ?? '', BILLING_GOOD, true)) {
+                $b['second'] = array_slice(array_values(array_unique(array_merge((array) ($b['second'] ?? []), [(string) ($o['id'] ?? '')]))), -10); $did = 'second subscription'; return $b;
+            }
             /* an older subscription's late event never overwrites the newer one */
             if (!empty($b['subscription']) && ($o['id'] ?? '') !== $b['subscription'] && in_array($b['status'] ?? '', BILLING_GOOD, true) && $type !== 'customer.subscription.created') { $did = 'old subscription'; return $b; }
             $b['subscription'] = (string) ($o['id'] ?? ''); $b['customer'] = (string) ($o['customer'] ?? ($b['customer'] ?? ''));

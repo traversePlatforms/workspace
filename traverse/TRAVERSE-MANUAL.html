@@ -208,7 +208,8 @@ a { color: var(--flag); }
   <h3>Signing in and the device</h3>
   <ul class="plain">
     <li><b>Six-digit code</b>, picked by an admin. No runs (123456) and no single repeated digit.</li>
-    <li><b>One phone or tablet and one computer per code.</b> Signing in on a second phone signs the first one out and tells it why. A company can turn this off in its settings.</li>
+    <li><b>Devices per code.</b> In the editions: <b>one phone, one tablet and one computer</b> at a time (since 29 Oct). In Sixfold: one phone or tablet and one computer. Signing in on a second device of the same kind signs the first one out and tells it why. The device says which kind it is (an iPad on Safari calls itself a Mac, so a Mac with a touch screen counts as a tablet; an Android without "Mobile" in its description is a tablet), so a determined person could fake it: it stops casual sharing, it isn't a lock. A company can turn this off in its settings.</li>
+    <li><b>The terms (editions).</b> The first time someone signs in, and again whenever the terms change, a full screen asks them to read the <a href="https://traverseplatforms.com/terms-of-use/">Terms of Use</a> and <a href="https://traverseplatforms.com/privacy/">Privacy Policy</a> and press <b>I agree</b>. An admin also accepts the <a href="https://traverseplatforms.com/terms/">Subscription Agreement</a>. The server keeps who, when, which version, the IP address and the browser (terms-accept.log, in the private folder beside the accounts). Never asked of your super sign-in, a See-through-their-eyes screen or the Claude/Fable test sign-ins, and not in Sixfold. To ask everyone again, bump TERMS_VERSION (or AGREEMENT_VERSION) at the top of rounds.php.</li>
     <li><b>English or Spanish</b>, switched on the sign-in screen or in Profile. Legal text stays in English.</li>
     <li><b>Light, dark or automatic look</b>, kept on each device.</li>
     <li><b>Installs to the home screen</b> like an app, and <b>works with no signal</b>: marks, notes and photos wait on the phone and send when signal comes back. Signing out warns if anything hasn't sent yet.</li>
@@ -429,7 +430,8 @@ a { color: var(--flag); }
   <h3>Every edition (not Sixfold)</h3>
   <ul class="plain">
     <li><b>Company screen:</b> the client sets its own name, phone, email, website and brand colour.</li>
-    <li><b>Billing</b> through Stripe. Built and switched off; see section 08.</li>
+    <li><b>Billing</b> through Stripe. Built and switched off; see section 08. <b>Seats:</b> every plan includes one admin free plus its workers (Solo 1 admin + 1 worker, Crew 1 + 5, Team 1 + 12); a second admin is a seat. Going over is allowed: the client's admin sees a warning in Accounts and Billing, and Traverse gets one email (to m.sharpe@traverseplatforms.com) each time the install goes over, logged in billing.log. <b>One subscription per company:</b> a second checkout waits while a payment is being confirmed, an open payment page is closed at Stripe before a new one opens, and a second subscription Stripe reports anyway is never taken as the plan (Traverse is emailed to cancel and refund it).</li>
+    <li><b>Six roles</b> (section 05): Admin, Manager, Office, Sales rep, Setter and Technician, named in each trade's words.</li>
     <li><b>Live radar</b> tile on the home screen.</li>
     <li><b>Trade parts shown to crew,</b> not just admins. In Sixfold the crew see the yard parts.</li>
     <li><b>Setup › Email</b> (admins): the company connects its own address. Pick Gmail, Outlook or Microsoft 365, or Other (server and port), type the address, the sender name and an <b>app password</b> made in their Google or Microsoft account (the screen lists the steps). A test email has to reach that address before anything is kept. The app password lets Traverse's server send as them; it is kept in the install's private folder and never shown again (the screen says "Connected as …"), and Disconnect deletes it. Some Microsoft 365 business accounts have SMTP sign-in turned off; their IT person turns on Authenticated SMTP.</li>
@@ -491,7 +493,7 @@ a { color: var(--flag); }
 <section id="roles">
   <span class="sn">05</span>
   <h2>Roles</h2>
-  <p class="intro">Four roles. The server enforces every rule below, so hiding a button is never the only lock. Making someone an admin in Accounts is what gives them the office tools; nothing is tied to a particular person's code, except super.</p>
+  <p class="intro">Four roles in Sixfold (six in the editions since 29 Oct: see "The editions' roles" below). The server enforces every rule below, so hiding a button is never the only lock. Making someone an admin in Accounts is what gives them the office tools; nothing is tied to a particular person's code, except super.</p>
 
   <div class="roles">
     <div class="role"><h4>Crew</h4><p class="who">The reps at the doors.</p><ul>
@@ -507,7 +509,8 @@ a { color: var(--flag); }
       <li>Team stats and the leaderboard</li>
       <li>Assign neighbourhoods and doors within their team, in Territories and the Plan table</li>
       <li>Draw territories on the desktop map</li>
-      <li>Team sign-ins: add crew (always crew, always on their team), give a new random code, sign out, remove</li>
+      <li>Team sign-ins: add crew (always crew, always on their team; in the editions a sales rep, setter or technician), give a new random code, sign out, remove</li>
+      <li>Goals: each teammate's own daily goal; in the editions also one daily goal for the whole team, over the company's</li>
       <li>Office dashboard for their team; their team's calendars</li>
     </ul></div>
     <div class="role"><h4>Admin</h4><p class="who">The company's office. Everything below, across the whole company.</p><ul>
@@ -528,6 +531,35 @@ a { color: var(--flag); }
     </ul></div>
   </div>
   <div class="note"><b>Sixfold's extra roles</b> (only where the jobs features are on): <b>Office</b> makes calls, sends emails and books walks, and nothing else of an admin's; <b>Quote only</b> is the quote desk (Quick quote, its schedule, its own customers and leads); <b>Job crew</b> is crew marked "Does walks", with the jobs-only app. Office and Quote only accounts are also checked for where they're used from.</div>
+
+  <h3>The editions' roles (since 29 Oct)</h3>
+  <p>The editions have six roles. The keys stay as they were (admin, manager, office, crew) plus two new ones (setter, tech); each trade names them its own way. Sixfold keeps its roles exactly as above. The server refuses what a role may not do, so a hidden button is never the only lock. An admin changes anyone's role in Accounts (Change), and it applies at once.</p>
+  <div class="tw"><table>
+    <thead><tr><th scope="col">Key</th><th scope="col">Roofing</th><th scope="col">Solar</th><th scope="col">Pest</th><th scope="col">Security</th><th scope="col">Yards</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">crew</th><td>Sales rep</td><td>Closer</td><td>Rep</td><td>Rep</td><td>Rep</td></tr>
+      <tr><th scope="row">setter</th><td>Setter</td><td>Setter</td><td>Setter</td><td>Setter</td><td>Setter</td></tr>
+      <tr><th scope="row">tech</th><td>Production crew</td><td>Installer</td><td>Technician</td><td>Technician</td><td>Crew</td></tr>
+      <tr><th scope="row">admin, manager, office</th><td colspan="5">Admin, Manager, Office in every edition</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tw"><table class="matrix">
+    <thead><tr><th scope="col">Action</th><th scope="col">Admin</th><th scope="col">Manager</th><th scope="col">Office</th><th scope="col">Sales rep</th><th scope="col">Setter</th><th scope="col">Technician</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Doors, marks, routes</th><td class="y">●</td><td class="y">●</td><td class="p">◐ Doors switch, off at first</td><td class="y">●</td><td class="y">●</td><td class="p">◐ Doors switch, off at first</td></tr>
+      <tr><th scope="row">Quote sent at the door</th><td class="y">●</td><td class="y">●</td><td class="p">◐ with doors</td><td class="y">●</td><td class="x">– books only</td><td class="p">◐ with doors</td></tr>
+      <tr><th scope="row">Their leads (handed to them)</th><td class="y">● all</td><td class="p">◐ unowned, own, team</td><td class="y">● all</td><td class="p">◐ own</td><td class="p">◐ own, no prices; not Quoted or Won</td><td class="x">–</td></tr>
+      <tr><th scope="row">Quotes with the quote kit</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="p">◐ own leads</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">The yes: deposit, agreement form, booking the day</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">– tells the office</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Customers</th><td class="y">●</td><td class="x">–</td><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Take payments (charge a card, pay link)</th><td class="y">●</td><td class="p">◐ switch</td><td class="y">●</td><td class="p">◐ switch</td><td class="x">– never</td><td class="p">◐ switch</td></tr>
+      <tr><th scope="row">Jobs: own schedule, notes, photos, Done</th><td class="y">●</td><td class="p">◐ if Does jobs</td><td class="y">● the board</td><td class="p">◐ if Does jobs</td><td class="x">– never</td><td class="y">● always</td></tr>
+      <tr><th scope="row">Team: sign-ins, leads, territories, numbers</th><td class="y">● all</td><td class="p">◐ own team (sales reps, setters, technicians)</td><td class="p">◐ Runs a team switch</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+      <tr><th scope="row">Goals</th><td class="y">● company + anyone</td><td class="p">◐ team goal + teammates</td><td class="x">–</td><td class="p">◐ own</td><td class="p">◐ own</td><td class="p">◐ own</td></tr>
+      <tr><th scope="row">Accounts, roles, billing, Company, exports</th><td class="y">●</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><b>Doors switch.</b> An office account or a technician with Doors off is refused the door lists and knocking on the server (area, streets, marks, doors worked, walk, area flags, Plan downloads, territories assigning, skip trace); a technician with Doors off is also refused the address search and single-door looks. Every role still gets the towns list (towns and neighbourhood counts only; the house lookup and jobs screens name towns from it). Before 29 Oct an office account with Doors off could still load doors through the door list request; that is closed in the editions. Sixfold's office accounts are unchanged. <b>"Switch"</b> means a per-person setting the admin ticks in Accounts.</div>
 
   <h3>Who can do what</h3>
   <div class="tw"><table class="matrix">
@@ -556,7 +588,8 @@ a { color: var(--flag); }
       <tr><th scope="row">See sign-in codes</th><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="y">●</td></tr>
       <tr><th scope="row">Flags, Downloads log, Usage</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
       <tr class="grp"><th colspan="5">Company and data</th></tr>
-      <tr><th scope="row">Write Training lessons, set team goals</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Write Training lessons, set the company goal</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
+      <tr><th scope="row">Set a teammate's goal; set their own team's goal (editions)</th><td class="x">–</td><td class="p">◐ own team</td><td class="y">●</td><td class="y">●</td></tr>
       <tr><th scope="row">Exports: customers, backups, Jobber, JobNimbus</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
       <tr><th scope="row">Storm list owners and phones, roof settings (Roofing)</th><td class="x">–</td><td class="x">–</td><td class="y">●</td><td class="y">●</td></tr>
       <tr><th scope="row">Hail and wind on the door card (Roofing)</th><td class="y">●</td><td class="y">●</td><td class="y">●</td><td class="y">●</td></tr>
@@ -605,7 +638,7 @@ a { color: var(--flag); }
   <dl class="kv">
     <dt>On a computer</dt><dd>Profile → Layout → Desktop or Phone. Phone shows the app in a phone-sized frame, which is useful for demos.</dd>
     <dt>On a tablet</dt><dd>Profile → Layout → Tablet or Desktop.</dd>
-    <dt>Devices per code</dt><dd>One phone or tablet plus one computer at the same time.</dd>
+    <dt>Devices per code</dt><dd>Editions: one phone, one tablet and one computer at the same time. Sixfold: one phone or tablet plus one computer.</dd>
   </dl>
 </section>
 

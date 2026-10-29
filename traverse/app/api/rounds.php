@@ -190,6 +190,13 @@ function icsTimezone(string $tzid): array {
     return $L;
 }
 function feature(string $k): bool { return !empty(company()['features'][$k]); }
+/* an edition, not Sixfold (2026-10-29, Matthew: the new roles, seats, devices and terms are for the editions only): every edition and client
+   install is built without an aeration brand (company.json a365); Sixfold has one. See "the editions' roles" further down. */
+function edition(): bool { return company()['a365'] === null; }
+/* the terms each person accepts (2026-10-29): bump a version when its text changes and everyone is asked again. See "the terms" further down. */
+const TERMS_VERSION = '2026-10-26';       /* Terms of Use + Privacy Policy, as published 26 October 2026 */
+const AGREEMENT_VERSION = '2026-10-26';   /* the Subscription Agreement (admins), as published 26 October 2026 */
+const TERMS_LINKS = ['terms' => 'https://traverseplatforms.com/terms-of-use/', 'privacy' => 'https://traverseplatforms.com/privacy/', 'agreement' => 'https://traverseplatforms.com/terms/'];
 /* who sees the card's trade parts (2026-10-08): admins, and everyone signed in where the company sets features.crew (the editions,
    and Sixfold for its yard parts). These began as an admin-only preview inside Sixfold. Office tools (accounts, JobNimbus) stay admin. */
 function crewSees(string $role): bool { return $role === 'admin' || ($role !== '' && feature('crew')); }
@@ -483,9 +490,18 @@ function deviceName(): string {
  * which is told why the next time it asks for anything. The page says which kind it is (an iPad on Safari calls itself a Mac);
  * without that, the browser's description decides. A company can turn it off: "oneDevice": false in company.json. */
 function devClass(?string $hint = null): string {
+    /* phone, tablet and computer (the editions, 2026-10-29, Matthew: "each sign-in code works on one phone + one tablet + one computer at a
+       time"): 't' is a tablet, its own class, so a rep's iPad no longer signs out their phone. Sixfold keeps two classes (a tablet counts as
+       a phone, 'm'). Honest note: the class is what the device reports (the page works it out from the browser's description, touch
+       points and screen size), so someone determined can fake it; it keeps a code from being passed around, it is not a lock. */
+    if ($hint === 't') return edition() ? 't' : 'm';
     if ($hint === 'm' || $hint === 'c') return $hint;
-    return preg_match('/iPhone|iPad|Android/i', (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')) ? 'm' : 'c';
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if (edition() && (stripos($ua, 'iPad') !== false || (stripos($ua, 'Android') !== false && stripos($ua, 'Mobile') === false))) return 't';
+    return preg_match('/iPhone|iPad|Android/i', $ua) ? 'm' : 'c';
 }
+/** the words for a device class, for the signed-out message */
+function devClassWords(string $cls): string { return $cls === 't' ? 'tablet' : ($cls === 'm' ? (edition() ? 'phone' : 'phone or tablet') : 'computer'); }
 function devClassOf(array $line): string { return (string) ($line[4] ?? (preg_match('/iPhone|iPad|Android/', (string) ($line[3] ?? '')) ? 'm' : 'c')); }
 function oneDeviceOn(): bool { return company()['oneDevice']; }
 $basePeople = $people;
@@ -547,6 +563,9 @@ if ($session) {
    client admin can change, sign out or remove it, and only it downloads the door list. */
 $isSuper = false;
 if ($session && $session['r'] === 'super') { $isSuper = true; $session['r'] = 'admin'; }
+/* a setter or a technician (the editions, 2026-10-29) works as crew underneath; $sub says which, and edGate() refuses what that role may not do */
+$sub = '';
+if ($session && edition() && in_array($session['r'], ['setter', 'tech'], true)) { $sub = $session['r']; $session['r'] = 'crew'; }
 /** every download that leaves the app (2026-10-11, Matthew): who, what, how many, when; admins read it on the Accounts screen */
 function exportLog(array $row): void {
     global $me;
@@ -1964,6 +1983,8 @@ if ($action === 'billinghook') {
     if (!is_array($ev) || empty($ev['type'])) fail('Not an event.', 400);
     $did = billingTakeEvent($bc, $ev);
     if ($did !== '') billingLog(['what' => 'event', 'type' => (string) $ev['type'], 'id' => (string) ($ev['id'] ?? ''), 'did' => $did]);
+    if ($did !== '') seatWatch();   /* a smaller plan can put the install over its seats (2026-10-29) */
+    if ($did === 'second subscription') travMail(seatNoteTo(), 'Traverse: ' . (string) company()['name'] . ' started a second subscription', "Stripe reported a second subscription for an install that already has an active one. It was NOT taken as the plan; the first one stands.\n\nCompany: " . (string) company()['name'] . "\nInstall: " . COOKIE . ' (' . (string) $bc['install'] . ")\nThe second subscription: " . (string) ($ev['data']['object']['id'] ?? '') . "\n\nCancel and refund it in Stripe.\n");   /* one subscription per company (2026-10-29) */
     out(['ok' => true, 'received' => true]);
 }
 
@@ -1990,7 +2011,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         if (oneDeviceOn()) foreach ($a['s'] as $t => $l) {
             if ($t === $mine || ($l[0] ?? '') !== $line[0] || devClassOf($l) !== $cls) continue;
             if ((int) ($l[1] ?? 0) < time()) continue;   /* 2026-10-13 (Fable review): a sign-in that has run out ends nothing; sessEdit drops it below. It was being logged as a move between devices (Flags) */
-            unset($a['s'][$t]); $a['x'][$t] = [time(), $line[3]]; $ended[] = (string) ($l[3] ?? '');
+            unset($a['s'][$t]); $a['x'][$t] = [time(), $line[3], $cls]; $ended[] = (string) ($l[3] ?? '');   /* + the class, for the signed-out message (2026-10-29) */
         }
         $a['s'][$mine] = $line; return $a;
     });
@@ -2059,7 +2080,7 @@ if ($action === 'hopin') {
         if (($who[1] ?? '') === 'super' && strcasecmp(trim((string) $who[0]), trim((string) $p['n'])) === 0) { $hit = $who; $hitCode = (string) $c; }
     }
     if (!$hit) fail('This edition has no super admin of that name. Sign in with a code.', 403);
-    out(startSession($hit, $hitCode, $sessionKey, $sessionDays));
+    out(array_replace(startSession($hit, $hitCode, $sessionKey, $sessionDays), edSignin($hit, $hitCode)));   /* + the editions' roles and terms (2026-10-29) */
 }
 
 if ($action === 'signin') {
@@ -2081,7 +2102,7 @@ if ($action === 'signin') {
     if (!$hit) { siteAddrs(clientKey()); fail('That code was not recognised.', 401); }      // the attempt already counted stands
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
     /* 'j': two sign-ins in the same second used to get the same cookie, so the signed-in list saw one phone (2026-10-04) */
-    out(startSession($hit, $hitCode, $sessionKey, $sessionDays));
+    out(array_replace(startSession($hit, $hitCode, $sessionKey, $sessionDays), edSignin($hit, $hitCode)));   /* + the editions' roles and terms (2026-10-29) */
 }
 
 /* A sign-out names the session it is for (Fable, 2026-10-03). A phone that signed out with no
@@ -3310,6 +3331,7 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
     if (!$vaRow || $vaRow['off'] || in_array($vaRow['role'], ['admin', 'super'], true)) out(['ok' => false, 'why' => 'viewgone', 'error' => 'That account is not there any more. Back to your own screen.'], 409);
     $viewing = ['by' => $realMe, 'name' => $vaRow['name'], 'role' => $vaRow['role']];
     $me = $vaRow['name']; $role = $vaRow['role']; $session['c'] = $vaId; $isSuper = false;
+    $sub = ''; if (edition() && in_array($role, ['setter', 'tech'], true)) { $sub = $role; $role = 'crew'; }   /* a setter or technician, as they see it (2026-10-29) */
     if ($action === 'taplog') out(['ok' => true, 'kept' => 0]);   /* their tap log stays theirs */
     if ($isPost && !in_array($action, ['area', 'signout'], true)) out(['ok' => false, 'why' => 'viewing', 'error' => 'Looking only: this is ' . $me . '\'s screen, so nothing is saved. Go back to your own screen to make changes.'], 409);
 }
@@ -3341,13 +3363,205 @@ if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
-    if (isset($sessNow['x'][$tagNow])) out(['ok' => false, 'why' => 'elsewhere', 'error' => 'Signed out: your code was used to sign in on another ' . (devClass() === 'm' ? 'phone or tablet' : 'computer') . '. Each code works on one phone and one computer at a time. If that was not you, tell your manager.'], 401);
+    if (isset($sessNow['x'][$tagNow])) out(['ok' => false, 'why' => 'elsewhere', 'error' => 'Signed out: your code was used to sign in on another ' . devClassWords((string) ($sessNow['x'][$tagNow][2] ?? devClass())) . '. Each code works on one phone' . (edition() ? ', one tablet' : '') . ' and one computer at a time. If that was not you, tell your manager.'], 401);
     $lineNow = $sessNow['s'][$tagNow] ?? null;
     if (!is_array($lineNow) || (int) ($lineNow[2] ?? 0) < time() - SEEN_EVERY) {
         $fresh = [$realC, (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName(), is_array($lineNow) ? devClassOf($lineNow) : devClass()];
         sessEdit(function ($a) use ($tagNow, $fresh) { $a['s'][$tagNow] = $fresh; return $a; });
     }
 }
+
+/* ==== THE EDITIONS' ROLES, SEATS NOTE AND TERMS (2026-10-29, Matthew: "ADDITIONAL ROLES for the editions, with permissions settled";
+ * "Enforce permissions on the SERVER, not just by hiding screens") ====================================================================
+ * Editions only (edition(): no aeration brand). Sixfold's roles, screens and checks are untouched by everything in this block.
+ * Six roles. The internal keys stay as they were (admin, manager, office, crew) and two are new (setter, tech); the page names each per
+ * trade from one label map (ROLE_LBL in the page: Roofing Setter / Sales rep / Production crew, Solar Setter / Closer / Installer ...).
+ *
+ *                         admin   manager        office            crew (Sales rep)   setter        tech (Crew / Technician)
+ *   doors, marks, routes  yes     yes            Doors switch, off yes                yes           Doors switch, off
+ *   own leads, pipeline   all     team's + open  all (desk)        own                own, no $     no
+ *   quotes (quote kit)    yes     no             yes               own leads          no            no
+ *   agreements + deposit  yes     no             yes               no (books a crew   no            no
+ *                                                                   day: the office)
+ *   customers             yes     no             yes               no                 no            no
+ *   take payments         yes     switch         yes               switch             never         switch
+ *   jobs: own schedule,   yes     if Does jobs   yes               if Does jobs       never         always
+ *   notes, photos, Done
+ *   team: sign-ins,       all     own team       Runs a team       no                 no            no
+ *   leads, territories            (crew, setter, switch
+ *                                  tech only)
+ *   goals                 company own team's     no                own                own           own
+ *                         + anyone team goal +
+ *                                  its people
+ *   accounts, roles,      yes     no             no                no                 no            no
+ *   billing, company,
+ *   exports
+ * A setter or tech signs in as crew underneath ($role 'crew', $sub), so everything a crew account has applies first; edGate() below then
+ * refuses what the role may not do. "Switch" = a per-person setting an admin ticks in Accounts.
+ * Door lists and knocking (ED_DOOR_LISTS) follow the Doors switch for office and tech accounts. The towns list ('regions') stays open to
+ * every signed-in role: it holds towns and neighbourhood counts only (no doors, owners or phones), and the address search, the house lookup
+ * and the jobs screens name towns from it. A tech with Doors off is also refused the single-door looks and saves (ED_DOOR_ONE); an office
+ * account keeps them, because its house lookup opens one door at a time by address. */
+const ED_DOOR_LISTS = ['area', 'streets', 'mark', 'mydoors', 'walk', 'areaflag', 'work', 'stormdoors', 'others', 'planexport', 'doorassign', 'assign', 'assignmany', 'unassignall', 'skiptrace', 'skiplist', 'skipexport', 'skippick', 'houseposs'];
+const ED_DOOR_ONE = ['search', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget', 'walkics', 'lawnmask', 'soil', 'firecheck', 'lawnfix', 'matfix', 'communities', 'territories', 'terrlist', 'terrsave', 'stormdays', 'secmap', 'seclist', 'secrates', 'pestseason', 'climate', 'result', 'results', 'money', 'lawncheck'];
+/* a setter: no prices, quotes, customers or payments */
+const ED_SETTER_NO = ['kit', 'kitquote', 'signsend', 'leadquote', 'leadcontact', 'leadhouse', 'leadask', 'quotes', 'quoted', 'roofjob', 'jobcharge', 'jobpaylink', 'jobpaid', 'squarecheck', 'squarelook', 'squarepage', 'squareconfirm', 'squareconfirmlist',
+    'payments', 'paymentsexport', 'receipt', 'receiptmail', 'customers', 'customerfrom', 'customersave', 'custjob', 'custdoc', 'custdocadd', 'visitsave', 'plantemplates', 'plantemplatesave', 'customersexport', 'customerimport',
+    'a365house', 'a365pricing', 'a365calc', 'fqhouse', 'fqcalc', 'fqsend', 'fqmine', 'jobsave', 'jobpart', 'jobdone', 'jobwork', 'secrates'];
+/* a technician: no leads, quotes or customers (the jobs they are given stay theirs) */
+const ED_TECH_NO = ['myleads', 'leadstatus', 'leadfollow', 'leadassign', 'leadrecall', 'leadunreach', 'leadremove', 'leadtry', 'leadoutcome', 'crewlead', 'leadadd', 'leadquote', 'leadcontact', 'leadhouse', 'leadask',
+    'kit', 'kitquote', 'signsend', 'quotes', 'quoted', 'roofjob', 'customers', 'customerfrom', 'customersave', 'custjob', 'custdoc', 'custdocadd', 'visitsave', 'customersexport', 'customerimport', 'a365house', 'teamleads'];
+/** the role's sub-key in an edition ('' = admin, manager, office or a plain crew account; 'setter' or 'tech') */
+function edSub(): string { global $sub; return edition() ? (string) ($sub ?? '') : ''; }
+/** does this account see doors? Office and tech accounts only with the Doors switch (Accounts); everyone else always */
+function edDoorsOk(): bool { global $role, $session; return !edition() || !($role === 'office' || edSub() === 'tech') || acctFlag('doors', (string) ($session['c'] ?? '')); }
+/** a sales rep (an edition's crew account, not a setter or tech) pricing one of their own leads with the quote kit */
+function edRepLead(string $id): bool {
+    global $role; if (!edition() || $role !== 'crew' || edSub() !== '' || $id === '') return false;
+    $l = leadsAll()[$id] ?? null; return is_array($l) && in_array((string) ($l['owner'] ?? ''), meNames(), true);
+}
+function edGate(string $a): void {
+    global $role, $body;
+    $sub = edSub();
+    $no = function (string $why) { fail($why, 403); };
+    if (!edDoorsOk() && (in_array($a, ED_DOOR_LISTS, true) || ($sub === 'tech' && in_array($a, ED_DOOR_ONE, true)))) $no('Doors are switched off for this account. An admin turns them on in Accounts.');
+    if ($sub === 'setter') {
+        if (in_array($a, ED_SETTER_NO, true)) $no('Prices, quotes, customers and payments are not part of this role. The sales rep or the office takes it from here.');
+        if ($a === 'mark' && !empty($body['qs'])) $no('A setter books the appointment; the quote is the sales rep\'s. Mark it Booked.');
+        if ($a === 'leadstatus' && in_array((string) ($body['status'] ?? ''), ['quoted', 'won'], true)) $no('Quoted and Won are the sales rep\'s.');
+    }
+    if ($sub === 'tech' && in_array($a, ED_TECH_NO, true)) $no('Leads, quotes and customers are not part of this role.');
+    /* the team tools: a manager, or an office account that runs a team (as before); never a setter or tech */
+    if ($sub !== '' && $role === 'crew' && in_array($a, ['teamsave', 'teammember', 'accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], true)) $no('Not allowed.');
+}
+if (!defined('SIXFOLD_CLI') && $session && edition()) edGate($action);
+
+/* ---- the note to Traverse when an install goes over its seats (2026-10-29, Matthew: "keep it allowed (never block), the client's admin
+ * sees the warning (exists), AND Matthew gets a note") ----
+ * Once each time it goes over, not on every request: seat-over.json beside the data remembers the last state, and a note goes only when
+ * it turns from within the plan to over (back within the plan arms it again). Checked after any change to the accounts, after a Stripe
+ * event and when Accounts or Billing is opened. Sent through Traverse's own mailbox (the website's Gmail sender: traverse-site-private/
+ * site-config.php beside public_html, the same file the website's demo bookings and the Prospect Desk use; nothing is hard-coded here). Every
+ * note, sent or not, goes in billing.log. TRAV_MAIL_MOCK (a file path, tests) writes the message there instead of sending. */
+function seatNoteTo(): string { return 'm.sharpe@traverseplatforms.com'; }   /* a function, not a const: the Stripe hook runs before this line */
+function travMailCfg(): array {
+    $c = ['host' => 'smtp.gmail.com', 'port' => 587, 'user' => 'm.sharpe@traverseplatforms.com', 'pass' => '', 'from_name' => 'Traverse', 'timeout' => 15, 'ehlo' => 'traverseplatforms.com'];
+    $f = dirname(__DIR__, 2) . '/traverse-site-private/site-config.php';
+    $own = is_file($f) ? (include $f) : [];
+    if (is_array($own['smtp'] ?? null)) foreach (['host', 'port', 'user', 'pass', 'timeout', 'ehlo'] as $k) if (isset($own['smtp'][$k])) $c[$k] = $own['smtp'][$k];
+    $c['pass'] = (string) preg_replace('/\s+/', '', (string) $c['pass']);
+    return $c;
+}
+/** one plain-text message from Traverse's mailbox; never throws: [ok, stage, error] */
+function travMail(string $to, string $subject, string $text): array {
+    $mock = getenv('TRAV_MAIL_MOCK');
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $subject, 'body' => $text], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '']; }
+    $s = travMailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => mb_substr((string) $e, 0, 200)];
+    if ($s['pass'] === '') return $fail('config', 'no mail password in traverse-site-private/site-config.php');
+    $fp = @stream_socket_client('tcp://' . $s['host'] . ':' . (int) $s['port'], $errno, $errstr, (int) $s['timeout']);
+    if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
+    stream_set_timeout($fp, (int) $s['timeout']);
+    $read = function () use ($fp): array { $last = ''; while (true) { $l = @fgets($fp, 2048); if ($l === false) return [0, 'connection closed']; $last = rtrim($l, "\r\n"); if (strlen($l) < 4 || $l[3] !== '-') break; } return [(int) substr($last, 0, 3), $last]; };
+    $w = function (string $cmd) use ($fp) { @fwrite($fp, $cmd . "\r\n"); };
+    $quit = function () use ($fp) { @fwrite($fp, "QUIT\r\n"); @fclose($fp); };
+    $step = function (string $cmd, array $want, string $st) use ($w, $read, $quit, $fail) { if ($cmd !== '') $w($cmd); [$code, $rep] = $read(); if (!in_array($code, $want, true)) { $quit(); return $fail($st, $rep); } return null; };
+    if ($e = $step('', [220], 'greeting')) return $e;
+    if ($e = $step('EHLO ' . $s['ehlo'], [250], 'ehlo')) return $e;
+    if ($e = $step('STARTTLS', [220], 'starttls')) return $e;
+    $cm = STREAM_CRYPTO_METHOD_TLS_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
+    if (@stream_socket_enable_crypto($fp, true, $cm) !== true) { $quit(); return $fail('starttls', 'TLS negotiation failed'); }
+    foreach ([['EHLO ' . $s['ehlo'], [250], 'ehlo-tls'], ['AUTH LOGIN', [334], 'auth'], [base64_encode($s['user']), [334], 'auth'], [base64_encode($s['pass']), [235], 'auth'],
+              ['MAIL FROM:<' . $s['user'] . '>', [250], 'from'], ['RCPT TO:<' . $to . '>', [250, 251], 'to'], ['DATA', [354], 'data']] as [$cmd, $want, $st]) if ($e = $step($cmd, $want, $st)) return $e;
+    $eol = "\r\n"; $mh = fn($x) => preg_match('/[\x80-\xFF]/', $x) ? '=?UTF-8?B?' . base64_encode($x) . '?=' : $x;
+    $payload = implode($eol, ['Date: ' . date('r'), 'From: ' . $mh((string) $s['from_name']) . ' <' . $s['user'] . '>', 'To: ' . $to, 'Subject: ' . $mh($subject),
+        'Message-ID: <' . bin2hex(random_bytes(12)) . '@traverseplatforms.com>', 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64']) . $eol . $eol . chunk_split(base64_encode($text), 76, $eol);
+    @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
+    return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
+}
+function seatWatch(): void {
+    global $basePeople, $sessionKey;
+    if (!edition() || !feature('billing') || !function_exists('billingSeatsUsed')) return;
+    $c = billingConfig(__DIR__); $b = billingLoad();
+    $used = billingSeatsUsed(acctRows($basePeople, loadAccounts(), $sessionKey)); $paid = billingSeatsPaid($b, $c);
+    $over = in_array($b['status'] ?? '', BILLING_GOOD, true) && $used > $paid;
+    $f = DATA_DIR . '/seat-over.json'; $h = @fopen($f, 'c+'); if (!$h) return;
+    flock($h, LOCK_EX);
+    $was = json_decode((string) stream_get_contents($h), true); $was = is_array($was) ? $was : [];
+    $put = function (array $x) use ($h) { ftruncate($h, 0); rewind($h); fwrite($h, json_encode($x, JSON_UNESCAPED_SLASHES)); fflush($h); };
+    if ($over && empty($was['over'])) {
+        $co = company(); $plan = ucfirst((string) ($b['plan'] ?? '?')) . (($b['interval'] ?? '') === 'year' ? ', yearly' : ', monthly');
+        $text = "An install has gone over the seats its plan pays for. Nothing is blocked; its admin sees the warning in Accounts and Billing.\n\n"
+              . 'Company: ' . (string) $co['name'] . "\n" . 'Edition: ' . (string) ($co['best'] ?? '') . ' (install ' . COOKIE . ', ' . (string) $c['install'] . ")\n"
+              . 'Plan: ' . $plan . "\n" . 'Seats paid: ' . $paid . ' workers, plus the one admin every plan includes' . "\n"
+              . 'Seats used: ' . $used . ' workers (the first admin, Traverse\'s own sign-in and test sign-ins not counted)' . "\n"
+              . 'When: ' . (new DateTime('now', new DateTimeZone(appTz())))->format('D j M Y, g:i a T') . "\n\n"
+              . "To add seats, change the subscription in Stripe; or ask them to remove people in Accounts.\n";
+        $r = travMail(seatNoteTo(), 'Traverse: ' . (string) $co['name'] . ' is over its seats (' . $used . ' of ' . $paid . ')', $text);
+        $put(['over' => true, 'at' => time(), 'used' => $used, 'paid' => $paid, 'plan' => $b['plan'] ?? null, 'mailed' => $r['ok']]);
+        billingLog(['what' => 'seats over', 'used' => $used, 'paid' => $paid, 'mailed' => $r['ok'], 'stage' => $r['stage'], 'error' => $r['error']]);
+    } elseif (!$over && !empty($was['over'])) {
+        $put(['over' => false, 'at' => time(), 'used' => $used, 'paid' => $paid]);
+        billingLog(['what' => 'seats within plan', 'used' => $used, 'paid' => $paid]);
+    }
+    flock($h, LOCK_UN); fclose($h);
+}
+/* after any change to the accounts (seatWatch reads them back from disk once the change is saved and answered) */
+if (!defined('SIXFOLD_CLI') && $isPost && edition() && in_array($action, ['accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore'], true)) register_shutdown_function('seatWatch');
+
+/* ---- the terms (2026-10-29, Matthew: "a screen where users accept the terms") ----
+ * On sign-in, someone who has not accepted the current Terms of Use (and Privacy Policy) is shown a full-screen step with links to both
+ * and an "I agree" button; an admin also accepts the Subscription Agreement (the client agreement, at /terms/ on the website; the Terms of
+ * Use are at /terms-of-use/, see traverse/marketing-site/build-legal.cjs). Who, when, which version, IP address and browser go in
+ * terms-accept.log beside the accounts (the private folder), and the versions on the person's account (so a new code keeps them). Bump a
+ * version when the text changes and everyone is asked again. Editions only; never Traverse's super sign-in, a view-as screen or the test
+ * sign-ins (Claude, Fable). The step is the page's: the server reports what is due and keeps the record. */
+/* the versions and links: at the top with edition(), since a sign-in (further up than the terms block) asks for them */
+/** what this person still has to accept: null = nothing asked here (Sixfold, super, test sign-ins, view-as) */
+function termsState(string $id, string $role, string $name, bool $super, bool $viewing = false): ?array {
+    global $acct;
+    if (!edition() || $super || $viewing || $id === '' || boardHidden($name)) return null;
+    $t = (array) ($acct['terms'][$id] ?? []);
+    $needA = $role === 'admin';
+    $dueT = ($t['t'] ?? '') !== TERMS_VERSION; $dueA = $needA && ($t['a'] ?? '') !== AGREEMENT_VERSION;
+    return ['due' => $dueT || $dueA, 'terms' => TERMS_VERSION, 'agreement' => $needA ? AGREEMENT_VERSION : null, 'dueTerms' => $dueT, 'dueAgreement' => $dueA, 'links' => TERMS_LINKS];
+}
+/** the extra fields of a sign-in's answer in an edition: the setter or tech as crew, their switches, and the terms due */
+function edSignin(array $hit, string $hitCode): array {
+    global $sessionKey, $acct;
+    if (!edition()) return [];
+    $r = (string) ($hit[1] ?? 'crew'); $id = codeId($hitCode, $sessionKey);
+    $o = ['terms' => termsState($id, $r === 'super' ? 'admin' : $r, (string) ($hit[0] ?? ''), $r === 'super')];
+    if (in_array($r, ['setter', 'tech'], true)) $o += ['role' => 'crew', 'sub' => $r, 'walker' => $r === 'tech', 'pays' => $r === 'tech' && paysOn($id), 'doors' => $r === 'tech' && acctFlag('doors', $id)];
+    return $o;
+}
+/** the same for 'me' */
+function edMe(): array {
+    global $session, $role, $realMe, $realSuper, $viewing, $me;
+    if (!edition()) return [];
+    $id = (string) ($session['c'] ?? ''); $s = edSub();
+    $o = ['sub' => $s, 'terms' => termsState($id, $role, (string) $me, (bool) $realSuper, (bool) $viewing)];
+    if ($s === 'tech') $o += ['walker' => true, 'doors' => acctFlag('doors', $id)];
+    if ($s === 'setter') $o += ['pays' => false, 'walker' => false];
+    return $o;
+}
+if ($action === 'termsaccept') {
+    if (!$isPost) fail('POST required', 405);
+    $tid = (string) ($session['c'] ?? '');
+    $ts = termsState($tid, $role, $me, $realSuper, (bool) $viewing);
+    if ($ts === null) out(['ok' => true, 'terms' => null]);
+    if ((string) ($body['terms'] ?? '') !== TERMS_VERSION || ($ts['agreement'] !== null && (string) ($body['agreement'] ?? '') !== AGREEMENT_VERSION)) fail('The terms changed while this was open. Read them again and agree.', 409);
+    $tl = @fopen(accountsFile() . '.lock', 'c');
+    if (!$tl || !flock($tl, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts();
+    $acct['terms'] = (array) ($acct['terms'] ?? []);
+    $acct['terms'][$tid] = ['t' => TERMS_VERSION, 'a' => $ts['agreement'] ?? (string) ($acct['terms'][$tid]['a'] ?? ''), 'at' => time()];
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    @file_put_contents(dirname(accountsFile()) . '/terms-accept.log', json_encode(['name' => $me, 'id' => $tid, 'role' => $role . (edSub() !== '' ? '/' . edSub() : ''), 'terms' => TERMS_VERSION,
+        'agreement' => $ts['agreement'], 'ip' => (string) ($_SERVER['REMOTE_ADDR'] ?? ''), 'ua' => mb_substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 300), 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+    flock($tl, LOCK_UN); fclose($tl);
+    out(['ok' => true, 'terms' => termsState($tid, $role, $me, $realSuper, (bool) $viewing)]);
+}
+/* ==== end of the editions' roles, seats note and terms ==== */
 
 /* ---- in-app texting (2026-10-10, api/sms.php) ----
  * A text goes to a number the homeowner gave: a door phone saved as "given at the door" (anyone who can see the door), a
@@ -3456,13 +3670,13 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))]);
+if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))], edMe()));   /* + edMe(): the editions' roles and terms (2026-10-29) */
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
 /* teams (2026-10-05): who is on whose team, worked out once per request; the functions and actions are further down */
 /* 'office' (2026-10-14, the walk desk): calls, emails and booking walks, nothing else of the admin's; only where features.walkdesk is on */
-define('ROLES', feature('walkdesk') ? (company()['a365'] ? ['crew', 'office', 'quote', 'manager', 'admin'] : ['crew', 'office', 'manager', 'admin']) : ['crew', 'manager', 'admin']);
+define('ROLES', feature('walkdesk') ? (company()['a365'] ? ['crew', 'office', 'quote', 'manager', 'admin'] : ['crew', 'setter', 'tech', 'office', 'manager', 'admin']) : (edition() ? ['crew', 'setter', 'tech', 'manager', 'admin'] : ['crew', 'manager', 'admin']));   /* + setter and tech in the editions (2026-10-29) */
 /* 'quote' (2026-10-15, Matthew: "an account that goes straight to the quote generator and only shows that"): the Quick quote and nothing else; the server refuses every other action */
 $TEAM = teamInfo($basePeople, $acct, $sessionKey);
 $myTeam = (string) ($TEAM['byName'][$me]['team'] ?? '');
@@ -4069,7 +4283,7 @@ if ($action === 'stats') {
     if (mgr() && !empty($_REQUEST['team']) && trim((string) ($_REQUEST['who'] ?? '')) === '') $who = '';
     $list = teamDays($days, $who);
     if (($role === 'manager' || (mgr() && !empty($_REQUEST['team']))) && $who === '') $list = array_values(array_filter($list, fn($p) => $p['name'] === $me || sameTeam($p['name'])));
-    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d'), 'who' => $who, 'people' => $list, 'goal' => $who !== '' ? (loadPGoals()[$who] ?? null) : null, 'company' => loadGoals()]);
+    out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d'), 'who' => $who, 'people' => $list, 'goal' => $who !== '' ? (loadPGoals()[$who] ?? null) : null, 'company' => $who !== '' && edition() ? goalFor($who) : loadGoals()]);   /* + their team's goal (editions, 2026-10-29) */
 }
 
 /* ---- my doors (2026-10-02) ------------------------------------------------
@@ -4602,7 +4816,7 @@ function teamInfo(array $basePeople, array $acct, string $key): array {
         if ($r['off']) continue;
         $tid = (string) ($acct['member'][$r['id']] ?? '');
         if ($tid !== '' && !isset($acct['teams'][$tid])) $tid = '';
-        $byName[$r['name']] = ['id' => $r['id'], 'role' => $r['role'], 'team' => $tid, 'walker' => !empty($acct['walker'][$r['id']])];
+        $byName[$r['name']] = ['id' => $r['id'], 'role' => $r['role'], 'team' => $tid, 'walker' => !empty($acct['walker'][$r['id']]) || ($r['role'] === 'tech' && edition())];   /* a technician always does the jobs (2026-10-29) */
         if ($tid !== '') $members[$tid][] = $r['name'];
     }
     return ['byName' => $byName, 'members' => $members];
@@ -4845,6 +5059,7 @@ if ($action === 'myleads') {
     $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
     $whoAll = $who === $me ? meNames() : [$who];   /* leads handed to a linked sign-in are this person's too (2026-10-21) */
     $list = array_values(array_filter(leadsAll(), fn($l) => in_array($l['owner'], $whoAll, true) && !(webHide() && webLead($l) && !sentToMe($l))));   /* never Matthew's, unless he sent it to them (2026-10-27) */
+    if (edSub() === 'setter') $list = array_map(fn($l) => array_diff_key($l, ['quote' => 1, 'sign' => 1, 'signed' => 1, 'job' => 1, 'value' => 1]), $list);   /* a setter sees no prices (2026-10-29) */
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     out(['ok' => true, 'who' => $who, 'leads' => $list]);
 }
@@ -5098,7 +5313,7 @@ if ($action === 'proppull') {
 }
 if (in_array($action, ['a365house', 'leadhouse', 'leadask', 'lawncheck'], true) && !feature('walkdesk')) fail('Not here.', 404);
 if ($action === 'a365house') {
-    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote' && !(edition() && $role === 'crew' && edSub() === '')) fail('Not allowed.', 403);   /* + a sales rep: the house on their quote, a door card they see anyway (2026-10-29) */
     $h = houseFacts((string) ($_GET['region'] ?? ''), (string) ($_GET['id'] ?? ''));
     if (!$h) fail('No such house.', 404);
     out(['ok' => true, 'house' => $h]);
@@ -9637,6 +9852,7 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billingli
     if (!feature('billing')) fail('Billing is not on for this install.', 403);
     $bc = billingConfig(__DIR__);
     $rows = acctRows($basePeople, $acct, $sessionKey);
+    if ($action === 'billing') seatWatch();   /* the note to Traverse when the install has gone over (2026-10-29) */
     if ($action === 'billing') out(['ok' => true, 'super' => $isSuper] + billingState($bc, $rows));
     if (!$isPost) fail('POST required', 405);
     /* go-live and the money-back guarantee (2026-10-27): only Traverse (the super admin) marks an app live or refunds */
@@ -9662,13 +9878,25 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billingli
         out(['ok' => true, 'url' => (string) $r['url']]);
     }
     if (in_array($b['status'] ?? '', array_merge(BILLING_GOOD, ['past_due', 'unpaid']), true)) fail('There is a plan already. To change it, email billing@traverseplatforms.com.');
+    /* one subscription per company (2026-10-29): a payment that finished and is waiting for Stripe's confirmation, or a payment page still
+       open in another tab or on another admin's phone, would each make a second subscription. A finished one waits (a day at most); an open
+       one is closed at Stripe before a new page opens, and if it has just been paid, no new page opens. */
+    if (!empty($b['pending']) && empty($b['status']) && (int) ($b['pending_at'] ?? time()) > time() - 86400) fail('Your payment went through and Stripe is confirming the plan. Open Billing again in a minute.', 409);
+    $openCo = is_array($b['checkout'] ?? null) ? $b['checkout'] : null;
+    if ($openCo && !empty($openCo['id']) && (int) ($openCo['until'] ?? 0) > time()) {
+        $cs = stripeCall($bc, 'GET', '/v1/checkout/sessions/' . rawurlencode((string) $openCo['id']));
+        if (($cs['status'] ?? '') === 'complete') fail('A payment page opened a moment ago was just paid. Open Billing again in a minute.', 409);
+        if (($cs['status'] ?? '') === 'open' && isset(stripeCall($bc, 'POST', '/v1/checkout/sessions/' . rawurlencode((string) $openCo['id']) . '/expire')['error'])) fail('Another payment page is open for this company. Finish or close it, then try again.', 409);
+    }
     $plan = (string) ($body['plan'] ?? ''); $iv = (string) ($body['interval'] ?? ''); $seats = (int) ($body['seats'] ?? 0); $addon = !empty($body['addon']);
     $cf = billingCheckoutFields($bc, $b, $plan, $iv, $seats, $addon, $back);
     if (isset($cf['error'])) fail($cf['error']);
     $ce = billingFoundingCoupon($bc, $cf['fields']);   /* the founding discount, made for this checkout (2026-10-26) */
     if ($ce !== null) fail($ce, 502);
+    $cf['fields']['expires_at'] = time() + 1860;   /* the page closes itself after 31 minutes (Stripe's least is 30), so at most one is open (2026-10-29) */
     $r = stripeCall($bc, 'POST', '/v1/checkout/sessions', $cf['fields']);
     if (isset($r['error']) || empty($r['url'])) fail($r['error'] ?? 'Stripe did not open the payment page.', 502);
+    billingSave(function (array $b0) use ($r, $cf) { $b0['checkout'] = ['id' => (string) ($r['id'] ?? ''), 'at' => time(), 'until' => (int) $cf['fields']['expires_at']]; return $b0; });   /* the page now open (2026-10-29) */
     billingLog(['what' => 'checkout', 'by' => $me, 'plan' => $plan, 'interval' => $iv, 'seats' => $seats, 'addon' => $addon, 'session' => (string) ($r['id'] ?? '')]);
     out(['ok' => true, 'url' => (string) $r['url']]);
 }
@@ -9761,6 +9989,7 @@ if ($action === 'paysset') {
     $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+    if (!empty($body['on']) && $rows[$id]['role'] === 'setter' && edition()) fail('A setter does not take payments.');   /* 2026-10-29 */
     if (!isset($acct['pays'])) $acct['pays'] = array_map(fn($v) => 1, (array) ($acct['walker'] ?? []));   /* the first change keeps everyone who had it */
     if (!empty($body['on'])) $acct['pays'][$id] = 1; else unset($acct['pays'][$id]);
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
@@ -9778,7 +10007,8 @@ if ($action === 'acctflag') {   /* "Runs a team" / "Marks won and lost" on an of
     $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
-    if ($flag === 'fq' ? !in_array($rows[$id]['role'], ['crew', 'manager'], true) : $rows[$id]['role'] !== 'office') fail($flag === 'fq' ? 'The quick quote is for crew accounts.' : 'Only an Office account takes this.');
+    $techDoors = $flag === 'doors' && edition() && $rows[$id]['role'] === 'tech';   /* a technician's Doors switch (2026-10-29) */
+    if (!$techDoors && ($flag === 'fq' ? !in_array($rows[$id]['role'], ['crew', 'manager'], true) : $rows[$id]['role'] !== 'office')) fail($flag === 'fq' ? 'The quick quote is for crew accounts.' : 'Only an Office account takes this.');
     if ($flag === 'runsteam' && !empty($body['on']) && (string) ($acct['member'][$id] ?? '') === '') fail('Put them on a team first.');
     $acct[$flag] = (array) ($acct[$flag] ?? []);
     if (!empty($body['on'])) $acct[$flag][$id] = 1; else unset($acct[$flag][$id]);
@@ -9796,6 +10026,7 @@ if ($action === 'walkerset') {
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
     if ($rows[$id]['role'] === 'super' || boardHidden($rows[$id]['name'])) fail('That sign-in does not do walks.');
+    if ($rows[$id]['role'] === 'setter' && edition()) fail('A setter does not do the jobs. Make them a technician or a sales rep first.');   /* 2026-10-29 */
     $acct['walker'] = (array) ($acct['walker'] ?? []);
     if (!empty($body['on'])) $acct['walker'][$id] = 1; else unset($acct['walker'][$id]);
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
@@ -9810,7 +10041,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     if ($isMgr && $myTeam === '') fail('You are not on a team yet. Ask an admin to put you on one.', 403);
     $rows = acctRows($basePeople, $acct, $sessionKey);
     $myId = (string) ($session['c'] ?? '');
-    $mgrMay = function (array $r) use ($myTeam): bool { global $acct; return $r['role'] === 'crew' && (string) ($acct['member'][$r['id']] ?? '') === $myTeam; };
+    $mgrMay = function (array $r) use ($myTeam): bool { global $acct; return in_array($r['role'], edition() ? ['crew', 'setter', 'tech'] : ['crew'], true) && (string) ($acct['member'][$r['id']] ?? '') === $myTeam; };   /* + setters and technicians on their team, in the editions (2026-10-29) */
     if ($action === 'accounts') {
         $sess = sessLoad(); $live = [];
         foreach ((array) ($sess['s'] ?? []) as $l) {
@@ -9827,6 +10058,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
         usort($tn, fn($x, $y) => strcmp(mb_strtolower($x['name']), mb_strtolower($y['name'])));
         /* seats against the plan (2026-10-10), only where billing is on: the screen warns, nothing is blocked */
+        if (!$isMgr) seatWatch();   /* the note to Traverse when the install has gone over (2026-10-29) */
         $seatInfo = feature('billing') && !$isMgr ? array_intersect_key(billingState(billingConfig(__DIR__), $rows), ['seats' => 1, 'used' => 1, 'status' => 1, 'plan' => 1]) : null;
         out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn, 'seats' => $seatInfo, 'manager' => $isMgr ? $myTeam : null]);
     }
@@ -9853,9 +10085,10 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     }
     if ($action === 'accountadd') {
         $name = acctName((string) ($body['name'] ?? '')); $r = $isMgr ? 'crew' : (string) ($body['role'] ?? 'crew');
+        if ($isMgr && edition() && in_array((string) ($body['role'] ?? ''), ['setter', 'tech'], true)) $r = (string) $body['role'];   /* a manager adds a setter or technician to their team too (2026-10-29) */
         if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if (acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');
-        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.');
+        if (!in_array($r, ROLES, true)) fail(edition() ? 'Pick a role from the list.' : (feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.'));
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
         $code = acctNewCode($basePeople, $acct);
         $acct['people'][$code] = [$name, $r, $me, time()];
@@ -9875,7 +10108,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['off']) fail('Turn the account back on first.');
         if (array_key_exists('name', $body) && !acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if ($name !== $t['name'] && acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');   /* renaming into one; an existing one keeps its name */
-        if (!in_array($r, ROLES, true)) fail(feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.');
+        if (!in_array($r, ROLES, true)) fail(edition() ? 'Pick a role from the list.' : (feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.'));
         if (acctTaken($rows, $name, $id)) fail('Someone else already signs in as ' . $name . '.');
         if ($id === $myId && $r !== 'admin') fail('You cannot take admin off yourself. Ask another admin.');
         if ($t['role'] === 'admin' && $r !== 'admin' && acctAdmins($rows) <= 1) fail('That is the last admin. Make someone else an admin first.');
@@ -9907,7 +10140,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         /* and every per-person setting (walks 2026-10-14; all of them 2026-10-21: Nneka's Runs a team and Marks won and lost stayed on her old
            code's id when she was given a new code on 20 Oct) */
         $nid = codeId($code, $sessionKey);
-        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq', 'email', 'hours', 'rides'] as $mk)   /* + the test email, work hours and rides with (2026-10-27) */ if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
+        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq', 'email', 'hours', 'rides', 'terms'] as $mk)   /* + the terms they accepted (2026-10-29) */   /* + the test email, work hours and rides with (2026-10-27) */ if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
@@ -9984,10 +10217,40 @@ if ($action === 'board') {
         $rows = array_filter($rows, fn($r) => $r['name'] === $me || sameTeam($r['name']));
         $terr = array_values(array_filter($terr, fn($t) => $t['who'] === $me || sameTeam($t['who'])));
     }
-    out(['ok' => true, 'today' => $from['today'], 'open' => BOARD_OPEN, 'goals' => loadGoals(), 'pgoals' => loadPGoals(), 'people' => array_values($rows),
+    out(['ok' => true, 'today' => $from['today'], 'open' => BOARD_OPEN, 'goals' => edition() && $role !== 'admin' && mgr() ? goalFor($me) : loadGoals(),   /* a manager: their team's goal (editions, 2026-10-29) */
+         'pgoals' => loadPGoals(), 'people' => array_values($rows),
          'territories' => $terr, 'names' => $role === 'admin' ? array_keys($names) : (mgr() ? array_values(array_filter(array_keys($names), fn($n) => $n === $me || sameTeam($n))) : [])]);
 }
 
+/* a team's daily goal (the editions, 2026-10-29, Matthew: "MANAGERS CAN SET GOALS for their own team's people (not other teams)"): a manager
+   (or an office account that runs a team) sets one daily goal for everyone on their own team, over the company goal; a person's own goal
+   still wins. Each person's goal on their stats page was already theirs to set for their own team (mygoal, canManage). goals-teams.json:
+   team id => {doors, talked, booked, by, at}. Sixfold keeps the company goal only. */
+function loadTeamGoals(): array { $g = json_decode((string) @file_get_contents(DATA_DIR . '/goals-teams.json'), true); return is_array($g) ? $g : []; }
+/** the goal that applies to a person when they set none of their own: their team's (editions), else the company's */
+function goalFor(string $who): array {
+    global $TEAM;
+    $tid = (string) ($TEAM['byName'][$who]['team'] ?? '');
+    $tg = edition() && $tid !== '' ? (loadTeamGoals()[$tid] ?? null) : null;
+    return is_array($tg) ? $tg + ['team' => true] : loadGoals();
+}
+if ($action === 'goals' && edition() && $role !== 'admin' && mgr()) {
+    if (!$isPost) fail('POST required', 405);
+    if ($myTeam === '') fail('You are not on a team yet. Ask an admin to put you on one.', 403);
+    $g = ['by' => $me, 'at' => time()]; $any = false;
+    foreach (['doors', 'talked', 'booked'] as $k) {
+        $v = $body[$k] ?? null;
+        if ($v === null || $v === '') { $g[$k] = null; continue; }
+        if (!is_numeric($v) || (int) $v != $v || (int) $v < 0 || (int) $v > 300) fail('Goals are whole numbers from 0 to 300.');
+        $g[$k] = (int) $v; $any = true;
+    }
+    $gf = DATA_DIR . '/goals-teams.json'; $glock = @fopen($gf . '.lock', 'c');
+    if (!$glock || !flock($glock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $all = loadTeamGoals();
+    if ($any) $all[$myTeam] = $g; else unset($all[$myTeam]);   /* all empty: back to the company goal */
+    if (@file_put_contents($gf, json_encode($all, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'goals' => $any ? $g + ['team' => true] : loadGoals()]);
+}
 if ($action === 'goals') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
@@ -11098,12 +11361,13 @@ function squareTry(string $token, string $env, string $path): array {
 if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], true)) {
     if (!kitOn()) fail('Not here.', 404);
     if ($action === 'kit') {
-        if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+        if (!desk() && $role !== 'quote' && !(edition() && $role === 'crew' && edSub() === '')) fail('Not allowed.', 403);   /* + a sales rep, for their own leads (2026-10-29) */
         out(['ok' => true, 'units' => KIT_UNITS, 'trade' => kitTrade()] + kitCfg() + ['pay' => $role === 'admin' ? kitPayState() : ['square' => ['on' => (bool) squareCfg()], 'stripe' => ['on' => (bool) stripePayCfg()]], 'setup' => $role === 'admin' ? kitSetup() : null]);
     }
     if (!$isPost && $action !== 'squareoauth') fail('POST required', 405);
     if ($action === 'kitquote') {
-        if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+        if (!desk() && $role !== 'quote' && !edRepLead((string) ($body['id'] ?? ''))) fail('Not allowed.', 403);   /* + a sales rep on their own lead (2026-10-29) */
+        if (!desk() && $role === 'crew' && array_key_exists('offer', $body)) fail('The office books the day. Save the quote and send it.', 403);   /* a rep quotes; booking a crew day stays the office's */
         $id = (string) ($body['id'] ?? ''); $all = leadsAll();
         if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
         if (!empty($all[$id]['signed']) && $role !== 'admin') fail('They already signed for this price. Change the job on the Jobs board.', 409);
