@@ -4,7 +4,7 @@
 
 ## Cancellation and Refund Policy
 
-**Last updated: [DATE] · Draft**
+**Last updated: [DATE]**
 
 ### Monthly plans
 

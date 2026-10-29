@@ -6,7 +6,7 @@
 
 ## Privacy Policy
 
-**Last updated: [DATE] · Draft**
+**Last updated: [DATE]**
 
 This policy explains what Traverse Platforms LLC ("Traverse", "we", "us") collects, why, and what you can do about it. It covers three groups of people:
 
