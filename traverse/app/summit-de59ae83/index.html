@@ -4355,7 +4355,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     grp('In the field', [
       S.fqOn && !asOffice() ? tile('button', 'leaf', 'Quick quote', 'Price a lawn on the spot. If they say yes, send it to the office.', null, function () { fieldQuoteView(); }) : null,   /* the field quick quote (2026-10-21) */
       asOffice() ? null : tile('button', 'door', 'Routes', 'Knock a neighbourhood. Works with no signal.', null, start),
-      asOffice() ? null : tile('button', 'chart', 'My stats', CO.a365 && adminView() ? 'Your leads, quotes, jobs landed and sales.' : 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
+      asOffice() ? null : tile('button', 'chart', 'My stats', pipeMine() ? 'Your leads, quotes, jobs landed and sales.' : 'Your doors, conversations, quotes and goals.', null, function () { statsView(S.me, chooseView); }),
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
       tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView),
       radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colours mean.', null, function () { hailMapView(null, chooseView); }) : null,
@@ -4842,6 +4842,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* My stats for a Sixfold admin = the pipeline, not doors (2026-10-29, Matthew: "should remove doors because i will never do door to door,
      but should have the data from my pipeline and it should show jobs ive landed and sold"). His leads: the website's and his Facebook ones
      (the server's mine flag) and the ones he added himself; how far each got; the jobs they became and what they sold for. */
+  /* whose My stats is the pipeline: Matthew's own sign-in on Sixfold (the server marks his leads "mine" for that sign-in only) */
+  function pipeMine() { return !!(CO && CO.a365 && S.super && !S.viewAs); }
   function pipeStatsView(back) {
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
@@ -4855,7 +4857,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!L.ok) { holder.appendChild(q('div', 'msg bad', L.error || 'Could not load your leads.')); return; }
       var jobs = [].concat((r[1] && r[1].jobs) || [], (r[2] && r[2].jobs) || []), jobOf = {};
       jobs.forEach(function (j) { var lid = j.lead || (j.who && j.who.lead); if (lid && !jobOf[lid]) jobOf[lid] = j; });
-      var mine = (L.leads || []).filter(function (l) { return l.mine || (l.by === S.me && !l.tojen); });
+      /* only the server's mine flag (the website's leads, and Facebook's in his window). Not 'added by him': the Facebook imports he ran for Jen
+         carry his name (2026-10-29, Matthew: 'I never had 38 leads ... the three bottom jobs are not mine'). Removed and test leads left out. */
+      var mine = (L.leads || []).filter(function (l) { return l.mine && !l.removed && !/\btest\b|\bclaude\b/i.test(l.name || ''); });
       var since = Date.now() / 1000 - 30 * 86400;
       var sum = function (list) {
         var o = { leads: list.length, reached: 0, quoted: 0, won: 0, sold: 0 };
@@ -4902,7 +4906,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
   function statsView(name, back) {
-    if (name === S.me && CO.a365 && adminView()) return pipeStatsView(back);   /* 2026-10-29: the pipeline, not doors */
+    if (name === S.me && pipeMine()) return pipeStatsView(back);   /* 2026-10-29: the pipeline, not doors */
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
     setBar('back', { title: name === S.me ? 'My stats' : name, sub: S.statTab === 'doors' ? 'Doors you worked, last 30 days' : 'Last 30 days · chart: last 14', back: back || chooseView, backLabel: 'Back' });
@@ -10668,9 +10672,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (walkerOn()) it.push(['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']]);
     if (walkerOn() && !wdOn()) it.push(['jobs', 'My jobs', function () { myJobsView(); }, ['myjobs', 'job']]);
     it.push(['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']]);
-    if (CO.a365 && adminView()) it.push(['numbers', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);   /* his pipeline in the computer menu (2026-10-29: it was a phone tile only) */
-    if (planOk()) it.push(['team', 'Team', teamView, ['team', 'board', 'territories', 'accounts'].concat(CO.a365 && adminView() ? [] : ['stats'])]);
-    else if (!(CO.a365 && adminView())) it.push(['team', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);
+    if (pipeMine()) it.push(['numbers', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);   /* his pipeline in the computer menu (2026-10-29: it was a phone tile only) */
+    if (planOk()) it.push(['team', 'Team', teamView, ['team', 'board', 'territories', 'accounts'].concat(pipeMine() ? [] : ['stats'])]);
+    else if (!pipeMine()) it.push(['team', 'My stats', function () { statsView(S.me, chooseView); }, ['stats']]);
     if (planOk()) it.push(['office', 'Office', officeView, ['office']]);
     return it;
   }
@@ -19030,8 +19034,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       wdOn() ? ['Stats', statsPageView, false, null, ['statspage']] : null,   /* 2026-10-20 */
       squarePageOn() ? ['Square', squareView, false, null, ['square']] : null,   /* 2026-10-21 */
       ['Calendar', function () { S.calWho = S.me; calendarView(); }, false, null, ['calendar']],
-      CO.a365 && adminView() ? ['My stats', function () { statsView(S.me, chooseView); }, false, null, ['stats']] : null,   /* his pipeline on a computer too (2026-10-29: it was a phone tile only) */
-      ['Team stats', teamView, false, null, CO.a365 && adminView() ? ['team'] : ['team', 'stats']],
+      pipeMine() ? ['My stats', function () { statsView(S.me, chooseView); }, false, null, ['stats']] : null,   /* his pipeline on a computer too (2026-10-29: it was a phone tile only) */
+      ['Team stats', teamView, false, null, pipeMine() ? ['team'] : ['team', 'stats']],
       ['Leaderboard', boardView, false, null, ['board']],
       ['Training', trainingView, false, null, ['training']],
       S.role === 'admin' ? ['Results', resultsView, false, null, ['results']] : null,
