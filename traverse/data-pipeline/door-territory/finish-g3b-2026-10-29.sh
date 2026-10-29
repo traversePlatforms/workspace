@@ -1,5 +1,5 @@
 #!/bin/bash
-# Finish Group 3 stage B on the laptop (2026-10-29). READY, NOT RUN, NOT in traverse/ops/run-cloud-finishers.sh: Matthew sees the counts
+# Finish Group 3 stage B on the laptop (2026-10-29). Stage g3b in traverse/ops/run-cloud-finishers.sh since Matthew's go (29 Oct: "add the group 3"); before that: Matthew sees the counts
 # first, then gives the go for group3/stageb-vm.sh on the cloud machine; this runs after it leaves ~/run/group3/g3stageb.vmdone.
 # Modelled on finish-g2b-2026-10-28.sh.   bash finish-g3b-2026-10-29.sh > logs-finish-g3b.log 2>&1
 #   1. copies back b/ (the stage B door lists, registered.json, merge lists, limited-<key>.json), the neighbourhood files, yard v2, material

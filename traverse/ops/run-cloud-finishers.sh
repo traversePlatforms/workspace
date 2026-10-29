@@ -15,7 +15,7 @@ rm -f "$ST/running.lock"
 # g2b's VM work); it leaves ~/run/group2/photos.vmdone.
 # A stage that failed 3 times is reported and skipped, so a later stage still runs (2026-10-28: g1fix and g2b push different towns).
 FAILED=""
-for name in layers group1 material g1fix g2b photos; do
+for name in layers group1 material g1fix g2b photos g3b; do
   [ -f "$ST/$name.done" ] && continue
   tries=$(cat "$ST/$name.tries" 2>/dev/null || echo 0)
   [ "$tries" -ge 3 ] && { FAILED="$FAILED $name"; continue; }
@@ -26,6 +26,7 @@ for name in layers group1 material g1fix g2b photos; do
     g1fix) VMQ='group1 fix: measuring done';;
     g2b) VMQ='group2 B: measuring done';;
     photos) VMQ='photos backfill: done';;
+    g3b) VMQ='group3 B: measuring done';;   # Group 3 stage B (Matthew 29 Oct: "add the group 3"); finish-g3b-2026-10-29.sh
   esac
   ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "grep -qE '$VMQ' ~/run-status.txt || test -f ~/run/group1/$name.vmdone || test -f ~/run/group2/$name.vmdone" < /dev/null 2>/dev/null || { echo "cloud finish: waiting for $name${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   echo $((tries + 1)) > "$ST/$name.tries"

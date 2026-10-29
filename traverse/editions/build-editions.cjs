@@ -237,7 +237,7 @@ function page(E) {
   html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
   html = rep(html, "document.title = c.short ? c.short + ' Routes' : 'Routes';   /* 2026-10-12 (Matthew): Sixfold Routes, not Door rounds */",
     "document.title = c.name ? '" + E.name + " — ' + c.name : '" + E.name + "';", 1, 'doc title');
-  html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Doors',", 1, 'tile');
+  html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Doors',", 2, 'tile');   /* 2 since 2026-10-29: the technician's own Routes tile (doors switched on) is renamed too */
   // sign-in: the client's mark and name stay on top; the product sits under them as a lockup
   html = rep(html, "inn.appendChild(q('div', 'sub', 'Routes'));",
     "var tv = q('div', 'sub tvlock'); tv.innerHTML = TV_MARK; tv.appendChild(q('span', null, '" + E.name + "')); inn.appendChild(tv);", 1, 'signin sub');
