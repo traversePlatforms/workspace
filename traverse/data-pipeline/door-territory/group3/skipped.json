@@ -1,0 +1,178 @@
+{
+ "counties": [
+  {
+   "county": "Fremont",
+   "census": 15459,
+   "ownerOccupied": 11525,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Montrose",
+   "census": 14132,
+   "ownerOccupied": 11099,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Delta",
+   "census": 12009,
+   "ownerOccupied": 8587,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Chaffee",
+   "census": 9817,
+   "ownerOccupied": 6905,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Otero",
+   "census": 6790,
+   "ownerOccupied": 4629,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Las Animas",
+   "census": 6442,
+   "ownerOccupied": 4034,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Alamosa",
+   "census": 4700,
+   "ownerOccupied": 3172,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Prowers",
+   "census": 3896,
+   "ownerOccupied": 2744,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Moffat",
+   "census": 3857,
+   "ownerOccupied": 2912,
+   "why": "no property address on the parcel rows (0%) and no address points for the county"
+  },
+  {
+   "county": "Conejos",
+   "census": 3281,
+   "ownerOccupied": 2053,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Saguache",
+   "census": 2938,
+   "ownerOccupied": 2236,
+   "why": "no property address on the parcel rows (0%) and the address points carry no parcel number to join"
+  },
+  {
+   "county": "Kit Carson",
+   "census": 2807,
+   "ownerOccupied": 1826,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Costilla",
+   "census": 1987,
+   "ownerOccupied": 1080,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Washington",
+   "census": 1938,
+   "ownerOccupied": 1419,
+   "why": "parcel rows carry neither owner nor mailing address (0%)"
+  },
+  {
+   "county": "Lincoln",
+   "census": 1935,
+   "ownerOccupied": 1316,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Phillips",
+   "census": 1854,
+   "ownerOccupied": 1340,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Bent",
+   "census": 1777,
+   "ownerOccupied": 1082,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Baca",
+   "census": 1504,
+   "ownerOccupied": 1013,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Crowley",
+   "census": 1209,
+   "ownerOccupied": 818,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Mineral",
+   "census": 1047,
+   "ownerOccupied": 243,
+   "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+  },
+  {
+   "county": "Sedgwick",
+   "census": 1005,
+   "ownerOccupied": 712,
+   "why": "parcel rows carry the owner but no mailing address (0%), so who lives there cannot be told"
+  },
+  {
+   "county": "Jackson",
+   "census": 923,
+   "ownerOccupied": 357,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Cheyenne",
+   "census": 843,
+   "ownerOccupied": 535,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  },
+  {
+   "county": "Kiowa",
+   "census": 608,
+   "ownerOccupied": 370,
+   "why": "not on the statewide parcel layer, nor on the address-point layer"
+  }
+ ],
+ "coveredAlready": [
+  {
+   "county": "Elbert",
+   "name": "Elizabeth town",
+   "census": 768,
+   "doors": 813,
+   "why": "a quarter or more already doors of ours"
+  },
+  {
+   "county": "Elbert",
+   "name": "Kiowa town",
+   "census": 167,
+   "doors": 91,
+   "why": "a quarter or more already doors of ours"
+  },
+  {
+   "county": "Teller",
+   "name": "Woodland Park city",
+   "census": 2969,
+   "doors": 1913,
+   "why": "a quarter or more already doors of ours"
+  },
+  {
+   "county": "Teller",
+   "name": "Divide CCD",
+   "census": 10197,
+   "doors": 3735,
+   "why": "a quarter or more already doors of ours"
+  }
+ ]
+}

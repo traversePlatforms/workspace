@@ -1,0 +1,211 @@
+{
+ "_note": "How each Group 3 county's parcels are read (2026-10-29), from group3/coverage.json (coverage-g3.mjs on the cloud machine). co = statewide parcel layer with its property address (build-walklist-co.mjs); ap = property address from the state address points joined by parcel number (group3/build-walklist-ap.mjs); skip = no doors can be made.",
+ "La Plata": {
+  "method": "co",
+  "why": "property address on 91% of rows near Durango (72% of a county-wide 1,000-row sample)"
+ },
+ "Eagle": {
+  "method": "ap",
+  "why": "property address on 0-2% of parcel rows; the address points carry the parcel number and join 76% of parcels near Edwards (75% of the rows with no address)"
+ },
+ "Garfield": {
+  "method": "co",
+  "why": "property address on 100% of rows near Rifle (100% of a county-wide 1,000-row sample)"
+ },
+ "Summit": {
+  "method": "co",
+  "why": "property address on 93% of rows near Breckenridge (84% of a county-wide 1,000-row sample); owner NAME blank on every row (mailing address 100%), so Summit doors would carry no owner name"
+ },
+ "Fremont": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Montrose": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Park": {
+  "method": "co",
+  "why": "property address on 80% of rows near Fairplay (66% of a county-wide 1,000-row sample)"
+ },
+ "Grand": {
+  "method": "co",
+  "why": "property address on 81% of rows near Granby (94% of a county-wide 1,000-row sample)"
+ },
+ "Delta": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Routt": {
+  "method": "co",
+  "why": "property address on 93% of rows near Steamboat Springs (96% of a county-wide 1,000-row sample)"
+ },
+ "Chaffee": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Elbert": {
+  "method": "co",
+  "why": "property address on 99% of rows near Ponderosa Park (93% of a county-wide 1,000-row sample)"
+ },
+ "Montezuma": {
+  "method": "co",
+  "why": "property address on 100% of rows near Cortez (100% of a county-wide 1,000-row sample)"
+ },
+ "Gunnison": {
+  "method": "co",
+  "why": "property address on 100% of rows near Gunnison (100% of a county-wide 1,000-row sample)"
+ },
+ "Morgan": {
+  "method": "co",
+  "why": "property address on 92% of rows near Fort Morgan (57% of a county-wide 1,000-row sample)"
+ },
+ "Teller": {
+  "method": "co",
+  "why": "property address on 48% of rows near Cripple Creek (79% of a county-wide 1,000-row sample)"
+ },
+ "Archuleta": {
+  "method": "co",
+  "why": "property address on 94% of rows near Pagosa Springs (98% of a county-wide 1,000-row sample)"
+ },
+ "Logan": {
+  "method": "co",
+  "why": "property address on 90% of rows near Sterling (98% of a county-wide 1,000-row sample)"
+ },
+ "Otero": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Las Animas": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Pitkin": {
+  "method": "co",
+  "why": "property address on 96% of rows near Aspen (100% of a county-wide 1,000-row sample)"
+ },
+ "Rio Grande": {
+  "method": "co",
+  "why": "property address on 96% of rows near Monte Vista (93% of a county-wide 1,000-row sample)"
+ },
+ "Clear Creek": {
+  "method": "co",
+  "why": "property address on 83% of rows near Idaho Springs (40% of a county-wide 1,000-row sample)"
+ },
+ "Alamosa": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Custer": {
+  "method": "ap",
+  "why": "property address on 0% of parcel rows; address points join about a third of parcels in the Silver Cliff sample, so expect a partial list"
+ },
+ "Huerfano": {
+  "method": "co",
+  "why": "property address on 68% of rows near Walsenburg (61% of a county-wide 1,000-row sample)"
+ },
+ "Prowers": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Moffat": {
+  "method": "skip",
+  "why": "no property address on the parcel rows (0%) and no address points for the county"
+ },
+ "San Miguel": {
+  "method": "co",
+  "why": "property address on 79% of rows near Mountain Village (64% of a county-wide 1,000-row sample)"
+ },
+ "Gilpin": {
+  "method": "co",
+  "why": "property address on 5% of rows near Central (49% of a county-wide 1,000-row sample)"
+ },
+ "Yuma": {
+  "method": "co",
+  "why": "property address on 87% of rows near Yuma (11% of a county-wide 1,000-row sample)"
+ },
+ "Conejos": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Lake": {
+  "method": "co",
+  "why": "property address on 96% of rows near Leadville (94% of a county-wide 1,000-row sample)"
+ },
+ "Saguache": {
+  "method": "skip",
+  "why": "no property address on the parcel rows (0%) and the address points carry no parcel number to join"
+ },
+ "Kit Carson": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Ouray": {
+  "method": "co",
+  "why": "property address on 100% of rows near Ouray (100% of a county-wide 1,000-row sample)"
+ },
+ "Rio Blanco": {
+  "method": "co",
+  "why": "property address on 87% of rows near Meeker (90% of a county-wide 1,000-row sample)"
+ },
+ "Costilla": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Washington": {
+  "method": "skip",
+  "why": "parcel rows carry neither owner nor mailing address (0%)"
+ },
+ "Lincoln": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Phillips": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Bent": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Baca": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Dolores": {
+  "method": "co",
+  "why": "property address on 91% of rows near Rico (74% of a county-wide 1,000-row sample)"
+ },
+ "Crowley": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Hinsdale": {
+  "method": "co",
+  "why": "property address on 73% of rows near Lake City (67% of a county-wide 1,000-row sample)"
+ },
+ "Mineral": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer (no owners); the state has its address points only"
+ },
+ "Sedgwick": {
+  "method": "skip",
+  "why": "parcel rows carry the owner but no mailing address (0%), so who lives there cannot be told"
+ },
+ "Jackson": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Cheyenne": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "Kiowa": {
+  "method": "skip",
+  "why": "not on the statewide parcel layer, nor on the address-point layer"
+ },
+ "San Juan": {
+  "method": "co",
+  "why": "property address on 96% of rows near Silverton (68% of a county-wide 1,000-row sample)"
+ }
+}

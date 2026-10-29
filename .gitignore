@@ -345,6 +345,13 @@ traverse/data-pipeline/door-territory/group2/build-walklist-co.mjs
 traverse/data-pipeline/door-territory/group2/raw/
 traverse/data-pipeline/door-territory/group2/out/
 traverse/data-pipeline/door-territory/group2/test/
+traverse/data-pipeline/door-territory/group3/door-points.json
+traverse/data-pipeline/door-territory/group3/build-walklist-co.mjs
+traverse/data-pipeline/door-territory/group3/raw/
+traverse/data-pipeline/door-territory/group3/out/
+traverse/data-pipeline/door-territory/group3/test/
+traverse/data-pipeline/door-territory/group3/*.csv
+traverse/data-pipeline/door-territory/group3/shapes.json
 
 # Sixfold job photos for content (2026-10-26): customer houses by address; storage only, not in git (Drive backup carries them)
 sixfold/brand/job-photos/**

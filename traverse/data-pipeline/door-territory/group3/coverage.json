@@ -1,0 +1,1377 @@
+{
+ "La Plata": {
+  "county": "La Plata",
+  "parcels": 35635,
+  "points": 34623,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 99,
+   "situsAdd": 72,
+   "landAcres": 100,
+   "landUse": 100
+  },
+  "boxAround": "Durango",
+  "box": {
+   "n": 2000,
+   "owner": 99,
+   "ownerAdd": 99,
+   "situsAdd": 91,
+   "landAcres": 72,
+   "landUse": 72
+  },
+  "uses": [
+   "RESIDENTIAL (1011)",
+   "COMMERCIAL (248)",
+   "EXEMPT (176)",
+   "INDUSTRIAL (6)",
+   "VACANT 10-<35 AC (2)",
+   "VACANT 1-<5 AC (2)",
+   "VACANT 35-<100 AC (1)"
+  ],
+  "boxPoints": 2000,
+  "pointsWithParcel": 100,
+  "joinRaw": 77,
+  "joinNorm": 77,
+  "noSitusJoined": 27,
+  "idExamples": {
+   "parcel": [
+    "566520300009",
+    "566520300013"
+   ],
+   "point": [
+    "566520315013",
+    "566520316006"
+   ]
+  }
+ },
+ "Eagle": {
+  "county": "Eagle",
+  "parcels": 25064,
+  "points": 38641,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 0,
+   "landAcres": 100,
+   "landUse": 100
+  },
+  "boxAround": "Edwards",
+  "box": {
+   "n": 131,
+   "owner": 95,
+   "ownerAdd": 95,
+   "situsAdd": 2,
+   "landAcres": 95,
+   "landUse": 95
+  },
+  "uses": [
+   "SINGLE FAM.RES-IMPROVEMTS (81)",
+   "SINGLE FAM.RES.-LAND (14)",
+   "HOMEOWNERS ASSOC (12)",
+   "VACANT RES LAND (6)",
+   "10 AC TO L/T 35 AC (2)",
+   "EXEMPT-COUNTY NON-RES LAND (1)",
+   "EXEMPT-FEDERAL NON-RES LAND (1)",
+   "RES NOT INTEGRAL TO AG OPERATION-IMPS (1)"
+  ],
+  "boxPoints": 100,
+  "pointsWithParcel": 100,
+  "joinRaw": 76,
+  "joinNorm": 76,
+  "noSitusJoined": 75,
+  "idExamples": {
+   "parcel": [
+    "210518204005",
+    "210518303006"
+   ],
+   "point": [
+    "210713103001",
+    "210724102015"
+   ]
+  }
+ },
+ "Garfield": {
+  "county": "Garfield",
+  "parcels": 28676,
+  "points": 23271,
+  "sample": {
+   "n": 1000,
+   "owner": 86,
+   "ownerAdd": 86,
+   "situsAdd": 100,
+   "landAcres": 75,
+   "landUse": 86
+  },
+  "boxAround": "Rifle",
+  "box": {
+   "n": 2000,
+   "owner": 92,
+   "ownerAdd": 93,
+   "situsAdd": 100,
+   "landAcres": 7,
+   "landUse": 93
+  },
+  "uses": [
+   "2R-5RF - 036 (1673)",
+   "2R-5RFAURA - 100 (82)",
+   "2R-5RFA - 041 (55)",
+   "2HC-RF - 021 (27)",
+   "2HC-RF-BCSC-EXC-148 (021) (11)",
+   "2R-5RFURA - 099 (3)"
+  ],
+  "boxPoints": 2000,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": null,
+  "idExamples": {
+   "parcel": [
+    "217716112001",
+    "217716100002"
+   ],
+   "point": []
+  }
+ },
+ "Summit": {
+  "county": "Summit",
+  "parcels": 38372,
+  "points": 40963,
+  "sample": {
+   "n": 1000,
+   "owner": 0,
+   "ownerAdd": 100,
+   "situsAdd": 84,
+   "landAcres": 99,
+   "landUse": 0
+  },
+  "boxAround": "Breckenridge",
+  "box": {
+   "n": 1064,
+   "owner": 0,
+   "ownerAdd": 100,
+   "situsAdd": 93,
+   "landAcres": 75,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 1706,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "1693-0110-00-001",
+    "2209-2440-14-001"
+   ],
+   "point": []
+  }
+ },
+ "Fremont": {
+  "county": "Fremont",
+  "parcels": 0,
+  "points": 0
+ },
+ "Montrose": {
+  "county": "Montrose",
+  "parcels": 0,
+  "points": 25146
+ },
+ "Park": {
+  "county": "Park",
+  "parcels": 43241,
+  "points": 23277,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 66,
+   "landAcres": 100,
+   "landUse": 100
+  },
+  "boxAround": "Fairplay",
+  "box": {
+   "n": 1241,
+   "owner": 98,
+   "ownerAdd": 98,
+   "situsAdd": 80,
+   "landAcres": 90,
+   "landUse": 98
+  },
+  "uses": [
+   "Vacant Land (450)",
+   "Residential (419)",
+   "Commercial (128)",
+   "Exempt (106)",
+   "Mobile Home (85)",
+   "Mixed Use- Com (24)",
+   "Agricultural (5)",
+   "Mining (2)"
+  ],
+  "boxPoints": 846,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "24290",
+    "24290"
+   ],
+   "point": []
+  }
+ },
+ "Grand": {
+  "county": "Grand",
+  "parcels": 28955,
+  "points": 22923,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 99,
+   "situsAdd": 94,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "boxAround": "Granby",
+  "box": {
+   "n": 1467,
+   "owner": 99,
+   "ownerAdd": 99,
+   "situsAdd": 81,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 1040,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "145108413184",
+    "145108413028"
+   ],
+   "point": []
+  }
+ },
+ "Delta": {
+  "county": "Delta",
+  "parcels": 0,
+  "points": 19943
+ },
+ "Routt": {
+  "county": "Routt",
+  "parcels": 25414,
+  "points": 8435,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 99,
+   "situsAdd": 96,
+   "landAcres": 65,
+   "landUse": 100
+  },
+  "boxAround": "Steamboat Springs",
+  "box": {
+   "n": 2000,
+   "owner": 100,
+   "ownerAdd": 98,
+   "situsAdd": 93,
+   "landAcres": 73,
+   "landUse": 100
+  },
+  "uses": [
+   "Residential Single Family (833)",
+   "Residential Condominium (312)",
+   "Residential Townhome (184)",
+   "Common Area (111)",
+   "Office (76)",
+   "Retail (66)",
+   "Res. SF w/Caretaker (51)",
+   "Vacant Land (45)"
+  ],
+  "boxPoints": 20,
+  "pointsWithParcel": 100,
+  "joinRaw": 1,
+  "joinNorm": 1,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "178200005",
+    "178100035"
+   ],
+   "point": [
+    "331100002",
+    "936081003"
+   ]
+  }
+ },
+ "Chaffee": {
+  "county": "Chaffee",
+  "parcels": 0,
+  "points": 0
+ },
+ "Elbert": {
+  "county": "Elbert",
+  "parcels": 17710,
+  "points": 16042,
+  "sample": {
+   "n": 1000,
+   "owner": 99,
+   "ownerAdd": 99,
+   "situsAdd": 93,
+   "landAcres": 100,
+   "landUse": 100
+  },
+  "boxAround": "Ponderosa Park",
+  "box": {
+   "n": 238,
+   "owner": 97,
+   "ownerAdd": 97,
+   "situsAdd": 99,
+   "landAcres": 99,
+   "landUse": 99
+  },
+  "uses": [
+   "Residential (230)",
+   "Agricultural (5)",
+   "Exempt (1)"
+  ],
+  "boxPoints": 213,
+  "pointsWithParcel": 100,
+  "joinRaw": 89,
+  "joinNorm": 89,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "8502103010",
+    "7535303013"
+   ],
+   "point": [
+    "7535303007",
+    "8503101003"
+   ]
+  }
+ },
+ "Montezuma": {
+  "county": "Montezuma",
+  "parcels": 15476,
+  "points": 19114,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 100,
+   "landAcres": 100,
+   "landUse": 100
+  },
+  "boxAround": "Cortez",
+  "box": {
+   "n": 2000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 100,
+   "landAcres": 90,
+   "landUse": 100
+  },
+  "uses": [
+   "RESIDENTIAL (1485)",
+   "COMMERCIAL (237)",
+   "VACANT_LAND (150)",
+   "EXEMPT (100)",
+   "COMMON AREA (13)",
+   "AGRICULTURAL (6)",
+   "COMM_RESIDENCE (5)",
+   "INDUSTRIAL (3)"
+  ],
+  "boxPoints": 2000,
+  "pointsWithParcel": 100,
+  "joinRaw": 53,
+  "joinNorm": 53,
+  "noSitusJoined": null,
+  "idExamples": {
+   "parcel": [
+    "561122400002",
+    "561122400002"
+   ],
+   "point": [
+    "561123406001",
+    "561125212003"
+   ]
+  }
+ },
+ "Gunnison": {
+  "county": "Gunnison",
+  "parcels": 21291,
+  "points": 16055,
+  "sample": {
+   "n": 1000,
+   "owner": 98,
+   "ownerAdd": 98,
+   "situsAdd": 100,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "boxAround": "Gunnison",
+  "box": {
+   "n": 934,
+   "owner": 98,
+   "ownerAdd": 98,
+   "situsAdd": 100,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 996,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "378701217026",
+    "378701217027"
+   ],
+   "point": []
+  }
+ },
+ "Morgan": {
+  "county": "Morgan",
+  "parcels": 15956,
+  "points": 0,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 57,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "boxAround": "Fort Morgan",
+  "box": {
+   "n": 2000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 92,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 0,
+  "pointsWithParcel": null,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "103932406010",
+    "122906139004"
+   ],
+   "point": []
+  }
+ },
+ "Teller": {
+  "county": "Teller",
+  "parcels": 31494,
+  "points": 21601,
+  "sample": {
+   "n": 1000,
+   "owner": 99,
+   "ownerAdd": 99,
+   "situsAdd": 79,
+   "landAcres": 99,
+   "landUse": 65
+  },
+  "boxAround": "Cripple Creek",
+  "box": {
+   "n": 1677,
+   "owner": 99,
+   "ownerAdd": 98,
+   "situsAdd": 48,
+   "landAcres": 91,
+   "landUse": 26
+  },
+  "uses": [
+   "SINGLE FAM.RES-IMPROVEMTS (407)",
+   "DUP/TRIPLEX IMPROVEMTS (17)",
+   "NOT INTREGRAL AG IMPS (2)",
+   "EXEMPT-RELIGIOUS RES IMPS (1)",
+   "EXEMPT-CHARITABLE RES IMPS (1)",
+   "EXEMPT-POL SD RES IMP (1)",
+   "FARM/RANCH RESIDENCE-IMPS (1)"
+  ],
+  "boxPoints": 709,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "10103.93020040",
+    "4005.132100010"
+   ],
+   "point": []
+  }
+ },
+ "Archuleta": {
+  "county": "Archuleta",
+  "parcels": 17892,
+  "points": 14498,
+  "sample": {
+   "n": 1000,
+   "owner": 98,
+   "ownerAdd": 98,
+   "situsAdd": 98,
+   "landAcres": 99,
+   "landUse": 0
+  },
+  "boxAround": "Pagosa Springs",
+  "box": {
+   "n": 530,
+   "owner": 94,
+   "ownerAdd": 94,
+   "situsAdd": 94,
+   "landAcres": 86,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 340,
+  "pointsWithParcel": 65,
+  "joinRaw": 38,
+  "joinNorm": 38,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "ROW",
+    "ROW"
+   ],
+   "point": [
+    "569923100143",
+    "569923100144"
+   ]
+  }
+ },
+ "Logan": {
+  "county": "Logan",
+  "parcels": 12139,
+  "points": 9673,
+  "sample": {
+   "n": 1000,
+   "owner": 99,
+   "ownerAdd": 99,
+   "situsAdd": 98,
+   "landAcres": 99,
+   "landUse": 0
+  },
+  "boxAround": "Sterling",
+  "box": {
+   "n": 599,
+   "owner": 90,
+   "ownerAdd": 90,
+   "situsAdd": 90,
+   "landAcres": 99,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 613,
+  "pointsWithParcel": 100,
+  "joinRaw": 21,
+  "joinNorm": 21,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "38052532104007",
+    "38052532103008"
+   ],
+   "point": [
+    "38052528102019",
+    "38052528102017"
+   ]
+  }
+ },
+ "Otero": {
+  "county": "Otero",
+  "parcels": 0,
+  "points": 0
+ },
+ "Las Animas": {
+  "county": "Las Animas",
+  "parcels": 0,
+  "points": 10457
+ },
+ "Pitkin": {
+  "county": "Pitkin",
+  "parcels": 19146,
+  "points": 9782,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 100,
+   "landAcres": 100,
+   "landUse": 100
+  },
+  "boxAround": "Aspen",
+  "box": {
+   "n": 2000,
+   "owner": 97,
+   "ownerAdd": 97,
+   "situsAdd": 96,
+   "landAcres": 100,
+   "landUse": 90
+  },
+  "uses": [
+   "Residential-Condominium (626)",
+   "Residential-Single Family Residence (470)",
+   "Residential-Duplex Condominium (287)",
+   "Commercial-Commercial Condominium (237)",
+   "Exempt-Political Subdivision - Non-Residential (40)",
+   "Vacant Land-Residential Lot (20)",
+   "Exempt-Political Subdivision - Residential (14)",
+   "Residential-Duplex or Triplex (12)"
+  ],
+  "boxPoints": 1713,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "273707346004",
+    "273707346005"
+   ],
+   "point": []
+  }
+ },
+ "Rio Grande": {
+  "county": "Rio Grande",
+  "parcels": 13171,
+  "points": 9633,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 99,
+   "situsAdd": 93,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "boxAround": "Monte Vista",
+  "box": {
+   "n": 1855,
+   "owner": 100,
+   "ownerAdd": 99,
+   "situsAdd": 96,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 1579,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "3531358033",
+    "3531358018"
+   ],
+   "point": []
+  }
+ },
+ "Clear Creek": {
+  "county": "Clear Creek",
+  "parcels": 26844,
+  "points": 5920,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 40,
+   "landAcres": 92,
+   "landUse": 100
+  },
+  "boxAround": "Idaho Springs",
+  "box": {
+   "n": 2000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 83,
+   "landAcres": 12,
+   "landUse": 100
+  },
+  "uses": [
+   "9 (1333)",
+   "2 (195)",
+   "5 (138)",
+   "4 (125)",
+   "10 (86)",
+   "7 (43)",
+   "12 (40)",
+   "11 (17)"
+  ],
+  "boxPoints": 1300,
+  "pointsWithParcel": 56,
+  "joinRaw": 79,
+  "joinNorm": 79,
+  "noSitusJoined": 3,
+  "idExamples": {
+   "parcel": [
+    "183535143001",
+    "183535143001"
+   ],
+   "point": [
+    "183536325902",
+    "183536325900"
+   ]
+  }
+ },
+ "Alamosa": {
+  "county": "Alamosa",
+  "parcels": 0,
+  "points": 7935
+ },
+ "Custer": {
+  "county": "Custer",
+  "parcels": 9489,
+  "points": 7041,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 97,
+   "situsAdd": 0,
+   "landAcres": 60,
+   "landUse": 0
+  },
+  "boxAround": "Silver Cliff",
+  "box": {
+   "n": 20,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 0,
+   "landAcres": 85,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 8,
+  "pointsWithParcel": 100,
+  "joinRaw": 35,
+  "joinNorm": 35,
+  "noSitusJoined": 35,
+  "idExamples": {
+   "parcel": [
+    "102-31-850",
+    "102-31-850"
+   ],
+   "point": [
+    "100-17-950",
+    "101-39-450"
+   ]
+  }
+ },
+ "Huerfano": {
+  "county": "Huerfano",
+  "parcels": 18042,
+  "points": 0,
+  "sample": {
+   "n": 1000,
+   "owner": 84,
+   "ownerAdd": 91,
+   "situsAdd": 61,
+   "landAcres": 29,
+   "landUse": 0
+  },
+  "boxAround": "Walsenburg",
+  "box": {
+   "n": 1767,
+   "owner": 88,
+   "ownerAdd": 88,
+   "situsAdd": 68,
+   "landAcres": 7,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 0,
+  "pointsWithParcel": null,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "3703510",
+    "28651"
+   ],
+   "point": []
+  }
+ },
+ "Prowers": {
+  "county": "Prowers",
+  "parcels": 0,
+  "points": 0
+ },
+ "Moffat": {
+  "county": "Moffat",
+  "parcels": 10541,
+  "points": 0,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 0,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "boxAround": "Craig",
+  "box": {
+   "n": 2000,
+   "owner": 98,
+   "ownerAdd": 98,
+   "situsAdd": 0,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 0,
+  "pointsWithParcel": null,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "065736304005",
+    "065736408017"
+   ],
+   "point": []
+  }
+ },
+ "San Miguel": {
+  "county": "San Miguel",
+  "parcels": 10732,
+  "points": 6285,
+  "sample": {
+   "n": 1000,
+   "owner": 96,
+   "ownerAdd": 92,
+   "situsAdd": 64,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "boxAround": "Mountain Village",
+  "box": {
+   "n": 2000,
+   "owner": 98,
+   "ownerAdd": 99,
+   "situsAdd": 79,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 913,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "477903405004",
+    "477903107116"
+   ],
+   "point": []
+  }
+ },
+ "Gilpin": {
+  "county": "Gilpin",
+  "parcels": 7724,
+  "points": 11816,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 49,
+   "landAcres": 100,
+   "landUse": 0
+  },
+  "boxAround": "Central",
+  "box": {
+   "n": 389,
+   "owner": 99,
+   "ownerAdd": 99,
+   "situsAdd": 5,
+   "landAcres": 99,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 32,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "N007387",
+    "N001039"
+   ],
+   "point": []
+  }
+ },
+ "Yuma": {
+  "county": "Yuma",
+  "parcels": 11862,
+  "points": 5436,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 11,
+   "landAcres": 100,
+   "landUse": 0
+  },
+  "boxAround": "Yuma",
+  "box": {
+   "n": 636,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 87,
+   "landAcres": 100,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 547,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "R218207",
+    "R218198"
+   ],
+   "point": []
+  }
+ },
+ "Conejos": {
+  "county": "Conejos",
+  "parcels": 0,
+  "points": 4940
+ },
+ "Lake": {
+  "county": "Lake",
+  "parcels": 9904,
+  "points": 9250,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 95,
+   "situsAdd": 94,
+   "landAcres": 89,
+   "landUse": 100
+  },
+  "boxAround": "Leadville",
+  "box": {
+   "n": 2000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 96,
+   "landAcres": 92,
+   "landUse": 100
+  },
+  "uses": [
+   "SINGLE FAM.RES-IMPROVEMENTS (1201)",
+   "VACANT RES LOTS (136)",
+   "EXEMPT-POLITICAL SD-LAND (89)",
+   "SINGLE FAM.RES.-LAND (80)",
+   "EXEMPT-COUNTY-LAND (57)",
+   "DUP/TRIPLEX IMPROVEMTS (53)",
+   "NAT - NONPROD. PAT. MINING CLAIM LAND (40)",
+   "EXEMPT MOBILE/MANUFACTURED HOME (40)"
+  ],
+  "boxPoints": 2000,
+  "pointsWithParcel": 94,
+  "joinRaw": 66,
+  "joinNorm": 66,
+  "noSitusJoined": 70,
+  "idExamples": {
+   "parcel": [
+    "263324223006",
+    "263323434002"
+   ],
+   "point": [
+    "263326111011",
+    "263324325017"
+   ]
+  }
+ },
+ "Saguache": {
+  "county": "Saguache",
+  "parcels": 14371,
+  "points": 7227,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 93,
+   "situsAdd": 0,
+   "landAcres": 100,
+   "landUse": 0
+  },
+  "boxAround": "Center",
+  "box": {
+   "n": 800,
+   "owner": 100,
+   "ownerAdd": 95,
+   "situsAdd": 0,
+   "landAcres": 100,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 703,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "485733014001",
+    "485733324002"
+   ],
+   "point": []
+  }
+ },
+ "Kit Carson": {
+  "county": "Kit Carson",
+  "parcels": 0,
+  "points": 0
+ },
+ "Ouray": {
+  "county": "Ouray",
+  "parcels": 8406,
+  "points": 4433,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 94,
+   "situsAdd": 100,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "boxAround": "Ouray",
+  "box": {
+   "n": 834,
+   "owner": 94,
+   "ownerAdd": 94,
+   "situsAdd": 100,
+   "landAcres": 0,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 627,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": null,
+  "idExamples": {
+   "parcel": [
+    "451725103003",
+    "451725103002"
+   ],
+   "point": []
+  }
+ },
+ "Rio Blanco": {
+  "county": "Rio Blanco",
+  "parcels": 5103,
+  "points": 0,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 90,
+   "landAcres": 38,
+   "landUse": 100
+  },
+  "boxAround": "Meeker",
+  "box": {
+   "n": 310,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 87,
+   "landAcres": 14,
+   "landUse": 99
+  },
+  "uses": [
+   "RESIDENTIAL (191)",
+   "VACANT (81)",
+   "EXEMPT (24)",
+   "AGRICULTURE (6)",
+   "COMMERCIAL (4)",
+   "MULTI-RES (2)"
+  ],
+  "boxPoints": 0,
+  "pointsWithParcel": null,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "140923306001",
+    "140923264001"
+   ],
+   "point": []
+  }
+ },
+ "Costilla": {
+  "county": "Costilla",
+  "parcels": 0,
+  "points": 2320
+ },
+ "Washington": {
+  "county": "Washington",
+  "parcels": 6505,
+  "points": 5910,
+  "sample": {
+   "n": 1000,
+   "owner": 0,
+   "ownerAdd": 0,
+   "situsAdd": 0,
+   "landAcres": 84,
+   "landUse": 0
+  },
+  "boxAround": "Akron",
+  "box": {
+   "n": 981,
+   "owner": 0,
+   "ownerAdd": 0,
+   "situsAdd": 0,
+   "landAcres": 18,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 865,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "92018501010",
+    "92018501011"
+   ],
+   "point": []
+  }
+ },
+ "Lincoln": {
+  "county": "Lincoln",
+  "parcels": 0,
+  "points": 0
+ },
+ "Phillips": {
+  "county": "Phillips",
+  "parcels": 0,
+  "points": 0
+ },
+ "Bent": {
+  "county": "Bent",
+  "parcels": 0,
+  "points": 1952
+ },
+ "Baca": {
+  "county": "Baca",
+  "parcels": 0,
+  "points": 0
+ },
+ "Dolores": {
+  "county": "Dolores",
+  "parcels": 4513,
+  "points": 2616,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 74,
+   "landAcres": 73,
+   "landUse": 0
+  },
+  "boxAround": "Rico",
+  "box": {
+   "n": 695,
+   "owner": 97,
+   "ownerAdd": 97,
+   "situsAdd": 91,
+   "landAcres": 38,
+   "landUse": 0
+  },
+  "uses": [],
+  "boxPoints": 507,
+  "pointsWithParcel": 100,
+  "joinRaw": 71,
+  "joinNorm": 71,
+  "noSitusJoined": 8,
+  "idExamples": {
+   "parcel": [
+    "504736222016",
+    "504736222017"
+   ],
+   "point": [
+    "504736219001",
+    "504736218002"
+   ]
+  }
+ },
+ "Crowley": {
+  "county": "Crowley",
+  "parcels": 0,
+  "points": 0
+ },
+ "Hinsdale": {
+  "county": "Hinsdale",
+  "parcels": 2909,
+  "points": 1923,
+  "sample": {
+   "n": 1000,
+   "owner": 99,
+   "ownerAdd": 94,
+   "situsAdd": 67,
+   "landAcres": 90,
+   "landUse": 99
+  },
+  "boxAround": "Lake City",
+  "box": {
+   "n": 935,
+   "owner": 99,
+   "ownerAdd": 93,
+   "situsAdd": 73,
+   "landAcres": 25,
+   "landUse": 97
+  },
+  "uses": [
+   "SINGLE FAM.RES-IMPROVEMTS (474)",
+   "VACANT RES LOTS (139)",
+   "SINGLE FAM.RES.-LAND (102)",
+   "MERCHANDISING-IMPROVEMENT (26)",
+   "EXEMPT-POLITICAL SUBDIVISION-NON RES-LAND (20)",
+   "MANUFCTD.HOUSING-LAND (17)",
+   "COMMERCIAL CONDOMINIUM (16)",
+   "VACANT COM LOTS (8)"
+  ],
+  "boxPoints": 683,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "450927104C10",
+    "450927104A10"
+   ],
+   "point": []
+  }
+ },
+ "Mineral": {
+  "county": "Mineral",
+  "parcels": 0,
+  "points": 1422
+ },
+ "Sedgwick": {
+  "county": "Sedgwick",
+  "parcels": 3160,
+  "points": 1387,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 0,
+   "situsAdd": 17,
+   "landAcres": 99,
+   "landUse": 19
+  },
+  "boxAround": "Julesburg",
+  "box": {
+   "n": 643,
+   "owner": 100,
+   "ownerAdd": 0,
+   "situsAdd": 92,
+   "landAcres": 98,
+   "landUse": 88
+  },
+  "uses": [
+   "RESIDENTIAL (431)",
+   "COMMERCIAL/INDUSTRIAL (129)",
+   "OUTBUILDING (3)"
+  ],
+  "boxPoints": 502,
+  "pointsWithParcel": 0,
+  "joinRaw": 0,
+  "joinNorm": 0,
+  "noSitusJoined": 0,
+  "idExamples": {
+   "parcel": [
+    "11037030",
+    "61233190"
+   ],
+   "point": []
+  }
+ },
+ "Jackson": {
+  "county": "Jackson",
+  "parcels": 0,
+  "points": 0
+ },
+ "Cheyenne": {
+  "county": "Cheyenne",
+  "parcels": 0,
+  "points": 0
+ },
+ "Kiowa": {
+  "county": "Kiowa",
+  "parcels": 0,
+  "points": 0
+ },
+ "San Juan": {
+  "county": "San Juan",
+  "parcels": 2781,
+  "points": 1452,
+  "sample": {
+   "n": 1000,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 68,
+   "landAcres": 97,
+   "landUse": 100
+  },
+  "boxAround": "Silverton",
+  "box": {
+   "n": 1030,
+   "owner": 100,
+   "ownerAdd": 100,
+   "situsAdd": 96,
+   "landAcres": 98,
+   "landUse": 100
+  },
+  "uses": [
+   "Residential Real Estate (426)",
+   "Vacant Land Real Estate (370)",
+   "Commercial/Industrial Real Estate (83)",
+   "Mixed Use Real Estate (49)",
+   "Mobile Home (36)",
+   "Patented Mining Claim Real Estate (34)",
+   "Town House attached single family (20)",
+   "Mobile Home Land Only (8)"
+  ],
+  "boxPoints": 937,
+  "pointsWithParcel": 100,
+  "joinRaw": 63,
+  "joinNorm": 63,
+  "noSitusJoined": 9,
+  "idExamples": {
+   "parcel": [
+    "R7124",
+    "N2147"
+   ],
+   "point": [
+    "R3060",
+    "R2778"
+   ]
+  }
+ }
+}
