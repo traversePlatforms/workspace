@@ -1740,6 +1740,14 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   button.kitstep{cursor:pointer}.kitstep span:nth-child(2){display:grid;gap:2px;flex:1;min-width:0}.kitstep small{color:var(--soft)}
   .kitck{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);font-weight:800}.kitstep.done .kitck{border-color:var(--go);background:var(--go);color:var(--on-go)}
   .kitgo{flex:none;font-size:20px;color:var(--soft)}
+  /* Setup › Email and other ways to pay (2026-10-29) */
+  .mailsteps{margin:0;padding:10px 12px 10px 30px;border-radius:12px;background:var(--sunk);font-size:14px;display:grid;gap:4px}
+  .mailmsg{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .mailmsg textarea,.kitpay textarea{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;width:100%;box-sizing:border-box}
+  .mailph{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;color:var(--soft)}.mailph code{font:600 13px ui-monospace,Consolas,monospace;color:var(--ink)}
+  .mailbtns{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center}
+  .jways{display:grid;gap:6px;margin-top:8px}.jwayrow{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+  .jwayrow .lnk{background:none;border:0;padding:2px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;text-decoration:none}
   .jnform label{display:grid;gap:3px;font-size:13px;font-weight:700}
   .jnform input{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line,#ccd);border-radius:8px;background:var(--card,#fff);color:inherit}
   .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
@@ -4301,7 +4309,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and colour, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* the quote and agreement kit (2026-10-27) */
         kitOnC() ? tile('button', 'calc', 'Prices and terms', 'What a quote adds up from the house, the usual deposit, and your agreement terms.', 'Admin only', kitPricesView) : null,
-        kitOnC() ? tile('button', 'card', 'Payments', 'Connect your own Square or Stripe for deposits on your forms.', 'Admin only', kitPayView) : null,
+        kitOnC() ? tile('button', 'card', 'Payments', 'Your own Square or Stripe for deposits, and other ways customers can pay.', 'Admin only', kitPayView) : null,
+        kitOnC() ? tile('button', 'mail', 'Email', 'Connect your own email: signed agreements and receipts go from your address, in your words.', 'Admin only', mailSetupView) : null,   /* 2026-10-29 */
         feat('billing') ? tile('button', 'card', 'Billing', 'Your Traverse plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10 */
         CO.a365 ? null : tile('button', 'door', 'Sample door', 'One made-up door with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew) */
     }
@@ -5536,15 +5545,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function jobPkgLabel(j) { return j && j.pkg === 'other' ? (j.svc || 'Another service') : JOB_PKG[(j && j.pkg) || 'full'] || JOB_PKG.full; }
   var JOB_SCOPE = { all: 'Whole lawn', front: 'Front yard only', back: 'Back yard only' };
   var JOB_PAY = { unpaid: 'Not paid yet', deposit: 'Deposit paid', paid: 'Paid in full', plan: 'Service plan' };
-  var JOB_HOW = { square: 'Square', card: 'Card', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', check: 'Check', other: 'Other' };
+  var JOB_HOW = { square: 'Square', card: 'Card', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', cashapp: 'Cash App', paypal: 'PayPal', check: 'Check', other: 'Other' };   /* + Cash App, PayPal (2026-10-29) */
   var JOB_HOW_PICK = { square: 'Card (Square)', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', check: 'Check', other: 'Other' };   /* Square and Card were the same thing: a card is taken on Square (Matthew 2026-10-15); old jobs saved as card keep their label */
+  /* the editions also record Cash App and PayPal (2026-10-29); the 365 office's choices stay as they are */
+  function jobHowPick() { if (!kitOnC()) return JOB_HOW_PICK; var o = {}; for (var k in JOB_HOW_PICK) { if (k === 'check') { o.cashapp = 'Cash App'; o.paypal = 'PayPal'; } o[k] = JOB_HOW_PICK[k]; } return o; }
+  function payHowRows(rows) { if (!kitOnC()) return rows; var o = []; rows.forEach(function (r) { if ((r[0] === 'card' || r[0] === 'check') && !o.some(function (x) { return x[0] === 'cashapp'; })) o.push(['cashapp', 'Cash App'], ['paypal', 'PayPal']); o.push(r); }); return o; }
   function jobMonday(iso) { var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoOf(d); }
   function jobAdd(iso, n) { var p = iso.split('-'); return isoOf(new Date(+p[0], +p[1] - 1, +p[2] + n)); }
   function jobDow(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).getDay(); }
   function jobName(j) { return j.who ? (j.who.name || j.who.phone || j.title) : j.title; }
   function jobWhen(j) { return dayName(j.date) + ', arrive ' + j.slotLabel; }
   /* Square (SX-58, 2026-10-15): connected or not, asked once */
-  function sqState(then) { api('squarestate').then(function (j) { S.sq = j && j.ok ? { on: !!j.on, env: j.env, pay: !!j.pay, payKind: j.payKind || null, payEnv: j.payEnv || null } : (S.sq || { on: false }); then(S.sq); }).catch(function () { then(S.sq || { on: false }); }); }   /* + pay: a kit install's card link (2026-10-27) */   /* asked fresh every time: a page opened before the keys changed kept the old answer until a reload (2026-10-15) */
+  function sqState(then) { api('squarestate').then(function (j) { S.sq = j && j.ok ? { on: !!j.on, env: j.env, pay: !!j.pay, payKind: j.payKind || null, payEnv: j.payEnv || null, ways: j.ways || [] } : (S.sq || { on: false, ways: [] }); then(S.sq); }).catch(function () { then(S.sq || { on: false }); }); }   /* + pay: a kit install's card link (2026-10-27) */   /* asked fresh every time: a page opened before the keys changed kept the old answer until a reload (2026-10-15) */
   function jobPayText(j) {
     var p = j.pay || { s: 'unpaid' };
     if (p.s === 'deposit') return 'Deposit $' + p.amt + ' paid' + (p.how ? ' (' + (JOB_HOW[p.how] || p.how) + ')' : '');
@@ -5928,7 +5940,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         payMore.appendChild(q('div', 'dwsub', 'Paid how'));
         var hr = q('div', 'dwlen'); payMore.appendChild(hr);
         if (!P.pay.how || P.pay.how === 'card') P.pay.how = 'square';
-        chips(hr, JOB_HOW_PICK, function () { return P.pay.how; }, function (k) { P.pay.how = k; });
+        chips(hr, jobHowPick(), function () { return P.pay.how; }, function (k) { P.pay.how = k; });
       }
     }
     drawPay();
@@ -5947,19 +5959,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       depBox.appendChild(q('div', 'dwsub', 'How they paid the deposit'));
       var hr = q('div', 'dwlen'); depBox.appendChild(hr);
       if (!P.how) P.how = 'square';
-      var howMap = {}, howRow = hr; for (var k0 in JOB_HOW_PICK) howMap[k0] = JOB_HOW_PICK[k0]; howMap.none = 'No deposit';   /* 2026-10-26 (Jen: Marc and Zane said no to the deposit) */
+      var howMap = {}, howRow = hr, HP = jobHowPick(); for (var k0 in HP) howMap[k0] = HP[k0]; howMap.none = 'No deposit';   /* 2026-10-26 (Jen: Marc and Zane said no to the deposit) */
       var drawHow = function () { howRow.textContent = ''; chips(howRow, howMap, function () { return P.how; }, function (k) { P.how = k; paint(); }); };
       sqState(function (sq) {   /* SX-58: they pay on the form, by Square link */
-        if (!(kitOnC() ? sq.pay : sq.on)) return;
-        howMap = { link: kitOnC() ? 'Card link on the form (' + (sq.payKind === 'stripe' ? 'Stripe' : 'Square') + ')' + (sq.payEnv === 'sandbox' ? ' (test)' : '') : 'Square link on the form' + (sq.env === 'sandbox' ? ' (test)' : '') }; for (var k in JOB_HOW_PICK) howMap[k] = JOB_HOW_PICK[k]; howMap.none = 'No deposit';
+        var wl = kitOnC() && sq.ways && sq.ways.length ? sq.ways.map(function (w) { return w.label; }) : [];   /* other ways to pay, on the form (2026-10-29) */
+        if (!(kitOnC() ? sq.pay : sq.on)) { if (wl.length) { howMap = { ways: 'On the form: ' + wl.join(', ') }; for (var k1 in HP) howMap[k1] = HP[k1]; howMap.none = 'No deposit'; drawHow(); if (typeof paint === 'function') paint(); } return; }
+        howMap = { link: kitOnC() ? 'Card link on the form (' + (sq.payKind === 'stripe' ? 'Stripe' : 'Square') + ')' + (sq.payEnv === 'sandbox' ? ' (test)' : '') : 'Square link on the form' + (sq.env === 'sandbox' ? ' (test)' : '') }; if (wl.length) howMap.ways = 'On the form: ' + wl.join(', '); for (var k in HP) howMap[k] = HP[k]; howMap.none = 'No deposit';
         if (!(SIGN && lead.sign)) P.how = 'link';
         drawHow(); if (typeof paint === 'function') paint();
       });
       drawHow();
       takenBtn = q('button', 'jtaken', ''); takenBtn.type = 'button'; takenBtn.setAttribute('aria-pressed', 'false');
       takenBtn.addEventListener('click', function () { takenBtn.setAttribute('aria-pressed', String(takenBtn.getAttribute('aria-pressed') !== 'true')); });
-      if (lead.sign && lead.sign.how && lead.sign.how !== 'link') takenBtn.setAttribute('aria-pressed', 'true');   /* sent already: she took it then */
+      if (lead.sign && lead.sign.how && lead.sign.how !== 'link' && lead.sign.how !== 'ways') takenBtn.setAttribute('aria-pressed', 'true');   /* sent already: she took it then */
       depBox.appendChild(takenBtn);
+      var waysNote = q('div', 'ltrynote', 'They see your Venmo, Cash App, PayPal, Zelle or pay link on the form and pay there. These cannot tell the app the money came in: the job starts unpaid, and you record the deposit on the job when it arrives.'); waysNote.hidden = true; depBox.appendChild(waysNote);   /* 2026-10-29 */
       /* signature or not (2026-10-17, Matthew: "she can choose to send one that requires signing and what that doesnt") */
       if (P.nosign == null) P.nosign = lead.sign ? !!lead.sign.nosign : true;   /* no signature is the default; signing is for big jobs (2026-10-19) */
       depBox.appendChild(q('div', 'dwsub', 'The form'));
@@ -5972,7 +5986,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           : 'They read it, pay there if it is by ' + lw + ', and sign. Signing books the job.';
       };
       drawNs();
-      var paint = function () { var none = P.how === 'none'; takenBtn.hidden = P.how === 'link' || none; dl.hidden = none; var pct = kitOnC() && S.kit ? S.kit.depositPct : 50, p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, half = Math.ceil(p * pct / 100); if (!depOwn) dDep.value = p ? half : ''; var d = depOwn ? (parseInt(String(dDep.value).replace(/\D/g, ''), 10) || 0) : half; S.depNow = none ? 0 : d; depTxt.textContent = none ? (p ? 'No deposit · they pay ' + money0(p) + ' when the work is done' : 'No deposit. Type the price.') : p ? (d === half ? (pct === 50 ? 'Deposit is half: ' : 'Deposit is ' + pct + '%: ') : 'Deposit changed from ' + (pct === 50 ? 'half' : pct + '%') + ' (' + money0(half) + '): ') + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
+      var paint = function () { var none = P.how === 'none'; takenBtn.hidden = P.how === 'link' || P.how === 'ways' || none; waysNote.hidden = P.how !== 'ways'; dl.hidden = none; var pct = kitOnC() && S.kit ? S.kit.depositPct : 50, p = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0, half = Math.ceil(p * pct / 100); if (!depOwn) dDep.value = p ? half : ''; var d = depOwn ? (parseInt(String(dDep.value).replace(/\D/g, ''), 10) || 0) : half; S.depNow = none ? 0 : d; depTxt.textContent = none ? (p ? 'No deposit · they pay ' + money0(p) + ' when the work is done' : 'No deposit. Type the price.') : p ? (d === half ? (pct === 50 ? 'Deposit is half: ' : 'Deposit is ' + pct + '%: ') : 'Deposit changed from ' + (pct === 50 ? 'half' : pct + '%') + ' (' + money0(half) + '): ') + money0(d) + ' \u00b7 balance on the day: ' + money0(p - d) : 'Type the price to see the deposit.'; takenBtn.textContent = p ? 'I took the ' + money0(d) + ' deposit' : 'I took the deposit'; };
       dPrice.addEventListener('input', paint); paint();
       box.insertBefore(q('div', 'dwh', 'Deposit'), nl); box.insertBefore(depBox, nl);
     }
@@ -6067,7 +6081,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (SIGN) {
         var sp = parseInt(String(dPrice.value).replace(/\D/g, ''), 10) || 0;
         if (sp < 1) { err.textContent = 'Type the price you quoted.'; return; }
-        if (P.how !== 'link' && P.how !== 'none' && takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
+        if (P.how !== 'link' && P.how !== 'none' && P.how !== 'ways' && takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
         if (S.depNow > sp) { err.textContent = 'The deposit cannot be more than the price.'; return; }
         sv.disabled = true;
         api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, nosign: P.nosign ? 1 : 0, pkg: kitOnC() ? 'job' : P.pkg === 'aerate' ? 'aerate' : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb, extras: pre.extras || qt.extras || [] } }).then(function (j) {
@@ -6119,7 +6133,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = myName();
-    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your ' + (j.nosign ? 'booking confirmation (no signature needed): ' : 'one-page agreement to sign: ') + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + slotSay(x.slot) + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page' + (j.nosign ? '; your day is booked once it is paid.' : ' before you sign.') : j.deposit > 0 ? 'the ' + money0(j.deposit) + ' deposit you paid.' : 'that you pay when the work is done.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
+    var msg = 'Hi ' + first + ', this is ' + me + ' with ' + B.name + '. Thanks for booking! Here is your ' + (j.nosign ? 'booking confirmation (no signature needed): ' : 'one-page agreement to sign: ') + j.link + ' It shows your day (' + longDay(x.date) + ', arriving ' + slotSay(x.slot) + '), the price and ' + (j.byLink ? 'the ' + money0(j.deposit) + ' deposit, which you can pay by card right on the page' + (j.nosign ? '; your day is booked once it is paid.' : ' before you sign.') : j.byWays ? 'the ' + money0(j.deposit) + ' deposit and the ways you can pay it.' : j.deposit > 0 ? 'the ' + money0(j.deposit) + ' deposit you paid.' : 'that you pay when the work is done.') + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
     box.appendChild(q('div', 'dwh', 'The form is ready'));
     box.appendChild(q('div', null, money0(x.price) + (j.deposit > 0 ? ' \u00b7 deposit ' + money0(j.deposit) + ' \u00b7 balance ' + money0(j.balance) : ' \u00b7 no deposit, paid when the work is done') + ' \u00b7 ' + dayName(x.date) + ', ' + slotLabel(x.slot) + (j.nosign ? (j.booked ? '. Booked on the Jobs board now, no signature needed.' : '. The day is held; it is booked when they pay the deposit (no signature needed).') : '. The day is held on the Jobs board; it goes on the crew\u2019s calendar when they sign.')));
     var row = q('div', 'lcontact');
@@ -6385,12 +6399,33 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     addGmail(r); box.appendChild(r);
     if (!to && tel.length < 10) box.appendChild(q('div', 'ltrynote', 'No email or phone on file: copy it and send it however you reach them.'));
   }
+  /* other ways to pay (2026-10-29, Matthew: Venmo, Cash App, PayPal, Zelle, the company's own pay link): each to open or copy, and all of them
+     to text or email from this phone. They cannot tell the app the money came in, so the office marks it paid, and the box says so. */
+  function payWaysBox(host, ways, owe, who) {
+    host.textContent = ''; if (!ways.length) return;
+    host.appendChild(q('div', 'dwh', 'Other ways to pay'));
+    var line = function (w) { return w.label + ': ' + (w.k === 'zelle' ? 'send to ' + w.show + (w.name ? ' (' + w.name + ')' : '') : w.url); };
+    ways.forEach(function (w) {
+      var r = q('div', 'jwayrow'); r.appendChild(q('b', null, w.label)); r.appendChild(q('span', 'sub2', ' ' + w.show + (w.name ? ' · ' + w.name : '')));
+      if (w.url) { var a = q('a', 'lnk', 'Open'); a.href = w.url; a.target = '_blank'; a.rel = 'noopener'; r.appendChild(a); }
+      var c = q('button', 'lnk', 'Copy'); c.type = 'button'; c.addEventListener('click', function () { copyText(w.url || w.show, w.label + ' details'); }); r.appendChild(c);
+      host.appendChild(r);
+    });
+    var B = leadBrand({ src: who && who.src, name: who && who.name }), tel = digits(who && who.phone);
+    var msg = 'Hi ' + greetName(who && who.name) + ', this is ' + myName() + ' with ' + B.name + '. You can pay ' + (owe > 0 ? 'the ' + money0(owe) + ' balance' : 'us') + ' any of these ways:\n' + ways.map(line).join('\n') + '\nPlease put your name and address in the note. Thank you!';
+    var ct = q('div', 'lcontact');
+    if (tel.length >= 10) { var t = q('a', 'sendtxt'); t.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); t.appendChild(ico('chat', 2.2)); t.appendChild(document.createTextNode('Text them these')); ct.appendChild(t); }
+    if (who && who.email) { var e = q('a'); e.href = 'mailto:' + encodeURIComponent(who.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('How to pay ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email them these')); ct.appendChild(e); }
+    var cp = q('button', 'lnk', 'Copy all'); cp.type = 'button'; cp.addEventListener('click', function () { copyText(msg, 'Paste it into a text or email'); }); ct.appendChild(cp);
+    addGmail(ct); host.appendChild(ct);
+    host.appendChild(q('div', 'ltrynote', 'These do not tell the app when the money arrives. When it comes in, mark it paid above and pick how they paid (Venmo, Cash App, PayPal, Zelle or Other).'));
+  }
   function jobAfterBox(jb, owe, redraw) {
     var w = q('div', 'jafter');
     if (owe > 0) {
       w.appendChild(q('div', 'dwh', 'Balance ' + money0(owe)));
       var row = q('div', 'jpaid'), sel = q('select'), pb = q('button', 'save', 'Mark it paid'); pb.type = 'button'; sel.setAttribute('aria-label', 'How they paid');
-      [['cash', 'Cash'], ['check', 'Check'], ['zelle', 'Zelle'], ['venmo', 'Venmo'], ['card', 'Card'], ['other', 'Other']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; sel.appendChild(op); });
+      payHowRows([['cash', 'Cash'], ['check', 'Check'], ['zelle', 'Zelle'], ['venmo', 'Venmo'], ['card', 'Card'], ['other', 'Other']]).forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; sel.appendChild(op); });
       /* the check number and the day it came in, for the receipt (2026-10-27, Matthew: Zane paid by check and needs a receipt for his HOA) */
       var pdRow = q('div', 'jpaid jpinfo'), ckNo = q('input'), rcvd = q('input');
       ckNo.type = 'text'; ckNo.maxLength = 20; ckNo.placeholder = 'Check number (optional)'; ckNo.setAttribute('aria-label', 'Check number');
@@ -6418,6 +6453,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         api('jobpart', { body: pdBody({ id: jb.id, amt: a, how: sel.value }) }).then(function (j) { pbt.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Part payment recorded', money0(j.tot) + ' paid so far \u00b7 ' + money0(j.left) + ' left', null); if (redraw) redraw(); }).catch(function () { pbt.disabled = false; toast('No signal', 'Not saved.', null); });
       });
       pr.appendChild(pin); pr.appendChild(pbt); w.appendChild(pr);
+      if (kitOnC()) { var wb = q('div', 'jways'); w.appendChild(wb); sqState(function (sq) { payWaysBox(wb, sq.ways || [], owe, jb.who || null); }); }   /* other ways to pay: show or send them (2026-10-29) */
       var sl = q('button', 'lnk', 'Check Square for a payment'); sl.type = 'button';   /* paid straight in Square (2026-10-19, Kirk) */
       sl.addEventListener('click', function () { sl.disabled = true; api('squarelook', { body: { id: jb.id } }).then(function (j) { sl.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') : 'The job now shows paid.', null); redraw(); } else toast('No payment found', j.why || 'Nothing in Square covers the ' + money0(owe) + ' balance yet.', null); }).catch(function () { sl.disabled = false; toast('No signal', 'Try again.', null); }); });
       w.appendChild(sl);
@@ -7328,9 +7364,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function signLine(l) {
     var g = l.sign, d = q('div', 'qline' + (l.signed ? ' qyes' : ''));
     var o = l.quote && l.quote.offer;
-    if (g.nosign && !l.signed) { d.className = 'qline' + (l.confirmed ? ' qyes' : ''); d.appendChild(document.createTextNode((l.confirmed ? 'Booked, no signature needed' : 'Form sent ' + ago(g.at) + ', no signature needed' + (g.how === 'link' ? ', waiting for the deposit' : '')) + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid ? ' paid by Square link' : ' by Square link') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + o.crew : ''))); }   /* no signature needed (2026-10-17) */
+    if (g.nosign && !l.signed) { d.className = 'qline' + (l.confirmed ? ' qyes' : ''); d.appendChild(document.createTextNode((l.confirmed ? 'Booked, no signature needed' : 'Form sent ' + ago(g.at) + ', no signature needed' + (g.how === 'link' ? ', waiting for the deposit' : '')) + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid ? ' paid by Square link' : ' by Square link') : g.how === 'ways' ? ' to pay another way (record it on the job)' : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + o.crew : ''))); }   /* no signature needed (2026-10-17) */
     else d.appendChild(document.createTextNode(l.signed ? 'Signed by ' + l.signed.name + ', ' + ago(l.signed.at) + (l.signed.job ? ' \u00b7 job booked' : ' \u00b7 the day was taken: set a new one on the Jobs board')
-      : 'Form sent ' + ago(g.at) + ', waiting for them to ' + (g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order) ? 'pay and sign' : 'sign') + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid && g.pay && l.sqpaid.order === g.pay.order ? ' paid by Square link' : ' by Square link, not paid yet') : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + o.crew : '')));
+      : 'Form sent ' + ago(g.at) + ', waiting for them to ' + (g.how === 'link' && !(l.sqpaid && g.pay && l.sqpaid.order === g.pay.order) ? 'pay and sign' : 'sign') + ' \u00b7 ' + money0(l.quote.price) + ', deposit ' + money0(g.deposit) + (g.how === 'link' ? (l.sqpaid && g.pay && l.sqpaid.order === g.pay.order ? ' paid by Square link' : ' by Square link, not paid yet') : g.how === 'ways' ? ' to pay another way (record it on the job)' : '') + (o ? ' \u00b7 ' + dayName(o.date) + ', ' + slotLabel(o.slot) + ' with ' + o.crew : '')));
     if (l.sqcard && l.sqcard.last4) d.appendChild(q('div', 'dwsub', 'Card saved for the balance: ' + (l.sqcard.brand || 'card') + ' ending ' + l.sqcard.last4));   /* 2026-10-15 */
     else if (l.savecard && l.savecard.yes && !(l.sqafter)) d.appendChild(q('div', 'dwsub', 'They chose to save their card for the balance'));
     var row = q('div', 'qlinks');
@@ -7453,7 +7489,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var r2 = q('div', 'row2'), ps = q('select'); ps.setAttribute('aria-label', 'Paid');
       [['paid', 'Paid in full (' + money0(l.quote.price) + ')'], ['deposit', 'Paid a deposit'], ['unpaid', 'Not paid yet']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; ps.appendChild(op); });
       var hw = q('select'); hw.setAttribute('aria-label', 'How they paid');
-      [['cash', 'Cash'], ['square', 'Square'], ['card', 'Card'], ['zelle', 'Zelle'], ['venmo', 'Venmo'], ['check', 'Check'], ['other', 'Other']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; hw.appendChild(op); });
+      payHowRows([['cash', 'Cash'], ['square', 'Square'], ['card', 'Card'], ['zelle', 'Zelle'], ['venmo', 'Venmo'], ['check', 'Check'], ['other', 'Other']]).forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; hw.appendChild(op); });
       r2.appendChild(ps); r2.appendChild(hw); f.appendChild(r2);
       var am = q('input'); am.type = 'number'; am.min = '1'; am.step = '1'; am.inputMode = 'decimal'; am.placeholder = 'Deposit $'; am.setAttribute('aria-label', 'Deposit amount'); am.hidden = true; f.appendChild(am);
       ps.addEventListener('change', function () { am.hidden = ps.value !== 'deposit'; hw.disabled = ps.value === 'unpaid'; });
@@ -12504,7 +12540,121 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       box.appendChild(q('div', 'sub2', 'With both, deposit links use Square. Keys are kept on the server and never shown again.'));
       box.appendChild(msg);
+      var wb = q('div', 'kitpay'); box.appendChild(wb); kitWaysForm(wb);   /* other ways customers can pay (2026-10-29) */
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitPayView)); });
+  }
+  /* other ways customers can pay (2026-10-29, Matthew: Venmo, Cash App, PayPal, Zelle and the company's own pay link): on the Payments screen.
+     They show on the customer's quote page and form, and on the job card's balance. None of them tells the app a payment came in. */
+  function kitWaysForm(box) {
+    box.textContent = ''; box.appendChild(q('div', 'skel'));
+    api('payways').then(function (j) {
+      box.textContent = ''; if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      var C = j.cfg || {};
+      box.appendChild(q('div', 'dwh', 'Other ways customers can pay'));
+      box.appendChild(q('div', 'sub2', 'Fill in the ones you take. They show on the customer’s quote page and form (beside the card link, if you have one) and on each job’s balance, so your people can show or send them.'));
+      box.appendChild(q('div', 'msg', 'These cannot tell the app when money arrives. When a customer pays this way, mark the job paid (or record the deposit) and pick how they paid.'));
+      var field = function (label, val, ph, hint) { var l = q('label', null, label); var i = q('input'); i.value = val || ''; i.placeholder = ph; i.autocomplete = 'off'; l.appendChild(i); if (hint) l.appendChild(q('small', 'sub2', hint)); box.appendChild(l); return i; };
+      var ve = field('Venmo username', C.venmo ? '@' + C.venmo : '', '@yourbusiness', 'Opens venmo.com/u/yourbusiness.');
+      var ca = field('Cash App $Cashtag', C.cashapp ? '$' + C.cashapp : '', '$yourbusiness', 'Opens cash.app/$yourbusiness.');
+      var pp = field('PayPal.Me name', C.paypal || '', 'yourbusiness', 'Opens paypal.me/yourbusiness.');
+      var ze = field('Zelle: the email or phone number it is set up with', C.zelle || '', 'pay@yourbusiness.com or (303) 555-0100', 'Zelle has no payment links, so customers see these details to copy into their bank’s app.');
+      var zn = field('Zelle: the name it shows (optional)', C.zelleName || '', 'Your Business LLC', 'So the customer knows they have the right one.');
+      var lk = field('Your own pay link (optional)', C.link || '', 'https://…', 'Any https address, like an invoice or payment page from QuickBooks or Jobber.');
+      var ll = field('Name for your pay link', C.linkLabel || '', 'Pay online', '');
+      var msg = q('div', 'sub2'); var row = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row.appendChild(sb); box.appendChild(row); box.appendChild(msg);
+      if ((j.ways || []).length) box.appendChild(q('div', 'sub2', 'Customers see: ' + j.ways.map(function (w) { return w.label + ' (' + w.show + ')'; }).join(', ') + '.'));
+      sb.addEventListener('click', function () {
+        sb.disabled = true; msg.textContent = 'Saving…';
+        api('paywaysset', { body: { venmo: ve.value, cashapp: ca.value, paypal: pp.value, zelle: ze.value, zelleName: zn.value, link: lk.value, linkLabel: ll.value } }).then(function (k) {
+          sb.disabled = false; if (!k.ok) { msg.textContent = k.error || 'Not saved.'; return; }
+          toast('Saved', (k.ways || []).length ? (k.ways || []).map(function (w) { return w.label; }).join(', ') : 'No other ways to pay', null); kitWaysForm(box);
+        }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
+      });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { kitWaysForm(box); })); });
+  }
+  /* Setup › Email (2026-10-29, Matthew: the company connects its own email; the automatic emails each with a switch and its own words). The
+     app password lets the server send as them; it is kept on the server and never comes back to this page. A test must go before it is kept. */
+  var MAIL_STEPS = {
+    gmail: ['Sign in to the Google account you send from, at myaccount.google.com.', 'Open Security, then 2-Step Verification, and turn it on if it is off (Google only offers app passwords with it on).',
+      'Search the account for “App passwords” (or Security, 2-Step Verification, App passwords). Name it Traverse and press Create.', 'Copy the 16-letter password Google shows and paste it below. You can delete it there any time, and sending stops.'],
+    outlook: ['Sign in at account.microsoft.com (a work or school account: mysignins.microsoft.com).', 'Under Security, turn on two-step verification (work accounts: Security info).',
+      'Open App passwords and create a new one. Copy it and paste it below.', 'Some Microsoft 365 business accounts have SMTP sign-in (Authenticated SMTP) turned off, or do not allow app passwords. If the test says the sign-in was refused, ask whoever runs your Microsoft 365 to turn on Authenticated SMTP for this mailbox.'],
+    other: ['Your email provider’s help pages list the outgoing (SMTP) server and port. Port 587 is most common; 465 also works.', 'Make an app password there if your provider has them (most do once two-step sign-in is on), and paste it below.']
+  };
+  function mailSetupView() {
+    hideToast(); S.signin = null; S.screen = 'mailsetup'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Email', sub: 'Customer emails from your own address', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitpay mailset'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('mail').then(function (j) {
+      box.textContent = ''; if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      var M = j.mail || { on: false };
+      box.appendChild(q('div', 'dwh', 'Your email'));
+      var form = q('div', 'jnform'); form.style.display = 'grid'; form.style.gap = '10px';
+      if (M.on) {
+        box.appendChild(q('div', 'msg', 'Connected as ' + M.user + (M.name ? ' (sent as “' + M.name + '”)' : '') + ' · ' + ({ gmail: 'Gmail', outlook: 'Outlook or Microsoft 365' }[M.kind] || M.host)));
+        var acts = q('div', 'mailbtns');
+        var ch = q('button', 'lnk', 'Change'); ch.type = 'button'; ch.addEventListener('click', function () { form.hidden = !form.hidden; }); acts.appendChild(ch);
+        var dc = q('button', 'lnk', 'Disconnect'); dc.type = 'button';
+        dc.addEventListener('click', function () { if (!window.confirm('Disconnect ' + M.user + '? Nothing is emailed to customers until you connect again.')) return; api('mailoff', { body: {} }).then(function (k) { if (!k.ok) { toast('Not done', k.error || '', null); return; } toast('Email disconnected', '', null); mailSetupView(); }).catch(function () { toast('No signal', 'Try again.', null); }); });
+        acts.appendChild(dc); box.appendChild(acts); form.hidden = true;
+      } else box.appendChild(q('div', 'msg bad', 'Not connected. Until it is, nothing is emailed to customers. Forms and receipts still work: print them, or send them from your own email app.'));
+      box.appendChild(form);
+      var kind = M.kind || 'gmail', kRow = q('div', 'dwlen'), steps = q('ol', 'mailsteps');
+      form.appendChild(q('div', 'sub2', 'Who is your email with?')); form.appendChild(kRow);
+      [['gmail', 'Gmail'], ['outlook', 'Outlook or Microsoft 365'], ['other', 'Other']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(kind === o[0])); b.addEventListener('click', function () { kind = o[0]; [].forEach.call(kRow.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paintK(); }); kRow.appendChild(b); });
+      form.appendChild(q('div', 'dwsub', 'Make an app password first'));
+      form.appendChild(steps);
+      var fld = function (label, type, val, ph) { var l = q('label', null, label); var i = q('input'); i.type = type; i.value = val || ''; if (ph) i.placeholder = ph; l.appendChild(i); form.appendChild(l); return [l, i]; };
+      var uI = fld('Email address you send from', 'email', M.user || '', 'you@yourcompany.com')[1];
+      var nI = fld('Sender name (what customers see)', 'text', M.name || j.company || '', j.company || '')[1]; nI.maxLength = 60;
+      var hF = fld('Outgoing (SMTP) server', 'text', M.kind === 'other' ? M.host : '', 'smtp.yourprovider.com'), pF = fld('Port', 'text', M.kind === 'other' ? String(M.port) : '587', '587'); pF[1].inputMode = 'numeric';
+      var pw = fld('App password', 'password', '', M.on ? 'Leave empty to keep the saved one' : 'Paste it here')[1]; pw.autocomplete = 'new-password'; pw.spellcheck = false;
+      form.appendChild(q('div', 'sub2', 'How this works: the app password lets our server send email from your address. It is not your normal password, and the app uses it only to send. It is kept on the server and never shown again; delete it in your Google or Microsoft account any time and sending stops.'));
+      var go = q('button', 'save', 'Send a test and connect'); go.type = 'button'; form.appendChild(go);
+      var fm = q('div', 'msg bad'); fm.hidden = true; fm.setAttribute('role', 'alert'); form.appendChild(fm);
+      function paintK() { steps.textContent = ''; MAIL_STEPS[kind].forEach(function (t) { steps.appendChild(q('li', null, t)); }); hF[0].hidden = pF[0].hidden = kind !== 'other'; }
+      paintK();
+      go.addEventListener('click', function () {
+        fm.hidden = true; go.disabled = true; go.textContent = 'Sending a test…';
+        api('mailset', { body: { kind: kind, user: uI.value.trim(), name: nI.value.trim(), host: hF[1].value.trim(), port: parseInt(pF[1].value, 10) || 0, pass: pw.value } }).then(function (k) {
+          go.disabled = false; go.textContent = 'Send a test and connect'; pw.value = '';
+          if (!k.ok) { fm.hidden = false; fm.textContent = k.error || 'It did not connect.'; return; }
+          toast('Email connected', 'A test went to ' + k.sentTo + '. Check that inbox (and spam).', null); mailSetupView();
+        }).catch(function () { go.disabled = false; go.textContent = 'Send a test and connect'; fm.hidden = false; fm.textContent = 'No signal: nothing was saved.'; });
+      });
+      /* the automatic emails */
+      box.appendChild(q('div', 'dwh', 'Automatic emails'));
+      box.appendChild(q('div', 'sub2', M.on ? 'Each one can be switched off, and the words are yours. Tests go to ' + (j.testTo || 'you') + '.' : 'Email is not connected, so none of these go out yet. You can set the words and preview them now.'));
+      (j.msgs || []).forEach(function (m) { box.appendChild(mailMsgCard(m, M)); });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(mailSetupView)); });
+  }
+  function mailMsgCard(m, M) {
+    var c = q('div', 'mailmsg');
+    var top = q('div', 'lookrow'); top.appendChild(q('b', null, m.label)); var seg = q('div', 'aseg');
+    [[false, 'Off'], [true, 'On']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!m.on === o[0]));
+      b.addEventListener('click', function () { if (!!m.on === o[0]) return; api('mailtpl', { body: { key: m.key, on: o[0] } }).then(function (k) { if (!k.ok) { toast('Not saved', k.error || '', null); return; } m.on = o[0]; [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); st.textContent = state(); toast(m.label + (o[0] ? ' on' : ' off'), '', null); }).catch(function () { toast('No signal', 'Not saved.', null); }); });
+      seg.appendChild(b);
+    });
+    top.appendChild(seg); c.appendChild(top);
+    var state = function () { return !m.on ? 'Off: this email is not sent.' : M.on ? 'On.' : 'On, but email is not connected, so it does not go yet.'; };
+    var st = q('div', 'sub2', state()); c.appendChild(st);
+    c.appendChild(q('div', 'sub2', m.when));
+    var sl = q('label', null, 'Subject'), si = q('input'); si.maxLength = 150; si.value = m.subject; sl.appendChild(si); c.appendChild(sl);
+    var bl = q('label', null, 'Your words'), bi = q('textarea'); bi.rows = 8; bi.maxLength = 4000; bi.value = m.body; bl.appendChild(bi); c.appendChild(bl);
+    var ph = q('div', 'mailph'); ph.appendChild(q('span', null, 'You can use:')); m.ph.forEach(function (p) { var x = q('span'); x.appendChild(q('code', null, '{' + p[0] + '}')); x.appendChild(document.createTextNode(' ' + p[1])); ph.appendChild(x); }); c.appendChild(ph);
+    c.appendChild(q('div', 'sub2', m.fixed));
+    var err = q('div', 'msg bad'); err.hidden = true; var pv = q('div', 'fupv');
+    var acts = q('div', 'mailbtns');
+    var bt = function (t, fn, cls) { var b = q('button', cls || 'lnk', t); b.type = 'button'; b.addEventListener('click', fn); acts.appendChild(b); return b; };
+    var words = function () { return { key: m.key, subject: si.value, body: bi.value }; };
+    var bad = function (k) { err.hidden = false; err.textContent = (k && k.error) || 'Try again.'; };
+    bt('Save', function () { err.hidden = true; api('mailtpl', { body: words() }).then(function (k) { if (!k.ok) return bad(k); toast('Saved', m.label, null); }).catch(function () { bad({ error: 'No signal: nothing was saved.' }); }); }, 'save');
+    bt('Preview', function () { err.hidden = true; pv.textContent = ''; api('mailpreview', { body: words() }).then(function (k) { if (!k.ok) return bad(k); pv.appendChild(q('div', 'sub2', 'Subject: ' + k.subject + ' · filled in with a made-up customer')); var fr = document.createElement('iframe'); fr.className = 'fuframe'; fr.setAttribute('sandbox', ''); fr.title = 'The email as it would look'; fr.srcdoc = k.html; pv.appendChild(fr); pv.appendChild(q('pre', 'futext noi18n', k.text)); }).catch(function () { bad({ error: 'No connection.' }); }); });
+    bt('Send me a test', function () { err.hidden = true; if (!M.on) return bad({ error: 'Connect your email first (above).' }); api('mailtest', { body: words() }).then(function (k) { if (!k.ok) return bad(k); toast('Test sent', k.to, null); }).catch(function () { bad({ error: 'No signal.' }); }); });
+    bt('Use the starting words', function () { if (!window.confirm('Put back the starting subject and words for ' + m.label.toLowerCase() + '?')) return; api('mailtpl', { body: { key: m.key, reset: true } }).then(function (k) { if (!k.ok) return bad(k); si.value = m.defSubject; bi.value = m.defBody; toast('Starting words back', m.label, null); }).catch(function () { bad({ error: 'No signal.' }); }); });
+    c.appendChild(acts); c.appendChild(err); c.appendChild(pv);
+    return c;
   }
   /* back from Square's Connect page: ?square=connected (or why not) */
   function kitSquareReturn() {
@@ -12525,7 +12675,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var STEP = { company: ['Your company: name and phone', 'On quotes, forms and texts to homeowners.', companyView], colour: ['Your colour', 'The app’s bar and your customers’ pages.', companyView],
         towns: ['Your towns', 'The towns and houses in your app.', null], people: ['People and sign-in codes', 'Give each person their own code.', accountsView],
         prices: ['Your prices', 'What a quote adds up from a house’s measurements.', kitPricesView], terms: ['Your agreement terms', 'What every one-page form says.', kitPricesView],
-        payments: ['Payments: Square or Stripe', 'For deposits paid on the form.', kitPayView], alerts: ['Alerts on your phone', 'New leads, signed forms and job notes. Turn them on in Profile.', profileView],
+        payments: ['Payments: Square or Stripe', 'For deposits paid on the form, and other ways customers can pay.', kitPayView], email: ['Your email', 'Signed agreements and receipts go to customers from your address.', mailSetupView], alerts: ['Alerts on your phone', 'New leads, signed forms and job notes. Turn them on in Profile.', profileView],
         plan: ['Your Traverse plan', 'Billing.', function () { billingView(); }] };
       var done = K.setup.filter(function (x) { return x.done; }).length;
       box.appendChild(q('div', 'dwh', done + ' of ' + K.setup.length + ' done'));
