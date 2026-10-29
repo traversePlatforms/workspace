@@ -154,6 +154,9 @@ function sendQueue(int $max): int {
     $lk = fopen(DATA_DIR . '/queue.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) { echo "another run is sending\n"; return 0; }
     $h = (int) date('G'); $dow = (int) date('N');
     if (!getenv('DESK_ANYTIME') && ($dow > 5 || $h < 8 || $h >= 17)) { echo "not sending hours\n"; return 0; }
+    /* a one-off hold (2026-10-28, Matthew: "push traverse email send outs to 10am tomorrow"): send-after.txt holds a time; nothing goes before it */
+    $hold = trim((string) @file_get_contents(DATA_DIR . '/send-after.txt'));
+    if (ctype_digit($hold) && time() < (int) $hold) { echo 'held until ' . date('D j M g:i a', (int) $hold) . "\n"; return 0; }
     $gap = getenv('DESK_GAP') !== false ? max(0, (int) getenv('DESK_GAP')) : 120;
     $sentN = 0;
     for ($i = 0; $i < $max; $i++) {
