@@ -6844,7 +6844,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(jobWorkBox(jb, redraw));   /* Brad's two lines (2026-10-27) */
     if (jb.fub && jb.fub.needs) { c.appendChild(q('div', 'qline fubline', 'Booked by ' + strtokName(jb.fub.by) + ' · needs Jen' + (jb.fub.what ? ' · ' + jb.fub.what : ''))); if (qView() || wdOn()) { var fcb = q('div'); fcb.appendChild(fuConfirmForm({ id: jb.id, kind: 'day', name: jobName(jb), date: jb.date, slot: jb.slot, price: jb.price, crew: jb.crew }, redraw)); c.appendChild(fcb); } }   /* a follow-up the crew booked (2026-10-28) */
     if (!qView() && jb.lead) c.appendChild(fuBookBox(jb));   /* Book a follow-up (2026-10-28) */
-    if (!qView()) c.appendChild(jobPhotoBox(jb, redraw));   /* photos (2026-10-19); Jen's account cannot open them */
+    c.appendChild(jobPhotoBox(jb, redraw));   /* photos (2026-10-19); Jen's account too since 2026-10-29 (Matthew: 'Allow jen to be able to open job photos') */
     c.appendChild(q('div', 'dwh', 'How did it go?'));
     var owe = (jb.pay && jb.pay.s === 'paid') || (jb.pay && jb.pay.s === 'plan') ? 0 : jb.price - ((jb.pay && jb.pay.amt) || 0);
     var panel = null;

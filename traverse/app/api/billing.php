@@ -160,10 +160,11 @@ function stripeSigValid(string $secret, string $payload, string $header, ?int $n
     foreach ($sigs as $s) if (hash_equals($want, $s)) return true;
     return false;
 }
-/** the people who count as seats: every sign-in that is on, except the test sign-ins (names starting Claude or Fable) */
+/** the people who count as seats: every sign-in that is on, except the test sign-ins (names starting Claude or Fable) and Traverse's own
+    super sign-in (2026-10-29, Matthew: a Solo customer showed over its seats on day one because of it) */
 function billingSeatsUsed(array $rows): int {
     $n = 0;
-    foreach ($rows as $r) if (empty($r['off']) && !preg_match('/^(Claude|Fable)\b/i', (string) ($r['name'] ?? ''))) $n++;
+    foreach ($rows as $r) if (empty($r['off']) && ($r['role'] ?? '') !== 'super' && !preg_match('/^(Claude|Fable)\b/i', (string) ($r['name'] ?? ''))) $n++;
     return $n;
 }
 /** seats the plan pays for: the people it includes plus the extra seats (kept together in billing.json 'seats') */

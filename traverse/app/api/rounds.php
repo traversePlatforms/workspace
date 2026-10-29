@@ -6866,7 +6866,7 @@ if ($action === 'jobphoto') {
     if (!$isPost) fail('POST required', 405);
     $jid = (string) ($_GET['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
     if (!preg_match('/^j[0-9a-f]{12}$/D', $jid) || !$j || $j['off']) fail('No such job.', 404);
-    if (!jobMine($j)) fail('Not allowed.', 403);
+    if (!jobOpen($j)) fail('Not allowed.', 403);   /* Jen adds photos to the jobs she manages (2026-10-29) */
     if (!throttleTake(rateFile('photo|' . (string) ($session['c'] ?? $me)), 120, 3600)) fail('That is a lot of photos in an hour. Wait a little and try again.', 429);
     $bin = $raw ?? '';
     if (strlen($bin) < 100) fail('No photo received.');
@@ -6883,7 +6883,7 @@ if ($action === 'jobphoto') {
 }
 if ($action === 'jobphotoget') {
     $jid = (string) ($_GET['job'] ?? ''); $f = (string) ($_GET['f'] ?? ''); $j = jobsAll()[$jid] ?? null;
-    if (!$j || !jobMine($j) || !validPhotoName($f) || !isset(jobPhotosAll()[$jid][$f])) fail('No such photo.', 404);
+    if (!$j || !jobOpen($j) || !validPhotoName($f) || !isset(jobPhotosAll()[$jid][$f])) fail('No such photo.', 404);   /* jobOpen: Jen's quote account too (2026-10-29) */
     $path = DATA_DIR . '/jobphotos/' . $jid . '/' . $f;
     if (!is_readable($path)) fail('No such photo.', 404);
     header('Content-Type: image/jpeg'); header('Cache-Control: no-store'); header('Content-Length: ' . filesize($path));
