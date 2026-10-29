@@ -4870,5 +4870,22 @@
   "radius": 15,
   "method": "co",
   "countyUpper": "SAN JUAN"
+ },
+ {
+  "key": "g3-divide-rural",
+  "label": "Divide (rural)",
+  "kind": "rural",
+  "county": "Teller",
+  "census": 6462,
+  "ownerOccupied": 4145,
+  "doorsAlready": 3735,
+  "subdivision": 6462,
+  "placesInside": [],
+  "forced": "Matthew 29 Oct: sweep the rest of Teller",
+  "lat": 38.94221,
+  "lon": -105.17871,
+  "radius": 13.8,
+  "method": "co",
+  "countyUpper": "TELLER"
  }
 ]

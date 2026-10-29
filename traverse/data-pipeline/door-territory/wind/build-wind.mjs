@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { cutoffs, keepWindDay } from '../storm-keep.mjs';
 import { metros } from '../metros/registry.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
+const DATA = process.env.ROUNDS_DATA || join(HERE, '..', '..', '..', 'app', 'data', 'rounds');   /* 2026-10-29: another folder (the hail backfill's door points) */
 /* the metro builder (2026-10-11): WIND_METRO=<metro> builds that metro alone: its state's reports, its towns, its own storm file */
 const METRO = process.env.WIND_METRO || '';
 const MDEF = METRO ? metros().find((m) => m.key === METRO) : null;

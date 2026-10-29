@@ -20,7 +20,7 @@ import { gunzipSync } from 'node:zlib';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
+const DATA = process.env.ROUNDS_DATA || join(HERE, '..', '..', '..', 'app', 'data', 'rounds');   /* 2026-10-29: another folder (the hail backfill's door points) */
 const SE_CACHE = join(HERE, 'se-cache'), LSR_CACHE = join(HERE, '..', 'wind', 'cache');
 const SE_DIR = 'https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/';
 const IEM = 'https://mesonet.agron.iastate.edu/cgi-bin/request/gis/lsr.py';

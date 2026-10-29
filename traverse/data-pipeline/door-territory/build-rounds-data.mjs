@@ -136,6 +136,10 @@ const G1_REG = join(HERE, 'group1', 'registered.json'), G1 = existsSync(G1_REG) 
    the same shape, added after Group 1 */
 const G2_REG = join(HERE, 'group2', 'registered.json');
 if (existsSync(G2_REG)) G1.push(...JSON.parse(readFileSync(G2_REG, 'utf8')).filter((t) => !G1.some((u) => u.key === t.key)));
+/* Group 3 (2026-10-29, the rest of Colorado and the address-point counties): group3/registered.json, written by group3/prep-stageb.mjs
+   at stage B (Matthew's go first); absent until then. The doors merged into our own towns are in those towns' areas files, not here. */
+const G3_REG = join(HERE, 'group3', 'registered.json');
+if (existsSync(G3_REG)) G1.push(...JSON.parse(readFileSync(G3_REG, 'utf8')).filter((t) => !G1.some((u) => u.key === t.key)));
 for (const t of G1) if (existsSync(join(HERE, t.key + '-areas.json'))) SOURCES.push([t.key, t.label, t.key + '-areas.json', t.key]);
 
 /* same slug rule as build-walk-tool.mjs, so a door has one id everywhere */

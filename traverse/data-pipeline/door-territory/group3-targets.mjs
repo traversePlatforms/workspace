@@ -19,6 +19,10 @@ const SRC = existsSync(join(OUT, 'county-sources.json')) ? JSON.parse(readFileSy
 const TW = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_ACS2024/MapServer/';
 const get = async (u) => { for (let i = 0; i < 8; i++) { try { const r = await fetch(u); if (r.ok) return await r.json(); } catch {} await new Promise((z) => setTimeout(z, 3000 * (i + 1))); } throw new Error('failed ' + u.slice(0, 160)); };
 const SKIP = /Fort Carson|Air Force Academy/;
+/* subdivisions swept even though a quarter or more of their houses are doors already, run AFTER the 172 (Matthew 29 Oct: "sweep the rest
+   of Teller"): Teller's Divide subdivision, 3,735 doors of 10,197 Census houses (Woodland Park, Divide, Florissant). The clip drops our
+   doors within 5 m; stage B (group3/prep-stageb.mjs) matches the rest to our Teller towns by address before anything is registered. */
+const FORCE_CCD = { '0811991026': 'g3-divide-rural' };
 const slug = (s) => s.toLowerCase().replace(/ (city|town|cdp|ccd)$/i, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const under = (r) => r.doors < r.census / 4;
 const CACHE = existsSync(join(OUT, 'shapes.json')) ? JSON.parse(readFileSync(join(OUT, 'shapes.json'), 'utf8')) : {};   /* group3-gaps.mjs */
@@ -44,6 +48,13 @@ for (const county of ORDER) {
     const inside = G.places.filter((p) => p.ccd === c.geoid && places.includes(p) && under(p));
     all.push({ key: 'g3-' + slug(c.name) + '-rural', label: c.name.replace(/ CCD$/, '') + ' (rural)', kind: 'rural', county, census: Math.max(0, c.gap - inside.reduce((n, p) => n + p.census, 0)), ownerOccupied: Math.max(0, c.ownerOccupied - inside.reduce((n, p) => n + p.ownerOccupied, 0)), doorsAlready: c.doors, subdivision: c.gap, placesInside: inside.map((p) => p.name.replace(/ (city|town|CDP)$/, '')), s });
   }
+}
+/* the forced sweeps, last */
+for (const [geoid, key] of Object.entries(FORCE_CCD)) {
+  const c = G.ccd.find((r) => r.geoid === geoid); if (!c || all.some((t) => t.key === key)) continue;
+  const s = await shape(22, c.geoid); if (!s) { console.log('no shape', c.name); continue; }
+  const li = left.findIndex((x) => x.county === c.county && x.name === c.name); if (li >= 0) left.splice(li, 1);
+  all.push({ key, label: c.name.replace(/ CCD$/, '') + ' (rural)', kind: 'rural', county: c.county, census: c.gap, ownerOccupied: Math.max(0, c.ownerOccupied - c.doors), doorsAlready: c.doors, subdivision: c.gap, placesInside: [], forced: 'Matthew 29 Oct: sweep the rest of ' + c.county, s });
 }
 const keys = new Set(); for (const t of all) { if (keys.has(t.key)) { t.key += '-' + slug(t.county); } if (keys.has(t.key)) throw new Error('duplicate key ' + t.key); keys.add(t.key); }
 for (const t of all) {

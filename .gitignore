@@ -352,6 +352,13 @@ traverse/data-pipeline/door-territory/group3/out/
 traverse/data-pipeline/door-territory/group3/test/
 traverse/data-pipeline/door-territory/group3/*.csv
 traverse/data-pipeline/door-territory/group3/shapes.json
+# Group 3b / stage B (2026-10-29): address-point pulls and the stage B door lists (owner names) stay out of git
+traverse/data-pipeline/door-territory/group3/raw3b/
+traverse/data-pipeline/door-territory/group3/test3b/
+traverse/data-pipeline/door-territory/group3/b/
+traverse/data-pipeline/door-territory/merge-*.csv
+traverse/data-pipeline/door-territory/merge-*-areas.json
+traverse/data-pipeline/door-territory/*.bak-g3-*
 
 # Sixfold job photos for content (2026-10-26): customer houses by address; storage only, not in git (Drive backup carries them)
 sixfold/brand/job-photos/**

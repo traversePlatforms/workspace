@@ -27,11 +27,13 @@ import { metros } from '../metros/registry.mjs';
 const ALL_YEAR_FROM = '2024-10-01';   /* before this, hail season only (April to September) */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DATA = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
+/* 2026-10-29 (hail backfill, BACKFILL-HAIL-2026-10-29.md): ROUNDS_DATA reads the towns from another folder (the cloud machine's
+   door points with no owners); HAIL_DAYS keeps the day files elsewhere; HAIL_BOX="s,n,w,e" fixes the box (the whole state) */
+const DATA = process.env.ROUNDS_DATA || join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 /* the metro builder (2026-10-11): HAIL_METRO=<metro> builds that metro alone, from its own day files, into its own storm files */
 const METRO = process.env.HAIL_METRO || '';
 const METRO_GROUPS = new Set(metros().map((m) => m.group || m.key));
-const DAYS = join(HERE, METRO ? 'days-' + METRO : 'days');
+const DAYS = process.env.HAIL_DAYS || join(HERE, METRO ? 'days-' + METRO : 'days');
 const SUFFIX = METRO ? '-' + METRO : '';
 const ARCHIVE = 'https://mtarchive.geol.iastate.edu';
 const MIN_STORE = 19.05;   /* 0.75 in: kept per door */
@@ -47,6 +49,7 @@ function doorsOf(key) {
   return out;
 }
 function bbox() {
+  if (process.env.HAIL_BOX) { const [s, n, w, e] = process.env.HAIL_BOX.split(',').map(Number); return { s, n, w, e }; }
   let s = 90, n = -90, w = 180, e = -180;
   for (const t of towns()) { let ds; try { ds = doorsOf(t.key); } catch { continue; } for (const d of ds) { s = Math.min(s, d.lat); n = Math.max(n, d.lat); w = Math.min(w, d.lon); e = Math.max(e, d.lon); } }
   return { s: s - 0.03, n: n + 0.03, w: w - 0.03, e: e + 0.03 };
