@@ -4354,5 +4354,12 @@
  "End-of-day email.": "Correo de fin del día.",
  "The day in one email to the owners each evening.": "El día en un correo a los dueños cada tarde.",
  "Turn the evening summary email on or off, and pick who gets it, when, and what it shows.": "Activa o apaga el correo de resumen de la tarde, y elige quién lo recibe, cuándo y qué muestra.",
- "end-of-day email": "correo de fin del día"
+ "end-of-day email": "correo de fin del día",
+ "Your tools": "Tus herramientas",
+ "House lookup": "Buscar una casa",
+ "Import / export": "Importar / exportar",
+ "Show map": "Mostrar el mapa",
+ "Hide map": "Ocultar el mapa",
+ "The neighborhoods with doors left, sized by how many, and the live radar. It loads when you ask.": "Los vecindarios con puertas por tocar, del tamaño de cuántas quedan, y el radar en vivo. Se carga cuando lo pides.",
+ "The neighborhoods with properties left, sized by how many, and the live radar. It loads when you ask.": "Los vecindarios con propiedades por visitar, del tamaño de cuántas quedan, y el radar en vivo. Se carga cuando lo pides."
 }
