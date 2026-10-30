@@ -1,0 +1,3 @@
+# "With map" pictures (2026-10-30): made by tools/build-maps.mjs from the door files (themselves gitignored); about 7 MB, rebuilt in
+# 30 s. maps.json (captions and counts) and the wordmark stay tracked.
+app/m/*-20[0-9][0-9][0-9][0-9][0-9][0-9].png

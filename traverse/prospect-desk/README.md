@@ -33,6 +33,32 @@ bookings (`traverse-site-private/site-config.php`).
 - A Not contacted company moves to Emailed when its message goes. Stop on the Email page empties the queue.
 - The starting templates are drafts: they describe the app plainly, claim nothing about anyone's results and name no data source.
 
+## Plain or With map (2026-10-30)
+
+Matthew: plain text "reads as a phishing scam or a don't-click-that-link type email ... I am fine with trying out a halfway". A
+per-send choice on the Email page (and on Send yourself a test): **Plain text** (the default until he picks; remembered on the device)
+or **With map**. With map sends multipart/alternative: the exact plain-text email as today, plus a light HTML version that still reads
+as a personal note: the Traverse wordmark, the same words (lists as lists, addresses as plain links), one map of the company's own
+city, and a business signature (name, title, company, phone, email, website, small logo, postal address) from Settings. No tracking
+pixel, no click tracking, no shortener, no buttons. About 4.5 KB of HTML; the map is hosted, not attached (lighter, no attachment
+clip, shown inline in Gmail through its image proxy), and the email reads the same with images off (alt text says what the map shows,
+and the caption is repeated as text under it). Tests get "(plain)" or "(with map)" at the end of the subject.
+
+- **The maps:** `node traverse/prospect-desk/tools/build-maps.mjs` (about 30 s) writes `app/m/<family>-<city>-<yyyymmdd>.png`
+  (840 x 588, 20-60 KB, gitignored) and `app/m/maps.json` (captions and counts, tracked), from the door files in the main tree. One
+  picture per city and trade family: **hail** (Roofing, Roofing and solar, Solar): this year's radar hail paths, NOAA/NSSL MRMS
+  (`hail-paths.json`), and the homes whose radar square had 1 in or more on any 2026 day; **moved** (Pest, Security): homes sold in
+  the 12 whole months ending two months before the county file's date (recent deeds reach the files late), `moved-<town>.json`;
+  **lawn** (Yards): homes with an estimated lawn of 5,000 sq ft or more (NAIP 2023, our measurement). Basemap: grey squares where homes
+  are and U.S. Census TIGER/Line roads (public domain); no tiles. Nothing picks out a house: hail on the radar's ~1 km grid, counts in
+  squares of at least ~470 m with 3 or more. Cities: Colorado Springs = the four cs- files, Denver = Denver + South Denver.
+- **Falls back to plain** when the company's city has no picture for its trade (no file, under 300 homes, too little county sale
+  data, or no home under 1 in hail this year: Boulder, Longmont, Fort Collins, Loveland, Grand Junction, Highlands Ranch ...). The
+  preview says which go plain.
+- The hail count is stricter than the door card's "near the house" rule (the 3 x 3 radar squares around it): Denver 31,772 in-square
+  against 66,948 near. The caption uses the stricter count so it matches the picture.
+- After a rebuild, upload `app/m/` (new names carry the date, so emails already sent keep their picture; don't delete old ones).
+
 ## Tests
 
 Harness (scratchpad `pdtest/desk-test.mjs`): php -S with `DESK_DATA` (throwaway data) and `DESK_MAIL_MOCK` (messages to a file;

@@ -101,7 +101,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
           <label style="margin-top:16px">Brand colour</label>
           <div class="sw" id="sw"></div>
           <div class="color"><input type="color" id="color" value="#1f6feb" aria-label="Pick any colour"><span class="small">Or pick any colour</span></div>
-          <label style="margin-top:16px">Logo <small>PNG, JPG or SVG, under 400 KB. Optional.</small><input type="file" id="logo" accept="image/png,image/jpeg,image/svg+xml"></label>
+          <label style="margin-top:16px">Logo <small>PNG, JPG or SVG, under 500 KB. Optional.</small><input type="file" id="logo" accept="image/png,image/jpeg,image/svg+xml"></label>
           <div class="err" id="e2" role="alert"></div>
           <button class="go" id="b2" type="button">Next: your company</button> <button class="lnk" type="button" data-back="1">Back</button>
         </section>
@@ -207,7 +207,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
   $('logo').onchange = function () {
     var f = $('logo').files[0]; $('e2').textContent = ''; logoData = '';
     if (!f) { paint(); return; }
-    if (f.size > 400 * 1024) { $('e2').textContent = 'That file is over 400 KB. Use a smaller one.'; $('logo').value = ''; return; }
+    if (f.size > 500 * 1024) { $('e2').textContent = 'That file is over 500 KB. Use a smaller one.'; $('logo').value = ''; return; }
     var rd = new FileReader(); rd.onload = function () { logoData = String(rd.result); $('pmk').innerHTML = ''; var im = new Image(); im.alt = ''; im.src = logoData; $('pmk').appendChild(im); }; rd.readAsDataURL(f);
   };
   $('b2').onclick = function () {

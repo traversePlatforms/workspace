@@ -389,8 +389,8 @@ function billingState(array $c, array $rows): array {
     $st = (string) ($b['status'] ?? ''); $L = billingLockState($b);
     $warn = null;
     if ($st === 'past_due' || $st === 'unpaid') $warn = 'The last payment did not go through. Update the card in Manage billing.'
-        . ($L['phase'] === 'locked' ? ' Until then the app is paused for your team; it opens again as soon as it is paid.' : (!empty($L['lockAt']) && !empty($b['live_at']) ? ' Your team keeps working until ' . date('j M Y', (int) $L['lockAt']) . '; after that the app pauses until it is paid.' : ''));   /* the 3-day lock (2026-10-29) */
-    elseif ($st === 'canceled') $warn = 'The plan was cancelled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . '. Pick a plan to carry on.' . ($L['phase'] === 'locked' && !empty($b['paid_at']) ? ' Until then the app is paused for your team.' : '');
+        . ($L['phase'] === 'locked' ? ' Until then door lists, maps and Traverse\'s data are paused for your team (pipeline, customers and jobs stay open); they open again as soon as it is paid.' : (!empty($L['lockAt']) && !empty($b['live_at']) ? ' Your team keeps working until ' . date('j M Y', (int) $L['lockAt']) . '; after that door lists, maps and Traverse\'s data pause until it is paid (pipeline, customers and jobs stay open).' : ''));   /* the 3-day lock (2026-10-29) */
+    elseif ($st === 'canceled') $warn = 'The plan was cancelled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . '. Pick a plan to carry on.' . ($L['phase'] === 'locked' && !empty($b['paid_at']) ? ' Until then door lists, maps and Traverse\'s data are paused for your team.' : '');
     elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ($used === 1 ? ' worker' : ' workers') . ' can sign in and the plan covers ' . $paid . ', besides your one admin. Email billing@traverseplatforms.com to add seats, or remove people in Accounts.';
     elseif (!empty($b['cancel_at_end']) && !empty($b['period_end'])) $warn = 'The plan ends on ' . date('j M Y', (int) $b['period_end']) . ' (cancelled in Stripe). Manage billing turns it back on.';
     return [

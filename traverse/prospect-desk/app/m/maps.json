@@ -1,0 +1,3862 @@
+{
+ "cities": {
+  "monument": {
+   "name": "Monument",
+   "keys": [
+    "monument"
+   ],
+   "homes": 7071,
+   "moved": {
+    "f": "moved-monument-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 338,
+    "cap": "Monument · 338 homes sold, Aug 2025 to Jul 2026",
+    "sub": "Market sales on the county’s own record (El Paso County, file of Sep 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Monument shaded by how many homes sold in each half-kilometre square: 338 homes sold between Aug 2025 and Jul 2026 (El Paso County records). No single home is shown.",
+    "text": "Monument: 338 homes sold between Aug 2025 and Jul 2026, on El Paso County's own sale records.",
+    "kb": 27,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-monument-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1657,
+    "cap": "Monument · 1,657 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Monument shaded by how many homes in each half-kilometre square have a large lawn: 1,657 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Monument: 1,657 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 28,
+    "built": "20261030"
+   }
+  },
+  "palmer-lake": {
+   "name": "Palmer Lake",
+   "keys": [
+    "palmer-lake"
+   ],
+   "homes": 444,
+   "moved": {
+    "f": "moved-palmer-lake-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 23,
+    "cap": "Palmer Lake · 23 homes sold, Aug 2025 to Jul 2026",
+    "sub": "Market sales on the county’s own record (El Paso County, file of Sep 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Palmer Lake shaded by how many homes sold in each half-kilometre square: 23 homes sold between Aug 2025 and Jul 2026 (El Paso County records). No single home is shown.",
+    "text": "Palmer Lake: 23 homes sold between Aug 2025 and Jul 2026, on El Paso County's own sale records.",
+    "kb": 24,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-palmer-lake-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 91,
+    "cap": "Palmer Lake · 91 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Palmer Lake shaded by how many homes in each half-kilometre square have a large lawn: 91 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Palmer Lake: 91 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 24,
+    "built": "20261030"
+   }
+  },
+  "black-forest": {
+   "name": "Black Forest",
+   "keys": [
+    "black-forest"
+   ],
+   "homes": 9286,
+   "hail": {
+    "f": "hail-black-forest-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 174,
+    "cap": "Black Forest · 174 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Black Forest with this year’s radar hail paths shaded by hail size: 174 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Black Forest this year: 174 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 31,
+    "built": "20261030",
+    "first": "2026-05-29",
+    "last": "2026-08-19",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-black-forest-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 557,
+    "cap": "Black Forest · 557 homes sold, Aug 2025 to Jul 2026",
+    "sub": "Market sales on the county’s own record (El Paso County, file of Sep 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Black Forest shaded by how many homes sold in each half-kilometre square: 557 homes sold between Aug 2025 and Jul 2026 (El Paso County records). No single home is shown.",
+    "text": "Black Forest: 557 homes sold between Aug 2025 and Jul 2026, on El Paso County's own sale records.",
+    "kb": 32,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-black-forest-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1168,
+    "cap": "Black Forest · 1,168 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Black Forest shaded by how many homes in each half-kilometre square have a large lawn: 1,168 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Black Forest: 1,168 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 33,
+    "built": "20261030"
+   }
+  },
+  "castle-rock": {
+   "name": "Castle Rock",
+   "keys": [
+    "castle-rock"
+   ],
+   "homes": 19531,
+   "hail": {
+    "f": "hail-castle-rock-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 141,
+    "cap": "Castle Rock · 141 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Castle Rock with this year’s radar hail paths shaded by hail size: 141 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Castle Rock this year: 141 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 29,
+    "built": "20261030",
+    "first": "2026-06-03",
+    "last": "2026-09-06",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-castle-rock-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1237,
+    "cap": "Castle Rock · 1,237 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Castle Rock shaded by how many homes sold in each half-kilometre square: 1,237 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Castle Rock: 1,237 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 30,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-castle-rock-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 576,
+    "cap": "Castle Rock · 576 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Castle Rock shaded by how many homes in each half-kilometre square have a large lawn: 576 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Castle Rock: 576 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 30,
+    "built": "20261030"
+   }
+  },
+  "larkspur": {
+   "name": "Larkspur",
+   "keys": [
+    "larkspur"
+   ],
+   "homes": 711,
+   "moved": {
+    "f": "moved-larkspur-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 34,
+    "cap": "Larkspur · 34 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Larkspur shaded by how many homes sold in each half-kilometre square: 34 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Larkspur: 34 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-larkspur-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 292,
+    "cap": "Larkspur · 292 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Larkspur shaded by how many homes in each half-kilometre square have a large lawn: 292 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Larkspur: 292 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "sedalia": {
+   "name": "Sedalia",
+   "keys": [
+    "sedalia"
+   ],
+   "homes": 1887,
+   "hail": {
+    "f": "hail-sedalia-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 248,
+    "cap": "Sedalia · 248 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Sedalia with this year’s radar hail paths shaded by hail size: 248 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Sedalia this year: 248 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 26,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-09-06",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-sedalia-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 81,
+    "cap": "Sedalia · 81 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Sedalia shaded by how many homes sold in each half-kilometre square: 81 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Sedalia: 81 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-sedalia-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 293,
+    "cap": "Sedalia · 293 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Sedalia shaded by how many homes in each half-kilometre square have a large lawn: 293 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Sedalia: 293 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "franktown": {
+   "name": "Franktown",
+   "keys": [
+    "franktown"
+   ],
+   "homes": 3026,
+   "hail": {
+    "f": "hail-franktown-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1196,
+    "cap": "Franktown · 1,196 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Franktown with this year’s radar hail paths shaded by hail size: 1,196 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Franktown this year: 1,196 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 24,
+    "built": "20261030",
+    "first": "2026-06-03",
+    "last": "2026-09-20",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-franktown-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 159,
+    "cap": "Franktown · 159 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Franktown shaded by how many homes sold in each half-kilometre square: 159 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Franktown: 159 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 24,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-franktown-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 286,
+    "cap": "Franktown · 286 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Franktown shaded by how many homes in each half-kilometre square have a large lawn: 286 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Franktown: 286 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "woodland-park": {
+   "name": "Woodland Park",
+   "keys": [
+    "woodland-park"
+   ],
+   "homes": 2751,
+   "lawn": {
+    "f": "lawn-woodland-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 999,
+    "cap": "Woodland Park · 999 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Woodland Park shaded by how many homes in each half-kilometre square have a large lawn: 999 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Woodland Park: 999 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "divide": {
+   "name": "Divide",
+   "keys": [
+    "divide"
+   ],
+   "homes": 575,
+   "hail": {
+    "f": "hail-divide-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 23,
+    "cap": "Divide · 23 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Divide with this year’s radar hail paths shaded by hail size: 23 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Divide this year: 23 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 20,
+    "built": "20261030",
+    "first": "2026-08-22",
+    "last": "2026-08-22",
+    "through": "2026-10-06"
+   },
+   "lawn": {
+    "f": "lawn-divide-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 254,
+    "cap": "Divide · 254 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Divide shaded by how many homes in each half-kilometre square have a large lawn: 254 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Divide: 254 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "florissant": {
+   "name": "Florissant",
+   "keys": [
+    "florissant"
+   ],
+   "homes": 409,
+   "lawn": {
+    "f": "lawn-florissant-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 207,
+    "cap": "Florissant · 207 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Florissant shaded by how many homes in each half-kilometre square have a large lawn: 207 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Florissant: 207 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "highlands-ranch": {
+   "name": "Highlands Ranch",
+   "keys": [
+    "highlands-ranch"
+   ],
+   "homes": 26742,
+   "moved": {
+    "f": "moved-highlands-ranch-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1151,
+    "cap": "Highlands Ranch · 1,151 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Highlands Ranch shaded by how many homes sold in each half-kilometre square: 1,151 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Highlands Ranch: 1,151 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 28,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-highlands-ranch-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 887,
+    "cap": "Highlands Ranch · 887 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Highlands Ranch shaded by how many homes in each half-kilometre square have a large lawn: 887 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Highlands Ranch: 887 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 27,
+    "built": "20261030"
+   }
+  },
+  "parker": {
+   "name": "Parker",
+   "keys": [
+    "parker"
+   ],
+   "homes": 24642,
+   "hail": {
+    "f": "hail-parker-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3672,
+    "cap": "Parker · 3,672 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Parker with this year’s radar hail paths shaded by hail size: 3,672 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Parker this year: 3,672 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 31,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-09-20",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-parker-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1380,
+    "cap": "Parker · 1,380 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Parker shaded by how many homes sold in each half-kilometre square: 1,380 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Parker: 1,380 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 33,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-parker-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 955,
+    "cap": "Parker · 955 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Parker shaded by how many homes in each half-kilometre square have a large lawn: 955 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Parker: 955 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 32,
+    "built": "20261030"
+   }
+  },
+  "castle-pines": {
+   "name": "Castle Pines",
+   "keys": [
+    "castle-pines"
+   ],
+   "homes": 7080,
+   "hail": {
+    "f": "hail-castle-pines-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3770,
+    "cap": "Castle Pines · 3,770 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Castle Pines with this year’s radar hail paths shaded by hail size: 3,770 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Castle Pines this year: 3,770 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 24,
+    "built": "20261030",
+    "first": "2026-06-08",
+    "last": "2026-09-20",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-castle-pines-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 419,
+    "cap": "Castle Pines · 419 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Castle Pines shaded by how many homes sold in each half-kilometre square: 419 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Castle Pines: 419 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-castle-pines-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 888,
+    "cap": "Castle Pines · 888 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Castle Pines shaded by how many homes in each half-kilometre square have a large lawn: 888 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Castle Pines: 888 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "colorado-springs": {
+   "name": "Colorado Springs",
+   "keys": [
+    "cs-northeast",
+    "cs-southeast",
+    "cs-northwest",
+    "cs-southwest"
+   ],
+   "homes": 99990,
+   "hail": {
+    "f": "hail-colorado-springs-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 5045,
+    "cap": "Colorado Springs · 5,045 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Colorado Springs with this year’s radar hail paths shaded by hail size: 5,045 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Colorado Springs this year: 5,045 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 45,
+    "built": "20261030",
+    "first": "2026-05-29",
+    "last": "2026-08-22",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-colorado-springs-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 4614,
+    "cap": "Colorado Springs · 4,614 homes sold, Aug 2025 to Jul 2026",
+    "sub": "Market sales on the county’s own record (El Paso County, file of Sep 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Colorado Springs shaded by how many homes sold in each half-kilometre square: 4,614 homes sold between Aug 2025 and Jul 2026 (El Paso County records). No single home is shown.",
+    "text": "Colorado Springs: 4,614 homes sold between Aug 2025 and Jul 2026, on El Paso County's own sale records.",
+    "kb": 46,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-colorado-springs-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2865,
+    "cap": "Colorado Springs · 2,865 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Colorado Springs shaded by how many homes in each half-kilometre square have a large lawn: 2,865 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Colorado Springs: 2,865 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 46,
+    "built": "20261030"
+   }
+  },
+  "security-widefield": {
+   "name": "Security-Widefield",
+   "keys": [
+    "security-widefield"
+   ],
+   "homes": 6175,
+   "moved": {
+    "f": "moved-security-widefield-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 251,
+    "cap": "Security-Widefield · 251 homes sold, Aug 2025 to Jul 2026",
+    "sub": "Market sales on the county’s own record (El Paso County, file of Sep 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Security-Widefield shaded by how many homes sold in each half-kilometre square: 251 homes sold between Aug 2025 and Jul 2026 (El Paso County records). No single home is shown.",
+    "text": "Security-Widefield: 251 homes sold between Aug 2025 and Jul 2026, on El Paso County's own sale records.",
+    "kb": 26,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-security-widefield-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 89,
+    "cap": "Security-Widefield · 89 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Security-Widefield shaded by how many homes in each half-kilometre square have a large lawn: 89 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Security-Widefield: 89 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "fountain": {
+   "name": "Fountain",
+   "keys": [
+    "fountain"
+   ],
+   "homes": 6825,
+   "hail": {
+    "f": "hail-fountain-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3242,
+    "cap": "Fountain · 3,242 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Fountain with this year’s radar hail paths shaded by hail size: 3,242 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Fountain this year: 3,242 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 24,
+    "built": "20261030",
+    "first": "2026-06-22",
+    "last": "2026-08-19",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-fountain-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 396,
+    "cap": "Fountain · 396 homes sold, Aug 2025 to Jul 2026",
+    "sub": "Market sales on the county’s own record (El Paso County, file of Sep 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fountain shaded by how many homes sold in each half-kilometre square: 396 homes sold between Aug 2025 and Jul 2026 (El Paso County records). No single home is shown.",
+    "text": "Fountain: 396 homes sold between Aug 2025 and Jul 2026, on El Paso County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-fountain-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 39,
+    "cap": "Fountain · 39 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fountain shaded by how many homes in each half-kilometre square have a large lawn: 39 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Fountain: 39 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "arvada": {
+   "name": "Arvada",
+   "keys": [
+    "arvada"
+   ],
+   "homes": 37589,
+   "hail": {
+    "f": "hail-arvada-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1055,
+    "cap": "Arvada · 1,055 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Arvada with this year’s radar hail paths shaded by hail size: 1,055 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Arvada this year: 1,055 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 29,
+    "built": "20261030",
+    "first": "2026-06-08",
+    "last": "2026-09-25",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-arvada-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1480,
+    "cap": "Arvada · 1,480 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Arvada shaded by how many homes sold in each half-kilometre square: 1,480 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Arvada: 1,480 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 31,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-arvada-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2982,
+    "cap": "Arvada · 2,982 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Arvada shaded by how many homes in each half-kilometre square have a large lawn: 2,982 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Arvada: 2,982 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 31,
+    "built": "20261030"
+   }
+  },
+  "centennial": {
+   "name": "Centennial",
+   "keys": [
+    "centennial"
+   ],
+   "homes": 30291,
+   "hail": {
+    "f": "hail-centennial-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 7851,
+    "cap": "Centennial · 7,851 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Centennial with this year’s radar hail paths shaded by hail size: 7,851 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Centennial this year: 7,851 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 34,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-09-20",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-centennial-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1093,
+    "cap": "Centennial · 1,093 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Centennial shaded by how many homes sold in each half-kilometre square: 1,093 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Centennial: 1,093 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 36,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-centennial-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3335,
+    "cap": "Centennial · 3,335 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Centennial shaded by how many homes in each half-kilometre square have a large lawn: 3,335 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Centennial: 3,335 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 36,
+    "built": "20261030"
+   }
+  },
+  "thornton": {
+   "name": "Thornton",
+   "keys": [
+    "thornton"
+   ],
+   "homes": 33431,
+   "hail": {
+    "f": "hail-thornton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1038,
+    "cap": "Thornton · 1,038 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Thornton with this year’s radar hail paths shaded by hail size: 1,038 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Thornton this year: 1,038 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 40,
+    "built": "20261030",
+    "first": "2026-06-08",
+    "last": "2026-09-06",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-thornton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1591,
+    "cap": "Thornton · 1,591 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Thornton shaded by how many homes sold in each half-kilometre square: 1,591 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Thornton: 1,591 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 41,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-thornton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 911,
+    "cap": "Thornton · 911 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Thornton shaded by how many homes in each half-kilometre square have a large lawn: 911 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Thornton: 911 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 41,
+    "built": "20261030"
+   }
+  },
+  "windsor": {
+   "name": "Windsor",
+   "keys": [
+    "windsor"
+   ],
+   "homes": 11452,
+   "moved": {
+    "f": "moved-windsor-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 451,
+    "cap": "Windsor · 451 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Windsor shaded by how many homes sold in each half-kilometre square: 451 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Windsor: 451 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 24,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-windsor-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 826,
+    "cap": "Windsor · 826 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Windsor shaded by how many homes in each half-kilometre square have a large lawn: 826 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Windsor: 826 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 24,
+    "built": "20261030"
+   }
+  },
+  "erie": {
+   "name": "Erie",
+   "keys": [
+    "erie"
+   ],
+   "homes": 11477,
+   "moved": {
+    "f": "moved-erie-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 677,
+    "cap": "Erie · 677 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Erie shaded by how many homes sold in each half-kilometre square: 677 homes sold between Sep 2025 and Aug 2026 (Boulder County, Weld County records). No single home is shown.",
+    "text": "Erie: 677 homes sold between Sep 2025 and Aug 2026, on Boulder County, Weld County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-erie-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 424,
+    "cap": "Erie · 424 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Erie shaded by how many homes in each half-kilometre square have a large lawn: 424 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Erie: 424 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "commerce-city": {
+   "name": "Commerce City",
+   "keys": [
+    "commerce-city"
+   ],
+   "homes": 17204,
+   "hail": {
+    "f": "hail-commerce-city-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 902,
+    "cap": "Commerce City · 902 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Commerce City with this year’s radar hail paths shaded by hail size: 902 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Commerce City this year: 902 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 37,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-09-06",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-commerce-city-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1095,
+    "cap": "Commerce City · 1,095 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Commerce City shaded by how many homes sold in each half-kilometre square: 1,095 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Commerce City: 1,095 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 38,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-commerce-city-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 160,
+    "cap": "Commerce City · 160 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Commerce City shaded by how many homes in each half-kilometre square have a large lawn: 160 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Commerce City: 160 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 37,
+    "built": "20261030"
+   }
+  },
+  "denver": {
+   "name": "Denver",
+   "keys": [
+    "denver",
+    "south-denver"
+   ],
+   "homes": 132461,
+   "hail": {
+    "f": "hail-denver-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 31772,
+    "cap": "Denver · 31,772 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Denver with this year’s radar hail paths shaded by hail size: 31,772 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 6 Oct 2026). No single home is shown.",
+    "text": "Denver this year: 31,772 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 6 Oct 2026).",
+    "kb": 51,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-08-26",
+    "through": "2026-10-06"
+   },
+   "moved": {
+    "f": "moved-denver-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 5384,
+    "cap": "Denver · 5,384 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Denver County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Denver shaded by how many homes sold in each half-kilometre square: 5,384 homes sold between Sep 2025 and Aug 2026 (Denver County records). No single home is shown.",
+    "text": "Denver: 5,384 homes sold between Sep 2025 and Aug 2026, on Denver County's own sale records.",
+    "kb": 55,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-denver-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3146,
+    "cap": "Denver · 3,146 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Denver shaded by how many homes in each half-kilometre square have a large lawn: 3,146 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Denver: 3,146 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 54,
+    "built": "20261030"
+   }
+  },
+  "boulder": {
+   "name": "Boulder",
+   "keys": [
+    "boulder"
+   ],
+   "homes": 16527,
+   "moved": {
+    "f": "moved-boulder-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 528,
+    "cap": "Boulder · 528 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Boulder shaded by how many homes sold in each half-kilometre square: 528 homes sold between Sep 2025 and Aug 2026 (Boulder County records). No single home is shown.",
+    "text": "Boulder: 528 homes sold between Sep 2025 and Aug 2026, on Boulder County's own sale records.",
+    "kb": 28,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-boulder-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1202,
+    "cap": "Boulder · 1,202 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Boulder shaded by how many homes in each half-kilometre square have a large lawn: 1,202 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Boulder: 1,202 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 29,
+    "built": "20261030"
+   }
+  },
+  "aurora": {
+   "name": "Aurora",
+   "keys": [
+    "aurora"
+   ],
+   "homes": 82458,
+   "hail": {
+    "f": "hail-aurora-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 18598,
+    "cap": "Aurora · 18,598 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Aurora with this year’s radar hail paths shaded by hail size: 18,598 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Aurora this year: 18,598 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 47,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-09-25",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-aurora-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2698,
+    "cap": "Aurora · 2,698 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Aurora shaded by how many homes sold in each half-kilometre square: 2,698 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Aurora: 2,698 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 48,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-aurora-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1576,
+    "cap": "Aurora · 1,576 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Aurora shaded by how many homes in each half-kilometre square have a large lawn: 1,576 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Aurora: 1,576 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 47,
+    "built": "20261030"
+   }
+  },
+  "englewood": {
+   "name": "Englewood",
+   "keys": [
+    "englewood"
+   ],
+   "homes": 6899,
+   "hail": {
+    "f": "hail-englewood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2910,
+    "cap": "Englewood · 2,910 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Englewood with this year’s radar hail paths shaded by hail size: 2,910 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Englewood this year: 2,910 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 24,
+    "built": "20261030",
+    "first": "2026-06-24",
+    "last": "2026-08-15",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-englewood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 277,
+    "cap": "Englewood · 277 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Englewood shaded by how many homes sold in each half-kilometre square: 277 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Englewood: 277 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 26,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-englewood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 220,
+    "cap": "Englewood · 220 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Englewood shaded by how many homes in each half-kilometre square have a large lawn: 220 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Englewood: 220 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "littleton": {
+   "name": "Littleton",
+   "keys": [
+    "littleton"
+   ],
+   "homes": 9984,
+   "hail": {
+    "f": "hail-littleton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 583,
+    "cap": "Littleton · 583 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Littleton with this year’s radar hail paths shaded by hail size: 583 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Littleton this year: 583 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 29,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-08-22",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-littleton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 362,
+    "cap": "Littleton · 362 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Littleton shaded by how many homes sold in each half-kilometre square: 362 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Littleton: 362 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 30,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-littleton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2332,
+    "cap": "Littleton · 2,332 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Littleton shaded by how many homes in each half-kilometre square have a large lawn: 2,332 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Littleton: 2,332 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 31,
+    "built": "20261030"
+   }
+  },
+  "lakewood": {
+   "name": "Lakewood",
+   "keys": [
+    "lakewood"
+   ],
+   "homes": 39332,
+   "hail": {
+    "f": "hail-lakewood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1341,
+    "cap": "Lakewood · 1,341 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Lakewood with this year’s radar hail paths shaded by hail size: 1,341 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Lakewood this year: 1,341 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 43,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-08-26",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-lakewood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1405,
+    "cap": "Lakewood · 1,405 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lakewood shaded by how many homes sold in each half-kilometre square: 1,405 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Lakewood: 1,405 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 46,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-lakewood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 5201,
+    "cap": "Lakewood · 5,201 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lakewood shaded by how many homes in each half-kilometre square have a large lawn: 5,201 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Lakewood: 5,201 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 45,
+    "built": "20261030"
+   }
+  },
+  "greenwood-village": {
+   "name": "Greenwood Village",
+   "keys": [
+    "greenwood-village"
+   ],
+   "homes": 3510,
+   "hail": {
+    "f": "hail-greenwood-village-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 900,
+    "cap": "Greenwood Village · 900 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Greenwood Village with this year’s radar hail paths shaded by hail size: 900 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Greenwood Village this year: 900 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 27,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-08-15",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-greenwood-village-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 133,
+    "cap": "Greenwood Village · 133 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Greenwood Village shaded by how many homes sold in each half-kilometre square: 133 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Greenwood Village: 133 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 28,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-greenwood-village-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2021,
+    "cap": "Greenwood Village · 2,021 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Greenwood Village shaded by how many homes in each half-kilometre square have a large lawn: 2,021 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Greenwood Village: 2,021 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 28,
+    "built": "20261030"
+   }
+  },
+  "cherry-hills-village": {
+   "name": "Cherry Hills Village",
+   "keys": [
+    "cherry-hills-village"
+   ],
+   "homes": 1904,
+   "moved": {
+    "f": "moved-cherry-hills-village-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 96,
+    "cap": "Cherry Hills Village · 96 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Cherry Hills Village shaded by how many homes sold in each half-kilometre square: 96 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Cherry Hills Village: 96 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 24,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-cherry-hills-village-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1638,
+    "cap": "Cherry Hills Village · 1,638 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Cherry Hills Village shaded by how many homes in each half-kilometre square have a large lawn: 1,638 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Cherry Hills Village: 1,638 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 24,
+    "built": "20261030"
+   }
+  },
+  "sheridan": {
+   "name": "Sheridan",
+   "keys": [
+    "sheridan"
+   ],
+   "homes": 1252,
+   "hail": {
+    "f": "hail-sheridan-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1252,
+    "cap": "Sheridan · 1,252 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Sheridan with this year’s radar hail paths shaded by hail size: 1,252 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Sheridan this year: 1,252 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 25,
+    "built": "20261030",
+    "first": "2026-06-24",
+    "last": "2026-08-14",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-sheridan-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 51,
+    "cap": "Sheridan · 51 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Sheridan shaded by how many homes sold in each half-kilometre square: 51 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Sheridan: 51 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-sheridan-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 30,
+    "cap": "Sheridan · 30 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Sheridan shaded by how many homes in each half-kilometre square have a large lawn: 30 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Sheridan: 30 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "lone-tree": {
+   "name": "Lone Tree",
+   "keys": [
+    "lone-tree"
+   ],
+   "homes": 3718,
+   "hail": {
+    "f": "hail-lone-tree-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 300,
+    "cap": "Lone Tree · 300 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Lone Tree with this year’s radar hail paths shaded by hail size: 300 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Lone Tree this year: 300 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 25,
+    "built": "20261030",
+    "first": "2026-08-15",
+    "last": "2026-09-20",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-lone-tree-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 259,
+    "cap": "Lone Tree · 259 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lone Tree shaded by how many homes sold in each half-kilometre square: 259 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Lone Tree: 259 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-lone-tree-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 263,
+    "cap": "Lone Tree · 263 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lone Tree shaded by how many homes in each half-kilometre square have a large lawn: 263 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Lone Tree: 263 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "wheat-ridge": {
+   "name": "Wheat Ridge",
+   "keys": [
+    "wheat-ridge"
+   ],
+   "homes": 7693,
+   "moved": {
+    "f": "moved-wheat-ridge-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 319,
+    "cap": "Wheat Ridge · 319 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Wheat Ridge shaded by how many homes sold in each half-kilometre square: 319 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Wheat Ridge: 319 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 30,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-wheat-ridge-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1352,
+    "cap": "Wheat Ridge · 1,352 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Wheat Ridge shaded by how many homes in each half-kilometre square have a large lawn: 1,352 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Wheat Ridge: 1,352 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 30,
+    "built": "20261030"
+   }
+  },
+  "edgewater": {
+   "name": "Edgewater",
+   "keys": [
+    "edgewater"
+   ],
+   "homes": 1045,
+   "moved": {
+    "f": "moved-edgewater-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 45,
+    "cap": "Edgewater · 45 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Edgewater shaded by how many homes sold in each half-kilometre square: 45 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Edgewater: 45 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 18,
+    "built": "20261030"
+   }
+  },
+  "golden": {
+   "name": "Golden",
+   "keys": [
+    "golden"
+   ],
+   "homes": 4935,
+   "moved": {
+    "f": "moved-golden-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 189,
+    "cap": "Golden · 189 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Golden shaded by how many homes sold in each half-kilometre square: 189 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Golden: 189 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 31,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-golden-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 347,
+    "cap": "Golden · 347 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Golden shaded by how many homes in each half-kilometre square have a large lawn: 347 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Golden: 347 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 31,
+    "built": "20261030"
+   }
+  },
+  "westminster": {
+   "name": "Westminster",
+   "keys": [
+    "westminster"
+   ],
+   "homes": 26249,
+   "hail": {
+    "f": "hail-westminster-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3517,
+    "cap": "Westminster · 3,517 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Westminster with this year’s radar hail paths shaded by hail size: 3,517 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Westminster this year: 3,517 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 35,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-09-06",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-westminster-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1061,
+    "cap": "Westminster · 1,061 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, Jefferson County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Westminster shaded by how many homes sold in each half-kilometre square: 1,061 homes sold between Apr 2025 and Mar 2026 (Adams County, Jefferson County records). No single home is shown.",
+    "text": "Westminster: 1,061 homes sold between Apr 2025 and Mar 2026, on Adams County, Jefferson County's own sale records.",
+    "kb": 36,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-westminster-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1539,
+    "cap": "Westminster · 1,539 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Westminster shaded by how many homes in each half-kilometre square have a large lawn: 1,539 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Westminster: 1,539 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 36,
+    "built": "20261030"
+   }
+  },
+  "broomfield": {
+   "name": "Broomfield",
+   "keys": [
+    "broomfield"
+   ],
+   "homes": 18325,
+   "moved": {
+    "f": "moved-broomfield-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 768,
+    "cap": "Broomfield · 768 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Broomfield County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Broomfield shaded by how many homes sold in each half-kilometre square: 768 homes sold between Sep 2025 and Aug 2026 (Broomfield County records). No single home is shown.",
+    "text": "Broomfield: 768 homes sold between Sep 2025 and Aug 2026, on Broomfield County's own sale records.",
+    "kb": 35,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-broomfield-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 860,
+    "cap": "Broomfield · 860 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Broomfield shaded by how many homes in each half-kilometre square have a large lawn: 860 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Broomfield: 860 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 34,
+    "built": "20261030"
+   }
+  },
+  "northglenn": {
+   "name": "Northglenn",
+   "keys": [
+    "northglenn"
+   ],
+   "homes": 8110,
+   "moved": {
+    "f": "moved-northglenn-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 287,
+    "cap": "Northglenn · 287 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Northglenn shaded by how many homes sold in each half-kilometre square: 287 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Northglenn: 287 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 23,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-northglenn-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 493,
+    "cap": "Northglenn · 493 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Northglenn shaded by how many homes in each half-kilometre square have a large lawn: 493 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Northglenn: 493 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 23,
+    "built": "20261030"
+   }
+  },
+  "federal-heights": {
+   "name": "Federal Heights",
+   "keys": [
+    "federal-heights"
+   ],
+   "homes": 927,
+   "moved": {
+    "f": "moved-federal-heights-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 39,
+    "cap": "Federal Heights · 39 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Federal Heights shaded by how many homes sold in each half-kilometre square: 39 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Federal Heights: 39 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "brighton": {
+   "name": "Brighton",
+   "keys": [
+    "brighton"
+   ],
+   "homes": 10830,
+   "hail": {
+    "f": "hail-brighton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 565,
+    "cap": "Brighton · 565 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Brighton with this year’s radar hail paths shaded by hail size: 565 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Brighton this year: 565 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 30,
+    "built": "20261030",
+    "first": "2026-06-08",
+    "last": "2026-09-18",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-brighton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 788,
+    "cap": "Brighton · 788 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Brighton shaded by how many homes sold in each half-kilometre square: 788 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Brighton: 788 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 30,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-brighton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 175,
+    "cap": "Brighton · 175 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Brighton shaded by how many homes in each half-kilometre square have a large lawn: 175 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Brighton: 175 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 30,
+    "built": "20261030"
+   }
+  },
+  "louisville": {
+   "name": "Louisville",
+   "keys": [
+    "louisville"
+   ],
+   "homes": 5179,
+   "moved": {
+    "f": "moved-louisville-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 170,
+    "cap": "Louisville · 170 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Louisville shaded by how many homes sold in each half-kilometre square: 170 homes sold between Sep 2025 and Aug 2026 (Boulder County records). No single home is shown.",
+    "text": "Louisville: 170 homes sold between Sep 2025 and Aug 2026, on Boulder County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-louisville-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 329,
+    "cap": "Louisville · 329 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Louisville shaded by how many homes in each half-kilometre square have a large lawn: 329 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Louisville: 329 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "lafayette": {
+   "name": "Lafayette",
+   "keys": [
+    "lafayette"
+   ],
+   "homes": 7308,
+   "moved": {
+    "f": "moved-lafayette-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 283,
+    "cap": "Lafayette · 283 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lafayette shaded by how many homes sold in each half-kilometre square: 283 homes sold between Sep 2025 and Aug 2026 (Boulder County records). No single home is shown.",
+    "text": "Lafayette: 283 homes sold between Sep 2025 and Aug 2026, on Boulder County's own sale records.",
+    "kb": 23,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-lafayette-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 443,
+    "cap": "Lafayette · 443 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lafayette shaded by how many homes in each half-kilometre square have a large lawn: 443 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Lafayette: 443 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 23,
+    "built": "20261030"
+   }
+  },
+  "superior": {
+   "name": "Superior",
+   "keys": [
+    "superior"
+   ],
+   "homes": 3106,
+   "moved": {
+    "f": "moved-superior-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 156,
+    "cap": "Superior · 156 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Superior shaded by how many homes sold in each half-kilometre square: 156 homes sold between Sep 2025 and Aug 2026 (Boulder County records). No single home is shown.",
+    "text": "Superior: 156 homes sold between Sep 2025 and Aug 2026, on Boulder County's own sale records.",
+    "kb": 24,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-superior-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 94,
+    "cap": "Superior · 94 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Superior shaded by how many homes in each half-kilometre square have a large lawn: 94 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Superior: 94 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 24,
+    "built": "20261030"
+   }
+  },
+  "longmont": {
+   "name": "Longmont",
+   "keys": [
+    "longmont"
+   ],
+   "homes": 22371,
+   "moved": {
+    "f": "moved-longmont-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 853,
+    "cap": "Longmont · 853 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Longmont shaded by how many homes sold in each half-kilometre square: 853 homes sold between Sep 2025 and Aug 2026 (Boulder County, Weld County records). No single home is shown.",
+    "text": "Longmont: 853 homes sold between Sep 2025 and Aug 2026, on Boulder County, Weld County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-longmont-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1078,
+    "cap": "Longmont · 1,078 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Longmont shaded by how many homes in each half-kilometre square have a large lawn: 1,078 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Longmont: 1,078 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "ken-caryl": {
+   "name": "Ken Caryl",
+   "keys": [
+    "ken-caryl"
+   ],
+   "homes": 9996,
+   "hail": {
+    "f": "hail-ken-caryl-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 766,
+    "cap": "Ken Caryl · 766 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Ken Caryl with this year’s radar hail paths shaded by hail size: 766 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Ken Caryl this year: 766 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 27,
+    "built": "20261030",
+    "first": "2026-06-24",
+    "last": "2026-08-22",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-ken-caryl-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 475,
+    "cap": "Ken Caryl · 475 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Ken Caryl shaded by how many homes sold in each half-kilometre square: 475 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Ken Caryl: 475 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 27,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-ken-caryl-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 696,
+    "cap": "Ken Caryl · 696 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Ken Caryl shaded by how many homes in each half-kilometre square have a large lawn: 696 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Ken Caryl: 696 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 28,
+    "built": "20261030"
+   }
+  },
+  "columbine": {
+   "name": "Columbine",
+   "keys": [
+    "columbine"
+   ],
+   "homes": 7358,
+   "moved": {
+    "f": "moved-columbine-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 251,
+    "cap": "Columbine · 251 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Columbine shaded by how many homes sold in each half-kilometre square: 251 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Columbine: 251 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 26,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-columbine-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1420,
+    "cap": "Columbine · 1,420 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Columbine shaded by how many homes in each half-kilometre square have a large lawn: 1,420 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Columbine: 1,420 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 27,
+    "built": "20261030"
+   }
+  },
+  "holly-hills": {
+   "name": "Holly Hills",
+   "keys": [
+    "holly-hills"
+   ],
+   "homes": 904,
+   "moved": {
+    "f": "moved-holly-hills-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 33,
+    "cap": "Holly Hills · 33 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Holly Hills shaded by how many homes sold in each half-kilometre square: 33 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Holly Hills: 33 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 23,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-holly-hills-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 150,
+    "cap": "Holly Hills · 150 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Holly Hills shaded by how many homes in each half-kilometre square have a large lawn: 150 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Holly Hills: 150 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "four-square-mile": {
+   "name": "Four Square Mile",
+   "keys": [
+    "four-square-mile"
+   ],
+   "homes": 1509,
+   "moved": {
+    "f": "moved-four-square-mile-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 50,
+    "cap": "Four Square Mile · 50 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Four Square Mile shaded by how many homes sold in each half-kilometre square: 50 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Four Square Mile: 50 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-four-square-mile-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 216,
+    "cap": "Four Square Mile · 216 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Four Square Mile shaded by how many homes in each half-kilometre square have a large lawn: 216 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Four Square Mile: 216 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "cherry-creek": {
+   "name": "Cherry Creek",
+   "keys": [
+    "cherry-creek"
+   ],
+   "homes": 2749,
+   "hail": {
+    "f": "hail-cherry-creek-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2561,
+    "cap": "Cherry Creek · 2,561 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Cherry Creek with this year’s radar hail paths shaded by hail size: 2,561 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Cherry Creek this year: 2,561 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 20,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-08-13",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-cherry-creek-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 94,
+    "cap": "Cherry Creek · 94 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Cherry Creek shaded by how many homes sold in each half-kilometre square: 94 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Cherry Creek: 94 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 20,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-cherry-creek-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 401,
+    "cap": "Cherry Creek · 401 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Cherry Creek shaded by how many homes in each half-kilometre square have a large lawn: 401 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Cherry Creek: 401 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "dakota-ridge": {
+   "name": "Dakota Ridge",
+   "keys": [
+    "dakota-ridge"
+   ],
+   "homes": 10341,
+   "hail": {
+    "f": "hail-dakota-ridge-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 4639,
+    "cap": "Dakota Ridge · 4,639 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Dakota Ridge with this year’s radar hail paths shaded by hail size: 4,639 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Dakota Ridge this year: 4,639 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 27,
+    "built": "20261030",
+    "first": "2026-06-24",
+    "last": "2026-08-15",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-dakota-ridge-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 352,
+    "cap": "Dakota Ridge · 352 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Dakota Ridge shaded by how many homes sold in each half-kilometre square: 352 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Dakota Ridge: 352 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 29,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-dakota-ridge-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 421,
+    "cap": "Dakota Ridge · 421 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Dakota Ridge shaded by how many homes in each half-kilometre square have a large lawn: 421 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Dakota Ridge: 421 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 28,
+    "built": "20261030"
+   }
+  },
+  "acres-green": {
+   "name": "Acres Green",
+   "keys": [
+    "acres-green"
+   ],
+   "homes": 916,
+   "moved": {
+    "f": "moved-acres-green-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 31,
+    "cap": "Acres Green · 31 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Acres Green shaded by how many homes sold in each half-kilometre square: 31 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Acres Green: 31 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 33,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-acres-green-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 71,
+    "cap": "Acres Green · 71 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Acres Green shaded by how many homes in each half-kilometre square have a large lawn: 71 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Acres Green: 71 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 33,
+    "built": "20261030"
+   }
+  },
+  "meridian": {
+   "name": "Meridian",
+   "keys": [
+    "meridian"
+   ],
+   "homes": 398,
+   "hail": {
+    "f": "hail-meridian-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 375,
+    "cap": "Meridian · 375 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Meridian with this year’s radar hail paths shaded by hail size: 375 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Meridian this year: 375 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 25,
+    "built": "20261030",
+    "first": "2026-08-15",
+    "last": "2026-09-20",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-meridian-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 42,
+    "cap": "Meridian · 42 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Meridian shaded by how many homes sold in each half-kilometre square: 42 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Meridian: 42 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "berkley": {
+   "name": "Berkley",
+   "keys": [
+    "berkley"
+   ],
+   "homes": 2044,
+   "moved": {
+    "f": "moved-berkley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 58,
+    "cap": "Berkley · 58 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Berkley shaded by how many homes sold in each half-kilometre square: 58 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Berkley: 58 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 27,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-berkley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 139,
+    "cap": "Berkley · 139 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Berkley shaded by how many homes in each half-kilometre square have a large lawn: 139 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Berkley: 139 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 28,
+    "built": "20261030"
+   }
+  },
+  "sterling-ranch": {
+   "name": "Sterling Ranch",
+   "keys": [
+    "sterling-ranch"
+   ],
+   "homes": 2805,
+   "moved": {
+    "f": "moved-sterling-ranch-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 289,
+    "cap": "Sterling Ranch · 289 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Sterling Ranch shaded by how many homes sold in each half-kilometre square: 289 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Sterling Ranch: 289 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 17,
+    "built": "20261030"
+   }
+  },
+  "derby": {
+   "name": "Derby",
+   "keys": [
+    "derby"
+   ],
+   "homes": 1452,
+   "moved": {
+    "f": "moved-derby-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 58,
+    "cap": "Derby · 58 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Derby shaded by how many homes sold in each half-kilometre square: 58 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Derby: 58 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 28,
+    "built": "20261030"
+   }
+  },
+  "columbine-valley": {
+   "name": "Columbine Valley",
+   "keys": [
+    "columbine-valley"
+   ],
+   "homes": 599,
+   "moved": {
+    "f": "moved-columbine-valley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 26,
+    "cap": "Columbine Valley · 26 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Columbine Valley shaded by how many homes sold in each half-kilometre square: 26 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Columbine Valley: 26 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-columbine-valley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 282,
+    "cap": "Columbine Valley · 282 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Columbine Valley shaded by how many homes in each half-kilometre square have a large lawn: 282 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Columbine Valley: 282 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 21,
+    "built": "20261030"
+   }
+  },
+  "dove-valley": {
+   "name": "Dove Valley",
+   "keys": [
+    "dove-valley"
+   ],
+   "homes": 673,
+   "hail": {
+    "f": "hail-dove-valley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 321,
+    "cap": "Dove Valley · 321 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Dove Valley with this year’s radar hail paths shaded by hail size: 321 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Dove Valley this year: 321 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 19,
+    "built": "20261030",
+    "first": "2026-08-15",
+    "last": "2026-08-26",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-dove-valley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 25,
+    "cap": "Dove Valley · 25 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Arapahoe County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Dove Valley shaded by how many homes sold in each half-kilometre square: 25 homes sold between Sep 2025 and Aug 2026 (Arapahoe County records). No single home is shown.",
+    "text": "Dove Valley: 25 homes sold between Sep 2025 and Aug 2026, on Arapahoe County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "twin-lakes": {
+   "name": "Twin Lakes",
+   "keys": [
+    "twin-lakes"
+   ],
+   "homes": 2472,
+   "moved": {
+    "f": "moved-twin-lakes-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 138,
+    "cap": "Twin Lakes · 138 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Twin Lakes shaded by how many homes sold in each half-kilometre square: 138 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Twin Lakes: 138 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 40,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-twin-lakes-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 36,
+    "cap": "Twin Lakes · 36 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Twin Lakes shaded by how many homes in each half-kilometre square have a large lawn: 36 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Twin Lakes: 36 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 40,
+    "built": "20261030"
+   }
+  },
+  "stonegate": {
+   "name": "Stonegate",
+   "keys": [
+    "stonegate"
+   ],
+   "homes": 2529,
+   "hail": {
+    "f": "hail-stonegate-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 4,
+    "cap": "Stonegate · 4 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Stonegate with this year’s radar hail paths shaded by hail size: 4 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Stonegate this year: 4 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 21,
+    "built": "20261030",
+    "first": "2026-08-15",
+    "last": "2026-09-06",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-stonegate-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 135,
+    "cap": "Stonegate · 135 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Stonegate shaded by how many homes sold in each half-kilometre square: 135 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Stonegate: 135 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-stonegate-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 37,
+    "cap": "Stonegate · 37 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Stonegate shaded by how many homes in each half-kilometre square have a large lawn: 37 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Stonegate: 37 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 21,
+    "built": "20261030"
+   }
+  },
+  "sherrelwood": {
+   "name": "Sherrelwood",
+   "keys": [
+    "sherrelwood"
+   ],
+   "homes": 4139,
+   "moved": {
+    "f": "moved-sherrelwood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 144,
+    "cap": "Sherrelwood · 144 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Sherrelwood shaded by how many homes sold in each half-kilometre square: 144 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Sherrelwood: 144 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 35,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-sherrelwood-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 48,
+    "cap": "Sherrelwood · 48 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Sherrelwood shaded by how many homes in each half-kilometre square have a large lawn: 48 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Sherrelwood: 48 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 35,
+    "built": "20261030"
+   }
+  },
+  "welby": {
+   "name": "Welby",
+   "keys": [
+    "welby"
+   ],
+   "homes": 2709,
+   "moved": {
+    "f": "moved-welby-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 100,
+    "cap": "Welby · 100 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Welby shaded by how many homes sold in each half-kilometre square: 100 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Welby: 100 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-welby-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 41,
+    "cap": "Welby · 41 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Welby shaded by how many homes in each half-kilometre square have a large lawn: 41 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Welby: 41 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "roxborough-park": {
+   "name": "Roxborough Park",
+   "keys": [
+    "roxborough-park"
+   ],
+   "homes": 3360,
+   "moved": {
+    "f": "moved-roxborough-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 156,
+    "cap": "Roxborough Park · 156 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Roxborough Park shaded by how many homes sold in each half-kilometre square: 156 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Roxborough Park: 156 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 18,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-roxborough-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 261,
+    "cap": "Roxborough Park · 261 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Roxborough Park shaded by how many homes in each half-kilometre square have a large lawn: 261 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Roxborough Park: 261 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 18,
+    "built": "20261030"
+   }
+  },
+  "evergreen": {
+   "name": "Evergreen",
+   "keys": [
+    "evergreen"
+   ],
+   "homes": 2851,
+   "hail": {
+    "f": "hail-evergreen-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 978,
+    "cap": "Evergreen · 978 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Evergreen with this year’s radar hail paths shaded by hail size: 978 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Evergreen this year: 978 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 22,
+    "built": "20261030",
+    "first": "2026-06-08",
+    "last": "2026-08-15",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-evergreen-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 131,
+    "cap": "Evergreen · 131 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Evergreen shaded by how many homes sold in each half-kilometre square: 131 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Evergreen: 131 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-evergreen-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 553,
+    "cap": "Evergreen · 553 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Evergreen shaded by how many homes in each half-kilometre square have a large lawn: 553 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Evergreen: 553 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "the-pinery": {
+   "name": "The Pinery",
+   "keys": [
+    "the-pinery"
+   ],
+   "homes": 4151,
+   "hail": {
+    "f": "hail-the-pinery-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3623,
+    "cap": "The Pinery · 3,623 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of The Pinery with this year’s radar hail paths shaded by hail size: 3,623 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "The Pinery this year: 3,623 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 20,
+    "built": "20261030",
+    "first": "2026-06-08",
+    "last": "2026-09-20",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-the-pinery-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 226,
+    "cap": "The Pinery · 226 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of The Pinery shaded by how many homes sold in each half-kilometre square: 226 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "The Pinery: 226 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 20,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-the-pinery-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1393,
+    "cap": "The Pinery · 1,393 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of The Pinery shaded by how many homes in each half-kilometre square have a large lawn: 1,393 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "The Pinery: 1,393 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 21,
+    "built": "20261030"
+   }
+  },
+  "perry-park": {
+   "name": "Perry Park",
+   "keys": [
+    "perry-park"
+   ],
+   "homes": 780,
+   "moved": {
+    "f": "moved-perry-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 48,
+    "cap": "Perry Park · 48 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Douglas County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Perry Park shaded by how many homes sold in each half-kilometre square: 48 homes sold between Sep 2025 and Aug 2026 (Douglas County records). No single home is shown.",
+    "text": "Perry Park: 48 homes sold between Sep 2025 and Aug 2026, on Douglas County's own sale records.",
+    "kb": 17,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-perry-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 417,
+    "cap": "Perry Park · 417 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Perry Park shaded by how many homes in each half-kilometre square have a large lawn: 417 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Perry Park: 417 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 17,
+    "built": "20261030"
+   }
+  },
+  "lochbuie": {
+   "name": "Lochbuie",
+   "keys": [
+    "lochbuie"
+   ],
+   "homes": 2723,
+   "moved": {
+    "f": "moved-lochbuie-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 199,
+    "cap": "Lochbuie · 199 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, Weld County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lochbuie shaded by how many homes sold in each half-kilometre square: 199 homes sold between Apr 2025 and Mar 2026 (Adams County, Weld County records). No single home is shown.",
+    "text": "Lochbuie: 199 homes sold between Apr 2025 and Mar 2026, on Adams County, Weld County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-lochbuie-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 20,
+    "cap": "Lochbuie · 20 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Lochbuie shaded by how many homes in each half-kilometre square have a large lawn: 20 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Lochbuie: 20 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 21,
+    "built": "20261030"
+   }
+  },
+  "elizabeth": {
+   "name": "Elizabeth",
+   "keys": [
+    "elizabeth"
+   ],
+   "homes": 813,
+   "hail": {
+    "f": "hail-elizabeth-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 813,
+    "cap": "Elizabeth · 813 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Elizabeth with this year’s radar hail paths shaded by hail size: 813 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Elizabeth this year: 813 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 16,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-09-20",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-elizabeth-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 32,
+    "cap": "Elizabeth · 32 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Elbert County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Elizabeth shaded by how many homes sold in each half-kilometre square: 32 homes sold between Sep 2025 and Aug 2026 (Elbert County records). No single home is shown.",
+    "text": "Elizabeth: 32 homes sold between Sep 2025 and Aug 2026, on Elbert County's own sale records.",
+    "kb": 16,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-elizabeth-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 23,
+    "cap": "Elizabeth · 23 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Elizabeth shaded by how many homes in each half-kilometre square have a large lawn: 23 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Elizabeth: 23 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 17,
+    "built": "20261030"
+   }
+  },
+  "dacono": {
+   "name": "Dacono",
+   "keys": [
+    "dacono"
+   ],
+   "homes": 1375,
+   "moved": {
+    "f": "moved-dacono-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 57,
+    "cap": "Dacono · 57 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Dacono shaded by how many homes sold in each half-kilometre square: 57 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Dacono: 57 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 18,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-dacono-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 24,
+    "cap": "Dacono · 24 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Dacono shaded by how many homes in each half-kilometre square have a large lawn: 24 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Dacono: 24 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "gunbarrel": {
+   "name": "Gunbarrel",
+   "keys": [
+    "gunbarrel"
+   ],
+   "homes": 2688,
+   "moved": {
+    "f": "moved-gunbarrel-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 86,
+    "cap": "Gunbarrel · 86 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Gunbarrel shaded by how many homes sold in each half-kilometre square: 86 homes sold between Sep 2025 and Aug 2026 (Boulder County records). No single home is shown.",
+    "text": "Gunbarrel: 86 homes sold between Sep 2025 and Aug 2026, on Boulder County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-gunbarrel-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 479,
+    "cap": "Gunbarrel · 479 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Gunbarrel shaded by how many homes in each half-kilometre square have a large lawn: 479 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Gunbarrel: 479 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "frederick": {
+   "name": "Frederick",
+   "keys": [
+    "frederick"
+   ],
+   "homes": 4675,
+   "moved": {
+    "f": "moved-frederick-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 214,
+    "cap": "Frederick · 214 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Frederick shaded by how many homes sold in each half-kilometre square: 214 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Frederick: 214 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 20,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-frederick-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 384,
+    "cap": "Frederick · 384 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Frederick shaded by how many homes in each half-kilometre square have a large lawn: 384 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Frederick: 384 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "bennett": {
+   "name": "Bennett",
+   "keys": [
+    "bennett"
+   ],
+   "homes": 1182,
+   "hail": {
+    "f": "hail-bennett-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 407,
+    "cap": "Bennett · 407 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Bennett with this year’s radar hail paths shaded by hail size: 407 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Bennett this year: 407 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 19,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-07-29",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-bennett-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 121,
+    "cap": "Bennett · 121 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Bennett shaded by how many homes sold in each half-kilometre square: 121 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Bennett: 121 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "fort-lupton": {
+   "name": "Fort Lupton",
+   "keys": [
+    "fort-lupton"
+   ],
+   "homes": 2520,
+   "moved": {
+    "f": "moved-fort-lupton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 143,
+    "cap": "Fort Lupton · 143 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fort Lupton shaded by how many homes sold in each half-kilometre square: 143 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Fort Lupton: 143 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-fort-lupton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 37,
+    "cap": "Fort Lupton · 37 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fort Lupton shaded by how many homes in each half-kilometre square have a large lawn: 37 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Fort Lupton: 37 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 21,
+    "built": "20261030"
+   }
+  },
+  "niwot": {
+   "name": "Niwot",
+   "keys": [
+    "niwot"
+   ],
+   "homes": 1255,
+   "moved": {
+    "f": "moved-niwot-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 48,
+    "cap": "Niwot · 48 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Boulder County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Niwot shaded by how many homes sold in each half-kilometre square: 48 homes sold between Sep 2025 and Aug 2026 (Boulder County records). No single home is shown.",
+    "text": "Niwot: 48 homes sold between Sep 2025 and Aug 2026, on Boulder County's own sale records.",
+    "kb": 20,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-niwot-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 756,
+    "cap": "Niwot · 756 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Niwot shaded by how many homes in each half-kilometre square have a large lawn: 756 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Niwot: 756 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "firestone": {
+   "name": "Firestone",
+   "keys": [
+    "firestone"
+   ],
+   "homes": 3287,
+   "moved": {
+    "f": "moved-firestone-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 188,
+    "cap": "Firestone · 188 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Firestone shaded by how many homes sold in each half-kilometre square: 188 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Firestone: 188 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-firestone-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 217,
+    "cap": "Firestone · 217 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Firestone shaded by how many homes in each half-kilometre square have a large lawn: 217 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Firestone: 217 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "strasburg": {
+   "name": "Strasburg",
+   "keys": [
+    "strasburg"
+   ],
+   "homes": 922,
+   "hail": {
+    "f": "hail-strasburg-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 714,
+    "cap": "Strasburg · 714 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Strasburg with this year’s radar hail paths shaded by hail size: 714 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Strasburg this year: 714 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 23,
+    "built": "20261030",
+    "first": "2026-06-01",
+    "last": "2026-08-14",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-strasburg-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 34,
+    "cap": "Strasburg · 34 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, Arapahoe County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Strasburg shaded by how many homes sold in each half-kilometre square: 34 homes sold between Apr 2025 and Mar 2026 (Adams County, Arapahoe County records). No single home is shown.",
+    "text": "Strasburg: 34 homes sold between Apr 2025 and Mar 2026, on Adams County, Arapahoe County's own sale records.",
+    "kb": 23,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-strasburg-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 253,
+    "cap": "Strasburg · 253 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Strasburg shaded by how many homes in each half-kilometre square have a large lawn: 253 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Strasburg: 253 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 23,
+    "built": "20261030"
+   }
+  },
+  "platteville": {
+   "name": "Platteville",
+   "keys": [
+    "platteville"
+   ],
+   "homes": 526,
+   "hail": {
+    "f": "hail-platteville-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 38,
+    "cap": "Platteville · 38 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Platteville with this year’s radar hail paths shaded by hail size: 38 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Platteville this year: 38 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 20,
+    "built": "20261030",
+    "first": "2026-09-20",
+    "last": "2026-09-20",
+    "through": "2026-10-28"
+   }
+  },
+  "mead": {
+   "name": "Mead",
+   "keys": [
+    "mead"
+   ],
+   "homes": 1838,
+   "moved": {
+    "f": "moved-mead-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 88,
+    "cap": "Mead · 88 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Mead shaded by how many homes sold in each half-kilometre square: 88 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Mead: 88 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-mead-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 255,
+    "cap": "Mead · 255 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Mead shaded by how many homes in each half-kilometre square have a large lawn: 255 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Mead: 255 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "keenesburg": {
+   "name": "Keenesburg",
+   "keys": [
+    "keenesburg"
+   ],
+   "homes": 598,
+   "hail": {
+    "f": "hail-keenesburg-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 26,
+    "cap": "Keenesburg · 26 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Keenesburg with this year’s radar hail paths shaded by hail size: 26 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Keenesburg this year: 26 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 23,
+    "built": "20261030",
+    "first": "2026-08-22",
+    "last": "2026-09-07",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-keenesburg-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 37,
+    "cap": "Keenesburg · 37 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Keenesburg shaded by how many homes sold in each half-kilometre square: 37 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Keenesburg: 37 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 23,
+    "built": "20261030"
+   }
+  },
+  "walden": {
+   "name": "Walden",
+   "keys": [
+    "walden"
+   ],
+   "homes": 470,
+   "moved": {
+    "f": "moved-walden-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 25,
+    "cap": "Walden · 25 homes sold, Aug 2025 to Jul 2026",
+    "sub": "Market sales on the county’s own record (El Paso County, file of Sep 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Walden shaded by how many homes sold in each half-kilometre square: 25 homes sold between Aug 2025 and Jul 2026 (El Paso County records). No single home is shown.",
+    "text": "Walden: 25 homes sold between Aug 2025 and Jul 2026, on El Paso County's own sale records.",
+    "kb": 18,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-walden-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 167,
+    "cap": "Walden · 167 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Walden shaded by how many homes in each half-kilometre square have a large lawn: 167 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Walden: 167 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "greeley": {
+   "name": "Greeley",
+   "keys": [
+    "g1-greeley"
+   ],
+   "homes": 20060,
+   "hail": {
+    "f": "hail-greeley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 992,
+    "cap": "Greeley · 992 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Greeley with this year’s radar hail paths shaded by hail size: 992 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Greeley this year: 992 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 27,
+    "built": "20261030",
+    "first": "2026-06-03",
+    "last": "2026-09-06",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-greeley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 825,
+    "cap": "Greeley · 825 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Greeley shaded by how many homes sold in each half-kilometre square: 825 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Greeley: 825 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 29,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-greeley-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1486,
+    "cap": "Greeley · 1,486 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Greeley shaded by how many homes in each half-kilometre square have a large lawn: 1,486 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Greeley: 1,486 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 29,
+    "built": "20261030"
+   }
+  },
+  "johnstown": {
+   "name": "Johnstown",
+   "keys": [
+    "g1-johnstown"
+   ],
+   "homes": 4624,
+   "hail": {
+    "f": "hail-johnstown-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1113,
+    "cap": "Johnstown · 1,113 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Johnstown with this year’s radar hail paths shaded by hail size: 1,113 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Johnstown this year: 1,113 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 20,
+    "built": "20261030",
+    "first": "2026-06-24",
+    "last": "2026-09-20",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-johnstown-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 289,
+    "cap": "Johnstown · 289 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Johnstown shaded by how many homes sold in each half-kilometre square: 289 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Johnstown: 289 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 21,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-johnstown-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 88,
+    "cap": "Johnstown · 88 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Johnstown shaded by how many homes in each half-kilometre square have a large lawn: 88 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Johnstown: 88 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "evans": {
+   "name": "Evans",
+   "keys": [
+    "g1-evans"
+   ],
+   "homes": 4465,
+   "moved": {
+    "f": "moved-evans-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 192,
+    "cap": "Evans · 192 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Evans shaded by how many homes sold in each half-kilometre square: 192 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Evans: 192 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-evans-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 75,
+    "cap": "Evans · 75 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Evans shaded by how many homes in each half-kilometre square have a large lawn: 75 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Evans: 75 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "berthoud": {
+   "name": "Berthoud",
+   "keys": [
+    "g1-berthoud"
+   ],
+   "homes": 4431,
+   "hail": {
+    "f": "hail-berthoud-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2400,
+    "cap": "Berthoud · 2,400 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Berthoud with this year’s radar hail paths shaded by hail size: 2,400 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Berthoud this year: 2,400 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 20,
+    "built": "20261030",
+    "first": "2026-06-23",
+    "last": "2026-09-20",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-berthoud-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 262,
+    "cap": "Berthoud · 262 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Larimer County, Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Berthoud shaded by how many homes sold in each half-kilometre square: 262 homes sold between Sep 2025 and Aug 2026 (Larimer County, Weld County records). No single home is shown.",
+    "text": "Berthoud: 262 homes sold between Sep 2025 and Aug 2026, on Larimer County, Weld County's own sale records.",
+    "kb": 20,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-berthoud-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 86,
+    "cap": "Berthoud · 86 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Berthoud shaded by how many homes in each half-kilometre square have a large lawn: 86 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Berthoud: 86 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 20,
+    "built": "20261030"
+   }
+  },
+  "severance": {
+   "name": "Severance",
+   "keys": [
+    "g1-severance"
+   ],
+   "homes": 3523,
+   "hail": {
+    "f": "hail-severance-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2091,
+    "cap": "Severance · 2,091 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Severance with this year’s radar hail paths shaded by hail size: 2,091 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Severance this year: 2,091 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 18,
+    "built": "20261030",
+    "first": "2026-06-20",
+    "last": "2026-08-13",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-severance-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 216,
+    "cap": "Severance · 216 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Severance shaded by how many homes sold in each half-kilometre square: 216 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Severance: 216 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-severance-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 266,
+    "cap": "Severance · 266 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Severance shaded by how many homes in each half-kilometre square have a large lawn: 266 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Severance: 266 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "milliken": {
+   "name": "Milliken",
+   "keys": [
+    "g1-milliken"
+   ],
+   "homes": 2540,
+   "hail": {
+    "f": "hail-milliken-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 316,
+    "cap": "Milliken · 316 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Milliken with this year’s radar hail paths shaded by hail size: 316 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Milliken this year: 316 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 18,
+    "built": "20261030",
+    "first": "2026-07-01",
+    "last": "2026-07-01",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-milliken-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 117,
+    "cap": "Milliken · 117 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Milliken shaded by how many homes sold in each half-kilometre square: 117 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Milliken: 117 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 18,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-milliken-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 66,
+    "cap": "Milliken · 66 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Milliken shaded by how many homes in each half-kilometre square have a large lawn: 66 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Milliken: 66 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "eaton": {
+   "name": "Eaton",
+   "keys": [
+    "g1-eaton"
+   ],
+   "homes": 1651,
+   "moved": {
+    "f": "moved-eaton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 73,
+    "cap": "Eaton · 73 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Eaton shaded by how many homes sold in each half-kilometre square: 73 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Eaton: 73 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-eaton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 85,
+    "cap": "Eaton · 85 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Eaton shaded by how many homes in each half-kilometre square have a large lawn: 85 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Eaton: 85 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "todd-creek": {
+   "name": "Todd Creek",
+   "keys": [
+    "g1-todd-creek"
+   ],
+   "homes": 1658,
+   "hail": {
+    "f": "hail-todd-creek-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 112,
+    "cap": "Todd Creek · 112 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Todd Creek with this year’s radar hail paths shaded by hail size: 112 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Todd Creek this year: 112 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 25,
+    "built": "20261030",
+    "first": "2026-06-08",
+    "last": "2026-09-06",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-todd-creek-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 77,
+    "cap": "Todd Creek · 77 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Todd Creek shaded by how many homes sold in each half-kilometre square: 77 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Todd Creek: 77 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 26,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-todd-creek-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 775,
+    "cap": "Todd Creek · 775 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Todd Creek shaded by how many homes in each half-kilometre square have a large lawn: 775 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Todd Creek: 775 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "shaw-heights": {
+   "name": "Shaw Heights",
+   "keys": [
+    "g1-shaw-heights"
+   ],
+   "homes": 1362,
+   "moved": {
+    "f": "moved-shaw-heights-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 38,
+    "cap": "Shaw Heights · 38 homes sold, Apr 2025 to Mar 2026",
+    "sub": "Market sales on the county’s own record (Adams County, file of May 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Shaw Heights shaded by how many homes sold in each half-kilometre square: 38 homes sold between Apr 2025 and Mar 2026 (Adams County records). No single home is shown.",
+    "text": "Shaw Heights: 38 homes sold between Apr 2025 and Mar 2026, on Adams County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-shaw-heights-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 21,
+    "cap": "Shaw Heights · 21 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Shaw Heights shaded by how many homes in each half-kilometre square have a large lawn: 21 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Shaw Heights: 21 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 25,
+    "built": "20261030"
+   }
+  },
+  "genesee": {
+   "name": "Genesee",
+   "keys": [
+    "g1-genesee"
+   ],
+   "homes": 1290,
+   "moved": {
+    "f": "moved-genesee-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 68,
+    "cap": "Genesee · 68 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Jefferson County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Genesee shaded by how many homes sold in each half-kilometre square: 68 homes sold between Sep 2025 and Aug 2026 (Jefferson County records). No single home is shown.",
+    "text": "Genesee: 68 homes sold between Sep 2025 and Aug 2026, on Jefferson County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-genesee-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 40,
+    "cap": "Genesee · 40 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Genesee shaded by how many homes in each half-kilometre square have a large lawn: 40 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Genesee: 40 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "coal-creek": {
+   "name": "Coal Creek",
+   "keys": [
+    "g1-coal-creek"
+   ],
+   "homes": 544
+  },
+  "la-salle": {
+   "name": "La Salle",
+   "keys": [
+    "g1-la-salle"
+   ],
+   "homes": 653,
+   "moved": {
+    "f": "moved-la-salle-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 37,
+    "cap": "La Salle · 37 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of La Salle shaded by how many homes sold in each half-kilometre square: 37 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "La Salle: 37 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 19,
+    "built": "20261030"
+   }
+  },
+  "ault": {
+   "name": "Ault",
+   "keys": [
+    "g1-ault"
+   ],
+   "homes": 404,
+   "moved": {
+    "f": "moved-ault-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 28,
+    "cap": "Ault · 28 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Weld County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Ault shaded by how many homes sold in each half-kilometre square: 28 homes sold between Sep 2025 and Aug 2026 (Weld County records). No single home is shown.",
+    "text": "Ault: 28 homes sold between Sep 2025 and Aug 2026, on Weld County's own sale records.",
+    "kb": 18,
+    "built": "20261030"
+   }
+  },
+  "deer-trail": {
+   "name": "Deer Trail",
+   "keys": [
+    "g1-deer-trail"
+   ],
+   "homes": 366,
+   "hail": {
+    "f": "hail-deer-trail-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 366,
+    "cap": "Deer Trail · 366 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Deer Trail with this year’s radar hail paths shaded by hail size: 366 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Deer Trail this year: 366 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 24,
+    "built": "20261030",
+    "first": "2026-06-24",
+    "last": "2026-08-26",
+    "through": "2026-10-28"
+   }
+  },
+  "pine-brook-hill": {
+   "name": "Pine Brook Hill",
+   "keys": [
+    "g1-pine-brook-hill"
+   ],
+   "homes": 367
+  },
+  "lazy-acres": {
+   "name": "Lazy Acres",
+   "keys": [
+    "g1-lazy-acres"
+   ],
+   "homes": 338,
+   "hail": {
+    "f": "hail-lazy-acres-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 4,
+    "cap": "Lazy Acres · 4 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Lazy Acres with this year’s radar hail paths shaded by hail size: 4 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Lazy Acres this year: 4 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 17,
+    "built": "20261030",
+    "first": "2026-07-09",
+    "last": "2026-07-09",
+    "through": "2026-10-28"
+   }
+  },
+  "aristocrat-ranchettes": {
+   "name": "Aristocrat Ranchettes",
+   "keys": [
+    "g1-aristocrat-ranchettes"
+   ],
+   "homes": 399
+  },
+  "fort-collins": {
+   "name": "Fort Collins",
+   "keys": [
+    "g2-fort-collins"
+   ],
+   "homes": 32009,
+   "moved": {
+    "f": "moved-fort-collins-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1405,
+    "cap": "Fort Collins · 1,405 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Larimer County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fort Collins shaded by how many homes sold in each half-kilometre square: 1,405 homes sold between Sep 2025 and Aug 2026 (Larimer County records). No single home is shown.",
+    "text": "Fort Collins: 1,405 homes sold between Sep 2025 and Aug 2026, on Larimer County's own sale records.",
+    "kb": 31,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-fort-collins-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 3573,
+    "cap": "Fort Collins · 3,573 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fort Collins shaded by how many homes in each half-kilometre square have a large lawn: 3,573 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Fort Collins: 3,573 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 31,
+    "built": "20261030"
+   }
+  },
+  "loveland": {
+   "name": "Loveland",
+   "keys": [
+    "g2-loveland"
+   ],
+   "homes": 21703,
+   "moved": {
+    "f": "moved-loveland-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1026,
+    "cap": "Loveland · 1,026 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Larimer County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Loveland shaded by how many homes sold in each half-kilometre square: 1,026 homes sold between Sep 2025 and Aug 2026 (Larimer County records). No single home is shown.",
+    "text": "Loveland: 1,026 homes sold between Sep 2025 and Aug 2026, on Larimer County's own sale records.",
+    "kb": 27,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-loveland-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 345,
+    "cap": "Loveland · 345 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Loveland shaded by how many homes in each half-kilometre square have a large lawn: 345 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Loveland: 345 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "wellington": {
+   "name": "Wellington",
+   "keys": [
+    "g2-wellington"
+   ],
+   "homes": 3224,
+   "hail": {
+    "f": "hail-wellington-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 194,
+    "cap": "Wellington · 194 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Wellington with this year’s radar hail paths shaded by hail size: 194 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Wellington this year: 194 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 22,
+    "built": "20261030",
+    "first": "2026-07-21",
+    "last": "2026-07-21",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-wellington-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 170,
+    "cap": "Wellington · 170 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Larimer County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Wellington shaded by how many homes sold in each half-kilometre square: 170 homes sold between Sep 2025 and Aug 2026 (Larimer County records). No single home is shown.",
+    "text": "Wellington: 170 homes sold between Sep 2025 and Aug 2026, on Larimer County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-wellington-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 96,
+    "cap": "Wellington · 96 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Wellington shaded by how many homes in each half-kilometre square have a large lawn: 96 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Wellington: 96 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 23,
+    "built": "20261030"
+   }
+  },
+  "estes-park": {
+   "name": "Estes Park",
+   "keys": [
+    "g2-estes-park"
+   ],
+   "homes": 1287,
+   "hail": {
+    "f": "hail-estes-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 115,
+    "cap": "Estes Park · 115 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Estes Park with this year’s radar hail paths shaded by hail size: 115 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Estes Park this year: 115 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 26,
+    "built": "20261030",
+    "first": "2026-07-28",
+    "last": "2026-07-28",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-estes-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 51,
+    "cap": "Estes Park · 51 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Larimer County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Estes Park shaded by how many homes sold in each half-kilometre square: 51 homes sold between Sep 2025 and Aug 2026 (Larimer County records). No single home is shown.",
+    "text": "Estes Park: 51 homes sold between Sep 2025 and Aug 2026, on Larimer County's own sale records.",
+    "kb": 26,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-estes-park-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 81,
+    "cap": "Estes Park · 81 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Estes Park shaded by how many homes in each half-kilometre square have a large lawn: 81 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Estes Park: 81 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "timnath": {
+   "name": "Timnath",
+   "keys": [
+    "g2-timnath"
+   ],
+   "homes": 3425,
+   "moved": {
+    "f": "moved-timnath-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 233,
+    "cap": "Timnath · 233 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Larimer County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Timnath shaded by how many homes sold in each half-kilometre square: 233 homes sold between Sep 2025 and Aug 2026 (Larimer County records). No single home is shown.",
+    "text": "Timnath: 233 homes sold between Sep 2025 and Aug 2026, on Larimer County's own sale records.",
+    "kb": 20,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-timnath-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 147,
+    "cap": "Timnath · 147 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Timnath shaded by how many homes in each half-kilometre square have a large lawn: 147 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Timnath: 147 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 21,
+    "built": "20261030"
+   }
+  },
+  "laporte": {
+   "name": "Laporte",
+   "keys": [
+    "g2-laporte"
+   ],
+   "homes": 417,
+   "moved": {
+    "f": "moved-laporte-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 24,
+    "cap": "Laporte · 24 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Larimer County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Laporte shaded by how many homes sold in each half-kilometre square: 24 homes sold between Sep 2025 and Aug 2026 (Larimer County records). No single home is shown.",
+    "text": "Laporte: 24 homes sold between Sep 2025 and Aug 2026, on Larimer County's own sale records.",
+    "kb": 20,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-laporte-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 112,
+    "cap": "Laporte · 112 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Laporte shaded by how many homes in each half-kilometre square have a large lawn: 112 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Laporte: 112 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 21,
+    "built": "20261030"
+   }
+  },
+  "grand-junction": {
+   "name": "Grand Junction",
+   "keys": [
+    "g2-grand-junction"
+   ],
+   "homes": 17075,
+   "moved": {
+    "f": "moved-grand-junction-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 765,
+    "cap": "Grand Junction · 765 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Mesa County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Grand Junction shaded by how many homes sold in each half-kilometre square: 765 homes sold between Sep 2025 and Aug 2026 (Mesa County records). No single home is shown.",
+    "text": "Grand Junction: 765 homes sold between Sep 2025 and Aug 2026, on Mesa County's own sale records.",
+    "kb": 34,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-grand-junction-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 2529,
+    "cap": "Grand Junction · 2,529 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Grand Junction shaded by how many homes in each half-kilometre square have a large lawn: 2,529 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Grand Junction: 2,529 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 34,
+    "built": "20261030"
+   }
+  },
+  "clifton": {
+   "name": "Clifton",
+   "keys": [
+    "g2-clifton"
+   ],
+   "homes": 4348,
+   "moved": {
+    "f": "moved-clifton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 183,
+    "cap": "Clifton · 183 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Mesa County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Clifton shaded by how many homes sold in each half-kilometre square: 183 homes sold between Sep 2025 and Aug 2026 (Mesa County records). No single home is shown.",
+    "text": "Clifton: 183 homes sold between Sep 2025 and Aug 2026, on Mesa County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-clifton-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 169,
+    "cap": "Clifton · 169 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Clifton shaded by how many homes in each half-kilometre square have a large lawn: 169 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Clifton: 169 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "fruita": {
+   "name": "Fruita",
+   "keys": [
+    "g2-fruita"
+   ],
+   "homes": 4101,
+   "hail": {
+    "f": "hail-fruita-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 16,
+    "cap": "Fruita · 16 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Fruita with this year’s radar hail paths shaded by hail size: 16 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Fruita this year: 16 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 25,
+    "built": "20261030",
+    "first": "2026-07-29",
+    "last": "2026-07-29",
+    "through": "2026-10-28"
+   },
+   "moved": {
+    "f": "moved-fruita-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 185,
+    "cap": "Fruita · 185 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Mesa County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fruita shaded by how many homes sold in each half-kilometre square: 185 homes sold between Sep 2025 and Aug 2026 (Mesa County records). No single home is shown.",
+    "text": "Fruita: 185 homes sold between Sep 2025 and Aug 2026, on Mesa County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-fruita-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 271,
+    "cap": "Fruita · 271 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fruita shaded by how many homes in each half-kilometre square have a large lawn: 271 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Fruita: 271 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "redlands": {
+   "name": "Redlands",
+   "keys": [
+    "g2-redlands"
+   ],
+   "homes": 2976,
+   "moved": {
+    "f": "moved-redlands-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 95,
+    "cap": "Redlands · 95 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Mesa County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Redlands shaded by how many homes sold in each half-kilometre square: 95 homes sold between Sep 2025 and Aug 2026 (Mesa County records). No single home is shown.",
+    "text": "Redlands: 95 homes sold between Sep 2025 and Aug 2026, on Mesa County's own sale records.",
+    "kb": 25,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-redlands-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 1386,
+    "cap": "Redlands · 1,386 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Redlands shaded by how many homes in each half-kilometre square have a large lawn: 1,386 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Redlands: 1,386 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 26,
+    "built": "20261030"
+   }
+  },
+  "fruitvale": {
+   "name": "Fruitvale",
+   "keys": [
+    "g2-fruitvale"
+   ],
+   "homes": 2820,
+   "moved": {
+    "f": "moved-fruitvale-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 112,
+    "cap": "Fruitvale · 112 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Mesa County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fruitvale shaded by how many homes sold in each half-kilometre square: 112 homes sold between Sep 2025 and Aug 2026 (Mesa County records). No single home is shown.",
+    "text": "Fruitvale: 112 homes sold between Sep 2025 and Aug 2026, on Mesa County's own sale records.",
+    "kb": 23,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-fruitvale-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 289,
+    "cap": "Fruitvale · 289 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Fruitvale shaded by how many homes in each half-kilometre square have a large lawn: 289 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Fruitvale: 289 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 23,
+    "built": "20261030"
+   }
+  },
+  "orchard-mesa": {
+   "name": "Orchard Mesa",
+   "keys": [
+    "g2-orchard-mesa"
+   ],
+   "homes": 1991,
+   "moved": {
+    "f": "moved-orchard-mesa-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 83,
+    "cap": "Orchard Mesa · 83 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Mesa County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Orchard Mesa shaded by how many homes sold in each half-kilometre square: 83 homes sold between Sep 2025 and Aug 2026 (Mesa County records). No single home is shown.",
+    "text": "Orchard Mesa: 83 homes sold between Sep 2025 and Aug 2026, on Mesa County's own sale records.",
+    "kb": 22,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-orchard-mesa-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 570,
+    "cap": "Orchard Mesa · 570 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Orchard Mesa shaded by how many homes in each half-kilometre square have a large lawn: 570 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Orchard Mesa: 570 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 22,
+    "built": "20261030"
+   }
+  },
+  "palisade": {
+   "name": "Palisade",
+   "keys": [
+    "g2-palisade"
+   ],
+   "homes": 472,
+   "moved": {
+    "f": "moved-palisade-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 20,
+    "cap": "Palisade · 20 homes sold, Sep 2025 to Aug 2026",
+    "sub": "Market sales on the county’s own record (Mesa County, file of Oct 2026). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Palisade shaded by how many homes sold in each half-kilometre square: 20 homes sold between Sep 2025 and Aug 2026 (Mesa County records). No single home is shown.",
+    "text": "Palisade: 20 homes sold between Sep 2025 and Aug 2026, on Mesa County's own sale records.",
+    "kb": 23,
+    "built": "20261030"
+   },
+   "lawn": {
+    "f": "lawn-palisade-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 31,
+    "cap": "Palisade · 31 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Palisade shaded by how many homes in each half-kilometre square have a large lawn: 31 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Palisade: 31 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 24,
+    "built": "20261030"
+   }
+  },
+  "pueblo": {
+   "name": "Pueblo",
+   "keys": [
+    "g2-pueblo"
+   ],
+   "homes": 26333,
+   "hail": {
+    "f": "hail-pueblo-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 6876,
+    "cap": "Pueblo · 6,876 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Pueblo with this year’s radar hail paths shaded by hail size: 6,876 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Pueblo this year: 6,876 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 32,
+    "built": "20261030",
+    "first": "2026-06-23",
+    "last": "2026-08-19",
+    "through": "2026-10-28"
+   },
+   "lawn": {
+    "f": "lawn-pueblo-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 189,
+    "cap": "Pueblo · 189 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Pueblo shaded by how many homes in each half-kilometre square have a large lawn: 189 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Pueblo: 189 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 33,
+    "built": "20261030"
+   }
+  },
+  "pueblo-west": {
+   "name": "Pueblo West",
+   "keys": [
+    "g2-pueblo-west"
+   ],
+   "homes": 10606,
+   "hail": {
+    "f": "hail-pueblo-west-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 963,
+    "cap": "Pueblo West · 963 homes in this year’s hail paths (1 in or larger)",
+    "sub": "Radar-estimated hail size, NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026. Streets: U.S. Census Bureau TIGER/Line.",
+    "alt": "Map of Pueblo West with this year’s radar hail paths shaded by hail size: 963 homes sat under hail of 1 inch or larger (NOAA radar estimate, 1 Jan to 28 Oct 2026). No single home is shown.",
+    "text": "Pueblo West this year: 963 homes were under radar-estimated hail of 1 inch or larger (NOAA/NSSL MRMS, 1 Jan to 28 Oct 2026).",
+    "kb": 28,
+    "built": "20261030",
+    "first": "2026-08-19",
+    "last": "2026-08-20",
+    "through": "2026-10-28"
+   },
+   "lawn": {
+    "f": "lawn-pueblo-west-20261030.png",
+    "w": 840,
+    "h": 588,
+    "n": 639,
+    "cap": "Pueblo West · 639 homes with a lawn of 5,000 sq ft or more",
+    "sub": "Lawn size estimated from USDA NAIP 2023 aerial photos (our measurement). Streets: U.S. Census TIGER/Line.",
+    "alt": "Map of Pueblo West shaded by how many homes in each half-kilometre square have a large lawn: 639 homes with an estimated lawn of 5,000 square feet or more. No single home is shown.",
+    "text": "Pueblo West: 639 homes with an estimated lawn of 5,000 sq ft or more, measured from 2023 aerial photos.",
+    "kb": 29,
+    "built": "20261030"
+   }
+  }
+ },
+ "note": "Built by traverse/prospect-desk/tools/build-maps.mjs: one picture per city and trade family (hail, moved, lawn). desk.php reads this.",
+ "built": "2026-10-30"
+}

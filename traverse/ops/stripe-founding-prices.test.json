@@ -1,0 +1,26 @@
+{
+  "solo": {
+    "month": "price_1UW8uQDLDMv66YmBU8lKXSvA",
+    "year": "price_1UW8uRDLDMv66YmBQQXDRjHn"
+  },
+  "crew": {
+    "month": "price_1UW8uRDLDMv66YmBZ0izGe6B",
+    "year": "price_1UW8uRDLDMv66YmBPxloX1cZ"
+  },
+  "team": {
+    "month": "price_1UW8uRDLDMv66YmBE99DfKVC",
+    "year": "price_1UW8uSDLDMv66YmBr8otho61"
+  },
+  "crew_extra": {
+    "month": "price_1UW8uSDLDMv66YmBT9pxpeb6",
+    "year": "price_1UW8uSDLDMv66YmBWwlTcTqq"
+  },
+  "team_extra": {
+    "month": "price_1UW8uTDLDMv66YmBqlolfKyA",
+    "year": "price_1UW8uTDLDMv66YmBwppUxo7G"
+  },
+  "addon": {
+    "month": "price_1UW8uTDLDMv66YmBJvdlQmww",
+    "year": "price_1UW8uTDLDMv66YmBpYM8KChe"
+  }
+}

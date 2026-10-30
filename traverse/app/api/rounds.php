@@ -128,6 +128,7 @@ function company(): array {
         if (isset($loc['review']) && is_string($loc['review'])) $f['links'] = array_merge(is_array($f['links'] ?? null) ? $f['links'] : [], ['googleReview' => $loc['review']]);
     }
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
+    if (is_array($f) && is_array($loc) && ($lu = logoInfo($loc))) $c['logoUp'] = logoPublic($lu);   /* the logo the admin uploaded (2026-10-29); no key at all without one */
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
     $c['card'] = array_replace($def['card'], is_array($c['card']) ? $c['card'] : []);
     foreach (['services', 'extraWork'] as $k) $c[$k] = array_values(array_filter((array) $c[$k], fn($p) => is_array($p) && count($p) >= 2 && preg_match('/^[a-z0-9_-]{1,30}$/D', (string) $p[0])));
@@ -202,7 +203,7 @@ const AGREEMENT_VERSION = '2026-10-29';   /* the Subscription Agreement v3 (admi
 const TERMS_LINKS = ['terms' => 'https://traverseplatforms.com/terms-of-use/', 'privacy' => 'https://traverseplatforms.com/privacy/', 'agreement' => 'https://traverseplatforms.com/terms/'];
 /* who sees the card's trade parts (2026-10-08): admins, and everyone signed in where the company sets features.crew (the editions,
    and Sixfold for its yard parts). These began as an admin-only preview inside Sixfold. Office tools (accounts, JobNimbus) stay admin. */
-function crewSees(string $role): bool { return $role === 'admin' || ($role !== '' && feature('crew')); }
+function crewSees(string $role): bool { return $role === 'admin' || ($role !== '' && feature('crew') && !permOff('doors.scores')); }   /* + the role's "See scores and trade facts" (2026-10-29) */
 /* ---- hail (2026-10-04): the radar estimate per door, built offline by operations/door-territory/hail/build-hail.mjs.
    Admin only, and only where the company turns it on (features.hail). Matthew is evaluating it for roofing. */
 function hailOn(string $role): bool { return crewSees($role) && feature('hail'); }
@@ -1173,7 +1174,7 @@ const BOARD_OPEN = false;
    assigned, everyone still sees every neighbourhood as before. false hides the assignments from the crew again. */
 const TERRITORIES_OPEN = true;
 const ODDS_MIN = 150;   /* SX-54: conversations (booked + not now) across the team before the Odds sort means anything */
-function boardOpen(string $role): bool { return BOARD_OPEN || $role === 'admin' || $role === 'manager' || mgr(); }
+function boardOpen(string $role): bool { return (BOARD_OPEN || $role === 'admin' || $role === 'manager' || mgr() || permAdded('team.board')) && !permOff('team.board'); }   /* + the role's "See the leaderboard" (2026-10-29) */
 function boardHidden(string $name): bool { return (bool) preg_match('/^(claude|fable)\b/i', $name); }
 function loadAssign(string $key): array {
     $out = [];
@@ -2063,7 +2064,9 @@ if ($action === 'billinghook') {
 
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
+if ($action === 'company') logoAdopt();   /* a client install made on the server: the logo given on the welcome page, once (2026-10-29) */
 if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1, '_signAs' => 1])]);   /* the market checked (2026-10-11) */
+if ($action === 'logo') logoServe();   /* the company's uploaded logo, for the sign-in screen, its quote and signing pages and its emails (2026-10-29): before sign-in, like company */
 
 /* a session for a person on this install's codes list: the cookie, the signed-in list, and the answer the page expects
    (sign-in, and since 2026-10-12 the super admin arriving from another install) */
@@ -2966,7 +2969,13 @@ function kitPrice(array $cfg, array $m, array $picks): array {
     return [$items, $total];
 }
 /** what the customer's pages show at the top: the company's own name, phone, email and colour (never Traverse's, never Sixfold's) */
-function kitBrand(): array { $c = company(); return ['name' => (string) $c['name'], 'phone' => (string) $c['phone'], 'email' => (string) $c['email'], 'color' => (string) ($c['brand'] ?: ($c['colors']['--bar'] ?? '')), 'site' => (string) $c['site']]; }
+function kitBrand(): array {
+    $c = company(); $col = (string) ($c['brand'] ?: ($c['colors']['--bar'] ?? ''));
+    /* the company's own pages (2026-10-29): + its logo and tagline, and a colour white text reads on (a light brand colour darkened to 4.5:1, as the app's bar is) */
+    if (preg_match('/^#[0-9a-f]{6}$/i', $col) && contrastRatio(strtolower($col), '#ffffff') < 4.5) $col = brandColors(strtolower($col))['light']['--accent'];
+    return ['name' => (string) $c['name'], 'phone' => (string) $c['phone'], 'email' => (string) $c['email'], 'color' => $col, 'site' => (string) $c['site'],
+            'tagline' => (string) $c['tagline'], 'logo' => $c['logoUp'] ?? null];
+}
 /** the one-page agreement for a kit install: the work quoted, the day, the price and the deposit, then the company's terms */
 function kitAgreement(array $l): array {
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $h = $l['house'] ?? null;
@@ -3223,13 +3232,31 @@ function kitSignedMail(array $l, array $sg, ?array $t = null): array {
     $rows = implode('', array_map(fn($f) => '<tr><td style="padding:6px 12px 6px 0;color:#566476;vertical-align:top">' . $e($f[0]) . '</td><td style="padding:6px 0;font-weight:700">' . $e($f[1]) . '</td></tr>', $facts));
     $lis = implode('', array_map(fn($x) => '<li style="margin:0 0 6px">' . $e($x) . '</li>', $terms));
     $html = '<!doctype html><html><body style="margin:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;color:#15202d;font-size:15px;line-height:1.5"><div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-          . '<div style="font-size:20px;font-weight:800;color:' . $col . ';margin-bottom:14px">' . $e($name) . '</div>' . $intro
+          . mailBrandHead($B, $col) . $intro
           . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin:6px 0 14px"><div style="font-weight:800;margin-bottom:8px">What we agreed</div><table style="border-collapse:collapse;font-size:15px">' . $rows . '</table></div>'
           . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;margin-bottom:8px">The details</div><ol style="margin:0;padding-left:20px;font-size:15px">' . $lis . '</ol></div>'
           . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin-bottom:18px"><div style="font-size:22px;font-style:italic;font-weight:700">' . $e($sg['name']) . '</div><div style="color:#566476;font-size:14px;margin-top:4px">Signed electronically on ' . $e($when) . '.</div></div>'
           . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:' . $col . ';color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">View or print your agreement</a></p>'
-          . '</div></body></html>';
+          . mailBrandFoot($B) . '</div></body></html>';
     return [$subject, $text, $html];
+}
+/* the company's letterhead on the emails the app writes for an edition (2026-10-29): its uploaded logo (PNG or JPG: email apps do not show
+   SVG, so an SVG logo leaves the name alone), its name in its colour, and at the foot its phone, email and website */
+function mailBrandHead(array $B, string $col): string {
+    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); $img = logoImgTag((string) $B['name'], 48);
+    return ($img !== '' ? '<div style="margin:0 0 8px">' . $img . '</div>' : '') . '<div style="font-size:20px;font-weight:800;color:' . $col . ';margin-bottom:14px">' . $e($B['name']) . '</div>';
+}
+/** a message's HTML (paragraphs) inside the letterhead */
+function mailBrandWrap(array $B, string $inner): string {
+    $col = preg_match('/^#[0-9a-f]{6}$/i', (string) $B['color']) ? (string) $B['color'] : '#13294b';
+    return '<!doctype html><html><body style="margin:0;font-family:Arial,Helvetica,sans-serif;color:#15202d;font-size:15px;line-height:1.5"><div style="max-width:600px;padding:20px 18px">'
+         . mailBrandHead($B, $col) . $inner . mailBrandFoot($B) . '</div></body></html>';
+}
+function mailBrandFoot(array $B): string {
+    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+    $site = (string) ($B['site'] ?? ''); $href = $site !== '' ? (preg_match('#^https?://#i', $site) ? $site : 'https://' . $site) : '';
+    $bits = array_filter([$e($B['name'] ?? ''), $e($B['phone'] ?? ''), ($B['email'] ?? '') !== '' ? '<a href="mailto:' . $e($B['email']) . '" style="color:#566476">' . $e($B['email']) . '</a>' : '', $href !== '' ? '<a href="' . $e($href) . '" style="color:#566476">' . $e(preg_replace('#^https?://#i', '', $site)) . '</a>' : '']);
+    return '<div style="border-top:1px solid #dce2ea;margin-top:18px;padding-top:12px;color:#566476;font-size:13px">' . implode(' &middot; ', $bits) . '</div>';
 }
 /** the receipt email for an edition: the company's words, then the receipt (always) */
 function kitReceiptMail(array $j, array $l, ?array $t = null): array {
@@ -3632,7 +3659,7 @@ const ED_TECH_NO = ['myleads', 'leadstatus', 'leadfollow', 'leadassign', 'leadre
 /** the role's sub-key in an edition ('' = admin, manager, office or a plain crew account; 'setter' or 'tech') */
 function edSub(): string { global $sub; return edition() ? (string) ($sub ?? '') : ''; }
 /** does this account see doors? Office and tech accounts only with the Doors switch (Accounts); everyone else always */
-function edDoorsOk(): bool { global $role, $session; return !edition() || !($role === 'office' || edSub() === 'tech') || acctFlag('doors', (string) ($session['c'] ?? '')); }
+function edDoorsOk(): bool { global $role, $session; return !edition() || (!permOff('doors.see') && (!($role === 'office' || edSub() === 'tech') || acctFlag('doors', (string) ($session['c'] ?? '')))); }   /* + the role's "See doors" (2026-10-29): the switch only adds what the role allows */
 /** a sales rep (an edition's crew account, not a setter or tech) pricing one of their own leads with the quote kit */
 function edRepLead(string $id): bool {
     global $role; if (!edition() || $role !== 'crew' || edSub() !== '' || $id === '') return false;
@@ -3647,42 +3674,209 @@ function repSendOn(): bool { global $acct; return edition() && feature('walkdesk
 /** a sales rep: an edition's crew account that is not a setter or a technician */
 function edRep(): bool { global $role; return edition() && $role === 'crew' && edSub() === ''; }
 /** a sales rep sending the agreement and deposit form for one of their own leads, with the company switch on */
-function edRepSend(string $id): bool { return repSendOn() && edRepLead($id); }
+function edRepSend(string $id): bool { return (repSendOn() || permVia() === 'agree.send') && edRepLead($id); }   /* + a role the admin gave "Send agreements" (2026-10-29) */
 function edGate(string $a): void {
     global $role, $body;
     $sub = edSub();
     $no = function (string $why) { fail($why, 403); };
-    if (!edDoorsOk() && (in_array($a, ED_DOOR_LISTS, true) || ($sub === 'tech' && in_array($a, ED_DOOR_ONE, true)))) $no('Doors are switched off for this account. An admin turns them on in Accounts.');
+    /* + the single-door looks for every role but office once doors are off (a tech's switch, or the role's "See doors" turned off, 2026-10-29) */
+    if (!edDoorsOk() && (in_array($a, ED_DOOR_LISTS, true) || ($role !== 'office' && in_array($a, ED_DOOR_ONE, true)))) $no('Doors are switched off for this account. An admin turns them on in Accounts.');
+    $lift = permLiftAct($a);   /* an admin-only screen the admin has given this role (Roles and permissions, 2026-10-29) */
     if ($sub === 'setter') {
-        if (in_array($a, ED_SETTER_NO, true)) $no('Prices, quotes, customers and payments are not part of this role. The sales rep or the office takes it from here.');
-        if ($a === 'mark' && !empty($body['qs'])) $no('A setter books the appointment; the quote is the sales rep\'s. Mark it Booked.');
-        if ($a === 'leadstatus' && in_array((string) ($body['status'] ?? ''), ['quoted', 'won'], true)) $no('Quoted and Won are the sales rep\'s.');
+        if (!$lift && in_array($a, ED_SETTER_NO, true)) $no('Prices, quotes, customers and payments are not part of this role. The sales rep or the office takes it from here.');
+        if ($a === 'mark' && !empty($body['qs']) && !permAdded('leads.close')) $no('A setter books the appointment; the quote is the sales rep\'s. Mark it Booked.');
+        if ($a === 'leadstatus' && in_array((string) ($body['status'] ?? ''), ['quoted', 'won'], true) && !permAdded('leads.close')) $no('Quoted and Won are the sales rep\'s.');
     }
-    if ($sub === 'tech' && in_array($a, ED_TECH_NO, true)) $no('Leads, quotes and customers are not part of this role.');
+    if ($sub === 'tech' && !$lift && in_array($a, ED_TECH_NO, true)) $no('Leads, quotes and customers are not part of this role.');
     /* the team tools: a manager, or an office account that runs a team (as before); never a setter or tech */
     if ($sub !== '' && $role === 'crew' && in_array($a, ['teamsave', 'teammember', 'accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], true)) $no('Not allowed.');
 }
-if (!defined('SIXFOLD_CLI') && $session && edition()) edGate($action);
+
+/* ==== ROLES AND PERMISSIONS (2026-10-29, Matthew: "build out all the permissions, we never know what type of business or company
+ * infrastructure is signing up") ==========================================================================================================
+ * Editions only; Sixfold never reads any of it. In Accounts an admin opens a role and turns its permissions on and off; saved per install
+ * in role-perms.json beside the data (only what differs from the defaults; in the app's backup and the nightly one). The admin role is
+ * fixed: everything. Each permission's default for a role is exactly what that role did before this list existed, so with nothing saved
+ * nothing changes. The server reads a permission in one of three ways:
+ *   - turned OFF where the role had it by default (permOff): the actions in 'acts' answer 403 why 'perm' (permGate), or the check that
+ *     needs it reads it (doors: edDoorsOk; trade facts: crewSees; the leaderboard: boardOpen; payments: canTakePay; prices on leads:
+ *     myleads; price changes and discounts: kitquote; jobs: teamInfo's walker);
+ *   - turned ON where the role did not have it (permAdded): a request for one of its actions is answered as the role that has it ('as':
+ *     rep = a sales rep on their own leads, office = the office, manager = a manager over their own team), for that one request and that
+ *     action only, so it gets exactly that role's screen and checks (permElevate). An 'admin' permission is read in the admin-only handler
+ *     instead (adminOr); nobody is ever made an admin;
+ *   - the person switches in Accounts (Knocks doors, Takes payments, Does jobs, Runs a team) only add what the role allows: the role's
+ *     permission is the ceiling and the person's switch is the key. With the permission off the switch does nothing (Accounts hides it);
+ *     with it on the switch works as before. 'sw' names the switch a role's default goes by.
+ * Never toggles: billing, accounts management (roles, PINs, every account), backups and the people switches themselves (the admin's);
+ * door list downloads (Traverse's own sign-in); a setter never takes a payment or a deposit (paysset, ED_SETTER_NO). The defaults, in the
+ * order manager, office, sales rep, setter, technician ('1' yes, '0' no, '-' not for that role, 'r' the company switch for sales reps'
+ * agreements in Accounts), are the 'def' strings below. */
+function permRoles(): array { return ['manager', 'office', 'crew', 'setter', 'tech']; }
+function permGroups(): array { return ['doors' => 'Doors', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }
+function permCat(): array {
+    static $c = null; if ($c !== null) return $c;
+    $other = function (): bool { global $me; $w = trim((string) ($_REQUEST['who'] ?? '')); return $w !== '' && $w !== $me; };
+    $c = [
+        'doors.see' => ['g' => 'doors', 'l' => 'See doors and maps', 's' => 'doors', 'd' => 'Door lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
+        'doors.mark' => ['g' => 'doors', 'l' => 'Mark doors', 's' => 'marks doors', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
+        'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best doors, door scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
+        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out doors and territories', 's' => 'hands out doors', 'd' => 'The Plan: give neighbourhoods and doors to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
+        'leads.own' => ['g' => 'leads', 'l' => 'Work their own leads', 's' => 'own leads', 'd' => 'Their own leads: stages, follow-ups, notes and call tries.', 'def' => '1-110', 'acts' => ['myleads', 'leadstatus', 'leadfollow', 'leadtry', 'leadoutcome', 'leadrecall', 'leadunreach', 'leadremove'], 'as' => 'rep'],
+        'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds door leads', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
+        'leads.hand' => ['g' => 'leads', 'l' => 'Add leads by hand', 's' => 'adds leads by hand', 'd' => 'Type in a lead that called, wrote or came from anywhere else.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadadd'], 'as' => 'office'],
+        'leads.import' => ['g' => 'leads', 'l' => 'Import a lead list', 's' => 'imports lead lists', 'd' => 'Bring in a list of leads from a spreadsheet.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadimport'], 'as' => 'office'],
+        'leads.team' => ['g' => 'leads', 'l' => 'See their team\'s leads', 's' => 'team\'s leads', 'd' => 'The leads of the people on their team, and the ones nobody has yet.', 'def' => '1-000', 'acts' => ['leads'], 'cond' => fn(string $a): bool => $a === 'myleads' && $other(), 'as' => 'manager'],
+        'leads.all' => ['g' => 'leads', 'l' => 'See every lead', 's' => 'every lead', 'd' => 'The whole Pipeline: everyone\'s leads.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leads'], 'as' => 'office'],
+        'leads.assign' => ['g' => 'leads', 'l' => 'Hand leads to others', 's' => 'hands out leads', 'd' => 'Give a lead to someone else (a manager: within their team).', 'def' => '11000', 'acts' => ['leadassign'], 'as' => 'manager'],
+        'leads.close' => ['g' => 'leads', 'l' => 'Mark leads quoted and won', 's' => 'marks quoted and won', 'd' => 'Move a lead to Quoted or Won, and log a quote at the door.', 'def' => '11101', 'eff' => true,
+            'cond' => function (string $a): bool { global $body; return ($a === 'leadstatus' && in_array((string) ($body['status'] ?? ''), ['quoted', 'won'], true)) || ($a === 'mark' && !empty($body['qs'])); }],
+        'quote.make' => ['g' => 'quotes', 'l' => 'Make quotes', 's' => 'quotes', 'd' => 'Price their own leads with the quote kit and save the quote.', 'def' => '01100', 'need' => 'kit', 'acts' => ['kitquote'], 'as' => 'rep'],
+        'quote.prices' => ['g' => 'quotes', 'l' => 'See prices', 's' => 'sees prices', 'd' => 'The quote kit\'s price list, and the money on their leads.', 'def' => '01100', 'need' => 'kit', 'acts' => ['kit'], 'as' => 'rep'],
+        'quote.adjust' => ['g' => 'quotes', 'l' => 'Change the price on a quote', 's' => 'changes prices', 'd' => 'Type a higher total than the price list gives.', 'def' => '11111', 'need' => 'kit', 'eff' => true],
+        'quote.discount' => ['g' => 'quotes', 'l' => 'Give discounts', 's' => 'discounts', 'd' => 'Type a lower total than the price list gives.', 'def' => '11111', 'need' => 'kit', 'eff' => true],
+        'agree.send' => ['g' => 'pay', 'l' => 'Send agreements and take deposits', 's' => 'agreements and deposits', 'd' => 'Send the agreement to sign and take the deposit, on their own leads.', 'def' => '01r-0', 'need' => 'kit', 'acts' => ['signsend'], 'gacts' => ['jobs'], 'as' => 'rep'],
+        'pay.take' => ['g' => 'pay', 'l' => 'Take payments', 's' => 'takes payments', 'd' => 'Charge the card on file or send a pay link for what a job still owes.', 'def' => '111-1', 'need' => 'walkdesk', 'sw' => ['manager' => 'pays', 'crew' => 'pays', 'tech' => 'pays']],
+        'pay.paid' => ['g' => 'pay', 'l' => 'Mark jobs paid', 's' => 'marks jobs paid', 'd' => 'Record money taken by hand: cash, check, part payments.', 'def' => '010-0', 'need' => 'walkdesk', 'acts' => ['jobpaid', 'jobpart'], 'as' => 'office'],
+        'pay.page' => ['g' => 'pay', 'l' => 'See the Payments page', 's' => 'Payments page', 'd' => 'Every payment taken, in one list.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['payments']],
+        'jobs.own' => ['g' => 'jobs', 'l' => 'Do jobs', 's' => 'does jobs', 'd' => 'Their own jobs: the schedule, notes, photos and Done.', 'def' => '11101', 'need' => 'walkdesk', 'sw' => ['manager' => 'walker', 'office' => 'walker', 'crew' => 'walker'],
+            'acts' => ['myjobs', 'myschedule', 'jobdone', 'jobwork', 'jobcnote', 'jobphoto', 'jobphotodel', 'crewwalk', 'mywalks', 'walkdone'], 'as' => 'rep'],
+        'jobs.all' => ['g' => 'jobs', 'l' => 'See the jobs schedule', 's' => 'jobs schedule', 'd' => 'Everyone\'s jobs on the Jobs board and the schedule.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['jobs', 'schedview'], 'as' => 'office'],
+        'jobs.book' => ['g' => 'jobs', 'l' => 'Book and move jobs', 's' => 'books jobs', 'd' => 'Put jobs on the board, move them, and ask customers to pick a day.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['jobsave', 'jobday', 'tosched', 'fuconfirm'], 'as' => 'office'],
+        'jobs.block' => ['g' => 'jobs', 'l' => 'Block days off', 's' => 'blocks days off', 'd' => 'Mark the days a crew is not working.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['jobblockadd', 'jobblockdel'], 'as' => 'office'],
+        'cust.see' => ['g' => 'cust', 'l' => 'See customers', 's' => 'customers', 'd' => 'The customer list, each customer\'s jobs and papers, and saved plans.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['customers', 'custjob', 'custdoc', 'plantemplates'], 'as' => 'office'],
+        'cust.edit' => ['g' => 'cust', 'l' => 'Edit customers', 's' => 'edits customers', 'd' => 'Change a customer, add visits, make a customer from a lead.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['customersave', 'customerfrom', 'visitsave', 'custdocadd', 'plantemplatesave'], 'as' => 'office'],
+        'cust.import' => ['g' => 'cust', 'l' => 'Import customers', 's' => 'imports customers', 'd' => 'Bring in customers, leads and past work from a spreadsheet.', 'def' => '00000', 'need' => 'imp', 'admin' => ['importcheck', 'importrun', 'imports', 'importundo', 'customerimport']],
+        'cust.export' => ['g' => 'cust', 'l' => 'Download customers and payments', 's' => 'downloads customers', 'd' => 'The customer and payment lists as spreadsheets, and the hand-off to another CRM.', 'def' => '00000', 'admin' => ['customersexport', 'paymentsexport', 'crmexport']],
+        'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Doors, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
+        'team.stats' => ['g' => 'team', 'l' => 'See their team\'s numbers', 's' => 'team\'s numbers', 'd' => 'The day-by-day numbers of the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'cond' => fn(string $a): bool => $a === 'stats' && ($other() || !empty($_REQUEST['team'])), 'gacts' => ['stats'], 'as' => 'manager'],
+        'team.statspage' => ['g' => 'team', 'l' => 'See the Stats page', 's' => 'Stats page', 'd' => 'The company\'s leads, close rate, ads and jobs.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['statspage'], 'as' => 'office'],
+        'team.goals' => ['g' => 'team', 'l' => 'Set their team\'s goals', 's' => 'sets team goals', 'd' => 'The daily goals for the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['goals'], 'as' => 'manager'],
+        'team.run' => ['g' => 'team', 'l' => 'Run their team\'s sign-ins', 's' => 'team sign-ins', 'd' => 'Add people to their team, give new codes, sign them out, remove them.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], 'as' => 'manager'],
+        'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
+        'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and colour.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
+        'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'payset', 'squareoauth', 'payways', 'paywaysset']],
+        'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply']],
+    ];
+    return $c;
+}
+/** never toggled, said under the list in Accounts */
+function permFixed(): array {
+    return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Door list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
+}
+function permFile(): string { return DATA_DIR . '/role-perms.json'; }
+function permSaved(bool $fresh = false): array {
+    static $s = null;
+    if ($s === null || $fresh) { $j = json_decode((string) @file_get_contents(permFile()), true); $s = is_array($j) ? $j : []; }
+    return $s;
+}
+function permNeed(array $p): bool {
+    $n = (string) ($p['need'] ?? '');
+    return $n === '' || ($n === 'walkdesk' ? feature('walkdesk') : ($n === 'kit' ? kitOn() : ($n === 'imp' ? impOn() : ($n === 'company' ? feature('company') : false))));
+}
+/** the roles this install has besides the admin (office only with the jobs board) */
+function permRolesHere(): array { return array_values(array_filter(permRoles(), fn($r) => $r !== 'office' || feature('walkdesk'))); }
+/** a role's default: true, false, or null when the permission is not for that role (or not in this install) */
+function permDef(string $k, string $r): ?bool {
+    $p = permCat()[$k] ?? null; $i = array_search($r, permRoles(), true);
+    if (!$p || $i === false || !edition() || !permNeed($p) || !in_array($r, permRolesHere(), true)) return null;
+    $ch = $p['def'][$i]; return $ch === '-' ? null : ($ch === 'r' || $ch === '1');
+}
+/** a role's value: what the admin saved, else the default; the sales reps' agreements are the company switch (repSendOn) */
+function permVal(string $k, string $r): ?bool {
+    $d = permDef($k, $r); if ($d === null) return null;
+    if (permCat()[$k]['def'][array_search($r, permRoles(), true)] === 'r') return repSendOn();
+    $s = permSaved()[$r][$k] ?? null; return is_bool($s) ? $s : $d;
+}
+/** whose role the permissions are read for: '' = none (Sixfold, the admin, the super admin); the account's own role even while one
+    request is answered as another (permElevate) */
+function permWho(): string {
+    global $role, $permWho0;
+    if (isset($permWho0)) return $permWho0;
+    if (!edition() || empty($role)) return '';
+    $r = $role === 'crew' && edSub() !== '' ? edSub() : (string) $role;
+    return in_array($r, permRoles(), true) ? $r : '';
+}
+function permOn(string $k): bool { $r = permWho(); return $r === '' ? true : (bool) permVal($k, $r); }
+/** the role had it by default and an admin turned it off */
+function permOff(string $k): bool { $r = permWho(); return $r !== '' && permOffFor($k, $r); }
+function permOffFor(string $k, string $r): bool { return edition() && permDef($k, $r) === true && permVal($k, $r) === false; }
+/** the role did not have it by default and an admin turned it on */
+function permAdded(string $k): bool { $r = permWho(); return $r !== '' && permAddedFor($k, $r); }
+function permAddedFor(string $k, string $r): bool { return edition() && permDef($k, $r) === false && permVal($k, $r) === true; }
+/** the permission this request is answered under as another role ('' = its own) */
+function permVia(): string { global $permVia0; return (string) ($permVia0 ?? ''); }
+/** an admin-only action this role has been given */
+function permLiftAct(string $a): bool { foreach (permCat() as $k => $p) if (in_array($a, $p['admin'] ?? [], true) && permAdded($k)) return true; return false; }
+/** the admin, or a role the admin gave this admin-only permission */
+function adminOr(string $k): bool { global $role; return $role === 'admin' || permAdded($k); }
+/** the effective permissions for the page: [all, added, off] for this account's role ([] for the admin) */
+function permMine(?string $r = null): array {
+    $r = $r ?? permWho(); if (!edition() || !in_array($r, permRoles(), true)) return [];
+    $all = []; $add = []; $off = [];
+    foreach (permCat() as $k => $p) { $v = permVal($k, $r); if ($v === null) continue; $all[$k] = $v; if (permAddedFor($k, $r)) $add[] = $k; if (permOffFor($k, $r)) $off[] = $k; }
+    return ['perms' => $all, 'permAdded' => $add, 'permOff' => $off];
+}
+/** a permission the role was given: this one request is answered as the role that has it (office first, then manager, then sales rep) */
+function permElevate(string $a): void {
+    global $role, $sub, $permWho0, $permVia0;
+    $who = permWho(); if ($who === '') return;
+    foreach (['office', 'manager', 'rep'] as $as) foreach (permCat() as $k => $p) {
+        if (($p['as'] ?? '') !== $as || !in_array($a, array_merge($p['acts'] ?? [], $p['gacts'] ?? []), true) || !permAdded($k)) continue;
+        if ($as === 'office' && !feature('walkdesk')) continue;
+        $permWho0 = $who; $permVia0 = $k;
+        $role = $as === 'rep' ? 'crew' : $as; $sub = '';
+        return;
+    }
+}
+/** a permission the admin turned off for this role: its actions are refused */
+function permGate(string $a): void {
+    $who = permWho(); if ($who === '') return;
+    $i = array_search($who, permRoles(), true); $via = permVia();
+    foreach (permCat() as $k => $p) {
+        if (($p['def'][$i] ?? '') === 'r') continue;   /* the sales reps' agreements: repSendOn() already answers, as before */
+        if ($via !== '' && empty($p['eff'])) continue;   /* answered as the role that has it */
+        if (!(in_array($a, $p['acts'] ?? [], true) || (isset($p['cond']) && ($p['cond'])($a)))) continue;
+        if (!empty($p['eff']) ? !permOn($k) : permOff($k))
+            out(['ok' => false, 'why' => 'perm', 'perm' => $k, 'error' => 'Not part of your role here (' . $p['l'] . '). An admin sets what each role can do in Accounts.'], 403);
+    }
+}
+if (!defined('SIXFOLD_CLI') && $session && edition()) { permElevate($action); edGate($action); permGate($action); }
 
 /* ==== SETUP MODE AND THE PAST-DUE LOCK (2026-10-29, Matthew: "BEFORE PAYMENT ... the install is in setup mode"; "lock it in 3 if they
  * reach out ill work with them") ======================================================================================================
  * Editions with billing on and Stripe set up, never an install whose company.json has features.billexempt (Traverse's own five editions),
  * never the super admin. Where the install stands is billingLockState() in billing.php: before payment and until the super admin presses
- * "Release to client" it is being set up; past due for 3 days, or cancelled, it is locked for payment. While it is either:
+ * "Release to client" it is being set up; past due for 3 days, or cancelled, it is locked for payment.
+ * Being set up (before release):
  *   - the client's admin reaches only what gets the company ready or pays: Billing, Company, Setup (Email, Payments, prices, Import, Your
  *     costs), Accounts, their profile and alerts (BILL_ADMIN_OK). Doors, maps, the Plan, territories, the house lookup, storm and hail lists,
  *     search, the pipeline, customers, jobs and stats answer 403 why 'locked': the server keeps them shut, the page only follows.
  *   - everyone else (manager, office, sales rep, setter, tech) signs in, but only 'me' and signing out answer; the page shows "being set
- *     up" or "needs attention".
- *   - previewing a role (X-View-As 'role:...') is answered as that role in the install's current state; the super admin himself is open.
+ *     up".
+ * Locked for payment (narrowed 2026-10-29, Matthew: "The lock if they dont pay should only pertain to stuff we add, i dont want to lock them
+ * out of their pipeline or customers and such"): only Traverse's data layer shuts (BILL_DATA_SHUT: door lists and maps, towns, streets, the
+ * house lookup and door search, the Plan and territories, door assignments, storm, hail and weather lists and alerts, the trade facts,
+ * lawn and roof data, the Sample door, door stats and the leaderboard). Everything that is the company's own stays open for everyone:
+ * pipeline and leads, customers, jobs and schedule, quotes and agreements, accounts, settings, their stats on leads and jobs, imports and
+ * downloads, email and payments setup. The door screens say "Door data is paused: your company's account needs attention."
+ * Either way, previewing a role (X-View-As 'role:...') is answered as that role in the install's current state; the super admin is open.
  * Nothing to clear when it opens: the next request reads billing.json again (Release to client, paid again, Give more time). */
-const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'billing', 'billingcheckout', 'billingportal',
+const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'logoset', 'logodel', 'billing', 'billingcheckout', 'billingportal',
     'accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'accountresend', 'acctflag', 'walkerset', 'paysset', 'repsendset',
     'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest',
     'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
-    'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear'];
+    'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
+    'perms', 'permset'];   /* + Roles and permissions, part of Accounts (2026-10-29) */
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
+/* what a lock for payment shuts: Traverse's own data, for everyone but the super admin (2026-10-29) */
+const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
+    'others', 'walkics', 'results', 'money', 'flags', 'sample', 'stats', 'board',   /* not quotes, quoted, result, roofjob: the Pipeline's door bookings are the company's own work */
+    'territories', 'terrlist', 'terrsave', 'assign', 'assignmany', 'unassignall', 'doorassign', 'planexport',
+    'stormdays', 'stormdoors', 'alerts', 'alertcalls', 'climate', 'secmap', 'seclist', 'secrates', 'pestseason', 'soil', 'firecheck', 'communities', 'parcelat',
+    'lawnmask', 'lawncheck', 'lawnfix', 'matfix', 'lawnhand', 'lawnrange', 'leadhouse', 'leadask', 'proppull', 'aroundjobs',
+    'skiptrace', 'skiplist', 'skipexport', 'skippick'];
 /** the lock in force, or null when the install is open (billingLockState() plus 'noted', the lapse already told about) */
 function billLock(): ?array {
     static $L = false;
@@ -3702,8 +3896,8 @@ function billLockInfo(?array $L, bool $admin): ?array {
 /** the lock for someone signing in with this role ('super' never) */
 function billLockFor(string $r): ?array { return $r === 'super' ? null : billLockInfo(billLock(), $r === 'admin'); }
 function billLockWords(array $L, bool $admin): string {
-    if (!$admin) return $L['lock'] === 'billing' ? 'Your company\'s account needs attention. Your admin has been told.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
-    if ($L['lock'] === 'billing') return 'The app is paused for your team until the plan is paid. Update the card in Billing and everything opens again at once.';
+    if (!$admin) return $L['lock'] === 'billing' ? 'Door data is paused: your company\'s account needs attention.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
+    if ($L['lock'] === 'billing') return 'Door data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
     return $L['phase'] === 'unpaid' ? 'Doors, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
         : 'Doors, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
 }
@@ -3716,11 +3910,11 @@ function billLockNote(array $L): void {
     if (!$first) return;
     $co = (string) company()['name'];
     $why = $L['phase'] === 'locked' && $L['pastDueSince'] ? 'past due since ' . date('j M Y', (int) $L['pastDueSince']) : 'its plan ended';
-    $r = travMail(seatNoteTo(), 'Traverse: ' . $co . ' is locked (' . $why . ')', "An install is locked for payment: its team sees \"Your company's account needs attention\" and its admin sees Billing, Setup and Accounts only.\n\n"
+    $r = travMail(seatNoteTo(), 'Traverse: ' . $co . ' is locked (' . $why . ')', "An install is locked for payment: door lists, maps and Traverse's data are paused (\"Door data is paused: your company's account needs attention\"); its pipeline, customers and jobs stay open.\n\n"
         . 'Company: ' . $co . "\nInstall: " . COOKIE . "\nWhy: " . $why . "\n\nPaying opens it at once. To work with them, open their Billing as Traverse and use Give more time.\n");
     billingLog(['what' => 'locked', 'lapse' => $L['lapse'], 'mailed' => $r['ok']]);
     foreach (acctRows($basePeople, $acct, $sessionKey) as $row) if (!$row['off'] && $row['role'] === 'admin' && !boardHidden((string) $row['name']))
-        feedAdd((string) $row['name'], 'Your team is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Update the card in Billing and everything opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
+        feedAdd((string) $row['name'], 'Door data is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Doors, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
 }
 function billGate(string $a): void {
     global $isSuper, $role;
@@ -3728,10 +3922,52 @@ function billGate(string $a): void {
     $L = billLock(); if (!$L) return;
     billLockNote($L);
     $admin = $role === 'admin';
-    if (in_array($a, $admin ? BILL_ADMIN_OK : BILL_TEAM_OK, true)) return;
+    if ($L['lock'] === 'billing' ? !in_array($a, BILL_DATA_SHUT, true) : in_array($a, $admin ? BILL_ADMIN_OK : BILL_TEAM_OK, true)) return;   /* a lock for payment: Traverse's data only (2026-10-29) */
     out(['ok' => false, 'why' => 'locked', 'lock' => billLockInfo($L, $admin), 'error' => billLockWords($L, $admin)], 403);
 }
 if (!defined('SIXFOLD_CLI') && $session && edition()) billGate($action);
+
+/* ---- Roles and permissions in Accounts (2026-10-29; see permCat above) ----
+ * 'perms': the list, grouped, with each role's default and current value (an admin, or a manager adding to their team: read only).
+ * 'permset' (admin): {role, perms: {key: true|false}} or {role, reset: 1}. Only what differs from the default is kept; the sales reps'
+ * "Send agreements and take deposits" is the company switch in the accounts file (repsendoff), the same one as the box in Accounts. */
+function permList(): array {
+    $list = [];
+    foreach (permCat() as $k => $p) {
+        if (!permNeed($p)) continue;
+        $def = []; $on = []; foreach (permRolesHere() as $r) { $def[$r] = permDef($k, $r); $on[$r] = permVal($k, $r); }
+        if (!array_filter($def, fn($v) => $v !== null)) continue;
+        $list[] = ['k' => $k, 'g' => $p['g'], 'l' => $p['l'], 's' => $p['s'], 'd' => $p['d'], 'def' => $def, 'on' => $on, 'sw' => (object) ($p['sw'] ?? []), 'admin' => isset($p['admin'])];
+    }
+    $sv = permSaved();
+    return ['ok' => true, 'roles' => permRolesHere(), 'groups' => permGroups(), 'list' => $list, 'fixed' => permFixed(), 'saved' => ['at' => (int) ($sv['_at'] ?? 0), 'by' => (string) ($sv['_by'] ?? '')]];
+}
+if ($action === 'perms' || $action === 'permset') {
+    if (!edition()) fail('Not here.', 404);
+    if ($action === 'perms') { if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403); out(permList()); }
+    if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    $r = (string) ($body['role'] ?? ''); if (!in_array($r, permRolesHere(), true)) fail('Pick a role.');
+    $want = is_array($body['perms'] ?? null) ? $body['perms'] : [];
+    $plock = @fopen(permFile() . '.lock', 'c'); if (!$plock || !flock($plock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $sv = permSaved(true); $mine = (array) ($sv[$r] ?? []); $changed = []; $rep = null;
+    if (!empty($body['reset'])) { $changed = array_keys($mine); $mine = []; if ($r === 'crew' && permDef('agree.send', 'crew') !== null && !repSendOn()) $rep = true; }
+    foreach ($want as $k => $v) {
+        $k = (string) $k; $d = permDef($k, $r); if ($d === null || !is_bool($v)) continue;
+        if (permCat()[$k]['def'][array_search($r, permRoles(), true)] === 'r') { if ($v !== repSendOn()) { $rep = $v; $changed[] = $k; } continue; }
+        if ($v === $d) { if (array_key_exists($k, $mine)) { unset($mine[$k]); $changed[] = $k; } }
+        elseif (($mine[$k] ?? null) !== $v) { $mine[$k] = $v; $changed[] = $k; }
+    }
+    if ($mine) $sv[$r] = $mine; else unset($sv[$r]);
+    $sv['_at'] = time(); $sv['_by'] = $me;
+    if (@file_put_contents(permFile(), json_encode($sv, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) === false) fail('Could not save that. Try again.', 500);
+    permSaved(true); flock($plock, LOCK_UN);
+    if ($rep !== null) {   /* the sales reps' agreements: the company switch */
+        $acctLock = @fopen(accountsFile() . '.lock', 'c');
+        if ($acctLock && flock($acctLock, LOCK_EX)) { $acct = loadAccounts(); if ($rep) unset($acct['repsendoff']); else $acct['repsendoff'] = 1; saveAccounts($acct); flock($acctLock, LOCK_UN); }
+    }
+    accountLog(['by' => $me, 'what' => 'role permissions', 'role' => $r, 'changed' => array_values(array_unique($changed)), 'reset' => !empty($body['reset'])]);
+    out(permList() + ['changed' => array_values(array_unique($changed))]);
+}
 
 /* ---- the note to Traverse when an install goes over its seats (2026-10-29, Matthew: "keep it allowed (never block), the client's admin
  * sees the warning (exists), AND Matthew gets a note") ----
@@ -3830,7 +4066,7 @@ function edSignin(array $hit, string $hitCode): array {
     $o = ['terms' => termsState($id, $r === 'super' ? 'admin' : $r, (string) ($hit[0] ?? ''), $r === 'super')] + ['repSend' => repSendOn(), 'mailFrom' => (string) (mailOwnCfg()['user'] ?? '')];   /* sales reps send agreements and take deposits: the company switch; mailFrom: emails to customers go from inside the app (2026-10-29) */
     $o['lock'] = billLockFor($r);   /* setup mode or the past-due lock (2026-10-29): the page opens on the right screen */
     if (in_array($r, ['setter', 'tech'], true)) $o += ['role' => 'crew', 'sub' => $r, 'walker' => $r === 'tech', 'pays' => $r === 'tech' && paysOn($id), 'doors' => $r === 'tech' && acctFlag('doors', $id)];
-    return $o;
+    return permSwitches($o + permMine($r), $r, $id);   /* the role's permissions (2026-10-29) */
 }
 /** the same for 'me' */
 function edMe(): array {
@@ -3841,6 +4077,18 @@ function edMe(): array {
     $o['lock'] = $isSuper ? null : billLockInfo(billLock(), $role === 'admin');   /* setup mode or the past-due lock (2026-10-29); a role preview sees it as that role */
     if ($s === 'tech') $o += ['walker' => true, 'doors' => acctFlag('doors', $id)];
     if ($s === 'setter') $o += ['pays' => false, 'walker' => false];
+    $r = permWho();
+    return $r === '' ? $o : permSwitches($o + permMine($r), $r, $id, true);   /* the role's permissions (2026-10-29) */
+}
+/** a person's switches under their role's permissions (the role is the ceiling): Takes payments, Does jobs, Knocks doors. $me: 'me'
+    answers carry walker and pays already (the base answer), so they are overridden; a sign-in answer only where it said them */
+function permSwitches(array $o, string $r, string $id, bool $me = false): array {
+    global $acct;
+    if (!edition() || !in_array($r, permRoles(), true)) return $o;
+    if (permOffFor('pay.take', $r)) $o['pays'] = false;
+    if (permOffFor('jobs.own', $r)) $o['walker'] = false;
+    elseif ($r === 'setter' && permAddedFor('jobs.own', $r)) $o['walker'] = !empty($acct['walker'][$id]);
+    if (permOffFor('doors.see', $r)) $o['doors'] = false;
     return $o;
 }
 if ($action === 'termsaccept') {
@@ -5316,7 +5564,7 @@ function teamInfo(array $basePeople, array $acct, string $key): array {
         if ($r['off']) continue;
         $tid = (string) ($acct['member'][$r['id']] ?? '');
         if ($tid !== '' && !isset($acct['teams'][$tid])) $tid = '';
-        $byName[$r['name']] = ['id' => $r['id'], 'role' => $r['role'], 'team' => $tid, 'walker' => !empty($acct['walker'][$r['id']]) || ($r['role'] === 'tech' && edition())];   /* a technician always does the jobs (2026-10-29) */
+        $byName[$r['name']] = ['id' => $r['id'], 'role' => $r['role'], 'team' => $tid, 'walker' => (!empty($acct['walker'][$r['id']]) || ($r['role'] === 'tech' && edition())) && !permOffFor('jobs.own', (string) $r['role'])];   /* + the role's "Do jobs": the Does jobs switch only adds what the role allows (2026-10-29) */   /* a technician always does the jobs (2026-10-29) */
         if ($tid !== '') $members[$tid][] = $r['name'];
     }
     return ['byName' => $byName, 'members' => $members];
@@ -5561,7 +5809,7 @@ if ($action === 'myleads') {
     $who = whoFor((string) ($_GET['who'] ?? '')) ?: $me;
     $whoAll = $who === $me ? meNames() : [$who];   /* leads handed to a linked sign-in are this person's too (2026-10-21) */
     $list = array_values(array_filter(leadsAll(), fn($l) => in_array($l['owner'], $whoAll, true) && !(webHide() && webLead($l) && !sentToMe($l))));   /* never Matthew's, unless he sent it to them (2026-10-27) */
-    if (edSub() === 'setter') $list = array_map(fn($l) => array_diff_key($l, ['quote' => 1, 'sign' => 1, 'signed' => 1, 'job' => 1, 'value' => 1]), $list);   /* a setter sees no prices (2026-10-29) */
+    if ((edSub() === 'setter' && !permAdded('quote.prices')) || permOff('quote.prices')) $list = array_map(fn($l) => array_diff_key($l, ['quote' => 1, 'sign' => 1, 'signed' => 1, 'job' => 1, 'value' => 1]), $list);   /* a setter sees no prices (2026-10-29) */
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     out(['ok' => true, 'who' => $who, 'leads' => $list]);
 }
@@ -6369,7 +6617,7 @@ if ($action === 'schedview') {
 }
 /* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
 if ($action === 'jobs') {
-    $repJ = !desk() && $role !== 'quote' && edRep() && repSendOn();   /* a sales rep picking a day for their own customer's form (2026-10-29): the quote login's redacted view */
+    $repJ = !desk() && $role !== 'quote' && edRep() && (repSendOn() || permVia() === 'agree.send');   /* a sales rep picking a day for their own customer's form (2026-10-29): the quote login's redacted view */
     if (!desk() && $role !== 'quote' && !$repJ) fail('Not allowed.', 403);
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!dateOk($from) || !dateOk($to) || $to < $from) fail('Pick the dates.');
@@ -7460,9 +7708,14 @@ function receiptBuild(array $j, array $l, bool $page = false): array {
          . 'td{padding:12px 0;border-bottom:1px solid #ece6da;vertical-align:top}.r{text-align:right}.tot td{border-bottom:0;font-size:15px;font-weight:700;padding-top:14px}'
          . '.foot{margin-top:40px;color:#5a6858;font-size:12px;border-top:1px solid #d9d1c2;padding-top:14px}.bar{display:flex;gap:10px;justify-content:flex-end;margin-bottom:16px}.bar button{font:inherit;padding:8px 16px;border-radius:999px;border:1px solid #2F5D2C;background:#2F5D2C;color:#fff;cursor:pointer}'
          . '@media print{.bar{display:none}.wrap{padding:0;max-width:none}}@media (max-width:560px){.grid{flex-direction:column;gap:12px}.head{flex-direction:column;align-items:flex-start}.title{text-align:left}}';
+    /* an edition's receipt in its own brand (2026-10-29): the uploaded logo in place of the app icon (an SVG on the page only: email apps do not
+       show SVG), and the company's colour in place of 365's green. Sixfold 365's receipt is unchanged. */
+    $logoTag = $a ? '' : logoImgTag($name, 64, $page);
+    $ink = $a ? '' : (string) kitBrand()['color'];
+    if (preg_match('/^#[0-9a-f]{6}$/i', $ink)) $css = str_replace('#2F5D2C', $ink, $css);
     $h = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Receipt - ' . $e($who) . '</title><style>' . $css . '</style></head><body><div class="wrap">'
        . ($page ? '<div class="bar"><button type="button" onclick="window.print()">Print or save as PDF</button></div>' : '')
-       . '<div class="head"><div class="brand"><img src="' . $e($badge) . '" alt=""><div><b>' . $e($name) . '</b><span>' . ($tag !== '' ? $e($tag) . '<br>' : '') . $e($contact) . '</span></div></div>'
+       . '<div class="head"><div class="brand">' . ($logoTag !== '' ? $logoTag : '<img src="' . $e($badge) . '" alt="">') . '<div><b>' . $e($name) . '</b><span>' . ($tag !== '' ? $e($tag) . '<br>' : '') . $e($contact) . '</span></div></div>'
        . '<div class="title"><h1>RECEIPT</h1><div>No. ' . $e($no) . '</div><div>Issued ' . $e($issued) . '</div><div class="paid">' . $e($status) . '</div></div></div>'
        . '<div class="grid"><div><div class="lbl">Customer</div>' . $e($who) . ($st !== '' ? '<br>' . $e($st) . ($town !== '' ? '<br>' . $e($town) : '') : '') . '</div>'
        . '<div><div class="lbl">Service address</div>' . ($st !== '' ? $e($st) . ($town !== '' ? '<br>' . $e($town) : '') : '&ndash;') . '</div><div><div class="lbl">Date of service</div>' . $e($svc) . '</div></div>'
@@ -9784,7 +10037,7 @@ function paymentsAll(): array {
     return $out;
 }
 if ($action === 'payments' || $action === 'paymentsexport') {
-    if ($role !== 'admin') fail('Not allowed.', 403);   /* money records: the admin's */
+    if (!adminOr($action === 'payments' ? 'pay.page' : 'cust.export')) fail('Not allowed.', 403);   /* money records: the admin's (or a role given them, 2026-10-29) */
     $y = (new DateTime('today', new DateTimeZone(appTz())))->format('Y');
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!dateOk($from)) $from = $y . '-01-01';
@@ -9911,7 +10164,8 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
     $officeCust = $role === 'office' && feature('walkdesk') && in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', 'visitsave', 'custdoc', 'custdocadd', 'plantemplates', 'plantemplatesave'], true);
     /* the quote account makes a customer from one of her own leads (2026-10-16, won without the form), nothing else here */
     $quoteCust = $role === 'quote' && feature('walkdesk') && $action === 'customerfrom' && qMine(leadsAll()[(string) ($body['lead'] ?? '')] ?? []);
-    if ($role !== 'admin' && !$officeCust && !$quoteCust) fail('Not allowed.', 403);
+    $permCust = ($action === 'customerimport' && permAdded('cust.import')) || ($action === 'customersexport' && permAdded('cust.export'));   /* a role given them (2026-10-29) */
+    if ($role !== 'admin' && !$officeCust && !$quoteCust && !$permCust) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz());
     $today = (new DateTime('today', $tz))->format('Y-m-d');
     /* saved plans (2026-10-27, Matthew: Jen's $74 lawn plan, picked for the next customer instead of typed again): customers/plans.log,
@@ -10055,8 +10309,8 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
         /* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices
            were not in the backup, so a lost server lost them). Keep in step with sixfold-tools/nightly-backup.php. */
         /* + each install's own settings (2026-10-29: the quote kit's prices and terms, Your costs, other ways to pay, the email templates, the
-           Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). */
-        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);
+           Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). + role permissions (role-perms.json, 2026-10-29). */
+        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];
@@ -10064,6 +10318,11 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
         $doc = ['backup' => company()['name'] . ' field tools', 'made' => date('c'), 'by' => $me,
                 'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
                 'files' => $files, 'photos' => $photos];
+        /* the Company screen's uploaded logo (2026-10-29): an image, so base64 under "binary" (only when there is one). Keep in step with nightly-backup.php */
+        foreach (['png', 'jpg', 'svg'] as $lt) if (is_file(DATA_DIR . '/company-logo.' . $lt)) {
+            $doc['binary']['sixfold-data/rounds/company-logo.' . $lt] = base64_encode((string) file_get_contents(DATA_DIR . '/company-logo.' . $lt));
+            $doc['restore'] .= ' Each entry in "binary" is a file in base64 (the company logo): decode it and put it back at its path.';
+        }
         accountLog(['by' => $me, 'what' => 'backup', 'n' => count($files)]);
         header('Content-Type: application/json; charset=utf-8');
         exportLog(['what' => 'full backup']);
@@ -10377,7 +10636,7 @@ function impHouses(array $want): array {
 }
 if (in_array($action, ['importcheck', 'importrun', 'imports', 'importundo'], true)) {
     if (!impOn()) fail('Not here.', 404);
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!adminOr('cust.import')) fail('Not allowed.', 403);
     $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
     $impLog = fn() => jsonLines(impLogFile());
     if ($action === 'imports') {
@@ -10830,12 +11089,12 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
         . "Then sign in with this email address and your password. Add the app to your phone's home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app), so it opens like any other app and works with no signal.\n\n"
         . "Questions about your work: ask $by at $cname.\n\nSent for $cname by Traverse Platforms.\n";
     $col = (string) ($co['brand'] ?: '#13294b'); if (!preg_match('/^#[0-9a-f]{6}$/i', $col)) $col = '#13294b';
-    $lg = is_array($co['logo'] ?? null) && !empty($co['logo']['img']) && preg_match('/^logo\.(png|jpg)(\?v=\d+)?$/', (string) $co['logo']['img']) ? $url . $co['logo']['img'] : '';
+    $lg = logoImgTag($cname, 40);   /* the company's uploaded logo (the Company screen's, or the welcome page's), PNG/JPG only: email apps do not show SVG */
     $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
     $html = '<!doctype html><html><body style="margin:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;color:#0f1b2d">'
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">'
         . '<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden" cellpadding="0" cellspacing="0">'
-        . '<tr><td style="background:' . $col . ';padding:20px 24px;color:#ffffff;font-size:20px;font-weight:bold">' . ($lg !== '' ? '<img src="' . $h($lg) . '" alt="" height="40" style="height:40px;vertical-align:middle;margin-right:10px;background:#ffffff;border-radius:6px;padding:2px">' : '') . $h($cname) . '</td></tr>'
+        . '<tr><td style="background:' . $col . ';padding:20px 24px;color:#ffffff;font-size:20px;font-weight:bold">' . ($lg !== '' ? '<div style="display:inline-block;background:#ffffff;border-radius:6px;padding:4px;margin-bottom:8px">' . $lg . '</div><br>' : '') . $h($cname) . '</td></tr>'
         . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s Traverse app as ' . $h($rl) . '.'
         . '<p style="margin:24px 0"><a href="' . $h($link) . '" style="display:inline-block;background:#d6400c;color:#ffffff;text-decoration:none;font-weight:bold;padding:13px 22px;border-radius:10px">Set your password</a></p>'
         . '<p style="font-size:14px;color:#566476">The link works once, for ' . PW_INVITE_DAYS . ' days. Then sign in with ' . $h($iv['email']) . ' and your password, and add the app to your home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app).</p>'
@@ -10989,7 +11248,7 @@ function acctWeakCode(string $c): bool {
    it. Until an admin first sets it for anyone, everyone who does walks has it (Brad: "he's a trusted worker"), so nothing changes the day
    it lands; the first change copies that list and from then on it is only what the admin set. Cash collected is still recorded by anyone. */
 function paysOn(string $id): bool { global $acct; if (!isset($acct['pays'])) return !empty($acct['walker'][$id]); return !empty($acct['pays'][$id]); }
-function canTakePay(): bool { global $session; return desk() || paysOn((string) ($session['c'] ?? '')); }
+function canTakePay(): bool { global $session; return !permOff('pay.take') && (desk() || paysOn((string) ($session['c'] ?? ''))); }   /* + the role's "Take payments" above the person's switch (2026-10-29) */
 if ($action === 'paysset') {
     if (!feature('walkdesk')) fail('Not here.', 404);
     if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
@@ -11047,7 +11306,7 @@ if ($action === 'walkerset') {
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
     if ($rows[$id]['role'] === 'super' || boardHidden($rows[$id]['name'])) fail('That sign-in does not do walks.');
-    if ($rows[$id]['role'] === 'setter' && edition()) fail('A setter does not do the jobs. Make them a technician or a sales rep first.');   /* 2026-10-29 */
+    if ($rows[$id]['role'] === 'setter' && edition() && !permAddedFor('jobs.own', 'setter')) fail('A setter does not do the jobs. Make them a technician or a sales rep first.');   /* 2026-10-29 */
     $acct['walker'] = (array) ($acct['walker'] ?? []);
     if (!empty($body['on'])) $acct['walker'][$id] = 1; else unset($acct['walker'][$id]);
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
@@ -12252,7 +12511,7 @@ function crmRows(string $set): array {
     return $rows;
 }
 if ($action === 'crmexport') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!($role === 'admin' || (permAdded('cust.export') && ($_GET['set'] ?? '') !== 'doors'))) fail('Not allowed.', 403);   /* a role given downloads: the customers, never the doors (2026-10-29) */
     $fmt = (string) ($_GET['fmt'] ?? ''); $set = ($_GET['set'] ?? '') === 'doors' ? 'doors' : 'customers';
     if (!isset(CRM_FORMATS[$fmt])) fail('Pick a program.');
     $rows = crmRows($set);
@@ -12339,9 +12598,11 @@ function brandColors(string $hex): array {
     while (contrastRatio($accent, '#ffffff') < 4.5 && $la > 0.05) { $la -= 0.02; $accent = hslHex($h, $s0, $la); }
     return ['light' => ['--bg' => $at(0.965, $s * 0.25), '--line' => $at(0.88, $s * 0.2), '--sunk' => $at(0.925, $s * 0.2), '--bar' => $at(0.2), '--bar-soft' => $at(0.85, $s * 0.45),
                         '--moss' => $at(0.55, $s * 0.6), '--moss-ink' => $at(0.2), '--accent' => $accent, '--signin' => $at(0.2), '--signin-deep' => $at(0.13),
-                        '--signin-soft' => $at(0.85, $s * 0.45), '--key' => $at(0.28), '--key-down' => $at(0.35)],
+                        '--signin-soft' => $at(0.85, $s * 0.45), '--key' => $at(0.28), '--key-down' => $at(0.35),
+                        /* the bar's and the cards' gradient tops (2026-10-29): were the built colours, so a brand colour met another hue in the bar */
+                        '--bar-top' => $at(0.26), '--bar-hi' => $at(0.3), '--bar-hi2' => $at(0.34)],
             'dark' => ['--bg' => $at(0.06, $s * 0.5), '--card' => $at(0.1, $s * 0.45), '--line' => $at(0.2, $s * 0.35), '--sunk' => $at(0.08, $s * 0.45), '--bar' => $at(0.12, $s * 0.5),
-                       '--moss-ink' => $at(0.75, $s * 0.55), '--accent' => $at(0.75, $s * 0.55)]];
+                       '--moss-ink' => $at(0.75, $s * 0.55), '--accent' => $at(0.75, $s * 0.55), '--bar-top' => $at(0.17, $s * 0.5), '--bar-hi' => $at(0.19, $s * 0.5), '--bar-hi2' => $at(0.22, $s * 0.5)]];
 }
 /* ---- the kit's screens (2026-10-27, TR-33): price rules and terms (Company), payments (Square / Stripe), the setup checklist, quoting a lead.
  *   kit         GET   rules, minimum, deposit %, terms (the company's or the starters), units; payments state; the admin's setup checklist
@@ -12400,7 +12661,7 @@ if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], tr
     if (!kitOn()) fail('Not here.', 404);
     if ($action === 'kit') {
         if (!desk() && $role !== 'quote' && !(edition() && $role === 'crew' && edSub() === '')) fail('Not allowed.', 403);   /* + a sales rep, for their own leads (2026-10-29) */
-        out(['ok' => true, 'units' => KIT_UNITS, 'trade' => kitTrade()] + kitCfg() + ['pay' => $role === 'admin' ? kitPayState() : ['square' => ['on' => (bool) squareCfg()], 'stripe' => ['on' => (bool) stripePayCfg()]], 'setup' => $role === 'admin' ? kitSetup() : null]);
+        out(['ok' => true, 'units' => KIT_UNITS, 'trade' => kitTrade()] + kitCfg() + ['pay' => adminOr('set.setup') ? kitPayState() : ['square' => ['on' => (bool) squareCfg()], 'stripe' => ['on' => (bool) stripePayCfg()]], 'setup' => adminOr('set.setup') ? kitSetup() : null]);
     }
     if (!$isPost && $action !== 'squareoauth') fail('POST required', 405);
     if ($action === 'kitquote') {
@@ -12414,7 +12675,10 @@ if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], tr
         $measures = ['lawn' => $mz('lawn', 2000000), 'roof' => $mz('roof', 500000), 'sqs' => $mz('sqs', 5000), 'visits' => max(1, (int) $mz('visits', 365))];
         [$items, $total] = kitPrice(kitCfg(), $measures, is_array($body['picks'] ?? null) ? $body['picks'] : []);
         if (isset($body['price']) && is_numeric($body['price']) && (int) $body['price'] > 0) {   /* the price they agreed, when it differs: an adjustment line */
-            $ov = min(100000, (int) $body['price']); if ($ov !== $total) { $items[] = ['id' => 'adj', 't' => $ov > $total ? 'Adjustment' : 'Discount', 'amt' => $ov - $total, 'qty' => 1, 'unit' => 'flat']; $total = $ov; }
+            $ov = min(100000, (int) $body['price']);
+            if ($ov > $total && !permOn('quote.adjust')) fail('Changing the price is not part of your role here. Save it at the price list\'s $' . $total . '.', 403);   /* the role's permissions (2026-10-29) */
+            if ($ov < $total && !permOn('quote.discount')) fail('Discounts are not part of your role here. Save it at the price list\'s $' . $total . '.', 403);
+            if ($ov !== $total) { $items[] = ['id' => 'adj', 't' => $ov > $total ? 'Adjustment' : 'Discount', 'amt' => $ov - $total, 'qty' => 1, 'unit' => 'flat']; $total = $ov; }
         }
         if ($total < 1) fail('This comes to $0. Set your prices in Company, or type the price.');
         $q = ['price' => $total, 'pkg' => 'job', 'sq' => (int) $measures['lawn'], 'items' => $items, 'measures' => $measures, 'note' => $clean($body['note'] ?? '', 300), 'sent' => !empty($body['sent'])];
@@ -12436,7 +12700,7 @@ if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], tr
         if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
         out(['ok' => true, 'price' => $total, 'items' => $items, 'link' => a365QuoteLink($id), 'status' => $row['status'] ?? $all[$id]['status']]);
     }
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!adminOr($action === 'kitset' ? 'set.prices' : 'set.setup')) fail('Not allowed.', 403);
     if ($action === 'kitset') {
         $rules = [];
         foreach (array_slice((array) ($body['rules'] ?? []), 0, 20) as $i => $r) {
@@ -12528,6 +12792,7 @@ if ($action === 'mailsend') {
     if (!throttleTake(rateFile('mailsend|' . (string) ($session['c'] ?? $me)), 30, 3600)) fail('That is a lot of emails in an hour from one sign-in. Wait a little and try again.', 429);
     if (!throttleTake(rateFile('mailsend|install'), 300, 86400)) fail('The app has sent 300 emails today, its daily most. Send the rest from your own email.', 429);
     [, $mtext, $mhtml] = mailRender(['subject' => $subj, 'body' => $txt], []);
+    $mB = kitBrand(); $mhtml = mailBrandWrap($mB, $mhtml);   /* the company's letterhead around the HTML part (2026-10-29); the plain part is the words as typed */
     $mr = sendMail($to, $subj, $mtext, $mhtml);
     appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'app', 'to' => $to, 'subject' => mb_substr($subj, 0, 200), 'lead' => (string) ($ml['id'] ?? ''), 'customer' => (string) ($mcu['id'] ?? ''), 'by' => $me, 'ok' => $mr['ok'], 'stage' => $mr['stage'], 'error' => mb_substr((string) $mr['error'], 0, 300)]);
     if (!$mr['ok']) fail('Not sent: ' . ($mr['error'] ?: 'the mail server said no') . '. Nothing went; try again, or use your own email.', 502);
@@ -12536,7 +12801,7 @@ if ($action === 'mailsend') {
 }
 if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest'], true)) {
     if (!kitOn()) fail('Not here.', 404);   /* Sixfold 365 keeps its own mailbox */
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!adminOr('set.setup')) fail('Not allowed.', 403);
     $myMail = (string) (($acct['email'] ?? [])[(string) ($session['c'] ?? '')] ?? '');
     $tplOut = function () { $T = mailTpls(); $o = [];
         foreach (MAIL_TPL as $k => $d) $o[] = ['key' => $k, 'label' => $d['label'], 'when' => $d['when'], 'fixed' => $d['fixed'], 'ph' => array_map(fn($p) => [$p, MAIL_PH[$p]], $d['ph']),
@@ -12629,7 +12894,7 @@ function waysDue(array $l): int {
 }
 if ($action === 'payways' || $action === 'paywaysset') {
     if (!kitOn()) fail('Not here.', 404);
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!adminOr('set.setup')) fail('Not allowed.', 403);
     if ($action === 'payways') out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
     if (!$isPost) fail('POST required', 405);
     $g = fn($k) => trim((string) preg_replace('/[\x00-\x1f\x7f]+/', '', (string) ($body[$k] ?? '')));
@@ -12723,12 +12988,12 @@ function costsDrive(array $cfg, ?array $h): ?array {
 if (in_array($action, ['costs', 'costsset', 'costsapply'], true)) {
     if (!costsOn()) fail('Not here.', 404);
     if ($action === 'costs') {
-        if (!desk()) fail('Not allowed.', 403);
+        if (!desk() && !permAdded('set.prices')) fail('Not allowed.', 403);
         $cfg = costsCfg(); $reg = (string) ($_GET['region'] ?? ''); $hid = (string) ($_GET['id'] ?? '');
         if ($reg !== '' && $hid !== '') $cfg['drive'] = costsDrive($cfg, houseFacts($reg, $hid));
         out(['ok' => true, 'units' => KIT_UNITS] + $cfg);
     }
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if (!adminOr('set.prices')) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     if ($action === 'costsapply') {
         $rid = (string) ($body['rule'] ?? ''); $rate = $body['rate'] ?? null;
@@ -12778,7 +13043,7 @@ if (in_array($action, ['costs', 'costsset', 'costsapply'], true)) {
 }
 const COMPANY_LOCAL = ['name', 'short', 'tagline', 'phone', 'email', 'site', 'review'];
 if ($action === 'companyset') {
-    if ($role !== 'admin' || !feature('company')) fail('Not allowed.', 403);   /* the Company screen: editions and clients (features.company), not Sixfold */
+    if (!adminOr('set.company') || !feature('company')) fail('Not allowed.', 403);   /* the Company screen: editions and clients (features.company), not Sixfold */
     if (!$isPost) fail('POST required', 405);
     $clean = fn($v, int $max) => trim(preg_replace('/[\x00-\x1f\x7f]+/', ' ', (string) $v));
     $loc = [];
@@ -12793,9 +13058,181 @@ if ($action === 'companyset') {
     $color = strtolower(trim((string) ($body['color'] ?? '')));
     if ($color !== '' && !preg_match('/^#[0-9a-f]{6}$/', $color)) fail('Pick a colour.');
     if ($color !== '') $loc['color'] = $color;
+    $old = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
+    if (is_array($old) && is_array($old['logo'] ?? null)) $loc['logo'] = $old['logo'];   /* the uploaded logo has its own save (logoset) and stays */
     $loc['by'] = $me; $loc['at'] = time();
     if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+
+/* ---- the company's own logo (2026-10-29, Matthew: branding is a selling point; "clients can take this on as their own and we just
+ * handle upkeep, trouble shooting and updates") ----
+ * The admin uploads it on the Company screen: PNG, JPG or SVG, 500 KB at most. Kept in the install's data folder beside company.json as
+ * company-logo.png|jpg|svg, and described in company-local.json `logo` {type, v (the first 12 of its SHA-1), w, h, bg, by, at}, so a data
+ * refresh never undoes it and the backups carry it. An SVG is rebuilt from a list of drawing elements and attributes before it is kept:
+ * no script, no event attributes, no links out (only #ids and embedded raster images), no DOCTYPE or entities, no CSS that loads anything.
+ * Served by action=logo before sign-in (the sign-in screen, the quote and signing pages and emails need it) with its own content type,
+ * nosniff, a sandboxing CSP and a year's cache for the versioned address. bg: draw it on a white backing where it sits on the brand colour
+ * (the bar, the sign-in screen, the pages' header), for a dark logo; off for a white or light one.
+ *   logoset  POST admin, features.company: {data: data URL or base64, bg} a new logo; or {bg} alone to change the backing
+ *   logodel  POST admin, features.company: remove it (the mark goes back to the built one, or the monogram) */
+const LOGO_MAX = 500 * 1024;
+const LOGO_TYPES = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'svg' => 'image/svg+xml'];
+function logoFile(string $type): string { return DATA_DIR . '/company-logo.' . $type; }
+/** the logo described in company-local.json, when its file is there; null otherwise */
+function logoInfo(?array $loc = null): ?array {
+    if ($loc === null) { $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true); if (!is_array($loc)) return null; }
+    $l = $loc['logo'] ?? null;
+    if (!is_array($l) || !in_array($l['type'] ?? '', ['png', 'jpg', 'svg'], true) || !preg_match('/^[0-9a-f]{12}$/D', (string) ($l['v'] ?? ''))) return null;
+    return is_file(logoFile((string) $l['type'])) ? $l : null;
+}
+/** its address: relative to the app's pages (index.html, q.html and sign.html sit together, the API one folder over), or whole for an email */
+function logoUrl(string $v, bool $abs = false): string {
+    $p = 'api/' . basename(__FILE__) . '?action=logo&v=' . $v;
+    if (!$abs) return '../' . $p;
+    $h = (string) ($_SERVER['HTTP_HOST'] ?? ''); if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) $h = 'traverseplatforms.com';
+    return (PHP_SAPI === 'cli-server' ? 'http' : 'https') . '://' . $h . '/' . $p;
+}
+/** what the pages are told (company and kitbrand) */
+function logoPublic(array $l): array { return ['url' => logoUrl((string) $l['v']), 'type' => (string) $l['type'], 'w' => (int) ($l['w'] ?? 0), 'h' => (int) ($l['h'] ?? 0), 'bg' => !empty($l['bg'])]; }
+/** the logo as an <img> for an email or a printout, or '' (none, or an SVG where email apps do not show SVG) */
+function logoImgTag(string $alt, int $height, bool $svgOk = false): string {
+    $l = logoInfo(); if (!$l || ($l['type'] === 'svg' && !$svgOk)) return '';
+    $w = (int) ($l['w'] ?? 0) > 0 && (int) ($l['h'] ?? 0) > 0 ? (int) round($height * (int) $l['w'] / (int) $l['h']) : 0;
+    if ($w > $height * 4) { $height = (int) floor($height * $height * 4 / $w); $w = $height * 4 > 0 ? (int) round($height * (int) $l['w'] / (int) $l['h']) : 0; }   /* a very wide logo: no wider than four times the height asked for */
+    return '<img src="' . htmlspecialchars(logoUrl((string) $l['v'], true), ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($alt, ENT_QUOTES, 'UTF-8') . '" height="' . $height . '"' . ($w ? ' width="' . $w . '"' : '')
+         . ' style="display:block;height:' . $height . 'px;' . ($w ? 'width:' . $w . 'px;' : '') . 'max-width:100%;border:0">';
+}
+function logoServe(): never {
+    $l = logoInfo();
+    if (!$l) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-store'); exit('No logo.'); }
+    $f = logoFile((string) $l['type']);
+    header('Content-Type: ' . ['png' => 'image/png', 'jpg' => 'image/jpeg', 'svg' => 'image/svg+xml'][$l['type']]);   /* not LOGO_TYPES: this runs before that line is reached */
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox");   /* an SVG opened on its own runs nothing */
+    header('Content-Disposition: inline; filename="logo.' . $l['type'] . '"');
+    header('Cache-Control: ' . ((string) ($_GET['v'] ?? '') === (string) $l['v'] ? 'public, max-age=31536000, immutable' : 'public, max-age=300'));   /* a new logo is a new v, so a new address */
+    header('ETag: "' . $l['v'] . '"');
+    if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === '"' . $l['v'] . '"') { http_response_code(304); exit; }
+    header('Content-Length: ' . filesize($f));
+    readfile($f);
+    exit;
+}
+/** an uploaded SVG rebuilt from what is allowed: [svg text, width, height] or [null, why] */
+function svgClean(string $raw): array {
+    if (!class_exists('DOMDocument')) return [null, 'This server cannot check SVG files. Use a PNG instead.'];
+    $raw = (string) preg_replace(['/^\xEF\xBB\xBF/', '/<!DOCTYPE[^\[>]*>/i'], '', $raw);   /* a plain DOCTYPE line (older Illustrator exports) goes; one with its own entities is refused */
+    if (preg_match('/<!DOCTYPE|<!ENTITY/i', $raw)) return [null, 'That SVG has a DOCTYPE with entities, which the app does not take. Export it again as plain SVG, or use a PNG.'];
+    $NS = 'http://www.w3.org/2000/svg'; $XL = 'http://www.w3.org/1999/xlink';
+    if (preg_match('/<svg\b[^>]*>/i', $raw, $m) && !preg_match('/\sxmlns\s*=/i', $m[0])) $raw = (string) preg_replace('/<svg\b/i', '<svg xmlns="' . $NS . '"', $raw, 1);   /* a hand-written SVG without its namespace */
+    $d = new DOMDocument(); $prev = libxml_use_internal_errors(true);
+    $ok = $d->loadXML($raw, LIBXML_NONET);   /* no LIBXML_NOENT: entities are never expanded */
+    libxml_clear_errors(); libxml_use_internal_errors($prev);
+    $root = $ok ? $d->documentElement : null;
+    if (!$root || $root->localName !== 'svg' || $root->namespaceURI !== $NS) return [null, 'That is not an SVG file the app can read. Export it again, or use a PNG.'];
+    static $EL = ['svg', 'g', 'defs', 'symbol', 'use', 'title', 'desc', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'tspan', 'textPath',
+        'linearGradient', 'radialGradient', 'stop', 'clipPath', 'mask', 'pattern', 'image', 'style', 'filter', 'feGaussianBlur', 'feOffset', 'feBlend', 'feColorMatrix',
+        'feFlood', 'feComposite', 'feMerge', 'feMergeNode', 'feDropShadow'];
+    static $AT = ['id', 'class', 'style', 'transform', 'd', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'fx', 'fy', 'fr', 'width', 'height', 'viewBox',
+        'preserveAspectRatio', 'points', 'pathLength', 'fill', 'fill-opacity', 'fill-rule', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit',
+        'stroke-dasharray', 'stroke-dashoffset', 'stroke-opacity', 'opacity', 'clip-path', 'clip-rule', 'mask', 'filter', 'color', 'display', 'visibility', 'overflow',
+        'gradientUnits', 'gradientTransform', 'spreadMethod', 'offset', 'stop-color', 'stop-opacity', 'patternUnits', 'patternContentUnits', 'patternTransform',
+        'clipPathUnits', 'maskUnits', 'maskContentUnits', 'filterUnits', 'primitiveUnits', 'font-family', 'font-size', 'font-weight', 'font-style', 'font-variant',
+        'text-anchor', 'dominant-baseline', 'alignment-baseline', 'baseline-shift', 'letter-spacing', 'word-spacing', 'text-decoration', 'dx', 'dy', 'rotate',
+        'textLength', 'lengthAdjust', 'startOffset', 'href', 'space', 'version', 'stdDeviation', 'in', 'in2', 'result', 'mode', 'values', 'type', 'operator',
+        'k1', 'k2', 'k3', 'k4', 'flood-color', 'flood-opacity', 'paint-order', 'vector-effect', 'shape-rendering', 'image-rendering', 'color-interpolation-filters',
+        'mix-blend-mode', 'isolation', 'enable-background'];
+    $el = array_flip($EL); $at = array_flip($AT);
+    $badCss = fn(string $v) => (bool) preg_match('/@import|expression\s*\(|javascript:|behavior\s*:|-moz-binding|\\\\|<|url\s*\(\s*(?![\'"]?\s*#)/i', $v);   /* url() only to an #id inside it */
+    $clean = function (DOMNode $n) use (&$clean, $el, $at, $badCss, $NS, $XL) {
+        foreach (iterator_to_array($n->childNodes, false) as $ch) {
+            if ($ch instanceof DOMElement) {
+                if ($ch->namespaceURI !== $NS || !isset($el[$ch->localName]) || ($ch->localName === 'style' && $badCss($ch->textContent))) { $n->removeChild($ch); continue; }
+                foreach (iterator_to_array($ch->attributes, false) as $a) {   /* false: href and xlink:href would share a key */
+                    $nm = $a->localName; $ns = $a->namespaceURI; $v = (string) $a->value;
+                    $keep = isset($at[$nm]) && ($ns === null || ($ns === $XL && $nm === 'href') || ($ns === 'http://www.w3.org/XML/1998/namespace' && $nm === 'space'));
+                    if ($keep && $nm === 'href') $keep = (bool) preg_match('/^#[A-Za-z_][\w.-]*$/D', $v) || ($ch->localName === 'image' && preg_match('#^data:image/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$#D', $v));
+                    if ($keep && $badCss($v) && $nm !== 'href') $keep = false;
+                    if ($keep && $nm === 'space') $keep = in_array($v, ['default', 'preserve'], true);
+                    if (!$keep) $ch->removeAttributeNode($a);
+                }
+                $clean($ch);
+            } elseif (!($ch instanceof DOMText)) $n->removeChild($ch);   /* comments, processing instructions, anything else (CDATA keeps its text as a text node) */
+        }
+    };
+    foreach (iterator_to_array($root->attributes, false) as $a) if (!isset($at[$a->localName]) || $a->localName === 'href' || ($a->namespaceURI !== null && $a->localName !== 'space') || $badCss((string) $a->value)) $root->removeAttributeNode($a);
+    foreach (iterator_to_array($d->childNodes, false) as $ch) if ($ch !== $root) $d->removeChild($ch);
+    $clean($root);
+    $vb = array_map('floatval', preg_split('/[\s,]+/', trim($root->getAttribute('viewBox'))) ?: []);
+    if (count($vb) === 4 && $vb[2] > 0 && $vb[3] > 0) { $w = $vb[2]; $h = $vb[3]; }
+    else {
+        $w = (float) $root->getAttribute('width'); $h = (float) $root->getAttribute('height');   /* "120px" reads as 120 */
+        if (!($w > 0 && $h > 0) || preg_match('/%/', $root->getAttribute('width') . $root->getAttribute('height'))) return [null, 'That SVG has no size (no viewBox, width or height). Export it again, or use a PNG.'];
+        $root->setAttribute('viewBox', '0 0 ' . $w . ' ' . $h);
+    }
+    if ($root->getElementsByTagNameNS($NS, '*')->length < 2) return [null, 'That SVG has nothing in it the app can draw. Use a PNG instead.'];
+    $out = (string) $d->saveXML($root);
+    $out = (string) preg_replace_callback('/^<svg\b[^>]*>/', fn($m) => preg_replace('/\sxmlns:(?!xlink=)[A-Za-z_][\w.-]*="[^"]*"/', '', $m[0]), $out);   /* the editor's own namespaces, now unused */
+    return strlen($out) > 500 * 1024 ? [null, 'That SVG is over 500 KB once checked. Use a smaller file or a PNG.'] : [$out, $w, $h];
+}
+if ($action === 'logoset' || $action === 'logodel') {
+    if ($role !== 'admin' || !feature('company') || !empty(company()['a365'])) fail('Not allowed.', 403);   /* the Company screen's: editions and clients, never Sixfold 365 (its mark is its own) */
+    if (!$isPost) fail('POST required', 405);
+    $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true); $loc = is_array($loc) ? $loc : [];
+    $cur = logoInfo($loc);
+    if ($action === 'logodel') {
+        foreach (array_keys(LOGO_TYPES) as $t) @unlink(logoFile($t));
+        unset($loc['logo']);
+        if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    $bg = !array_key_exists('bg', $body) || !empty($body['bg']);
+    $data = (string) ($body['data'] ?? '');
+    if ($data === '') {   /* the backing alone */
+        if (!$cur) fail('Upload a logo first.');
+        $loc['logo'] = ['bg' => $bg] + $cur;
+        if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'logo' => logoPublic($loc['logo'])]);
+    }
+    if (strlen($data) > (int) (LOGO_MAX * 1.4) + 200) fail('Use a logo file under 500 KB.');
+    $raw = base64_decode((string) preg_replace('#^data:[a-z/+.-]+;base64,#i', '', $data), true);
+    if ($raw === false || $raw === '') fail('That file did not arrive whole. Try again.');
+    $r = logoTake($raw, $bg, $me);
+    if (isset($r['error'])) fail($r['error'], (int) ($r['code'] ?? 400));
+    out(['ok' => true, 'logo' => logoPublic($r['logo'])]);
+}
+/** keep a logo (the checks above: PNG/JPG that opens, 16-4,000 px; an SVG rebuilt by svgClean; 500 KB at most): ['logo' => info] | ['error'].
+    Also used for the logo a company gave on the website's welcome page (logoAdopt, 2026-10-29). */
+function logoTake(string $raw, bool $bg, string $by): array {
+    if (strlen($raw) > 500 * 1024) return ['error' => 'Use a logo file under 500 KB.'];   /* not LOGO_MAX: logoAdopt runs before that line is reached */
+    if (strncmp($raw, "\x89PNG\r\n\x1a\n", 8) === 0 || strncmp($raw, "\xFF\xD8\xFF", 3) === 0) {
+        $info = @getimagesizefromstring($raw);
+        if (!$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)) return ['error' => 'That image would not open. Save it again as PNG or JPG.'];
+        if ($info[0] < 16 || $info[1] < 16 || $info[0] > 4000 || $info[1] > 4000) return ['error' => 'Use a logo between 16 and 4,000 pixels on each side.'];
+        $type = $info[2] === IMAGETYPE_PNG ? 'png' : 'jpg'; $w = (int) $info[0]; $h = (int) $info[1];
+    } elseif (preg_match('/^\s*(<\?xml[^>]*>\s*)?((<!--.*?-->|<!DOCTYPE[^\[>]*(\[.*?\])?\s*>)\s*)*<svg[\s>]/is',(string) preg_replace('/^\xEF\xBB\xBF/', '', $raw))) {
+        [$raw, $w, $h] = svgClean($raw) + [null, 0, 0];
+        if ($raw === null) return ['error' => (string) $w];
+        $type = 'svg'; $w = (int) round($w); $h = (int) round($h);
+    } else return ['error' => 'Use a PNG, JPG or SVG file.'];
+    $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true); $loc = is_array($loc) ? $loc : [];
+    $v = substr(sha1($raw), 0, 12);
+    if (!writeTextAtomic(logoFile($type), $raw)) return ['error' => 'Could not save that. Try again.', 'code' => 500];
+    foreach (['png', 'jpg', 'svg'] as $t) if ($t !== $type) @unlink(logoFile($t));
+    $loc['logo'] = ['type' => $type, 'v' => $v, 'w' => max(1, $w), 'h' => max(1, $h), 'bg' => $bg, 'by' => $by, 'at' => time()];
+    if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) return ['error' => 'Could not save that. Try again.', 'code' => 500];
+    return ['logo' => $loc['logo']];
+}
+/** the logo a company gave on the website's welcome page (2026-10-29, api/traverse-clients-lib.php leaves it as <private>/logo-pending.<ext>):
+    taken through logoTake, exactly as a Company-screen upload, the first time the install is asked for its company (before anyone signs in) */
+function logoAdopt(): void {
+    foreach (['png', 'jpg', 'svg'] as $t) {
+        $f = pushPrivDir() . '/logo-pending.' . $t; if (!is_file($f)) continue;
+        $r = logoTake((string) file_get_contents($f), true, 'Website checkout');
+        @unlink($f);
+        if (isset($r['error'])) error_log('rounds: the welcome page logo was not taken: ' . $r['error']);
+        return;
+    }
 }
 
 /* ---- booked doors for JobNimbus (2026-10-08, TraverseRoofing) ----

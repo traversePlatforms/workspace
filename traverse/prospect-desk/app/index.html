@@ -92,6 +92,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 .msg{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 10px;background:var(--card)}
 .msg .mh{font-size:13px;color:var(--soft);overflow-wrap:anywhere}.msg .ms{font-weight:700;margin:2px 0 8px;overflow-wrap:anywhere}
 .msg pre{white-space:pre-wrap;font:14px/1.5 var(--sans);margin:0;overflow-wrap:anywhere}
+.msg .mmap{margin:0 0 10px}.msg .mmap img{display:block;width:100%;max-width:420px;height:auto;border:1px solid var(--line);border-radius:8px}.msg .mmap small{display:block;color:var(--soft);margin-top:4px}
+.msg .mnomap{font-size:13px;color:var(--soft);margin:0 0 8px}.msg details{margin-top:10px}.msg summary{cursor:pointer;font-size:14px;font-weight:600}
+.msg iframe{display:block;width:100%;height:620px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:8px}
 .rec{font-size:13.5px;padding:6px 0;border-bottom:1px solid var(--line)}.rec small{color:var(--soft)}.rec.fail b{color:var(--warn)}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:50;font-size:14px;display:flex;gap:14px;align-items:center;max-width:calc(100vw - 32px)}
 .toast button{border:0;background:none;color:var(--flag);font-weight:800;padding:0}
@@ -134,7 +137,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   'use strict';
   var API = 'api/desk.php';
   var S = { data: null, tab: 'list', f: { trade: 'all', where: 'all', reach: 'any', st: 'open', grade: 'all' }, q: '', sort: 'fit', sel: null, shown: 150,
-            em: { trade: 'all', where: 'all', fresh: true, ticks: null, tpl: 'auto', shown: 200, preview: null } };
+            em: { trade: 'all', where: 'all', fresh: true, ticks: null, tpl: 'auto', style: 'plain', shown: 200, preview: null } };
+  try { if (localStorage.getItem('desk.style') === 'map') S.em.style = 'map'; } catch (e) {}
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   var main = $('main');
@@ -404,6 +408,22 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     if (S.sel && lead(S.sel)) { split.appendChild(detail(lead(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
   }
 
+  /* Plain or With map (2026-10-30, Matthew: plain text "reads as a phishing scam ... I am fine with trying out a halfway") */
+  function styleSelect(v, onChange) {
+    var x = el('select'); x.setAttribute('aria-label', 'Plain or with a map'); x.style.cssText = 'padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);max-width:100%';
+    [['plain', 'Plain text'], ['map', 'With map']].forEach(function (o) { var op = el('option', null, o[1]); op.value = o[0]; x.appendChild(op); });
+    x.value = v; if (onChange) x.addEventListener('change', onChange); return x;
+  }
+  function mapBits(c, m) {
+    if (m.style === 'map' && m.map) { var f = el('div', 'mmap'); var im = el('img'); im.src = m.map.img; im.alt = 'Map of ' + m.map.city; im.loading = 'lazy'; f.appendChild(im); f.appendChild(el('small', null, m.map.text)); c.appendChild(f); }
+    else if (m.nomap) c.appendChild(el('div', 'mnomap', 'Plain: ' + m.nomap.replace(/: goes plain$/, '') + '.'));
+  }
+  function htmlLook(c, m) {
+    if (!m.html) return;
+    var d = el('details'); d.appendChild(el('summary', null, 'See it as the email looks')); c.appendChild(d);
+    d.addEventListener('toggle', function () { if (!d.open || d.querySelector('iframe')) return; var fr = el('iframe'); fr.title = 'The email as it looks'; fr.setAttribute('sandbox', ''); fr.srcdoc = m.html; d.appendChild(fr); });
+  }
+
   /* ---- Email: pick the companies, preview every message, queue them; the server drip-sends ---- */
   function drawEmail() {
     var D = S.data, Q = D.queue, set = D.settings, em = S.em;
@@ -421,12 +441,14 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       try { ti.value = localStorage.getItem('desk.testto') || ''; } catch (e) {}
       var ts = el('select'); ts.setAttribute('aria-label', 'Which trade\u2019s message'); ts.style.cssText = 'padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);max-width:100%';
       Object.keys(D.trades).filter(function (t) { return D.templates[t]; }).forEach(function (t) { var o = el('option', null, D.trades[t] + ' message'); o.value = t; ts.appendChild(o); });
+      var tst = styleSelect(S.em.style, null);
+      var tci = el('input'); tci.type = 'text'; tci.value = 'Denver'; tci.setAttribute('aria-label', 'The sample company\u2019s city (the map is of this city)'); tci.style.cssText = 'padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);min-width:0;flex:0 1 150px';
       var tb0 = el('button', 'btn', 'Send the test'); tb0.type = 'button';
       tb0.addEventListener('click', function () {
         var to = ti.value.trim(); if (!to) { ti.focus(); return; } try { localStorage.setItem('desk.testto', to); } catch (e) {}
-        tb0.disabled = true; api('sendtest', { to: to, trade: ts.value }).then(function (j) { tb0.disabled = false; toast(j.ok ? 'Test sent to ' + j.to + ': check the inbox (and spam)' : (j.error || 'The test did not go out.')); }).catch(function () { tb0.disabled = false; toast('No connection.'); });
+        tb0.disabled = true; api('sendtest', { to: to, trade: ts.value, style: tst.value, city: tci.value.trim() }).then(function (j) { tb0.disabled = false; toast(j.ok ? 'Test sent to ' + j.to + ' (' + j.subject + '): check the inbox (and spam)' : (j.error || 'The test did not go out.')); }).catch(function () { tb0.disabled = false; toast('No connection.'); });
       });
-      tr0.appendChild(ti); tr0.appendChild(ts); tr0.appendChild(tb0); tc.appendChild(tr0); main.appendChild(tc);
+      tr0.appendChild(ti); tr0.appendChild(ts); tr0.appendChild(tst); tr0.appendChild(tci); tr0.appendChild(tb0); tc.appendChild(tr0); main.appendChild(tc);
     }
     if (Q.waiting) {
       var qc = el('div', 'card'); qc.appendChild(el('h3', null, 'Next in line'));
@@ -472,18 +494,22 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     var tsel = el('select'); tsel.setAttribute('aria-label', 'Template'); tsel.style.cssText = 'padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);max-width:100%';
     [['auto', 'Each company gets its own trade’s template']].concat(Object.keys(D.trades).map(function (t) { return [t, 'Everyone gets the ' + D.trades[t] + ' template']; })).forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; tsel.appendChild(x); });
     tsel.value = em.tpl; tsel.addEventListener('change', function () { em.tpl = tsel.value; em.preview = null; prev.textContent = ''; }); c2.appendChild(tsel);
+    var ssel = styleSelect(em.style, function () { em.style = ssel.value; try { localStorage.setItem('desk.style', em.style); } catch (e) {} em.preview = null; prev.textContent = ''; });
+    ssel.style.marginLeft = '8px'; c2.appendChild(ssel);
+    c2.appendChild(el('p', 'help', 'With map: the same words, plus a light HTML version with the Traverse logo, a map of the company\u2019s own city from our data (hail for roofing and solar, recent sales for pest and security, big lawns for yards) and a full signature. Companies in a city we have no map for get the plain email.'));
     var ed = el('p', 'help'); ed.appendChild(document.createTextNode('Change the wording in ')); var gs2 = el('button', 'lnk', 'Settings ›'); gs2.type = 'button'; gs2.addEventListener('click', function () { go('settings'); }); ed.appendChild(gs2); c2.appendChild(ed);
     var go2 = el('button', 'btn', 'Read every message'); go2.type = 'button'; go2.style.marginTop = '10px'; c2.appendChild(go2);
     var prev = el('div'); prev.style.marginTop = '12px'; c2.appendChild(prev);
     go2.addEventListener('click', function () {
       var ids = picked().map(function (l) { return l.id; }); go2.disabled = true;
-      api('preview', { ids: ids, tpl: em.tpl }).then(function (j) { go2.disabled = false; if (!j.ok) { toast(j.error || 'Could not make them.'); return; } em.preview = j; drawPreview(); }).catch(function () { go2.disabled = false; toast('No connection.'); });
+      api('preview', { ids: ids, tpl: em.tpl, style: em.style }).then(function (j) { go2.disabled = false; if (!j.ok) { toast(j.error || 'Could not make them.'); return; } em.preview = j; drawPreview(); }).catch(function () { go2.disabled = false; toast('No connection.'); });
     });
     function drawPreview() {
       prev.textContent = ''; var j = em.preview; if (!j) return;
       var sk = Object.keys(j.skipped || {}); if (sk.length) prev.appendChild(el('p', 'soft', 'Left out: ' + sk.map(function (k) { return j.skipped[k] + ' (' + k + ')'; }).join(', ') + '.'));
       var shownN = 30, box = el('div'); prev.appendChild(box);
-      var draw3 = function () { box.textContent = ''; j.messages.slice(0, shownN).forEach(function (m) { var c = el('div', 'msg'); c.appendChild(el('div', 'mh', 'To: ' + m.to)); c.appendChild(el('div', 'ms', m.subject)); c.appendChild(el('pre', null, m.body)); box.appendChild(c); }); if (j.messages.length > shownN) { var mm = el('button', 'btn ghost small', 'Show ' + Math.min(50, j.messages.length - shownN) + ' more of ' + (j.messages.length - shownN) + ' left'); mm.type = 'button'; mm.addEventListener('click', function () { shownN += 50; draw3(); }); box.appendChild(mm); } };
+      if (j.style === 'map') { var nm = j.messages.filter(function (m) { return m.style === 'map'; }).length; prev.appendChild(el('p', 'soft', nm + ' of ' + j.messages.length + ' go with a map; ' + (j.messages.length - nm) + ' go plain (no map for their city).')); }
+      var draw3 = function () { box.textContent = ''; j.messages.slice(0, shownN).forEach(function (m) { var c = el('div', 'msg'); c.appendChild(el('div', 'mh', 'To: ' + m.to)); c.appendChild(el('div', 'ms', m.subject)); mapBits(c, m); c.appendChild(el('pre', null, m.body)); htmlLook(c, m); box.appendChild(c); }); if (j.messages.length > shownN) { var mm = el('button', 'btn ghost small', 'Show ' + Math.min(50, j.messages.length - shownN) + ' more of ' + (j.messages.length - shownN) + ' left'); mm.type = 'button'; mm.addEventListener('click', function () { shownN += 50; draw3(); }); box.appendChild(mm); } };
       draw3();
       var send = el('button', 'btn', 'Queue these ' + j.messages.length + ' emails'); send.type = 'button'; send.style.marginTop = '10px'; send.setAttribute('data-act', 'queue');
       var days = Math.ceil(j.messages.length / Math.max(1, set.cap));
@@ -493,7 +519,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
         var who = em.from === 'one' ? 'this company' : em.from === 'list' && em.desc ? em.desc : listDesc({ trade: em.trade, where: em.where }, '') + (em.fresh ? ' not emailed yet' : '');
         if (!confirm('Queue ' + j.messages.length + (j.messages.length === 1 ? ' email' : ' emails') + ' to ' + who + '? Each goes on its own from ' + Q.mailbox + ', at most ' + set.cap + ' a day, starting at the next send window.')) return;
         send.disabled = true;
-        save('queue', { ids: j.messages.map(function (m) { return m.id; }), tpl: em.tpl }, null).then(function (r) { if (r && r.ok) { em.ticks = {}; em.from = null; em.preview = null; draw(); toast(r.queued + ' emails queued'); } else send.disabled = false; });
+        save('queue', { ids: j.messages.map(function (m) { return m.id; }), tpl: em.tpl, style: j.style || 'plain' }, null).then(function (r) { if (r && r.ok) { em.ticks = {}; em.from = null; em.preview = null; draw(); toast(r.queued + ' emails queued'); } else send.disabled = false; });
       });
       prev.appendChild(send); prev.appendChild(why);
     }

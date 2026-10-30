@@ -388,41 +388,19 @@ function tcCode(array $taken): string {
     }
     throw new RuntimeException('no code');
 }
-/** a logo the app can draw: a PNG or JPG (re-drawn at 512 px at most when the server can, which drops anything hidden in it), or an SVG made
-    of paths (each path's d and fill only; scripts, links, styles and every other element are dropped). Returns ['img' => bytes, 'ext'] |
-    ['logo' => company.json logo] | ['error'] | [] for none */
+/** the logo from the welcome page, checked only for what it claims to be (PNG, JPG or SVG, 500 KB at most). The install's own Company-screen
+    upload code takes it the first time the install is asked for its company (rounds.php logoAdopt -> logoTake: the PNG/JPG checks, svgClean),
+    so a welcome-page logo is kept exactly as an upload would be; this file only carries it there. Returns ['raw', 'ext'] | ['error'] | [] */
 function tcLogo(string $dataUrl): array {
     if ($dataUrl === '') return [];
     if (!preg_match('#^data:image/(png|jpeg|svg\+xml);base64,([A-Za-z0-9+/=\s]+)$#D', $dataUrl, $m)) return ['error' => 'The logo must be a PNG, JPG or SVG file.'];
-    $bin = base64_decode(preg_replace('/\s+/', '', $m[2]), true);
-    if ($bin === false || strlen($bin) > 400 * 1024) return ['error' => 'The logo must be under 400 KB.'];
-    if ($m[1] === 'svg+xml') {
-        if (preg_match('/<!DOCTYPE|<!ENTITY|<script|<foreignObject|javascript:/i', $bin)) return ['error' => 'That SVG has parts we cannot use (scripts or embedded content). Save it as a PNG instead.'];
-        $doc = new DOMDocument(); $prev = libxml_use_internal_errors(true);
-        $ok = $doc->loadXML($bin, LIBXML_NONET); libxml_use_internal_errors($prev);   /* no network, no entities (refused above) */
-        if (!$ok || !$doc->documentElement || strtolower($doc->documentElement->localName) !== 'svg') return ['error' => 'That SVG could not be read. Save it as a PNG instead.'];
-        $vb = trim((string) $doc->documentElement->getAttribute('viewBox'));
-        if (!preg_match('/^-?[\d.]+[ ,]+-?[\d.]+[ ,]+[\d.]+[ ,]+[\d.]+$/', $vb)) { $w = (float) $doc->documentElement->getAttribute('width'); $h = (float) $doc->documentElement->getAttribute('height'); $vb = $w > 0 && $h > 0 ? '0 0 ' . $w . ' ' . $h : ''; }
-        $parts = [];
-        foreach ($doc->getElementsByTagName('path') as $p) {
-            $d = (string) preg_replace('/[^0-9A-Za-z .,\-]/', '', $p->getAttribute('d')); if ($d === '' || strlen($d) > 20000) continue;
-            $fill = strtolower(trim($p->getAttribute('fill'))); if (!preg_match('/^#[0-9a-f]{3,8}$/', $fill)) $fill = 'currentColor';
-            $parts[] = ['d' => $d, 'fill' => $fill]; if (count($parts) >= 24) break;
-        }
-        if (!$parts || $vb === '') return ['error' => 'That SVG has no shapes we can use (we keep paths only). Save it as a PNG instead.'];
-        return ['logo' => ['viewBox' => preg_replace('/[^0-9 .\-]/', '', str_replace(',', ' ', $vb)), 'parts' => $parts]];
-    }
-    $png = $m[1] === 'png';
-    if ($png ? strncmp($bin, "\x89PNG\r\n\x1a\n", 8) !== 0 : strncmp($bin, "\xFF\xD8\xFF", 3) !== 0) return ['error' => 'That file is not the picture type its name says.'];
-    $sz = @getimagesizefromstring($bin); if (!$sz || $sz[0] < 16 || $sz[1] < 16 || $sz[0] > 6000 || $sz[1] > 6000) return ['error' => 'That picture could not be read, or is too small or too large.'];
-    if (function_exists('imagecreatefromstring') && ($im = @imagecreatefromstring($bin))) {
-        $w = imagesx($im); $h = imagesy($im); $k = min(1, 512 / max($w, $h)); $nw = max(1, (int) round($w * $k)); $nh = max(1, (int) round($h * $k));
-        $out = imagecreatetruecolor($nw, $nh); imagealphablending($out, false); imagesavealpha($out, true);
-        imagefill($out, 0, 0, imagecolorallocatealpha($out, 0, 0, 0, 127));
-        imagecopyresampled($out, $im, 0, 0, 0, 0, $nw, $nh, $w, $h);
-        ob_start(); imagepng($out); $bin = (string) ob_get_clean(); imagedestroy($im); imagedestroy($out); $png = true;
-    }
-    return ['img' => $bin, 'ext' => $png ? 'png' : 'jpg'];
+    $bin = base64_decode((string) preg_replace('/\s+/', '', $m[2]), true);
+    if ($bin === false || $bin === '' || strlen($bin) > 500 * 1024) return ['error' => 'The logo must be under 500 KB.'];
+    $ext = ['png' => 'png', 'jpeg' => 'jpg', 'svg+xml' => 'svg'][$m[1]];
+    $ok = $ext === 'png' ? strncmp($bin, "\x89PNG\r\n\x1a\n", 8) === 0 : ($ext === 'jpg' ? strncmp($bin, "\xFF\xD8\xFF", 3) === 0 : (bool) preg_match('/<svg[\s>]/i', substr($bin, 0, 4096)));
+    if (!$ok) return ['error' => 'That file is not the picture type its name says.'];
+    if ($ext !== 'svg') { $sz = @getimagesizefromstring($bin); if (!$sz || $sz[0] < 16 || $sz[1] < 16 || $sz[0] > 4000 || $sz[1] > 4000) return ['error' => 'Use a logo between 16 and 4,000 pixels on each side.']; }
+    return ['raw' => $bin, 'ext' => $ext];
 }
 /** the welcome page's last step (company and the admin), checked. Returns the clean values or ['error' => ..., 'field'] */
 function tcForm(array $in): array {
@@ -499,11 +477,10 @@ function tcBrand(array $c, string $cid, string $cs, array $in): array {
     if (!preg_match('/^#[0-9a-f]{6}$/', $color)) return ['error' => 'Pick your brand colour.', 'field' => 'color'];
     $logo = tcLogo((string) ($in['logo'] ?? '')); if (isset($logo['error'])) return $logo + ['field' => 'logo'];
     $brand = ['color' => $color, 'logo' => null];
-    if (isset($logo['img'])) { $f = tcDir() . '/pending/' . $cid . '-logo.' . $logo['ext']; foreach (['png', 'jpg'] as $x) @unlink(tcDir() . '/pending/' . $cid . '-logo.' . $x); tcWrite($f, $logo['img'], 0600); $brand['logo'] = ['file' => basename($f), 'ext' => $logo['ext']]; }
-    elseif (isset($logo['logo'])) $brand['logo'] = ['svg' => $logo['logo']];
+    if (isset($logo['raw'])) { $f = tcDir() . '/pending/' . $cid . '-logo.' . $logo['ext']; foreach (['png', 'jpg', 'svg'] as $x) @unlink(tcDir() . '/pending/' . $cid . '-logo.' . $x); tcWrite($f, $logo['raw'], 0600); $brand['logo'] = ['file' => basename($f), 'ext' => $logo['ext']]; }
     elseif (!empty($in['keep']) && is_array($p['brand']['logo'] ?? null)) $brand['logo'] = $p['brand']['logo'];   /* the colour changed, the logo stays */
     tcPendSave($cid, function ($x) use ($brand) { $x['brand'] = $brand; return $x; });
-    return ['ok' => true, 'brand' => ['color' => $color, 'logo' => $brand['logo'] ? (isset($brand['logo']['svg']) ? 'svg' : $brand['logo']['ext']) : null]];
+    return ['ok' => true, 'brand' => ['color' => $color, 'logo' => $brand['logo'] ? $brand['logo']['ext'] : null]];
 }
 /**
  * Make the install for a paid checkout. Idempotent: a second submit, a retry after a failure part way, or a double click makes one install
@@ -522,9 +499,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     if (empty($p['area'])) return ['error' => 'Start with your service area (step 1).', 'field' => 'area', 'step' => 1];
     if (empty($p['brand'])) return ['error' => 'Pick your colour first (step 2).', 'field' => 'color', 'step' => 2];
     $area = (array) $p['area']; $brand = (array) $p['brand']; $v['color'] = (string) $brand['color'];
-    $logo = [];
-    if (isset($brand['logo']['file']) && is_file(tcDir() . '/pending/' . $brand['logo']['file'])) $logo = ['img' => (string) file_get_contents(tcDir() . '/pending/' . $brand['logo']['file']), 'ext' => (string) $brand['logo']['ext']];
-    elseif (isset($brand['logo']['svg'])) $logo = ['logo' => $brand['logo']['svg']];
+    $logoFile = isset($brand['logo']['file']) && is_file(tcDir() . '/pending/' . $brand['logo']['file']) ? tcDir() . '/pending/' . $brand['logo']['file'] : '';
     $ed = (string) $p['edition']; $edj = tcJson(tcTplDir($ed) . '/edition.json');
     if (!$edj) return ['error' => 'That trade is not ready on our side. We have been told and will email you.', 'code' => 500];
     $S = tcSettings();
@@ -545,7 +520,8 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
 
     /* the page and API */
     $r = tcRender($e); if (isset($r['error'])) { tcLog(['what' => 'render failed', 'cid' => $cid, 'why' => $r['error']]); return ['error' => 'We could not make your app. We have been told.', 'code' => 500]; }
-    if (isset($logo['img'])) { foreach (['png', 'jpg'] as $x) @unlink(tcPub() . '/' . $e['folder'] . '/logo.' . $x); tcWrite(tcPub() . '/' . $e['folder'] . '/logo.' . $logo['ext'], $logo['img'], 0644); }
+    /* the logo goes to the install's own upload code (rounds.php logoAdopt -> logoTake), taken on its first company request */
+    if ($logoFile !== '') @copy($logoFile, tcSite() . '/' . $e['priv'] . '/logo-pending.' . $brand['logo']['ext']);
 
     /* sign-ins: Traverse's super line(s) under the names the edition uses (so the Edition and Clients pickers' hop finds them), and the admin */
     $supers = []; $ef = tcSite() . '/' . $edj['priv'] . '/rounds-codes.php';
@@ -581,7 +557,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     $co['features'] = array_replace((array) ($co['features'] ?? []), ['billing' => true, 'clientstart' => true, 'crew' => true, 'company' => true, 'walkdesk' => true]);
     unset($co['features']['billexempt']);
     $co = array_replace($co, ['name' => $v['company'], 'short' => $v['short'], 'tagline' => '', 'phone' => $v['mobile'], 'email' => $v['email'], 'site' => '', 'appUrl' => $e['url']]);
-    $co['logo'] = isset($logo['logo']) ? $logo['logo'] : (isset($logo['img']) ? ['img' => 'logo.' . $logo['ext'] . '?v=' . time()] : null);
+    $co['logo'] = null;   /* the built mark stays out; the uploaded logo (company-local.json logo) is drawn instead */
     $co['area'] = tcAreaPublic($area);   /* as the area step left it: linking, or done (that step links under the same lock, so it has finished by now) */
     tcWrite($dst . '/company.json', (string) json_encode($co, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     tcWrite($dst . '/company-local.json', (string) json_encode(['name' => $v['company'], 'short' => $v['short'], 'tagline' => '', 'phone' => $v['mobile'], 'email' => $v['email'], 'site' => '',
