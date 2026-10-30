@@ -57,8 +57,9 @@ var i18nT = function (t) { return t; };
       return p;
     }).join(' · ');
     r = r.replace(MRE, function (m, a, num, b) { return a ? MON[a] : num + MON[b]; });
-    /* counts the code builds from numbers: '4 of 30,464', '37 doors', '1 door' */
-    r = r.replace(/(\d[\d,]*) of (\d)/g, '$1 de $2').replace(/(\d) doors\b/g, '$1 puertas').replace(/(\d) door\b/g, '$1 puerta');
+    /* counts the code builds from numbers: '4 of 30,464', '37 doors', '1 door', and the editions' '37 properties' (2026-10-30) */
+    r = r.replace(/(\d[\d,]*) of (\d)/g, '$1 de $2').replace(/(\d) doors\b/g, '$1 puertas').replace(/(\d) door\b/g, '$1 puerta')
+      .replace(/(\d) properties\b/g, '$1 propiedades').replace(/(\d) property\b/g, '$1 propiedad');
     /* phrases with a name or a number inside (2026-10-11, round 2) */
     r = r.replace(/^Install the (.+) app$/, 'Instalar la app $1').replace(/^Instalar la app (.+) app$/, 'Instalar la app $1')
       .replace(/\b(\d+) min ago\b/g, 'hace $1 min').replace(/\b(\d+) h ago\b/g, 'hace $1 h').replace(/\bjust now\b/g, 'justo ahora')   /* ago() (2026-10-11) */
