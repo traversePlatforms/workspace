@@ -3227,5 +3227,12 @@
  "Create a new app password and copy it.": "Crea una contraseña de aplicación nueva y cópiala.",
  "Come back here, paste it below, and press Send a test and connect.": "Vuelve aquí, pégala abajo y presiona Enviar una prueba y conectar.",
  "That page is for personal Outlook and Hotmail accounts. A work or school Microsoft 365 account may have app passwords turned off: ask whoever runs your Microsoft 365 to allow them (or to turn on Authenticated SMTP for this mailbox).": "Esa página es para cuentas personales de Outlook y Hotmail. Una cuenta de Microsoft 365 de trabajo o escuela puede tener apagadas las contraseñas de aplicación: pide a quien administra tu Microsoft 365 que las permita (o que active SMTP autenticado para este buzón).",
- "That address is not on a lead or customer you work with, so the app does not send to it.": "Esa dirección no está en un prospecto o cliente con el que trabajes, así que la app no le envía."
+ "That address is not on a lead or customer you work with, so the app does not send to it.": "Esa dirección no está en un prospecto o cliente con el que trabajes, así que la app no le envía.",
+ " kW fits, around ": " kW caben, alrededor de ",
+ " panels of 400 W)": " paneles de 400 W)",
+ "Estimate: roof facing, slope and shade from the laser scan; sun data from PVWatts (NREL, now NLR) for this area, ": "Estimado: orientación, inclinación y sombra del techo según el escaneo láser; datos solares de PVWatts (NREL, ahora NLR) para esta zona, ",
+ " kWh per kW here": " kWh por kW aquí",
+ "% taken off for tall trees on the sunny side (our assumption), ": "% descontado por árboles altos del lado soleado (supuesto nuestro), ",
+ " kWh without": " kWh sin descontar",
+ ". The most that fits, not a sized system.": ". Lo máximo que cabe, no un sistema dimensionado."
 }
