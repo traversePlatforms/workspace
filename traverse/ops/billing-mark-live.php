@@ -1,7 +1,8 @@
 <?php
 // "Mark live" from the command line (2026-10-27, Matthew: setup of up to 2 business days after payment, then a 7-day money-back
 // guarantee from the day the company's app is live). Records live_at in that install's billing.json, the same as the super admin's
-// Mark live button on Billing. Run on the server:
+// Release to client button on Billing (called Mark live until 2026-10-29). Since 2026-10-29 it also opens the whole app to the client's
+// team (setup mode ends; see billing.php). Run on the server:
 //   php billing-mark-live.php traverse          (Roofing; also traverse-yards, traverse-solar, traverse-pest, traverse-security, or sixfold)
 // Refuses when there is no paid plan yet or the app is already live. Refunds are never done from here.
 if (PHP_SAPI !== 'cli') exit;
@@ -15,5 +16,5 @@ define('SIXFOLD_CLI', true);
 $_REQUEST = ['action' => 'billinglivecli']; $_GET = $_REQUEST; $_SERVER['REQUEST_METHOD'] = 'GET';
 $r = ['ok' => false, 'error' => 'The app did not answer.'];
 try { require getenv('HOME') . '/www/traverseplatforms.com/public_html/api/' . $files[$which]; } catch (SixfoldOut $e) { $r = $e->body; }
-if (!empty($r['ok'])) { echo "$which: live since " . date('j M Y H:i', (int) $r['liveAt']) . "; the money-back guarantee runs 7 days from now\n"; exit(0); }
+if (!empty($r['ok'])) { echo "$which: released to the client, live since " . date('j M Y H:i', (int) $r['liveAt']) . "; the money-back guarantee runs 7 days from now\n"; exit(0); }
 fwrite(STDERR, "$which: " . ($r['error'] ?? 'refused') . "\n"); exit(1);

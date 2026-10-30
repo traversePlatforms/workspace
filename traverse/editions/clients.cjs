@@ -85,6 +85,7 @@ module.exports = function addClients(EDITIONS) {
       market: mk ? mk.co.key : null, marketGroup: mk ? mk.group : null, money: mk ? false : base.money,
       company: () => {
         const co = base.company();
+        if (co.features) delete co.features.billexempt;   /* a client pays: setup mode and the past-due lock apply (2026-10-29); only Traverse's own editions are exempt */
         Object.assign(co, { name: C.name, short: C.short || C.name.split(/\s+/)[0], tagline: C.tagline || '', phone: C.phone || '', email: C.email || '', site: C.site || '' });
         if (Array.isArray(C.towns)) co.townGroups = C.towns;
         if (mk) {   /* a market install: its own towns only, and nothing that reads Colorado-only data */

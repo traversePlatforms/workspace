@@ -1752,6 +1752,12 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   button.kitstep{cursor:pointer}.kitstep span:nth-child(2){display:grid;gap:2px;flex:1;min-width:0}.kitstep small{color:var(--soft)}
   .kitck{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);font-weight:800}.kitstep.done .kitck{border-color:var(--go);background:var(--go);color:var(--on-go)}
   .kitgo{flex:none;font-size:20px;color:var(--soft)}
+  /* setup mode and the past-due lock (2026-10-29): the admin's checklist, the team's waiting screen, Give more time; the role lines in Accounts */
+  .setuph .setupck{margin:12px 0}.setuplinks{display:flex;gap:14px;padding:0 12px 4px 50px}.setuph > .billgo{margin:14px 0 4px}
+  .lockv .tmsg{font-size:16px;line-height:1.45}
+  .billmore{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:8px}.billmore label{display:grid;gap:4px;font:600 13px var(--sans);color:var(--soft)}.billmore input{width:84px;min-height:40px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:16px var(--sans)}
+  .billlock{color:var(--bad, #b3261e)}
+  .rolesall{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:4px;font:13px/1.4 var(--sans);color:var(--soft)}.rolesall li.on{color:var(--ink)}.rolesall li.rolesay{margin:0}.rolesall b{color:var(--ink)}
   /* Setup › Email and other ways to pay (2026-10-29) */
   .mailsteps{margin:0;padding:10px 12px 10px 30px;border-radius:12px;background:var(--sunk);font-size:14px;display:grid;gap:4px}
   .mailmsg{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
@@ -2830,10 +2836,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     yards: { crew: 'Rep', setter: 'Setter', tech: 'Crew' },
     _: { admin: 'Admin', manager: 'Manager', office: 'Office', crew: 'Sales rep', setter: 'Setter', tech: 'Technician', super: 'Traverse', quote: 'Quote only' }
   };
-  /* what each role does, for the Accounts form (the full matrix is in the manual and in the API's edition block) */
-  var ROLE_SAY = { crew: 'runs appointments: doors, their own leads and quotes', setter: 'knocks doors and books appointments; no prices, quotes, customers or payments',
-    tech: 'does the work: their own jobs, schedule, notes, photos and Done; doors only if you switch them on', office: 'works the leads, the schedule, customers and payments',
-    manager: 'runs a team: its people, leads, territories, numbers and goals', admin: 'everything, including these accounts and billing' };
+  /* what each role can do, one plain line each, for the Accounts form (2026-10-29, Matthew: a description per role). Worded from what the
+     server enforces (edGate, ED_SETTER_NO, ED_TECH_NO, desk(), repSendOn() and the per-person switches in the API), with the trade's labels;
+     the full matrix is in the API's edition block. */
+  function roleSay(r) {
+    var kit = kitOnC(), pay = kit ? '; takes payments only if you tick Takes payments' : '';
+    if (r === 'admin') return 'everything: doors, leads, quotes, customers, payments, jobs, every account, billing and company setup';
+    if (r === 'manager') return 'knocks doors and works their own leads, and runs their team: its sign-ins, leads, territories, numbers and goals; no quotes or customers' + pay;
+    if (r === 'office') return 'works every lead: quotes, agreements and deposits, the jobs schedule, customers and payments; door lists only if you tick Knocks doors';
+    if (r === 'crew') return 'knocks doors and works their own leads' + (kit ? ', prices them with the quote kit' : '') + (kit && S.repSend ? ', sends the agreement and takes the deposit' : kit ? '; the office sends the agreement' : '') + '; no customer list' + pay;
+    if (r === 'setter') return 'knocks doors and books appointments on their own leads; no prices, quotes, customers or payments';
+    if (r === 'tech') return 'does the work: their own jobs, schedule, notes, photos and Done; no leads, quotes or customers; doors only if you tick Knocks doors' + pay;
+    return '';
+  }
   function edOn() { return !!(CO && CO.name) && !CO.a365; }
   function roleName(r) { if (!edOn()) return ({ admin: 'Admin', manager: 'Manager', office: 'Office', quote: 'Quote only', super: 'Traverse' })[r] || 'Crew'; return (ROLE_LBL[CO.best] || {})[r] || ROLE_LBL._[r] || 'Crew'; }
   function edRoles() { return ['crew', 'setter', 'tech'].concat(feat('walkdesk') ? ['office'] : [], ['manager', 'admin']); }
@@ -3059,6 +3074,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (j.why === 'viewgone') { vaSet(''); location.reload(); }   /* the account looked through was switched off or removed */
           if (j.why === 'viewing') { j.error = 'Looking only. To save from here, tap Make changes on the blue bar.'; setTimeout(function () { toast('Looking only', 'To save from ' + ((S.viewing && S.viewing.name) || 'their') + '\u2019s screen, tap Make changes on the blue bar. It saves as you.', null); }, 0); }
           if (r.status === 401 && j.why === 'elsewhere') S.outWhy = j.error;   /* one device at a time (2026-10-12): say why, on the sign-in screen */
+          if (j.why === 'locked') lockHit(j);   /* setup mode or the past-due lock began while the app was open (2026-10-29) */
           if (action === 'regions' && j.ok && j.regions) j.regions.forEach(areaFill);   /* before trimCard, which takes away the parts an edition does not have */
           if (action === 'regions' && j.ok && j.regions) S.regionsSig = (!fromSaved && j.sig) || '';   /* the answer's signature (2026-10-27): refresh() asks only for it next time; a saved offline copy never counts as current */
           if (TRIM_ACTIONS[action]) trimCard(j);
@@ -3558,7 +3574,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.sub = ''; S.terms = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.sub = ''; S.terms = null; S.lock = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin'; tabPaint();
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -3597,7 +3613,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -4302,7 +4318,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(hd); box.appendChild(g);
   }
   function chooseView() {
+    if (lockOn() && S.role !== 'admin') { lockedView(); return; }   /* setup mode or the past-due lock: a team member waits (2026-10-29) */
     if (termsDue()) { termsView(); return; }   /* the terms, before anything else (the editions, 2026-10-29) */
+    if (lockOn()) { setupHome(); return; }   /* ...and the admin gets the company ready (2026-10-29) */
     if (qView()) { quickQuoteView(); return; }   /* quote-only accounts: the Quick quote is all there is (2026-10-15) */
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools'; S.inOffice = false;
@@ -10745,7 +10763,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return it;
   }
   var DNAV_ICO = { home: 'home', pipe: 'clip', jobs: 'cal', card: 'card', house: 'leaf', fq: 'leaf', cal: 'clock', numbers: 'chart', doors: 'door', walks: 'route', team: 'users', office: 'table', plan: 'map', storms: 'hail' };
-  function dnavOn() { return !!(DESK_MQ && DESK_MQ.matches) && !!S.me && S.screen !== 'signin'; }
+  function dnavOn() { return !!(DESK_MQ && DESK_MQ.matches) && !!S.me && S.screen !== 'signin' && !lockOn(); }   /* no top bar while the app is locked (2026-10-29): its links are the locked screens */
   function dnavPaint() {
     var on = dnavOn();
     document.body.classList.toggle('dnav-on', on); dnav.hidden = !on;
@@ -12470,13 +12488,113 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      the next time it opens. The colour sets the bar, sign-in screen, keys and accents; the home-screen icon and name stay as
      the install was built. */
   /* billing (Matthew 2026-10-10): the admin sees the plan and pays through Stripe. The page never sees a card: Checkout and
-     the customer portal are Stripe's own pages. Shown only where company.json turns on features.billing. Nothing locks. */
+     the customer portal are Stripe's own pages. Shown only where company.json turns on features.billing. Setup mode and the past-due lock (2026-10-29): setupHome() above. */
   /* the plans (Matthew 2026-10-26): per company with people included, the trade data in every plan */
   var BILL_PLAN = {
     solo: ['Solo', 'One admin and one worker: doors, the trade data, appointments and pipeline.'],
     crew: ['Crew', 'For a crew: adds phones and follow-ups, the leaderboard and training.'],
     team: ['Team', 'For bigger teams: adds managers, territories, goals, alerts and the CRM hand-off.']
   };
+  /* ---- setup mode and the past-due lock (2026-10-29, Matthew: "BEFORE PAYMENT ... the install is in setup mode"; "lock it in 3") ----
+     The server decides (billGate in the API) and sends S.lock with the sign-in and 'me'; the page follows. Before payment and until Traverse
+     releases the app, and when the plan has been past due for 3 days or has ended, a client's admin gets setupHome() and the screens it opens
+     (Billing, Accounts, Company, Setup); everyone else gets lockedView(). Traverse's super sign-in is never sent a lock; a role preview is. */
+  var LOCK_SCREENS = { setuphome: 1, billing: 1, accounts: 1, company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, hours: 1, profile: 1, terms: 1, signin: 1 };
+  function lockOn() { return !!(S.lock && S.me); }
+  function lockHit(j) {   /* a refusal with why 'locked': the lock began while the app was open */
+    S.lock = j.lock || S.lock || { kind: 'setup', admin: S.role === 'admin' };
+    if (S.screen === 'signin') return;
+    if (S.role === 'admin' ? !LOCK_SCREENS[S.screen] : S.screen !== 'locked') setTimeout(chooseView, 0);
+  }
+  /* open yet? Check again, and every two minutes while the screen shows */
+  function lockRecheck(btn) {
+    if (btn) btn.disabled = true;
+    api('me').then(function (j) {
+      if (btn) btn.disabled = false;
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) return;
+      S.lock = j.lock || null;
+      if (!S.lock) { toast('Your app is ready', 'Everything is open now.', null); chooseView(); }
+      else if (btn) toast('Not yet', S.lock.kind === 'billing' ? 'The plan is still waiting for payment.' : 'We’ll have it ready soon.', null);
+    }).catch(function () { if (btn) btn.disabled = false; });
+  }
+  var lockTimer = null;
+  function lockPoll() {
+    clearInterval(lockTimer);
+    lockTimer = setInterval(function () { if (S.screen !== 'setuphome' && S.screen !== 'locked') { clearInterval(lockTimer); return; } if (!document.hidden && navigator.onLine) lockRecheck(null); }, 120000);
+  }
+  /* a team member (manager, office, sales rep, setter, tech) while the app is locked */
+  function lockedView() {
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'locked'; tabPaint();
+    hdr.hidden = true; foot.hidden = true; setDock(null); if (typeof dnavPaint === 'function') dnavPaint();
+    view.textContent = '';
+    var bill = S.lock && S.lock.kind === 'billing';
+    var box = q('div', 'signin terms lockv'), inn = q('div', 'in'); box.appendChild(inn);
+    inn.appendChild(ridge('mk'));
+    inn.appendChild(q('h1', null, CO.short));
+    inn.appendChild(q('div', 'prompt', bill ? 'Paused for now' : 'Almost ready'));
+    inn.appendChild(q('p', 'tmsg', bill ? 'Your company’s account needs attention. Your admin has been told.' : 'Your company’s Traverse is being set up. Your admin will let you know when it’s ready.'));
+    var ck = q('button', 'save tagree', 'Check again'); ck.type = 'button'; ck.addEventListener('click', function () { lockRecheck(ck); }); inn.appendChild(ck);
+    inn.appendChild(q('p', 'tsub', 'Nothing for you to do. When it opens, this screen opens the app by itself.'));
+    var out = q('button', 'lnk tout', 'Sign out'); out.type = 'button'; out.addEventListener('click', function () { markOut(true); clearSaved().then(function () { signinView(); }); tellServerOut(); }); inn.appendChild(out);
+    view.appendChild(box);
+    lockPoll();
+  }
+  /* the client's admin while the app is locked: what gets the company ready, in order, and where Billing is */
+  function setupHome() {
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'setuphome'; S.inOffice = false; foot.hidden = true; setDock(null);
+    var L = S.lock || {}, bill = L.kind === 'billing', days = L.setupDays || 2;
+    setBar('tools', { title: CO.short, sub: bill ? 'Paused for your team' : 'Getting ready', avatar: true });
+    view.textContent = '';
+    var box = q('div', 'choose setuph'), hero = q('div', 'hero');
+    hero.appendChild(q('div', 'hi', bill ? 'Your plan needs attention' : 'Welcome to Traverse, ' + (myName() || 'there')));
+    hero.appendChild(q('div', 'dt', bill ? 'The app is paused for your team until the plan is paid. Update the card in Billing and everything opens again at once.'
+      : L.paid ? 'Paid: we’re setting up your towns and data; ready in up to ' + days + ' business days, often sooner.'
+      : 'Get your company ready while we set up your app. We release it in up to ' + days + ' business days after you pay, often sooner.'));
+    box.appendChild(hero);
+    var card = q('div', 'card coform kitsetup setupck'), marks = {};
+    var step = function (key, n, title, sub, fn, links) {
+      var row = q('button', 'kitstep'); row.type = 'button'; row.setAttribute('data-step', key); row.addEventListener('click', fn);
+      var ck = q('span', 'kitck', n); row.appendChild(ck); marks[key] = [row, ck];
+      var tx = q('span'); tx.appendChild(q('b', null, title)); tx.appendChild(q('small', null, sub)); row.appendChild(tx);
+      row.appendChild(q('span', 'kitgo', '›')); card.appendChild(row);
+      if (links) { var lw = q('div', 'setuplinks'); links.forEach(function (x) { var b = q('button', 'lnk', x[0]); b.type = 'button'; b.addEventListener('click', x[1]); lw.appendChild(b); }); card.appendChild(lw); }
+    };
+    var tick = function (key, on) { var m = marks[key]; if (!m || !on) return; m[0].classList.add('done'); m[1].textContent = '✓'; };
+    var kit = kitOnC(), n = 0;
+    if (bill) {
+      card.appendChild(q('div', 'dwh', 'To open the app again'));
+      step('pay', '1', 'Update the card in Billing', 'Manage billing opens Stripe’s page. Paid again, everyone is back in at once.', billingView);
+      step('team', '', 'Accounts', 'Your team’s sign-ins. They can sign in again as soon as the plan is paid.', accountsView);
+      if (kit) step('setup', '', 'Setup', 'Email, payments, prices and import, as before.', kitSetupView);
+    } else {
+      card.appendChild(q('div', 'dwh', 'Get ready'));
+      step('pay', String(++n), L.paid ? 'Paid' : 'Pay to start setup', L.paid ? 'Your plan is paid. Billing has the details.' : 'Pick your plan. The money-back guarantee starts the day your app opens.', billingView);
+      step('team', String(++n), 'Add your team', 'A sign-in for each person. They can sign in once your app is released.', accountsView);
+      if (kit) step('connect', String(++n), 'Connect email and payments', 'Your email for agreements and receipts; Square, Stripe or other ways customers pay.', mailSetupView, [['Email', mailSetupView], ['Payments', kitPayView]]);
+      if (kit && impOnC()) step('import', String(++n), 'Import your customers', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', function () { importView(); });
+      tick('pay', L.paid);
+      card.appendChild(q('p', 'sub2', 'We release your app in up to ' + days + ' business days, often sooner. Doors, maps, the Plan and the pipeline open then, and your team can sign in.'));
+    }
+    box.appendChild(card);
+    if (kit && !bill) {
+      api('kit').then(function (K) { (K && K.ok && K.setup || []).forEach(function (x) { if (x.k === 'people') tick('team', x.done); }); var on = {}; (K && K.setup || []).forEach(function (x) { on[x.k] = x.done; }); tick('connect', on.email && on.payments); }).catch(function () {});
+      if (impOnC()) api('imports').then(function (j) { tick('import', !!(j && j.ok && (j.imports || []).some(function (x) { return !x.undone; }))); }).catch(function () {});
+    }
+    var more = [feat('company') ? ['Company', 'Name, phone, email, website and colour.', companyView] : null,
+      kit ? ['Prices and terms', 'What a quote adds up from, and your agreement terms.', kitPricesView] : null,
+      kit && costsOnC() ? ['Your costs', 'What each price line costs you.', costsView] : null,
+      kit ? ['Setup checklist', 'Everything to set before your first quote.', kitSetupView] : null,
+      bill ? null : ['Billing', 'Your Traverse plan.', billingView]].filter(Boolean);
+    if (more.length) {
+      box.appendChild(q('h2', 'tgrp', 'More setup'));
+      var g = q('div', 'tgrid'); more.forEach(function (x) { g.appendChild(tile('button', 'check', x[0], x[1], 'Admin only', x[2])); }); box.appendChild(g);
+    }
+    var ckb = q('button', 'billgo', 'Check again'); ckb.type = 'button'; ckb.addEventListener('click', function () { lockRecheck(ckb); }); box.appendChild(ckb);
+    view.appendChild(box);
+    window.scrollTo(0, 0);
+    lockPoll();
+  }
   function billDate(ts) { return ts ? new Date(ts * 1000).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) : ''; }
   function billingReturn() {
     var m = /[?&]billing=(done|cancel)\b/.exec(location.search); if (!m) return false;
@@ -12507,13 +12625,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       location.href = r.url;
     }).catch(function () { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Try again when you have signal.'; });
   }
-  /* Traverse-only Billing actions (Mark live, Refund and cancel): redraw with what the server answers */
+  /* Traverse-only Billing actions (Release to client, Give more time, Refund and cancel): redraw with what the server answers */
   function billAct(btn, msg, action, body, holder) {
     btn.disabled = true; msg.className = 'sub2'; msg.textContent = 'Working…';
     api(action, { body: body }).then(function (r) {
       if (!r.ok) { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = r.error || 'That did not go through.'; return; }
       drawBilling(holder, r);
       if (action === 'billingrefund') toast('Refunded and cancelled', (r.amount ? money2(r.amount / 100) + ' goes back to the card. ' : '') + 'Stripe sends the receipt.', null);
+      if (action === 'billinglive') toast('Released', 'Their whole team can sign in now.', null);   /* 2026-10-29 */
+      if (action === 'billingmore') toast('More time given', r.lock && r.lock.moreUntil ? 'Open until ' + billDate(r.lock.moreUntil) + '.' : 'Noted.', null);
     }).catch(function () { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Try again when you have signal.'; });
   }
   function drawBilling(holder, j) {
@@ -12542,14 +12662,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* setup, then the money-back guarantee (Matthew 2026-10-27, replacing the free pilot): set up within setupDays business days of
          paying; money back for guaranteeDays from the day the app is live. Only Traverse marks it live or refunds. */
       var good = j.status === 'active' || j.status === 'trialing';
-      if (good && j.paidAt && !j.liveAt) c.appendChild(q('div', 'billfd', 'Setting up your app (up to ' + j.setupDays + ' business days)'));
+      if (good && j.paidAt && !j.liveAt) c.appendChild(q('div', 'billfd', 'Setting up your app: ready in up to ' + j.setupDays + ' business days, often sooner'));   /* 2026-10-29 wording */
       if (good && j.liveAt) c.appendChild(q('div', 'billfd', 'Live since ' + billDate(j.liveAt) + (j.guaranteeUntil && j.guaranteeUntil * 1000 > Date.now() ? ' · money-back guarantee until ' + billDate(j.guaranteeUntil) + ' (' + j.guaranteeDays + ' days)' : '')));
       if (j.refunded) c.appendChild(q('div', 'sub2', 'Refunded under the money-back guarantee.'));
+      /* Release to client (2026-10-29; was Mark live, same action): the whole app opens to the client's team at once, and the guarantee starts */
       if (j.super && good && j.paidAt && !j.liveAt) {
-        var lb = q('button', 'billgo', 'Mark live'); lb.type = 'button'; var lm = q('div', 'sub2', 'Traverse only: the app is set up. The money-back guarantee starts now.');
-        lb.addEventListener('click', function () { billAct(lb, lm, 'billinglive', {}, holder); });
+        var lb = q('button', 'billgo', 'Release to client'); lb.type = 'button'; var lm = q('div', 'sub2', 'Traverse only: the app is set up. Everything opens for their team now, and the money-back guarantee starts.');
+        lb.addEventListener('click', function () { if (!window.confirm('Release the app to ' + (CO.name || 'this client') + ' now? Their whole team can sign in, and the money-back guarantee starts today.')) return; billAct(lb, lm, 'billinglive', {}, holder); });
         c.appendChild(lb); c.appendChild(lm);
       }
+      billLockLines(c, j, holder);
       if (j.super && j.refundable) {
         var rb = q('button', 'billgo billrf', 'Refund and cancel'); rb.type = 'button'; var rm = q('div', 'sub2', 'Traverse only, within the money-back guarantee: refunds the last payment in full and ends the plan now.');
         rb.disabled = !j.ready;
@@ -12570,6 +12692,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (live || j.pending) return;
     holder.appendChild(billPicker(j));
+  }
+  /* the past-due lock on the Billing card, Traverse's eyes only (2026-10-29): when the team pauses, and Give more time to work with them.
+     The client's admin reads the same in the warning line. */
+  function billLockLines(c, j, holder) {
+    var L = j.lock || {};
+    if (!j.super) return;
+    if (j.exempt) { c.appendChild(q('div', 'sub2', 'Traverse only: this install never locks (features.billexempt).')); return; }
+    if (L.phase !== 'due' && L.phase !== 'locked') return;
+    var bits = [];
+    if (L.pastDueSince) bits.push('Past due since ' + billDate(L.pastDueSince));
+    bits.push(L.phase === 'locked' ? 'Locked for their team now' : (L.moreUntil ? 'More time given: locks for their team on ' : 'Locks for their team on ') + billDate(L.lockAt));
+    c.appendChild(q('div', 'billfd billlock', bits.join(' · ')));
+    (j.more || []).forEach(function (m) { c.appendChild(q('div', 'sub2', '+' + m.days + (m.days === 1 ? ' day' : ' days') + ' by ' + m.by + ', ' + billDate(m.at))); });
+    var row = q('div', 'billmore'), lab = q('label', null, 'Days'), inp = q('input'); inp.type = 'number'; inp.min = '1'; inp.max = '60'; inp.step = '1'; inp.value = '3'; inp.inputMode = 'numeric'; lab.appendChild(inp);
+    var mb = q('button', 'billgo', 'Give more time'); mb.type = 'button'; var mm = q('div', 'sub2', 'Traverse only: their app stays open (or opens again) for these days, counted from when it would lock. It is noted with your name.');
+    mb.addEventListener('click', function () { var d = parseInt(inp.value, 10); if (!(d >= 1 && d <= 60)) { mm.className = 'msg bad'; mm.textContent = 'Give 1 to 60 days.'; return; } billAct(mb, mm, 'billingmore', { days: d }, holder); });
+    row.appendChild(lab); row.appendChild(mb); c.appendChild(row); c.appendChild(mm);
   }
   function billPicker(j) {
     var box = q('div', 'card billcard');
@@ -12648,7 +12787,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (off) sum.appendChild(q('div', 'sub2', 'The founding price, for your first 12 months; then ' + money(m) + ' a month. Stripe shows the discount on the next page.'));
       /* the agreement (2026-10-13) */
       var agr = q('div', 'sub2'); agr.appendChild(document.createTextNode('By choosing a plan you agree to the ')); var la = q('a', null, 'Subscription Agreement'); la.href = 'https://traverseplatforms.com/terms/'; la.target = '_blank'; la.rel = 'noopener'; agr.appendChild(la); agr.appendChild(document.createTextNode(' and ')); var lp = q('a', null, 'Privacy Policy'); lp.href = 'https://traverseplatforms.com/privacy/'; lp.target = '_blank'; lp.rel = 'noopener'; agr.appendChild(lp); agr.appendChild(document.createTextNode('.')); sum.appendChild(agr);
-      if (j.guaranteeDays) sum.appendChild(q('div', 'sub2', 'The card is charged today. We set your app up within ' + j.setupDays + ' business days, and you get a ' + j.guaranteeDays + '-day money-back guarantee from the day it is live.'));
+      if (j.guaranteeDays) sum.appendChild(q('div', 'sub2', 'The card is charged today. We set your app up in up to ' + j.setupDays + ' business days, often sooner, and you get a ' + j.guaranteeDays + '-day money-back guarantee from the day it is live.'));
       sum.appendChild(q('div', 'sub2', 'Prices in US dollars. Stripe takes the card; this app never sees it.'));
     }
     go.disabled = !j.ready;
@@ -13674,14 +13813,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var seg = q('div', 'aseg' + (edOn() ? ' aseg-ed' : ''));
     var opts = edOn() ? (only || edRoles()).map(function (k) { return [k, roleName(k)]; })   /* the editions' roles (2026-10-29) */
       : [['crew', 'Crew']].concat(feat('walkdesk') ? [['office', 'Office']] : [], feat('walkdesk') && CO.a365 ? [['quote', 'Quote only']] : [], [['manager', 'Manager'], ['admin', 'Admin']]);
-    var say = edOn() ? q('div', 'lsub rolesay', ROLE_SAY[cur] ? roleName(cur) + ': ' + ROLE_SAY[cur] + '.' : '') : null;
+    /* every role offered, one line each (2026-10-29, was the picked role's line only): the picked one stands out (.rolesay) */
+    var all = edOn() ? q('ul', 'lsub rolesall') : null;
+    var mark = function (k) { [].forEach.call(all.children, function (li) { li.className = li.getAttribute('data-role') === k ? 'on rolesay' : ''; }); };
+    if (all) { opts.forEach(function (o) { var li = q('li'); li.setAttribute('data-role', o[0]); li.appendChild(q('b', null, o[1])); li.appendChild(document.createTextNode(': ' + roleSay(o[0]) + '.')); all.appendChild(li); }); mark(cur); }
     opts.forEach(function (o) {
       var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0]));
-      b.addEventListener('click', function () { onPick(o[0]); [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); if (say) say.textContent = roleName(o[0]) + ': ' + (ROLE_SAY[o[0]] || '') + '.'; });
+      b.addEventListener('click', function () { onPick(o[0]); [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); if (all) mark(o[0]); });
       seg.appendChild(b);
     });
-    if (!say) return seg;
-    var w = q('div', 'rolepick'); w.appendChild(seg); w.appendChild(say); return w;
+    if (!all) return seg;
+    var w = q('div', 'rolepick'); w.appendChild(seg); w.appendChild(all); return w;
   }
   function accountForm(holder) {
     var fm = q('div', 'phf acf'), r = 'crew';
@@ -20041,7 +20183,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -20049,7 +20191,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

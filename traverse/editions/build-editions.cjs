@@ -76,7 +76,7 @@ const EDITIONS = {
         alerts: withWinter(['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning', 'High Wind Warning', 'High Wind Watch',
                  'Heat Advisory', 'Excessive Heat Warning', 'Extreme Heat Warning']),
         townGroups: coloradoGroups(),   /* was: ['north-douglas', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain', 'thornton', 'centennial', 'erie', 'commerce-city', 'denver'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the five Front Range hail towns measured (Denver after the packed side files and the lighter scorer)
-        features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true, billing: true },   // billing on in Roofing first (Matthew 2026-10-13); Stripe LIVE since 2026-10-26
+        features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: true, roof: true, billing: true, billexempt: true },   // billexempt (2026-10-29): Traverse's own editions never go into setup mode or the past-due lock; client installs drop it (clients.cjs). billing on in Roofing first (Matthew 2026-10-13); Stripe LIVE since 2026-10-26
         card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: true, roof: true }
       });
     }
@@ -108,7 +108,7 @@ const EDITIONS = {
       best: 'yards',   // best doors first: this trade's walking order (2026-10-07)
       alerts: withWinter(['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory', 'Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Wildfires']),
       townGroups: coloradoGroups(),   /* was: ['north-douglas', 'thornton', 'erie', 'commerce-city', 'centennial', 'south-denver', 'englewood', 'walden', 'aurora'] */   // +Aurora 2026-10-12 (Matthew asked for it); +Walden 2026-10-12 (a Sixfold job's neighbourhood); +South Denver and Englewood 2026-10-12 (a Sixfold rep there);   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); +4 towns with lawn and trees measured 2026-10-12 (research/markets/yards-markets-2026-10.md)
-      features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false, billing: true },   // billing on in every edition (Matthew 2026-10-29: "Turn on billing for all them")
+      features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false, billing: true, billexempt: true },   // billing on in every edition (Matthew 2026-10-29: "Turn on billing for all them")
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
       links: { googleReview: '' }
     })
@@ -139,7 +139,7 @@ const EDITIONS = {
       best: 'solar',   // best doors first: this trade's walking order (2026-10-07)
       alerts: withWinter(['Severe Thunderstorm Warning', 'Tornado Warning']),   // safety only (Matthew 2026-10-06); + winter and wind (2026-10-29)
       townGroups: coloradoGroups(),   /* was: ['north-douglas', 'arvada', 'centennial', 'thornton', 'cs-northeast', 'cs-southeast', 'security-widefield', 'fountain'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); 2026-10-10: the El Paso towns now measured for sun (Matthew: every relevant town in)
-      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true, billing: true },
+      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: true, solar: true, billing: true, billexempt: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: true, solar: true },
       links: { googleReview: '' }
     })
@@ -169,7 +169,7 @@ const EDITIONS = {
       best: 'pest',   // best doors first: this trade's walking order (2026-10-07)
       alerts: withWinter(['Severe Thunderstorm Warning', 'Tornado Warning']),   // safety only (Matthew 2026-10-06); + winter and wind (2026-10-29)
       townGroups: coloradoGroups(),   /* was: ['north-douglas', 'windsor', 'erie', 'commerce-city'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
-      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: true, billing: true },
+      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: true, billing: true, billexempt: true },
       card: { lawn: false, trees: true, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: true },
       links: { googleReview: '' }
     })
@@ -199,7 +199,7 @@ const EDITIONS = {
       best: 'security',   // best doors first: this trade's walking order (2026-10-07)
       alerts: withWinter(['Severe Thunderstorm Warning', 'Tornado Warning']),   // safety only (Matthew 2026-10-06); + winter and wind (2026-10-29)
       townGroups: coloradoGroups(),   /* was: ['north-douglas', 'denver', 'cs-northeast', 'cs-southeast', 'cs-northwest', 'cs-southwest', 'boulder'] */   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md)
-      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: false, security: true, billing: true },
+      features: { quote: false, communities: false, firecheck: false, skiptrace: false, hail: false, roof: false, solar: false, pest: false, security: true, billing: true, billexempt: true },
       card: { lawn: false, trees: false, fire: false, money: false, water: false, fc: false, hail: false, roof: false, solar: false, pest: false, security: true },
       links: { googleReview: '' }
     })

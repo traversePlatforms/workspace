@@ -29,9 +29,21 @@ declare(strict_types=1);
  * guarantee_days from live_at. Refunds are never automatic: only the super admin's "Refund and cancel" (refunds the latest
  * charge in full and cancels the subscription), allowed from payment until the guarantee ends.
  *
+ * ---- SETUP MODE AND THE PAST-DUE LOCK (Matthew 2026-10-29) --------------------------------------------------------------
+ * billingLockState() says where the install stands; rounds.php (billGate) enforces it, editions only, never on an install whose
+ * company.json has features.billexempt (Traverse's own five editions) and never for the super admin.
+ *   - Before payment (no paid_at) and after payment until the super admin presses "Release to client" (billinglive, live_at): setup
+ *     mode. The client's admin reaches only Billing, Company, Setup and Accounts; team members can sign in but see "being set up".
+ *   - Past due (or unpaid) for BILLING_LOCK_DAYS (3) days, counted from Stripe's event time when it first went past due
+ *     (past_due_at), or the plan ended (cancelled): locked back to the same screens. Before 3 days only the warning shows.
+ *     "Give more time" (super admin, billingmore) pushes the lock back N days from the later of now and when it would lock
+ *     (more_until; each one listed in 'more' and billing.log). Paid again: open at once, and past_due_at and more_until are cleared.
+ *   - A new subscription after the plan ended, at an install Traverse had released before, is live at once (live_at set as it is
+ *     paid): the app is already set up. As for any new subscription, the money-back guarantee runs again from then.
+ *   - More people than paid seats still only warns (never blocked).
+ *
  * ---- WHAT IT DOES NOT DO ------------------------------------------------------------------
- *   - It never locks anyone out. Past due, cancelled or more people than paid seats: the admin sees a warning and
- *     nothing else changes. Whether to enforce anything is Matthew's call, later.
+ *   - It never locks Traverse's own installs (features.billexempt) or the super admin out.
  *   - No card details touch this server: Stripe's pages take them.
  *   - The Company plan (custom) is not sold here.
  *
@@ -53,6 +65,7 @@ const BILLING_PLANS = ['solo', 'crew', 'team'];
 const BILLING_PRICE_KEYS = ['solo', 'crew', 'team', 'crew_extra', 'team_extra', 'uplift_solo', 'uplift', 'addon'];
 const BILLING_GOOD = ['active', 'trialing'];
 const BILLING_SEATS_MAX = 500;
+const BILLING_LOCK_DAYS = 3;   /* past due this long locks the install (Matthew 2026-10-29: "lock it in 3 if they reach out ill work with them") */
 
 function billingConfigDefaults(): array {
     $two = fn($m, $y) => ['month' => $m, 'year' => $y];
@@ -245,9 +258,48 @@ function billingMarkLive(array $c, string $by): ?string {
     if (($err = $why(billingLoad())) !== null) return $err;   /* a refusal writes nothing */
     billingSave(function (array $b) use ($by, $why, &$err) {
         if (($err = $why($b)) !== null) return $b;
-        $b['live_at'] = time(); $b['live_by'] = $by; return $b;
+        $b['live_at'] = time(); $b['live_by'] = $by; $b['released_at'] = $b['released_at'] ?? time(); return $b;   /* released_at: the first release, kept for good (2026-10-29) */
     });
     if ($err === null) billingLog(['what' => 'live', 'by' => $by]);
+    return $err;
+}
+/** where the install stands for the setup mode and the past-due lock (2026-10-29). 'phase':
+ *    unpaid  no plan paid yet                                    lock 'setup'
+ *    setup   paid, not released yet (no live_at)                  lock 'setup'
+ *    live    paid and released                                    open
+ *    due     past due, or ended, inside the 3 days or the extra time given: open if released (the warning shows), else 'setup'
+ *    locked  past due for 3 days or more, or ended, no extra time left   lock 'billing'
+ *  'lapse' names this spell of past due or cancelled (for the one note it gets); 'lockAt' is when 'due' turns 'locked'. */
+function billingLockState(array $b, ?int $now = null): array {
+    $now = $now ?? time(); $st = (string) ($b['status'] ?? ''); $more = (int) ($b['more_until'] ?? 0);
+    $o = ['phase' => 'live', 'lock' => null, 'pastDueSince' => null, 'lockAt' => null, 'moreUntil' => $more > $now ? $more : null, 'lapse' => ''];
+    if (empty($b['paid_at'])) return ['phase' => 'unpaid', 'lock' => 'setup'] + $o;
+    if (in_array($st, BILLING_GOOD, true)) return empty($b['live_at']) ? ['phase' => 'setup', 'lock' => 'setup'] + $o : $o;
+    if ($st === 'past_due' || $st === 'unpaid') {
+        $since = (int) ($b['past_due_at'] ?? 0) ?: ((int) ($b['updated'] ?? 0) ?: $now);   /* a past due from before 2026-10-29 has no past_due_at: the last event's time */
+        $at = max($since + BILLING_LOCK_DAYS * 86400, $more);
+        $o['pastDueSince'] = $since; $o['lapse'] = 'due:' . $since;
+    } else {   /* cancelled (or another state that is not paying): locked now, unless more time was given */
+        $at = $more; $o['lapse'] = 'end:' . ((int) ($b['ended'] ?? 0) ?: (string) $st);
+    }
+    $o['lockAt'] = $at ?: null;
+    if ($now < $at) return ['phase' => 'due', 'lock' => empty($b['live_at']) ? 'setup' : null] + $o;
+    return ['phase' => 'locked', 'lock' => 'billing'] + $o;
+}
+/** "Give more time" (super admin, 2026-10-29): the lock moves N days past the later of now and when it would lock. Returns an error or null */
+function billingMoreTime(int $days, string $by): ?string {
+    if ($days < 1 || $days > 60) return 'Give 1 to 60 days.';
+    $why = function (array $b): ?string { return in_array(billingLockState($b)['phase'], ['due', 'locked'], true) ? null : 'More time is for a plan that is past due or has ended.'; };
+    if (($err = $why(billingLoad())) !== null) return $err;
+    $until = 0;
+    billingSave(function (array $b) use ($days, $by, $why, &$err, &$until) {
+        if (($err = $why($b)) !== null) return $b;
+        $until = max(time(), (int) (billingLockState($b)['lockAt'] ?? 0)) + $days * 86400;
+        $b['more_until'] = $until;
+        $b['more'] = array_slice(array_merge((array) ($b['more'] ?? []), [['days' => $days, 'by' => $by, 'at' => time(), 'until' => $until]]), -20);
+        return $b;
+    });
+    if ($err === null) billingLog(['what' => 'more time', 'days' => $days, 'by' => $by, 'until' => $until]);
     return $err;
 }
 /** "Refund and cancel" (super admin only, within the guarantee): refunds the latest charge in full, then cancels the subscription
@@ -273,10 +325,11 @@ function billingRefundCancel(array $c, string $by): array {
 /** what the admin sees: the subscription, seats used against seats paid, and the one warning that applies */
 function billingState(array $c, array $rows): array {
     $b = billingLoad(); $used = billingSeatsUsed($rows); $paid = billingSeatsPaid($b, $c);
-    $st = (string) ($b['status'] ?? '');
+    $st = (string) ($b['status'] ?? ''); $L = billingLockState($b);
     $warn = null;
-    if ($st === 'past_due' || $st === 'unpaid') $warn = 'The last payment did not go through. Update the card in Manage billing.';
-    elseif ($st === 'canceled') $warn = 'The plan was cancelled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . '. Pick a plan to carry on.';
+    if ($st === 'past_due' || $st === 'unpaid') $warn = 'The last payment did not go through. Update the card in Manage billing.'
+        . ($L['phase'] === 'locked' ? ' Until then the app is paused for your team; it opens again as soon as it is paid.' : (!empty($L['lockAt']) && !empty($b['live_at']) ? ' Your team keeps working until ' . date('j M Y', (int) $L['lockAt']) . '; after that the app pauses until it is paid.' : ''));   /* the 3-day lock (2026-10-29) */
+    elseif ($st === 'canceled') $warn = 'The plan was cancelled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . '. Pick a plan to carry on.' . ($L['phase'] === 'locked' && !empty($b['paid_at']) ? ' Until then the app is paused for your team.' : '');
     elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ($used === 1 ? ' worker' : ' workers') . ' can sign in and the plan covers ' . $paid . ', besides your one admin. Email billing@traverseplatforms.com to add seats, or remove people in Accounts.';
     elseif (!empty($b['cancel_at_end']) && !empty($b['period_end'])) $warn = 'The plan ends on ' . date('j M Y', (int) $b['period_end']) . ' (cancelled in Stripe). Manage billing turns it back on.';
     return [
@@ -289,6 +342,7 @@ function billingState(array $c, array $rows): array {
         'setupDays' => (int) $c['setup_days'], 'guaranteeDays' => (int) $c['guarantee_days'],
         'paidAt' => $b['paid_at'] ?? null, 'liveAt' => $b['live_at'] ?? null, 'guaranteeUntil' => billingGuaranteeUntil($c, $b),
         'refunded' => !empty($b['refunded']), 'refundable' => billingRefundable($c, $b),
+        'lock' => array_intersect_key($L, ['phase' => 1, 'lock' => 1, 'pastDueSince' => 1, 'lockAt' => 1, 'moreUntil' => 1]), 'lockDays' => BILLING_LOCK_DAYS,   /* setup mode and the past-due lock (2026-10-29) */
         'display' => $c['display'], 'included' => $c['included'], 'uplift' => billingUplift($c),
         'monthly' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon'])) : null,
         'offer' => array_values(array_filter(BILLING_PLANS, fn($p) => ($c['prices'][$p]['month'] ?? '') !== '' || ($c['prices'][$p]['year'] ?? '') !== '')),
@@ -352,7 +406,8 @@ function billingTakeEvent(array $c, array $ev): string {
     };
     if (!$ours($o)) return '';
     $did = '';
-    billingSave(function (array $b) use ($c, $type, $o, $id, &$did) {
+    $evAt = min(time(), (int) ($ev['created'] ?? 0) ?: time());   /* Stripe's own time for the event (2026-10-29: the past-due clock) */
+    billingSave(function (array $b) use ($c, $type, $o, $id, $evAt, &$did) {
         if ($type === 'checkout.session.completed') {
             $b['customer'] = (string) ($o['customer'] ?? ($b['customer'] ?? ''));
             if (!empty($o['subscription'])) $b['subscription'] = (string) $o['subscription'];
@@ -385,8 +440,15 @@ function billingTakeEvent(array $c, array $ev): string {
             if ($type === 'customer.subscription.deleted') $b['ended'] = (int) ($o['ended_at'] ?? time());
             /* the setup clock (2026-10-27): the first time a subscription is paid and running, it starts; a new subscription starts it again */
             if (in_array($b['status'], BILLING_GOOD, true) && ($b['paid_sub'] ?? '') !== $b['subscription']) {
+                $wasLive = !empty($b['live_at']) || !empty($b['released_at']);
                 $b['paid_sub'] = $b['subscription']; $b['paid_at'] = time(); unset($b['live_at'], $b['live_by'], $b['refunded']);
+                /* paid again after the plan ended (2026-10-29, Matthew: "Paid again: unlocks immediately"): released before, so already set up */
+                if ($wasLive) { $b['live_at'] = time(); $b['live_by'] = 'Paid again'; $b['released_at'] = $b['released_at'] ?? time(); }
             }
+            /* the past-due clock (2026-10-29): when it first went past due, by Stripe's time; paying clears it and any extra time given */
+            if (in_array($b['status'], ['past_due', 'unpaid'], true)) { if (empty($b['past_due_at']) || $evAt < (int) $b['past_due_at']) $b['past_due_at'] = $evAt; }
+            else unset($b['past_due_at']);
+            if (in_array($b['status'], BILLING_GOOD, true)) unset($b['more_until']);
             unset($b['pending']); $did = $b['status'];
         } elseif ($type === 'invoice.payment_failed' || $type === 'invoice.paid') {
             $b['last_invoice'] = ['paid' => $type === 'invoice.paid', 'amount' => (int) ($o['amount_due'] ?? 0), 'at' => time()];

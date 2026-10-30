@@ -2199,7 +2199,7 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest',
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE') && in_array($action, ['regions', 'regionsig'], true)) {
     $session = ['n' => 'Command line', 'r' => (string) SIXFOLD_WARM_ROLE, 'c' => ''];
 }
-/* "Mark live" from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, the guarantee starts */
+/* "Mark live" (Release to client since 2026-10-29) from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, the guarantee starts */
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli') {
     $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
     $b = billingLoad();
@@ -3523,6 +3523,75 @@ function edGate(string $a): void {
 }
 if (!defined('SIXFOLD_CLI') && $session && edition()) edGate($action);
 
+/* ==== SETUP MODE AND THE PAST-DUE LOCK (2026-10-29, Matthew: "BEFORE PAYMENT ... the install is in setup mode"; "lock it in 3 if they
+ * reach out ill work with them") ======================================================================================================
+ * Editions with billing on and Stripe set up, never an install whose company.json has features.billexempt (Traverse's own five editions),
+ * never the super admin. Where the install stands is billingLockState() in billing.php: before payment and until the super admin presses
+ * "Release to client" it is being set up; past due for 3 days, or cancelled, it is locked for payment. While it is either:
+ *   - the client's admin reaches only what gets the company ready or pays: Billing, Company, Setup (Email, Payments, prices, Import, Your
+ *     costs), Accounts, their profile and alerts (BILL_ADMIN_OK). Doors, maps, the Plan, territories, the house lookup, storm and hail lists,
+ *     search, the pipeline, customers, jobs and stats answer 403 why 'locked': the server keeps them shut, the page only follows.
+ *   - everyone else (manager, office, sales rep, setter, tech) signs in, but only 'me' and signing out answer; the page shows "being set
+ *     up" or "needs attention".
+ *   - previewing a role (X-View-As 'role:...') is answered as that role in the install's current state; the super admin himself is open.
+ * Nothing to clear when it opens: the next request reads billing.json again (Release to client, paid again, Give more time). */
+const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'billing', 'billingcheckout', 'billingportal',
+    'accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'acctflag', 'walkerset', 'paysset', 'repsendset',
+    'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
+    'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest',
+    'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
+    'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear'];
+const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
+/** the lock in force, or null when the install is open (billingLockState() plus 'noted', the lapse already told about) */
+function billLock(): ?array {
+    static $L = false;
+    if ($L !== false) return $L;
+    $L = null;
+    if (!edition() || !feature('billing') || feature('billexempt') || !function_exists('billingLockState')) return $L;
+    if (!billingConfigured(billingConfig(__DIR__))) return $L;   /* no Stripe keys: nothing to pay with, so nothing to wait for */
+    $b = billingLoad(); $s = billingLockState($b);
+    if ($s['lock'] !== null) $L = $s + ['noted' => (string) ($b['lock_noted'] ?? '')];
+    return $L;
+}
+/** what the page is told about a lock: the kind, and for an admin the phase (the checklist's Pay step) */
+function billLockInfo(?array $L, bool $admin): ?array {
+    if (!$L) return null;
+    return ['kind' => $L['lock'], 'admin' => $admin] + ($admin ? ['phase' => $L['phase'], 'paid' => $L['phase'] !== 'unpaid', 'setupDays' => (int) billingConfig(__DIR__)['setup_days']] : []);
+}
+/** the lock for someone signing in with this role ('super' never) */
+function billLockFor(string $r): ?array { return $r === 'super' ? null : billLockInfo(billLock(), $r === 'admin'); }
+function billLockWords(array $L, bool $admin): string {
+    if (!$admin) return $L['lock'] === 'billing' ? 'Your company\'s account needs attention. Your admin has been told.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
+    if ($L['lock'] === 'billing') return 'The app is paused for your team until the plan is paid. Update the card in Billing and everything opens again at once.';
+    return $L['phase'] === 'unpaid' ? 'Doors, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
+        : 'Doors, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
+}
+/** a lock for payment is told once per lapse: Traverse by email, the client's admins in their alerts ("Your admin has been told") */
+function billLockNote(array $L): void {
+    global $basePeople, $acct, $sessionKey, $viewing;
+    if ($L['lock'] !== 'billing' || $L['lapse'] === '' || $L['noted'] === $L['lapse'] || $viewing) return;
+    $first = false;
+    billingSave(function (array $b) use ($L, &$first) { if (($b['lock_noted'] ?? '') !== $L['lapse']) { $b['lock_noted'] = $L['lapse']; $first = true; } return $b; });
+    if (!$first) return;
+    $co = (string) company()['name'];
+    $why = $L['phase'] === 'locked' && $L['pastDueSince'] ? 'past due since ' . date('j M Y', (int) $L['pastDueSince']) : 'its plan ended';
+    $r = travMail(seatNoteTo(), 'Traverse: ' . $co . ' is locked (' . $why . ')', "An install is locked for payment: its team sees \"Your company's account needs attention\" and its admin sees Billing, Setup and Accounts only.\n\n"
+        . 'Company: ' . $co . "\nInstall: " . COOKIE . "\nWhy: " . $why . "\n\nPaying opens it at once. To work with them, open their Billing as Traverse and use Give more time.\n");
+    billingLog(['what' => 'locked', 'lapse' => $L['lapse'], 'mailed' => $r['ok']]);
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $row) if (!$row['off'] && $row['role'] === 'admin' && !boardHidden((string) $row['name']))
+        feedAdd((string) $row['name'], 'Your team is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Update the card in Billing and everything opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
+}
+function billGate(string $a): void {
+    global $isSuper, $role;
+    if ($isSuper) return;
+    $L = billLock(); if (!$L) return;
+    billLockNote($L);
+    $admin = $role === 'admin';
+    if (in_array($a, $admin ? BILL_ADMIN_OK : BILL_TEAM_OK, true)) return;
+    out(['ok' => false, 'why' => 'locked', 'lock' => billLockInfo($L, $admin), 'error' => billLockWords($L, $admin)], 403);
+}
+if (!defined('SIXFOLD_CLI') && $session && edition()) billGate($action);
+
 /* ---- the note to Traverse when an install goes over its seats (2026-10-29, Matthew: "keep it allowed (never block), the client's admin
  * sees the warning (exists), AND Matthew gets a note") ----
  * Once each time it goes over, not on every request: seat-over.json beside the data remembers the last state, and a note goes only when
@@ -3618,15 +3687,17 @@ function edSignin(array $hit, string $hitCode): array {
     if (!edition()) return [];
     $r = (string) ($hit[1] ?? 'crew'); $id = codeId($hitCode, $sessionKey);
     $o = ['terms' => termsState($id, $r === 'super' ? 'admin' : $r, (string) ($hit[0] ?? ''), $r === 'super')] + ['repSend' => repSendOn(), 'mailFrom' => (string) (mailOwnCfg()['user'] ?? '')];   /* sales reps send agreements and take deposits: the company switch; mailFrom: emails to customers go from inside the app (2026-10-29) */
+    $o['lock'] = billLockFor($r);   /* setup mode or the past-due lock (2026-10-29): the page opens on the right screen */
     if (in_array($r, ['setter', 'tech'], true)) $o += ['role' => 'crew', 'sub' => $r, 'walker' => $r === 'tech', 'pays' => $r === 'tech' && paysOn($id), 'doors' => $r === 'tech' && acctFlag('doors', $id)];
     return $o;
 }
 /** the same for 'me' */
 function edMe(): array {
-    global $session, $role, $realMe, $realSuper, $viewing, $me;
+    global $session, $role, $realMe, $realSuper, $viewing, $me, $isSuper;
     if (!edition()) return [];
     $id = (string) ($session['c'] ?? ''); $s = edSub();
     $o = ['sub' => $s, 'terms' => termsState($id, $role, (string) $me, (bool) $realSuper, (bool) $viewing), 'repSend' => repSendOn(), 'mailFrom' => (string) (mailOwnCfg()['user'] ?? '')];   /* 2026-10-29 */
+    $o['lock'] = $isSuper ? null : billLockInfo(billLock(), $role === 'admin');   /* setup mode or the past-due lock (2026-10-29); a role preview sees it as that role */
     if ($s === 'tech') $o += ['walker' => true, 'doors' => acctFlag('doors', $id)];
     if ($s === 'setter') $o += ['pays' => false, 'walker' => false];
     return $o;
@@ -10550,19 +10621,23 @@ function acctTaken(array $rows, string $name, string $except = ''): bool {
     return false;
 }
 /* ---- billing (2026-10-10, api/billing.php): the admin sees the plan, pays through Stripe Checkout, manages it in Stripe's portal.
- * Nothing here locks anyone out. */
-if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billinglive', 'billingrefund'], true)) {
+ * Setup mode and the past-due lock (2026-10-29) are billGate() further up; here Traverse releases the app and gives more time. */
+if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billinglive', 'billingrefund', 'billingmore'], true)) {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!feature('billing')) fail('Billing is not on for this install.', 403);
     $bc = billingConfig(__DIR__);
     $rows = acctRows($basePeople, $acct, $sessionKey);
+    /* exempt: never locked (Traverse's own installs); more: the extra time given, for the super admin's eyes (2026-10-29) */
+    $billMore = function () use ($isSuper) { return ['exempt' => feature('billexempt'), 'more' => $isSuper ? array_slice((array) (billingLoad()['more'] ?? []), -5) : []]; };
     if ($action === 'billing') seatWatch();   /* the note to Traverse when the install has gone over (2026-10-29) */
-    if ($action === 'billing') out(['ok' => true, 'super' => $isSuper] + billingState($bc, $rows));
+    if ($action === 'billing') out(['ok' => true, 'super' => $isSuper] + $billMore() + billingState($bc, $rows));
     if (!$isPost) fail('POST required', 405);
-    /* go-live and the money-back guarantee (2026-10-27): only Traverse (the super admin) marks an app live or refunds */
-    if ($action === 'billinglive' || $action === 'billingrefund') {
+    /* go-live and the money-back guarantee (2026-10-27): only Traverse (the super admin) marks an app live or refunds. "Release to client"
+       (2026-10-29) is the same go-live: it opens the whole app to the client's team at once. "Give more time" moves the past-due lock. */
+    if ($action === 'billinglive' || $action === 'billingrefund' || $action === 'billingmore') {
         if (!$isSuper) fail('Only Traverse does this.', 403);
-        if ($action === 'billinglive') { $e = billingMarkLive($bc, $me); if ($e !== null) fail($e); out(['ok' => true, 'super' => true] + billingState($bc, $rows)); }
+        if ($action === 'billinglive') { $e = billingMarkLive($bc, $me); if ($e !== null) fail($e); out(['ok' => true, 'super' => true] + $billMore() + billingState($bc, $rows)); }
+        if ($action === 'billingmore') { $e = billingMoreTime((int) ($body['days'] ?? 0), $me); if ($e !== null) fail($e); out(['ok' => true, 'super' => true] + $billMore() + billingState($bc, $rows)); }
         if (!billingConfigured($bc)) fail('Billing is not set up yet: the Stripe keys are missing.', 503);
         if (!billingRefundable($bc, billingLoad())) fail('Refunds are only for a paid plan within the money-back guarantee.');
         if (empty($body['confirm'])) fail('Confirm the refund first.');
