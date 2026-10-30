@@ -4909,7 +4909,8 @@ function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_st
    2026-10-26: "only new leads from today"). Messenger stays Jen's, and so do the Facebook leads from before. He takes them end to end; the
    office sees their jobs as Booked only, as for website leads. */
 function metaMineFrom(): int { static $t = null; if ($t === null) { $d = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) (company()['metaMine'] ?? '')) ? (string) company()['metaMine'] : ''; $t = $d !== '' ? (int) strtotime($d . ' 00:00:00 America/Denver') : 0; } return $t; }
-function webLead(array $l): bool { if (!empty($l['jenkeep']) || !empty($l['tojen'])) return false;   /* reached out to the office themselves: theirs now (2026-10-26); handed to Jen: hers (2026-10-26, Matthew: David Marshall) */
+function webLead(array $l): bool { if (!empty($l['jenkeep']) || !empty($l['tojen'])) return false;
+    if (!empty($l['mhand']) && (string) ($l['owner'] ?? '') !== '') return false;   /* sent on with Send to (handTo): the owner's now (2026-10-29, Matthew: Randall Carrera, sent to Jen, still in his pipeline) */   /* reached out to the office themselves: theirs now (2026-10-26); handed to Jen: hers (2026-10-26, Matthew: David Marshall) */
     $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom() && (metaMineTo() === 0 || (int) ($l['at'] ?? 0) < metaMineTo())); }
 /* the end of that (2026-10-28, Matthew: "switch the intake leads back to jen ... give her any of the ones i havent called, texted or emailed yet.
    Leave website leads to me"): company.json "metaMineTo", set just before the first Facebook lead he had not reached; the ones he had stay his */
