@@ -124,7 +124,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
       </div>
       <div class="prev" aria-label="Preview">
         <div class="phone" id="phone"><div class="bar" id="pbar"><div class="mk" id="pmk">Y</div><div><div class="nm" id="pnm">Your company</div><div class="tg" id="ptg"></div></div></div>
-          <div class="bd"><div class="tile" id="ptile"><span style="display:block;font-size:17px">Good morning</span><span style="display:flex;gap:6px;margin-top:10px"><span class="st"><b>0</b>DOORS</span><span class="st"><b>0</b>TALKED</span><span class="st"><b>0</b>QUOTES</span></span></div><div class="row"><span>Homes in your area</span><b id="phomes">…</b></div><div class="row"><span>Your team</span><b>Invite</b></div><div class="row"><span>Pipeline</span><b>0</b></div><div class="row"><span>Calendar</span><b>Today</b></div><div class="row"><span>Quotes</span><b>0</b></div><div class="row"><span>Jobs</span><b>0</b></div><div class="row"><span>Customers</span><b>Import</b></div></div><div class="nav"><span>Home</span><span>Doors</span><span>Pipeline</span><span>More</span></div></div>
+          <div class="bd"><div class="tile" id="ptile"><span style="display:block;font-size:17px">Good morning</span><span style="display:flex;gap:6px;margin-top:10px"><span class="st"><b>0</b>PROPERTIES</span><span class="st"><b>0</b>TALKED</span><span class="st"><b>0</b>QUOTES</span></span></div><div class="row"><span>Homes in your area</span><b id="phomes">…</b></div><div class="row"><span>Your team</span><b>Invite</b></div><div class="row"><span>Pipeline</span><b>0</b></div><div class="row"><span>Calendar</span><b>Today</b></div><div class="row"><span>Quotes</span><b>0</b></div><div class="row"><span>Jobs</span><b>0</b></div><div class="row"><span>Customers</span><b>Import</b></div></div><div class="nav"><span>Home</span><span>Properties</span><span>Pipeline</span><span>More</span></div></div>
         <p class="small" style="text-align:center">A preview of your app</p>
       </div>
     </div>
@@ -173,7 +173,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
     var where = a.miles ? a.miles + ' mi around ' + (a.place || 'your business') : (a.place || 'your counties');
     if (a.status === 'linking') return ['Loading your homes in ' + where + '… this carries on while you finish.', false];
     if (a.status === 'ready') return [Number(a.doors || 0).toLocaleString('en-US') + ' homes in ' + a.towns + ' towns are ready (' + where + ').', true];
-    return ['Door data for your area is being added; we will email you when your homes are in. Everything else in the app works now.', false];
+    return ['Property data for your area is being added; we will email you when your homes are in. Everything else in the app works now.', false];
   }
   function drawArea(a) {
     var x = areaLine(a);

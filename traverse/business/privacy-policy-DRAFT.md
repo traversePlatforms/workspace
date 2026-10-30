@@ -28,13 +28,13 @@ Questions or requests: **privacy@traverseplatforms.com**, or (303) 596-9515.
 
 **Account and sign-in information.** Each person's name and role, the kind of device they sign in from (for example "iPhone" or "Windows computer"), and when they sign in and out. Anyone can add a profile photo of themselves.
 
-**What people record in the app.** Door outcomes with the time, notes (typed or spoken), photos, phone numbers and email addresses homeowners give, appointments, customers, leads and results. This is the client's own data (see section 4).
+**What people record in the app.** Visit outcomes with the time, notes (typed or spoken), photos, phone numbers and email addresses homeowners give, appointments, customers, leads and results. This is the client's own data (see section 4).
 
 **How the app is used.** Which screens and buttons are used, so we and the client can see what helps. Never what anyone types.
 
-**Downloads and shared sign-ins.** Every download from the app is logged. The app flags a sign-in that looks shared, using the addresses of the doors marked and the time between them, and frequent switches between phones.
+**Downloads and shared sign-ins.** Every download from the app is logged. The app flags a sign-in that looks shared, using the addresses of the properties marked and the time between them, and frequent switches between phones.
 
-**Location.** The app asks for a phone's location only when the person chooses a feature that uses it, such as the nearest door or the map. The location is used on the phone to show where they are and to order their stops. **It is not sent to us or stored**, and the app does not track anyone in the background.
+**Location.** The app asks for a phone's location only when the person chooses a feature that uses it, such as the nearest property or the map. The location is used on the phone to show where they are and to order their stops. **It is not sent to us or stored**, and the app does not track anyone in the background.
 
 **Payments.** Billing is handled by Stripe. We receive the plan, the number of seats and whether a payment succeeded. We never see or store card numbers.
 
@@ -88,7 +88,7 @@ We may also disclose information when the law requires it, to protect people's s
 
 ### 7. Security
 
-Each client has its own copy of Traverse with its own sign-ins. Sign-in codes are six digits, chosen by the client's admins, and each code works on one phone, one tablet and one computer at a time. Roles limit what each person sees, and the limits are enforced on our server. Only Traverse can download the door list, at most 500 doors at a time, and every download is logged. The site and app use HTTPS. Records are backed up every night.
+Each client has its own copy of Traverse with its own sign-ins. Sign-in codes are six digits, chosen by the client's admins, and each code works on one phone, one tablet and one computer at a time. Roles limit what each person sees, and the limits are enforced on our server. Only Traverse can download the property list, at most 500 properties at a time, and every download is logged. The site and app use HTTPS. Records are backed up every night.
 
 No system is perfectly secure. If we learn of unauthorized access to personal information we hold, we will tell the affected client, and the people affected where the law requires.
 
