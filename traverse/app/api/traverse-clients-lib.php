@@ -376,9 +376,20 @@ function tcRender(array $e): array {
     foreach (array_merge(['manifest.json', 'es.json', '.htaccess'], array_map('basename', glob($edPg . '/*.png') ?: [])) as $f) {
         if (!is_file($edPg . '/' . $f)) continue;
         $t = (string) file_get_contents($edPg . '/' . $f);
+        if ($f === 'manifest.json') $t = tcManifest($t, $e);   /* the company's name on the home screen, not the edition's (2026-10-30) */
         if ((string) @file_get_contents($pg . '/' . $f) !== $t) { tcWrite($pg . '/' . $f, $t, 0644); $n++; }
     }
     return ['ok' => true, 'written' => $n];
+}
+
+/** the edition's manifest with the client company's name in it: the home-screen app is the company's, never Traverse's (2026-10-30, Matthew:
+    zero branding for clients). The short name is cut to fit a phone's label. */
+function tcManifest(string $json, array $e): string {
+    $m = json_decode($json, true); if (!is_array($m)) return $json;
+    $name = trim((string) ($e['name'] ?? '')); if ($name === '') return $json;
+    $short = trim((string) ($e['short'] ?? '')) ?: $name;
+    $m['name'] = $name; $m['short_name'] = mb_strlen($short) > 12 ? rtrim(mb_substr($short, 0, 12)) : $short; $m['description'] = $name;
+    return json_encode($m, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
 }
 
 /* ---------------------------------------------------------------- 3. making the install */

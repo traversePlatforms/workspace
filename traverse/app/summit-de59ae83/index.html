@@ -3144,6 +3144,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function vw() { return VW().toLowerCase(); }
   function setCompany(c) {
     CO = Object.assign({}, CO_DEFAULT, c || {});
+    if (CO.name && !CO.a365) { var hs = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (hs) hs.setAttribute('content', CO.short || CO.name); }   /* the company's own name on the home screen, never Traverse's (2026-10-30, Matthew: zero branding for clients) */
     if (typeof FILT !== 'undefined') FILT.forEach(function (x) { if (x[0] === 'lawn') x[2] = CO.a365 ? 'Lawn to aerate' : 'Has a lawn'; });   /* aeration is 365's word; the editions say what the filter does (2026-10-26) */
     if (!Array.isArray(CO.services) || !CO.services.length) CO.services = CO_DEFAULT.services;
     if (!Array.isArray(CO.extraWork)) CO.extraWork = [];
@@ -3786,7 +3787,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     inn.appendChild(ridge('mk'));
     inn.appendChild(q('h1', null, CO.short));
     inn.appendChild(q('div', 'prompt', 'Before you start'));
-    var p = q('p', 'tmsg'); p.appendChild(document.createTextNode('Hi ' + (myName() || 'there') + '. ' + (T.dueTerms ? 'Please read and accept the Traverse Terms of Use and Privacy Policy.' : 'The terms have not changed for you; one more to accept.')));
+    var p = q('p', 'tmsg'); p.appendChild(document.createTextNode('Hi ' + (myName() || 'there') + '. ' + (T.dueTerms ? 'Please read and accept the Terms of Use and Privacy Policy.' : 'The terms have not changed for you; one more to accept.')));
     inn.appendChild(p);
     var links = q('div', 'tlinks');
     var lk = function (href, text) { var a = q('a', 'tlink', text + ' ›'); a.href = href; a.target = '_blank'; a.rel = 'noopener'; links.appendChild(a); };
@@ -12776,7 +12777,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function startCard() {
     if (!startOn() || startHidden()) return null;
     var A = CO.area || {}, card = q('section', 'card coform kitsetup setupck startck'), marks = {};
-    card.appendChild(q('div', 'dwh', 'Welcome to Traverse, ' + (myName() || 'there')));
+    card.appendChild(q('div', 'dwh', 'Welcome, ' + (myName() || 'there')));
     var step = function (key, n, title, sub, fn) {
       var row = q(fn ? 'button' : 'div', 'kitstep'); if (fn) { row.type = 'button'; row.addEventListener('click', fn); } row.setAttribute('data-step', key);
       var ck = q('span', 'kitck', n); row.appendChild(ck); marks[key] = [row, ck];
@@ -13010,7 +13011,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     inn.appendChild(ridge('mk'));
     inn.appendChild(q('h1', null, CO.short));
     inn.appendChild(q('div', 'prompt', bill ? 'Paused for now' : 'Almost ready'));
-    inn.appendChild(q('p', 'tmsg', bill ? 'Your company’s account needs attention. Your admin has been told.' : 'Your company’s Traverse is being set up. Your admin will let you know when it’s ready.'));
+    inn.appendChild(q('p', 'tmsg', bill ? 'Your company’s account needs attention. Your admin has been told.' : 'Your company’s app is being set up. Your admin will let you know when it’s ready.'));
     var ck = q('button', 'save tagree', 'Check again'); ck.type = 'button'; ck.addEventListener('click', function () { lockRecheck(ck); }); inn.appendChild(ck);
     inn.appendChild(q('p', 'tsub', 'Nothing for you to do. When it opens, this screen opens the app by itself.'));
     var out = q('button', 'lnk tout', 'Sign out'); out.type = 'button'; out.addEventListener('click', function () { markOut(true); clearSaved().then(function () { signinView(); }); tellServerOut(); }); inn.appendChild(out);
@@ -13024,7 +13025,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('tools', { title: CO.short, sub: bill ? 'Paused for your team' : 'Getting ready', avatar: true });
     view.textContent = '';
     var box = q('div', 'choose setuph'), hero = q('div', 'hero');
-    hero.appendChild(q('div', 'hi', bill ? 'Your plan needs attention' : 'Welcome to Traverse, ' + (myName() || 'there')));
+    hero.appendChild(q('div', 'hi', bill ? 'Your plan needs attention' : 'Welcome, ' + (myName() || 'there')));
     hero.appendChild(q('div', 'dt', bill ? 'The app is paused for your team until the plan is paid. Update the card in Billing and everything opens again at once.'
       : L.paid ? 'Paid: we’re setting up your towns and data; ready in up to ' + days + ' business days, often sooner.'
       : 'Get your company ready while we set up your app. We release it in up to ' + days + ' business days after you pay, often sooner.'));
@@ -13561,7 +13562,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      app password lets the server send as them; it is kept on the server and never comes back to this page. A test must go before it is kept. */
   var MAIL_STEPS = {
     gmail: ['Sign in to the Google account you send from, at myaccount.google.com.', 'Open Security, then 2-Step Verification, and turn it on if it is off (Google only offers app passwords with it on).',
-      'Search the account for “App passwords” (or Security, 2-Step Verification, App passwords). Name it Traverse and press Create.', 'Copy the 16-letter password Google shows and paste it below. You can delete it there any time, and sending stops.'],
+      'Search the account for “App passwords” (or Security, 2-Step Verification, App passwords). Give it any name, like your company’s, and press Create.', 'Copy the 16-letter password Google shows and paste it below. You can delete it there any time, and sending stops.'],
     outlook: ['Sign in at account.microsoft.com (a work or school account: mysignins.microsoft.com).', 'Under Security, turn on two-step verification (work accounts: Security info).',
       'Open App passwords and create a new one. Copy it and paste it below.', 'Some Microsoft 365 business accounts have SMTP sign-in (Authenticated SMTP) turned off, or do not allow app passwords. If the test says the sign-in was refused, ask whoever runs your Microsoft 365 to turn on Authenticated SMTP for this mailbox.'],
     other: ['Your email provider’s help pages list the outgoing (SMTP) server and port. Port 587 is most common; 465 also works.', 'Make an app password there if your provider has them (most do once two-step sign-in is on), and paste it below.']
@@ -13572,7 +13573,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      moves under More detail (mailOauthFor, below). */
   var MAIL_GO = {
     gmail: { url: 'https://myaccount.google.com/apppasswords', btn: 'Open Google app passwords', oauth: 'Sign in with Google',
-      steps: ['Turn on 2-Step Verification if Google asks.', 'Name it Traverse, press Create, and copy the 16 letters.', 'Come back here, paste them below, and press Send a test and connect.'] },
+      steps: ['Turn on 2-Step Verification if Google asks.', 'Give it any name, press Create, and copy the 16 letters.', 'Come back here, paste them below, and press Send a test and connect.'] },
     outlook: { url: 'https://account.live.com/proofs/AppPassword', btn: 'Open Microsoft app passwords', oauth: 'Sign in with Microsoft',
       steps: ['Turn on two-step verification if Microsoft asks.', 'Create a new app password and copy it.', 'Come back here, paste it below, and press Send a test and connect.'],
       note: 'That page is for personal Outlook and Hotmail accounts. A work or school Microsoft 365 account may have app passwords turned off: ask whoever runs your Microsoft 365 to allow them (or to turn on Authenticated SMTP for this mailbox).' }
@@ -14559,7 +14560,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       sv.addEventListener('click', function () {
         err.hidden = true;
         var b = st.mode === 'radius' ? { mode: 'radius', miles: mi.value, address: ai.value.trim() } : { mode: 'counties', counties: Object.keys(st.pick).filter(function (k) { return st.pick[k]; }) };
-        if (st.mode === 'radius') { var m = parseFloat(mi.value); if (!(m >= j.min && m <= j.max)) { err.hidden = false; err.textContent = m > j.max ? 'Traverse covers up to ' + j.max + ' miles around your business. For a wider area, pick counties instead.' : 'Type a radius from ' + j.min + ' to ' + j.max + ' miles.'; return; } }
+        if (st.mode === 'radius') { var m = parseFloat(mi.value); if (!(m >= j.min && m <= j.max)) { err.hidden = false; err.textContent = m > j.max ? 'The app covers up to ' + j.max + ' miles around your business. For a wider area, pick counties instead.' : 'Type a radius from ' + j.min + ' to ' + j.max + ' miles.'; return; } }
         else if (!b.counties.length) { err.hidden = false; err.textContent = 'Tick at least one county.'; return; }
         sv.disabled = true; sv.textContent = 'Saving…';
         api('svcareaset', { body: b }).then(function (k) {

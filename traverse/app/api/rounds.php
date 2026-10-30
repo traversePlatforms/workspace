@@ -2320,7 +2320,7 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time()] + ($noPw ? ['email' => $em] : []);
         saveAccounts($acct); flock($lk, LOCK_UN); fclose($lk);
         $co = company(); $link = (string) $co['appUrl'] . '#pw=r.' . $tok;
-        pwMail($em, (string) $co['name'] . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $co['name'] . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+        pwMail($em, (string) $co['name'] . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $co['name'] . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is.\n\n" . $co['name'] . "\n", null, []);
         accountLog(['what' => 'reset link sent', 'id' => $id]);
         out($same);
     }
@@ -3957,7 +3957,7 @@ function billLockInfo(?array $L, bool $admin): ?array {
 /** the lock for someone signing in with this role ('super' never) */
 function billLockFor(string $r): ?array { return $r === 'super' ? null : billLockInfo(billLock(), $r === 'admin'); }
 function billLockWords(array $L, bool $admin): string {
-    if (!$admin) return $L['lock'] === 'billing' ? 'Property data is paused: your company\'s account needs attention.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
+    if (!$admin) return $L['lock'] === 'billing' ? 'Property data is paused: your company\'s account needs attention.' : 'Your company\'s app is being set up. Your admin will let you know when it\'s ready.';
     if ($L['lock'] === 'billing') return 'Property data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
     return $L['phase'] === 'unpaid' ? 'Properties, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
         : 'Properties, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
@@ -11111,15 +11111,23 @@ function inviteJoined(string $code): void {
     if (is_array($a['inv'][$id] ?? null) && empty($a['inv'][$id]['joined'])) { $a['inv'][$id]['joined'] = time(); saveAccounts($a); $acct = $a; accountLog(['what' => 'invite accepted', 'id' => $id]); }
     flock($lk, LOCK_UN); fclose($lk);
 }
-/** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok] */
+/** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok]
+    The From address stays the mailer's (delivery needs it); the name is the company's and Reply-To its admin (2026-10-30, Matthew: zero
+    Traverse branding to a client's team: no "via Traverse", no "Sent for ... by Traverse Platforms"). */
+function pwReplyTo(array $headers): string {
+    foreach ($headers as $x) if (stripos((string) $x, 'Reply-To:') === 0) return trim(substr((string) $x, 9));
+    $co = company(); if (filter_var((string) ($co['email'] ?? ''), FILTER_VALIDATE_EMAIL)) return (string) $co['email'];
+    return '';
+}
+function pwReplyHeaders(array $headers): array { $rt = pwReplyTo($headers); foreach ($headers as $x) if (stripos((string) $x, 'Reply-To:') === 0) return $headers; return $rt !== '' ? array_merge($headers, ['Reply-To: ' . $rt]) : $headers; }
 function pwMail(string $to, string $subject, string $text, ?string $html, array $headers): bool {
     $cname = (string) company()['name'];
     $mock = getenv('TRAV_MAIL_MOCK');
-    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $cname . ' via Traverse', 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $cname, 'replyTo' => pwReplyTo($headers), 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
     $s = travMailCfg(); if ($s['pass'] === '') return false;
     $h = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
-    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $cname . ' via Traverse', 'domain' => 'traverseplatforms.com'],
-        $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', $headers)['ok'];
+    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $cname, 'domain' => 'traverseplatforms.com'],
+        $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', pwReplyHeaders($headers))['ok'];
 }
 /** the invite itself: a new link (the old one dies). The caller holds the accounts lock. Returns whether it went. */
 function inviteSend(string $id, string $name, string $role, string $by): bool {
@@ -11129,9 +11137,9 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
     $co = company(); $url = (string) ($co['appUrl'] ?? ''); $cname = (string) $co['name']; $link = $url . '#pw=i.' . $tok;
     $rl = ['admin' => 'an admin', 'manager' => 'a manager', 'office' => 'office staff', 'crew' => 'a sales rep', 'setter' => 'a setter', 'tech' => 'a technician'][$role] ?? 'a team member';
     $first = explode(' ', trim($name))[0];
-    $text = "Hi $first,\n\n$by added you to $cname's Traverse app as $rl.\n\nSet your password here (the link works once, for " . PW_INVITE_DAYS . " days):\n$link\n\n"
+    $text = "Hi $first,\n\n$by added you to $cname's app as $rl.\n\nSet your password here (the link works once, for " . PW_INVITE_DAYS . " days):\n$link\n\n"
         . "Then sign in with this email address and your password. Add the app to your phone's home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app), so it opens like any other app and works with no signal.\n\n"
-        . "Questions about your work: ask $by at $cname.\n\nSent for $cname by Traverse Platforms.\n";
+        . "Questions about your work: ask $by at $cname.\n\n$cname\n";
     $col = (string) ($co['brand'] ?: '#13294b'); if (!preg_match('/^#[0-9a-f]{6}$/i', $col)) $col = '#13294b';
     $lg = logoImgTag($cname, 40);   /* the company's uploaded logo (the Company screen's, or the welcome page's), PNG/JPG only: email apps do not show SVG */
     $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
@@ -11139,14 +11147,14 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">'
         . '<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden" cellpadding="0" cellspacing="0">'
         . '<tr><td style="background:' . $col . ';padding:20px 24px;color:#ffffff;font-size:20px;font-weight:bold">' . ($lg !== '' ? '<div style="display:inline-block;background:#ffffff;border-radius:6px;padding:4px;margin-bottom:8px">' . $lg . '</div><br>' : '') . $h($cname) . '</td></tr>'
-        . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s Traverse app as ' . $h($rl) . '.'
+        . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s app as ' . $h($rl) . '.'
         . '<p style="margin:24px 0"><a href="' . $h($link) . '" style="display:inline-block;background:#d6400c;color:#ffffff;text-decoration:none;font-weight:bold;padding:13px 22px;border-radius:10px">Set your password</a></p>'
         . '<p style="font-size:14px;color:#566476">The link works once, for ' . PW_INVITE_DAYS . ' days. Then sign in with ' . $h($iv['email']) . ' and your password, and add the app to your home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app).</p>'
         . '<p style="font-size:14px;color:#566476">Questions about your work: ask ' . $h($by) . '.</p></td></tr>'
-        . '<tr><td style="padding:14px 24px;background:#f4f6f9;font-size:12px;color:#8a96a6">Sent for ' . $h($cname) . ' by Traverse Platforms</td></tr></table></td></tr></table></body></html>';
+        . '<tr><td style="padding:14px 24px;background:#f4f6f9;font-size:12px;color:#8a96a6">' . $h($cname) . '</td></tr></table></td></tr></table></body></html>';
     $mine = (string) ($a['login'][(string) ($session['c'] ?? '')]['email'] ?? '');   /* the inviting admin's own address, else the company's */
     $rt = filter_var($mine, FILTER_VALIDATE_EMAIL) ? $mine : (filter_var((string) ($co['email'] ?? ''), FILTER_VALIDATE_EMAIL) ? (string) $co['email'] : '');
-    $ok = pwMail((string) $iv['email'], $cname . ' invited you to its Traverse app', $text, $html, $rt !== '' ? ['Reply-To: ' . $rt] : []);
+    $ok = pwMail((string) $iv['email'], $cname . ' invited you to its app', $text, $html, $rt !== '' ? ['Reply-To: ' . $rt] : []);
     if ($ok) { $a['inv'][$id]['tok'] = hash('sha256', $tok); $a['inv'][$id]['exp'] = time() + PW_INVITE_DAYS * 86400; $a['inv'][$id]['last'] = time(); }
     $a['inv'][$id]['sent'] = (int) ($iv['sent'] ?? 0) + ($ok ? 1 : 0);
     saveAccounts($a); $GLOBALS['acct'] = $a;
@@ -11405,7 +11413,7 @@ if ($action === 'acctlink') {
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
     flock($lk, LOCK_UN); fclose($lk);
     $co = company(); $first = explode(' ', (string) $rows[$id]['name'])[0];
-    $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+    $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\n" . $co['name'] . "\n", null, []);
     accountLog(['by' => $me, 'what' => $ok ? 'sign-in link sent' : 'sign-in link failed', 'name' => $rows[$id]['name'], 'id' => $id]);
     if (!$ok) fail('The email did not go. Try again in a minute.', 502);
     out(['ok' => true, 'to' => $em]);
@@ -13746,8 +13754,8 @@ if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', '
         if (strlen($pass) < 8 || strlen($pass) > 200) fail('That does not look like an app password.');
         $c = ['kind' => $kind, 'host' => $host, 'port' => $port, 'user' => $user, 'pass' => $pass, 'from_name' => $name];
         $co = (string) company()['name'];
-        $tt = "This is a test from your Traverse app.\n\nIf you are reading it, " . $co . "'s email is connected: signed agreements and receipts can now go to your customers from " . $user . ".\n";
-        $r = smtpSend($c + ['domain' => mailDomain($user)], $user, 'Test: ' . $co . ' email is connected', $tt, '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#15202d"><p>This is a test from your Traverse app.</p><p>If you are reading it, ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . '&#39;s email is connected: signed agreements and receipts can now go to your customers from ' . htmlspecialchars($user, ENT_QUOTES, 'UTF-8') . '.</p></body></html>');
+        $tt = "This is a test from your " . $co . " app.\n\nIf you are reading it, " . $co . "'s email is connected: signed agreements and receipts can now go to your customers from " . $user . ".\n";
+        $r = smtpSend($c + ['domain' => mailDomain($user)], $user, 'Test: ' . $co . ' email is connected', $tt, '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#15202d"><p>This is a test from your ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . ' app.</p><p>If you are reading it, ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . '&#39;s email is connected: signed agreements and receipts can now go to your customers from ' . htmlspecialchars($user, ENT_QUOTES, 'UTF-8') . '.</p></body></html>');
         appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'connect test', 'to' => $user, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300), 'by' => $me]);
         if (!$r['ok']) fail(mailWhy($r, $kind, $host, $port));
         if (!writeJsonAtomic(mailOwnFile(), $c + ['by' => $me, 'at' => time()])) fail('The test went, but the setting could not be saved. Try again.', 500);
@@ -14055,7 +14063,7 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
         $raw = $body['miles'] ?? null;
         if (!is_numeric($raw)) fail('Type the radius in miles.');
         $mi = (int) round((float) $raw);
-        if ($mi > AREA_MI[1]) fail('Traverse covers up to ' . AREA_MI[1] . ' miles around your business. For a wider area, pick counties instead, or email hello@traverseplatforms.com.');
+        if ($mi > AREA_MI[1]) fail('The app covers up to ' . AREA_MI[1] . ' miles around your business. For a wider area, pick counties instead, or email hello@traverseplatforms.com.');
         if ($mi < AREA_MI[0]) fail('The radius is ' . AREA_MI[0] . ' miles at least.');
         $addr = trim((string) preg_replace('/[\x00-\x1f\x7f]+/', ' ', mb_substr((string) ($body['address'] ?? ''), 0, 160)));
         $base = !isset($old['lat']) && is_array($old['home'] ?? null) ? $old['home'] + $old : $old;   /* back from counties: the point kept aside */
@@ -14066,11 +14074,11 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
             $g = tcGeocode($addr);
             if (is_array($g) && isset($g['error'])) fail((string) $g['error'], 502);
             if ($g === null) fail('That address was not found on the map. Check the street, city, state and ZIP.');
-            if (strtoupper((string) $g['state']) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now: that address is in ' . ((string) $g['state'] ?: 'another state') . '.');
+            if (strtoupper((string) $g['state']) !== tcSettings()['state']) fail('The app\'s homes are in Colorado for now: that address is in ' . ((string) $g['state'] ?: 'another state') . '.');
             $new = array_replace($new, ['address' => $addr, 'matched' => (string) ($g['matched'] ?? ''), 'lat' => $g['lat'], 'lon' => $g['lon'], 'state' => strtoupper((string) $g['state']), 'place' => (string) ($g['city'] ?? '')]);
         }
         if (!isset($new['lat'], $new['lon'])) fail('Your business address is not on the map yet. Type it above.');
-        if (strtoupper((string) ($new['state'] ?? '')) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now. Type your Colorado business address above.');
+        if (strtoupper((string) ($new['state'] ?? '')) !== tcSettings()['state']) fail('The app\'s homes are in Colorado for now. Type your Colorado business address above.');
     } else fail('Pick a radius or counties.');
     if (!throttleTake(DATA_DIR . '/area-throttle.json', 10, 600)) fail('That is a lot of changes in a few minutes. Wait a little and try again.', 429);   /* saves only: each one links the towns again */
     $new += ['status' => 'linking', 'towns' => (int) ($old['towns'] ?? 0), 'doors' => (int) ($old['doors'] ?? 0)]; $new['status'] = 'linking'; $new['at'] = time(); $new['by'] = $me;

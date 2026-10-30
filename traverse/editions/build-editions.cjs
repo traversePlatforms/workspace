@@ -288,12 +288,10 @@ function page(E) {
   // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
   html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="' + ha(E.short) + '">', 1, 'home-screen label');
   html = rep(html, "document.title = c.short ? c.short + ' Routes' : 'Routes';   /* 2026-10-12 (Matthew): Sixfold Routes, not Door rounds */",
-    "document.title = c.name ? '" + E.name + " — ' + c.name : '" + E.name + "';", 1, 'doc title');
+    "document.title = c.name || c.short || '" + E.name + "';", 1, 'doc title');   /* the company's name only (2026-10-30) */
   html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Properties',", 2, 'tile');   /* Properties, not Doors (2026-10-30, Matthew) */   /* 2 since 2026-10-29: the technician's own Routes tile (doors switched on) is renamed too */
   // sign-in: the client's mark and name stay on top; the product sits under them as a lockup
-  html = rep(html, "inn.appendChild(q('div', 'sub', 'Routes'));",
-    "var tv = q('div', 'sub tvlock'); tv.innerHTML = TV_MARK; tv.appendChild(q('span', null, '" + E.name + "')); inn.appendChild(tv);", 1, 'signin sub');
-  html = rep(html, "  var QKEY = ", "  var TV_MARK = '" + mark('currentColor', 'var(--signin)', 'var(--ember)') + "';\n  var QKEY = ", 1, 'mark const');
+  html = rep(html, "inn.appendChild(q('div', 'sub', 'Routes'));", '', 1, 'signin sub');   /* the company's mark and name only (2026-10-30, Matthew: zero Traverse branding for clients; was the Traverse mark and the edition's name) */
 
   // colours hard-coded outside the tokens
   html = rep(html, '<meta name="theme-color" content="#2F5D2C">', '<meta name="theme-color" content="' + c.bar + '">', 1, 'theme-color');
@@ -444,7 +442,7 @@ function apiFiles(E) {
 const TPL = { cid: 'czzzzzzzz', cookie: 'cqqqq', folder: 'qq-qqqqqq' };
 function clientTemplate(key) {
   const E = EDITIONS[key];
-  const T = Object.assign({}, E, { folder: TPL.folder, api: 'traverse-' + TPL.cid, data: 'traverse-' + TPL.cid + '-data', priv: 'traverse-' + TPL.cid + '-private',
+  const T = Object.assign({}, E, { name: 'Sign in', short: 'App', folder: TPL.folder,   /* a client's page names no edition: the company's name arrives with company.json (2026-10-30) */ api: 'traverse-' + TPL.cid, data: 'traverse-' + TPL.cid + '-data', priv: 'traverse-' + TPL.cid + '-private',
     cookie: TPL.cookie, store: 'tv' + TPL.cid + '.', storeApp: 'tv' + TPL.cid + '.app.', idb: 'tv' + TPL.cid + '-rounds', cache: 'tv' + TPL.cid + '-' });
   const dir = path.join('client-templates', key), pg = page(T);
   write(path.join(dir, 'index.html'), pg);

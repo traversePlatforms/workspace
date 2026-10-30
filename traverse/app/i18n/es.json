@@ -4199,5 +4199,11 @@
  "your price per gallon": "tu precio por galón",
  "Fuel cost: set where your trips start.": "Costo de combustible: indica desde dónde salen tus viajes.",
  "Fuel cost: give your truck's miles per gallon.": "Costo de combustible: indica las millas por galón de tu camioneta.",
- "Fuel cost: that start address was not found. Type the whole address, like \"123 Main St, Denver, CO 80202\", or use Where I am now while you are there.": "Costo de combustible: no se encontró esa dirección de salida. Escribe la dirección completa, como \"123 Main St, Denver, CO 80202\", o usa Dónde estoy ahora mientras estés ahí."
+ "Fuel cost: that start address was not found. Type the whole address, like \"123 Main St, Denver, CO 80202\", or use Where I am now while you are there.": "Costo de combustible: no se encontró esa dirección de salida. Escribe la dirección completa, como \"123 Main St, Denver, CO 80202\", o usa Dónde estoy ahora mientras estés ahí.",
+ "Please read and accept the Terms of Use and Privacy Policy.": "Lee y acepta los Términos de uso y la Política de privacidad.",
+ "Welcome, ": "Bienvenido, ",
+ "Your company’s app is being set up. Your admin will let you know when it’s ready.": "Estamos preparando la app de tu empresa. Tu administrador te avisará cuando esté lista.",
+ "Your company's app is being set up. Your admin will let you know when it's ready.": "Estamos preparando la app de tu empresa. Tu administrador te avisará cuando esté lista.",
+ "Search the account for “App passwords” (or Security, 2-Step Verification, App passwords). Give it any name, like your company’s, and press Create.": "Busca en la cuenta “Contraseñas de aplicaciones” (o Seguridad, Verificación en 2 pasos, Contraseñas de aplicaciones). Ponle cualquier nombre, como el de tu empresa, y presiona Crear.",
+ "Give it any name, press Create, and copy the 16 letters.": "Ponle cualquier nombre, presiona Crear y copia las 16 letras."
 }
