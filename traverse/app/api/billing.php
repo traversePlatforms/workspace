@@ -83,7 +83,7 @@ function billingConfigDefaults(): array {
            (billingFoundingSchedule). Empty = the per-checkout coupon, as before. */
         'prices_founding' => array_fill_keys(BILLING_FOUNDING_KEYS, $two('', '')),
         /* what the Billing screen shows, US dollars per month (year = per month, billed yearly). Keep it equal to Stripe. */
-        'display' => ['solo' => $two(99, 79), 'crew' => $two(249, 199), 'team' => $two(549, 449),
+        'display' => ['solo' => $two(99, 79), 'crew' => $two(249, 199), 'team' => $two(549, 439),   /* yearly $439 = 20% off $549 (Matthew 2026-10-30: 'save 20%' true on every plan; shown as Company) */
                       'crew_extra' => $two(45, 35), 'team_extra' => $two(39, 29),
                       'uplift_solo' => $two(20, 20), 'uplift' => $two(50, 50), 'addon' => $two(99, 99)],
         'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* workers each plan covers before extra seats, besides the one free admin (2026-10-29) */

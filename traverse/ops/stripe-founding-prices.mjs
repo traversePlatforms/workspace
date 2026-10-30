@@ -18,7 +18,7 @@ async function api(method, path, params) {
   const j = await r.json(); if (j.error) throw new Error(path + ': ' + j.error.message); return j;
 }
 /* dollars per month, list (billing.php defaults) */
-const LIST = { solo: [99, 79], crew: [249, 199], team: [549, 449], crew_extra: [45, 35], team_extra: [39, 29], addon: [99, 99] };
+const LIST = { solo: [99, 79], crew: [249, 199], team: [549, 439], crew_extra: [45, 35], team_extra: [39, 29], addon: [99, 99] };
 const PCT = 25;
 const out = {};
 for (const [key, [m, y]] of Object.entries(LIST)) {
