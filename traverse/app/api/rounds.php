@@ -2194,6 +2194,11 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest',
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
+/* the towns answer built ahead of the first phone (2026-10-29, speed: a new day, a deploy or a settings save made whoever opened the app
+   next wait 7-16 s while every town was rebuilt): tools/regions-warm.php asks for it once per kind of viewer, as that role */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE') && in_array($action, ['regions', 'regionsig'], true)) {
+    $session = ['n' => 'Command line', 'r' => (string) SIXFOLD_WARM_ROLE, 'c' => ''];
+}
 /* "Mark live" from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, the guarantee starts */
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli') {
     $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
@@ -4641,12 +4646,15 @@ function teamDays(int $days, string $who): array {
     /* review 2026-10-03: through logRows(), so a door's rows from its old town and its new town are
        read together (a put-back filed under the new town used to leave the old mark counted).
        Rows for a door that moved AWAY to a partner town are left for that town to count. */
+    /* speed (2026-10-29): the town's rows in the window first; a town with none (most of them) never reads its door ids, which was
+       1.09 million ids and about 0.5 s on every stats call */
     $rowsOf = function (string $kind, string $k) use ($since) {
+        $rows = array_filter(logRows($kind, $k), fn($r) => isset($r['id']) && (int) ($r['at'] ?? 0) >= $since);
+        if (!$rows) return [];
         $away = [];
         foreach (sharedWith($k) as $pk) foreach (doorIds($pk) as $id => $_) $away[$id] = true;
         $mine = doorIds($k);
-        return array_values(array_filter(logRows($kind, $k), fn($r) => isset($r['id']) && (int) ($r['at'] ?? 0) >= $since
-            && (isset($r['_from']) || !isset($away[$r['id']]) || isset($mine[$r['id']]))));
+        return array_values(array_filter($rows, fn($r) => isset($r['_from']) || !isset($away[$r['id']]) || isset($mine[$r['id']])));
     };
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     foreach (($idx['regions'] ?? []) as $rg) {
