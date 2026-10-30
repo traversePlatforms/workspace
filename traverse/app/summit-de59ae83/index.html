@@ -16749,6 +16749,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     w.appendChild(q('span', 'hl', 'Net metering: extra solar output earns a credit at the retail energy rate for the hour it is made, carried forward month to month; or a year-end cash-out at Xcel\u2019s avoided cost (a few cents a kWh). Systems are sized up to 120% of the home\u2019s average yearly use.'));
     return w;
   }
+  /* the production estimate (2026-10-29, Matthew's go, Solar only: the solar row reaches no other edition). ev 2 = built by place:
+     PVWatts' yearly output per kW at this house's 0.25-degree cell for its facing and slope (yk), times the system that fits (kw),
+     less a shade factor for tall trees on the sunny side (sf; our assumption, said so). An older file (no ev) keeps its old line. */
+  function solarEstLine(s) {
+    var w = q('span', 'hl');
+    if (s.ev !== 2 || !s.yk) {
+      w.appendChild(q('b', null, 'Room for about ' + s.pn + ' panels, ' + s.kw + ' kW')); w.appendChild(document.createTextNode(' · up to about ' + s.kwh.toLocaleString(LOCALE) + ' kWh a year'));
+      return w;
+    }
+    /* fkeep: the estimate and how it was made stay on the folded card (the Solar edition's headline figure) */
+    var f = document.createDocumentFragment(), before = Math.round(s.kw * s.yk / 100) * 100;
+    w.classList.add('fkeep');
+    w.appendChild(q('b', null, 'About ' + s.kw.toLocaleString(LOCALE) + ' kW fits, around ' + s.kwh.toLocaleString(LOCALE) + ' kWh a year'));
+    w.appendChild(document.createTextNode(' (' + s.pn + ' panels of 400 W)'));
+    f.appendChild(w);
+    f.appendChild(q('small', 'sub fkeep', 'Estimate: roof facing, slope and shade from the laser scan; sun data from PVWatts (NREL, now NLR) for this area, ' + s.yk.toLocaleString(LOCALE) + ' kWh per kW here' +
+      (s.sf ? '; ' + Math.round((1 - s.sf) * 100) + '% taken off for tall trees on the sunny side (our assumption), ' + before.toLocaleString(LOCALE) + ' kWh without' : '') + '. The most that fits, not a sized system.'));
+    return f;
+  }
   function solarBlock(d) {
     var s = d.solar, b = q('div', 'hailx solarx'); b.appendChild(ico('sun', 2.2));
     var t = q('span');
@@ -16758,7 +16777,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var l1 = q('span', 'hl'); l1.appendChild(q('b', null, (sunny + side).toLocaleString(LOCALE) + ' sq ft'));
       l1.appendChild(document.createTextNode(' faces the sun (' + sunny.toLocaleString(LOCALE) + ' south, ' + side.toLocaleString(LOCALE) + ' east or west)' + (a.F ? ', ' + a.F.toLocaleString(LOCALE) + ' flat' : '')));
       t.appendChild(l1);
-      if (s.pn) { var l2 = q('span', 'hl'); l2.appendChild(q('b', null, 'Room for about ' + s.pn + ' panels, ' + s.kw + ' kW')); l2.appendChild(document.createTextNode(' · up to about ' + s.kwh.toLocaleString(LOCALE) + ' kWh a year')); t.appendChild(l2); }
+      if (s.pn) t.appendChild(solarEstLine(s));
       var SH = { open: 'Open: no tall trees on the sunny side', some: 'Some shade from tall trees on the sunny side', heavy: 'Heavy shade from tall trees on the sunny side' };
       if (s.sh) t.appendChild(q('span', 'hl', SH[s.sh] || ''));
       var spl = permitSolarLine(d); if (spl) t.appendChild(spl);
