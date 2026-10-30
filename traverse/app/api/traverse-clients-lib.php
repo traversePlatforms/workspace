@@ -376,9 +376,20 @@ function tcRender(array $e): array {
     foreach (array_merge(['manifest.json', 'es.json', '.htaccess'], array_map('basename', glob($edPg . '/*.png') ?: [])) as $f) {
         if (!is_file($edPg . '/' . $f)) continue;
         $t = (string) file_get_contents($edPg . '/' . $f);
+        if ($f === 'manifest.json') $t = tcManifest($t, $e);   /* the company's name on the home screen, not the edition's (2026-10-30) */
         if ((string) @file_get_contents($pg . '/' . $f) !== $t) { tcWrite($pg . '/' . $f, $t, 0644); $n++; }
     }
     return ['ok' => true, 'written' => $n];
+}
+
+/** the edition's manifest with the client company's name in it: the home-screen app is the company's, never Traverse's (2026-10-30, Matthew:
+    zero branding for clients). The short name is cut to fit a phone's label. */
+function tcManifest(string $json, array $e): string {
+    $m = json_decode($json, true); if (!is_array($m)) return $json;
+    $name = trim((string) ($e['name'] ?? '')); if ($name === '') return $json;
+    $short = trim((string) ($e['short'] ?? '')) ?: $name;
+    $m['name'] = $name; $m['short_name'] = mb_strlen($short) > 12 ? rtrim(mb_substr($short, 0, 12)) : $short; $m['description'] = $name;
+    return json_encode($m, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
 }
 
 /* ---------------------------------------------------------------- 3. making the install */
@@ -625,7 +636,7 @@ function tcMailReady(array $e, string $code): bool {
         . "Open it here (save it to your phone's home screen): " . $e['url'] . "\nSign in with " . $e['email'] . " and the password you picked. Your admin code, for a quick sign-in on a phone: " . $code . "\n\n"
         . "Keep both to yourself: they open the admin side of your company's app. The welcome checklist inside the app walks you through inviting your team (each person gets an email to set their own password), connecting your email and payments, and importing customers.\n\n"
         . (($a['mode'] ?? '') === 'counties' ? 'Your homes: every town we cover in ' . ($a['place'] ?? 'your counties') . '. You can change this later in the app.'
-            : (isset($a['lat']) && strtoupper((string) ($a['state'] ?? '')) === tcSettings()['state'] ? 'Your homes: every town within ' . (int) ($a['miles'] ?? 0) . ' miles of ' . ($a['place'] ?: 'your business') . '. You can change this later in the app.' : 'Door data for your area is being added; we will email you when your homes are in. Everything else works now.'))
+            : (isset($a['lat']) && strtoupper((string) ($a['state'] ?? '')) === tcSettings()['state'] ? 'Your homes: every town within ' . (int) ($a['miles'] ?? 0) . ' miles of ' . ($a['place'] ?: 'your business') . '. You can change this later in the app.' : 'Property data for your area is being added; we will email you when your homes are in. Everything else works now.'))
         . "\n\nYour 7-day money-back guarantee started today. Questions: reply to this email or call (303) 596-9515.\n\nMatthew Sharpe\nTraverse Platforms\n";
     return tcMail((string) $e['email'], 'Your Traverse is ready: ' . $e['name'], $body);
 }
