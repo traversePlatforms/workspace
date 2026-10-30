@@ -59,7 +59,7 @@ function backupOne(string $site, string $dir): bool {
         $doc['binary'][$dir . '/rounds/company-logo.' . $lt] = base64_encode((string) file_get_contents($rounds . '/company-logo.' . $lt));
         $doc['restore'] .= ' Each entry in "binary" is a file in base64 (the company logo): decode it and put it back at its path.';
     }
-    $json =json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    $json = json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     $gz = $json === false ? false : gzencode($json, 9);
     if ($gz === false) { fwrite(STDERR, "$dir backup: could not build the file\n"); return false; }
 

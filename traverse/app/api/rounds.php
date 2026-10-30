@@ -2992,13 +2992,16 @@ function smtpSend(array $c, string $to, string $subject, string $text, string $h
     $bcc = (string) ($c['bcc'] ?? ''); if ($bcc !== '' && filter_var($bcc, FILTER_VALIDATE_EMAIL) && strcasecmp($bcc, $to) !== 0) { $w('RCPT TO:<' . $bcc . '>'); $read(); }
     $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
     $eol = "\r\n"; $bd = 'a3' . bin2hex(random_bytes(8));
+    /* an empty $html: a plain-text message (Traverse's own notes to Matthew, travMail), one part and no boundary (2026-10-30) */
     $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) $c['from_name']) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
-          'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $dom . '>', 'MIME-Version: 1.0', 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
+          'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $dom . '>', 'MIME-Version: 1.0', $html === '' ? 'Content-Type: text/plain; charset=UTF-8' : 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
+    if ($html === '') $h[] = 'Content-Transfer-Encoding: base64';
     foreach ($extra as $xh) if (is_string($xh) && preg_match('/^[A-Za-z-]{2,40}: [^\r\n]{1,900}$/D', $xh)) $h[] = $xh;
     $payload = implode($eol, $h) . $eol . $eol
-        . '--' . $bd . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($text), 76, $eol)
+        . ($html === '' ? chunk_split(base64_encode($text), 76, $eol)
+        : '--' . $bd . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($text), 76, $eol)
         . '--' . $bd . $eol . 'Content-Type: text/html; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($html), 76, $eol)
-        . '--' . $bd . '--' . $eol;
+        . '--' . $bd . '--' . $eol);
     $payload = preg_replace('/^\./m', '..', $payload);
     @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
     return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
@@ -3847,27 +3850,10 @@ function travMailCfg(): array {
 function travMail(string $to, string $subject, string $text): array {
     $mock = getenv('TRAV_MAIL_MOCK');
     if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $subject, 'body' => $text], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '']; }
-    $s = travMailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => mb_substr((string) $e, 0, 200)];
-    if ($s['pass'] === '') return $fail('config', 'no mail password in traverse-site-private/site-config.php');
-    $fp = @stream_socket_client('tcp://' . $s['host'] . ':' . (int) $s['port'], $errno, $errstr, (int) $s['timeout']);
-    if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
-    stream_set_timeout($fp, (int) $s['timeout']);
-    $read = function () use ($fp): array { $last = ''; while (true) { $l = @fgets($fp, 2048); if ($l === false) return [0, 'connection closed']; $last = rtrim($l, "\r\n"); if (strlen($l) < 4 || $l[3] !== '-') break; } return [(int) substr($last, 0, 3), $last]; };
-    $w = function (string $cmd) use ($fp) { @fwrite($fp, $cmd . "\r\n"); };
-    $quit = function () use ($fp) { @fwrite($fp, "QUIT\r\n"); @fclose($fp); };
-    $step = function (string $cmd, array $want, string $st) use ($w, $read, $quit, $fail) { if ($cmd !== '') $w($cmd); [$code, $rep] = $read(); if (!in_array($code, $want, true)) { $quit(); return $fail($st, $rep); } return null; };
-    if ($e = $step('', [220], 'greeting')) return $e;
-    if ($e = $step('EHLO ' . $s['ehlo'], [250], 'ehlo')) return $e;
-    if ($e = $step('STARTTLS', [220], 'starttls')) return $e;
-    $cm = STREAM_CRYPTO_METHOD_TLS_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT; if (defined('STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT')) $cm |= STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT;
-    if (@stream_socket_enable_crypto($fp, true, $cm) !== true) { $quit(); return $fail('starttls', 'TLS negotiation failed'); }
-    foreach ([['EHLO ' . $s['ehlo'], [250], 'ehlo-tls'], ['AUTH LOGIN', [334], 'auth'], [base64_encode($s['user']), [334], 'auth'], [base64_encode($s['pass']), [235], 'auth'],
-              ['MAIL FROM:<' . $s['user'] . '>', [250], 'from'], ['RCPT TO:<' . $to . '>', [250, 251], 'to'], ['DATA', [354], 'data']] as [$cmd, $want, $st]) if ($e = $step($cmd, $want, $st)) return $e;
-    $eol = "\r\n"; $mh = fn($x) => preg_match('/[\x80-\xFF]/', $x) ? '=?UTF-8?B?' . base64_encode($x) . '?=' : $x;
-    $payload = implode($eol, ['Date: ' . date('r'), 'From: ' . $mh((string) $s['from_name']) . ' <' . $s['user'] . '>', 'To: ' . $to, 'Subject: ' . $mh($subject),
-        'Message-ID: <' . bin2hex(random_bytes(12)) . '@traverseplatforms.com>', 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64']) . $eol . $eol . chunk_split(base64_encode($text), 76, $eol);
-    @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
-    return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
+    $s = travMailCfg();
+    if ($s['pass'] === '') return ['ok' => false, 'stage' => 'config', 'error' => 'no mail password in traverse-site-private/site-config.php'];
+    /* the one SMTP client (smtpSend, review 2026-10-30: this was a second copy of it); plain text, EHLO and Message-ID as traverseplatforms.com */
+    return smtpSend(['host' => (string) $s['host'], 'port' => (int) $s['port'], 'user' => (string) $s['user'], 'pass' => (string) $s['pass'], 'from_name' => (string) $s['from_name'], 'domain' => (string) $s['ehlo']], $to, $subject, $text, '');
 }
 function seatWatch(): void {
     global $basePeople, $sessionKey;
@@ -4685,7 +4671,7 @@ if ($action === 'area') {
     $hrepOf = hailOn($role) ? loadSide('hailrep', $key, $only) : [];   /* measured on the ground (2026-10-12) */
     $hrecent = hailOn($role) ? hailRecentReports() : [];
     $wxOf = wxDoorMatcher($role);   /* the weather warnings over each door, by the warning's shape (2026-10-29) */
-    $roofOf =roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
+    $roofOf = roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
     /* everywhere else, only houses built in or after the aerial photo's year, so the lot preview can say why the house may not show
        (2026-10-20, Matthew: "if its builts after 2023 we should probably state that as a reason for not having imagery") */
     if (!roofDataOn($role)) { $photoYr = (int) (market()['naip']['year'] ?? 2023); $bldOf = array_filter(array_map(fn($v) => is_array($v) && (int) ($v['yb'] ?? 0) >= $photoYr ? ['yb' => (int) $v['yb']] : null, loadSide('year', $key, $only))); }
