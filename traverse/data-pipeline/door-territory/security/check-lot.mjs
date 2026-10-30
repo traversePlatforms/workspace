@@ -1,10 +1,10 @@
-/* Checks build-lot.mjs's corner lots and streets behind against real lot lines (2026-10-29).
+/* Checks build-lot.mjs's corner lots against real lot lines (2026-10-29). "Backs onto a road" (bk) has its own check since it was
+ * rebuilt the same night: check-back.mjs.
  *   node check-lot.mjs <town> [parcels.json]
  * The lot lines: the state parcel layer as already cached on disk for the lawn work (lawn-trial/drcog-turf/parcels-<town>.json,
  * { cells: { key: [rings, ...] } }); nothing is fetched. For each door, the parcel that holds its point; then, along the lot line
  * every 2 m, which named streets (TIGER 2026) run within 13 m of it. The truth for a door:
  *   corner   its own street and another named street each run along 6 m or more of the lot line, on sides roughly square to each other
- *   behind   another named street runs along 6 m or more of the lot line on the side opposite its own street
  * Prints the agreement and a few disagreements of each kind (address and the numbers) to look at on a map. */
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -16,7 +16,7 @@ const DATA = process.env.ROUNDS_DATA || join(HERE, '..', '..', '..', 'app', 'dat
 const town = process.argv[2], pf = process.argv[3] || join(HERE, '..', 'lawn-trial', 'drcog-turf', `parcels-${town}.json`);
 const MAIN_DT = process.env.DT_DIR; const pfile = existsSync(pf) ? pf : join(MAIN_DT || '', 'lawn-trial', 'drcog-turf', `parcels-${town}.json`);
 const parcels = Object.values(JSON.parse(readFileSync(pfile, 'utf8')).cells).flat();
-const lot = JSON.parse(readFileSync(join(DATA, `security-lot-${town}.json`), 'utf8')).doors;
+const lot = JSON.parse(readFileSync(join(process.env.LOT_OUT || DATA, `security-lot-${town}.json`), 'utf8')).doors;
 const doors = JSON.parse(readFileSync(join(DATA, `${town}.json`), 'utf8')).areas.flatMap((a) => a.doors).filter((d) => d.lat != null);
 const lat0 = doors[0].lat, kx = 111320 * Math.cos(lat0 * Math.PI / 180), ky = 110540, P = (lon, lat) => [lon * kx, lat * ky];
 const ABBR = { STREET: 'ST', AVENUE: 'AVE', DRIVE: 'DR', ROAD: 'RD', COURT: 'CT', CIRCLE: 'CIR', LANE: 'LN', PLACE: 'PL', TRAIL: 'TRL', PARKWAY: 'PKWY', BOULEVARD: 'BLVD', LOOP: 'LP', VISTA: 'VIS', TERRACE: 'TER', POINT: 'PT', NORTH: 'N', SOUTH: 'S', EAST: 'E', WEST: 'W' };
@@ -50,7 +50,7 @@ function meet(c1, c2, p, R) {
   }
   return best;
 }
-const m = { tp: 0, fp: 0, fn: 0, tn: 0, btp: 0, bfp: 0, bfn: 0, nolot: 0, noown: 0 }, ex = { fp: [], fn: [], bfp: [], bfn: [] };
+const m = { tp: 0, fp: 0, fn: 0, tn: 0, nolot: 0, noown: 0 }, ex = { fp: [], fn: [] };
 for (const d of doors) {
   const p = P(d.lon, d.lat), cands = pgrid.get(Math.floor(p[0] / PG) + ',' + Math.floor(p[1] / PG)) || [];
   const hit = cands.map((i) => pr[i]).filter((q) => p[0] >= q.bb[0] && p[0] <= q.bb[2] && p[1] >= q.bb[1] && p[1] <= q.bb[3] && inRing(p[0], p[1], q.r));
@@ -63,18 +63,17 @@ for (const d of doors) {
   const own = core(streetOf(d.address)), fo = front.get(own);
   const v = lot[d.id] ? JSON.parse(lot[d.id]) : {};
   if (!fo || fo[0] < 3) { m.noown++; continue; }
-  let tc = null, tb = null;
+  let tc = null;
   for (const [c, f] of front) {
     if (c === own || f[0] < 3) continue;
     /* where the two streets meet, measured to the lot line: at the lot (a corner) or nowhere near it (a street behind) */
     const X = meet(own, c, [cx, cy], 150), dl = X ? Math.min(...r.map((q, i) => i ? segD(X, r[i - 1], q) : Infinity)) : Infinity;
-    if (dl <= 22 || (X && inRing(X[0], X[1], r))) tc = tc || f[3]; else if (dl > 40) tb = tb || f[3];
+    if (dl <= 22 || (X && inRing(X[0], X[1], r))) tc = tc || f[3];
   }
-  const row = { address: d.address, acres: d.acres, lat: d.lat, lon: d.lon, said: v.c || v.bk || null, truth: tc || tb };
+  const row = { address: d.address, acres: d.acres, lat: d.lat, lon: d.lon, said: v.c || null, truth: tc };
   if (tc && v.c) m.tp++; else if (tc) { m.fn++; ex.fn.push(row); } else if (v.c) { m.fp++; ex.fp.push(row); } else m.tn++;
-  if (tb && v.bk) m.btp++; else if (tb) { m.bfn++; ex.bfn.push(row); } else if (v.bk) { m.bfp++; ex.bfp.push(row); }
 }
 console.log(town, m);
-console.log(`corner: precision ${(m.tp / (m.tp + m.fp) * 100).toFixed(1)}%, recall ${(m.tp / (m.tp + m.fn) * 100).toFixed(1)}%;  street behind: precision ${(m.btp / (m.btp + m.bfp) * 100).toFixed(1)}%, recall ${(m.btp / (m.btp + m.bfn) * 100).toFixed(1)}%`);
+console.log(`corner: precision ${(m.tp / (m.tp + m.fp) * 100).toFixed(1)}%, recall ${(m.tp / (m.tp + m.fn) * 100).toFixed(1)}%`);
 const pick = (a, n) => a.filter((_, i) => i % Math.max(1, Math.floor(a.length / n)) === 0).slice(0, n);
-for (const k of ['fp', 'fn', 'bfp', 'bfn']) { console.log(k); for (const x of pick(ex[k], 6)) console.log('  ', JSON.stringify(x)); }
+for (const k of ['fp', 'fn']) { console.log(k); for (const x of pick(ex[k], 6)) console.log('  ', JSON.stringify(x)); }

@@ -11165,6 +11165,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     ['corner', 'home', 'Corner lot', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.c); }],
     ['opensp', 'tree', 'Backs onto open space', secLotFilt, function (d) { return !!(d.sec && (d.sec.os || (d.sec.lot && d.sec.lot.os))); }],
     ['alley', 'route', 'Alley behind', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.al === 'b'); }],
+    ['backrd', 'route', 'Backs onto a road', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.bk); }],
     ['deadend', 'map', 'Dead end or cul-de-sac', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.de !== undefined); }],
     ['sold12', 'door', 'Sold in the last 12 months', function () { return edOn() && crewSees(); }, function (d) { return soldRecent(d); }],   /* the county's sale record (2026-10-29): the editions */
     ['due', 'clock', 'Due back', function () { return true; }, function (d) { return !!(d.mark && backOn(d)); }],
@@ -16931,7 +16932,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       t.appendChild(q('small', 'sub', 'The lot'));
       lot.forEach(function (x) { t.appendChild(q('span', 'hl', x)); });
       /* TIGER/Line's terms: free to use, the U.S. Census Bureau acknowledged as the source; Denver's alleys credit the city */
-      t.appendChild(q('span', 'hl', 'Lot facts: U.S. Census Bureau street map (2026) and the county parcel; distances from the middle of the lot.' + (s.lot.ad ? ' Alley: City and County of Denver.' : '')));
+      t.appendChild(q('span', 'hl', 'Lot facts: U.S. Census Bureau street map (2026) and the county parcel; distances from the middle of the lot.' + (s.lot.ad ? ' Alley: City and County of Denver.' : '') + (s.lot.bk ? ' Road behind: from the back lot line to the middle of the road' + (s.lot.bd ? ' (lot lines: City and County of Denver).' : ' (lot lines: State of Colorado public parcels).') : '')));
     }
     if (s.cr) {
       /* m: within 1 mile [30, 90, 365 days] by kind (h: within 1/2 mile). An older file has h and a year-only mile total. */
@@ -16958,14 +16959,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return b;
   }
   /* the lot (2026-10-29, Security only; security-lot-<town>.json from data-pipeline/door-territory/security/build-lot.mjs): plain
-     physical facts from the Census street map and the parcel, never a score. c corner [own street, cross street], bk a named road
-     behind, al alley behind 'b' or beside 's', tr a path or trail along the lot, de metres to where the house's street dead-ends,
+     physical facts from the Census street map and the parcel, never a score. c corner [own street, cross street], bk backs onto a
+     road (bd = 1: Denver's lot lines), al alley behind 'b' or beside 's', tr a path or trail along the lot, de metres to where the house's street dead-ends,
      nn metres to the nearest other home (shown when far), wa a creek or pond nearby. Open space shows in the Why knock line. */
   function secLotLines(l) {
     var o = []; if (!l) return o;
     var ft = function (m) { return Math.max(10, Math.round(m * 3.28084 / 10) * 10); };
     if (l.c) o.push('Corner lot: ' + l.c[0] + ' / ' + l.c[1]);
-    /* bk (road behind) is kept in the data but not shown: against the parcel lines it was right only about half the time (2026-10-29 check) */
+    /* bk [road, metres from the back lot line to the road's middle, 'h' highway / 'm' main road (the Census road class)]: only where
+       the lot line itself is on file; 95%+ right against the lot lines and the aerial photo (rebuilt 2026-10-29, back-road.mjs) */
+    if (l.bk && l.bk[0]) o.push('Backs onto ' + l.bk[0] + (l.bk[2] === 'h' ? ' (highway)' : l.bk[2] === 'm' ? ' (main road)' : '') + ', about ' + ft(l.bk[1]) + ' ft behind the lot');
     if (l.al) o.push(l.al === 'b' ? 'Alley behind the house' : 'Alley beside the house');
     if (l.tr !== undefined) o.push(l.tr ? 'Path or trail beside the lot: ' + l.tr : 'Path or trail beside the lot');
     if (l.de !== undefined) o.push('Dead end or cul-de-sac about ' + ft(l.de) + ' ft from this lot');
