@@ -16896,7 +16896,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var o = []; if (!l) return o;
     var ft = function (m) { return Math.max(10, Math.round(m * 3.28084 / 10) * 10); };
     if (l.c) o.push('Corner lot: ' + l.c[0] + ' / ' + l.c[1]);
-    if (l.bk) o.push('Road behind the lot: ' + l.bk);
+    /* bk (road behind) is kept in the data but not shown: against the parcel lines it was right only about half the time (2026-10-29 check) */
     if (l.al) o.push(l.al === 'b' ? 'Alley behind the house' : 'Alley beside the house');
     if (l.tr !== undefined) o.push(l.tr ? 'Path or trail beside the lot: ' + l.tr : 'Path or trail beside the lot');
     if (l.de !== undefined) o.push('Dead end or cul-de-sac about ' + ft(l.de) + ' ft from this lot');
