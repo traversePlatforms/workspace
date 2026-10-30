@@ -651,6 +651,7 @@ function tools() {
   const dir = path.join(OUT, 'traverse-tools');
   fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
   for (const f of ['push-alerts.php', 'storm-update.php', 'crm-sync.php']) fs.copyFileSync(path.join(SRC, 'tools', f), path.join(dir, f));
+  fs.copyFileSync(path.join(SRC, 'tools', 'fb-leads.php'), path.join(dir, 'fb-leads.php'));   /* Facebook lead ads every 5 minutes (2026-10-30) */
   fs.copyFileSync(path.join(SRC, 'tools', 'clients-cli.php'), path.join(dir, 'clients.php'));   /* client installs made on the server (2026-10-29): regen, relink, list */
   const apis = Object.keys(EDITIONS).map((k) => EDITIONS[k].api + '-rounds.php');
   const sh = [
@@ -667,6 +668,7 @@ function tools() {
     '  [ -f "$D/../public_html/api/$a" ] || continue',
     '  "$PHP" "$D/push-alerts.php" --api="$a" "$@"',
     '  case " $* " in *" --dry-run "*) ;; *) "$PHP" "$D/crm-sync.php" --api="$a" ;; esac   # booked doors to JobNimbus, where connected (2026-10-08); never in a dry run',
+    '  case " $* " in *" --dry-run "*) ;; *) "$PHP" "$D/fb-leads.php" --api="$a" ;; esac   # Facebook lead ads into the Pipeline, where connected (2026-10-30); never in a dry run',
     'done',
     '',
   ].join('\n');

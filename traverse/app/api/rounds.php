@@ -1088,6 +1088,7 @@ require_once __DIR__ . '/billing.php';   /* billing (2026-10-10): Stripe, keys i
 if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oauth-lib.php';   /* Sign in with Google / Microsoft for Setup › Email (2026-10-30): one shared file beside every install's API */
 if (is_file(__DIR__ . '/care-lib.php')) require_once __DIR__ . '/care-lib.php';   /* plans and customer emails for the editions (2026-10-30): one shared file beside every install's API */
 if (is_file(__DIR__ . '/eod-lib.php')) require_once __DIR__ . '/eod-lib.php';   /* the editions' end-of-day email (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/fb-leads-lib.php')) require_once __DIR__ . '/fb-leads-lib.php';   /* Facebook lead ads into the Pipeline, editions and client installs (2026-10-30): one shared file beside every install's API */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -2377,6 +2378,8 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest',
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
+/* Facebook lead ads every 5 minutes (2026-10-30, fb-leads-lib.php): traverse-tools/fb-leads.php, once per edition and client install */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fbpoll') $session = ['n' => 'Command line', 'r' => 'admin', 'c' => ''];
 /* the towns answer built ahead of the first phone (2026-10-29, speed: a new day, a deploy or a settings save made whoever opened the app
    next wait 7-16 s while every town was rebuilt): tools/regions-warm.php asks for it once per kind of viewer, as that role */
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE') && in_array($action, ['regions', 'regionsig'], true)) {
@@ -3652,7 +3655,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview'];   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms'];   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     $roOk = array_merge($roOk, ['careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
@@ -3825,6 +3828,7 @@ function permCat(): array {
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
         'set.eod' => ['g' => 'set', 'l' => 'End-of-day email', 's' => 'end-of-day email', 'd' => 'Turn the evening summary email on or off, and pick who gets it, when, and what it shows.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['eodget', 'eodset', 'eodpreview', 'eodtest']],   /* 2026-10-30 */
+        'set.fbleads' => ['g' => 'set', 'l' => 'Facebook lead ads', 's' => 'Facebook lead ads', 'd' => 'Connect the company\'s Facebook Page, pick the lead forms and who new ad leads go to.', 'def' => '00000', 'admin' => ['fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbpollnow']],   /* 2026-10-30, fb-leads-lib.php */
         'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],
         'set.plans' => ['g' => 'set', 'l' => 'Plans', 's' => 'builds plans', 'd' => 'The company\'s recurring plans: what each visit includes, how often, the season and the price.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['careplanset']],   /* 2026-10-30 */
         'set.care' => ['g' => 'set', 'l' => 'Customer emails', 's' => 'customer emails', 'd' => 'The follow-up after a quote, the aftercare email and the monthly newsletter: on or off, the words, and approving each issue.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog']],
@@ -3941,7 +3945,8 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel',   /* smart prices and terms (2026-10-30); + the fuel cost's prices */
     'careplans', 'careplanset', 'carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog',   /* plans and customer emails (2026-10-30) */
     'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
-    'perms', 'permset'];   /* + Roles and permissions, part of Accounts (2026-10-29) */
+    'perms', 'permset',   /* + Roles and permissions, part of Accounts (2026-10-29) */
+    'fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbleadstoken'];   /* + Setup › Facebook leads (2026-10-30) */
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
 /* what a lock for payment shuts: Traverse's own data, for everyone but the super admin (2026-10-29) */
 const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
@@ -10695,6 +10700,7 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
            Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). + role permissions (role-perms.json, 2026-10-29). */
         foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json', 'eod-report.json', 'ad-spend.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the end-of-day email's settings and the typed ad spend (2026-10-30) */   /* + the smart price list and the clause library (2026-10-30) */
         foreach (['care-plans.json', 'care-cfg.json', 'care-news.json', 'care-optin.json', 'care-qplans.json', 'newsletter-unsub.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + plans and customer emails (2026-10-30; their logs are *.log above) and the unsubscribe list */
+        $add(DATA_DIR . '/fb-leads.json', 'sixfold-data/rounds/fb-leads.json');   /* the Facebook leads choices (2026-10-30); fbleads.log goes with the *.log above; never the tokens */
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];
@@ -14053,6 +14059,7 @@ if ($action === 'mailsend') {
     if ($ml) appendLine(leadsDir() . '/leadst.log', ['id' => (string) $ml['id'], 'note' => mb_substr('Emailed from the app (' . (string) $mc['user'] . '): ' . $subj, 0, 500), 'by' => $me, 'at' => time()]);
     out(['ok' => true, 'from' => (string) $mc['user'], 'to' => $to]);
 }
+if (function_exists('flAction') && in_array($action, FL_ACTIONS, true)) flAction($action);   /* Setup › Facebook leads and the 5-minute job (2026-10-30, fb-leads-lib.php) */
 if ($action === 'mailoauth' && function_exists('moAction')) moAction();   /* Sign in with Google / Microsoft: the address to go to (2026-10-30, mail-oauth-lib.php) */
 if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest'], true)) {
     if (!kitOn()) fail('Not here.', 404);   /* Sixfold 365 keeps its own mailbox */
