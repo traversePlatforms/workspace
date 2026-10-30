@@ -40,6 +40,10 @@ Questions or requests: **privacy@traverseplatforms.com**, or (303) 596-9515.
 
 **Deposits clients take.** Clients can take deposits from homeowners through their own payment providers: Square, Stripe, or the pay links they add (for example Venmo, Cash App, PayPal or Zelle). Those payments go to the client under that provider's terms. We receive whether a deposit was paid, never card numbers.
 
+**Connecting a mailbox (Google or Microsoft).** A client can connect its own email account so that quotes, signed agreements and receipts go to its customers from its own address. When it chooses "Sign in with Google" or "Sign in with Microsoft", we receive the account's email address and permission to **send** email on the client's behalf (Google's gmail.send scope; Microsoft's Mail.Send). We use that permission only to send the emails the client's own people start in the app. **We never read, search, store or delete anyone's email**, and we don't use it for advertising or to train any AI model. The access key is kept encrypted on our servers, for that client only, and is deleted when the client disconnects; the client can also remove our access at any time in its Google or Microsoft account. Traverse's use and transfer to any other app of information received from Google APIs will adhere to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements.
+
+**Price lists a client uploads.** When a client chooses to import its price list, the file it uploads is sent to Anthropic, which provides the AI model that reads it, and only that file: no customer, homeowner or property information. The result is a draft the client reviews before anything is saved.
+
 ### 3. Homeowners
 
 **What the app shows about a property.** Traverse shows information about homes so that companies can plan their work: the property's address, the owner's name as it appears in public government records, lot and building details, the home's assessed value, and estimates worked out from published sources (for example roof size, lawn size, storm history and solar potential). Much of it is an estimate and may be out of date. Traverse scores houses, not people.
@@ -66,6 +70,8 @@ We do not sell the personal information of our website visitors or app users. We
 - **Square or Stripe**, when a client connects its own account to take deposits, receives the payment details the homeowner enters there.
 - **Twilio** sends text messages, when a client turns texting on; texts go from that client's own number.
 - **JobNimbus**, when a client connects it, receives the bookings the client sends it.
+- **Google or Microsoft**, when a client connects its mailbox, sends the client's emails (section 2).
+- **Anthropic** reads a price list a client chooses to import (section 2).
 - **A phone-lookup provider**, when a client turns lookups on and pays for them.
 - **Map and weather image services** provide the map, aerial and radar pictures the app loads on your device; they receive your device's internet address, as any website does.
 
