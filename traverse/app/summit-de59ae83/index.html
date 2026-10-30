@@ -14067,7 +14067,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (D.imports && D.imports.length) {
         box.appendChild(q('div', 'dwh', 'Earlier imports'));
         D.imports.forEach(function (x) {
-          var b = q('button', 'kitstep'); b.type = 'button'; b.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x.name)); tx.appendChild(q('small', null, x.lines + ' lines · ' + (x.by || '') + ' · ' + new Date(x.at * 1000).toLocaleDateString(LOCALE))); b.appendChild(tx); b.appendChild(q('span', 'kitgo', '›'));
+          var b = q('button', 'kitstep'); b.type = 'button'; b.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x.name)); tx.appendChild(q('small', null, x.lines + (x.lines === 1 ? ' line · ' : ' lines · ') + (x.by || '') + ' · ' + new Date(x.at * 1000).toLocaleDateString(LOCALE))); b.appendChild(tx); b.appendChild(q('span', 'kitgo', '›'));
           b.addEventListener('click', function () { api('prcimportget', { params: { id: x.id } }).then(function (j) { if (j && j.ok) prcImportView(j.draft); else toast('Could not open it', (j && j.error) || '', null); }); }); box.appendChild(b);
         });
       }
