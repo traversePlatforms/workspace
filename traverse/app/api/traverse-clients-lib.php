@@ -26,7 +26,8 @@ declare(strict_types=1);
  *
  * ---- WHAT AN INSTALL IS MADE OF (id c3fa9b2c1 for example) ----------------------------------------------------------------------------
  *   public_html/<xx-6hex>/                       its page folder: the edition's template with the client's names (tcRender), the
- *                                                edition's icons, manifest and Spanish dictionary, and its logo when it gave one
+ *                                                edition's icons, manifest and Spanish dictionary (its logo is the Company screen's
+ *                                                upload: company-logo.* in its data folder, rounds.php logoTake)
  *   public_html/api/traverse-c3fa9b2c1-*.php      its API (rounds, billing, sms, webpush, skiptrace), from the template
  *   traverse-c3fa9b2c1-data/rounds/              company.json, company-local.json, billing.json, index.json (its towns only) and links to
  *                                                the edition's town and side files (.links.json lists every link this code made)
