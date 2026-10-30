@@ -132,6 +132,12 @@ html{scroll-behavior:smooth}
   .nowall p{font-size:18px !important}
   .brandart{height:390px !important}
 }
+/* contact (2026-10-30): the words over the three cards on narrow screens; the cards lift a little on hover */
+@media (max-width:860px){.contactrow{grid-template-columns:minmax(0,1fr) !important;gap:28px !important}}
+@media (max-width:480px){.contactlist b{font-size:18px !important}.contactlist > a{padding:16px !important;gap:12px !important}}
+.contactlist > a{transition:translate .2s ease,box-shadow .2s ease,border-color .2s ease}
+.contactlist > a:hover{translate:0 -2px;border-color:#b8c3d1 !important;box-shadow:0 10px 24px -14px rgba(15,27,45,0.35)}
+.contactlist > a:focus-visible{outline:2px solid #d6400c;outline-offset:2px}
 /* the questions: two columns of cards, one on narrow screens; the + turns to a cross when open */
 @media (max-width:860px){.faqgrid{grid-template-columns:minmax(0,1fr) !important}}
 #faq summary::-webkit-details-marker{display:none}
@@ -317,7 +323,7 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Traverse Platforms</title>
-<meta name="description" content="Traverse runs field sales from the first knock to the finished job: properties, phone calls, quotes, jobs and the office in one app, set up for your trade.">
+<meta name="description" content="Traverse runs field sales from the first point of contact to the finished job: properties, phone calls, quotes, jobs and the office in one app, set up for your trade.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Traverse Platforms">
 <meta property="og:title" content="Traverse: work the real territory">

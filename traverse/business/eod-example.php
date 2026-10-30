@@ -32,10 +32,10 @@ $R = ['date' => 'Fri 30 Oct', 'kpis' => [
             ['l' => 'Last 7 days', 'v' => '47', 's' => 'At the door 21, Facebook ads 14, Website 7, Referrals 3, Phone calls 2'],
             ['l' => 'Waiting on a first call', 'v' => '3', 't' => 'warn']]],
         ['title' => 'Team today', 'rows' => [
-            ['l' => '1. Marcus Reed', 'v' => '$15,400', 's' => '64 doors · 3 leads · 2 estimates · 1 job sold', 't' => 'good'],
-            ['l' => '2. Priya Shah', 'v' => '$12,500', 's' => '52 doors · 2 leads · 2 estimates · 1 job sold', 't' => 'good'],
-            ['l' => '3. Jordan Lee', 'v' => '81 doors', 's' => '81 doors · 4 leads · 1 estimate · 0 jobs sold'],
-            ['l' => '4. Sam Ortiz', 'v' => '47 doors', 's' => '47 doors · 1 lead · 1 estimate · 0 jobs sold']]],
+            ['l' => '1. Marcus Reed', 'v' => '$15,400', 's' => '64 properties · 3 leads · 2 estimates · 1 job sold', 't' => 'good'],
+            ['l' => '2. Priya Shah', 'v' => '$12,500', 's' => '52 properties · 2 leads · 2 estimates · 1 job sold', 't' => 'good'],
+            ['l' => '3. Jordan Lee', 'v' => '81 properties', 's' => '81 properties · 4 leads · 1 estimate · 0 jobs sold'],
+            ['l' => '4. Sam Ortiz', 'v' => '47 properties', 's' => '47 properties · 1 lead · 1 estimate · 0 jobs sold']]],
         ['title' => 'Tomorrow, Sat 31 Oct', 'rows' => [
             ['l' => 'Rachel M.', 'v' => '$13,900', 's' => '8:00 am · Crew 1 (Tom Alvarez)'],
             ['l' => 'Kevin B.', 'v' => '$8,600', 's' => '10:30 am · Crew 2 (Eli Brooks)'],

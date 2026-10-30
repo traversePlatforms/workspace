@@ -200,6 +200,17 @@ function feature(string $k): bool { return !empty(company()['features'][$k]); }
 /* an edition, not Sixfold (2026-10-29, Matthew: the new roles, seats, devices and terms are for the editions only): every edition and client
    install is built without an aeration brand (company.json a365); Sixfold has one. See "the editions' roles" further down. */
 function edition(): bool { return company()['a365'] === null; }
+/* "doors" become "properties" in the editions' words (2026-10-30, Matthew), the same swap as pw() in the page: Sixfold 365 keeps its
+   words, and the knock itself ("at the door", "next door", "door-to-door", the Knocks doors switch) and door sensors stay. Text only. */
+function edWords(string $s): string {
+    if (stripos($s, 'door') === false || !defined('DATA_DIR') || !edition()) return $s;
+    $kept = [];
+    $s = (string) preg_replace_callback('/\b(?:at|from) (?:the|your|their|a) door\b|\bnext door\b|\bdoor-to-door\b|\bdoor (?:and|or) window\b|\bknocks? doors\b/i',
+        function ($m) use (&$kept) { $kept[] = $m[0]; return "\x01" . (count($kept) - 1) . "\x02"; }, $s);
+    $s = (string) preg_replace_callback('/\b([Dd])oors\b/', fn($m) => $m[1] === 'D' ? 'Properties' : 'properties', $s);
+    $s = (string) preg_replace_callback('/\b([Dd])oor\b/', fn($m) => $m[1] === 'D' ? 'Property' : 'property', $s);
+    return (string) preg_replace_callback('/\x01(\d+)\x02/', fn($m) => $kept[(int) $m[1]], $s);
+}
 /* the terms each person accepts (2026-10-29): bump a version when its text changes and everyone is asked again. See "the terms" further down. */
 const TERMS_VERSION = '2026-10-29';       /* Terms of Use v2 + Privacy Policy, as published 29 October 2026 */
 const AGREEMENT_VERSION = '2026-10-29';   /* the Subscription Agreement v3 (admins), as published 29 October 2026 */
@@ -350,7 +361,7 @@ function sendJson(string $txt): never {
     echo $txt;
     exit;
 }
-function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => $msg], $status); }
+function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => edWords($msg)], $status); }   /* the editions' words (2026-10-30) */
 
 /* SX-9e (2026-10-03): the crew codes live ABOVE public_html, in sixfold-private/, beside
    sixfold-data/. If PHP ever stops running in this folder, a file in here is served as plain
@@ -2310,7 +2321,7 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time()] + ($noPw ? ['email' => $em] : []);
         saveAccounts($acct); flock($lk, LOCK_UN); fclose($lk);
         $co = company(); $link = (string) $co['appUrl'] . '#pw=r.' . $tok;
-        pwMail($em, (string) $co['name'] . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $co['name'] . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+        pwMail($em, (string) $co['name'] . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $co['name'] . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is.\n\n" . $co['name'] . "\n", null, []);
         accountLog(['what' => 'reset link sent', 'id' => $id]);
         out($same);
     }
@@ -3763,17 +3774,17 @@ function edGate(string $a): void {
  * order manager, office, sales rep, setter, technician ('1' yes, '0' no, '-' not for that role, 'r' the company switch for sales reps'
  * agreements in Accounts), are the 'def' strings below. */
 function permRoles(): array { return ['manager', 'office', 'crew', 'setter', 'tech']; }
-function permGroups(): array { return ['doors' => 'Doors', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }
+function permGroups(): array { return ['doors' => 'Properties', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }
 function permCat(): array {
     static $c = null; if ($c !== null) return $c;
     $other = function (): bool { global $me; $w = trim((string) ($_REQUEST['who'] ?? '')); return $w !== '' && $w !== $me; };
     $c = [
-        'doors.see' => ['g' => 'doors', 'l' => 'See doors and maps', 's' => 'doors', 'd' => 'Door lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
-        'doors.mark' => ['g' => 'doors', 'l' => 'Mark doors', 's' => 'marks doors', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
-        'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best doors, door scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
-        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out doors and territories', 's' => 'hands out doors', 'd' => 'The Plan: give neighborhoods and doors to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
+        'doors.see' => ['g' => 'doors', 'l' => 'See properties and maps', 's' => 'properties', 'd' => 'Property lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
+        'doors.mark' => ['g' => 'doors', 'l' => 'Mark properties', 's' => 'marks properties', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
+        'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best properties, property scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
+        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out properties and territories', 's' => 'hands out properties', 'd' => 'The Plan: give neighborhoods and properties to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
         'leads.own' => ['g' => 'leads', 'l' => 'Work their own leads', 's' => 'own leads', 'd' => 'Their own leads: stages, follow-ups, notes and call tries.', 'def' => '1-110', 'acts' => ['myleads', 'leadstatus', 'leadfollow', 'leadtry', 'leadoutcome', 'leadrecall', 'leadunreach', 'leadremove'], 'as' => 'rep'],
-        'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds door leads', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
+        'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds leads at the door', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
         'leads.hand' => ['g' => 'leads', 'l' => 'Add leads by hand', 's' => 'adds leads by hand', 'd' => 'Type in a lead that called, wrote or came from anywhere else.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadadd'], 'as' => 'office'],
         'leads.import' => ['g' => 'leads', 'l' => 'Import a lead list', 's' => 'imports lead lists', 'd' => 'Bring in a list of leads from a spreadsheet.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadimport'], 'as' => 'office'],
         'leads.team' => ['g' => 'leads', 'l' => 'See their team\'s leads', 's' => 'team\'s leads', 'd' => 'The leads of the people on their team, and the ones nobody has yet.', 'def' => '1-000', 'acts' => ['leads'], 'cond' => fn(string $a): bool => $a === 'myleads' && $other(), 'as' => 'manager'],
@@ -3798,7 +3809,7 @@ function permCat(): array {
         'cust.edit' => ['g' => 'cust', 'l' => 'Edit customers', 's' => 'edits customers', 'd' => 'Change a customer, add visits, make a customer from a lead.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['customersave', 'customerfrom', 'visitsave', 'custdocadd', 'plantemplatesave'], 'as' => 'office'],
         'cust.import' => ['g' => 'cust', 'l' => 'Import customers', 's' => 'imports customers', 'd' => 'Bring in customers, leads and past work from a spreadsheet.', 'def' => '00000', 'need' => 'imp', 'admin' => ['importcheck', 'importrun', 'imports', 'importundo', 'customerimport']],
         'cust.export' => ['g' => 'cust', 'l' => 'Download customers and payments', 's' => 'downloads customers', 'd' => 'The customer and payment lists as spreadsheets, and the hand-off to another CRM.', 'def' => '00000', 'admin' => ['customersexport', 'paymentsexport', 'crmexport']],
-        'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Doors, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
+        'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Properties, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
         'team.stats' => ['g' => 'team', 'l' => 'See their team\'s numbers', 's' => 'team\'s numbers', 'd' => 'The day-by-day numbers of the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'cond' => fn(string $a): bool => $a === 'stats' && ($other() || !empty($_REQUEST['team'])), 'gacts' => ['stats'], 'as' => 'manager'],
         'team.statspage' => ['g' => 'team', 'l' => 'See the Stats page', 's' => 'Stats page', 'd' => 'The company\'s leads, close rate, ads and jobs.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['statspage'], 'as' => 'office'],
         'team.goals' => ['g' => 'team', 'l' => 'Set their team\'s goals', 's' => 'sets team goals', 'd' => 'The daily goals for the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['goals'], 'as' => 'manager'],
@@ -3813,7 +3824,7 @@ function permCat(): array {
 }
 /** never toggled, said under the list in Accounts */
 function permFixed(): array {
-    return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Door list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
+    return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Property list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
 }
 function permFile(): string { return DATA_DIR . '/role-perms.json'; }
 function permSaved(bool $fresh = false): array {
@@ -3948,10 +3959,10 @@ function billLockInfo(?array $L, bool $admin): ?array {
 /** the lock for someone signing in with this role ('super' never) */
 function billLockFor(string $r): ?array { return $r === 'super' ? null : billLockInfo(billLock(), $r === 'admin'); }
 function billLockWords(array $L, bool $admin): string {
-    if (!$admin) return $L['lock'] === 'billing' ? 'Door data is paused: your company\'s account needs attention.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
-    if ($L['lock'] === 'billing') return 'Door data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
-    return $L['phase'] === 'unpaid' ? 'Doors, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
-        : 'Doors, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
+    if (!$admin) return $L['lock'] === 'billing' ? 'Property data is paused: your company\'s account needs attention.' : 'Your company\'s app is being set up. Your admin will let you know when it\'s ready.';
+    if ($L['lock'] === 'billing') return 'Property data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
+    return $L['phase'] === 'unpaid' ? 'Properties, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
+        : 'Properties, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
 }
 /** a lock for payment is told once per lapse: Traverse by email, the client's admins in their alerts ("Your admin has been told") */
 function billLockNote(array $L): void {
@@ -3966,7 +3977,7 @@ function billLockNote(array $L): void {
         . 'Company: ' . $co . "\nInstall: " . COOKIE . "\nWhy: " . $why . "\n\nPaying opens it at once. To work with them, open their Billing as Traverse and use Give more time.\n");
     billingLog(['what' => 'locked', 'lapse' => $L['lapse'], 'mailed' => $r['ok']]);
     foreach (acctRows($basePeople, $acct, $sessionKey) as $row) if (!$row['off'] && $row['role'] === 'admin' && !boardHidden((string) $row['name']))
-        feedAdd((string) $row['name'], 'Door data is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Doors, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
+        feedAdd((string) $row['name'], 'Property data is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Properties, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
 }
 function billGate(string $a): void {
     global $isSuper, $role;
@@ -6041,7 +6052,7 @@ function houseFacts(string $key, string $id): ?array {
     }
     foreach (lookupDoors($k0) as $d) {   /* not on a door list (2026-10-14): rented, mostly */
         if ($d['id'] !== $id) continue;
-        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : 'Not on the door lists','owner' => $d['owner'] ?? null,
+        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : edWords('Not on the door lists'),'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']), 'hand' => loadLawnHand($k0)[$id] ?? null, 'range' => lawnRangeCache()[$k0 . '/' . $id] ?? null,
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
@@ -10111,7 +10122,7 @@ if ($action === 'payments' || $action === 'paymentsexport') {
  *   own clock): sixfold-tools/edition-eod.php, started by the hourly morning-email.php, asks each edition and client install (eodcron).
  *   Each send is a line in eod.log (in the backups with the settings).
  *   eodget GET, eodset POST, eodpreview GET (?s=money,jobs,...), eodtest POST {email}: adminOr('set.eod'); eodcron: the command line only. */
-function edWords(): array {
+function edTradeWords(): array {
     $t = kitTrade();
     $w = ['roof' => ['job', 'jobs', 'estimate', 'estimates'], 'solar' => ['install', 'installs', 'proposal', 'proposals'], 'pest' => ['service', 'services', 'quote', 'quotes'],
           'security' => ['install', 'installs', 'quote', 'quotes'], 'yards' => ['job', 'jobs', 'quote', 'quotes']][$t] ?? ['job', 'jobs', 'quote', 'quotes'];
@@ -10223,7 +10234,7 @@ function edStats(string $p): array {
         $weeks[] = ['from' => $f, 'to' => $t, 'booked' => $bk, 'jobs' => $bn, 'pipeline' => $exp, 'plans' => $planW, 'total' => $bk + $exp + $planW];
     }
     $eod = adminOr('set.eod') && function_exists('eodSectionList') ? eodCfg() : null;   /* eod-lib.php beside the API */
-    return ['ok' => true, 'ed' => true, 'today' => $T, 'period' => ['key' => $pkey, 'label' => $plabel, 'from' => $from, 'to' => $to], 'words' => edWords(),
+    return ['ok' => true, 'ed' => true, 'today' => $T, 'period' => ['key' => $pkey, 'label' => $plabel, 'from' => $from, 'to' => $to], 'words' => edTradeWords(),
             'sources' => array_values($src), 'quotes' => $q + ['close' => $CR['close'], 'quoted8' => $CR['quoted'], 'won8' => $CR['won'], 'pipe' => $CR['pipe'], 'pipeN' => $CR['pipeN'], 'groups' => $CR['groups']],
             'options' => ['quotes' => $optQ, 'customer' => $custPick, 'list' => array_values($opt)], 'jobs' => $jb, 'money' => $money,
             'ads' => $adOut, 'adRows' => edAds(), 'adSrc' => edAdSrc(), 'team' => $team, 'doors' => $doors,
@@ -10259,7 +10270,7 @@ function eodBrand(): array {
 }
 /** today's report as data (eod-lib.php draws it), only the parts asked for. [R, subject bits] */
 function eodData(array $want, bool $test = false): array {
-    $W = edWords(); $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d'); $t0 = $today->getTimestamp(); $now = time();
+    $W = edTradeWords(); $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d'); $t0 = $today->getTimestamp(); $now = time();
     $tomD = (clone $today)->modify('+1 day')->format('Y-m-d'); $wk0 = $now - 7 * 86400;
     $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days')->format('Y-m-d'); $m1 = $today->format('Y-m-01');
     $leads = array_filter(leadsAll(), 'edReal');
@@ -10321,8 +10332,8 @@ function eodData(array $want, bool $test = false): array {
         foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) { $n = edCredit($leads[$j['lead']] ?? [], $j); $bump($n, 'sold'); $bump($n, 'soldV', (int) $j['price']); }
         uksort($P, fn($a, $b) => [$P[$b]['soldV'], $P[$b]['sold'], $P[$b]['quotes'], $P[$b]['doors']] <=> [$P[$a]['soldV'], $P[$a]['sold'], $P[$a]['quotes'], $P[$a]['doors']]);
         $rows = []; $i = 0;
-        foreach ($P as $n => $x) $rows[] = ['l' => (++$i) . '. ' . $n, 'v' => $x['soldV'] ? $usd($x['soldV']) : $pl($x['doors'], 'door', 'doors'), 's' => implode(' · ', [$pl($x['doors'], 'door', 'doors'), $pl($x['leads'], 'lead', 'leads'), $pl($x['quotes'], $W['quote'], $W['quotes']), $pl($x['sold'], $W['job'] . ' sold', $W['jobs'] . ' sold')]), 't' => $x['soldV'] ? 'good' : ''];
-        $R['sections'][] = ['title' => 'Team today', 'rows' => array_slice($rows, 0, 15), 'empty' => 'Nobody logged doors, leads or sales today.'];
+        foreach ($P as $n => $x) $rows[] = array_map('edWords', ['l' => (++$i) . '. ' . $n, 'v' => $x['soldV'] ? $usd($x['soldV']) : $pl($x['doors'], 'door', 'doors'), 's' => implode(' · ', [$pl($x['doors'], 'door', 'doors'), $pl($x['leads'], 'lead', 'leads'), $pl($x['quotes'], $W['quote'], $W['quotes']), $pl($x['sold'], $W['job'] . ' sold', $W['jobs'] . ' sold')]), 't' => $x['soldV'] ? 'good' : '']);   /* doors read properties in the editions (edWords) */
+        $R['sections'][] = ['title' => 'Team today', 'rows' => array_slice($rows, 0, 15), 'empty' => edWords('Nobody logged doors, leads or sales today.')];
     }
     if (!empty($want['tomorrow'])) {
         $tm = array_values(array_filter($jobs, fn($j) => $j['date'] === $tomD)); usort($tm, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
@@ -10360,7 +10371,7 @@ if (in_array($action, ['eodget', 'eodset', 'eodpreview', 'eodtest'], true)) {
     $c = eodCfg();
     if ($action === 'eodget') {
         $last = null; foreach (array_reverse(readLines(DATA_DIR . '/eod.log')) as $r) { if (($r['what'] ?? '') === 'send') { $last = ['at' => (int) $r['at'], 'ok' => !empty($r['ok']), 'n' => (int) ($r['n'] ?? 0)]; break; } }
-        $W = edWords(); $tw = fn(string $s) => str_replace(['Quotes', 'quotes', 'Jobs', 'jobs'], [$W['Quotes'], $W['quotes'], $W['Jobs'], $W['jobs']], $s);
+        $W = edTradeWords(); $tw = fn(string $s) => edWords(str_replace(['Quotes', 'quotes', 'Jobs', 'jobs'], [$W['Quotes'], $W['quotes'], $W['Jobs'], $W['jobs']], $s));
         $ms = mailOwnCfg();
         out(['ok' => true, 'cfg' => $c, 'people' => array_values(eodPeople()), 'sections' => array_map(fn($k, $v) => ['k' => $k, 'l' => $tw($v[0]), 'd' => $tw($v[1])], array_keys(eodSectionList()), eodSectionList()),   /* in the trade's words (estimates, installs) */
              'mail' => ['own' => (bool) $ms, 'user' => $ms ? (string) $ms['user'] : '', 'company' => (string) company()['name'], 'reply' => (string) company()['email']], 'last' => $last, 'tz' => appTz(),
@@ -11427,15 +11438,23 @@ function inviteJoined(string $code): void {
     if (is_array($a['inv'][$id] ?? null) && empty($a['inv'][$id]['joined'])) { $a['inv'][$id]['joined'] = time(); saveAccounts($a); $acct = $a; accountLog(['what' => 'invite accepted', 'id' => $id]); }
     flock($lk, LOCK_UN); fclose($lk);
 }
-/** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok] */
+/** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok]
+    The From address stays the mailer's (delivery needs it); the name is the company's and Reply-To its admin (2026-10-30, Matthew: zero
+    Traverse branding to a client's team: no "via Traverse", no "Sent for ... by Traverse Platforms"). */
+function pwReplyTo(array $headers): string {
+    foreach ($headers as $x) if (stripos((string) $x, 'Reply-To:') === 0) return trim(substr((string) $x, 9));
+    $co = company(); if (filter_var((string) ($co['email'] ?? ''), FILTER_VALIDATE_EMAIL)) return (string) $co['email'];
+    return '';
+}
+function pwReplyHeaders(array $headers): array { $rt = pwReplyTo($headers); foreach ($headers as $x) if (stripos((string) $x, 'Reply-To:') === 0) return $headers; return $rt !== '' ? array_merge($headers, ['Reply-To: ' . $rt]) : $headers; }
 function pwMail(string $to, string $subject, string $text, ?string $html, array $headers): bool {
     $cname = (string) company()['name'];
     $mock = getenv('TRAV_MAIL_MOCK');
-    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $cname . ' via Traverse', 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $cname, 'replyTo' => pwReplyTo($headers), 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
     $s = travMailCfg(); if ($s['pass'] === '') return false;
     $h = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
-    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $cname . ' via Traverse', 'domain' => 'traverseplatforms.com'],
-        $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', $headers)['ok'];
+    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $cname, 'domain' => 'traverseplatforms.com'],
+        $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', pwReplyHeaders($headers))['ok'];
 }
 /** the invite itself: a new link (the old one dies). The caller holds the accounts lock. Returns whether it went. */
 function inviteSend(string $id, string $name, string $role, string $by): bool {
@@ -11445,9 +11464,9 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
     $co = company(); $url = (string) ($co['appUrl'] ?? ''); $cname = (string) $co['name']; $link = $url . '#pw=i.' . $tok;
     $rl = ['admin' => 'an admin', 'manager' => 'a manager', 'office' => 'office staff', 'crew' => 'a sales rep', 'setter' => 'a setter', 'tech' => 'a technician'][$role] ?? 'a team member';
     $first = explode(' ', trim($name))[0];
-    $text = "Hi $first,\n\n$by added you to $cname's Traverse app as $rl.\n\nSet your password here (the link works once, for " . PW_INVITE_DAYS . " days):\n$link\n\n"
+    $text = "Hi $first,\n\n$by added you to $cname's app as $rl.\n\nSet your password here (the link works once, for " . PW_INVITE_DAYS . " days):\n$link\n\n"
         . "Then sign in with this email address and your password. Add the app to your phone's home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app), so it opens like any other app and works with no signal.\n\n"
-        . "Questions about your work: ask $by at $cname.\n\nSent for $cname by Traverse Platforms.\n";
+        . "Questions about your work: ask $by at $cname.\n\n$cname\n";
     $col = (string) ($co['brand'] ?: '#13294b'); if (!preg_match('/^#[0-9a-f]{6}$/i', $col)) $col = '#13294b';
     $lg = logoImgTag($cname, 40);   /* the company's uploaded logo (the Company screen's, or the welcome page's), PNG/JPG only: email apps do not show SVG */
     $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
@@ -11455,14 +11474,14 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">'
         . '<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden" cellpadding="0" cellspacing="0">'
         . '<tr><td style="background:' . $col . ';padding:20px 24px;color:#ffffff;font-size:20px;font-weight:bold">' . ($lg !== '' ? '<div style="display:inline-block;background:#ffffff;border-radius:6px;padding:4px;margin-bottom:8px">' . $lg . '</div><br>' : '') . $h($cname) . '</td></tr>'
-        . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s Traverse app as ' . $h($rl) . '.'
+        . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s app as ' . $h($rl) . '.'
         . '<p style="margin:24px 0"><a href="' . $h($link) . '" style="display:inline-block;background:#d6400c;color:#ffffff;text-decoration:none;font-weight:bold;padding:13px 22px;border-radius:10px">Set your password</a></p>'
         . '<p style="font-size:14px;color:#566476">The link works once, for ' . PW_INVITE_DAYS . ' days. Then sign in with ' . $h($iv['email']) . ' and your password, and add the app to your home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app).</p>'
         . '<p style="font-size:14px;color:#566476">Questions about your work: ask ' . $h($by) . '.</p></td></tr>'
-        . '<tr><td style="padding:14px 24px;background:#f4f6f9;font-size:12px;color:#8a96a6">Sent for ' . $h($cname) . ' by Traverse Platforms</td></tr></table></td></tr></table></body></html>';
+        . '<tr><td style="padding:14px 24px;background:#f4f6f9;font-size:12px;color:#8a96a6">' . $h($cname) . '</td></tr></table></td></tr></table></body></html>';
     $mine = (string) ($a['login'][(string) ($session['c'] ?? '')]['email'] ?? '');   /* the inviting admin's own address, else the company's */
     $rt = filter_var($mine, FILTER_VALIDATE_EMAIL) ? $mine : (filter_var((string) ($co['email'] ?? ''), FILTER_VALIDATE_EMAIL) ? (string) $co['email'] : '');
-    $ok = pwMail((string) $iv['email'], $cname . ' invited you to its Traverse app', $text, $html, $rt !== '' ? ['Reply-To: ' . $rt] : []);
+    $ok = pwMail((string) $iv['email'], $cname . ' invited you to its app', $text, $html, $rt !== '' ? ['Reply-To: ' . $rt] : []);
     if ($ok) { $a['inv'][$id]['tok'] = hash('sha256', $tok); $a['inv'][$id]['exp'] = time() + PW_INVITE_DAYS * 86400; $a['inv'][$id]['last'] = time(); }
     $a['inv'][$id]['sent'] = (int) ($iv['sent'] ?? 0) + ($ok ? 1 : 0);
     saveAccounts($a); $GLOBALS['acct'] = $a;
@@ -11721,7 +11740,7 @@ if ($action === 'acctlink') {
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
     flock($lk, LOCK_UN); fclose($lk);
     $co = company(); $first = explode(' ', (string) $rows[$id]['name'])[0];
-    $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+    $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\n" . $co['name'] . "\n", null, []);
     accountLog(['by' => $me, 'what' => $ok ? 'sign-in link sent' : 'sign-in link failed', 'name' => $rows[$id]['name'], 'id' => $id]);
     if (!$ok) fail('The email did not go. Try again in a minute.', 502);
     out(['ok' => true, 'to' => $em]);
@@ -14062,8 +14081,8 @@ if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', '
         if (strlen($pass) < 8 || strlen($pass) > 200) fail('That does not look like an app password.');
         $c = ['kind' => $kind, 'host' => $host, 'port' => $port, 'user' => $user, 'pass' => $pass, 'from_name' => $name];
         $co = (string) company()['name'];
-        $tt = "This is a test from your Traverse app.\n\nIf you are reading it, " . $co . "'s email is connected: signed agreements and receipts can now go to your customers from " . $user . ".\n";
-        $r = smtpSend($c + ['domain' => mailDomain($user)], $user, 'Test: ' . $co . ' email is connected', $tt, '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#15202d"><p>This is a test from your Traverse app.</p><p>If you are reading it, ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . '&#39;s email is connected: signed agreements and receipts can now go to your customers from ' . htmlspecialchars($user, ENT_QUOTES, 'UTF-8') . '.</p></body></html>');
+        $tt = "This is a test from your " . $co . " app.\n\nIf you are reading it, " . $co . "'s email is connected: signed agreements and receipts can now go to your customers from " . $user . ".\n";
+        $r = smtpSend($c + ['domain' => mailDomain($user)], $user, 'Test: ' . $co . ' email is connected', $tt, '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#15202d"><p>This is a test from your ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . ' app.</p><p>If you are reading it, ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . '&#39;s email is connected: signed agreements and receipts can now go to your customers from ' . htmlspecialchars($user, ENT_QUOTES, 'UTF-8') . '.</p></body></html>');
         appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'connect test', 'to' => $user, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300), 'by' => $me]);
         if (!$r['ok']) fail(mailWhy($r, $kind, $host, $port));
         if (!writeJsonAtomic(mailOwnFile(), $c + ['by' => $me, 'at' => time()])) fail('The test went, but the setting could not be saved. Try again.', 500);
@@ -14371,7 +14390,7 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
         $raw = $body['miles'] ?? null;
         if (!is_numeric($raw)) fail('Type the radius in miles.');
         $mi = (int) round((float) $raw);
-        if ($mi > AREA_MI[1]) fail('Traverse covers up to ' . AREA_MI[1] . ' miles around your business. For a wider area, pick counties instead, or email hello@traverseplatforms.com.');
+        if ($mi > AREA_MI[1]) fail('The app covers up to ' . AREA_MI[1] . ' miles around your business. For a wider area, pick counties instead, or email hello@traverseplatforms.com.');
         if ($mi < AREA_MI[0]) fail('The radius is ' . AREA_MI[0] . ' miles at least.');
         $addr = trim((string) preg_replace('/[\x00-\x1f\x7f]+/', ' ', mb_substr((string) ($body['address'] ?? ''), 0, 160)));
         $base = !isset($old['lat']) && is_array($old['home'] ?? null) ? $old['home'] + $old : $old;   /* back from counties: the point kept aside */
@@ -14382,11 +14401,11 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
             $g = tcGeocode($addr);
             if (is_array($g) && isset($g['error'])) fail((string) $g['error'], 502);
             if ($g === null) fail('That address was not found on the map. Check the street, city, state and ZIP.');
-            if (strtoupper((string) $g['state']) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now: that address is in ' . ((string) $g['state'] ?: 'another state') . '.');
+            if (strtoupper((string) $g['state']) !== tcSettings()['state']) fail('The app\'s homes are in Colorado for now: that address is in ' . ((string) $g['state'] ?: 'another state') . '.');
             $new = array_replace($new, ['address' => $addr, 'matched' => (string) ($g['matched'] ?? ''), 'lat' => $g['lat'], 'lon' => $g['lon'], 'state' => strtoupper((string) $g['state']), 'place' => (string) ($g['city'] ?? '')]);
         }
         if (!isset($new['lat'], $new['lon'])) fail('Your business address is not on the map yet. Type it above.');
-        if (strtoupper((string) ($new['state'] ?? '')) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now. Type your Colorado business address above.');
+        if (strtoupper((string) ($new['state'] ?? '')) !== tcSettings()['state']) fail('The app\'s homes are in Colorado for now. Type your Colorado business address above.');
     } else fail('Pick a radius or counties.');
     if (!throttleTake(DATA_DIR . '/area-throttle.json', 10, 600)) fail('That is a lot of changes in a few minutes. Wait a little and try again.', 429);   /* saves only: each one links the towns again */
     $new += ['status' => 'linking', 'towns' => (int) ($old['towns'] ?? 0), 'doors' => (int) ($old['doors'] ?? 0)]; $new['status'] = 'linking'; $new['at'] = time(); $new['by'] = $me;
@@ -14396,7 +14415,7 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
     if (is_array($co0)) { $co0['area'] = tcAreaPublic($new); writeJsonAtomic($cf, $co0); }
     tcLog(['what' => 'area changed', 'cid' => $cid, 'by' => $me, 'mode' => $new['mode'], 'miles' => (int) ($new['miles'] ?? 0), 'counties' => $new['counties'] ?? null]);
     /* the answer first; the linking after it (on the host the connection closes, fastcgi_finish_request; PHP's test server waits for the end) */
-    $txt = (string) json_encode($areaOut() + ['said' => 'Saved. Doors in your area update within a minute.'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $txt = (string) json_encode($areaOut() + ['said' => edWords('Saved. Doors in your area update within a minute.')], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     ignore_user_abort(true); @set_time_limit(300);
     header('Content-Type: application/json; charset=utf-8'); header('Content-Length: ' . strlen($txt)); header('Connection: close');
     echo $txt;
