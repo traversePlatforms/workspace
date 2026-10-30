@@ -379,7 +379,7 @@ function billingRefundCancel(array $c, string $by): array {
         if (isset($r['error'])) return ['error' => $r['error']];
     }
     $x = stripeCall($c, 'DELETE', '/v1/subscriptions/' . rawurlencode((string) $b['subscription']));
-    if (isset($x['error'])) return ['error' => 'Refunded, but cancelling failed: ' . $x['error'] . ' Cancel it in Stripe.'];
+    if (isset($x['error'])) return ['error' => 'Refunded, but canceling failed: ' . $x['error'] . ' Cancel it in Stripe.'];
     billingSave(function (array $b) use ($by) { $b['refunded'] = ['at' => time(), 'by' => $by]; $b['status'] = 'canceled'; $b['ended'] = time(); return $b; });
     billingLog(['what' => 'refund', 'by' => $by, 'charge' => (string) $charge['id'], 'amount' => (int) ($charge['amount'] ?? 0)]);
     return ['ok' => true, 'amount' => (int) ($charge['amount'] ?? 0)];

@@ -967,7 +967,7 @@ function ownerFlag(array $d, ?array $r): array { $a = ownerAge($d, $r); return $
 function doorHome(string $key, string $id): string {
     if (isset(doorIds($key)[$id])) return $key;
     foreach (sharedWith($key) as $p) if (isset(doorIds($p)[$id])) return $p;
-    fail('That door is no longer on this list. Reload the neighbourhood.', 409);
+    fail('That door is no longer on this list. Reload the neighborhood.', 409);
 }
 function marksFile(string $key): string { return DATA_DIR . '/marks-' . $key . '.log'; }
 
@@ -2330,7 +2330,7 @@ if ($action === 'signin') {
     foreach ($people as $c => $who) {                            // constant-time-ish: check all
         if (hash_equals((string) $c, (string) $code)) { $hit = $who; $hitCode = (string) $c; }
     }
-    if (!$hit) { siteAddrs(clientKey()); fail('That code was not recognised.', 401); }      // the attempt already counted stands
+    if (!$hit) { siteAddrs(clientKey()); fail('That code was not recognized.', 401); }      // the attempt already counted stands
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
     inviteJoined($hitCode);   /* an emailed invite turns active on the first sign-in (2026-10-29) */
     /* 'j': two sign-ins in the same second used to get the same cookie, so the signed-in list saw one phone (2026-10-04) */
@@ -2646,7 +2646,7 @@ function a365Alert(string $title, string $text, bool $super = false, bool $newLe
 /* where a website visitor came from (2026-10-20, Matthew: "go ahead and do the website lead tracking"): the page notes, when they arrive, the
    page that sent them (the browser's referrer, address only), the utm tags and whether the link carried Facebook's or Google's ad-click mark.
    No cookies, nothing sent anywhere else. A QR code on our printed things wins; then an ad click; then the sending site; else typed in. */
-const A365_HEAR = ['facebook' => 'Facebook or Instagram', 'google' => 'Google search', 'nextdoor' => 'Nextdoor', 'friend' => 'A friend or neighbour', 'sign' => 'A yard sign', 'card' => 'A business card or flyer', 'truck' => 'Our truck', 'other' => 'Something else'];
+const A365_HEAR = ['facebook' => 'Facebook or Instagram', 'google' => 'Google search', 'nextdoor' => 'Nextdoor', 'friend' => 'A friend or neighbor', 'sign' => 'A yard sign', 'card' => 'A business card or flyer', 'truck' => 'Our truck', 'other' => 'Something else'];
 function a365Trk($t): array {
     if (!is_array($t)) return [];
     $o = [];
@@ -3749,7 +3749,7 @@ function permCat(): array {
         'doors.see' => ['g' => 'doors', 'l' => 'See doors and maps', 's' => 'doors', 'd' => 'Door lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
         'doors.mark' => ['g' => 'doors', 'l' => 'Mark doors', 's' => 'marks doors', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
         'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best doors, door scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
-        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out doors and territories', 's' => 'hands out doors', 'd' => 'The Plan: give neighbourhoods and doors to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
+        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out doors and territories', 's' => 'hands out doors', 'd' => 'The Plan: give neighborhoods and doors to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
         'leads.own' => ['g' => 'leads', 'l' => 'Work their own leads', 's' => 'own leads', 'd' => 'Their own leads: stages, follow-ups, notes and call tries.', 'def' => '1-110', 'acts' => ['myleads', 'leadstatus', 'leadfollow', 'leadtry', 'leadoutcome', 'leadrecall', 'leadunreach', 'leadremove'], 'as' => 'rep'],
         'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds door leads', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
         'leads.hand' => ['g' => 'leads', 'l' => 'Add leads by hand', 's' => 'adds leads by hand', 'd' => 'Type in a lead that called, wrote or came from anywhere else.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadadd'], 'as' => 'office'],
@@ -3782,7 +3782,7 @@ function permCat(): array {
         'team.goals' => ['g' => 'team', 'l' => 'Set their team\'s goals', 's' => 'sets team goals', 'd' => 'The daily goals for the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['goals'], 'as' => 'manager'],
         'team.run' => ['g' => 'team', 'l' => 'Run their team\'s sign-ins', 's' => 'team sign-ins', 'd' => 'Add people to their team, give new codes, sign them out, remove them.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], 'as' => 'manager'],
         'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
-        'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and colour.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
+        'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'payset', 'squareoauth', 'payways', 'paywaysset']],
         'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply']],
     ];
@@ -4809,7 +4809,7 @@ if ($action === 'area') {
        The town's logs and side files are read once for all of them instead of once per neighbourhood. */
     $names = ($isPost && isset($body['areas']) && is_array($body['areas'])) ? array_values(array_unique(array_filter(array_map('strval', $body['areas']), fn($x) => $x !== ''))) : [$name];
     if ($isPost && isset($body['region'])) $key = (string) $body['region'];
-    if (count($names) > 40) fail('Ask for 40 neighbourhoods at most.');
+    if (count($names) > 40) fail('Ask for 40 neighborhoods at most.');
     $many = $isPost && isset($body['areas']);
     /* just this neighbourhood, from the town's split cache (TR-7, 2026-10-10); the whole town only when the cache can't be made */
     if (!regionAvailable($key)) fail('No such region.', 404);
@@ -4949,7 +4949,7 @@ if ($action === 'area') {
     viewCount(array_sum(array_map(fn($x) => count($x['doors']), $answers)));
     if ($many) out(['ok' => true, 'many' => $answers]);
     if ($answers) out($answers[0]);
-    fail('No such neighbourhood.', 404);
+    fail('No such neighborhood.', 404);
 }
 
 if ($action === 'mark') {
@@ -6756,7 +6756,7 @@ if ($action === 'jobsave') {
         if (($leads[$have['lead']]['status'] ?? '') === 'won') appendLine(leadsDir() . '/leadst.log', ['id' => $have['lead'], 'status' => 'quoted', 'by' => $me, 'at' => time()]);
         $sgx = $leads[$have['lead']]['signed'] ?? null; if ($sgx && ($sgx['job'] ?? '') === $id) appendLine(leadsDir() . '/leadst.log', ['id' => $have['lead'], 'signed' => ['job' => null] + $sgx, 'by' => $me, 'at' => time()]);   /* Fable review 2026-10-14 */
         $sl = jobSlot((string) $have['slot']);
-        if ($have['crew'] !== $me) pushName($have['crew'], 'Job cancelled: ' . deskWhen($have['date'], '') . ($sl ? ', ' . $sl[1] : ''), $have['title'] . ' · cancelled by ' . $me, './', 'job-' . $id);
+        if ($have['crew'] !== $me) pushName($have['crew'], 'Job canceled: ' . deskWhen($have['date'], '') . ($sl ? ', ' . $sl[1] : ''), $have['title'] . ' · canceled by ' . $me, './', 'job-' . $id);
         out(['ok' => true]);
     }
     $lead = $have ? (string) $have['lead'] : (string) ($body['lead'] ?? '');
@@ -8366,7 +8366,7 @@ if ($action === 'deskwalk') {
             $cw = loadWalks((string) $have['region'])[(string) $have['door']] ?? null;
             if ($cw && $cw['date'] === (string) $have['date'] && $cw['time'] === (string) ($have['time'] ?? '')) appendWalk((string) $have['region'], ['id' => (string) $have['door'], 'date' => null, 'by' => $me, 'at' => time()]);
         }
-        $al = $have['walker'] !== '' && $have['walker'] !== $me ? pushName($have['walker'], $vw . ' cancelled: ' . deskWhen($have['date'], $have['time']), $have['title'] . ' · cancelled by ' . $me, './', 'dw-' . $id) : null;
+        $al = $have['walker'] !== '' && $have['walker'] !== $me ? pushName($have['walker'], $vw . ' canceled: ' . deskWhen($have['date'], $have['time']), $have['title'] . ' · canceled by ' . $me, './', 'dw-' . $id) : null;
         out(['ok' => true, 'alert' => $al]);
     }
     /* what it is for: kept from the booking when changing one */
@@ -10060,7 +10060,7 @@ if ($action === 'payments' || $action === 'paymentsexport') {
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="payments-' . $from . '-to-' . $to . '.csv"');
         $fh = fopen('php://output', 'w');
-        fputcsv($fh, ['Date', 'Customer', 'Address', 'For', 'Method', 'Amount', 'Square payment ID', 'Job date', 'Job cancelled'], ',', '"', '');
+        fputcsv($fh, ['Date', 'Customer', 'Address', 'For', 'Method', 'Amount', 'Square payment ID', 'Job date', 'Job canceled'], ',', '"', '');
         foreach ($rows as $p) fputcsv($fh, array_map('csvSafe', [$p['date'], $p['customer'], $p['addr'], $p['kind'], $p['howL'], number_format($p['amt'], 2, '.', ''), $p['ref'], $p['jobDate'], $p['cancelled'] ? 'yes' : '']), ',', '"', '');
         fputcsv($fh, ['', '', '', '', 'Total', number_format(array_sum(array_column($rows, 'amt')), 2, '.', ''), '', '', ''], ',', '"', '');
         fclose($fh); exit;
@@ -11678,7 +11678,7 @@ if ($action === 'unassignall') {
     if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $who = trim((string) ($body['who'] ?? ''));
-    if ($who === '') fail('Whose neighbourhoods?');
+    if ($who === '') fail('Whose neighborhoods?');
     if (!mayAssign($who, '')) fail('A manager changes territories within their own team.', 403);
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $n = 0;
@@ -11696,9 +11696,9 @@ if ($action === 'assignmany') {
     $areas = is_array($body['areas'] ?? null) ? array_values(array_unique(array_map('strval', $body['areas']))) : [];
     $data = loadRegion($key);
     if (!$data) fail('No such region.', 404);
-    if (!$areas || count($areas) > 200) fail('Pick the neighbourhoods to assign.');
+    if (!$areas || count($areas) > 200) fail('Pick the neighborhoods to assign.');
     $have = array_column($data['areas'], 'name');
-    foreach ($areas as $a) if (!in_array($a, $have, true)) fail('No such neighbourhood: ' . $a, 404);
+    foreach ($areas as $a) if (!in_array($a, $have, true)) fail('No such neighborhood: ' . $a, 404);
     if ($who !== '') {
         $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
         if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
@@ -11716,7 +11716,7 @@ if ($action === 'assign') {
     $key = (string) ($body['region'] ?? ''); $area = (string) ($body['area'] ?? ''); $who = trim((string) ($body['who'] ?? ''));
     $data = loadRegion($key);
     if (!$data) fail('No such region.', 404);
-    if (!in_array($area, array_column($data['areas'], 'name'), true)) fail('No such neighbourhood.', 404);
+    if (!in_array($area, array_column($data['areas'], 'name'), true)) fail('No such neighborhood.', 404);
     if ($who !== '') {
         $known = false; foreach ($people as $pp) if ((string) ($pp[0] ?? '') === $who) $known = true;
         if (!$known || boardHidden($who)) fail('Pick someone with a sign-in code.');
@@ -12212,7 +12212,7 @@ if ($action === 'areaflag') {
     if (!$data) fail('No such region.', 404);
     $area = null;
     foreach ($data['areas'] as $a) { if ($a['name'] === $name) { $area = $a; break; } }
-    if (!$area) fail('No such neighbourhood.', 404);
+    if (!$area) fail('No such neighborhood.', 404);
     $hit = flagsOver($area['doors'], loadAreaFlags($key));
     if ($on) {
         if ($hit) out(['ok' => true]);                              // already flagged
@@ -12372,7 +12372,7 @@ if ($action === 'skiptrace') {
     $cfg = skipConfig(__DIR__);
     $since = max(0, (int) ($in['since'] ?? 0));   /* the page's forced run, a chunk at a time: doors done since then are not done again */
     $cand = skipCandidates($key, $area, $limit, $force, regionLabel($key), $since);
-    if ($area !== '' && $cand['total'] === 0) fail('No such neighbourhood.', 404);
+    if ($area !== '' && $cand['total'] === 0) fail('No such neighborhood.', 404);
     $n = count($cand['send']);
     $cost = $cfg['price_per_record'] !== null ? round($n * $cfg['price_per_record'], 2) : null;
     $base = ['ok' => true, 'region' => $key, 'area' => $area, 'limit' => $limit, 'force' => $force, 'provider' => (string) $cfg['provider'], 'configured' => skipConfigured($cfg),
@@ -12508,7 +12508,7 @@ if ($action === 'jobber') {
             if (preg_match('/^unavailable$/i', $owner)) $owner = '';
             $isCo = (bool) preg_match('/\b(LLC|L\.L\.C|INC|CORP|CORPORATION|COMPANY|LTD|LLLP|LP|PARTNERSHIP)\b/i', $owner);
             $noteBits = ['Booked at the door by ' . ($m['by'] ?: 'crew') . ' on ' . date('M j, Y', (int) $m['at']) . ' (' . company()['short'] . ' door app).'];
-            if (isset($fireName[$f])) $noteBits[] = 'Fire hazard: ' . $fireName[$f] . ' (USFS 2023, neighbourhood scale).';
+            if (isset($fireName[$f])) $noteBits[] = 'Fire hazard: ' . $fireName[$f] . ' (USFS 2023, neighborhood scale).';
             if ($lv && isset($lawnName[$lv])) $noteBits[] = 'Lawn: ' . $lawnName[$lv] . '.';
             if ($wk) $noteBits[] = 'Extra work seen: ' . implode('; ', array_map(fn($t) => (workLabels()[$t] ?? $t), $wk)) . '.';
             if (!empty($d['val'])) $noteBits[] = 'County value: $' . number_format((int) $d['val']) . '.';
@@ -13122,7 +13122,7 @@ if (in_array($action, ['costs', 'costsset', 'costsapply'], true)) {
                 $mats[] = ['name' => $nm ?: 'Material', 'cost' => $n($m['cost'] ?? 0, $say . 'a material cost between $0 and $100,000.', 100000), 'covers' => $n($m['covers'] ?? 0, $say . 'how many units a pack covers, 0 to 100,000.', 100000)];
                 if (end($mats)['covers'] <= 0) fail($say . 'say how many units one "' . end($mats)['name'] . '" covers.');
             }
-            $j['rules'][$rid] = ['hour' => $n($c['hour'] ?? 0, $say . 'labour between $0 and $1,000 an hour.', 1000), 'mins' => $n($c['mins'] ?? 0, $say . 'crew minutes per unit, 0 to 100,000.', 100000), 'mats' => $mats];
+            $j['rules'][$rid] = ['hour' => $n($c['hour'] ?? 0, $say . 'labor between $0 and $1,000 an hour.', 1000), 'mins' => $n($c['mins'] ?? 0, $say . 'crew minutes per unit, 0 to 100,000.', 100000), 'mats' => $mats];
         }
         foreach ((array) ($old['rules'] ?? []) as $rid => $c) if (!isset($j['rules'][$rid]) && isset($ids[$rid])) $j['rules'][$rid] = $c;   /* lines not sent keep what they had */
         if (array_key_exists('base', $body)) {
@@ -13158,7 +13158,7 @@ if ($action === 'companyset') {
     $loc['site'] = strtolower($clean($body['site'] ?? '', 80)); if ($loc['site'] !== '' && !preg_match('#^(https?://)?[a-z0-9.-]+\.[a-z]{2,}(/[a-z0-9._~/-]*)?$#', $loc['site'])) fail('That website does not look right (like yourcompany.com).');
     $loc['review'] = $clean($body['review'] ?? '', 300); if ($loc['review'] !== '' && !preg_match('#^https://[^\s<>"]{8,300}$#D', $loc['review'])) fail('The review link should start with https://');   /* 2026-10-13 */
     $color = strtolower(trim((string) ($body['color'] ?? '')));
-    if ($color !== '' && !preg_match('/^#[0-9a-f]{6}$/', $color)) fail('Pick a colour.');
+    if ($color !== '' && !preg_match('/^#[0-9a-f]{6}$/', $color)) fail('Pick a color.');
     if ($color !== '') $loc['color'] = $color;
     $old = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
     if (is_array($old) && is_array($old['logo'] ?? null)) $loc['logo'] = $old['logo'];   /* the uploaded logo has its own save (logoset) and stays */
