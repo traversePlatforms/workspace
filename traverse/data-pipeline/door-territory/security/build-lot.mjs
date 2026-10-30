@@ -11,7 +11,9 @@
  * Per door (the house point is the county parcel's centre, the lot size its acres):
  *   c   corner lot: [its own street, the cross street]. Another named street runs along the side of the lot (within the lot's
  *       half-width plus the street's own width) roughly square to the house's street, and the two streets meet beside the lot.
- *   bk  a named street runs behind the lot (the far side from the house's street): its name.
+ *   bk  backs onto a road: [road name, metres from the back lot line to the road's centre line, class 'h' highway (S1100) /
+ *       'm' main road (S1200) / '' other]. Only where the lot line is cached; see back-road.mjs (rebuilt 2026-10-29: the first try
+ *       read about half right against the lot lines). bd = 1 when the lot line is Denver's own (credited on the card).
  *   al  an alley (TIGER S1730, or Denver's own alley lines: then ad = 1) behind ('b') or beside ('s') the lot.
  *   tr  a walkway, trail or bike path (S1710, S1820, S1830) along the side or back of the lot: its name, or '' when unnamed.
  *   de  the house's own street dead-ends (a cul-de-sac or a street that stops) this many metres from the house point.
@@ -23,17 +25,23 @@
  *     2026-10-06). Public domain (a U.S. federal government work); road classes from the 2026 MAF/TIGER Feature Class Codes.
  *   - the county parcel points and acres already in the door files (Colorado Public Parcels / the county files, built earlier).
  *   - COMaP (state) and USGS NHD through pest-<town>.json, as the Pest edition shows them.
+ *   - for bk, lot lines cached on disk: the State of Colorado's Colorado Public Parcels (as the lawn work cached it) and the City and
+ *     County of Denver's Parcels (fetch-denver-parcels.mjs); terms and attribution in README.
  * Limits: TIGER draws alleys only where the Census has them (Denver and older grids mostly; most suburbs have none to draw).
  * The house point is the parcel's centre, not the front door, so distances are lot-centre distances. */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countyFiles, readRoads } from './tiger-roads.mjs';
+import { parcelFiles, parcelsIn, lotIndex, backRoad, backRoadNoLot } from './back-road.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 /* ROUNDS_DATA / LOT_CACHE: run from a git worktree against the main tree's data (the door files and caches are not in git) */
 const DATA = process.env.ROUNDS_DATA || join(HERE, '..', '..', '..', 'app', 'data', 'rounds'), CACHE = process.env.LOT_CACHE || join(HERE, 'cache'), TIGER = join(CACHE, 'tiger');
 const args = process.argv.slice(2), opt = (k) => { const a = args.find((x) => x.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : null; };
+/* BACK_NOLOT=1: "backs onto a road" from the house point and the estimated lot only, for every door (to check that fallback against
+   the lot lines; it is not written for the app that way) */
+const NOLOT = process.env.BACK_NOLOT === '1';
 const SAMPLE = opt('sample'), DEBUG = args.includes('--debug'), unmatched = new Map();   /* --debug: writes nothing, lists the address streets no TIGER name matched */
 const CO_BOX = [-109.1, 36.9, -102.0, 41.1];
 const today = new Date().toISOString().slice(0, 10);
@@ -82,7 +90,6 @@ function ownStreet(cand, st) {
 
 /* ---- road classes (2026 MAF/TIGER Feature Class Codes) ---- */
 const FRONT = new Set(['S1200', 'S1400', 'S1640']);                 /* streets a house can face or sit at the corner of */
-const BEHIND = new Set(['S1100', 'S1200', 'S1400', 'S1630', 'S1640']);   /* any named road behind the lot, freeways and ramps too */
 const PATHS = new Set(['S1710', 'S1820', 'S1830']);                 /* walkway, bike path, bridle path */
 const ALLEY = 'S1730';
 const DRIVEN = (c) => /^S1[1-7]/.test(c) && c !== 'S1710' && c !== 'S1720';   /* counted for dead ends: anything a car can use */
@@ -96,6 +103,8 @@ const angle = (u, v) => { const c = (u[0] * v[0] + u[1] * v[1]) / (Math.hypot(..
 const COUNTIES = countyFiles(TIGER);
 if (!COUNTIES.length) throw new Error('no TIGER road files in ' + TIGER + ': download tl_2026_08xxx_roads.zip there first (see README)');
 const denverAlleys = existsSync(join(CACHE, 'denver-alleys.json')) ? JSON.parse(readFileSync(join(CACHE, 'denver-alleys.json'), 'utf8')) : [];
+/* lot lines cached on disk (the lawn work's state parcels, Denver's own); DT_DIR: the main tree's door-territory from a worktree */
+const PARCEL_FILES = parcelFiles(process.env.DT_DIR || join(HERE, '..'), CACHE);
 const roadMemo = new Map();
 const roadsOf = (f) => { if (!roadMemo.has(f.name)) roadMemo.set(f.name, readRoads(f)); return roadMemo.get(f.name); };
 
@@ -193,6 +202,24 @@ for (const town of Object.keys(doorsOf)) {
     return best;
   }
 
+  /* the homes' points in metres (a 50 m grid) and the town's lot lines, for "backs onto a road" */
+  const HG = 50, hgrid = new Map();
+  for (let ci = Math.floor(box[1] / HOME_CELL); ci <= Math.floor(box[3] / HOME_CELL); ci++) for (let cj = Math.floor(box[0] / HOME_CELL); cj <= Math.floor(box[2] / HOME_CELL); cj++) {
+    const arr = homes.get(ci + ',' + cj); if (!arr) continue;
+    for (let i = 0; i < arr.length; i += 2) { const h = P(arr[i + 1], arr[i]), k = Math.floor(h[0] / HG) + ',' + Math.floor(h[1] / HG); let s = hgrid.get(k); if (!s) hgrid.set(k, (s = [])); s.push(h); }
+  }
+  const homesNear = (bb) => { const o = []; for (let gx = Math.floor(bb[0] / HG); gx <= Math.floor(bb[2] / HG); gx++) for (let gy = Math.floor(bb[1] / HG); gy <= Math.floor(bb[3] / HG); gy++) for (const h of hgrid.get(gx + ',' + gy) || []) if (h[0] >= bb[0] && h[0] <= bb[2] && h[1] >= bb[1] && h[1] <= bb[3]) o.push(h); return o; };
+  const lotRings = parcelsIn(PARCEL_FILES, box), lots = lotRings.length ? lotIndex(lotRings, P, homesNear) : null;
+  const roadsAlong = (a, b) => { const o = [], seen = new Set();
+    for (let gx = Math.floor(Math.min(a[0], b[0]) / CELL); gx <= Math.floor(Math.max(a[0], b[0]) / CELL); gx++) for (let gy = Math.floor(Math.min(a[1], b[1]) / CELL); gy <= Math.floor(Math.max(a[1], b[1]) / CELL); gy++) {
+      const s = grid.get(gx + ',' + gy); if (!s) continue;
+      for (let i = 0; i < s.length; i += 3) { if (seen.has(s[i + 1])) continue; seen.add(s[i + 1]); o.push([roads[s[i]], s[i + 1], s[i + 2]]); }
+    }
+    return o; };
+  /* the house's own street: every TIGER line of that name (TIGER splits a street into pieces) */
+  const byCanon = new Map(); for (const r of roads) if (r.n) { for (const k of [r.canon, r.core]) { if (!byCanon.has(k)) byCanon.set(k, []); byCanon.get(k).push(r); } }
+  const ownLinesOf = (r) => [...new Set([...(byCanon.get(r.canon) || []), ...(byCanon.get(r.core) || [])])].flatMap((x) => x.lines);
+  let tLots = 0;
   const pestF = join(DATA, `pest-${town}.json`), pest = existsSync(pestF) ? JSON.parse(readFileSync(pestF, 'utf8')).doors || {} : {};
   const out = {}; let tTot = 0; const tHit = { c: 0, al: 0, de: 0, own: 0 };
   for (const x of pts) {
@@ -225,13 +252,19 @@ for (const town of Object.keys(doorsOf)) {
           const X = crossNear(own.r, c.r, p, Rx + 30);
           if (X !== null && X <= Rx) { o.c = [own.r.n, c.r.n]; why.c = { d0: Math.round(d0), d: Math.round(c.d), ang: Math.round(ang), X: Math.round(X), Tside: Math.round(Tside), Rx: Math.round(Rx) }; continue; }
         }
-        /* a street behind: across the lot from its own street, not one that meets it at the lot (that is a corner) */
-        if (!o.bk && named && BEHIND.has(c.r.c) && c.d <= Tback && ang >= 140) {
-          const X = crossNear(own.r, c.r, p, Rx + 30);
-          if (X === null || X > Rx + 20) { o.bk = c.r.n; why.bk = { d0: Math.round(d0), d: Math.round(c.d), ang: Math.round(ang), Tback: Math.round(Tback) }; }
-        }
         if (!o.al && c.r.c === ALLEY && ang >= 50 && c.d <= (ang >= 120 ? Tback - 4 : Tside - 4)) { o.al = ang >= 120 ? 'b' : 's'; if (c.r.extra) o.ad = 1; why.al = { d0: Math.round(d0), d: Math.round(c.d), ang: Math.round(ang) }; }
         if (o.tr === undefined && PATHS.has(c.r.c) && ang >= 50 && c.d <= (ang >= 120 ? Tback : Tside)) { o.tr = c.r.n || ''; why.tr = { d: Math.round(c.d), ang: Math.round(ang) }; }
+      }
+      /* backs onto a road: from the lot line, where one is cached (back-road.mjs) */
+      if (lots || NOLOT) {
+        if (lots && lots.at(p[0], p[1]).length) tLots++;
+        if (process.env.BACK_DEBUG && process.env.BACK_DEBUG.split(',').includes(x.id)) globalThis.BACK_DEBUG = [];
+        let b = NOLOT ? backRoadNoLot(p, own.r, ownLinesOf(own.r), roadsAlong, homesNear, W, D) : backRoad(p, own.r, ownLinesOf(own.r), roadsAlong, lots, homesNear);
+        /* not a side street: a road that meets the house's own street beside the lot (within 45 m of the lot's middle) runs along the
+           side of a corner lot, however the back line is drawn (the visual check, 2026-10-29) */
+        if (globalThis.BACK_DEBUG) { console.log('BACK_DEBUG', x.id, JSON.stringify(globalThis.BACK_DEBUG), b && b.road.n); globalThis.BACK_DEBUG = null; }
+        if (b) { const X = crossNear({ lines: ownLinesOf(own.r) }, { lines: ownLinesOf(b.road) }, p, 45); if ((o.c && o.c[1] === b.road.n) || X !== null) b = null; }
+        if (b) { o.bk = [b.road.n, Math.round(b.m), b.road.c === 'S1100' ? 'h' : b.road.c === 'S1200' ? 'm' : '']; if (b.src === 'd') o.bd = 1; why.bk = { m: Math.round(b.m), rays: b.rays, depth: Math.round(b.depth), cls: b.road.c }; }
       }
       /* the own street's dead end near the house */
       const R = 0.5 * L + 45;
@@ -245,13 +278,13 @@ for (const town of Object.keys(doorsOf)) {
     if (pp.os) o.os = pp.os;
     if (pp.wa) o.wa = pp.wa;
     for (const k of Object.keys(hit)) if (k !== 'own' && o[k] !== undefined) hit[k]++;
-    if (o.c) tHit.c++; if (o.al) tHit.al++; if (o.de !== undefined) tHit.de++;
+    if (o.bk) tHit.bk = (tHit.bk || 0) + 1; if (o.c) tHit.c++; if (o.al) tHit.al++; if (o.de !== undefined) tHit.de++;
     if (SAMPLE) { for (const k of ['c', 'bk', 'al', 'tr', 'de']) if (o[k] !== undefined && samples[k].length < 400) samples[k].push({ id: x.id, address: x.address, acres: x.acres, lat: x.lat, lon: x.lon, o, why: why[k] });
       if (own && !o.c && !o.bk && !o.al && o.de === undefined && samples.none.length < 400) samples.none.push({ id: x.id, address: x.address, acres: x.acres, lat: x.lat, lon: x.lon }); }
     if (Object.keys(o).length) out[x.id] = JSON.stringify(o);
   }
-  if (!SAMPLE && !DEBUG) writeFileSync(join(DATA, `security-lot-${town}.json`), JSON.stringify({ built: today, src: 'U.S. Census Bureau TIGER/Line 2026 roads; county parcel points; COMaP and USGS NHD (pest build)', packed: 1, doors: out }));
-  console.log(`  security-lot-${town}.json: ${tTot} doors, own street ${tHit.own}, corner ${tHit.c}, alley ${tHit.al}, dead end ${tHit.de} (${roads.length} roads)`);
+  if (!SAMPLE && !DEBUG) writeFileSync(join(process.env.LOT_OUT || DATA, `security-lot-${town}.json`), JSON.stringify({ built: today, src: 'U.S. Census Bureau TIGER/Line 2026 roads; county parcel points; lot lines (state parcel layer, City and County of Denver) where cached; COMaP and USGS NHD (pest build)', packed: 1, doors: out }));
+  console.log(`  security-lot-${town}.json: ${tTot} doors, own street ${tHit.own}, corner ${tHit.c}, lot line ${tLots}, backs onto a road ${tHit.bk || 0}, alley ${tHit.al}, dead end ${tHit.de} (${roads.length} roads)`);
 }
 console.log(`${tot} doors: own street found ${hit.own}, corner ${hit.c}, street behind ${hit.bk}, alley ${hit.al}, path ${hit.tr}, dead end ${hit.de}, neighbour distance ${hit.nn}, open space ${hit.os}, water ${hit.wa}`);
 if (SAMPLE) writeFileSync(join(CACHE, `lot-sample-${SAMPLE}.json`), JSON.stringify(samples));
