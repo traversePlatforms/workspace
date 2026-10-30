@@ -2628,6 +2628,24 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .cologo .lgprev img{height:44px;width:auto;max-width:200px;object-fit:contain}
   .cologo .lgprev img.mkbg{height:44px}
   .cologo .lgprev span{font-size:13px;opacity:.85}
+  /* Plans and customer emails, editions (2026-10-30) */
+  .carelist{display:grid;gap:6px;margin:8px 0}.careprow.off{opacity:.7}
+  .carebadge{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:var(--accent);color:#fff;font:700 11.5px/1.6 var(--sans);font-style:normal;vertical-align:middle}.carebadge.soft{background:var(--sunk);color:var(--soft)}
+  .careform{display:grid;gap:10px}.careform label[hidden],.careseason[hidden]{display:none}.careseason{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .caremd,.careprice{display:flex;gap:8px}.caremd select,.careprice select{flex:1 1 auto;min-width:0}.caremd input{width:76px;flex:none}.careprice input{width:120px;flex:none}
+  .careform textarea,.carenews textarea,.carepay input[readonly]{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;width:100%;box-sizing:border-box}
+  .careplan .carenext{font-weight:700;margin:6px 0 2px}.careplan .carenl{margin-top:10px}.careplan .careoffer{display:grid;gap:6px;margin:8px 0;padding:10px 12px;border:1px dashed var(--line);border-radius:12px}
+  .carepay{margin-top:8px}.carepayout{display:grid;gap:6px}
+  .caredue h2{margin:0 0 4px}.caredue .cpayrow{display:flex;gap:10px;align-items:center}.caredue .cpw{flex:1 1 auto;min-width:0;display:grid}
+  .carenums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.carenews .carenums{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media (max-width:520px){.carenums{grid-template-columns:1fr 1fr}.careseason{grid-template-columns:1fr}}
+  .caretpls{display:grid;gap:8px}.caretpl{display:grid;gap:8px;padding:10px;border-radius:10px;background:var(--sunk)}.caretpl textarea{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;width:100%;box-sizing:border-box}
+  .carerev{display:grid;gap:8px}.carerev textarea{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;width:100%;box-sizing:border-box}
+  .caremail .msg.ok,.carenews .msg.ok{border-color:var(--go)}.carelog{margin-top:12px}.carelog summary{cursor:pointer;font-weight:700}
+  .careq{display:grid;gap:6px;margin:6px 0}
+  .careform label,.caremail label,.carenews label,.careq label,.carepay label{display:grid;gap:4px;font-size:13.5px;font-weight:700}.careform label.cpck,.caremail label.cpck{display:flex;font-weight:600}
+  .careform input:not([type=checkbox]),.careform select,.caremail input:not([type=checkbox]),.caremail select,.carenews input,.carenews select,.careq select,.carepay input{font:400 15px var(--sans);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%;box-sizing:border-box;min-width:0}
+  .careform .caremd input{width:76px;flex:none}.careform .careprice input{width:130px;flex:none}.caremail label small,.careform label small,.carenews label small{font-weight:400}
 </style>
 </head>
 <body>
@@ -2988,6 +3006,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (pAdd('set.company')) x.push(['flag', 'Company', 'Name, phone, email, website and color.', companyView, ['company'], 'office']);
     if (pAdd('set.prices')) x.push(['calc', 'Prices and terms', 'What a quote adds up from, and the agreement terms.', kitPricesView, ['kitprices'], 'office']);
     if (pAdd('set.setup')) x.push(['mail', 'Email and payments', 'Connect the company email and the ways customers pay.', mailSetupView, ['mailsetup', 'kitpay'], 'office']);
+    if (pAdd('set.plans') && careOnC()) x.push(['cal', 'Plans', 'What you sell on a schedule.', function () { carePlansView(); }, ['careplans'], 'office']);   /* 2026-10-30 */
+    if (pAdd('set.care') && careOnC()) x.push(['mail', 'Customer emails', 'Follow-ups, aftercare and the newsletter.', careMailView, ['caremail', 'carenews'], 'office']);
     return x;
   }
   function permTiles(box) {
@@ -4678,6 +4698,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         kitOnC() ? tile('button', 'calc', 'Prices and terms', 'What a quote adds up from the house, the usual deposit, and your agreement terms.', 'Admin only', kitPricesView) : null,
         kitOnC() ? tile('button', 'card', 'Payments', 'Your own Square or Stripe for deposits, and other ways customers can pay.', 'Admin only', kitPayView) : null,
         kitOnC() ? tile('button', 'mail', 'Email', 'Connect your own email: signed agreements and receipts go from your address, in your words.', 'Admin only', mailSetupView) : null,   /* 2026-10-29 */
+        careOnC() ? tile('button', 'cal', 'Plans', 'What you sell on a schedule: each visit, how often, the season and the price.', 'Admin only', function () { carePlansView(); }) : null,   /* 2026-10-30 */
+        careOnC() ? tile('button', 'mail', 'Customer emails', 'Follow-ups after quotes, aftercare after jobs and the monthly newsletter. All off until you turn them on.', 'Admin only', careMailView) : null,
         kitOnC() ? tile('button', 'clip', 'Import', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', 'Admin only', function () { importView(); }) : null,   /* 2026-10-29 */
         costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
         feat('billing') ? tile('button', 'card', 'Billing', 'Your Traverse plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10 */
@@ -8473,6 +8495,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var box = q('div', 'schedv');
     if (asJobs && (adminView() || asOffice()) && feat('walkdesk')) box.appendChild(squareConfirmCard(function () { again(wk); }));   /* 2026-10-20 */
     if (feat('walkdesk')) box.appendChild(toschedBox(function () { again(wk); }));   /* follow-ups the crew booked, to confirm (2026-10-28) */
+    if (asJobs && careOnC() && (adminView() || asOffice() || pAdd('cust.plans'))) box.appendChild(careDueBox(function () { again(wk); }));   /* plan visits to book, an edition (2026-10-30) */
     var nav = q('div', 'schednav');
     var pv = q('button', null, '\u2039 Week before'), nx = q('button', null, 'Week after \u203a'); pv.type = nx.type = 'button';
     var end = jobAdd(wk, 6);
@@ -13727,6 +13750,419 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return true;
   }
   /* the setup checklist (admin): what a new company does before its first quote */
+  /* ==== PLANS AND CUSTOMER EMAILS (2026-10-30, Matthew: a plan builder for the editions; the 2-day follow-up, aftercare and the monthly
+     newsletter, all optional and editable; the server's notes are at the top of api/care-lib.php) ====
+     Editions and client installs only (careOnC: never Sixfold 365, which keeps its plan box, Follow-up email and Newsletter screens).
+     Screens: Setup › Plans (carePlansView), Setup › Customer emails (careMailView) and its Newsletter (careNewsView); the plan box on a
+     customer (careCustBox, in place of the older one); Plan visits to book on the Jobs board (careDueBox); a plan offered with a quote
+     (careQuoteBox). Nothing here charges a card: a plan's payments are links the office sends, or taken as before. */
+  function careOnC() { return edOn() && feat('walkdesk'); }
+  /** a customer's plan in a few words: an edition plan's own name, else the plan box's kind */
+  function carePlanL(c) { return c.care && !c.care.ended && c.planName ? c.planName : PLAN_L[c.plan]; }
+  function careField(holder, label, el, hint) { var lb = q('label', null, label); lb.appendChild(el); if (hint) lb.appendChild(q('small', 'sub2', hint)); holder.appendChild(lb); return lb; }
+  function careInput(type, val, attrs) { var el = type === 'textarea' ? q('textarea') : q('input'); if (type !== 'textarea') el.type = type; el.value = val == null ? '' : val; if (attrs) for (var k in attrs) el[k] = attrs[k]; return el; }
+  function careSelect(opts, val) { var s = q('select'); opts.forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; s.appendChild(op); }); s.value = val == null ? '' : String(val); return s; }
+  function careBtn(holder, text, cls, fn) { var b = q('button', cls || 'lnk', text); b.type = 'button'; b.addEventListener('click', fn); holder.appendChild(b); return b; }
+  function careErr(holder) { var e = q('div', 'msg bad'); e.hidden = true; e.setAttribute('role', 'alert'); holder.appendChild(e); return { el: e, say: function (k) { e.hidden = false; e.textContent = (k && k.error) || 'Try again.'; }, hide: function () { e.hidden = true; } }; }
+  function careMdText(md) { return md ? MONTHS[+md.slice(0, 2) - 1] + ' ' + (+md.slice(3, 5)) : ''; }
+  /* "Apr 15, 7/15, 10-15" -> ['04-15', '07-15', '10-15'] (null when one is not a date) */
+  function careParseDates(s) {
+    var out = [], bad = false;
+    String(s || '').split(/[,;]+/).forEach(function (t) {
+      t = t.trim(); if (!t) return; var m, mo = 0, d = 0;
+      if ((m = /^([A-Za-z]{3,})\.?\s+(\d{1,2})$/.exec(t))) { mo = MONTHS.map(function (x) { return x.toLowerCase(); }).indexOf(m[1].slice(0, 3).toLowerCase()) + 1; d = +m[2]; }
+      else if ((m = /^(\d{1,2})[\/-](\d{1,2})$/.exec(t))) { mo = +m[1]; d = +m[2]; }
+      if (!(mo >= 1 && mo <= 12 && d >= 1 && d <= new Date(2024, mo, 0).getDate())) { bad = true; return; }
+      var md = (mo < 10 ? '0' : '') + mo + '-' + (d < 10 ? '0' : '') + d; if (out.indexOf(md) < 0) out.push(md);
+    });
+    return bad ? null : out.sort();
+  }
+  function carePreview(holder, k) { holder.textContent = ''; holder.appendChild(q('div', 'sub2', 'Subject: ' + k.subject + ' · filled in with a made-up customer')); var fr = document.createElement('iframe'); fr.className = 'fuframe'; fr.setAttribute('sandbox', ''); fr.srcdoc = k.html; holder.appendChild(fr); }
+  function carePhList(list) { var ph = q('div', 'mailph'); ph.appendChild(q('span', null, 'You can use:')); (list || []).forEach(function (p) { var x = q('span'); x.appendChild(q('code', null, '{' + p[0] + '}')); x.appendChild(document.createTextNode(' ' + p[1])); ph.appendChild(x); }); return ph; }
+  /* Setup: the three rows under the checklist */
+  function careSetupRows(box) {
+    if (!careOnC()) return;
+    box.appendChild(q('div', 'dwh', 'Plans and customer emails'));
+    [['Plans', 'What you sell on a schedule: each visit, how often, the season and the price.', carePlansView, 'careplans'],
+     ['Customer emails', 'Follow-ups after quotes, aftercare after jobs. All off until you turn them on.', careMailView, 'caremail'],
+     ['Newsletter', 'A monthly email to customers who said yes. You approve every issue.', function () { careNewsView(undefined, true); }, 'carenews']].forEach(function (x) {
+      var row = q('button', 'kitstep'); row.type = 'button'; row.setAttribute('data-k', x[3]); row.addEventListener('click', setupGo(x[2]));
+      row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[0])); tx.appendChild(q('small', null, x[1])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
+    });
+  }
+
+  /* ---- Setup › Plans ---- */
+  function careOftenC(p) {
+    var f = p.freq || {}, s = f.k === 'weeks' ? 'Every ' + (f.n || 2) + ' weeks' : f.k === 'dates' ? 'Each year on ' + (f.dates || []).map(careMdText).join(', ') : ({ week: 'Every week', month: 'Every month', quarter: 'Every 3 months', year: 'Once a year' })[f.k] || '';
+    if (p.season && p.season.from) s += ', ' + careMdText(p.season.from) + ' to ' + careMdText(p.season.to);
+    if (p.visits) s += ', up to ' + p.visits + ' visit' + (p.visits === 1 ? '' : 's') + ' a year';
+    return s;
+  }
+  function carePlansView(editId) {
+    hideToast(); S.signin = null; S.screen = 'careplans'; foot.hidden = true; setDock(null);
+    setBar('back', editId !== undefined ? { title: editId ? 'Change the plan' : 'New plan', sub: 'Plans', back: function () { carePlansView(); }, backLabel: 'Plans' } : { title: 'Plans', sub: 'What you sell on a schedule', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card coform careplans'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('careplans').then(function (j) {
+      box.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load your plans.')); return; }
+      if (editId !== undefined) return carePlanForm(box, j, editId ? j.plans.filter(function (p) { return p.id === editId; })[0] || null : null);
+      box.appendChild(q('div', 'sub2', 'Build the plans you sell: what each visit includes, how often, the season and the price. Put a customer on one from their customer page, or offer one with a quote. Plan visits show on the Jobs board to book.'));
+      box.appendChild(q('div', 'msg soft', 'Plans are not charged automatically. For each visit or period you send a payment link (Square or Stripe), or take payment as you do now.'));
+      if (!j.saved) box.appendChild(q('div', 'msg soft', 'These are starter examples for your trade. Each says Edit me: check it, set your price and what it includes, and save it before you use it.'));
+      var list = q('div', 'carelist');
+      j.plans.forEach(function (p) {
+        var row = q('button', 'kitstep careprow' + (p.off ? ' off' : '')); row.type = 'button'; row.setAttribute('data-id', p.id);
+        row.appendChild(q('span', 'kitck', p.starter ? '!' : p.off ? '' : '✓'));
+        var tx = q('span'), hd = q('b', null, p.name); if (p.starter) hd.appendChild(q('em', 'carebadge', 'Edit me')); if (p.off) hd.appendChild(q('em', 'carebadge soft', 'Not offered'));
+        tx.appendChild(hd); tx.appendChild(q('small', null, p.priceText + ' · ' + p.often)); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›'));
+        row.addEventListener('click', function () { carePlansView(p.id); }); list.appendChild(row);
+      });
+      if (!j.plans.length) list.appendChild(q('div', 'msg soft', 'No plans yet.'));
+      box.appendChild(list);
+      var acts = q('div', 'kitbtns'); careBtn(acts, '+ New plan', 'save', function () { carePlansView(''); }); box.appendChild(acts);
+      if (j.saved) careBtn(box, 'Add the starter examples again', 'lnk', function () { api('careplanset', { body: { starters: 1 } }).then(function (k) { if (!k.ok) { toast('Not done', k.error || '', null); return; } carePlansView(); }); });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { carePlansView(editId); })); });
+  }
+  function carePlanForm(box, j, p) {
+    var fm = q('div', 'careform'); box.appendChild(fm);
+    if (p && p.starter) fm.appendChild(q('div', 'msg soft', 'A starter example: the price and the list are ours, not yours. Change them to what you charge, then save. It can be given to customers once saved.'));
+    var nm = careInput('text', p ? p.name : '', { maxLength: 80, placeholder: 'For example: Quarterly pest control' }); careField(fm, 'Plan name', nm);
+    var sv = careInput('textarea', p ? (p.services || []).join('\n') : '', { rows: 4, maxLength: 1600, placeholder: 'One per line' }); careField(fm, 'What each visit includes', sv, 'One per line. Customers see this list.');
+    var fr = careSelect(Object.keys(j.freq).map(function (k) { return [k, j.freq[k]]; }), p ? p.freq.k : 'month'); careField(fm, 'How often', fr);
+    var wn = careInput('number', p && p.freq.k === 'weeks' ? p.freq.n : 2, { min: 2, max: 52, step: 1, inputMode: 'numeric' }); var wnL = careField(fm, 'Every how many weeks', wn);
+    var ds = careInput('text', p && p.freq.k === 'dates' ? (p.freq.dates || []).map(careMdText).join(', ') : '', { placeholder: 'Apr 15, Jul 15, Oct 15' }); var dsL = careField(fm, 'The dates each year', ds, 'Month and day, separated by commas.');
+    var seaL = q('label', 'cpck'), sea = careInput('checkbox'); sea.checked = !!(p && p.season); seaL.appendChild(sea); seaL.appendChild(q('span', null, 'Only in season (no visits outside it)')); fm.appendChild(seaL);
+    var seaBox = q('div', 'careseason');
+    var mdPick = function (label, md) {
+      var w = q('label', null, label), row = q('div', 'caremd'), m = careSelect(MONTHS.map(function (x, i) { return [(i < 9 ? '0' : '') + (i + 1), x]; }), md ? md.slice(0, 2) : '04'), d = careInput('number', md ? +md.slice(3) : 1, { min: 1, max: 31, step: 1, inputMode: 'numeric' });
+      row.appendChild(m); row.appendChild(d); w.appendChild(row); seaBox.appendChild(w); return function () { var dd = Math.max(1, Math.min(31, parseInt(d.value, 10) || 1)); return m.value + '-' + (dd < 10 ? '0' : '') + dd; };
+    };
+    var sFrom = mdPick('Season starts', p && p.season ? p.season.from : '04-01'), sTo = mdPick('Season ends', p && p.season ? p.season.to : '10-31'); fm.appendChild(seaBox);
+    var vi = careInput('number', p && p.visits ? p.visits : '', { min: 1, max: 365, step: 1, inputMode: 'numeric', placeholder: 'No limit' }); careField(fm, 'Up to how many visits a year (optional)', vi);
+    var prRow = q('div', 'careprice'), pr = careInput('number', p ? p.price : '', { min: 0, step: 1, inputMode: 'decimal', placeholder: '0' }), per = careSelect(Object.keys(j.per).map(function (k) { return [k, j.per[k]]; }), p ? p.per : 'visit');
+    prRow.appendChild(pr); prRow.appendChild(per); var prL = q('label', null, 'Price ($)'); prL.appendChild(prRow); fm.appendChild(prL);
+    var nt = careInput('textarea', p ? p.notes : '', { rows: 3, maxLength: 1000 }); careField(fm, 'Notes (optional)', nt, 'For your team, and shown with the plan on a quote.');
+    var offL = q('label', 'cpck'), off = careInput('checkbox'); off.checked = !!(p && p.off); offL.appendChild(off); offL.appendChild(q('span', null, 'Do not offer this plan for now')); fm.appendChild(offL);
+    var said = q('div', 'sub2'); fm.appendChild(said);
+    var body = function () {
+      var f = { k: fr.value }; if (fr.value === 'weeks') f.n = parseInt(wn.value, 10) || 0; if (fr.value === 'dates') f.dates = careParseDates(ds.value) || [];
+      return { name: nm.value.trim(), services: sv.value, freq: f, season: sea.checked ? { from: sFrom(), to: sTo() } : null, visits: vi.value, price: pr.value, per: per.value, notes: nt.value, off: off.checked };
+    };
+    var paint = function () { wnL.hidden = fr.value !== 'weeks'; dsL.hidden = fr.value !== 'dates'; seaBox.hidden = !sea.checked; var b = body(); said.textContent = (b.price ? money(b.price) + ' ' + (j.per[b.per] || '') + ' · ' : '') + careOftenC({ freq: b.freq, season: b.season, visits: parseInt(b.visits, 10) || 0 }); };
+    [fr, sea, wn, ds, vi, pr, per].forEach(function (el) { el.addEventListener('input', paint); el.addEventListener('change', paint); }); seaBox.addEventListener('change', paint); paint();
+    var err = careErr(fm), acts = q('div', 'kitbtns');
+    var save = careBtn(acts, p && p.starter ? 'Save it as my plan' : 'Save the plan', 'save', function () {
+      err.hide(); if (fr.value === 'dates' && !careParseDates(ds.value)) return err.say({ error: 'One of the dates is not right. Write them like Apr 15, Jul 15.' });
+      save.disabled = true;
+      api('careplanset', { body: { id: p ? p.id : '', plan: body() } }).then(function (k) { save.disabled = false; if (!k.ok) return err.say(k); toast('Plan saved', nm.value.trim(), null); carePlansView(); }).catch(function () { save.disabled = false; err.say({ error: 'No signal: nothing was saved.' }); });
+    });
+    if (p) careBtn(acts, 'Remove the plan', 'lnk danger', function () { if (!window.confirm('Remove the plan “' + p.name + '”? Customers already on it keep their plan as it is.')) return; api('careplanset', { body: { id: p.id, del: 1 } }).then(function (k) { if (!k.ok) return err.say(k); toast('Plan removed', p.name, null); carePlansView(); }); });
+    careBtn(acts, 'Cancel', 'tolink', function () { carePlansView(); });
+    fm.appendChild(acts);
+  }
+
+  /* ---- the plan on a customer's page (in place of the older plan box) ---- */
+  function careCustBox(c, redraw) {
+    var box = q('div', 'cplanbox careplan'); box.appendChild(q('div', 'skel'));
+    api('carecust', { params: { id: c.id } }).then(function (j) {
+      box.textContent = '';
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load the plan.')); return; }
+      careCustDraw(box, c, j, redraw);
+    }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'The plan needs signal.')); });
+    return box;
+  }
+  function careCustDraw(box, c, j, redraw) {
+    var s = j.sub && !j.sub.ended ? j.sub : null, err = null;
+    var again = function () { S.careOpen = null; customerView(c.id); };
+    if (S.careOpen === c.id) {
+      var fm = q('div', 'phf cform'); fm.appendChild(q('div', 'wl', s ? 'Change the plan' : 'Put on a plan'));
+      if (!j.plans.length) { fm.appendChild(q('div', 'msg soft', 'No plans to pick yet. ' + (S.role === 'admin' ? 'Build them in Setup, Plans.' : 'An admin builds them in Setup, Plans.'))); if (S.role === 'admin') careBtn(fm, 'Open Plans ›', 'lnk', function () { carePlansView(); }); careBtn(fm, 'Cancel', 'tolink', function () { S.careOpen = null; redraw(); }); box.appendChild(fm); return; }
+      var pick = careSelect(j.plans.map(function (p) { return [p.id, p.name + ' · ' + p.priceText]; }), s ? s.plan : j.plans[0].id); careField(fm, 'Plan', pick);
+      var info = q('div', 'sub2'); fm.appendChild(info);
+      var st = careInput('date', todayISO()); careField(fm, 'Starts', st, 'The first visit is on this day (or the first day in season after it).');
+      var pr = careInput('number', '', { min: 0, step: 1, inputMode: 'decimal' }); careField(fm, 'Their price ($)', pr, 'Leave it as the plan price, or give them their own.');
+      var fill = function () { var p = j.plans.filter(function (x) { return x.id === pick.value; })[0]; if (!p) return; info.textContent = p.often + (p.services.length ? ' · ' + p.services.join(', ') : ''); pr.value = p.price; pr.placeholder = p.price; };
+      pick.addEventListener('change', fill); fill();
+      fm.appendChild(q('div', 'sub2', 'Not charged automatically: you send a payment link for each visit or period, or take payment as you do now.'));
+      err = careErr(fm);
+      var go = careBtn(fm, s ? 'Change the plan' : 'Start the plan', 'save', function () {
+        err.hide(); go.disabled = true;
+        api('careenrol', { body: { cid: c.id, plan: pick.value, start: st.value, price: pr.value } }).then(function (k) { go.disabled = false; if (!k.ok) return err.say(k); toast(s ? 'Plan changed' : 'Plan started', (c.name || '') + (k.next ? ' · first visit ' + fmtD(k.next) : ''), null); again(); }).catch(function () { go.disabled = false; err.say({ error: 'No signal: nothing was saved.' }); });
+      });
+      careBtn(fm, 'Cancel', 'tolink', function () { S.careOpen = null; redraw(); });
+      box.appendChild(fm); return;
+    }
+    if (s) {
+      box.appendChild(q('div', 'wl', 'Service plan'));
+      box.appendChild(q('div', 'cpl', s.name + ' · ' + s.priceText));
+      box.appendChild(q('div', 'sub2', s.often + ' · started ' + fmtD(s.start)));
+      if (s.services && s.services.length) box.appendChild(q('div', 'lmsg', s.services.join(' · ')));
+      if (j.list.length) box.appendChild(q('div', 'carenext', (j.next < todayISO() ? 'Due since ' : 'Next visits: ') + j.list.slice(0, 4).map(fmtD).join(' · ')));
+      else box.appendChild(q('div', 'sub2', 'No more visits on this plan.'));
+      box.appendChild(q('div', 'sub2', j.booked ? 'Next visit booked: ' + fmtD(j.booked) + '.' : j.last ? 'Last visit ' + fmtD(j.last) + '. The next one is not booked yet.' : 'The first visit is not booked yet.'));
+      var acts = q('div', 'aacts cacts');
+      if (!j.booked && j.next && (S.role === 'admin' || asOffice() || pAdd('jobs.book'))) careBtn(acts, 'Book the next visit', 'lnk', function () { careBook({ cid: c.id, plan: s.name, next: j.next, price: s.price, per: s.per }, function () { customerView(c.id); }); });
+      if (j.canPay) careBtn(acts, 'Payment link', 'lnk', function () { S.carePay = S.carePay === c.id ? null : c.id; redraw(); });
+      careBtn(acts, 'Change plan', 'lnk', function () { S.careOpen = c.id; redraw(); });
+      var en = careBtn(acts, 'End plan', 'lnk danger', function () { if (!window.confirm('End ' + (c.name || 'this customer') + '’s plan? Their visits and history stay.')) return; en.disabled = true; api('careend', { body: { cid: c.id } }).then(function (k) { en.disabled = false; if (!k.ok) { toast('Not done', k.error || '', null); return; } toast('Plan ended', c.name || '', null); again(); }); });
+      box.appendChild(acts);
+      if (S.carePay === c.id && j.canPay) box.appendChild(carePayPanel(c, s, j));
+      box.appendChild(q('div', 'sub2', 'Not charged automatically: each payment is a link you send, or taken as you do now.'));
+      if (j.pays.length) box.appendChild(q('div', 'sub2', 'Links sent: ' + j.pays.slice(0, 3).map(function (p) { return fmtDay(p.at) + ' ' + money(p.amt) + (p.mailed ? ' (emailed)' : ''); }).join(' · ')));
+    } else {
+      if (j.sub && j.sub.ended) box.appendChild(q('div', 'sub2', 'Plan ended ' + fmtDay(j.sub.ended) + ': ' + j.sub.name + '.'));
+      if (j.offer) {
+        var ob = q('div', 'careoffer'); ob.appendChild(q('b', null, 'Their quote offered a plan: ' + j.offer.plan.name + ' · ' + j.offer.plan.priceText));
+        ob.appendChild(q('div', 'sub2', j.offer.picked ? 'They picked it on their quote page on ' + fmtDay(j.offer.picked.at) + '.' : 'They have not picked it on their quote page.'));
+        if (j.plans.some(function (p) { return p.id === j.offer.plan.id; })) {
+          var sb = careBtn(ob, 'Start this plan', 'save', function () { sb.disabled = true; api('careenrol', { body: { cid: c.id, plan: j.offer.plan.id } }).then(function (k) { sb.disabled = false; if (!k.ok) { toast('Not started', k.error || '', null); return; } toast('Plan started', (c.name || '') + (k.next ? ' · first visit ' + fmtD(k.next) : ''), null); again(); }); });
+        }
+        box.appendChild(ob);
+      }
+      careBtn(box, '+ Put on a plan', 'addlead', function () { S.careOpen = c.id; redraw(); });
+      if (c.plan && c.plan !== 'oneoff') { box.appendChild(q('div', 'sub2', 'Their plan from before (typed in, or imported):')); box.appendChild(custPlanBox(c, redraw)); }
+    }
+    /* the newsletter: only customers who said yes */
+    var nl = q('label', 'cpck carenl'), ck = careInput('checkbox'); ck.checked = !!j.optin; ck.disabled = !j.email || !!j.unsub;
+    nl.appendChild(ck); nl.appendChild(q('span', null, j.unsub ? 'Unsubscribed from emails on ' + fmtDay(j.unsub) : !j.email ? 'Newsletter: add their email first' : 'Gets the monthly newsletter (they said yes)'));
+    ck.addEventListener('change', function () { ck.disabled = true; api('careoptin', { body: { cid: c.id, on: ck.checked } }).then(function (k) { ck.disabled = false; if (!k.ok) { ck.checked = !ck.checked; toast('Not saved', k.error || '', null); return; } toast(ck.checked ? 'Newsletter: yes' : 'Newsletter: no', c.name || '', null); }).catch(function () { ck.disabled = false; ck.checked = !ck.checked; toast('No signal', 'Not saved.', null); }); });
+    box.appendChild(nl);
+  }
+  /* a payment link for the next visit or period: copy, text, or email it from the company's own address */
+  function carePayPanel(c, s, j) {
+    var p = q('div', 'phf cform carepay'), out = q('div', 'carepayout');
+    p.appendChild(q('div', 'wl', 'Payment link · ' + (s.per === 'visit' ? 'one visit' : 'one ' + s.per)));
+    var am = careInput('number', s.price, { min: 1, step: 1, inputMode: 'decimal' }); careField(p, 'Amount ($)', am);
+    var err = careErr(p), acts = q('div', 'aacts cacts');
+    var make = function (email, b) {
+      err.hide(); b.disabled = true;
+      api('carepaylink', { body: { cid: c.id, amount: am.value, email: email ? 1 : 0 } }).then(function (k) {
+        b.disabled = false; if (!k.ok) return err.say(k);
+        out.textContent = ''; out.appendChild(q('div', 'sub2', k.label + ' · ' + money(k.amt) + (k.mailed ? ' · emailed to ' + j.email : '')));
+        var u = q('input'); u.readOnly = true; u.value = k.url; out.appendChild(u);
+        var r = q('div', 'aacts cacts');
+        careBtn(r, 'Copy the link', 'lnk', function () { try { navigator.clipboard.writeText(k.url); toast('Link copied', '', null); } catch (e) { u.select(); } });
+        var tel = digits(c.phone || ''); if (tel.length >= 10) { var a = q('a', 'lnk', 'Text it'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent('Here is the link to pay for ' + k.label + ' (' + money(k.amt) + '): ' + k.url); r.appendChild(a); }
+        out.appendChild(r); if (k.mailed) toast('Link emailed', j.email, null);
+      }).catch(function () { b.disabled = false; err.say({ error: 'No signal: no link was made.' }); });
+    };
+    var b1 = careBtn(acts, 'Make a link to copy or text', 'save', function () { make(false, b1); });
+    if (j.email) { var b2 = careBtn(acts, 'Email it to them', 'lnk', function () { make(true, b2); }); }
+    p.appendChild(acts); p.appendChild(out);
+    p.appendChild(q('div', 'sub2', 'Through your Square or Stripe. The customer pays when they open it; nothing is taken from a saved card.'));
+    return p;
+  }
+  /* book a plan visit: the usual booking form for that customer, filled in */
+  function careBook(d, back) {
+    api('custjob', { body: { id: d.cid } }).then(function (j) {
+      if (!j || !j.ok) { toast('Not done', (j && j.error) || 'Try again.', null); return; }
+      jobBookView(j.lead, null, { pkg: 'other', svc: (d.plan + ' visit').slice(0, 80), price: d.per === 'visit' ? Math.round(d.price) : '', date: d.next >= todayISO() ? d.next : '', back: back });
+    }).catch(function () { toast('No signal', 'Try again.', null); });
+  }
+  /* ---- Plan visits to book, on the Jobs board ---- */
+  function careDueBox(again) {
+    var sec = q('section', 'ocard caredue'); sec.hidden = true;
+    api('caredue').then(function (j) {
+      if (!j || !j.ok || !j.due.length) return;
+      sec.hidden = false; sec.appendChild(q('h2', null, 'Plan visits to book · ' + j.due.length));
+      sec.appendChild(q('div', 'sub2', 'Customers on a plan whose next visit is in the next three weeks, with nothing booked.'));
+      j.due.forEach(function (d) {
+        var r = q('div', 'cpayrow'), w = q('div', 'cpw');
+        w.appendChild(q('b', null, d.name + ' · ' + (d.overdue ? 'due since ' : 'due ') + fmtD(d.next)));
+        w.appendChild(q('small', null, d.plan + (d.addr ? ' · ' + d.addr : '')));
+        r.appendChild(w); careBtn(r, 'Book', 'lnk', function () { careBook(d, function () { again(); }); });
+        careBtn(r, 'Customer', 'lnk', function () { customerView(d.cid); });
+        sec.appendChild(r);
+      });
+    }).catch(function () {});
+    return sec;
+  }
+  /* ---- a plan offered with a quote: their quote page shows it beside the quote, with "I'd like the plan" ---- */
+  function careQuoteBox(lead) {
+    var b = q('div', 'careq'); if (!careOnC()) return b;
+    api('careplans', { params: { lead: lead.id } }).then(function (j) {
+      if (!j || !j.ok || !j.plans.length) return;
+      var usable = j.plans.filter(function (p) { return !p.starter && !p.off; }); if (!usable.length) return;
+      b.appendChild(q('div', 'dwh', 'Offer a plan too (optional)'));
+      b.appendChild(q('div', 'sub2', 'Their quote page shows it beside the quote, with a button to say they would like it.'));
+      var cur = j.offer && j.offer.plan ? j.offer.plan.id : '';
+      var sel = careSelect([['', '– No plan –']].concat(usable.map(function (p) { return [p.id, p.name + ' · ' + p.priceText]; })), cur);
+      var lb = q('label', null, 'Plan'); lb.appendChild(sel); b.appendChild(lb);
+      var st = q('div', 'sub2'); b.appendChild(st); var row = q('div', 'aacts cacts'); b.appendChild(row);
+      var paint = function (offer) {
+        st.textContent = !offer ? '' : offer.picked ? 'They picked this plan on their quote page on ' + fmtDay(offer.picked.at) + '.' : 'On their quote page now. Save or send the quote as usual.';
+        row.textContent = '';
+        if (offer && (S.role === 'admin' || asOffice())) {
+          var go = careBtn(row, 'They want it: start the plan', 'lnk', function () { go.disabled = true; api('careenrol', { body: { lead: lead.id, plan: offer.plan.id } }).then(function (k) { go.disabled = false; if (!k.ok) { toast('Not started', k.error || '', null); return; } toast('Plan started', (lead.name || '') + (k.next ? ' · first visit ' + fmtD(k.next) : '') + ' · on their customer page', null); }); });
+        }
+      };
+      paint(j.offer);
+      sel.addEventListener('change', function () { sel.disabled = true; api('careqset', { body: { lead: lead.id, plan: sel.value } }).then(function (k) { sel.disabled = false; if (!k.ok) { toast('Not saved', k.error || '', null); sel.value = cur; return; } cur = sel.value; paint(k.offer); toast(sel.value ? 'Plan offered on the quote' : 'Plan taken off the quote', '', null); }).catch(function () { sel.disabled = false; sel.value = cur; toast('No signal', 'Not saved.', null); }); });
+    }).catch(function () {});
+    return b;
+  }
+
+  /* ---- Setup › Customer emails ---- */
+  function careMailView() {
+    hideToast(); S.signin = null; S.screen = 'caremail'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Customer emails', sub: 'Follow-ups, aftercare and the newsletter', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card coform caremail'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('carecfg').then(function (j) {
+      box.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      var M = j.mail || {};
+      if (M.on) box.appendChild(q('div', 'msg ok', 'They go from your own address: ' + (M.user || j.mail.to) + '.'));
+      else { var nb = q('div', 'msg bad', 'Email is not connected, so none of these go out yet. You can set them up and preview them now.'); box.appendChild(nb); if (S.role === 'admin') careBtn(box, 'Connect your email ›', 'lnk', mailSetupView); }
+      box.appendChild(q('div', 'sub2', 'Each one is off until you turn it on, and the words are yours. At most ' + j.caps.day + ' a day, never to anyone who unsubscribed, and each says how to unsubscribe. Nothing here charges anyone.'));
+      box.appendChild(careFuCard(j, M)); box.appendChild(careAcCard(j, M));
+      var nr = q('button', 'kitstep'); nr.type = 'button'; nr.appendChild(q('span', 'kitck', '')); var nt = q('span'); nt.appendChild(q('b', null, 'Newsletter')); nt.appendChild(q('small', null, j.counts.optin + ' customer' + (j.counts.optin === 1 ? '' : 's') + ' said yes · you write and approve every issue')); nr.appendChild(nt); nr.appendChild(q('span', 'kitgo', '›'));
+      nr.addEventListener('click', function () { careNewsView(undefined, false); }); box.appendChild(nr);
+      var lg = q('details', 'carelog'); lg.appendChild(q('summary', null, 'Sent lately')); box.appendChild(lg);
+      lg.addEventListener('toggle', function () { if (!lg.open || lg.dataset.done) return; lg.dataset.done = '1'; api('carelog').then(function (k) { if (!k || !k.ok) return; if (!k.log.length) lg.appendChild(q('div', 'sub2', 'Nothing sent yet.'));
+        var KN = { fu: 'Follow-up', ac: 'Aftercare', nl: 'Newsletter', pay: 'Payment link' };
+        k.log.forEach(function (r) { lg.appendChild(q('div', 'sub2', fmtDay(r.at) + ' · ' + (KN[r.kind] || r.kind) + (r.n ? ' ' + r.n : '') + (r.test ? ' (test)' : '') + ' · ' + r.to + ' · ' + (r.ok ? 'sent' : 'not sent: ' + r.stage))); }); }); });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(careMailView)); });
+  }
+  function careOnOff(c, label, on, part) {
+    var top = q('div', 'lookrow'); top.appendChild(q('b', null, label)); var seg = q('div', 'aseg');
+    [[false, 'Off'], [true, 'On']].forEach(function (o) {
+      var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!on === o[0]));
+      b.addEventListener('click', function () { if (b.getAttribute('aria-pressed') === 'true') return; api('carecfgset', { body: { part: part, on: o[0] } }).then(function (k) { if (!k.ok) { toast('Not saved', k.error || '', null); return; } [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); toast(label + (o[0] ? ' on' : ' off'), o[0] ? 'From now on; nothing from before is sent.' : '', null); }).catch(function () { toast('No signal', 'Not saved.', null); }); });
+      seg.appendChild(b);
+    });
+    top.appendChild(seg); c.appendChild(top);
+  }
+  function careTplEd(holder, t, kind, ph, M, extra) {
+    var w = q('div', 'caretpl');
+    var si = careInput('text', t.subject, { maxLength: 150 }); careField(w, 'Subject', si);
+    var bi = careInput('textarea', t.body, { rows: 7, maxLength: 4000 }); careField(w, 'Your words', bi);
+    var pv = q('div', 'fupv'), err = careErr(w), acts = q('div', 'mailbtns');
+    var get = function () { var o = { subject: si.value, body: bi.value }; if (extra) for (var k in extra) o[k] = extra[k](); return o; };
+    careBtn(acts, 'Preview', 'lnk', function () { err.hide(); api('carepreview', { body: { part: kind, tpl: get(), review: holder._review ? holder._review() : undefined } }).then(function (k) { if (!k.ok) return err.say(k); carePreview(pv, k); }).catch(function () { err.say({ error: 'No signal.' }); }); });
+    careBtn(acts, 'Send me a test', 'lnk', function () { err.hide(); if (!M.on) return err.say({ error: 'Connect your email first.' }); api('caretest', { body: { part: kind, tpl: get(), review: holder._review ? holder._review() : undefined } }).then(function (k) { if (!k.ok) return err.say(k); toast('Test sent', k.to, null); }).catch(function () { err.say({ error: 'No signal.' }); }); });
+    w.appendChild(acts); w.appendChild(pv);
+    w._get = get; holder.appendChild(w); return w;
+  }
+  function careFuCard(j, M) {
+    var F = j.cfg.fu, c = q('div', 'mailmsg carefu');
+    careOnOff(c, 'Follow-up after a quote', F.on, 'fu');
+    c.appendChild(q('div', 'sub2', 'When a quote gets no answer. It stops as soon as they answer: the lead moves on from Quoted (won, lost or booked), they say yes or pick a plan on their quote page, you send the form, or someone logs a call where you talked. Only quotes saved after you turn it on; sent between 8 am and 6 pm.'));
+    var row = q('div', 'carenums');
+    var d1 = careInput('number', F.days, { min: 1, max: 30, step: 1, inputMode: 'numeric' }); careField(row, 'First one after (days)', d1);
+    var d2 = careInput('number', F.gap, { min: 1, max: 30, step: 1, inputMode: 'numeric' }); careField(row, 'Then every (days)', d2);
+    var mx = careSelect([1, 2, 3, 4, 5].map(function (n) { return [n, n === 1 ? 'One email' : 'Up to ' + n]; }), F.max); careField(row, 'How many', mx);
+    c.appendChild(row);
+    var eds = q('div', 'caretpls'), list = (F.tpls || []).slice(), boxes = []; c.appendChild(eds);
+    var draw = function () {
+      var cur = boxes.map(function (b) { return b._get(); }); if (cur.length) list = cur;
+      eds.textContent = ''; boxes = []; var n = +mx.value;
+      while (list.length < n) list.push(JSON.parse(JSON.stringify(list[list.length - 1] || j.def.fu.tpls[0])));
+      for (var i = 0; i < n; i++) { eds.appendChild(q('div', 'dwh', 'Follow-up ' + (i + 1) + (i === 0 ? ' · ' + d1.value + ' days after the quote' : ' · ' + d2.value + ' days after the one before'))); boxes.push(careTplEd(eds, list[i], 'fu', j.ph.fu, M)); }
+    };
+    mx.addEventListener('change', draw); d1.addEventListener('change', draw); d2.addEventListener('change', draw); draw();
+    c.appendChild(carePhList(j.ph.fu));
+    var err = careErr(c), acts = q('div', 'mailbtns');
+    careBtn(acts, 'Save', 'save', function () { err.hide(); api('carecfgset', { body: { part: 'fu', days: d1.value, gap: d2.value, max: mx.value, tpls: boxes.map(function (b) { return b._get(); }) } }).then(function (k) { if (!k.ok) return err.say(k); toast('Saved', 'Follow-up after a quote', null); }).catch(function () { err.say({ error: 'No signal: nothing was saved.' }); }); });
+    careBtn(acts, 'Use the starting words', 'lnk', function () { if (!window.confirm('Put back the starting words for the follow-ups?')) return; api('carecfgset', { body: { part: 'fu', reset: 1 } }).then(function (k) { if (!k.ok) return err.say(k); careMailView(); }); });
+    c.appendChild(acts); return c;
+  }
+  function careAcCard(j, M) {
+    var A = j.cfg.ac, c = q('div', 'mailmsg careac');
+    careOnOff(c, 'Aftercare after a job', A.on, 'ac');
+    c.appendChild(q('div', 'sub2', 'After a job is marked Done. Words for each service: the first whose words match the job (its service or quote lines) goes; otherwise the general one. Only jobs done after you turn it on; sent between 8 am and 6 pm.'));
+    var hr = careInput('number', A.hours, { min: 0, max: 72, step: 1, inputMode: 'numeric' }); careField(c, 'Send it (hours after Done)', hr);
+    var rv = q('div', 'carerev'), rvL = q('label', 'cpck'), rvC = careInput('checkbox'); rvC.checked = !!A.review.on; rvL.appendChild(rvC); rvL.appendChild(q('span', null, 'Add a line asking for a Google review')); rv.appendChild(rvL);
+    var rvLink = careInput('url', A.review.link, { placeholder: j.companyReview || 'https://g.page/r/...' }); careField(rv, 'Your Google review link', rvLink, j.companyReview ? 'Empty: the one on your Company screen.' : 'From your Google Business Profile: Ask for reviews.');
+    var rvLine = careInput('textarea', A.review.line, { rows: 2, maxLength: 300 }); careField(rv, 'The review line', rvLine, 'Asked of every customer the same way: never a discount or a gift for a review (Google does not allow it).');
+    c.appendChild(rv);
+    var review = function () { return { on: rvC.checked, link: rvLink.value.trim(), line: rvLine.value }; };
+    var eds = q('div', 'caretpls'), boxes = [], list = (A.tpls || []).slice(); c.appendChild(eds); eds._review = review;
+    var draw = function () {
+      eds.textContent = ''; boxes = [];
+      list.forEach(function (t, i) {
+        var hd = q('div', 'dwh', t.match ? 'For: ' + t.match : 'General (when no other one fits)'); eds.appendChild(hd);
+        var nm = careInput('text', t.name, { maxLength: 60 }), mt = careInput('text', t.match, { maxLength: 200, placeholder: 'Empty = the general one' });
+        careField(eds, 'Name', nm); careField(eds, 'Words to match (commas between)', mt, 'For example: gutter, gutters. Matched on the job’s service and quote lines.');
+        var ed = careTplEd(eds, t, 'ac', j.ph.ac, M, { name: function () { return nm.value; }, match: function () { return mt.value; } }); boxes.push(ed);
+        if (list.length > 1) careBtn(eds, 'Remove these words', 'lnk danger', function () { list = boxes.map(function (b) { return b._get(); }); list.splice(i, 1); draw(); });
+      });
+      careBtn(eds, '+ Words for another service', 'lnk', function () { list = boxes.map(function (b) { return b._get(); }); list.push({ name: 'Another service', match: '', subject: j.def.ac.tpls[0].subject, body: j.def.ac.tpls[0].body }); draw(); });
+    };
+    draw();
+    c.appendChild(carePhList(j.ph.ac));
+    var err = careErr(c), acts = q('div', 'mailbtns');
+    careBtn(acts, 'Save', 'save', function () { err.hide(); api('carecfgset', { body: { part: 'ac', hours: hr.value, tpls: boxes.map(function (b) { return b._get(); }), review: review() } }).then(function (k) { if (!k.ok) return err.say(k); toast('Saved', 'Aftercare after a job', null); }).catch(function () { err.say({ error: 'No signal: nothing was saved.' }); }); });
+    careBtn(acts, 'Use the starting words', 'lnk', function () { if (!window.confirm('Put back the starting aftercare words (one general email)?')) return; api('carecfgset', { body: { part: 'ac', reset: 1 } }).then(function (k) { if (!k.ok) return err.say(k); careMailView(); }); });
+    c.appendChild(acts); return c;
+  }
+
+  /* ---- the Newsletter: the postal address, the issues, and approving each one ---- */
+  function careNewsView(openId, fromSetup) {
+    if (fromSetup !== undefined) S.careNewsSetup = !!fromSetup;   /* Back: to Setup when opened from there, else to Customer emails */
+    hideToast(); S.signin = null; S.screen = 'carenews'; foot.hidden = true; setDock(null);
+    setBar('back', openId !== undefined ? { title: openId ? 'The issue' : 'New issue', sub: 'Newsletter', back: function () { careNewsView(); }, backLabel: 'Newsletter' } : S.careNewsSetup ? { title: 'Newsletter', sub: 'A monthly email to customers who said yes', back: kitSetupView, backLabel: 'Setup' } : { title: 'Newsletter', sub: 'A monthly email to customers who said yes', back: careMailView, backLabel: 'Customer emails' });
+    view.textContent = ''; var box = q('div', 'card coform carenews'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('carenews').then(function (j) {
+      box.textContent = '';
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      if (openId !== undefined) return careIssueEd(box, j, openId ? j.issues.filter(function (x) { return x.id === openId; })[0] || null : null);
+      box.appendChild(q('div', 'sub2', 'Write each issue (or start from a template), preview it, send yourself a test, pick the day and time, and approve it. Nothing goes without your approval, and changing an approved issue takes the approval back. It goes to customers who said yes (tick it on their customer page), from your own email.'));
+      if (!j.mail) box.appendChild(q('div', 'msg bad', 'Email is not connected: connect it in Setup, Email before approving an issue.'));
+      box.appendChild(q('div', 'dwh', 'Your postal mailing address'));
+      box.appendChild(q('div', 'sub2', 'The law (CAN-SPAM) says every newsletter carries it, so no issue is approved or sent without it. A street address or a PO box you check.'));
+      var ad = careInput('textarea', j.address, { rows: 3, maxLength: 300, placeholder: 'Street or PO box, town, state, ZIP' }); box.appendChild(ad);
+      var aerr = careErr(box), aa = q('div', 'mailbtns'); box.appendChild(aa);
+      careBtn(aa, 'Save the address', 'save', function () { aerr.hide(); api('carecfgset', { body: { part: 'nl', address: ad.value } }).then(function (k) { if (!k.ok) return aerr.say(k); toast('Address saved', '', null); }).catch(function () { aerr.say({ error: 'No signal.' }); }); });
+      box.appendChild(q('div', 'dwh', 'Issues'));
+      box.appendChild(q('div', 'sub2', j.recipients + ' customer' + (j.recipients === 1 ? '' : 's') + ' said yes' + (j.unsub ? ' · ' + j.unsub + ' unsubscribed' : '') + '.'));
+      var ST = { draft: 'Draft', approved: 'Approved', sending: 'Sending', sent: 'Sent' };
+      j.issues.forEach(function (x) {
+        var r = q('button', 'kitstep careissue ' + x.state); r.type = 'button'; r.appendChild(q('span', 'kitck', x.state === 'sent' || x.state === 'approved' ? '✓' : ''));
+        var tx = q('span'); var hd = q('b', null, x.subject); hd.appendChild(q('em', 'carebadge' + (x.state === 'draft' ? ' soft' : ''), ST[x.state])); tx.appendChild(hd);
+        tx.appendChild(q('small', null, x.state === 'sent' ? x.sent.ok + ' sent' + (x.sent.bad ? ', ' + x.sent.bad + ' not sent' : '') + ' · ' + fmtDay(x.sent.end || x.sent.start) : x.state === 'sending' ? x.sent.n + ' of ' + x.sent.of + ' so far' : (x.state === 'approved' ? 'Goes ' : 'Set for ') + careWhen(x.send)));
+        r.appendChild(tx); r.appendChild(q('span', 'kitgo', '›')); r.addEventListener('click', function () { careNewsView(x.id); }); box.appendChild(r);
+      });
+      if (!j.issues.length) box.appendChild(q('div', 'msg soft', 'No issues yet.'));
+      var na = q('div', 'kitbtns'); careBtn(na, '+ New issue', 'save', function () { careNewsView(''); }); box.appendChild(na);
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { careNewsView(openId); })); });
+  }
+  function careWhen(s) { if (!s) return ''; var p = s.split(' '), t = (p[1] || '09:00').split(':'), h = +t[0]; return fmtD(p[0]) + ', ' + (h % 12 || 12) + (+t[1] ? ':' + t[1] : '') + (h < 12 ? ' am' : ' pm'); }
+  function careIssueEd(box, j, x) {
+    var locked = x && (x.state === 'sending' || x.state === 'sent');
+    if (!x) {
+      box.appendChild(q('div', 'dwh', 'Start from'));
+      var tp = careSelect([['', 'A blank page']].concat(j.templates.map(function (t) { return [t.k, t.name]; })), ''); box.appendChild(tp);
+      box.appendChild(q('div', 'sub2', 'A template has [Write ...] where your words go. It cannot be approved until every one is replaced.'));
+    }
+    var si = careInput('text', x ? x.subject : '', { maxLength: 150 }); careField(box, 'Subject', si);
+    var pi = careInput('text', x ? x.pre : '', { maxLength: 200 }); careField(box, 'Preview line (optional)', pi, 'The short line inboxes show after the subject.');
+    var bi = careInput('textarea', x ? x.body : '', { rows: 16, maxLength: 20000 }); careField(box, 'The issue', bi, '# a heading · ## a smaller heading · - a list line · **bold** · [words](https://a-link). {first_name}, {company} and {phone} are filled in.');
+    if (!x) tp.addEventListener('change', function () { var t = j.templates.filter(function (y) { return y.k === tp.value; })[0]; si.value = t ? t.subject : ''; pi.value = t ? t.pre : ''; bi.value = t ? t.body : ''; });
+    var wr = q('div', 'carenums'), sd = careInput('date', (x ? x.send : j.nextFirst).slice(0, 10)), stt = careInput('time', (x ? x.send : j.nextFirst).slice(11, 16)); careField(wr, 'Goes on', sd); careField(wr, 'At', stt); box.appendChild(wr);
+    box.appendChild(q('div', 'sub2', 'It goes with the first hourly run at or after that time, to the customers who said yes then.'));
+    if (x && x.approved) box.appendChild(q('div', 'msg ok', 'Approved by ' + x.approved.by + ' on ' + fmtDay(x.approved.at) + '. Changing anything takes the approval back.'));
+    if (x && x.sent) box.appendChild(q('div', 'msg soft', x.state === 'sent' ? 'Sent: ' + x.sent.ok + ' of ' + x.sent.of + (x.sent.bad ? ' (' + x.sent.bad + ' not sent: unsubscribed or refused)' : '') + '.' : 'Sending: ' + x.sent.n + ' of ' + x.sent.of + ' so far.'));
+    if (locked) [si, pi, bi, sd, stt].forEach(function (el) { el.disabled = true; });
+    var pv = q('div', 'fupv'), err = careErr(box), acts = q('div', 'mailbtns'); box.appendChild(acts); box.appendChild(pv);
+    var body = function () { return { id: x ? x.id : '', subject: si.value, pre: pi.value, body: bi.value, send: sd.value + ' ' + stt.value }; };
+    var save = function () { return api('carenewsset', { body: body() }).then(function (k) { if (!k.ok) { err.say(k); return null; } x = k.issue; return k.issue; }); };
+    careBtn(acts, 'Preview', 'lnk', function () { err.hide(); api('carepreview', { body: { part: 'nl', subject: si.value, pre: pi.value, body: bi.value } }).then(function (k) { if (!k.ok) return err.say(k); carePreview(pv, k); }); });
+    if (locked) return;
+    careBtn(acts, 'Save', 'save', function () { err.hide(); save().then(function (s) { if (s) { toast('Saved', s.subject, null); careNewsView(s.id); } }).catch(function () { err.say({ error: 'No signal: nothing was saved.' }); }); });
+    careBtn(acts, 'Send me a test', 'lnk', function () { err.hide(); if (!j.mail) return err.say({ error: 'Connect your email first.' }); save().then(function (s) { if (!s) return; api('carenewstest', { body: { id: s.id } }).then(function (k) { if (!k.ok) return err.say(k); toast('Test sent', k.to, null); }); }); });
+    if (!x || !x.approved) careBtn(acts, 'Approve to send', 'lnk', function () {
+      err.hide(); save().then(function (s) {
+        if (!s) return;
+        if (!window.confirm('Send “' + s.subject + '” on ' + careWhen(s.send) + ' to the customers who said yes (' + j.recipients + ' now)? You can take it back until it starts.')) return;
+        api('carenewsapprove', { body: { id: s.id, on: 1 } }).then(function (k) { if (!k.ok) return err.say(k); toast('Approved', 'Goes ' + careWhen(s.send) + ' to ' + k.recipients, null); careNewsView(); });
+      });
+    });
+    else careBtn(acts, 'Take back the approval', 'lnk', function () { api('carenewsapprove', { body: { id: x.id, on: 0 } }).then(function (k) { if (!k.ok) return err.say(k); toast('Approval taken back', 'It will not go until you approve it again.', null); careNewsView(x.id); }); });
+    if (x) careBtn(acts, 'Delete', 'lnk danger', function () { if (!window.confirm('Delete this issue?')) return; api('carenewsdel', { body: { id: x.id } }).then(function (k) { if (!k.ok) return err.say(k); toast('Deleted', '', null); careNewsView(); }); });
+  }
   /* Back from a screen Setup opened goes to Setup (2026-10-30, Matthew: most went to the very beginning, Your prices did not): setupGo() marks
      the screen it opens, and setBar gives that screen (and it again, drawn fresh after a save or a step inside it) Back to Setup. Home, the
      Office menu, the side menu and Setup itself clear the mark. */
@@ -13767,6 +14203,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!x[0]) return; var row = q('button', 'kitstep'); row.type = 'button'; row.setAttribute('data-k', x[4]); row.addEventListener('click', setupGo(x[3]));
         row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[1])); tx.appendChild(q('small', null, x[2])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
       });
+      careSetupRows(box);   /* plans and customer emails (2026-10-30) */
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitSetupView)); });
   }
   /* ==== SMART PRICES AND TERMS (2026-10-30, Matthew: "1-6 is good to build"; the server's notes are above prcOn() in the API) ====
@@ -13933,6 +14370,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var ol = q('label', null, 'Price you agreed (optional)'); var ov = q('input'); ov.inputMode = 'numeric'; ov.placeholder = 'Leave empty to use the total';
       ov.addEventListener('input', function () { over[tier] = parseInt(String(ov.value).replace(/\D/g, ''), 10) || ''; paint(); }); ol.appendChild(ov); ol.appendChild(q('small', 'sub2', 'A different price adds an adjustment line, so the lines still add up.')); box.appendChild(ol);
       var nl = q('label', null, 'Note on the quote (optional)'); var nt = q('textarea'); nt.rows = 2; nt.maxLength = 300; nt.value = Q0.note || ''; nl.appendChild(nt); box.appendChild(nl);
+      box.appendChild(careQuoteBox(lead));   /* a plan offered beside the quote (2026-10-30) */
       var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
       var row2 = q('div', 'kitbtns'); var sv = q('button', 'save', 'Save the quote'); sv.type = 'button'; row2.appendChild(sv); box.appendChild(row2);
       var sendBox = q('div', 'kitsend'); box.appendChild(sendBox);
@@ -15524,7 +15962,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', c.name || 'Customer')); top.appendChild(ico('chev', 2.4)); b.appendChild(top);
     b.appendChild(q('div', 'swhere', [c.address, c.town].filter(Boolean).join(' · ')));
     var m = q('div', 'meta');
-    m.appendChild(q('span', 'tag cplan', (PLAN_L[c.plan] || 'One-off job') + ' · ' + (SERVICE_L[c.service] || '')));
+    m.appendChild(q('span', 'tag cplan', (carePlanL(c) || 'One-off job') + ' · ' + (SERVICE_L[c.service] || '')));
     if (c.status && c.status !== 'active') m.appendChild(q('span', 'tag cstat', STATUS_L[c.status]));
     if (c.overdue) m.appendChild(q('span', 'tag cover', 'Overdue · ' + fmtD(c.next)));
     else if (c.due) m.appendChild(q('span', 'tag cdue', 'Due ' + fmtD(c.next)));
@@ -15614,7 +16052,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (due.length) {
       var dbox = q('div', 'walkup');
       dbox.appendChild(q('div', 'wl', 'Due this week'));
-      due.forEach(function (c) { var r = q('div', 'wur'); r.appendChild(q('b', null, (c.overdue ? 'Overdue · ' : '') + fmtD(c.next))); r.appendChild(q('span', null, c.name + ' · ' + (PLAN_L[c.plan] || '') + (c.price ? ' · ' + money(c.price) : ''))); dbox.appendChild(r); });
+      due.forEach(function (c) { var r = q('div', 'wur'); r.appendChild(q('b', null, (c.overdue ? 'Overdue · ' : '') + fmtD(c.next))); r.appendChild(q('span', null, c.name + ' · ' + (carePlanL(c) || '') + (c.price ? ' · ' + money(c.price) : ''))); dbox.appendChild(r); });
       var rt = custRoute(all);
       if (rt) dbox.appendChild(rt);
       holder.appendChild(dbox);
@@ -16172,7 +16610,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var head = q('div', 'chead');
     head.appendChild(q('div', 'cname', c.name || 'Customer'));
     var tags = q('div', 'meta');
-    tags.appendChild(q('span', 'tag cplan', (PLAN_L[c.plan] || 'One-off job') + ' · ' + (SERVICE_L[c.service] || '')));
+    tags.appendChild(q('span', 'tag cplan', (carePlanL(c) || 'One-off job') + ' · ' + (SERVICE_L[c.service] || '')));
     tags.appendChild(q('span', 'tag cstat ' + (c.status || 'active'), STATUS_L[c.status || 'active']));
     if (c.overdue) tags.appendChild(q('span', 'tag cover', 'Overdue'));
     if (c.offer10) tags.appendChild(q('span', 'tag coff10', '10% off offered ' + fmtD(c.offer10)));   /* in the follow-up email (2026-10-27): for quoting their next service */
@@ -16183,7 +16621,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     head.appendChild(figs);
     holder.appendChild(head);
-    holder.appendChild(custPlanBox(c, function () { drawCustomer(holder0, c); }));
+    holder.appendChild(careOnC() ? careCustBox(c, function () { drawCustomer(holder0, c); }) : custPlanBox(c, function () { drawCustomer(holder0, c); }));   /* an edition: its own plans (2026-10-30) */
     holder.appendChild(custPay(c));   /* their jobs, deposits and balances (2026-10-16) */
     /* contact */
     var ct = q('div', 'lcontact cct');
@@ -21123,6 +21561,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
       S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea']] : null,   /* the quote and agreement kit (2026-10-27) */
+      S.role === 'admin' && careOnC() ? ['Plans', function () { carePlansView(); }, false, null, ['careplans']] : null,   /* plans and customer emails (2026-10-30) */
+      S.role === 'admin' && careOnC() ? ['Customer emails', careMailView, false, null, ['caremail', 'carenews']] : null,
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */
     it.forEach(function (x) {
       var lit = x[4].indexOf(S.screen) >= 0;

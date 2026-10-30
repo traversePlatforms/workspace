@@ -1075,6 +1075,7 @@ require_once __DIR__ . '/webpush.php';   /* phone alerts (2026-10-05): Web Push,
 require_once __DIR__ . '/sms.php';       /* in-app texting (2026-10-10): Twilio, keys in the private folder */
 require_once __DIR__ . '/billing.php';   /* billing (2026-10-10): Stripe, keys in the private folder */
 if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oauth-lib.php';   /* Sign in with Google / Microsoft for Setup › Email (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/care-lib.php')) require_once __DIR__ . '/care-lib.php';   /* plans and customer emails for the editions (2026-10-30): one shared file beside every install's API */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -2376,6 +2377,8 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fuelcron') {
     $fc = fuelRefresh(($_GET['force'] ?? '') === '1');
     out(['ok' => true, 'asked' => $fc['asked'], 'err' => (string) ($fc['err'] ?? ''), 'newest' => fuelNewest($fc), 'gas' => fuelNow(['type' => 'gas']), 'diesel' => fuelNow(['type' => 'diesel'])]);
 }
+/* plans and customer emails, the timed part (2026-10-30, care-lib.php): tools/care-sweep.php asks each edition and client install hourly */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'caresweep') $session = ['n' => 'Customer emails', 'r' => 'admin', 'c' => ''];
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli') {
     $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
     $b = billingLoad();
@@ -2858,6 +2861,8 @@ function offerLive(array $l): ?array {
     $until = offerUntil($l); if ($until !== null && $until < time()) return null;   /* the 72-hour hold has run out: the quote page asks them to say yes instead */
     return slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null ? $o : null;
 }
+/* a plan offered beside the quote on the customer's quote page, and their "I'd like the plan" (2026-10-30, care-lib.php) */
+if (($action === 'careqplan' || $action === 'careqpick') && function_exists('carePublic')) carePublic();
 if ($action === 'a365quote' || $action === 'a365accept') {
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
     if (in_array($origin, A365_ORIGINS, true) || (PHP_SAPI === 'cli-server' && preg_match('#^http://127\.0\.0\.1(:\d+)?$#D', $origin))) {
@@ -3636,6 +3641,7 @@ if (!$viewing && $realMe === 'Claude Check') {
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+    $roOk = array_merge($roOk, ['careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3803,9 +3809,12 @@ function permCat(): array {
         'team.goals' => ['g' => 'team', 'l' => 'Set their team\'s goals', 's' => 'sets team goals', 'd' => 'The daily goals for the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['goals'], 'as' => 'manager'],
         'team.run' => ['g' => 'team', 'l' => 'Run their team\'s sign-ins', 's' => 'team sign-ins', 'd' => 'Add people to their team, give new codes, sign them out, remove them.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], 'as' => 'manager'],
         'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
+        'cust.plans' => ['g' => 'cust', 'l' => 'Put customers on plans', 's' => 'puts customers on plans', 'd' => 'Start, change and end a customer\'s plan, send a plan payment link, the newsletter yes, and book plan visits.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['carecust', 'careenrol', 'careend', 'careoptin', 'carepaylink', 'caredue'], 'as' => 'office'],   /* 2026-10-30, care-lib.php */
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
         'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],
+        'set.plans' => ['g' => 'set', 'l' => 'Plans', 's' => 'builds plans', 'd' => 'The company\'s recurring plans: what each visit includes, how often, the season and the price.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['careplanset']],   /* 2026-10-30 */
+        'set.care' => ['g' => 'set', 'l' => 'Customer emails', 's' => 'customer emails', 'd' => 'The follow-up after a quote, the aftercare email and the monthly newsletter: on or off, the words, and approving each issue.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog']],
     ];
     return $c;
 }
@@ -3917,6 +3926,7 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth',
     'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
     'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel',   /* smart prices and terms (2026-10-30); + the fuel cost's prices */
+    'careplans', 'careplanset', 'carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog',   /* plans and customer emails (2026-10-30) */
     'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
     'perms', 'permset'];   /* + Roles and permissions, part of Accounts (2026-10-29) */
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
@@ -3976,6 +3986,7 @@ function billGate(string $a): void {
     out(['ok' => false, 'why' => 'locked', 'lock' => billLockInfo($L, $admin), 'error' => billLockWords($L, $admin)], 403);
 }
 if (!defined('SIXFOLD_CLI') && $session && edition()) billGate($action);
+if (strncmp($action, 'care', 4) === 0 && function_exists('careAction')) careAction();   /* plans and customer emails for the editions (2026-10-30, care-lib.php) */
 
 /* ---- Roles and permissions in Accounts (2026-10-29; see permCat above) ----
  * 'perms': the list, grouped, with each role's default and current value (an admin, or a manager adding to their team: read only).
@@ -10344,6 +10355,7 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
         /* + each install's own settings (2026-10-29: the quote kit's prices and terms, Your costs, other ways to pay, the email templates, the
            Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). + role permissions (role-perms.json, 2026-10-29). */
         foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the smart price list and the clause library (2026-10-30) */
+        foreach (['care-plans.json', 'care-cfg.json', 'care-news.json', 'care-optin.json', 'care-qplans.json', 'newsletter-unsub.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + plans and customer emails (2026-10-30; their logs are *.log above) and the unsubscribe list */
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];

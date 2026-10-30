@@ -49,6 +49,7 @@ function backupOne(string $site, string $dir): bool {
     /* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices were missing) */
     /* + each install's own settings (2026-10-29): kit, costs, pay ways, email templates, Company screen, team goals, crews' towns and days off; never the mailbox password */   /* + role permissions (role-perms.json, 2026-10-29) */
     foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json'] as $n) $add($rounds . '/' . $n, $dir . '/rounds/' . $n);   /* + the smart price list and the clause library (2026-10-30) */
+    foreach (['care-plans.json', 'care-cfg.json', 'care-news.json', 'care-optin.json', 'care-qplans.json', 'newsletter-unsub.json'] as $n) $add($rounds . '/' . $n, $dir . '/rounds/' . $n);   /* + plans and customer emails (2026-10-30; their logs are *.log above) and the unsubscribe list */
     foreach ((glob($data . '/leads/*.log') ?: []) as $p) $add($p, $dir . '/leads/' . basename($p));
     foreach ((glob($data . '/customers/*.log') ?: []) as $p) $add($p, $dir . '/customers/' . basename($p));
     $photos = [];
