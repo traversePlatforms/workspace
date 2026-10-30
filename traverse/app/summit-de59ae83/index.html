@@ -4367,7 +4367,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (S.super) box.appendChild(editionRow());
     if (S.super || (S.viewing && S.viewing.preview)) box.appendChild(roleRow());
-    box.appendChild(q('div', 'sub2', 'The app records which screens and buttons you use, so the company can see what helps. Never what you type. Your code works on one phone and one computer at a time; signing in on another phone signs this one out.'));   /* the tap log (2026-10-12) */
+    box.appendChild(q('div', 'sub2', 'The app records which screens and buttons you use, so the company can see what helps. Never what you type. ' + (edOn() ? 'Your code works on one phone, one tablet and one computer at a time; signing in on another phone signs this one out.' : 'Your code works on one phone and one computer at a time; signing in on another phone signs this one out.')));   /* the tap log (2026-10-12); the editions count a tablet too (2026-10-29) */
     box.appendChild(q('h2', 'tgrp', 'This device'));
     box.appendChild(pushRow());
     box.appendChild(lk);
@@ -8755,7 +8755,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function mailSendApp(a) {
     var P = mailParts(a.getAttribute('href')); if (!P || !P.subject || !P.body) return false;
     if (a.getAttribute('aria-busy') === 'true') return true;
-    if (!window.confirm('Send this email from ' + S.mailFrom + ' to ' + P.to + '?\n\nSubject: ' + P.subject + '\n\n' + P.body.slice(0, 700) + (P.body.length > 700 ? '\u2026' : ''))) return true;
+    if (!window.confirm((a.classList.contains('mailsent') ? 'This email was sent already. Send it again from ' : 'Send this email from ') + S.mailFrom + ' to ' + P.to + '?\n\nSubject: ' + P.subject + '\n\n' + P.body.slice(0, 700) + (P.body.length > 700 ? '\u2026' : ''))) return true;   /* a second tap says so (review 2026-10-30) */
     a.setAttribute('aria-busy', 'true');
     api('mailsend', { body: P }).then(function (j) {
       a.removeAttribute('aria-busy');
@@ -9311,7 +9311,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return { miles: rt, gal: gal, cost: gal * P.gas.price, gas: P.gas };
   }
   function fertOf(P, k) { var L = P.ferts || []; return L.filter(function (x) { return x.k === k; })[0] || L.filter(function (x) { return x.k === P.fertDefault; })[0] || L[0] || null; }
-  function money2(n) { return '$' + (Math.round(n * 100) / 100).toFixed(2); }
   function weekText(iso) { if (!iso) return ''; var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }); }
   /* the close rate in two groups (2026-10-24): ad leads (Instant Form, Messenger) and the rest (referrals, phone, in person, website) */
   function closeLines(P) {
@@ -13404,6 +13403,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function impHead(h) { return String(h || '').replace(/^﻿/, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   /* the separator the first line uses most (comma, tab or semicolon: Excel in some countries saves semicolons); the same reader as Meta's */
   function impParse(text) {
+    text = String(text).replace(/^﻿/, '');   /* Excel's byte-order mark (review 2026-10-30: it rode into the first heading and the "needs a look" download) */
     var first = text.split(/\r?\n/)[0] || '', sep = ',', best = -1;
     [',', '\t', ';'].forEach(function (s) { var n = first.split(s).length; if (n > best) { best = n; sep = s; } });
     var rows = [], row = [], cell = '', inQ = false;
@@ -15132,7 +15132,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!txt) return true;
     var x = it.x, d = digits(txt), low = txt.toLowerCase();
     var ph = it.kind === 'door' ? [x.phone && (x.phone.phone || x.phone)] : [x.phone];
-    if (d.length >= 3 && d.length >= low.replace(/[s().+-]/g, '').length) return ph.some(function (p) { return digits(p).indexOf(d) >= 0; });   /* digits typed: the phone */
+    if (d.length >= 3 && d.length >= low.replace(/[\s().+-]/g, '').length) return ph.some(function (p) { return digits(p).indexOf(d) >= 0; });   /* digits typed: the phone */
     var hay = it.kind === 'door' ? [x.address, x.owner, x.name, x.email && (x.email.email || x.email), x.town] : [x.name].concat(x.names || [], [x.email, x.town, x.house && x.house.address, x.house && x.house.town]);
     return hay.join(' ').toLowerCase().indexOf(low) >= 0;
   }
@@ -18015,7 +18015,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      page, each checked 2026-10-29). The composite is about 1 km, so tiles are asked for at zoom 8 at most and stretched beyond, the same
      on every map (it was 8 on the radar map and 12 on the office map). */
   var RADAR_BASE = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/', RADAR_LAYER = 'nexrad-n0q-900913', RADAR_NATIVE = 8;
-  var RADAR_URL = RADAR_BASE + RADAR_LAYER + '/{z}/{x}/{y}.png';
   var RADAR_ATTR = 'Radar: NOAA NWS NEXRAD via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>';
   var RADAR_TIME = 'https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.json';
   var RADAR_PAST = [55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0];   /* minutes before the latest, oldest first */
@@ -18907,7 +18906,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function tpsUrl(w) { return 'https://www.truepeoplesearch.com/resultaddress?streetaddress=' + encodeURIComponent(w.street) + '&citystatezip=' + encodeURIComponent(w.town + ', CO' + (w.zip ? ' ' + w.zip : '')); }
   function fpsUrl(w) { var slug = function (t) { return String(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }; return 'https://www.fastpeoplesearch.com/address/' + slug(w.street) + '_' + slug(w.town + ' co' + (w.zip ? ' ' + w.zip : '')); }
-  function copyText(t, btn) {
+  /* copyBtn (review 2026-10-30): was a second copyText(t, btn) under the first copyText(t, said), so the later one won and the five callers
+     that pass a toast message got no "Copied" at all. The button version keeps its own name. */
+  function copyBtn(t, btn) {
     var done = function () { var o = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = o; }, 1200); };
     try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done, function () {}); return; } } catch (e) {}
     var ta = q('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
@@ -18918,7 +18919,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(q('div', 'wl', 'Look up the number'));
     var row = function (label, value) {
       var r = q('div', 'lkrow'); var t = q('span'); t.appendChild(q('small', null, label)); t.appendChild(q('b', null, value)); r.appendChild(t);
-      var c = q('button', 'lnk', 'Copy'); c.type = 'button'; c.addEventListener('click', function () { copyText(value, c); }); r.appendChild(c);
+      var c = q('button', 'lnk', 'Copy'); c.type = 'button'; c.addEventListener('click', function () { copyBtn(value, c); }); r.appendChild(c);
       box.appendChild(r);
     };
     if (d.owner) row('Owner of record', ownerText(d.owner));
