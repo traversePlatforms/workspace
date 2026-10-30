@@ -14472,7 +14472,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function homeRetClear() { S.homeRet = null; S.homeScr = null; }
   /* a setup screen opens at its top (2026-10-30, Matthew: Setup > Company opened at the bottom of the page, where Home had been scrolled);
      drawn again on the same screen (after a save) it stays where it is */
-  var SETUP_SCR = { company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, prcprices: 1, prcterms: 1, prcimport: 1, svcarea: 1, billing: 1, accounts: 1, newsletter: 1, followupmail: 1, sample: 1, training: 1, careplans: 1, caremail: 1, carenews: 1, prcfeedback: 1 };
+  var SETUP_SCR = { company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, prcprices: 1, prcterms: 1, prcimport: 1, svcarea: 1, billing: 1, accounts: 1, newsletter: 1, followupmail: 1, sample: 1, training: 1, careplans: 1, caremail: 1, carenews: 1, prcfeedback: 1, fbleads: 1 };
   function setupTop() { if (S.screen === S._topScr) return; S._topScr = S.screen; if (SETUP_SCR && SETUP_SCR[S.screen]) window.scrollTo(0, 0); }
   function homeBackFix(o) {
     if (!S.homeRet || /^(tools|setuphome)$/.test(S.screen)) return o;
