@@ -23,7 +23,7 @@ A yearly plan costs about 20% less than paying month to month, and it is paid on
 
 ### Setup and the 7-day money-back guarantee
 
-There is no free trial. Your card is charged when you subscribe. We set up your company's app (your towns, branding, sign-in codes, prices and terms) within 2 business days of your payment, and tell you the day it is live. If Traverse isn't right for you, email billing@traverseplatforms.com before your app is live or within 7 days after, and we refund your first payment in full and end your plan. This is once per company, on its first plan.
+There is no free trial. Your card is charged when you subscribe. We set up your company's app (your towns, branding, sign-in codes, prices and terms) in up to 2 business days after your payment (often sooner), and tell you the day it is live. If Traverse isn't right for you, email billing@traverseplatforms.com before your app is live or within 7 days after, and we refund your first payment in full and end your plan. This is once per company, on its first plan.
 
 Traverse makes every refund, back to the payment method you used.
 
