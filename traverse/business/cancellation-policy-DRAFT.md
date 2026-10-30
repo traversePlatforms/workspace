@@ -29,7 +29,7 @@ Traverse makes every refund, back to the payment method you used.
 
 ### Founding companies
 
-Companies that sign up in our first year get about 25% off their first 12 months. Their price is locked in, and they keep every feature, for as long as they stay with us. If a company leaves and comes back, the terms current then apply.
+Companies that sign up in our first year get 25% off their first 12 months. Their price is locked in, and they keep every feature, for as long as they stay with us. If a company leaves and comes back, the terms current then apply.
 
 ### Seats
 
@@ -60,7 +60,7 @@ Questions: **billing@traverseplatforms.com** or (303) 596-9515.
 | Faults: 30 days to fix, then pro-rata refund | Subscription agreement §14.1 | Matches the draft |
 | Removed core feature: refund | Subscription agreement §2.6 | Matches the draft |
 | Charged at checkout; set up within 2 business days; 7-day money-back from go-live, once | Matthew 2026-10-27 (replaces the free 7-day pilot); billing.php: no trial at checkout, paid_at on the first paid subscription event, live_at from Traverse's Mark live, refund only by Traverse within the window; subscription agreement §9.3 | Verified against the code; **attorney to confirm the wording** |
-| Founding: about 25% off 12 months, price locked in for life while they stay | billing.php founding_pct 25 (coupon for 12 months); subscription agreement §9.6 and Order Form (list price does not increase while the subscription continues without a break) | Matches; Matthew's phrase (27 Oct) |
+| Founding: 25% off 12 months, price locked in for life while they stay | billing.php founding_pct 25 (coupon for 12 months); subscription agreement §9.6 and Order Form (list price does not increase while the subscription continues without a break) | Matches; Matthew's phrase (27 Oct) |
 | Added seats pro-rata | Stripe customer portal set to create prorations (traverse/ops/stripe-setup.mjs) | Verified |
 | Seats: admin plus the plan's people; changed through billing@, not automatic | Matthew 2026-10-29 (admin account decided today); billing.php: plan and seat changes go through Traverse, the portal cannot change a subscription | Matches the policy; **the app's seat count is being changed to leave the admin account out (29 Oct)** |
 | No free trial; refunds only by Traverse | Matthew 2026-10-27; billing.php: no trial at checkout, refund super-only | Verified |
