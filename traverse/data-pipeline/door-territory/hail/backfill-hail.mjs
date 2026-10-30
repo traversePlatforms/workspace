@@ -53,6 +53,7 @@ if (cmd === 'stage') {
     for (const a of d.areas) for (const x of a.doors) doors.push([t, x.id, x.lat, x.lon, a.name]);
   }
   const files = readdirSync(DAYS).filter((f) => f.endsWith('.json') && f.slice(0, 10) <= LAST).sort();
+  if (!files.length) throw new Error(`no day files in ${DAYS} through ${LAST}: nothing to build (the fetch step did not run, or HAIL_DAYS points elsewhere)`);   /* review 2026-10-30: it wrote every town's hail file empty */
   console.log(`${regions.length} towns, ${doors.length} doors, ${files.length} day files`);
   /* the doors by grid square, per grid (MRMS keeps one grid; checked per day all the same) */
   const gridKey = (o) => [o.lat1, o.lon1, o.dx, o.dy].join(',');

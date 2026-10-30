@@ -4,7 +4,7 @@
  *
  *   node build-moved.mjs [--only=town,town] [--counties=denver,jefferson,...]
  *
- * Writes app/data/rounds/moved-<town>.json   { built, counties: { key: [name, asof 'YYYY-MM'] }, doors: { id: 'YYYY-MM|key' } }
+ * Writes app/data/rounds/moved-<town>.json   { built, counties: { key: [name, sales as of, building facts as of] }, doors: { id: 'YYYY-MM|key' } }
  *        app/data/rounds/house-<town>.json   { built, counties, doors: { id: { c, yb?, bs?, bf?, wo?, cr?, sl?, st?, ex? } } }
  *        moved/coverage.json                 counts only (doors with a sale / total and with basement facts / total, by county)
  *   moved  the month of the most recent MARKET sale on record: a sale deed (warranty, special warranty, bargain and sale,
@@ -375,8 +375,11 @@ for (const ck of Object.keys(COUNTIES)) {
 }
 
 /* ---------------------------------------------------------------- write */
-let wrote = 0, totD = 0, totS = 0, totB = 0;
+let wrote = 0, totD = 0, totS = 0, totB = 0, held = [];
 for (const T of towns) {
+  /* review 2026-10-30: a county that failed (or was left out with --counties=) used to leave every town on it rewritten without its sales
+     and house facts, and the run still said done. A town whose counties did not all answer keeps the files it has. */
+  if (!T.cs.every((k) => counties[k])) { held.push(T.t); continue; }
   const used = Object.fromEntries(Object.keys(T.used).map((k) => [k, counties[k]]));
   totD += T.doors.length; totS += Object.keys(T.mv).length; totB += Object.values(T.hs).filter((h) => h.bs !== undefined || h.cr || h.sl).length;
   if (Object.keys(T.mv).length) { writeFileSync(join(DATA, `moved-${T.t}.json`), JSON.stringify({ built: today, counties: used, doors: T.mv })); wrote++; }
@@ -385,3 +388,4 @@ for (const T of towns) {
 const byTown = Object.fromEntries(towns.map((T) => [T.t, { doors: T.doors.length, sold: Object.keys(T.mv).length, house: Object.keys(T.hs).length }]));
 writeFileSync(join(HERE, 'coverage.json'), JSON.stringify({ built: today, totals: { doors: totD, sold: totS, basement: totB }, counties: cov, towns: byTown }, null, 1));
 console.log(`${wrote} moved- files; ${totS} of ${totD} doors with a sale month, ${totB} with basement / crawl / slab facts`);
+if (held.length) { console.log(`${held.length} towns NOT written (a county of theirs did not answer or was left out): ${held.join(', ')}`); process.exitCode = 1; }

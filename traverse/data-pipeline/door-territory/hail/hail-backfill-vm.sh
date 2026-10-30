@@ -18,7 +18,8 @@ export ROUNDS_DATA="$H/stormstage" HAIL_DAYS="$H/days" HAIL_BOX="36.95,41.05,-10
 mkdir -p days out
 if [ ! -f fetch.done ]; then
   st "radar days 2021-10-01 to $THROUGH"
-  for t in 1 2 3; do nice -n 10 node hail/build-hail.mjs fetch 2021-10-01 "$THROUGH" && break; sleep 120; done
+  ok=0; for t in 1 2 3; do nice -n 10 node hail/build-hail.mjs fetch 2021-10-01 "$THROUGH" && { ok=1; break; }; sleep 120; done
+  [ $ok = 1 ] || { st "STOPPED: the radar fetch failed three times"; exit 1; }   # review 2026-10-30: fetch.done was touched even when every try failed, and the build ran on whatever days were there
   touch fetch.done
 fi
 st "hail per door"

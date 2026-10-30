@@ -53,17 +53,18 @@ if (mode !== 'build' || !a1 || !a2) { console.error('usage: stage <plan.json> | 
 
 const plan = JSON.parse(readFileSync(a1, 'utf8'));
 const OUT = a2, PROG = a2 + '.progress';
-const out = existsSync(OUT) && existsSync(PROG) ? JSON.parse(readFileSync(OUT, 'utf8')) : { days: {} };   /* no progress file: a fresh start */
-const done = new Set(existsSync(PROG) ? JSON.parse(readFileSync(PROG, 'utf8')) : []);
-const listing = new Map();
+const resume = existsSync(OUT) && existsSync(PROG);   /* both or neither (review 2026-10-30): a stray .progress with no output skipped its dates for good */
+const out = resume ? JSON.parse(readFileSync(OUT, 'utf8')) : { days: {} };
+const done = new Set(resume ? JSON.parse(readFileSync(PROG, 'utf8')) : []);
+const listing = new Map(), unlisted = new Set();   /* unlisted: a day the archive would not list (not a 404): nothing is known about it, so it is not done */
 async function files(utcDay) {           /* the 2-minute file names in one UTC day's folder */
   if (listing.has(utcDay)) return listing.get(utcDay);
   const p = utcDay.replace(/-/g, '/');
   for (let i = 0; i < 3; i++) {
-    try { const r = await fetch(`${ARCHIVE}/${p}/mrms/ncep/MESH/`, { headers: UA }); if (r.ok) { const t = await r.text(); const set = new Set([...t.matchAll(/href="(MESH_00\.50_\d{8}-\d{6}\.grib2\.gz)"/g)].map((m) => m[1])); listing.set(utcDay, set); return set; } if (r.status === 404) break; } catch (e) {}
+    try { const r = await fetch(`${ARCHIVE}/${p}/mrms/ncep/MESH/`, { headers: UA }); if (r.ok) { const t = await r.text(); const set = new Set([...t.matchAll(/href="(MESH_00\.50_\d{8}-\d{6}\.grib2\.gz)"/g)].map((m) => m[1])); listing.set(utcDay, set); return set; } if (r.status === 404) { listing.set(utcDay, new Set()); return listing.get(utcDay); } } catch (e) {}
     await new Promise((z) => setTimeout(z, 1500 * (i + 1)));
   }
-  listing.set(utcDay, new Set()); return listing.get(utcDay);
+  unlisted.add(utcDay); return new Set();   /* not cached: tried again on the next date that needs this day, and the date is left for the next run */
 }
 async function sample(utc) {             /* the file nearest this time (within 4 minutes), decoded */
   const day = utc.toISOString().slice(0, 10), set = await files(day);
@@ -99,6 +100,8 @@ for (const date of todo) {
     while (i < times.length) { const [h, utc] = times[i++]; const g = await sample(utc); if (!g) { failed.push([h, utc]); continue; } got++; look(h, g); }
   }));
   for (const [h, utc] of failed) { await new Promise((z) => setTimeout(z, 3000)); const g = await sample(utc); if (g) { got++; look(h, g); } }   /* one more try for a file that did not come */
+  const days = new Set(times.map(([, u]) => u.toISOString().slice(0, 10)));
+  if ([...days].some((d) => unlisted.has(d))) { console.log(`${++n}/${todo.length} ${date}: the archive did not answer for its folder; left for the next run`); for (const d of days) unlisted.delete(d); continue; }   /* review 2026-10-30: an outage was being written down as "no hail" and never retried */
   read += got; if (!got) missing++;
   const day = Object.fromEntries(Object.entries(hrs).filter(([, v]) => v.size).map(([k, v]) => [k, [...v].sort((a, b) => a - b)]));
   out.days[date] = day;   /* a day with no hours stays, empty, as build-hail-hours.mjs keeps it (so its weekly run does not redo it) */

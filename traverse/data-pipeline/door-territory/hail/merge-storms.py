@@ -108,5 +108,6 @@ write(sf, hs)
 if paths is not None: write(pf, paths)
 for k, (L, b, a, e) in joined.items():
     if e: write(os.path.join(rd, 'hail-%s.json' % k), L)
-for f in ['hail-storms.json', 'hail-paths.json']: J(os.path.join(rd, f))
+for f in ['hail-storms.json', 'hail-paths.json']:
+    if os.path.exists(os.path.join(rd, f)): J(os.path.join(rd, f))   # review 2026-10-30: no hail-paths.json on the server made the check crash after a good merge
 print('merged; json ok')
