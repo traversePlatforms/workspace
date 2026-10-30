@@ -1,0 +1,63 @@
+<?php
+/* a stand-in for Facebook's login dialog and Graph API, for fbleads-test.mjs only (php -S 127.0.0.1:8813 router.php).
+   State in state.json beside it (pages, forms, leads, switches); every call is logged to calls.log (method, path, token, appsecret_proof). */
+header('Content-Type: application/json');
+$D = __DIR__; $path = trim((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'); $m = $_SERVER['REQUEST_METHOD'];
+$st = json_decode((string) @file_get_contents($D . '/state.json'), true) ?: [];
+$tok = (string) ($_GET['access_token'] ?? '');
+foreach (['SYSTEMTOK', 'PAGETOK1', 'PAGETOK2'] as $pre) if (strncmp($tok, $pre, strlen($pre)) === 0) $tok = $pre;   /* the pasted tokens are padded to a real token's length */
+file_put_contents($D . '/calls.log', json_encode(['m' => $m, 'p' => $path, 'tok' => $tok, 'proof' => isset($_GET['appsecret_proof']), 'q' => array_diff_key($_GET, ['access_token' => 1, 'appsecret_proof' => 1])]) . "\n", FILE_APPEND);
+$save = function () use (&$st, $D) { file_put_contents($D . '/state.json', json_encode($st, JSON_PRETTY_PRINT)); };
+$err = function (string $msg, int $code, int $http = 400, int $sub = 0) { http_response_code($http); echo json_encode(['error' => ['message' => $msg, 'type' => 'OAuthException', 'code' => $code] + ($sub ? ['error_subcode' => $sub] : [])]); exit; };
+if ($path === 'dialog') {   /* Facebook's login: straight back with a code, or a refusal */
+    $to = (string) ($_GET['redirect_uri'] ?? ''); $q = !empty($st['deny']) ? ['error' => 'access_denied', 'error_reason' => 'user_denied'] : ['code' => 'CODE' . str_repeat('x', 20)];
+    $st['lastDialog'] = $_GET; $save();
+    header('Location: ' . $to . '?' . http_build_query($q + ['state' => (string) ($_GET['state'] ?? '')]), true, 302); exit;
+}
+$g = preg_replace('#^graph/#', '', $path);
+if ($g === 'oauth/access_token') {
+    if (($_GET['grant_type'] ?? '') === 'fb_exchange_token') { echo json_encode(($_GET['fb_exchange_token'] ?? '') === 'SHORTUSER' ? ['access_token' => 'LONGUSER', 'token_type' => 'bearer', 'expires_in' => 5184000] : ['error' => ['message' => 'bad token', 'code' => 190]]); exit; }
+    if (($_GET['client_secret'] ?? '') !== 'abcdef0123456789abcdef0123456789') $err('Error validating client secret.', 1);
+    if (strncmp((string) ($_GET['code'] ?? ''), 'CODE', 4) !== 0) $err('Invalid verification code format.', 100);
+    echo json_encode(['access_token' => !empty($st['bisu']) ? 'BISUTOKEN' : 'SHORTUSER', 'token_type' => 'bearer']); exit;
+}
+if ($g === 'debug_token') {
+    $in = (string) ($_GET['input_token'] ?? ''); $sc = $st['scopes'] ?? ['leads_retrieval', 'pages_show_list', 'pages_read_engagement', 'pages_manage_ads', 'ads_management', 'business_management'];
+    echo json_encode(['data' => ['app_id' => '1234567890', 'type' => $in === 'BISUTOKEN' ? 'SYSTEM_USER' : 'USER', 'is_valid' => true, 'scopes' => $sc, 'expires_at' => $in === 'SHORTUSER' ? time() + 3600 : 0, 'user_id' => 'u1']]); exit;
+}
+$users = ['LONGUSER' => ['id' => 'u1', 'name' => 'Pat Admin'], 'BISUTOKEN' => ['id' => 's1', 'name' => 'Acme Roofing integration'], 'SYSTEMTOK' => ['id' => 's2', 'name' => 'Traverse system user']];
+$pageToks = ['PAGETOK1' => '1110001', 'PAGETOK2' => '2220002'];
+if (!empty($st['dead']) && $tok !== '') $err('Error validating access token: The session has been invalidated because the user changed their password.', 190, 400, 460);
+if ($g === 'me/permissions' && $m === 'DELETE') { $st['revoked'][] = $tok; $save(); echo json_encode(['success' => true]); exit; }
+if ($g === 'me') {
+    if (isset($users[$tok])) { echo json_encode($users[$tok]); exit; }
+    if (isset($pageToks[$tok])) { $pid = $pageToks[$tok]; echo json_encode(['id' => $pid, 'name' => $st['pages'][$pid]['name'] ?? 'Page']); exit; }
+    $err('Invalid OAuth access token.', 190);
+}
+if ($g === 'me/accounts') {
+    if (!isset($users[$tok])) $err('(#100) Tried accessing nonexisting field (accounts) on node type (Page)', 100);
+    $o = []; foreach ($st['pages'] as $pid => $p) $o[] = ['id' => (string) $pid, 'name' => $p['name'], 'access_token' => $p['token'], 'tasks' => $p['tasks'] ?? ['MANAGE', 'ADVERTISE', 'MANAGE_LEADS']];
+    echo json_encode(['data' => $o]); exit;
+}
+/* everything below needs a Page's token */
+if (!isset($pageToks[$tok])) $err('Invalid OAuth access token.', 190);
+$myPage = $pageToks[$tok];
+if (preg_match('#^(\d+)/leadgen_forms$#', $g, $mm)) {
+    if ($mm[1] !== $myPage) $err('(#200) Permissions error', 200, 403);
+    $o = []; foreach (($st['pages'][$myPage]['forms'] ?? []) as $fid => $f) $o[] = ['id' => (string) $fid, 'name' => $f['name'], 'status' => $f['status'] ?? 'ACTIVE', 'questions' => $f['questions']];
+    echo json_encode(['data' => $o]); exit;
+}
+if (preg_match('#^(\d+)/leads$#', $g, $mm)) {
+    $fid = $mm[1]; $f = $st['pages'][$myPage]['forms'][$fid] ?? null; if (!$f) $err('(#100) Unknown form', 100);
+    if (!empty($st['badfield']) && str_contains((string) ($_GET['fields'] ?? ''), 'ad_name')) $err('(#100) Tried accessing nonexisting field (adset_name) on node type (Lead)', 100);
+    if (!empty($st['leadsErr'])) $err('(#200) The user does not have permission to retrieve leads (Leads Access)', 200, 403);
+    $fl = json_decode((string) ($_GET['filtering'] ?? '[]'), true); $since = (int) ($fl[0]['value'] ?? 0);
+    $all = array_values(array_filter($f['leads'] ?? [], fn($l) => strtotime($l['created_time']) > $since));
+    /* two at a time, with a next link, so paging is used */
+    $off = (int) ($_GET['after'] ?? 0); $page = array_slice($all, $off, 2);
+    $out = ['data' => array_map(function ($l) { if (!empty($GLOBALS['st']['badfield'])) return array_intersect_key($l, array_flip(['id', 'created_time', 'field_data'])); return $l; }, $page)];
+    if ($off + 2 < count($all)) $out['paging'] = ['next' => 'http://127.0.0.1:8813/graph/' . $fid . '/leads?' . http_build_query(['access_token' => $tok, 'fields' => $_GET['fields'] ?? '', 'limit' => 100, 'filtering' => $_GET['filtering'] ?? '', 'after' => $off + 2])];
+    echo json_encode($out); exit;
+}
+if (preg_match('#^(\d+)$#', $g, $mm)) { $f = $st['pages'][$myPage]['forms'][$mm[1]] ?? null; if (!$f) $err('(#100) Unknown form', 100); echo json_encode(['id' => $mm[1], 'name' => $f['name'], 'questions' => $f['questions']]); exit; }
+$err('no such path ' . $g, 100, 404);

@@ -50,6 +50,8 @@ function backupOne(string $site, string $dir): bool {
     /* + each install's own settings (2026-10-29): kit, costs, pay ways, email templates, Company screen, team goals, crews' towns and days off; never the mailbox password */   /* + role permissions (role-perms.json, 2026-10-29) */
     foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json', 'eod-report.json', 'ad-spend.json'] as $n) $add($rounds . '/' . $n, $dir . '/rounds/' . $n);   /* + the end-of-day email's settings and the typed ad spend (2026-10-30; eod.log goes with every *.log) */   /* + the smart price list and the clause library (2026-10-30) */
     foreach (['care-plans.json', 'care-cfg.json', 'care-news.json', 'care-optin.json', 'care-qplans.json', 'newsletter-unsub.json'] as $n) $add($rounds . '/' . $n, $dir . '/rounds/' . $n);   /* + plans and customer emails (2026-10-30; their logs are *.log above) and the unsubscribe list */
+    $add($rounds . '/fb-leads.json', $dir . '/rounds/fb-leads.json');   /* the Facebook leads choices (2026-10-30); fbleads.log goes with the *.log above; never the tokens */
+    foreach (['sync.json', 'sync-links.json', 'sync-hold.json'] as $n) $add($rounds . '/' . $n, $dir . '/rounds/' . $n);   /* + Sync from another system (2026-10-30); its keys stay in the private folder */
     foreach ((glob($data . '/leads/*.log') ?: []) as $p) $add($p, $dir . '/leads/' . basename($p));
     foreach ((glob($data . '/customers/*.log') ?: []) as $p) $add($p, $dir . '/customers/' . basename($p));
     $photos = [];
