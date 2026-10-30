@@ -7,6 +7,9 @@
 # -billing, -sms, -webpush.php. Backup first (~/upload-backups/before-<label>-<stamp>.tgz), then ~/bin/safe-extract.sh renames every
 # file into place (no half-written rounds.php ever served), md5 of every placed file against the local one, version stamps, and each
 # API answering 401 to a signed-out request. Exits non-zero on any mismatch.
+# + (2026-10-29) the website's checkout and central Stripe webhook (api/traverse-start.php, traverse-hook.php, traverse-clients-lib.php), the five
+# client templates (traverse-shared/client-templates/, from build-editions.cjs) and traverse-tools/clients.php; then on the server
+# "clients.php regen" remakes every client install's page and API from the new templates.
 set -u
 LABEL="${1:?usage: deploy-app.sh <label>}"
 R="/c/Users/Surge Inc/Desktop/claude test 2/traverse"; D="$R/editions/dist/public_html"
