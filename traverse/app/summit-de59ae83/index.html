@@ -13603,7 +13603,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         steps.textContent = ''; MAIL_STEPS[kind].forEach(function (t) { steps.appendChild(q('li', null, t)); }); hF[0].hidden = pF[0].hidden = kind !== 'other';
         quick.textContent = ''; mq.textContent = ''; var G = MAIL_GO[kind]; more.hidden = false;
         var ov = mailOauthFor(M, kind); ksub.textContent = ov ? 'Sign in to connect' : 'Make an app password first';
-        if (ov) more.appendChild(pwbox); else form.appendChild(pwbox);   /* Sign in with Google or Microsoft is the quick way; the app password waits under More detail (2026-10-30) */
+        if (ov) { more.appendChild(pwbox); more.firstChild.textContent = 'Another way to connect (app password)'; } else form.appendChild(pwbox);   /* named for what it holds (Matthew 2026-10-30) */   /* Sign in with Google or Microsoft is the quick way; the app password waits under More detail (2026-10-30) */
         if (!G) { more.open = true; quick.hidden = true; return; }
         quick.hidden = false; more.open = false;
         if (ov) mailOauthBtn(quick, ov, G.oauth);
@@ -13662,13 +13662,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function mailOauthBtn(to, prov, label) {
     var b = q('button', 'save mailgobtn mailoauth', label); b.type = 'button'; to.appendChild(b);
     to.appendChild(q('div', 'sub2', prov === 'google' ? 'Sign in and allow Traverse to send email as you. No app password needed.' : 'Sign in with your Outlook, Hotmail or work Microsoft 365 account and allow Traverse to send email as you. No app password needed.'));
+    /* in its own window (2026-10-30, Matthew: a 403 with no way back): Google's and Microsoft's sign-in pages refuse to open inside a
+       frame (the Home Base hub shows the app in one) and an error page there left no Back button. The window is opened on the tap (so
+       it isn't blocked), pointed at the sign-in once the server answers, and closes itself when it comes back (mailOauthReturn). */
     b.addEventListener('click', function () {
       b.disabled = true;
+      var w = null; try { w = window.open('', 'traverse-signin', 'width=520,height=720'); } catch (e) {}
       api('mailoauth', { body: { provider: prov } }).then(function (k) {
         b.disabled = false;
-        if (k && k.ok && k.ready && k.url) { location.href = k.url; return; }
-        toast(k && k.ok ? 'Not available yet' : 'Not started', (k && k.error) || 'Use an app password for now (More detail).', null);
-      }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); });
+        if (k && k.ok && k.ready && k.url) {
+          if (w && !w.closed) { w.location.href = k.url; toast('Finish in the new window', 'Sign in there; it closes by itself when you are done.', null); return; }
+          try { window.top.location.href = k.url; } catch (e) { location.href = k.url; }   /* the window was blocked: the whole tab goes */
+          return;
+        }
+        if (w && !w.closed) w.close();
+        toast(k && k.ok ? 'Not available yet' : 'Not started', (k && k.error) || 'Use an app password for now (Another way to connect).', null);
+      }).catch(function () { b.disabled = false; if (w && !w.closed) w.close(); toast('No signal', 'Try again.', null); });
     });
     return b;
   }
@@ -13682,16 +13691,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var m = /[?&]mailoauth=([a-z-]+)\b/.exec(location.search); if (!m) return false;
     var a = /[?&]as=([^&#]+)/.exec(location.search), who = ''; try { who = a ? decodeURIComponent(a[1]) : ''; } catch (e) {}
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    /* back in the sign-in window: tell the app that opened it, then close (2026-10-30) */
+    if (window.name === 'traverse-signin' && window.opener && !window.opener.closed) {
+      try { window.opener.postMessage({ traverseMail: m[1], as: who }, location.origin); window.close(); return true; } catch (e) {}
+    }
     mailSetupView();
     var W = { connected: ['Email connected', 'Connected as ' + who + '. Signed agreements and receipts now go to customers from this address.'],
       denied: ['Not connected', 'You did not allow it, so nothing changed.'],
       noscope: ['Not connected', 'Sending email was not allowed. Sign in again and leave the box for sending email ticked.'],
-      noemail: ['Not connected', 'The account did not give its email address. Try again, or use an app password (More detail).'],
+      noemail: ['Not connected', 'The account did not give its email address. Try again, or use an app password (Another way to connect).'],
       browser: ['Not connected', 'Start again from this screen, in the same browser.'],
-      'not-ready': ['Not available yet', 'Use an app password for now (More detail).'] }[m[1]] || ['Not connected', 'It did not finish. Try again, or use an app password (More detail).'];
+      'not-ready': ['Not available yet', 'Use an app password for now (Another way to connect).'] }[m[1]] || ['Not connected', 'It did not finish. Try again, or use an app password (Another way to connect).'];
     toast(W[0], W[1], null);
     return true;
   }
+  /* the sign-in window said how it went (2026-10-30): the same note and screen as coming back in this tab */
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data || typeof e.data.traverseMail !== 'string' || !/^[a-z-]+$/.test(e.data.traverseMail)) return;
+    try { history.replaceState(null, '', location.pathname + '?mailoauth=' + e.data.traverseMail + '&as=' + encodeURIComponent(String(e.data.as || '')) + location.hash); } catch (x) { return; }
+    mailOauthReturn();
+  });
   /* back from Square's Connect page: ?square=connected (or why not) */
   function kitSquareReturn() {
     if (mailOauthReturn()) return true;   /* + back from Sign in with Google / Microsoft (2026-10-30) */

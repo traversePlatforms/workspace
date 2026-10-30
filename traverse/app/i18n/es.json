@@ -3907,5 +3907,11 @@
  "No QR code yet": "Todavía no hay código QR",
  "QR code saved": "Código QR guardado",
  "QR code removed": "Código QR quitado",
- "Bring your data, check your prices, train your team": "Trae tus datos, revisa tus precios, capacita a tu equipo"
+ "Bring your data, check your prices, train your team": "Trae tus datos, revisa tus precios, capacita a tu equipo",
+  "Another way to connect (app password)": "Otra forma de conectar (contraseña de aplicación)",
+  "Finish in the new window": "Termine en la ventana nueva",
+  "Sign in there; it closes by itself when you are done.": "Inicie sesión allí; se cierra sola cuando termine.",
+  "Use an app password for now (Another way to connect).": "Por ahora use una contraseña de aplicación (Otra forma de conectar).",
+  "The account did not give its email address. Try again, or use an app password (Another way to connect).": "La cuenta no dio su correo electrónico. Inténtelo de nuevo o use una contraseña de aplicación (Otra forma de conectar).",
+  "It did not finish. Try again, or use an app password (Another way to connect).": "No terminó. Inténtelo de nuevo o use una contraseña de aplicación (Otra forma de conectar)."
 }
