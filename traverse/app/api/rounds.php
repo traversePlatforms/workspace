@@ -125,6 +125,7 @@ function company(): array {
         if (isset($loc['review']) && is_string($loc['review'])) $f['links'] = array_merge(is_array($f['links'] ?? null) ? $f['links'] : [], ['googleReview' => $loc['review']]);
     }
     $c = is_array($f) ? array_replace($def, array_intersect_key($f, $def)) : $def;
+    if (is_array($f) && is_array($loc) && ($lu = logoInfo($loc))) $c['logoUp'] = logoPublic($lu);   /* the logo the admin uploaded (2026-10-29); no key at all without one */
     $c['features'] = array_replace($def['features'], is_array($c['features']) ? $c['features'] : []);
     $c['card'] = array_replace($def['card'], is_array($c['card']) ? $c['card'] : []);
     foreach (['services', 'extraWork'] as $k) $c[$k] = array_values(array_filter((array) $c[$k], fn($p) => is_array($p) && count($p) >= 2 && preg_match('/^[a-z0-9_-]{1,30}$/D', (string) $p[0])));
@@ -2054,6 +2055,7 @@ if ($action === 'billinghook') {
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
 if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1, '_signAs' => 1])]);   /* the market checked (2026-10-11) */
+if ($action === 'logo') logoServe();   /* the company's uploaded logo, for the sign-in screen, its quote and signing pages and its emails (2026-10-29): before sign-in, like company */
 
 /* a session for a person on this install's codes list: the cookie, the signed-in list, and the answer the page expects
    (sign-in, and since 2026-10-12 the super admin arriving from another install) */
@@ -2825,7 +2827,13 @@ function kitPrice(array $cfg, array $m, array $picks): array {
     return [$items, $total];
 }
 /** what the customer's pages show at the top: the company's own name, phone, email and colour (never Traverse's, never Sixfold's) */
-function kitBrand(): array { $c = company(); return ['name' => (string) $c['name'], 'phone' => (string) $c['phone'], 'email' => (string) $c['email'], 'color' => (string) ($c['brand'] ?: ($c['colors']['--bar'] ?? '')), 'site' => (string) $c['site']]; }
+function kitBrand(): array {
+    $c = company(); $col = (string) ($c['brand'] ?: ($c['colors']['--bar'] ?? ''));
+    /* the company's own pages (2026-10-29): + its logo and tagline, and a colour white text reads on (a light brand colour darkened to 4.5:1, as the app's bar is) */
+    if (preg_match('/^#[0-9a-f]{6}$/i', $col) && contrastRatio(strtolower($col), '#ffffff') < 4.5) $col = brandColors(strtolower($col))['light']['--accent'];
+    return ['name' => (string) $c['name'], 'phone' => (string) $c['phone'], 'email' => (string) $c['email'], 'color' => $col, 'site' => (string) $c['site'],
+            'tagline' => (string) $c['tagline'], 'logo' => $c['logoUp'] ?? null];
+}
 /** the one-page agreement for a kit install: the work quoted, the day, the price and the deposit, then the company's terms */
 function kitAgreement(array $l): array {
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null; $h = $l['house'] ?? null;
@@ -3082,13 +3090,31 @@ function kitSignedMail(array $l, array $sg, ?array $t = null): array {
     $rows = implode('', array_map(fn($f) => '<tr><td style="padding:6px 12px 6px 0;color:#566476;vertical-align:top">' . $e($f[0]) . '</td><td style="padding:6px 0;font-weight:700">' . $e($f[1]) . '</td></tr>', $facts));
     $lis = implode('', array_map(fn($x) => '<li style="margin:0 0 6px">' . $e($x) . '</li>', $terms));
     $html = '<!doctype html><html><body style="margin:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;color:#15202d;font-size:15px;line-height:1.5"><div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-          . '<div style="font-size:20px;font-weight:800;color:' . $col . ';margin-bottom:14px">' . $e($name) . '</div>' . $intro
+          . mailBrandHead($B, $col) . $intro
           . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin:6px 0 14px"><div style="font-weight:800;margin-bottom:8px">What we agreed</div><table style="border-collapse:collapse;font-size:15px">' . $rows . '</table></div>'
           . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;margin-bottom:8px">The details</div><ol style="margin:0;padding-left:20px;font-size:15px">' . $lis . '</ol></div>'
           . '<div style="background:#fff;border:1px solid #dce2ea;border-radius:14px;padding:16px 18px;margin-bottom:18px"><div style="font-size:22px;font-style:italic;font-weight:700">' . $e($sg['name']) . '</div><div style="color:#566476;font-size:14px;margin-top:4px">Signed electronically on ' . $e($when) . '.</div></div>'
           . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:' . $col . ';color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">View or print your agreement</a></p>'
-          . '</div></body></html>';
+          . mailBrandFoot($B) . '</div></body></html>';
     return [$subject, $text, $html];
+}
+/* the company's letterhead on the emails the app writes for an edition (2026-10-29): its uploaded logo (PNG or JPG: email apps do not show
+   SVG, so an SVG logo leaves the name alone), its name in its colour, and at the foot its phone, email and website */
+function mailBrandHead(array $B, string $col): string {
+    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); $img = logoImgTag((string) $B['name'], 48);
+    return ($img !== '' ? '<div style="margin:0 0 8px">' . $img . '</div>' : '') . '<div style="font-size:20px;font-weight:800;color:' . $col . ';margin-bottom:14px">' . $e($B['name']) . '</div>';
+}
+/** a message's HTML (paragraphs) inside the letterhead */
+function mailBrandWrap(array $B, string $inner): string {
+    $col = preg_match('/^#[0-9a-f]{6}$/i', (string) $B['color']) ? (string) $B['color'] : '#13294b';
+    return '<!doctype html><html><body style="margin:0;font-family:Arial,Helvetica,sans-serif;color:#15202d;font-size:15px;line-height:1.5"><div style="max-width:600px;padding:20px 18px">'
+         . mailBrandHead($B, $col) . $inner . mailBrandFoot($B) . '</div></body></html>';
+}
+function mailBrandFoot(array $B): string {
+    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+    $site = (string) ($B['site'] ?? ''); $href = $site !== '' ? (preg_match('#^https?://#i', $site) ? $site : 'https://' . $site) : '';
+    $bits = array_filter([$e($B['name'] ?? ''), $e($B['phone'] ?? ''), ($B['email'] ?? '') !== '' ? '<a href="mailto:' . $e($B['email']) . '" style="color:#566476">' . $e($B['email']) . '</a>' : '', $href !== '' ? '<a href="' . $e($href) . '" style="color:#566476">' . $e(preg_replace('#^https?://#i', '', $site)) . '</a>' : '']);
+    return '<div style="border-top:1px solid #dce2ea;margin-top:18px;padding-top:12px;color:#566476;font-size:13px">' . implode(' &middot; ', $bits) . '</div>';
 }
 /** the receipt email for an edition: the company's words, then the receipt (always) */
 function kitReceiptMail(array $j, array $l, ?array $t = null): array {
@@ -3535,7 +3561,7 @@ if (!defined('SIXFOLD_CLI') && $session && edition()) edGate($action);
  *     up" or "needs attention".
  *   - previewing a role (X-View-As 'role:...') is answered as that role in the install's current state; the super admin himself is open.
  * Nothing to clear when it opens: the next request reads billing.json again (Release to client, paid again, Give more time). */
-const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'billing', 'billingcheckout', 'billingportal',
+const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'logoset', 'logodel', 'billing', 'billingcheckout', 'billingportal',
     'accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'acctflag', 'walkerset', 'paysset', 'repsendset',
     'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest',
@@ -7319,9 +7345,14 @@ function receiptBuild(array $j, array $l, bool $page = false): array {
          . 'td{padding:12px 0;border-bottom:1px solid #ece6da;vertical-align:top}.r{text-align:right}.tot td{border-bottom:0;font-size:15px;font-weight:700;padding-top:14px}'
          . '.foot{margin-top:40px;color:#5a6858;font-size:12px;border-top:1px solid #d9d1c2;padding-top:14px}.bar{display:flex;gap:10px;justify-content:flex-end;margin-bottom:16px}.bar button{font:inherit;padding:8px 16px;border-radius:999px;border:1px solid #2F5D2C;background:#2F5D2C;color:#fff;cursor:pointer}'
          . '@media print{.bar{display:none}.wrap{padding:0;max-width:none}}@media (max-width:560px){.grid{flex-direction:column;gap:12px}.head{flex-direction:column;align-items:flex-start}.title{text-align:left}}';
+    /* an edition's receipt in its own brand (2026-10-29): the uploaded logo in place of the app icon (an SVG on the page only: email apps do not
+       show SVG), and the company's colour in place of 365's green. Sixfold 365's receipt is unchanged. */
+    $logoTag = $a ? '' : logoImgTag($name, 64, $page);
+    $ink = $a ? '' : (string) kitBrand()['color'];
+    if (preg_match('/^#[0-9a-f]{6}$/i', $ink)) $css = str_replace('#2F5D2C', $ink, $css);
     $h = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Receipt - ' . $e($who) . '</title><style>' . $css . '</style></head><body><div class="wrap">'
        . ($page ? '<div class="bar"><button type="button" onclick="window.print()">Print or save as PDF</button></div>' : '')
-       . '<div class="head"><div class="brand"><img src="' . $e($badge) . '" alt=""><div><b>' . $e($name) . '</b><span>' . ($tag !== '' ? $e($tag) . '<br>' : '') . $e($contact) . '</span></div></div>'
+       . '<div class="head"><div class="brand">' . ($logoTag !== '' ? $logoTag : '<img src="' . $e($badge) . '" alt="">') . '<div><b>' . $e($name) . '</b><span>' . ($tag !== '' ? $e($tag) . '<br>' : '') . $e($contact) . '</span></div></div>'
        . '<div class="title"><h1>RECEIPT</h1><div>No. ' . $e($no) . '</div><div>Issued ' . $e($issued) . '</div><div class="paid">' . $e($status) . '</div></div></div>'
        . '<div class="grid"><div><div class="lbl">Customer</div>' . $e($who) . ($st !== '' ? '<br>' . $e($st) . ($town !== '' ? '<br>' . $e($town) : '') : '') . '</div>'
        . '<div><div class="lbl">Service address</div>' . ($st !== '' ? $e($st) . ($town !== '' ? '<br>' . $e($town) : '') : '&ndash;') . '</div><div><div class="lbl">Date of service</div>' . $e($svc) . '</div></div>'
@@ -9923,6 +9954,11 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
         $doc = ['backup' => company()['name'] . ' field tools', 'made' => date('c'), 'by' => $me,
                 'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
                 'files' => $files, 'photos' => $photos];
+        /* the Company screen's uploaded logo (2026-10-29): an image, so base64 under "binary" (only when there is one). Keep in step with nightly-backup.php */
+        foreach (['png', 'jpg', 'svg'] as $lt) if (is_file(DATA_DIR . '/company-logo.' . $lt)) {
+            $doc['binary']['sixfold-data/rounds/company-logo.' . $lt] = base64_encode((string) file_get_contents(DATA_DIR . '/company-logo.' . $lt));
+            $doc['restore'] .= ' Each entry in "binary" is a file in base64 (the company logo): decode it and put it back at its path.';
+        }
         accountLog(['by' => $me, 'what' => 'backup', 'n' => count($files)]);
         header('Content-Type: application/json; charset=utf-8');
         exportLog(['what' => 'full backup']);
@@ -12092,9 +12128,11 @@ function brandColors(string $hex): array {
     while (contrastRatio($accent, '#ffffff') < 4.5 && $la > 0.05) { $la -= 0.02; $accent = hslHex($h, $s0, $la); }
     return ['light' => ['--bg' => $at(0.965, $s * 0.25), '--line' => $at(0.88, $s * 0.2), '--sunk' => $at(0.925, $s * 0.2), '--bar' => $at(0.2), '--bar-soft' => $at(0.85, $s * 0.45),
                         '--moss' => $at(0.55, $s * 0.6), '--moss-ink' => $at(0.2), '--accent' => $accent, '--signin' => $at(0.2), '--signin-deep' => $at(0.13),
-                        '--signin-soft' => $at(0.85, $s * 0.45), '--key' => $at(0.28), '--key-down' => $at(0.35)],
+                        '--signin-soft' => $at(0.85, $s * 0.45), '--key' => $at(0.28), '--key-down' => $at(0.35),
+                        /* the bar's and the cards' gradient tops (2026-10-29): were the built colours, so a brand colour met another hue in the bar */
+                        '--bar-top' => $at(0.26), '--bar-hi' => $at(0.3), '--bar-hi2' => $at(0.34)],
             'dark' => ['--bg' => $at(0.06, $s * 0.5), '--card' => $at(0.1, $s * 0.45), '--line' => $at(0.2, $s * 0.35), '--sunk' => $at(0.08, $s * 0.45), '--bar' => $at(0.12, $s * 0.5),
-                       '--moss-ink' => $at(0.75, $s * 0.55), '--accent' => $at(0.75, $s * 0.55)]];
+                       '--moss-ink' => $at(0.75, $s * 0.55), '--accent' => $at(0.75, $s * 0.55), '--bar-top' => $at(0.17, $s * 0.5), '--bar-hi' => $at(0.19, $s * 0.5), '--bar-hi2' => $at(0.22, $s * 0.5)]];
 }
 /* ---- the kit's screens (2026-10-27, TR-33): price rules and terms (Company), payments (Square / Stripe), the setup checklist, quoting a lead.
  *   kit         GET   rules, minimum, deposit %, terms (the company's or the starters), units; payments state; the admin's setup checklist
@@ -12281,6 +12319,7 @@ if ($action === 'mailsend') {
     if (!throttleTake(rateFile('mailsend|' . (string) ($session['c'] ?? $me)), 30, 3600)) fail('That is a lot of emails in an hour from one sign-in. Wait a little and try again.', 429);
     if (!throttleTake(rateFile('mailsend|install'), 300, 86400)) fail('The app has sent 300 emails today, its daily most. Send the rest from your own email.', 429);
     [, $mtext, $mhtml] = mailRender(['subject' => $subj, 'body' => $txt], []);
+    $mB = kitBrand(); $mhtml = mailBrandWrap($mB, $mhtml);   /* the company's letterhead around the HTML part (2026-10-29); the plain part is the words as typed */
     $mr = sendMail($to, $subj, $mtext, $mhtml);
     appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'app', 'to' => $to, 'subject' => mb_substr($subj, 0, 200), 'lead' => (string) ($ml['id'] ?? ''), 'customer' => (string) ($mcu['id'] ?? ''), 'by' => $me, 'ok' => $mr['ok'], 'stage' => $mr['stage'], 'error' => mb_substr((string) $mr['error'], 0, 300)]);
     if (!$mr['ok']) fail('Not sent: ' . ($mr['error'] ?: 'the mail server said no') . '. Nothing went; try again, or use your own email.', 502);
@@ -12546,9 +12585,162 @@ if ($action === 'companyset') {
     $color = strtolower(trim((string) ($body['color'] ?? '')));
     if ($color !== '' && !preg_match('/^#[0-9a-f]{6}$/', $color)) fail('Pick a colour.');
     if ($color !== '') $loc['color'] = $color;
+    $old = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
+    if (is_array($old) && is_array($old['logo'] ?? null)) $loc['logo'] = $old['logo'];   /* the uploaded logo has its own save (logoset) and stays */
     $loc['by'] = $me; $loc['at'] = time();
     if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+
+/* ---- the company's own logo (2026-10-29, Matthew: branding is a selling point; "clients can take this on as their own and we just
+ * handle upkeep, trouble shooting and updates") ----
+ * The admin uploads it on the Company screen: PNG, JPG or SVG, 500 KB at most. Kept in the install's data folder beside company.json as
+ * company-logo.png|jpg|svg, and described in company-local.json `logo` {type, v (the first 12 of its SHA-1), w, h, bg, by, at}, so a data
+ * refresh never undoes it and the backups carry it. An SVG is rebuilt from a list of drawing elements and attributes before it is kept:
+ * no script, no event attributes, no links out (only #ids and embedded raster images), no DOCTYPE or entities, no CSS that loads anything.
+ * Served by action=logo before sign-in (the sign-in screen, the quote and signing pages and emails need it) with its own content type,
+ * nosniff, a sandboxing CSP and a year's cache for the versioned address. bg: draw it on a white backing where it sits on the brand colour
+ * (the bar, the sign-in screen, the pages' header), for a dark logo; off for a white or light one.
+ *   logoset  POST admin, features.company: {data: data URL or base64, bg} a new logo; or {bg} alone to change the backing
+ *   logodel  POST admin, features.company: remove it (the mark goes back to the built one, or the monogram) */
+const LOGO_MAX = 500 * 1024;
+const LOGO_TYPES = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'svg' => 'image/svg+xml'];
+function logoFile(string $type): string { return DATA_DIR . '/company-logo.' . $type; }
+/** the logo described in company-local.json, when its file is there; null otherwise */
+function logoInfo(?array $loc = null): ?array {
+    if ($loc === null) { $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true); if (!is_array($loc)) return null; }
+    $l = $loc['logo'] ?? null;
+    if (!is_array($l) || !in_array($l['type'] ?? '', ['png', 'jpg', 'svg'], true) || !preg_match('/^[0-9a-f]{12}$/D', (string) ($l['v'] ?? ''))) return null;
+    return is_file(logoFile((string) $l['type'])) ? $l : null;
+}
+/** its address: relative to the app's pages (index.html, q.html and sign.html sit together, the API one folder over), or whole for an email */
+function logoUrl(string $v, bool $abs = false): string {
+    $p = 'api/' . basename(__FILE__) . '?action=logo&v=' . $v;
+    if (!$abs) return '../' . $p;
+    $h = (string) ($_SERVER['HTTP_HOST'] ?? ''); if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) $h = 'traverseplatforms.com';
+    return (PHP_SAPI === 'cli-server' ? 'http' : 'https') . '://' . $h . '/' . $p;
+}
+/** what the pages are told (company and kitbrand) */
+function logoPublic(array $l): array { return ['url' => logoUrl((string) $l['v']), 'type' => (string) $l['type'], 'w' => (int) ($l['w'] ?? 0), 'h' => (int) ($l['h'] ?? 0), 'bg' => !empty($l['bg'])]; }
+/** the logo as an <img> for an email or a printout, or '' (none, or an SVG where email apps do not show SVG) */
+function logoImgTag(string $alt, int $height, bool $svgOk = false): string {
+    $l = logoInfo(); if (!$l || ($l['type'] === 'svg' && !$svgOk)) return '';
+    $w = (int) ($l['w'] ?? 0) > 0 && (int) ($l['h'] ?? 0) > 0 ? (int) round($height * (int) $l['w'] / (int) $l['h']) : 0;
+    if ($w > $height * 4) { $height = (int) floor($height * $height * 4 / $w); $w = $height * 4 > 0 ? (int) round($height * (int) $l['w'] / (int) $l['h']) : 0; }   /* a very wide logo: no wider than four times the height asked for */
+    return '<img src="' . htmlspecialchars(logoUrl((string) $l['v'], true), ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($alt, ENT_QUOTES, 'UTF-8') . '" height="' . $height . '"' . ($w ? ' width="' . $w . '"' : '')
+         . ' style="display:block;height:' . $height . 'px;' . ($w ? 'width:' . $w . 'px;' : '') . 'max-width:100%;border:0">';
+}
+function logoServe(): never {
+    $l = logoInfo();
+    if (!$l) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-store'); exit('No logo.'); }
+    $f = logoFile((string) $l['type']);
+    header('Content-Type: ' . ['png' => 'image/png', 'jpg' => 'image/jpeg', 'svg' => 'image/svg+xml'][$l['type']]);   /* not LOGO_TYPES: this runs before that line is reached */
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox");   /* an SVG opened on its own runs nothing */
+    header('Content-Disposition: inline; filename="logo.' . $l['type'] . '"');
+    header('Cache-Control: ' . ((string) ($_GET['v'] ?? '') === (string) $l['v'] ? 'public, max-age=31536000, immutable' : 'public, max-age=300'));   /* a new logo is a new v, so a new address */
+    header('ETag: "' . $l['v'] . '"');
+    if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === '"' . $l['v'] . '"') { http_response_code(304); exit; }
+    header('Content-Length: ' . filesize($f));
+    readfile($f);
+    exit;
+}
+/** an uploaded SVG rebuilt from what is allowed: [svg text, width, height] or [null, why] */
+function svgClean(string $raw): array {
+    if (!class_exists('DOMDocument')) return [null, 'This server cannot check SVG files. Use a PNG instead.'];
+    $raw = (string) preg_replace(['/^\xEF\xBB\xBF/', '/<!DOCTYPE[^\[>]*>/i'], '', $raw);   /* a plain DOCTYPE line (older Illustrator exports) goes; one with its own entities is refused */
+    if (preg_match('/<!DOCTYPE|<!ENTITY/i', $raw)) return [null, 'That SVG has a DOCTYPE with entities, which the app does not take. Export it again as plain SVG, or use a PNG.'];
+    $NS = 'http://www.w3.org/2000/svg'; $XL = 'http://www.w3.org/1999/xlink';
+    if (preg_match('/<svg\b[^>]*>/i', $raw, $m) && !preg_match('/\sxmlns\s*=/i', $m[0])) $raw = (string) preg_replace('/<svg\b/i', '<svg xmlns="' . $NS . '"', $raw, 1);   /* a hand-written SVG without its namespace */
+    $d = new DOMDocument(); $prev = libxml_use_internal_errors(true);
+    $ok = $d->loadXML($raw, LIBXML_NONET);   /* no LIBXML_NOENT: entities are never expanded */
+    libxml_clear_errors(); libxml_use_internal_errors($prev);
+    $root = $ok ? $d->documentElement : null;
+    if (!$root || $root->localName !== 'svg' || $root->namespaceURI !== $NS) return [null, 'That is not an SVG file the app can read. Export it again, or use a PNG.'];
+    static $EL = ['svg', 'g', 'defs', 'symbol', 'use', 'title', 'desc', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'tspan', 'textPath',
+        'linearGradient', 'radialGradient', 'stop', 'clipPath', 'mask', 'pattern', 'image', 'style', 'filter', 'feGaussianBlur', 'feOffset', 'feBlend', 'feColorMatrix',
+        'feFlood', 'feComposite', 'feMerge', 'feMergeNode', 'feDropShadow'];
+    static $AT = ['id', 'class', 'style', 'transform', 'd', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'fx', 'fy', 'fr', 'width', 'height', 'viewBox',
+        'preserveAspectRatio', 'points', 'pathLength', 'fill', 'fill-opacity', 'fill-rule', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit',
+        'stroke-dasharray', 'stroke-dashoffset', 'stroke-opacity', 'opacity', 'clip-path', 'clip-rule', 'mask', 'filter', 'color', 'display', 'visibility', 'overflow',
+        'gradientUnits', 'gradientTransform', 'spreadMethod', 'offset', 'stop-color', 'stop-opacity', 'patternUnits', 'patternContentUnits', 'patternTransform',
+        'clipPathUnits', 'maskUnits', 'maskContentUnits', 'filterUnits', 'primitiveUnits', 'font-family', 'font-size', 'font-weight', 'font-style', 'font-variant',
+        'text-anchor', 'dominant-baseline', 'alignment-baseline', 'baseline-shift', 'letter-spacing', 'word-spacing', 'text-decoration', 'dx', 'dy', 'rotate',
+        'textLength', 'lengthAdjust', 'startOffset', 'href', 'space', 'version', 'stdDeviation', 'in', 'in2', 'result', 'mode', 'values', 'type', 'operator',
+        'k1', 'k2', 'k3', 'k4', 'flood-color', 'flood-opacity', 'paint-order', 'vector-effect', 'shape-rendering', 'image-rendering', 'color-interpolation-filters',
+        'mix-blend-mode', 'isolation', 'enable-background'];
+    $el = array_flip($EL); $at = array_flip($AT);
+    $badCss = fn(string $v) => (bool) preg_match('/@import|expression\s*\(|javascript:|behavior\s*:|-moz-binding|\\\\|<|url\s*\(\s*(?![\'"]?\s*#)/i', $v);   /* url() only to an #id inside it */
+    $clean = function (DOMNode $n) use (&$clean, $el, $at, $badCss, $NS, $XL) {
+        foreach (iterator_to_array($n->childNodes, false) as $ch) {
+            if ($ch instanceof DOMElement) {
+                if ($ch->namespaceURI !== $NS || !isset($el[$ch->localName]) || ($ch->localName === 'style' && $badCss($ch->textContent))) { $n->removeChild($ch); continue; }
+                foreach (iterator_to_array($ch->attributes, false) as $a) {   /* false: href and xlink:href would share a key */
+                    $nm = $a->localName; $ns = $a->namespaceURI; $v = (string) $a->value;
+                    $keep = isset($at[$nm]) && ($ns === null || ($ns === $XL && $nm === 'href') || ($ns === 'http://www.w3.org/XML/1998/namespace' && $nm === 'space'));
+                    if ($keep && $nm === 'href') $keep = (bool) preg_match('/^#[A-Za-z_][\w.-]*$/D', $v) || ($ch->localName === 'image' && preg_match('#^data:image/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$#D', $v));
+                    if ($keep && $badCss($v) && $nm !== 'href') $keep = false;
+                    if ($keep && $nm === 'space') $keep = in_array($v, ['default', 'preserve'], true);
+                    if (!$keep) $ch->removeAttributeNode($a);
+                }
+                $clean($ch);
+            } elseif (!($ch instanceof DOMText)) $n->removeChild($ch);   /* comments, processing instructions, anything else (CDATA keeps its text as a text node) */
+        }
+    };
+    foreach (iterator_to_array($root->attributes, false) as $a) if (!isset($at[$a->localName]) || $a->localName === 'href' || ($a->namespaceURI !== null && $a->localName !== 'space') || $badCss((string) $a->value)) $root->removeAttributeNode($a);
+    foreach (iterator_to_array($d->childNodes, false) as $ch) if ($ch !== $root) $d->removeChild($ch);
+    $clean($root);
+    $vb = array_map('floatval', preg_split('/[\s,]+/', trim($root->getAttribute('viewBox'))) ?: []);
+    if (count($vb) === 4 && $vb[2] > 0 && $vb[3] > 0) { $w = $vb[2]; $h = $vb[3]; }
+    else {
+        $w = (float) $root->getAttribute('width'); $h = (float) $root->getAttribute('height');   /* "120px" reads as 120 */
+        if (!($w > 0 && $h > 0) || preg_match('/%/', $root->getAttribute('width') . $root->getAttribute('height'))) return [null, 'That SVG has no size (no viewBox, width or height). Export it again, or use a PNG.'];
+        $root->setAttribute('viewBox', '0 0 ' . $w . ' ' . $h);
+    }
+    if ($root->getElementsByTagNameNS($NS, '*')->length < 2) return [null, 'That SVG has nothing in it the app can draw. Use a PNG instead.'];
+    $out = (string) $d->saveXML($root);
+    $out = (string) preg_replace_callback('/^<svg\b[^>]*>/', fn($m) => preg_replace('/\sxmlns:(?!xlink=)[A-Za-z_][\w.-]*="[^"]*"/', '', $m[0]), $out);   /* the editor's own namespaces, now unused */
+    return strlen($out) > LOGO_MAX ? [null, 'That SVG is over 500 KB once checked. Use a smaller file or a PNG.'] : [$out, $w, $h];
+}
+if ($action === 'logoset' || $action === 'logodel') {
+    if ($role !== 'admin' || !feature('company') || !empty(company()['a365'])) fail('Not allowed.', 403);   /* the Company screen's: editions and clients, never Sixfold 365 (its mark is its own) */
+    if (!$isPost) fail('POST required', 405);
+    $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true); $loc = is_array($loc) ? $loc : [];
+    $cur = logoInfo($loc);
+    if ($action === 'logodel') {
+        foreach (array_keys(LOGO_TYPES) as $t) @unlink(logoFile($t));
+        unset($loc['logo']);
+        if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true]);
+    }
+    $bg = !array_key_exists('bg', $body) || !empty($body['bg']);
+    $data = (string) ($body['data'] ?? '');
+    if ($data === '') {   /* the backing alone */
+        if (!$cur) fail('Upload a logo first.');
+        $loc['logo'] = ['bg' => $bg] + $cur;
+        if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'logo' => logoPublic($loc['logo'])]);
+    }
+    if (strlen($data) > (int) (LOGO_MAX * 1.4) + 200) fail('Use a logo file under 500 KB.');
+    $raw = base64_decode((string) preg_replace('#^data:[a-z/+.-]+;base64,#i', '', $data), true);
+    if ($raw === false || $raw === '') fail('That file did not arrive whole. Try again.');
+    if (strlen($raw) > LOGO_MAX) fail('Use a logo file under 500 KB.');
+    if (strncmp($raw, "\x89PNG\r\n\x1a\n", 8) === 0 || strncmp($raw, "\xFF\xD8\xFF", 3) === 0) {
+        $info = @getimagesizefromstring($raw);
+        if (!$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)) fail('That image would not open. Save it again as PNG or JPG.');
+        if ($info[0] < 16 || $info[1] < 16 || $info[0] > 4000 || $info[1] > 4000) fail('Use a logo between 16 and 4,000 pixels on each side.');
+        $type = $info[2] === IMAGETYPE_PNG ? 'png' : 'jpg'; $w = (int) $info[0]; $h = (int) $info[1];
+    } elseif (preg_match('/^\s*(<\?xml[^>]*>\s*)?((<!--.*?-->|<!DOCTYPE[^\[>]*(\[.*?\])?\s*>)\s*)*<svg[\s>]/is',(string) preg_replace('/^\xEF\xBB\xBF/', '', $raw))) {
+        [$raw, $w, $h] = svgClean($raw) + [null, 0, 0];
+        if ($raw === null) fail((string) $w);
+        $type = 'svg'; $w = (int) round($w); $h = (int) round($h);
+    } else fail('Use a PNG, JPG or SVG file.');
+    $v = substr(sha1($raw), 0, 12);
+    if (!writeTextAtomic(logoFile($type), $raw)) fail('Could not save that. Try again.', 500);
+    foreach (array_keys(LOGO_TYPES) as $t) if ($t !== $type) @unlink(logoFile($t));
+    $loc['logo'] = ['type' => $type, 'v' => $v, 'w' => max(1, $w), 'h' => max(1, $h), 'bg' => $bg, 'by' => $me, 'at' => time()];
+    if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'logo' => logoPublic($loc['logo'])]);
 }
 
 /* ---- booked doors for JobNimbus (2026-10-08, TraverseRoofing) ----

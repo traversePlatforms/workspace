@@ -54,7 +54,12 @@ function backupOne(string $site, string $dir): bool {
     $doc = ['backup' => $coName . ' field tools', 'made' => date('c'), 'by' => 'nightly',
             'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (' . $dir . '/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
             'files' => $files, 'photos' => $photos];
-    $json = json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    /* the Company screen's uploaded logo (2026-10-29): an image, so base64 under "binary"; the same as action=backup */
+    foreach (['png', 'jpg', 'svg'] as $lt) if (is_file($rounds . '/company-logo.' . $lt)) {
+        $doc['binary'][$dir . '/rounds/company-logo.' . $lt] = base64_encode((string) file_get_contents($rounds . '/company-logo.' . $lt));
+        $doc['restore'] .= ' Each entry in "binary" is a file in base64 (the company logo): decode it and put it back at its path.';
+    }
+    $json =json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     $gz = $json === false ? false : gzencode($json, 9);
     if ($gz === false) { fwrite(STDERR, "$dir backup: could not build the file\n"); return false; }
 

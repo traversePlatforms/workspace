@@ -17,6 +17,14 @@
   header{background:var(--brand);color:#fff}
   header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px}
   header b{font-size:20px} header a{color:#fff;font-weight:700;text-decoration:none;white-space:nowrap}
+  /* the company's own logo, tagline and contact lines (2026-10-29, Matthew: branding is a selling point); .bg = on a white backing for a dark logo */
+  header .co{display:flex;align-items:center;gap:12px;min-width:0;padding:10px 0}
+  header .co img{display:block;height:40px;width:auto;max-width:min(170px,42vw);object-fit:contain;flex:none}
+  header .co img.bg{box-sizing:border-box;height:46px;padding:4px 8px;border-radius:9px;background:#fff}
+  header .nm{display:grid;min-width:0;line-height:1.2}header .nm b{overflow-wrap:anywhere}header .nm small{font-size:13px;opacity:.88}
+  footer .fco{display:block;color:var(--ink);font-weight:700;margin-bottom:2px}
+  footer a{color:inherit}
+  @media (max-width:420px){header b{font-size:17px}header .nm small{display:none}}
   .band{padding:24px 0 6px}.band h1{font-size:clamp(26px,6vw,36px);line-height:1.15;margin:0 0 4px}.band p{margin:0;color:var(--soft)}
   main .wrap{display:grid;gap:16px;padding-top:14px;padding-bottom:40px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
@@ -40,7 +48,7 @@
 </style>
 </head>
 <body>
-<header><div class="wrap"><b id="co">Your quote</b><a id="call" href="#" hidden></a></div></header>
+<header><div class="wrap"><span class="co"><img id="logo" alt="" hidden><span class="nm"><b id="co">Your quote</b><small id="tag" hidden></small></span></span><a id="call" href="#" hidden></a></div></header>
 <div class="band"><div class="wrap"><h1 id="hi">Your quote</h1><p id="for"></p></div></div>
 <main><div class="wrap" id="main"><div class="skel"></div></div></main>
 <footer><div class="wrap" id="foot"></div></footer>
@@ -59,7 +67,22 @@
     document.title = 'Your quote · ' + B.name; document.getElementById('co').textContent = B.name;
     if (/^#[0-9a-f]{6}$/i.test(B.color || '')) document.documentElement.style.setProperty('--brand', B.color);
     var c = document.getElementById('call'); if (B.phone) { c.hidden = false; c.textContent = B.phone; c.href = tel(B.phone); }
-    document.getElementById('foot').textContent = B.name + (B.phone ? ' · ' + B.phone : '') + (B.email ? ' · ' + B.email : '');
+    brandMore(B, document.getElementById('foot'));
+  }
+  /* the company's logo (uploaded on its Company screen), tagline and a footer with its phone, email and website (2026-10-29) */
+  function brandMore(B, f) {
+    var lg = B.logo && /^\.\.\/api\/[a-z0-9-]+\.php\?action=logo&v=[0-9a-f]{12}$/.test(String(B.logo.url || '')) ? B.logo : null;
+    if (lg) {
+      var im = document.getElementById('logo'); im.src = lg.url; im.alt = B.name; im.hidden = false; if (lg.bg) im.className = 'bg';
+      var ic = document.createElement('link'); ic.rel = 'icon'; ic.href = lg.url; document.head.appendChild(ic);
+    }
+    if (B.tagline) { var tg = document.getElementById('tag'); tg.textContent = B.tagline; tg.hidden = false; }
+    f.textContent = ''; f.appendChild(el('span', 'fco', B.name));
+    var bits = [];
+    if (B.phone) { var a = el('a', null, B.phone); a.href = tel(B.phone); bits.push(a); }
+    if (B.email) { var m = el('a', null, B.email); m.href = 'mailto:' + B.email; bits.push(m); }
+    if (B.site) { var w = el('a', null, String(B.site).replace(/^https?:\/\//i, '')); w.href = /^https?:\/\//i.test(B.site) ? B.site : 'https://' + B.site; w.target = '_blank'; w.rel = 'noopener'; bits.push(w); }
+    bits.forEach(function (x, i) { if (i) f.appendChild(document.createTextNode(' · ')); f.appendChild(x); });
   }
   fetch(API + '?action=kitbrand', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { if (j && j.ok) brand(j); load(); }).catch(load);
   function load() {

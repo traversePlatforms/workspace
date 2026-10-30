@@ -3387,5 +3387,21 @@
  "does the work: their own jobs, schedule, notes, photos and Done; no leads, quotes or customers; doors only if you tick Knocks doors; takes payments only if you tick Takes payments": "hace el trabajo: sus propios trabajos, agenda, notas, fotos y Listo; sin prospectos, cotizaciones ni clientes; puertas solo si marcas Toca puertas; cobra solo si marcas Cobra pagos",
  "Doors, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.": "Las puertas, los mapas y las listas se abren cuando tu plan esté pagado y tu app lista: hasta 2 días hábiles, muchas veces antes.",
  "Doors, maps and lists open when your app is released: up to 2 business days after paying, often sooner.": "Las puertas, los mapas y las listas se abren cuando entreguemos tu app: hasta 2 días hábiles después de pagar, muchas veces antes.",
- "More time given: locks for their team on ": "Más tiempo dado: se bloquea para su equipo el "
+ "More time given: locks for their team on ": "Más tiempo dado: se bloquea para su equipo el ",
+ "Your logo": "Tu logotipo",
+ "Upload logo": "Subir logotipo",
+ "Change logo": "Cambiar logotipo",
+ "No logo yet": "Aún no hay logotipo",
+ "Choose a logo file": "Elige un archivo de logotipo",
+ "White backing behind it (for a dark logo on the bar colour)": "Fondo blanco detrás (para un logotipo oscuro sobre el color de la barra)",
+ "PNG, JPG or SVG, 500 KB at most; a wide logo with a clear or white background works best. It shows on the sign-in screen, the top bar, the quote and signing pages your customers open, receipts and emails. Email apps do not show SVG, so an emailed copy uses your name in place of an SVG logo: upload a PNG to have it there too.": "PNG, JPG o SVG, 500 KB como máximo; funciona mejor un logotipo ancho con fondo transparente o blanco. Aparece en la pantalla de inicio de sesión, la barra superior, las páginas de cotización y firma que abren tus clientes, los recibos y los correos. Las aplicaciones de correo no muestran SVG, así que un correo usa tu nombre en lugar de un logotipo SVG: sube un PNG para que aparezca ahí también.",
+ "Logo saved": "Logotipo guardado",
+ "Logo removed": "Logotipo quitado",
+ "Use a PNG, JPG or SVG file.": "Usa un archivo PNG, JPG o SVG.",
+ "That file would not open.": "Ese archivo no se pudo abrir.",
+ "Use a logo file under 500 KB.": "Usa un archivo de logotipo de menos de 500 KB.",
+ "Upload a logo first.": "Primero sube un logotipo.",
+ "That image would not open. Save it again as PNG or JPG.": "Esa imagen no se pudo abrir. Guárdala otra vez como PNG o JPG.",
+ "Use a logo between 16 and 4,000 pixels on each side.": "Usa un logotipo de entre 16 y 4,000 píxeles por lado.",
+ "That file did not arrive whole. Try again.": "Ese archivo no llegó completo. Inténtalo otra vez."
 }
