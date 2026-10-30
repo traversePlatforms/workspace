@@ -669,6 +669,7 @@ function tools() {
     '  "$PHP" "$D/push-alerts.php" --api="$a" "$@"',
     '  case " $* " in *" --dry-run "*) ;; *) "$PHP" "$D/crm-sync.php" --api="$a" ;; esac   # booked doors to JobNimbus, where connected (2026-10-08); never in a dry run',
     '  case " $* " in *" --dry-run "*) ;; *) "$PHP" "$D/fb-leads.php" --api="$a" ;; esac   # Facebook lead ads into the Pipeline, where connected (2026-10-30); never in a dry run',
+    '  case " $* " in *" --dry-run "*) ;; *) "$PHP" "$D/crm-sync.php" --api="$a" --pull ;; esac   # Sync from another system: sheets and CRMs in, where turned on (2026-10-30)',
     'done',
     '',
   ].join('\n');

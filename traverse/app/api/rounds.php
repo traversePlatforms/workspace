@@ -2374,7 +2374,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron', 'nlsweep', 'eodcron'], true)) {   /* + eodcron: the editions' end-of-day email (2026-10-30) */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron', 'nlsweep', 'eodcron', 'syncpoll'], true)) {   /* + syncpoll: Sync from another system (2026-10-30) */   /* + eodcron: the editions' end-of-day email (2026-10-30) */
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -3620,6 +3620,7 @@ if ($action === 'nlunsub') {
        . '</div></body></html>';
     exit;
 }
+if ($action === 'synchook') syncHookSession();   /* Sync from another system: the install's secret link for Zapier, Make or any app (2026-10-30); answered further down */
 /* everything past here needs a session */
 if (!$session) fail('Sign in first.', 401);
 $me   = (string) $session['n'];
@@ -3657,6 +3658,7 @@ if (!$viewing && $realMe === 'Claude Check') {
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms'];   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     $roOk = array_merge($roOk, ['careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
+    $roOk[] = 'sync';   /* Sync from another system's screen, read only: keys never shown (2026-10-30) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3752,6 +3754,7 @@ function edGate(string $a): void {
     /* + the single-door looks for every role but office once doors are off (a tech's switch, or the role's "See doors" turned off, 2026-10-29) */
     if (!edDoorsOk() && (in_array($a, ED_DOOR_LISTS, true) || ($role !== 'office' && in_array($a, ED_DOOR_ONE, true)))) $no('Doors are switched off for this account. An admin turns them on in Accounts.');
     $lift = permLiftAct($a);   /* an admin-only screen the admin has given this role (Roles and permissions, 2026-10-29) */
+    if (!$lift && in_array($a, ['kit', 'kitquote'], true) && permAdded('quote.phone')) $lift = true;   /* the Quick quote given to a setter or tech (2026-10-30): its own leads only, see pqLeadMine() */
     if ($sub === 'setter') {
         if (!$lift && in_array($a, ED_SETTER_NO, true)) $no('Prices, quotes, customers and payments are not part of this role. The sales rep or the office takes it from here.');
         if ($a === 'mark' && !empty($body['qs']) && !permAdded('leads.close')) $no('A setter books the appointment; the quote is the sales rep\'s. Mark it Booked.');
@@ -3805,6 +3808,9 @@ function permCat(): array {
         'quote.prices' => ['g' => 'quotes', 'l' => 'See prices', 's' => 'sees prices', 'd' => 'The quote kit\'s price list, and the money on their leads.', 'def' => '01100', 'need' => 'kit', 'acts' => ['kit'], 'as' => 'rep'],
         'quote.adjust' => ['g' => 'quotes', 'l' => 'Change the price on a quote', 's' => 'changes prices', 'd' => 'Type a higher total than the price list gives.', 'def' => '11111', 'need' => 'kit', 'eff' => true],
         'quote.discount' => ['g' => 'quotes', 'l' => 'Give discounts', 's' => 'discounts', 'd' => 'Type a lower total than the price list gives.', 'def' => '11111', 'need' => 'kit', 'eff' => true],
+        /* the Quick quote as a permission, not a role (2026-10-30, Matthew: "make quote online a permission but I don't think we need an extra role,
+           I can't expect them to pay for a quote only"): see phonequote below. The office had it already (a lead by hand, then Build a quote). */
+        'quote.phone' => ['g' => 'quotes', 'l' => 'Quote by phone or online (the Quick quote)', 's' => 'quotes by phone', 'd' => 'Someone called, texted or wrote in: type their details and address, build the quote and send it, with no door visit.', 'def' => '01000', 'need' => 'kit', 'acts' => ['phonequote']],
         'agree.send' => ['g' => 'pay', 'l' => 'Send agreements and take deposits', 's' => 'agreements and deposits', 'd' => 'Send the agreement to sign and take the deposit, on their own leads.', 'def' => '01r-0', 'need' => 'kit', 'acts' => ['signsend'], 'gacts' => ['jobs'], 'as' => 'rep'],
         'pay.take' => ['g' => 'pay', 'l' => 'Take payments', 's' => 'takes payments', 'd' => 'Charge the card on file or send a pay link for what a job still owes.', 'def' => '111-1', 'need' => 'walkdesk', 'sw' => ['manager' => 'pays', 'crew' => 'pays', 'tech' => 'pays']],
         'pay.paid' => ['g' => 'pay', 'l' => 'Mark jobs paid', 's' => 'marks jobs paid', 'd' => 'Record money taken by hand: cash, check, part payments.', 'def' => '010-0', 'need' => 'walkdesk', 'acts' => ['jobpaid', 'jobpart'], 'as' => 'office'],
@@ -3817,6 +3823,7 @@ function permCat(): array {
         'cust.see' => ['g' => 'cust', 'l' => 'See customers', 's' => 'customers', 'd' => 'The customer list, each customer\'s jobs and papers, and saved plans.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['customers', 'custjob', 'custdoc', 'plantemplates'], 'as' => 'office'],
         'cust.edit' => ['g' => 'cust', 'l' => 'Edit customers', 's' => 'edits customers', 'd' => 'Change a customer, add visits, make a customer from a lead.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['customersave', 'customerfrom', 'visitsave', 'custdocadd', 'plantemplatesave'], 'as' => 'office'],
         'cust.import' => ['g' => 'cust', 'l' => 'Import customers', 's' => 'imports customers', 'd' => 'Bring in customers, leads and past work from a spreadsheet.', 'def' => '00000', 'need' => 'imp', 'admin' => ['importcheck', 'importrun', 'imports', 'importundo', 'customerimport']],
+        'cust.sync' => ['g' => 'cust', 'l' => 'Sync from another system', 's' => 'syncs from another system', 'd' => 'Keep new leads, customers and jobs coming in from the old CRM, a Google Sheet, Zapier or Make.', 'def' => '00000', 'need' => 'imp', 'admin' => ['sync', 'synchookset', 'syncmap', 'syncsheet', 'syncsheetset', 'syncconn', 'syncrun', 'synctest', 'synchold']],   /* 2026-10-30, see syncOn() */
         'cust.export' => ['g' => 'cust', 'l' => 'Download customers and payments', 's' => 'downloads customers', 'd' => 'The customer and payment lists as spreadsheets, and the hand-off to another CRM.', 'def' => '00000', 'admin' => ['customersexport', 'paymentsexport', 'crmexport']],
         'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Properties, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
         'team.stats' => ['g' => 'team', 'l' => 'See their team\'s numbers', 's' => 'team\'s numbers', 'd' => 'The day-by-day numbers of the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'cond' => fn(string $a): bool => $a === 'stats' && ($other() || !empty($_REQUEST['team'])), 'gacts' => ['stats'], 'as' => 'manager'],
@@ -3942,6 +3949,7 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth',
     'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
+    'sync', 'synchookset', 'syncmap', 'syncsheet', 'syncsheetset', 'syncconn', 'syncrun', 'synctest', 'synchold', 'synchook',   /* + Sync from another system (2026-10-30) */
     'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel',   /* smart prices and terms (2026-10-30); + the fuel cost's prices */
     'careplans', 'careplanset', 'carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog',   /* plans and customer emails (2026-10-30) */
     'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
@@ -10701,6 +10709,7 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
         foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json', 'eod-report.json', 'ad-spend.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the end-of-day email's settings and the typed ad spend (2026-10-30) */   /* + the smart price list and the clause library (2026-10-30) */
         foreach (['care-plans.json', 'care-cfg.json', 'care-news.json', 'care-optin.json', 'care-qplans.json', 'newsletter-unsub.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + plans and customer emails (2026-10-30; their logs are *.log above) and the unsubscribe list */
         $add(DATA_DIR . '/fb-leads.json', 'sixfold-data/rounds/fb-leads.json');   /* the Facebook leads choices (2026-10-30); fbleads.log goes with the *.log above; never the tokens */
+        foreach (['sync.json', 'sync-links.json', 'sync-hold.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + Sync from another system (2026-10-30); its keys stay in the private folder */
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];
@@ -11102,9 +11111,16 @@ if (in_array($action, ['importcheck', 'importrun', 'imports', 'importundo'], tru
         out(['ok' => true, 'removed' => $removed, 'reverted' => $reverted, 'kept' => $kept]);
     }
     /* ---- check or run one call's rows ---- */
+    out(['ok' => true] + impRows($body, $action === 'importcheck'));
+}
+/** one call's rows checked ($dry) or saved: ['id', 'counts', 'rows']. Also how Sync from another system brings rows in (syncApply, 2026-10-30),
+    so a synced row is matched, added and undone exactly as an imported one. */
+function impRows(array $body, bool $dry): array {
+    global $me, $clean, $TEAM;
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $impLog = fn() => jsonLines(impLogFile());
     $kind = (string) ($body['kind'] ?? ''); if (!in_array($kind, IMP_KINDS, true)) fail('Pick what you are importing.');
     $rows = $body['rows'] ?? null; if (!is_array($rows) || !$rows) fail('Nothing to import.');
-    $dry = $action === 'importcheck';
     if (count($rows) > ($dry ? 5000 : 500)) fail($dry ? 'Check 5,000 at a time.' : 'Import 500 at a time.');
     $mode = ($body['mode'] ?? 'update') === 'skip' ? 'skip' : 'update';
     $impId = (string) ($body['id'] ?? '');
@@ -11289,7 +11305,782 @@ if (in_array($action, ['importcheck', 'importrun', 'imports', 'importundo'], tru
         if (!is_dir(custDir())) @mkdir(custDir(), 0750, true);
         appendLine(impLogFile(), ['id' => $impId, 'kind' => $kind, 'file' => $clean($body['file'] ?? '', 120), 'mode' => $mode, 'rows' => count($rows)] + $cnt + ['by' => $me, 'at' => $now]);
     }
-    out(['ok' => true, 'id' => $dry ? null : $impId, 'counts' => $cnt, 'rows' => $res]);
+    return ['id' => $dry ? null : $impId, 'counts' => $cnt, 'rows' => $res];
+}
+/* ==== SYNC FROM ANOTHER SYSTEM (2026-10-30, Matthew: "make sure we have a wide enough reach that whatever they are currently using they can
+ * port over") ==============================================================================================================================
+ * Editions and client installs (impOn()); never Sixfold 365, which keeps its own ClickUp pull (clickuppoll). Setup › Sync from another system.
+ * Three ways in, every one read-only on the other side and every one through the Import's own engine (impRows: the same field names, the
+ * same "someone already here" rules by house, phone, email and name, never a second copy; each run that brings anything is an import with its
+ * own id, listed under Import and undone there):
+ *   1. the universal link (synchook, before sign-in): a secret link per install that takes leads, customers or jobs as JSON or a form post,
+ *      one record or a list of up to 200. Our field names work as they are (SYNC_FIELDS, listed on the screen); any other names are mapped
+ *      once on the screen (syncmap). Made for Zapier ("Webhooks by Zapier", a paid Zapier plan) and Make (HTTP, Make a request), which reach
+ *      thousands of apps, and for any app that can send a webhook. A record we cannot read yet (no name, phone or email; a job with no date)
+ *      waits (sync-hold.json, the newest 500) until the fields are mapped, then "Bring them in".
+ *   2. a Google Sheet or a CSV link (syncsheet, syncsheetset): read again every 5 minutes to every day, its columns mapped like an import,
+ *      only new or changed rows brought in.
+ *   3. connectors (syncconn): HubSpot, Pipedrive, JobNimbus, ClickUp, Housecall Pro and HighLevel, with a key the company makes itself in that
+ *      system. Read every 5 minutes, new and changed records only. The others (Jobber, ServiceTitan, AccuLynx, Salesforce, Zoho) are listed with
+ *      why they go through Zapier or Make instead (SYNC_OTHERS: partner approval, terms, or an OAuth app Traverse has not registered).
+ * Each outside record keeps its link id (sync-links.json: the source's own id and a fingerprint of what we last read), so it is brought in
+ * once and again only when it changes; its status or owner is applied only when that changed over there, so a lead moved here is not moved
+ * back. Nothing is ever deleted, in either system. The 5-minute job (traverse-tools/crm-sync.php --pull, action syncpoll) runs the sheets and
+ * the connectors; "Sync now" runs one at once. Everything is OFF until the company's admin turns it on, and a source that keeps failing (an
+ * hour of refusals) is paused and the admins are told. Keys and links live in the private folder (sync-keys.json, 0600): the page only ever
+ * gets a key's last four characters. Settings, link ids, waiting records and the log (sync.json, sync-links.json, sync-hold.json, sync.log)
+ * sit beside the data and are in both backups. Admins, or a role given "Sync from another system" (cust.sync). */
+const SYNC_KINDS = ['leads', 'customers', 'jobs'];
+/* our field names per kind, as the Import's columns are (the page lists them with their meaning); jobs: done ones become past work, upcoming
+   ones the customer's next visit */
+const SYNC_FIELDS = [
+    'leads' => ['name', 'first', 'last', 'phone', 'email', 'address', 'town', 'zip', 'need', 'source', 'status', 'owner', 'date', 'ext', 'notes'],
+    'customers' => ['name', 'first', 'last', 'phone', 'email', 'address', 'town', 'zip', 'service', 'status', 'often', 'every', 'planName', 'price', 'listPrice', 'start', 'next', 'notes'],
+    'jobs' => ['name', 'first', 'last', 'phone', 'email', 'address', 'town', 'zip', 'date', 'service', 'price', 'crew', 'status', 'ext', 'notes'],
+];
+/* other names apps commonly send, letters and digits only, lower case -> our field (a saved mapping wins) */
+const SYNC_ALIAS = ['fullname' => 'name', 'contactname' => 'name', 'customername' => 'name', 'clientname' => 'name', 'displayname' => 'name', 'firstname' => 'first', 'givenname' => 'first',
+    'lastname' => 'last', 'surname' => 'last', 'familyname' => 'last', 'phonenumber' => 'phone', 'mobile' => 'phone', 'mobilephone' => 'phone', 'mobilenumber' => 'phone', 'cell' => 'phone',
+    'cellphone' => 'phone', 'telephone' => 'phone', 'tel' => 'phone', 'primaryphone' => 'phone', 'homephone' => 'phone', 'emailaddress' => 'email', 'mail' => 'email', 'primaryemail' => 'email',
+    'street' => 'address', 'streetaddress' => 'address', 'address1' => 'address', 'addressline1' => 'address', 'serviceaddress' => 'address', 'propertyaddress' => 'address', 'jobaddress' => 'address',
+    'city' => 'town', 'locality' => 'town', 'zipcode' => 'zip', 'postalcode' => 'zip', 'postcode' => 'zip', 'message' => 'notes', 'note' => 'notes', 'comments' => 'notes', 'comment' => 'notes',
+    'description' => 'notes', 'details' => 'notes', 'leadsource' => 'source', 'utmsource' => 'source', 'stage' => 'status', 'leadstatus' => 'status', 'id' => 'ext', 'externalid' => 'ext',
+    'recordid' => 'ext', 'leadid' => 'ext', 'jobid' => 'ext', 'assignedto' => 'owner', 'technician' => 'crew', 'nextvisit' => 'next', 'frequency' => 'often', 'amount' => 'price', 'total' => 'price',
+    'createdat' => 'date', 'datecreated' => 'date', 'completedat' => 'date', 'scheduleddate' => 'date', 'servicedate' => 'date', 'jobdate' => 'date', 'servicetype' => 'service', 'interestedin' => 'need'];
+/* the connectors: name, what the admin pastes (key, label, secret), where to find it, and the source of those steps */
+const SYNC_CONNS = [
+    'hubspot' => ['HubSpot', [['token', 'Service key', true]], ['In HubSpot: Settings (the gear) › Integrations › Service Keys › Create service key.', 'Give it the read scopes crm.objects.contacts.read and crm.objects.deals.read only, create it, and copy the key here.', 'A private app token you already have works the same way (HubSpot stopped making new private apps in October 2026).'],
+        'Contacts. A contact whose lifecycle stage is Customer comes in as a customer, the rest as leads.', 'https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/account-service-keys'],
+    'pipedrive' => ['Pipedrive', [['domain', 'Your Pipedrive address (the part before .pipedrive.com)', false], ['token', 'Personal API token', true]], ['In Pipedrive: your picture (top right) › Personal preferences › API.', 'Copy "Your personal API token" here. If you do not see the API tab, your Pipedrive admin turns API access on for your permission set.'],
+        'People come in as leads; a won deal makes its person a customer.', 'https://pipedrive.readme.io/docs/how-to-find-the-api-token'],
+    'jobnimbus' => ['JobNimbus', [['key', 'API key', true]], ['In JobNimbus: Settings › Integrations › API › New API key.', 'Give it an access profile that can see contacts and jobs, and copy the key here.'],
+        'Contacts come in as leads (as customers once their status says sold, won, paid or complete); finished jobs as past work. Homes you sent to JobNimbus from here are not brought back.', 'https://support.jobnimbus.com/what-does-it-mean-to-assign-an-api-key-an-access-profile'],
+    'clickup' => ['ClickUp', [['token', 'Personal API token (starts pk_)', true], ['list', 'List ID (the number in the list\'s web address)', false]], ['In ClickUp: your avatar › Settings › Apps › API Token › Generate, and copy it here.', 'Open the list you keep leads in: its ID is the number after /li/ in the web address.'],
+        'Each task in the list comes in as a lead; custom fields named Phone, Email, Address, City, ZIP, Source or Service are read by their names.', 'https://developer.clickup.com/docs/authentication'],
+    'hcp' => ['Housecall Pro', [['key', 'API key', true]], ['Housecall Pro gives API keys on its MAX plan.', 'In Housecall Pro (an admin): My Apps › API Key Management › Generate API key, pick Read-only, and copy it here.'],
+        'Customers, leads and jobs: finished jobs as past work, scheduled ones as the customer\'s next visit.', 'https://help.housecallpro.com/en/articles/8505035-api-overview'],
+    'ghl' => ['HighLevel (GoHighLevel)', [['token', 'Private Integration token', true], ['location', 'Location ID (sub-account)', false]], ['In HighLevel, in the sub-account: Settings › Private Integrations › Create new integration (if you do not see it, turn it on in Labs).', 'Give it the scope View Contacts (contacts.readonly) only and copy the token here. The Location ID is under Settings › Business Profile.'],
+        'Contacts come in as leads; a contact tagged customer comes in as a customer.', 'https://marketplace.gohighlevel.com/docs/Authorization/PrivateIntegrationsToken'],
+];
+/* the ones not built as connectors, and why (checked on each one's own developer pages, 2026-10-30) */
+const SYNC_OTHERS = [
+    ['Jobber', 'Jobber has no API keys: a company connects through an app registered in Jobber\'s Developer Center. A draft app works for up to 5 companies without Jobber\'s review; this app is not registered with Jobber yet. Use Zapier or Make for now.', 'https://developer.getjobber.com/docs/custom_integrations/'],
+    ['ServiceTitan', 'ServiceTitan does not allow a company\'s app key to be given to another software company; that needs a Certified App reviewed by ServiceTitan. Use Zapier or Make, or a CSV export and Import.', 'https://help.servicetitan.com/docs/understand-approved-integration-paths-in-servicetitan'],
+    ['AccuLynx', 'AccuLynx asks software companies to apply as partners before connecting. Use Zapier or Make, or a CSV export and Import.', 'https://apidocs.acculynx.com/docs/getting-started'],
+    ['Salesforce', 'Needs an External Client App your Salesforce admin makes (Enterprise edition or higher). Not built yet: use Zapier or Make.', 'https://help.salesforce.com/s/articleView?id=xcloud.configure_client_credentials_flow_for_external_client_apps.htm&type=5'],
+    ['Zoho CRM', 'Needs a Zoho Self Client and a one-time code exchanged within minutes. Not built yet: use Zapier or Make.', 'https://www.zoho.com/crm/developer/docs/api/v8/register-client.html'],
+];
+const SYNC_EVERY = [5, 15, 30, 60, 360, 1440];
+function syncOn(): bool { return impOn(); }
+function syncCfgFile(): string { return DATA_DIR . '/sync.json'; }
+function syncKeysFile(): string { return pushPrivDir() . '/sync-keys.json'; }
+function syncCfg(): array { $j = json_decode((string) @file_get_contents(syncCfgFile()), true); $j = is_array($j) ? $j : []; return $j + ['hook' => [], 'sheets' => [], 'conns' => []]; }
+function syncKeys(): array { $j = json_decode((string) @file_get_contents(syncKeysFile()), true); return is_array($j) ? $j : []; }
+/** change sync.json under its lock; the function gets and returns the whole settings */
+function syncCfgEdit(callable $fn): array {
+    $lk = @fopen(syncCfgFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $c = $fn(syncCfg()); if (!writeJsonAtomic(syncCfgFile(), $c)) { flock($lk, LOCK_UN); fail('Could not save that. Try again.', 500); }
+    flock($lk, LOCK_UN); return $c;
+}
+function syncKeysEdit(callable $fn): array {
+    $f = syncKeysFile(); $lk = @fopen($f . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $k = $fn(syncKeys()); if (!writeJsonAtomic($f, $k)) { flock($lk, LOCK_UN); fail('Could not save that. Try again.', 500); }
+    @chmod($f, 0600); flock($lk, LOCK_UN); return $k;
+}
+function syncLog(array $row): void { appendLine(DATA_DIR . '/sync.log', $row + ['at' => time()]); }
+function syncTail(string $s): string { return $s === '' ? '' : '••••' . substr($s, -4); }
+/** the test copy's stand-in for every outside system (TRAVERSE_SYNC_MOCK); never set on the host */
+function syncMock(): string { return rtrim((string) getenv('TRAVERSE_SYNC_MOCK'), '/'); }
+function syncBase(string $k, string $real): string { return syncMock() !== '' ? syncMock() . '/' . $k : $real; }
+/** one outside call: [HTTP status, decoded JSON or null, error text, raw]. HTTPS only (the test copy's stand-in excepted); no redirects for APIs */
+function syncHttp(string $method, string $url, array $hdr, $body = null, int $timeout = 25, int $redirects = 0, int $maxBytes = 5242880): array {
+    $mock = syncMock() !== '' && str_starts_with($url, syncMock());
+    if (!$mock && !preg_match('#^https://#i', $url)) return [0, null, 'not an https link', ''];
+    $hdr[] = agentHeader(); $hdr[] = 'Accept: application/json, text/csv, text/plain, */*';
+    $payload = $body === null ? null : (is_string($body) ? $body : json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    if ($payload !== null && !is_string($body)) $hdr[] = 'Content-Type: application/json';
+    if (function_exists('curl_init')) {
+        $c = curl_init($url); $got = '';
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => false, CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_HTTPHEADER => $hdr,
+            CURLOPT_FOLLOWLOCATION => $redirects > 0, CURLOPT_MAXREDIRS => $redirects,
+            CURLOPT_WRITEFUNCTION => function ($h, $chunk) use (&$got, $maxBytes) { $got .= $chunk; return strlen($got) > $maxBytes ? 0 : strlen($chunk); }]);
+        if (!$mock && defined('CURLPROTO_HTTPS')) { curl_setopt($c, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS); curl_setopt($c, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS); }
+        if ($payload !== null) curl_setopt($c, CURLOPT_POSTFIELDS, $payload);
+        $ok = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); $err = $ok === false ? (strlen($got) > $maxBytes ? 'more than ' . intdiv($maxBytes, 1048576) . ' MB' : curl_error($c)) : ''; curl_close($c);
+        $raw = $got;
+    } else {
+        $ctx = stream_context_create(['http' => ['method' => $method, 'header' => implode("\r\n", $hdr), 'content' => $payload ?? '', 'timeout' => $timeout, 'ignore_errors' => true, 'follow_location' => $redirects > 0 ? 1 : 0, 'max_redirects' => max(1, $redirects)]]);
+        $raw = @file_get_contents($url, false, $ctx, 0, $maxBytes + 1); $code = 0; $err = $raw === false ? 'no answer' : '';
+        foreach (($http_response_header ?? []) as $h) if (preg_match('#^HTTP/\S+\s+(\d{3})#', $h, $mm)) $code = (int) $mm[1];
+        $raw = (string) $raw; if (strlen($raw) > $maxBytes) { $err = 'more than ' . intdiv($maxBytes, 1048576) . ' MB'; $code = 0; }
+    }
+    $j = json_decode($raw, true);
+    return [$code, is_array($j) ? $j : null, $err, $raw];
+}
+/** what an outside system's refusal says, for the screen (never the key) */
+function syncErr(string $who, int $code, ?array $j, string $err): string {
+    if ($code === 401 || $code === 403) return $who . ' refused the key (' . $code . '). Make a new one there and connect again.';
+    if ($code === 429) return $who . ' asked us to slow down (429). The next run tries again.';
+    $msg = ''; foreach (['message', 'error', 'err', 'title'] as $k) if (isset($j[$k]) && is_string($j[$k])) { $msg = $j[$k]; break; }
+    return $who . ' answered ' . ($code ?: 'nothing') . ($err !== '' ? ' (' . $err . ')' : '') . ($msg !== '' ? ': ' . mb_substr($msg, 0, 140) : '') . '.';
+}
+/** a nested record as flat "a.b" => text; lists of plain values joined with commas */
+function syncFlat($v, string $p = '', array &$o = [], int $depth = 0): array {
+    if ($depth > 4 || count($o) > 200) return $o;
+    if (is_array($v)) {
+        if ($v && array_is_list($v) && !array_filter($v, 'is_array')) { $o[$p] = mb_substr(implode(', ', array_map(fn($x) => is_bool($x) ? ($x ? 'yes' : 'no') : (string) $x, $v)), 0, 2000); return $o; }
+        foreach ($v as $k => $x) syncFlat($x, $p === '' ? (string) $k : $p . '.' . $k, $o, $depth + 1);
+        return $o;
+    }
+    if ($p !== '' && $v !== null) $o[$p] = mb_substr(is_bool($v) ? ($v ? 'yes' : 'no') : (string) $v, 0, 2000);
+    return $o;
+}
+function syncNorm(string $k): string { return (string) preg_replace('/[^a-z0-9]/', '', strtolower($k)); }
+/** one outside record in our field names: the saved mapping first, then our own names, then the common other names; first + last make the
+    name, and "123 Main St, Castle Rock, CO 80104" in one field is split as the Import's page does */
+function syncMapRow(array $rec, string $kind, array $map): array {
+    $ours = SYNC_FIELDS[$kind]; $byNorm = []; foreach ($ours as $f) $byNorm[syncNorm($f)] = $f;
+    $o = [];
+    foreach (syncFlat($rec) as $k => $v) {
+        $v = trim((string) $v); if ($v === '') continue;
+        if (array_key_exists($k, $map)) $f = (string) $map[$k];
+        else { $n = syncNorm($k); $last = syncNorm((string) preg_replace('/^.*\./', '', $k)); $f = $byNorm[$n] ?? (SYNC_ALIAS[$n] ?? ($byNorm[$last] ?? (SYNC_ALIAS[$last] ?? ''))); }
+        if ($f === 'need' && $kind !== 'leads') $f = 'service';
+        if ($f === 'service' && $kind === 'leads') $f = 'need';
+        if ($f === '' || !in_array($f, $ours, true)) continue;
+        $o[$f] = isset($o[$f]) && $f !== 'ext' ? $o[$f] . ' ' . $v : $v;
+    }
+    if (empty($o['name']) && (!empty($o['first']) || !empty($o['last']))) $o['name'] = trim(($o['first'] ?? '') . ' ' . ($o['last'] ?? ''));
+    unset($o['first'], $o['last']);
+    if (!empty($o['address']) && empty($o['town']) && strpos($o['address'], ',') > 0) {
+        $p = explode(',', $o['address']); $o['address'] = trim(array_shift($p));
+        $t = trim((string) preg_replace('/,?\s*([A-Z]{2})?\s*\d{5}(-\d{4})?\s*$/', '', implode(',', $p))); $t = trim((string) preg_replace('/,\s*[A-Za-z]{2}$/', '', $t)); $t = trim($t, ', ');
+        if ($t !== '') $o['town'] = $t;
+        if (empty($o['zip']) && preg_match('/\b(\d{5})(-\d{4})?\s*$/', implode(',', $p), $m)) $o['zip'] = $m[1];
+    }
+    return $o;
+}
+/** jobs as the Import takes them: done (dated today or before) -> past work; upcoming -> the customer and their next visit; cancelled -> left out */
+function syncJobRows(array $rec, string $today): array {
+    $st = strtolower((string) ($rec['status'] ?? ''));
+    if (preg_match('/cancel|void|declin|no.?show|deleted/', $st)) return ['skip' => 'Cancelled'];
+    $d = impDate((string) ($rec['date'] ?? ''));
+    if ($d === '') return ['hold' => 'No date for the job'];
+    $who = array_intersect_key($rec, array_flip(['name', 'phone', 'email', 'address', 'town', 'zip']));
+    if ($d <= $today) return ['work' => $who + array_intersect_key($rec, array_flip(['service', 'price', 'crew', 'notes'])) + ['date' => $d]];
+    return ['customers' => $who + array_intersect_key($rec, array_flip(['service'])) + ['next' => $d]];
+}
+/** the records a source sent, in our names, brought in through the Import: [added, updated, skipped, look, held, imp ids].
+ *  $recs: [['_ext' => link id or '', '_raw' => what came (kept while it waits), ...our fields]] */
+function syncApply(string $src, string $label, string $kind, array $recs, string $owner = ''): array {
+    global $me, $TEAM;
+    $tot = ['n' => count($recs), 'added' => 0, 'updated' => 0, 'skipped' => 0, 'look' => 0, 'held' => 0, 'same' => 0, 'imp' => []];
+    if (!$recs) return $tot;
+    $lk = @fopen(DATA_DIR . '/sync-apply.lock', 'c'); if ($lk) flock($lk, LOCK_EX);   /* the link, the job and Sync now never add the same person twice at once */
+    $links = json_decode((string) @file_get_contents(DATA_DIR . '/sync-links.json'), true) ?: [];
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    if ($owner !== '' && !activeName($owner)) $owner = '';
+    $hold = []; $byKind = []; $linkNew = [];
+    foreach ($recs as $r) {
+        $ext = (string) ($r['_ext'] ?? ''); $raw = $r['_raw'] ?? null; unset($r['_ext'], $r['_raw']);
+        $r = array_filter(array_map(fn($v) => is_scalar($v) ? trim((string) $v) : '', $r), fn($v) => $v !== '');
+        $fp = md5(json_encode($r));
+        $L = $ext !== '' ? ($links[$ext] ?? null) : null;
+        if ($L && ($L['h'] ?? '') === $fp) { $tot['same']++; continue; }   /* nothing changed over there since the last read */
+        if ($L && isset($r['status']) && ($L['st'] ?? null) === $r['status']) unset($r['status']);   /* their status moves ours only when it changed there */
+        if ($L && isset($r['owner']) && ($L['ow'] ?? null) === $r['owner']) unset($r['owner']);
+        $k2 = $kind; $row = $r;
+        if ($kind === 'jobs') {
+            $j = syncJobRows($r, $today);
+            if (isset($j['skip'])) { $tot['skipped']++; if ($ext !== '') $linkNew[$ext] = ['h' => $fp]; continue; }
+            if (isset($j['hold'])) { $hold[] = ['why' => $j['hold'], 'raw' => $raw ?? $r]; continue; }
+            $k2 = isset($j['work']) ? 'work' : 'customers'; $row = $j[$k2];
+        }
+        if ($k2 !== 'work' && trim(($row['name'] ?? '') . ($row['phone'] ?? '') . ($row['email'] ?? '')) === '') { $hold[] = ['why' => 'No name, phone or email', 'raw' => $raw ?? $r]; continue; }
+        if ($k2 === 'work' && trim(($row['name'] ?? '') . ($row['phone'] ?? '') . ($row['email'] ?? '') . ($row['address'] ?? '')) === '') { $hold[] = ['why' => 'No name, phone, email or address for the job', 'raw' => $raw ?? $r]; continue; }
+        if ($k2 === 'leads' && $ext !== '') $row['ext'] = substr((string) preg_replace('/[^0-9A-Za-z_:.-]/', '', $ext), 0, 64);
+        $byKind[$k2][] = ['row' => $row, 'ext' => $ext, 'fp' => $fp, 'st' => $r['status'] ?? ($L['st'] ?? null), 'ow' => $r['owner'] ?? ($L['ow'] ?? null), 'raw' => $raw ?? $r, 'known' => (bool) $L];
+    }
+    if (!isset($TEAM)) { global $basePeople, $acct, $sessionKey; $TEAM = teamInfo($basePeople, $acct, $sessionKey); }
+    $was = $me; $me = 'Sync: ' . $label;
+    try {
+        foreach ($byKind as $k2 => $items) foreach (array_chunk($items, 500) as $chunk) {
+            foreach ([true, false] as $isNew) {   /* the default owner goes to new people only, never over a reassignment made here */
+                $part = array_values(array_filter($chunk, fn($x) => $x['known'] !== $isNew)); if (!$part) continue;
+                $res = impRows(['kind' => $k2, 'rows' => array_column($part, 'row'), 'mode' => 'update', 'owner' => $isNew ? $owner : '', 'makeMissing' => true, 'file' => $label . ' (' . $k2 . ')', 'src' => ''], false);
+                $tot['imp'][] = $res['id'];
+                foreach (['added', 'updated', 'skipped', 'look'] as $c) $tot[$c] += (int) ($res['counts'][$c] ?? 0);
+                foreach ($res['rows'] as $x) {
+                    $it = $part[(int) $x['i']] ?? null; if (!$it) continue;
+                    if ($x['act'] === 'look') { $hold[] = ['why' => (string) ($x['why'] ?? 'Needs a look'), 'raw' => $it['raw']]; continue; }
+                    if ($it['ext'] !== '') $linkNew[$it['ext']] = array_filter(['h' => $it['fp'], 'st' => $it['st'], 'ow' => $it['ow'], 'at' => time()], fn($v) => $v !== null);
+                }
+            }
+        }
+    } finally { $me = $was; }
+    if ($linkNew) { foreach ($linkNew as $e => $v) $links[$e] = $v; writeJsonAtomic(DATA_DIR . '/sync-links.json', $links); }
+    if ($hold) { syncHoldAdd($src, $kind, $hold); $tot['held'] = count($hold); }
+    if ($lk) flock($lk, LOCK_UN);
+    if ($tot['added'] || $tot['updated'] || $tot['held'] || $tot['look']) syncLog(['src' => $src, 'label' => $label, 'kind' => $kind] + array_diff_key($tot, ['same' => 1]));
+    return $tot;
+}
+function syncHoldFile(): string { return DATA_DIR . '/sync-hold.json'; }
+function syncHold(): array { $j = json_decode((string) @file_get_contents(syncHoldFile()), true); return is_array($j['items'] ?? null) ? $j['items'] : []; }
+function syncHoldAdd(string $src, string $kind, array $items): void {
+    $lk = @fopen(syncHoldFile() . '.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
+    $all = syncHold(); foreach ($items as $x) $all[] = ['src' => $src, 'kind' => $kind, 'why' => (string) $x['why'], 'raw' => $x['raw'], 'at' => time()];
+    writeJsonAtomic(syncHoldFile(), ['items' => array_slice($all, -500)]);
+    if ($lk) flock($lk, LOCK_UN);
+}
+/** the admins' alerts, once per tag */
+function syncTell(string $title, string $text, string $tag): void {
+    global $basePeople, $acct, $sessionKey;
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $row) if (!$row['off'] && $row['role'] === 'admin' && !boardHidden((string) $row['name'])) feedAdd((string) $row['name'], $title, $text, './', $tag, '', true);
+}
+/** a source's run noted on its settings: the last time, counts, the error; an hour of failures in a row pauses it and tells the admins */
+function syncNote(string $where, string $id, array $res, string $err): void {
+    $name = '';
+    syncCfgEdit(function (array $c) use ($where, $id, $res, $err, &$name) {
+        if (!isset($c[$where][$id])) return $c;
+        $s = &$c[$where][$id]; $s['last'] = ['at' => time(), 'ok' => $err === '', 'err' => $err] + array_intersect_key($res, array_flip(['n', 'added', 'updated', 'skipped', 'look', 'held', 'same']));
+        if ($err === '') { $s['fails'] = 0; if (array_sum(array_intersect_key($res, array_flip(['added', 'updated']))) > 0) $s['lastIn'] = time(); }
+        else { $s['fails'] = (int) ($s['fails'] ?? 0) + 1; if ($s['fails'] >= 12 && !empty($s['on'])) { $s['on'] = false; $s['paused'] = 'failing'; $name = (string) ($s['name'] ?? $id); } }
+        return $c;
+    });
+    if ($err !== '') syncLog(['src' => $where . ':' . $id, 'err' => $err]);
+    if ($name !== '') syncTell('Sync paused: ' . $name, 'It failed for an hour in a row (' . $err . '). Nothing was changed. Open Setup › Sync from another system to fix it and turn it back on.', 'syncpause-' . $id . '-' . date('Ymd'));
+}
+
+/* ---- 1. the universal link ---- */
+function syncHookUrl(string $key, string $kind): string {
+    $h = (string) ($_SERVER['HTTP_HOST'] ?? ''); if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) $h = 'traverseplatforms.com';
+    $path = (string) ($_SERVER['SCRIPT_NAME'] ?? '/api/' . basename(__FILE__)); if (!preg_match('#^/[A-Za-z0-9/_.-]+\.php$#', $path)) $path = '/api/' . basename(__FILE__);
+    return (PHP_SAPI === 'cli-server' ? 'http' : 'https') . '://' . $h . $path . '?action=synchook&k=' . $key . '&kind=' . $kind;
+}
+/** the records in what was sent: one object, a list, or a list under records/data/items/leads/customers/jobs */
+function syncHookRecords(array $in): array {
+    if ($in && array_is_list($in)) return $in;
+    foreach (['records', 'data', 'items', 'leads', 'customers', 'jobs', 'contacts'] as $k) if (isset($in[$k]) && is_array($in[$k]) && array_is_list($in[$k])) return $in[$k];
+    return $in ? [$in] : [];
+}
+/** before sign-in (called above the session check): the link's key proved, the link on, then the request goes on as the install's own
+    "Sync link" admin session, for this one action only (synchook below), the way the command-line jobs do */
+function syncHookSession(): void {
+    global $session, $isSuper, $isPost;
+    header('Cache-Control: no-store');
+    if (!syncOn()) fail('Not here.', 404);
+    $k = (string) ($_GET['k'] ?? ''); $hk = (string) (syncKeys()['hook'] ?? '');
+    if (!preg_match('/^[0-9a-f]{40}$/D', $k) || $hk === '' || !hash_equals($hk, $k)) {
+        if (!throttleTake(rateFile('synchookbad|' . clientKey()), 30, 3600)) fail('Too many tries.', 429);
+        fail('Not here.', 404);
+    }
+    if (empty(syncCfg()['hook']['on'])) fail('This link is paused. Turn it on in Setup › Sync from another system.', 403);
+    if (!$isPost) fail('Send it as a POST (JSON or a form).', 405);
+    if (!throttleTake(rateFile('synchook|' . substr($k, 0, 12)), 1200, 3600)) fail('Too many records this hour. Send them in lists of up to 200.', 429);
+    $session = ['n' => 'Sync link', 'r' => 'admin', 'c' => '']; $isSuper = false;
+}
+function syncHookRun(): never {
+    global $body;
+    $H = syncCfg()['hook'];
+    $raw = (string) (file_get_contents('php://input') ?: '');
+    if (strlen($raw) > 1048576) fail('Too big: send up to 1 MB a time.', 413);
+    $in = $body;
+    if (!$in) { if ($_POST) $in = $_POST; elseif ($raw !== '' && $raw[0] !== '{' && $raw[0] !== '[') { parse_str($raw, $pf); $in = is_array($pf) ? $pf : []; } }
+    $recs = syncHookRecords(is_array($in) ? $in : []);
+    if (!$recs) fail('Nothing in it: send the fields as JSON or as a form.');
+    if (count($recs) > 200) fail('Up to 200 records a time.', 413);
+    $kind = (string) ($_GET['kind'] ?? ($H['kind'] ?? 'leads')); if (!in_array($kind, SYNC_KINDS, true)) $kind = 'leads';
+    $map = (array) ($H['map'][$kind] ?? []); $out = []; $seen = [];
+    foreach ($recs as $r) {
+        if (!is_array($r)) continue;
+        foreach (syncFlat($r) as $f => $v) if (count($seen) < 80 && !isset($seen[$f])) $seen[$f] = mb_substr((string) $v, 0, 40);
+        $m = syncMapRow($r, $kind, $map);
+        $out[] = ['_ext' => isset($m['ext']) && $m['ext'] !== '' ? 'hook:' . $kind . ':' . $m['ext'] : '', '_raw' => $r] + $m;
+    }
+    $res = syncApply('hook', 'Sync link', $kind, $out, (string) ($H['owner'] ?? ''));
+    syncCfgEdit(function (array $c) use ($kind, $seen, $res) {
+        $f = (array) ($c['hook']['seen'][$kind] ?? []); foreach ($seen as $k => $v) $f[$k] = $v;
+        $c['hook']['seen'][$kind] = array_slice($f, -80, null, true);
+        $c['hook']['last'] = ['at' => time(), 'kind' => $kind] + array_intersect_key($res, array_flip(['n', 'added', 'updated', 'skipped', 'look', 'held', 'same']));
+        return $c;
+    });
+    out(['ok' => true, 'received' => $res['n'], 'added' => $res['added'], 'updated' => $res['updated'], 'unchanged' => $res['same'] + $res['skipped'], 'waiting' => $res['held'], 'needsLook' => $res['look']]);
+}
+
+/* ---- 2. a Google Sheet or a CSV link ---- */
+/** the link as CSV: a Google Sheet's edit or published link turned into its CSV form; https and a public address only */
+function syncSheetUrl(string $u): string {
+    $u = trim($u);
+    if (preg_match('#^https://docs\.google\.com/spreadsheets/d/e/([A-Za-z0-9_-]{20,200})/pub(html)?(\?[^\s#]*)?#', $u, $m)) {
+        parse_str(ltrim($m[3] ?? '', '?'), $q); $gid = isset($q['gid']) && ctype_digit((string) $q['gid']) ? '&gid=' . $q['gid'] : '';
+        return 'https://docs.google.com/spreadsheets/d/e/' . $m[1] . '/pub?output=csv' . $gid . (isset($q['single']) ? '&single=true' : '');
+    }
+    if (preg_match('#^https://docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]{20,200})(/[^?\#]*)?(\?[^\#]*)?(\#.*)?$#', $u, $m)) {
+        $gid = preg_match('/gid=(\d+)/', ($m[3] ?? '') . ($m[4] ?? ''), $g) ? '&gid=' . $g[1] : '';
+        return 'https://docs.google.com/spreadsheets/d/' . $m[1] . '/export?format=csv' . $gid;
+    }
+    return $u;
+}
+function syncPublicHost(string $url): bool {
+    if (syncMock() !== '' && str_starts_with($url, syncMock())) return true;
+    $h = (string) parse_url($url, PHP_URL_HOST); if ($h === '' || !preg_match('#^https://#i', $url)) return false;
+    $ips = @gethostbynamel($h); if (!$ips) return false;
+    foreach ($ips as $ip) if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return false;
+    return true;
+}
+/** the sheet's rows: [head, rows (each a list), error] */
+function syncSheetRead(string $url): array {
+    $u = syncSheetUrl($url);
+    if (!syncPublicHost($u)) return [[], [], 'That link has to start with https:// and be on the open internet.'];
+    [$code, , $err, $raw] = syncHttp('GET', $u, [], null, 30, 4);
+    if ($code !== 200) return [[], [], $code === 401 || $code === 403 || $code === 404 ? 'The sheet is not shared. In Google Sheets: File › Share › Publish to web, pick the sheet and "Comma-separated values (.csv)", and paste the link it gives.' : 'The link answered ' . ($code ?: 'nothing') . ($err !== '' ? ' (' . $err . ')' : '') . '.'];
+    $raw = (string) preg_replace('/^\xEF\xBB\xBF/', '', $raw);
+    if (preg_match('/^\s*</', $raw)) return [[], [], 'That link gives a web page, not a spreadsheet. Publish it as CSV (File › Share › Publish to web, "Comma-separated values") and paste that link.'];
+    $first = strtok($raw, "\n"); $sep = ','; $best = -1; foreach ([',', "\t", ';'] as $s) { $n = substr_count((string) $first, $s); if ($n > $best) { $best = $n; $sep = $s; } }
+    $fh = fopen('php://temp', 'w+'); fwrite($fh, $raw); rewind($fh); $rows = [];
+    while (($r = fgetcsv($fh, 0, $sep, '"', '')) !== false) { if ($r === [null]) continue; if (array_filter($r, fn($c) => trim((string) $c) !== '')) $rows[] = $r; if (count($rows) > 20001) break; }
+    fclose($fh);
+    if (!$rows) return [[], [], 'The sheet is empty.'];
+    $head = array_map(fn($h) => mb_substr(trim((string) $h), 0, 80), array_shift($rows));
+    return [$head, $rows, count($rows) > 20000 ? 'Up to 20,000 rows: the rest were left out.' : ''];
+}
+function syncSheetRun(string $id): array {
+    $C = syncCfg(); $S = $C['sheets'][$id] ?? null; $url = (string) (syncKeys()['sheets'][$id] ?? '');
+    if (!$S || $url === '') return ['err' => 'No such sheet.'];
+    [$head, $rows, $err] = syncSheetRead($url);
+    if (!$head) { syncNote('sheets', $id, [], $err); return ['err' => $err]; }
+    $kind = (string) $S['kind']; $map = (array) ($S['map'] ?? []); $recs = [];
+    foreach (array_slice($rows, 0, 20000) as $r) {
+        $o = []; foreach ($head as $i => $h) if ($h !== '' && isset($r[$i])) $o[$h] = (string) $r[$i];
+        $m = syncMapRow($o, $kind, $map + array_fill_keys(array_diff($head, array_keys($map)), ''));   /* a sheet uses its saved columns only */
+        $idk = ($m['ext'] ?? '') !== '' ? 'x' . $m['ext'] : md5(mb_strtolower(($m['name'] ?? '') . '|' . impDigits($m['phone'] ?? '') . '|' . impEmail($m['email'] ?? '') . '|' . ($m['address'] ?? '') . ($kind === 'jobs' ? '|' . ($m['date'] ?? '') : '')));
+        $recs[] = ['_ext' => 'sh:' . $id . ':' . substr($idk, 0, 40), '_raw' => $o] + $m;
+    }
+    $res = syncApply('sheet:' . $id, (string) $S['name'], $kind, $recs, (string) ($S['owner'] ?? ''));
+    syncNote('sheets', $id, $res, $err);
+    return $res + ['err' => $err];
+}
+
+/* ---- 3. the connectors: each reads what changed since its last run, in pages, up to its share of the run's time ---- */
+/** a record in our names, empty values dropped */
+function syncRec(string $ext, array $f): array { return ['_ext' => $ext] + array_filter(array_map(fn($v) => trim((string) $v), $f), fn($v) => $v !== ''); }
+function syncDay($v): string { if ($v === null || $v === '') return ''; $t = is_numeric($v) ? (int) $v : strtotime((string) $v); if ($t > 100000000000) $t = intdiv($t, 1000); return $t > 0 ? (new DateTime('@' . $t))->setTimezone(new DateTimeZone(appTz()))->format('Y-m-d') : ''; }
+function syncHubspot(array $K, array &$st, float $until): array {
+    $base = syncBase('hubspot', 'https://api.hubapi.com'); $H = ['Authorization: Bearer ' . $K['token']];
+    $out = ['leads' => [], 'customers' => []]; $since = (string) ($st['since'] ?? ''); $after = null; $pages = 0; $max = $since;
+    do {
+        $b = ['sorts' => [['propertyName' => 'lastmodifieddate', 'direction' => 'ASCENDING']], 'limit' => 100,
+              'properties' => ['firstname', 'lastname', 'email', 'phone', 'mobilephone', 'address', 'city', 'zip', 'lifecyclestage', 'hs_lead_status', 'createdate', 'lastmodifieddate']];
+        if ($since !== '') $b['filterGroups'] = [['filters' => [['propertyName' => 'lastmodifieddate', 'operator' => 'GTE', 'value' => $since]]]];
+        if ($after !== null) $b['after'] = $after;
+        [$code, $j, $err] = syncHttp('POST', $base . '/crm/v3/objects/contacts/search', $H, $b);
+        if ($code !== 200 || !is_array($j)) return $out + ['err' => syncErr('HubSpot', $code, $j, $err)];
+        foreach ((array) ($j['results'] ?? []) as $r) {
+            $p = (array) ($r['properties'] ?? []); $cust = strtolower((string) ($p['lifecyclestage'] ?? '')) === 'customer';
+            $f = ['name' => trim(($p['firstname'] ?? '') . ' ' . ($p['lastname'] ?? '')), 'phone' => $p['phone'] ?? ($p['mobilephone'] ?? ''), 'email' => $p['email'] ?? '', 'address' => $p['address'] ?? '', 'town' => $p['city'] ?? '', 'zip' => $p['zip'] ?? ''];
+            if ($cust) $out['customers'][] = syncRec('hs:c:' . $r['id'], $f + ['start' => syncDay($p['createdate'] ?? '')]);
+            else $out['leads'][] = syncRec('hs:c:' . $r['id'], $f + ['status' => strtolower(str_replace('_', ' ', (string) ($p['hs_lead_status'] ?? ''))), 'date' => $p['createdate'] ?? '', 'source' => 'HubSpot']);
+            $lm = (string) ($p['lastmodifieddate'] ?? ''); $ms = $lm !== '' ? (string) ((int) (strtotime($lm) ?: 0) * 1000) : ''; if ($ms !== '' && ($max === '' || (int) $ms > (int) $max)) $max = $ms;
+        }
+        $after = $j['paging']['next']['after'] ?? null; $pages++;
+    } while ($after !== null && $pages < 10 && microtime(true) < $until);
+    $st['since'] = $max;
+    return $out;
+}
+function syncPipedrive(array $K, array &$st, float $until): array {
+    $base = syncBase('pipedrive', 'https://' . $K['domain'] . '.pipedrive.com') . '/api/v2'; $H = ['x-api-token: ' . $K['token']];
+    $out = ['leads' => [], 'customers' => []];
+    $person = function (array $p): array {
+        $em = ''; foreach ((array) ($p['emails'] ?? []) as $e) if (is_array($e) && ($e['value'] ?? '') !== '') { $em = (string) $e['value']; if (!empty($e['primary'])) break; }
+        $ph = ''; foreach ((array) ($p['phones'] ?? []) as $e) if (is_array($e) && ($e['value'] ?? '') !== '') { $ph = (string) $e['value']; if (!empty($e['primary'])) break; }
+        $a = is_array($p['postal_address'] ?? null) ? $p['postal_address'] : [];
+        $street = trim(($a['street_number'] ?? '') . ' ' . ($a['route'] ?? '')); if ($street === '' && !empty($a['value'])) $street = (string) $a['value'];
+        return ['name' => (string) ($p['name'] ?? trim(($p['first_name'] ?? '') . ' ' . ($p['last_name'] ?? ''))), 'phone' => $ph, 'email' => $em, 'address' => $street, 'town' => (string) ($a['locality'] ?? ''), 'zip' => (string) ($a['postal_code'] ?? '')];
+    };
+    foreach (['persons', 'deals'] as $what) {
+        $since = (string) ($st[$what] ?? ''); $cursor = null; $pages = 0; $max = $since; $looked = 0;
+        do {
+            $q = ['sort_by' => 'update_time', 'sort_direction' => 'asc', 'limit' => 100] + ($since !== '' ? ['updated_since' => $since] : []) + ($what === 'deals' ? ['status' => 'won'] : []) + ($cursor ? ['cursor' => $cursor] : []);
+            [$code, $j, $err] = syncHttp('GET', $base . '/' . $what . '?' . http_build_query($q), $H);
+            if ($code !== 200 || !is_array($j)) return $out + ['err' => syncErr('Pipedrive', $code, $j, $err)];
+            foreach ((array) ($j['data'] ?? []) as $r) {
+                $ut = (string) ($r['update_time'] ?? ''); if ($ut !== '' && ($max === '' || strtotime($ut) > strtotime($max))) $max = $ut;
+                if ($what === 'persons') { $out['leads'][] = syncRec('pd:p:' . $r['id'], $person($r) + ['date' => $r['add_time'] ?? '', 'source' => 'Pipedrive']); continue; }
+                $pid = is_array($r['person_id'] ?? null) ? ($r['person_id']['value'] ?? null) : ($r['person_id'] ?? null); if (!$pid || $looked >= 25) continue;
+                $looked++; [$c2, $p2] = syncHttp('GET', $base . '/persons/' . rawurlencode((string) $pid), $H);
+                if ($c2 === 200 && is_array($p2['data'] ?? null)) $out['customers'][] = syncRec('pd:d:' . $r['id'], $person($p2['data']) + ['start' => syncDay($r['won_time'] ?? ($r['close_time'] ?? '')), 'notes' => 'Won in Pipedrive: ' . ($r['title'] ?? '') . (isset($r['value']) ? ' (' . $r['value'] . ' ' . ($r['currency'] ?? '') . ')' : '')]);
+            }
+            $cursor = $j['additional_data']['next_cursor'] ?? null; $pages++;
+        } while ($cursor && $pages < 10 && microtime(true) < $until);
+        $st[$what] = $max;
+    }
+    return $out;
+}
+function syncJobnimbus(array $K, array &$st, float $until): array {
+    $base = syncBase('jobnimbus', 'https://app.jobnimbus.com/api1'); $H = ['Authorization: Bearer ' . $K['key']];
+    $out = ['leads' => [], 'customers' => [], 'jobs' => []];
+    $sentJn = []; foreach ((array) (json_decode((string) @file_get_contents(jnFile('jobnimbus-sent.json')), true) ?: []) as $s) if (!empty($s['jnid'])) $sentJn[(string) $s['jnid']] = true;   /* homes we sent there: not back */
+    $phone = fn(array $r) => (string) (($r['mobile_phone'] ?? '') ?: (($r['home_phone'] ?? '') ?: ($r['work_phone'] ?? '')));
+    foreach (['contacts', 'jobs'] as $what) {
+        $since = (int) ($st[$what] ?? 0); $from = 0; $pages = 0; $max = $since;
+        do {
+            $q = ['size' => 100, 'from' => $from, 'sort_field' => 'date_updated', 'sort_direction' => 'asc'] + ($since ? ['filter' => json_encode(['must' => [['range' => ['date_updated' => ['gte' => $since]]]]])] : []);
+            [$code, $j, $err] = syncHttp('GET', $base . '/' . $what . '?' . http_build_query($q), $H);
+            if ($code !== 200 || !is_array($j)) return $out + ['err' => syncErr('JobNimbus', $code, $j, $err)];
+            $res = (array) ($j['results'] ?? []);
+            foreach ($res as $r) {
+                $max = max($max, (int) ($r['date_updated'] ?? 0)); $id = (string) ($r['jnid'] ?? ''); if ($id === '' || isset($sentJn[$id])) continue;
+                $st0 = (string) ($r['status_name'] ?? '');
+                $f = ['name' => (string) (($r['display_name'] ?? '') ?: trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? ''))), 'phone' => $phone($r), 'email' => (string) ($r['email'] ?? ''),
+                      'address' => (string) ($r['address_line1'] ?? ''), 'town' => (string) ($r['city'] ?? ''), 'zip' => (string) ($r['zip'] ?? '')];
+                if ($what === 'contacts') {
+                    if (preg_match('/\b(sold|won|customer|complete|completed|paid|closed)\b/i', $st0)) $out['customers'][] = syncRec('jn:c:' . $id, $f + ['start' => syncDay($r['date_created'] ?? '')]);
+                    else $out['leads'][] = syncRec('jn:c:' . $id, $f + ['status' => $st0, 'date' => syncDay($r['date_created'] ?? ''), 'source' => 'JobNimbus']);
+                    continue;
+                }
+                if (!preg_match('/complet|paid|closed|invoic|finish/i', $st0)) continue;   /* a job still under way stays there until it is done */
+                if ($f['name'] === '' && is_array($r['primary'] ?? null)) $f['name'] = (string) ($r['primary']['name'] ?? '');
+                $out['jobs'][] = syncRec('jn:j:' . $id, $f + ['date' => syncDay(($r['date_status_change'] ?? 0) ?: ($r['date_updated'] ?? '')), 'service' => (string) ($r['record_type_name'] ?? ''), 'status' => $st0, 'notes' => mb_substr(trim(($r['name'] ?? '') . ' ' . ($r['description'] ?? '')), 0, 500)]);
+            }
+            $from += count($res); $pages++;
+        } while (count($res) === 100 && $pages < 10 && microtime(true) < $until);
+        $st[$what] = $max;
+    }
+    return $out;
+}
+function syncClickup(array $K, array &$st, float $until): array {
+    $base = syncBase('clickup', 'https://api.clickup.com/api/v2'); $H = ['Authorization: ' . $K['token']];
+    $out = ['leads' => []]; $since = (int) ($st['since'] ?? 0); $max = $since; $end = false;
+    for ($pg = 0; $pg < 50 && microtime(true) < $until; $pg++) {   /* "changed since" moves on only once the whole list of changes was read */
+        $q = ['include_closed' => 'true', 'subtasks' => 'true', 'order_by' => 'updated', 'page' => $pg] + ($since ? ['date_updated_gt' => $since] : []);
+        [$code, $j, $err] = syncHttp('GET', $base . '/list/' . rawurlencode((string) $K['list']) . '/task?' . http_build_query($q), $H);
+        if ($code !== 200 || !is_array($j)) return $out + ['err' => syncErr('ClickUp', $code, $j, $err)];
+        $tasks = (array) ($j['tasks'] ?? []);
+        foreach ($tasks as $t) {
+            $max = max($max, (int) ($t['date_updated'] ?? 0));
+            $f = ['name' => (string) ($t['name'] ?? ''), 'status' => (string) ($t['status']['status'] ?? ''), 'date' => syncDay($t['date_created'] ?? ''), 'notes' => mb_substr((string) ($t['text_content'] ?? ($t['description'] ?? '')), 0, 600), 'source' => 'ClickUp'];
+            foreach ((array) ($t['custom_fields'] ?? []) as $c) {
+                $n = strtolower((string) ($c['name'] ?? '')); $v = $c['value'] ?? null; if ($v === null || $v === '') continue;
+                if (is_array($v)) $v = (string) ($v['formatted_address'] ?? ($v['address'] ?? ''));
+                elseif (is_numeric($v) && is_array($c['type_config']['options'] ?? null)) foreach ($c['type_config']['options'] as $o) if ((string) ($o['orderindex'] ?? '') === (string) $v) { $v = (string) ($o['name'] ?? $v); break; }
+                foreach (['phone' => 'phone', 'mobile' => 'phone', 'email' => 'email', 'address' => 'address', 'location' => 'address', 'city' => 'town', 'zip' => 'zip', 'postal' => 'zip', 'source' => 'source', 'service' => 'need'] as $w => $k)
+                    if (str_contains($n, $w) && empty($f[$k] ?? '') || (str_contains($n, $w) && $k === 'source')) { $f[$k] = (string) $v; break; }
+            }
+            $out['leads'][] = syncRec('cu:' . ($t['id'] ?? ''), $f);
+        }
+        if (!empty($j['last_page']) || count($tasks) < 100) { $end = true; break; }
+    }
+    if ($end) $st['since'] = $max;
+    return $out;
+}
+function syncHcp(array $K, array &$st, float $until): array {
+    $base = syncBase('hcp', 'https://api.housecallpro.com'); $H = ['Authorization: Token ' . $K['key']];
+    $out = ['customers' => [], 'jobs' => [], 'leads' => []];
+    $who = function (array $c, ?array $a = null): array {
+        $a = $a ?? (is_array($c['addresses'][0] ?? null) ? $c['addresses'][0] : []);
+        return ['name' => trim(($c['first_name'] ?? '') . ' ' . ($c['last_name'] ?? '')) ?: (string) ($c['company'] ?? ''), 'phone' => (string) (($c['mobile_number'] ?? '') ?: (($c['home_number'] ?? '') ?: ($c['work_number'] ?? ''))),
+                'email' => (string) ($c['email'] ?? ''), 'address' => (string) ($a['street'] ?? ''), 'town' => (string) ($a['city'] ?? ''), 'zip' => (string) ($a['zip'] ?? '')];
+    };
+    foreach (['customers', 'jobs', 'leads'] as $what) {
+        /* no "changed since" on Housecall Pro's lists: newest change first, read until one is older than the last run; the first time, every
+           page, carried on run to run ('page') until the end */
+        $s = (array) ($st[$what] ?? []); $since = (string) ($s['since'] ?? ''); $page = (int) ($s['page'] ?? 1); $top = (string) ($s['top'] ?? ''); $done = false; $n = 0;
+        while (!$done && $n < 10 && microtime(true) < $until) {
+            [$code, $j, $err] = syncHttp('GET', $base . '/' . $what . '?' . http_build_query(['page' => $page, 'page_size' => 100, 'sort_by' => 'updated_at', 'sort_direction' => 'desc']), $H);
+            if ($code !== 200 || !is_array($j)) return $out + ['err' => syncErr('Housecall Pro', $code, $j, $err)];
+            $list = (array) ($j[$what] ?? []); $n++;
+            foreach ($list as $r) {
+                $ut = (string) ($r['updated_at'] ?? ''); if ($top === '' || strtotime($ut) > strtotime($top)) $top = $ut;
+                if ($since !== '' && $ut !== '' && strtotime($ut) < strtotime($since)) { $done = true; break; }
+                $id = (string) ($r['id'] ?? '');
+                if ($what === 'customers') { $out['customers'][] = syncRec('hcp:c:' . $id, $who($r) + ['start' => syncDay($r['created_at'] ?? '')]); continue; }
+                $c = is_array($r['customer'] ?? null) ? $r['customer'] : []; $a = is_array($r['address'] ?? null) ? $r['address'] : null;
+                if ($what === 'leads') { $out['leads'][] = syncRec('hcp:l:' . $id, $who($c, $a) + ['status' => (string) ($r['pipeline_status'] ?? ($r['status'] ?? '')), 'date' => $r['created_at'] ?? '', 'source' => 'Housecall Pro']); continue; }
+                $done0 = (string) ($r['work_timestamps']['completed_at'] ?? ''); $when = $done0 !== '' ? $done0 : (string) ($r['schedule']['scheduled_start'] ?? '');
+                $amt = is_numeric($r['total_amount'] ?? null) ? round((float) $r['total_amount'] / 100, 2) : '';   /* in cents, as Housecall Pro's leads are */
+                if ($when === '') continue;   /* not scheduled yet: nothing to bring */
+                if ($done0 === '' && syncDay($when) <= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) continue;   /* past its day and not finished: left until it is */
+                $out['jobs'][] = syncRec('hcp:j:' . $id, $who($c, $a) + ['date' => syncDay($when), 'price' => $done0 !== '' ? $amt : '', 'status' => (string) ($r['work_status'] ?? ''), 'service' => mb_substr((string) ($r['description'] ?? ''), 0, 60), 'notes' => trim('Housecall Pro job ' . ($r['invoice_number'] ?? ''))]);
+            }
+            if (!$list || $page >= (int) ($j['total_pages'] ?? $page)) { $done = true; break; }
+            $page++;
+        }
+        $st[$what] = $done ? ['since' => $top !== '' ? $top : $since] : ['since' => $since, 'page' => $page, 'top' => $top];
+        if ($done && $since === '' && $top === '') $st[$what] = ['since' => gmdate('c')];
+    }
+    return $out;
+}
+function syncGhl(array $K, array &$st, float $until): array {
+    $base = syncBase('ghl', 'https://services.leadconnectorhq.com'); $H = ['Authorization: Bearer ' . $K['token'], 'Version: 2021-07-28'];
+    $out = ['leads' => [], 'customers' => []];
+    /* no "changed since" on HighLevel's contact list: walk it with its cursor to the end (new contacts are read at the next run), and once a
+       day from the start again so changes come too (the fingerprint skips what did not change) */
+    if (!empty($st['end']) && time() - (int) ($st['full'] ?? 0) > 86400) { $st['after'] = null; $st['end'] = false; }
+    for ($pg = 0; $pg < 10 && microtime(true) < $until; $pg++) {
+        $q = ['locationId' => $K['location'], 'limit' => 100]; if (is_array($st['after'] ?? null)) { $q['startAfterId'] = $st['after'][0]; $q['startAfter'] = $st['after'][1]; }
+        [$code, $j, $err] = syncHttp('GET', $base . '/contacts/?' . http_build_query($q), $H);
+        if ($code !== 200 || !is_array($j)) return $out + ['err' => syncErr('HighLevel', $code, $j, $err)];
+        $list = (array) ($j['contacts'] ?? []);
+        foreach ($list as $r) {
+            $tags = array_map('strtolower', array_map('strval', (array) ($r['tags'] ?? [])));
+            $f = ['name' => (string) (($r['contactName'] ?? '') ?: trim(($r['firstName'] ?? '') . ' ' . ($r['lastName'] ?? ''))), 'phone' => (string) ($r['phone'] ?? ''), 'email' => (string) ($r['email'] ?? ''),
+                  'address' => (string) ($r['address1'] ?? ''), 'town' => (string) ($r['city'] ?? ''), 'zip' => (string) ($r['postalCode'] ?? '')];
+            if (in_array('customer', $tags, true)) $out['customers'][] = syncRec('ghl:' . ($r['id'] ?? ''), $f + ['start' => syncDay($r['dateAdded'] ?? '')]);
+            else $out['leads'][] = syncRec('ghl:' . ($r['id'] ?? ''), $f + ['date' => $r['dateAdded'] ?? '', 'source' => (string) (($r['source'] ?? '') ?: 'HighLevel'), 'notes' => $tags ? 'Tags: ' . implode(', ', $tags) : '']);
+        }
+        $m = (array) ($j['meta'] ?? []);
+        if (!empty($m['startAfterId'])) $st['after'] = [(string) $m['startAfterId'], (string) ($m['startAfter'] ?? '')];
+        if (!$list || empty($m['nextPage'])) { if (empty($st['end'])) $st['full'] = time(); $st['end'] = true; break; }
+    }
+    return $out;
+}
+/** a connector's key, proved with one small read before it is kept: '' or what went wrong */
+function syncConnTest(string $k, array $K): string {
+    $calls = ['hubspot' => ['GET', syncBase('hubspot', 'https://api.hubapi.com') . '/crm/v3/objects/contacts?limit=1', ['Authorization: Bearer ' . ($K['token'] ?? '')]],
+        'pipedrive' => ['GET', syncBase('pipedrive', 'https://' . ($K['domain'] ?? 'x') . '.pipedrive.com') . '/api/v2/persons?limit=1', ['x-api-token: ' . ($K['token'] ?? '')]],
+        'jobnimbus' => ['GET', syncBase('jobnimbus', 'https://app.jobnimbus.com/api1') . '/contacts?size=1', ['Authorization: Bearer ' . ($K['key'] ?? '')]],
+        'clickup' => ['GET', syncBase('clickup', 'https://api.clickup.com/api/v2') . '/list/' . rawurlencode((string) ($K['list'] ?? '')), ['Authorization: ' . ($K['token'] ?? '')]],
+        'hcp' => ['GET', syncBase('hcp', 'https://api.housecallpro.com') . '/customers?page=1&page_size=1', ['Authorization: Token ' . ($K['key'] ?? '')]],
+        'ghl' => ['GET', syncBase('ghl', 'https://services.leadconnectorhq.com') . '/contacts/?' . http_build_query(['locationId' => $K['location'] ?? '', 'limit' => 1]), ['Authorization: Bearer ' . ($K['token'] ?? ''), 'Version: 2021-07-28']]];
+    [$m, $u, $h] = $calls[$k];
+    [$code, $j, $err] = syncHttp($m, $u, $h, null, 20);
+    if ($code === 200) return '';
+    if ($code === 404 && $k === 'clickup') return 'ClickUp has no list with that ID for this token.';
+    if ($code === 404 && $k === 'pipedrive') return 'Pipedrive has no company at that address. Type the part before .pipedrive.com.';
+    return syncErr(SYNC_CONNS[$k][0], $code, $j, $err);
+}
+function syncConnRun(string $k, float $until): array {
+    $C = syncCfg(); $S = $C['conns'][$k] ?? null; $K = (array) (syncKeys()['conns'][$k] ?? []);
+    if ($k === 'jobnimbus' && !empty($K['reuse'])) $K['key'] = (string) (jnConf()['key'] ?? '');
+    if (!$S || !$K || array_filter(SYNC_CONNS[$k][1], fn($f) => trim((string) ($K[$f[0]] ?? '')) === '')) return ['err' => 'Not connected.'];
+    $st = (array) ($S['state'] ?? []);
+    $fn = ['hubspot' => 'syncHubspot', 'pipedrive' => 'syncPipedrive', 'jobnimbus' => 'syncJobnimbus', 'clickup' => 'syncClickup', 'hcp' => 'syncHcp', 'ghl' => 'syncGhl'][$k];
+    $got = $fn($K, $st, $until); $err = (string) ($got['err'] ?? ''); unset($got['err']);
+    $res = ['n' => 0, 'added' => 0, 'updated' => 0, 'skipped' => 0, 'look' => 0, 'held' => 0, 'same' => 0];
+    foreach ($got as $kind => $recs) if ($recs) { $r = syncApply('conn:' . $k, SYNC_CONNS[$k][0], $kind, $recs, (string) ($S['owner'] ?? '')); foreach ($res as $c => $v) $res[$c] += (int) ($r[$c] ?? 0); }
+    if ($err === '') syncCfgEdit(function (array $c) use ($k, $st) { if (isset($c['conns'][$k])) $c['conns'][$k]['state'] = $st; return $c; });   /* a failed read is read again from the same place */
+    syncNote('conns', $k, $res, $err);
+    return $res + ['err' => $err];
+}
+/** what the screen shows: settings without any key */
+function syncState(): array {
+    global $TEAM;
+    $C = syncCfg(); $K = syncKeys(); $hk = (string) ($K['hook'] ?? '');
+    $hook = array_intersect_key($C['hook'], array_flip(['on', 'kind', 'map', 'seen', 'last', 'owner'])) + ['on' => false, 'map' => [], 'seen' => [], 'owner' => ''];
+    $hook['urls'] = $hk !== '' ? array_combine(SYNC_KINDS, array_map(fn($kd) => syncHookUrl($hk, $kd), SYNC_KINDS)) : null;
+    $sheets = []; foreach ($C['sheets'] as $id => $s) { $u = (string) ($K['sheets'][$id] ?? ''); $sheets[] = ['id' => $id, 'host' => (string) parse_url($u, PHP_URL_HOST)] + array_intersect_key($s, array_flip(['name', 'kind', 'every', 'map', 'head', 'on', 'owner', 'last', 'lastIn', 'paused'])); }
+    $conns = [];
+    foreach (SYNC_CONNS as $k => $d) {
+        $s = $C['conns'][$k] ?? []; $kk = (array) ($K['conns'][$k] ?? []);
+        $conns[] = ['k' => $k, 'name' => $d[0], 'fields' => array_map(fn($f) => ['k' => $f[0], 'l' => $f[1], 'secret' => $f[2], 'have' => $f[2] ? syncTail((string) ($kk[$f[0]] ?? '')) : (string) ($kk[$f[0]] ?? '')], $d[1]),
+                    'steps' => $d[2], 'what' => $d[3], 'src' => $d[4], 'connected' => (bool) $kk, 'reuse' => !empty($kk['reuse'])] + array_intersect_key($s, array_flip(['on', 'owner', 'last', 'lastIn', 'paused', 'at', 'by']));
+    }
+    $hold = syncHold(); $hc = []; foreach ($hold as $h) { $kk = $h['src'] . '|' . $h['kind']; $hc[$kk] = ($hc[$kk] ?? 0) + 1; }
+    $log = array_slice(array_reverse(jsonLines(DATA_DIR . '/sync.log')), 0, 25);
+    return ['ok' => true, 'kinds' => SYNC_KINDS, 'fields' => SYNC_FIELDS, 'every' => SYNC_EVERY, 'hook' => $hook, 'sheets' => $sheets, 'conns' => $conns, 'others' => SYNC_OTHERS,
+            'held' => ['n' => count($hold), 'by' => $hc, 'some' => array_map(fn($h) => ['src' => $h['src'], 'kind' => $h['kind'], 'why' => $h['why'], 'at' => $h['at'], 'fields' => array_slice(array_keys(syncFlat($h['raw'])), 0, 12)], array_slice(array_reverse($hold), 0, 8))],
+            'jnHave' => feature('roof') && (string) (jnConf()['key'] ?? '') !== '', 'log' => $log,
+            'people' => array_values(array_filter(array_keys($TEAM['byName'] ?? []), fn($n) => !preg_match('/^Claude Check/i', (string) $n)))];
+}
+/** run what is due (the 5-minute job) or one source now; each source gets its share of the time */
+function syncRunDue(?string $only, int $budget): array {
+    $lk = @fopen(DATA_DIR . '/sync-run.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['busy' => true];
+    $t0 = microtime(true); $C = syncCfg(); $done = [];
+    foreach ($C['sheets'] as $id => $s) {
+        if ($only !== null && $only !== 'sheet:' . $id) continue;
+        if ($only === null && (empty($s['on']) || time() < (int) ($s['last']['at'] ?? 0) + max(5, (int) ($s['every'] ?? 15)) * 60 - 30)) continue;
+        if (microtime(true) - $t0 > $budget) break;
+        $done['sheet:' . $id] = syncSheetRun((string) $id);
+    }
+    foreach (array_keys(SYNC_CONNS) as $k) {
+        if ($only !== null && $only !== 'conn:' . $k) continue;
+        if ($only === null && empty($C['conns'][$k]['on'])) continue;
+        $left = $budget - (microtime(true) - $t0); if ($left < 5) break;
+        $done['conn:' . $k] = syncConnRun($k, microtime(true) + min(40, $left));
+    }
+    flock($lk, LOCK_UN); fclose($lk);
+    return $done;
+}
+
+if ($action === 'synchook') { if (($session['n'] ?? '') !== 'Sync link') fail('Not here.', 404); syncHookRun(); }   /* the link, its key proved above the session check (syncHookSession) */
+if ($action === 'syncpoll') {   /* the 5-minute job: traverse-tools/crm-sync.php --pull */
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    if (!syncOn()) out(['ok' => true, 'note' => 'not here']);
+    @set_time_limit(120); @ini_set('memory_limit', '1024M');
+    $C = syncCfg(); $any = array_filter($C['sheets'], fn($s) => !empty($s['on'])) || array_filter($C['conns'], fn($s) => !empty($s['on']));
+    if (!$any) out(['ok' => true, 'note' => 'nothing on']);
+    out(['ok' => true, 'ran' => syncRunDue(null, 70)]);
+}
+if (in_array($action, ['sync', 'synchookset', 'syncmap', 'syncsheet', 'syncsheetset', 'syncconn', 'syncrun', 'synctest', 'synchold'], true)) {
+    if (!syncOn()) fail('Not here.', 404);
+    if (!adminOr('cust.sync')) fail('Not allowed.', 403);
+    if ($action === 'sync') out(syncState());
+    if (!$isPost) fail('POST required', 405);
+    $kindOk = fn($k) => in_array($k, SYNC_KINDS, true) ? $k : fail('Pick leads, customers or jobs.');
+    $mapClean = function ($m, string $kind): array { $o = []; foreach ((array) $m as $their => $ours) { $their = mb_substr(trim((string) $their), 0, 120); $ours = (string) $ours; if ($their !== '' && ($ours === '' || in_array($ours, SYNC_FIELDS[$kind], true))) $o[$their] = $ours; if (count($o) >= 120) break; } return $o; };
+    $ownerOk = fn($o) => ($o = trim((string) $o)) === '' || activeName($o) ? $o : fail('Pick an owner from your people, or nobody.');
+    if ($action === 'synchookset') {   /* on/off, a new link, the owner of new leads, the kind a link without &kind= means */
+        if (!empty($body['rotate']) || (string) (syncKeys()['hook'] ?? '') === '') syncKeysEdit(function (array $k) { $k['hook'] = bin2hex(random_bytes(20)); return $k; });
+        syncCfgEdit(function (array $c) use ($body, $kindOk, $ownerOk, $me) {
+            if (array_key_exists('on', $body)) $c['hook']['on'] = (bool) $body['on'];
+            if (array_key_exists('owner', $body)) $c['hook']['owner'] = $ownerOk($body['owner']);
+            if (array_key_exists('kind', $body)) $c['hook']['kind'] = $kindOk((string) $body['kind']);
+            $c['hook']['at'] = time(); $c['hook']['by'] = $me; return $c;
+        });
+        accountLog(['by' => $me, 'what' => 'sync link', 'on' => $body['on'] ?? null, 'rotate' => !empty($body['rotate'])]);
+        out(syncState());
+    }
+    if ($action === 'syncmap') {   /* the link's field names -> ours, per kind */
+        $kind = $kindOk((string) ($body['kind'] ?? ''));
+        syncCfgEdit(function (array $c) use ($kind, $body, $mapClean) { $c['hook']['map'][$kind] = $mapClean($body['map'] ?? [], $kind); return $c; });
+        out(syncState());
+    }
+    if ($action === 'synctest') {   /* a record as the link would take it: what it reads and what it would do, nothing saved */
+        $kind = $kindOk((string) ($body['kind'] ?? '')); $rec = is_array($body['rec'] ?? null) ? $body['rec'] : [];
+        if (!$rec) fail('Nothing to test.');
+        $m = syncMapRow($rec, $kind, $mapClean($body['map'] ?? (syncCfg()['hook']['map'][$kind] ?? []), $kind));
+        $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+        $k2 = $kind; $row = $m; if ($kind === 'jobs') { $j = syncJobRows($m, $today); if (isset($j['skip']) || isset($j['hold'])) out(['ok' => true, 'read' => $m, 'act' => isset($j['skip']) ? 'skip' : 'hold', 'why' => $j['skip'] ?? $j['hold']]); $k2 = isset($j['work']) ? 'work' : 'customers'; $row = $j[$k2]; }
+        if ($k2 !== 'work' && trim(($row['name'] ?? '') . ($row['phone'] ?? '') . ($row['email'] ?? '')) === '') out(['ok' => true, 'read' => $m, 'act' => 'hold', 'why' => 'No name, phone or email: it would wait until the fields are mapped.']);
+        $r = impRows(['kind' => $k2, 'rows' => [$row], 'mode' => 'update'], true);
+        out(['ok' => true, 'read' => $m, 'as' => $k2, 'act' => $r['rows'][0]['act'] ?? 'look', 'why' => $r['rows'][0]['why'] ?? '', 'warn' => $r['rows'][0]['warn'] ?? []]);
+    }
+    if ($action === 'synchold') {   /* the waiting records: bring them in with the mapping as it is now, or let them go */
+        $lk = @fopen(syncHoldFile() . '.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
+        $all = syncHold(); writeJsonAtomic(syncHoldFile(), ['items' => []]); if ($lk) flock($lk, LOCK_UN);
+        if (!empty($body['clear'])) { syncLog(['src' => 'hold', 'cleared' => count($all), 'by' => $me]); out(syncState() + ['cleared' => count($all)]); }
+        $C = syncCfg(); $grp = [];
+        foreach ($all as $h) $grp[$h['src'] . '|' . $h['kind']][] = $h;
+        $tot = ['added' => 0, 'updated' => 0, 'held' => 0];
+        foreach ($grp as $g => $items) {
+            [$src, $kind] = explode('|', $g, 2); $map = $src === 'hook' ? (array) ($C['hook']['map'][$kind] ?? []) : (str_starts_with($src, 'sheet:') ? (array) ($C['sheets'][substr($src, 6)]['map'] ?? []) : null);
+            $recs = array_map(function ($h) use ($map, $kind, $src) {
+                $raw = (array) $h['raw']; $m = $map === null ? array_diff_key($raw, ['_ext' => 1]) : syncMapRow($raw, $kind, $map);
+                return ['_ext' => $src === 'hook' && ($m['ext'] ?? '') !== '' ? 'hook:' . $kind . ':' . $m['ext'] : '', '_raw' => $raw] + $m;
+            }, $items);
+            $r = syncApply($src, $src === 'hook' ? 'Sync link' : ($src === 'hold' ? 'Waiting records' : (str_starts_with($src, 'conn:') ? (SYNC_CONNS[substr($src, 5)][0] ?? 'Connector') : (string) ($C['sheets'][substr($src, 6)]['name'] ?? 'Sheet'))), $kind, $recs);
+            foreach ($tot as $c => $v) $tot[$c] += (int) ($r[$c] ?? 0);
+        }
+        out(syncState() + ['brought' => $tot]);
+    }
+    if ($action === 'syncsheet') {   /* read a link once: its columns and the first rows, to map (nothing saved) */
+        $u = trim((string) ($body['url'] ?? '')); if ($u === '' || strlen($u) > 1000) fail('Paste the sheet\'s link.');
+        if (!throttleTake(rateFile('syncsheet|' . $me), 60, 3600)) fail('Too many tries this hour.', 429);
+        [$head, $rows, $err] = syncSheetRead($u);
+        if (!$head) fail($err);
+        out(['ok' => true, 'head' => $head, 'sample' => array_slice($rows, 0, 3), 'rows' => count($rows), 'warn' => $err]);
+    }
+    if ($action === 'syncsheetset') {   /* add a sheet, change it (name, kind, how often, columns, owner), pause it, or remove it (its rows already in stay) */
+        $id = (string) ($body['id'] ?? '');
+        if ($id !== '' && !preg_match('/^s[0-9a-f]{8}$/D', $id)) fail('No such sheet.', 404);
+        if ($id !== '' && !isset(syncCfg()['sheets'][$id])) fail('No such sheet.', 404);
+        if (!empty($body['remove'])) {
+            syncCfgEdit(function (array $c) use ($id) { unset($c['sheets'][$id]); return $c; });
+            syncKeysEdit(function (array $k) use ($id) { unset($k['sheets'][$id]); return $k; });
+            accountLog(['by' => $me, 'what' => 'sync sheet removed', 'id' => $id]);
+            out(syncState());
+        }
+        $new = $id === '';
+        if ($new) {
+            if (count(syncCfg()['sheets']) >= 10) fail('Up to 10 sheets.');
+            $u = trim((string) ($body['url'] ?? '')); if (!preg_match('#^https://\S{8,1000}$#', $u) && !(syncMock() !== '' && str_starts_with($u, syncMock()))) fail('Paste the sheet\'s link (https://...).');
+            $id = 's' . bin2hex(random_bytes(4));
+            syncKeysEdit(function (array $k) use ($id, $u) { $k['sheets'][$id] = $u; return $k; });
+        }
+        $kind = $kindOk((string) ($body['kind'] ?? (syncCfg()['sheets'][$id]['kind'] ?? '')));
+        $every = (int) ($body['every'] ?? (syncCfg()['sheets'][$id]['every'] ?? 15)); if (!in_array($every, SYNC_EVERY, true)) $every = 15;
+        syncCfgEdit(function (array $c) use ($id, $body, $kind, $every, $mapClean, $ownerOk, $me, $new, $clean) {
+            $s = $c['sheets'][$id] ?? ['on' => false, 'at' => time(), 'by' => $me];
+            $s['name'] = $clean($body['name'] ?? ($s['name'] ?? 'My sheet'), 60) ?: 'My sheet'; $s['kind'] = $kind; $s['every'] = $every;
+            if (array_key_exists('map', $body)) $s['map'] = $mapClean($body['map'], $kind);
+            if (is_array($body['head'] ?? null)) $s['head'] = array_slice(array_map(fn($h) => mb_substr((string) $h, 0, 80), $body['head']), 0, 120);
+            if (array_key_exists('owner', $body)) $s['owner'] = $ownerOk($body['owner']);
+            if (array_key_exists('on', $body)) { $s['on'] = (bool) $body['on']; if ($s['on']) { unset($s['paused']); $s['fails'] = 0; } }
+            $c['sheets'][$id] = $s; return $c;
+        });
+        accountLog(['by' => $me, 'what' => $new ? 'sync sheet added' : 'sync sheet changed', 'id' => $id, 'on' => $body['on'] ?? null]);
+        out(syncState() + ['id' => $id]);
+    }
+    if ($action === 'syncconn') {   /* connect (the key proved first), owner, pause or turn on, or disconnect (the key forgotten; what came in stays) */
+        $k = (string) ($body['k'] ?? ''); if (!isset(SYNC_CONNS[$k])) fail('Pick a system.');
+        $D = SYNC_CONNS[$k];
+        if (!empty($body['remove'])) {
+            syncKeysEdit(function (array $kk) use ($k) { unset($kk['conns'][$k]); return $kk; });
+            syncCfgEdit(function (array $c) use ($k) { unset($c['conns'][$k]); return $c; });
+            accountLog(['by' => $me, 'what' => 'sync disconnected', 'system' => $k]);
+            out(syncState());
+        }
+        $have = (array) (syncKeys()['conns'][$k] ?? []);
+        $in = []; foreach ($D[1] as $f) { $v = trim((string) ($body[$f[0]] ?? '')); if ($v !== '') $in[$f[0]] = $v; }
+        if ($k === 'jobnimbus' && !empty($body['reuse'])) { if ((string) (jnConf()['key'] ?? '') === '') fail('There is no JobNimbus key here to use. Paste one.'); $in = ['reuse' => true]; }
+        if ($in) {
+            foreach ($in as $f => $v) if ($f !== 'reuse' && !preg_match($f === 'domain' ? '/^[a-z0-9-]{2,63}$/i' : ($f === 'list' || $f === 'location' ? '/^[A-Za-z0-9_-]{2,64}$/' : '/^[A-Za-z0-9._:\-]{8,400}$/'), (string) $v)) fail('That does not look like a ' . $D[0] . ' ' . strtolower(array_column($D[1], 1, 0)[$f]) . '.');
+            $K = $in + (isset($in['reuse']) ? [] : array_diff_key($have, ['reuse' => 1]));
+            $missing = array_filter($D[1], fn($f) => trim((string) (isset($K['reuse']) && $f[0] === 'key' ? jnConf()['key'] ?? '' : ($K[$f[0]] ?? ''))) === '');
+            if ($missing) fail('Fill in ' . strtolower(array_values($missing)[0][1]) . '.');
+            if (!throttleTake(rateFile('syncconn|' . $me), 30, 3600)) fail('Too many tries this hour.', 429);
+            $err = syncConnTest($k, isset($K['reuse']) ? ['key' => (string) jnConf()['key']] : $K); if ($err !== '') fail($err);
+            syncKeysEdit(function (array $kk) use ($k, $K) { $kk['conns'][$k] = $K; return $kk; });
+            syncCfgEdit(function (array $c) use ($k, $me) { $c['conns'][$k] = ($c['conns'][$k] ?? []) + ['on' => false]; $c['conns'][$k]['at'] = time(); $c['conns'][$k]['by'] = $me; $c['conns'][$k]['name'] = SYNC_CONNS[$k][0]; return $c; });
+            accountLog(['by' => $me, 'what' => 'sync connected', 'system' => $k]);
+        } elseif (!$have) fail('Paste the ' . strtolower($D[1][0][1]) . ' first.');
+        syncCfgEdit(function (array $c) use ($k, $body, $ownerOk) {
+            if (!isset($c['conns'][$k])) $c['conns'][$k] = ['on' => false, 'name' => SYNC_CONNS[$k][0]];
+            if (array_key_exists('owner', $body)) $c['conns'][$k]['owner'] = $ownerOk($body['owner']);
+            if (array_key_exists('on', $body)) { $c['conns'][$k]['on'] = (bool) $body['on']; if ($body['on']) { unset($c['conns'][$k]['paused']); $c['conns'][$k]['fails'] = 0; } }
+            return $c;
+        });
+        out(syncState());
+    }
+    if ($action === 'syncrun') {   /* Sync now: one source, at once */
+        $src = (string) ($body['src'] ?? '');
+        if (!preg_match('/^(sheet:s[0-9a-f]{8}|conn:[a-z]+)$/D', $src)) fail('Pick what to sync.');
+        if (!throttleTake(rateFile('syncrun|' . $me), 60, 3600)) fail('Too many tries this hour.', 429);
+        @set_time_limit(90);
+        $r = syncRunDue($src, 45);
+        if (!empty($r['busy'])) fail('A sync is running now. Try again in a minute.', 409);
+        $one = $r[$src] ?? null; if (!$one) fail('Not connected.');
+        out(syncState() + ['ran' => $one]);
+    }
+    fail('Unknown action.', 404);
+}
+
+/* ---- the Quick quote in the editions (2026-10-30; the permission is quote.phone in permCat) ----
+ * Sixfold's Quick quote is a role (Jen's quote login); here it is a permission any role can be given, on by default for the office (which
+ * did this before with a lead by hand and Build a quote). phonequote takes the caller's details and address: the same person already in the
+ * Pipeline by phone or email is used (theirs, or nobody's yet), never a second lead; a new one is theirs ('pq' and, for anyone but the office,
+ * the owner). Then the quote builder prices it (kitquote, which lets them quote a lead of their own made this way: pqLeadMine). Sending the
+ * agreement stays with "Send agreements and take deposits". */
+/** this account's role was given the Quick quote (the admin and the office go by desk()) */
+function pqOn(): bool { return edition() && kitOn() && permWho() !== '' && permOn('quote.phone'); }
+function pqLeadMine(string $id): bool {
+    if (!pqOn() || $id === '') return false;
+    $l = leadsAll()[$id] ?? null; return is_array($l) && (in_array((string) ($l['pq'] ?? ''), meNames(), true) || in_array((string) ($l['owner'] ?? ''), meNames(), true));
+}
+if ($action === 'phonequote') {
+    if (!edition() || !kitOn() || !feature('walkdesk')) fail('Not here.', 404);
+    if (!$isPost) fail('POST required', 405);
+    if (!(desk() ? permOn('quote.phone') : pqOn())) fail('Not part of your role here (Quote by phone or online). An admin sets what each role can do in Accounts.', 403);
+    $name = $clean($body['name'] ?? '', 120); $phone = $clean($body['phone'] ?? '', 40); $email = strtolower($clean($body['email'] ?? '', 160));
+    $addr = $clean($body['address'] ?? '', 160); $town = $clean($body['town'] ?? '', 60);
+    if ($name === '' && $phone === '' && $email === '') fail('Add at least a name, a phone number or an email.');
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+    $src = in_array($body['src'] ?? '', ['phone', 'messenger', 'referral', 'inperson', 'other'], true) ? (string) $body['src'] : 'phone';
+    $d10 = impDigits($phone); $mineOk = desk();
+    foreach (leadsAll() as $ex) {
+        if (in_array((string) ($ex['status'] ?? 'new'), ['lost', 'won'], true)) continue;
+        if (!(($d10 !== '' && impDigits($ex['phone'] ?? '') === $d10) || ($email !== '' && impEmail($ex['email'] ?? '') === $email))) continue;
+        $ow = (string) ($ex['owner'] ?? '');
+        if (!$mineOk && $ow !== '' && !in_array($ow, meNames(), true)) fail('They are already in the Pipeline as ' . $ow . '\'s lead. Ask ' . strtok($ow, ' ') . ' or the office.', 409);
+        if (!$mineOk && $ow === '') appendLine(leadsDir() . '/leadst.log', ['id' => $ex['id'], 'owner' => $me, 'note' => 'Taken on by ' . $me . ' in the Quick quote.', 'by' => $me, 'at' => time()]);
+        out(['ok' => true, 'had' => true, 'lead' => leadsAll()[$ex['id']] ?? $ex]);
+    }
+    $row = ['id' => 'm' . date('YmdHis') . bin2hex(random_bytes(3)), 'src' => $src, 'at' => time(), 'need' => $clean($body['need'] ?? '', 60) ?: 'Quote', 'name' => $name, 'phone' => $phone, 'email' => $email,
+            'town' => trim($addr . ($town !== '' ? ', ' . $town : ''), ', '), 'msg' => $clean($body['msg'] ?? '', 1000), 'by' => $me, 'pq' => $me];
+    if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
+    if (!$mineOk) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'owner' => $me, 'by' => $me, 'at' => time()]);
+    if ($addr !== '' && preg_match('/^\d+ \S/', $addr)) { $h = a365Match($addr, $town); appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h ?: ['address' => $addr, 'town' => $town, 'typed' => true], 'by' => $me, 'at' => time()]); }
+    out(['ok' => true, 'lead' => leadsAll()[$row['id']] ?? $row]);
 }
 
 if ($action === 'matfix') {
@@ -13111,12 +13902,12 @@ function squareTry(string $token, string $env, string $path): array {
 if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], true)) {
     if (!kitOn()) fail('Not here.', 404);
     if ($action === 'kit') {
-        if (!desk() && $role !== 'quote' && !(edition() && $role === 'crew' && edSub() === '')) fail('Not allowed.', 403);   /* + a sales rep, for their own leads (2026-10-29) */
+        if (!desk() && $role !== 'quote' && !(edition() && $role === 'crew' && edSub() === '') && !pqOn()) fail('Not allowed.', 403);   /* + a sales rep, for their own leads (2026-10-29); + a role given the Quick quote (2026-10-30) */
         out(['ok' => true, 'units' => KIT_UNITS, 'trade' => kitTrade()] + kitCfg() + ['pay' => adminOr('set.setup') ? kitPayState() : ['square' => ['on' => (bool) squareCfg()], 'stripe' => ['on' => (bool) stripePayCfg()]], 'setup' => adminOr('set.setup') ? kitSetup() : null, 'prc' => prcForQuote($_GET)]);   /* + the smart price list for the builder (2026-10-30) */
     }
     if (!$isPost && $action !== 'squareoauth') fail('POST required', 405);
     if ($action === 'kitquote') {
-        if (!desk() && $role !== 'quote' && !edRepLead((string) ($body['id'] ?? ''))) fail('Not allowed.', 403);   /* + a sales rep on their own lead (2026-10-29) */
+        if (!desk() && $role !== 'quote' && !edRepLead((string) ($body['id'] ?? '')) && !pqLeadMine((string) ($body['id'] ?? ''))) fail('Not allowed.', 403);   /* + a sales rep on their own lead (2026-10-29); + a Quick quote lead of their own (2026-10-30) */
         if (!desk() && $role === 'crew' && array_key_exists('offer', $body)) fail('The office books the day. Save the quote and send it.', 403);   /* a rep quotes; booking a crew day stays the office's */
         $id = (string) ($body['id'] ?? ''); $all = leadsAll();
         if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
