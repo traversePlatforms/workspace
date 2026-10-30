@@ -1235,6 +1235,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 
 - [ ] **TR-42 — Microsoft publisher verification (ON MATTHEW'S LIST, 30 Oct).** Without it, people on Microsoft 365 work accounts (common: GoDaddy bundles it) can't one-click "Sign in with Microsoft" in Setup > Email. Domain step done 30 Oct (TXT MS=ms36414987 in SiteGround DNS; set Branding > Publisher domain = traverseplatforms.com once Verify passes). Left: join the free Microsoft AI Cloud Partner Program (partner.microsoft.com, m.sharpe@traverseplatforms.com, Traverse Platforms LLC; business check takes days), then enter the Partner ID under the app's Publisher verification.
 
+- [ ] **TR-43 — Join the Microsoft AI Cloud Partner Program (ON MATTHEW'S LIST, 30 Oct).** Free. Sign up at partner.microsoft.com with m.sharpe@traverseplatforms.com as Traverse Platforms LLC (have the EIN and formation details ready; Microsoft checks the business, can take a few days). It gives the Partner ID (MPN ID) that TR-42 needs for the verified-publisher badge.
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
