@@ -45,7 +45,7 @@ mode('edition'); execFileSync('node', [DIR + '/preaccept.cjs']);
 for (const f of ['fb-leads.json', 'fb-leads-state.json', 'fb-leads-oauth.json']) rmSync(PRIV + '/' + f, { force: true });
 rmSync(DATA + '/fb-leads.json', { force: true }); rmSync(DATA + '/fbleads.log', { force: true });
 mkdirSync(SHARED, { recursive: true }); rmSync(SHARED + '/meta-app.json', { force: true });
-if (!existsSync(SHARED + '/mail-oauth.key')) writeFileSync(SHARED + '/mail-oauth.key', '7'.repeat(64));
+const madeKey = !existsSync(SHARED + '/mail-oauth.key'); if (madeKey) writeFileSync(SHARED + '/mail-oauth.key', '7'.repeat(64));
 writeFileSync(MOCK + '/state.json', JSON.stringify(freshState(), null, 1)); writeFileSync(MOCK + '/calls.log', '');
 /* someone already in the Pipeline with L3's phone */
 mkdirSync(LEADS, { recursive: true });
@@ -280,6 +280,7 @@ try {
   t(await B.js(`!document.querySelector('.fbset')`), 'Sixfold: the Facebook leads screen never opens');
 } catch (e) { t(false, 'crashed: ' + (e && e.stack || e)); }
 finally {
+  rmSync(SHARED + '/meta-app.json', { force: true }); if (madeKey) rmSync(SHARED + '/mail-oauth.key', { force: true });   /* the harness as it was: other suites read the mail key */
   mode('edition');
   for (const f of ['fb-leads.json', 'fb-leads-state.json', 'fb-leads-oauth.json']) rmSync(PRIV + '/' + f, { force: true });
   B.close();
