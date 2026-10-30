@@ -13427,7 +13427,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   };
   /* the quick way (2026-10-29, Matthew: "We gotta make things as convenient as possible for people who are paying for convenience"): Gmail and
      Outlook get one big button straight to the provider's app-password page, three short lines, and one paste box; the long steps stay folded
-     under More detail. Sign in with Google or Microsoft comes later (Traverse registered with both first): its slot is here, hidden. */
+     under More detail. + Sign in with Google or Microsoft (2026-10-30): when the server has it, that is the quick way and the app password
+     moves under More detail (mailOauthFor, below). */
   var MAIL_GO = {
     gmail: { url: 'https://myaccount.google.com/apppasswords', btn: 'Open Google app passwords', oauth: 'Sign in with Google',
       steps: ['Turn on 2-Step Verification if Google asks.', 'Name it Traverse, press Create, and copy the 16 letters.', 'Come back here, paste them below, and press Send a test and connect.'] },
@@ -13445,39 +13446,49 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(q('div', 'dwh', 'Your email'));
       var form = q('div', 'jnform'); form.style.display = 'grid'; form.style.gap = '10px';
       if (M.on) {
-        box.appendChild(q('div', 'msg', 'Connected as ' + M.user + (M.name ? ' (sent as “' + M.name + '”)' : '') + ' · ' + ({ gmail: 'Gmail', outlook: 'Outlook or Microsoft 365' }[M.kind] || M.host)));
+        box.appendChild(q('div', 'msg', 'Connected as ' + M.user + (M.name ? ' (sent as “' + M.name + '”)' : '') + ' · ' + ({ gmail: 'Gmail', outlook: 'Outlook or Microsoft 365', google: 'Signed in with Google', microsoft: 'Signed in with Microsoft' }[M.kind] || M.host)));
         var acts = q('div', 'mailbtns');
         var ch = q('button', 'lnk', 'Change'); ch.type = 'button'; ch.addEventListener('click', function () { form.hidden = !form.hidden; }); acts.appendChild(ch);
         var dc = q('button', 'lnk', 'Disconnect'); dc.type = 'button';
-        dc.addEventListener('click', function () { if (!window.confirm('Disconnect ' + M.user + '? Nothing is emailed to customers until you connect again.')) return; api('mailoff', { body: {} }).then(function (k) { if (!k.ok) { toast('Not done', k.error || '', null); return; } toast('Email disconnected', '', null); mailSetupView(); }).catch(function () { toast('No signal', 'Try again.', null); }); });
+        dc.addEventListener('click', function () { if (!window.confirm('Disconnect ' + M.user + '?' + (M.via === 'google' ? ' Traverse’s access is removed from the Google account too.' : '') + ' Nothing is emailed to customers until you connect again.')) return; api('mailoff', { body: {} }).then(function (k) { if (!k.ok) { toast('Not done', k.error || '', null); return; } toast('Email disconnected', k.note || '', null); mailSetupView(); }).catch(function () { toast('No signal', 'Try again.', null); }); });
         acts.appendChild(dc); box.appendChild(acts); form.hidden = true;
-      } else box.appendChild(q('div', 'msg bad', 'Not connected. Until it is, nothing is emailed to customers. Forms and receipts still work: print them, or send them from your own email app.'));
+      } else if (M.lost) {   /* a Google or Microsoft sign-in that stopped working (2026-10-30): sign in again, or another way */
+        mailOauthLost(box, M.lost); var la = q('div', 'mailbtns'), lc = q('button', 'lnk', 'Use another way'); lc.type = 'button';
+        lc.addEventListener('click', function () { form.hidden = !form.hidden; }); la.appendChild(lc); box.appendChild(la); form.hidden = true;
+      }
+      else box.appendChild(q('div', 'msg bad', 'Not connected. Until it is, nothing is emailed to customers. Forms and receipts still work: print them, or send them from your own email app.'));
       box.appendChild(form);
-      var kind = M.kind || 'gmail', kRow = q('div', 'dwlen'), steps = q('ol', 'mailsteps');
+      var kind = { google: 'gmail', microsoft: 'outlook' }[M.kind || (M.lost && M.lost.via)] || M.kind || 'gmail', kRow = q('div', 'dwlen'), steps = q('ol', 'mailsteps');
       form.appendChild(q('div', 'sub2', 'Who is your email with?')); form.appendChild(kRow);
       [['gmail', 'Gmail'], ['outlook', 'Outlook or Microsoft 365'], ['other', 'Other']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(kind === o[0])); b.addEventListener('click', function () { kind = o[0]; [].forEach.call(kRow.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paintK(); }); kRow.appendChild(b); });
-      form.appendChild(q('div', 'dwsub', 'Make an app password first'));
+      var ksub = q('div', 'dwsub', 'Make an app password first'); form.appendChild(ksub);
       var quick = q('div', 'mailgo'); form.appendChild(quick);   /* the quick way (2026-10-29) */
       var more = q('details', 'mailmore'); more.appendChild(q('summary', null, 'More detail'));
+      var mq = q('div', 'mailgo'); more.appendChild(mq);   /* the app-password button, when Sign in with Google or Microsoft is the quick way (2026-10-30) */
       more.appendChild(steps); form.appendChild(more);
-      var fld = function (label, type, val, ph) { var l = q('label', null, label); var i = q('input'); i.type = type; i.value = val || ''; if (ph) i.placeholder = ph; l.appendChild(i); form.appendChild(l); return [l, i]; };
+      var pwbox = q('div', 'mailpw'); pwbox.style.display = 'grid'; pwbox.style.gap = '10px'; form.appendChild(pwbox);   /* the app-password fields: under More detail when a sign-in is offered */
+      var fld = function (label, type, val, ph) { var l = q('label', null, label); var i = q('input'); i.type = type; i.value = val || ''; if (ph) i.placeholder = ph; l.appendChild(i); pwbox.appendChild(l); return [l, i]; };
       var uI = fld('Email address you send from', 'email', M.user || j.testTo || '', 'you@yourcompany.com')[1];   /* + your own email on your account, when it is known (2026-10-29) */
       var nI = fld('Sender name (what customers see)', 'text', M.name || j.company || '', j.company || '')[1]; nI.maxLength = 60;
       var hF = fld('Outgoing (SMTP) server', 'text', M.kind === 'other' ? M.host : '', 'smtp.yourprovider.com'), pF = fld('Port', 'text', M.kind === 'other' ? String(M.port) : '587', '587'); pF[1].inputMode = 'numeric';
       var pw = fld('App password', 'password', '', M.on ? 'Leave empty to keep the saved one' : 'Paste it here')[1]; pw.autocomplete = 'new-password'; pw.spellcheck = false;
       pw.addEventListener('input', function () { var v = pw.value.replace(/\s+/g, ''); if (v !== pw.value) pw.value = v; });   /* Google shows it in groups of four: the spaces go (2026-10-29) */
-      form.appendChild(q('div', 'sub2', 'How this works: the app password lets our server send email from your address. It is not your normal password, and the app uses it only to send. It is kept on the server and never shown again; delete it in your Google or Microsoft account any time and sending stops.'));
-      var go = q('button', 'save', 'Send a test and connect'); go.type = 'button'; form.appendChild(go);
-      var fm = q('div', 'msg bad'); fm.hidden = true; fm.setAttribute('role', 'alert'); form.appendChild(fm);
+      pwbox.appendChild(q('div', 'sub2', 'How this works: the app password lets our server send email from your address. It is not your normal password, and the app uses it only to send. It is kept on the server and never shown again; delete it in your Google or Microsoft account any time and sending stops.'));
+      var go = q('button', 'save', 'Send a test and connect'); go.type = 'button'; pwbox.appendChild(go);
+      var fm = q('div', 'msg bad'); fm.hidden = true; fm.setAttribute('role', 'alert'); pwbox.appendChild(fm);
       function paintK() {
         steps.textContent = ''; MAIL_STEPS[kind].forEach(function (t) { steps.appendChild(q('li', null, t)); }); hF[0].hidden = pF[0].hidden = kind !== 'other';
-        quick.textContent = ''; var G = MAIL_GO[kind]; more.hidden = false;
+        quick.textContent = ''; mq.textContent = ''; var G = MAIL_GO[kind]; more.hidden = false;
+        var ov = mailOauthFor(M, kind); ksub.textContent = ov ? 'Sign in to connect' : 'Make an app password first';
+        if (ov) more.appendChild(pwbox); else form.appendChild(pwbox);   /* Sign in with Google or Microsoft is the quick way; the app password waits under More detail (2026-10-30) */
         if (!G) { more.open = true; quick.hidden = true; return; }
         quick.hidden = false; more.open = false;
-        var oa = q('button', 'lnk mailoauth', G.oauth); oa.type = 'button'; oa.disabled = true; oa.hidden = true; quick.appendChild(oa);   /* later: OAuth, once Traverse is registered with Google and Microsoft */
-        var a = q('a', 'save mailgobtn', G.btn); a.href = G.url; a.target = '_blank'; a.rel = 'noopener'; quick.appendChild(a);
-        var ol = q('ol', 'mailsteps'); G.steps.forEach(function (t) { ol.appendChild(q('li', null, t)); }); quick.appendChild(ol);
-        if (G.note) quick.appendChild(q('div', 'ltrynote', G.note));
+        if (ov) mailOauthBtn(quick, ov, G.oauth);
+        else { var oa = q('button', 'lnk mailoauth', G.oauth); oa.type = 'button'; oa.disabled = true; oa.hidden = true; quick.appendChild(oa); }   /* not set up on this server: the slot stays, hidden */
+        var to = ov ? mq : quick;
+        var a = q('a', 'save mailgobtn', G.btn); a.href = G.url; a.target = '_blank'; a.rel = 'noopener'; to.appendChild(a);
+        var ol = q('ol', 'mailsteps'); G.steps.forEach(function (t) { ol.appendChild(q('li', null, t)); }); to.appendChild(ol);
+        if (G.note) to.appendChild(q('div', 'ltrynote', G.note));
       }
       paintK();
       go.addEventListener('click', function () {
@@ -13522,8 +13533,45 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(acts); c.appendChild(err); c.appendChild(pv);
     return c;
   }
+  /* Sign in with Google / Microsoft (2026-10-30): offered when the server has that sign-in set up (mail.oauth); the server sends the admin to
+     Google or Microsoft and back to this page with ?mailoauth=connected (or why not). No token ever comes to this page. */
+  function mailOauthFor(M, kind) { var p = { gmail: 'google', outlook: 'microsoft' }[kind]; return p && M.oauth && M.oauth[p] ? p : ''; }
+  function mailOauthBtn(to, prov, label) {
+    var b = q('button', 'save mailgobtn mailoauth', label); b.type = 'button'; to.appendChild(b);
+    to.appendChild(q('div', 'sub2', prov === 'google' ? 'Sign in and allow Traverse to send email as you. No app password needed.' : 'Sign in with your Outlook, Hotmail or work Microsoft 365 account and allow Traverse to send email as you. No app password needed.'));
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      api('mailoauth', { body: { provider: prov } }).then(function (k) {
+        b.disabled = false;
+        if (k && k.ok && k.ready && k.url) { location.href = k.url; return; }
+        toast(k && k.ok ? 'Not available yet' : 'Not started', (k && k.error) || 'Use an app password for now (More detail).', null);
+      }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); });
+    });
+    return b;
+  }
+  function mailOauthLost(box, L) {
+    var lbl = L.via === 'microsoft' ? 'Microsoft' : 'Google';
+    box.appendChild(q('div', 'msg bad', 'Needs reconnecting: ' + L.user + ' · ' + lbl));
+    box.appendChild(q('div', 'sub2', 'The sign-in stopped working (the access was removed, the password changed, or it ran out). Nothing is emailed to customers until you sign in again.'));
+    var w = q('div', 'mailgo'); box.appendChild(w); mailOauthBtn(w, L.via, 'Sign in with ' + lbl + ' again');
+  }
+  function mailOauthReturn() {
+    var m = /[?&]mailoauth=([a-z-]+)\b/.exec(location.search); if (!m) return false;
+    var a = /[?&]as=([^&#]+)/.exec(location.search), who = ''; try { who = a ? decodeURIComponent(a[1]) : ''; } catch (e) {}
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    mailSetupView();
+    var W = { connected: ['Email connected', 'Connected as ' + who + '. Signed agreements and receipts now go to customers from this address.'],
+      denied: ['Not connected', 'You did not allow it, so nothing changed.'],
+      noscope: ['Not connected', 'Sending email was not allowed. Sign in again and leave the box for sending email ticked.'],
+      noemail: ['Not connected', 'The account did not give its email address. Try again, or use an app password (More detail).'],
+      browser: ['Not connected', 'Start again from this screen, in the same browser.'],
+      'not-ready': ['Not available yet', 'Use an app password for now (More detail).'] }[m[1]] || ['Not connected', 'It did not finish. Try again, or use an app password (More detail).'];
+    toast(W[0], W[1], null);
+    return true;
+  }
   /* back from Square's Connect page: ?square=connected (or why not) */
   function kitSquareReturn() {
+    if (mailOauthReturn()) return true;   /* + back from Sign in with Google / Microsoft (2026-10-30) */
     var m = /[?&]square=([a-z-]+)\b/.exec(location.search); if (!m) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
     if (S.role !== 'admin') return false;
