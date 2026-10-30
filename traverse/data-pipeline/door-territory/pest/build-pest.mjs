@@ -9,6 +9,8 @@
  *         from the USGS National Hydrography Dataset, large scale (hydro.nationalmap.gov nhd MapServer 6 and 12);
  *   yb    year built (the county files, already matched in year-<town>.json; El Paso and Douglas);
  *   sold  the last sale, 'YYYY-MM', from El Paso's assessor file (SALEDATE). Douglas's free files carry no sale date.
+ *         (2026-10-29: superseded for every county we hold by ../moved/build-moved.mjs: moved-<town>.json, market sales only, all
+ *         editions, and house-<town>.json, basement / crawl space / slab, stories, walls for Pest. The card shows the newer month.)
  * Only the sale MONTH leaves this script; the assessor file's owner columns are never read. Facts only: the card states
  * what is near the house, it does not score pest risk. */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, createReadStream, copyFileSync } from 'node:fs';
