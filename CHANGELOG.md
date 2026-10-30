@@ -33,7 +33,14 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 **Clients and admin:** Peak sponsor leads PDF (Lost Island, Hanson Hot Spring Spas; business sources only); Apollo free account (company lookups only); door-list JSON gitignored; 1.4 GB snapshot cleared; cloud finishers wait on the phone hotspot.
 
-**Running overnight:** Group 3 stage B measuring, then automatic upload; overnight check; server backup 2:45 am.
+**Evening (after the 6:16 pm report):**
+- **Sixfold:** tonight's ad spend in Stats ($2,407.29 lifetime; form ad $972.63 / 64 leads, Messenger $1,265.38 / 103; both $81/day); the 8 pm email carried the 28 Oct figures. Randall Carrera off Matthew's pipeline (Send to = the new owner's lead).
+- **Editions:** billing on in all five (live Stripe checked with no charge); new movers in every edition (county sale month, Sold tag and filter; 837k of 1.05M homes, 12 counties); Pest house facts (basement, crawl/slab, stories, walls; 755k); Security lot facts (corner, alley, dead end, nearest home, open space, water; 573k; road-behind hidden at ~55% precision); Solar production estimate (NREL PVWatts by area, laser-scan roof, stated shade cut; 674k); permits per trade + Solar roof age and largest hail (Denver, Aurora, Boulder, Longmont added; Aurora share-alike flagged); sales reps send agreements, Pipeline search and Last contacted, in-app email, Group 3 limited-data note, Spanish.
+- **Every Colorado home in every edition** (1,093,827): stale index counts recounted, merge script fixed. **Nightly backups** now cover the five editions.
+- **Weather:** one shared Colorado alerts call (was ~1,000), warning shapes on maps and houses, winter/wind alerts everywhere, alert links fixed, radar switch on the Doors map (auto-refresh, time, 1-hour loop), wildfires around each app's own towns. Hail timing for every town queued on the cloud machine; same-day hail queued (TR-38); Xweather and HailTrace/Verisk on Matthew's list.
+- **Speed:** the towns list is built ahead every hour and after each deploy (was 7-23 s for the first phone); stats skips towns with no marks.
+
+**Running overnight:** Group 3 stage B measuring, then automatic upload, Group 3 storm history, then hail timing; towns list warmed hourly; overnight check; server backup 2:45 am.
 
 ---
 
