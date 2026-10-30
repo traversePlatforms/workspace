@@ -8,6 +8,35 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-10-29 (Thursday)
+
+**Sixfold 365 app** (Sixfold only)
+- **Reschedule with deposit:** "Change or send again" on a booking with no signature and no deposit reopens it (old job off the board, new day held, the new form asks for a deposit). Jen rebooked Roy this way (Sat 31 Oct). Bookings with a deposit keep their day.
+- **Crew notes** on a job: 1,000 characters (was 300). **Job photos:** Jen opens and adds them on the jobs she manages.
+- **My stats** on Matthew's sign-in = his pipeline (leads, quoted, jobs landed, sold, rates, still open), counting only his own leads (website + Facebook 26 Oct to 27 Oct 5 pm): 15 leads, 3 jobs. Brandon and other admins keep door stats. **Computer side menu** scrolls on its own and carries My stats.
+- **Fixed by hand:** Matt's Won ($359 front yard only, job with Brad 29 Oct); Alberto's email copied to his customer record (his duplicate web lead still open).
+
+**Doors and data**
+- **False "new owner" flags fixed** at the source (owner history keyed by town and door): Sixfold 1,278 → 4, each edition 1,314 → 4.
+- **Group 2 measured layers** (lawn, trees, roof, sun) live on all six at 4:42 am; close-up roof photos by 6:30 am.
+- **Roof material** diagnosed and re-run (Roofing and Solar, 62 towns; Greeley 0 → 20,054, Longmont 175 → 13,759). "Probably asphalt" for the 39 no-county towns stays off; Jefferson and Arapahoe records are TR-35.
+- **Hail and wind history** backfilled statewide on Roofing (Oct 2021 to now; hail days 66 → 115). Server storm job memory limit before April 2027 is TR-37.
+- **Lawn figures:** re-scored on 19 hand-measured lots (typical miss 24%, old figure 65%); the shared-lot rule fixed, 84,834 cards in 165 towns now show the newer figure (Sixfold + five editions).
+- **Group 3:** stage A and 3b counted (223 new towns, 143,368 doors + 777 merged); stage B running on the cloud machine on Matthew's go, uploads by itself. The 13 counties with no statewide source are TR-36.
+
+**Traverse editions** (deployed roles-email-import-1029; Sixfold unchanged)
+- Roles (Setter and Technician added, per-trade names, server-enforced; team goals), seats (one admin free, over-seat email, super never counts), one phone + tablet + computer per sign-in, terms acceptance at sign-in, Setup › Email (own mailbox, signed copy + receipt templates), ways to pay (Venmo, Cash App, PayPal, Zelle, own link), Import (customers with plans, leads, past work; undo), one subscription per company. **Your costs** built, off (super only).
+
+**Traverse launch and website:** first prospect emails held with no set time (queue empty). Website and legal pages rewritten to Matthew's wording (pricing: every plan every feature; Terms of Use v2, Subscription Agreement v3, cancellation, privacy, dated 29 Oct) and uploaded, still private. New clauses not attorney-reviewed.
+
+**Sixfold 365 print and email:** event sign-up sheet (ZIP code, "Free quote" consent box, Englewood); Christmas concert ad, three versions, QR to 365aeration.com; Brandon + Jenn shared business card; /concert/ QR page live but unused; 2-day follow-up email drafted, to send from hello@365aeration.com (not sent).
+
+**Clients and admin:** Peak sponsor leads PDF (Lost Island, Hanson Hot Spring Spas; business sources only); Apollo free account (company lookups only); door-list JSON gitignored; 1.4 GB snapshot cleared; cloud finishers wait on the phone hotspot.
+
+**Running overnight:** Group 3 stage B measuring, then automatic upload; overnight check; server backup 2:45 am.
+
+---
+
 ## 2026-10-28 (Wednesday)
 
 **Sixfold 365 app** (live on Sixfold and the five Traverse editions unless marked)
