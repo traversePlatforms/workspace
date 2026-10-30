@@ -12578,7 +12578,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     box.appendChild(card);
     if (kit && !bill) {
-      api('kit').then(function (K) { (K && K.ok && K.setup || []).forEach(function (x) { if (x.k === 'people') tick('team', x.done); }); var on = {}; (K && K.setup || []).forEach(function (x) { on[x.k] = x.done; }); tick('connect', on.email && on.payments); }).catch(function () {});
+      api('kit').then(function (K) { var on = {}; (K && K.ok && K.setup || []).forEach(function (x) { on[x.k] = x.done; }); tick('connect', on.email && on.payments); }).catch(function () {});
+      /* the team: someone besides admins and Traverse's own sign-in (the kit's people count includes both) */
+      api('accounts').then(function (j) { tick('team', !!(j && j.ok && (j.accounts || []).some(function (a) { return !a.off && a.role !== 'admin' && a.role !== 'super' && !/^(Claude|Fable)\b/i.test(a.name || ''); }))); }).catch(function () {});
       if (impOnC()) api('imports').then(function (j) { tick('import', !!(j && j.ok && (j.imports || []).some(function (x) { return !x.undone; }))); }).catch(function () {});
     }
     var more = [feat('company') ? ['Company', 'Name, phone, email, website and colour.', companyView] : null,
