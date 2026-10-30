@@ -1,0 +1,2746 @@
+{
+ "made": "2026-10-30",
+ "what": "Hand lawn measures vs ours (card lawn sq ft, yard v2), DRCOG 2020 LULC turf (class 6) and turf+trees (6+5) inside the parcel, and blends. Read-only analysis.",
+ "sources": {
+  "drcog": "DRCOG 2020 Regional Land Use Land Cover (Denver Regional Council of Governments), Planetary Computer drcog-lulc, 1 ft; counted as lawn-range.mjs does (pixel centre inside the state parcel line). Values here unrounded; the app rounds to 100.",
+  "ours": "local door files app/data/rounds/<town>.json lawn (sq, or the middle of rng on T cards), matching live after the 29 Oct upload",
+  "hand": "Matthew/Jen traces in Google Earth/Maps; lawnhand-<town>.log on the server and yard-v2-rescore-2026-10-29.json"
+ },
+ "rows": [
+  {
+   "town": "denver",
+   "id": "3855-s-valentia-ct",
+   "address": "3855 S VALENTIA CT",
+   "use": "core",
+   "set": "tuned",
+   "hand": 8111,
+   "handAlt": null,
+   "handIncludes": "whole property incl. beds and grass under tree edges (log incl=beds); back yard alone 5,843 incl. under trees",
+   "measuredBy": "Matthew 22 Oct",
+   "scopeFlag": "includes beds",
+   "lotSqft": 13423,
+   "crownShare": 0.31,
+   "ours": 6300,
+   "oursCard": {
+    "lv": "L",
+    "sq": 6300,
+    "yr": 2023
+   },
+   "v2raw": 6286,
+   "drcogTurf": 6751,
+   "drcogTurfTrees": 10084,
+   "drcogTurfApp": 6800,
+   "drcogTurfTreesApp": 10100,
+   "avgOursTurf": 6525.5,
+   "guardedAvg": 6525.5,
+   "err": {
+    "ours": -0.223,
+    "drcogTurf": -0.168,
+    "drcogTurfTrees": 0.243,
+    "avg": -0.195,
+    "guardedAvg": -0.195
+   }
+  },
+  {
+   "town": "parker",
+   "id": "11663-settlers-dr",
+   "address": "11663 SETTLERS DR",
+   "use": "core",
+   "set": "tuned",
+   "hand": 10473,
+   "handAlt": null,
+   "handIncludes": "whole lawn, Google Earth",
+   "measuredBy": "Jen 21 Oct",
+   "scopeFlag": "Jen's trace",
+   "lotSqft": 16533,
+   "crownShare": 0.28,
+   "ours": 4600,
+   "oursCard": {
+    "lv": "L",
+    "sq": 4600,
+    "yr": 2023
+   },
+   "v2raw": 4575,
+   "drcogTurf": 8063,
+   "drcogTurfTrees": 11665,
+   "drcogTurfApp": 8100,
+   "drcogTurfTreesApp": 11700,
+   "avgOursTurf": 6331.5,
+   "guardedAvg": 6331.5,
+   "err": {
+    "ours": -0.561,
+    "drcogTurf": -0.23,
+    "drcogTurfTrees": 0.114,
+    "avg": -0.395,
+    "guardedAvg": -0.395
+   }
+  },
+  {
+   "town": "castle-rock",
+   "id": "2787-russet-sky-ct",
+   "address": "2787 RUSSET SKY CT",
+   "use": "core",
+   "set": "tuned",
+   "hand": 3898,
+   "handAlt": null,
+   "handIncludes": "total lawn, Google Maps",
+   "measuredBy": "Matthew 2 Oct",
+   "scopeFlag": null,
+   "lotSqft": 14833,
+   "crownShare": 0.07,
+   "ours": 4200,
+   "oursCard": {
+    "lv": "L",
+    "sq": 4200,
+    "yr": 2023
+   },
+   "v2raw": 4198,
+   "drcogTurf": 6586,
+   "drcogTurfTrees": 6725,
+   "drcogTurfApp": 6600,
+   "drcogTurfTreesApp": 6700,
+   "avgOursTurf": 5393,
+   "guardedAvg": 5393,
+   "err": {
+    "ours": 0.077,
+    "drcogTurf": 0.69,
+    "drcogTurfTrees": 0.725,
+    "avg": 0.384,
+    "guardedAvg": 0.384
+   }
+  },
+  {
+   "town": "castle-rock",
+   "id": "1648-marsh-hawk-cir",
+   "address": "1648 MARSH HAWK CIR",
+   "use": "core",
+   "set": "tuned",
+   "hand": 2344,
+   "handAlt": null,
+   "handIncludes": "total lawn, Google Maps",
+   "measuredBy": "Matthew 2 Oct",
+   "scopeFlag": null,
+   "lotSqft": 8880,
+   "crownShare": 0.24,
+   "ours": 2300,
+   "oursCard": {
+    "lv": "M",
+    "sq": 2300,
+    "yr": 2023
+   },
+   "v2raw": 2325,
+   "drcogTurf": 3218,
+   "drcogTurfTrees": 4670,
+   "drcogTurfApp": 3200,
+   "drcogTurfTreesApp": 4700,
+   "avgOursTurf": 2759,
+   "guardedAvg": 2759,
+   "err": {
+    "ours": -0.019,
+    "drcogTurf": 0.373,
+    "drcogTurfTrees": 0.992,
+    "avg": 0.177,
+    "guardedAvg": 0.177
+   }
+  },
+  {
+   "town": "franktown",
+   "id": "7378-upton-ct",
+   "address": "7378 UPTON CT",
+   "use": "core",
+   "set": "tuned",
+   "hand": 2595,
+   "handAlt": null,
+   "handIncludes": "watered lawn only (acreage lot)",
+   "measuredBy": "Matthew 2 Oct",
+   "scopeFlag": "watered lawn only on a 1.2-acre lot",
+   "lotSqft": 52269,
+   "crownShare": 0.07,
+   "ours": 3300,
+   "oursCard": {
+    "lv": "L",
+    "sq": 3300,
+    "yr": 2023
+   },
+   "v2raw": 3337,
+   "drcogTurf": 11579,
+   "drcogTurfTrees": 13704,
+   "drcogTurfApp": 11600,
+   "drcogTurfTreesApp": 13700,
+   "avgOursTurf": 7439.5,
+   "guardedAvg": 3300,
+   "err": {
+    "ours": 0.272,
+    "drcogTurf": 3.462,
+    "drcogTurfTrees": 4.281,
+    "avg": 1.867,
+    "guardedAvg": 0.272
+   }
+  },
+  {
+   "town": "arvada",
+   "id": "6595-zinnia-st",
+   "address": "6595 ZINNIA ST",
+   "use": "core",
+   "set": "tuned",
+   "hand": 3225,
+   "handAlt": null,
+   "handIncludes": "whole property incl. grass under a tree (log incl=trees)",
+   "measuredBy": "Matthew 22 Oct",
+   "scopeFlag": null,
+   "lotSqft": 6437,
+   "crownShare": 0.18,
+   "ours": 2100,
+   "oursCard": {
+    "lv": "M",
+    "sq": 2100,
+    "yr": 2023
+   },
+   "v2raw": 2088,
+   "drcogTurf": 2914,
+   "drcogTurfTrees": 3824,
+   "drcogTurfApp": 2900,
+   "drcogTurfTreesApp": 3800,
+   "avgOursTurf": 2507,
+   "guardedAvg": 2507,
+   "err": {
+    "ours": -0.349,
+    "drcogTurf": -0.096,
+    "drcogTurfTrees": 0.186,
+    "avg": -0.223,
+    "guardedAvg": -0.223
+   }
+  },
+  {
+   "town": "highlands-ranch",
+   "id": "3247-oak-leaf-pl",
+   "address": "3247 OAK LEAF PL",
+   "use": "core",
+   "set": "tuned",
+   "hand": 2556,
+   "handAlt": null,
+   "handIncludes": "grass only, front evergreen left out (log incl=grass)",
+   "measuredBy": "Matthew 22 Oct",
+   "scopeFlag": "front evergreen left out",
+   "lotSqft": 9375,
+   "crownShare": 0.32,
+   "ours": 2900,
+   "oursCard": {
+    "lv": "M",
+    "sq": 2900,
+    "yr": 2023
+   },
+   "v2raw": 2885,
+   "drcogTurf": 3129,
+   "drcogTurfTrees": 5482,
+   "drcogTurfApp": 3100,
+   "drcogTurfTreesApp": 5500,
+   "avgOursTurf": 3014.5,
+   "guardedAvg": 3014.5,
+   "err": {
+    "ours": 0.135,
+    "drcogTurf": 0.224,
+    "drcogTurfTrees": 1.145,
+    "avg": 0.179,
+    "guardedAvg": 0.179
+   }
+  },
+  {
+   "town": "black-forest",
+   "id": "9554-penstemon-ct",
+   "address": "9554 PENSTEMON CT",
+   "use": "upper",
+   "set": "tuned",
+   "hand": 5746,
+   "handAlt": null,
+   "handIncludes": "upper limit only",
+   "measuredBy": "Matthew 2 Oct",
+   "scopeFlag": null,
+   "lotSqft": 14908,
+   "crownShare": 0.15,
+   "ours": 2600,
+   "oursCard": {
+    "lv": "M",
+    "sq": 2600,
+    "yr": 2021
+   },
+   "v2raw": 2551,
+   "drcogTurf": null,
+   "drcogTurfTrees": null,
+   "drcogTurfApp": null,
+   "drcogTurfTreesApp": null,
+   "avgOursTurf": null,
+   "guardedAvg": 2600,
+   "err": {
+    "ours": -0.548,
+    "drcogTurf": null,
+    "drcogTurfTrees": null,
+    "avg": null,
+    "guardedAvg": -0.548
+   }
+  },
+  {
+   "town": "thornton",
+   "id": "7006-e-131st-way",
+   "address": "7006 E 131ST WAY",
+   "use": "core",
+   "set": "unseen",
+   "hand": 2137,
+   "handAlt": null,
+   "handIncludes": "back 450 + front 763 + 924 under the front trees",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 7266,
+   "crownShare": 0.14,
+   "ours": 800,
+   "oursCard": {
+    "lv": "S",
+    "sq": 800,
+    "yr": 2023
+   },
+   "v2raw": 775,
+   "drcogTurf": 3185,
+   "drcogTurfTrees": 3185,
+   "drcogTurfApp": 3200,
+   "drcogTurfTreesApp": 3200,
+   "avgOursTurf": 1992.5,
+   "guardedAvg": 1992.5,
+   "err": {
+    "ours": -0.626,
+    "drcogTurf": 0.49,
+    "drcogTurfTrees": 0.49,
+    "avg": -0.068,
+    "guardedAvg": -0.068
+   }
+  },
+  {
+   "town": "thornton",
+   "id": "7614-e-121st-pl",
+   "address": "7614 E 121ST PL",
+   "use": "core",
+   "set": "unseen",
+   "hand": 2961,
+   "handAlt": null,
+   "handIncludes": "back 1,801 + front 854 + 306",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 10624,
+   "crownShare": 0.15,
+   "ours": 3200,
+   "oursCard": {
+    "lv": "L",
+    "sq": 3200,
+    "yr": 2023
+   },
+   "v2raw": 3229,
+   "drcogTurf": 4871,
+   "drcogTurfTrees": 5858,
+   "drcogTurfApp": 4900,
+   "drcogTurfTreesApp": 5900,
+   "avgOursTurf": 4035.5,
+   "guardedAvg": 4035.5,
+   "err": {
+    "ours": 0.081,
+    "drcogTurf": 0.645,
+    "drcogTurfTrees": 0.978,
+    "avg": 0.363,
+    "guardedAvg": 0.363
+   }
+  },
+  {
+   "town": "welby",
+   "id": "579-e-76th-ave",
+   "address": "579 E 76TH AVE",
+   "use": "core",
+   "set": "unseen",
+   "hand": 3613,
+   "handAlt": null,
+   "handIncludes": "whole property 3,402 + 211 strip by the drive, open lot",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 12217,
+   "crownShare": 0.05,
+   "ours": 1600,
+   "oursCard": {
+    "lv": "M",
+    "sq": 1600,
+    "yr": 2023
+   },
+   "v2raw": 1636,
+   "drcogTurf": 238,
+   "drcogTurfTrees": 390,
+   "drcogTurfApp": 200,
+   "drcogTurfTreesApp": 400,
+   "avgOursTurf": 919,
+   "guardedAvg": 1600,
+   "err": {
+    "ours": -0.557,
+    "drcogTurf": -0.934,
+    "drcogTurfTrees": -0.892,
+    "avg": -0.746,
+    "guardedAvg": -0.557
+   }
+  },
+  {
+   "town": "castle-rock",
+   "id": "3852-primrose-ln",
+   "address": "3852 PRIMROSE LN",
+   "use": "core",
+   "set": "unseen",
+   "hand": 3461,
+   "handAlt": null,
+   "handIncludes": "back 3,061 incl. under tree edges + front 400",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 9322,
+   "crownShare": 0.36,
+   "ours": 3900,
+   "oursCard": {
+    "lv": "L",
+    "sq": 3900,
+    "yr": 2023
+   },
+   "v2raw": 3940,
+   "drcogTurf": 3713,
+   "drcogTurfTrees": 6401,
+   "drcogTurfApp": 3700,
+   "drcogTurfTreesApp": 6400,
+   "avgOursTurf": 3806.5,
+   "guardedAvg": 3806.5,
+   "err": {
+    "ours": 0.127,
+    "drcogTurf": 0.073,
+    "drcogTurfTrees": 0.849,
+    "avg": 0.1,
+    "guardedAvg": 0.1
+   }
+  },
+  {
+   "town": "columbine",
+   "id": "6049-w-roxbury-pl",
+   "address": "6049 W ROXBURY PL",
+   "use": "core",
+   "set": "unseen",
+   "hand": 3131,
+   "handAlt": null,
+   "handIncludes": "back 1,867 + front 1,264, heavy trees",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 12411,
+   "crownShare": 0.65,
+   "ours": 3000,
+   "oursCard": {
+    "lv": "L",
+    "sq": 3000,
+    "yr": 2023
+   },
+   "v2raw": 3035,
+   "drcogTurf": 1725,
+   "drcogTurfTrees": 9443,
+   "drcogTurfApp": 1700,
+   "drcogTurfTreesApp": 9400,
+   "avgOursTurf": 2362.5,
+   "guardedAvg": 2362.5,
+   "err": {
+    "ours": -0.042,
+    "drcogTurf": -0.449,
+    "drcogTurfTrees": 2.016,
+    "avg": -0.245,
+    "guardedAvg": -0.245
+   }
+  },
+  {
+   "town": "littleton",
+   "id": "6431-s-cedar-st",
+   "address": "6431 S CEDAR ST",
+   "use": "partial",
+   "set": "unseen",
+   "hand": 2614,
+   "handAlt": null,
+   "handIncludes": "BACK lawn only (front looked like rock/dry)",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 10645,
+   "crownShare": 0.34,
+   "ours": 4300,
+   "oursCard": {
+    "lv": "L",
+    "sq": 4300,
+    "yr": 2023
+   },
+   "v2raw": 4263,
+   "drcogTurf": 4854,
+   "drcogTurfTrees": 8245,
+   "drcogTurfApp": 4900,
+   "drcogTurfTreesApp": 8200,
+   "avgOursTurf": 4577,
+   "guardedAvg": 4577,
+   "err": {
+    "ours": 0.645,
+    "drcogTurf": 0.857,
+    "drcogTurfTrees": 2.154,
+    "avg": 0.751,
+    "guardedAvg": 0.751
+   }
+  },
+  {
+   "town": "littleton",
+   "id": "6916-s-elati-st",
+   "address": "6916 S ELATI ST",
+   "use": "core",
+   "set": "unseen",
+   "hand": 2554,
+   "handAlt": null,
+   "handIncludes": "front + side + back strip, heavy canopy, rough",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": "rough trace",
+   "lotSqft": 10387,
+   "crownShare": 0.52,
+   "ours": 2700,
+   "oursCard": {
+    "lv": "M",
+    "sq": 2700,
+    "yr": 2023
+   },
+   "v2raw": 2680,
+   "drcogTurf": 2509,
+   "drcogTurfTrees": 7619,
+   "drcogTurfApp": 2500,
+   "drcogTurfTreesApp": 7600,
+   "avgOursTurf": 2604.5,
+   "guardedAvg": 2604.5,
+   "err": {
+    "ours": 0.057,
+    "drcogTurf": -0.018,
+    "drcogTurfTrees": 1.983,
+    "avg": 0.02,
+    "guardedAvg": 0.02
+   }
+  },
+  {
+   "town": "highlands-ranch",
+   "id": "600-hiddenbrook-ct",
+   "address": "600 HIDDENBROOK CT",
+   "use": "core",
+   "set": "unseen",
+   "hand": 2231,
+   "handAlt": null,
+   "handIncludes": "back 1,691 + front 290 + 130 + 120",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 11700,
+   "crownShare": 0.11,
+   "ours": 1700,
+   "oursCard": {
+    "lv": "M",
+    "sq": 1700,
+    "yr": 2023
+   },
+   "v2raw": 1744,
+   "drcogTurf": 3770,
+   "drcogTurfTrees": 4115,
+   "drcogTurfApp": 3800,
+   "drcogTurfTreesApp": 4100,
+   "avgOursTurf": 2735,
+   "guardedAvg": 2735,
+   "err": {
+    "ours": -0.238,
+    "drcogTurf": 0.69,
+    "drcogTurfTrees": 0.844,
+    "avg": 0.226,
+    "guardedAvg": 0.226
+   }
+  },
+  {
+   "town": "highlands-ranch",
+   "id": "9267-canyon-wren-ct",
+   "address": "9267 CANYON WREN CT",
+   "use": "core",
+   "set": "unseen",
+   "hand": 4637,
+   "handAlt": null,
+   "handIncludes": "front 1,169 + back 3,468 incl. under tree shade",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": null,
+   "lotSqft": 10290,
+   "crownShare": 0.4,
+   "ours": 3400,
+   "oursCard": {
+    "lv": "L",
+    "sq": 3400,
+    "yr": 2023
+   },
+   "v2raw": 3444,
+   "drcogTurf": 3672,
+   "drcogTurfTrees": 7458,
+   "drcogTurfApp": 3700,
+   "drcogTurfTreesApp": 7500,
+   "avgOursTurf": 3536,
+   "guardedAvg": 3536,
+   "err": {
+    "ours": -0.267,
+    "drcogTurf": -0.208,
+    "drcogTurfTrees": 0.608,
+    "avg": -0.237,
+    "guardedAvg": -0.237
+   }
+  },
+  {
+   "town": "highlands-ranch",
+   "id": "852-hughes-ln",
+   "address": "852 HUGHES LN",
+   "use": "core",
+   "set": "unseen",
+   "hand": 1385,
+   "handAlt": null,
+   "handIncludes": "side 745 (partly past the lot line) + front 640, rough; back under canopy maybe not traced",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": "runs past the lot line; back under canopy maybe not traced; rough",
+   "lotSqft": 8826,
+   "crownShare": 0.43,
+   "ours": 2400,
+   "oursCard": {
+    "lv": "M",
+    "sq": 2400,
+    "yr": 2023
+   },
+   "v2raw": 2411,
+   "drcogTurf": 2332,
+   "drcogTurfTrees": 5312,
+   "drcogTurfApp": 2300,
+   "drcogTurfTreesApp": 5300,
+   "avgOursTurf": 2366,
+   "guardedAvg": 2366,
+   "err": {
+    "ours": 0.733,
+    "drcogTurf": 0.684,
+    "drcogTurfTrees": 2.835,
+    "avg": 0.708,
+    "guardedAvg": 0.708
+   }
+  },
+  {
+   "town": "highlands-ranch",
+   "id": "9416-desert-willow-trl",
+   "address": "9416 DESERT WILLOW TRL",
+   "use": "core",
+   "set": "unseen",
+   "hand": 1473,
+   "handAlt": null,
+   "handIncludes": "front 766 (part past the lot line) + back 707 under trees",
+   "measuredBy": "Matthew 23 Oct",
+   "scopeFlag": "front partly past the lot line",
+   "lotSqft": 6598,
+   "crownShare": 0.3,
+   "ours": 1400,
+   "oursCard": {
+    "lv": "M",
+    "sq": 1400,
+    "yr": 2023
+   },
+   "v2raw": 1399,
+   "drcogTurf": 1143,
+   "drcogTurfTrees": 2630,
+   "drcogTurfApp": 1100,
+   "drcogTurfTreesApp": 2600,
+   "avgOursTurf": 1271.5,
+   "guardedAvg": 1271.5,
+   "err": {
+    "ours": -0.05,
+    "drcogTurf": -0.224,
+    "drcogTurfTrees": 0.785,
+    "avg": -0.137,
+    "guardedAvg": -0.137
+   }
+  },
+  {
+   "town": "centennial",
+   "id": "2195-e-nichols-dr",
+   "address": "2195 E NICHOLS DR",
+   "use": "core",
+   "set": "unseen",
+   "hand": 3035,
+   "handAlt": null,
+   "handIncludes": "front-left 848 + back 1,858 almost all under one big tree + side 329 (log incl=trees)",
+   "measuredBy": "Matthew 25 Oct",
+   "scopeFlag": null,
+   "lotSqft": 6211,
+   "crownShare": 0.39,
+   "ours": 1350,
+   "oursCard": {
+    "lv": "T",
+    "sq": 700,
+    "yr": 2023,
+    "rng": [
+     700,
+     2000
+    ]
+   },
+   "v2raw": 689,
+   "drcogTurf": 1830,
+   "drcogTurfTrees": 3991,
+   "drcogTurfApp": 1800,
+   "drcogTurfTreesApp": 4000,
+   "avgOursTurf": 1590,
+   "guardedAvg": 1590,
+   "err": {
+    "ours": -0.555,
+    "drcogTurf": -0.397,
+    "drcogTurfTrees": 0.315,
+    "avg": -0.476,
+    "guardedAvg": -0.476
+   }
+  },
+  {
+   "town": "arvada",
+   "id": "9353-pike-way",
+   "address": "9353 PIKE WAY",
+   "use": "core",
+   "set": "unseen",
+   "hand": 1880,
+   "handAlt": null,
+   "handIncludes": "back 1,165 to the grass edge under fence-line trees + front 451 + drive strip 121 + bed-edge grass 81 + 62 (may overlap: true ~1,820-1,880) (log incl=trees)",
+   "measuredBy": "Matthew 29 Oct",
+   "scopeFlag": "two bed-edge pieces may overlap (true ~1,820-1,880)",
+   "lotSqft": 8547,
+   "crownShare": 0.11,
+   "ours": 1400,
+   "oursCard": {
+    "lv": "M",
+    "sq": 1400,
+    "yr": 2023
+   },
+   "v2raw": 1367,
+   "drcogTurf": 2009,
+   "drcogTurfTrees": 2119,
+   "drcogTurfApp": 2000,
+   "drcogTurfTreesApp": 2100,
+   "avgOursTurf": 1704.5,
+   "guardedAvg": 1704.5,
+   "err": {
+    "ours": -0.255,
+    "drcogTurf": 0.069,
+    "drcogTurfTrees": 0.127,
+    "avg": -0.093,
+    "guardedAvg": -0.093
+   }
+  },
+  {
+   "town": "lakewood",
+   "id": "12405-w-19th-pl",
+   "address": "12405 W 19TH PL",
+   "use": "quote",
+   "set": "unseen",
+   "hand": 4300,
+   "handAlt": null,
+   "handIncludes": "\"about 4,300\", remote quote",
+   "measuredBy": "Jen 25 Oct",
+   "scopeFlag": null,
+   "lotSqft": 13197,
+   "crownShare": 0.4,
+   "ours": 4800,
+   "oursCard": {
+    "lv": "L",
+    "sq": 4800,
+    "yr": 2023
+   },
+   "v2raw": 4790,
+   "drcogTurf": 3230,
+   "drcogTurfTrees": 8317,
+   "drcogTurfApp": 3200,
+   "drcogTurfTreesApp": 8300,
+   "avgOursTurf": 4015,
+   "guardedAvg": 4015,
+   "err": {
+    "ours": 0.116,
+    "drcogTurf": -0.249,
+    "drcogTurfTrees": 0.934,
+    "avg": -0.066,
+    "guardedAvg": -0.066
+   }
+  },
+  {
+   "town": "lakewood",
+   "id": "155-everett-st",
+   "address": "155 EVERETT ST",
+   "use": "quote",
+   "set": "unseen",
+   "hand": 2000,
+   "handAlt": null,
+   "handIncludes": "remote quote",
+   "measuredBy": "Jen 25 Oct",
+   "scopeFlag": null,
+   "lotSqft": 12314,
+   "crownShare": 0.39,
+   "ours": 3800,
+   "oursCard": {
+    "lv": "L",
+    "sq": 3800,
+    "yr": 2023
+   },
+   "v2raw": 3789,
+   "drcogTurf": 4519,
+   "drcogTurfTrees": 8653,
+   "drcogTurfApp": 4500,
+   "drcogTurfTreesApp": 8700,
+   "avgOursTurf": 4159.5,
+   "guardedAvg": 4159.5,
+   "err": {
+    "ours": 0.9,
+    "drcogTurf": 1.26,
+    "drcogTurfTrees": 3.326,
+    "avg": 1.08,
+    "guardedAvg": 1.08
+   }
+  },
+  {
+   "town": "lakewood",
+   "id": "1539-harlan-st",
+   "address": "1539 HARLAN ST",
+   "use": "quote",
+   "set": "unseen",
+   "hand": 1500,
+   "handAlt": null,
+   "handIncludes": "back 1,250 + front, \"might be turf\"",
+   "measuredBy": "Jen 25 Oct",
+   "scopeFlag": null,
+   "lotSqft": 5554,
+   "crownShare": 0.49,
+   "ours": 1200,
+   "oursCard": {
+    "lv": "T",
+    "sq": 500,
+    "yr": 2023,
+    "rng": [
+     500,
+     1900
+    ]
+   },
+   "v2raw": 484,
+   "drcogTurf": 551,
+   "drcogTurfTrees": 3352,
+   "drcogTurfApp": 600,
+   "drcogTurfTreesApp": 3400,
+   "avgOursTurf": 875.5,
+   "guardedAvg": 1200,
+   "err": {
+    "ours": -0.2,
+    "drcogTurf": -0.633,
+    "drcogTurfTrees": 1.235,
+    "avg": -0.416,
+    "guardedAvg": -0.2
+   }
+  },
+  {
+   "town": "lakewood",
+   "id": "2644-s-hoyt-st",
+   "address": "2644 S HOYT ST",
+   "use": "quote",
+   "set": "unseen",
+   "hand": 2700,
+   "handAlt": null,
+   "handIncludes": "\"about 2,700, hard to tell with trees\"",
+   "measuredBy": "Jen 25 Oct",
+   "scopeFlag": null,
+   "lotSqft": 8234,
+   "crownShare": 0.49,
+   "ours": 2600,
+   "oursCard": {
+    "lv": "M",
+    "sq": 2600,
+    "yr": 2023
+   },
+   "v2raw": 2594,
+   "drcogTurf": 1515,
+   "drcogTurfTrees": 5322,
+   "drcogTurfApp": 1500,
+   "drcogTurfTreesApp": 5300,
+   "avgOursTurf": 2057.5,
+   "guardedAvg": 2057.5,
+   "err": {
+    "ours": -0.037,
+    "drcogTurf": -0.439,
+    "drcogTurfTrees": 0.971,
+    "avg": -0.238,
+    "guardedAvg": -0.238
+   }
+  },
+  {
+   "town": "welby",
+   "id": "567-e-77th-pl",
+   "address": "567 E 77TH PL",
+   "use": "core",
+   "set": "unseen",
+   "hand": 2229,
+   "handAlt": 1851,
+   "handIncludes": "back 1,175 (deck/patio left out) + front 676 + side strip 378; the side strip reads dark (shade or gravel): 1,851 without it",
+   "measuredBy": "Matthew 30 Oct",
+   "scopeFlag": "side strip may be gravel/shade (1,851 without it)",
+   "lotSqft": 5673,
+   "crownShare": 0.17,
+   "ours": 1400,
+   "oursCard": {
+    "lv": "M",
+    "sq": 1400,
+    "yr": 2023
+   },
+   "v2raw": 1410,
+   "drcogTurf": 3083,
+   "drcogTurfTrees": 3359,
+   "drcogTurfApp": 3100,
+   "drcogTurfTreesApp": 3400,
+   "avgOursTurf": 2241.5,
+   "guardedAvg": 2241.5,
+   "err": {
+    "ours": -0.372,
+    "drcogTurf": 0.383,
+    "drcogTurfTrees": 0.507,
+    "avg": 0.006,
+    "guardedAvg": 0.006
+   }
+  }
+ ],
+ "summary": {
+  "all": {
+   "n": 20,
+   "ours (card)": {
+    "n": 20,
+    "medAbs": 0.2466645049925136,
+    "meanSigned": -0.13158732509264823,
+    "medSigned": -0.1364178774426757,
+    "within20": 8,
+    "within25": 10,
+    "worst": 0.7328519855595668
+   },
+   "DRCOG turf": {
+    "n": 20,
+    "medAbs": 0.37799917163912866,
+    "meanSigned": 0.25290340038511805,
+    "medSigned": 0.07071417374144726,
+    "within20": 5,
+    "within25": 9,
+    "worst": 3.462042389210019
+   },
+   "DRCOG turf+trees": {
+    "n": 20,
+    "medAbs": 0.8149680959801453,
+    "meanSigned": 0.9567070198575207,
+    "medSigned": 0.7553577704652621,
+    "within20": 3,
+    "within25": 4,
+    "worst": 4.280924855491329
+   },
+   "average(ours, turf)": {
+    "n": 20,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.06065803764623488,
+    "medSigned": -0.031005130188209072,
+    "within20": 9,
+    "within25": 13,
+    "worst": 1.866859344894027
+   },
+   "average(ours, turf+trees)": {
+    "n": 20,
+    "medAbs": 0.38465811144120765,
+    "meanSigned": 0.4125598473824361,
+    "medSigned": 0.33559190180457255,
+    "within20": 7,
+    "within25": 8,
+    "worst": 2.276300578034682
+   },
+   "geo mean(ours, turf)": {
+    "n": 20,
+    "medAbs": 0.23547520861157384,
+    "meanSigned": 0.006250437167189279,
+    "medSigned": -0.08794126251463699,
+    "within20": 9,
+    "within25": 11,
+    "worst": 1.3820733738768358
+   },
+   "larger of ours, turf": {
+    "n": 20,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.3097322404282742,
+    "medSigned": 0.09772948723465731,
+    "within20": 7,
+    "within25": 10,
+    "worst": 3.462042389210019
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 20,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.2929871532431095,
+    "medSigned": 0.09772948723465731,
+    "within20": 7,
+    "within25": 10,
+    "worst": 3.462042389210019
+   },
+   "turf + half the DRCOG trees": {
+    "n": 20,
+    "medAbs": 0.5865004847151041,
+    "meanSigned": 0.6048052101213194,
+    "medSigned": 0.47577275604073843,
+    "within20": 5,
+    "within25": 6,
+    "worst": 3.8714836223506746
+   },
+   "average, ours if turf < half of ours": {
+    "n": 20,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.0700823387810259,
+    "medSigned": -0.031005130188209072,
+    "within20": 9,
+    "within25": 13,
+    "worst": 1.866859344894027
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 20,
+    "medAbs": 0.23825236923565365,
+    "meanSigned": 0.18589278231365908,
+    "medSigned": 0.1030530011409113,
+    "within20": 4,
+    "within25": 10,
+    "worst": 1.6369386281588447
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 20,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": -0.009676813434773692,
+    "medSigned": -0.031005130188209072,
+    "within20": 9,
+    "within25": 13,
+    "worst": 0.7083032490974729
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 20,
+    "medAbs": 0.2229563450534684,
+    "meanSigned": -0.00800344162187985,
+    "medSigned": -0.018115885960149875,
+    "within20": 9,
+    "within25": 12,
+    "worst": 0.7328519855595668
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 20,
+    "medAbs": 0.24172929973554316,
+    "meanSigned": -0.1332606969055421,
+    "medSigned": -0.21645663959467712,
+    "within20": 8,
+    "within25": 11,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 20,
+    "medAbs": 0.2229563450534684,
+    "meanSigned": 0.062331409459128725,
+    "medSigned": -0.018115885960149875,
+    "within20": 9,
+    "within25": 12,
+    "worst": 1.866859344894027
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 20,
+    "medAbs": 0.23017182265863495,
+    "meanSigned": 0.013775453499138246,
+    "medSigned": -0.12254647484508385,
+    "within20": 7,
+    "within25": 12,
+    "worst": 1.7073410404624279
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 20,
+    "medAbs": 0.23589965621150064,
+    "meanSigned": -0.06983218140062918,
+    "medSigned": -0.09584667295344286,
+    "within20": 8,
+    "within25": 12,
+    "worst": 0.8379783393501804
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 20,
+    "medAbs": 0.23954868780641828,
+    "meanSigned": 0.06714548439804292,
+    "medSigned": -0.03699206361829256,
+    "within20": 8,
+    "within25": 12,
+    "worst": 1.5478227360308288
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 20,
+    "medAbs": 0.23481591014126602,
+    "meanSigned": -0.0675505920110539,
+    "medSigned": -0.09323877131480947,
+    "within20": 8,
+    "within25": 12,
+    "worst": 0.9061371841155235
+   }
+  },
+  "tree-heavy (crowns ≥ 25%)": {
+   "n": 10,
+   "ours (card)": {
+    "n": 10,
+    "medAbs": 0.17893116035353757,
+    "meanSigned": -0.06459630532679876,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "DRCOG turf": {
+    "n": 10,
+    "medAbs": 0.22410549515695666,
+    "meanSigned": -0.07128979257837412,
+    "medSigned": -0.1878911103691829,
+    "within20": 3,
+    "within25": 7,
+    "worst": 0.683754512635379
+   },
+   "DRCOG turf+trees": {
+    "n": 10,
+    "medAbs": 0.8174686493059213,
+    "meanSigned": 1.0894632426930113,
+    "medSigned": 0.8174686493059213,
+    "within20": 1,
+    "within25": 2,
+    "worst": 2.835379061371841
+   },
+   "average(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "average(ours, turf+trees)": {
+    "n": 10,
+    "medAbs": 0.42805513202785456,
+    "meanSigned": 0.5124334686831062,
+    "medSigned": 0.42805513202785456,
+    "within20": 3,
+    "within25": 4,
+    "worst": 1.784115523465704
+   },
+   "geo mean(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.21697901274931203,
+    "meanSigned": -0.0743978454980154,
+    "medSigned": -0.16858545974315134,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7081268543100356
+   },
+   "larger of ours, turf": {
+    "n": 10,
+    "medAbs": 0.1878911103691829,
+    "meanSigned": 0.004670682968774026,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.7328519855595668
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 10,
+    "medAbs": 0.1878911103691829,
+    "meanSigned": 0.004670682968774026,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.7328519855595668
+   },
+   "turf + half the DRCOG trees": {
+    "n": 10,
+    "medAbs": 0.37092900956502417,
+    "meanSigned": 0.5090867250573187,
+    "medSigned": 0.37092900956502417,
+    "within20": 3,
+    "within25": 4,
+    "worst": 1.75956678700361
+   },
+   "average, ours if turf < half of ours": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 10,
+    "medAbs": 0.3794380205199027,
+    "meanSigned": 0.4454060993968566,
+    "medSigned": 0.2939684306930509,
+    "within20": 2,
+    "within25": 4,
+    "worst": 1.6369386281588447
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 10,
+    "medAbs": 0.17893116035353757,
+    "meanSigned": -0.06459630532679876,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 10,
+    "medAbs": 0.17893116035353757,
+    "meanSigned": -0.06459630532679876,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.21862208113621207,
+    "meanSigned": -0.06792998198976666,
+    "medSigned": -0.16575229987387322,
+    "within20": 4,
+    "within25": 7,
+    "worst": 0.7107581227436823
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.22930653554470856,
+    "meanSigned": 0.0077875249632129665,
+    "medSigned": 0.026621793149684866,
+    "within20": 4,
+    "within25": 7,
+    "worst": 0.8379783393501804
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 10,
+    "medAbs": 0.18796891077419742,
+    "meanSigned": -0.03644154443736462,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7328519855595668
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 10,
+    "medAbs": 0.23481591014126602,
+    "meanSigned": 0.0065654516313266575,
+    "medSigned": 0.00201584444628025,
+    "within20": 4,
+    "within25": 7,
+    "worst": 0.9061371841155235
+   }
+  },
+  "open (crowns < 25%)": {
+   "n": 10,
+   "ours (card)": {
+    "n": 10,
+    "medAbs": 0.2634977247571024,
+    "meanSigned": -0.19857834485849774,
+    "medSigned": -0.2466645049925136,
+    "within20": 3,
+    "within25": 4,
+    "worst": -0.6256434253626579
+   },
+   "DRCOG turf": {
+    "n": 10,
+    "medAbs": 0.5677297299774624,
+    "meanSigned": 0.5770965933486102,
+    "medSigned": 0.4367692809276116,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.462042389210019
+   },
+   "DRCOG turf+trees": {
+    "n": 10,
+    "medAbs": 0.7848540402403835,
+    "meanSigned": 0.8239507970220299,
+    "medSigned": 0.6160987528315702,
+    "within20": 2,
+    "within25": 2,
+    "worst": 4.280924855491329
+   },
+   "average(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.18925912424505628,
+    "medSigned": 0.09132783874370883,
+    "within20": 4,
+    "within25": 6,
+    "worst": 1.866859344894027
+   },
+   "average(ours, turf+trees)": {
+    "n": 10,
+    "medAbs": 0.35229346198984,
+    "meanSigned": 0.31268622608176605,
+    "medSigned": 0.1853731595996621,
+    "within20": 4,
+    "within25": 4,
+    "worst": 2.276300578034682
+   },
+   "geo mean(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.24299594651473228,
+    "meanSigned": 0.08689871983239397,
+    "medSigned": 0.03339556720971844,
+    "within20": 4,
+    "within25": 5,
+    "worst": 1.3820733738768358
+   },
+   "larger of ours, turf": {
+    "n": 10,
+    "medAbs": 0.5237809159224716,
+    "meanSigned": 0.6147937978877743,
+    "medSigned": 0.4367692809276116,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.462042389210019
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 10,
+    "medAbs": 0.5677297299774624,
+    "meanSigned": 0.581303623517445,
+    "medSigned": 0.4367692809276116,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.462042389210019
+   },
+   "turf + half the DRCOG trees": {
+    "n": 10,
+    "medAbs": 0.6950039575734122,
+    "meanSigned": 0.7005236951853201,
+    "medSigned": 0.5865004847151041,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.8714836223506746
+   },
+   "average, ours if turf < half of ours": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.20810772651463832,
+    "medSigned": 0.09132783874370883,
+    "within20": 4,
+    "within25": 6,
+    "worst": 1.866859344894027
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 10,
+    "medAbs": 0.2231993180186098,
+    "meanSigned": -0.07362053476953853,
+    "medSigned": -0.16609384805020172,
+    "within20": 2,
+    "within25": 6,
+    "worst": -0.5738998062551895
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.048589422083039055,
+    "medSigned": 0.09132783874370883,
+    "within20": 4,
+    "within25": 6,
+    "worst": -0.5571547190700249
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.048589422083039055,
+    "medSigned": 0.09132783874370883,
+    "within20": 4,
+    "within25": 6,
+    "worst": -0.5571547190700249
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 10,
+    "medAbs": 0.2634977247571024,
+    "meanSigned": -0.19857834485849774,
+    "medSigned": -0.2466645049925136,
+    "within20": 3,
+    "within25": 4,
+    "worst": -0.6256434253626579
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.18925912424505628,
+    "medSigned": 0.09132783874370883,
+    "within20": 4,
+    "within25": 6,
+    "worst": 1.866859344894027
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.2849615780338196,
+    "meanSigned": 0.09548088898804315,
+    "medSigned": 0.003689739359317906,
+    "within20": 3,
+    "within25": 5,
+    "worst": 1.7073410404624279
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.2791526678212106,
+    "meanSigned": -0.14745188776447132,
+    "medSigned": -0.21004147910964455,
+    "within20": 4,
+    "within25": 5,
+    "worst": -0.5738998062551895
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 10,
+    "medAbs": 0.2771632462320241,
+    "meanSigned": 0.17073251323345046,
+    "medSigned": 0.10182452797976406,
+    "within20": 3,
+    "within25": 5,
+    "worst": 1.5478227360308288
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 10,
+    "medAbs": 0.2509030183077684,
+    "meanSigned": -0.14166663565343446,
+    "medSigned": -0.2089977302421393,
+    "within20": 4,
+    "within25": 5,
+    "worst": -0.5882077678989237
+   }
+  },
+  "scope-clean (drop Valentia, Upton, Hughes, Desert Willow)": {
+   "n": 16,
+   "ours (card)": {
+    "n": 16,
+    "medAbs": 0.2466645049925136,
+    "meanSigned": -0.21021493956907594,
+    "medSigned": -0.2466645049925136,
+    "within20": 7,
+    "within25": 8,
+    "worst": -0.6256434253626579
+   },
+   "DRCOG turf": {
+    "n": 16,
+    "medAbs": 0.37799917163912866,
+    "meanSigned": 0.08149857638683675,
+    "medSigned": 0.07071417374144726,
+    "within20": 4,
+    "within25": 7,
+    "worst": -0.9341267644616662
+   },
+   "DRCOG turf+trees": {
+    "n": 16,
+    "medAbs": 0.7848540402403835,
+    "meanSigned": 0.6868196716593273,
+    "medSigned": 0.6668055968494873,
+    "within20": 3,
+    "within25": 3,
+    "worst": 2.015969338869371
+   },
+   "average(ours, turf)": {
+    "n": 16,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": -0.06435818159111961,
+    "medSigned": -0.031005130188209072,
+    "within20": 7,
+    "within25": 11,
+    "worst": -0.7456407417658456
+   },
+   "average(ours, turf+trees)": {
+    "n": 16,
+    "medAbs": 0.35229346198984,
+    "meanSigned": 0.23830236604512567,
+    "medSigned": 0.23701366930793732,
+    "within20": 6,
+    "within25": 7,
+    "worst": 1.0201644479248237
+   },
+   "geo mean(ours, turf)": {
+    "n": 16,
+    "medAbs": 0.23547520861157384,
+    "meanSigned": -0.10175128533479894,
+    "medSigned": -0.08794126251463699,
+    "within20": 7,
+    "within25": 9,
+    "worst": -0.829202893766493
+   },
+   "larger of ours, turf": {
+    "n": 16,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.13856141795396382,
+    "medSigned": 0.09772948723465731,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.6898251904975348
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 16,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.11763005897250797,
+    "medSigned": 0.09772948723465731,
+    "within20": 5,
+    "within25": 8,
+    "worst": -0.8920564627733186
+   },
+   "turf + half the DRCOG trees": {
+    "n": 16,
+    "medAbs": 0.5865004847151041,
+    "meanSigned": 0.3841591240230821,
+    "medSigned": 0.47577275604073843,
+    "within20": 4,
+    "within25": 5,
+    "worst": 0.9827721221613156
+   },
+   "average, ours if turf < half of ours": {
+    "n": 16,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": -0.05257780517263081,
+    "medSigned": -0.031005130188209072,
+    "within20": 7,
+    "within25": 11,
+    "worst": -0.5571547190700249
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 16,
+    "medAbs": 0.23825236923565365,
+    "meanSigned": 0.08789353485021649,
+    "medSigned": -0.017825544189947126,
+    "within20": 3,
+    "within25": 8,
+    "worst": 1.295736186521878
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 16,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": -0.05257780517263081,
+    "medSigned": -0.031005130188209072,
+    "within20": 7,
+    "within25": 11,
+    "worst": -0.5571547190700249
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 16,
+    "medAbs": 0.19984172024234728,
+    "meanSigned": -0.05573508523061544,
+    "medSigned": -0.018115885960149875,
+    "within20": 8,
+    "within25": 10,
+    "worst": -0.5607753270314141
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 16,
+    "medAbs": 0.24172929973554316,
+    "meanSigned": -0.20705765951109129,
+    "medSigned": -0.24172929973554316,
+    "within20": 6,
+    "within25": 9,
+    "worst": -0.6256434253626579
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 16,
+    "medAbs": 0.19984172024234728,
+    "meanSigned": -0.06751546164910424,
+    "medSigned": -0.018115885960149875,
+    "within20": 8,
+    "within25": 10,
+    "worst": -0.7456407417658456
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 16,
+    "medAbs": 0.23017182265863495,
+    "meanSigned": -0.11319284334222492,
+    "medSigned": -0.17332545841566205,
+    "within20": 6,
+    "within25": 10,
+    "worst": -0.7267921394962634
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 16,
+    "medAbs": 0.23589965621150064,
+    "meanSigned": -0.1561876759520175,
+    "medSigned": -0.20344835844285247,
+    "within20": 6,
+    "within25": 10,
+    "worst": -0.5738998062551895
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 16,
+    "medAbs": 0.23954868780641828,
+    "meanSigned": -0.042948167456957315,
+    "medSigned": -0.03699206361829256,
+    "within20": 7,
+    "within25": 10,
+    "worst": -0.5571547190700249
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 16,
+    "medAbs": 0.23481591014126602,
+    "meanSigned": -0.15434471327142632,
+    "medSigned": -0.2089977302421393,
+    "within20": 6,
+    "within25": 10,
+    "worst": -0.5882077678989237
+   }
+  },
+  "unseen by v2 tuning": {
+   "n": 13,
+   "ours (card)": {
+    "n": 13,
+    "medAbs": 0.2553191489361702,
+    "meanSigned": -0.15106329399148835,
+    "medSigned": -0.23800986104885702,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "DRCOG turf": {
+    "n": 13,
+    "medAbs": 0.3970345963756178,
+    "meanSigned": 0.061816853212936965,
+    "medSigned": 0.06861702127659575,
+    "within20": 3,
+    "within25": 5,
+    "worst": -0.9341267644616662
+   },
+   "DRCOG turf+trees": {
+    "n": 13,
+    "medAbs": 0.8444643657552667,
+    "meanSigned": 0.8806223655550784,
+    "medSigned": 0.7854718262050238,
+    "within20": 1,
+    "within25": 1,
+    "worst": 2.835379061371841
+   },
+   "average(ours, turf)": {
+    "n": 13,
+    "medAbs": 0.22590766472433887,
+    "meanSigned": -0.04462322038927569,
+    "medSigned": -0.06761815629386991,
+    "within20": 6,
+    "within25": 9,
+    "worst": -0.7456407417658456
+   },
+   "average(ours, turf+trees)": {
+    "n": 13,
+    "medAbs": 0.36795655125594023,
+    "meanSigned": 0.364779535781795,
+    "medSigned": 0.30322725235320486,
+    "within20": 5,
+    "within25": 5,
+    "worst": 1.784115523465704
+   },
+   "geo mean(ours, turf)": {
+    "n": 13,
+    "medAbs": 0.238002232598553,
+    "meanSigned": -0.08446913173056744,
+    "medSigned": -0.10793574622365344,
+    "within20": 6,
+    "within25": 7,
+    "worst": -0.829202893766493
+   },
+   "larger of ours, turf": {
+    "n": 13,
+    "medAbs": 0.38313144908030505,
+    "meanSigned": 0.14924583789471563,
+    "medSigned": 0.06861702127659575,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 13,
+    "medAbs": 0.38313144908030505,
+    "meanSigned": 0.12348416530215459,
+    "medSigned": 0.06861702127659575,
+    "within20": 5,
+    "within25": 6,
+    "worst": -0.8920564627733186
+   },
+   "turf + half the DRCOG trees": {
+    "n": 13,
+    "medAbs": 0.4904071127749181,
+    "meanSigned": 0.4712196093840078,
+    "medSigned": 0.4611383993065588,
+    "within20": 2,
+    "within25": 3,
+    "worst": 1.75956678700361
+   },
+   "average, ours if turf < half of ours": {
+    "n": 13,
+    "medAbs": 0.22590766472433887,
+    "meanSigned": -0.030124295566520246,
+    "medSigned": -0.06761815629386991,
+    "within20": 6,
+    "within25": 9,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 13,
+    "medAbs": 0.22250785105428433,
+    "meanSigned": 0.23570297279429964,
+    "medSigned": 0.08328660772050911,
+    "within20": 2,
+    "within25": 7,
+    "worst": 1.6369386281588447
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 13,
+    "medAbs": 0.22590766472433887,
+    "meanSigned": -0.030124295566520246,
+    "medSigned": -0.06761815629386991,
+    "within20": 6,
+    "within25": 9,
+    "worst": 0.7083032490974729
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 13,
+    "medAbs": 0.12684195319271888,
+    "meanSigned": -0.009247707873432508,
+    "medSigned": -0.04183966783775152,
+    "within20": 7,
+    "within25": 8,
+    "worst": 0.7328519855595668
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 13,
+    "medAbs": 0.2454487384222293,
+    "meanSigned": -0.17193988168457608,
+    "medSigned": -0.23800986104885702,
+    "within20": 4,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 13,
+    "medAbs": 0.12684195319271888,
+    "meanSigned": -0.023746632696187948,
+    "medSigned": -0.04183966783775152,
+    "within20": 7,
+    "within25": 8,
+    "worst": -0.7456407417658456
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 13,
+    "medAbs": 0.22508783136378155,
+    "meanSigned": -0.09489788275987089,
+    "medSigned": -0.12574468085106388,
+    "within20": 5,
+    "within25": 8,
+    "worst": -0.7267921394962634
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 13,
+    "medAbs": 0.23619680851063826,
+    "meanSigned": -0.09207132473020119,
+    "medSigned": -0.18388614970865083,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.8379783393501804
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 13,
+    "medAbs": 0.12684195319271888,
+    "meanSigned": -0.004654221727745181,
+    "medSigned": -0.04183966783775152,
+    "within20": 7,
+    "within25": 8,
+    "worst": 0.7328519855595668
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 13,
+    "medAbs": 0.2301056717705413,
+    "meanSigned": -0.09034803299594148,
+    "medSigned": -0.19991035410129987,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.9061371841155235
+   }
+  }
+ },
+ "summaryWith567At1851": {
+  "all": {
+   "n": 20,
+   "ours (card)": {
+    "n": 20,
+    "medAbs": 0.24083097050281857,
+    "meanSigned": -0.12517414622821715,
+    "medSigned": -0.1364178774426757,
+    "within20": 8,
+    "within25": 11,
+    "worst": 0.7328519855595668
+   },
+   "DRCOG turf": {
+    "n": 20,
+    "medAbs": 0.38495074528678497,
+    "meanSigned": 0.2670261364130045,
+    "medSigned": 0.07071417374144726,
+    "within20": 5,
+    "within25": 9,
+    "worst": 3.462042389210019
+   },
+   "DRCOG turf+trees": {
+    "n": 20,
+    "medAbs": 0.829579562672339,
+    "meanSigned": 0.9720940682901092,
+    "medSigned": 0.8000832928972175,
+    "within20": 3,
+    "within25": 4,
+    "worst": 4.280924855491329
+   },
+   "average(ours, turf)": {
+    "n": 20,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.07092599509239364,
+    "medSigned": -0.023922625523599014,
+    "within20": 8,
+    "within25": 13,
+    "worst": 1.866859344894027
+   },
+   "average(ours, turf+trees)": {
+    "n": 20,
+    "medAbs": 0.38465811144120765,
+    "meanSigned": 0.4234599610309459,
+    "medSigned": 0.33559190180457255,
+    "within20": 6,
+    "within25": 7,
+    "worst": 2.276300578034682
+   },
+   "geo mean(ours, turf)": {
+    "n": 20,
+    "medAbs": 0.23547520861157384,
+    "meanSigned": 0.015767350122658633,
+    "medSigned": -0.044424304746659,
+    "within20": 9,
+    "within25": 11,
+    "worst": 1.3820733738768358
+   },
+   "larger of ours, turf": {
+    "n": 20,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.3238549764561606,
+    "medSigned": 0.09772948723465731,
+    "within20": 7,
+    "within25": 10,
+    "worst": 3.462042389210019
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 20,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.3071098892709959,
+    "medSigned": 0.09772948723465731,
+    "within20": 7,
+    "within25": 10,
+    "worst": 3.462042389210019
+   },
+   "turf + half the DRCOG trees": {
+    "n": 20,
+    "medAbs": 0.6835308876390691,
+    "meanSigned": 0.6195601023515568,
+    "medSigned": 0.5865004847151041,
+    "within20": 5,
+    "within25": 6,
+    "worst": 3.8714836223506746
+   },
+   "average, ours if turf < half of ours": {
+    "n": 20,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.08035029622718466,
+    "medSigned": -0.023922625523599014,
+    "within20": 8,
+    "within25": 13,
+    "worst": 1.866859344894027
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 20,
+    "medAbs": 0.23825236923565365,
+    "meanSigned": 0.1938315190046769,
+    "medSigned": 0.1030530011409113,
+    "within20": 5,
+    "within25": 10,
+    "worst": 1.6369386281588447
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 20,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.0005911440113850544,
+    "medSigned": -0.023922625523599014,
+    "within20": 8,
+    "within25": 13,
+    "worst": 0.7083032490974729
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 20,
+    "medAbs": 0.2229563450534684,
+    "meanSigned": 0.002264515824278897,
+    "medSigned": 0.007662781586214296,
+    "within20": 8,
+    "within25": 12,
+    "worst": 0.7328519855595668
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 20,
+    "medAbs": 0.24083097050281857,
+    "meanSigned": -0.12684751804111102,
+    "medSigned": -0.21645663959467712,
+    "within20": 8,
+    "within25": 12,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 20,
+    "medAbs": 0.2229563450534684,
+    "meanSigned": 0.07259936690528748,
+    "medSigned": 0.007662781586214296,
+    "within20": 8,
+    "within25": 12,
+    "worst": 1.866859344894027
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 20,
+    "medAbs": 0.22400668163933757,
+    "meanSigned": -0.07006892754477925,
+    "medSigned": -0.07312896315197054,
+    "within20": 8,
+    "within25": 11,
+    "worst": 0.7279422382671479
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 20,
+    "medAbs": 0.22930653554470856,
+    "meanSigned": -0.06297030905779025,
+    "medSigned": -0.09584667295344286,
+    "within20": 9,
+    "within25": 13,
+    "worst": 0.8379783393501804
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 20,
+    "medAbs": 0.24191348840730661,
+    "meanSigned": -0.022054225549954325,
+    "medSigned": 0.007662781586214296,
+    "within20": 8,
+    "within25": 10,
+    "worst": 0.7328519855595668
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 20,
+    "medAbs": 0.19111580442962162,
+    "meanSigned": -0.03769156085103882,
+    "medSigned": -0.05005966518694312,
+    "within20": 11,
+    "within25": 13,
+    "worst": 0.9061371841155235
+   }
+  },
+  "tree-heavy (crowns ≥ 25%)": {
+   "n": 10,
+   "ours (card)": {
+    "n": 10,
+    "medAbs": 0.17893116035353757,
+    "meanSigned": -0.06459630532679876,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "DRCOG turf": {
+    "n": 10,
+    "medAbs": 0.22410549515695666,
+    "meanSigned": -0.07128979257837412,
+    "medSigned": -0.1878911103691829,
+    "within20": 3,
+    "within25": 7,
+    "worst": 0.683754512635379
+   },
+   "DRCOG turf+trees": {
+    "n": 10,
+    "medAbs": 0.8174686493059213,
+    "meanSigned": 1.0894632426930113,
+    "medSigned": 0.8174686493059213,
+    "within20": 1,
+    "within25": 2,
+    "worst": 2.835379061371841
+   },
+   "average(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "average(ours, turf+trees)": {
+    "n": 10,
+    "medAbs": 0.42805513202785456,
+    "meanSigned": 0.5124334686831062,
+    "medSigned": 0.42805513202785456,
+    "within20": 3,
+    "within25": 4,
+    "worst": 1.784115523465704
+   },
+   "geo mean(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.21697901274931203,
+    "meanSigned": -0.0743978454980154,
+    "medSigned": -0.16858545974315134,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7081268543100356
+   },
+   "larger of ours, turf": {
+    "n": 10,
+    "medAbs": 0.1878911103691829,
+    "meanSigned": 0.004670682968774026,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.7328519855595668
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 10,
+    "medAbs": 0.1878911103691829,
+    "meanSigned": 0.004670682968774026,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.7328519855595668
+   },
+   "turf + half the DRCOG trees": {
+    "n": 10,
+    "medAbs": 0.37092900956502417,
+    "meanSigned": 0.5090867250573187,
+    "medSigned": 0.37092900956502417,
+    "within20": 3,
+    "within25": 4,
+    "worst": 1.75956678700361
+   },
+   "average, ours if turf < half of ours": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 10,
+    "medAbs": 0.3794380205199027,
+    "meanSigned": 0.4454060993968566,
+    "medSigned": 0.2939684306930509,
+    "within20": 2,
+    "within25": 4,
+    "worst": 1.6369386281588447
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 10,
+    "medAbs": 0.17893116035353757,
+    "meanSigned": -0.06459630532679876,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 10,
+    "medAbs": 0.21645663959467712,
+    "meanSigned": -0.06794304895258645,
+    "medSigned": -0.16613546780444416,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 10,
+    "medAbs": 0.17893116035353757,
+    "meanSigned": -0.06459630532679876,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.2214022562071034,
+    "meanSigned": -0.08165524926424313,
+    "medSigned": -0.15108508865827447,
+    "within20": 4,
+    "within25": 6,
+    "worst": 0.7279422382671479
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.22930653554470856,
+    "meanSigned": 0.0077875249632129665,
+    "medSigned": 0.026621793149684866,
+    "within20": 4,
+    "within25": 7,
+    "worst": 0.8379783393501804
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 10,
+    "medAbs": 0.19630943598687153,
+    "meanSigned": -0.05453384749880642,
+    "medSigned": -0.045699195765447384,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 10,
+    "medAbs": 0.21648509280246936,
+    "meanSigned": 0.02894406414052144,
+    "medSigned": 0.049730884658008026,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.9061371841155235
+   }
+  },
+  "open (crowns < 25%)": {
+   "n": 10,
+   "ours (card)": {
+    "n": 10,
+    "medAbs": 0.24948561444647516,
+    "meanSigned": -0.1857519871296356,
+    "medSigned": -0.24083097050281857,
+    "within20": 3,
+    "within25": 5,
+    "worst": -0.6256434253626579
+   },
+   "DRCOG turf": {
+    "n": 10,
+    "medAbs": 0.6553192584090202,
+    "meanSigned": 0.6053420654043831,
+    "medSigned": 0.5677297299774624,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.462042389210019
+   },
+   "DRCOG turf+trees": {
+    "n": 10,
+    "medAbs": 0.829579562672339,
+    "meanSigned": 0.854724893887207,
+    "medSigned": 0.7699692371574558,
+    "within20": 2,
+    "within25": 2,
+    "worst": 4.280924855491329
+   },
+   "average(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.2097950391373738,
+    "medSigned": 0.1940074132052963,
+    "within20": 3,
+    "within25": 6,
+    "worst": 1.866859344894027
+   },
+   "average(ours, turf+trees)": {
+    "n": 10,
+    "medAbs": 0.35229346198984,
+    "meanSigned": 0.3344864533787857,
+    "medSigned": 0.2943742960847602,
+    "within20": 3,
+    "within25": 3,
+    "worst": 2.276300578034682
+   },
+   "geo mean(ours, turf)": {
+    "n": 10,
+    "medAbs": 0.24299594651473228,
+    "meanSigned": 0.10593254574333266,
+    "medSigned": 0.12856469676441196,
+    "within20": 4,
+    "within25": 5,
+    "worst": 1.3820733738768358
+   },
+   "larger of ours, turf": {
+    "n": 10,
+    "medAbs": 0.6011035331250159,
+    "meanSigned": 0.6430392699435472,
+    "medSigned": 0.5677297299774624,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.462042389210019
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 10,
+    "medAbs": 0.6553192584090202,
+    "meanSigned": 0.6095490955732179,
+    "medSigned": 0.5677297299774624,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.462042389210019
+   },
+   "turf + half the DRCOG trees": {
+    "n": 10,
+    "medAbs": 0.7237772615526282,
+    "meanSigned": 0.730033479645795,
+    "medSigned": 0.6950039575734122,
+    "within20": 2,
+    "within25": 2,
+    "worst": 3.8714836223506746
+   },
+   "average, ours if turf < half of ours": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.22864364140695584,
+    "medSigned": 0.1940074132052963,
+    "within20": 3,
+    "within25": 6,
+    "worst": 1.866859344894027
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 10,
+    "medAbs": 0.21962860762149122,
+    "meanSigned": -0.05774306138750285,
+    "medSigned": -0.09133540666716543,
+    "within20": 3,
+    "within25": 6,
+    "worst": -0.5738998062551895
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.06912533697535655,
+    "medSigned": 0.1940074132052963,
+    "within20": 3,
+    "within25": 6,
+    "worst": -0.5571547190700249
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.06912533697535655,
+    "medSigned": 0.1940074132052963,
+    "within20": 3,
+    "within25": 6,
+    "worst": -0.5571547190700249
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 10,
+    "medAbs": 0.24948561444647516,
+    "meanSigned": -0.1857519871296356,
+    "medSigned": -0.24083097050281857,
+    "within20": 3,
+    "within25": 5,
+    "worst": -0.6256434253626579
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 10,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": 0.2097950391373738,
+    "medSigned": 0.1940074132052963,
+    "within20": 3,
+    "within25": 6,
+    "worst": 1.866859344894027
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.27326121556984984,
+    "meanSigned": -0.05848260582531537,
+    "medSigned": -0.05712364038869805,
+    "within20": 4,
+    "within25": 5,
+    "worst": -0.594851923609189
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 10,
+    "medAbs": 0.2134657732450544,
+    "meanSigned": -0.13372814307879347,
+    "medSigned": -0.18731044384406068,
+    "within20": 5,
+    "within25": 6,
+    "worst": -0.5738998062551895
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 10,
+    "medAbs": 0.3143848307456486,
+    "meanSigned": 0.01042539639889776,
+    "medSigned": 0.16148550133402656,
+    "within20": 3,
+    "within25": 4,
+    "worst": 0.590712909441233
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 10,
+    "medAbs": 0.18700538157324514,
+    "meanSigned": -0.10432718584259908,
+    "medSigned": -0.1649140675531003,
+    "within20": 6,
+    "within25": 6,
+    "worst": -0.5882077678989237
+   }
+  },
+  "scope-clean (drop Valentia, Upton, Hughes, Desert Willow)": {
+   "n": 16,
+   "ours (card)": {
+    "n": 16,
+    "medAbs": 0.24083097050281857,
+    "meanSigned": -0.2021984659885371,
+    "medSigned": -0.24083097050281857,
+    "within20": 7,
+    "within25": 9,
+    "worst": -0.6256434253626579
+   },
+   "DRCOG turf": {
+    "n": 16,
+    "medAbs": 0.38495074528678497,
+    "meanSigned": 0.09915199642169478,
+    "medSigned": 0.07071417374144726,
+    "within20": 4,
+    "within25": 7,
+    "worst": -0.9341267644616662
+   },
+   "DRCOG turf+trees": {
+    "n": 16,
+    "medAbs": 0.829579562672339,
+    "meanSigned": 0.706053482200063,
+    "medSigned": 0.7699692371574558,
+    "within20": 3,
+    "within25": 3,
+    "worst": 2.015969338869371
+   },
+   "average(ours, turf)": {
+    "n": 16,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": -0.051523234783421176,
+    "medSigned": -0.023922625523599014,
+    "within20": 6,
+    "within25": 11,
+    "worst": -0.7456407417658456
+   },
+   "average(ours, turf+trees)": {
+    "n": 16,
+    "medAbs": 0.35229346198984,
+    "meanSigned": 0.2519275081057629,
+    "medSigned": 0.2943742960847602,
+    "within20": 5,
+    "within25": 6,
+    "worst": 1.0201644479248237
+   },
+   "geo mean(ours, turf)": {
+    "n": 16,
+    "medAbs": 0.23547520861157384,
+    "meanSigned": -0.08985514414046225,
+    "medSigned": -0.044424304746659,
+    "within20": 7,
+    "within25": 9,
+    "worst": -0.829202893766493
+   },
+   "larger of ours, turf": {
+    "n": 16,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.15621483798882185,
+    "medSigned": 0.09772948723465731,
+    "within20": 5,
+    "within25": 8,
+    "worst": 0.6898251904975348
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 16,
+    "medAbs": 0.30149121469183393,
+    "meanSigned": 0.135283479007366,
+    "medSigned": 0.09772948723465731,
+    "within20": 5,
+    "within25": 8,
+    "worst": -0.8920564627733186
+   },
+   "turf + half the DRCOG trees": {
+    "n": 16,
+    "medAbs": 0.6835308876390691,
+    "meanSigned": 0.4026027393108789,
+    "medSigned": 0.5865004847151041,
+    "within20": 4,
+    "within25": 5,
+    "worst": 0.9827721221613156
+   },
+   "average, ours if turf < half of ours": {
+    "n": 16,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": -0.03974285836493238,
+    "medSigned": -0.023922625523599014,
+    "within20": 6,
+    "within25": 11,
+    "worst": -0.5571547190700249
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 16,
+    "medAbs": 0.23825236923565365,
+    "meanSigned": 0.0978169557139888,
+    "medSigned": 0.009776745243290808,
+    "within20": 4,
+    "within25": 8,
+    "worst": 1.295736186521878
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 16,
+    "medAbs": 0.22427166181953379,
+    "meanSigned": -0.03974285836493238,
+    "medSigned": -0.023922625523599014,
+    "within20": 6,
+    "within25": 11,
+    "worst": -0.5571547190700249
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 16,
+    "medAbs": 0.21680135187767768,
+    "meanSigned": -0.04290013842291701,
+    "medSigned": 0.007662781586214296,
+    "within20": 7,
+    "within25": 10,
+    "worst": -0.5607753270314141
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 16,
+    "medAbs": 0.24083097050281857,
+    "meanSigned": -0.19904118593055245,
+    "medSigned": -0.24083097050281857,
+    "within20": 6,
+    "within25": 10,
+    "worst": -0.6256434253626579
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 16,
+    "medAbs": 0.21680135187767768,
+    "meanSigned": -0.054680514841405806,
+    "medSigned": 0.007662781586214296,
+    "within20": 7,
+    "within25": 10,
+    "worst": -0.7456407417658456
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 16,
+    "medAbs": 0.22400668163933757,
+    "meanSigned": -0.15111647008046356,
+    "medSigned": -0.1423649809763555,
+    "within20": 7,
+    "within25": 9,
+    "worst": -0.594851923609189
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 16,
+    "medAbs": 0.22930653554470856,
+    "meanSigned": -0.1476103355234688,
+    "medSigned": -0.18731044384406068,
+    "within20": 7,
+    "within25": 11,
+    "worst": -0.5738998062551895
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 16,
+    "medAbs": 0.24191348840730661,
+    "meanSigned": -0.09358587507851984,
+    "medSigned": 0.007662781586214296,
+    "within20": 7,
+    "within25": 8,
+    "worst": -0.5571547190700249
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 16,
+    "medAbs": 0.19111580442962162,
+    "meanSigned": -0.12241831258739073,
+    "medSigned": -0.1649140675531003,
+    "within20": 9,
+    "within25": 11,
+    "worst": -0.5882077678989237
+   }
+  },
+  "unseen by v2 tuning": {
+   "n": 13,
+   "ours (card)": {
+    "n": 13,
+    "medAbs": 0.24365207995678012,
+    "meanSigned": -0.14119686496928668,
+    "medSigned": -0.23800986104885702,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7328519855595668
+   },
+   "DRCOG turf": {
+    "n": 13,
+    "medAbs": 0.4490578090067071,
+    "meanSigned": 0.08354413940968532,
+    "medSigned": 0.06861702127659575,
+    "within20": 3,
+    "within25": 5,
+    "worst": -0.9341267644616662
+   },
+   "DRCOG turf+trees": {
+    "n": 13,
+    "medAbs": 0.8444643657552667,
+    "meanSigned": 0.9042947477590608,
+    "medSigned": 0.8146947595894112,
+    "within20": 1,
+    "within25": 1,
+    "worst": 2.835379061371841
+   },
+   "average(ours, turf)": {
+    "n": 13,
+    "medAbs": 0.22590766472433887,
+    "meanSigned": -0.028826362779800704,
+    "medSigned": -0.06761815629386991,
+    "within20": 5,
+    "within25": 9,
+    "worst": -0.7456407417658456
+   },
+   "average(ours, turf+trees)": {
+    "n": 13,
+    "medAbs": 0.36795655125594023,
+    "meanSigned": 0.381548941394887,
+    "medSigned": 0.30322725235320486,
+    "within20": 4,
+    "within25": 4,
+    "worst": 1.784115523465704
+   },
+   "geo mean(ours, turf)": {
+    "n": 13,
+    "medAbs": 0.238002232598553,
+    "meanSigned": -0.06982772718369151,
+    "medSigned": -0.10793574622365344,
+    "within20": 6,
+    "within25": 7,
+    "worst": -0.829202893766493
+   },
+   "larger of ours, turf": {
+    "n": 13,
+    "medAbs": 0.3970345963756178,
+    "meanSigned": 0.17097312409146398,
+    "medSigned": 0.06861702127659575,
+    "within20": 5,
+    "within25": 6,
+    "worst": 0.7328519855595668
+   },
+   "middle of ours, turf, turf+trees": {
+    "n": 13,
+    "medAbs": 0.3970345963756178,
+    "meanSigned": 0.14521145149890294,
+    "medSigned": 0.06861702127659575,
+    "within20": 5,
+    "within25": 6,
+    "worst": -0.8920564627733186
+   },
+   "turf + half the DRCOG trees": {
+    "n": 13,
+    "medAbs": 0.7401404646137223,
+    "meanSigned": 0.4939194435843731,
+    "medSigned": 0.4904071127749181,
+    "within20": 2,
+    "within25": 3,
+    "worst": 1.75956678700361
+   },
+   "average, ours if turf < half of ours": {
+    "n": 13,
+    "medAbs": 0.22590766472433887,
+    "meanSigned": -0.01432743795704525,
+    "medSigned": -0.06761815629386991,
+    "within20": 5,
+    "within25": 9,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: w=crowns on turf+trees": {
+    "n": 13,
+    "medAbs": 0.21581878088962117,
+    "meanSigned": 0.24791641385740398,
+    "medSigned": 0.08328660772050911,
+    "within20": 3,
+    "within25": 7,
+    "worst": 1.6369386281588447
+   },
+   "average, guarded (ours if lot > 20,000 sq ft or turf < half of ours)": {
+    "n": 13,
+    "medAbs": 0.22590766472433887,
+    "meanSigned": -0.01432743795704525,
+    "medSigned": -0.06761815629386991,
+    "within20": 5,
+    "within25": 9,
+    "worst": 0.7083032490974729
+   },
+   "open lots average (guarded), tree lots ours": {
+    "n": 13,
+    "medAbs": 0.2109670448406267,
+    "meanSigned": 0.006549149736042487,
+    "medSigned": -0.04183966783775152,
+    "within20": 6,
+    "within25": 8,
+    "worst": 0.7328519855595668
+   },
+   "tree-weighted: open=ours, crowns>=25%=avg(ours,turf)": {
+    "n": 13,
+    "medAbs": 0.24365207995678012,
+    "meanSigned": -0.16207345266237444,
+    "medSigned": -0.23800986104885702,
+    "within20": 4,
+    "within25": 8,
+    "worst": 0.7083032490974729
+   },
+   "tree-weighted: open=avg(ours,turf), crowns>=25%=ours": {
+    "n": 13,
+    "medAbs": 0.2109670448406267,
+    "meanSigned": -0.007949775086712952,
+    "medSigned": -0.04183966783775152,
+    "within20": 6,
+    "within25": 8,
+    "worst": -0.7456407417658456
+   },
+   "w·turf + (1−w)·ours [LOO]": {
+    "n": 13,
+    "medAbs": 0.22508783136378155,
+    "meanSigned": -0.10269431860341979,
+    "medSigned": -0.08445349626612363,
+    "within20": 5,
+    "within25": 7,
+    "worst": 0.7279422382671479
+   },
+   "w·(turf+trees) + (1−w)·ours [LOO]": {
+    "n": 13,
+    "medAbs": 0.22301056717705411,
+    "meanSigned": -0.0815145980489105,
+    "medSigned": -0.18388614970865083,
+    "within20": 6,
+    "within25": 9,
+    "worst": 0.8379783393501804
+   },
+   "ours + w·max(0, turf − ours) [LOO]": {
+    "n": 13,
+    "medAbs": 0.22292553191489356,
+    "meanSigned": -0.047497053197555844,
+    "medSigned": -0.04183966783775152,
+    "within20": 6,
+    "within25": 7,
+    "worst": 0.7328519855595668
+   },
+   "ours × (1+w) [LOO]": {
+    "n": 13,
+    "medAbs": 0.18878757176629532,
+    "meanSigned": -0.055316551466215266,
+    "medSigned": -0.1618108471537426,
+    "within20": 8,
+    "within25": 9,
+    "worst": 0.9061371841155235
+   }
+  }
+ },
+ "fitsInSample": {
+  "w·turf + (1−w)·ours": {
+   "w": 0.4,
+   "s": 0.20288127746520543
+  },
+  "w·(turf+trees) + (1−w)·ours": {
+   "w": 0.05,
+   "s": 0.21148062571650142
+  },
+  "ours + w·(turf − ours) when turf > ours": {
+   "w": 0.45,
+   "s": 0.1888856838506025
+  },
+  "ours × (1+w)": {
+   "w": 0.05,
+   "s": 0.2089977302421393
+  }
+ },
+ "groups": {
+  "all": [
+   "3855 S VALENTIA CT",
+   "11663 SETTLERS DR",
+   "2787 RUSSET SKY CT",
+   "1648 MARSH HAWK CIR",
+   "7378 UPTON CT",
+   "6595 ZINNIA ST",
+   "3247 OAK LEAF PL",
+   "7006 E 131ST WAY",
+   "7614 E 121ST PL",
+   "579 E 76TH AVE",
+   "3852 PRIMROSE LN",
+   "6049 W ROXBURY PL",
+   "6916 S ELATI ST",
+   "600 HIDDENBROOK CT",
+   "9267 CANYON WREN CT",
+   "852 HUGHES LN",
+   "9416 DESERT WILLOW TRL",
+   "2195 E NICHOLS DR",
+   "9353 PIKE WAY",
+   "567 E 77TH PL"
+  ],
+  "tree-heavy (crowns ≥ 25%)": [
+   "3855 S VALENTIA CT",
+   "11663 SETTLERS DR",
+   "3247 OAK LEAF PL",
+   "3852 PRIMROSE LN",
+   "6049 W ROXBURY PL",
+   "6916 S ELATI ST",
+   "9267 CANYON WREN CT",
+   "852 HUGHES LN",
+   "9416 DESERT WILLOW TRL",
+   "2195 E NICHOLS DR"
+  ],
+  "open (crowns < 25%)": [
+   "2787 RUSSET SKY CT",
+   "1648 MARSH HAWK CIR",
+   "7378 UPTON CT",
+   "6595 ZINNIA ST",
+   "7006 E 131ST WAY",
+   "7614 E 121ST PL",
+   "579 E 76TH AVE",
+   "600 HIDDENBROOK CT",
+   "9353 PIKE WAY",
+   "567 E 77TH PL"
+  ],
+  "scope-clean (drop Valentia, Upton, Hughes, Desert Willow)": [
+   "11663 SETTLERS DR",
+   "2787 RUSSET SKY CT",
+   "1648 MARSH HAWK CIR",
+   "6595 ZINNIA ST",
+   "3247 OAK LEAF PL",
+   "7006 E 131ST WAY",
+   "7614 E 121ST PL",
+   "579 E 76TH AVE",
+   "3852 PRIMROSE LN",
+   "6049 W ROXBURY PL",
+   "6916 S ELATI ST",
+   "600 HIDDENBROOK CT",
+   "9267 CANYON WREN CT",
+   "2195 E NICHOLS DR",
+   "9353 PIKE WAY",
+   "567 E 77TH PL"
+  ],
+  "unseen by v2 tuning": [
+   "7006 E 131ST WAY",
+   "7614 E 121ST PL",
+   "579 E 76TH AVE",
+   "3852 PRIMROSE LN",
+   "6049 W ROXBURY PL",
+   "6916 S ELATI ST",
+   "600 HIDDENBROOK CT",
+   "9267 CANYON WREN CT",
+   "852 HUGHES LN",
+   "9416 DESERT WILLOW TRL",
+   "2195 E NICHOLS DR",
+   "9353 PIKE WAY",
+   "567 E 77TH PL"
+  ]
+ }
+}
