@@ -15307,6 +15307,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tgm.appendChild(b);
       });
       holder.appendChild(tgm);
+      /* his own leads live in My pipeline only (2026-10-30, Matthew: "leave mine just in my pipeline"; David Quintana showed in both);
+         a search still finds them in Full */
+      if (!mineMode && !finding) items = items.filter(function (it) { return !(it.kind === 'lead' && it.x.mine); });
     }
     /* top: add a lead, the walks coming up, the Jobber export */
     var top = q('div', 'pipetop');
