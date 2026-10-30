@@ -28,7 +28,8 @@ EDS="tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7"
 for e in $EDS; do for f in index.html version.txt q.html sign.html sw.js es.json; do cp_if "$D/$e/$f" "$e"; done; done
 for a in traverse traverse-yards traverse-solar traverse-pest traverse-security; do for k in rounds billing sms webpush; do cp_if "$D/api/$a-$k.php" api; done; done
 # the website's checkout, the central Stripe webhook and the client-install library (2026-10-29; the shared billing.php above is theirs too)
-for f in traverse-clients-lib.php traverse-start.php traverse-hook.php; do cp_if "$R/app/api/$f" api; done
+# + the website's find-my-app (traverse-findapp.php, 2026-10-30)
+for f in traverse-clients-lib.php traverse-start.php traverse-hook.php traverse-findapp.php; do cp_if "$R/app/api/$f" api; done
 # client installs made on the server (2026-10-29): each edition's client template goes to traverse-shared/client-templates/, and
 # traverse-tools/clients.php with it; after the upload every client's page and API is remade from them (clients.php regen), so client
 # installs get each deploy exactly when the editions do. Staged apart: they unpack beside public_html, not in it.
