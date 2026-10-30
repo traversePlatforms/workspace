@@ -1074,6 +1074,7 @@ require_once __DIR__ . '/skiptrace.php';
 require_once __DIR__ . '/webpush.php';   /* phone alerts (2026-10-05): Web Push, no secrets in it */
 require_once __DIR__ . '/sms.php';       /* in-app texting (2026-10-10): Twilio, keys in the private folder */
 require_once __DIR__ . '/billing.php';   /* billing (2026-10-10): Stripe, keys in the private folder */
+if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oauth-lib.php';   /* Sign in with Google / Microsoft for Setup › Email (2026-10-30): one shared file beside every install's API */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -3135,20 +3136,25 @@ function smtpSend(array $c, string $to, string $subject, string $text, string $h
     $w('RCPT TO:<' . $to . '>'); [$code, $rep] = $read(); if ($code !== 250 && $code !== 251) { $quit(); return $fail('to', $rep); }
     $bcc = (string) ($c['bcc'] ?? ''); if ($bcc !== '' && filter_var($bcc, FILTER_VALIDATE_EMAIL) && strcasecmp($bcc, $to) !== 0) { $w('RCPT TO:<' . $bcc . '>'); $read(); }
     $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
+    $eol = "\r\n";
+    $payload = preg_replace('/^\./m', '..', mailMime($c, $to, $subject, $text, $html, $extra, $dom));
+    @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
+    return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
+}
+/** the message itself, headers and body (CRLF): what smtpSend sends, and what the Google and Microsoft sign-ins send (mail-oauth-lib.php
+ *  moSend, 2026-10-30). $c: user, from_name; $dom: the Message-ID's domain */
+function mailMime(array $c, string $to, string $subject, string $text, string $html, array $extra, string $dom): string {
     $eol = "\r\n"; $bd = 'a3' . bin2hex(random_bytes(8));
     /* an empty $html: a plain-text message (Traverse's own notes to Matthew, travMail), one part and no boundary (2026-10-30) */
     $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) $c['from_name']) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
           'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $dom . '>', 'MIME-Version: 1.0', $html === '' ? 'Content-Type: text/plain; charset=UTF-8' : 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
     if ($html === '') $h[] = 'Content-Transfer-Encoding: base64';
     foreach ($extra as $xh) if (is_string($xh) && preg_match('/^[A-Za-z-]{2,40}: [^\r\n]{1,900}$/D', $xh)) $h[] = $xh;
-    $payload = implode($eol, $h) . $eol . $eol
+    return implode($eol, $h) . $eol . $eol
         . ($html === '' ? chunk_split(base64_encode($text), 76, $eol)
         : '--' . $bd . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($text), 76, $eol)
         . '--' . $bd . $eol . 'Content-Type: text/html; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($html), 76, $eol)
         . '--' . $bd . '--' . $eol);
-    $payload = preg_replace('/^\./m', '..', $payload);
-    @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
-    return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
 }
 /* ---- the install's own email, Setup › Email (2026-10-29, Matthew: email for the editions: the company connects its own address, and the
  * automatic emails can be switched on or off and reworded) ----
@@ -3181,6 +3187,8 @@ const MAIL_PH = ['first_name' => 'their first name', 'customer_name' => 'their f
                  'paid' => 'what they have paid', 'balance' => 'what is left to pay', 'receipt_no' => 'the receipt number'];
 function mailOwnFile(): string { return pushPrivDir() . '/mail.json'; }
 function mailOwnCfg(): ?array {
+    /* signed in with Google or Microsoft (2026-10-30, mail-oauth-lib.php): that first, while it works; sent as the company's name */
+    if (!company()['a365'] && function_exists('moCfg') && ($o = moCfg(pushPrivDir()))) return $o + ['from_name' => (string) company()['name']];
     $j = json_decode((string) @file_get_contents(mailOwnFile()), true);
     return is_array($j) && !empty($j['user']) && !empty($j['pass']) && !empty($j['host']) && !empty($j['port']) ? $j : null;
 }
@@ -3191,12 +3199,14 @@ function mailDomain(string $addr): string { $d = strtolower(substr((string) strr
 function sendMail(string $to, string $subject, string $text, string $html, array $extra = []): array {
     if (!empty(company()['a365'])) return a365Mail($to, $subject, $text, $html, $extra);
     $c = mailOwnCfg(); if (!$c) return ['ok' => false, 'stage' => 'config', 'error' => 'Email is not connected yet (Setup, Email).'];
+    if (!empty($c['oauth'])) return moSend(pushPrivDir(), mailMime($c, $to, $subject, $text, $html, $extra, mailDomain((string) $c['user'])));   /* Gmail API or Microsoft Graph (2026-10-30) */
     return smtpSend($c + ['domain' => mailDomain((string) $c['user'])], $to, $subject, $text, $html, $extra);
 }
 /** what the Email screen shows: never the password */
 function mailState(): array {
     $c = mailOwnCfg();
-    return $c ? ['on' => true, 'kind' => (string) ($c['kind'] ?? 'other'), 'user' => (string) $c['user'], 'name' => (string) ($c['from_name'] ?? ''), 'host' => (string) $c['host'], 'port' => (int) $c['port'], 'at' => (int) ($c['at'] ?? 0), 'by' => (string) ($c['by'] ?? '')] : ['on' => false];
+    $o = $c ? ['on' => true, 'kind' => (string) ($c['kind'] ?? 'other'), 'user' => (string) $c['user'], 'name' => (string) ($c['from_name'] ?? ''), 'host' => (string) $c['host'], 'port' => (int) $c['port'], 'at' => (int) ($c['at'] ?? 0), 'by' => (string) ($c['by'] ?? '')] : ['on' => false];
+    return function_exists('moState') ? $o + moState(pushPrivDir()) : $o;   /* + the sign-ins offered, and a lost one (2026-10-30) */
 }
 /** each message's switch and words, the defaults where the company has not changed them */
 function mailTpls(): array {
@@ -3285,6 +3295,7 @@ function mailSample(string $k, array $t): array {
 /** a failed send in plain words, for the person setting it up */
 function mailWhy(array $r, string $kind, string $host, int $port): string {
     $st = (string) $r['stage']; $said = mb_substr(trim((string) $r['error']), 0, 160);
+    if ($st === 'reconnect' || str_starts_with($st, 'oauth')) return $said;   /* the Google or Microsoft sign-in says it in its own words (2026-10-30) */
     if ($st === 'connect') return 'Could not reach the mail server (' . $host . ':' . $port . '). Check the server name and port.';
     if (in_array($st, ['greeting', 'ehlo', 'starttls', 'ehlo-tls'], true)) return 'The mail server did not start a secure connection (' . $said . ').';
     if ($st === 'auth') return 'The mail server did not accept that address and app password. Check that it is an app password (not your normal password)'
@@ -3760,7 +3771,7 @@ function permCat(): array {
         'team.run' => ['g' => 'team', 'l' => 'Run their team\'s sign-ins', 's' => 'team sign-ins', 'd' => 'Add people to their team, give new codes, sign them out, remove them.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], 'as' => 'manager'],
         'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and colour.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
-        'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'payset', 'squareoauth', 'payways', 'paywaysset']],
+        'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
         'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply']],
     ];
     return $c;
@@ -3870,7 +3881,7 @@ if (!defined('SIXFOLD_CLI') && $session && edition()) { permElevate($action); ed
 const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'logoset', 'logodel', 'billing', 'billingcheckout', 'billingportal',
     'accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'accountresend', 'acctflag', 'walkerset', 'paysset', 'repsendset',
     'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
-    'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest',
+    'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth',
     'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
     'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
     'perms', 'permset'];   /* + Roles and permissions, part of Accounts (2026-10-29) */
@@ -12787,6 +12798,7 @@ if ($action === 'mailsend') {
     if ($ml) appendLine(leadsDir() . '/leadst.log', ['id' => (string) $ml['id'], 'note' => mb_substr('Emailed from the app (' . (string) $mc['user'] . '): ' . $subj, 0, 500), 'by' => $me, 'at' => time()]);
     out(['ok' => true, 'from' => (string) $mc['user'], 'to' => $to]);
 }
+if ($action === 'mailoauth' && function_exists('moAction')) moAction();   /* Sign in with Google / Microsoft: the address to go to (2026-10-30, mail-oauth-lib.php) */
 if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest'], true)) {
     if (!kitOn()) fail('Not here.', 404);   /* Sixfold 365 keeps its own mailbox */
     if (!adminOr('set.setup')) fail('Not allowed.', 403);
@@ -12804,7 +12816,11 @@ if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', '
     };
     if ($action === 'mail') out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut(), 'testTo' => $myMail ?: (mailOwnCfg()['user'] ?? ''), 'company' => (string) company()['name']]);
     if (!$isPost) fail('POST required', 405);
-    if ($action === 'mailoff') { @unlink(mailOwnFile()); appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'disconnected', 'by' => $me]); out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut()]); }
+    if ($action === 'mailoff') {
+        $oa = function_exists('moDisconnect') ? moDisconnect(pushPrivDir(), $me) : ['was' => '', 'revoked' => false, 'note' => ''];   /* + a Google or Microsoft sign-in: revoked at Google, deleted here (2026-10-30) */
+        @unlink(mailOwnFile()); if ($oa['was'] === '') appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'disconnected', 'by' => $me]);
+        out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut(), 'revoked' => $oa['revoked'], 'note' => $oa['note']]);
+    }
     if ($action === 'mailset') {
         if (!throttleTake(rateFile('mailset|' . (string) ($session['c'] ?? $me)), 12, 3600)) fail('That is a lot of tries in an hour. Wait a little and check the steps.', 429);
         $kind = (string) ($body['kind'] ?? ''); if (!isset(MAIL_KINDS[$kind]) && $kind !== 'other') fail('Pick Gmail, Outlook or Other.');
@@ -12829,6 +12845,7 @@ if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', '
         if (!$r['ok']) fail(mailWhy($r, $kind, $host, $port));
         if (!writeJsonAtomic(mailOwnFile(), $c + ['by' => $me, 'at' => time()])) fail('The test went, but the setting could not be saved. Try again.', 500);
         @chmod(mailOwnFile(), 0600);
+        if (function_exists('moDisconnect')) moDisconnect(pushPrivDir(), $me, 'replaced by an app password:');   /* the newest way wins (2026-10-30) */
         out(['ok' => true, 'mail' => mailState(), 'msgs' => $tplOut(), 'sentTo' => $user]);
     }
     if ($action === 'mailtpl') {
