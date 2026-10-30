@@ -4758,7 +4758,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
         feat('billing') ? tile('button', 'card', 'Billing', 'Your Traverse plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10 */
         CO.a365 ? null : tile('button', 'door', 'Sample property', 'One made-up property with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew) */
-      homeFold(box, 'office', 'Office', [obox], 'ogwrap-f', [].map.call(obox.querySelectorAll(':scope > .tgrid .tt b, :scope > .ogrp .ct b'), function (b) { return b.textContent; }).join(' · '));
+      homeFold(box, 'office', 'Office', [obox], 'ogwrap-f', [].map.call(obox.querySelectorAll(':scope > .tgrid:not(.ogbox) .tt b, :scope > .ogrp .ct b'), function (b) { return b.textContent; }).join(' · '));
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     permTiles(box);   /* the screens the role was given (2026-10-29) */
