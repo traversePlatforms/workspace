@@ -240,7 +240,7 @@ Traverse will give notice before suspending where practical, will limit the susp
 | **Plan** | [Solo: an admin account plus 1 person / Crew: an admin account plus up to 5 people / Team: an admin account plus up to 12 people]. One plan per company |
 | **Seats** | [ ] (people beyond those the plan includes; changed by asking Traverse at billing@traverseplatforms.com) |
 | **Billing** | [Monthly / Yearly], in advance, by card through Stripe |
-| **Fees** | [Solo $99 a month or $79 a month billed yearly / Crew $249 a month or $199 billed yearly, extra people $45 or $35 each / Team $549 a month or $449 billed yearly, extra people $39 or $29 each]. Roofing and Solar editions: [+$50 a month on Crew and Team / +$20 on Solo] |
+| **Fees** | [Solo $99 a month or $79 a month billed yearly / Crew $249 a month or $199 billed yearly, extra people $45 or $35 each / Team $549 a month or $449 billed yearly, extra people $39 or $29 each]. |
 | **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): the founding prices on this Order Form (about 25% off, in whole dollars) for the first 12 months, and the list price on this Order Form is locked in, with every feature the plan includes, for as long as the subscription continues without a break (§9.6) |
 | **Setup and guarantee** | No free trial. Install set up within 2 business days of the first payment; 7-day money-back guarantee from the Go-Live Date (§9.3) |
 | **Start date** | [ ] |

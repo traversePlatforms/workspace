@@ -16,7 +16,8 @@ declare(strict_types=1);
  * Per company, users included: Solo 1 person, Crew up to 5, Team up to 12; each person past that is an extra seat. Since 2026-10-29
  * (Matthew: "every plan includes ONE admin account free plus the workers it lists") those are the WORKERS: every plan also carries one
  * admin free (billingFreeAdmin), so Solo is 1 admin + 1 worker, Crew 1 + 5, Team 1 + 12; a second admin is a seat. Prices unchanged.
- * Roofing and Solar installs carry the edition uplift (+$20 on Solo, +$50 on Crew and Team). A second edition is a flat
+ * Roofing and Solar installs carried an edition uplift (+$20 on Solo, +$50 on Crew and Team) until 2026-10-29, when Matthew took it
+ * off (all in one, all inclusive): uplift_on false; the Stripe prices stay, unused. A second edition is a flat
  * add-on. One subscription = the plan's base price (quantity 1) + extra seats (quantity = people past the included) +
  * the uplift (quantity 1, where it applies) + the second edition (quantity 1, if picked). Founding companies: a coupon
  * on the whole subscription (25% off for 12 months).
@@ -67,7 +68,8 @@ function billingConfigDefaults(): array {
                       'crew_extra' => $two(45, 35), 'team_extra' => $two(39, 29),
                       'uplift_solo' => $two(20, 20), 'uplift' => $two(50, 50), 'addon' => $two(99, 99)],
         'included' => ['solo' => 1, 'crew' => 5, 'team' => 12],   /* workers each plan covers before extra seats, besides the one free admin (2026-10-29) */
-        'uplift_on' => null,             /* the Roofing/Solar uplift: null = from the edition (features roof, solar or hail) */
+        'uplift_on' => false,            /* the Roofing/Solar uplift: off for every edition (Matthew 2026-10-29: "remove the $50, our selling point is
+                                            its all in one, all inclusive"); null = from the edition (features roof, solar or hail) */
         /* a founding company (Matthew 2026-10-26): about 25% off for the first 12 months (the free 7-day pilot it also had was
            replaced on 2026-10-27 by the money-back guarantee below; trial_days stays 0). Every price is taken down by founding_pct and ROUNDED TO WHOLE DOLLARS ("people seeing cents on a price just feels
            weird"): Crew $199 -> $149. Each checkout gets its own Stripe coupon for exactly the dollars between the list total and the
