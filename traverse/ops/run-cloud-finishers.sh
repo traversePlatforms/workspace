@@ -15,12 +15,15 @@ rm -f "$ST/running.lock"
 # g2b's VM work); it leaves ~/run/group2/photos.vmdone.
 # g3hail (2026-10-29, Matthew: "run the storm history ... when group 3 is done"): storm history for the Group 3 towns
 # (finish-g3hail-2026-10-29.sh). Ready when g3b is done here (not a VM flag: it stages the door points and starts its own cloud job).
-# Every stage, g3hail too, is behind the hotspot check below and the one running.lock: never two at once.
+# hailhours (2026-10-29, Matthew: "run it on the cloud computer once it is free"): when the hail fell, for every hail town and every day
+# (finish-hailhours-2026-10-29.sh, hail/rebuild-hail-hours.mjs on the cloud machine). Ready when g3hail is done here, so the Group 3 towns' hail
+# files are in its plan and the cloud machine is free; it starts its own cloud job, like g3hail.
+# Every stage, g3hail and hailhours too, is behind the hotspot check below and the one running.lock: never two at once.
 # A stage that failed 3 times is reported and skipped, so a later stage still runs (2026-10-28: g1fix and g2b push different towns).
 FAILED=""
 # never pull a stage back over the phone hotspot (2026-10-29: Group 3 copies back gigabytes; memory: SSID "iPhone" = no heavy downloads)
 if netsh wlan show interfaces 2>/dev/null | tr -d "" | grep -qE "^ +SSID +: iPhone$"; then echo "cloud finish: on the phone hotspot, waiting for Wi-Fi"; exit 0; fi
-for name in layers group1 material g1fix g2b photos g3b g3hail; do
+for name in layers group1 material g1fix g2b photos g3b g3hail hailhours; do
   [ -f "$ST/$name.done" ] && continue
   tries=$(cat "$ST/$name.tries" 2>/dev/null || echo 0)
   [ "$tries" -ge 3 ] && { FAILED="$FAILED $name"; continue; }
@@ -33,9 +36,12 @@ for name in layers group1 material g1fix g2b photos g3b g3hail; do
     photos) VMQ='photos backfill: done';;
     g3b) VMQ='group3 B: measuring done';;   # Group 3 stage B (Matthew 29 Oct: "add the group 3"); finish-g3b-2026-10-29.sh
     g3hail) VMQ='';;   # storm history for the Group 3 towns (Matthew 29 Oct); finish-g3hail-2026-10-29.sh starts its own cloud job, so it waits for g3b here, not for the VM
+    hailhours) VMQ='';;   # the hail hours for every town and day (Matthew 29 Oct); finish-hailhours-2026-10-29.sh starts its own cloud job, after g3hail here
   esac
   if [ "$name" = g3hail ]; then
     [ -f "$ST/g3b.done" ] || { echo "cloud finish: waiting for g3hail (after g3b)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
+  elif [ "$name" = hailhours ]; then
+    [ -f "$ST/g3hail.done" ] || { echo "cloud finish: waiting for hailhours (after g3hail)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   else
     ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "grep -qE '$VMQ' ~/run-status.txt || test -f ~/run/group1/$name.vmdone || test -f ~/run/group2/$name.vmdone || { [ $name = g3b ] && test -f ~/run/group3/g3stageb.vmdone; }" < /dev/null 2>/dev/null || { echo "cloud finish: waiting for $name${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   fi

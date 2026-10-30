@@ -1887,6 +1887,13 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .cseg button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
   .alrt{display:block;width:100%;text-align:left;border:0;border-radius:14px;margin:0 0 12px;padding:11px 14px;background:var(--fire-h);color:var(--fire-on);font:700 14px/1.35 var(--sans);cursor:pointer}
   .alrt.storm{background:#34506F;color:#F4F7FB}
+  /* the weather on the door maps and cards (2026-10-29) */
+  .meta.wxl{color:var(--bad);font-weight:700}
+  .meta.wxl a{color:inherit}
+  .dkradar .radarplay,.radarkey .radarplay,.omap .radarplay{min-height:36px;padding:0 12px;margin:6px 0 0;font-size:13px}
+  .dkradar .wxline,.wxline{color:var(--bad);font-weight:700}
+  .dkradar .dkpan .wxline{color:#A33A2A}
+  .radartm{font-variant-numeric:tabular-nums}
   .alrt.storm .ic{width:18px;height:18px;vertical-align:-3px;margin-right:6px}
   .alrt.calm{background:var(--sunk);color:var(--ink);font-weight:600}
   .alrt .more{display:block;font-weight:600;font-size:12.5px;opacity:.9;margin-top:2px}
@@ -10827,6 +10834,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var bb3 = backBadge(d); if (bb3) tt.appendChild(bb3);
     tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), d.lim && !d.owner ? '' : 'Owner: ' + ownerText(d.owner)].filter(Boolean).join(' \u00b7 ')));
     var lim1 = limLine(d); if (lim1) tt.appendChild(lim1);   /* limited county data (2026-10-29) */
+    var wx1 = wxLine(d); if (wx1) tt.appendChild(wx1);   /* a weather warning over the house (2026-10-29) */
     top.appendChild(tt);
     var sc = scoreChip(d); if (sc) { sc.classList.add('big'); top.appendChild(sc); }
     var x = q('button', 'dkc-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close this door'); x.appendChild(ico('close', 2.4));
@@ -11014,6 +11022,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (deskHailOn()) deskHail(map);   /* a storm day's hail path, under the map switch (2026-10-09) */
       hoodRings(map, function (k, n) { if (!D.drawing) openHood(k, n); });   /* the other neighbourhoods, a tap opens one (2026-10-09); not mid-outline */
       deskTerr(map, D);   /* the drawn territories, and Draw a territory for admins and managers (2026-10-09) */
+      radarCtl(map);   /* the live radar switch and the warnings' outlines (2026-10-29) */
       D.restyle(false);
     });
   }
@@ -16222,6 +16231,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       satSwitch(map, true);   /* after the view, as on the desktop map (2026-10-09); photos first on the phone too (2026-10-18, Matthew) */
       hoodRings(map, function (k, n) { S.keepMap = true; openHood(k, n); });   /* opened from the map, the next one opens on its map too */
       othersLayer(map, S.region);   /* the homes not on the list, in grey (2026-10-12) */
+      radarCtl(map);   /* the live radar switch and the warnings' outlines (2026-10-29) */
       if (S.mapSel && markers[S.mapSel]) select(markers[S.mapSel].d);
     });
   }
@@ -16238,6 +16248,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      withhold the owner's name): one plain line on the card; doors without it are unchanged */
   var LIM_TEXT = { noowner: 'Limited data: no owner on record', noocc: 'Owner on record, occupancy unknown', noname: 'Owner name withheld by the county' };
   function limLine(d) { return d && LIM_TEXT[d.lim] ? q('div', 'meta liml', LIM_TEXT[d.lim]) : null; }
+  /* a weather warning over this house (2026-10-29): the server matches each door to the warning's own outline, or its zones' */
+  function wxLine(d) {
+    if (!d || !d.wx || !d.wx.length) return null;
+    var el = q('div', 'meta wxl');
+    d.wx.slice(0, 2).forEach(function (w, i) {
+      el.appendChild(document.createTextNode((i ? ' · ' : '⚠ ') + w[0] + untilText(w[1]) + ' covers this house '));
+      if (w[2]) { var a = q('a', null, 'NWS'); a.href = w[2]; a.target = '_blank'; a.rel = 'noopener noreferrer'; el.appendChild(a); }
+    });
+    return el;
+  }
   function ownerText(o) { return /^unavailable$/i.test(String(o || '').trim()) ? 'not on the public record' : o; }
   function fmtVal(v) { return !v ? '' : v >= 999500 ? '$' + (v / 1e6).toFixed(2).replace(/0$/, '') + 'M' : '$' + Math.round(v / 1000) + 'k'; }
   function quoteCard(x) {
@@ -17526,10 +17546,126 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      refreshed every 5 minutes) for watching a storm as it happens. */
   var HAIL_BINS = [[2, '#7F1D1D', '2 in +'], [1.5, '#B91C1C', '1.5 to 2 in'], [1, '#EA580C', '1 to 1.5 in'], [0.75, '#F59E0B', '\u00be to 1 in']];
   function hailColour(inch) { for (var i = 0; i < HAIL_BINS.length; i++) if (inch >= HAIL_BINS[i][0]) return HAIL_BINS[i][1]; return HAIL_BINS[HAIL_BINS.length - 1][1]; }
-  var RADAR_URL = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png';
+  /* ---- live radar on every map (2026-10-29) ----
+     NOAA NEXRAD base reflectivity, the national composite as the Iowa Environmental Mesonet tiles it (public domain; IEM asks for
+     credit, kept on every map). While a map is open the tiles are asked for again every 5 minutes; "as of" is the composite's own time
+     (IEM's n0q_0.json); Play shows the last hour from IEM's past-frame layers (nexrad-n0q-900913-m05m to -m55m, listed on IEM's OGC
+     page, each checked 2026-10-29). The composite is about 1 km, so tiles are asked for at zoom 8 at most and stretched beyond, the same
+     on every map (it was 8 on the radar map and 12 on the office map). */
+  var RADAR_BASE = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/', RADAR_LAYER = 'nexrad-n0q-900913', RADAR_NATIVE = 8;
+  var RADAR_URL = RADAR_BASE + RADAR_LAYER + '/{z}/{x}/{y}.png';
+  var RADAR_ATTR = 'Radar: NOAA NWS NEXRAD via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>';
+  var RADAR_TIME = 'https://mesonet.agron.iastate.edu/data/gis/images/4326/USCOMP/n0q_0.json';
+  var RADAR_PAST = [55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0];   /* minutes before the latest, oldest first */
   /* the radar's colours (NOAA reflectivity, as the Iowa Environmental Mesonet draws it), in plain words (Matthew 2026-10-06) */
   var RADAR_KEY = [['#02c501', 'Light rain'], ['#fdf802', 'Moderate'], ['#fd9500', 'Heavy'], ['#fd0000', 'Very heavy'], ['#f800fd', 'Hail likely']];
-  function radarOn() { return feat('hail') || !!(CO && CO.alerts && CO.alerts.length); }   /* the editions; Sixfold reaches it through Hail */
+  function radarOn() { return true; }   /* everyone signed in, every install (2026-10-29: Sixfold's field users too; was the editions only) */
+  function radarClock(d) { return d.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit', timeZone: mkTz() }); }
+  /* the radar on one map: E.set(on); E.play() / E.stop() the last hour; onTime(text) hears "as of 2:15 pm" and each frame's time */
+  function radarEngine(map, onTime) {
+    var E = { on: false, layer: null, frames: null, loop: null, tick: null, stamp: 0, valid: null };
+    var url = function (lay) { return RADAR_BASE + lay + '/{z}/{x}/{y}.png?_=' + E.stamp; };
+    var opt = function (op) { return { opacity: op, maxNativeZoom: RADAR_NATIVE, maxZoom: 21, zIndex: 5, attribution: RADAR_ATTR }; };
+    var alive = function () { return !!(map._container && document.body.contains(map._container)); };
+    var say = function (t) { if (onTime) onTime(t); };
+    var asOf = function () {
+      fetch(RADAR_TIME, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+        var d = new Date(j && j.meta && j.meta.valid); if (isNaN(d)) throw new Error('no time');
+        E.valid = d; if (E.on && !E.frames) say('as of ' + radarClock(d));
+      }).catch(function () { E.valid = null; if (E.on && !E.frames) say(''); });
+    };
+    E.set = function (on) {
+      E.on = !!on;
+      if (on && !E.layer) {
+        E.stamp = Math.floor(Date.now() / 300000); E.layer = L.tileLayer(url(RADAR_LAYER), opt(0.6)).addTo(map); asOf();
+        clearInterval(E.tick);
+        E.tick = setInterval(function () {   /* every minute: a new 5-minute stamp redraws the tiles and asks the time again */
+          if (!alive()) { E.stop(); clearInterval(E.tick); return; }
+          var st = Math.floor(Date.now() / 300000); if (st === E.stamp || E.frames) return;
+          E.stamp = st; if (E.layer) E.layer.setUrl(url(RADAR_LAYER)); asOf();
+        }, 60000);
+      }
+      if (!on && E.layer) { E.stop(); map.removeLayer(E.layer); E.layer = null; clearInterval(E.tick); say(''); }
+    };
+    E.stop = function () {
+      clearInterval(E.loop); E.loop = null;
+      if (E.frames) { E.frames.forEach(function (f) { try { map.removeLayer(f); } catch (e) {} }); E.frames = null; }
+      if (E.layer) E.layer.setOpacity(0.6);
+      if (E.on) say(E.valid ? 'as of ' + radarClock(E.valid) : '');
+    };
+    E.play = function () {
+      if (!E.on || E.frames) return;
+      E.frames = RADAR_PAST.map(function (m) { return L.tileLayer(url(m ? RADAR_LAYER + '-m' + (m < 10 ? '0' : '') + m + 'm' : RADAR_LAYER), opt(0)).addTo(map); });
+      E.layer.setOpacity(0);
+      var i = 0, hold = 0;
+      E.loop = setInterval(function () {
+        if (!alive() || !E.frames) { E.stop(); return; }
+        if (hold > 0) { hold--; return; }
+        E.frames.forEach(function (f, k) { f.setOpacity(k === i ? 0.6 : 0); });
+        var m = RADAR_PAST[i];
+        say((E.valid ? radarClock(new Date(E.valid.getTime() - m * 60000)) + ' · ' : '') + (m ? m + ' min ago' : 'latest'));
+        if (i === RADAR_PAST.length - 1) hold = 3;   /* a pause on the latest frame */
+        i = (i + 1) % RADAR_PAST.length;
+      }, 600);
+    };
+    return E;
+  }
+  /* ---- the warnings' own outlines on a map (2026-10-29) ----
+     The National Weather Service draws a storm warning as a polygon (the storm's path); the ones this person is shown are outlined, in
+     their own pane under the doors, never taking a tap. cb(list) hears the warnings drawn, for the map's radar panel. */
+  var WX_INK = { 'Tornado Warning': '#c8102e', 'Severe Thunderstorm Warning': '#e07b00' };
+  function wxAlertsData() {
+    if (S.wxJ && Date.now() - S.wxJ.t < 60000) return Promise.resolve(S.wxJ.j);
+    return api('alerts').then(function (j) { if (j && j.ok) S.wxJ = { t: Date.now(), j: j }; return j; });
+  }
+  function wxOutlines(map, cb) {
+    if (S.region === SAMPLE_KEY) return;
+    wxAlertsData().then(function (j) {
+      if (!j || !j.ok || !map._container || !document.body.contains(map._container)) return;
+      var drawn = (j.weather || []).concat(j.near || []).filter(function (a) { return a.geo && a.geo.length; });   /* near: over doors, not a town centre */
+      if (!drawn.length) return;
+      if (!map.getPane('wxp')) { map.createPane('wxp'); map.getPane('wxp').style.zIndex = 380; map.getPane('wxp').style.pointerEvents = 'none'; }
+      drawn.forEach(function (a) {
+        var ink = WX_INK[a.event] || '#3b5bdb';
+        L.polygon(a.geo, { pane: 'wxp', interactive: false, color: ink, weight: 3, opacity: 0.9, fillColor: ink, fillOpacity: 0.08 }).addTo(map);
+      });
+      if (cb) cb(drawn);
+    }).catch(function () {});
+  }
+  /* the radar on the door maps (2026-10-29, Matthew: radar on the Doors map for every install): a Radar switch under the map's look,
+     off until turned on and remembered on this device; on, the time and Play for the last hour. Any warning outlined on the map is
+     named in the same panel, radar on or off. */
+  function radarCtl(map) {
+    var on = false; try { on = localStorage.getItem('sixfold.rounds.radar') === '1'; } catch (e) {}
+    var E = null, box = null, tm = '', warns = [];
+    var paint = function () {
+      if (!box) return;
+      box.textContent = '';
+      var b = L.DomUtil.create('button', 'dkc-main', box); b.type = 'button'; b.setAttribute('aria-pressed', String(on)); b.setAttribute('data-radar', '1');
+      b.textContent = 'Radar: ' + (on ? 'on' : 'off'); b.title = 'NOAA weather radar, every 5 minutes';
+      b.addEventListener('click', function () { on = !on; try { localStorage.setItem('sixfold.rounds.radar', on ? '1' : '0'); } catch (e) {} E.set(on); paint(); });
+      if (!on && !warns.length) return;
+      var p = L.DomUtil.create('div', 'dkpan', box);
+      if (on) {
+        var row = q('div', 'dknote radartm', tm || 'NOAA radar');
+        var pl = q('button', 'back radarplay', E.frames ? 'Stop' : 'Play last hour'); pl.type = 'button';
+        pl.addEventListener('click', function () { if (E.frames) E.stop(); else E.play(); paint(); });
+        p.appendChild(row); p.appendChild(pl);
+      }
+      warns.slice(0, 3).forEach(function (a) { p.appendChild(q('div', 'dknote wxline', '⚠ ' + a.event + untilText(a.ends) + ' (outlined)')); });
+    };
+    var ctl = L.control({ position: 'topright' });
+    ctl.onAdd = function () {
+      box = L.DomUtil.create('div', 'leaflet-bar mapsw dkctl dkradar');
+      L.DomEvent.disableClickPropagation(box); L.DomEvent.disableScrollPropagation(box);
+      L.DomEvent.on(box, 'click', L.DomEvent.stopPropagation);   /* the panel is redrawn under the tap, as the Hail panel's is */
+      E = radarEngine(map, function (t) { tm = t; var n = box && box.querySelector('.radartm'); if (n) n.textContent = t || 'NOAA radar'; else paint(); });
+      E.set(on); paint(); return box;
+    };
+    ctl.addTo(map);
+    wxOutlines(map, function (list) { warns = list; paint(); });
+    return ctl;
+  }
   function hailMapView(day, back) {
     hideToast(); S.signin = null; S.screen = 'hailmap'; foot.hidden = true; setDock(null);
     var backTo = back || (feat('hail') && cardOn('hail') ? hailView : chooseView);
@@ -17543,6 +17679,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(lg);
     var rk = q('div', 'radarkey');   /* what the radar colours mean; shown while the radar is on */
     RADAR_KEY.forEach(function (k) { var sp = q('span'), i = q('i'); i.style.background = k[0]; sp.appendChild(i); sp.appendChild(document.createTextNode(k[1])); rk.appendChild(sp); });
+    var rt = q('span', 'radartm'), rp = q('button', 'back radarplay', 'Play last hour'); rp.type = 'button';   /* the radar's time and the last hour (2026-10-29) */
+    rk.appendChild(rt); rk.appendChild(rp);
     box.appendChild(rk);
     if (day) box.appendChild(q('div', 'sub2', 'Squares are about 1 km: the radar estimate of the largest hail there that day. It runs smaller than ground reports for big stones.'));
     view.appendChild(box);
@@ -17553,15 +17691,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
       baseLayer(map, 19);
       map.setView(MK().centre, MK().zoom);   /* our corner of Colorado (the market's middle elsewhere) until a path is drawn */
-      var radar = null;
+      var E = radarEngine(map, function (t) { rt.textContent = t; rp.textContent = E && E.frames ? 'Stop' : 'Play last hour'; });   /* refreshed every 5 minutes, with its time (2026-10-29) */
       var setRadar = function (on) {
-        if (on && !radar) radar = L.tileLayer(RADAR_URL + '?_=' + Math.floor(Date.now() / 300000), { opacity: 0.6, maxZoom: 19, maxNativeZoom: 8,
-          attribution: 'Radar: NOAA NEXRAD via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>' }).addTo(map);
-        if (!on && radar) { map.removeLayer(radar); radar = null; }
+        E.set(on);
         rb.textContent = 'Live radar: ' + (on ? 'on' : 'off'); rk.hidden = !on;
       };
-      rb.addEventListener('click', function () { setRadar(!radar); });
+      rb.addEventListener('click', function () { setRadar(!E.on); });
+      rp.addEventListener('click', function () { if (E.frames) E.stop(); else E.play(); rp.textContent = E.frames ? 'Stop' : 'Play last hour'; });
       setRadar(!day);   /* a past storm opens without today's radar on top of it; the live map opens with it */
+      if (!day) wxOutlines(map);   /* the warnings' own outlines (2026-10-29) */
       if (!day) return;
       api('hailmap', { params: { day: day } }).then(function (j) {
         if (!document.body.contains(el)) return;
@@ -18373,6 +18511,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);
     var lim0 = limLine(d); if (lim0) card.appendChild(lim0);   /* limited county data (2026-10-29) */
+    var wx0 = wxLine(d); if (wx0) card.appendChild(wx0);   /* a weather warning over the house (2026-10-29) */
     var cl0 = censusLine(d.cen); if (cl0) card.appendChild(q('div', 'meta cenl', cl0 + ' (Census, the area not this house)'));   /* 2026-10-21 */
     var sw = scoreWhy(d); if (sw) card.appendChild(sw);   /* why the score (2026-10-08) */
     if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + markName(d.prevMark) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
@@ -19660,7 +19799,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       lg.textContent = '';
       lg.appendChild(q('span', 'soft', 'Bigger = more doors left' + (bestTrade() ? '; darker green = more of them worth knocking first' : '; darker = less of it visited')));
       if (radar) RADAR_KEY.forEach(function (k) { var sp = q('span'), i = q('i'); i.style.background = k[0]; sp.appendChild(i); sp.appendChild(document.createTextNode(k[1])); lg.appendChild(sp); });
+      if (radar) { lg.appendChild(rt); lg.appendChild(rp); }   /* the radar's time and the last hour (2026-10-29) */
+      warns.slice(0, 3).forEach(function (a) { lg.appendChild(q('span', 'wxline', '⚠ ' + a.event + untilText(a.ends) + ' (outlined)')); });
     };
+    var rt = q('span', 'radartm'), rp = q('button', 'back radarplay', 'Play last hour'), E = null, warns = []; rp.type = 'button';
+    rp.addEventListener('click', function () { if (!E) return; if (E.frames) E.stop(); else E.play(); rp.textContent = E.frames ? 'Stop' : 'Play last hour'; });
     var paintBtn = function () { rb.textContent = 'Live radar: ' + (radar ? 'on' : 'off'); rb.setAttribute('aria-pressed', String(radar)); key(); };
     paintBtn();
     /* after the card is on the page: with Leaflet already loaded (say, after Doors) the callback runs at once, before the card
@@ -19672,11 +19815,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var map = S.officeMap = L.map(el, { zoomControl: true });   /* dots as SVG, like the doors map: each one a tap target with a tooltip */
       el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
       baseLayer(map, 18);
-      var rl = null;
-      var setRadar = function () {
-        if (radar && !rl) rl = L.tileLayer(RADAR_URL + '?t=' + Math.floor(Date.now() / 300000), { opacity: 0.6, maxNativeZoom: 12, maxZoom: 18, zIndex: 5, attribution: 'Radar: NOAA via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>' }).addTo(map);
-        if (!radar && rl) { map.removeLayer(rl); rl = null; }
-      };
+      E = radarEngine(map, function (t) { rt.textContent = t; rp.textContent = E && E.frames ? 'Stop' : 'Play last hour'; });   /* refreshed every 5 minutes, with its time (2026-10-29) */
+      var setRadar = function () { E.set(radar); };
       rb.addEventListener('click', function () { radar = !radar; try { localStorage.setItem('sixfold.office.radar', radar ? '1' : '0'); } catch (e) {} paintBtn(); setRadar(); });
       /* the towns' list loads in the background after sign-in: opened straight from the tools screen, the map can come first,
          so it asks for the list itself (live check 2026-10-09: four editions drew an empty map). The view comes first, then the
@@ -19692,6 +19832,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.officeView) map.setView(S.officeView.c, S.officeView.z); else if (pts.length) map.fitBounds(pts, { padding: [20, 20] }); else map.setView([39.1, -104.85], 9);   /* the Front Range */
       map.on('moveend', function () { var c = map.getCenter(); S.officeView = { c: [c.lat, c.lng], z: map.getZoom() }; });
       setRadar();
+      wxOutlines(map, function (l) { warns = l; key(); });   /* the warnings' own outlines (2026-10-29) */
       list.forEach(function (ra) {
         var r = ra[0], a = ra[1];
         (function () {
