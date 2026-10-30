@@ -1233,6 +1233,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 
 - [ ] **TR-41 — More ways for companies to take payment (Matthew 30 Oct: "Add attaching those other payment systems to the todo list").** Today: Square (Connect Square), Stripe (own key), and Venmo / Cash App / PayPal / Zelle / own link as "other ways to pay" (Zelle QR upload being added 30 Oct). To attach: QuickBooks Payments (most likely next: many trades keep books in QuickBooks), PayPal/Venmo Business (real checkout, not just a handle), Clover, Helcim, Authorize.net; and customer financing (Wisetack, Hearth, GreenSky: big for roofing and solar jobs). Check each provider's API terms and partner requirements first.
 
+- [ ] **TR-42 — Microsoft publisher verification (ON MATTHEW'S LIST, 30 Oct).** Without it, people on Microsoft 365 work accounts (common: GoDaddy bundles it) can't one-click "Sign in with Microsoft" in Setup > Email. Domain step done 30 Oct (TXT MS=ms36414987 in SiteGround DNS; set Branding > Publisher domain = traverseplatforms.com once Verify passes). Left: join the free Microsoft AI Cloud Partner Program (partner.microsoft.com, m.sharpe@traverseplatforms.com, Traverse Platforms LLC; business check takes days), then enter the Partner ID under the app's Publisher verification.
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
