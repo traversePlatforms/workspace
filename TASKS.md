@@ -1227,6 +1227,10 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 
 - [x] **Legal (29 Oct): attorney approved all reviews** — Terms of Use v2, Subscription Agreement v3, cancellation and privacy pages (Matthew 29 Oct). No change needed on the site.
 
+- [ ] **TR-38 — Same-day hail (queued by Matthew 29 Oct: "We also need same-day hail qued up somewhere").** Today the storm job only sees a storm after the next 12Z MRMS MESH file (about 6 am the next day) and only when an admin opens Hail. Build: run the storm job on a timer and, while warnings are active, add MRMS MESH from NOAA on AWS (registry.opendata.aws/noaa-mrms-pds, free, attribution) as a "hail in the last 24 h" layer by evening. 1-2 days. **Do it together with TR-37** (the storm job memory fix), before the April hail season.
+- [ ] **TR-39 — ON MATTHEW'S LIST (29 Oct): look into Xweather** (hail threat + lightning API; pay-as-you-go, first 15,000 accesses a month free, hail calls cost 12x; commercial terms of the free tier unverified). https://www.xweather.com/pricing/weather-api-pay-as-you-go
+- [ ] **TR-40 — ON MATTHEW'S LIST (29 Oct): look into HailTrace and Verisk** for insurance-grade hail/wind reports per address (what SalesRabbit uses, via Verisk). Prices by sales call only. https://hailtrace.com/plans · https://salesrabbit.com/weather/
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
