@@ -200,6 +200,17 @@ function feature(string $k): bool { return !empty(company()['features'][$k]); }
 /* an edition, not Sixfold (2026-10-29, Matthew: the new roles, seats, devices and terms are for the editions only): every edition and client
    install is built without an aeration brand (company.json a365); Sixfold has one. See "the editions' roles" further down. */
 function edition(): bool { return company()['a365'] === null; }
+/* "doors" become "properties" in the editions' words (2026-10-30, Matthew), the same swap as pw() in the page: Sixfold 365 keeps its
+   words, and the knock itself ("at the door", "next door", "door-to-door", the Knocks doors switch) and door sensors stay. Text only. */
+function edWords(string $s): string {
+    if (stripos($s, 'door') === false || !defined('DATA_DIR') || !edition()) return $s;
+    $kept = [];
+    $s = (string) preg_replace_callback('/\b(?:at|from) (?:the|your|their|a) door\b|\bnext door\b|\bdoor-to-door\b|\bdoor (?:and|or) window\b|\bknocks? doors\b/i',
+        function ($m) use (&$kept) { $kept[] = $m[0]; return "\x01" . (count($kept) - 1) . "\x02"; }, $s);
+    $s = (string) preg_replace_callback('/\b([Dd])oors\b/', fn($m) => $m[1] === 'D' ? 'Properties' : 'properties', $s);
+    $s = (string) preg_replace_callback('/\b([Dd])oor\b/', fn($m) => $m[1] === 'D' ? 'Property' : 'property', $s);
+    return (string) preg_replace_callback('/\x01(\d+)\x02/', fn($m) => $kept[(int) $m[1]], $s);
+}
 /* the terms each person accepts (2026-10-29): bump a version when its text changes and everyone is asked again. See "the terms" further down. */
 const TERMS_VERSION = '2026-10-29';       /* Terms of Use v2 + Privacy Policy, as published 29 October 2026 */
 const AGREEMENT_VERSION = '2026-10-29';   /* the Subscription Agreement v3 (admins), as published 29 October 2026 */
@@ -350,7 +361,7 @@ function sendJson(string $txt): never {
     echo $txt;
     exit;
 }
-function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => $msg], $status); }
+function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => edWords($msg)], $status); }   /* the editions' words (2026-10-30) */
 
 /* SX-9e (2026-10-03): the crew codes live ABOVE public_html, in sixfold-private/, beside
    sixfold-data/. If PHP ever stops running in this folder, a file in here is served as plain
@@ -3756,17 +3767,17 @@ function edGate(string $a): void {
  * order manager, office, sales rep, setter, technician ('1' yes, '0' no, '-' not for that role, 'r' the company switch for sales reps'
  * agreements in Accounts), are the 'def' strings below. */
 function permRoles(): array { return ['manager', 'office', 'crew', 'setter', 'tech']; }
-function permGroups(): array { return ['doors' => 'Doors', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }
+function permGroups(): array { return ['doors' => 'Properties', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }
 function permCat(): array {
     static $c = null; if ($c !== null) return $c;
     $other = function (): bool { global $me; $w = trim((string) ($_REQUEST['who'] ?? '')); return $w !== '' && $w !== $me; };
     $c = [
-        'doors.see' => ['g' => 'doors', 'l' => 'See doors and maps', 's' => 'doors', 'd' => 'Door lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
-        'doors.mark' => ['g' => 'doors', 'l' => 'Mark doors', 's' => 'marks doors', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
-        'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best doors, door scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
-        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out doors and territories', 's' => 'hands out doors', 'd' => 'The Plan: give neighborhoods and doors to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
+        'doors.see' => ['g' => 'doors', 'l' => 'See properties and maps', 's' => 'properties', 'd' => 'Property lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
+        'doors.mark' => ['g' => 'doors', 'l' => 'Mark properties', 's' => 'marks properties', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
+        'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best properties, property scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
+        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out properties and territories', 's' => 'hands out properties', 'd' => 'The Plan: give neighborhoods and properties to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
         'leads.own' => ['g' => 'leads', 'l' => 'Work their own leads', 's' => 'own leads', 'd' => 'Their own leads: stages, follow-ups, notes and call tries.', 'def' => '1-110', 'acts' => ['myleads', 'leadstatus', 'leadfollow', 'leadtry', 'leadoutcome', 'leadrecall', 'leadunreach', 'leadremove'], 'as' => 'rep'],
-        'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds door leads', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
+        'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds leads at the door', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
         'leads.hand' => ['g' => 'leads', 'l' => 'Add leads by hand', 's' => 'adds leads by hand', 'd' => 'Type in a lead that called, wrote or came from anywhere else.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadadd'], 'as' => 'office'],
         'leads.import' => ['g' => 'leads', 'l' => 'Import a lead list', 's' => 'imports lead lists', 'd' => 'Bring in a list of leads from a spreadsheet.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadimport'], 'as' => 'office'],
         'leads.team' => ['g' => 'leads', 'l' => 'See their team\'s leads', 's' => 'team\'s leads', 'd' => 'The leads of the people on their team, and the ones nobody has yet.', 'def' => '1-000', 'acts' => ['leads'], 'cond' => fn(string $a): bool => $a === 'myleads' && $other(), 'as' => 'manager'],
@@ -3791,7 +3802,7 @@ function permCat(): array {
         'cust.edit' => ['g' => 'cust', 'l' => 'Edit customers', 's' => 'edits customers', 'd' => 'Change a customer, add visits, make a customer from a lead.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['customersave', 'customerfrom', 'visitsave', 'custdocadd', 'plantemplatesave'], 'as' => 'office'],
         'cust.import' => ['g' => 'cust', 'l' => 'Import customers', 's' => 'imports customers', 'd' => 'Bring in customers, leads and past work from a spreadsheet.', 'def' => '00000', 'need' => 'imp', 'admin' => ['importcheck', 'importrun', 'imports', 'importundo', 'customerimport']],
         'cust.export' => ['g' => 'cust', 'l' => 'Download customers and payments', 's' => 'downloads customers', 'd' => 'The customer and payment lists as spreadsheets, and the hand-off to another CRM.', 'def' => '00000', 'admin' => ['customersexport', 'paymentsexport', 'crmexport']],
-        'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Doors, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
+        'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Properties, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
         'team.stats' => ['g' => 'team', 'l' => 'See their team\'s numbers', 's' => 'team\'s numbers', 'd' => 'The day-by-day numbers of the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'cond' => fn(string $a): bool => $a === 'stats' && ($other() || !empty($_REQUEST['team'])), 'gacts' => ['stats'], 'as' => 'manager'],
         'team.statspage' => ['g' => 'team', 'l' => 'See the Stats page', 's' => 'Stats page', 'd' => 'The company\'s leads, close rate, ads and jobs.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['statspage'], 'as' => 'office'],
         'team.goals' => ['g' => 'team', 'l' => 'Set their team\'s goals', 's' => 'sets team goals', 'd' => 'The daily goals for the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['goals'], 'as' => 'manager'],
@@ -3805,7 +3816,7 @@ function permCat(): array {
 }
 /** never toggled, said under the list in Accounts */
 function permFixed(): array {
-    return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Door list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
+    return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Property list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
 }
 function permFile(): string { return DATA_DIR . '/role-perms.json'; }
 function permSaved(bool $fresh = false): array {
@@ -3940,10 +3951,10 @@ function billLockInfo(?array $L, bool $admin): ?array {
 /** the lock for someone signing in with this role ('super' never) */
 function billLockFor(string $r): ?array { return $r === 'super' ? null : billLockInfo(billLock(), $r === 'admin'); }
 function billLockWords(array $L, bool $admin): string {
-    if (!$admin) return $L['lock'] === 'billing' ? 'Door data is paused: your company\'s account needs attention.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
-    if ($L['lock'] === 'billing') return 'Door data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
-    return $L['phase'] === 'unpaid' ? 'Doors, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
-        : 'Doors, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
+    if (!$admin) return $L['lock'] === 'billing' ? 'Property data is paused: your company\'s account needs attention.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
+    if ($L['lock'] === 'billing') return 'Property data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
+    return $L['phase'] === 'unpaid' ? 'Properties, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
+        : 'Properties, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
 }
 /** a lock for payment is told once per lapse: Traverse by email, the client's admins in their alerts ("Your admin has been told") */
 function billLockNote(array $L): void {
@@ -3958,7 +3969,7 @@ function billLockNote(array $L): void {
         . 'Company: ' . $co . "\nInstall: " . COOKIE . "\nWhy: " . $why . "\n\nPaying opens it at once. To work with them, open their Billing as Traverse and use Give more time.\n");
     billingLog(['what' => 'locked', 'lapse' => $L['lapse'], 'mailed' => $r['ok']]);
     foreach (acctRows($basePeople, $acct, $sessionKey) as $row) if (!$row['off'] && $row['role'] === 'admin' && !boardHidden((string) $row['name']))
-        feedAdd((string) $row['name'], 'Door data is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Doors, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
+        feedAdd((string) $row['name'], 'Property data is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Properties, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
 }
 function billGate(string $a): void {
     global $isSuper, $role;
@@ -6033,7 +6044,7 @@ function houseFacts(string $key, string $id): ?array {
     }
     foreach (lookupDoors($k0) as $d) {   /* not on a door list (2026-10-14): rented, mostly */
         if ($d['id'] !== $id) continue;
-        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : 'Not on the door lists','owner' => $d['owner'] ?? null,
+        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : edWords('Not on the door lists'),'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']), 'hand' => loadLawnHand($k0)[$id] ?? null, 'range' => lawnRangeCache()[$k0 . '/' . $id] ?? null,
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
@@ -13859,7 +13870,7 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
     if (is_array($co0)) { $co0['area'] = tcAreaPublic($new); writeJsonAtomic($cf, $co0); }
     tcLog(['what' => 'area changed', 'cid' => $cid, 'by' => $me, 'mode' => $new['mode'], 'miles' => (int) ($new['miles'] ?? 0), 'counties' => $new['counties'] ?? null]);
     /* the answer first; the linking after it (on the host the connection closes, fastcgi_finish_request; PHP's test server waits for the end) */
-    $txt = (string) json_encode($areaOut() + ['said' => 'Saved. Doors in your area update within a minute.'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $txt = (string) json_encode($areaOut() + ['said' => edWords('Saved. Doors in your area update within a minute.')], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     ignore_user_abort(true); @set_time_limit(300);
     header('Content-Type: application/json; charset=utf-8'); header('Content-Length: ' . strlen($txt)); header('Connection: close');
     echo $txt;

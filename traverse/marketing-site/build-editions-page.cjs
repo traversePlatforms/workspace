@@ -37,7 +37,7 @@ const ED = {
     who: 'roofing and storm-restoration companies that canvass after hail and wind.',
     door: ['Hail at the house, storm by storm since 2020', 'Damaging wind nearby, with the date', 'Roof size and pitch', 'Roof material, where on record', 'Year built and remodelled, where on record, for the roof’s age', 'Past re-roofs, where known', 'A close-up photo of the roof with its outline', 'Owner, home value and the area’s risk ratings'],
     rank: 'The biggest hail on the roof, damaging wind, the roof’s age and size, and no re-roof since the storm, then the owner’s ability to pay.',
-    tools: [['Storm list', 'The doors each storm day reached, biggest hail first.'], ['Hail layer', 'A storm’s path drawn over your neighborhood map.'], ['Storm alerts', 'A phone alert when severe weather reaches your towns.'], ['JobNimbus', 'Booked doors go straight into JobNimbus.']],
+    tools: [['Storm list', 'The properties each storm day reached, biggest hail first.'], ['Hail layer', 'A storm’s path drawn over your neighborhood map.'], ['Storm alerts', 'A phone alert when severe weather reaches your towns.'], ['JobNimbus', 'Bookings go straight into JobNimbus.']],
     sample: [['Biggest hail', '1.75 in · 14 May'], ['Roof', '3,300 sq ft · 6/12'], ['Material', 'Asphalt'], ['Built', '2004 · no re-roof since']], score: 10,
   },
   yards: {
@@ -62,9 +62,9 @@ const ED = {
     name: 'Pest', colour: '#7a3fa3', ink: '#ffffff', deep: '#7a3fa3',
     line: 'Show up with the reason this house needs you, and the neighbors who already use you.',
     who: 'pest control companies selling plans door to door.',
-    door: ['New owners, and when they bought', 'Open space, creeks and ponds beside the house', 'Trees close to the house and the year it was built', 'What’s in season this month, pest by pest', 'Neighbors already on your service, from your own customer list', 'Recent bookings and door notes nearby', 'Owner, home value and the area’s figures'],
+    door: ['New owners, and when they bought', 'Open space, creeks and ponds beside the house', 'Trees close to the house and the year it was built', 'What’s in season this month, pest by pest', 'Neighbors already on your service, from your own customer list', 'Recent bookings and visit notes nearby', 'Owner, home value and the area’s figures'],
     rank: 'A new owner, trees against the house, and open space or water beside it, then the owner’s ability to pay.',
-    tools: [['Plans', 'Quarterly plans with the visits that are due.'], ['Customer import', 'Bring your customer list and neighbors show on every door.'], ['Customers', 'Every customer with their visit history.'], ['Office dashboard', 'The whole team’s day on one screen.']],
+    tools: [['Plans', 'Quarterly plans with the visits that are due.'], ['Customer import', 'Bring your customer list and neighbors show on every property.'], ['Customers', 'Every customer with their visit history.'], ['Office dashboard', 'The whole team’s day on one screen.']],
     sample: [['New owner', 'Bought in June'], ['Beside the house', 'Open space · creek'], ['Neighbors on service', '3 within a block'], ['In season', 'Wasps, mice']], score: 8,
   },
   security: {
@@ -77,7 +77,7 @@ const ED = {
     sample: [['Crime within 1 mile', '4 in 90 days'], ['New owner', 'Bought in March'], ['Owner lives', 'Out of state'], ['Lot', '1.2 acres']], score: 8,
   },
 };
-const ALL = ['The homes in the towns you work', 'Neighborhoods crews can claim', 'A 1 to 10 score on every door', 'The map, in photo or street view', 'Calendars and booked walks', 'Knock to signed job', 'Teams and managers', 'Training built in', 'Works with no signal', 'Quotes signed on the phone, with a deposit link', 'Voice notes and routes', 'Bring your current leads and customers', 'Your logo, name and colors'];
+const ALL = ['The homes in the towns you work', 'Neighborhoods crews can claim', 'A 1 to 10 score on every property', 'The map, in photo or street view', 'Calendars and booked walks', 'First contact to signed job', 'Teams and managers', 'Training built in', 'Works with no signal', 'Quotes signed on the phone, with a deposit link', 'Voice notes and routes', 'Bring your current leads and customers', 'Your logo, name and colors'];
 
 /* Matthew 2026-10-06: never say where the data comes from. Refuse the build if a source word slips in. */
 const SOURCE_WORDS = /\b(NOAA|NWS|MRMS|radar|county|assessor|LiDAR|laser|aerial|satellite|USGS|USDA|NAIP|FEMA|census|PVWatts|EIA|FBI|police|public record|permit|national weather|no answer|do not call)\b/i;
@@ -147,9 +147,9 @@ const main = `
 </div>
 </section>
 <section class="edw edtop">
-<div><h2>On every door</h2><ul class="edchk" id="eddoor"></ul></div>
-<div class="edsample" aria-label="A sample door card">
-<div class="eds-h"><div><small>Sample door</small><b>A house in Monument</b></div><span class="eds-sc" id="edscore">10</span></div>
+<div><h2>On every property</h2><ul class="edchk" id="eddoor"></ul></div>
+<div class="edsample" aria-label="A sample property card">
+<div class="eds-h"><div><small>Sample property</small><b>A house in Monument</b></div><span class="eds-sc" id="edscore">10</span></div>
 <div class="eds-t" id="edtiles"></div>
 <small class="eds-n">Figures made up for this example.</small>
 </div>

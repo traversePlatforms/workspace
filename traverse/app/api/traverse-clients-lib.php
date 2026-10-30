@@ -625,7 +625,7 @@ function tcMailReady(array $e, string $code): bool {
         . "Open it here (save it to your phone's home screen): " . $e['url'] . "\nSign in with " . $e['email'] . " and the password you picked. Your admin code, for a quick sign-in on a phone: " . $code . "\n\n"
         . "Keep both to yourself: they open the admin side of your company's app. The welcome checklist inside the app walks you through inviting your team (each person gets an email to set their own password), connecting your email and payments, and importing customers.\n\n"
         . (($a['mode'] ?? '') === 'counties' ? 'Your homes: every town we cover in ' . ($a['place'] ?? 'your counties') . '. You can change this later in the app.'
-            : (isset($a['lat']) && strtoupper((string) ($a['state'] ?? '')) === tcSettings()['state'] ? 'Your homes: every town within ' . (int) ($a['miles'] ?? 0) . ' miles of ' . ($a['place'] ?: 'your business') . '. You can change this later in the app.' : 'Door data for your area is being added; we will email you when your homes are in. Everything else works now.'))
+            : (isset($a['lat']) && strtoupper((string) ($a['state'] ?? '')) === tcSettings()['state'] ? 'Your homes: every town within ' . (int) ($a['miles'] ?? 0) . ' miles of ' . ($a['place'] ?: 'your business') . '. You can change this later in the app.' : 'Property data for your area is being added; we will email you when your homes are in. Everything else works now.'))
         . "\n\nYour 7-day money-back guarantee started today. Questions: reply to this email or call (303) 596-9515.\n\nMatthew Sharpe\nTraverse Platforms\n";
     return tcMail((string) $e['email'], 'Your Traverse is ready: ' . $e['name'], $body);
 }
