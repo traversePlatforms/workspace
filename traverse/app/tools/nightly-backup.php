@@ -15,48 +15,62 @@ declare(strict_types=1);
  *
  * A copy on the same server does not survive losing the server. The app reminds an admin to download one
  * to a device when nobody has for a week.
+ *
+ * + the Traverse editions (Matthew 2026-10-29: "add edition back ups at night"): the same run walks each
+ * edition's data folder beside sixfold-data and writes <folder>/backups/sixfold-backup-YYYY-MM-DD.json.gz,
+ * the name each edition's Backups screen lists (build-editions.cjs renames only the folder). Logs and
+ * settings only: the door files are rebuilt from the data pipeline, so they are never copied. A folder
+ * that fails is reported and the rest still run.
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 date_default_timezone_set('America/Denver');
 
 const KEEP = 30;
+const FOLDERS = ['sixfold-data', 'traverse-data', 'traverse-yards-data', 'traverse-solar-data', 'traverse-pest-data', 'traverse-security-data'];
 $site = dirname(__DIR__);
-$data = $site . '/sixfold-data';
-$rounds = $data . '/rounds';
-if (!is_dir($rounds)) { fwrite(STDERR, "sixfold backup: no data folder at $rounds\n"); exit(1); }
-$out = $data . '/backups';
-if (!is_dir($out) && !@mkdir($out, 0700, true)) { fwrite(STDERR, "sixfold backup: cannot create $out\n"); exit(1); }
+$failed = 0;
+foreach (FOLDERS as $dir) if (!backupOne($site, $dir)) $failed++;
+exit($failed ? 1 : 0);
 
-/* the same list as action=backup in api/rounds.php */
-$files = [];
-$add = function (string $abs, string $rel) use (&$files) { if (is_file($abs) && is_readable($abs)) $files[$rel] = (string) file_get_contents($abs); };
-foreach ((glob($rounds . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/rounds/' . basename($p));
-/* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices were missing) */
-/* + each install's own settings (2026-10-29): kit, costs, pay ways, email templates, Company screen, team goals, crews' towns and days off; never the mailbox password */
-foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json'] as $n) $add($rounds . '/' . $n, 'sixfold-data/rounds/' . $n);
-foreach ((glob($data . '/leads/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
-foreach ((glob($data . '/customers/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
-$photos = [];
-foreach ((glob($rounds . '/photos/*/*/*') ?: []) as $p) $photos[] = 'sixfold-data/rounds/photos/' . substr($p, strlen($rounds . '/photos/'));
-$coName = (string) ((json_decode((string) @file_get_contents($rounds . '/company.json'), true) ?: [])['name'] ?? 'Door app');
-$doc = ['backup' => $coName . ' field tools', 'made' => date('c'), 'by' => 'nightly',
-        'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
-        'files' => $files, 'photos' => $photos];
-$json = json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-$gz = $json === false ? false : gzencode($json, 9);
-if ($gz === false) { fwrite(STDERR, "sixfold backup: could not build the file\n"); exit(1); }
+function backupOne(string $site, string $dir): bool {
+    $data = $site . '/' . $dir;
+    $rounds = $data . '/rounds';
+    if (!is_dir($rounds)) { fwrite(STDERR, "$dir backup: no data folder at $rounds\n"); return false; }
+    $out = $data . '/backups';
+    if (!is_dir($out) && !@mkdir($out, 0700, true)) { fwrite(STDERR, "$dir backup: cannot create $out\n"); return false; }
 
-$name = 'sixfold-backup-' . date('Y-m-d') . '.json.gz';
-$tmp = $out . '/.' . $name . '.' . bin2hex(random_bytes(4)) . '.tmp';
-if (@file_put_contents($tmp, $gz, LOCK_EX) === false || !@rename($tmp, $out . '/' . $name)) {
-    @unlink($tmp); fwrite(STDERR, "sixfold backup: could not write $name\n"); exit(1);
+    /* the same list as action=backup in api/rounds.php */
+    $files = [];
+    $add = function (string $abs, string $rel) use (&$files) { if (is_file($abs) && is_readable($abs)) $files[$rel] = (string) file_get_contents($abs); };
+    foreach ((glob($rounds . '/*.log') ?: []) as $p) $add($p, $dir . '/rounds/' . basename($p));
+    /* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices were missing) */
+    /* + each install's own settings (2026-10-29): kit, costs, pay ways, email templates, Company screen, team goals, crews' towns and days off; never the mailbox password */
+    foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json'] as $n) $add($rounds . '/' . $n, $dir . '/rounds/' . $n);
+    foreach ((glob($data . '/leads/*.log') ?: []) as $p) $add($p, $dir . '/leads/' . basename($p));
+    foreach ((glob($data . '/customers/*.log') ?: []) as $p) $add($p, $dir . '/customers/' . basename($p));
+    $photos = [];
+    foreach ((glob($rounds . '/photos/*/*/*') ?: []) as $p) $photos[] = $dir . '/rounds/photos/' . substr($p, strlen($rounds . '/photos/'));
+    $coName = (string) ((json_decode((string) @file_get_contents($rounds . '/company.json'), true) ?: [])['name'] ?? 'Door app');
+    $doc = ['backup' => $coName . ' field tools', 'made' => date('c'), 'by' => 'nightly',
+            'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (' . $dir . '/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
+            'files' => $files, 'photos' => $photos];
+    $json = json_encode($doc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    $gz = $json === false ? false : gzencode($json, 9);
+    if ($gz === false) { fwrite(STDERR, "$dir backup: could not build the file\n"); return false; }
+
+    $name = 'sixfold-backup-' . date('Y-m-d') . '.json.gz';
+    $tmp = $out . '/.' . $name . '.' . bin2hex(random_bytes(4)) . '.tmp';
+    if (@file_put_contents($tmp, $gz, LOCK_EX) === false || !@rename($tmp, $out . '/' . $name)) {
+        @unlink($tmp); fwrite(STDERR, "$dir backup: could not write $name\n"); return false;
+    }
+    @chmod($out . '/' . $name, 0600);
+
+    /* keep the newest KEEP; the names sort by date */
+    $all = glob($out . '/sixfold-backup-*.json.gz') ?: [];
+    sort($all);
+    foreach (array_slice($all, 0, max(0, count($all) - KEEP)) as $old) @unlink($old);
+
+    @file_put_contents($out . '/backups.log', json_encode(['at' => time(), 'file' => $name, 'bytes' => strlen($gz), 'logs' => count($files)]) . "\n", FILE_APPEND | LOCK_EX);
+    echo "$dir backup: $name, " . count($files) . " logs, " . strlen($gz) . " bytes, " . min(count($all), KEEP) . " kept\n";
+    return true;
 }
-@chmod($out . '/' . $name, 0600);
-
-/* keep the newest KEEP; the names sort by date */
-$all = glob($out . '/sixfold-backup-*.json.gz') ?: [];
-sort($all);
-foreach (array_slice($all, 0, max(0, count($all) - KEEP)) as $old) @unlink($old);
-
-@file_put_contents($out . '/backups.log', json_encode(['at' => time(), 'file' => $name, 'bytes' => strlen($gz), 'logs' => count($files)]) . "\n", FILE_APPEND | LOCK_EX);
-echo "sixfold backup: $name, " . count($files) . " logs, " . strlen($gz) . " bytes, " . min(count($all), KEEP) . " kept\n";
