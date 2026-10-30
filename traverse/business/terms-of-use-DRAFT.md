@@ -36,14 +36,14 @@ These terms are between you and [ENTITY] ("Traverse", "we"). You can use Travers
 So that your company can run its teams and so that sign-ins are not shared, the app records:
 
 - **When and on what kind of device you sign in** (for example "iPhone" or "Windows computer"), and when you sign out.
-- **The doors you mark, with the time,** and the notes, phone numbers, emails and photos you add.
+- **The properties you mark, with the time,** and the notes, phone numbers, emails and photos you add.
 - **Which screens and buttons you use.** Never what you type.
 - **Downloads** made from the app, and unusually heavy viewing of door data.
-- **Flags for a sign-in that looks shared.** We compare *where the doors you mark are* (from each door's address, not from your
+- **Flags for a sign-in that looks shared.** We compare *where the properties you mark are* (from each property's address, not from your
   phone) and the time between marks. Two marks further apart than anyone could drive in that time are flagged for your
   company's admin, and so is a code that moves between phones several times in a day. A flag is a prompt to ask, not proof.
 
-**Your location.** The app asks for your phone's location only when you choose to use it (for example "nearest door" or the
+**Your location.** The app asks for your phone's location only when you choose to use it (for example "nearest property" or the
 map). It is used on your phone to show where you are and to order your stops. **The app does not send it to Traverse or store
 it,** and it does not track you in the background. You can say no and still use the app.
 

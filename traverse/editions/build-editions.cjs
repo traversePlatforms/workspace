@@ -56,7 +56,7 @@ const EDITIONS = {
     name: 'TraverseRoofing', short: 'Roofing', folder: 'tr-cb2e8587',
     api: 'traverse', data: 'traverse-data', priv: 'traverse-private', cookie: 'trv',
     store: 'traverse.', storeApp: 'traverse.app.', idb: 'traverse-rounds', cache: 'traverse-',
-    blurb: 'Doors, phones and appointments for roofing crews.',
+    blurb: 'Properties, phones and appointments for roofing crews.',
     icon: '#4e6680',                                   // the kit's roof edition fill
     // storm slate: the edition colour, deepened for the bar and sign-in
     c: { bar: '#22303f', deep: '#161f2a', key: '#2f4155', keyDown: '#3d546d', barSoft: '#c3cfdc', accent: '#4e6680', moss: '#6b7f99', mossInk: '#2b3a4d',
@@ -85,7 +85,7 @@ const EDITIONS = {
     name: 'Traverse Lawn & Landscape', short: 'Lawn & Yard',   /* fits a phone's home-screen label (Matthew 2026-10-30: 'use lawn and yard') */ folder: 'ty-25604fff',   /* what customers read (Matthew 2026-10-30: Yards is "Lawn & Landscape"); the key, folder and files keep yards */
     api: 'traverse-yards', data: 'traverse-yards-data', priv: 'traverse-yards-private', cookie: 'tvy',
     store: 'tvyards.', storeApp: 'tvyards.app.', idb: 'tvyards-rounds', cache: 'tvyards-',
-    blurb: 'Doors, phones and appointments for lawn and yard crews.',
+    blurb: 'Properties, phones and appointments for lawn and yard crews.',
     icon: '#2f7a3a',                                   // the kit's yards edition fill
     // field green
     c: { bar: '#1d4a26', deep: '#12321a', key: '#285c32', keyDown: '#33703f', barSoft: '#c7dcc9', accent: '#2f7a3a', moss: '#5f8f5a', mossInk: '#1d4a26',
@@ -117,7 +117,7 @@ const EDITIONS = {
     name: 'TraverseSolar', short: 'Solar', folder: 'ts-016064fc',
     api: 'traverse-solar', data: 'traverse-solar-data', priv: 'traverse-solar-private', cookie: 'tvs',
     store: 'tvsolar.', storeApp: 'tvsolar.app.', idb: 'tvsolar-rounds', cache: 'tvsolar-',
-    blurb: 'Doors, phones and appointments for solar sales teams.',
+    blurb: 'Properties, phones and appointments for solar sales teams.',
     icon: '#f2a900', iconInk: '#0f1b2d',              // the kit's solar edition: ink on amber
     // late sun: the edition amber, deepened to brown for the bar and sign-in
     c: { bar: '#3b2a07', deep: '#271c04', key: '#4d380c', keyDown: '#634810', barSoft: '#ecd9a8', accent: '#8f5e00', moss: '#b08a3a', mossInk: '#3b2a07',
@@ -148,7 +148,7 @@ const EDITIONS = {
     name: 'TraversePest', short: 'Pest', folder: 'tq-9cf8d9de',
     api: 'traverse-pest', data: 'traverse-pest-data', priv: 'traverse-pest-private', cookie: 'tvp',
     store: 'tvpest.', storeApp: 'tvpest.app.', idb: 'tvpest-rounds', cache: 'tvpest-',
-    blurb: 'Doors, phones and appointments for pest control teams.',
+    blurb: 'Properties, phones and appointments for pest control teams.',
     icon: '#7a3fa3',                                   // the kit's pest edition fill
     // dusk violet: the edition purple, deepened for the bar and sign-in
     c: { bar: '#3a1f52', deep: '#26133a', key: '#4c2a6b', keyDown: '#5f3786', barSoft: '#e2d3f0', accent: '#6a3594', moss: '#9a7ab8', mossInk: '#3a1f52',
@@ -178,7 +178,7 @@ const EDITIONS = {
     name: 'TraverseSecurity', short: 'Security', folder: 'tg-3b0b89e7',
     api: 'traverse-security', data: 'traverse-security-data', priv: 'traverse-security-private', cookie: 'tvg',
     store: 'tvsec.', storeApp: 'tvsec.app.', idb: 'tvsec-rounds', cache: 'tvsec-',
-    blurb: 'Doors, phones and appointments for home security teams.',
+    blurb: 'Properties, phones and appointments for home security teams.',
     icon: '#1b6f7a',                                   // night teal (the brand kit has no security edition yet)
     c: { bar: '#123b44', deep: '#0b2a31', key: '#1a4d58', keyDown: '#22606d', barSoft: '#cfe6ea', accent: '#1b6f7a', moss: '#6a9ea6', mossInk: '#123b44',
          bg: '#f3f7f8', line: '#dbe6e8', sunk: '#e6eff1', card1: '#1a4d58', appbar: '#164550', tile: '#22606d',
@@ -288,12 +288,10 @@ function page(E) {
   // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
   html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="' + ha(E.short) + '">', 1, 'home-screen label');
   html = rep(html, "document.title = c.short ? c.short + ' Routes' : 'Routes';   /* 2026-10-12 (Matthew): Sixfold Routes, not Door rounds */",
-    "document.title = c.name ? '" + E.name + " — ' + c.name : '" + E.name + "';", 1, 'doc title');
-  html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Doors',", 2, 'tile');   /* 2 since 2026-10-29: the technician's own Routes tile (doors switched on) is renamed too */
+    "document.title = c.name || c.short || '" + E.name + "';", 1, 'doc title');   /* the company's name only (2026-10-30) */
+  html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Properties',", 2, 'tile');   /* Properties, not Doors (2026-10-30, Matthew) */   /* 2 since 2026-10-29: the technician's own Routes tile (doors switched on) is renamed too */
   // sign-in: the client's mark and name stay on top; the product sits under them as a lockup
-  html = rep(html, "inn.appendChild(q('div', 'sub', 'Routes'));",
-    "var tv = q('div', 'sub tvlock'); tv.innerHTML = TV_MARK; tv.appendChild(q('span', null, '" + E.name + "')); inn.appendChild(tv);", 1, 'signin sub');
-  html = rep(html, "  var QKEY = ", "  var TV_MARK = '" + mark('currentColor', 'var(--signin)', 'var(--ember)') + "';\n  var QKEY = ", 1, 'mark const');
+  html = rep(html, "inn.appendChild(q('div', 'sub', 'Routes'));", '', 1, 'signin sub');   /* the company's mark and name only (2026-10-30, Matthew: zero Traverse branding for clients; was the Traverse mark and the edition's name) */
 
   // colours hard-coded outside the tokens
   html = rep(html, '<meta name="theme-color" content="#2F5D2C">', '<meta name="theme-color" content="' + c.bar + '">', 1, 'theme-color');
@@ -444,7 +442,7 @@ function apiFiles(E) {
 const TPL = { cid: 'czzzzzzzz', cookie: 'cqqqq', folder: 'qq-qqqqqq' };
 function clientTemplate(key) {
   const E = EDITIONS[key];
-  const T = Object.assign({}, E, { folder: TPL.folder, api: 'traverse-' + TPL.cid, data: 'traverse-' + TPL.cid + '-data', priv: 'traverse-' + TPL.cid + '-private',
+  const T = Object.assign({}, E, { name: 'Sign in', short: 'App', folder: TPL.folder,   /* a client's page names no edition: the company's name arrives with company.json (2026-10-30) */ api: 'traverse-' + TPL.cid, data: 'traverse-' + TPL.cid + '-data', priv: 'traverse-' + TPL.cid + '-private',
     cookie: TPL.cookie, store: 'tv' + TPL.cid + '.', storeApp: 'tv' + TPL.cid + '.app.', idb: 'tv' + TPL.cid + '-rounds', cache: 'tv' + TPL.cid + '-' });
   const dir = path.join('client-templates', key), pg = page(T);
   write(path.join(dir, 'index.html'), pg);
