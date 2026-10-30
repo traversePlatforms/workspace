@@ -8,13 +8,14 @@
 #   2. merges the new doors into our own towns (group3/merge-into-town.mjs: cripple-creek, idaho-springs, woodland-park, florissant,
 #      divide; appended neighbourhoods, existing doors untouched, backups);
 #   3. registers the new towns (group3/registered.json, read by build-rounds-data.mjs; county in assessor/town-county.json; laser keys);
-#   4. builds the door files and layers, checks every town is in the index with doors;
+#   4. builds the door files and layers (each Group 3 door with a gap carries lim: noowner / noocc / noname, from b/limited-<key>.json,
+#      group3/limited-doors.mjs; the build stops if under 90% of the listed doors carry it), checks every town is in the index with doors;
 #   5. uploads to Sixfold (upload-towns-sixfold.sh, batches of 8; the merged towns too) and each edition (push-edition.sh with the g3- towns
 #      and the merged towns only);
 #   6. live-checks one door list per method (co, ap, address points).
-# Not done here: storm history for the new towns (hail/BACKFILL-HAIL: stage their door points, re-run backfill-hail.mjs build on the cloud
-# machine from the statewide day files already there, merge-storms.py, push); the app's COUNTY_NAME for the new counties; the app's
-# "Limited data" label (limited-<key>.json lists which doors, GROUP3-PLAN "For the app").
+# Next: storm history for the new towns is stage g3hail (finish-g3hail-2026-10-29.sh), which the finisher loop starts once this one is
+# done. Not done here: the app's COUNTY_NAME for the new counties and the app's "Limited data" label (it reads the doors' lim; the
+# server's door answer in api/rounds.php must pass lim through).
 set -u
 cd "$(dirname "$0")"
 S=/c/Users/SURGEI~1/AppData/Local/Temp/claude/c--Users-Surge-Inc-Desktop-claude-test-2/db3e1153-072f-46a3-b860-134f689b5a09/scratchpad
@@ -44,7 +45,8 @@ for m in $MERGE; do [ -f "$T/merge-$m-areas.json" ] && node group3/merge-into-to
 node -e "const fs=require('fs');const tc=JSON.parse(fs.readFileSync('assessor/town-county.json'));let n=0;for(const t of JSON.parse(fs.readFileSync('group3/registered.json')))if(!tc[t.key]){tc[t.key]=[t.county];n++}fs.writeFileSync('assessor/town-county.json',JSON.stringify(tc,null,1)+'\n');console.log('counties registered:',n)"
 step "build"; (cd lawn-trial && node build-yard-v2.mjs | head -1)
 node --max-old-space-size=8192 assessor/build-year.mjs | tail -1
-node --max-old-space-size=8192 build-rounds-data.mjs | grep -E "wrote|listed by two" || exit 1
+node --max-old-space-size=8192 build-rounds-data.mjs | grep -E "wrote|listed by two|limited data" || exit 1
+node group3/limited-doors.mjs built "$RD" $KEYS $MERGE || { step "STOP: the Limited data marks (lim) did not reach the door files"; exit 1; }
 node --max-old-space-size=8192 census/build-census.mjs | tail -1; node --max-old-space-size=8192 nri/build-nri.mjs | tail -1
 node --max-old-space-size=8192 pest/build-pest.mjs | tail -1; node --max-old-space-size=8192 build-others.mjs $KEYS | tail -3
 (cd roofs && node --max-old-space-size=8192 sample-roofs.mjs --build --all-towns | tail -1 && node --max-old-space-size=8192 photo-index.mjs build --all-towns | tail -1 && node --max-old-space-size=8192 outline-photos.mjs | tail -1)

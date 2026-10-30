@@ -16,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { recordOwner, isHistoryKey } from './owner-names.mjs';
 import { metroTowns } from './metros/registry.mjs';   /* towns outside Colorado from metros/<metro>.json (2026-10-11) */
+import { limitedFor } from './group3/limited-doors.mjs';   /* Group 3's "Limited data" doors: lim (2026-10-29) */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '..', '..', 'app', 'data', 'rounds');
@@ -289,11 +290,15 @@ for (const t of G1) CENTRE[t.key] = [t.lat, t.lon];
 const METRO_TOWN = Object.fromEntries(metroTowns().map((t) => [t.key, t]));
 const km = (la1, lo1, la2, lo2) => Math.hypot((la1 - la2) * 111, (lo1 - lo2) * 111 * Math.cos((la1 * Math.PI) / 180));
 const built = [];
+/* lim (2026-10-29, Matthew: "just make that note in the app"): a Group 3 door with a gap in the county's record carries lim 'noowner'
+   (address point, no owner on record), 'noocc' (owner on record, occupancy unknown) or 'noname' (owner name withheld or blank), from
+   group3/b/limited-<town>.json (prep-stageb.mjs). Towns with no such file are unchanged. group3/limited-doors.mjs */
+let limN = 0; const limTowns = new Set();
 for (const [key, label, fileName, group] of SOURCES) {
   const p = join(HERE, fileName);
   if (!existsSync(p)) { console.log(`skipping ${label} — no ${fileName}`); continue; }
   const j = JSON.parse(readFileSync(p, 'utf8'));
-  const seen = new Set();
+  const seen = new Set(), limOf = limitedFor(key);
   const areas = j.areas.map((a) => ({
     name: a.name,
     avg: a.avg ? +a.avg.toFixed(2) : null,
@@ -302,11 +307,13 @@ for (const [key, label, fileName, group] of SOURCES) {
       let id = slug(d.a);
       while (seen.has(id)) id += 'x';
       seen.add(id);
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), ...(commonGround(d, key) ? { cg: 1 } : {}) };
+      const lim = limOf ? limOf(d.a) : null; if (lim) { limN++; limTowns.add(key); }
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), ...(commonGround(d, key) ? { cg: 1 } : {}), ...(lim ? { lim } : {}) };
     }),
   }));
   built.push({ key, label, group, j, areas });
 }
+if (limN) console.log(`limited data: ${limN} doors marked lim in ${limTowns.size} towns`);
 const groupOf = Object.fromEntries(built.map((b) => [b.key, b.group || null]));
 /* id -> towns listing it AS THE SAME HOUSE (2026-10-10). Ids come from the street address alone, so "100 Main St" in Denver and
    in Fountain made the same id: 58 different houses were each dropped from one town, and 20 town pairs that share no house were
