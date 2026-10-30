@@ -1847,7 +1847,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .fbset select{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;max-width:100%}
   .fbpage .fbpbody{display:grid;gap:8px}.fbforms{display:grid;gap:10px}.fbform{display:grid;gap:4px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
   .fbqs{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}.fbq{display:grid;gap:3px;font-weight:600}.fbq span{font-size:13px;color:var(--soft);overflow-wrap:anywhere}
-  .fbwho{display:grid;gap:6px}.fblog{margin:0;padding-left:18px;display:grid;gap:3px;font-size:13.5px;color:var(--soft)}
+  .fbset .permrow{display:flex;gap:10px;align-items:flex-start}.fbwho{display:grid;gap:6px}.fblog{margin:0;padding-left:18px;display:grid;gap:3px;font-size:13.5px;color:var(--soft)}
   .jnform input{font:inherit;font-weight:400;padding:8px 10px;border:1px solid var(--line,#ccd);border-radius:8px;background:var(--card,#fff);color:inherit}
   .strh{font:700 12.5px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:16px 2px 6px}
   .strh:first-of-type{margin-top:6px}
@@ -13732,7 +13732,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function fbOnC() { return edOn() && !S.viewing && (S.role === 'admin' || pAdd('set.fbleads')); }
   var FB_WHO = { none: 'Nobody yet', one: 'One person', rr: 'Take turns' };
   function fbLeadsView() {
-    hideToast(); S.signin = null; S.screen = 'fbleads'; foot.hidden = true; setDock(null);
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'fbleads'; foot.hidden = true; setDock(null);   /* hideSplash: opened straight from the way back from Facebook */
     setBar('back', { title: 'Facebook leads', sub: 'Your lead ads, straight into the Pipeline', back: kitOnC() && S.role === 'admin' ? kitSetupView : officeView, backLabel: kitOnC() && S.role === 'admin' ? 'Setup' : 'Office' });
     view.textContent = ''; var box = q('div', 'card jnform coform kitpay mailset fbset'); box.appendChild(q('div', 'skel')); view.appendChild(box);
     api('fbleads').then(function (j) {

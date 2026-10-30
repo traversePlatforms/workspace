@@ -174,9 +174,9 @@ function flConnState(string $priv): array {
     $c = flRead(flConnFile($priv));
     $o = ['ready' => flApp() !== null && flKey() !== null, 'keyOk' => flKey() !== null, 'on' => false];
     if (!$c) return $o;
-    return $o + ['on' => ($c['status'] ?? '') === 'ok', 'lost' => ($c['status'] ?? '') === 'reconnect' ? ['at' => (int) ($c['lost'] ?? 0), 'why' => (string) ($c['why'] ?? '')] : null,
+    return array_merge($o, ['on' => ($c['status'] ?? '') === 'ok', 'lost' => ($c['status'] ?? '') === 'reconnect' ? ['at' => (int) ($c['lost'] ?? 0), 'why' => (string) ($c['why'] ?? '')] : null,
         'via' => (string) ($c['via'] ?? ''), 'kind' => (string) ($c['kind'] ?? ''), 'who' => (string) ($c['user']['name'] ?? ''), 'by' => (string) ($c['by'] ?? ''), 'at' => (int) ($c['at'] ?? 0),
-        'pages' => array_map(fn($p) => ['id' => (string) $p['id'], 'name' => (string) $p['name'], 'leads' => in_array('MANAGE_LEADS', (array) ($p['tasks'] ?? []), true) || in_array('ADVERTISE', (array) ($p['tasks'] ?? []), true) || !isset($p['tasks'])], (array) ($c['pages'] ?? []))];
+        'pages' => array_map(fn($p) => ['id' => (string) $p['id'], 'name' => (string) $p['name'], 'leads' => in_array('MANAGE_LEADS', (array) ($p['tasks'] ?? []), true) || in_array('ADVERTISE', (array) ($p['tasks'] ?? []), true) || !isset($p['tasks'])], (array) ($c['pages'] ?? []))]);
 }
 /** the Pages a token reaches, with their own tokens: [[id, name, token, tasks]] or ['error' => ...] */
 function flPagesOf(string $token, bool $proof = true): array {
