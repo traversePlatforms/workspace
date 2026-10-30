@@ -22,7 +22,7 @@ covered towns; about 20% off for paying a year up front (cash now).
 | **Team** | $449 | $549 | up to 12 | $29 / $39 |
 | **Company** | quoted | quoted | 13+, several trades or offices | — |
 
-- **Roofing and Solar editions: +$50 a month** on Crew and Team (+$20 on Solo). They carry the most data (hail and wind per
+- **(Removed 2026-10-29, Matthew: "our selling point is its all in one, all inclusive"; every edition is the same price.)** ~~Roofing and Solar editions: +$50 a month~~ on Crew and Team (+$20 on Solo). They carry the most data (hail and wind per
   house, roof size and pitch from laser scans, re-roof and solar permits) and the biggest jobs.
 - **Second edition** on the same account: +$99 a month.
 - **Owner phone and email look-ups** (when switched on): $0.15 each.
