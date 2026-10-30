@@ -167,9 +167,7 @@ function mailHtml(string $main, array $set, array $map, string $unsubUrl): strin
          . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;' . $font . 'font-size:15px;line-height:22px;color:#0F1B2D"><tr><td>'
          . '<img src="' . htmlspecialchars(deskBase() . '/m/traverse-wordmark.png', ENT_QUOTES) . '" width="128" height="24" alt="Traverse" style="display:block;border:0;margin:0 0 20px;' . $font . 'font-size:18px;font-weight:bold;color:#13294B">'
          . implode('', $blocks)
-         . '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:22px 0 0;' . $font . 'color:#0F1B2D"><tr>'
-         . '<td style="vertical-align:top;padding:2px 14px 0 0"><img src="https://traverseplatforms.com/brand/traverse-mark-144.png" width="44" height="44" alt="" style="display:block;border:0;border-radius:10px"></td>'
-         . '<td style="vertical-align:top;border-left:2px solid #D6400C;padding:0 0 0 14px">' . $sl . '</td></tr></table>'
+         . '<div style="margin:22px 0 0">' . $sl . '</div>'   /* just his signature, once (Matthew 2026-10-30: the logo-and-bar block doubled the footer; he has his own signature) */
          . '<p style="margin:22px 0 0;font-size:12px;line-height:18px;color:#8590A0">Unsubscribe: <a href="' . htmlspecialchars($unsubUrl, ENT_QUOTES) . '" style="color:#8590A0;text-decoration:underline">' . htmlspecialchars($unsubUrl, ENT_QUOTES) . '</a></p>'
          . '</td></tr></table></td></tr></table></body></html>';
 }
@@ -422,7 +420,7 @@ switch ($action) {
         if (!$ids) fail('Tick at least one company.');
         if (count($ids) > 2000) fail('At most 2,000 at a time.');
         $tplPick = (string) ($body['tpl'] ?? 'auto'); $tpl = $S['templates'];
-        $style = (string) ($body['style'] ?? 'plain'); if (!isset(STYLES[$style])) fail('Pick Plain or With map.');   /* per send (2026-10-30); Plain unless picked */
+        $style = (string) ($body['style'] ?? 'map'); if (!isset(STYLES[$style])) fail('Pick Plain or With map.');   /* per send (2026-10-30); With map unless Plain is picked (Matthew 30 Oct) */
         if ($tplPick !== 'auto') { if (!isset($tpl[$tplPick])) fail('Pick a template.'); $tpl = array_fill_keys(array_keys(TRADES), $tpl[$tplPick]); }
         $queued = array_flip(array_column(jread('queue.json', []), 'id')); $msgs = []; $skip = [];
         foreach ($ids as $id) {
@@ -449,7 +447,7 @@ switch ($action) {
         if (trim((string) $S['settings']['address']) === '') fail('Add your postal address in Settings first.');
         $n = 0; foreach (logRows() as $r) if (($r['t'] ?? '') === 'test' && (int) $r['at'] > time() - 86400) $n++;
         if ($n >= 10) fail('That is 10 tests in a day already. Try again tomorrow.');
-        $style = (string) ($body['style'] ?? 'plain'); if (!isset(STYLES[$style])) fail('Pick Plain or With map.');
+        $style = (string) ($body['style'] ?? 'map'); if (!isset(STYLES[$style])) fail('Pick Plain or With map.');
         $city = clean($body['city'] ?? '', 60) ?: 'Denver';   /* the sample company's city (2026-10-30: the map is the city's) */
         $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => $city, 'trade' => $tr, 'person' => '', 'email' => $to];
         $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u, $style);
