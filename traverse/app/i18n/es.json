@@ -3234,5 +3234,21 @@
  " kWh per kW here": " kWh por kW aquí",
  "% taken off for tall trees on the sunny side (our assumption), ": "% descontado por árboles altos del lado soleado (supuesto nuestro), ",
  " kWh without": " kWh sin descontar",
- ". The most that fits, not a sized system.": ". Lo máximo que cabe, no un sistema dimensionado."
+ ". The most that fits, not a sized system.": ". Lo máximo que cabe, no un sistema dimensionado.",
+ "The lot": "El lote",
+ "Corner lot": "Lote de esquina",
+ "Corner lot: ": "Lote de esquina: ",
+ "Road behind the lot: ": "Calle detrás del lote: ",
+ "Alley behind the house": "Callejón detrás de la casa",
+ "Alley beside the house": "Callejón al lado de la casa",
+ "Path or trail beside the lot": "Sendero o camino junto al lote",
+ "Dead end or cul-de-sac about ": "Calle sin salida o cul-de-sac a unos ",
+ " ft from this lot": " pies de este lote",
+ "Nearest home about ": "Casa más cercana a unos ",
+ "Water nearby: ": "Agua cerca: ",
+ "Lot facts: U.S. Census Bureau street map (2026) and the county parcel; distances from the middle of the lot.": "Datos del lote: mapa de calles de la Oficina del Censo de EE. UU. (2026) y la parcela del condado; distancias desde el centro del lote.",
+ " Alley: City and County of Denver.": " Callejón: Ciudad y Condado de Denver.",
+ "Backs onto open space": "Colinda con espacio abierto",
+ "Alley behind": "Callejón atrás",
+ "Dead end or cul-de-sac": "Calle sin salida o cul-de-sac"
 }

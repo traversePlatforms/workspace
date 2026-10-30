@@ -3989,6 +3989,9 @@ if ($action === 'area') {
     };
     $pestOf = []; $custPts = []; $bookPts = []; $notePts = []; $posOf = [];
     $secOf = securityOn($role) ? loadSide('security', $key, $only) : [];
+    /* lot facts (2026-10-29, Security only): corner lot, street behind, alley, path, dead end, nearest home, open space, water
+       (data-pipeline/door-territory/security/build-lot.mjs; the file name keeps it out of every other edition) */
+    $secLotOf = securityOn($role) ? loadSide('security-lot', $key, $only) : [];
     if (pestOn($role) || securityOn($role)) {
         $pestOf = pestOn($role) ? loadSide('pest', $key, $only) : [];
         /* every door's position in the town (customers, bookings and notes nearby are counted town-wide) */
@@ -4020,7 +4023,7 @@ if ($action === 'area') {
                 }
                 $near = ['nb' => $nb, 'bk' => $bk] + ($tg ? ['tg' => $tg] : []);
                 if (pestOn($role)) $pestRow = ($pestOf[$d['id']] ?? []) + $near;
-                if (securityOn($role)) $secRow = ($secOf[$d['id']] ?? []) + $near;
+                if (securityOn($role)) $secRow = ($secOf[$d['id']] ?? []) + (isset($secLotOf[$d['id']]) ? ['lot' => $secLotOf[$d['id']]] : []) + $near;
             }
             $doors[] = [
                 'id' => $d['id'], 'address' => $d['address'], 'acres' => $d['acres'], 'owner' => $d['owner'],

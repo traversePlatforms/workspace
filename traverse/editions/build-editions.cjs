@@ -172,7 +172,8 @@ const EDITIONS = {
     c: { bar: '#123b44', deep: '#0b2a31', key: '#1a4d58', keyDown: '#22606d', barSoft: '#cfe6ea', accent: '#1b6f7a', moss: '#6a9ea6', mossInk: '#123b44',
          bg: '#f3f7f8', line: '#dbe6e8', sunk: '#e6eff1', card1: '#1a4d58', appbar: '#164550', tile: '#22606d',
          dBg: '#081315', dCard: '#101e21', dLine: '#233a3f', dSunk: '#0c181b', dBar: '#0d262b', dAccent: '#8fd0da' },
-    // the security layers; none of the storm, roof, solar, pest, lawn, fire or commercial layers
+    // the security layers; none of the storm, roof, solar, pest, lawn, fire or commercial layers. security-lot-<town> (the lot facts,
+    // 2026-10-29) rides on the security- prefix: kept here, and every other edition's security-(?!widefield) drops it
     keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
