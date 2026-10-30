@@ -200,6 +200,17 @@ function feature(string $k): bool { return !empty(company()['features'][$k]); }
 /* an edition, not Sixfold (2026-10-29, Matthew: the new roles, seats, devices and terms are for the editions only): every edition and client
    install is built without an aeration brand (company.json a365); Sixfold has one. See "the editions' roles" further down. */
 function edition(): bool { return company()['a365'] === null; }
+/* "doors" become "properties" in the editions' words (2026-10-30, Matthew), the same swap as pw() in the page: Sixfold 365 keeps its
+   words, and the knock itself ("at the door", "next door", "door-to-door", the Knocks doors switch) and door sensors stay. Text only. */
+function edWords(string $s): string {
+    if (stripos($s, 'door') === false || !defined('DATA_DIR') || !edition()) return $s;
+    $kept = [];
+    $s = (string) preg_replace_callback('/\b(?:at|from) (?:the|your|their|a) door\b|\bnext door\b|\bdoor-to-door\b|\bdoor (?:and|or) window\b|\bknocks? doors\b/i',
+        function ($m) use (&$kept) { $kept[] = $m[0]; return "\x01" . (count($kept) - 1) . "\x02"; }, $s);
+    $s = (string) preg_replace_callback('/\b([Dd])oors\b/', fn($m) => $m[1] === 'D' ? 'Properties' : 'properties', $s);
+    $s = (string) preg_replace_callback('/\b([Dd])oor\b/', fn($m) => $m[1] === 'D' ? 'Property' : 'property', $s);
+    return (string) preg_replace_callback('/\x01(\d+)\x02/', fn($m) => $kept[(int) $m[1]], $s);
+}
 /* the terms each person accepts (2026-10-29): bump a version when its text changes and everyone is asked again. See "the terms" further down. */
 const TERMS_VERSION = '2026-10-29';       /* Terms of Use v2 + Privacy Policy, as published 29 October 2026 */
 const AGREEMENT_VERSION = '2026-10-29';   /* the Subscription Agreement v3 (admins), as published 29 October 2026 */
@@ -350,7 +361,7 @@ function sendJson(string $txt): never {
     echo $txt;
     exit;
 }
-function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => $msg], $status); }
+function fail(string $msg, int $status = 400): never { out(['ok' => false, 'error' => edWords($msg)], $status); }   /* the editions' words (2026-10-30) */
 
 /* SX-9e (2026-10-03): the crew codes live ABOVE public_html, in sixfold-private/, beside
    sixfold-data/. If PHP ever stops running in this folder, a file in here is served as plain
@@ -1075,6 +1086,9 @@ require_once __DIR__ . '/webpush.php';   /* phone alerts (2026-10-05): Web Push,
 require_once __DIR__ . '/sms.php';       /* in-app texting (2026-10-10): Twilio, keys in the private folder */
 require_once __DIR__ . '/billing.php';   /* billing (2026-10-10): Stripe, keys in the private folder */
 if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oauth-lib.php';   /* Sign in with Google / Microsoft for Setup › Email (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/care-lib.php')) require_once __DIR__ . '/care-lib.php';   /* plans and customer emails for the editions (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/eod-lib.php')) require_once __DIR__ . '/eod-lib.php';   /* the editions' end-of-day email (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/fb-leads-lib.php')) require_once __DIR__ . '/fb-leads-lib.php';   /* Facebook lead ads into the Pipeline, editions and client installs (2026-10-30): one shared file beside every install's API */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -2313,7 +2327,7 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time()] + ($noPw ? ['email' => $em] : []);
         saveAccounts($acct); flock($lk, LOCK_UN); fclose($lk);
         $co = company(); $link = (string) $co['appUrl'] . '#pw=r.' . $tok; $cn = pwBrand();
-        pwMail($em, $cn . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $cn . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is." . (edition() ? '' : ' Your 6-digit code still works too.') . "\n\n" . (edition() ? "Sent for " . $cn . " by Traverse Platforms." : "Sent by " . $cn . ".") . "\n", null, []);
+        pwMail($em, $cn . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $cn . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is." . (edition() ? '' : ' Your 6-digit code still works too.') . "\n\n" . $cn . "\n", null, []);
         accountLog(['what' => 'reset link sent', 'id' => $id]);
         out($same);
     }
@@ -2364,10 +2378,12 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron', 'nlsweep'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron', 'nlsweep', 'eodcron'], true)) {   /* + eodcron: the editions' end-of-day email (2026-10-30) */
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
+/* Facebook lead ads every 5 minutes (2026-10-30, fb-leads-lib.php): traverse-tools/fb-leads.php, once per edition and client install */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fbpoll') $session = ['n' => 'Command line', 'r' => 'admin', 'c' => ''];
 /* the towns answer built ahead of the first phone (2026-10-29, speed: a new day, a deploy or a settings save made whoever opened the app
    next wait 7-16 s while every town was rebuilt): tools/regions-warm.php asks for it once per kind of viewer, as that role */
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE') && in_array($action, ['regions', 'regionsig'], true)) {
@@ -2380,6 +2396,8 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fuelcron') {
     $fc = fuelRefresh(($_GET['force'] ?? '') === '1');
     out(['ok' => true, 'asked' => $fc['asked'], 'err' => (string) ($fc['err'] ?? ''), 'newest' => fuelNewest($fc), 'gas' => fuelNow(['type' => 'gas']), 'diesel' => fuelNow(['type' => 'diesel'])]);
 }
+/* plans and customer emails, the timed part (2026-10-30, care-lib.php): tools/care-sweep.php asks each edition and client install hourly */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'caresweep') $session = ['n' => 'Customer emails', 'r' => 'admin', 'c' => ''];
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli') {
     $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
     $b = billingLoad();
@@ -2862,6 +2880,8 @@ function offerLive(array $l): ?array {
     $until = offerUntil($l); if ($until !== null && $until < time()) return null;   /* the 72-hour hold has run out: the quote page asks them to say yes instead */
     return slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null ? $o : null;
 }
+/* a plan offered beside the quote on the customer's quote page, and their "I'd like the plan" (2026-10-30, care-lib.php) */
+if (($action === 'careqplan' || $action === 'careqpick') && function_exists('carePublic')) carePublic();
 if ($action === 'a365quote' || $action === 'a365accept') {
     $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
     if (in_array($origin, A365_ORIGINS, true) || (PHP_SAPI === 'cli-server' && preg_match('#^http://127\.0\.0\.1(:\d+)?$#D', $origin))) {
@@ -3666,7 +3686,8 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+    $roOk = array_merge($roOk, ['careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3794,17 +3815,17 @@ function edGate(string $a): void {
  * order manager, office, sales rep, setter, technician ('1' yes, '0' no, '-' not for that role, 'r' the company switch for sales reps'
  * agreements in Accounts), are the 'def' strings below. */
 function permRoles(): array { return edition() ? ['manager', 'office', 'crew', 'setter', 'tech'] : ['manager', 'office', 'quote', 'crew']; }   /* + Sixfold 365's own roles (2026-10-30, permSixCat) */
-function permGroups(): array { return ['doors' => 'Doors', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }
+function permGroups(): array { return ['doors' => edition() ? 'Properties' : 'Doors', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }   /* Sixfold keeps its door words (2026-10-30) */
 function permCat(): array {
     static $c = null; if ($c !== null) return $c;
     $other = function (): bool { global $me; $w = trim((string) ($_REQUEST['who'] ?? '')); return $w !== '' && $w !== $me; };
     $c = [
-        'doors.see' => ['g' => 'doors', 'l' => 'See doors and maps', 's' => 'doors', 'd' => 'Door lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
-        'doors.mark' => ['g' => 'doors', 'l' => 'Mark doors', 's' => 'marks doors', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
-        'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best doors, door scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
-        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out doors and territories', 's' => 'hands out doors', 'd' => 'The Plan: give neighborhoods and doors to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
+        'doors.see' => ['g' => 'doors', 'l' => 'See properties and maps', 's' => 'properties', 'd' => 'Property lists, maps, routes and the house lookup.', 'def' => '11111', 'sw' => ['office' => 'doors', 'tech' => 'doors']],
+        'doors.mark' => ['g' => 'doors', 'l' => 'Mark properties', 's' => 'marks properties', 'd' => 'Log a knock (home, not home, booked) with notes, phone numbers and photos.', 'def' => '11111', 'acts' => ['mark', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'walk', 'work']],
+        'doors.scores' => ['g' => 'doors', 'l' => 'See scores and trade facts', 's' => 'scores and trade facts', 'd' => 'Best properties, property scores, and the trade facts on each card: storms, roofs, permits, new movers.', 'def' => '11111'],
+        'doors.plan' => ['g' => 'doors', 'l' => 'Hand out properties and territories', 's' => 'hands out properties', 'd' => 'The Plan: give neighborhoods and properties to the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['doorassign', 'assign', 'assignmany', 'unassignall', 'terrsave'], 'as' => 'manager'],
         'leads.own' => ['g' => 'leads', 'l' => 'Work their own leads', 's' => 'own leads', 'd' => 'Their own leads: stages, follow-ups, notes and call tries.', 'def' => '1-110', 'acts' => ['myleads', 'leadstatus', 'leadfollow', 'leadtry', 'leadoutcome', 'leadrecall', 'leadunreach', 'leadremove'], 'as' => 'rep'],
-        'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds door leads', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
+        'leads.add' => ['g' => 'leads', 'l' => 'Add leads at the door', 's' => 'adds leads at the door', 'd' => 'Turn a house they knocked into a lead, with a name and phone.', 'def' => '11110', 'need' => 'walkdesk', 'acts' => ['crewlead'], 'as' => 'rep'],
         'leads.hand' => ['g' => 'leads', 'l' => 'Add leads by hand', 's' => 'adds leads by hand', 'd' => 'Type in a lead that called, wrote or came from anywhere else.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadadd'], 'as' => 'office'],
         'leads.import' => ['g' => 'leads', 'l' => 'Import a lead list', 's' => 'imports lead lists', 'd' => 'Bring in a list of leads from a spreadsheet.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['leadimport'], 'as' => 'office'],
         'leads.team' => ['g' => 'leads', 'l' => 'See their team\'s leads', 's' => 'team\'s leads', 'd' => 'The leads of the people on their team, and the ones nobody has yet.', 'def' => '1-000', 'acts' => ['leads'], 'cond' => fn(string $a): bool => $a === 'myleads' && $other(), 'as' => 'manager'],
@@ -3829,15 +3850,20 @@ function permCat(): array {
         'cust.edit' => ['g' => 'cust', 'l' => 'Edit customers', 's' => 'edits customers', 'd' => 'Change a customer, add visits, make a customer from a lead.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['customersave', 'customerfrom', 'visitsave', 'custdocadd', 'plantemplatesave'], 'as' => 'office'],
         'cust.import' => ['g' => 'cust', 'l' => 'Import customers', 's' => 'imports customers', 'd' => 'Bring in customers, leads and past work from a spreadsheet.', 'def' => '00000', 'need' => 'imp', 'admin' => ['importcheck', 'importrun', 'imports', 'importundo', 'customerimport']],
         'cust.export' => ['g' => 'cust', 'l' => 'Download customers and payments', 's' => 'downloads customers', 'd' => 'The customer and payment lists as spreadsheets, and the hand-off to another CRM.', 'def' => '00000', 'admin' => ['customersexport', 'paymentsexport', 'crmexport']],
-        'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Doors, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
+        'team.board' => ['g' => 'team', 'l' => 'See the leaderboard', 's' => 'leaderboard', 'd' => 'Properties, talks and bookings for everyone, ranked.', 'def' => '11000', 'sw' => ['office' => 'runsteam']],
         'team.stats' => ['g' => 'team', 'l' => 'See their team\'s numbers', 's' => 'team\'s numbers', 'd' => 'The day-by-day numbers of the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'cond' => fn(string $a): bool => $a === 'stats' && ($other() || !empty($_REQUEST['team'])), 'gacts' => ['stats'], 'as' => 'manager'],
         'team.statspage' => ['g' => 'team', 'l' => 'See the Stats page', 's' => 'Stats page', 'd' => 'The company\'s leads, close rate, ads and jobs.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['statspage'], 'as' => 'office'],
         'team.goals' => ['g' => 'team', 'l' => 'Set their team\'s goals', 's' => 'sets team goals', 'd' => 'The daily goals for the people on their team.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['goals'], 'as' => 'manager'],
         'team.run' => ['g' => 'team', 'l' => 'Run their team\'s sign-ins', 's' => 'team sign-ins', 'd' => 'Add people to their team, give new codes, sign them out, remove them.', 'def' => '11000', 'sw' => ['office' => 'runsteam'], 'acts' => ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], 'as' => 'manager'],
         'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
+        'cust.plans' => ['g' => 'cust', 'l' => 'Put customers on plans', 's' => 'puts customers on plans', 'd' => 'Start, change and end a customer\'s plan, send a plan payment link, the newsletter yes, and book plan visits.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['carecust', 'careenrol', 'careend', 'careoptin', 'carepaylink', 'caredue'], 'as' => 'office'],   /* 2026-10-30, care-lib.php */
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
+        'set.eod' => ['g' => 'set', 'l' => 'End-of-day email', 's' => 'end-of-day email', 'd' => 'Turn the evening summary email on or off, and pick who gets it, when, and what it shows.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['eodget', 'eodset', 'eodpreview', 'eodtest']],   /* 2026-10-30 */
+        'set.fbleads' => ['g' => 'set', 'l' => 'Facebook lead ads', 's' => 'Facebook lead ads', 'd' => 'Connect the company\'s Facebook Page, pick the lead forms and who new ad leads go to.', 'def' => '00000', 'admin' => ['fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbpollnow']],   /* 2026-10-30, fb-leads-lib.php */
         'set.prices' => ['g' => 'set', 'l' => 'Prices', 's' => 'prices', 'd' => 'What a quote adds up from, and Your costs. The agreement terms stay the admin\'s.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],   /* the terms library left this list (2026-10-30, Matthew: terms are the admin's and the super admin's only, never given to a role) */
+        'set.plans' => ['g' => 'set', 'l' => 'Plans', 's' => 'builds plans', 'd' => 'The company\'s recurring plans: what each visit includes, how often, the season and the price.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['careplanset']],   /* 2026-10-30 */
+        'set.care' => ['g' => 'set', 'l' => 'Customer emails', 's' => 'customer emails', 'd' => 'The follow-up after a quote, the aftercare email and the monthly newsletter: on or off, the words, and approving each issue.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog']],
     ];
     if (!edition()) $c = permSixCat($c);   /* Sixfold 365: its own roles, defaults and screens (2026-10-30) */
     return $c;
@@ -3856,21 +3882,21 @@ function permCat(): array {
  * Marks won and lost, Communities, Field quick quote) stay the key under the role, as in the editions. */
 function permSixCat(array $c): array {
     $six = [
-        'doors.see' => ['11-1', ['office' => 'doors']], 'doors.mark' => ['11-1', []],
+        'doors.see' => ['11-1', ['office' => 'doors'], 'Door lists, maps, routes and the house lookup.', ['See doors and maps', 'doors']], 'doors.mark' => ['11-1', [], null, ['Mark doors', 'marks doors']],   /* Sixfold keeps its door words */
         'doors.scores' => ['11-1', [], 'The lawn, tree and fire facts on each card, and new movers.'],
-        'doors.plan' => ['11--', ['office' => 'runsteam']],
+        'doors.plan' => ['11--', ['office' => 'runsteam'], 'The Plan: give neighborhoods and doors to the people on their team.', ['Hand out doors and territories', 'hands out doors']],
         'leads.own' => ['1--1', []], 'leads.add' => ['11-1', []], 'leads.hand' => ['0110', []], 'leads.team' => ['1--0', []], 'leads.all' => ['01-0', []],
         'leads.assign' => ['11-0', []], 'leads.close' => ['11-1', ['office' => 'wonlost'], 'Move a lead to Quoted or Won.'],
         'pay.take' => ['1111', ['manager' => 'pays', 'quote' => 'pays', 'crew' => 'pays']], 'pay.paid' => ['0110', []], 'pay.page' => ['00-0', []],
         'jobs.own' => ['11-1', ['manager' => 'walker', 'office' => 'walker', 'crew' => 'walker'], 'Their own jobs and walks: the schedule, notes, photos and Done.'],
         'jobs.all' => ['0110', []], 'jobs.book' => ['0110', []], 'jobs.block' => ['0110', []],
         'cust.see' => ['01-0', []], 'cust.edit' => ['01-0', []],
-        'team.board' => ['11-0', ['office' => 'runsteam']], 'team.stats' => ['11-0', ['office' => 'runsteam']], 'team.statspage' => ['01-0', []], 'team.run' => ['11-0', ['office' => 'runsteam']],
+        'team.board' => ['11-0', ['office' => 'runsteam'], 'Doors, talks and bookings for everyone, ranked.'], 'team.stats' => ['11-0', ['office' => 'runsteam']], 'team.statspage' => ['01-0', []], 'team.run' => ['11-0', ['office' => 'runsteam']],
     ];
     $o = [];
     foreach ($six as $k => $x) {
         if (!isset($c[$k])) continue;
-        $p = $c[$k]; $p['def'] = $x[0]; $p['sw'] = $x[1]; if (isset($x[2])) $p['d'] = $x[2];
+        $p = $c[$k]; $p['def'] = $x[0]; $p['sw'] = $x[1]; if (isset($x[2])) $p['d'] = $x[2]; if (isset($x[3])) { $p['l'] = $x[3][0]; $p['s'] = $x[3][1]; }
         unset($p['eff'], $p['need']);   /* Sixfold: a toggle refuses only once turned off (no "on unless the role has it" rows) */
         $o[$k] = $p;
         if ($k === 'leads.close') $o['q365.make'] = ['g' => 'quotes', 'l' => 'Make quotes', 's' => 'quotes', 'd' => 'Price a lead from its house and save the quote: the Quote builder, or Quick quote on a quote-only login.', 'def' => '-11-', 'acts' => ['leadquote', 'a365pricing', 'a365calc']];
@@ -3900,7 +3926,7 @@ function sixPermFor(string $r, string $id, bool $me): array {
 /** never toggled, said under the list in Accounts */
 function permFixed(): array {
     if (!edition()) return ['Accounts (every sign-in, roles, codes and the switches on each person), prices, goals, the agreement terms, the Payments setup and downloads stay the admin\'s.', 'The quote-only login keeps to its own screens: its permissions can be turned off, not widened.'];   /* Sixfold 365 (2026-10-30) */
-    return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Door list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
+    return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Property list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
 }
 function permFile(): string { return DATA_DIR . '/role-perms.json'; }
 function permSaved(bool $fresh = false): array {
@@ -4006,8 +4032,10 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth',
     'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
     'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel',   /* smart prices and terms (2026-10-30); + the fuel cost's prices */
+    'careplans', 'careplanset', 'carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog',   /* plans and customer emails (2026-10-30) */
     'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
-    'perms', 'permset'];   /* + Roles and permissions, part of Accounts (2026-10-29) */
+    'perms', 'permset',   /* + Roles and permissions, part of Accounts (2026-10-29) */
+    'fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbleadstoken'];   /* + Setup › Facebook leads (2026-10-30) */
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
 /* what a lock for payment shuts: Traverse's own data, for everyone but the super admin (2026-10-29) */
 const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
@@ -4035,10 +4063,10 @@ function billLockInfo(?array $L, bool $admin): ?array {
 /** the lock for someone signing in with this role ('super' never) */
 function billLockFor(string $r): ?array { return $r === 'super' ? null : billLockInfo(billLock(), $r === 'admin'); }
 function billLockWords(array $L, bool $admin): string {
-    if (!$admin) return $L['lock'] === 'billing' ? 'Door data is paused: your company\'s account needs attention.' : 'Your company\'s Traverse is being set up. Your admin will let you know when it\'s ready.';
-    if ($L['lock'] === 'billing') return 'Door data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
-    return $L['phase'] === 'unpaid' ? 'Doors, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
-        : 'Doors, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
+    if (!$admin) return $L['lock'] === 'billing' ? 'Property data is paused: your company\'s account needs attention.' : 'Your company\'s app is being set up. Your admin will let you know when it\'s ready.';
+    if ($L['lock'] === 'billing') return 'Property data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
+    return $L['phase'] === 'unpaid' ? 'Properties, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
+        : 'Properties, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
 }
 /** a lock for payment is told once per lapse: Traverse by email, the client's admins in their alerts ("Your admin has been told") */
 function billLockNote(array $L): void {
@@ -4053,7 +4081,7 @@ function billLockNote(array $L): void {
         . 'Company: ' . $co . "\nInstall: " . COOKIE . "\nWhy: " . $why . "\n\nPaying opens it at once. To work with them, open their Billing as Traverse and use Give more time.\n");
     billingLog(['what' => 'locked', 'lapse' => $L['lapse'], 'mailed' => $r['ok']]);
     foreach (acctRows($basePeople, $acct, $sessionKey) as $row) if (!$row['off'] && $row['role'] === 'admin' && !boardHidden((string) $row['name']))
-        feedAdd((string) $row['name'], 'Door data is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Doors, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
+        feedAdd((string) $row['name'], 'Property data is paused: the plan needs paying', 'The last payment did not go through, or the plan ended. Properties, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.', './', 'billlock-' . $L['lapse'], '', true);
 }
 function billGate(string $a): void {
     global $isSuper, $role;
@@ -4065,6 +4093,7 @@ function billGate(string $a): void {
     out(['ok' => false, 'why' => 'locked', 'lock' => billLockInfo($L, $admin), 'error' => billLockWords($L, $admin)], 403);
 }
 if (!defined('SIXFOLD_CLI') && $session && edition()) billGate($action);
+if (strncmp($action, 'care', 4) === 0 && function_exists('careAction')) careAction();   /* plans and customer emails for the editions (2026-10-30, care-lib.php) */
 
 /* ---- Roles and permissions in Accounts (2026-10-29; see permCat above) ----
  * 'perms': the list, grouped, with each role's default and current value (an admin, or a manager adding to their team: read only).
@@ -6128,7 +6157,7 @@ function houseFacts(string $key, string $id): ?array {
     }
     foreach (lookupDoors($k0) as $d) {   /* not on a door list (2026-10-14): rented, mostly */
         if ($d['id'] !== $id) continue;
-        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : 'Not on the door lists','owner' => $d['owner'] ?? null,
+        return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : edWords('Not on the door lists'),'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
                 'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']), 'hand' => loadLawnHand($k0)[$id] ?? null, 'range' => lawnRangeCache()[$k0 . '/' . $id] ?? null,
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
@@ -7226,6 +7255,7 @@ function adSpendFile(): string { return DATA_DIR . '/ad-spend.json'; }
 function adSpend(): array {
     $j = json_decode((string) @file_get_contents(adSpendFile()), true);
     if (is_array($j) && isset($j['ads'])) return $j['ads'];
+    if (edition()) return [];   /* the figures below are Sixfold's own Meta spend: an edition or client install with nothing saved starts empty (2026-10-30) */
     return [   /* Matthew's Meta screenshots (19 and 20 Oct); replaced as soon as anyone saves new figures */
         ['key' => 'form1', 'label' => 'Instant Form ad (13-14 Oct, paused)', 'src' => 'meta', 'spend' => 169.28, 'results' => 21, 'asof' => '2026-10-19', 'by' => 'Matthew\'s Meta screenshot'],
         ['key' => 'form2', 'label' => 'Instant Form ad (since 19 Oct)', 'src' => 'meta', 'spend' => 134.84, 'results' => 9, 'asof' => '2026-10-20', 'by' => 'Matthew\'s Meta screenshot'],
@@ -7266,7 +7296,7 @@ function closeRates(array $leads, array $jobOfLead): array {
     foreach ($G as $k => &$x) { $x['close'] = $x['quoted'] ? round($x['won'] / $x['quoted'], 3) : null; $exp += $x['pipe'] * ($x['close'] ?? $allClose); } unset($x);   /* no history in a group yet: the overall rate */
     return ['groups' => $G, 'quoted' => $all['quoted'], 'won' => $all['won'], 'close' => round($allClose, 3), 'pipe' => $G['ads']['pipe'] + $G['warm']['pipe'], 'pipeN' => $G['ads']['pipeN'] + $G['warm']['pipeN'], 'expected' => round($exp)];
 }
-if ($action === 'statspage') {
+if ($action === 'statspage' && !edition()) {   /* an edition's Stats page: edStats, further down (2026-10-30) */
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz);
     $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days');   /* this week's Monday */
@@ -7380,7 +7410,7 @@ if ($action === 'adspendsave') {   /* an admin types each ad's lifetime spend fr
     if (!feature('walkdesk') || $role !== 'admin' || !$isPost) fail('Not allowed.', 403);
     $in = is_array($body['ads'] ?? null) ? $body['ads'] : []; $out = [];
     foreach (array_slice($in, 0, 20) as $a) {
-        $label = mb_substr(trim((string) ($a['label'] ?? '')), 0, 80); $src = in_array($a['src'] ?? '', ['meta', 'messenger'], true) ? (string) $a['src'] : '';
+        $label = mb_substr(trim((string) ($a['label'] ?? '')), 0, 80); $src = in_array($a['src'] ?? '', edition() ? array_keys(edAdSrc()) : ['meta', 'messenger'], true) ? (string) $a['src'] : '';   /* an edition: any of edAdSrc() (2026-10-30) */
         if ($label === '' || $src === '') continue;
         $out[] = ['key' => preg_replace('/[^a-z0-9]/', '', strtolower((string) ($a['key'] ?? '')) ) ?: 'ad' . count($out), 'label' => $label, 'src' => $src, 'spend' => max(0, round((float) ($a['spend'] ?? 0), 2)), 'results' => max(0, (int) ($a['results'] ?? 0)), 'asof' => date('Y-m-d'), 'by' => $me];
     }
@@ -10182,6 +10212,331 @@ if ($action === 'payments' || $action === 'paymentsexport') {
     out(['ok' => true, 'from' => $from, 'to' => $to, 'rows' => $rows, 'total' => array_sum(array_column($rows, 'amt')), 'count' => count($rows), 'byHow' => $byHow, 'byMonth' => $byMonth,
          'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i'), 'sqcheck' => squareCheckShown()]);
 }
+/* ==== THE EDITIONS' STATS PAGE AND END-OF-DAY EMAIL (2026-10-30, Matthew: "STATS PAGE" and "END-OF-DAY REPORT, OPTIONAL", for the editions
+ * and client installs; Sixfold keeps its own Stats page and its 8 pm picture email exactly as they are) ====================================
+ * Stats (action statspage on an edition, the role permission "See the Stats page"): built from Sixfold's page (the same close-rate rule,
+ * closeRates; the same six-weeks formula; the same typed ad spend, ad-spend.json and Update ad spend) but for any trade and any lead source:
+ *   leads by source (Facebook ads, Messenger, website, at the door, phone, referrals, imported lists, other) with how many were quoted and
+ *   booked; quotes sent and the close rate; jobs booked and done and the money taken; the Good / Better / Best options picked; each ad's
+ *   typed spend against the leads and jobs its source brought (cost per lead, cost per booked job); each person's numbers; six weeks ahead
+ *   (booked + open quotes x close rate + plans). Periods: this week, last week, the last 30 days, this month. Words follow the trade (edWords).
+ * End-of-day email (eod-report.json beside the data; OFF until the company's admin turns it on, Stats > End-of-day email; the role permission
+ *   "End-of-day email"): the admin picks the people (the company's admins and managers, each with an email address), the hour, and the parts
+ *   (eodSectionList in eod-lib.php). It goes from the company's connected mailbox (Setup > Email) or, if none, Traverse's mail server under
+ *   the COMPANY's name with Reply-To the company's email; the email itself carries only the company's name, colour and logo (eod-lib.php).
+ *   Preview and Send me a test on the same screen. Sent once a day, in the first hourly run in the 4 hours from the chosen hour (the install's
+ *   own clock): sixfold-tools/edition-eod.php, started by the hourly morning-email.php, asks each edition and client install (eodcron).
+ *   Each send is a line in eod.log (in the backups with the settings).
+ *   eodget GET, eodset POST, eodpreview GET (?s=money,jobs,...), eodtest POST {email}: adminOr('set.eod'); eodcron: the command line only. */
+function edTradeWords(): array {
+    $t = kitTrade();
+    $w = ['roof' => ['job', 'jobs', 'estimate', 'estimates'], 'solar' => ['install', 'installs', 'proposal', 'proposals'], 'pest' => ['service', 'services', 'quote', 'quotes'],
+          'security' => ['install', 'installs', 'quote', 'quotes'], 'yards' => ['job', 'jobs', 'quote', 'quotes']][$t] ?? ['job', 'jobs', 'quote', 'quotes'];
+    return ['job' => $w[0], 'jobs' => $w[1], 'quote' => $w[2], 'quotes' => $w[3], 'Job' => ucfirst($w[0]), 'Jobs' => ucfirst($w[1]), 'Quote' => ucfirst($w[2]), 'Quotes' => ucfirst($w[3])];
+}
+/** where a lead came from, as the editions' Stats page groups it: an imported list is its own group (unless it was a Facebook form file) */
+function edSrcKey(array $l): string {
+    $s = (string) ($l['src'] ?? '');
+    if ($s === 'meta') return 'facebook';
+    if (!empty($l['imp'])) return 'import';
+    return ['messenger' => 'messenger', 'website' => 'website', 'a365web' => 'website', 'door' => 'door', 'inperson' => 'door', 'phone' => 'phone', 'referral' => 'referral'][$s] ?? 'other';
+}
+function edSrcNames(): array {
+    return ['facebook' => 'Facebook ads', 'messenger' => 'Facebook Messenger', 'website' => 'Website', 'door' => 'At the door', 'phone' => 'Phone calls', 'referral' => 'Referrals', 'import' => 'Imported lists', 'other' => 'Other'];
+}
+/** the sources an edition's ad can bring leads in as (Update ad spend): the lead's own src */
+function edAdSrc(): array {
+    return ['meta' => 'Facebook / Instagram lead form', 'messenger' => 'Facebook Messenger', 'website' => 'Your website (Google and other ads)', 'phone' => 'Phone calls', 'nextdoor' => 'Nextdoor', 'other' => 'Other'];
+}
+/** an edition's typed ad spend: what the admin saved, else nothing (Sixfold's screenshot figures are Sixfold's) */
+function edAds(): array { $j = json_decode((string) @file_get_contents(adSpendFile()), true); return is_array($j) && is_array($j['ads'] ?? null) ? $j['ads'] : []; }
+/** each lead's first quote, from the log: a quote counts on the day it was first sent; a revised one is not new */
+function edQuoteFirst(): array { $f = []; foreach (readLines(leadsDir() . '/leadst.log') as $u) if (!empty($u['quote']) && !isset($f[$u['id']])) $f[(string) $u['id']] = (int) ($u['at'] ?? 0); return $f; }
+/** who a sale is credited to: the lead's owner, else whoever quoted it, else whoever added it */
+function edCredit(array $l, ?array $j = null): string {
+    $n = trim((string) ($l['owner'] ?? '')) ?: trim((string) ($l['quote']['by'] ?? '')) ?: trim((string) ($l['by'] ?? ''));
+    if ($n === '' && $j) $n = trim((string) ($j['by'] ?? ''));
+    return in_array($n, ['website', 'Website', 'ClickUp', 'Command line', 'Morning email'], true) || boardHidden($n) ? '' : $n;
+}
+/** a test lead is never counted (as on Sixfold's page) */
+function edReal(array $l): bool { return !preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? '')); }
+/** the period asked for: [from, to, label, key] (dates, the install's clock) */
+function edPeriod(string $p): array {
+    $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d');
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days');
+    if ($p === 'week') return [$mon->format('Y-m-d'), $T, 'This week', 'week'];
+    if ($p === 'last') return [(clone $mon)->modify('-7 days')->format('Y-m-d'), (clone $mon)->modify('-1 day')->format('Y-m-d'), 'Last week', 'last'];
+    if ($p === 'month') return [$today->format('Y-m-01'), $T, 'This month', 'month'];
+    return [(clone $today)->modify('-29 days')->format('Y-m-d'), $T, 'Last 30 days', '30'];
+}
+/** the editions' Stats page */
+function edStats(string $p): array {
+    global $role;
+    [$from, $to, $plabel, $pkey] = edPeriod($p);
+    $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d');
+    $ts = fn(string $ymd, bool $end = false) => (new DateTime($ymd . ($end ? ' 23:59:59' : ' 00:00:00'), $tz))->getTimestamp();
+    $t0 = $ts($from); $t1 = $ts($to, true); $in = fn(int $at) => $at >= $t0 && $at <= $t1;
+    $leads = array_filter(leadsAll(), 'edReal');
+    $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && edReal($leads[$j['lead']] ?? ['name' => (string) ($j['title'] ?? '')]));
+    $jobOf = []; foreach ($jobs as $j) if (!empty($j['lead'])) $jobOf[(string) $j['lead']] = $j;
+    $qFirst = edQuoteFirst();
+    $wasQuoted = fn($l) => !empty($l['quote']) || in_array($l['status'] ?? '', ['quoted', 'won'], true) || isset($jobOf[$l['id']]);
+    $qPrice = fn($l) => (int) ($l['quote']['price'] ?? 0);
+    /* 1. leads by source: the period's new leads, and how many of them were quoted and booked so far */
+    $src = []; foreach (edSrcNames() as $k => $n) $src[$k] = ['key' => $k, 'label' => $n, 'leads' => 0, 'quoted' => 0, 'booked' => 0, 'value' => 0];
+    foreach ($leads as $l) { if (!$in((int) ($l['at'] ?? 0))) continue; $k = edSrcKey($l); $src[$k]['leads']++; if ($wasQuoted($l)) $src[$k]['quoted']++; if (isset($jobOf[$l['id']])) { $src[$k]['booked']++; $src[$k]['value'] += (int) $jobOf[$l['id']]['price']; } }
+    /* 2. quotes: first sent in the period; how many have booked; Good / Better / Best picks on them */
+    $q = ['n' => 0, 'value' => 0, 'booked' => 0, 'bookedValue' => 0]; $opt = []; $optQ = 0; $custPick = 0;
+    foreach ($leads as $l) {
+        $qa = $qFirst[$l['id']] ?? null; if ($qa === null || !$in($qa) || empty($l['quote'])) continue;
+        $q['n']++; $q['value'] += $qPrice($l); $jx = $jobOf[$l['id']] ?? null; if ($jx) { $q['booked']++; $q['bookedValue'] += (int) $jx['price']; }
+        $Q = $l['quote']; if (empty($Q['options']) || !is_array($Q['options'])) continue;
+        $optQ++; if (($Q['optBy'] ?? '') === 'customer') $custPick++;
+        foreach ($Q['options'] as $o) { if (!is_array($o)) continue; $k = (string) ($o['k'] ?? ''); if ($k === '') continue;
+            $opt[$k] = ($opt[$k] ?? ['key' => $k, 'name' => '', 'offered' => 0, 'picked' => 0, 'booked' => 0, 'value' => 0]); $opt[$k]['name'] = (string) ($o['name'] ?? $k); $opt[$k]['offered']++;
+            if ((string) ($Q['opt'] ?? '') === $k) { $opt[$k]['picked']++; if ($jx) { $opt[$k]['booked']++; $opt[$k]['value'] += (int) $jx['price']; } } }
+    }
+    $CR = closeRates($leads, $jobOf);
+    /* 3. jobs and money */
+    $jb = ['booked' => 0, 'bookedValue' => 0, 'done' => 0, 'doneValue' => 0, 'onBoard' => 0, 'notDone' => 0];
+    foreach ($jobs as $j) {
+        if ($in((int) ($j['at'] ?? 0))) { $jb['booked']++; $jb['bookedValue'] += (int) $j['price']; }
+        if ($j['date'] >= $from && $j['date'] <= $to) { $jb['onBoard']++; $o = (string) ($j['done']['o'] ?? ''); if ($o === 'done') { $jb['done']++; $jb['doneValue'] += (int) $j['price']; } elseif ($j['date'] < $T) $jb['notDone']++; }
+    }
+    $money = ['in' => 0, 'n' => 0, 'byHow' => []];
+    foreach (paymentsAll() as $pm) { if ($pm['date'] < $from || $pm['date'] > $to) continue; $money['in'] += (int) $pm['amt']; if ((int) $pm['amt'] > 0) $money['n']++; $money['byHow'][$pm['howL']] = ($money['byHow'][$pm['howL']] ?? 0) + (int) $pm['amt']; }
+    arsort($money['byHow']);
+    /* 4. ads: each ad's typed lifetime spend against every lead and job its source has brought */
+    $ads = edAds(); $adOut = [];
+    foreach (edAdSrc() as $sk => $sl) {
+        $sp = 0.0; $res = 0; $asof = ''; $n = 0; foreach ($ads as $a) if (($a['src'] ?? '') === $sk) { $sp += (float) $a['spend']; $res += (int) ($a['results'] ?? 0); $asof = max($asof, (string) ($a['asof'] ?? '')); $n++; }
+        if (!$n) continue;
+        $ln = 0; $jn = 0; $bk = 0; $pd = 0; foreach ($leads as $l) if (($l['src'] ?? '') === $sk) { $ln++; if (isset($jobOf[$l['id']])) { $jn++; $bk += (int) $jobOf[$l['id']]['price']; $pd += jobPaidSoFar($jobOf[$l['id']]); } }
+        $per = $res ?: $ln;
+        $adOut[] = ['src' => $sk, 'label' => $sl, 'spend' => round($sp, 2), 'results' => $res, 'asof' => $asof, 'leads' => $ln, 'jobs' => $jn, 'booked' => $bk, 'paid' => $pd, 'perLead' => $per ? round($sp / $per, 2) : null, 'perJob' => $jn ? round($sp / $jn, 2) : null];
+    }
+    /* 5. each person: doors (the leaderboard's count), leads added, quotes sent, sales credited, jobs done as crew */
+    $days = (int) $today->diff(new DateTime($from, $tz))->days + 1;
+    $team = []; $bump = function (string $n, string $k, int $v = 1) use (&$team) { if ($n === '' || boardHidden($n)) return; $team[$n] = $team[$n] ?? ['name' => $n, 'doors' => 0, 'talked' => 0, 'leads' => 0, 'quotes' => 0, 'quoteValue' => 0, 'sold' => 0, 'soldValue' => 0, 'done' => 0]; $team[$n][$k] += $v; };
+    $doors = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'people' => 0];
+    foreach (teamDays(max(1, $days), '') as $pp) { $any = false; foreach ($pp['days'] as $r) { if ($r['date'] < $from || $r['date'] > $to) continue; $bump($pp['name'], 'doors', (int) $r['doors']); $bump($pp['name'], 'talked', (int) $r['booked'] + (int) $r['later']); if (!boardHidden($pp['name'])) { $doors['doors'] += (int) $r['doors']; $doors['talked'] += (int) $r['booked'] + (int) $r['later']; $doors['booked'] += (int) $r['booked']; } if ((int) $r['doors'] > 0) $any = true; } if ($any && !boardHidden($pp['name'])) $doors['people']++; }
+    foreach ($leads as $l) {
+        if ($in((int) ($l['at'] ?? 0)) && !in_array((string) ($l['src'] ?? ''), ['website', 'a365web', 'meta'], true) && empty($l['imp'])) $bump(edCredit(['by' => (string) ($l['by'] ?? '')]), 'leads');
+        $qa = $qFirst[$l['id']] ?? null; if ($qa !== null && $in($qa) && !empty($l['quote'])) { $qb = trim((string) ($l['quote']['by'] ?? '')); $bump($qb === 'website' ? '' : $qb, 'quotes'); $bump($qb === 'website' ? '' : $qb, 'quoteValue', $qPrice($l)); }
+    }
+    foreach ($jobs as $j) {
+        if ($in((int) ($j['at'] ?? 0))) { $n = edCredit($leads[$j['lead']] ?? [], $j); $bump($n, 'sold'); $bump($n, 'soldValue', (int) $j['price']); }
+        if ($j['date'] >= $from && $j['date'] <= $to && (($j['done']['o'] ?? '') === 'done')) foreach (array_filter(array_map('trim', explode(',', (string) $j['crew']))) as $cn) $bump($cn, 'done');
+    }
+    $team = array_values($team); usort($team, fn($a, $b) => [$b['soldValue'], $b['sold'], $b['quotes'], $b['doors']] <=> [$a['soldValue'], $a['sold'], $a['quotes'], $a['doors']]);
+    /* 6. six weeks ahead from this week's Monday: booked + open quotes x each group's close rate, spread evenly + plan income (Sixfold's formula) */
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days'); $mrr = 0.0; $planN = 0; $per = ['monthly' => 1, 'quarterly' => 1 / 3, 'yearly' => 1 / 12];
+    foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); $wk = (int) ($c['every'] ?? 0); if (($c['status'] ?? 'active') !== 'active' || !(isset($per[$pl]) || ($pl === 'custom' && $wk > 0))) continue; $mrr += (float) ($c['price'] ?? 0) * ($per[$pl] ?? 52 / 12 / max(1, $wk)); $planN++; }
+    $weeks = [];
+    for ($w = 0; $w < 6; $w++) {
+        $f = (clone $mon)->modify('+' . (7 * $w) . ' days')->format('Y-m-d'); $t = (clone $mon)->modify('+' . (7 * $w + 6) . ' days')->format('Y-m-d');
+        $bk = 0; $bn = 0; foreach ($jobs as $j) if ($j['date'] >= $f && $j['date'] <= $t) { $bk += (int) $j['price']; $bn++; }
+        $exp = (int) round($CR['expected'] / 6); $planW = (int) round($mrr * 12 / 52);
+        $weeks[] = ['from' => $f, 'to' => $t, 'booked' => $bk, 'jobs' => $bn, 'pipeline' => $exp, 'plans' => $planW, 'total' => $bk + $exp + $planW];
+    }
+    $eod = adminOr('set.eod') && function_exists('eodSectionList') ? eodCfg() : null;   /* eod-lib.php beside the API */
+    return ['ok' => true, 'ed' => true, 'today' => $T, 'period' => ['key' => $pkey, 'label' => $plabel, 'from' => $from, 'to' => $to], 'words' => edTradeWords(),
+            'sources' => array_values($src), 'quotes' => $q + ['close' => $CR['close'], 'quoted8' => $CR['quoted'], 'won8' => $CR['won'], 'pipe' => $CR['pipe'], 'pipeN' => $CR['pipeN'], 'groups' => $CR['groups']],
+            'options' => ['quotes' => $optQ, 'customer' => $custPick, 'list' => array_values($opt)], 'jobs' => $jb, 'money' => $money,
+            'ads' => $adOut, 'adRows' => edAds(), 'adSrc' => edAdSrc(), 'team' => $team, 'doors' => $doors,
+            'proj' => ['weeks' => $weeks, 'expected' => $CR['expected'], 'pipe' => $CR['pipe'], 'pipeN' => $CR['pipeN'], 'close' => $CR['close'], 'groups' => $CR['groups'], 'mrr' => round($mrr, 2), 'plans' => $planN],
+            'canEdit' => $role === 'admin', 'eod' => $eod ? ['on' => $eod['on'], 'hour' => $eod['hour'], 'to' => count($eod['to'])] : null];
+}
+/* ---- the end-of-day email ---- */
+function eodFile(): string { return DATA_DIR . '/eod-report.json'; }
+function eodCfg(): array {
+    $j = json_decode((string) @file_get_contents(eodFile()), true); $j = is_array($j) ? $j : [];
+    $sec = []; foreach (eodSectionList() as $k => $_) $sec[$k] = array_key_exists($k, (array) ($j['sections'] ?? [])) ? !empty($j['sections'][$k]) : true;
+    $to = []; foreach ((array) ($j['to'] ?? []) as $t) if (is_array($t) && preg_match('/^[0-9a-f]{6,64}$/', (string) ($t['id'] ?? '')) && filter_var((string) ($t['email'] ?? ''), FILTER_VALIDATE_EMAIL)) $to[] = ['id' => (string) $t['id'], 'email' => strtolower((string) $t['email'])];
+    $h = (int) ($j['hour'] ?? 19);
+    return ['on' => !empty($j['on']), 'hour' => $h >= 12 && $h <= 23 ? $h : 19, 'to' => $to, 'sections' => $sec, 'via' => in_array($j['via'] ?? '', ['auto', 'own', 'app'], true) ? (string) $j['via'] : 'auto', 'by' => (string) ($j['by'] ?? ''), 'at' => (int) ($j['at'] ?? 0)];
+}
+/** who can get it: the company's own admins and managers (never Traverse's super admin, never a hidden test account), with the email they sign in with */
+function eodPeople(): array {
+    global $basePeople, $acct, $sessionKey; $o = [];
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) {
+        if ($r['off'] || !in_array($r['role'], ['admin', 'manager'], true) || boardHidden((string) $r['name'])) continue;
+        $o[$r['id']] = ['id' => $r['id'], 'name' => (string) $r['name'], 'role' => (string) $r['role'], 'email' => strtolower((string) (($acct['login'][$r['id']]['email'] ?? '') ?: ($acct['inv'][$r['id']]['email'] ?? '')))];
+    }
+    return $o;
+}
+/** the company's look for the email: its name, a colour white reads on, its PNG or JPG logo as a whole address (email apps show no SVG) */
+function eodBrand(): array {
+    $B = kitBrand(); $l = logoInfo(); $logo = '';
+    if ($l && in_array($l['type'], ['png', 'jpg'], true)) {
+        $logo = logoUrl((string) $l['v'], true);
+        if (PHP_SAPI === 'cli' && preg_match('#^(https?://[a-z0-9.-]+(:\d+)?)/#i', (string) company()['appUrl'], $m)) $logo = $m[1] . '/api/' . basename(__FILE__) . '?action=logo&v=' . $l['v'];   /* the hourly run has no web address of its own */
+    }
+    return ['name' => (string) $B['name'], 'color' => preg_match('/^#[0-9a-f]{6}$/i', (string) $B['color']) ? (string) $B['color'] : '#1f3a5f', 'logo' => $logo, 'phone' => (string) $B['phone'], 'site' => (string) $B['site']];
+}
+/** today's report as data (eod-lib.php draws it), only the parts asked for. [R, subject bits] */
+function eodData(array $want, bool $test = false): array {
+    $W = edTradeWords(); $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d'); $t0 = $today->getTimestamp(); $now = time();
+    $tomD = (clone $today)->modify('+1 day')->format('Y-m-d'); $wk0 = $now - 7 * 86400;
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days')->format('Y-m-d'); $m1 = $today->format('Y-m-01');
+    $leads = array_filter(leadsAll(), 'edReal');
+    $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && edReal($leads[$j['lead']] ?? ['name' => (string) ($j['title'] ?? '')]));
+    $jobOf = []; foreach ($jobs as $j) if (!empty($j['lead'])) $jobOf[(string) $j['lead']] = $j;
+    $short = function ($n) { $p = preg_split('/\s+/', trim((string) $n)); return ($p[0] ?? '') !== '' ? $p[0] . (isset($p[1]) && $p[1] !== '' ? ' ' . mb_strtoupper(mb_substr($p[1], 0, 1)) . '.' : '') : 'A customer'; };
+    $usd = fn($v) => '$' . number_format((float) $v, (float) $v == floor((float) $v) ? 0 : 2);
+    $pl = fn(int $n, string $one, string $many) => $n . ' ' . ($n === 1 ? $one : $many);
+    $nameOf = fn($j) => $short($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''));
+    $R = ['date' => $today->format('D j M'), 'kpis' => [], 'sections' => []]; $bits = [];
+    if (!empty($want['money'])) {
+        $m = ['today' => 0, 'n' => 0, 'week' => 0, 'month' => 0];
+        foreach (paymentsAll() as $p) { if ($p['date'] >= $m1) $m['month'] += (int) $p['amt']; if ($p['date'] >= $mon) $m['week'] += (int) $p['amt']; if ($p['date'] === $T) { $m['today'] += (int) $p['amt']; if ((int) $p['amt'] > 0) $m['n']++; } }
+        $owed = 0; $owedN = 0; foreach ($jobs as $j) if (($j['done']['o'] ?? '') === 'done' && ($o = jobOwed($j)) > 0) { $owed += $o; $owedN++; }
+        $R['kpis'][] = ['Money in today', $usd($m['today']), $pl($m['n'], 'payment', 'payments')];
+        $rows = [['l' => 'This week', 'v' => $usd($m['week'])], ['l' => 'This month', 'v' => $usd($m['month'])]];
+        if ($owedN) $rows[] = ['l' => ucfirst($W['jobs']) . ' done, not paid in full', 'v' => $usd($owed), 's' => $pl($owedN, $W['job'], $W['jobs']), 't' => 'warn'];
+        $R['sections'][] = ['title' => 'Money in', 'note' => 'Payments recorded in the app: cards, pay links, cash and checks.', 'rows' => $rows];
+        $bits[] = $usd($m['today']) . ' in';
+    }
+    if (!empty($want['jobs'])) {
+        $bk = array_values(array_filter($jobs, fn($j) => (int) ($j['at'] ?? 0) >= $t0)); $bkV = array_sum(array_map(fn($j) => (int) $j['price'], $bk));
+        $tj = array_values(array_filter($jobs, fn($j) => $j['date'] === $T)); usort($tj, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
+        $done = array_values(array_filter($tj, fn($j) => ($j['done']['o'] ?? '') === 'done')); $doneV = array_sum(array_map(fn($j) => (int) $j['price'], $done));
+        $R['kpis'][] = [ucfirst($W['jobs']) . ' booked', (string) count($bk), $bk ? $usd($bkV) : 'none today'];
+        $R['kpis'][] = [ucfirst($W['jobs']) . ' done', (string) count($done), $done ? $usd($doneV) : ($tj ? 'of ' . count($tj) . ' today' : 'none scheduled')];
+        $rows = [];
+        foreach ($bk as $j) $rows[] = ['l' => 'Booked: ' . $nameOf($j), 'v' => $usd((int) $j['price']), 's' => trim(implode(' · ', array_filter([($n = edCredit($leads[$j['lead']] ?? [], $j)) !== '' ? 'sold by ' . $n : '', 'on ' . date('D j M', strtotime($j['date'] . ' 12:00'))])))];
+        foreach ($tj as $j) { $o = (string) ($j['done']['o'] ?? ''); $rows[] = ['l' => ($o === 'done' ? 'Done: ' : ($o === 'could not' ? 'Not done: ' : 'Today: ')) . $nameOf($j), 'v' => $usd((int) $j['price']), 's' => trim($j['crew'] . ($o === 'could not' ? ' · ' . mb_substr((string) ($j['done']['note'] ?? ''), 0, 90) : ($o === 'done' ? '' : ' · not marked done yet'))), 't' => $o === 'could not' ? 'bad' : ($o === 'done' ? '' : 'warn')]; }
+        $R['sections'][] = ['title' => ucfirst($W['jobs']) . ' done and booked', 'rows' => $rows, 'empty' => 'Nothing booked or scheduled today.'];
+        $bits[] = count($bk) . ' booked'; $bits[] = count($done) . ' done';
+    }
+    if (!empty($want['quotes'])) {
+        $qFirst = edQuoteFirst(); $qn = 0; $qv = 0; $picks = [];
+        foreach ($leads as $l) { if (($qFirst[$l['id']] ?? 0) < $t0 || empty($l['quote'])) continue; $qn++; $qv += (int) ($l['quote']['price'] ?? 0);
+            $Q = $l['quote']; if (!empty($Q['options']) && ($k = (string) ($Q['opt'] ?? '')) !== '') foreach ((array) $Q['options'] as $o) if (is_array($o) && ($o['k'] ?? '') === $k) $picks[(string) ($o['name'] ?? $k)] = ($picks[(string) ($o['name'] ?? $k)] ?? 0) + 1; }
+        $CR = closeRates($leads, $jobOf);
+        $R['kpis'][] = [ucfirst($W['quotes']) . ' sent', (string) $qn, $qv ? 'worth ' . $usd($qv) : 'none today'];
+        $rows = [['l' => ucfirst($W['quotes']) . ' sent today', 'v' => (string) $qn, 's' => $qv ? 'worth ' . $usd($qv) : '']];
+        if ($picks) $rows[] = ['l' => 'Options picked', 'v' => (string) array_sum($picks), 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($picks), $picks))];
+        $rows[] = ['l' => 'Open ' . $W['quotes'], 'v' => $usd($CR['pipe']), 's' => $pl($CR['pipeN'], $W['quote'], $W['quotes']) . ' with no ' . $W['job'] . ' yet'];
+        $rows[] = ['l' => 'Close rate', 'v' => $CR['quoted'] ? round($CR['close'] * 100) . '%' : '–', 's' => $CR['quoted'] ? $CR['won'] . ' of ' . $CR['quoted'] . ' quoted 1 to 8 weeks ago booked' : 'not enough ' . $W['quotes'] . ' 1 to 8 weeks old yet'];
+        $R['sections'][] = ['title' => ucfirst($W['quotes']), 'rows' => $rows];
+        $bits[] = $pl($qn, $W['quote'], $W['quotes']);
+    }
+    if (!empty($want['leads'])) {
+        $names = edSrcNames(); $td = []; $wk = []; $wait = 0;
+        foreach ($leads as $l) { $at = (int) ($l['at'] ?? 0); $k = $names[edSrcKey($l)]; if ($at >= $t0) $td[$k] = ($td[$k] ?? 0) + 1; if ($at >= $wk0) $wk[$k] = ($wk[$k] ?? 0) + 1;
+            if (in_array($l['status'] ?? 'new', ['new'], true) && empty($l['tries']) && empty($l['quote']) && !isset($jobOf[$l['id']])) $wait++; }
+        arsort($td); arsort($wk); $line = fn(array $x) => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($x), $x));
+        $R['kpis'][] = ['New leads', (string) array_sum($td), $td ? (string) array_key_first($td) . ' ' . reset($td) : 'none today'];
+        $R['sections'][] = ['title' => 'Leads by source', 'rows' => [['l' => 'New today', 'v' => (string) array_sum($td), 's' => $line($td)], ['l' => 'Last 7 days', 'v' => (string) array_sum($wk), 's' => $line($wk)], ['l' => 'Waiting on a first call', 'v' => (string) $wait, 't' => $wait ? 'warn' : '']]];
+    }
+    if (!empty($want['team'])) {
+        $qFirst = $qFirst ?? edQuoteFirst(); $P = []; $bump = function (string $n, string $k, int $v = 1) use (&$P) { if ($n === '' || boardHidden($n)) return; $P[$n] = $P[$n] ?? ['doors' => 0, 'leads' => 0, 'quotes' => 0, 'sold' => 0, 'soldV' => 0]; $P[$n][$k] += $v; };
+        foreach (teamDays(1, '') as $pp) foreach ($pp['days'] as $r) if ($r['date'] === $T) $bump($pp['name'], 'doors', (int) $r['doors']);
+        foreach ($leads as $l) { if ((int) ($l['at'] ?? 0) >= $t0 && !in_array((string) ($l['src'] ?? ''), ['website', 'a365web', 'meta'], true) && empty($l['imp'])) $bump(edCredit(['by' => (string) ($l['by'] ?? '')]), 'leads');
+            if (($qFirst[$l['id']] ?? 0) >= $t0 && !empty($l['quote'])) $bump(edCredit(['by' => (string) ($l['quote']['by'] ?? '')]), 'quotes'); }
+        foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) { $n = edCredit($leads[$j['lead']] ?? [], $j); $bump($n, 'sold'); $bump($n, 'soldV', (int) $j['price']); }
+        uksort($P, fn($a, $b) => [$P[$b]['soldV'], $P[$b]['sold'], $P[$b]['quotes'], $P[$b]['doors']] <=> [$P[$a]['soldV'], $P[$a]['sold'], $P[$a]['quotes'], $P[$a]['doors']]);
+        $rows = []; $i = 0;
+        foreach ($P as $n => $x) $rows[] = array_map('edWords', ['l' => (++$i) . '. ' . $n, 'v' => $x['soldV'] ? $usd($x['soldV']) : $pl($x['doors'], 'door', 'doors'), 's' => implode(' · ', [$pl($x['doors'], 'door', 'doors'), $pl($x['leads'], 'lead', 'leads'), $pl($x['quotes'], $W['quote'], $W['quotes']), $pl($x['sold'], $W['job'] . ' sold', $W['jobs'] . ' sold')]), 't' => $x['soldV'] ? 'good' : '']);   /* doors read properties in the editions (edWords) */
+        $R['sections'][] = ['title' => 'Team today', 'rows' => array_slice($rows, 0, 15), 'empty' => edWords('Nobody logged doors, leads or sales today.')];
+    }
+    if (!empty($want['tomorrow'])) {
+        $tm = array_values(array_filter($jobs, fn($j) => $j['date'] === $tomD)); usort($tm, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
+        $R['kpis'][] = ['Tomorrow', (string) count($tm), $tm ? $usd(array_sum(array_map(fn($j) => (int) $j['price'], $tm))) : 'nothing booked'];
+        $rows = []; foreach ($tm as $j) $rows[] = ['l' => $nameOf($j), 'v' => $usd((int) $j['price']), 's' => (jobSlot((string) $j['slot'])[1] ?? $j['slot']) . ' · ' . $j['crew']];
+        foreach (jobHolds($leads) as $h) if ($h['date'] === $tomD) $rows[] = ['l' => $short($h['name']), 'v' => 'held', 's' => 'not signed yet · ' . $h['crew'], 't' => 'warn'];
+        $R['sections'][] = ['title' => 'Tomorrow, ' . (clone $today)->modify('+1 day')->format('D j M'), 'rows' => $rows, 'empty' => 'Nothing booked.'];
+        $bits[] = count($tm) . ' tomorrow';
+    }
+    $R['kpis'] = array_slice($R['kpis'], 0, 4);
+    $co = (string) company()['name'];
+    $R['foot'] = ($test ? 'TEST: sent to you only, from Stats, End-of-day email. ' : '') . 'From ' . $co . '\'s app, for its admins and managers. Customer names are private: keep this inside ' . $co . '.';
+    return [$R, ($test ? 'TEST ' : '') . 'End of day, ' . $R['date'] . ($bits ? ': ' . implode(' · ', $bits) : '')];
+}
+/** today's email: [subject, text, html] */
+function eodBuild(array $want, bool $test = false): array { [$R, $subject] = eodData($want, $test); return eodRender($R, eodBrand(), $subject); }
+/** one email: the company's connected mailbox, else (or if the admin picked it) Traverse's mail server under the company's name. [ok, stage, error, via] */
+function eodSend(string $to, array $m, string $via): array {
+    $co = company(); $useOwn = $via === 'own' || ($via === 'auto' && mailOwnCfg());
+    $mock = getenv('TRAV_MAIL_MOCK');
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $m[0], 'body' => $m[1], 'html' => strlen($m[2]), 'from' => $useOwn ? 'own' : (string) $co['name'], 'kind' => 'eod'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '', 'via' => $useOwn ? 'own' : 'app']; }
+    if ($useOwn) return sendMail($to, $m[0], $m[1], $m[2]) + ['via' => 'own'];
+    $s = travMailCfg(); if ($s['pass'] === '') return ['ok' => false, 'stage' => 'config', 'error' => 'The app\'s mail server is not set up on this host.', 'via' => 'app'];
+    $rt = filter_var((string) $co['email'], FILTER_VALIDATE_EMAIL) ? ['Reply-To: ' . $co['email']] : [];
+    return smtpSend(['host' => (string) $s['host'], 'port' => (int) $s['port'], 'user' => (string) $s['user'], 'pass' => (string) $s['pass'], 'from_name' => mb_substr((string) $co['name'], 0, 60), 'domain' => (string) $s['ehlo']], $to, $m[0], $m[1], $m[2], $rt) + ['via' => 'app'];
+}
+function eodLog(array $row): void { @file_put_contents(DATA_DIR . '/eod.log', json_encode(['id' => 'e' . date('YmdHis') . bin2hex(random_bytes(2)), 'at' => time()] + $row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); }
+if ($action === 'statspage' && edition()) {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    out(edStats((string) ($_GET['p'] ?? '30')));
+}
+if (in_array($action, ['eodget', 'eodset', 'eodpreview', 'eodtest'], true)) {
+    if (!edition() || !adminOr('set.eod')) fail('Not allowed.', 403);
+    if (!function_exists('eodRender')) fail('The end-of-day email is not on this server yet.', 503);
+    $c = eodCfg();
+    if ($action === 'eodget') {
+        $last = null; foreach (array_reverse(readLines(DATA_DIR . '/eod.log')) as $r) { if (($r['what'] ?? '') === 'send') { $last = ['at' => (int) $r['at'], 'ok' => !empty($r['ok']), 'n' => (int) ($r['n'] ?? 0)]; break; } }
+        $W = edTradeWords(); $tw = fn(string $s) => edWords(str_replace(['Quotes', 'quotes', 'Jobs', 'jobs'], [$W['Quotes'], $W['quotes'], $W['Jobs'], $W['jobs']], $s));
+        $ms = mailOwnCfg();
+        out(['ok' => true, 'cfg' => $c, 'people' => array_values(eodPeople()), 'sections' => array_map(fn($k, $v) => ['k' => $k, 'l' => $tw($v[0]), 'd' => $tw($v[1])], array_keys(eodSectionList()), eodSectionList()),   /* in the trade's words (estimates, installs) */
+             'mail' => ['own' => (bool) $ms, 'user' => $ms ? (string) $ms['user'] : '', 'company' => (string) company()['name'], 'reply' => (string) company()['email']], 'last' => $last, 'tz' => appTz(),
+             'me' => strtolower((string) ($acct['login'][(string) ($session['c'] ?? '')]['email'] ?? '')) ?: (string) company()['email']]);
+    }
+    if ($action === 'eodpreview') {
+        $want = $c['sections']; if (isset($_GET['s'])) { $ask = explode(',', (string) $_GET['s']); foreach ($want as $k => $_) $want[$k] = in_array($k, $ask, true); }
+        [$subject, $text, $html] = eodBuild($want);
+        out(['ok' => true, 'subject' => $subject, 'text' => $text, 'html' => $html]);
+    }
+    if (!$isPost) fail('POST required', 405);
+    if ($action === 'eodset') {
+        $ppl = eodPeople(); $to = [];
+        foreach ((array) ($body['to'] ?? []) as $t) {
+            $id = (string) ($t['id'] ?? ''); $em = strtolower(trim((string) ($t['email'] ?? '')));
+            if (!isset($ppl[$id])) continue;
+            if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen($em) > 120) fail('Add an email address for ' . $ppl[$id]['name'] . ', or leave them unticked.');
+            $to[] = ['id' => $id, 'email' => $em];
+        }
+        $sec = []; foreach (eodSectionList() as $k => $_) $sec[$k] = !empty($body['sections'][$k]);
+        $on = !empty($body['on']); $h = (int) ($body['hour'] ?? 19); $via = in_array($body['via'] ?? '', ['auto', 'own', 'app'], true) ? (string) $body['via'] : 'auto';
+        if ($h < 12 || $h > 23) fail('Pick a time between noon and 11 pm.');
+        if ($on && !$to) fail('Pick at least one person to send it to.');
+        if ($on && !array_filter($sec)) fail('Pick at least one part to include.');
+        if ($via === 'own' && !mailOwnCfg()) fail('The company email is not connected yet (Setup, Email). Pick the other way to send, or connect it first.');
+        if (!writeJsonAtomic(eodFile(), ['on' => $on, 'hour' => $h, 'to' => array_slice($to, 0, 20), 'sections' => $sec, 'via' => $via, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        eodLog(['what' => 'settings', 'on' => $on, 'hour' => $h, 'n' => count($to), 'by' => $me]);
+        out(['ok' => true, 'cfg' => eodCfg()]);
+    }
+    /* eodtest: now, to one address (the admin's own unless they type another), marked TEST; the parts ticked on the screen */
+    $em = strtolower(trim((string) ($body['email'] ?? '')));
+    if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen($em) > 120) fail('Type the email address to send the test to.');
+    if (!throttleTake(rateFile('eodtest|' . COOKIE), 10, 3600)) fail('That is a lot of tests in an hour. Try again later.', 429);
+    $want = $c['sections']; if (is_array($body['sections'] ?? null)) foreach ($want as $k => $_) $want[$k] = !empty($body['sections'][$k]);
+    $via = in_array($body['via'] ?? '', ['auto', 'own', 'app'], true) ? (string) $body['via'] : $c['via'];
+    $r = eodSend($em, eodBuild($want, true), $via);
+    eodLog(['what' => 'test', 'test' => true, 'to' => $em, 'ok' => !empty($r['ok']), 'stage' => (string) ($r['stage'] ?? ''), 'via' => (string) ($r['via'] ?? ''), 'by' => $me]);
+    if (empty($r['ok'])) fail('The test did not go: ' . (($r['stage'] ?? '') === 'config' ? (string) $r['error'] : 'the mail server said no (' . (string) ($r['stage'] ?? '?') . '). Try the other way to send, or check Setup, Email.'), 502);
+    out(['ok' => true, 'to' => $em, 'via' => (string) $r['via']]);
+}
+/* the hourly send (sixfold-tools/edition-eod.php): at the chosen hour or in the 4 hours after it, once a day, to each ticked admin or manager
+   who is still an active admin or manager. force=1 (tests): now, whatever the hour and even if sent today */
+if ($action === 'eodcron') {
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    if (!edition()) out(['ok' => true, 'sent' => 0, 'why' => 'not an edition']);
+    if (!function_exists('eodRender')) out(['ok' => true, 'sent' => 0, 'why' => 'no eod-lib.php']);
+    $c = eodCfg(); if (!$c['on']) out(['ok' => true, 'sent' => 0, 'why' => 'off']);
+    $now = new DateTime('now', new DateTimeZone(appTz())); $force = ($_GET['force'] ?? '') === '1'; $G = (int) $now->format('G');
+    if (!$force && ($G < $c['hour'] || $G >= $c['hour'] + 4)) out(['ok' => true, 'sent' => 0, 'why' => 'not the hour']);
+    $sf = DATA_DIR . '/eod-last-sent.txt';
+    if (!$force && trim((string) @file_get_contents($sf)) === $now->format('Y-m-d')) out(['ok' => true, 'sent' => 0, 'why' => 'sent today']);
+    $ppl = eodPeople(); $to = array_values(array_filter($c['to'], fn($t) => isset($ppl[$t['id']])));
+    if (!$to) { eodLog(['what' => 'send', 'ok' => false, 'n' => 0, 'stage' => 'nobody']); out(['ok' => true, 'sent' => 0, 'why' => 'nobody to send to']); }
+    $m = eodBuild($c['sections']); $sent = 0; $fails = [];
+    foreach ($to as $t) { $r = eodSend($t['email'], $m, $c['via']); if (!empty($r['ok'])) $sent++; else $fails[] = (string) ($r['stage'] ?? '?'); }
+    eodLog(['what' => 'send', 'ok' => $sent > 0, 'n' => $sent, 'failed' => count($fails), 'stage' => implode(',', array_unique($fails)), 'subject' => $m[0]]);
+    if ($sent > 0) @file_put_contents($sf, $now->format('Y-m-d'));   /* one got through: no resend to the others at the next hour */
+    out(['ok' => true, 'sent' => $sent, 'failed' => count($fails), 'subject' => $m[0]]);
+}
 /* ---- the nightly Square check (2026-10-16, Matthew: "run scans from square to see who's paid ... just in case it's not updating
  * properly"; "build the nightly square check") ----
  * Every Square payment of the last 45 days at every location (pay links, the Square app, invoices) against the app's own payment
@@ -10432,7 +10787,9 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
            were not in the backup, so a lost server lost them). Keep in step with sixfold-tools/nightly-backup.php. */
         /* + each install's own settings (2026-10-29: the quote kit's prices and terms, Your costs, other ways to pay, the email templates, the
            Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). + role permissions (role-perms.json, 2026-10-29). */
-        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the smart price list and the clause library (2026-10-30) */
+        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json', 'eod-report.json', 'ad-spend.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the end-of-day email's settings and the typed ad spend (2026-10-30) */   /* + the smart price list and the clause library (2026-10-30) */
+        foreach (['care-plans.json', 'care-cfg.json', 'care-news.json', 'care-optin.json', 'care-qplans.json', 'newsletter-unsub.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + plans and customer emails (2026-10-30; their logs are *.log above) and the unsubscribe list */
+        $add(DATA_DIR . '/fb-leads.json', 'sixfold-data/rounds/fb-leads.json');   /* the Facebook leads choices (2026-10-30); fbleads.log goes with the *.log above; never the tokens */
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];
@@ -11189,15 +11546,23 @@ function inviteJoined(string $code): void {
     if (is_array($a['inv'][$id] ?? null) && empty($a['inv'][$id]['joined'])) { $a['inv'][$id]['joined'] = time(); saveAccounts($a); $acct = $a; accountLog(['what' => 'invite accepted', 'id' => $id]); }
     flock($lk, LOCK_UN); fclose($lk);
 }
-/** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok] */
+/** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok]
+    The From address stays the mailer's (delivery needs it); the name is the company's and Reply-To its admin (2026-10-30, Matthew: zero
+    Traverse branding to a client's team: no "via Traverse", no "Sent for ... by Traverse Platforms"). */
+function pwReplyTo(array $headers): string {
+    foreach ($headers as $x) if (stripos((string) $x, 'Reply-To:') === 0) return trim(substr((string) $x, 9));
+    $co = company(); if (filter_var((string) ($co['email'] ?? ''), FILTER_VALIDATE_EMAIL)) return (string) $co['email'];
+    return '';
+}
+function pwReplyHeaders(array $headers): array { $rt = pwReplyTo($headers); foreach ($headers as $x) if (stripos((string) $x, 'Reply-To:') === 0) return $headers; return $rt !== '' ? array_merge($headers, ['Reply-To: ' . $rt]) : $headers; }
 function pwMail(string $to, string $subject, string $text, ?string $html, array $headers): bool {
-    $cname = pwBrand(); $from = edition() ? $cname . ' via Traverse' : $cname;   /* Sixfold 365 signs as itself (2026-10-30) */
+    $cname = pwBrand();   /* Sixfold 365 signs as itself (2026-10-30) */
     $mock = getenv('TRAV_MAIL_MOCK');
-    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $from, 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $cname, 'replyTo' => pwReplyTo($headers), 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
     $s = travMailCfg(); if ($s['pass'] === '') return false;
     $h = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
-    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $from, 'domain' => 'traverseplatforms.com'],
-        $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', $headers)['ok'];
+    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $cname, 'domain' => 'traverseplatforms.com'],
+        $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', pwReplyHeaders($headers))['ok'];
 }
 /** the invite itself: a new link (the old one dies). The caller holds the accounts lock. Returns whether it went. */
 function inviteSend(string $id, string $name, string $role, string $by): bool {
@@ -11207,9 +11572,9 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
     $co = company(); $url = (string) ($co['appUrl'] ?? ''); $cname = (string) $co['name']; $link = $url . '#pw=i.' . $tok;
     $rl = ['admin' => 'an admin', 'manager' => 'a manager', 'office' => 'office staff', 'crew' => 'a sales rep', 'setter' => 'a setter', 'tech' => 'a technician'][$role] ?? 'a team member';
     $first = explode(' ', trim($name))[0];
-    $text = "Hi $first,\n\n$by added you to $cname's Traverse app as $rl.\n\nSet your password here (the link works once, for " . PW_INVITE_DAYS . " days):\n$link\n\n"
+    $text = "Hi $first,\n\n$by added you to $cname's app as $rl.\n\nSet your password here (the link works once, for " . PW_INVITE_DAYS . " days):\n$link\n\n"
         . "Then sign in with this email address and your password. Add the app to your phone's home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app), so it opens like any other app and works with no signal.\n\n"
-        . "Questions about your work: ask $by at $cname.\n\nSent for $cname by Traverse Platforms.\n";
+        . "Questions about your work: ask $by at $cname.\n\n$cname\n";
     $col = (string) ($co['brand'] ?: '#13294b'); if (!preg_match('/^#[0-9a-f]{6}$/i', $col)) $col = '#13294b';
     $lg = logoImgTag($cname, 40);   /* the company's uploaded logo (the Company screen's, or the welcome page's), PNG/JPG only: email apps do not show SVG */
     $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
@@ -11217,14 +11582,14 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">'
         . '<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden" cellpadding="0" cellspacing="0">'
         . '<tr><td style="background:' . $col . ';padding:20px 24px;color:#ffffff;font-size:20px;font-weight:bold">' . ($lg !== '' ? '<div style="display:inline-block;background:#ffffff;border-radius:6px;padding:4px;margin-bottom:8px">' . $lg . '</div><br>' : '') . $h($cname) . '</td></tr>'
-        . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s Traverse app as ' . $h($rl) . '.'
+        . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s app as ' . $h($rl) . '.'
         . '<p style="margin:24px 0"><a href="' . $h($link) . '" style="display:inline-block;background:#d6400c;color:#ffffff;text-decoration:none;font-weight:bold;padding:13px 22px;border-radius:10px">Set your password</a></p>'
         . '<p style="font-size:14px;color:#566476">The link works once, for ' . PW_INVITE_DAYS . ' days. Then sign in with ' . $h($iv['email']) . ' and your password, and add the app to your home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app).</p>'
         . '<p style="font-size:14px;color:#566476">Questions about your work: ask ' . $h($by) . '.</p></td></tr>'
-        . '<tr><td style="padding:14px 24px;background:#f4f6f9;font-size:12px;color:#8a96a6">Sent for ' . $h($cname) . ' by Traverse Platforms</td></tr></table></td></tr></table></body></html>';
+        . '<tr><td style="padding:14px 24px;background:#f4f6f9;font-size:12px;color:#8a96a6">' . $h($cname) . '</td></tr></table></td></tr></table></body></html>';
     $mine = (string) ($a['login'][(string) ($session['c'] ?? '')]['email'] ?? '');   /* the inviting admin's own address, else the company's */
     $rt = filter_var($mine, FILTER_VALIDATE_EMAIL) ? $mine : (filter_var((string) ($co['email'] ?? ''), FILTER_VALIDATE_EMAIL) ? (string) $co['email'] : '');
-    $ok = pwMail((string) $iv['email'], $cname . ' invited you to its Traverse app', $text, $html, $rt !== '' ? ['Reply-To: ' . $rt] : []);
+    $ok = pwMail((string) $iv['email'], $cname . ' invited you to its app', $text, $html, $rt !== '' ? ['Reply-To: ' . $rt] : []);
     if ($ok) { $a['inv'][$id]['tok'] = hash('sha256', $tok); $a['inv'][$id]['exp'] = time() + PW_INVITE_DAYS * 86400; $a['inv'][$id]['last'] = time(); }
     $a['inv'][$id]['sent'] = (int) ($iv['sent'] ?? 0) + ($ok ? 1 : 0);
     saveAccounts($a); $GLOBALS['acct'] = $a;
@@ -11483,7 +11848,7 @@ if ($action === 'acctlink') {
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
     flock($lk, LOCK_UN); fclose($lk);
     $co = company(); $first = explode(' ', (string) $rows[$id]['name'])[0];
-    $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+    $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\n" . $co['name'] . "\n", null, []);
     accountLog(['by' => $me, 'what' => $ok ? 'sign-in link sent' : 'sign-in link failed', 'name' => $rows[$id]['name'], 'id' => $id]);
     if (!$ok) fail('The email did not go. Try again in a minute.', 502);
     out(['ok' => true, 'to' => $em]);
@@ -13821,6 +14186,7 @@ if ($action === 'mailsend') {
     if ($ml) appendLine(leadsDir() . '/leadst.log', ['id' => (string) $ml['id'], 'note' => mb_substr('Emailed from the app (' . (string) $mc['user'] . '): ' . $subj, 0, 500), 'by' => $me, 'at' => time()]);
     out(['ok' => true, 'from' => (string) $mc['user'], 'to' => $to]);
 }
+if (function_exists('flAction') && in_array($action, FL_ACTIONS, true)) flAction($action);   /* Setup › Facebook leads and the 5-minute job (2026-10-30, fb-leads-lib.php) */
 if ($action === 'mailoauth' && function_exists('moAction')) moAction();   /* Sign in with Google / Microsoft: the address to go to (2026-10-30, mail-oauth-lib.php) */
 if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest'], true)) {
     if (!kitOn()) fail('Not here.', 404);   /* Sixfold 365 keeps its own mailbox */
@@ -13862,8 +14228,8 @@ if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', '
         if (strlen($pass) < 8 || strlen($pass) > 200) fail('That does not look like an app password.');
         $c = ['kind' => $kind, 'host' => $host, 'port' => $port, 'user' => $user, 'pass' => $pass, 'from_name' => $name];
         $co = (string) company()['name'];
-        $tt = "This is a test from your Traverse app.\n\nIf you are reading it, " . $co . "'s email is connected: signed agreements and receipts can now go to your customers from " . $user . ".\n";
-        $r = smtpSend($c + ['domain' => mailDomain($user)], $user, 'Test: ' . $co . ' email is connected', $tt, '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#15202d"><p>This is a test from your Traverse app.</p><p>If you are reading it, ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . '&#39;s email is connected: signed agreements and receipts can now go to your customers from ' . htmlspecialchars($user, ENT_QUOTES, 'UTF-8') . '.</p></body></html>');
+        $tt = "This is a test from your " . $co . " app.\n\nIf you are reading it, " . $co . "'s email is connected: signed agreements and receipts can now go to your customers from " . $user . ".\n";
+        $r = smtpSend($c + ['domain' => mailDomain($user)], $user, 'Test: ' . $co . ' email is connected', $tt, '<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#15202d"><p>This is a test from your ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . ' app.</p><p>If you are reading it, ' . htmlspecialchars($co, ENT_QUOTES, 'UTF-8') . '&#39;s email is connected: signed agreements and receipts can now go to your customers from ' . htmlspecialchars($user, ENT_QUOTES, 'UTF-8') . '.</p></body></html>');
         appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'connect test', 'to' => $user, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300), 'by' => $me]);
         if (!$r['ok']) fail(mailWhy($r, $kind, $host, $port));
         if (!writeJsonAtomic(mailOwnFile(), $c + ['by' => $me, 'at' => time()])) fail('The test went, but the setting could not be saved. Try again.', 500);
@@ -14196,7 +14562,7 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
         $raw = $body['miles'] ?? null;
         if (!is_numeric($raw)) fail('Type the radius in miles.');
         $mi = (int) round((float) $raw);
-        if ($mi > AREA_MI[1]) fail('Traverse covers up to ' . AREA_MI[1] . ' miles around your business. For a wider area, pick counties instead, or email hello@traverseplatforms.com.');
+        if ($mi > AREA_MI[1]) fail('The app covers up to ' . AREA_MI[1] . ' miles around your business. For a wider area, pick counties instead, or email hello@traverseplatforms.com.');
         if ($mi < AREA_MI[0]) fail('The radius is ' . AREA_MI[0] . ' miles at least.');
         $addr = trim((string) preg_replace('/[\x00-\x1f\x7f]+/', ' ', mb_substr((string) ($body['address'] ?? ''), 0, 160)));
         $base = !isset($old['lat']) && is_array($old['home'] ?? null) ? $old['home'] + $old : $old;   /* back from counties: the point kept aside */
@@ -14207,11 +14573,11 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
             $g = tcGeocode($addr);
             if (is_array($g) && isset($g['error'])) fail((string) $g['error'], 502);
             if ($g === null) fail('That address was not found on the map. Check the street, city, state and ZIP.');
-            if (strtoupper((string) $g['state']) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now: that address is in ' . ((string) $g['state'] ?: 'another state') . '.');
+            if (strtoupper((string) $g['state']) !== tcSettings()['state']) fail('The app\'s homes are in Colorado for now: that address is in ' . ((string) $g['state'] ?: 'another state') . '.');
             $new = array_replace($new, ['address' => $addr, 'matched' => (string) ($g['matched'] ?? ''), 'lat' => $g['lat'], 'lon' => $g['lon'], 'state' => strtoupper((string) $g['state']), 'place' => (string) ($g['city'] ?? '')]);
         }
         if (!isset($new['lat'], $new['lon'])) fail('Your business address is not on the map yet. Type it above.');
-        if (strtoupper((string) ($new['state'] ?? '')) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now. Type your Colorado business address above.');
+        if (strtoupper((string) ($new['state'] ?? '')) !== tcSettings()['state']) fail('The app\'s homes are in Colorado for now. Type your Colorado business address above.');
     } else fail('Pick a radius or counties.');
     if (!throttleTake(DATA_DIR . '/area-throttle.json', 10, 600)) fail('That is a lot of changes in a few minutes. Wait a little and try again.', 429);   /* saves only: each one links the towns again */
     $new += ['status' => 'linking', 'towns' => (int) ($old['towns'] ?? 0), 'doors' => (int) ($old['doors'] ?? 0)]; $new['status'] = 'linking'; $new['at'] = time(); $new['by'] = $me;
@@ -14221,7 +14587,7 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
     if (is_array($co0)) { $co0['area'] = tcAreaPublic($new); writeJsonAtomic($cf, $co0); }
     tcLog(['what' => 'area changed', 'cid' => $cid, 'by' => $me, 'mode' => $new['mode'], 'miles' => (int) ($new['miles'] ?? 0), 'counties' => $new['counties'] ?? null]);
     /* the answer first; the linking after it (on the host the connection closes, fastcgi_finish_request; PHP's test server waits for the end) */
-    $txt = (string) json_encode($areaOut() + ['said' => 'Saved. Doors in your area update within a minute.'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $txt = (string) json_encode($areaOut() + ['said' => edWords('Saved. Doors in your area update within a minute.')], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     ignore_user_abort(true); @set_time_limit(300);
     header('Content-Type: application/json; charset=utf-8'); header('Content-Length: ' . strlen($txt)); header('Connection: close');
     echo $txt;
