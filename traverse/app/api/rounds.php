@@ -10359,9 +10359,10 @@ if (in_array($action, ['eodget', 'eodset', 'eodpreview', 'eodtest'], true)) {
     if (!function_exists('eodRender')) fail('The end-of-day email is not on this server yet.', 503);
     $c = eodCfg();
     if ($action === 'eodget') {
-        $last = null; foreach (array_reverse(readLines(DATA_DIR . '/eod.log')) as $r) { if (empty($r['test'])) { $last = ['at' => (int) $r['at'], 'ok' => !empty($r['ok']), 'n' => (int) ($r['n'] ?? 0)]; break; } }
+        $last = null; foreach (array_reverse(readLines(DATA_DIR . '/eod.log')) as $r) { if (($r['what'] ?? '') === 'send') { $last = ['at' => (int) $r['at'], 'ok' => !empty($r['ok']), 'n' => (int) ($r['n'] ?? 0)]; break; } }
+        $W = edWords(); $tw = fn(string $s) => str_replace(['Quotes', 'quotes', 'Jobs', 'jobs'], [$W['Quotes'], $W['quotes'], $W['Jobs'], $W['jobs']], $s);
         $ms = mailOwnCfg();
-        out(['ok' => true, 'cfg' => $c, 'people' => array_values(eodPeople()), 'sections' => array_map(fn($k, $v) => ['k' => $k, 'l' => $v[0], 'd' => $v[1]], array_keys(eodSectionList()), eodSectionList()),
+        out(['ok' => true, 'cfg' => $c, 'people' => array_values(eodPeople()), 'sections' => array_map(fn($k, $v) => ['k' => $k, 'l' => $tw($v[0]), 'd' => $tw($v[1])], array_keys(eodSectionList()), eodSectionList()),   /* in the trade's words (estimates, installs) */
              'mail' => ['own' => (bool) $ms, 'user' => $ms ? (string) $ms['user'] : '', 'company' => (string) company()['name'], 'reply' => (string) company()['email']], 'last' => $last, 'tz' => appTz(),
              'me' => strtolower((string) ($acct['login'][(string) ($session['c'] ?? '')]['email'] ?? '')) ?: (string) company()['email']]);
     }

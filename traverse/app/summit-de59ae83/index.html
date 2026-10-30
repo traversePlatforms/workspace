@@ -21470,7 +21470,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tr(tb2, [['Booked from them', Q.n ? pct(Q.booked / Q.n) + ' so far' : ''], num(Q.booked), money0(Q.bookedValue)]);
       tr(tb2, [['Open ' + W.quotes, 'quoted, no ' + W.job + ' yet, not lost (any time)'], num(Q.pipeN), money0(Q.pipe)]);
       tr(tb2, [['Close rate', closeLines({ groups: Q.groups, won: Q.won8, quoted: Q.quoted8 }).join('; ')], Q.quoted8 ? Q.won8 + ' of ' + Q.quoted8 : '–', Q.quoted8 ? pct(Q.close) : '–'], 'sttot');
-      c2.appendChild(q('p', 'stnote', 'A ' + W.quote + ' counts on the day it was first sent. The close rate looks at ' + W.quotes + ' sent 1 to 8 weeks ago, so this week’s have time to answer.'));
+      c2.appendChild(q('p', 'stnote', (/^[aeiou]/.test(W.quote) ? 'An ' : 'A ') + W.quote + ' counts on the day it was first sent. The close rate looks at ' + W.quotes + ' sent 1 to 8 weeks ago, so this week’s have time to answer.'));
       /* 3. jobs and money */
       var c3 = card(W.Jobs + ' and money', P.label);
       var tb3 = table(c3, ['', 'Count', 'Value']);
