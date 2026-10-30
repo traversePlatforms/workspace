@@ -13403,7 +13403,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function impHead(h) { return String(h || '').replace(/^﻿/, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   /* the separator the first line uses most (comma, tab or semicolon: Excel in some countries saves semicolons); the same reader as Meta's */
   function impParse(text) {
-    text = String(text).replace(/^﻿/, '');   /* Excel's byte-order mark (review 2026-10-30: it rode into the first heading and the "needs a look" download) */
+    text = String(text); if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);   /* Excel's byte-order mark (review 2026-10-30: it rode into the first heading and the "needs a look" download; written as a code, since the Spanish sync turns ﻿ in the source into the invisible character itself) */
     var first = text.split(/\r?\n/)[0] || '', sep = ',', best = -1;
     [',', '\t', ';'].forEach(function (s) { var n = first.split(s).length; if (n > best) { best = n; sep = s; } });
     var rows = [], row = [], cell = '', inQ = false;
@@ -15586,7 +15586,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var MONTH_L = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   function t12(t) { if (!t) return ''; var p = t.split(':'), h = +p[0]; return (h % 12 || 12) + ':' + p[1] + (h < 12 ? ' am' : ' pm'); }
   function fmtWalk(w) { return dayName(w.date) + ' · ' + (w.time ? t12(w.time) : 'time to agree'); }
-  function longDay(iso) { var p = iso.split('-'), dt = new Date(+p[0], +p[1] - 1, +p[2]); return WDAY[dt.getDay()] + ', ' + MONTH_L[dt.getMonth()] + ' ' + dt.getDate(); }
+  /* longDay: the one further up (toLocaleDateString, 2026-10-14) serves here too; this older English copy shadowed it (review 2026-10-30) */
   function titleAddr(a) { return String(a || '').toLowerCase().replace(/\b([a-z])/g, function (c) { return c.toUpperCase(); }); }
   function walkText(d) {
     var first = myName() || 'the crew';
