@@ -217,6 +217,27 @@ function pestOn(string $role): bool { return crewSees($role) && feature('pest');
    location), town figures (FBI), owner lives elsewhere, plus the pest build's sale month, year built and open space, and the
    same neighbours / bookings / door-note counts. Admins only, where the company turns security on. */
 function securityOn(string $role): bool { return crewSees($role) && feature('security'); }
+/* building permits per trade (2026-10-29, Matthew; permits/build-permits.mjs): Roofing and Solar as before (re-roof, solar), and now
+   every edition: Yards pool, fence, deck, irrigation, landscaping; Pest and Security new building, addition, pool, fence. The edition's
+   files carry only its own kinds (build-editions.cjs permitPack); permitRow() and permitCover() keep to them here too. Sixfold: off. */
+const PERMIT_KINDS = ['roof' => ['roof', 'solar'], 'solar' => ['roof', 'solar'], 'yards' => ['pool', 'fence', 'deck', 'irr', 'land'],
+                      'pest' => ['new', 'add', 'pool', 'fence'], 'security' => ['new', 'add', 'pool', 'fence']];
+const PERMIT_KEY = ['roof' => ['r', 'm'], 'solar' => ['s', 'so'], 'new' => ['n'], 'add' => ['a'], 'pool' => ['pl'], 'fence' => ['f'], 'deck' => ['d'], 'irr' => ['ir'], 'land' => ['ld']];
+function permitOn(string $role): bool { return crewSees($role) && (feature('roof') || feature('solar') || (edition() && isset(PERMIT_KINDS[company()['best'] ?? '']))); }
+function permitKinds(): array { return PERMIT_KINDS[company()['best'] ?? ''] ?? ['roof', 'solar']; }
+function permitRow($v): ?array {
+    if (!is_array($v)) return null;
+    $keep = []; foreach (permitKinds() as $k) foreach (PERMIT_KEY[$k] as $f) $keep[$f] = 1;
+    $o = array_intersect_key($v, $keep);
+    return $o ?: null;
+}
+/* whose permits cover the town, since when, and which of this trade's kinds they record (an older index has no kinds: re-roof and solar) */
+function permitCover(string $key): ?array {
+    $p = (json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null;
+    if (!is_array($p)) return null;
+    $ks = array_values(array_intersect(permitKinds(), is_array($p['kinds'] ?? null) ? $p['kinds'] : ['roof', 'solar']));
+    return $ks ? ['kinds' => $ks] + $p : null;
+}
 function loadSide(string $kind, string $key, ?array $only = null): array {
     static $memo = [];
     $k = $kind . '-' . $key;
@@ -1530,6 +1551,7 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
     $side = function (string $p) use ($key): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $p . '-' . $key . '.json'), true); return is_array($j['doors'] ?? null) ? $j['doors'] : []; };
     $cen = json_decode((string) @file_get_contents(DATA_DIR . '/census-' . $key . '.json'), true) ?: [];
     $pidx = (json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null;
+    if ($pidx && !in_array('roof', is_array($pidx['kinds'] ?? null) ? $pidx['kinds'] : ['roof'], true)) $pidx = null;   /* 2026-10-29: a source with no re-roofs (Denver) says nothing about them */
     /* one file at a time, keeping only what the points use (2026-10-08): whole and together they passed 160 MB for a big town */
     /* a packed file (an edition's side files since 2026-10-10) holds each door's entry as JSON text, unpacked here one door at a time */
     $take = function (string $p, callable $f) use ($side): array { $o = []; foreach ($side($p) as $id => $v) { $x = $f(is_string($v) && in_array($v[0] ?? '', ['{', '['], true) ? json_decode($v, true) : $v); if ($x !== null) $o[$id] = $x; } return $o; };
@@ -3974,7 +3996,9 @@ if ($action === 'area') {
     $mfxOf = loadMatFix($key);
     $solarOf = solarOn($role) ? loadSide('solar', $key, $only) : [];
     /* re-roof and solar permits (2026-10-07, permits/build-permits.mjs): admins, where the company sells roofs or solar */
-    $permOf = (crewSees($role) && (feature('roof') || feature('solar'))) ? loadSide('permit', $key, $only) : [];
+    $permOf = permitOn($role) ? loadSide('permit', $key, $only) : [];   /* 2026-10-29: every edition, its own kinds (permitRow) */
+    /* Solar's hail line (2026-10-29): the largest radar hail at the house, from hailmax-<town>.json (build-editions.cjs makes it from Roofing's layer) */
+    $hmaxOf = (solarOn($role) && !hailOn($role)) ? loadSide('hailmax', $key, $only) : [];
     /* FEMA's National Risk Index for the door's census tract (2026-10-07, nri/build-nri.mjs): the editions only, admins */
     $nriF = (crewSees($role) && company()['best'] !== null) ? (json_decode((string) @file_get_contents(DATA_DIR . '/nri-' . $key . '.json'), true) ?: []) : [];
     /* the Census Bureau's survey for the door's block group (2026-10-07, census/build-census.mjs): the editions only, admins */
@@ -4034,7 +4058,7 @@ if ($action === 'area') {
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => hailWithHours($hailOf[$d['id']] ?? null, $key), 'wind' => windRows($windOf[$d['id']] ?? null),
                 'hrep' => hailRepRows($hrepOf[$d['id']] ?? null, $hrecent, $d),
-                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => olRows($olOf[$d['id']] ?? null), 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => $permOf[$d['id']] ?? null, 'nri' => $nriOf((string) $d['id']), 'cen' => $cenOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
+                'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => olRows($olOf[$d['id']] ?? null), 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => permitRow($permOf[$d['id']] ?? null), 'nri' => $nriOf((string) $d['id']), 'cen' => $cenOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
                 'os' => $d['os'] ?? null,
@@ -4053,12 +4077,13 @@ if ($action === 'area') {
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
+            if (isset($hmaxOf[$d['id']])) $doors[count($doors) - 1]['hmax'] = $hmaxOf[$d['id']];   /* Solar only (2026-10-29) */
         }
         $answers[] = ['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
              'hoa' => hoaFor($a['place'] ?? null),   /* the subdivision's registered HOA (2026-10-12) */
              'nosol' => flagSummary(flagsOver($a['doors'], loadAreaFlags($key))),
              /* whose permits cover this town and for which years (2026-10-07): lets the card say "no re-roof permit since 2016" */
-             'perm' => $permOf || (crewSees($role) && (feature('roof') || feature('solar'))) ? ((json_decode((string) @file_get_contents(DATA_DIR . '/permit-index.json'), true) ?: [])[$key] ?? null) : null];
+             'perm' => permitOn($role) ? permitCover($key) : null];   /* 2026-10-29: with the kinds the town's source records, of this trade's */
     }
     viewCount(array_sum(array_map(fn($x) => count($x['doors']), $answers)));
     if ($many) out(['ok' => true, 'many' => $answers]);

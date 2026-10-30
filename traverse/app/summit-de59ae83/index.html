@@ -10058,6 +10058,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.sec && feat('security') && cardOn('security')) wrap.appendChild(fold(secBlock(d), d.id + ':sec'));     /* security (2026-10-06): admins only, where the company has security on */
     if (d.pest && feat('pest') && cardOn('pest')) wrap.appendChild(fold(pestBlock(d), d.id + ':pest'));      /* pest (2026-10-06): the server sends it to admins only, where the company has pest on */
     if (d.solar && feat('solar') && cardOn('solar')) wrap.appendChild(fold(solarBlock(d), d.id + ':solar'));   /* solar (2026-10-06): the server sends it to admins only, where the company has solar on */
+    if (d.permit) { var pb0 = permitBlock(d); if (pb0) wrap.appendChild(fold(pb0, d.id + ':perm')); }   /* other trades' permits (2026-10-29): the server sends them in Yards, Pest and Security only */
     if (cardOn('roof')) wrap.appendChild(fold(roofBlock(d), d.id + ':roof'));   /* everywhere the roof card is on: at least the material line, which anyone can set */                     /* roof size, pitch, year built: admins only too */
     if (d.note && S.editNote !== d.id) wrap.appendChild(noteBlock(d));
     if (d.email && S.editEmail !== d.id) wrap.appendChild(emailBlock(d));
@@ -11146,7 +11147,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     ['lawn', 'leaf', 'Lawn to aerate', function () { return cardOn('lawn'); }, function (d) { var lv = lawnLevelOf(d); return lv === 'L' || lv === 'M' || lv === 'S'; }],
     ['trees', 'tree', 'Trees close', function () { return cardOn('trees'); }, function (d) { var tl = treeLevel(d); return tl === 'against' || tl === 'heavy'; }],
     ['newown', 'users', 'New owner', function () { return true; }, function (d) { return !!bestNewOwner(d, (d.pest && d.pest.sold) || (d.sec && d.sec.sold)); }],
-    ['due', 'clock', 'Due back', function () { return true; }, function (d) { return !!(d.mark && backOn(d)); }]
+    ['due', 'clock', 'Due back', function () { return true; }, function (d) { return !!(d.mark && backOn(d)); }],
+    /* building permits (2026-10-29): Solar skips houses with a solar permit; the other trades find a recent pool, fence, addition ... */
+    ['nosolar', 'sun', 'No solar on record', function () { return feat('solar'); }, function (d) { return !(d.permit && d.permit.s && !d.permit.so); }],
+    ['bprec', 'clip', 'Permit in the last 2 years', function () { var b = bestTrade(); return edOn() && (b === 'yards' || b === 'pest' || b === 'security'); }, permitRecent]
   ];
   var ORDER = [['street', 'Street order', 'list'], ['best', 'Best first', 'chart'], ['near', 'Nearest', 'near'], ['bestnear', 'Best near me', 'near'], ['route', 'Route', 'route']];
   function orderOk(v) { return v === 'street' || v === 'near' || v === 'route' || ((v === 'best' || v === 'bestnear') && !!bestTrade() && (v === 'best' || crewSees())); }
@@ -11317,7 +11321,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var big = d.hail && d.hail.length ? d.hail.reduce(function (m, x) { return x[1] > m[1] ? x : m; }, d.hail[0]) : null;
         if (big && pr >= big[0].slice(0, 7)) f.push([-8, 'Re-roofed ' + monthName(pr) + ', after that hail']);
         else if (yr - +pr.slice(0, 4) <= 5) f.push([-3, 'Re-roofed ' + monthName(pr)]);
-      } else if (P && P.since && P.full !== false && d.bld && d.bld.yb && +P.since.slice(0, 4) - d.bld.yb >= 5) f.push([1, 'No re-roof permit since ' + P.since.slice(0, 4)]);
+      } else if (permKind(P, 'roof') && P.full !== false && d.bld && d.bld.yb && +P.since.slice(0, 4) - d.bld.yb >= 5) f.push([1, 'No re-roof permit since ' + P.since.slice(0, 4)]);
       return f;
     },
     yards: function (d) {
@@ -16761,8 +16765,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (s.pn) { var l2 = q('span', 'hl'); l2.appendChild(q('b', null, 'Room for about ' + s.pn + ' panels, ' + s.kw + ' kW')); l2.appendChild(document.createTextNode(' · up to about ' + s.kwh.toLocaleString(LOCALE) + ' kWh a year')); t.appendChild(l2); }
       var SH = { open: 'Open: no tall trees on the sunny side', some: 'Some shade from tall trees on the sunny side', heavy: 'Heavy shade from tall trees on the sunny side' };
       if (s.sh) t.appendChild(q('span', 'hl', SH[s.sh] || ''));
-      var spl = permitSolarLine(d); if (spl) t.appendChild(spl);
     }
+    var spl = permitSolarLine(d); if (spl) t.appendChild(spl);   /* 2026-10-29: also where the laser scan has no sun figures */
+    var ral = roofAgeLine(d); if (ral) t.appendChild(ral);   /* the roof's age and hail (2026-10-29) */
+    var hml = hailMaxLine(d); if (hml) t.appendChild(hml);
     if (s.u) { var l3 = q('span', 'hl'); l3.appendChild(document.createTextNode('Power company: ')); l3.appendChild(q('b', null, s.u)); t.appendChild(l3); }
     /* the power company in figures (2026-10-07): the EIA's 2025 survey of every utility (Form EIA-861), and Colorado's latest
        monthly price from EIA open data. Averages across the company's homes, said as such. */
@@ -17012,8 +17018,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* building permits (2026-10-07): the latest re-roof permit and any solar permit, from the building department that covers the
      town (S.areaPerm: who, since when). In a covered town no permit is a fact too: no re-roof on record since then. */
+  /* does the town's permit source record this kind at all (2026-10-29: Denver publishes no re-roofs)? An older index has no kinds. */
+  function permKind(P, k) { return !!(P && P.since && (P.kinds ? P.kinds.indexOf(k) >= 0 : (k === 'roof' || k === 'solar'))); }
   function permitRoofLine(d) {
-    var P = S.areaPerm; if (!P || !P.since) return null;
+    var P = S.areaPerm; if (!permKind(P, 'roof')) return null;
     var p = d.permit || {}, l = q('span', 'hl');
     if (p.r) {
       var recent = (new Date().getFullYear() - +p.r.slice(0, 4)) <= 3;
@@ -17024,15 +17032,57 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return l;
   }
   function permitSolarLine(d) {
-    var P = S.areaPerm; if (!P || !P.since) return null;
+    var P = S.areaPerm; if (!permKind(P, 'solar')) return null;
     var p = d.permit || {}, l = q('span', 'hl');
-    if (p.s && !p.so) l.appendChild(q('b', null, 'Solar permit ' + monthName(p.s) + ': it already has panels'));
+    if (p.s && !p.so) l.appendChild(q('b', null, 'Has solar, permitted ' + monthName(p.s)));   /* 2026-10-29 wording (Matthew): skip it, or name it to the neighbours */
     else if (p.s) l.appendChild(document.createTextNode('Solar permit ' + monthName(p.s) + ', panels removed ' + monthName(p.so)));
     else if (P.full !== false) l.appendChild(document.createTextNode('No solar permit since ' + P.since.slice(0, 4)));
     else return null;
     l.appendChild(document.createTextNode(' (' + P.src + ')'));
     return l;
   }
+  /* the roof's age on the Solar card (2026-10-29, Matthew): the last re-roof permit, else the year the house was built. "Original roof"
+     only where the permits reach back to the year it was built (a house built since the records start, in a fully covered town);
+     before that, the card says no re-roof is on record since the records start. Facts only, each with its source. */
+  function roofAgeLine(d) {
+    var P = S.areaPerm, p = d.permit || {}, yb = d.bld && d.bld.yb, yr = new Date().getFullYear(), l = q('span', 'hl');
+    var yrs = function (y) { var n = yr - y; return n <= 0 ? ' (this year)' : n === 1 ? ' (1 year)' : ' (' + n + ' years)'; };
+    if (p.r) { l.appendChild(document.createTextNode('Roof age: ')); l.appendChild(q('b', null, 're-roofed ' + monthName(p.r) + yrs(+p.r.slice(0, 4)))); l.appendChild(document.createTextNode(' (permit' + (P && P.src ? ', ' + P.src : '') + ')')); return l; }
+    if (!yb) return null;
+    var cov = permKind(P, 'roof') && P.full !== false, since = cov ? +P.since.slice(0, 4) : 0;
+    l.appendChild(document.createTextNode('Roof age: '));
+    if (cov && yb >= since) { l.appendChild(q('b', null, 'original roof, house built ' + yb + yrs(yb))); l.appendChild(document.createTextNode(' (no re-roof permit since; county record, ' + P.src + ')')); }
+    else if (cov) { l.appendChild(q('b', null, 'house built ' + yb + yrs(yb))); l.appendChild(document.createTextNode(' · no re-roof permit on record since ' + since + ' (county record, ' + P.src + ')')); }
+    else { l.appendChild(q('b', null, 'house built ' + yb + yrs(yb))); l.appendChild(document.createTextNode(' · re-roof permits not on record here (county record)')); }
+    return l;
+  }
+  /* the largest hail the radar estimated at the house (Solar, 2026-10-29: hmax, made from the Roofing edition's hail layer) */
+  function hailMaxLine(d) {
+    var h = d.hmax; if (!h || !h[1]) return null;
+    var l = q('span', 'hl'); l.appendChild(document.createTextNode('Largest hail at the house: '));
+    l.appendChild(q(h[1] >= 1 ? 'b' : 'span', null, inch(h[1]) + ' on ' + hailDay(h[0])));
+    l.appendChild(document.createTextNode(' (NOAA radar estimate)'));
+    return l;
+  }
+  /* building permits for the other trades (2026-10-29, Matthew): Yards pool, fence, deck or patio cover, irrigation, landscaping; Pest and
+     Security new building, addition, pool, fence. The latest of each kind, with the month and the department; bold within two years.
+     The server sends each edition only its own kinds. Nothing is said about a kind with no permit (a fence or pool often needs none). */
+  var PERMIT_NAME = [['n', 'New building permit'], ['a', 'Addition permit'], ['pl', 'Pool permit'], ['f', 'Fence permit'], ['d', 'Deck or patio cover permit'], ['ir', 'Irrigation permit'], ['ld', 'Landscaping permit']];
+  function permitAgo(ym) { var n = new Date(); return (n.getFullYear() - +ym.slice(0, 4)) * 12 + (n.getMonth() + 1 - +ym.slice(5, 7)); }
+  function permitOther(d) { var p = d.permit; return p ? PERMIT_NAME.filter(function (k) { return p[k[0]]; }) : []; }
+  function permitBlock(d) {
+    var ks = permitOther(d); if (!ks.length) return null;
+    var P = S.areaPerm, b = q('div', 'hailx permx'); b.appendChild(ico('clip', 2.2));
+    var t = q('span'); t.appendChild(q('small', null, 'Building permits' + (P && P.src ? ' (' + P.src + (P.since ? ', since ' + P.since.slice(0, 4) : '') + ')' : '')));
+    ks.sort(function (x, y) { return d.permit[x[0]] < d.permit[y[0]] ? 1 : -1; }).forEach(function (k) {
+      var ym = d.permit[k[0]], l = q('span', 'hl');
+      l.appendChild(q(permitAgo(ym) <= 24 ? 'b' : 'span', null, k[1] + ' ' + monthName(ym)));
+      t.appendChild(l);
+    });
+    b.appendChild(t);
+    return b;
+  }
+  function permitRecent(d) { return permitOther(d).some(function (k) { return permitAgo(d.permit[k[0]]) <= 24; }); }
   function roofBlock(d) {
     var b = q('div', 'hailx roofx'); b.appendChild(ico('roof', 2.2));
     var t = q('span');
@@ -18767,6 +18817,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (F.hail && !(d.hail && d.hail.length && Math.max.apply(null, d.hail.map(function (h) { return h[1]; })) >= F.hail)) return false;
       if (F.age && !(d.bld && d.bld.yb && yr - Math.max(d.bld.yb, d.bld.rm || 0) >= F.age)) return false;
       if (F.noperm && d.permit && d.permit.r) return false;
+      if (F.nosol && d.permit && d.permit.s && !d.permit.so) return false;   /* 2026-10-29 */
       if (F.kwh && !(d.solar && d.solar.kwh >= F.kwh)) return false;
       return on.every(function (x) { return x[4](d); });
     });
@@ -18783,13 +18834,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     ['age20', 'Roof 20 years or older', function () { return feat('roof') || bestTrade() === 'roof'; }, { age: 20 }],
     ['noperm', 'No re-roof permit on record', function () { return feat('roof') || bestTrade() === 'roof'; }, { noperm: true }],
     ['kwh7', 'Solar 7,000 kWh a year or more', function () { return feat('solar'); }, { kwh: 7000 }],
-    ['kwh10', 'Solar 10,000 kWh a year or more', function () { return feat('solar'); }, { kwh: 10000 }]
+    ['kwh10', 'Solar 10,000 kWh a year or more', function () { return feat('solar'); }, { kwh: 10000 }],
+    ['nosol', 'No solar on record', function () { return feat('solar'); }, { nosol: true }]   /* 2026-10-29: no solar permit (or panels removed) */
   ];
   /* the same filters, short enough for one line of chips */
-  var PLAN_SHORT = { min8: 'Score 8+', min9: 'Score 9+', min10: 'Score 10', hail1: 'Hail 1 in+', hail125: 'Hail 1.25 in+', hail175: 'Hail 1.75 in+', age15: 'Roof 15+ yrs', age20: 'Roof 20+ yrs', noperm: 'No re-roof permit', kwh7: 'Solar 7k kWh+', kwh10: 'Solar 10k kWh+' };
+  var PLAN_SHORT = { min8: 'Score 8+', min9: 'Score 9+', min10: 'Score 10', hail1: 'Hail 1 in+', hail125: 'Hail 1.25 in+', hail175: 'Hail 1.75 in+', age15: 'Roof 15+ yrs', age20: 'Roof 20+ yrs', noperm: 'No re-roof permit', kwh7: 'Solar 7k kWh+', kwh10: 'Solar 10k kWh+', nosol: 'No solar on record' };
   function planChipText(k, v) {
     return k === 'min' ? (v === 10 ? 'Score 10 only' : 'Score ' + v + ' or more') : k === 'hail' ? 'Hail ' + v + ' in or more' : k === 'age' ? 'Roof ' + v + ' years or older'
-      : k === 'noperm' ? 'No re-roof permit' : k === 'kwh' ? 'Solar ' + v.toLocaleString(LOCALE) + ' kWh+' : k === 'area' ? v : k;
+      : k === 'noperm' ? 'No re-roof permit' : k === 'nosol' ? 'No solar on record' : k === 'kwh' ? 'Solar ' + v.toLocaleString(LOCALE) + ' kWh+' : k === 'area' ? v : k;
   }
   function planHidden() { try { return JSON.parse(localStorage.getItem('sixfold.plan.hide') || '[]') || []; } catch (e) { return []; } }
   /* the preview beside the table: what the door's card would say first, and the way into it */
@@ -18945,7 +18997,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     chip('free', 'Nobody assigned', 'users'); chip('mine', 'Assigned', 'users');
     var wide = planWide();
     if (P.filt.q) { var xq = q('button', 'xchip'); xq.type = 'button'; xq.setAttribute('aria-pressed', 'true'); xq.setAttribute('aria-label', 'Clear the search'); xq.appendChild(document.createTextNode('\u201c' + P.filt.q + '\u201d ')); xq.appendChild(ico('close', 2.4)); xq.addEventListener('click', function () { delete P.filt.q; planDraw(); }); fl.appendChild(xq); }
-    ['area', 'min', 'hail', 'age', 'noperm', 'kwh'].forEach(function (k) {
+    ['area', 'min', 'hail', 'age', 'noperm', 'nosol', 'kwh'].forEach(function (k) {
       if (!P.filt[k] || (wide && PLAN_MORE.some(function (m) { return m[2]() && m[3][k] === P.filt[k]; }))) return;   /* a chip on the second line shows it; any other value keeps its cross */
       var b = q('button', 'xchip'); b.type = 'button'; b.setAttribute('aria-pressed', 'true'); b.setAttribute('data-x', k); b.setAttribute('aria-label', 'Remove the filter: ' + planChipText(k, P.filt[k]));
       b.appendChild(document.createTextNode(planChipText(k, P.filt[k]) + ' ')); b.appendChild(ico('close', 2.4));
