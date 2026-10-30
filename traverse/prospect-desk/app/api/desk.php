@@ -95,7 +95,7 @@ function fill(string $s, array $l): string {
 function render(array $l, array $tpl, array $set, string $unsubUrl): array {
     $t = $tpl[$l['trade']] ?? reset($tpl);
     $body = rtrim(fill((string) $t['body'], $l)) . "\n\n" . trim((string) $set['signature'])   /* a blank line before the signature */ . ($set['address'] !== '' ? "\n" . trim((string) $set['address']) : '')
-          . "\n\nIf you would rather not get emails from me, reply \"no thanks\" or use this link: " . $unsubUrl;
+          . "\n\nUnsubscribe: " . $unsubUrl;   /* a plain line, not an apology (Matthew 2026-10-29: "reply no thanks" read as unconfident); the law needs a working opt-out, and this is it */
     return ['id' => $l['id'], 'to' => (string) $l['email'], 'subject' => fill((string) $t['subject'], $l), 'body' => $body];
 }
 /** why a company cannot be emailed ('' = it can) */
@@ -170,7 +170,7 @@ function sendQueue(int $max): int {
         if ($l && $why === '' && strtolower((string) $l['email']) !== strtolower((string) $m['to'])) $why = 'email changed since it was queued';
         if ($why !== '') { logAdd(['t' => 'skipped', 'id' => $m['id'], 'why' => $why, 'by' => 'queue', 'at' => time()]); $i--; continue; }   /* a skip costs no send */
         if ($sentN > 0 && $gap) sleep($gap);
-        $r = mailSend($m['to'], $m['subject'], $m['body'], ['List-Unsubscribe: <' . $m['unsub'] . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']);
+        $r = mailSend($m['to'], $m['subject'], $m['body'], []);   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day */
         if ($r['ok']) {
             logAdd(['t' => 'sent', 'id' => $m['id'], 'to' => $m['to'], 'subject' => $m['subject'], 'by' => $m['by'], 'at' => time()]);
             if ($l['status'] === 'new') logAdd(['t' => 'status', 'id' => $m['id'], 'status' => 'emailed', 'by' => $m['by'], 'at' => time()]);
@@ -370,7 +370,7 @@ switch ($action) {
         if ($n >= 10) fail('That is 10 tests in a day already. Try again tomorrow.');
         $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => 'Denver', 'trade' => $tr, 'person' => '', 'email' => $to];
         $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u);
-        $r = mailSend($to, $m['subject'], $m['body'], ['List-Unsubscribe: <' . $u . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']);
+        $r = mailSend($to, $m['subject'], $m['body'], []);   /* as the queue sends it: no bulk-mail headers (2026-10-29) */
         logAdd(['t' => 'test', 'to' => $to, 'trade' => $tr, 'ok' => $r['ok'], 'by' => $ME, 'at' => time()]);
         if (!$r['ok']) fail('The test did not go out (' . $r['stage'] . '): ' . mb_substr((string) $r['error'], 0, 160));
         out(['ok' => true, 'to' => $to, 'subject' => $m['subject']]);
