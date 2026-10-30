@@ -68,6 +68,9 @@ function dataDir(): string {
     exit('{"ok":false,"error":"Rounds is not configured on this server."}');
 }
 define('DATA_DIR', dataDir());
+/* a client install made on the server (2026-10-29): the logo given on the website's welcome page is taken by the Company screen's own upload code
+   (logoAdopt -> logoTake) on the install's first company request, before company() reads company-local.json, so that very answer carries it */
+if ((string) ($_REQUEST['action'] ?? '') === 'company' && !defined('SIXFOLD_CLI')) logoAdopt();
 /* memory (2026-10-08): the editions' big towns carry tens of MB of side files. The door view and the town list read only what
    they need, but ask for 256 MB where the host's limit is lower and lets a script raise it; diag reports what was granted. */
 (function () {
@@ -114,7 +117,10 @@ function company(): array {
                office's again. '' = no end */
             'metaMineTo' => '',
             /* who Matthew can send his own leads to (2026-10-27, Matthew: 'I need to also be able to send some leads to cai'): account names; see mhand */
-            'handTo' => []];
+            'handTo' => [],
+            /* a client install made on the server (2026-10-29, api/traverse-clients-lib.php): its homes' area as the welcome checklist shows it,
+               {status: linking|ready|none|outside|nomatch, towns, doors, miles, place, state}. null everywhere else */
+            'area' => null];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -2048,6 +2054,13 @@ if ($action === 'billinghook') {
     $did = billingTakeEvent($bc, $ev);
     if ($did !== '') billingLog(['what' => 'event', 'type' => (string) $ev['type'], 'id' => (string) ($ev['id'] ?? ''), 'did' => $did]);
     if ($did !== '') seatWatch();   /* a smaller plan can put the install over its seats (2026-10-29) */
+    /* founding prices step up to the list prices after 12 months (2026-10-29): the schedule, made once when the checkout completes */
+    if ($did === 'checkout' && ($ev['data']['object']['metadata']['founding'] ?? '') === '1' && empty(billingLoad()['schedule'])) {
+        $fs = billingFoundingSchedule($bc, (string) ($ev['data']['object']['subscription'] ?? ''));
+        if (!empty($fs['schedule'])) billingSave(function (array $b) use ($fs) { $b['schedule'] = $fs['schedule']; return $b; });
+        billingLog(['what' => 'founding schedule'] + $fs);
+        if (isset($fs['error'])) travMail(seatNoteTo(), 'Traverse: founding step-up NOT scheduled for ' . (string) company()['name'], "The founding subscription's step-up to the list price after 12 months could not be scheduled in Stripe.\n\nInstall: " . COOKIE . "\nSubscription: " . (string) ($ev['data']['object']['subscription'] ?? '') . "\nWhy: " . $fs['error'] . "\n\nSet a subscription schedule for it in the Stripe dashboard (phase 1: the founding prices for 12 months; phase 2: the list prices).\n");
+    }
     if ($did === 'second subscription') travMail(seatNoteTo(), 'Traverse: ' . (string) company()['name'] . ' started a second subscription', "Stripe reported a second subscription for an install that already has an active one. It was NOT taken as the plan; the first one stands.\n\nCompany: " . (string) company()['name'] . "\nInstall: " . COOKIE . ' (' . (string) $bc['install'] . ")\nThe second subscription: " . (string) ($ev['data']['object']['id'] ?? '') . "\n\nCancel and refund it in Stripe.\n");   /* one subscription per company (2026-10-29) */
     out(['ok' => true, 'received' => true]);
 }
@@ -2103,6 +2116,20 @@ function hopInstalls(): array {
         if (!preg_match('/^[a-z0-9-]{2,40}$/D', $id) || $nm === '' || !preg_match('#^https?://[^\s"<>]{3,200}$#D', $url)) continue;
         $o[$id] = ['id' => $id, 'name' => substr($nm, 0, 40), 'url' => $url];
     }
+    foreach (clientInstalls() as $id => $i) if (!isset($o[$id])) $o[$id] = ['id' => $id, 'name' => $i['name'], 'url' => $i['url'], 'client' => true];   /* client installs (2026-10-29) */
+    return $o;
+}
+/* ---- client installs made on the server (2026-10-29, api/traverse-clients-lib.php): traverse-shared/clients/registry.json lists them. The super
+ * admin hops into one exactly as into an edition (its codes file carries his super line under the same name); the Clients list in Profile
+ * shows each with where its plan stands, read from its own billing.json. */
+function clientInstalls(): array {
+    static $o = null; if ($o !== null) return $o;
+    $o = [];
+    $j = json_decode((string) @file_get_contents(hopDir() . '/clients/registry.json'), true);
+    foreach ((array) ($j['clients'] ?? []) as $cid => $e) {
+        if (!is_array($e) || ($e['status'] ?? '') !== 'live' || !preg_match('/^c[0-9a-f]{4}$/D', (string) ($e['cookie'] ?? '')) || !preg_match('#^https?://[^\s"<>]{3,200}$#D', (string) ($e['url'] ?? ''))) continue;
+        $o[(string) $e['cookie']] = ['cid' => (string) $cid, 'name' => mb_substr(trim((string) ($e['name'] ?? '')), 0, 40) ?: (string) $cid, 'url' => (string) $e['url'], 'e' => $e];
+    }
     return $o;
 }
 /* a pass is spent when it is used: its 'j' is kept until the pass would have run out anyway */
@@ -2148,6 +2175,122 @@ if ($action === 'hopin') {
     out(array_replace(startSession($hit, $hitCode, $sessionKey, $sessionDays), edSignin($hit, $hitCode)));   /* + the editions' roles and terms (2026-10-29) */
 }
 
+/* the Clients list (super admin, 2026-10-29, Matthew: "a dropdown of my clients to view their installs"): every client install with where its plan
+   stands (live, past due, locked, cancelled; billing.php billingLockState), plan, edition, since when, its towns and homes. Opening one is the hop. */
+if ($action === 'clients') {
+    if (!$isSuper) fail('Not allowed.', 403);
+    $L = [];
+    foreach (clientInstalls() as $id => $i) {
+        $e = $i['e']; $b = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/' . basename((string) ($e['data'] ?? 'none')) . '/rounds/billing.json'), true); $b = is_array($b) ? $b : [];
+        $st = billingLockState($b); $s = (string) ($b['status'] ?? '');
+        $status = $s === 'canceled' ? 'cancelled' : ($st['phase'] === 'locked' ? 'locked' : (in_array($s, ['past_due', 'unpaid'], true) ? 'past due' : ($st['phase'] === 'live' ? 'live' : 'setup')));
+        $a = (array) ($e['area'] ?? []);
+        $L[] = ['id' => $id, 'name' => $i['name'], 'edition' => (string) ($e['edition'] ?? ''), 'plan' => (string) ($b['plan'] ?? ($e['plan'] ?? '')), 'interval' => (string) ($b['interval'] ?? ($e['interval'] ?? '')),
+                'seats' => (int) ($b['seats'] ?? ($e['seats'] ?? 0)), 'status' => $status, 'since' => (int) ($e['created'] ?? 0), 'liveAt' => (int) ($b['live_at'] ?? 0),
+                'towns' => (int) ($a['towns'] ?? 0), 'homes' => (int) ($a['doors'] ?? 0), 'place' => (string) ($a['place'] ?? ''), 'miles' => (int) ($a['miles'] ?? 0), 'area' => (string) ($a['status'] ?? ''), 'here' => $id === COOKIE];
+    }
+    usort($L, fn($x, $y) => $y['since'] <=> $x['since']);
+    out(['ok' => true, 'clients' => $L, 'canHop' => hopKey() !== '']);
+}
+
+/* the buyer's first sign-in, straight from the website's welcome page (2026-10-29, Matthew: "they pay. They get access to the app's welcome screen"):
+   the provisioning (api/traverse-clients-lib.php) leaves a one-use pass for the company's admin in the private folder, good for half an hour;
+   the page arrives with #start=<pass> and this signs that admin in. Nothing else signs in with it, and it works once. */
+if ($action === 'startin') {
+    if (!$isPost) fail('POST required', 405);
+    if (!throttleTake(rateFile('startin|' . clientKey()), 20, 3600)) fail('Too many tries from here. Sign in with your code.', 429);
+    $pf = dirname(__DIR__, 2) . '/sixfold-private/start-pass.json';
+    $lk = @fopen($pf . '.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
+    $sp = json_decode((string) @file_get_contents($pf), true);
+    $pass = (string) ($body['pass'] ?? '');
+    if (!is_array($sp) || $pass === '' || (int) ($sp['exp'] ?? 0) < time() || !hash_equals((string) ($sp['h'] ?? ''), hash('sha256', $pass))) fail('That link has been used or has run out. Sign in with the code we emailed you.', 401);
+    @unlink($pf);
+    $hit = null; $hitCode = '';
+    foreach ($people as $c => $who) if (($who[1] ?? '') === 'admin' && hash_equals((string) $sp['id'], codeId((string) $c, $sessionKey))) { $hit = $who; $hitCode = (string) $c; }
+    if (!$hit) fail('Sign in with the code we emailed you.', 401);
+    inviteJoined($hitCode);
+    out(array_replace(startSession($hit, $hitCode, $sessionKey, $sessionDays), edSignin($hit, $hitCode)));
+}
+
+/* ---- email and password (2026-10-29, Matthew: invites with passwords; "they sign in with email + password on the app's sign-in screen (the
+ * 6-digit codes keep working for existing people)"; "Forgot password") ----
+ * Editions and client installs, never Sixfold. A password belongs to an account (the same row, code and settings as before): accounts "login"
+ * id => {email, hash (password_hash), at}. It is set from a link Traverse emails: an invite (inviteSend; 7 days) or a reset (pwforgot; 24 hours).
+ * A link is a random token kept only as its SHA-256 ("inv"/"reset" .tok), works once, and dies when a newer one is sent. Passwords: 10 characters
+ * at least. Signing in with a password counts against the same limits as a wrong code, plus 10 an hour per email address. Sessions and devices
+ * are exactly a code sign-in's (startSession).
+ *   pwinfo    GET   ?t=i.<token>|r.<token>: whose link it is (name, email, company), not spent
+ *   pwset     POST  {t, password}: sets the password, spends the link, signs in
+ *   pwsignin  POST  {email, password, dev}
+ *   pwforgot  POST  {email}: a reset link when that address signs in here; the same answer either way */
+const PW_MIN = 10, PW_INVITE_DAYS = 7, PW_RESET_HOURS = 24;
+function pwTokenFind(string $t): ?array {
+    global $acct;
+    if (!preg_match('/^([ir])\.([0-9a-f]{48})$/D', $t, $m)) return null;
+    $kind = $m[1] === 'i' ? 'inv' : 'reset'; $h = hash('sha256', $m[2]);
+    foreach ((array) ($acct[$kind] ?? []) as $id => $x) if (is_array($x) && !empty($x['tok']) && hash_equals((string) $x['tok'], $h)) return ((int) ($x['exp'] ?? 0) >= time()) ? ['kind' => $kind, 'id' => (string) $id] + $x : ['expired' => true];
+    return null;
+}
+function pwHit(string $id): ?array { global $people, $sessionKey; foreach ($people as $c => $who) if (hash_equals($id, codeId((string) $c, $sessionKey))) return [$who, (string) $c]; return null; }
+function pwEmailOwner(string $em): string { global $acct; $em = strtolower(trim($em)); foreach ((array) ($acct['login'] ?? []) as $id => $l) if (strtolower((string) ($l['email'] ?? '')) === $em) return (string) $id; return ''; }
+if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
+    if (!edition()) fail('Not here.', 404);
+    if ($action === 'pwinfo') {
+        if (!throttleTake(rateFile('pwinfo|' . clientKey()), 60, 3600)) fail('Too many tries from here. Wait a while.', 429);
+        $tk = pwTokenFind((string) ($_GET['t'] ?? ''));
+        if (!$tk || !empty($tk['expired'])) fail(!empty($tk['expired']) ? 'That link has run out. Ask your admin to send it again, or use Forgot password.' : 'That link has been used or is not one we know. Sign in, or use Forgot password.', 404);
+        $hw = pwHit($tk['id']); if (!$hw) fail('That account is no longer on. Ask your admin.', 404);
+        out(['ok' => true, 'kind' => $tk['kind'] === 'inv' ? 'invite' : 'reset', 'name' => (string) $hw[0][0], 'email' => (string) ($tk['kind'] === 'inv' ? $tk['email'] : ($acct['login'][$tk['id']]['email'] ?? '')), 'company' => (string) company()['name'], 'min' => PW_MIN]);
+    }
+    if (!$isPost) fail('POST required', 405);
+    if ($action === 'pwset') {
+        if (!throttleTake(rateFile('pwset|' . clientKey()), 20, 3600)) fail('Too many tries from here. Wait a while.', 429);
+        $pw = (string) ($body['password'] ?? '');
+        if (mb_strlen($pw) < PW_MIN) fail('Use at least ' . PW_MIN . ' characters.');
+        if (mb_strlen($pw) > 200) fail('That password is too long.');
+        $lk = @fopen(accountsFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+        $acct = loadAccounts();
+        $tk = pwTokenFind((string) ($body['t'] ?? ''));
+        if (!$tk || !empty($tk['expired'])) fail('That link has been used or has run out. Use Forgot password for a new one.', 404);
+        $hw = pwHit($tk['id']); if (!$hw) fail('That account is no longer on. Ask your admin.', 404);
+        $em = $tk['kind'] === 'inv' ? (string) $tk['email'] : (string) ($acct['login'][$tk['id']]['email'] ?? '');
+        $other = pwEmailOwner($em); if ($other !== '' && $other !== $tk['id']) fail('That email address signs in to another account here. Ask your admin.');
+        $acct['login'] = (array) ($acct['login'] ?? []); $acct['login'][$tk['id']] = ['email' => strtolower($em), 'hash' => password_hash($pw, PASSWORD_DEFAULT), 'at' => time()];
+        if ($tk['kind'] === 'inv') { unset($acct['inv'][$tk['id']]['tok']); $acct['inv'][$tk['id']]['joined'] = $acct['inv'][$tk['id']]['joined'] ?? time(); } else unset($acct['reset'][$tk['id']]);
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        flock($lk, LOCK_UN); fclose($lk);
+        accountLog(['what' => $tk['kind'] === 'inv' ? 'password set (invite)' : 'password reset', 'id' => $tk['id']]);
+        out(array_replace(startSession($hw[0], $hw[1], $sessionKey, $sessionDays), edSignin($hw[0], $hw[1])));
+    }
+    $em = strtolower(trim((string) ($body['email'] ?? '')));
+    if ($action === 'pwsignin') {
+        $addrFile = rateFile(clientKey());
+        if (!throttleTake($addrFile, MAX_TRIES, TRY_WINDOW) || !throttleTake(rateFile('pwmail|' . hash('sha256', $em)), 10, 3600)) fail('Too many tries. Wait fifteen minutes.', 429);
+        $id = pwEmailOwner($em); $l = $id !== '' ? $acct['login'][$id] : null;
+        $ok = password_verify((string) ($body['password'] ?? ''), $l ? (string) $l['hash'] : '$2y$12$N9PW5rubSI5Sne.jRnvJyOdtH/fwgJySxK/QIUFHzVcSkDMhPnQb6');   /* the same work whether or not the address is known */
+        $hw = $ok && $l ? pwHit($id) : null;
+        if (!$hw) fail('That email and password do not match. Try again, or use Forgot password.', 401);
+        throttleGiveBack($addrFile);
+        inviteJoined($hw[1]);
+        out(array_replace(startSession($hw[0], $hw[1], $sessionKey, $sessionDays), edSignin($hw[0], $hw[1])));
+    }
+    if ($action === 'pwforgot') {
+        if (!throttleTake(rateFile('pwforgot|' . clientKey()), 10, 3600)) fail('Too many tries from here. Wait a while.', 429);
+        $same = ['ok' => true, 'said' => 'If that email signs in here, a link to set a new password is on its way. It works once, for ' . PW_RESET_HOURS . ' hours.'];
+        if (!filter_var($em, FILTER_VALIDATE_EMAIL) || !throttleTake(rateFile('pwforgotm|' . hash('sha256', $em)), 3, 3600)) out($same);
+        $lk = @fopen(accountsFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) out($same);
+        $acct = loadAccounts(); $id = pwEmailOwner($em); $hw = $id !== '' ? pwHit($id) : null;
+        if (!$hw) out($same);
+        $tok = bin2hex(random_bytes(24));
+        $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time()];
+        saveAccounts($acct); flock($lk, LOCK_UN); fclose($lk);
+        $co = company(); $link = (string) $co['appUrl'] . '#pw=r.' . $tok;
+        pwMail($em, (string) $co['name'] . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $co['name'] . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+        accountLog(['what' => 'reset link sent', 'id' => $id]);
+        out($same);
+    }
+}
+
 if ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
     $addrFile = rateFile(clientKey()); $siteFile = rateFile('*site*');
@@ -2166,6 +2309,7 @@ if ($action === 'signin') {
     }
     if (!$hit) { siteAddrs(clientKey()); fail('That code was not recognised.', 401); }      // the attempt already counted stands
     throttleGiveBack($addrFile); throttleGiveBack($siteFile);   // right code: only THIS attempt is given back
+    inviteJoined($hitCode);   /* an emailed invite turns active on the first sign-in (2026-10-29) */
     /* 'j': two sign-ins in the same second used to get the same cookie, so the signed-in list saw one phone (2026-10-04) */
     out(array_replace(startSession($hit, $hitCode, $sessionKey, $sessionDays), edSignin($hit, $hitCode)));   /* + the editions' roles and terms (2026-10-29) */
 }
@@ -3724,7 +3868,7 @@ if (!defined('SIXFOLD_CLI') && $session && edition()) { permElevate($action); ed
  * Either way, previewing a role (X-View-As 'role:...') is answered as that role in the install's current state; the super admin is open.
  * Nothing to clear when it opens: the next request reads billing.json again (Release to client, paid again, Give more time). */
 const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'logoset', 'logodel', 'billing', 'billingcheckout', 'billingportal',
-    'accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'acctflag', 'walkerset', 'paysset', 'repsendset',
+    'accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'accountresend', 'acctflag', 'walkerset', 'paysset', 'repsendset',
     'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest',
     'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
@@ -10864,6 +11008,95 @@ function acctTaken(array $rows, string $name, string $except = ''): bool {
     foreach ($rows as $r) if (!$r['off'] && $r['id'] !== $except && mb_strtolower($r['name']) === mb_strtolower($name)) return true;
     return false;
 }
+/* ---- inviting the team by email (2026-10-29, Matthew: "INVITE THE TEAM BY EMAIL in the checklist (and in Accounts any time)"; then "INVITES WITH
+ * PASSWORDS": first and last name, email, role and their own switches; an invite LINK where they set a password) ----
+ * Editions and client installs, never Sixfold. Adding a person with an email address makes their account as before (with a code, which still
+ * works) and emails them a link to set a password (pwset; 7 days, once). Sent from TRAVERSE'S mailbox (the website's Gmail sender, travMailCfg),
+ * sender name "<Company> via Traverse", Reply-To the inviting admin's own email (else the Company screen's): an invite has to work on day one,
+ * before Setup › Email is connected. The account shows "Invited" until the password is set or it first signs in (inviteJoined), then it is active.
+ * Resend (accountresend) makes a new link and the old one dies; Cancel invite is Remove. Seats count as for any sign-in: never blocked,
+ * seatWatch tells Traverse. Limits: 40 invites an hour and 150 a day per install; 4 resends a day per person.
+ * <private>/rounds-accounts.json "inv": id => {email, phone, at, by, sent, last, tok (SHA-256 of the link's token), exp, joined}. */
+function inviteFields(array $body): ?array {
+    global $acct;
+    $em = strtolower(trim((string) ($body['email'] ?? ''))); $ph = trim((string) preg_replace('/[^0-9 ()+.\-]/', '', (string) ($body['phone'] ?? '')));
+    if ($em === '') return null;
+    if (!edition()) fail('Email invites are for Traverse installs.');
+    if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen($em) > 120) fail('That email address does not look right.');
+    if ($ph !== '' && !preg_match('/^[0-9 ()+.\-]{10,30}$/', $ph)) fail('That phone number does not look right (10 digits), or leave it empty.');
+    if (pwEmailOwner($em) !== '') fail('That email address already signs in here.');
+    foreach ((array) ($acct['inv'] ?? []) as $x) if (is_array($x) && empty($x['joined']) && ($x['email'] ?? '') === $em) fail('Someone was already invited with that email address.');
+    if (!throttleTake(rateFile('invite-hour|' . COOKIE), 40, 3600) || !throttleTake(rateFile('invite-day|' . COOKIE), 150, 86400)) fail('That is a lot of invites at once. Wait an hour, or add people without an email and give them their code.', 429);
+    return ['email' => $em, 'phone' => $ph];
+}
+/** the per-person switches picked with the invite (Matthew 2026-10-29: "takes payments, does jobs, knocks doors, runs a team, results, won/lost"),
+    each only where the role takes it, as the switches in Accounts allow it (paysset, walkerset, acctflag) */
+function invitePerms(array &$acct, string $id, string $role, array $perms, string $team): array {
+    $set = [];
+    $may = ['pays' => !in_array($role, ['setter'], true), 'walker' => !in_array($role, ['setter', 'admin'], true) && feature('walkdesk'), 'doors' => in_array($role, ['office', 'tech'], true),
+            'runsteam' => $role === 'office' && $team !== '', 'results' => $role === 'office', 'wonlost' => $role === 'office'];
+    foreach ($may as $k => $ok) if ($ok && !empty($perms[$k])) {
+        if ($k === 'pays' && !isset($acct['pays'])) $acct['pays'] = array_map(fn($v) => 1, (array) ($acct['walker'] ?? []));   /* as paysset: the first change keeps everyone who had it */
+        $acct[$k] = (array) ($acct[$k] ?? []); $acct[$k][$id] = 1; $set[] = $k;
+    }
+    return $set;
+}
+function inviteInfo(string $id): ?array {
+    global $acct; $i = $acct['inv'][$id] ?? null;
+    return is_array($i) ? ['email' => (string) ($i['email'] ?? ''), 'sent' => (int) ($i['sent'] ?? 0), 'last' => (int) ($i['last'] ?? 0), 'joined' => (int) ($i['joined'] ?? 0), 'exp' => (int) ($i['exp'] ?? 0), 'password' => !empty($acct['login'][$id])] : null;
+}
+/** the first sign-in on an invited account: it is active from now (its own lock: the sign-in holds none) */
+function inviteJoined(string $code): void {
+    global $acct, $sessionKey;
+    $id = codeId($code, $sessionKey);
+    if (!is_array($acct['inv'][$id] ?? null) || !empty($acct['inv'][$id]['joined'])) return;
+    $lk = @fopen(accountsFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) return;
+    $a = loadAccounts();
+    if (is_array($a['inv'][$id] ?? null) && empty($a['inv'][$id]['joined'])) { $a['inv'][$id]['joined'] = time(); saveAccounts($a); $acct = $a; accountLog(['what' => 'invite accepted', 'id' => $id]); }
+    flock($lk, LOCK_UN); fclose($lk);
+}
+/** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok] */
+function pwMail(string $to, string $subject, string $text, ?string $html, array $headers): bool {
+    $cname = (string) company()['name'];
+    $mock = getenv('TRAV_MAIL_MOCK');
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $cname . ' via Traverse', 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
+    $s = travMailCfg(); if ($s['pass'] === '') return false;
+    $h = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
+    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $cname . ' via Traverse', 'domain' => 'traverseplatforms.com'],
+        $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', $headers)['ok'];
+}
+/** the invite itself: a new link (the old one dies). The caller holds the accounts lock. Returns whether it went. */
+function inviteSend(string $id, string $name, string $role, string $by): bool {
+    global $session;
+    $a = loadAccounts(); $iv = $a['inv'][$id] ?? null; if (!is_array($iv) || empty($iv['email'])) return false;
+    $tok = bin2hex(random_bytes(24));
+    $co = company(); $url = (string) ($co['appUrl'] ?? ''); $cname = (string) $co['name']; $link = $url . '#pw=i.' . $tok;
+    $rl = ['admin' => 'an admin', 'manager' => 'a manager', 'office' => 'office staff', 'crew' => 'a sales rep', 'setter' => 'a setter', 'tech' => 'a technician'][$role] ?? 'a team member';
+    $first = explode(' ', trim($name))[0];
+    $text = "Hi $first,\n\n$by added you to $cname's Traverse app as $rl.\n\nSet your password here (the link works once, for " . PW_INVITE_DAYS . " days):\n$link\n\n"
+        . "Then sign in with this email address and your password. Add the app to your phone's home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app), so it opens like any other app and works with no signal.\n\n"
+        . "Questions about your work: ask $by at $cname.\n\nSent for $cname by Traverse Platforms.\n";
+    $col = (string) ($co['brand'] ?: '#13294b'); if (!preg_match('/^#[0-9a-f]{6}$/i', $col)) $col = '#13294b';
+    $lg = logoImgTag($cname, 40);   /* the company's uploaded logo (the Company screen's, or the welcome page's), PNG/JPG only: email apps do not show SVG */
+    $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+    $html = '<!doctype html><html><body style="margin:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;color:#0f1b2d">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">'
+        . '<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden" cellpadding="0" cellspacing="0">'
+        . '<tr><td style="background:' . $col . ';padding:20px 24px;color:#ffffff;font-size:20px;font-weight:bold">' . ($lg !== '' ? '<div style="display:inline-block;background:#ffffff;border-radius:6px;padding:4px;margin-bottom:8px">' . $lg . '</div><br>' : '') . $h($cname) . '</td></tr>'
+        . '<tr><td style="padding:24px;font-size:16px;line-height:1.5">Hi ' . $h($first) . ',<br><br>' . $h($by) . ' added you to ' . $h($cname) . '&#39;s Traverse app as ' . $h($rl) . '.'
+        . '<p style="margin:24px 0"><a href="' . $h($link) . '" style="display:inline-block;background:#d6400c;color:#ffffff;text-decoration:none;font-weight:bold;padding:13px 22px;border-radius:10px">Set your password</a></p>'
+        . '<p style="font-size:14px;color:#566476">The link works once, for ' . PW_INVITE_DAYS . ' days. Then sign in with ' . $h($iv['email']) . ' and your password, and add the app to your home screen (iPhone: Share, Add to Home Screen; Android: the menu, Install app).</p>'
+        . '<p style="font-size:14px;color:#566476">Questions about your work: ask ' . $h($by) . '.</p></td></tr>'
+        . '<tr><td style="padding:14px 24px;background:#f4f6f9;font-size:12px;color:#8a96a6">Sent for ' . $h($cname) . ' by Traverse Platforms</td></tr></table></td></tr></table></body></html>';
+    $mine = (string) ($a['login'][(string) ($session['c'] ?? '')]['email'] ?? '');   /* the inviting admin's own address, else the company's */
+    $rt = filter_var($mine, FILTER_VALIDATE_EMAIL) ? $mine : (filter_var((string) ($co['email'] ?? ''), FILTER_VALIDATE_EMAIL) ? (string) $co['email'] : '');
+    $ok = pwMail((string) $iv['email'], $cname . ' invited you to its Traverse app', $text, $html, $rt !== '' ? ['Reply-To: ' . $rt] : []);
+    if ($ok) { $a['inv'][$id]['tok'] = hash('sha256', $tok); $a['inv'][$id]['exp'] = time() + PW_INVITE_DAYS * 86400; $a['inv'][$id]['last'] = time(); }
+    $a['inv'][$id]['sent'] = (int) ($iv['sent'] ?? 0) + ($ok ? 1 : 0);
+    saveAccounts($a); $GLOBALS['acct'] = $a;
+    accountLog(['by' => $by, 'what' => $ok ? 'invite sent' : 'invite failed', 'name' => $name, 'id' => $id]);
+    return $ok;
+}
 /* ---- billing (2026-10-10, api/billing.php): the admin sees the plan, pays through Stripe Checkout, manages it in Stripe's portal.
  * Setup mode and the past-due lock (2026-10-29) are billGate() further up; here Traverse releases the app and gives more time. */
 if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billinglive', 'billingrefund', 'billingmore'], true)) {
@@ -11068,11 +11301,11 @@ if ($action === 'walkerset') {
     accountLog(['by' => $me, 'what' => !empty($body['on']) ? 'does walks' : 'no walks', 'name' => $rows[$id]['name'], 'id' => $id]);
     out(['ok' => true]);
 }
-if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins'], true)) {
+if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'accountresend'], true)) {
     /* managers (Matthew 2026-10-11: "they can remove people right? they should be able to"): the crew on their own team only.
        They add crew (who join their team), give a new code, sign out and remove; roles, teams, PINs and everyone else stay with admins. */
     $isMgr = mgr();   /* a manager, or an office account that runs a team (2026-10-20) */
-    if ($role !== 'admin' && !($isMgr && in_array($action, ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout'], true))) fail('Not allowed.', 403);
+    if ($role !== 'admin' && !($isMgr && in_array($action, ['accounts', 'accountadd', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountresend'], true))) fail('Not allowed.', 403);
     if ($isMgr && $myTeam === '') fail('You are not on a team yet. Ask an admin to put you on one.', 403);
     $rows = acctRows($basePeople, $acct, $sessionKey);
     $myId = (string) ($session['c'] ?? '');
@@ -11087,7 +11320,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id']), 'doors' => acctFlag('doors', $r['id']), 'communities' => acctFlag('communities', $r['id']), 'results' => acctFlag('results', $r['id']), 'fq' => acctFlag('fq', $r['id'])];
+            return array_diff_key($r, ['code' => 1]) + ['invited' => inviteInfo($r['id']), 'login' => (string) ($acct['login'][$r['id']]['email'] ?? ''), 'you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id']), 'doors' => acctFlag('doors', $r['id']), 'communities' => acctFlag('communities', $r['id']), 'results' => acctFlag('results', $r['id']), 'fq' => acctFlag('fq', $r['id'])];
         }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
@@ -11125,12 +11358,28 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if (acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');
         if (!in_array($r, ROLES, true)) fail(edition() ? 'Pick a role from the list.' : (feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.'));
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
+        $inv = inviteFields($body);   /* an email address: the person is invited by email (2026-10-29), editions and client installs */
         $code = acctNewCode($basePeople, $acct);
         $acct['people'][$code] = [$name, $r, $me, time()];
         if ($isMgr) { $acct['member'] = (array) ($acct['member'] ?? []); $acct['member'][codeId($code, $sessionKey)] = $myTeam; }   /* a manager's new crew join their team */
+        if ($inv) { $acct['inv'] = (array) ($acct['inv'] ?? []); $acct['inv'][codeId($code, $sessionKey)] = $inv + ['at' => time(), 'by' => $me, 'sent' => 0]; }
+        $perms = edition() && is_array($body['perms'] ?? null) ? invitePerms($acct, codeId($code, $sessionKey), $r, (array) $body['perms'], (string) ($acct['member'][codeId($code, $sessionKey)] ?? '')) : [];   /* their own switches, picked with them (2026-10-29) */
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
-        accountLog(['by' => $me, 'what' => 'add', 'name' => $name, 'role' => $r, 'id' => codeId($code, $sessionKey)]);
-        out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $name, 'role' => $r, 'code' => $code]);
+        accountLog(['by' => $me, 'what' => 'add', 'name' => $name, 'role' => $r, 'id' => codeId($code, $sessionKey)] + ($inv ? ['invite' => true] : []) + ($perms ? ['perms' => implode(',', $perms)] : []));
+        $sent = $inv ? inviteSend(codeId($code, $sessionKey), $name, $r, $me) : null;
+        out(['ok' => true, 'id' => codeId($code, $sessionKey), 'name' => $name, 'role' => $r, 'code' => $code, 'perms' => $perms] + ($inv ? ['invited' => ['to' => $inv['email'], 'sent' => $sent]] : []));
+    }
+    if ($action === 'accountresend') {   /* the invite again, with the person's current code (2026-10-29) */
+        $id = (string) ($body['id'] ?? '');
+        if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+        if ($isMgr && !$mgrMay($rows[$id])) fail('A manager changes the crew on their own team.', 403);
+        $iv = $acct['inv'][$id] ?? null;
+        if (!is_array($iv) || empty($iv['email'])) fail('That person was not invited by email.');
+        if (!empty($iv['joined'])) fail($rows[$id]['name'] . ' has signed in already.');
+        if (!throttleTake(rateFile('invresend|' . $id), 4, 86400)) fail('That invite has been sent four times today. Try tomorrow, or give them the code yourself.', 429);
+        $ok = inviteSend($id, $rows[$id]['name'], $rows[$id]['role'], $me);
+        if (!$ok) fail('The email did not go. Try again in a minute, or give them the code yourself.', 502);
+        out(['ok' => true, 'to' => $iv['email']]);
     }
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id])) fail('No such account.', 404);
@@ -11175,7 +11424,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         /* and every per-person setting (walks 2026-10-14; all of them 2026-10-21: Nneka's Runs a team and Marks won and lost stayed on her old
            code's id when she was given a new code on 20 Oct) */
         $nid = codeId($code, $sessionKey);
-        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq', 'email', 'hours', 'rides', 'terms'] as $mk)   /* + the terms they accepted (2026-10-29) */   /* + the test email, work hours and rides with (2026-10-27) */ if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
+        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq', 'email', 'hours', 'rides', 'terms', 'inv', 'login', 'reset'] as $mk)   /* + an email invite, the password and a reset link (2026-10-29) */   /* + the terms they accepted (2026-10-29) */   /* + the test email, work hours and rides with (2026-10-27) */ if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
@@ -11196,6 +11445,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if ($t['role'] === 'admin' && acctAdmins($rows) <= 1) fail('That is the last admin.');
         if ($t['source'] === 'app') unset($acct['people'][$t['code']]);
         else $acct['off'][$id] = ['by' => $me, 'at' => time()];
+        unset($acct['inv'][$id], $acct['login'][$id], $acct['reset'][$id]);   /* an invite cancelled, a password and its links gone with the person (2026-10-29) */
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'remove', 'name' => $t['name'], 'id' => $id]);
@@ -12911,7 +13161,7 @@ function svgClean(string $raw): array {
     if ($root->getElementsByTagNameNS($NS, '*')->length < 2) return [null, 'That SVG has nothing in it the app can draw. Use a PNG instead.'];
     $out = (string) $d->saveXML($root);
     $out = (string) preg_replace_callback('/^<svg\b[^>]*>/', fn($m) => preg_replace('/\sxmlns:(?!xlink=)[A-Za-z_][\w.-]*="[^"]*"/', '', $m[0]), $out);   /* the editor's own namespaces, now unused */
-    return strlen($out) > LOGO_MAX ? [null, 'That SVG is over 500 KB once checked. Use a smaller file or a PNG.'] : [$out, $w, $h];
+    return strlen($out) > 500 * 1024 ? [null, 'That SVG is over 500 KB once checked. Use a smaller file or a PNG.'] : [$out, $w, $h];
 }
 if ($action === 'logoset' || $action === 'logodel') {
     if ($role !== 'admin' || !feature('company') || !empty(company()['a365'])) fail('Not allowed.', 403);   /* the Company screen's: editions and clients, never Sixfold 365 (its mark is its own) */
@@ -12935,23 +13185,42 @@ if ($action === 'logoset' || $action === 'logodel') {
     if (strlen($data) > (int) (LOGO_MAX * 1.4) + 200) fail('Use a logo file under 500 KB.');
     $raw = base64_decode((string) preg_replace('#^data:[a-z/+.-]+;base64,#i', '', $data), true);
     if ($raw === false || $raw === '') fail('That file did not arrive whole. Try again.');
-    if (strlen($raw) > LOGO_MAX) fail('Use a logo file under 500 KB.');
+    $r = logoTake($raw, $bg, $me);
+    if (isset($r['error'])) fail($r['error'], (int) ($r['code'] ?? 400));
+    out(['ok' => true, 'logo' => logoPublic($r['logo'])]);
+}
+/** keep a logo (the checks above: PNG/JPG that opens, 16-4,000 px; an SVG rebuilt by svgClean; 500 KB at most): ['logo' => info] | ['error'].
+    Also used for the logo a company gave on the website's welcome page (logoAdopt, 2026-10-29). */
+function logoTake(string $raw, bool $bg, string $by): array {
+    if (strlen($raw) > 500 * 1024) return ['error' => 'Use a logo file under 500 KB.'];   /* not LOGO_MAX: logoAdopt runs before that line is reached */
     if (strncmp($raw, "\x89PNG\r\n\x1a\n", 8) === 0 || strncmp($raw, "\xFF\xD8\xFF", 3) === 0) {
         $info = @getimagesizefromstring($raw);
-        if (!$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)) fail('That image would not open. Save it again as PNG or JPG.');
-        if ($info[0] < 16 || $info[1] < 16 || $info[0] > 4000 || $info[1] > 4000) fail('Use a logo between 16 and 4,000 pixels on each side.');
+        if (!$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)) return ['error' => 'That image would not open. Save it again as PNG or JPG.'];
+        if ($info[0] < 16 || $info[1] < 16 || $info[0] > 4000 || $info[1] > 4000) return ['error' => 'Use a logo between 16 and 4,000 pixels on each side.'];
         $type = $info[2] === IMAGETYPE_PNG ? 'png' : 'jpg'; $w = (int) $info[0]; $h = (int) $info[1];
     } elseif (preg_match('/^\s*(<\?xml[^>]*>\s*)?((<!--.*?-->|<!DOCTYPE[^\[>]*(\[.*?\])?\s*>)\s*)*<svg[\s>]/is',(string) preg_replace('/^\xEF\xBB\xBF/', '', $raw))) {
         [$raw, $w, $h] = svgClean($raw) + [null, 0, 0];
-        if ($raw === null) fail((string) $w);
+        if ($raw === null) return ['error' => (string) $w];
         $type = 'svg'; $w = (int) round($w); $h = (int) round($h);
-    } else fail('Use a PNG, JPG or SVG file.');
+    } else return ['error' => 'Use a PNG, JPG or SVG file.'];
+    $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true); $loc = is_array($loc) ? $loc : [];
     $v = substr(sha1($raw), 0, 12);
-    if (!writeTextAtomic(logoFile($type), $raw)) fail('Could not save that. Try again.', 500);
-    foreach (array_keys(LOGO_TYPES) as $t) if ($t !== $type) @unlink(logoFile($t));
-    $loc['logo'] = ['type' => $type, 'v' => $v, 'w' => max(1, $w), 'h' => max(1, $h), 'bg' => $bg, 'by' => $me, 'at' => time()];
-    if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
-    out(['ok' => true, 'logo' => logoPublic($loc['logo'])]);
+    if (!writeTextAtomic(logoFile($type), $raw)) return ['error' => 'Could not save that. Try again.', 'code' => 500];
+    foreach (['png', 'jpg', 'svg'] as $t) if ($t !== $type) @unlink(logoFile($t));
+    $loc['logo'] = ['type' => $type, 'v' => $v, 'w' => max(1, $w), 'h' => max(1, $h), 'bg' => $bg, 'by' => $by, 'at' => time()];
+    if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) return ['error' => 'Could not save that. Try again.', 'code' => 500];
+    return ['logo' => $loc['logo']];
+}
+/** the logo a company gave on the website's welcome page (2026-10-29, api/traverse-clients-lib.php leaves it as <private>/logo-pending.<ext>):
+    taken through logoTake, exactly as a Company-screen upload, the first time the install is asked for its company (before anyone signs in) */
+function logoAdopt(): void {
+    foreach (['png', 'jpg', 'svg'] as $t) {
+        $f = pushPrivDir() . '/logo-pending.' . $t; if (!is_file($f)) continue;
+        $r = logoTake((string) file_get_contents($f), true, 'Website checkout');
+        @unlink($f);
+        if (isset($r['error'])) error_log('rounds: the welcome page logo was not taken: ' . $r['error']);
+        return;
+    }
 }
 
 /* ---- booked doors for JobNimbus (2026-10-08, TraverseRoofing) ----

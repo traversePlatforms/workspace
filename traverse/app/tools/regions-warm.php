@@ -19,7 +19,7 @@ if (empty($argv[1])) {
     exit;
 }
 $f = $argv[1]; $role = $argv[2] ?? '';
-if (!preg_match('#/(rounds|traverse[a-z-]*-rounds)\.php$#', $f) || !is_file($f)) { echo "not an install API\n"; exit(1); }
+if (!preg_match('#/(rounds|traverse[a-z0-9-]*-rounds)\.php$#', $f)   /* digits: client installs made on the server, traverse-c<8 hex>-rounds.php (2026-10-29) */ || !is_file($f)) { echo "not an install API\n"; exit(1); }
 if (!in_array($role, ['admin', 'crew'], true)) { echo "role must be admin or crew\n"; exit(1); }
 final class SixfoldOut extends Exception { public array $body; public function __construct(array $b) { parent::__construct('out'); $this->body = $b; } }
 define('SIXFOLD_CLI', true);

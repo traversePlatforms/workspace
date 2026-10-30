@@ -29,7 +29,10 @@ Header always set Strict-Transport-Security "max-age=31536000"
 # 2026-10-15 (Matthew: "put the traverseplatforms.com homepage and pages private for now"): the marketing pages need a password;
 # the apps (summit-de59ae83, the five editions), api/ and maps/ do not, so crews and the office are not affected.
 # The password file is outside public_html (traverse-site-private/.htpasswd); Matthew has the password.
-<If "%{REQUEST_URI} =~ m#^/(index\.html)?$# || %{REQUEST_URI} =~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation|shots)(/|$)# || %{REQUEST_URI} =~ m#^/og\.png$#">
+# start/ (the checkout and welcome page, 2026-10-29) is private with the rest until Matthew opens it. To send payment links before the whole site
+# opens, take "start|" out of this list and chmod 644 the files in start/ (its API, api/traverse-start.php and api/traverse-hook.php, is never
+# behind the password). The welcome page must be reachable by anyone who has paid, so it opens with /start/ or with the site.
+<If "%{REQUEST_URI} =~ m#^/(index\.html)?$# || %{REQUEST_URI} =~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation|shots|start)(/|$)# || %{REQUEST_URI} =~ m#^/og\.png$#">
   AuthType Basic
   AuthName "Traverse Platforms (private for now)"
   AuthUserFile /home/customer/www/traverseplatforms.com/traverse-site-private/.htpasswd
@@ -37,4 +40,4 @@ Header always set Strict-Transport-Security "max-age=31536000"
 </If>
 # Since 2026-10-15 the marketing pages are private: plain files are served by the host's front server, which skips
 # this password rule, so after uploading the site run on the server:
-#   chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots -type f -exec chmod 600 {} \;
+#   chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots start -type f -exec chmod 600 {} \;

@@ -29,7 +29,10 @@ const KEEP = 30;
 const FOLDERS = ['sixfold-data', 'traverse-data', 'traverse-yards-data', 'traverse-solar-data', 'traverse-pest-data', 'traverse-security-data'];
 $site = dirname(__DIR__);
 $failed = 0;
-foreach (FOLDERS as $dir) if (!backupOne($site, $dir)) $failed++;
+/* + every client install made on the server (2026-10-29): traverse-c<8 hex>-data beside the others; its door files are links to its edition's,
+   and only its own logs and settings are read, as for every folder */
+$clients = array_map('basename', glob($site . '/traverse-c[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-data', GLOB_ONLYDIR) ?: []);
+foreach (array_merge(FOLDERS, $clients) as $dir) if (!backupOne($site, $dir)) $failed++;
 exit($failed ? 1 : 0);
 
 function backupOne(string $site, string $dir): bool {

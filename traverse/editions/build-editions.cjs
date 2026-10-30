@@ -409,6 +409,56 @@ function api(E, name) {
     .split('SIXFOLD_BILLING').join(E.api.toUpperCase().replace(/-/g, '_') + '_BILLING');
   return s;
 }
+/* the install's API files, named for it: rounds (the API itself) and the four it requires */
+function apiFiles(E) {
+  let r = api(E, 'rounds.php');
+  r = rep(r, "const COOKIE     = 'sfr';", "const COOKIE     = '" + E.cookie + "';", 1, 'cookie');
+  r = rep(r, "const APP_DIR = 'summit-de59ae83';", "const APP_DIR = '" + E.folder + "';", 1, 'app dir');   /* the quote and sign pages' address (2026-10-27, TR-33) */
+  // the codes file's fallback beside the API (a local checkout) is named per install: public_html/api/rounds-codes.php is
+  // Sixfold's changeover copy, and an edition whose private folder was missing would otherwise sign Sixfold's codes in
+  // and share its session key (review 2026-10-06)
+  r = rep(r, "__DIR__ . '/rounds-codes.php'", "__DIR__ . '/" + E.api + "-rounds-codes.php'", 1, 'codes fallback');
+  r = rep(r, "require_once __DIR__ . '/skiptrace.php';", "require_once __DIR__ . '/" + E.api + "-skiptrace.php';", 1, 'require skiptrace');
+  r = rep(r, "require_once __DIR__ . '/webpush.php';", "require_once __DIR__ . '/" + E.api + "-webpush.php';", 1, 'require webpush');
+  r = rep(r, "require_once __DIR__ . '/sms.php';", "require_once __DIR__ . '/" + E.api + "-sms.php';", 1, 'require sms');
+  r = rep(r, "require_once __DIR__ . '/billing.php';", "require_once __DIR__ . '/" + E.api + "-billing.php';", 1, 'require billing');
+  for (const bad of ['sixfold-data', 'sixfold-private', "'sfr'"]) if (r.indexOf(bad) >= 0) throw new Error('API still names ' + bad);
+  const st = api(E, 'skiptrace.php');
+  if (st.indexOf('sixfold-private') >= 0) throw new Error('skiptrace still names sixfold-private');
+  const sm = api(E, 'sms.php'); if (sm.indexOf('sixfold-private') >= 0) throw new Error('sms still names sixfold-private');
+  const bl = api(E, 'billing.php'); if (bl.indexOf('sixfold-private') >= 0) throw new Error('billing still names sixfold-private');
+  return { rounds: r, skiptrace: st, webpush: api(E, 'webpush.php'), sms: sm, billing: bl };
+}
+
+/* ---------------------------------------------------------- client templates (2026-10-29)
+   Matthew: a company pays on the website and is using its own install within minutes, nothing manual. The server makes that install
+   itself (public_html/api/traverse-clients-lib.php, tcProvision), from its edition: these templates are the edition's page, offline worker,
+   quote and sign pages and API files, built by the same code as the edition but with placeholder names where a client install's own go.
+   The server swaps each placeholder for the client's names (tcRender) and never has to take the edition's built copy apart:
+     czzzzzzzz / CZZZZZZZZ   the client's id ('c' + 8 hex), in its API, data and private folder names, storage keys, caches, env vars
+     cqqqq                   its session cookie        qq-qqqqqq   its page folder
+   They go to traverse-shared/client-templates/<edition>/ with every deploy (traverse/ops/deploy-app.sh), which then remakes every client's
+   copies from them (traverse-tools/clients.php regen), so a fix to the app reaches every client install the moment it reaches the edition.
+   edition.json names the edition's own folders: the provisioning copies its icons and manifest and links its door data. */
+const TPL = { cid: 'czzzzzzzz', cookie: 'cqqqq', folder: 'qq-qqqqqq' };
+function clientTemplate(key) {
+  const E = EDITIONS[key];
+  const T = Object.assign({}, E, { folder: TPL.folder, api: 'traverse-' + TPL.cid, data: 'traverse-' + TPL.cid + '-data', priv: 'traverse-' + TPL.cid + '-private',
+    cookie: TPL.cookie, store: 'tv' + TPL.cid + '.', storeApp: 'tv' + TPL.cid + '.app.', idb: 'tv' + TPL.cid + '-rounds', cache: 'tv' + TPL.cid + '-' });
+  const dir = path.join('client-templates', key), pg = page(T);
+  write(path.join(dir, 'index.html'), pg);
+  write(path.join(dir, 'version.txt'), buildStamp(pg) + '\n');
+  write(path.join(dir, 'sw.js'), worker(T));
+  for (const p of ['q.html', 'sign.html']) write(path.join(dir, p), rep(fs.readFileSync(path.join(APP, p), 'utf8'), "'../api/rounds.php'", "'../api/" + T.api + "-rounds.php'", 1, p + ' api'));
+  for (const [k, s] of Object.entries(apiFiles(T))) write(path.join(dir, 'api-' + k + '.php'), s);
+  /* every placeholder must have landed, and nothing of the edition's own names may be left where a client's go */
+  const all = fs.readdirSync(path.join(OUT, dir)).map((f) => fs.readFileSync(path.join(OUT, dir, f), 'utf8')).join('\n');
+  for (const ph of [TPL.cid, TPL.cookie, TPL.folder, TPL.cid.toUpperCase()]) if (all.indexOf(ph) < 0) throw new Error(key + ' template: placeholder ' + ph + ' missing');
+  if (all.indexOf("'../api/" + E.api + "-rounds.php'") >= 0 || all.indexOf("const COOKIE     = '" + E.cookie + "'") >= 0) throw new Error(key + ' template: the edition\'s own API or cookie is left in it');
+  write(path.join(dir, 'edition.json'), JSON.stringify({ key, name: E.name, short: E.short, folder: E.folder, api: E.api, data: E.data, priv: E.priv,
+    cookie: E.cookie, placeholders: TPL, built: new Date().toISOString() }, null, 2) + '\n');
+}
+const CODE_ONLY = process.env.TRAVERSE_CODE_ONLY === '1';   /* pages, APIs and client templates only: no door data, codes, icons or packs (tests, quick deploys) */
 
 /* ------------------------------------------------------------------ one edition */
 async function build(key) {
@@ -433,27 +483,8 @@ async function build(key) {
   write(path.join(app, '.htaccess'), fs.readFileSync(path.join(APP, '.htaccess'), 'utf8')
     .replace('<IfModule mod_headers.c>', '<IfModule mod_headers.c>\nHeader set X-Robots-Tag "noindex, nofollow"'));
 
-  let r = api(E, 'rounds.php');
-  r = rep(r, "const COOKIE     = 'sfr';", "const COOKIE     = '" + E.cookie + "';", 1, 'cookie');
-  r = rep(r, "const APP_DIR = 'summit-de59ae83';", "const APP_DIR = '" + E.folder + "';", 1, 'app dir');   /* the quote and sign pages' address (2026-10-27, TR-33) */
-  // the codes file's fallback beside the API (a local checkout) is named per install: public_html/api/rounds-codes.php is
-  // Sixfold's changeover copy, and an edition whose private folder was missing would otherwise sign Sixfold's codes in
-  // and share its session key (review 2026-10-06)
-  r = rep(r, "__DIR__ . '/rounds-codes.php'", "__DIR__ . '/" + E.api + "-rounds-codes.php'", 1, 'codes fallback');
-  r = rep(r, "require_once __DIR__ . '/skiptrace.php';", "require_once __DIR__ . '/" + E.api + "-skiptrace.php';", 1, 'require skiptrace');
-  r = rep(r, "require_once __DIR__ . '/webpush.php';", "require_once __DIR__ . '/" + E.api + "-webpush.php';", 1, 'require webpush');
-  r = rep(r, "require_once __DIR__ . '/sms.php';", "require_once __DIR__ . '/" + E.api + "-sms.php';", 1, 'require sms');
-  r = rep(r, "require_once __DIR__ . '/billing.php';", "require_once __DIR__ . '/" + E.api + "-billing.php';", 1, 'require billing');
-  for (const bad of ['sixfold-data', 'sixfold-private', "'sfr'"]) if (r.indexOf(bad) >= 0) throw new Error('API still names ' + bad);
-  write(path.join('public_html', 'api', E.api + '-rounds.php'), r);
-  const st = api(E, 'skiptrace.php');
-  if (st.indexOf('sixfold-private') >= 0) throw new Error('skiptrace still names sixfold-private');
-  write(path.join('public_html', 'api', E.api + '-skiptrace.php'), st);
-  write(path.join('public_html', 'api', E.api + '-webpush.php'), api(E, 'webpush.php'));
-  const sm = api(E, 'sms.php'); if (sm.indexOf('sixfold-private') >= 0) throw new Error('sms still names sixfold-private');
-  write(path.join('public_html', 'api', E.api + '-sms.php'), sm);
-  const bl = api(E, 'billing.php'); if (bl.indexOf('sixfold-private') >= 0) throw new Error('billing still names sixfold-private');
-  write(path.join('public_html', 'api', E.api + '-billing.php'), bl);
+  for (const [k, s] of Object.entries(apiFiles(E))) write(path.join('public_html', 'api', E.api + '-' + k + '.php'), s);
+  if (CODE_ONLY) { console.log(key + ': page and API only (TRAVERSE_CODE_ONLY)'); return; }
 
   // The data: towns and the per-door layers this edition uses. Never Sixfold's own business: its company file and
   // training lessons, or the docs folder (only its funding and water sheets, for Yards, with Sixfold's review link out).
@@ -604,12 +635,12 @@ function syncSixfoldTowns() {
   console.log('Sixfold: town groups now ' + want.join(', ') + ' (as Yards)');
 }
 (async () => {
-  syncSixfoldTowns();
+  if (!CODE_ONLY) syncSixfoldTowns();
   const only = process.argv[2];
   if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar, pest, security, or c-<client> from editions/clients/)');
   fs.rmSync(path.join(OUT, 'upload', '1-extract-in-HOME-beside-public_html--traverse-data.zip'), { force: true });   // the single-edition packs of the first build
   fs.rmSync(path.join(OUT, 'upload', '4-extract-in-public_html--app-tr-cb2e8587.zip'), { force: true });
-  for (const k of only ? [only] : Object.keys(EDITIONS)) await build(k);
+  for (const k of only ? [only] : Object.keys(EDITIONS)) { await build(k); if (!EDITIONS[k].client) clientTemplate(k); }   /* + the client templates (2026-10-29) */
   tools();
 })().catch((e) => { console.error(e); process.exit(1); });
 
@@ -621,6 +652,7 @@ function tools() {
   const dir = path.join(OUT, 'traverse-tools');
   fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
   for (const f of ['push-alerts.php', 'storm-update.php', 'crm-sync.php']) fs.copyFileSync(path.join(SRC, 'tools', f), path.join(dir, f));
+  fs.copyFileSync(path.join(SRC, 'tools', 'clients-cli.php'), path.join(dir, 'clients.php'));   /* client installs made on the server (2026-10-29): regen, relink, list */
   const apis = Object.keys(EDITIONS).map((k) => EDITIONS[k].api + '-rounds.php');
   const sh = [
     '#!/bin/sh',
@@ -630,7 +662,9 @@ function tools() {
     '# Prints only when something was pushed. Add --dry-run to see what would go, to how many phones, without sending.',
     'D=$(cd "$(dirname "$0")" && pwd)',
     'PHP=${PHP:-php}',
-    'for a in ' + apis.join(' ') + '; do',
+    '# + every client install made on the server (2026-10-29): public_html/api/traverse-c<8 hex>-rounds.php',
+    'CL=$(cd "$D/../public_html/api" && ls traverse-c[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-rounds.php 2>/dev/null)',
+    'for a in ' + apis.join(' ') + ' $CL; do',
     '  [ -f "$D/../public_html/api/$a" ] || continue',
     '  "$PHP" "$D/push-alerts.php" --api="$a" "$@"',
     '  case " $* " in *" --dry-run "*) ;; *) "$PHP" "$D/crm-sync.php" --api="$a" ;; esac   # booked doors to JobNimbus, where connected (2026-10-08); never in a dry run',
