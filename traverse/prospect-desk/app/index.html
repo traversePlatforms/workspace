@@ -137,8 +137,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   'use strict';
   var API = 'api/desk.php';
   var S = { data: null, tab: 'list', f: { trade: 'all', where: 'all', reach: 'any', st: 'open', grade: 'all' }, q: '', sort: 'fit', sel: null, shown: 150,
-            em: { trade: 'all', where: 'all', fresh: true, ticks: null, tpl: 'auto', style: 'plain', shown: 200, preview: null } };
-  try { if (localStorage.getItem('desk.style') === 'map') S.em.style = 'map'; } catch (e) {}
+            em: { trade: 'all', where: 'all', fresh: true, ticks: null, tpl: 'auto', style: 'map', shown: 200, preview: null } };
+  try { var st0 = localStorage.getItem('desk.style'); if (st0 === 'map' || st0 === 'plain') S.em.style = st0; } catch (e) {}   /* With map by default (Matthew 2026-10-30); this device's own pick wins */
   var $ = function (id) { return document.getElementById(id); };
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   var main = $('main');
@@ -519,7 +519,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
         var who = em.from === 'one' ? 'this company' : em.from === 'list' && em.desc ? em.desc : listDesc({ trade: em.trade, where: em.where }, '') + (em.fresh ? ' not emailed yet' : '');
         if (!confirm('Queue ' + j.messages.length + (j.messages.length === 1 ? ' email' : ' emails') + ' to ' + who + '? Each goes on its own from ' + Q.mailbox + ', at most ' + set.cap + ' a day, starting at the next send window.')) return;
         send.disabled = true;
-        save('queue', { ids: j.messages.map(function (m) { return m.id; }), tpl: em.tpl, style: j.style || 'plain' }, null).then(function (r) { if (r && r.ok) { em.ticks = {}; em.from = null; em.preview = null; draw(); toast(r.queued + ' emails queued'); } else send.disabled = false; });
+        save('queue', { ids: j.messages.map(function (m) { return m.id; }), tpl: em.tpl, style: j.style || 'map' }, null).then(function (r) { if (r && r.ok) { em.ticks = {}; em.from = null; em.preview = null; draw(); toast(r.queued + ' emails queued'); } else send.disabled = false; });
       });
       prev.appendChild(send); prev.appendChild(why);
     }
