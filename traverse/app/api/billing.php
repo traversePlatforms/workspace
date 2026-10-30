@@ -63,6 +63,7 @@ declare(strict_types=1);
 
 const BILLING_PLANS = ['solo', 'crew', 'team'];
 const BILLING_PRICE_KEYS = ['solo', 'crew', 'team', 'crew_extra', 'team_extra', 'uplift_solo', 'uplift', 'addon'];
+const BILLING_FOUNDING_KEYS = ['solo', 'crew', 'team', 'crew_extra', 'team_extra', 'addon'];
 const BILLING_GOOD = ['active', 'trialing'];
 const BILLING_SEATS_MAX = 500;
 const BILLING_LOCK_DAYS = 3;   /* past due this long locks the install (Matthew 2026-10-29: "lock it in 3 if they reach out ill work with them") */
@@ -76,6 +77,11 @@ function billingConfigDefaults(): array {
         /* Stripe price ids, one per key and interval (traverse/ops/stripe-setup.mjs prints them): the three plans' base prices,
            the extra seat on Crew and on Team, the edition uplift (Solo's and the others'), the second edition */
         'prices' => array_fill_keys(BILLING_PRICE_KEYS, $two('', '')),
+        /* the founding prices (Matthew 2026-10-29: real Stripe prices beside each list price, lookup keys traverse_v2f_<key>_<month|year>, each part
+           round(list x 0.75), yearly = per month x 12; ids in traverse/ops/stripe-founding-prices.<test|live>.json). While founding is on, checkout
+           uses these directly and makes no coupon; a Subscription Schedule steps the subscription up to the list prices after 12 months
+           (billingFoundingSchedule). Empty = the per-checkout coupon, as before. */
+        'prices_founding' => array_fill_keys(BILLING_FOUNDING_KEYS, $two('', '')),
         /* what the Billing screen shows, US dollars per month (year = per month, billed yearly). Keep it equal to Stripe. */
         'display' => ['solo' => $two(99, 79), 'crew' => $two(249, 199), 'team' => $two(549, 449),
                       'crew_extra' => $two(45, 35), 'team_extra' => $two(39, 29),
@@ -100,7 +106,9 @@ function billingConfigDefaults(): array {
 function billingConfig(?string $apiDir = null): array {
     $apiDir = $apiDir ?? __DIR__;
     $cfg = billingConfigDefaults();
-    $priv = dirname($apiDir, 2) . '/sixfold-private/billing-config.php';
+    /* BILLING_CONFIG_FILE: the website's checkout and the client installs made on the server share one config (2026-10-29,
+       traverse-shared/clients/billing-config.php, api/traverse-clients-lib.php); an install's own API never defines it */
+    $priv = defined('BILLING_CONFIG_FILE') ? (string) BILLING_CONFIG_FILE : dirname($apiDir, 2) . '/sixfold-private/billing-config.php';
     if (is_readable($priv)) $cfg = array_replace_recursive($cfg, (array) (require $priv));
     foreach (['secret_key' => 'SIXFOLD_BILLING_KEY', 'webhook_secret' => 'SIXFOLD_BILLING_HOOK', 'install' => 'SIXFOLD_BILLING_INSTALL',
               'mock_file' => 'SIXFOLD_BILLING_MOCK'] as $k => $name) {
@@ -112,6 +120,8 @@ function billingConfig(?string $apiDir = null): array {
         if ($cfg['webhook_secret'] === '') $cfg['webhook_secret'] = 'whsec_mock';
         foreach (BILLING_PRICE_KEYS as $p) foreach (['month', 'year'] as $i)
             if (($cfg['prices'][$p][$i] ?? '') === '') $cfg['prices'][$p][$i] = 'price_mock_' . $p . '_' . $i;
+        if (getenv('SIXFOLD_BILLING_MOCK_FOUNDING') === '1' || !empty($cfg['mock_founding']))   /* the founding prices in a mock test */
+            foreach (BILLING_FOUNDING_KEYS as $p) foreach (['month', 'year'] as $i) if (($cfg['prices_founding'][$p][$i] ?? '') === '') $cfg['prices_founding'][$p][$i] = 'price_mock_f_' . $p . '_' . $i;
     }
     return $cfg;
 }
@@ -137,7 +147,57 @@ function billingLog(array $row): void {
 /** which plan, interval and add-on a Stripe price id is, from the config */
 function billingPriceOf(array $c, string $price): ?array {
     foreach ((array) $c['prices'] as $plan => $ivs) foreach ((array) $ivs as $iv => $id) if ($id !== '' && $id === $price) return [$plan, $iv];
+    foreach ((array) ($c['prices_founding'] ?? []) as $plan => $ivs) foreach ((array) $ivs as $iv => $id) if ($id !== '' && $id === $price) return [$plan, $iv, 'founding'];   /* the same plan and interval (2026-10-29) */
     return null;
+}
+/** the founding price for a key and interval, or '' (no founding prices configured: the coupon path) */
+function billingFoundingPrice(array $c, string $key, string $iv): string { return (string) ($c['prices_founding'][$key][$iv] ?? ''); }
+/** founding by real prices: on, and every founding price this pick needs is set */
+function billingFoundingByPrice(array $c, string $plan, string $iv, bool $extra, bool $addon): bool {
+    if (!billingFoundingOn($c) || billingFoundingPrice($c, $plan, $iv) === '') return false;
+    if ($extra && billingFoundingPrice($c, $plan . '_extra', $iv) === '') return false;
+    return !$addon || billingFoundingPrice($c, 'addon', $iv) !== '';
+}
+/**
+ * The step-up from the founding prices to the list prices (Matthew 2026-10-29; the agreement: 25% off for the first 12 months, then the list price,
+ * locked in): a Subscription Schedule made from the subscription. Phase 1 = the founding prices as they are, 12 months (12 monthly bills or one
+ * yearly bill); phase 2 = the matching list prices, no end (released to a plain subscription after it starts). Run when Stripe reports the
+ * checkout complete; safe to run again (a subscription that already has a schedule is left alone). Returns ['schedule' => id] or ['error'].
+ */
+function billingFoundingSchedule(array $c, string $subId): array {
+    if ($subId === '') return ['error' => 'no subscription'];
+    $sub = stripeCall($c, 'GET', '/v1/subscriptions/' . rawurlencode($subId));
+    if (isset($sub['error'])) return $sub;
+    $sid = !empty($sub['schedule']) ? (is_array($sub['schedule']) ? (string) ($sub['schedule']['id'] ?? '') : (string) $sub['schedule']) : '';
+    $s = [];
+    if ($sid !== '') {   /* already scheduled: done if it has its two steps; one left half made (a refused update) is set again below */
+        $s = stripeCall($c, 'GET', '/v1/subscription_schedules/' . rawurlencode($sid));
+        if (count((array) ($s['phases'] ?? [])) >= 2) return ['schedule' => $sid, 'again' => true];
+    }
+    $items = []; $list = []; $any = false;
+    foreach ((array) ($sub['items']['data'] ?? []) as $it) {
+        $pid = (string) ($it['price']['id'] ?? ''); $p = billingPriceOf($c, $pid); $qty = (int) ($it['quantity'] ?? 1);
+        if (!$p) return ['error' => 'a price on the subscription is not one of ours: ' . $pid];
+        $items[] = ['price' => $pid, 'quantity' => $qty];
+        $lp = (string) ($c['prices'][$p[0]][$p[1]] ?? ''); if ($lp === '') return ['error' => 'no list price for ' . $p[0] . ' ' . $p[1]];
+        $list[] = ['price' => $lp, 'quantity' => $qty]; if (($p[2] ?? '') === 'founding') $any = true;
+    }
+    if (!$any) return ['error' => 'not on founding prices'];
+    if (!empty($c['mock_file'])) { $sid = $sid ?: 'sub_sched_mock_' . substr(md5($subId), 0, 8); stripeCall($c, 'POST', '/v1/subscription_schedules', ['from_subscription' => $subId]); }
+    elseif ($sid === '') {
+        $s = stripeCall($c, 'POST', '/v1/subscription_schedules', ['from_subscription' => $subId]);
+        if (isset($s['error']) || empty($s['id'])) return ['error' => $s['error'] ?? 'Stripe made no schedule.'];
+        $sid = (string) $s['id'];
+    }
+    /* phase 1 ends 12 months after it began (an end date: Stripe's newer API versions dropped "iterations") */
+    $start = (int) ($s['phases'][0]['start_date'] ?? ($sub['start_date'] ?? ($sub['current_period_start'] ?? ($sub['items']['data'][0]['current_period_start'] ?? time()))));
+    $end = (new DateTimeImmutable('@' . $start))->modify('+12 months')->getTimestamp();
+    $f = ['end_behavior' => 'release', 'proration_behavior' => 'none',
+          'phases' => [['items' => $items, 'start_date' => $start, 'end_date' => $end, 'proration_behavior' => 'none', 'metadata' => ['step' => 'founding']],
+                       ['items' => $list, 'proration_behavior' => 'none', 'metadata' => ['step' => 'list price']]]];
+    $u = stripeCall($c, 'POST', '/v1/subscription_schedules/' . rawurlencode($sid), $f);
+    if (isset($u['error'])) return ['error' => 'schedule made but not set: ' . $u['error']];
+    return ['schedule' => $sid];
 }
 /** one Stripe API call: form-encoded, Bearer key. Returns the decoded answer, or ['error' => message] */
 function stripeCall(array $c, string $method, string $path, array $fields = []): array {
@@ -145,6 +205,7 @@ function stripeCall(array $c, string $method, string $path, array $fields = []):
         @file_put_contents($c['mock_file'] . '.requests.log', json_encode(['method' => $method, 'path' => $path, 'fields' => $fields], JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
         $canned = json_decode((string) @file_get_contents($c['mock_file']), true) ?: [];
         if (!empty($canned['fail'])) return ['error' => (string) $canned['fail']];
+        if ($method === 'GET' && is_array($canned['get'][$path] ?? null)) return $canned['get'][$path];   /* a canned object, e.g. a subscription (2026-10-29) */
         if ($path === '/v1/checkout/sessions') return ['id' => 'cs_mock_' . bin2hex(random_bytes(6)), 'url' => 'https://checkout.stripe.test/c/pay/mock'];
         if ($path === '/v1/billing_portal/sessions') return ['id' => 'bps_mock', 'url' => 'https://billing.stripe.test/p/session/mock'];
         return ['id' => 'mock'];
@@ -368,6 +429,9 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if ($seats < 1 || $seats > BILLING_SEATS_MAX) return ['error' => 'People: 1 to ' . BILLING_SEATS_MAX . '.'];
     $inc = (int) ($c['included'][$plan] ?? 1);
     if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one admin and one worker. Crew covers up to ' . (int) $c['included']['crew'] . ' workers.'];
+    /* founding by real prices (2026-10-29): the founding price ids in place of the list ones, no coupon; the schedule steps up after 12 months */
+    $byPrice = billingFoundingByPrice($c, $plan, $iv, $seats > $inc, $addon) && !billingUplift($c);
+    if ($byPrice) { $c['prices'] = array_replace_recursive($c['prices'], array_map(fn($ivs) => array_filter((array) $ivs), array_intersect_key((array) $c['prices_founding'], array_flip(BILLING_FOUNDING_KEYS)))); $price = (string) $c['prices'][$plan][$iv]; }
     $f = ['mode' => 'subscription', 'client_reference_id' => $c['install'],
           'success_url' => $back . (str_contains($back, '?') ? '&' : '?') . 'billing=done',
           'cancel_url' => $back . (str_contains($back, '?') ? '&' : '?') . 'billing=cancel',
@@ -389,7 +453,8 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     /* no trial (2026-10-27): the card is charged at checkout; the money-back guarantee covers the first days instead */
     /* Stripe takes a coupon or a promotion-code box, not both. The founding coupon is made per checkout by billingFoundingCoupon()
        (the caller runs it before opening Checkout): what it takes off depends on the plan, people and add-ons picked. */
-    if (billingFoundingOn($c)) $f['_founding'] = [$plan, $iv, max($seats, $inc), $addon];
+    if ($byPrice) { $f['metadata']['founding'] = '1'; $f['subscription_data']['metadata']['founding'] = '1'; }   /* the founding prices are on the lines (2026-10-29) */
+    elseif (billingFoundingOn($c)) $f['_founding'] = [$plan, $iv, max($seats, $inc), $addon];
     else $f['allow_promotion_codes'] = 'true';
     return ['fields' => $f];
 }
@@ -402,6 +467,7 @@ function billingTakeEvent(array $c, array $ev): string {
         if (($o['client_reference_id'] ?? null) === $c['install']) return true;
         if (($o['metadata']['install'] ?? null) === $c['install']) return true;
         if (($o['subscription_details']['metadata']['install'] ?? null) === $c['install']) return true;
+        if (($o['parent']['subscription_details']['metadata']['install'] ?? null) === $c['install']) return true;   /* invoices on Stripe API versions from 2025 (2026-10-29) */
         return !empty($b['customer']) && ($o['customer'] ?? null) === $b['customer'];
     };
     if (!$ours($o)) return '';

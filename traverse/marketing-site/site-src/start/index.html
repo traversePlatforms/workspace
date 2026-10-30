@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Start Traverse</title>
+<meta name="description" content="Pick your trade and plan, pay, and your company's Traverse app opens.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<!-- The website's checkout (2026-10-29, Matthew: a company pays on the Traverse website and is using its own Traverse within minutes; demo-led
+     clients get the same page as a link after the demo). Prices come from api/traverse-start.php?action=plans: billing.php's own numbers and
+     founding rule, the same an install's Billing screen shows, so nothing here can drift from what Stripe charges. Deep links:
+     ?edition=roofing&plan=crew&iv=year&people=7 (any of them). -->
+<style>
+:root{--ink:#0f1b2d;--soft:#566476;--line:#dce2ea;--bg:#f4f6f9;--card:#ffffff;--navy:#13294b;--flag:#d6400c;--flag-ink:#b83608;--go:#1f7a4d;--strike:#8a96a6}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#e8edf5;--soft:#9aa8bc;--line:#24324a;--bg:#0b1220;--card:#131d2e;--navy:#dce6f5;--flag:#ff7a45;--flag-ink:#ff9b70;--go:#6fcf9b;--strike:#6c7a90}}
+:root[data-theme="dark"]{--ink:#e8edf5;--soft:#9aa8bc;--line:#24324a;--bg:#0b1220;--card:#131d2e;--navy:#dce6f5;--flag:#ff7a45;--flag-ink:#ff9b70;--go:#6fcf9b;--strike:#6c7a90}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--navy)}a:hover{color:var(--flag)}
+header{background:var(--card);border-bottom:1px solid var(--line)}
+.hin{max-width:1080px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:"Familjen Grotesk",sans-serif;font-size:21px;letter-spacing:-.02em}
+.brand b{font-weight:700}.brand span{font-weight:500}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:28px;align-items:start}
+h1{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:40px;line-height:1.05;letter-spacing:-.02em;margin:0 0 8px}
+.lead{color:var(--soft);margin:0 0 26px;max-width:60ch}
+h2{font-family:"Familjen Grotesk",sans-serif;font-size:20px;margin:28px 0 10px;display:flex;align-items:center;gap:10px}
+h2 .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:var(--bg);font-size:14px;font-family:"JetBrains Mono",monospace}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{font:inherit;font-size:15px;font-weight:700;padding:10px 16px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;min-height:44px}
+.seg button[aria-pressed=true]{border-color:var(--navy);background:var(--navy);color:var(--bg)}
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.plan{font:inherit;text-align:left;border:1.5px solid var(--line);border-radius:16px;padding:16px;background:var(--card);color:var(--ink);cursor:pointer;display:grid;gap:4px;min-width:0}
+.plan[aria-pressed=true]{border-color:var(--flag);box-shadow:0 0 0 3px color-mix(in srgb,var(--flag) 22%,transparent)}
+.plan b{font-family:"Familjen Grotesk",sans-serif;font-size:20px}.plan .who{font-size:14px;color:var(--soft)}
+.plan .pr{white-space:nowrap;font-family:"Familjen Grotesk",sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em}.plan .pr small{font-size:14px;font-weight:400;color:var(--soft)}
+.plan s,.sum s{color:var(--strike);font-weight:700}
+.people{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.step{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.step button{font:inherit;font-size:22px;width:48px;height:48px;border:0;background:transparent;color:var(--ink);cursor:pointer}.step button:disabled{opacity:.35;cursor:default}
+.step input{width:64px;height:48px;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);text-align:center;font:700 18px "JetBrains Mono",monospace;background:transparent;color:var(--ink)}
+.hint{font-size:14px;color:var(--soft)}
+.agree{display:flex;gap:12px;align-items:flex-start;margin-top:8px;font-size:15px}.agree input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--flag)}
+aside{position:sticky;top:16px}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:10px}
+.sum .tag{justify-self:start;font:700 12px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--flag-ink);border:1.5px dashed var(--flag-ink);border-radius:999px;padding:4px 10px}
+.sum .big{font-family:"Familjen Grotesk",sans-serif;font-size:44px;font-weight:700;letter-spacing:-.02em;line-height:1}.sum .big small{font-size:16px;font-weight:400;color:var(--soft)}
+.sum dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:15px}.sum dt{color:var(--soft)}.sum dd{margin:0;text-align:right;font-family:"JetBrains Mono",monospace}
+.sum hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.pay{font:inherit;font-weight:700;font-size:17px;min-height:52px;border:0;border-radius:12px;background:var(--flag);color:#fff;cursor:pointer;width:100%}
+.pay:disabled{opacity:.5;cursor:default}
+.err{color:#b42318;font-size:15px;min-height:1em}@media (prefers-color-scheme: dark){.err{color:#f0786a}}
+.small{font-size:13px;color:var(--soft)}
+.note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;color:var(--soft)}
+@media (max-width:880px){main{grid-template-columns:minmax(0,1fr)}aside{position:static}.plans{grid-template-columns:minmax(0,1fr)}h1{font-size:32px}}
+</style>
+</head>
+<body>
+<header><div class="hin">
+  <a class="brand" href="../"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"/><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="53" cy="17" r="8" fill="#d6400c"/></g></svg><span><b>Traverse</b> <span>Platforms</span></span></a>
+  <a href="../demo/" class="small">Rather talk first? Book a demo</a>
+</div></header>
+<main>
+  <section>
+    <h1>Start your Traverse</h1>
+    <p class="lead">Pick your trade and plan and pay securely with Stripe. Your company's app opens straight after, with your homes and a short checklist to bring your team in.</p>
+    <div id="closed" class="note" hidden></div>
+    <div id="form">
+      <h2><span class="n">1</span>Your trade</h2>
+      <div class="seg" id="eds" role="group" aria-label="Trade"></div>
+      <h2><span class="n">2</span>Your plan</h2>
+      <div class="seg" id="ivs" role="group" aria-label="Billing">
+        <button type="button" data-iv="year">Yearly (save about 20%)</button><button type="button" data-iv="month">Monthly</button>
+      </div>
+      <div class="plans" id="plans" style="margin-top:12px"></div>
+      <h2><span class="n">3</span>Your people</h2>
+      <div class="people">
+        <div class="step"><button type="button" id="minus" aria-label="Fewer people">−</button><input id="people" type="number" inputmode="numeric" min="1" aria-label="People besides you"><button type="button" id="plus" aria-label="More people">+</button></div>
+        <span class="hint" id="phint"></span>
+      </div>
+      <h2><span class="n">4</span>The terms</h2>
+      <label class="agree"><input type="checkbox" id="agree"><span>I agree to the <a href="../terms-of-use/" target="_blank" rel="noopener">Terms of Use</a> and the <a href="../terms/" target="_blank" rel="noopener">Subscription Agreement</a> for my company, and I can sign for it.</span></label>
+    </div>
+  </section>
+  <aside>
+    <div class="sum" id="sum" aria-live="polite">
+      <span class="tag" id="ftag">Founding price</span>
+      <div id="sumname" style="font-family:'Familjen Grotesk',sans-serif;font-size:20px;font-weight:700"></div>
+      <div><s id="slist"></s> <span class="big" id="sbig"></span></div>
+      <dl id="sdl"></dl>
+      <hr>
+      <dl><dt>Due today</dt><dd id="sdue" style="font-weight:700"></dd></dl>
+      <div class="small" id="sfine"></div>
+      <div class="err" id="err" role="alert"></div>
+      <button class="pay" id="pay" type="button" disabled>Continue to secure payment</button>
+      <div class="small">Card details go to Stripe, never to us. <span id="sguar"></span></div>
+    </div>
+  </aside>
+</main>
+<script>
+(function () {
+  var API = '../api/traverse-start.php';
+  var $ = function (id) { return document.getElementById(id); };
+  var Q = new URLSearchParams(location.search);
+  var P = null, st = { edition: Q.get('edition') || '', plan: Q.get('plan') || 'crew', iv: Q.get('iv') === 'month' ? 'month' : 'year', people: parseInt(Q.get('people') || '0', 10) || 0 };
+  var NAMES = { solo: ['Solo', 'One person working their own doors.'], crew: ['Crew', 'The app on every phone in the crew.'], team: ['Team', 'Bigger teams with managers.'] };
+  var money = function (n) { return '$' + Number(n).toLocaleString('en-US'); };
+  function btn(label, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(!!on)); b.addEventListener('click', fn); return b; }
+  function row(dl, a, b) { var t = document.createElement('dt'), d = document.createElement('dd'); t.textContent = a; d.textContent = b; dl.appendChild(t); dl.appendChild(d); }
+  function cur() { return P.plans[st.plan] && P.plans[st.plan][st.iv]; }
+  function draw() {
+    var eds = $('eds'); eds.textContent = '';
+    P.editions.forEach(function (e) { eds.appendChild(btn(e.name.replace('Traverse', ''), st.edition === e.key, function () { st.edition = e.key; draw(); })); });
+    [].forEach.call($('ivs').children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-iv') === st.iv)); });
+    var pl = $('plans'); pl.textContent = '';
+    Object.keys(NAMES).forEach(function (k) {
+      var x = P.plans[k] && P.plans[k][st.iv]; if (!x) return;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'plan'; b.setAttribute('aria-pressed', String(st.plan === k)); b.setAttribute('data-plan', k);
+      b.innerHTML = '<b></b><span class="who"></span><span class="pr"></span><span class="who inc"></span>';
+      b.children[0].textContent = NAMES[k][0]; b.children[1].textContent = NAMES[k][1];
+      b.children[2].innerHTML = (P.founding && x.list !== x.price ? '<s>' + money(x.list) + '</s> ' : '') + money(x.price) + ' <small>/ month</small>';
+      b.children[3].textContent = 'Admin + ' + (k === 'solo' ? '1 person' : 'up to ' + x.included + ' people') + (x.extra ? ', then ' + money(x.extra) + ' each' : '');
+      b.addEventListener('click', function () { st.plan = k; st.people = Math.max(st.people, 0); draw(); });
+      pl.appendChild(b);
+    });
+    var x = cur(); if (!x) return;
+    var inc = x.included, max = st.plan === 'solo' ? 1 : P.seatsMax;
+    if (!st.people || st.people < inc) st.people = st.plan === 'solo' ? 1 : Math.max(st.people || inc, inc);
+    st.people = Math.min(st.people, max);
+    $('people').value = st.people; $('minus').disabled = st.people <= inc; $('plus').disabled = st.people >= max;
+    var extra = Math.max(0, st.people - inc);
+    $('phint').textContent = st.plan === 'solo' ? 'Solo is you (the admin) and one person. More people: pick Crew.' : 'Besides you (the admin, always free). ' + inc + ' included' + (extra ? ', ' + extra + ' extra at ' + money(x.extra) + ' each' : '') + '.';
+    var tot = x.price + extra * x.extra, list = x.list + extra * x.extraList;
+    var ed = P.editions.filter(function (e) { return e.key === st.edition; })[0];
+    $('sumname').textContent = (ed ? ed.name : 'Traverse') + ' · ' + NAMES[st.plan][0] + (st.iv === 'year' ? ', yearly' : ', monthly');
+    $('ftag').hidden = !P.founding;
+    $('slist').textContent = P.founding && list !== tot ? money(list) : '';
+    $('sbig').innerHTML = money(tot) + ' <small>/ month</small>';
+    var dl = $('sdl'); dl.textContent = '';
+    row(dl, NAMES[st.plan][0] + ' (admin + ' + inc + ')', money(x.price) + '/mo');
+    if (extra) row(dl, extra + ' extra ' + (extra === 1 ? 'person' : 'people') + ' × ' + money(x.extra), money(extra * x.extra) + '/mo');
+    $('sdue').textContent = money(st.iv === 'year' ? tot * 12 : tot) + (st.iv === 'year' ? ' for the year' : ' for the month');
+    $('sfine').textContent = (P.founding ? P.foundingPct + '% off your first 12 months, then ' + money(list) + ' a month, locked in for as long as you stay. ' : '') + (st.iv === 'year' ? 'Billed yearly.' : 'Month to month, cancel any time.');
+    $('sguar').textContent = P.guaranteeDays ? P.guaranteeDays + '-day money-back guarantee.' : '';
+    $('pay').disabled = !(st.edition && $('agree').checked);
+    $('pay').textContent = !st.edition ? 'Pick your trade first' : !$('agree').checked ? 'Tick the terms to continue' : 'Continue to secure payment';
+    try { history.replaceState(null, '', '?' + new URLSearchParams({ edition: st.edition, plan: st.plan, iv: st.iv, people: String(st.people) }).toString()); } catch (e) {}
+  }
+  [].forEach.call($('ivs').children, function (b) { b.addEventListener('click', function () { st.iv = b.getAttribute('data-iv'); draw(); }); });
+  $('minus').addEventListener('click', function () { st.people--; draw(); });
+  $('plus').addEventListener('click', function () { st.people++; draw(); });
+  $('people').addEventListener('change', function () { st.people = parseInt($('people').value, 10) || 0; draw(); });
+  $('agree').addEventListener('change', draw);
+  $('pay').addEventListener('click', function () {
+    var b = $('pay'); b.disabled = true; b.textContent = 'Opening Stripe…'; $('err').textContent = '';
+    fetch(API + '?action=checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ edition: st.edition, plan: st.plan, iv: st.iv, seats: st.people, agree: $('agree').checked, terms: P.terms, agreement: P.agreement }) })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        if (j.ok && j.url) { location.href = j.url; return; }
+        $('err').textContent = j.error || 'That did not work. Try again.'; draw();
+      }).catch(function () { $('err').textContent = 'No connection. Try again.'; draw(); });
+  });
+  if (Q.get('back')) $('err').textContent = 'No payment was taken. Pick up where you left off.';
+  fetch(API + '?action=plans').then(function (r) { return r.json(); }).then(function (j) {
+    if (!j.ok) { $('form').hidden = true; $('sum').hidden = true; $('closed').hidden = false; $('closed').textContent = j.error || 'Sign-up is not open yet.'; return; }
+    P = j; if (!P.plans[st.plan]) st.plan = 'crew';
+    if (!P.editions.some(function (e) { return e.key === st.edition; })) st.edition = '';
+    draw();
+  }).catch(function () { $('closed').hidden = false; $('closed').textContent = 'The prices did not load. Reload the page.'; });
+})();
+</script>
+</body>
+</html>

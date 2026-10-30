@@ -7,7 +7,7 @@ set -e
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
 MODE="${1:-open}"
 if [ "$MODE" = "undo" ]; then
-  $SG 'cd $HOME/www/traverseplatforms.com/public_html && B=$(ls -d $HOME/upload-backups/open-site-* 2>/dev/null | tail -1) && [ -n "$B" ] && tar xzf $B/before.tgz && rm -f robots.txt sitemap.xml && [ -f $B/had-robots ] && cp $B/robots.txt . ; chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots -type f -exec chmod 600 {} \; ; site-tools-client domain-all update id=traverseplatforms.com flush_cache=1 | grep -o "msg=OK"; echo "undone from $B"'
+  $SG 'cd $HOME/www/traverseplatforms.com/public_html && B=$(ls -d $HOME/upload-backups/open-site-* 2>/dev/null | tail -1) && [ -n "$B" ] && tar xzf $B/before.tgz && rm -f robots.txt sitemap.xml && [ -f $B/had-robots ] && cp $B/robots.txt . ; chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots $(ls -d start 2>/dev/null) -type f -exec chmod 600 {} \; ; site-tools-client domain-all update id=traverseplatforms.com flush_cache=1 | grep -o "msg=OK"; echo "undone from $B"'
   exit 0
 fi
 read -r -d '' REMOTE <<'EOS' || true
@@ -28,7 +28,7 @@ for p in $PAGES; do php -r '$f=$argv[1]; $h=file_get_contents($f); $n=str_replac
 printf 'User-agent: *\nAllow: /\nSitemap: https://traverseplatforms.com/sitemap.xml\n' > robots.txt
 D=$(date +%Y-%m-%d); { echo '<?xml version="1.0" encoding="UTF-8"?>'; echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
   for u in "" demo/ editions/ privacy/ terms/ terms-of-use/ cancellation/; do echo "  <url><loc>https://traverseplatforms.com/$u</loc><lastmod>$D</lastmod></url>"; done; echo '</urlset>'; } > sitemap.xml
-chmod 600 index.html robots.txt sitemap.xml; find demo editions privacy terms terms-of-use cancellation shots -type f -exec chmod 600 {} \;   # no-cache from Apache, not the front server's six-month copy
+chmod 600 index.html robots.txt sitemap.xml; find demo editions privacy terms terms-of-use cancellation shots $(ls -d start 2>/dev/null) -type f -exec chmod 600 {} \;   # no-cache from Apache, not the front server's six-month copy
 site-tools-client domain-all update id=traverseplatforms.com flush_cache=1 | grep -o "msg=OK" | sed 's/^/cache flush /'
 echo "backup: $B"
 EOS

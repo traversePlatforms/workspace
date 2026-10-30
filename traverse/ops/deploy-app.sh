@@ -24,6 +24,16 @@ for f in rounds.php billing.php square-oauth.php webpush.php; do cp_if "$R/app/a
 EDS="tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7"
 for e in $EDS; do for f in index.html version.txt q.html sign.html sw.js es.json; do cp_if "$D/$e/$f" "$e"; done; done
 for a in traverse traverse-yards traverse-solar traverse-pest traverse-security; do for k in rounds billing sms webpush; do cp_if "$D/api/$a-$k.php" api; done; done
+# the website's checkout, the central Stripe webhook and the client-install library (2026-10-29; the shared billing.php above is theirs too)
+for f in traverse-clients-lib.php traverse-start.php traverse-hook.php; do cp_if "$R/app/api/$f" api; done
+# client installs made on the server (2026-10-29): each edition's client template goes to traverse-shared/client-templates/, and
+# traverse-tools/clients.php with it; after the upload every client's page and API is remade from them (clients.php regen), so client
+# installs get each deploy exactly when the editions do. Staged apart: they unpack beside public_html, not in it.
+SH="$(mktemp -d)"; trap 'rm -rf "$ST" "$SH"' EXIT
+TPL="$R/editions/dist/client-templates"
+for e in roofing yards solar pest security; do [ -s "$TPL/$e/edition.json" ] || { echo "MISSING $TPL/$e: run build-editions.cjs first"; exit 1; }; done
+mkdir -p "$SH/traverse-shared" "$SH/traverse-tools"; cp -r "$TPL" "$SH/traverse-shared/"; cp "$R/editions/dist/traverse-tools/clients.php" "$SH/traverse-tools/"
+for f in $(find "$SH" -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
 cd "$ST" || exit 1
 for f in $(find api -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
 find . -type f | sed 's#^\./##' | sort > files.txt
@@ -38,6 +48,12 @@ fi
 base64 -w0 files.txt | $SG "cd ~/www/traverseplatforms.com/public_html && base64 -d > /tmp/dl-$STAMP.txt && tar czf ~/upload-backups/before-$LABEL-$STAMP.tgz \$(while read f; do [ -f \"\$f\" ] && echo \"\$f\"; done < /tmp/dl-$STAMP.txt) && rm -f /tmp/dl-$STAMP.txt && echo backed-up" || { echo "backup FAILED"; exit 1; }
 cat pkg.tgz | $SG "~/bin/safe-extract.sh ~/www/traverseplatforms.com/public_html -" | sed 's/ \*/  /' | sort -k2 > placed.md5 || { echo "upload FAILED"; exit 1; }
 if diff -q local.md5 placed.md5 > /dev/null; then echo "MD5 MATCH ($N)"; else echo "MD5 MISMATCH"; diff local.md5 placed.md5 | head; exit 1; fi
+# the client templates and clients.php, then every client install remade from them (2026-10-29)
+( cd "$SH" && find . -type f | sed 's#^\./##' | sort > ../sh-files.txt && while IFS= read -r f; do md5sum "$f"; done < ../sh-files.txt | sed 's/ \*/  /' | sort -k2 > ../sh-local.md5 && tar czf ../sh.tgz -T ../sh-files.txt )
+cat "$SH/../sh.tgz" | $SG "~/bin/safe-extract.sh ~/www/traverseplatforms.com -" | sed 's/ \*/  /' | sort -k2 > sh-placed.md5 || { echo "template upload FAILED"; exit 1; }
+if diff -q "$SH/../sh-local.md5" sh-placed.md5 > /dev/null; then echo "templates MD5 MATCH ($(wc -l < sh-placed.md5))"; else echo "templates MD5 MISMATCH"; exit 1; fi
+rm -f "$SH/../sh.tgz" "$SH/../sh-files.txt" "$SH/../sh-local.md5"
+$SG "cd ~/www/traverseplatforms.com && php traverse-tools/clients.php regen && { php traverse-tools/clients.php check || echo '  (check: see above; the shared config waits for clients.php setup)'; }" < /dev/null || { echo "client regen FAILED"; exit 1; }
 bad=0
 for p in summit-de59ae83 $EDS; do
   [ -f "$p/version.txt" ] || continue
