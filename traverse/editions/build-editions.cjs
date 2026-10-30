@@ -82,7 +82,7 @@ const EDITIONS = {
     }
   },
   yards: {
-    name: 'Traverse Lawn & Landscape', short: 'Lawn & Landscape', folder: 'ty-25604fff',   /* what customers read (Matthew 2026-10-30: Yards is "Lawn & Landscape"); the key, folder and files keep yards */
+    name: 'Traverse Lawn & Landscape', short: 'Lawn & Yard',   /* fits a phone's home-screen label (Matthew 2026-10-30: 'use lawn and yard') */ folder: 'ty-25604fff',   /* what customers read (Matthew 2026-10-30: Yards is "Lawn & Landscape"); the key, folder and files keep yards */
     api: 'traverse-yards', data: 'traverse-yards-data', priv: 'traverse-yards-private', cookie: 'tvy',
     store: 'tvyards.', storeApp: 'tvyards.app.', idb: 'tvyards-rounds', cache: 'tvyards-',
     blurb: 'Doors, phones and appointments for lawn and yard crews.',

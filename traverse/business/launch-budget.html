@@ -173,6 +173,7 @@ button.reset{font:inherit;font-size:13px;background:transparent;color:var(--mute
     twilio: ['Twilio 10DLC registration and SMS prices (comparison of Twilio fees)', 'https://readysms.io/blog/10dlc-registration-cost', 'cmp'],
     twilio1: ['Twilio A2P 10DLC', 'https://www.twilio.com/en-us/phone-numbers/a2p-10dlc', 'off'],
     stripe: ['Stripe pricing', 'https://stripe.com/pricing', 'off'],
+    anth: ['Anthropic API pricing (Claude Sonnet 5.5)', 'https://www.anthropic.com/pricing', 'off'],
     tax: ['PwC: Colorado expands sales tax to software (HB 26-1223)', 'https://www.pwc.com/us/en/services/tax/library/colorado-expands-sales-and-use-tax-to-software-remote-access.html', 'cmp'],
     ftc: ['FTC: 2027 Do Not Call registry fees', 'https://www.ftc.gov/news-events/news/press-releases/2026/08/ftc-announces-2027-telemarketer-fees-access-national-do-not-call-registry', 'off']
   };
@@ -202,6 +203,8 @@ button.reset{font:inherit;font-size:13px;background:transparent;color:var(--mute
     { id: 'mail', sec: 'mo', name: 'Company email', note: 'SiteGround includes email with hosting. Google Workspace Starter is $7 per person a month.', src: 'gw', on: true,
       ctl: { type: 'pick', opts: [['sg', 'SiteGround email (included)'], ['gw1', 'Google Workspace, 1 person'], ['gw2', 'Google Workspace, 2 people'], ['gw3', 'Google Workspace, 3 people']], def: 'sg' },
       calc: function (v) { var n = { sg: 0, gw1: 1, gw2: 2, gw3: 3 }[v.k] || 0; return { mo: 7 * n }; } },
+    { id: 'claude', sec: 'mo', name: 'Claude for clients’ price-list imports', note: 'Grows with clients (Matthew 30 Oct: pennies now, but it builds up). Each import of a price list costs about 3 to 8 cents (a 30-page PDF about 35 cents), on your Anthropic account. Capped at  a month and 10 imports a day per client. Estimate here: about 30 cents per client a month. Revisit a cheaper model or passing it on as clients grow.', src: 'anth', on: true,
+      ctl: { type: 'count', label: 'Clients', min: 0, max: 500, def: 10 }, calc: function (v) { return { mo: +(0.30 * v.n).toFixed(2) }; } },
 
     { id: 'ins', sec: 'yr', name: 'Insurance: tech errors and omissions, with cyber cover', note: 'Average for app developers is about $68 a month ($810 a year). Traverse holds owners’ names and addresses, so treat it as a must-have. Replace with your quote.', src: 'ins', on: true,
       ctl: { type: 'money', label: 'Per year $', def: 810 }, calc: function (v) { return { yr: v.n }; } },

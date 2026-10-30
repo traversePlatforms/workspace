@@ -1237,6 +1237,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 
 - [ ] **TR-43 — Join the Microsoft AI Cloud Partner Program (ON MATTHEW'S LIST, 30 Oct).** Free. Sign up at partner.microsoft.com with m.sharpe@traverseplatforms.com as Traverse Platforms LLC (have the EIN and formation details ready; Microsoft checks the business, can take a few days). It gives the Partner ID (MPN ID) that TR-42 needs for the verified-publisher badge.
 
+- [ ] **TR-44 — Watch the Claude cost of clients' price-list imports (Matthew 30 Oct: "its pennys now but it builds up with the more users ... We may need to look into a cheaper option overtime").** Imports run on Matthew's Anthropic key (traverse-shared/claude.json, claude-sonnet-5-5), about 3-8 cents each, capped $5/month and 10/day per client; counted in traverse/business/launch-budget.html (Monthly overhead, ~30 cents per client). Revisit at ~50 clients: a cheaper model (Haiku 5.5) for simple spreadsheets, caching, or a client-paid add-on. Usage log: each install's import log.
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now

@@ -12928,7 +12928,7 @@ function prcStarterClauses(string $t): array {
         $C('change', 'Changes to the work', 'Any change to the work or the price is agreed with you in writing before we do it.'),
         $C('weather', 'Weather', 'If the weather stops us, we will contact you to move the day.'),
         $C('resched', 'Rescheduling', 'To reschedule, call or text {phone} at least 24 hours before your day.'),
-        $C('cancel3', 'Your right to cancel', 'You, the buyer, may cancel this transaction at any time prior to midnight of the third business day after the date of this transaction. To cancel, call or text {phone} or email {email}, or write to us at our address.'),
+        $C('cancel3', 'Your right to cancel', 'You, the buyer, may cancel this transaction at any time prior to midnight of the third business day after the date of this transaction. To cancel, call or text {phone} or email {email}, or write to us at our address.', false),   /* off by default (Matthew 2026-10-30: 'we are not their lawyers'; their window may be longer): the company switches it on */
         $C('warranty', 'Warranty', 'We stand behind our workmanship for [number] year(s) from the day the work is done. Manufacturer warranties on materials are passed on to you.', false),
         $C('permits', 'Permits', 'We pull any permit the work needs. Its cost is included in the price unless the quote shows it on its own line.', $t === 'roof' || $t === 'solar'),
         $C('cleanup', 'Clean-up', 'We clean up and take away the waste from our work before we leave.'),
