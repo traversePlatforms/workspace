@@ -2370,6 +2370,12 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE')
     $session = ['n' => 'Command line', 'r' => (string) SIXFOLD_WARM_ROLE, 'c' => ''];
 }
 /* "Mark live" (Release to client since 2026-10-29) from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, the guarantee starts */
+/* the weekly fuel prices (2026-10-30, the fuel cost; see prcFuel): tools/fuel-prices.php, started by the hourly morning email, asks EIA when
+   a new week is due (force=1: now, at most every 10 minutes). The copy is shared by every install on the host, so one install asks. */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fuelcron') {
+    $fc = fuelRefresh(($_GET['force'] ?? '') === '1');
+    out(['ok' => true, 'asked' => $fc['asked'], 'err' => (string) ($fc['err'] ?? ''), 'newest' => fuelNewest($fc), 'gas' => fuelNow(['type' => 'gas']), 'diesel' => fuelNow(['type' => 'diesel'])]);
+}
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli') {
     $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
     $b = billingLoad();
@@ -3629,7 +3635,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3799,7 +3805,7 @@ function permCat(): array {
         'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
-        'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback']],
+        'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],
     ];
     return $c;
 }
@@ -3910,7 +3916,7 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth',
     'importcheck', 'importrun', 'imports', 'importundo', 'costs', 'costsapply', 'costsset',
-    'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback',   /* smart prices and terms (2026-10-30) */
+    'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel',   /* smart prices and terms (2026-10-30); + the fuel cost's prices */
     'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
     'perms', 'permset'];   /* + Roles and permissions, part of Accounts (2026-10-29) */
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
@@ -12909,7 +12915,7 @@ function prcStarter(string $t): array {
     $x = $lists[$t] ?? [[$L('j1', 'The job', 'flat', 0, $all)], [], [], 0];
     return ['lines' => $x[0], 'tiers' => ['on' => true, 'pick' => 'better', 'list' => ['good' => ['name' => 'Good', 'pct' => 0, 'desc' => 'The work, done right.'], 'better' => ['name' => 'Better', 'pct' => 10, 'desc' => 'Upgraded materials.'], 'best' => ['name' => 'Best', 'pct' => 25, 'desc' => 'Our top option.']]],
             'rules' => ['min' => ['on' => $x[3] > 0, 'amt' => $x[3]], 'travel' => ['on' => false, 'base' => null, 'bands' => [['upto' => 20, 'fee' => 0], ['upto' => 35, 'fee' => 50], ['upto' => 50, 'fee' => 100]], 'over' => null],
-                        'sur' => $x[1], 'season' => [['id' => 'n1', 'on' => false, 'label' => 'Off-season price', 'from' => '11-15', 'to' => '03-15', 'pct' => -5]], 'sugg' => $x[2]],
+                        'sur' => $x[1], 'season' => [['id' => 'n1', 'on' => false, 'label' => 'Off-season price', 'from' => '11-15', 'to' => '03-15', 'pct' => -5]], 'sugg' => $x[2], 'fuel' => prcFuelStarter()],
             'kwDefault' => 8];
 }
 /** starter clauses: plain wording the company edits or switches off; the screen says "starter, have your attorney review" */
@@ -12961,6 +12967,7 @@ function prcRules($R, array $lineIds, ?callable $fail = null): array {
     usort($bands, fn($a, $c) => $a['upto'] <=> $c['upto']); $o['travel']['bands'] = $bands;
     $ov = $R['travel']['over'] ?? null; $o['travel']['over'] = is_numeric($ov) ? (int) $num($ov, 0, 100000) : null;
     if ($o['travel']['on'] && !$o['travel']['base']) $no('Travel fee: set where your trips start (your base).');
+    $o['fuel'] = prcFuelRules($R['fuel'] ?? null, $o['travel']['base'], $no);   /* fuel cost (2026-10-30) */
     foreach (array_slice((array) ($R['sur'] ?? []), 0, 20) as $i => $x) {
         if (!is_array($x)) continue; $lab = mb_substr(trim((string) ($x['label'] ?? '')), 0, 60); if ($lab === '') continue;
         $f = (string) ($x['fact'] ?? ''); if (!prcFactOk($f)) { $no('Pick the house fact for "' . $lab . '".'); continue; }
@@ -13057,6 +13064,194 @@ function prcMiles(?array $base, $lat, $lon): ?float {
     $a = sin($dl / 2) ** 2 + cos($base['lat'] * $rad) * cos((float) $lat * $rad) * sin($dn / 2) ** 2;
     return round(3958.8 * 2 * atan2(sqrt($a), sqrt(1 - $a)) * 1.3, 1);
 }
+/* ---- FUEL COST (2026-10-30, Matthew: "Do we have a way for them to add gas into their price? I think they should be able to enter a start
+ * point, and it'll price gas based on the averages we pull from Colorado and the distance there and back.") ----
+ * One more automatic adjustment (rules.fuel, on or off, the company's own settings): round-trip miles x trips / miles per gallon x the
+ * price per gallon, plus the company's markup, rounded to the dollar. A line with the company's own label (default "Fuel"), or folded into
+ * the price lines (their choice: shared out by each line's amount, the rest on the biggest line). Staff see the breakdown (the item's f, the
+ * quote's fuel); the customer sees the line or nothing (the customer's pages carry only each line's words and amount). Skipping it is held
+ * to the role's price permissions, as every adjustment is (skip id 'fuel').
+ *   Start point: rules.fuel.base, else the travel fee's base. A typed address is placed by the U.S. Census Bureau geocoder (tcGeocode in
+ *     traverse-clients-lib.php, as the self-serve build places a business), else found on the house lists; or Where I am now.
+ *   Miles: the straight line x the company's road factor (default 1.3, as the travel fee and Your costs), there and back, and called
+ *     "estimated road miles" wherever shown. No routing service (checked 2026-10-30 on each one's own site): the OSRM project's demo server
+ *     and FOSSGIS's routing.openstreetmap.de allow no heavy use (one request a second) and forbid access behind a paywall; GraphHopper's free
+ *     plan is "for non-commercial use only"; openrouteservice states no commercial terms for its free key; Google and Mapbox are out; the
+ *     host cannot run a router of its own.
+ *   Price: the U.S. Energy Information Administration's weekly average retail price, dollars per gallon with taxes (public domain;
+ *     eia.gov/about/copyrights_reuse.php: "You may use and/or distribute any of our data", with an acknowledgment and the date):
+ *     regular gasoline for Colorado (series EMM_EPMR_PTE_SCO_DPG), else the Rocky Mountain region (PADD 4, EMM_EPMR_PTE_R40_DPG); diesel
+ *     for the Rocky Mountain region (EMD_EPD2D_PTE_R40_DPG: EIA publishes no weekly Colorado diesel price; a Colorado series would be used
+ *     first if it ever appears). Read from EIA's own weekly tables, which need no key (fuelPages). Kept once for every install on the host
+ *     in traverse-shared/fuel/eia.json; tools/fuel-prices.php (started by the hourly morning-email.php; there is no crontab here) asks EIA
+ *     only when a new week should be out (fuelDue); Prices' "Check for a new price" asks at once (prcfuel, at most every 10 minutes). A failed
+ *     fetch keeps the last prices, and the screens say which week they are and how old. The company can type its own price per gallon.
+ * Starter: off, label "Fuel", a line, gas, 15 mpg, 1 trip, no markup, road factor 1.3. */
+function prcFuelStarter(): array { return ['on' => false, 'label' => 'Fuel', 'show' => 'line', 'base' => null, 'road' => 1.3, 'type' => 'gas', 'mpg' => 15, 'trips' => 1, 'markup' => 0, 'own' => null]; }
+/** rules.fuel, cleaned; $no refuses on a save (fuel on with nowhere to start, or no miles per gallon) */
+function prcFuelRules($F, ?array $travelBase, callable $no): array {
+    $F = is_array($F) ? $F : []; $d = prcFuelStarter();
+    $nb = fn($v, $lo, $hi, $def, $dp = 2) => is_numeric($v) ? max($lo, min($hi, round((float) $v, $dp))) : $def;
+    $b = $F['base'] ?? null; $base = null;
+    if (is_array($b) && is_numeric($b['lat'] ?? null) && is_numeric($b['lon'] ?? null) && abs((float) $b['lat']) <= 90 && abs((float) $b['lon']) <= 180) $base = ['label' => mb_substr((string) ($b['label'] ?? ''), 0, 120), 'lat' => round((float) $b['lat'], 5), 'lon' => round((float) $b['lon'], 5)];
+    $mpg = $F['mpg'] ?? $d['mpg'];
+    $o = ['on' => !empty($F['on']), 'label' => mb_substr(trim((string) preg_replace('/\s+/u', ' ', (string) ($F['label'] ?? ''))), 0, 40) ?: $d['label'], 'show' => ($F['show'] ?? '') === 'fold' ? 'fold' : 'line', 'base' => $base,
+          'road' => $nb($F['road'] ?? null, 1, 3, $d['road']), 'type' => ($F['type'] ?? '') === 'diesel' ? 'diesel' : 'gas',
+          'mpg' => is_numeric($mpg) && (float) $mpg > 0 ? $nb($mpg, 1, 100, $d['mpg'], 1) : $d['mpg'], 'trips' => (int) $nb($F['trips'] ?? null, 1, 50, 1, 0),
+          'markup' => $nb($F['markup'] ?? null, 0, 300, 0, 1), 'own' => is_numeric($F['own'] ?? null) && (float) $F['own'] > 0 ? $nb($F['own'], 0.5, 20, null, 3) : null];
+    if ($o['on'] && !$base && !$travelBase) $no('Fuel cost: set where your trips start.');
+    if ($o['on'] && !(is_numeric($mpg) && (float) $mpg > 0)) $no('Fuel cost: give your truck\'s miles per gallon.');
+    return $o;
+}
+/** straight-line miles between two points (the same sum as prcMiles, without its road factor) */
+function prcLineMiles(array $base, float $lat, float $lon): float {
+    $rad = M_PI / 180; $dl = ($lat - $base['lat']) * $rad; $dn = ($lon - $base['lon']) * $rad;
+    $a = sin($dl / 2) ** 2 + cos($base['lat'] * $rad) * cos($lat * $rad) * sin($dn / 2) ** 2;
+    return 3958.8 * 2 * atan2(sqrt($a), sqrt(1 - $a));
+}
+/** the fuel cost for one house. null when off or nowhere to start from or no point for the house; ['amt' => 0, 'why' => 'noprice'] with no
+    price yet; else ['amt', 'rt' (estimated road miles there and back), 'trips', 'mpg', 'gal', 'type', 'src', 'f' (the breakdown, staff only)] */
+function prcFuel(array $R, array $H, array $m): ?array {
+    $F = $R['fuel'] ?? null; if (!$F || !$F['on']) return null;
+    $base = $F['base'] ?: $R['travel']['base']; $lat = $H['lat'] ?? null; $lon = $H['lon'] ?? null;
+    if (!$base || !is_numeric($lat) || !is_numeric($lon)) return null;
+    $now = fuelNow($F); if (!$now) return ['amt' => 0, 'why' => 'noprice'];
+    $rt = round(2 * prcLineMiles($base, (float) $lat, (float) $lon) * $F['road'], 1);
+    $trips = (int) ($m['trips'] ?? 0) > 0 ? (int) $m['trips'] : $F['trips'];
+    $amt = (int) round($rt * $trips / $F['mpg'] * $now['gal'] * (1 + $F['markup'] / 100));
+    $num = fn($v, $d) => rtrim(rtrim(number_format((float) $v, $d, '.', ''), '0'), '.');
+    $f = $num($rt, 1) . ' est. road miles there and back × ' . $trips . ' trip' . ($trips === 1 ? '' : 's') . ' ÷ ' . $num($F['mpg'], 1) . ' mpg × $' . $num($now['gal'], 3) . '/gal ' . ($F['type'] === 'diesel' ? 'diesel' : 'regular')
+       . ($F['markup'] > 0 ? ' + ' . $num($F['markup'], 1) . '%' : '') . ' (' . $now['src'] . ')';
+    return ['amt' => $amt, 'rt' => $rt, 'trips' => $trips, 'mpg' => $F['mpg'], 'gal' => $now['gal'], 'type' => $F['type'], 'src' => $now['src'], 'f' => $f];
+}
+/** the fuel cost shared out over the price lines by each line's amount (whole dollars, the rest on the biggest line) */
+function prcFuelFold(array $items, int $amt): array {
+    $base = 0; $big = -1; foreach ($items as $i => $x) if ($x['amt'] > 0) { $base += $x['amt']; if ($big < 0 || $x['amt'] > $items[$big]['amt']) $big = $i; }
+    if ($big < 0) return $items;
+    $left = $amt; foreach ($items as $i => $x) if ($x['amt'] > 0) { $s = intdiv($amt * $x['amt'], $base); $items[$i]['amt'] += $s; $left -= $s; }
+    $items[$big]['amt'] += $left;
+    return $items;
+}
+/* the weekly EIA prices, kept for every install on this host (traverse-shared/fuel/); a lone install with no such folder keeps them in its own */
+function fuelDir(): string {
+    static $d = null; if ($d !== null) return $d;
+    $s = dirname(__DIR__, 2) . '/traverse-shared/fuel';
+    return $d = ((is_dir($s) || @mkdir($s, 0700, true)) && is_writable($s)) ? $s : DATA_DIR;
+}
+/** fuel => [[EIA series id, the area it covers], ...] in the order tried */
+function fuelSeries(): array {
+    return ['gas' => [['EMM_EPMR_PTE_SCO_DPG', 'Colorado'], ['EMM_EPMR_PTE_R40_DPG', 'Rocky Mountain region']],
+            'diesel' => [['EMD_EPD2D_PTE_SCO_DPG', 'Colorado'], ['EMD_EPD2D_PTE_R40_DPG', 'Rocky Mountain region']]];
+}
+/** EIA's weekly retail price tables for Colorado and the Rocky Mountain region (PADD 4): plain pages, no key */
+function fuelPages(): array { return ['https://www.eia.gov/dnav/pet/pet_pri_gnd_dcus_sco_w.htm', 'https://www.eia.gov/dnav/pet/pet_pri_gnd_dcus_r40_w.htm']; }
+function fuelCache(bool $again = false): array {
+    static $c = null; if ($c !== null && !$again) return $c;
+    $j = json_decode((string) @file_get_contents(fuelDir() . '/eia.json'), true);
+    return $c = is_array($j) ? $j + ['s' => []] : ['s' => []];
+}
+/** one EIA weekly table -> ['weeks' => [Y-m-d, ...], 's' => [series id => ['v' => dollars per gallon, 'week' => Y-m-d]], 'release' => Y-m-d or '']
+    Each series' newest week with a number; a row whose cells do not line up with the weeks is left out rather than guessed. */
+function fuelParseEia(string $html): array {
+    $o = ['weeks' => [], 's' => [], 'release' => ''];
+    if (preg_match_all('#<th[^>]*class="Series5"[^>]*>\s*(\d{2})/(\d{2})/(\d{2})\s*</th>#i', $html, $m, PREG_SET_ORDER)) foreach ($m as $x) $o['weeks'][] = '20' . $x[3] . '-' . $x[1] . '-' . $x[2];
+    if (preg_match('#Release Date:\s*(\d{1,2})/(\d{1,2})/(\d{4})#i', $html, $r)) $o['release'] = sprintf('%04d-%02d-%02d', (int) $r[3], (int) $r[1], (int) $r[2]);
+    $n = count($o['weeks']); if (!$n) return $o;
+    foreach (array_slice(preg_split('#<tr[^>]*class="DataRow"[^>]*>#i', $html), 1) as $row) {
+        $hp = stripos($row, 'class="DataHist"'); if ($hp === false) continue;   /* the row ends at the first </tr> after its history link (the name cell holds a table of its own) */
+        $ep = stripos($row, '</tr>', $hp); if ($ep !== false) $row = substr($row, 0, $ep);
+        if (!preg_match('#LeafHandler\.ashx\?n=PET&(?:amp;)?s=([A-Z0-9_]{6,40})&(?:amp;)?f=W\b#', $row, $id)) continue;
+        if (!preg_match_all('#<td[^>]*class="([A-Za-z0-9]+)"[^>]*>(.*?)</td>#is', $row, $c, PREG_SET_ORDER)) continue;
+        $cells = array_values(array_filter($c, fn($x) => !preg_match('/^(DataStub|DataHist)/i', $x[1])));
+        if (count($cells) !== $n) continue;
+        for ($i = $n - 1; $i >= 0; $i--) {
+            $v = trim(html_entity_decode(strip_tags($cells[$i][2])));
+            if (preg_match('/^\d{1,2}\.\d{2,3}$/', $v) && (float) $v >= 0.5 && (float) $v <= 20 && checkdate((int) substr($o['weeks'][$i], 5, 2), (int) substr($o['weeks'][$i], 8, 2), (int) substr($o['weeks'][$i], 0, 4))) { $o['s'][$id[1]] = ['v' => (float) $v, 'week' => $o['weeks'][$i]]; break; }
+        }
+    }
+    return $o;
+}
+/** the test server's stand-in for EIA (sixfold-private/fuel-mock-url.txt): the test PHP server, or the command line with TRAVERSE_FUEL_MOCK=1; never on the host */
+function fuelUrl(string $u): string {
+    $f = dirname(__DIR__, 2) . '/sixfold-private/fuel-mock-url.txt';
+    if ((PHP_SAPI === 'cli-server' || (PHP_SAPI === 'cli' && getenv('TRAVERSE_FUEL_MOCK') === '1')) && is_file($f)) return rtrim(trim((string) file_get_contents($f)), '/') . '/?u=' . rawurlencode($u);
+    return $u;
+}
+function fuelGet(string $u): ?string {
+    if (function_exists('curl_init')) {
+        $h = curl_init($u); curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 3, CURLOPT_USERAGENT => 'TraversePlatforms/1.0 (hello@traverseplatforms.com)']);
+        $b = curl_exec($h); $code = (int) curl_getinfo($h, CURLINFO_HTTP_CODE); curl_close($h);
+        return $b !== false && $code === 200 ? (string) $b : null;
+    }
+    $b = @file_get_contents($u, false, stream_context_create(['http' => ['timeout' => 20, 'user_agent' => 'TraversePlatforms/1.0 (hello@traverseplatforms.com)', 'ignore_errors' => false]]));
+    return is_string($b) && $b !== '' ? $b : null;
+}
+/** the newest week kept, '' with none */
+function fuelNewest(array $c): string { $w = ''; foreach ((array) ($c['s'] ?? []) as $x) if (is_array($x) && (string) ($x['week'] ?? '') > $w) $w = (string) $x['week']; return $w; }
+/** time to ask EIA: nothing kept, or a newer week should be out (EIA releases on Monday afternoon, a day later after a holiday: from 6 pm
+    Colorado time seven days after the newest week's Monday); a try at most every 6 hours (every hour while nothing is kept) */
+function fuelDue(array $c, int $now): bool {
+    $wk = fuelNewest($c);
+    if ((int) ($c['tried'] ?? 0) > $now - ($wk === '' ? 3600 : 6 * 3600)) return false;
+    if ($wk === '') return true;
+    try { $due = (new DateTime($wk . ' 18:00', new DateTimeZone('America/Denver')))->getTimestamp() + 7 * 86400; } catch (Throwable $e) { return true; }
+    return $now >= $due;
+}
+/** ask EIA when due (or $force: at once, at most every 10 minutes); one install at a time (the lock); a failed try keeps the last prices.
+    -> the kept copy + ['asked' => bool] */
+function fuelRefresh(bool $force = false): array {
+    $c = fuelCache(true); $now = time();
+    if ($force ? (int) ($c['tried'] ?? 0) > $now - 600 : !fuelDue($c, $now)) return $c + ['asked' => false];
+    $f = fuelDir() . '/eia.json'; $lk = @fopen($f . '.lock', 'c');
+    if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) { if ($lk) fclose($lk); return $c + ['asked' => false]; }
+    $c = fuelCache(true); $c['tried'] = $now; $got = []; $rel = ''; $err = [];
+    $want = []; foreach (fuelSeries() as $L) foreach ($L as $x) $want[$x[0]] = 1;
+    foreach (fuelPages() as $u) {
+        $h = fuelGet(fuelUrl($u)); if ($h === null) { $err[] = 'EIA did not answer'; continue; }
+        $p = fuelParseEia($h); if (!$p['s']) { $err[] = 'EIA\'s table could not be read'; continue; }
+        $got += array_intersect_key($p['s'], $want); if ($p['release'] > $rel) $rel = $p['release'];   /* only the series a quote can use */
+    }
+    foreach ($got as $id => $x) if (!isset($c['s'][$id]['week']) || $x['week'] >= $c['s'][$id]['week']) $c['s'][$id] = $x;
+    if ($got) { $c['at'] = $now; if ($rel !== '') $c['release'] = $rel; }
+    $c['err'] = implode('; ', array_unique($err));
+    $c['src'] = 'U.S. Energy Information Administration, Weekly Retail Gasoline and Diesel Prices';
+    writeJsonAtomic($f, $c); flock($lk, LOCK_UN); fclose($lk);
+    fuelCache(true);
+    return $c + ['asked' => true];
+}
+/** the price per gallon a quote uses: the company's own when typed, else EIA's newest for that fuel. null with neither.
+    -> ['gal', 'own', 'type', 'area', 'week', 'days' (the week's age), 'stale' (over two weeks old), 'src' (as shown to staff)] */
+function fuelNow(array $F): ?array {
+    $type = ($F['type'] ?? '') === 'diesel' ? 'diesel' : 'gas';
+    if (is_numeric($F['own'] ?? null) && (float) $F['own'] > 0) return ['gal' => round((float) $F['own'], 3), 'own' => true, 'type' => $type, 'area' => '', 'week' => '', 'days' => 0, 'stale' => false, 'src' => 'your price per gallon'];
+    $c = fuelCache();
+    foreach (fuelSeries()[$type] as [$sid, $area]) {
+        $x = $c['s'][$sid] ?? null; if (!is_array($x) || !is_numeric($x['v'] ?? null) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) ($x['week'] ?? ''))) continue;
+        $days = max(0, (int) floor((time() - strtotime($x['week'] . ' 12:00')) / 86400));
+        return ['gal' => round((float) $x['v'], 3), 'own' => false, 'type' => $type, 'area' => $area, 'week' => $x['week'], 'days' => $days, 'stale' => $days > 13,
+                'src' => $area . ' average, week of ' . date('M j', strtotime($x['week'] . ' 12:00')) . ', EIA'];
+    }
+    return null;
+}
+/** what Prices shows: both fuels' newest EIA prices, when EIA was last asked and whether that worked */
+function fuelState(): array {
+    $c = fuelCache();
+    return ['gas' => fuelNow(['type' => 'gas']), 'diesel' => fuelNow(['type' => 'diesel']), 'tried' => (int) ($c['tried'] ?? 0), 'at' => (int) ($c['at'] ?? 0), 'err' => (string) ($c['err'] ?? ''),
+            'release' => (string) ($c['release'] ?? ''), 'source' => 'U.S. Energy Information Administration (EIA), Weekly Retail Gasoline and Diesel Prices, dollars per gallon with taxes'];
+}
+/** a typed start address to a point: the U.S. Census Bureau geocoder (as the self-serve build), else the house lists. -> [label, lat, lon] or the reason */
+function prcPlace(string $txt) {
+    if ($txt === '') return 'Type the start address.';
+    if (is_file(__DIR__ . '/traverse-clients-lib.php')) {
+        require_once __DIR__ . '/traverse-clients-lib.php';
+        $g = tcGeocode($txt);
+        if (is_array($g) && isset($g['lat'], $g['lon'])) return ['label' => $txt, 'lat' => (float) $g['lat'], 'lon' => (float) $g['lon']];
+    }
+    $parts = array_map('trim', explode(',', $txt, 2));
+    $h = a365Match($parts[0], $parts[1] ?? ''); $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
+    if ($hf && isset($hf['lat'], $hf['lon'])) return ['label' => streetCaseServer((string) $hf['address']) . ', ' . (string) $hf['town'], 'lat' => (float) $hf['lat'], 'lon' => (float) $hf['lon']];
+    return 'Fuel cost: that start address was not found. Type the whole address, like "123 Main St, Denver, CO 80202", or use Where I am now while you are there.';
+}
 function prcMatch(array $r, array $f): bool {
     if (!isset($f[$r['fact']])) return false; $v = $f[$r['fact']];
     if (prcFacts()[$r['fact']][1] === 'text') return $r['val'] !== '' && str_contains(strtolower((string) $v), (string) $r['val']);
@@ -13085,7 +13280,8 @@ function prcPrice(array $cfg, array $m, array $H, string $tier, array $picks, ar
         $items[] = ['id' => $r['id'], 't' => $r['label'], 'amt' => $amt, 'qty' => round($qty, 2), 'unit' => $r['unit']];
     }
     $lineSum = array_sum(array_column($items, 'amt'));
-    $adj = function (bool $useSkip) use ($cfg, $f, $H, $skip, $date, $lineSum, $items) {
+    $fuel = $items ? prcFuel($cfg['rules'], $H, $m) : null;   /* fuel cost (2026-10-30): the same for every option */
+    $adj = function (bool $useSkip) use ($cfg, $f, $H, $skip, $date, $lineSum, $items, $fuel) {
         $add = []; $R = $cfg['rules'];
         if ($items) {
             foreach ($R['sur'] as $s) if ($s['on'] && !($useSkip && isset($skip[$s['id']])) && prcMatch($s, $f))
@@ -13099,12 +13295,16 @@ function prcPrice(array $cfg, array $m, array $H, string $tier, array $picks, ar
             if ($fee === null) { $fee = $R['travel']['over']; if ($fee === null) $far = true; }
             if ($fee) $add[] = ['id' => 't:travel', 't' => 'Travel (' . rtrim(rtrim(number_format($mi, 1), '0'), '.') . ' miles)', 'amt' => (int) $fee, 'qty' => 1, 'unit' => 'flat'];
         }
+        $fold = 0; $fuelOn = $fuel && $fuel['amt'] > 0 && !($useSkip && isset($skip['fuel']));
+        if ($fuelOn && $R['fuel']['show'] === 'fold') $fold = $fuel['amt'];   /* folded into the price lines below: no line of its own */
+        elseif ($fuelOn) $add[] = ['id' => 't:fuel', 't' => $R['fuel']['label'], 'f' => $fuel['f'], 'amt' => $fuel['amt'], 'qty' => 1, 'unit' => 'flat'];   /* f: the breakdown, staff only */
         $add = array_values(array_filter($add, fn($x) => $x['amt'] !== 0));
-        $tot = $lineSum + array_sum(array_column($add, 'amt'));
+        $tot = $lineSum + $fold + array_sum(array_column($add, 'amt'));
         if ($items && $R['min']['on'] && !($useSkip && isset($skip['min'])) && $tot < $R['min']['amt']) { $add[] = ['id' => 'min', 't' => 'Minimum charge', 'amt' => $R['min']['amt'] - $tot, 'qty' => 1, 'unit' => 'flat']; $tot = $R['min']['amt']; }
-        return [$add, max(0, $tot), $far, $mi];
+        return [$add, max(0, $tot), $far, $mi, $fold];
     };
-    [, $list] = $adj(false); [$add, $tot, $far, $mi] = $adj(true);
+    [, $list] = $adj(false); [$add, $tot, $far, $mi, $fold] = $adj(true);
+    if ($fold > 0) $items = prcFuelFold($items, $fold);
     $items = array_merge($items, $add);
     foreach (array_slice((array) ($o['extras'] ?? []), 0, 6) as $i => $x) {
         if (!is_array($x)) continue; $t = mb_substr(trim((string) ($x['t'] ?? '')), 0, 80); $a = (int) round((float) ($x['amt'] ?? 0)); if ($t === '' || $a <= 0) continue;
@@ -13112,13 +13312,13 @@ function prcPrice(array $cfg, array $m, array $H, string $tier, array $picks, ar
     }
     $ov = $o['price'] ?? null;
     if (is_numeric($ov) && (int) $ov > 0 && (int) $ov !== $tot) { $ov = min(100000, (int) $ov); $items[] = ['id' => 'adj', 't' => $ov > $tot ? 'Adjustment' : 'Discount', 'amt' => $ov - $tot, 'qty' => 1, 'unit' => 'flat']; $tot = $ov; }
-    return ['items' => $items, 'total' => $tot, 'list' => $list, 'need' => $need, 'far' => $far, 'miles' => $mi, 'sugg' => $sugg];
+    return ['items' => $items, 'total' => $tot, 'list' => $list, 'need' => $need, 'far' => $far, 'miles' => $mi, 'sugg' => $sugg, 'fuel' => $fuel ? $fuel + ['fold' => $fold > 0, 'left' => $fuel['amt'] > 0 && isset($skip['fuel'])] : null];
 }
 /** the measurements a quote may carry, from what was typed (0 when missing) */
 function prcMeasures($m0): array {
     $m0 = is_array($m0) ? $m0 : [];
     $z = fn($k, $max) => isset($m0[$k]) && is_numeric($m0[$k]) && (float) $m0[$k] >= 0 && (float) $m0[$k] <= $max ? round((float) $m0[$k], 1) : 0;
-    return ['lawn' => $z('lawn', 2000000), 'roof' => $z('roof', 500000), 'sqs' => $z('sqs', 5000), 'visits' => max(1, (int) $z('visits', 365)), 'kw' => $z('kw', 1000), 'perim' => $z('perim', 20000), 'home' => $z('home', 100000), 'lot' => $z('lot', 50000000)];
+    return ['lawn' => $z('lawn', 2000000), 'roof' => $z('roof', 500000), 'sqs' => $z('sqs', 5000), 'visits' => max(1, (int) $z('visits', 365)), 'kw' => $z('kw', 1000), 'perim' => $z('perim', 20000), 'home' => $z('home', 100000), 'lot' => $z('lot', 50000000), 'trips' => (int) $z('trips', 50)];   /* trips: the fuel cost's trips for this job, 0 = the company's usual (2026-10-30) */
 }
 /** kitquote with {prc}: every option priced from the house and the rep's picks; the role's price permissions checked per option.
     -> ['items', 'total', 'measures', 'q' (more keys for the saved quote), 'out' (the preview answer)] */
@@ -13144,12 +13344,14 @@ function prcKitQuote(array $lead, array $body): array {
     if (!$chosen) fail('Pick an option.');
     $q = ['opt' => $pick, 'prc' => ['v' => 1, 'picks' => array_intersect_key((array) ($P['picks'] ?? []), array_flip($tiers)), 'skip' => $skip, 'extras' => array_intersect_key((array) ($P['extras'] ?? []), array_flip($tiers)), 'over' => array_intersect_key((array) ($P['over'] ?? []), array_flip($tiers))]];
     if ($cfg['tiers']['on']) $q['options'] = array_map(fn($o) => array_intersect_key($o, array_flip(['k', 'name', 'desc', 'price', 'items'])), array_values(array_filter($opts, fn($o) => $o['price'] > 0)));
+    if (!empty($chosen['fuel']['amt'])) $q['fuel'] = array_intersect_key($chosen['fuel'], array_flip(['amt', 'rt', 'trips', 'mpg', 'gal', 'type', 'src', 'f', 'fold', 'left']));   /* the fuel cost's breakdown, staff only (never on the customer's pages) */
     return ['items' => $chosen['items'], 'total' => $chosen['total'], 'measures' => $m, 'q' => $q,
-            'out' => ['opt' => $pick, 'options' => $opts, 'miles' => $chosen['miles'], 'far' => $chosen['far'], 'sugg' => $chosen['sugg'], 'measures' => $m]];
+            'out' => ['opt' => $pick, 'options' => $opts, 'miles' => $chosen['miles'], 'far' => $chosen['far'], 'sugg' => $chosen['sugg'], 'measures' => $m, 'fuel' => $chosen['fuel']]];
 }
 /** what the quote builder needs, in the kit answer: the list, options, rules, units, and the house (facts, measurements) when asked */
 function prcForQuote(array $get): array {
-    $c = prcCfg(); $o = ['lines' => $c['lines'], 'tiers' => $c['tiers'], 'rules' => $c['rules'], 'units' => prcUnits(), 'facts' => prcFacts(), 'set' => $c['set'], 'from' => $c['from'], 'kwDefault' => $c['kwDefault']];
+    $c = prcCfg(); $o = ['lines' => $c['lines'], 'tiers' => $c['tiers'], 'rules' => $c['rules'], 'units' => prcUnits(), 'facts' => prcFacts(), 'set' => $c['set'], 'from' => $c['from'], 'kwDefault' => $c['kwDefault'],
+                         'fuelNow' => $c['rules']['fuel']['on'] ? fuelNow($c['rules']['fuel']) : null];   /* the price per gallon the builder's sum uses: the server's own (2026-10-30) */
     $reg = (string) ($get['region'] ?? ''); $hid = (string) ($get['id'] ?? '');
     if ($reg !== '' && $hid !== '') { $hf = houseFacts($reg, $hid); $o['house'] = $hf ? prcHouse($hf) + ['address' => (string) $hf['address'], 'town' => (string) $hf['town']] : null; }
     return $o;
@@ -13396,13 +13598,17 @@ function prcDrafts(): array {
     foreach (array_slice($fs, 0, 8) as $f) { $d = json_decode((string) @file_get_contents($f), true); if (is_array($d)) $o[] = ['id' => (string) $d['id'], 'at' => (int) $d['at'], 'by' => (string) $d['by'], 'name' => (string) $d['name'], 'kind' => (string) $d['kind'], 'lines' => count((array) $d['lines'])]; }
     return $o;
 }
-if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback'], true)) {
+if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel'], true)) {
     if (!prcOn()) fail('Not here.', 404);
     if (!adminOr('set.prices')) fail('Not allowed.', 403);
     if ($action === 'prc') {
         $c = prcCfg(); $k = kitCfg();
         out(['ok' => true, 'trade' => kitTrade(), 'units' => prcUnits(), 'facts' => prcFacts(), 'tierKeys' => prcTiers(), 'depositPct' => $k['depositPct'], 'starter' => prcStarter(kitTrade()), 'starterClauses' => prcStarterClauses(kitTrade()),
-             'lib' => prcClauses(), 'imports' => prcDrafts(), 'ai' => prcAiUse(), 'costsBase' => costsOn() ? costsCfg()['base'] : null] + $c);
+             'lib' => prcClauses(), 'imports' => prcDrafts(), 'ai' => prcAiUse(), 'costsBase' => costsOn() ? costsCfg()['base'] : null, 'fuel' => fuelState()] + $c);
+    }
+    if ($action === 'prcfuel') {   /* the weekly EIA prices as kept; POST {refresh: true} asks EIA now (at most every 10 minutes) (2026-10-30) */
+        if ($isPost && !empty($body['refresh'])) fuelRefresh(true);
+        out(['ok' => true, 'fuel' => fuelState()]);
     }
     if ($action === 'prcimportget') {
         $id = (string) ($_GET['id'] ?? ''); if (!preg_match('/^\d{14}[0-9a-f]{6}$/D', $id)) fail('No such import.', 404);
@@ -13422,6 +13628,10 @@ if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget'
             $h = $txt !== '' ? a365Match($parts[0], $parts[1] ?? '') : null; $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
             if (!$hf || !isset($hf['lat'], $hf['lon'])) fail('That base address is not on your house lists. Type it as "123 Main St, Town", or use Where I am now while you are there.');
             $body['rules']['travel']['base'] = ['label' => streetCaseServer((string) $hf['address']) . ', ' . (string) $hf['town'], 'lat' => (float) $hf['lat'], 'lon' => (float) $hf['lon']];
+        }
+        if (is_array($body['rules']['fuel']['base'] ?? null) && isset($body['rules']['fuel']['base']['text'])) {   /* the fuel cost's own start point, typed: the Census geocoder, else the house lists (2026-10-30) */
+            $g = prcPlace($clean($body['rules']['fuel']['base']['text'], 160)); if (is_string($g)) fail($g);
+            $body['rules']['fuel']['base'] = $g;
         }
         $j = ['v' => 1, 'lines' => $lines, 'tiers' => prcTiersClean($body['tiers'] ?? []), 'rules' => prcRules($body['rules'] ?? [], array_column($lines, 'id'), $no),
               'kwDefault' => is_numeric($body['kwDefault'] ?? null) ? max(0, min(100, (float) $body['kwDefault'])) : 8, 'by' => $me, 'at' => time()];
