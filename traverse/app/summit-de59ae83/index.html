@@ -4646,7 +4646,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       asOffice() || !pOn('doors.see') ? null : tile('button', 'door', 'Routes', 'Knock a neighborhood. Works with no signal.', null, start),
       asOffice() ? null : tile('button', 'chart', 'My stats', pipeMine() ? 'Your leads, quotes, jobs landed and sales.' : pw('Your doors, conversations, quotes and goals.'), null, function () { statsView(S.me, chooseView); }),
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
-      tile('button', 'book', 'Training', 'Doors, sales, quotes, phones and more.', null, trainingView),
+      tile('button', 'book', 'Training', pw('Doors, sales, quotes, phones and more.', 'Door-to-door, sales, quotes, phones and more.'), null, trainingView),
       radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colors mean.', null, function () { hailMapView(null, chooseView); }) : null,
       feat('security') && crewSees() ? tile('button', 'shield', 'Crime map', 'Property crime reported to Colorado Springs police, last 90 days, by area.', crewTag(), crimeMapView) : null].filter(Boolean));
     /* a manager is crew plus their own team (Matthew 2026-10-05): leads to hand out, the team's numbers and territories */
@@ -12259,11 +12259,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Each company's own lessons (training.json in its data folder): door to door, the phone, and anything else. The
      product carries the section; the company carries the content (Matthew). Admins add and edit lessons here. */
   /* the seven headings (Matthew 2026-10-05); 'other' stays so a lesson filed before the split still shows */
+  /* the lessons' kinds; the door kind reads Door-to-door in the editions (2026-10-30: properties, not doors; door-to-door is the selling method) */
+  function trainKinds() { return TRAIN_KIND.map(function (k) { return k[0] === 'door' ? [k[0], pw(k[1], 'Door-to-door')] : k; }); }
   var TRAIN_KIND = [['door', 'Doors'], ['sales', 'Sales'], ['quote', 'Quotes'], ['phone', 'Phones'], ['paper', 'Paperwork'], ['safety', 'Safety'], ['app', 'Using the app'], ['other', 'Other']];
-  function trainKindName(k) { return (TRAIN_KIND.filter(function (x) { return x[0] === k; })[0] || TRAIN_KIND[TRAIN_KIND.length - 1])[1]; }
+  function trainKindName(k) { var K = trainKinds(); return (K.filter(function (x) { return x[0] === k; })[0] || K[K.length - 1])[1]; }
   function trainingView(openId) {
     hideToast(); S.signin = null; S.screen = 'training'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Training', sub: 'Doors, sales, quotes, phones and more', back: typeof openId === 'string' ? function () { trainingView(); } : chooseView, backLabel: typeof openId === 'string' ? 'Training' : 'Field tools' });
+    setBar('back', { title: 'Training', sub: pw('Doors, sales, quotes, phones and more', 'Door-to-door, sales, quotes, phones and more'), back: typeof openId === 'string' ? function () { trainingView(); } : chooseView, backLabel: typeof openId === 'string' ? 'Training' : 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     api('training').then(function (j) {
@@ -12286,7 +12288,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (!S.train.length) { holder.appendChild(q('div', 'msg', S.trainEdit ? 'No lessons yet. Add the first one: a title, which heading it goes under, and the text.' : 'No lessons yet. They appear here once the office adds them.')); return; }
     /* one chip per heading that has lessons, so someone who only does phones can see just theirs; the phone remembers it */
-    var have = TRAIN_KIND.filter(function (k) { return S.train.some(function (x) { return x.kind === k[0]; }); });
+    var have = trainKinds().filter(function (k) { return S.train.some(function (x) { return x.kind === k[0]; }); });
     var pick = ''; try { pick = localStorage.getItem('doorapp.trainkind') || ''; } catch (e) {}
     if (!have.some(function (k) { return k[0] === pick; })) pick = '';
     if (have.length > 1) {
@@ -12299,7 +12301,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(chips);
     }
     var plain = function (t) { return t.replace(/^\s*#{1,3}\s+(.*)$/gm, function (m, h) { return /[.:?!]$/.test(h) ? h : h + ':'; }).replace(/^\s*[-*\u2022]\s+/gm, '').replace(/^\s*(Say|They say|Do|Don't|Never|Law|Tip): /gm, '').replace(/\s+/g, ' ').trim(); };   /* card markers out of the preview (2026-10-13) */
-    TRAIN_KIND.forEach(function (k) {
+    trainKinds().forEach(function (k) {
       if (pick && k[0] !== pick) return;
       var ls = S.train.filter(function (x) { return x.kind === k[0]; });
       if (!ls.length) return;
@@ -12392,7 +12394,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var f = q('div', 'phf');
     var field = function (label, el) { var lb = q('label', null, label); lb.appendChild(el); f.appendChild(lb); return el; };
     var tt = field('Title', q('input')); tt.maxLength = 120; tt.value = l ? l.title : '';
-    var kd = q('select'); TRAIN_KIND.forEach(function (k) { var op = q('option', null, k[1]); op.value = k[0]; kd.appendChild(op); }); kd.value = l ? l.kind : 'door'; field('For', kd);
+    var kd = q('select'); trainKinds().forEach(function (k) { var op = q('option', null, k[1]); op.value = k[0]; kd.appendChild(op); }); kd.value = l ? l.kind : 'door'; field('For', kd);
     var tx = field('Text', q('textarea')); tx.rows = 14; tx.maxLength = 20000; tx.value = l ? l.text : '';
     f.appendChild(q('p', 'hint', 'A line starting with "# " is a heading; "- " makes a bullet; a blank line starts a new paragraph. Start a line with Say:, They say:, Do:, Don\u2019t:, Never:, Law: or Tip: to make it a card.'));
     var err = q('div', 'err'); f.appendChild(err);
@@ -12813,7 +12815,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (impOnC()) step('import', String(++n), 'Import your customers', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', function () { importView(); });
     if (feat('company')) step('brand', String(++n), 'Check your logo and color', 'How your logo and color look in the app your team opens.', function () { try { localStorage.setItem('sixfold.startBrand', '1'); } catch (e) {} companyView('brand'); });
-    step('train', String(++n), 'Train your team', 'The Training lessons: doors, sales, quotes, phones. Add your own for your team.', function () { try { localStorage.setItem('sixfold.startTrain', '1'); } catch (e) {} trainingView(); });   /* 2026-10-30 */
+    step('train', String(++n), 'Train your team', pw('The Training lessons: doors, sales, quotes, phones. Add your own for your team.', 'The Training lessons: door-to-door, sales, quotes, phones. Add your own for your team.'), function () { try { localStorage.setItem('sixfold.startTrain', '1'); } catch (e) {} trainingView(); });   /* 2026-10-30 */
     try { tick('brand', localStorage.getItem('sixfold.startBrand') === '1'); tick('train', localStorage.getItem('sixfold.startTrain') === '1'); } catch (e) {}
     api('accounts').then(function (j) { tick('team', !!(j && j.ok && (j.accounts || []).some(function (a) { return !a.off && a.role !== 'super' && !a.you && !/^(Claude|Fable)\b/i.test(a.name || ''); }))); }).catch(function () {});
     if (kitOnC()) api('kit').then(function (K) { var on = {}; (K && K.ok && K.setup || []).forEach(function (x) { on[x.k] = x.done; }); tick('email', on.email); tick('payments', on.payments); }).catch(function () {});
@@ -13781,7 +13783,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(q('div', 'dwh', 'Bring your data, check your prices, train your team'));
       [[true, 'Import customers, leads and past work', 'From a spreadsheet: your old software, Excel or Google Sheets. Every import can be undone.', function () { importView(); }, 'import'],
        [costsOnC(), 'Your costs' + (feat('costs') ? '' : ' (testing: only Traverse sees this)'), 'Labor, materials, drive and overhead for each price line: what it costs you, and a suggested price.', costsView, 'costs'],
-       [true, 'Training', 'Your team’s lessons: doors, sales, quotes, phones and more.', function () { trainingView(); }, 'training']].forEach(function (x) {
+       [true, 'Training', pw('Your team’s lessons: doors, sales, quotes, phones and more.', 'Your team’s lessons: door-to-door, sales, quotes, phones and more.'), function () { trainingView(); }, 'training']].forEach(function (x) {
         if (!x[0]) return; var row = q('button', 'kitstep'); row.type = 'button'; row.setAttribute('data-k', x[4]); row.addEventListener('click', setupGo(x[3]));
         row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[1])); tx.appendChild(q('small', null, x[2])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
       });
