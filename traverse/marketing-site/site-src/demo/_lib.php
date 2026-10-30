@@ -15,7 +15,9 @@ const SITE_DEFAULTS = [
     'timezone_label' => 'Mountain Time',
     'slot_minutes' => 30,
     /* weekday (1 = Monday .. 7 = Sunday) => list of [start, end] windows, local time; a demo must END by the window's end */
-    'hours' => [1 => [['09:00', '17:00']], 2 => [['09:00', '17:00']], 3 => [['09:00', '17:00']], 4 => [['09:00', '17:00']], 5 => [['09:00', '17:00']]],
+    /* Matthew 2026-10-30: open 8 am to 8 pm every day, except school runs (Tue-Fri from 9:30) and the weekly Sixfold call (Tue 4:30-6 pm) */
+    'hours' => [1 => [['08:00', '20:00']], 2 => [['09:30', '16:30'], ['18:00', '20:00']], 3 => [['09:30', '20:00']], 4 => [['09:30', '20:00']], 5 => [['09:30', '20:00']],
+                6 => [['08:00', '20:00']], 7 => [['08:00', '20:00']]],
     'min_notice_hours' => 18,          /* no booking sooner than this */
     'max_days' => 45,                  /* how far ahead */
     'blocked_dates' => [],             /* 'YYYY-MM-DD' days off (the manage page adds to the file's own list) */
