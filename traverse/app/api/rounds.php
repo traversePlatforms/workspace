@@ -3928,6 +3928,334 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
     sendJson('{"ok":true,"sig":"' . $rsig . '","regions":' . $rtxt . '}');
 }
 
+/* ---- alerts (SX-41, 2026-10-03; rebuilt 2026-10-29) ----------------------------------
+ * Weather warnings and wildfires near the towns, from two public feeds:
+ *   - National Weather Service active alerts for Colorado (api.weather.gov/alerts/active?area=CO): ONE request per refresh for every
+ *     install on this host, kept in traverse-shared/weather/nws-co.json and fetched at most every 2 minutes (NWS asks for no more than
+ *     about one request every 30 seconds; before this each install asked once per town, about 180 calls a refresh). An alert reaches a
+ *     town when its own polygon holds the town's centre; an alert with no polygon by the outlines of the zones and counties it names
+ *     (affectedZones), each outline fetched once and kept 30 days in traverse-shared/weather/zones.json, at most 4 new ones a refresh.
+ *     The door list matches each door the same way (wxDoorMatcher), so a warning over half a town still shows on its doors;
+ *   - wildfires (not prescribed burns) not fully contained, from the national interagency incident feed (NIFC WFIGS current incident
+ *     locations): one query over Colorado and 60 miles around it, shared the same way, then those within 60 miles of this install's towns.
+ * Each install keeps its own matched answer in alerts-cache.json for 10 minutes (4 for the phone alerts' job), as before.
+ * Homeowners listen after a scare; the app also says never to knock inside an evacuation area.
+ * A feed that fails keeps the last good answer and says how old it is. Any signed-in user. */
+const ALERT_TOWNS = [
+    'monument' => [39.0917, -104.8722], 'palmer-lake' => [39.1222, -104.9169], 'black-forest' => [39.0138, -104.7025],
+    'castle-rock' => [39.3722, -104.8561], 'larkspur' => [39.2311, -104.8747], 'sedalia' => [39.4386, -104.9614],
+    'franktown' => [39.3894, -104.7519], 'woodland-park' => [39.0000, -105.0569], 'divide' => [38.9469, -105.1636],
+    'florissant' => [38.9469, -105.2911], 'cripple-creek' => [38.7466, -105.1783]];
+/* winter and wind safety (Matthew 2026-10-29), every install: the names as api.weather.gov/alerts/types lists them on 2026-10-29
+   (NWS renamed Wind Chill Warning to Extreme Cold Warning in 2024-25). The editions name them in build-editions.cjs. */
+const ALERT_WINTER = ['Winter Storm Warning', 'Winter Storm Watch', 'Blizzard Warning', 'Winter Weather Advisory', 'Ice Storm Warning',
+    'High Wind Warning', 'High Wind Watch', 'Wind Advisory', 'Extreme Cold Warning'];
+const ALERT_EVENTS = ['Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Extreme Fire Danger', 'Heat Advisory',
+    'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch',
+    'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning',
+    'Winter Storm Warning', 'Winter Storm Watch', 'Blizzard Warning', 'Winter Weather Advisory', 'Ice Storm Warning', 'Wind Advisory', 'Extreme Cold Warning'];
+/* per install (Matthew 2026-10-06: "only include the weather alerts that are relative to each edition"): company.json "alerts"
+   lists the events this install shows and pushes, and wildfires only when it names 'Wildfires'. Without it (Sixfold), ALERT_EVENTS
+   and the wildfire feed as before. Freeze and frost are fetched for the lawn edition. */
+const ALERT_EXTRA = ['Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'];
+function alertEvents(): ?array { $a = company()['alerts'] ?? null; return is_array($a) ? array_values(array_map('strval', $a)) : null; }
+/* hail (Matthew 2026-10-05): the storm alerts go only where hail is on (admins of a company with features.hail); a warning
+   carries the NWS's own hail size and wind gust. Each one seen is remembered for STORM_KEEP so the storm call list still
+   works the day after, when the warning has left the live feed. */
+const STORM_EVENTS = ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch'];
+const STORM_KEEP = 3 * 86400;
+function isStorm(array $w): bool { return in_array((string) ($w['event'] ?? ''), STORM_EVENTS, true); }
+function recentStorms(array $active = []): array {
+    $f = DATA_DIR . '/storms-recent.json';
+    $all = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
+    if ($active) {
+        foreach ($active as $id => $w) if (isStorm($w)) $all[$id] = array_diff_key($w, ['poly' => 1, 'zones' => 1]) + ['seen' => time()];
+        $all = array_filter($all, fn($w) => (int) ($w['seen'] ?? 0) > time() - STORM_KEEP);
+        @file_put_contents($f, json_encode($all, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    }
+    return array_filter($all, fn($w) => (int) ($w['seen'] ?? 0) > time() - STORM_KEEP);
+}
+function httpJson(string $url, array $headers = []): ?array {
+    $hdr = array_merge([agentHeader(), 'Accept: application/geo+json, application/json'], $headers);
+    if (function_exists('curl_init')) {
+        $c = curl_init($url);
+        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_HTTPHEADER => $hdr, CURLOPT_FOLLOWLOCATION => true]);
+        $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
+        if ($body !== false && $code === 200) { $j = json_decode((string) $body, true); if (is_array($j)) return $j; }
+    }
+    return httpJsonPlain($url, $hdr);   /* curl missing or failing (e.g. no certificate list): the plain way */
+}
+function httpJsonPlain(string $url, array $hdr): ?array {
+    $body = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 8, 'header' => implode("\r\n", $hdr)]]));
+    if ($body === false) return null;
+    $j = json_decode((string) $body, true);
+    return is_array($j) ? $j : null;
+}
+function milesBetween(float $la1, float $lo1, float $la2, float $lo2): float {
+    return hypot(($la1 - $la2) * 69.0, ($lo1 - $lo2) * 69.0 * cos(deg2rad($la1)));
+}
+/** the towns whose alerts this install asks for (2026-10-07): every town it shows, at its centre (index.json "c", written by
+    build-rounds-data.mjs); a town without one falls back to ALERT_TOWNS, and with none at all the fixed list is used */
+function alertTowns(): array {
+    static $t = null; if ($t !== null) return $t;
+    $t = [];
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $k = (string) ($r['key'] ?? ''); if ($k === '' || regionHidden($k)) continue;
+        if (isset($r['c'][0], $r['c'][1]) && is_numeric($r['c'][0]) && is_numeric($r['c'][1])) $t[$k] = [round((float) $r['c'][0], 4), round((float) $r['c'][1], 4)];
+        elseif (isset(ALERT_TOWNS[$k])) $t[$k] = ALERT_TOWNS[$k];
+    }
+    if (!$t) $t = ALERT_TOWNS;
+    return $t;
+}
+/* the shared weather copies (2026-10-29): traverse-shared/weather/ beside every install on this host (made on first use); a lone
+   install with no such folder keeps them in its own data folder */
+const WX_SHARE_AGE = 120;                      /* the NWS copy: one request every 2 minutes at most, for all six installs */
+const WX_FIRE_AGE = 600;                       /* the wildfire copy: every 10 minutes, as before */
+const WX_FIRE_MILES = 60;
+const WX_FIRE_BOX = '-110.2,36.1,-100.9,41.9'; /* Colorado and about 60 miles around it (west, south, east, north) */
+const WX_ZONE_DAYS = 30, WX_ZONE_NEW = 4;      /* a zone's outline is kept 30 days; at most 4 new outlines fetched a refresh */
+function wxShareDir(): string {
+    static $d = null; if ($d !== null) return $d;
+    $s = dirname(__DIR__, 2) . '/traverse-shared/weather';
+    return $d = ((is_dir($s) || @mkdir($s, 0700, true)) && is_writable($s)) ? $s : DATA_DIR;
+}
+/** the test server's stand-in feeds (sixfold-private/wx-mock-url.txt); never on the host */
+function wxUrl(string $u): string {
+    $f = dirname(__DIR__, 2) . '/sixfold-private/wx-mock-url.txt';
+    if (PHP_SAPI === 'cli-server' && is_file($f)) return rtrim(trim((string) file_get_contents($f)), '/') . '/?u=' . rawurlencode($u);
+    return $u;
+}
+/** one shared feed: the copy in the shared folder while younger than $maxAge, else fetched once (one install at a time holds the
+    lock; the others use the copy they find). A failed fetch keeps the old copy and waits a minute before trying again.
+    ['data' => trimmed answer or null, 'at' => when that copy was fetched] */
+function wxShared(string $name, string $url, int $maxAge, callable $trim): array {
+    $f = wxShareDir() . '/' . $name . '.json';
+    $read = function () use ($f) { $c = json_decode((string) @file_get_contents($f), true); return is_array($c) ? $c : []; };
+    $ans = fn(array $c) => ['data' => is_array($c['data'] ?? null) ? $c['data'] : null, 'at' => (int) ($c['at'] ?? 0)];
+    $c = $read();
+    if (is_array($c['data'] ?? null) && (int) ($c['at'] ?? 0) > time() - $maxAge) return $ans($c);
+    if ((int) ($c['tried'] ?? 0) > time() - 60) return $ans($c);
+    $fp = @fopen($f . '.lock', 'c');
+    if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) { if ($fp) fclose($fp); return $ans($c); }
+    $c = $read();   /* another install may have fetched it a moment ago */
+    if (!(is_array($c['data'] ?? null) && (int) ($c['at'] ?? 0) > time() - $maxAge)) {
+        $j = httpJson(wxUrl($url));
+        $d = ($j !== null && !isset($j['error'])) ? $trim($j) : null;
+        if (is_array($d)) $c = ['at' => time(), 'data' => $d]; else $c['tried'] = time();
+        writeJsonAtomic($f, $c);
+    }
+    flock($fp, LOCK_UN); fclose($fp);
+    return $ans($c);
+}
+/** GeoJSON Polygon or MultiPolygon -> [polygon [ring [[lon, lat], ...], ...], ...], rounded; null when there is none */
+function wxGeom($g, int $dp = 4): ?array {
+    if (!is_array($g)) return null;
+    $t = (string) ($g['type'] ?? '');
+    $polys = $t === 'Polygon' ? [$g['coordinates'] ?? []] : ($t === 'MultiPolygon' ? (array) ($g['coordinates'] ?? []) : []);
+    $out = [];
+    foreach ($polys as $poly) {
+        $rings = [];
+        foreach ((array) $poly as $ring) {
+            $r = []; $last = null;
+            foreach ((array) $ring as $p) {
+                if (!is_array($p) || !isset($p[0], $p[1]) || !is_numeric($p[0]) || !is_numeric($p[1])) continue;
+                $q = [round((float) $p[0], $dp), round((float) $p[1], $dp)];
+                if ($q !== $last) { $r[] = $q; $last = $q; }
+            }
+            if (count($r) >= 3) $rings[] = $r;
+        }
+        if ($rings) $out[] = $rings;
+    }
+    return $out ?: null;
+}
+/** is the point inside any of the polygons (wxGeom's order, [lon, lat]; a polygon's later rings are holes: even-odd over all of them) */
+function wxInside(array $polys, float $la, float $lo): bool {
+    foreach ($polys as $poly) {
+        $in = false;
+        foreach ($poly as $ring) {
+            $n = count($ring);
+            for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
+                [$xi, $yi] = $ring[$i]; [$xj, $yj] = $ring[$j];
+                if (($yi > $la) !== ($yj > $la) && $lo < ($xj - $xi) * ($la - $yi) / ($yj - $yi) + $xi) $in = !$in;
+            }
+        }
+        if ($in) return true;
+    }
+    return false;
+}
+/** the box around polygons [south, west, north, east], to skip the full test for points far away */
+function wxBox(array $polys): array {
+    $b = [90.0, 180.0, -90.0, -180.0];
+    foreach ($polys as $poly) foreach ($poly as $ring) foreach ($ring as [$x, $y]) { $b = [min($b[0], $y), min($b[1], $x), max($b[2], $y), max($b[3], $x)]; }
+    return $b;
+}
+function wxIn(array $polys, array $box, float $la, float $lo): bool { return $la >= $box[0] && $la <= $box[2] && $lo >= $box[1] && $lo <= $box[3] && wxInside($polys, $la, $lo); }
+/** NWS's answer, trimmed to what the matching and the list need (no description text) */
+function wxTrimAlerts(array $j): ?array {
+    if (!is_array($j['features'] ?? null)) return null;
+    $out = [];
+    foreach ($j['features'] as $ft) {
+        $p = $ft['properties'] ?? []; $id = (string) ($p['id'] ?? $ft['id'] ?? '');
+        if ($id === '' || !isset($p['event'])) continue;
+        $zones = [];
+        foreach ((array) ($p['affectedZones'] ?? []) as $z) if (preg_match('#/zones/(forecast|county|fire)/([A-Z]{2}[CZ]\d{3})$#D', (string) $z, $m)) $zones[] = $m[1] . '/' . $m[2];
+        $out[] = ['id' => $id, 'event' => (string) $p['event'], 'headline' => (string) ($p['headline'] ?? ''),
+            'ends' => (string) ($p['ends'] ?? $p['expires'] ?? ''), 'severity' => (string) ($p['severity'] ?? ''), 'sent' => (string) ($p['sent'] ?? ''),
+            'hail' => is_numeric($p['parameters']['maxHailSize'][0] ?? null) ? (float) $p['parameters']['maxHailSize'][0] : null,
+            'wind' => (string) ($p['parameters']['maxWindGust'][0] ?? ''),
+            'poly' => wxGeom($ft['geometry'] ?? null), 'zones' => $zones,
+            'ugc' => array_values(array_map('strval', (array) ($p['geocode']['UGC'] ?? []))), 'same' => array_values(array_map('strval', (array) ($p['geocode']['SAME'] ?? [])))];
+    }
+    return $out;
+}
+/** the wildfire feed, trimmed: [name, acres, contained, found, county, lat, lon] for each wildfire not fully contained */
+function wxTrimFires(array $j): ?array {
+    if (!is_array($j['features'] ?? null)) return null;
+    $r = [];
+    foreach ($j['features'] as $ft) {
+        $a = $ft['attributes'] ?? []; $g = $ft['geometry'] ?? [];
+        if (!isset($g['x'], $g['y']) || !is_numeric($g['x']) || !is_numeric($g['y'])) continue;
+        if (($a['PercentContained'] ?? null) !== null && (float) $a['PercentContained'] >= 100) continue;
+        $r[] = [(string) ($a['IncidentName'] ?? 'Unnamed fire'), isset($a['IncidentSize']) ? (float) $a['IncidentSize'] : null,
+            isset($a['PercentContained']) ? (float) $a['PercentContained'] : null, isset($a['FireDiscoveryDateTime']) ? (int) ($a['FireDiscoveryDateTime'] / 1000) : null,
+            trim((string) ($a['POOCounty'] ?? '') . ', ' . preg_replace('/^US-/', '', (string) ($a['POOState'] ?? '')), ', '), round((float) $g['y'], 4), round((float) $g['x'], 4)];
+    }
+    return $r;
+}
+/** the outlines of NWS zones ('forecast/COZ046', 'county/COC041', 'fire/COZ222'), from the shared copy; up to $maxNew missing ones are
+    fetched (api.weather.gov/zones/<type>/<id>), the rest on a later refresh. A zone with no outline is remembered as such. */
+function wxZones(array $keys, int $maxNew = WX_ZONE_NEW): array {
+    $f = wxShareDir() . '/zones.json';
+    $c = json_decode((string) @file_get_contents($f), true) ?: [];
+    $out = []; $want = [];
+    foreach (array_unique($keys) as $k) {
+        $z = $c[$k] ?? null;
+        if (is_array($z) && (int) ($z['at'] ?? 0) > time() - WX_ZONE_DAYS * 86400) { if (!empty($z['g'])) $out[$k] = $z['g']; }
+        elseif (preg_match('#^(forecast|county|fire)/[A-Z]{2}[CZ]\d{3}$#D', (string) $k)) $want[] = $k;
+    }
+    if (!$want || $maxNew < 1) return $out;
+    $fp = @fopen($f . '.lock', 'c');
+    if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) { if ($fp) fclose($fp); return $out; }
+    $c = json_decode((string) @file_get_contents($f), true) ?: [];
+    $got = 0;
+    foreach (array_slice($want, 0, $maxNew) as $k) {
+        if (isset($c[$k]['at']) && (int) $c[$k]['at'] > time() - WX_ZONE_DAYS * 86400) { if (!empty($c[$k]['g'])) $out[$k] = $c[$k]['g']; continue; }
+        $j = httpJson(wxUrl('https://api.weather.gov/zones/' . $k));
+        if ($j === null) continue;   /* tried again next refresh */
+        $g = wxGeom($j['geometry'] ?? null, 3);
+        $c[$k] = ['at' => time(), 'g' => $g]; $got++;
+        if ($g) $out[$k] = $g;
+    }
+    if ($got) writeJsonAtomic($f, $c);
+    flock($fp, LOCK_UN); fclose($fp);
+    return $out;
+}
+/** an alert's shapes: its own polygon, else the outlines of the zones it names that are known */
+function wxShapes(array $a, array $zg): array {
+    if (!empty($a['poly'])) return $a['poly'];
+    $p = []; foreach ((array) ($a['zones'] ?? []) as $z) if (isset($zg[$z])) foreach ($zg[$z] as $poly) $p[] = $poly;
+    return $p;
+}
+/** the National Weather Service page for an alert (2026-10-29: alerts.weather.gov no longer resolves). Checked against live alerts
+    on 2026-10-29: forecast.weather.gov/showsigwx.php shows a zone's and county's alert texts when given a forecast zone AND a county;
+    an alert without both (a county-only storm warning, a fire-weather zone) gets its own record at api.weather.gov/alerts/<id>. */
+function wxLink(array $a): string {
+    $z = ''; foreach ((array) ($a['zones'] ?? []) as $k) if (preg_match('#^forecast/(COZ\d{3})$#D', (string) $k, $m)) { $z = $m[1]; break; }
+    $c = ''; foreach ((array) ($a['same'] ?? []) as $s) if (preg_match('/^008(\d{3})$/D', (string) $s, $m)) { $c = 'COC' . $m[1]; break; }
+    if ($z !== '' && $c !== '') return 'https://forecast.weather.gov/showsigwx.php?' . http_build_query(['warnzone' => $z, 'warncounty' => $c, 'product1' => (string) $a['event']]);
+    return 'https://api.weather.gov/alerts/' . rawurlencode((string) $a['id']);
+}
+/* every event any install may show: the shared copy is matched against these only */
+function wxAllEvents(): array { return array_values(array_unique(array_merge(ALERT_EVENTS, ALERT_EXTRA, ALERT_WINTER, alertEvents() ?? []))); }
+function freshAlerts(int $maxAge = 600): array {
+    $f = DATA_DIR . '/alerts-cache.json';
+    $cache = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
+    if (($cache['at'] ?? 0) > time() - $maxAge) return $cache;
+    $fp = @fopen($f . '.lock', 'c');                        /* one refresh at a time */
+    if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) return $cache ?: ['at' => 0, 'weather' => [], 'fires' => [], 'stale' => true];
+    $towns = alertTowns();
+    $nws = wxShared('nws-co', 'https://api.weather.gov/alerts/active?area=CO', WX_SHARE_AGE, 'wxTrimAlerts');
+    $wOk = $nws['data'] !== null && $nws['at'] > time() - 1800;   /* a copy older than half an hour is no answer */
+    $weather = []; $near = [];   /* near: a warning over none of the town centres but within about 10 miles of one, for the doors only */
+    if ($wOk) {
+        $all = wxAllEvents();
+        $keep = array_values(array_filter($nws['data'], fn($a) => in_array((string) ($a['event'] ?? ''), $all, true)));
+        $need = []; foreach ($keep as $a) if (empty($a['poly'])) foreach ((array) $a['zones'] as $z) $need[] = $z;
+        $zg = $need ? wxZones($need) : [];
+        foreach ($keep as $a) {
+            $polys = wxShapes($a, $zg); if (!$polys) continue;
+            $box = wxBox($polys); $hit = [];
+            foreach ($towns as $town => [$la, $lo]) if (wxIn($polys, $box, (float) $la, (float) $lo)) $hit[] = $town;
+            $close = false;
+            if (!$hit) foreach ($towns as [$la, $lo]) if ($la >= $box[0] - 0.15 && $la <= $box[2] + 0.15 && $lo >= $box[1] - 0.15 && $lo <= $box[3] + 0.15) { $close = true; break; }
+            if (!$hit && !$close) continue;
+            $row = ['event' => $a['event'], 'headline' => $a['headline'], 'ends' => $a['ends'], 'severity' => $a['severity'],
+                'id' => $a['id'], 'url' => wxLink($a), 'towns' => $hit, 'hail' => $a['hail'], 'wind' => $a['wind'], 'sent' => $a['sent'],
+                'poly' => $a['poly'] ?: null, 'zones' => $a['poly'] ? [] : array_values((array) $a['zones'])];
+            if ($hit) $weather[$a['id']] = $row; else $near[] = $row;
+        }
+    }
+    $fires = [];
+    $fq = http_build_query(['where' => "IncidentTypeCategory='WF'", 'geometry' => WX_FIRE_BOX, 'geometryType' => 'esriGeometryEnvelope', 'inSR' => '4326',
+        'spatialRel' => 'esriSpatialRelIntersects', 'outFields' => 'IncidentName,IncidentSize,PercentContained,FireDiscoveryDateTime,POOCounty,POOState',
+        'returnGeometry' => 'true', 'outSR' => '4326', 'f' => 'json']);
+    $wf = wxShared('wfigs-co', 'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?' . $fq, WX_FIRE_AGE, 'wxTrimFires');
+    $fOk = $wf['data'] !== null && $wf['at'] > time() - 3600;
+    if ($fOk) foreach ($wf['data'] as [$name, $acres, $cont, $found, $county, $fla, $flo]) {
+        $best = null; $dist = [];
+        foreach ($towns as $town => [$la, $lo]) {
+            $mi = milesBetween((float) $la, (float) $lo, (float) $fla, (float) $flo);
+            if ($mi <= WX_FIRE_MILES) $dist[$town] = (int) round($mi);
+            if (!$best || $mi < $best[1]) $best = [$town, $mi];
+        }
+        if (!$best || $best[1] > WX_FIRE_MILES) continue;   /* within 60 miles of one of this install's towns (was: of Monument) */
+        $fires[] = ['name' => $name, 'acres' => $acres, 'contained' => $cont, 'found' => $found, 'county' => $county,
+            'near' => $best[0], 'miles' => (int) round($best[1]), 'dist' => $dist, 'lat' => $fla, 'lon' => $flo];
+    }
+    usort($fires, fn($x, $y) => $x['miles'] <=> $y['miles']);
+    if ($wOk) recentStorms($weather ?: ['_' => ['event' => '']]);   /* remember storm warnings (the dummy only prunes) */
+    $out = ['at' => time(),
+            'weather' => $wOk || !$cache ? array_values($weather) : ($cache['weather'] ?? []),
+            'fires' => $fOk || !$cache ? $fires : ($cache['fires'] ?? []),
+            'near' => $wOk || !$cache ? $near : ($cache['near'] ?? []),
+            'stale' => !$wOk || !$fOk || $nws['at'] < time() - 900 || $wf['at'] < time() - 1800];
+    @file_put_contents($f, json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    flock($fp, LOCK_UN); fclose($fp);
+    return $out;
+}
+/** the warnings this person is shown, of this install's matched list */
+function alertsShown(array $a, string $role): array {
+    $list = alertEvents();
+    return array_values(array_filter($a['weather'] ?? [], function ($x) use ($list, $role) {
+        $ev = (string) ($x['event'] ?? '');
+        if ($list === null) return in_array($ev, ALERT_EVENTS, true) && (!isStorm($x) || hailOn($role));   /* storms: where hail is on only */
+        return in_array($ev, $list, true) && (!isStorm($x) || !feature('hail') || hailOn($role));          /* a storm is a safety warning where there is no hail card */
+    }));
+}
+/** the warnings over each door (2026-10-29): fn(door) -> [[event, ends, link], ...] for a door inside a warning this person is shown
+    (its own polygon, or the outlines of its zones), null for the rest. Reads the matched list as it stands (no fetch from the door list);
+    one older than an hour, or a warning that has ended, counts for nothing. */
+function wxDoorMatcher(string $role): callable {
+    $c = json_decode((string) @file_get_contents(DATA_DIR . '/alerts-cache.json'), true);
+    $ws = (is_array($c) && (int) ($c['at'] ?? 0) > time() - 3600) ? alertsShown(['weather' => array_merge((array) ($c['weather'] ?? []), (array) ($c['near'] ?? []))], $role) : [];
+    $ws = array_values(array_filter($ws, fn($w) => (strtotime((string) ($w['ends'] ?? '')) ?: PHP_INT_MAX) > time()));
+    if (!$ws) return fn($d) => null;
+    $need = []; foreach ($ws as $w) if (empty($w['poly'])) foreach ((array) ($w['zones'] ?? []) as $z) $need[] = $z;
+    $zg = $need ? wxZones($need, 0) : [];
+    $use = [];
+    foreach ($ws as $w) { $p = wxShapes($w, $zg); if ($p) $use[] = [$p, wxBox($p), [(string) $w['event'], (string) ($w['ends'] ?? ''), (string) ($w['url'] ?? '')]]; }
+    return function ($d) use ($use) {
+        if (!$use || !isset($d['lat'], $d['lon']) || !is_numeric($d['lat']) || !is_numeric($d['lon'])) return null;
+        $r = []; foreach ($use as [$p, $b, $row]) if (wxIn($p, $b, (float) $d['lat'], (float) $d['lon'])) $r[] = $row;
+        return $r ?: null;
+    };
+}
+/** the alert's shape for the maps, in Leaflet's [lat, lon] order */
+function wxLatLon(?array $polys): ?array {
+    if (!$polys) return null;
+    return array_map(fn($poly) => array_map(fn($ring) => array_map(fn($p) => [$p[1], $p[0]], $ring), $poly), $polys);
+}
 if ($action === 'area') {
     $key  = (string) ($_REQUEST['region'] ?? '');
     $name = (string) ($_REQUEST['area'] ?? '');
@@ -3963,7 +4291,8 @@ if ($action === 'area') {
     $hailOf = hailOn($role) ? loadSide('hail', $key, $only) : [];   /* admins only: storms near the house, newest first */
     $hrepOf = hailOn($role) ? loadSide('hailrep', $key, $only) : [];   /* measured on the ground (2026-10-12) */
     $hrecent = hailOn($role) ? hailRecentReports() : [];
-    $roofOf = roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
+    $wxOf = wxDoorMatcher($role);   /* the weather warnings over each door, by the warning's shape (2026-10-29) */
+    $roofOf =roofDataOn($role) ? loadSide('roof', $key, $only) : []; $bldOf = roofDataOn($role) ? loadSide('year', $key, $only) : [];
     /* everywhere else, only houses built in or after the aerial photo's year, so the lot preview can say why the house may not show
        (2026-10-20, Matthew: "if its builts after 2023 we should probably state that as a reason for not having imagery") */
     if (!roofDataOn($role)) { $photoYr = (int) (market()['naip']['year'] ?? 2023); $bldOf = array_filter(array_map(fn($v) => is_array($v) && (int) ($v['yb'] ?? 0) >= $photoYr ? ['yb' => (int) $v['yb']] : null, loadSide('year', $key, $only))); }
@@ -4034,6 +4363,7 @@ if ($action === 'area') {
                 'trace' => isset($traces[$d['id']]) ? skipPublic($traces[$d['id']]) : null,
                 'hail' => hailWithHours($hailOf[$d['id']] ?? null, $key), 'wind' => windRows($windOf[$d['id']] ?? null),
                 'hrep' => hailRepRows($hrepOf[$d['id']] ?? null, $hrecent, $d),
+                'wx' => $wxOf($d),
                 'roof' => $roofOf[$d['id']] ?? null, 'bld' => $bldOf[$d['id']] ?? null, 'mat' => $matOf[$d['id']] ?? null, 'matfix' => $mfxOf[$d['id']] ?? null, 'naip' => $naipOf[$d['id']] ?? null, 'ol' => olRows($olOf[$d['id']] ?? null), 'photo' => $photoOf[$d['id']] ?? null, 'solar' => $solarRow($solarOf[$d['id']] ?? null), 'permit' => $permOf[$d['id']] ?? null, 'nri' => $nriOf((string) $d['id']), 'cen' => $cenOf((string) $d['id']), 'pest' => $pestRow, 'sec' => $secRow,
                 'city' => $placeOf[$d['id']]['c'] ?? null, 'zip' => $placeOf[$d['id']]['z'] ?? null,   /* for Look up number (2026-10-04); the mailing address stays on the server */
                 'note' => $n ? ['note' => $n['note'], 'by' => $n['by'], 'at' => $n['at']] + ownerFlag($d, $n) : null,
@@ -4526,160 +4856,16 @@ if ($action === 'communities') {
     out(['ok' => true, 'communities' => $list]);
 }
 
-/* ---- alerts (SX-41, 2026-10-03) ------------------------------------------------------
- * Fire weather and wildfires near the towns, from two public feeds, fetched at most every
- * 10 minutes and kept in sixfold-data/rounds/alerts-cache.json:
- *   - National Weather Service active alerts at each town's centre (api.weather.gov), kept
- *     when they bear on the work: red flag, fire weather, fire, heat, air quality, smoke, wind;
- *   - wildfires (not prescribed burns) within 60 miles that are not fully contained, from the
- *     national interagency incident feed (NIFC WFIGS current incident locations).
- * Homeowners listen after a scare; the app also says never to knock inside an evacuation area.
- * A feed that fails keeps the last good answer and says how old it is. Any signed-in user. */
-const ALERT_TOWNS = [
-    'monument' => [39.0917, -104.8722], 'palmer-lake' => [39.1222, -104.9169], 'black-forest' => [39.0138, -104.7025],
-    'castle-rock' => [39.3722, -104.8561], 'larkspur' => [39.2311, -104.8747], 'sedalia' => [39.4386, -104.9614],
-    'franktown' => [39.3894, -104.7519], 'woodland-park' => [39.0000, -105.0569], 'divide' => [38.9469, -105.1636],
-    'florissant' => [38.9469, -105.2911], 'cripple-creek' => [38.7466, -105.1783]];
-const ALERT_EVENTS = ['Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Extreme Fire Danger', 'Heat Advisory',
-    'Excessive Heat Warning', 'Extreme Heat Warning', 'Air Quality Alert', 'Dense Smoke Advisory', 'High Wind Warning', 'High Wind Watch',
-    'Severe Thunderstorm Warning', 'Severe Thunderstorm Watch', 'Tornado Warning'];
-/* per install (Matthew 2026-10-06: "only include the weather alerts that are relative to each edition"): company.json "alerts"
-   lists the events this install shows and pushes, and wildfires only when it names 'Wildfires'. Without it (Sixfold), ALERT_EVENTS
-   and the wildfire feed as before. Freeze and frost are fetched for the lawn edition. */
-const ALERT_EXTRA = ['Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory'];
-function alertEvents(): ?array { $a = company()['alerts'] ?? null; return is_array($a) ? array_values(array_map('strval', $a)) : null; }
-/* hail (Matthew 2026-10-05): the storm alerts go only where hail is on (admins of a company with features.hail); a warning
-   carries the NWS's own hail size and wind gust. Each one seen is remembered for STORM_KEEP so the storm call list still
-   works the day after, when the warning has left the live feed. */
-const STORM_EVENTS = ['Severe Thunderstorm Warning', 'Severe Thunderstorm Watch'];
-const STORM_KEEP = 3 * 86400;
-function isStorm(array $w): bool { return in_array((string) ($w['event'] ?? ''), STORM_EVENTS, true); }
-function recentStorms(array $active = []): array {
-    $f = DATA_DIR . '/storms-recent.json';
-    $all = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
-    if ($active) {
-        foreach ($active as $id => $w) if (isStorm($w)) $all[$id] = $w + ['seen' => time()];
-        $all = array_filter($all, fn($w) => (int) ($w['seen'] ?? 0) > time() - STORM_KEEP);
-        @file_put_contents($f, json_encode($all, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
-    }
-    return array_filter($all, fn($w) => (int) ($w['seen'] ?? 0) > time() - STORM_KEEP);
-}
-function httpJson(string $url, array $headers = []): ?array {
-    $hdr = array_merge([agentHeader(), 'Accept: application/geo+json, application/json'], $headers);
-    if (function_exists('curl_init')) {
-        $c = curl_init($url);
-        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_HTTPHEADER => $hdr, CURLOPT_FOLLOWLOCATION => true]);
-        $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
-        if ($body !== false && $code === 200) { $j = json_decode((string) $body, true); if (is_array($j)) return $j; }
-    }
-    return httpJsonPlain($url, $hdr);   /* curl missing or failing (e.g. no certificate list): the plain way */
-}
-function httpJsonPlain(string $url, array $hdr): ?array {
-    $body = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 8, 'header' => implode("\r\n", $hdr)]]));
-    if ($body === false) return null;
-    $j = json_decode((string) $body, true);
-    return is_array($j) ? $j : null;
-}
-/** several GETs at once (curl_multi); null for any that failed. Falls back to one at a time. */
-function httpJsonMany(array $urls): array {
-    if (!function_exists('curl_multi_init')) return array_map(fn($u) => httpJson($u), $urls);
-    $hdr = [agentHeader(), 'Accept: application/geo+json, application/json'];
-    $mh = curl_multi_init(); $hs = [];
-    foreach ($urls as $k => $u) {
-        $c = curl_init($u);
-        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_HTTPHEADER => $hdr, CURLOPT_FOLLOWLOCATION => true]);
-        curl_multi_add_handle($mh, $c); $hs[$k] = $c;
-    }
-    do { $st = curl_multi_exec($mh, $running); if ($running) curl_multi_select($mh, 1.0); } while ($running && $st === CURLM_OK);
-    $out = [];
-    foreach ($hs as $k => $c) {
-        $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); $body = curl_multi_getcontent($c);
-        $j = ($code === 200 && $body) ? json_decode((string) $body, true) : null;
-        $out[$k] = is_array($j) ? $j : httpJsonPlain($urls[$k], $hdr);   /* a failed one gets one plain retry */
-        curl_multi_remove_handle($mh, $c); curl_close($c);
-    }
-    curl_multi_close($mh);
-    return $out;
-}
-function milesBetween(float $la1, float $lo1, float $la2, float $lo2): float {
-    return hypot(($la1 - $la2) * 69.0, ($lo1 - $lo2) * 69.0 * cos(deg2rad($la1)));
-}
-/** the towns whose alerts this install asks for (2026-10-07): every town it shows, at its centre (index.json "c", written by
-    build-rounds-data.mjs); a town without one falls back to ALERT_TOWNS, and with none at all the fixed list is used */
-function alertTowns(): array {
-    static $t = null; if ($t !== null) return $t;
-    $t = [];
-    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: [];
-    foreach (($idx['regions'] ?? []) as $r) {
-        $k = (string) ($r['key'] ?? ''); if ($k === '' || regionHidden($k)) continue;
-        if (isset($r['c'][0], $r['c'][1]) && is_numeric($r['c'][0]) && is_numeric($r['c'][1])) $t[$k] = [round((float) $r['c'][0], 4), round((float) $r['c'][1], 4)];
-        elseif (isset(ALERT_TOWNS[$k])) $t[$k] = ALERT_TOWNS[$k];
-    }
-    if (!$t) $t = ALERT_TOWNS;
-    return $t;
-}
-function freshAlerts(int $maxAge = 600): array {
-    $f = DATA_DIR . '/alerts-cache.json';
-    $cache = is_readable($f) ? (json_decode((string) file_get_contents($f), true) ?: []) : [];
-    if (($cache['at'] ?? 0) > time() - $maxAge) return $cache;
-    $fp = @fopen($f . '.lock', 'c');                        /* one refresh at a time */
-    if (!$fp || !flock($fp, LOCK_EX | LOCK_NB)) return $cache ?: ['at' => 0, 'weather' => [], 'fires' => [], 'stale' => true];
-    $weather = []; $wOk = true;
-    $towns = alertTowns();
-    $answers = httpJsonMany(array_map(fn($p) => 'https://api.weather.gov/alerts/active?point=' . $p[0] . ',' . $p[1], $towns));
-    foreach ($towns as $town => [$la, $lo]) {
-        $j = $answers[$town] ?? null;
-        if ($j === null) { $wOk = false; continue; }
-        foreach (($j['features'] ?? []) as $ft) {
-            $p = $ft['properties'] ?? [];
-            if (!in_array($p['event'] ?? '', ALERT_EVENTS, true) && !in_array($p['event'] ?? '', ALERT_EXTRA, true)) continue;
-            $id = (string) ($p['id'] ?? $ft['id'] ?? '');
-            if (!isset($weather[$id])) $weather[$id] = ['event' => $p['event'], 'headline' => (string) ($p['headline'] ?? ''),
-                'ends' => (string) ($p['ends'] ?? $p['expires'] ?? ''), 'severity' => (string) ($p['severity'] ?? ''),
-                'id' => $id, 'url' => 'https://alerts.weather.gov/search?id=' . rawurlencode($id), 'towns' => [],
-                'hail' => is_numeric($p['parameters']['maxHailSize'][0] ?? null) ? (float) $p['parameters']['maxHailSize'][0] : null,
-                'wind' => (string) ($p['parameters']['maxWindGust'][0] ?? ''), 'sent' => (string) ($p['sent'] ?? '')];
-            $weather[$id]['towns'][] = $town;
-        }
-    }
-    $fires = []; $fOk = true;
-    $q = http_build_query(['where' => "IncidentTypeCategory='WF'", 'geometry' => '-104.95,39.1', 'geometryType' => 'esriGeometryPoint', 'inSR' => '4326',
-        'distance' => '60', 'units' => 'esriSRUnit_StatuteMile', 'outFields' => 'IncidentName,IncidentSize,PercentContained,FireDiscoveryDateTime,POOCounty,POOState',
-        'returnGeometry' => 'true', 'outSR' => '4326', 'f' => 'json']);
-    $j = httpJson('https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?' . $q);
-    if ($j === null || isset($j['error'])) $fOk = false;
-    else foreach (($j['features'] ?? []) as $ft) {
-        $a = $ft['attributes'] ?? []; $g = $ft['geometry'] ?? [];
-        if (!isset($g['x'], $g['y'])) continue;
-        if (($a['PercentContained'] ?? null) !== null && (float) $a['PercentContained'] >= 100) continue;
-        $best = null; $dist = [];
-        foreach ($towns as $town => [$la, $lo]) { $mi = milesBetween($la, $lo, (float) $g['y'], (float) $g['x']); $dist[$town] = (int) round($mi); if (!$best || $mi < $best[1]) $best = [$town, $mi]; }
-        $fires[] = ['name' => (string) ($a['IncidentName'] ?? 'Unnamed fire'), 'acres' => isset($a['IncidentSize']) ? (float) $a['IncidentSize'] : null,
-            'contained' => isset($a['PercentContained']) ? (float) $a['PercentContained'] : null,
-            'found' => isset($a['FireDiscoveryDateTime']) ? (int) ($a['FireDiscoveryDateTime'] / 1000) : null,
-            'county' => trim((string) ($a['POOCounty'] ?? '') . ', ' . (string) ($a['POOState'] ?? ''), ', '),
-            'near' => $best[0], 'miles' => (int) round($best[1]), 'dist' => $dist, 'lat' => (float) $g['y'], 'lon' => (float) $g['x']];
-    }
-    usort($fires, fn($x, $y) => $x['miles'] <=> $y['miles']);
-    if ($wOk) recentStorms($weather ?: ['_' => ['event' => '']]);   /* remember storm warnings (the dummy only prunes) */
-    $out = ['at' => time(),
-            'weather' => $wOk || !$cache ? array_values($weather) : ($cache['weather'] ?? []),
-            'fires' => $fOk || !$cache ? $fires : ($cache['fires'] ?? []),
-            'stale' => !$wOk || !$fOk];
-    @file_put_contents($f, json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
-    flock($fp, LOCK_UN); fclose($fp);
-    return $out;
-}
+/* ---- alerts: the answer (the feeds, the matching and the constants sit before the door list, which matches doors too) ---- */
 if ($action === 'alerts') {
     $a = freshAlerts();
     $list = alertEvents();
-    $w = array_values(array_filter($a['weather'] ?? [], function ($x) use ($list, $role) {
-        $ev = (string) ($x['event'] ?? '');
-        if ($list === null) return in_array($ev, ALERT_EVENTS, true) && (!isStorm($x) || hailOn($role));   /* storms: where hail is on only */
-        return in_array($ev, $list, true) && (!isStorm($x) || !feature('hail') || hailOn($role));          /* a storm is a safety warning where there is no hail card */
-    }));
+    $shape = fn($x) => array_diff_key($x, ['poly' => 1, 'zones' => 1]) + ['geo' => wxLatLon($x['poly'] ?? null)];
+    $w = array_map($shape, alertsShown($a, $role));
+    /* near: warnings over none of the town centres but close to them, for the maps' outlines only (the lists and pushes leave them out) */
+    $near = array_values(array_filter(array_map($shape, alertsShown(['weather' => $a['near'] ?? []], $role)), fn($x) => $x['geo'] !== null));
     $fires = $list === null || in_array('Wildfires', $list, true) ? ($a['fires'] ?? []) : [];
-    out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $w, 'fires' => $fires, 'stale' => !empty($a['stale'])]);
+    out(['ok' => true, 'at' => $a['at'] ?? 0, 'weather' => $w, 'near' => $near, 'fires' => $fires, 'stale' => !empty($a['stale'])]);
 }
 
 /* ---- around our jobs (2026-10-03, after GlassHouse) ------------------------------------
@@ -4750,7 +4936,8 @@ if ($action === 'alertcalls') {
     } else {
         /* the warnings this install shows (review 2026-10-07: the cache now also holds freeze and frost for the lawn edition; Sixfold's list never did) */
         $shown = alertEvents() ?? ALERT_EVENTS;
-        foreach (($al['weather'] ?? []) as $w) if (!isStorm($w) && in_array((string) ($w['event'] ?? ''), $shown, true)) foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = (string) $w['event'];
+        $winter = array_diff(ALERT_WINTER, ['High Wind Warning', 'High Wind Watch']);   /* the winter warnings (2026-10-29) are for the crews' safety, not a reason to call customers */
+        foreach (($al['weather'] ?? []) as $w) if (!isStorm($w) && in_array((string) ($w['event'] ?? ''), $shown, true) && !in_array((string) ($w['event'] ?? ''), $winter, true)) foreach ((array) ($w['towns'] ?? []) as $t) $towns[$t][] = (string) $w['event'];
         foreach (($al['fires'] ?? []) as $fi) foreach ((array) ($fi['dist'] ?? []) as $t => $mi) if ($mi <= 30) $towns[$t][] = 'Wildfire ' . $mi . ' mi away (' . $fi['name'] . ')';
     }
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
