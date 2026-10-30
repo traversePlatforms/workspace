@@ -33,6 +33,9 @@ if (!$mxNow && !$mxDry && is_file(dirname(__DIR__) . '/public_html/prospects-47b
 /* every install's door-search index, rebuilt here when a town file changed instead of inside someone's first search (2026-10-27, code
    review item 9); in the background, so this email never waits on it */
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/search-index-warm.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/search-index-warm.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/search-warm.log') . ' 2>&1 &');
+/* client installs pick up towns that came into their radius (new towns, e.g. Group 3) once a day, at the 4 am run (2026-10-30: there is
+   no crontab command on this host, so it rides on this hourly job) */
+if (!$mxNow && !$mxDry && date('G') === '4' && is_file(dirname(__DIR__) . '/traverse-tools/clients.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/traverse-tools/clients.php') . ' relink >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/clients-relink.log') . ' 2>&1 &');
 /* and every install's towns answer, so the first phone after midnight or a settings save doesn't wait for all the towns (2026-10-29) */
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/regions-warm.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/regions-warm.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/regions-warm.log') . ' 2>&1 &');
 $mxSite = dirname(__DIR__);
