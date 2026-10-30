@@ -1769,7 +1769,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .prcrule{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px;border:1px solid var(--line);border-radius:12px}.prcblock{display:grid;justify-items:start}
   .prcsur,.prcband{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 0;border-top:1px dashed var(--line);width:100%;font-size:14.5px}
   .prcsur input,.prcband input,.prcbase input{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans)}.prcsur input:not(.kitqty){flex:1 1 9em;min-width:0}
-  .prcsur select,.prcmd select,.prccopts select,.prcmode select{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans);max-width:100%}
+  .prcsur select,.prcmd select,.prccopts select,.prcmode select,.prctiers select{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans);max-width:100%}
   .prcbase{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;width:100%}.prcbase input{flex:1 1 14em;min-width:0}.prcmd{display:inline-flex;gap:4px}
   .prcclause{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.prcclause.off{opacity:.62}.prcclause small{color:var(--soft)}
   .prcctop{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.prcctop .prcact{margin-left:auto;display:flex;gap:12px}.prcbadge{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--later-tint);color:var(--later)}
@@ -1779,6 +1779,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .prcpre{margin:0;max-height:60vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.45 ui-monospace,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:var(--ink)}
   .prcpre mark{background:var(--later-tint);color:var(--ink);outline:2px solid var(--later);border-radius:2px}.prcpdf{width:100%;height:60vh;border:1px solid var(--line);border-radius:10px;background:#fff}
   @media (min-width:960px){.prcsplit{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}.prcread{position:sticky;top:70px}}
+  .prcdraft .prcrow{grid-template-columns:auto minmax(0,1fr)}.prcdraft .prcrow>input:first-child,.prcdraft .prcrow select,.prcdraft .prcrow .prcact{grid-column:1/-1}
   .prcnotes{margin:0;padding-left:20px;font-size:14px}
   .prcseg{display:flex;gap:6px;flex-wrap:wrap}.prcseg button{min-height:38px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}.prcseg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
   .prcbig{font-size:16px;margin:4px 0}.prcft{display:grid;gap:8px}.prcfr{display:grid;grid-template-columns:minmax(7em,auto) minmax(0,1fr) 3.2em;gap:4px 10px;align-items:center}.prcfr small{grid-column:1/-1;color:var(--soft)}
@@ -13644,7 +13645,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     function adj(useSkip) {
       var add = [], far = false;
       if (items.length) {
-        R.sur.forEach(function (s) { if (s.on && !(useSkip && skip[s.id]) && prcMatchC(P, s, f)) add.push({ id: 's:' + s.id, t: s.label + ' (' + P.facts[s.fact][0] + ' ' + prcFactText(P, s.fact, f[s.fact]) + ')', amt: s.how === 'pct' ? prcRnd(lineSum * s.amt / 100) : prcRnd(s.amt), qty: 1, unit: 'flat' }); });
+        R.sur.forEach(function (s) { if (s.on && !(useSkip && skip[s.id]) && prcMatchC(P, s, f)) add.push({ id: 's:' + s.id, t: s.label, f: P.facts[s.fact][0] + ' ' + prcFactText(P, s.fact, f[s.fact]), amt: s.how === 'pct' ? prcRnd(lineSum * s.amt / 100) : prcRnd(s.amt), qty: 1, unit: 'flat' }); });
         R.season.forEach(function (s) { if (s.on && !(useSkip && skip[s.id]) && prcInSeasonC(s, date)) add.push({ id: 'n:' + s.id, t: s.label + ' (' + (s.pct > 0 ? '+' : '') + prcNumText(s.pct, 1) + '%)', amt: prcRnd(lineSum * s.pct / 100), qty: 1, unit: 'flat' }); });
       }
       if (items.length && R.travel.on && miles != null && !(useSkip && skip.travel)) {
@@ -13664,7 +13665,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return { items: items, total: tot, list: L0.tot, need: need, far: A.far, miles: miles, sugg: sugg };
   }
   /* the adjustments that would apply to this house (for the rep's Leave off boxes), from a pricing with no skips */
-  function prcAdjList(P, res) { return res.items.filter(function (x) { return /^(s:|n:|t:|min$)/.test(x.id); }).map(function (x) { return { key: x.id === 'min' ? 'min' : x.id === 't:travel' ? 'travel' : x.id.slice(2), t: x.t, amt: x.amt }; }); }
+  function prcAdjList(P, res) { return res.items.filter(function (x) { return /^(s:|n:|t:|min$)/.test(x.id); }).map(function (x) { return { key: x.id === 'min' ? 'min' : x.id === 't:travel' ? 'travel' : x.id.slice(2), t: x.t + (x.f ? ' (' + x.f + ')' : ''), amt: x.amt }; }); }
   function prcTierName(P, k) { return P.tiers.on ? ((P.tiers.list[k] || {}).name || k) : ''; }
   /* ---- the quote builder ---- */
   function prcQuoteView(lead) {
@@ -13768,7 +13769,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       function paint() {
         var r = priceOf(tier); sumBox.textContent = '';
-        r.items.forEach(function (x) { var r0 = q('div', 'kitline'); r0.appendChild(q('span', null, x.t)); r0.appendChild(q('b', null, (x.amt < 0 ? '−' : '') + money0(Math.abs(x.amt)))); sumBox.appendChild(r0); });
+        r.items.forEach(function (x) { var r0 = q('div', 'kitline'); r0.appendChild(q('span', null, x.t + (x.f ? ' (' + x.f + ')' : '')));   /* the fact behind a surcharge: staff only */ r0.appendChild(q('b', null, (x.amt < 0 ? '−' : '') + money0(Math.abs(x.amt)))); sumBox.appendChild(r0); });
         var tt = q('div', 'kitline kittotal'); tt.appendChild(q('span', null, P.tiers.on ? prcTierName(P, tier) + ' total' : 'Total')); tt.appendChild(q('b', null, money0(r.total))); sumBox.appendChild(tt);
         if (r.total !== r.list) sumBox.appendChild(q('div', 'sub2', 'Your price list gives ' + money0(r.list) + '.'));
         if (r.need.length) sumBox.appendChild(q('div', 'sub2', 'Not priced yet (needs a measurement): ' + r.need.map(function (id) { var l = P.lines.filter(function (x) { return x.id === id; })[0]; return l ? l.label : id; }).join(', ') + '.'));

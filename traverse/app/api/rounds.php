@@ -2855,7 +2855,7 @@ if ($action === 'a365quote' || $action === 'a365accept') {
         out(['ok' => true, 'first' => $first, 'street' => $street, 'pkg' => $Q['pkg'], 'svc' => (string) ($Q['svc'] ?? ''), 'price' => (int) $Q['price'], 'date' => date('F j, Y', (int) $Q['at']),
              'items' => kitOn() ? array_values(array_map(fn($x) => ['t' => (string) $x['t'], 'amt' => (int) $x['amt']], (array) ($Q['items'] ?? []))) : null, 'note' => kitOn() ? (string) ($Q['note'] ?? '') : null,
              'offer' => $off ? ['day' => a365Day($off['date']), 'arrive' => a365Arrive((string) $off['slot'])] : null,
-             'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone, 'ways' => payWays(), 'options' => prcOptionsOut($Q)]);   /* + other ways to pay, an edition (2026-10-29) */
+             'accepted' => $acc && !$job ? true : false, 'booked' => $job ? $bookedOut($job) : null, 'phone' => $phone, 'ways' => payWays()] + (kitOn() ? ['options' => prcOptionsOut($Q)] : []));   /* + Good / Better / Best, a kit install (2026-10-30) */   /* + other ways to pay, an edition (2026-10-29) */
     }
     if (!$isPost) fail('POST required', 405);
     if (!throttleTake(rateFile('a365accept|' . visitorKey()), 10, 86400)) fail('We have had a lot of answers from here today. Please call or text us.', 429);
@@ -13002,7 +13002,7 @@ function prcPrice(array $cfg, array $m, array $H, string $tier, array $picks, ar
         $add = []; $R = $cfg['rules'];
         if ($items) {
             foreach ($R['sur'] as $s) if ($s['on'] && !($useSkip && isset($skip[$s['id']])) && prcMatch($s, $f))
-                $add[] = ['id' => 's:' . $s['id'], 't' => $s['label'] . ' (' . prcFacts()[$s['fact']][0] . ' ' . prcFactText($s['fact'], $f[$s['fact']]) . ')', 'amt' => (int) ($s['how'] === 'pct' ? round($lineSum * $s['amt'] / 100) : round($s['amt'])), 'qty' => 1, 'unit' => 'flat'];
+                $add[] = ['id' => 's:' . $s['id'], 't' => $s['label'], 'f' => prcFacts()[$s['fact']][0] . ' ' . prcFactText($s['fact'], $f[$s['fact']]),   /* f: the fact, for staff only (never on the customer's pages) */ 'amt' => (int) ($s['how'] === 'pct' ? round($lineSum * $s['amt'] / 100) : round($s['amt'])), 'qty' => 1, 'unit' => 'flat'];
             foreach ($R['season'] as $s) if ($s['on'] && !($useSkip && isset($skip[$s['id']])) && prcInSeason($s, $date))
                 $add[] = ['id' => 'n:' . $s['id'], 't' => $s['label'] . ' (' . ($s['pct'] > 0 ? '+' : '') . rtrim(rtrim(number_format($s['pct'], 1), '0'), '.') . '%)', 'amt' => (int) round($lineSum * $s['pct'] / 100), 'qty' => 1, 'unit' => 'flat'];
         }
