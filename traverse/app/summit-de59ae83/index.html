@@ -2887,6 +2887,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (pAdd('pay.page')) x.push(['card', 'Payments', 'Every payment taken, in one list.', paymentsView, ['payments'], 'card']);
     if (pAdd('team.statspage')) x.push(['chart', 'Stats', 'Leads, close rate, ads and jobs.', statsPageView, ['statspage'], 'numbers']);
     if (pAdd('team.board')) x.push(['users', 'Leaderboard', 'Doors, talks and bookings, ranked.', boardView, ['board'], 'team']);
+    if (pAdd('doors.plan')) x.push(['route', 'Territories', 'Hand out neighbourhoods within your team.', territoriesView, ['territories'], 'plan']);
+    if (pAdd('team.run')) x.push(['users', 'Team sign-ins', 'Add people to your team, new codes, sign out, remove.', accountsView, ['accounts'], 'team']);
     if (pAdd('cust.import')) x.push(['clip', 'Import', 'Customers, leads and past work from a spreadsheet.', function () { importView(); }, ['import'], 'office']);
     if (pAdd('set.company')) x.push(['flag', 'Company', 'Name, phone, email, website and colour.', companyView, ['company'], 'office']);
     if (pAdd('set.prices')) x.push(['calc', 'Prices and terms', 'What a quote adds up from, and the agreement terms.', kitPricesView, ['kitprices'], 'office']);
@@ -12864,7 +12866,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (L.phase !== 'due' && L.phase !== 'locked') return;
     var bits = [];
     if (L.pastDueSince) bits.push('Past due since ' + billDate(L.pastDueSince));
-    bits.push(L.phase === 'locked' ? 'Locked for their team now' : (L.moreUntil ? 'More time given: locks for their team on ' : 'Locks for their team on ') + billDate(L.lockAt));
+    bits.push(L.phase === 'locked' ? 'Door data paused for their team now' : (L.moreUntil ? 'More time given: door data pauses on ' : 'Door data pauses on ') + billDate(L.lockAt));   /* the lock for payment is Traverse's data only (2026-10-29) */
     c.appendChild(q('div', 'billfd billlock', bits.join(' · ')));
     (j.more || []).forEach(function (m) { c.appendChild(q('div', 'sub2', '+' + m.days + (m.days === 1 ? ' day' : ' days') + ' by ' + m.by + ', ' + billDate(m.at))); });
     var row = q('div', 'billmore'), lab = q('label', null, 'Days'), inp = q('input'); inp.type = 'number'; inp.min = '1'; inp.max = '60'; inp.step = '1'; inp.value = '3'; inp.inputMode = 'numeric'; lab.appendChild(inp);
@@ -13811,7 +13813,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.screen !== 'accounts') { S.pins = null; S.pinAsk = false; S.permCat = null; S.permOpen = null; S.permDraft = null; }   /* PINs hide whenever you leave the screen */
     hideToast(); S.signin = null; S.screen = 'accounts';
     foot.hidden = true; setDock(null);
-    var mgr = mgrOn();
+    var mgr = mgrOn() || pAdd('team.run');   /* + a role given Run their team's sign-ins (2026-10-29) */
     setBar('back', { title: mgr ? 'Team sign-ins' : 'Accounts', sub: mgr ? 'Your crew: add, new codes, sign out, remove' : 'Who can sign in to the field tools', back: chooseView, backLabel: 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
@@ -13820,6 +13822,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.textContent = '';
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the accounts.')); return; }
       S.accts = j.accounts; S.acctTracking = j.tracking || 0; S.acctTeams = j.teams || []; S.acctSeats = j.seats || null; S.acctMgr = j.manager || null; S.acctRepSend = j.repSend; drawAccounts(holder);
+      if (edOn() && mgr && !S.permCat) permLoad(function () { if (S.screen === 'accounts') drawAccounts(holder); });   /* a manager's role lines follow the toggles too (2026-10-29) */
       if (S.role === 'admin' && feat('walkdesk')) { var gv = q('button', 'lnk geolnk', 'Where the office and quote-only accounts are used \u203a'); gv.type = 'button'; gv.addEventListener('click', geoView); holder.insertBefore(gv, holder.firstChild); }
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Accounts need signal.')); });
   }
@@ -13828,7 +13831,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.newCode) holder.appendChild(codeCard(S.newCode));
     /* seats against the plan (2026-10-10): a warning only, adding people is never blocked */
     var sx = S.acctSeats; if (sx && (sx.status === 'active' || sx.status === 'trialing') && sx.used > sx.seats) holder.appendChild(q('div', 'msg bad', sx.used + (sx.used === 1 ? ' worker' : ' workers') + ' can sign in and the plan pays for ' + sx.seats + ', besides your one admin. Add seats in Billing.'));
-    var mgr = mgrOn();
+    var mgr = mgrOn() || pAdd('team.run');   /* + a role given Run their team's sign-ins (2026-10-29) */
     if (mgr) { var tmn = (S.acctTeams || [])[0]; holder.appendChild(q('div', 'sub2', 'Your team' + (tmn ? ': ' + tmn.name : '') + '. Admins change roles and teams.')); }
     else holder.appendChild(teamsBox(holder));
     if (!mgr && S.role === 'admin' && typeof S.acctRepSend === 'boolean') holder.appendChild(repSendBox(holder));

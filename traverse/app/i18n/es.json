@@ -3540,5 +3540,10 @@
  "Door data is paused: the plan needs paying": "Datos de puertas en pausa: hay que pagar el plan",
  "The last payment did not go through, or the plan ended. Doors, maps and lists are paused; your pipeline, customers and jobs stay open. Update the card in Billing and it all opens again at once.": "El último pago no pasó, o el plan terminó. Puertas, mapas y listas están en pausa; tu embudo, clientes y trabajos siguen abiertos. Actualiza la tarjeta en Facturación y todo se abre de inmediato.",
  " An admin sets what each role can do in Accounts.": " Un administrador decide lo que puede hacer cada rol en Cuentas.",
- "Not part of your role here": "No es parte de tu rol aquí"
+ "Not part of your role here": "No es parte de tu rol aquí",
+ "Door data paused for their team now": "Datos de puertas en pausa para su equipo ahora",
+ "More time given: door data pauses on ": "Más tiempo dado: los datos de puertas se pausan el ",
+ "Door data pauses on ": "Los datos de puertas se pausan el ",
+ "Hand out neighbourhoods within your team.": "Reparte vecindarios dentro de tu equipo.",
+ "Add people to your team, new codes, sign out, remove.": "Agrega gente a tu equipo, códigos nuevos, cerrar sesión, quitar."
 }
