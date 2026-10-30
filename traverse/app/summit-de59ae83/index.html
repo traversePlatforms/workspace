@@ -1645,10 +1645,10 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .stp .stedit .str{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:center}
   .stp .stedit input,.stp .stedit select{min-height:40px;padding:0 8px;border:1px solid var(--line,#d9d1c2);border-radius:8px;font:14px var(--sans);min-width:0}
   .stp .stbtns{display:flex;flex-wrap:wrap;gap:8px}
-  .stp .stedit .str button{min-height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--line,#d9d1c2);background:#fff;font:600 13px var(--sans);cursor:pointer}
+  .stp .stedit .str button{min-height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--line,#d9d1c2);background:var(--sunk,#F4ECDD);color:var(--ink);font:600 13px var(--sans);cursor:pointer}
   .stp .stedit .sth{font:800 11.5px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--soft)}
   @media (max-width:640px){ .stp .stedit .sth{display:none} }
-  .stp .stbtns button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line,#d9d1c2);background:#fff;font:700 14px var(--sans);cursor:pointer}
+  .stp .stbtns button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line,#d9d1c2);background:var(--sunk,#F4ECDD);color:var(--ink);font:700 14px var(--sans);cursor:pointer}   /* the theme's sunk colour, not white: it glared on the dark look (Matthew 2026-10-29: "the update ad spend button is to bright") */
   .stp .stbtns button.save{background:var(--ember,#d6400c);border-color:var(--ember,#d6400c);color:#fff}
   @media (max-width:640px){ .stp .stedit .str{grid-template-columns:1fr 1fr} .stp .stedit .str input:first-child{grid-column:1/-1}
     .stp .okpis{grid-template-columns:1fr 1fr;gap:8px;min-height:0} .stp .okpi{padding:10px 12px} .stp .okpi b{font-size:26px}
@@ -2957,7 +2957,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!S.viewing) return;
     var b = q('div'); b.id = 'vabar'; b.setAttribute('role', 'status');
     var wr = vaWriteOn();
-    var t = q('span'); t.appendChild(document.createTextNode('Seeing ')); t.appendChild(q('b', null, S.viewing.name)); t.appendChild(document.createTextNode(' \u00b7 ' + vaRoleName(S.viewing.role) + ' \u00b7 ' + (wr ? 'changes save as you' : 'looking only')));
+    var t = q('span'); t.appendChild(document.createTextNode(S.viewing.preview ? 'Previewing ' : 'Seeing ')); t.appendChild(q('b', null, S.viewing.preview ? 'a new ' + vaRoleName(S.viewing.role) : S.viewing.name));   /* a role preview names the role (2026-10-29) */ t.appendChild(document.createTextNode((S.viewing.preview ? '' : ' \u00b7 ' + vaRoleName(S.viewing.role)) + ' \u00b7 ' + (wr ? 'changes save as you' : 'looking only')));
     b.appendChild(t);
     if (wr) b.classList.add('vawrite');
     var mc = q('button', wr ? null : 'alt', wr ? 'Stop changes' : 'Make changes'); mc.type = 'button';
@@ -4114,6 +4114,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { row.hidden = true; });
     return row;
   }
+  /* the role slot beside Edition (2026-10-29, Matthew: "I need to see what each role looks like in each edition so i can determine what
+     needs to be added what needs to be removed"): the super admin picks a role and this tab answers as a made-up account of it
+     (X-View-As 'role:<role>', looking only), the same way as seeing a person; Me goes back. The list matches previewRoles() on the server. */
+  function roleRow() {
+    var row = q('div', 'lookrow edrow'); row.appendChild(q('span', null, 'Role'));
+    var sel = q('select', 'edsel noi18n'); sel.setAttribute('aria-label', 'Role');
+    var roles = edOn() ? ['admin', 'manager'].concat(feat('walkdesk') ? ['office'] : [], ['crew', 'setter', 'tech'])
+      : ['admin', 'manager'].concat(feat('walkdesk') ? ['office', 'quote'] : [], ['crew']);
+    var me = q('option', null, 'Me (Traverse)'); me.value = ''; sel.appendChild(me);
+    var cur = vaId();
+    roles.forEach(function (r) { var o = q('option', null, roleName(r)); o.value = 'role:' + r; if (cur === o.value) o.selected = true; sel.appendChild(o); });
+    sel.addEventListener('change', function () { vaGo(sel.value); });
+    row.appendChild(sel);
+    return row;
+  }
   function profileView() {
     hideToast(); S.signin = null; S.screen = 'profile'; foot.hidden = true; setDock(null);
     setBar('back', { title: 'Profile', sub: S.me || '', back: chooseView, backLabel: 'Field tools' });
@@ -4173,6 +4188,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hours').then(function (j) { hs.textContent = j && j.ok ? (j.hours ? hoursSummary(j.hours) : 'Not set yet: any time can be booked') : ''; }).catch(function () { hs.textContent = ''; });
     }
     if (S.super) box.appendChild(editionRow());
+    if (S.super || (S.viewing && S.viewing.preview)) box.appendChild(roleRow());
     box.appendChild(q('div', 'sub2', 'The app records which screens and buttons you use, so the company can see what helps. Never what you type. Your code works on one phone and one computer at a time; signing in on another phone signs this one out.'));   /* the tap log (2026-10-12) */
     box.appendChild(q('h2', 'tgrp', 'This device'));
     box.appendChild(pushRow());

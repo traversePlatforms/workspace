@@ -3394,10 +3394,19 @@ $role = (string) ($session['r'] ?? 'crew');
    anything that would save is refused, so nothing is ever done in someone else's name; loading doors still works. */
 $realMe = $me; $realC = (string) ($session['c'] ?? ''); $realSuper = $isSuper; $viewing = null;
 $vaId = (string) ($_SERVER['HTTP_X_VIEW_AS'] ?? '');
+/* a role, not a person (2026-10-29, Matthew: "next to edition in my profile page ... a role slot ... I need to see what each role looks
+   like in each edition"): X-View-As 'role:<role>' answers as a made-up account of that role with no doors, leads or jobs of its own, so
+   the screens and rights are the role's exactly. Admin is allowed here (a client's admin sees less than the super admin). */
+function previewRoles(): array {
+    if (!edition()) return array_merge(['admin', 'manager'], feature('walkdesk') ? ['office', 'quote'] : [], ['crew']);
+    return array_merge(['admin', 'manager'], feature('walkdesk') ? ['office'] : [], ['crew', 'setter', 'tech']);
+}
 if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
-    $vaRow = acctRows($basePeople, $acct, $sessionKey)[$vaId] ?? null;
-    if (!$vaRow || $vaRow['off'] || in_array($vaRow['role'], ['admin', 'super'], true)) out(['ok' => false, 'why' => 'viewgone', 'error' => 'That account is not there any more. Back to your own screen.'], 409);
-    $viewing = ['by' => $realMe, 'name' => $vaRow['name'], 'role' => $vaRow['role']];
+    $vaRole = strncmp($vaId, 'role:', 5) === 0 ? substr($vaId, 5) : null;
+    $vaRow = $vaRole !== null ? (in_array($vaRole, previewRoles(), true) ? ['name' => 'Preview', 'role' => $vaRole, 'off' => false] : null)
+        : (acctRows($basePeople, $acct, $sessionKey)[$vaId] ?? null);
+    if (!$vaRow || $vaRow['off'] || ($vaRole === null && in_array($vaRow['role'], ['admin', 'super'], true))) out(['ok' => false, 'why' => 'viewgone', 'error' => 'That account is not there any more. Back to your own screen.'], 409);
+    $viewing = ['by' => $realMe, 'name' => $vaRow['name'], 'role' => $vaRow['role'], 'preview' => $vaRole !== null];
     $me = $vaRow['name']; $role = $vaRow['role']; $session['c'] = $vaId; $isSuper = false;
     $sub = ''; if (edition() && in_array($role, ['setter', 'tech'], true)) { $sub = $role; $role = 'crew'; }   /* a setter or technician, as they see it (2026-10-29) */
     if ($action === 'taplog') out(['ok' => true, 'kept' => 0]);   /* their tap log stays theirs */
