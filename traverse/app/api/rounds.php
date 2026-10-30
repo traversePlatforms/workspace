@@ -3422,6 +3422,16 @@ function edRepLead(string $id): bool {
     global $role; if (!edition() || $role !== 'crew' || edSub() !== '' || $id === '') return false;
     $l = leadsAll()[$id] ?? null; return is_array($l) && in_array((string) ($l['owner'] ?? ''), meNames(), true);
 }
+/* sales reps send the agreement and take the deposit (2026-10-29, Matthew: "Include that sales reps can send agreements and take deposits,
+   we will let the admin decide but leave it on by default. Make it a switch in the admin section like we currently have"). One switch for
+   the company, in Accounts: on until an admin turns it off ($acct['repsendoff']). A rep sends the form for their own leads only, picking a
+   day from the free times (the jobs answer, as Jen's quote login sees it: other people's times say Booked or Held). Setters and technicians
+   never (ED_SETTER_NO, ED_TECH_NO, and edRep() below). */
+function repSendOn(): bool { global $acct; return edition() && feature('walkdesk') && empty($acct['repsendoff']); }
+/** a sales rep: an edition's crew account that is not a setter or a technician */
+function edRep(): bool { global $role; return edition() && $role === 'crew' && edSub() === ''; }
+/** a sales rep sending the agreement and deposit form for one of their own leads, with the company switch on */
+function edRepSend(string $id): bool { return repSendOn() && edRepLead($id); }
 function edGate(string $a): void {
     global $role, $body;
     $sub = edSub();
@@ -3532,7 +3542,7 @@ function edSignin(array $hit, string $hitCode): array {
     global $sessionKey, $acct;
     if (!edition()) return [];
     $r = (string) ($hit[1] ?? 'crew'); $id = codeId($hitCode, $sessionKey);
-    $o = ['terms' => termsState($id, $r === 'super' ? 'admin' : $r, (string) ($hit[0] ?? ''), $r === 'super')];
+    $o = ['terms' => termsState($id, $r === 'super' ? 'admin' : $r, (string) ($hit[0] ?? ''), $r === 'super')] + ['repSend' => repSendOn(), 'mailFrom' => (string) (mailOwnCfg()['user'] ?? '')];   /* sales reps send agreements and take deposits: the company switch; mailFrom: emails to customers go from inside the app (2026-10-29) */
     if (in_array($r, ['setter', 'tech'], true)) $o += ['role' => 'crew', 'sub' => $r, 'walker' => $r === 'tech', 'pays' => $r === 'tech' && paysOn($id), 'doors' => $r === 'tech' && acctFlag('doors', $id)];
     return $o;
 }
@@ -3541,7 +3551,7 @@ function edMe(): array {
     global $session, $role, $realMe, $realSuper, $viewing, $me;
     if (!edition()) return [];
     $id = (string) ($session['c'] ?? ''); $s = edSub();
-    $o = ['sub' => $s, 'terms' => termsState($id, $role, (string) $me, (bool) $realSuper, (bool) $viewing)];
+    $o = ['sub' => $s, 'terms' => termsState($id, $role, (string) $me, (bool) $realSuper, (bool) $viewing), 'repSend' => repSendOn(), 'mailFrom' => (string) (mailOwnCfg()['user'] ?? '')];   /* 2026-10-29 */
     if ($s === 'tech') $o += ['walker' => true, 'doors' => acctFlag('doors', $id)];
     if ($s === 'setter') $o += ['pays' => false, 'walker' => false];
     return $o;
@@ -4034,6 +4044,7 @@ if ($action === 'area') {
                 'trees' => $d['trees'] ?? null,
                 'val' => $d['val'] ?? null,
                 'com' => $d['com'] ?? null,   /* commercial test buildings (admin-only towns): use, roof size, owner lead */
+                'lim' => in_array($d['lim'] ?? null, ['noowner', 'noocc', 'noname'], true) ? $d['lim'] : null,   /* limited county data (2026-10-29, Group 3): no owner on record, occupancy unknown, or the name withheld */
                 'work' => $work[$d['id']] ?? null,
                 'fc' => isset($fchk[$d['id']]) ? lastChecks($fchk[$d['id']]) : null,
                 'walk' => walkFor($m, $walks[$d['id']] ?? null),
@@ -5253,6 +5264,7 @@ function houseFacts(string $key, string $id): ?array {
                 'roof' => (function ($r) { return is_array($r) ? array_intersect_key($r, array_flip(['sq', 'sqs', 'pitch', 'flat'])) : null; })(sideDoor('roof', $key, $id)),   /* the quote kit prices a roof (2026-10-27) */
                 /* 2026-10-14 (Matthew: "is that all the information we have for the property?"): the rest the door lists carry */
                 'fire' => $d['fire'] ?? null, 'cg' => !empty($d['cg']), 'os' => $d['os'] ?? null, 'place' => $a['place'] ?? null,
+                'lim' => in_array($d['lim'] ?? null, ['noowner', 'noocc', 'noname'], true) ? $d['lim'] : null,   /* limited county data (2026-10-29, Group 3) */
                 'mark' => (function () use ($key, $d, $id) { $m = freshMark($d, loadMarks($key)[$id] ?? null); return $m ? ['o' => (string) ($m['outcome'] ?? ''), 'by' => (string) ($m['by'] ?? ''), 'at' => (int) ($m['at'] ?? 0)] : null; })(),
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
     }
@@ -5802,11 +5814,20 @@ function blockAt(string $crew, string $date, string $slot): ?array {
     return null;
 }
 function blocksAhead(): array { $t = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d'); $o = array_map('blockNorm', array_values(array_filter(jobBlocks(), fn($b) => ($b['to'] ?? '') >= $t))); usort($o, fn($a, $b) => [$a['from'], $a['crew']] <=> [$b['from'], $b['crew']]); return $o; }
+/** an edition's job in words (2026-10-29, Matthew: edition job cards said "Doing: Aerate, seed & feed"): the quote's lines, without the
+    minimum and adjustment lines, from the job's lead; '' when the lead has no kit quote */
+function jobItemItems(array $j): array {
+    $q = leadsAll()[(string) ($j['lead'] ?? '')]['quote'] ?? null;
+    if (!is_array($q) || empty($q['items']) || !is_array($q['items'])) return [];
+    return array_values(array_filter(array_map(fn($x) => is_array($x) && !in_array((string) ($x['id'] ?? ''), ['min', 'adj'], true) ? trim((string) ($x['t'] ?? '')) : '', $q['items']), fn($t) => $t !== ''));
+}
+function jobItemsText(array $j): string { return implode(', ', jobItemItems($j)); }
 function jobShow(array $j, ?array $leads = null): array {
     $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'svc', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet', 'want', 'suggest', 'funo', 'rcpt', 'payinfo', 'fub']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
     if ($fs = followupState($j)) $o['fuState'] = $fs;   /* the follow-up email: due, sent, or why not (2026-10-27) */
     $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
+    if (kitOn()) $o['items'] = jobItemItems($j);   /* an edition: what the quote included, for the job card (2026-10-29) */
     $o['cnotes'] = array_values((array) ($j['cnotes'] ?? []));   /* notes on the job (2026-10-26) */
     $l = ($leads ?? leadsAll())[$j['lead']] ?? null;
     if ($l) {
@@ -5860,7 +5881,8 @@ if ($action === 'schedview') {
 }
 /* the board: jobs between two dates (at most two months), each crew's area per day, the crews, the slots, and the totals */
 if ($action === 'jobs') {
-    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    $repJ = !desk() && $role !== 'quote' && edRep() && repSendOn();   /* a sales rep picking a day for their own customer's form (2026-10-29): the quote login's redacted view */
+    if (!desk() && $role !== 'quote' && !$repJ) fail('Not allowed.', 403);
     $from = (string) ($_GET['from'] ?? ''); $to = (string) ($_GET['to'] ?? '');
     if (!dateOk($from) || !dateOk($to) || $to < $from) fail('Pick the dates.');
     if (strtotime($to) - strtotime($from) > 62 * 86400) fail('Ask for two months at most.');
@@ -5869,9 +5891,10 @@ if ($action === 'jobs') {
     usort($list, fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
     $days = []; foreach (jobDays() as $d => $v) if ($d >= $from && $d <= $to) $days[$d] = $v;
     $holds = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] >= $from && $h['date'] <= $to));
-    if ($role === 'quote') {   /* the day picker only: a taken time, never whose or for how much (2026-10-15) */
-        $list = array_map(fn($j) => ['id' => $j['id'], 'date' => $j['date'], 'crew' => $j['crew'], 'slot' => $j['slot'], 'slotLabel' => $j['slotLabel'] ?? '', 'title' => 'Booked', 'who' => ['name' => 'Booked'], 'price' => 0, 'pkg' => 'full', 'scope' => 'all', 'pay' => ['s' => 'unpaid'], 'card' => false, 'done' => null, 'lead' => qMine($leads[$j['lead']] ?? []) ? $j['lead'] : ''], $list);
-        $holds = array_map(fn($h) => qMine($leads[$h['lead']] ?? []) ? $h : ['lead' => '', 'name' => 'Held', 'crew' => $h['crew'], 'date' => $h['date'], 'slot' => $h['slot'], 'until' => $h['until'], 'paid' => $h['paid']], $holds);
+    if ($role === 'quote' || $repJ) {   /* the day picker only: a taken time, never whose or for how much (2026-10-15); a rep's own leads by name (2026-10-29) */
+        $mineL = fn($l) => $repJ ? in_array((string) ($l['owner'] ?? ''), meNames(), true) : qMine($l);
+        $list = array_map(fn($j) => ['id' => $j['id'], 'date' => $j['date'], 'crew' => $j['crew'], 'slot' => $j['slot'], 'slotLabel' => $j['slotLabel'] ?? '', 'title' => 'Booked', 'who' => ['name' => 'Booked'], 'price' => 0, 'pkg' => 'full', 'scope' => 'all', 'pay' => ['s' => 'unpaid'], 'card' => false, 'done' => null, 'lead' => $mineL($leads[$j['lead']] ?? []) ? $j['lead'] : ''], $list);
+        $holds = array_map(fn($h) => $mineL($leads[$h['lead']] ?? []) ? $h : ['lead' => '', 'name' => 'Held', 'crew' => $h['crew'], 'date' => $h['date'], 'slot' => $h['slot'], 'until' => $h['until'], 'paid' => $h['paid']], $holds);
     }
     out(['ok' => true, 'jobs' => $list, 'holds' => $holds, 'days' => $days, 'crews' => jobBoardCrews(), 'pick' => jobCrewList(), 'slots' => array_map(fn($s) => ['k' => $s[0], 'label' => $s[1]], jobSlots()), 'closed' => jobClosed(), 'blocks' => blocksAhead(), 'hours' => hoursAll(jobCrewList())]);   /* + work hours (2026-10-27) */
 }
@@ -5965,6 +5988,7 @@ if ($action === 'hoursall') {
 function jobPkgText(array $j, bool $short = false): string {
     $p = (string) ($j['pkg'] ?? 'full');
     if ($p === 'other') return trim((string) ($j['svc'] ?? '')) ?: 'Another service';
+    if (kitOn() && $p !== 'plan') return jobItemsText($j) ?: 'The quoted work';   /* an edition: the quote's own work, never the aeration packages (2026-10-29) */
     return $p === 'aerate' ? 'Aerate only' : ($p === 'plan' ? 'Service plan' : ($short ? 'Full' : 'Aerate, seed & feed'));
 }
 /* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
@@ -6000,7 +6024,7 @@ if ($action === 'jobsave') {
     if ($why = slotFree($crew, $date, $slot, $lead, $id)) fail($why, 409);   /* a job there, or another quote's offered day (2026-10-14) */
     $price = (int) ($body['price'] ?? ($have['price'] ?? 0)); $tbd = desk() && $price === 0 && (!empty($body['tbd']) || ($have && (int) ($have['price'] ?? 0) === 0 && !array_key_exists('price', $body)));   /* price to confirm (2026-10-15, Russ and Erik: Brandon gives the price) */
     if (!$tbd && ($price < 1 || $price > 100000)) fail('Give the job a price.');
-    $pkg = (string) ($body['pkg'] ?? ($have['pkg'] ?? 'full')); if (!in_array($pkg, ['full', 'aerate', 'plan', 'other'], true)) fail('Pick what is included.');
+    $pkg = (string) ($body['pkg'] ?? ($have['pkg'] ?? 'full')); if (!in_array($pkg, array_merge(['full', 'aerate', 'plan', 'other'], kitOn() ? ['job'] : []), true)) fail('Pick what is included.');   /* + job: an edition's quoted work (2026-10-29; Change the booking on a job from a kit quote was refused) */
     $svc = $pkg === 'other' ? (array_key_exists('svc', $body) ? $clean($body['svc'], 80) : (string) ($have['svc'] ?? '')) : '';   /* "Another service": what it is (2026-10-28) */
     if ($pkg === 'other' && $svc === '') fail('Say what the service is (for example: Fall cleanup).');
     $scope = (string) ($body['scope'] ?? ($have['scope'] ?? 'all')); if (!in_array($scope, ['all', 'front', 'back'], true)) fail('Pick front, back or all.');
@@ -8824,7 +8848,7 @@ function a365BookNoSign(string $lid, string $by): ?string {
     return $jid;
 }
 if ($action === 'signsend') {
-    if (!feature('walkdesk') || (!desk() && $role !== 'quote')) fail('Not allowed.', 403);
+    if (!feature('walkdesk') || (!desk() && $role !== 'quote' && !edRepSend((string) ($body['id'] ?? '')))) fail(edRep() && !repSendOn() ? 'Your admin has the office send agreements and take deposits. Tell the office they said yes.' : 'Not allowed.', 403);   /* + a sales rep on their own lead, with the company switch on (2026-10-29) */
     if (!$isPost) fail('POST required', 405);
     $id = (string) ($body['id'] ?? ''); $all = leadsAll();
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
@@ -8916,7 +8940,7 @@ if ($action === 'squarecheck') {
     if (!squareCfg()) fail('Square is not connected yet.');
     $lid = (string) ($body['lead'] ?? ''); $jid = (string) ($body['job'] ?? '');
     if ($lid !== '') {
-        if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+        if (!desk() && $role !== 'quote' && !edRepSend($lid)) fail('Not allowed.', 403);   /* + a sales rep's own lead (2026-10-29) */
         $l = leadsAll()[$lid] ?? null; if (!$l || ($l['sign']['how'] ?? '') !== 'link') fail('No Square link on this lead.', 404);
         out(['ok' => true, 'paid' => a365DepositPaid($l)]);
     }
@@ -9542,7 +9566,9 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
         foreach ((glob(DATA_DIR . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/rounds/' . basename($p));
         /* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices
            were not in the backup, so a lost server lost them). Keep in step with sixfold-tools/nightly-backup.php. */
-        foreach (['goals.json', 'goals-people.json', 'training.json', 'roof-settings.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);
+        /* + each install's own settings (2026-10-29: the quote kit's prices and terms, Your costs, other ways to pay, the email templates, the
+           Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). */
+        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];
@@ -10398,6 +10424,18 @@ if ($action === 'paysset') {
     accountLog(['by' => $me, 'what' => !empty($body['on']) ? 'takes payments' : 'no payments', 'name' => $rows[$id]['name'], 'id' => $id]);
     out(['ok' => true]);
 }
+/* the company switch for sales reps sending agreements and taking deposits (2026-10-29, see repSendOn): an admin, in Accounts; on by default */
+if ($action === 'repsendset') {
+    if (!edition() || !feature('walkdesk')) fail('Not here.', 404);
+    if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    $acctLock = @fopen(accountsFile() . '.lock', 'c');
+    if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts();
+    if (!empty($body['on'])) unset($acct['repsendoff']); else $acct['repsendoff'] = 1;
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    accountLog(['by' => $me, 'what' => !empty($body['on']) ? 'sales reps send agreements and take deposits' : 'sales reps: agreements and deposits off']);
+    out(['ok' => true, 'repSend' => repSendOn()]);
+}
 /* who does walks (2026-10-14, the walk desk): an admin ticks them in Accounts; the desk books walks only with them */
 if ($action === 'acctflag') {   /* "Runs a team" / "Marks won and lost" on an office account (2026-10-20) */
     if (!feature('walkdesk')) fail('Not here.', 404);
@@ -10462,7 +10500,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         /* seats against the plan (2026-10-10), only where billing is on: the screen warns, nothing is blocked */
         if (!$isMgr) seatWatch();   /* the note to Traverse when the install has gone over (2026-10-29) */
         $seatInfo = feature('billing') && !$isMgr ? array_intersect_key(billingState(billingConfig(__DIR__), $rows), ['seats' => 1, 'used' => 1, 'status' => 1, 'plan' => 1]) : null;
-        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn, 'seats' => $seatInfo, 'manager' => $isMgr ? $myTeam : null]);
+        out(['ok' => true, 'accounts' => $list, 'tracking' => (int) ($sess['since'] ?? 0), 'teams' => $tn, 'seats' => $seatInfo, 'manager' => $isMgr ? $myTeam : null] + (edition() && !$isMgr && feature('walkdesk') ? ['repSend' => repSendOn()] : []));   /* the reps switch (2026-10-29) */
     }
     if (!$isPost) fail('POST required', 405);
     /* every change works on a fresh copy under a lock (Fable 2026-10-04): the file is rewritten whole, so
@@ -11869,6 +11907,35 @@ if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], tr
  *   mailtpl     POST  {key, on} | {key, subject, body} | {key, reset}
  *   mailpreview POST  {key, subject, body}: what is typed (not saved yet), filled with a made-up customer
  *   mailtest    POST  {key, subject, body}: that, marked [Test], to the admin's own email (Accounts), else the connected address */
+/* ---- an email to a customer from inside the app (2026-10-29, Matthew: "sending it all from inside the app email wise is better, only open it in
+ * another browser email app if they dont currently have a gmail and outlook connected") ----
+ * Editions with Setup, Email connected: the quote, the form link, the receipt, the ways to pay and the other emails the app writes for a
+ * customer go from the company's own mailbox (sendMail), after the person checks it on screen. Not connected: the page opens their own email
+ * app as before. Sixfold 365 keeps its own paths and its mailto links. Only to an address on a lead or customer this person works with, so it
+ * can never mail strangers; 30 an hour per sign-in and 300 a day for the install; every send in mail.log, and a note on the lead. */
+function edMayMail(array $l): bool {
+    global $me; if (desk() || in_array((string) ($l['owner'] ?? ''), meNames(), true)) return true;
+    $j = jobForLead((string) ($l['id'] ?? '')); return $j && $j['crew'] === $me;
+}
+if ($action === 'mailsend') {
+    if (!edition() || !$isPost) fail('Not allowed.', 403);
+    $mc = mailOwnCfg(); if (!$mc) fail('Email is not connected yet (Setup, Email).', 409);
+    $to = strtolower(trim((string) ($body['to'] ?? ''))); if (!filter_var($to, FILTER_VALIDATE_EMAIL)) fail('That email address does not look right.');
+    $subj = trim((string) preg_replace('/[\r\n\t]+/', ' ', (string) ($body['subject'] ?? ''))); $txt = trim(str_replace("\r", '', (string) ($body['body'] ?? '')));
+    if ($subj === '' || mb_strlen($subj) > 200) fail('Give it a subject (200 characters at most).');
+    if ($txt === '' || mb_strlen($txt) > 8000) fail('The email is empty or too long (8,000 characters at most).');
+    $ml = null; foreach (leadsAll() as $l0) if (strtolower(trim((string) ($l0['email'] ?? ''))) === $to && edMayMail($l0) && (!$ml || (int) ($l0['at'] ?? 0) > (int) ($ml['at'] ?? 0))) $ml = $l0;
+    $mcu = null; if (!$ml && desk()) foreach (loadCustomers() as $c0) if (strtolower(trim((string) ($c0['email'] ?? ''))) === $to) { $mcu = $c0; break; }
+    if (!$ml && !$mcu) fail('That address is not on a lead or customer you work with, so the app does not send to it.', 403);
+    if (!throttleTake(rateFile('mailsend|' . (string) ($session['c'] ?? $me)), 30, 3600)) fail('That is a lot of emails in an hour from one sign-in. Wait a little and try again.', 429);
+    if (!throttleTake(rateFile('mailsend|install'), 300, 86400)) fail('The app has sent 300 emails today, its daily most. Send the rest from your own email.', 429);
+    [, $mtext, $mhtml] = mailRender(['subject' => $subj, 'body' => $txt], []);
+    $mr = sendMail($to, $subj, $mtext, $mhtml);
+    appendLine(DATA_DIR . '/mail.log', ['at' => time(), 'what' => 'app', 'to' => $to, 'subject' => mb_substr($subj, 0, 200), 'lead' => (string) ($ml['id'] ?? ''), 'customer' => (string) ($mcu['id'] ?? ''), 'by' => $me, 'ok' => $mr['ok'], 'stage' => $mr['stage'], 'error' => mb_substr((string) $mr['error'], 0, 300)]);
+    if (!$mr['ok']) fail('Not sent: ' . ($mr['error'] ?: 'the mail server said no') . '. Nothing went; try again, or use your own email.', 502);
+    if ($ml) appendLine(leadsDir() . '/leadst.log', ['id' => (string) $ml['id'], 'note' => mb_substr('Emailed from the app (' . (string) $mc['user'] . '): ' . $subj, 0, 500), 'by' => $me, 'at' => time()]);
+    out(['ok' => true, 'from' => (string) $mc['user'], 'to' => $to]);
+}
 if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest'], true)) {
     if (!kitOn()) fail('Not here.', 404);   /* Sixfold 365 keeps its own mailbox */
     if ($role !== 'admin') fail('Not allowed.', 403);

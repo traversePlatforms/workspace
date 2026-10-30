@@ -1715,6 +1715,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .billplan.on{border:2px solid var(--go);padding:11px 13px}.billplan b{font:800 16px var(--sans)}.billpr{font:800 24px var(--sans)}.billfd{color:var(--go);font-weight:700}
   .billopts{display:grid;gap:6px}.billseat{display:grid;gap:4px;font-weight:700}.billseat input{max-width:8em;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:16px var(--sans);background:var(--card);color:var(--ink)}
   .billadd{display:flex;align-items:center;gap:6px;font-size:14.5px}.billsum{padding-top:6px;border-top:1px solid var(--line)}.billsum b,.billtot{font:800 18px var(--sans)}
+  .mailgo a.mailgobtn{display:block;text-align:center;text-decoration:none;box-sizing:border-box;margin:4px 0 8px}.mailmore summary{cursor:pointer;font-weight:700;color:var(--accent)}   /* Setup, Email: the quick way (2026-10-29) */
+  .pipefind{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}.pipefind input{flex:1 1 200px;min-width:0;min-height:42px;box-sizing:border-box}.pipefind select{flex:0 1 auto;min-width:0;max-width:100%;min-height:42px}.pipefind .pfn{flex:1 1 100%;font-size:13px;color:var(--soft)}.lctag{display:block;font-size:12.5px;color:var(--soft);margin:2px 0 4px}   /* the Pipeline's search and Last contacted (2026-10-29) */
   .pipemode{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 10px}.pipemode button{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14.5px var(--sans);cursor:pointer}.pipemode button[aria-pressed=true]{background:var(--go);color:var(--on-go);border-color:var(--go)}   /* To contact / Full pipeline (2026-10-26) */
   .jnotes{display:grid;gap:8px;margin-top:12px}.jnlist{display:grid;gap:6px}.jnrow{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}.jntext{white-space:pre-wrap;font-size:15px}.jnin{width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:inherit}   /* job notes (2026-10-26) */
   .bellbtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:none;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}.bellbtn .ic{width:22px;height:22px}.bellbtn .bcount{position:absolute;top:2px;right:0;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#c0392b;color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center}.bellbtn .bcount[hidden]{display:none}
@@ -3549,7 +3551,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.sub = ''; S.terms = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.sub = ''; S.terms = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin'; tabPaint();
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -3588,7 +3590,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognised.');
         markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -4226,7 +4228,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.sub = ''; S.terms = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.sid = null; officeReset(); clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.sub = ''; S.terms = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -5712,7 +5714,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      and whether a card is on file, and the notes (gate codes). The month's booked total sits at the top. Sunday is closed.
      The crew are the people marked "Does walks" (Brad for now); a booked job goes on their calendar with an alert. */
   var JOB_PKG = { full: 'Aerate, seed & feed', aerate: 'Aerate only', plan: 'Service plan', other: 'Another service' };   /* + Another service: a fall cleanup, a one-off (2026-10-28) */
-  function jobPkgLabel(j) { return j && j.pkg === 'other' ? (j.svc || 'Another service') : JOB_PKG[(j && j.pkg) || 'full'] || JOB_PKG.full; }
+  /* an edition (2026-10-29, Matthew: edition job cards said "Doing: Aerate, seed & feed"): the job's own work, from its quote's lines (the
+     server sends them as items), never the aeration packages */
+  var JOB_PKG_ED = { job: 'The quoted work', plan: 'Service plan', other: 'Another service' };
+  function jobPkgLabel(j) {
+    if (kitOnC() && j && j.pkg !== 'other' && j.pkg !== 'plan') return (j.items && j.items.length ? j.items.map(function (x) { return typeof x === 'string' ? x : x && x.id !== 'min' && x.id !== 'adj' ? x.t : ''; }).filter(Boolean).join(', ') : '') || j.svc || JOB_PKG_ED.job;
+    return j && j.pkg === 'other' ? (j.svc || 'Another service') : JOB_PKG[(j && j.pkg) || 'full'] || JOB_PKG.full;
+  }
   var JOB_SCOPE = { all: 'Whole lawn', front: 'Front yard only', back: 'Back yard only' };
   var JOB_PAY = { unpaid: 'Not paid yet', deposit: 'Deposit paid', paid: 'Paid in full', plan: 'Service plan' };
   var JOB_HOW = { square: 'Square', card: 'Card', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', cashapp: 'Cash App', paypal: 'PayPal', check: 'Check', other: 'Other' };   /* + Cash App, PayPal (2026-10-29) */
@@ -6020,7 +6028,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var SIGN = !!pre.sign;   /* the phone quote said yes (2026-10-14): price, half as deposit, the day, then the one-page form */
     var back = pre.back ? pre.back : SIGN && qqFor(lead) ? quickBack : SIGN && qView() ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
     var who = job ? (job.who || {}) : lead, title = job ? jobName(job) : (lead.name || lead.phone || lead.email || 'Lead');
-    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && (qView() || qqFor(lead)) ? 'Quick quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });
+    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && (qView() || qqFor(lead)) ? 'Quick quote' : SIGN && repOn() ? 'Quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });   /* a sales rep comes from their quote (2026-10-29) */
     view.textContent = '';
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
@@ -6089,10 +6097,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         host.appendChild(b);
       });
     };
-    chips(pkRow, JOB_PKG, function () { return P.pkg; }, function (k) { P.pkg = k; if (k === 'plan' && P.pay.s === 'unpaid') { P.pay = { s: 'plan' }; drawPay(); } svcPaint(); });
-    function svcPaint() { var o = P.pkg === 'other'; svcL.hidden = !o; seedIn.parentNode.hidden = o; fertIn.parentNode.hidden = o; if (o) setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); }   /* Another service: what it is; no seed or fertilizer */
+    if (kitOnC() && !job && (P.pkg === 'full' || P.pkg === 'aerate')) P.pkg = 'job';   /* an edition books the quoted work (2026-10-29) */
+    chips(pkRow, kitOnC() ? JOB_PKG_ED : JOB_PKG, function () { return P.pkg; }, function (k) { P.pkg = k; if (k === 'plan' && P.pay.s === 'unpaid') { P.pay = { s: 'plan' }; drawPay(); } svcPaint(); });
+    function svcPaint() { var o = P.pkg === 'other'; svcL.hidden = !o; seedIn.parentNode.hidden = o || kitOnC(); fertIn.parentNode.hidden = o || kitOnC();   /* no seed or fertilizer on an edition (2026-10-29) */ if (o) setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); }   /* Another service: what it is; no seed or fertilizer */
     svcPaint();
     chips(scRow, JOB_SCOPE, function () { return P.scope; }, function (k) { P.scope = k; });
+    if (kitOnC()) scRow.hidden = true;   /* whole lawn, front or back: Sixfold's (2026-10-29) */
     chips(cardRow, { yes: 'Card on file', no: 'No card on file: call to pay' }, function () { return P.card ? 'yes' : 'no'; }, function (k) { P.card = k === 'yes'; });
     function drawPay() {
       chips(payRow, JOB_PAY, function () { return P.pay.s; }, function (k) { P.pay = { s: k, amt: P.pay.amt, how: P.pay.how }; drawMore(); });
@@ -6215,7 +6225,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         areaLine.appendChild(q('b', null, area || 'not set'));
         var ch = q('button', 'lnk', area ? 'Change' : 'Set it'); ch.type = 'button';
         ch.addEventListener('click', function () { jobAreaAsk(P.date, P.crew, area, function () { loadWeek(); }); });
-        if (qView()) ch.hidden = true;   /* the crew's town is set by the office */
+        if (qView() || repOn()) ch.hidden = true;   /* the crew's town is set by the office (a sales rep too, 2026-10-29) */
         areaLine.appendChild(ch);
       }
       W.data.slots.forEach(function (s) {
@@ -6299,7 +6309,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     hideToast(); S.screen = 'jobbook';
     var QB = qqFor(lead) ? S.qqBack : null;
     if (QB) back = function () { api('leads').then(function (L) { var l2 = ((L && L.leads) || []).filter(function (x) { return x.id === lead.id; })[0]; if (!l2) return quickBack(); signSendView(l2, Object.assign({}, QB.pre, { price: x.price, deposit: j.deposit })); }).catch(function () { toast('No signal', 'Try Back again.', null); }); };   /* back one step, filled in (Matthew 2026-10-15) */
-    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : qView() ? 'Quick quote' : 'Pipeline' });
+    if (repOn() && !QB) back = calendarView;   /* a sales rep: done, back to their Calendar (2026-10-29) */
+    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : qView() ? 'Quick quote' : repOn() ? 'Calendar' : 'Pipeline' });
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = myName();
@@ -6638,6 +6649,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       w.appendChild(q('div', 'ltrynote', 'For money taken another way.' + ((S.pays || wdOn()) ? ' The card on file and the pay link are above.' : ' An admin can let you charge cards and make pay links (Takes payments, in Accounts).')));
     }
+    if (kitOnC()) return w;   /* the aftercare is Sixfold's (2026-10-29, Matthew: edition job cards showed an Aftercare box) */
     w.appendChild(q('div', 'dwh', 'Aftercare'));
     /* Send aftercare at any time (2026-10-28, Matthew: "make sure that jen can send the aftercare stuff no matter what time that way she can do
        it regardless if it coming from brad"): done or not, paid or not. With the 365 mailbox it emails; without one (none on the server yet)
@@ -6671,9 +6683,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     }
     draw(jb.cnotes);
-    var ta = q('textarea', 'jnin'); ta.rows = 3; ta.maxLength = 1000; ta.placeholder = 'Extra work they asked for, gate code, anything Matthew should know…';
+    var ta = q('textarea', 'jnin'); ta.rows = 3; ta.maxLength = 1000; ta.placeholder = kitOnC() ? 'Extra work they asked for, gate code, anything the office should know…' : 'Extra work they asked for, gate code, anything Matthew should know…';   /* an edition: the office (2026-10-29) */
     var sv = q('button', 'save', 'Add note'); sv.type = 'button';
-    var say = q('div', 'sub2', 'Matthew gets a notification as soon as you add it.');
+    var say = q('div', 'sub2', kitOnC() ? 'The office gets a notification as soon as you add it.' : 'Matthew gets a notification as soon as you add it.');
     sv.addEventListener('click', function () {
       var t = ta.value.trim(); if (!t) { ta.focus(); return; }
       sv.disabled = true; sv.textContent = 'Saving…';
@@ -6682,7 +6694,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
         ta.value = ''; jb.cnotes = j.notes || jb.cnotes; draw(jb.cnotes);
-        toast('Note added', 'Matthew has been notified', null);
+        toast('Note added', kitOnC() ? 'The office has been notified' : 'Matthew has been notified', null);
       }).catch(function () { sv.disabled = false; sv.textContent = 'Add note'; toast('No signal', 'What you wrote is kept. Tap Add note again when you have signal.', null); });
     });
     w.appendChild(ta); w.appendChild(sv); w.appendChild(say);
@@ -6991,9 +7003,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     fact('Payment', jobPayText(jb));
     fact('Collect', jobCollect(jb));
     var sqBox = q('div', 'sqbox'); c.appendChild(sqBox);   /* SX-58: a Square pay link for the balance (filled below the facts) */
-    if (jb.seedLb) fact('Seed', jb.seedLb + ' lb');
-    if (jb.fertLb) fact('Fertilizer', jb.fertLb + ' lb');
-    if (H && H.lawn && H.lawn.sq) fact('Our lawn estimate', 'about ' + Number(H.lawn.sq).toLocaleString(LOCALE) + ' sq ft');
+    if (jb.seedLb && !kitOnC()) fact('Seed', jb.seedLb + ' lb');   /* seed and fertilizer: Sixfold only (2026-10-29) */
+    if (jb.fertLb && !kitOnC()) fact('Fertilizer', jb.fertLb + ' lb');
+    if (H && H.lawn && H.lawn.sq && (!kitOnC() || CO.best === 'yards')) fact('Our lawn estimate', 'about ' + Number(H.lawn.sq).toLocaleString(LOCALE) + ' sq ft');
     if (L) fact('Came from', LEAD_SRC[L.src] || L.src);
     c.appendChild(facts);
     c.insertBefore(sqBox, facts.nextSibling);
@@ -7041,7 +7053,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       sqBox.appendChild(q('div', 'ltrynote', 'They pay by card on Square\u2019s page; it opens on their phone. The job shows paid once Square has it.'));
     });
-    if (H && H.region && !qView()) c.appendChild(lawnCheckBox(H.region, H.id, H.lawn && H.lawn.sq));   /* Brad checks our measurement on the day */
+    if (H && H.region && !qView() && (!kitOnC() || CO.best === 'yards')) c.appendChild(lawnCheckBox(H.region, H.id, H.lawn && H.lawn.sq));   /* the lawn check: Sixfold and Yards (2026-10-29) */   /* Brad checks our measurement on the day */
     if (jb.note) { c.appendChild(q('div', 'dwh', 'Notes from ' + jb.by)); c.appendChild(q('div', 'lmsg', jb.note)); }
     if (L && L.notes && L.notes.length) {
       c.appendChild(q('div', 'dwh', 'Notes on the lead'));
@@ -7050,7 +7062,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(jobNotesBox(jb, redraw));   /* notes (2026-10-26) */
     c.appendChild(jobWorkBox(jb, redraw));   /* Brad's two lines (2026-10-27) */
     if (jb.fub && jb.fub.needs) { c.appendChild(q('div', 'qline fubline', 'Booked by ' + strtokName(jb.fub.by) + ' · needs Jen' + (jb.fub.what ? ' · ' + jb.fub.what : ''))); if (qView() || wdOn()) { var fcb = q('div'); fcb.appendChild(fuConfirmForm({ id: jb.id, kind: 'day', name: jobName(jb), date: jb.date, slot: jb.slot, price: jb.price, crew: jb.crew }, redraw)); c.appendChild(fcb); } }   /* a follow-up the crew booked (2026-10-28) */
-    if (!qView() && jb.lead) c.appendChild(fuBookBox(jb));   /* Book a follow-up (2026-10-28) */
+    if (!qView() && jb.lead && !kitOnC()) c.appendChild(fuBookBox(jb));   /* Sixfold's: Jen confirms it (not on an edition, 2026-10-29) */   /* Book a follow-up (2026-10-28) */
     c.appendChild(jobPhotoBox(jb, redraw));   /* photos (2026-10-19); Jen's account too since 2026-10-29 (Matthew: 'Allow jen to be able to open job photos') */
     c.appendChild(q('div', 'dwh', 'How did it go?'));
     var owe = (jb.pay && jb.pay.s === 'paid') || (jb.pay && jb.pay.s === 'plan') ? 0 : jb.price - ((jb.pay && jb.pay.amt) || 0);
@@ -7828,6 +7840,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(q('div', 'addr', streetCase(h.address)));
     box.appendChild(q('div', 'meta', h.lookup ? h.town + ' · not on the door lists' + (h.rent ? ': the owner lives elsewhere (likely rented)' : '') : h.town + ' · ' + streetCase(h.area)));
     if (h.owner) box.appendChild(q('div', 'meta', (h.rent ? 'Owner of record (the landlord, likely): ' : 'Owner of record: ') + ownerText(h.owner)));
+    var limH = limLine(h); if (limH) box.appendChild(limH);   /* limited county data (2026-10-29, Group 3) */
     var ml0 = mapsLink(h); if (ml0) box.appendChild(ml0);   /* map position (2026-10-21) */
     if (h.lat != null) {   /* the 2023 photo with the property line, as on the lead card (Matthew 2026-10-15) */
       var hp = q('div', 'lpmap hpmap'); hp.setAttribute('role', 'img'); hp.setAttribute('aria-label', 'Aerial photo of ' + streetCase(h.address)); box.appendChild(hp);
@@ -8510,7 +8523,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var hasT = !!el.querySelector('a[href^="sms:"]'), hasM = !!el.querySelector('a[href^="mailto:"]');
     if (!hasT && !hasM) return null;
     return q('div', 'ltrynote sendnote', [hasT ? 'Text opens the Messages app on this device and sends from its number. On a computer it only works if the computer is linked to a phone (an iPhone with a Mac, or Phone Link on Windows); if not, copy the text and send it from your phone.' : '',
-      hasM ? (onPhone() ? 'Email opens the email app on this phone.' : 'Open in Gmail writes the email in Gmail in your browser, ready to send (sign in to Gmail there first).') : ''].filter(Boolean).join(' '));
+      hasM ? (inAppMail() ? 'Email sends it from ' + S.mailFrom + ' inside the app, after you check it.' : onPhone() ? 'Email opens the email app on this phone.' : 'Open in Gmail writes the email in Gmail in your browser, ready to send (sign in to Gmail there first).') : ''].filter(Boolean).join(' '));
   }
   /* the same email in Gmail in the browser: a mailto link does nothing on a computer with no email app set up (Matthew 2026-10-15) */
   function gmailHref(mailto) {
@@ -8518,14 +8531,39 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var p = {}; (m[2] || '').split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i)] = kv.slice(i + 1); });
     return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + m[1] + (p.subject ? '&su=' + p.subject : '') + (p.body ? '&body=' + p.body : '');
   }
+  /* an email to a customer from inside the app (2026-10-29, Matthew: "sending it all from inside the app email wise is better, only open it in
+     another browser email app if they dont currently have a gmail and outlook connected"): on an edition with Setup, Email connected, a message
+     the app wrote (a mailto with a subject and words) goes from the company's mailbox after a check; a bare address, no mailbox, or Sixfold
+     open the email app as before. The server sends only to a lead or customer this person works with, and notes it on the lead. */
+  function inAppMail() { return kitOnC() && !!S.mailFrom && !S.viewing; }
+  function mailParts(href) {
+    var m = /^mailto:([^?]*)(?:\?(.*))?$/.exec(href || ''); if (!m) return null;
+    var p = {}, dec = function (v) { try { return decodeURIComponent(v); } catch (er) { return v; } };
+    (m[2] || '').split('&').forEach(function (kv) { var i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i)] = dec(kv.slice(i + 1)); });
+    return { to: dec(m[1]), subject: p.subject || '', body: p.body || '' };
+  }
+  function mailSendApp(a) {
+    var P = mailParts(a.getAttribute('href')); if (!P || !P.subject || !P.body) return false;
+    if (a.getAttribute('aria-busy') === 'true') return true;
+    if (!window.confirm('Send this email from ' + S.mailFrom + ' to ' + P.to + '?\n\nSubject: ' + P.subject + '\n\n' + P.body.slice(0, 700) + (P.body.length > 700 ? '\u2026' : ''))) return true;
+    a.setAttribute('aria-busy', 'true');
+    api('mailsend', { body: P }).then(function (j) {
+      a.removeAttribute('aria-busy');
+      if (j._status === 401) return signinView('Signed out. Enter your code again.');
+      if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; }
+      a.classList.add('mailsent'); toast('Sent from ' + j.from, 'To ' + j.to + '. It is noted on the lead.', null);
+    }).catch(function () { a.removeAttribute('aria-busy'); toast('No signal', 'Nothing was sent. Try again.', null); });
+    return true;
+  }
   document.addEventListener('click', function (e) {
     var a = e.target && e.target.closest ? e.target.closest('a[href^="mailto:"]') : null;
+    if (a && inAppMail() && mailSendApp(a)) { e.preventDefault(); return; }   /* 2026-10-29 */
     if (!a || onPhone()) return;
     var g = gmailHref(a.getAttribute('href')); if (!g) return;
     e.preventDefault(); window.open(g, '_blank', 'noopener');
   });
   function onPhone() { return /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent || ''); }
-  function addGmail(el) { if (onPhone()) return; [].forEach.call(el.querySelectorAll('a[href^="mailto:"]'), function (a) { a.hidden = true; if (a.nextSibling && a.nextSibling.classList && a.nextSibling.classList.contains('gmailbtn')) return; var g = q('a', 'gmailbtn'); g.href = gmailHref(a.getAttribute('href')); g.target = '_blank'; g.rel = 'noopener'; g.appendChild(ico('mail', 2.2)); g.appendChild(document.createTextNode('Open in Gmail')); a.parentNode.insertBefore(g, a.nextSibling); }); }
+  function addGmail(el) { if (onPhone() || inAppMail()) return;   /* sent from inside the app instead (2026-10-29) */ [].forEach.call(el.querySelectorAll('a[href^="mailto:"]'), function (a) { a.hidden = true; if (a.nextSibling && a.nextSibling.classList && a.nextSibling.classList.contains('gmailbtn')) return; var g = q('a', 'gmailbtn'); g.href = gmailHref(a.getAttribute('href')); g.target = '_blank'; g.rel = 'noopener'; g.appendChild(ico('mail', 2.2)); g.appendChild(document.createTextNode('Open in Gmail')); a.parentNode.insertBefore(g, a.nextSibling); }); }
   function addSendNote(parent, el) { addGmail(el); var n = sendNote(el); if (n) parent.appendChild(n); }
   function copyText(t, said) { var done = function () { toast('Copied', said, null); }; try { navigator.clipboard.writeText(t).then(done, function () { window.prompt('Copy this:', t); }); } catch (e) { window.prompt('Copy this:', t); } }
   /* ---- the field quick quote (2026-10-21, Matthew: "Christian needs access to a quick quote system. he just needs it so that he can give
@@ -10782,7 +10820,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var top = q('div', 'dkc-top'), tt = q('div', 'dkc-t');
     tt.appendChild(q('h2', null, d.address));
     var bb3 = backBadge(d); if (bb3) tt.appendChild(bb3);
-    tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), 'Owner: ' + ownerText(d.owner)].join(' \u00b7 ')));
+    tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), d.lim && !d.owner ? '' : 'Owner: ' + ownerText(d.owner)].filter(Boolean).join(' \u00b7 ')));
+    var lim1 = limLine(d); if (lim1) tt.appendChild(lim1);   /* limited county data (2026-10-29) */
     top.appendChild(tt);
     var sc = scoreChip(d); if (sc) { sc.classList.add('big'); top.appendChild(sc); }
     var x = q('button', 'dkc-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close this door'); x.appendChild(ico('close', 2.4));
@@ -11406,7 +11445,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* the Front Range towns and one-off jobs (2026-10-11): the server already sent these keys; they showed as Other towns */
     adams: 'Adams County', arapahoe: 'Arapahoe County', jefferson: 'Jefferson County', weld: 'Weld County', denver: 'Denver', boulder: 'Boulder County', park: 'Park County',
     /* Group 2 (Larimer, Mesa, Pueblo) and three live counties that showed as Other towns (2026-10-28) */
-    larimer: 'Larimer County', mesa: 'Mesa County', pueblo: 'Pueblo County', broomfield: 'Broomfield', clearcreek: 'Clear Creek County', elbert: 'Elbert County' };
+    larimer: 'Larimer County', mesa: 'Mesa County', pueblo: 'Pueblo County', broomfield: 'Broomfield', clearcreek: 'Clear Creek County', elbert: 'Elbert County',
+    /* Group 3 (2026-10-29, the rest of Colorado; Park, Elbert, Teller and Clear Creek are above): keys as the editions' build makes them from
+       assessor/town-county.json, lower case with spaces and punctuation dropped */
+    laplata: 'La Plata County', garfield: 'Garfield County', summit: 'Summit County', grand: 'Grand County', routt: 'Routt County', montezuma: 'Montezuma County', gunnison: 'Gunnison County', morgan: 'Morgan County', archuleta: 'Archuleta County', logan: 'Logan County', pitkin: 'Pitkin County', riogrande: 'Rio Grande County',
+    huerfano: 'Huerfano County', sanmiguel: 'San Miguel County', gilpin: 'Gilpin County', yuma: 'Yuma County', lake: 'Lake County', ouray: 'Ouray County', rioblanco: 'Rio Blanco County', dolores: 'Dolores County', hinsdale: 'Hinsdale County', sanjuan: 'San Juan County', eagle: 'Eagle County', custer: 'Custer County',
+    /* Group 3b, the counties built from the state's address points */
+    montrose: 'Montrose County', delta: 'Delta County', lasanimas: 'Las Animas County', alamosa: 'Alamosa County', conejos: 'Conejos County', saguache: 'Saguache County', costilla: 'Costilla County', washington: 'Washington County', bent: 'Bent County', mineral: 'Mineral County', sedgwick: 'Sedgwick County' };
   function townSum(r) {
     return r.areas.reduce(function (t, a) {
       t.total += a.total; t.done += a.done + (a.noanswer || 0); t.left += a.total - a.done - (a.noanswer || 0);
@@ -12619,8 +12664,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var pv = q('a', 'lnk', 'See their quote page ›'); pv.href = j.link; pv.target = '_blank'; pv.rel = 'noopener'; sendBox.appendChild(pv);
         var ms = q('button', 'lnk', 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { api('kitquote', { body: body(true) }).then(function (k) { if (k && k.ok) { toast('Quote marked sent', money0(k.price), null); ms.textContent = 'Sent ✓'; } }); }); sendBox.appendChild(ms);
         var yes = q('button', 'save jbook', 'They said yes: deposit and form ›'); yes.type = 'button';
-        yes.addEventListener('click', function () { signSendView(Object.assign({}, lead, { quote: { price: j.price, pkg: 'job', items: j.items } }), { price: j.price, pkg: 'job' }); });
-        if (!repOn()) sendBox.appendChild(yes);
+        yes.addEventListener('click', function () { signSendView(Object.assign({}, lead, { quote: { price: j.price, pkg: 'job', items: j.items } }), repOn() ? { price: j.price, pkg: 'job', back: function () { kitQuoteView(lead); } } : { price: j.price, pkg: 'job' }); });
+        /* a sales rep sends it too, while the admin leaves Agreements and deposits on (2026-10-29, Matthew: "we will let the admin decide but leave it on by default") */
+        if (!repOn() || S.repSend) sendBox.appendChild(yes);
         else sendBox.appendChild(q('div', 'ltrynote', 'When they say yes, tell the office: they take the deposit, send the agreement and book the day.'));   /* the yes is the office's (2026-10-29) */
         sendBox.appendChild(q('div', 'ltrynote', 'The text and email open here, filled in, from your own number or email. Nothing is sent until you press send.'));
       }
@@ -12756,6 +12802,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       'Open App passwords and create a new one. Copy it and paste it below.', 'Some Microsoft 365 business accounts have SMTP sign-in (Authenticated SMTP) turned off, or do not allow app passwords. If the test says the sign-in was refused, ask whoever runs your Microsoft 365 to turn on Authenticated SMTP for this mailbox.'],
     other: ['Your email provider’s help pages list the outgoing (SMTP) server and port. Port 587 is most common; 465 also works.', 'Make an app password there if your provider has them (most do once two-step sign-in is on), and paste it below.']
   };
+  /* the quick way (2026-10-29, Matthew: "We gotta make things as convenient as possible for people who are paying for convenience"): Gmail and
+     Outlook get one big button straight to the provider's app-password page, three short lines, and one paste box; the long steps stay folded
+     under More detail. Sign in with Google or Microsoft comes later (Traverse registered with both first): its slot is here, hidden. */
+  var MAIL_GO = {
+    gmail: { url: 'https://myaccount.google.com/apppasswords', btn: 'Open Google app passwords', oauth: 'Sign in with Google',
+      steps: ['Turn on 2-Step Verification if Google asks.', 'Name it Traverse, press Create, and copy the 16 letters.', 'Come back here, paste them below, and press Send a test and connect.'] },
+    outlook: { url: 'https://account.live.com/proofs/AppPassword', btn: 'Open Microsoft app passwords', oauth: 'Sign in with Microsoft',
+      steps: ['Turn on two-step verification if Microsoft asks.', 'Create a new app password and copy it.', 'Come back here, paste it below, and press Send a test and connect.'],
+      note: 'That page is for personal Outlook and Hotmail accounts. A work or school Microsoft 365 account may have app passwords turned off: ask whoever runs your Microsoft 365 to allow them (or to turn on Authenticated SMTP for this mailbox).' }
+  };
   function mailSetupView() {
     hideToast(); S.signin = null; S.screen = 'mailsetup'; foot.hidden = true; setDock(null);
     setBar('back', { title: 'Email', sub: 'Customer emails from your own address', back: kitSetupView, backLabel: 'Setup' });
@@ -12778,16 +12834,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       form.appendChild(q('div', 'sub2', 'Who is your email with?')); form.appendChild(kRow);
       [['gmail', 'Gmail'], ['outlook', 'Outlook or Microsoft 365'], ['other', 'Other']].forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(kind === o[0])); b.addEventListener('click', function () { kind = o[0]; [].forEach.call(kRow.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); paintK(); }); kRow.appendChild(b); });
       form.appendChild(q('div', 'dwsub', 'Make an app password first'));
-      form.appendChild(steps);
+      var quick = q('div', 'mailgo'); form.appendChild(quick);   /* the quick way (2026-10-29) */
+      var more = q('details', 'mailmore'); more.appendChild(q('summary', null, 'More detail'));
+      more.appendChild(steps); form.appendChild(more);
       var fld = function (label, type, val, ph) { var l = q('label', null, label); var i = q('input'); i.type = type; i.value = val || ''; if (ph) i.placeholder = ph; l.appendChild(i); form.appendChild(l); return [l, i]; };
-      var uI = fld('Email address you send from', 'email', M.user || '', 'you@yourcompany.com')[1];
+      var uI = fld('Email address you send from', 'email', M.user || j.testTo || '', 'you@yourcompany.com')[1];   /* + your own email on your account, when it is known (2026-10-29) */
       var nI = fld('Sender name (what customers see)', 'text', M.name || j.company || '', j.company || '')[1]; nI.maxLength = 60;
       var hF = fld('Outgoing (SMTP) server', 'text', M.kind === 'other' ? M.host : '', 'smtp.yourprovider.com'), pF = fld('Port', 'text', M.kind === 'other' ? String(M.port) : '587', '587'); pF[1].inputMode = 'numeric';
       var pw = fld('App password', 'password', '', M.on ? 'Leave empty to keep the saved one' : 'Paste it here')[1]; pw.autocomplete = 'new-password'; pw.spellcheck = false;
+      pw.addEventListener('input', function () { var v = pw.value.replace(/\s+/g, ''); if (v !== pw.value) pw.value = v; });   /* Google shows it in groups of four: the spaces go (2026-10-29) */
       form.appendChild(q('div', 'sub2', 'How this works: the app password lets our server send email from your address. It is not your normal password, and the app uses it only to send. It is kept on the server and never shown again; delete it in your Google or Microsoft account any time and sending stops.'));
       var go = q('button', 'save', 'Send a test and connect'); go.type = 'button'; form.appendChild(go);
       var fm = q('div', 'msg bad'); fm.hidden = true; fm.setAttribute('role', 'alert'); form.appendChild(fm);
-      function paintK() { steps.textContent = ''; MAIL_STEPS[kind].forEach(function (t) { steps.appendChild(q('li', null, t)); }); hF[0].hidden = pF[0].hidden = kind !== 'other'; }
+      function paintK() {
+        steps.textContent = ''; MAIL_STEPS[kind].forEach(function (t) { steps.appendChild(q('li', null, t)); }); hF[0].hidden = pF[0].hidden = kind !== 'other';
+        quick.textContent = ''; var G = MAIL_GO[kind]; more.hidden = false;
+        if (!G) { more.open = true; quick.hidden = true; return; }
+        quick.hidden = false; more.open = false;
+        var oa = q('button', 'lnk mailoauth', G.oauth); oa.type = 'button'; oa.disabled = true; oa.hidden = true; quick.appendChild(oa);   /* later: OAuth, once Traverse is registered with Google and Microsoft */
+        var a = q('a', 'save mailgobtn', G.btn); a.href = G.url; a.target = '_blank'; a.rel = 'noopener'; quick.appendChild(a);
+        var ol = q('ol', 'mailsteps'); G.steps.forEach(function (t) { ol.appendChild(q('li', null, t)); }); quick.appendChild(ol);
+        if (G.note) quick.appendChild(q('div', 'ltrynote', G.note));
+      }
       paintK();
       go.addEventListener('click', function () {
         fm.hidden = true; go.disabled = true; go.textContent = 'Sending a test…';
@@ -13375,7 +13443,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       holder.textContent = '';
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the accounts.')); return; }
-      S.accts = j.accounts; S.acctTracking = j.tracking || 0; S.acctTeams = j.teams || []; S.acctSeats = j.seats || null; S.acctMgr = j.manager || null; drawAccounts(holder);
+      S.accts = j.accounts; S.acctTracking = j.tracking || 0; S.acctTeams = j.teams || []; S.acctSeats = j.seats || null; S.acctMgr = j.manager || null; S.acctRepSend = j.repSend; drawAccounts(holder);
       if (S.role === 'admin' && feat('walkdesk')) { var gv = q('button', 'lnk geolnk', 'Where the office and quote-only accounts are used \u203a'); gv.type = 'button'; gv.addEventListener('click', geoView); holder.insertBefore(gv, holder.firstChild); }
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Accounts need signal.')); });
   }
@@ -13387,6 +13455,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var mgr = mgrOn();
     if (mgr) { var tmn = (S.acctTeams || [])[0]; holder.appendChild(q('div', 'sub2', 'Your team' + (tmn ? ': ' + tmn.name : '') + '. Admins change roles and teams.')); }
     else holder.appendChild(teamsBox(holder));
+    if (!mgr && S.role === 'admin' && typeof S.acctRepSend === 'boolean') holder.appendChild(repSendBox(holder));   /* sales reps: agreements and deposits (2026-10-29) */
     var add = q('button', 'addlead', S.acctAdd ? 'Close the form' : mgr ? '+ Add someone to your team' : '+ Add a person'); add.type = 'button';
     add.addEventListener('click', function () { S.acctAdd = !S.acctAdd; S.newCode = null; drawAccounts(holder); });
     holder.appendChild(add);
@@ -13433,6 +13502,27 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!mgr) holder.appendChild(exportsBox());
     if (!mgr) holder.appendChild(flagsBox());
     if (off.length) holder.appendChild(acctGroup('off', 'Turned off', off, holder));
+  }
+  /* the company switch for sales reps (2026-10-29, Matthew: "Include that sales reps can send agreements and take deposits, we will let the admin
+     decide but leave it on by default. Make it a switch in the admin section like we currently have"): editions, admins; the server enforces it */
+  function repSendBox(holder) {
+    var on = !!S.acctRepSend, reps = roleName('crew') + 's';
+    var b = q('div', 'teamsbox repsend'); b.setAttribute('data-on', String(on));
+    var bh = q('div', 'tbh'); bh.appendChild(q('b', null, 'Agreements and deposits')); bh.appendChild(q('span', 'tag', on ? 'On' : 'Off')); b.appendChild(bh);
+    b.appendChild(q('div', 'sub2', on ? reps + ' send the agreement and take the deposit on their own leads, picking a day from the free times. On for everyone in that role.'
+      : 'Only the office and admins send agreements and take deposits. ' + reps + ' quote, then tell the office when the customer says yes.'));
+    var t = q('button', on ? 'lnk' : 'save', on ? 'Turn off for ' + reps : 'Turn on for ' + reps); t.type = 'button';
+    t.addEventListener('click', function () {
+      t.disabled = true;
+      api('repsendset', { body: { on: on ? 0 : 1 } }).then(function (j) {
+        t.disabled = false;
+        if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        S.acctRepSend = !!j.repSend; drawAccounts(holder);
+        toast(j.repSend ? reps + ' send agreements now' : reps + ' no longer send agreements', j.repSend ? 'They take the deposit and send the form on their own leads.' : 'The office sends the form and takes the deposit.', null);
+      }).catch(function () { t.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
+    });
+    b.appendChild(t);
+    return b;
   }
   function acctGroup(k, title, its, holder) {
     S.acctOpen = S.acctOpen || {};
@@ -14558,7 +14648,48 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
   /* the Pipeline from the menu, a tile or an alert opens with no stage picked (2026-10-21, Matthew: "we dont want to open into clutterness,
      lets allow them to choose"); a link to one lead still opens its stage */
-  function pipeOpen() { S.pipeStage = null; S.pipeSel = null; S.pipeFocus = null; pipelineView(); }
+  /* search and Last contacted (2026-10-29, Jen and Cai via Matthew: "a search and a filter would be helpful on the pipeline. Searching by name or
+     phone number would help us find people now that the list is getting bigger. And a filter by date or something to see the last time someone
+     was contacted"). One row above the Pipeline; Jen's stages and cards stay as they are. Typing or picking a range shows everyone who matches
+     across every stage (a stage tapped after that narrows it). Last contacted = the newest call try, note or status change on the lead by a
+     person (Square, Facebook and Messenger lines are the machines', not a contact); a door booking counts its last mark. */
+  var PIPE_LC = [['', 'Last contacted: any time'], ['today', 'Contacted today'], ['7', 'Contacted in the last 7 days'], ['30', 'Last contacted 8 to 30 days ago'], ['old', 'Last contacted over 30 days ago'], ['never', 'Never contacted']];
+  var PIPE_SYS = { Square: 1, Facebook: 1, Messenger: 1 };
+  function pipeContactAt(it) {
+    var x = it.x, t = 0;
+    if (it.kind === 'door') return x.at || 0;
+    (x.tries || []).forEach(function (r) { if ((r.at || 0) > t) t = r.at; });
+    (x.notes || []).forEach(function (n) { if ((n.at || 0) > t && !PIPE_SYS[n.by]) t = n.at; });
+    if (x.statusAt && x.statusAt > t && !PIPE_SYS[x.statusBy]) t = x.statusAt;
+    return t;
+  }
+  function pipeHit(it, txt) {
+    if (!txt) return true;
+    var x = it.x, d = digits(txt), low = txt.toLowerCase();
+    var ph = it.kind === 'door' ? [x.phone && (x.phone.phone || x.phone)] : [x.phone];
+    if (d.length >= 3 && d.length >= low.replace(/[s().+-]/g, '').length) return ph.some(function (p) { return digits(p).indexOf(d) >= 0; });   /* digits typed: the phone */
+    var hay = it.kind === 'door' ? [x.address, x.owner, x.name, x.email && (x.email.email || x.email), x.town] : [x.name].concat(x.names || [], [x.email, x.town, x.house && x.house.address, x.house && x.house.town]);
+    return hay.join(' ').toLowerCase().indexOf(low) >= 0;
+  }
+  function pipeLcHit(it, k) {
+    if (!k) return true;
+    var t = pipeContactAt(it); if (k === 'never') return !t;
+    if (!t) return false;
+    var days = (Date.now() / 1000 - t) / 86400, mid = new Date(); mid.setHours(0, 0, 0, 0);
+    return k === 'today' ? t * 1000 >= mid.getTime() : k === '7' ? days <= 7 : k === '30' ? days > 7 && days <= 30 : days > 30;
+  }
+  function pipeFindRow() {
+    var row = q('div', 'pipefind'), si = q('input'), sel = q('select'), note = q('div', 'pfn');
+    si.type = 'search'; si.placeholder = 'Search a name, phone, email or street'; si.setAttribute('aria-label', 'Search the Pipeline'); si.value = S.pipeQ || ''; si.autocomplete = 'off';
+    sel.setAttribute('aria-label', 'Last contacted');
+    PIPE_LC.forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; if (o[0] === (S.pipeLc || '')) op.selected = true; sel.appendChild(op); });
+    si.addEventListener('input', function () { S.pipeQ = si.value; S.pipeStage = null; drawPipe(); });
+    sel.addEventListener('change', function () { S.pipeLc = sel.value; S.pipeStage = null; drawPipe(); });
+    row.appendChild(si); row.appendChild(sel); row.appendChild(note); note.hidden = true;
+    S.pipeFindNote = note;
+    return row;
+  }
+  function pipeOpen() { S.pipeStage = null; S.pipeSel = null; S.pipeFocus = null; S.pipeQ = ''; S.pipeLc = ''; pipelineView(); }   /* + the search starts empty (2026-10-29) */
   function pipelineView() {
     /* a save made on the pipeline refreshes it in place: the list stays up until the new one arrives,
        rather than blanking for the half-second the door bookings take to load */
@@ -14573,6 +14704,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       view.textContent = '';
       /* Results lives here since the fold-up (2026-10-12): which doors turn into jobs, the end of this same pipeline */
       var rs0 = q('button', 'lnk subnav', 'Results: which houses turn into jobs \u203a'); rs0.type = 'button'; rs0.addEventListener('click', function () { S.resultsBack = pipelineView; resultsView(); }); if (!asOffice()) view.appendChild(rs0);
+      view.appendChild(pipeFindRow());   /* search and Last contacted (2026-10-29) */
       holder = q('div'); holder.appendChild(q('div', 'skel')); holder.appendChild(q('div', 'skel'));
       view.appendChild(holder);
       S.qholder = holder;
@@ -14683,6 +14815,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .concat((S.pleads || []).map(function (l) { return { kind: 'lead', x: l, at: l.at }; }))
       .sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
     if (asOffice()) items = items.filter(function (it) { return it.kind === 'lead'; });   /* the office works the leads, not the crews' door bookings */
+    var fq = String(S.pipeQ || '').trim(), flc = S.pipeLc || '', finding = !!(fq || flc), allN = items.length;   /* search and Last contacted (2026-10-29) */
+    if (finding) {
+      items = items.filter(function (it) { return pipeHit(it, fq) && pipeLcHit(it, flc); });
+      if (flc) items.sort(function (a, b) { return flc === 'never' ? (a.at || 0) - (b.at || 0) : pipeContactAt(b) - pipeContactAt(a); });
+    }
+    if (S.pipeFindNote) { S.pipeFindNote.hidden = !finding; S.pipeFindNote.textContent = finding ? (items.length ? items.length + (items.length === 1 ? ' match' : ' matches') + ' of ' + allN + '. Tap a stage to narrow it.' : 'Nobody matches. Check the spelling, or try part of the phone number.') : ''; }
     var stage = S.pipeStage || null, src = S.pipeSrc || 'all';   /* nothing open until a stage is picked (2026-10-21) */
     if (stage && !asOffice() && !PIPE_ST.some(function (x) { return x[0] === stage; })) stage = 'call';
     if (stage && asOffice() && !OFFICE_ST.some(function (x) { return x[0] === stage; })) stage = OFFICE_MAP[stage] || ({ walk: 'call' })[stage] || 'call';
@@ -14733,7 +14871,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var its = mineItems.filter(function (it) { return mineStage(it) === k; }).sort(function (a, b) { return waitM(a) - waitM(b); });
         if (its.length) groupsM.push([labM[k] || k, its]);
       });
-      var cardM = function (it, into) { var card = leadCard(it.x); card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild); (into || holder).appendChild(card); };
+      var cardM = function (it, into) { var card = leadCard(it.x); if (flc) { var lcm = pipeContactAt(it); card.insertBefore(q('span', 'lctag', lcm ? 'Last contacted ' + ago(lcm) : 'Not contacted yet'), card.firstChild); } card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild); (into || holder).appendChild(card); };
       if (!groupsM.length) holder.appendChild(q('div', 'msg soft pipepick', 'Nothing open right now. New Facebook ad and website leads show here the moment they come in.'));
       else if (wdOn() && deskWide()) pipeTwo(holder, groupsM, cardM);
       else groupsM.forEach(function (g) { holder.appendChild(q('h2', 'pipegrp', g[0] + ' · ' + g[1].length)); g[1].forEach(function (it) { cardM(it); }); });
@@ -14766,13 +14904,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(sc);
     }
     var shown = items.filter(function (it) { return pipeStage(it) === stage && (src === 'all' || pipeSrc(it) === src); });
-    if (!stage) holder.appendChild(q('div', 'msg soft pipepick', 'Pick a stage to see who is in it.'));
+    if (!stage && !finding) holder.appendChild(q('div', 'msg soft pipepick', 'Pick a stage to see who is in it.'));
     if (stage && !shown.length && !(wdOn() && deskWide())) {
       holder.appendChild(q('div', 'msg', items.length ? 'Nothing at this stage' + (src === 'all' ? '' : ' from ' + pipeSrcName(src)) + '.'
         : 'Nothing yet. Door bookings appear the moment a crew member taps Walk booked or Quote sent; website enquiries arrive by themselves; add the rest with + Add a lead.'));
     }
     var drawCard = function (it, into) {
       var card = it.kind === 'door' ? quoteCard(it.x) : leadCard(it.x);
+      if (flc) { var lct = pipeContactAt(it); card.insertBefore(q('span', 'lctag', lct ? 'Last contacted ' + ago(lct) : 'Not contacted yet'), card.firstChild); }   /* 2026-10-29 */
       card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild);
       (into || holder).appendChild(card);
     };
@@ -14800,7 +14939,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var rdue = shown.filter(function (it) { return rd(it) <= td; }).sort(function (a, b) { return rd(a) < rd(b) ? -1 : rd(a) > rd(b) ? 1 : 0; }), rlater = shown.filter(function (it) { return rd(it) > td; }).sort(function (a, b) { return rd(a) < rd(b) ? -1 : rd(a) > rd(b) ? 1 : 0; });
       groups = []; if (rdue.length) groups.push(['Call back today', rdue]); if (rlater.length) groups.push(['Coming up', rlater]);
     }
-    if (!stage) { /* nothing picked */ } else if (wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);   /* a computer: the list and the lead side by side */
+    if (!stage && finding) {   /* a search with no stage picked: every match, under its stage (2026-10-29) */
+      groups = []; stList.forEach(function (st) { var its = items.filter(function (it) { return pipeStage(it) === st[0] && (src === 'all' || pipeSrc(it) === src); }); if (its.length) groups.push([st[1], its]); });
+      if (groups.length && wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);
+      else groups.forEach(function (g) { holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
+    } else if (!stage) { /* nothing picked */ } else if (wdOn() && deskWide()) pipeTwo(holder, groups, drawCard);   /* a computer: the list and the lead side by side */
     else groups.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
     /* won, not in Customers yet (2026-10-15: no Won tab any more; a won door from the crew, or a lead won before Won made the customer) */
     if (!asOffice() && S.custLinks) {
@@ -16045,6 +16188,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      new one: it could be either owner's (review 2026-10-03), so it stays live with a warning */
   function maybeNote(box, r) { if (r && r.maybe) box.appendChild(q('span', 'oldl maybe', "Recorded around the time the house sold: check it's the new owner's")); }
   /* the assessor's total value for the parcel, Douglas and Teller only (2026-10-03) */
+  /* limited county data on a door (2026-10-29, Group 3: the address-point counties have no owner, some no occupancy test, and Eagle and Summit
+     withhold the owner's name): one plain line on the card; doors without it are unchanged */
+  var LIM_TEXT = { noowner: 'Limited data: no owner on record', noocc: 'Owner on record, occupancy unknown', noname: 'Owner name withheld by the county' };
+  function limLine(d) { return d && LIM_TEXT[d.lim] ? q('div', 'meta liml', LIM_TEXT[d.lim]) : null; }
   function ownerText(o) { return /^unavailable$/i.test(String(o || '').trim()) ? 'not on the public record' : o; }
   function fmtVal(v) { return !v ? '' : v >= 999500 ? '$' + (v / 1e6).toFixed(2).replace(/0$/, '') + 'M' : '$' + Math.round(v / 1000) + 'k'; }
   function quoteCard(x) {
@@ -18124,13 +18271,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var fb = fireBadge(d); if (fb) meta.appendChild(fb);
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
-    meta.appendChild(q('span', 'own', d.acres.toFixed(2) + '-acre lot (house and driveway included)' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + ownerText(d.owner)));
+    if (d.lim && LIM_TEXT[d.lim]) { var lp = [d.acres > 0 ? d.acres.toFixed(2) + '-acre lot (house and driveway included)' : '', d.val ? 'County value ' + fmtVal(d.val) : '', d.owner ? 'Owner: ' + ownerText(d.owner) : ''].filter(Boolean); if (lp.length) meta.appendChild(q('span', 'own', lp.join(' · '))); }   /* limited data: no empty owner or 0-acre lot (2026-10-29) */
+    else meta.appendChild(q('span', 'own', d.acres.toFixed(2) + '-acre lot (house and driveway included)' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + ownerText(d.owner)));
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);
+    var lim0 = limLine(d); if (lim0) card.appendChild(lim0);   /* limited county data (2026-10-29) */
     var cl0 = censusLine(d.cen); if (cl0) card.appendChild(q('div', 'meta cenl', cl0 + ' (Census, the area not this house)'));   /* 2026-10-21 */
     var sw = scoreWhy(d); if (sw) card.appendChild(sw);   /* why the score (2026-10-08) */
     if (d.prevMark) card.appendChild(q('div', 'meta st prevm', 'Before the new owner: ' + markName(d.prevMark) + (d.prevMark.by ? ' · ' + d.prevMark.by : '') + (d.prevMark.at ? ' · ' + fmtDay(d.prevMark.at) : '')));
@@ -19590,7 +19739,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('hopin', { body: { pass: decodeURIComponent(hp[1]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
+        S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -19598,7 +19747,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

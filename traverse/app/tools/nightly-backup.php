@@ -32,7 +32,8 @@ $files = [];
 $add = function (string $abs, string $rel) use (&$files) { if (is_file($abs) && is_readable($abs)) $files[$rel] = (string) file_get_contents($abs); };
 foreach ((glob($rounds . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/rounds/' . basename($p));
 /* the settings the app writes as whole files (review 2026-10-06: personal goals, the lessons and the roof prices were missing) */
-foreach (['goals.json', 'goals-people.json', 'training.json', 'roof-settings.json'] as $n) $add($rounds . '/' . $n, 'sixfold-data/rounds/' . $n);
+/* + each install's own settings (2026-10-29): kit, costs, pay ways, email templates, Company screen, team goals, crews' towns and days off; never the mailbox password */
+foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json'] as $n) $add($rounds . '/' . $n, 'sixfold-data/rounds/' . $n);
 foreach ((glob($data . '/leads/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
 foreach ((glob($data . '/customers/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
 $photos = [];
