@@ -228,7 +228,7 @@ function securityOn(string $role): bool { return crewSees($role) && feature('sec
    the last market sale on the county's own record, data-pipeline/door-territory/moved/build-moved.mjs -> moved-<town>.json
    { counties: { key: [name, sales as of, building facts as of] }, doors: { id: 'YYYY-MM|key' } }. The door gets
    ['s' => 'YYYY-MM', 'c' => 'Arapahoe County', 'a' => 'YYYY-MM'], so the card can say whose record it is and how fresh. */
-function movedOn(string $role): bool { return edition() && crewSees($role); }
+function movedOn(string $role): bool { return (edition() || !empty(company()['a365'])) && crewSees($role); }   /* + Sixfold 365 (2026-10-30, Matthew: lawn customers move in and need aeration); the house lookup stays as it was */
 function movedSide(string $key, ?array $only = null): array {
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/moved-' . $key . '.json'), true);
     if (!is_array($j['doors'] ?? null)) return [];
@@ -2255,14 +2255,18 @@ function pwAdminByEmail(string $em): string {
     $first = billingFreeAdmin($rows);
     return $first !== '' && $ok($first) ? $first : '';
 }
+/** where email and password sign-in is offered: the editions and client installs, and since 2026-10-30 Sixfold 365 (optional there: each person
+    adds a password from Profile, pwadd below; codes keep working). Sixfold's emails go from Traverse's mailbox with the sender name Sixfold 365. */
+function pwHere(): bool { return edition() || !empty(company()['a365']); }
+function pwBrand(): string { return !empty(company()['a365']) ? 'Sixfold 365' : (string) company()['name']; }
 if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
-    if (!edition()) fail('Not here.', 404);
+    if (!pwHere()) fail('Not here.', 404);
     if ($action === 'pwinfo') {
         if (!throttleTake(rateFile('pwinfo|' . clientKey()), 60, 3600)) fail('Too many tries from here. Wait a while.', 429);
         $tk = pwTokenFind((string) ($_GET['t'] ?? ''));
         if (!$tk || !empty($tk['expired'])) fail(!empty($tk['expired']) ? 'That link has run out. Ask your admin to send it again, or use Forgot password.' : 'That link has been used or is not one we know. Sign in, or use Forgot password.', 404);
         $hw = pwHit($tk['id']); if (!$hw) fail('That account is no longer on. Ask your admin.', 404);
-        out(['ok' => true, 'kind' => $tk['kind'] === 'inv' ? 'invite' : 'reset', 'name' => (string) $hw[0][0], 'email' => (string) ($tk['kind'] === 'inv' ? $tk['email'] : (($tk['email'] ?? '') ?: ($acct['login'][$tk['id']]['email'] ?? ''))), 'company' => (string) company()['name'], 'min' => PW_MIN]);
+        out(['ok' => true, 'kind' => $tk['kind'] === 'inv' ? 'invite' : (!empty($tk['add']) ? 'add' : 'reset'), 'name' => (string) $hw[0][0],   /* 'add': a Sixfold person adding a password from Profile (2026-10-30) */ 'email' => (string) ($tk['kind'] === 'inv' ? $tk['email'] : (($tk['email'] ?? '') ?: ($acct['login'][$tk['id']]['email'] ?? ''))), 'company' => pwBrand(), 'min' => PW_MIN]);
     }
     if (!$isPost) fail('POST required', 405);
     if ($action === 'pwset') {
@@ -2302,14 +2306,14 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         if (!filter_var($em, FILTER_VALIDATE_EMAIL) || !throttleTake(rateFile('pwforgotm|' . hash('sha256', $em)), 3, 3600)) out($same);
         $lk = @fopen(accountsFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) out($same);
         $acct = loadAccounts(); $id = pwEmailOwner($em); $noPw = false;
-        if ($id === '') { $id = pwAdminByEmail($em); $noPw = $id !== ''; }   /* an admin who signs in with a code only (2026-10-30) */
+        if ($id === '' && edition()) { $id = pwAdminByEmail($em); $noPw = $id !== ''; }   /* Sixfold: only an email someone added from Profile (2026-10-30) */   /* an admin who signs in with a code only (2026-10-30) */
         $hw = $id !== '' ? pwHit($id) : null;
         if (!$hw) out($same);
         $tok = bin2hex(random_bytes(24));
         $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time()] + ($noPw ? ['email' => $em] : []);
         saveAccounts($acct); flock($lk, LOCK_UN); fclose($lk);
-        $co = company(); $link = (string) $co['appUrl'] . '#pw=r.' . $tok;
-        pwMail($em, (string) $co['name'] . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $co['name'] . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+        $co = company(); $link = (string) $co['appUrl'] . '#pw=r.' . $tok; $cn = pwBrand();
+        pwMail($em, $cn . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $cn . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is." . (edition() ? '' : ' Your 6-digit code still works too.') . "\n\n" . (edition() ? "Sent for " . $cn . " by Traverse Platforms." : "Sent by " . $cn . ".") . "\n", null, []);
         accountLog(['what' => 'reset link sent', 'id' => $id]);
         out($same);
     }
@@ -3088,6 +3092,40 @@ function squareAppCfg(): ?array {
 function a365Extras($in): array { $out = []; foreach (is_array($in) ? $in : [] as $x) { if (!is_array($x)) continue; $t = a365Clean((string) ($x['t'] ?? ''), 120); if ($t === '') continue; $p = (int) round((float) ($x['p'] ?? 0)); $out[] = ['t' => $t, 'p' => max(0, min(100000, $p))]; if (count($out) >= 6) break; } return $out; }
 /** the extra work in words, for the crew's job note: "Also: clear the front beds; haul the branches." (no prices) */
 function a365ExtrasNote(array $Q): string { $t = array_map(fn($x) => (string) $x['t'], a365Extras($Q['extras'] ?? [])); return $t ? 'Also: ' . implode('; ', $t) . '.' : ''; }
+/* ---- Sixfold 365's agreement terms as a library (2026-10-30, Matthew: "starting from Sixfold's CURRENT agreement wording split into clauses so
+ * nothing changes until Brandon/Matthew edit"; admin and super admin only, never given to a role) ----
+ * The seven lines the form has carried since v4 (2026-10-16), one clause each, kept in clauses.json beside the data once an admin saves (the same
+ * file and shape as the editions' library; in the app's backup and the nightly one). Each clause: words, on or off, and when it shows: always,
+ * only with a deposit, or only with no deposit (the two deposit lines were dropped from no-deposit forms since 2026-10-26: "with a deposit").
+ * {phone} is the lead's call-back number (a365Phone). Every signed form keeps the exact facts and terms it was signed with (a365signed), and a
+ * booking without a signature keeps its copy (confirmed), so a change reaches only forms opened after it. A365_SIGN_VERSION is unchanged.
+ *   a365terms      GET   admin: {lib: {clauses, set, ver, at, by}, defaults, phone}
+ *   a365termsset   POST  admin: {clauses: [{id, title, text, on, when}]} | {reset: true} (back to the wording above) */
+function a365ClauseDefaults(): array {
+    $c = [['t1', 'We will do the work listed above at this address on the day shown, arriving in the time shown.', 'always'],
+          ['t2', 'Please let us know if there are sprinklers, shallow pipes or invisible dog fences, so they can be marked before we start.', 'always'],
+          ['t3', 'On the day, please leave gates unlocked and keep pets inside.', 'always'],
+          ['t4', 'If the weather or the ground (frozen, waterlogged or very dry) stops us, we will contact you to move the day.', 'always'],
+          ['t5', 'To reschedule or cancel, call or text {phone} at least 24 hours before your day.', 'always'],
+          ['t6', 'The appointment is not confirmed until the deposit is paid.', 'deposit'],   /* Matthew 2026-10-15 */
+          ['t7', 'The deposit is non-refundable.', 'deposit']];
+    return array_map(fn($x) => ['id' => $x[0], 'title' => '', 'text' => $x[1], 'on' => true, 'svc' => [], 'when' => $x[2], 'starter' => false], $c);
+}
+function a365Clauses(): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/clauses.json'), true);
+    if (is_array($j) && is_array($j['clauses'] ?? null)) return ['clauses' => array_values(array_filter(array_map('prcClauseClean', $j['clauses'], array_keys($j['clauses'])))), 'set' => true, 'ver' => (int) ($j['ver'] ?? 1), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? '')];
+    return ['clauses' => a365ClauseDefaults(), 'set' => false, 'ver' => 0, 'at' => 0, 'by' => ''];
+}
+/** the form's terms for this lead: the clauses switched on that fit it (a deposit is any form but "no deposit", as before) */
+function a365Terms(array $l, string $ph): array {
+    $dep = ($l['sign']['how'] ?? '') !== 'none'; $o = [];
+    foreach (a365Clauses()['clauses'] as $x) {
+        if (!$x['on'] || ($x['when'] === 'deposit' && !$dep) || ($x['when'] === 'nodeposit' && $dep)) continue;
+        $tx = str_replace('{phone}', $ph, $x['text']);
+        $o[] = $x['title'] !== '' ? $x['title'] . ': ' . $tx : $tx;
+    }
+    return $o;
+}
 function a365Agreement(array $l): array {
     if (kitOn()) return kitAgreement($l);   /* every install but Sixfold: the company's own work, terms and name (2026-10-27) */
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null;
@@ -3109,14 +3147,7 @@ function a365Agreement(array $l): array {
               ['Balance due when the work is done', '$' . number_format((int) $Q['price'] - (int) $S2['deposit'])]]);
     if (($S2['how'] ?? '') === 'link' && !empty($l['savecard']['yes'])) $facts[] = ['Card on file', a365SaveText((int) $Q['price'] - (int) $S2['deposit'])];   /* their choice when they paid (2026-10-15) */
     $ph = a365Phone($l);
-    $terms = ['We will do the work listed above at this address on the day shown, arriving in the time shown.',
-              'Please let us know if there are sprinklers, shallow pipes or invisible dog fences, so they can be marked before we start.',
-              'On the day, please leave gates unlocked and keep pets inside.',
-              'If the weather or the ground (frozen, waterlogged or very dry) stops us, we will contact you to move the day.',
-              'To reschedule or cancel, call or text ' . $ph . ' at least 24 hours before your day.',
-              'The appointment is not confirmed until the deposit is paid.',   /* Matthew 2026-10-15 */
-              'The deposit is non-refundable.'];
-    if (($S2['how'] ?? '') === 'none') $terms = array_values(array_filter($terms, fn($t) => stripos($t, 'deposit') === false));   /* no deposit taken (2026-10-26): no deposit rules on the form */
+    $terms = a365Terms($l, $ph);   /* the terms library (2026-10-30): the wording below until an admin changes it (a365ClauseDefaults) */
     $consents = ['I have read this agreement and I agree to its terms.', 'I agree to sign it electronically by typing my name.'];
     $consent = implode(' ', $consents);
     $text = implode("\n", array_map(fn($x) => $x[0] . ': ' . $x[1], $facts)) . "\n" . implode("\n", $terms) . "\n" . $consent;
@@ -3635,7 +3666,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3653,7 +3684,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'tosched', 'fuconfirm', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear'], true))   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'tosched', 'fuconfirm', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear', 'pwmine', 'pwadd', 'pwoff'], true))   /* + her own email sign-in (2026-10-30) */   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -3705,6 +3736,7 @@ const ED_SETTER_NO = ['kit', 'kitquote', 'signsend', 'leadquote', 'leadcontact',
 /* a technician: no leads, quotes or customers (the jobs they are given stay theirs) */
 const ED_TECH_NO = ['myleads', 'leadstatus', 'leadfollow', 'leadassign', 'leadrecall', 'leadunreach', 'leadremove', 'leadtry', 'leadoutcome', 'crewlead', 'leadadd', 'leadquote', 'leadcontact', 'leadhouse', 'leadask',
     'kit', 'kitquote', 'signsend', 'quotes', 'quoted', 'roofjob', 'customers', 'customerfrom', 'customersave', 'custjob', 'custdoc', 'custdocadd', 'visitsave', 'customersexport', 'customerimport', 'a365house', 'teamleads'];
+if (!defined('SIXFOLD_CLI') && $session && !edition() && is_file(permFile())) sixPermGate($action);   /* Sixfold 365's role permissions (2026-10-30): nothing runs until an admin saves a change */
 /** the role's sub-key in an edition ('' = admin, manager, office or a plain crew account; 'setter' or 'tech') */
 function edSub(): string { global $sub; return edition() ? (string) ($sub ?? '') : ''; }
 /** does this account see doors? Office and tech accounts only with the Doors switch (Accounts); everyone else always */
@@ -3761,7 +3793,7 @@ function edGate(string $a): void {
  * door list downloads (Traverse's own sign-in); a setter never takes a payment or a deposit (paysset, ED_SETTER_NO). The defaults, in the
  * order manager, office, sales rep, setter, technician ('1' yes, '0' no, '-' not for that role, 'r' the company switch for sales reps'
  * agreements in Accounts), are the 'def' strings below. */
-function permRoles(): array { return ['manager', 'office', 'crew', 'setter', 'tech']; }
+function permRoles(): array { return edition() ? ['manager', 'office', 'crew', 'setter', 'tech'] : ['manager', 'office', 'quote', 'crew']; }   /* + Sixfold 365's own roles (2026-10-30, permSixCat) */
 function permGroups(): array { return ['doors' => 'Doors', 'leads' => 'Leads and pipeline', 'quotes' => 'Quotes', 'pay' => 'Agreements and payments', 'jobs' => 'Jobs and schedule', 'cust' => 'Customers', 'team' => 'Team', 'msg' => 'Messages', 'set' => 'Settings']; }
 function permCat(): array {
     static $c = null; if ($c !== null) return $c;
@@ -3805,12 +3837,69 @@ function permCat(): array {
         'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
-        'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],
+        'set.prices' => ['g' => 'set', 'l' => 'Prices', 's' => 'prices', 'd' => 'What a quote adds up from, and Your costs. The agreement terms stay the admin\'s.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],   /* the terms library left this list (2026-10-30, Matthew: terms are the admin's and the super admin's only, never given to a role) */
     ];
+    if (!edition()) $c = permSixCat($c);   /* Sixfold 365: its own roles, defaults and screens (2026-10-30) */
     return $c;
+}
+/* ---- Roles and permissions in Sixfold 365 (2026-10-30, Matthew: "Enable the permissions editor for Sixfold with defaults that reproduce
+ * Sixfold's current behaviour EXACTLY") ----
+ * The same list, enforcement and editor as the editions, for Sixfold's own roles: manager, office, quote (the quote-only login) and crew. Each
+ * default below is what that role does in Sixfold today (read from the checks in this file and proved by a matrix of answers per role,
+ * scratchpad ptest-six5/sixperms-test.mjs), in the order manager, office, quote, crew ('1' yes, '0' no, '-' not for that role). Nothing is read
+ * until an admin saves a change: the checks run only when role-perms.json exists (sixPermGate), and 'me' carries a role's permissions only
+ * once that role has a change (sixPermFor), so with nothing saved every answer is exactly as before.
+ * Differences from the editions: the quote-only login keeps to its own screens (it can be narrowed, never widened: '-' wherever its list in
+ * this file would refuse anyway); turned-on rows are offered only where the screen exists for the role in Sixfold; the editions' quote kit,
+ * setup, goals and email rows are not here; and five Sixfold rows are: Make quotes (Quote builder / Quick quote), Send forms and take
+ * deposits, the walk desk, the field quick quote and Communities. The person switches (Takes payments, Does jobs, Knocks doors, Runs a team,
+ * Marks won and lost, Communities, Field quick quote) stay the key under the role, as in the editions. */
+function permSixCat(array $c): array {
+    $six = [
+        'doors.see' => ['11-1', ['office' => 'doors']], 'doors.mark' => ['11-1', []],
+        'doors.scores' => ['11-1', [], 'The lawn, tree and fire facts on each card, and new movers.'],
+        'doors.plan' => ['11--', ['office' => 'runsteam']],
+        'leads.own' => ['1--1', []], 'leads.add' => ['11-1', []], 'leads.hand' => ['0110', []], 'leads.team' => ['1--0', []], 'leads.all' => ['01-0', []],
+        'leads.assign' => ['11-0', []], 'leads.close' => ['11-1', ['office' => 'wonlost'], 'Move a lead to Quoted or Won.'],
+        'pay.take' => ['1111', ['manager' => 'pays', 'quote' => 'pays', 'crew' => 'pays']], 'pay.paid' => ['0110', []], 'pay.page' => ['00-0', []],
+        'jobs.own' => ['11-1', ['manager' => 'walker', 'office' => 'walker', 'crew' => 'walker'], 'Their own jobs and walks: the schedule, notes, photos and Done.'],
+        'jobs.all' => ['0110', []], 'jobs.book' => ['0110', []], 'jobs.block' => ['0110', []],
+        'cust.see' => ['01-0', []], 'cust.edit' => ['01-0', []],
+        'team.board' => ['11-0', ['office' => 'runsteam']], 'team.stats' => ['11-0', ['office' => 'runsteam']], 'team.statspage' => ['01-0', []], 'team.run' => ['11-0', ['office' => 'runsteam']],
+    ];
+    $o = [];
+    foreach ($six as $k => $x) {
+        if (!isset($c[$k])) continue;
+        $p = $c[$k]; $p['def'] = $x[0]; $p['sw'] = $x[1]; if (isset($x[2])) $p['d'] = $x[2];
+        unset($p['eff'], $p['need']);   /* Sixfold: a toggle refuses only once turned off (no "on unless the role has it" rows) */
+        $o[$k] = $p;
+        if ($k === 'leads.close') $o['q365.make'] = ['g' => 'quotes', 'l' => 'Make quotes', 's' => 'quotes', 'd' => 'Price a lead from its house and save the quote: the Quote builder, or Quick quote on a quote-only login.', 'def' => '-11-', 'acts' => ['leadquote', 'a365pricing', 'a365calc']];
+        if ($k === 'leads.close') $o['six.fq'] = ['g' => 'quotes', 'l' => 'Field quick quote', 's' => 'field quick quote', 'd' => 'Price a lawn at the door and send it to the office.', 'def' => '1--1', 'sw' => ['manager' => 'fq', 'crew' => 'fq'], 'acts' => ['fqhouse', 'fqcalc', 'fqsend', 'fqmine']];
+        if ($k === 'pay.take') $o['q365.send'] = ['g' => 'pay', 'l' => 'Send forms and take deposits', 's' => 'forms and deposits', 'd' => 'Send the agreement or booking form, with the deposit by Square link or taken by hand.', 'def' => '-11-', 'acts' => ['signsend', 'a365mailsigned']];
+        if ($k === 'jobs.block') $o['desk.walks'] = ['g' => 'jobs', 'l' => 'Book yard walks', 's' => 'books walks', 'd' => 'The walk desk: book, move and hand over walks with the people who do them.', 'def' => '-1--', 'acts' => ['deskwalks', 'deskday', 'deskwalk']];
+        if ($k === 'doors.plan') $o['six.comm'] = ['g' => 'doors', 'l' => 'Communities', 's' => 'Communities', 'd' => 'The HOA and community list for each town.', 'def' => '-1--', 'sw' => ['office' => 'communities'], 'acts' => ['communities']];
+    }
+    return $o;
+}
+/** where the role permissions apply: the editions and Sixfold 365 */
+function permHere(): bool { return edition() || !empty(company()['a365']); }
+/** Sixfold's gate (2026-10-30): only once an admin has saved a change. A role given a screen is answered as the role that has it, then a
+    toggle turned off refuses its actions; doors off refuses the door lists (and, but for the office's house lookup, the single-door looks) */
+function sixPermGate(string $a): void {
+    global $role;
+    if (permWho() === '' || !permSaved()) return;
+    permElevate($a);
+    if (permOff('doors.see') && (in_array($a, ED_DOOR_LISTS, true) || ($role !== 'office' && in_array($a, ED_DOOR_ONE, true)))) fail('Doors are switched off for this account. An admin turns them on in Accounts.', 403);
+    permGate($a);
+}
+/** a Sixfold role's permissions for 'me' and the sign-in answer, only once that role has a change ([] = the answer as before) */
+function sixPermFor(string $r, string $id, bool $me): array {
+    if (edition() || !permHere() || !in_array($r, permRoles(), true) || empty(permSaved()[$r])) return [];
+    return permSwitches(permMine($r), $r, $id, $me);
 }
 /** never toggled, said under the list in Accounts */
 function permFixed(): array {
+    if (!edition()) return ['Accounts (every sign-in, roles, codes and the switches on each person), prices, goals, the agreement terms, the Payments setup and downloads stay the admin\'s.', 'The quote-only login keeps to its own screens: its permissions can be turned off, not widened.'];   /* Sixfold 365 (2026-10-30) */
     return ['Billing, Accounts (every sign-in, roles, PINs and the switches on each person) and backups stay the admin\'s.', 'Door list downloads stay with Traverse.', 'A setter never takes a payment or a deposit.'];
 }
 function permFile(): string { return DATA_DIR . '/role-perms.json'; }
@@ -3828,7 +3917,7 @@ function permRolesHere(): array { return array_values(array_filter(permRoles(), 
 /** a role's default: true, false, or null when the permission is not for that role (or not in this install) */
 function permDef(string $k, string $r): ?bool {
     $p = permCat()[$k] ?? null; $i = array_search($r, permRoles(), true);
-    if (!$p || $i === false || !edition() || !permNeed($p) || !in_array($r, permRolesHere(), true)) return null;
+    if (!$p || $i === false || !permHere() || !permNeed($p) || !in_array($r, permRolesHere(), true)) return null;
     $ch = $p['def'][$i]; return $ch === '-' ? null : ($ch === 'r' || $ch === '1');
 }
 /** a role's value: what the admin saved, else the default; the sales reps' agreements are the company switch (repSendOn) */
@@ -3842,17 +3931,17 @@ function permVal(string $k, string $r): ?bool {
 function permWho(): string {
     global $role, $permWho0;
     if (isset($permWho0)) return $permWho0;
-    if (!edition() || empty($role)) return '';
+    if (!permHere() || empty($role)) return '';
     $r = $role === 'crew' && edSub() !== '' ? edSub() : (string) $role;
     return in_array($r, permRoles(), true) ? $r : '';
 }
 function permOn(string $k): bool { $r = permWho(); return $r === '' ? true : (bool) permVal($k, $r); }
 /** the role had it by default and an admin turned it off */
 function permOff(string $k): bool { $r = permWho(); return $r !== '' && permOffFor($k, $r); }
-function permOffFor(string $k, string $r): bool { return edition() && permDef($k, $r) === true && permVal($k, $r) === false; }
+function permOffFor(string $k, string $r): bool { return permHere() && permDef($k, $r) === true && permVal($k, $r) === false; }
 /** the role did not have it by default and an admin turned it on */
 function permAdded(string $k): bool { $r = permWho(); return $r !== '' && permAddedFor($k, $r); }
-function permAddedFor(string $k, string $r): bool { return edition() && permDef($k, $r) === false && permVal($k, $r) === true; }
+function permAddedFor(string $k, string $r): bool { return permHere() && permDef($k, $r) === false && permVal($k, $r) === true; }
 /** the permission this request is answered under as another role ('' = its own) */
 function permVia(): string { global $permVia0; return (string) ($permVia0 ?? ''); }
 /** an admin-only action this role has been given */
@@ -3861,7 +3950,7 @@ function permLiftAct(string $a): bool { foreach (permCat() as $k => $p) if (in_a
 function adminOr(string $k): bool { global $role; return $role === 'admin' || permAdded($k); }
 /** the effective permissions for the page: [all, added, off] for this account's role ([] for the admin) */
 function permMine(?string $r = null): array {
-    $r = $r ?? permWho(); if (!edition() || !in_array($r, permRoles(), true)) return [];
+    $r = $r ?? permWho(); if (!permHere() || !in_array($r, permRoles(), true)) return [];
     $all = []; $add = []; $off = [];
     foreach (permCat() as $k => $p) { $v = permVal($k, $r); if ($v === null) continue; $all[$k] = $v; if (permAddedFor($k, $r)) $add[] = $k; if (permOffFor($k, $r)) $off[] = $k; }
     return ['perms' => $all, 'permAdded' => $add, 'permOff' => $off];
@@ -3993,7 +4082,7 @@ function permList(): array {
     return ['ok' => true, 'roles' => permRolesHere(), 'groups' => permGroups(), 'list' => $list, 'fixed' => permFixed(), 'saved' => ['at' => (int) ($sv['_at'] ?? 0), 'by' => (string) ($sv['_by'] ?? '')]];
 }
 if ($action === 'perms' || $action === 'permset') {
-    if (!edition()) fail('Not here.', 404);
+    if (!permHere()) fail('Not here.', 404);   /* + Sixfold 365 (2026-10-30) */
     if ($action === 'perms') { if ($role !== 'admin' && !mgr()) fail('Not allowed.', 403); out(permList()); }
     if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
     $r = (string) ($body['role'] ?? ''); if (!in_array($r, permRolesHere(), true)) fail('Pick a role.');
@@ -4094,7 +4183,7 @@ function termsState(string $id, string $role, string $name, bool $super, bool $v
 /** the extra fields of a sign-in's answer in an edition: the setter or tech as crew, their switches, and the terms due */
 function edSignin(array $hit, string $hitCode): array {
     global $sessionKey, $acct;
-    if (!edition()) return [];
+    if (!edition()) return sixPermFor((string) ($hit[1] ?? ''), codeId($hitCode, $sessionKey), false);   /* Sixfold: a changed role's permissions (2026-10-30) */
     $r = (string) ($hit[1] ?? 'crew'); $id = codeId($hitCode, $sessionKey);
     $o = ['terms' => termsState($id, $r === 'super' ? 'admin' : $r, (string) ($hit[0] ?? ''), $r === 'super')] + ['repSend' => repSendOn(), 'mailFrom' => (string) (mailOwnCfg()['user'] ?? '')];   /* sales reps send agreements and take deposits: the company switch; mailFrom: emails to customers go from inside the app (2026-10-29) */
     $o['lock'] = billLockFor($r);   /* setup mode or the past-due lock (2026-10-29): the page opens on the right screen */
@@ -4104,7 +4193,7 @@ function edSignin(array $hit, string $hitCode): array {
 /** the same for 'me' */
 function edMe(): array {
     global $session, $role, $realMe, $realSuper, $viewing, $me, $isSuper;
-    if (!edition()) return [];
+    if (!edition()) return sixPermFor(permWho(), (string) ($session['c'] ?? ''), true);   /* Sixfold: a changed role's permissions (2026-10-30) */
     $id = (string) ($session['c'] ?? ''); $s = edSub();
     $o = ['sub' => $s, 'terms' => termsState($id, $role, (string) $me, (bool) $realSuper, (bool) $viewing), 'repSend' => repSendOn(), 'mailFrom' => (string) (mailOwnCfg()['user'] ?? '')];   /* 2026-10-29 */
     $o['lock'] = $isSuper ? null : billLockInfo(billLock(), $role === 'admin');   /* setup mode or the past-due lock (2026-10-29); a role preview sees it as that role */
@@ -4117,7 +4206,7 @@ function edMe(): array {
     answers carry walker and pays already (the base answer), so they are overridden; a sign-in answer only where it said them */
 function permSwitches(array $o, string $r, string $id, bool $me = false): array {
     global $acct;
-    if (!edition() || !in_array($r, permRoles(), true)) return $o;
+    if (!permHere() || !in_array($r, permRoles(), true)) return $o;
     if (permOffFor('pay.take', $r)) $o['pays'] = false;
     if (permOffFor('jobs.own', $r)) $o['walker'] = false;
     elseif ($r === 'setter' && permAddedFor('jobs.own', $r)) $o['walker'] = !empty($acct['walker'][$id]);
@@ -11102,12 +11191,12 @@ function inviteJoined(string $code): void {
 }
 /** one email from Traverse's mailbox with the company as the sender's name (travMailCfg's login; TRAV_MAIL_MOCK in tests). [ok] */
 function pwMail(string $to, string $subject, string $text, ?string $html, array $headers): bool {
-    $cname = (string) company()['name'];
+    $cname = pwBrand(); $from = edition() ? $cname . ' via Traverse' : $cname;   /* Sixfold 365 signs as itself (2026-10-30) */
     $mock = getenv('TRAV_MAIL_MOCK');
-    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $cname . ' via Traverse', 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'from' => $from, 'subject' => $subject, 'body' => $text, 'html' => $html, 'headers' => $headers], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return true; }
     $s = travMailCfg(); if ($s['pass'] === '') return false;
     $h = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
-    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $cname . ' via Traverse', 'domain' => 'traverseplatforms.com'],
+    return smtpSend(['host' => $s['host'], 'port' => (int) $s['port'], 'user' => $s['user'], 'pass' => $s['pass'], 'from_name' => $from, 'domain' => 'traverseplatforms.com'],
         $to, $subject, $text, $html ?? '<pre style="font:15px/1.5 Arial,sans-serif;white-space:pre-wrap">' . $h($text) . '</pre>', $headers)['ok'];
 }
 /** the invite itself: a new link (the old one dies). The caller holds the accounts lock. Returns whether it went. */
@@ -11396,6 +11485,43 @@ if ($action === 'acctlink') {
     $co = company(); $first = explode(' ', (string) $rows[$id]['name'])[0];
     $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
     accountLog(['by' => $me, 'what' => $ok ? 'sign-in link sent' : 'sign-in link failed', 'name' => $rows[$id]['name'], 'id' => $id]);
+    if (!$ok) fail('The email did not go. Try again in a minute.', 502);
+    out(['ok' => true, 'to' => $em]);
+}
+/* ---- Sign in with email instead of a code (2026-10-30, Matthew: optional in Sixfold 365; "Don't force anyone to switch") ----
+ * On Profile a person types their email; a link to set a password goes there (the reset link of pwforgot, marked 'add', 24 hours, once),
+ * so the address is proved before it can sign in or get a reset. Then they sign in with that email and password, or with their code as before.
+ * Forgot password (pwforgot) emails a reset link to the email on the account. Sixfold only; never while previewing someone (view-as).
+ *   pwmine  GET   {email: the address that signs in ('' = none), sent: an address a link went to and is not used yet}
+ *   pwadd   POST  {email}: the link (5 a day per account)
+ *   pwoff   POST  the password comes off the account; the code still works */
+if (in_array($action, ['pwmine', 'pwadd', 'pwoff'], true)) {
+    if (empty(company()['a365'])) fail('Not here.', 404);
+    $pid = (string) ($session['c'] ?? '');
+    if ($viewing || $pid === '') fail('Only for your own sign-in.', 403);
+    $pend = $acct['reset'][$pid] ?? null; $pendOk = is_array($pend) && !empty($pend['tok']) && (int) ($pend['exp'] ?? 0) >= time() ? (string) ($pend['email'] ?? '') : '';
+    if ($action === 'pwmine') out(['ok' => true, 'email' => (string) ($acct['login'][$pid]['email'] ?? ''), 'sent' => $pendOk, 'min' => PW_MIN]);
+    if (!$isPost) fail('POST required', 405);
+    $lk = @fopen(accountsFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts();
+    if ($action === 'pwoff') {
+        if (empty($acct['login'][$pid])) out(['ok' => true, 'email' => '']);
+        unset($acct['login'][$pid], $acct['reset'][$pid]);
+        if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => 'password off', 'id' => $pid]);
+        out(['ok' => true, 'email' => '']);
+    }
+    $em = strtolower(trim((string) ($body['email'] ?? '')));
+    if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen($em) > 120) fail('Type your email address.');
+    $other = pwEmailOwner($em); if ($other !== '' && $other !== $pid) fail('That email address signs in to another account here. Use another, or ask an admin.');
+    if (!throttleTake(rateFile('pwadd|' . $pid), 5, 86400)) fail('Five links today already. Try again tomorrow.', 429);
+    $tok = bin2hex(random_bytes(24));
+    $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$pid] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time(), 'email' => $em, 'add' => 1];
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    flock($lk, LOCK_UN); fclose($lk);
+    $first = explode(' ', (string) $me)[0]; $cn = pwBrand();
+    $ok = pwMail($em, $cn . ': set your password', "Hi $first,\n\nYou asked to sign in to the " . $cn . " app with this email address. Open this link to set your password (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) company()['appUrl'] . '#pw=r.' . $tok . "\n\nThen you can sign in with this email and your password, or with your 6-digit code as before. If Forgot password is ever needed, the link comes to this address.\n\nIf it was not you, ignore this email: nothing changes.\n\nSent by " . $cn . ".\n", null, []);
+    accountLog(['by' => $me, 'what' => $ok ? 'password link sent' : 'password link failed', 'id' => $pid]);
     if (!$ok) fail('The email did not go. Try again in a minute.', 502);
     out(['ok' => true, 'to' => $em]);
 }
@@ -13644,6 +13770,7 @@ if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget'
         out(['ok' => true]);
     }
     if ($action === 'clauseset') {
+        if ($role !== 'admin') fail('The agreement terms are the admin\'s.', 403);   /* never given to a role with Prices (2026-10-30, Matthew) */
         $cl = [];
         foreach (array_slice((array) ($body['clauses'] ?? []), 0, 40) as $i => $x) {
             if (!is_array($x)) continue;
@@ -13775,14 +13902,18 @@ if (in_array($action, ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', '
  *   paywaysset  POST  admin: {venmo, cashapp, paypal, zelle, zelleName, link, linkLabel}; empty = off */
 function payWaysCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/payways.json'), true); return is_array($j) ? $j : []; }
 /** the ways turned on, as the customer sees them: [{k, label, show, url|null, name?}] (Zelle has no link: its details are to copy) */
+/* Sixfold 365 too (2026-10-30, Matthew: Venmo, Zelle with its QR, Cash App and PayPal beside Square, off until set): its admin fills them in
+   on Other ways to pay; they show on the 365 signing page ("Or pay another way" beside the Square deposit, and for the balance) and on the job's
+   balance. Square stays the main way: no deposit "another way" on Sixfold's form (Jen's screen is unchanged) and no own pay link. */
+function payWaysHere(): bool { return kitOn() || !empty(company()['a365']); }
 function payWays(): array {
-    if (!kitOn()) return [];
+    if (!payWaysHere()) return [];
     $c = payWaysCfg(); $o = [];
     if (!empty($c['venmo'])) $o[] = ['k' => 'venmo', 'label' => 'Venmo', 'show' => '@' . $c['venmo'], 'url' => 'https://venmo.com/u/' . rawurlencode((string) $c['venmo'])];
     if (!empty($c['cashapp'])) $o[] = ['k' => 'cashapp', 'label' => 'Cash App', 'show' => '$' . $c['cashapp'], 'url' => 'https://cash.app/$' . rawurlencode((string) $c['cashapp'])];
     if (!empty($c['paypal'])) $o[] = ['k' => 'paypal', 'label' => 'PayPal', 'show' => 'paypal.me/' . $c['paypal'], 'url' => 'https://paypal.me/' . rawurlencode((string) $c['paypal'])];
     if (!empty($c['zelle'])) $o[] = ['k' => 'zelle', 'label' => 'Zelle', 'show' => (string) $c['zelle'], 'name' => (string) ($c['zelleName'] ?? ''), 'url' => null] + (($q = zelleQrInfo($c)) ? ['qr' => zelleQrUrl((string) $q['v'])] : []);
-    if (!empty($c['link'])) $o[] = ['k' => 'link', 'label' => (string) (($c['linkLabel'] ?? '') ?: 'Pay online'), 'show' => (string) parse_url((string) $c['link'], PHP_URL_HOST), 'url' => (string) $c['link']];
+    if (!empty($c['link']) && kitOn()) $o[] = ['k' => 'link', 'label' => (string) (($c['linkLabel'] ?? '') ?: 'Pay online'), 'show' => (string) parse_url((string) $c['link'], PHP_URL_HOST), 'url' => (string) $c['link']];
     return $o;
 }
 /** a deposit "on the form, another way" is not in until the office records it: what counts as taken when the job is made */
@@ -13794,7 +13925,7 @@ function waysDue(array $l): int {
     return (int) ($l['sign']['deposit'] ?? 0);
 }
 if ($action === 'payways' || $action === 'paywaysset') {
-    if (!kitOn()) fail('Not here.', 404);
+    if (!payWaysHere()) fail('Not here.', 404);
     if (!adminOr('set.setup')) fail('Not allowed.', 403);
     if ($action === 'payways') out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
     if (!$isPost) fail('POST required', 405);
@@ -13814,7 +13945,7 @@ if ($action === 'payways' || $action === 'paywaysset') {
         else fail('For Zelle, type the email address or US phone number your Zelle is set up with.');
     }
     $c['zelle'] = $v; $c['zelleName'] = $v !== '' ? mb_substr($g('zelleName'), 0, 60) : '';
-    $v = $g('link');
+    $v = kitOn() ? $g('link') : '';   /* Sixfold: Square is its card link (2026-10-30) */
     if ($v !== '') {
         $pu = parse_url($v);
         if (strlen($v) > 300 || !preg_match('#^https://[^\s<>"\']+$#D', $v) || !filter_var($v, FILTER_VALIDATE_URL) || empty($pu['host']) || !str_contains((string) $pu['host'], '.')) fail('Your own pay link has to be a full web address starting with https:// (copy it from your invoice or payment page).');
@@ -13824,6 +13955,27 @@ if ($action === 'payways' || $action === 'paywaysset') {
     $c['by'] = $me; $c['at'] = time();
     if (!writeJsonAtomic(DATA_DIR . '/payways.json', $c)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
+}
+if ($action === 'a365terms' || $action === 'a365termsset') {   /* Sixfold 365's terms library (2026-10-30; see a365ClauseDefaults) */
+    if (empty(company()['a365'])) fail('Not here.', 404);
+    if ($role !== 'admin') fail('Not allowed.', 403);   /* the admin and the super admin; never a permission */
+    if ($action === 'a365terms') out(['ok' => true, 'lib' => a365Clauses(), 'defaults' => a365ClauseDefaults(), 'phone' => a365Phone()]);
+    if (!$isPost) fail('POST required', 405);
+    if (!empty($body['reset'])) {
+        $old = a365Clauses();
+        if ($old['set'] && !writeJsonAtomic(DATA_DIR . '/clauses.json', ['clauses' => a365ClauseDefaults(), 'ver' => $old['ver'] + 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'lib' => a365Clauses()]);
+    }
+    $cl = [];
+    foreach (array_slice((array) ($body['clauses'] ?? []), 0, 40) as $i => $x) {
+        if (!is_array($x)) continue;
+        if (mb_strlen(trim((string) ($x['text'] ?? ''))) > 2000) fail('A clause can be 2,000 characters at most.');
+        unset($x['svc']); if ($c = prcClauseClean($x, $i)) $cl[] = $c;
+    }
+    if (!array_filter($cl, fn($c) => $c['on'])) fail('Keep at least one clause switched on.');
+    $old = a365Clauses();
+    if (!writeJsonAtomic(DATA_DIR . '/clauses.json', ['clauses' => $cl, 'ver' => $old['ver'] + 1, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'lib' => a365Clauses()]);
 }
 /* ---- the Zelle QR code (2026-10-30, Matthew: an optional Zelle QR upload, shown with the email or phone) ----
  * The admin uploads the QR code their bank's app makes (PNG or JPG, 500 KB at most, 64 to 4,000 pixels a side: the logo upload's checks, no SVG).
@@ -13838,7 +13990,7 @@ function zelleQrInfo(?array $c = null): ?array {
 }
 function zelleQrUrl(string $v): string { return '../api/' . basename(__FILE__) . '?action=zelleqr&v=' . $v; }
 if ($action === 'zelleqrset') {
-    if (!kitOn()) fail('Not here.', 404);
+    if (!payWaysHere()) fail('Not here.', 404);
     if (!adminOr('set.setup')) fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $c = payWaysCfg();

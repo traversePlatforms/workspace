@@ -255,6 +255,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hrbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .hrbtn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 15px var(--sans);cursor:pointer}
   .hrbtn .ic{width:20px;height:20px}.hrbtn.hrmain{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pwcard .pwin{width:100%;box-sizing:border-box;margin:0 0 10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:16px var(--sans)}
+  .pwcard .pwnote{margin:8px 0 0;font-size:13px;color:var(--soft)}.pwcard .hrbtns.one{grid-template-columns:1fr}
   .thaxis{position:relative;height:18px;margin:10px 0 2px 86px;margin-right:64px;font-size:11px;color:var(--soft)}.thaxis span{position:absolute;transform:translateX(-50%)}
   .thday{border-top:1px solid var(--line);padding:10px 0}
   .thhead{display:flex;align-items:center;gap:8px;margin-bottom:6px}.thhead b{font-size:15px}
@@ -2972,8 +2974,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function pOn(k) { return !S.perms || !(k in S.perms) ? true : !!S.perms[k]; }
   function pAdd(k) { return !!(S.permAdded && S.permAdded.indexOf(k) >= 0); }
   /* the screens a role was given that it does not usually have: [icon, label, sub, open, screens, top-bar key] */
+  /* where the editor and the role's permissions apply: the editions and, since 2026-10-30, Sixfold 365 (the server's permHere) */
+  function permHereC() { return edOn() || !!(CO && CO.a365); }
   function permExtras() {
-    if (!edOn() || !S.permAdded || !S.permAdded.length) return [];
+    if (!permHereC() || !S.permAdded || !S.permAdded.length) return [];
     var x = [];
     if (pAdd('leads.all')) x.push(['clip', 'Pipeline', 'Every lead, call to won.', pipeOpen, ['pipeline'], 'pipe']);
     else if (pAdd('leads.team')) x.push(['clip', 'Leads', 'Your team\u2019s leads, and the ones nobody has yet.', teamLeadsView, ['teamleads'], 'pipe']);
@@ -2999,7 +3003,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function permLoad(cb) { api('perms').then(function (j) { if (j && j.ok) { S.permCat = j; if (cb) cb(); } }).catch(function () {}); }
   /** may this role have a person switch? (the role's permission is the ceiling; unknown = as before) */
   function roleAllows(r, k) { var c = S.permCat, p = c && c.list.filter(function (x) { return x.k === k; })[0]; return !p || p.on[r] === null || p.on[r] === undefined ? true : !!p.on[r]; }
-  var SW_SAY = { doors: 'with the person\u2019s Knocks doors switch', pays: 'with the person\u2019s Takes payments switch', walker: 'with the person\u2019s Does jobs switch', runsteam: 'with the person\u2019s Runs a team switch' };
+  var SW_SAY = { doors: 'with the person\u2019s Knocks doors switch', pays: 'with the person\u2019s Takes payments switch', walker: 'with the person\u2019s Does jobs switch', runsteam: 'with the person\u2019s Runs a team switch',
+    wonlost: 'with the person\u2019s Marks won and lost switch', communities: 'with the person\u2019s Communities or Runs a team switch', fq: 'with the person\u2019s Field quick quote switch' };   /* + Sixfold 365's switches (2026-10-30) */
   /** a role's line in Accounts, from its current permissions when an admin has changed any ('' = the usual words in roleSay) */
   function permSay(r) {
     var c = S.permCat; if (!c || r === 'admin') return '';
@@ -3860,7 +3865,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       keys.appendChild(b);
     });
     inn.appendChild(keys);
-    if (edOn()) { var pwl = q('button', 'lnk pwgo', 'Sign in with email and password'); pwl.type = 'button'; pwl.addEventListener('click', function () { pwSigninView(); }); inn.appendChild(pwl); }   /* 2026-10-29 */
+    if (edOn() || (CO && CO.a365)) { var pwl = q('button', 'lnk pwgo', 'Sign in with email and password'); pwl.type = 'button';   /* + Sixfold 365, for people who added a password on Profile (2026-10-30) */ pwl.addEventListener('click', function () { pwSigninView(); }); inn.appendChild(pwl); }   /* 2026-10-29 */
     if (edOn()) { var fgc = q('button', 'lnk pwgo fgcode', 'Forgot your code?'); fgc.type = 'button'; fgc.addEventListener('click', function () { pwSigninView('', 'code'); }); inn.appendChild(fgc); }   /* a way back in for an admin with a code only (2026-10-30) */
     if (!standalone()) { var ih = q('div', 'insthost onsign'); inn.appendChild(ih); fillInstall(ih); }
     S.signin = press;
@@ -4428,6 +4433,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       hbs.appendChild(hb); hbs.appendChild(tb); hr.appendChild(hbs); box.appendChild(hr);
       api('hours').then(function (j) { hs.textContent = j && j.ok ? (j.hours ? hoursSummary(j.hours) : 'Not set yet: any time can be booked') : ''; }).catch(function () { hs.textContent = ''; });
     }
+    if (CO && CO.a365 && !S.viewing) box.appendChild(pwRow());   /* Sign in with email instead of a code (Sixfold 365, 2026-10-30) */
     if (S.super) box.appendChild(editionRow());
     if (S.super && edOn()) box.appendChild(clientsRow());   /* the client installs (2026-10-29), from the editions (Sixfold's screen unchanged) */
     if (S.super || (S.viewing && S.viewing.preview)) box.appendChild(roleRow());
@@ -4673,6 +4679,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
+        CO.a365 && wdOn() ? tile('button', 'clip', 'Agreement terms', 'What the 365 form says under the price: each line yours to change. Signed forms keep theirs.', 'Admin only', a365TermsView) : null,   /* 2026-10-30 */
+        CO.a365 && wdOn() ? tile('button', 'card', 'Other ways to pay', 'Venmo, Zelle with its QR code, Cash App and PayPal, beside Square. Off until you fill them in.', 'Admin only', a365WaysView) : null,   /* 2026-10-30 */
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and color, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* the quote and agreement kit (2026-10-27) */
         kitOnC() ? tile('button', 'calc', 'Prices and terms', 'What a quote adds up from the house, the usual deposit, and your agreement terms.', 'Admin only', kitPricesView) : null,
@@ -5998,7 +6006,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var JOB_HOW_PICK = { square: 'Card (Square)', cash: 'Cash', zelle: 'Zelle', venmo: 'Venmo', check: 'Check', other: 'Other' };   /* Square and Card were the same thing: a card is taken on Square (Matthew 2026-10-15); old jobs saved as card keep their label */
   /* the editions also record Cash App and PayPal (2026-10-29); the 365 office's choices stay as they are */
   function jobHowPick() { if (!kitOnC()) return JOB_HOW_PICK; var o = {}; for (var k in JOB_HOW_PICK) { if (k === 'check') { o.cashapp = 'Cash App'; o.paypal = 'PayPal'; } o[k] = JOB_HOW_PICK[k]; } return o; }
-  function payHowRows(rows) { if (!kitOnC()) return rows; var o = []; rows.forEach(function (r) { if ((r[0] === 'card' || r[0] === 'check') && !o.some(function (x) { return x[0] === 'cashapp'; })) o.push(['cashapp', 'Cash App'], ['paypal', 'PayPal']); o.push(r); }); return o; }
+  /* Sixfold 365 (2026-10-30): Cash App and PayPal join Mark it paid only once its admin set them on Other ways to pay (the list as before otherwise) */
+  function sixHowRows(rows) {
+    var ws = (CO && CO.a365 && S.sq && S.sq.ways) || [], has = function (k) { return ws.some(function (w) { return w.k === k; }); };
+    if (!has('cashapp') && !has('paypal')) return rows;
+    var o = []; rows.forEach(function (r) { if ((r[0] === 'card' || r[0] === 'check') && !o.some(function (x) { return x[0] === 'cashapp' || x[0] === 'paypal'; })) { if (has('cashapp')) o.push(['cashapp', 'Cash App']); if (has('paypal')) o.push(['paypal', 'PayPal']); } o.push(r); }); return o;
+  }
+  function sixHowAdd(sel, ways) { ['paypal', 'cashapp'].forEach(function (k) { var w = ways.filter(function (x) { return x.k === k; })[0]; if (!w || [].some.call(sel.options, function (o) { return o.value === k; })) return; var op = q('option', null, w.label); op.value = k; var at = [].filter.call(sel.options, function (o) { return o.value === 'card'; })[0]; sel.insertBefore(op, at || null); }); }
+  function payHowRows(rows) { if (!kitOnC()) return sixHowRows(rows); var o = []; rows.forEach(function (r) { if ((r[0] === 'card' || r[0] === 'check') && !o.some(function (x) { return x[0] === 'cashapp'; })) o.push(['cashapp', 'Cash App'], ['paypal', 'PayPal']); o.push(r); }); return o; }
   function jobMonday(iso) { var p = iso.split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoOf(d); }
   function jobAdd(iso, n) { var p = iso.split('-'); return isoOf(new Date(+p[0], +p[1] - 1, +p[2] + n)); }
   function jobDow(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).getDay(); }
@@ -6909,7 +6924,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         api('jobpart', { body: pdBody({ id: jb.id, amt: a, how: sel.value }) }).then(function (j) { pbt.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } toast('Part payment recorded', money0(j.tot) + ' paid so far \u00b7 ' + money0(j.left) + ' left', null); if (redraw) redraw(); }).catch(function () { pbt.disabled = false; toast('No signal', 'Not saved.', null); });
       });
       pr.appendChild(pin); pr.appendChild(pbt); w.appendChild(pr);
-      if (kitOnC()) { var wb = q('div', 'jways'); w.appendChild(wb); sqState(function (sq) { payWaysBox(wb, sq.ways || [], owe, jb.who || null); }); }   /* other ways to pay: show or send them (2026-10-29) */
+      if (kitOnC() || (CO && CO.a365)) { var wb = q('div', 'jways'); w.appendChild(wb); sqState(function (sq) { payWaysBox(wb, sq.ways || [], owe, jb.who || null); if (!kitOnC()) sixHowAdd(sel, sq.ways || []); }); }   /* + Sixfold 365, once its admin fills them in (2026-10-30) */   /* other ways to pay: show or send them (2026-10-29) */
       var sl = q('button', 'lnk', 'Check Square for a payment'); sl.type = 'button';   /* paid straight in Square (2026-10-19, Kirk) */
       sl.addEventListener('click', function () { sl.disabled = true; api('squarelook', { body: { id: jb.id } }).then(function (j) { sl.disabled = false; if (!j.ok) { toast('Could not check', j.error || 'Try again.', null); return; } if (j.paid) { toast('Paid in Square', j.amt ? money0(j.amt) + (j.last4 ? ' on the card ending ' + j.last4 : '') : 'The job now shows paid.', null); redraw(); } else toast('No payment found', j.why || 'Nothing in Square covers the ' + money0(owe) + ' balance yet.', null); }).catch(function () { sl.disabled = false; toast('No signal', 'Try again.', null); }); });
       w.appendChild(sl);
@@ -10331,7 +10346,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (((d.hail && d.hail.length) || (d.hrep && d.hrep.length)) && cardOn('hail')) wrap.appendChild(fold(hailBlock(d), d.id + ':hail'));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(fold(windBlock(d), d.id + ':wind'));             /* wind reported near the house (2026-10-05): rides with hail */
-    if (d.mv && edOn()) wrap.appendChild(movedBlock(d));   /* the last sale on the county's record (2026-10-29): the server sends it in the editions only */
+    if (d.mv && moversOn()) wrap.appendChild(movedBlock(d));   /* the last sale on the county's record (2026-10-29): the server sends it in the editions only */
     if (d.cen && bestTrade()) { var cb0 = censusBlock(d); if (cb0) wrap.appendChild(fold(cb0, d.id + ':cen')); }   /* the Census survey for the block (2026-10-07): the editions */
     if (d.nri && (cardOn('hail') || cardOn('fire'))) { var nb0 = nriBlock(d); if (nb0) wrap.appendChild(fold(nb0, d.id + ':nri')); }   /* FEMA's tract ratings (2026-10-07): the server sends them in the editions only */
     if (d.sec && feat('security') && cardOn('security')) wrap.appendChild(fold(secBlock(d), d.id + ':sec'));     /* security (2026-10-06): admins only, where the company has security on */
@@ -11446,7 +11461,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     ['alley', 'route', 'Alley behind', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.al === 'b'); }],
     ['backrd', 'route', 'Backs onto a road', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.bk); }],
     ['deadend', 'map', 'Dead end or cul-de-sac', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.de !== undefined); }],
-    ['sold12', 'door', 'Sold in the last 12 months', function () { return edOn() && crewSees(); }, function (d) { return soldRecent(d); }],   /* the county's sale record (2026-10-29): the editions */
+    ['sold12', 'door', 'Sold in the last 12 months', function () { return moversOn() && crewSees(); }, function (d) { return soldRecent(d); }],   /* the county's sale record (2026-10-29): the editions */
     ['due', 'clock', 'Due back', function () { return true; }, function (d) { return !!(d.mark && backOn(d)); }],
     /* building permits (2026-10-29): Solar skips houses with a solar permit; the other trades find a recent pool, fence, addition ... */
     ['nosolar', 'sun', 'No solar on record', function () { return feat('solar'); }, function (d) { return !(d.permit && d.permit.s && !d.permit.so); }],
@@ -11598,6 +11613,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function monthsAgo(ym) { var n = new Date(); return (n.getFullYear() - +ym.slice(0, 4)) * 12 + (n.getMonth() + 1 - +ym.slice(5, 7)); }
   function soldOf(d, sold) { var m = d && d.mv && d.mv.s; return m && (!sold || m > sold) ? m : sold; }
   function soldRecent(d) { return !!(d.mv && d.mv.s && monthsAgo(d.mv.s) <= 12); }
+  /* new movers: the editions and, since 2026-10-30, Sixfold 365 (the server sends d.mv where movedOn() allows it) */
+  function moversOn() { return edOn() || !!(CO && CO.a365); }
   function soldTag(d) { return soldRecent(d) ? q('span', 'tag newown', 'Sold ' + monthName(d.mv.s)) : null; }
   function movedBlock(d) {
     var m = d.mv, b = q('div', 'hailx mvx'); b.appendChild(ico('door', 2.2));
@@ -12905,8 +12922,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.appendChild(box);
     api('pwinfo', { params: { t: t } }).then(function (j) {
       if (!j || !j.ok) { pr.textContent = 'That link does not work'; inn.appendChild(q('p', 'tmsg', (j && j.error) || 'Ask your admin to send it again.')); var b0 = q('button', 'save tagree', 'Sign in'); b0.type = 'button'; b0.addEventListener('click', function () { pwSigninView(); }); inn.appendChild(b0); return; }
-      pr.textContent = j.kind === 'invite' ? 'Welcome, ' + String(j.name).split(' ')[0] : 'Set a new password';
-      inn.appendChild(q('p', 'tmsg', j.kind === 'invite' ? 'Set your password for ' + j.company + '. From now on you sign in with ' + j.email + ' and this password.' : 'For ' + j.email + ' at ' + j.company + '.'));
+      pr.textContent = j.kind === 'invite' ? 'Welcome, ' + String(j.name).split(' ')[0] : j.kind === 'add' ? 'Set your password' : 'Set a new password';
+      inn.appendChild(q('p', 'tmsg', j.kind === 'invite' ? 'Set your password for ' + j.company + '. From now on you sign in with ' + j.email + ' and this password.'
+        : j.kind === 'add' ? 'For ' + j.email + ' at ' + j.company + '. Then you can sign in with this email and password, or with your 6-digit code as before.' : 'For ' + j.email + ' at ' + j.company + '.'));   /* 'add': a password added from Profile (Sixfold, 2026-10-30) */
       var fm = q('form', 'pwf'); fm.setAttribute('novalidate', '');
       var hid = q('input'); hid.type = 'email'; hid.autocomplete = 'username'; hid.value = j.email; hid.hidden = true; fm.appendChild(hid);   /* password managers file it under the email */
       var l1 = q('label', null, 'New password (at least ' + j.min + ' characters)'); var p1 = q('input'); p1.type = 'password'; p1.autocomplete = 'new-password'; l1.appendChild(p1); fm.appendChild(l1);
@@ -12927,6 +12945,48 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       inn.appendChild(fm);
       setTimeout(function () { try { p1.focus(); } catch (e) {} }, 50);
     }).catch(function () { pr.textContent = 'No connection. Open the link again when you have signal.'; });
+  }
+  /* Sign in with email instead of a code (Sixfold 365, 2026-10-30, Matthew: optional, nobody has to switch): on Profile, the person types their
+     email and a link to set a password goes there (pwadd); after that the sign-in screen's "Sign in with email and password" works for them, and
+     Forgot password sends a reset link to that address. Their code keeps working. */
+  function pwRow() {
+    var c = q('div', 'hrcard pwcard'); c.appendChild(q('div', 'hrh', 'Sign in with email instead of a code'));
+    var sum = q('div', 'hrsum', '…'); c.appendChild(sum);
+    var body = q('div'); c.appendChild(body);
+    var draw = function (j) {
+      body.textContent = '';
+      if (!j || !j.ok) { sum.textContent = (j && j.error) || 'Not available right now.'; return; }
+      if (j.email) {
+        sum.textContent = 'On: ' + j.email;
+        body.appendChild(q('p', 'pwnote', 'You can sign in with this email and your password, or with your 6-digit code. Forgot password sends a link to this address.'));
+        var bs = q('div', 'hrbtns'), ch = q('button', 'hrbtn', 'Change password'), off = q('button', 'hrbtn', 'Turn off'); ch.type = off.type = 'button';
+        ch.addEventListener('click', function () { send(j.email, ch); });
+        off.addEventListener('click', function () {
+          if (!confirm('Turn off signing in with ' + j.email + '? Your code keeps working.')) return;
+          off.disabled = true; api('pwoff', { body: {} }).then(function (k) { off.disabled = false; if (k.ok) { toast('Turned off', 'Sign in with your code.', null); draw({ ok: true, email: '', sent: '' }); } else toast('Not done', k.error || 'Try again.', null); }).catch(function () { off.disabled = false; toast('No signal', 'Try again.', null); });
+        });
+        bs.appendChild(ch); bs.appendChild(off); body.appendChild(bs);
+        return;
+      }
+      sum.textContent = j.sent ? 'Link sent to ' + j.sent : 'Off: you sign in with your code';
+      var inp = q('input', 'pwin'); inp.type = 'email'; inp.autocomplete = 'email'; inp.placeholder = 'Your email address'; inp.setAttribute('aria-label', 'Your email address'); if (j.sent) inp.value = j.sent;
+      body.appendChild(inp);
+      var bs1 = q('div', 'hrbtns one'), go = q('button', 'hrbtn hrmain', j.sent ? 'Send the link again' : 'Email me a link'); go.type = 'button';
+      go.addEventListener('click', function () { send(inp.value, go); });
+      bs1.appendChild(go); body.appendChild(bs1);
+      body.appendChild(q('p', 'pwnote', 'We email a link that sets your password (it works once, for 24 hours). Your code keeps working.'));
+    };
+    var send = function (em, b) {
+      if (!/^\S+@\S+\.\S+$/.test(String(em || '').trim())) { toast('Your email', 'Type your email address.', null); return; }
+      b.disabled = true;
+      api('pwadd', { body: { email: String(em).trim() } }).then(function (k) {
+        b.disabled = false;
+        if (!k.ok) { toast('Not sent', k.error || 'Try again.', null); return; }
+        toast('Check your email', 'The link went to ' + k.to + '.', null); api('pwmine').then(draw).catch(function () {});
+      }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); });
+    };
+    api('pwmine').then(draw).catch(function () { sum.textContent = 'Needs signal.'; });
+    return c;
   }
   /* the switches picked with a new person (2026-10-29): only those the role takes, as the server checks them (invitePerms) */
   function permsFor(role) {
@@ -13518,7 +13578,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.textContent = ''; if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
       var C = j.cfg || {};
       box.appendChild(q('div', 'dwh', 'Other ways customers can pay'));
-      box.appendChild(q('div', 'sub2', 'Fill in the ones you take. They show on the customer’s quote page and form (beside the card link, if you have one) and on each job’s balance, so your people can show or send them.'));
+      box.appendChild(q('div', 'sub2', CO && CO.a365 ? 'Fill in the ones you take. Square stays the main way. These show on the 365 form (“Or pay another way” beside the Square deposit, and for the balance) and on each job’s balance, so the office and crew can show or send them. Leave them all empty to keep them off.'
+        : 'Fill in the ones you take. They show on the customer’s quote page and form (beside the card link, if you have one) and on each job’s balance, so your people can show or send them.'));
       box.appendChild(q('div', 'msg', 'These cannot tell the app when money arrives. When a customer pays this way, mark the job paid (or record the deposit) and pick how they paid.'));
       var field = function (label, val, ph, hint) { var l = q('label', null, label); var i = q('input'); i.value = val || ''; i.placeholder = ph; i.autocomplete = 'off'; l.appendChild(i); if (hint) l.appendChild(q('small', 'sub2', hint)); box.appendChild(l); return i; };
       var ve = field('Venmo username', C.venmo ? '@' + C.venmo : '', '@yourbusiness', 'Opens venmo.com/u/yourbusiness.');
@@ -13529,6 +13590,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(zelleQrBlock(C, function () { kitWaysForm(box); }));   /* the Zelle QR code (2026-10-30) */
       var lk = field('Your own pay link (optional)', C.link || '', 'https://…', 'Any https address, like an invoice or payment page from QuickBooks or Jobber.');
       var ll = field('Name for your pay link', C.linkLabel || '', 'Pay online', '');
+      if (CO && CO.a365) { lk.parentNode.hidden = true; ll.parentNode.hidden = true; }   /* Sixfold: Square is its card link (2026-10-30) */
       var msg = q('div', 'sub2'); var row = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row.appendChild(sb); box.appendChild(row); box.appendChild(msg);
       if ((j.ways || []).length) box.appendChild(q('div', 'sub2', 'Customers see: ' + j.ways.map(function (w) { return w.label + ' (' + w.show + ')'; }).join(', ') + '.'));
       sb.addEventListener('click', function () {
@@ -14048,7 +14110,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var C = JSON.parse(JSON.stringify(start || { lines: D.lines, tiers: D.tiers, rules: D.rules, kwDefault: D.kwDefault, depositPct: D.depositPct }));
       if (C.depositPct == null) C.depositPct = D.depositPct;
       var nav = q('div', 'prcnav');
-      [['Terms and clauses ›', prcTermsView], ['Import with Claude ›', function () { prcImportView(); }], ['Price feedback ›', function () { prcFeedbackView(0); }]].forEach(function (x) { var b = q('button', 'lnk', x[0]); b.type = 'button'; b.addEventListener('click', x[1]); nav.appendChild(b); });
+      (S.role === 'admin' ? [['Terms and clauses ›', prcTermsView]] : []).concat([['Import with Claude ›', function () { prcImportView(); }], ['Price feedback ›', function () { prcFeedbackView(0); }]]).forEach(function (x) {   /* the terms: the admin's only (2026-10-30) */ var b = q('button', 'lnk', x[0]); b.type = 'button'; b.addEventListener('click', x[1]); nav.appendChild(b); });
       box.appendChild(nav);
       if (start) box.appendChild(q('div', 'msg', 'Not saved yet: check it, then press Save at the bottom.'));
       else if (!D.set) box.appendChild(q('div', 'msg', D.from === 'kit' ? 'These are your prices from the older Prices and terms screen, in the new shape. Check them and Save.' : 'Starter prices for your trade: placeholders to edit, not market rates. Change them to yours and Save.'));
@@ -14295,6 +14357,74 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       draw();
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(prcTermsView)); });
   }
+  /* ---- Sixfold 365's agreement terms (2026-10-30, Matthew: admin and super admin only; it starts from the form's current wording, one clause per
+     line, so nothing changes until Brandon or Matthew edits). The same clause cards as the editions' library, without the per-service picks (a 365
+     form is aeration, aeration with seed and feed, or a custom job). Signed forms keep the words they were signed with. */
+  function a365TermsView() {
+    hideToast(); S.signin = null; S.screen = 'a365terms'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Agreement terms', sub: 'What the 365 form says under the price', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp prct a365t'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('a365terms').then(function (D) {
+      box.textContent = ''; if (!D || !D.ok) { box.appendChild(q('div', 'msg bad', (D && D.error) || 'Could not load it.')); return; }
+      var cl = JSON.parse(JSON.stringify(D.lib.clauses));
+      box.appendChild(q('div', 'msg', 'The terms on every 365 form: include, leave out or rewrite any line, and add your own. Each signed form keeps the exact words the customer signed; a change reaches forms opened after you save.'));
+      box.appendChild(q('div', 'sub2', D.lib.set ? 'Last saved' + (D.lib.by ? ' by ' + D.lib.by : '') + (D.lib.at ? ', ' + new Date(D.lib.at * 1000).toLocaleDateString() : '') + '.' : 'This is the wording the form carries today. Nothing changes until you save.'));
+      box.appendChild(q('div', 'sub2', 'Write {phone} and the form fills in the call-back number for that customer (' + (D.phone || '365’s number') + ' unless the lead has its own).'));
+      var listB = q('div', 'prcclauses'); box.appendChild(listB);
+      var WHEN = { always: 'Every form', deposit: 'Only when there is a deposit', nodeposit: 'Only when there is no deposit' };
+      var prev = q('ol', 'prcprev'), prevN = q('ol', 'prcprev');
+      function paintPrev() {
+        [[prev, true], [prevN, false]].forEach(function (p) {
+          p[0].textContent = '';
+          cl.forEach(function (c) { if (!c.on || !String(c.text).trim() || (c.when === 'deposit' && !p[1]) || (c.when === 'nodeposit' && p[1])) return; p[0].appendChild(q('li', null, (c.title ? c.title + ': ' : '') + String(c.text).replace(/\{phone\}/g, D.phone || '{phone}'))); });
+          if (!p[0].children.length) p[0].appendChild(q('li', null, 'No terms on this form.'));
+        });
+      }
+      function draw() {
+        listB.textContent = '';
+        cl.forEach(function (c, i) {
+          var card = q('div', 'prcclause' + (c.on ? '' : ' off')); card.setAttribute('data-id', c.id || '');
+          var top = q('div', 'prcctop'); top.appendChild(prcChk(c.on, 'Include', function (v) { c.on = v; card.classList.toggle('off', !v); paintPrev(); }));
+          var act = q('span', 'prcact');
+          if (i > 0) { var up = q('button', 'lnk', '↑'); up.type = 'button'; up.setAttribute('aria-label', 'Move up'); up.addEventListener('click', function () { cl.splice(i - 1, 0, cl.splice(i, 1)[0]); draw(); }); act.appendChild(up); }
+          if (i < cl.length - 1) { var dn = q('button', 'lnk', '↓'); dn.type = 'button'; dn.setAttribute('aria-label', 'Move down'); dn.addEventListener('click', function () { cl.splice(i + 1, 0, cl.splice(i, 1)[0]); draw(); }); act.appendChild(dn); }
+          var del = q('button', 'lnk', 'Delete'); del.type = 'button'; del.addEventListener('click', function () { cl.splice(i, 1); draw(); }); act.appendChild(del);
+          top.appendChild(act); card.appendChild(top);
+          card.appendChild(prcIn(c.title, 'Heading (optional)', function (v) { c.title = v; paintPrev(); }));
+          var ta = q('textarea'); ta.rows = 3; ta.maxLength = 2000; ta.value = c.text; ta.setAttribute('aria-label', 'Wording'); ta.addEventListener('input', function () { c.text = ta.value; paintPrev(); }); card.appendChild(ta);
+          var opts = q('div', 'prccopts'); opts.appendChild(prcSel(WHEN, c.when, 'When it is used', function (v) { c.when = v; paintPrev(); })); card.appendChild(opts);
+          listB.appendChild(card);
+        });
+        paintPrev();
+      }
+      var adds = q('div', 'kitbtns'); box.appendChild(adds);
+      var ad = q('button', 'lnk', '+ Add a clause'); ad.type = 'button'; ad.addEventListener('click', function () { cl.push({ id: '', title: '', text: '', on: true, svc: [], when: 'always', starter: false }); draw(); }); adds.appendChild(ad);
+      box.appendChild(q('div', 'dwh', 'What the form will say'));
+      box.appendChild(q('div', 'sub2', 'With a deposit:')); box.appendChild(prev);
+      box.appendChild(q('div', 'sub2', 'With no deposit:')); box.appendChild(prevN);
+      var msg = q('div', 'sub2'); var row3 = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row3.appendChild(sb);
+      if (D.lib.set) { var rs = q('button', 'lnk', 'Back to the original wording'); rs.type = 'button'; rs.addEventListener('click', function () {
+        if (!confirm('Put back the seven original lines? Signed forms keep theirs.')) return;
+        api('a365termsset', { body: { reset: true } }).then(function (j) { if (!j.ok) { msg.textContent = j.error || 'Not saved.'; return; } toast('Back to the original wording', '', null); a365TermsView(); }).catch(function () { msg.textContent = 'No signal: nothing was saved.'; });
+      }); row3.appendChild(rs); }
+      box.appendChild(row3); box.appendChild(msg);
+      sb.addEventListener('click', function () {
+        sb.disabled = true; msg.textContent = 'Saving…';
+        api('a365termsset', { body: { clauses: cl } }).then(function (j) {
+          sb.disabled = false; if (!j.ok) { msg.textContent = j.error || 'Not saved.'; return; }
+          toast('Saved', 'New forms use these terms. Signed ones keep theirs.', null); a365TermsView();
+        }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
+      });
+      draw();
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(a365TermsView)); });
+  }
+  /* Sixfold 365's other ways to pay (2026-10-30): Venmo, Zelle (with its QR code), Cash App and PayPal beside Square, off until filled in */
+  function a365WaysView() {
+    hideToast(); S.signin = null; S.screen = 'a365ways'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Other ways to pay', sub: 'Beside Square: Venmo, Zelle, Cash App, PayPal', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitpay'); view.appendChild(box);
+    kitWaysForm(box);
+  }
   /* ---- import a price list with Claude: a draft beside what was read; nothing changes until Save ---- */
   function prcB64(buf) { var b = new Uint8Array(buf), s = '', i; for (i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
   function prcImportView(draft) {
@@ -14401,7 +14531,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       sb.disabled = true; msg.textContent = 'Saving…';
       api('prcset', { body: C }).then(function (j) {
         if (!j.ok) { sb.disabled = false; msg.textContent = j.error || 'Not saved.'; return; }
-        var addT = terms.filter(function (t) { return t.add; });
+        var addT = S.role === 'admin' ? terms.filter(function (t) { return t.add; }) : [];   /* terms go in only for the admin (2026-10-30) */
         var done = function () { S.kit = null; toast('Saved', keep.length + ' price lines' + (addT.length ? ' and ' + addT.length + ' terms' : '') + ' from ' + d.name, null); prcPricesView(); };
         if (!addT.length) return done();
         api('clauseset', { body: { clauses: D.lib.clauses.concat(addT.map(function (t) { return { id: '', title: t.title, text: t.text, on: true, svc: [], when: 'always', starter: false }; })) } }).then(done, done);
@@ -15084,7 +15214,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (mgr) { var tmn = (S.acctTeams || [])[0]; holder.appendChild(q('div', 'sub2', 'Your team' + (tmn ? ': ' + tmn.name : '') + '. Admins change roles and teams.')); }
     else holder.appendChild(teamsBox(holder));
     if (!mgr && S.role === 'admin' && typeof S.acctRepSend === 'boolean') holder.appendChild(repSendBox(holder));
-    if (!mgr && S.role === 'admin' && edOn()) holder.appendChild(permBox(holder));   /* Roles and permissions (2026-10-29) */   /* sales reps: agreements and deposits (2026-10-29) */
+    if (!mgr && S.role === 'admin' && permHereC()) holder.appendChild(permBox(holder));   /* Roles and permissions (2026-10-29) */   /* sales reps: agreements and deposits (2026-10-29) */
     var add = q('button', 'addlead', S.acctAdd ? 'Close the form' : mgr ? '+ Add someone to your team' : '+ Add a person'); add.type = 'button';
     add.addEventListener('click', function () { S.acctAdd = !S.acctAdd; S.newCode = null; drawAccounts(holder); });
     holder.appendChild(add);
@@ -21121,6 +21251,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
+      S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
+      S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
       S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */
