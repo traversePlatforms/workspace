@@ -82,7 +82,7 @@ const EDITIONS = {
     }
   },
   yards: {
-    name: 'TraverseYards', short: 'Yards', folder: 'ty-25604fff',
+    name: 'Traverse Lawn & Landscape', short: 'Lawn & Landscape', folder: 'ty-25604fff',   /* what customers read (Matthew 2026-10-30: Yards is "Lawn & Landscape"); the key, folder and files keep yards */
     api: 'traverse-yards', data: 'traverse-yards-data', priv: 'traverse-yards-private', cookie: 'tvy',
     store: 'tvyards.', storeApp: 'tvyards.app.', idb: 'tvyards-rounds', cache: 'tvyards-',
     blurb: 'Doors, phones and appointments for lawn and yard crews.',
@@ -283,9 +283,10 @@ function page(E) {
   if (/'(sixfold|doorapp)[.-]/.test(html)) throw new Error('a Sixfold storage key is left in the page');
 
   // the product's name (the client's name comes from company.json, as for every install)
-  html = rep(html, '<title>Sixfold Routes</title>', '<title>' + E.name + '</title>', 1, 'title');
+  const ha = (t) => String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');   /* Lawn & Landscape (2026-10-30) */
+  html = rep(html, '<title>Sixfold Routes</title>', '<title>' + ha(E.name) + '</title>', 1, 'title');
   // the iPhone home-screen label (Safari reads this tag first); short, because the label is cut at about 12 letters
-  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="' + E.short + '">', 1, 'home-screen label');
+  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="' + ha(E.short) + '">', 1, 'home-screen label');
   html = rep(html, "document.title = c.short ? c.short + ' Routes' : 'Routes';   /* 2026-10-12 (Matthew): Sixfold Routes, not Door rounds */",
     "document.title = c.name ? '" + E.name + " — ' + c.name : '" + E.name + "';", 1, 'doc title');
   html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Doors',", 2, 'tile');   /* 2 since 2026-10-29: the technician's own Routes tile (doors switched on) is renamed too */

@@ -40,7 +40,8 @@ declare(strict_types=1);
  */
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 
-const TC_EDITIONS = ['roofing' => 'TraverseRoofing', 'yards' => 'TraverseYards', 'solar' => 'TraverseSolar', 'pest' => 'TraversePest', 'security' => 'TraverseSecurity'];
+const TC_EDITIONS = ['roofing' => 'TraverseRoofing', 'yards' => 'Traverse Lawn & Landscape', 'solar' => 'TraverseSolar', 'pest' => 'TraversePest', 'security' => 'TraverseSecurity'];   /* what customers read; Yards is "Lawn & Landscape" (Matthew 2026-10-30), the key stays */
+const TC_PLAN_NAMES = ['solo' => 'Solo', 'crew' => 'Team', 'team' => 'Company'];   /* the plans as customers read them (2026-10-30); the keys stay */
 /* what customers read (2026-10-30, Matthew: the trade, not a Traverse product name; "Yards" is Lawn & Landscape) */
 const TC_TRADES = ['roofing' => 'Roofing', 'yards' => 'Lawn & Landscape', 'solar' => 'Solar', 'pest' => 'Pest', 'security' => 'Security'];
 function tcTrade(string $ed): string { return isset(TC_TRADES[$ed]) ? 'Traverse for ' . TC_TRADES[$ed] : 'Traverse'; }
@@ -661,7 +662,7 @@ function tcHookPending(string $cid, array $ev): string {
     if ($first && empty($p['provisioned_at'])) {
         if (($p['email'] ?? '') !== '' && filter_var($p['email'], FILTER_VALIDATE_EMAIL))
             tcMail($p['email'], 'Finish setting up your Traverse', "Thanks for subscribing to " . tcTrade((string) $p['edition']) . ".\n\nIf you closed the page before finishing, pick up where you left off here (about two minutes: your company, your business address and your colour, and your app opens):\n" . tcWelcomeUrl($p) . "\n\nKeep this link to yourself. Questions: reply to this email or call (303) 596-9515.\n\nTraverse Platforms\n");
-        tcMailMatthew('new paid company (' . (TC_EDITIONS[$p['edition']] ?? $p['edition']) . ')', ['Edition' => $p['edition'], 'Plan' => $p['plan'] . ', ' . $p['interval'] . ', ' . $p['seats'] . ' people', 'Price' => tcMoney($p),
+        tcMailMatthew('new paid company (' . (TC_EDITIONS[$p['edition']] ?? $p['edition']) . ')', ['Edition' => $p['edition'], 'Plan' => (TC_PLAN_NAMES[$p['plan']] ?? $p['plan']) . ', ' . $p['interval'] . ', ' . $p['seats'] . ' people', 'Price' => tcMoney($p),
             'Buyer' => $p['company_hint'] ?? '', 'Email' => $p['email'] ?? '', 'Client id' => $cid, 'Status' => 'paid; their app opens as soon as they fill in the welcome page']);
     }
     return $type;
@@ -675,7 +676,7 @@ function tcRemind(): int {
         if (empty($p['paid_at']) || !empty($p['provisioned_at']) || empty($p['email'])) continue;
         $sent = (array) ($p['reminded'] ?? []); $last = $sent ? max($sent) : (int) $p['paid_at'];
         if (count($sent) >= 3 || time() - $last < 86400) continue;
-        tcMail((string) $p['email'], 'Your Traverse is waiting for you', "You subscribed to " . tcTrade((string) $p['edition']) . " but your app is not open yet: it needs your company name, business address and colour (about two minutes).\n\n" . tcWelcomeUrl($p) . "\n\nTraverse Platforms\n");
+        tcMail((string) $p['email'], 'Your Traverse is waiting for you', "You subscribed to " . tcTrade((string) $p['edition']) . " but your app is not open yet: it needs your company name, business address and color (about two minutes).\n\n" . tcWelcomeUrl($p) . "\n\nTraverse Platforms\n");
         tcPendSave((string) $p['cid'], function ($x) { $x['reminded'] = array_merge((array) ($x['reminded'] ?? []), [time()]); return $x; }); $n++;
     }
     return $n;
