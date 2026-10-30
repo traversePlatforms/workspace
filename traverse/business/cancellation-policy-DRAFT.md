@@ -12,7 +12,7 @@ You can cancel any time. Your plan keeps working until the end of the month you 
 
 ### Yearly plans
 
-A yearly plan costs about 20% less than paying month to month, and it is paid once a year. You can turn off the renewal any time; the plan then runs to the end of the year you paid for. We don't refund the unused part of a year, except in the cases below.
+A yearly plan costs 20% less than paying month to month, and it is paid once a year. You can turn off the renewal any time; the plan then runs to the end of the year you paid for. We don't refund the unused part of a year, except in the cases below.
 
 ### When we do refund
 
@@ -23,7 +23,7 @@ A yearly plan costs about 20% less than paying month to month, and it is paid on
 
 ### Setup and the 7-day money-back guarantee
 
-There is no free trial. Your card is charged when you subscribe. We set up your company's app (your towns, branding, sign-in codes, prices and terms) in up to 2 business days after your payment (often sooner), and tell you the day it is live. If Traverse isn't right for you, email billing@traverseplatforms.com before your app is live or within 7 days after, and we refund your first payment in full and end your plan. This is once per company, on its first plan.
+There is no free trial. Your card is charged when you subscribe. We set up your company's app (your towns, branding, sign-in codes, prices and terms) after your payment, and tell you the day it is live. If Traverse isn't right for you, email billing@traverseplatforms.com before your app is live or within 7 days after, and we refund your first payment in full and end your plan. This is once per company, on its first plan.
 
 Traverse makes every refund, back to the payment method you used.
 
@@ -33,7 +33,7 @@ Companies that sign up in our first year get 25% off their first 12 months. Thei
 
 ### Seats
 
-One plan per company. Every plan includes one admin account plus its people: Solo 1 person, Crew up to 5, Team up to 12. To add or remove seats, email **billing@traverseplatforms.com**; seats don't change on their own. An added seat is billed for the rest of the current period. A removed seat comes off from your next bill.
+One plan per company. Every plan includes one admin account plus its people: Solo 1 person, Team up to 5, Company up to 12. To add or remove seats, email **billing@traverseplatforms.com**; seats don't change on their own. An added seat is billed for the rest of the current period. A removed seat comes off from your next bill.
 
 ### If a payment fails
 
@@ -56,10 +56,10 @@ Questions: **billing@traverseplatforms.com** or (303) 596-9515.
 
 | Claim | Matches | Result |
 |---|---|---|
-| Yearly about 20% less | Homepage and billing.php display prices, 26 Oct plans ($79 vs $99, $199 vs $249, $449 vs $549 a month; extra people $35 vs $45, $29 vs $39) | Verified: 18–26% |
+| Yearly 20% less | Homepage and billing.php display prices, 30 Oct plans Solo / Team / Company ($79 vs $99, $199 vs $249, $439 vs $549 a month; extra people $35 vs $45, $29 vs $39) | Verified: base prices 20% (20.2%, 20.1%, 20.0%); extra people 22–26% |
 | Faults: 30 days to fix, then pro-rata refund | Subscription agreement §14.1 | Matches the draft |
 | Removed core feature: refund | Subscription agreement §2.6 | Matches the draft |
-| Charged at checkout; set up within 2 business days; 7-day money-back from go-live, once | Matthew 2026-10-27 (replaces the free 7-day pilot); billing.php: no trial at checkout, paid_at on the first paid subscription event, live_at from Traverse's Mark live, refund only by Traverse within the window; subscription agreement §9.3 | Verified against the code; **attorney to confirm the wording** |
+| Charged at checkout; set up after payment (no set-up time promised, 30 Oct); 7-day money-back from go-live, once | Matthew 2026-10-27 (replaces the free 7-day pilot); billing.php: no trial at checkout, paid_at on the first paid subscription event, live_at from Traverse's Mark live, refund only by Traverse within the window; subscription agreement §9.3 | Verified against the code; **attorney to confirm the wording** |
 | Founding: 25% off 12 months, price locked in for life while they stay | billing.php founding_pct 25 (coupon for 12 months); subscription agreement §9.6 and Order Form (list price does not increase while the subscription continues without a break) | Matches; Matthew's phrase (27 Oct) |
 | Added seats pro-rata | Stripe customer portal set to create prorations (traverse/ops/stripe-setup.mjs) | Verified |
 | Seats: admin plus the plan's people; changed through billing@, not automatic | Matthew 2026-10-29 (admin account decided today); billing.php: plan and seat changes go through Traverse, the portal cannot change a subscription | Matches the policy; **the app's seat count is being changed to leave the admin account out (29 Oct)** |
