@@ -91,12 +91,87 @@ function spokenName(string $n): string {
 function fill(string $s, array $l): string {
     return strtr($s, ['{company}' => spokenName((string) $l['name']), '{city}' => (string) ($l['city'] ?: 'your area'), '{trade}' => strtolower(TRADES[$l['trade']] ?? 'your trade'), '{first}' => firstName((string) $l['person']) ?: 'there']);
 }
-/** one company's message: the template filled in, the signature, the address, the unsubscribe line */
-function render(array $l, array $tpl, array $set, string $unsubUrl): array {
+/** one company's message: the template filled in, the signature, the address, the unsubscribe line. $style 'map' adds the HTML
+    version with the city's map when there is one ($mapTrade: the template's trade when everyone gets one trade's template) */
+function render(array $l, array $tpl, array $set, string $unsubUrl, string $style = 'plain', ?string $mapTrade = null): array {
     $t = $tpl[$l['trade']] ?? reset($tpl);
-    $body = rtrim(fill((string) $t['body'], $l)) . "\n\n" . trim((string) $set['signature'])   /* a blank line before the signature */ . ($set['address'] !== '' ? "\n" . trim((string) $set['address']) : '')
+    $main = rtrim(fill((string) $t['body'], $l));
+    $body = $main . "\n\n" . trim((string) $set['signature'])   /* a blank line before the signature */ . ($set['address'] !== '' ? "\n" . trim((string) $set['address']) : '')
           . "\n\nUnsubscribe: " . $unsubUrl;   /* a plain line, not an apology (Matthew 2026-10-29: "reply no thanks" read as unconfident); the law needs a working opt-out, and this is it */
-    return ['id' => $l['id'], 'to' => (string) $l['email'], 'subject' => fill((string) $t['subject'], $l), 'body' => $body];
+    $m = ['id' => $l['id'], 'to' => (string) $l['email'], 'subject' => fill((string) $t['subject'], $l), 'body' => $body, 'style' => 'plain'];
+    if ($style === 'map') {
+        $map = mapFor($mapTrade ?? (string) $l['trade'], (string) ($l['city'] ?? ''));
+        if ($map) { $m['style'] = 'map'; $m['map'] = ['img' => $map['url'], 'text' => $map['text'], 'city' => $map['city']]; $m['html'] = mailHtml($main, $set, $map, $unsubUrl); }
+        else $m['nomap'] = 'no map for ' . ((string) ($l['city'] ?? '') ?: 'a company with no city') . ': goes plain';
+    }
+    return $m;
+}
+
+/* ---- "With map" (2026-10-30, Matthew: plain text "reads as a phishing scam or a don't-click-that-link type email ... I am fine with
+   trying out a halfway"): the same message as a light HTML note beside the exact plain text (multipart/alternative): the Traverse
+   wordmark, the same words, one map of the company's own city from our data, a business signature. No tracking pixel, no click
+   tracking, no shortener: every link is the plain address it shows. The maps are made by tools/build-maps.mjs into ../m/ with their
+   captions in m/maps.json (one picture per city and trade family, counts from our files); a city with no map goes plain. The
+   pictures are hosted (not attached): a lighter message with no attachment, which Gmail shows inline through its image proxy. ---- */
+const STYLES = ['plain' => 'Plain', 'map' => 'With map'];
+const MAP_FAMILY = ['roofing' => 'hail', 'roofing solar' => 'hail', 'solar' => 'hail', 'pest' => 'moved', 'security' => 'moved', 'yards' => 'lawn'];
+function mapsIndex(): array { static $m = null; if ($m === null) { $j = json_decode((string) @file_get_contents(dirname(__DIR__) . '/m/maps.json'), true); $m = is_array($j['cities'] ?? null) ? $j['cities'] : []; } return $m; }
+function citySlug(string $c): string { return trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower(trim($c))), '-'); }
+/** where the desk is on the web: https://traverseplatforms.com/prospects-47bfe6 (images and the unsubscribe link hang off it) */
+function deskOrigin(): string {
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? 'traverseplatforms.com');
+    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || !preg_match('/^(127\.|localhost)/', $host) ? 'https' : 'http';
+    return $proto . '://' . $host;
+}
+function deskBase(): string { return deskOrigin() . rtrim(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/api/desk.php'), 2)), '/'); }
+/** the map for a trade in a city, or null */
+function mapFor(string $trade, string $city): ?array {
+    $fam = MAP_FAMILY[$trade] ?? ''; $c = mapsIndex()[citySlug($city)] ?? null;
+    if ($fam === '' || !$c || empty($c[$fam]['f']) || !is_file(dirname(__DIR__) . '/m/' . basename((string) $c[$fam]['f']))) return null;
+    return $c[$fam] + ['city' => (string) $c['name'], 'url' => deskBase() . '/m/' . rawurlencode(basename((string) $c[$fam]['f']))];
+}
+/* text to HTML: escaped, with web addresses, emails and phone numbers as plain links (the address shown is the address it opens) */
+function linkify(string $s, string $style): string {
+    $s = htmlspecialchars($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    return (string) preg_replace_callback('~\b([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})\b|\b((?:https?://)?(?:[a-z0-9-]+\.)+(?:com|net|org|us|co|io)(?:/[^\s<>()]*[^\s<>().,;:!?])?)|(\(\d{3}\)\s?\d{3}-\d{4})~i', function ($m) use ($style) {
+        if (($m[1] ?? '') !== '') return '<a href="mailto:' . $m[1] . '" style="' . $style . '">' . $m[1] . '</a>';
+        if (($m[2] ?? '') !== '') return '<a href="' . (preg_match('~^https?://~i', $m[2]) ? $m[2] : 'https://' . $m[2]) . '" style="' . $style . '">' . $m[2] . '</a>';
+        return '<a href="tel:+1' . preg_replace('/\D/', '', $m[3]) . '" style="' . $style . '">' . $m[3] . '</a>';
+    }, $s);
+}
+/** the HTML version: a personal note, not a newsletter (no banner, no buttons); reads the same with images off */
+function mailHtml(string $main, array $set, array $map, string $unsubUrl): string {
+    $font = 'font-family:Arial,Helvetica,sans-serif;';
+    $a = 'color:#13294B;text-decoration:underline'; $blocks = []; $listAt = -1;
+    foreach (preg_split("/\n{2,}/", trim($main)) as $p) {
+        $lines = explode("\n", trim($p));
+        if (count(array_filter($lines, fn($x) => preg_match('/^\s*[-*\x{2022}]\s+/u', $x))) === count($lines)) {
+            $li = array_map(fn($x) => '<li style="margin:0 0 4px">' . linkify((string) preg_replace('/^\s*[-*\x{2022}]\s+/u', '', $x), $a) . '</li>', $lines);
+            $blocks[] = '<ul style="margin:0 0 14px;padding:0 0 0 22px">' . implode('', $li) . '</ul>'; if ($listAt < 0) $listAt = count($blocks) - 1;
+        } else $blocks[] = '<p style="margin:0 0 14px">' . implode('<br>', array_map(fn($x) => linkify($x, $a), $lines)) . '</p>';
+    }
+    $w = (int) ($map['w'] ?? 840); $h = (int) ($map['h'] ?? 588); $hh = (int) round(560 * $h / max(1, $w));
+    $fig = '<div style="margin:4px 0 18px"><img src="' . htmlspecialchars((string) $map['url'], ENT_QUOTES) . '" width="560" height="' . $hh . '" alt="' . htmlspecialchars((string) $map['alt'], ENT_QUOTES) . '"'
+         . ' style="display:block;width:100%;max-width:560px;height:auto;border:1px solid #DCE2EA;border-radius:8px;background:#F4F6F9;' . $font . 'font-size:13px;line-height:18px;color:#566476">'
+         . '<div style="font-size:13px;line-height:18px;color:#566476;margin-top:6px">' . htmlspecialchars((string) $map['text'], ENT_QUOTES) . '</div></div>';
+    $at = $listAt >= 0 ? $listAt + 1 : (count($blocks) >= 3 ? 2 : max(0, count($blocks) - 1));   /* under the list of what the house cards show, else after the second paragraph */
+    array_splice($blocks, $at, 0, [$fig]);
+    $sig = array_values(array_filter(array_map('trim', explode("\n", trim((string) $set['signature']))), 'strlen'));
+    $sl = '';
+    foreach ($sig as $i => $x) $sl .= $i === 0 ? '<div style="font-size:15px;font-weight:bold;color:#13294B;line-height:20px">' . htmlspecialchars($x, ENT_QUOTES) . '</div>'
+                                             : '<div style="font-size:13px;color:#566476;line-height:19px">' . linkify($x, 'color:#13294B;text-decoration:none') . '</div>';
+    if (trim((string) $set['address']) !== '') $sl .= '<div style="font-size:12px;color:#8590A0;line-height:18px">' . htmlspecialchars(trim((string) $set['address']), ENT_QUOTES) . '</div>';
+    return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title></title></head>'
+         . '<body style="margin:0;padding:0;background:#FFFFFF">'
+         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF"><tr><td style="padding:16px">'
+         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;' . $font . 'font-size:15px;line-height:22px;color:#0F1B2D"><tr><td>'
+         . '<img src="' . htmlspecialchars(deskBase() . '/m/traverse-wordmark.png', ENT_QUOTES) . '" width="128" height="24" alt="Traverse" style="display:block;border:0;margin:0 0 20px;' . $font . 'font-size:18px;font-weight:bold;color:#13294B">'
+         . implode('', $blocks)
+         . '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin:22px 0 0;' . $font . 'color:#0F1B2D"><tr>'
+         . '<td style="vertical-align:top;padding:2px 14px 0 0"><img src="https://traverseplatforms.com/brand/traverse-mark-144.png" width="44" height="44" alt="" style="display:block;border:0;border-radius:10px"></td>'
+         . '<td style="vertical-align:top;border-left:2px solid #D6400C;padding:0 0 0 14px">' . $sl . '</td></tr></table>'
+         . '<p style="margin:22px 0 0;font-size:12px;line-height:18px;color:#8590A0">Unsubscribe: <a href="' . htmlspecialchars($unsubUrl, ENT_QUOTES) . '" style="color:#8590A0;text-decoration:underline">' . htmlspecialchars($unsubUrl, ENT_QUOTES) . '</a></p>'
+         . '</td></tr></table></td></tr></table></body></html>';
 }
 /** why a company cannot be emailed ('' = it can) */
 function noMail(array $l): string {
@@ -116,10 +191,23 @@ function mailCfg(): array {
     return $c;
 }
 function mimeH(string $s): string { return preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s; }
-/** one plain-text message to one address; never throws. DESK_MAIL_MOCK writes it to a file instead (tests). */
-function mailSend(string $to, string $subject, string $body, array $extra): array {
+/** the message as it goes over the wire (headers and body, before dot-stuffing): plain text alone, or with $html both parts as
+    multipart/alternative, the plain text first and the HTML last (mail apps show the last part they can) */
+function mailPayload(array $s, string $to, string $subject, string $body, array $extra, string $html): string {
+    $eol = "\r\n";
+    $h = ['Date: ' . date('r'), 'From: ' . mimeH($s['from_name']) . ' <' . $s['user'] . '>', 'To: ' . $to, 'Subject: ' . mimeH($subject),
+          'Message-ID: <' . bin2hex(random_bytes(12)) . '@traverseplatforms.com>', 'MIME-Version: 1.0'];
+    foreach ($extra as $x) { $x = trim(preg_replace('/[\r\n]+/', ' ', (string) $x)); if ($x !== '') $h[] = $x; }
+    $part = fn(string $type, string $t) => 'Content-Type: ' . $type . '; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($t), 76, $eol);
+    if ($html === '') return implode($eol, $h) . $eol . $part('text/plain', $body);
+    $bd = 'tv-' . bin2hex(random_bytes(12));
+    return implode($eol, $h) . $eol . 'Content-Type: multipart/alternative; boundary="' . $bd . '"' . $eol . $eol
+         . '--' . $bd . $eol . $part('text/plain', $body) . '--' . $bd . $eol . $part('text/html', $html) . '--' . $bd . '--' . $eol;
+}
+/** one message to one address (see mailPayload); never throws. DESK_MAIL_MOCK writes it to a file instead, with the raw message (tests). */
+function mailSend(string $to, string $subject, string $body, array $extra, string $html = ''): array {
     $mock = getenv('DESK_MAIL_MOCK');
-    if ($mock) { file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $subject, 'body' => $body, 'headers' => $extra]) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '']; }
+    if ($mock) { file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $subject, 'body' => $body, 'html' => $html, 'headers' => $extra, 'raw' => mailPayload(mailCfg(), $to, $subject, $body, $extra, $html)]) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '']; }
     $s = mailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     if ($s['pass'] === '') return $fail('config', 'no Gmail app password in traverse-site-private/site-config.php');
     $fp = @stream_socket_client('tcp://' . $s['host'] . ':' . (int) $s['port'], $errno, $errstr, (int) $s['timeout']);
@@ -141,11 +229,7 @@ function mailSend(string $to, string $subject, string $body, array $extra): arra
     $w('RCPT TO:<' . $to . '>'); [$code, $rep] = $read(); if ($code !== 250 && $code !== 251) { $quit(); return $fail('to', $rep); }
     $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
     $eol = "\r\n";
-    $h = ['Date: ' . date('r'), 'From: ' . mimeH($s['from_name']) . ' <' . $s['user'] . '>', 'To: ' . $to, 'Subject: ' . mimeH($subject),
-          'Message-ID: <' . bin2hex(random_bytes(12)) . '@traverseplatforms.com>', 'MIME-Version: 1.0'];
-    foreach ($extra as $x) { $x = trim(preg_replace('/[\r\n]+/', ' ', (string) $x)); if ($x !== '') $h[] = $x; }
-    $payload = implode($eol, $h) . $eol . 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($body), 76, $eol);
-    $payload = preg_replace('/^\./m', '..', $payload);
+    $payload = preg_replace('/^\./m', '..', mailPayload($s, $to, $subject, $body, $extra, $html));
     @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
     return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
 }
@@ -170,7 +254,7 @@ function sendQueue(int $max): int {
         if ($l && $why === '' && strtolower((string) $l['email']) !== strtolower((string) $m['to'])) $why = 'email changed since it was queued';
         if ($why !== '') { logAdd(['t' => 'skipped', 'id' => $m['id'], 'why' => $why, 'by' => 'queue', 'at' => time()]); $i--; continue; }   /* a skip costs no send */
         if ($sentN > 0 && $gap) sleep($gap);
-        $r = mailSend($m['to'], $m['subject'], $m['body'], []);   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day */
+        $r = mailSend($m['to'], $m['subject'], $m['body'], [], (string) ($m['html'] ?? ''));   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day. html: queued "With map" (2026-10-30) */
         if ($r['ok']) {
             logAdd(['t' => 'sent', 'id' => $m['id'], 'to' => $m['to'], 'subject' => $m['subject'], 'by' => $m['by'], 'at' => time()]);
             if ($l['status'] === 'new') logAdd(['t' => 'status', 'id' => $m['id'], 'status' => 'emailed', 'by' => $m['by'], 'at' => time()]);
@@ -259,11 +343,7 @@ function needLead(array $S, string $id): array { if (!preg_match('/^[a-z0-9]{6,2
 function okDay(string $d): bool { return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $d); }
 function okPhone(string $p): string { $d = preg_replace('/\D/', '', $p); if ($p === '') return ''; if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1); if (strlen($d) !== 10) fail('That phone number does not look right.'); return '(' . substr($d, 0, 3) . ') ' . substr($d, 3, 3) . '-' . substr($d, 6); }
 function okSite(string $s): string { if ($s === '') return ''; if (!preg_match('#^(https?://)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(/\S*)?$#i', $s)) fail('That website does not look right.'); return $s; }
-function unsubUrl(string $id): string {
-    $host = (string) ($_SERVER['HTTP_HOST'] ?? 'traverseplatforms.com'); $path = (string) ($_SERVER['SCRIPT_NAME'] ?? '/api/desk.php');
-    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || !preg_match('/^(127\.|localhost)/', $host) ? 'https' : 'http';
-    return $proto . '://' . $host . $path . '?action=unsub&id=' . $id . '&t=' . unsubToken($id);
-}
+function unsubUrl(string $id): string { return deskOrigin() . (string) ($_SERVER['SCRIPT_NAME'] ?? '/api/desk.php') . '?action=unsub&id=' . $id . '&t=' . unsubToken($id); }
 function queueView(array $S): array {
     $Q = jread('queue.json', []); $recent = [];
     foreach (array_reverse(logRows()) as $r) { $t = $r['t'] ?? ''; if (!in_array($t, ['sent', 'sendfail', 'skipped'], true)) continue; $recent[] = ['t' => $t, 'id' => $r['id'], 'name' => $S['leads'][$r['id']]['name'] ?? '', 'at' => $r['at'], 'subject' => $r['subject'] ?? '', 'why' => $r['why'] ?? ($r['stage'] ?? '')]; if (count($recent) >= 60) break; }
@@ -342,22 +422,23 @@ switch ($action) {
         if (!$ids) fail('Tick at least one company.');
         if (count($ids) > 2000) fail('At most 2,000 at a time.');
         $tplPick = (string) ($body['tpl'] ?? 'auto'); $tpl = $S['templates'];
+        $style = (string) ($body['style'] ?? 'plain'); if (!isset(STYLES[$style])) fail('Pick Plain or With map.');   /* per send (2026-10-30); Plain unless picked */
         if ($tplPick !== 'auto') { if (!isset($tpl[$tplPick])) fail('Pick a template.'); $tpl = array_fill_keys(array_keys(TRADES), $tpl[$tplPick]); }
         $queued = array_flip(array_column(jread('queue.json', []), 'id')); $msgs = []; $skip = [];
         foreach ($ids as $id) {
             $l = $S['leads'][$id] ?? null; if (!$l) { $skip['not on the desk'] = ($skip['not on the desk'] ?? 0) + 1; continue; }
             $why = noMail($l); if ($why === '' && isset($queued[$id])) $why = 'already waiting to send';
             if ($why !== '') { $skip[$why] = ($skip[$why] ?? 0) + 1; continue; }
-            $msgs[] = render($l, $tpl, $S['settings'], unsubUrl($id));
+            $msgs[] = render($l, $tpl, $S['settings'], unsubUrl($id), $style, $tplPick !== 'auto' ? $tplPick : null);
         }
-        if ($action === 'preview') out(['ok' => true, 'messages' => $msgs, 'skipped' => $skip, 'addressSet' => trim((string) $S['settings']['address']) !== '']);
+        if ($action === 'preview') out(['ok' => true, 'messages' => $msgs, 'skipped' => $skip, 'addressSet' => trim((string) $S['settings']['address']) !== '', 'style' => $style]);
         if (trim((string) $S['settings']['address']) === '') fail('Add your postal address in Settings first. The law wants it in every email like this, so sending stays off until it is there.');
         if (!$msgs) fail('None of those can be emailed.');
         $lk = fopen(DATA_DIR . '/queue.lock.add', 'c'); flock($lk, LOCK_EX);
         $Q = jread('queue.json', []);
         foreach ($msgs as $m) $Q[] = $m + ['unsub' => unsubUrl($m['id']), 'by' => $ME, 'at' => time()];
         jwrite('queue.json', $Q); flock($lk, LOCK_UN);
-        logAdd(['t' => 'queued', 'n' => count($msgs), 'by' => $ME, 'at' => time()]);
+        logAdd(['t' => 'queued', 'n' => count($msgs), 'style' => $style, 'maps' => count(array_filter($msgs, fn($m) => $m['style'] === 'map')), 'by' => $ME, 'at' => time()]);
         out(['ok' => true, 'queued' => count($msgs), 'skipped' => $skip, 'waiting' => count($Q)]);
     }
     case 'sendtest': {
@@ -368,12 +449,15 @@ switch ($action) {
         if (trim((string) $S['settings']['address']) === '') fail('Add your postal address in Settings first.');
         $n = 0; foreach (logRows() as $r) if (($r['t'] ?? '') === 'test' && (int) $r['at'] > time() - 86400) $n++;
         if ($n >= 10) fail('That is 10 tests in a day already. Try again tomorrow.');
-        $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => 'Denver', 'trade' => $tr, 'person' => '', 'email' => $to];
-        $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u);
-        $r = mailSend($to, $m['subject'], $m['body'], []);   /* as the queue sends it: no bulk-mail headers (2026-10-29) */
-        logAdd(['t' => 'test', 'to' => $to, 'trade' => $tr, 'ok' => $r['ok'], 'by' => $ME, 'at' => time()]);
+        $style = (string) ($body['style'] ?? 'plain'); if (!isset(STYLES[$style])) fail('Pick Plain or With map.');
+        $city = clean($body['city'] ?? '', 60) ?: 'Denver';   /* the sample company's city (2026-10-30: the map is the city's) */
+        $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => $city, 'trade' => $tr, 'person' => '', 'email' => $to];
+        $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u, $style);
+        $m['subject'] .= $m['style'] === 'map' ? ' (with map)' : ($style === 'map' ? ' (plain: no map for ' . $city . ')' : ' (plain)');   /* a test says which version it is */
+        $r = mailSend($to, $m['subject'], $m['body'], [], (string) ($m['html'] ?? ''));   /* as the queue sends it: no bulk-mail headers (2026-10-29) */
+        logAdd(['t' => 'test', 'to' => $to, 'trade' => $tr, 'style' => $m['style'], 'city' => $city, 'ok' => $r['ok'], 'by' => $ME, 'at' => time()]);
         if (!$r['ok']) fail('The test did not go out (' . $r['stage'] . '): ' . mb_substr((string) $r['error'], 0, 160));
-        out(['ok' => true, 'to' => $to, 'subject' => $m['subject']]);
+        out(['ok' => true, 'to' => $to, 'subject' => $m['subject'], 'style' => $m['style']]);
     }
     case 'queueclear': {
         /* stop: everything still waiting comes off; what was sent stays sent */
