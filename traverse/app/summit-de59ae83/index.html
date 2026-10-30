@@ -1629,6 +1629,21 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .adrep tr.artot td{font-weight:800;border-top:2px solid #2F5D2C} .adrep .artwo{display:grid;grid-template-columns:1fr 1fr;gap:12px} .adrep .arboth td{text-align:left} .adrep .arsmall{font-size:12px;color:#5a6858;margin-top:10px}
   @media (max-width:640px){ .adrep .arkpis,.adrep .artwo{grid-template-columns:1fr} }
   @media print{ body.dk-top #dnav,#dnav,header,.bar,#bar,#foot,.noprint,.toast{display:none!important} .adrep{max-width:none;padding:0;font-size:11.5px} .adrep h1{font-size:20px} body{background:#fff!important} @page{size:Letter;margin:.45in} }
+  /* the editions' Stats page and end-of-day email (2026-10-30) */
+  .stp .edtabs{display:flex;flex-wrap:wrap;gap:6px}
+  .stp .edtabs button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line,#d9d1c2);background:var(--sunk,#F4ECDD);color:var(--ink);font:700 13.5px var(--sans);cursor:pointer}
+  .stp .edtabs button.on{background:var(--accent,#13294b);border-color:var(--accent,#13294b);color:#fff}
+  .eodp .stcard{margin:0 0 14px} .eodp .ohead small{display:block;max-width:640px}
+  .eodp .arback{background:none;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;margin:0 0 6px;font:700 14px var(--sans);color:var(--ink);cursor:pointer}
+  .eodp .eodck{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+  .eodp .eodck input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--accent,#13294b)}
+  .eodp .eodck b{display:block;font-weight:700} .eodp .eodck small{display:block;color:var(--soft);font-size:13px;line-height:1.4}
+  .eodp .eodrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+  .eodp select,.eodp input[type=email]{min-height:44px;padding:0 10px;border:1px solid var(--line,#d9d1c2);border-radius:10px;font:15px var(--sans);background:var(--card,#fff);color:var(--ink);min-width:0}
+  .eodp .eodwho{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px;align-items:center;border-bottom:1px solid var(--line,#e3ddd2);padding:2px 0 8px}
+  .eodp .eodtest{margin-top:12px} .eodp .eodtest input{flex:1;min-width:200px}
+  .eodp .eodtest button{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line,#d9d1c2);background:var(--sunk,#F4ECDD);color:var(--ink);font:700 14px var(--sans);cursor:pointer}
+  @media (max-width:640px){ .eodp .eodwho{grid-template-columns:1fr} .stp .edtabs button{flex:1 1 40%} }
   .stp .spgrid{display:grid;gap:14px;align-items:start}
   .stp .spcol{display:grid;gap:14px;align-items:start;min-width:0}
   .stp .spgrid > *{min-width:0}
@@ -2988,6 +3003,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (pAdd('set.company')) x.push(['flag', 'Company', 'Name, phone, email, website and color.', companyView, ['company'], 'office']);
     if (pAdd('set.prices')) x.push(['calc', 'Prices and terms', 'What a quote adds up from, and the agreement terms.', kitPricesView, ['kitprices'], 'office']);
     if (pAdd('set.setup')) x.push(['mail', 'Email and payments', 'Connect the company email and the ways customers pay.', mailSetupView, ['mailsetup', 'kitpay'], 'office']);
+    if (pAdd('set.eod')) x.push(['mail', 'End-of-day email', 'The day in one email to the owners each evening.', eodView, ['eod'], 'office']);   /* 2026-10-30 */
     return x;
   }
   function permTiles(box) {
@@ -21138,6 +21154,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var ST_SRC = { meta: 'Instant Form', messenger: 'Messenger', a365web: '365 website', website: 'Website', phone: 'Phone call', referral: 'Referral', door: 'At the door', inperson: 'In person', nextdoor: 'Nextdoor', linktree: 'Linktree', other: 'Other', '': 'Not set' };
   function statsPageView() {
     if (!wdOn()) return chooseView();
+    if (edOn()) return edStatsView();   /* an edition's own page (2026-10-30) */
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'statspage'; S.inOffice = planOk();
     setDock(null); foot.hidden = true;
@@ -21362,7 +21379,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }, function () { page.textContent = ''; page.appendChild(q('div', 'msg', 'The report needs signal.')); });
   }
   /* an admin types each ad's lifetime spend from Meta's Ads Manager (2026-10-20) */
-  function adSpendEditor(rows, done) {
+  function adSpendEditor(rows, done, srcs) {   /* srcs: an edition's lead sources (2026-10-30) */
     var w = q('div'), bt = q('div', 'stbtns'), open = q('button', null, 'Update ad spend'); open.type = 'button'; bt.appendChild(open); w.appendChild(bt);
     open.addEventListener('click', function () {
       w.textContent = '';
@@ -21373,7 +21390,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var add = function (a) {
         var r = q('div', 'str');
         var nm = q('input'); nm.placeholder = 'Ad name'; nm.value = a.label || ''; nm.setAttribute('aria-label', 'Ad name'); nm.maxLength = 80;
-        var sr = q('select'); sr.setAttribute('aria-label', 'Where its leads come from'); [['meta', 'Instant Form'], ['messenger', 'Messenger']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; sr.appendChild(op); }); sr.value = a.src || 'meta';
+        var sr = q('select'); sr.setAttribute('aria-label', 'Where its leads come from'); (srcs || [['meta', 'Instant Form'], ['messenger', 'Messenger']]).forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; sr.appendChild(op); }); sr.value = a.src || 'meta';
         var sp = q('input'); sp.type = 'number'; sp.min = '0'; sp.step = '0.01'; sp.placeholder = 'Spent $'; sp.setAttribute('aria-label', 'Amount spent'); sp.value = a.spend !== undefined ? a.spend : '';
         var rs = q('input'); rs.type = 'number'; rs.min = '0'; rs.step = '1'; rs.placeholder = 'Results'; rs.setAttribute('aria-label', 'Results Meta counts'); rs.value = a.results !== undefined ? a.results : '';
         var rm = q('button', null, 'Remove'); rm.type = 'button'; rm.addEventListener('click', function () { r.remove(); });
@@ -21392,6 +21409,191 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     });
     return w;
+  }
+  /* ---- the editions' Stats page (2026-10-30, Matthew: Sixfold's page for every trade): edStats in rounds.php. The period, leads by source,
+     quotes and the close rate, jobs and money, Good / Better / Best, each ad's typed spend, the team, six weeks ahead, and the end-of-day
+     email for the admin. Sixfold keeps statsPageView exactly as it was. ---- */
+  function edStatsView(p) {
+    S.edStatsP = p || S.edStatsP || '30';
+    hideSplash(); hideToast();
+    S.signin = null; S.screen = 'statspage'; S.inOffice = planOk();
+    setDock(null); foot.hidden = true;
+    setBar('back', { title: 'Stats', sub: 'Leads, quotes, jobs, ads and the team', back: chooseView, backLabel: asOffice() ? 'Home' : 'Field tools' });
+    document.body.classList.add('dk-top');
+    view.textContent = '';
+    var page = q('div', 'office stp edst'), body = q('div', 'obody');
+    if (planOk()) page.appendChild(officeMenu()); else page.classList.add('nomenu');
+    var hd = q('div', 'ohead'), ht = q('div'); ht.appendChild(q('h2', null, 'Stats')); var hs = q('small', null, 'Loading…'); ht.appendChild(hs); hd.appendChild(ht);
+    var tabs = q('div', 'edtabs'); tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', 'Period');
+    [['week', 'This week'], ['last', 'Last week'], ['30', 'Last 30 days'], ['month', 'This month']].forEach(function (t) {
+      var b = q('button', t[0] === S.edStatsP ? 'on' : null, t[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(t[0] === S.edStatsP));
+      b.addEventListener('click', function () { if (t[0] !== S.edStatsP) edStatsView(t[0]); }); tabs.appendChild(b);
+    });
+    hd.appendChild(tabs); body.appendChild(hd);
+    var kp = q('div', 'okpis'); body.appendChild(kp);
+    var out = q('div'); out.appendChild(q('div', 'skel')); body.appendChild(out);
+    page.appendChild(body); view.appendChild(page);
+    var pct = function (n) { return Math.round(n * 100) + '%'; };
+    var cur = function (n) { return n === null || n === undefined ? '–' : '$' + Number(n).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var num = function (n) { return Number(n || 0).toLocaleString(LOCALE); };
+    var card = function (title, sub, into) { var c = q('section', 'card stcard'), h = q('h3', null, title); if (sub) h.appendChild(q('small', null, sub)); c.appendChild(h); (into || out).appendChild(c); return c; };
+    var table = function (c, head) { var w = q('div', 'stwrap'), t = document.createElement('table'), tr0 = document.createElement('tr'); head.forEach(function (x) { tr0.appendChild(q('th', null, x)); }); var th = document.createElement('thead'); th.appendChild(tr0); t.appendChild(th); var tb = document.createElement('tbody'); tb._h = head; t.appendChild(tb); w.appendChild(t); c.appendChild(w); return tb; };
+    var tr = function (tb, cells, cls) { var r = document.createElement('tr'); if (cls) r.className = cls; cells.forEach(function (x, i) { var td = document.createElement('td'); if (i > 0 && tb._h && tb._h[i]) td.setAttribute('data-label', tb._h[i]); if (Array.isArray(x)) { td.appendChild(document.createTextNode(x[0])); if (x[1]) td.appendChild(q('small', null, x[1])); } else td.textContent = x === null || x === undefined ? '' : String(x); r.appendChild(td); }); tb.appendChild(r); return r; };
+    var load = function () { edStatsView(S.edStatsP); };
+    api('statspage', { params: { p: S.edStatsP } }).then(function (j) {
+      if (S.screen !== 'statspage' || !document.body.contains(page)) return;
+      out.textContent = ''; kp.textContent = ''; out.className = 'spgrid';
+      if (!j || !j.ok) { out.appendChild(q('div', 'msg', (j && j.error) || 'The stats need signal.')); hs.textContent = ''; return; }
+      var W = j.words, P = j.period, Q = j.quotes, J = j.jobs, M = j.money;
+      hs.textContent = P.label + ', ' + (P.from === P.to ? dayName(P.from) : dayName(P.from) + ' – ' + dayName(P.to)) + ' · from the app’s own records';
+      var leadsN = j.sources.reduce(function (a, s) { return a + s.leads; }, 0), leadsQ = j.sources.reduce(function (a, s) { return a + s.quoted; }, 0), leadsB = j.sources.reduce(function (a, s) { return a + s.booked; }, 0);
+      [['New leads', leadsN, [leadsQ + ' quoted', leadsB + ' booked']],
+       [W.Quotes + ' sent', Q.n, [Q.n ? money0(Q.value) : '', Q.booked ? Q.booked + ' booked' : '']],
+       ['Close rate', null, [Q.quoted8 ? Q.won8 + ' of ' + Q.quoted8 + ' booked' : 'not enough yet', 'quoted 1 to 8 weeks ago']],
+       [W.Jobs + ' booked', J.booked, [money0(J.bookedValue)]],
+       ['Money in', null, [M.n + (M.n === 1 ? ' payment' : ' payments')]]].forEach(function (x, i) {
+        var c = kpiCard(x[0]); kp.appendChild(c); kpiFill(c, x[1], x[2]);
+        if (i === 2) c.querySelector('b').textContent = Q.quoted8 ? pct(Q.close) : '–';
+        if (i === 4) c.querySelector('b').textContent = money0(M.in);
+      });
+      /* 1. leads by source */
+      var c1 = card('Leads by source', P.label);
+      var tb1 = table(c1, ['Source', 'Leads', 'Quoted', 'Booked', 'Booked $']);
+      var core = { facebook: 1, website: 1, door: 1, import: 1 };
+      j.sources.forEach(function (s) { if (s.leads || core[s.key]) tr(tb1, [s.label, num(s.leads), num(s.quoted), num(s.booked), money0(s.value)]); });
+      tr(tb1, ['All sources', num(leadsN), num(leadsQ), num(leadsB), money0(j.sources.reduce(function (a, s) { return a + s.value; }, 0))], 'sttot');
+      c1.appendChild(q('p', 'stnote', 'New leads in the period, by where each came from, and how many of them have been quoted and booked so far. Facebook ads: leads from a Facebook or Instagram lead form. Imported lists: leads brought in from a spreadsheet.'));
+      /* 2. quotes and close rate */
+      var c2 = card(W.Quotes + ' and close rate', P.label);
+      var tb2 = table(c2, ['', 'Count', 'Value']);
+      tr(tb2, [W.Quotes + ' sent', num(Q.n), money0(Q.value)]);
+      tr(tb2, [['Booked from them', Q.n ? pct(Q.booked / Q.n) + ' so far' : ''], num(Q.booked), money0(Q.bookedValue)]);
+      tr(tb2, [['Open ' + W.quotes, 'quoted, no ' + W.job + ' yet, not lost (any time)'], num(Q.pipeN), money0(Q.pipe)]);
+      tr(tb2, [['Close rate', closeLines({ groups: Q.groups, won: Q.won8, quoted: Q.quoted8 }).join('; ')], Q.quoted8 ? Q.won8 + ' of ' + Q.quoted8 : '–', Q.quoted8 ? pct(Q.close) : '–'], 'sttot');
+      c2.appendChild(q('p', 'stnote', 'A ' + W.quote + ' counts on the day it was first sent. The close rate looks at ' + W.quotes + ' sent 1 to 8 weeks ago, so this week’s have time to answer.'));
+      /* 3. jobs and money */
+      var c3 = card(W.Jobs + ' and money', P.label);
+      var tb3 = table(c3, ['', 'Count', 'Value']);
+      tr(tb3, [[W.Jobs + ' booked', 'sold in the period'], num(J.booked), money0(J.bookedValue)]);
+      tr(tb3, [[W.Jobs + ' done', 'on the schedule in the period and marked done'], num(J.done), money0(J.doneValue)]);
+      if (J.notDone) tr(tb3, [['Not marked done', 'past days on the schedule'], num(J.notDone), '']);
+      tr(tb3, [['Money in', 'payments recorded in the app'], num(M.n), money0(M.in)], 'sttot');
+      var hw = Object.keys(M.byHow || {}); if (hw.length) { var src3 = q('div', 'stsrc'); hw.forEach(function (k) { src3.appendChild(q('span', null, k + ' ' + money0(M.byHow[k]))); }); c3.appendChild(src3); }
+      /* 4. Good / Better / Best */
+      var O = j.options, c4 = card('Good / Better / Best', P.label);
+      if (!O.quotes) c4.appendChild(q('div', 'msg soft', 'No ' + W.quotes + ' with Good / Better / Best options in this period. They are set up in Prices and terms.'));
+      else {
+        var tb4 = table(c4, ['Option', 'Offered', 'Picked', 'Booked', 'Booked $']);
+        O.list.forEach(function (o) { tr(tb4, [o.name, num(o.offered), num(o.picked), num(o.booked), money0(o.value)]); });
+        c4.appendChild(q('p', 'stnote', O.quotes + (O.quotes === 1 ? ' ' + W.quote : ' ' + W.quotes) + ' with options. Picked: the option on the ' + W.quote + ' as it stands' + (O.customer ? ', ' + O.customer + ' of them picked by the customer on their ' + W.quote + ' page' : '') + '.'));
+      }
+      /* 5. ads */
+      var c5 = card('Ads', 'spend as typed in, since each ad started'); c5.classList.add('spwide');
+      if (!j.ads.length) c5.appendChild(q('div', 'msg soft', 'No ad spend typed in yet. Add each ad’s spend and results from the ad platform, and pick where its leads come in; the app works out the cost per lead and per booked ' + W.job + '.'));
+      else {
+        var tb5 = table(c5, ['Leads come in as', 'Spent', 'Results', 'Leads in the app', W.Jobs, 'Booked', 'Collected', 'Per lead', 'Per ' + W.job]);
+        var t5 = { sp: 0, l: 0, jb: 0, bk: 0, pd: 0 };
+        j.ads.forEach(function (a) { t5.sp += a.spend; t5.l += a.leads; t5.jb += a.jobs; t5.bk += a.booked; t5.pd += a.paid;
+          tr(tb5, [[a.label, a.asof ? 'spend as of ' + dayName(a.asof) : ''], cur(a.spend), a.results ? num(a.results) : '–', num(a.leads), num(a.jobs), money0(a.booked), money0(a.paid), cur(a.perLead), cur(a.perJob)]); });
+        if (j.ads.length > 1) tr(tb5, ['All ads', cur(t5.sp), '', num(t5.l), num(t5.jb), money0(t5.bk), money0(t5.pd), t5.l ? cur(t5.sp / t5.l) : '–', t5.jb ? cur(t5.sp / t5.jb) : '–'], 'sttot');
+        c5.appendChild(q('p', 'stnote', 'Spend and results are typed in from the ad platform (the whole run of each ad). Leads, ' + W.jobs + ' and money are every lead that came in from that source, so a customer someone sent you is a referral, not an ad lead. Per lead uses the platform’s results when typed in, else the leads in the app.'));
+      }
+      if (j.canEdit) c5.appendChild(adSpendEditor(j.adRows, load, Object.keys(j.adSrc).map(function (k) { return [k, j.adSrc[k]]; })));
+      /* 6. the team */
+      var c6 = card('Team', P.label); c6.classList.add('spwide');
+      if (!j.team.length) c6.appendChild(q('div', 'msg soft', 'Nobody logged doors, leads, ' + W.quotes + ' or sales in this period.'));
+      else {
+        var tb6 = table(c6, ['Person', 'Doors', 'Talked to', 'Leads added', W.Quotes, W.Quotes + ' $', 'Sold', 'Sold $', 'Done']);
+        j.team.forEach(function (t) { tr(tb6, [t.name, num(t.doors), num(t.talked), num(t.leads), num(t.quotes), money0(t.quoteValue), num(t.sold), money0(t.soldValue), num(t.done)]); });
+        c6.appendChild(q('p', 'stnote', 'Sold: ' + W.jobs + ' booked in the period, counted to the lead’s owner (else whoever quoted it). Done: ' + W.jobs + ' they worked that were marked done. Talked to: doors marked booked or come back later.'));
+      }
+      /* 7. six weeks ahead */
+      var col = q('div', 'spcol'); out.appendChild(col);
+      var PJ = j.proj, c7 = card('Six weeks ahead', 'booked work + open ' + W.quotes + ' × the close rate' + (PJ.plans ? ' + plan income' : ''), col);
+      var tb7 = table(c7, ['Week', 'Booked', 'From open ' + W.quotes].concat(PJ.plans ? ['Plans'] : []).concat(['Total'])), gt = 0;
+      PJ.weeks.forEach(function (w, i) { gt += w.total; tr(tb7, [[(i === 0 ? 'This week' : 'Week of ' + dayName(w.from)), w.jobs ? w.jobs + ' ' + (w.jobs === 1 ? W.job : W.jobs) : ''], money0(w.booked), money0(w.pipeline)].concat(PJ.plans ? [money0(w.plans)] : []).concat([money0(w.total)])); });
+      tr(tb7, ['Six weeks', money0(PJ.weeks.reduce(function (a, w) { return a + w.booked; }, 0)), money0(PJ.weeks.reduce(function (a, w) { return a + w.pipeline; }, 0))].concat(PJ.plans ? [money0(PJ.weeks.reduce(function (a, w) { return a + w.plans; }, 0))] : []).concat([money0(gt)]), 'sttot');
+      c7.appendChild(q('p', 'stnote', 'Booked: ' + W.jobs + ' on the schedule that week. Open ' + W.quotes + ': ' + PJ.pipeN + ' worth ' + money0(PJ.pipe) + ', each at its group’s close rate, spread evenly over the six weeks.' + (PJ.plans ? ' Plans: ' + PJ.plans + ' customers, ' + money0(PJ.mrr) + ' a month.' : '')));
+      /* 8. doors */
+      var D = j.doors, c8 = card('Doors', P.label, col);
+      var tb8 = table(c8, ['', 'Doors knocked', 'Talked to', 'Booked', 'People out']);
+      tr(tb8, ['The whole company', num(D.doors), num(D.talked), num(D.booked), num(D.people)]);
+      /* 9. the end-of-day email (the admin, or a role given it) */
+      if (j.eod) {
+        var c9 = card('End-of-day email', j.eod.on ? 'on' : 'off', col);
+        c9.appendChild(q('p', 'stnote', j.eod.on ? 'Goes at ' + eodHour(j.eod.hour) + ' to ' + j.eod.to + (j.eod.to === 1 ? ' person' : ' people') + ': the day’s money, ' + W.jobs + ', ' + W.quotes + ', leads, the team and tomorrow, as you pick.' : 'A short summary of the day by email each evening, to the owners and managers you pick. Off until you turn it on.'));
+        var eb = q('div', 'stbtns'), ebb = q('button', 'save', j.eod.on ? 'Change the end-of-day email' : 'Set up the end-of-day email'); ebb.type = 'button'; ebb.addEventListener('click', function () { eodView(); }); eb.appendChild(ebb); c9.appendChild(eb);
+      }
+    }, function () { if (S.screen === 'statspage') { out.textContent = ''; out.appendChild(q('div', 'msg', 'The stats need signal.')); } });
+  }
+  function eodHour(h) { return (h % 12 || 12) + (h < 12 ? ' am' : ' pm'); }
+  /* the end-of-day email's settings (2026-10-30): eodget / eodset / eodpreview / eodtest in rounds.php; the email is drawn by eod-lib.php */
+  function eodView() {
+    if (!edOn()) return chooseView();
+    hideSplash(); hideToast(); S.signin = null; S.screen = 'eod'; setDock(null); foot.hidden = true;
+    setBar('back', { title: 'End-of-day email', sub: 'The day in one email, each evening', back: function () { statsPageView(); }, backLabel: 'Stats' });
+    document.body.classList.add('dk-top'); view.textContent = '';
+    var page = q('div', 'office stp eodp'), body = q('div', 'obody'); if (planOk()) page.appendChild(officeMenu()); else page.classList.add('nomenu'); page.appendChild(body); view.appendChild(page);
+    var bk = q('button', 'arback', '‹ Back to Stats'); bk.type = 'button'; bk.addEventListener('click', function () { statsPageView(); }); body.appendChild(bk);   /* the top menu hides the app bar on a computer */
+    var hd = q('div', 'ohead'), ht = q('div'); ht.appendChild(q('h2', null, 'End-of-day email')); ht.appendChild(q('small', null, 'Money in, work done and sold, ' + 'quotes, leads, the team and tomorrow, in one email to the people you pick.')); hd.appendChild(ht); body.appendChild(hd);
+    var out = q('div'); out.appendChild(q('div', 'skel')); body.appendChild(out);
+    api('eodget').then(function (j) {
+      if (S.screen !== 'eod') return;
+      out.textContent = '';
+      if (!j || !j.ok) { out.appendChild(q('div', 'msg', (j && j.error) || 'Needs signal.')); return; }
+      var c = j.cfg, err = q('div', 'msg bad'); err.hidden = true;
+      var sec = function (title, sub) { var s = q('section', 'card stcard'), h = q('h3', null, title); if (sub) h.appendChild(q('small', null, sub)); s.appendChild(h); out.appendChild(s); return s; };
+      var check = function (box, label, on, sub) { var l = q('label', 'eodck'), i = q('input'); i.type = 'checkbox'; i.checked = !!on; l.appendChild(i); var t = q('span'); t.appendChild(q('b', null, label)); if (sub) t.appendChild(q('small', null, sub)); l.appendChild(t); box.appendChild(l); return i; };
+      /* on or off */
+      var s1 = sec('Send it', null);
+      var onI = check(s1, 'Send the end-of-day email', c.on, 'Off until you turn it on. Nothing is sent while it is off.');
+      if (j.last) s1.appendChild(q('p', 'stnote', 'Last sent ' + new Date(j.last.at * 1000).toLocaleString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) + (j.last.ok ? ' to ' + j.last.n + (j.last.n === 1 ? ' person' : ' people') : ': it did not go') + '.'));
+      /* when */
+      var s2 = sec('When', null), hs = q('select'); hs.setAttribute('aria-label', 'Time of day');
+      for (var h = 12; h <= 23; h++) { var op = q('option', null, eodHour(h)); op.value = String(h); hs.appendChild(op); } hs.value = String(c.hour);
+      var hl = q('label', 'eodrow'); hl.appendChild(q('span', null, 'Each evening at')); hl.appendChild(hs); s2.appendChild(hl);
+      s2.appendChild(q('p', 'stnote', 'Your company’s time (' + j.tz.replace(/_/g, ' ') + '). It goes within the hour, once a day.'));
+      /* who */
+      var s3 = sec('Who gets it', 'admins and managers'), rows = [];
+      if (!j.people.length) s3.appendChild(q('div', 'msg soft', 'No admins or managers yet. Add them in Accounts.'));
+      j.people.forEach(function (p) {
+        var saved = c.to.filter(function (t) { return t.id === p.id; })[0];
+        var r = q('div', 'eodwho'), l = q('label', 'eodck'), i = q('input'); i.type = 'checkbox'; i.checked = !!saved; l.appendChild(i); var t = q('span'); t.appendChild(q('b', null, p.name)); t.appendChild(q('small', null, p.role === 'admin' ? 'Admin' : 'Manager')); l.appendChild(t); r.appendChild(l);
+        var em = q('input'); em.type = 'email'; em.placeholder = 'Their email address'; em.setAttribute('aria-label', 'Email address for ' + p.name); em.maxLength = 120; em.value = (saved && saved.email) || p.email || ''; r.appendChild(em);
+        s3.appendChild(r); rows.push({ id: p.id, i: i, em: em });
+      });
+      s3.appendChild(q('p', 'stnote', 'Each person gets their own copy; nobody sees the others’ addresses. Customer names are in it, so keep it to the people who run the company.'));
+      /* what */
+      var s4 = sec('What it shows', null), parts = {};
+      j.sections.forEach(function (x) { parts[x.k] = check(s4, x.l, c.sections[x.k], x.d); });
+      /* sent from */
+      var s5 = sec('Sent from', null), via = c.via === 'auto' ? (j.mail.own ? 'own' : 'app') : c.via, radios = {};
+      [['own', 'Your company email', j.mail.own ? 'Connected as ' + j.mail.user + '.' : 'Not connected yet (Setup, Email).'], ['app', 'The app’s mail server, in your company’s name', 'From “' + j.mail.company + '”' + (j.mail.reply ? '; replies go to ' + j.mail.reply : '') + '.']].forEach(function (o) {
+        var l = q('label', 'eodck'), i = q('input'); i.type = 'radio'; i.name = 'eodvia'; i.value = o[0]; i.checked = via === o[0]; i.disabled = o[0] === 'own' && !j.mail.own; l.appendChild(i); var t = q('span'); t.appendChild(q('b', null, o[1])); t.appendChild(q('small', null, o[2])); l.appendChild(t); s5.appendChild(l); radios[o[0]] = i;
+      });
+      var pick = function () { var o = {}; Object.keys(parts).forEach(function (k) { o[k] = parts[k].checked; }); return o; };
+      var viaNow = function () { return radios.own.checked ? 'own' : 'app'; };
+      /* save, preview, test */
+      var s6 = q('section', 'card stcard'); out.appendChild(s6); s6.appendChild(err);
+      var bt = q('div', 'stbtns'), sv = q('button', 'save', 'Save'), pvb = q('button', null, 'Preview'); sv.type = pvb.type = 'button'; bt.appendChild(sv); bt.appendChild(pvb); s6.appendChild(bt);
+      var tl = q('div', 'eodrow eodtest'), te = q('input'), tb = q('button', null, 'Send me a test'); te.type = 'email'; te.placeholder = 'Your email address'; te.setAttribute('aria-label', 'Send the test to'); te.value = j.me || ''; tb.type = 'button'; tl.appendChild(te); tl.appendChild(tb); s6.appendChild(tl);
+      var pv = q('div', 'fupv'); s6.appendChild(pv);
+      var bad = function (r) { err.textContent = (r && r.error) || 'Needs signal.'; err.hidden = false; };
+      sv.addEventListener('click', function () {
+        err.hidden = true; sv.disabled = true;
+        var to = rows.filter(function (r) { return r.i.checked; }).map(function (r) { return { id: r.id, email: r.em.value.trim() }; });
+        api('eodset', { body: { on: onI.checked, hour: +hs.value, to: to, sections: pick(), via: viaNow() } }).then(function (r) { sv.disabled = false; if (r && r.ok) toast('Saved', r.cfg.on ? 'It goes each evening at ' + eodHour(r.cfg.hour) + '.' : 'The end-of-day email is off.'); else bad(r); }, function () { sv.disabled = false; bad(); });
+      });
+      pvb.addEventListener('click', function () {
+        err.hidden = true; pv.textContent = '';
+        var p = pick(), s = Object.keys(p).filter(function (k) { return p[k]; }).join(',');
+        api('eodpreview', { params: { s: s || 'none' } }).then(function (k) { if (!k || !k.ok) return bad(k); pv.appendChild(q('div', 'sub2', 'Subject: ' + k.subject + ' · today’s figures so far')); var fr = document.createElement('iframe'); fr.className = 'fuframe'; fr.setAttribute('sandbox', ''); fr.title = 'The email as it would look'; fr.srcdoc = k.html; pv.appendChild(fr); }, function () { bad(); });
+      });
+      tb.addEventListener('click', function () {
+        err.hidden = true; tb.disabled = true;
+        api('eodtest', { body: { email: te.value.trim(), sections: pick(), via: viaNow() } }).then(function (r) { tb.disabled = false; if (r && r.ok) toast('Sent', 'A test went to ' + r.to + '.'); else bad(r); }, function () { tb.disabled = false; bad(); });
+      });
+    }, function () { out.textContent = ''; out.appendChild(q('div', 'msg', 'Needs signal.')); });
   }
   function officeView() {
     if (!planOk()) return chooseView();

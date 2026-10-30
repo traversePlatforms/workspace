@@ -1074,7 +1074,8 @@ require_once __DIR__ . '/skiptrace.php';
 require_once __DIR__ . '/webpush.php';   /* phone alerts (2026-10-05): Web Push, no secrets in it */
 require_once __DIR__ . '/sms.php';       /* in-app texting (2026-10-10): Twilio, keys in the private folder */
 require_once __DIR__ . '/billing.php';   /* billing (2026-10-10): Stripe, keys in the private folder */
-if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oauth-lib.php';   /* Sign in with Google / Microsoft for Setup › Email (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oauth-lib.php';
+if (is_file(__DIR__ . '/eod-lib.php')) require_once __DIR__ . '/eod-lib.php';   /* the editions' end-of-day email (2026-10-30): one shared file beside every install's API */   /* Sign in with Google / Microsoft for Setup › Email (2026-10-30): one shared file beside every install's API */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -2360,7 +2361,7 @@ if ($action === 'signout') {
 /* the morning email runs this file from the server's own command line (sixfold-tools/morning-email.php,
    started by cron) and asks for one thing: the digest. A web request is never 'cli', so this can't be
    reached from a browser. */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron', 'nlsweep'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest', 'skiptrace', 'skiplist', 'skipexport', 'pushcron', 'stormcron', 'jnsync', 'metapoll', 'metasetup', 'clickuppoll', 'squarenightly', 'squaresweep', 'followupsweep', 'remindcron', 'nlsweep', 'eodcron'], true)) {   /* + eodcron: the editions' end-of-day email (2026-10-30) */
     /* skiptrace / skiplist / skipexport: tools/skip-trace.php, the same way (2026-10-04) */
     $session = ['n' => $action === 'digest' ? 'Morning email' : 'Command line', 'r' => 'admin', 'c' => ''];
 }
@@ -3635,7 +3636,7 @@ if (!$viewing && $realMe === 'Claude Check') {
     $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
-        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel'];   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
+        'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview'];   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3805,6 +3806,7 @@ function permCat(): array {
         'msg.email' => ['g' => 'msg', 'l' => 'Email customers', 's' => 'emails customers', 'd' => 'Send a customer an email or a receipt from inside the app.', 'def' => '11111', 'acts' => ['mailsend', 'receiptmail']],
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
+        'set.eod' => ['g' => 'set', 'l' => 'End-of-day email', 's' => 'end-of-day email', 'd' => 'Turn the evening summary email on or off, and pick who gets it, when, and what it shows.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['eodget', 'eodset', 'eodpreview', 'eodtest']],   /* 2026-10-30 */
         'set.prices' => ['g' => 'set', 'l' => 'Prices and terms', 's' => 'prices and terms', 'd' => 'What a quote adds up from, the agreement terms, and Your costs.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],
     ];
     return $c;
@@ -7177,7 +7179,7 @@ function closeRates(array $leads, array $jobOfLead): array {
     foreach ($G as $k => &$x) { $x['close'] = $x['quoted'] ? round($x['won'] / $x['quoted'], 3) : null; $exp += $x['pipe'] * ($x['close'] ?? $allClose); } unset($x);   /* no history in a group yet: the overall rate */
     return ['groups' => $G, 'quoted' => $all['quoted'], 'won' => $all['won'], 'close' => round($allClose, 3), 'pipe' => $G['ads']['pipe'] + $G['warm']['pipe'], 'pipeN' => $G['ads']['pipeN'] + $G['warm']['pipeN'], 'expected' => round($exp)];
 }
-if ($action === 'statspage') {
+if ($action === 'statspage' && !edition()) {   /* an edition's Stats page: edStats, further down (2026-10-30) */
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz);
     $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days');   /* this week's Monday */
@@ -7291,7 +7293,7 @@ if ($action === 'adspendsave') {   /* an admin types each ad's lifetime spend fr
     if (!feature('walkdesk') || $role !== 'admin' || !$isPost) fail('Not allowed.', 403);
     $in = is_array($body['ads'] ?? null) ? $body['ads'] : []; $out = [];
     foreach (array_slice($in, 0, 20) as $a) {
-        $label = mb_substr(trim((string) ($a['label'] ?? '')), 0, 80); $src = in_array($a['src'] ?? '', ['meta', 'messenger'], true) ? (string) $a['src'] : '';
+        $label = mb_substr(trim((string) ($a['label'] ?? '')), 0, 80); $src = in_array($a['src'] ?? '', edition() ? array_keys(edAdSrc()) : ['meta', 'messenger'], true) ? (string) $a['src'] : '';   /* an edition: any of edAdSrc() (2026-10-30) */
         if ($label === '' || $src === '') continue;
         $out[] = ['key' => preg_replace('/[^a-z0-9]/', '', strtolower((string) ($a['key'] ?? '')) ) ?: 'ad' . count($out), 'label' => $label, 'src' => $src, 'spend' => max(0, round((float) ($a['spend'] ?? 0), 2)), 'results' => max(0, (int) ($a['results'] ?? 0)), 'asof' => date('Y-m-d'), 'by' => $me];
     }
@@ -10093,6 +10095,330 @@ if ($action === 'payments' || $action === 'paymentsexport') {
     out(['ok' => true, 'from' => $from, 'to' => $to, 'rows' => $rows, 'total' => array_sum(array_column($rows, 'amt')), 'count' => count($rows), 'byHow' => $byHow, 'byMonth' => $byMonth,
          'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i'), 'sqcheck' => squareCheckShown()]);
 }
+/* ==== THE EDITIONS' STATS PAGE AND END-OF-DAY EMAIL (2026-10-30, Matthew: "STATS PAGE" and "END-OF-DAY REPORT, OPTIONAL", for the editions
+ * and client installs; Sixfold keeps its own Stats page and its 8 pm picture email exactly as they are) ====================================
+ * Stats (action statspage on an edition, the role permission "See the Stats page"): built from Sixfold's page (the same close-rate rule,
+ * closeRates; the same six-weeks formula; the same typed ad spend, ad-spend.json and Update ad spend) but for any trade and any lead source:
+ *   leads by source (Facebook ads, Messenger, website, at the door, phone, referrals, imported lists, other) with how many were quoted and
+ *   booked; quotes sent and the close rate; jobs booked and done and the money taken; the Good / Better / Best options picked; each ad's
+ *   typed spend against the leads and jobs its source brought (cost per lead, cost per booked job); each person's numbers; six weeks ahead
+ *   (booked + open quotes x close rate + plans). Periods: this week, last week, the last 30 days, this month. Words follow the trade (edWords).
+ * End-of-day email (eod-report.json beside the data; OFF until the company's admin turns it on, Stats > End-of-day email; the role permission
+ *   "End-of-day email"): the admin picks the people (the company's admins and managers, each with an email address), the hour, and the parts
+ *   (eodSectionList in eod-lib.php). It goes from the company's connected mailbox (Setup > Email) or, if none, Traverse's mail server under
+ *   the COMPANY's name with Reply-To the company's email; the email itself carries only the company's name, colour and logo (eod-lib.php).
+ *   Preview and Send me a test on the same screen. Sent once a day, in the first hourly run in the 4 hours from the chosen hour (the install's
+ *   own clock): sixfold-tools/edition-eod.php, started by the hourly morning-email.php, asks each edition and client install (eodcron).
+ *   Each send is a line in eod.log (in the backups with the settings).
+ *   eodget GET, eodset POST, eodpreview GET (?s=money,jobs,...), eodtest POST {email}: adminOr('set.eod'); eodcron: the command line only. */
+function edWords(): array {
+    $t = kitTrade();
+    $w = ['roof' => ['job', 'jobs', 'estimate', 'estimates'], 'solar' => ['install', 'installs', 'proposal', 'proposals'], 'pest' => ['service', 'services', 'quote', 'quotes'],
+          'security' => ['install', 'installs', 'quote', 'quotes'], 'yards' => ['job', 'jobs', 'quote', 'quotes']][$t] ?? ['job', 'jobs', 'quote', 'quotes'];
+    return ['job' => $w[0], 'jobs' => $w[1], 'quote' => $w[2], 'quotes' => $w[3], 'Job' => ucfirst($w[0]), 'Jobs' => ucfirst($w[1]), 'Quote' => ucfirst($w[2]), 'Quotes' => ucfirst($w[3])];
+}
+/** where a lead came from, as the editions' Stats page groups it: an imported list is its own group (unless it was a Facebook form file) */
+function edSrcKey(array $l): string {
+    $s = (string) ($l['src'] ?? '');
+    if ($s === 'meta') return 'facebook';
+    if (!empty($l['imp'])) return 'import';
+    return ['messenger' => 'messenger', 'website' => 'website', 'a365web' => 'website', 'door' => 'door', 'inperson' => 'door', 'phone' => 'phone', 'referral' => 'referral'][$s] ?? 'other';
+}
+function edSrcNames(): array {
+    return ['facebook' => 'Facebook ads', 'messenger' => 'Facebook Messenger', 'website' => 'Website', 'door' => 'At the door', 'phone' => 'Phone calls', 'referral' => 'Referrals', 'import' => 'Imported lists', 'other' => 'Other'];
+}
+/** the sources an edition's ad can bring leads in as (Update ad spend): the lead's own src */
+function edAdSrc(): array {
+    return ['meta' => 'Facebook / Instagram lead form', 'messenger' => 'Facebook Messenger', 'website' => 'Your website (Google and other ads)', 'phone' => 'Phone calls', 'nextdoor' => 'Nextdoor', 'other' => 'Other'];
+}
+/** an edition's typed ad spend: what the admin saved, else nothing (Sixfold's screenshot figures are Sixfold's) */
+function edAds(): array { $j = json_decode((string) @file_get_contents(adSpendFile()), true); return is_array($j) && is_array($j['ads'] ?? null) ? $j['ads'] : []; }
+/** each lead's first quote, from the log: a quote counts on the day it was first sent; a revised one is not new */
+function edQuoteFirst(): array { $f = []; foreach (readLines(leadsDir() . '/leadst.log') as $u) if (!empty($u['quote']) && !isset($f[$u['id']])) $f[(string) $u['id']] = (int) ($u['at'] ?? 0); return $f; }
+/** who a sale is credited to: the lead's owner, else whoever quoted it, else whoever added it */
+function edCredit(array $l, ?array $j = null): string {
+    $n = trim((string) ($l['owner'] ?? '')) ?: trim((string) ($l['quote']['by'] ?? '')) ?: trim((string) ($l['by'] ?? ''));
+    if ($n === '' && $j) $n = trim((string) ($j['by'] ?? ''));
+    return in_array($n, ['website', 'Website', 'ClickUp', 'Command line', 'Morning email'], true) || boardHidden($n) ? '' : $n;
+}
+/** a test lead is never counted (as on Sixfold's page) */
+function edReal(array $l): bool { return !preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? '')); }
+/** the period asked for: [from, to, label, key] (dates, the install's clock) */
+function edPeriod(string $p): array {
+    $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d');
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days');
+    if ($p === 'week') return [$mon->format('Y-m-d'), $T, 'This week', 'week'];
+    if ($p === 'last') return [(clone $mon)->modify('-7 days')->format('Y-m-d'), (clone $mon)->modify('-1 day')->format('Y-m-d'), 'Last week', 'last'];
+    if ($p === 'month') return [$today->format('Y-m-01'), $T, 'This month', 'month'];
+    return [(clone $today)->modify('-29 days')->format('Y-m-d'), $T, 'Last 30 days', '30'];
+}
+/** the editions' Stats page */
+function edStats(string $p): array {
+    global $role;
+    [$from, $to, $plabel, $pkey] = edPeriod($p);
+    $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d');
+    $ts = fn(string $ymd, bool $end = false) => (new DateTime($ymd . ($end ? ' 23:59:59' : ' 00:00:00'), $tz))->getTimestamp();
+    $t0 = $ts($from); $t1 = $ts($to, true); $in = fn(int $at) => $at >= $t0 && $at <= $t1;
+    $leads = array_filter(leadsAll(), 'edReal');
+    $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && edReal($leads[$j['lead']] ?? ['name' => (string) ($j['title'] ?? '')]));
+    $jobOf = []; foreach ($jobs as $j) if (!empty($j['lead'])) $jobOf[(string) $j['lead']] = $j;
+    $qFirst = edQuoteFirst();
+    $wasQuoted = fn($l) => !empty($l['quote']) || in_array($l['status'] ?? '', ['quoted', 'won'], true) || isset($jobOf[$l['id']]);
+    $qPrice = fn($l) => (int) ($l['quote']['price'] ?? 0);
+    /* 1. leads by source: the period's new leads, and how many of them were quoted and booked so far */
+    $src = []; foreach (edSrcNames() as $k => $n) $src[$k] = ['key' => $k, 'label' => $n, 'leads' => 0, 'quoted' => 0, 'booked' => 0, 'value' => 0];
+    foreach ($leads as $l) { if (!$in((int) ($l['at'] ?? 0))) continue; $k = edSrcKey($l); $src[$k]['leads']++; if ($wasQuoted($l)) $src[$k]['quoted']++; if (isset($jobOf[$l['id']])) { $src[$k]['booked']++; $src[$k]['value'] += (int) $jobOf[$l['id']]['price']; } }
+    /* 2. quotes: first sent in the period; how many have booked; Good / Better / Best picks on them */
+    $q = ['n' => 0, 'value' => 0, 'booked' => 0, 'bookedValue' => 0]; $opt = []; $optQ = 0; $custPick = 0;
+    foreach ($leads as $l) {
+        $qa = $qFirst[$l['id']] ?? null; if ($qa === null || !$in($qa) || empty($l['quote'])) continue;
+        $q['n']++; $q['value'] += $qPrice($l); $jx = $jobOf[$l['id']] ?? null; if ($jx) { $q['booked']++; $q['bookedValue'] += (int) $jx['price']; }
+        $Q = $l['quote']; if (empty($Q['options']) || !is_array($Q['options'])) continue;
+        $optQ++; if (($Q['optBy'] ?? '') === 'customer') $custPick++;
+        foreach ($Q['options'] as $o) { if (!is_array($o)) continue; $k = (string) ($o['k'] ?? ''); if ($k === '') continue;
+            $opt[$k] = ($opt[$k] ?? ['key' => $k, 'name' => '', 'offered' => 0, 'picked' => 0, 'booked' => 0, 'value' => 0]); $opt[$k]['name'] = (string) ($o['name'] ?? $k); $opt[$k]['offered']++;
+            if ((string) ($Q['opt'] ?? '') === $k) { $opt[$k]['picked']++; if ($jx) { $opt[$k]['booked']++; $opt[$k]['value'] += (int) $jx['price']; } } }
+    }
+    $CR = closeRates($leads, $jobOf);
+    /* 3. jobs and money */
+    $jb = ['booked' => 0, 'bookedValue' => 0, 'done' => 0, 'doneValue' => 0, 'onBoard' => 0, 'notDone' => 0];
+    foreach ($jobs as $j) {
+        if ($in((int) ($j['at'] ?? 0))) { $jb['booked']++; $jb['bookedValue'] += (int) $j['price']; }
+        if ($j['date'] >= $from && $j['date'] <= $to) { $jb['onBoard']++; $o = (string) ($j['done']['o'] ?? ''); if ($o === 'done') { $jb['done']++; $jb['doneValue'] += (int) $j['price']; } elseif ($j['date'] < $T) $jb['notDone']++; }
+    }
+    $money = ['in' => 0, 'n' => 0, 'byHow' => []];
+    foreach (paymentsAll() as $pm) { if ($pm['date'] < $from || $pm['date'] > $to) continue; $money['in'] += (int) $pm['amt']; if ((int) $pm['amt'] > 0) $money['n']++; $money['byHow'][$pm['howL']] = ($money['byHow'][$pm['howL']] ?? 0) + (int) $pm['amt']; }
+    arsort($money['byHow']);
+    /* 4. ads: each ad's typed lifetime spend against every lead and job its source has brought */
+    $ads = edAds(); $adOut = [];
+    foreach (edAdSrc() as $sk => $sl) {
+        $sp = 0.0; $res = 0; $asof = ''; $n = 0; foreach ($ads as $a) if (($a['src'] ?? '') === $sk) { $sp += (float) $a['spend']; $res += (int) ($a['results'] ?? 0); $asof = max($asof, (string) ($a['asof'] ?? '')); $n++; }
+        if (!$n) continue;
+        $ln = 0; $jn = 0; $bk = 0; $pd = 0; foreach ($leads as $l) if (($l['src'] ?? '') === $sk) { $ln++; if (isset($jobOf[$l['id']])) { $jn++; $bk += (int) $jobOf[$l['id']]['price']; $pd += jobPaidSoFar($jobOf[$l['id']]); } }
+        $per = $res ?: $ln;
+        $adOut[] = ['src' => $sk, 'label' => $sl, 'spend' => round($sp, 2), 'results' => $res, 'asof' => $asof, 'leads' => $ln, 'jobs' => $jn, 'booked' => $bk, 'paid' => $pd, 'perLead' => $per ? round($sp / $per, 2) : null, 'perJob' => $jn ? round($sp / $jn, 2) : null];
+    }
+    /* 5. each person: doors (the leaderboard's count), leads added, quotes sent, sales credited, jobs done as crew */
+    $days = (int) $today->diff(new DateTime($from, $tz))->days + 1;
+    $team = []; $bump = function (string $n, string $k, int $v = 1) use (&$team) { if ($n === '' || boardHidden($n)) return; $team[$n] = $team[$n] ?? ['name' => $n, 'doors' => 0, 'talked' => 0, 'leads' => 0, 'quotes' => 0, 'quoteValue' => 0, 'sold' => 0, 'soldValue' => 0, 'done' => 0]; $team[$n][$k] += $v; };
+    $doors = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'people' => 0];
+    foreach (teamDays(max(1, $days), '') as $pp) { $any = false; foreach ($pp['days'] as $r) { if ($r['date'] < $from || $r['date'] > $to) continue; $bump($pp['name'], 'doors', (int) $r['doors']); $bump($pp['name'], 'talked', (int) $r['booked'] + (int) $r['later']); if (!boardHidden($pp['name'])) { $doors['doors'] += (int) $r['doors']; $doors['talked'] += (int) $r['booked'] + (int) $r['later']; $doors['booked'] += (int) $r['booked']; } if ((int) $r['doors'] > 0) $any = true; } if ($any && !boardHidden($pp['name'])) $doors['people']++; }
+    foreach ($leads as $l) {
+        if ($in((int) ($l['at'] ?? 0)) && !in_array((string) ($l['src'] ?? ''), ['website', 'a365web', 'meta'], true) && empty($l['imp'])) $bump(edCredit(['by' => (string) ($l['by'] ?? '')]), 'leads');
+        $qa = $qFirst[$l['id']] ?? null; if ($qa !== null && $in($qa) && !empty($l['quote'])) { $qb = trim((string) ($l['quote']['by'] ?? '')); $bump($qb === 'website' ? '' : $qb, 'quotes'); $bump($qb === 'website' ? '' : $qb, 'quoteValue', $qPrice($l)); }
+    }
+    foreach ($jobs as $j) {
+        if ($in((int) ($j['at'] ?? 0))) { $n = edCredit($leads[$j['lead']] ?? [], $j); $bump($n, 'sold'); $bump($n, 'soldValue', (int) $j['price']); }
+        if ($j['date'] >= $from && $j['date'] <= $to && (($j['done']['o'] ?? '') === 'done')) foreach (array_filter(array_map('trim', explode(',', (string) $j['crew']))) as $cn) $bump($cn, 'done');
+    }
+    $team = array_values($team); usort($team, fn($a, $b) => [$b['soldValue'], $b['sold'], $b['quotes'], $b['doors']] <=> [$a['soldValue'], $a['sold'], $a['quotes'], $a['doors']]);
+    /* 6. six weeks ahead from this week's Monday: booked + open quotes x each group's close rate, spread evenly + plan income (Sixfold's formula) */
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days'); $mrr = 0.0; $planN = 0; $per = ['monthly' => 1, 'quarterly' => 1 / 3, 'yearly' => 1 / 12];
+    foreach (loadCustomers() as $c) { $pl = (string) ($c['plan'] ?? 'oneoff'); $wk = (int) ($c['every'] ?? 0); if (($c['status'] ?? 'active') !== 'active' || !(isset($per[$pl]) || ($pl === 'custom' && $wk > 0))) continue; $mrr += (float) ($c['price'] ?? 0) * ($per[$pl] ?? 52 / 12 / max(1, $wk)); $planN++; }
+    $weeks = [];
+    for ($w = 0; $w < 6; $w++) {
+        $f = (clone $mon)->modify('+' . (7 * $w) . ' days')->format('Y-m-d'); $t = (clone $mon)->modify('+' . (7 * $w + 6) . ' days')->format('Y-m-d');
+        $bk = 0; $bn = 0; foreach ($jobs as $j) if ($j['date'] >= $f && $j['date'] <= $t) { $bk += (int) $j['price']; $bn++; }
+        $exp = (int) round($CR['expected'] / 6); $planW = (int) round($mrr * 12 / 52);
+        $weeks[] = ['from' => $f, 'to' => $t, 'booked' => $bk, 'jobs' => $bn, 'pipeline' => $exp, 'plans' => $planW, 'total' => $bk + $exp + $planW];
+    }
+    $eod = adminOr('set.eod') && function_exists('eodSectionList') ? eodCfg() : null;   /* eod-lib.php beside the API */
+    return ['ok' => true, 'ed' => true, 'today' => $T, 'period' => ['key' => $pkey, 'label' => $plabel, 'from' => $from, 'to' => $to], 'words' => edWords(),
+            'sources' => array_values($src), 'quotes' => $q + ['close' => $CR['close'], 'quoted8' => $CR['quoted'], 'won8' => $CR['won'], 'pipe' => $CR['pipe'], 'pipeN' => $CR['pipeN'], 'groups' => $CR['groups']],
+            'options' => ['quotes' => $optQ, 'customer' => $custPick, 'list' => array_values($opt)], 'jobs' => $jb, 'money' => $money,
+            'ads' => $adOut, 'adRows' => edAds(), 'adSrc' => edAdSrc(), 'team' => $team, 'doors' => $doors,
+            'proj' => ['weeks' => $weeks, 'expected' => $CR['expected'], 'pipe' => $CR['pipe'], 'pipeN' => $CR['pipeN'], 'close' => $CR['close'], 'groups' => $CR['groups'], 'mrr' => round($mrr, 2), 'plans' => $planN],
+            'canEdit' => $role === 'admin', 'eod' => $eod ? ['on' => $eod['on'], 'hour' => $eod['hour'], 'to' => count($eod['to'])] : null];
+}
+/* ---- the end-of-day email ---- */
+function eodFile(): string { return DATA_DIR . '/eod-report.json'; }
+function eodCfg(): array {
+    $j = json_decode((string) @file_get_contents(eodFile()), true); $j = is_array($j) ? $j : [];
+    $sec = []; foreach (eodSectionList() as $k => $_) $sec[$k] = array_key_exists($k, (array) ($j['sections'] ?? [])) ? !empty($j['sections'][$k]) : true;
+    $to = []; foreach ((array) ($j['to'] ?? []) as $t) if (is_array($t) && preg_match('/^[0-9a-f]{6,64}$/', (string) ($t['id'] ?? '')) && filter_var((string) ($t['email'] ?? ''), FILTER_VALIDATE_EMAIL)) $to[] = ['id' => (string) $t['id'], 'email' => strtolower((string) $t['email'])];
+    $h = (int) ($j['hour'] ?? 19);
+    return ['on' => !empty($j['on']), 'hour' => $h >= 12 && $h <= 23 ? $h : 19, 'to' => $to, 'sections' => $sec, 'via' => in_array($j['via'] ?? '', ['auto', 'own', 'app'], true) ? (string) $j['via'] : 'auto', 'by' => (string) ($j['by'] ?? ''), 'at' => (int) ($j['at'] ?? 0)];
+}
+/** who can get it: the company's own admins and managers (never Traverse's super admin, never a hidden test account), with the email they sign in with */
+function eodPeople(): array {
+    global $basePeople, $acct, $sessionKey; $o = [];
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) {
+        if ($r['off'] || !in_array($r['role'], ['admin', 'manager'], true) || boardHidden((string) $r['name'])) continue;
+        $o[$r['id']] = ['id' => $r['id'], 'name' => (string) $r['name'], 'role' => (string) $r['role'], 'email' => strtolower((string) (($acct['login'][$r['id']]['email'] ?? '') ?: ($acct['inv'][$r['id']]['email'] ?? '')))];
+    }
+    return $o;
+}
+/** the company's look for the email: its name, a colour white reads on, its PNG or JPG logo as a whole address (email apps show no SVG) */
+function eodBrand(): array {
+    $B = kitBrand(); $l = logoInfo(); $logo = '';
+    if ($l && in_array($l['type'], ['png', 'jpg'], true)) {
+        $logo = logoUrl((string) $l['v'], true);
+        if (PHP_SAPI === 'cli' && preg_match('#^(https?://[a-z0-9.-]+(:\d+)?)/#i', (string) company()['appUrl'], $m)) $logo = $m[1] . '/api/' . basename(__FILE__) . '?action=logo&v=' . $l['v'];   /* the hourly run has no web address of its own */
+    }
+    return ['name' => (string) $B['name'], 'color' => preg_match('/^#[0-9a-f]{6}$/i', (string) $B['color']) ? (string) $B['color'] : '#1f3a5f', 'logo' => $logo, 'phone' => (string) $B['phone'], 'site' => (string) $B['site']];
+}
+/** today's report as data (eod-lib.php draws it), only the parts asked for. [R, subject bits] */
+function eodData(array $want, bool $test = false): array {
+    $W = edWords(); $tz = new DateTimeZone(appTz()); $today = new DateTime('today', $tz); $T = $today->format('Y-m-d'); $t0 = $today->getTimestamp(); $now = time();
+    $tomD = (clone $today)->modify('+1 day')->format('Y-m-d'); $wk0 = $now - 7 * 86400;
+    $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days')->format('Y-m-d'); $m1 = $today->format('Y-m-01');
+    $leads = array_filter(leadsAll(), 'edReal');
+    $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && edReal($leads[$j['lead']] ?? ['name' => (string) ($j['title'] ?? '')]));
+    $jobOf = []; foreach ($jobs as $j) if (!empty($j['lead'])) $jobOf[(string) $j['lead']] = $j;
+    $short = function ($n) { $p = preg_split('/\s+/', trim((string) $n)); return ($p[0] ?? '') !== '' ? $p[0] . (isset($p[1]) && $p[1] !== '' ? ' ' . mb_strtoupper(mb_substr($p[1], 0, 1)) . '.' : '') : 'A customer'; };
+    $usd = fn($v) => '$' . number_format((float) $v, (float) $v == floor((float) $v) ? 0 : 2);
+    $pl = fn(int $n, string $one, string $many) => $n . ' ' . ($n === 1 ? $one : $many);
+    $nameOf = fn($j) => $short($leads[$j['lead']]['name'] ?? ($j['title'] ?? ''));
+    $R = ['date' => $today->format('D j M'), 'kpis' => [], 'sections' => []]; $bits = [];
+    if (!empty($want['money'])) {
+        $m = ['today' => 0, 'n' => 0, 'week' => 0, 'month' => 0];
+        foreach (paymentsAll() as $p) { if ($p['date'] >= $m1) $m['month'] += (int) $p['amt']; if ($p['date'] >= $mon) $m['week'] += (int) $p['amt']; if ($p['date'] === $T) { $m['today'] += (int) $p['amt']; if ((int) $p['amt'] > 0) $m['n']++; } }
+        $owed = 0; $owedN = 0; foreach ($jobs as $j) if (($j['done']['o'] ?? '') === 'done' && ($o = jobOwed($j)) > 0) { $owed += $o; $owedN++; }
+        $R['kpis'][] = ['Money in today', $usd($m['today']), $pl($m['n'], 'payment', 'payments')];
+        $rows = [['l' => 'This week', 'v' => $usd($m['week'])], ['l' => 'This month', 'v' => $usd($m['month'])]];
+        if ($owedN) $rows[] = ['l' => ucfirst($W['jobs']) . ' done, not paid in full', 'v' => $usd($owed), 's' => $pl($owedN, $W['job'], $W['jobs']), 't' => 'warn'];
+        $R['sections'][] = ['title' => 'Money in', 'note' => 'Payments recorded in the app: cards, pay links, cash and checks.', 'rows' => $rows];
+        $bits[] = $usd($m['today']) . ' in';
+    }
+    if (!empty($want['jobs'])) {
+        $bk = array_values(array_filter($jobs, fn($j) => (int) ($j['at'] ?? 0) >= $t0)); $bkV = array_sum(array_map(fn($j) => (int) $j['price'], $bk));
+        $tj = array_values(array_filter($jobs, fn($j) => $j['date'] === $T)); usort($tj, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
+        $done = array_values(array_filter($tj, fn($j) => ($j['done']['o'] ?? '') === 'done')); $doneV = array_sum(array_map(fn($j) => (int) $j['price'], $done));
+        $R['kpis'][] = [ucfirst($W['jobs']) . ' booked', (string) count($bk), $bk ? $usd($bkV) : 'none today'];
+        $R['kpis'][] = [ucfirst($W['jobs']) . ' done', (string) count($done), $done ? $usd($doneV) : ($tj ? 'of ' . count($tj) . ' today' : 'none scheduled')];
+        $rows = [];
+        foreach ($bk as $j) $rows[] = ['l' => 'Booked: ' . $nameOf($j), 'v' => $usd((int) $j['price']), 's' => trim(implode(' · ', array_filter([($n = edCredit($leads[$j['lead']] ?? [], $j)) !== '' ? 'sold by ' . $n : '', 'on ' . date('D j M', strtotime($j['date'] . ' 12:00'))])))];
+        foreach ($tj as $j) { $o = (string) ($j['done']['o'] ?? ''); $rows[] = ['l' => ($o === 'done' ? 'Done: ' : ($o === 'could not' ? 'Not done: ' : 'Today: ')) . $nameOf($j), 'v' => $usd((int) $j['price']), 's' => trim($j['crew'] . ($o === 'could not' ? ' · ' . mb_substr((string) ($j['done']['note'] ?? ''), 0, 90) : ($o === 'done' ? '' : ' · not marked done yet'))), 't' => $o === 'could not' ? 'bad' : ($o === 'done' ? '' : 'warn')]; }
+        $R['sections'][] = ['title' => ucfirst($W['jobs']) . ' done and booked', 'rows' => $rows, 'empty' => 'Nothing booked or scheduled today.'];
+        $bits[] = count($bk) . ' booked'; $bits[] = count($done) . ' done';
+    }
+    if (!empty($want['quotes'])) {
+        $qFirst = edQuoteFirst(); $qn = 0; $qv = 0; $picks = [];
+        foreach ($leads as $l) { if (($qFirst[$l['id']] ?? 0) < $t0 || empty($l['quote'])) continue; $qn++; $qv += (int) ($l['quote']['price'] ?? 0);
+            $Q = $l['quote']; if (!empty($Q['options']) && ($k = (string) ($Q['opt'] ?? '')) !== '') foreach ((array) $Q['options'] as $o) if (is_array($o) && ($o['k'] ?? '') === $k) $picks[(string) ($o['name'] ?? $k)] = ($picks[(string) ($o['name'] ?? $k)] ?? 0) + 1; }
+        $CR = closeRates($leads, $jobOf);
+        $R['kpis'][] = [ucfirst($W['quotes']) . ' sent', (string) $qn, $qv ? 'worth ' . $usd($qv) : 'none today'];
+        $rows = [['l' => ucfirst($W['quotes']) . ' sent today', 'v' => (string) $qn, 's' => $qv ? 'worth ' . $usd($qv) : '']];
+        if ($picks) $rows[] = ['l' => 'Options picked', 'v' => (string) array_sum($picks), 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($picks), $picks))];
+        $rows[] = ['l' => 'Open ' . $W['quotes'], 'v' => $usd($CR['pipe']), 's' => $pl($CR['pipeN'], $W['quote'], $W['quotes']) . ' with no ' . $W['job'] . ' yet'];
+        $rows[] = ['l' => 'Close rate', 'v' => $CR['quoted'] ? round($CR['close'] * 100) . '%' : '–', 's' => $CR['quoted'] ? $CR['won'] . ' of ' . $CR['quoted'] . ' quoted 1 to 8 weeks ago booked' : 'not enough ' . $W['quotes'] . ' 1 to 8 weeks old yet'];
+        $R['sections'][] = ['title' => ucfirst($W['quotes']), 'rows' => $rows];
+        $bits[] = $pl($qn, $W['quote'], $W['quotes']);
+    }
+    if (!empty($want['leads'])) {
+        $names = edSrcNames(); $td = []; $wk = []; $wait = 0;
+        foreach ($leads as $l) { $at = (int) ($l['at'] ?? 0); $k = $names[edSrcKey($l)]; if ($at >= $t0) $td[$k] = ($td[$k] ?? 0) + 1; if ($at >= $wk0) $wk[$k] = ($wk[$k] ?? 0) + 1;
+            if (in_array($l['status'] ?? 'new', ['new'], true) && empty($l['tries']) && empty($l['quote']) && !isset($jobOf[$l['id']])) $wait++; }
+        arsort($td); arsort($wk); $line = fn(array $x) => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($x), $x));
+        $R['kpis'][] = ['New leads', (string) array_sum($td), $td ? (string) array_key_first($td) . ' ' . reset($td) : 'none today'];
+        $R['sections'][] = ['title' => 'Leads by source', 'rows' => [['l' => 'New today', 'v' => (string) array_sum($td), 's' => $line($td)], ['l' => 'Last 7 days', 'v' => (string) array_sum($wk), 's' => $line($wk)], ['l' => 'Waiting on a first call', 'v' => (string) $wait, 't' => $wait ? 'warn' : '']]];
+    }
+    if (!empty($want['team'])) {
+        $qFirst = $qFirst ?? edQuoteFirst(); $P = []; $bump = function (string $n, string $k, int $v = 1) use (&$P) { if ($n === '' || boardHidden($n)) return; $P[$n] = $P[$n] ?? ['doors' => 0, 'leads' => 0, 'quotes' => 0, 'sold' => 0, 'soldV' => 0]; $P[$n][$k] += $v; };
+        foreach (teamDays(1, '') as $pp) foreach ($pp['days'] as $r) if ($r['date'] === $T) $bump($pp['name'], 'doors', (int) $r['doors']);
+        foreach ($leads as $l) { if ((int) ($l['at'] ?? 0) >= $t0 && !in_array((string) ($l['src'] ?? ''), ['website', 'a365web', 'meta'], true) && empty($l['imp'])) $bump(edCredit(['by' => (string) ($l['by'] ?? '')]), 'leads');
+            if (($qFirst[$l['id']] ?? 0) >= $t0 && !empty($l['quote'])) $bump(edCredit(['by' => (string) ($l['quote']['by'] ?? '')]), 'quotes'); }
+        foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) { $n = edCredit($leads[$j['lead']] ?? [], $j); $bump($n, 'sold'); $bump($n, 'soldV', (int) $j['price']); }
+        uksort($P, fn($a, $b) => [$P[$b]['soldV'], $P[$b]['sold'], $P[$b]['quotes'], $P[$b]['doors']] <=> [$P[$a]['soldV'], $P[$a]['sold'], $P[$a]['quotes'], $P[$a]['doors']]);
+        $rows = []; $i = 0;
+        foreach ($P as $n => $x) $rows[] = ['l' => (++$i) . '. ' . $n, 'v' => $x['soldV'] ? $usd($x['soldV']) : $pl($x['doors'], 'door', 'doors'), 's' => implode(' · ', [$pl($x['doors'], 'door', 'doors'), $pl($x['leads'], 'lead', 'leads'), $pl($x['quotes'], $W['quote'], $W['quotes']), $pl($x['sold'], $W['job'] . ' sold', $W['jobs'] . ' sold')]), 't' => $x['soldV'] ? 'good' : ''];
+        $R['sections'][] = ['title' => 'Team today', 'rows' => array_slice($rows, 0, 15), 'empty' => 'Nobody logged doors, leads or sales today.'];
+    }
+    if (!empty($want['tomorrow'])) {
+        $tm = array_values(array_filter($jobs, fn($j) => $j['date'] === $tomD)); usort($tm, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
+        $R['kpis'][] = ['Tomorrow', (string) count($tm), $tm ? $usd(array_sum(array_map(fn($j) => (int) $j['price'], $tm))) : 'nothing booked'];
+        $rows = []; foreach ($tm as $j) $rows[] = ['l' => $nameOf($j), 'v' => $usd((int) $j['price']), 's' => (jobSlot((string) $j['slot'])[1] ?? $j['slot']) . ' · ' . $j['crew']];
+        foreach (jobHolds($leads) as $h) if ($h['date'] === $tomD) $rows[] = ['l' => $short($h['name']), 'v' => 'held', 's' => 'not signed yet · ' . $h['crew'], 't' => 'warn'];
+        $R['sections'][] = ['title' => 'Tomorrow, ' . (clone $today)->modify('+1 day')->format('D j M'), 'rows' => $rows, 'empty' => 'Nothing booked.'];
+        $bits[] = count($tm) . ' tomorrow';
+    }
+    $R['kpis'] = array_slice($R['kpis'], 0, 4);
+    $co = (string) company()['name'];
+    $R['foot'] = ($test ? 'TEST: sent to you only, from Stats, End-of-day email. ' : '') . 'From ' . $co . '\'s app, for its admins and managers. Customer names are private: keep this inside ' . $co . '.';
+    return [$R, ($test ? 'TEST ' : '') . 'End of day, ' . $R['date'] . ($bits ? ': ' . implode(' · ', $bits) : '')];
+}
+/** today's email: [subject, text, html] */
+function eodBuild(array $want, bool $test = false): array { [$R, $subject] = eodData($want, $test); return eodRender($R, eodBrand(), $subject); }
+/** one email: the company's connected mailbox, else (or if the admin picked it) Traverse's mail server under the company's name. [ok, stage, error, via] */
+function eodSend(string $to, array $m, string $via): array {
+    $co = company(); $useOwn = $via === 'own' || ($via === 'auto' && mailOwnCfg());
+    $mock = getenv('TRAV_MAIL_MOCK');
+    if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $m[0], 'body' => $m[1], 'html' => strlen($m[2]), 'from' => $useOwn ? 'own' : (string) $co['name'], 'kind' => 'eod'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '', 'via' => $useOwn ? 'own' : 'app']; }
+    if ($useOwn) return sendMail($to, $m[0], $m[1], $m[2]) + ['via' => 'own'];
+    $s = travMailCfg(); if ($s['pass'] === '') return ['ok' => false, 'stage' => 'config', 'error' => 'The app\'s mail server is not set up on this host.', 'via' => 'app'];
+    $rt = filter_var((string) $co['email'], FILTER_VALIDATE_EMAIL) ? ['Reply-To: ' . $co['email']] : [];
+    return smtpSend(['host' => (string) $s['host'], 'port' => (int) $s['port'], 'user' => (string) $s['user'], 'pass' => (string) $s['pass'], 'from_name' => mb_substr((string) $co['name'], 0, 60), 'domain' => (string) $s['ehlo']], $to, $m[0], $m[1], $m[2], $rt) + ['via' => 'app'];
+}
+function eodLog(array $row): void { @file_put_contents(DATA_DIR . '/eod.log', json_encode(['id' => 'e' . date('YmdHis') . bin2hex(random_bytes(2)), 'at' => time()] + $row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); }
+if ($action === 'statspage' && edition()) {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    out(edStats((string) ($_GET['p'] ?? '30')));
+}
+if (in_array($action, ['eodget', 'eodset', 'eodpreview', 'eodtest'], true)) {
+    if (!edition() || !adminOr('set.eod')) fail('Not allowed.', 403);
+    if (!function_exists('eodRender')) fail('The end-of-day email is not on this server yet.', 503);
+    $c = eodCfg();
+    if ($action === 'eodget') {
+        $last = null; foreach (array_reverse(readLines(DATA_DIR . '/eod.log')) as $r) { if (empty($r['test'])) { $last = ['at' => (int) $r['at'], 'ok' => !empty($r['ok']), 'n' => (int) ($r['n'] ?? 0)]; break; } }
+        $ms = mailOwnCfg();
+        out(['ok' => true, 'cfg' => $c, 'people' => array_values(eodPeople()), 'sections' => array_map(fn($k, $v) => ['k' => $k, 'l' => $v[0], 'd' => $v[1]], array_keys(eodSectionList()), eodSectionList()),
+             'mail' => ['own' => (bool) $ms, 'user' => $ms ? (string) $ms['user'] : '', 'company' => (string) company()['name'], 'reply' => (string) company()['email']], 'last' => $last, 'tz' => appTz(),
+             'me' => strtolower((string) ($acct['login'][(string) ($session['c'] ?? '')]['email'] ?? '')) ?: (string) company()['email']]);
+    }
+    if ($action === 'eodpreview') {
+        $want = $c['sections']; if (isset($_GET['s'])) { $ask = explode(',', (string) $_GET['s']); foreach ($want as $k => $_) $want[$k] = in_array($k, $ask, true); }
+        [$subject, $text, $html] = eodBuild($want);
+        out(['ok' => true, 'subject' => $subject, 'text' => $text, 'html' => $html]);
+    }
+    if (!$isPost) fail('POST required', 405);
+    if ($action === 'eodset') {
+        $ppl = eodPeople(); $to = [];
+        foreach ((array) ($body['to'] ?? []) as $t) {
+            $id = (string) ($t['id'] ?? ''); $em = strtolower(trim((string) ($t['email'] ?? '')));
+            if (!isset($ppl[$id])) continue;
+            if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen($em) > 120) fail('Add an email address for ' . $ppl[$id]['name'] . ', or leave them unticked.');
+            $to[] = ['id' => $id, 'email' => $em];
+        }
+        $sec = []; foreach (eodSectionList() as $k => $_) $sec[$k] = !empty($body['sections'][$k]);
+        $on = !empty($body['on']); $h = (int) ($body['hour'] ?? 19); $via = in_array($body['via'] ?? '', ['auto', 'own', 'app'], true) ? (string) $body['via'] : 'auto';
+        if ($h < 12 || $h > 23) fail('Pick a time between noon and 11 pm.');
+        if ($on && !$to) fail('Pick at least one person to send it to.');
+        if ($on && !array_filter($sec)) fail('Pick at least one part to include.');
+        if ($via === 'own' && !mailOwnCfg()) fail('The company email is not connected yet (Setup, Email). Pick the other way to send, or connect it first.');
+        if (!writeJsonAtomic(eodFile(), ['on' => $on, 'hour' => $h, 'to' => array_slice($to, 0, 20), 'sections' => $sec, 'via' => $via, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        eodLog(['what' => 'settings', 'on' => $on, 'hour' => $h, 'n' => count($to), 'by' => $me]);
+        out(['ok' => true, 'cfg' => eodCfg()]);
+    }
+    /* eodtest: now, to one address (the admin's own unless they type another), marked TEST; the parts ticked on the screen */
+    $em = strtolower(trim((string) ($body['email'] ?? '')));
+    if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen($em) > 120) fail('Type the email address to send the test to.');
+    if (!throttleTake(rateFile('eodtest|' . COOKIE), 10, 3600)) fail('That is a lot of tests in an hour. Try again later.', 429);
+    $want = $c['sections']; if (is_array($body['sections'] ?? null)) foreach ($want as $k => $_) $want[$k] = !empty($body['sections'][$k]);
+    $via = in_array($body['via'] ?? '', ['auto', 'own', 'app'], true) ? (string) $body['via'] : $c['via'];
+    $r = eodSend($em, eodBuild($want, true), $via);
+    eodLog(['what' => 'test', 'test' => true, 'to' => $em, 'ok' => !empty($r['ok']), 'stage' => (string) ($r['stage'] ?? ''), 'via' => (string) ($r['via'] ?? ''), 'by' => $me]);
+    if (empty($r['ok'])) fail('The test did not go: ' . (($r['stage'] ?? '') === 'config' ? (string) $r['error'] : 'the mail server said no (' . (string) ($r['stage'] ?? '?') . '). Try the other way to send, or check Setup, Email.'), 502);
+    out(['ok' => true, 'to' => $em, 'via' => (string) $r['via']]);
+}
+/* the hourly send (sixfold-tools/edition-eod.php): at the chosen hour or in the 4 hours after it, once a day, to each ticked admin or manager
+   who is still an active admin or manager. force=1 (tests): now, whatever the hour and even if sent today */
+if ($action === 'eodcron') {
+    if (!(PHP_SAPI === 'cli' && defined('SIXFOLD_CLI'))) fail('Not here.', 404);
+    if (!edition()) out(['ok' => true, 'sent' => 0, 'why' => 'not an edition']);
+    if (!function_exists('eodRender')) out(['ok' => true, 'sent' => 0, 'why' => 'no eod-lib.php']);
+    $c = eodCfg(); if (!$c['on']) out(['ok' => true, 'sent' => 0, 'why' => 'off']);
+    $now = new DateTime('now', new DateTimeZone(appTz())); $force = ($_GET['force'] ?? '') === '1'; $G = (int) $now->format('G');
+    if (!$force && ($G < $c['hour'] || $G >= $c['hour'] + 4)) out(['ok' => true, 'sent' => 0, 'why' => 'not the hour']);
+    $sf = DATA_DIR . '/eod-last-sent.txt';
+    if (!$force && trim((string) @file_get_contents($sf)) === $now->format('Y-m-d')) out(['ok' => true, 'sent' => 0, 'why' => 'sent today']);
+    $ppl = eodPeople(); $to = array_values(array_filter($c['to'], fn($t) => isset($ppl[$t['id']])));
+    if (!$to) { eodLog(['what' => 'send', 'ok' => false, 'n' => 0, 'stage' => 'nobody']); out(['ok' => true, 'sent' => 0, 'why' => 'nobody to send to']); }
+    $m = eodBuild($c['sections']); $sent = 0; $fails = [];
+    foreach ($to as $t) { $r = eodSend($t['email'], $m, $c['via']); if (!empty($r['ok'])) $sent++; else $fails[] = (string) ($r['stage'] ?? '?'); }
+    eodLog(['what' => 'send', 'ok' => $sent > 0, 'n' => $sent, 'failed' => count($fails), 'stage' => implode(',', array_unique($fails)), 'subject' => $m[0]]);
+    if ($sent > 0) @file_put_contents($sf, $now->format('Y-m-d'));   /* one got through: no resend to the others at the next hour */
+    out(['ok' => true, 'sent' => $sent, 'failed' => count($fails), 'subject' => $m[0]]);
+}
 /* ---- the nightly Square check (2026-10-16, Matthew: "run scans from square to see who's paid ... just in case it's not updating
  * properly"; "build the nightly square check") ----
  * Every Square payment of the last 45 days at every location (pay links, the Square app, invoices) against the app's own payment
@@ -10343,7 +10669,7 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
            were not in the backup, so a lost server lost them). Keep in step with sixfold-tools/nightly-backup.php. */
         /* + each install's own settings (2026-10-29: the quote kit's prices and terms, Your costs, other ways to pay, the email templates, the
            Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). + role permissions (role-perms.json, 2026-10-29). */
-        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the smart price list and the clause library (2026-10-30) */
+        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json', 'eod-report.json', 'ad-spend.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the end-of-day email's settings and the typed ad spend (2026-10-30) */   /* + the smart price list and the clause library (2026-10-30) */
         foreach ((glob(leadsDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/leads/' . basename($p));
         foreach ((glob(custDir() . '/*.log') ?: []) as $p) $add($p, 'sixfold-data/customers/' . basename($p));
         $photos = [];

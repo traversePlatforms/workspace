@@ -26,6 +26,8 @@ for f in sw.js es.json; do cp_if "$R/app/summit-de59ae83/$f" summit-de59ae83; do
 for f in rounds.php billing.php square-oauth.php webpush.php; do cp_if "$R/app/api/$f" api; done
 # Sign in with Google / Microsoft for Setup › Email (2026-10-30): the one callback and the library every install's rounds.php loads beside it
 for f in mail-oauth.php mail-oauth-lib.php; do cp_if "$R/app/api/$f" api; done
+# the editions' end-of-day email (2026-10-30): the shared drawing every install's rounds.php loads beside it
+cp_if "$R/app/api/eod-lib.php" api
 EDS="tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7"
 for e in $EDS; do for f in index.html version.txt q.html sign.html sw.js es.json; do cp_if "$D/$e/$f" "$e"; done; done
 for a in traverse traverse-yards traverse-solar traverse-pest traverse-security; do for k in rounds billing sms webpush; do cp_if "$D/api/$a-$k.php" api; done; done
@@ -39,7 +41,7 @@ SH="$(mktemp -d)"; trap 'rm -rf "$ST" "$SH"' EXIT
 TPL="$R/editions/dist/client-templates"
 for e in roofing yards solar pest security; do [ -s "$TPL/$e/edition.json" ] || { echo "MISSING $TPL/$e: run build-editions.cjs first"; exit 1; }; done
 mkdir -p "$SH/traverse-shared" "$SH/traverse-tools"; cp -r "$TPL" "$SH/traverse-shared/"; cp "$R/editions/dist/traverse-tools/clients.php" "$R/editions/dist/traverse-tools/push-alerts.sh" "$SH/traverse-tools/"   # push-alerts.sh: + every client install's alerts
-mkdir -p "$SH/sixfold-tools"; cp "$R/app/tools/nightly-backup.php" "$R/app/tools/regions-warm.php" "$R/app/tools/fuel-prices.php" "$R/app/tools/morning-email.php" "$SH/sixfold-tools/"   # backups and the towns warm-up include client installs; + the weekly EIA fuel prices (2026-10-30)
+mkdir -p "$SH/sixfold-tools"; cp "$R/app/tools/nightly-backup.php" "$R/app/tools/regions-warm.php" "$R/app/tools/fuel-prices.php" "$R/app/tools/morning-email.php" "$R/app/tools/edition-eod.php" "$SH/sixfold-tools/"   # + the editions' end-of-day emails (2026-10-30); backups and the towns warm-up include client installs; + the weekly EIA fuel prices (2026-10-30)
 for f in $(find "$SH" -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
 cd "$ST" || exit 1
 for f in $(find api -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
