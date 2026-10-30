@@ -13667,12 +13667,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
        it isn't blocked), pointed at the sign-in once the server answers, and closes itself when it comes back (mailOauthReturn). */
     b.addEventListener('click', function () {
       b.disabled = true;
-      var w = null; try { w = window.open('', 'traverse-signin', 'width=520,height=720'); } catch (e) {}
+      /* only inside a frame, i.e. Matthew's Home Base hub (Matthew 2026-10-30: "only apply when it's done on my end in the hub"); everyone
+         else signs in in the same tab, as before */
+      var framed = false; try { framed = window.self !== window.top; } catch (e) { framed = true; }
+      var w = null; if (framed) try { w = window.open('', 'traverse-signin', 'width=520,height=720'); } catch (e) {}
       api('mailoauth', { body: { provider: prov } }).then(function (k) {
         b.disabled = false;
         if (k && k.ok && k.ready && k.url) {
           if (w && !w.closed) { w.location.href = k.url; toast('Finish in the new window', 'Sign in there; it closes by itself when you are done.', null); return; }
-          try { window.top.location.href = k.url; } catch (e) { location.href = k.url; }   /* the window was blocked: the whole tab goes */
+          if (!framed) { location.href = k.url; return; }   /* a normal tab: straight there, as before */
+          try { window.top.location.href = k.url; } catch (e) { location.href = k.url; }   /* in the hub with the window blocked: the whole tab goes */
           return;
         }
         if (w && !w.closed) w.close();
