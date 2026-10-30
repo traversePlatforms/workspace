@@ -4,15 +4,21 @@
  * All_Permits_View), updated nightly. The layer has no parcel numbers, so doors are matched on the street address.
  *   roof: job type Roofing (its description is the material: Composition, Concrete Tile, ...)
  *   solar / rr / off: any permit whose description or scope names solar or photovoltaic (kinds as in fetch-pprbd.mjs)
+ * and since 2026-10-29 (the editions' trades), building permits by the county's own description: new (RS - Stock, RS - Custom: a new
+ * house), pool (AU - Private Pool), deck (AU - Deck, AU - Patio Cover), fence (Fencing), and an addition named in the scope of work.
  * Since 2016, issued permits only.
+ * TRAVERSE_MAIN=<repo root>: that tree's permit files (from a worktree), as in fetch-pprbd.mjs.
  *
  *   node fetch-douglas.mjs     writes douglas-permits.json { through, permits: { permitNo: [address, 'YYYY-MM-DD', kind, material?] } } */
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { kindOf } from './fetch-pprbd.mjs';
+import { textKind } from './kinds.mjs';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+const HERE = process.env.TRAVERSE_MAIN ? join(process.env.TRAVERSE_MAIN, 'traverse', 'data-pipeline', 'door-territory', 'permits') : dirname(fileURLToPath(import.meta.url));
+/* the county's building descriptions that name the kind outright */
+const BLD = { 'RS - Stock': 'new', 'RS - Custom': 'new', 'AU - Private Pool': 'pool', 'AU - Deck': 'deck', 'AU - Patio Cover': 'deck', 'RS - Fencing': 'fence', 'CM - Fencing': 'fence' };
 const URL0 = 'https://services.arcgis.com/seTexOicoRXDvRsJ/arcgis/rest/services/All_Permits_View/FeatureServer/0/query';
 const SINCE = '2016-01-01', PAGE = 2000;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -43,11 +49,13 @@ if (process.argv[1] && process.argv[1].endsWith('fetch-douglas.mjs')) {
   const rows = [
     ...await pull(`${since} AND PERMIT_JOB_TYPE = 'Roofing'`),
     ...await pull(`${since} AND PERMIT_JOB_TYPE <> 'Roofing' AND (UPPER(DESCRIPTION) LIKE '%SOLAR%' OR UPPER(SCOPE_OF_WORK) LIKE '%SOLAR%' OR UPPER(DESCRIPTION) LIKE '%PHOTOVOLT%' OR UPPER(SCOPE_OF_WORK) LIKE '%PHOTOVOLT%')`),
+    ...await pull(`${since} AND PERMIT_JOB_TYPE = 'Building' AND (DESCRIPTION IN (${Object.keys(BLD).map((x) => `'${x}'`).join(',')}) OR UPPER(SCOPE_OF_WORK) LIKE '%ADDITION%')`),
   ];
-  const permits = {}, n = { roof: 0, solar: 0, rr: 0, off: 0 }; let through = '';
+  const permits = {}, n = { roof: 0, solar: 0, rr: 0, off: 0, new: 0, add: 0, pool: 0, fence: 0, deck: 0 }; let through = '';
   for (const a of rows) {
     if (!a.ISSUED_DATE || !a.ORIGINAL_ADDRESS_1 || /VOID|CANCEL|WITHDRAW|EXPIRED|DENIED/i.test(a.STATUS_CURRENT || '')) continue;
-    const k = a.PERMIT_JOB_TYPE === 'Roofing' ? 'roof' : kindOf(`${a.DESCRIPTION || ''} ${a.SCOPE_OF_WORK || ''}`);
+    const text = `${a.DESCRIPTION || ''} ${a.SCOPE_OF_WORK || ''}`;
+    const k = a.PERMIT_JOB_TYPE === 'Roofing' ? 'roof' : kindOf(text) || BLD[a.DESCRIPTION] || (a.PERMIT_JOB_TYPE === 'Building' && textKind(a.SCOPE_OF_WORK) === 'add' ? 'add' : null);
     if (!k || permits[a.PERMIT_NUMBER]) continue;
     const day = new Date(a.ISSUED_DATE).toISOString().slice(0, 10);
     const mat = k === 'roof' && a.DESCRIPTION ? String(a.DESCRIPTION).trim().slice(0, 40) : undefined;
@@ -55,5 +63,5 @@ if (process.argv[1] && process.argv[1].endsWith('fetch-douglas.mjs')) {
     if (day > through) through = day;
   }
   writeFileSync(join(HERE, 'douglas-permits.json'), JSON.stringify({ source: 'Douglas County building division, open data (All Permits)', since: SINCE, through, fetched: new Date().toISOString().slice(0, 10), permits }));
-  console.log(`${Object.keys(permits).length} permits through ${through}: ${n.roof} re-roofs, ${n.solar} solar, ${n.rr} solar off-and-on, ${n.off} solar removed`);
+  console.log(`${Object.keys(permits).length} permits through ${through}: ${n.roof} re-roofs, ${n.solar} solar, ${n.rr} solar off-and-on, ${n.off} solar removed; ${n.new} new houses, ${n.add} additions, ${n.pool} pools, ${n.fence} fences, ${n.deck} decks or patio covers`);
 }

@@ -64,6 +64,7 @@ const EDITIONS = {
          dBg: '#0d131b', dCard: '#161e29', dLine: '#2a3646', dSunk: '#111821', dBar: '#18222e', dAccent: '#a9bbd1' },
     // storm data and roofs; no lawn, trees, fire, funding or water
     keep: (f) => !/^(climate\.json$|lawnmask-|solar-|pest-|house-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$)/.test(f),   /* house- (basement, walls): Pest's; moved- (last sale): every edition */
+    permitKinds: ['roof', 'solar'],   /* the building permits this edition shows (2026-10-29, permitPack below) */
     money: false, extraRegions: 'roofing-commercial-towns.json',
     company: () => {
       const ex = JSON.parse(fs.readFileSync(path.join(REPO, 'traverse', 'app', 'company.example.json'), 'utf8'));
@@ -91,7 +92,8 @@ const EDITIONS = {
          bg: '#f3f6f2', line: '#dbe3d9', sunk: '#e8eee6', card1: '#285c32', appbar: '#24552d', tile: '#2f6b39',
          dBg: '#0b130d', dCard: '#142019', dLine: '#26382b', dSunk: '#0f1a12', dBar: '#11301a', dAccent: '#9fd1a5' },
     // lawn, trees, fire, funding and water; none of the storm or roof layers
-    keep: (f) => !/^(hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|house-|security-(?!widefield\b))/.test(f),   /* the town Security-Widefield is not the Security edition's data (2026-10-26) */
+    keep: (f) => !/^(hail-|hailrep-|wind-|roof-|year-|material-|photo-|naip-|outline-|com-|solar-|pest-|house-|security-(?!widefield\b))/.test(f),   /* the town Security-Widefield is not the Security edition's data (2026-10-26) */
+    permitKinds: ['pool', 'fence', 'deck', 'irr', 'land'],   /* yard work the departments record (2026-10-29): permit- files carry only these */
     money: true, extraRegions: null,
     company: () => ({
       name: 'Example Lawn & Land Co', short: 'Example Lawn', tagline: 'Lawn care and yard work',
@@ -123,6 +125,8 @@ const EDITIONS = {
          dBg: '#120e05', dCard: '#1d170b', dLine: '#3a2f18', dSunk: '#17120a', dBar: '#211906', dAccent: '#f2c14e' },
     // the roof and the sun; none of the storm, lawn, fire or commercial layers
     keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|com-|lawnmask-|pest-|house-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    permitKinds: ['roof', 'solar'],   /* existing panels and the last re-roof (2026-10-29) */
+    hailMax: true,                    /* the roof's hail history as one line: hailmax-<town>.json, the largest stone per house, made from Roofing's hail-<town>.json */
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Solar Co', short: 'Example Solar', tagline: 'Solar and battery installs',
@@ -151,7 +155,8 @@ const EDITIONS = {
          bg: '#f6f4f8', line: '#e2dce8', sunk: '#ede8f2', card1: '#4c2a6b', appbar: '#452664', tile: '#5f3786',
          dBg: '#100b15', dCard: '#1b1424', dLine: '#33283f', dSunk: '#150f1b', dBar: '#1e1229', dAccent: '#c9a6ea' },
     // the pest layers and trees near the house; none of the storm, roof, solar, lawn, fire or commercial layers
-    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|lawnmask-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|material-|photo-|naip-|outline-|com-|solar-|lawnmask-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    permitKinds: ['new', 'add', 'pool', 'fence'],   /* new building, addition, pool, fence (2026-10-29) */
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Pest Co', short: 'Example Pest', tagline: 'Pest control for homes',
@@ -180,7 +185,8 @@ const EDITIONS = {
          dBg: '#081315', dCard: '#101e21', dLine: '#233a3f', dSunk: '#0c181b', dBar: '#0d262b', dAccent: '#8fd0da' },
     // the security layers; none of the storm, roof, solar, pest, lawn, fire or commercial layers. security-lot-<town> (the lot facts,
     // 2026-10-29) rides on the security- prefix: kept here, and every other edition's security-(?!widefield) drops it
-    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|house-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|material-|photo-|naip-|outline-|com-|solar-|pest-|house-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    permitKinds: ['new', 'add', 'pool', 'fence'],   /* new building, addition, pool, fence (2026-10-29) */
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Security Co', short: 'Example Security', tagline: 'Home security and monitoring',
@@ -201,6 +207,44 @@ const EDITIONS = {
 };
 /* client installs (2026-10-08): one per signed company, from ./clients/<slug>.json (clients.cjs, new-client.cjs) */
 const CLIENTS = require('./clients.cjs')(EDITIONS);
+
+/* ---- building permits per trade (2026-10-29, data-pipeline/door-territory/permits/build-permits.mjs) ----
+   One permit-<town>.json per town holds every kind the building department records; each edition keeps only the kinds it shows
+   (E.permitKinds), so Yards never carries re-roofs and Roofing never carries fences. A door left with nothing is dropped, and a town
+   whose source records none of the edition's kinds leaves the edition's permit-index.json (no "no permit since" line there). */
+const PERMIT_KEY = { roof: ['r', 'm'], solar: ['s', 'so'], new: ['n'], add: ['a'], pool: ['pl'], fence: ['f'], deck: ['d'], irr: ['ir'], land: ['ld'] };
+function permitPack(E, f, buf) {
+  const kinds = E.permitKinds || [];
+  if (!kinds.length) return null;
+  const j = JSON.parse(buf.toString('utf8'));
+  /* a file built before 2026-10-29 has no kinds: re-roof and solar only */
+  const has = (k) => kinds.filter((x) => (k || ['roof', 'solar']).includes(x));
+  if (f === 'permit-index.json') {
+    const o = {};
+    for (const [t, v] of Object.entries(j)) { const ks = has(v.kinds); if (ks.length) o[t] = Object.assign({}, v, { kinds: ks }); }
+    return Buffer.from(JSON.stringify(o));
+  }
+  const ks = has(j.kinds); if (!ks.length) return null;
+  const keys = new Set([].concat(...ks.map((k) => PERMIT_KEY[k] || [])));
+  const doors = {};
+  for (const [id, v0] of Object.entries(j.doors || {})) {
+    const v = typeof v0 === 'string' ? JSON.parse(v0) : v0, o = {};
+    for (const k of Object.keys(v)) if (keys.has(k)) o[k] = v[k];
+    if (Object.keys(o).length) doors[id] = o;
+  }
+  return Buffer.from(JSON.stringify(Object.assign({}, j, { kinds: ks, doors, packed: undefined })));
+}
+/* the largest hail the radar estimated at each house, with its day: [day, inches] (hailmax-<town>.json, Solar's roof line) */
+function hailMaxPack(f, p, regions) {
+  const m = f.match(/^hail-(.+)\.json$/); if (!m || !regions.some((r) => r.key === m[1])) return null;
+  const j = JSON.parse(fs.readFileSync(p, 'utf8')), doors = {};
+  for (const [id, v0] of Object.entries(j.doors || {})) {
+    const v = typeof v0 === 'string' ? JSON.parse(v0) : v0; let big = null;
+    for (const x of Array.isArray(v) ? v : []) if (Array.isArray(x) && (!big || +x[1] > +big[1])) big = x;
+    if (big) doors[id] = [String(big[0]).slice(0, 10), +big[1]];
+  }
+  return { name: 'hailmax-' + m[1] + '.json', buf: Buffer.from(JSON.stringify({ from: j.from || null, through: j.through || null, source: 'NOAA MRMS radar estimate (Roofing hail layer)', doors })) };
+}
 
 /* every swap is counted, so a change in the source fails the build instead of shipping half a rebrand */
 function rep(s, from, to, want, what) {
@@ -441,6 +485,11 @@ async function build(key) {
   };
   for (const f of fs.readdirSync(DATA)) {
     const p = path.join(DATA, f);
+    /* Solar's hail line (2026-10-29): hailmax-<town>.json made from Roofing's hail-<town>.json, which Solar does not carry itself */
+    if (E.hailMax && !E.marketGroup && /^hail-/.test(f) && !townOfFile(f)) {
+      const hm = hailMaxPack(f, p, allRegions);
+      if (hm) { write(path.join(E.data, 'rounds', hm.name), hm.buf); copied++; bytes += hm.buf.length; }
+    }
     if (!fs.statSync(p).isFile() || !f.endsWith('.json') || f === 'company.json' || f === 'training.json' || /^(regions-cache-|best-)/.test(f) || !E.keep(f)) continue;   /* the server's kept answers: each install makes its own (Fable 2026-10-09) */
     if (townOfFile(f)) continue;
     /* a market install: its towns' files, the index, the damage thresholds (national), and the market's own storm lists under the
@@ -474,6 +523,8 @@ async function build(key) {
        hundreds of thousands of small arrays when it reads a big town's file whole (Roofing with Denver needed 256-384 MB to build its
        towns answer). loadSide() and the best-doors scorer unpack only the doors they keep. Hail stays as it is: the storm job rewrites
        it in place; census is read raw. */
+    /* building permits per trade (2026-10-29): each edition's permit files carry only the kinds it shows */
+    if (/^permit-/.test(f)) { buf = permitPack(E, f, buf); if (!buf) continue; }
     const PACK = /^(wind|roof|year|permit|solar|pest|material|naip|outline|photo|house)-(.+)\.json$/;
     const pm = f.match(PACK);
     if (pm && allRegions.some((r) => r.key === pm[2])) {

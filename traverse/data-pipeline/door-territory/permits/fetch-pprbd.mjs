@@ -8,15 +8,19 @@
  *   solar  panels put on ("PV SOLAR (7480 WATTS)", "PHOTOVOLTAIC")
  *   rr     solar panels taken off and put back, which is done for a re-roof: the house has solar AND a new roof
  *   off    solar panels removed only
+ * and since 2026-10-29 (the editions' trades): new (census code 101, a new single-family house), and from the description a pool,
+ * fence, deck or patio cover, addition, irrigation or landscaping (kinds.mjs).
  * The bulk report files are sold by subscription; the public map service is free and states no reuse terms (checked
  * 2026-10-07). Paged politely, one request at a time.
+ * TRAVERSE_MAIN=<repo root> reads and writes that tree's permit files instead of the ones beside this script (from a worktree).
  *
  *   node fetch-pprbd.mjs     writes pprbd-permits.json { through, fetched, permits: { permitNum: [parcel, 'YYYY-MM-DD', kind] } } */
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { textKind } from './kinds.mjs';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+const HERE = process.env.TRAVERSE_MAIN ? join(process.env.TRAVERSE_MAIN, 'traverse', 'data-pipeline', 'door-territory', 'permits') : dirname(fileURLToPath(import.meta.url));
 const BASE = 'https://maps.pprbd.org/server/rest/services';
 const SINCE = '2016-01-01', PAGE = 5000;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -35,7 +39,7 @@ export function kindOf(desc) {
 async function layer(code, where) {
   const out = []; let off = 0;
   for (;;) {
-    const q = new URLSearchParams({ where, outFields: 'PermitNum,parcel,PermitDate,ProjectDesc', returnGeometry: 'false', orderByFields: 'OBJECTID',
+    const q = new URLSearchParams({ where, outFields: 'PermitNum,parcel,PermitDate,ProjectDesc' + (code === 'B' ? ',ProjectCode' : ''), returnGeometry: 'false', orderByFields: 'OBJECTID',
       resultOffset: String(off), resultRecordCount: String(PAGE), f: 'json' });
     let j = null;
     for (let t = 0; t < 4 && !j; t++) {
@@ -55,12 +59,15 @@ async function layer(code, where) {
 if (process.argv[1] && process.argv[1].endsWith('fetch-pprbd.mjs')) {
   const since = `PermitDate >= DATE '${SINCE}' AND IsResidential = 1`;
   const rows = [
-    ...await layer('B', `${since} AND (ProjectDesc LIKE '%ROOF%' OR ProjectDesc LIKE '%TEAR%OFF%' OR ProjectDesc LIKE '%SOLAR%' OR ProjectDesc LIKE '%PHOTOVOLT%' OR ProjectDesc LIKE '%PV %')`),
+    ...await layer('B', `${since} AND (ProjectDesc LIKE '%ROOF%' OR ProjectDesc LIKE '%TEAR%OFF%' OR ProjectDesc LIKE '%SOLAR%' OR ProjectDesc LIKE '%PHOTOVOLT%' OR ProjectDesc LIKE '%PV %'` +
+      ` OR ProjectCode = '101' OR ProjectDesc LIKE '%POOL%' OR ProjectDesc LIKE '%FENC%' OR ProjectDesc LIKE '%DECK%' OR ProjectDesc LIKE '%PATIO COVER%'` +
+      ` OR ProjectDesc LIKE '%ADDITION%' OR ProjectDesc LIKE '%IRRIGATION%' OR ProjectDesc LIKE '%SPRINKLER SYSTEM%' OR ProjectDesc LIKE '%LANDSCAP%')`),
     ...await layer('E', `${since} AND (ProjectDesc LIKE '%SOLAR%' OR ProjectDesc LIKE '%PHOTOVOLT%' OR ProjectDesc LIKE '%PV %')`),
   ];
-  const permits = {}, n = { roof: 0, solar: 0, rr: 0, off: 0 }; let through = '';
+  const permits = {}, n = { roof: 0, solar: 0, rr: 0, off: 0, new: 0, add: 0, pool: 0, fence: 0, deck: 0, irr: 0, land: 0 }; let through = '';
   for (const a of rows) {
-    const k = kindOf(a.ProjectDesc), p = String(a.parcel || '').trim();
+    /* re-roof and solar first, as before; then a new house by its census code, then the description (building layer only) */
+    const k = kindOf(a.ProjectDesc) || (a.ProjectCode === undefined ? null : String(a.ProjectCode || '').trim() === '101' ? 'new' : textKind(a.ProjectDesc)), p = String(a.parcel || '').trim();
     /* El Paso parcels are 10 digits; Woodland Park's (Teller) look like 1234.567890123 (2026-10-07) */
     if (!k || !/^(\d{10}|\d{4,5}\.\d{8,9})$/.test(p) || !a.PermitDate || permits[a.PermitNum]) continue;
     const day = new Date(a.PermitDate).toISOString().slice(0, 10);
@@ -68,5 +75,5 @@ if (process.argv[1] && process.argv[1].endsWith('fetch-pprbd.mjs')) {
     if (day > through) through = day;
   }
   writeFileSync(join(HERE, 'pprbd-permits.json'), JSON.stringify({ source: 'Pikes Peak Regional Building Department, public permit map service', since: SINCE, through, fetched: new Date().toISOString().slice(0, 10), permits }));
-  console.log(`${Object.keys(permits).length} permits through ${through}: ${n.roof} re-roofs, ${n.solar} solar, ${n.rr} solar off-and-on (re-roof), ${n.off} solar removed`);
+  console.log(`${Object.keys(permits).length} permits through ${through}: ${n.roof} re-roofs, ${n.solar} solar, ${n.rr} solar off-and-on (re-roof), ${n.off} solar removed; ${n.new} new houses, ${n.add} additions, ${n.pool} pools, ${n.fence} fences, ${n.deck} decks or patio covers, ${n.irr} irrigation, ${n.land} landscaping`);
 }

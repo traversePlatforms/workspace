@@ -4,6 +4,10 @@
 # uploaded to every Traverse install that carries permits (Roofing and Solar today), with a backup first and an md5 check.
 # Parker and Thornton came from records requests (files, not a feed): they are rebuilt from the files already here and only
 # change when a new request is answered.
+# 2026-10-29 (permits per trade, every edition): the open-data cities too, Denver, Aurora, Boulder and Longmont (fetch-open.mjs),
+# and every kind the departments record (new building, addition, pool, fence, deck, irrigation, landscaping). Each edition's
+# permit files carry only its own kinds (build-editions.cjs); the upload goes to every install that already carries permit files.
+# Aurora's and Longmont's feeds are rolling windows (about five years and two), so they shrink a little as old months drop off.
 #
 # Safety: nothing is uploaded if a source or a town comes back noticeably smaller than last time (a site down or changed
 # its format looks like that), or if any step fails. The previous source files are put back. One line per run in
@@ -29,11 +33,13 @@ exec > "$OUT" 2>&1
 say() { echo "$(date +%H:%M:%S) $*"; }
 fail() { say "STOPPED: $*"; echo "$STAMP STOPPED: $*" >> "$LOG"; restore; exit 1; }
 SAVE=$(mktemp -d)
-restore() { for f in pprbd douglas centennial; do [ -f "$SAVE/$f-permits.json" ] && cp "$SAVE/$f-permits.json" "$P/$f-permits.json"; done; for f in "$SAVE"/app-permit-*.json; do [ -f "$f" ] && cp "$f" "$DATA/$(basename "$f" | sed 's/^app-//')"; done; }
+SOURCES="pprbd douglas centennial denver aurora boulder longmont"
+OPEN=" denver aurora boulder longmont "   # read by fetch-open.mjs <city>
+restore() { for f in $SOURCES; do [ -f "$SAVE/$f-permits.json" ] && cp "$SAVE/$f-permits.json" "$P/$f-permits.json"; done; for f in "$SAVE"/app-permit-*.json; do [ -f "$f" ] && cp "$f" "$DATA/$(basename "$f" | sed 's/^app-//')"; done; }
 
 # counts before
 count() { node -e "const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));const o=j.permits||j.doors||{};console.log(Array.isArray(o)?o.length:Object.keys(o).length)" "$1" 2>/dev/null || echo 0; }
-for f in pprbd douglas centennial; do cp "$P/$f-permits.json" "$SAVE/" 2>/dev/null; eval "BEFORE_$f=$(count "$P/$f-permits.json")"; done
+for f in $SOURCES; do cp "$P/$f-permits.json" "$SAVE/" 2>/dev/null; eval "BEFORE_$f=$(count "$P/$f-permits.json")"; done
 for f in "$DATA"/permit-*.json; do cp "$f" "$SAVE/app-$(basename "$f")"; done
 
 if [ $ONLYUP = 1 ]; then
@@ -43,9 +49,10 @@ if [ $ONLYUP = 1 ]; then
 else
 # 1. fetch
 cd "$P" || fail "no permits folder"
-for f in pprbd douglas centennial; do
+for f in $SOURCES; do
   say "fetch $f"
-  node "fetch-$f.mjs" || fail "fetch-$f.mjs failed"
+  if [ "${OPEN#* $f }" != "$OPEN" ]; then node fetch-open.mjs "$f" || fail "fetch-open.mjs $f failed"
+  else node "fetch-$f.mjs" || fail "fetch-$f.mjs failed"; fi
   n=$(count "$P/$f-permits.json"); eval "b=\$BEFORE_$f"
   say "  $f: $b -> $n permits"
   [ "$n" -ge $(( b * 95 / 100 )) ] || fail "$f came back with $n permits, last time $b (more than 5% fewer)"
@@ -86,7 +93,7 @@ if [ $UPLOAD = 1 ]; then
     TOTAL=$(( TOTAL + $(echo $CH | wc -w) ))
   done
 fi
-SUM="pprbd $BEFORE_pprbd->$(count "$P/pprbd-permits.json"), douglas $BEFORE_douglas->$(count "$P/douglas-permits.json"), centennial $BEFORE_centennial->$(count "$P/centennial-permits.json")"
+SUM=$(for f in $SOURCES; do eval "b=\$BEFORE_$f"; printf '%s %s->%s, ' "$f" "$b" "$(count "$P/$f-permits.json")"; done); SUM=${SUM%, }
 say "done: $SUM; $TOTAL files uploaded"
 echo "$STAMP ok: $SUM; $TOTAL files uploaded$([ $UPLOAD = 0 ] && echo ' (no-upload run)')" >> "$LOG"
 rm -rf "$SAVE"
