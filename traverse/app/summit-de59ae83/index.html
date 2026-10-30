@@ -7866,6 +7866,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (h.val) fact('County value', fmtVal(h.val));
     fact('Area (Census)', censusLine(h.cen));
     if (h.yb) fact('Built', h.yb + (h.bsf ? ' · house ' + fmtSq(h.bsf) : ''));
+    if (h.mv && h.mv.s) fact('Last sale', 'Sold ' + monthName(h.mv.s) + (h.mv.c ? ' (' + h.mv.c + (h.mv.a ? ', as of ' + monthName(h.mv.a) : '') + ')' : ''));   /* the county's record (2026-10-29, editions) */
+    if (h.hs) { var hl0 = houseSpans({ hs: h.hs }).slice(0, -1).map(function (n) { return n.textContent; }); if (hl0.length) fact('House', hl0.join(' · ')); }   /* Pest (2026-10-29) */
     var W = S.money && S.money.water && S.money.water.cards, wt = W && W.towns ? W.towns[h.region] : '';
     if (wt) fact('Water', wt);
     var mi = milesFromBase(h); if (mi != null) fact('Distance', mi.toFixed(0) + ' miles from Englewood' + (CO.a365 && CO.a365.radius && mi > CO.a365.radius ? ' (outside the ' + CO.a365.radius + '-mile area)' : ''));
@@ -10053,6 +10055,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.trace && S.editPhone !== d.id) wrap.appendChild(traceBlock(d));   /* skip-trace result: the server sends it to admins only */
     if (((d.hail && d.hail.length) || (d.hrep && d.hrep.length)) && cardOn('hail')) wrap.appendChild(fold(hailBlock(d), d.id + ':hail'));             /* hail near the house: the server sends it to admins only */
     if (d.wind && d.wind.length && cardOn('hail')) wrap.appendChild(fold(windBlock(d), d.id + ':wind'));             /* wind reported near the house (2026-10-05): rides with hail */
+    if (d.mv && edOn()) wrap.appendChild(movedBlock(d));   /* the last sale on the county's record (2026-10-29): the server sends it in the editions only */
     if (d.cen && bestTrade()) { var cb0 = censusBlock(d); if (cb0) wrap.appendChild(fold(cb0, d.id + ':cen')); }   /* the Census survey for the block (2026-10-07): the editions */
     if (d.nri && (cardOn('hail') || cardOn('fire'))) { var nb0 = nriBlock(d); if (nb0) wrap.appendChild(fold(nb0, d.id + ':nri')); }   /* FEMA's tract ratings (2026-10-07): the server sends them in the editions only */
     if (d.sec && feat('security') && cardOn('security')) wrap.appendChild(fold(secBlock(d), d.id + ':sec'));     /* security (2026-10-06): admins only, where the company has security on */
@@ -10244,6 +10247,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tc = treeChip(d); if (tc) { tc.disabled = true; tc.tabIndex = -1; meta.appendChild(tc); }
     var bb1 = backBadge(d); if (bb1) meta.insertBefore(bb1, meta.firstChild);
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }   /* worth knowing before the knock */
+    var st0 = soldTag(d); if (st0) meta.appendChild(st0);   /* sold in the last 12 months, the county's record (2026-10-29, editions) */
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));   /* from the planning table (2026-10-08) */
     if (meta.children.length) row.appendChild(meta);
@@ -10770,6 +10774,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!out.length && d.acres) out.push(d.acres.toFixed(2) + ' acres');
     }
     if (d.os) out.push('New owner');
+    else if (soldRecent(d) && !out.some(function (x) { return /^New owner/.test(x); })) out.push('Sold ' + monthName(d.mv.s));   /* the county's sale record (2026-10-29, editions) */
     if (d.rep) out.push(d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep);
     if (d.cust) out.push('Customer');
     return out.join(' \u00b7 ');
@@ -11151,6 +11156,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     ['opensp', 'tree', 'Backs onto open space', secLotFilt, function (d) { return !!(d.sec && (d.sec.os || (d.sec.lot && d.sec.lot.os))); }],
     ['alley', 'route', 'Alley behind', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.al === 'b'); }],
     ['deadend', 'map', 'Dead end or cul-de-sac', secLotFilt, function (d) { return !!(d.sec && d.sec.lot && d.sec.lot.de !== undefined); }],
+    ['sold12', 'door', 'Sold in the last 12 months', function () { return edOn() && crewSees(); }, function (d) { return soldRecent(d); }],   /* the county's sale record (2026-10-29): the editions */
     ['due', 'clock', 'Due back', function () { return true; }, function (d) { return !!(d.mark && backOn(d)); }]
   ];
   function secLotFilt() { return feat('security') && cardOn('security') && crewSees(); }
@@ -11293,8 +11299,42 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      crime map is for choosing the neighbourhood. */
   var BEST_NAME = { roof: 'roofing', yards: 'lawn and yard work', solar: 'solar', pest: 'pest control', security: 'home security' };
   function bestTrade() { var b = CO && CO.best; return BEST_NAME[b] ? b : null; }
+  /* new movers (2026-10-29, the editions; Matthew: new owners are the best leads for alarm, pest and solar companies): the county's last
+     market sale, d.mv = { s: 'YYYY-MM', c: 'Arapahoe County', a: the records' date } (moved-<town>.json). The newer of it and the pest or
+     security file's month counts wherever a sale month did before. Sixfold's doors carry no mv. */
+  function monthsAgo(ym) { var n = new Date(); return (n.getFullYear() - +ym.slice(0, 4)) * 12 + (n.getMonth() + 1 - +ym.slice(5, 7)); }
+  function soldOf(d, sold) { var m = d && d.mv && d.mv.s; return m && (!sold || m > sold) ? m : sold; }
+  function soldRecent(d) { return !!(d.mv && d.mv.s && monthsAgo(d.mv.s) <= 12); }
+  function soldTag(d) { return soldRecent(d) ? q('span', 'tag newown', 'Sold ' + monthName(d.mv.s)) : null; }
+  function movedBlock(d) {
+    var m = d.mv, b = q('div', 'hailx mvx'); b.appendChild(ico('door', 2.2));
+    var t = q('span'); t.appendChild(q('small', null, 'Last sale on record'));
+    var l1 = q('span', 'hl'); l1.appendChild(q('b', null, 'Sold ' + monthName(m.s) + (monthsAgo(m.s) <= 12 ? ' · New owner' : ''))); t.appendChild(l1);
+    t.appendChild(q('span', 'hl', 'Records: ' + (m.c || 'the county') + (m.a ? ', as of ' + monthName(m.a) : '')));
+    b.appendChild(t);
+    return b;
+  }
+  /* house facts for a pest rep (2026-10-29, Pest edition): d.hs from house-<town>.json, the county's record of basement, crawl space or
+     slab, stories and walls. Only what the record says: no basement figure means the county does not say, not that there is none. */
+  var ST_WORD = { 1: 'One story', 1.5: 'One and a half stories', 2: 'Two stories', 2.5: 'Two and a half stories', 3: 'Three stories', split: 'Split level', bi: 'Bi-level' };
+  function houseSpans(d) {
+    var h = d.hs, o = []; if (!h) return o;
+    var n0 = function (v) { return (+v).toLocaleString(LOCALE); };
+    if (h.bs > 0) o.push(q('span', 'hl', 'Basement: ' + n0(h.bs) + ' sq ft' + (h.bf ? ' (' + n0(h.bf) + ' finished)' : '') + (h.wo ? ', walk-out' : '')));
+    else if (h.bs === 0) o.push(q('span', 'hl', h.cr ? 'Crawl space, no basement on the county record' : h.sl ? 'Slab, no basement on the county record' : 'No basement on the county record'));
+    else if (h.cr) o.push(q('span', 'hl', 'Crawl space')); else if (h.sl) o.push(q('span', 'hl', 'Slab foundation'));
+    if (ST_WORD[h.st] || h.ex) {
+      var l = q('span', 'hl');   /* separate pieces, so each is translated on its own */
+      if (ST_WORD[h.st]) l.appendChild(document.createTextNode(ST_WORD[h.st]));
+      if (ST_WORD[h.st] && h.ex) l.appendChild(document.createTextNode(' · '));
+      if (h.ex) { l.appendChild(document.createTextNode('Walls: ')); l.appendChild(document.createTextNode(h.ex)); }
+      o.push(l);
+    }
+    if (o.length) o.push(q('span', 'hl', 'Records: ' + (h.cn || 'the county') + (h.a ? ', as of ' + monthName(h.a) : '')));
+    return o;
+  }
   function bestNewOwner(d, sold) {
-    var now = new Date();
+    var now = new Date(); sold = soldOf(d, sold);
     if (sold && (now.getFullYear() - +sold.slice(0, 4)) * 12 + (now.getMonth() + 1 - +sold.slice(5, 7)) <= 12) return 'New owner (sold ' + MONTHS[+sold.slice(5, 7) - 1] + ' ' + sold.slice(0, 4) + ')';
     if (d.os) return 'New owner since ' + String(d.os).slice(0, 7);
     return null;
@@ -16813,7 +16853,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var p = d.pest, b = q('div', 'hailx pestx'); b.appendChild(ico('bug', 2.2));
     var t = q('span'), why = [], more = [];
     var now = new Date(), ago = function (ym) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7); return (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - m); };
-    if (p.sold && ago(p.sold) <= 12) why.push('New owner (sold ' + MONTHS[+p.sold.slice(5, 7) - 1] + ' ' + p.sold.slice(0, 4) + ')');
+    var sd = soldOf(d, p.sold);   /* the newer of El Paso's month here and the county sale record (2026-10-29) */
+    if (sd && ago(sd) <= 12) why.push('New owner (sold ' + MONTHS[+sd.slice(5, 7) - 1] + ' ' + sd.slice(0, 4) + ')');
     else if (d.os) why.push('New owner since ' + String(d.os).slice(0, 7));
     if (p.nb) why.push(p.nb + (p.nb === 1 ? ' neighbour' : ' neighbours') + ' on service nearby');
     if (p.bk) why.push(p.bk + ' booked nearby this month');
@@ -16821,7 +16862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (lv === 'against') why.push('Trees against the house'); else if (lv === 'heavy') why.push('Heavy trees around the house');
     if (p.os) { why.push(p.os.n ? 'Backs onto ' + p.os.n : 'Next to ' + p.os.k); more.push((p.os.n ? p.os.n + ' (' + p.os.k + ')' : 'Open ' + p.os.k) + ', ' + feetOf(p.os.d)); }
     if (p.wa) { why.push(p.wa.n ? p.wa.n + ' nearby' : 'A ' + p.wa.k + ' nearby'); more.push((p.wa.n || ('A ' + p.wa.k)) + ', ' + feetOf(p.wa.d)); }
-    if (p.yb) more.push('Built ' + p.yb);
+    if (p.yb) more.push('Built ' + p.yb); else if (d.hs && d.hs.yb) more.push('Built ' + d.hs.yb);   /* year built from the county record where the pest file has none (2026-10-29) */
     if (p.tg) {
       var L = {}; ((CO && CO.extraWork) || []).forEach(function (w) { L[w[0]] = w[1]; });
       var said = Object.keys(p.tg).sort(function (a, c) { return p.tg[c] - p.tg[a]; }).map(function (k) { return (L[k] || k).toLowerCase() + ' (' + p.tg[k] + ')'; });
@@ -16831,7 +16872,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     t.appendChild(q('small', null, why.length ? 'Why knock' : 'This door'));
     if (why.length) { var l1 = q('span', 'hl'); l1.appendChild(q('b', null, why.join(' \u00b7 '))); t.appendChild(l1); }
     more.forEach(function (m) { t.appendChild(q('span', 'hl', m)); });
-    if (!why.length && !more.length) t.appendChild(q('span', 'hl', 'Nothing stands out here yet.'));
+    var hsp = houseSpans(d); hsp.forEach(function (n) { t.appendChild(n); });   /* basement, crawl space or slab, stories, walls (2026-10-29) */
+    if (!why.length && !more.length && !hsp.length) t.appendChild(q('span', 'hl', 'Nothing stands out here yet.'));
     b.appendChild(t);
     return b;
   }
@@ -16845,7 +16887,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var s = d.sec, b = q('div', 'hailx secx'); b.appendChild(ico('shield', 2.2));
     var t = q('span'), why = [], now = new Date();
     var ago = function (ym) { return (now.getFullYear() - +ym.slice(0, 4)) * 12 + (now.getMonth() + 1 - +ym.slice(5, 7)); };
-    if (s.sold && ago(s.sold) <= 12) why.push('New owner (sold ' + MONTHS[+s.sold.slice(5, 7) - 1] + ' ' + s.sold.slice(0, 4) + ')');
+    var sd = soldOf(d, s.sold);   /* the newer of El Paso's month here and the county sale record (2026-10-29) */
+    if (sd && ago(sd) <= 12) why.push('New owner (sold ' + MONTHS[+sd.slice(5, 7) - 1] + ' ' + sd.slice(0, 4) + ')');
     else if (d.os) why.push('New owner since ' + String(d.os).slice(0, 7));
     if (s.yb && s.yb >= now.getFullYear() - 5) why.push('Newer home (built ' + s.yb + ')');
     if (s.ab) why.push('Owner lives elsewhere');
@@ -18325,6 +18368,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
+    var st1 = soldTag(d); if (st1) meta.appendChild(st1);   /* sold in the last 12 months (2026-10-29, editions) */
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);

@@ -57,7 +57,7 @@ const EDITIONS = {
          bg: '#f3f5f8', line: '#dbe1e8', sunk: '#e7ecf1', card1: '#2f4155', appbar: '#2a394b', tile: '#3a4e66',
          dBg: '#0d131b', dCard: '#161e29', dLine: '#2a3646', dSunk: '#111821', dBar: '#18222e', dAccent: '#a9bbd1' },
     // storm data and roofs; no lawn, trees, fire, funding or water
-    keep: (f) => !/^(climate\.json$|lawnmask-|solar-|pest-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|lawnmask-|solar-|pest-|house-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$)/.test(f),   /* house- (basement, walls): Pest's; moved- (last sale): every edition */
     money: false, extraRegions: 'roofing-commercial-towns.json',
     company: () => {
       const ex = JSON.parse(fs.readFileSync(path.join(REPO, 'traverse', 'app', 'company.example.json'), 'utf8'));
@@ -85,7 +85,7 @@ const EDITIONS = {
          bg: '#f3f6f2', line: '#dbe3d9', sunk: '#e8eee6', card1: '#285c32', appbar: '#24552d', tile: '#2f6b39',
          dBg: '#0b130d', dCard: '#142019', dLine: '#26382b', dSunk: '#0f1a12', dBar: '#11301a', dAccent: '#9fd1a5' },
     // lawn, trees, fire, funding and water; none of the storm or roof layers
-    keep: (f) => !/^(hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|security-(?!widefield\b))/.test(f),   /* the town Security-Widefield is not the Security edition's data (2026-10-26) */
+    keep: (f) => !/^(hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|house-|security-(?!widefield\b))/.test(f),   /* the town Security-Widefield is not the Security edition's data (2026-10-26) */
     money: true, extraRegions: null,
     company: () => ({
       name: 'Example Lawn & Land Co', short: 'Example Lawn', tagline: 'Lawn care and yard work',
@@ -116,7 +116,7 @@ const EDITIONS = {
          bg: '#f7f5ef', line: '#e6e0d1', sunk: '#efeadf', card1: '#4d380c', appbar: '#45320a', tile: '#5c4410',
          dBg: '#120e05', dCard: '#1d170b', dLine: '#3a2f18', dSunk: '#17120a', dBar: '#211906', dAccent: '#f2c14e' },
     // the roof and the sun; none of the storm, lawn, fire or commercial layers
-    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|com-|lawnmask-|pest-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|com-|lawnmask-|pest-|house-|security-(?!widefield\b)|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Solar Co', short: 'Example Solar', tagline: 'Solar and battery installs',
@@ -174,7 +174,7 @@ const EDITIONS = {
          dBg: '#081315', dCard: '#101e21', dLine: '#233a3f', dSunk: '#0c181b', dBar: '#0d262b', dAccent: '#8fd0da' },
     // the security layers; none of the storm, roof, solar, pest, lawn, fire or commercial layers. security-lot-<town> (the lot facts,
     // 2026-10-29) rides on the security- prefix: kept here, and every other edition's security-(?!widefield) drops it
-    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
+    keep: (f) => !/^(climate\.json$|nri-|hail-|hailrep-|wind-|roof-|year-|permit-|material-|photo-|naip-|outline-|com-|solar-|pest-|house-|lawnmask-|cwpp\.json$|hoa-communities\.json$|roof-damage-defaults\.json$)/.test(f),
     money: false, extraRegions: null,
     company: () => ({
       name: 'Example Security Co', short: 'Example Security', tagline: 'Home security and monitoring',
@@ -468,7 +468,7 @@ async function build(key) {
        hundreds of thousands of small arrays when it reads a big town's file whole (Roofing with Denver needed 256-384 MB to build its
        towns answer). loadSide() and the best-doors scorer unpack only the doors they keep. Hail stays as it is: the storm job rewrites
        it in place; census is read raw. */
-    const PACK = /^(wind|roof|year|permit|solar|pest|material|naip|outline|photo)-(.+)\.json$/;
+    const PACK = /^(wind|roof|year|permit|solar|pest|material|naip|outline|photo|house)-(.+)\.json$/;
     const pm = f.match(PACK);
     if (pm && allRegions.some((r) => r.key === pm[2])) {
       const j = JSON.parse(buf.toString('utf8'));

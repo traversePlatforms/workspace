@@ -217,6 +217,42 @@ function pestOn(string $role): bool { return crewSees($role) && feature('pest');
    location), town figures (FBI), owner lives elsewhere, plus the pest build's sale month, year built and open space, and the
    same neighbours / bookings / door-note counts. Admins only, where the company turns security on. */
 function securityOn(string $role): bool { return crewSees($role) && feature('security'); }
+/* new movers (2026-10-29, the editions only; Matthew: new owners are the best leads for alarm, pest and solar companies): the month of
+   the last market sale on the county's own record, data-pipeline/door-territory/moved/build-moved.mjs -> moved-<town>.json
+   { counties: { key: [name, sales as of, building facts as of] }, doors: { id: 'YYYY-MM|key' } }. The door gets
+   ['s' => 'YYYY-MM', 'c' => 'Arapahoe County', 'a' => 'YYYY-MM'], so the card can say whose record it is and how fresh. */
+function movedOn(string $role): bool { return edition() && crewSees($role); }
+function movedSide(string $key, ?array $only = null): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/moved-' . $key . '.json'), true);
+    if (!is_array($j['doors'] ?? null)) return [];
+    $cs = is_array($j['counties'] ?? null) ? $j['counties'] : []; $o = [];
+    foreach (($only !== null ? array_intersect_key($j['doors'], $only) : $j['doors']) as $id => $v) {
+        $p = explode('|', (string) $v, 2); $c = $cs[$p[1] ?? ''] ?? null;
+        if (preg_match('/^\d{4}-\d{2}$/D', $p[0])) $o[$id] = ['s' => $p[0], 'c' => is_array($c) ? (string) ($c[0] ?? '') : '', 'a' => is_array($c) ? (string) ($c[1] ?? '') : ''];
+    }
+    return $o;
+}
+/* house facts for pest (2026-10-29, the Pest edition): house-<town>.json from the same build, per door { c: county key, yb, bs basement
+   sq ft (0 = the county records none), bf finished, wo walk-out, cr crawl space, sl slab, st stories, ex walls }; the door gets them
+   with the county's name and date ('cn', 'a'). */
+function houseSide(string $key, ?array $only = null): array {
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/house-' . $key . '.json'), true);
+    if (!is_array($j['doors'] ?? null)) return [];
+    $cs = is_array($j['counties'] ?? null) ? $j['counties'] : []; $o = [];
+    foreach (($only !== null ? array_intersect_key($j['doors'], $only) : $j['doors']) as $id => $v) {
+        if (is_string($v)) $v = json_decode($v, true);   /* an edition's packed file */
+        if (!is_array($v)) continue;
+        $c = $cs[(string) ($v['c'] ?? '')] ?? null;
+        $o[$id] = array_intersect_key($v, array_flip(['yb', 'bs', 'bf', 'wo', 'cr', 'sl', 'st', 'ex'])) + ['cn' => is_array($c) ? (string) ($c[0] ?? '') : '', 'a' => is_array($c) ? (string) ($c[2] ?? $c[1] ?? '') : ''];
+    }
+    return $o;
+}
+/* both, for one house (the house lookup): nothing at all outside the editions, so Sixfold's answer is unchanged */
+function moverFacts(string $key, string $id): array {
+    if (!edition()) return [];
+    $m = movedSide($key, [$id => 1]); $h = feature('pest') ? houseSide($key, [$id => 1]) : [];
+    return array_filter(['mv' => $m[$id] ?? null, 'hs' => $h[$id] ?? null]);
+}
 function loadSide(string $kind, string $key, ?array $only = null): array {
     static $memo = [];
     $k = $kind . '-' . $key;
@@ -1521,6 +1557,7 @@ function doorScore10(string $trade, int $pts, array $q): int {
 }
 function bestTownPoints(string $trade, string $key, array $data, ?array &$parts = null): array {
     $src = ['hail', 'wind', 'year', 'roof', 'solar', 'permit', 'census', 'pest', 'security'];
+    if (edition()) $src[] = 'moved';   /* new movers (2026-10-29): a county sale counts like the pest file's sale month */
     $files = array_map(fn($p) => DATA_DIR . '/' . $p . '-' . $key . '.json', $src);
     $files[] = DATA_DIR . '/' . $key . '.json'; $files[] = DATA_DIR . '/permit-index.json';
     $sig = md5(implode('|', array_map(fn($f) => (string) (@filemtime($f) ?: 0), $files)) . '|' . date('Y') . '|v3');   /* v3 2026-10-12: aeration-first lawn points */
@@ -1553,6 +1590,8 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
     $perm = ($trade === 'roof' || $trade === 'solar') ? $take('permit', fn($v) => is_array($v) ? array_intersect_key($v, ['r' => 1, 's' => 1, 'so' => 1]) : null) : [];
     $pest = $trade === 'pest' ? $take('pest', fn($v) => is_array($v) ? array_intersect_key($v, ['sold' => 1, 'os' => 1, 'wa' => 1]) : null) : [];
     $sec = $trade === 'security' ? $take('security', fn($v) => is_array($v) ? array_intersect_key($v, ['sold' => 1, 'yb' => 1, 'ab' => 1, 'os' => 1]) : null) : [];
+    /* the county's last market sale, 'YYYY-MM' (moved-<town>.json, the editions): the newer of it and the pest/security file's month counts */
+    $mvS = (($trade === 'pest' || $trade === 'security') && edition()) ? $take('moved', fn($v) => is_string($v) && preg_match('/^\d{4}-\d{2}/', $v) ? substr($v, 0, 7) : null) : [];
     $yr = (int) date('Y'); $ymNow = $yr * 12 + (int) date('n');
     $recent = fn(string $ym): bool => strlen($ym) >= 7 && $ymNow - ((int) substr($ym, 0, 4) * 12 + (int) substr($ym, 5, 2)) <= 12;
     $p = []; $qq = [];
@@ -1580,13 +1619,13 @@ function bestTownPoints(string $trade, string $key, array $data, ?array &$parts 
             $pm = $perm[$id] ?? null; if ($pm && !empty($pm['s']) && empty($pm['so'])) $pts -= 8;
         } elseif ($trade === 'pest') {
             $x = $pest[$id] ?? [];
-            if ($recent((string) ($x['sold'] ?? ''))) $pts += 2;
+            if ($recent(max((string) ($x['sold'] ?? ''), (string) ($mvS[$id] ?? '')))) $pts += 2;
             if (in_array(treeLevel($d), ['against', 'heavy'], true)) $pts += 1;
             if (!empty($x['os'])) $pts += 1;
             if (!empty($x['wa'])) $pts += 1;
         } elseif ($trade === 'security') {
             $x = $sec[$id] ?? [];
-            if ($recent((string) ($x['sold'] ?? ''))) $pts += 2;
+            if ($recent(max((string) ($x['sold'] ?? ''), (string) ($mvS[$id] ?? '')))) $pts += 2;
             if (!empty($x['yb']) && (int) $x['yb'] >= $yr - 5) $pts += 1;
             if (!empty($x['ab'])) $pts += 1;
             if ((float) ($d['acres'] ?? 0) >= 1) $pts += 1;
@@ -3795,7 +3834,7 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
     foreach (($idx['regions'] ?? []) as $r) {
         $k = (string) $r['key']; $tp = [$gsig, fileSig((string) regionFile($k))];
         foreach (array_merge(sharedWith($k), [$k]) as $p) foreach (['marks', 'lawnfix', 'assign', 'areaflags'] as $lg) $tp[] = fileSig(DATA_DIR . '/' . $lg . '-' . $p . '.log');
-        if ($bestT) { foreach (['hail', 'wind', 'year', 'roof', 'solar', 'permit', 'census', 'pest', 'security'] as $sd) $tp[] = fileSig(DATA_DIR . '/' . $sd . '-' . $k . '.json'); $tp[] = fileSig(DATA_DIR . '/permit-index.json'); }
+        if ($bestT) { foreach (['hail', 'wind', 'year', 'roof', 'solar', 'permit', 'census', 'pest', 'security'] as $sd) $tp[] = fileSig(DATA_DIR . '/' . $sd . '-' . $k . '.json'); $tp[] = fileSig(DATA_DIR . '/permit-index.json'); if (edition()) $tp[] = fileSig(DATA_DIR . '/moved-' . $k . '.json'); }
         $tsigs[$k] = md5(implode('|', $tp));
     }
     $rsig = md5(implode('|', [$gsig, fileSig(DATA_DIR . '/index.json'), fileSig(DATA_DIR . '/docs/money.json'), json_encode($tsigs)]));
@@ -3992,6 +4031,8 @@ if ($action === 'area') {
     /* lot facts (2026-10-29, Security only): corner lot, street behind, alley, path, dead end, nearest home, open space, water
        (data-pipeline/door-territory/security/build-lot.mjs; the file name keeps it out of every other edition) */
     $secLotOf = securityOn($role) ? loadSide('security-lot', $key, $only) : [];
+    $mvOf = movedOn($role) ? movedSide($key, $only) : [];                      /* new movers (2026-10-29): the editions */
+    $hsOf = (pestOn($role) && edition()) ? houseSide($key, $only) : [];        /* house facts (2026-10-29): the Pest edition */
     if (pestOn($role) || securityOn($role)) {
         $pestOf = pestOn($role) ? loadSide('pest', $key, $only) : [];
         /* every door's position in the town (customers, bookings and notes nearby are counted town-wide) */
@@ -4056,6 +4097,8 @@ if ($action === 'area') {
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
+            if (isset($mvOf[$d['id']])) $doors[array_key_last($doors)]['mv'] = $mvOf[$d['id']];   /* only where there is one: Sixfold's doors stay as they were */
+            if (isset($hsOf[$d['id']])) $doors[array_key_last($doors)]['hs'] = $hsOf[$d['id']];
         }
         $answers[] = ['ok' => true, 'area' => $a['name'], 'avg' => $a['avg'], 'doors' => $doors, 'rest' => MISS_REST_DAYS, 'place' => $a['place'] ?? null, 'fw' => $a['fw'] ?? null,
              'hoa' => hoaFor($a['place'] ?? null),   /* the subdivision's registered HOA (2026-10-12) */
@@ -5269,7 +5312,8 @@ function houseFacts(string $key, string $id): ?array {
                 'fire' => $d['fire'] ?? null, 'cg' => !empty($d['cg']), 'os' => $d['os'] ?? null, 'place' => $a['place'] ?? null,
                 'lim' => in_array($d['lim'] ?? null, ['noowner', 'noocc', 'noname'], true) ? $d['lim'] : null,   /* limited county data (2026-10-29, Group 3) */
                 'mark' => (function () use ($key, $d, $id) { $m = freshMark($d, loadMarks($key)[$id] ?? null); return $m ? ['o' => (string) ($m['outcome'] ?? ''), 'by' => (string) ($m['by'] ?? ''), 'at' => (int) ($m['at'] ?? 0)] : null; })(),
-                'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
+                'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))]
+               + moverFacts($key, $id);   /* the last sale and, in Pest, the house facts (2026-10-29): the editions only */
     }
     foreach (lookupDoors($k0) as $d) {   /* not on a door list (2026-10-14): rented, mostly */
         if ($d['id'] !== $id) continue;

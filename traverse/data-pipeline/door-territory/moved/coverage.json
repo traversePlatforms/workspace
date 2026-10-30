@@ -1,0 +1,956 @@
+{
+ "built": "2026-10-30",
+ "totals": {
+  "doors": 1048676,
+  "sold": 837348,
+  "basement": 755212
+ },
+ "counties": {
+  "denver": {
+   "name": "Denver",
+   "asof": "2026-10",
+   "parcelsWithSale": 120999,
+   "parcelsWithHouse": 212870,
+   "doors": 132461,
+   "sold": 69048,
+   "sold12": 5118,
+   "house": 131246,
+   "basement": 131246,
+   "hasBasement": 92492
+  },
+  "jefferson": {
+   "name": "Jefferson County",
+   "asof": "2026-10",
+   "parcelsWithSale": 188059,
+   "parcelsWithHouse": 201902,
+   "doors": 138322,
+   "sold": 134188,
+   "sold12": 5481,
+   "house": 149421,
+   "basement": 149421,
+   "hasBasement": 113476
+  },
+  "arapahoe": {
+   "name": "Arapahoe County",
+   "asof": "2026-10",
+   "parcelsWithSale": 148631,
+   "parcelsWithHouse": 0,
+   "doors": 143751,
+   "sold": 91575,
+   "sold12": 4606,
+   "house": 0,
+   "basement": 0,
+   "hasBasement": 0
+  },
+  "broomfield": {
+   "name": "Broomfield",
+   "asof": "2026-10",
+   "parcelsWithSale": 18383,
+   "parcelsWithHouse": 21303,
+   "doors": 18325,
+   "sold": 13604,
+   "sold12": 735,
+   "house": 18310,
+   "basement": 18310,
+   "hasBasement": 14992
+  },
+  "mesa": {
+   "name": "Mesa County",
+   "asof": "2026-10",
+   "parcelsWithSale": 53433,
+   "parcelsWithHouse": 66030,
+   "doors": 38895,
+   "sold": 33115,
+   "sold12": 1604,
+   "house": 38423,
+   "basement": 0,
+   "hasBasement": 0
+  },
+  "elbert": {
+   "name": "Elbert County",
+   "asof": "2026-10",
+   "parcelsWithSale": 8021,
+   "parcelsWithHouse": 11071,
+   "doors": 904,
+   "sold": 705,
+   "sold12": 41,
+   "house": 900,
+   "basement": 0,
+   "hasBasement": 0
+  },
+  "elpaso": {
+   "name": "El Paso County",
+   "asof": "2026-09",
+   "parcelsWithSale": 158569,
+   "parcelsWithHouse": 237482,
+   "doors": 130261,
+   "sold": 82551,
+   "sold12": 5820,
+   "house": 129911,
+   "basement": 129911,
+   "hasBasement": 104225
+  },
+  "douglas": {
+   "name": "Douglas County",
+   "asof": "2026-10",
+   "parcelsWithSale": 135134,
+   "parcelsWithHouse": 126460,
+   "doors": 102276,
+   "sold": 101621,
+   "sold12": 5376,
+   "house": 102256,
+   "basement": 0,
+   "hasBasement": 0
+  },
+  "adams": {
+   "name": "Adams County",
+   "asof": "2026-05",
+   "parcelsWithSale": 150438,
+   "parcelsWithHouse": 159104,
+   "doors": 114762,
+   "sold": 92864,
+   "sold12": 2654,
+   "house": 101971,
+   "basement": 101971,
+   "hasBasement": 72920
+  },
+  "weld": {
+   "name": "Weld County",
+   "asof": "2026-10",
+   "parcelsWithSale": 126083,
+   "parcelsWithHouse": 115254,
+   "doors": 87529,
+   "sold": 72633,
+   "sold12": 3422,
+   "house": 75001,
+   "basement": 75001,
+   "hasBasement": 57911
+  },
+  "boulder": {
+   "name": "Boulder County",
+   "asof": "2026-10",
+   "parcelsWithSale": 116263,
+   "parcelsWithHouse": 109471,
+   "doors": 62072,
+   "sold": 65267,
+   "sold12": 2522,
+   "house": 66791,
+   "basement": 66791,
+   "hasBasement": 53208
+  },
+  "larimer": {
+   "name": "Larimer County",
+   "asof": "2026-10",
+   "parcelsWithSale": 144352,
+   "parcelsWithHouse": 131814,
+   "doors": 79118,
+   "sold": 80177,
+   "sold12": 3864,
+   "house": 82561,
+   "basement": 82561,
+   "hasBasement": 58340
+  }
+ },
+ "towns": {
+  "monument": {
+   "doors": 7071,
+   "sold": 4155,
+   "house": 6933
+  },
+  "palmer-lake": {
+   "doors": 444,
+   "sold": 245,
+   "house": 432
+  },
+  "black-forest": {
+   "doors": 9286,
+   "sold": 5928,
+   "house": 9093
+  },
+  "castle-rock": {
+   "doors": 19531,
+   "sold": 19444,
+   "house": 19526
+  },
+  "larkspur": {
+   "doors": 711,
+   "sold": 696,
+   "house": 708
+  },
+  "sedalia": {
+   "doors": 1887,
+   "sold": 1854,
+   "house": 1886
+  },
+  "franktown": {
+   "doors": 3026,
+   "sold": 3004,
+   "house": 3025
+  },
+  "highlands-ranch": {
+   "doors": 26742,
+   "sold": 26666,
+   "house": 26742
+  },
+  "parker": {
+   "doors": 24642,
+   "sold": 24458,
+   "house": 24640
+  },
+  "castle-pines": {
+   "doors": 7080,
+   "sold": 7023,
+   "house": 7078
+  },
+  "cs-northeast": {
+   "doors": 21142,
+   "sold": 15582,
+   "house": 21142
+  },
+  "cs-southeast": {
+   "doors": 23942,
+   "sold": 15686,
+   "house": 23942
+  },
+  "security-widefield": {
+   "doors": 6175,
+   "sold": 3985,
+   "house": 6175
+  },
+  "fountain": {
+   "doors": 6825,
+   "sold": 4963,
+   "house": 6825
+  },
+  "arvada": {
+   "doors": 37589,
+   "sold": 33391,
+   "house": 36762
+  },
+  "centennial": {
+   "doors": 30291,
+   "sold": 19993,
+   "house": 0
+  },
+  "thornton": {
+   "doors": 33431,
+   "sold": 31434,
+   "house": 33413
+  },
+  "windsor": {
+   "doors": 11452,
+   "sold": 8471,
+   "house": 8653
+  },
+  "erie": {
+   "doors": 11477,
+   "sold": 11440,
+   "house": 11470
+  },
+  "commerce-city": {
+   "doors": 17204,
+   "sold": 16471,
+   "house": 17187
+  },
+  "denver": {
+   "doors": 105486,
+   "sold": 55902,
+   "house": 104496
+  },
+  "cs-northwest": {
+   "doors": 28359,
+   "sold": 16314,
+   "house": 28359
+  },
+  "cs-southwest": {
+   "doors": 26547,
+   "sold": 15427,
+   "house": 26547
+  },
+  "boulder": {
+   "doors": 16527,
+   "sold": 15751,
+   "house": 16451
+  },
+  "aurora": {
+   "doors": 82458,
+   "sold": 51379,
+   "house": 0
+  },
+  "south-denver": {
+   "doors": 26975,
+   "sold": 13146,
+   "house": 26750
+  },
+  "englewood": {
+   "doors": 6899,
+   "sold": 4636,
+   "house": 0
+  },
+  "littleton": {
+   "doors": 9984,
+   "sold": 6170,
+   "house": 0
+  },
+  "lakewood": {
+   "doors": 39332,
+   "sold": 34361,
+   "house": 39232
+  },
+  "greenwood-village": {
+   "doors": 3510,
+   "sold": 2114,
+   "house": 0
+  },
+  "cherry-hills-village": {
+   "doors": 1904,
+   "sold": 1149,
+   "house": 0
+  },
+  "sheridan": {
+   "doors": 1252,
+   "sold": 821,
+   "house": 0
+  },
+  "lone-tree": {
+   "doors": 3718,
+   "sold": 3714,
+   "house": 3718
+  },
+  "wheat-ridge": {
+   "doors": 7693,
+   "sold": 6544,
+   "house": 7634
+  },
+  "edgewater": {
+   "doors": 1045,
+   "sold": 931,
+   "house": 1036
+  },
+  "golden": {
+   "doors": 4935,
+   "sold": 4366,
+   "house": 4908
+  },
+  "westminster": {
+   "doors": 26249,
+   "sold": 23612,
+   "house": 26235
+  },
+  "broomfield": {
+   "doors": 18325,
+   "sold": 13604,
+   "house": 18310
+  },
+  "northglenn": {
+   "doors": 8110,
+   "sold": 6640,
+   "house": 8110
+  },
+  "federal-heights": {
+   "doors": 927,
+   "sold": 815,
+   "house": 892
+  },
+  "brighton": {
+   "doors": 10830,
+   "sold": 10077,
+   "house": 10694
+  },
+  "louisville": {
+   "doors": 5179,
+   "sold": 5069,
+   "house": 5162
+  },
+  "lafayette": {
+   "doors": 7308,
+   "sold": 7193,
+   "house": 7276
+  },
+  "superior": {
+   "doors": 3106,
+   "sold": 3076,
+   "house": 3081
+  },
+  "longmont": {
+   "doors": 22371,
+   "sold": 21907,
+   "house": 22294
+  },
+  "ken-caryl": {
+   "doors": 9996,
+   "sold": 9307,
+   "house": 9987
+  },
+  "columbine": {
+   "doors": 7358,
+   "sold": 6575,
+   "house": 7350
+  },
+  "holly-hills": {
+   "doors": 904,
+   "sold": 550,
+   "house": 0
+  },
+  "four-square-mile": {
+   "doors": 1509,
+   "sold": 1050,
+   "house": 0
+  },
+  "cherry-creek": {
+   "doors": 2749,
+   "sold": 1780,
+   "house": 0
+  },
+  "dakota-ridge": {
+   "doors": 10341,
+   "sold": 9605,
+   "house": 10336
+  },
+  "acres-green": {
+   "doors": 916,
+   "sold": 866,
+   "house": 916
+  },
+  "inverness": {
+   "doors": 5,
+   "sold": 4,
+   "house": 0
+  },
+  "meridian": {
+   "doors": 398,
+   "sold": 397,
+   "house": 398
+  },
+  "berkley": {
+   "doors": 2044,
+   "sold": 1658,
+   "house": 2040
+  },
+  "sterling-ranch": {
+   "doors": 2805,
+   "sold": 2805,
+   "house": 2805
+  },
+  "derby": {
+   "doors": 1452,
+   "sold": 1208,
+   "house": 1448
+  },
+  "bow-mar": {
+   "doors": 268,
+   "sold": 180,
+   "house": 85
+  },
+  "columbine-valley": {
+   "doors": 599,
+   "sold": 393,
+   "house": 0
+  },
+  "glendale": {
+   "doors": 31,
+   "sold": 23,
+   "house": 0
+  },
+  "dove-valley": {
+   "doors": 673,
+   "sold": 529,
+   "house": 0
+  },
+  "morrison": {
+   "doors": 49,
+   "sold": 39,
+   "house": 49
+  },
+  "twin-lakes": {
+   "doors": 2472,
+   "sold": 2124,
+   "house": 2470
+  },
+  "foxfield": {
+   "doors": 255,
+   "sold": 141,
+   "house": 0
+  },
+  "stonegate": {
+   "doors": 2529,
+   "sold": 2527,
+   "house": 2529
+  },
+  "sherrelwood": {
+   "doors": 4139,
+   "sold": 3309,
+   "house": 4138
+  },
+  "welby": {
+   "doors": 2709,
+   "sold": 2277,
+   "house": 2677
+  },
+  "roxborough-park": {
+   "doors": 3360,
+   "sold": 3321,
+   "house": 3359
+  },
+  "evergreen": {
+   "doors": 2851,
+   "sold": 2507,
+   "house": 2837
+  },
+  "the-pinery": {
+   "doors": 4151,
+   "sold": 4089,
+   "house": 4148
+  },
+  "watkins": {
+   "doors": 101,
+   "sold": 55,
+   "house": 0
+  },
+  "perry-park": {
+   "doors": 780,
+   "sold": 757,
+   "house": 778
+  },
+  "lochbuie": {
+   "doors": 2723,
+   "sold": 2679,
+   "house": 2721
+  },
+  "elizabeth": {
+   "doors": 813,
+   "sold": 649,
+   "house": 809
+  },
+  "dacono": {
+   "doors": 1375,
+   "sold": 1325,
+   "house": 1374
+  },
+  "gunbarrel": {
+   "doors": 2688,
+   "sold": 2610,
+   "house": 2674
+  },
+  "frederick": {
+   "doors": 4675,
+   "sold": 4663,
+   "house": 4675
+  },
+  "bennett": {
+   "doors": 1182,
+   "sold": 1152,
+   "house": 1178
+  },
+  "fort-lupton": {
+   "doors": 2520,
+   "sold": 2341,
+   "house": 2515
+  },
+  "niwot": {
+   "doors": 1255,
+   "sold": 1232,
+   "house": 1250
+  },
+  "firestone": {
+   "doors": 3287,
+   "sold": 3276,
+   "house": 3287
+  },
+  "hudson": {
+   "doors": 200,
+   "sold": 194,
+   "house": 199
+  },
+  "nederland": {
+   "doors": 97,
+   "sold": 94,
+   "house": 90
+  },
+  "kiowa": {
+   "doors": 91,
+   "sold": 56,
+   "house": 91
+  },
+  "strasburg": {
+   "doors": 922,
+   "sold": 831,
+   "house": 677
+  },
+  "platteville": {
+   "doors": 526,
+   "sold": 494,
+   "house": 525
+  },
+  "mead": {
+   "doors": 1838,
+   "sold": 1830,
+   "house": 1837
+  },
+  "keenesburg": {
+   "doors": 598,
+   "sold": 592,
+   "house": 597
+  },
+  "byers": {
+   "doors": 261,
+   "sold": 200,
+   "house": 0
+  },
+  "lyons": {
+   "doors": 233,
+   "sold": 232,
+   "house": 233
+  },
+  "walden": {
+   "doors": 470,
+   "sold": 266,
+   "house": 463
+  },
+  "g1-greeley": {
+   "doors": 20060,
+   "sold": 18946,
+   "house": 20025
+  },
+  "g1-johnstown": {
+   "doors": 4624,
+   "sold": 4550,
+   "house": 4617
+  },
+  "g1-evans": {
+   "doors": 4465,
+   "sold": 4314,
+   "house": 4463
+  },
+  "g1-berthoud": {
+   "doors": 4431,
+   "sold": 4362,
+   "house": 4397
+  },
+  "g1-severance": {
+   "doors": 3523,
+   "sold": 3514,
+   "house": 3520
+  },
+  "g1-milliken": {
+   "doors": 2540,
+   "sold": 2477,
+   "house": 2537
+  },
+  "g1-eaton": {
+   "doors": 1651,
+   "sold": 1572,
+   "house": 1646
+  },
+  "g1-todd-creek": {
+   "doors": 1658,
+   "sold": 1604,
+   "house": 1655
+  },
+  "g1-shaw-heights": {
+   "doors": 1362,
+   "sold": 1060,
+   "house": 1362
+  },
+  "g1-genesee": {
+   "doors": 1290,
+   "sold": 1175,
+   "house": 1285
+  },
+  "g1-coal-creek": {
+   "doors": 544,
+   "sold": 468,
+   "house": 538
+  },
+  "g1-la-salle": {
+   "doors": 653,
+   "sold": 569,
+   "house": 652
+  },
+  "g1-allenspark": {
+   "doors": 87,
+   "sold": 79,
+   "house": 79
+  },
+  "g1-ault": {
+   "doors": 404,
+   "sold": 402,
+   "house": 404
+  },
+  "g1-indian-hills": {
+   "doors": 188,
+   "sold": 164,
+   "house": 183
+  },
+  "g1-eldora": {
+   "doors": 32,
+   "sold": 30,
+   "house": 32
+  },
+  "g1-pierce": {
+   "doors": 170,
+   "sold": 160,
+   "house": 170
+  },
+  "g1-deer-trail": {
+   "doors": 366,
+   "sold": 307,
+   "house": 0
+  },
+  "g1-kittredge": {
+   "doors": 257,
+   "sold": 235,
+   "house": 254
+  },
+  "g1-pine-brook-hill": {
+   "doors": 367,
+   "sold": 353,
+   "house": 364
+  },
+  "g1-lazy-acres": {
+   "doors": 338,
+   "sold": 314,
+   "house": 332
+  },
+  "g1-aristocrat-ranchettes": {
+   "doors": 399,
+   "sold": 346,
+   "house": 396
+  },
+  "g1-aspen-park": {
+   "doors": 272,
+   "sold": 226,
+   "house": 269
+  },
+  "g1-paragon-estates": {
+   "doors": 289,
+   "sold": 258,
+   "house": 283
+  },
+  "g1-altona": {
+   "doors": 184,
+   "sold": 178,
+   "house": 180
+  },
+  "g1-kersey": {
+   "doors": 188,
+   "sold": 183,
+   "house": 188
+  },
+  "g1-gilcrest": {
+   "doors": 65,
+   "sold": 64,
+   "house": 65
+  },
+  "g1-sugarloaf": {
+   "doors": 90,
+   "sold": 80,
+   "house": 89
+  },
+  "g1-brook-forest": {
+   "doors": 91,
+   "sold": 83,
+   "house": 90
+  },
+  "g1-north-washington": {
+   "doors": 71,
+   "sold": 50,
+   "house": 71
+  },
+  "g1-st-ann-highlands": {
+   "doors": 95,
+   "sold": 93,
+   "house": 95
+  },
+  "g1-nunn": {
+   "doors": 97,
+   "sold": 88,
+   "house": 96
+  },
+  "g1-idledale": {
+   "doors": 47,
+   "sold": 43,
+   "house": 47
+  },
+  "g1-eldorado-springs": {
+   "doors": 102,
+   "sold": 87,
+   "house": 100
+  },
+  "g1-south-jefferson-rural": {
+   "doors": 7556,
+   "sold": 6832,
+   "house": 7501
+  },
+  "g1-central-jefferson-rural": {
+   "doors": 3679,
+   "sold": 3265,
+   "house": 3655
+  },
+  "g1-bald-mountain-rural": {
+   "doors": 1724,
+   "sold": 1581,
+   "house": 1663
+  },
+  "g1-golden-rural": {
+   "doors": 2941,
+   "sold": 2513,
+   "house": 2906
+  },
+  "g1-ault-rural": {
+   "doors": 143,
+   "sold": 138,
+   "house": 141
+  },
+  "g1-johnstown-milliken-rural": {
+   "doors": 1977,
+   "sold": 1928,
+   "house": 1975
+  },
+  "g1-greeley-rural": {
+   "doors": 1468,
+   "sold": 1268,
+   "house": 1457
+  },
+  "g2-fort-collins": {
+   "doors": 32009,
+   "sold": 30834,
+   "house": 31703
+  },
+  "g2-loveland": {
+   "doors": 21703,
+   "sold": 21011,
+   "house": 21487
+  },
+  "g2-wellington": {
+   "doors": 3224,
+   "sold": 3175,
+   "house": 3189
+  },
+  "g2-estes-park": {
+   "doors": 1287,
+   "sold": 1201,
+   "house": 1274
+  },
+  "g2-timnath": {
+   "doors": 3425,
+   "sold": 3383,
+   "house": 3384
+  },
+  "g2-red-feather-lakes": {
+   "doors": 90,
+   "sold": 85,
+   "house": 89
+  },
+  "g2-laporte": {
+   "doors": 417,
+   "sold": 379,
+   "house": 402
+  },
+  "g2-fort-collins-rural": {
+   "doors": 4577,
+   "sold": 4183,
+   "house": 4509
+  },
+  "g2-loveland-rural": {
+   "doors": 6532,
+   "sold": 6133,
+   "house": 6430
+  },
+  "g2-timnath-wellington-rural": {
+   "doors": 1680,
+   "sold": 1619,
+   "house": 1659
+  },
+  "g2-estes-park-rural": {
+   "doors": 1367,
+   "sold": 1245,
+   "house": 1355
+  },
+  "g2-berthoud-rural": {
+   "doors": 1918,
+   "sold": 1798,
+   "house": 1892
+  },
+  "g2-livermore-rural": {
+   "doors": 889,
+   "sold": 829,
+   "house": 851
+  },
+  "g2-grand-junction": {
+   "doors": 17075,
+   "sold": 14907,
+   "house": 16975
+  },
+  "g2-clifton": {
+   "doors": 4348,
+   "sold": 3769,
+   "house": 4262
+  },
+  "g2-fruita": {
+   "doors": 4101,
+   "sold": 3652,
+   "house": 4064
+  },
+  "g2-redlands": {
+   "doors": 2976,
+   "sold": 2363,
+   "house": 2959
+  },
+  "g2-fruitvale": {
+   "doors": 2820,
+   "sold": 2441,
+   "house": 2801
+  },
+  "g2-orchard-mesa": {
+   "doors": 1991,
+   "sold": 1612,
+   "house": 1978
+  },
+  "g2-palisade": {
+   "doors": 472,
+   "sold": 393,
+   "house": 470
+  },
+  "g2-loma": {
+   "doors": 192,
+   "sold": 161,
+   "house": 184
+  },
+  "g2-grand-junction-rural": {
+   "doors": 1477,
+   "sold": 1174,
+   "house": 1386
+  },
+  "g2-fruita-rural": {
+   "doors": 1573,
+   "sold": 1245,
+   "house": 1518
+  },
+  "g2-clifton-rural": {
+   "doors": 790,
+   "sold": 556,
+   "house": 769
+  },
+  "g2-collbran-rural": {
+   "doors": 133,
+   "sold": 97,
+   "house": 128
+  },
+  "g2-glade-park-gateway-rural": {
+   "doors": 192,
+   "sold": 137,
+   "house": 189
+  },
+  "g2-whitewater-kannah-creek-rural": {
+   "doors": 680,
+   "sold": 542,
+   "house": 665
+  },
+  "g2-de-beque-rural": {
+   "doors": 75,
+   "sold": 66,
+   "house": 75
+  }
+ }
+}
