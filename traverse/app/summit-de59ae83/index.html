@@ -1752,6 +1752,37 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   button.kitstep{cursor:pointer}.kitstep span:nth-child(2){display:grid;gap:2px;flex:1;min-width:0}.kitstep small{color:var(--soft)}
   .kitck{flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);font-weight:800}.kitstep.done .kitck{border-color:var(--go);background:var(--go);color:var(--on-go)}
   .kitgo{flex:none;font-size:20px;color:var(--soft)}
+  /* smart prices and terms (2026-10-30): the builder's options and house facts, the price list, adjustments, terms library, Claude import, feedback */
+  .prcq .lnk,.prcp .lnk,.prct .lnk,.prci .lnk,.prcf .lnk{justify-self:start;background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;text-decoration:none}
+  .prcfacts{display:flex;flex-wrap:wrap;gap:6px}.prcfact{display:grid;gap:1px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);font-size:14px}.prcfact small{color:var(--soft);font-size:12px}
+  .prctabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.prctab{display:grid;gap:2px;padding:10px 8px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:15px var(--sans);cursor:pointer;text-align:center;min-width:0}
+  .prctab b{overflow-wrap:anywhere}.prctab span{font-weight:800;font-size:17px}.prctab small{color:var(--accent);font-weight:700;font-size:12px}.prctab[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .prcsug{color:var(--accent)!important}.prcextras{display:grid;gap:6px}.prcxrow{display:grid;grid-template-columns:minmax(0,1fr) 6em auto;gap:6px;align-items:center}
+  .prcnav{display:flex;flex-wrap:wrap;gap:4px 16px}
+  .prcrow{position:relative}.prcrow .prcins{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 14px}.prcrow .prcact{grid-column:1/-1;display:flex;gap:14px;justify-content:flex-end}
+  .prcrow .prcsrc,.prcrow .prcdoubt{grid-column:1/-1;font-size:13px;color:var(--soft);text-align:left;font-weight:400;overflow-wrap:anywhere}.prcrow .prcdoubt{color:var(--later);font-weight:700}
+  .prcrow .prcqty{grid-column:1/-1;display:flex!important;align-items:center;gap:8px;font-weight:400}.prcrow.unsure{border-color:var(--later);border-width:2px}
+  @media (min-width:700px){.prcrow{grid-template-columns:minmax(0,1fr) auto 6em 13em}.prcrow .prcins{grid-column:1/3}.prcrow .prcact{grid-column:3/5}}
+  .prcchk{display:inline-flex!important;align-items:center;gap:6px;font-weight:400!important;white-space:nowrap}.prcchk input{width:18px;height:18px}
+  .prctiers,.prcrules,.prcclauses{display:grid;gap:8px}.prctier{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:8px;border:1px solid var(--line);border-radius:12px}.prctier>input:last-child{grid-column:1/-1}
+  .prcpct{display:inline-flex!important;align-items:center;gap:4px;font-weight:400!important;white-space:nowrap}.prcpct input{width:5.5em}
+  .prcrule{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px;border:1px solid var(--line);border-radius:12px}.prcblock{display:grid;justify-items:start}
+  .prcsur,.prcband{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 0;border-top:1px dashed var(--line);width:100%;font-size:14.5px}
+  .prcsur input,.prcband input,.prcbase input{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans)}.prcsur input:not(.kitqty){flex:1 1 9em;min-width:0}
+  .prcsur select,.prcmd select,.prccopts select,.prcmode select{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans);max-width:100%}
+  .prcbase{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;width:100%}.prcbase input{flex:1 1 14em;min-width:0}.prcmd{display:inline-flex;gap:4px}
+  .prcclause{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.prcclause.off{opacity:.62}.prcclause small{color:var(--soft)}
+  .prcctop{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.prcctop .prcact{margin-left:auto;display:flex;gap:12px}.prcbadge{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--later-tint);color:var(--later)}
+  .prcnote{font-size:13px;color:var(--soft)}.prccopts{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:start}.prcsvc summary{cursor:pointer;font-weight:700;font-size:14px;padding:6px 0}.prcsvc{display:grid;gap:4px}
+  .prcprev{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14.5px}
+  .prcsplit{display:grid;gap:12px}.prcread,.prcdraft{display:grid;gap:8px;align-content:start;min-width:0}
+  .prcpre{margin:0;max-height:60vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.45 ui-monospace,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:var(--ink)}
+  .prcpre mark{background:var(--later-tint);color:var(--ink);outline:2px solid var(--later);border-radius:2px}.prcpdf{width:100%;height:60vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+  @media (min-width:960px){.prcsplit{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}.prcread{position:sticky;top:70px}}
+  .prcnotes{margin:0;padding-left:20px;font-size:14px}
+  .prcseg{display:flex;gap:6px;flex-wrap:wrap}.prcseg button{min-height:38px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}.prcseg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+  .prcbig{font-size:16px;margin:4px 0}.prcft{display:grid;gap:8px}.prcfr{display:grid;grid-template-columns:minmax(7em,auto) minmax(0,1fr) 3.2em;gap:4px 10px;align-items:center}.prcfr small{grid-column:1/-1;color:var(--soft)}
+  .prcbar{display:block;height:10px;border-radius:5px;background:var(--sunk);overflow:hidden}.prcbar span{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--accent)}.prcrate{text-align:right;font-weight:800}
   /* setup mode and the past-due lock (2026-10-29): the admin's checklist, the team's waiting screen, Give more time; the role lines in Accounts */
   /* a client install's welcome checklist, the Clients list, email and password, invites (2026-10-29) */
   .startck{margin:12px 0}.startck .dwh{font-size:18px}.startck > .lnk{justify-self:start;margin-top:4px}
@@ -12979,13 +13010,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       step('pay', String(++n), L.paid ? 'Paid' : 'Pay to start setup', L.paid ? 'Your plan is paid. Billing has the details.' : 'Pick your plan. The money-back guarantee starts the day your app opens.', billingView);
       step('team', String(++n), 'Add your team', 'A sign-in for each person. They can sign in once your app is released.', accountsView);
       if (kit) step('connect', String(++n), 'Connect email and payments', 'Your email for agreements and receipts; Square, Stripe or other ways customers pay.', mailSetupView, [['Email', mailSetupView], ['Payments', kitPayView]]);
+      if (kit) step('prices', String(++n), 'Set your prices', 'Your price list, Good, Better, Best, and your agreement terms. Claude can read your current price list in.', function () { prcPricesView(); });   /* the smart price list (2026-10-30) */
       if (kit && impOnC()) step('import', String(++n), 'Import your customers', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', function () { importView(); });
       tick('pay', L.paid);
       card.appendChild(q('p', 'sub2', 'We release your app in up to ' + days + ' business days, often sooner. Doors, maps, the Plan and the pipeline open then, and your team can sign in.'));
     }
     box.appendChild(card);
     if (kit && !bill) {
-      api('kit').then(function (K) { var on = {}; (K && K.ok && K.setup || []).forEach(function (x) { on[x.k] = x.done; }); tick('connect', on.email && on.payments); }).catch(function () {});
+      api('kit').then(function (K) { var on = {}; (K && K.ok && K.setup || []).forEach(function (x) { on[x.k] = x.done; }); tick('connect', on.email && on.payments); tick('prices', on.prices); }).catch(function () {});
       /* the team: someone besides admins and Traverse's own sign-in (the kit's people count includes both) */
       api('accounts').then(function (j) { tick('team', !!(j && j.ok && (j.accounts || []).some(function (a) { return !a.off && a.role !== 'admin' && a.role !== 'super' && !/^(Claude|Fable)\b/i.test(a.name || ''); }))); }).catch(function () {});
       if (impOnC()) api('imports').then(function (j) { tick('import', !!(j && j.ok && (j.imports || []).some(function (x) { return !x.undone; }))); }).catch(function () {});
@@ -13223,6 +13255,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return { items: items, total: total };
   }
   function kitQuoteView(lead) {
+    if (prcOnC()) return prcQuoteView(lead);   /* the smart price list's builder: options, adjustments (2026-10-30) */
     hideToast(); S.signin = null; S.screen = 'kitquote'; foot.hidden = true; setDock(null);
     setBar('back', { title: lead.quote ? 'Change the quote' : 'Build a quote', sub: lead.name || '', back: repOn() ? calendarView : pipelineView, backLabel: repOn() ? 'Calendar' : 'Pipeline' });   /* a sales rep comes from their Calendar (2026-10-29) */
     view.textContent = '';
@@ -13311,6 +13344,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the kit screens with no signal: say so and offer Try again (device QA F8, 2026-10-27) */
   function kitRetry(again) { var m = q('div', 'msg'); m.appendChild(document.createTextNode('Needs signal. ')); var b = q('button', 'lnk', 'Try again'); b.type = 'button'; b.addEventListener('click', function () { again(); }); m.appendChild(b); return m; }
   function kitPricesView() {
+    if (prcOnC()) return prcPricesView();   /* the smart price list and the terms library (2026-10-30) */
     hideToast(); S.signin = null; S.screen = 'kitprices'; foot.hidden = true; setDock(null);
     setBar('back', { title: 'Prices and terms', sub: 'Your quotes and your one-page agreement', back: kitSetupView, backLabel: 'Setup' });
     view.textContent = ''; var box = q('div', 'card jnform coform kitp'); box.appendChild(q('div', 'skel')); view.appendChild(box);
@@ -13540,7 +13574,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.textContent = ''; if (!K || !K.ok || !K.setup) { box.appendChild(q('div', 'msg bad', (K && K.error) || 'Could not load it.')); return; }
       var STEP = { company: ['Your company: name and phone', 'On quotes, forms and texts to homeowners.', companyView], colour: ['Your colour', 'The app’s bar and your customers’ pages.', companyView],
         towns: ['Your towns', 'The towns and houses in your app.', null], people: ['People and sign-in codes', 'Give each person their own code.', accountsView],
-        prices: ['Your prices', 'What a quote adds up from a house’s measurements.', kitPricesView], terms: ['Your agreement terms', 'What every one-page form says.', kitPricesView],
+        prices: ['Set your prices', 'What a quote adds up from a house’s measurements; Good, Better, Best; import with Claude.', function () { prcPricesView(); }], terms: ['Your agreement terms', 'Every clause on your one-page form, yours to change.', prcTermsView],   /* the smart price list (2026-10-30) */
         payments: ['Payments: Square or Stripe', 'For deposits paid on the form, and other ways customers can pay.', kitPayView], email: ['Your email', 'Signed agreements and receipts go to customers from your address.', mailSetupView], alerts: ['Alerts on your phone', 'New leads, signed forms and job notes. Turn them on in Profile.', profileView],
         plan: ['Your Traverse plan', 'Billing.', function () { billingView(); }] };
       var done = K.setup.filter(function (x) { return x.done; }).length;
@@ -13561,6 +13595,577 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[1])); tx.appendChild(q('small', null, x[2])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
       });
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitSetupView)); });
+  }
+  /* ==== SMART PRICES AND TERMS (2026-10-30, Matthew: "1-6 is good to build"; the server's notes are above prcOn() in the API) ====
+     Every install with the quote kit (never Sixfold 365). Screens: the quote builder priced from the house card with Good / Better / Best
+     (prcQuoteView, opened instead of the older builder), the price list with its options and automatic adjustments (prcPricesView, opened
+     instead of the older Prices and terms), the terms library (prcTermsView), reading a price list with Claude (prcImportView) and price
+     feedback (prcFeedbackView). prcPriceC is the same sum as the server's prcPrice(), so totals move as the rep types; the server prices
+     again when the quote is saved and its answer is what is kept. */
+  function prcOnC() { return kitOnC(); }
+  var PRC_TIERS = ['good', 'better', 'best'];
+  var PRC_OPS = { ge: 'at least', le: 'at most', eq: 'is' };
+  var PRC_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  /* PHP's round(): halves away from zero (Math.round sends -2.5 to -2) */
+  function prcRnd(x) { return x < 0 ? -Math.round(-x) : Math.round(x); }
+  function prcNumText(v, d) { var s = Number(v).toFixed(d); return s.indexOf('.') >= 0 ? s.replace(/0+$/, '').replace(/\.$/, '') : s; }
+  function prcFactText(P, k, v) { var F = P.facts[k] || ['', 'num', '']; return k === 'pitch' ? prcNumText(v, 1) + '/12' : (F[1] === 'num' ? prcNumText(v, k === 'lot' ? 2 : 0) + (F[2] ? ' ' + F[2] : '') : String(v)); }
+  function prcMatchC(P, r, f) {
+    if (!(r.fact in f)) return false; var v = f[r.fact];
+    if ((P.facts[r.fact] || [])[1] === 'text') return r.val !== '' && String(v).toLowerCase().indexOf(String(r.val)) >= 0;
+    v = +v; var w = +r.val; return r.op === 'ge' ? v >= w : (r.op === 'le' ? v <= w : Math.abs(v - w) < 1e-9);
+  }
+  function prcSuggestC(P, f) { var o = {}; P.rules.sugg.forEach(function (g) { if (g.on && prcMatchC(P, g, f)) o[g.line] = g.why || (P.facts[g.fact][0] + ': ' + prcFactText(P, g.fact, f[g.fact])); }); return o; }
+  function prcMilesC(base, lat, lon) {
+    if (!base || lat == null || lon == null) return null;
+    var rad = Math.PI / 180, dl = (lat - base.lat) * rad, dn = (lon - base.lon) * rad;
+    var a = Math.pow(Math.sin(dl / 2), 2) + Math.cos(base.lat * rad) * Math.cos(lat * rad) * Math.pow(Math.sin(dn / 2), 2);
+    return Math.round(3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1.3 * 10) / 10;
+  }
+  function prcInSeasonC(s, date) { var md = date.slice(5, 10); return s.from <= s.to ? (md >= s.from && md <= s.to) : (md >= s.from || md <= s.to); }
+  function prcQtyC(r, m, p) {
+    return { roofsq: +m.sqs || 0, roofft: +m.roof || 0, lawn: (+m.lawn || 0) / 1000, lawnft: +m.lawn || 0, kw: +m.kw || 0, perim: +m.perim || 0, homeft: +m.home || 0, lotk: (+m.lot || 0) / 1000,
+      visit: Math.max(1, parseInt(m.visits, 10) || 1), each: Math.max(0, Math.min(10000, parseInt(p.qty != null ? p.qty : r.qty, 10) || 0)), flat: 1 }[r.unit];
+  }
+  /* the same sum as prcPrice() in the API: -> {items, total, list, need, far, miles, sugg} */
+  function prcPriceC(P, m, H, tier, picks, o) {
+    o = o || {}; var T = P.tiers, tk = T.on ? tier : 'good', pct = +((T.list[tk] || {}).pct || 0), f = (H && H.f) || {}, sugg = prcSuggestC(P, f), skip = {}, items = [], need = [];
+    (o.skip || []).forEach(function (s) { skip[s] = true; });
+    var date = o.date || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    P.lines.forEach(function (r) {
+      var p = picks[r.id] || {}, on = 'on' in p ? !!p.on : (!!r['in'][tk] || r.id in sugg); if (!on) return;
+      var qty = prcQtyC(r, m, p);
+      if (qty <= 0 && r.unit !== 'each') { need.push(r.id); return; }
+      var amt = prcRnd(r.rate * qty * (1 + pct / 100)); if (amt === 0 && r.rate > 0) return;
+      items.push({ id: r.id, t: r.label, amt: amt, qty: Math.round(qty * 100) / 100, unit: r.unit });
+    });
+    var lineSum = items.reduce(function (a, x) { return a + x.amt; }, 0), R = P.rules;
+    var miles = prcMilesC(R.travel.base, H && H.lat, H && H.lon);
+    function adj(useSkip) {
+      var add = [], far = false;
+      if (items.length) {
+        R.sur.forEach(function (s) { if (s.on && !(useSkip && skip[s.id]) && prcMatchC(P, s, f)) add.push({ id: 's:' + s.id, t: s.label + ' (' + P.facts[s.fact][0] + ' ' + prcFactText(P, s.fact, f[s.fact]) + ')', amt: s.how === 'pct' ? prcRnd(lineSum * s.amt / 100) : prcRnd(s.amt), qty: 1, unit: 'flat' }); });
+        R.season.forEach(function (s) { if (s.on && !(useSkip && skip[s.id]) && prcInSeasonC(s, date)) add.push({ id: 'n:' + s.id, t: s.label + ' (' + (s.pct > 0 ? '+' : '') + prcNumText(s.pct, 1) + '%)', amt: prcRnd(lineSum * s.pct / 100), qty: 1, unit: 'flat' }); });
+      }
+      if (items.length && R.travel.on && miles != null && !(useSkip && skip.travel)) {
+        var fee = null; for (var i = 0; i < R.travel.bands.length; i++) if (miles <= R.travel.bands[i].upto) { fee = R.travel.bands[i].fee; break; }
+        if (fee === null) { fee = R.travel.over; if (fee === null) far = true; }
+        if (fee) add.push({ id: 't:travel', t: 'Travel (' + prcNumText(miles, 1) + ' miles)', amt: fee, qty: 1, unit: 'flat' });
+      }
+      add = add.filter(function (x) { return x.amt !== 0; });
+      var tot = lineSum + add.reduce(function (a, x) { return a + x.amt; }, 0);
+      if (items.length && R.min.on && !(useSkip && skip.min) && tot < R.min.amt) { add.push({ id: 'min', t: 'Minimum charge', amt: R.min.amt - tot, qty: 1, unit: 'flat' }); tot = R.min.amt; }
+      return { add: add, tot: Math.max(0, tot), far: far };
+    }
+    var L0 = adj(false), A = adj(true), tot = A.tot; items = items.concat(A.add);
+    (o.extras || []).slice(0, 6).forEach(function (x, i) { var t = String(x.t || '').trim().slice(0, 80), a = prcRnd(+x.amt || 0); if (!t || a <= 0) return; a = Math.min(100000, a); items.push({ id: 'x' + (i + 1), t: t, amt: a, qty: 1, unit: 'flat' }); tot += a; });
+    var ov = parseInt(o.price, 10);
+    if (ov > 0 && ov !== tot) { ov = Math.min(100000, ov); items.push({ id: 'adj', t: ov > tot ? 'Adjustment' : 'Discount', amt: ov - tot, qty: 1, unit: 'flat' }); tot = ov; }
+    return { items: items, total: tot, list: L0.tot, need: need, far: A.far, miles: miles, sugg: sugg };
+  }
+  /* the adjustments that would apply to this house (for the rep's Leave off boxes), from a pricing with no skips */
+  function prcAdjList(P, res) { return res.items.filter(function (x) { return /^(s:|n:|t:|min$)/.test(x.id); }).map(function (x) { return { key: x.id === 'min' ? 'min' : x.id === 't:travel' ? 'travel' : x.id.slice(2), t: x.t, amt: x.amt }; }); }
+  function prcTierName(P, k) { return P.tiers.on ? ((P.tiers.list[k] || {}).name || k) : ''; }
+  /* ---- the quote builder ---- */
+  function prcQuoteView(lead) {
+    hideToast(); S.signin = null; S.screen = 'kitquote'; foot.hidden = true; setDock(null);
+    setBar('back', { title: lead.quote ? 'Change the quote' : 'Build a quote', sub: lead.name || '', back: repOn() ? calendarView : pipelineView, backLabel: repOn() ? 'Calendar' : 'Pipeline' });
+    view.textContent = '';
+    var box = q('div', 'card jnform coform kitq prcq'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    var hh = lead.house && lead.house.region && lead.house.door ? { region: lead.house.region, id: lead.house.door } : {};
+    var cp = costsOnC() ? api('costs', { params: hh }).catch(function () { return null; }) : Promise.resolve(null);
+    Promise.all([api('kit', { params: hh }).then(function (j) { if (j && j.ok) S.kit = j; return j; }), cp]).then(function (res) {
+      var K = res[0], Kc = res[1]; box.textContent = '';
+      if (!K || !K.ok || !K.prc) { box.appendChild(q('div', 'msg bad', (K && K.error) || 'Could not load your prices.')); return; }
+      var P = K.prc, H = P.house || null, Q0 = lead.quote || {}, saved = Q0.prc || {};
+      if (!P.set) {
+        var nb = q('div', 'msg'); nb.appendChild(document.createTextNode('Starter prices: placeholders to edit, not market rates. ' + (S.role === 'admin' ? '' : 'Your admin sets the real ones.')));
+        if (S.role === 'admin' || pAdd('set.prices')) { var nl0 = q('button', 'lnk', 'Set your prices ›'); nl0.type = 'button'; nl0.addEventListener('click', prcPricesView); nb.appendChild(nl0); }
+        box.appendChild(nb);
+      }
+      if (H && H.address) box.appendChild(q('div', 'sub2', H.address + ', ' + H.town));
+      /* the house's facts, each with where it came from */
+      var fk = Object.keys((H && H.f) || {}).filter(function (k) { return k !== 'miles'; });
+      if (fk.length) {
+        box.appendChild(q('div', 'dwh', 'From the house card'));
+        var fl = q('div', 'prcfacts'); fk.forEach(function (k) { var c = q('span', 'prcfact'); c.appendChild(q('b', null, prcFactText(P, k, H.f[k]))); c.appendChild(q('small', null, P.facts[k][0] + (H.src && H.src[k] ? ' · ' + H.src[k] : ''))); fl.appendChild(c); }); box.appendChild(fl);
+      }
+      var M0 = Q0.measures || {}, Hm = (H && H.m) || {};
+      var m = { lawn: M0.lawn || Hm.lawn || 0, roof: M0.roof || Hm.roof || 0, sqs: M0.sqs || Hm.sqs || 0, kw: M0.kw || Hm.kw || 0, perim: M0.perim || Hm.perim || 0, home: M0.home || Hm.home || 0, lot: M0.lot || Hm.lot || 0, visits: M0.visits || 1 };
+      var units = {}; P.lines.forEach(function (r) { units[r.unit] = true; });
+      var num = function (label, key, hint) { var l = q('label', null, label); var i = q('input'); i.inputMode = 'decimal'; i.value = m[key] || ''; i.addEventListener('input', function () { m[key] = parseFloat(String(i.value).replace(/[^\d.]/g, '')) || 0; paint(); }); l.appendChild(i); if (hint) l.appendChild(q('small', 'sub2', hint)); return l; };
+      var from = function (k, words) { return Hm[k] ? words : 'Type it if you measured.'; };
+      var mrow = q('div', 'kitm');
+      if (units.roofsq) mrow.appendChild(num('Roofing squares', 'sqs', from('sqs', 'From the laser scan; change it if you measured.')));
+      if (units.roofft) mrow.appendChild(num('Roof (sq ft)', 'roof', from('roof', 'From the laser scan; change it if you measured.')));
+      if (units.lawn || units.lawnft) mrow.appendChild(num('Lawn (sq ft)', 'lawn', from('lawn', 'From the house card; change it if you measured.')));
+      if (units.kw) mrow.appendChild(num('System size (kW)', 'kw', H && H.f && H.f.kw ? 'The roof fits about ' + prcNumText(H.f.kw, 1) + ' kW (laser scan estimate).' : 'Type the system size.'));
+      if (units.perim) mrow.appendChild(num('Around the house (ft)', 'perim', from('perim', 'Worked out from the footprint; change it if you measured.')));
+      if (units.homeft) mrow.appendChild(num('Home (sq ft)', 'home', from('home', 'From the county record.')));
+      if (units.lotk) mrow.appendChild(num('Lot (sq ft)', 'lot', from('lot', 'From the county parcel.')));
+      if (units.visit) mrow.appendChild(num('Visits', 'visits'));
+      if (mrow.children.length) { box.appendChild(q('div', 'dwh', 'Measurements')); box.appendChild(mrow); }
+      var tiers = P.tiers.on ? PRC_TIERS : ['good'];
+      var tier = tiers.indexOf(Q0.opt) >= 0 ? Q0.opt : (P.tiers.on ? P.tiers.pick : 'good');
+      var picks = {}, extras = {}, over = {}; tiers.forEach(function (k) { picks[k] = (saved.picks && saved.picks[k]) || {}; extras[k] = ((saved.extras && saved.extras[k]) || []).slice(); over[k] = saved.over && saved.over[k] ? saved.over[k] : ''; });
+      var skip = (saved.skip || []).slice();
+      /* an older quote (before options): its ticked lines and typed price carry over to the option shown */
+      if (Q0.items && !Q0.prc) { var had = {}; Q0.items.forEach(function (x) { had[x.id] = x; }); P.lines.forEach(function (r) { picks[tier][r.id] = { on: !!had[r.id] }; }); if (had.adj) over[tier] = Q0.price; }
+      var tabs = q('div', 'prctabs'); if (P.tiers.on) { box.appendChild(q('div', 'dwh', 'Options for the customer')); box.appendChild(q('div', 'sub2', 'Their quote page shows all three and they pick one. The one marked here is the price on the form if you send it.')); box.appendChild(tabs); }
+      var inc = q('div', 'dwh'); box.appendChild(inc);
+      var rl = q('div', 'kitrules'); box.appendChild(rl);
+      var adjH = q('div', 'dwh', 'Added for this house'); var adjBox = q('div', 'kitrules'); box.appendChild(adjH); box.appendChild(adjBox);
+      var exH = q('div', 'dwh', 'Extra work (optional)'); var exBox = q('div', 'prcextras'); box.appendChild(exH); box.appendChild(exBox);
+      var sumBox = q('div', 'kitsum'); box.appendChild(sumBox);
+      var ol = q('label', null, 'Price you agreed (optional)'); var ov = q('input'); ov.inputMode = 'numeric'; ov.placeholder = 'Leave empty to use the total';
+      ov.addEventListener('input', function () { over[tier] = parseInt(String(ov.value).replace(/\D/g, ''), 10) || ''; paint(); }); ol.appendChild(ov); ol.appendChild(q('small', 'sub2', 'A different price adds an adjustment line, so the lines still add up.')); box.appendChild(ol);
+      var nl = q('label', null, 'Note on the quote (optional)'); var nt = q('textarea'); nt.rows = 2; nt.maxLength = 300; nt.value = Q0.note || ''; nl.appendChild(nt); box.appendChild(nl);
+      var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
+      var row2 = q('div', 'kitbtns'); var sv = q('button', 'save', 'Save the quote'); sv.type = 'button'; row2.appendChild(sv); box.appendChild(row2);
+      var sendBox = q('div', 'kitsend'); box.appendChild(sendBox);
+      function priceOf(k) { return prcPriceC(P, m, H, k, picks[k], { skip: skip, extras: extras[k], price: over[k] }); }
+      function drawTabs() {
+        tabs.textContent = '';
+        tiers.forEach(function (k) {
+          var r = priceOf(k), b = q('button', 'prctab'); b.type = 'button'; b.setAttribute('aria-pressed', String(k === tier));
+          b.appendChild(q('b', null, prcTierName(P, k))); b.appendChild(q('span', null, money0(r.total))); if (k === tier) b.appendChild(q('small', null, 'Marked'));
+          b.addEventListener('click', function () { tier = k; drawAll(); }); tabs.appendChild(b);
+        });
+      }
+      function drawLines() {
+        inc.textContent = P.tiers.on ? 'What is in ' + prcTierName(P, tier) : 'What is included';
+        rl.textContent = ''; var sg = prcSuggestC(P, (H && H.f) || {}), tk = P.tiers.on ? tier : 'good';
+        P.lines.forEach(function (r) {
+          var p = picks[tier][r.id] || {}, def = !!r['in'][tk] || r.id in sg, on = 'on' in p ? !!p.on : def;
+          var row = q('label', 'kitrule'); var cb = q('input'); cb.type = 'checkbox'; cb.checked = on;
+          cb.addEventListener('change', function () { var x = picks[tier][r.id] || {}; x.on = cb.checked; picks[tier][r.id] = x; paint(); });
+          row.appendChild(cb); var tx = q('span'); tx.appendChild(q('b', null, r.label));
+          tx.appendChild(q('small', null, money0(r.rate) + ' ' + (P.units[r.unit] || r.unit) + (r['in'][tk] ? '' : ' · add-on')));
+          if (r.id in sg && !r['in'][tk]) tx.appendChild(q('small', 'prcsug', 'Suggested: ' + sg[r.id]));
+          row.appendChild(tx);
+          if (r.unit === 'each') { var qi = q('input', 'kitqty'); qi.inputMode = 'numeric'; qi.value = p.qty != null ? p.qty : r.qty; qi.setAttribute('aria-label', 'How many'); qi.addEventListener('input', function () { var x = picks[tier][r.id] || {}; x.qty = parseInt(qi.value, 10) || 0; picks[tier][r.id] = x; paint(); }); row.appendChild(qi); }
+          rl.appendChild(row);
+        });
+      }
+      function drawAdj() {
+        adjBox.textContent = ''; var all = prcAdjList(P, prcPriceC(P, m, H, tier, picks[tier], {}));
+        adjH.hidden = !all.length && !skip.length;
+        all.forEach(function (a) {
+          var row = q('label', 'kitrule'); var cb = q('input'); cb.type = 'checkbox'; cb.checked = skip.indexOf(a.key) < 0;
+          cb.addEventListener('change', function () { var i = skip.indexOf(a.key); if (cb.checked && i >= 0) skip.splice(i, 1); if (!cb.checked && i < 0) skip.push(a.key); paint(); });
+          row.appendChild(cb); var tx = q('span'); tx.appendChild(q('b', null, a.t)); tx.appendChild(q('small', null, (a.amt < 0 ? '−' : '') + money0(Math.abs(a.amt)) + ' · set by your price list; untick to leave it off')); row.appendChild(tx); adjBox.appendChild(row);
+        });
+      }
+      function drawExtras() {
+        exBox.textContent = '';
+        extras[tier].forEach(function (x, i) {
+          var row = q('div', 'prcxrow'); var t = q('input'); t.value = x.t || ''; t.placeholder = 'What it is'; t.maxLength = 80; t.setAttribute('aria-label', 'What it is'); t.addEventListener('input', function () { x.t = t.value; paint(); });
+          var a = q('input', 'kitrate'); a.inputMode = 'numeric'; a.value = x.amt || ''; a.placeholder = '$'; a.setAttribute('aria-label', 'Price ($)'); a.addEventListener('input', function () { x.amt = parseInt(String(a.value).replace(/\D/g, ''), 10) || 0; paint(); });
+          var d = q('button', 'lnk', 'Remove'); d.type = 'button'; d.addEventListener('click', function () { extras[tier].splice(i, 1); drawExtras(); paint(); });
+          row.appendChild(t); row.appendChild(a); row.appendChild(d); exBox.appendChild(row);
+        });
+        if (extras[tier].length < 6) { var ad = q('button', 'lnk', '+ Add extra work'); ad.type = 'button'; ad.addEventListener('click', function () { extras[tier].push({ t: '', amt: 0 }); drawExtras(); }); exBox.appendChild(ad); }
+      }
+      function paint() {
+        var r = priceOf(tier); sumBox.textContent = '';
+        r.items.forEach(function (x) { var r0 = q('div', 'kitline'); r0.appendChild(q('span', null, x.t)); r0.appendChild(q('b', null, (x.amt < 0 ? '−' : '') + money0(Math.abs(x.amt)))); sumBox.appendChild(r0); });
+        var tt = q('div', 'kitline kittotal'); tt.appendChild(q('span', null, P.tiers.on ? prcTierName(P, tier) + ' total' : 'Total')); tt.appendChild(q('b', null, money0(r.total))); sumBox.appendChild(tt);
+        if (r.total !== r.list) sumBox.appendChild(q('div', 'sub2', 'Your price list gives ' + money0(r.list) + '.'));
+        if (r.need.length) sumBox.appendChild(q('div', 'sub2', 'Not priced yet (needs a measurement): ' + r.need.map(function (id) { var l = P.lines.filter(function (x) { return x.id === id; })[0]; return l ? l.label : id; }).join(', ') + '.'));
+        if (r.far) sumBox.appendChild(q('div', 'sub2', 'This house is past your farthest travel band (' + prcNumText(r.miles, 1) + ' miles): no travel fee was added.'));
+        if (Kc && Kc.ok) sumBox.appendChild(costsQuoteLine(Kc, r, r.total));   /* estimated cost and margin, staff only */
+        if (P.tiers.on) drawTabs();
+        ov.value = over[tier] || '';
+      }
+      function drawAll() { drawLines(); drawAdj(); drawExtras(); paint(); }
+      function body(sent, preview) { var b = { id: lead.id, measures: m, prc: { tier: tier, picks: picks, skip: skip, extras: extras, over: over }, note: nt.value, sent: !!sent }; if (preview) b.preview = true; return b; }
+      function sendPanel(j) {
+        sendBox.textContent = '';
+        var B = leadBrand(lead), first = greetName(lead.name), street = H && H.address ? streetCase(H.address) : '';
+        var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. Here is your quote' + (street ? ' for ' + street : '') + ' (' + money0(j.price) + '): ' + j.link + (B.phone ? ' Questions? Call or text ' + B.phone + '.' : '');
+        sendBox.appendChild(q('div', 'dwh', 'Send it'));
+        var rw = q('div', 'lcontact'); var tel = digits(lead.phone);
+        if (tel.length >= 10) { var a = q('a', 'sendtxt'); a.href = 'sms:' + tel + '?&body=' + encodeURIComponent(msg); a.appendChild(ico('chat', 2.2)); a.appendChild(document.createTextNode('Text the quote')); rw.appendChild(a); }
+        if (lead.email) { var e = q('a', 'sendmail'); e.href = 'mailto:' + encodeURIComponent(lead.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent('Your quote from ' + B.name) + '&body=' + encodeURIComponent(msg + mailSig(B)); e.appendChild(ico('mail', 2.2)); e.appendChild(document.createTextNode('Email the quote')); rw.appendChild(e); }
+        sendBox.appendChild(rw);
+        var cpb = q('button', 'lnk', 'Copy the link'); cpb.type = 'button'; cpb.addEventListener('click', function () { try { navigator.clipboard.writeText(j.link); toast('Link copied', '', null); } catch (er) {} }); sendBox.appendChild(cpb);
+        var pv = q('a', 'lnk', 'See their quote page ›'); pv.href = j.link; pv.target = '_blank'; pv.rel = 'noopener'; sendBox.appendChild(pv);
+        var ms = q('button', 'lnk', 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { api('kitquote', { body: body(true) }).then(function (k) { if (k && k.ok) { toast('Quote marked sent', money0(k.price), null); ms.textContent = 'Sent ✓'; } }); }); sendBox.appendChild(ms);
+        var yes = q('button', 'save jbook', 'They said yes: deposit and form ›'); yes.type = 'button';
+        yes.addEventListener('click', function () { signSendView(Object.assign({}, lead, { quote: { price: j.price, pkg: 'job', items: j.items } }), repOn() ? { price: j.price, pkg: 'job', back: function () { prcQuoteView(lead); } } : { price: j.price, pkg: 'job' }); });
+        if (!repOn() || S.repSend || pAdd('agree.send')) sendBox.appendChild(yes);
+        else sendBox.appendChild(q('div', 'ltrynote', 'When they say yes, tell the office: they take the deposit, send the agreement and book the day.'));
+        sendBox.appendChild(q('div', 'ltrynote', 'The text and email open here, filled in, from your own number or email. Nothing is sent until you press send.'));
+      }
+      sv.addEventListener('click', function () {
+        err.hidden = true; sv.disabled = true;
+        api('kitquote', { body: body(false) }).then(function (j) {
+          sv.disabled = false;
+          if (j._status === 401) return signinView('Signed out. Enter your code again.');
+          if (!j.ok) { err.hidden = false; err.textContent = j.error || 'Not saved. Try again.'; return; }
+          lead.quote = { price: j.price, pkg: 'job', items: j.items, measures: m, note: nt.value, link: j.link, opt: tier, prc: body(false).prc, by: S.me, at: Math.floor(Date.now() / 1000) };
+          toast('Quote saved', money0(j.price) + (P.tiers.on ? ' · ' + prcTierName(P, tier) : '') + ' · ' + (lead.name || ''), null); sendPanel(j);
+        }).catch(function () { sv.disabled = false; err.hidden = false; err.textContent = 'No signal. Nothing was saved.'; });
+      });
+      drawAll();
+      if (Q0.link && Q0.pkg === 'job') sendPanel({ price: Q0.price, link: Q0.link, items: Q0.items });
+    }).catch(function () { box.textContent = ''; box.appendChild(q('div', 'msg', 'Building a quote needs signal.')); });
+  }
+  /* ---- the price list, the options and the automatic adjustments (admin, or a role given Prices and terms) ---- */
+  function prcLoad() { return api('prc'); }
+  function prcSel(opts, val, label, on) { var s = q('select'); if (label) s.setAttribute('aria-label', label); Object.keys(opts).forEach(function (k) { var o = q('option', null, opts[k]); o.value = k; if (String(val) === String(k)) o.selected = true; s.appendChild(o); }); s.addEventListener('change', function () { on(s.value); }); return s; }
+  function prcIn(val, label, on, cls, mode) { var i = q('input', cls || null); i.value = val == null ? '' : val; if (label) { i.setAttribute('aria-label', label); i.placeholder = label; } if (mode) i.inputMode = mode; i.addEventListener('input', function () { on(i.value); }); return i; }
+  function prcChk(val, label, on) { var l = q('label', 'prcchk'); var c = q('input'); c.type = 'checkbox'; c.checked = !!val; c.addEventListener('change', function () { on(c.checked); }); l.appendChild(c); l.appendChild(document.createTextNode(' ' + label)); return l; }
+  function prcNum(v) { var n = parseFloat(String(v).replace(/[^\d.\-]/g, '')); return isNaN(n) ? 0 : n; }
+  function prcMd(val, label, on) {
+    var w = q('span', 'prcmd'), p = String(val || '01-01').split('-'), mo = p[0] || '01', dy = p[1] || '01';
+    var ms = {}; PRC_MONTHS.forEach(function (n, i) { ms[(i < 9 ? '0' : '') + (i + 1)] = n; });
+    var ds = {}; for (var i = 1; i <= 31; i++) ds[(i < 10 ? '0' : '') + i] = String(i);
+    w.appendChild(prcSel(ms, mo, label + ' month', function (v) { mo = v; on(mo + '-' + dy); })); w.appendChild(prcSel(ds, dy, label + ' day', function (v) { dy = v; on(mo + '-' + dy); }));
+    return w;
+  }
+  function prcPricesView(start) {
+    if (!start || !start.lines) start = null;   /* opened from a button: no unsaved list */
+    hideToast(); S.signin = null; S.screen = 'prcprices'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Prices', sub: 'Your price list, options and automatic adjustments', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp prcp'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    prcLoad().then(function (D) {
+      box.textContent = ''; if (!D || !D.ok) { box.appendChild(q('div', 'msg bad', (D && D.error) || 'Could not load it.')); return; }
+      var C = JSON.parse(JSON.stringify(start || { lines: D.lines, tiers: D.tiers, rules: D.rules, kwDefault: D.kwDefault, depositPct: D.depositPct }));
+      if (C.depositPct == null) C.depositPct = D.depositPct;
+      var nav = q('div', 'prcnav');
+      [['Terms and clauses ›', prcTermsView], ['Import with Claude ›', function () { prcImportView(); }], ['Price feedback ›', function () { prcFeedbackView(0); }]].forEach(function (x) { var b = q('button', 'lnk', x[0]); b.type = 'button'; b.addEventListener('click', x[1]); nav.appendChild(b); });
+      box.appendChild(nav);
+      if (start) box.appendChild(q('div', 'msg', 'Not saved yet: check it, then press Save at the bottom.'));
+      else if (!D.set) box.appendChild(q('div', 'msg', D.from === 'kit' ? 'These are your prices from the older Prices and terms screen, in the new shape. Check them and Save.' : 'Starter prices for your trade: placeholders to edit, not market rates. Change them to yours and Save.'));
+      /* the price lines */
+      box.appendChild(q('div', 'dwh', 'Your price list'));
+      box.appendChild(q('div', 'sub2', 'Each line is a price times a measurement the house card already has. Tick which options include it; a line in none of them is an add-on the rep can tick.'));
+      var list = q('div', 'kitedit'); box.appendChild(list);
+      var tn = function (k) { return (C.tiers.list[k] && C.tiers.list[k].name) || k; };
+      function drawLines() {
+        list.textContent = '';
+        C.lines.forEach(function (r, i) {
+          var row = q('div', 'kitrow prcrow');
+          row.appendChild(prcIn(r.label, 'What it is', function (v) { r.label = v; }));
+          row.appendChild(q('span', 'kitdollar', '$')); row.appendChild(prcIn(r.rate, 'Price ($)', function (v) { r.rate = prcNum(v); }, 'kitrate', 'decimal'));
+          row.appendChild(prcSel(D.units, r.unit, 'How it is priced', function (v) { r.unit = v; drawLines(); }));
+          var ins = q('span', 'prcins');
+          (C.tiers.on ? PRC_TIERS : ['good']).forEach(function (k) { ins.appendChild(prcChk(r['in'][k], C.tiers.on ? tn(k) : 'Included', function (v) { r['in'][k] = v; })); });
+          row.appendChild(ins);
+          if (r.unit === 'each') { var qw = q('label', 'prcqty', 'Usual count'); qw.appendChild(prcIn(r.qty, 'Usual count', function (v) { r.qty = parseInt(v, 10) || 0; }, 'kitqty', 'numeric')); row.appendChild(qw); }
+          var act = q('span', 'prcact');
+          if (i > 0) { var up = q('button', 'lnk', '↑'); up.type = 'button'; up.setAttribute('aria-label', 'Move up'); up.addEventListener('click', function () { C.lines.splice(i - 1, 0, C.lines.splice(i, 1)[0]); drawLines(); }); act.appendChild(up); }
+          var del = q('button', 'lnk', 'Remove'); del.type = 'button'; del.addEventListener('click', function () { C.lines.splice(i, 1); drawLines(); drawRules(); }); act.appendChild(del);
+          row.appendChild(act);
+          if (r.src) row.appendChild(q('small', 'prcsrc', 'From your file: “' + r.src + '”'));
+          list.appendChild(row);
+        });
+      }
+      drawLines();
+      var add = q('button', 'lnk', '+ Add a price line'); add.type = 'button'; add.addEventListener('click', function () { if (C.lines.length >= 60) return toast('60 lines at most', '', null); C.lines.push({ id: '', label: '', unit: 'flat', rate: 0, 'in': { good: false, better: false, best: false }, qty: 1 }); drawLines(); }); box.appendChild(add);
+      if (C.lines.some(function (r) { return r.unit === 'kw'; })) { var kl = q('label', null, 'Usual system size (kW)'); kl.appendChild(prcIn(C.kwDefault, 'kW', function (v) { C.kwDefault = prcNum(v); }, null, 'decimal')); kl.appendChild(q('small', 'sub2', 'A quote starts at this size, or less when the roof fits less. The rep changes it.')); box.appendChild(kl); }
+      /* Good / Better / Best */
+      box.appendChild(q('div', 'dwh', 'Good, Better, Best'));
+      var tb = q('div', 'prctiers'); box.appendChild(tb);
+      function drawTiers() {
+        tb.textContent = '';
+        tb.appendChild(prcChk(C.tiers.on, 'Offer three options on every quote', function (v) { C.tiers.on = v; drawTiers(); drawLines(); }));
+        if (!C.tiers.on) { tb.appendChild(q('div', 'sub2', 'Off: one price per quote, from the lines ticked Included.')); return; }
+        tb.appendChild(q('div', 'sub2', 'One price list makes all three. Each option can add a percentage on its lines (upgraded materials, more care). The customer picks on their quote page.'));
+        PRC_TIERS.forEach(function (k) {
+          var t = C.tiers.list[k], row = q('div', 'prctier');
+          row.appendChild(prcIn(t.name, 'Name', function (v) { t.name = v; }));
+          var pl = q('label', 'prcpct'); pl.appendChild(prcIn(t.pct, '% added', function (v) { t.pct = prcNum(v); }, null, 'decimal')); pl.appendChild(document.createTextNode(' % on its lines')); row.appendChild(pl);
+          row.appendChild(prcIn(t.desc, 'A few words for the customer', function (v) { t.desc = v; }));
+          tb.appendChild(row);
+        });
+        var pk = q('label', null, 'Marked for the rep to start with'); var pko = {}; PRC_TIERS.forEach(function (k) { pko[k] = tn(k); }); pk.appendChild(prcSel(pko, C.tiers.pick, 'Marked option', function (v) { C.tiers.pick = v; })); tb.appendChild(pk);
+      }
+      drawTiers();
+      /* the automatic adjustments */
+      box.appendChild(q('div', 'dwh', 'Automatic adjustments'));
+      box.appendChild(q('div', 'sub2', 'Each one is yours to switch on or off. The rep sees what was added and can leave one off if their role allows changing prices.'));
+      var rb = q('div', 'prcrules'); box.appendChild(rb);
+      var factOpts = {}; Object.keys(D.facts).filter(function (k) { return k !== 'miles'; }).forEach(function (k) { factOpts[k] = D.facts[k][0] + (D.facts[k][2] ? ' (' + D.facts[k][2] + ')' : ''); });
+      function drawRules() {
+        var R = C.rules; rb.textContent = '';
+        var mn = q('div', 'prcrule'); mn.appendChild(prcChk(R.min.on, 'Minimum for a job', function (v) { R.min.on = v; }));
+        var mw = q('label', 'prcpct', '$ '); mw.appendChild(prcIn(R.min.amt || '', 'Minimum ($)', function (v) { R.min.amt = Math.round(prcNum(v)); }, null, 'numeric')); mn.appendChild(mw); rb.appendChild(mn);
+        /* travel */
+        var tv = q('div', 'prcrule prcblock'); tv.appendChild(prcChk(R.travel.on, 'Travel fee by distance', function (v) { R.travel.on = v; drawRules(); }));
+        if (R.travel.on) {
+          tv.appendChild(q('div', 'sub2', R.travel.base ? 'From: ' + (R.travel.base.label || 'your base') + '. Miles are the straight line × 1.3 for roads.' : 'Set where your trips start.'));
+          var bl = q('div', 'prcbase'); var bi = prcIn(R.travel.base && R.travel.base.text || '', '123 Main St, Town', function (v) { R.travel.base = v.trim() ? { text: v } : (R.travel.base && R.travel.base.lat ? R.travel.base : null); }); bl.appendChild(bi);
+          var gh = q('button', 'lnk', 'Where I am now'); gh.type = 'button'; gh.addEventListener('click', function () { if (!navigator.geolocation) return toast('This device cannot tell where it is', '', null); navigator.geolocation.getCurrentPosition(function (p) { R.travel.base = { lat: p.coords.latitude, lon: p.coords.longitude, label: 'Where you stood when you set it' }; drawRules(); }, function () { toast('Location was not allowed', '', null); }); }); bl.appendChild(gh);
+          if (D.costsBase && !R.travel.base) { var cb = q('button', 'lnk', 'Use the base from Your costs'); cb.type = 'button'; cb.addEventListener('click', function () { R.travel.base = D.costsBase; drawRules(); }); bl.appendChild(cb); }
+          tv.appendChild(bl);
+          R.travel.bands.forEach(function (b, i) {
+            var br = q('div', 'prcband'); br.appendChild(document.createTextNode('Up to ')); br.appendChild(prcIn(b.upto, 'Miles', function (v) { b.upto = prcNum(v); }, 'kitqty', 'decimal')); br.appendChild(document.createTextNode(' miles: $'));
+            br.appendChild(prcIn(b.fee, 'Fee ($)', function (v) { b.fee = Math.round(prcNum(v)); }, 'kitqty', 'numeric'));
+            var d = q('button', 'lnk', 'Remove'); d.type = 'button'; d.addEventListener('click', function () { R.travel.bands.splice(i, 1); drawRules(); }); br.appendChild(d); tv.appendChild(br);
+          });
+          var ab = q('button', 'lnk', '+ Add a distance band'); ab.type = 'button'; ab.addEventListener('click', function () { var last = R.travel.bands[R.travel.bands.length - 1]; R.travel.bands.push({ upto: last ? last.upto + 15 : 20, fee: 0 }); drawRules(); }); tv.appendChild(ab);
+          var ovr = q('label', 'prcband', 'Farther than that: $ '); ovr.appendChild(prcIn(R.travel.over == null ? '' : R.travel.over, 'Fee past the last band', function (v) { R.travel.over = String(v).trim() === '' ? null : Math.round(prcNum(v)); }, 'kitqty', 'numeric')); ovr.appendChild(q('small', 'sub2', 'Empty: no fee, and the rep is told the house is past your area.')); tv.appendChild(ovr);
+        }
+        rb.appendChild(tv);
+        /* surcharges from house facts */
+        var su = q('div', 'prcrule prcblock'); su.appendChild(q('b', null, 'Surcharges from house facts'));
+        R.sur.forEach(function (s, i) {
+          var sr = q('div', 'prcsur'); sr.appendChild(prcChk(s.on, 'On', function (v) { s.on = v; })); sr.appendChild(prcIn(s.label, 'Name on the quote', function (v) { s.label = v; }));
+          sr.appendChild(document.createTextNode('when ')); sr.appendChild(prcSel(factOpts, s.fact, 'House fact', function (v) { s.fact = v; drawRules(); }));
+          var isText = (D.facts[s.fact] || [])[1] === 'text';
+          if (!isText) sr.appendChild(prcSel(PRC_OPS, s.op === 'eq' ? 'ge' : s.op, 'Compare', function (v) { s.op = v; })); else sr.appendChild(document.createTextNode(' has '));
+          sr.appendChild(prcIn(s.val, 'Value', function (v) { s.val = isText ? v.toLowerCase() : prcNum(v); }, 'kitqty', isText ? null : 'decimal'));
+          sr.appendChild(document.createTextNode('add ')); sr.appendChild(prcIn(s.amt, 'Amount', function (v) { s.amt = prcNum(v); }, 'kitqty', 'decimal'));
+          sr.appendChild(prcSel({ pct: '% of the lines', flat: 'dollars' }, s.how, 'Percent or dollars', function (v) { s.how = v; }));
+          var d = q('button', 'lnk', 'Remove'); d.type = 'button'; d.addEventListener('click', function () { R.sur.splice(i, 1); drawRules(); }); sr.appendChild(d);
+          su.appendChild(sr);
+        });
+        var as = q('button', 'lnk', '+ Add a surcharge'); as.type = 'button'; as.addEventListener('click', function () { R.sur.push({ id: '', on: true, label: '', fact: Object.keys(factOpts)[0], op: 'ge', val: 0, how: 'pct', amt: 10 }); drawRules(); }); su.appendChild(as);
+        rb.appendChild(su);
+        /* seasons */
+        var se = q('div', 'prcrule prcblock'); se.appendChild(q('b', null, 'Seasonal prices')); se.appendChild(q('small', 'sub2', 'By the day the quote is made. A minus number is a discount.'));
+        R.season.forEach(function (s, i) {
+          var sr = q('div', 'prcsur'); sr.appendChild(prcChk(s.on, 'On', function (v) { s.on = v; })); sr.appendChild(prcIn(s.label, 'Name on the quote', function (v) { s.label = v; }));
+          sr.appendChild(document.createTextNode('from ')); sr.appendChild(prcMd(s.from, 'From', function (v) { s.from = v; })); sr.appendChild(document.createTextNode(' to ')); sr.appendChild(prcMd(s.to, 'To', function (v) { s.to = v; }));
+          var pw = q('label', 'prcpct'); pw.appendChild(prcIn(s.pct, '%', function (v) { s.pct = prcNum(v); }, 'kitqty', 'decimal')); pw.appendChild(document.createTextNode(' %')); sr.appendChild(pw);
+          var d = q('button', 'lnk', 'Remove'); d.type = 'button'; d.addEventListener('click', function () { R.season.splice(i, 1); drawRules(); }); sr.appendChild(d);
+          se.appendChild(sr);
+        });
+        var an = q('button', 'lnk', '+ Add a season'); an.type = 'button'; an.addEventListener('click', function () { R.season.push({ id: '', on: true, label: '', from: '06-01', to: '08-31', pct: 0 }); drawRules(); }); se.appendChild(an);
+        rb.appendChild(se);
+        /* suggested add-ons */
+        var sg = q('div', 'prcrule prcblock'); sg.appendChild(q('b', null, 'Add-ons the house suggests')); sg.appendChild(q('small', 'sub2', 'Ticked for the rep when the house fits; they can untick it.'));
+        var lineOpts = {}; C.lines.forEach(function (r) { if (r.id) lineOpts[r.id] = r.label || r.id; });
+        R.sugg.forEach(function (g, i) {
+          var sr = q('div', 'prcsur'); sr.appendChild(prcChk(g.on, 'On', function (v) { g.on = v; })); sr.appendChild(document.createTextNode('Suggest ')); sr.appendChild(prcSel(lineOpts, g.line, 'Price line', function (v) { g.line = v; }));
+          sr.appendChild(document.createTextNode(' when ')); sr.appendChild(prcSel(factOpts, g.fact, 'House fact', function (v) { g.fact = v; drawRules(); }));
+          var isText = (D.facts[g.fact] || [])[1] === 'text';
+          if (!isText) sr.appendChild(prcSel(PRC_OPS, g.op === 'eq' ? 'ge' : g.op, 'Compare', function (v) { g.op = v; })); else sr.appendChild(document.createTextNode(' has '));
+          sr.appendChild(prcIn(g.val, 'Value', function (v) { g.val = isText ? v.toLowerCase() : prcNum(v); }, 'kitqty', isText ? null : 'decimal'));
+          sr.appendChild(prcIn(g.why, 'Why, for the rep', function (v) { g.why = v; }));
+          var d = q('button', 'lnk', 'Remove'); d.type = 'button'; d.addEventListener('click', function () { R.sugg.splice(i, 1); drawRules(); }); sr.appendChild(d);
+          sg.appendChild(sr);
+        });
+        var ag = q('button', 'lnk', '+ Add a suggestion'); ag.type = 'button'; ag.addEventListener('click', function () { var k = Object.keys(lineOpts)[0]; if (!k) return toast('Save a price line first', '', null); R.sugg.push({ id: '', on: true, fact: Object.keys(factOpts)[0], op: 'ge', val: 0, line: k, why: '' }); drawRules(); }); sg.appendChild(ag);
+        rb.appendChild(sg);
+      }
+      drawRules();
+      var dp = q('label', null, 'Usual deposit (% of the price)'); dp.appendChild(prcIn(C.depositPct, '%', function (v) { C.depositPct = Math.round(prcNum(v)); }, null, 'numeric')); dp.appendChild(q('small', 'sub2', 'Filled in on the one-page form; the office can change it or pick No deposit.')); box.appendChild(dp);
+      var msg = q('div', 'sub2'); var row3 = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row3.appendChild(sb);
+      var rs = q('button', 'lnk', 'Start again from the starter prices'); rs.type = 'button'; rs.addEventListener('click', function () { if (confirm('Replace what is on this screen with the starter prices? Nothing is saved until you press Save.')) { var st = JSON.parse(JSON.stringify(D.starter)); st.depositPct = C.depositPct; prcPricesView(st); } });
+      box.appendChild(row3); box.appendChild(msg); box.appendChild(rs);
+      sb.addEventListener('click', function () {
+        sb.disabled = true; msg.textContent = 'Saving…';
+        api('prcset', { body: C }).then(function (j) {
+          sb.disabled = false; if (!j.ok) { msg.textContent = j.error || 'Not saved.'; return; }
+          S.kit = null; toast('Saved', 'New quotes use these prices.', null); prcPricesView();
+        }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
+      });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { prcPricesView(start); })); });
+  }
+  /* ---- the terms library: every clause the company's to include, leave out, rewrite, reorder or add ---- */
+  function prcTermsView() {
+    hideToast(); S.signin = null; S.screen = 'prcterms'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Terms and clauses', sub: 'What your one-page agreement says', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp prct'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    prcLoad().then(function (D) {
+      box.textContent = ''; if (!D || !D.ok) { box.appendChild(q('div', 'msg bad', (D && D.error) || 'Could not load it.')); return; }
+      var cl = JSON.parse(JSON.stringify(D.lib.clauses)), lines = D.lines;
+      var nav = q('div', 'prcnav'); var pb = q('button', 'lnk', '‹ Prices'); pb.type = 'button'; pb.addEventListener('click', function () { prcPricesView(); }); nav.appendChild(pb); box.appendChild(nav);
+      box.appendChild(q('div', 'msg', 'Your terms are yours: include, leave out or rewrite any clause, and add your own. Starter wording is plain and not legal advice: have your attorney review it. Each signed agreement keeps the exact words the customer signed.'));
+      if (!D.lib.set) box.appendChild(q('div', 'sub2', 'Until you save here, your agreement keeps the terms it has now. Saving makes it say exactly the clauses switched on below, nothing added.'));
+      box.appendChild(q('div', 'sub2', 'Write {phone}, {email} or {company} and the agreement fills in yours.'));
+      var listB = q('div', 'prcclauses'); box.appendChild(listB);
+      var WHEN = { always: 'Every agreement', deposit: 'Only when there is a deposit', nodeposit: 'Only when there is no deposit' };
+      function draw() {
+        listB.textContent = '';
+        cl.forEach(function (c, i) {
+          var card = q('div', 'prcclause' + (c.on ? '' : ' off'));
+          var top = q('div', 'prcctop'); top.appendChild(prcChk(c.on, 'Include', function (v) { c.on = v; card.classList.toggle('off', !v); paintPrev(); }));
+          if (c.starter) top.appendChild(q('span', 'prcbadge', 'Starter: have your attorney review'));
+          var act = q('span', 'prcact');
+          if (i > 0) { var up = q('button', 'lnk', '↑'); up.type = 'button'; up.setAttribute('aria-label', 'Move up'); up.addEventListener('click', function () { cl.splice(i - 1, 0, cl.splice(i, 1)[0]); draw(); }); act.appendChild(up); }
+          if (i < cl.length - 1) { var dn = q('button', 'lnk', '↓'); dn.type = 'button'; dn.setAttribute('aria-label', 'Move down'); dn.addEventListener('click', function () { cl.splice(i + 1, 0, cl.splice(i, 1)[0]); draw(); }); act.appendChild(dn); }
+          var del = q('button', 'lnk', 'Delete'); del.type = 'button'; del.addEventListener('click', function () { cl.splice(i, 1); draw(); }); act.appendChild(del);
+          top.appendChild(act); card.appendChild(top);
+          card.appendChild(prcIn(c.title, 'Heading (optional)', function (v) { c.title = v; paintPrev(); }));
+          var ta = q('textarea'); ta.rows = 3; ta.maxLength = 2000; ta.value = c.text; ta.setAttribute('aria-label', 'Wording'); ta.addEventListener('input', function () { c.text = ta.value; paintPrev(); }); card.appendChild(ta);
+          if (c.id === 'cancel3') card.appendChild(q('small', 'prcnote', 'For you, not the customer: federal rules (the FTC’s Cooling-Off Rule, 16 CFR Part 429) and Colorado law can give a customer 3 business days to cancel a sale made at their home, with set wording and a cancellation form. Have your attorney check what applies to you.'));
+          var opts = q('div', 'prccopts'); opts.appendChild(prcSel(WHEN, c.when, 'When it is used', function (v) { c.when = v; paintPrev(); }));
+          var sv = q('details', 'prcsvc'); var su = q('summary', null, c.svc.length ? 'Only for ' + c.svc.length + ' of your services' : 'For every service'); sv.appendChild(su);
+          lines.forEach(function (r) { sv.appendChild(prcChk(c.svc.indexOf(r.id) >= 0, r.label, function (v) { var k = c.svc.indexOf(r.id); if (v && k < 0) c.svc.push(r.id); if (!v && k >= 0) c.svc.splice(k, 1); su.textContent = c.svc.length ? 'Only for ' + c.svc.length + ' of your services' : 'For every service'; })); });
+          sv.appendChild(q('small', 'sub2', 'Nothing ticked: on every quote. Ticked: only on quotes with one of those lines.'));
+          opts.appendChild(sv); card.appendChild(opts);
+          listB.appendChild(card);
+        });
+        paintPrev();
+      }
+      var adds = q('div', 'kitbtns'); box.appendChild(adds);
+      var ad = q('button', 'lnk', '+ Add your own clause'); ad.type = 'button'; ad.addEventListener('click', function () { cl.push({ id: '', title: '', text: '', on: true, svc: [], when: 'always', starter: false }); draw(); }); adds.appendChild(ad);
+      var gone = function () { var have = {}; cl.forEach(function (c) { have[c.id] = true; }); return D.starterClauses.filter(function (s) { return !have[s.id]; }); };
+      var bk = q('button', 'lnk', '+ Put a starter clause back'); bk.type = 'button'; bk.addEventListener('click', function () {
+        var g = gone(); if (!g.length) return toast('Every starter clause is already here', '', null);
+        var pick = prompt('Which one? ' + g.map(function (s, i) { return (i + 1) + ' ' + s.title; }).join(', '), '1'); var n = parseInt(pick, 10); if (!(n >= 1 && n <= g.length)) return;
+        cl.push(JSON.parse(JSON.stringify(g[n - 1]))); draw();
+      }); adds.appendChild(bk);
+      box.appendChild(q('div', 'dwh', 'What the agreement will say'));
+      box.appendChild(q('div', 'sub2', 'With a deposit, on a quote with every service. Your phone and email fill in on the real one.'));
+      var prev = q('ol', 'prcprev'); box.appendChild(prev);
+      function paintPrev() { prev.textContent = ''; cl.forEach(function (c) { if (!c.on || c.when === 'nodeposit' || !String(c.text).trim()) return; prev.appendChild(q('li', null, (c.title ? c.title + ': ' : '') + c.text)); }); if (!prev.children.length) prev.appendChild(q('li', null, 'No terms: the agreement shows what was agreed and the signature only.')); }
+      var msg = q('div', 'sub2'); var row3 = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row3.appendChild(sb); box.appendChild(row3); box.appendChild(msg);
+      sb.addEventListener('click', function () {
+        sb.disabled = true; msg.textContent = 'Saving…';
+        api('clauseset', { body: { clauses: cl } }).then(function (j) {
+          sb.disabled = false; if (!j.ok) { msg.textContent = j.error || 'Not saved.'; return; }
+          toast('Saved', 'New agreements use these terms. Signed ones keep theirs.', null); prcTermsView();
+        }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
+      });
+      draw();
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(prcTermsView)); });
+  }
+  /* ---- import a price list with Claude: a draft beside what was read; nothing changes until Save ---- */
+  function prcB64(buf) { var b = new Uint8Array(buf), s = '', i; for (i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+  function prcImportView(draft) {
+    if (!draft || !draft.lines) draft = null;
+    hideToast(); S.signin = null; S.screen = 'prcimport'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Import your prices', sub: 'Claude reads your price list into a draft you check', back: function () { prcPricesView(); }, backLabel: 'Prices' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp prci'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    prcLoad().then(function (D) {
+      box.textContent = ''; if (!D || !D.ok) { box.appendChild(q('div', 'msg bad', (D && D.error) || 'Could not load it.')); return; }
+      if (draft) return prcDraftView(box, D, draft);
+      var A = D.ai || {};
+      box.appendChild(q('div', 'sub2', 'Upload your current price list (a spreadsheet, a PDF, or paste the text). Claude, an AI model from Anthropic, reads it into price lines. You see each line beside the words it came from, fix anything it misread, and nothing changes until you press Save.'));
+      box.appendChild(q('div', 'sub2', 'Only the file you pick is sent to read. Never your customers, leads or houses.'));
+      if (!A.on) box.appendChild(q('div', 'msg', 'Reading with Claude is not switched on for your company yet. You can type your prices on the Prices screen.'));
+      else box.appendChild(q('div', 'sub2', 'Imports left today: ' + Math.max(0, A.perDay - A.today) + ' of ' + A.perDay + '.' + (A.usd >= A.usdMonth ? ' This month’s imports are used up; they start again on the 1st.' : '')));
+      var fl = q('label', null, 'Your price list (.csv, .xlsx, .pdf or .txt)'); var inp = q('input'); inp.type = 'file'; inp.accept = '.csv,.tsv,.txt,.xlsx,.pdf,text/csv,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; inp.id = 'prcFile'; fl.appendChild(inp); box.appendChild(fl);
+      var tl = q('label', null, 'Or paste your prices'); var ta = q('textarea'); ta.rows = 6; ta.maxLength = 60000; ta.placeholder = 'Roof replacement $450 per square…'; tl.appendChild(ta); box.appendChild(tl);
+      var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
+      var row = q('div', 'kitbtns'); var go = q('button', 'save', 'Read it with Claude'); go.type = 'button'; go.disabled = !A.on; row.appendChild(go); box.appendChild(row);
+      var wait = q('div', 'sub2'); box.appendChild(wait);
+      go.addEventListener('click', function () {
+        err.hidden = true; var file = inp.files && inp.files[0], txt = ta.value.trim();
+        if (!file && !txt) { err.hidden = false; err.textContent = 'Pick a file or paste your prices.'; return; }
+        var send = function (b, blob) {
+          go.disabled = true; wait.textContent = 'Claude is reading it. This can take up to a minute.';
+          api('prcimport', { body: b }).then(function (j) {
+            go.disabled = false; wait.textContent = '';
+            if (!j.ok) { err.hidden = false; err.textContent = j.error || 'That did not work. Try again.'; return; }
+            if (blob) S.prcBlob = { id: j.draft.id, url: URL.createObjectURL(blob) };
+            prcImportView(j.draft);
+          }).catch(function () { go.disabled = false; wait.textContent = ''; err.hidden = false; err.textContent = 'No signal. Nothing was read.'; });
+        };
+        if (!file) return send({ kind: 'text', name: 'Pasted text', text: txt });
+        var ext = (file.name.split('.').pop() || '').toLowerCase(), kind = ext === 'pdf' ? 'pdf' : ext === 'xlsx' ? 'xlsx' : (['csv', 'tsv', 'txt'].indexOf(ext) >= 0 ? 'csv' : '');
+        if (!kind) { err.hidden = false; err.textContent = ext === 'xls' ? 'That is an older Excel file. In Excel: File, Save As, Excel Workbook (.xlsx) or CSV, and pick that.' : 'Pick a .csv, .xlsx, .pdf or .txt file.'; return; }
+        var fr = new FileReader(); fr.onload = function () { send({ kind: kind, name: file.name, data: prcB64(fr.result) }, kind === 'pdf' ? file : null); };
+        fr.onerror = function () { err.hidden = false; err.textContent = 'Could not read that file. Try saving it again.'; }; fr.readAsArrayBuffer(file);
+      });
+      if (D.imports && D.imports.length) {
+        box.appendChild(q('div', 'dwh', 'Earlier imports'));
+        D.imports.forEach(function (x) {
+          var b = q('button', 'kitstep'); b.type = 'button'; b.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x.name)); tx.appendChild(q('small', null, x.lines + ' lines · ' + (x.by || '') + ' · ' + new Date(x.at * 1000).toLocaleDateString(LOCALE))); b.appendChild(tx); b.appendChild(q('span', 'kitgo', '›'));
+          b.addEventListener('click', function () { api('prcimportget', { params: { id: x.id } }).then(function (j) { if (j && j.ok) prcImportView(j.draft); else toast('Could not open it', (j && j.error) || '', null); }); }); box.appendChild(b);
+        });
+      }
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { prcImportView(draft); })); });
+  }
+  function prcDraftView(box, D, d) {
+    var lines = d.lines.map(function (x) { return Object.assign({ keep: true }, x); }), useMin = !!d.minimum, terms = (d.terms || []).map(function (t) { return Object.assign({ add: false }, t); }), mode = D.set ? 'add' : 'replace';
+    var unsure = lines.filter(function (x) { return !x.sure; }).length;
+    box.appendChild(q('div', 'sub2', d.name + ' · ' + lines.length + ' lines read' + (unsure ? ' · ' + unsure + ' to check' : '') + '. Nothing is saved until you press Save.'));
+    var split = q('div', 'prcsplit'); box.appendChild(split);
+    var left = q('div', 'prcread'); left.appendChild(q('div', 'dwh', 'What Claude read'));
+    var pre = null;
+    if (d.read) { pre = q('pre', 'prcpre'); pre.textContent = d.read; left.appendChild(pre); }
+    else if (S.prcBlob && S.prcBlob.id === d.id) { var fr = q('iframe', 'prcpdf'); fr.src = S.prcBlob.url; fr.title = d.name; left.appendChild(fr); }
+    else left.appendChild(q('div', 'sub2', 'The PDF is not kept here. Each line shows the words it came from and its page.'));
+    var right = q('div', 'prcdraft'); right.appendChild(q('div', 'dwh', 'Draft price lines'));
+    split.appendChild(left); split.appendChild(right);
+    function show(src) {   /* the line's words, marked in what was read */
+      if (!pre || !src) return; var t = d.read, i = t.toLowerCase().indexOf(String(src).toLowerCase()); pre.textContent = '';
+      if (i < 0) { pre.textContent = t; return; }
+      pre.appendChild(document.createTextNode(t.slice(0, i))); var mk = q('mark', null, t.slice(i, i + src.length)); pre.appendChild(mk); pre.appendChild(document.createTextNode(t.slice(i + src.length)));
+      try { mk.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+    }
+    var lb = q('div', 'kitedit'); right.appendChild(lb);
+    function drawL() {
+      lb.textContent = '';
+      lines.forEach(function (x, i) {
+        var row = q('div', 'kitrow prcrow prcdl' + (x.sure ? '' : ' unsure'));
+        row.appendChild(prcIn(x.label, 'What it is', function (v) { x.label = v; }));
+        row.appendChild(q('span', 'kitdollar', '$')); row.appendChild(prcIn(x.rate, 'Price ($)', function (v) { x.rate = prcNum(v); }, 'kitrate', 'decimal'));
+        row.appendChild(prcSel(D.units, x.unit, 'How it is priced', function (v) { x.unit = v; }));
+        row.appendChild(prcChk(x.addon, 'Add-on', function (v) { x.addon = v; }));
+        var act = q('span', 'prcact'); var del = q('button', 'lnk', 'Delete'); del.type = 'button'; del.addEventListener('click', function () { lines.splice(i, 1); drawL(); }); act.appendChild(del); row.appendChild(act);
+        if (x.src) { var s = q('button', 'prcsrc lnk', 'From: “' + x.src + '”' + (x.page ? ' (page ' + x.page + ')' : '')); s.type = 'button'; s.addEventListener('click', function () { show(x.src); }); row.appendChild(s); }
+        else if (x.id && x.id.charAt(0) !== 'n') row.appendChild(q('small', 'prcsrc', 'No words given for this line.'));
+        if (!x.sure) row.appendChild(q('small', 'prcdoubt', 'Check this: ' + (x.doubt || 'Claude was not sure.')));
+        lb.appendChild(row);
+      });
+    }
+    drawL();
+    var al = q('button', 'lnk', '+ Add a line'); al.type = 'button'; al.addEventListener('click', function () { lines.push({ id: 'n' + Date.now(), label: '', unit: 'flat', rate: 0, addon: false, src: '', sure: true, doubt: '' }); drawL(); }); right.appendChild(al);
+    if (d.minimum) { right.appendChild(prcChk(useMin, 'Use the ' + money0(d.minimum.amt) + ' minimum it found (“' + d.minimum.src + '”)', function (v) { useMin = v; })); }
+    if (d.notes && d.notes.length) { right.appendChild(q('div', 'dwh', 'Also in the file')); var ul = q('ul', 'prcnotes'); d.notes.forEach(function (n) { ul.appendChild(q('li', null, n)); }); right.appendChild(ul); right.appendChild(q('small', 'sub2', 'Not added anywhere: set these up yourself if you want them.')); }
+    if (terms.length) {
+      right.appendChild(q('div', 'dwh', 'Terms it found'));
+      terms.forEach(function (t) { var w = q('div', 'prcclause'); w.appendChild(prcChk(t.add, 'Add to my terms: ' + (t.title || 'Clause'), function (v) { t.add = v; })); w.appendChild(q('small', null, t.text)); right.appendChild(w); });
+    }
+    right.appendChild(q('div', 'dwh', 'Save'));
+    var md = q('div', 'prcmode');
+    md.appendChild(prcSel({ add: 'Add these to my price list', replace: 'Replace my price list with these' }, mode, 'Add or replace', function (v) { mode = v; })); right.appendChild(md);
+    var msg = q('div', 'sub2'); var row = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row.appendChild(sb);
+    var again = q('button', 'lnk', 'Read another file'); again.type = 'button'; again.addEventListener('click', function () { prcImportView(); }); row.appendChild(again);
+    right.appendChild(row); right.appendChild(msg);
+    sb.addEventListener('click', function () {
+      var keep = lines.filter(function (x) { return String(x.label).trim(); });
+      if (!keep.length) { msg.textContent = 'There are no lines to save.'; return; }
+      var tiersOn = D.tiers.on;
+      var made = keep.map(function (x) { var inc = !x.addon; return { id: '', label: x.label, unit: x.unit, rate: x.rate, 'in': { good: inc, better: inc && tiersOn, best: inc && tiersOn }, qty: 1, src: x.src || '' }; });
+      var C = { lines: mode === 'replace' ? made : D.lines.concat(made), tiers: D.tiers, rules: JSON.parse(JSON.stringify(D.rules)), kwDefault: D.kwDefault, depositPct: D.depositPct };
+      if (mode === 'replace') { C.rules.sugg = []; }
+      if (useMin && d.minimum) C.rules.min = { on: true, amt: d.minimum.amt };
+      sb.disabled = true; msg.textContent = 'Saving…';
+      api('prcset', { body: C }).then(function (j) {
+        if (!j.ok) { sb.disabled = false; msg.textContent = j.error || 'Not saved.'; return; }
+        var addT = terms.filter(function (t) { return t.add; });
+        var done = function () { S.kit = null; toast('Saved', keep.length + ' price lines' + (addT.length ? ' and ' + addT.length + ' terms' : '') + ' from ' + d.name, null); prcPricesView(); };
+        if (!addT.length) return done();
+        api('clauseset', { body: { clauses: D.lib.clauses.concat(addT.map(function (t) { return { id: '', title: t.title, text: t.text, on: true, svc: [], when: 'always', starter: false }; })) } }).then(done, done);
+      }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
+    });
+  }
+  /* ---- price feedback: their own quotes and outcomes; facts, never a price change ---- */
+  function prcFeedbackView(days) {
+    days = typeof days === 'number' ? days : 0;
+    hideToast(); S.signin = null; S.screen = 'prcfeedback'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Price feedback', sub: 'Which prices your customers say yes to', back: function () { prcPricesView(); }, backLabel: 'Prices' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp prcf'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('prcfeedback', { params: { days: days } }).then(function (F) {
+      box.textContent = ''; if (!F || !F.ok) { box.appendChild(q('div', 'msg bad', (F && F.error) || 'Could not load it.')); return; }
+      var seg = q('div', 'prcseg'); [[0, 'All time'], [365, '12 months'], [90, '90 days']].forEach(function (x) { var b = q('button', null, x[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(x[0] === days)); b.addEventListener('click', function () { prcFeedbackView(x[0]); }); seg.appendChild(b); }); box.appendChild(seg);
+      var pct = function (r) { return r == null ? '–' : Math.round(r * 100) + '%'; };
+      box.appendChild(q('p', 'prcbig', F.n ? F.n + ' quotes: ' + F.won + ' won, ' + F.lost + ' lost, ' + F.open + ' still open. Won ' + pct(F.rate) + ' of those decided.' : 'No quotes in this time yet.'));
+      function table(title, rows, label) {
+        box.appendChild(q('div', 'dwh', title)); if (!rows.length) { box.appendChild(q('div', 'sub2', 'Not enough decided quotes yet.')); return; }
+        var t = q('div', 'prcft');
+        rows.forEach(function (r) {
+          var row = q('div', 'prcfr'); row.appendChild(q('b', null, label(r)));
+          var bar = q('span', 'prcbar'); var fill = q('span'); fill.style.width = r.rate == null ? '0' : Math.round(r.rate * 100) + '%'; bar.appendChild(fill); row.appendChild(bar);
+          row.appendChild(q('span', 'prcrate', pct(r.rate)));
+          row.appendChild(q('small', null, (r.won + r.lost) + ' decided: ' + r.won + ' won, ' + r.lost + ' lost' + (r.open ? ' · ' + r.open + ' open' : '') + ((r.won + r.lost) < 10 ? ' · few quotes, read with care' : '')));
+          t.appendChild(row);
+        });
+        box.appendChild(t);
+      }
+      table('By price', F.bands, function (r) { return r.lo === r.hi ? money0(r.lo) : money0(r.lo) + '–' + money0(r.hi); });
+      if (F.unit) table('By price ' + F.unitLabel.replace(/\s*\(.*\)$/, ''), F.perUnit, function (r) { return r.lo === r.hi ? money0(r.lo) : money0(r.lo) + '–' + money0(r.hi); });
+      if (F.optionsOn || F.options.some(function (o) { return o.n; })) table('By option', F.options.filter(function (o) { return o.n; }), function (r) { return r.name; });
+      box.appendChild(q('div', 'sub2', 'Win rate is won ÷ (won + lost); open quotes are left out. Bands split your decided quotes into equal groups by price. A quote counts as won once the lead is Won or the agreement is signed. Nothing here changes your prices.'));
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { prcFeedbackView(days); })); });
   }
   /* ---- Import (2026-10-29, Matthew: part of onboarding; Traverse also offers to do the import for clients during the 2-day setup, so it has to
      be reliable for us too) ----

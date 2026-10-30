@@ -45,6 +45,11 @@
   .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
   .ways{display:grid;gap:10px;margin-top:12px}.way{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px}
   .way span{display:grid;gap:2px;min-width:0;overflow-wrap:anywhere}.way b{font-size:17px}.way .btn{width:auto;min-height:42px;margin:0;padding:0 18px;font-size:15px}
+  /* Good / Better / Best (2026-10-30): one card per option, the picked one outlined */
+  .opts{display:grid;gap:10px}.opt{display:grid;gap:6px;width:100%;text-align:left;padding:14px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+  .opt[aria-pressed=true]{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}.opt:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+  .opth{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.opth b{font-size:19px}.opth strong{font-size:22px}.opt table{font-size:15px}
+  @media (prefers-color-scheme:dark){.opt[aria-pressed=true]{border-color:#9db4d8;box-shadow:inset 0 0 0 1px #9db4d8}}
 </style>
 </head>
 <body>
@@ -92,6 +97,12 @@
       document.getElementById('hi').textContent = Q.first ? 'Hi ' + Q.first + ', here’s your quote' : 'Your quote';
       document.getElementById('for').textContent = Q.street ? 'For ' + Q.street : (B.name ? 'From ' + B.name : '');
       main.textContent = '';
+      if (Q.options && Q.options.list && Q.options.list.length > 1 && !Q.booked && !Q.accepted) {   /* Good / Better / Best (2026-10-30): they pick one, and the yes is for that one */
+        main.appendChild(options(Q));
+        main.appendChild(book(Q));
+        if (Q.ways && Q.ways.length) main.appendChild(ways(Q.ways));
+        return;
+      }
       var q = el('div', 'card'); q.appendChild(el('h2', null, 'What’s included'));
       if (Q.items && Q.items.length) { var t = el('table'); Q.items.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('td', null, x.t)); tr.appendChild(el('td', 'r', money(x.amt))); t.appendChild(tr); }); q.appendChild(t); }
       var pr = el('div', 'total'); pr.appendChild(el('span', 'muted', 'Quoted ' + Q.date)); pr.appendChild(el('b', null, money(Q.price))); q.appendChild(pr);
@@ -101,6 +112,25 @@
       if (Q.ways && Q.ways.length) main.appendChild(ways(Q.ways));   /* other ways to pay (2026-10-29) */
     }).catch(function () { sorry('We could not reach our system just now. Try again in a minute. ' + callLine()); });
   }
+  /* the options on one quote (2026-10-30): each with its lines and price; the one picked goes with the yes */
+  var pick = '';
+  function options(Q) {
+    var c = el('div', 'card'); c.appendChild(el('h2', null, 'Pick your option'));
+    c.appendChild(el('p', 'muted', 'Quoted ' + Q.date + '. Tap the one you want, then say yes below.'));
+    var list = el('div', 'opts'); pick = Q.options.pick || Q.options.list[0].k;
+    Q.options.list.forEach(function (o) {
+      var b = el('button', 'opt'); b.type = 'button'; b.setAttribute('aria-pressed', String(o.k === pick)); b.setAttribute('data-k', o.k);
+      var hd = el('span', 'opth'); hd.appendChild(el('b', null, o.name)); hd.appendChild(el('strong', null, money(o.price))); b.appendChild(hd);
+      if (o.desc) b.appendChild(el('span', 'muted', o.desc));
+      var t = el('table'); o.items.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('td', null, x.t)); tr.appendChild(el('td', 'r', money(x.amt))); t.appendChild(tr); }); b.appendChild(t);
+      b.addEventListener('click', function () { pick = o.k; [].forEach.call(list.children, function (x) { x.setAttribute('aria-pressed', String(x.getAttribute('data-k') === pick)); }); var go = document.getElementById('go'); if (go && !go.disabled) go.textContent = goLabel(Q); });
+      list.appendChild(b);
+    });
+    c.appendChild(list);
+    if (Q.note) c.appendChild(el('p', 'muted', Q.note));
+    return c;
+  }
+  function goLabel(Q) { var o = Q.options && Q.options.list.filter(function (x) { return x.k === pick; })[0]; return (Q.offer ? 'Book it' : 'Yes, go ahead') + (o && Q.options.list.length > 1 ? ' with ' + o.name + ' (' + money(o.price) + ')' : ''); }
   /* the company's other ways to pay (2026-10-29): each opens its own page, Zelle has details to copy; we confirm a payment when it arrives */
   function ways(list) {
     var c = el('div', 'card'); c.appendChild(el('h2', null, 'Ways to pay'));
@@ -127,13 +157,16 @@
     c.appendChild(el('div', 'h', 'Anything we should know? (optional)'));
     var nt = el('textarea'); nt.rows = 3; nt.maxLength = 300; nt.setAttribute('aria-label', 'Anything we should know'); c.appendChild(nt);
     var label = Q.offer ? 'Book it' : 'Yes, go ahead';
-    var go = el('button', 'btn', label); go.type = 'button'; c.appendChild(go);
+    if (pick) label = goLabel(Q);   /* with the option picked (2026-10-30) */
+    var go = el('button', 'btn', label); go.type = 'button'; go.id = 'go'; c.appendChild(go);
     var err = el('div', 'err'); err.setAttribute('role', 'alert'); c.appendChild(err);
     go.addEventListener('click', function () {
       err.textContent = ''; go.disabled = true; go.textContent = 'Sending…';
-      fetch(API + '?action=a365accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: key, note: nt.value }) })
+      fetch(API + '?action=a365accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: key, note: nt.value, opt: pick }) })
         .then(function (r) { return r.json(); }).then(function (j) {
+          if (pick) label = goLabel(Q);
           if (!j || !j.ok) { go.disabled = false; go.textContent = label; err.textContent = (j && j.error) || 'That did not go through. Try again.'; return; }
+          if (pick && !j.gone) { pick = ''; window.scrollTo(0, 0); load(); return; }   /* options: the page again, showing the one they picked */
           c.replaceWith(j.booked ? booked(j.booked) : thanks(Q, false, !!j.gone)); window.scrollTo(0, 0);
         }).catch(function () { go.disabled = false; go.textContent = label; err.textContent = 'No connection. Try again.'; });
     });
