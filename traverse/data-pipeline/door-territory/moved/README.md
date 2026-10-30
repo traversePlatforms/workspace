@@ -12,6 +12,12 @@ Matthew approved both for the editions only (Sixfold unchanged):
 
 Facts only. Nothing here predicts anything about a house.
 
+**30 Oct 2026: new movers in Sixfold 365 too** (Matthew: lawn customers move in and need aeration). Same card line, row tag and
+filter for everyone in Sixfold who sees the trade facts (`movedOn()`). The house lookup (Jen's Quick quote) is unchanged, and the
+Pest house facts stay in the Pest edition. Sixfold reads `data/rounds/` directly, so the files go up with
+`bash traverse/data-pipeline/door-territory/push-sixfold-side.sh moved-` (`DRY=1` first lists them; only towns Sixfold has, only new
+or changed files, backup and md5 check). 30 Oct: all 160 files (31 MB, 837,348 doors with a sale month) were for towns on Sixfold.
+
 ## Files
 
 | | |
