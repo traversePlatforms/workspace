@@ -116,6 +116,31 @@ if (cmd === 'stage') {
   const kp = {}; for (const s of list) if (paths[s.date]) kp[s.date] = paths[s.date];
   writeFileSync(join(OUT, 'hail-paths-backfill.json'), JSON.stringify({ ...grid0, r0: 0, c0: 0, paths: kp }));
   console.log(`through ${through}: ${list.length} storm days kept, ${have} days read, ${missing} missing; ${[...perDoor.keys()].length} doors ever at 0.75 in+`);
+} else if (cmd === 'paths') {
+  /* (laptop, 2026-10-29, Group 3's storm history: finish-g3hail-2026-10-29.sh) hail-paths-add.json for merge-storms.py: the build's
+     statewide map squares cut to those within N grid squares (default 8, about 8 km) of a door of the named towns, so the live
+     hail-paths.json grows only round the new doors. (The 29 Oct add file's own cut was not recorded; it held every square within 5
+     of a door and most within 10.)
+       node backfill-hail.mjs paths <hail-paths-backfill.json> <stage dir> <out hail-paths-add.json> [--cells=8] <town...> */
+  const [, , , src, stage, out, ...rest] = process.argv;
+  const N = +((rest.find((x) => x.startsWith('--cells=')) || '--cells=8').slice(8)), towns = rest.filter((x) => !x.startsWith('--'));
+  if (!src || !stage || !out || !towns.length) throw new Error('paths <hail-paths-backfill.json> <stage dir> <out> [--cells=8] <town...>');
+  const P = JSON.parse(readFileSync(src, 'utf8')), r0 = P.r0 || 0, c0 = P.c0 || 0;
+  const own = new Set(), cells = new Set(); let nd = 0;
+  for (const k of towns) {
+    const f = join(stage, k + '.json'); if (!existsSync(f)) throw new Error('no staged door points for ' + k);
+    for (const a of JSON.parse(readFileSync(f, 'utf8')).areas) for (const x of a.doors) {
+      nd++; own.add((Math.round((P.lat1 - x.lat) / P.dy) - r0) * 100000 + Math.round((x.lon + 360 - P.lon1) / P.dx) - c0);
+    }
+  }
+  for (const k of own) { const r = Math.floor(k / 100000), c = k - r * 100000; for (let dr = -N; dr <= N; dr++) for (let dc = -N; dc <= N; dc++) cells.add((r + dr) * 100000 + c + dc); }
+  const kp = {}; let kept = 0, all = 0;
+  for (const [d, list] of Object.entries(P.paths || {})) {
+    all += list.length; const l = list.filter(([r, c]) => cells.has(r * 100000 + c));
+    if (l.length) { kp[d] = l; kept += l.length; }
+  }
+  writeFileSync(out, JSON.stringify({ lat1: P.lat1, lon1: P.lon1, dx: P.dx, dy: P.dy, r0, c0, paths: kp }));
+  console.log(`paths: ${towns.length} towns, ${nd} doors; ${kept} of ${all} map squares within ${N} squares of a door, on ${Object.keys(kp).length} days`);
 } else {
-  console.log('node backfill-hail.mjs stage <dir> | build <out> [through]');
+  console.log('node backfill-hail.mjs stage <dir> | build <out> [through] | paths <hail-paths-backfill.json> <stage dir> <out> [--cells=8] <town...>');
 }

@@ -13,11 +13,14 @@ rm -f "$ST/running.lock"
 # g2b (2026-10-28): Group 2 stage B (group2/stageb-vm.sh, which waits for g1fix's VM work first); it leaves ~/run/group2/g2b.vmdone.
 # photos (2026-10-28): the close-up roof photos for the towns whose roof material step was skipped (group2/photos-backfill-vm.sh, after
 # g2b's VM work); it leaves ~/run/group2/photos.vmdone.
+# g3hail (2026-10-29, Matthew: "run the storm history ... when group 3 is done"): storm history for the Group 3 towns
+# (finish-g3hail-2026-10-29.sh). Ready when g3b is done here (not a VM flag: it stages the door points and starts its own cloud job).
+# Every stage, g3hail too, is behind the hotspot check below and the one running.lock: never two at once.
 # A stage that failed 3 times is reported and skipped, so a later stage still runs (2026-10-28: g1fix and g2b push different towns).
 FAILED=""
 # never pull a stage back over the phone hotspot (2026-10-29: Group 3 copies back gigabytes; memory: SSID "iPhone" = no heavy downloads)
 if netsh wlan show interfaces 2>/dev/null | tr -d "" | grep -qE "^ +SSID +: iPhone$"; then echo "cloud finish: on the phone hotspot, waiting for Wi-Fi"; exit 0; fi
-for name in layers group1 material g1fix g2b photos g3b; do
+for name in layers group1 material g1fix g2b photos g3b g3hail; do
   [ -f "$ST/$name.done" ] && continue
   tries=$(cat "$ST/$name.tries" 2>/dev/null || echo 0)
   [ "$tries" -ge 3 ] && { FAILED="$FAILED $name"; continue; }
@@ -29,8 +32,13 @@ for name in layers group1 material g1fix g2b photos g3b; do
     g2b) VMQ='group2 B: measuring done';;
     photos) VMQ='photos backfill: done';;
     g3b) VMQ='group3 B: measuring done';;   # Group 3 stage B (Matthew 29 Oct: "add the group 3"); finish-g3b-2026-10-29.sh
+    g3hail) VMQ='';;   # storm history for the Group 3 towns (Matthew 29 Oct); finish-g3hail-2026-10-29.sh starts its own cloud job, so it waits for g3b here, not for the VM
   esac
-  ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "grep -qE '$VMQ' ~/run-status.txt || test -f ~/run/group1/$name.vmdone || test -f ~/run/group2/$name.vmdone" < /dev/null 2>/dev/null || { echo "cloud finish: waiting for $name${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
+  if [ "$name" = g3hail ]; then
+    [ -f "$ST/g3b.done" ] || { echo "cloud finish: waiting for g3hail (after g3b)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
+  else
+    ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "grep -qE '$VMQ' ~/run-status.txt || test -f ~/run/group1/$name.vmdone || test -f ~/run/group2/$name.vmdone || { [ $name = g3b ] && test -f ~/run/group3/g3stageb.vmdone; }" < /dev/null 2>/dev/null || { echo "cloud finish: waiting for $name${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
+  fi
   echo $((tries + 1)) > "$ST/$name.tries"
   (
     cd "$DT" && bash "$(ls finish-$name-2026-*.sh | head -1)" > "logs-finish-$name.log" 2>&1 && touch "$ST/$name.done"

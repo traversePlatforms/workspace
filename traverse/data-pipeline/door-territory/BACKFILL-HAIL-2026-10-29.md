@@ -48,3 +48,7 @@ The statewide day files stay on the cloud machine (`~/run/hailfill/days`, 76 MB)
 2. Copy them to the cloud machine.
 3. Run `THROUGH=<server's through> bash ~/run/hailfill/hail-backfill-vm.sh`. The fetch is skipped (fetch.done); remove fetch.done to add newer days.
 4. Run `merge-storms.py` on the server (`--dry` first), then `push-edition.sh traverse-data` with an exact filter that leaves out the hail files the server already has.
+
+merge-storms.py reads the map squares as `hail-paths-add.json`. `node hail/backfill-hail.mjs paths <hail-paths-backfill.json> <stage dir> <out> [--cells=8] <town...>` makes it from the build's statewide squares, keeping those within 8 grid squares of the named towns' doors.
+
+**Group 3 runs these steps unattended:** `finish-g3hail-2026-10-29.sh`, stage g3hail of traverse/ops/run-cloud-finishers.sh, after g3b. It stages every Roofing town, so wind-storms.json and hail-reports.json stay statewide. It sends only the g3- and merged towns' files plus those two lists. See GROUP3-PLAN-2026-10-29.md, "Stage B order", step 3.
