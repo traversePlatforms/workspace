@@ -35,7 +35,8 @@ for f in traverse-clients-lib.php traverse-start.php traverse-hook.php; do cp_if
 SH="$(mktemp -d)"; trap 'rm -rf "$ST" "$SH"' EXIT
 TPL="$R/editions/dist/client-templates"
 for e in roofing yards solar pest security; do [ -s "$TPL/$e/edition.json" ] || { echo "MISSING $TPL/$e: run build-editions.cjs first"; exit 1; }; done
-mkdir -p "$SH/traverse-shared" "$SH/traverse-tools"; cp -r "$TPL" "$SH/traverse-shared/"; cp "$R/editions/dist/traverse-tools/clients.php" "$SH/traverse-tools/"
+mkdir -p "$SH/traverse-shared" "$SH/traverse-tools"; cp -r "$TPL" "$SH/traverse-shared/"; cp "$R/editions/dist/traverse-tools/clients.php" "$R/editions/dist/traverse-tools/push-alerts.sh" "$SH/traverse-tools/"   # push-alerts.sh: + every client install's alerts
+mkdir -p "$SH/sixfold-tools"; cp "$R/app/tools/nightly-backup.php" "$R/app/tools/regions-warm.php" "$SH/sixfold-tools/"   # backups and the towns warm-up include client installs
 for f in $(find "$SH" -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
 cd "$ST" || exit 1
 for f in $(find api -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
