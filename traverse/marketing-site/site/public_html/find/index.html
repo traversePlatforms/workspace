@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Find my app</title>
+<meta name="description" content="Lost your company's Traverse link? We email it to the address on your account.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@500;600;700&display=swap">
+<!-- Find my app (2026-10-30, Matthew: automate the lost-link request). The person types their email; api/traverse-findapp.php emails the sign-in
+     link of every app where that address is on an account, to that address only. The page never says whether an account was found: every
+     well-formed request gets the same answer. -->
+<style>
+:root{--ink:#0f1b2d;--soft:#566476;--line:#dce2ea;--bg:#f4f6f9;--card:#ffffff;--navy:#13294b;--flag:#d6400c;--go:#1f7a4d;--go-tint:#dcefe5;--bad:#b42318}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#e8edf5;--soft:#9aa8bc;--line:#24324a;--bg:#0b1220;--card:#131d2e;--navy:#dce6f5;--flag:#ff7a45;--go:#6fcf9b;--go-tint:#133324;--bad:#f0786a}}
+:root[data-theme="dark"]{--ink:#e8edf5;--soft:#9aa8bc;--line:#24324a;--bg:#0b1220;--card:#131d2e;--navy:#dce6f5;--flag:#ff7a45;--go:#6fcf9b;--go-tint:#133324;--bad:#f0786a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--navy)}a:hover{color:var(--flag)}
+header{background:var(--card);border-bottom:1px solid var(--line)}
+.hin{max-width:1080px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:"Familjen Grotesk",sans-serif;font-size:21px;letter-spacing:-.02em}
+.brand b{font-weight:700}.brand span{font-weight:500}
+main{max-width:560px;margin:0 auto;padding:56px 16px 80px}
+h1{font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:40px;line-height:1.05;letter-spacing:-.02em;margin:0 0 10px}
+.lead{color:var(--soft);margin:0 0 24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px}
+label{display:grid;gap:6px;font-size:15px;font-weight:700}
+input[type=email]{font:17px "Atkinson Hyperlegible",sans-serif;padding:13px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
+input:focus{outline:2px solid var(--flag);outline-offset:1px}
+.go{font:inherit;font-weight:700;font-size:17px;min-height:50px;width:100%;margin-top:16px;border:0;border-radius:12px;background:var(--flag);color:#fff;cursor:pointer}
+.go:disabled{opacity:.55;cursor:default}
+.msg{margin:14px 0 0;font-size:15px;min-height:1.4em}
+.msg.ok{background:var(--go-tint);color:var(--go);border-radius:12px;padding:12px 14px;font-weight:700}
+.msg.bad{color:var(--bad)}
+.hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
+.small{font-size:14px;color:var(--soft);margin:18px 0 0}
+@media (max-width:560px){h1{font-size:32px}main{padding-top:36px}}
+</style>
+</head>
+<body>
+<header><div class="hin">
+  <a class="brand" href="../"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"/><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="53" cy="17" r="8" fill="#d6400c"/></g></svg><span><b>Traverse</b> <span>Platforms</span></span></a>
+</div></header>
+<main>
+  <h1>Find my app</h1>
+  <p class="lead">Each company has its own link to its app. Type the email you sign in with and we'll send your link to it.</p>
+  <form class="card" id="f" novalidate>
+    <label>Email<input type="email" id="email" autocomplete="email" required></label>
+    <span class="hp" aria-hidden="true"><input name="website" id="website" tabindex="-1" autocomplete="off"></span>
+    <button class="go" id="b" type="submit">Email me my link</button>
+    <p class="msg" id="m" role="status"></p>
+  </form>
+  <p class="small">No email arrived after a few minutes? Check spam, ask your company's admin, or email <a href="mailto:support@traverseplatforms.com">support@traverseplatforms.com</a>.</p>
+</main>
+<script>
+(function () {
+  var T0 = Date.now(), f = document.getElementById('f'), m = document.getElementById('m'), b = document.getElementById('b'), em = document.getElementById('email');
+  function say(t, cls) { m.className = 'msg' + (cls ? ' ' + cls : ''); m.textContent = t; }
+  f.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = em.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { say('That email address does not look right.', 'bad'); em.focus(); return; }
+    b.disabled = true; say('Sending…');
+    fetch('../api/traverse-findapp.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: v, hp: document.getElementById('website').value, t: Date.now() - T0 }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { b.disabled = false; if (j && j.ok) { say(j.said || "If that email has a Traverse account, we've sent the link to it.", 'ok'); f.reset(); } else say((j && j.error) || 'That did not go through. Try again.', 'bad'); })
+      .catch(function () { b.disabled = false; say('No connection. Try again.', 'bad'); });
+  });
+})();
+</script>
+</body>
+</html>

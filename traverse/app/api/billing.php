@@ -428,7 +428,7 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if ($price === '') return ['error' => 'That plan is not offered ' . $ivWord . ' yet.'];
     if ($seats < 1 || $seats > BILLING_SEATS_MAX) return ['error' => 'People: 1 to ' . BILLING_SEATS_MAX . '.'];
     $inc = (int) ($c['included'][$plan] ?? 1);
-    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one admin and one worker. Crew covers up to ' . (int) $c['included']['crew'] . ' workers.'];
+    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one admin and one worker. Team covers up to ' . (int) $c['included']['crew'] . ' workers.'];
     /* founding by real prices (2026-10-29): the founding price ids in place of the list ones, no coupon; the schedule steps up after 12 months */
     $byPrice = billingFoundingByPrice($c, $plan, $iv, $seats > $inc, $addon) && !billingUplift($c);
     if ($byPrice) { $c['prices'] = array_replace_recursive($c['prices'], array_map(fn($ivs) => array_filter((array) $ivs), array_intersect_key((array) $c['prices_founding'], array_flip(BILLING_FOUNDING_KEYS)))); $price = (string) $c['prices'][$plan][$iv]; }

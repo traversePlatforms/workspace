@@ -102,6 +102,8 @@ html{scroll-behavior:smooth}
   /* the features two by two with hairline dividers */
   .featstrip{grid-template-columns:1fr 1fr !important;gap:1px !important;background:rgba(255,255,255,0.14) !important}
   .featstrip > div{box-shadow:none !important;background:#13294b}
+  /* your app, your brand: the words, then the picture */
+  .brandrow{grid-template-columns:minmax(0,1fr) !important}
 }
 /* five editions sit in one row on a desktop; narrower than that they go two across, the mark beside the name,
    and the last one takes the whole row rather than sitting alone */
@@ -122,13 +124,22 @@ html{scroll-behavior:smooth}
   .conds{grid-template-columns:1fr !important}
   .featstrip{grid-template-columns:1fr !important}
   .eds{grid-template-columns:1fr !important}
-  .lhform{grid-template-columns:1fr !important}
   .seerow{grid-template-columns:minmax(0,1fr) !important}
   .seerow figure:last-child{max-width:300px;margin:0 auto !important}
-  #more h2,#faq h2,#contact h2{font-size:32px !important}
+  #more h2,#faq h2,#contact h2,#brand h2{font-size:32px !important}
+  .ctacard{padding:40px 22px !important}
+  .ctacard > svg{width:100% !important;opacity:.5 !important}
+  .nowall p{font-size:18px !important}
+  .brandart{height:390px !important}
 }
-@media (max-width:860px){.faqwrap{grid-template-columns:minmax(0,1fr) !important}}
-#faq summary::marker{color:#d6400c}
+/* the questions: two columns of cards, one on narrow screens; the + turns to a cross when open */
+@media (max-width:860px){.faqgrid{grid-template-columns:minmax(0,1fr) !important}}
+#faq summary::-webkit-details-marker{display:none}
+#faq summary::marker{content:""}
+#faq .faqi{transition:transform .2s ease}
+#faq details[open] .faqi{transform:rotate(45deg)}
+#faq summary:hover .faqi{background:#fde6dc !important}
+#faq summary:focus-visible{outline:2px solid #d6400c;outline-offset:-2px;border-radius:14px}
 /* small phones: the wordmark drops "Platforms" so the header stays on one row */
 @media (max-width:480px){
   h1{font-size:36px !important}
@@ -180,6 +191,11 @@ html.anim .hero-ping{opacity:0;transform-box:fill-box;transform-origin:center}
 html.anim .go .hero-door,html.anim .go .hero-stop{opacity:1;transform:none}
 html.anim .go .hero-route{stroke-dashoffset:0 !important}
 html.anim .go .hero-ping{animation:ping 2.4s ease-out 2.3s infinite}
+/* the hero's small doors twinkle like stars (Matthew 2026-10-30): a halo and a brightening, each on its own beat; the halo is the stroke
+   (no stroke otherwise), so the doors keep their place. Only with motion allowed (html.anim), after they have appeared. */
+#top svg circle[r="7"]{stroke:#ffffff;stroke-opacity:0;stroke-width:7}
+html.anim .go .hero-door{animation:twinkle var(--tw,3.2s) ease-in-out var(--twd,2.6s) infinite}
+@keyframes twinkle{0%,100%{fill-opacity:1;stroke-opacity:0}40%{fill-opacity:.55;stroke-opacity:0}55%{fill-opacity:1;stroke-opacity:.38}70%{fill-opacity:1;stroke-opacity:0}}
 @keyframes ping{0%{opacity:.7;transform:scale(1)}80%,100%{opacity:0;transform:scale(2.8)}}
 /* How it works: the line wipes in left to right and each station arrives as the line reaches it */
 html.anim .trav-line{clip-path:inset(-30px 100% -30px -30px);transition:clip-path 1.7s cubic-bezier(.45,.05,.4,1)}
@@ -188,27 +204,12 @@ html.anim .trav.in .trav-line{clip-path:inset(-30px -30px -30px -30px)}
 .eds > div,#pricing .plan{transition:translate .25s ease,box-shadow .25s ease}
 .eds > div:hover,#pricing .plan:hover{translate:0 -6px;box-shadow:0 2px 4px rgba(15,27,45,0.08),0 18px 34px -10px rgba(15,27,45,0.28) !important}
 html.anim .eds > div.rv,html.anim #pricing .plan.rv{transition:opacity .7s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),translate .25s ease,box-shadow .25s ease}
-/* (the Find your edition button is the a[href="#trades"] with a border) */
+/* (the Find your trade button is the a[href="#trades"] with a border) */
 a[href="demo/"],a[href="#trades"][style*="border"]{transition:translate .2s ease,filter .2s ease}
 a[href="demo/"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;filter:brightness(1.06)}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
 </style>`;
-const linkJs = `<script>
-(function () {
-  var f = document.getElementById('linkhelp'); if (!f) return;
-  var T0 = Date.now(), msg = document.getElementById('lh-msg');
-  f.addEventListener('submit', function (e) {
-    e.preventDefault(); msg.style.color = '#0f1b2d';
-    var body = { name: f['lh-name'].value, company: f['lh-company'].value, email: f['lh-email'].value, phone: f['lh-phone'].value, hp: f.website.value, t: Date.now() - T0 };
-    if (!body.name.trim() || !body.company.trim() || !body.email.trim()) { msg.style.color = '#b3261e'; msg.textContent = 'Please add your name, company and email.'; return; }
-    var b = f.querySelector('button'); b.disabled = true; msg.textContent = 'Sending…';
-    fetch('demo/api.php?action=linkhelp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); })
-      .then(function (j) { b.disabled = false; if (j && j.ok) { f.reset(); msg.textContent = 'Thanks. We\\'ll email you your link once we\\'ve checked.'; } else { msg.style.color = '#b3261e'; msg.textContent = (j && j.error) || 'That did not go through. Please email support@traverseplatforms.com.'; } })
-      .catch(function () { b.disabled = false; msg.style.color = '#b3261e'; msg.textContent = 'No connection. Please try again.'; });
-  });
-})();
-</script>`;
+/* 2026-10-30: the lost-link form left the homepage; it is the Find my app page now (site-src/find/, api/traverse-findapp.php) */
 const motionJs = `<script>
 (function () {
   // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
@@ -257,7 +258,9 @@ const motionJs = `<script>
     if (vis) {
       var map = vis.firstElementChild, card = vis.lastElementChild, svg = map && map.querySelector('svg');
       if (svg) {
-        Array.prototype.forEach.call(svg.querySelectorAll('circle[r="7"]'), function (c, i) { c.classList.add('hero-door'); c.style.setProperty('--d', (0.05 + i * 0.035).toFixed(2) + 's'); });
+        Array.prototype.forEach.call(svg.querySelectorAll('circle[r="7"]'), function (c, i) { c.classList.add('hero-door'); c.style.setProperty('--d', (0.05 + i * 0.035).toFixed(2) + 's');
+          /* each star on its own beat: 2.6 to 4.4 s, starting once the route has drawn */
+          c.style.setProperty('--tw', (2.6 + (i * 0.7) % 1.8).toFixed(2) + 's'); c.style.setProperty('--twd', (2.6 + (i * 0.53) % 2.2).toFixed(2) + 's'); });
         var route = svg.querySelector('polyline');
         if (route && route.getTotalLength) { var len = route.getTotalLength(); route.classList.add('hero-route'); route.style.strokeDasharray = len; route.style.strokeDashoffset = len; }
         var stops = svg.querySelectorAll('circle:not([r="7"])');
@@ -280,6 +283,9 @@ const motionJs = `<script>
     tag($('.trav-st'), '', wide ? 0.38 : 0.12, wide ? 0.25 : 0);
     tag($('.conds > div'), '', 0.12);
     tag($('.featstrip'), '', 0, 0.1);
+    tag($('.brandart > div'), 'rv-pop', 0.15, 0.1);
+    tag($('.faqgrid > details'), '', 0.05);
+    tag($('.nowall'), '', 0, 0.05);
     var plans = document.querySelectorAll('#pricing [style*="minmax(270px"] > div');
     Array.prototype.forEach.call(plans, function (d) { d.classList.add('plan'); });
     tag(plans, '', 0.1);
@@ -311,11 +317,11 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Traverse Platforms</title>
-<meta name="description" content="Traverse runs field sales from the first knock to the signed job: doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.">
+<meta name="description" content="Traverse runs field sales from the first knock to the finished job: properties, phone calls, quotes, jobs and the office in one app, set up for your trade.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Traverse Platforms">
 <meta property="og:title" content="Traverse: work the real territory">
-<meta property="og:description" content="Doors, phone calls, appointments and the pipeline in one app, with an edition built for your trade.">
+<meta property="og:description" content="Properties, phone calls, quotes, jobs and the office in one app, set up for your trade.">
 <meta property="og:url" content="https://traverseplatforms.com/">
 <meta property="og:image" content="https://traverseplatforms.com/og.png">
 <meta property="og:image:width" content="1200">
@@ -329,7 +335,6 @@ ${motionHead}
 <body>
 ${body}
 ${menuJs}
-${linkJs}
 ${motionJs}
 </body>
 </html>

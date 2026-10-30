@@ -9,7 +9,7 @@
 // Output: preview/tp-5ea36a05/editions/index.html. Upload it into sixfoldcolorado.com/public_html/tp-5ea36a05/editions/.
 // Everything said about an edition is what the app does today; the sample door on each is labelled as made up.
 // Matthew's marketing rules apply: never say where the data comes from (it gives the concept away; the build refuses source
-// words), nothing negative ("no answer"), no Do Not Call, and no two neighbouring sections in the same card format.
+// words), nothing negative ("no answer"), no Do Not Call, and no two neighboring sections in the same card format.
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -23,10 +23,10 @@ let head = home.slice(0, hi), header = home.slice(hi, hj), tail = home.slice(fi)
 /* the homepage's in-page links become links back to it */
 const homeLinks = (s) => s.replace(/href="#(top|product|trades|how|pricing|demo|more|faq|contact)"/g, 'href="../#$1"')
   /* 2026-10-13: the homepage's own folder links (booking page, legal pages) and its edition links, seen from /editions/ */
-  .replace(/href="(demo|terms|terms-of-use|privacy|cancellation)\/"/g, 'href="../$1/"').replace(/href="editions\/\?e=/g, 'href="?e=');
+  .replace(/href="(demo|terms|terms-of-use|privacy|cancellation|find)\/"/g, 'href="../$1/"').replace(/href="editions\/\?e=/g, 'href="?e=');
 header = homeLinks(header); tail = homeLinks(tail);
-head = head.replace(/<title>[^<]*<\/title>/, '<title>Traverse editions</title>');
-if (!/<title>Traverse editions<\/title>/.test(head)) throw new Error('title not set');
+head = head.replace(/<title>[^<]*<\/title>/, '<title>Traverse trades</title>');
+if (!/<title>Traverse trades<\/title>/.test(head)) throw new Error('title not set');
 
 /* ---- the editions ---- */
 /* colour = the band; ink = text on the band; deep = the accent as text on white (Solar's yellow is too light for that) */
@@ -37,11 +37,11 @@ const ED = {
     who: 'roofing and storm-restoration companies that canvass after hail and wind.',
     door: ['Hail at the house, storm by storm since 2020', 'Damaging wind nearby, with the date', 'Roof size and pitch', 'Roof material, where on record', 'Year built and remodelled, where on record, for the roof’s age', 'Past re-roofs, where known', 'A close-up photo of the roof with its outline', 'Owner, home value and the area’s risk ratings'],
     rank: 'The biggest hail on the roof, damaging wind, the roof’s age and size, and no re-roof since the storm, then the owner’s ability to pay.',
-    tools: [['Storm list', 'The doors each storm day reached, biggest hail first.'], ['Hail layer', 'A storm’s path drawn over your neighbourhood map.'], ['Storm alerts', 'A phone alert when severe weather reaches your towns.'], ['JobNimbus', 'Booked doors go straight into JobNimbus.']],
+    tools: [['Storm list', 'The doors each storm day reached, biggest hail first.'], ['Hail layer', 'A storm’s path drawn over your neighborhood map.'], ['Storm alerts', 'A phone alert when severe weather reaches your towns.'], ['JobNimbus', 'Booked doors go straight into JobNimbus.']],
     sample: [['Biggest hail', '1.75 in · 14 May'], ['Roof', '3,300 sq ft · 6/12'], ['Material', 'Asphalt'], ['Built', '2004 · no re-roof since']], score: 10,
   },
   yards: {
-    name: 'Yards', colour: '#2f7a3a', ink: '#ffffff', deep: '#2f7a3a',
+    name: 'Lawn & Landscape', colour: '#2f7a3a', ink: '#ffffff', deep: '#2f7a3a',
     line: 'See the lawn, the trees and the fire hazard around each house before you pull up.',
     who: 'lawn care, landscaping, tree and wildfire-mitigation companies.',
     door: ['Lawn size, from large to none', 'Trees close to the house', 'Wildfire hazard around the property', 'The wildfire plan and HOA the house belongs to', 'The tax credit, insurance and grants that cover the work', 'The town’s watering and well rules', 'Frost dates and recent rain nearby', 'Owner, home value and the area’s figures'],
@@ -60,12 +60,12 @@ const ED = {
   },
   pest: {
     name: 'Pest', colour: '#7a3fa3', ink: '#ffffff', deep: '#7a3fa3',
-    line: 'Show up with the reason this house needs you, and the neighbours who already use you.',
+    line: 'Show up with the reason this house needs you, and the neighbors who already use you.',
     who: 'pest control companies selling plans door to door.',
-    door: ['New owners, and when they bought', 'Open space, creeks and ponds beside the house', 'Trees close to the house and the year it was built', 'What’s in season this month, pest by pest', 'Neighbours already on your service, from your own customer list', 'Recent bookings and door notes nearby', 'Owner, home value and the area’s figures'],
+    door: ['New owners, and when they bought', 'Open space, creeks and ponds beside the house', 'Trees close to the house and the year it was built', 'What’s in season this month, pest by pest', 'Neighbors already on your service, from your own customer list', 'Recent bookings and door notes nearby', 'Owner, home value and the area’s figures'],
     rank: 'A new owner, trees against the house, and open space or water beside it, then the owner’s ability to pay.',
-    tools: [['Plans', 'Quarterly plans with the visits that are due.'], ['Customer import', 'Bring your customer list and neighbours show on every door.'], ['Customers', 'Every customer with their visit history.'], ['Office dashboard', 'The whole team’s day on one screen.']],
-    sample: [['New owner', 'Bought in June'], ['Beside the house', 'Open space · creek'], ['Neighbours on service', '3 within a block'], ['In season', 'Wasps, mice']], score: 8,
+    tools: [['Plans', 'Quarterly plans with the visits that are due.'], ['Customer import', 'Bring your customer list and neighbors show on every door.'], ['Customers', 'Every customer with their visit history.'], ['Office dashboard', 'The whole team’s day on one screen.']],
+    sample: [['New owner', 'Bought in June'], ['Beside the house', 'Open space · creek'], ['Neighbors on service', '3 within a block'], ['In season', 'Wasps, mice']], score: 8,
   },
   security: {
     name: 'Security', colour: '#1b6f7a', ink: '#ffffff', deep: '#1b6f7a',
@@ -73,11 +73,11 @@ const ED = {
     who: 'home security and smart-home companies.',
     door: ['Property crime within a mile: the last 30, 90 and 365 days, in cities that report it', 'Town crime figures', 'New owners and newer homes', 'Owners who live somewhere else', 'Big lots and homes backing onto open space', 'Owner, home value and the area’s figures'],
     rank: 'New owners, newer homes, owners who live elsewhere, big lots and open space behind, then the owner’s ability to pay. Crime is shown on the card but kept out of the score.',
-    tools: [['Crime by neighbourhood', 'Neighbourhoods ranked by recent crime, with a crime map.'], ['Territories', 'The planning table, and territories drawn on the map.'], ['Follow-ups', 'Customers and the follow-ups that are due.'], ['Office dashboard', 'The whole team’s day on one screen.']],
+    tools: [['Crime by neighborhood', 'Neighborhoods ranked by recent crime, with a crime map.'], ['Territories', 'The planning table, and territories drawn on the map.'], ['Follow-ups', 'Customers and the follow-ups that are due.'], ['Office dashboard', 'The whole team’s day on one screen.']],
     sample: [['Crime within 1 mile', '4 in 90 days'], ['New owner', 'Bought in March'], ['Owner lives', 'Out of state'], ['Lot', '1.2 acres']], score: 8,
   },
 };
-const ALL = ['The homes in the towns you work', 'Neighbourhoods crews can claim', 'A 1 to 10 score on every door', 'The map, in photo or street view', 'Calendars and booked walks', 'Knock to signed job', 'Teams and managers', 'Training built in', 'Works with no signal', 'Quotes signed on the phone, with a deposit link', 'Voice notes and routes', 'Bring your current leads and customers', 'Your name and colours'];
+const ALL = ['The homes in the towns you work', 'Neighborhoods crews can claim', 'A 1 to 10 score on every door', 'The map, in photo or street view', 'Calendars and booked walks', 'Knock to signed job', 'Teams and managers', 'Training built in', 'Works with no signal', 'Quotes signed on the phone, with a deposit link', 'Voice notes and routes', 'Bring your current leads and customers', 'Your logo, name and colors'];
 
 /* Matthew 2026-10-06: never say where the data comes from. Refuse the build if a source word slips in. */
 const SOURCE_WORDS = /\b(NOAA|NWS|MRMS|radar|county|assessor|LiDAR|laser|aerial|satellite|USGS|USDA|NAIP|FEMA|census|PVWatts|EIA|FBI|police|public record|permit|national weather|no answer|do not call)\b/i;
@@ -131,19 +131,19 @@ const main = `
 <section class="edh">
 <div class="edw edhw">
 <div class="edhl">
-<span class="ede">Editions</span>
+<span class="ede">Trades</span>
 <div class="edrow">
-<h1 class="edt"><b>Traverse</b><span id="edname">Roofing</span></h1>
-<label class="eds"><span class="vh">Choose an edition</span>
+<h1 class="edt"><span id="edname">Roofing</span></h1>
+<label class="eds"><span class="vh">Choose a trade</span>
 <select id="edsel">
-<option value="roofing">TraverseRoofing</option><option value="yards">TraverseYards</option><option value="solar">TraverseSolar</option><option value="pest">TraversePest</option><option value="security">TraverseSecurity</option>
+<option value="roofing">Roofing</option><option value="yards">Lawn &amp; Landscape</option><option value="solar">Solar</option><option value="pest">Pest</option><option value="security">Security</option>
 </select></label>
 </div>
 <p class="edl" id="edline"></p>
 <p class="edwho" id="edwho"></p>
 <div class="edcta"><a class="edb pri" href="../demo/">Book a demo</a></div>
 </div>
-<div class="edart" aria-hidden="true"><div class="edphone"><div class="edscreen"><div class="edbar"><b>Traverse<span id="edbarname">Roofing</span></b><small>Monument</small></div><div id="edmap"></div><div class="edchip"><div><small id="edchipk"></small><b id="edchipv"></b></div><span class="eds-sc" id="edchips">10</span></div></div></div></div>
+<div class="edart" aria-hidden="true"><div class="edphone"><div class="edscreen"><div class="edbar"><b>Your Company</b><small id="edbarname">Roofing</small></div><div id="edmap"></div><div class="edchip"><div><small id="edchipk"></small><b id="edchipv"></b></div><span class="eds-sc" id="edchips">10</span></div></div></div></div>
 </div>
 </section>
 <section class="edw edtop">
@@ -154,9 +154,9 @@ const main = `
 <small class="eds-n">Figures made up for this example.</small>
 </div>
 </section>
-<section class="edrank"><div class="edw"><span class="edk">Best doors first</span><p id="edrank"></p></div></section>
+<section class="edrank"><div class="edw"><span class="edk">Top priorities first</span><p id="edrank"></p></div></section>
 <section class="edw edtools"><h2>What it adds</h2><ol id="edtools"></ol></section>
-<section class="edw edall"><h2>Every edition also has</h2><ul id="edall"></ul></section>
+<section class="edw edall"><h2>Every trade also has</h2><ul id="edall"></ul></section>
 </main>
 <style>
 #editions{--edc:#4e6680;--edi:#fff;--edd:#4e6680;color:#0f1b2d}
@@ -169,8 +169,7 @@ const main = `
 #editions .ede,#editions .edk{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.1em;text-transform:uppercase}
 #editions .ede{opacity:.8}
 #editions .edrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:14px 24px;margin-top:8px}
-#editions .edt{margin:0;font-family:'Familjen Grotesk',sans-serif;font-size:56px;line-height:1.02;letter-spacing:-.025em;font-weight:500}
-#editions .edt b{font-weight:700}
+#editions .edt{margin:0;font-family:'Familjen Grotesk',sans-serif;font-size:56px;line-height:1.02;letter-spacing:-.025em;font-weight:700}
 #editions .eds select{min-height:52px;padding:0 44px 0 16px;border-radius:12px;border:0;background:#fff;color:#0f1b2d;font:700 17px 'Atkinson Hyperlegible',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:pointer}
 #editions .edl{margin-top:18px;font-size:22px;line-height:1.35;max-width:46ch;font-family:'Familjen Grotesk',sans-serif;font-weight:500}
 #editions .edwho{margin-top:8px;font-size:17px;opacity:.85}
@@ -183,7 +182,6 @@ const main = `
 #editions .edscreen{border-radius:29px;overflow:hidden;background:#fff}
 #editions .edh .edbar{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px 10px;border-bottom:1px solid #e3e8ee}
 #editions .edh .edbar b{font:700 15px 'Familjen Grotesk',sans-serif;color:#0f1b2d}
-#editions .edh .edbar b span{color:var(--edd)}
 #editions .edh .edbar small{font-size:12px;color:#566476}
 #editions #edmap svg{display:block;width:100%;height:auto}
 #editions .edh .edchip{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px 16px;border-top:1px solid #e3e8ee}
@@ -236,7 +234,7 @@ const main = `
   function show(k) {
     var e = D.ED[k]; if (!e) { k = 'roofing'; e = D.ED[k]; }
     var root = $('editions'); root.style.setProperty('--edc', e.colour); root.style.setProperty('--edi', e.ink); root.style.setProperty('--edd', e.deep);
-    $('edname').textContent = e.name; $('edsel').value = k; document.title = 'Traverse' + e.name + ' \\u00b7 Traverse editions';
+    $('edname').textContent = e.name; $('edsel').value = k; document.title = e.name + ' \\u00b7 Traverse';
     $('edline').textContent = e.line; $('edwho').textContent = 'Built for ' + e.who;
     $('edmap').innerHTML = D.ART[k]; $('edbarname').textContent = e.name;   /* our own drawing, built with this page */
     $('edchipk').textContent = e.sample[0][0]; $('edchipv').textContent = e.sample[0][1];
