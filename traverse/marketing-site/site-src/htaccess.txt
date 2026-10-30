@@ -32,7 +32,8 @@ Header always set Strict-Transport-Security "max-age=31536000"
 # start/ (the checkout and welcome page, 2026-10-29) is private with the rest until Matthew opens it. To send payment links before the whole site
 # opens, take "start|" out of this list and chmod 644 the files in start/ (its API, api/traverse-start.php and api/traverse-hook.php, is never
 # behind the password). The welcome page must be reachable by anyone who has paid, so it opens with /start/ or with the site.
-<If "%{REQUEST_URI} =~ m#^/(index\.html)?$# || %{REQUEST_URI} =~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation|shots|start)(/|$)# || %{REQUEST_URI} =~ m#^/og\.png$#">
+# find/ (Find my app, 2026-10-30) is private with the rest; its API, api/traverse-findapp.php, is not. To open it early, take "find|" out.
+<If "%{REQUEST_URI} =~ m#^/(index\.html)?$# || %{REQUEST_URI} =~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation|shots|start|find)(/|$)# || %{REQUEST_URI} =~ m#^/og\.png$#">
   AuthType Basic
   AuthName "Traverse Platforms (private for now)"
   AuthUserFile /home/customer/www/traverseplatforms.com/traverse-site-private/.htpasswd
@@ -40,4 +41,4 @@ Header always set Strict-Transport-Security "max-age=31536000"
 </If>
 # Since 2026-10-15 the marketing pages are private: plain files are served by the host's front server, which skips
 # this password rule, so after uploading the site run on the server:
-#   chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots start -type f -exec chmod 600 {} \;
+#   chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots start find -type f -exec chmod 600 {} \;

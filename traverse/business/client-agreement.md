@@ -8,7 +8,7 @@ This Subscription Agreement (the **"Agreement"**) is between **Traverse Platform
 - **"Client Data"**: everything the Client and its Authorized Users put into the Service or create through it, including customers, leads, notes, phone numbers and email addresses collected from homeowners, photos, appointments, door outcomes, results and training content. Client Data does not include Door Data.
 - **"Door Data"**: the property and area information Traverse provides in the Service, and anything derived from it. That includes property records, owner-of-record names, addresses, lot and building details, scores and rankings, maps, aerial photos, storm, roof, lawn, tree, solar, pest, crime and other layers, estimates and neighbourhood groupings, whether shown on a door card, a map, a list or a table.
 - **"Documentation"**: the help and setup material Traverse makes available for the Service.
-- **"Edition"**: the trade version of the Service named on the Order Form (for example Roofing, Yards, Solar, Pest or Security).
+- **"Edition"**: the trade version of the Service named on the Order Form (for example Roofing, Lawn & Landscape, Solar, Pest or Security).
 - **"Install"**: the separate copy of the Service Traverse runs for the Client, with its own web address, sign-ins and data.
 - **"Order Form"**: the order (Exhibit A, or an online checkout that references this Agreement) stating the Edition, plan, Seats, fees and Subscription Term.
 - **"Seat"**: one Authorized User who can sign in, including the Client's admin account. A Seat may not be shared between people. Traverse's Support Account is not a Seat.
@@ -118,10 +118,10 @@ The Client will not, and will not let anyone else:
 
 **9.1 Fees.** The Client will pay the fees on the Order Form. Unless the Order Form says otherwise, fees are billed in advance, monthly or yearly, through Traverse's payment processor (currently Stripe), and charged to the payment method on file.
 
-**9.2 Seats.** One plan per company. Each plan includes one admin account plus a number of other Authorized Users (Solo 1, Crew up to 5, Team up to 12; Company as stated on the Order Form). Each Authorized User beyond that is an extra Seat at the Order Form price. To add or remove Seats, the Client asks Traverse at **billing@traverseplatforms.com**; Seats are not changed automatically. Added Seats are billed pro-rata for the rest of the billing period, and removed Seats come off from the next bill. If more people can sign in than the Client has paid for, Traverse may notify the Client and bill the extra Seats from the date they were added. Booking several plans to get extra Seats, or other abuse of plans and Seats, may lead to suspension under §11 or termination under §10.3, without a refund.
+**9.2 Seats.** One plan per company. Each plan includes one admin account plus a number of other Authorized Users (Solo 1, Team up to 5, Company up to 12; more than 12 as stated on the Order Form). Each Authorized User beyond that is an extra Seat at the Order Form price. To add or remove Seats, the Client asks Traverse at **billing@traverseplatforms.com**; Seats are not changed automatically. Added Seats are billed pro-rata for the rest of the billing period, and removed Seats come off from the next bill. If more people can sign in than the Client has paid for, Traverse may notify the Client and bill the extra Seats from the date they were added. Booking several plans to get extra Seats, or other abuse of plans and Seats, may lead to suspension under §11 or termination under §10.3, without a refund.
 
 
-**9.3 Setup and the money-back guarantee.** There is no free trial. The first payment is charged when the Client subscribes. Traverse then sets up the Client's Install (its towns, branding, sign-in codes, prices and terms) within 2 business days (Monday to Friday, except US federal holidays), or longer only while Traverse is waiting on something it needs from the Client, and tells the Client the day the Install is live (the **"Go-Live Date"**). If the Client is not satisfied, it may cancel by email to **billing@traverseplatforms.com** at any time before the Go-Live Date or within 7 days after it, and Traverse will refund that first payment in full and end the subscription. The guarantee applies once per client, to its first subscription. Traverse makes all refunds, to the payment method used.
+**9.3 Setup and the money-back guarantee.** There is no free trial. The first payment is charged when the Client subscribes. Traverse then sets up the Client's Install (its towns, branding, sign-in codes, prices and terms) and tells the Client the day the Install is live (the **"Go-Live Date"**). If the Client is not satisfied, it may cancel by email to **billing@traverseplatforms.com** at any time before the Go-Live Date or within 7 days after it, and Traverse will refund that first payment in full and end the subscription. The guarantee applies once per client, to its first subscription. Traverse makes all refunds, to the payment method used.
 
 **9.4 Late payment.** If a payment fails or is late, Traverse will notify the Client. If it is not paid within 14 days of that notice, Traverse may suspend the Service under §11 until payment is made.
 
@@ -235,14 +235,14 @@ Traverse will give notice before suspending where practical, will limit the susp
 | **Client** (legal name) | [ ] |
 | **Client contact and notice email** | [ ] |
 | **Billing email** | [ ] |
-| **Edition** | [Roofing / Yards / Solar / Pest / Security] |
+| **Edition** | [Roofing / Lawn & Landscape / Solar / Pest / Security] |
 | **Second edition** | [None / name] at $99 a month |
-| **Plan** | [Solo: an admin account plus 1 person / Crew: an admin account plus up to 5 people / Team: an admin account plus up to 12 people]. One plan per company |
+| **Plan** | [Solo: an admin account plus 1 person / Team: an admin account plus up to 5 people / Company: an admin account plus up to 12 people]. One plan per company |
 | **Seats** | [ ] (people beyond those the plan includes; changed by asking Traverse at billing@traverseplatforms.com) |
 | **Billing** | [Monthly / Yearly], in advance, by card through Stripe |
-| **Fees** | [Solo $99 a month or $79 a month billed yearly / Crew $249 a month or $199 billed yearly, extra people $45 or $35 each / Team $549 a month or $449 billed yearly, extra people $39 or $29 each]. |
+| **Fees** | [Solo $99 a month or $79 a month billed yearly / Team $249 a month or $199 billed yearly, extra people $45 or $35 each / Company $549 a month or $439 billed yearly, extra people $39 or $29 each]. |
 | **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): the founding prices on this Order Form (25% off, rounded to whole dollars) for the first 12 months, and the list price on this Order Form is locked in, with every feature the plan includes, for as long as the subscription continues without a break (§9.6) |
-| **Setup and guarantee** | No free trial. Install set up within 2 business days of the first payment; 7-day money-back guarantee from the Go-Live Date (§9.3) |
+| **Setup and guarantee** | No free trial. Install set up after the first payment; 7-day money-back guarantee from the Go-Live Date (§9.3) |
 | **Start date** | [ ] |
 | **Initial Subscription Term** | [1 month / 12 months], renewing under §10.2 |
 | **Install address** | Provided by Traverse at setup |

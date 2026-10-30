@@ -41,6 +41,9 @@ declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 
 const TC_EDITIONS = ['roofing' => 'TraverseRoofing', 'yards' => 'TraverseYards', 'solar' => 'TraverseSolar', 'pest' => 'TraversePest', 'security' => 'TraverseSecurity'];
+/* what customers read (2026-10-30, Matthew: the trade, not a Traverse product name; "Yards" is Lawn & Landscape) */
+const TC_TRADES = ['roofing' => 'Roofing', 'yards' => 'Lawn & Landscape', 'solar' => 'Solar', 'pest' => 'Pest', 'security' => 'Security'];
+function tcTrade(string $ed): string { return isset(TC_TRADES[$ed]) ? 'Traverse for ' . TC_TRADES[$ed] : 'Traverse'; }
 const TC_PH = ['cid' => 'czzzzzzzz', 'CID' => 'CZZZZZZZZ', 'cookie' => 'cqqqq', 'folder' => 'qq-qqqqqq'];   /* build-editions.cjs TPL */
 const TC_PAGE_FILES = ['index.html', 'version.txt', 'sw.js', 'q.html', 'sign.html'];
 const TC_API_FILES = ['rounds', 'billing', 'sms', 'webpush', 'skiptrace'];
@@ -475,7 +478,7 @@ function tcBrand(array $c, string $cid, string $cs, array $in): array {
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know.', 'code' => 404];
     $color = strtolower(trim((string) ($in['color'] ?? '')));
-    if (!preg_match('/^#[0-9a-f]{6}$/', $color)) return ['error' => 'Pick your brand colour.', 'field' => 'color'];
+    if (!preg_match('/^#[0-9a-f]{6}$/', $color)) return ['error' => 'Pick your brand color.', 'field' => 'color'];
     $logo = tcLogo((string) ($in['logo'] ?? '')); if (isset($logo['error'])) return $logo + ['field' => 'logo'];
     $brand = ['color' => $color, 'logo' => null];
     if (isset($logo['raw'])) { $f = tcDir() . '/pending/' . $cid . '-logo.' . $logo['ext']; foreach (['png', 'jpg', 'svg'] as $x) @unlink(tcDir() . '/pending/' . $cid . '-logo.' . $x); tcWrite($f, $logo['raw'], 0600); $brand['logo'] = ['file' => basename($f), 'ext' => $logo['ext']]; }
@@ -497,8 +500,8 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     $s = tcSessionGet($c, $cs);
     if (!tcSessionPaid($s, $cid)) return ['error' => 'We have not seen this payment go through yet. Wait a moment and try again.', 'code' => 402];
     $v = tcForm($in); if (isset($v['error'])) return $v;
-    if (empty($p['area'])) return ['error' => 'Start with your service area (step 1).', 'field' => 'area', 'step' => 1];
-    if (empty($p['brand'])) return ['error' => 'Pick your colour first (step 2).', 'field' => 'color', 'step' => 2];
+    if (empty($p['area'])) return ['error' => 'Start with your service area.', 'field' => 'area', 'step' => 1];
+    if (empty($p['brand'])) return ['error' => 'Pick your color first.', 'field' => 'color', 'step' => 2];
     $area = (array) $p['area']; $brand = (array) $p['brand']; $v['color'] = (string) $brand['color'];
     $logoFile = isset($brand['logo']['file']) && is_file(tcDir() . '/pending/' . $brand['logo']['file']) ? tcDir() . '/pending/' . $brand['logo']['file'] : '';
     $ed = (string) $p['edition']; $edj = tcJson(tcTplDir($ed) . '/edition.json');
@@ -617,11 +620,11 @@ function tcMoney(array $p): string { $q = (array) ($p['quote'] ?? []); return '$
 /** the buyer's email: their app is ready, with the address and their admin code */
 function tcMailReady(array $e, string $code): bool {
     $a = (array) ($e['area'] ?? []);
-    $body = "Hi " . explode(' ', (string) $e['admin'])[0] . ",\n\nYour Traverse is ready: " . $e['name'] . " on " . (TC_EDITIONS[$e['edition']] ?? 'Traverse') . ".\n\n"
+    $body = "Hi " . explode(' ', (string) $e['admin'])[0] . ",\n\nYour Traverse is ready: " . $e['name'] . " on " . tcTrade((string) $e['edition']) . ".\n\n"
         . "Open it here (save it to your phone's home screen): " . $e['url'] . "\nSign in with " . $e['email'] . " and the password you picked. Your admin code, for a quick sign-in on a phone: " . $code . "\n\n"
         . "Keep both to yourself: they open the admin side of your company's app. The welcome checklist inside the app walks you through inviting your team (each person gets an email to set their own password), connecting your email and payments, and importing customers.\n\n"
-        . (($a['mode'] ?? '') === 'counties' ? 'Your homes: every town we cover in ' . ($a['place'] ?? 'your counties') . '. More area later is free: just ask.'
-            : (isset($a['lat']) && strtoupper((string) ($a['state'] ?? '')) === tcSettings()['state'] ? 'Your homes: every town within ' . (int) ($a['miles'] ?? 0) . ' miles of ' . ($a['place'] ?: 'your business') . '. More area later is free: just ask.' : 'Door data for your area is being added; we will email you when your homes are in. Everything else works now.'))
+        . (($a['mode'] ?? '') === 'counties' ? 'Your homes: every town we cover in ' . ($a['place'] ?? 'your counties') . '. You can change this later in the app.'
+            : (isset($a['lat']) && strtoupper((string) ($a['state'] ?? '')) === tcSettings()['state'] ? 'Your homes: every town within ' . (int) ($a['miles'] ?? 0) . ' miles of ' . ($a['place'] ?: 'your business') . '. You can change this later in the app.' : 'Door data for your area is being added; we will email you when your homes are in. Everything else works now.'))
         . "\n\nYour 7-day money-back guarantee started today. Questions: reply to this email or call (303) 596-9515.\n\nMatthew Sharpe\nTraverse Platforms\n";
     return tcMail((string) $e['email'], 'Your Traverse is ready: ' . $e['name'], $body);
 }
@@ -657,7 +660,7 @@ function tcHookPending(string $cid, array $ev): string {
     }
     if ($first && empty($p['provisioned_at'])) {
         if (($p['email'] ?? '') !== '' && filter_var($p['email'], FILTER_VALIDATE_EMAIL))
-            tcMail($p['email'], 'Finish setting up your Traverse', "Thanks for subscribing to " . (TC_EDITIONS[$p['edition']] ?? 'Traverse') . ".\n\nIf you closed the page before finishing, pick up where you left off here (about two minutes: your company, your business address and your colour, and your app opens):\n" . tcWelcomeUrl($p) . "\n\nKeep this link to yourself. Questions: reply to this email or call (303) 596-9515.\n\nTraverse Platforms\n");
+            tcMail($p['email'], 'Finish setting up your Traverse', "Thanks for subscribing to " . tcTrade((string) $p['edition']) . ".\n\nIf you closed the page before finishing, pick up where you left off here (about two minutes: your company, your business address and your colour, and your app opens):\n" . tcWelcomeUrl($p) . "\n\nKeep this link to yourself. Questions: reply to this email or call (303) 596-9515.\n\nTraverse Platforms\n");
         tcMailMatthew('new paid company (' . (TC_EDITIONS[$p['edition']] ?? $p['edition']) . ')', ['Edition' => $p['edition'], 'Plan' => $p['plan'] . ', ' . $p['interval'] . ', ' . $p['seats'] . ' people', 'Price' => tcMoney($p),
             'Buyer' => $p['company_hint'] ?? '', 'Email' => $p['email'] ?? '', 'Client id' => $cid, 'Status' => 'paid; their app opens as soon as they fill in the welcome page']);
     }
@@ -672,7 +675,7 @@ function tcRemind(): int {
         if (empty($p['paid_at']) || !empty($p['provisioned_at']) || empty($p['email'])) continue;
         $sent = (array) ($p['reminded'] ?? []); $last = $sent ? max($sent) : (int) $p['paid_at'];
         if (count($sent) >= 3 || time() - $last < 86400) continue;
-        tcMail((string) $p['email'], 'Your Traverse is waiting for you', "You subscribed to " . (TC_EDITIONS[$p['edition']] ?? 'Traverse') . " but your app is not open yet: it needs your company name, business address and colour (about two minutes).\n\n" . tcWelcomeUrl($p) . "\n\nTraverse Platforms\n");
+        tcMail((string) $p['email'], 'Your Traverse is waiting for you', "You subscribed to " . tcTrade((string) $p['edition']) . " but your app is not open yet: it needs your company name, business address and colour (about two minutes).\n\n" . tcWelcomeUrl($p) . "\n\nTraverse Platforms\n");
         tcPendSave((string) $p['cid'], function ($x) { $x['reminded'] = array_merge((array) ($x['reminded'] ?? []), [time()]); return $x; }); $n++;
     }
     return $n;

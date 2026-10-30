@@ -12710,7 +12710,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!startOn() || startHidden()) return null;
     var A = CO.area || {}, card = q('section', 'card coform kitsetup setupck startck'), marks = {};
     card.appendChild(q('div', 'dwh', 'Welcome to Traverse, ' + (myName() || 'there')));
-    card.appendChild(q('p', 'sub2', 'Your app is ready to use. These get your company going; each one opens where it is done.'));
+    card.appendChild(q('p', 'sub2', 'Your app is ready to use.'));
     var step = function (key, n, title, sub, fn) {
       var row = q(fn ? 'button' : 'div', 'kitstep'); if (fn) { row.type = 'button'; row.addEventListener('click', fn); } row.setAttribute('data-step', key);
       var ck = q('span', 'kitck', n); row.appendChild(ck); marks[key] = [row, ck];
