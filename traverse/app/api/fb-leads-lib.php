@@ -384,7 +384,7 @@ function flPoll(string $priv, string $by = 'Facebook'): array {
     try {
         $state = flRead(flStateFile($priv)) ?? []; $state['last'] = (array) ($state['last'] ?? []);
         $digits = fn($p) => substr((string) preg_replace('/\D/', '', (string) $p), -10);
-        $seenExt = []; $who = [];
+        $seenExt = array_fill_keys(array_map('strval', (array) ($state['seen'] ?? [])), true); $who = [];   /* + the lead ids that became a note or brought a lead back: never in leads.log, so kept here */
         foreach (readLines(leadsDir() . '/leads.log') as $l) {
             if (!empty($l['ext'])) $seenExt[preg_replace('/^l:/', '', (string) $l['ext'])] = true;
         }
@@ -438,10 +438,11 @@ function flPoll(string $priv, string $by = 'Facebook'): array {
                             !empty($L['campaign_name']) ? 'Campaign: ' . a365Clean($L['campaign_name'], 120) : '', 'Form: ' . a365Clean($F['name'] ?: $F['id'], 120) . ' · Page: ' . a365Clean($P['name'], 80)]));
                         /* Couldn't reach, then the form again: that lead comes back */
                         $un = ''; foreach ($keys as $k) if (isset($unWho[$k])) { $un = $unWho[$k]; break; }
-                        if ($un !== '') { leadRevive($un, 'filled in a Facebook form again (' . a365Clean($F['name'], 60) . ')', 'Facebook'); foreach ($keys as $k) unset($unWho[$k]); $res['back']++; continue; }
+                        if ($un !== '') { $state['seen'][] = $ext; leadRevive($un, 'filled in a Facebook form again (' . a365Clean($F['name'], 60) . ')', 'Facebook'); foreach ($keys as $k) unset($unWho[$k]); $res['back']++; continue; }
                         /* already in the Pipeline: a note on that lead, not a second lead */
                         $have = ''; foreach ($keys as $k) if (isset($who[$k])) { $have = $who[$k]; break; }
                         if ($have !== '') {
+                            $state['seen'][] = $ext;
                             appendLine(leadsDir() . '/leadst.log', ['id' => $have, 'note' => 'Filled in a Facebook form again. ' . implode(' · ', $adLine) . ($v['notes'] ? "\n" . implode("\n", $v['notes']) : ''), 'by' => 'Facebook', 'at' => time()]);
                             $res['notes']++; continue;
                         }
@@ -462,7 +463,7 @@ function flPoll(string $priv, string $by = 'Facebook'): array {
             if (count($res['errors']) === $errBefore) $state['last'][$pid] = max($since, $newest - 60);   /* a minute of overlap for the two clocks; the lead ids stop doubles; never past a form that failed */
         }
         $res['fresh'] = array_values(array_diff($res['errors'], (array) ($state['errors'] ?? [])));   /* the command line says an error once, not every 5 minutes */
-        $state['ran'] = time(); $state['errors'] = array_slice($res['errors'], 0, 10);
+        $state['ran'] = time(); $state['errors'] = array_slice($res['errors'], 0, 10); $state['seen'] = array_slice(array_values(array_unique(array_map('strval', (array) ($state['seen'] ?? [])))), -500);
         if ($res['added'] || $res['notes'] || $res['back']) { $state['lastAdded'] = time(); $state['n'] = (int) ($state['n'] ?? 0) + $res['added']; }
         flWrite(flStateFile($priv), $state);
         if ($res['added'] || $res['notes'] || $res['back'] || $res['errors']) flLog(['what' => 'run', 'by' => $by, 'added' => $res['added'], 'notes' => $res['notes'], 'back' => $res['back'], 'leads' => $res['who'], 'errors' => array_slice($res['errors'], 0, 5)]);
