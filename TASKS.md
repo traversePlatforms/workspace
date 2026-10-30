@@ -1231,6 +1231,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-39 — ON MATTHEW'S LIST (29 Oct): look into Xweather** (hail threat + lightning API; pay-as-you-go, first 15,000 accesses a month free, hail calls cost 12x; commercial terms of the free tier unverified). https://www.xweather.com/pricing/weather-api-pay-as-you-go
 - [ ] **TR-40 — ON MATTHEW'S LIST (29 Oct): look into HailTrace and Verisk** for insurance-grade hail/wind reports per address (what SalesRabbit uses, via Verisk). Prices by sales call only. https://hailtrace.com/plans · https://salesrabbit.com/weather/
 
+- [ ] **TR-41 — More ways for companies to take payment (Matthew 30 Oct: "Add attaching those other payment systems to the todo list").** Today: Square (Connect Square), Stripe (own key), and Venmo / Cash App / PayPal / Zelle / own link as "other ways to pay" (Zelle QR upload being added 30 Oct). To attach: QuickBooks Payments (most likely next: many trades keep books in QuickBooks), PayPal/Venmo Business (real checkout, not just a handle), Clover, Helcim, Authorize.net; and customer financing (Wisetack, Hearth, GreenSky: big for roofing and solar jobs). Check each provider's API terms and partner requirements first.
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
