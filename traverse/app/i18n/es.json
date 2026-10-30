@@ -3227,5 +3227,21 @@
  "Create a new app password and copy it.": "Crea una contraseña de aplicación nueva y cópiala.",
  "Come back here, paste it below, and press Send a test and connect.": "Vuelve aquí, pégala abajo y presiona Enviar una prueba y conectar.",
  "That page is for personal Outlook and Hotmail accounts. A work or school Microsoft 365 account may have app passwords turned off: ask whoever runs your Microsoft 365 to allow them (or to turn on Authenticated SMTP for this mailbox).": "Esa página es para cuentas personales de Outlook y Hotmail. Una cuenta de Microsoft 365 de trabajo o escuela puede tener apagadas las contraseñas de aplicación: pide a quien administra tu Microsoft 365 que las permita (o que active SMTP autenticado para este buzón).",
- "That address is not on a lead or customer you work with, so the app does not send to it.": "Esa dirección no está en un prospecto o cliente con el que trabajes, así que la app no le envía."
+ "That address is not on a lead or customer you work with, so the app does not send to it.": "Esa dirección no está en un prospecto o cliente con el que trabajes, así que la app no le envía.",
+ "The lot": "El lote",
+ "Corner lot": "Lote de esquina",
+ "Corner lot: ": "Lote de esquina: ",
+ "Road behind the lot: ": "Calle detrás del lote: ",
+ "Alley behind the house": "Callejón detrás de la casa",
+ "Alley beside the house": "Callejón al lado de la casa",
+ "Path or trail beside the lot": "Sendero o camino junto al lote",
+ "Dead end or cul-de-sac about ": "Calle sin salida o cul-de-sac a unos ",
+ " ft from this lot": " pies de este lote",
+ "Nearest home about ": "Casa más cercana a unos ",
+ "Water nearby: ": "Agua cerca: ",
+ "Lot facts: U.S. Census Bureau street map (2026) and the county parcel; distances from the middle of the lot.": "Datos del lote: mapa de calles de la Oficina del Censo de EE. UU. (2026) y la parcela del condado; distancias desde el centro del lote.",
+ " Alley: City and County of Denver.": " Callejón: Ciudad y Condado de Denver.",
+ "Backs onto open space": "Colinda con espacio abierto",
+ "Alley behind": "Callejón atrás",
+ "Dead end or cul-de-sac": "Calle sin salida o cul-de-sac"
 }
