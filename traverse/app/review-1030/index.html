@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App notes, 30 Oct</title>
+<style>
+  :root { --bg: #f4f6f9; --card: #ffffff; --ink: #0f1b2d; --soft: #566476; --line: #dbe1e8; --acc: #2f4155; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0d131b; --card: #161e29; --ink: #e8edf3; --soft: #9aa7b6; --line: #2a3646; --acc: #a9bbd1; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .sub { color: var(--soft); margin: 0 0 24px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 0 0 18px; }
+  h2 { font-size: 18px; margin: 0 0 6px; }
+  p { margin: 0 0 12px; color: var(--soft); }
+  .shots { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+  figure { margin: 0; }
+  figure img { display: block; border: 1px solid var(--line); border-radius: 10px; max-width: 100%; height: auto; }
+  figure.desk img { width: 720px; }
+  figure.phone img { width: 260px; }
+  figcaption { font-size: 13px; color: var(--soft); margin-top: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>App notes, 30 Oct</h1>
+  <p class="sub">Each change on a computer and a phone, from the test copy (a made-up company, test codes). Nothing here is live until it is deployed.</p>
+
+  <section>
+    <h2>1. Company: each Setup entry opens its own part</h2>
+    <p>Setup's "Your company" opens name, phone, email, website and review link. "Your logo and color" opens the color and logo. The Office menu's Company shows both, each under its heading.</p>
+    <div class="shots">
+      <figure class="desk"><img src="01-company-details-desktop.png" alt="Your company, computer"><figcaption>Your company, computer</figcaption></figure>
+      <figure class="phone"><img src="01-company-details-phone.png" alt="Your company, phone"><figcaption>Your company, phone</figcaption></figure>
+      <figure class="desk"><img src="01-company-brand-desktop.png" alt="Logo and color, computer"><figcaption>Logo and color, computer</figcaption></figure>
+      <figure class="phone"><img src="01-company-brand-phone.png" alt="Logo and color, phone"><figcaption>Logo and color, phone</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. The Office menu fits the window</h2>
+    <p>The cause: the Office menu beside Accounts and the other office screens was sticky with no height limit, so on a short window its bottom ran past the screen. It now fits the window and scrolls by itself.</p>
+    <div class="shots"><figure class="desk"><img src="02-office-menu-640.png" alt="Accounts on a 640-pixel-tall window"><figcaption>Accounts, a 640-pixel-tall window</figcaption></figure></div>
+  </section>
+
+  <section>
+    <h2>3 and 6. Setup: Back comes here; Training is in it</h2>
+    <p>Back from every Setup choice returns to Setup; Back from Setup goes to the Office on a computer and Home on a phone. Training is listed beside Import and Your costs.</p>
+    <div class="shots">
+      <figure class="desk"><img src="03-setup-desktop.png" alt="Setup, computer"><figcaption>Setup, computer</figcaption></figure>
+      <figure class="phone"><img src="03-setup-phone.png" alt="Setup, phone"><figcaption>Setup, phone</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>5 and 11. Billing for a company that already pays</h2>
+    <p>Plan and people, the price now, the founding price and the day it steps up, the next charge, Manage billing for invoices, card and canceling, and a request to add people or change plan (an email to Traverse). No pay-to-start screen for a client install. Plans read Solo, Team, Company.</p>
+    <div class="shots">
+      <figure class="desk"><img src="05-billing-desktop.png" alt="Billing, computer"><figcaption>Billing, computer</figcaption></figure>
+      <figure class="phone"><img src="05-billing-phone.png" alt="Billing, phone"><figcaption>Billing, phone</figcaption></figure>
+      <figure class="desk"><img src="05-billing-client-desktop.png" alt="Billing in a self-serve client install"><figcaption>Billing in a self-serve client install</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>6 and 10. The welcome checklist</h2>
+    <p>"Train your team" opens Training. The line "each one opens where it is done" is gone.</p>
+    <div class="shots">
+      <figure class="desk"><img src="06-welcome-checklist-desktop.png" alt="Welcome checklist, computer"><figcaption>Welcome checklist, computer</figcaption></figure>
+      <figure class="phone"><img src="06-welcome-checklist-phone.png" alt="Welcome checklist, phone"><figcaption>Welcome checklist, phone</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. Your service area</h2>
+    <p>In Setup for a self-serve client: a radius of 5 to 100 miles around the business, or counties. Colorado only. On save the towns are linked again.</p>
+    <div class="shots">
+      <figure class="desk"><img src="07-service-area-desktop.png" alt="Service area, computer"><figcaption>Service area, computer</figcaption></figure>
+      <figure class="phone"><img src="07-service-area-phone.png" alt="Service area, phone"><figcaption>Service area, phone</figcaption></figure>
+      <figure class="phone"><img src="07-service-area-counties-phone.png" alt="Service area by counties, phone"><figcaption>By counties, phone</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>8. Zelle QR code</h2>
+    <p>An optional QR code picture on Payments, shown with the Zelle email or phone on the quote and signing pages and the job's balance.</p>
+    <div class="shots">
+      <figure class="desk"><img src="08-zelle-setup-desktop.png" alt="Payments with the QR code"><figcaption>Setup, Payments</figcaption></figure>
+      <figure class="phone"><img src="08-zelle-quote-phone.png" alt="The customer's quote page"><figcaption>The customer's quote page</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>9. Forgot your code</h2>
+    <p>On the code screen, "Forgot your code?" emails a link that sets a password, to the email on the account (or, for the first admin, the company's email on file). Traverse can also email an admin that link from Accounts. No code is shown.</p>
+    <div class="shots">
+      <figure class="phone"><img src="09-signin-forgot-link-phone.png" alt="The code screen"><figcaption>The code screen</figcaption></figure>
+      <figure class="phone"><img src="09-forgot-code-phone.png" alt="Forgot your code"><figcaption>Forgot your code</figcaption></figure>
+      <figure class="desk"><img src="09-super-signin-link-desktop.png" alt="Accounts, Traverse's Email a sign-in link"><figcaption>Accounts: Email a sign-in link (Traverse only)</figcaption></figure>
+    </div>
+  </section>
+</main>
+</body>
+</html>
