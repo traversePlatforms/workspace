@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Checkout Walkthrough</title>
+<!-- Every screen a buyer sees, in order (Matthew 2026-10-29: "show me everything that gets done"). Taken from the local test copy on Stripe's
+     TEST account by the client-install suites (scratchpad ptest-ci: e2e-a.mjs, e2e-b.mjs, e2e-c.mjs, shots-extra.mjs). The company, people and
+     emails in them are made up. Not a public page: it lives in the repo. -->
+<style>
+:root{--ink:#0f1b2d;--soft:#566476;--line:#dce2ea;--bg:#f4f6f9;--card:#fff;--navy:#13294b;--flag:#d6400c}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#e8edf5;--soft:#9aa8bc;--line:#24324a;--bg:#0b1220;--card:#131d2e;--navy:#dce6f5;--flag:#ff7a45}}
+:root[data-theme="dark"]{--ink:#e8edf5;--soft:#9aa8bc;--line:#24324a;--bg:#0b1220;--card:#131d2e;--navy:#dce6f5;--flag:#ff7a45}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1100px;margin:0 auto;padding:32px 16px 80px}
+h1{font-family:"Familjen Grotesk",system-ui,sans-serif;font-size:38px;line-height:1.1;margin:0 0 8px;letter-spacing:-.02em}
+h2{font-family:"Familjen Grotesk",system-ui,sans-serif;font-size:26px;margin:48px 0 6px;padding-top:18px;border-top:1px solid var(--line)}
+.lead{color:var(--soft);max-width:70ch}
+.step{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:24px;margin:22px 0;align-items:start}
+.step.phone{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.step img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+.step.phone img{max-width:390px;justify-self:center}
+.n{font:700 13px "JetBrains Mono",ui-monospace,monospace;color:var(--flag);letter-spacing:.06em;text-transform:uppercase}
+h3{font-family:"Familjen Grotesk",system-ui,sans-serif;font-size:21px;margin:4px 0 8px}
+.txt p{margin:0 0 10px}.txt ul{margin:0 0 10px;padding-left:20px}.back{font-size:15px;color:var(--soft);border-left:3px solid var(--line);padding-left:12px}
+@media (max-width:760px){.step,.step.phone{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<main>
+<h1>From the price list to a working app</h1>
+<p class="lead">Every screen a company sees when it buys Traverse on the website, in order, and what the server does behind each one. Nothing on Traverse's side is manual. Taken on the local test copy with Stripe's test account; the company and people are made up.</p>
+
+<h2>1. Choosing and paying</h2>
+<div class="step"><div class="txt"><div class="n">Screen 1</div><h3>The homepage's prices</h3><p>Each plan's button is <b>Start now</b> and goes to the checkout with that plan picked. "Or book a demo first" stays under it. After a demo, you send the same page as a link, e.g. <code>/start/?edition=roofing&amp;plan=crew&amp;iv=year&amp;people=7</code>.</p><p class="back">The setup-time line is gone: "No setup fee and no waiting: pay, and your app opens with your homes and a short checklist." The old "$50 for Roofing and Solar" line is gone too.</p></div><img src="01-homepage-pricing.png" alt="The homepage pricing section with Start now buttons"></div>
+<div class="step"><div class="txt"><div class="n">Screen 2</div><h3>The checkout page (/start/)</h3><p>Trade, plan, yearly or monthly, how many people, and the terms box. The summary shows the founding price exactly as the app's Billing screen works it out (the list price struck through), what is due today, and the step up after 12 months.</p><p class="back">Prices come from the server (billing.php), so the page cannot drift from what Stripe charges. The button stays off until a trade is picked and the Terms of Use and Subscription Agreement are ticked; the acceptance (versions, time, address) is kept.</p></div><img src="02-start-desktop.png" alt="The checkout page on a computer"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 2, phone</div><h3>The same on a phone</h3><p>One column; the summary and pay button follow the choices.</p></div><img src="03-start-phone.png" alt="The checkout page on a phone"></div>
+<div class="step"><div class="txt"><div class="n">Screen 3</div><h3>Stripe's payment page</h3><p>Stripe's own page takes the card (it never touches our server). It shows the founding price directly: the subscription is made of the real founding prices you created, no coupon.</p><p class="back">Behind it: a Subscription Schedule is made as soon as Stripe reports the payment: 12 months on the founding prices, then the list prices, locked in. If the buyer closes the tab after paying, they get an email with a link back to the next step, and you get an email about every new paid company.</p></div><img src="04-stripe-payment.png" alt="Stripe's payment page in test mode"></div>
+
+<h2>2. The welcome page (three steps)</h2>
+<div class="step"><div class="txt"><div class="n">Screen 4</div><h3>Where you work</h3><p>First, the service area: around the business address (filled in from what they gave Stripe) with a radius slider, default 25 miles, or…</p><p class="back">The address goes to the U.S. Census Bureau's geocoder (free, first-party). As soon as this step is sent, the server starts linking every town of the edition whose centre, or any home, is in the area: links to the edition's own files, never copies.</p></div><img src="05-welcome-area.png" alt="Welcome step 1, around the address"></div>
+<div class="step"><div class="txt"><div class="n">Screen 4b</div><h3>…pick counties</h3><p>Checkboxes of every Colorado county the edition covers, with how many homes each has.</p></div><img src="06-welcome-counties.png" alt="Welcome step 1, pick counties"></div>
+<div class="step"><div class="txt"><div class="n">Screen 5</div><h3>Your brand</h3><p>Colour (swatches or any colour) and logo (PNG, JPG or SVG, under 400 KB). The preview on the right shows it at once. Meanwhile: "Loading your homes in 25 mi around Englewood… this carries on while you finish."</p><p class="back">Logos are cleaned on the server: pictures are redrawn (anything hidden in the file is dropped), SVGs keep their shapes only.</p></div><img src="07-welcome-brand.png" alt="Welcome step 2, colour and logo"></div>
+<div class="step"><div class="txt"><div class="n">Screen 6</div><h3>Your company and sign-in</h3><p>Company name, their name, email, mobile and a password (10 characters or more). By now the homes are in: "672,592 homes in 72 towns are ready (25 mi around Englewood)."</p></div><img src="08-welcome-company.png" alt="Welcome step 3, company and admin"></div>
+<div class="step"><div class="txt"><div class="n">Screen 7</div><h3>Your Traverse is ready</h3><p>The sign-in email, an admin code for a quick phone sign-in, and Open my app (it opens by itself after a few seconds). The same arrives by email.</p><p class="back">In those seconds the server made the install from its edition: its own page folder and API files, its own data and private folders, the admin's sign-in, Traverse's super sign-in for you, company and colours, billing.json from Stripe's own events, and released at once: the 7-day money-back guarantee starts now. A double click or a retry makes one install, never two.</p></div><img src="09-ready.png" alt="The ready screen"></div>
+
+<h2>3. Inside their app</h2>
+<div class="step phone"><div class="txt"><div class="n">Screen 8</div><h3>Straight into the welcome checklist</h3><p>Signed in already (a one-use pass). The checklist: their homes, invite your team, connect your email, connect payments, import your customers, check your logo and colours. Each ticks itself when done; "Hide this list" puts it away.</p></div><img src="10-app-checklist-phone.png" alt="The app's welcome checklist on a phone"></div>
+<div class="step"><div class="txt"><div class="n">Screen 8, computer</div><h3>The same on a computer</h3></div><img src="11-app-checklist-desktop.png" alt="The checklist on a computer"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 9</div><h3>If the homes are still loading</h3><p>The app opens anyway with "Loading your homes in …" and fills in by itself when they are linked (here, Douglas County picked)…</p></div><img src="22-app-homes-loading.png" alt="The checklist while homes load"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 9b</div><h3>…then the homes are in</h3></div><img src="23-app-homes-in.png" alt="The checklist after homes are linked"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 10</div><h3>Outside Colorado (or no towns in the area)</h3><p>The app still opens; pipeline, customers, jobs and the team all work. A plain note: "Door data for your area is being added." No setup-mode words. You get an email "NEEDS DOOR DATA" with what to do.</p></div><img src="24-app-outside-colorado.png" alt="The checklist for an address outside Colorado"></div>
+
+<h2>4. The team: invites with passwords</h2>
+<div class="step phone"><div class="txt"><div class="n">Screen 11</div><h3>Invite a person</h3><p>First and last name, email, mobile (optional), role, and that person's own switches (the ones the role takes: takes payments, does jobs, knocks doors, results, won and lost).</p></div><img src="12-invite-form.png" alt="The invite form"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 12</div><h3>Invited, until they set a password</h3><p>Their line says Invited, with Resend invite (a new link; the old one stops working) and Cancel invite.</p></div><img src="13-accounts-invited.png" alt="Accounts with an invited person"></div>
+<div class="step"><div class="txt"><div class="n">Screen 13</div><h3>The invite email</h3><p>From "Peakline Roofing LLC via Traverse" (Traverse's own mailbox, so it works before they connect theirs), Reply-To the admin who sent it, with their logo and colour and a Set your password button. The link works once, for 7 days.</p></div><img src="14-invite-email.png" alt="The invite email"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 14</div><h3>Set a password</h3><p>The link opens the app on "Welcome, Marco"; a password twice; then they are signed in (and asked to accept the Terms of Use, as every new person is).</p></div><img src="15-set-password.png" alt="Set your password"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 15</div><h3>Sign in: code or email</h3><p>The 6-digit code keypad stays for everyone who has one; under it, "Sign in with email and password".</p></div><img src="16-signin-code-or-email.png" alt="The sign-in screen with the email option"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 16</div><h3>Email and password</h3></div><img src="17-signin-email.png" alt="Signing in with email"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 17</div><h3>Forgot password</h3><p>Always the same answer (so nobody can test which emails exist); the link works once, for 24 hours. Wrong passwords are rate limited.</p></div><img src="18-forgot-password.png" alt="Forgot password"></div>
+
+<h2>5. Your side</h2>
+<div class="step phone"><div class="txt"><div class="n">Screen 18</div><h3>Profile: Clients</h3><p>Beside Edition and Role: a dropdown of every client with where its plan stands; picking one opens it as Traverse.</p></div><img src="19-profile-clients.png" alt="Profile with the Clients dropdown"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 19</div><h3>All clients</h3><p>Search, a status filter (live, setting up, past due, locked, cancelled), plan, trade, since when, and their homes.</p></div><img src="20-clients-list.png" alt="The full Clients list"></div>
+<div class="step phone"><div class="txt"><div class="n">Screen 20</div><h3>Inside a client's app, as Traverse</h3><p>Billing there has Refund and cancel and Give more time, as in the editions. Past due locks it after 3 days, paying opens it at once; all of that arrives through the one central Stripe webhook.</p></div><img src="21-hop-into-client.png" alt="A client's app opened as Traverse"></div>
+</main>
+</body>
+</html>
