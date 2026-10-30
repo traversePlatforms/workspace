@@ -68,6 +68,9 @@ function dataDir(): string {
     exit('{"ok":false,"error":"Rounds is not configured on this server."}');
 }
 define('DATA_DIR', dataDir());
+/* a client install made on the server (2026-10-29): the logo given on the website's welcome page is taken by the Company screen's own upload code
+   (logoAdopt -> logoTake) on the install's first company request, before company() reads company-local.json, so that very answer carries it */
+if ((string) ($_REQUEST['action'] ?? '') === 'company' && !defined('SIXFOLD_CLI')) logoAdopt();
 /* memory (2026-10-08): the editions' big towns carry tens of MB of side files. The door view and the town list read only what
    they need, but ask for 256 MB where the host's limit is lower and lets a script raise it; diag reports what was granted. */
 (function () {
@@ -2064,7 +2067,6 @@ if ($action === 'billinghook') {
 
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
-if ($action === 'company') logoAdopt();   /* a client install made on the server: the logo given on the welcome page, once (2026-10-29) */
 if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1, '_signAs' => 1])]);   /* the market checked (2026-10-11) */
 if ($action === 'logo') logoServe();   /* the company's uploaded logo, for the sign-in screen, its quote and signing pages and its emails (2026-10-29): before sign-in, like company */
 
