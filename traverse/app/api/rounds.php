@@ -2068,6 +2068,14 @@ if ($action === 'billinghook') {
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
 if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1, '_signAs' => 1])]);   /* the market checked (2026-10-11) */
+if ($action === 'zelleqr') {   /* the Zelle QR code (2026-10-30): before sign-in, for the quote and signing pages; served like the logo */
+    $zq = zelleQrInfo();
+    if (!$zq) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); exit('No QR code.'); }
+    header('Content-Type: ' . ($zq['type'] === 'png' ? 'image/png' : 'image/jpeg')); header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: default-src 'none'; sandbox"); header('Content-Disposition: inline; filename="zelle-qr.' . $zq['type'] . '"');
+    header('Cache-Control: ' . ((string) ($_GET['v'] ?? '') === (string) $zq['v'] ? 'public, max-age=31536000, immutable' : 'no-cache'));
+    header('Content-Length: ' . filesize(zelleQrFile((string) $zq['type']))); readfile(zelleQrFile((string) $zq['type'])); exit;
+}
 if ($action === 'logo') logoServe();   /* the company's uploaded logo, for the sign-in screen, its quote and signing pages and its emails (2026-10-29): before sign-in, like company */
 
 /* a session for a person on this install's codes list: the cookie, the signed-in list, and the answer the page expects
@@ -2233,6 +2241,19 @@ function pwTokenFind(string $t): ?array {
 }
 function pwHit(string $id): ?array { global $people, $sessionKey; foreach ($people as $c => $who) if (hash_equals($id, codeId((string) $c, $sessionKey))) return [$who, (string) $c]; return null; }
 function pwEmailOwner(string $em): string { global $acct; $em = strtolower(trim($em)); foreach ((array) ($acct['login'] ?? []) as $id => $l) if (strtolower((string) ($l['email'] ?? '')) === $em) return (string) $id; return ''; }
+/** Forgot your code (2026-10-30, Matthew: an admin who signs in with a 6-digit code on an older install needs a way back in): an admin with no
+    password yet, found by the email their invite went to, or else the company's own email on file (Company screen) for the company's first
+    admin. The reset link then sets a password for that admin's own account; no code is ever shown. '' = nobody. */
+function pwAdminByEmail(string $em): string {
+    global $acct, $basePeople, $sessionKey;
+    $em = strtolower(trim($em)); if ($em === '') return '';
+    $rows = acctRows($basePeople, $acct, $sessionKey);
+    $ok = fn(string $id) => isset($rows[$id]) && !$rows[$id]['off'] && $rows[$id]['role'] === 'admin' && empty($acct['login'][$id]);
+    foreach ((array) ($acct['inv'] ?? []) as $id => $iv) if (is_array($iv) && strtolower((string) ($iv['email'] ?? '')) === $em && $ok((string) $id)) return (string) $id;
+    if (strtolower(trim((string) (company()['email'] ?? ''))) !== $em || !function_exists('billingFreeAdmin')) return '';
+    $first = billingFreeAdmin($rows);
+    return $first !== '' && $ok($first) ? $first : '';
+}
 if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
     if (!edition()) fail('Not here.', 404);
     if ($action === 'pwinfo') {
@@ -2240,7 +2261,7 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         $tk = pwTokenFind((string) ($_GET['t'] ?? ''));
         if (!$tk || !empty($tk['expired'])) fail(!empty($tk['expired']) ? 'That link has run out. Ask your admin to send it again, or use Forgot password.' : 'That link has been used or is not one we know. Sign in, or use Forgot password.', 404);
         $hw = pwHit($tk['id']); if (!$hw) fail('That account is no longer on. Ask your admin.', 404);
-        out(['ok' => true, 'kind' => $tk['kind'] === 'inv' ? 'invite' : 'reset', 'name' => (string) $hw[0][0], 'email' => (string) ($tk['kind'] === 'inv' ? $tk['email'] : ($acct['login'][$tk['id']]['email'] ?? '')), 'company' => (string) company()['name'], 'min' => PW_MIN]);
+        out(['ok' => true, 'kind' => $tk['kind'] === 'inv' ? 'invite' : 'reset', 'name' => (string) $hw[0][0], 'email' => (string) ($tk['kind'] === 'inv' ? $tk['email'] : (($tk['email'] ?? '') ?: ($acct['login'][$tk['id']]['email'] ?? ''))), 'company' => (string) company()['name'], 'min' => PW_MIN]);
     }
     if (!$isPost) fail('POST required', 405);
     if ($action === 'pwset') {
@@ -2253,7 +2274,7 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         $tk = pwTokenFind((string) ($body['t'] ?? ''));
         if (!$tk || !empty($tk['expired'])) fail('That link has been used or has run out. Use Forgot password for a new one.', 404);
         $hw = pwHit($tk['id']); if (!$hw) fail('That account is no longer on. Ask your admin.', 404);
-        $em = $tk['kind'] === 'inv' ? (string) $tk['email'] : (string) ($acct['login'][$tk['id']]['email'] ?? '');
+        $em = $tk['kind'] === 'inv' ? (string) $tk['email'] : (string) (($tk['email'] ?? '') ?: ($acct['login'][$tk['id']]['email'] ?? ''));   /* a reset sent to an admin with no password yet carries its address (2026-10-30) */
         $other = pwEmailOwner($em); if ($other !== '' && $other !== $tk['id']) fail('That email address signs in to another account here. Ask your admin.');
         $acct['login'] = (array) ($acct['login'] ?? []); $acct['login'][$tk['id']] = ['email' => strtolower($em), 'hash' => password_hash($pw, PASSWORD_DEFAULT), 'at' => time()];
         if ($tk['kind'] === 'inv') { unset($acct['inv'][$tk['id']]['tok']); $acct['inv'][$tk['id']]['joined'] = $acct['inv'][$tk['id']]['joined'] ?? time(); } else unset($acct['reset'][$tk['id']]);
@@ -2279,10 +2300,12 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         $same = ['ok' => true, 'said' => 'If that email signs in here, a link to set a new password is on its way. It works once, for ' . PW_RESET_HOURS . ' hours.'];
         if (!filter_var($em, FILTER_VALIDATE_EMAIL) || !throttleTake(rateFile('pwforgotm|' . hash('sha256', $em)), 3, 3600)) out($same);
         $lk = @fopen(accountsFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) out($same);
-        $acct = loadAccounts(); $id = pwEmailOwner($em); $hw = $id !== '' ? pwHit($id) : null;
+        $acct = loadAccounts(); $id = pwEmailOwner($em); $noPw = false;
+        if ($id === '') { $id = pwAdminByEmail($em); $noPw = $id !== ''; }   /* an admin who signs in with a code only (2026-10-30) */
+        $hw = $id !== '' ? pwHit($id) : null;
         if (!$hw) out($same);
         $tok = bin2hex(random_bytes(24));
-        $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time()];
+        $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time()] + ($noPw ? ['email' => $em] : []);
         saveAccounts($acct); flock($lk, LOCK_UN); fclose($lk);
         $co = company(); $link = (string) $co['appUrl'] . '#pw=r.' . $tok;
         pwMail($em, (string) $co['name'] . ': set a new password', "Hi " . explode(' ', (string) $hw[0][0])[0] . ",\n\nSomeone asked to set a new password for your " . $co['name'] . " sign-in. If it was you, open this link (it works once, for " . PW_RESET_HOURS . " hours):\n\n$link\n\nIf it was not you, ignore this email: your password stays as it is.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
@@ -3867,7 +3890,7 @@ if (!defined('SIXFOLD_CLI') && $session && edition()) { permElevate($action); ed
  * downloads, email and payments setup. The door screens say "Door data is paused: your company's account needs attention."
  * Either way, previewing a role (X-View-As 'role:...') is answered as that role in the install's current state; the super admin is open.
  * Nothing to clear when it opens: the next request reads billing.json again (Release to client, paid again, Give more time). */
-const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'logoset', 'logodel', 'billing', 'billingcheckout', 'billingportal',
+const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 'logoset', 'logodel', 'billing', 'billingcheckout', 'billingportal', 'billingask',
     'accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'accountresend', 'acctflag', 'walkerset', 'paysset', 'repsendset',
     'teamsave', 'teammember', 'hours', 'hoursset', 'hoursall', 'exportlog',
     'kit', 'kitset', 'kitbrand', 'payset', 'squareoauth', 'payways', 'paywaysset', 'mail', 'mailoff', 'mailset', 'mailtpl', 'mailpreview', 'mailtest',
@@ -4010,7 +4033,7 @@ function seatWatch(): void {
     $was = json_decode((string) stream_get_contents($h), true); $was = is_array($was) ? $was : [];
     $put = function (array $x) use ($h) { ftruncate($h, 0); rewind($h); fwrite($h, json_encode($x, JSON_UNESCAPED_SLASHES)); fflush($h); };
     if ($over && empty($was['over'])) {
-        $co = company(); $plan = ucfirst((string) ($b['plan'] ?? '?')) . (($b['interval'] ?? '') === 'year' ? ', yearly' : ', monthly');
+        $co = company(); $plan = billingPlanName((string) ($b['plan'] ?? '?')) . (($b['interval'] ?? '') === 'year' ? ', yearly' : ', monthly');
         $text = "An install has gone over the seats its plan pays for. Nothing is blocked; its admin sees the warning in Accounts and Billing.\n\n"
               . 'Company: ' . (string) $co['name'] . "\n" . 'Edition: ' . (string) ($co['best'] ?? '') . ' (install ' . COOKIE . ', ' . (string) $c['install'] . ")\n"
               . 'Plan: ' . $plan . "\n" . 'Seats paid: ' . $paid . ' workers, plus the one admin every plan includes' . "\n"
@@ -11099,7 +11122,7 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
 }
 /* ---- billing (2026-10-10, api/billing.php): the admin sees the plan, pays through Stripe Checkout, manages it in Stripe's portal.
  * Setup mode and the past-due lock (2026-10-29) are billGate() further up; here Traverse releases the app and gives more time. */
-if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billinglive', 'billingrefund', 'billingmore'], true)) {
+if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billinglive', 'billingrefund', 'billingmore', 'billingask'], true)) {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!feature('billing')) fail('Billing is not on for this install.', 403);
     $bc = billingConfig(__DIR__);
@@ -11122,7 +11145,35 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billingli
         if (isset($r['error'])) fail($r['error'], 502);
         out(['ok' => true, 'super' => true, 'amount' => $r['amount']] + billingState($bc, $rows));
     }
+    /* a request to change the plan or add people (2026-10-30, Matthew: Stripe's portal cannot change a subscription of several prices): one
+       email to Traverse with what they asked, at most once every ten minutes per install. Nothing changes in Stripe until Traverse does it. */
+    if ($action === 'billingask') {
+        $kind = (string) ($body['kind'] ?? ''); $note = trim((string) preg_replace('/[\x00-\x09\x0b-\x1f\x7f]+/', ' ', mb_substr((string) ($body['note'] ?? ''), 0, 1000)));
+        $K = ['people' => 'Add people', 'plan' => 'Change the plan', 'other' => 'Something else about billing'];
+        if (!isset($K[$kind])) fail('Pick what you would like changed.');
+        $seatsW = $kind === 'people' ? (int) ($body['seats'] ?? 0) : 0;
+        if ($kind === 'people' && ($seatsW < 1 || $seatsW > 500)) fail('How many people to add: 1 to 500.');
+        $planW = $kind === 'plan' ? (string) ($body['plan'] ?? '') : '';
+        if ($kind === 'plan' && !in_array($planW, BILLING_PLANS, true)) fail('Pick the plan you want.');
+        $bb = billingLoad();
+        if ((int) ($bb['asked']['at'] ?? 0) > time() - 600) fail('Your last request went a few minutes ago. Traverse answers by email; for more, write to ' . BILLING_CONTACT . '.', 429);
+        $co = company(); $st0 = billingState($bc, $rows);
+        $mail0 = (string) ($acct['login'][(string) ($session['c'] ?? '')]['email'] ?? '');
+        $text = $K[$kind] . ($seatsW ? ': ' . $seatsW . ($seatsW === 1 ? ' more person' : ' more people') : '') . ($planW ? ': to ' . billingPlanName($planW) : '') . "\n\n"
+              . 'Company: ' . (string) $co['name'] . ' (install ' . (string) $bc['install'] . ")\n"
+              . 'Asked by: ' . $me . ($mail0 !== '' ? ' <' . $mail0 . '>' : '') . ' · company email: ' . (string) ($co['email'] ?? '') . "\n"
+              . 'Plan now: ' . billingPlanName((string) ($st0['plan'] ?? '?')) . ', ' . (($st0['interval'] ?? '') === 'year' ? 'yearly' : 'monthly') . ', ' . (int) $st0['seats'] . ' workers paid, ' . (int) $st0['used'] . " signed up\n"
+              . 'Stripe customer: ' . (string) ($bb['customer'] ?? '') . ', subscription: ' . (string) ($bb['subscription'] ?? '') . (!empty($bb['schedule']) ? ', schedule: ' . (string) $bb['schedule'] : '') . "\n"
+              . ($note !== '' ? "\nTheir note:\n" . $note . "\n" : '')
+              . "\nChange the subscription in Stripe (a founding subscription has a schedule: change both phases), then answer them.\n";
+        $r = travMail(seatNoteTo(), 'Traverse: ' . (string) $co['name'] . ' asks: ' . strtolower($K[$kind]), $text);
+        if (!$r['ok']) fail('The request did not send. Email ' . BILLING_CONTACT . ' instead.', 502);
+        billingSave(function (array $x) use ($me, $kind) { $x['asked'] = ['at' => time(), 'by' => $me, 'kind' => $kind]; return $x; });
+        billingLog(['what' => 'asked', 'by' => $me, 'kind' => $kind, 'seats' => $seatsW, 'plan' => $planW]);
+        out(['ok' => true, 'super' => $isSuper, 'said' => 'Sent to Traverse. The answer comes by email; nothing changes on your card until then.'] + $billMore() + billingState($bc, $rows));
+    }
     if (!billingConfigured($bc)) fail('Billing is not set up yet: the Stripe keys are missing.', 503);
+    if ($action === 'billingcheckout' && billingClient()) fail('Your plan is paid on traverseplatforms.com. To change it or start again, email ' . BILLING_CONTACT . '.');   /* a client install paid on the website (2026-10-30) */
     $back = billingBack($bc, (string) ($body['back'] ?? ''));
     if ($back === null) fail('Open Billing from the app and try again.');
     $b = billingLoad();
@@ -11133,7 +11184,7 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billingli
         billingLog(['what' => 'portal', 'by' => $me]);
         out(['ok' => true, 'url' => (string) $r['url']]);
     }
-    if (in_array($b['status'] ?? '', array_merge(BILLING_GOOD, ['past_due', 'unpaid']), true)) fail('There is a plan already. To change it, email billing@traverseplatforms.com.');
+    if (in_array($b['status'] ?? '', array_merge(BILLING_GOOD, ['past_due', 'unpaid']), true)) fail('There is a plan already. To change it, email ' . BILLING_CONTACT . '.');
     /* one subscription per company (2026-10-29): a payment that finished and is waiting for Stripe's confirmation, or a payment page still
        open in another tab or on another admin's phone, would each make a second subscription. A finished one waits (a day at most); an open
        one is closed at Stripe before a new page opens, and if it has just been paid, no new page opens. */
@@ -11300,6 +11351,31 @@ if ($action === 'walkerset') {
     if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
     accountLog(['by' => $me, 'what' => !empty($body['on']) ? 'does walks' : 'no walks', 'name' => $rows[$id]['name'], 'id' => $id]);
     out(['ok' => true]);
+}
+/* a company admin who lost their code (2026-10-30, Matthew: "an admin who signs in with a 6-digit code (older installs) has a recovery path"):
+   Traverse's super admin emails them a link that sets a password for their own account (the reset link of pwforgot, sent to the address typed
+   here). Nobody sees a code: they sign in with that email and the password; their code keeps working if they find it. Editions and clients.
+     acctlink  POST  super admin: {id, email} */
+if ($action === 'acctlink') {
+    if (!$isSuper || $viewing || !edition()) fail('Only Traverse does this.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $rows = acctRows($basePeople, $acct, $sessionKey); $id = (string) ($body['id'] ?? '');
+    if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+    if ($rows[$id]['role'] !== 'admin') fail('This is for a company admin. Everyone else gets a new code or an invite from their admin.');
+    $em = strtolower(trim((string) ($body['email'] ?? '')));
+    if (!filter_var($em, FILTER_VALIDATE_EMAIL) || strlen($em) > 120) fail('Type the admin\'s email address.');
+    $other = pwEmailOwner($em); if ($other !== '' && $other !== $id) fail('That email address signs in to another account here.');
+    if (!throttleTake(rateFile('acctlink|' . $id), 5, 86400)) fail('Five links today for this admin already. Try tomorrow.', 429);
+    $lk = @fopen(accountsFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $acct = loadAccounts(); $tok = bin2hex(random_bytes(24));
+    $acct['reset'] = (array) ($acct['reset'] ?? []); $acct['reset'][$id] = ['tok' => hash('sha256', $tok), 'exp' => time() + PW_RESET_HOURS * 3600, 'at' => time(), 'email' => $em, 'by' => $me];
+    if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
+    flock($lk, LOCK_UN); fclose($lk);
+    $co = company(); $first = explode(' ', (string) $rows[$id]['name'])[0];
+    $ok = pwMail($em, (string) $co['name'] . ': your sign-in link', "Hi $first,\n\nHere is a link to set a password for your " . $co['name'] . " admin sign-in (it works once, for " . PW_RESET_HOURS . " hours):\n\n" . (string) $co['appUrl'] . '#pw=r.' . $tok . "\n\nThen sign in with this email address and your password.\n\nSent for " . $co['name'] . " by Traverse Platforms.\n", null, []);
+    accountLog(['by' => $me, 'what' => $ok ? 'sign-in link sent' : 'sign-in link failed', 'name' => $rows[$id]['name'], 'id' => $id]);
+    if (!$ok) fail('The email did not go. Try again in a minute.', 502);
+    out(['ok' => true, 'to' => $em]);
 }
 if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', 'accountremove', 'accountrestore', 'accountsignout', 'accountpins', 'accountresend'], true)) {
     /* managers (Matthew 2026-10-11: "they can remove people right? they should be able to"): the crew on their own team only.
@@ -12868,7 +12944,7 @@ function payWays(): array {
     if (!empty($c['venmo'])) $o[] = ['k' => 'venmo', 'label' => 'Venmo', 'show' => '@' . $c['venmo'], 'url' => 'https://venmo.com/u/' . rawurlencode((string) $c['venmo'])];
     if (!empty($c['cashapp'])) $o[] = ['k' => 'cashapp', 'label' => 'Cash App', 'show' => '$' . $c['cashapp'], 'url' => 'https://cash.app/$' . rawurlencode((string) $c['cashapp'])];
     if (!empty($c['paypal'])) $o[] = ['k' => 'paypal', 'label' => 'PayPal', 'show' => 'paypal.me/' . $c['paypal'], 'url' => 'https://paypal.me/' . rawurlencode((string) $c['paypal'])];
-    if (!empty($c['zelle'])) $o[] = ['k' => 'zelle', 'label' => 'Zelle', 'show' => (string) $c['zelle'], 'name' => (string) ($c['zelleName'] ?? ''), 'url' => null];
+    if (!empty($c['zelle'])) $o[] = ['k' => 'zelle', 'label' => 'Zelle', 'show' => (string) $c['zelle'], 'name' => (string) ($c['zelleName'] ?? ''), 'url' => null] + (($q = zelleQrInfo($c)) ? ['qr' => zelleQrUrl((string) $q['v'])] : []);
     if (!empty($c['link'])) $o[] = ['k' => 'link', 'label' => (string) (($c['linkLabel'] ?? '') ?: 'Pay online'), 'show' => (string) parse_url((string) $c['link'], PHP_URL_HOST), 'url' => (string) $c['link']];
     return $o;
 }
@@ -12907,7 +12983,45 @@ if ($action === 'payways' || $action === 'paywaysset') {
         if (strlen($v) > 300 || !preg_match('#^https://[^\s<>"\']+$#D', $v) || !filter_var($v, FILTER_VALIDATE_URL) || empty($pu['host']) || !str_contains((string) $pu['host'], '.')) fail('Your own pay link has to be a full web address starting with https:// (copy it from your invoice or payment page).');
     }
     $c['link'] = $v; $lb = $g('linkLabel'); if (mb_strlen($lb) > 40) fail('The pay link\'s name is 40 characters at most.'); $c['linkLabel'] = $v !== '' ? $lb : '';
+    if (is_array(payWaysCfg()['zelleQr'] ?? null)) $c['zelleQr'] = payWaysCfg()['zelleQr'];   /* the QR code has its own save (zelleqrset) and stays */
     $c['by'] = $me; $c['at'] = time();
+    if (!writeJsonAtomic(DATA_DIR . '/payways.json', $c)) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
+}
+/* ---- the Zelle QR code (2026-10-30, Matthew: an optional Zelle QR upload, shown with the email or phone) ----
+ * The admin uploads the QR code their bank's app makes (PNG or JPG, 500 KB at most, 64 to 4,000 pixels a side: the logo upload's checks, no SVG).
+ * Kept beside payways.json as zelle-qr.png|jpg, described in payways.json zelleQr {type, v (first 12 of its SHA-1), w, h, by, at}. Served by
+ * action=zelleqr before sign-in (the quote and signing pages show it), with its own type, nosniff and a sandboxing CSP, like the logo.
+ *   zelleqrset  POST  admin: {data: data URL} a new code; {remove: true} takes it off */
+function zelleQrFile(string $type): string { return DATA_DIR . '/zelle-qr.' . $type; }
+function zelleQrInfo(?array $c = null): ?array {
+    $q = ($c ?? payWaysCfg())['zelleQr'] ?? null;
+    if (!is_array($q) || !in_array($q['type'] ?? '', ['png', 'jpg'], true) || !preg_match('/^[0-9a-f]{12}$/D', (string) ($q['v'] ?? ''))) return null;
+    return is_file(zelleQrFile((string) $q['type'])) ? $q : null;
+}
+function zelleQrUrl(string $v): string { return '../api/' . basename(__FILE__) . '?action=zelleqr&v=' . $v; }
+if ($action === 'zelleqrset') {
+    if (!kitOn()) fail('Not here.', 404);
+    if (!adminOr('set.setup')) fail('Not allowed.', 403);
+    if (!$isPost) fail('POST required', 405);
+    $c = payWaysCfg();
+    if (!empty($body['remove'])) {
+        foreach (['png', 'jpg'] as $t) @unlink(zelleQrFile($t));
+        unset($c['zelleQr']);
+    } else {
+        $data = (string) ($body['data'] ?? '');
+        if ($data === '' || strlen($data) > (int) (500 * 1024 * 1.4) + 200) fail('Use a QR code image under 500 KB.');
+        $raw = base64_decode((string) preg_replace('#^data:image/(png|jpeg);base64,#i', '', $data), true);
+        if ($raw === false || $raw === '' || strlen($raw) > 500 * 1024) fail('Use a QR code image under 500 KB, saved as PNG or JPG.');
+        if (strncmp($raw, "\x89PNG\r\n\x1a\n", 8) !== 0 && strncmp($raw, "\xFF\xD8\xFF", 3) !== 0) fail('Use a PNG or JPG picture of the QR code (a screenshot works).');
+        $info = @getimagesizefromstring($raw);
+        if (!$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)) fail('That image would not open. Save it again as PNG or JPG.');
+        if ($info[0] < 64 || $info[1] < 64 || $info[0] > 4000 || $info[1] > 4000) fail('Use a QR code picture between 64 and 4,000 pixels on each side.');
+        $type = $info[2] === IMAGETYPE_PNG ? 'png' : 'jpg';
+        if (!writeTextAtomic(zelleQrFile($type), $raw)) fail('Could not save that. Try again.', 500);
+        foreach (['png', 'jpg'] as $t) if ($t !== $type) @unlink(zelleQrFile($t));
+        $c['zelleQr'] = ['type' => $type, 'v' => substr(sha1($raw), 0, 12), 'w' => (int) $info[0], 'h' => (int) $info[1], 'by' => $me, 'at' => time()];
+    }
     if (!writeJsonAtomic(DATA_DIR . '/payways.json', $c)) fail('Could not save that. Try again.', 500);
     out(['ok' => true, 'cfg' => payWaysCfg(), 'ways' => payWays()]);
 }
@@ -13051,6 +13165,80 @@ if ($action === 'companyset') {
     $loc['by'] = $me; $loc['at'] = time();
     if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
     out(['ok' => true]);
+}
+
+/* ---- the service area (2026-10-30, Matthew: "the admin can widen or narrow the radius (or counties) that the self-serve build set") ----
+ * Only a client install made by the website's checkout (it has an entry in traverse-shared/clients/registry.json, clientInstalls()); its admin, or
+ * Traverse's super admin. Around the business address (5 to 100 miles; a new address is placed by the Census geocoder and must be in Colorado) or
+ * a set of the edition's counties. Saved in the registry, then the towns are linked again by api/traverse-clients-lib.php tcLinkTowns (the same
+ * code as the welcome page and the daily relink), after the answer has gone: the doors appear within a minute.
+ *   svcarea     GET   the area as set (the admin's own business address included), the counties the edition covers, the limits
+ *   svcareaset  POST  {mode: radius, miles, address?} | {mode: counties, counties: [keys]} */
+const AREA_MI = [5, 100];
+function areaMine(): ?array {
+    $e = clientInstalls()[COOKIE] ?? null;
+    if (!$e || !is_file(__DIR__ . '/traverse-clients-lib.php')) return null;
+    return $e;
+}
+if ($action === 'svcarea' || $action === 'svcareaset') {
+    if ($role !== 'admin' || !feature('clientstart')) fail('Not allowed.', 403);
+    $me0 = areaMine(); if (!$me0) fail('Your area is set by Traverse. Email hello@traverseplatforms.com to change it.', 404);
+    require_once __DIR__ . '/traverse-clients-lib.php';
+    $cid = (string) $me0['cid']; $ed = (string) ($me0['e']['edition'] ?? '');
+    $areaOut = function () use ($cid, $ed) {
+        $a = (array) (tcReg()[$cid]['area'] ?? []);
+        return ['ok' => true, 'area' => tcAreaPublic($a) + ['mode' => (string) ($a['mode'] ?? 'radius'), 'address' => (string) ($a['address'] ?? ''), 'counties' => array_values((array) ($a['counties'] ?? []))],
+                'counties' => tcCounties($ed), 'min' => AREA_MI[0], 'max' => AREA_MI[1]];
+    };
+    if ($action === 'svcarea') out($areaOut());
+    if (!$isPost) fail('POST required', 405);
+    $old = (array) (tcReg()[$cid]['area'] ?? []); $mode = (string) ($body['mode'] ?? 'radius');
+    $HOME = ['address' => 1, 'matched' => 1, 'lat' => 1, 'lon' => 1, 'state' => 1, 'place' => 1];
+    if ($mode === 'counties') {
+        $have = array_column(tcCounties($ed), 'name', 'key');
+        $pick = array_values(array_intersect(array_map('strval', (array) ($body['counties'] ?? [])), array_keys($have)));
+        if (!$pick) fail('Tick at least one county.');
+        $new = ['mode' => 'counties', 'counties' => $pick, 'place' => implode(', ', array_map(fn($k) => $have[$k], array_slice($pick, 0, 3))) . (count($pick) > 3 ? ' and ' . (count($pick) - 3) . ' more' : ''), 'state' => 'CO', 'miles' => 0]
+             + array_intersect_key($old, ['address' => 1, 'matched' => 1]);
+        /* the business's point is kept aside (tcLinkTowns keeps no point for counties), so going back to a radius needs nothing typed */
+        $home = isset($old['lat'], $old['lon']) ? array_intersect_key($old, $HOME) : (is_array($old['home'] ?? null) ? $old['home'] : null);
+        if ($home) $new['home'] = $home;
+    } elseif ($mode === 'radius') {
+        $raw = $body['miles'] ?? null;
+        if (!is_numeric($raw)) fail('Type the radius in miles.');
+        $mi = (int) round((float) $raw);
+        if ($mi > AREA_MI[1]) fail('Traverse covers up to ' . AREA_MI[1] . ' miles around your business. For a wider area, pick counties instead, or email hello@traverseplatforms.com.');
+        if ($mi < AREA_MI[0]) fail('The radius is ' . AREA_MI[0] . ' miles at least.');
+        $addr = trim((string) preg_replace('/[\x00-\x1f\x7f]+/', ' ', mb_substr((string) ($body['address'] ?? ''), 0, 160)));
+        $base = !isset($old['lat']) && is_array($old['home'] ?? null) ? $old['home'] + $old : $old;   /* back from counties: the point kept aside */
+        $new = ['mode' => 'radius', 'miles' => $mi] + array_intersect_key($base, $HOME);
+        if ($addr === '' && !isset($new['lat'])) $addr = (string) ($old['address'] ?? '');   /* no point kept: the address on file, placed again */
+        if ($addr !== '' && ($addr !== (string) ($old['address'] ?? '') || !isset($new['lat']))) {   /* a new business address: placed on the map, in Colorado */
+            if (mb_strlen($addr) < 8 || !preg_match('/\d/', $addr)) fail('Type your business street address, city, state and ZIP.');
+            $g = tcGeocode($addr);
+            if (is_array($g) && isset($g['error'])) fail((string) $g['error'], 502);
+            if ($g === null) fail('That address was not found on the map. Check the street, city, state and ZIP.');
+            if (strtoupper((string) $g['state']) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now: that address is in ' . ((string) $g['state'] ?: 'another state') . '.');
+            $new = array_replace($new, ['address' => $addr, 'matched' => (string) ($g['matched'] ?? ''), 'lat' => $g['lat'], 'lon' => $g['lon'], 'state' => strtoupper((string) $g['state']), 'place' => (string) ($g['city'] ?? '')]);
+        }
+        if (!isset($new['lat'], $new['lon'])) fail('Your business address is not on the map yet. Type it above.');
+        if (strtoupper((string) ($new['state'] ?? '')) !== tcSettings()['state']) fail('Traverse\'s homes are in Colorado for now. Type your Colorado business address above.');
+    } else fail('Pick a radius or counties.');
+    if (!throttleTake(DATA_DIR . '/area-throttle.json', 10, 600)) fail('That is a lot of changes in a few minutes. Wait a little and try again.', 429);   /* saves only: each one links the towns again */
+    $new += ['status' => 'linking', 'towns' => (int) ($old['towns'] ?? 0), 'doors' => (int) ($old['doors'] ?? 0)]; $new['status'] = 'linking'; $new['at'] = time(); $new['by'] = $me;
+    $lk = tcLock($cid);
+    tcRegSave(function ($all) use ($cid, $new) { if (isset($all[$cid])) $all[$cid]['area'] = $new; return $all; });
+    $cf = DATA_DIR . '/company.json'; $co0 = json_decode((string) @file_get_contents($cf), true);
+    if (is_array($co0)) { $co0['area'] = tcAreaPublic($new); writeJsonAtomic($cf, $co0); }
+    tcLog(['what' => 'area changed', 'cid' => $cid, 'by' => $me, 'mode' => $new['mode'], 'miles' => (int) ($new['miles'] ?? 0), 'counties' => $new['counties'] ?? null]);
+    /* the answer first; the linking after it (on the host the connection closes, fastcgi_finish_request; PHP's test server waits for the end) */
+    $txt = (string) json_encode($areaOut() + ['said' => 'Saved. Doors in your area update within a minute.'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    ignore_user_abort(true); @set_time_limit(300);
+    header('Content-Type: application/json; charset=utf-8'); header('Content-Length: ' . strlen($txt)); header('Connection: close');
+    echo $txt;
+    if (function_exists('fastcgi_finish_request')) fastcgi_finish_request(); else { @ob_flush(); flush(); }
+    tcLinkTowns($cid);   /* index.json changes, so the towns answer (regions-cache-*, keyed on it) is made again */
+    exit;
 }
 
 /* ---- the company's own logo (2026-10-29, Matthew: branding is a selling point; "clients can take this on as their own and we just

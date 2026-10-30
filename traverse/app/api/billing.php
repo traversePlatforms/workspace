@@ -9,8 +9,9 @@ declare(strict_types=1);
  * edition if wanted) and is sent to Stripe Checkout to pay. Stripe tells this install what happened through its webhook
  * (rounds.php ?action=billinghook, the Stripe-Signature checked), and the plan, seats, status and renewal date are kept
  * in sixfold-data/rounds/billing.json. The card, invoices and cancelling happen in Stripe's own customer portal
- * ("Manage billing"). Plan and seat changes go through Traverse (billing@): the portal cannot change a subscription
- * made of several prices.
+ * ("Manage billing"). Plan and seat changes go through Traverse (hello@, or the Billing screen's request, billingask): the portal
+ * cannot change a subscription made of several prices. Customers read the plans as Solo, Team and Company (2026-10-30); the keys stay
+ * solo, crew and team.
  *
  * ---- THE PLANS (Matthew 2026-10-26, traverse/research/pricing-2026-10-26/PRICING-RECOMMENDATION.md) ------------------
  * Per company, users included: Solo 1 person, Crew up to 5, Team up to 12; each person past that is an extra seat. Since 2026-10-29
@@ -384,15 +385,30 @@ function billingRefundCancel(array $c, string $by): array {
     return ['ok' => true, 'amount' => (int) ($charge['amount'] ?? 0)];
 }
 /** what the admin sees: the subscription, seats used against seats paid, and the one warning that applies */
+/** a plan as customers read it (2026-10-30): the keys stay solo, crew, team */
+function billingPlanName(string $k): string { return ['solo' => 'Solo', 'crew' => 'Team', 'team' => 'Company'][$k] ?? ucfirst($k); }
+const BILLING_CONTACT = 'hello@traverseplatforms.com';   /* plan and people changes (2026-10-30: was billing@) */
+/** a client install made by the website's checkout (features.clientstart): it paid on the website, so its Billing has no plan picker */
+function billingClient(): bool { return function_exists('feature') && feature('clientstart'); }
+/** the founding price on this subscription: [on now, the day it steps up to the list price or null] (2026-10-30). Founding prices step up
+    12 months after the subscription began (billingFoundingSchedule); the older coupon path ends with the coupon. */
+function billingFoundingStep(array $b, ?int $now = null): array {
+    $now = $now ?? time(); $at = null;
+    if (!empty($b['founding_price'])) $at = !empty($b['start']) ? (new DateTimeImmutable('@' . (int) $b['start']))->modify('+12 months')->getTimestamp() : null;
+    elseif (!empty($b['discount_end'])) $at = (int) $b['discount_end'];
+    $on = (!empty($b['founding_price']) || !empty($b['discount_end'])) && ($at === null || $now < $at);
+    return [$on, $on ? $at : null];
+}
 function billingState(array $c, array $rows): array {
     $b = billingLoad(); $used = billingSeatsUsed($rows); $paid = billingSeatsPaid($b, $c);
     $st = (string) ($b['status'] ?? ''); $L = billingLockState($b);
+    [$fdOn, $fdStep] = billingFoundingStep($b);
     $warn = null;
     if ($st === 'past_due' || $st === 'unpaid') $warn = 'The last payment did not go through. Update the card in Manage billing.'
         . ($L['phase'] === 'locked' ? ' Until then door lists, maps and Traverse\'s data are paused for your team (pipeline, customers and jobs stay open); they open again as soon as it is paid.' : (!empty($L['lockAt']) && !empty($b['live_at']) ? ' Your team keeps working until ' . date('j M Y', (int) $L['lockAt']) . '; after that door lists, maps and Traverse\'s data pause until it is paid (pipeline, customers and jobs stay open).' : ''));   /* the 3-day lock (2026-10-29) */
-    elseif ($st === 'canceled') $warn = 'The plan was cancelled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . '. Pick a plan to carry on.' . ($L['phase'] === 'locked' && !empty($b['paid_at']) ? ' Until then door lists, maps and Traverse\'s data are paused for your team.' : '');
-    elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ($used === 1 ? ' worker' : ' workers') . ' can sign in and the plan covers ' . $paid . ', besides your one admin. Email billing@traverseplatforms.com to add seats, or remove people in Accounts.';
-    elseif (!empty($b['cancel_at_end']) && !empty($b['period_end'])) $warn = 'The plan ends on ' . date('j M Y', (int) $b['period_end']) . ' (cancelled in Stripe). Manage billing turns it back on.';
+    elseif ($st === 'canceled') $warn = 'The plan was canceled' . (!empty($b['ended']) ? ' on ' . date('j M Y', (int) $b['ended']) : '') . (billingClient() ? '. To start again, email ' . BILLING_CONTACT . '.' : '. Pick a plan to carry on.') . ($L['phase'] === 'locked' && !empty($b['paid_at']) ? ' Until then door lists, maps and Traverse\'s data are paused for your team.' : '');
+    elseif (in_array($st, BILLING_GOOD, true) && $used > $paid) $warn = $used . ($used === 1 ? ' worker' : ' workers') . ' can sign in and the plan covers ' . $paid . ', besides your one admin. Ask for more people below (or email ' . BILLING_CONTACT . '), or remove people in Accounts.';
+    elseif (!empty($b['cancel_at_end']) && !empty($b['period_end'])) $warn = 'The plan ends on ' . date('j M Y', (int) $b['period_end']) . ' (canceled in Stripe). Manage billing turns it back on.';
     return [
         'ready' => billingConfigured($c), 'mock' => !empty($c['mock_file']),
         'plan' => $b['plan'] ?? null, 'interval' => $b['interval'] ?? null, 'seats' => $paid, 'used' => $used,
@@ -406,6 +422,11 @@ function billingState(array $c, array $rows): array {
         'lock' => array_intersect_key($L, ['phase' => 1, 'lock' => 1, 'pastDueSince' => 1, 'lockAt' => 1, 'moreUntil' => 1]), 'lockDays' => BILLING_LOCK_DAYS,   /* setup mode and the past-due lock (2026-10-29) */
         'display' => $c['display'], 'included' => $c['included'], 'uplift' => billingUplift($c),
         'monthly' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon'])) : null,
+        /* what is charged now (the founding price while it lasts) and when it steps up; the next charge (2026-10-30) */
+        'monthlyNow' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon']), $fdOn) : null,
+        'foundingNow' => $fdOn, 'stepUp' => $fdStep,
+        'nextCharge' => in_array($st, BILLING_GOOD, true) && empty($b['cancel_at_end']) && !empty($b['period_end']) ? (int) $b['period_end'] : null,
+        'client' => billingClient(), 'contact' => BILLING_CONTACT, 'asked' => $b['asked'] ?? null,
         'offer' => array_values(array_filter(BILLING_PLANS, fn($p) => ($c['prices'][$p]['month'] ?? '') !== '' || ($c['prices'][$p]['year'] ?? '') !== '')),
         'intervals' => array_values(array_filter(['month', 'year'], function ($i) use ($c) { foreach (BILLING_PLANS as $p) if (($c['prices'][$p][$i] ?? '') !== '') return true; return false; })),
     ];
@@ -428,7 +449,7 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if ($price === '') return ['error' => 'That plan is not offered ' . $ivWord . ' yet.'];
     if ($seats < 1 || $seats > BILLING_SEATS_MAX) return ['error' => 'People: 1 to ' . BILLING_SEATS_MAX . '.'];
     $inc = (int) ($c['included'][$plan] ?? 1);
-    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one admin and one worker. Crew covers up to ' . (int) $c['included']['crew'] . ' workers.'];
+    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one admin and one worker. Team covers up to ' . (int) $c['included']['crew'] . ' workers.'];
     /* founding by real prices (2026-10-29): the founding price ids in place of the list ones, no coupon; the schedule steps up after 12 months */
     $byPrice = billingFoundingByPrice($c, $plan, $iv, $seats > $inc, $addon) && !billingUplift($c);
     if ($byPrice) { $c['prices'] = array_replace_recursive($c['prices'], array_map(fn($ivs) => array_filter((array) $ivs), array_intersect_key((array) $c['prices_founding'], array_flip(BILLING_FOUNDING_KEYS)))); $price = (string) $c['prices'][$plan][$iv]; }
@@ -488,17 +509,22 @@ function billingTakeEvent(array $c, array $ev): string {
             if (!empty($b['subscription']) && ($o['id'] ?? '') !== $b['subscription'] && in_array($b['status'] ?? '', BILLING_GOOD, true) && $type !== 'customer.subscription.created') { $did = 'old subscription'; return $b; }
             $b['subscription'] = (string) ($o['id'] ?? ''); $b['customer'] = (string) ($o['customer'] ?? ($b['customer'] ?? ''));
             $b['status'] = $type === 'customer.subscription.deleted' ? 'canceled' : (string) ($o['status'] ?? '');
-            $plan = null; $iv = null; $extra = 0; $addon = false; $uplift = false; $end = null;
+            $plan = null; $iv = null; $extra = 0; $addon = false; $uplift = false; $end = null; $fp = false;
             foreach ((array) ($o['items']['data'] ?? []) as $it) {
                 $p = billingPriceOf($c, (string) ($it['price']['id'] ?? ''));
                 if (!$p) continue;
+                if (($p[2] ?? '') === 'founding') $fp = true;   /* on the founding prices (2026-10-30: the Billing screen says when they step up) */
                 if ($p[0] === 'addon') { $addon = true; continue; }
                 if (str_starts_with($p[0], 'uplift')) { $uplift = true; continue; }
                 if (str_ends_with($p[0], '_extra')) { $extra = (int) ($it['quantity'] ?? 0); continue; }
                 [$plan, $iv] = $p;
                 if (!empty($it['current_period_end'])) $end = (int) $it['current_period_end'];   /* newer API versions keep it on the item */
             }
-            if ($plan) { $b['plan'] = $plan; $b['interval'] = $iv; $b['seats'] = (int) ($c['included'][$plan] ?? 1) + $extra; $b['addon'] = $addon; $b['uplift'] = $uplift; }
+            if ($plan) { $b['plan'] = $plan; $b['interval'] = $iv; $b['seats'] = (int) ($c['included'][$plan] ?? 1) + $extra; $b['addon'] = $addon; $b['uplift'] = $uplift; $b['founding_price'] = $fp; }
+            /* when it began, and a founding coupon's last day (the older coupon path): the step-up date on the Billing screen (2026-10-30) */
+            if (!empty($o['start_date'])) $b['start'] = (int) $o['start_date'];
+            $disc = is_array($o['discount'] ?? null) ? $o['discount'] : (is_array($o['discounts'][0] ?? null) ? $o['discounts'][0] : null);
+            $b['discount_end'] = $disc && !empty($disc['end']) ? (int) $disc['end'] : null;
             $b['period_end'] = (int) ($o['current_period_end'] ?? $end ?? 0) ?: null;
             $b['trial_end'] = !empty($o['trial_end']) ? (int) $o['trial_end'] : null;
             if (!empty($o['trial_end'])) $b['had_trial'] = true;

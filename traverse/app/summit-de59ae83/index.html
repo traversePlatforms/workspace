@@ -1589,6 +1589,11 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .office{display:grid;gap:18px}
   @media (min-width:1100px){ .office{grid-template-columns:200px minmax(0,1fr);align-items:start} .office.nomenu{grid-template-columns:minmax(0,1fr)} .office .omenu{position:sticky;top:76px;flex-direction:column;overflow:visible} }
   .office .omenu{display:flex;gap:4px;overflow-x:auto;padding:4px 0}
+  /* 2026-10-30 (Matthew: on Accounts you had to scroll the whole page to reach the bottom of the left menu): this Office menu was sticky with
+     no height limit, so on a window shorter than its 20-odd entries its foot ran off the bottom (the 29 Oct fix was on .dnav, the other menu).
+     It now fits the window and scrolls by itself. */
+  @media (min-width:1100px){ .office .omenu{max-height:calc(100vh - 92px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin} body.dnav-on.dk-top .office .omenu{top:70px;max-height:calc(100vh - 84px)} }
+  @media (min-width:1280px){ body.dnav-on.dk-top .office .omenu{top:14px;max-height:calc(100vh - 28px)} }
   .office .omenu button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--ink);font:700 14px var(--sans);text-align:left;white-space:nowrap;cursor:pointer}
   .office .omenu button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
   .office .omenu button.on{background:color-mix(in srgb,var(--go) 14%,transparent)}
@@ -1764,7 +1769,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .clst.cl-live{background:var(--go-tint);color:var(--go)}.clst.cl-pastdue,.clst.cl-setup{background:var(--later-tint);color:var(--later)}.clst.cl-locked,.clst.cl-cancelled{background:var(--miss-tint);color:var(--bad)}
   .pwsign .pwf{display:grid;gap:10px;width:100%;max-width:340px;margin:8px auto 0;text-align:left}.pwsign .pwf label{display:grid;gap:4px;font-size:14px;color:var(--signin-soft)}
   .pwsign .pwf input{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:var(--signin-ink);font:16px var(--sans)}
-  .pwlinks{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:14px}.pwlinks .lnk,.signin .pwgo{color:var(--signin-soft)}.signin .pwgo{display:block;margin:14px auto 0}
+  .pwlinks{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:14px}.pwlinks .lnk,.signin .pwgo{color:var(--signin-soft)}.signin .pwgo{display:block;margin:14px auto 0}.signin .pwgo.fgcode{margin-top:6px}
   .acperms{display:grid;gap:6px;margin:6px 0}.acperms .chk{display:flex;gap:8px;align-items:center;justify-content:flex-start;font-size:15px;font-weight:600}.acperms .chk input{width:20px;height:20px;min-height:0;padding:0;margin:0;flex:none}.acname{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .invline{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:13px;color:var(--soft);margin-top:6px}.invtag{background:var(--later-tint);color:var(--later)}
   .setuph .setupck{margin:12px 0}.setuplinks{display:flex;gap:14px;padding:0 12px 4px 50px}.setuph > .billgo{margin:14px 0 4px}
@@ -2575,6 +2580,14 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .splash img.splimg{display:block;height:88px;width:auto;max-width:70vw;object-fit:contain;animation:rise .5s ease both}
   .splash img.splimg.mkbg{border-radius:14px;padding:8px 12px}
   .lgbox{display:grid;gap:6px;margin-top:6px}
+  /* 2026-10-30: the Company screen's two parts, the service area, the Billing card's lines and request */
+  .coform .coh{margin-top:6px}.coform .coh:first-child{margin-top:0}
+  .areanow{display:grid;gap:2px;padding:10px 12px;border-radius:12px;background:var(--sunk)}.areanow small{color:var(--soft)}
+  .areaseg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0}.areaseg button{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}.areaseg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}.areacl{display:grid;gap:6px;max-height:50vh;overflow:auto;padding:2px}.arear[hidden],.areac[hidden]{display:none}
+  .billdl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:8px 0 4px}.billdl dt{color:var(--soft);font-size:14px}.billdl dd{margin:0;font-size:15px}
+  @media (max-width:520px){.billdl{grid-template-columns:1fr;gap:0}.billdl dd{margin-bottom:8px}}
+  .billaskf{display:grid;gap:8px;margin-top:6px}.billaskf label[hidden]{display:none}
+  .zqr{display:block;width:160px;max-width:60%;height:auto;margin:6px 0;border:1px solid var(--line);border-radius:8px;background:#fff}
   .lgbox label.chk{display:flex;align-items:center;gap:8px;font-weight:600}.lgbox label.chk input{width:20px;height:20px;padding:0;margin:0;flex:none}
   .coform .ghost{min-height:46px;padding:0 16px;border:1.5px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);font:700 14.5px var(--sans);cursor:pointer}
   .cologo{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 4px}
@@ -3560,7 +3573,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     load();
   }
   function setBar(mode, o) {
-    o = o || {};
+    o = setupBackFix(o || {});   /* Back to Setup from a screen Setup opened (2026-10-30) */
     if (S.screen !== S._foldScreen) { S._foldScreen = S.screen;   /* folds start closed on every screen (2026-10-17, Matthew: not remembered after a refresh, leaving or coming back) */
       ['foldOpen', 'custOpenG', 'custAllL', 'qqAllG', 'teamOpen', 'cuCheckOpen', 'qqOpenRow', 'wonPendOpen', 'treeOpen', 'hailOpen', 'commOpen', 'flOpen', 'exOpen', 'mdOpen', 'photoOpen', 'qqInboxOpen', 'qqCustOpen', 'jobsReadyOpen', 'trainOpen', 'wonPendNew'].forEach(function (k) { delete S[k]; }); }
     hdr.hidden = false; tabPaint();   /* the phone menu bar follows the screen (2026-10-21) */
@@ -3815,6 +3828,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     inn.appendChild(keys);
     if (edOn()) { var pwl = q('button', 'lnk pwgo', 'Sign in with email and password'); pwl.type = 'button'; pwl.addEventListener('click', function () { pwSigninView(); }); inn.appendChild(pwl); }   /* 2026-10-29 */
+    if (edOn()) { var fgc = q('button', 'lnk pwgo fgcode', 'Forgot your code?'); fgc.type = 'button'; fgc.addEventListener('click', function () { pwSigninView('', 'code'); }); inn.appendChild(fgc); }   /* a way back in for an admin with a code only (2026-10-30) */
     if (!standalone()) { var ih = q('div', 'insthost onsign'); inn.appendChild(ih); fillInstall(ih); }
     S.signin = press;
     view.appendChild(box);
@@ -4502,7 +4516,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (lockOn()) { setupHome(); return; }   /* ...and the admin gets the company ready (2026-10-29) */
     if (qView()) { quickQuoteView(); return; }   /* quote-only accounts: the Quick quote is all there is (2026-10-15) */
     hideSplash(); hideToast();
-    S.signin = null; S.screen = 'tools'; S.inOffice = false;
+    S.signin = null; S.screen = 'tools'; S.inOffice = false; setupClear();
     if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
     S.pins = null; S.pinAsk = false; S.newCode = null;   /* shown once: leaving Accounts forgets them (Fable) */
     if (jobCrew()) return crewHome();   /* the field crew: jobs and walks, no doors (2026-10-19) */
@@ -6818,6 +6832,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (w.url) { var a = q('a', 'lnk', 'Open'); a.href = w.url; a.target = '_blank'; a.rel = 'noopener'; r.appendChild(a); }
       var c = q('button', 'lnk', 'Copy'); c.type = 'button'; c.addEventListener('click', function () { copyText(w.url || w.show, w.label + ' details'); }); r.appendChild(c);
       host.appendChild(r);
+      if (w.qr) { var zi = q('img', 'zqr'); zi.alt = 'Zelle QR code'; zi.src = w.qr; zi.loading = 'lazy'; host.appendChild(zi); }   /* the Zelle QR code, to show the customer (2026-10-30) */
     });
     var B = leadBrand({ src: who && who.src, name: who && who.name }), tel = digits(who && who.phone);
     var msg = 'Hi ' + greetName(who && who.name) + ', this is ' + myName() + ' with ' + B.name + '. You can pay ' + (owe > 0 ? 'the ' + money0(owe) + ' balance' : 'us') + ' any of these ways:\n' + ways.map(line).join('\n') + '\nPlease put your name and address in the note. Thank you!';
@@ -10830,7 +10845,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      A screen opened from the Office keeps the Office menu beside it, and Office stays lit in the top bar, until another place is
      picked from the top bar or Home. Computers only (a phone has no side menu). Each screen draws as it always has; whatever it
      puts in the page is moved into the frame as it lands, so nothing about the screens themselves changed. */
-  var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1, followupmail: 1, newsletter: 1 };
+  var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1, followupmail: 1, newsletter: 1,
+    kitsetup: 1, kitprices: 1, kitpay: 1, kitimport: 1, kitcosts: 1, mailsetup: 1, svcarea: 1 };   /* Setup and its screens keep the Office menu too (2026-10-30) */
   function officeFramed() { return !!S.inOffice && !!OFFICE_SCREENS[S.screen] && S.screen !== 'office' && dnavOn(); }
   var officeObs = window.MutationObserver ? new MutationObserver(function () { officeFrame(); }) : null;
   function officeFrame() {
@@ -10972,7 +10988,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       home.appendChild(ridge('mk')); home.appendChild(brandName((CO && (CO.short || CO.name)) || 'Doors'));   /* one brand for everyone (2026-10-21, Sixfold 365) */
       home.addEventListener('click', chooseView); dnav.appendChild(home);
       var links = q('div', 'dnl');
-      items.forEach(function (x) { var b = q('button'); b.appendChild(ico(DNAV_ICO[x[0]] || 'chev', 2)); b.appendChild(q('span', null, x[1])); b.type = 'button'; b.setAttribute('data-k', x[0]);   /* an icon for the side menu (face lift 2026-10-22); the top bar hides it */ b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = x[0] === 'office'; x[2](); }); links.appendChild(b); });
+      items.forEach(function (x) { var b = q('button'); b.appendChild(ico(DNAV_ICO[x[0]] || 'chev', 2)); b.appendChild(q('span', null, x[1])); b.type = 'button'; b.setAttribute('data-k', x[0]);   /* an icon for the side menu (face lift 2026-10-22); the top bar hides it */ b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = x[0] === 'office'; setupClear(); x[2](); }); links.appendChild(b); });
       dnav.appendChild(links);
       dnav.appendChild(q('span', 'dnsp'));
       var lab = q('label', 'dns'); lab.appendChild(ico('search', 2.2));
@@ -12690,9 +12706,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the plans (Matthew 2026-10-26): per company with people included, the trade data in every plan */
   var BILL_PLAN = {
     solo: ['Solo', 'One admin and one worker: doors, the trade data, appointments and pipeline.'],
-    crew: ['Crew', 'For a crew: adds phones and follow-ups, the leaderboard and training.'],
-    team: ['Team', 'For bigger teams: adds managers, territories, goals, alerts and the CRM hand-off.']
+    crew: ['Team', 'For a crew: adds phones and follow-ups, the leaderboard and training.'],   /* customers read Solo, Team, Company (2026-10-30); the keys stay */
+    team: ['Company', 'For bigger teams: adds managers, territories, goals, alerts and the CRM hand-off.']
   };
+  function planName(k) { return (BILL_PLAN[k] || [k ? k.charAt(0).toUpperCase() + k.slice(1) : ''])[0]; }
   /* ---- a client install made on the server (2026-10-29, Matthew: "they pay. They get access to the app's welcome screen, they get a check list
      option. It loads the information and populates that app.") ----
      company.json features.clientstart marks it. Its admin's home starts with the welcome checklist: the homes (loading while the server links the
@@ -12710,7 +12727,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!startOn() || startHidden()) return null;
     var A = CO.area || {}, card = q('section', 'card coform kitsetup setupck startck'), marks = {};
     card.appendChild(q('div', 'dwh', 'Welcome to Traverse, ' + (myName() || 'there')));
-    card.appendChild(q('p', 'sub2', 'Your app is ready to use. These get your company going; each one opens where it is done.'));
     var step = function (key, n, title, sub, fn) {
       var row = q(fn ? 'button' : 'div', 'kitstep'); if (fn) { row.type = 'button'; row.addEventListener('click', fn); } row.setAttribute('data-step', key);
       var ck = q('span', 'kitck', n); row.appendChild(ck); marks[key] = [row, ck];
@@ -12721,7 +12737,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var where = A.mode === 'counties' || !A.miles ? (A.place || 'your area') : A.miles + ' mi around ' + (A.place || 'your business');
     var n = 0;
     if (A.status === 'linking') {
-      var lr = step('homes', String(++n), 'Loading your homes in ' + where + '…', 'This takes a moment. You can start on the rest now; the doors fill in by themselves.', null);
+      var lr = step('homes', String(++n), 'Loading your homes in ' + where + '…', 'The doors appear here when it finishes.', null);
       marks.homes[0].classList.add('loading'); marks.homes[1].textContent = ''; marks.homes[1].appendChild(q('span', 'spin'));
       clearTimeout(startPollT);
       startPollT = setTimeout(function () {
@@ -12737,7 +12753,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       step('homes', String(++n), 'Your homes: ' + (A.doors || 0).toLocaleString(LOCALE) + ' in ' + (A.towns || 0) + ' towns', 'Every town in ' + where + '. More area later is free: email hello@traverseplatforms.com.', function () { start(); });
       tick('homes', true);
     } else if (A.status) {
-      step('homes', String(++n), 'Door data for your area is being added', 'We have been told and will email you when your homes are in. Everything else works now: pipeline, customers, jobs and your team.', null);
+      step('homes', String(++n), 'Door data for your area is being added', 'We email you when your homes are in. Pipeline, customers, jobs and your team work now.', null);
     }
     step('team', String(++n), 'Invite your team', 'Add each person with their email: they get a link to set their own password.', function () { S.acctAdd = true; S.newCode = null; accountsView(); });
     if (kitOnC()) {
@@ -12745,8 +12761,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       step('payments', String(++n), 'Connect payments', 'Square, Stripe or the ways your customers already pay.', kitPayView);
     }
     if (impOnC()) step('import', String(++n), 'Import your customers', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', function () { importView(); });
-    if (feat('company')) step('brand', String(++n), 'Check your logo and colours', 'How your name, logo and colour look in the app your team opens.', function () { try { localStorage.setItem('sixfold.startBrand', '1'); } catch (e) {} companyView(); });
-    try { tick('brand', localStorage.getItem('sixfold.startBrand') === '1'); } catch (e) {}
+    if (feat('company')) step('brand', String(++n), 'Check your logo and color', 'How your logo and color look in the app your team opens.', function () { try { localStorage.setItem('sixfold.startBrand', '1'); } catch (e) {} companyView('brand'); });
+    step('train', String(++n), 'Train your team', 'The Training lessons: doors, sales, quotes, phones. Add your own for your team.', function () { try { localStorage.setItem('sixfold.startTrain', '1'); } catch (e) {} trainingView(); });   /* 2026-10-30 */
+    try { tick('brand', localStorage.getItem('sixfold.startBrand') === '1'); tick('train', localStorage.getItem('sixfold.startTrain') === '1'); } catch (e) {}
     api('accounts').then(function (j) { tick('team', !!(j && j.ok && (j.accounts || []).some(function (a) { return !a.off && a.role !== 'super' && !a.you && !/^(Claude|Fable)\b/i.test(a.name || ''); }))); }).catch(function () {});
     if (kitOnC()) api('kit').then(function (K) { var on = {}; (K && K.ok && K.setup || []).forEach(function (x) { on[x.k] = x.done; }); tick('email', on.email); tick('payments', on.payments); }).catch(function () {});
     if (impOnC()) api('imports').then(function (j) { tick('import', !!(j && j.ok && (j.imports || []).some(function (x) { return !x.undone; }))); }).catch(function () {});
@@ -12766,7 +12783,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       try { (ownFrame ? window.parent : window).location.href = k.url + '#hop=' + encodeURIComponent(k.pass); } catch (e) { location.href = k.url + '#hop=' + encodeURIComponent(k.pass); }
     }).catch(function () { toast('Not opened', 'No signal. Try again.', null); if (onFail) onFail(); });
   }
-  var CL_ST = { live: 'Live', setup: 'Setting up', 'past due': 'Past due', locked: 'Locked', cancelled: 'Cancelled' };
+  var CL_ST = { live: 'Live', setup: 'Setting up', 'past due': 'Past due', locked: 'Locked', cancelled: 'Canceled' };   /* the key is the server's */
+  /* the editions as customers read them (2026-10-30, Matthew: Yards is "Lawn & Landscape"; the keys stay) */
+  var ED_NAME = { roofing: 'Roofing', yards: 'Lawn & Landscape', solar: 'Solar', pest: 'Pest', security: 'Security' };
+  function edName(k) { return ED_NAME[k] || (k ? k.charAt(0).toUpperCase() + k.slice(1) : ''); }
   function clientsRow() {
     var row = q('div', 'lookrow edrow clrow'); row.appendChild(q('span', null, 'Clients'));
     var sel = q('select', 'edsel noi18n'); sel.setAttribute('aria-label', 'Clients'); sel.disabled = true;
@@ -12794,13 +12814,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var rows = [];
     var draw = function () {
       list.textContent = ''; var t = srch.value.trim().toLowerCase();
-      var hits = rows.filter(function (c) { return (!st.value || c.status === st.value) && (!t || (c.name + ' ' + c.edition + ' ' + c.place).toLowerCase().indexOf(t) >= 0); });
+      var hits = rows.filter(function (c) { return (!st.value || c.status === st.value) && (!t || (c.name + ' ' + c.edition + ' ' + edName(c.edition) + ' ' + c.place).toLowerCase().indexOf(t) >= 0); });
       if (!hits.length) { list.appendChild(q('div', 'soft', rows.length ? 'No client matches.' : 'No clients yet. A company that pays on the website appears here at once.')); return; }
       hits.forEach(function (c) {
         var r = q('button', 'door acct clcard'); r.type = 'button'; r.setAttribute('data-status', c.status);
         var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', c.name)); top.appendChild(q('span', 'tag clst cl-' + c.status.replace(' ', ''), CL_ST[c.status] || c.status)); r.appendChild(top);
         var m = q('div', 'meta');
-        [c.edition ? c.edition.charAt(0).toUpperCase() + c.edition.slice(1) : '', c.plan ? c.plan.charAt(0).toUpperCase() + c.plan.slice(1) + (c.interval === 'year' ? ', yearly' : ', monthly') + ' · ' + c.seats + ' people' : '',
+        [edName(c.edition), c.plan ? planName(c.plan) + (c.interval === 'year' ? ', yearly' : ', monthly') + ' · ' + c.seats + ' people' : '',
           'since ' + fmtDay(c.since), c.towns ? c.homes.toLocaleString(LOCALE) + ' homes in ' + c.towns + ' towns' + (c.place ? ' (' + (c.miles ? c.miles + ' mi, ' : '') + c.place + ')' : '') : (c.area === 'linking' ? 'homes loading' : 'no homes yet')].filter(Boolean).forEach(function (x) { m.appendChild(q('span', null, x)); });
         r.appendChild(m);
         if (c.here) r.disabled = true; else r.addEventListener('click', function () { r.disabled = true; hopTo(c.id, c.name, function () { r.disabled = false; }); });
@@ -12818,12 +12838,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.textContent = '';
     var box = q('div', 'signin pwsign'), inn = q('div', 'in'); box.appendChild(inn);
     inn.appendChild(ridge('mk')); inn.appendChild(q('h1', null, CO.short));
-    inn.appendChild(q('div', 'prompt', forgot ? 'Set a new password' : 'Sign in with your email'));
+    inn.appendChild(q('div', 'prompt', forgot === 'code' ? 'Forgot your code?' : forgot ? 'Set a new password' : 'Sign in with your email'));
     var fm = q('form', 'pwf'); fm.setAttribute('novalidate', '');
     var el = q('label', null, 'Email'); var em = q('input'); em.type = 'email'; em.autocomplete = 'username'; em.required = true; el.appendChild(em); fm.appendChild(el);
     var pw = null;
     if (!forgot) { var pl = q('label', null, 'Password'); pw = q('input'); pw.type = 'password'; pw.autocomplete = 'current-password'; pw.required = true; pl.appendChild(pw); fm.appendChild(pl); }
-    var say = q('div', 'say' + (err ? ' bad' : ''), err || (forgot ? 'We email you a link that works once, for 24 hours.' : '')); say.setAttribute('role', 'status'); fm.appendChild(say);
+    var say = q('div', 'say' + (err ? ' bad' : ''), err || (forgot === 'code' ? 'Type the email on your account (an admin can use the company’s email on file). We email a link that sets a password; then you sign in with your email. It works once, for 24 hours. Not an admin? Your admin gives you a new code.' : forgot ? 'We email you a link that works once, for 24 hours.' : '')); say.setAttribute('role', 'status'); fm.appendChild(say);
     var go = q('button', 'save tagree', forgot ? 'Email me a link' : 'Sign in'); go.type = 'submit'; fm.appendChild(go);
     fm.addEventListener('submit', function (e) {
       e.preventDefault(); if (go.disabled) return; go.disabled = true; say.className = 'say'; say.textContent = forgot ? 'Sending…' : 'Checking…';
@@ -13040,7 +13060,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     api(action, { body: body }).then(function (r) {
       if (!r.ok) { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = r.error || 'That did not go through.'; return; }
       drawBilling(holder, r);
-      if (action === 'billingrefund') toast('Refunded and cancelled', (r.amount ? money2(r.amount / 100) + ' goes back to the card. ' : '') + 'Stripe sends the receipt.', null);
+      if (action === 'billingrefund') toast('Refunded and canceled', (r.amount ? money2(r.amount / 100) + ' goes back to the card. ' : '') + 'Stripe sends the receipt.', null);
       if (action === 'billinglive') toast('Released', 'Their whole team can sign in now.', null);   /* 2026-10-29 */
       if (action === 'billingmore') toast('More time given', r.lock && r.lock.moreUntil ? 'Open until ' + billDate(r.lock.moreUntil) + '.' : 'Noted.', null);
     }).catch(function () { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Try again when you have signal.'; });
@@ -13057,17 +13077,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(pc);
     }
     if (j.status) {
+      /* a company that already pays (2026-10-30, Matthew: payment happens on the website now): the plan and people, what it costs now, the next
+         charge, the founding price and the day it steps up, then Manage billing and how to change the plan or add people */
       var c = q('div', 'card billcard'), P = BILL_PLAN[j.plan] || ['Plan', '', ''];
       var head = q('div', 'billhead'); head.appendChild(q('b', null, P[0] + (j.addon ? ' + second edition' : '')));
-      var label = { active: 'Active', trialing: 'Active', past_due: 'Payment failed', unpaid: 'Unpaid', canceled: 'Cancelled', incomplete: 'Payment not finished', incomplete_expired: 'Payment not finished', paused: 'Paused' }[j.status] || j.status;
+      var label = { active: 'Active', trialing: 'Active', past_due: 'Payment failed', unpaid: 'Unpaid', canceled: 'Canceled', incomplete: 'Payment not finished', incomplete_expired: 'Payment not finished', paused: 'Paused' }[j.status] || j.status;
       head.appendChild(q('span', 'billst ' + (j.status === 'active' || j.status === 'trialing' ? 'ok' : 'bad'), label));
       c.appendChild(head);
-      var lines = [];
-      if (j.interval) lines.push(j.interval === 'year' ? 'Paid yearly' : 'Paid monthly');
-      if (live) lines.push(j.used + ' of ' + j.seats + ' workers the plan covers, plus your one admin');   /* one admin free on every plan (2026-10-29) */
-      if (live && j.monthly) lines.push(money(j.monthly) + ' a month' + (j.interval === 'year' ? ', billed yearly' : '') + (j.founding ? ', before the founding discount' : ''));
-      if (live && j.periodEnd) lines.push((j.cancelAtEnd ? 'Ends ' : 'Renews ') + billDate(j.periodEnd));
-      lines.forEach(function (t) { c.appendChild(q('div', 'sub2', t)); });
+      var dl = q('dl', 'billdl'), row = function (k, v) { if (!v) return; dl.appendChild(q('dt', null, k)); dl.appendChild(q('dd', null, v)); };
+      if (live) row('People', j.used + ' of ' + j.seats + ' workers the plan covers, plus your one admin');   /* one admin free on every plan (2026-10-29) */
+      var per = function (m) { return money(m) + ' a month' + (j.interval === 'year' ? ', billed yearly (' + money(m * 12) + ')' : ''); };
+      if (live && j.monthlyNow) row('Price', per(j.monthlyNow) + (j.foundingNow ? ', the founding price' : ''));
+      if (live && j.foundingNow && j.monthly && j.monthly !== j.monthlyNow) row('Founding price', j.stepUp ? 'Until ' + billDate(j.stepUp) + '; then ' + per(j.monthly) + ', the list price, locked in for as long as you stay.' : 'For your first 12 months; then ' + per(j.monthly) + ', the list price.');
+      if (live && j.nextCharge) row('Next charge', billDate(j.nextCharge) + (j.monthlyNow ? ': ' + money(j.interval === 'year' ? (j.stepUp && j.stepUp <= j.nextCharge ? j.monthly : j.monthlyNow) * 12 : (j.stepUp && j.stepUp <= j.nextCharge ? j.monthly : j.monthlyNow)) : ''));
+      if (live && j.cancelAtEnd && j.periodEnd) row('Ends', billDate(j.periodEnd));
+      if (!live && j.interval) row('Was', j.interval === 'year' ? 'Paid yearly' : 'Paid monthly');
+      if (dl.children.length) c.appendChild(dl);
       /* setup, then the money-back guarantee (Matthew 2026-10-27, replacing the free pilot): set up within setupDays business days of
          paying; money back for guaranteeDays from the day the app is live. Only Traverse marks it live or refunds. */
       var good = j.status === 'active' || j.status === 'trialing';
@@ -13095,12 +13120,47 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var mb = q('button', 'billgo', 'Manage billing'); mb.type = 'button'; var mm = q('div', 'sub2');
         mb.disabled = !j.ready;
         mb.addEventListener('click', function () { billGo(mb, mm, 'billingportal', {}); });
-        c.appendChild(mb); c.appendChild(q('div', 'sub2', 'Card, invoices and cancelling, on Stripe’s page. To change the plan or add people, email billing@traverseplatforms.com.')); c.appendChild(mm);
+        c.appendChild(mb); c.appendChild(q('div', 'sub2', 'Invoices, your card and canceling, on Stripe’s page.')); c.appendChild(mm);
       }
       holder.appendChild(c);
+      if (live || j.client) holder.appendChild(billAskCard(j, holder));
     }
     if (live || j.pending) return;
+    if (j.client) {   /* a client install pays on the website: no payment page in the app (2026-10-30) */
+      if (!j.status) { var nc = q('div', 'card billcard'); nc.appendChild(q('b', null, 'No plan on file yet')); nc.appendChild(q('p', 'sub2', 'Your plan is paid on traverseplatforms.com. If you paid and this still shows, email ' + (j.contact || 'hello@traverseplatforms.com') + '.')); holder.appendChild(nc); }
+      return;
+    }
     holder.appendChild(billPicker(j));
+  }
+  /* changing the plan or adding people (2026-10-30): Stripe's page cannot change a plan made of several prices, so the admin asks here (an email
+     to Traverse, billingask) or writes to hello@ */
+  function billAskCard(j, holder) {
+    var c = q('div', 'card billcard billask');
+    c.appendChild(q('b', null, 'Add people or change your plan'));
+    c.appendChild(q('p', 'sub2', 'Stripe’s page cannot change this plan, so Traverse does it: send a request here or email ' + (j.contact || 'hello@traverseplatforms.com') + '. Nothing changes on your card until you hear back.'));
+    if (j.asked && j.asked.at) c.appendChild(q('div', 'sub2', 'Last request: ' + billDate(j.asked.at) + ' by ' + j.asked.by + '.'));
+    var fm = q('div', 'billaskf phf'), kl = q('label', null, 'What to change'), ks = q('select');
+    [['people', 'Add people'], ['plan', 'Change the plan'], ['other', 'Something else']].forEach(function (x) { var o = q('option', null, x[1]); o.value = x[0]; ks.appendChild(o); });
+    kl.appendChild(ks); fm.appendChild(kl);
+    var nl = q('label', null, 'How many more people'), ni = q('input'); ni.type = 'number'; ni.min = '1'; ni.max = '500'; ni.value = '1'; ni.inputMode = 'numeric'; nl.appendChild(ni); fm.appendChild(nl);
+    var pl = q('label', null, 'The plan you want'), ps = q('select');
+    ['solo', 'crew', 'team'].filter(function (k) { return k !== j.plan; }).forEach(function (k) { var o = q('option', null, planName(k)); o.value = k; ps.appendChild(o); });
+    pl.appendChild(ps); fm.appendChild(pl);
+    var tl = q('label', null, 'Anything else (optional)'), ta = q('textarea'); ta.rows = 2; ta.maxLength = 1000; tl.appendChild(ta); fm.appendChild(tl);
+    var go = q('button', 'billgo', 'Send the request'); go.type = 'button'; var say = q('div', 'sub2'); say.setAttribute('role', 'status');
+    var show = function () { nl.hidden = ks.value !== 'people'; pl.hidden = ks.value !== 'plan'; };
+    ks.addEventListener('change', show); show();
+    go.addEventListener('click', function () {
+      go.disabled = true; say.className = 'sub2'; say.textContent = 'Sending…';
+      var b = { kind: ks.value, note: ta.value }; if (ks.value === 'people') b.seats = parseInt(ni.value, 10) || 0; if (ks.value === 'plan') b.plan = ps.value;
+      api('billingask', { body: b }).then(function (r) {
+        go.disabled = false;
+        if (!r.ok) { say.className = 'msg bad'; say.textContent = r.error || 'It did not send.'; return; }
+        drawBilling(holder, r); toast('Request sent', r.said || '', null);
+      }).catch(function () { go.disabled = false; say.className = 'msg bad'; say.textContent = 'No signal. Try again when you have signal.'; });
+    });
+    fm.appendChild(go); fm.appendChild(say); c.appendChild(fm);
+    return c;
   }
   /* the past-due lock on the Billing card, Traverse's eyes only (2026-10-29): when the team pauses, and Give more time to work with them.
      The client's admin reads the same in the warning line. */
@@ -13130,7 +13190,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tg = q('div', 'billtg'), plans = q('div', 'billplans'), opts = q('div', 'billopts'), sum = q('div', 'billsum'), msg = q('div', 'sub2');
     var go = q('button', 'billgo', 'Continue to payment'); go.type = 'button';
     box.appendChild(tg); box.appendChild(plans); box.appendChild(opts); box.appendChild(sum); box.appendChild(go); box.appendChild(msg);
-    box.appendChild(q('p', 'sub2', 'Several teams, trades or offices? The Company plan is set up with us directly.'));
+    box.appendChild(q('p', 'sub2', 'Several teams, trades or offices? Email hello@traverseplatforms.com and we set it up with you.'));
     function per(k) { return (j.display[k] || {})[st.iv] || 0; }
     function upl(p) { return j.uplift ? per(p === 'solo' ? 'uplift_solo' : 'uplift') : 0; }
     /* the same sum as billingMonthly() on the server: base + people past the included + the edition uplift + the second edition */
@@ -13165,11 +13225,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.appendChild(q('b', null, P[0])); b.appendChild(priceEl('billpr', per(p) + upl(p), fdi(per(p)) + fdi(upl(p))));
         b.appendChild(q('small', null, 'a month' + (st.iv === 'year' ? ', billed yearly' : '') + ' · ' + (p === 'solo' ? '1 admin + 1 worker' : '1 admin + up to ' + (inc[p] || 0) + ' workers') + (p !== 'solo' && per(p + '_extra') ? ', then ' + money(per(p + '_extra')) + ' each' : '')));
         b.appendChild(q('small', 'sub2', P[1]));
-        if (p === 'solo' && used > (inc.solo || 1)) b.appendChild(q('small', 'sub2', used + ' workers can sign in now, so Crew or Team fits.'));
+        if (p === 'solo' && used > (inc.solo || 1)) b.appendChild(q('small', 'sub2', used + ' workers can sign in now, so Team or Company fits.'));
         b.addEventListener('click', function () { st.plan = p; if (p === 'solo') st.seats = 1; else if (st.seats < used) st.seats = used; paint(); });
         plans.appendChild(b);
       });
-      if (j.uplift) plans.appendChild(q('small', 'sub2', 'Prices include this edition’s data: +' + money(per('uplift')) + ' a month on Crew and Team, +' + money(per('uplift_solo')) + ' on Solo.'));
+      if (j.uplift) plans.appendChild(q('small', 'sub2', 'Prices include this edition’s data: +' + money(per('uplift')) + ' a month on Team and Company, +' + money(per('uplift_solo')) + ' on Solo.'));
       if (off) plans.appendChild(q('small', 'billfd', 'Founding company: ' + j.foundingPct + '% off for the first year, and your price is locked in for life as long as you’re with us.' + (j.foundingUntil ? ' Open to companies that sign up by ' + new Date(j.foundingUntil + 'T12:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) + '.' : '')));
       opts.textContent = '';
       if (st.plan !== 'solo') {
@@ -13387,6 +13447,33 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var wb = q('div', 'kitpay'); box.appendChild(wb); kitWaysForm(wb);   /* other ways customers can pay (2026-10-29) */
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitPayView)); });
   }
+  /* the Zelle QR code (2026-10-30, Matthew): optional, a PNG or JPG of the code the bank's app makes; saved at once (zelleqrset), apart from
+     the form's Save, and shown with the Zelle email or phone on the quote and signing pages and the job's balance */
+  function zelleQrBlock(C, redraw) {
+    var box = q('div', 'lgbox zqbox'); box.appendChild(q('label', null, 'Zelle QR code (optional)'));
+    var url = C.zelleQr && C.zelleQr.v ? API + '?action=zelleqr&v=' + C.zelleQr.v : '';
+    var row = q('div', 'cologo');
+    if (url) { var im = q('img', 'zqr'); im.alt = 'Your Zelle QR code'; im.src = url; row.appendChild(im); } else row.appendChild(q('span', 'sub2', 'No QR code yet'));
+    var fi = q('input'); fi.type = 'file'; fi.accept = 'image/png,image/jpeg,.png,.jpg,.jpeg'; fi.hidden = true; fi.setAttribute('aria-label', 'Choose the QR code picture');
+    var pick = q('button', 'ghost', url ? 'Change QR code' : 'Upload QR code'); pick.type = 'button'; pick.addEventListener('click', function () { fi.click(); });
+    row.appendChild(pick); row.appendChild(fi);
+    var lm = q('div', 'sub2');
+    var send = function (body, done) {
+      lm.textContent = 'Saving…'; pick.disabled = true;
+      api('zelleqrset', { body: body }).then(function (j) { pick.disabled = false; if (!j || !j.ok) { lm.textContent = (j && j.error) || 'Not saved.'; return; } toast(done, '', null); redraw(); })
+        .catch(function () { pick.disabled = false; lm.textContent = 'No signal: nothing was saved.'; });
+    };
+    if (url) { var rm = q('button', 'ghost', 'Remove'); rm.type = 'button'; rm.addEventListener('click', function () { send({ remove: true }, 'QR code removed'); }); row.appendChild(rm); }
+    box.appendChild(row); box.appendChild(lm);
+    box.appendChild(q('small', 'sub2', 'Your bank’s app shows your Zelle QR code: save it or take a screenshot. PNG or JPG, 500 KB at most. Customers see it beside your Zelle email or phone.'));
+    fi.addEventListener('change', function () {
+      var file = fi.files && fi.files[0]; fi.value = ''; if (!file) return;
+      if (!/\.(png|jpe?g)$/i.test(file.name) && !/^image\/(png|jpeg)$/.test(file.type)) { lm.textContent = 'Use a PNG or JPG picture.'; return; }
+      if (file.size > 500 * 1024) { lm.textContent = 'That file is ' + Math.round(file.size / 1024) + ' KB. Use one under 500 KB.'; return; }
+      var rd = new FileReader(); rd.onload = function () { send({ data: String(rd.result || '') }, 'QR code saved'); }; rd.onerror = function () { lm.textContent = 'That file would not open.'; }; rd.readAsDataURL(file);
+    });
+    return box;
+  }
   /* other ways customers can pay (2026-10-29, Matthew: Venmo, Cash App, PayPal, Zelle and the company's own pay link): on the Payments screen.
      They show on the customer's quote page and form, and on the job card's balance. None of them tells the app a payment came in. */
   function kitWaysForm(box) {
@@ -13403,6 +13490,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var pp = field('PayPal.Me name', C.paypal || '', 'yourbusiness', 'Opens paypal.me/yourbusiness.');
       var ze = field('Zelle: the email or phone number it is set up with', C.zelle || '', 'pay@yourbusiness.com or (303) 555-0100', 'Zelle has no payment links, so customers see these details to copy into their bank’s app.');
       var zn = field('Zelle: the name it shows (optional)', C.zelleName || '', 'Your Business LLC', 'So the customer knows they have the right one.');
+      box.appendChild(zelleQrBlock(C, function () { kitWaysForm(box); }));   /* the Zelle QR code (2026-10-30) */
       var lk = field('Your own pay link (optional)', C.link || '', 'https://…', 'Any https address, like an invoice or payment page from QuickBooks or Jobber.');
       var ll = field('Name for your pay link', C.linkLabel || '', 'Pay online', '');
       var msg = q('div', 'sub2'); var row = q('div', 'kitbtns'); var sb = q('button', 'save', 'Save'); sb.type = 'button'; row.appendChild(sb); box.appendChild(row); box.appendChild(msg);
@@ -13532,14 +13620,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return true;
   }
   /* the setup checklist (admin): what a new company does before its first quote */
+  /* Back from a screen Setup opened goes to Setup (2026-10-30, Matthew: most went to the very beginning, Your prices did not): setupGo() marks
+     the screen it opens, and setBar gives that screen (and it again, drawn fresh after a save or a step inside it) Back to Setup. Home, the
+     Office menu, the side menu and Setup itself clear the mark. */
+  function setupGo(fn) { return function () { S.setupRet = true; S.setupScr = null; fn(); }; }
+  function setupBackFix(o) {
+    if (!S.setupRet || S.screen === 'kitsetup') return o;
+    if (S.setupScr === null) S.setupScr = S.screen;
+    return S.screen === S.setupScr && (o.back === chooseView || o.back === officeView) ? Object.assign({}, o, { back: kitSetupView, backLabel: 'Setup' }) : o;   /* only a Back that went to the beginning: a step inside (a lesson, a person) keeps its own */
+  }
+  function setupClear() { S.setupRet = false; S.setupScr = null; }
   function kitSetupView() {
-    hideToast(); S.signin = null; S.screen = 'kitsetup'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Setup', sub: 'Get ready for your first quote', back: chooseView, backLabel: 'Field tools' });
+    hideToast(); S.signin = null; S.screen = 'kitsetup'; foot.hidden = true; setDock(null); setupClear();
+    var toOffice = S.inOffice && planOk() && dnavOn();   /* Back from the Setup list: the Office on a computer, Home on a phone */
+    setBar('back', { title: 'Setup', sub: 'Get ready for your first quote', back: toOffice ? officeView : chooseView, backLabel: toOffice ? 'Office' : 'Field tools' });
     view.textContent = ''; var box = q('div', 'card coform kitsetup'); box.appendChild(q('div', 'skel')); view.appendChild(box);
     kitLoad().then(function (K) {
       box.textContent = ''; if (!K || !K.ok || !K.setup) { box.appendChild(q('div', 'msg bad', (K && K.error) || 'Could not load it.')); return; }
-      var STEP = { company: ['Your company: name and phone', 'On quotes, forms and texts to homeowners.', companyView], colour: ['Your colour', 'The app’s bar and your customers’ pages.', companyView],
-        towns: ['Your towns', 'The towns and houses in your app.', null], people: ['People and sign-in codes', 'Give each person their own code.', accountsView],
+      var STEP = { company: ['Your company: name and phone', 'On quotes, forms and texts to homeowners.', function () { companyView('details'); }], colour: ['Your logo and color', 'The app’s bar and your customers’ pages.', function () { companyView('brand'); }],
+        towns: areaOnC() ? ['Your service area', 'The towns and houses in your app: widen or narrow it.', function () { areaView(); }] : ['Your towns', 'The towns and houses in your app.', null], people: ['People and sign-in codes', 'Give each person their own code.', accountsView],
         prices: ['Your prices', 'What a quote adds up from a house’s measurements.', kitPricesView], terms: ['Your agreement terms', 'What every one-page form says.', kitPricesView],
         payments: ['Payments: Square or Stripe', 'For deposits paid on the form, and other ways customers can pay.', kitPayView], email: ['Your email', 'Signed agreements and receipts go to customers from your address.', mailSetupView], alerts: ['Alerts on your phone', 'New leads, signed forms and job notes. Turn them on in Profile.', profileView],
         plan: ['Your Traverse plan', 'Billing.', function () { billingView(); }] };
@@ -13547,17 +13646,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(q('div', 'dwh', done + ' of ' + K.setup.length + ' done'));
       K.setup.forEach(function (x) {
         var st = STEP[x.k]; if (!st) return;
-        var row = q(st[2] ? 'button' : 'div', 'kitstep' + (x.done ? ' done' : '')); if (st[2]) { row.type = 'button'; row.addEventListener('click', st[2]); }
+        var row = q(st[2] ? 'button' : 'div', 'kitstep' + (x.done ? ' done' : '')); if (st[2]) { row.type = 'button'; row.addEventListener('click', setupGo(st[2])); } row.setAttribute('data-k', x.k);
         row.appendChild(q('span', 'kitck', x.done ? '✓' : ''));
         var tx = q('span'); tx.appendChild(q('b', null, st[0])); tx.appendChild(q('small', null, x.info ? x.info + ' · ' + st[1] : st[1])); row.appendChild(tx);
         if (st[2]) row.appendChild(q('span', 'kitgo', '›'));
         box.appendChild(row);
       });
-      /* Import and Your costs (2026-10-29): beside the checklist, not steps on it */
-      box.appendChild(q('div', 'dwh', 'Bring your data, check your prices'));
-      [[true, 'Import customers, leads and past work', 'From a spreadsheet: your old software, Excel or Google Sheets. Every import can be undone.', function () { importView(); }],
-       [costsOnC(), 'Your costs' + (feat('costs') ? '' : ' (testing: only Traverse sees this)'), 'Labour, materials, drive and overhead for each price line: what it costs you, and a suggested price.', costsView]].forEach(function (x) {
-        if (!x[0]) return; var row = q('button', 'kitstep'); row.type = 'button'; row.addEventListener('click', x[3]);
+      /* Import, Your costs and Training (2026-10-29; Training 2026-10-30): beside the checklist, not steps on it */
+      box.appendChild(q('div', 'dwh', 'Bring your data, check your prices, train your team'));
+      [[true, 'Import customers, leads and past work', 'From a spreadsheet: your old software, Excel or Google Sheets. Every import can be undone.', function () { importView(); }, 'import'],
+       [costsOnC(), 'Your costs' + (feat('costs') ? '' : ' (testing: only Traverse sees this)'), 'Labor, materials, drive and overhead for each price line: what it costs you, and a suggested price.', costsView, 'costs'],
+       [true, 'Training', 'Your team’s lessons: doors, sales, quotes, phones and more.', function () { trainingView(); }, 'training']].forEach(function (x) {
+        if (!x[0]) return; var row = q('button', 'kitstep'); row.type = 'button'; row.setAttribute('data-k', x[4]); row.addEventListener('click', setupGo(x[3]));
         row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[1])); tx.appendChild(q('small', null, x[2])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
       });
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(kitSetupView)); });
@@ -13606,6 +13706,80 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       ['notes', 'Notes', ['notes', 'note', 'comments', 'comment', 'description', 'memo', 'details', 'job notes'], '']])
   };
   function impOnC() { return kitOnC() && S.role === 'admin'; }
+  /* ---- Your service area (2026-10-30, Matthew: "the admin can widen or narrow the radius (or counties) that the self-serve build set") ----
+     Setup, for a client install made by the website's checkout (company.json area); its admin or Traverse. A radius around the business address
+     (5 to 100 miles, Colorado) or the edition's counties; saved, the server links the towns again (rounds.php svcareaset) and the doors follow. */
+  function areaOnC() { return feat('clientstart') && S.role === 'admin' && !!(CO && CO.area); }
+  var areaPollT = null;
+  function areaPoll(n) {
+    clearTimeout(areaPollT);
+    areaPollT = setTimeout(function () {
+      api('company').then(function (j) {
+        if (!j || !j.ok || !j.company) return;
+        try { localStorage.setItem('doorapp.company', JSON.stringify(j.company)); } catch (e) {}
+        setCompany(j.company);
+        var A = j.company.area || {};
+        if (A.status === 'linking') { if (n < 30) areaPoll(n + 1); return; }
+        S.regions = [];   /* the town list is fetched again with the new towns */
+        toast('Your area is updated', A.status === 'ready' ? (A.doors || 0).toLocaleString(LOCALE) + ' homes in ' + (A.towns || 0) + ' towns' : 'No towns we cover are in it yet.', null);
+        if (S.screen === 'svcarea') areaView();
+      }).catch(function () { if (n < 30) areaPoll(n + 1); });
+    }, 4000);
+  }
+  function areaView() {
+    if (!areaOnC()) return kitSetupView();
+    hideToast(); S.signin = null; S.screen = 'svcarea'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Your service area', sub: 'The towns and homes in your app', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card jnform coform areav'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('svcarea').then(function (j) {
+      box.textContent = '';
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load your area.')); return; }
+      var A = j.area || {}, st = { mode: A.mode === 'counties' ? 'counties' : 'radius', pick: {} };
+      (A.counties || []).forEach(function (k) { st.pick[k] = true; });
+      var now = q('div', 'areanow');
+      now.appendChild(q('b', null, A.status === 'linking' ? 'Updating your homes…' : A.status === 'ready' ? (A.doors || 0).toLocaleString(LOCALE) + ' homes in ' + (A.towns || 0) + ' towns' : 'No towns we cover are in your area yet'));
+      now.appendChild(q('small', null, A.mode === 'counties' ? 'Counties: ' + (A.place || '') : (A.miles || 0) + ' miles around ' + (A.place || 'your business')));
+      box.appendChild(now);
+      if (A.status === 'linking') areaPoll(0);
+      var seg = q('div', 'aseg areaseg');
+      [['radius', 'Around my business'], ['counties', 'Pick counties']].forEach(function (o) {
+        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(st.mode === o[0])); b.setAttribute('data-mode', o[0]);
+        b.addEventListener('click', function () { st.mode = o[0]; [].forEach.call(seg.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); paint(); });
+        seg.appendChild(b);
+      });
+      box.appendChild(seg);
+      var rad = q('div', 'arear'), cty = q('div', 'areac');
+      var al = q('label', null, 'Business address'), ai = q('input'); ai.value = A.address || ''; ai.autocomplete = 'street-address'; ai.placeholder = '123 Main St, Castle Rock, CO 80104'; al.appendChild(ai); rad.appendChild(al);
+      var ml = q('label', null, 'Radius in miles (' + j.min + ' to ' + j.max + ')'), mi = q('input'); mi.type = 'number'; mi.min = String(j.min); mi.max = String(j.max); mi.step = '1'; mi.inputMode = 'numeric'; mi.value = String(A.miles || 25); mi.name = 'miles'; ml.appendChild(mi); rad.appendChild(ml);
+      var cl = q('div', 'areacl');
+      (j.counties || []).forEach(function (c) {
+        var l = q('label', 'chk'), cb = q('input'); cb.type = 'checkbox'; cb.value = c.key; cb.checked = !!st.pick[c.key];
+        cb.addEventListener('change', function () { st.pick[c.key] = cb.checked; });
+        l.appendChild(cb); l.appendChild(q('span', null, c.name + ' · ' + c.towns + (c.towns === 1 ? ' town, ' : ' towns, ') + (c.homes || 0).toLocaleString(LOCALE) + ' homes')); cl.appendChild(l);
+      });
+      cty.appendChild(cl);
+      box.appendChild(rad); box.appendChild(cty);
+      var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
+      var row = q('div', 'kitbtns'), sv = q('button', 'save', 'Save the area'); sv.type = 'button'; row.appendChild(sv); box.appendChild(row);
+      box.appendChild(q('small', 'sub2', 'Doors in your area update within a minute. Homes are in Colorado.'));
+      function paint() { rad.hidden = st.mode !== 'radius'; cty.hidden = st.mode !== 'counties'; }
+      paint();
+      sv.addEventListener('click', function () {
+        err.hidden = true;
+        var b = st.mode === 'radius' ? { mode: 'radius', miles: mi.value, address: ai.value.trim() } : { mode: 'counties', counties: Object.keys(st.pick).filter(function (k) { return st.pick[k]; }) };
+        if (st.mode === 'radius') { var m = parseFloat(mi.value); if (!(m >= j.min && m <= j.max)) { err.hidden = false; err.textContent = m > j.max ? 'Traverse covers up to ' + j.max + ' miles around your business. For a wider area, pick counties instead.' : 'Type a radius from ' + j.min + ' to ' + j.max + ' miles.'; return; } }
+        else if (!b.counties.length) { err.hidden = false; err.textContent = 'Tick at least one county.'; return; }
+        sv.disabled = true; sv.textContent = 'Saving…';
+        api('svcareaset', { body: b }).then(function (k) {
+          sv.disabled = false; sv.textContent = 'Save the area';
+          if (!k || !k.ok) { err.hidden = false; err.textContent = (k && k.error) || 'Not saved.'; return; }
+          toast('Area saved', k.said || 'Doors in your area update within a minute.', null);
+          if (CO.area) CO.area.status = 'linking';
+          areaPoll(0); areaView();
+        }).catch(function () { sv.disabled = false; sv.textContent = 'Save the area'; err.hidden = false; err.textContent = 'No signal: nothing was saved.'; });
+      });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(areaView)); });
+  }
   function impHead(h) { return String(h || '').replace(/^﻿/, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
   /* the separator the first line uses most (comma, tab or semicolon: Excel in some countries saves semicolons); the same reader as Meta's */
   function impParse(text) {
@@ -14013,7 +14187,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!j || !j.ok) { lm.textContent = (j && j.error) || 'Not saved.'; return; }
         return api('company').then(function (k) {
           if (k && k.ok && k.company) { try { localStorage.setItem('doorapp.company', JSON.stringify(k.company)); } catch (er) {} setCompany(k.company); }
-          companyView(); toast(done, 'Every phone shows it the next time the app opens.', null);
+          companyView(S.coPart); toast(done, 'Every phone shows it the next time the app opens.', null);
         });
       }).catch(function () { pick.disabled = false; lm.textContent = 'No signal: nothing was saved.'; });
     }
@@ -14029,29 +14203,41 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     return box;
   }
-  function companyView() {
-    hideToast(); S.signin = null; S.screen = 'company'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Company', sub: 'How the app names and shows you', back: chooseView, backLabel: 'Field tools' });
+  /* the Company screen in two parts (2026-10-30, Matthew: Setup's "Your company" and "Your color" opened the same place): part 'details'
+     (name, phone, email, website, review link) or 'brand' (color and logo) opens that part alone; no part (the Office menu) shows both, each
+     under its own heading. A part's Save sends the other part's values as the app has them, so nothing else changes. */
+  function companyView(part) {
+    part = part === 'details' || part === 'brand' ? part : '';
+    hideToast(); S.signin = null; S.screen = 'company'; S.coPart = part; foot.hidden = true; setDock(null);
+    setBar('back', { title: part === 'brand' ? 'Logo and color' : part === 'details' ? 'Your company' : 'Company', sub: part === 'brand' ? 'How your app and customer pages look' : part === 'details' ? 'Name, phone, email and website' : 'How the app names and shows you', back: chooseView, backLabel: 'Field tools' });
     view.textContent = '';
-    var f = q('form', 'card jnform coform');
+    var f = q('form', 'card jnform coform' + (part ? ' copart-' + part : ''));
     var fld = function (label, name, val, type, ph, hint) { var l = q('label', null, label); var i = q('input'); i.name = name; i.type = type || 'text'; i.value = val || ''; if (ph) i.placeholder = ph; l.appendChild(i); if (hint) l.appendChild(q('small', 'sub2', hint)); f.appendChild(l); return i; };
-    var nm = fld('Company name', 'name', CO.name, 'text', 'Acme Roofing', 'On text messages to homeowners, reports and the top of the app.');
-    var sh = fld('Short name', 'short', CO.short, 'text', 'Acme', 'Where space is tight. 20 characters at most.');
-    var tg = fld('Tagline', 'tagline', CO.tagline, 'text', 'Roofing done right', 'Optional.');
-    var ph = fld('Phone', 'phone', CO.phone, 'tel', '(719) 555-0100');
-    var em = fld('Email', 'email', CO.email, 'email', 'office@yourcompany.com');
-    var st = fld('Website', 'site', CO.site, 'text', 'yourcompany.com');
-    var rvl = fld('Google review link', 'review', (CO.links && CO.links.googleReview) || '', 'url', 'https://g.page/r/…/review', 'From your Google Business Profile: Ask for reviews, then copy the link. The Ask for a review button on each customer uses it.');   /* 2026-10-13 */
-    var cl = q('label', null, 'Brand colour'); var crow = q('div', 'jnrow');
-    var pick = q('input'); pick.type = 'color'; pick.name = 'color'; pick.value = /^#[0-9a-f]{6}$/i.test(CO.brand || '') ? CO.brand : '#2f4155';
-    var hex = q('input'); hex.type = 'text'; hex.value = CO.brand || ''; hex.placeholder = 'as built'; hex.style.maxWidth = '9em';
-    var paint = function () {};
-    pick.addEventListener('input', function () { hex.value = pick.value; paint(); });
-    hex.addEventListener('input', function () { if (/^#[0-9a-f]{6}$/i.test(hex.value.trim())) { pick.value = hex.value.trim(); paint(); } });
-    crow.appendChild(pick); crow.appendChild(hex); cl.appendChild(crow);
-    cl.appendChild(q('small', 'sub2', 'Sets the bar, the sign-in screen and the buttons; text on it stays readable (the app darkens a light colour). Empty keeps the colours the app was built with. The icon on phones’ home screens changes only when the app is rebuilt.'));
-    f.appendChild(cl); paint();
-    f.appendChild(coLogoBlock());
+    var keep = function (v) { return { value: v || '' }; };   /* a field of the other part: sent as it is */
+    var nm, sh, tg, ph, em, st, rvl;
+    if (part !== 'brand') {
+      f.appendChild(q('div', 'dwh coh', 'Your company'));
+      nm = fld('Company name', 'name', CO.name, 'text', 'Acme Roofing', 'On text messages to homeowners, reports and the top of the app.');
+      sh = fld('Short name', 'short', CO.short, 'text', 'Acme', 'Where space is tight. 20 characters at most.');
+      tg = fld('Tagline', 'tagline', CO.tagline, 'text', 'Roofing done right', 'Optional.');
+      ph = fld('Phone', 'phone', CO.phone, 'tel', '(719) 555-0100');
+      em = fld('Email', 'email', CO.email, 'email', 'office@yourcompany.com');
+      st = fld('Website', 'site', CO.site, 'text', 'yourcompany.com');
+      rvl = fld('Google review link', 'review', (CO.links && CO.links.googleReview) || '', 'url', 'https://g.page/r/…/review', 'From your Google Business Profile: Ask for reviews, then copy the link. The Ask for a review button on each customer uses it.');   /* 2026-10-13 */
+    } else { nm = keep(CO.name); sh = keep(CO.short); tg = keep(CO.tagline); ph = keep(CO.phone); em = keep(CO.email); st = keep(CO.site); rvl = keep(CO.links && CO.links.googleReview); }
+    var hex = keep(CO.brand);
+    if (part !== 'details') {
+      f.appendChild(q('div', 'dwh coh', 'Logo and color'));
+      var cl = q('label', null, 'Brand color'); var crow = q('div', 'jnrow');
+      var pick = q('input'); pick.type = 'color'; pick.name = 'color'; pick.value = /^#[0-9a-f]{6}$/i.test(CO.brand || '') ? CO.brand : '#2f4155';
+      hex = q('input'); hex.type = 'text'; hex.value = CO.brand || ''; hex.placeholder = 'as built'; hex.style.maxWidth = '9em';
+      pick.addEventListener('input', function () { hex.value = pick.value; });
+      hex.addEventListener('input', function () { if (/^#[0-9a-f]{6}$/i.test(hex.value.trim())) pick.value = hex.value.trim(); });
+      crow.appendChild(pick); crow.appendChild(hex); cl.appendChild(crow);
+      cl.appendChild(q('small', 'sub2', 'Sets the bar, the sign-in screen and the buttons; text on it stays readable (the app darkens a light color). Empty keeps the colors the app was built with. The icon on phones’ home screens changes only when the app is rebuilt.'));
+      f.appendChild(cl);
+      f.appendChild(coLogoBlock());
+    }
     var msg = q('div', 'sub2'); var row = q('div', 'jnrow'); var save = q('button', 'save', 'Save'); save.type = 'submit'; row.appendChild(save); f.appendChild(row); f.appendChild(msg);
     f.addEventListener('submit', function (e) {
       e.preventDefault(); save.disabled = true; msg.textContent = 'Saving…';
@@ -14060,7 +14246,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!j.ok) { msg.textContent = j.error || 'Not saved.'; return; }
         return api('company').then(function (k) {
           if (k && k.ok && k.company) { try { localStorage.setItem('doorapp.company', JSON.stringify(k.company)); } catch (er) {} setCompany(k.company); }
-          companyView(); toast('Company saved', 'Every phone shows it the next time the app opens.', null);
+          companyView(part); toast(part === 'brand' ? 'Color saved' : 'Company saved', 'Every phone shows it the next time the app opens.', null);
         });
       }).catch(function () { save.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
     });
@@ -14372,6 +14558,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       cn.addEventListener('click', function () { if (!confirm('Cancel the invite for ' + a.name + '? Their link stops working and they are removed.')) return; acctCall('accountremove', { id: a.id }, function () { toast('Invite cancelled', a.name, null); }); });
       ivl.appendChild(rs); ivl.appendChild(cn); c.appendChild(ivl);
     } else if (!a.off && a.login) c.appendChild(q('div', 'anote', 'Signs in with ' + a.login + ' and a password (or their code)'));
+    /* an admin who lost their code (2026-10-30): Traverse emails them a link that sets a password; no code is shown to anyone */
+    if (S.super && !S.viewing && edOn() && a.role === 'admin' && !a.off && !a.you) {
+      var sl = q('button', 'lnk', 'Email a sign-in link'); sl.type = 'button'; sl.setAttribute('data-act', 'acctlink');
+      sl.addEventListener('click', function () {
+        var em = window.prompt('Email a link that sets a password for ' + a.name + '. Their email:', a.login || (a.invited && a.invited.email) || CO.email || ''); if (!em) return;
+        sl.disabled = true;
+        api('acctlink', { body: { id: a.id, email: em.trim() } }).then(function (j) { sl.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sign-in link sent', 'To ' + j.to + '. It works once, for 24 hours.', null); }).catch(function () { sl.disabled = false; toast('No signal', 'Try again.', null); });
+      });
+      c.appendChild(sl);
+    }
     if (S.acctEdit === a.id) {
       var fm = q('div', 'phf acf');
       var lb = q('label', null, 'Name'); var nm = q('input'); nm.maxLength = 40; nm.value = a.name; lb.appendChild(nm); fm.appendChild(lb);
@@ -20111,7 +20307,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      booked for the week. Everything comes from answers the app already has (regions, stats, walks, alerts). A manager
      sees their own team. Laid out in columns on a computer, one under another on a phone. */
   /* the office's places, down the side of the dashboard (2026-10-09, mock-up D); each only for the roles and editions that have it */
+  /* the Office menu fits the window (2026-10-30): its height is the window below where it sits now (lower while a bar above it is still on
+     screen, then its sticky top), so its foot is always in view and it scrolls by itself; the CSS max-height is the fallback */
+  var omenuFitQ = false;
+  function omenuFit() {
+    if (omenuFitQ) return; omenuFitQ = true;
+    (window.requestAnimationFrame || setTimeout)(function () {
+      omenuFitQ = false;
+      [].forEach.call(document.querySelectorAll('.office .omenu'), function (m) {
+        if (getComputedStyle(m).position !== 'sticky') { m.style.maxHeight = ''; return; }
+        m.style.maxHeight = Math.max(200, window.innerHeight - Math.max(0, m.getBoundingClientRect().top) - 16) + 'px';
+      });
+    });
+  }
+  window.addEventListener('scroll', omenuFit, { passive: true }); window.addEventListener('resize', omenuFit);
   function officeMenu() {
+    setTimeout(omenuFit, 0); setTimeout(omenuFit, 400);
     var m = q('nav', 'omenu'); m.setAttribute('aria-label', 'Office');
     var first = function () { return S.region || (S.regions[0] && S.regions[0].key); };
     /* [label, open, (unused), badge, the screens it lights for] */
@@ -20136,12 +20347,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
-      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup']] : null,   /* the quote and agreement kit (2026-10-27) */
+      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */
     it.forEach(function (x) {
       var lit = x[4].indexOf(S.screen) >= 0;
       var b = q('button', lit ? 'on' : null, x[0]); b.type = 'button'; if (lit) b.setAttribute('aria-current', 'page');
-      b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = true; x[1](); });
+      b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = true; setupClear(); x[1](); });
       if (x[3] === 'lead') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok && l.new) b.appendChild(q('span', 'obadge', String(l.new))); }).catch(function () {});
       m.appendChild(b);
     });

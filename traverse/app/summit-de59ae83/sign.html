@@ -50,6 +50,7 @@
   .skel{height:200px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
   footer{padding:20px 0 36px;color:var(--soft);font-size:14px}
   /* other ways to pay (2026-10-29): Venmo, Cash App, PayPal, Zelle, the company's own link */
+  .zqr{display:block;width:160px;max-width:60%;height:auto;margin:-2px 0 4px;border:1px solid var(--line);border-radius:8px;background:#fff}
   .ways{display:grid;gap:10px;margin-top:12px}.way{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px}
   .way span{display:grid;gap:2px;min-width:0;overflow-wrap:anywhere}.way b{font-size:17px}.way .btn{width:auto;min-height:42px;margin:0;padding:0 18px;font-size:15px}
   @media print{.noprint{display:none}.card{border:0;padding:0}body{background:#fff;color:#000}
@@ -149,6 +150,7 @@
       if (w.url) { var a = el('a', 'btn', w.k === 'link' ? 'Open' : 'Pay with ' + w.label); a.href = w.url; a.target = '_blank'; a.rel = 'noopener'; r.appendChild(a); }
       else { var b = el('button', 'btn ghost', 'Copy'); b.type = 'button'; b.addEventListener('click', function () { var done = function () { b.textContent = 'Copied'; }; try { navigator.clipboard.writeText(w.show).then(done, function () { window.prompt('Copy this:', w.show); }); } catch (e) { window.prompt('Copy this:', w.show); } }); r.appendChild(b); }
       list.appendChild(r);
+      if (w.qr) { var zi = el('img', 'zqr'); zi.alt = 'Zelle QR code: scan it in your bank’s app'; zi.src = w.qr; list.appendChild(zi); }   /* the Zelle QR code (2026-10-30) */
     });
     c.appendChild(list);
     if (mode !== 'balance') c.appendChild(el('p', 'muted', 'These do not confirm by themselves: we mark it received when it arrives.' + (mode === 'deposit' && !A.signed && !A.nosign ? ' You can sign below now.' : '')));

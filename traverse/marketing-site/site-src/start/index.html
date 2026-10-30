@@ -106,14 +106,14 @@ aside{position:sticky;top:16px}
   var $ = function (id) { return document.getElementById(id); };
   var Q = new URLSearchParams(location.search);
   var P = null, st = { edition: Q.get('edition') || '', plan: Q.get('plan') || 'crew', iv: Q.get('iv') === 'month' ? 'month' : 'year', people: parseInt(Q.get('people') || '0', 10) || 0 };
-  var NAMES = { solo: ['Solo', 'One person working their own doors.'], crew: ['Crew', 'The app on every phone in the crew.'], team: ['Team', 'Bigger teams with managers.'] };
+  var NAMES = { solo: ['Solo', 'One person working their own doors.'], crew: ['Team', 'The app on every phone in the crew.'], team: ['Company', 'Bigger teams with managers.'] };   /* customers read Solo, Team, Company (2026-10-30); the keys stay */
   var money = function (n) { return '$' + Number(n).toLocaleString('en-US'); };
   function btn(label, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', String(!!on)); b.addEventListener('click', fn); return b; }
   function row(dl, a, b) { var t = document.createElement('dt'), d = document.createElement('dd'); t.textContent = a; d.textContent = b; dl.appendChild(t); dl.appendChild(d); }
   function cur() { return P.plans[st.plan] && P.plans[st.plan][st.iv]; }
   function draw() {
     var eds = $('eds'); eds.textContent = '';
-    P.editions.forEach(function (e) { eds.appendChild(btn(e.name.replace('Traverse', ''), st.edition === e.key, function () { st.edition = e.key; draw(); })); });
+    P.editions.forEach(function (e) { eds.appendChild(btn(e.name.replace('Traverse', '').trim(), st.edition === e.key, function () { st.edition = e.key; draw(); })); });
     [].forEach.call($('ivs').children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-iv') === st.iv)); });
     var pl = $('plans'); pl.textContent = '';
     Object.keys(NAMES).forEach(function (k) {
@@ -132,7 +132,7 @@ aside{position:sticky;top:16px}
     st.people = Math.min(st.people, max);
     $('people').value = st.people; $('minus').disabled = st.people <= inc; $('plus').disabled = st.people >= max;
     var extra = Math.max(0, st.people - inc);
-    $('phint').textContent = st.plan === 'solo' ? 'Solo is you (the admin) and one person. More people: pick Crew.' : 'Besides you (the admin, always free). ' + inc + ' included' + (extra ? ', ' + extra + ' extra at ' + money(x.extra) + ' each' : '') + '.';
+    $('phint').textContent = st.plan === 'solo' ? 'Solo is you (the admin) and one person. More people: pick Team.' : 'Besides you (the admin, always free). ' + inc + ' included' + (extra ? ', ' + extra + ' extra at ' + money(x.extra) + ' each' : '') + '.';
     var tot = x.price + extra * x.extra, list = x.list + extra * x.extraList;
     var ed = P.editions.filter(function (e) { return e.key === st.edition; })[0];
     $('sumname').textContent = (ed ? ed.name : 'Traverse') + ' · ' + NAMES[st.plan][0] + (st.iv === 'year' ? ', yearly' : ', monthly');

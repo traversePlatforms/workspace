@@ -96,11 +96,11 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
         <!-- step 2: the brand -->
         <section class="card" id="s2" hidden>
           <h2>Your brand</h2>
-          <p class="sub">Your colour and logo go on the app your team opens. You can change both later.</p>
+          <p class="sub">Your color and logo go on the app your team opens. You can change both later.</p>
           <div class="pill" id="area2"></div>
-          <label style="margin-top:16px">Brand colour</label>
+          <label style="margin-top:16px">Brand color</label>
           <div class="sw" id="sw"></div>
-          <div class="color"><input type="color" id="color" value="#1f6feb" aria-label="Pick any colour"><span class="small">Or pick any colour</span></div>
+          <div class="color"><input type="color" id="color" value="#1f6feb" aria-label="Pick any color"><span class="small">Or pick any color</span></div>
           <label style="margin-top:16px">Logo <small>PNG, JPG or SVG, under 500 KB. Optional.</small><input type="file" id="logo" accept="image/png,image/jpeg,image/svg+xml"></label>
           <div class="err" id="e2" role="alert"></div>
           <button class="go" id="b2" type="button">Next: your company</button> <button class="lnk" type="button" data-back="1">Back</button>
@@ -202,7 +202,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
     }).catch(function () { b.disabled = false; $('e1').textContent = 'No connection. Try again.'; });
   };
   /* step 2 */
-  SW.forEach(function (c) { var b = document.createElement('button'); b.type = 'button'; b.style.background = c; b.setAttribute('data-c', c); b.setAttribute('aria-label', 'Colour ' + c); b.onclick = function () { $('color').value = c; paint(); }; $('sw').appendChild(b); });
+  SW.forEach(function (c) { var b = document.createElement('button'); b.type = 'button'; b.style.background = c; b.setAttribute('data-c', c); b.setAttribute('aria-label', 'Color ' + c); b.onclick = function () { $('color').value = c; paint(); }; $('sw').appendChild(b); });
   $('color').oninput = paint;
   $('logo').onchange = function () {
     var f = $('logo').files[0]; $('e2').textContent = ''; logoData = '';
@@ -236,7 +236,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
     if (j.ready) { msg('Your Traverse is ready', 'Open it here: ' + j.url + ' — sign in with your email and password (we emailed you).'); var a = document.createElement('a'); a.className = 'go'; a.href = j.url; a.textContent = 'Open my app'; a.style.cssText = 'display:inline-flex;align-items:center;text-decoration:none'; $('msg').appendChild(a); return; }
     if (!j.paid) { msg('Waiting for your payment', j.error || 'It can take a moment.', true); return; }
     W = j; $('flow').hidden = false;
-    $('lead').textContent = 'You subscribed to ' + j.editionName + ' ' + j.plan.charAt(0).toUpperCase() + j.plan.slice(1) + '. Three quick steps and your app opens.';
+    $('lead').textContent = 'You subscribed to ' + j.editionName + ' ' + ({ solo: 'Solo', crew: 'Team', team: 'Company' }[j.plan] || j.plan) + '. Three quick steps and your app opens.';
     $('ptg').textContent = j.editionName;
     $('addr').value = j.prefill.address || ''; $('email').value = j.prefill.email || ''; $('mobile').value = j.prefill.phone || ''; $('admin').value = j.prefill.name || '';
     $('miles').min = j.milesMin; $('miles').max = j.milesMax; $('miles').value = j.miles; $('milesv').textContent = j.miles + ' mi';
