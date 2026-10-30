@@ -7161,6 +7161,7 @@ function adSpendFile(): string { return DATA_DIR . '/ad-spend.json'; }
 function adSpend(): array {
     $j = json_decode((string) @file_get_contents(adSpendFile()), true);
     if (is_array($j) && isset($j['ads'])) return $j['ads'];
+    if (edition()) return [];   /* the figures below are Sixfold's own Meta spend: an edition or client install with nothing saved starts empty (2026-10-30) */
     return [   /* Matthew's Meta screenshots (19 and 20 Oct); replaced as soon as anyone saves new figures */
         ['key' => 'form1', 'label' => 'Instant Form ad (13-14 Oct, paused)', 'src' => 'meta', 'spend' => 169.28, 'results' => 21, 'asof' => '2026-10-19', 'by' => 'Matthew\'s Meta screenshot'],
         ['key' => 'form2', 'label' => 'Instant Form ad (since 19 Oct)', 'src' => 'meta', 'spend' => 134.84, 'results' => 9, 'asof' => '2026-10-20', 'by' => 'Matthew\'s Meta screenshot'],
