@@ -1776,6 +1776,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .prcsur input,.prcband input,.prcbase input{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans)}.prcsur input:not(.kitqty){flex:1 1 9em;min-width:0}
   .prcsur select,.prcmd select,.prccopts select,.prcmode select,.prctiers select{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans);max-width:100%}
   .prcbase{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;width:100%}.prcbase input{flex:1 1 14em;min-width:0}.prcmd{display:inline-flex;gap:4px}
+  .prcfh{margin-top:6px;font-weight:600;font-size:14.5px}.prcfuel>label:not(.prcchk):not(.prcband){display:grid;gap:4px;width:100%;font-size:14.5px}.prcfuel>label:not(.prcchk):not(.prcband) input,.prcfuel>label:not(.prcchk):not(.prcband) select{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans);max-width:100%}.prcfuelsrc{font-size:14.5px}.prcfuelex{padding:8px 10px;border-radius:10px;background:var(--sunk);font-size:14px;width:100%;box-sizing:border-box}
   .prcclause{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.prcclause.off{opacity:.62}.prcclause small{color:var(--soft)}
   .prcctop{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}.prcctop .prcact{margin-left:auto;display:flex;gap:12px}.prcbadge{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--later-tint);color:var(--later)}
   .prcnote{font-size:13px;color:var(--soft)}.prccopts{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:start}.prcsvc summary{cursor:pointer;font-weight:700;font-size:14px;padding:6px 0}.prcsvc{display:grid;gap:4px}
@@ -13799,7 +13800,31 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return { roofsq: +m.sqs || 0, roofft: +m.roof || 0, lawn: (+m.lawn || 0) / 1000, lawnft: +m.lawn || 0, kw: +m.kw || 0, perim: +m.perim || 0, homeft: +m.home || 0, lotk: (+m.lot || 0) / 1000,
       visit: Math.max(1, parseInt(m.visits, 10) || 1), each: Math.max(0, Math.min(10000, parseInt(p.qty != null ? p.qty : r.qty, 10) || 0)), flat: 1 }[r.unit];
   }
-  /* the same sum as prcPrice() in the API: -> {items, total, list, need, far, miles, sugg} */
+  /* the fuel cost (2026-10-30): the same sum as prcFuel() in the API; P.fuelNow is the server's price per gallon (EIA's week, or the company's own) */
+  function prcLineMilesC(base, lat, lon) {
+    var rad = Math.PI / 180, dl = (lat - base.lat) * rad, dn = (lon - base.lon) * rad;
+    var a = Math.pow(Math.sin(dl / 2), 2) + Math.cos(base.lat * rad) * Math.cos(lat * rad) * Math.pow(Math.sin(dn / 2), 2);
+    return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  function prcFuelC(P, H, m) {
+    var R = P.rules, F = R.fuel; if (!F || !F.on) return null;
+    var base = F.base || R.travel.base; if (!base || !H || H.lat == null || H.lon == null) return null;
+    var now = P.fuelNow; if (!now) return { amt: 0, why: 'noprice' };
+    var rt = Math.round(2 * prcLineMilesC(base, +H.lat, +H.lon) * F.road * 10) / 10;
+    var t0 = +((m || {}).trips || 0); t0 = t0 >= 0 && t0 <= 50 ? Math.floor(Math.round(t0 * 10) / 10) : 0;   /* as prcMeasures() reads it */
+    var trips = t0 > 0 ? t0 : F.trips;
+    var amt = prcRnd(rt * trips / F.mpg * now.gal * (1 + F.markup / 100));
+    var f = prcNumText(rt, 1) + ' est. road miles there and back × ' + trips + ' trip' + (trips === 1 ? '' : 's') + ' ÷ ' + prcNumText(F.mpg, 1) + ' mpg × $' + prcNumText(now.gal, 3) + '/gal ' + (F.type === 'diesel' ? 'diesel' : 'regular') + (F.markup > 0 ? ' + ' + prcNumText(F.markup, 1) + '%' : '') + ' (' + now.src + ')';
+    return { amt: amt, rt: rt, trips: trips, mpg: F.mpg, gal: now.gal, type: F.type, src: now.src, f: f };
+  }
+  /* folded: shared out over the price lines by each line's amount, whole dollars, the rest on the biggest line (prcFuelFold) */
+  function prcFuelFoldC(items, amt) {
+    var base = 0, big = -1; items.forEach(function (x, i) { if (x.amt > 0) { base += x.amt; if (big < 0 || x.amt > items[big].amt) big = i; } });
+    if (big < 0) return items;
+    var left = amt; items.forEach(function (x) { if (x.amt > 0) { var s = Math.floor(amt * x.amt / base); x.amt += s; left -= s; } });
+    items[big].amt += left; return items;
+  }
+  /* the same sum as prcPrice() in the API: -> {items, total, list, need, far, miles, sugg, fuel} */
   function prcPriceC(P, m, H, tier, picks, o) {
     o = o || {}; var T = P.tiers, tk = T.on ? tier : 'good', pct = +((T.list[tk] || {}).pct || 0), f = (H && H.f) || {}, sugg = prcSuggestC(P, f), skip = {}, items = [], need = [];
     (o.skip || []).forEach(function (s) { skip[s] = true; });
@@ -13812,7 +13837,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       items.push({ id: r.id, t: r.label, amt: amt, qty: Math.round(qty * 100) / 100, unit: r.unit });
     });
     var lineSum = items.reduce(function (a, x) { return a + x.amt; }, 0), R = P.rules;
-    var miles = prcMilesC(R.travel.base, H && H.lat, H && H.lon);
+    var miles = prcMilesC(R.travel.base, H && H.lat, H && H.lon), fuel = items.length ? prcFuelC(P, H, m) : null;
     function adj(useSkip) {
       var add = [], far = false;
       if (items.length) {
@@ -13824,19 +13849,34 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (fee === null) { fee = R.travel.over; if (fee === null) far = true; }
         if (fee) add.push({ id: 't:travel', t: 'Travel (' + prcNumText(miles, 1) + ' miles)', amt: fee, qty: 1, unit: 'flat' });
       }
+      var fold = 0, fuelOn = fuel && fuel.amt > 0 && !(useSkip && skip.fuel);
+      if (fuelOn && R.fuel.show === 'fold') fold = fuel.amt;
+      else if (fuelOn) add.push({ id: 't:fuel', t: R.fuel.label, f: fuel.f, amt: fuel.amt, qty: 1, unit: 'flat' });
       add = add.filter(function (x) { return x.amt !== 0; });
-      var tot = lineSum + add.reduce(function (a, x) { return a + x.amt; }, 0);
+      var tot = lineSum + fold + add.reduce(function (a, x) { return a + x.amt; }, 0);
       if (items.length && R.min.on && !(useSkip && skip.min) && tot < R.min.amt) { add.push({ id: 'min', t: 'Minimum charge', amt: R.min.amt - tot, qty: 1, unit: 'flat' }); tot = R.min.amt; }
-      return { add: add, tot: Math.max(0, tot), far: far };
+      return { add: add, tot: Math.max(0, tot), far: far, fold: fold };
     }
-    var L0 = adj(false), A = adj(true), tot = A.tot; items = items.concat(A.add);
+    var L0 = adj(false), A = adj(true), tot = A.tot; if (A.fold > 0) items = prcFuelFoldC(items, A.fold); items = items.concat(A.add);
     (o.extras || []).slice(0, 6).forEach(function (x, i) { var t = String(x.t || '').trim().slice(0, 80), a = prcRnd(+x.amt || 0); if (!t || a <= 0) return; a = Math.min(100000, a); items.push({ id: 'x' + (i + 1), t: t, amt: a, qty: 1, unit: 'flat' }); tot += a; });
     var ov = parseInt(o.price, 10);
     if (ov > 0 && ov !== tot) { ov = Math.min(100000, ov); items.push({ id: 'adj', t: ov > tot ? 'Adjustment' : 'Discount', amt: ov - tot, qty: 1, unit: 'flat' }); tot = ov; }
-    return { items: items, total: tot, list: L0.tot, need: need, far: A.far, miles: miles, sugg: sugg };
+    return { items: items, total: tot, list: L0.tot, need: need, far: A.far, miles: miles, sugg: sugg, fuel: fuel ? Object.assign({}, fuel, { fold: A.fold > 0, left: fuel.amt > 0 && !!skip.fuel }) : null };
   }
   /* the adjustments that would apply to this house (for the rep's Leave off boxes), from a pricing with no skips */
-  function prcAdjList(P, res) { return res.items.filter(function (x) { return /^(s:|n:|t:|min$)/.test(x.id); }).map(function (x) { return { key: x.id === 'min' ? 'min' : x.id === 't:travel' ? 'travel' : x.id.slice(2), t: x.t + (x.f ? ' (' + x.f + ')' : ''), amt: x.amt }; }); }
+  function prcAdjList(P, res) {
+    var o = res.items.filter(function (x) { return /^(s:|n:|t:|min$)/.test(x.id); }).map(function (x) { return { key: x.id === 'min' ? 'min' : x.id === 't:travel' ? 'travel' : x.id.slice(2), t: x.t + (x.f ? ' (' + x.f + ')' : ''), amt: x.amt }; });
+    if (res.fuel && res.fuel.fold && res.fuel.amt > 0) o.push({ key: 'fuel', t: P.rules.fuel.label + ', folded into the price (' + res.fuel.f + ')', amt: res.fuel.amt });   /* fuel cost (2026-10-30): no line of its own */
+    return o;
+  }
+  /* the fuel cost under the builder's sum, staff only: folded (the customer sees no fuel line), no price yet, or an old week */
+  function prcFuelNote(P, r, box) {
+    var F = r.fuel, N = P.fuelNow;
+    if (F && F.why === 'noprice') box.appendChild(q('div', 'sub2', 'Fuel cost: there is no fuel price yet, so none was added. Your admin can type a price per gallon in Prices.'));
+    if (F && F.fold && F.amt > 0) box.appendChild(q('div', 'sub2 prcfuelnote', P.rules.fuel.label + ' ' + money0(F.amt) + ' is folded into the lines above: ' + F.f + '. The customer sees no fuel line.'));
+    if (F && F.amt > 0 && N && N.stale) box.appendChild(q('div', 'sub2', 'The fuel price is from the week of ' + prcWeek(N.week) + ' (' + N.days + ' days old): the newest check did not get a newer one.'));
+  }
+  function prcWeek(w) { var d = new Date(w + 'T12:00:00'); return isNaN(d) ? w : PRC_MONTHS[d.getMonth()] + ' ' + d.getDate(); }
   function prcTierName(P, k) { return P.tiers.on ? ((P.tiers.list[k] || {}).name || k) : ''; }
   /* ---- the quote builder ---- */
   function prcQuoteView(lead) {
@@ -13863,7 +13903,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var fl = q('div', 'prcfacts'); fk.forEach(function (k) { var c = q('span', 'prcfact'); c.appendChild(q('b', null, prcFactText(P, k, H.f[k]))); c.appendChild(q('small', null, P.facts[k][0] + (H.src && H.src[k] ? ' · ' + H.src[k] : ''))); fl.appendChild(c); }); box.appendChild(fl);
       }
       var M0 = Q0.measures || {}, Hm = (H && H.m) || {};
-      var m = { lawn: M0.lawn || Hm.lawn || 0, roof: M0.roof || Hm.roof || 0, sqs: M0.sqs || Hm.sqs || 0, kw: M0.kw || Hm.kw || 0, perim: M0.perim || Hm.perim || 0, home: M0.home || Hm.home || 0, lot: M0.lot || Hm.lot || 0, visits: M0.visits || 1 };
+      var m = { lawn: M0.lawn || Hm.lawn || 0, roof: M0.roof || Hm.roof || 0, sqs: M0.sqs || Hm.sqs || 0, kw: M0.kw || Hm.kw || 0, perim: M0.perim || Hm.perim || 0, home: M0.home || Hm.home || 0, lot: M0.lot || Hm.lot || 0, visits: M0.visits || 1, trips: M0.trips || 0 };
       var units = {}; P.lines.forEach(function (r) { units[r.unit] = true; });
       var num = function (label, key, hint) { var l = q('label', null, label); var i = q('input'); i.inputMode = 'decimal'; i.value = m[key] || ''; i.addEventListener('input', function () { m[key] = parseFloat(String(i.value).replace(/[^\d.]/g, '')) || 0; paint(); }); l.appendChild(i); if (hint) l.appendChild(q('small', 'sub2', hint)); return l; };
       var from = function (k, words) { return Hm[k] ? words : 'Type it if you measured.'; };
@@ -13876,6 +13916,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (units.homeft) mrow.appendChild(num('Home (sq ft)', 'home', from('home', 'From the county record.')));
       if (units.lotk) mrow.appendChild(num('Lot (sq ft)', 'lot', from('lot', 'From the county parcel.')));
       if (units.visit) mrow.appendChild(num('Visits', 'visits'));
+      if (P.rules.fuel && P.rules.fuel.on) mrow.appendChild(num('Trips (fuel cost)', 'trips', 'Empty: your usual ' + P.rules.fuel.trips + '. More when the job takes more visits.'));   /* fuel cost (2026-10-30) */
       if (mrow.children.length) { box.appendChild(q('div', 'dwh', 'Measurements')); box.appendChild(mrow); }
       var tiers = P.tiers.on ? PRC_TIERS : ['good'];
       var tier = tiers.indexOf(Q0.opt) >= 0 ? Q0.opt : (P.tiers.on ? P.tiers.pick : 'good');
@@ -13945,6 +13986,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (r.total !== r.list) sumBox.appendChild(q('div', 'sub2', 'Your price list gives ' + money0(r.list) + '.'));
         if (r.need.length) sumBox.appendChild(q('div', 'sub2', 'Not priced yet (needs a measurement): ' + r.need.map(function (id) { var l = P.lines.filter(function (x) { return x.id === id; })[0]; return l ? l.label : id; }).join(', ') + '.'));
         if (r.far) sumBox.appendChild(q('div', 'sub2', 'This house is past your farthest travel band (' + prcNumText(r.miles, 1) + ' miles): no travel fee was added.'));
+        prcFuelNote(P, r, sumBox);   /* fuel cost: the breakdown when folded, or why there is none (staff only) */
         if (Kc && Kc.ok) sumBox.appendChild(costsQuoteLine(Kc, r, r.total));   /* estimated cost and margin, staff only */
         if (P.tiers.on) drawTabs();
         ov.value = over[tier] || '';
@@ -14081,6 +14123,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var ovr = q('label', 'prcband', 'Farther than that: $ '); ovr.appendChild(prcIn(R.travel.over == null ? '' : R.travel.over, 'Fee past the last band', function (v) { R.travel.over = String(v).trim() === '' ? null : Math.round(prcNum(v)); }, 'kitqty', 'numeric')); ovr.appendChild(q('small', 'sub2', 'Empty: no fee, and the rep is told the house is past your area.')); tv.appendChild(ovr);
         }
         rb.appendChild(tv);
+        rb.appendChild(prcFuelBlock(D, C, drawRules));   /* fuel cost (2026-10-30) */
         /* surcharges from house facts */
         var su = q('div', 'prcrule prcblock'); su.appendChild(q('b', null, 'Surcharges from house facts'));
         R.sur.forEach(function (s, i) {
@@ -14136,6 +14179,61 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         }).catch(function () { sb.disabled = false; msg.textContent = 'No signal: nothing was saved.'; });
       });
     }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { prcPricesView(start); })); });
+  }
+  /* ---- the fuel cost in Prices' automatic adjustments (2026-10-30; what it is and where the prices come from: above prcFuelStarter() in
+     the API). D: the prc answer (D.fuel: EIA's newest prices as kept on the server); C: the list being edited; redraw: draws the rules again ---- */
+  function prcFuelText(N, type) { return N.own ? 'Your price: $' + prcNumText(N.gal, 3) + '/gal' : N.area + ' average, week of ' + prcWeek(N.week) + ': $' + prcNumText(N.gal, 3) + '/gal ' + (type === 'diesel' ? 'diesel' : 'regular') + ', EIA'; }
+  function prcFuelBlock(D, C, redraw) {
+    var R = C.rules; if (!R.fuel) R.fuel = JSON.parse(JSON.stringify(D.starter.rules.fuel));
+    var F = R.fuel, S0 = D.fuel || {};
+    var fb = q('div', 'prcrule prcblock prcfuel'); fb.appendChild(prcChk(F.on, 'Fuel cost', function (v) { F.on = v; redraw(); }));
+    if (!F.on) { fb.appendChild(q('small', 'sub2', 'On: the fuel for the drive there and back, from where your trips start, your truck’s miles per gallon and the week’s Colorado fuel price.')); return fb; }
+    /* where trips start: their own, else the travel fee's base */
+    var trav = R.travel.base && R.travel.base.lat != null ? R.travel.base : null, own = !!(F.base && (F.base.lat != null || F.base.text));
+    fb.appendChild(q('div', 'prcfh', 'Where trips start'));
+    var from = own ? (F.base.lat != null ? (F.base.label || 'your start point') : F.base.text + ' (found on the map when you save)') : (trav ? (trav.label || 'your base') + ' (your travel fee’s base)' : '');
+    fb.appendChild(q('div', 'sub2', from ? 'From: ' + from : 'Set where your trips start.'));
+    var bl = q('div', 'prcbase');
+    bl.appendChild(prcIn(F.base && F.base.text || '', 'Start address, like 123 Main St, Denver, CO 80202', function (v) { F.base = v.trim() ? { text: v } : (F.base && F.base.lat != null ? F.base : null); }));
+    var gh = q('button', 'lnk', 'Where I am now'); gh.type = 'button'; gh.addEventListener('click', function () { if (!navigator.geolocation) return toast('This device cannot tell where it is', '', null); navigator.geolocation.getCurrentPosition(function (p) { F.base = { lat: p.coords.latitude, lon: p.coords.longitude, label: 'Where you stood when you set it' }; redraw(); }, function () { toast('Location was not allowed', '', null); }); }); bl.appendChild(gh);
+    if (own && trav) { var ut = q('button', 'lnk', 'Use the travel fee’s base'); ut.type = 'button'; ut.addEventListener('click', function () { F.base = null; redraw(); }); bl.appendChild(ut); }
+    if (D.costsBase && !own && !trav) { var cb = q('button', 'lnk', 'Use the base from Your costs'); cb.type = 'button'; cb.addEventListener('click', function () { F.base = D.costsBase; redraw(); }); bl.appendChild(cb); }
+    fb.appendChild(bl);
+    var rw = q('label', 'prcband', 'Road factor '); rw.appendChild(prcIn(F.road, 'Road factor', function (v) { F.road = prcNum(v); }, 'kitqty', 'decimal'));
+    rw.appendChild(q('small', 'sub2', 'Estimated road miles: the straight line to the house × this (1.3 is usual), there and back.')); fb.appendChild(rw);
+    /* the truck */
+    fb.appendChild(q('div', 'prcfh', 'Your truck'));
+    var tr = q('div', 'prcsur');
+    tr.appendChild(prcSel({ gas: 'Gas (regular)', diesel: 'Diesel' }, F.type, 'Fuel', function (v) { F.type = v; redraw(); }));
+    var mp = q('label', 'prcpct'); mp.appendChild(prcIn(F.mpg, 'Miles per gallon', function (v) { F.mpg = prcNum(v); }, 'kitqty', 'decimal')); mp.appendChild(document.createTextNode(' miles per gallon')); tr.appendChild(mp);
+    var tp = q('label', 'prcpct'); tp.appendChild(prcIn(F.trips, 'Trips', function (v) { F.trips = Math.max(1, Math.round(prcNum(v)) || 1); }, 'kitqty', 'numeric')); tp.appendChild(document.createTextNode(' trips a job')); tr.appendChild(tp);
+    var mk = q('label', 'prcpct'), mki = prcIn(F.markup || '', 'Markup (%)', function (v) { F.markup = prcNum(v); }, 'kitqty', 'decimal'); mki.placeholder = '0'; mk.appendChild(mki); mk.appendChild(document.createTextNode(' % markup')); tr.appendChild(mk);
+    fb.appendChild(tr);
+    fb.appendChild(q('small', 'sub2', 'Trips: a job that takes several visits multiplies the drive. The rep can change it on a quote.'));
+    /* the price per gallon */
+    fb.appendChild(q('div', 'prcfh', 'Price per gallon'));
+    var N = S0[F.type === 'diesel' ? 'diesel' : 'gas'];
+    fb.appendChild(q('div', 'prcfuelsrc', N ? prcFuelText(N, F.type) : 'No EIA price has been fetched yet.'));
+    if (N && N.stale) fb.appendChild(q('small', 'sub2', 'That week is ' + N.days + ' days old: the newest checks did not get a newer one, so the last price is kept.'));
+    if (S0.err && S0.tried) fb.appendChild(q('small', 'sub2', 'The last check (' + new Date(S0.tried * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + ') did not work: ' + S0.err + '.'));
+    fb.appendChild(q('small', 'sub2', F.type === 'diesel' ? 'Weekly average retail diesel price for the Rocky Mountain region (EIA publishes no weekly Colorado diesel price), with taxes. Checked every week.' : 'Weekly average retail price of regular gasoline in Colorado, with taxes. Checked every week.'));
+    var ck = q('button', 'lnk', 'Check for a new price'); ck.type = 'button';
+    ck.addEventListener('click', function () { ck.disabled = true; api('prcfuel', { body: { refresh: true } }).then(function (j) { ck.disabled = false; if (j && j.ok) { D.fuel = j.fuel; redraw(); toast('Fuel price checked', '', null); } else toast((j && j.error) || 'Could not check', '', null); }).catch(function () { ck.disabled = false; toast('No signal', '', null); }); });
+    fb.appendChild(ck);
+    var ow = q('label', null, 'Or your own price per gallon (optional)'); ow.appendChild(prcIn(F.own == null ? '' : F.own, '$ per gallon', function (v) { F.own = String(v).trim() === '' ? null : prcNum(v); }, null, 'decimal'));
+    ow.appendChild(q('small', 'sub2', 'Typed: every quote uses it instead of the EIA average. Empty: the EIA average, new each week.')); fb.appendChild(ow);
+    /* on the quote */
+    fb.appendChild(q('div', 'prcfh', 'On the quote'));
+    var lb = q('label', null, 'Name on the quote'); lb.appendChild(prcIn(F.label, 'Fuel', function (v) { F.label = v; })); fb.appendChild(lb);
+    var sh = q('label', null, 'How the customer sees it'); sh.appendChild(prcSel({ line: 'Its own line on the quote', fold: 'Folded into the price (no fuel line)' }, F.show, 'How the customer sees it', function (v) { F.show = v; })); fb.appendChild(sh);
+    fb.appendChild(q('small', 'sub2', 'Your team sees the miles, miles per gallon, price and source either way. The customer sees the line, or nothing.'));
+    /* a worked example, so the numbers can be checked by hand */
+    var gal = F.own > 0 ? F.own : (N ? N.gal : 0);
+    if (gal > 0 && F.mpg > 0) {
+      var rt = Math.round(2 * 10 * (F.road || 1.3) * 10) / 10, amt = prcRnd(rt * (F.trips || 1) / F.mpg * gal * (1 + (F.markup || 0) / 100));
+      fb.appendChild(q('div', 'prcfuelex', 'Example: a house 10 miles away in a straight line: ' + prcNumText(rt, 1) + ' estimated road miles there and back × ' + (F.trips || 1) + ' trip' + ((F.trips || 1) === 1 ? '' : 's') + ' ÷ ' + prcNumText(F.mpg, 1) + ' mpg × $' + prcNumText(gal, 3) + (F.markup > 0 ? ' + ' + prcNumText(F.markup, 1) + '%' : '') + ' = ' + money0(amt) + '.'));
+    }
+    return fb;
   }
   /* ---- the terms library: every clause the company's to include, leave out, rewrite, reorder or add ---- */
   function prcTermsView() {

@@ -38,6 +38,8 @@ if (!$mxNow && !$mxDry && is_file(__DIR__ . '/search-index-warm.php')) @exec(esc
 if (!$mxNow && !$mxDry && date('G') === '4' && is_file(dirname(__DIR__) . '/traverse-tools/clients.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/traverse-tools/clients.php') . ' relink >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/clients-relink.log') . ' 2>&1 &');
 /* and every install's towns answer, so the first phone after midnight or a settings save doesn't wait for all the towns (2026-10-29) */
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/regions-warm.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/regions-warm.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/regions-warm.log') . ' 2>&1 &');
+/* the weekly fuel prices for the quote's fuel cost (2026-10-30): fuel-prices.php asks EIA only when a new week is due; in the background */
+if (!$mxNow && !$mxDry && is_file(__DIR__ . '/fuel-prices.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/fuel-prices.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/fuel-prices.log') . ' 2>&1 &');
 $mxSite = dirname(__DIR__);
 $mxApi = getenv('SIXFOLD_API_DIR') ?: $mxSite . '/public_html/api';   /* the override is for the test copy only */
 $mxState = $mxSite . '/sixfold-data/digest';
