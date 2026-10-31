@@ -197,7 +197,8 @@ function mailHtml(string $main, array $set, array $map, string $unsubUrl): strin
          . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;' . $font . 'font-size:15px;line-height:22px;color:#0F1B2D"><tr><td>'
          . '<img src="' . htmlspecialchars(deskBase() . '/m/traverse-wordmark.png', ENT_QUOTES) . '" width="128" height="24" alt="Traverse" style="display:block;border:0;margin:0 0 20px;' . $font . 'font-size:18px;font-weight:bold;color:#13294B">'
          . implode('', $blocks)
-         . '<div style="margin:22px 0 0">' . $sl . '</div>'   /* just his signature, once (Matthew 2026-10-30: the logo-and-bar block doubled the footer; he has his own signature) */
+         . '<div style="margin:22px 0 0">' . $sl . '</div>'
+         . '<img src="' . htmlspecialchars(deskBase() . '/m/traverse-wordmark.png', ENT_QUOTES) . '" width="112" height="21" alt="Traverse" style="display:block;border:0;margin:16px 0 0;' . $font . 'font-size:15px;font-weight:bold;color:#13294B">'   /* the logo under the signature (2026-10-30, Matthew: he missed it at the bottom) */   /* just his signature, once (Matthew 2026-10-30: the logo-and-bar block doubled the footer; he has his own signature) */
          . '<p style="margin:22px 0 0;font-size:12px;line-height:18px;color:#8590A0">Unsubscribe: <a href="' . htmlspecialchars($unsubUrl, ENT_QUOTES) . '" style="color:#8590A0;text-decoration:underline">' . htmlspecialchars($unsubUrl, ENT_QUOTES) . '</a></p>'
          . '</td></tr></table></td></tr></table></body></html>';
 }
