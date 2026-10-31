@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Radar compare</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  body{margin:0;font:600 15px system-ui,Segoe UI,Arial;background:#fff;color:#111}
+  .g{display:grid;grid-template-columns:repeat(2,600px);gap:8px;padding:8px}
+  .p{position:relative;width:600px;height:450px;border:1px solid #bbb}
+  .p .m{position:absolute;inset:0}
+  .p .l{position:absolute;left:0;right:0;top:0;z-index:1000;background:rgba(255,255,255,.92);padding:6px 10px;font-size:14px;line-height:1.3;border-bottom:1px solid #ccc}
+  .p .l small{display:block;font-weight:400;color:#444;font-size:12.5px}
+  .leaflet-control-attribution{font-size:9px}
+</style></head><body>
+<div class="g" id="g"></div>
+<script>
+  var Q = new URLSearchParams(location.search), CASE = Q.get('case') || 'parker', Z = +(Q.get('z') || 11);
+  var IEM = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/';
+  var OSM = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var wms = function (ws, layer, extra) {
+    return function () { return L.tileLayer.wms('https://opengeo.ncep.noaa.gov/geoserver/' + ws + '/ows', Object.assign({ layers: layer, format: 'image/png', transparent: true, version: '1.3.0', tileSize: 512, zoomOffset: -1, opacity: 0.6, interpolations: 'bicubic', detectRetina: true }, extra || {})); };
+  };
+  var C = {
+    parker: { c: [39.50, -104.76], when: '6 Sep 2026, 5:10 pm MDT (Parker hail storm, from the IEM archive)', panels: [
+      ['A. What the app shows today', 'IEM NEXRAD composite N0Q (0.005 deg, about 0.5 km), tiles asked for at zoom 8 and stretched (RADAR_NATIVE = 8)', function () { return L.tileLayer(IEM + 'ridge::USCOMP-N0Q-202609062310/{z}/{x}/{y}.png', { opacity: 0.6, maxNativeZoom: 8, maxZoom: 21 }); }],
+      ['B. Same source, tiles asked for at the map zoom', 'IEM composite N0Q, maxNativeZoom 12: the server draws the cells, crisp, not stretched', function () { return L.tileLayer(IEM + 'ridge::USCOMP-N0Q-202609062310/{z}/{x}/{y}.png', { opacity: 0.6, maxNativeZoom: 12, maxZoom: 21 }); }],
+      ['C. Single radar, super-resolution (KFTG, Denver)', 'IEM ridge::FTG-N0B: 0.5 deg x 250 m bins, raw Level III, a scan every 2-5 min', function () { return L.tileLayer(IEM + 'ridge::FTG-N0B-202609062311/{z}/{x}/{y}.png', { opacity: 0.6, maxNativeZoom: 12, maxZoom: 21 }); }],
+      ['D. Single radar, super-resolution (KPUX, Pueblo)', 'IEM ridge::PUX-N0B: the same storm from the radar 140 km south (beam wider and higher)', function () { return L.tileLayer(IEM + 'ridge::PUX-N0B-' + (Q.get('pux') || '202609062310') + '/{z}/{x}/{y}.png', { opacity: 0.6, maxNativeZoom: 12, maxZoom: 21 }); }]
+    ] },
+    live: { c: [+(Q.get('lat') || 28.1), +(Q.get('lon') || -97.3)], when: 'live, ' + new Date().toUTCString(), panels: [
+      ['A. What the app shows today', 'IEM NEXRAD composite N0Q, tiles at zoom 8 stretched', function () { return L.tileLayer(IEM + 'nexrad-n0q-900913/{z}/{x}/{y}.png', { opacity: 0.6, maxNativeZoom: 8, maxZoom: 21 }); }],
+      ['B. IEM composite, tiles at the map zoom', 'IEM N0Q, maxNativeZoom 12 (one constant in the app)', function () { return L.tileLayer(IEM + 'nexrad-n0q-900913/{z}/{x}/{y}.png', { opacity: 0.6, maxNativeZoom: 12, maxZoom: 21 }); }],
+      ['C. NWS MRMS composite, smoothed (recommended)', 'opengeo.ncep.noaa.gov conus_bref_qcd: 1 km, quality controlled, about every 2 min, drawn bicubic at 512 px / retina', wms('conus', 'conus_bref_qcd')],
+      ['D. NWS single radar super-res (' + (Q.get('site') || 'kcrp').toUpperCase() + ')', 'opengeo.ncep.noaa.gov ' + (Q.get('site') || 'kcrp') + '_sr_bref: 250 m bins, raw (clutter and clear-air echoes show)', wms(Q.get('site') || 'kcrp', (Q.get('site') || 'kcrp') + '_sr_bref')]
+    ] }
+  }[CASE];
+  var maps = [], g = document.getElementById('g');
+  C.panels.forEach(function (p) {
+    var d = document.createElement('div'); d.className = 'p';
+    d.innerHTML = '<div class="m"></div><div class="l">' + p[0] + '<small>' + p[1] + '</small></div>';
+    g.appendChild(d);
+    var m = L.map(d.querySelector('.m'), { zoomControl: false, attributionControl: true }).setView(C.c, Z);
+    L.tileLayer(OSM, { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(m);
+    p[2]().addTo(m);
+    maps.push(m);
+  });
+  var cap = document.createElement('div'); cap.style.cssText = 'padding:0 10px 10px;font-weight:400;font-size:13px';
+  cap.textContent = 'Zoom ' + Z + ' · ' + C.when + ' · rendered at device pixel ratio 2 (an iPad) · radar at 60% opacity as in the app';
+  document.body.appendChild(cap);
+</script>
+</body></html>

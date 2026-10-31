@@ -1,0 +1,326 @@
+[
+ {
+  "inst": "sixfold",
+  "vk": "desk",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 14,
+  "tMapMs": 10125,
+  "tDotsMs": 10125,
+  "dotsDoneMs": 10204,
+  "circles": 8619,
+  "requests": 25,
+  "kb": 1971,
+  "apiKb": 1673,
+  "tileReqs": 9,
+  "tileKb": 220,
+  "leafletKb": 78,
+  "api": [
+   {
+    "a": "regions",
+    "kb": 1669,
+    "ms": 8771,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 9353,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 9730,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 12210,
+    "st": 200
+   },
+   {
+    "a": "alertcount",
+    "kb": 0,
+    "ms": 12074,
+    "st": 200
+   },
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 8553,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 9062,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 9386,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 9554,
+    "st": 200
+   },
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 4469,
+    "st": 200
+   },
+   {
+    "a": "pushkey",
+    "kb": 0,
+    "ms": 1140,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 435,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ },
+ {
+  "inst": "sixfold",
+  "vk": "desk",
+  "pass": "second visit (warm)",
+  "homeReqs": 33,
+  "tMapMs": 292,
+  "tDotsMs": 292,
+  "dotsDoneMs": 400,
+  "circles": 8619,
+  "requests": 5,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 296,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 297,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 653,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 878,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "1669 KB in 8771 ms"
+  ]
+ },
+ {
+  "inst": "sixfold",
+  "vk": "tabP",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 21,
+  "tMapMs": 1017,
+  "tDotsMs": 1017,
+  "dotsDoneMs": 1103,
+  "circles": 8619,
+  "requests": 22,
+  "kb": 329,
+  "apiKb": 2,
+  "tileReqs": 14,
+  "tileKb": 249,
+  "leafletKb": 78,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 110,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 212,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 529,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 750,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 75,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "0 KB in 1523 ms"
+  ]
+ },
+ {
+  "inst": "sixfold",
+  "vk": "tabP",
+  "pass": "second visit (warm)",
+  "homeReqs": 28,
+  "tMapMs": 274,
+  "tDotsMs": 274,
+  "dotsDoneMs": 362,
+  "circles": 8619,
+  "requests": 6,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 1,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 279,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 279,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 601,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 850,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ },
+ {
+  "inst": "sixfold",
+  "vk": "tabL",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 24,
+  "tMapMs": 1104,
+  "tDotsMs": 1104,
+  "dotsDoneMs": 1200,
+  "circles": 8619,
+  "requests": 18,
+  "kb": 328,
+  "apiKb": 2,
+  "tileReqs": 10,
+  "tileKb": 249,
+  "leafletKb": 78,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 119,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 238,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 583,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 824,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 73,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "0 KB in 957 ms"
+  ]
+ },
+ {
+  "inst": "sixfold",
+  "vk": "tabL",
+  "pass": "second visit (warm)",
+  "homeReqs": 24,
+  "tMapMs": 293,
+  "tDotsMs": 293,
+  "dotsDoneMs": 366,
+  "circles": 8619,
+  "requests": 5,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 297,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 1,
+    "ms": 297,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 721,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 984,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ }
+]
