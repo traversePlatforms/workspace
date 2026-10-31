@@ -16157,7 +16157,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     row.appendChild(pick); row.appendChild(fi);
     if (up) { var rm = q('button', 'ghost', 'Remove'); rm.type = 'button'; rm.addEventListener('click', function () { send('logodel', {}, 'Logo removed'); }); row.appendChild(rm); }
     box.appendChild(row);
-    var bl = q('label', 'chk'), bc = q('input'); bc.type = 'checkbox'; bc.checked = up ? !!CO.logoUp.bg : true; bl.appendChild(bc); bl.appendChild(q('span', null, 'White backing behind it (for a dark logo on the bar color)'));
+    var bl = q('label', 'chk'), bc = q('input'); bc.type = 'checkbox'; bc.checked = up ? !!CO.logoUp.bg : false;   /* unticked by default (2026-10-30, Matthew: most logos carry their own background; the white card read as an outline) */ bl.appendChild(bc); bl.appendChild(q('span', null, 'White backing behind it (for a dark logo on the bar color)'));
     bc.addEventListener('change', function () { if (logoSrc(CO)) send('logoset', { bg: bc.checked }, 'Logo saved'); });
     box.appendChild(bl);
     var lm = q('div', 'sub2'); box.appendChild(lm);

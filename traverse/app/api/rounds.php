@@ -15519,7 +15519,7 @@ if ($action === 'logoset' || $action === 'logodel') {
         if (!writeJsonAtomic(DATA_DIR . '/company-local.json', $loc)) fail('Could not save that. Try again.', 500);
         out(['ok' => true]);
     }
-    $bg = !array_key_exists('bg', $body) || !empty($body['bg']);
+    $bg = !empty($body['bg']);   /* no white backing unless asked (2026-10-30, Matthew: unticked by default) */
     $data = (string) ($body['data'] ?? '');
     if ($data === '') {   /* the backing alone */
         if (!$cur) fail('Upload a logo first.');
