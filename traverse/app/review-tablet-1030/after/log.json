@@ -58,7 +58,7 @@
   "homeY": 2300,
   "title": "TraverseRoofingField tools",
   "home": true,
-  "y": 2322,
+  "y": 2300,
   "checklist": 0
  },
  "13-checklist-back-phone": {
@@ -108,14 +108,14 @@
   "small": null
  },
  "06-office-phone": {
-  "kpiMs": 793,
-  "settledMs": 2437,
-  "requests": 8,
-  "kb": 3,
+  "kpiMs": 486,
+  "settledMs": 504,
+  "requests": 4,
+  "kb": 2,
   "tiles": 0,
   "markers": 0,
   "mapOn": false,
-  "showBtn": true
+  "showBtn": false
  },
  "06-showmap-phone": {
   "drawnMs": 183,
@@ -183,7 +183,7 @@
   ]
  },
  "11-company-scroll-tablet": {
-  "homeY": 1080,
+  "homeY": 1102,
   "companyY": 0,
   "title": "CompanyHow the app names and shows you"
  },
@@ -250,14 +250,14 @@
   "small": null
  },
  "06-office-tablet": {
-  "kpiMs": 779,
-  "settledMs": 2430,
-  "requests": 8,
-  "kb": 3,
+  "kpiMs": 315,
+  "settledMs": 418,
+  "requests": 4,
+  "kb": 2,
   "tiles": 0,
   "markers": 0,
   "mapOn": false,
-  "showBtn": true
+  "showBtn": false
  },
  "06-showmap-tablet": {
   "drawnMs": 247,
@@ -300,7 +300,7 @@
    "Calendar",
    "Team",
    "Office",
-   "73",
+   "79",
    "TA"
   ],
   "tiles": []
@@ -348,14 +348,14 @@
   "small": null
  },
  "06-office-tabletl": {
-  "kpiMs": 935,
-  "settledMs": 2589,
-  "requests": 9,
-  "kb": 3,
+  "kpiMs": 473,
+  "settledMs": 462,
+  "requests": 4,
+  "kb": 2,
   "tiles": 0,
   "markers": 0,
   "mapOn": false,
-  "showBtn": true
+  "showBtn": false
  },
  "06-showmap-tabletl": {
   "drawnMs": 177,
@@ -398,7 +398,7 @@
    "Calendar",
    "Team",
    "Office",
-   "73",
+   "79",
    "TA"
   ],
   "tiles": []
@@ -446,14 +446,14 @@
   "small": null
  },
  "06-office-desktop": {
-  "kpiMs": 1095,
-  "settledMs": 2412,
-  "requests": 10,
-  "kb": 4,
+  "kpiMs": 332,
+  "settledMs": 426,
+  "requests": 4,
+  "kb": 2,
   "tiles": 0,
   "markers": 0,
   "mapOn": false,
-  "showBtn": true
+  "showBtn": false
  },
  "06-showmap-desktop": {
   "drawnMs": 162,

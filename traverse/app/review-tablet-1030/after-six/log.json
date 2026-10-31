@@ -84,10 +84,10 @@
   "small": null
  },
  "06-office-phone": {
-  "kpiMs": 941,
-  "settledMs": 3397,
-  "requests": 22,
-  "kb": 81,
+  "kpiMs": 474,
+  "settledMs": 2527,
+  "requests": 19,
+  "kb": 80,
   "tiles": 10,
   "markers": 8619,
   "mapOn": true,
@@ -138,7 +138,7 @@
   ]
  },
  "11-company-scroll-tablet": {
-  "homeY": 456,
+  "homeY": 434,
   "companyY": 0,
   "title": "CompanyHow the app names and shows you"
  },
@@ -189,9 +189,9 @@
   "small": null
  },
  "06-office-tablet": {
-  "kpiMs": 779,
-  "settledMs": 2415,
-  "requests": 25,
+  "kpiMs": 312,
+  "settledMs": 2527,
+  "requests": 22,
   "kb": 3,
   "tiles": 13,
   "markers": 8619,
@@ -227,7 +227,7 @@
    "Calendar",
    "Team",
    "Office",
-   "73"
+   "79"
   ],
   "tiles": []
  },
@@ -270,10 +270,10 @@
   "small": null
  },
  "06-office-desktop": {
-  "kpiMs": 1267,
-  "settledMs": 2532,
-  "requests": 25,
-  "kb": 5,
+  "kpiMs": 316,
+  "settledMs": 503,
+  "requests": 18,
+  "kb": 2,
   "tiles": 10,
   "markers": 8619,
   "mapOn": true,
