@@ -69,6 +69,7 @@ function state(): array {
             case 'next': if (isset($L[$id])) $L[$id]['next'] = $r['next']; break;
             case 'edit': if (isset($L[$id])) foreach ((array) $r['f'] as $k => $v) if (in_array($k, ['phone', 'email', 'site', 'person', 'name'], true)) { $L[$id][$k] = $v; if ($k === 'email') { $L[$id]['emailOk'] = ''; $L[$id]['emailSrc'] = 'desk'; } } break;
             case 'sent': if (isset($L[$id])) { $L[$id]['sent'][] = ['at' => $r['at'], 'subject' => $r['subject'], 'to' => $r['to']]; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Emailed: ' . $r['subject']]; } break;
+            case 'click': if (isset($L[$id])) { $L[$id]['clicks'] = ($L[$id]['clicks'] ?? 0) + 1; $L[$id]['log'][] = ['at' => $r['at'], 'by' => 'the company', 'what' => 'Clicked ' . (($r['to'] ?? '') === 'demo' ? 'Book a demo' : 'the website') . ' in the email']; } break;   /* 2026-10-30 */
             case 'unsub': if (isset($L[$id])) { $L[$id]['unsub'] = true; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Asked not to be emailed']; } break;
             case 'template': if (isset(TRADES[$r['trade'] ?? ''])) $tpl[$r['trade']] = ['subject' => $r['subject'], 'body' => $r['body']]; break;
             case 'settings': $set = array_merge($set, array_intersect_key((array) $r['s'], $set)); break;
@@ -79,6 +80,14 @@ function state(): array {
 
 /* ---- email ---- */
 function secret(): string { $f = DATA_DIR . '/secret.key'; $s = @file_get_contents($f); if (!$s) { $s = bin2hex(random_bytes(32)); file_put_contents($f, $s); @chmod($f, 0600); } return trim($s); }
+function goToken(string $id, string $to): string { return substr(hash_hmac('sha256', 'go|' . $id . '|' . $to, secret()), 0, 16); }   /* click tracking (2026-10-30) */
+const GO_TO = ['home' => 'https://traverseplatforms.com/', 'demo' => 'https://traverseplatforms.com/demo/'];
+/** the email's homepage and demo links routed through action=go for this company (done at send time, so queued messages get it too) */
+function trackLinks(string $html, string $id): string {
+    if ($html === '' || !preg_match('/^[a-z0-9]{6,24}$/', $id)) return $html;
+    $go = fn($to) => 'https://traverseplatforms.com/prospects-47bfe6/api/desk.php?action=go&amp;id=' . $id . '&amp;to=' . $to . '&amp;t=' . goToken($id, $to);
+    return preg_replace_callback('#href="https://traverseplatforms\.com(/demo/?)?/?"#', fn($m) => 'href="' . $go(!empty($m[1]) ? 'demo' : 'home') . '"', $html);
+}
 function unsubToken(string $id): string { return substr(hash_hmac('sha256', 'unsub|' . $id, secret()), 0, 20); }
 function firstName(string $person): string { $p = preg_split('/\s+/', trim($person)) ?: []; $f = $p[0] ?? ''; return preg_match('/^[A-Za-z][A-Za-z\'-]{1,30}$/', $f) ? $f : ''; }
 /* the name as people say it (2026-10-27, Matthew's review: "Colorado hail map for Verity Roofing LLC"): the register's legal suffix off
@@ -255,7 +264,7 @@ function sendQueue(int $max): int {
         if ($l && $why === '' && strtolower((string) $l['email']) !== strtolower((string) $m['to'])) $why = 'email changed since it was queued';
         if ($why !== '') { logAdd(['t' => 'skipped', 'id' => $m['id'], 'why' => $why, 'by' => 'queue', 'at' => time()]); $i--; continue; }   /* a skip costs no send */
         if ($sentN > 0 && $gap) sleep($gap);
-        $r = mailSend($m['to'], $m['subject'], $m['body'], [], (string) ($m['html'] ?? ''));   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day. html: queued "With map" (2026-10-30) */
+        $r = mailSend($m['to'], $m['subject'], $m['body'], [], trackLinks((string) ($m['html'] ?? ''), (string) $m['id']));   /* links counted (2026-10-30) */   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day. html: queued "With map" (2026-10-30) */
         if ($r['ok']) {
             logAdd(['t' => 'sent', 'id' => $m['id'], 'to' => $m['to'], 'subject' => $m['subject'], 'by' => $m['by'], 'at' => time()]);
             if ($l['status'] === 'new') logAdd(['t' => 'status', 'id' => $m['id'], 'status' => 'emailed', 'by' => $m['by'], 'at' => time()]);
@@ -285,6 +294,20 @@ if (PHP_SAPI === 'cli') {
 
 $action = (string) ($_GET['action'] ?? '');
 /* ---- unsubscribe: no sign-in (the link in every email, and the one-click button mail apps show) ---- */
+if ($action === 'go') {   /* a click on the email's homepage or demo link (2026-10-30): log it, then forward at once */
+    $id = (string) ($_GET['id'] ?? ''); $to = (string) ($_GET['to'] ?? ''); $tk = (string) ($_GET['t'] ?? '');
+    $dest = GO_TO[$to] ?? GO_TO['home'];
+    if (isset(GO_TO[$to]) && preg_match('/^[a-z0-9]{6,24}$/', $id) && hash_equals(goToken($id, $to), $tk)) {
+        $S = state(); $l = $S['leads'][$id] ?? null;
+        if ($l) {
+            $sentAt = 0; foreach ((array) ($l['sent'] ?? []) as $x) $sentAt = max($sentAt, (int) (is_array($x) ? ($x['at'] ?? 0) : 0));
+            $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+            $scan = ($sentAt && time() - $sentAt < 60) || $ua === '' || preg_match('/bot|crawler|spider|preview|scanner|safelinks|barracuda|mimecast|proofpoint|urldefense|google-?image|facebookexternalhit|slackbot|curl|wget|python|java\//i', $ua);
+            logAdd(['t' => $scan ? 'scan' : 'click', 'id' => $id, 'to' => $to, 'by' => 'the company', 'at' => time()]);
+        }
+    }
+    header('Location: ' . $dest . '?utm_source=email&utm_medium=prospect&utm_campaign=launch', true, 302); exit;
+}
 if ($action === 'unsub') {
     $id = (string) ($_GET['id'] ?? ''); $tk = (string) ($_GET['t'] ?? '');
     if ($id === 'testmsg' && hash_equals(unsubToken($id), $tk)) {   /* the link in a test email (2026-10-28): it works, and takes nobody off */
