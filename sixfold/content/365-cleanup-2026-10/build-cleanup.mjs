@@ -14,6 +14,9 @@ const FONTS = pathToFileURL(join(PACK, 'Fonts')).href;
 const BADGE = pathToFileURL(join(PACK, 'Full colour/365-Badge-A-Green.svg')).href;
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const PHONE = '(720) 830-4553', SITE = '365aeration.com';
+/* a real Sixfold 365 job photo (Brad's crew; the customer was asked at the job), cropped so no house number, car, plate or person shows;
+   made into .render/job-photo.jpg from the job-photos folder (folder names hold addresses, so the photo and this picture stay local) */
+const PHOTO = pathToFileURL(join(TMP, 'job-photo.jpg')).href;
 const TIERS = [   /* sizes as square feet (1 acre = 43,560 sq ft): arithmetic, not a claim about which lots are typical */
   ['Up to 1/4 acre', 'Up to about 10,900 sq ft of lot', '$100–$300'],
   ['1/4 to 1/2 acre', 'About 10,900 to 21,800 sq ft', '$250–$600'],
@@ -25,11 +28,12 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 * { box-sizing: border-box; margin: 0; } html, body { width: 1080px; height: 1350px; overflow: hidden; background: #2F5D2C; }
 body { position: relative; color: #FFF8EC; font-family: DMSans, sans-serif; }
 .leafbg { position: absolute; inset: 0; background: radial-gradient(1200px 700px at 85% -10%, rgba(242,193,78,.18), transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(255,248,236,.08), transparent 60%); }
-.top { position: absolute; left: 76px; right: 76px; top: 70px; display: flex; justify-content: space-between; align-items: flex-start; }
-.badge { width: 150px; height: 150px; }
-.kicker { font: 700 30px DMSans, sans-serif; color: #F2C14E; letter-spacing: .08em; text-transform: uppercase; margin-top: 18px; }
-h1 { position: absolute; left: 76px; right: 76px; top: 250px; font: 800 86px/1.0 Outfit, sans-serif; letter-spacing: -.012em; }
-.sub { position: absolute; left: 76px; right: 120px; top: 440px; font: 500 34px/1.38 DMSans, sans-serif; color: #F1EADB; }
+.photo { position: absolute; left: 0; right: 0; top: 0; height: 500px; background: url('${PHOTO}') center 30% / cover no-repeat; }
+.photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(20,40,19,.55) 0%, rgba(20,40,19,0) 28%, rgba(47,93,44,0) 46%, #2F5D2C 92%); }
+.top { position: absolute; left: 76px; right: 76px; top: 56px; display: flex; justify-content: space-between; align-items: flex-start; }
+.badge { width: 150px; height: 150px; filter: drop-shadow(0 4px 12px rgba(0,0,0,.35)); }
+.kicker { font: 700 28px DMSans, sans-serif; color: #F2C14E; letter-spacing: .08em; text-transform: uppercase; margin-top: 18px; background: rgba(30,61,28,.92); border-radius: 999px; padding: 12px 24px; }
+h1 { position: absolute; left: 76px; right: 76px; top: 372px; font: 800 80px/1.0 Outfit, sans-serif; letter-spacing: -.012em; text-shadow: 0 2px 18px rgba(0,0,0,.25); }
 .tiers { position: absolute; left: 76px; right: 76px; top: 570px; display: flex; flex-direction: column; gap: 22px; }
 .tier { background: #FFF8EC; color: #1E3D1C; border-radius: 26px; padding: 30px 38px; display: flex; justify-content: space-between; align-items: center; }
 .tier .k { font: 800 44px/1.05 Outfit, sans-serif; }
@@ -40,10 +44,9 @@ h1 { position: absolute; left: 76px; right: 76px; top: 250px; font: 800 86px/1.0
 .foot { position: absolute; left: 76px; right: 76px; bottom: 56px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px solid rgba(255,248,236,.25); padding-top: 22px; }
 .foot .q { font: 600 26px/1.35 DMSans, sans-serif; color: #F1EADB; max-width: 520px; }
 .foot .c { text-align: right; } .foot .c b { display: block; font: 800 46px Outfit, sans-serif; color: #F2C14E; } .foot .c span { font: 700 26px DMSans, sans-serif; }
-</style></head><body><div class="leafbg"></div>
+</style></head><body><div class="leafbg"></div><div class="photo"></div>
 <div class="top"><div class="kicker">Yard clean-up</div><img class="badge" src="${BADGE}" alt=""></div>
 <h1>Your yard, cleaned up and hauled away.</h1>
-<div class="sub">Clear prices by yard size, from the same crew that aerates your lawn.</div>
 <div class="tiers">${TIERS.map(([k, d, p]) => `<div class="tier"><div><div class="k">${k}</div><div class="d">${d}</div></div><div class="p">${p}</div></div>`).join('')}</div>
 <div class="haul"><div class="k">Haul-away and disposal</div><div class="p">$40\u2013$80 a load</div></div>
 <div class="foot"><div class="q">Every yard is different. Call or text for a free quote and we\u2019ll confirm your price.</div><div class="c"><b>${PHONE}</b><span>${SITE}</span></div></div>

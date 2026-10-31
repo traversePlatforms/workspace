@@ -6,7 +6,7 @@ Picture: `365-yard-cleanup-prices.png` (1080 x 1350, Facebook/Instagram feed). R
 ## On the picture
 - Kicker: YARD CLEAN-UP (no season on the picture, so it can run again in spring; standing rule)
 - Headline: Your yard, cleaned up and hauled away.
-- Line: Clear prices by yard size, from the same crew that aerates your lawn.
+- Photo across the top: a real 365 job (Brad's crew, customer asked at the job), a neat front lawn and rock beds, cropped so no house number, car, plate or person shows. Not presented as a clean-up result.
 - Up to 1/4 acre (up to about 10,900 sq ft of lot): $100–$300
 - 1/4 to 1/2 acre (about 10,900 to 21,800 sq ft): $250–$600
 - 1/2 acre and up (over about 21,800 sq ft): $600–$1,000
@@ -37,6 +37,10 @@ Hashtags are a suggestion; trim to what the 365 page already uses.
 1. **What's included** isn't stated by Brad: the caption has a slot. The picture says only "cleaned up and hauled away".
 2. **Prices on a public post:** the aeration ads were "no flat rate, quote the walk". These are ranges with "free quote ... confirm your price", which keeps the quote as the deciding step. Brandon sets offers; worth a nod from him.
 3. Nothing posted, scheduled or queued. Standing rule: drafts only until Matthew says to post.
+
+## Changes
+- 31 Oct: removed "Clear prices by yard size, from the same crew that aerates your lawn" (Matthew); added the job photo (Matthew: "add an image from one of our jobs"). Job photo #55 skipped: leaves on the lawn read as a yard still needing a clean-up, and seasonal.
+- The finished picture holds a job photo, so it stays local like the other job-photo posts (gitignored); rebuild with node build-cleanup.mjs.
 
 ## Fact-check log
 - Prices, hourly and haul-away: Brad's own figures (message relayed by Matthew, 31 Oct). Offer prices, not market claims.
