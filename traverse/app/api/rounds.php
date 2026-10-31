@@ -1918,7 +1918,12 @@ function writeTextAtomic(string $f, string $txt): bool {
     if (@file_put_contents($tmp, $txt, LOCK_EX) !== strlen($txt)) { @unlink($tmp); return false; }
     return @rename($tmp, $f);
 }
-/** bring the hail files up to date (see above). Returns what it did; never throws. */
+/** bring the hail files up to date (see above). Returns what it did; never throws.
+    One town at a time (TR-37, 2026-10-31): it used to hold every door in the index as a PHP array (308 MB for 1.1 million doors on the
+    server) and every touched town's hail file at once, and on a day that passes the keep rule every town's (978 MB with the 29 Oct
+    backfill, against the 768 MB limit). Now each town's doors are kept packed (about 35 bytes a door), each day's hail as the grid
+    squares of 0.75 in or more, the hits as packed per-town lists, and each hail file is loaded, merged, keep-filtered, written and
+    freed in turn. Same files out, byte for byte (storm-mem-test in the TR-37 review). */
 function stormRefresh(bool $force = false): array {
     $state = DATA_DIR . '/storm-refresh.json';
     $st = is_readable($state) ? (json_decode((string) file_get_contents($state), true) ?: []) : [];
@@ -1931,28 +1936,37 @@ function stormRefresh(bool $force = false): array {
     $hs = json_decode((string) @file_get_contents($sf), true);
     if (!is_array($hs)) { flock($fp, LOCK_UN); fclose($fp); return ['skipped' => 'no hail files yet']; }
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
-    /* every door, once: town, area, id, where (the box is the doors' extent plus a margin, as the build's) */
-    $doors = []; $box = ['n' => -90, 's' => 90, 'w' => 180, 'e' => -180]; $label = [];
+    /* every door, once, packed per town: ids (one string), where (two doubles) and which area (a number); the box is the doors'
+       extent plus a margin, as the build's */
+    $towns = []; $box = ['n' => -90, 's' => 90, 'w' => 180, 'e' => -180]; $label = [];
     foreach (($idx['regions'] ?? []) as $r) {
         $f = regionFile((string) $r['key']); if (!$f) continue;
+        $big = @filesize($f) > 4000000;
         $d = json_decode((string) @file_get_contents($f), true); if (!is_array($d)) continue;
         $label[$r['key']] = (string) ($r['label'] ?? $r['key']);
-        foreach (($d['areas'] ?? []) as $a) foreach (($a['doors'] ?? []) as $x) {
-            if (!is_numeric($x['lat'] ?? null) || !is_numeric($x['lon'] ?? null)) continue;
-            $la = (float) $x['lat']; $lo = (float) $x['lon'];
-            $doors[] = [$r['key'], (string) $a['name'], (string) $x['id'], $la, $lo];
-            $box['n'] = max($box['n'], $la); $box['s'] = min($box['s'], $la); $box['w'] = min($box['w'], $lo); $box['e'] = max($box['e'], $lo);
+        $ids = []; $ll = ''; $ai = ''; $areas = [];
+        foreach (($d['areas'] ?? []) as $a) {
+            $an = count($areas); $areas[] = (string) $a['name'];
+            foreach (($a['doors'] ?? []) as $x) {
+                if (!is_numeric($x['lat'] ?? null) || !is_numeric($x['lon'] ?? null)) continue;
+                $la = (float) $x['lat']; $lo = (float) $x['lon'];
+                $ids[] = (string) $x['id']; $ll .= pack('dd', $la, $lo); $ai .= pack('N', $an);
+                $box['n'] = max($box['n'], $la); $box['s'] = min($box['s'], $la); $box['w'] = min($box['w'], $lo); $box['e'] = max($box['e'], $lo);
+            }
         }
+        unset($d); if ($big) gc_mem_caches();   /* a big town's freed memory goes back, so the next big town does not stack on top of it (468 -> 312 MB at the peak on Roofing's data; not after every town: each call costs time) */
+        if ($ids) $towns[(string) $r['key']] = ['ids' => implode("\0", $ids), 'll' => $ll, 'ai' => $ai, 'areas' => $areas, 'n' => count($ids)];
     }
-    if (!$doors) { flock($fp, LOCK_UN); fclose($fp); return ['skipped' => 'no doors']; }
+    if (!$towns) { flock($fp, LOCK_UN); fclose($fp); return ['skipped' => 'no doors']; }
     $box = ['n' => $box['n'] + 0.03, 's' => $box['s'] - 0.03, 'w' => $box['w'] - 0.03, 'e' => $box['e'] + 0.03];
     $through = (string) ($hs['through'] ?? '2020-03-31');
     $yesterday = date('Y-m-d', strtotime('yesterday'));
     $pf = DATA_DIR . '/hail-paths.json';
     $paths = json_decode((string) @file_get_contents($pf), true);
-    $hail = []; $touched = []; $added = []; $missing = []; $storms = [];
+    $added = []; $missing = []; $storms = []; $days = [];
     foreach ((array) ($hs['storms'] ?? []) as $sx) $storms[$sx['date']] = $sx;
-    $loadTown = function (string $k) use (&$hail) { if (!isset($hail[$k])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/hail-' . $k . '.json'), true); $hail[$k] = is_array($j) ? $j : ['doors' => []]; if (!is_array($hail[$k]['doors'] ?? null)) $hail[$k]['doors'] = []; } };
+    /* 1. the new days from the archive: per day only the squares that can give a door 0.75 in (a door's value is the most in the 3 x 3
+          squares around it, so nothing smaller can count), and the day's map squares */
     $t0 = microtime(true);
     for ($day = date('Y-m-d', strtotime($through . ' +1 day')), $n = 0; $day <= $yesterday && $n < HAIL_MAX_DAYS; $day = date('Y-m-d', strtotime($day . ' +1 day')), $n++) {
         if (microtime(true) - $t0 > HAIL_BUDGET) break;   /* out of time: write what is done, the rest next run */
@@ -1963,46 +1977,78 @@ function stormRefresh(bool $force = false): array {
             if ($recent) break;                      /* not published yet: try again next time */
             $missing[] = $day; $through = $day; continue;   /* an old gap stays a gap, as in the build */
         }
-        $grid = []; foreach ($c['cells'] as $x) $grid[$x[0] * 100000 + $x[1]] = $x[2] / 10;
-        if ($grid) foreach ($doors as [$tk, $area, $id, $la, $lo]) {
-            $r = (int) round(($c['lat1'] - $la) / $c['dy']) - $c['r0']; $cc = (int) round(($lo + 360 - $c['lon1']) / $c['dx']) - $c['c0'];
-            $best = 0.0;
-            for ($dr = -1; $dr <= 1; $dr++) for ($dc = -1; $dc <= 1; $dc++) { $v = $grid[($r + $dr) * 100000 + $cc + $dc] ?? 0; if ($v > $best) $best = $v; }
-            if ($best < HAIL_MIN_MM) continue;
-            $inch = round($best / 25.4, 2);
-            $loadTown($tk); $touched[$tk] = true;
-            $list = array_values(array_filter((array) ($hail[$tk]['doors'][$id] ?? []), fn($e) => ($e[0] ?? '') !== $day));
-            array_unshift($list, [$day, $inch]); usort($list, fn($x, $y) => strcmp((string) $y[0], (string) $x[0]));
-            $hail[$tk]['doors'][$id] = $list;
-            $s = $storms[$day] ?? ['date' => $day, 'max' => 0, 'n1' => 0, 'n34' => 0, 'towns' => []];
-            $tw = $s['towns'][$tk] ?? ['label' => $label[$tk] ?? $tk, 'n1' => 0, 'n34' => 0, 'max' => 0, 'areas' => (object) []];
-            $tw['areas'] = (array) $tw['areas'];
-            $s['max'] = max($s['max'], $inch); $tw['max'] = max($tw['max'], $inch); $s['n34']++; $tw['n34']++;
-            if ($best >= HAIL_BIG_MM) { $s['n1']++; $tw['n1']++; $tw['areas'][$area] = ($tw['areas'][$area] ?? 0) + 1; }
-            $s['towns'][$tk] = $tw; $storms[$day] = $s;
+        $g = []; $rr = [PHP_INT_MAX, PHP_INT_MIN, PHP_INT_MAX, PHP_INT_MIN];
+        foreach ($c['cells'] as $x) if ($x[2] / 10 >= HAIL_MIN_MM) {
+            $g[$x[0] * 100000 + $x[1]] = $x[2];
+            $rr = [min($rr[0], $x[0]), max($rr[1], $x[0]), min($rr[2], $x[1]), max($rr[3], $x[1])];
         }
-        if (isset($storms[$day]) && is_array($paths)) {
-            $paths['paths'][$day] = array_values(array_map(fn($x) => [$x[0] + $c['r0'] - (int) $paths['r0'], $x[1] + $c['c0'] - (int) $paths['c0'], (int) round($x[2] / 10 / 25.4 * 100)],
-                array_filter($c['cells'], fn($x) => $x[2] / 10 >= HAIL_MIN_MM)));
-        }
+        $path = is_array($paths) ? array_values(array_map(fn($x) => [$x[0] + $c['r0'] - (int) $paths['r0'], $x[1] + $c['c0'] - (int) $paths['c0'], (int) round($x[2] / 10 / 25.4 * 100)],
+            array_filter($c['cells'], fn($x) => $x[2] / 10 >= HAIL_MIN_MM))) : null;
+        $days[$day] = ['g' => $g, 'rr' => $rr, 'path' => $path, 'lat1' => $c['lat1'], 'lon1' => $c['lon1'], 'dx' => $c['dx'], 'dy' => $c['dy'], 'r0' => $c['r0'], 'c0' => $c['c0']];
+        unset($c, $g, $path);
         $added[] = $day; $through = $day;
     }
+    /* 2. the doors each day hit, town by town: the storm list is counted as before, and each town's hits are kept packed
+          (door number, day number, tenths of a mm) until its hail file is opened */
+    $dl = array_keys(array_filter($days, fn($x) => (bool) $x['g'])); $hits = [];
+    if ($dl) foreach ($towns as $tk => $T) {
+        $ll = unpack('d*', $T['ll']); $ai = unpack('N*', $T['ai']); $h = '';
+        foreach ($dl as $di => $day) {
+            $G = $days[$day]; $grid = $G['g']; [$rlo, $rhi, $clo, $chi] = $G['rr'];
+            for ($i = 0; $i < $T['n']; $i++) {
+                $la = $ll[2 * $i + 1]; $lo = $ll[2 * $i + 2];
+                $r = (int) round(($G['lat1'] - $la) / $G['dy']) - $G['r0']; $cc = (int) round(($lo + 360 - $G['lon1']) / $G['dx']) - $G['c0'];
+                if ($r < $rlo - 1 || $r > $rhi + 1 || $cc < $clo - 1 || $cc > $chi + 1) continue;   /* nowhere near that day's hail */
+                $best = 0;
+                for ($dr = -1; $dr <= 1; $dr++) for ($dc = -1; $dc <= 1; $dc++) { $v = $grid[($r + $dr) * 100000 + $cc + $dc] ?? 0; if ($v > $best) $best = $v; }
+                $mm = $best / 10;
+                if ($mm < HAIL_MIN_MM) continue;
+                $inch = round($mm / 25.4, 2); $area = $T['areas'][$ai[$i + 1]];
+                $h .= pack('NnN', $i, $di, $best);
+                $s = $storms[$day] ?? ['date' => $day, 'max' => 0, 'n1' => 0, 'n34' => 0, 'towns' => []];
+                $tw = $s['towns'][$tk] ?? ['label' => $label[$tk] ?? $tk, 'n1' => 0, 'n34' => 0, 'max' => 0, 'areas' => (object) []];
+                $tw['areas'] = (array) $tw['areas'];
+                $s['max'] = max($s['max'], $inch); $tw['max'] = max($tw['max'], $inch); $s['n34']++; $tw['n34']++;
+                if ($mm >= HAIL_BIG_MM) { $s['n1']++; $tw['n1']++; $tw['areas'][$area] = ($tw['areas'][$area] ?? 0) + 1; }
+                $s['towns'][$tk] = $tw; $storms[$day] = $s;
+            }
+        }
+        if ($h !== '') $hits[$tk] = $h;
+        unset($ll, $ai, $h);
+    }
+    foreach ($days as $day => $G) if (isset($storms[$day]) && is_array($paths)) $paths['paths'][$day] = $G['path'];
+    unset($days);
     /* the keep rule, by storm day (whole days, so door lists and the storm list agree) */
     $cut = keepCutoffs(); $kept = [];
     foreach ($storms as $d => $s) if ($d >= $cut['keep'] || ((float) ($s['max'] ?? 0) >= KEEP_MAJOR_HAIL_IN && $d >= $cut['major'])) $kept[$d] = true;
     $dropped = array_values(array_diff(array_keys($storms), array_keys($kept)));
-    if ($dropped) {
-        foreach (($idx['regions'] ?? []) as $r) {
-            $k = (string) $r['key']; $loadTown($k);
-            foreach ($hail[$k]['doors'] as $id => $list) {
-                $l2 = array_values(array_filter((array) $list, fn($e) => isset($kept[$e[0] ?? ''])));
-                if (count($l2) !== count((array) $list)) { $touched[$k] = true; if ($l2) $hail[$k]['doors'][$id] = $l2; else unset($hail[$k]['doors'][$id]); }
-            }
-        }
-        foreach ($dropped as $d) { unset($storms[$d]); if (is_array($paths)) unset($paths['paths'][$d]); }
-    }
+    /* 3. each hail file in turn: open, add the town's hits day by day, drop days past the keep rule, write if changed, free */
+    $open = array_keys($hits);
+    if ($dropped) foreach (($idx['regions'] ?? []) as $r) $open[] = (string) $r['key'];
     $ok = true;
-    foreach (array_keys($touched) as $k) { $hail[$k]['through'] = $through; $hail[$k]['keep'] = $cut; $ok = writeJsonAtomic(DATA_DIR . '/hail-' . $k . '.json', $hail[$k]) && $ok; }
+    foreach (array_unique($open) as $k) {
+        $hf = DATA_DIR . '/hail-' . $k . '.json'; $big = @filesize($hf) > 1500000;
+        $H = json_decode((string) @file_get_contents($hf), true); $H = is_array($H) ? $H : ['doors' => []]; if (!is_array($H['doors'] ?? null)) $H['doors'] = [];
+        $touched = false;
+        if (isset($hits[$k])) {
+            $ids = explode("\0", $towns[$k]['ids']);
+            for ($o = 0, $len = strlen($hits[$k]); $o < $len; $o += 10) {
+                $q = unpack('Ni/nd/Nv', $hits[$k], $o);
+                $id = $ids[$q['i']]; $day = $dl[$q['d']]; $inch = round($q['v'] / 10 / 25.4, 2);
+                $list = array_values(array_filter((array) ($H['doors'][$id] ?? []), fn($e) => ($e[0] ?? '') !== $day));
+                array_unshift($list, [$day, $inch]); usort($list, fn($x, $y) => strcmp((string) $y[0], (string) $x[0]));
+                $H['doors'][$id] = $list;
+            }
+            unset($ids); $touched = true;
+        }
+        if ($dropped) foreach ($H['doors'] as $id => $list) {
+            $l2 = array_values(array_filter((array) $list, fn($e) => isset($kept[$e[0] ?? ''])));
+            if (count($l2) !== count((array) $list)) { $touched = true; if ($l2) $H['doors'][$id] = $l2; else unset($H['doors'][$id]); }
+        }
+        if ($touched) { $H['through'] = $through; $H['keep'] = $cut; $ok = writeJsonAtomic(DATA_DIR . '/hail-' . $k . '.json', $H) && $ok; }
+        unset($H); if ($big) gc_mem_caches();
+    }
+    if ($dropped) foreach ($dropped as $d) { unset($storms[$d]); if (is_array($paths)) unset($paths['paths'][$d]); }
     if ($added || $dropped || $missing) {
         krsort($storms);
         $hs['storms'] = array_values($storms); $hs['through'] = $through; $hs['keep'] = $cut;
