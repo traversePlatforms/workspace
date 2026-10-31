@@ -128,7 +128,9 @@ html{scroll-behavior:smooth}
   .seerow figure:last-child{max-width:300px;margin:0 auto !important}
   #more h2,#faq h2,#contact h2,#brand h2{font-size:32px !important}
   .ctacard{padding:40px 22px !important}
-  .ctacard > svg{width:100% !important;opacity:.5 !important}
+  /* the closing card's screenshot sits under the words on a phone, as a band along the bottom */
+  .ctacard{padding-bottom:230px !important}
+  .ctacard > .ctashot{right:22px !important;left:22px;top:auto !important;bottom:-10px;width:auto !important;max-width:none !important;height:200px !important;border-radius:12px 12px 0 0 !important;border-right:1px solid rgba(255,255,255,0.18) !important}
   .nowall p{font-size:18px !important}
   .brandart{height:390px !important}
   /* phones (Matthew 2026-10-30): the whole-day topics and the More-than-a-map tiles read too long, so each one closes to its title and opens

@@ -145,11 +145,11 @@ const main = `
 <p class="edwho" id="edwho"></p>
 <div class="edcta"><a class="edb pri" href="../demo/">Book a demo</a></div>
 </div>
-<div class="edart" aria-hidden="true"><div class="edphone"><div class="edscreen"><div class="edbar"><b>Your Company</b><small id="edbarname">Roofing</small></div><div id="edmap"></div><div class="edchip"><div><small id="edchipk"></small><b id="edchipv"></b></div><span class="eds-sc" id="edchips">10</span></div></div></div></div>
+<div class="edart"><div class="edphone"><div class="edscreen"><div class="edbar"><b>Your Company</b><small id="edbarname">Roofing</small></div><div id="edmap"></div><div class="edchip"><div><small id="edchipk"></small><b id="edchipv"></b></div><span class="eds-sc" id="edchips">10</span></div></div></div></div>
 </div>
 </section>
 <section class="edw edtop">
-<div><h2>On every property</h2><ul class="edchk" id="eddoor"></ul></div>
+<div><details class="edfold" open><summary><h2>On every property</h2></summary><ul class="edchk" id="eddoor"></ul></details></div>
 <div class="edsample" aria-label="A sample property card">
 <div class="eds-h"><div><small>Sample property</small><b>A house in Monument</b></div><span class="eds-sc" id="edscore">10</span></div>
 <div class="eds-t" id="edtiles"></div>
@@ -157,8 +157,8 @@ const main = `
 </div>
 </section>
 <section class="edrank"><div class="edw"><span class="edk">Top priorities first</span><p id="edrank"></p></div></section>
-<section class="edw edtools"><h2>What it adds</h2><ol id="edtools"></ol></section>
-<section class="edw edall"><h2>Every trade also has</h2><ul id="edall"></ul></section>
+<section class="edw edtools"><details class="edfold" open><summary><h2>What it adds</h2></summary><ol id="edtools"></ol></details></section>
+<section class="edw edall"><details class="edfold" open><summary><h2>Every trade also has</h2></summary><ul id="edall"></ul></details></section>
 </main>
 <style>
 #editions{--edc:#4e6680;--edi:#fff;--edd:#4e6680;color:#0f1b2d}
@@ -223,9 +223,26 @@ const main = `
 #editions .edall h2{font-size:22px}
 #editions .edall ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px}
 #editions .edall li{padding:9px 14px;border-radius:999px;background:#fff;border:1px solid #d3dae4;font-size:15px}
+/* a real screenshot in the phone (2026-10-30, Matthew: the Lawn & Landscape picture must be real): the shot fills the screen, the drawn bar and chip go */
+#editions .edphone.real .edbar,#editions .edphone.real .edchip{display:none}
+#editions .edphone.real .edscreen{aspect-ratio:390/844;background:#2a332e}
+#editions .edphone.real img{display:block;width:100%;height:100%;object-fit:cover}
+#editions .edshotcap{margin:12px 4px 0;font-size:13px;line-height:1.4;opacity:.85;max-width:300px}
+/* phones (2026-10-30): the three long parts close to their titles; on wider screens the titles are plain headings */
+#editions .edfold > summary{list-style:none;cursor:default}
+#editions .edfold > summary::-webkit-details-marker{display:none}
+#editions .edfold > summary h2{display:inline-block}
 @media (max-width:960px){#editions .edtools ol{grid-template-columns:1fr 1fr}}
-@media (max-width:860px){#editions .edhw{grid-template-columns:1fr}#editions .edart{display:none}#editions .edtop{grid-template-columns:1fr}#editions .edt{font-size:40px}#editions .edrank p{font-size:22px}}
+@media (max-width:860px){#editions .edhw{grid-template-columns:1fr}#editions .edart{display:none}#editions .edart.real{display:flex;justify-content:center}#editions .edart.real .edphone{width:260px}#editions .edtop{grid-template-columns:1fr}#editions .edt{font-size:40px}#editions .edrank p{font-size:22px}}
 @media (max-width:560px){#editions .edchk{grid-template-columns:1fr}#editions .edtools ol{grid-template-columns:1fr}}
+@media (max-width:760px){
+  #editions .edfold > summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid #dce2ea}
+  #editions .edfold > summary h2{margin:0;font-size:22px}
+  #editions .edfold > summary::after{content:'+';flex:none;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid #dce2ea;color:#d6400c;font-size:20px;line-height:1;transition:transform .2s ease}
+  #editions .edfold[open] > summary::after{transform:rotate(45deg)}
+  #editions .edtools,#editions .edall{padding-top:0;padding-bottom:0}
+  #editions .edall{padding-bottom:40px}
+}
 </style>
 <script>
 (function () {
@@ -239,6 +256,11 @@ const main = `
     $('edname').textContent = e.name; $('edsel').value = k; document.title = e.name + ' \\u00b7 Traverse';
     $('edline').textContent = e.line; $('edwho').textContent = 'Built for ' + e.who;
     $('edmap').innerHTML = D.ART[k]; $('edbarname').textContent = e.name;   /* our own drawing, built with this page */
+    /* a real screenshot from the app where the trade has one (Lawn & Landscape, 2026-10-30) */
+    var ph = document.querySelector('#editions .edphone'), art = document.querySelector('#editions .edart'), old = document.querySelector('#editions .edshotcap');
+    if (old) old.remove();
+    if (e.shot) { var im = document.createElement('img'); im.src = e.shot[0]; im.alt = e.shot[1]; im.width = 390; im.height = 844; $('edmap').textContent = ''; $('edmap').appendChild(im); ph.classList.add('real'); art.classList.add('real'); var cp = document.createElement('p'); cp.className = 'edshotcap'; cp.textContent = e.shot[1]; art.appendChild(cp); }
+    else { ph.classList.remove('real'); art.classList.remove('real'); }
     $('edchipk').textContent = e.sample[0][0]; $('edchipv').textContent = e.sample[0][1];
     var cs = $('edchips'); cs.textContent = String(e.score); cs.className = 'eds-sc' + (e.score === 10 ? ' top' : '');
     list($('eddoor'), e.door); $('edrank').textContent = e.rank;
@@ -248,6 +270,8 @@ const main = `
     var tiles = $('edtiles'); tiles.textContent = '';
     e.sample.forEach(function (x) { var d = el('div'); d.appendChild(el('small', x[0])); d.appendChild(el('span', x[1])); tiles.appendChild(d); });
   }
+  /* phones: the long parts start closed (the markup has them open so a wide screen, or no script, shows everything) */
+  if (window.matchMedia && matchMedia('(max-width: 760px)').matches) Array.prototype.forEach.call(document.querySelectorAll('#editions .edfold'), function (d) { d.removeAttribute('open'); });
   var start = new URLSearchParams(location.search).get('e'); if (keys.indexOf(start) < 0) start = 'roofing';
   $('edsel').addEventListener('change', function () { var k = $('edsel').value; show(k); try { history.replaceState(null, '', '?e=' + k); } catch (x) {} });
   show(start);
