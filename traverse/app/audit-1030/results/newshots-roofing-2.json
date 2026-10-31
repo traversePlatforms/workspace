@@ -1,0 +1,93 @@
+[
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": true,
+  "title": "End-of-day email The day in one email, each evening",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2703,
+  "shot": "phone-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "end-of-day",
+  "reached": true,
+  "title": "End-of-day email The day in one email, each evening",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2703,
+  "shot": "phone-dark-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": true,
+  "title": "End-of-day email The day in one email, each evening",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2703,
+  "shot": "tabP-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "end-of-day",
+  "reached": true,
+  "title": "End-of-day email The day in one email, each evening",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2703,
+  "shot": "tabP-dark-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": true,
+  "title": "End-of-day emailThe day in one email, each evening",
+  "scrollY": 1686,
+  "errors": [],
+  "words": {},
+  "textLen": 2703,
+  "shot": "tabL-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": true,
+  "title": "End-of-day emailThe day in one email, each evening",
+  "scrollY": 1512,
+  "errors": [],
+  "words": {},
+  "textLen": 2703,
+  "shot": "desk-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "end-of-day",
+  "reached": true,
+  "title": "End-of-day emailThe day in one email, each evening",
+  "scrollY": 1512,
+  "errors": [],
+  "words": {},
+  "textLen": 2703,
+  "shot": "desk-dark-end-of-day.jpg"
+ }
+]

@@ -1,0 +1,290 @@
+[
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 24,
+  "tMapMs": 1039,
+  "tDotsMs": 1039,
+  "dotsDoneMs": 1129,
+  "circles": 8619,
+  "requests": 18,
+  "kb": 328,
+  "apiKb": 2,
+  "tileReqs": 10,
+  "tileKb": 248,
+  "leafletKb": 78,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 96,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 201,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 522,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 738,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 57,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "1662 KB in 1002 ms"
+  ]
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "pass": "second visit (warm)",
+  "homeReqs": 24,
+  "tMapMs": 220,
+  "tDotsMs": 220,
+  "dotsDoneMs": 312,
+  "circles": 8619,
+  "requests": 5,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 223,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 224,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 554,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 767,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 21,
+  "tMapMs": 921,
+  "tDotsMs": 921,
+  "dotsDoneMs": 1025,
+  "circles": 8619,
+  "requests": 21,
+  "kb": 327,
+  "apiKb": 2,
+  "tileReqs": 13,
+  "tileKb": 248,
+  "leafletKb": 77,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 93,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 183,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 459,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 642,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 57,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "0 KB in 1558 ms"
+  ]
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "pass": "second visit (warm)",
+  "homeReqs": 26,
+  "tMapMs": 192,
+  "tDotsMs": 192,
+  "dotsDoneMs": 276,
+  "circles": 8619,
+  "requests": 6,
+  "kb": 2,
+  "apiKb": 2,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 196,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 197,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 483,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 669,
+    "st": 200
+   },
+   {
+    "a": "taplog",
+    "kb": 0,
+    "ms": 226,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 26,
+  "tMapMs": 902,
+  "tDotsMs": 902,
+  "dotsDoneMs": 983,
+  "circles": 8619,
+  "requests": 18,
+  "kb": 327,
+  "apiKb": 2,
+  "tileReqs": 10,
+  "tileKb": 248,
+  "leafletKb": 77,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 144,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 195,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 504,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 705,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 72,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "0 KB in 810 ms"
+  ]
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "pass": "second visit (warm)",
+  "homeReqs": 24,
+  "tMapMs": 196,
+  "tDotsMs": 196,
+  "dotsDoneMs": 280,
+  "circles": 8619,
+  "requests": 5,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 199,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 271,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 505,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 685,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ }
+]

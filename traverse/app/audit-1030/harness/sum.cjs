@@ -1,0 +1,7 @@
+const L = require('fs').readFileSync(process.argv[2], 'utf8').trim().split('\n').map(JSON.parse);
+const f = process.argv[3] ? new RegExp(process.argv[3]) : null;
+for (const r of L) {
+  if (f && !f.test(JSON.stringify(r))) continue;
+  if (r.kind === 'home') { console.log('HOME', r.role, r.vp, r.theme, r.open.tHome, r.open.tSettled, 'err', r.errors.length, r.fails.join(';'), 'door:', r.doorWords.length, 'six:', r.sixWords.join('|').slice(0, 80), 'trav:', (r.travWords || []).join('|').slice(0, 80)); continue; }
+  console.log([r.role, r.vp, r.theme].join('/').padEnd(18), r.kind.slice(0, 6).padEnd(6), String(r.ms || '').padStart(6), r.settled === false ? '!' : ' ', (r.screen ? r.screen.slice(0, 12) + '>' : '') + (r.item || '').slice(0, 26), '→', (r.title || '').slice(0, 26), r.noop ? 'NOOP' : '', r.back ? ('back:' + String(r.back.landed).slice(0, 24)) : '', (r.errors || []).length ? 'ERR:' + r.errors[0].slice(0, 90) : '', (r.fails || []).length ? 'FAIL:' + r.fails.join(';').slice(0, 90) : '', (r.overflow || []).length ? 'OVF:' + r.overflow[0].slice(0, 60) : '', (r.clipped || []).length ? 'CLIP:' + r.clipped[0].slice(0, 50) : '', (r.white || []).length ? 'WHITE:' + r.white[0].slice(0, 50) : '', r.covered ? 'COVERED:' + r.covered.slice(0, 40) : '', (r.doorWords || []).length ? 'DOOR' + r.doorWords.length : '', (r.sixWords || []).length ? 'SIX:' + r.sixWords[0].slice(0, 50) : '', r.scrollY > 0 ? 'scrollY=' + r.scrollY : '', r.found === false ? 'NOTFOUND' : '', r.kind === 'skipped' || r.kind === 'link' ? '' : '');
+}

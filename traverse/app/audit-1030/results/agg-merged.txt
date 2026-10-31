@@ -1,0 +1,399 @@
+[back-not-home] Plans  x3  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     label "Setup" landed card coform kitsetup|SetupGet ready for your first quote
+     shot roofing/admin-tabP-light-31-plans.jpg
+[back-not-home] Customer emails  x3  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     label "Setup" landed card coform kitsetup|SetupGet ready for your first quote
+     shot roofing/admin-tabP-light-32-customer-emails.jpg
+[back-not-home] Import  x3  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     label "Setup" landed card coform kitsetup|SetupGet ready for your first quote
+     shot roofing/admin-tabP-light-33-import.jpg
+[back-not-home] Facebook leads  x3  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     label "Setup" landed card coform kitsetup|SetupGet ready for your first quote
+     shot roofing/admin-tabP-light-34-facebook-leads.jpg
+[back-not-home] Office  x2  {roofing,sixfold} {admin} {desk/light}
+     label "" landed office|OfficeExample Roofing || label "" landed office|OfficeExample Pest Co
+     shot roofing/admin-desk-light-11-office.jpg
+[back-not-home] Stats  x2  {roofing,sixfold} {admin} {desk/light}
+     label "" landed office stp edst|StatsLeads, quotes, jobs, ads and the team || label "" landed office stp|StatsLast week, this week and six weeks ahead
+     shot roofing/admin-desk-light-17-stats.jpg
+[console] Jobs  x16  {roofing,sixfold} {admin,office} {tabP/light,desk/light,phone/light,tabP/dark}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot roofing/admin-tabP-light-13-jobs.jpg
+[console] Office dashboard  x6  {roofing,sixfold} {admin} {tabP/light,phone/light,tabP/dark}
+     log: Failed to load resource: the server responded with a status of 404 (Not Found) /maps/colorado.pmtiles
+     shot roofing/admin-tabP-light-10-office-dashboard.jpg
+[console] Jobs > ‹ Week before  x6  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot roofing/admin-tabP-light-13-jobs--02--week-before.jpg
+[console] Jobs > Week after ›  x6  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot roofing/admin-tabP-light-13-jobs--03-week-after-.jpg
+[console] Stats  x5  {sixfold} {admin,office} {tabP/light,desk/light,phone/light,tabP/dark}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-tabP-light-18-stats.jpg
+[console] Stats > Today  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     log: Failed to load resource: the server responded with a status of 404 (Not Found) /maps/colorado.pmtiles
+     shot roofing/admin-tabP-light-16-stats--01-today.jpg
+[console] Customers  x4  {roofing,sixfold} {office} {tabP/light}
+     log: Failed to load resource: the server responded with a status of 403 (Forbidden) /api/rounds.php?action=backups
+     shot roofing/office-tabP-light-16-customers.jpg
+[console] Office  x2  {roofing,sixfold} {admin} {desk/light}
+     log: Failed to load resource: the server responded with a status of 404 (Not Found) /maps/colorado.pmtiles
+     shot roofing/admin-desk-light-11-office.jpg
+[console] Jobs board  x2  {roofing,sixfold} {office} {tabP/light}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot roofing/office-tabP-light-15-jobs-board.jpg
+[console] Stats > Stats  x2  {sixfold} {admin} {tabP/light,desk/light}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-tabP-light-18-stats--06-stats.jpg
+[console] Stats > Setup  x1  {roofing} {admin} {desk/light}
+     log: Failed to load resource: the server responded with a status of 404 (Not Found) /maps/colorado.pmtiles
+[console] Office dashboard > Stats  x1  {sixfold} {admin} {tabP/light}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-tabP-light-11-office-dashboard--06-stats.jpg
+[console] Office > Stats  x1  {sixfold} {admin} {desk/light}
+     log: Failed to load resource: the server responded with a status of 400 (Bad Request) /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-desk-light-11-office--06-stats.jpg
+[door-word] (home)  x15  {roofing} {admin,office} {tabP/light,desk/light,phone/light,tabP/dark}
+     Quotes SALES TIP Smile before the door opens. It shows in your || ups and your own entries. Training Door-to-door, sales, quotes, || your own entries. Training Door-to-door, sales, quotes, phones a
+     shot roofing/admin-tabP-light-00-home.jpg
+[door-word] Stats > Team stats  x12  {roofing} {admin} {tabP/light,desk/light}
+     PM MANAGER AEJDHC Pr Mate aejdhc 0 DOORS 7D 0 QUOTES 7D No proper || perties marked yet Pr Rep aejdhc 0 DOORS 7D 0 QUOTES 7D No proper || ties marked yet Ps Setter aejdhc 0 DOORS 7D 0 QUOTES 7D No proper
+[door-word] Pipeline  x8  {roofing} {admin,office} {tabP/light,desk/light,phone/light,tabP/dark}
+     sent 0 On hold Everyone Phone call Door Pick a stage to see who || gned 0 No sale Everyone Phone call Door Pick a stage to see who
+     shot roofing/admin-tabP-light-12-pipeline.jpg
+[door-word] Pipeline > Door  x8  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door Nothing at this stage fr || ll Door Nothing at this stage from Door. ‖ Field tools Pipeline
+[door-word] Customers  x8  {roofing} {admin} {tabP/light,desk/light,phone/light,tabP/dark}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+     shot roofing/admin-tabP-light-15-customers.jpg
+[door-word] Setup Accounts · Company · Setup checklist · Prices and term  x8  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     ups and your own entries. Training Door-to-door, sales, quotes, || your own entries. Training Door-to-door, sales, quotes, phones a || y not now, ask when. A date on the door beats “some other time”.
+     shot roofing/admin-tabP-light-24-setup-accounts-company-setup-checklist-p.jpg
+[door-word] Office dashboard > Team stats  x6  {roofing} {admin} {tabP/light}
+     PM MANAGER AEJDHC Pr Mate aejdhc 0 DOORS 7D 0 QUOTES 7D No proper || perties marked yet Pr Rep aejdhc 0 DOORS 7D 0 QUOTES 7D No proper || ties marked yet Ps Setter aejdhc 0 DOORS 7D 0 QUOTES 7D No proper
+[door-word] Pipeline > + Add a lead  x6  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door Pick a stage to see who
+[door-word] Pipeline > Show  x6  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door Pick a stage to see who
+[door-word] Pipeline > 0 Emailed  x6  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door Nothing at this stage. ‖ || sent 0 On hold Everyone Phone call Door Nothing at this stage. P
+[door-word] Pipeline > 0 Texted  x6  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door Nothing at this stage. ‖ || sent 0 On hold Everyone Phone call Door Nothing at this stage. P
+[door-word] Pipeline > 4 Quote sent  x6  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door PHONE CALL Perm Lead 1 a || sent 0 On hold Everyone Phone call Door Perm Lead 1 aejdhc Phone
+[door-word] Pipeline > 0 On hold  x6  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door Nothing at this stage. ‖ || sent 0 On hold Everyone Phone call Door Nothing at this stage. P
+[door-word] Pipeline > Everyone  x6  {roofing} {admin} {tabP/light,desk/light}
+     acebook Messenger In person At the door Name Phone Email Town or || sent 0 On hold Everyone Phone call Door Nothing at this stage. ‖ || sent 0 On hold Everyone Phone call Door Nothing at this stage. P
+[door-word] Setup checklist  x6  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     e. › Training Your team’s lessons: door-to-door, sales, quotes, || ining Your team’s lessons: door-to-door, sales, quotes, phones a
+     shot roofing/admin-tabP-light-27-setup-checklist.jpg
+[door-word] Office > Team stats  x6  {roofing} {admin} {desk/light}
+     PM MANAGER AEJDHC Pr Mate aejdhc 0 DOORS 7D 0 QUOTES 7D No proper || perties marked yet Pr Rep aejdhc 0 DOORS 7D 0 QUOTES 7D No proper || ties marked yet Ps Setter aejdhc 0 DOORS 7D 0 QUOTES 7D No proper
+[door-word] Stats  x5  {roofing} {admin,office} {tabP/light,desk/light,phone/light,tabP/dark}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+     shot roofing/admin-tabP-light-16-stats.jpg
+[door-word] Customers > + Add a customer  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > Active  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > Everyone  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > Upcoming jobs  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > Balance due  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > Recurring  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > One-off  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > NOV 2026 (3)  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > OCT 2026 (1)  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Customers > Show all 30  x4  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Stats > Training  x4  {roofing} {admin} {tabP/light,desk/light}
+     d the text. ‖ Field tools Training Door-to-door, sales, quotes, || xt. ‖ Field tools Training Door-to-door, sales, quotes, phones a
+[door-word] Stats > Setup  x4  {roofing} {admin} {tabP/light,desk/light}
+     e. › Training Your team’s lessons: door-to-door, sales, quotes, || ining Your team’s lessons: door-to-door, sales, quotes, phones a
+[door-word] Pipeline > Results: which houses turn into jobs ›  x3  {roofing} {admin} {tabP/light,desk/light}
+     s Walk booked or Quote sent at the door, or a job on the lead; w
+[door-word] Jobs > The old board: prices, addresses and the weather  x3  {roofing} {admin} {tabP/light,desk/light}
+     d total 0 done $0 collected at the door ‹ Week before This week
+[door-word] Office dashboard > Training  x2  {roofing} {admin} {tabP/light}
+     d the text. ‖ Field tools Training Door-to-door, sales, quotes, || xt. ‖ Field tools Training Door-to-door, sales, quotes, phones a
+[door-word] Office dashboard > Setup  x2  {roofing} {admin} {tabP/light}
+     e. › Training Your team’s lessons: door-to-door, sales, quotes, || ining Your team’s lessons: door-to-door, sales, quotes, phones a
+[door-word] Stats > Pipeline 5  x2  {roofing} {admin} {tabP/light,desk/light}
+     sent 0 On hold Everyone Phone call Door Pick a stage to see who
+[door-word] Stats > Customers  x2  {roofing} {admin} {tabP/light,desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Stats > Stats  x2  {roofing} {admin} {tabP/light,desk/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+[door-word] Stats > Results  x2  {roofing} {admin} {tabP/light,desk/light}
+     s Walk booked or Quote sent at the door, or a job on the lead; w
+[door-word] Stats > Usage  x2  {roofing} {admin} {tabP/light,desk/light}
+     orks wi (tools) 37 TrainingDoor-to-door, sales, quotes, pho (too
+[door-word] Stats > This week  x2  {roofing} {admin} {tabP/light,desk/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+[door-word] Stats > Last week  x2  {roofing} {admin} {tabP/light,desk/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 0 0 0 $0 Imported lists
+[door-word] Stats > Last 30 days  x2  {roofing} {admin} {tabP/light,desk/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+[door-word] Stats > This month  x2  {roofing} {admin} {tabP/light,desk/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+[door-word] Stats > Update ad spend  x2  {roofing} {admin} {tabP/light,desk/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+[door-word] Setup checklist > Training Your team’s lessons: door-to-door, sales, quotes, p  x2  {roofing} {admin} {tabP/light}
+     er, and the text. ‖ Setup Training Door-to-door, sales, quotes, || the text. ‖ Setup Training Door-to-door, sales, quotes, phones a
+[door-word] Office > Training  x2  {roofing} {admin} {desk/light}
+     d the text. ‖ Field tools Training Door-to-door, sales, quotes, || xt. ‖ Field tools Training Door-to-door, sales, quotes, phones a
+[door-word] Office > Usage  x2  {roofing} {admin} {desk/light}
+     orks wi (tools) 37 TrainingDoor-to-door, sales, quotes, pho (too || tup · TrainingYour team’s lessons: door-to-doo Oct 30, 7:24 PM ·
+[door-word] Office > Setup  x2  {roofing} {admin} {desk/light}
+     e. › Training Your team’s lessons: door-to-door, sales, quotes, || ining Your team’s lessons: door-to-door, sales, quotes, phones a
+[door-word] Office dashboard > Pipeline 5  x1  {roofing} {admin} {tabP/light}
+     sent 0 On hold Everyone Phone call Door Pick a stage to see who
+[door-word] Office dashboard > Customers  x1  {roofing} {admin} {tabP/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Office dashboard > Stats  x1  {roofing} {admin} {tabP/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+[door-word] Office dashboard > Results  x1  {roofing} {admin} {tabP/light}
+     s Walk booked or Quote sent at the door, or a job on the lead; w
+[door-word] Office dashboard > Usage  x1  {roofing} {admin} {tabP/light}
+     ek, the (tools) 36 TrainingDoor-to-door, sales, quotes, pho (too
+[door-word] Office > Pipeline 5  x1  {roofing} {admin} {desk/light}
+     sent 0 On hold Everyone Phone call Door Pick a stage to see who
+[door-word] Office > Customers  x1  {roofing} {admin} {desk/light}
+     RAM Customers Bookings made at the door Any CRM (generic file) H
+[door-word] Office > Stats  x1  {roofing} {admin} {desk/light}
+     s 0 0 0 $0 Website 0 0 0 $0 At the door 2 0 0 $0 Phone calls 11
+[door-word] Office > Results  x1  {roofing} {admin} {desk/light}
+     s Walk booked or Quote sent at the door, or a job on the lead; w
+[failed-request] Jobs  x16  {roofing,sixfold} {admin,office} {tabP/light,desk/light,phone/light,tabP/dark}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot roofing/admin-tabP-light-13-jobs.jpg
+[failed-request] Office dashboard  x6  {roofing,sixfold} {admin} {tabP/light,phone/light,tabP/dark}
+     404 /maps/colorado.pmtiles
+     shot roofing/admin-tabP-light-10-office-dashboard.jpg
+[failed-request] Jobs > ‹ Week before  x6  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot roofing/admin-tabP-light-13-jobs--02--week-before.jpg
+[failed-request] Jobs > Week after ›  x6  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot roofing/admin-tabP-light-13-jobs--03-week-after-.jpg
+[failed-request] Stats  x5  {sixfold} {admin,office} {tabP/light,desk/light,phone/light,tabP/dark}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-tabP-light-18-stats.jpg
+[failed-request] Stats > Today  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     404 /maps/colorado.pmtiles
+     shot roofing/admin-tabP-light-16-stats--01-today.jpg
+[failed-request] Customers  x4  {roofing,sixfold} {office} {tabP/light}
+     403 /api/rounds.php?action=backups
+     shot roofing/office-tabP-light-16-customers.jpg
+[failed-request] Office  x2  {roofing,sixfold} {admin} {desk/light}
+     404 /maps/colorado.pmtiles
+     shot roofing/admin-desk-light-11-office.jpg
+[failed-request] Jobs board  x2  {roofing,sixfold} {office} {tabP/light}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot roofing/office-tabP-light-15-jobs-board.jpg
+[failed-request] Stats > Stats  x2  {sixfold} {admin} {tabP/light,desk/light}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-tabP-light-18-stats--06-stats.jpg
+[failed-request] Stats > Setup  x1  {roofing} {admin} {desk/light}
+     404 /maps/colorado.pmtiles
+[failed-request] Office dashboard > Stats  x1  {sixfold} {admin} {tabP/light}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-tabP-light-11-office-dashboard--06-stats.jpg
+[failed-request] Office > Stats  x1  {sixfold} {admin} {desk/light}
+     400 /api/rounds.php?action=squareconfirmlist
+     shot sixfold/admin-desk-light-11-office--06-stats.jpg
+[lawn-word] Customers  x8  {roofing} {admin} {tabP/light,desk/light,phone/light,tabP/dark}
+     mns when importing: Housecall Pro, LawnPro, GorillaDesk, HubSpot
+     shot roofing/admin-tabP-light-15-customers.jpg
+[lawn-word] (home)  x3  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     House lookup Type an address: the lawn, the lot and what to ask
+     shot roofing/admin-tabP-light-00-home.jpg
+[lawn-word] Setup Accounts · Company · Setup checklist · Prices and term  x3  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     House lookup Type an address: the lawn, the lot and what to ask
+     shot roofing/admin-tabP-light-24-setup-accounts-company-setup-checklist-p.jpg
+[no-op] Pipeline > 0 Texted  x3  {sixfold} {admin} {tabP/light,desk/light}
+     Pipeline Door bookings and inquiries, call to won
+[no-op] Pipeline > Everyone  x3  {sixfold} {admin} {tabP/light,desk/light}
+     Pipeline Door bookings and inquiries, call to won
+[no-op] Customer emails > Off  x1  {roofing} {admin} {tabP/light}
+     Customer emails Follow-ups, aftercare and the newsletter
+[no-op] Pipeline > Door  x1  {sixfold} {admin} {desk/light}
+     Pipeline Door bookings and inquiries, call to won
+[not-found] Office > Play last hour  x2  {roofing,sixfold} {admin} {desk/light}
+     
+[opens-scrolled] Office dashboard  x6  {roofing,sixfold} {admin} {tabP/light,phone/light,tabP/dark}
+     scrollY 146 || scrollY 609 || scrollY 681
+     shot roofing/admin-tabP-light-10-office-dashboard.jpg
+[sixfold-word] Pipeline > Show  x18  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline > 0 Emailed  x18  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline > 0 Texted  x18  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline > 4 Quote sent  x18  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline > 0 On hold  x18  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline > Everyone  x18  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline > Door  x18  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline > + Add a lead  x9  {roofing} {admin} {tabP/light,desk/light}
+     ect Source Where did it come from? Meta ad Nextdoor Phone call Link || l Linktree Referral Other Facebook Messenger In person At the door Na || Question What they said Save lead ClickUp and the app 7 to look at
+[sixfold-word] Pipeline  x7  {roofing} {admin} {tabP/light,desk/light,phone/light,tabP/dark}
+     raight into your JobNimbus Connect ClickUp and the app 7 to look at
+     shot roofing/admin-tabP-light-12-pipeline.jpg
+[sixfold-word] Stats > Plan the properties  x2  {roofing} {admin} {tabP/light,desk/light}
+     sq 1996 Mar 2020 $965k To knock 10 365 LIONS HEAD DR INDIAN SUM
+[sixfold-word] Stats > Pipeline 5  x2  {roofing} {admin} {tabP/light,desk/light}
+     raight into your JobNimbus Connect ClickUp and the app 7 to look at
+[sixfold-word] Office dashboard > Plan the properties  x1  {roofing} {admin} {tabP/light}
+     sq 1996 Mar 2020 $965k To knock 10 365 LIONS HEAD DR INDIAN SUM
+[sixfold-word] Office dashboard > Pipeline 5  x1  {roofing} {admin} {tabP/light}
+     raight into your JobNimbus Connect ClickUp and the app 7 to look at
+[sixfold-word] Setup checklist > Sync from another system Keep new leads, customers and jobs   x1  {roofing} {admin} {tabP/light}
+     CRM HubSpot, Pipedrive, JobNimbus, ClickUp, Housecall Pro, HighLeve
+[sixfold-word] Office > Plan the properties  x1  {roofing} {admin} {desk/light}
+     sq 1996 Mar 2020 $965k To knock 10 365 LIONS HEAD DR INDIAN SUM
+[sixfold-word] Office > Pipeline 5  x1  {roofing} {admin} {desk/light}
+     raight into your JobNimbus Connect ClickUp and the app 7 to look at
+[sub-back-wrong] Jobs > The old board: prices, addresses and the weather  x6  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Today  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home || landed OfficeExample Roofing || landed OfficeExample Pest Co
+     shot roofing/admin-tabP-light-16-stats--01-today.jpg
+[sub-back-wrong] Stats > Territories  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Pipeline 5  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Customers  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Square  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home || landed SquarePayments, the last 14 days
+[sub-back-wrong] Stats > Calendar  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Team stats  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Leaderboard  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Training  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Results  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Usage  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Accounts  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Company  x4  {roofing,sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Office dashboard > Territories  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Pipeline 5  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Customers  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Stats  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+     shot sixfold/admin-tabP-light-11-office-dashboard--06-stats.jpg
+[sub-back-wrong] Office dashboard > Square  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Calendar  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Team stats  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Leaderboard  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Training  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Results  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Usage  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Accounts  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Company  x2  {roofing,sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Stats > Plan the properties  x2  {roofing} {admin} {tabP/light,desk/light}
+     landed  || landed Plan the propertiesMonument
+[sub-back-wrong] Stats > Storm list  x2  {roofing} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Billing  x2  {roofing} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Stats > Setup  x2  {roofing} {admin} {tabP/light,desk/light}
+     landed home || landed OfficeExample Roofing
+[sub-back-wrong] Stats > Plans  x2  {roofing} {admin} {tabP/light,desk/light}
+     landed Setup Get ready for your first quote
+[sub-back-wrong] Stats > Customer emails  x2  {roofing} {admin} {tabP/light,desk/light}
+     landed Setup Get ready for your first quote
+[sub-back-wrong] Office > Territories  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Pipeline 5  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Customers  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Stats  x2  {roofing,sixfold} {admin} {desk/light}
+     landed StatsLeads, quotes, jobs, ads and the team || landed StatsLast week, this week and six weeks ahead
+     shot sixfold/admin-desk-light-11-office--06-stats.jpg
+[sub-back-wrong] Office > Square  x2  {roofing,sixfold} {admin} {desk/light}
+     landed SquarePayments, the last 14 days
+[sub-back-wrong] Office > Calendar  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Team stats  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Leaderboard  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Training  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Results  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Usage  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Accounts  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Company  x2  {roofing,sixfold} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Stats > Plan the doors  x2  {sixfold} {admin} {tabP/light,desk/light}
+     landed  || landed Plan the doorsMonument
+[sub-back-wrong] Stats > Newsletter  x2  {sixfold} {admin} {tabP/light,desk/light}
+     landed home
+[sub-back-wrong] Office dashboard > Plan the properties  x1  {roofing} {admin} {tabP/light}
+     landed 
+[sub-back-wrong] Office dashboard > Storm list  x1  {roofing} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Billing  x1  {roofing} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Setup  x1  {roofing} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office dashboard > Plans  x1  {roofing} {admin} {tabP/light}
+     landed Setup Get ready for your first quote
+[sub-back-wrong] Office dashboard > Customer emails  x1  {roofing} {admin} {tabP/light}
+     landed Setup Get ready for your first quote
+[sub-back-wrong] Office > Plan the properties  x1  {roofing} {admin} {desk/light}
+     landed Plan the propertiesMonument
+[sub-back-wrong] Office > Storm list  x1  {roofing} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Billing  x1  {roofing} {admin} {desk/light}
+     landed home
+[sub-back-wrong] Office > Plans  x1  {roofing} {admin} {desk/light}
+     landed Setup Get ready for your first quote
+[sub-back-wrong] Office > Customer emails  x1  {roofing} {admin} {desk/light}
+     landed Setup Get ready for your first quote
+[sub-back-wrong] Office dashboard > Plan the doors  x1  {sixfold} {admin} {tabP/light}
+     landed 
+[sub-back-wrong] Office dashboard > Newsletter  x1  {sixfold} {admin} {tabP/light}
+     landed home
+[sub-back-wrong] Office > Plan the doors  x1  {sixfold} {admin} {desk/light}
+     landed Plan the doorsMonument
+[sub-back-wrong] Office > Newsletter  x1  {sixfold} {admin} {desk/light}
+     landed home
+[traverse-word] Setup checklist  x3  {roofing} {admin} {tabP/light,phone/light,tabP/dark}
+     s. Turn them on in Profile. › Your Traverse plan Billing. › BRING YO
+     shot roofing/admin-tabP-light-27-setup-checklist.jpg
