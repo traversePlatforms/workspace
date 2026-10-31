@@ -40,7 +40,8 @@ h1 { position: absolute; left: 76px; right: 76px; top: 330px; font: 800 76px/1.0
 .tier .k { font: 800 44px/1.05 Outfit, sans-serif; }
 .tier .d { font: 500 26px DMSans, sans-serif; color: #4C6A48; margin-top: 6px; }
 .tier .p { font: 800 54px Outfit, sans-serif; color: #2F5D2C; white-space: nowrap; }
-.haul { position: absolute; left: 76px; right: 76px; top: 1052px; display: flex; justify-content: space-between; align-items: center; border: 3px solid #F2C14E; border-radius: 22px; padding: 18px 36px; }
+.haul { position: absolute; left: 76px; right: 76px; top: 1052px; display: flex; justify-content: space-between; align-items: center; border: 3px solid #F2C14E; border-radius: 22px; padding: 14px 36px; }
+.haul .o { font: 500 22px DMSans, sans-serif; color: #F1EADB; margin-top: 2px; }   /* optional (Matthew 31 Oct) */
 .haul .k { font: 700 34px DMSans, sans-serif; } .haul .p { font: 800 42px Outfit, sans-serif; color: #F2C14E; }
 .foot { position: absolute; left: 76px; right: 76px; bottom: 56px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px solid rgba(255,248,236,.25); padding-top: 22px; }
 .foot .q { font: 600 25px/1.34 DMSans, sans-serif; color: #F1EADB; max-width: 560px; }
@@ -50,7 +51,7 @@ h1 { position: absolute; left: 76px; right: 76px; top: 330px; font: 800 76px/1.0
 <h1>Your yard, cleaned up and hauled away.</h1>
 <div class="incl"><b>We get it all:</b> leaves, pine needles and debris, anything that’s fallen onto your lawn.</div>
 <div class="tiers">${TIERS.map(([k, d, p]) => `<div class="tier"><div><div class="k">${k}</div><div class="d">${d}</div></div><div class="p">${p}</div></div>`).join('')}</div>
-<div class="haul"><div class="k">Haul-away and disposal</div><div class="p">$40\u2013$80 a load</div></div>
+<div class="haul"><div><div class="k">Haul-away and disposal</div><div class="o">Optional: or we can leave it on your property</div></div><div class="p">$40\u2013$80 a load</div></div>
 <div class="foot"><div class="q">Price depends on your yard’s size and how much debris there is. Every lawn is different: send us a picture of your lawn for a free quote.</div><div class="c"><b>${PHONE}</b><span>${SITE}</span></div></div>
 </body></html>`;
 const f = join(TMP, 'cleanup.html'); writeFileSync(f, html);

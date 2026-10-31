@@ -11,7 +11,7 @@ Picture: `365-yard-cleanup-prices.png` (1080 x 1350, Facebook/Instagram feed). R
 - Up to 1/4 acre (up to about 10,900 sq ft of lot): $100–$300
 - 1/4 to 1/2 acre (about 10,900 to 21,800 sq ft): $250–$600
 - 1/2 acre and up (over about 21,800 sq ft): $600–$1,000
-- Haul-away and disposal: $40–$80 a load
+- Haul-away and disposal: $40–$80 a load, marked "Optional: or we can leave it on your property" (Matthew 31 Oct)
 - Price depends on your yard's size and how much debris there is. Every lawn is different: send us a picture of your lawn for a free quote. (Brad's note + Matthew, 31 Oct)
 - (720) 830-4553 · 365aeration.com · 365 badge
 
