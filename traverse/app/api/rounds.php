@@ -9110,10 +9110,10 @@ if ($action === 'leads') {
     if ($isSuper) foreach ($list as &$ml) $ml['mine'] = webLead($ml); unset($ml);   /* Matthew's own leads, for his To contact view (2026-10-26) */
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
     if (!empty($_REQUEST['count'])) out(['ok' => true, 'new' => $new]);
-    out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' ? ['cucheck' => cuCheckShown()] : []) + ($handTo ? ['handTo' => $handTo] : []));   /* + who his own leads can go to (2026-10-27) */   /* the ClickUp sync check (2026-10-17) */
+    out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' && !empty(company()['a365']) ? ['cucheck' => cuCheckShown()] : []) + ($handTo ? ['handTo' => $handTo] : []));   /* + who his own leads can go to (2026-10-27) */   /* the ClickUp sync check (2026-10-17); Sixfold 365 only (2026-10-30 audit: it showed in the editions) */
 }
 if ($action === 'cucheckok') {   /* Leave it, on the Pipeline's ClickUp check */
-    if ($role !== 'admin' || !$isPost) fail('Not allowed.', 403);
+    if ($role !== 'admin' || !$isPost || empty(company()['a365'])) fail('Not allowed.', 403);
     $k = (string) ($body['key'] ?? ''); if (!preg_match('/^[a-z]+:[A-Za-z0-9:_ .\/-]{1,160}$/D', $k)) fail('Nothing to leave.');
     $keys = cuCheckOk(); if (!in_array($k, $keys, true)) $keys[] = $k;
     writeJsonAtomic(DATA_DIR . '/clickup-check-ok.json', ['keys' => array_slice($keys, -500), 'by' => $me, 'at' => time()]);

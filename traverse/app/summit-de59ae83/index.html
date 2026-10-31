@@ -17739,7 +17739,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return;
     }
     /* the walks coming up list is gone from the Pipeline (2026-10-21, Matthew); booked walks show on the calendar and the office home */
-    if (S.role === 'admin' && !asOffice() && S.cucheck && S.cucheck.items && S.cucheck.items.length) holder.appendChild(cuCheckBox(S.cucheck));
+    if (CO.a365 && S.role === 'admin' && !asOffice() && S.cucheck && S.cucheck.items && S.cucheck.items.length) holder.appendChild(cuCheckBox(S.cucheck));   /* Sixfold 365 only: its ClickUp (2026-10-30 audit) */
     /* stages */
     /* Walk booked only while someone is in it (2026-10-21, Matthew: "walk booked wouldn't really be used") */
     var stList = (asOffice() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()); });   /* Recall: the lead desk only (2026-10-21) */
