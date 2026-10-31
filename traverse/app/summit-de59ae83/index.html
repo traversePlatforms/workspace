@@ -910,8 +910,6 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .matpick button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
   .choose .ogrp{margin:8px 0 8px}
   .choose .ogbox{margin-bottom:6px}
-  .choose .ogwrap{margin:0 0 6px 6px;padding-left:10px;border-left:3px solid var(--line)}   /* Office's groups, inside the Office bar (2026-10-30) */
-  .choose .ogwrap > .tgrid{margin-top:8px}
   .choose [data-fold][hidden]{display:none}
   .roofx > span > button.lnk{display:block;background:none;border:0;padding:5px 0 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;text-align:left}
   .teamsbox button.lnk,.goalbox button.lnk,.caldet button.lnk,.lesson ~ .aacts button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
@@ -4690,11 +4688,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     homeFold(box, key, title, tiles, 'tgrid ogbox');
   }
   /* ---- the home screen's groups fold (2026-10-30, Matthew's tablet test: "every group closed by default ... remembered"): In the field,
-     Office and its four groups, Your team, Given to your role and the crew's tools. Each starts closed; the bar opens and closes it, and
-     this device remembers what was open for this install and this person (it was Sales open, the rest closed, every time). ---- */
+     the dashboard and the office groups (each its own bar since 2026-10-31), Your team, Given to your role and the crew's tools. Each
+     starts closed; the bar opens and closes it, and this device remembers what was open for this install and this person (it was Sales
+     open, the rest closed, every time). ---- */
   function homeFoldKey() { return 'doorapp.grp' + ':' + (location.pathname.split('/')[1] || '') + ':' + (S.me || ''); }
   function homeFoldGet() { try { var o = JSON.parse(localStorage.getItem(homeFoldKey()) || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
   function homeFoldSet(key, on) { try { var o = homeFoldGet(); if (on) o[key] = 1; else delete o[key]; localStorage.setItem(homeFoldKey(), JSON.stringify(o)); } catch (e) {} }
+  /* no Office bar around the office groups any more (2026-10-31, Matthew on tablet and iPhone: "opening the office drop down creates 4/5
+     more drop downs ... have all the drop downs available from the start"). The dashboard keeps the old Office key, so an open Office
+     opens it; once, an Office that was closed closes the groups that were open inside it, so the home looks as it did. */
+  function homeFoldFlat() {
+    try {
+      var o = homeFoldGet(); if (o.flat) return;
+      if (!o.office) ['sales', 'team', 'storms', 'setup'].forEach(function (k) { delete o[k]; });
+      o.flat = 1; localStorage.setItem(homeFoldKey(), JSON.stringify(o));
+    } catch (e) {}
+  }
   /** a bar and what it folds: tiles (their names make the bar's second line) or any other elements; returns the folded box */
   function homeFold(box, key, title, items, cls, line) {
     items = items.filter(Boolean); if (!items.length) return null;
@@ -4811,31 +4820,32 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }).catch(function () {});
       var qt = feat('quote') ? tile('a', 'calc', 'Quote builder', 'Price a job from the ' + vw() + '.', S.offline ? 'Needs signal' : 'Admin only · in testing', null, 'quote.html?v=' + QUOTE_V) : null;
       if (qt && S.offline) { qt.removeAttribute('href'); qt.setAttribute('aria-disabled', 'true'); qt.style.opacity = '.55'; }   /* Fable: offline it led to the browser's error page */
-      /* Office in four fold-out groups (Matthew 2026-10-05: thirteen tiles in a row ran long). Each bar names what is
-         inside; the phone remembers which are open (Sales open the first time). The tiles stay in the page when folded. */
-      var obox = q('div', 'ogwrap');   /* Office folds too, its dashboard and four groups inside (2026-10-30) */
-      /* the dashboard (2026-10-08): above the fold-out groups, one tap */
-      var otl = q('div', 'tgrid');
-      if (S.super) otl.appendChild(tile('button', 'users', 'See through their eyes', (CO.a365 ? 'Open the app as the office, ' + who('jen') + ', a manager, a door rep or a crew, looking only. No signing out and in.' : pw('Open the app as the office, a manager, a door rep or a crew, looking only. No signing out and in.', 'Open the app as the office, a manager, a sales rep or a crew, looking only. No signing out and in.')), 'Traverse only', vaPicker));
-      if (S.super && !S.viewing && CO.a365) otl.appendChild(tile('button', 'chat', 'Messenger preview', 'Facebook messages as they would come into the Pipeline. Looking only: nothing is saved.', 'Traverse only', msgPreview));   /* 2026-10-20 */
-      else if (feat('walkdesk') && CO.a365) otl.appendChild(tile('button', 'users', 'See ' + who('jen') + '\u2019s screen', 'Exactly what ' + who('jen') + ' sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
+      /* Office in fold-out groups (Matthew 2026-10-05: thirteen tiles in a row ran long). Each bar names what is inside; the
+         device remembers which are open. Each is its own bar on the home, beside In the field: no Office bar around them (2026-10-31). */
+      homeFoldFlat();
+      /* the dashboard (2026-10-08), its own bar first; it keeps the old Office bar's key */
+      var otl = [];
+      if (S.super) otl.push(tile('button', 'users', 'See through their eyes', (CO.a365 ? 'Open the app as the office, ' + who('jen') + ', a manager, a door rep or a crew, looking only. No signing out and in.' : pw('Open the app as the office, a manager, a door rep or a crew, looking only. No signing out and in.', 'Open the app as the office, a manager, a sales rep or a crew, looking only. No signing out and in.')), 'Traverse only', vaPicker));
+      if (S.super && !S.viewing && CO.a365) otl.push(tile('button', 'chat', 'Messenger preview', 'Facebook messages as they would come into the Pipeline. Looking only: nothing is saved.', 'Traverse only', msgPreview));   /* 2026-10-20 */
+      else if (feat('walkdesk') && CO.a365) otl.push(tile('button', 'users', 'See ' + who('jen') + '\u2019s screen', 'Exactly what ' + who('jen') + ' sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
-      otl.appendChild(tile('button', 'chart', 'Office dashboard', pw('Today and this week, the map of best doors left, the team, walks and live radar.'), 'Admin only', officeView)); obox.appendChild(otl);
-      officeGroup(obox, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way ' + who('jen') + ' does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', lookSay(), 'Admin only', function () { houseLookupView(null); }) : null,
+      otl.push(tile('button', 'chart', 'Office dashboard', pw('Today and this week, the map of best doors left, the team, walks and live radar.'), 'Admin only', officeView));
+      homeFold(box, 'office', 'Dashboard', otl);
+      officeGroup(box, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way ' + who('jen') + ' does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', lookSay(), 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
         wdOn() ? tile('button', 'chart', 'Stats', 'Last week, this week, the ads and the next six weeks.', 'Admin only', statsPageView) : null,   /* on the phone as on the computer (2026-10-22) */
         squarePageOn() ? tile('button', 'card', 'Square', 'Payments in, and which job each belongs to.', 'Admin only', squareView) : null,
         qt,
         feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null]);
-      officeGroup(obox, 'team', 'Team', [
+      officeGroup(box, 'team', 'Team', [
         tile('button', 'users', 'Team stats', "Everyone's numbers, and the leaderboard.", 'Admin only', teamView),
         tile('button', 'route', 'Territories', 'Assign neighborhoods to people.', 'Admin only', territoriesView)]);
-      officeGroup(obox, 'storms', 'Storms and data', [
+      officeGroup(box, 'storms', 'Storms and data', [
         feat('security') && crewSees() ? tile('button', 'shield', 'Crime by neighborhood', 'Neighborhoods ranked by property crime reported nearby, last 90 days.', crewTag(), secListView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Storm list', pw('From a storm to a phone call: the doors it hit, their roofs, who owns them, who to call.'), 'Admin only · in testing', stormView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms from the last two years (five for a big one) and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
-      officeGroup(obox, 'setup', 'Setup', [
+      officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* next to Accounts (2026-10-30, Matthew: the rest of Setup is on it); the quote and agreement kit (2026-10-27) */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
@@ -4853,7 +4863,6 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
         feat('billing') ? tile('button', 'card', 'Billing', 'Your plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10; no product name outside the Billing screen itself (2026-10-31) */
         CO.a365 ? null : tile('button', 'door', 'Sample property', 'One made-up property with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew) */
-      homeFold(box, 'office', 'Office', [obox], 'ogwrap-f', [].map.call(obox.querySelectorAll(':scope > .tgrid:not(.ogbox) .tt b, :scope > .ogrp .ct b'), function (b) { return b.textContent; }).join(' · '));
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     permTiles(box);   /* the screens the role was given (2026-10-29) */
