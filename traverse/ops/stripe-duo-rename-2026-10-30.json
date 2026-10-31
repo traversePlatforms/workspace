@@ -1,0 +1,72 @@
+{
+ "at": "2026-10-31T04:13:39.733Z",
+ "note": "Solo -> Duo display names (live). Lookup keys, metadata and price ids unchanged.",
+ "changes": [
+  {
+   "kind": "product",
+   "id": "prod_VVzfdhl5eVhGLI",
+   "before": {
+    "name": "Traverse Solo",
+    "description": "One person, with the trade edition's data."
+   },
+   "after": {
+    "name": "Traverse Duo",
+    "description": "Two people (an admin and one worker), with the trade edition’s data."
+   }
+  },
+  {
+   "kind": "product",
+   "id": "prod_VVzft2pUwvAGtF",
+   "before": {
+    "name": "Traverse Roofing or Solar edition (Solo)",
+    "description": "The Roofing or Solar edition's data on Solo."
+   },
+   "after": {
+    "name": "Traverse Roofing or Solar edition (Duo)",
+    "description": "The Roofing or Solar edition’s data on Duo."
+   }
+  },
+  {
+   "kind": "price",
+   "id": "price_1UW8ugDpgzeXbgqWKHqZIR7m",
+   "lookup_key": "traverse_v2f_solo_year",
+   "before": "Founding solo year (25% off $948)",
+   "after": "Founding duo year (25% off $948)"
+  },
+  {
+   "kind": "price",
+   "id": "price_1UW8ugDpgzeXbgqWQLT7T1UQ",
+   "lookup_key": "traverse_v2f_solo_month",
+   "before": "Founding solo month (25% off $99)",
+   "after": "Founding duo month (25% off $99)"
+  },
+  {
+   "kind": "price",
+   "id": "price_1UUxgPDpgzeXbgqWBXuOPDHU",
+   "lookup_key": "traverse_v2_uplift_solo_year",
+   "before": "Traverse Roofing or Solar edition (Solo), yearly",
+   "after": "Traverse Roofing or Solar edition (Duo), yearly"
+  },
+  {
+   "kind": "price",
+   "id": "price_1UUxgPDpgzeXbgqW2PQQalfn",
+   "lookup_key": "traverse_v2_uplift_solo_month",
+   "before": "Traverse Roofing or Solar edition (Solo), monthly",
+   "after": "Traverse Roofing or Solar edition (Duo), monthly"
+  },
+  {
+   "kind": "price",
+   "id": "price_1UUxgLDpgzeXbgqWkdeP0Q7L",
+   "lookup_key": "traverse_v2_solo_year",
+   "before": "Traverse Solo, yearly",
+   "after": "Traverse Duo, yearly"
+  },
+  {
+   "kind": "price",
+   "id": "price_1UUxgLDpgzeXbgqWj8S8ucfn",
+   "lookup_key": "traverse_v2_solo_month",
+   "before": "Traverse Solo, monthly",
+   "after": "Traverse Duo, monthly"
+  }
+ ]
+}
