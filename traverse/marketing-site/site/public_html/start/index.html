@@ -55,7 +55,11 @@ aside{position:sticky;top:16px}
 .err{color:#b42318;font-size:15px;min-height:1em}@media (prefers-color-scheme: dark){.err{color:#f0786a}}
 .small{font-size:13px;color:var(--soft)}
 .note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;color:var(--soft)}
-@media (max-width:880px){main{grid-template-columns:minmax(0,1fr)}aside{position:static}.plans{grid-template-columns:minmax(0,1fr)}h1{font-size:32px}}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.edsel{display:none}
+.edsel select{font:inherit;font-weight:700;font-size:16px;width:100%;min-height:50px;padding:0 44px 0 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d6400c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:20px}
+.edsel select:focus{outline:2px solid var(--flag);outline-offset:1px}
+@media (max-width:880px){main{grid-template-columns:minmax(0,1fr)}aside{position:static}.plans{grid-template-columns:minmax(0,1fr)}h1{font-size:32px}#eds{display:none}.edsel{display:block}}
 </style>
 </head>
 <body>
@@ -71,6 +75,8 @@ aside{position:sticky;top:16px}
     <div id="form">
       <h2><span class="n">1</span>Your trade</h2>
       <div class="seg" id="eds" role="group" aria-label="Trade"></div>
+      <!-- phones (Matthew 2026-10-30): a dropdown picks the trade; the buttons stay on wider screens -->
+      <label class="edsel"><span class="vh">Trade</span><select id="edsel"><option value="">Pick your trade</option></select></label>
       <h2><span class="n">2</span>Your plan</h2>
       <div class="seg" id="ivs" role="group" aria-label="Billing">
         <button type="button" data-iv="year">Yearly (save 20%)</button><button type="button" data-iv="month">Monthly</button>
@@ -106,8 +112,8 @@ aside{position:sticky;top:16px}
   var $ = function (id) { return document.getElementById(id); };
   var Q = new URLSearchParams(location.search);
   var P = null, st = { edition: Q.get('edition') || '', plan: Q.get('plan') || 'crew', iv: Q.get('iv') === 'month' ? 'month' : 'year', people: parseInt(Q.get('people') || '0', 10) || 0 };
-  /* plan names (2026-10-30): the billing keys stay solo / crew / team; customers read Solo / Team / Company. Trades: "Yards" is Lawn & Landscape */
-  var NAMES = { solo: ['Solo', 'One person working their own territory.'], crew: ['Team', 'A crew of up to 5 people.'], team: ['Company', 'Bigger teams with managers and an office.'] };
+  /* plan names (2026-10-30): the billing keys stay solo / crew / team; customers read Duo / Team / Company. Trades: "Yards" is Lawn & Landscape */
+  var NAMES = { solo: ['Duo', 'You and one person in the field.'], crew: ['Team', 'A crew of up to 5 people.'], team: ['Company', 'Bigger teams with managers and an office.'] };
   var TRADE = { roofing: 'Roofing', yards: 'Lawn & Landscape', solar: 'Solar', pest: 'Pest', security: 'Security' };
   var trade = function (e) { return TRADE[e.key] || e.name.replace('Traverse', ''); };
   var money = function (n) { return '$' + Number(n).toLocaleString('en-US'); };
@@ -117,6 +123,10 @@ aside{position:sticky;top:16px}
   function draw() {
     var eds = $('eds'); eds.textContent = '';
     P.editions.forEach(function (e) { eds.appendChild(btn(trade(e), st.edition === e.key, function () { st.edition = e.key; draw(); })); });
+    var sel = $('edsel'); sel.textContent = '';
+    var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Pick your trade'; sel.appendChild(o0);
+    P.editions.forEach(function (e) { var o = document.createElement('option'); o.value = e.key; o.textContent = trade(e); sel.appendChild(o); });
+    sel.value = st.edition;
     [].forEach.call($('ivs').children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-iv') === st.iv)); });
     var pl = $('plans'); pl.textContent = '';
     Object.keys(NAMES).forEach(function (k) {
@@ -135,7 +145,7 @@ aside{position:sticky;top:16px}
     st.people = Math.min(st.people, max);
     $('people').value = st.people; $('minus').disabled = st.people <= inc; $('plus').disabled = st.people >= max;
     var extra = Math.max(0, st.people - inc);
-    $('phint').textContent = st.plan === 'solo' ? 'Solo is you (the admin) and one person. More people: pick Team.' : 'Besides you (the admin, always free). ' + inc + ' included' + (extra ? ', ' + extra + ' extra at ' + money(x.extra) + ' each' : '') + '.';
+    $('phint').textContent = st.plan === 'solo' ? 'Duo is you (the admin) and one person. More people: pick Team.' : 'Besides you (the admin, always free). ' + inc + ' included' + (extra ? ', ' + extra + ' extra at ' + money(x.extra) + ' each' : '') + '.';
     var tot = x.price + extra * x.extra, list = x.list + extra * x.extraList;
     var ed = P.editions.filter(function (e) { return e.key === st.edition; })[0];
     $('sumname').textContent = (ed ? trade(ed) : 'Traverse') + ' · ' + NAMES[st.plan][0] + (st.iv === 'year' ? ', yearly' : ', monthly');
@@ -153,6 +163,7 @@ aside{position:sticky;top:16px}
     try { history.replaceState(null, '', '?' + new URLSearchParams({ edition: st.edition, plan: st.plan, iv: st.iv, people: String(st.people) }).toString()); } catch (e) {}
   }
   [].forEach.call($('ivs').children, function (b) { b.addEventListener('click', function () { st.iv = b.getAttribute('data-iv'); draw(); }); });
+  $('edsel').addEventListener('change', function () { st.edition = $('edsel').value; draw(); });
   $('minus').addEventListener('click', function () { st.people--; draw(); });
   $('plus').addEventListener('click', function () { st.people++; draw(); });
   $('people').addEventListener('change', function () { st.people = parseInt($('people').value, 10) || 0; draw(); });

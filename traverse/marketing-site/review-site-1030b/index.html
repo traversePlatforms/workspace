@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Site notes, second round</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#0f1b2d;--soft:#566476;--line:#dce2ea;--accent:#d6400c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d131b;--card:#161e29;--ink:#e8edf3;--soft:#9fb0c3;--line:#2a3646;--accent:#ff7a45}}
+:root[data-theme="dark"]{--bg:#0d131b;--card:#161e29;--ink:#e8edf3;--soft:#9fb0c3;--line:#2a3646;--accent:#ff7a45}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1240px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:30px;margin:0 0 6px}h2{font-size:22px;margin:40px 0 8px;padding-top:16px;border-top:1px solid var(--line)}
+p,li{color:var(--soft);max-width:90ch}
+.row{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:16px;align-items:start;margin:12px 0}
+.row.two{grid-template-columns:repeat(2,minmax(0,1fr))}.row.phones{grid-template-columns:repeat(4,minmax(0,1fr))}
+figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;min-width:0}
+figure img{display:block;width:100%;height:auto;border-radius:6px}
+figcaption{font-size:13px;color:var(--soft);margin-top:6px}
+.tag{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+@media (max-width:760px){.row,.row.two,.row.phones{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<main>
+<h1>Website notes, second round (30 October, evening)</h1>
+<p>Each item from Matthew's second set of notes, before (left of each pair, or marked) and after, desktop and phone. Local build served from the repo; the checkout page says the prices did not load because its price API is not in the local copy (it reads the same on the before shot). App pictures come from the test harness in edition mode as "Your Company": made-up figures, owner names and the address swapped out.</p>
+
+<h2>1. Find my app</h2>
+<p>"Each link is unique" (not "each company has its own link"). The one answer after sending: "If that address is on an app, the link is on its way. Nothing arrived? Check the spelling, or ask your admin." The address shape is checked on the page and on the server before anything is sent; a missing @ and a bad domain each get a plain message. The endpoint was called with a bad, a misspelt and an unknown address: the malformed ones get the format message (400), the well-formed ones all get the same answer (200), known or not.</p>
+<div class="row two"><figure><img src="before-find-desktop.png" alt="Find my app, before"><figcaption>Before</figcaption></figure><figure><img src="after-find-desktop.png" alt="Find my app, after"><figcaption>After</figcaption></figure></div>
+<div class="row two"><figure><img src="before-find-phone.png" alt="Find my app, phone, before"><figcaption>Before, phone</figcaption></figure><figure><img src="after-find-phone.png" alt="Find my app, phone, after"><figcaption>After, phone</figcaption></figure></div>
+
+<h2>2 and 3. One app for the whole day</h2>
+<p>Properties: "Features such as quote now, booked, not now, come back later." Pipeline: "your website", "upcoming jobs". On phones each topic closes to its title and opens on a tap; the desktop layout is unchanged.</p>
+<div class="row"><figure><img src="before-home-02-whole-day-desktop.png" alt="Whole day, desktop, before"><figcaption>Before</figcaption></figure><figure><img src="before-home-02-whole-day-phone.png" alt="Whole day, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-02-whole-day-desktop.png" alt="Whole day, desktop, after"><figcaption>After</figcaption></figure><figure><img src="after-home-02-whole-day-phone.png" alt="Whole day, phone, after, closed"><figcaption>After, phone (closed)</figcaption></figure></div>
+<div class="row"><div></div><figure><img src="after-home-02-whole-day-phone-open.png" alt="Whole day, phone, two topics open"><figcaption>After, phone, two topics opened</figcaption></figure></div>
+
+<h2>4. OpenStreetMap credit</h2>
+<p>Kept for the licence, as small grey text under the picture instead of in the caption sentence.</p>
+<div class="row"><figure><img src="before-home-03-phone-computer-desktop.png" alt="Phone and computer, before"><figcaption>Before</figcaption></figure><figure><img src="before-home-03-phone-computer-phone.png" alt="Phone and computer, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-03-phone-computer-desktop.png" alt="Phone and computer, after"><figcaption>After</figcaption></figure><figure><img src="after-home-03-phone-computer-phone.png" alt="Phone and computer, phone, after"><figcaption>After, phone</figcaption></figure></div>
+
+<h2>5. Set up for your trade</h2>
+<p>Roofing: "where on record" gone; the JobNimbus line became weather alerts and notifications, with a quiet "Also works with your CRM." under the list; the roof photo says satellite imagery. Lawn &amp; Landscape card leans to the lawn (fire out). Solar's estimate block lives in the app's property card: it is now three labelled tiles (System that fits, Output a year, Panels), each with what it means, shot from the app on a phone and a computer.</p>
+<div class="row"><figure><img src="before-home-04-trades-desktop.png" alt="Trades cards, before"><figcaption>Before</figcaption></figure><figure><img src="before-home-04-trades-phone.png" alt="Trades cards, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-04-trades-desktop.png" alt="Trades cards, after"><figcaption>After</figcaption></figure><figure><img src="after-home-04-trades-phone.png" alt="Trades cards, phone, after"><figcaption>After, phone</figcaption></figure></div>
+<div class="row"><figure><img src="app-solar-card-desktop.png" alt="Solar estimate tiles in the app on a computer"><figcaption>The solar estimate in the app, computer (1024 wide): System that fits · Output a year · Panels, then how it was made. Parker; owner name swapped out.</figcaption></figure><figure><img src="app-solar-card-phone.png" alt="Solar estimate tiles in the app on a phone"><figcaption>Phone</figcaption></figure></div>
+
+<h2>6 and 7. More than a map of properties</h2>
+<p>"Use the built-in CRM" leads, with the one line for keeping your own (sync from another system, Google Sheets, Zapier). The insurance tile is now "Storm history and roof age". On phones the tiles close to their titles.</p>
+<div class="row"><figure><img src="before-home-07-more-desktop.png" alt="More than a map, before"><figcaption>Before</figcaption></figure><figure><img src="before-home-07-more-phone.png" alt="More than a map, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-07-more-desktop.png" alt="More than a map, after"><figcaption>After</figcaption></figure><figure><img src="after-home-07-more-phone.png" alt="More than a map, phone, after"><figcaption>After, phone (closed)</figcaption></figure></div>
+<div class="row"><div></div><figure><img src="after-home-07-more-phone-open.png" alt="More than a map, phone, two tiles open"><figcaption>After, phone, the two new tiles opened</figcaption></figure></div>
+
+<h2>8. Pricing: Duo</h2>
+<p>billing.php includes one worker on the first plan besides the one free admin, so the first plan is two people: Duo. Renamed on the pricing cards and FAQ, the checkout, the welcome page, the app's Billing screen and refusal text, billingPlanName and TC_PLAN_NAMES, the subscription agreement (md, pdf, docx) and cancellation policy, the lawn prospect draft and the manual. Billing keys, Stripe lookup keys and price ids unchanged.</p>
+<div class="row"><figure><img src="before-home-09-pricing-desktop.png" alt="Pricing, before"><figcaption>Before</figcaption></figure><figure><img src="before-home-09-pricing-phone.png" alt="Pricing, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-09-pricing-desktop.png" alt="Pricing, after"><figcaption>After</figcaption></figure><figure><img src="after-home-09-pricing-phone.png" alt="Pricing, phone, after"><figcaption>After, phone</figcaption></figure></div>
+
+<h2>9. Traverse your day</h2>
+<p>The mark's line (used twice elsewhere) is replaced by a real screenshot of the editions' Stats page from the app, made-up figures, no customer names. On phones it sits as a band under the words.</p>
+<div class="row"><figure><img src="before-home-11-traverse-your-day-desktop.png" alt="Traverse your day, before"><figcaption>Before</figcaption></figure><figure><img src="before-home-11-traverse-your-day-phone.png" alt="Traverse your day, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-11-traverse-your-day-desktop.png" alt="Traverse your day, after"><figcaption>After</figcaption></figure><figure><img src="after-home-11-traverse-your-day-phone.png" alt="Traverse your day, phone, after"><figcaption>After, phone</figcaption></figure></div>
+<div class="row two"><figure><img src="app-stats-desktop.png" alt="The Stats page in the app"><figcaption>The full Stats page as shot in the app (the picture on the site shows its top left).</figcaption></figure></div>
+
+<h2>10. Talk to us and the footer</h2>
+<p>"Matthew", not the legal name; hello@traverseplatforms.com on the email card. The footer has a socials row under the logo, filled from an empty SOCIALS list in build-preview.cjs and kept out of the page until links exist (so the footer looks the same for now).</p>
+<div class="row"><figure><img src="before-home-12-contact-desktop.png" alt="Contact, before"><figcaption>Before</figcaption></figure><figure><img src="before-home-12-contact-phone.png" alt="Contact, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-12-contact-desktop.png" alt="Contact, after"><figcaption>After</figcaption></figure><figure><img src="after-home-12-contact-phone.png" alt="Contact, phone, after"><figcaption>After, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-home-13-footer-desktop.png" alt="Footer, after"><figcaption>Footer after (the socials row is there, hidden while the list is empty)</figcaption></figure><figure><img src="after-home-13-footer-phone.png" alt="Footer, phone, after"><figcaption>Phone</figcaption></figure></div>
+
+<h2>11. Checkout on a phone</h2>
+<p>The trade is picked from a dropdown on narrow screens; the buttons stay on wider ones. (Prices do not load in the local copy; they do on the site.)</p>
+<div class="row"><figure><img src="after-start-desktop.png" alt="Checkout, desktop, after"><figcaption>After, desktop (buttons as before)</figcaption></figure><figure><img src="after-start-phone.png" alt="Checkout, phone, after"><figcaption>After, phone: dropdown</figcaption></figure></div>
+<div class="row"><div></div><figure><img src="before-start-phone.png" alt="Checkout, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+
+<h2>12. Trades page, Lawn &amp; Landscape</h2>
+<p>A real picture from the app in the phone: the aerial photo, the property line in yellow and the lawn we counted shaded green (Parker; address and owner left out; the property line came from the app's own cache, nothing was asked of the parcel map). The list leads with the lawn (size from laser scans and satellite imagery, the outline, near-house lawn, lot size, watering days); fire is kept to the Fire check tool. On phones the three long parts close to their titles.</p>
+<div class="row"><figure><img src="before-trades-yards-desktop.png" alt="Trades page, Lawn, before"><figcaption>Before</figcaption></figure><figure><img src="before-trades-yards-phone.png" alt="Trades page, Lawn, phone, before"><figcaption>Before, phone</figcaption></figure></div>
+<div class="row"><figure><img src="after-trades-yards-desktop.png" alt="Trades page, Lawn, after"><figcaption>After</figcaption></figure><figure><img src="after-trades-yards-phone.png" alt="Trades page, Lawn, phone, after"><figcaption>After, phone (closed)</figcaption></figure></div>
+<div class="row"><div></div><figure><img src="after-trades-yards-phone-open.png" alt="Trades page, Lawn, phone, opened"><figcaption>After, phone, everything opened</figcaption></figure></div>
+<div class="row two"><figure><img src="app-lawn-lot-phone.png" alt="The lot photo with the lawn outline in the app"><figcaption>The app picture as shot (phone).</figcaption></figure></div>
+
+<h2>13. The other trades</h2>
+<p>Each list checked against what the app does now: plans and customer emails, Stats and the end-of-day email, Facebook leads, CRM sync, live weather map and alerts, new movers, house and lot facts, the solar estimate, permits and roof age, hail history. Every trade mentions satellite imagery. No provider is named; JobNimbus is out.</p>
+<div class="row"><figure><img src="before-trades-roofing-desktop.png" alt="Roofing, before"><figcaption>Roofing, before</figcaption></figure><figure><img src="after-trades-roofing-phone.png" alt="Roofing, phone, after"><figcaption>Roofing, phone, after</figcaption></figure></div>
+<div class="row"><figure><img src="after-trades-roofing-desktop.png" alt="Roofing, after"><figcaption>Roofing, after</figcaption></figure><div></div></div>
+<div class="row"><figure><img src="before-trades-solar-desktop.png" alt="Solar, before"><figcaption>Solar, before</figcaption></figure><figure><img src="after-trades-solar-phone.png" alt="Solar, phone, after"><figcaption>Solar, phone, after</figcaption></figure></div>
+<div class="row"><figure><img src="after-trades-solar-desktop.png" alt="Solar, after"><figcaption>Solar, after</figcaption></figure><div></div></div>
+<div class="row"><figure><img src="before-trades-pest-desktop.png" alt="Pest, before"><figcaption>Pest, before</figcaption></figure><figure><img src="after-trades-pest-phone.png" alt="Pest, phone, after"><figcaption>Pest, phone, after</figcaption></figure></div>
+<div class="row"><figure><img src="after-trades-pest-desktop.png" alt="Pest, after"><figcaption>Pest, after</figcaption></figure><div></div></div>
+<div class="row"><figure><img src="before-trades-security-desktop.png" alt="Security, before"><figcaption>Security, before</figcaption></figure><figure><img src="after-trades-security-phone.png" alt="Security, phone, after"><figcaption>Security, phone, after</figcaption></figure></div>
+<div class="row"><figure><img src="after-trades-security-desktop.png" alt="Security, after"><figcaption>Security, after</figcaption></figure><div></div></div>
+</main>
+</body>
+</html>
