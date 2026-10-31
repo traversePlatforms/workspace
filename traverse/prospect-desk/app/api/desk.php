@@ -490,7 +490,7 @@ switch ($action) {
         $tr = (string) ($body['trade'] ?? ''); if (!isset(TRADES[$tr], $S['templates'][$tr])) fail('Pick the trade whose message you want to see.');
         if (trim((string) $S['settings']['address']) === '') fail('Add your postal address in Settings first.');
         $n = 0; foreach (logRows() as $r) if (($r['t'] ?? '') === 'test' && (int) $r['at'] > time() - 86400) $n++;
-        if ($n >= 10) fail('That is 10 tests in a day already. Try again tomorrow.');
+        if ($n >= 20) fail('That is 20 tests in a day already. Try again tomorrow.');   /* 20 (was 10) while designs are being tried (2026-10-30, Matthew) */
         $style = (string) ($body['style'] ?? 'map'); if (!isset(STYLES[$style])) fail('Pick Plain or With map.');
         $city = clean($body['city'] ?? '', 60) ?: 'Denver';   /* the sample company's city (2026-10-30: the map is the city's) */
         $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => $city, 'trade' => $tr, 'person' => '', 'email' => $to];
