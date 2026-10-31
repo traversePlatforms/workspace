@@ -1974,7 +1974,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hailmap .radarkey[hidden]{display:none}
   .crimecities button{margin-right:12px;font-weight:700}.crimecities button.on{text-decoration:underline}
   .hailc .hmax.big{color:var(--later)}
-  .hailc .lnk{margin-right:16px}.hailsl{margin-left:16px}   /* two link-buttons in a row ran together: "Show on the mapShow the neighborhoods hit" (2026-10-30 audit) */
+  .hailc .lnk,.hailrl{margin-right:16px}   /* two link-buttons in a row ran together: "Show on the mapShow the neighborhoods hit" (2026-10-30 audit) */
   .hailc .calist .lq{font-weight:700;font-size:13px;margin-top:4px}
   .hailx{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13.5px}
   .hailx .ic{width:18px;height:18px;flex:none;color:var(--accent);margin-top:2px}
@@ -4187,11 +4187,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       box.appendChild(row);
     });
     box.appendChild(q('div', null, 'Nobody on a ladder or a roof until it has passed. Afterwards, the streets it crossed are where to knock; the Hail screen shows the radar path once the hail files are updated.'));
-    var lr = q('button', 'back', 'Live radar map'); lr.type = 'button';
+    var lr = q('button', 'back hailrl', 'Live radar map'); lr.type = 'button';
     lr.addEventListener('click', function () { hailMapView(null); });
     box.appendChild(lr);
     if (S.role === 'admin') {
-      var cl = q('button', 'back hailsl', 'Storm call list: customers and quotes in these towns'); cl.type = 'button';
+      var cl = q('button', 'back', 'Storm call list: customers and quotes in these towns'); cl.type = 'button';
       cl.addEventListener('click', function () { callListView('storm'); });
       box.appendChild(cl);
     }
@@ -20214,7 +20214,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       if (!j.ok) { holder.appendChild(q('div', 'msg bad', j.error || 'Could not load the storms.')); return; }
       var st = q('button', 'back', 'Prices and damage thresholds'); st.type = 'button'; st.addEventListener('click', roofSettingsView); holder.appendChild(st);
-      var lr = q('button', 'back', 'Live radar map'); lr.type = 'button'; lr.addEventListener('click', function () { hailMapView(null); }); holder.appendChild(lr);
+      var lr = q('button', 'back hailrl', 'Live radar map'); lr.type = 'button'; lr.addEventListener('click', function () { hailMapView(null); }); holder.appendChild(lr);
       holder.appendChild(q('div', 'sub2', 'Pick a storm day. Hail is the radar estimate at each house; wind is the strongest report within 10 miles. Hail through ' + (j.hailThrough ? hailDay(j.hailThrough) : '?') + ', wind through ' + (j.windThrough ? hailDay(j.windThrough) : '?') + '.'));
       var big = S.stormBig !== false;
       var seg = q('div', 'seg');
@@ -20389,10 +20389,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       seg.appendChild(b);
     });
     holder.appendChild(seg);
-    var lr = q('button', 'back', 'Live radar map'); lr.type = 'button';
+    var lr = q('button', 'back hailrl', 'Live radar map'); lr.type = 'button';
     lr.addEventListener('click', function () { hailMapView(null); });
     holder.appendChild(lr);
-    var scl = q('button', 'back hailsl', 'Storm call list: customers and quotes after a warning'); scl.type = 'button';
+    var scl = q('button', 'back', 'Storm call list: customers and quotes after a warning'); scl.type = 'button';
     scl.addEventListener('click', function () { callListView('storm'); });
     holder.appendChild(scl);
     var list = (H.storms || []).filter(function (s) { return big ? s.n1 > 0 : s.n34 > 0; });
