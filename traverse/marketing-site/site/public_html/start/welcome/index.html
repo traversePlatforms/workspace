@@ -180,8 +180,11 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
     ['area2', 'area3'].forEach(function (id) { var p = $(id); p.className = 'pill' + (x[1] ? ' ok' : ''); p.innerHTML = a && a.status === 'linking' ? '<span class="spin"></span><span></span>' : '<span></span>'; p.lastChild.textContent = x[0]; });
     $('phomes').textContent = a && a.status === 'ready' ? Number(a.doors).toLocaleString('en-US') : a && a.status === 'linking' ? 'loading…' : '—';
     clearTimeout(pollT);
-    if (a && a.status === 'linking') pollT = setTimeout(function () { call('areastatus').then(function (j) { if (j.ok) drawArea(j.area); }).catch(function () { drawArea(a); }); }, 3000);
+    /* every 3 s for the first minute, then every 10 s (the server allows 240 looks an hour; a wide radius can take a while), and a refused
+       look (429) is tried again later rather than leaving the spinner for good (review 2026-10-31) */
+    if (a && a.status === 'linking') { pollN++; pollT = setTimeout(function () { call('areastatus').then(function (j) { drawArea(j.ok ? j.area : a); }).catch(function () { drawArea(a); }); }, pollN < 20 ? 3000 : 10000); }
   }
+  var pollN = 0;
   function ready(r) {
     $('flow').hidden = true; $('msg').hidden = true; $('ready').hidden = false;
     $('rlead').textContent = r.name + (W ? ' · ' + tradeOf(W) : '') + '.';
