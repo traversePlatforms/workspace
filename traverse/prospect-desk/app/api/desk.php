@@ -30,7 +30,7 @@ function logRows(): array { $out = []; $fh = @fopen(DATA_DIR . '/events.log', 'r
 function clean($v, int $max): string { $t = trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string) $v) ?? ''); return mb_substr($t, 0, $max); }
 function cleanText($v, int $max): string { $t = str_replace(["\r\n", "\r"], "\n", (string) $v); $t = preg_replace('/[\x00-\x09\x0B-\x1F\x7F]+/u', ' ', $t) ?? ''; return mb_substr(trim($t), 0, $max); }   /* keeps line breaks */
 function codeHash(string $c): string { return hash('sha256', 'prospectdesk|' . $c); }
-const STATUSES = ['new' => 'Not contacted', 'emailed' => 'Emailed', 'called' => 'Called / left voicemail', 'talking' => 'Talking', 'demo' => 'Demo booked', 'pilot' => 'Pilot', 'customer' => 'Customer', 'notnow' => 'Not now', 'no' => 'No'];
+const STATUSES = ['new' => 'Not contacted', 'emailed' => 'Emailed', 'called' => 'Called / left voicemail', 'nextdoor' => 'Messaged on Nextdoor', 'talking' => 'Talking', 'demo' => 'Demo booked', 'pilot' => 'Pilot', 'customer' => 'Customer', 'notnow' => 'Not now', 'no' => 'No'];   /* nextdoor (31 Oct, Matthew): messaged by hand on Nextdoor; the desk never messages there */
 const OFF = ['notnow', 'no'];   /* knocked off the list: hidden unless asked for */
 const TRADES = ['roofing' => 'Roofing', 'roofing solar' => 'Roofing and solar', 'solar' => 'Solar', 'pest' => 'Pest control', 'security' => 'Security', 'yards' => 'Lawn and yards'];
 const CAP_MAX = 240;   /* 10 an hour around the clock (Matthew 31 Oct: "10 emails an hour", no daily stop); the hourly 10 is the pace */
