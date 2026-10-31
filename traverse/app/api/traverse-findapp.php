@@ -28,7 +28,8 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex, nofollow');
 
-const FA_SAID = "If that email has a Traverse account, we've sent the link to it.";
+/* the one answer (2026-10-30, Matthew): it must not read as confirmation that the address is in our system, and it tells a misspelling what to do */
+const FA_SAID = "If that address is on an app, the link is on its way. Nothing arrived? Check the spelling, or ask your admin.";
 const FA_MIN_MS = 1500;                 /* a person takes longer than this to type an address */
 const FA_EMAIL_HOUR = 3, FA_EMAIL_DAY = 6;
 
@@ -36,7 +37,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') { header('Allow: POST'); f
 rate_limit(10, 'findapp');
 $body = (array) (json_decode((string) file_get_contents('php://input'), true) ?: []);
 $em = strtolower(trim((string) ($body['email'] ?? '')));
-if ($em === '' || strlen($em) > 160 || !filter_var($em, FILTER_VALIDATE_EMAIL)) fail('That email address does not look right.');
+/* the shape only (nothing about any account): a real address has one @, a domain with a dot and a 2+ letter ending, no doubled dots */
+if ($em === '' || strlen($em) > 160 || !filter_var($em, FILTER_VALIDATE_EMAIL) || !preg_match('/^[^@\s]+@[^@\s.][^@\s]*\.[a-z]{2,}$/', $em) || str_contains($em, '..'))
+    fail(!str_contains($em, '@') ? 'An email address needs an @ sign, like name@company.com.' : 'That email address does not look right. Check the part after the @, like company.com.');
 $hash = substr(hash('sha256', $em), 0, 16);
 $why = '';
 if (trim((string) ($body['hp'] ?? '')) !== '') $why = 'honeypot';
