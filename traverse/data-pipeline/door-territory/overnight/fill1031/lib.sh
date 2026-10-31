@@ -8,7 +8,9 @@ mkdir -p "$B"
 st() { echo "$(date -u +%FT%TZ) fill1031: $*" | tee "$HOME/run-status.txt"; }
 room() { [ "$(df -k --output=avail / | tail -1)" -ge 5242880 ] || { st "STOPPED, under 5 GB free"; exit 1; }; }
 prune() { while [ "$(du -sk "$LIDAR" | cut -f1)" -gt 26214400 ]; do old=$(find "$LIDAR" -name '*.bin' -printf '%A@ %p\n' | sort -n | head -n 3000 | cut -d' ' -f2-); [ -z "$old" ] && break; printf '%s\n' "$old" | xargs -r rm -f; done; }
-tries() { local name=$1; shift; for t in 1 2 3 4 5; do prune; room; "$@" && return 0; echo "$(date -u +%T) $name failed (try $t)"; sleep 60; done; return 1; }
+# the counter is local and not named t: the stages loop over towns in $t, and a global t here turned every town after a tries call into "1"
+# (31 Oct: roofsolar's done markers went to town "1"; dougmat fetched crops for a town called "1")
+tries() { local name=$1 try; shift; for try in 1 2 3 4 5; do prune; room; "$@" && return 0; echo "$(date -u +%T) $name failed (try $try)"; sleep 60; done; return 1; }
 # put_cache <name in in/> <live path>: the laptop's merged cache replaces this machine's copy once (this machine's kept in vm-backup)
 put_cache() {
   local n=$1 dst=$2
