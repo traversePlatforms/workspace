@@ -49,7 +49,7 @@ h1 { position: absolute; left: 76px; right: 76px; top: 372px; font: 800 80px/1.0
 <h1>Your yard, cleaned up and hauled away.</h1>
 <div class="tiers">${TIERS.map(([k, d, p]) => `<div class="tier"><div><div class="k">${k}</div><div class="d">${d}</div></div><div class="p">${p}</div></div>`).join('')}</div>
 <div class="haul"><div class="k">Haul-away and disposal</div><div class="p">$40\u2013$80 a load</div></div>
-<div class="foot"><div class="q">Every yard is different. Call or text for a free quote and we\u2019ll confirm your price.</div><div class="c"><b>${PHONE}</b><span>${SITE}</span></div></div>
+<div class="foot"><div class="q">Every lawn is different. Send us a picture of your lawn for a free quote.</div><div class="c"><b>${PHONE}</b><span>${SITE}</span></div></div>
 </body></html>`;
 const f = join(TMP, 'cleanup.html'); writeFileSync(f, html);
 const out = join(HERE, '365-yard-cleanup-prices.png');

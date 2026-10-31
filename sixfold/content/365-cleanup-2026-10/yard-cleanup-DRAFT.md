@@ -11,7 +11,7 @@ Picture: `365-yard-cleanup-prices.png` (1080 x 1350, Facebook/Instagram feed). R
 - 1/4 to 1/2 acre (about 10,900 to 21,800 sq ft): $250–$600
 - 1/2 acre and up (over about 21,800 sq ft): $600–$1,000
 - Haul-away and disposal: $40–$80 a load
-- Every yard is different. Call or text for a free quote and we'll confirm your price.
+- Every lawn is different. Send us a picture of your lawn for a free quote. (Matthew 31 Oct)
 - (720) 830-4553 · 365aeration.com · 365 badge
 
 ## Caption (season goes here)
@@ -22,7 +22,7 @@ Picture: `365-yard-cleanup-prices.png` (1080 x 1350, Facebook/Instagram feed). R
 > 1/2 acre and up: $600–$1,000
 > Haul-away: $40–$80 a load
 >
-> Call or text (720) 830-4553 for a free quote, or reply here. [WHAT'S INCLUDED: confirm with Brad (leaves, bed clean-out, branch pick-up, trimming?) before this goes out]
+> Text a picture of your lawn to (720) 830-4553 for a free quote, or send it here. [WHAT'S INCLUDED: confirm with Brad (leaves, bed clean-out, branch pick-up, trimming?) before this goes out]
 >
 > #DenverLawnCare #YardCleanup #FallCleanup #ColoradoLawns
 
