@@ -12200,7 +12200,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var rec = [];
       pl.forEach(function (p) {
         var r = byKey[p.r], a = r && r.areas.filter(function (y) { return y.name === p.a; })[0], k = p.r + '|' + p.a;
-        if (a && !seen[k] && rec.length < 4) { seen[k] = 1; rec.push([r, a, p]); }
+        if (a && !seen[k] && rec.length < (desk ? 2 : 4)) { seen[k] = 1; rec.push([r, a, p]); }   /* the computer's column keeps room for the regions */
       });
       if (!mine.length && !rec.length) { wrap.hidden = true; return; }
       wrap.hidden = false;

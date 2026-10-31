@@ -1,0 +1,59 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TR-47 town list (31 Oct 2026)</title>
+<style>:root{--bg:#fff;--ink:#111;--soft:#555;--line:#ccc;--th:#f3f3f3;--code:#f3f3f3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15151a;--ink:#eee;--soft:#aaa;--line:#444;--th:#23232b;--code:#23232b}}
+:root[data-theme="dark"]{--bg:#15151a;--ink:#eee;--soft:#aaa;--line:#444;--th:#23232b;--code:#23232b}
+body{font:15px/1.45 system-ui,Segoe UI,Arial;margin:20px 16px;color:var(--ink);background:var(--bg);max-width:1300px}h1{font-size:22px}h2{font-size:17px;margin:28px 0 8px}
+table{border-collapse:collapse;margin:8px 0;font-size:14px}td,th{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}th{background:var(--th)}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}figure{margin:0}img{width:100%;border:1px solid var(--line);display:block}figcaption{font-size:13px;color:var(--soft);margin-top:4px}
+code{background:var(--code);padding:1px 4px}p.n{color:var(--soft)}</style>
+<h1>TR-47: the long town list (built 31 Oct 2026, not deployed)</h1>
+<p class="n">Matthew's tablet test, 30 Oct: the editions hold 407 towns and 1.24 million homes, and the County &gt; town &gt; neighbourhood list was far too long. All four offered parts are built for the five editions and client installs. Sixfold keeps its county list (checked in the test). The harness has 99 towns, so three small made-up towns (Fruita, Sterling, Salida, marked "(test)") stand in for the Western Slope, the Eastern Plains and the mountains. They are fixture data in the harness only.</p>
+
+<h2>Before and after: the rep's town list</h2>
+<div class="g4">
+<figure><img src="before-phone.png" alt=""><figcaption>Before, phone 390x844: one card per county, 17 here (live: about 60)</figcaption></figure>
+<figure><img src="after-phone.png" alt=""><figcaption>After, phone: Yours (given to the rep, then where they knocked lately), the search, six regions, all closed</figcaption></figure>
+<figure><img src="before-tablet.png" alt=""><figcaption>Before, upright tablet 820x1180</figcaption></figure>
+<figure><img src="after-tablet.png" alt=""><figcaption>After, upright tablet</figcaption></figure>
+<figure><img src="before-tablet-wide.png" alt=""><figcaption>Before, sideways tablet 1180x820 (the computer layout): counties in the town column</figcaption></figure>
+<figure><img src="after-tablet-wide.png" alt=""><figcaption>After, sideways tablet: the search box, Yours, then regions &gt; counties &gt; towns; the town on screen keeps its region and county open</figcaption></figure>
+<figure><img src="before-desktop.png" alt=""><figcaption>Before, desktop 1440x900</figcaption></figure>
+<figure><img src="after-desktop.png" alt=""><figcaption>After, desktop</figcaption></figure>
+</div>
+
+<h2>The parts at work</h2>
+<div class="g4">
+<figure><img src="after-phone-regions.png" alt=""><figcaption>Part 3: Colorado Springs and south opened, El Paso County opened. Western Slope (one county) opens straight to Mesa County.</figcaption></figure>
+<figure><img src="after-phone-search-town.png" alt=""><figcaption>Part 2: "castle" typed. Results take the place of Yours and the regions.</figcaption></figure>
+<figure><img src="after-phone-search-zip.png" alt=""><figcaption>Part 2: ZIP 80132. The towns and neighbourhoods nearest the ZIP's middle (Census ZIP areas), closest first.</figcaption></figure>
+<figure><img src="after-desktop-search.png" alt=""><figcaption>Part 2 on a computer: "fru" in the town column</figcaption></figure>
+<figure><img src="after-phone-hide-screen.png" alt=""><figcaption>Part 4: Setup &gt; Counties in the town list (also linked at the foot of the admin's town list)</figcaption></figure>
+<figure><img src="after-phone-super-hidden.png" alt=""><figcaption>Part 4: Logan County hidden. The team's list drops it; Traverse's super admin still sees it, marked.</figcaption></figure>
+<figure><img src="after-407-tablet.png" alt=""><figcaption>407 towns (made-up copies over all 64 counties): searching "testtown 3"</figcaption></figure>
+<figure><img src="after-sixfold-unchanged.png" alt=""><figcaption>Sixfold: the county list as before</figcaption></figure>
+</div>
+
+<h2>Speed with 407 towns (harness, headless Chrome)</h2>
+<table><tr><th>What</th><th>Result</th></tr>
+<tr><td>Town cards drawn when the list opens (regions closed)</td><td>0 (cards are drawn when a county opens)</td></tr>
+<tr><td>Back from a town to the 407-town list</td><td>30-45 ms (three runs)</td></tr>
+<tr><td>Ten keys typed fast</td><td>results redrawn once (180 ms pause after the last key)</td></tr>
+<tr><td>One search ("ra") over every town and neighbourhood</td><td>5 ms, 31 rows</td></tr></table>
+
+<h2>Tests</h2>
+<p class="n"><b>tr47-test.mjs: 78 passed, 0 failed</b> after merging main. It covers the edition with the fixture, the 407-town check and Sixfold.</p>
+<table><tr><th>Regression suite</th><th>Before (code at 036b5219)</th><th>After (TR-47)</th></tr>
+<tr><td>t1030 (edition), alone</td><td>63 passed, 1 failed</td><td>64 passed, 1 failed (the same plan-picker line; one more pass comes from the new Setup row)</td></tr>
+<tr><td>reps (edition / Sixfold)</td><td>37/0, 37/0</td><td>37/0, 37/0</td></tr>
+<tr><td>batch1029-ui (edition / Sixfold), alone</td><td>3/1, 3/1 (timeout: email quick way)</td><td>3/1, 3/1 (the same)</td></tr>
+<tr><td>accounts (edition / Sixfold)</td><td>29/1, 26/1 (timeouts: code card, tools)</td><td>29/1, 26/1 (the same)</td></tr>
+<tr><td>card-test</td><td>15 passed, 3 failed</td><td>15 passed, 3 failed (the same three). The test loads the main tree's company.json, which has no a365, so the page treats it as an edition. Its town click now opens the region and county first.</td></tr>
+<tr><td>roles (edition / Sixfold)</td><td>75/0, 75/0</td><td>75/0, 75/0</td></tr>
+<tr><td>perms (matrix)</td><td>119 passed, 5 failed</td><td>119 passed, 5 failed (the same five)</td></tr></table>
+<div class="g4">
+<figure><img src="after-phone-list.png" alt=""><figcaption>Phone: the whole list (rep)</figcaption></figure>
+<figure><img src="after-tablet-list.png" alt=""><figcaption>Upright tablet: the whole list</figcaption></figure>
+<figure><img src="after-tablet-wide-search.png" alt=""><figcaption>Sideways tablet: "fru" in the town column</figcaption></figure>
+<figure><img src="after-tablet-wide-fruita.png" alt=""><figcaption>Sideways tablet: Fruita picked from the search</figcaption></figure>
+<figure><img src="after-desktop-fruita.png" alt=""><figcaption>Desktop: Fruita picked from the search</figcaption></figure>
+</div>
