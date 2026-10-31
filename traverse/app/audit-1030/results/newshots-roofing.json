@@ -1,0 +1,725 @@
+[
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "plans",
+  "reached": true,
+  "title": "Plans What you sell on a schedule",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 557,
+  "shot": "phone-light-plans.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "customer-emails",
+  "reached": true,
+  "title": "Customer emails Follow-ups, aftercare and the newsletter",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2198,
+  "shot": "phone-light-customer-emails.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "facebook-leads",
+  "reached": true,
+  "title": "Facebook leads Your lead ads, straight into the Pipeline",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 368,
+  "shot": "phone-light-facebook-leads.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "sync",
+  "reached": true,
+  "title": "Sync from another system Leads, customers and jobs from what you use now",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "clickup": 1
+  },
+  "textLen": 563,
+  "shot": "phone-light-sync.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "stats",
+  "reached": true,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 2846,
+  "shot": "phone-light-stats.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": false,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 2846,
+  "shot": "phone-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "light",
+  "screen": "setup-checklist",
+  "reached": true,
+  "title": "Setup Get ready for your first quote",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "traverse": 1,
+   "door": 2
+  },
+  "textLen": 1599,
+  "shot": "phone-light-setup-checklist.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "plans",
+  "reached": true,
+  "title": "Plans What you sell on a schedule",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 557,
+  "shot": "phone-dark-plans.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "customer-emails",
+  "reached": true,
+  "title": "Customer emails Follow-ups, aftercare and the newsletter",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2198,
+  "shot": "phone-dark-customer-emails.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "facebook-leads",
+  "reached": true,
+  "title": "Facebook leads Your lead ads, straight into the Pipeline",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 368,
+  "shot": "phone-dark-facebook-leads.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "sync",
+  "reached": true,
+  "title": "Sync from another system Leads, customers and jobs from what you use now",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "clickup": 1
+  },
+  "textLen": 563,
+  "shot": "phone-dark-sync.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "stats",
+  "reached": true,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 2846,
+  "shot": "phone-dark-stats.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "end-of-day",
+  "reached": false,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 2846,
+  "shot": "phone-dark-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "phone",
+  "theme": "dark",
+  "screen": "setup-checklist",
+  "reached": true,
+  "title": "Setup Get ready for your first quote",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "traverse": 1,
+   "door": 2
+  },
+  "textLen": 1599,
+  "shot": "phone-dark-setup-checklist.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "plans",
+  "reached": true,
+  "title": "Plans What you sell on a schedule",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 557,
+  "shot": "tabP-light-plans.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "customer-emails",
+  "reached": true,
+  "title": "Customer emails Follow-ups, aftercare and the newsletter",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2198,
+  "shot": "tabP-light-customer-emails.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "facebook-leads",
+  "reached": true,
+  "title": "Facebook leads Your lead ads, straight into the Pipeline",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 368,
+  "shot": "tabP-light-facebook-leads.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "sync",
+  "reached": true,
+  "title": "Sync from another system Leads, customers and jobs from what you use now",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "clickup": 1
+  },
+  "textLen": 563,
+  "shot": "tabP-light-sync.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "stats",
+  "reached": true,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "tabP-light-stats.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": false,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "tabP-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "light",
+  "screen": "setup-checklist",
+  "reached": true,
+  "title": "Setup Get ready for your first quote",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "traverse": 1,
+   "door": 2
+  },
+  "textLen": 1599,
+  "shot": "tabP-light-setup-checklist.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "plans",
+  "reached": true,
+  "title": "Plans What you sell on a schedule",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 557,
+  "shot": "tabP-dark-plans.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "customer-emails",
+  "reached": true,
+  "title": "Customer emails Follow-ups, aftercare and the newsletter",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 2198,
+  "shot": "tabP-dark-customer-emails.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "facebook-leads",
+  "reached": true,
+  "title": "Facebook leads Your lead ads, straight into the Pipeline",
+  "scrollY": 0,
+  "errors": [],
+  "words": {},
+  "textLen": 368,
+  "shot": "tabP-dark-facebook-leads.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "sync",
+  "reached": true,
+  "title": "Sync from another system Leads, customers and jobs from what you use now",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "clickup": 1
+  },
+  "textLen": 563,
+  "shot": "tabP-dark-sync.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "stats",
+  "reached": true,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "tabP-dark-stats.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "end-of-day",
+  "reached": false,
+  "title": "Stats Leads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "tabP-dark-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "theme": "dark",
+  "screen": "setup-checklist",
+  "reached": true,
+  "title": "Setup Get ready for your first quote",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "traverse": 1,
+   "door": 2
+  },
+  "textLen": 1599,
+  "shot": "tabP-dark-setup-checklist.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "plans",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1
+  },
+  "textLen": 1054,
+  "shot": "tabL-light-plans.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "customer-emails",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1
+  },
+  "textLen": 1083,
+  "shot": "tabL-light-customer-emails.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "facebook-leads",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1053,
+  "shot": "tabL-light-facebook-leads.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "sync",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1
+  },
+  "textLen": 1057,
+  "shot": "tabL-light-sync.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "stats",
+  "reached": true,
+  "title": "StatsLeads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "tabL-light-stats.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": false,
+  "title": "StatsLeads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "tabL-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "theme": "light",
+  "screen": "setup-checklist",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1043,
+  "shot": "tabL-light-setup-checklist.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "plans",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1044,
+  "shot": "desk-light-plans.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "customer-emails",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1053,
+  "shot": "desk-light-customer-emails.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "facebook-leads",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1
+  },
+  "textLen": 1042,
+  "shot": "desk-light-facebook-leads.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "sync",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1
+  },
+  "textLen": 1052,
+  "shot": "desk-light-sync.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "stats",
+  "reached": true,
+  "title": "StatsLeads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "desk-light-stats.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "end-of-day",
+  "reached": false,
+  "title": "StatsLeads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "desk-light-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "light",
+  "screen": "setup-checklist",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1
+  },
+  "textLen": 1075,
+  "shot": "desk-light-setup-checklist.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "plans",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1053,
+  "shot": "desk-dark-plans.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "customer-emails",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1
+  },
+  "textLen": 1051,
+  "shot": "desk-dark-customer-emails.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "facebook-leads",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1053,
+  "shot": "desk-dark-facebook-leads.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "sync",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1020,
+  "shot": "desk-dark-sync.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "stats",
+  "reached": true,
+  "title": "StatsLeads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "desk-dark-stats.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "end-of-day",
+  "reached": false,
+  "title": "StatsLeads, quotes, jobs, ads and the team",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "door": 1
+  },
+  "textLen": 3080,
+  "shot": "desk-dark-end-of-day.jpg"
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "theme": "dark",
+  "screen": "setup-checklist",
+  "reached": false,
+  "title": "Example RoofingField tools",
+  "scrollY": 0,
+  "errors": [],
+  "words": {
+   "doors": 1,
+   "door": 1
+  },
+  "textLen": 1053,
+  "shot": "desk-dark-setup-checklist.jpg"
+ }
+]

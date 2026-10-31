@@ -29,7 +29,7 @@ const home = async () => { await send('Page.navigate', { url: ORIGIN + '/summit-
 /* [name, steps from Home] */
 const SCREENS = [
   ['plans', ['Plans']], ['customer-emails', ['Customer emails']], ['facebook-leads', ['Facebook leads']],
-  ['sync', ['Setup checklist', 'Sync from another system']], ['stats', ['Stats']], ['end-of-day', ['Stats', 'End-of-day email']],
+  ['sync', ['Setup checklist', 'Sync from another system']], ['stats', ['Stats']], ['end-of-day', ['Stats', 'Set up the end-of-day']],
   ['setup-checklist', ['Setup checklist']]
 ];
 const out = [];
@@ -44,7 +44,8 @@ for (const [vk, v] of Object.entries(VPS)) for (const theme of ['light', 'dark']
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: theme }, { name: 'pointer', value: v.touch ? 'coarse' : 'fine' }] });
   for (const [name, steps] of SCREENS) {
     await home(); errs.length = 0; let ok = true;
-    for (const s of steps) { const c = await click(s); if (!c) { ok = false; break; } await sleep(2200); }
+    if (process.env.ONLYS && !new RegExp(process.env.ONLYS).test(name)) continue;
+    for (const s of steps) { const c = await click(s); if (!c) { ok = false; break; } await sleep(1500); for (let k = 0; k < 60; k++) { const busy = await js(`/Loading…|Loading\\.\\.\\./.test((document.querySelector('#view')||{}).innerText||'')||!!document.querySelector('#view .skel')`); if (!busy) break; await sleep(250); } await sleep(700); }
     const t = await title(); const scrollY = await js('Math.round(scrollY)');
     const txt = await js(`(document.querySelector('#view')||{}).innerText||''`);
     const words = (txt.match(/\b(doors?|Sixfold|365|Jen|ClickUp|Messenger|Traverse|lawn|aeration)\b/gi) || []).reduce((a, w) => { a[w.toLowerCase()] = (a[w.toLowerCase()] || 0) + 1; return a; }, {});
@@ -53,5 +54,5 @@ for (const [vk, v] of Object.entries(VPS)) for (const theme of ['light', 'dark']
     out.push(rec); console.log(JSON.stringify(rec));
   }
 }
-writeFileSync(`${DIR}/results/newshots-${inst}.json`, JSON.stringify(out, null, 1));
+writeFileSync(`${DIR}/results/newshots-${inst}${process.env.ONLYS ? '-2' : ''}.json`, JSON.stringify(out, null, 1));
 ws.close(); ch.kill(); process.exit(0);
