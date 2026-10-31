@@ -185,8 +185,8 @@ function careEmailOf(array $x): string { $e = strtolower(trim((string) ($x['emai
 function careUnsub(string $e): ?array { $u = nlUnsubs(); return $e !== '' && isset($u[$e]) ? (array) $u[$e] : null; }
 
 /* ---- the emails ---- */
-function careCfg(): array {
-    $j = careJson('cfg'); $d = careCfgDefaults();
+function careCfg(?array $j = null): array {   /* $j: the file's contents already read (carecfgset edits under the lock, 2026-10-31) */
+    $j = $j ?? careJson('cfg'); $d = careCfgDefaults();
     $fu = array_merge($d['fu'], array_intersect_key((array) ($j['fu'] ?? []), $d['fu'])); $ac = array_merge($d['ac'], array_intersect_key((array) ($j['ac'] ?? []), $d['ac']));
     $ac['review'] = array_merge($d['ac']['review'], array_intersect_key((array) ($ac['review'] ?? []), $d['ac']['review']));
     $nl = array_merge($d['nl'], array_intersect_key((array) ($j['nl'] ?? []), $d['nl']));
@@ -342,7 +342,15 @@ function careSweep(?int $now = null): array {
     if ($mailOk && $day && !empty($cfg['fu']['on'])) {
         $days = max(1, (int) $cfg['fu']['days']); $gap = max(1, (int) $cfg['fu']['gap']); $max = max(1, min(5, (int) $cfg['fu']['max'])); $tpls = array_values((array) $cfg['fu']['tpls']);
         $qp = careJson('qplans'); $sent = [];
-        foreach ($log as $r) if (($r['kind'] ?? '') === 'fu' && empty($r['test']) && (!empty($r['ok']) || ($r['stage'] ?? '') !== 'config')) $sent[(string) ($r['lead'] ?? '')][] = $r;
+        /* what counts as sent: a row that went, or the third failed try for that quote (review 2026-10-31: one mail-server hiccup used to spend the
+           follow-up for good; a mailbox that is not connected, stage config, never counts, so it goes when the mailbox is back) */
+        $fails = [];
+        foreach ($log as $r) if (($r['kind'] ?? '') === 'fu' && empty($r['test'])) {
+            if (!empty($r['ok'])) { $sent[(string) ($r['lead'] ?? '')][] = $r; continue; }
+            if (($r['stage'] ?? '') === 'config') continue;
+            $k = (string) ($r['lead'] ?? '') . '|' . (int) ($r['qat'] ?? 0) . '|' . (int) ($r['n'] ?? 0);
+            if (++$fails[$k] >= 3) $sent[(string) ($r['lead'] ?? '')][] = $r;
+        }
         foreach (leadsAll() as $l) {
             if ($left <= 0) break;
             $qat = (int) ($l['quote']['at'] ?? 0); if (!$qat || empty($l['quote']['price']) || $qat < (int) $cfg['fu']['onAt'] - $days * 86400 || $qat < $now - 60 * 86400) continue;
@@ -360,7 +368,11 @@ function careSweep(?int $now = null): array {
     }
     /* aftercare after a job is marked done */
     if ($mailOk && $day && !empty($cfg['ac']['on']) && $left > 0) {
-        $done = []; foreach ($log as $r) if (($r['kind'] ?? '') === 'ac' && empty($r['test']) && (!empty($r['ok']) || ($r['stage'] ?? '') !== 'config')) $done[(string) ($r['job'] ?? '')] = true;
+        $done = []; $acFails = [];
+        foreach ($log as $r) if (($r['kind'] ?? '') === 'ac' && empty($r['test'])) {   /* sent, or failed three times (review 2026-10-31, as the follow-ups) */
+            if (!empty($r['ok'])) $done[(string) ($r['job'] ?? '')] = true;
+            elseif (($r['stage'] ?? '') !== 'config' && ++$acFails[(string) ($r['job'] ?? '')] >= 3) $done[(string) ($r['job'] ?? '')] = true;
+        }
         $leads = leadsAll(); $hours = max(0, min(72, (int) $cfg['ac']['hours'])); $review = careReviewLink($cfg);
         foreach (jobsAll() as $j) {
             if ($left <= 0) break;
@@ -577,8 +589,8 @@ function careAction(): void {
     if ($action === 'carecfgset') {
         $post(); $part = (string) ($body['part'] ?? '');
         if (!in_array($part, ['fu', 'ac', 'nl'], true)) fail('Which part?');
-        $new = careEdit('cfg', function ($d) use ($part, $body, $cfg, $me) {
-            $c = $cfg[$part];
+        $new = careEdit('cfg', function ($d) use ($part, $body, $me) {
+            $c = careCfg($d)[$part];   /* from the file as it is under the lock, not as it was read before it (review 2026-10-31: two admins saving different parts lost one) */
             if ($part === 'nl') { $a = careClean($body['address'] ?? '', 300); if ($a !== '' && mb_strlen($a) < 10) fail('Give the whole mailing address: street (or PO box), town, state and ZIP.'); $c['address'] = $a; }
             else {
                 if (array_key_exists('on', $body)) { $on = !empty($body['on']); if ($on && empty($c['on'])) $c['onAt'] = time(); $c['on'] = $on; }
