@@ -910,6 +910,9 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .matpick button[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
   .choose .ogrp{margin:8px 0 8px}
   .choose .ogbox{margin-bottom:6px}
+  .choose .ogwrap{margin:0 0 6px 6px;padding-left:10px;border-left:3px solid var(--line)}   /* Office's groups, inside the Office bar (2026-10-30) */
+  .choose .ogwrap > .tgrid{margin-top:8px}
+  .choose [data-fold][hidden]{display:none}
   .roofx > span > button.lnk{display:block;background:none;border:0;padding:5px 0 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;text-align:left}
   .teamsbox button.lnk,.goalbox button.lnk,.caldet button.lnk,.lesson ~ .aacts button.lnk{background:none;border:0;padding:4px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer}
   .teamsbox button.lnk.bad,.caldet button.lnk.bad,.lesson ~ .aacts button.lnk.bad{color:var(--fire-h)}
@@ -1389,6 +1392,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .dkc-lot:focus-visible{outline:3px solid #d6400c;outline-offset:2px}
   .dkc-lotmap{position:absolute;inset:0;background:#2b3326}
   .dkc-lotmap.leaflet-container{background:#2b3326;cursor:pointer}
+  .door .dkc-lot.edlot{height:clamp(170px,30vw,240px);margin:10px 0 6px}   /* the editions' phone and tablet card (2026-10-30) */
   .dkc-lotcap{position:absolute;left:8px;bottom:8px;z-index:500;padding:4px 9px;border-radius:9px;background:rgba(20,22,28,.78);color:#fff;font-size:12.5px;font-weight:700;pointer-events:none}
   .lotbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:10px 0 4px;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink) 6%,transparent);color:inherit;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
   .desk .dkc-tile{padding:9px 12px;border-radius:12px;border:1px solid var(--line)}
@@ -1687,7 +1691,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .office .omaph{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
   .office .omaph h3{margin:0}
   .office .omaph .back{margin:0}
-  .office .omapel{height:clamp(320px,58vh,640px);border-radius:12px;overflow:hidden}
+  .office .omapel{height:clamp(320px,58vh,640px);border-radius:12px;overflow:hidden;position:relative;isolation:isolate;z-index:0}   /* isolate (2026-10-30): the map's layers (z-index 400+) stay inside it and scroll under the top bar, as the lot preview's do */
+  .office .oplanc p{margin:0 0 12px;font-size:14px}   /* the editions' Plan card in the map's place (2026-10-30) */
   .office .radarkey{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:8px;font-size:12.5px;color:var(--soft)}
   .office .radarkey i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .office table{width:100%;border-collapse:collapse;font-size:14px}
@@ -1724,6 +1729,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .bestwhy{display:flex;gap:6px;align-items:flex-start;font-size:13px;font-weight:700;color:var(--ink);margin:4px 0 2px;line-height:1.35}
   .bestwhy .ic{flex:none;width:15px;height:15px;margin-top:1px;color:var(--soft)}
   .jnbox{margin:10px 0;padding:12px 14px;display:grid;gap:6px}
+  .iofold{margin:8px 0}.iofold .iobtn{display:inline-flex;align-items:center;gap:6px;margin:0;min-height:40px;padding:0 14px}.iofold .iobtn .ic{width:16px;height:16px}.iofold .iobody[hidden]{display:none}   /* 2026-10-30 */
   .jnbox .bad{color:var(--danger,#b42318)}
   .jnrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .jnform{display:grid;gap:8px}
@@ -2144,10 +2150,11 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .vappl button.cur{border-color:#1d6fe0;background:#eaf2fd}
   .vappl small{font-weight:600;color:#55635B;font-size:12px;text-align:right}
   /* a person's territories (2026-10-20) */
-  .pterr .ptrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(22,32,28,.1)}
-  .pterr .ptrow small{display:block;color:#55635B;font-size:12px}
+  .pterr .ptrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+  .pterr .ptrow small{display:block;color:var(--soft);font-size:12px}
   .pterr .ptform{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}
-  .pterr .ptform select{flex:1 1 160px;min-height:44px;border-radius:10px;border:1px solid rgba(22,32,28,.22);padding:0 10px;font:600 14px var(--sans);background:#fff}
+  .pterr .ptform select{flex:1 1 160px;min-height:44px;border-radius:10px;border:1px solid var(--line);padding:0 10px;font:600 14px var(--sans);background:var(--sunk);color:var(--ink)}   /* the theme's colours (2026-10-30, Matthew: the box and its list were all white; white on white in the dark theme) */
+  .pterr .ptform select option{background:var(--card);color:var(--ink)}
   .pterr .ptform .save{min-height:44px}
   /* Square payments to confirm, and the part payment row (2026-10-20) */
   .sqconf{background:#fff8e6;border:1px solid #e8c873;border-radius:16px;padding:14px 16px;margin:0 0 14px}
@@ -3064,8 +3071,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function permTiles(box) {
     var x = permExtras(); if (!x.length) return;
-    box.appendChild(q('h2', 'tgrp', 'Given to your role'));
-    var g = q('div', 'tgrid permx'); x.forEach(function (e) { g.appendChild(tile('button', e[0], e[1], e[2], 'Your admin turned this on', e[3])); }); box.appendChild(g);
+    homeFold(box, 'permx', 'Given to your role', x.map(function (e) { return tile('button', e[0], e[1], e[2], 'Your admin turned this on', e[3]); }), 'tgrid ogbox permx');   /* folds like the rest of the home (2026-10-30) */
   }
   /* the editor in Accounts: the admin opens a role and ticks what it can do; the admin role always has everything */
   function permLoad(cb) { api('perms').then(function (j) { if (j && j.ok) { S.permCat = j; if (cb) cb(); } }).catch(function () {}); }
@@ -3200,6 +3206,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function vw() { return VW().toLowerCase(); }
   function setCompany(c) {
     CO = Object.assign({}, CO_DEFAULT, c || {});
+    LEAD_SRC.door = pw('At the door', 'At the property'); if (typeof ST_SRC !== 'undefined') ST_SRC.door = LEAD_SRC.door;   /* the lead source's name in the editions (2026-10-30 audit) */
     if (CO.name && !CO.a365) { var hs = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (hs) hs.setAttribute('content', CO.short || CO.name); }   /* the company's own name on the home screen, never Traverse's (2026-10-30, Matthew: zero branding for clients) */
     if (typeof FILT !== 'undefined') FILT.forEach(function (x) { if (x[0] === 'lawn') x[2] = CO.a365 ? 'Lawn to aerate' : 'Has a lawn'; });   /* aeration is 365's word; the editions say what the filter does (2026-10-26) */
     if (!Array.isArray(CO.services) || !CO.services.length) CO.services = CO_DEFAULT.services;
@@ -3681,7 +3688,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     load();
   }
   function setBar(mode, o) {
-    o = setupBackFix(o || {});   /* Back to Setup from a screen Setup opened (2026-10-30) */
+    o = homeBackFix(setupBackFix(o || {}));   /* Back to Setup from a screen Setup opened; Back to Home, where you were, from one a home tile opened (2026-10-30) */
+    setupTop();   /* a setup screen opens at its top (2026-10-30) */
     if (S.screen !== S._foldScreen) { S._foldScreen = S.screen;   /* folds start closed on every screen (2026-10-17, Matthew: not remembered after a refresh, leaving or coming back) */
       ['foldOpen', 'custOpenG', 'custAllL', 'qqAllG', 'teamOpen', 'cuCheckOpen', 'qqOpenRow', 'wonPendOpen', 'treeOpen', 'hailOpen', 'commOpen', 'flOpen', 'exOpen', 'mdOpen', 'photoOpen', 'qqInboxOpen', 'qqCustOpen', 'jobsReadyOpen', 'trainOpen', 'wonPendNew'].forEach(function (k) { delete S[k]; }); }
     hdr.hidden = false; tabPaint();   /* the phone menu bar follows the screen (2026-10-21) */
@@ -3732,7 +3740,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function tabItems() {
     var home = ['home', 'home', 'Home', chooseView];
     if ((asOffice() || adminView()) && feat('walkdesk')) return [home, ['pipeline', 'clip', 'Pipeline', pipeOpen], ['jobs', 'cal', 'Jobs', jobsView], ['customers', 'card', 'Customers', customersView]];
-    return [home].concat(adminView() ? [['pipeline', 'clip', 'Pipeline', pipeOpen]] : [], [['routes', 'route', 'Routes', start]], S.fqOn ? [['quote', 'leaf', 'Quote', function () { fieldQuoteView(); }]] : [], [['calendar', 'cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }]]).slice(0, 5);
+    return [home].concat(adminView() ? [['pipeline', 'clip', 'Pipeline', pipeOpen]] : [], [['routes', 'route', edOn() ? 'Properties' : 'Routes', start]]   /* Properties in the editions (2026-10-30), as their tile */, S.fqOn ? [['quote', 'leaf', 'Quote', function () { fieldQuoteView(); }]] : [], [['calendar', 'cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }]]).slice(0, 5);
   }
   function tabPaint() {
     var nav = document.getElementById('tabnav'), key = TAB_SCREENS[S.screen];
@@ -3743,7 +3751,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     tabItems().forEach(function (x) {
       var b = q('button'); b.type = 'button'; b.appendChild(ico(x[1], 2.2)); b.appendChild(q('span', null, x[2]));
       if (x[0] === key) b.setAttribute('aria-current', 'page');
-      b.addEventListener('click', function () { window.scrollTo(0, 0); x[3](); });
+      b.addEventListener('click', function () { window.scrollTo(0, 0); homeRetClear(); x[3](); });
       nav.appendChild(b);
     });
   }
@@ -4607,17 +4615,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* one fold-out group of office tiles (2026-10-05), the same bar as the counties on the Colorado screen */
   function officeGroup(box, key, title, tiles) {
     tiles = tiles.filter(Boolean); if (!tiles.length) return;
-    try { localStorage.removeItem('doorapp.office'); } catch (e) {}   /* not remembered (2026-10-17, Matthew): Sales open, the rest closed, every time */
-    var open = key === 'sales';
+    try { localStorage.removeItem('doorapp.office'); } catch (e) {}   /* the old per-phone list (2026-10-17) */
+    homeFold(box, key, title, tiles, 'tgrid ogbox');
+  }
+  /* ---- the home screen's groups fold (2026-10-30, Matthew's tablet test: "every group closed by default ... remembered"): In the field,
+     Office and its four groups, Your team, Given to your role and the crew's tools. Each starts closed; the bar opens and closes it, and
+     this device remembers what was open for this install and this person (it was Sales open, the rest closed, every time). ---- */
+  function homeFoldKey() { return 'doorapp.grp' + ':' + (location.pathname.split('/')[1] || '') + ':' + (S.me || ''); }
+  function homeFoldGet() { try { var o = JSON.parse(localStorage.getItem(homeFoldKey()) || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
+  function homeFoldSet(key, on) { try { var o = homeFoldGet(); if (on) o[key] = 1; else delete o[key]; localStorage.setItem(homeFoldKey(), JSON.stringify(o)); } catch (e) {} }
+  /** a bar and what it folds: tiles (their names make the bar's second line) or any other elements; returns the folded box */
+  function homeFold(box, key, title, items, cls, line) {
+    items = items.filter(Boolean); if (!items.length) return null;
+    var open = !!homeFoldGet()[key];
     var hd = q('button', 'cty ogrp'); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open)); hd.setAttribute('data-group', key);
     var ht = q('span', 'ct'); ht.appendChild(q('b', null, title));
-    ht.appendChild(q('small', null, tiles.map(function (t) { var b = t.querySelector('.tt b'); return b ? b.textContent : ''; }).filter(Boolean).join(' \u00b7 ')));
+    var names = line || items.map(function (t) { var b = t.querySelector && t.querySelector('.tt b'); return b ? b.textContent : ''; }).filter(Boolean).join(' \u00b7 ');
+    if (names) ht.appendChild(q('small', null, names));
     hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
-    var g = q('div', 'tgrid ogbox'); g.hidden = !open; tiles.forEach(function (t) { g.appendChild(t); });
+    var g = q('div', cls || 'tgrid ogbox'); g.hidden = !open; g.setAttribute('data-fold', key); items.forEach(function (t) { g.appendChild(t); });
     hd.addEventListener('click', function () {
-      open = !open; g.hidden = !open; hd.setAttribute('aria-expanded', String(open));
+      open = !open; g.hidden = !open; hd.setAttribute('aria-expanded', String(open)); homeFoldSet(key, open);
     });
     box.appendChild(hd); box.appendChild(g);
+    return g;
   }
   function chooseView() {
     if (lockOn() && S.role !== 'admin') { lockedView(); return; }   /* setup mode or the past-due lock: a team member waits (2026-10-29) */
@@ -4686,10 +4707,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     /* In the field first, then Office; one line each. The office side is gated on ROLE, never on a
        particular person's code: making someone an admin in Accounts is what gives them these tools. */
-    var grp = function (title, tiles) {
-      box.appendChild(q('h2', 'tgrp', title));
-      var g = q('div', 'tgrid'); tiles.forEach(function (t) { g.appendChild(t); }); box.appendChild(g);
-    };
+    var grp = function (title, tiles, key) { homeFold(box, key, title, tiles); };   /* each group folds, closed until opened (2026-10-30) */
     if (!standalone()) { var ih2 = q('div', 'insthost ontools'); box.appendChild(ih2); fillInstall(ih2); }
     var wkh = q('div'); box.appendChild(wkh); walkerCard(wkh);   /* the walk desk (2026-10-14) */
     var jbh = q('div'); box.appendChild(jbh); jobsHomeCard(jbh);   /* the jobs board (2026-10-14) */
@@ -4697,7 +4715,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (asOffice()) {   /* first on the office home (2026-10-14): Jen works leads, not doors */   /* the office role (2026-10-14): leads, walks and everyone's calendar */
       var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipeOpen);
       api('leads', { params: { count: 1 } }).then(function (j) { var tg = opt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Office'; }).catch(function () {});
-      grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
+      grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })], 'officerole');
     }
     grp('In the field', [
       pqOnC() ? tile('button', 'clip', 'Quick quote', 'Someone called or wrote in: their details, the house and the price, then send the quote.', null, phoneQuoteView) : null,   /* the editions' Quick quote, a permission (2026-10-30) */
@@ -4707,14 +4725,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tile('button', 'cal', 'Calendar', 'Walks, come-backs, lead follow-ups and your own entries.', null, function () { S.calWho = S.me; calendarView(); }),
       tile('button', 'book', 'Training', pw('Doors, sales, quotes, phones and more.', 'Door-to-door, sales, quotes, phones and more.'), null, trainingView),
       radarOn() ? tile('button', 'hail', 'Live radar', 'NOAA weather radar, every 5 minutes, with what the colors mean.', null, function () { hailMapView(null, chooseView); }) : null,
-      feat('security') && crewSees() ? tile('button', 'shield', 'Crime map', 'Property crime reported to Colorado Springs police, last 90 days, by area.', crewTag(), crimeMapView) : null].filter(Boolean));
+      feat('security') && crewSees() ? tile('button', 'shield', 'Crime map', 'Property crime reported to Colorado Springs police, last 90 days, by area.', crewTag(), crimeMapView) : null].filter(Boolean), 'field');
     /* a manager is crew plus their own team (Matthew 2026-10-05): leads to hand out, the team's numbers and territories */
     if (mgrOn()) grp('Your team', [
       tile('button', 'clip', 'Leads', 'New inquiries to hand out, and your team\u2019s.', 'Manager', teamLeadsView),
       tile('button', 'users', 'Team stats', 'Your team\u2019s numbers, and the leaderboard.', 'Manager', teamView),
       tile('button', 'route', 'Territories', 'Assign neighborhoods within your team.', 'Manager', territoriesView),
       tile('button', 'users', 'Team sign-ins', 'Add your crew, give a new code, sign out or remove.', 'Manager', accountsView),
-      tile('button', 'chart', 'Office', pw('Your team today and this week, the map of best doors left, walks and live radar.'), 'Manager', officeView)]);
+      tile('button', 'chart', 'Office', pw('Your team today and this week, the map of best doors left, walks and live radar.'), 'Manager', officeView)], 'myteam');
     if (adminView()) {
       var pt = tile('button', 'clip', 'Pipeline', pw('Door bookings and inquiries, call to won.', 'Bookings and inquiries, call to won.'), 'Admin only', pipeOpen);
       api('leads', { params: { count: 1 } }).then(function (j) {
@@ -4724,36 +4742,36 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (qt && S.offline) { qt.removeAttribute('href'); qt.setAttribute('aria-disabled', 'true'); qt.style.opacity = '.55'; }   /* Fable: offline it led to the browser's error page */
       /* Office in four fold-out groups (Matthew 2026-10-05: thirteen tiles in a row ran long). Each bar names what is
          inside; the phone remembers which are open (Sales open the first time). The tiles stay in the page when folded. */
-      box.appendChild(q('h2', 'tgrp', 'Office'));
+      var obox = q('div', 'ogwrap');   /* Office folds too, its dashboard and four groups inside (2026-10-30) */
       /* the dashboard (2026-10-08): above the fold-out groups, one tap */
       var otl = q('div', 'tgrid');
       if (S.super) otl.appendChild(tile('button', 'users', 'See through their eyes', (CO.a365 ? 'Open the app as the office, Jen, a manager, a door rep or a crew, looking only. No signing out and in.' : pw('Open the app as the office, a manager, a door rep or a crew, looking only. No signing out and in.', 'Open the app as the office, a manager, a sales rep or a crew, looking only. No signing out and in.')), 'Traverse only', vaPicker));
       if (S.super && !S.viewing && CO.a365) otl.appendChild(tile('button', 'chat', 'Messenger preview', 'Facebook messages as they would come into the Pipeline. Looking only: nothing is saved.', 'Traverse only', msgPreview));   /* 2026-10-20 */
       else if (feat('walkdesk') && CO.a365) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
-      otl.appendChild(tile('button', 'chart', 'Office dashboard', pw('Today and this week, the map of best doors left, the team, walks and live radar.'), 'Admin only', officeView)); box.appendChild(otl);
-      officeGroup(box, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way Jen does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
+      otl.appendChild(tile('button', 'chart', 'Office dashboard', pw('Today and this week, the map of best doors left, the team, walks and live radar.'), 'Admin only', officeView)); obox.appendChild(otl);
+      officeGroup(obox, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way Jen does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
         wdOn() ? tile('button', 'chart', 'Stats', 'Last week, this week, the ads and the next six weeks.', 'Admin only', statsPageView) : null,   /* on the phone as on the computer (2026-10-22) */
         squarePageOn() ? tile('button', 'card', 'Square', 'Payments in, and which job each belongs to.', 'Admin only', squareView) : null,
         qt,
         feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null]);
-      officeGroup(box, 'team', 'Team', [
+      officeGroup(obox, 'team', 'Team', [
         tile('button', 'users', 'Team stats', "Everyone's numbers, and the leaderboard.", 'Admin only', teamView),
         tile('button', 'route', 'Territories', 'Assign neighborhoods to people.', 'Admin only', territoriesView)]);
-      officeGroup(box, 'storms', 'Storms and data', [
+      officeGroup(obox, 'storms', 'Storms and data', [
         feat('security') && crewSees() ? tile('button', 'shield', 'Crime by neighborhood', 'Neighborhoods ranked by property crime reported nearby, last 90 days.', crewTag(), secListView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Storm list', pw('From a storm to a phone call: the doors it hit, their roofs, who owns them, who to call.'), 'Admin only · in testing', stormView) : null,
         feat('hail') && cardOn('hail') ? tile('button', 'hail', 'Hail', 'Storms from the last two years (five for a big one) and the streets they hit. Radar estimate.', 'Admin only · in testing', hailView) : null,
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
-      officeGroup(box, 'setup', 'Setup', [
+      officeGroup(obox, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
+        kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* next to Accounts (2026-10-30, Matthew: the rest of Setup is on it); the quote and agreement kit (2026-10-27) */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
         CO.a365 && wdOn() ? tile('button', 'clip', 'Agreement terms', 'What the 365 form says under the price: each line yours to change. Signed forms keep theirs.', 'Admin only', a365TermsView) : null,   /* 2026-10-30 */
         CO.a365 && wdOn() ? tile('button', 'card', 'Other ways to pay', 'Venmo, Zelle with its QR code, Cash App and PayPal, beside Square. Off until you fill them in.', 'Admin only', a365WaysView) : null,   /* 2026-10-30 */
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and color, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
-        kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* the quote and agreement kit (2026-10-27) */
         kitOnC() ? tile('button', 'calc', 'Prices and terms', 'What a quote adds up from the house, the usual deposit, and your agreement terms.', 'Admin only', kitPricesView) : null,
         kitOnC() ? tile('button', 'card', 'Payments', 'Your own Square or Stripe for deposits, and other ways customers can pay.', 'Admin only', kitPayView) : null,
         kitOnC() ? tile('button', 'mail', 'Email', 'Connect your own email: signed agreements and receipts go from your address, in your words.', 'Admin only', mailSetupView) : null,   /* 2026-10-29 */
@@ -4764,9 +4782,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
         feat('billing') ? tile('button', 'card', 'Billing', 'Your Traverse plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10 */
         CO.a365 ? null : tile('button', 'door', 'Sample property', 'One made-up property with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew) */
+      homeFold(box, 'office', 'Office', [obox], 'ogwrap-f', [].map.call(obox.querySelectorAll(':scope > .tgrid:not(.ogbox) .tt b, :scope > .ogrp .ct b'), function (b) { return b.textContent; }).join(' · '));
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     permTiles(box);   /* the screens the role was given (2026-10-29) */
+    homeRetMark(box);   /* Back from what a tile opens comes back here, where you were (2026-10-30) */
     view.appendChild(box);
     window.scrollTo(0, 0);
   }
@@ -4802,7 +4822,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function renderAreas() {
     if (payLockOn()) return pausedView();   /* locked for payment: door data is paused (2026-10-29) */
     S.returnTo = null; S.backFirst = false;       /* the neighbourhood list is home again */
-    if (deskWide()) return deskBrowse();   /* on a computer: towns, neighbourhoods and the map in one screen (2026-10-09, mock-up F) */
+    if (deskWide()) { window.scrollTo(0, 0); return deskBrowse(); }   /* on a computer: towns, neighbourhoods and the map in one screen (2026-10-09, mock-up F); at the top (2026-10-30) */
     S.ringAnim = S.animRegion !== S.region; if (S.ringAnim) S.animRegion = S.region;
     if (S.ringAnim) setTimeout(function () { S.ringAnim = false; }, 0);
     if (!S.region) return stateView();
@@ -6755,15 +6775,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var up = q('section', 'crewup'); up.appendChild(q('h2', 'tgrp', 'Coming up')); var list = q('div'); list.appendChild(q('div', 'skel')); up.appendChild(list); box.appendChild(up);
     var add = q('button', 'save crewadd'); add.type = 'button'; add.appendChild(ico('route', 2.2)); add.appendChild(document.createTextNode('Add a ' + vw()));
     add.addEventListener('click', function () { crewWalkView(chooseView); }); if (!techOn()) box.appendChild(add);   /* a technician takes the jobs the office books (2026-10-29) */
-    box.appendChild(q('h2', 'tgrp', 'Your tools'));
-    var g = q('div', 'tgrid');
+    var g = q('div', 'tgrid');   /* folded under its bar, like the other homes' groups (2026-10-30) */
     g.appendChild(tile('button', 'cal', 'My schedule', 'Your jobs and ' + vw() + 's, day by day. The office books and moves them.', null, function () { crewSchedView(); }));
     g.appendChild(tile('button', 'route', 'My ' + vw() + 's', 'The ' + vw() + 's booked with you, with everything for each.', null, function () { myWalksView(); }));
     g.appendChild(tile('button', 'chart', 'My stats', 'Jobs done, hours, square feet of lawn, and your past jobs.', null, function () { crewStatsView(); }));
     if (techOn() && S.doorsOn) g.appendChild(tile('button', 'door', 'Routes', 'Knock a neighborhood. Works with no signal.', null, start));   /* a technician with the Doors switch (2026-10-29) */
     if (squarePageOn()) g.appendChild(tile('button', 'card', 'Square', 'Payments taken, and the jobs they belong to.', null, squareView));   /* on the phone as on the computer (2026-10-22, Matthew: "make sure nothing else is missing across the board") */
-    box.appendChild(g);
+    homeFold(box, 'crewtools', 'Your tools', [].slice.call(g.children));
     permTiles(box);   /* the screens the role was given (2026-10-29) */
+    homeRetMark(box);   /* Back comes here, where you were (2026-10-30) */
     view.appendChild(box);
     var t = todayISO();
     api('myschedule', { params: { from: t, to: jobAdd(t, 6) } }).then(function (j) {
@@ -9056,7 +9076,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (quick && S.screen !== 'quickquote') { S.qqInboxOpen = false; S.qqCustOpen = false; }   /* coming to the Quick quote: both lists start folded (2026-10-17) */
     hideToast(); S.signin = null; S.screen = quick ? 'quickquote' : 'house'; foot.hidden = true; setDock(null);
     var back = lead ? pipelineView : chooseView;
-    setBar('back', { title: quick || !qView() ? qqName() : 'Find the house', sub: lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
+    setBar('back', { title: quick ? qqName() : qView() ? 'Find the house' : lead ? qqName() : 'House lookup', sub:   /* House lookup, as its tile (2026-10-30, Matthew: it said Quote builder); a lead's quote keeps Quote builder */ lead ? (lead.name || lead.phone || 'Lead') : quick ? 'No lead needed: copy it to your notes or a text' : 'Any address in our towns', back: back, backLabel: lead ? 'Pipeline' : quick ? 'Home' : 'Field tools' });
     if (!S.money && !S.moneyAsk) { S.moneyAsk = true; api('money').then(function (j) { if (j && j.ok) S.money = j; else S.moneyAsk = false; }).catch(function () { S.moneyAsk = false; }); }
     if (deskWide()) document.body.classList.add('owide');   /* a computer: the house beside the quote (2026-10-21) */
     view.textContent = '';
@@ -9919,7 +9939,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       grp[1].forEach(function (r) {
         var b = q('button', 'teamrow' + (r.none ? ' none' : '')); b.type = 'button';
         b.appendChild(q('div', 'tn', r.name));
-        var v1 = q('div', 'tv'); v1.appendChild(q('b', null, String(r.w.doors))); v1.appendChild(q('small', null, 'doors 7d')); b.appendChild(v1);
+        var v1 = q('div', 'tv'); v1.appendChild(q('b', null, String(r.w.doors))); v1.appendChild(q('small', null, pw('doors 7d'))); b.appendChild(v1);
         var v2 = q('div', 'tv'); v2.appendChild(q('b', null, String(r.w.booked))); v2.appendChild(q('small', null, 'quotes 7d')); b.appendChild(v2);
         b.appendChild(q('div', 'ts', r.none ? pw('No doors marked yet') : 'Today ' + r.t.doors + pw(' doors, ') + r.t.booked + ' booked · 7 days rate ' + rate(r.w.booked, r.w.doors - r.w.miss - (r.w.nosolicit || 0)) +
           ' · 30 days ' + r.m.doors + pw(' doors, ') + r.m.booked + ' booked (' + rate(r.m.booked, r.m.doors - r.m.miss - (r.m.nosolicit || 0)) + ')'));
@@ -10134,11 +10154,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.dview === 'map' && !S.keepMap) S.dview = S.lastView && orderOk(S.lastView) ? S.lastView : null;   /* back to the order the phone had (review 2026-10-08) */
       if (S.dview !== 'map' && (!S.dview || !orderOk(S.dview))) S.dview = bestTrade() ? 'best' : 'street';
       S.keepMap = false;
-      S.mapSel = null; S.sheetMin = false; S.filterOpen = false; S.allClosed = false;
+      S.mapSel = null; S.sheetMin = false; S.filterOpen = false; S.allClosed = hoodOpensClosed();
       if ((S.dview === 'near' || S.dview === 'bestnear' || S.dview === 'route') && !S.here && !S.locating) locate(function () { if (S.area) renderDoors(); });
       window.scrollTo(0, 0);                      /* before drawing, so a jump to a section survives */
       renderDoors();
     });
+  }
+  /* a neighbourhood opens on its list with no card open (2026-10-30, Matthew's tablet test: the first property opened by itself), unless
+     a property was picked to open (from a walk, the calendar, a search). The editions; Sixfold's crews keep the first door opening. */
+  function hoodOpensClosed() {
+    if (!edOn()) return false;
+    var id = S.openDoor; return !(id && (S.doors || []).some(function (x) { return x.id === id; }));
   }
   /* signal is back: fetch the open neighbourhood again in place, without moving the page */
   function reloadArea() {
@@ -10409,7 +10435,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      hides while its form is open in the capture panel, so an untouched card stays short. */
   function extras(d) {
     var wrap = q('div', 'xt');
-    if (!deskOn() && typeof d.lat === 'number' && typeof d.lon === 'number') {   /* phones: one tap to the lot and its property line (2026-10-19; it was a small chip at the bottom) */
+    if (!deskOn() && typeof d.lat === 'number' && typeof d.lon === 'number' && !(edOn() && S.dview !== 'map')) {   /* phones: one tap to the lot and its property line (2026-10-19; it was a small chip at the bottom); the editions' list card shows the lot at its top instead (2026-10-30) */
       var lb = q('button', 'lotbtn'); lb.type = 'button';
       lb.appendChild(ico('globe', 2.4)); lb.appendChild(document.createTextNode('See the lot: photo and property line'));
       lb.addEventListener('click', function () { aerialView(d); });
@@ -10801,7 +10827,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       (pp ? pp.days || [] : []).forEach(function (x) { d += x.doors || 0; t += (x.booked || 0) + (x.later || 0); b += x.booked || 0; });
       var g = (j && j.goal) || (j && j.company) || {};
       var row = q('div', 'dh-wk');
-      [[d, 'doors', g.doors ? 'goal ' + g.doors + ' a day' : ''], [t, 'talked', ''], [b, 'quotes', '']].forEach(function (x) { var c = q('div'); c.appendChild(q('b', null, String(x[0]))); c.appendChild(q('small', null, x[1] + (x[2] ? ' \u00b7 ' + x[2] : ''))); row.appendChild(c); });
+      [[d, pw('doors'), g.doors ? 'goal ' + g.doors + ' a day' : ''], [t, 'talked', ''], [b, 'quotes', '']].forEach(function (x) { var c = q('div'); c.appendChild(q('b', null, String(x[0]))); c.appendChild(q('small', null, x[1] + (x[2] ? ' \u00b7 ' + x[2] : ''))); row.appendChild(c); });
       wc.appendChild(row);
     }).catch(function () {});
     /* today: walks, come-backs, leads */
@@ -11614,6 +11640,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      The roofer's own JobNimbus API key, pasted once (the server tests it with JobNimbus and keeps it; the page only ever sees its
      last four characters). Booked doors then go up as JobNimbus contacts, roof walks as appointments: every 5 minutes on the
      server, or now with Send now. Names go as the county owner of record, as written. */
+  /* the CRM connection and the exports fold behind one small button in the editions (2026-10-30, Matthew's tablet test: JobNimbus and the
+     exports opened out from the start and took a lot of room); closed each time the screen opens */
+  function ioFold(el) {
+    var w = q('div', 'iofold'), b = q('button', 'back iobtn'); b.type = 'button'; b.setAttribute('aria-expanded', 'false');
+    b.appendChild(ico('table', 2.2)); b.appendChild(document.createTextNode('Import / export'));
+    var body = q('div', 'iobody'); body.hidden = true; body.appendChild(el);
+    b.addEventListener('click', function () { body.hidden = !body.hidden; b.setAttribute('aria-expanded', String(!body.hidden)); });
+    w.appendChild(b); w.appendChild(body); return w;
+  }
   function jnAgo(t) { var s = Math.max(0, Math.round(Date.now() / 1000 - t)); return s < 90 ? 'just now' : s < 5400 ? Math.round(s / 60) + ' min ago' : s < 129600 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' days ago'; }
   function jnPanel() {
     var box = q('div', 'card jnbox'); box.appendChild(q('div', 'sub2', 'JobNimbus: checking…'));
@@ -13182,10 +13217,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('accounts').then(function (j) { tick('team', !!(j && j.ok && (j.accounts || []).some(function (a) { return !a.off && a.role !== 'admin' && a.role !== 'super' && !/^(Claude|Fable)\b/i.test(a.name || ''); }))); }).catch(function () {});
       if (impOnC()) api('imports').then(function (j) { tick('import', !!(j && j.ok && (j.imports || []).some(function (x) { return !x.undone; }))); }).catch(function () {});
     }
-    var more = [feat('company') ? ['Company', 'Name, phone, email, website and color.', companyView] : null,
+    var more = [kit ? ['Setup checklist', 'Everything to set before your first quote.', kitSetupView] : null,   /* first (2026-10-30) */
+      feat('company') ? ['Company', 'Name, phone, email, website and color.', companyView] : null,
       kit ? ['Prices and terms', 'What a quote adds up from, and your agreement terms.', kitPricesView] : null,
       kit && costsOnC() ? ['Your costs', 'What each price line costs you.', costsView] : null,
-      kit ? ['Setup checklist', 'Everything to set before your first quote.', kitSetupView] : null,
       bill ? null : ['Billing', 'Your Traverse plan.', billingView]].filter(Boolean);
     if (more.length) {
       box.appendChild(q('h2', 'tgrp', 'More setup'));
@@ -14484,9 +14519,43 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.setupScr === null) S.setupScr = S.screen;
     return S.screen === S.setupScr && (o.back === chooseView || o.back === officeView) ? Object.assign({}, o, { back: kitSetupView, backLabel: 'Setup' }) : o;   /* only a Back that went to the beginning: a step inside (a lesson, a person) keeps its own */
   }
-  function setupClear() { S.setupRet = false; S.setupScr = null; }
+  function setupClear(keepHome) { S.setupRet = false; S.setupScr = null; if (!keepHome) homeRetClear(); }
+  /* ---- Back to where you were on Home (2026-10-30, Matthew's tablet test: Home scrolled down > Setup > Prices and terms > Back landed on
+     the Setup checklist). A tile on a home screen marks the screen it opens and how far down Home was; that screen's Back (and the same
+     screen drawn again after a save) goes Home and scrolls back there. Opened from the checklist, Back still goes to the checklist
+     (setupGo). Home, the side menu, the Office menu and the phone menu bar clear the mark. ---- */
+  function homeRetMark(box) {
+    [].forEach.call(box.querySelectorAll('.tile'), function (t) {
+      t.addEventListener('click', function () { S.homeRet = { y: window.scrollY || 0 }; S.homeScr = null; S.setupRet = false; S.setupScr = null; }, true);
+    });
+  }
+  /* the Office menu on a phone or an upright tablet (2026-10-30 audit: from the Stats page's menu, every Back went Home): what it opens
+     comes back to the page the menu was on. A computer keeps the menu beside the screen and needs no Back. */
+  var MENU_RET = { statspage: ['Stats', function () { statsPageView(); }], office: ['Office', officeView] };
+  function homeRetMenu() {
+    var m = MENU_RET[S.screen]; if (deskWide() || !m) return;
+    S.homeRet = { y: 0, to: m[1], label: m[0] }; S.homeScr = null;
+  }
+  function homeRetClear() { S.homeRet = null; S.homeScr = null; }
+  /* a setup screen opens at its top (2026-10-30, Matthew: Setup > Company opened at the bottom of the page, where Home had been scrolled);
+     drawn again on the same screen (after a save) it stays where it is */
+  var SETUP_SCR = { company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, prcprices: 1, prcterms: 1, prcimport: 1, svcarea: 1, billing: 1, accounts: 1, newsletter: 1, followupmail: 1, sample: 1, training: 1, careplans: 1, caremail: 1, carenews: 1, prcfeedback: 1, fbleads: 1, eod: 1 };
+  function setupTop() { if (S.screen === S._topScr) return; S._topScr = S.screen; if (SETUP_SCR && SETUP_SCR[S.screen]) window.scrollTo(0, 0); }
+  function homeBackFix(o) {
+    if (!S.homeRet || /^(tools|setuphome)$/.test(S.screen)) return o;
+    if (S.homeScr === null) S.homeScr = S.screen;
+    if (S.screen !== S.homeScr || !o.back || (o.back !== chooseView && o.back !== kitSetupView && o.back !== officeView)) return o;   /* a step inside keeps its own Back */
+    var y = S.homeRet.y, to = S.homeRet.to || null, lbl = S.homeRet.label || (o.back === chooseView ? o.backLabel : 'Field tools');
+    return Object.assign({}, o, { back: function () { homeBack(y, to); }, backLabel: lbl });
+  }
+  function homeBack(y, to) {
+    if (to) { homeRetClear(); to(); return; }
+    chooseView();
+    var go = function () { if (S.screen === 'tools') window.scrollTo(0, y); };
+    go(); setTimeout(go, 60); setTimeout(go, 400);   /* again as the cards that load late (walks, territories) land */
+  }
   function kitSetupView() {
-    hideToast(); S.signin = null; S.screen = 'kitsetup'; foot.hidden = true; setDock(null); setupClear();
+    hideToast(); S.signin = null; S.screen = 'kitsetup'; foot.hidden = true; setDock(null); setupClear(true);
     var toOffice = S.inOffice && planOk() && dnavOn();   /* Back from the Setup list: the Office on a computer, Home on a phone */
     setBar('back', { title: 'Setup', sub: 'Get ready for your first quote', back: toOffice ? officeView : chooseView, backLabel: toOffice ? 'Office' : 'Field tools' });
     view.textContent = ''; var box = q('div', 'card coform kitsetup'); box.appendChild(q('div', 'skel')); view.appendChild(box);
@@ -16797,7 +16866,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
        each file in the import layout that program documents (crmexport in the API) */
     var cx = q('div', 'crmx'); cx.appendChild(q('div', 'wl', 'Export to another program'));
     var cxSet = q('select'), cxFmt = q('select'); cxSet.setAttribute('aria-label', 'What to export'); cxFmt.setAttribute('aria-label', 'Program');
-    [['customers', 'Customers'], ['doors', pw('Doors booked at the door', 'Bookings made at the door')]].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; cxSet.appendChild(op); });
+    [['customers', 'Customers'], ['doors', pw('Doors booked at the door', 'Bookings made at the property')]].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; cxSet.appendChild(op); });
     var CRMX = [['generic', 'Any CRM (generic file)'], ['housecallpro', 'Housecall Pro'], ['yardbook', 'Yardbook'], ['gorilladesk', 'GorillaDesk'], ['highlevel', 'HighLevel (GoHighLevel)'], ['quickbooks', 'QuickBooks Online'], ['hubspot', 'HubSpot'], ['google', 'Google Contacts'], ['jobber', 'Jobber']];
     if (feat('roof')) CRMX.push(['jobnimbus', 'JobNimbus']);
     CRMX.forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; cxFmt.appendChild(op); });
@@ -16837,7 +16906,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         nl.appendChild(mo);
       }
     }).catch(function () {});
-    holder.appendChild(ex);
+    holder.appendChild(edOn() && S.role === 'admin' ? ioFold(ex) : ex);
   }
   function customerForm(c, done) {
     var fm = q('div', 'phf cform'), v = c || {};
@@ -17433,7 +17502,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['recall', 'Recall'], ['email', 'Emailed'], ['text', 'Texted'], ['quoted', 'Quoted'], ['sent', 'Form sent'], ['hold', 'On hold'], ['signed', 'Signed'], ['nosale', 'No sale']];   /* Quoted: a phone quote, no form yet (2026-10-16); On hold (2026-10-17) */   /* + Recall (2026-10-21) */
   var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale', hold: 'hold', unreached: 'unreached' };   /* Couldn't reach: no tab, its own folded list (2026-10-21) */
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
-  function pipeSrcName(k) { return k === 'door' ? 'Door' : (LEAD_SRC[k] || k); }
+  function pipeSrcName(k) { return k === 'door' ? pw('Door', 'Property') : (LEAD_SRC[k] || k); }   /* Property in the editions (2026-10-30) */
   /* the Pipeline from the menu, a tile or an alert opens with no stage picked (2026-10-21, Matthew: "we dont want to open into clutterness,
      lets allow them to choose"); a link to one lead still opens its stage */
   /* search and Last contacted (2026-10-29, Jen and Cai via Matthew: "a search and a filter would be helpful on the pipeline. Searching by name or
@@ -17619,7 +17688,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
        pipeline to complete stuff"): every stage of his own leads, the ones to contact first; handed to Jen = hers, not here */
     var CONTACT_ST = ['call', 'vm', 'recall', 'email', 'text'], MINE_ST = CONTACT_ST.concat(['walk', 'quoted', 'sent', 'hold']), mineMode = false, mineItems = [];
     var mineStage = function (it) { var k = pipeStage(it); return k === 'quoted' && it.x.sign ? 'sent' : k; };
-    if (S.super && !asOffice() && !S.viewAs) {
+    if (S.super && !asOffice() && !S.viewAs && !edOn()) {   /* Sixfold only (2026-10-30, Matthew: the editions have the Full pipeline alone) */
       var pm = 'mine'; try { pm = localStorage.getItem('pipeMode') || 'mine'; } catch (e) {}
       mineMode = pm === 'mine';
       mineItems = items.filter(function (it) { return it.kind === 'lead' && it.x.mine && MINE_ST.indexOf(mineStage(it)) >= 0; });
@@ -17650,7 +17719,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
     /* tabled 2026-10-15 (Matthew: "table the export to Jobber for now"; TASKS.md keeps it): if (adminView()) top.appendChild(jb); */
     holder.appendChild(top);
-    if (feat('roof') && S.role === 'admin') holder.appendChild(jnPanel());
+    if (feat('roof') && S.role === 'admin') holder.appendChild(edOn() ? ioFold(jnPanel()) : jnPanel());
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
     if (S.leadAdd) holder.appendChild(leadForm());
     if (S.metaPrev) holder.appendChild(metaPreview());
@@ -21299,6 +21368,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);
+    var lot0 = edCardLot(d, full); if (lot0) card.appendChild(lot0);   /* the photo near the top (2026-10-30) */
     var lim0 = limLine(d); if (lim0) card.appendChild(lim0);   /* limited county data (2026-10-29) */
     var wx0 = wxLine(d); if (wx0) card.appendChild(wx0);   /* a weather warning over the house (2026-10-29) */
     var cl0 = censusLine(d.cen); if (cl0) card.appendChild(q('div', 'meta cenl', cl0 + ' (Census, the area not this house)'));   /* 2026-10-21 */
@@ -21334,8 +21404,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     /* the fold-up (2026-10-12): the four buttons sit straight under the score and the status, so marking a door never needs a
        scroll past the facts; the capture panel and the come-back chooser open in the same place */
-    if (capOpen(d)) card.appendChild(capturePanel(d, { region: S.region, redraw: renderDoors, phone: d.phone }, false));
-    if (S.pickLater === d.id) card.appendChild(laterChooser(d)); else card.appendChild(doorActs(card, d));
+    var actsLast = edOn();   /* the editions: the facts first, the outcome buttons at the bottom of the card (2026-10-30, Matthew's tablet test) */
+    var addActs = function () {
+      if (capOpen(d)) card.appendChild(capturePanel(d, { region: S.region, redraw: renderDoors, phone: d.phone }, false));
+      if (S.pickLater === d.id) card.appendChild(laterChooser(d)); else card.appendChild(doorActs(card, d));
+    };
+    if (!actsLast) addActs();
     card.appendChild(extras(d));
     if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
     var facts = [], fn = [];
@@ -21344,7 +21418,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var wl = cardOn('water') ? waterLine(d) : null; if (wl) { facts.push(wl); fn.push('water'); }
     if (facts.length) card.appendChild(factsFold(facts, fn));
     if (S.areaHoa && S.areaHoa.length) { var hl = q('div', 'meta hoal'); hl.appendChild(q('span', 'tag', 'HOA')); hl.appendChild(document.createTextNode(' ' + S.areaHoa[0].hoa + (S.areaHoa.length > 1 ? ' (or ' + (S.areaHoa.length - 1) + ' more in this subdivision)' : '') + ' \u00b7 check their rules before quoting')); card.appendChild(hl); }   /* 2026-10-12 */
+    if (actsLast) addActs();
     return card;
+  }
+  /* the editions' card shows the lot's aerial photo near the top (2026-10-30): the same preview as the computer's card (2023 USDA photo
+     and the property line; a tap opens the full aerial view). Phones and tablets; a computer has it in the card's head already. */
+  function edCardLot(d, full) {
+    if (!edOn() || full || deskOn() || typeof d.lat !== 'number' || typeof d.lon !== 'number') return null;
+    var el = lotPreview(d); el.classList.add('edlot'); return el;
   }
   /* the four outcome buttons (split out 2026-10-12 so the card can put them under the score) */
   function doorActs(card, d) {
@@ -22242,7 +22323,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     it.forEach(function (x) {
       var lit = x[4].indexOf(S.screen) >= 0;
       var b = q('button', lit ? 'on' : null, x[0]); b.type = 'button'; if (lit) b.setAttribute('aria-current', 'page');
-      b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = true; setupClear(); x[1](); });
+      b.addEventListener('click', function () { window.scrollTo(0, 0); S.inOffice = true; setupClear(); homeRetMenu(); x[1](); });
       if (x[3] === 'lead') api('leads', { params: { count: 1 } }).then(function (l) { if (l && l.ok && l.new) b.appendChild(q('span', 'obadge', String(l.new))); }).catch(function () {});
       m.appendChild(b);
     });
@@ -22715,6 +22796,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var cols = q('div', 'ocols'), left = q('div', 'ocol omapcol'), right = q('div', 'ocol');
     cols.appendChild(left); cols.appendChild(right); body.appendChild(cols);
     page.appendChild(body); view.appendChild(page);
+    window.scrollTo(0, 0);   /* at the top (2026-10-30: it kept Home's scroll, opening 600 px down on a phone) */
     var cards = { d: kpiCard(pw('Doors knocked today')), t: kpiCard('Talked to today'), b: kpiCard('Quotes booked today'), w: kpiCard(feat('hail') ? 'Roof walks this week' : 'Walks this week') };
     kp.appendChild(cards.d); kp.appendChild(cards.t); kp.appendChild(cards.b); kp.appendChild(cards.w);
     var tc = q('div', 'card oteam'); tc.appendChild(q('h3', null, 'The team today')); right.appendChild(tc);
@@ -22786,6 +22868,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function kpiCard(label) { var c = q('div', 'card okpi'); c.appendChild(q('small', null, label)); c.appendChild(q('b', null, '\u2013')); c.appendChild(q('span', null, '')); return c; }
   function kpiFill(c, n, notes) { c.querySelector('b').textContent = n === null || n === undefined ? '\u2013' : n.toLocaleString(LOCALE); c.querySelector('span').textContent = notes.filter(Boolean).join(' \u00b7 '); }
   function officeMap() {
+    if (edOn()) return officePlanCard();   /* the editions: no map on the dashboard (2026-10-30) */
     var card = q('div', 'card omap');
     var hd = q('div', 'omaph'); hd.appendChild(q('h3', null, bestTrade() ? pw('Best doors left, by neighborhood') : pw('Doors left, by neighborhood')));
     var radar = false; try { radar = localStorage.getItem('sixfold.office.radar') === '1'; } catch (e) {}
@@ -22803,13 +22886,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     rp.addEventListener('click', function () { if (!E) return; if (E.frames) E.stop(); else E.play(); rp.textContent = E.frames ? 'Stop' : 'Play last hour'; });
     var paintBtn = function () { rb.textContent = 'Live radar: ' + (radar ? 'on' : 'off'); rb.setAttribute('aria-pressed', String(radar)); key(); };
     paintBtn();
+    var build = function () {
     /* after the card is on the page: with Leaflet already loaded (say, after Doors) the callback runs at once, before the card
        is added, and the map was never drawn (live check 2026-10-09) */
     setTimeout(function () { loadLeaflet(function () {
       if (!document.body.contains(el)) return;
       if (!window.L) { el.appendChild(q('div', 'msg bad', 'The map could not load: no signal, or the map service is down.')); return; }
       if (S.officeMap) try { S.officeMap.remove(); } catch (e) {}   /* the last visit's map (Fable 2026-10-09: one leaked per visit) */
-      var map = S.officeMap = L.map(el, { zoomControl: true });   /* dots as SVG, like the doors map: each one a tap target with a tooltip */
+      var map = S.officeMap = L.map(el, { zoomControl: true, preferCanvas: edOn() });   /* dots as SVG, like the doors map: each one a tap target with a tooltip; the editions draw them on a canvas (2026-10-30: thousands of neighbourhoods were slow) */
       el.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
       baseLayer(map, 18);
       E = radarEngine(map, function (t) { rt.textContent = t; rp.textContent = E && E.frames ? 'Stop' : 'Play last hour'; });   /* refreshed every 5 minutes, with its time (2026-10-29) */
@@ -22842,6 +22926,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       });
     }); }, 0);
+    };
+    build();
+    return card;
+  }
+  /* the editions' dashboard has no map (2026-10-30, Matthew: it loaded by itself, cluttered and slow; his call that evening: no Show map
+     button either). In its place, the way to Plan, which ranks the neighbourhoods. Nothing is fetched for it. Sixfold keeps its map. */
+  function officePlanCard() {
+    var card = q('div', 'card omap oplanc');
+    var hd = q('div', 'omaph'); hd.appendChild(q('h3', null, 'Plan the properties')); card.appendChild(hd);
+    card.appendChild(q('p', 'soft', 'Best neighborhoods to knock next are on Home and in Plan.'));
+    var b = q('button', 'oplan', 'Plan the properties'); b.type = 'button';
+    b.addEventListener('click', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); });
+    card.appendChild(b);
     return card;
   }
 
