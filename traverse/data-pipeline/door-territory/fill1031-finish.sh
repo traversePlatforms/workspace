@@ -50,7 +50,16 @@ fs.writeFileSync(loc+'.tmp',JSON.stringify(L));fs.renameSync(loc+'.tmp',loc);con
 # side-file counts per town (doors in <prefix>-<town>.json) in a folder, for before/after checks
 counts() { node -e "const fs=require('fs');const [dir,p,...t]=process.argv.slice(1);const o={};for(const x of t){const f=dir+'/'+p+'-'+x+'.json';o[x]=fs.existsSync(f)?Object.keys(JSON.parse(fs.readFileSync(f)).doors||{}).length:0}console.log(JSON.stringify(o))" "$@"; }
 # the editions' build (copies app/data/rounds into each edition's dist folder)
-editions() { (cd ../../app && node ../editions/build-editions.cjs 2>&1 | grep -E "built|rror"); }
+# then every town in each edition's index must have its door file: on 31 Oct a build whose zip step failed left Roofing's folder 359
+# door files short, and push-edition.sh (which sends only files that exist) then sent nothing for those towns. One more build, then stop.
+edcheck() { node -e "const fs=require('fs');let bad=0;for(const d of process.argv.slice(1)){const f='../../editions/dist/'+d+'/rounds/';const r=JSON.parse(fs.readFileSync(f+'index.json')).regions;const m=r.filter(x=>!fs.existsSync(f+x.key+'.json')).length;if(m){console.log(d+': '+m+' door files missing');bad++}}process.exit(bad?1:0)" $EDS; }
+editions() {
+  for try in 1 2; do
+    (cd ../../app && node ../editions/build-editions.cjs 2>&1 | grep -E "built|rror")
+    edcheck && return 0; step "an edition's build folder is incomplete (try $try)"
+  done
+  stop "the editions' build folders are incomplete after two builds"
+}
 # door files of the given towns to Sixfold and the five editions, then a live read-back
 push_doors() {   # <label> <towns...>
   local label=$1; shift; local towns="$*"
