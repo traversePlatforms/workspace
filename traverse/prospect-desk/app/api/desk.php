@@ -75,6 +75,7 @@ function state(): array {
                  $L[$id][$k] = $v; if ($k === 'email') { $L[$id]['emailOk'] = ''; $L[$id]['emailSrc'] = 'desk'; } } break;
             case 'sent': if (isset($L[$id])) { $L[$id]['sent'][] = ['at' => $r['at'], 'subject' => $r['subject'], 'to' => $r['to']]; if (!in_array('emailed', $L[$id]['reached'], true)) $L[$id]['reached'][] = 'emailed'; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Emailed: ' . $r['subject']]; } break;
             case 'click': if (isset($L[$id])) { $L[$id]['clicks'] = ($L[$id]['clicks'] ?? 0) + 1; $L[$id]['log'][] = ['at' => $r['at'], 'by' => 'the company', 'what' => 'Clicked ' . (($r['to'] ?? '') === 'demo' ? 'Book a demo' : 'the website') . ' in the email']; } break;   /* 2026-10-30 */
+            case 'bounce': if (isset($L[$id])) { $L[$id]['emailOk'] = 'no'; $L[$id]['emailWhy'] = 'the email to ' . ($r['to'] ?? 'it') . ' bounced'; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Email bounced: ' . ($r['to'] ?? '')]; } break;   /* 31 Oct: a bounce Matthew reports; the address is kept, the desk never emails it again */
             case 'unsub': if (isset($L[$id])) { $L[$id]['unsub'] = true; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Asked not to be emailed']; } break;
             case 'template': if (isset(TRADES[$r['trade'] ?? ''])) $tpl[$r['trade']] = ['subject' => $r['subject'], 'body' => $r['body']]; break;
             case 'settings': $set = array_merge($set, array_intersect_key((array) $r['s'], $set)); break;
