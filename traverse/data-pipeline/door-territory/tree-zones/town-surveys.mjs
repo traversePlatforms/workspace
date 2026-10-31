@@ -11,3 +11,6 @@ export const SURVEY = Object.fromEntries([...body.matchAll(/'?([a-z0-9-]+)'?:\s*
 /* and the towns added without editing sample-trees (Group 1, 2026-10-26) */
 const EXTRA = join(dirname(fileURLToPath(import.meta.url)), 'town-surveys-extra.json');
 if (existsSync(EXTRA)) Object.assign(SURVEY, JSON.parse(readFileSync(EXTRA, 'utf8')));
+/* and the towns moved onto more surveys (2026-10-31, stage newlidar): lidar-surveys-extra.json { towns: { key: label } } */
+const MORE = join(dirname(fileURLToPath(import.meta.url)), 'lidar-surveys-extra.json');
+if (existsSync(MORE)) Object.assign(SURVEY, JSON.parse(readFileSync(MORE, 'utf8')).towns || {});
