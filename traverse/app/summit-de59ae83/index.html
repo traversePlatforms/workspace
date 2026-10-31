@@ -1050,6 +1050,11 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .dbrowse .db-yours{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;border-bottom:1px solid var(--line)}
   .dbrowse .db-yh{margin:6px 4px 2px;font:800 11.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
   .dbrowse .db-town.trr.trmine{background:var(--go-tint)}
+  .adminlink.trhide{margin:18px 4px 6px}
+  .dbrowse .lnk.trhide{margin:10px 4px 4px;text-align:left;font-size:12.5px}
+  .cohide .chk{display:flex;align-items:center;gap:10px;padding:8px 2px;font-size:15px}
+  .cohide .chk input{width:20px;height:20px;flex:none}
+  .cohide .dwh{margin-top:14px}
   .brow.tap{cursor:pointer}
   .door.acct .alive{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:13px;font-weight:600;color:var(--soft)}
   .door.acct .alive .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
@@ -3133,6 +3138,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (pAdd('set.setup')) x.push(['mail', 'Email and payments', 'Connect the company email and the ways customers pay.', mailSetupView, ['mailsetup', 'kitpay'], 'office']);
     if (pAdd('set.plans') && careOnC()) x.push(['cal', 'Plans', 'What you sell on a schedule.', function () { carePlansView(); }, ['careplans'], 'office']);   /* 2026-10-30 */
     if (pAdd('set.care') && careOnC()) x.push(['mail', 'Customer emails', 'Follow-ups, aftercare and the newsletter.', careMailView, ['caremail', 'carenews'], 'office']);
+    if (pAdd('set.counties') && trOn()) x.push(['map', 'Counties in the town list', 'Hide counties outside the service area from everyone’s list.', function () { trHideView(); }, ['cohide'], 'office']);   /* TR-47, 2026-10-31 */
     if (pAdd('set.eod')) x.push(['mail', 'End-of-day email', 'The day in one email to the owners each evening.', eodView, ['eod'], 'office']);   /* 2026-10-30 */
     return x;
   }
@@ -10959,6 +10965,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         });
       });
     });
+    trHideLink(tl, 'lnk');
     var yh = q('div'); col.insertBefore(yh, tl); trYours(yh, true);
     var res = q('div', 'db-res'); res.hidden = true; col.insertBefore(res, tl);
     trSearchBox(null, res, [yh, tl], true, tq);
@@ -11093,7 +11100,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      picked from the top bar or Home. Computers only (a phone has no side menu). Each screen draws as it always has; whatever it
      puts in the page is moved into the frame as it lands, so nothing about the screens themselves changed. */
   var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1, followupmail: 1, newsletter: 1,
-    kitsetup: 1, kitprices: 1, kitpay: 1, kitimport: 1, kitcosts: 1, mailsetup: 1, svcarea: 1 };   /* Setup and its screens keep the Office menu too (2026-10-30) */
+    kitsetup: 1, kitprices: 1, kitpay: 1, kitimport: 1, kitcosts: 1, mailsetup: 1, svcarea: 1, cohide: 1 };   /* Setup and its screens keep the Office menu too (2026-10-30) */
   function officeFramed() { return !!S.inOffice && !!OFFICE_SCREENS[S.screen] && S.screen !== 'office' && dnavOn(); }
   var officeObs = window.MutationObserver ? new MutationObserver(function () { officeFrame(); }) : null;
   function officeFrame() {
@@ -12233,6 +12240,58 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.trQ) { inp.value = S.trQ; run(); }
     return inp;
   }
+  /* ---- Counties in the town list (TR-47 part 4): an admin (or a role given it, set.counties) unticks the counties outside the service area and
+     their towns leave everyone's list (rounds.php cohide/cohideset; the doors stay, Traverse's super admin still sees them, marked). From Setup,
+     the Office menu or the foot of the town list. ---- */
+  function trHideOk() { return trOn() && !S.viewing && (S.role === 'admin' || !!S.super || pAdd('set.counties')); }
+  function trHideLink(box, cls) {
+    if (!trHideOk()) return;
+    var b = q('button', cls + ' trhide', 'Counties outside your service area? Hide them'); b.type = 'button';
+    b.addEventListener('click', function () { trHideView(true); }); box.appendChild(b);
+  }
+  function trHideView(from) {
+    if (!trHideOk()) return chooseView();
+    if (from !== 'again') S.trHideList = from === true;
+    hideToast(); S.signin = null; S.screen = 'cohide'; foot.hidden = true; setDock(null);
+    var toList = function () { if (S.regions.length) { S.region = null; renderAreas(); } else start(); };
+    setBar('back', { title: 'Counties in the town list', sub: 'Hide the ones outside your service area', back: S.trHideList ? toList : chooseView, backLabel: S.trHideList ? pw('Doors') : 'Field tools' });
+    view.textContent = ''; var box = q('div', 'card coform cohide'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('cohide').then(function (j) {
+      box.textContent = '';
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load the counties.')); return; }
+      var hid = {}; (j.hide || []).forEach(function (k) { hid[k] = 1; });
+      box.appendChild(q('p', 'sub2', 'Untick a county to take its towns off everyone’s town list. Nothing is deleted: tick it again to bring it back. Traverse’s support still sees every county.'));
+      var st = MK().state, L = TR_REGIONS[st] || [], groups = {}, order = [], boxes = [];
+      (j.counties || []).forEach(function (c) { var g = trRegionOf(st, c.key) || ['other', 'Other towns']; if (!groups[g[0]]) { groups[g[0]] = { label: g[1], list: [] }; order.push(g[0]); } groups[g[0]].list.push(c); });
+      var rank = function (k) { for (var i = 0; i < L.length; i++) if (L[i][0] === k) return i; return 99; };
+      order.sort(function (a, b) { return rank(a) - rank(b); });
+      order.forEach(function (gk) {
+        var g = groups[gk]; box.appendChild(q('div', 'dwh', g.label));
+        g.list.sort(function (a, b) { return countyName(a.key).localeCompare(countyName(b.key)); }).forEach(function (c) {
+          var l = q('label', 'chk'), cb = q('input'); cb.type = 'checkbox'; cb.value = c.key; cb.checked = !hid[c.key];
+          l.appendChild(cb); l.appendChild(q('span', null, countyName(c.key) + ' · ' + c.towns + (c.towns === 1 ? ' town, ' : ' towns, ') + trNum(c.homes || 0) + pw(' doors')));
+          box.appendChild(l); boxes.push(cb);
+        });
+      });
+      if (!boxes.length) box.appendChild(q('div', 'msg', 'No counties yet.'));
+      if (j.by && j.at) box.appendChild(q('small', 'sub2', 'Last changed by ' + j.by + ', ' + ago(j.at) + '.'));
+      var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
+      var row = q('div', 'kitbtns'), sv = q('button', 'save', 'Save'); sv.type = 'button'; row.appendChild(sv); box.appendChild(row);
+      sv.addEventListener('click', function () {
+        var hide = boxes.filter(function (cb) { return !cb.checked; }).map(function (cb) { return cb.value; });
+        err.hidden = true;
+        if (boxes.length && hide.length >= boxes.length) { err.hidden = false; err.textContent = 'Keep at least one county on the list.'; return; }
+        sv.disabled = true; sv.textContent = 'Saving…';
+        api('cohideset', { body: { hide: hide } }).then(function (k) {
+          sv.disabled = false; sv.textContent = 'Save';
+          if (!k || !k.ok) { err.hidden = false; err.textContent = (k && k.error) || 'Not saved.'; return; }
+          S.regions = []; S._trIx = null; S.trPlaces = null;   /* the towns come again, without the hidden counties */
+          toast('Saved', k.said || '', null);
+          if (S.screen === 'cohide') trHideView('again');
+        }).catch(function () { sv.disabled = false; sv.textContent = 'Save'; err.hidden = false; err.textContent = 'No signal: nothing was saved.'; });
+      });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { trHideView('again'); })); });
+  }
   /** the town list below the state card (stateView) */
   function trBrowse(box) {
     var yh = q('div'); box.appendChild(yh); trYours(yh, false);
@@ -12240,6 +12299,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var res = q('div', 'trres'); res.hidden = true; box.appendChild(res);
     var main = q('div', 'trmain'); box.appendChild(main);
     trGroups(main);
+    trHideLink(main, 'adminlink');
     trSearchBox(sw, res, [yh, main], false);
   }
   function stateView() {
@@ -14859,7 +14919,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function homeRetClear() { S.homeRet = null; S.homeScr = null; }
   /* a setup screen opens at its top (2026-10-30, Matthew: Setup > Company opened at the bottom of the page, where Home had been scrolled);
      drawn again on the same screen (after a save) it stays where it is */
-  var SETUP_SCR = { company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, prcprices: 1, prcterms: 1, prcimport: 1, svcarea: 1, billing: 1, accounts: 1, newsletter: 1, followupmail: 1, sample: 1, training: 1, careplans: 1, caremail: 1, carenews: 1, prcfeedback: 1, fbleads: 1, eod: 1 };
+  var SETUP_SCR = { company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, prcprices: 1, prcterms: 1, prcimport: 1, svcarea: 1, billing: 1, accounts: 1, newsletter: 1, followupmail: 1, sample: 1, training: 1, careplans: 1, caremail: 1, carenews: 1, prcfeedback: 1, fbleads: 1, eod: 1, cohide: 1 };
   function setupTop() { if (S.screen === S._topScr) return; S._topScr = S.screen; if (SETUP_SCR && SETUP_SCR[S.screen]) window.scrollTo(0, 0); }
   function homeBackFix(o) {
     if (!S.homeRet || /^(tools|setuphome)$/.test(S.screen)) return o;
@@ -14902,6 +14962,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
        [syncOnC(), 'Sync from another system', 'Keep new leads, customers and jobs coming in from your CRM, a Google Sheet, Zapier or Make. Read-only over there.', syncView, 'sync'],   /* 2026-10-30 */
        [costsOnC(), 'Your costs' + (feat('costs') ? '' : ' (testing: only Traverse sees this)'), 'Labor, materials, drive and overhead for each price line: what it costs you, and a suggested price.', costsView, 'costs'],
        [true, 'Training', pw('Your team’s lessons: doors, sales, quotes, phones and more.', 'Your team’s lessons: door-to-door, sales, quotes, phones and more.'), function () { trainingView(); }, 'training'],
+       [trHideOk(), 'Counties in the town list', 'Hide counties outside your service area from everyone’s town list. Tick them again any time.', function () { trHideView(); }, 'cohide'],   /* TR-47, 2026-10-31 */
        [fbOnC(), 'Facebook lead ads', 'New leads from your Facebook and Instagram lead forms, in your Pipeline within 5 minutes.', fbLeadsView, 'fbleads']].forEach(function (x) {   /* 2026-10-30 */
         if (!x[0]) return; var row = q('button', 'kitstep'); row.type = 'button'; row.setAttribute('data-k', x[4]); row.addEventListener('click', setupGo(x[3]));
         row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[1])); tx.appendChild(q('small', null, x[2])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
@@ -22775,7 +22836,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
-      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea', 'fbleads']] : null,   /* the quote and agreement kit (2026-10-27) */
+      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea', 'fbleads', 'cohide']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.role === 'admin' && careOnC() ? ['Plans', function () { carePlansView(); }, false, null, ['careplans']] : null,   /* plans and customer emails (2026-10-30) */
       S.role === 'admin' && careOnC() ? ['Customer emails', careMailView, false, null, ['caremail', 'carenews']] : null,
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */

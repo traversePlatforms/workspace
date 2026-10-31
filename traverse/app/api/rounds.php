@@ -769,6 +769,16 @@ function regionHidden(string $key): bool {
     if ($grp === null) { $grp = []; $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: []; foreach (($idx['regions'] ?? []) as $r) if (!empty($r['group'])) $grp[(string) $r['key']] = (string) $r['group']; }
     return isset($grp[$key]) && !in_array($grp[$key], company()['townGroups'], true);
 }
+/* counties an admin hid from the town list (TR-47, 2026-10-31, Setup › Counties in the town list): county-hide.json {hide: [county keys], by, at}.
+   Their towns drop out of the towns answer and the Yours places for everyone but Traverse's super admin; the doors stay, nothing is deleted, and
+   ticking the county again brings it back. Never in Sixfold 365. */
+function countyHide(): array {
+    static $h = null; if ($h !== null) return $h;
+    $h = []; if (!empty(company()['a365'])) return $h;
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/county-hide.json'), true);
+    foreach ((array) ($j['hide'] ?? []) as $k) if (is_string($k) && $k !== '') $h[$k] = true;
+    return $h;
+}
 function loadRegion(string $key): ?array {
     if (regionHidden($key)) return null;
     if (adminRegion($key) && ($GLOBALS['role'] ?? '') !== 'admin') return null;
@@ -3741,8 +3751,8 @@ if (!$viewing && $realMe === 'Claude Check') {
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     $roOk = array_merge($roOk, ['careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
-    $roOk[] = 'sync';
-    $roOk[] = 'myplaces';   /* the town list's Yours section (TR-47, 2026-10-31) */   /* Sync from another system's screen, read only: keys never shown (2026-10-30) */
+    $roOk[] = 'sync';   /* Sync from another system's screen, read only: keys never shown (2026-10-30) */
+    $roOk[] = 'myplaces'; $roOk[] = 'cohide';   /* the town list's Yours section and its hidden counties, read only (TR-47, 2026-10-31) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3919,6 +3929,7 @@ function permCat(): array {
         'cust.plans' => ['g' => 'cust', 'l' => 'Put customers on plans', 's' => 'puts customers on plans', 'd' => 'Start, change and end a customer\'s plan, send a plan payment link, the newsletter yes, and book plan visits.', 'def' => '01000', 'need' => 'walkdesk', 'acts' => ['carecust', 'careenrol', 'careend', 'careoptin', 'carepaylink', 'caredue'], 'as' => 'office'],   /* 2026-10-30, care-lib.php */
         'set.company' => ['g' => 'set', 'l' => 'Company screen', 's' => 'Company screen', 'd' => 'The company\'s name, phone, email, website and color.', 'def' => '00000', 'need' => 'company', 'admin' => ['companyset']],
         'set.setup' => ['g' => 'set', 'l' => 'Email and payments setup', 's' => 'email and payments setup', 'd' => 'Connect the company email, Square, Stripe and other ways customers pay.', 'def' => '00000', 'need' => 'kit', 'admin' => ['mail', 'mailset', 'mailoff', 'mailtpl', 'mailpreview', 'mailtest', 'mailoauth', 'payset', 'squareoauth', 'payways', 'paywaysset']],
+        'set.counties' => ['g' => 'set', 'l' => 'Counties in the town list', 's' => 'hides counties', 'd' => 'Hide counties outside the service area from everyone\'s town list, and show them again.', 'def' => '00000', 'admin' => ['cohideset']],   /* TR-47, 2026-10-31 */
         'set.eod' => ['g' => 'set', 'l' => 'End-of-day email', 's' => 'end-of-day email', 'd' => 'Turn the evening summary email on or off, and pick who gets it, when, and what it shows.', 'def' => '00000', 'need' => 'walkdesk', 'admin' => ['eodget', 'eodset', 'eodpreview', 'eodtest']],   /* 2026-10-30 */
         'set.fbleads' => ['g' => 'set', 'l' => 'Facebook lead ads', 's' => 'Facebook lead ads', 'd' => 'Connect the company\'s Facebook Page, pick the lead forms and who new ad leads go to.', 'def' => '00000', 'admin' => ['fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbpollnow']],   /* 2026-10-30, fb-leads-lib.php */
         'set.prices' => ['g' => 'set', 'l' => 'Prices', 's' => 'prices', 'd' => 'What a quote adds up from, and Your costs. The agreement terms stay the admin\'s.', 'def' => '00000', 'need' => 'kit', 'admin' => ['kitset', 'costs', 'costsset', 'costsapply', 'prc', 'prcset', 'prcimport', 'prcimportget', 'prcfeedback', 'prcfuel']],   /* the terms library left this list (2026-10-30, Matthew: terms are the admin's and the super admin's only, never given to a role) */
@@ -4099,7 +4110,8 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbleadstoken', 'fbpollnow',   /* + Setup › Facebook leads (2026-10-30) */
     /* review 2026-10-31: the rest of the Setup checklist's rows, which answered 'locked' and bounced the admin back to Setup: the Zelle QR code
        (Payments), Your service area (client installs), Training, and the end-of-day email */
-    'zelleqrset', 'svcarea', 'svcareaset', 'training', 'eodget', 'eodset', 'eodpreview', 'eodtest'];
+    'zelleqrset', 'svcarea', 'svcareaset', 'training', 'eodget', 'eodset', 'eodpreview', 'eodtest',
+    'cohide', 'cohideset'];   /* + Counties in the town list (TR-47, 2026-10-31) */
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
 /* what a lock for payment shuts: Traverse's own data, for everyone but the super admin (2026-10-29) */
 const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'myplaces', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
@@ -4545,6 +4557,7 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
        kept until something it reads changes, the day turns, or the code changes. One per kind of viewer: what it shows differs only by
        admin or not and whether crew see scores. */
     $rkind = ($role === 'admin' ? 'a' : 'c') . (crewSees($role) ? '1' : '0') . ((TERRITORIES_OPEN || $role === 'admin') ? 't' : 'n');
+    $hideC = countyHide(); if ($hideC && $isSuper) $rkind .= 's';   /* hidden counties (TR-47): the super admin's answer keeps them, marked */
     /* per town (2026-10-27, code review item 1): any mark, note or photo in any town used to throw the whole answer away, and the next
        phone decoded every town again (3.4 s of json_decode for 98 towns on a laptop, done once per kind). Now each town's part is kept
        in town-cache/<town>/regions-<kind>.json, keyed on what that part reads: its door file, its own and its partners' marks, lawn-fix,
@@ -4552,7 +4565,7 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
        rebuilds one town. The whole answer is still kept for the common case where nothing changed, keyed on every town key together,
        and a lock stops two phones rebuilding at once (the second gets what the first built). */
     $bestT = crewSees($role) ? company()['best'] : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
-    $gsig = implode('|', [$today, (string) @filemtime(__FILE__), $rkind, fileSig(custDir() . '/customers.log'), fileSig(DATA_DIR . '/company.json'), fileSig(DATA_DIR . '/cwpp.json')]);
+    $gsig = implode('|', [$today, (string) @filemtime(__FILE__), $rkind, fileSig(custDir() . '/customers.log'), fileSig(DATA_DIR . '/company.json'), fileSig(DATA_DIR . '/cwpp.json'), fileSig(DATA_DIR . '/county-hide.json')]);
     $tsigs = [];
     foreach (($idx['regions'] ?? []) as $r) {
         $k = (string) $r['key']; $tp = [$gsig, fileSig((string) regionFile($k))];
@@ -4578,6 +4591,8 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
     /* the county each town is in, from the funding sheet (one list to keep up to date) */
     $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
     foreach (($idx['regions'] ?? []) as $r) {
+        $hidT = $hideC && isset($hideC[(string) ($countyOf[$r['key']] ?? ($r['county'] ?? ''))]);
+        if ($hidT && !$isSuper) continue;   /* a county hidden from the list (TR-47) */
         $tcf = DATA_DIR . '/town-cache/' . $r['key'] . '/regions-' . $rkind . '.json';
         $tc = json_decode((string) @file_get_contents($tcf), true);
         if (!is_array($tc) || ($tc['sig'] ?? '') !== $tsigs[$r['key']]) $tc = null;
@@ -4662,7 +4677,7 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
         if (!empty($tc['skip'])) continue;
         foreach (($tc['segT'] ?? []) as $sg => $c) $segT[$sg] = ($segT[$sg] ?? 0) + $c;
         foreach (($tc['segB'] ?? []) as $sg => $c) $segB[$sg] = ($segB[$sg] ?? 0) + $c;
-        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $tc['areas']];
+        $regions[] = ['key' => $r['key'], 'label' => $r['label'], 'county' => $countyOf[$r['key']] ?? ($r['county'] ?? null), 'areas' => $tc['areas']] + ($hidT ? ['hid' => 1] : []);
         unset($tc);
     }
     /* ---- our own odds (SX-54, 2026-10-04) ----
@@ -5496,9 +5511,10 @@ function townDoorAreas(string $key): array {
 if ($action === 'myplaces') {
     $since = time() - MYPLACES_DAYS * 86400;
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
-    $byTown = [];
+    $byTown = []; $hideC = $isSuper ? [] : countyHide(); $countyOf = $hideC ? ((json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? []) : [];
     foreach (($idx['regions'] ?? []) as $r) {
         $k = (string) ($r['key'] ?? ''); if ($k === '' || !regionAvailable($k)) continue;
+        if ($hideC && isset($hideC[(string) ($countyOf[$k] ?? ($r['county'] ?? ''))])) continue;   /* a hidden county (TR-47 part 4) */
         $f = DATA_DIR . '/marks-' . $k . '.log'; if (!is_file($f)) continue;
         foreach (jsonLines($f) as $m) {
             if (($m['by'] ?? '') !== $me || ($m['outcome'] ?? null) === null || (int) ($m['at'] ?? 0) < $since || !isset($m['id'])) continue;
@@ -10917,7 +10933,7 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
            were not in the backup, so a lost server lost them). Keep in step with sixfold-tools/nightly-backup.php. */
         /* + each install's own settings (2026-10-29: the quote kit's prices and terms, Your costs, other ways to pay, the email templates, the
            Company screen, team goals, crews' towns and days off). Never the mailbox password (mail.json stays in the private folder). + role permissions (role-perms.json, 2026-10-29). */
-        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json', 'eod-report.json', 'ad-spend.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the end-of-day email's settings and the typed ad spend (2026-10-30) */   /* + the smart price list and the clause library (2026-10-30) */
+        foreach (['goals.json', 'goals-people.json', 'goals-teams.json', 'training.json', 'roof-settings.json', 'kit.json', 'costs.json', 'payways.json', 'mail-templates.json', 'company-local.json', 'jobdays.json', 'jobblocks.json', 'role-perms.json', 'pricing.json', 'clauses.json', 'eod-report.json', 'ad-spend.json', 'county-hide.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + the end-of-day email's settings and the typed ad spend (2026-10-30) */   /* + the smart price list and the clause library (2026-10-30) */
         foreach (['care-plans.json', 'care-cfg.json', 'care-news.json', 'care-optin.json', 'care-qplans.json', 'newsletter-unsub.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + plans and customer emails (2026-10-30; their logs are *.log above) and the unsubscribe list */
         $add(DATA_DIR . '/fb-leads.json', 'sixfold-data/rounds/fb-leads.json');   /* the Facebook leads choices (2026-10-30); fbleads.log goes with the *.log above; never the tokens */
         foreach (['sync.json', 'sync-links.json', 'sync-hold.json'] as $n) $add(DATA_DIR . '/' . $n, 'sixfold-data/rounds/' . $n);   /* + Sync from another system (2026-10-30); its keys stay in the private folder */
@@ -15520,6 +15536,39 @@ if ($action === 'svcarea' || $action === 'svcareaset') {
     if (function_exists('fastcgi_finish_request')) fastcgi_finish_request(); else { @ob_flush(); flush(); }
     tcLinkTowns($cid);   /* index.json changes, so the towns answer (regions-cache-*, keyed on it) is made again */
     exit;
+}
+
+/* ---- counties in the town list (TR-47, 2026-10-31, Matthew: "admins can hide counties outside their service area") ----
+ * Every edition and client install (not Sixfold 365); the admin, a role given Counties in the town list (set.counties), or Traverse's super admin.
+ *   cohide     GET   the counties this install's towns are in {key, towns, homes}, which are hidden, who hid them and when
+ *   cohideset  POST  {hide: [county keys]}: at least one county stays. Hidden counties drop out of the towns answer for everyone but the super admin
+ *                    (countyHide); nothing is deleted, and an empty list shows them all again. */
+if ($action === 'cohide' || $action === 'cohideset') {
+    if (!empty(company()['a365'])) fail('Not here.', 404);
+    if (!$isSuper && !adminOr('set.counties')) fail('Not allowed.', 403);
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
+    $cs = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $k = (string) ($r['key'] ?? ''); if ($k === '' || regionHidden($k) || adminRegion($k) || !regionFile($k)) continue;
+        $c = (string) ($countyOf[$k] ?? ($r['county'] ?? '')); if ($c === '') continue;
+        $cs[$c] = $cs[$c] ?? ['key' => $c, 'towns' => 0, 'homes' => 0];
+        $cs[$c]['towns']++; $cs[$c]['homes'] += (int) ($r['doors'] ?? 0);
+    }
+    ksort($cs);
+    $hf = DATA_DIR . '/county-hide.json';
+    $cur = json_decode((string) @file_get_contents($hf), true); $cur = is_array($cur) ? $cur : [];
+    $ans = function (array $cur) use ($cs) { return ['ok' => true, 'counties' => array_values($cs), 'hide' => array_values(array_intersect(array_map('strval', (array) ($cur['hide'] ?? [])), array_keys($cs))), 'by' => (string) ($cur['by'] ?? ''), 'at' => (int) ($cur['at'] ?? 0)]; };
+    if ($action === 'cohide') out($ans($cur));
+    if (!$isPost) fail('POST required', 405);
+    $hide = array_values(array_unique(array_intersect(array_map('strval', (array) ($body['hide'] ?? [])), array_keys($cs))));
+    if ($cs && count($hide) >= count($cs)) fail('Keep at least one county in the list.');
+    /* a hidden county no longer in the towns (a client's area moved) stays hidden: it comes back hidden if the towns come back */
+    $keep = array_values(array_diff(array_map('strval', (array) ($cur['hide'] ?? [])), array_keys($cs)));
+    $new = ['hide' => array_values(array_unique(array_merge($hide, $keep))), 'by' => $me, 'at' => time()];
+    if (!writeJsonAtomic($hf, $new)) fail('Could not save that. Try again.', 500);
+    appendLine(DATA_DIR . '/county-hide.log', ['hide' => $hide, 'by' => $me, 'at' => time()]);
+    out($ans($new) + ['said' => count($hide) ? count($hide) . (count($hide) === 1 ? ' county is' : ' counties are') . ' off the town list.' : 'Every county is on the town list.']);
 }
 
 /* ---- the company's own logo (2026-10-29, Matthew: branding is a selling point; "clients can take this on as their own and we just
