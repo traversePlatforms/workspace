@@ -474,7 +474,7 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     /* no trial (2026-10-27): the card is charged at checkout; the money-back guarantee covers the first days instead */
     /* Stripe takes a coupon or a promotion-code box, not both. The founding coupon is made per checkout by billingFoundingCoupon()
        (the caller runs it before opening Checkout): what it takes off depends on the plan, people and add-ons picked. */
-    if ($byPrice) { $f['metadata']['founding'] = '1'; $f['subscription_data']['metadata']['founding'] = '1'; }   /* the founding prices are on the lines (2026-10-29) */
+    if ($byPrice) { $f['metadata']['founding'] = '1'; $f['subscription_data']['metadata']['founding'] = '1'; $f['allow_promotion_codes'] = 'true'; }   /* the founding prices are on the lines (2026-10-29); no coupon rides with them, so the promotion-code box can (2026-10-30, Matthew's $0 launch test; also how a client gets a code later) */
     elseif (billingFoundingOn($c)) $f['_founding'] = [$plan, $iv, max($seats, $inc), $addon];
     else $f['allow_promotion_codes'] = 'true';
     return ['fields' => $f];
