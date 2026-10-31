@@ -20416,13 +20416,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      implied. The frames' times come from the layer's time dimension in GetCapabilities (a new frame about every 2 minutes, 2 hours
      kept), read at most every few minutes and shared by every open map; if that read fails the map shows the server's latest frame
      with no time. While a map is open the latest time is looked at every minute and the tiles redrawn when it moves (NWS asks for no
-     more than one try a minute). Play shows the last two hours, a frame every 5 minutes, drawn at zoom 10 so a loop stays light.
+     more than one try a minute). Play shows the last two hours, a frame every 5 minutes, drawn at zoom 9 at most so a loop stays light.
      If the NWS server does not answer (a tile error, one redraw to retry, errors again with nothing loaded), the map switches to the
      IEM tiles it used before (the Iowa Environmental Mesonet's copy of NOAA's NEXRAD composite, public domain, credit asked for and
      kept; past frames nexrad-n0q-900913-m05m to -m55m) with a one-line notice, for as long as that map is open. */
   var RADAR_WMS = 'https://opengeo.ncep.noaa.gov/geoserver/conus/conus_bref_qcd/ows', RADAR_WMS_LAYER = 'conus_bref_qcd';
   var RADAR_ATTR = 'Radar: NOAA NWS MRMS';
-  var RADAR_LOOP = { mins: 120, step: 5 };   /* Play: the last two hours, a frame every 5 minutes (24 past frames, then the latest) */
+  var RADAR_LOOP = { mins: 120, step: 5, z: 9 };   /* Play: the last two hours, a frame every 5 minutes (24 past frames, then the latest), drawn at zoom 9 at most (a 512 px image per 512 CSS px there: a loop of 24 is about 150 small tiles on a tablet, not 300) */
   var RADAR_CAPS = { at: 0, times: null, p: null };   /* the time list, shared by every map: kept 2.5 minutes, a failure kept 1 minute */
   var RADAR_BASE = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/', RADAR_LAYER = 'nexrad-n0q-900913', RADAR_NATIVE = 8;   /* the fallback: IEM's tiles, zoom 8 at most and stretched beyond */
   var RADAR_IEM_ATTR = 'Radar: NOAA NWS NEXRAD via <a href="https://mesonet.agron.iastate.edu/">Iowa Environmental Mesonet</a>';
@@ -20499,7 +20499,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     };
     var watch = function (lay) {
       var errs = 0, ok = 0, retried = false, timer = null;
-      var judge = function () { clearTimeout(timer); timer = null; if (lay !== E.layer || E.iem) return; if (errs && errs >= ok) useIem(); };
+      var judge = function () { clearTimeout(timer); timer = null; if (lay !== E.layer || E.iem) return; if (errs && errs >= ok) setTimeout(useIem, 0); };   /* after the layer's own event, never inside it */
       lay.on('tileerror', function () {
         if (lay !== E.layer || E.iem) return;
         if (retried) { errs++; return; }
@@ -20550,7 +20550,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (list) { var best = null; for (var i = 0; i < list.length; i++) if (!best || Math.abs(list[i] - d) < Math.abs(best - d)) best = list[i]; d = best; }   /* the listed frame nearest the step; with no list the server picks its nearest */
           if (seen[d.getTime()] || (E.valid && d.getTime() >= E.valid.getTime())) continue;
           seen[d.getTime()] = 1;
-          past.push([wms(0, { time: iso(d), maxNativeZoom: 10 }).addTo(map), Math.round((end - d) / 60000), d]);
+          past.push([wms(0, { time: iso(d), maxNativeZoom: RADAR_LOOP.z }).addTo(map), Math.round((end - d) / 60000), d]);
         }
       }
       if (!past.length) return;
