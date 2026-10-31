@@ -1,0 +1,284 @@
+[
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 24,
+  "tMapMs": 712,
+  "tDotsMs": 712,
+  "dotsDoneMs": 783,
+  "circles": 8619,
+  "requests": 18,
+  "kb": 329,
+  "apiKb": 2,
+  "tileReqs": 10,
+  "tileKb": 249,
+  "leafletKb": 78,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 69,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 135,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 333,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 458,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 41,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "1662 KB in 739 ms"
+  ]
+ },
+ {
+  "inst": "roofing",
+  "vk": "desk",
+  "pass": "second visit (warm)",
+  "homeReqs": 24,
+  "tMapMs": 191,
+  "tDotsMs": 191,
+  "dotsDoneMs": 276,
+  "circles": 8619,
+  "requests": 5,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 638,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 733,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 1104,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 1480,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 21,
+  "tMapMs": 1979,
+  "tDotsMs": 1979,
+  "dotsDoneMs": 2086,
+  "circles": 8619,
+  "requests": 21,
+  "kb": 328,
+  "apiKb": 2,
+  "tileReqs": 13,
+  "tileKb": 248,
+  "leafletKb": 78,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 73,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 160,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 441,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 614,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 98,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "0 KB in 1402 ms"
+  ]
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabP",
+  "pass": "second visit (warm)",
+  "homeReqs": 26,
+  "tMapMs": 284,
+  "tDotsMs": 284,
+  "dotsDoneMs": 450,
+  "circles": 8619,
+  "requests": 5,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 493,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 595,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 874,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 1053,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "pass": "first visit after sign-in (cold cache)",
+  "homeReqs": 26,
+  "tMapMs": 1542,
+  "tDotsMs": 1542,
+  "dotsDoneMs": 1608,
+  "circles": 8619,
+  "requests": 18,
+  "kb": 328,
+  "apiKb": 2,
+  "tileReqs": 10,
+  "tileKb": 249,
+  "leafletKb": 78,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 82,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 160,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 400,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 549,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 59,
+    "st": 200
+   }
+  ],
+  "homeRegions": [
+   "0 KB in 655 ms"
+  ]
+ },
+ {
+  "inst": "roofing",
+  "vk": "tabL",
+  "pass": "second visit (warm)",
+  "homeReqs": 24,
+  "tMapMs": 231,
+  "tDotsMs": 231,
+  "dotsDoneMs": 287,
+  "circles": 8619,
+  "requests": 5,
+  "kb": 1,
+  "apiKb": 1,
+  "tileReqs": 0,
+  "tileKb": 0,
+  "leafletKb": 0,
+  "api": [
+   {
+    "a": "leads",
+    "kb": 0,
+    "ms": 241,
+    "st": 200
+   },
+   {
+    "a": "alerts",
+    "kb": 0,
+    "ms": 241,
+    "st": 200
+   },
+   {
+    "a": "stats",
+    "kb": 0,
+    "ms": 515,
+    "st": 200
+   },
+   {
+    "a": "walks",
+    "kb": 0,
+    "ms": 695,
+    "st": 200
+   }
+  ],
+  "homeRegions": []
+ }
+]
