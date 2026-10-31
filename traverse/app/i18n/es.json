@@ -4495,8 +4495,7 @@
  "Your tools": "Tus herramientas",
  "House lookup": "Buscar una casa",
  "Import / export": "Importar / exportar",
- "Show map": "Mostrar el mapa",
- "Hide map": "Ocultar el mapa",
- "The neighborhoods with doors left, sized by how many, and the live radar. It loads when you ask.": "Los vecindarios con puertas por tocar, del tamaño de cuántas quedan, y el radar en vivo. Se carga cuando lo pides.",
- "The neighborhoods with properties left, sized by how many, and the live radar. It loads when you ask.": "Los vecindarios con propiedades por visitar, del tamaño de cuántas quedan, y el radar en vivo. Se carga cuando lo pides."
+ "Best neighborhoods to knock next are on Home and in Plan.": "Los mejores vecindarios para tocar después están en Inicio y en Planear.",
+ "At the property": "En la propiedad",
+ "Bookings made at the property": "Citas hechas en la propiedad"
 }
