@@ -1099,6 +1099,7 @@ if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oaut
 if (is_file(__DIR__ . '/care-lib.php')) require_once __DIR__ . '/care-lib.php';   /* plans and customer emails for the editions (2026-10-30): one shared file beside every install's API */
 if (is_file(__DIR__ . '/eod-lib.php')) require_once __DIR__ . '/eod-lib.php';   /* the editions' end-of-day email (2026-10-30): one shared file beside every install's API */
 if (is_file(__DIR__ . '/fb-leads-lib.php')) require_once __DIR__ . '/fb-leads-lib.php';   /* Facebook lead ads into the Pipeline, editions and client installs (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/jobber-lib.php')) require_once __DIR__ . '/jobber-lib.php';   /* Jobber for Sync from another system (TR-46, 2026-10-31): one shared file beside every install's API */
 
 /* ---- notes (2026-10-01) ------------------------------------------------
  * What was said at the door: "dog in the yard", "back after 5", "wants aeration in
@@ -6898,7 +6899,8 @@ if ($action === 'schedview') {
     foreach (jobsAll() as $j) if (!$j['off'] && $j['date'] >= $from && $j['date'] <= $to)
         $rows[] = ['id' => $j['id'], 'date' => $j['date'], 'slot' => $j['slot'], 'crew' => $j['crew'], 'kind' => 'booked', 'name' => trim((string) ($leads[$j['lead']]['name'] ?? $j['title'] ?? '')) ?: 'A customer', 'town' => $town($j['lead'], $j['addr'] ?? ''),
             'what' => jobPkgText($j, true) . (($j['scope'] ?? 'all') === 'front' ? ', front yard only' : (($j['scope'] ?? 'all') === 'back' ? ', back yard only' : '')),
-            'pay' => payLine($j), 'owed' => jobOwed($j), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => cardLine($j, $leads[$j['lead']] ?? null), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
+            'pay' => payLine($j), 'owed' => jobOwed($j), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => cardLine($j, $leads[$j['lead']] ?? null), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : '']
+            + (kitOn() ? ['ps' => payState($j)] : []);   /* an edition: the Paid / Part paid / Unpaid badge (TR-48) */
     foreach (jobHolds($leads) as $h) if ($h['date'] >= $from && $h['date'] <= $to)
         $rows[] = ['lead' => $h['lead'], 'date' => $h['date'], 'slot' => $h['slot'], 'crew' => $h['crew'], 'kind' => 'held', 'name' => $h['name'], 'town' => $town($h['lead'], ''), 'what' => '', 'pay' => $h['paid'] ? 'Held: form sent, waiting to sign' : 'Held: offered with a quote', 'src' => $srcName((string) ($leads[$h['lead']]['src'] ?? '')), 'card' => '', 'done' => ''];
     if ($role === 'quote') {   /* quote-only accounts: their own customers by name and movable; anyone else's slot only says taken (2026-10-15) */
@@ -10345,10 +10347,12 @@ if ($action === 'payments' || $action === 'paymentsexport') {
     if (!dateOk($to)) $to = $y . '-12-31';
     if ($to < $from) [$from, $to] = [$to, $from];
     $rows = array_values(array_filter(paymentsAll(), fn($p) => $p['date'] >= $from && $p['date'] <= $to));
+    $how = (string) ($_GET['how'] ?? ''); if (!isset(PAY_HOW[$how])) $how = '';   /* one method only (TR-48, the editions' Payments screen) */
+    if ($how !== '') $rows = array_values(array_filter($rows, fn($p) => $p['how'] === $how));
     if ($action === 'paymentsexport') {
-        exportLog(['what' => 'payments', 'from' => $from, 'to' => $to]);
+        exportLog(['what' => 'payments', 'from' => $from, 'to' => $to] + ($how !== '' ? ['how' => $how] : []));
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="payments-' . $from . '-to-' . $to . '.csv"');
+        header('Content-Disposition: attachment; filename="payments-' . $from . '-to-' . $to . ($how !== '' ? '-' . $how : '') . '.csv"');
         $fh = fopen('php://output', 'w');
         fputcsv($fh, ['Date', 'Customer', 'Address', 'For', 'Method', 'Amount', 'Square payment ID', 'Job date', 'Job canceled'], ',', '"', '');
         foreach ($rows as $p) fputcsv($fh, array_map('csvSafe', [$p['date'], $p['customer'], $p['addr'], $p['kind'], $p['howL'], number_format($p['amt'], 2, '.', ''), $p['ref'], $p['jobDate'], $p['cancelled'] ? 'yes' : '']), ',', '"', '');
@@ -10358,8 +10362,31 @@ if ($action === 'payments' || $action === 'paymentsexport') {
     $byHow = []; $byMonth = [];
     foreach ($rows as $p) { $byHow[$p['howL']] = ($byHow[$p['howL']] ?? 0) + $p['amt']; $m = substr($p['date'], 0, 7); $byMonth[$m] = ($byMonth[$m] ?? 0) + $p['amt']; }
     arsort($byHow); ksort($byMonth);
+    $ed = kitOn() ? payOwing() : [];   /* an edition: the method asked for, and the jobs still owed (TR-48); Sixfold 365's answer is as it was */
     out(['ok' => true, 'from' => $from, 'to' => $to, 'rows' => $rows, 'total' => array_sum(array_column($rows, 'amt')), 'count' => count($rows), 'byHow' => $byHow, 'byMonth' => $byMonth,
-         'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i'), 'sqcheck' => squareCheckShown()]);
+         'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i'), 'sqcheck' => squareCheckShown()]
+         + (kitOn() ? ['how' => $how, 'owing' => $ed, 'owingTotal' => array_sum(array_column($ed, 'owed'))] : []));
+}
+/** paid, part paid or unpaid, for the badge on an edition's job (TR-48, 2026-10-31); '' for a service plan or a job with no price yet.
+    The page's payStateC() is the same rule */
+function payState(array $j): string {
+    $p = $j['pay'] ?? []; $s0 = (string) ($p['s'] ?? 'unpaid'); $price = (int) ($j['price'] ?? 0);
+    if ($s0 === 'plan') return ''; if ($s0 === 'paid') return 'paid'; if ($price < 1) return '';
+    if ($s0 === 'deposit' && (int) ($p['amt'] ?? 0) > 0) return (int) $p['amt'] >= $price ? 'paid' : 'part';
+    return 'unpaid';
+}
+/** the jobs still owed, for the editions' Payments screen: not cancelled, a price set, part paid or unpaid; the oldest first, at most 300 */
+function payOwing(): array {
+    $leads = leadsAll(); $o = [];
+    foreach (jobsAll() as $j) {
+        if ($j['off'] || !in_array(payState($j), ['part', 'unpaid'], true)) continue;
+        $owed = jobOwed($j); if ($owed < 1) continue;
+        $l = $leads[$j['lead']] ?? [];
+        $o[] = ['id' => (string) $j['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: (trim((string) ($j['title'] ?? '')) ?: 'A customer'), 'date' => (string) $j['date'], 'addr' => (string) ($j['addr'] ?? ''),
+                'price' => (int) $j['price'], 'paid' => jobPaidSoFar($j), 'owed' => $owed, 'ps' => payState($j)];
+    }
+    usort($o, fn($a, $b) => [$a['date'], $a['id']] <=> [$b['date'], $b['id']]);
+    return array_slice($o, 0, 300);
 }
 /* ==== THE EDITIONS' STATS PAGE AND END-OF-DAY EMAIL (2026-10-30, Matthew: "STATS PAGE" and "END-OF-DAY REPORT, OPTIONAL", for the editions
  * and client installs; Sixfold keeps its own Stats page and its 8 pm picture email exactly as they are) ====================================
@@ -11602,6 +11629,14 @@ const SYNC_OTHERS = [
     ['Zoho CRM', 'Needs a Zoho Self Client and a one-time code exchanged within minutes. Not built yet: use Zapier or Make.', 'https://www.zoho.com/crm/developer/docs/api/v8/register-client.html'],
 ];
 const SYNC_EVERY = [5, 15, 30, 60, 360, 1440];
+/* Jobber (TR-46, 2026-10-31): a connector once Traverse's Jobber app is on the server (traverse-shared/jobber-app.json, jobber-lib.php); OAuth,
+   not a pasted key, so it is not in SYNC_CONNS. Until the file is there it stays in SYNC_OTHERS, as before */
+const SYNC_JOBBER = ['Jobber', ['Press Connect Jobber and sign in to Jobber as an admin of your Jobber account.', 'Jobber asks you to allow Traverse to read your clients, requests, quotes and jobs. Press Allow Access: you come back here.', 'Turn it on to start reading. To stop, press Disconnect here (or Disconnect on the app in Jobber).'],
+    'Clients come in as customers (leads while Jobber calls them leads); requests and sent quotes as leads (an approved quote marks the lead won); finished jobs as past work, scheduled ones as the customer\'s next visit. Read only: nothing in Jobber is changed.',
+    'https://developer.getjobber.com/docs/building_your_app/app_authorization/'];   /* Matthew's steps to register the app: traverse/ops/jobber-app-setup.md */
+function syncJbOn(): bool { return function_exists('jbReady') && jbReady(); }
+/** the connectors this install offers: the pasted-key ones, and Jobber once its app is set up */
+function syncConnKeys(): array { return array_merge(array_keys(SYNC_CONNS), syncJbOn() ? ['jobber'] : []); }
 function syncOn(): bool { return impOn(); }
 function syncCfgFile(): string { return DATA_DIR . '/sync.json'; }
 function syncKeysFile(): string { return pushPrivDir() . '/sync-keys.json'; }
@@ -12081,6 +12116,7 @@ function syncConnTest(string $k, array $K): string {
     return syncErr(SYNC_CONNS[$k][0], $code, $j, $err);
 }
 function syncConnRun(string $k, float $until): array {
+    if ($k === 'jobber') return syncJbRun($until);
     $C = syncCfg(); $S = $C['conns'][$k] ?? null; $K = (array) (syncKeys()['conns'][$k] ?? []);
     if ($k === 'jobnimbus' && !empty($K['reuse'])) $K['key'] = (string) (jnConf()['key'] ?? '');
     if (!$S || !$K || array_filter(SYNC_CONNS[$k][1], fn($f) => trim((string) ($K[$f[0]] ?? '')) === '')) return ['err' => 'Not connected.'];
@@ -12091,6 +12127,19 @@ function syncConnRun(string $k, float $until): array {
     foreach ($got as $kind => $recs) if ($recs) { $r = syncApply('conn:' . $k, SYNC_CONNS[$k][0], $kind, $recs, (string) ($S['owner'] ?? '')); foreach ($res as $c => $v) $res[$c] += (int) ($r[$c] ?? 0); }
     if ($err === '') syncCfgEdit(function (array $c) use ($k, $st) { if (isset($c['conns'][$k])) $c['conns'][$k]['state'] = $st; return $c; });   /* a failed read is read again from the same place */
     syncNote('conns', $k, $res, $err);
+    return $res + ['err' => $err];
+}
+/** Jobber's run (TR-46): its tokens in the private folder (jobber-lib.php), its settings and place in sync.json as every connector's */
+function syncJbRun(float $until): array {
+    $S = syncCfg()['conns']['jobber'] ?? null;
+    if (!$S || !syncJbOn() || !jbState(pushPrivDir())['connected']) { $err = !$S ? 'Not connected.' : (jbState(pushPrivDir())['lost'] ? 'Jobber needs connecting again. An admin presses Connect Jobber in Setup, Sync from another system.' : 'Not connected.'); if ($S) syncNote('conns', 'jobber', [], $err); return ['err' => $err]; }
+    $st = (array) ($S['state'] ?? []);
+    $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
+    $got = jbPull(pushPrivDir(), $st, $until, 'syncRec', 'syncDay', $today); $err = (string) ($got['err'] ?? ''); unset($got['err']);
+    $res = ['n' => 0, 'added' => 0, 'updated' => 0, 'skipped' => 0, 'look' => 0, 'held' => 0, 'same' => 0];
+    foreach ($got as $kind => $recs) if ($recs) { $r = syncApply('conn:jobber', 'Jobber', $kind, $recs, (string) ($S['owner'] ?? '')); foreach ($res as $c => $v) $res[$c] += (int) ($r[$c] ?? 0); }
+    if ($err === '') syncCfgEdit(function (array $c) use ($st) { if (isset($c['conns']['jobber'])) $c['conns']['jobber']['state'] = $st; return $c; });
+    syncNote('conns', 'jobber', $res, $err);
     return $res + ['err' => $err];
 }
 /** what the screen shows: settings without any key. $keys false (the read-only sign-in, 2026-10-31): the link addresses stay out too, since
@@ -12108,9 +12157,16 @@ function syncState(bool $keys = true): array {
         $conns[] = ['k' => $k, 'name' => $d[0], 'fields' => array_map(fn($f) => ['k' => $f[0], 'l' => $f[1], 'secret' => $f[2], 'have' => $f[2] ? syncTail((string) ($kk[$f[0]] ?? '')) : (string) ($kk[$f[0]] ?? '')], $d[1]),
                     'steps' => $d[2], 'what' => $d[3], 'src' => $d[4], 'connected' => (bool) $kk, 'reuse' => !empty($kk['reuse'])] + array_intersect_key($s, array_flip(['on', 'owner', 'last', 'lastIn', 'paused', 'at', 'by']));
     }
+    $others = SYNC_OTHERS;
+    if (syncJbOn()) {   /* Jobber (TR-46): Connect Jobber instead of a key; who connected it and to which Jobber account */
+        $J = jbState(pushPrivDir()); $s = $C['conns']['jobber'] ?? [];
+        $conns[] = ['k' => 'jobber', 'name' => SYNC_JOBBER[0], 'oauth' => true, 'fields' => [], 'steps' => SYNC_JOBBER[1], 'what' => SYNC_JOBBER[2], 'src' => SYNC_JOBBER[3], 'connected' => $J['connected'],
+                    'account' => (string) ($J['account'] ?? ''), 'lost' => $J['lost'] ?? null, 'reuse' => false, 'at' => (int) ($J['at'] ?? 0), 'by' => (string) ($J['by'] ?? '')] + array_intersect_key($s, array_flip(['on', 'owner', 'last', 'lastIn', 'paused']));
+        $others = array_values(array_filter($others, fn($o) => $o[0] !== 'Jobber'));
+    }
     $hold = syncHold(); $hc = []; foreach ($hold as $h) { $kk = $h['src'] . '|' . $h['kind']; $hc[$kk] = ($hc[$kk] ?? 0) + 1; }
     $log = array_slice(array_reverse(jsonLines(DATA_DIR . '/sync.log')), 0, 25);
-    return ['ok' => true, 'kinds' => SYNC_KINDS, 'fields' => SYNC_FIELDS, 'every' => SYNC_EVERY, 'hook' => $hook, 'sheets' => $sheets, 'conns' => $conns, 'others' => SYNC_OTHERS,
+    return ['ok' => true, 'kinds' => SYNC_KINDS, 'fields' => SYNC_FIELDS, 'every' => SYNC_EVERY, 'hook' => $hook, 'sheets' => $sheets, 'conns' => $conns, 'others' => $others,
             'held' => ['n' => count($hold), 'by' => $hc, 'some' => array_map(fn($h) => ['src' => $h['src'], 'kind' => $h['kind'], 'why' => $h['why'], 'at' => $h['at'], 'fields' => array_slice(array_keys(syncFlat($h['raw'])), 0, 12)], array_slice(array_reverse($hold), 0, 8))],
             'jnHave' => feature('roof') && (string) (jnConf()['key'] ?? '') !== '', 'log' => $log,
             'people' => array_values(array_filter(array_keys($TEAM['byName'] ?? []), fn($n) => !preg_match('/^Claude Check/i', (string) $n)))];
@@ -12125,7 +12181,7 @@ function syncRunDue(?string $only, int $budget): array {
         if (microtime(true) - $t0 > $budget) break;
         $done['sheet:' . $id] = syncSheetRun((string) $id);
     }
-    foreach (array_keys(SYNC_CONNS) as $k) {
+    foreach (syncConnKeys() as $k) {   /* + Jobber once its app is set up (TR-46) */
         if ($only !== null && $only !== 'conn:' . $k) continue;
         if ($only === null && empty($C['conns'][$k]['on'])) continue;
         $left = $budget - (microtime(true) - $t0); if ($left < 5) break;
@@ -12144,7 +12200,7 @@ if ($action === 'syncpoll') {   /* the 5-minute job: traverse-tools/crm-sync.php
     if (!$any) out(['ok' => true, 'note' => 'nothing on']);
     out(['ok' => true, 'ran' => syncRunDue(null, 70)]);
 }
-if (in_array($action, ['sync', 'synchookset', 'syncmap', 'syncsheet', 'syncsheetset', 'syncconn', 'syncrun', 'synctest', 'synchold'], true)) {
+if (in_array($action, ['sync', 'synchookset', 'syncmap', 'syncsheet', 'syncsheetset', 'syncconn', 'syncrun', 'synctest', 'synchold', 'jobberoauth'], true)) {   /* + Connect Jobber (TR-46) */
     if (!syncOn()) fail('Not here.', 404);
     if (!adminOr('cust.sync')) fail('Not allowed.', 403);
     if ($action === 'sync') out(syncState($realMe !== 'Claude Check'));   /* the read-only sign-in never sees the link's key (2026-10-31) */
@@ -12233,6 +12289,35 @@ if (in_array($action, ['sync', 'synchookset', 'syncmap', 'syncsheet', 'syncsheet
         });
         accountLog(['by' => $me, 'what' => $new ? 'sync sheet added' : 'sync sheet changed', 'id' => $id, 'on' => $body['on'] ?? null]);
         out(syncState() + ['id' => $id]);
+    }
+    if ($action === 'jobberoauth') {   /* Connect Jobber (TR-46): the address to send the admin to; {ready: false} until Traverse's Jobber app is on the server */
+        if (!syncJbOn()) out(['ok' => true, 'ready' => false]);
+        if (!throttleTake(rateFile('jobberoauth|' . (string) ($session['c'] ?? $me)), 20, 3600)) fail('That is a lot of tries in an hour. Wait a little and try again.', 429);
+        $r = jbStart(pushPrivDir(), (string) ($session['c'] ?? ''), (string) $me, kitBase());
+        if (isset($r['error'])) { if ($r['error'] === 'not-ready') out(['ok' => true, 'ready' => false]); fail($r['error'], 500); }
+        $https = ($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off';
+        setcookie($r['cookie'][0], $r['cookie'][1], ['expires' => time() + JB_TTL, 'path' => '/api/jobber-oauth.php', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $https]);
+        accountLog(['by' => $me, 'what' => 'sync connect started', 'system' => 'jobber']);
+        out(['ok' => true, 'ready' => true, 'url' => $r['url']]);
+    }
+    if ($action === 'syncconn' && (string) ($body['k'] ?? '') === 'jobber') {   /* Jobber (TR-46): owner, on or off, or disconnect (Jobber told; what came in stays) */
+        if (!syncJbOn()) fail('Jobber is not available here yet.');
+        if (!empty($body['remove'])) {
+            $r = jbDisconnect(pushPrivDir());
+            syncCfgEdit(function (array $c) { unset($c['conns']['jobber']); return $c; });
+            accountLog(['by' => $me, 'what' => 'sync disconnected', 'system' => 'jobber', 'told' => $r['told']]);
+            out(syncState() + ['told' => $r['told']]);
+        }
+        $J = jbState(pushPrivDir());
+        if (!empty($body['on']) && !$J['connected']) fail($J['lost'] ? 'Jobber needs connecting again first: press Connect Jobber.' : 'Connect Jobber first.');
+        syncCfgEdit(function (array $c) use ($body, $ownerOk, $me) {
+            if (!isset($c['conns']['jobber'])) $c['conns']['jobber'] = ['on' => false, 'name' => 'Jobber', 'at' => time(), 'by' => $me];
+            if (array_key_exists('owner', $body)) $c['conns']['jobber']['owner'] = $ownerOk($body['owner']);
+            if (array_key_exists('on', $body)) { $c['conns']['jobber']['on'] = (bool) $body['on']; if ($body['on']) { unset($c['conns']['jobber']['paused']); $c['conns']['jobber']['fails'] = 0; } }
+            return $c;
+        });
+        if (array_key_exists('on', $body)) accountLog(['by' => $me, 'what' => 'sync ' . (!empty($body['on']) ? 'on' : 'paused'), 'system' => 'jobber']);
+        out(syncState());
     }
     if ($action === 'syncconn') {   /* connect (the key proved first), owner, pause or turn on, or disconnect (the key forgotten; what came in stays) */
         $k = (string) ($body['k'] ?? ''); if (!isset(SYNC_CONNS[$k])) fail('Pick a system.');

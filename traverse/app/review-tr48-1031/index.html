@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TR-48 and TR-46 review</title>
+<style>
+  :root{--bg:#f6f5f2;--card:#fff;--ink:#1d1b18;--soft:#5d5850;--line:#e3dfd8;--accent:#9b4a12}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171614;--card:#22201d;--ink:#eeeae4;--soft:#aaa49a;--line:#3a3631;--accent:#e08a4a}}
+  :root[data-theme="dark"]{--bg:#171614;--card:#22201d;--ink:#eeeae4;--soft:#aaa49a;--line:#3a3631;--accent:#e08a4a}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+  h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 8px}p.sub{color:var(--soft);margin:0 0 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+  figure img{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block}
+  figcaption{font-size:13.5px;color:var(--soft);margin-top:8px}
+  figure.wide{grid-column:1/-1}
+  ul{padding-left:20px}code{font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>TR-48 and TR-46</h1>
+<p class="sub">31 Oct 2026. Harness copy on 127.0.0.1:8819, edition mode (TraverseRoofing-like) unless the caption says Sixfold. Made-up people only.</p>
+
+<h2>TR-48: the Sample property</h2>
+<div class="grid">
+  <figure><img src="02-phone-setup-optional-sample.png" alt="Setup checklist with an Optional step: Try the sample property"><figcaption>Setup checklist (phone): "Try the sample property" under <b>Optional</b>, below the counted steps, with "Hide this step". The count above stays "N of 10 done".</figcaption></figure>
+  <figure><img src="03-phone-sample-from-setup.png" alt="The sample property opened from Setup"><figcaption>Tapping it opens the existing sample property; Back returns to the Setup checklist.</figcaption></figure>
+  <figure><img src="12-phone-super-sample-tile.png" alt="Super admin's Office Setup group with the Sample property tile"><figcaption>Traverse's own sign-in (super admin) keeps the tile under Office › Setup, tagged "Traverse only", and in the computer's tool row. Client admins no longer see either.</figcaption></figure>
+  <figure class="wide"><img src="11-desktop-setup-optional-sample.png" alt="Setup checklist on a computer"><figcaption>The same on a computer.</figcaption></figure>
+</div>
+
+<h2>TR-48: Payments received and the badge</h2>
+<div class="grid">
+  <figure><img src="01-phone-office-sales-payments-tile.png" alt="Office Sales group with the Payments received tile"><figcaption>Office › Sales has a "Payments received" tile (editions and client installs).</figcaption></figure>
+  <figure><img src="04-phone-payments.png" alt="Payments received screen on a phone"><figcaption>The screen: dates and method, then the jobs still owed (any date) with their badges, then what came in for the period with totals, print and spreadsheet.</figcaption></figure>
+  <figure><img src="05-phone-payments-cash.png" alt="Payments filtered to cash"><figcaption>Method set to Cash: the list, the totals, the printout and the spreadsheet all follow it.</figcaption></figure>
+  <figure><img src="06-phone-job-card-badge.png" alt="Job card with an Unpaid badge"><figcaption>A still-owed job opens its job card: the badge by the name, and Mark it paid where it always was. Back goes to Payments received.</figcaption></figure>
+  <figure><img src="07-phone-jobs-badges.png" alt="Jobs board with Paid and Part paid badges"><figcaption>Jobs board: Paid / Part paid / Unpaid on each booked job.</figcaption></figure>
+  <figure><img src="07b-phone-jobs-all-payments-link.png" alt="Jobs with the All payments link"><figcaption>"All payments ›" on Jobs (and on Customers, where the big "Payments received (for taxes)" button was).</figcaption></figure>
+  <figure><img src="08-tablet-payments.png" alt="Payments on a tablet"><figcaption>Tablet.</figcaption></figure>
+  <figure class="wide"><img src="09-desktop-payments.png" alt="Payments on a computer"><figcaption>Computer: Office › Payments received in the Office menu.</figcaption></figure>
+  <figure class="wide"><img src="10-desktop-jobs-badges.png" alt="Jobs on a computer with badges"><figcaption>Computer: the Jobs board with badges.</figcaption></figure>
+</div>
+
+<h2>TR-46: Jobber in Sync from another system</h2>
+<div class="grid">
+  <figure><img src="20-jobber-no-app-file-phone.png" alt="No app file: Jobber listed with why"><figcaption>Without <code>traverse-shared/jobber-app.json</code> (today): exactly as before, Jobber in "Jobber, ServiceTitan, AccuLynx, Salesforce, Zoho" with why.</figcaption></figure>
+  <figure><img src="21-jobber-connect-phone.png" alt="Jobber with a Connect Jobber button"><figcaption>With the file: Jobber under Connect your CRM, with Connect Jobber and the three steps.</figcaption></figure>
+  <figure><img src="22-jobber-connected-phone.png" alt="Connected to Test Lawn Co"><figcaption>After the round trip through Jobber's sign-in (here a local stand-in): "Connected to Test Lawn Co", off until turned on.</figcaption></figure>
+  <figure><img src="24-jobber-lost-phone.png" alt="Jobber needs connecting again"><figcaption>When Jobber refuses the saved connection: "Needs connecting again" and Connect Jobber again.</figcaption></figure>
+  <figure class="wide"><img src="23-jobber-on-desktop.png" alt="Jobber on and read on a computer"><figcaption>Computer: on, after Sync now.</figcaption></figure>
+</div>
+
+<h2>Tests</h2>
+<ul id="tests">
+  <li><b>tr48-test</b> (Part 1, edition and Sixfold checks, API and pages): 45 passed, 0 failed, on a fresh data copy.</li>
+  <li><b>jobber-test</b> (Part 2, against a local Jobber stand-in): 55 passed, 0 failed, on a fresh data copy.</li>
+  <li><b>Regression set</b> (t1030, perms, roles, accounts, payments, jobs, reps, batch1029-ui, crmsync), once in edition mode and once in Sixfold mode, each on fresh data, before and after: no new failures. Every failure after is also there before (the plan-picker line in t1030, the four perms lines, two roles lines and the accounts / jobs page timeouts), or is a timing failure that passed on a re-run (batch1029-ui 43/0, crmsync 82/0 on a quiet port). One expected change: t1030 now also visits the new optional Setup row and checks its Back says Setup (it does).</li>
+</ul>
+</main>
+</body>
+</html>

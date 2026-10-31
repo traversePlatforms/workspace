@@ -775,6 +775,17 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sqcheck.warn{background:#3a2e12;border-color:#8a6a1c}}:root[data-theme="dark"] .sqcheck.warn{background:#3a2e12;border-color:#8a6a1c}
   .paysum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 12px}.paysum div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.paysum b{display:block;font-size:20px}.paysum span{color:var(--muted);font-size:13px}
   .paytbl{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border-radius:12px;overflow:hidden}.paytbl th,.paytbl td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.paytbl th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.paytbl td.n,.paytbl th.n{text-align:right;white-space:nowrap}.paytbl tr.neg td{color:var(--later)}.paytbl small{color:var(--muted)}
+  /* TR-48: the job's payment badge, the jobs still owed, the payments link */
+  .paybadge{display:inline-block;margin:0 6px 0 0;padding:1px 8px;border-radius:999px;border:1.5px solid currentColor;font:800 11.5px/1.5 var(--sans);letter-spacing:.02em;vertical-align:1px;white-space:nowrap}
+  .addr .paybadge{margin:0 0 0 8px}.payowe b .paybadge{margin:0 0 0 8px}
+  .pb-paid{color:var(--go)}.pb-part{color:#9a6400}.pb-unpaid{color:var(--fire-h)}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pb-part{color:#e0b048}}:root[data-theme="dark"] .pb-part{color:#e0b048}
+  .payowe{display:grid;gap:6px;margin:0 0 6px}.payowerow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:15px var(--sans)}
+  button.payowerow{cursor:pointer}.payowerow>span:first-child{display:grid;gap:2px;flex:1;min-width:0}.payowerow small{color:var(--soft)}.payowed{font-weight:800;white-space:nowrap}
+  .paytw{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}.paytw .paytbl{min-width:480px}
+  @media (max-width: 600px){.paytw .paytbl{min-width:0}.paytw .paytbl th:nth-child(3),.paytw .paytbl td:nth-child(3){display:none}.paytw .paytbl th,.paytw .paytbl td{padding:8px 6px}}
+  .lnk.paylink{background:none;border:0;padding:6px 0;margin:2px 0 6px;color:var(--accent);font:700 14.5px var(--sans);cursor:pointer;text-align:left}
+  .kitopt{display:grid;gap:6px;margin-top:6px}.kitopt .lnk{justify-self:start;background:none;border:0;padding:4px 2px;color:var(--accent);font:700 14px var(--sans);cursor:pointer}.kitoptstep .kitck{border-style:dashed}
   .payacts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.payacts button,.payacts a{flex:1;min-width:200px;padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:700 15px var(--sans);text-align:center;text-decoration:none;cursor:pointer}.payacts a{background:var(--card);color:var(--ink);border:1px solid var(--line)}
   .crewadd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;display:grid;gap:8px}.crewadd input,.crewadd select,.crewadd textarea{width:100%;font:600 16px var(--sans);padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
   .crewadd .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.crewaddb{width:100%;text-align:left;border:1.5px dashed var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font:600 14px var(--sans);color:var(--ink);cursor:pointer;margin:10px 0}
@@ -4833,6 +4844,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       homeFold(box, 'office', 'Dashboard', otl);
       officeGroup(box, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way ' + who('jen') + ' does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', lookSay(), 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
+        kitOnC() ? tile('button', 'card', 'Payments received', 'Every payment by date and method, the totals, and the jobs still owed.', 'Admin only', function () { paymentsView(); }) : null,   /* its own screen in an edition (TR-48, 2026-10-31) */
         wdOn() ? tile('button', 'chart', 'Stats', 'Last week, this week, the ads and the next six weeks.', 'Admin only', statsPageView) : null,   /* on the phone as on the computer (2026-10-22) */
         squarePageOn() ? tile('button', 'card', 'Square', 'Payments in, and which job each belongs to.', 'Admin only', squareView) : null,
         qt,
@@ -4862,7 +4874,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         fbOnC() && S.role === 'admin' ? tile('button', 'chat', 'Facebook leads', 'Your Facebook and Instagram lead ads straight into the Pipeline, every 5 minutes.', 'Admin only', fbLeadsView) : null,   /* 2026-10-30 */
         costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
         feat('billing') ? tile('button', 'card', 'Billing', 'Your plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10; no product name outside the Billing screen itself (2026-10-31) */
-        CO.a365 ? null : tile('button', 'door', 'Sample property', 'One made-up property with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew) */
+        CO.a365 || !S.super ? null : tile('button', 'door', 'Sample property', 'One made-up property with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Traverse only', function () { sampleView(); })].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew); a client's admin finds it in the Setup checklist instead (TR-48, 2026-10-31) */
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
     permTiles(box);   /* the screens the role was given (2026-10-29) */
@@ -6201,6 +6213,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (p.s === 'paid') return 'Paid in full' + (p.how ? ' (' + JOB_HOW[p.how] + ')' : '');
     return JOB_PAY[p.s] || 'Not paid yet';
   }
+  /* the small Paid / Part paid / Unpaid badge on a job (TR-48, 2026-10-31; the editions and client installs, never Sixfold 365): the same rule
+     as the server's payState(). '' (no badge) for a service plan or a job with no price yet */
+  var PAY_BADGE = { paid: 'Paid', part: 'Part paid', unpaid: 'Unpaid' };
+  function payStateC(price, pay) {
+    var p = pay || { s: 'unpaid' };
+    if (p.s === 'plan') return ''; if (p.s === 'paid') return 'paid'; if (!price) return '';
+    if (p.s === 'deposit' && (p.amt || 0) > 0) return p.amt >= price ? 'paid' : 'part';
+    return 'unpaid';
+  }
+  function payBadge(st) { if (!st || !PAY_BADGE[st] || (CO && CO.a365)) return null; return q('span', 'paybadge pb-' + st, PAY_BADGE[st]); }
   function jobCollect(j) {   /* what the crew collects at the door */
     var p = j.pay || { s: 'unpaid' };
     if (p.s === 'paid') return 'Nothing: paid in full';
@@ -6291,7 +6313,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             tr.appendChild(q('td', null, s.label)); tr.appendChild(q('td', null, String(crew).split(' ')[0]));
             if (jb) {
               tr.appendChild(q('td', null, jobName(jb)));
-              tr.appendChild(q('td', null, (jb.price ? money0(jb.price) : 'Price to confirm') + ' \u00b7 ' + jobPayText(jb) + (jb.done ? ' \u00b7 ' + (jb.done.o === 'done' ? 'Done' : 'Not done') : '')));
+              var bpc = q('td', null, (jb.price ? money0(jb.price) : 'Price to confirm') + ' \u00b7 ' + jobPayText(jb) + (jb.done ? ' \u00b7 ' + (jb.done.o === 'done' ? 'Done' : 'Not done') : '')), bpb = kitOnC() ? payBadge(payStateC(jb.price, jb.pay)) : null;
+              if (bpb) bpc.insertBefore(bpb, bpc.firstChild); tr.appendChild(bpc);   /* Paid / Part paid / Unpaid, an edition (TR-48) */
               tr.appendChild(q('td', 'saddr', jb.addr || '')); tr.appendChild(q('td', null, jobPkgLabel(jb) + (jb.scope !== 'all' ? ' \u00b7 ' + JOB_SCOPE[jb.scope] : ''))); tr.appendChild(q('td', null, jb.card ? 'Card on file' : 'No card'));
               tr.title = 'Open the job'; tr.addEventListener('click', function () { jobView(jb.id, jobsView, jb.crew); });
             } else if (hd) {
@@ -7445,7 +7468,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function jobCard(jb, redraw) {
     var L = jb.who || null, H = jb.house || null, name = jobName(jb);
     var c = q('div', 'door lead walkcard jobcard');
-    c.appendChild(q('div', 'addr', name));
+    var nm = q('div', 'addr', name), pbg = kitOnC() ? payBadge(payStateC(jb.price, jb.pay)) : null; if (pbg) nm.appendChild(pbg);   /* Paid / Part paid / Unpaid (TR-48) */
+    c.appendChild(nm);
     c.appendChild(q('div', 'meta', jobWhen(jb) + ' · ' + jb.addr));
     var ct = q('div', 'lcontact'), tel = digits(L ? L.phone : '');
     if (tel.length >= 10) {
@@ -8663,6 +8687,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (asJobs && (adminView() || asOffice()) && feat('walkdesk')) box.appendChild(squareConfirmCard(function () { again(wk); }));   /* 2026-10-20 */
     if (feat('walkdesk')) box.appendChild(toschedBox(function () { again(wk); }));   /* follow-ups the crew booked, to confirm (2026-10-28) */
     if (asJobs && careOnC() && (adminView() || asOffice() || pAdd('cust.plans'))) box.appendChild(careDueBox(function () { again(wk); }));   /* plan visits to book, an edition (2026-10-30) */
+    if (asJobs && payPageC() && !S.viewAs) box.appendChild(payLink(jobsView));   /* payments received: their own Office screen, one link from here (TR-48) */
     var nav = q('div', 'schednav');
     var pv = q('button', null, '\u2039 Week before'), nx = q('button', null, 'Week after \u203a'); pv.type = nx.type = 'button';
     var end = jobAdd(wk, 6);
@@ -8708,7 +8733,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               if (r && r.fub) tr.classList.add('sfub');   /* booked by the crew, needs Jen (2026-10-28) */   /* not .mine: that is the chip style */
               if (r && r.kind === 'held' && r.hold) { tr.classList.add('edit'); tr.title = 'Not signed yet: move or take off'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }   /* held, not signed (2026-10-16) */
               if (r && r.id) { tr.classList.add('edit'); tr.title = 'Move or cancel'; (function (row, rr) { row.addEventListener('click', function () { schedEdit(row, rr, j, function () { again(wk); }); }); })(tr, r); }
-              if (r) { tr.appendChild(q('td', null, r.name + (r.fub ? ' · ' + r.fub : ''))); tr.appendChild(q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : ''))); tr.appendChild(schedTownCell(r, area, function () { again(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
+              if (r) { tr.appendChild(q('td', null, r.name + (r.fub ? ' · ' + r.fub : ''))); var pcell = q('td', null, r.pay + (r.done ? ' \u00b7 ' + r.done : '')), pbg = payBadge(r.ps); if (pbg) pcell.insertBefore(pbg, pcell.firstChild); tr.appendChild(pcell); tr.appendChild(schedTownCell(r, area, function () { again(wk); })); tr.appendChild(q('td', null, r.what)); tr.appendChild(q('td', null, r.src)); tr.appendChild(q('td', null, r.card)); }
               else if (bk) { tr.appendChild(q('td', null, 'Off')); [bk.note || 'Blocked off', '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               else { tr.appendChild(q('td', null, past ? '\u2014' : 'Open')); ['', area ? area + ' that day' : '', '', '', ''].forEach(function (v) { tr.appendChild(q('td', null, v)); }); }
               bd.appendChild(tr); n++;
@@ -10212,7 +10237,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () {});
   }
   function openArea(name) {
-    setBar('area', { title: name, sub: townLabel(), back: areaBack, backLabel: S.returnTo ? 'Back' : 'All neighborhoods' });
+    setBar('area', { title: name, sub: townLabel(), back: areaBack, backLabel: S.returnTo ? (S.returnTo.label || 'Back') : 'All neighborhoods' });
     setDock(null); foot.hidden = true;
     view.textContent = '';
     for (var sk = 0; sk < 3; sk++) view.appendChild(q('div', 'skel'));
@@ -10786,7 +10811,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (adminView() && feat('communities')) t.push(['Communities', communitiesView]);
     if (adminView() && feat('skiptrace')) t.push(['Skip trace', skipView]);   /* on the computer as on the phone (2026-10-22) */
     if (adminView() && kitOnC()) t.push(['Setup', kitSetupView]);   /* the Setup checklist on a computer and an iPad held sideways too (2026-10-30 audit: it was only under Office › Setup there) */
-    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365) t.push(['Sample property', sampleView]);   /* not on Sixfold (2026-10-17) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk') && CO.a365) { t.push(['See ' + who('jen') + '\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
+    if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365 && S.super) t.push(['Sample property', function () { sampleView(); }]);   /* not on Sixfold (2026-10-17); Traverse only here, the Setup checklist for a client (TR-48) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk') && CO.a365) { t.push(['See ' + who('jen') + '\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
   }
   function areaLeft(a) { return Math.max(0, a.total - a.done - (a.noanswer || 0)); }
@@ -14479,6 +14504,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function kitSquareReturn() {
     if (mailOauthReturn()) return true;   /* + back from Sign in with Google / Microsoft (2026-10-30) */
     if (fbLeadsReturn()) return true;   /* + back from Connect Facebook (2026-10-30) */
+    if (jobberReturn()) return true;   /* + back from Connect Jobber (TR-46, 2026-10-31) */
     var m = /[?&]square=([a-z-]+)\b/.exec(location.search); if (!m) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
     if (S.role !== 'admin') return false;
@@ -14904,6 +14930,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      the screen it opens, and setBar gives that screen (and it again, drawn fresh after a save or a step inside it) Back to Setup. Home, the
      Office menu, the side menu and Setup itself clear the mark. */
   function setupGo(fn) { return function () { S.setupRet = true; S.setupScr = null; fn(); }; }
+  /* the Sample property as an optional step on the Setup checklist (TR-48, 2026-10-31, Matthew's tablet test: it sat on every client admin's
+     home screen). Not one of the "N of 10": it is never counted and has no tick. Hide it and it stays hidden on this device; Traverse's own
+     sign-in keeps the tile under Office › Setup. Admins only, as the server's sample answer is. */
+  function sampleHidden() { try { return localStorage.getItem('sixfold.sampleHide') === '1'; } catch (e) { return false; } }
+  function sampleStep(box) {
+    if ((CO && CO.a365) || S.role !== 'admin' || sampleHidden()) return;
+    var wrap = q('div', 'kitopt'); wrap.appendChild(q('div', 'dwh', 'Optional'));
+    var row = q('button', 'kitstep kitoptstep'); row.type = 'button'; row.setAttribute('data-k', 'sample');
+    row.addEventListener('click', function () { sampleView(true); });
+    row.appendChild(q('span', 'kitck', ''));
+    var tx = q('span'); tx.appendChild(q('b', null, 'Try the sample property')); tx.appendChild(q('small', null, 'One made-up property with your card on it, to try things before your team does. Nothing you do there is saved.')); row.appendChild(tx);
+    row.appendChild(q('span', 'kitgo', '›')); wrap.appendChild(row);
+    var hd = q('button', 'lnk', 'Hide this step'); hd.type = 'button'; hd.setAttribute('data-k', 'samplehide');
+    hd.addEventListener('click', function () { try { localStorage.setItem('sixfold.sampleHide', '1'); } catch (e) {} wrap.remove(); toast('Hidden', 'The sample property is not on this list any more.', null); });
+    wrap.appendChild(hd); box.appendChild(wrap);
+  }
   function setupBackFix(o) {
     if (!S.setupRet || S.screen === 'kitsetup') return o;
     if (S.setupScr === null) S.setupScr = S.screen;
@@ -14966,6 +15008,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (st[2]) row.appendChild(q('span', 'kitgo', '›'));
         box.appendChild(row);
       });
+      sampleStep(box);   /* optional, never counted above (TR-48) */
       /* Import, Your costs and Training (2026-10-29; Training 2026-10-30): beside the checklist, not steps on it */
       box.appendChild(q('div', 'dwh', 'Bring your data, check your prices, train your team'));
       [[true, 'Import customers, leads and past work', 'From a spreadsheet: your old software, Excel or Google Sheets. Every import can be undone.', function () { importView(); }, 'import'],
@@ -16184,7 +16227,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       hw.appendChild(hb); box.appendChild(hw);
     }
     syncDrawHook(box, J); syncDrawSheets(box, J); syncDrawConns(box, J);
-    var ot = syncFold(box, 'others', 'Jobber, ServiceTitan, AccuLynx, Salesforce, Zoho', 'Through Zapier or Make: why');
+    var ot = syncFold(box, 'others', (J.others || []).map(function (o) { return o[0] === 'Zoho CRM' ? 'Zoho' : o[0]; }).join(', '), 'Through Zapier or Make: why');   /* Jobber leaves this list once it can connect (TR-46) */
     (J.others || []).forEach(function (o) { var d = q('div', 'improw'); d.appendChild(q('b', null, o[0])); d.appendChild(q('small', null, o[1])); var a = q('a', 'lnk', 'Their page'); a.href = o[2]; a.target = '_blank'; a.rel = 'noopener'; d.appendChild(a); ot.appendChild(d); });
     if ((J.log || []).length) {
       var lg = syncFold(box, 'log', 'Recent activity', '');
@@ -16323,14 +16366,29 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- 3. the CRMs ---- */
   function syncDrawConns(box, J) {
     var cs = J.conns || [], onN = cs.filter(function (c) { return c.on; }).length;
-    var b = syncFold(box, 'conns', 'Connect your CRM', onN ? onN + ' connected and on' : 'HubSpot, Pipedrive, JobNimbus, ClickUp, Housecall Pro, HighLevel');
-    b.appendChild(q('div', 'sub2', 'With a key you make in your own account there. Read-only: we only read. Checked every 5 minutes for new and changed records.'));
+    var b = syncFold(box, 'conns', 'Connect your CRM', onN ? onN + ' connected and on' : cs.map(function (c) { return c.name === 'HighLevel (GoHighLevel)' ? 'HighLevel' : c.name; }).join(', '));
+    b.appendChild(q('div', 'sub2', cs.some(function (c) { return c.oauth; }) ? 'With a key you make in your own account there, or for Jobber, by signing in to Jobber. Read-only: we only read. Checked every 5 minutes for new and changed records.' : 'With a key you make in your own account there. Read-only: we only read. Checked every 5 minutes for new and changed records.'));
     cs.forEach(function (c) {
       var d = q('details', 'syncconn'); d.setAttribute('data-k', c.k); if (S.syncOpen['c' + c.k]) d.open = true; d.addEventListener('toggle', function () { S.syncOpen['c' + c.k] = d.open; });
-      var su = q('summary'); su.appendChild(q('b', null, c.name)); su.appendChild(q('span', 'tag ' + (c.on ? 'impact add' : 'impact skip'), c.on ? 'On' : c.connected ? (c.paused === 'failing' ? 'Paused: it kept failing' : 'Connected, off') : 'Not connected')); d.appendChild(su);
+      var su = q('summary'); su.appendChild(q('b', null, c.name)); su.appendChild(q('span', 'tag ' + (c.on && !c.lost ? 'impact add' : 'impact skip'), c.lost ? 'Needs connecting again' : c.on ? 'On' : c.connected ? (c.paused === 'failing' ? 'Paused: it kept failing' : 'Connected, off') : 'Not connected')); d.appendChild(su);   /* c.lost: Jobber's connection stopped (TR-46) */
       var w = q('div', 'syncbody'); d.appendChild(w);
       w.appendChild(q('div', 'sub2', c.what));
-      if (!c.connected) {
+      if (c.oauth && !c.connected) {   /* Jobber (TR-46): Connect Jobber, Jobber's own sign-in, back here */
+        if (c.lost) w.appendChild(q('div', 'syncst bad', 'Jobber stopped accepting the connection' + (c.lost.why ? ' (' + c.lost.why + ')' : '') + (c.lost.at ? ', ' + syncWhen(c.lost.at) : '') + '. Nothing comes in until it is connected again.'));
+        var ol2 = q('ol', 'syncsteps'); c.steps.forEach(function (s) { ol2.appendChild(q('li', null, s)); }); w.appendChild(ol2);
+        var jb = q('div', 'kitbtns'); jb.appendChild(syncBtn('save', c.lost ? 'Connect Jobber again' : 'Connect Jobber', function (x) { jobberConnect(x); }));
+        if (c.lost) jb.appendChild(syncBtn('lnk danger', 'Forget it', function (x) { if (window.confirm('Forget the Jobber connection? What came in stays.')) syncCall(box, 'syncconn', { k: c.k, remove: 1 }, ['Forgotten', 'What came in stays.'], x); }));
+        w.appendChild(jb);
+      } else if (c.oauth) {
+        w.appendChild(q('div', 'syncst', 'Connected to ' + (c.account || 'Jobber') + (c.by ? ' · by ' + c.by : '') + (c.at ? ', ' + syncWhen(c.at) : '')));
+        w.appendChild(q('div', 'syncst' + (c.last && c.last.err ? ' bad' : ''), 'Last read: ' + syncSaid(c.last)));
+        w.appendChild(syncOwnerSel(J, c.owner || '', function (v) { syncCall(box, 'syncconn', { k: c.k, owner: v }, ['Saved', v ? 'New leads go to ' + v + '.' : 'New leads go to nobody yet.']); }));
+        var jo = q('div', 'kitbtns');
+        jo.appendChild(syncBtn('save', c.on ? 'Pause' : 'Turn on: read every 5 minutes', function (x) { syncCall(box, 'syncconn', { k: c.k, on: !c.on }, [c.on ? 'Paused' : 'Jobber is on', c.on ? 'Nothing is read until you turn it on.' : 'The first read is within 5 minutes, or tap Sync now.'], x); }));
+        jo.appendChild(syncBtn('lnk', 'Sync now', function (x) { x.textContent = 'Reading…'; syncCall(box, 'syncrun', { src: 'conn:' + c.k }, ['Jobber', function (j) { return syncSaid(Object.assign({ at: Math.floor(Date.now() / 1000) }, j.ran)); }], x); }));
+        jo.appendChild(syncBtn('lnk danger', 'Disconnect', function (x) { if (window.confirm('Disconnect Jobber? Jobber is told, and this app stops reading it. What came in stays.')) syncCall(box, 'syncconn', { k: c.k, remove: 1 }, ['Disconnected', 'What came in stays.'], x); }));
+        w.appendChild(jo);
+      } else if (!c.connected) {
         var ol = q('ol', 'syncsteps'); c.steps.forEach(function (s) { ol.appendChild(q('li', null, s)); }); w.appendChild(ol);
         var vals = {};
         c.fields.forEach(function (f) { var l = q('label', null, f.l), i = q('input'); i.type = f.secret ? 'password' : 'text'; i.autocomplete = 'off'; i.spellcheck = false; i.name = 'sync-' + c.k + '-' + f.k; i.addEventListener('input', function () { vals[f.k] = i.value.trim(); }); l.appendChild(i); w.appendChild(l); });
@@ -16348,10 +16406,47 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         bb.appendChild(syncBtn('lnk danger', 'Disconnect', function (x) { if (window.confirm('Disconnect ' + c.name + '? The key is forgotten here; what came in stays. Delete the key in ' + c.name + ' too.')) syncCall(box, 'syncconn', { k: c.k, remove: 1 }, ['Disconnected', 'What came in stays.'], x); }));
         w.appendChild(bb);
       }
-      var sa = q('a', 'lnk', c.name + '’s own page about the key'); sa.href = c.src; sa.target = '_blank'; sa.rel = 'noopener'; w.appendChild(sa);
+      var sa = q('a', 'lnk', c.oauth ? 'How Jobber connects apps (Jobber’s page)' : c.name + '’s own page about the key'); sa.href = c.src; sa.target = '_blank'; sa.rel = 'noopener'; w.appendChild(sa);
       b.appendChild(d);
     });
   }
+  /* Connect Jobber (TR-46): the server sends them to Jobber; in the Home Base hub (a frame) in its own window, as Connect Facebook does */
+  function jobberConnect(b) {
+    b.disabled = true;
+    var framed = false; try { framed = window.self !== window.top; } catch (e) { framed = true; }
+    var w = null; if (framed) try { w = window.open('', 'traverse-signin', 'width=600,height=760'); } catch (e) {}
+    api('jobberoauth', { body: {} }).then(function (k) {
+      b.disabled = false;
+      if (k && k.ok && k.ready && k.url) {
+        if (w && !w.closed) { w.location.href = k.url; toast('Finish in the new window', 'Sign in to Jobber there; it closes by itself when you are done.', null); return; }
+        if (!framed) { location.href = k.url; return; }
+        try { window.top.location.href = k.url; } catch (e) { location.href = k.url; }
+        return;
+      }
+      if (w && !w.closed) w.close();
+      toast(k && k.ok ? 'Not available yet' : 'Not started', (k && k.error) || 'Connecting Jobber is being finished on our side.', null);
+    }).catch(function () { b.disabled = false; if (w && !w.closed) w.close(); toast('No signal', 'Try again.', null); });
+  }
+  /* back from Jobber: ?jobber=connected (or why not) */
+  function jobberReturn() {
+    var m = /[?&]jobber=([a-z-]+)\b/.exec(location.search); if (!m) return false;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    if (window.name === 'traverse-signin' && window.opener && !window.opener.closed) {
+      try { window.opener.postMessage({ traverseJobber: m[1] }, location.origin); window.close(); return true; } catch (e) {}
+    }
+    if (!syncOnC()) return false;
+    S.syncOpen = S.syncOpen || {}; S.syncOpen.conns = true; S.syncOpen.cjobber = true;
+    syncView();
+    var W = { connected: ['Jobber connected', 'Turn it on to start reading, and pick who new leads go to.'], denied: ['Not connected', 'Access was not allowed in Jobber, so nothing changed.'],
+      browser: ['Not connected', 'Start again from this screen, in the same browser.'] }[m[1]] || ['Not connected', 'It did not finish. Try again in a minute.'];
+    toast(W[0], W[1], null);
+    return true;
+  }
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data || typeof e.data.traverseJobber !== 'string' || !/^[a-z-]+$/.test(e.data.traverseJobber)) return;
+    try { history.replaceState(null, '', location.pathname + '?jobber=' + e.data.traverseJobber + location.hash); } catch (x) { return; }
+    jobberReturn();
+  });
   /* ---- the Quick quote in the editions (2026-10-30, Matthew: "make quote online a permission but I don't think we need an extra role, I can't
      expect them to pay for a quote only") ----
      For a role with "Quote by phone or online" (the admin always, the office by default, any other role an admin gives it in Accounts): the
@@ -17186,7 +17281,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (kitOnC()) imp.textContent = 'Import (spreadsheet)';
     if (S.role === 'admin') holder.appendChild(imp);   /* imports are the admin's (2026-10-14) */
     var pyb = q('button', 'addlead', 'Payments received (for taxes)'); pyb.type = 'button'; pyb.addEventListener('click', function () { paymentsView(); });
-    if (S.role === 'admin') holder.appendChild(pyb);   /* money records: the admin's (2026-10-16) */
+    if (S.role === 'admin' && !kitOnC()) holder.appendChild(pyb);   /* money records: the admin's (2026-10-16) */
+    if (S.role === 'admin' && kitOnC()) holder.appendChild(payLink(customersView));   /* an edition: its own Office screen now, a link here (TR-48) */
     if (S.custImport) holder.appendChild(customerImport(function () { S.custImport = false; customersView(); }));
     var all = S.custs || [];
     var due = all.filter(function (c) { return c.due; }).sort(function (a, b) { return a.next < b.next ? -1 : 1; });
@@ -17428,24 +17524,39 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (k === 'lastmonth') return [ymd(new Date(y, m - 1, 1)), ymd(new Date(y, m, 0))];
     return [y + '-01-01', y + '-12-31'];
   }
-  function paymentsView() {
+  /* The editions and client installs (TR-48, 2026-10-31, Matthew's tablet test): Payments received is its own Office screen (Office › Sales,
+     and Office on a computer), opened from Customers and Jobs by an "All payments" link; it filters by method as well as dates, and lists the
+     jobs still owed, each opening the job card where Mark it paid is. Sixfold 365 keeps it under Customers as it was. back: where Back goes. */
+  function payPageC() { return kitOnC() && (S.role === 'admin' || pAdd('pay.page')); }
+  function payLink(back) { var a = q('button', 'lnk paylink', 'All payments ›'); a.type = 'button'; a.addEventListener('click', function () { paymentsView(back); }); return a; }
+  function paymentsView(back) {
     hideToast(); S.signin = null; S.screen = 'payments'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Payments received', sub: 'Every payment, for the books', back: customersView, backLabel: 'Customers' });
+    var ed = kitOnC(); back = typeof back === 'function' ? back : (ed ? chooseView : customersView);
+    S.payBack = back;
+    setBar('back', { title: 'Payments received', sub: ed ? 'Every payment, and what is still owed' : 'Every payment, for the books', back: back, backLabel: back === customersView ? 'Customers' : back === jobsView ? 'Jobs' : back === officeView ? 'Office' : 'Home' });
     view.textContent = '';
-    var wrap = q('div'); view.appendChild(wrap);
+    var wrap = q('div', ed ? 'payv' : null); view.appendChild(wrap);
     var ctl = q('div', 'payctl'); wrap.appendChild(ctl);
     var per = q('select'); per.id = 'pay-period'; per.setAttribute('aria-label', 'Period');
     [['year', 'This year'], ['lastyear', 'Last year'], ['quarter', 'This quarter'], ['lastquarter', 'Last quarter'], ['month', 'This month'], ['lastmonth', 'Last month'], ['custom', 'Pick dates']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; per.appendChild(op); });
     per.value = S.payPer || 'year'; ctl.appendChild(per);
     var f1 = q('input'); f1.type = 'date'; f1.id = 'pay-from'; f1.setAttribute('aria-label', 'From'); var f2 = q('input'); f2.type = 'date'; f2.id = 'pay-to'; f2.setAttribute('aria-label', 'To');
     ctl.appendChild(f1); ctl.appendChild(q('span', null, 'to')); ctl.appendChild(f2);
+    var how = null;
+    if (ed) {   /* by method (TR-48): the list, the totals, the printout and the spreadsheet all follow it */
+      how = q('select'); how.id = 'pay-how'; how.setAttribute('aria-label', 'How they paid');
+      var o0 = q('option', null, 'Every method'); o0.value = ''; how.appendChild(o0);
+      Object.keys(JOB_HOW).forEach(function (k) { var op = q('option', null, JOB_HOW[k]); op.value = k; how.appendChild(op); });
+      how.value = S.payHow || ''; ctl.appendChild(how);
+    }
     var body = q('div'); wrap.appendChild(body);
     var setDates = function () { if (per.value !== 'custom') { var r = payPeriod(per.value); f1.value = r[0]; f2.value = r[1]; } };
     if (S.payFrom && per.value === 'custom') { f1.value = S.payFrom; f2.value = S.payTo; } else setDates();
     var load = function () {
-      S.payPer = per.value; S.payFrom = f1.value; S.payTo = f2.value;
+      S.payPer = per.value; S.payFrom = f1.value; S.payTo = f2.value; if (how) S.payHow = how.value;
       body.textContent = ''; body.appendChild(q('div', 'skel'));
-      api('payments', { params: { from: f1.value, to: f2.value } }).then(function (j) {
+      var prm = { from: f1.value, to: f2.value }; if (how && how.value) prm.how = how.value;
+      api('payments', { params: prm }).then(function (j) {
         if (S.screen !== 'payments') return;
         body.textContent = '';
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
@@ -17455,7 +17566,27 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     };
     per.addEventListener('change', function () { setDates(); load(); });
     [f1, f2].forEach(function (x) { x.addEventListener('change', function () { per.value = 'custom'; if (f1.value && f2.value) load(); }); });
+    if (how) how.addEventListener('change', load);
     load();
+  }
+  /* the jobs still owed (an edition, TR-48): each with its badge, and the job card (Mark it paid, a part payment, a pay link) one tap away */
+  function payOwing(body, j) {
+    var L = j.owing || [];
+    var hd = q('h2', null, L.length ? 'Still owed: ' + L.length + (L.length === 1 ? ' job' : ' jobs') + ' · ' + payMoney(j.owingTotal || 0) : 'Still owed'); body.appendChild(hd);
+    if (L.length) body.appendChild(q('div', 'sub2', 'Every job with money left to pay, whatever its date.'));
+    if (!L.length) { body.appendChild(q('div', 'msg soft', 'Every job with a price is paid in full.')); return; }
+    var open = wdOn() || pAdd('pay.paid');
+    var list = q('div', 'payowe');
+    L.forEach(function (x) {
+      var r = q(open ? 'button' : 'div', 'payowerow'); if (open) { r.type = 'button'; r.addEventListener('click', function () { jobView(x.id, function () { paymentsView(S.payBack); }); }); }
+      var tx = q('span'); var nb = q('b', null, x.name); var bg = payBadge(x.ps); if (bg) nb.appendChild(bg); tx.appendChild(nb);
+      tx.appendChild(q('small', null, [dayName(x.date), x.addr, money0(x.price) + (x.paid ? ', ' + money0(x.paid) + ' paid' : '')].filter(Boolean).join(' · '))); r.appendChild(tx);
+      r.appendChild(q('span', 'payowed', money0(x.owed) + ' owed'));
+      if (open) r.appendChild(q('span', 'kitgo', '›'));
+      list.appendChild(r);
+    });
+    body.appendChild(list);
+    body.appendChild(q('div', 'sub2', open ? 'Tap a job to mark it paid, record a part payment or send a pay link.' : 'Who can mark jobs paid is set per role in Accounts.'));
   }
   var payMoney = function (n) { return (n < 0 ? '\u2212$' : '$') + Math.abs(n).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   var payMonth = function (ym) { var p = ym.split('-'); return MONTHS[+p[1] - 1] + ' ' + p[0]; };
@@ -17519,6 +17650,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return box;
   }
   function drawPayments(body, j) {
+    if (j.owing) { payOwing(body, j); body.appendChild(q('h2', 'payrcv', 'Received, ' + fmtD(j.from) + ' to ' + fmtD(j.to) + (j.how ? ' · ' + (JOB_HOW[j.how] || j.how) : ''))); }   /* an edition: the jobs still owed first, then what came in (TR-48) */
     body.appendChild(sqCheckBox(j.sqcheck));
     var sum = q('div', 'paysum');
     var card = function (big, small) { var d = q('div'); d.appendChild(q('b', null, big)); d.appendChild(q('span', null, small)); sum.appendChild(d); };
@@ -17528,9 +17660,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     body.appendChild(sum);
     var acts = q('div', 'payacts');
     var pr = q('button', 'save', 'Print the report'); pr.type = 'button'; pr.addEventListener('click', function () { printPayments(j); }); acts.appendChild(pr);
-    var dl = q('a', 'save', 'Download the spreadsheet'); dl.href = API + '?action=paymentsexport&from=' + encodeURIComponent(j.from) + '&to=' + encodeURIComponent(j.to); dl.setAttribute('download', ''); dl.style.textAlign = 'center'; acts.appendChild(dl);
+    var dl = q('a', 'save', 'Download the spreadsheet'); dl.href = API + '?action=paymentsexport&from=' + encodeURIComponent(j.from) + '&to=' + encodeURIComponent(j.to) + (j.how ? '&how=' + encodeURIComponent(j.how) : ''); dl.setAttribute('download', ''); dl.style.textAlign = 'center'; acts.appendChild(dl);
     body.appendChild(acts);
-    if (!j.rows.length) { body.appendChild(q('div', 'msg', 'No payments recorded in this period.')); }
+    if (!j.rows.length) { body.appendChild(q('div', 'msg', j.how ? 'No ' + (JOB_HOW[j.how] || j.how) + ' payments recorded in this period.' : 'No payments recorded in this period.')); }
     else {
       var mons = Object.keys(j.byMonth);
       if (mons.length > 1) {
@@ -17552,7 +17684,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         t.appendChild(tr);
       });
       var ft = q('tr'); ft.appendChild(q('td', null, '')); ft.appendChild(q('td', null, '')); ft.appendChild(q('td', null, '')); ft.appendChild(q('th', null, 'Total')); ft.appendChild(q('th', 'n', payMoney(j.total))); t.appendChild(ft);
-      body.appendChild(t);
+      if (j.owing) { var tw = q('div', 'paytw'); tw.appendChild(t); body.appendChild(tw); } else body.appendChild(t);   /* an edition: the table scrolls on its own on a phone */
     }
     body.appendChild(q('div', 'sub2', 'Built from the jobs: deposits and balances set on a job, deposits paid by Square link, and balances charged to a saved card. Square\u2019s card fees are not taken off these amounts; Square lists them in its own reports (Reports \u203a Sales summary). Visits logged on customers without a job are not included. This is a record of what was received, not tax advice: give it, with Square\u2019s reports, to whoever does the taxes.'));
   }
@@ -17566,7 +17698,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       '@page{size:letter;margin:0.6in}body{font:11pt/1.4 Arial,Helvetica,sans-serif;color:#111;margin:0}h1{font-size:18pt;margin:0 0 2px}h2{font-size:12pt;margin:18px 0 6px}.sub{color:#555;margin:0 0 12px}' +
       'table{width:100%;border-collapse:collapse;margin:0 0 6px}th,td{border-bottom:1px solid #ccc;padding:5px 6px;text-align:left;vertical-align:top}th{font-size:9pt;text-transform:uppercase;color:#444}td.n,th.n{text-align:right;white-space:nowrap}small{color:#666;font-size:8.5pt}tr.neg td{color:#a33}.two{display:flex;gap:24px}.two table{width:auto;min-width:220px}.tot td{font-weight:bold;border-top:2px solid #111}.note{color:#555;font-size:9pt;margin-top:14px}' +
       '</style></head><body>' +
-      '<h1>Payments received</h1><p class="sub">' + esc(j.company) + ' \u00b7 ' + esc(j.from) + ' to ' + esc(j.to) + ' \u00b7 ' + j.count + ' payment' + (j.count === 1 ? '' : 's') + ' \u00b7 total ' + esc(payMoney(j.total)) + ' \u00b7 made ' + esc(j.made) + '</p>' +
+      '<h1>Payments received</h1><p class="sub">' + esc(j.company) + ' \u00b7 ' + esc(j.from) + ' to ' + esc(j.to) + (j.how ? ' \u00b7 ' + esc(JOB_HOW[j.how] || j.how) + ' only' : '') + ' \u00b7 ' + j.count + ' payment' + (j.count === 1 ? '' : 's') + ' \u00b7 total ' + esc(payMoney(j.total)) + ' \u00b7 made ' + esc(j.made) + '</p>' +
       '<div class="two"><div><h2>By month</h2><table>' + mons + '<tr class="tot"><td>Total</td><td class="n">' + esc(payMoney(j.total)) + '</td></tr></table></div><div><h2>By method</h2><table>' + hows + '<tr class="tot"><td>Total</td><td class="n">' + esc(payMoney(j.total)) + '</td></tr></table></div></div>' +
       '<h2>Every payment</h2><table><tr><th>Date</th><th>Customer</th><th>For</th><th>Method</th><th class="n">Amount</th></tr>' + rows + '<tr class="tot"><td></td><td></td><td></td><td>Total</td><td class="n">' + esc(payMoney(j.total)) + '</td></tr></table>' +
       '<p class="note">Built from the job records: deposits and balances set on each job, deposits paid by Square link, and balances charged to a saved card. Square card fees are not taken off; Square\u2019s own reports list them. A correction (in red) is a payment status changed back on a job. This is a record of payments received, not tax advice.</p>' +
@@ -20544,9 +20676,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- the Sample door (Matthew 2026-10-05) ----
      Fetched from the private data folder (admins only), then opened through the ordinary door screen, so every part of the
      card is the real thing. Fresh each time it is opened: what you did last time is gone. */
-  function sampleView() {
+  function sampleView(fromSetup) {
     hideToast(); S.signin = null; S.screen = 'sample'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Sample property', sub: 'Loading\u2026', back: chooseView, backLabel: 'Field tools' });
+    var toSetup = function () { if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; } kitSetupView(); };   /* as Home does (chooseView) */
+    toSetup.label = 'Setup';   /* the card's Back says where it goes */
+    setBar('back', { title: 'Sample property', sub: 'Loading\u2026', back: fromSetup ? toSetup : chooseView, backLabel: fromSetup ? 'Setup' : 'Field tools' });
     view.textContent = ''; view.appendChild(q('div', 'skel'));
     api('sample').then(function (j) {
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
@@ -20575,7 +20709,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         (j.alerts.fires || []).forEach(function (f) { f.near = SAMPLE_KEY; f.dist = {}; f.dist[SAMPLE_KEY] = f.miles; });
       }
       S.region = SAMPLE_KEY; S.openDoor = j.door.id;
-      S.returnTo = chooseView;
+      S.returnTo = fromSetup ? toSetup : chooseView;   /* opened from the Setup checklist: Back goes there (TR-48) */
       openArea('Sample property');
     }).catch(function () { view.textContent = ''; view.appendChild(q('div', 'msg', 'No signal. The sample property needs signal to open.')); });
   }
@@ -22010,7 +22144,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
     } else {
       setBar('area', { title: S.area, sub: townLabel() + ' · ' + S.doors.length + (S.doors.length === 1 ? pw(' door') : pw(' doors')) + hoodAway(), count: todo.length,
-        back: areaBack, backLabel: S.returnTo ? 'Back' : 'All neighborhoods' });
+        back: areaBack, backLabel: S.returnTo ? (S.returnTo.label || 'Back') : 'All neighborhoods' });
       S.barArea = S.area;
     }
     doorDock();
@@ -22830,6 +22964,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && feat('hail') && cardOn('hail') ? ['Storm list', stormView, false, null, ['storm', 'stormday', 'hail']] : null,
       S.role === 'admin' || S.role === 'office' ? ['Pipeline', pipeOpen, false, 'lead', ['pipeline']] : ['Leads', teamLeadsView, false, null, ['teamleads']],
       S.role === 'admin' || S.role === 'office' ? ['Customers', customersView, false, null, ['customers', 'customer']] : null,
+      S.role === 'admin' && kitOnC() ? ['Payments received', function () { paymentsView(officeView); }, false, null, ['payments']] : null,   /* an edition's own screen (TR-48) */
       wdOn() ? ['Stats', statsPageView, false, null, ['statspage']] : null,   /* 2026-10-20 */
       squarePageOn() ? ['Square', squareView, false, null, ['square']] : null,   /* 2026-10-21 */
       ['Calendar', function () { S.calWho = S.me; calendarView(); }, false, null, ['calendar']],
