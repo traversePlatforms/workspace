@@ -3618,13 +3618,19 @@ function webOrigin(): string {
     }
     return (PHP_SAPI === 'cli-server' ? 'http' : 'https') . '://' . $h;
 }
-/** who it goes to: customers with an email, one per address, not unsubscribed, no test names */
+/** who it goes to: customers, then every lead with an email (Matthew 31 Oct: "every email we have that's come into sixfold"), one per address,
+ *  not unsubscribed, no test names, no lead removed as spam or a duplicate */
 function nlRecipients(): array {
     $un = nlUnsubs(); $o = [];
-    foreach (loadCustomers() as $c) {
-        $e = strtolower(trim((string) ($c['email'] ?? ''))); if ($e === '' || !filter_var($e, FILTER_VALIDATE_EMAIL) || isset($un[$e]) || isset($o[$e])) continue;
-        if (preg_match('/\btest\b|claude/i', (string) ($c['name'] ?? ''))) continue;
-        $o[$e] = ['email' => $e, 'name' => trim((string) ($c['name'] ?? '')), 'cid' => (string) $c['id']];
+    $add = function (string $e, string $name, array $x) use (&$o, $un) {
+        $e = strtolower(trim($e)); if ($e === '' || !filter_var($e, FILTER_VALIDATE_EMAIL) || isset($un[$e]) || isset($o[$e])) return;
+        if (preg_match('/\btest\b|claude/i', $name)) return;
+        $o[$e] = ['email' => $e, 'name' => trim($name)] + $x;
+    };
+    foreach (loadCustomers() as $c) $add((string) ($c['email'] ?? ''), (string) ($c['name'] ?? ''), ['cid' => (string) $c['id']]);
+    foreach (leadsAllRaw() as $id => $l) {
+        if (array_filter((array) ($l['notes'] ?? []), fn($n) => str_contains((string) ($n['note'] ?? ''), 'spam or a duplicate'))) continue;
+        $add((string) ($l['email'] ?? ''), (string) ($l['name'] ?? ''), ['lid' => (string) $id]);
     }
     return array_values($o);
 }
@@ -3646,7 +3652,7 @@ function nlRender(array $is, string $to, bool $test = false): array {
         $h .= '<p style="margin:0 0 16px">' . implode('<br>', array_map($inline, $lines)) . '</p>'; $t .= $plain($blk) . "\n\n";
     }
     $un = nlUnsubUrl($to); $addr = nlAddress();
-    $why = 'You are getting this because you are a ' . $name . ' customer.';
+    $why = 'You are getting this because you got in touch with ' . $name . ' or we have worked on your lawn.';   /* leads as well as customers (31 Oct) */
     $text = ($test ? "[TEST: what each customer gets]\n\n" : '') . trim($t) . "\n\n--\n" . $name . ($ph !== '' ? ' · ' . $ph : '') . ($web !== '' ? ' · ' . $web : '') . "\n" . $why . "\nUnsubscribe: " . $un . "\n" . $addr . "\n";
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
           . '<div style="display:none;max-height:0;overflow:hidden;opacity:0">' . $e((string) ($is['pre'] ?? '')) . '</div>'
