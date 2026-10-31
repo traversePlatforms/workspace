@@ -6827,7 +6827,8 @@ if ($action === 'schedview') {
     foreach (jobsAll() as $j) if (!$j['off'] && $j['date'] >= $from && $j['date'] <= $to)
         $rows[] = ['id' => $j['id'], 'date' => $j['date'], 'slot' => $j['slot'], 'crew' => $j['crew'], 'kind' => 'booked', 'name' => trim((string) ($leads[$j['lead']]['name'] ?? $j['title'] ?? '')) ?: 'A customer', 'town' => $town($j['lead'], $j['addr'] ?? ''),
             'what' => jobPkgText($j, true) . (($j['scope'] ?? 'all') === 'front' ? ', front yard only' : (($j['scope'] ?? 'all') === 'back' ? ', back yard only' : '')),
-            'pay' => payLine($j), 'owed' => jobOwed($j), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => cardLine($j, $leads[$j['lead']] ?? null), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : ''];
+            'pay' => payLine($j), 'owed' => jobOwed($j), 'src' => $srcName((string) ($leads[$j['lead']]['src'] ?? '')), 'card' => cardLine($j, $leads[$j['lead']] ?? null), 'done' => $j['done'] ? ($j['done']['o'] === 'done' ? 'Done' : 'Not done') : '']
+            + (kitOn() ? ['ps' => payState($j)] : []);   /* an edition: the Paid / Part paid / Unpaid badge (TR-48) */
     foreach (jobHolds($leads) as $h) if ($h['date'] >= $from && $h['date'] <= $to)
         $rows[] = ['lead' => $h['lead'], 'date' => $h['date'], 'slot' => $h['slot'], 'crew' => $h['crew'], 'kind' => 'held', 'name' => $h['name'], 'town' => $town($h['lead'], ''), 'what' => '', 'pay' => $h['paid'] ? 'Held: form sent, waiting to sign' : 'Held: offered with a quote', 'src' => $srcName((string) ($leads[$h['lead']]['src'] ?? '')), 'card' => '', 'done' => ''];
     if ($role === 'quote') {   /* quote-only accounts: their own customers by name and movable; anyone else's slot only says taken (2026-10-15) */
@@ -10274,10 +10275,12 @@ if ($action === 'payments' || $action === 'paymentsexport') {
     if (!dateOk($to)) $to = $y . '-12-31';
     if ($to < $from) [$from, $to] = [$to, $from];
     $rows = array_values(array_filter(paymentsAll(), fn($p) => $p['date'] >= $from && $p['date'] <= $to));
+    $how = (string) ($_GET['how'] ?? ''); if (!isset(PAY_HOW[$how])) $how = '';   /* one method only (TR-48, the editions' Payments screen) */
+    if ($how !== '') $rows = array_values(array_filter($rows, fn($p) => $p['how'] === $how));
     if ($action === 'paymentsexport') {
-        exportLog(['what' => 'payments', 'from' => $from, 'to' => $to]);
+        exportLog(['what' => 'payments', 'from' => $from, 'to' => $to] + ($how !== '' ? ['how' => $how] : []));
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="payments-' . $from . '-to-' . $to . '.csv"');
+        header('Content-Disposition: attachment; filename="payments-' . $from . '-to-' . $to . ($how !== '' ? '-' . $how : '') . '.csv"');
         $fh = fopen('php://output', 'w');
         fputcsv($fh, ['Date', 'Customer', 'Address', 'For', 'Method', 'Amount', 'Square payment ID', 'Job date', 'Job canceled'], ',', '"', '');
         foreach ($rows as $p) fputcsv($fh, array_map('csvSafe', [$p['date'], $p['customer'], $p['addr'], $p['kind'], $p['howL'], number_format($p['amt'], 2, '.', ''), $p['ref'], $p['jobDate'], $p['cancelled'] ? 'yes' : '']), ',', '"', '');
@@ -10287,8 +10290,31 @@ if ($action === 'payments' || $action === 'paymentsexport') {
     $byHow = []; $byMonth = [];
     foreach ($rows as $p) { $byHow[$p['howL']] = ($byHow[$p['howL']] ?? 0) + $p['amt']; $m = substr($p['date'], 0, 7); $byMonth[$m] = ($byMonth[$m] ?? 0) + $p['amt']; }
     arsort($byHow); ksort($byMonth);
+    $ed = kitOn() ? payOwing() : [];   /* an edition: the method asked for, and the jobs still owed (TR-48); Sixfold 365's answer is as it was */
     out(['ok' => true, 'from' => $from, 'to' => $to, 'rows' => $rows, 'total' => array_sum(array_column($rows, 'amt')), 'count' => count($rows), 'byHow' => $byHow, 'byMonth' => $byMonth,
-         'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i'), 'sqcheck' => squareCheckShown()]);
+         'company' => (string) (company()['name'] ?? ''), 'made' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d H:i'), 'sqcheck' => squareCheckShown()]
+         + (kitOn() ? ['how' => $how, 'owing' => $ed, 'owingTotal' => array_sum(array_column($ed, 'owed'))] : []));
+}
+/** paid, part paid or unpaid, for the badge on an edition's job (TR-48, 2026-10-31); '' for a service plan or a job with no price yet.
+    The page's payStateC() is the same rule */
+function payState(array $j): string {
+    $p = $j['pay'] ?? []; $s0 = (string) ($p['s'] ?? 'unpaid'); $price = (int) ($j['price'] ?? 0);
+    if ($s0 === 'plan') return ''; if ($s0 === 'paid') return 'paid'; if ($price < 1) return '';
+    if ($s0 === 'deposit' && (int) ($p['amt'] ?? 0) > 0) return (int) $p['amt'] >= $price ? 'paid' : 'part';
+    return 'unpaid';
+}
+/** the jobs still owed, for the editions' Payments screen: not cancelled, a price set, part paid or unpaid; the oldest first, at most 300 */
+function payOwing(): array {
+    $leads = leadsAll(); $o = [];
+    foreach (jobsAll() as $j) {
+        if ($j['off'] || !in_array(payState($j), ['part', 'unpaid'], true)) continue;
+        $owed = jobOwed($j); if ($owed < 1) continue;
+        $l = $leads[$j['lead']] ?? [];
+        $o[] = ['id' => (string) $j['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: (trim((string) ($j['title'] ?? '')) ?: 'A customer'), 'date' => (string) $j['date'], 'addr' => (string) ($j['addr'] ?? ''),
+                'price' => (int) $j['price'], 'paid' => jobPaidSoFar($j), 'owed' => $owed, 'ps' => payState($j)];
+    }
+    usort($o, fn($a, $b) => [$a['date'], $a['id']] <=> [$b['date'], $b['id']]);
+    return array_slice($o, 0, 300);
 }
 /* ==== THE EDITIONS' STATS PAGE AND END-OF-DAY EMAIL (2026-10-30, Matthew: "STATS PAGE" and "END-OF-DAY REPORT, OPTIONAL", for the editions
  * and client installs; Sixfold keeps its own Stats page and its 8 pm picture email exactly as they are) ====================================
