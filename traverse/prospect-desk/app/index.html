@@ -427,7 +427,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   /* ---- Email: pick the companies, preview every message, queue them; the server drip-sends ---- */
   function drawEmail() {
     var D = S.data, Q = D.queue, set = D.settings, em = S.em;
-    head('Email', 'One email per company, each sent on its own from ' + Q.mailbox + '. Pick who gets it, read every message, then queue them. The desk sends weekdays 8 am to 5 pm, about 2 minutes apart, at most ' + set.cap + ' a day.');
+    head('Email', 'One email per company, each sent on its own from ' + Q.mailbox + '. Pick who gets it, read every message, then queue them. The desk sends up to 10 an hour, any day and any time, about 2 minutes apart, at most ' + set.cap + ' a day.');
     var noAddr = !String(set.address || '').trim();
     if (noAddr) { var w = el('div', 'warnbox'); w.appendChild(el('b', null, 'Sending is off until you add your postal address. ')); w.appendChild(document.createTextNode('US law (CAN-SPAM) wants a real postal address in every email like this. Add it in Settings; a PO box or a registered mailbox is fine.')); var gs = el('button', 'lnk', 'Open Settings ›'); gs.type = 'button'; gs.addEventListener('click', function () { go('settings'); }); w.appendChild(document.createTextNode(' ')); w.appendChild(gs); main.appendChild(w); }
     var k = el('div', 'kpis');
@@ -513,7 +513,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       draw3();
       var send = el('button', 'btn', 'Queue these ' + j.messages.length + ' emails'); send.type = 'button'; send.style.marginTop = '10px'; send.setAttribute('data-act', 'queue');
       var days = Math.ceil(j.messages.length / Math.max(1, set.cap));
-      var why = el('p', 'help', noAddr ? 'Add your postal address in Settings to turn sending on.' : 'They go out at most ' + set.cap + ' a day, weekdays 8 am to 5 pm: about ' + days + (days === 1 ? ' working day.' : ' working days.') + ' You can stop the queue any time.');
+      var why = el('p', 'help', noAddr ? 'Add your postal address in Settings to turn sending on.' : 'They go out at most ' + set.cap + ' a day, up to 10 an hour, any day: about ' + days + (days === 1 ? ' day.' : ' days.') + ' You can stop the queue any time.');
       if (noAddr || !j.messages.length) send.disabled = true;
       send.addEventListener('click', function () {
         var who = em.from === 'one' ? 'this company' : em.from === 'list' && em.desc ? em.desc : listDesc({ trade: em.trade, where: em.where }, '') + (em.fresh ? ' not emailed yet' : '');

@@ -20,7 +20,7 @@ add a company by hand, knock a company off (No / Not now, one tap to undo), and 
 One message per company, written from the trade's template (Settings; merge fields {company}, {city}, {first}, {trade}), each to one
 address (never everyone in To/CC/BCC). Matthew picks companies (from the Prospects filter, ticks, or the Email page's own filters),
 reads every message, and taps Queue. The hourly cron job (`traverse/app/tools/morning-email.php`, in `sixfold-tools/`) runs
-`desk.php sendqueue 10` in the background: weekdays 8 am to 5 pm Colorado time, about 2 minutes apart, at most the daily cap
+`desk.php sendqueue 10` in the background: up to 10 an hour, any day and any hour (since 30 Oct, Matthew; `DESK_HOURS=1` for weekdays 8 to 5 only), about 2 minutes apart, at most the daily cap
 (Settings; default 40, highest 80). Sent from m.sharpe@traverseplatforms.com through the same Gmail login as the website's demo
 bookings (`traverse-site-private/site-config.php`).
 

@@ -9,12 +9,12 @@
  *   php desk.php addaccount "Matthew Sharpe" admin
  * Email to many (2026-10-26): the desk writes one message per company from a template, Matthew previews them and queues them; the
  * hourly cron job (traverse/app/tools/morning-email.php starts it) drip-sends from his Traverse mailbox, one message per company,
- * weekdays 8 am to 5 pm Colorado time, about 2 minutes apart, at most the daily cap (default 40). Nothing is queued without his tap,
+ * any day and any hour (Matthew 2026-10-30: businesses run at all hours), about 2 minutes apart, at most the daily cap (default 40). Nothing is queued without his tap,
  * and nothing can be queued until a postal address is set (the law wants one in every commercial email). Each message carries an
  * unsubscribe link this file answers without a sign-in; an unsubscribed company is never emailed again.
  *   php desk.php sendqueue [max]     (the cron job: sends up to max, default 10, if it is time)
  * Test hooks (the harness only): DESK_DATA (data folder), DESK_MAIL_MOCK (a file: messages are written there, none are sent),
- * DESK_ANYTIME=1 (skip the weekday hours), DESK_GAP (seconds between messages; default 120). */
+ * DESK_HOURS=1 (only weekdays 8 am to 5 pm, as before 30 Oct), DESK_GAP (seconds between messages; default 120). */
 declare(strict_types=1);
 define('DESK', 1);
 date_default_timezone_set('America/Denver');
@@ -234,11 +234,11 @@ function mailSend(string $to, string $subject, string $body, array $extra, strin
     @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
     return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
 }
-/** the cron job: send up to $max waiting messages if it is a weekday between 8 am and 5 pm, within today's cap; 0 = fine */
+/** the cron job: send up to $max waiting messages, any day and hour (DESK_HOURS=1: weekdays 8 to 5 only), within today's cap; 0 = fine */
 function sendQueue(int $max): int {
     $lk = fopen(DATA_DIR . '/queue.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) { echo "another run is sending\n"; return 0; }
     $h = (int) date('G'); $dow = (int) date('N');
-    if (!getenv('DESK_ANYTIME') && ($dow > 5 || $h < 8 || $h >= 17)) { echo "not sending hours\n"; return 0; }
+    if (getenv('DESK_HOURS') && ($dow > 5 || $h < 8 || $h >= 17)) { echo "not sending hours\n"; return 0; }   /* any hour by default since 2026-10-30 (Matthew) */
     /* a one-off hold (2026-10-28, Matthew: "push traverse email send outs to 10am tomorrow"): send-after.txt holds a time; nothing goes before it */
     $hold = trim((string) @file_get_contents(DATA_DIR . '/send-after.txt'));
     if (ctype_digit($hold) && time() < (int) $hold) { echo 'held until ' . date('D j M g:i a', (int) $hold) . "\n"; return 0; }

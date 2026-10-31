@@ -17,7 +17,7 @@ Colorado lawn map for {company}
 <!-- body -->
 Hi {first},
 
-I'm Matthew. I built Traverse here in Colorado: a field-sales app for lawn and landscape crews of one to ten people, with door maps, CRM, phones, quotes and the office side in one place. We've mapped over a million Colorado homes, and the house cards show:
+I'm Matthew. I built Traverse here in Colorado: a field-sales app for lawn and landscape crews of one to ten people, with door maps, CRM, phones, quotes and the office side in one place. We've mapped 1.24 million Colorado homes, and the house cards show:
 
 - The lawn's size in square feet, house by house
 - Which streets around {city} have the most large lawns still to knock
@@ -50,7 +50,7 @@ pricing section, 2026-10-30) and `/cancellation/`.
 |---|---|---|
 | "a field-sales app ... with door maps, CRM, phones, quotes and the office side in one place" | Homepage: "properties, phone calls, quotes, jobs and the office in one app"; the same sentence shape as the approved roofing template | OK |
 | "crews of one to ten people" | Matthew's direction (30 Oct). Plans cover 1 (Solo), up to 5 (Team), up to 12 (Company): pricing page and `/cancellation/` | OK (audience, not a plan limit) |
-| "over a million Colorado homes" | The other six templates say "1.24 million" (Matthew's go, 29 Oct); memory: ~1.09M mapped before Group 3 lands, 1.24M after. "Over a million" is true either way. Switch to "1.24 million" to match the roofing text if Matthew prefers | OK, his choice |
+| "1.24 million Colorado homes" (was "over a million"; Matthew 30 Oct: say 1.24 million) | Live editions hold 1,237,418 homes in 407 towns (server index, 30 Oct, after Group 3). Earlier note: The other six templates say "1.24 million" (Matthew's go, 29 Oct); memory: ~1.09M mapped before Group 3 lands, 1.24M after. "Over a million" is true either way. Switch to "1.24 million" to match the roofing text if Matthew prefers | OK, his choice |
 | "The lawn's size in square feet, house by house" | App: lawn chip on the house card ("Large lawn, about 5,100 sq ft"), `TRAVERSE-MANUAL.html` "Lawn size per door"; Yards edition `card.lawn: true` (`traverse/editions/build-editions.cjs`) | OK |
 | "Which streets around {city} have the most large lawns still to knock" | App: "lawn: neighbourhoods with the most large and medium lawns STILL TO KNOCK first" (the edition's ranking) | OK |
 | "The town's watering days, so you have something to open with" | App door card tip: "Ask about their watering days. It shows you know the area and opens the conversation."; Yards `card.water: true` | OK |
