@@ -4170,6 +4170,17 @@ function travMail(string $to, string $subject, string $text): array {
     /* the one SMTP client (smtpSend, review 2026-10-30: this was a second copy of it); plain text, EHLO and Message-ID as traverseplatforms.com */
     return smtpSend(['host' => (string) $s['host'], 'port' => (int) $s['port'], 'user' => (string) $s['user'], 'pass' => (string) $s['pass'], 'from_name' => (string) $s['from_name'], 'domain' => (string) $s['ehlo']], $to, $subject, $text, '');
 }
+/** the refusal when one more person would go over the plan's seats ('' = fine). $after: the account rows as they would be.
+    Matthew 2026-10-30: block it, and say they must remove someone (or move to a bigger plan). Never for Sixfold, an exempt install, or a plan not active. */
+function seatFull(array $after): string {
+    if (!edition() || !feature('billing') || feature('billexempt') || !function_exists('billingSeatsUsed')) return '';
+    $c = billingConfig(__DIR__); $b = billingLoad();
+    if (!in_array($b['status'] ?? '', BILLING_GOOD, true)) return '';
+    $paid = billingSeatsPaid($b, $c); $used = billingSeatsUsed($after);
+    if ($used <= $paid) return '';
+    $plan = function_exists('billingPlanName') ? billingPlanName((string) ($b['plan'] ?? '')) : 'Your';
+    return 'Your ' . $plan . ' plan covers ' . $paid . ' ' . ($paid === 1 ? 'person' : 'people') . ' besides your admin, and ' . ($paid === 1 ? 'that seat is' : 'all ' . $paid . ' are') . ' in use. Remove someone in Accounts to add another, or move to a bigger plan in Billing.';
+}
 function seatWatch(): void {
     global $basePeople, $sessionKey;
     if (!edition() || !feature('billing') || !function_exists('billingSeatsUsed')) return;
@@ -12741,6 +12752,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if (acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');
         if (!in_array($r, ROLES, true)) fail(edition() ? 'Pick a role from the list.' : (feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.'));
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
+        if (($full = seatFull($rows + ['__new' => ['id' => '__new', 'name' => $name, 'role' => $r, 'off' => false, 'source' => 'app', 'at' => time()]])) !== '') fail($full, 409);   /* over the plan's seats: refused (2026-10-30) */
         $inv = inviteFields($body);   /* an email address: the person is invited by email (2026-10-29), editions and client installs */
         $code = acctNewCode($basePeople, $acct);
         $acct['people'][$code] = [$name, $r, $me, time()];
@@ -12837,6 +12849,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     if ($action === 'accountrestore') {
         if (!$t['off']) fail('That account is already on.');
         if (acctTaken($rows, $t['name'], $id)) fail('Someone else signs in as ' . $t['name'] . ' now. Rename one of them first.');
+        if (($full = seatFull(array_replace($rows, [$id => ['off' => false] + $rows[$id]]))) !== '') fail($full, 409);   /* turning someone back on counts as adding (2026-10-30) */
         unset($acct['off'][$id]);
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         accountLog(['by' => $me, 'what' => 'restore', 'name' => $t['name'], 'id' => $id]);
