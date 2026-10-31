@@ -97,7 +97,7 @@ build_side() {
   step "build photo outlines";      (cd roofs && node --max-old-space-size=8192 outline-photos.mjs) | tail -2 || stop "outline build"
 }
 doors_build() { step "build door files"; node --max-old-space-size=8192 build-rounds-data.mjs | grep -E "wrote|listed by two" || stop "build-rounds-data failed"; }
-LABEL="$STAGE-$(date +%Y%m%d)"
+LABEL="${FILL_LABEL:-$STAGE-$(date +%Y%m%d)}"   # FILL_LABEL: a second run the same day (upload-towns-sixfold.sh skips a label it has done)
 
 case $STAGE in
 lawnfix)
@@ -109,7 +109,7 @@ lawnfix)
 const fs=require('fs'),[S,RD,ED,...T]=process.argv.slice(1);const good=[];let a0=0,a1=0;
 for(const t of T){const df=[RD+'/'+t+'.json',ED+'/'+t+'.json'].find(fs.existsSync);const nf=S+'/new/'+t+'.json',of=S+'/before/'+t+'.json';if(!df||!fs.existsSync(nf)){console.error(t+': missing file');continue}
 const ids=new Set(JSON.parse(fs.readFileSync(df)).areas.flatMap(a=>a.doors.map(x=>x.id)));const N=JSON.parse(fs.readFileSync(nf)).doors,O=fs.existsSync(of)?JSON.parse(fs.readFileSync(of)).doors:{};
-const lot=m=>Object.values(m).filter(v=>v&&(v.lot||v.big||v.shared)).length;const stray=Object.keys(N).filter(k=>!ids.has(k)).length;let lost=0;for(const [k,v] of Object.entries(O))if(v&&v.lot&&!(N[k]&&N[k].lot))lost++;
+const lot=m=>Object.values(m).filter(v=>v&&(v.lot||v.big||v.shared)).length;const stray=Object.keys(N).filter(k=>!ids.has(k)&&!(k in O)).length;   /* new strays only: Denver's file has carried 1,943 South Denver ids since the split */let lost=0;for(const [k,v] of Object.entries(O))if(v&&v.lot&&!(N[k]&&N[k].lot))lost++;
 const ok=!stray&&lost<=Math.max(5,lot(O)*0.01)&&lot(N)>=lot(O);a0+=lot(O);a1+=lot(N);
 console.error(t+': lots '+lot(O)+' -> '+lot(N)+', answers '+Object.keys(O).length+' -> '+Object.keys(N).length+', stray '+stray+', lost '+lost+(ok?'':'  LEFT OUT'));if(ok)good.push(t)}
 console.error('all: lots '+a0+' -> '+a1);console.log(good.join(' '))" "$S" "$RD" "$ED/traverse-data/rounds" $TOWNS 2> "$S/check.txt")
