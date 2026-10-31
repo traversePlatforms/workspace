@@ -3031,6 +3031,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .replace(/\u0001(\d+)\u0002/g, function (m, i) { return kept[+i]; });
   }
   function roleName(r) { if (!edOn()) return ({ admin: 'Admin', manager: 'Manager', office: 'Office', quote: 'Quote only', super: 'Traverse' })[r] || 'Crew'; return (ROLE_LBL[CO.best] || {})[r] || ROLE_LBL._[r] || 'Crew'; }
+  /* the House lookup tile's line, in the trade's words (2026-10-30 audit: every edition said "the lawn, the lot"); Sixfold 365 and Yards keep the lawn */
+  var LOOK_SAY = { roof: 'the roof, the lot', solar: 'the roof, the sun', pest: 'the house, the lot', security: 'the house, the lot' };
+  function lookSay() { return 'Type an address: ' + ((edOn() && LOOK_SAY[CO.best]) || 'the lawn, the lot') + ' and what to ask, at once.'; }
+  /* Sixfold 365's people and suppliers, named only there (2026-10-30 audit: "Jen", "Brad's SiteOne receipt" and "Brandon's price" sat in every
+     edition's page source). The editions' build swaps this one line for plain words, and fails if a name is still in the page. */
+  var WHO = { jen: 'Jen', brad: 'Brad', brandon: 'Brandon', bryce: 'Bryce', siteone: 'SiteOne', clickup: 'ClickUp' };
+  function who(k) { return WHO[k] || k; }
   function edRoles() { return ['crew', 'setter', 'tech'].concat(feat('walkdesk') ? ['office'] : [], ['manager', 'admin']); }
   function setterOn() { return edOn() && S.sub === 'setter'; }
   function techOn() { return edOn() && S.sub === 'tech'; }
@@ -4716,7 +4723,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (asOffice()) {   /* first on the office home (2026-10-14): Jen works leads, not doors */   /* the office role (2026-10-14): leads, walks and everyone's calendar */
       var opt = tile('button', 'clip', 'Pipeline', 'Leads to call and email, and booking ' + vw() + 's.', 'Office', pipeOpen);
       api('leads', { params: { count: 1 } }).then(function (j) { var tg = opt.querySelector('.tag'); if (j && j.ok && j.new && tg) tg.textContent = j.new + (j.new === 1 ? ' new lead' : ' new leads') + ' \u00b7 Office'; }).catch(function () {});
-      grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })], 'officerole');
+      grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', lookSay(), 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })], 'officerole');
     }
     grp('In the field', [
       pqOnC() ? tile('button', 'clip', 'Quick quote', 'Someone called or wrote in: their details, the house and the price, then send the quote.', null, phoneQuoteView) : null,   /* the editions' Quick quote, a permission (2026-10-30) */
@@ -4751,7 +4758,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       else if (feat('walkdesk') && CO.a365) otl.appendChild(tile('button', 'users', 'See Jen\u2019s screen', 'Exactly what Jen sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
       otl.appendChild(tile('button', 'chart', 'Office dashboard', pw('Today and this week, the map of best doors left, the team, walks and live radar.'), 'Admin only', officeView)); obox.appendChild(otl);
-      officeGroup(obox, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way Jen does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Admin only', function () { houseLookupView(null); }) : null,
+      officeGroup(obox, 'sales', 'Sales', [pt, quickCanBook() ? tile('button', 'clip', 'Quote builder', 'Price a lawn the way Jen does: find the house, set the price, send the quote or book it.', 'Admin only', function () { quickQuoteView(); }) : null, wdOn() ? tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Admin only', jobsView) : null, wdOn() ? tile('button', 'door', 'House lookup', lookSay(), 'Admin only', function () { houseLookupView(null); }) : null,
         tile('button', 'card', 'Customers', 'Plans, visits, what is due. Backups.', 'Admin only', customersView),
         wdOn() ? tile('button', 'chart', 'Stats', 'Last week, this week, the ads and the next six weeks.', 'Admin only', statsPageView) : null,   /* on the phone as on the computer (2026-10-22) */
         squarePageOn() ? tile('button', 'card', 'Square', 'Payments in, and which job each belongs to.', 'Admin only', squareView) : null,
@@ -14775,7 +14782,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var row = q('label', 'kitrule'); var cb = q('input'); cb.type = 'checkbox'; cb.checked = on;
           cb.addEventListener('change', function () { var x = picks[tier][r.id] || {}; x.on = cb.checked; picks[tier][r.id] = x; paint(); });
           row.appendChild(cb); var tx = q('span'); tx.appendChild(q('b', null, r.label));
-          tx.appendChild(q('small', null, money0(r.rate) + ' ' + (P.units[r.unit] || r.unit) + (r['in'][tk] ? '' : ' · add-on')));
+          tx.appendChild(q('small', null, money0(r.rate) + ' ' + ((P.unitsAll || P.units)[r.unit] || r.unit) + (r['in'][tk] ? '' : ' · add-on')));   /* every unit's words, not only the trade's (2026-10-30) */
           if (r.id in sg && !r['in'][tk]) tx.appendChild(q('small', 'prcsug', 'Suggested: ' + sg[r.id]));
           row.appendChild(tx);
           if (r.unit === 'each') { var qi = q('input', 'kitqty'); qi.inputMode = 'numeric'; qi.value = p.qty != null ? p.qty : r.qty; qi.setAttribute('aria-label', 'How many'); qi.addEventListener('input', function () { var x = picks[tier][r.id] || {}; x.qty = parseInt(qi.value, 10) || 0; picks[tier][r.id] = x; paint(); }); row.appendChild(qi); }
@@ -14849,6 +14856,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* ---- the price list, the options and the automatic adjustments (admin, or a role given Prices and terms) ---- */
   function prcLoad() { return api('prc'); }
+  /* the unit picker: the trade's units (the server's list), plus the line's own when it is not among them, so an older line keeps it (2026-10-30 audit) */
+  function prcUnitPick(D, u) { var o = D.units || {}; if (u && !(u in o) && D.unitsAll && D.unitsAll[u]) { o = Object.assign({}, o); o[u] = D.unitsAll[u]; } return o; }
   function prcSel(opts, val, label, on) { var s = q('select'); if (label) s.setAttribute('aria-label', label); Object.keys(opts).forEach(function (k) { var o = q('option', null, opts[k]); o.value = k; if (String(val) === String(k)) o.selected = true; s.appendChild(o); }); s.addEventListener('change', function () { on(s.value); }); return s; }
   function prcIn(val, label, on, cls, mode) { var i = q('input', cls || null); i.value = val == null ? '' : val; if (label) { i.setAttribute('aria-label', label); i.placeholder = label; } if (mode) i.inputMode = mode; i.addEventListener('input', function () { on(i.value); }); return i; }
   function prcChk(val, label, on) { var l = q('label', 'prcchk'); var c = q('input'); c.type = 'checkbox'; c.checked = !!val; c.addEventListener('change', function () { on(c.checked); }); l.appendChild(c); l.appendChild(document.createTextNode(' ' + label)); return l; }
@@ -14885,7 +14894,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var row = q('div', 'kitrow prcrow');
           row.appendChild(prcIn(r.label, 'What it is', function (v) { r.label = v; }));
           row.appendChild(q('span', 'kitdollar', '$')); row.appendChild(prcIn(r.rate, 'Price ($)', function (v) { r.rate = prcNum(v); }, 'kitrate', 'decimal'));
-          row.appendChild(prcSel(D.units, r.unit, 'How it is priced', function (v) { r.unit = v; drawLines(); }));
+          row.appendChild(prcSel(prcUnitPick(D, r.unit), r.unit, 'How it is priced', function (v) { r.unit = v; drawLines(); }));
           var ins = q('span', 'prcins');
           (C.tiers.on ? PRC_TIERS : ['good']).forEach(function (k) { ins.appendChild(prcChk(r['in'][k], C.tiers.on ? tn(k) : 'Included', function (v) { r['in'][k] = v; })); });
           row.appendChild(ins);
@@ -15257,7 +15266,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var row = q('div', 'kitrow prcrow prcdl' + (x.sure ? '' : ' unsure'));
         row.appendChild(prcIn(x.label, 'What it is', function (v) { x.label = v; }));
         row.appendChild(q('span', 'kitdollar', '$')); row.appendChild(prcIn(x.rate, 'Price ($)', function (v) { x.rate = prcNum(v); }, 'kitrate', 'decimal'));
-        row.appendChild(prcSel(D.units, x.unit, 'How it is priced', function (v) { x.unit = v; }));
+        row.appendChild(prcSel(prcUnitPick(D, x.unit), x.unit, 'How it is priced', function (v) { x.unit = v; }));
         row.appendChild(prcChk(x.addon, 'Add-on', function (v) { x.addon = v; }));
         var act = q('span', 'prcact'); var del = q('button', 'lnk', 'Delete'); del.type = 'button'; del.addEventListener('click', function () { lines.splice(i, 1); drawL(); }); act.appendChild(del); row.appendChild(act);
         if (x.src) { var s = q('button', 'prcsrc lnk', 'From: “' + x.src + '”' + (x.page ? ' (page ' + x.page + ')' : '')); s.type = 'button'; s.addEventListener('click', function () { show(x.src); }); row.appendChild(s); }

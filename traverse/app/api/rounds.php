@@ -14167,6 +14167,14 @@ function prcUnits(): array {
     return ['roofsq' => 'per roofing square (100 sq ft of roof)', 'roofft' => 'per sq ft of roof', 'lawn' => 'per 1,000 sq ft of lawn', 'lawnft' => 'per sq ft of lawn',
             'kw' => 'per kW of solar', 'perim' => 'per foot around the house', 'homeft' => 'per sq ft of home', 'lotk' => 'per 1,000 sq ft of lot', 'visit' => 'per visit', 'each' => 'each', 'flat' => 'flat'];
 }
+/** the units offered on the price screens: the ones that fit this company's trade (2026-10-30 audit: a roofer was picking from lawn and solar
+    units). Every unit in prcUnits() stays valid when saved or imported, so an older line keeps its own; the page adds it to the picker. */
+function prcUnitsShown(): array {
+    $fit = ['roof' => ['roofsq', 'roofft', 'homeft', 'perim'], 'yards' => ['lawn', 'lawnft', 'lotk', 'perim'], 'solar' => ['kw', 'roofsq', 'roofft'], 'pest' => ['homeft', 'perim', 'lotk'], 'security' => ['homeft', 'perim']];
+    $t = kitTrade(); if (!isset($fit[$t])) return prcUnits();
+    $keep = array_merge($fit[$t], ['visit', 'each', 'flat']);
+    return array_filter(prcUnits(), fn($k) => in_array($k, $keep, true), ARRAY_FILTER_USE_KEY);
+}
 /** house facts a rule can use: key => [label, num|text, unit word] */
 function prcFacts(): array {
     return ['pitch' => ['Roof pitch', 'num', '/12'], 'stories' => ['Stories', 'num', ''], 'yb' => ['Year built', 'num', ''], 'age' => ['House age', 'num', 'years'],
@@ -14632,7 +14640,7 @@ function prcKitQuote(array $lead, array $body): array {
 }
 /** what the quote builder needs, in the kit answer: the list, options, rules, units, and the house (facts, measurements) when asked */
 function prcForQuote(array $get): array {
-    $c = prcCfg(); $o = ['lines' => $c['lines'], 'tiers' => $c['tiers'], 'rules' => $c['rules'], 'units' => prcUnits(), 'facts' => prcFacts(), 'set' => $c['set'], 'from' => $c['from'], 'kwDefault' => $c['kwDefault'],
+    $c = prcCfg(); $o = ['lines' => $c['lines'], 'tiers' => $c['tiers'], 'rules' => $c['rules'], 'units' => prcUnitsShown(), 'unitsAll' => prcUnits(), 'facts' => prcFacts(), 'set' => $c['set'], 'from' => $c['from'], 'kwDefault' => $c['kwDefault'],
                          'fuelNow' => $c['rules']['fuel']['on'] ? fuelNow($c['rules']['fuel']) : null];   /* the price per gallon the builder's sum uses: the server's own (2026-10-30) */
     $reg = (string) ($get['region'] ?? ''); $hid = (string) ($get['id'] ?? '');
     if ($reg !== '' && $hid !== '') { $hf = houseFacts($reg, $hid); $o['house'] = $hf ? prcHouse($hf) + ['address' => (string) $hf['address'], 'town' => (string) $hf['town']] : null; }
@@ -14885,7 +14893,7 @@ if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget'
     if (!adminOr('set.prices')) fail('Not allowed.', 403);
     if ($action === 'prc') {
         $c = prcCfg(); $k = kitCfg();
-        out(['ok' => true, 'trade' => kitTrade(), 'units' => prcUnits(), 'facts' => prcFacts(), 'tierKeys' => prcTiers(), 'depositPct' => $k['depositPct'], 'starter' => prcStarter(kitTrade()), 'starterClauses' => prcStarterClauses(kitTrade()),
+        out(['ok' => true, 'trade' => kitTrade(), 'units' => prcUnitsShown(), 'unitsAll' => prcUnits(), 'facts' => prcFacts(), 'tierKeys' => prcTiers(), 'depositPct' => $k['depositPct'], 'starter' => prcStarter(kitTrade()), 'starterClauses' => prcStarterClauses(kitTrade()),
              'lib' => prcClauses(), 'imports' => prcDrafts(), 'ai' => prcAiUse(), 'costsBase' => costsOn() ? costsCfg()['base'] : null, 'fuel' => fuelState()] + $c);
     }
     if ($action === 'prcfuel') {   /* the weekly EIA prices as kept; POST {refresh: true} asks EIA now (at most every 10 minutes) (2026-10-30) */
