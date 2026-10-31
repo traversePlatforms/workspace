@@ -1,0 +1,70 @@
+<!doctype html><meta charset="utf-8"><title>Audit fixes, 30 Oct 2026: before and after</title>
+<style>body{font:15px/1.45 system-ui,Segoe UI,Arial;margin:20px;color:#111;background:#fff;max-width:1400px}h1{font-size:22px}h2{font-size:17px;margin:28px 0 8px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g.ph{grid-template-columns:repeat(4,1fr)}figure{margin:0}img{width:100%;border:1px solid #ccc;display:block}figcaption{font-size:13px;color:#444;margin-top:4px}
+p.n{color:#444}code{background:#f3f3f3;padding:1px 4px}table{border-collapse:collapse;font-size:14px}td,th{border:1px solid #ddd;padding:4px 8px;text-align:left;vertical-align:top}</style>
+<h1>The 30 Oct audit's findings, fixed: before and after</h1>
+<p class="n">Items 1 to 11 of the fix brief from <code>traverse/app/audit-1030/REPORT.md</code>. Left or first: main before the fixes (<code>dcedfc38</code>). Right or second: this branch, merged with that main. Harness copy on port 8809 (<code>scratchpad/ptest-auditfix</code>), headless Chrome, phone 390x844 and desktop 1440x900, edition mode (TraverseRoofing-like) and Sixfold mode. The harness company is a stand-in; nothing here touched the live server.</p>
+
+<h2>1. The ClickUp check box in the Pipeline (High): Sixfold 365's only</h2>
+<div class="g"><figure><img src="before-edition-02-pipeline-phone.png" alt=""><figcaption>Before, Roofing admin: "ClickUp and the app · 7 to look at" in an edition's Pipeline</figcaption></figure>
+<figure><img src="after-edition-02-pipeline-phone.png" alt=""><figcaption>After, Roofing admin: no box. The <code>leads</code> answer carries no <code>cucheck</code> and <code>cucheckok</code> is refused outside Sixfold</figcaption></figure></div>
+<div class="g"><figure><img src="before-sixfold-02-pipeline-phone.png" alt=""><figcaption>Sixfold before</figcaption></figure><figure><img src="after-sixfold-02-pipeline-phone.png" alt=""><figcaption>Sixfold after: unchanged, the box still shows</figcaption></figure></div>
+
+<h2>2. Aerial photos (Medium): the register's new ids, and a line instead of grey</h2>
+<div class="g"><figure><img src="before-edition-04-photo-note-phone.png" alt=""><figcaption>Before: the Planetary Computer unreachable (every request to it failed by the test); the map shows nothing and says nothing</figcaption></figure>
+<figure><img src="after-edition-04-photo-note-phone.png" alt=""><figcaption>After: "Aerial photos cannot load right now. Showing the street map; tap Photo to try again." on the map (and the toast as before). The register's <code>pc1.&lt;time&gt;.&lt;hex&gt;</code> ids are accepted (checked live on 30 Oct: it answers <code>pc1.1793501053.…</code>); the 9 Oct fallback stays; a small map gives up once every tile it asked for has failed and none loaded (a phone asks for six; 15 was never reached)</figcaption></figure></div>
+
+<h2>3. Prices and terms units, House lookup words (Medium)</h2>
+<p class="n">The <code>prc</code> answer's <code>units</code> are now the trade's: Roofing gets <code>roofsq, roofft, perim, homeft, visit, each, flat</code> (before: all eleven, lawn and solar included); <code>unitsAll</code> still carries every unit's words so an older line keeps its own and the picker adds it. House lookup tile: "the roof, the lot" (roofing), "the roof, the sun" (solar), "the house, the lot" (pest, security); Yards and Sixfold keep "the lawn, the lot".</p>
+
+<h2>4. Sixfold's people and suppliers in the editions' page source (Medium)</h2>
+<p class="n">Before (the minified page): Jen 22, ClickUp 16, Bryce 7, Brad 3, Brandon 2, SiteOne 2. After: every such string goes through <code>who()</code> and one <code>WHO</code> line; the editions' build swaps that line for plain words, leaves es.json entries naming them out, and fails if a name is left. The five built pages: 0 hits for Jen, Brandon, Brad, Bryce, SiteOne, Cai, Nneka; ClickUp once per page, in the Sync screen's CRM list as a product. Sixfold's own screens read exactly as before.</p>
+
+<h2>5. The update bar (Medium): low, with a close, gone after 20 seconds</h2>
+<div class="g ph"><figure><img src="before-edition-01-update-bar-phone.png" alt=""><figcaption>Before: over the top bar</figcaption></figure><figure><img src="after-edition-01-update-bar-phone.png" alt=""><figcaption>After: at the bottom (above the tab bar where there is one), a close, gone by itself after 20 s</figcaption></figure>
+<figure><img src="before-sixfold-01-update-bar-phone.png" alt=""><figcaption>Sixfold before</figcaption></figure><figure><img src="after-sixfold-01-update-bar-phone.png" alt=""><figcaption>Sixfold after</figcaption></figure></div>
+
+<h2>6. Hail's link-buttons (Low-Med)</h2>
+<div class="g"><figure><img src="before-edition-03-hail-phone.png" alt=""><figcaption>Before: "Show on the mapShow the neighborhoods hit"; "Live radar map" against "Storm call list"</figcaption></figure><figure><img src="after-edition-03-hail-phone.png" alt=""><figcaption>After: 16 px between them (shot before the second tweak, which moved the gap to after "Live radar map" so a wrapped "Storm call list" starts at the edge)</figcaption></figure></div>
+
+<h2>7 and 8. Refused calls (Low): the office's Customers, a manager on no team</h2>
+<div class="g ph"><figure><img src="before-edition-08-office-customers.png" alt=""><figcaption>Before: <code>backups</code> asked and refused (403) on every visit</figcaption></figure><figure><img src="after-edition-08-office-customers.png" alt=""><figcaption>After: asked only as the admin; nothing refused</figcaption></figure>
+<figure><img src="before-edition-09-manager-no-team.png" alt=""><figcaption>Before: the right words, from a 403</figcaption></figure><figure><img src="after-edition-09-manager-no-team.png" alt=""><figcaption>After: the sign-in and <code>me</code> carry <code>onteam</code>; the page says so itself (after one <code>me</code> check, in case an admin just added them)</figcaption></figure></div>
+<div class="g ph"><figure><img src="before-sixfold-08-office-customers.png" alt=""><figcaption>Sixfold before</figcaption></figure><figure><img src="after-sixfold-08-office-customers.png" alt=""><figcaption>Sixfold after</figcaption></figure><figure><img src="before-sixfold-09-manager-no-team.png" alt=""><figcaption>Sixfold before</figcaption></figure><figure><img src="after-sixfold-09-manager-no-team.png" alt=""><figcaption>Sixfold after</figcaption></figure></div>
+
+<h2>9. Setup from Home on a computer (Medium)</h2>
+<div class="g"><figure><img src="before-edition-06-desk-home.png" alt=""><figcaption>Before: Customers, Stats, Square, Training, Live radar, House lookup, Accounts, Company, Sample property; no Setup</figcaption></figure><figure><img src="after-edition-06-desk-home.png" alt=""><figcaption>After: Setup on the tool row (admins with the quote kit); it opens the checklist. Sixfold's desktop home is unchanged (no quote kit there)</figcaption></figure></div>
+
+<h2>10. "At the door" on the editions' Stats page (Low)</h2>
+<p class="n">The server's source names (<code>edSrcNames</code>) say "At the property" in an edition and "At the door" on Sixfold 365; the page's <code>LEAD_SRC</code>/<code>ST_SRC</code> swap was already in main.</p>
+
+<h2>11. Setup › Email's quick way (and the batch1029-ui suite)</h2>
+<div class="g"><figure><img src="after-edition-05-setup-email-phone.png" alt=""><figcaption>Phone: Setup checklist › "Your email" (<code>button.kitstep[data-k="email"]</code>) › the quick way: "Open Google app passwords" (<code>.mailgobtn</code>); the "Sign in with Google" slot (<code>.mailoauth</code>) stays hidden on this server, which has no OAuth keys</figcaption></figure><figure><img src="after-edition-07-setup-email-desk.png" alt=""><figcaption>Desktop: Home › Setup › Your email, the same quick way</figcaption></figure></div>
+<p class="n">batch1029-ui-test.mjs passed on current main in this harness (43/0, before and after): its Setup step finds the "Setup checklist" tile by its text even inside a closed group and the rows are still <code>.kitstep</code>. The new suite opens the group bar first, as a person would.</p>
+
+<h2>Tests</h2>
+<table><tr><th>Suite</th><th>Before (main)</th><th>After (merged)</th></tr>
+<tr><td>auditfix-test.mjs (new; items 1 to 11, both modes)</td><td>19 passed, 22 failed (the 22 are the findings)</td><td>42 passed, 0 failed</td></tr>
+</table>
+<h2>Regression suites (edition then Sixfold mode; each on fresh logs)</h2>
+<p class="n">Before = main before the fixes; after = this branch merged with main. The failures on both sides are the same pre-existing ones (reps-test's deposit flow, accounts-test's code-card timeout, card-test's Sixfold|Roofing preview, billlock-test's paused-data wording, perms-test's matrix after the doors-to-properties wording and the Spanish line), none of them from these changes.</p>
+<table><tr><th>Suite</th><th>Before</th><th>After</th></tr>
+<tr><td>edition · t1030-test</td><td>64 passed, 0 failed</td><td>64 passed, 0 failed</td></tr>
+<tr><td>edition · reps-test</td><td>14 passed, 4 failed</td><td>14 passed, 4 failed</td></tr>
+<tr><td>edition · batch1029-ui-test</td><td>43 passed, 0 failed</td><td>43 passed, 0 failed</td></tr>
+<tr><td>edition · accounts-test</td><td>29 passed, 1 failed</td><td>29 passed, 1 failed</td></tr>
+<tr><td>edition · payments-test</td><td>20 passed, 0 failed</td><td>20 passed, 0 failed</td></tr>
+<tr><td>edition · card-test</td><td>15 passed, 3 failed</td><td>15 passed, 3 failed</td></tr>
+<tr><td>edition · roles-test</td><td>75 passed, 0 failed</td><td>75 passed, 0 failed</td></tr>
+<tr><td>edition · billlock-test</td><td>101 passed, 7 failed</td><td>101 passed, 7 failed</td></tr>
+<tr><td>perms · perms-test</td><td>119 passed, 5 failed</td><td>119 passed, 5 failed</td></tr>
+<tr><td>sixfold · t1030-test</td><td>64 passed, 0 failed</td><td>64 passed, 0 failed</td></tr>
+<tr><td>sixfold · reps-test</td><td>14 passed, 4 failed</td><td>14 passed, 4 failed</td></tr>
+<tr><td>sixfold · batch1029-ui-test</td><td>43 passed, 0 failed</td><td>43 passed, 0 failed</td></tr>
+<tr><td>sixfold · roles-test</td><td>75 passed, 0 failed</td><td>75 passed, 0 failed</td></tr>
+<tr><td>sixfold · accounts-test</td><td>26 passed, 1 failed</td><td>26 passed, 1 failed</td></tr>
+<tr><td>sixfold · payments-test</td><td>20 passed, 0 failed</td><td>20 passed, 0 failed</td></tr>
+<tr><td>sixfold · card-test</td><td>1 passed, 1 failed</td><td>1 passed, 1 failed</td></tr>
+<tr><td>sixfold · billlock-test</td><td>101 passed, 7 failed</td><td>101 passed, 7 failed</td></tr>
+</table>
+</body>
