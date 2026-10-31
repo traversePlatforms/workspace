@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stats and end-of-day email</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--ink:#15202d;--soft:#566476;--line:#dce2ea}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11161d;--card:#1a212b;--ink:#e8edf3;--soft:#9aa7b6;--line:#2c3644}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+  h1{font-size:24px;margin:0 0 4px} h2{font-size:18px;margin:28px 0 8px} p{margin:6px 0;color:var(--soft)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+  figure img{width:100%;height:auto;display:block;border-radius:6px} figcaption{font-size:13px;color:var(--soft);margin-top:6px}
+  .phone img{max-width:390px;margin:0 auto}
+</style></head><body><main>
+<h1>Editions: Stats page and end-of-day email</h1>
+<p>30 Oct 2026, the test harness (TraverseRoofing-like edition; harness data, throwaway accounts). Screens from edstats-test.mjs.</p>
+<h2>Stats page</h2>
+<div class="grid">
+  <figure><img src="01-stats-desktop.png" alt="Stats page on a computer"><figcaption>Computer, last 30 days: KPIs, leads by source, estimates and close rate, jobs and money, Good / Better / Best, ads, team, six weeks, doors, end-of-day card.</figcaption></figure>
+  <figure class="phone"><img src="01-stats-phone.png" alt="Stats page on a phone"><figcaption>Phone.</figcaption></figure>
+</div>
+<h2>End-of-day email settings</h2>
+<div class="grid">
+  <figure><img src="02-eod-settings-desktop.png" alt="End-of-day settings on a computer"><figcaption>Off until the admin turns it on; time, people (admins and managers), parts, sender.</figcaption></figure>
+  <figure class="phone"><img src="02-eod-settings-phone.png" alt="End-of-day settings on a phone"><figcaption>Phone.</figcaption></figure>
+  <figure><img src="03-eod-preview-desktop.png" alt="Preview of the email"><figcaption>Preview, today's harness figures.</figcaption></figure>
+  <figure class="phone"><img src="03-eod-preview-phone.png" alt="Preview on a phone"><figcaption>Preview on a phone.</figcaption></figure>
+</div>
+<h2>Sixfold, unchanged</h2>
+<div class="grid">
+  <figure><img src="04-sixfold-stats-unchanged-desktop.png" alt="Sixfold's own Stats page"><figcaption>Sixfold mode: its own Stats page as before (Ad performance, Monthly plans, no period tabs).</figcaption></figure>
+</div>
+<h2>Example email (made-up numbers)</h2>
+<p>traverse/business/eod-report-example.pdf: a sample roofing company, drawn by the app's own eod-lib.php.</p>
+</main></body></html>

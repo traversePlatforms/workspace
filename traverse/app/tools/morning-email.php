@@ -40,6 +40,12 @@ if (!$mxNow && !$mxDry && date('G') === '4' && is_file(dirname(__DIR__) . '/trav
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/regions-warm.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/regions-warm.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/regions-warm.log') . ' 2>&1 &');
 /* the weekly fuel prices for the quote's fuel cost (2026-10-30): fuel-prices.php asks EIA only when a new week is due; in the background */
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/fuel-prices.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/fuel-prices.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/fuel-prices.log') . ' 2>&1 &');
+/* plans and customer emails for every edition and client install (2026-10-30, care-sweep.php): follow-ups, aftercare and approved newsletter
+   issues, each off until that install's admin turns it on; in the background */
+if (!$mxNow && !$mxDry && is_file(__DIR__ . '/care-sweep.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/care-sweep.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/care-sweep.log') . ' 2>&1 &');
+/* the editions' and client installs' end-of-day emails (2026-10-30): each install sends only if its admin turned it on, at its own hour;
+   edition-eod.php asks each in turn, in the background (Sixfold's own report is the eod-report.php line above) */
+if (!$mxNow && !$mxDry && is_file(__DIR__ . '/edition-eod.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/edition-eod.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/edition-eod.log') . ' 2>&1 &');
 $mxSite = dirname(__DIR__);
 $mxApi = getenv('SIXFOLD_API_DIR') ?: $mxSite . '/public_html/api';   /* the override is for the test copy only */
 $mxState = $mxSite . '/sixfold-data/digest';

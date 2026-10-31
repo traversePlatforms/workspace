@@ -102,6 +102,7 @@
         main.appendChild(options(Q));
         main.appendChild(book(Q));
         if (Q.ways && Q.ways.length) main.appendChild(ways(Q.ways));
+        carePlan();   /* a plan offered beside the quote (2026-10-30) */
         return;
       }
       var q = el('div', 'card'); q.appendChild(el('h2', null, 'What’s included'));
@@ -111,6 +112,7 @@
       main.appendChild(q);
       if (Q.booked) main.appendChild(booked(Q.booked)); else if (Q.accepted) main.appendChild(thanks(Q, true, false)); else main.appendChild(book(Q));
       if (Q.ways && Q.ways.length) main.appendChild(ways(Q.ways));   /* other ways to pay (2026-10-29) */
+      carePlan();   /* a plan offered beside the quote (2026-10-30) */
     }).catch(function () { sorry('We could not reach our system just now. Try again in a minute. ' + callLine()); });
   }
   /* the options on one quote (2026-10-30): each with its lines and price; the one picked goes with the yes */
@@ -145,6 +147,29 @@
       if (w.qr) { var zi = el('img', 'zqr'); zi.alt = 'Zelle QR code: scan it in your bank’s app'; zi.src = w.qr; box.appendChild(zi); }   /* the Zelle QR code (2026-10-30) */
     });
     c.appendChild(box); return c;
+  }
+  /* a plan offered beside the quote (2026-10-30): its visits, how often and the price; "I'd like the plan" tells the company, who starts it */
+  function carePlan() {
+    fetch(API + '?action=careqplan&q=' + encodeURIComponent(key), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (P) {
+      if (!P || !P.ok || !P.plan) return;
+      var c = el('div', 'card'); c.appendChild(el('h2', null, 'Or go on a plan'));
+      c.appendChild(el('p', 'big', P.plan.name + ' · ' + P.plan.priceText));
+      c.appendChild(el('p', 'muted', P.plan.often + '.'));
+      if (P.plan.services && P.plan.services.length) { var t = el('table'); P.plan.services.forEach(function (x) { var tr = el('tr'); tr.appendChild(el('td', null, x)); t.appendChild(tr); }); c.appendChild(t); }
+      if (P.plan.notes) c.appendChild(el('p', 'muted', P.plan.notes));
+      if (P.picked) { c.appendChild(el('p', 'big', 'You asked for this plan. We\u2019ll be in touch to start it.')); main.appendChild(c); return; }
+      var go = el('button', 'btn ghost', 'I\u2019d like the plan'); go.type = 'button'; c.appendChild(go);
+      var err = el('div', 'err'); err.setAttribute('role', 'alert'); c.appendChild(err);
+      c.appendChild(el('p', 'muted', 'Nothing is charged now. We\u2019ll call or text to set it up.'));
+      go.addEventListener('click', function () {
+        err.textContent = ''; go.disabled = true;
+        fetch(API + '?action=careqpick', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: key }) }).then(function (r) { return r.json(); }).then(function (j) {
+          if (!j || !j.ok) { go.disabled = false; err.textContent = (j && j.error) || 'That did not go through. Try again.'; return; }
+          go.replaceWith(el('p', 'big', 'Thanks! We\u2019ll be in touch to start your plan.'));
+        }).catch(function () { go.disabled = false; err.textContent = 'No connection. Try again.'; });
+      });
+      main.appendChild(c);
+    }).catch(function () {});
   }
   function booked(Bk) { var c = el('div', 'card ok'); c.appendChild(el('h2', null, 'You’re booked')); c.appendChild(el('p', 'big', Bk.day + (Bk.arrive ? ', arriving ' + Bk.arrive : '') + '.')); c.appendChild(el('p', 'muted', 'Need to change it? ' + callLine())); return c; }
   function thanks(Q, before, gone) {
