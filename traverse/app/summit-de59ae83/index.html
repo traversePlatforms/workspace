@@ -1981,6 +1981,14 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hailx > span{display:grid;gap:1px}
   .hailx small{font-size:11.5px;color:var(--soft)}
   .hailx b{color:var(--later)}
+  /* the solar estimate as three labelled tiles (2026-10-30) */
+  .solest{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:4px 0 2px}
+  .solest > div{display:grid;gap:1px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);min-width:0}
+  .solest small{font-size:11px;color:var(--soft);line-height:1.25}
+  .solest b{font:700 17px/1.15 var(--mono);color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+  .solest b .un{font-size:11.5px;font-weight:600;margin-left:3px;color:var(--soft)}
+  .solest .mn{font-size:11px;color:var(--soft);line-height:1.25}
+  @media (max-width:360px){.solest{grid-template-columns:1fr 1fr}.solest > div:last-child{grid-column:1 / -1}}
   .comx b{color:inherit}
   .comx .lnk{justify-self:start;font-size:12.5px}
   .comsearch{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
@@ -12884,8 +12892,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      the customer portal are Stripe's own pages. Shown only where company.json turns on features.billing. Setup mode and the past-due lock (2026-10-29): setupHome() above. */
   /* the plans (Matthew 2026-10-26): per company with people included, the trade data in every plan */
   var BILL_PLAN = {
-    solo: ['Solo', pw('One admin and one worker: doors, the trade data, appointments and pipeline.')],
-    crew: ['Team', 'For a crew: adds phones and follow-ups, the leaderboard and training.'],   /* customers read Solo, Team, Company (2026-10-30); the keys stay */
+    solo: ['Duo', pw('One admin and one worker: doors, the trade data, appointments and pipeline.')],
+    crew: ['Team', 'For a crew: adds phones and follow-ups, the leaderboard and training.'],   /* customers read Duo, Team, Company (2026-10-30; Duo = the admin and one worker); the keys stay */
     team: ['Company', 'For bigger teams: adds managers, territories, goals, alerts and the CRM hand-off.']
   };
   function planName(k) { return (BILL_PLAN[k] || [k ? k.charAt(0).toUpperCase() + k.slice(1) : ''])[0]; }
@@ -13452,7 +13460,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         b.addEventListener('click', function () { st.plan = p; if (p === 'solo') st.seats = 1; else if (st.seats < used) st.seats = used; paint(); });
         plans.appendChild(b);
       });
-      if (j.uplift) plans.appendChild(q('small', 'sub2', 'Prices include this edition’s data: +' + money(per('uplift')) + ' a month on Team and Company, +' + money(per('uplift_solo')) + ' on Solo.'));
+      if (j.uplift) plans.appendChild(q('small', 'sub2', 'Prices include this edition’s data: +' + money(per('uplift')) + ' a month on Team and Company, +' + money(per('uplift_solo')) + ' on Duo.'));
       if (off) plans.appendChild(q('small', 'billfd', 'Founding company: ' + j.foundingPct + '% off for the first year, and your price is locked in for life as long as you’re with us.' + (j.foundingUntil ? ' Open to companies that sign up by ' + new Date(j.foundingUntil + 'T12:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) + '.' : '')));
       opts.textContent = '';
       if (st.plan !== 'solo') {
@@ -19665,18 +19673,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the production estimate (2026-10-29, Matthew's go, Solar only: the solar row reaches no other edition). ev 2 = built by place:
      PVWatts' yearly output per kW at this house's 0.25-degree cell for its facing and slope (yk), times the system that fits (kw),
      less a shade factor for tall trees on the sunny side (sf; our assumption, said so). An older file (no ev) keeps its old line. */
+  /* 2026-10-30 (Matthew: "About 32.8 kW fits, around 45,100 kWh a year" read unclear to a stranger): three labelled tiles, each a label,
+     the number and what it means, then the one line on how it was made. The same tiles for an older file (no ev), minus the sun figure. */
   function solarEstLine(s) {
-    var w = q('span', 'hl');
-    if (s.ev !== 2 || !s.yk) {
-      w.appendChild(q('b', null, 'Room for about ' + s.pn + ' panels, ' + s.kw + ' kW')); w.appendChild(document.createTextNode(' · up to about ' + s.kwh.toLocaleString(LOCALE) + ' kWh a year'));
-      return w;
-    }
-    /* fkeep: the estimate and how it was made stay on the folded card (the Solar edition's headline figure) */
-    var f = document.createDocumentFragment(), before = Math.round(s.kw * s.yk / 100) * 100;
-    w.classList.add('fkeep');
-    w.appendChild(q('b', null, 'About ' + s.kw.toLocaleString(LOCALE) + ' kW fits, around ' + s.kwh.toLocaleString(LOCALE) + ' kWh a year'));
-    w.appendChild(document.createTextNode(' (' + s.pn + ' panels of 400 W)'));
-    f.appendChild(w);
+    var f = document.createDocumentFragment(), tiles = q('div', 'solest fkeep');
+    var tile = function (label, num, unit, means) {
+      var d = q('div'); d.appendChild(q('small', null, label));
+      var n = q('b'); n.appendChild(document.createTextNode(num)); n.appendChild(q('span', 'un', unit)); d.appendChild(n);
+      d.appendChild(q('span', 'mn', means)); tiles.appendChild(d);
+    };
+    tile('System that fits', s.kw.toLocaleString(LOCALE), 'kW', 'the most this roof holds');
+    tile('Output a year', s.kwh.toLocaleString(LOCALE), 'kWh', s.ev === 2 && s.yk ? 'from the sun it gets here' : 'up to about this much');
+    tile('Panels', String(s.pn), '', '400 W each');
+    f.appendChild(tiles);
+    if (s.ev !== 2 || !s.yk) { f.appendChild(q('small', 'sub fkeep', 'An estimate of the most that fits, not a sized system.')); return f; }
+    var before = Math.round(s.kw * s.yk / 100) * 100;
     f.appendChild(q('small', 'sub fkeep', 'Estimate: roof facing, slope and shade from the laser scan; sun data from PVWatts (NREL, now NLR) for this area, ' + s.yk.toLocaleString(LOCALE) + ' kWh per kW here' +
       (s.sf ? '; ' + Math.round((1 - s.sf) * 100) + '% taken off for tall trees on the sunny side (our assumption), ' + before.toLocaleString(LOCALE) + ' kWh without' : '') + '. The most that fits, not a sized system.'));
     return f;
