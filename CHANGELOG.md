@@ -8,7 +8,29 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
-## 2026-10-29 (Thursday)
+## 2026-10-30 (Friday)
+
+**Traverse editions, new** (eight deploys, every check passed; Sixfold unchanged unless named)
+- **Properties, not doors** in the five editions (app, Spanish, website, legal plain wording; the Subscription Agreement keeps "Door Data"). **Zero Traverse branding** for client companies: team emails from the company's name, sign-in/tab/home-screen carry the company; Billing still says Traverse.
+- **Plans** (builder, next visits, "Plan visits to book", payment links; never auto-charged). **Customer emails** (quote follow-ups, aftercare, newsletter; all off, every word editable, per-issue approval). **Stats page + optional end-of-day email** for the editions (example PDF on the Desktop). **Facebook lead ads** into the Pipeline every 5 min (Traverse Meta app + App Review still needed: TR-45). **Sync from another system**: Sheets/CSV, HubSpot, Pipedrive, JobNimbus, ClickUp, Housecall Pro, HighLevel, universal Zapier/Make link; quote by phone is a permission (Jobber etc. need partner access: TR-46).
+- **Radar** switched to NOAA MRMS (1 km, every ~2 min, 2-hour loop, colour key, IEM fallback). Public domain.
+
+**Traverse editions, fixed**
+- Matthew's tablet test: home groups closed and remembered, neighbourhood opens nothing, property card info first with the lot photo, territories colours, My pipeline Sixfold-only, Import / export button, House lookup title, Setup at the top with the checklist next to Accounts, Back returns where you came from. **Office dashboard map removed** in the editions ("Plan the properties" in its place; 5 s → 0.5 s).
+- **Leaks closed:** Roofing's Stats showed Sixfold's real Meta ad spend; Sixfold's ClickUp box showed in every edition's Pipeline; Sixfold people's names sat in every edition's page source (build now refuses them).
+- **Full button check** (3,590 screen opens, no JS errors) and all 15 findings fixed: satellite imagery id format, per-trade price units and House lookup wording, update bar, desktop Setup entry, hail button spacing, two console 403s, "At the property" source label. Google Sheet link pattern bug fixed before launch.
+
+**Sixfold 365 app** (off until an admin saves, verified identical until then)
+- New movers (837,348 homes' sale records pushed), roles and permissions editor, optional email + password sign-in with forgot password, agreement terms library (admin + super), other ways to pay (Venmo, Cash App, PayPal, Zelle + QR) on the 365 sign page and job card. Website leads counted: 9 form leads since 16 Oct, 3 with jobs, 1 done.
+
+**Website and launch** (still behind the password)
+- Homepage: "first point of contact", the real sample house (owner's consent) with roof and rough property line on a public-domain aerial, contact cards, desk screenshot without Doors. Privacy policy: mailbox use (Limited Use) and Anthropic for price-list imports. Agreement approved (Solo/Team/Company, $439, 25% founding). Demo hours 8–8, Tue–Fri from 9:30, Tue 4:30–6 off. Google and Outlook sign-in tested; both Google apps published.
+- **The push (Matthew):** lawn AND roofing, small companies and start-ups first. 30 young roofers + 30 young lawn companies queued with the map email, **held**; lawn email drafted with a fact-check log; two tests sent to Matthew only. spokenName keeps 2–3-letter initials.
+- "Traverse review" Desktop folder: 15 sets, ~500 images, one index. Register at 12px with finished items ticked; TR-45 to TR-49 added; Xweather (hold) and HailTrace (not worth attaching) answered.
+
+**Research and admin:** lawn size compare (ours 25%, DRCOG 38%, average 22% median miss; no card switch yet). Usage rule: builders one or two at a time, cheaper model for mechanical work. Seven Claude Check codes rotated after a terminal slip. Cloud machine: Group 3 homes and storm history done, hail hours running.
+
+
 
 **Sixfold 365 app** (Sixfold only)
 - **Reschedule with deposit:** "Change or send again" on a booking with no signature and no deposit reopens it (old job off the board, new day held, the new form asks for a deposit). Jen rebooked Roy this way (Sat 31 Oct). Bookings with a deposit keep their day.

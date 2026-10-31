@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day: Friday 30 October 2026</title>
+<!-- Matthew's end-of-day change log (started 2026-10-27). Same layout as Brandon's end-of-day picture: a header band, number tiles two by two,
+     then sections with plain rows. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). Cards stay on one page when printed. -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:13px;line-height:1.42}.page{padding:0 4px 8px}.head{padding:20px 24px}.kpis{margin:14px 0 4px;gap:10px}.kpi{padding:12px 16px}.kpi b{font-size:34px}.kpi small{font-size:12px}h2{font-size:18px;margin:16px 0 8px}.row{padding:8px 16px;grid-template-columns:140px 1fr}.foot{margin-top:18px}}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="head">
+  <div><div class="tag">End of day</div><h1>Friday 30 October 2026</h1><div class="d">Everything we changed today across the apps, sites and data</div></div>
+  <div class="d">Traverse · Sixfold 365 · Launch · Your admin</div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><b>132</b><span>Changes saved</span><small>Each one recorded in the change history</small></div>
+  <div class="kpi"><b>8</b><span>App deploys</span><small>Every one of the six installs, every upload checked, a backup taken before each</small></div>
+  <div class="kpi"><b>60</b><span>Prospect emails queued</span><small>30 roofers, 30 lawn companies, all held until you say go</small></div>
+  <div class="kpi warn"><b>9</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+
+<div class="sec">
+<h2>Traverse editions: new <span class="n">8</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Properties</div><div class="v"><span class="pill live">Live</span>The five editions say "properties" instead of "doors" everywhere a rep reads it, in Spanish too; the knock itself ("at the door", "door-to-door") stays. Sixfold keeps doors and routes. The website, trades page, welcome page, privacy and terms of use say properties; the Subscription Agreement keeps its defined "Door Data".</div></div>
+  <div class="row"><div class="k">Zero branding</div><div class="v"><span class="pill live">Live</span>A client company's staff and customers see only the company: invite, password and sign-in emails come from the company's name with replies to the company; the sign-in screen, browser tab and home-screen icon carry the company's name and mark. Billing still says Traverse, because they pay Traverse.</div></div>
+  <div class="row"><div class="k">Plans</div><div class="v"><span class="pill live">Live, off until set</span>Setup › Plans: what each visit includes, how often, season, price. A customer goes on a plan from their page or from a quote; next visits track themselves; "Plan visits to book" on the Jobs board; payment links by Square or Stripe. Nothing is ever charged automatically.</div></div>
+  <div class="row"><div class="k">Customer emails</div><div class="v"><span class="pill live">Live, off until set</span>Setup › Customer emails: up to five follow-ups after a quote, aftercare after a job, and a monthly newsletter. Every word editable, preview and test send, 8 am to 6 pm only, every issue approved one at a time. Nothing sends until a company turns it on and has connected its email.</div></div>
+  <div class="row"><div class="k">Stats + end-of-day email</div><div class="v"><span class="pill live">Live, off until set</span>A Stats page for the editions (leads by source, quotes, jobs, money in, Good/Better/Best, team, ad cost per lead) and an optional evening email to the owners in the company's colours. The example PDF is on your Desktop: "End of day report example.pdf".</div></div>
+  <div class="row"><div class="k">Facebook leads</div><div class="v"><span class="pill live">Live, off until set</span>Setup › Facebook leads: connect the Page, pick the forms, match the questions, choose who gets new leads. Checked every 5 minutes; a lead already in the Pipeline gets a note, not a copy. <em>Until Meta approves a Traverse app, only you can connect a client's Page (TR-45).</em></div></div>
+  <div class="row"><div class="k">Sync from another system</div><div class="v"><span class="pill live">Live, off until set</span>Google Sheets or CSV links, HubSpot, Pipedrive, JobNimbus, ClickUp, Housecall Pro and HighLevel, plus a secret link for Zapier or Make. Read-only on their side, every run an import you can undo. Quote by phone is now a permission, not a role. <em>Jobber, ServiceTitan, AccuLynx, Salesforce and Zoho need partner access (TR-46).</em></div></div>
+  <div class="row"><div class="k">Radar</div><div class="v"><span class="pill live">Live</span>NOAA's 1 km MRMS radar drawn at the map's own zoom, so no more stretched blocks; fresh about every 2 minutes; "Play last 2 hours"; a colour key from light rain to hail likely; falls back to the old source if NOAA is down. Public domain, nothing paid.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Traverse editions: fixed <span class="n">6</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Your tablet test</div><div class="v"><span class="pill live">Live</span>Home groups start closed and remember your choice; a neighbourhood opens nothing by itself; the property card shows the lot photo first and the outcome buttons last; My stats territories have proper colours; My pipeline is Sixfold-only; JobNimbus sits behind a small Import / export button; House lookup has its own title; Setup opens at the top with the checklist next to Accounts; Back returns where you came from, including from the 19 Stats screens.</div></div>
+  <div class="row"><div class="k">Office dashboard</div><div class="v"><span class="pill live">Live</span>The map is gone from the editions' dashboard, replaced by "Plan the properties" (the same answer lives on Home and in Plan). It opens in half a second instead of 5 on a phone. Sixfold keeps its map.</div></div>
+  <div class="row"><div class="k">Sixfold leaks</div><div class="v"><span class="pill live">Fixed</span>Three places where Sixfold showed through in the editions: Roofing's Stats carried Sixfold's real Meta ad spend; Sixfold's "ClickUp and the app" box showed in every edition's Pipeline; Jen's, Brad's, Brandon's and SiteOne's names sat in every edition's page source. All gated or stripped; the build now refuses a page that names them.</div></div>
+  <div class="row"><div class="k">Full button check</div><div class="v"><span class="pill live">Done</span>3,590 screen opens across five editions and Sixfold, four sizes, light and dark, five roles: no JavaScript errors, nothing clipped, every new screen clean. Its 15 findings are all fixed tonight: satellite photos that would have gone grey when an imagery ID expired, every trade's price units on every line, the update bar covering Back, no Setup from a desktop Home, hail buttons running together, two console errors.</div></div>
+  <div class="row"><div class="k">Google Sheets</div><div class="v"><span class="pill live">Fixed</span>A pattern bug in the new sync meant a published Google Sheet link could never match. Found in testing before launch.</div></div>
+  <div class="row"><div class="k">Nightly jobs</div><div class="v"><span class="pill live">Live</span>Plans, customer emails and end-of-day emails run hourly for every edition and client install; Facebook and CRM pulls ride the 5-minute job. Each was run once by hand tonight: every install reported off, nothing sent.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Sixfold 365 app <span class="n">6</span></h2>
+<div class="card">
+  <div class="row"><div class="k">New movers</div><div class="v"><span class="pill live">Live</span>Houses sold in the last 12 months show on the property card and as a filter, as in the editions. 837,348 homes' sale records went up tonight (160 files, every checksum matched).</div></div>
+  <div class="row"><div class="k">Roles and permissions</div><div class="v"><span class="pill live">Live, off until saved</span>A permissions editor for manager, office, quote and crew. Nothing changes until an admin saves it; until then every account behaves exactly as before, checked answer for answer against the old code.</div></div>
+  <div class="row"><div class="k">Email sign-in</div><div class="v"><span class="pill live">Live, per person</span>From Profile: "Sign in with email instead of a code", with Forgot password. Codes keep working. Emails go out as Sixfold 365.</div></div>
+  <div class="row"><div class="k">Agreement terms</div><div class="v"><span class="pill live">Live</span>Admins and super admins edit the seven lines on the sign form, with "back to the original wording". Signed forms keep what was signed. In the editions, editing terms is now admin-only too.</div></div>
+  <div class="row"><div class="k">Other ways to pay</div><div class="v"><span class="pill live">Live, off until set</span>Venmo, Cash App, PayPal and Zelle with a QR code, on the 365 sign page and the job card balance. Both 365 addresses updated.</div></div>
+  <div class="row"><div class="k">Website leads</div><div class="v">Counted from the app's data: 9 leads through the 365aeration.com form since 16 October, 3 of them with a job booked, 1 done ($814). <em>You see 4 jobs in the scheduler; the fourth's lead was probably typed in under another source. Send me its date or town and I'll trace it.</em></div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Website and launch <span class="n">7</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Homepage</div><div class="v"><span class="pill live">Live, private</span>"From the first point of contact"; the phone picture shows your parents' house on a public-domain aerial photo with the roof and a rough property line traced, figures labelled as samples; three contact cards (call, email, book a demo); the desk screenshot no longer says Doors.</div></div>
+  <div class="row"><div class="k">Privacy policy</div><div class="v"><span class="pill live">Live, private</span>How a connected mailbox is used (send only, never read; Google's Limited Use statement) and that uploaded price lists are read by Anthropic. Needed for Google's verification.</div></div>
+  <div class="row"><div class="k">Agreement</div><div class="v"><span class="pill live">Approved</span>Plan names Solo / Team / Company, Company yearly $439, 25% founding discount, no setup-time promise, Lawn & Landscape. You approved it this morning.</div></div>
+  <div class="row"><div class="k">Demo booking</div><div class="v"><span class="pill live">Live</span>8 am to 8 pm every day; Tuesday to Friday from 9:30; Tuesday 4:30 to 6 pm off.</div></div>
+  <div class="row"><div class="k">Email sign-in</div><div class="v"><span class="pill live">Live</span>Google and Outlook sign-in both tested from your app and both delivered a test email. The Traverse Google app is published, so sign-ins no longer expire weekly; your email assistant's Google app is published too. The sign-in opens a popup only inside the Home Base hub.</div></div>
+  <div class="row"><div class="k">The push</div><div class="v"><span class="pill off">Held</span>Your call tonight: push lawn and roofing together, small companies and start-ups first. 30 young roofers and 30 young lawn companies are queued with the map email, held until you say go. One roofing and one lawn test are in your Gmail. A lawn version of the email is drafted with a fact-check log; "JA-MAR" and "AP" style names now render right.</div></div>
+  <div class="row"><div class="k">Review folder</div><div class="v"><span class="pill live">Done</span>One Desktop folder, "Traverse review": 15 sets, about 500 images, re-shot with the new wording, one index page by topic.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Research and admin <span class="n">6</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Lawn sizes</div><div class="v"><span class="pill live">Done</span>Our figure against DRCOG's and 20 hand measurements: ours misses by 25%, DRCOG by 38%, the average of the two by 22%. Not enough to switch the card yet; 8 to 10 more open lots would decide it.</div></div>
+  <div class="row"><div class="k">Xweather</div><div class="v"><span class="pill live">Answered</span>Every map tile is one access, so the free 15,000 a month is about 50 animated radar views across all clients: not for radar. The hail feed could fit if our server polled it only during warnings. Held; the new NOAA radar makes it unnecessary for now.</div></div>
+  <div class="row"><div class="k">HailTrace</div><div class="v"><span class="pill live">Answered</span>Its free plan is a contractor account on their site, not a data feed we can build in. Later idea: "connect your own HailTrace" per client, which needs partner access.</div></div>
+  <div class="row"><div class="k">Register</div><div class="v"><span class="pill live">Done</span>The Working Register is 12px, with nine finished items ticked and four new ones waiting on you (TR-45 to TR-48), plus tonight's TR-49 for the push. TASKS.md matches.</div></div>
+  <div class="row"><div class="k">Usage</div><div class="v"><span class="pill live">Done</span>Today's builders used about 6 million tokens, which is what burned the allowance. New standing rule: one or two builders at a time, the cheaper model for mechanical work, no needless test reruns. The cloud machine uses no Claude usage at all.</div></div>
+  <div class="row"><div class="k">Security</div><div class="v"><span class="pill live">Done</span>Seven Claude Check codes were rotated after one slipped into a terminal line this morning; the new ones live only in their file.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Running tonight</h2>
+<div class="card">
+  <div class="row"><div class="k">Cloud machine</div><div class="v">Group 3's last stage, "hail hours" (when hail usually falls, per town and day). The homes and storm history are done.</div></div>
+  <div class="row"><div class="k">Hourly</div><div class="v">Towns list rebuilt; plans, customer emails and end-of-day emails checked for every install (all off); fuel prices weekly.</div></div>
+  <div class="row"><div class="k">Every 5 minutes</div><div class="v">Alerts, Facebook leads and CRM pulls for every edition and client install (nothing connected yet, so they exit at once).</div></div>
+  <div class="row"><div class="k">Overnight check</div><div class="v">Every 30 minutes, as usual. Server backup 2:45 am.</div></div>
+</div>
+</div>
+
+<div class="sec wait">
+<h2>Waiting on you <span class="n">9</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Look at the folder</div><div class="v">"Traverse review" on your Desktop, then tell me what to change.</div></div>
+  <div class="row"><div class="k">"Open it"</div><div class="v">Takes the site password off, opens checkout and search, lifts the email hold. Then: one demo booking test, one real checkout and refund, Google verification with the logo back.</div></div>
+  <div class="row"><div class="k">Go for the emails</div><div class="v">60 prospects are queued and held. Say go and they start in sending hours.</div></div>
+  <div class="row"><div class="k">Counties (TR-47)</div><div class="v">Which of the four fixes for the long county list: a "Yours" section, search, regions, hiding counties outside the service area.</div></div>
+  <div class="row"><div class="k">Placement (TR-48)</div><div class="v">Sample property into the Setup checklist? Payments on their own screen with a paid badge on each job?</div></div>
+  <div class="row"><div class="k">Meta app (TR-45)</div><div class="v">A Traverse Meta app and App Review so clients can connect their own Facebook Page. Steps are written up; needs the site open first.</div></div>
+  <div class="row"><div class="k">Jobber (TR-46)</div><div class="v">Register a Jobber developer app so clients can connect Jobber.</div></div>
+  <div class="row"><div class="k">Lawn range box</div><div class="v">Flip the DRCOG figure to show on open lots instead of tree lots?</div></div>
+  <div class="row"><div class="k">Fourth website job</div><div class="v">Its date or town, so I can trace the lead.</div></div>
+</div>
+</div>
+
+<p class="foot">Full detail of every change: the workspace change history (git log) for 30 October, and CHANGELOG.md. This document: changelog/2026-10-30.html, with a copy in Desktop › End of Day Reports.</p>
+</div>
+</body>
+</html>
