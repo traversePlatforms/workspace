@@ -115,6 +115,9 @@ function render(array $l, array $tpl, array $set, string $unsubUrl, string $styl
         $map = mapFor($mapTrade ?? (string) $l['trade'], (string) ($l['city'] ?? ''));
         if ($map) { $m['style'] = 'map'; $m['map'] = ['img' => $map['url'], 'text' => $map['text'], 'city' => $map['city']]; $m['html'] = mailHtml($main, $set, $map, $unsubUrl); }
         else $m['nomap'] = 'no map for ' . ((string) ($l['city'] ?? '') ?: 'a company with no city') . ': goes plain';
+    } elseif (isset(APP_PICS[$style])) {   /* an app picture instead of the map (2026-10-30) */
+        $pic = appPic($style, $mapTrade ?? (string) $l['trade']);
+        $m['style'] = $style; $m['map'] = ['img' => $pic['url'], 'text' => $pic['text'], 'city' => '']; $m['html'] = mailHtml($main, $set, $pic, $unsubUrl);
     }
     return $m;
 }
@@ -125,7 +128,22 @@ function render(array $l, array $tpl, array $set, string $unsubUrl, string $styl
    tracking, no shortener: every link is the plain address it shows. The maps are made by tools/build-maps.mjs into ../m/ with their
    captions in m/maps.json (one picture per city and trade family, counts from our files); a city with no map goes plain. The
    pictures are hosted (not attached): a lighter message with no attachment, which Gmail shows inline through its image proxy. ---- */
-const STYLES = ['plain' => 'Plain', 'map' => 'With map'];
+const STYLES = ['plain' => 'Plain', 'map' => 'With map', 'phone' => 'App: phone', 'computer' => 'App: computer', 'both' => 'App: phone + computer'];
+/* the app pictures (2026-10-30, Matthew: the map read pixelated; "we should be just showing the application images"): file, size, words under it */
+const APP_PICS = [
+    'phone' => ['roofing' => ['app-phone-roofing.jpg', 1120, 780, 'On the phone at the door: every property best first, with the hail, wind, roof size and year built that make it worth the knock.'],
+                'yards' => ['app-phone-yards.jpg', 1120, 780, 'On the phone at the property: the lawn measured and outlined on the lot before you knock.']],
+    'computer' => ['roofing' => ['app-computer-roofing.jpg', 1120, 730, 'On the computer: the neighborhood map, the list and the property card side by side.'],
+                   'yards' => ['app-computer-yards.jpg', 1120, 730, 'On the computer: leads, estimates, jobs and money in, from the app\'s own records.']],
+    'both' => ['roofing' => ['app-both-roofing.jpg', 1120, 700, 'The same app on the phone in the field and the computer in the office.'],
+               'yards' => ['app-both-yards.jpg', 1120, 700, 'The same app on the phone in the field and the computer in the office.']],
+];
+/** the picture block for an app style and trade, in mapFor's shape (url, text, w, h, alt) */
+function appPic(string $style, string $trade): ?array {
+    $set = APP_PICS[$style] ?? null; if (!$set) return null;
+    $p = $set[$trade === 'yards' ? 'yards' : 'roofing'];
+    return ['url' => deskBase() . '/m/' . $p[0], 'w' => $p[1], 'h' => $p[2], 'text' => $p[3], 'alt' => 'The Traverse app', 'city' => ''];
+}
 const MAP_FAMILY = ['roofing' => 'hail', 'roofing solar' => 'hail', 'solar' => 'hail', 'pest' => 'moved', 'security' => 'moved', 'yards' => 'lawn'];
 function mapsIndex(): array { static $m = null; if ($m === null) { $j = json_decode((string) @file_get_contents(dirname(__DIR__) . '/m/maps.json'), true); $m = is_array($j['cities'] ?? null) ? $j['cities'] : []; } return $m; }
 function citySlug(string $c): string { return trim((string) preg_replace('/[^a-z0-9]+/', '-', strtolower(trim($c))), '-'); }
@@ -477,7 +495,7 @@ switch ($action) {
         $city = clean($body['city'] ?? '', 60) ?: 'Denver';   /* the sample company's city (2026-10-30: the map is the city's) */
         $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => $city, 'trade' => $tr, 'person' => '', 'email' => $to];
         $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u, $style);
-        $m['subject'] .= $m['style'] === 'map' ? ' (with map)' : ($style === 'map' ? ' (plain: no map for ' . $city . ')' : ' (plain)');   /* a test says which version it is */
+        $m['subject'] .= isset(APP_PICS[$m['style']]) ? ' (' . strtolower(STYLES[$m['style']]) . ')' : ($m['style'] === 'map' ? ' (with map)' : ($style === 'map' ? ' (plain: no map for ' . $city . ')' : ' (plain)'));   /* a test says which version it is */
         $r = mailSend($to, $m['subject'], $m['body'], [], (string) ($m['html'] ?? ''));   /* as the queue sends it: no bulk-mail headers (2026-10-29) */
         logAdd(['t' => 'test', 'to' => $to, 'trade' => $tr, 'style' => $m['style'], 'city' => $city, 'ok' => $r['ok'], 'by' => $ME, 'at' => time()]);
         if (!$r['ok']) fail('The test did not go out (' . $r['stage'] . '): ' . mb_substr((string) $r['error'], 0, 160));
