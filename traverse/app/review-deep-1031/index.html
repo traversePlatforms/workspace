@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deep review 31 Oct</title>
+<style>
+  :root{--ink:#0f1b2d;--soft:#566476;--bg:#f4f6f9;--card:#fff;--line:#dbe1e8;--ok:#1f7a4d;--warn:#a85a00}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#e8edf3;--soft:#9fb0c3;--bg:#0d131b;--card:#161e29;--line:#2a3646}}
+  :root[data-theme="dark"]{--ink:#e8edf3;--soft:#9fb0c3;--bg:#0d131b;--card:#161e29;--line:#2a3646}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}
+  main{max-width:960px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px} p{margin:6px 0;color:var(--soft)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}
+  ol{padding-left:22px} li{margin:6px 0}
+  .sev{display:inline-block;font:700 11px/1 system-ui;letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:999px;border:1px solid var(--line);margin-right:6px;color:var(--soft)}
+  .sev.h{color:#fff;background:#a83232;border-color:#a83232} .sev.m{color:#fff;background:var(--warn);border-color:var(--warn)}
+  figure{margin:10px 0} figure img{max-width:100%;border:1px solid var(--line);border-radius:10px;background:#fff} figcaption{color:var(--soft);font-size:14px;margin-top:4px}
+  .phone img{max-width:300px}
+  code{font:13px ui-monospace,Consolas,monospace;background:rgba(127,127,127,.12);padding:1px 5px;border-radius:5px}
+  a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+  <h1>Deep review, 31 October 2026</h1>
+  <p>Everything built on 29 and 30 October, read as a paying client lives it. The ranked findings, fixes and regression numbers are in <a href="REPORT.md">REPORT.md</a>; the tests are in <code>tests/</code>.</p>
+
+  <h2>What was fixed</h2>
+  <div class="card">
+    <ol>
+      <li><span class="sev h">High</span>An email-and-password sign-in lost the person's permissions, lock state, super flag and session id until the app was reopened (one <code>signedIn()</code> now).</li>
+      <li><span class="sev m">Medium</span>The read-only Claude Check sign-in was handed the Sync link's secret key.</li>
+      <li><span class="sev m">Medium</span>Setup rows (Zelle QR, Your service area, Training, End-of-day email, Facebook check now) answered "locked" in setup mode and bounced the admin back to Setup.</li>
+      <li><span class="sev m">Medium</span>Prospect Desk: the unsubscribe link unsubscribed on a bare GET, so mail scanners took companies off before anyone read the email. It now shows a page with one button.</li>
+      <li><span class="sev m">Medium</span>Prospect Desk: the queue was read and rewritten under two different locks (a lost batch or a double send was possible during the hourly run).</li>
+      <li><span class="sev m">Medium</span><code>diag</code> listed every other install's folders to any client admin; backups missed the Zelle QR code.</li>
+      <li><span class="sev m">Medium</span>Customer emails: one mail-server hiccup spent a follow-up or aftercare email for good.</li>
+      <li><span class="sev m">Medium</span>Checkout: the welcome page's brand step did not check the payment (logo files could be parked by an unpaid visitor); a retry kept the first attempt's email and password.</li>
+      <li><span class="sev">Low</span>The update bar covered the phone menu bar; a right password still counted against the per-address limit; the welcome-page logo kept the white backing; cron-sent email links used our domain for a client on its own; the seats-over email said nothing is blocked; the welcome page's homes poll outran its rate limit; desk pictures and placeholders; nightly backup memory; "Your Traverse plan" on tiles; six Spanish strings.</li>
+    </ol>
+  </div>
+
+  <h2>Screenshot</h2>
+  <figure class="phone">
+    <img src="shots/deep-1-pw-signin-home.png" alt="The office person's home on a phone right after signing in with email and password, with the Company tile showing">
+    <figcaption>An office person given the Company screen signs in with email and password on a phone: the Company tile is there at once (before the fix it only appeared after the app was closed and reopened).</figcaption>
+  </figure>
+</main>
+</body>
+</html>
