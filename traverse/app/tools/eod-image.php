@@ -49,7 +49,7 @@ function eodImage(array $R, string $assets): string {
     $bp = @imagecreatefrompng("$assets/badge.png");
     if ($bp) { $bs = 150; $disk = 162; imagefilledellipse($im, $P + intdiv($disk, 2), intdiv($head, 2), $disk, $disk, $col['cream']); imagecopyresampled($im, $bp, $P + intdiv($disk - $bs, 2), intdiv($head - $bs, 2), 0, 0, $bs, $bs, imagesx($bp), imagesy($bp)); }
     $tx = $P + 162 + 36;
-    imagettftext($im, 60, 0, $tx, 108, $col['white'], $F['h'], 'End of day');
+    imagettftext($im, 60, 0, $tx, 108, $col['white'], $F['h'], $R['head'] ?? 'End of day');   /* 'The week' on Saturdays' weekly report (2026-10-31) */
     imagettftext($im, 32, 0, $tx, 160, $col['mint'], $F['m'], $R['date']);
     $rnd = function ($x1, $y1, $x2, $y2, $r, $c) use ($im) {
         imagefilledrectangle($im, (int) ($x1 + $r), (int) $y1, (int) ($x2 - $r), (int) $y2, $c); imagefilledrectangle($im, (int) $x1, (int) ($y1 + $r), (int) $x2, (int) ($y2 - $r), $c);

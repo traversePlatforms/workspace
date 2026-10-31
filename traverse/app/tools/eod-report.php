@@ -15,6 +15,12 @@ declare(strict_types=1);
  *   php .../eod-report.php --test         send now, to Matthew's copy only, marked TEST
  *   php .../eod-report.php --now --brandon   send now, to Brandon only
  *   php .../eod-report.php --dry-run      print it instead of sending (--dry-run --png: the picture)
+ *   add --week to any of these for the weekly report (Monday to today)
+ *
+ * The weekly report (2026-10-31, Matthew: "on saturdays instead of giving brandon the daily update can we do both a daily and 1 for the
+ * whole week since we typically dont work on sunday"): on Saturdays, after the daily one is sent, the same run sends a second email for
+ * Monday to Saturday, to the same two people. Same figures, counted over the week: money, jobs booked and done, quotes sent, leads, the
+ * week's jobs day by day and next week's. Its own sent-marker (eod-week-last-sent.txt), so a failed weekly one is tried again next hour.
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 date_default_timezone_set('America/Denver');
@@ -23,12 +29,21 @@ const EOD_HOUR = 20;
 const EOD_BRANDON = 'Bincline@gmail.com';
 $eArgs = array_slice($argv ?? [], 1);
 $eDry = in_array('--dry-run', $eArgs, true); $eTest = in_array('--test', $eArgs, true);
+$W = in_array('--week', $eArgs, true);
 $eSite = dirname(__DIR__);
 $eApi = getenv('SIXFOLD_API_DIR') ?: $eSite . '/public_html/api';
 $eState = $eSite . '/sixfold-data/digest';
-if (!$eDry && !$eTest && !in_array('--now', $eArgs, true)) {
+$eAuto = !$eDry && !$eTest && !in_array('--now', $eArgs, true);
+$eSentFile = $eState . ($W ? '/eod-week-last-sent.txt' : '/eod-last-sent.txt');
+/* Saturday: the weekly one goes out by itself once the daily one has (a separate run, so its sending can't touch the daily one) */
+$eWeekly = function () use ($eState) {
+    if (date('N') !== '6' || trim((string) @file_get_contents($eState . '/eod-week-last-sent.txt')) === date('Y-m-d')) return 0;
+    passthru(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__FILE__) . ' --week', $rc); return $rc;
+};
+if ($eAuto) {
     if ((int) date('G') < EOD_HOUR) exit(0);
-    if (trim((string) @file_get_contents($eState . '/eod-last-sent.txt')) === date('Y-m-d')) exit(0);
+    if ($W && date('N') !== '6') exit(0);
+    if (trim((string) @file_get_contents($eSentFile)) === date('Y-m-d')) exit($W ? 0 : $eWeekly());
 }
 
 /* load the app as the morning email does; its functions stay usable after the digest answers */
@@ -44,6 +59,11 @@ $today = new DateTime('today', $tz); $T = $today->format('Y-m-d'); $t0 = $today-
 $tomD = (clone $today)->modify('+1 day')->format('Y-m-d');
 $mon = (clone $today)->modify('-' . (((int) $today->format('N')) - 1) . ' days');
 $m1 = new DateTime($today->format('Y-m-01'), $tz);
+/* the period the report counts: today, or Monday to today for the weekly one; "tomorrow" becomes next Monday to Saturday */
+$p0 = $W ? $mon->getTimestamp() : $t0; $M = $mon->format('Y-m-d');
+$nx0 = $W ? (clone $mon)->modify('+7 days')->format('Y-m-d') : $tomD; $nx1 = $W ? (clone $mon)->modify('+12 days')->format('Y-m-d') : $tomD;
+$inPeriod = fn(string $d) => $W ? ($d >= $M && $d <= $T) : $d === $T;
+$inNext = fn(string $d) => $d >= $nx0 && $d <= $nx1;
 $real = fn($l) => !preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''));
 $short = function ($n) { $p = preg_split('/\s+/', trim((string) $n)); return ($p[0] ?? '') !== '' ? $p[0] . (isset($p[1]) && $p[1] !== '' ? ' ' . mb_strtoupper(mb_substr($p[1], 0, 1)) . '.' : '') : 'A customer'; };
 $usd = fn($v) => '$' . number_format((float) $v, (float) $v == floor((float) $v) ? 0 : 2);
@@ -66,7 +86,7 @@ foreach ((array) $pays as $p) {
     $at = (int) strtotime((string) ($p['created_at'] ?? ''));
     if ($at >= $m1->getTimestamp()) $money['month'] += $net;
     if ($at >= $mon->getTimestamp()) $money['week'] += $net;
-    if ($at >= $t0) { $money['today'] += $net; $money['n']++; }
+    if ($at >= $p0) { $money['today'] += $net; $money['n']++; }
 }
 $owedDone = 0; $owedDoneN = 0; foreach ($jobs as $j) if (($j['done']['o'] ?? '') === 'done' && ($o = jobOwed($j)) > 0) { $owedDone += $o; $owedDoneN++; }
 $depOpen = 0; $depOpenN = 0;
@@ -79,9 +99,9 @@ $toConfirm = is_array($pays) ? count(squareToConfirm(array_values(array_filter($
 $quotedToday = 0; $quotedVal = 0;
 /* a quote counts on the day it was first sent; a revised one is not new (audit 2026-10-23: Pat S. was quoted the day before) */
 $qFirst = []; foreach (readLines(leadsDir() . '/leadst.log') as $u) if (!empty($u['quote']) && !isset($qFirst[$u['id']])) $qFirst[$u['id']] = (int) ($u['at'] ?? 0);
-foreach ($leads as $l) if (!empty($l['quote']) && ($qFirst[$l['id']] ?? 0) >= $t0) { $quotedToday++; $quotedVal += (int) ($l['quote']['price'] ?? 0); }
+foreach ($leads as $l) if (!empty($l['quote']) && ($qFirst[$l['id']] ?? 0) >= $p0) { $quotedToday++; $quotedVal += (int) ($l['quote']['price'] ?? 0); }
 $bookedToday = []; $bookedBy = [];
-foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $t0) { $bookedToday[] = $j; $s = $srcName[$leads[$j['lead']]['src'] ?? 'other'] ?? 'Other'; $bookedBy[$s] = ($bookedBy[$s] ?? 0) + 1; }
+foreach ($jobs as $j) if ((int) ($j['at'] ?? 0) >= $p0) { $bookedToday[] = $j; $s = $srcName[$leads[$j['lead']]['src'] ?? 'other'] ?? 'Other'; $bookedBy[$s] = ($bookedBy[$s] ?? 0) + 1; }
 arsort($bookedBy);
 /* close rates, ad leads and the rest apart, the app's own closeRates() so the report and the Stats page agree (2026-10-24) */
 $CR = closeRates($leads, $jobOf); $pipe = $CR['pipe']; $pipeN = $CR['pipeN'];
@@ -104,7 +124,7 @@ if (is_array($mf) && !empty($mf['pages'][0]['token'])) {
             $ms = $gget($mf['graph'] . '/' . rawurlencode((string) $c['id']) . '/messages?' . http_build_query(['fields' => 'created_time', 'limit' => 100, 'access_token' => $tok]));
             if (!isset($ms['data']) || !$ms['data'] || !empty($ms['paging']['next'])) continue;   /* a long chat: it started before this week */
             $first = min(array_map(fn($m) => (int) strtotime((string) ($m['created_time'] ?? '')), $ms['data']));
-            if ($first >= $wk0) $msgr['week']++; if ($first >= $t0) $msgr['today']++;
+            if ($first >= $wk0) $msgr['week']++; if ($first >= $p0) $msgr['today']++;
         }
     }
 }
@@ -131,7 +151,7 @@ if ($refJ) $adRows[] = ['l' => 'Referrals', 'v' => $usd(array_sum(array_map(fn($
 $wk0 = $now - 7 * 86400; $srcOf = fn($l) => $srcName[$l['src'] ?? 'other'] ?? 'Other';
 $inToday = []; $inWeek = []; $srcAll = [];
 foreach ($leads as $l) { $at = (int) ($l['at'] ?? 0); $s = $srcOf($l); $srcAll[$l['src'] ?? 'other'] = ($srcAll[$l['src'] ?? 'other'] ?? 0) + 1;
-    if ($at >= $t0) $inToday[$s] = ($inToday[$s] ?? 0) + 1; if ($at >= $wk0) $inWeek[$s] = ($inWeek[$s] ?? 0) + 1; }
+    if ($at >= $p0) $inToday[$s] = ($inToday[$s] ?? 0) + 1; if ($at >= $wk0) $inWeek[$s] = ($inWeek[$s] ?? 0) + 1; }
 arsort($inToday); arsort($inWeek);
 /* waiting on us: open leads not quoted yet, by where the last try left them */
 $wait = ['Not contacted yet' => 0, 'Left a voicemail' => 0, 'Texted, no reply yet' => 0, 'Emailed, no reply yet' => 0, 'Call back on a set day' => 0, 'Talked, not booked' => 0];
@@ -183,8 +203,9 @@ foreach ($leads as $l) {
 }
 
 /* 4. the work: today's jobs and tomorrow's */
-$todayJobs = array_values(array_filter($jobs, fn($j) => $j['date'] === $T)); usort($todayJobs, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
-$tomJobs = array_values(array_filter($jobs, fn($j) => $j['date'] === $tomD)); usort($tomJobs, fn($a, $b) => strcmp((string) $a['slot'], (string) $b['slot']));
+$bySlot = fn($a, $b) => strcmp($a['date'] . ' ' . $a['slot'], $b['date'] . ' ' . $b['slot']);
+$todayJobs = array_values(array_filter($jobs, fn($j) => $inPeriod((string) $j['date']))); usort($todayJobs, $bySlot);
+$tomJobs = array_values(array_filter($jobs, fn($j) => $inNext((string) $j['date']))); usort($tomJobs, $bySlot);
 $doneN = 0; $doneVal = 0; $crewMins = 0; $timedVal = 0; $couldNot = []; $openN = 0;
 foreach ($todayJobs as $j) {
     $o = (string) ($j['done']['o'] ?? '');
@@ -192,7 +213,7 @@ foreach ($todayJobs as $j) {
     if ($o === 'done') { $doneN++; $doneVal += (int) $j['price']; $crewMins += $m; if ($m > 0) $timedVal += (int) $j['price']; }   /* per crew hour: only jobs with time logged (2026-10-26) */
     elseif ($o === 'could not') $couldNot[] = $j; else $openN++;
 }
-$holdsTom = array_values(array_filter(jobHolds($leads), fn($h) => $h['date'] === $tomD));
+$holdsTom = array_values(array_filter(jobHolds($leads), fn($h) => $inNext((string) $h['date'])));
 
 /* 5. needs attention */
 $stale = array_values(array_filter($leads, fn($l) => !empty($l['quote']) && !isset($jobOf[$l['id']]) && !in_array($l['status'] ?? '', ['lost', 'won'], true) && (int) ($l['quote']['at'] ?? 0) < $now - 3 * 86400));
@@ -212,17 +233,17 @@ $six = $bk6 + $CR['expected'] + round($mrr * 12 / 52 * 6);
 $day = fn(string $iso) => date('D j M', strtotime($iso . ' 12:00'));
 $plural = fn(int $n, string $one, string $many) => $n . ' ' . ($n === 1 ? $one : $many);
 $bookedVal = array_sum(array_map(fn($j) => (int) $j['price'], $bookedToday)); $tomVal = array_sum(array_map(fn($j) => (int) $j['price'], $tomJobs));
-$R = ['date' => $day($T), 'kpis' => [
-    ['Money in today', $money['answer'] ? $usd(round($money['today'])) : '?', $money['answer'] ? $plural($money['n'], 'payment', 'payments') : 'Square did not answer'],
-    ['Jobs booked', (string) count($bookedToday), $bookedToday ? $usd($bookedVal) : 'none today'],
+$R = ['date' => $W ? $day($M) . ' to ' . $day($T) : $day($T), 'head' => $W ? 'The week' : 'End of day', 'kpis' => [
+    [$W ? 'Money in this week' : 'Money in today', $money['answer'] ? $usd(round($money['today'])) : '?', $money['answer'] ? $plural($money['n'], 'payment', 'payments') : 'Square did not answer'],
+    ['Jobs booked', (string) count($bookedToday), $bookedToday ? $usd($bookedVal) : ($W ? 'none this week' : 'none today')],
     ['Jobs done', (string) $doneN, $doneN ? $usd($doneVal) : ($todayJobs ? 'of ' . count($todayJobs) : 'none scheduled')],
-    ['Tomorrow', (string) count($tomJobs), $tomJobs ? $usd($tomVal) : 'nothing booked'],
+    [$W ? 'Next week' : 'Tomorrow', (string) count($tomJobs), $tomJobs ? $usd($tomVal) : 'nothing booked'],
 ], 'sections' => []];
 $sec = [];
-if ($money['answer']) { $sec[] = ['l' => 'This week', 'v' => $usd(round($money['week']))]; $sec[] = ['l' => 'This month', 'v' => $usd(round($money['month']))]; }
+if ($money['answer']) { if (!$W) $sec[] = ['l' => 'This week', 'v' => $usd(round($money['week']))]; $sec[] = ['l' => 'This month', 'v' => $usd(round($money['month']))]; }
 $R['sections'][] = ['title' => 'Money', 'rows' => $sec];
-$sec = $bookedToday ? [['l' => 'Booked today, by source', 'v' => $usd($bookedVal), 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($bookedBy), $bookedBy))]] : [];
-$sec[] = ['l' => 'Quotes sent today', 'v' => (string) $quotedToday, 's' => $quotedVal ? 'worth ' . $usd($quotedVal) : ''];
+$sec = $bookedToday ? [['l' => $W ? 'Booked this week, by source' : 'Booked today, by source', 'v' => $usd($bookedVal), 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys($bookedBy), $bookedBy))]] : [];
+$sec[] = ['l' => $W ? 'Quotes sent this week' : 'Quotes sent today', 'v' => (string) $quotedToday, 's' => $quotedVal ? 'worth ' . $usd($quotedVal) : ''];
 
 $sec[] = ['l' => 'Open quotes', 'v' => $usd($pipe), 's' => $plural($pipeN, 'quote', 'quotes')];
 $R['sections'][] = ['title' => 'Sales', 'rows' => $sec];
@@ -244,20 +265,25 @@ $leadLine = function (string $when, array $by) use ($msgr) {
     return [array_sum(array_map(fn($p) => (int) preg_replace('/\D.*$/', '', (string) preg_replace('/^\D+/', '', $p)), $parts)), implode(', ', $parts)];
 };
 [$nT, $sT] = $leadLine('today', $inToday); [$nW, $sW] = $leadLine('week', $inWeek);
-$rowsL = [['l' => 'New leads today', 'v' => (string) $nT, 's' => $sT], ['l' => 'New leads, last 7 days', 'v' => (string) $nW, 's' => $sW]];
+$rowsL = $W ? [['l' => 'New leads this week', 'v' => (string) $nT, 's' => $sT]] : [['l' => 'New leads today', 'v' => (string) $nT, 's' => $sT], ['l' => 'New leads, last 7 days', 'v' => (string) $nW, 's' => $sW]];
 $rowsL[] = ['l' => 'Waiting on us to reach them', 'v' => (string) $waitN, 's' => implode(', ', array_map(fn($k, $v) => $k . ' ' . $v, array_keys(array_filter($wait)), array_filter($wait))), 't' => $wait['Not contacted yet'] ? 'warn' : ''];
 $R['sections'][] = ['title' => 'Leads', 'note' => 'Facebook form and Messenger counted from Facebook itself' . ($msgr === null ? ' (Messenger could not be read today, so as entered)' : '') . '; phone, website and referrals as they came into the app.', 'rows' => $rowsL];
 $R['sections'][] = ['title' => 'Ads and referrals', 'note' => 'Spend as last typed in Stats' . ($spendAt ? ', ' . date('D j M g:i a', $spendAt) : '') . '. The app cannot read the ad account these ads run on yet, so spend is only as fresh as the last time it was typed in.', 'rows' => $adRows];
 
 $sec = [];
-foreach ($todayJobs as $j) { $o = (string) ($j['done']['o'] ?? ''); $m = (int) ($j['done']['mins'] ?? 0); foreach ((array) ($j['ridet'] ?? []) as $r) $m += (int) $r['mins'];
+/* the weekly one: a row a day (Mon to Sat), not a row a job */
+if ($W) { $g = []; foreach ($todayJobs as $j) $g[$j['date']][] = $j;
+    foreach ($g as $d => $js) { $o = array_count_values(array_map(fn($j) => (string) ($j['done']['o'] ?? ''), $js)); $nd = $o['done'] ?? 0; $nc = $o['could not'] ?? 0; $nm = count($js) - $nd - $nc;
+        $sec[] = ['l' => $day($d), 'v' => $usd(array_sum(array_map(fn($j) => (int) $j['price'], $js))), 's' => $plural(count($js), 'job', 'jobs') . ': ' . $nd . ' done' . ($nc ? ', ' . $nc . ' not done' : '') . ($nm ? ', ' . $nm . ' not marked' : ''), 't' => $nc ? 'bad' : ($nm ? 'warn' : '')]; } }
+else foreach ($todayJobs as $j) { $o = (string) ($j['done']['o'] ?? ''); $m = (int) ($j['done']['mins'] ?? 0); foreach ((array) ($j['ridet'] ?? []) as $r) $m += (int) $r['mins'];
     $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => $j['crew'] . ' · ' . ($o === 'done' ? 'done' . ($m ? ' · ' . $dur($m) : '') : ($o === 'could not' ? 'not done: ' . mb_substr((string) ($j['done']['note'] ?? ''), 0, 90) : 'not marked yet')), 't' => $o === 'could not' ? 'bad' : ($o === 'done' ? '' : 'warn')]; }
 if ($doneN && $crewMins) $sec[] = ['l' => 'Per crew hour', 'v' => $usd(round($timedVal / ($crewMins / 60))), 's' => $usd($timedVal) . ' of work in ' . $dur($crewMins) . ($timedVal < $doneVal ? ' (jobs with time logged)' : '')];
-$R['sections'][] = ['title' => 'Today\'s jobs', 'rows' => $sec, 'empty' => 'None scheduled.'];
+$R['sections'][] = ['title' => $W ? 'This week\'s jobs' : 'Today\'s jobs', 'rows' => $sec, 'empty' => 'None scheduled.'];
 $sec = [];
-foreach ($tomJobs as $j) $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => (jobSlot((string) $j['slot'])[1] ?? $j['slot']) . ' · ' . $j['crew']];
-foreach ($holdsTom as $h) $sec[] = ['l' => $short($h['name']), 'v' => 'held', 's' => 'not signed yet · ' . $h['crew'], 't' => 'warn'];
-$R['sections'][] = ['title' => 'Tomorrow', 'rows' => $sec, 'empty' => 'Nothing booked.'];
+if ($W) { $g = []; foreach ($tomJobs as $j) $g[$j['date']][] = $j; foreach ($g as $d => $js) $sec[] = ['l' => $day($d), 'v' => $usd(array_sum(array_map(fn($j) => (int) $j['price'], $js))), 's' => $plural(count($js), 'job', 'jobs') . ' · ' . implode(', ', array_map($nameOfJob, $js))]; }
+else foreach ($tomJobs as $j) $sec[] = ['l' => $nameOfJob($j), 'v' => $usd((int) $j['price']), 's' => (jobSlot((string) $j['slot'])[1] ?? $j['slot']) . ' · ' . $j['crew']];
+foreach ($holdsTom as $h) $sec[] = ['l' => $short($h['name']), 'v' => 'held', 's' => 'not signed yet · ' . ($W ? $day($h['date']) . ' · ' : '') . $h['crew'], 't' => 'warn'];
+$R['sections'][] = ['title' => $W ? 'Next week' : 'Tomorrow', 'rows' => $sec, 'empty' => 'Nothing booked.'];
 $sec = [];
 $list = fn(array $xs, callable $f) => implode(', ', array_map($f, array_slice($xs, 0, 8))) . (count($xs) > 8 ? ' and ' . (count($xs) - 8) . ' more' : '');
 $names = fn(array $xs, bool $price = false) => $list($xs, fn($l) => $short($l['name'] ?? '') . ($price ? ' ' . $usd($qPrice($l)) : ''));
@@ -267,7 +293,7 @@ if ($vmOld) $sec[] = ['l' => 'Voicemails not followed up in a day', 'v' => (stri
 if ($txtOld) $sec[] = ['l' => 'Texts or emails with no reply, no next try', 'v' => (string) count($txtOld), 's' => 'two days or more · ' . $names($txtOld), 't' => 'warn'];
 if ($depOpenN) $sec[] = ['l' => 'Deposit links sent, not paid', 'v' => $usd($depOpen), 's' => $plural($depOpenN, 'customer has', 'customers have') . ' the deposit link and ' . ($depOpenN === 1 ? 'has' : 'have') . ' not paid yet', 't' => 'warn'];
 if ($owedDoneN) $sec[] = ['l' => 'Jobs done, not paid in full', 'v' => $usd($owedDone), 's' => $plural($owedDoneN, 'job', 'jobs'), 't' => 'warn'];
-if ($couldNot) $sec[] = ['l' => 'Jobs not done today, to rebook', 'v' => (string) count($couldNot), 't' => 'bad'];
+if ($couldNot) $sec[] = ['l' => $W ? 'Jobs not done this week, to rebook' : 'Jobs not done today, to rebook', 'v' => (string) count($couldNot), 't' => 'bad'];
 $R['sections'][] = ['title' => 'Where follow-up slips', 'note' => 'From the calls, texts and emails logged in the app: one not logged counts as not done.', 'rows' => $sec, 'empty' => 'Nothing slipping today.'];
 $R['sections'][] = ['title' => 'Next six weeks', 'rows' => [
     ['l' => 'Expected', 'v' => $usd($six), 's' => $usd($bk6) . ' booked in ' . $plural($bk6n, 'job', 'jobs') . ' + open quotes at each group\'s close rate' . ($planN ? ' + plans' : '')],
@@ -275,7 +301,7 @@ $R['sections'][] = ['title' => 'Next six weeks', 'rows' => [
 $R['foot'] = ($eTest ? 'TEST, sent to Matthew only. ' : '') . 'From the Sixfold 365 app, Square and the ad spend typed in Stats. Customer names are private: keep this inside the company.';
 
 /* the plain-text copy, for mail apps that show no pictures */
-$L = ['End of day, ' . $R['date'] . '.', ''];
+$L = [$R['head'] . ', ' . $R['date'] . '.', ''];
 foreach ($R['kpis'] as [$k, $v, $s]) $L[] = $k . ': ' . $v . ' (' . $s . ')';
 foreach ($R['sections'] as $s) {
     $L[] = ''; $L[] = strtoupper($s['title']);
@@ -285,7 +311,7 @@ foreach ($R['sections'] as $s) {
 }
 $L[] = ''; $L[] = '-- ' . $R['foot'];
 $body = implode("\n", $L);
-$subject = ($eTest ? 'TEST ' : '') . 'End of day, ' . $day($T) . ': ' . ($money['answer'] ? $usd(round($money['today'], 2)) . ' in · ' : '') . count($bookedToday) . ' booked · ' . $doneN . ' done · ' . count($tomJobs) . ' tomorrow';
+$subject = ($eTest ? 'TEST ' : '') . ($W ? 'The week, ' . $R['date'] : 'End of day, ' . $day($T)) . ': ' . ($money['answer'] ? $usd(round($money['today'], 2)) . ' in · ' : '') . count($bookedToday) . ' booked · ' . $doneN . ' done · ' . count($tomJobs) . ($W ? ' next week' : ' tomorrow');
 
 require __DIR__ . '/eod-image.php';
 $png = eodImage($R, __DIR__ . '/eod-assets');
@@ -293,7 +319,7 @@ if (in_array('--png', $eArgs, true)) { file_put_contents('php://stdout', $png); 
 if ($eDry) { echo "Subject: $subject\n\n$body\n\n[picture: " . strlen($png) . " bytes]\n"; exit(0); }
 
 /* the email: the picture first (HTML with the picture attached inline, so it shows on opening), the plain text for the rest */
-$alt = 'End of day ' . $R['date'] . ': ' . implode(' · ', array_map(fn($k) => $k[0] . ' ' . $k[1], $R['kpis']));
+$alt = $R['head'] . ' ' . $R['date'] . ': ' . implode(' · ', array_map(fn($k) => $k[0] . ' ' . $k[1], $R['kpis']));
 $b1 = 'alt' . bin2hex(random_bytes(8)); $b2 = 'rel' . bin2hex(random_bytes(8)); $cid = 'eod' . bin2hex(random_bytes(6)) . '@sixfold365';
 $html = '<!doctype html><html><body style="margin:0;padding:0;background:#ffffff"><div style="max-width:600px;margin:0 auto">'
       . '<img src="cid:' . $cid . '" width="600" alt="' . htmlspecialchars($alt, ENT_QUOTES) . '" style="display:block;width:100%;max-width:600px;height:auto;border:0">'
@@ -314,6 +340,7 @@ foreach ($to as $addr) {
     @file_put_contents($eState . '/eod.log', json_encode(['at' => time(), 'to' => $addr, 'ok' => $ok, 'stage' => $eRes['stage'] ?? null, 'subject' => $subject]) . "\n", FILE_APPEND | LOCK_EX);
     echo $ok ? "eod: sent to $addr\n" : 'eod: NOT sent to ' . $addr . ' (' . ($eRes['stage'] ?? '?') . ")\n";
 }
-if (!$eTest && $fails < count($to)) @file_put_contents($eState . '/eod-last-sent.txt', date('Y-m-d'));   /* one got through: no resend to the other at the next hour */
+if (!$eTest && $fails < count($to)) @file_put_contents($eSentFile, date('Y-m-d'));   /* one got through: no resend to the other at the next hour */
+if ($eAuto && !$W && $fails < count($to)) $eWeekly();   /* Saturday: the weekly one next */
 exit($fails ? 1 : 0);
 
