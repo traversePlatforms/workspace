@@ -1013,6 +1013,18 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .cty .ic{width:18px;height:18px;flex:none;color:var(--soft);transition:transform .2s}
   .cty[aria-expanded="true"] .ic{transform:rotate(90deg)}
   .ctyb{display:grid;gap:0}
+  /* the long town list (TR-47, 2026-10-31): regions > counties > towns, Yours and the search */
+  .cty.trrg,.cty.trst{margin:12px 0 6px}
+  .cty.trrg b,.cty.trst b{font:400 20px/1.2 var(--serif)}
+  .trrgb,.trstb{margin:0 0 6px 10px;padding-left:10px;border-left:2px solid var(--line)}
+  .cty.trc{margin:8px 0 6px;padding:10px 12px;box-shadow:none;border:1px solid var(--line)}
+  .cty.trc b{font-size:17px}
+  .cty .trhid{color:var(--accent);font-weight:700}
+  .dbrowse .db-fold{display:flex;flex-direction:column;gap:6px}
+  .dbrowse .db-fold .db-fold{padding-left:10px}
+  .dbrowse .db-rg{color:var(--ink)}
+  .dbrowse .db-cty2{font-size:11px;letter-spacing:.04em}
+  .dbrowse .db-cty2.hid span{color:var(--accent)}
   .brow.tap{cursor:pointer}
   .door.acct .alive{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:13px;font-weight:600;color:var(--soft)}
   .door.acct .alive .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
@@ -10887,6 +10899,42 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.here) { var near = list.filter(function (x) { var m = hoodDist(x[1]); return m !== null && m <= 25000; }); if (near.length) list = near; }
     return list.sort(function (x, y) { return hoodRank(y[1]) - hoodRank(x[1]) || (y[1].bestN || 0) - (x[1].bestN || 0) || areaLeft(y[1]) - areaLeft(x[1]); }).slice(0, n);
   }
+  /** a town in the computer's town column */
+  function deskTownBtn(x) {
+    var b = q('button', 'db-town' + (x.key === S.region ? ' on' : '')); b.type = 'button'; b.setAttribute('data-town', x.key);
+    /* 2026-10-11 (Matthew: the town ratings read too low): a town's average sank under its empty land, so the town shows how many
+       doors scoring 8 or more it has left instead; the neighbourhoods keep their scores */
+    b.appendChild(q('span', null, x.label)); var t8 = x.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
+    if (t8) { var tc8 = q('span', 'dtc', t8 >= 10000 ? Math.round(t8 / 1000) + 'k' : t8 >= 1000 ? (t8 / 1000).toFixed(1) + 'k' : String(t8)); tc8.title = t8.toLocaleString(LOCALE) + pw(' doors score 8 or more'); b.setAttribute('aria-label', x.label + ': ' + tc8.title); b.appendChild(tc8); }
+    b.addEventListener('click', function () { S.region = x.key; S.browseSel = null; renderAreas(); });
+    return b;
+  }
+  /** the computer's town column in the editions (TR-47): regions (remembered) > counties > towns; the town on screen keeps its region and county open */
+  function trDesk(col, tq, tl) {
+    var cur = S.regions.filter(function (x) { return x.key === S.region; })[0] || {};
+    var T = trTree(), many = T.states.length > 1, f = homeFoldGet();
+    S.trOpenC = S.trOpenC || {}; if (cur.county) S.trOpenC[cur.county] = 1;
+    tl.textContent = '';
+    if (S.regions.some(function (x) { return x.areas.some(function (a) { return a.sc8; }); })) tl.appendChild(q('small', 'db-tlegend', pw('Doors scoring 8+')));
+    var bar = function (box, cls, label, n, key, open, data, onTog) {
+      var b = q('button', 'db-ctyb ' + cls); b.type = 'button'; b.setAttribute('aria-expanded', String(open)); for (var d in data) b.setAttribute('data-' + d, data[d]);
+      b.appendChild(ico('chev', 2.4)); b.appendChild(q('span', null, label)); b.appendChild(q('small', null, n));
+      var g = q('div', 'db-fold'); g.hidden = !open; b.addEventListener('click', function () { open = !open; g.hidden = !open; b.setAttribute('aria-expanded', String(open)); onTog(open); });
+      box.appendChild(b); box.appendChild(g); return g;
+    };
+    T.states.forEach(function (s) {
+      var sk = 'trs:' + s.key, sb = many ? bar(tl, 'db-st', s.label, trNum(s.total), sk, !!f[sk] || trState(cur) === s.key, { state: s.key }, function (o) { homeFoldSet(sk, o); }) : tl;
+      s.regions.forEach(function (rg) {
+        var rk = 'trr:' + s.key + ':' + rg.key, has = rg.counties.some(function (c) { return c.key === (cur.county || 'other'); }) && trState(cur) === s.key;
+        var rb = s.regions.length === 1 ? sb : bar(sb, 'db-rg', rg.label, rg.total >= 10000 ? Math.round(rg.total / 1000) + 'k' : trNum(rg.total), rk, !!f[rk] || has, { region: rg.key }, function (o) { homeFoldSet(rk, o); });
+        if (s.regions.length > 1) rb.previousSibling.title = rg.towns + ' towns · ' + trNum(rg.total) + pw(' doors');
+        rg.counties.forEach(function (ct) {
+          var cb = bar(rb, 'db-cty2' + (ct.hid ? ' hid' : ''), ct.label + (ct.hid ? ' · hidden' : ''), String(ct.towns.length), null, rg.counties.length === 1 || !!S.trOpenC[ct.key], { county: ct.key }, function (o) { if (o) S.trOpenC[ct.key] = 1; else delete S.trOpenC[ct.key]; });
+          ct.towns.forEach(function (x) { cb.appendChild(deskTownBtn(x.r)); });
+        });
+      });
+    });
+  }
   /* ---- towns and neighbourhoods on a computer (2026-10-09, mock-up F): towns by county, the town's neighbourhoods as a table,
      and the town's map with the picked neighbourhood's summary ---- */
   function deskBrowse() {
@@ -10914,18 +10962,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var cOpen = order.length === 1 || !!v || !!ctyOpen[k];
         if (order.length > 1) { var ch = q('button', 'db-cty db-ctyb'); ch.type = 'button'; ch.setAttribute('aria-expanded', String(cOpen)); ch.appendChild(ico('chev', 2.4)); ch.appendChild(q('span', null, countyName(k))); ch.appendChild(q('small', null, String(ts.length))); ch.addEventListener('click', function () { ctyOpen[k] = !ctyOpen[k]; drawTowns(); }); tl.appendChild(ch); }
         if (!cOpen) return;
-        ts.forEach(function (x) {
-          var b = q('button', 'db-town' + (x.key === S.region ? ' on' : '')); b.type = 'button'; b.setAttribute('data-town', x.key);
-          /* 2026-10-11 (Matthew: the town ratings read too low): a town's average sank under its empty land, so the town shows how many
-             doors scoring 8 or more it has left instead; the neighbourhoods keep their scores */
-          b.appendChild(q('span', null, x.label)); var t8 = x.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
-          if (t8) { var tc8 = q('span', 'dtc', t8 >= 10000 ? Math.round(t8 / 1000) + 'k' : t8 >= 1000 ? (t8 / 1000).toFixed(1) + 'k' : String(t8)); tc8.title = t8.toLocaleString(LOCALE) + pw(' doors score 8 or more'); b.setAttribute('aria-label', x.label + ': ' + tc8.title); b.appendChild(tc8); }
-          b.addEventListener('click', function () { S.region = x.key; S.browseSel = null; renderAreas(); });
-          tl.appendChild(b);
-        });
+        ts.forEach(function (x) { tl.appendChild(deskTownBtn(x)); });
       });
     };
-    tq.addEventListener('input', drawTowns); drawTowns();
+    if (trOn()) trDesk(towns, tq, tl); else { tq.addEventListener('input', drawTowns); drawTowns(); }   /* TR-47 (2026-10-31): regions, Yours and the search */
     /* the town's head and the sort */
     var T = townSum(r), at8 = r.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
     var hd = q('div', 'db-head'), ht = q('div');
@@ -11947,12 +11987,97 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     laplata: 'La Plata County', garfield: 'Garfield County', summit: 'Summit County', grand: 'Grand County', routt: 'Routt County', montezuma: 'Montezuma County', gunnison: 'Gunnison County', morgan: 'Morgan County', archuleta: 'Archuleta County', logan: 'Logan County', pitkin: 'Pitkin County', riogrande: 'Rio Grande County',
     huerfano: 'Huerfano County', sanmiguel: 'San Miguel County', gilpin: 'Gilpin County', yuma: 'Yuma County', lake: 'Lake County', ouray: 'Ouray County', rioblanco: 'Rio Blanco County', dolores: 'Dolores County', hinsdale: 'Hinsdale County', sanjuan: 'San Juan County', eagle: 'Eagle County', custer: 'Custer County',
     /* Group 3b, the counties built from the state's address points */
-    montrose: 'Montrose County', delta: 'Delta County', lasanimas: 'Las Animas County', alamosa: 'Alamosa County', conejos: 'Conejos County', saguache: 'Saguache County', costilla: 'Costilla County', washington: 'Washington County', bent: 'Bent County', mineral: 'Mineral County', sedgwick: 'Sedgwick County' };
+    montrose: 'Montrose County', delta: 'Delta County', lasanimas: 'Las Animas County', alamosa: 'Alamosa County', conejos: 'Conejos County', saguache: 'Saguache County', costilla: 'Costilla County', washington: 'Washington County', bent: 'Bent County', mineral: 'Mineral County', sedgwick: 'Sedgwick County',
+    /* the rest of Colorado's 64 (TR-47, 2026-10-31), so a county the editions add later never shows as Other towns */
+    fremont: 'Fremont County', chaffee: 'Chaffee County', jackson: 'Jackson County', moffat: 'Moffat County', phillips: 'Phillips County', kitcarson: 'Kit Carson County', lincoln: 'Lincoln County', cheyenne: 'Cheyenne County', kiowa: 'Kiowa County', crowley: 'Crowley County', otero: 'Otero County', prowers: 'Prowers County', baca: 'Baca County' };
   function townSum(r) {
     return r.areas.reduce(function (t, a) {
       t.total += a.total; t.done += a.done + (a.noanswer || 0); t.left += a.total - a.done - (a.noanswer || 0);
       t.hot += a.hot || 0; t.booked += a.booked || 0; t.all3 += a.all3 || 0; return t;
     }, { total: 0, done: 0, left: 0, hot: 0, booked: 0, all3: 0 });
+  }
+  /* ---- the long town list (TR-47, 2026-10-31, Matthew's tablet test: the editions hold 407 towns and 1.24 million homes, and the County >
+     town > neighbourhood list was far too long) ----
+     The editions and client installs; Sixfold keeps its counties (trOn). The counties sit in regions, each closed until opened and remembered on
+     this device for this person, like the home's groups (homeFold), with its property count. A second state's towns would sit under a state bar
+     above its regions (trTree: the state comes from the town, else the market). A county opened stays open while the app is open. */
+  function trOn() { return edOn(); }
+  /* Colorado's 64 counties by region, keys as COUNTY_NAME. Denver metro is the seven DRCOG core counties and Elbert; the mountain counties of
+     the Denver statistical area (Clear Creek, Gilpin, Park) are with the Mountains; the San Luis Valley is with Colorado Springs and south. */
+  var TR_REGIONS = { CO: [
+    ['denver', 'Denver metro', ['denver', 'adams', 'arapahoe', 'jefferson', 'douglas', 'broomfield', 'boulder', 'elbert']],
+    ['north', 'Northern Front Range', ['larimer', 'weld']],
+    ['south', 'Colorado Springs and south', ['elpaso', 'teller', 'pueblo', 'fremont', 'custer', 'huerfano', 'lasanimas', 'alamosa', 'conejos', 'costilla', 'riogrande', 'saguache', 'mineral']],
+    ['mtn', 'Mountains', ['clearcreek', 'gilpin', 'park', 'summit', 'eagle', 'grand', 'jackson', 'routt', 'lake', 'chaffee', 'pitkin', 'gunnison', 'hinsdale', 'sanjuan']],
+    ['west', 'Western Slope', ['mesa', 'garfield', 'delta', 'montrose', 'ouray', 'sanmiguel', 'dolores', 'montezuma', 'laplata', 'archuleta', 'rioblanco', 'moffat']],
+    ['east', 'Eastern Plains', ['morgan', 'logan', 'sedgwick', 'phillips', 'yuma', 'washington', 'kitcarson', 'lincoln', 'cheyenne', 'kiowa', 'crowley', 'otero', 'bent', 'prowers', 'baca']]] };
+  var TR_STATE = { CO: 'Colorado' };
+  function trState(r) { return r.st || MK().state || 'CO'; }
+  function trRegionOf(st, c) { var L = TR_REGIONS[st] || []; for (var i = 0; i < L.length; i++) if (L[i][2].indexOf(c) >= 0) return L[i]; return null; }
+  /** states > regions > counties > towns, with totals; regions in TR_REGIONS order (a county in none: Other towns, last), counties A to Z */
+  function trTree() {
+    var T = { states: [] }, sI = {};
+    S.regions.forEach(function (r) {
+      var st = trState(r), c = r.county || 'other', g = trRegionOf(st, c) || ['other', 'Other towns'], t = townSum(r);
+      var s = sI[st]; if (!s) { s = sI[st] = { key: st, label: TR_STATE[st] || (st === MK().state ? MK().stateName : st), regions: [], rI: {}, total: 0, towns: 0 }; T.states.push(s); }
+      var rg = s.rI[g[0]]; if (!rg) { rg = s.rI[g[0]] = { key: g[0], label: g[1], counties: [], cI: {}, total: 0, left: 0, towns: 0 }; s.regions.push(rg); }
+      var ct = rg.cI[c]; if (!ct) { ct = rg.cI[c] = { key: c, label: countyName(c), towns: [], total: 0, left: 0, hot: 0, booked: 0, hid: false }; rg.counties.push(ct); }
+      ct.towns.push({ r: r, t: t }); if (r.hid) ct.hid = true;
+      ct.total += t.total; ct.left += t.left; ct.hot += t.hot || 0; ct.booked += t.booked || 0;
+      rg.total += t.total; rg.left += t.left; rg.towns++; s.total += t.total; s.towns++;
+    });
+    var rank = function (s, k) { var L = TR_REGIONS[s.key] || []; for (var i = 0; i < L.length; i++) if (L[i][0] === k) return i; return 99; };
+    T.states.sort(function (a, b) { return (b.key === MK().state) - (a.key === MK().state) || a.label.localeCompare(b.label); });
+    T.states.forEach(function (s) {
+      s.regions.sort(function (a, b) { return rank(s, a.key) - rank(s, b.key); });
+      s.regions.forEach(function (rg) { rg.counties.sort(function (a, b) { return (a.key === 'other') - (b.key === 'other') || a.label.localeCompare(b.label); }); });
+    });
+    return T;
+  }
+  /** a bar that folds what follows it, open state kept per device and person (homeFold's store); returns the folded box */
+  function trFold(box, key, cls, title, line, data) {
+    var open = !!homeFoldGet()[key];
+    var hd = q('button', 'cty ' + cls); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open));
+    for (var d in data) hd.setAttribute('data-' + d, data[d]);
+    var ht = q('span', 'ct'); ht.appendChild(q('b', null, title)); if (line) ht.appendChild(q('small', null, line));
+    hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
+    var g = q('div', cls + 'b'); g.hidden = !open;
+    hd.addEventListener('click', function () { open = !open; g.hidden = !open; hd.setAttribute('aria-expanded', String(open)); homeFoldSet(key, open); });
+    box.appendChild(hd); box.appendChild(g);
+    return g;
+  }
+  function trNum(n) { return n.toLocaleString(LOCALE); }
+  /** the regions on a phone or an upright tablet: region bars (remembered), county bars (open while the app is open), town cards */
+  function trGroups(box) {
+    var T = trTree(), many = T.states.length > 1;
+    S.trOpenC = S.trOpenC || {};
+    T.states.forEach(function (s) {
+      var sb = many ? trFold(box, 'trs:' + s.key, 'trst', s.label, s.towns + ' towns · ' + trNum(s.total) + pw(' doors'), { state: s.key }) : box;
+      s.regions.forEach(function (rg) {
+        var one = s.regions.length === 1;   /* one region: its counties straight away */
+        var rb = one ? sb : trFold(sb, 'trr:' + s.key + ':' + rg.key, 'trrg', rg.label,
+          rg.counties.length + (rg.counties.length === 1 ? ' county · ' : ' counties · ') + rg.towns + (rg.towns === 1 ? ' town · ' : ' towns · ') + trNum(rg.total) + pw(' doors'), { region: rg.key });
+        rg.counties.forEach(function (ct) {
+          var open = rg.counties.length === 1 || !!S.trOpenC[ct.key];
+          var hd = q('button', 'cty trc'); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open)); hd.setAttribute('data-county', ct.key);
+          var ht = q('span', 'ct'); ht.appendChild(q('b', null, ct.label));
+          ht.appendChild(q('small', null, ct.towns.length + (ct.towns.length === 1 ? ' town · ' : ' towns · ') + trNum(ct.left) + pw(' doors to knock') +
+            (ct.hot ? ' · ' + trNum(ct.hot) + ' high-risk' : '') + (ct.booked ? ' · ' + ct.booked + ' booked' : '')));
+          if (ct.hid) ht.appendChild(q('small', 'trhid', 'Hidden from the team (only Traverse sees it)'));
+          hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
+          var cb = q('div', 'ctyb'); cb.hidden = !open; var drawn = false;
+          var draw = function () { if (drawn) return; drawn = true; ct.towns.forEach(function (x) { cb.appendChild(townCard(x)); }); };   /* towns drawn when opened: 407 cards nobody sees cost the first paint */
+          if (open) draw();
+          hd.addEventListener('click', function () { open = !open; if (open) draw(); cb.hidden = !open; hd.setAttribute('aria-expanded', String(open)); if (open) S.trOpenC[ct.key] = 1; else delete S.trOpenC[ct.key]; });
+          rb.appendChild(hd); rb.appendChild(cb);
+        });
+      });
+    });
+  }
+  /** the town list below the state card (stateView) */
+  function trBrowse(box) {
+    var main = q('div', 'trmain'); box.appendChild(main);
+    trGroups(main);
   }
   function stateView() {
     if (deskWide()) { S.returnTo = null; return deskBrowse(); }
@@ -11983,6 +12108,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.appendChild(alertStrip(null));
     if (feat('pest') && crewSees()) view.appendChild(seasonStrip());
     if (feat('security') && crewSees()) secRates(function () {});   /* the town figures, ready for the cards */   /* pest edition: what is in season (2026-10-06) */
+    if (trOn()) { trBrowse(view); window.scrollTo(0, 0); return; }   /* TR-47 (2026-10-31): Yours, the search and the regions; Sixfold keeps the counties below */
     /* counties, in the order the towns are listed. Each folds up (Matthew 2026-10-05: more counties would clutter
        the screen); the bar carries the county's totals, and each phone remembers which are open. One county: open. */
     var order = [];
@@ -12002,28 +12128,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         open = !open; box.hidden = !open; hd.setAttribute('aria-expanded', String(open));
       });
       view.appendChild(hd); view.appendChild(box);
-      towns.forEach(function (x, i) {
-        var b = q('button', 'area town'); b.type = 'button'; b.setAttribute('data-town', x.r.key);
-        var p = x.t.total ? x.t.done / x.t.total : 0, fin = x.t.left === 0;
-        b.appendChild(ring(48, 5, p, fin ? ico('check', 3) : pctText(p), fin));
-        var mid = q('div', 'mid'); mid.appendChild(q('div', 'nm', x.r.label));
-        mid.appendChild(q('div', 'sub', x.r.areas.length + ' neighborhoods · ' + x.t.total.toLocaleString(LOCALE) + pw(' doors')));
-        var chips = q('div', 'chips');
-        if (x.t.hot) chips.appendChild(chipEl('hot', 'flame', x.t.hot.toLocaleString(LOCALE) + ' high-risk ' + (x.t.hot === 1 ? 'door' : 'doors') + ' left'));
-        if (x.t.all3) chips.appendChild(chipEl('all3', 'check', x.t.all3 + ' with fire, lawn and trees'));
-        if (x.t.booked) chips.appendChild(chipEl('bk', 'check', x.t.booked + (x.t.booked === 1 ? ' quote' : ' quotes') + ' booked'));
-        var yours = x.r.areas.filter(function (a) { return a.who && a.who === S.me; }).length;
-        if (yours) chips.appendChild(chipEl('mine me', 'users', yours + (yours === 1 ? ' neighborhood is yours' : ' neighborhoods are yours')));
-        if (chips.children.length) mid.appendChild(chips);
-        b.appendChild(mid);
-        var cnt = q('div', 'left'); cnt.appendChild(q('b', null, fin ? 'Done' : x.t.left.toLocaleString(LOCALE))); if (!fin) cnt.appendChild(q('small', null, 'to knock'));
-        b.appendChild(cnt);
-        b.addEventListener('click', function () { S.region = x.r.key; S.area = null; renderAreas(); window.scrollTo(0, 0); });
-        if (!reduced()) { var n = view.querySelectorAll('button.town').length; if (n < 14) { b.style.animationDelay = (n * 35) + 'ms'; b.classList.add('enter'); } }
-        box.appendChild(b);
-      });
+      towns.forEach(function (x) { box.appendChild(townCard(x)); });
     });
     window.scrollTo(0, 0);
+  }
+  /** one town's card in the list ({r: town, t: townSum(town)}); the counties above and the regions (TR-47) both use it */
+  function townCard(x) {
+    var b = q('button', 'area town'); b.type = 'button'; b.setAttribute('data-town', x.r.key);
+    var p = x.t.total ? x.t.done / x.t.total : 0, fin = x.t.left === 0;
+    b.appendChild(ring(48, 5, p, fin ? ico('check', 3) : pctText(p), fin));
+    var mid = q('div', 'mid'); mid.appendChild(q('div', 'nm', x.r.label));
+    mid.appendChild(q('div', 'sub', x.r.areas.length + ' neighborhoods · ' + x.t.total.toLocaleString(LOCALE) + pw(' doors')));
+    var chips = q('div', 'chips');
+    if (x.t.hot) chips.appendChild(chipEl('hot', 'flame', x.t.hot.toLocaleString(LOCALE) + ' high-risk ' + (x.t.hot === 1 ? 'door' : 'doors') + ' left'));
+    if (x.t.all3) chips.appendChild(chipEl('all3', 'check', x.t.all3 + ' with fire, lawn and trees'));
+    if (x.t.booked) chips.appendChild(chipEl('bk', 'check', x.t.booked + (x.t.booked === 1 ? ' quote' : ' quotes') + ' booked'));
+    var yours = x.r.areas.filter(function (a) { return a.who && a.who === S.me; }).length;
+    if (yours) chips.appendChild(chipEl('mine me', 'users', yours + (yours === 1 ? ' neighborhood is yours' : ' neighborhoods are yours')));
+    if (chips.children.length) mid.appendChild(chips);
+    b.appendChild(mid);
+    var cnt = q('div', 'left'); cnt.appendChild(q('b', null, fin ? 'Done' : x.t.left.toLocaleString(LOCALE))); if (!fin) cnt.appendChild(q('small', null, 'to knock'));
+    b.appendChild(cnt);
+    b.addEventListener('click', function () { S.region = x.r.key; S.area = null; renderAreas(); window.scrollTo(0, 0); });
+    if (!reduced()) { var n = view.querySelectorAll('button.town').length; if (n < 14) { b.style.animationDelay = (n * 35) + 'ms'; b.classList.add('enter'); } }
+    return b;
   }
   /* ---- territories (2026-10-04) ----
      Matthew: territories as their own thing; admins assign neighbourhoods to people (later a team
