@@ -50,21 +50,23 @@ cp "$S"/back/app/data/rounds/material-*.json "$RD/" || stop "copy into app/data/
 node -e "
 const fs=require('fs'),[loc,vm,...towns]=process.argv.slice(1);const L=JSON.parse(fs.readFileSync(loc)),V=JSON.parse(fs.readFileSync(vm));let n=0;
 for(const t of towns)if(V[t]){L[t]=V[t];n++}fs.writeFileSync(loc,JSON.stringify(L,null,1));console.log('coverage.json: '+n+' towns merged')" roofs/material/coverage.json "$S/back/data-pipeline/door-territory/roofs/material/coverage.json" $TOWNS || stop "coverage merge"
-RX=""
+# Mesa's towns get their year files only (year built; Mesa publishes no roof cover)
+MESA=$(node -e "console.log(require('./group2/registered.json').filter(t=>t.county==='Mesa').map(t=>t.key).join(' '))")
 for d in traverse-data traverse-solar-data; do
-  for t in $TOWNS; do
-    grep -q "\"key\": *\"$t\"" "$ED/$d/rounds/index.json" || { step "  $d has no $t: skipped"; continue; }
+  for t in $TOWNS $MESA; do
+    grep -qE "\"key\": *\"$t\"" "$ED/$d/rounds/index.json" || { step "  $d has no $t: skipped"; continue; }
     for p in material year; do [ -f "$RD/$p-$t.json" ] && cp "$RD/$p-$t.json" "$ED/$d/rounds/"; done
   done
 done
-RX="^(material|year)-($(echo $TOWNS | tr ' ' '|'))\.json$"
+RX="^(material|year)-($(echo $TOWNS | tr ' ' '|'))\.json$|^year-($(echo $MESA | tr ' ' '|'))\.json$"
+ALLN=$(( $(echo $TOWNS | wc -w) * 2 + $(echo $MESA | wc -w) ))
 
 ## 3. push
 for d in traverse-data traverse-solar-data; do
   wifi
   DRY=1 bash ./push-edition.sh "$d" "$RX" > "$S/dry-$d.txt" || stop "dry run $d failed"
   n=$(grep -cE '^(material|year)-' "$S/dry-$d.txt"); step "$d: $n files to send"
-  [ "$n" -le $(( $(echo $TOWNS | wc -w) * 2 )) ] || stop "$d would send $n files"
+  [ "$n" -le "$ALLN" ] || stop "$d would send $n files (at most $ALLN expected)"
   bash ./push-edition.sh "$d" "$RX" | tee "$S/push-$d.txt"
   grep -qE "MD5 MATCH|: 0 files to send" "$S/push-$d.txt" && grep -q "json ok" "$S/push-$d.txt" || stop "push $d did not match"
 done
