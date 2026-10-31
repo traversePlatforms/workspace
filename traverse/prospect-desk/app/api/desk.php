@@ -32,6 +32,7 @@ function cleanText($v, int $max): string { $t = str_replace(["\r\n", "\r"], "\n"
 function codeHash(string $c): string { return hash('sha256', 'prospectdesk|' . $c); }
 const STATUSES = ['new' => 'Not contacted', 'emailed' => 'Emailed', 'called' => 'Called / left voicemail', 'nextdoor' => 'Messaged on Nextdoor', 'talking' => 'Talking', 'demo' => 'Demo booked', 'pilot' => 'Pilot', 'customer' => 'Customer', 'notnow' => 'Not now', 'no' => 'No'];   /* nextdoor (31 Oct, Matthew): messaged by hand on Nextdoor; the desk never messages there */
 const OFF = ['notnow', 'no'];   /* knocked off the list: hidden unless asked for */
+const WAYS = ['emailed', 'called', 'nextdoor'];   /* ways we reached them (31 Oct, Matthew): ticks that can all be on at once; while a company is still at the first stage its status is the last one ticked, or Not contacted with none */
 const TRADES = ['roofing' => 'Roofing', 'roofing solar' => 'Roofing and solar', 'solar' => 'Solar', 'pest' => 'Pest control', 'security' => 'Security', 'yards' => 'Lawn and yards'];
 const CAP_MAX = 240;   /* 10 an hour around the clock (Matthew 31 Oct: "10 emails an hour", no daily stop); the hourly 10 is the pace */
 
@@ -55,7 +56,7 @@ function defaultSettings(): array { return ['address' => '', 'signature' => "Mat
 function noteKey(array $r): string { return substr(sha1($r['at'] . '|' . $r['by'] . '|' . $r['note']), 0, 8); }
 function state(): array {
     $seed = jread('seed.json', ['leads' => []]);
-    $base = ['status' => 'new', 'notes' => [], 'next' => null, 'log' => [], 'person' => '', 'unsub' => false, 'sent' => []];
+    $base = ['status' => 'new', 'reached' => [], 'notes' => [], 'next' => null, 'log' => [], 'person' => '', 'unsub' => false, 'sent' => []];
     $L = []; foreach ($seed['leads'] as $l) $L[$l['id']] = $l + $base;
     $tpl = defaultTemplates(); $set = defaultSettings(); $team = [];
     foreach (logRows() as $r) {
@@ -63,13 +64,16 @@ function state(): array {
         if (!empty($r['by'])) { $b = (string) $r['by']; $team[$b][$t] = ($team[$b][$t] ?? 0) + 1; }
         switch ($t) {
             case 'lead': $L[$id] = $r['lead'] + $base; break;
-            case 'status': if (isset($L[$id])) { $L[$id]['status'] = $r['status']; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Status: ' . (STATUSES[$r['status']] ?? $r['status'])]; } break;
+            case 'status': if (isset($L[$id])) { $L[$id]['status'] = $r['status']; if ($r['status'] === 'new') $L[$id]['reached'] = []; elseif (in_array($r['status'], WAYS, true) && !in_array($r['status'], $L[$id]['reached'], true)) $L[$id]['reached'][] = $r['status']; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Status: ' . (STATUSES[$r['status']] ?? $r['status'])]; } break;
+            case 'reach': if (isset($L[$id]) && in_array($r['way'] ?? '', WAYS, true)) { $w = $r['way']; $R = array_values(array_diff($L[$id]['reached'], [$w])); if (!empty($r['on'])) $R[] = $w; $L[$id]['reached'] = $R;
+                 if ($L[$id]['status'] === 'new' || in_array($L[$id]['status'], WAYS, true)) $L[$id]['status'] = $R ? end($R) : 'new';
+                 $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => (!empty($r['on']) ? 'Ticked: ' : 'Unticked: ') . STATUSES[$w]]; } break;   /* 31 Oct */
             case 'note': if (isset($L[$id])) $L[$id]['notes'][] = ['k' => noteKey($r), 'at' => $r['at'], 'by' => $r['by'], 'note' => $r['note']]; break;
             case 'notedel': if (isset($L[$id])) $L[$id]['notes'] = array_values(array_filter($L[$id]['notes'], fn($n) => $n['k'] !== ($r['nk'] ?? ''))); break;
             case 'next': if (isset($L[$id])) $L[$id]['next'] = $r['next']; break;
             case 'edit': if (isset($L[$id])) foreach ((array) $r['f'] as $k => $v) if ($k === 'nextdoor') { $L[$id]['nextdoor'] = (string) $v; $so = array_values(array_filter((array) ($L[$id]['socials'] ?? []), fn($u) => stripos((string) $u, 'nextdoor.com') === false)); if ((string) $v !== '') array_unshift($so, (string) $v); $L[$id]['socials'] = $so; } elseif (in_array($k, ['phone', 'email', 'site', 'person', 'name'], true)) {   /* + nextdoor (31 Oct): their business page, first among the social links */
                  $L[$id][$k] = $v; if ($k === 'email') { $L[$id]['emailOk'] = ''; $L[$id]['emailSrc'] = 'desk'; } } break;
-            case 'sent': if (isset($L[$id])) { $L[$id]['sent'][] = ['at' => $r['at'], 'subject' => $r['subject'], 'to' => $r['to']]; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Emailed: ' . $r['subject']]; } break;
+            case 'sent': if (isset($L[$id])) { $L[$id]['sent'][] = ['at' => $r['at'], 'subject' => $r['subject'], 'to' => $r['to']]; if (!in_array('emailed', $L[$id]['reached'], true)) $L[$id]['reached'][] = 'emailed'; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Emailed: ' . $r['subject']]; } break;
             case 'click': if (isset($L[$id])) { $L[$id]['clicks'] = ($L[$id]['clicks'] ?? 0) + 1; $L[$id]['log'][] = ['at' => $r['at'], 'by' => 'the company', 'what' => 'Clicked ' . (($r['to'] ?? '') === 'demo' ? 'Book a demo' : 'the website') . ' in the email']; } break;   /* 2026-10-30 */
             case 'unsub': if (isset($L[$id])) { $L[$id]['unsub'] = true; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Asked not to be emailed']; } break;
             case 'template': if (isset(TRADES[$r['trade'] ?? ''])) $tpl[$r['trade']] = ['subject' => $r['subject'], 'body' => $r['body']]; break;
@@ -422,6 +426,11 @@ switch ($action) {
         $id = (string) ($body['id'] ?? ''); needLead($S, $id); $st = (string) ($body['status'] ?? '');
         if (!isset(STATUSES[$st])) fail('Pick a status.');
         logAdd(['t' => 'status', 'id' => $id, 'status' => $st, 'by' => $ME, 'at' => time()]); out(['ok' => true]);
+    }
+    case 'reach': {   /* tick or untick a way we reached them (31 Oct) */
+        $id = (string) ($body['id'] ?? ''); needLead($S, $id); $w = (string) ($body['way'] ?? '');
+        if (!in_array($w, WAYS, true)) fail('Pick Emailed, Called or Messaged on Nextdoor.');
+        logAdd(['t' => 'reach', 'id' => $id, 'way' => $w, 'on' => !empty($body['on']), 'by' => $ME, 'at' => time()]); out(['ok' => true]);
     }
     case 'note': {
         $id = (string) ($body['id'] ?? ''); needLead($S, $id); $n = clean($body['note'] ?? '', 1000); if ($n === '') fail('Write the note first.');

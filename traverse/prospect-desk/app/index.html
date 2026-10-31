@@ -143,6 +143,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   var main = $('main');
   var OFF = ['notnow', 'no'];
+  var WAYS = ['emailed', 'called', 'nextdoor'], WAY_SHORT = { emailed: 'Emailed', called: 'Called', nextdoor: 'Nextdoor' };   /* ways we reached them: ticks, any number at once (31 Oct, Matthew) */
   var WHERE = [['in our towns', 'In our towns'], ['next to our towns', 'Next to our towns'], ['elsewhere in Colorado', 'Elsewhere in Colorado']];
   var SHORT = { roofing: 'ROOF', 'roofing solar': 'R+S', solar: 'SOL', pest: 'PEST', security: 'SEC', yards: 'YARD' };
   function api(action, body, q) {
@@ -159,6 +160,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   var ago = function (ts) { return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
   var agoT = function (ts) { return new Date(ts * 1000).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
   var stName = function (k) { return S.data.statuses[k] || k; };
+  var reached = function (l) { return l.reached || []; };
+  var stLabel = function (l) { var R = reached(l); return WAYS.indexOf(l.status) >= 0 && R.length > 1 ? WAYS.filter(function (w) { return R.indexOf(w) >= 0; }).map(function (w) { return WAY_SHORT[w]; }).join(' + ') : stName(l.status); };   /* the pill: Emailed + Nextdoor */
   var trName = function (k) { return S.data.trades[k] || k; };
   var lead = function (id) { return S.byId[id]; };
   var isOff = function (l) { return OFF.indexOf(l.status) >= 0; };
@@ -245,7 +248,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   var hasSoc = function (l) { return !!(l.socials && l.socials.length); };
   var hasNd = function (l) { return !!(l.socials || []).filter(function (u) { return /nextdoor.com/i.test(u); }).length; };   /* a Nextdoor business page (31 Oct, Matthew: sort by the ones on Nextdoor) */   /* a social page is a way in too (2026-10-26) */
   function matchReach(l, r) { return r === 'all' ? true : r === 'any' ? (reachN(l) > 0 || hasSoc(l)) : r === 'phone' ? !!l.phone : r === 'email' ? !!l.email : r === 'social' ? hasSoc(l) : r === 'nextdoor' ? hasNd(l) : (reachN(l) === 0 && !hasSoc(l)); }
-  function matchSt(l, st) { return st === 'open' ? !isOff(l) : st === 'off' ? isOff(l) : l.status === st; }
+  function matchSt(l, st) { return st === 'open' ? !isOff(l) : st === 'off' ? isOff(l) : WAYS.indexOf(st) >= 0 ? reached(l).indexOf(st) >= 0 && !isOff(l) : l.status === st; }
 
   /* ---- Prospects ---- */
   function drawList() {
@@ -286,7 +289,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
         var right = el('div'); right.style.textAlign = 'right';
         if (l.grade) { var gb = el('span', 'grade g-' + l.grade, l.grade); gb.title = 'Fit ' + l.grade + ' (' + (l.score || 0) + ' points)'; right.appendChild(gb); }
         var mk = el('span', 'reach', (l.phone ? '☎' : '') + (l.email ? ' ✉' : '')); mk.title = (l.email ? 'Has an email' : 'No email') + ' · ' + (l.phone ? 'has a phone' : 'no phone'); right.appendChild(mk);
-        right.appendChild(el('span', 'pill s-' + l.status, stName(l.status)));
+        right.appendChild(el('span', 'pill s-' + l.status, stLabel(l)));
         if (l.next && l.next.date) right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(l.next.date)));
         r.appendChild(right);
         r.addEventListener('click', function () { if (!S.sel) S.listY = window.scrollY; S.sel = l.id; draw(); });
@@ -309,11 +312,12 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     d.appendChild(el('div', 'sub', [trName(l.trade), [l.city, l.zip].filter(Boolean).join(' '), l.where, l.formed ? 'since ' + l.formed : '', l.added ? 'added on the desk' : ''].filter(Boolean).join(' · ')));
     if (l.grade) { var fw = el('div', 'fitwhy'); fw.appendChild(el('span', 'grade g-' + l.grade, l.grade)); fw.appendChild(el('span', null, 'Fit ' + (l.score || 0) + ' of 100' + ((l.why || []).length ? ': ' + l.why.join(', ') : ''))); d.appendChild(fw); }
     /* status: the working stages, then the two that knock it off the list */
-    var s1 = el('div', 'sec'); s1.appendChild(el('h3', null, 'Status'));
+    var s1 = el('div', 'sec'); s1.appendChild(el('h3', null, 'Status')); s1.appendChild(el('small', 'sub', 'Emailed, Called and Messaged on Nextdoor can all be ticked at once.'));
     var seg = el('div', 'seg'), seg2 = el('div', 'seg off'); seg2.style.marginTop = '6px';
     Object.keys(S.data.statuses).forEach(function (k) {
-      var b = el('button', null, (OFF.indexOf(k) >= 0 ? 'Knock off: ' : '') + S.data.statuses[k]); b.type = 'button'; b.setAttribute('data-st', k); b.setAttribute('aria-pressed', String(l.status === k));
+      var b = el('button', null, (OFF.indexOf(k) >= 0 ? 'Knock off: ' : '') + S.data.statuses[k]); b.type = 'button'; b.setAttribute('data-st', k); b.setAttribute('aria-pressed', String(WAYS.indexOf(k) >= 0 ? reached(l).indexOf(k) >= 0 : l.status === k));
       b.addEventListener('click', function () {
+        if (WAYS.indexOf(k) >= 0) { var on = reached(l).indexOf(k) < 0; save('reach', { id: l.id, way: k, on: on }, (on ? 'Ticked ' : 'Unticked ') + S.data.statuses[k], function () { save('reach', { id: l.id, way: k, on: !on }, 'Put back'); }); return; }   /* a tick: the others stay on */
         if (l.status === k) return; var prev = l.status, name = l.name;
         save('status', { id: l.id, status: k }, OFF.indexOf(k) >= 0 ? name + ' knocked off the list' : 'Marked ' + S.data.statuses[k], function () { save('status', { id: l.id, status: prev }, 'Put back: ' + stName(prev)); });
       });
@@ -402,7 +406,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       g[1].forEach(function (l) {
         var r = el('button', 'row' + (S.sel === l.id ? ' on' : '')); r.type = 'button'; r.appendChild(el('div', 'tr', SHORT[l.trade] || '•'));
         var nm = el('div', 'nm'); nm.appendChild(el('b', null, l.name)); nm.appendChild(el('small', null, [l.next.what, l.city].filter(Boolean).join(' · '))); r.appendChild(nm);
-        var right = el('div'); right.style.textAlign = 'right'; right.appendChild(el('span', 'pill s-' + l.status, stName(l.status))); right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), fmtDay(l.next.date))); r.appendChild(right);
+        var right = el('div'); right.style.textAlign = 'right'; right.appendChild(el('span', 'pill s-' + l.status, stLabel(l))); right.appendChild(el('div', 'due' + (l.next.date < today() ? ' late' : ''), fmtDay(l.next.date))); r.appendChild(right);
         r.addEventListener('click', function () { S.sel = l.id; draw(); }); list.appendChild(r);
       });
     });
@@ -484,7 +488,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
         var r = el('label', 'pick'); var cb = el('input'); cb.type = 'checkbox'; cb.checked = !!em.ticks[l.id]; cb.setAttribute('data-id', l.id);
         cb.addEventListener('change', function () { if (cb.checked) em.ticks[l.id] = true; else delete em.ticks[l.id]; em.preview = null; prev.textContent = ''; refreshCount(); });
         r.appendChild(cb); var tx = el('span'); tx.appendChild(el('b', null, l.name)); tx.appendChild(el('small', null, [l.email, trName(l.trade), l.city].join(' · '))); r.appendChild(tx);
-        r.appendChild(el('span', 'pill s-' + l.status, stName(l.status))); pl.appendChild(r);
+        r.appendChild(el('span', 'pill s-' + l.status, stLabel(l))); pl.appendChild(r);
       });
       if (pool.length > em.shown) { var m = el('button', 'more', 'Show more (' + (pool.length - em.shown) + ' left)'); m.type = 'button'; m.addEventListener('click', function () { em.shown += 400; drawPicks(); }); pl.appendChild(m); }
     }
