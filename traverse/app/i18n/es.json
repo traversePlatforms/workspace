@@ -2454,7 +2454,7 @@
  " people can sign in now, so Crew or Team fits.": " personas pueden entrar ahora, así que conviene Crew o Team.",
  "Prices include this edition’s data: +": "Los precios incluyen los datos de esta edición: +",
  " a month on Crew and Team, +": " al mes en Crew y Team, +",
- " on Solo.": " en Solo.",
+ " on Duo.": " en Duo.",
  "Founding company: 25% off for the first year, and your price is locked in for life as long as you’re with us.": "Empresa fundadora: 25% de descuento el primer año, y tu precio queda fijo de por vida mientras sigas con nosotros.",
  "People": "Personas",
  " a month)": " al mes)",
@@ -2464,7 +2464,7 @@
  " the plan covers.": " que cubre el plan.",
  " people can sign in and the plan covers ": " personas pueden entrar y el plan cubre ",
  ". Email billing@traverseplatforms.com to add seats, or remove people in Accounts.": ". Escribe a billing@traverseplatforms.com para sumar puestos, o quita personas en Cuentas.",
- "Solo is for one person. Crew covers up to ": "Solo es para una persona. Crew cubre hasta ",
+ "Duo is for one admin and one worker. Team covers up to ": "Duo es para un administrador y un trabajador. Team cubre hasta ",
  "People: 1 to ": "Personas: 1 a ",
  "Extra people are not offered ": "Las personas extra no se ofrecen ",
  "This edition is not offered ": "Esta edición no se ofrece ",
@@ -4550,5 +4550,12 @@
  "NOAA NWS MRMS, about every 2 minutes": "NOAA NWS MRMS, cada 2 minutos aproximadamente",
  "Very light": "Muy ligera",
  "NWS radar is not answering": "El radar del NWS no responde",
- "showing the Iowa Mesonet copy instead": "se muestra la copia de Iowa Mesonet"
+ "showing the Iowa Mesonet copy instead": "se muestra la copia de Iowa Mesonet",
+ "System that fits": "Sistema que cabe",
+ "Output a year": "Producción al año",
+ "the most this roof holds": "lo más que soporta este techo",
+ "from the sun it gets here": "según el sol que recibe aquí",
+ "up to about this much": "hasta más o menos esto",
+ "400 W each": "400 W cada uno",
+ "An estimate of the most that fits, not a sized system.": "Una estimación de lo más que cabe, no un sistema dimensionado."
 }

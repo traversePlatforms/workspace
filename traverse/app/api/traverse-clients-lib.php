@@ -41,7 +41,7 @@ declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 
 const TC_EDITIONS = ['roofing' => 'TraverseRoofing', 'yards' => 'Traverse Lawn & Landscape', 'solar' => 'TraverseSolar', 'pest' => 'TraversePest', 'security' => 'TraverseSecurity'];   /* what customers read; Yards is "Lawn & Landscape" (Matthew 2026-10-30), the key stays */
-const TC_PLAN_NAMES = ['solo' => 'Solo', 'crew' => 'Team', 'team' => 'Company'];   /* the plans as customers read them (2026-10-30); the keys stay */
+const TC_PLAN_NAMES = ['solo' => 'Duo', 'crew' => 'Team', 'team' => 'Company'];   /* the plans as customers read them (2026-10-30; Duo since the evening: an admin and one worker); the keys stay */
 /* what customers read (2026-10-30, Matthew: the trade, not a Traverse product name; "Yards" is Lawn & Landscape) */
 const TC_TRADES = ['roofing' => 'Roofing', 'yards' => 'Lawn & Landscape', 'solar' => 'Solar', 'pest' => 'Pest', 'security' => 'Security'];
 function tcTrade(string $ed): string { return isset(TC_TRADES[$ed]) ? 'Traverse for ' . TC_TRADES[$ed] : 'Traverse'; }

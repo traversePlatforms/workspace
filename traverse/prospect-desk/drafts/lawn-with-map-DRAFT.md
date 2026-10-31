@@ -24,7 +24,7 @@ I'm Matthew. I built Traverse here in Colorado: a field-sales app for lawn and l
 - The town's watering days, so you have an opener at the door
 - A quote from that lawn size and your own prices, sent from your phone
 
-A client has had success with it, and I'm opening it to small companies at a price a start-up can carry: Solo is $59 a month for your first year as a founding company (25% off, billed yearly), then $79, locked in for as long as you stay. No setup fee, and a 7-day money-back guarantee from the day your app is live.
+A client has had success with it, and I'm opening it to small companies at a price a start-up can carry: Duo is $59 a month for your first year as a founding company (25% off, billed yearly), then $79, locked in for as long as you stay. No setup fee, and a 7-day money-back guarantee from the day your app is live.
 
 You'd deal with me directly, and in return for the founding price I'd ask for your honest feedback on what to build next.
 
@@ -49,14 +49,14 @@ pricing section, 2026-10-30) and `/cancellation/`.
 | Claim | Source | Status |
 |---|---|---|
 | "a field-sales app ... with door maps, CRM, phones, quotes and the office side in one place" | Homepage: "properties, phone calls, quotes, jobs and the office in one app"; the same sentence shape as the approved roofing template | OK |
-| "crews of one to ten people" | Matthew's direction (30 Oct). Plans cover 1 (Solo), up to 5 (Team), up to 12 (Company): pricing page and `/cancellation/` | OK (audience, not a plan limit) |
+| "crews of one to ten people" | Matthew's direction (30 Oct). Plans cover 1 (Duo), up to 5 (Team), up to 12 (Company): pricing page and `/cancellation/` | OK (audience, not a plan limit) |
 | "over a million Colorado homes" | The other six templates say "1.24 million" (Matthew's go, 29 Oct); memory: ~1.09M mapped before Group 3 lands, 1.24M after. "Over a million" is true either way. Switch to "1.24 million" to match the roofing text if Matthew prefers | OK, his choice |
 | "The lawn's size in square feet, house by house" | App: lawn chip on the house card ("Large lawn, about 5,100 sq ft"), `TRAVERSE-MANUAL.html` "Lawn size per door"; Yards edition `card.lawn: true` (`traverse/editions/build-editions.cjs`) | OK |
 | "Which streets around {city} have the most large lawns still to knock" | App: "lawn: neighbourhoods with the most large and medium lawns STILL TO KNOCK first" (the edition's ranking) | OK |
 | "The town's watering days, so you have something to open with" | App door card tip: "Ask about their watering days. It shows you know the area and opens the conversation."; Yards `card.water: true` | OK |
 | "A quote built from that lawn size and your own prices, sent from your phone" | TR-33 quote kit: lead card > Build a quote (prices from the house card's lawn sq ft) > send quote page; on when `walkdesk` is on and no `a365`. Checked on the server 30 Oct: the Yards edition has `walkdesk: true`, no `a365`. Price unit "per 1,000 sq ft of lawn" (`KIT_SHOW`) | OK |
 | "A client has had success with it" | The only proof wording allowed (Matthew 29 Oct). No client named, no trade named, no "daily" | OK |
-| "Solo is $59 a month for your first year as a founding company (25% off, billed yearly), then $79" | Pricing page Solo card: "Founding price ~~$79~~ $59 / month ... Billed yearly. 25% off your first 12 months, then $79. Month to month: ~~$99~~ $74." | OK |
+| "Duo is $59 a month for your first year as a founding company (25% off, billed yearly), then $79" | Pricing page Duo card (Solo until the evening of 30 Oct): "Founding price ~~$79~~ $59 / month ... Billed yearly. 25% off your first 12 months, then $79. Month to month: ~~$99~~ $74." | OK |
 | "locked in for as long as you stay" | Pricing page: "Your price is locked in, and you keep every feature, for as long as you stay with us. If you leave and come back, current terms apply." (the $79 is what is locked, not the $59) | OK |
 | "No setup fee" | Pricing page: "No setup fee, and a 7-day money-back guarantee on every plan." | OK |
 | "7-day money-back guarantee from the day your app is live" | Pricing page FAQ and `/cancellation/`; the same line is in the roofing template | OK |
