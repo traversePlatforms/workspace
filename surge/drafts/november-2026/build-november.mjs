@@ -117,6 +117,10 @@ function boardPage(p) {
     h = patchOnce(h, 'Read first-hand 14 September 2026.', `Read first-hand 14 September 2026, re-checked ${CHECKED}.`, 'check date');
   }
   if (p.n === 6) {
+    // Closer to the source (daily-process.md: goal-setting = personal and professional goals) and clear of the Tier 2 KPI entry.
+    h = patchOnce(h, 'The number the room is working to, said before anything else.', 'Personal and professional goals, set before anything else.', 'goal step');
+    // Roediger & Karpicke tested free recall, not recall out loud, and the abstract does not say the gap widens from 2 days to 1 week.
+    h = patchOnce(h, 'verbs: recall out loud beats review, and it beats it by more the longer you wait.', 'verbs: once there is any delay, recall beats review.', 'read: out loud / longer');
     h = patchOnce(h, 'Both checked 14 September 2026.', `Both checked 14 September 2026 and re-checked ${CHECKED}.`, 'check date');
   }
   const screen = '<style>@media screen{body{padding:0 !important;display:block !important;background:transparent !important}.board{box-shadow:none !important;margin:0 !important}}</style>';
