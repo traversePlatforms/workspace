@@ -10185,7 +10185,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () {});
   }
   function openArea(name) {
-    setBar('area', { title: name, sub: townLabel(), back: areaBack, backLabel: S.returnTo ? 'Back' : 'All neighborhoods' });
+    setBar('area', { title: name, sub: townLabel(), back: areaBack, backLabel: S.returnTo ? (S.returnTo.label || 'Back') : 'All neighborhoods' });
     setDock(null); foot.hidden = true;
     view.textContent = '';
     for (var sk = 0; sk < 3; sk++) view.appendChild(q('div', 'skel'));
@@ -20317,6 +20317,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function sampleView(fromSetup) {
     hideToast(); S.signin = null; S.screen = 'sample'; foot.hidden = true; setDock(null);
     var toSetup = function () { if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; } kitSetupView(); };   /* as Home does (chooseView) */
+    toSetup.label = 'Setup';   /* the card's Back says where it goes */
     setBar('back', { title: 'Sample property', sub: 'Loading\u2026', back: fromSetup ? toSetup : chooseView, backLabel: fromSetup ? 'Setup' : 'Field tools' });
     view.textContent = ''; view.appendChild(q('div', 'skel'));
     api('sample').then(function (j) {
@@ -21781,7 +21782,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
     } else {
       setBar('area', { title: S.area, sub: townLabel() + ' · ' + S.doors.length + (S.doors.length === 1 ? pw(' door') : pw(' doors')) + hoodAway(), count: todo.length,
-        back: areaBack, backLabel: S.returnTo ? 'Back' : 'All neighborhoods' });
+        back: areaBack, backLabel: S.returnTo ? (S.returnTo.label || 'Back') : 'All neighborhoods' });
       S.barArea = S.area;
     }
     doorDock();
