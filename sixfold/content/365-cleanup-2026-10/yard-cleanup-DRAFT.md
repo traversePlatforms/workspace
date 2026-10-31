@@ -4,25 +4,26 @@ Asked 31 Oct 2026: Brad (via Matthew) wants an infographic so he can start selli
 Picture: `365-yard-cleanup-prices.png` (1080 x 1350, Facebook/Instagram feed). Rebuild: `node build-cleanup.mjs`.
 
 ## On the picture
-- Kicker: YARD CLEAN-UP (no season on the picture, so it can run again in spring; standing rule)
+- Kicker: FALL CLEAN-UP (Matthew 31 Oct: his call over the seasonless default; this card is for fall only)
+- Included line (Brad 31 Oct): We get it all: leaves, pine needles and debris, anything that's fallen onto your lawn.
 - Headline: Your yard, cleaned up and hauled away.
 - Photo across the top: a real 365 job (Brad's crew, customer asked at the job), a neat front lawn and rock beds, cropped so no house number, car, plate or person shows. Not presented as a clean-up result.
 - Up to 1/4 acre (up to about 10,900 sq ft of lot): $100–$300
 - 1/4 to 1/2 acre (about 10,900 to 21,800 sq ft): $250–$600
 - 1/2 acre and up (over about 21,800 sq ft): $600–$1,000
 - Haul-away and disposal: $40–$80 a load
-- Every lawn is different. Send us a picture of your lawn for a free quote. (Matthew 31 Oct)
+- Price depends on your yard's size and how much debris there is. Every lawn is different: send us a picture of your lawn for a free quote. (Brad's note + Matthew, 31 Oct)
 - (720) 830-4553 · 365aeration.com · 365 badge
 
 ## Caption (season goes here)
-> Fall clean-up is open. Leaves, beds and the mess the season leaves behind, cleared and hauled away, priced by the size of your yard.
+> Fall clean-up is open. We get everything the season drops: leaves, pine needles and debris, anything that's fallen onto your lawn, cleared and hauled away. Priced by your yard's size and how much there is.
 >
 > Up to 1/4 acre: $100–$300
 > 1/4 to 1/2 acre: $250–$600
 > 1/2 acre and up: $600–$1,000
 > Haul-away: $40–$80 a load
 >
-> Text a picture of your lawn to (720) 830-4553 for a free quote, or send it here. [WHAT'S INCLUDED: confirm with Brad (leaves, bed clean-out, branch pick-up, trimming?) before this goes out]
+> Text a picture of your lawn to (720) 830-4553 for a free quote, or send it here. 
 >
 > #DenverLawnCare #YardCleanup #FallCleanup #ColoradoLawns
 
@@ -34,7 +35,7 @@ Hashtags are a suggestion; trim to what the 365 page already uses.
 - **Overlap:** the first two ranges overlap ($250–$300) by design (Brad's ranges); the quote decides.
 
 ## Before it goes out (flags)
-1. **What's included** isn't stated by Brad: the caption has a slot. The picture says only "cleaned up and hauled away".
+1. ~~What's included~~: answered by Brad 31 Oct (leaves, pine needles, debris, anything fallen onto the lawn).
 2. **Prices on a public post:** the aeration ads were "no flat rate, quote the walk". These are ranges with "free quote ... confirm your price", which keeps the quote as the deciding step. Brandon sets offers; worth a nod from him.
 3. Nothing posted, scheduled or queued. Standing rule: drafts only until Matthew says to post.
 
