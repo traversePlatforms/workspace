@@ -3,3 +3,6 @@
 photosets/
 posts/*-jp-*.png
 contact-sheet*.png
+# designed cards with a band of a real job photo (Kara's job), same rule; names kept so the calendar's manifest paths don't change
+posts/2026-11-03-spring-plan.png
+posts/2026-11-17-cleanup-followup.png

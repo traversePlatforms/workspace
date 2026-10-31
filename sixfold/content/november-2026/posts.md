@@ -3,14 +3,14 @@
 For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. **Every post needs Matthew's go in the posting calendar; approval for one is not approval for the next.**
 
 - Designed posts: Tue/Thu 3:00 pm Mountain, 1080 x 1350, in `posts/`. Photo sets: Saturdays 2:00 pm Mountain, 4 photos each at 1440 x 1080, in `photosets/`.
-- Rebuild: `node build-november.mjs` (reuses the Gemini pictures; `--regen` makes new ones). This file and `manifest.json` are written by the script: edit captions there, not here.
-- Posts with a job photo, the photo sets and the contact sheets stay local (gitignored). Contact sheets: `contact-sheet.png` (the 8 posts) and `contact-sheet-photosets.png`.
+- Rebuild: `node build-november.mjs` (no generated imagery: real job photos and designed cards only, Matthew 31 Oct). This file and `manifest.json` are written by the script: edit captions there, not here.
+- Posts that hold a job photo (full photo or a card band), the photo sets and the contact sheets stay local (gitignored). Contact sheets: `contact-sheet.png` (the 8 posts) and `contact-sheet-photosets.png`.
 - Fact-check log: [FACT-CHECK.md](FACT-CHECK.md).
 
 ## Tue, Nov 3, 3:00 pm: Aeration and overseeding, sorted early.
 
-**Picture:** `posts/2026-11-03-spring-plan.png`. Gemini scenery picture, no people, no results. On it: kicker "Plan ahead", headline "Aeration and overseeding, sorted early.", line "Spring and fall are the best times to core aerate. Get your free quote in now.", (720) 830-4553, 365 badge.
-**Season:** Seasonless picture and words; "spring" is in the caption only.
+**Picture:** `posts/2026-11-03-spring-plan.png`. Designed 365 card with a band of a real job photo (Kara's job, After/IMG_0198.HEIC); stays local, gitignored. On it: kicker "Plan ahead", headline "Aeration and overseeding, sorted early.", 1. "Spring and fall" (The best times of year to core aerate), 2. "The plugs stay" (They break down back into the lawn), 3. "Seed goes in straight after" (While the holes are open), footer "Free quote: text a picture of your lawn.", (720) 830-4553, 365 badge.
+**Season:** Seasonless words; "spring" is in the caption only.
 
 **Facebook**
 
@@ -34,8 +34,8 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 ## Thu, Nov 5, 3:00 pm: See grass through the leaves? Mow them in.
 
-**Picture:** `posts/2026-11-05-leaves-mow-in.png`. Gemini scenery picture, no people, no results. On it: kicker "Fallen leaves", headline "See grass through the leaves? Mow them in.", line "Chopped fine with the mower, a thin layer of leaves goes back into the soil.", (720) 830-4553, 365 badge.
-**Season:** Seasonal by design: the picture shows fallen leaves. The words on it are seasonless.
+**Picture:** `posts/2026-11-05-leaves-mow-in.png`. Designed 365 card: text and simple shapes, no photo. On it: kicker "Fallen leaves", headline "See grass through the leaves? Mow them in.", 1. "Mower on its highest setting" (And take the bag off), 2. "At least two passes" (Chop them fine; don’t leave them whole), 3. "A thin layer feeds the soil" (Research CSU cites: it can raise soil organic matter), footer "From CSU Extension GardenNotes #655, Using Leaves in the Landscape.", (720) 830-4553, 365 badge.
+**Season:** Leaves are the topic, so it reads as fall, but no season word is on the card.
 
 **Facebook**
 
@@ -61,7 +61,7 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 ## Tue, Nov 10, 3:00 pm: A front lawn from a recent 365 job.
 
-**Picture:** `posts/2026-11-10-jp-real-work.png`. Real 365 job photo (2026-10-23 job, file 2026-10-23 15.01 36414e41.jpg), cropped. On it: kicker "Real work", headline "A front lawn from a recent 365 job.", line "Core aeration and overseeding for lawns across the Denver area. Every lawn gets its own quote.", (720) 830-4553, 365 badge.
+**Picture:** `posts/2026-11-10-jp-real-work.png`. Real 365 job photo (2026-10-23 job, file 2026-10-23 15.01 36414e41.jpg), cropped; stays local, gitignored. On it: kicker "Real work", headline "A front lawn from a recent 365 job.", line "Core aeration and overseeding for lawns across the Denver area. Every lawn gets its own quote.", (720) 830-4553, 365 badge.
 **Season:** Seasonless: a green front lawn and walk; the street, a parked car and the houses across the road cropped out. A few stray leaves only.
 
 **Facebook**
@@ -86,8 +86,8 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 ## Thu, Nov 12, 3:00 pm: Long dry spell, no snow? Water at midday.
 
-**Picture:** `posts/2026-11-12-winter-watering.png`. Gemini scenery picture, no people, no results. On it: kicker "Winter watering", headline "Long dry spell, no snow? Water at midday.", line "Only above 40°F, about once or twice a month, and only where your water provider allows it.", (720) 830-4553, 365 badge.
-**Season:** Seasonal by design: winter advice ("dry spell, no snow"); dormant lawn and bare tree in the picture.
+**Picture:** `posts/2026-11-12-winter-watering.png`. Designed 365 card: text and simple shapes, no photo. On it: kicker "Winter watering", headline "Long dry spell, no snow? Water at midday.", 1. "Above 40°F" (Air and soil both, with no snow on the ground), 2. "Once or twice a month" (During long dry spells), 3. "At midday" (So it soaks in before the night freeze), note "Check your water rules first: Only water where your water provider allows it", footer "From CSU Extension fact sheet 7.211, Fall and Winter Watering.", (720) 830-4553, 365 badge.
+**Season:** Seasonal by design: winter advice ("Winter watering", "no snow").
 
 **Facebook**
 
@@ -115,8 +115,8 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 ## Tue, Nov 17, 3:00 pm: Leaves, needles and debris, cleared.
 
-**Picture:** `posts/2026-11-17-cleanup-followup.png`. Gemini scenery picture, no people, no results. On it: kicker "Fall clean-up", headline "Leaves, needles and debris, cleared.", line "Hauled away, or left on your property if you’d rather. Send us a picture for a free quote.", (720) 830-4553, 365 badge.
-**Season:** Seasonal by design (fall clean-up, kicker says so, as Matthew chose for the 31 Oct card). The picture shows the problem, not a result.
+**Picture:** `posts/2026-11-17-cleanup-followup.png`. Designed 365 card with a band of a real job photo (Kara's job, Content/IMG_0215.HEIC); stays local, gitignored. On it: kicker "Fall clean-up", headline "Leaves, needles and debris, cleared.", line "We get it all: leaves, pine needles and debris, anything that’s fallen onto your lawn.", 1. "Haul-away" (Or we leave it on your property, if you’d rather), 2. "A free quote from a picture" (Text it to us, or send it in a message), footer "Priced by your yard’s size and how much there is. Send us a picture of your lawn for a free quote.", (720) 830-4553, 365 badge.
+**Season:** Seasonal by design (kicker "Fall clean-up", as Matthew chose for the 31 Oct card). No prices on it.
 
 **Facebook**
 
@@ -138,7 +138,7 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 ## Thu, Nov 19, 3:00 pm: Landscaping, on its own.
 
-**Picture:** `posts/2026-11-19-jp-landscaping.png`. Real 365 job photo (2026-10-16 job, file 2026-10-22 18.37 c758e370.jpg), cropped. On it: kicker "Landscaping", headline "Landscaping, on its own.", line "Shrub and hedge trimming, plant removal, bed clean-up and haul-away. No aeration booking needed.", (720) 830-4553, 365 badge.
+**Picture:** `posts/2026-11-19-jp-landscaping.png`. Real 365 job photo (2026-10-16 job, file 2026-10-22 18.37 c758e370.jpg), cropped; stays local, gitignored. On it: kicker "Landscaping", headline "Landscaping, on its own.", line "Shrub and hedge trimming, plant removal, bed clean-up and haul-away. No aeration booking needed.", (720) 830-4553, 365 badge.
 **Season:** Mostly seasonless: green corner lawn and a flower bed, house, flag and car cropped out. The bed has orange mums (mild fall cue).
 
 **Facebook**
@@ -163,8 +163,8 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 ## Tue, Nov 24, 3:00 pm: Matted, gray patches as the snow melts?
 
-**Picture:** `posts/2026-11-24-snow-mold.png`. Gemini scenery picture, no people, no results. On it: kicker "After the snow", headline "Matted, gray patches as the snow melts?", line "Often snow mold. It rarely kills a bluegrass lawn: rake the patches lightly so they dry out.", (720) 830-4553, 365 badge.
-**Season:** Seasonal by design: melting snow in the picture, late-winter advice.
+**Picture:** `posts/2026-11-24-snow-mold.png`. Designed 365 card: text and simple shapes, no photo. On it: kicker "After the snow", headline "Matted, gray patches as the snow melts?", line "Often snow mold. It rarely kills a bluegrass lawn.", 1. "Rake the patches lightly" (So the matted grass dries out), 2. "Skip the fungicide" (CSU doesn’t recommend it for snow mold), 3. "Slow to come back?" (Core aeration, then overseeding), footer "From CSU Extension PlantTalk 1543, Gray Snow Mold in Lawns.", (720) 830-4553, 365 badge.
+**Season:** Seasonal by design: snow-melt advice.
 
 **Facebook**
 
@@ -190,8 +190,8 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 ## Thu, Nov 26, 3:00 pm: Thank you for trusting us with your lawn.
 
-**Picture:** `posts/2026-11-26-thanksgiving.png`. Gemini scenery picture, no people, no results. On it: kicker "Happy Thanksgiving", headline "Thank you for trusting us with your lawn.", line "From all of us at 365 Aeration & Seeding.", (720) 830-4553, 365 badge.
-**Season:** Seasonal by design (Thanksgiving). The picture itself is seasonless scenery.
+**Picture:** `posts/2026-11-26-thanksgiving.png`. Designed 365 card: text and simple shapes, no photo. On it: kicker "Happy Thanksgiving", headline "Thank you for trusting us with your lawn.", line "From all of us at 365 Aeration & Seeding. Enjoy the day.", footer "Whenever you need us: message us or text a picture of your lawn.", (720) 830-4553, 365 badge.
+**Season:** Seasonal by design (Thanksgiving).
 
 **Facebook**
 
