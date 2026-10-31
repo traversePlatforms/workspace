@@ -112,5 +112,10 @@ case "$JP" in *FAILED*) bad "$JP";; *) say "  info  $JP";; esac
 CF=$(bash "$REPO/traverse/ops/run-cloud-finishers.sh" 2>&1 | tail -1)
 case "$CF" in *FAILED*) bad "$CF";; *) say "  info  $CF";; esac
 
+# 8. Website visitors since the site opened, bots and our own visits left out (2026-10-31, Matthew: "how many website views have we had").
+# The server's access log is written once a day (~10:40 pm MT), so this moves once a day. Source: traverse/ops/site-visitors.php.
+SV=$($SG 'php ~/www/traverseplatforms.com/traverse-tools/site-visitors.php --line' < /dev/null 2>/dev/null | tail -1)
+[ -n "$SV" ] && say "  info  $SV"
+
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"
