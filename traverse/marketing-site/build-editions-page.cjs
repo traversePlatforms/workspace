@@ -35,52 +35,54 @@ const ED = {
     name: 'Roofing', colour: '#4e6680', ink: '#ffffff', deep: '#4e6680',
     line: 'Find the roofs the last storm hit, and know the roof before you knock.',
     who: 'roofing and storm-restoration companies that canvass after hail and wind.',
-    door: ['Hail at the house, storm by storm since 2020', 'Damaging wind nearby, with the date', 'Roof size and pitch', 'Roof material, where on record', 'Year built and remodelled, where on record, for the roof’s age', 'Past re-roofs, where known', 'A close-up photo of the roof with its outline', 'Owner, home value and the area’s risk ratings'],
+    door: ['Hail at the house, storm by storm since 2020', 'Damaging wind nearby, with the date', 'Roof size and pitch, from laser scans', 'Roof material and age, from county records', 'The last re-roof and any solar permit on file', 'A close-up photo of the roof from satellite imagery', 'New owners, and the month they moved in', 'Owner, home value and the area’s figures'],
     rank: 'The biggest hail on the roof, damaging wind, the roof’s age and size, and no re-roof since the storm, then the owner’s ability to pay.',
-    tools: [['Storm list', 'The properties each storm day reached, biggest hail first.'], ['Hail layer', 'A storm’s path drawn over your neighborhood map.'], ['Storm alerts', 'A phone alert when severe weather reaches your towns.'], ['JobNimbus', 'Bookings go straight into JobNimbus.']],
-    sample: [['Biggest hail', '1.75 in · 14 May'], ['Roof', '3,300 sq ft · 6/12'], ['Material', 'Asphalt'], ['Built', '2004 · no re-roof since']], score: 10,
+    tools: [['Storm list', 'The properties each storm day reached, biggest hail first, with the storm’s path drawn over your map.'], ['Live weather map and alerts', 'Storms as they happen, and a phone alert when severe weather reaches your towns.'], ['Facebook leads', 'Lead-ad forms land in the pipeline within minutes, and the person they go to is alerted.'], ['Stats and the end-of-day email', 'Leads by source, estimates and close rate, jobs and money; an evening email if you want one.'], ['Your CRM, kept in sync', 'Leads, customers and jobs flow in from the system you use now, a Google Sheet or Zapier.']],
+    sample: [['Biggest hail', '1.75 in · 14 May'], ['Roof', '3,300 sq ft · 6/12'], ['Material · age', 'Asphalt · 21 yrs'], ['Last re-roof', 'None on file']], score: 10,
   },
   yards: {
     name: 'Lawn & Landscape', colour: '#2f7a3a', ink: '#ffffff', deep: '#2f7a3a',
-    line: 'See the lawn, the trees and the fire hazard around each house before you pull up.',
-    who: 'lawn care, landscaping, tree and wildfire-mitigation companies.',
-    door: ['Lawn size, from large to none', 'Trees close to the house', 'Wildfire hazard around the property', 'The wildfire plan and HOA the house belongs to', 'The tax credit, insurance and grants that cover the work', 'The town’s watering and well rules', 'Frost dates and recent rain nearby', 'Owner, home value and the area’s figures'],
-    rank: 'Large and medium lawns, fire hazard, trees against the house and lot size, then the owner’s ability to pay.',
-    tools: [['Plans', 'Monthly and quarterly plans, with the visits that are due.'], ['Fire check', 'A walk-around check with a printable homeowner report.'], ['Customers', 'Every customer with their visit history.'], ['Weather and fire alerts', 'Phone alerts for storms, freezes, frost, red-flag fire weather and wildfires nearby.']],
-    sample: [['Lawn', 'Large · 6,200 sq ft'], ['Trees', 'Against the house'], ['Fire hazard', 'High'], ['Lot', '0.84 acres']], score: 9,
+    line: 'See the lawn before you pull up: its size, its outline on the lot, and the trees around the house.',
+    who: 'lawn care, landscaping and tree companies.',
+    door: ['Lawn size at nearly every house, measured from laser scans and satellite imagery', 'The lot outlined on the photo, with the lawn we counted shaded in', 'Lawn near the house against lawn far from it', 'Lot size and the property line', 'Trees close to the house', 'New owners, and the month they moved in', 'The town’s watering days and well rules', 'Frost dates and recent rain nearby'],
+    rank: 'Large and medium lawns still to knock, lot size and trees against the house, then the owner’s ability to pay.',
+    tools: [['Plans and customer emails', 'Weekly, monthly and seasonal plans with the next visit, and the follow-up, aftercare and newsletter emails that go with them.'], ['Quotes from the lawn', 'A quote priced from the lawn’s square feet and your own prices, signed on the homeowner’s phone with the deposit.'], ['Stats and the end-of-day email', 'Leads by source, quotes and close rate, jobs and money; an evening email if you want one.'], ['Facebook leads', 'Lead-ad forms land in the pipeline within minutes, and the person they go to is alerted.'], ['Fire check', 'For crews that also sell fuel reduction: a walk-around check with a printable homeowner report.']],
+    sample: [['Lawn', 'Large · 6,200 sq ft'], ['Near the house', '4,900 sq ft'], ['Lot', '0.84 acres · outlined'], ['Trees', 'Against the house'], ['Watering days', 'Tue · Fri'], ['Moved in', 'This spring']], score: 9,
+    shot: ['../shots/lawn-lot-phone.png', 'A real lot in the app: the aerial photo, the property line in yellow and the lawn we counted shaded green. Address and owner left out.'],
   },
   solar: {
     name: 'Solar', colour: '#f2a900', ink: '#0f1b2d', deep: '#8a5a00',
-    line: 'Know how much sun a roof gets, and what it’s worth, before the first conversation.',
+    line: 'Know how much sun a roof gets, and what fits on it, before the first conversation.',
     who: 'residential solar installers and their sales teams.',
-    door: ['Sun-facing roof area, by direction', 'Shade from tall trees on the sunny side', 'Room for panels, the system size and a year’s output', 'The power company and its average price', 'Houses that already have solar, where it is on record, so you skip them', 'Roof size and pitch, and the year built where on record', 'Owner, home value and the area’s figures'],
+    door: ['Sun-facing roof area by direction, from laser scans and satellite imagery', 'Shade from tall trees on the sunny side', 'The system that fits, its panels and a year’s output from the sun this spot gets', 'Houses that already have solar, from the permits on file, so you skip them', 'Roof age and the last re-roof, from county records', 'The power company', 'New owners, and the month they moved in', 'Owner, home value and the area’s figures'],
     rank: 'A year’s output and open sun, houses that already have solar moved down, then the owner’s ability to pay.',
-    tools: [['Solar columns', 'Output, panels and shade in the planning table.'], ['Territories', 'Draw territories on the map and assign them.'], ['Follow-ups', 'Customers and the follow-ups that are due.'], ['Office dashboard', 'The whole team’s day on one screen.']],
-    sample: [['Solar a year', '11,400 kWh'], ['Panels', '26 · 10.4 kW'], ['Shade', 'Open'], ['Power company', 'Xcel Energy']], score: 9,
+    tools: [['Solar columns', 'Output, panels and shade in the planning table, and territories drawn on the map.'], ['Proposals signed on the phone', 'A proposal that fills in from the roof, signed on the homeowner’s phone, with the deposit.'], ['Facebook leads', 'Lead-ad forms land in the pipeline within minutes, and the person they go to is alerted.'], ['Stats and the end-of-day email', 'Leads by source, proposals and close rate, installs and money; an evening email if you want one.'], ['Your CRM, kept in sync', 'Leads, customers and jobs flow in from the system you use now, a Google Sheet or Zapier.']],
+    sample: [['System that fits', '10.4 kW · 26 panels'], ['Output a year', '11,400 kWh'], ['Shade', 'Open'], ['Power company', 'Xcel Energy']], score: 9,
   },
   pest: {
     name: 'Pest', colour: '#7a3fa3', ink: '#ffffff', deep: '#7a3fa3',
     line: 'Show up with the reason this house needs you, and the neighbors who already use you.',
     who: 'pest control companies selling plans door to door.',
-    door: ['New owners, and when they bought', 'Open space, creeks and ponds beside the house', 'Trees close to the house and the year it was built', 'What’s in season this month, pest by pest', 'Neighbors already on your service, from your own customer list', 'Recent bookings and visit notes nearby', 'Owner, home value and the area’s figures'],
+    door: ['New owners, and the month they moved in', 'Open space, creeks and ponds beside the house, from satellite imagery', 'Trees close to the house and the year it was built', 'Basements, crawl spaces and other house facts on record', 'What’s in season this month, pest by pest', 'Neighbors already on your service, from your own customer list', 'Owner, home value and the area’s figures'],
     rank: 'A new owner, trees against the house, and open space or water beside it, then the owner’s ability to pay.',
-    tools: [['Plans', 'Quarterly plans with the visits that are due.'], ['Customer import', 'Bring your customer list and neighbors show on every property.'], ['Customers', 'Every customer with their visit history.'], ['Office dashboard', 'The whole team’s day on one screen.']],
-    sample: [['New owner', 'Bought in June'], ['Beside the house', 'Open space · creek'], ['Neighbors on service', '3 within a block'], ['In season', 'Wasps, mice']], score: 8,
+    tools: [['Plans and customer emails', 'Quarterly and monthly plans with the next visit, and the follow-up and newsletter emails that go with them.'], ['Customer import', 'Bring your customer list and neighbors on service show on every property.'], ['Facebook leads', 'Lead-ad forms land in the pipeline within minutes, and the person they go to is alerted.'], ['Stats and the end-of-day email', 'Leads by source, quotes and close rate, services and money; an evening email if you want one.'], ['Your CRM, kept in sync', 'Leads, customers and jobs flow in from the system you use now, a Google Sheet or Zapier.']],
+    sample: [['New owner', 'Moved in June'], ['Beside the house', 'Open space · creek'], ['Neighbors on service', '3 within a block'], ['In season', 'Wasps, mice']], score: 8,
   },
   security: {
     name: 'Security', colour: '#1b6f7a', ink: '#ffffff', deep: '#1b6f7a',
     line: 'The facts that make a home security conversation relevant, house by house.',
     who: 'home security and smart-home companies.',
-    door: ['Property crime within a mile: the last 30, 90 and 365 days, in cities that report it', 'Town crime figures', 'New owners and newer homes', 'Owners who live somewhere else', 'Big lots and homes backing onto open space', 'Owner, home value and the area’s figures'],
+    door: ['Property crime within a mile: the last 30, 90 and 365 days, in cities that report it', 'Town crime figures', 'New owners and newer homes, with the month they moved in', 'Owners who live somewhere else', 'Corner lots, dead ends and alleys, from the property lines and satellite imagery', 'What backs onto the lot: open space, water or a road', 'Owner, home value and the area’s figures'],
     rank: 'New owners, newer homes, owners who live elsewhere, big lots and open space behind, then the owner’s ability to pay. Crime is shown on the card but kept out of the score.',
-    tools: [['Crime by neighborhood', 'Neighborhoods ranked by recent crime, with a crime map.'], ['Territories', 'The planning table, and territories drawn on the map.'], ['Follow-ups', 'Customers and the follow-ups that are due.'], ['Office dashboard', 'The whole team’s day on one screen.']],
-    sample: [['Crime within 1 mile', '4 in 90 days'], ['New owner', 'Bought in March'], ['Owner lives', 'Out of state'], ['Lot', '1.2 acres']], score: 8,
+    tools: [['Crime by neighborhood', 'Neighborhoods ranked by recent crime, with a crime map.'], ['Territories', 'The planning table, and territories drawn on the map and assigned.'], ['Facebook leads', 'Lead-ad forms land in the pipeline within minutes, and the person they go to is alerted.'], ['Stats and the end-of-day email', 'Leads by source, quotes and close rate, installs and money; an evening email if you want one.'], ['Your CRM, kept in sync', 'Leads, customers and jobs flow in from the system you use now, a Google Sheet or Zapier.']],
+    sample: [['Crime within 1 mile', '4 in 90 days'], ['New owner', 'Moved in March'], ['Owner lives', 'Out of state'], ['Behind the lot', 'Open space']], score: 8,
   },
 };
-const ALL = ['The homes in the towns you work', 'Neighborhoods crews can claim', 'A 1 to 10 score on every property', 'The map, in photo or street view', 'Calendars and booked walks', 'First contact to signed job', 'Teams and managers', 'Training built in', 'Works with no signal', 'Quotes signed on the phone, with a deposit link', 'Voice notes and routes', 'Bring your current leads and customers', 'Your logo, name and colors'];
+const ALL = ['The homes in the towns you work', 'Neighborhoods crews can claim', 'A 1 to 10 score on every property', 'The map, in photo or street view', 'Live weather map and alerts', 'New movers, month by month', 'Calendars and booked appointments', 'First contact to signed job', 'Quotes signed on the phone, with a deposit link', 'Plans and customer emails', 'Facebook lead ads into the pipeline', 'Stats and an end-of-day email', 'Sync from your CRM, Sheets or Zapier', 'Teams, managers and roles', 'Training built in', 'Works with no signal', 'Voice notes and routes', 'Bring your current leads and customers', 'Your logo, name and colors'];
 
-/* Matthew 2026-10-06: never say where the data comes from. Refuse the build if a source word slips in. */
-const SOURCE_WORDS = /\b(NOAA|NWS|MRMS|radar|county|assessor|LiDAR|laser|aerial|satellite|USGS|USDA|NAIP|FEMA|census|PVWatts|EIA|FBI|police|public record|permit|national weather|no answer|do not call)\b/i;
+/* Matthew 2026-10-06: never say where the data comes from (no provider is named; "laser scans", "satellite imagery" and "county records" are
+   fine since 2026-10-30). Refuse the build if a provider or banned word slips in. */
+const SOURCE_WORDS = /\b(NOAA|NWS|MRMS|radar|assessor|LiDAR|USGS|USDA|NAIP|FEMA|census|PVWatts|NREL|EIA|FBI|police|public record|national weather|no answer|do not call|JobNimbus)\b/i;
 const copy = JSON.stringify({ ED, ALL });
 const bad = copy.match(SOURCE_WORDS); if (bad) throw new Error('source or banned word in the editions copy: ' + bad[0]);
 
