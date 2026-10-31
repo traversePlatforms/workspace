@@ -32,6 +32,8 @@ cp_if "$R/app/api/eod-lib.php" api
 cp_if "$R/app/api/satcache.php" api
 # Facebook lead ads for the editions and client installs (2026-10-30): the one Connect Facebook callback and the library every install loads
 for f in fb-oauth.php fb-leads-lib.php; do cp_if "$R/app/api/$f" api; done
+# Jobber for Sync from another system (TR-46, 2026-10-31): the one Connect Jobber callback, the APP_DISCONNECT webhook and the library every install loads
+for f in jobber-oauth.php jobber-hook.php jobber-lib.php; do cp_if "$R/app/api/$f" api; done
 EDS="tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7"
 for e in $EDS; do for f in index.html version.txt q.html sign.html sw.js es.json; do cp_if "$D/$e/$f" "$e"; done; done
 for a in traverse traverse-yards traverse-solar traverse-pest traverse-security; do for k in rounds billing sms webpush; do cp_if "$D/api/$a-$k.php" api; done; done
@@ -78,6 +80,9 @@ for a in rounds traverse-rounds traverse-yards-rounds traverse-solar-rounds trav
 done
 # the tile cache refuses anything but a Colorado NAIP tile (400), without fetching (TR-52)
 c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/satcache.php?l=xx&z=1&x=0&y=0"); [ "$c" = 400 ] || { echo "  api/satcache.php answered $c"; bad=1; }
+# Jobber's callback with no state answers 400 in plain words; its webhook refuses a GET (405) (TR-46)
+c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/jobber-oauth.php"); [ "$c" = 400 ] || { echo "  api/jobber-oauth.php answered $c"; bad=1; }
+c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/jobber-hook.php"); [ "$c" = 405 ] || { echo "  api/jobber-hook.php answered $c"; bad=1; }
 [ $bad = 0 ] && echo "deploy $LABEL: all checks passed (backup before-$LABEL-$STAMP.tgz)" || { echo "deploy $LABEL: CHECK FAILED"; exit 1; }
 # the towns answer rebuilt now, in the background on the server, so the first phone after a deploy doesn't wait 7-16 s (2026-10-29)
 $SG "f=~/www/traverseplatforms.com/sixfold-tools/regions-warm.php; [ -f \$f ] && (nohup php \$f >> ~/www/traverseplatforms.com/sixfold-data/digest/regions-warm.log 2>&1 &) ; echo '  towns answer: warming in the background'" < /dev/null

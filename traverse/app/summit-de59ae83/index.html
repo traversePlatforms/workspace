@@ -14143,6 +14143,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function kitSquareReturn() {
     if (mailOauthReturn()) return true;   /* + back from Sign in with Google / Microsoft (2026-10-30) */
     if (fbLeadsReturn()) return true;   /* + back from Connect Facebook (2026-10-30) */
+    if (jobberReturn()) return true;   /* + back from Connect Jobber (TR-46, 2026-10-31) */
     var m = /[?&]square=([a-z-]+)\b/.exec(location.search); if (!m) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
     if (S.role !== 'admin') return false;
@@ -15864,7 +15865,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       hw.appendChild(hb); box.appendChild(hw);
     }
     syncDrawHook(box, J); syncDrawSheets(box, J); syncDrawConns(box, J);
-    var ot = syncFold(box, 'others', 'Jobber, ServiceTitan, AccuLynx, Salesforce, Zoho', 'Through Zapier or Make: why');
+    var ot = syncFold(box, 'others', (J.others || []).map(function (o) { return o[0] === 'Zoho CRM' ? 'Zoho' : o[0]; }).join(', '), 'Through Zapier or Make: why');   /* Jobber leaves this list once it can connect (TR-46) */
     (J.others || []).forEach(function (o) { var d = q('div', 'improw'); d.appendChild(q('b', null, o[0])); d.appendChild(q('small', null, o[1])); var a = q('a', 'lnk', 'Their page'); a.href = o[2]; a.target = '_blank'; a.rel = 'noopener'; d.appendChild(a); ot.appendChild(d); });
     if ((J.log || []).length) {
       var lg = syncFold(box, 'log', 'Recent activity', '');
@@ -16003,14 +16004,29 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- 3. the CRMs ---- */
   function syncDrawConns(box, J) {
     var cs = J.conns || [], onN = cs.filter(function (c) { return c.on; }).length;
-    var b = syncFold(box, 'conns', 'Connect your CRM', onN ? onN + ' connected and on' : 'HubSpot, Pipedrive, JobNimbus, ClickUp, Housecall Pro, HighLevel');
-    b.appendChild(q('div', 'sub2', 'With a key you make in your own account there. Read-only: we only read. Checked every 5 minutes for new and changed records.'));
+    var b = syncFold(box, 'conns', 'Connect your CRM', onN ? onN + ' connected and on' : cs.map(function (c) { return c.name === 'HighLevel (GoHighLevel)' ? 'HighLevel' : c.name; }).join(', '));
+    b.appendChild(q('div', 'sub2', cs.some(function (c) { return c.oauth; }) ? 'With a key you make in your own account there, or for Jobber, by signing in to Jobber. Read-only: we only read. Checked every 5 minutes for new and changed records.' : 'With a key you make in your own account there. Read-only: we only read. Checked every 5 minutes for new and changed records.'));
     cs.forEach(function (c) {
       var d = q('details', 'syncconn'); d.setAttribute('data-k', c.k); if (S.syncOpen['c' + c.k]) d.open = true; d.addEventListener('toggle', function () { S.syncOpen['c' + c.k] = d.open; });
-      var su = q('summary'); su.appendChild(q('b', null, c.name)); su.appendChild(q('span', 'tag ' + (c.on ? 'impact add' : 'impact skip'), c.on ? 'On' : c.connected ? (c.paused === 'failing' ? 'Paused: it kept failing' : 'Connected, off') : 'Not connected')); d.appendChild(su);
+      var su = q('summary'); su.appendChild(q('b', null, c.name)); su.appendChild(q('span', 'tag ' + (c.on && !c.lost ? 'impact add' : 'impact skip'), c.lost ? 'Needs connecting again' : c.on ? 'On' : c.connected ? (c.paused === 'failing' ? 'Paused: it kept failing' : 'Connected, off') : 'Not connected')); d.appendChild(su);   /* c.lost: Jobber's connection stopped (TR-46) */
       var w = q('div', 'syncbody'); d.appendChild(w);
       w.appendChild(q('div', 'sub2', c.what));
-      if (!c.connected) {
+      if (c.oauth && !c.connected) {   /* Jobber (TR-46): Connect Jobber, Jobber's own sign-in, back here */
+        if (c.lost) w.appendChild(q('div', 'syncst bad', 'Jobber stopped accepting the connection' + (c.lost.why ? ' (' + c.lost.why + ')' : '') + (c.lost.at ? ', ' + syncWhen(c.lost.at) : '') + '. Nothing comes in until it is connected again.'));
+        var ol2 = q('ol', 'syncsteps'); c.steps.forEach(function (s) { ol2.appendChild(q('li', null, s)); }); w.appendChild(ol2);
+        var jb = q('div', 'kitbtns'); jb.appendChild(syncBtn('save', c.lost ? 'Connect Jobber again' : 'Connect Jobber', function (x) { jobberConnect(x); }));
+        if (c.lost) jb.appendChild(syncBtn('lnk danger', 'Forget it', function (x) { if (window.confirm('Forget the Jobber connection? What came in stays.')) syncCall(box, 'syncconn', { k: c.k, remove: 1 }, ['Forgotten', 'What came in stays.'], x); }));
+        w.appendChild(jb);
+      } else if (c.oauth) {
+        w.appendChild(q('div', 'syncst', 'Connected to ' + (c.account || 'Jobber') + (c.by ? ' · by ' + c.by : '') + (c.at ? ', ' + syncWhen(c.at) : '')));
+        w.appendChild(q('div', 'syncst' + (c.last && c.last.err ? ' bad' : ''), 'Last read: ' + syncSaid(c.last)));
+        w.appendChild(syncOwnerSel(J, c.owner || '', function (v) { syncCall(box, 'syncconn', { k: c.k, owner: v }, ['Saved', v ? 'New leads go to ' + v + '.' : 'New leads go to nobody yet.']); }));
+        var jo = q('div', 'kitbtns');
+        jo.appendChild(syncBtn('save', c.on ? 'Pause' : 'Turn on: read every 5 minutes', function (x) { syncCall(box, 'syncconn', { k: c.k, on: !c.on }, [c.on ? 'Paused' : 'Jobber is on', c.on ? 'Nothing is read until you turn it on.' : 'The first read is within 5 minutes, or tap Sync now.'], x); }));
+        jo.appendChild(syncBtn('lnk', 'Sync now', function (x) { x.textContent = 'Reading…'; syncCall(box, 'syncrun', { src: 'conn:' + c.k }, ['Jobber', function (j) { return syncSaid(Object.assign({ at: Math.floor(Date.now() / 1000) }, j.ran)); }], x); }));
+        jo.appendChild(syncBtn('lnk danger', 'Disconnect', function (x) { if (window.confirm('Disconnect Jobber? Jobber is told, and this app stops reading it. What came in stays.')) syncCall(box, 'syncconn', { k: c.k, remove: 1 }, ['Disconnected', 'What came in stays.'], x); }));
+        w.appendChild(jo);
+      } else if (!c.connected) {
         var ol = q('ol', 'syncsteps'); c.steps.forEach(function (s) { ol.appendChild(q('li', null, s)); }); w.appendChild(ol);
         var vals = {};
         c.fields.forEach(function (f) { var l = q('label', null, f.l), i = q('input'); i.type = f.secret ? 'password' : 'text'; i.autocomplete = 'off'; i.spellcheck = false; i.name = 'sync-' + c.k + '-' + f.k; i.addEventListener('input', function () { vals[f.k] = i.value.trim(); }); l.appendChild(i); w.appendChild(l); });
@@ -16028,10 +16044,47 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         bb.appendChild(syncBtn('lnk danger', 'Disconnect', function (x) { if (window.confirm('Disconnect ' + c.name + '? The key is forgotten here; what came in stays. Delete the key in ' + c.name + ' too.')) syncCall(box, 'syncconn', { k: c.k, remove: 1 }, ['Disconnected', 'What came in stays.'], x); }));
         w.appendChild(bb);
       }
-      var sa = q('a', 'lnk', c.name + '’s own page about the key'); sa.href = c.src; sa.target = '_blank'; sa.rel = 'noopener'; w.appendChild(sa);
+      var sa = q('a', 'lnk', c.oauth ? 'How Jobber connects apps (Jobber’s page)' : c.name + '’s own page about the key'); sa.href = c.src; sa.target = '_blank'; sa.rel = 'noopener'; w.appendChild(sa);
       b.appendChild(d);
     });
   }
+  /* Connect Jobber (TR-46): the server sends them to Jobber; in the Home Base hub (a frame) in its own window, as Connect Facebook does */
+  function jobberConnect(b) {
+    b.disabled = true;
+    var framed = false; try { framed = window.self !== window.top; } catch (e) { framed = true; }
+    var w = null; if (framed) try { w = window.open('', 'traverse-signin', 'width=600,height=760'); } catch (e) {}
+    api('jobberoauth', { body: {} }).then(function (k) {
+      b.disabled = false;
+      if (k && k.ok && k.ready && k.url) {
+        if (w && !w.closed) { w.location.href = k.url; toast('Finish in the new window', 'Sign in to Jobber there; it closes by itself when you are done.', null); return; }
+        if (!framed) { location.href = k.url; return; }
+        try { window.top.location.href = k.url; } catch (e) { location.href = k.url; }
+        return;
+      }
+      if (w && !w.closed) w.close();
+      toast(k && k.ok ? 'Not available yet' : 'Not started', (k && k.error) || 'Connecting Jobber is being finished on our side.', null);
+    }).catch(function () { b.disabled = false; if (w && !w.closed) w.close(); toast('No signal', 'Try again.', null); });
+  }
+  /* back from Jobber: ?jobber=connected (or why not) */
+  function jobberReturn() {
+    var m = /[?&]jobber=([a-z-]+)\b/.exec(location.search); if (!m) return false;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    if (window.name === 'traverse-signin' && window.opener && !window.opener.closed) {
+      try { window.opener.postMessage({ traverseJobber: m[1] }, location.origin); window.close(); return true; } catch (e) {}
+    }
+    if (!syncOnC()) return false;
+    S.syncOpen = S.syncOpen || {}; S.syncOpen.conns = true; S.syncOpen.cjobber = true;
+    syncView();
+    var W = { connected: ['Jobber connected', 'Turn it on to start reading, and pick who new leads go to.'], denied: ['Not connected', 'Access was not allowed in Jobber, so nothing changed.'],
+      browser: ['Not connected', 'Start again from this screen, in the same browser.'] }[m[1]] || ['Not connected', 'It did not finish. Try again in a minute.'];
+    toast(W[0], W[1], null);
+    return true;
+  }
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data || typeof e.data.traverseJobber !== 'string' || !/^[a-z-]+$/.test(e.data.traverseJobber)) return;
+    try { history.replaceState(null, '', location.pathname + '?jobber=' + e.data.traverseJobber + location.hash); } catch (x) { return; }
+    jobberReturn();
+  });
   /* ---- the Quick quote in the editions (2026-10-30, Matthew: "make quote online a permission but I don't think we need an extra role, I can't
      expect them to pay for a quote only") ----
      For a role with "Quote by phone or online" (the admin always, the office by default, any other role an admin gives it in Accounts): the
