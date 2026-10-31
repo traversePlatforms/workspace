@@ -1011,6 +1011,48 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .cty .ic{width:18px;height:18px;flex:none;color:var(--soft);transition:transform .2s}
   .cty[aria-expanded="true"] .ic{transform:rotate(90deg)}
   .ctyb{display:grid;gap:0}
+  /* the long town list (TR-47, 2026-10-31): regions > counties > towns, Yours and the search */
+  .cty.trrg,.cty.trst{margin:12px 0 6px}
+  .cty.trrg b,.cty.trst b{font:400 20px/1.2 var(--serif)}
+  .trrgb,.trstb{margin:0 0 6px 10px;padding-left:10px;border-left:2px solid var(--line)}
+  .cty.trc{margin:8px 0 6px;padding:10px 12px;box-shadow:none;border:1px solid var(--line)}
+  .cty.trc b{font-size:17px}
+  .cty .trhid{color:var(--accent);font-weight:700}
+  .dbrowse .db-fold{display:flex;flex-direction:column;gap:6px}
+  .dbrowse .db-fold .db-fold{padding-left:12px}
+  .dbrowse .db-rg{color:var(--ink);font-size:12.5px;border-top:1px solid var(--line);padding-top:9px;margin-top:2px}
+  .dbrowse .db-cty2{font-size:11px;letter-spacing:.04em;padding-left:12px}
+  .dbrowse .db-cty2.hid span{color:var(--accent)}
+  .trsearch{margin:14px 0 4px}
+  .trsbox{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:0 14px;background:var(--card);box-shadow:var(--shadow)}
+  .trsbox .ic{width:20px;height:20px;color:var(--accent);flex:none}
+  .trsbox input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:600 16px var(--sans);padding:14px 0;outline:none}
+  .trres{display:grid;gap:6px;margin:8px 0}
+  .trrh{margin:12px 4px 2px;font:800 11.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+  .trr{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:11px 13px;cursor:pointer;font:inherit}
+  .trr .trtx{flex:1;min-width:0;display:grid;gap:2px}
+  .trr b{font:400 17px/1.2 var(--serif);overflow-wrap:anywhere}
+  .trr small{font-size:12.5px;color:var(--soft)}
+  .trr .ic{width:16px;height:16px;color:var(--soft);flex:none}
+  .trmore,.trsrc{display:block;margin:4px 4px 0;font-size:12px;color:var(--soft)}
+  .dbrowse .db-res{display:flex;flex-direction:column;gap:4px}
+  .dbrowse .db-town.trr{border:0;padding:7px 8px;border-radius:8px;background:none}
+  .dbrowse .db-town.trr b{font:700 13.5px var(--sans)}
+  .dbrowse .db-town.trr small{font-size:11.5px}
+  .dbrowse .trrh{margin:8px 2px 0}
+  .tryours{display:grid;gap:6px}
+  .tryours .sect{margin:16px 4px 4px}
+  .trr.trmine{border-color:var(--go);background:var(--go-tint)}
+  .trr.trmine small{color:var(--go)}
+  .trall{justify-self:start;margin:2px 4px}
+  .dbrowse .db-yours{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .dbrowse .db-yh{margin:6px 4px 2px;font:800 11.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+  .dbrowse .db-town.trr.trmine{background:var(--go-tint)}
+  .adminlink.trhide{margin:18px 4px 6px}
+  .dbrowse .lnk.trhide{margin:10px 4px 4px;text-align:left;font-size:12.5px}
+  .cohide .chk{display:flex;align-items:center;gap:10px;padding:8px 2px;font-size:15px}
+  .cohide .chk input{width:20px;height:20px;flex:none}
+  .cohide .dwh{margin-top:14px}
   .brow.tap{cursor:pointer}
   .door.acct .alive{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:13px;font-weight:600;color:var(--soft)}
   .door.acct .alive .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
@@ -3094,6 +3136,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (pAdd('set.setup')) x.push(['mail', 'Email and payments', 'Connect the company email and the ways customers pay.', mailSetupView, ['mailsetup', 'kitpay'], 'office']);
     if (pAdd('set.plans') && careOnC()) x.push(['cal', 'Plans', 'What you sell on a schedule.', function () { carePlansView(); }, ['careplans'], 'office']);   /* 2026-10-30 */
     if (pAdd('set.care') && careOnC()) x.push(['mail', 'Customer emails', 'Follow-ups, aftercare and the newsletter.', careMailView, ['caremail', 'carenews'], 'office']);
+    if (pAdd('set.counties') && trOn()) x.push(['map', 'Counties in the town list', 'Hide counties outside the service area from everyone’s list.', function () { trHideView(); }, ['cohide'], 'office']);   /* TR-47, 2026-10-31 */
     if (pAdd('set.eod')) x.push(['mail', 'End-of-day email', 'The day in one email to the owners each evening.', eodView, ['eod'], 'office']);   /* 2026-10-30 */
     return x;
   }
@@ -10896,6 +10939,46 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.here) { var near = list.filter(function (x) { var m = hoodDist(x[1]); return m !== null && m <= 25000; }); if (near.length) list = near; }
     return list.sort(function (x, y) { return hoodRank(y[1]) - hoodRank(x[1]) || (y[1].bestN || 0) - (x[1].bestN || 0) || areaLeft(y[1]) - areaLeft(x[1]); }).slice(0, n);
   }
+  /** a town in the computer's town column */
+  function deskTownBtn(x) {
+    var b = q('button', 'db-town' + (x.key === S.region ? ' on' : '')); b.type = 'button'; b.setAttribute('data-town', x.key);
+    /* 2026-10-11 (Matthew: the town ratings read too low): a town's average sank under its empty land, so the town shows how many
+       doors scoring 8 or more it has left instead; the neighbourhoods keep their scores */
+    b.appendChild(q('span', null, x.label)); var t8 = x.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
+    if (t8) { var tc8 = q('span', 'dtc', t8 >= 10000 ? Math.round(t8 / 1000) + 'k' : t8 >= 1000 ? (t8 / 1000).toFixed(1) + 'k' : String(t8)); tc8.title = t8.toLocaleString(LOCALE) + pw(' doors score 8 or more'); b.setAttribute('aria-label', x.label + ': ' + tc8.title); b.appendChild(tc8); }
+    b.addEventListener('click', function () { S.region = x.key; S.browseSel = null; renderAreas(); });
+    return b;
+  }
+  /** the computer's town column in the editions (TR-47): regions (remembered) > counties > towns; the town on screen keeps its region and county open */
+  function trDesk(col, tq, tl) {
+    var cur = S.regions.filter(function (x) { return x.key === S.region; })[0] || {};
+    var T = trTree(), many = T.states.length > 1, f = homeFoldGet();
+    S.trOpenC = S.trOpenC || {}; if (cur.county) S.trOpenC[cur.county] = 1;
+    tl.textContent = '';
+    if (S.regions.some(function (x) { return x.areas.some(function (a) { return a.sc8; }); })) tl.appendChild(q('small', 'db-tlegend', pw('Doors scoring 8+')));
+    var bar = function (box, cls, label, n, key, open, data, onTog) {
+      var b = q('button', 'db-ctyb ' + cls); b.type = 'button'; b.setAttribute('aria-expanded', String(open)); for (var d in data) b.setAttribute('data-' + d, data[d]);
+      b.appendChild(ico('chev', 2.4)); b.appendChild(q('span', null, label)); b.appendChild(q('small', null, n));
+      var g = q('div', 'db-fold'); g.hidden = !open; b.addEventListener('click', function () { open = !open; g.hidden = !open; b.setAttribute('aria-expanded', String(open)); onTog(open); });
+      box.appendChild(b); box.appendChild(g); return g;
+    };
+    T.states.forEach(function (s) {
+      var sk = 'trs:' + s.key, sb = many ? bar(tl, 'db-st', s.label, trNum(s.total), sk, !!f[sk] || trState(cur) === s.key, { state: s.key }, function (o) { homeFoldSet(sk, o); }) : tl;
+      s.regions.forEach(function (rg) {
+        var rk = 'trr:' + s.key + ':' + rg.key, has = rg.counties.some(function (c) { return c.key === (cur.county || 'other'); }) && trState(cur) === s.key;
+        var rb = s.regions.length === 1 ? sb : bar(sb, 'db-rg', rg.label, rg.total >= 10000 ? Math.round(rg.total / 1000) + 'k' : trNum(rg.total), rk, !!f[rk] || has, { region: rg.key }, function (o) { homeFoldSet(rk, o); });
+        if (s.regions.length > 1) rb.previousSibling.title = rg.towns + ' towns · ' + trNum(rg.total) + pw(' doors');
+        rg.counties.forEach(function (ct) {
+          var cb = bar(rb, 'db-cty2' + (ct.hid ? ' hid' : ''), ct.label + (ct.hid ? ' · hidden' : ''), String(ct.towns.length), null, rg.counties.length === 1 || !!S.trOpenC[ct.key], { county: ct.key }, function (o) { if (o) S.trOpenC[ct.key] = 1; else delete S.trOpenC[ct.key]; });
+          ct.towns.forEach(function (x) { cb.appendChild(deskTownBtn(x.r)); });
+        });
+      });
+    });
+    trHideLink(tl, 'lnk');
+    var yh = q('div'); col.insertBefore(yh, tl); trYours(yh, true);
+    var res = q('div', 'db-res'); res.hidden = true; col.insertBefore(res, tl);
+    trSearchBox(null, res, [yh, tl], true, tq);
+  }
   /* ---- towns and neighbourhoods on a computer (2026-10-09, mock-up F): towns by county, the town's neighbourhoods as a table,
      and the town's map with the picked neighbourhood's summary ---- */
   function deskBrowse() {
@@ -10923,18 +11006,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var cOpen = order.length === 1 || !!v || !!ctyOpen[k];
         if (order.length > 1) { var ch = q('button', 'db-cty db-ctyb'); ch.type = 'button'; ch.setAttribute('aria-expanded', String(cOpen)); ch.appendChild(ico('chev', 2.4)); ch.appendChild(q('span', null, countyName(k))); ch.appendChild(q('small', null, String(ts.length))); ch.addEventListener('click', function () { ctyOpen[k] = !ctyOpen[k]; drawTowns(); }); tl.appendChild(ch); }
         if (!cOpen) return;
-        ts.forEach(function (x) {
-          var b = q('button', 'db-town' + (x.key === S.region ? ' on' : '')); b.type = 'button'; b.setAttribute('data-town', x.key);
-          /* 2026-10-11 (Matthew: the town ratings read too low): a town's average sank under its empty land, so the town shows how many
-             doors scoring 8 or more it has left instead; the neighbourhoods keep their scores */
-          b.appendChild(q('span', null, x.label)); var t8 = x.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
-          if (t8) { var tc8 = q('span', 'dtc', t8 >= 10000 ? Math.round(t8 / 1000) + 'k' : t8 >= 1000 ? (t8 / 1000).toFixed(1) + 'k' : String(t8)); tc8.title = t8.toLocaleString(LOCALE) + pw(' doors score 8 or more'); b.setAttribute('aria-label', x.label + ': ' + tc8.title); b.appendChild(tc8); }
-          b.addEventListener('click', function () { S.region = x.key; S.browseSel = null; renderAreas(); });
-          tl.appendChild(b);
-        });
+        ts.forEach(function (x) { tl.appendChild(deskTownBtn(x)); });
       });
     };
-    tq.addEventListener('input', drawTowns); drawTowns();
+    if (trOn()) trDesk(towns, tq, tl); else { tq.addEventListener('input', drawTowns); drawTowns(); }   /* TR-47 (2026-10-31): regions, Yours and the search */
     /* the town's head and the sort */
     var T = townSum(r), at8 = r.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
     var hd = q('div', 'db-head'), ht = q('div');
@@ -11034,7 +11109,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      picked from the top bar or Home. Computers only (a phone has no side menu). Each screen draws as it always has; whatever it
      puts in the page is moved into the frame as it lands, so nothing about the screens themselves changed. */
   var OFFICE_SCREENS = { office: 1, plan: 1, territories: 1, communities: 1, usage: 1, storm: 1, stormday: 1, hail: 1, pipeline: 1, customers: 1, customer: 1, teamleads: 1, calendar: 1, team: 1, stats: 1, board: 1, training: 1, results: 1, accounts: 1, company: 1, billing: 1, followupmail: 1, newsletter: 1,
-    kitsetup: 1, kitprices: 1, kitpay: 1, kitimport: 1, kitcosts: 1, mailsetup: 1, svcarea: 1 };   /* Setup and its screens keep the Office menu too (2026-10-30) */
+    kitsetup: 1, kitprices: 1, kitpay: 1, kitimport: 1, kitcosts: 1, mailsetup: 1, svcarea: 1, cohide: 1 };   /* Setup and its screens keep the Office menu too (2026-10-30) */
   function officeFramed() { return !!S.inOffice && !!OFFICE_SCREENS[S.screen] && S.screen !== 'office' && dnavOn(); }
   var officeObs = window.MutationObserver ? new MutationObserver(function () { officeFrame(); }) : null;
   function officeFrame() {
@@ -11956,12 +12031,286 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     laplata: 'La Plata County', garfield: 'Garfield County', summit: 'Summit County', grand: 'Grand County', routt: 'Routt County', montezuma: 'Montezuma County', gunnison: 'Gunnison County', morgan: 'Morgan County', archuleta: 'Archuleta County', logan: 'Logan County', pitkin: 'Pitkin County', riogrande: 'Rio Grande County',
     huerfano: 'Huerfano County', sanmiguel: 'San Miguel County', gilpin: 'Gilpin County', yuma: 'Yuma County', lake: 'Lake County', ouray: 'Ouray County', rioblanco: 'Rio Blanco County', dolores: 'Dolores County', hinsdale: 'Hinsdale County', sanjuan: 'San Juan County', eagle: 'Eagle County', custer: 'Custer County',
     /* Group 3b, the counties built from the state's address points */
-    montrose: 'Montrose County', delta: 'Delta County', lasanimas: 'Las Animas County', alamosa: 'Alamosa County', conejos: 'Conejos County', saguache: 'Saguache County', costilla: 'Costilla County', washington: 'Washington County', bent: 'Bent County', mineral: 'Mineral County', sedgwick: 'Sedgwick County' };
+    montrose: 'Montrose County', delta: 'Delta County', lasanimas: 'Las Animas County', alamosa: 'Alamosa County', conejos: 'Conejos County', saguache: 'Saguache County', costilla: 'Costilla County', washington: 'Washington County', bent: 'Bent County', mineral: 'Mineral County', sedgwick: 'Sedgwick County',
+    /* the rest of Colorado's 64 (TR-47, 2026-10-31), so a county the editions add later never shows as Other towns */
+    fremont: 'Fremont County', chaffee: 'Chaffee County', jackson: 'Jackson County', moffat: 'Moffat County', phillips: 'Phillips County', kitcarson: 'Kit Carson County', lincoln: 'Lincoln County', cheyenne: 'Cheyenne County', kiowa: 'Kiowa County', crowley: 'Crowley County', otero: 'Otero County', prowers: 'Prowers County', baca: 'Baca County' };
   function townSum(r) {
     return r.areas.reduce(function (t, a) {
       t.total += a.total; t.done += a.done + (a.noanswer || 0); t.left += a.total - a.done - (a.noanswer || 0);
       t.hot += a.hot || 0; t.booked += a.booked || 0; t.all3 += a.all3 || 0; return t;
     }, { total: 0, done: 0, left: 0, hot: 0, booked: 0, all3: 0 });
+  }
+  /* ---- the long town list (TR-47, 2026-10-31, Matthew's tablet test: the editions hold 407 towns and 1.24 million homes, and the County >
+     town > neighbourhood list was far too long) ----
+     The editions and client installs; Sixfold keeps its counties (trOn). The counties sit in regions, each closed until opened and remembered on
+     this device for this person, like the home's groups (homeFold), with its property count. A second state's towns would sit under a state bar
+     above its regions (trTree: the state comes from the town, else the market). A county opened stays open while the app is open. */
+  function trOn() { return edOn(); }
+  /* Colorado's 64 counties by region, keys as COUNTY_NAME. Denver metro is the seven DRCOG core counties and Elbert; the mountain counties of
+     the Denver statistical area (Clear Creek, Gilpin, Park) are with the Mountains; the San Luis Valley is with Colorado Springs and south. */
+  var TR_REGIONS = { CO: [
+    ['denver', 'Denver metro', ['denver', 'adams', 'arapahoe', 'jefferson', 'douglas', 'broomfield', 'boulder', 'elbert']],
+    ['north', 'Northern Front Range', ['larimer', 'weld']],
+    ['south', 'Colorado Springs and south', ['elpaso', 'teller', 'pueblo', 'fremont', 'custer', 'huerfano', 'lasanimas', 'alamosa', 'conejos', 'costilla', 'riogrande', 'saguache', 'mineral']],
+    ['mtn', 'Mountains', ['clearcreek', 'gilpin', 'park', 'summit', 'eagle', 'grand', 'jackson', 'routt', 'lake', 'chaffee', 'pitkin', 'gunnison', 'hinsdale', 'sanjuan']],
+    ['west', 'Western Slope', ['mesa', 'garfield', 'delta', 'montrose', 'ouray', 'sanmiguel', 'dolores', 'montezuma', 'laplata', 'archuleta', 'rioblanco', 'moffat']],
+    ['east', 'Eastern Plains', ['morgan', 'logan', 'sedgwick', 'phillips', 'yuma', 'washington', 'kitcarson', 'lincoln', 'cheyenne', 'kiowa', 'crowley', 'otero', 'bent', 'prowers', 'baca']]] };
+  var TR_STATE = { CO: 'Colorado' };
+  function trState(r) { return r.st || MK().state || 'CO'; }
+  function trRegionOf(st, c) { var L = TR_REGIONS[st] || []; for (var i = 0; i < L.length; i++) if (L[i][2].indexOf(c) >= 0) return L[i]; return null; }
+  /** states > regions > counties > towns, with totals; regions in TR_REGIONS order (a county in none: Other towns, last), counties A to Z */
+  function trTree() {
+    var T = { states: [] }, sI = {};
+    S.regions.forEach(function (r) {
+      var st = trState(r), c = r.county || 'other', g = trRegionOf(st, c) || ['other', 'Other towns'], t = townSum(r);
+      var s = sI[st]; if (!s) { s = sI[st] = { key: st, label: TR_STATE[st] || (st === MK().state ? MK().stateName : st), regions: [], rI: {}, total: 0, towns: 0 }; T.states.push(s); }
+      var rg = s.rI[g[0]]; if (!rg) { rg = s.rI[g[0]] = { key: g[0], label: g[1], counties: [], cI: {}, total: 0, left: 0, towns: 0 }; s.regions.push(rg); }
+      var ct = rg.cI[c]; if (!ct) { ct = rg.cI[c] = { key: c, label: countyName(c), towns: [], total: 0, left: 0, hot: 0, booked: 0, hid: false }; rg.counties.push(ct); }
+      ct.towns.push({ r: r, t: t }); if (r.hid) ct.hid = true;
+      ct.total += t.total; ct.left += t.left; ct.hot += t.hot || 0; ct.booked += t.booked || 0;
+      rg.total += t.total; rg.left += t.left; rg.towns++; s.total += t.total; s.towns++;
+    });
+    var rank = function (s, k) { var L = TR_REGIONS[s.key] || []; for (var i = 0; i < L.length; i++) if (L[i][0] === k) return i; return 99; };
+    T.states.sort(function (a, b) { return (b.key === MK().state) - (a.key === MK().state) || a.label.localeCompare(b.label); });
+    T.states.forEach(function (s) {
+      s.regions.sort(function (a, b) { return rank(s, a.key) - rank(s, b.key); });
+      s.regions.forEach(function (rg) { rg.counties.sort(function (a, b) { return (a.key === 'other') - (b.key === 'other') || a.label.localeCompare(b.label); }); });
+    });
+    return T;
+  }
+  /** a bar that folds what follows it, open state kept per device and person (homeFold's store); returns the folded box */
+  function trFold(box, key, cls, title, line, data) {
+    var open = !!homeFoldGet()[key];
+    var hd = q('button', 'cty ' + cls); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open));
+    for (var d in data) hd.setAttribute('data-' + d, data[d]);
+    var ht = q('span', 'ct'); ht.appendChild(q('b', null, title)); if (line) ht.appendChild(q('small', null, line));
+    hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
+    var g = q('div', cls + 'b'); g.hidden = !open;
+    hd.addEventListener('click', function () { open = !open; g.hidden = !open; hd.setAttribute('aria-expanded', String(open)); homeFoldSet(key, open); });
+    box.appendChild(hd); box.appendChild(g);
+    return g;
+  }
+  function trNum(n) { return n.toLocaleString(LOCALE); }
+  /** the regions on a phone or an upright tablet: region bars (remembered), county bars (open while the app is open), town cards */
+  function trGroups(box) {
+    var T = trTree(), many = T.states.length > 1;
+    S.trOpenC = S.trOpenC || {};
+    T.states.forEach(function (s) {
+      var sb = many ? trFold(box, 'trs:' + s.key, 'trst', s.label, s.towns + ' towns · ' + trNum(s.total) + pw(' doors'), { state: s.key }) : box;
+      s.regions.forEach(function (rg) {
+        var one = s.regions.length === 1;   /* one region: its counties straight away */
+        var rb = one ? sb : trFold(sb, 'trr:' + s.key + ':' + rg.key, 'trrg', rg.label,
+          rg.counties.length + (rg.counties.length === 1 ? ' county · ' : ' counties · ') + rg.towns + (rg.towns === 1 ? ' town · ' : ' towns · ') + trNum(rg.total) + pw(' doors'), { region: rg.key });
+        rg.counties.forEach(function (ct) {
+          var open = rg.counties.length === 1 || !!S.trOpenC[ct.key];
+          var hd = q('button', 'cty trc'); hd.type = 'button'; hd.setAttribute('aria-expanded', String(open)); hd.setAttribute('data-county', ct.key);
+          var ht = q('span', 'ct'); ht.appendChild(q('b', null, ct.label));
+          ht.appendChild(q('small', null, ct.towns.length + (ct.towns.length === 1 ? ' town · ' : ' towns · ') + trNum(ct.left) + pw(' doors to knock') +
+            (ct.hot ? ' · ' + trNum(ct.hot) + ' high-risk' : '') + (ct.booked ? ' · ' + ct.booked + ' booked' : '')));
+          if (ct.hid) ht.appendChild(q('small', 'trhid', 'Hidden from the team (only Traverse sees it)'));
+          hd.appendChild(ht); hd.appendChild(ico('chev', 2.4));
+          var cb = q('div', 'ctyb'); cb.hidden = !open; var drawn = false;
+          var draw = function () { if (drawn) return; drawn = true; ct.towns.forEach(function (x) { cb.appendChild(townCard(x)); }); };   /* towns drawn when opened: 407 cards nobody sees cost the first paint */
+          if (open) draw();
+          hd.addEventListener('click', function () { open = !open; if (open) draw(); cb.hidden = !open; hd.setAttribute('aria-expanded', String(open)); if (open) S.trOpenC[ct.key] = 1; else delete S.trOpenC[ct.key]; });
+          rb.appendChild(hd); rb.appendChild(cb);
+        });
+      });
+    });
+  }
+  /* ---- the search above the list (TR-47 part 2): a town, a neighbourhood, a county or a 5-digit ZIP, results as you type (after a short
+     pause, so a fast typist does not redraw the list on every key). A ZIP lists the neighbourhoods whose middle is within the ZIP's rough
+     size of the ZIP's middle, from the Census Bureau's ZIP areas (traverse/data-pipeline/door-territory/zcta/): near the ZIP, never "in" it. */
+  /* zcta:start */
+  var TR_ZIP = { CO: '80002:39.794,-105.108,1.5;80003:39.825,-105.064,1.5;80004:39.814,-105.122,1.5;80005:39.852,-105.131,1.9;80007:39.867,-105.198,2.9;80010:39.739,-104.862,1.3;80011:39.744,-104.790,2.6;80012:39.700,-104.838,1.6;80013:39.661,-104.766,2.1;80014:39.664,-104.838,1.5;80015:39.628,-104.793,2.4;80016:39.593,-104.723,3.2;80017:39.699,-104.775,1.7;80018:39.702,-104.687,3.4;80019:39.779,-104.685,3.0;80020:39.931,-105.074,2.5;80021:39.891,-105.114,2.4;80022:39.862,-104.789,5.1;80023:39.976,-105.009,2.4;80024:39.844,-104.918,0.3;80025:39.926,-105.299,1.1;80026:40.012,-105.100,2.7;80027:39.951,-105.157,2.4;80030:39.831,-105.037,0.9;80031:39.874,-105.039,1.6;80033:39.773,-105.105,1.7;80045:39.747,-104.837,0.5;80101:39.407,-103.944,10.8;80102:39.734,-104.438,9.7;80103:39.791,-104.094,10.9;80104:39.302,-104.820,4.7;80105:39.637,-103.966,11.3;80106:39.186,-104.516,7.4;80107:39.412,-104.572,7.0;80108:39.444,-104.853,3.4;80109:39.372,-104.915,2.9;80110:39.646,-105.011,1.4;80111:39.612,-104.883,1.9;80112:39.573,-104.865,2.4;80113:39.646,-104.967,1.6;80116:39.320,-104.710,5.4;80117:39.396,-104.390,7.7;80118:39.190,-104.882,6.5;80120:39.594,-105.011,1.7;80121:39.610,-104.954,1.5;80122:39.580,-104.955,1.5;80123:39.616,-105.069,2.1;80124:39.533,-104.891,1.7;80125:39.485,-105.063,3.6;80126:39.542,-104.964,1.9;80127:39.531,-105.164,4.6;80128:39.561,-105.080,2.1;80129:39.547,-105.012,1.5;80130:39.529,-104.923,1.5;80131:39.476,-105.009,0.4;80132:39.086,-104.858,3.6;80133:39.113,-104.900,1.0;80134:39.483,-104.780,4.3;80135:39.255,-105.157,10.9;80136:39.792,-104.280,8.2;80137:39.712,-104.594,5.9;80138:39.511,-104.676,4.4;80202:39.752,-104.998,0.6;80203:39.731,-104.983,0.6;80204:39.735,-105.021,1.3;80205:39.759,-104.964,1.2;80206:39.730,-104.953,0.9;80207:39.761,-104.917,1.1;80209:39.707,-104.966,1.1;80210:39.677,-104.962,1.4;80211:39.767,-105.020,1.2;80212:39.772,-105.048,1.1;80214:39.743,-105.069,1.2;80215:39.745,-105.116,1.3;80216:39.788,-104.961,1.8;80218:39.731,-104.971,0.7;80219:39.695,-105.036,1.5;80220:39.734,-104.916,1.3;80221:39.816,-105.012,1.7;80222:39.671,-104.928,1.1;80223:39.696,-105.004,1.3;80224:39.688,-104.912,1.0;80226:39.710,-105.092,1.6;80227:39.665,-105.102,1.9;80228:39.697,-105.172,1.9;80229:39.854,-104.958,2.0;80230:39.720,-104.889,0.9;80231:39.671,-104.888,1.2;80232:39.688,-105.089,1.1;80233:39.898,-104.944,1.7;80234:39.910,-105.001,1.5;80235:39.647,-105.088,1.0;80236:39.652,-105.040,1.0;80237:39.640,-104.903,1.1;80238:39.777,-104.880,1.5;80239:39.789,-104.834,1.8;80241:39.929,-104.954,1.5;80246:39.705,-104.931,0.7;80247:39.698,-104.879,1.0;80249:39.856,-104.714,3.9;80260:39.867,-105.001,1.2;80264:39.742,-104.985,0.3;80266:39.790,-104.900,0.3;80290:39.744,-104.987,0.3;80293:39.746,-104.990,0.3;80294:39.750,-104.990,0.3;80301:40.046,-105.201,3.2;80302:40.025,-105.349,5.5;80303:39.973,-105.209,2.7;80304:40.045,-105.288,1.7;80305:39.977,-105.249,1.4;80310:40.004,-105.261,0.4;80401:39.719,-105.235,4.0;80403:39.829,-105.317,6.7;80419:39.728,-105.202,0.3;80420:39.324,-106.116,3.7;80421:39.461,-105.501,5.8;80422:39.862,-105.540,5.8;80423:39.846,-106.555,8.9;80424:39.473,-106.004,6.3;80425:39.350,-105.206,4.1;80426:39.875,-106.991,5.1;80427:39.794,-105.524,2.1;80428:40.848,-106.926,8.1;80430:40.504,-106.431,6.4;80432:39.230,-105.838,8.0;80433:39.498,-105.303,4.6;80434:40.903,-106.285,5.2;80435:39.574,-105.935,5.8;80436:39.781,-105.640,2.4;80438:39.744,-105.796,4.2;80439:39.634,-105.440,7.3;80440:39.132,-106.055,10.2;80442:39.925,-105.888,4.2;80443:39.503,-106.174,5.7;80444:39.632,-105.735,3.5;80446:40.164,-105.935,11.0;80447:40.296,-105.822,8.1;80448:39.477,-105.834,8.5;80449:38.930,-105.790,12.0;80451:40.040,-106.045,3.4;80452:39.712,-105.597,6.4;80453:39.665,-105.243,0.4;80454:39.630,-105.247,1.3;80455:40.095,-105.398,3.2;80456:39.310,-105.689,8.8;80457:39.651,-105.300,0.4;80459:40.155,-106.414,14.0;80461:39.242,-106.288,8.8;80463:39.982,-106.758,5.9;80465:39.609,-105.206,3.7;80466:39.988,-105.544,6.1;80467:40.209,-106.827,9.4;80468:39.915,-106.111,10.4;80469:40.214,-106.968,3.4;80470:39.380,-105.324,5.7;80471:39.935,-105.421,0.5;80473:40.449,-106.160,3.4;80474:39.923,-105.569,1.6;80475:39.411,-105.606,3.4;80476:39.671,-105.834,4.3;80478:40.022,-105.857,3.4;80479:39.993,-106.847,7.3;80480:40.673,-106.342,20.9;80481:40.101,-105.577,3.8;80482:39.901,-105.786,6.7;80483:40.092,-106.936,5.6;80487:40.581,-106.886,15.9;80498:39.747,-106.271,9.8;80501:40.165,-105.102,2.0;80503:40.169,-105.211,5.5;80504:40.166,-105.029,5.6;80510:40.213,-105.606,4.6;80512:40.631,-105.574,12.4;80513:40.299,-105.119,4.9;80514:40.071,-104.955,1.7;80515:40.462,-105.382,3.9;80516:40.054,-105.019,3.6;80517:40.398,-105.615,9.8;80520:40.114,-104.933,0.4;80521:40.593,-105.127,2.1;80524:40.647,-105.030,6.5;80525:40.527,-105.041,2.8;80526:40.522,-105.129,3.3;80528:40.499,-105.005,2.5;80530:40.102,-104.923,1.0;80532:40.484,-105.466,3.4;80534:40.332,-104.937,3.9;80535:40.736,-105.191,4.3;80536:40.879,-105.381,10.9;80537:40.383,-105.200,6.3;80538:40.545,-105.245,5.8;80540:40.225,-105.401,7.0;80542:40.234,-104.999,1.7;80543:40.350,-104.857,3.2;80544:40.103,-105.171,0.3;80545:40.842,-105.702,9.5;80546:40.527,-104.850,0.3;80547:40.529,-104.965,1.3;80549:40.886,-105.044,7.8;80550:40.489,-104.900,4.2;80601:39.962,-104.808,2.9;80602:39.965,-104.911,3.2;80603:39.951,-104.660,5.0;80610:40.674,-104.591,7.6;80611:40.625,-104.249,11.4;80612:40.879,-104.824,9.3;80615:40.546,-104.646,5.8;80620:40.375,-104.713,1.4;80621:40.107,-104.801,6.4;80622:40.539,-104.442,1.9;80623:40.285,-104.783,0.5;80624:40.435,-104.423,4.8;80631:40.445,-104.679,5.8;80634:40.401,-104.792,3.5;80640:39.888,-104.880,2.2;80642:40.051,-104.612,5.7;80643:40.113,-104.489,8.3;80644:40.335,-104.430,7.2;80645:40.283,-104.649,5.6;80646:40.475,-104.698,0.3;80648:40.763,-104.731,7.0;80649:40.401,-104.186,7.8;80650:40.649,-104.781,4.2;80651:40.240,-104.815,5.5;80652:40.139,-104.275,7.3;80653:40.446,-103.978,6.7;80654:40.136,-104.082,8.7;80701:40.125,-103.818,14.0;80705:40.271,-103.834,0.3;80720:40.073,-103.187,17.7;80721:40.688,-102.153,5.3;80722:40.476,-103.200,4.6;80723:40.193,-103.543,9.2;80726:40.923,-102.777,7.1;80727:40.024,-102.511,9.2;80728:40.640,-102.873,10.6;80729:40.876,-104.227,13.7;80731:40.588,-102.598,11.0;80732:40.988,-104.305,0.8;80733:40.357,-103.475,2.7;80734:40.520,-102.292,12.4;80735:39.710,-102.244,9.5;80736:40.812,-103.027,6.5;80737:40.895,-102.199,8.9;80740:39.744,-103.385,7.4;80741:40.567,-103.477,8.5;80742:40.756,-103.835,12.9;80743:40.215,-102.956,11.6;80744:40.874,-102.392,6.1;80745:40.895,-103.413,7.0;80746:40.607,-102.457,0.7;80747:40.934,-103.181,8.4;80749:40.867,-102.547,7.5;80750:40.415,-103.605,6.3;80751:40.652,-103.241,12.4;80754:40.665,-103.636,7.3;80755:39.897,-102.346,6.0;80757:39.791,-103.583,10.6;80758:40.139,-102.193,14.8;80759:40.111,-102.691,14.2;80801:39.732,-103.101,6.7;80802:38.828,-102.150,10.7;80804:39.347,-103.248,10.3;80805:39.297,-102.437,6.6;80807:39.321,-102.223,15.4;80808:39.008,-104.304,11.2;80809:38.852,-105.009,4.0;80810:38.822,-102.429,13.5;80812:39.633,-102.831,6.9;80813:38.754,-105.120,6.0;80814:38.945,-105.190,5.7;80815:39.389,-103.099,13.0;80816:38.858,-105.316,7.6;80817:38.588,-104.678,6.1;80818:39.422,-103.465,10.2;80819:38.943,-104.995,1.4;80820:38.777,-105.567,9.1;80821:39.000,-103.447,15.5;80822:39.678,-102.679,5.8;80823:38.663,-103.419,9.5;80824:39.672,-102.500,6.5;80825:38.833,-102.828,13.4;80826:39.219,-103.691,0.3;80827:39.056,-105.467,9.5;80828:39.264,-103.705,11.8;80829:38.829,-104.933,2.5;80830:39.114,-103.913,7.3;80831:38.981,-104.500,7.7;80832:38.897,-103.767,9.7;80833:38.763,-103.965,12.3;80834:39.297,-102.881,9.4;80835:39.219,-104.023,6.6;80836:39.303,-102.583,11.4;80840:39.000,-104.864,2.7;80860:38.712,-105.092,4.7;80861:39.324,-102.771,9.0;80862:38.922,-103.058,7.7;80863:39.033,-105.055,7.5;80864:38.699,-104.188,8.8;80902:38.684,-104.822,2.4;80903:38.830,-104.816,1.3;80904:38.863,-104.870,1.9;80905:38.819,-104.838,1.3;80906:38.753,-104.878,3.8;80907:38.879,-104.821,1.8;80908:39.047,-104.691,5.5;80909:38.853,-104.774,1.6;80910:38.812,-104.775,1.4;80911:38.753,-104.720,1.9;80913:38.687,-104.749,2.8;80914:38.824,-104.705,0.5;80915:38.850,-104.717,1.6;80916:38.797,-104.689,2.4;80917:38.887,-104.740,1.3;80918:38.910,-104.780,2.0;80919:38.928,-104.880,3.0;80920:38.956,-104.772,2.0;80921:39.061,-104.819,4.0;80922:38.890,-104.701,1.4;80923:38.927,-104.714,1.5;80924:38.967,-104.722,1.4;80925:38.770,-104.644,3.0;80926:38.635,-104.903,5.0;80927:38.928,-104.659,1.2;80928:38.630,-104.402,9.7;80929:38.825,-104.608,2.8;80930:38.805,-104.506,3.3;80938:38.906,-104.657,1.3;80939:38.873,-104.676,0.3;80951:38.878,-104.658,1.0;81001:38.295,-104.537,3.2;81003:38.281,-104.655,2.0;81004:38.044,-104.714,7.2;81005:38.212,-104.832,8.0;81006:38.240,-104.478,6.0;81007:38.386,-104.796,6.6;81008:38.388,-104.568,5.7;81019:37.942,-104.836,2.1;81020:37.465,-104.610,11.1;81021:38.419,-103.376,9.7;81022:38.026,-104.434,10.8;81023:38.066,-104.926,7.0;81024:37.229,-104.712,4.1;81025:38.455,-104.355,13.2;81027:37.247,-103.723,14.7;81029:37.083,-102.509,13.5;81030:38.105,-103.512,0.3;81033:38.196,-103.856,0.4;81036:38.415,-102.793,15.4;81039:37.939,-104.085,13.7;81040:37.783,-105.227,12.3;81041:37.852,-102.398,12.5;81043:38.120,-102.223,0.3;81044:37.860,-102.948,10.4;81045:38.565,-103.154,11.4;81046:37.296,-104.369,0.4;81047:38.010,-102.191,13.9;81049:37.304,-103.390,18.0;81050:37.856,-103.472,12.8;81052:37.974,-102.639,14.7;81054:37.912,-103.190,17.5;81055:37.385,-105.119,8.8;81057:38.123,-102.902,3.9;81058:38.103,-103.884,4.0;81059:37.563,-104.001,18.1;81062:38.297,-103.964,8.7;81063:38.431,-103.771,11.2;81064:37.225,-102.999,12.6;81067:38.016,-103.725,8.4;81069:37.892,-104.889,9.6;81071:38.433,-102.261,13.5;81073:37.425,-102.705,14.3;81076:38.343,-103.602,9.7;81077:38.020,-103.615,0.9;81081:37.065,-104.156,10.0;81082:37.185,-104.414,15.7;81084:37.564,-102.428,8.1;81087:37.392,-102.413,3.1;81089:37.630,-104.675,17.3;81090:37.366,-102.230,14.4;81091:37.149,-104.963,11.5;81092:38.215,-102.908,7.9;81101:37.469,-105.854,10.8;81120:37.195,-106.349,16.9;81121:37.018,-107.421,1.3;81122:37.302,-107.537,12.4;81123:37.411,-105.566,6.8;81124:37.285,-106.107,1.0;81125:37.819,-106.070,9.2;81126:37.161,-105.347,1.8;81128:37.080,-106.621,6.8;81129:37.105,-106.022,0.9;81130:37.702,-107.097,17.7;81131:37.865,-105.679,10.9;81132:37.714,-106.416,14.9;81133:37.450,-105.328,11.3;81136:37.720,-105.813,5.1;81137:37.052,-107.614,9.2;81138:37.023,-105.627,2.5;81140:37.299,-106.161,9.5;81141:37.161,-105.894,2.9;81143:38.158,-105.850,11.0;81144:37.554,-106.139,9.6;81146:37.646,-105.668,9.4;81147:37.286,-107.092,20.8;81148:37.172,-105.985,0.3;81149:38.100,-106.346,14.5;81151:37.239,-105.712,9.7;81152:37.135,-105.396,12.4;81154:37.629,-106.672,10.9;81155:38.305,-106.121,9.4;81201:38.555,-106.107,11.3;81210:38.809,-106.678,12.4;81211:38.951,-106.367,12.3;81212:38.542,-105.423,14.6;81220:38.298,-107.478,9.1;81221:38.362,-105.142,0.6;81222:38.355,-105.816,3.2;81223:38.365,-105.613,11.3;81224:38.880,-106.933,9.1;81225:38.962,-107.016,3.0;81226:38.338,-105.089,6.4;81227:38.549,-106.290,0.3;81228:39.032,-106.277,1.4;81230:38.395,-106.954,23.3;81232:38.275,-105.609,0.5;81233:38.492,-105.814,4.3;81235:37.965,-107.405,13.1;81236:38.671,-106.256,7.1;81237:38.647,-106.576,4.1;81239:38.537,-106.608,3.7;81240:38.500,-105.034,6.7;81241:38.632,-106.497,3.6;81242:38.472,-106.073,2.6;81243:38.266,-107.192,9.7;81244:38.364,-105.165,0.8;81248:38.419,-106.500,10.9;81251:39.152,-106.450,6.7;81252:38.111,-105.428,14.0;81253:38.169,-105.066,5.5;81301:37.529,-107.822,15.5;81303:37.124,-107.855,6.8;81320:37.720,-108.735,7.0;81321:37.313,-108.735,11.6;81323:37.703,-108.127,15.6;81324:37.642,-109.010,11.7;81325:37.919,-108.713,12.7;81326:37.146,-108.117,11.5;81327:37.517,-108.656,3.1;81328:37.271,-108.330,12.6;81330:37.235,-108.478,4.5;81331:37.446,-108.907,9.2;81332:37.700,-107.991,3.2;81334:37.146,-108.613,8.2;81335:37.544,-108.720,1.2;81401:38.515,-107.766,8.0;81403:38.315,-107.928,12.7;81410:38.810,-107.977,3.3;81411:38.252,-108.979,5.7;81413:38.976,-107.899,7.0;81415:38.626,-107.628,9.4;81416:38.641,-108.255,13.5;81418:38.899,-108.058,4.8;81419:38.882,-107.749,8.2;81422:38.320,-108.708,8.8;81423:38.009,-108.427,13.7;81424:38.345,-108.502,10.3;81425:38.458,-108.119,8.4;81426:37.866,-107.821,1.8;81427:38.026,-107.610,4.9;81428:38.963,-107.600,7.8;81429:38.379,-108.883,8.3;81430:38.054,-108.067,8.3;81431:38.144,-108.514,6.5;81432:38.130,-107.745,9.8;81433:37.722,-107.579,8.4;81434:38.982,-107.431,14.1;81435:37.859,-107.919,7.8;81501:39.072,-108.546,1.7;81503:39.034,-108.487,2.7;81504:39.120,-108.489,2.9;81505:39.214,-108.588,4.8;81506:39.125,-108.559,2.8;81507:39.010,-108.652,6.0;81520:39.111,-108.434,2.6;81521:39.157,-108.879,7.7;81522:38.685,-108.921,9.6;81523:38.925,-108.889,9.6;81524:39.291,-108.733,6.6;81525:39.260,-108.967,7.0;81526:39.083,-108.346,4.8;81527:38.798,-108.470,16.4;81601:39.605,-107.351,10.8;81610:40.289,-108.843,8.7;81611:39.160,-106.674,9.9;81612:39.051,-106.845,4.1;81615:39.213,-106.943,2.8;81620:39.613,-106.503,4.2;81621:39.378,-106.876,9.1;81623:39.247,-107.163,11.8;81624:39.159,-107.745,13.2;81625:40.705,-107.736,21.9;81630:39.458,-108.564,20.0;81631:39.626,-106.771,8.4;81632:39.621,-106.612,6.1;81633:40.387,-108.469,6.1;81635:39.535,-108.067,10.3;81637:39.780,-107.106,15.9;81638:40.300,-107.643,11.5;81639:40.565,-107.247,12.2;81640:40.668,-108.514,26.7;81641:40.109,-107.818,24.0;81642:39.313,-106.568,5.6;81643:39.124,-108.149,7.0;81645:39.456,-106.458,5.8;81646:39.104,-108.005,4.7;81647:39.579,-107.533,9.5;81648:39.904,-108.792,18.6;81649:39.465,-106.283,6.7;81650:39.751,-108.114,18.1;81652:39.466,-107.673,5.8;81653:40.896,-107.242,7.5;81654:39.206,-107.046,5.7;81655:39.753,-106.686,4.4;81656:39.279,-106.787,4.3;81657:39.649,-106.326,6.1' };
+  /* zcta:end */
+  var trZipM = null;
+  function trZip(z) {
+    if (!trZipM) { trZipM = {}; for (var st in TR_ZIP) TR_ZIP[st].split(';').forEach(function (e) { var p = e.split(':'), v = (p[1] || '').split(','); if (v.length === 3) trZipM[p[0]] = { lat: +v[0], lon: +v[1], r: +v[2], st: st }; }); }
+    return trZipM[z] || null;
+  }
+  function trMiles(la1, lo1, la2, lo2) { return Math.sqrt(Math.pow((la1 - la2) * 69, 2) + Math.pow((lo1 - lo2) * 69 * Math.cos(la1 * Math.PI / 180), 2)); }
+  /** what the search looks through, made on the first letter typed and kept while the towns are the same */
+  function trIndex() {
+    if (S._trIx && S._trIx.src === S.regions) return S._trIx;
+    var ix = { src: S.regions, towns: [], hoods: [], counties: {} };
+    S.regions.forEach(function (r) {
+      ix.towns.push([r.label.toUpperCase(), r]);
+      var c = r.county || 'other'; if (c !== 'other' && !ix.counties[c]) ix.counties[c] = [countyName(c).toUpperCase(), c, 0];
+      if (ix.counties[c]) ix.counties[c][2]++;
+      r.areas.forEach(function (a) { ix.hoods.push([String(a.name).toUpperCase(), r, a]); });
+    });
+    return (S._trIx = ix);
+  }
+  /** 0 the name starts with it, 1 a word in it does, 2 it is somewhere inside, -1 not there */
+  function trHit(name, v) { var i = name.indexOf(v); return i < 0 ? -1 : i === 0 ? 0 : /[^A-Z0-9]/.test(name.charAt(i - 1)) ? 1 : 2; }
+  function trRow(cls, title, sub, fn, data) {
+    var b = q('button', cls); b.type = 'button'; for (var d in data) b.setAttribute('data-' + d, data[d]);
+    var tx = q('span', 'trtx'); tx.appendChild(q('b', null, title)); if (sub) tx.appendChild(q('small', null, sub)); b.appendChild(tx);
+    b.appendChild(ico('chev', 2.4)); b.addEventListener('click', fn); return b;
+  }
+  /** the results for what was typed into res; false when there is nothing to search yet (the list shows again) */
+  function trFind(raw, res, desk) {
+    var v = String(raw || '').trim().toUpperCase(); res.textContent = '';
+    var digits = /^\d+$/.test(v);
+    if (!v || (!digits && v.length < 2)) return false;
+    var cls = desk ? 'db-town trr' : 'trr', n = 0;
+    var head = function (t) { res.appendChild(q('div', 'trrh', t)); };
+    var town = function (r, sub) { n++; res.appendChild(trRow(cls + ' trtown', r.label, sub || ('Town · ' + countyName(r.county || 'other') + ' · ' + r.areas.length + ' neighborhoods · ' + trNum(r.areas.reduce(function (s, a) { return s + areaLeft(a); }, 0)) + pw(' doors to knock')), function () { S.region = r.key; S.area = null; S.browseSel = null; renderAreas(); window.scrollTo(0, 0); }, { town: r.key })); };
+    var hood = function (r, a, pre) { n++; res.appendChild(trRow(cls + ' trhood', a.name, (pre || 'Neighborhood') + ' · ' + r.label + ' · ' + (areaLeft(a) ? trNum(areaLeft(a)) + ' left' : 'Done') + (dayTag(a) && a.who === S.me ? ' · ' + dayTag(a) : ''), function () { openHood(r.key, a.name); }, { town: r.key, hood: a.name })); };
+    if (digits) {
+      if (v.length !== 5) { res.appendChild(q('div', 'msg', 'Type all 5 digits of the ZIP.')); return true; }
+      var z = trZip(v);
+      if (!z) { res.appendChild(q('div', 'msg', 'No ZIP ' + v + ' in ' + (TR_STATE[MK().state] || MK().stateName) + '.')); return true; }
+      var near = [], byT = {};
+      S.regions.forEach(function (r) { r.areas.forEach(function (a) { if (a.la == null || a.lo == null) return; var m = trMiles(z.lat, z.lon, a.la, a.lo); if (m <= z.r + 0.75) { near.push([m, r, a]); byT[r.key] = byT[r.key] || [r, 0]; byT[r.key][1]++; } }); });
+      if (!near.length) { res.appendChild(q('div', 'msg', 'None of your towns are near ZIP ' + v + '.')); return true; }
+      near.sort(function (x, y) { return x[0] - y[0]; });
+      var tw = Object.keys(byT).map(function (k) { return byT[k]; }).sort(function (x, y) { return y[1] - x[1]; });
+      head('Towns near ZIP ' + v);
+      tw.slice(0, 6).forEach(function (x) { town(x[0], x[1] + (x[1] === 1 ? ' neighborhood' : ' neighborhoods') + ' near the middle of ' + v + ' · ' + countyName(x[0].county || 'other')); });
+      head('Neighborhoods nearest the middle of ' + v);
+      near.slice(0, 12).forEach(function (x) { hood(x[1], x[2], (x[0] < 0.1 ? '0.1' : x[0].toFixed(1)) + ' mi'); });
+      if (near.length > 12) res.appendChild(q('small', 'trmore', (near.length - 12) + ' more near this ZIP: open a town for all of them.'));
+      res.appendChild(q('small', 'trsrc', 'ZIP areas: U.S. Census Bureau. Near the ZIP’s middle, not its exact edge.'));
+      return true;
+    }
+    var ix = trIndex(), rk = function (L) { return L.map(function (x) { return [trHit(x[0], v), x]; }).filter(function (x) { return x[0] >= 0; }).sort(function (a, b) { return a[0] - b[0] || a[1][0].localeCompare(b[1][0]); }); };
+    var T = rk(ix.towns), H = rk(ix.hoods), C = rk(Object.keys(ix.counties).map(function (k) { return ix.counties[k]; }));
+    if (C.length) { head('Counties'); C.slice(0, 3).forEach(function (x) { var c = x[1]; n++; res.appendChild(trRow(cls + ' trcty', countyName(c[1]), c[2] + (c[2] === 1 ? ' town' : ' towns') + ' · show them in the list', function () { trShowCounty(c[1]); }, { county: c[1] })); }); }
+    if (T.length) { head('Towns'); T.slice(0, 8).forEach(function (x) { town(x[1][1]); }); if (T.length > 8) res.appendChild(q('small', 'trmore', (T.length - 8) + ' more towns: keep typing.')); }
+    if (H.length) { head('Neighborhoods'); H.slice(0, 20).forEach(function (x) { hood(x[1][1], x[1][2]); }); if (H.length > 20) res.appendChild(q('small', 'trmore', (H.length - 20) + ' more neighborhoods: keep typing.')); }
+    if (!n) res.appendChild(q('div', 'msg', 'No town, neighborhood or county called “' + String(raw).trim() + '”. For an address, use Find an address.'));
+    return true;
+  }
+  /** a county picked in the search: the search clears and the list opens at it */
+  function trShowCounty(c) {
+    S.trQ = ''; S.trOpenC = S.trOpenC || {}; S.trOpenC[c] = 1;
+    var st = MK().state, g = trRegionOf(st, c); if (g) homeFoldSet('trr:' + st + ':' + g[0], true);
+    if (deskWide()) { var r0 = S.regions.filter(function (r) { return (r.county || 'other') === c; })[0]; if (r0) { S.region = r0.key; S.browseSel = null; } renderAreas(); return; }
+    stateView();
+    var el = view.querySelector('button.trc[data-county="' + c + '"]'); if (el) el.scrollIntoView({ block: 'start' });
+  }
+  /* ---- Yours (TR-47 part 1), at the top of the list so most reps never scroll: the neighbourhoods given to this person (open ones first, today's
+     and the dated ones first, as the computer's Assigned to you), then the places they knocked in the last 45 days (rounds.php myplaces, asked at
+     most once a minute) and the neighbourhood this device opened last. Nothing given and nothing knocked: no section. */
+  function trYours(box, desk) {
+    var wrap = q('div', desk ? 'db-yours' : 'tryours'); box.appendChild(wrap);
+    var MAX = desk ? 4 : 5;
+    var paint = function () {
+      wrap.textContent = '';
+      var byKey = {}; S.regions.forEach(function (r) { byKey[r.key] = r; });
+      var mine = []; S.regions.forEach(function (r) { r.areas.forEach(function (a) { if (a.who && a.who === S.me) mine.push([r, a]); }); });
+      mine.sort(function (x, y) { return (areaLeft(y[1]) ? 1 : 0) - (areaLeft(x[1]) ? 1 : 0) || mineSort(x[1], y[1]); });
+      var seen = {}; mine.forEach(function (x) { seen[x[0].key + '|' + x[1].name] = 1; });
+      var pl = (S.trPlaces && S.trPlaces.me === S.me ? S.trPlaces.list : []).slice(), last = null;
+      try { last = JSON.parse(localStorage.getItem('sixfold.desk.last') || 'null'); } catch (e) {}
+      if (last && last.r && last.a) pl.push({ r: last.r, a: last.a, opened: true });
+      var rec = [];
+      pl.forEach(function (p) {
+        var r = byKey[p.r], a = r && r.areas.filter(function (y) { return y.name === p.a; })[0], k = p.r + '|' + p.a;
+        if (a && !seen[k] && rec.length < (desk ? 2 : 4)) { seen[k] = 1; rec.push([r, a, p]); }   /* the computer's column keeps room for the regions */
+      });
+      if (!mine.length && !rec.length) { wrap.hidden = true; return; }
+      wrap.hidden = false;
+      if (desk) wrap.appendChild(q('small', 'db-yh', 'Yours'));
+      else { var hd = q('div', 'sect'); hd.appendChild(q('h2', null, 'Yours')); hd.appendChild(q('span', null, mine.length ? 'Given to you, and where you knocked lately' : 'Where you knocked lately')); wrap.appendChild(hd); }
+      var left = function (a) { return areaLeft(a) ? trNum(areaLeft(a)) + ' left' : 'Done'; };
+      var row = function (r, a, sub, cls) { wrap.appendChild(trRow((desk ? 'db-town trr ' : 'trr ') + cls, a.name, sub, function () { openHood(r.key, a.name); }, { town: r.key, hood: a.name })); };
+      mine.slice(0, S.trMineAll ? mine.length : MAX).forEach(function (x) { row(x[0], x[1], (dayTag(x[1]) ? dayTag(x[1]) + ' · ' : '') + 'Given to you · ' + x[0].label + ' · ' + left(x[1]), 'trmine'); });
+      if (mine.length > MAX) { var mb = q('button', 'lnk trall', S.trMineAll ? 'Show fewer' : 'All ' + mine.length + ' given to you'); mb.type = 'button'; mb.addEventListener('click', function () { S.trMineAll = !S.trMineAll; paint(); }); wrap.appendChild(mb); }
+      rec.forEach(function (x) {
+        var p = x[2], when = p.opened ? 'Opened last on this device' : 'You knocked ' + p.n + (p.n === 1 ? pw(' door') : pw(' doors')) + ' here, ' + ago(p.at);
+        row(x[0], x[1], when + ' · ' + x[0].label + ' · ' + left(x[1]), 'trrecent');
+      });
+    };
+    paint();
+    if (!S.trPlaces || S.trPlaces.me !== S.me || Date.now() - S.trPlaces.t > 60000) {
+      api('myplaces').then(function (j) {
+        if (!j || !j.ok) return;
+        S.trPlaces = { me: S.me, t: Date.now(), list: j.places || [] };
+        if (document.body.contains(wrap)) paint();
+      }).catch(function () {});
+    }
+    return wrap;
+  }
+  /** the search box; the typed words are kept (S.trQ) so Back from a town comes back to the same results */
+  function trSearchBox(box, res, main, desk, inp) {
+    if (!inp) {
+      var lab = q('label', 'trsbox'); lab.appendChild(ico('search', 2.4));
+      inp = q('input'); lab.appendChild(inp); box.appendChild(lab);
+    }
+    inp.type = 'search'; inp.autocomplete = 'off'; inp.enterKeyHint = 'search';
+    inp.placeholder = 'Find a town, ZIP or neighborhood'; inp.setAttribute('aria-label', 'Find a town, ZIP or neighborhood');
+    var run = function () { S.trQ = inp.value; var on = trFind(inp.value, res, desk); res.hidden = !on; [].concat(main).forEach(function (m) { m.hidden = on; }); };
+    var tm = null;
+    inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 180); });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); var f = res.querySelector('button'); if (f && res.querySelectorAll('button').length === 1) f.click(); } if (e.key === 'Escape') { inp.value = ''; run(); } });
+    if (S.trQ) { inp.value = S.trQ; run(); }
+    return inp;
+  }
+  /* ---- Counties in the town list (TR-47 part 4): an admin (or a role given it, set.counties) unticks the counties outside the service area and
+     their towns leave everyone's list (rounds.php cohide/cohideset; the doors stay, Traverse's super admin still sees them, marked). From Setup,
+     the Office menu or the foot of the town list. ---- */
+  function trHideOk() { return trOn() && !S.viewing && (S.role === 'admin' || !!S.super || pAdd('set.counties')); }
+  function trHideLink(box, cls) {
+    if (!trHideOk()) return;
+    var b = q('button', cls + ' trhide', 'Counties outside your service area? Hide them'); b.type = 'button';
+    b.addEventListener('click', function () { trHideView(true); }); box.appendChild(b);
+  }
+  function trHideView(from) {
+    if (!trHideOk()) return chooseView();
+    if (from !== 'again') S.trHideList = from === true;
+    hideToast(); S.signin = null; S.screen = 'cohide'; foot.hidden = true; setDock(null);
+    var toList = function () { start(); };   /* the towns again: after a save the list comes without the hidden counties */
+    setBar('back', { title: 'Counties in the town list', sub: 'Hide the ones outside your service area', back: S.trHideList ? toList : chooseView, backLabel: S.trHideList ? pw('Doors') : 'Field tools' });
+    view.textContent = ''; var box = q('div', 'card coform cohide'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    api('cohide').then(function (j) {
+      box.textContent = '';
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load the counties.')); return; }
+      var hid = {}; (j.hide || []).forEach(function (k) { hid[k] = 1; });
+      box.appendChild(q('p', 'sub2', 'Untick a county to take its towns off everyone’s town list. Nothing is deleted: tick it again to bring it back. Traverse’s support still sees every county.'));
+      var st = MK().state, L = TR_REGIONS[st] || [], groups = {}, order = [], boxes = [];
+      (j.counties || []).forEach(function (c) { var g = trRegionOf(st, c.key) || ['other', 'Other towns']; if (!groups[g[0]]) { groups[g[0]] = { label: g[1], list: [] }; order.push(g[0]); } groups[g[0]].list.push(c); });
+      var rank = function (k) { for (var i = 0; i < L.length; i++) if (L[i][0] === k) return i; return 99; };
+      order.sort(function (a, b) { return rank(a) - rank(b); });
+      order.forEach(function (gk) {
+        var g = groups[gk]; box.appendChild(q('div', 'dwh', g.label));
+        g.list.sort(function (a, b) { return countyName(a.key).localeCompare(countyName(b.key)); }).forEach(function (c) {
+          var l = q('label', 'chk'), cb = q('input'); cb.type = 'checkbox'; cb.value = c.key; cb.checked = !hid[c.key];
+          l.appendChild(cb); l.appendChild(q('span', null, countyName(c.key) + ' · ' + c.towns + (c.towns === 1 ? ' town, ' : ' towns, ') + trNum(c.homes || 0) + pw(' doors')));
+          box.appendChild(l); boxes.push(cb);
+        });
+      });
+      if (!boxes.length) box.appendChild(q('div', 'msg', 'No counties yet.'));
+      if (j.by && j.at) box.appendChild(q('small', 'sub2', 'Last changed by ' + j.by + ', ' + ago(j.at) + '.'));
+      var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
+      var row = q('div', 'kitbtns'), sv = q('button', 'save', 'Save'); sv.type = 'button'; row.appendChild(sv); box.appendChild(row);
+      sv.addEventListener('click', function () {
+        var hide = boxes.filter(function (cb) { return !cb.checked; }).map(function (cb) { return cb.value; });
+        err.hidden = true;
+        if (boxes.length && hide.length >= boxes.length) { err.hidden = false; err.textContent = 'Keep at least one county on the list.'; return; }
+        sv.disabled = true; sv.textContent = 'Saving…';
+        api('cohideset', { body: { hide: hide } }).then(function (k) {
+          sv.disabled = false; sv.textContent = 'Save';
+          if (!k || !k.ok) { err.hidden = false; err.textContent = (k && k.error) || 'Not saved.'; return; }
+          S.regions = []; S.regionsSig = ''; S._trIx = null; S.trPlaces = null;   /* the towns come again, without the hidden counties */
+          api('regions').then(function (r) { if (r && r.ok && !r._saved && !S.regions.length) S.regions = r.regions; }).catch(function () {});   /* asked now, so the server has made the new list before Back */
+          toast('Saved', k.said || '', null);
+          if (S.screen === 'cohide') trHideView('again');
+        }).catch(function () { sv.disabled = false; sv.textContent = 'Save'; err.hidden = false; err.textContent = 'No signal: nothing was saved.'; });
+      });
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(function () { trHideView('again'); })); });
+  }
+  /** the town list below the state card (stateView) */
+  function trBrowse(box) {
+    var yh = q('div'); box.appendChild(yh); trYours(yh, false);
+    var sw = q('div', 'trsearch'); box.appendChild(sw);
+    var res = q('div', 'trres'); res.hidden = true; box.appendChild(res);
+    var main = q('div', 'trmain'); box.appendChild(main);
+    trGroups(main);
+    trHideLink(main, 'adminlink');
+    trSearchBox(sw, res, [yh, main], false);
   }
   function stateView() {
     if (deskWide()) { S.returnTo = null; return deskBrowse(); }
@@ -11992,6 +12341,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.appendChild(alertStrip(null));
     if (feat('pest') && crewSees()) view.appendChild(seasonStrip());
     if (feat('security') && crewSees()) secRates(function () {});   /* the town figures, ready for the cards */   /* pest edition: what is in season (2026-10-06) */
+    if (trOn()) { trBrowse(view); window.scrollTo(0, 0); return; }   /* TR-47 (2026-10-31): Yours, the search and the regions; Sixfold keeps the counties below */
     /* counties, in the order the towns are listed. Each folds up (Matthew 2026-10-05: more counties would clutter
        the screen); the bar carries the county's totals, and each phone remembers which are open. One county: open. */
     var order = [];
@@ -12011,28 +12361,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         open = !open; box.hidden = !open; hd.setAttribute('aria-expanded', String(open));
       });
       view.appendChild(hd); view.appendChild(box);
-      towns.forEach(function (x, i) {
-        var b = q('button', 'area town'); b.type = 'button'; b.setAttribute('data-town', x.r.key);
-        var p = x.t.total ? x.t.done / x.t.total : 0, fin = x.t.left === 0;
-        b.appendChild(ring(48, 5, p, fin ? ico('check', 3) : pctText(p), fin));
-        var mid = q('div', 'mid'); mid.appendChild(q('div', 'nm', x.r.label));
-        mid.appendChild(q('div', 'sub', x.r.areas.length + ' neighborhoods · ' + x.t.total.toLocaleString(LOCALE) + pw(' doors')));
-        var chips = q('div', 'chips');
-        if (x.t.hot) chips.appendChild(chipEl('hot', 'flame', x.t.hot.toLocaleString(LOCALE) + ' high-risk ' + (x.t.hot === 1 ? 'door' : 'doors') + ' left'));
-        if (x.t.all3) chips.appendChild(chipEl('all3', 'check', x.t.all3 + ' with fire, lawn and trees'));
-        if (x.t.booked) chips.appendChild(chipEl('bk', 'check', x.t.booked + (x.t.booked === 1 ? ' quote' : ' quotes') + ' booked'));
-        var yours = x.r.areas.filter(function (a) { return a.who && a.who === S.me; }).length;
-        if (yours) chips.appendChild(chipEl('mine me', 'users', yours + (yours === 1 ? ' neighborhood is yours' : ' neighborhoods are yours')));
-        if (chips.children.length) mid.appendChild(chips);
-        b.appendChild(mid);
-        var cnt = q('div', 'left'); cnt.appendChild(q('b', null, fin ? 'Done' : x.t.left.toLocaleString(LOCALE))); if (!fin) cnt.appendChild(q('small', null, 'to knock'));
-        b.appendChild(cnt);
-        b.addEventListener('click', function () { S.region = x.r.key; S.area = null; renderAreas(); window.scrollTo(0, 0); });
-        if (!reduced()) { var n = view.querySelectorAll('button.town').length; if (n < 14) { b.style.animationDelay = (n * 35) + 'ms'; b.classList.add('enter'); } }
-        box.appendChild(b);
-      });
+      towns.forEach(function (x) { box.appendChild(townCard(x)); });
     });
     window.scrollTo(0, 0);
+  }
+  /** one town's card in the list ({r: town, t: townSum(town)}); the counties above and the regions (TR-47) both use it */
+  function townCard(x) {
+    var b = q('button', 'area town'); b.type = 'button'; b.setAttribute('data-town', x.r.key);
+    var p = x.t.total ? x.t.done / x.t.total : 0, fin = x.t.left === 0;
+    b.appendChild(ring(48, 5, p, fin ? ico('check', 3) : pctText(p), fin));
+    var mid = q('div', 'mid'); mid.appendChild(q('div', 'nm', x.r.label));
+    mid.appendChild(q('div', 'sub', x.r.areas.length + ' neighborhoods · ' + x.t.total.toLocaleString(LOCALE) + pw(' doors')));
+    var chips = q('div', 'chips');
+    if (x.t.hot) chips.appendChild(chipEl('hot', 'flame', x.t.hot.toLocaleString(LOCALE) + ' high-risk ' + (x.t.hot === 1 ? 'door' : 'doors') + ' left'));
+    if (x.t.all3) chips.appendChild(chipEl('all3', 'check', x.t.all3 + ' with fire, lawn and trees'));
+    if (x.t.booked) chips.appendChild(chipEl('bk', 'check', x.t.booked + (x.t.booked === 1 ? ' quote' : ' quotes') + ' booked'));
+    var yours = x.r.areas.filter(function (a) { return a.who && a.who === S.me; }).length;
+    if (yours) chips.appendChild(chipEl('mine me', 'users', yours + (yours === 1 ? ' neighborhood is yours' : ' neighborhoods are yours')));
+    if (chips.children.length) mid.appendChild(chips);
+    b.appendChild(mid);
+    var cnt = q('div', 'left'); cnt.appendChild(q('b', null, fin ? 'Done' : x.t.left.toLocaleString(LOCALE))); if (!fin) cnt.appendChild(q('small', null, 'to knock'));
+    b.appendChild(cnt);
+    b.addEventListener('click', function () { S.region = x.r.key; S.area = null; renderAreas(); window.scrollTo(0, 0); });
+    if (!reduced()) { var n = view.querySelectorAll('button.town').length; if (n < 14) { b.style.animationDelay = (n * 35) + 'ms'; b.classList.add('enter'); } }
+    return b;
   }
   /* ---- territories (2026-10-04) ----
      Matthew: territories as their own thing; admins assign neighbourhoods to people (later a team
@@ -14577,7 +14929,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function homeRetClear() { S.homeRet = null; S.homeScr = null; }
   /* a setup screen opens at its top (2026-10-30, Matthew: Setup > Company opened at the bottom of the page, where Home had been scrolled);
      drawn again on the same screen (after a save) it stays where it is */
-  var SETUP_SCR = { company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, prcprices: 1, prcterms: 1, prcimport: 1, svcarea: 1, billing: 1, accounts: 1, newsletter: 1, followupmail: 1, sample: 1, training: 1, careplans: 1, caremail: 1, carenews: 1, prcfeedback: 1, fbleads: 1, eod: 1 };
+  var SETUP_SCR = { company: 1, kitsetup: 1, kitprices: 1, kitpay: 1, mailsetup: 1, kitimport: 1, kitcosts: 1, prcprices: 1, prcterms: 1, prcimport: 1, svcarea: 1, billing: 1, accounts: 1, newsletter: 1, followupmail: 1, sample: 1, training: 1, careplans: 1, caremail: 1, carenews: 1, prcfeedback: 1, fbleads: 1, eod: 1, cohide: 1 };
   function setupTop() { if (S.screen === S._topScr) return; S._topScr = S.screen; if (SETUP_SCR && SETUP_SCR[S.screen]) window.scrollTo(0, 0); }
   function homeBackFix(o) {
     if (!S.homeRet || /^(tools|setuphome)$/.test(S.screen)) return o;
@@ -14620,6 +14972,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
        [syncOnC(), 'Sync from another system', 'Keep new leads, customers and jobs coming in from your CRM, a Google Sheet, Zapier or Make. Read-only over there.', syncView, 'sync'],   /* 2026-10-30 */
        [costsOnC(), 'Your costs' + (feat('costs') ? '' : ' (testing: only Traverse sees this)'), 'Labor, materials, drive and overhead for each price line: what it costs you, and a suggested price.', costsView, 'costs'],
        [true, 'Training', pw('Your team’s lessons: doors, sales, quotes, phones and more.', 'Your team’s lessons: door-to-door, sales, quotes, phones and more.'), function () { trainingView(); }, 'training'],
+       [trHideOk(), 'Counties in the town list', 'Hide counties outside your service area from everyone’s town list. Tick them again any time.', function () { trHideView(); }, 'cohide'],   /* TR-47, 2026-10-31 */
        [fbOnC(), 'Facebook lead ads', 'New leads from your Facebook and Instagram lead forms, in your Pipeline within 5 minutes.', fbLeadsView, 'fbleads']].forEach(function (x) {   /* 2026-10-30 */
         if (!x[0]) return; var row = q('button', 'kitstep'); row.type = 'button'; row.setAttribute('data-k', x[4]); row.addEventListener('click', setupGo(x[3]));
         row.appendChild(q('span', 'kitck', '')); var tx = q('span'); tx.appendChild(q('b', null, x[1])); tx.appendChild(q('small', null, x[2])); row.appendChild(tx); row.appendChild(q('span', 'kitgo', '›')); box.appendChild(row);
@@ -22493,7 +22846,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
       S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
-      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea', 'fbleads']] : null,   /* the quote and agreement kit (2026-10-27) */
+      S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea', 'fbleads', 'cohide']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.role === 'admin' && careOnC() ? ['Plans', function () { carePlansView(); }, false, null, ['careplans']] : null,   /* plans and customer emails (2026-10-30) */
       S.role === 'admin' && careOnC() ? ['Customer emails', careMailView, false, null, ['caremail', 'carenews']] : null,
       S.super && !S.viewing && CO.a365 ? ['Messenger preview', msgPreview, false, null, []] : null].filter(Boolean);   /* Traverse only, opens over the page (2026-10-20) */

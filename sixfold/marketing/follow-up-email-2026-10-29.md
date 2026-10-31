@@ -68,6 +68,8 @@ Thanks for choosing Sixfold 365 for your lawn this season.
 If you have a minute, we'd appreciate an honest Google review:
 {review_link}
 
+**Getting your lawn through the winter.** Colorado winters are dry. When there's no snow on the lawn and it's above 40°F, give it a midday watering about once or twice a month, so it soaks in before it freezes at night. New grass from this fall's seeding needs it most. Keep mowing at 2½ to 3 inches while it's still growing.
+
 **Keep it going all year.** Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control, with aeration when the lawn needs it. Reply and we'll send you the details.
 
 **Spring aeration.** Want a spot? Reply "spring" and we'll put you on the list.
@@ -79,6 +81,8 @@ Sixfold 365
 (720) 830-4553 · 365aeration.com
 
 *Footer:* same as Version A.
+
+*31 Oct (Matthew): Version B goes to everyone we've done a job for (25 with an email), pushing the monthly plan, some aftercare advice and a review. The winter aftercare paragraph was added for that; it uses only the CSU Extension facts already verified for the November newsletter (Fact Sheet 7.211; Basic Turf Management).*
 
 ---
 
