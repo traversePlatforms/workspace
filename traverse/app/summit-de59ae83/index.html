@@ -1021,9 +1021,9 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .cty.trc b{font-size:17px}
   .cty .trhid{color:var(--accent);font-weight:700}
   .dbrowse .db-fold{display:flex;flex-direction:column;gap:6px}
-  .dbrowse .db-fold .db-fold{padding-left:10px}
-  .dbrowse .db-rg{color:var(--ink)}
-  .dbrowse .db-cty2{font-size:11px;letter-spacing:.04em}
+  .dbrowse .db-fold .db-fold{padding-left:12px}
+  .dbrowse .db-rg{color:var(--ink);font-size:12.5px;border-top:1px solid var(--line);padding-top:9px;margin-top:2px}
+  .dbrowse .db-cty2{font-size:11px;letter-spacing:.04em;padding-left:12px}
   .dbrowse .db-cty2.hid span{color:var(--accent)}
   .trsearch{margin:14px 0 4px}
   .trsbox{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:0 14px;background:var(--card);box-shadow:var(--shadow)}
@@ -12253,7 +12253,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!trHideOk()) return chooseView();
     if (from !== 'again') S.trHideList = from === true;
     hideToast(); S.signin = null; S.screen = 'cohide'; foot.hidden = true; setDock(null);
-    var toList = function () { if (S.regions.length) { S.region = null; renderAreas(); } else start(); };
+    var toList = function () { start(); };   /* the towns again: after a save the list comes without the hidden counties */
     setBar('back', { title: 'Counties in the town list', sub: 'Hide the ones outside your service area', back: S.trHideList ? toList : chooseView, backLabel: S.trHideList ? pw('Doors') : 'Field tools' });
     view.textContent = ''; var box = q('div', 'card coform cohide'); box.appendChild(q('div', 'skel')); view.appendChild(box);
     api('cohide').then(function (j) {
@@ -12285,7 +12285,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         api('cohideset', { body: { hide: hide } }).then(function (k) {
           sv.disabled = false; sv.textContent = 'Save';
           if (!k || !k.ok) { err.hidden = false; err.textContent = (k && k.error) || 'Not saved.'; return; }
-          S.regions = []; S._trIx = null; S.trPlaces = null;   /* the towns come again, without the hidden counties */
+          S.regions = []; S.regionsSig = ''; S._trIx = null; S.trPlaces = null;   /* the towns come again, without the hidden counties */
+          api('regions').then(function (r) { if (r && r.ok && !r._saved && !S.regions.length) S.regions = r.regions; }).catch(function () {});   /* asked now, so the server has made the new list before Back */
           toast('Saved', k.said || '', null);
           if (S.screen === 'cohide') trHideView('again');
         }).catch(function () { sv.disabled = false; sv.textContent = 'Save'; err.hidden = false; err.textContent = 'No signal: nothing was saved.'; });
