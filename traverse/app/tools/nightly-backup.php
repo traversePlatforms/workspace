@@ -24,6 +24,7 @@ declare(strict_types=1);
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 date_default_timezone_set('America/Denver');
+@ini_set('memory_limit', '1024M');   /* every log is read whole; the CLI default (128M) would stop the run part way, and the folders after it (review 2026-10-31) */
 
 const KEEP = 30;
 const FOLDERS = ['sixfold-data', 'traverse-data', 'traverse-yards-data', 'traverse-solar-data', 'traverse-pest-data', 'traverse-security-data'];
@@ -61,6 +62,7 @@ function backupOne(string $site, string $dir): bool {
             'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (' . $dir . '/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
             'files' => $files, 'photos' => $photos];
     /* the Company screen's uploaded logo (2026-10-29): an image, so base64 under "binary"; the same as action=backup */
+    foreach (['png', 'jpg'] as $lt) if (is_file($rounds . '/zelle-qr.' . $lt)) $doc['binary'][$dir . '/rounds/zelle-qr.' . $lt] = base64_encode((string) file_get_contents($rounds . '/zelle-qr.' . $lt));   /* the Zelle QR code payways.json describes (review 2026-10-31) */
     foreach (['png', 'jpg', 'svg'] as $lt) if (is_file($rounds . '/company-logo.' . $lt)) {
         $doc['binary'][$dir . '/rounds/company-logo.' . $lt] = base64_encode((string) file_get_contents($rounds . '/company-logo.' . $lt));
         $doc['restore'] .= ' Each entry in "binary" is a file in base64 (the company logo): decode it and put it back at its path.';

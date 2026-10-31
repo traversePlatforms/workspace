@@ -2310,7 +2310,7 @@ if (in_array($action, ['pwinfo', 'pwset', 'pwsignin', 'pwforgot'], true)) {
         $ok = password_verify((string) ($body['password'] ?? ''), $l ? (string) $l['hash'] : '$2y$12$N9PW5rubSI5Sne.jRnvJyOdtH/fwgJySxK/QIUFHzVcSkDMhPnQb6');   /* the same work whether or not the address is known */
         $hw = $ok && $l ? pwHit($id) : null;
         if (!$hw) fail('That email and password do not match. Try again, or use Forgot password.', 401);
-        throttleGiveBack($addrFile);
+        throttleGiveBack($addrFile); throttleGiveBack(rateFile('pwmail|' . hash('sha256', $em)));   /* a right password costs no tries, on either count (review 2026-10-31: ten sign-ins an hour on one address used to lock it) */
         inviteJoined($hw[1]);
         out(array_replace(startSession($hw[0], $hw[1], $sessionKey, $sessionDays), edSignin($hw[0], $hw[1])));
     }
@@ -2973,11 +2973,7 @@ function a365SignLink(string $id, string $k): string { return (kitOn() ? kitBase
  * Customer pages: <install folder>/q.html (the quote) and sign.html (the form), same address as the app. */
 function kitOn(): bool { return feature('walkdesk') && !company()['a365']; }
 /** the install's page address, for links customers open: the host this request came to (traverseplatforms.com from the command line) */
-function kitBase(): string {
-    $h = (string) ($_SERVER['HTTP_HOST'] ?? ''); if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) $h = 'traverseplatforms.com';
-    $s = PHP_SAPI === 'cli-server' ? 'http' : 'https';
-    return $s . '://' . $h . '/' . APP_DIR . '/';
-}
+function kitBase(): string { return webOrigin() . '/' . APP_DIR . '/'; }
 function kitTrade(): string { $b = (string) (company()['best'] ?? ''); return $b !== '' ? $b : 'job'; }
 /* the units a price rule can use */
 /** starter rules, so the price screen is never blank; the company changes them */
@@ -3551,7 +3547,17 @@ function nlEdit(callable $fn): array { $lk = @fopen(nlFile() . '.lock', 'c'); if
 function nlAddress(): string { $a = trim(nlLoad()['address']); return $a !== '' ? $a : trim((string) (company()['a365']['postal'] ?? '')); }
 function nlUnsubs(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/newsletter-unsub.json'), true); return is_array($j) ? $j : []; }
 function nlToken(string $email): string { global $sessionKey; $e = strtolower(trim($email)); return b64u($e) . '.' . substr(hash_hmac('sha256', 'nlunsub|' . $e, $sessionKey), 0, 20); }
-function nlUnsubUrl(string $email): string { $h = (string) ($_SERVER['HTTP_HOST'] ?? ''); if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) $h = 'traverseplatforms.com'; return (PHP_SAPI === 'cli-server' ? 'http' : 'https') . '://' . $h . '/api/' . basename(__FILE__) . '?action=nlunsub&t=' . nlToken($email); }
+function nlUnsubUrl(string $email): string { return webOrigin() . '/api/' . basename(__FILE__) . '?action=nlunsub&t=' . nlToken($email); }
+/** the address this install is reached at, for links in emails: the host this request came to; from the command line (the hourly jobs) the
+    company's own appUrl, else traverseplatforms.com (review 2026-10-31: the cron-sent emails of a client on its own domain carried ours) */
+function webOrigin(): string {
+    $h = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    if (!preg_match('/^[a-z0-9.-]{3,80}(:\d{2,5})?$/i', $h)) {
+        if (preg_match('#^(https?://[a-z0-9.-]+(:\d+)?)/#i', (string) (company()['appUrl'] ?? ''), $m)) return $m[1];
+        $h = 'traverseplatforms.com';
+    }
+    return (PHP_SAPI === 'cli-server' ? 'http' : 'https') . '://' . $h;
+}
 /** who it goes to: customers with an email, one per address, not unsubscribed, no test names */
 function nlRecipients(): array {
     $un = nlUnsubs(); $o = [];
@@ -4043,7 +4049,10 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'careplans', 'careplanset', 'carecfg', 'carecfgset', 'carepreview', 'caretest', 'carenews', 'carenewsset', 'carenewsapprove', 'carenewsdel', 'carenewstest', 'carelog',   /* plans and customer emails (2026-10-30) */
     'avatar', 'avatarget', 'avatardel', 'pushkey', 'pushsubscribe', 'pushunsubscribe', 'pushtest', 'pushlatest', 'alertlist', 'alertcount', 'alertread', 'alertclear',
     'perms', 'permset',   /* + Roles and permissions, part of Accounts (2026-10-29) */
-    'fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbleadstoken'];   /* + Setup › Facebook leads (2026-10-30) */
+    'fbleads', 'fbleadsset', 'fbforms', 'fboauth', 'fbleadsoff', 'fbleadstoken', 'fbpollnow',   /* + Setup › Facebook leads (2026-10-30) */
+    /* review 2026-10-31: the rest of the Setup checklist's rows, which answered 'locked' and bounced the admin back to Setup: the Zelle QR code
+       (Payments), Your service area (client installs), Training, and the end-of-day email */
+    'zelleqrset', 'svcarea', 'svcareaset', 'training', 'eodget', 'eodset', 'eodpreview', 'eodtest'];
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
 /* what a lock for payment shuts: Traverse's own data, for everyone but the super admin (2026-10-29) */
 const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
@@ -4193,7 +4202,7 @@ function seatWatch(): void {
     $put = function (array $x) use ($h) { ftruncate($h, 0); rewind($h); fwrite($h, json_encode($x, JSON_UNESCAPED_SLASHES)); fflush($h); };
     if ($over && empty($was['over'])) {
         $co = company(); $plan = billingPlanName((string) ($b['plan'] ?? '?')) . (($b['interval'] ?? '') === 'year' ? ', yearly' : ', monthly');
-        $text = "An install has gone over the seats its plan pays for. Nothing is blocked; its admin sees the warning in Accounts and Billing.\n\n"
+        $text = "An install has gone over the seats its plan pays for (a smaller plan was picked with more people already on). Adding anyone else is refused until someone is removed or the plan grows; its admin sees the note in Accounts and Billing.\n\n"
               . 'Company: ' . (string) $co['name'] . "\n" . 'Edition: ' . (string) ($co['best'] ?? '') . ' (install ' . COOKIE . ', ' . (string) $c['install'] . ")\n"
               . 'Plan: ' . $plan . "\n" . 'Seats paid: ' . $paid . ' workers, plus the one admin every plan includes' . "\n"
               . 'Seats used: ' . $used . ' workers (the first admin, Traverse\'s own sign-in and test sign-ins not counted)' . "\n"
@@ -4451,8 +4460,9 @@ if ($action === 'diag') {
         'expected'     => $expected,
         'expected_exists' => is_dir($expected),
         'parent'       => dirname(__DIR__, 2),
-        'parent_list'  => is_dir(dirname(__DIR__, 2)) ? array_values(array_diff((array) scandir(dirname(__DIR__, 2)), ['.', '..'])) : [],
-        'data_list'    => is_dir(DATA_DIR) ? array_values(array_diff((array) scandir(DATA_DIR), ['.', '..'])) : [],
+        /* the folder listings name every other install on the host (client installs since 2026-10-29): the super admin only (review 2026-10-31) */
+        'parent_list'  => $isSuper && is_dir(dirname(__DIR__, 2)) ? array_values(array_diff((array) scandir(dirname(__DIR__, 2)), ['.', '..'])) : [],
+        'data_list'    => $isSuper && is_dir(DATA_DIR) ? array_values(array_diff((array) scandir(DATA_DIR), ['.', '..'])) : [],
         'index_readable' => is_readable(DATA_DIR . '/index.json'),
     ]);
 }
@@ -10821,6 +10831,7 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
                 'restore' => 'Each entry in "files" is a log the app reads. To rebuild, put each one back at its path beside public_html (sixfold-data/...). Lines are JSON, one change per line, oldest first. Sign-in codes and the app-made sign-ins are not included (re-create those people in Accounts); photos are listed, not copied.',
                 'files' => $files, 'photos' => $photos];
         /* the Company screen's uploaded logo (2026-10-29): an image, so base64 under "binary" (only when there is one). Keep in step with nightly-backup.php */
+        foreach (['png', 'jpg'] as $lt) if (is_file(DATA_DIR . '/zelle-qr.' . $lt)) $doc['binary']['sixfold-data/rounds/zelle-qr.' . $lt] = base64_encode((string) file_get_contents(DATA_DIR . '/zelle-qr.' . $lt));   /* the Zelle QR code payways.json describes (review 2026-10-31) */
         foreach (['png', 'jpg', 'svg'] as $lt) if (is_file(DATA_DIR . '/company-logo.' . $lt)) {
             $doc['binary']['sixfold-data/rounds/company-logo.' . $lt] = base64_encode((string) file_get_contents(DATA_DIR . '/company-logo.' . $lt));
             $doc['restore'] .= ' Each entry in "binary" is a file in base64 (the company logo): decode it and put it back at its path.';
@@ -11965,12 +11976,14 @@ function syncConnRun(string $k, float $until): array {
     syncNote('conns', $k, $res, $err);
     return $res + ['err' => $err];
 }
-/** what the screen shows: settings without any key */
-function syncState(): array {
+/** what the screen shows: settings without any key. $keys false (the read-only sign-in, 2026-10-31): the link addresses stay out too, since
+    the hook key is the whole secret in them */
+function syncState(bool $keys = true): array {
     global $TEAM;
     $C = syncCfg(); $K = syncKeys(); $hk = (string) ($K['hook'] ?? '');
     $hook = array_intersect_key($C['hook'], array_flip(['on', 'kind', 'map', 'seen', 'last', 'owner'])) + ['on' => false, 'map' => [], 'seen' => [], 'owner' => ''];
-    $hook['urls'] = $hk !== '' ? array_combine(SYNC_KINDS, array_map(fn($kd) => syncHookUrl($hk, $kd), SYNC_KINDS)) : null;
+    $hook['urls'] = $hk !== '' && $keys ? array_combine(SYNC_KINDS, array_map(fn($kd) => syncHookUrl($hk, $kd), SYNC_KINDS)) : null;
+    if ($hk !== '' && !$keys) $hook['keysHidden'] = true;
     $sheets = []; foreach ($C['sheets'] as $id => $s) { $u = (string) ($K['sheets'][$id] ?? ''); $sheets[] = ['id' => $id, 'host' => (string) parse_url($u, PHP_URL_HOST)] + array_intersect_key($s, array_flip(['name', 'kind', 'every', 'map', 'head', 'on', 'owner', 'last', 'lastIn', 'paused'])); }
     $conns = [];
     foreach (SYNC_CONNS as $k => $d) {
@@ -12017,7 +12030,7 @@ if ($action === 'syncpoll') {   /* the 5-minute job: traverse-tools/crm-sync.php
 if (in_array($action, ['sync', 'synchookset', 'syncmap', 'syncsheet', 'syncsheetset', 'syncconn', 'syncrun', 'synctest', 'synchold'], true)) {
     if (!syncOn()) fail('Not here.', 404);
     if (!adminOr('cust.sync')) fail('Not allowed.', 403);
-    if ($action === 'sync') out(syncState());
+    if ($action === 'sync') out(syncState($realMe !== 'Claude Check'));   /* the read-only sign-in never sees the link's key (2026-10-31) */
     if (!$isPost) fail('POST required', 405);
     $kindOk = fn($k) => in_array($k, SYNC_KINDS, true) ? $k : fail('Pick leads, customers or jobs.');
     $mapClean = function ($m, string $kind): array { $o = []; foreach ((array) $m as $their => $ours) { $their = mb_substr(trim((string) $their), 0, 120); $ours = (string) $ours; if ($their !== '' && ($ours === '' || in_array($ours, SYNC_FIELDS[$kind], true))) $o[$their] = $ours; if (count($o) >= 120) break; } return $o; };
@@ -15574,7 +15587,7 @@ function logoTake(string $raw, bool $bg, string $by): array {
 function logoAdopt(): void {
     foreach (['png', 'jpg', 'svg'] as $t) {
         $f = pushPrivDir() . '/logo-pending.' . $t; if (!is_file($f)) continue;
-        $r = logoTake((string) file_get_contents($f), true, 'Website checkout');
+        $r = logoTake((string) file_get_contents($f), false, 'Website checkout');   /* no white backing, as a new upload (Matthew 2026-10-30: it read as a white outline) */
         @unlink($f);
         if (isset($r['error'])) error_log('rounds: the welcome page logo was not taken: ' . $r['error']);
         return;
