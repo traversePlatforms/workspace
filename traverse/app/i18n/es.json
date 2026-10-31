@@ -492,7 +492,6 @@
  "Setup": "Configuración",
  "Add, change, sign out and remove sign-ins.": "Agrega, cambia, cierra y quita accesos.",
  "Your company name, phone, email, website and color, as the app shows them.": "El nombre, teléfono, correo, sitio web y color de tu empresa, como los muestra la app.",
- "Your Traverse plan, seats and payment, through Stripe.": "Tu plan de Traverse, usuarios y pago, a través de Stripe.",
  "One made-up door with this app’s card on it, to try things. Nothing you do there is saved.": "Una puerta inventada con la tarjeta de esta app, para probar. Nada de lo que hagas ahí se guarda.",
  "Colorado · all towns": "Colorado · todos los pueblos",
  "Plan the doors in a table": "Planear las puertas en una tabla",
@@ -3598,7 +3597,6 @@
  "What a quote adds up from, and your agreement terms.": "De qué se suma una cotización, y los términos de tu acuerdo.",
  "What each price line costs you.": "Lo que te cuesta cada línea de precio.",
  "Everything to set before your first quote.": "Todo lo que hay que configurar antes de tu primera cotización.",
- "Your Traverse plan.": "Tu plan de Traverse.",
  "everything: doors, leads, quotes, customers, payments, jobs, every account, billing and company setup": "todo: puertas, prospectos, cotizaciones, clientes, pagos, trabajos, todas las cuentas, la facturación y la configuración de la empresa",
  "knocks doors and works their own leads, and runs their team: its sign-ins, leads, territories, numbers and goals; no quotes or customers; takes payments only if you tick Takes payments": "toca puertas y trabaja sus propios prospectos, y dirige su equipo: sus accesos, prospectos, territorios, números y metas; sin cotizaciones ni clientes; cobra solo si marcas Cobra pagos",
  "works every lead: quotes, agreements and deposits, the jobs schedule, customers and payments; door lists only if you tick Knocks doors": "trabaja todos los prospectos: cotizaciones, acuerdos y depósitos, la agenda de trabajos, los clientes y los pagos; listas de puertas solo si marcas Toca puertas",
@@ -4557,5 +4555,14 @@
  "from the sun it gets here": "según el sol que recibe aquí",
  "up to about this much": "hasta más o menos esto",
  "400 W each": "400 W cada uno",
- "An estimate of the most that fits, not a sized system.": "Una estimación de lo más que cabe, no un sistema dimensionado."
+ "An estimate of the most that fits, not a sized system.": "Una estimación de lo más que cabe, no un sistema dimensionado.",
+ "Your plan, seats and payment, through Stripe.": "Tu plan, usuarios y pago, a través de Stripe.",
+ "Your plan and payment.": "Tu plan y tu pago.",
+ "Your plan": "Tu plan",
+ "Every neighborhood is assigned already.": "Todos los vecindarios ya están asignados.",
+ "Take it back": "Retomarlo",
+ "Nobody waiting. New inquiries from the websites, Facebook forms and the crew land here.": "Nadie en espera. Las consultas nuevas de los sitios web, los formularios de Facebook y el equipo llegan aquí.",
+ "You are not on a team yet. Ask an admin to put you on one.": "Todavía no estás en un equipo. Pide a un administrador que te ponga en uno.",
+ "This job is not on the list any more. It may have been moved or taken off.": "Este trabajo ya no está en la lista. Puede que lo hayan movido o quitado.",
+ "Plan visits to book": "Visitas del plan por agendar"
 }

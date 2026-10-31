@@ -2064,7 +2064,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   @media print { html,body.printing{background:#fff !important} body.printing > *:not(.freport){display:none !important} .freport{position:static;overflow:visible} .freport .frbar{display:none} .freport .frpage{padding:0;max-width:none} .freport .frtab tr,.freport .frphotos{break-inside:avoid} }
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
   .updbar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;width:min(640px,calc(100% - 24px));display:flex;gap:10px;align-items:center;background:#1d2a1c;color:#fff;border-radius:14px;padding:10px 12px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px var(--sans)}.updbar span{flex:1}.updbar button{flex:none;border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}
-  body.has-dock .updbar{bottom:calc(96px + env(safe-area-inset-bottom,0px))}   /* above the phone's tab bar; it sat over Back, the title and the search box (2026-10-30 audit) */
+  body.has-dock .updbar{bottom:calc(96px + env(safe-area-inset-bottom,0px))}   /* above the door list's sort bar; it sat over Back, the title and the search box (2026-10-30 audit) */
+  body.has-tabs:not(.has-dock) .updbar{bottom:calc(84px + env(safe-area-inset-bottom,0px))}   /* above the phone's menu bar, as the toast (review 2026-10-31: it covered Home and Pipeline for 20 s) */
   .updbar .updx{background:none;padding:4px 6px;font:700 20px/1 var(--sans);color:#fff;opacity:.85}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
@@ -3946,10 +3947,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       (vaSet(''), S.viewing = null, vaBar(), api('signin', { body: { code: code, dev: devClass() } })).then(function (j) {
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognized.');
-        markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
-        flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
-        pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
+        signedIn(j); S.signin = null;                           /* the answer into S (one function for every sign-in path, 2026-10-31) */
         boxes.className = 'boxes ok';
         say.textContent = 'Welcome back, ' + String(j.name || '').split(' ')[0];
         setTimeout(chooseView, reduced() ? 0 : 650);
@@ -4810,7 +4808,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         kitOnC() ? tile('button', 'clip', 'Import', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', 'Admin only', function () { importView(); }) : null,   /* 2026-10-29 */
         fbOnC() && S.role === 'admin' ? tile('button', 'chat', 'Facebook leads', 'Your Facebook and Instagram lead ads straight into the Pipeline, every 5 minutes.', 'Admin only', fbLeadsView) : null,   /* 2026-10-30 */
         costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
-        feat('billing') ? tile('button', 'card', 'Billing', 'Your Traverse plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10 */
+        feat('billing') ? tile('button', 'card', 'Billing', 'Your plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10; no product name outside the Billing screen itself (2026-10-31) */
         CO.a365 ? null : tile('button', 'door', 'Sample property', 'One made-up property with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Admin only', sampleView)].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew) */
       homeFold(box, 'office', 'Office', [obox], 'ogwrap-f', [].map.call(obox.querySelectorAll(':scope > .tgrid:not(.ogbox) .tt b, :scope > .ogrp .ct b'), function (b) { return b.textContent; }).join(' · '));
     }
@@ -10819,7 +10817,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!la) { var nb0 = nearBest(all, 1)[0]; if (nb0) { lr = nb0[0]; la = nb0[1]; } }
       var ccEl = null;
       if (la) {
-        var cc = q('div', 'card dh-cont'); ccEl = cc, vis = la.total ? (la.done + (la.noanswer || 0)) / la.total : 0;
+        var cc = q('div', 'card dh-cont'); ccEl = cc; var vis = la.total ? (la.done + (la.noanswer || 0)) / la.total : 0;
         cc.appendChild(q('small', null, last && lr.key === last.r && la.name === last.a ? 'Pick up where you left off' : 'A good place to start'));
         cc.appendChild(q('b', 'dh-name', la.name));
         cc.appendChild(q('span', 'dh-meta', lr.label + ' \u00b7 ' + areaLeft(la) + ' of ' + la.total + pw(' doors left') + (la.sc8 ? ' \u00b7 ' + la.sc8 + ' score 8+' : '')));
@@ -12909,9 +12907,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      company.json features.clientstart marks it. Its admin's home starts with the welcome checklist: the homes (loading while the server links the
      towns in the radius, then how many), invite the team by email, connect email, connect payments, import customers, check the logo and colours.
      Ticks come from the server (accounts, kit, imports); the list can be hidden on this device once read. */
-  function signedIn(j) {   /* the sign-in answer into S, as the code screen does (password sign-in and set-password, 2026-10-29) */
+  function signedIn(j) {   /* the sign-in answer into S: the code pad, an email and password sign-in or set-password, and the welcome page's pass or a super's hop all come through here (2026-10-31: the password path used to miss the permissions, team, lock, super and session id) */
     markOut(false);
-    S.me = j.name; S.sub = j.sub || ''; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
+    S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
     flush(); warmSaved(); pushResend(); pushPrepare();
   }
   function startOn() { return feat('clientstart') && S.role === 'admin' && !S.viewing; }
@@ -13252,7 +13250,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       feat('company') ? ['Company', 'Name, phone, email, website and color.', companyView] : null,
       kit ? ['Prices and terms', 'What a quote adds up from, and your agreement terms.', kitPricesView] : null,
       kit && costsOnC() ? ['Your costs', 'What each price line costs you.', costsView] : null,
-      bill ? null : ['Billing', 'Your Traverse plan.', billingView]].filter(Boolean);
+      bill ? null : ['Billing', 'Your plan and payment.', billingView]].filter(Boolean);
     if (more.length) {
       box.appendChild(q('h2', 'tgrp', 'More setup'));
       var g = q('div', 'tgrid'); more.forEach(function (x) { g.appendChild(tile('button', 'check', x[0], x[1], 'Admin only', x[2])); }); box.appendChild(g);
@@ -14596,7 +14594,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         towns: areaOnC() ? ['Your service area', 'The towns and houses in your app: widen or narrow it.', function () { areaView(); }] : ['Your towns', 'The towns and houses in your app.', null], people: ['People and sign-in codes', 'Give each person their own code.', accountsView],
         prices: ['Set your prices', 'What a quote adds up from a house’s measurements; Good, Better, Best; import with Claude.', function () { prcPricesView(); }], terms: ['Your agreement terms', 'Every clause on your one-page form, yours to change.', prcTermsView],   /* the smart price list (2026-10-30) */
         payments: ['Payments: Square or Stripe', 'For deposits paid on the form, and other ways customers can pay.', kitPayView], email: ['Your email', 'Signed agreements and receipts go to customers from your address.', mailSetupView], alerts: ['Alerts on your phone', 'New leads, signed forms and job notes. Turn them on in Profile.', profileView],
-        plan: ['Your Traverse plan', 'Billing.', function () { billingView(); }] };
+        plan: ['Your plan', 'Billing.', function () { billingView(); }] };
       var done = K.setup.filter(function (x) { return x.done; }).length;
       box.appendChild(q('div', 'dwh', done + ' of ' + K.setup.length + ' done'));
       K.setup.forEach(function (x) {
@@ -23233,9 +23231,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
       api(hp[1] === 'start' ? 'startin' : 'hopin', { body: { pass: decodeURIComponent(hp[2]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
-        markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
-        flush(); warmSaved(); pushResend(); pushPrepare();
+        signedIn(j);
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
       return;
