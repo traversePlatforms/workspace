@@ -21,7 +21,10 @@ import { createInterface } from 'node:readline';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const HERE = dirname(fileURLToPath(import.meta.url)), RAW = join(HERE, 'raw'), DT = join(HERE, '..');
+/* TRAVERSE_ROOT (2026-10-31, optional): the traverse/ folder holding the data (raw/, the town CSVs, app/data/rounds), i.e. the main
+   checkout when this runs from a worktree; town-county.json is still read beside this file. */
+const HERE = dirname(fileURLToPath(import.meta.url));
+const DT = process.env.TRAVERSE_ROOT ? join(process.env.TRAVERSE_ROOT, 'data-pipeline', 'door-territory') : join(HERE, '..'), RAW = join(DT, 'assessor', 'raw');
 const DATA = join(DT, '..', '..', 'app', 'data', 'rounds');
 const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'elpaso', 'castle-rock': 'douglas', larkspur: 'douglas', sedalia: 'douglas', franktown: 'douglas', 'highlands-ranch': 'douglas', parker: 'douglas', 'castle-pines': 'douglas', 'cs-northeast': 'elpaso', 'cs-southeast': 'elpaso', 'security-widefield': 'elpaso', 'fountain': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southwest': 'elpaso',
   /* 2026-10-10: the Front Range Roofing towns. Adams and Boulder record roof cover; Denver gives year built and remodel; Arapahoe
@@ -29,7 +32,7 @@ const TOWNS = { monument: 'elpaso', 'palmer-lake': 'elpaso', 'black-forest': 'el
   thornton: ['adams', 'weld'], 'commerce-city': 'adams', erie: ['boulder', 'weld'], denver: 'denver' };
 /* every other town in a county whose files we hold (2026-10-20, Matthew: year built for the metro towns, so the lot preview can say a house
    was built after the aerial photo). town-county.json: each town's counties from sample doors; the towns listed above keep their entries. */
-const COUNTY_KEY = { 'El Paso': 'elpaso', Douglas: 'douglas', Adams: 'adams', Boulder: 'boulder', Denver: 'denver', Weld: 'weld' };
+const COUNTY_KEY = { 'El Paso': 'elpaso', Douglas: 'douglas', Adams: 'adams', Boulder: 'boulder', Denver: 'denver', Weld: 'weld', Larimer: 'larimer', Mesa: 'mesa' };
 const TC = existsSync(join(HERE, 'town-county.json')) ? JSON.parse(readFileSync(join(HERE, 'town-county.json'), 'utf8')) : {};
 for (const [town, cs] of Object.entries(TC)) {
   if (town.startsWith('_') || TOWNS[town] || !Array.isArray(cs)) continue;
@@ -140,14 +143,49 @@ function parseCSV(s) {
   return rows;
 }
 
-const ep = existsSync(join(RAW, 'EPC Parcel Data.txt')) ? await elPaso() : new Map();
-const dg = existsSync(join(RAW, 'Property_Improvements.txt')) ? await douglas() : new Map();
-const ad = existsSync(join(RAW, 'adams', 'Built_As.TXT')) ? await adams() : new Map();
-const bo = existsSync(join(RAW, 'boulder', 'Buildings.csv')) ? await boulder() : new Map();
-const dn = denver();
-const wd = existsSync(join(RAW, 'weld', 'ImpsCurrentInvntry.csv')) ? await weld() : new Map();
-console.log(`El Paso parcels with a year built: ${ep.size}; Douglas residential parcels: ${dg.size}; Adams ${ad.size}; Boulder ${bo.size}; Denver ${dn.size}; Weld ${wd.size}`);
-const SRC = { elpaso: ep, douglas: dg, adams: ad, boulder: bo, denver: dn, weld: wd };
+/* digits only, no leading zeros (Mesa's door lists write 2945-074-22-020, its parcel layer 294507422020) */
+const pkey = (p) => String(p ?? '').replace(/\D/g, '').replace(/^0+/, '');
+/* Larimer (2026-10-31): the assessor's Public Data Center improvement table, larimer.gov/assessor/publicdata ->
+   storage.googleapis.com/lc-public/asr/assessor-public-improvement.csv (no owner fields in it; the page: "available 24/7 and free to
+   the public", disclaimer only, "The data shall be used and relied upon only at the risk of the user"). One row per building: the
+   largest residential building on the parcel is the house. ROOFCOVER, ROOFTYPE, BLTASYEARBUILT, YEARREMODELED, SF. A few hand-typed
+   spellings of composition shingle are folded into the county's usual one so features.py's CLASS_OF knows them. */
+async function larimer() {
+  const best = new Map(); let h = null;
+  const COMP = /^comp(osition)? shingle$/i, HEAVY = /^comp shingle heavy$/i;
+  await lines(join(RAW, 'larimer', 'improvement.csv'), (l) => {
+    const c = csvRow(l); if (!h) { h = c.map((x) => x.trim().toUpperCase()); return; }
+    const g = (k) => (c[h.indexOf(k)] || '').trim();
+    if (!/resid|town|duplex|triplex|manufact|mobile/i.test(g('PROPERTYTYPE') + ' ' + g('OCCDESCRIPTION'))) return;
+    const yb = +g('BLTASYEARBUILT'), sf = +g('SF') || 0; if (!(yb > 1800)) return;
+    const p = pkey(g('PARCELNO')), cur = best.get(p); if (!p || (cur && (cur.bsf || 0) >= sf)) return;
+    let mat = g('ROOFCOVER'); if (COMP.test(mat)) mat = 'Composition Shingle'; else if (HEAVY.test(mat)) mat = 'Comp Shingle Heavy';
+    const rm = +g('YEARREMODELED');
+    best.set(p, { yb, rm: rm > yb ? rm : undefined, shape: g('ROOFTYPE') || undefined, mat: mat || undefined, bsf: sf > 0 ? Math.round(sf) : undefined });
+  });
+  return best;
+}
+/* Mesa (2026-10-31): year built only (AYB1ST, the first building's actual year built) from the county's Open_Data Tax Parcels layer
+   (mcgis.mesacounty.us .../maps/Open_Data/MapServer/55), already fetched by moved/fetch-arcgis.mjs without owner fields. Mesa
+   publishes no roof cover, so it adds no county roof records: the year is for the card and the lawn "built after our photo" note. */
+function mesa() {
+  const m = new Map(), f = join(RAW, 'mesa', 'mesa-parcels.json'); if (!existsSync(f)) return m;
+  const j = JSON.parse(readFileSync(f, 'utf8')), iP = j.fields.indexOf('PARCELNUM'), iY = j.fields.indexOf('AYB1ST');
+  for (const r of j.rows) { const p = pkey(r[iP]), yb = +r[iY]; if (p && yb > 1800 && !m.has(p)) m.set(p, { yb }); }
+  return m;
+}
+/* only the counties the (--only) towns need are read (2026-10-31) */
+const NEED = new Set(Object.values(TOWNS).flat());
+const ep = NEED.has('elpaso') && existsSync(join(RAW, 'EPC Parcel Data.txt')) ? await elPaso() : new Map();
+const dg = NEED.has('douglas') && existsSync(join(RAW, 'Property_Improvements.txt')) ? await douglas() : new Map();
+const ad = NEED.has('adams') && existsSync(join(RAW, 'adams', 'Built_As.TXT')) ? await adams() : new Map();
+const bo = NEED.has('boulder') && existsSync(join(RAW, 'boulder', 'Buildings.csv')) ? await boulder() : new Map();
+const dn = NEED.has('denver') ? denver() : new Map();
+const wd = NEED.has('weld') && existsSync(join(RAW, 'weld', 'ImpsCurrentInvntry.csv')) ? await weld() : new Map();
+const lr = NEED.has('larimer') && existsSync(join(RAW, 'larimer', 'improvement.csv')) ? await larimer() : new Map();
+const ms = NEED.has('mesa') ? mesa() : new Map();
+console.log(`El Paso parcels with a year built: ${ep.size}; Douglas residential parcels: ${dg.size}; Adams ${ad.size}; Boulder ${bo.size}; Denver ${dn.size}; Weld ${wd.size}; Larimer ${lr.size}; Mesa ${ms.size}`);
+const SRC = { elpaso: ep, douglas: dg, adams: ad, boulder: bo, denver: dn, weld: wd, larimer: lr, mesa: ms };
 let tot = 0, hit = 0;
 for (const [town, county] of Object.entries(TOWNS)) {
   const csvF = join(DT, `${town}.csv`), doorF = join(DATA, `${town}.json`);
@@ -160,7 +198,7 @@ for (const [town, county] of Object.entries(TOWNS)) {
   const d = JSON.parse(readFileSync(doorF, 'utf8'));
   let n = 0, k = 0;
   for (const a of d.areas) for (const x of a.doors) {
-    n++; const p = parcelOf.get(String(x.address).trim().toUpperCase()); const f = p && (src.get(p) || src.get(p.replace(/^0+/, '')));
+    n++; const p = parcelOf.get(String(x.address).trim().toUpperCase()); const f = p && (src.get(p) || src.get(p.replace(/^0+/, '')) || src.get(pkey(p)));
     if (f) { doors[x.id] = f; k++; }
   }
   writeFileSync(join(DATA, `year-${town}.json`), JSON.stringify({ built: new Date().toISOString().slice(0, 10), county, doors }));
