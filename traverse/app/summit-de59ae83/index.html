@@ -9342,7 +9342,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         .then(function (r) { return r.json(); })
         .then(function (j) {
           var f = (j.features || []).sort(function (a, b) { return a.properties.gsd - b.properties.gsd; })[0]; if (!f) return;
-          L.tileLayer(PC_API + '/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=naip&item=' + encodeURIComponent(f.id) + '&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png', { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
+          L.tileLayer(satItemTiles(f.id), { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
         }).catch(function () {});
       parcelAt(d.lon, d.lat, MK().parcels).then(function (geo) {
         var ll = geo.rings.map(function (ring) { return ring.map(function (p) { return [p[1], p[0]]; }); });
@@ -18525,6 +18525,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the ids the register answers with: 32 hex characters until October 2026, "pc1.<time>.<hex>" since (2026-10-30 audit: the new shape was
      refused, so every device sat on the 9 Oct fallback, which Microsoft can expire any day) */
   var SAT_ID_OK = /^(?:[a-f0-9]{16,64}|pc1\.\d{6,14}\.[a-f0-9]{8,64})$/;
+  /* the photo tiles through our server's copy (TR-52, 2026-10-31): api/satcache.php keeps every Colorado tile it fetches from Planetary
+     Computer, so the second look at a street, from any phone on any install, comes off our disk instead of being drawn again (0.5-2 s a
+     tile). Same photos, same query. Colorado only: the server fetches nothing else, so other places still go straight to Planetary Computer. */
+  var SATC = '../api/satcache.php';
+  function satMosaicTiles(id) {
+    var st = MK().naip || MK_CO.naip;
+    if (st.state === 'co' && /^20[1-3]\d$/.test(String(st.year))) return SATC + '?l=co' + st.year + '&z={z}&x={x}&y={y}';   /* the server registers the search itself: the id changes every visit */
+    return PC_API + '/data/v1/mosaic/' + id + '/tiles/WebMercatorQuad/{z}/{x}/{y}?collection=naip&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png';
+  }
+  function satItemTiles(item) {
+    if (/^co_m_/.test(item)) return SATC + '?i=' + encodeURIComponent(item) + '&z={z}&x={x}&y={y}';
+    return PC_API + '/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=naip&item=' + encodeURIComponent(item) + '&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png';
+  }
   function satSet(v) { try { localStorage.setItem('sixfold.rounds.sat2', v === true ? '1' : v === false ? '0' : String(v)); } catch (e) {} }
   function satSearch(cb) {
     if (S.satId) return cb(S.satId);
@@ -18567,7 +18580,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (m !== '0' && !photo) satSearch(function (id) {
         if (photo || mode() === '0' || !map._container || !document.body.contains(map._container)) return;
         if (!id) { gaveUp = true; paint(); apply(); satNote(map, SAT_NONE); return; }   /* no mosaic for this place (outside the fallback's state, register down): say so, no grey (2026-10-30 audit) */
-        photo = L.tileLayer(PC_API + '/data/v1/mosaic/' + id + '/tiles/WebMercatorQuad/{z}/{x}/{y}?collection=naip&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png',
+        photo = L.tileLayer(satMosaicTiles(id),
           { minZoom: 13, maxNativeZoom: 18, maxZoom: 21, zIndex: 3, attribution: 'USDA NAIP 2023 aerial photos (public domain), Microsoft Planetary Computer' });
         photo.on('tileloadstart', function () { asked++; });
         photo.on('tileerror', function () { fails++; if (photo && (fails === 15 || (!everLoaded && fails >= 6 && fails >= asked))) { map.removeLayer(photo); photo = null; gaveUp = true; paint(); apply(); satNote(map, SAT_SLOW); toast('Aerial photos are slow right now', 'Showing the street map. Tap Photo to try again.'); } });   /* not remembered (2026-10-18) */
@@ -21120,8 +21133,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         map.setView([d.lat, d.lon], zoomFor(d.acres));
         naipItem(d).then(function (it) {
           if (LOT !== mine) return;
-          L.tileLayer(PC_API + '/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=naip&item=' + encodeURIComponent(it.id) +
-            '&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png', { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
+          L.tileLayer(satItemTiles(it.id), { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
           got.photo = true; got.year = it.year; say();
         }).catch(function () { got.photo = false; say(); });
         parcelAt(d.lon, d.lat, MK().parcels).then(function (geo) {
@@ -21184,8 +21196,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var f = (j.features || []).sort(function (a, b) { return a.properties.gsd - b.properties.gsd; })[0];
           if (!f) throw new Error('no photo');
           st.year = String(f.properties.datetime).slice(0, 4);
-          L.tileLayer(PC_API + '/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=naip&item=' + encodeURIComponent(f.id) +
-            '&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png', { maxZoom: 21, maxNativeZoom: 19, minZoom: 12,
+          L.tileLayer(satItemTiles(f.id), { maxZoom: 21, maxNativeZoom: 19, minZoom: 12,
             attribution: 'USDA NAIP ' + st.year + ' (public domain)' }).addTo(map);
           st.photo = true; setCap();
         })
