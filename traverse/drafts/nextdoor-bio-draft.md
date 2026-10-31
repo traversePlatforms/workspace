@@ -4,15 +4,19 @@ Draft only. Nothing posted or saved to Nextdoor. Paste it in yourself.
 
 Who reads it: owners of local field-sales companies (roofing, lawn and landscape, solar, pest, security) who open the page after you message them. Neighbours will see it too, so it stays plain.
 
-Nextdoor's business page has a short description in **Business info** and a longer **Your Story** section. I found no published character limit for either, so both are kept short.
+Nextdoor's business page has a short description in **Business info** and a longer **Your Story** section. **The limit is 500 characters** (Matthew, 31 Oct; not published in Nextdoor's help pages). Both versions below fit: Business info 233, Your Story 484.
 
 ---
 
-## Business info (short description)
+## Business info (short description, 233 characters)
 
 Traverse is a territory sales platform, built in Colorado, for roofing, lawn and landscape, solar, pest and security companies. Properties, phone calls, quotes, jobs and the office in one app, carrying your company's logo and colors.
 
-## Your Story
+## Your Story (484 characters)
+
+I'm Matthew. I built Traverse in Colorado for companies that sell door to door. It puts the whole day in one app: the homes in your territory, calls and follow-ups, quotes signed on the homeowner's phone, the job schedule and the office. It works offline, in English or Spanish. We've mapped more than 1.2 million Colorado homes, with the facts for your trade. Every plan has every feature and a 7-day money-back guarantee. Book a demo at traverseplatforms.com or call (303) 596-9515.
+
+## First, longer Your Story (too long for the 500 limit; kept for the cut lines)
 
 I'm Matthew. I built Traverse here in Colorado for companies that sell and work door to door.
 
@@ -41,6 +45,8 @@ Book a demo at traverseplatforms.com or call (303) 596-9515.
 
 ## Lines cut, and why
 
+- To fit 500 characters (31 Oct): the per-trade examples (hail and roof age, lawn size, sun-facing roof area), "your logo", "appointments", "a deposit", "you deal with me directly", and the phone-and-computer line.
+
 - "Built for crews of one to ten." Cut because it states a headcount and a limit, which you take out of copy.
 - Founding price ($59 a month for Duo, 25% off the first 12 months). Cut because prices can change and a stale price on a page you don't check often is a risk. It can go back in if you want the number up front.
 - "A client has had success with it." Cut to keep the bio short. If it goes back in, use exactly that wording, with no trade named.
@@ -61,6 +67,6 @@ Book a demo at traverseplatforms.com or call (303) 596-9515.
 | Phone (303) 596-9515 | Traverse-only number since 13 Oct | Verified |
 | hello@traverseplatforms.com | Homepage FAQ | Verified |
 | Nextdoor field names (Business info, Your Story) | help.nextdoor.com "Edit your business page information" | Verified 31 Oct |
-| Character limits | Not published on help.nextdoor.com or business.nextdoor.com | Unresolved: check when pasting |
+| Character limit 500 | Matthew, from the Nextdoor page itself (not published in the help pages) | Confirmed 31 Oct |
 
 Wording checks: no data sources named, no client named, no trade singled out as proof, no "no answer" or other negative outcome, no prices.
