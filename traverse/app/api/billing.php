@@ -10,7 +10,7 @@ declare(strict_types=1);
  * (rounds.php ?action=billinghook, the Stripe-Signature checked), and the plan, seats, status and renewal date are kept
  * in sixfold-data/rounds/billing.json. The card, invoices and cancelling happen in Stripe's own customer portal
  * ("Manage billing"). Plan and seat changes go through Traverse (hello@, or the Billing screen's request, billingask): the portal
- * cannot change a subscription made of several prices. Customers read the plans as Solo, Team and Company (2026-10-30); the keys stay
+ * cannot change a subscription made of several prices. Customers read the plans as Duo, Team and Company (2026-10-30; Duo = the admin and one worker, named so the evening of 30 Oct); the keys stay
  * solo, crew and team.
  *
  * ---- THE PLANS (Matthew 2026-10-26, traverse/research/pricing-2026-10-26/PRICING-RECOMMENDATION.md) ------------------
@@ -386,7 +386,7 @@ function billingRefundCancel(array $c, string $by): array {
 }
 /** what the admin sees: the subscription, seats used against seats paid, and the one warning that applies */
 /** a plan as customers read it (2026-10-30): the keys stay solo, crew, team */
-function billingPlanName(string $k): string { return ['solo' => 'Solo', 'crew' => 'Team', 'team' => 'Company'][$k] ?? ucfirst($k); }
+function billingPlanName(string $k): string { return ['solo' => 'Duo', 'crew' => 'Team', 'team' => 'Company'][$k] ?? ucfirst($k); }
 const BILLING_CONTACT = 'hello@traverseplatforms.com';   /* plan and people changes (2026-10-30: was billing@) */
 /** a client install made by the website's checkout (features.clientstart): it paid on the website, so its Billing has no plan picker */
 function billingClient(): bool { return function_exists('feature') && feature('clientstart'); }
@@ -449,7 +449,7 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if ($price === '') return ['error' => 'That plan is not offered ' . $ivWord . ' yet.'];
     if ($seats < 1 || $seats > BILLING_SEATS_MAX) return ['error' => 'People: 1 to ' . BILLING_SEATS_MAX . '.'];
     $inc = (int) ($c['included'][$plan] ?? 1);
-    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Solo is for one admin and one worker. Team covers up to ' . (int) $c['included']['crew'] . ' workers.'];
+    if ($plan === 'solo' && $seats > $inc) return ['error' => 'Duo is for one admin and one worker. Team covers up to ' . (int) $c['included']['crew'] . ' workers.'];
     /* founding by real prices (2026-10-29): the founding price ids in place of the list ones, no coupon; the schedule steps up after 12 months */
     $byPrice = billingFoundingByPrice($c, $plan, $iv, $seats > $inc, $addon) && !billingUplift($c);
     if ($byPrice) { $c['prices'] = array_replace_recursive($c['prices'], array_map(fn($ivs) => array_filter((array) $ivs), array_intersect_key((array) $c['prices_founding'], array_flip(BILLING_FOUNDING_KEYS)))); $price = (string) $c['prices'][$plan][$iv]; }

@@ -47,14 +47,14 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
 </div></header>
 <main>
   <h1>Find my app</h1>
-  <p class="lead">Each company has its own link to its app. Type the email you sign in with and we'll send your link to it.</p>
+  <p class="lead">Each link is unique. Type the email you sign in with and we'll send yours to it.</p>
   <form class="card" id="f" novalidate>
     <label>Email<input type="email" id="email" autocomplete="email" required></label>
     <span class="hp" aria-hidden="true"><input name="website" id="website" tabindex="-1" autocomplete="off"></span>
     <button class="go" id="b" type="submit">Email me my link</button>
     <p class="msg" id="m" role="status"></p>
   </form>
-  <p class="small">No email arrived after a few minutes? Check spam, ask your company's admin, or email <a href="mailto:support@traverseplatforms.com">support@traverseplatforms.com</a>.</p>
+  <p class="small">Nothing after a few minutes? Check spam and the spelling, ask your admin, or email <a href="mailto:hello@traverseplatforms.com">hello@traverseplatforms.com</a>.</p>
 </main>
 <script>
 (function () {
@@ -63,11 +63,14 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
   f.addEventListener('submit', function (e) {
     e.preventDefault();
     var v = em.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { say('That email address does not look right.', 'bad'); em.focus(); return; }
+    /* the shape of an address before anything is sent (2026-10-30, Matthew): one @, no spaces, a domain with a dot and a 2+ letter ending,
+       no dot next to the @ or doubled. Says nothing about whether the address is known: that answer is the same for everyone. */
+    var shape = /^[^\s@]+@[^\s@.][^\s@]*\.[a-zA-Z]{2,}$/.test(v) && !/\.\.|\.@|@\./.test(v) && v.length <= 160;
+    if (!shape) { say(v.indexOf('@') < 0 ? 'An email address needs an @ sign, like name@company.com.' : 'That email address does not look right. Check the part after the @, like company.com.', 'bad'); em.focus(); return; }
     b.disabled = true; say('Sending…');
     fetch('../api/traverse-findapp.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: v, hp: document.getElementById('website').value, t: Date.now() - T0 }) })
       .then(function (r) { return r.json(); })
-      .then(function (j) { b.disabled = false; if (j && j.ok) { say(j.said || "If that email has a Traverse account, we've sent the link to it.", 'ok'); f.reset(); } else say((j && j.error) || 'That did not go through. Try again.', 'bad'); })
+      .then(function (j) { b.disabled = false; if (j && j.ok) { say(j.said || "If that address is on an app, the link is on its way. Nothing arrived? Check the spelling, or ask your admin.", 'ok'); f.reset(); } else say((j && j.error) || 'That did not go through. Try again.', 'bad'); })
       .catch(function () { b.disabled = false; say('No connection. Try again.', 'bad'); });
   });
 })();

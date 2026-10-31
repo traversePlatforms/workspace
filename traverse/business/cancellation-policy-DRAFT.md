@@ -33,7 +33,7 @@ Companies that sign up in our first year get 25% off their first 12 months. Thei
 
 ### Seats
 
-One plan per company. Every plan includes one admin account plus its people: Solo 1 person, Team up to 5, Company up to 12. To add or remove seats, email **billing@traverseplatforms.com**; seats don't change on their own. An added seat is billed for the rest of the current period. A removed seat comes off from your next bill.
+One plan per company. Every plan includes one admin account plus its people: Duo 1 person, Team up to 5, Company up to 12. To add or remove seats, email **billing@traverseplatforms.com**; seats don't change on their own. An added seat is billed for the rest of the current period. A removed seat comes off from your next bill.
 
 ### If a payment fails
 
@@ -56,7 +56,7 @@ Questions: **billing@traverseplatforms.com** or (303) 596-9515.
 
 | Claim | Matches | Result |
 |---|---|---|
-| Yearly 20% less | Homepage and billing.php display prices, 30 Oct plans Solo / Team / Company ($79 vs $99, $199 vs $249, $439 vs $549 a month; extra people $35 vs $45, $29 vs $39) | Verified: base prices 20% (20.2%, 20.1%, 20.0%); extra people 22–26% |
+| Yearly 20% less | Homepage and billing.php display prices, 30 Oct plans Duo / Team / Company ($79 vs $99, $199 vs $249, $439 vs $549 a month; extra people $35 vs $45, $29 vs $39) | Verified: base prices 20% (20.2%, 20.1%, 20.0%); extra people 22–26% |
 | Faults: 30 days to fix, then pro-rata refund | Subscription agreement §14.1 | Matches the draft |
 | Removed core feature: refund | Subscription agreement §2.6 | Matches the draft |
 | Charged at checkout; set up after payment (no set-up time promised, 30 Oct); 7-day money-back from go-live, once | Matthew 2026-10-27 (replaces the free 7-day pilot); billing.php: no trial at checkout, paid_at on the first paid subscription event, live_at from Traverse's Mark live, refund only by Traverse within the window; subscription agreement §9.3 | Verified against the code; **attorney to confirm the wording** |

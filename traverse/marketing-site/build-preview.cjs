@@ -128,9 +128,24 @@ html{scroll-behavior:smooth}
   .seerow figure:last-child{max-width:300px;margin:0 auto !important}
   #more h2,#faq h2,#contact h2,#brand h2{font-size:32px !important}
   .ctacard{padding:40px 22px !important}
-  .ctacard > svg{width:100% !important;opacity:.5 !important}
+  /* the closing card's screenshot sits under the words on a phone, as a band along the bottom */
+  .ctacard{padding-bottom:230px !important}
+  .ctacard > .ctashot{right:22px !important;left:22px;top:auto !important;bottom:-10px;width:auto !important;max-width:none !important;height:200px !important;border-radius:12px 12px 0 0 !important;border-right:1px solid rgba(255,255,255,0.18) !important}
   .nowall p{font-size:18px !important}
   .brandart{height:390px !important}
+  /* phones (Matthew 2026-10-30): the whole-day topics and the More-than-a-map tiles read too long, so each one closes to its title and opens
+     on a tap; the script marks them .fold and adds the button. Desktop unchanged (the class only acts here). */
+  .fold .foldbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+  .fold .foldbtn .foldi{flex:none;display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#f4f6f9;color:#d6400c;font-size:20px;line-height:1;transition:transform .2s ease}
+  .fold[aria-expanded="false"] > p,.fold[aria-expanded="false"] > div:last-child{display:none !important}
+  .fold[aria-expanded="true"] .foldi{transform:rotate(45deg)}
+  .dayitem.fold{gap:8px !important;padding:12px 0 !important;border-bottom:1px solid #dce2ea}
+  .daycol-l .dayitem.fold .foldbtn > div{flex-direction:row-reverse}
+  .daycol.fold-list{gap:0 !important}
+  .moregrid > div.fold{flex-direction:column !important;gap:8px !important;padding:12px 0 !important;border-bottom:1px solid #dce2ea}
+  .moregrid > div.fold .foldbtn{gap:14px}
+  .moregrid > div.fold > div:last-child{padding-left:54px}
+  .moregrid.fold-list{gap:0 !important}
 }
 /* contact (2026-10-30): the words over the three cards on narrow screens; the cards lift a little on hover */
 @media (max-width:860px){.contactrow{grid-template-columns:minmax(0,1fr) !important;gap:28px !important}}
@@ -216,6 +231,38 @@ a[href="demo/"]:hover,a[href="#trades"][style*="border"]:hover{translate:0 -2px;
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
 </style>`;
 /* 2026-10-30: the lost-link form left the homepage; it is the Find my app page now (site-src/find/, api/traverse-findapp.php) */
+/* the footer's socials row (Matthew 2026-10-30): [label, url] pairs; empty = the row stays out of the page. Fill in when the accounts exist. */
+const SOCIALS = [];
+const socialsHtml = SOCIALS.length ? SOCIALS.map(([label, url]) => `<a href="${url}" rel="noopener" target="_blank" style="display:inline-flex;align-items:center;height:34px;padding:0 12px;border-radius:999px;border:1px solid #33435a;color:#c9d6ea;text-decoration:none;font-size:13px;font-weight:700;">${label}</a>`).join('') : '';
+if (body.split('data-socials').length !== 2) throw new Error('expected one socials row in the footer');
+body = body.replace(/<div class="socials" data-socials style="display: none;/, () => '<div class="socials" data-socials style="display: ' + (SOCIALS.length ? 'flex' : 'none') + ';').replace(/(<div class="socials" data-socials[^>]*>)<\/div>/, (m, open) => open + socialsHtml + '</div>');
+/* the phone collapsibles (2026-10-30): under 760px the whole-day topics and the More tiles close to their titles */
+const foldJs = `<script>
+(function () {
+  var mq = window.matchMedia('(max-width: 760px)'); if (!mq.matches) return;
+  function fold(el, titleEl) {
+    if (!el || !titleEl || el.classList.contains('fold')) return;
+    el.classList.add('fold'); el.setAttribute('aria-expanded', 'false');
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'foldbtn';
+    var head = titleEl.parentNode === el ? titleEl : titleEl;
+    b.appendChild(head); var i = document.createElement('span'); i.className = 'foldi'; i.setAttribute('aria-hidden', 'true'); i.textContent = '+'; b.appendChild(i);
+    el.insertBefore(b, el.firstChild);
+    b.setAttribute('aria-expanded', 'false');
+    b.addEventListener('click', function () { var open = el.getAttribute('aria-expanded') !== 'true'; el.setAttribute('aria-expanded', String(open)); b.setAttribute('aria-expanded', String(open)); });
+  }
+  /* the whole day: the title row (icon + h3) becomes the button, the paragraph folds */
+  Array.prototype.forEach.call(document.querySelectorAll('.dayitem'), function (it) { var row = it.querySelector(':scope > div'); if (row) { fold(it, row); } });
+  Array.prototype.forEach.call(document.querySelectorAll('.daycol'), function (c) { c.classList.add('fold-list'); });
+  /* more than a map: icon + bold title become the button, the description folds; the title is moved out of its text block */
+  Array.prototype.forEach.call(document.querySelectorAll('.moregrid > div'), function (it) {
+    var icon = it.children[0], txt = it.children[1], title = txt && txt.querySelector('b'); if (!icon || !txt || !title) return;
+    var head = document.createElement('span'); head.style.cssText = 'display:flex;align-items:center;gap:14px;min-width:0;';
+    head.appendChild(icon); head.appendChild(title);
+    fold(it, head);
+  });
+  var mg = document.querySelector('.moregrid'); if (mg) mg.classList.add('fold-list');
+})();
+</script>`;
 const motionJs = `<script>
 (function () {
   // open at the top: a reload or Back lands on the hero, and page links don't leave a #section in the address
@@ -341,6 +388,7 @@ ${motionHead}
 <body>
 ${body}
 ${menuJs}
+${foldJs}
 ${motionJs}
 </body>
 </html>

@@ -145,8 +145,8 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
   var $ = function (id) { return document.getElementById(id); };
   var Q = new URLSearchParams(location.search), C = Q.get('c') || '', CS = Q.get('cs') || '';
   var W = null, mode = 'radius', picked = {}, logoData = '', pollT = null;
-  /* customers read the trade ("Yards" is Lawn & Landscape) and Solo / Team / Company; the keys stay as billing has them (2026-10-30) */
-  var TRADE = { roofing: 'Roofing', yards: 'Lawn & Landscape', solar: 'Solar', pest: 'Pest', security: 'Security' }, PLAN = { solo: 'Solo', crew: 'Team', team: 'Company' };
+  /* customers read the trade ("Yards" is Lawn & Landscape) and Duo / Team / Company; the keys stay as billing has them (2026-10-30) */
+  var TRADE = { roofing: 'Roofing', yards: 'Lawn & Landscape', solar: 'Solar', pest: 'Pest', security: 'Security' }, PLAN = { solo: 'Duo', crew: 'Team', team: 'Company' };
   function tradeOf(j) { return TRADE[j.edition] || String(j.editionName || '').replace('Traverse', ''); }
   var SW = ['#1f6feb', '#13294b', '#2f7a3a', '#b42318', '#d6400c', '#7a3fa3', '#1b6f7a', '#8f5e00', '#0f1b2d'];
   function call(action, body) {
