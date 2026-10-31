@@ -489,6 +489,8 @@ function tcArea(array $c, string $cid, string $cs, array $in): array {
 function tcBrand(array $c, string $cid, string $cs, array $in): array {
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know.', 'code' => 404];
+    /* paid first, as the area step (review 2026-10-31: the session id is in Stripe's own checkout address, so an unpaid visitor knew the link and could park logo files here) */
+    if (empty($p['paid_at']) && !tcSessionPaid(tcSessionGet($c, $cs), $cid)) return ['error' => 'We have not seen this payment go through yet. Wait a moment and try again.', 'code' => 402];
     $color = strtolower(trim((string) ($in['color'] ?? '')));
     if (!preg_match('/^#[0-9a-f]{6}$/', $color)) return ['error' => 'Pick your brand color.', 'field' => 'color'];
     $logo = tcLogo((string) ($in['logo'] ?? '')); if (isset($logo['error'])) return $logo + ['field' => 'logo'];
@@ -537,7 +539,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     /* the page and API */
     $r = tcRender($e); if (isset($r['error'])) { tcLog(['what' => 'render failed', 'cid' => $cid, 'why' => $r['error']]); return ['error' => 'We could not make your app. We have been told.', 'code' => 500]; }
     /* the logo goes to the install's own upload code (rounds.php logoAdopt -> logoTake), taken on its first company request */
-    if ($logoFile !== '') @copy($logoFile, tcSite() . '/' . $e['priv'] . '/logo-pending.' . $brand['logo']['ext']);
+    if ($logoFile !== '' && !is_file(tcSite() . '/' . $e['priv'] . '/logo-pending.' . $brand['logo']['ext'])) @copy($logoFile, tcSite() . '/' . $e['priv'] . '/logo-pending.' . $brand['logo']['ext']);   /* the pending copy is removed once the install is live (below) */
 
     /* sign-ins: Traverse's super line(s) under the names the edition uses (so the Edition and Clients pickers' hop finds them), and the admin */
     $supers = []; $ef = tcSite() . '/' . $edj['priv'] . '/rounds-codes.php';
@@ -558,12 +560,15 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
        (rounds.php termsState reads accounts "terms"; a newer version than the one accepted still asks) */
     $adminId = substr(hash_hmac('sha256', 'code|' . $adminCode, $key), 0, 20); $ag = (array) ($p['agreed'] ?? []);
     /* + the admin's email and password (2026-10-29, Matthew: "the admin who bought also gets email + password from the welcome page"): rounds.php pwsignin */
+    $login = [$adminId => ['email' => $v['email'], 'hash' => password_hash($v['password'], PASSWORD_DEFAULT), 'at' => time()]];
     if (!is_file($priv . '/rounds-accounts.json')) {
-        tcWrite($priv . '/rounds-accounts.json', (string) json_encode(['people' => new stdClass(), 'off' => new stdClass(), 'over' => new stdClass(),
-            'login' => [$adminId => ['email' => $v['email'], 'hash' => password_hash($v['password'], PASSWORD_DEFAULT), 'at' => time()]]]
+        tcWrite($priv . '/rounds-accounts.json', (string) json_encode(['people' => new stdClass(), 'off' => new stdClass(), 'over' => new stdClass(), 'login' => $login]
             + (($ag['terms'] ?? '') !== '' ? ['terms' => [$adminId => ['t' => (string) $ag['terms'], 'a' => (string) ($ag['agreement'] ?? ''), 'at' => (int) ($ag['at'] ?? time())]]] : []), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), 0600);
         if (($ag['terms'] ?? '') !== '') @file_put_contents($priv . '/terms-accept.log', json_encode(['name' => $v['admin'], 'id' => $adminId, 'role' => 'admin', 'terms' => (string) $ag['terms'], 'agreement' => (string) ($ag['agreement'] ?? ''),
             'ip' => (string) ($ag['ip'] ?? ''), 'ua' => 'website checkout', 'at' => (int) ($ag['at'] ?? time())], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+    } else {   /* a retry after a failure part way: the email and password typed this time are the ones that sign in (review 2026-10-31; the admin's name is re-taken above the same way) */
+        $acc = tcJson($priv . '/rounds-accounts.json'); $acc['login'] = (array) ($acc['login'] ?? []); $acc['login'][$adminId] = $login[$adminId];
+        tcWrite($priv . '/rounds-accounts.json', (string) json_encode($acc, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), 0600);
     }
     tcWrite($priv . '/billing-config.php', "<?php\n/* this client install's Stripe config: the shared one (keys, prices, the central webhook's secret) under its own id (2026-10-29) */\n\$c = (array) (require dirname(__DIR__) . '/traverse-shared/clients/billing-config.php');\n\$c['install'] = " . var_export($cid, true) . ";\n\$c['return_url'] = " . var_export($e['url'], true) . ";\nreturn \$c;\n", 0600);
 
@@ -610,6 +615,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
            'live_at' => (int) ($b['live_at'] ?? 0)];
     tcRegSave(function ($all) use ($cid, $e) { $all[$cid] = array_replace($all[$cid] ?? [], $e); return $all; });
     tcPendSave($cid, fn($x) => $x + ['provisioned_at' => time()]);
+    if ($logoFile !== '') @unlink($logoFile);   /* the welcome page's copy has been handed to the install (review 2026-10-31: it was kept for good) */
     tcLog(['what' => 'provisioned', 'cid' => $cid, 'edition' => $ed, 'folder' => $e['folder'], 'live' => !empty($b['live_at'])]);
     if ($lock) { flock($lock, LOCK_UN); fclose($lock); }
     return ['ok' => true, 'code' => $adminCode, 'pass' => $pass] + tcReadyInfo($e, $adminCode);
@@ -683,7 +689,9 @@ function tcRemind(): int {
     $n = 0;
     foreach (glob(tcDir() . '/pending/c*.json') ?: [] as $f) {
         $p = tcJson($f);
-        if (empty($p['paid_at']) && empty($p['events']) && empty($p['area']) && empty($p['provisioned_at']) && (int) ($p['created'] ?? 0) < time() - 14 * 86400) { @unlink($f); @unlink($f . '.lock'); continue; }   /* a checkout started and never paid: gone after two weeks */
+        if (empty($p['paid_at']) && empty($p['events']) && empty($p['area']) && empty($p['provisioned_at']) && (int) ($p['created'] ?? 0) < time() - 14 * 86400) {   /* a checkout started and never paid: gone after two weeks, its logo too */
+            @unlink($f); @unlink($f . '.lock'); foreach (['png', 'jpg', 'svg'] as $x) @unlink(substr($f, 0, -5) . '-logo.' . $x); continue;
+        }
         if (empty($p['paid_at']) || !empty($p['provisioned_at']) || empty($p['email'])) continue;
         $sent = (array) ($p['reminded'] ?? []); $last = $sent ? max($sent) : (int) $p['paid_at'];
         if (count($sent) >= 3 || time() - $last < 86400) continue;
