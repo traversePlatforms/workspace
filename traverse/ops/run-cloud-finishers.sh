@@ -23,7 +23,10 @@ rm -f "$ST/running.lock"
 FAILED=""
 # never pull a stage back over the phone hotspot (2026-10-29: Group 3 copies back gigabytes; memory: SSID "iPhone" = no heavy downloads)
 if netsh wlan show interfaces 2>/dev/null | tr -d "" | grep -qE "^ +SSID +: iPhone$"; then echo "cloud finish: on the phone hotspot, waiting for Wi-Fi"; exit 0; fi
-for name in layers group1 material g1fix g2b photos g3b g3hail hailhours; do
+# g2mat, centlawn, commercial (2026-10-31 overnight queue, traverse/data-pipeline/door-territory/overnight/queue-1031-vm.sh on the VM as
+# ~/run/ovn1031/queue.sh): Larimer roof material to Roofing + Solar; Centennial's no-lot doors measured again with yard v2 (Sixfold +
+# editions); the internal commercial building list (never uploaded). Each is ready only when ~/run/ovn1031/<stage>.vmdone exists.
+for name in layers group1 material g1fix g2b photos g3b g3hail hailhours g2mat centlawn commercial; do
   [ -f "$ST/$name.done" ] && continue
   tries=$(cat "$ST/$name.tries" 2>/dev/null || echo 0)
   [ "$tries" -ge 3 ] && { FAILED="$FAILED $name"; continue; }
@@ -37,13 +40,14 @@ for name in layers group1 material g1fix g2b photos g3b g3hail hailhours; do
     g3b) VMQ='group3 B: measuring done';;   # Group 3 stage B (Matthew 29 Oct: "add the group 3"); finish-g3b-2026-10-29.sh
     g3hail) VMQ='';;   # storm history for the Group 3 towns (Matthew 29 Oct); finish-g3hail-2026-10-29.sh starts its own cloud job, so it waits for g3b here, not for the VM
     hailhours) VMQ='';;   # the hail hours for every town and day (Matthew 29 Oct); finish-hailhours-2026-10-29.sh starts its own cloud job, after g3hail here
+    g2mat|centlawn|commercial) VMQ='^NEVER-MATCHES$';;   # the VM's .vmdone file only (below); finish-<stage>-2026-10-31.sh
   esac
   if [ "$name" = g3hail ]; then
     [ -f "$ST/g3b.done" ] || { echo "cloud finish: waiting for g3hail (after g3b)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   elif [ "$name" = hailhours ]; then
     [ -f "$ST/g3hail.done" ] || { echo "cloud finish: waiting for hailhours (after g3hail)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   else
-    ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "grep -qE '$VMQ' ~/run-status.txt || test -f ~/run/group1/$name.vmdone || test -f ~/run/group2/$name.vmdone || { [ $name = g3b ] && test -f ~/run/group3/g3stageb.vmdone; }" < /dev/null 2>/dev/null || { echo "cloud finish: waiting for $name${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
+    ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "grep -qE '$VMQ' ~/run-status.txt || test -f ~/run/group1/$name.vmdone || test -f ~/run/group2/$name.vmdone || test -f ~/run/ovn1031/$name.vmdone || { [ $name = g3b ] && test -f ~/run/group3/g3stageb.vmdone; }" < /dev/null 2>/dev/null || { echo "cloud finish: waiting for $name${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   fi
   echo $((tries + 1)) > "$ST/$name.tries"
   (

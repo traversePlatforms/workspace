@@ -674,13 +674,17 @@
   "crops": 244,
   "clear_crops": 211,
   "usable_crops": 211,
-  "county": 60,
-  "imagery": 58,
-  "guess": 89,
-  "labelled": 118,
-  "share": 0.047,
+  "county": 4378,
+  "imagery": 3,
+  "guess": 1,
+  "labelled": 4381,
+  "share": 0.989,
   "by_class": {
-   "asphalt": 207
+   "asphalt": 4138,
+   "tile": 182,
+   "metal": 3,
+   "shake": 53,
+   "flat": 6
   }
  },
  "g1-brook-forest": {
@@ -1846,6 +1850,250 @@
    "metal": 7,
    "shake": 68,
    "flat": 2
+  }
+ },
+ "g2-fort-collins": {
+  "doors": 32009,
+  "structural_data": true,
+  "crops": 32006,
+  "clear_crops": 31558,
+  "usable_crops": 31558,
+  "county": 31322,
+  "imagery": 223,
+  "guess": 436,
+  "labelled": 31545,
+  "share": 0.999,
+  "by_class": {
+   "asphalt": 28289,
+   "shake": 3312,
+   "flat": 176,
+   "metal": 77,
+   "tile": 127
+  }
+ },
+ "g2-loveland": {
+  "doors": 21703,
+  "structural_data": true,
+  "crops": 21703,
+  "clear_crops": 20732,
+  "usable_crops": 20732,
+  "county": 21272,
+  "imagery": 140,
+  "guess": 260,
+  "labelled": 21412,
+  "share": 0.999,
+  "by_class": {
+   "asphalt": 20243,
+   "metal": 61,
+   "tile": 275,
+   "shake": 1011,
+   "flat": 82
+  }
+ },
+ "g2-wellington": {
+  "doors": 3224,
+  "structural_data": true,
+  "crops": 3224,
+  "clear_crops": 0,
+  "usable_crops": 0,
+  "county": 3173,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 3173,
+  "share": 0.984,
+  "by_class": {
+   "asphalt": 3162,
+   "flat": 2,
+   "metal": 4,
+   "shake": 3,
+   "tile": 2
+  }
+ },
+ "g2-estes-park": {
+  "doors": 1287,
+  "structural_data": true,
+  "crops": 1287,
+  "clear_crops": 1265,
+  "usable_crops": 1265,
+  "county": 1209,
+  "imagery": 4,
+  "guess": 67,
+  "labelled": 1213,
+  "share": 0.995,
+  "by_class": {
+   "asphalt": 1099,
+   "metal": 25,
+   "shake": 127,
+   "tile": 22,
+   "flat": 7
+  }
+ },
+ "g2-timnath": {
+  "doors": 3425,
+  "structural_data": true,
+  "crops": 3425,
+  "clear_crops": 2872,
+  "usable_crops": 2872,
+  "county": 3375,
+  "imagery": 27,
+  "guess": 11,
+  "labelled": 3402,
+  "share": 0.996,
+  "by_class": {
+   "asphalt": 3328,
+   "tile": 78,
+   "metal": 6,
+   "shake": 1
+  }
+ },
+ "g2-red-feather-lakes": {
+  "doors": 90,
+  "structural_data": true,
+  "crops": 90,
+  "clear_crops": 0,
+  "usable_crops": 0,
+  "county": 85,
+  "imagery": 0,
+  "guess": 0,
+  "labelled": 85,
+  "share": 0.944,
+  "by_class": {
+   "metal": 15,
+   "asphalt": 62,
+   "shake": 8
+  }
+ },
+ "g2-laporte": {
+  "doors": 417,
+  "structural_data": true,
+  "crops": 417,
+  "clear_crops": 382,
+  "usable_crops": 382,
+  "county": 400,
+  "imagery": 5,
+  "guess": 10,
+  "labelled": 405,
+  "share": 0.995,
+  "by_class": {
+   "shake": 24,
+   "asphalt": 358,
+   "metal": 28,
+   "flat": 3,
+   "tile": 2
+  }
+ },
+ "g2-fort-collins-rural": {
+  "doors": 4577,
+  "structural_data": true,
+  "crops": 4577,
+  "clear_crops": 4422,
+  "usable_crops": 4422,
+  "county": 4428,
+  "imagery": 50,
+  "guess": 83,
+  "labelled": 4478,
+  "share": 0.997,
+  "by_class": {
+   "metal": 101,
+   "asphalt": 3548,
+   "shake": 780,
+   "tile": 66,
+   "flat": 66
+  }
+ },
+ "g2-loveland-rural": {
+  "doors": 6532,
+  "structural_data": true,
+  "crops": 6532,
+  "clear_crops": 5906,
+  "usable_crops": 5906,
+  "county": 6359,
+  "imagery": 36,
+  "guess": 103,
+  "labelled": 6395,
+  "share": 0.995,
+  "by_class": {
+   "shake": 738,
+   "asphalt": 4876,
+   "metal": 94,
+   "tile": 728,
+   "flat": 62
+  }
+ },
+ "g2-timnath-wellington-rural": {
+  "doors": 1680,
+  "structural_data": true,
+  "crops": 1680,
+  "clear_crops": 1140,
+  "usable_crops": 1140,
+  "county": 1605,
+  "imagery": 2,
+  "guess": 46,
+  "labelled": 1607,
+  "share": 0.984,
+  "by_class": {
+   "asphalt": 1424,
+   "shake": 138,
+   "flat": 12,
+   "metal": 26,
+   "tile": 53
+  }
+ },
+ "g2-estes-park-rural": {
+  "doors": 1367,
+  "structural_data": true,
+  "crops": 1367,
+  "clear_crops": 1335,
+  "usable_crops": 1335,
+  "county": 1341,
+  "imagery": 9,
+  "guess": 13,
+  "labelled": 1350,
+  "share": 0.997,
+  "by_class": {
+   "asphalt": 1114,
+   "flat": 13,
+   "shake": 148,
+   "metal": 79,
+   "tile": 9
+  }
+ },
+ "g2-berthoud-rural": {
+  "doors": 1918,
+  "structural_data": true,
+  "crops": 1918,
+  "clear_crops": 1891,
+  "usable_crops": 1891,
+  "county": 1879,
+  "imagery": 13,
+  "guess": 24,
+  "labelled": 1892,
+  "share": 0.999,
+  "by_class": {
+   "asphalt": 1721,
+   "metal": 43,
+   "shake": 116,
+   "tile": 29,
+   "flat": 7
+  }
+ },
+ "g2-livermore-rural": {
+  "doors": 889,
+  "structural_data": true,
+  "crops": 889,
+  "clear_crops": 125,
+  "usable_crops": 125,
+  "county": 846,
+  "imagery": 2,
+  "guess": 4,
+  "labelled": 848,
+  "share": 0.958,
+  "by_class": {
+   "asphalt": 645,
+   "shake": 32,
+   "metal": 170,
+   "tile": 1,
+   "flat": 4
   }
  }
 }

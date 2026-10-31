@@ -22,7 +22,7 @@ GUESS_MIN = 0.6
 CACHE = HERE / 'cache'
 DATA = HERE.parents[3] / 'app' / 'data' / 'rounds'   # was site/, before the 2026-10-06 reorganisation
 # the counties whose assessor files ../../assessor/build-year.mjs reads (its COUNTY_KEY), and each town's counties
-YEAR_COUNTIES = {'El Paso', 'Douglas', 'Adams', 'Boulder', 'Denver', 'Weld'}
+YEAR_COUNTIES = {'El Paso', 'Douglas', 'Adams', 'Boulder', 'Denver', 'Weld', 'Larimer', 'Mesa'}   # Larimer + Mesa 2026-10-31
 _tc = HERE.parents[1] / 'assessor' / 'town-county.json'
 TOWN_COUNTY = {k: v for k, v in (json.loads(_tc.read_text()) if _tc.exists() else {}).items() if isinstance(v, list)}
 
@@ -88,7 +88,7 @@ def main(towns):
         n_county = sum(1 for d in doors.values() if d['src'] == 'county'); n_guess = sum(1 for d in doors.values() if d['src'] == 'guess'); n_img = len(doors) - n_county - n_guess
         by_cls = {}
         for d in doors.values(): by_cls[d['m']] = by_cls.get(d['m'], 0) + 1
-        out = {'source': 'County assessor roof material where the county records it (county: Douglas, Adams, Boulder, Weld) + USDA NAIP 2023 0.3 m imagery classifier (imagery: tested 96%+ right; guess: its best guess below that); see operations/door-territory/roofs/material/README.md',
+        out = {'source': 'County assessor roof material where the county records it (county: Douglas, Adams, Boulder, Weld, Larimer) + USDA NAIP 2023 0.3 m imagery classifier (imagery: tested 96%+ right; guess: its best guess below that); see operations/door-territory/roofs/material/README.md',
                'built': built, 'classes': {'asphalt': 'composition shingle or roll', 'tile': 'concrete or clay tile', 'shake': 'wood shake', 'metal': 'metal', 'flat': 'built-up or membrane'},
                'thresholds': usable, 'doors': doors}
         (DATA / f'material-{town}.json').write_text(json.dumps(out, separators=(',', ':')))
