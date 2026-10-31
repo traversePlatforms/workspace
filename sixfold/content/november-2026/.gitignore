@@ -1,0 +1,5 @@
+# Anything holding a customer's job photo stays local (customer houses; folder names hold addresses). Drive backup carries them.
+.render/
+photosets/
+posts/*-jp-*.png
+contact-sheet*.png
