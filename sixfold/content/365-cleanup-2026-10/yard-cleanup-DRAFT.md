@@ -6,7 +6,7 @@ Picture: `365-yard-cleanup-prices.png` (1080 x 1350, Facebook/Instagram feed). R
 ## On the picture
 - Kicker: FALL CLEAN-UP (Matthew 31 Oct: his call over the seasonless default; this card is for fall only)
 - Included line (Brad 31 Oct): We get it all: leaves, pine needles and debris, anything that's fallen onto your lawn.
-- Headline: Your yard, cleaned up. (shortened 31 Oct: haul-away is optional)
+- Headline: Your yard, cleaned up, made beautiful again. (Matthew 31 Oct)
 - Photo across the top: a real 365 job (Brad's crew, customer asked at the job), a neat front lawn and rock beds, cropped so no house number, car, plate or person shows. Not presented as a clean-up result.
 - Up to 1/4 acre (up to about 10,900 sq ft of lot): $100–$300
 - 1/4 to 1/2 acre (about 10,900 to 21,800 sq ft): $250–$600

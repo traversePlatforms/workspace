@@ -48,7 +48,7 @@ h1 { position: absolute; left: 76px; right: 76px; top: 330px; font: 800 76px/1.0
 .foot .c { text-align: right; } .foot .c b { display: block; font: 800 46px Outfit, sans-serif; color: #F2C14E; } .foot .c span { font: 700 26px DMSans, sans-serif; }
 </style></head><body><div class="leafbg"></div><div class="photo"></div>
 <div class="top"><div class="kicker">Fall clean-up</div><img class="badge" src="${BADGE}" alt=""></div>
-<h1>Your yard, cleaned up.</h1>
+<h1>Your yard, cleaned up, made beautiful again.</h1>
 <div class="incl"><b>We get it all:</b> leaves, pine needles and debris, anything that’s fallen onto your lawn.</div>
 <div class="tiers">${TIERS.map(([k, d, p]) => `<div class="tier"><div><div class="k">${k}</div><div class="d">${d}</div></div><div class="p">${p}</div></div>`).join('')}</div>
 <div class="haul"><div><div class="k">Haul-away and disposal</div><div class="o">Optional: or we can leave it on your property</div></div><div class="p">$40\u2013$80 a load</div></div>
