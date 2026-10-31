@@ -208,6 +208,14 @@ export const PROJECT = { elpaso: 'CO_Eastern_ElPaso_2018', douglas: 'CO_DRCOG_2_
   larimer: 'CO_CameronPkFire_1_2021|CO_NWCO_2_2020|CO_DRCOG_3_2020|CO_Eastern_B1_2018|CO_DRCOG_2_2020', pueblo: 'CO_Eastern_B5_2018' };
 export const PROJECT_YEAR = { CO_Eastern_ElPaso_2018: 2018, CO_DRCOG_2_2020: 2020, CO_DRCOG_1_2020: 2020, CO_Eastern_B1_2018: 2018,
   CO_CameronPkFire_1_2021: 2021, CO_NWCO_2_2020: 2020, CO_DRCOG_3_2020: 2020, CO_Eastern_B5_2018: 2018 };
+/* More surveys (2026-10-31, the cloud machine's coverage fill, stage newlidar): group2/probe-lidar-g2.mjs found 3DEP surveys in the same
+   Entwine bucket (EPSG:3857, public domain) over towns that read "no LiDAR here" or had no survey. lidar-surveys-extra.json beside this
+   file holds { labels: { label: 'CO_A|CO_B' }, depth: { CO_A: d }, year: { CO_A: y }, towns: { key: label } }; town-surveys.mjs and
+   sample-trees.mjs read its towns. No file, no change. */
+{
+  const f = new URL('./lidar-surveys-extra.json', import.meta.url);   /* on the cloud machine lidar.mjs is a symlink: this is its real folder */
+  if (existsSync(f)) { const x = JSON.parse(readFileSync(f, 'utf8')); Object.assign(PROJECT, x.labels || {}); Object.assign(PROJECT_DEPTH, x.depth || {}); Object.assign(PROJECT_YEAR, x.year || {}); }
+}
 
 /* ---- the measurement on LiDAR -------------------------------------------------------
    Same zones as zones.mjs. The building outline is first slid (up to 4 m each way) to

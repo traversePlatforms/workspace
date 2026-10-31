@@ -33,6 +33,8 @@ const TOWNS = { walden: 'elpaso', monument: 'elpaso', 'palmer-lake': 'elpaso', '
   'cs-northeast': 'elpaso', 'cs-northwest': 'elpaso', 'cs-southeast': 'elpaso', 'cs-southwest': 'elpaso', 'security-widefield': 'elpaso', fountain: 'elpaso' };   /* Springs (2026-10-12): El Paso county scan, as Monument; 8-door check before the overnight run */   /* Yards' new towns (2026-10-11): both read 8 of 8 sample doors in CO_DRCOG_2_2020 */
 /* towns added without editing the list above (2026-10-26, Group 1): town-surveys-extra.json { key: survey } */
 if (existsSync(join(HERE, 'town-surveys-extra.json'))) Object.assign(TOWNS, JSON.parse(readFileSync(join(HERE, 'town-surveys-extra.json'), 'utf8')));
+/* and the towns moved onto more surveys (2026-10-31, stage newlidar; lidar.mjs reads the same file's labels) */
+if (existsSync(join(HERE, 'lidar-surveys-extra.json'))) Object.assign(TOWNS, JSON.parse(readFileSync(join(HERE, 'lidar-surveys-extra.json'), 'utf8')).towns || {});
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const ONLY = arg('town', null), CONC = +arg('conc', 4), LIMIT = +arg('limit', 1e9), BLD = arg('buildings', 'buildings');
 /* --mail: measure the mailing-list properties (../mail/mail-properties.csv, owners who live
