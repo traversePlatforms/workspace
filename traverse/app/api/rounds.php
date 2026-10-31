@@ -11611,7 +11611,7 @@ function syncHookRun(): never {
 /** the link as CSV: a Google Sheet's edit or published link turned into its CSV form; https and a public address only */
 function syncSheetUrl(string $u): string {
     $u = trim($u);
-    if (preg_match('#^https://docs\.google\.com/spreadsheets/d/e/([A-Za-z0-9_-]{20,200})/pub(html)?(\?[^\s#]*)?#', $u, $m)) {
+    if (preg_match('#^https://docs\.google\.com/spreadsheets/d/e/([A-Za-z0-9_-]{20,200})/pub(html)?(\?[^\s\#]*)?#', $u, $m)) {
         parse_str(ltrim($m[3] ?? '', '?'), $q); $gid = isset($q['gid']) && ctype_digit((string) $q['gid']) ? '&gid=' . $q['gid'] : '';
         return 'https://docs.google.com/spreadsheets/d/e/' . $m[1] . '/pub?output=csv' . $gid . (isset($q['single']) ? '&single=true' : '');
     }
