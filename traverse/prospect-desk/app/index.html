@@ -242,8 +242,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   function matchBase(l, f) {
     return (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where) && (!f.grade || f.grade === 'all' || (l.grade || 'C') === f.grade);
   }
-  var hasSoc = function (l) { return !!(l.socials && l.socials.length); };   /* a social page is a way in too (2026-10-26) */
-  function matchReach(l, r) { return r === 'all' ? true : r === 'any' ? (reachN(l) > 0 || hasSoc(l)) : r === 'phone' ? !!l.phone : r === 'email' ? !!l.email : r === 'social' ? hasSoc(l) : (reachN(l) === 0 && !hasSoc(l)); }
+  var hasSoc = function (l) { return !!(l.socials && l.socials.length); };
+  var hasNd = function (l) { return !!(l.socials || []).filter(function (u) { return /nextdoor.com/i.test(u); }).length; };   /* a Nextdoor business page (31 Oct, Matthew: sort by the ones on Nextdoor) */   /* a social page is a way in too (2026-10-26) */
+  function matchReach(l, r) { return r === 'all' ? true : r === 'any' ? (reachN(l) > 0 || hasSoc(l)) : r === 'phone' ? !!l.phone : r === 'email' ? !!l.email : r === 'social' ? hasSoc(l) : r === 'nextdoor' ? hasNd(l) : (reachN(l) === 0 && !hasSoc(l)); }
   function matchSt(l, st) { return st === 'open' ? !isOff(l) : st === 'off' ? isOff(l) : l.status === st; }
 
   /* ---- Prospects ---- */
@@ -257,13 +258,13 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     main.appendChild(chipRow('Where', [['all', 'All']].concat(WHERE.map(function (w) { return [w[0], w[1], cnt(function (l) { return l.where === w[0] && (f.trade === 'all' || l.trade === f.trade) && matchReach(l, f.reach) && matchSt(l, f.st); })]; })), f.where, function (k) { f.where = k; S.sel = null; S.shown = 150; draw(); }));
     /* the rank (2026-10-26): A best fit, then B and C; the reasons are on each company */
     main.appendChild(chipRow('Fit', [['all', 'All'], ['A', 'A: best fit'], ['B', 'B'], ['C', 'C']].map(function (o) { return o[0] === 'all' ? o : o.concat([cnt(function (l) { return (l.grade || 'C') === o[0] && (f.trade === 'all' || l.trade === f.trade) && (f.where === 'all' || l.where === f.where) && matchReach(l, f.reach) && matchSt(l, f.st); })]); }), f.grade, function (k) { f.grade = k; S.sel = null; S.shown = 150; draw(); }));
-    main.appendChild(chipRow('Reach', [['any', 'Any way in'], ['phone', 'Phone'], ['email', 'Email'], ['social', 'Social page'], ['none', 'Nothing yet'], ['all', 'All']].map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, o[0]) && matchSt(l, f.st); })]); }), f.reach, function (k) { f.reach = k; S.sel = null; S.shown = 150; draw(); }));
+    main.appendChild(chipRow('Reach', [['any', 'Any way in'], ['phone', 'Phone'], ['email', 'Email'], ['social', 'Social page'], ['nextdoor', 'Nextdoor'], ['none', 'Nothing yet'], ['all', 'All']].map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, o[0]) && matchSt(l, f.st); })]); }), f.reach, function (k) { f.reach = k; S.sel = null; S.shown = 150; draw(); }));
     var stOpts = [['open', 'Still on the list']].concat(Object.keys(D.statuses).filter(function (k) { return OFF.indexOf(k) < 0; }).map(function (k) { return [k, D.statuses[k]]; })).concat([['off', 'Knocked off']]);
     var stRow = chipRow('Stage', stOpts.map(function (o) { return o.concat([cnt(function (l) { return matchBase(l, f) && matchReach(l, f.reach) && matchSt(l, o[0]); })]); }).filter(function (o) { return o[2] || o[0] === f.st || o[0] === 'open'; }), f.st, function (k) { f.st = k; S.sel = null; S.shown = 150; draw(); });
     main.appendChild(stRow);
     var c = el('div', 'controls'); var q = el('input', 'search'); q.type = 'search'; q.placeholder = 'Search name or town'; q.value = S.q; c.appendChild(q);
     var lab = el('label', 'sortby'); lab.appendChild(el('span', null, 'Sort')); var sel = el('select'); sel.setAttribute('aria-label', 'Sort');
-    [['fit', 'Best fit first'], ['best', 'Our towns and best contact first'], ['name', 'Name A to Z'], ['next', 'Next step soonest'], ['new', 'Newest companies first']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; sel.appendChild(x); }); sel.value = S.sort;
+    [['fit', 'Best fit first'], ['best', 'Our towns and best contact first'], ['name', 'Name A to Z'], ['next', 'Next step soonest'], ['new', 'Newest companies first'], ['nd', 'On Nextdoor first']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; sel.appendChild(x); }); sel.value = S.sort;
     lab.appendChild(sel); c.appendChild(lab); main.appendChild(c);
     var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
     var rows = [];
@@ -272,7 +273,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       rows = L.filter(function (l) { return matchBase(l, f) && matchReach(l, f.reach) && matchSt(l, f.st) && (!qq || (l.name + ' ' + l.city + ' ' + (l.person || '')).toLowerCase().indexOf(qq) >= 0); });
       var byName = function (a, b) { return a.name.localeCompare(b.name); };
       var nx = function (l) { return (l.next && l.next.date) || '9999'; };
-      rows.sort({ fit: function (a, b) { return (b.score || 0) - (a.score || 0) || whereRank(a) - whereRank(b) || reachN(b) - reachN(a) || byName(a, b); }, best: function (a, b) { return whereRank(a) - whereRank(b) || reachN(b) - reachN(a) || byName(a, b); }, name: byName, next: function (a, b) { return nx(a).localeCompare(nx(b)) || byName(a, b); }, 'new': function (a, b) { return String(b.formed || '').localeCompare(String(a.formed || '')) || byName(a, b); } }[S.sort]);
+      rows.sort({ fit: function (a, b) { return (b.score || 0) - (a.score || 0) || whereRank(a) - whereRank(b) || reachN(b) - reachN(a) || byName(a, b); }, best: function (a, b) { return whereRank(a) - whereRank(b) || reachN(b) - reachN(a) || byName(a, b); }, name: byName, next: function (a, b) { return nx(a).localeCompare(nx(b)) || byName(a, b); }, 'new': function (a, b) { return String(b.formed || '').localeCompare(String(a.formed || '')) || byName(a, b); }, nd: function (a, b) { return (hasNd(b) ? 1 : 0) - (hasNd(a) ? 1 : 0) || (b.score || 0) - (a.score || 0) || byName(a, b); } }[S.sort] || byName);
       mail.textContent = 'Email these (' + rows.filter(function (l) { return !l.nomail; }).length + ')';
     }
     function drawRows() {
@@ -342,10 +343,10 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     var eb = el('button', 'lnk', 'Edit the contact details'); eb.type = 'button'; eb.style.display = 'block'; eb.style.marginTop = '6px'; s2.appendChild(eb);
     var ef = el('div', 'form'); ef.hidden = true; ef.style.marginTop = '6px'; s2.appendChild(ef);
     var mkIn = function (lab, v, type) { var w = el('label', null, lab), i = el('input'); i.value = v || ''; if (type) i.type = type; w.appendChild(i); ef.appendChild(w); return i; };
-    var iP = mkIn('Who to ask for', l.person), iT = mkIn('Phone', l.phone, 'tel'), iE = mkIn('Email', l.email, 'email'), iW = mkIn('Website', l.site);
+    var iP = mkIn('Who to ask for', l.person), iT = mkIn('Phone', l.phone, 'tel'), iE = mkIn('Email', l.email, 'email'), iW = mkIn('Website', l.site), iN = mkIn('Nextdoor page', l.nextdoor || ((l.socials || []).filter(function (u) { return /nextdoor.com/i.test(u); })[0] || ''), 'url');
     var es = el('button', 'btn small', 'Save the details'); es.type = 'button'; ef.appendChild(es);
     eb.addEventListener('click', function () { ef.hidden = !ef.hidden; });
-    es.addEventListener('click', function () { save('edit', { id: l.id, person: iP.value, phone: iT.value, email: iE.value, site: iW.value }, 'Details saved'); });
+    es.addEventListener('click', function () { save('edit', { id: l.id, person: iP.value, phone: iT.value, email: iE.value, site: iW.value, nextdoor: iN.value.trim() }, 'Details saved'); });
     d.appendChild(s2);
     /* email this one */
     var s7 = el('div', 'sec'); s7.appendChild(el('h3', null, 'Email'));

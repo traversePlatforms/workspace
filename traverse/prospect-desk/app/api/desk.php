@@ -67,7 +67,8 @@ function state(): array {
             case 'note': if (isset($L[$id])) $L[$id]['notes'][] = ['k' => noteKey($r), 'at' => $r['at'], 'by' => $r['by'], 'note' => $r['note']]; break;
             case 'notedel': if (isset($L[$id])) $L[$id]['notes'] = array_values(array_filter($L[$id]['notes'], fn($n) => $n['k'] !== ($r['nk'] ?? ''))); break;
             case 'next': if (isset($L[$id])) $L[$id]['next'] = $r['next']; break;
-            case 'edit': if (isset($L[$id])) foreach ((array) $r['f'] as $k => $v) if (in_array($k, ['phone', 'email', 'site', 'person', 'name'], true)) { $L[$id][$k] = $v; if ($k === 'email') { $L[$id]['emailOk'] = ''; $L[$id]['emailSrc'] = 'desk'; } } break;
+            case 'edit': if (isset($L[$id])) foreach ((array) $r['f'] as $k => $v) if ($k === 'nextdoor') { $L[$id]['nextdoor'] = (string) $v; $so = array_values(array_filter((array) ($L[$id]['socials'] ?? []), fn($u) => stripos((string) $u, 'nextdoor.com') === false)); if ((string) $v !== '') array_unshift($so, (string) $v); $L[$id]['socials'] = $so; } elseif (in_array($k, ['phone', 'email', 'site', 'person', 'name'], true)) {   /* + nextdoor (31 Oct): their business page, first among the social links */
+                 $L[$id][$k] = $v; if ($k === 'email') { $L[$id]['emailOk'] = ''; $L[$id]['emailSrc'] = 'desk'; } } break;
             case 'sent': if (isset($L[$id])) { $L[$id]['sent'][] = ['at' => $r['at'], 'subject' => $r['subject'], 'to' => $r['to']]; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Emailed: ' . $r['subject']]; } break;
             case 'click': if (isset($L[$id])) { $L[$id]['clicks'] = ($L[$id]['clicks'] ?? 0) + 1; $L[$id]['log'][] = ['at' => $r['at'], 'by' => 'the company', 'what' => 'Clicked ' . (($r['to'] ?? '') === 'demo' ? 'Book a demo' : 'the website') . ' in the email']; } break;   /* 2026-10-30 */
             case 'unsub': if (isset($L[$id])) { $L[$id]['unsub'] = true; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Asked not to be emailed']; } break;
@@ -443,6 +444,7 @@ switch ($action) {
         if (array_key_exists('phone', $body)) $f['phone'] = okPhone(clean($body['phone'], 40));
         if (array_key_exists('email', $body)) { $e = strtolower(clean($body['email'], 120)); if ($e !== '' && !filter_var($e, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.'); $f['email'] = $e; }
         if (array_key_exists('site', $body)) $f['site'] = okSite(clean($body['site'], 160));
+        if (array_key_exists('nextdoor', $body)) { $u = clean($body['nextdoor'], 200); if ($u !== '' && !preg_match('#^https://(www\.)?nextdoor\.com/pages?/[A-Za-z0-9._~%-]+/?(\?\S*)?$#', $u)) fail('That is not a Nextdoor business page link (nextdoor.com/page/...).'); $f['nextdoor'] = $u; }   /* 31 Oct */
         foreach ($f as $k => $v) if ((string) ($L[$k] ?? '') === $v) unset($f[$k]);
         if (!$f) out(['ok' => true, 'same' => true]);
         logAdd(['t' => 'edit', 'id' => $id, 'f' => $f, 'by' => $ME, 'at' => time()]); out(['ok' => true]);
