@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Circle cost</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>body{margin:0}#m{position:absolute;inset:0}</style></head><body><div id="m"></div>
+<script>
+  /* the Office map's drawing, as officeMap() does it: one SVG circleMarker per neighbourhood with a tooltip and a click handler,
+     spread over the Front Range like the real towns. N from ?n= */
+  var N = +(new URLSearchParams(location.search).get('n') || 8619);
+  var map = L.map('m', { zoomControl: true });
+  var t0 = performance.now(), pts = [];
+  var seed = 7; var rnd = function () { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (var i = 0; i < N; i++) {
+    var la = 38.6 + rnd() * 1.6, lo = -105.2 + rnd() * 0.9; pts.push([la, lo]);
+  }
+  map.fitBounds(pts, { padding: [20, 20] });
+  for (var k = 0; k < N; k++) {
+    var m = L.circleMarker(pts[k], { radius: 4 + Math.min(18, Math.sqrt(rnd() * 400) * 0.9), color: '#ffffff', weight: 1.25, fillColor: 'rgba(31,138,76,0.6)', fillOpacity: 1 }).addTo(map);
+    m.bindTooltip('Area ' + k, { direction: 'top' }); m.on('click', function () {});
+  }
+  var tAdd = performance.now() - t0;
+  requestAnimationFrame(function () { requestAnimationFrame(function () {
+    var tPaint = performance.now() - t0;
+    /* one pan, timed to the next two frames */
+    var p0 = performance.now(); map.panBy([200, 0], { animate: false });
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      var tPan = performance.now() - p0, z0 = performance.now(); map.setZoom(map.getZoom() + 1, { animate: false });
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        window.RESULT = { n: N, addMs: Math.round(tAdd), firstPaintMs: Math.round(tPaint), panMs: Math.round(tPan), zoomMs: Math.round(performance.now() - z0), domNodes: document.getElementsByTagName('*').length };
+        document.title = 'done';
+      }); });
+    }); });
+  }); });
+</script></body></html>
