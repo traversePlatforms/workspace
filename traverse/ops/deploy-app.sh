@@ -28,6 +28,8 @@ for f in rounds.php billing.php square-oauth.php webpush.php; do cp_if "$R/app/a
 for f in mail-oauth.php mail-oauth-lib.php care-lib.php; do cp_if "$R/app/api/$f" api; done   # + plans and customer emails (care-lib.php, 2026-10-30), loaded the same way
 # the editions' end-of-day email (2026-10-30): the shared drawing every install's rounds.php loads beside it
 cp_if "$R/app/api/eod-lib.php" api
+# the aerial photo tile cache (TR-52, 2026-10-31): one endpoint every install's page asks (../api/satcache.php), tiles kept in traverse-shared/satcache
+cp_if "$R/app/api/satcache.php" api
 # Facebook lead ads for the editions and client installs (2026-10-30): the one Connect Facebook callback and the library every install loads
 for f in fb-oauth.php fb-leads-lib.php; do cp_if "$R/app/api/$f" api; done
 EDS="tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7"
@@ -74,6 +76,8 @@ done
 for a in rounds traverse-rounds traverse-yards-rounds traverse-solar-rounds traverse-pest-rounds traverse-security-rounds; do
   c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/$a.php?action=leads"); [ "$c" = 401 ] || { echo "  api/$a.php answered $c"; bad=1; }
 done
+# the tile cache refuses anything but a Colorado NAIP tile (400), without fetching (TR-52)
+c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/satcache.php?l=xx&z=1&x=0&y=0"); [ "$c" = 400 ] || { echo "  api/satcache.php answered $c"; bad=1; }
 [ $bad = 0 ] && echo "deploy $LABEL: all checks passed (backup before-$LABEL-$STAMP.tgz)" || { echo "deploy $LABEL: CHECK FAILED"; exit 1; }
 # the towns answer rebuilt now, in the background on the server, so the first phone after a deploy doesn't wait 7-16 s (2026-10-29)
 $SG "f=~/www/traverseplatforms.com/sixfold-tools/regions-warm.php; [ -f \$f ] && (nohup php \$f >> ~/www/traverseplatforms.com/sixfold-data/digest/regions-warm.log 2>&1 &) ; echo '  towns answer: warming in the background'" < /dev/null
