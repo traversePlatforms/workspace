@@ -82,10 +82,13 @@ function secret(): string { $f = DATA_DIR . '/secret.key'; $s = @file_get_conten
 function unsubToken(string $id): string { return substr(hash_hmac('sha256', 'unsub|' . $id, secret()), 0, 20); }
 function firstName(string $person): string { $p = preg_split('/\s+/', trim($person)) ?: []; $f = $p[0] ?? ''; return preg_match('/^[A-Za-z][A-Za-z\'-]{1,30}$/', $f) ? $f : ''; }
 /* the name as people say it (2026-10-27, Matthew's review: "Colorado hail map for Verity Roofing LLC"): the register's legal suffix off
-   (LLC, Inc, Corp, Co, Ltd, PLLC ...), and an ALL-CAPS name in normal case ("FULL CURL ROOFING LLC" -> "Full Curl Roofing") */
+   (LLC, Inc, Corp, Co, Ltd, PLLC ...), and an ALL-CAPS name in normal case ("FULL CURL ROOFING LLC" -> "Full Curl Roofing"). A word of
+   two or three capitals stays as written (2026-10-30: "AP LANDSCAPE" -> "AP Landscape", "JA-MAR ROOFING" -> "JA-MAR Roofing", not "Ap",
+   "Ja-Mar"), unless it is an ordinary short word ("THE", "AND", "PRO" ...), which goes to normal case like the rest. */
+const SHORT_WORDS = ['THE', 'AND', 'FOR', 'OF', 'ALL', 'TOP', 'NEW', 'ONE', 'TWO', 'PRO', 'BIG', 'SKY', 'SUN', 'RED', 'DRY', 'MAX', 'ACE', 'OAK', 'OUR', 'MY', 'GO', 'IN', 'ON', 'AT', 'TO', 'BY', 'UP', 'AN', 'NO', 'OR', 'DO', 'IT', 'WE', 'YOU', 'HIS', 'HER', 'OLD', 'HOT', 'AIR', 'ICE', 'ELK', 'FOX', 'BEE', 'OWL', 'PEAK', 'LOW', 'HIGH', 'MILE', 'ROOF', 'LAWN', 'YARD', 'TREE', 'CO'];
 function spokenName(string $n): string {
     $n = trim(preg_replace('/[\s,.]+(l\.?\s?l\.?\s?c\.?|inc\.?|incorporated|corp\.?|corporation|co\.?|company|ltd\.?|limited|p\.?l\.?l\.?c\.?|l\.?l\.?l\.?p\.?|l\.?l\.?p\.?)\s*$/i', '', trim($n)), " ,.\t");
-    if ($n !== '' && $n === strtoupper($n) && preg_match('/[A-Z]{3,}/', $n)) $n = preg_replace_callback('/\b([A-Z])([A-Z\']*)\b/', fn($m) => $m[1] . strtolower($m[2]), $n);
+    if ($n !== '' && $n === strtoupper($n) && preg_match('/[A-Z]{3,}/', $n)) $n = preg_replace_callback('/\b([A-Z])([A-Z\']*)\b/', fn($m) => (strlen($m[0]) >= 2 && strlen($m[0]) <= 3 && !in_array($m[0], SHORT_WORDS, true)) ? $m[0] : $m[1] . strtolower($m[2]), $n);
     return $n;
 }
 function fill(string $s, array $l): string {
