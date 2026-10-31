@@ -4543,5 +4543,12 @@
  "Import / export": "Importar / exportar",
  "Best neighborhoods to knock next are on Home and in Plan.": "Los mejores vecindarios para tocar después están en Inicio y en Planear.",
  "At the property": "En la propiedad",
- "Bookings made at the property": "Citas hechas en la propiedad"
+ "Bookings made at the property": "Citas hechas en la propiedad",
+ "Play last 2 hours": "Ver las últimas 2 horas",
+ "NOAA weather radar, about every 2 minutes, with what the colors mean.": "Radar del clima de NOAA, cada 2 minutos aproximadamente, con lo que significan los colores.",
+ "NOAA weather radar, about every 2 minutes": "Radar del clima de NOAA, cada 2 minutos aproximadamente",
+ "NOAA NWS MRMS, about every 2 minutes": "NOAA NWS MRMS, cada 2 minutos aproximadamente",
+ "Very light": "Muy ligera",
+ "NWS radar is not answering": "El radar del NWS no responde",
+ "showing the Iowa Mesonet copy instead": "se muestra la copia de Iowa Mesonet"
 }
