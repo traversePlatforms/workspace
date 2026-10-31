@@ -3243,7 +3243,7 @@ function a365Mail(string $to, string $subject, string $text, string $html, array
        beside it and sends nothing. Never set on a live install. */
     if (!empty($c['dryrun'])) return appendLine(dirname(__DIR__, 2) . '/sixfold-private/a365-dryrun.log', ['at' => time(), 'to' => $to, 'subject' => $subject, 'text' => $text, 'html' => $html, 'headers' => $extra]) ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('dryrun', 'could not write the dry-run log');
     /* the sending itself is smtpSend now (2026-10-29, Setup › Email for the editions): for 365, Gmail on 587 as 365aeration.com, exactly as before */
-    return smtpSend(['host' => 'smtp.gmail.com', 'port' => 587, 'user' => (string) $c['user'], 'pass' => (string) $c['pass'], 'domain' => '365aeration.com', 'bcc' => (string) ($c['bcc'] ?? ''),
+    return smtpSend(['host' => 'smtp.gmail.com', 'port' => 587, 'user' => (string) $c['user'], 'pass' => (string) $c['pass'], 'domain' => '365aeration.com', 'bcc' => (string) ($c['bcc'] ?? ''), 'from' => (string) ($c['from'] ?? ''), 'reply_to' => (string) ($c['reply_to'] ?? ''),
                      'from_name' => (string) ($c['from_name'] ?? (company()['a365']['name'] ?? '365 Aeration & Seeding'))], $to, $subject, $text, $html, $extra);
 }
 /** one message over SMTP with a login, text and HTML; never throws. $c: host, port (587 STARTTLS, 465 TLS from the start), user, pass, from_name,
@@ -3282,8 +3282,11 @@ function smtpSend(array $c, string $to, string $subject, string $text, string $h
 function mailMime(array $c, string $to, string $subject, string $text, string $html, array $extra, string $dom): string {
     $eol = "\r\n"; $bd = 'a3' . bin2hex(random_bytes(8));
     /* an empty $html: a plain-text message (Traverse's own notes to Matthew, travMail), one part and no boundary (2026-10-30) */
-    $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) $c['from_name']) . ' <' . $c['user'] . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
+    /* from: a send-as alias of the signed-in mailbox, reply_to: where answers go (2026-10-31, the 365 mailbox signs in as one address and sends as hello@) */
+    $from = filter_var((string) ($c['from'] ?? ''), FILTER_VALIDATE_EMAIL) ? (string) $c['from'] : (string) $c['user'];
+    $h = ['Date: ' . date('r'), 'From: ' . a365MimeH((string) $c['from_name']) . ' <' . $from . '>', 'To: ' . $to, 'Subject: ' . a365MimeH($subject),
           'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $dom . '>', 'MIME-Version: 1.0', $html === '' ? 'Content-Type: text/plain; charset=UTF-8' : 'Content-Type: multipart/alternative; boundary="' . $bd . '"'];
+    if (filter_var((string) ($c['reply_to'] ?? ''), FILTER_VALIDATE_EMAIL)) $h[] = 'Reply-To: ' . $c['reply_to'];
     if ($html === '') $h[] = 'Content-Transfer-Encoding: base64';
     foreach ($extra as $xh) if (is_string($xh) && preg_match('/^[A-Za-z-]{2,40}: [^\r\n]{1,900}$/D', $xh)) $h[] = $xh;
     return implode($eol, $h) . $eol . $eol
