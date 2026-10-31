@@ -1,0 +1,302 @@
+{
+ "01-groups-phone": [
+  "In the field:false",
+  "Office:false",
+  "Sales:false",
+  "Team:false",
+  "Setup:false"
+ ],
+ "01-headings-phone": [],
+ "12-setup-order-phone": [
+  "Accounts",
+  "Newsletter",
+  "Follow-up email",
+  "Company"
+ ],
+ "01-after-reload-phone": [
+  "In the field:false",
+  "Office:true",
+  "Sales:false",
+  "Team:false",
+  "Setup:true"
+ ],
+ "04-nav-phone": {
+  "tab": [
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ],
+  "dnav": [],
+  "tiles": [
+   "Routes"
+  ]
+ },
+ "11-company-scroll-phone": {
+  "homeY": 1242,
+  "companyY": 0,
+  "title": "CompanyHow the app names and shows you"
+ },
+ "13-company-back-phone": {
+  "title": "TraverseRoofingField tools",
+  "screen": "home",
+  "y": 1242
+ },
+ "02-hood-phone": {
+  "open": 1,
+  "title": "HERRING RD 14390–16020Black Forest · 47 doors",
+  "dock": [
+   "Back",
+   "Map",
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ]
+ },
+ "03-card-phone": {
+  "order": [
+   "d-top",
+   "meta",
+   "meta",
+   "bestwhy",
+   "acts",
+   "xt",
+   "factsx"
+  ],
+  "acts": 4,
+  "extras": 5,
+  "lot": false,
+  "photoBtn": true
+ },
+ "05-terr-light-phone": {
+  "card": "rgb(255, 255, 255)",
+  "text": "rgb(29, 42, 28)",
+  "select": "rgb(236, 234, 238)",
+  "selectText": "rgb(29, 42, 28)",
+  "small": null
+ },
+ "05-terr-dark-phone": {
+  "card": "rgb(26, 20, 31)",
+  "text": "rgb(243, 238, 227)",
+  "select": "rgb(21, 16, 24)",
+  "selectText": "rgb(243, 238, 227)",
+  "small": null
+ },
+ "06-office-phone": {
+  "kpiMs": 941,
+  "settledMs": 3397,
+  "requests": 22,
+  "kb": 81,
+  "tiles": 10,
+  "markers": 8619,
+  "mapOn": true,
+  "showBtn": false
+ },
+ "06-clip-phone": {
+  "isolation": "isolate",
+  "z": "0"
+ },
+ "07-error-phone": "timeout: pipeline",
+ "08-customers-io-phone": {
+  "cexpShown": true,
+  "io": []
+ },
+ "09-house-phone": "House lookupAny address in our towns",
+ "10-ads-phone": "Ad performanceFacebook and Instagram, since the ads startedSpentMeta countsLeads in the appJobsBookedCollectedPer leadPer jobInstant Formspend as of Tue 20 Oct$304.1230 leads00$0$0$10.14–Messengerspend as of Tue 20 Oct$541.0751 chats00$0$0$10.61–Both$845.198100$0$0$10.43–Spend and Meta’s counts are ",
+ "01-groups-tablet": [
+  "In the field:false",
+  "Office:false",
+  "Sales:false",
+  "Team:false",
+  "Setup:false"
+ ],
+ "01-headings-tablet": [],
+ "12-setup-order-tablet": [
+  "Accounts",
+  "Newsletter",
+  "Follow-up email",
+  "Company"
+ ],
+ "01-after-reload-tablet": [
+  "In the field:false",
+  "Office:true",
+  "Sales:false",
+  "Team:false",
+  "Setup:true"
+ ],
+ "04-nav-tablet": {
+  "tab": [
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ],
+  "dnav": [],
+  "tiles": [
+   "Routes"
+  ]
+ },
+ "11-company-scroll-tablet": {
+  "homeY": 456,
+  "companyY": 0,
+  "title": "CompanyHow the app names and shows you"
+ },
+ "13-company-back-tablet": {
+  "title": "TraverseRoofingField tools",
+  "screen": "home",
+  "y": 279
+ },
+ "02-hood-tablet": {
+  "open": 1,
+  "title": "HERRING RD 14390–16020Black Forest · 47 doors",
+  "dock": [
+   "Back",
+   "Map",
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ]
+ },
+ "03-card-tablet": {
+  "order": [
+   "d-top",
+   "meta",
+   "meta",
+   "bestwhy",
+   "acts",
+   "xt",
+   "factsx"
+  ],
+  "acts": 4,
+  "extras": 5,
+  "lot": false,
+  "photoBtn": true
+ },
+ "05-terr-light-tablet": {
+  "card": "rgb(255, 255, 255)",
+  "text": "rgb(29, 42, 28)",
+  "select": "rgb(236, 234, 238)",
+  "selectText": "rgb(29, 42, 28)",
+  "small": null
+ },
+ "05-terr-dark-tablet": {
+  "card": "rgb(26, 20, 31)",
+  "text": "rgb(243, 238, 227)",
+  "select": "rgb(21, 16, 24)",
+  "selectText": "rgb(243, 238, 227)",
+  "small": null
+ },
+ "06-office-tablet": {
+  "kpiMs": 779,
+  "settledMs": 2415,
+  "requests": 25,
+  "kb": 3,
+  "tiles": 13,
+  "markers": 8619,
+  "mapOn": true,
+  "showBtn": false
+ },
+ "06-clip-tablet": {
+  "isolation": "isolate",
+  "z": "0"
+ },
+ "07-error-tablet": "timeout: pipeline",
+ "08-customers-io-tablet": {
+  "cexpShown": true,
+  "io": []
+ },
+ "09-house-tablet": "House lookupAny address in our towns",
+ "10-ads-tablet": "Ad performanceFacebook and Instagram, since the ads startedSpentMeta countsLeads in the appJobsBookedCollectedPer leadPer jobInstant Formspend as of Tue 20 Oct$304.1230 leads00$0$0$10.14–Messengerspend as of Tue 20 Oct$541.0751 chats00$0$0$10.61–Both$845.198100$0$0$10.43–Spend and Meta’s counts are ",
+ "01-groups-desktop": [],
+ "01-headings-desktop": [],
+ "12-setup-order-desktop": null,
+ "01-after-reload-desktop": [],
+ "04-nav-desktop": {
+  "tab": [],
+  "dnav": [
+   "TraverseRoofing",
+   "Home",
+   "Doors",
+   "Plan",
+   "Pipeline",
+   "Jobs",
+   "Customers",
+   "Quote builder",
+   "Calendar",
+   "Team",
+   "Office",
+   "73"
+  ],
+  "tiles": []
+ },
+ "11-error-desktop": "timeout: setup",
+ "02-hood-desktop": {
+  "open": 1,
+  "title": "HERRING RD 14390–16020Black Forest · 47 doors",
+  "dock": [
+   "Back",
+   "Map"
+  ]
+ },
+ "03-card-desktop": {
+  "order": [
+   "d-top",
+   "meta",
+   "meta",
+   "bestwhy",
+   "acts",
+   "xt",
+   "factsx"
+  ],
+  "acts": 4,
+  "extras": 5,
+  "lot": true,
+  "photoBtn": false
+ },
+ "05-terr-light-desktop": {
+  "card": "rgb(255, 255, 255)",
+  "text": "rgb(29, 42, 28)",
+  "select": "rgb(236, 234, 238)",
+  "selectText": "rgb(29, 42, 28)",
+  "small": null
+ },
+ "05-terr-dark-desktop": {
+  "card": "rgb(26, 20, 31)",
+  "text": "rgb(243, 238, 227)",
+  "select": "rgb(21, 16, 24)",
+  "selectText": "rgb(243, 238, 227)",
+  "small": null
+ },
+ "06-office-desktop": {
+  "kpiMs": 1267,
+  "settledMs": 2532,
+  "requests": 25,
+  "kb": 5,
+  "tiles": 10,
+  "markers": 8619,
+  "mapOn": true,
+  "showBtn": false
+ },
+ "06-clip-desktop": {
+  "isolation": "isolate",
+  "z": "0"
+ },
+ "07-pipemode-desktop": [
+  "My pipeline (0)",
+  "Full pipeline"
+ ],
+ "08-pipeline-io-desktop": {
+  "jn": false,
+  "jnShown": false,
+  "io": []
+ },
+ "08-customers-io-desktop": {
+  "cexpShown": true,
+  "io": []
+ },
+ "09-error-desktop": "n/a: no House lookup in the computer menu for an admin",
+ "10-ads-desktop": "Ad performanceFacebook and Instagram, since the ads startedSpentMeta countsLeads in the appJobsBookedCollectedPer leadPer jobInstant Formspend as of Tue 20 Oct$304.1230 leads00$0$0$10.14–Messengerspend as of Tue 20 Oct$541.0751 chats00$0$0$10.61–Both$845.198100$0$0$10.43–Spend and Meta’s counts are ",
+ "pageErrors": []
+}

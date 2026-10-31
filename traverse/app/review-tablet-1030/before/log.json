@@ -1,0 +1,457 @@
+{
+ "01-groups-phone": [
+  "Sales:true",
+  "Team:false",
+  "Setup:false"
+ ],
+ "01-headings-phone": [
+  "In the field",
+  "Office"
+ ],
+ "12-setup-order-phone": [
+  "Accounts",
+  "Company",
+  "Setup checklist",
+  "Prices and terms",
+  "Payments",
+  "Email",
+  "Plans",
+  "Customer emails",
+  "Import",
+  "Billing",
+  "Sample property"
+ ],
+ "01-after-reload-phone": [
+  "Sales:true",
+  "Team:false",
+  "Setup:false"
+ ],
+ "04-nav-phone": {
+  "tab": [
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ],
+  "dnav": [],
+  "tiles": [
+   "Routes"
+  ]
+ },
+ "11-company-scroll-phone": {
+  "homeY": 3193,
+  "companyY": 691,
+  "title": "CompanyHow the app names and shows you"
+ },
+ "13-company-back-phone": {
+  "title": "TraverseRoofingField tools",
+  "screen": "home",
+  "y": 0
+ },
+ "11-prices-scroll-phone": {
+  "y": 0,
+  "title": "PricesYour price list, options and automatic adjustments"
+ },
+ "13-prices-back-phone": {
+  "homeY": 1677,
+  "title": "SetupGet ready for your first quote",
+  "home": false,
+  "y": 0,
+  "checklist": 14
+ },
+ "13-checklist-back-phone": {
+  "stepBackToChecklist": true,
+  "checklistBackHome": true
+ },
+ "02-hood-phone": {
+  "open": 1,
+  "title": "HERRING RD 14390–16020Black Forest · 47 properties",
+  "dock": [
+   "Back",
+   "Map",
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ]
+ },
+ "03-card-phone": {
+  "order": [
+   "d-top",
+   "meta",
+   "meta",
+   "bestwhy",
+   "acts",
+   "xt",
+   "factsx"
+  ],
+  "acts": 4,
+  "extras": 5,
+  "lot": false,
+  "photoBtn": true
+ },
+ "05-terr-light-phone": {
+  "card": "rgb(255, 255, 255)",
+  "text": "rgb(29, 42, 28)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(0, 0, 0)",
+  "small": null
+ },
+ "05-terr-dark-phone": {
+  "card": "rgb(26, 20, 31)",
+  "text": "rgb(243, 238, 227)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(255, 255, 255)",
+  "small": null
+ },
+ "06-office-phone": {
+  "kpiMs": 467,
+  "settledMs": 2540,
+  "requests": 19,
+  "kb": 80,
+  "tiles": 10,
+  "markers": 8619,
+  "mapOn": true,
+  "showBtn": false
+ },
+ "06-clip-phone": {
+  "isolation": "auto",
+  "z": "auto"
+ },
+ "07-pipemode-phone": [
+  "My pipeline (0)",
+  "Full pipeline"
+ ],
+ "08-pipeline-io-phone": {
+  "jn": true,
+  "jnShown": true,
+  "io": []
+ },
+ "08-customers-io-phone": {
+  "cexpShown": true,
+  "io": []
+ },
+ "09-house-phone": "Quote builderAny address in our towns",
+ "10-ads-phone": "Adsspend as typed in, since each ad startedNo ad spend typed in yet. Add each ad’s spend and results from the ad platform, and pick where its leads come in; the app works out the cost per lead and per booked job.Update ad spend",
+ "01-groups-tablet": [
+  "Sales:true",
+  "Team:false",
+  "Setup:false"
+ ],
+ "01-headings-tablet": [
+  "In the field",
+  "Office"
+ ],
+ "12-setup-order-tablet": [
+  "Accounts",
+  "Company",
+  "Setup checklist",
+  "Prices and terms",
+  "Payments",
+  "Email",
+  "Plans",
+  "Customer emails",
+  "Import",
+  "Billing",
+  "Sample property"
+ ],
+ "01-after-reload-tablet": [
+  "Sales:true",
+  "Team:false",
+  "Setup:false"
+ ],
+ "04-nav-tablet": {
+  "tab": [
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ],
+  "dnav": [],
+  "tiles": [
+   "Routes"
+  ]
+ },
+ "11-company-scroll-tablet": {
+  "homeY": 1661,
+  "companyY": 196,
+  "title": "CompanyHow the app names and shows you"
+ },
+ "13-company-back-tablet": {
+  "title": "TraverseRoofingField tools",
+  "screen": "home",
+  "y": 0
+ },
+ "11-prices-scroll-tablet": {
+  "y": 0,
+  "title": "PricesYour price list, options and automatic adjustments"
+ },
+ "13-prices-back-tablet": {
+  "homeY": 765,
+  "title": "SetupGet ready for your first quote",
+  "home": false,
+  "y": 0,
+  "checklist": 14
+ },
+ "13-checklist-back-tablet": {
+  "stepBackToChecklist": true,
+  "checklistBackHome": true
+ },
+ "02-hood-tablet": {
+  "open": 1,
+  "title": "HERRING RD 14390–16020Black Forest · 47 properties",
+  "dock": [
+   "Back",
+   "Map",
+   "Home",
+   "Pipeline",
+   "Jobs",
+   "Customers"
+  ]
+ },
+ "03-card-tablet": {
+  "order": [
+   "d-top",
+   "meta",
+   "meta",
+   "bestwhy",
+   "acts",
+   "xt",
+   "factsx"
+  ],
+  "acts": 4,
+  "extras": 5,
+  "lot": false,
+  "photoBtn": true
+ },
+ "05-terr-light-tablet": {
+  "card": "rgb(255, 255, 255)",
+  "text": "rgb(29, 42, 28)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(0, 0, 0)",
+  "small": null
+ },
+ "05-terr-dark-tablet": {
+  "card": "rgb(26, 20, 31)",
+  "text": "rgb(243, 238, 227)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(255, 255, 255)",
+  "small": null
+ },
+ "06-office-tablet": {
+  "kpiMs": 702,
+  "settledMs": 2564,
+  "requests": 22,
+  "kb": 2,
+  "tiles": 13,
+  "markers": 8619,
+  "mapOn": true,
+  "showBtn": false
+ },
+ "06-clip-tablet": {
+  "isolation": "auto",
+  "z": "auto"
+ },
+ "07-pipemode-tablet": [
+  "My pipeline (0)",
+  "Full pipeline"
+ ],
+ "08-pipeline-io-tablet": {
+  "jn": true,
+  "jnShown": true,
+  "io": []
+ },
+ "08-customers-io-tablet": {
+  "cexpShown": true,
+  "io": []
+ },
+ "09-house-tablet": "Quote builderAny address in our towns",
+ "10-ads-tablet": "Adsspend as typed in, since each ad startedNo ad spend typed in yet. Add each ad’s spend and results from the ad platform, and pick where its leads come in; the app works out the cost per lead and per booked job.Update ad spend",
+ "01-groups-tabletl": [],
+ "01-headings-tabletl": [],
+ "12-setup-order-tabletl": null,
+ "01-after-reload-tabletl": [],
+ "04-nav-tabletl": {
+  "tab": [],
+  "dnav": [
+   "TraverseRoofing",
+   "Home",
+   "Properties",
+   "Plan",
+   "Pipeline",
+   "Jobs",
+   "Customers",
+   "Calendar",
+   "Team",
+   "Office",
+   "73",
+   "TA"
+  ],
+  "tiles": []
+ },
+ "11-company-scroll-tabletl": {
+  "setupY": 568,
+  "companyY": 212,
+  "title": "Your companyName, phone, email and website"
+ },
+ "02-hood-tabletl": {
+  "open": 1,
+  "title": "HERRING RD 14390–16020Black Forest · 47 properties",
+  "dock": [
+   "Back",
+   "Map"
+  ]
+ },
+ "03-card-tabletl": {
+  "order": [
+   "d-top",
+   "meta",
+   "meta",
+   "bestwhy",
+   "acts",
+   "xt",
+   "factsx"
+  ],
+  "acts": 4,
+  "extras": 5,
+  "lot": true,
+  "photoBtn": false
+ },
+ "05-terr-light-tabletl": {
+  "card": "rgb(255, 255, 255)",
+  "text": "rgb(29, 42, 28)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(0, 0, 0)",
+  "small": null
+ },
+ "05-terr-dark-tabletl": {
+  "card": "rgb(26, 20, 31)",
+  "text": "rgb(243, 238, 227)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(255, 255, 255)",
+  "small": null
+ },
+ "06-office-tabletl": {
+  "kpiMs": 780,
+  "settledMs": 2563,
+  "requests": 24,
+  "kb": 4,
+  "tiles": 10,
+  "markers": 8619,
+  "mapOn": true,
+  "showBtn": false
+ },
+ "06-clip-tabletl": {
+  "isolation": "auto",
+  "z": "auto"
+ },
+ "07-pipemode-tabletl": [
+  "My pipeline (0)",
+  "Full pipeline"
+ ],
+ "08-pipeline-io-tabletl": {
+  "jn": true,
+  "jnShown": true,
+  "io": []
+ },
+ "08-customers-io-tabletl": {
+  "cexpShown": true,
+  "io": []
+ },
+ "09-error-tabletl": "n/a: no House lookup in the computer menu for an admin",
+ "10-ads-tabletl": "Adsspend as typed in, since each ad startedNo ad spend typed in yet. Add each ad’s spend and results from the ad platform, and pick where its leads come in; the app works out the cost per lead and per booked job.Update ad spend",
+ "01-groups-desktop": [],
+ "01-headings-desktop": [],
+ "12-setup-order-desktop": null,
+ "01-after-reload-desktop": [],
+ "04-nav-desktop": {
+  "tab": [],
+  "dnav": [
+   "TraverseRoofing",
+   "Home",
+   "Properties",
+   "Plan",
+   "Pipeline",
+   "Jobs",
+   "Customers",
+   "Calendar",
+   "Team",
+   "Office",
+   "73",
+   "TA"
+  ],
+  "tiles": []
+ },
+ "11-company-scroll-desktop": {
+  "setupY": 432,
+  "companyY": 150,
+  "title": "Your companyName, phone, email and website"
+ },
+ "02-hood-desktop": {
+  "open": 1,
+  "title": "HERRING RD 14390–16020Black Forest · 47 properties",
+  "dock": [
+   "Back",
+   "Map"
+  ]
+ },
+ "03-card-desktop": {
+  "order": [
+   "d-top",
+   "meta",
+   "meta",
+   "bestwhy",
+   "acts",
+   "xt",
+   "factsx"
+  ],
+  "acts": 4,
+  "extras": 5,
+  "lot": true,
+  "photoBtn": false
+ },
+ "05-terr-light-desktop": {
+  "card": "rgb(255, 255, 255)",
+  "text": "rgb(29, 42, 28)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(0, 0, 0)",
+  "small": null
+ },
+ "05-terr-dark-desktop": {
+  "card": "rgb(26, 20, 31)",
+  "text": "rgb(243, 238, 227)",
+  "select": "rgb(255, 255, 255)",
+  "selectText": "rgb(255, 255, 255)",
+  "small": null
+ },
+ "06-office-desktop": {
+  "kpiMs": 1114,
+  "settledMs": 2419,
+  "requests": 23,
+  "kb": 4,
+  "tiles": 10,
+  "markers": 8619,
+  "mapOn": true,
+  "showBtn": false
+ },
+ "06-clip-desktop": {
+  "isolation": "auto",
+  "z": "auto"
+ },
+ "07-pipemode-desktop": [
+  "My pipeline (0)",
+  "Full pipeline"
+ ],
+ "08-pipeline-io-desktop": {
+  "jn": true,
+  "jnShown": true,
+  "io": []
+ },
+ "08-customers-io-desktop": {
+  "cexpShown": true,
+  "io": []
+ },
+ "09-error-desktop": "n/a: no House lookup in the computer menu for an admin",
+ "10-ads-desktop": "Adsspend as typed in, since each ad startedNo ad spend typed in yet. Add each ad’s spend and results from the ad platform, and pick where its leads come in; the app works out the cost per lead and per booked job.Update ad spend",
+ "pageErrors": []
+}
