@@ -6,7 +6,7 @@ Picture: `365-yard-cleanup-prices.png` (1080 x 1350, Facebook/Instagram feed). R
 ## On the picture
 - Kicker: FALL CLEAN-UP (Matthew 31 Oct: his call over the seasonless default; this card is for fall only)
 - Included line (Brad 31 Oct): We get it all: leaves, pine needles and debris, anything that's fallen onto your lawn.
-- Headline: Your yard, cleaned up and hauled away.
+- Headline: Your yard, cleaned up. (shortened 31 Oct: haul-away is optional)
 - Photo across the top: a real 365 job (Brad's crew, customer asked at the job), a neat front lawn and rock beds, cropped so no house number, car, plate or person shows. Not presented as a clean-up result.
 - Up to 1/4 acre (up to about 10,900 sq ft of lot): $100–$300
 - 1/4 to 1/2 acre (about 10,900 to 21,800 sq ft): $250–$600
@@ -49,3 +49,10 @@ Hashtags are a suggestion; trim to what the 365 page already uses.
 - Phone (720) 830-4553 and 365aeration.com: the 365 contact details in use since 14 and 23 Oct.
 - Removed from an earlier render: "most city and suburban lots" / "bigger yards and corner lots" (unsourced claims about which lots are typical); replaced with square feet.
 - Per-cubic-yard figure: derived estimate, labelled as such; no outside source used.
+
+## What others charge (checked 31 Oct 2026, for Brad; internal)
+- **Denver Pro Landscape** (Denver landscaper, own published guide): seasonal clean-up **$200–$600**, "depending on how much material comes off the property"; covers debris hauling, perennial cutback and bed refresh; large lots with mature trees toward the top. No per-visit or hourly figure on the page; page undated (site © 2026). https://denverprolandscape.com/leaf-removal-denver/
+- **Junk Same Day** (Denver hauling company, own price table): leaves and yard waste **$149–$299**; small pile $149–$249; medium clean-up $249–$399; full truck load $349–$499; large/storm $499–$999+; "all loading, hauling, and disposal included". Undated; mentions jobs from Sep 2025 and Aug 2026. https://junksameday.com/yard-debris-cleanup-denver/
+- **Angi** (aggregator): search results quoted a Denver average of about $438 for leaf removal; the page refused our fetch (403), so NOT verified and not used.
+- Left out: a search summary claiming Denver Pro Landscape lists "$150–$350 per visit, 4–6 visits" (not on the page when fetched); cost-guide and lead-generation sites.
+- **Read against Brad's prices:** his small-yard floor ($100) is under both published starting points (~$149–$200); his large-yard range ($600–$1,000) sits at and above Denver Pro's top and inside Junk Same Day's large/storm band. With haul-away optional and priced separately, his totals land in the same range as these.
