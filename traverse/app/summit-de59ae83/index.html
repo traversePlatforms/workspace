@@ -3054,7 +3054,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (pAdd('team.run')) x.push(['users', 'Team sign-ins', 'Add people to your team, new codes, sign out, remove.', accountsView, ['accounts'], 'team']);
     if (pAdd('cust.import')) x.push(['clip', 'Import', 'Customers, leads and past work from a spreadsheet.', function () { importView(); }, ['import'], 'office']);
     if (pAdd('set.company')) x.push(['flag', 'Company', 'Name, phone, email, website and color.', companyView, ['company'], 'office']);
-    if (pAdd('set.prices')) x.push(['calc', 'Prices and terms', 'What a quote adds up from, and the agreement terms.', kitPricesView, ['kitprices'], 'office']);
+    if (pAdd('set.prices')) x.push(['calc', 'Prices', 'What a quote adds up from, and Your costs. The terms stay the admin’s.', kitPricesView, ['kitprices'], 'office']);   /* the terms are never given to a role (2026-10-30) */
     if (pAdd('set.fbleads')) x.push(['chat', 'Facebook leads', 'Lead ads into the Pipeline: Pages, forms and who gets them.', fbLeadsView, ['fbleads'], 'office']);   /* 2026-10-30 */
     if (pAdd('set.setup')) x.push(['mail', 'Email and payments', 'Connect the company email and the ways customers pay.', mailSetupView, ['mailsetup', 'kitpay'], 'office']);
     if (pAdd('set.plans') && careOnC()) x.push(['cal', 'Plans', 'What you sell on a schedule.', function () { carePlansView(); }, ['careplans'], 'office']);   /* 2026-10-30 */
