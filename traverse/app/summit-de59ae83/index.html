@@ -18541,6 +18541,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function satSwitch(map, def) {
     var photo = null, lines = null, fails = 0, box = null, gaveUp = false;   /* gaveUp: photos failed on this map, this time only */
+    var asked = 0, everLoaded = false;   /* a phone's map asks for six tiles: when every tile asked for has failed and none ever loaded, that is enough to give up (2026-10-30 audit: 15 was never reached, so the map stayed grey with no word) */
     var ctl = L.control({ position: 'topright' });
     var mode = function () { if (gaveUp) return '0'; var m = satMode(def); return m === '2' && !hybridOk() ? '1' : m; };
     var paint = function () { if (!box) return; var m = mode(); [].forEach.call(box.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-m') === m)); }); };
@@ -18551,8 +18552,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (!id) { gaveUp = true; paint(); apply(); satNote(map, SAT_NONE); return; }   /* no mosaic for this place (outside the fallback's state, register down): say so, no grey (2026-10-30 audit) */
         photo = L.tileLayer(PC_API + '/data/v1/mosaic/' + id + '/tiles/WebMercatorQuad/{z}/{x}/{y}?collection=naip&assets=image&asset_bidx=image%7C1%2C2%2C3&format=png',
           { minZoom: 13, maxNativeZoom: 18, maxZoom: 21, zIndex: 3, attribution: 'USDA NAIP 2023 aerial photos (public domain), Microsoft Planetary Computer' });
-        photo.on('tileerror', function () { if (++fails === 15 && photo) { map.removeLayer(photo); photo = null; gaveUp = true; paint(); apply(); satNote(map, SAT_SLOW); toast('Aerial photos are slow right now', 'Showing the street map. Tap Photo to try again.'); } });   /* not remembered (2026-10-18) */
-        photo.on('tileload', function () { fails = 0; });
+        photo.on('tileloadstart', function () { asked++; });
+        photo.on('tileerror', function () { fails++; if (photo && (fails === 15 || (!everLoaded && fails >= 6 && fails >= asked))) { map.removeLayer(photo); photo = null; gaveUp = true; paint(); apply(); satNote(map, SAT_SLOW); toast('Aerial photos are slow right now', 'Showing the street map. Tap Photo to try again.'); } });   /* not remembered (2026-10-18) */
+        photo.on('tileload', function () { fails = 0; everLoaded = true; });
         photo.addTo(map);
       });
       if (m === '0' && photo) { map.removeLayer(photo); photo = null; }
@@ -18564,7 +18566,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       [['0', 'Map', 'The street map'], ['2', 'Hybrid', 'The aerial photos with the streets and their names'], ['1', 'Photo', 'The 2023 aerial photos']].forEach(function (x) {
         if (x[0] === '2' && !hybridOk()) return;
         var b = L.DomUtil.create('button', '', box); b.type = 'button'; b.textContent = x[1]; b.title = x[2]; b.setAttribute('data-m', x[0]);
-        b.addEventListener('click', function () { satSet(x[0]); fails = 0; gaveUp = false; satNote(map, null); paint(); apply(); });
+        b.addEventListener('click', function () { satSet(x[0]); fails = 0; asked = 0; gaveUp = false; satNote(map, null); paint(); apply(); });
       });
       L.DomEvent.disableClickPropagation(box);
       paint(); return box;
