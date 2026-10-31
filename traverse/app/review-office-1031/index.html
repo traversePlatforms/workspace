@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Office bars, 31 Oct</title>
+<style>
+  :root { --bg: #f4f6f9; --card: #ffffff; --ink: #0f1b2d; --soft: #566476; --line: #dbe1e8; --acc: #2f4155; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0d131b; --card: #161e29; --ink: #e8edf3; --soft: #9aa7b6; --line: #2a3646; --acc: #a9bbd1; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .sub { color: var(--soft); margin: 0 0 24px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin: 0 0 18px; }
+  h2 { font-size: 18px; margin: 0 0 6px; }
+  p, li { color: var(--soft); }
+  p { margin: 0 0 12px; }
+  .shots { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+  figure { margin: 0; }
+  figure img { display: block; border: 1px solid var(--line); border-radius: 10px; max-width: 100%; height: auto; }
+  figure.phone img { width: 240px; }
+  figure.tab img { width: 360px; }
+  figcaption { font-size: 13px; color: var(--soft); margin-top: 4px; }
+  table { border-collapse: collapse; font-size: 14px; }
+  td, th { border-bottom: 1px solid var(--line); padding: 6px 12px 6px 0; text-align: left; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Office bars, 31 Oct</h1>
+  <p class="sub">Matthew, tablet and iPhone: "opening the office drop down creates 4/5 more drop downs. instead of doing that just have all the drop downs available from the start." From the test copy (a made-up company, test codes). Nothing here is live until it is deployed.</p>
+
+  <section>
+    <h2>What changed</h2>
+    <ul>
+      <li>On the phone and upright-tablet home (under 1100 px wide) there is no Office bar any more. Dashboard, Sales, Team, Storms and data (where the install has it) and Setup are each their own bar, under In the field.</li>
+      <li>Every bar still starts closed, and the device still remembers which ones are open for this install and this person (same saved key as before).</li>
+      <li>Saved state carries over. The Dashboard bar keeps the old Office bar's key, so if Office was open, the Dashboard is open. If Office was closed, the groups that were open inside it start closed, so the home looks the way it did.</li>
+      <li>The same in every edition and on Sixfold. The office role (the lead desk) and the manager (In the field, Your team) never had a bar inside a bar, and they are unchanged. The computer home (1100 px and wider) is unchanged.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Phone, edition admin: before and after</h2>
+    <p>Before: one Office bar, and opening it shows four more bars. After: all the bars from the start, each closed.</p>
+    <div class="shots">
+      <figure class="phone"><img src="before-edition-phone-admin-closed.png" alt="Before, closed"><figcaption>Before: closed</figcaption></figure>
+      <figure class="phone"><img src="before-edition-phone-admin-office-tapped.png" alt="Before, Office opened"><figcaption>Before: Office opened</figcaption></figure>
+      <figure class="phone"><img src="after-edition-phone-admin-closed.png" alt="After, closed"><figcaption>After: closed</figcaption></figure>
+      <figure class="phone"><img src="after-edition-phone-admin-office-tapped.png" alt="After, Dashboard opened"><figcaption>After: Dashboard opened</figcaption></figure>
+      <figure class="phone"><img src="after-edition-phone-admin-setup-open.png" alt="After, Setup opened"><figcaption>After: Setup opened</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tablet (820 x 1180), edition admin</h2>
+    <div class="shots">
+      <figure class="tab"><img src="before-edition-tablet-admin-office-tapped.png" alt="Before, Office opened"><figcaption>Before: Office opened</figcaption></figure>
+      <figure class="tab"><img src="after-edition-tablet-admin-closed.png" alt="After, closed"><figcaption>After: closed</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sixfold admin</h2>
+    <p>The Sixfold test copy's top bar shows the edition name left over from the earlier run in the same browser; the bars below are Sixfold's (See Jen's screen, Newsletter, Agreement terms).</p>
+    <div class="shots">
+      <figure class="phone"><img src="before-sixfold-phone-admin-office-tapped.png" alt="Before, Office opened"><figcaption>Before: Office opened (phone)</figcaption></figure>
+      <figure class="phone"><img src="after-sixfold-phone-admin-closed.png" alt="After, closed"><figcaption>After: closed (phone)</figcaption></figure>
+      <figure class="tab"><img src="before-sixfold-tablet-admin-office-tapped.png" alt="Before, tablet"><figcaption>Before: Office opened (tablet)</figcaption></figure>
+      <figure class="tab"><img src="after-sixfold-tablet-admin-office-tapped.png" alt="After, tablet"><figcaption>After: Dashboard opened (tablet)</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Traverse sign-in (super)</h2>
+    <p>See through their eyes now sits in the Dashboard bar.</p>
+    <div class="shots">
+      <figure class="phone"><img src="before-edition-phone-super-closed.png" alt="Before"><figcaption>Before (edition phone)</figcaption></figure>
+      <figure class="phone"><img src="after-edition-phone-super-closed.png" alt="After"><figcaption>After (edition phone)</figcaption></figure>
+      <figure class="phone"><img src="after-sixfold-phone-super-closed.png" alt="After Sixfold"><figcaption>After (Sixfold phone)</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Office and manager: unchanged</h2>
+    <div class="shots">
+      <figure class="phone"><img src="after-edition-phone-office-closed.png" alt="Office"><figcaption>Office, edition phone (lead desk)</figcaption></figure>
+      <figure class="phone"><img src="after-sixfold-phone-office-closed.png" alt="Office Sixfold"><figcaption>Office, Sixfold phone</figcaption></figure>
+      <figure class="phone"><img src="after-edition-phone-manager-closed.png" alt="Manager"><figcaption>Manager, edition phone</figcaption></figure>
+      <figure class="tab"><img src="after-sixfold-tablet-manager-closed.png" alt="Manager Sixfold"><figcaption>Manager, Sixfold tablet</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tests (test copy, port 8820)</h2>
+    <table>
+      <tr><th>Suite</th><th>Before</th><th>After</th></tr>
+      <tr><td>office-test (phone and tablet, edition and Sixfold, admin, super, office, manager)</td><td>87 passed, 12 failed (the bars inside Office, and the old saved state)</td><td>99 passed, 0 failed</td></tr>
+      <tr><td>reps</td><td>37 / 0</td><td>37 / 0</td></tr>
+      <tr><td>batch1029-ui</td><td>43 / 0</td><td>43 / 0</td></tr>
+      <tr><td>roles</td><td>75 / 0</td><td>75 / 0</td></tr>
+      <tr><td>t1030</td><td>63 / 1</td><td>63 / 1 (same failure both times: 11, the plan picker wording; not this change)</td></tr>
+    </table>
+  </section>
+</main>
+</body>
+</html>
