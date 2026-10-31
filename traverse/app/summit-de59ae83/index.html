@@ -1858,6 +1858,15 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .costrule{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px}.costhd{display:grid;gap:2px}.costhd small{color:var(--soft)}.costex{justify-self:start;background:#fff3cd;color:#5c4400}
   .costmats{display:grid;gap:6px}.costmat{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.costmat input{width:5.5em}.costmat input:first-child{flex:1 1 12em;width:auto}.costlab{font-size:12.5px;color:var(--soft);white-space:nowrap}
   .costv .kitbtns{align-items:center}.costv .kitrate{width:8em}.costneg{color:var(--bad)!important}
+  /* Sync from another system and the editions' Quick quote (2026-10-30) */
+  .syncsec{border:1px solid var(--line);border-radius:14px;background:var(--card)}.syncsec>summary{display:grid;gap:2px;padding:12px 14px;cursor:pointer;list-style:none}.syncsec>summary::-webkit-details-marker{display:none}.syncsec>summary small{color:var(--soft);font-weight:400}
+  .syncsec[open]>summary{border-bottom:1px solid var(--line)}.syncbody{display:grid;gap:10px;padding:12px 14px}.syncsub>summary{cursor:pointer;font-weight:700;padding:4px 0}.syncsub[open]{display:grid;gap:8px}
+  .syncurl{display:flex;gap:8px;align-items:flex-end}.syncurl label{flex:1 1 auto;min-width:0}.syncurl input{width:100%;font:13px var(--mono,monospace)}.syncsteps{margin:0;padding-left:22px;display:grid;gap:4px}
+  .syncfields{display:grid;gap:2px;margin:6px 0}.syncfields>div{display:flex;gap:10px;flex-wrap:wrap}.syncfields code{min-width:6.5em;font-weight:700}.syncpre{white-space:pre-wrap;word-break:break-all;background:var(--sunk);padding:10px;border-radius:10px;font-size:12.5px}
+  .syncst{color:var(--soft);font-size:14px}.syncst.bad{color:var(--bad)}.synctry{width:100%;font:13px var(--mono,monospace);border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);padding:8px;box-sizing:border-box}
+  .syncconn{border-top:1px solid var(--line);padding-top:6px}.syncconn>summary{display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px 0;flex-wrap:wrap}.syncbtns{display:flex;flex-wrap:wrap;gap:4px 14px}
+  .syncheld{display:grid;gap:4px}.syncheld small{color:var(--soft)}.synclog{display:block;color:var(--soft)}.syncv{gap:12px}
+  .ohqq{display:block;margin-top:12px;padding:10px 0 0;background:none;border:0;color:inherit;font:700 15px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}.pqv{display:grid;gap:10px}.pqv select{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:16px var(--sans);padding:0 10px;width:100%}
   .costq{display:grid;gap:2px;margin-top:6px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;font-size:13.5px}.costq b{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--soft)}.costq small{color:var(--soft)}.costq.costneg span{color:var(--bad)}
   .jnform label{display:grid;gap:3px;font-size:13px;font-weight:700}
   /* Setup › Facebook leads (2026-10-30) */
@@ -4691,6 +4700,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       grp('Office', [opt, tile('button', 'card', 'Customers', 'Call a customer, or fix something on their record.', 'Office', customersView), tile('button', 'leaf', 'Jobs', 'The week: each crew\u2019s town, the four arrival times, and booking quoted leads.', 'Office', jobsView), tile('button', 'door', 'House lookup', 'Type an address: the lawn, the lot and what to ask, at once.', 'Office', function () { houseLookupView(null); }), tile('button', 'cal', 'Calendars', 'Anyone\u2019s calendar, to see who is free.', 'Office', function () { S.calWho = S.me; calendarView(); })]);
     }
     grp('In the field', [
+      pqOnC() ? tile('button', 'clip', 'Quick quote', 'Someone called or wrote in: their details, the house and the price, then send the quote.', null, phoneQuoteView) : null,   /* the editions' Quick quote, a permission (2026-10-30) */
       S.fqOn && !asOffice() ? tile('button', 'leaf', 'Quick quote', 'Price a lawn on the spot. If they say yes, send it to the office.', null, function () { fieldQuoteView(); }) : null,   /* the field quick quote (2026-10-21) */
       asOffice() || !pOn('doors.see') ? null : tile('button', 'door', 'Routes', 'Knock a neighborhood. Works with no signal.', null, start),
       asOffice() ? null : tile('button', 'chart', 'My stats', pipeMine() ? 'Your leads, quotes, jobs landed and sales.' : pw('Your doors, conversations, quotes and goals.'), null, function () { statsView(S.me, chooseView); }),
@@ -9336,6 +9346,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var sb = q('button', null, 'Find'); sb.type = 'submit'; sf.appendChild(sb);
     sf.addEventListener('submit', function (e) { e.preventDefault(); houseLookupView(null, null, si.value); });
     hero.appendChild(sf); box.appendChild(hero);
+    if (pqOnC()) { var pqb = q('button', 'ohqq', 'Quick quote: someone called or wrote in ›'); pqb.type = 'button'; pqb.addEventListener('click', phoneQuoteView); hero.appendChild(pqb); }   /* the editions' Quick quote, a permission (2026-10-30) */
     var grid = q('div', 'ogrid'), c1 = q('div', 'ocol'), c2 = q('div', 'ocol');
     grid.appendChild(c1); grid.appendChild(c2); box.appendChild(grid);
     /* who to contact */
@@ -13446,7 +13457,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function kitQuoteView(lead) {
     if (prcOnC()) return prcQuoteView(lead);   /* the smart price list's builder: options, adjustments (2026-10-30) */
     hideToast(); S.signin = null; S.screen = 'kitquote'; foot.hidden = true; setDock(null);
-    setBar('back', { title: lead.quote ? 'Change the quote' : 'Build a quote', sub: lead.name || '', back: repOn() ? calendarView : pipelineView, backLabel: repOn() ? 'Calendar' : 'Pipeline' });   /* a sales rep comes from their Calendar (2026-10-29) */
+    setBar('back', { title: lead.quote ? 'Change the quote' : 'Build a quote', sub: lead.name || '', back: lead._back || (repOn() ? calendarView : pipelineView), backLabel: lead._backLabel || (repOn() ? 'Calendar' : 'Pipeline') });   /* a sales rep comes from their Calendar (2026-10-29) */
     view.textContent = '';
     var box = q('div', 'card jnform coform kitq'); box.appendChild(q('div', 'skel')); view.appendChild(box);
     var hp = lead.house && lead.house.region && lead.house.door ? api('a365house', { params: { region: lead.house.region, id: lead.house.door } }).catch(function () { return null; }) : Promise.resolve(null);
@@ -14499,6 +14510,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* Import, Your costs and Training (2026-10-29; Training 2026-10-30): beside the checklist, not steps on it */
       box.appendChild(q('div', 'dwh', 'Bring your data, check your prices, train your team'));
       [[true, 'Import customers, leads and past work', 'From a spreadsheet: your old software, Excel or Google Sheets. Every import can be undone.', function () { importView(); }, 'import'],
+       [syncOnC(), 'Sync from another system', 'Keep new leads, customers and jobs coming in from your CRM, a Google Sheet, Zapier or Make. Read-only over there.', syncView, 'sync'],   /* 2026-10-30 */
        [costsOnC(), 'Your costs' + (feat('costs') ? '' : ' (testing: only Traverse sees this)'), 'Labor, materials, drive and overhead for each price line: what it costs you, and a suggested price.', costsView, 'costs'],
        [true, 'Training', pw('Your team’s lessons: doors, sales, quotes, phones and more.', 'Your team’s lessons: door-to-door, sales, quotes, phones and more.'), function () { trainingView(); }, 'training'],
        [fbOnC(), 'Facebook lead ads', 'New leads from your Facebook and Instagram lead forms, in your Pipeline within 5 minutes.', fbLeadsView, 'fbleads']].forEach(function (x) {   /* 2026-10-30 */
@@ -14620,7 +14632,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* ---- the quote builder ---- */
   function prcQuoteView(lead) {
     hideToast(); S.signin = null; S.screen = 'kitquote'; foot.hidden = true; setDock(null);
-    setBar('back', { title: lead.quote ? 'Change the quote' : 'Build a quote', sub: lead.name || '', back: repOn() ? calendarView : pipelineView, backLabel: repOn() ? 'Calendar' : 'Pipeline' });
+    setBar('back', { title: lead.quote ? 'Change the quote' : 'Build a quote', sub: lead.name || '', back: lead._back || (repOn() ? calendarView : pipelineView), backLabel: lead._backLabel || (repOn() ? 'Calendar' : 'Pipeline') });
     view.textContent = '';
     var box = q('div', 'card jnform coform kitq prcq'); box.appendChild(q('div', 'skel')); view.appendChild(box);
     var hh = lead.house && lead.house.region && lead.house.door ? { region: lead.house.region, id: lead.house.door } : {};
@@ -15618,6 +15630,297 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         h.appendChild(d);
       });
     }).catch(function () {});
+  }
+  /* ==== SYNC FROM ANOTHER SYSTEM (2026-10-30, Matthew: "make sure we have a wide enough reach that whatever they are currently using they can
+     port over"; the server's notes are above SYNC_KINDS in the API) ====
+     Setup › Sync from another system, for the editions and client installs (never Sixfold 365). One screen, three ways in: the link for Zapier,
+     Make or any app (its field names mapped once here), Google Sheets or CSV links read on a schedule, and the CRMs connected with a key from
+     the company's own account. Everything starts off; nothing over there is changed; what comes in is an import, undone under Import. The
+     screen goes by the Import's name (kitimport), so it keeps the same menus and the same setup-mode rules. */
+  function syncOnC() { return kitOnC() && (S.role === 'admin' || pAdd('cust.sync')); }
+  var SYNC_KIND = { leads: 'Leads', customers: 'Customers', jobs: 'Jobs' };
+  /* our field names per kind, with what each means (the Import's own lists; jobs are past work plus a status and an id) */
+  function syncFieldsC(kind) {
+    var F = kind === 'jobs' ? IMP_F.work.concat([['status', 'Status (cancelled jobs are left out)', ['status', 'job status', 'work status'], 'completed'], ['ext', 'Job ID in the other app', ['id', 'job id', 'external id'], '']]) : IMP_F[kind];
+    if (kind === 'leads') F = F.map(function (f) { return f[0] === 'ext' ? [f[0], 'Lead ID in the other app', f[2], f[3]] : f; });
+    return F;
+  }
+  function syncWhen(t) { return t ? new Date(t * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''; }
+  function syncSaid(L) {
+    if (!L || !L.at) return 'Nothing yet';
+    if (L.err) return syncWhen(L.at) + ': ' + L.err;
+    var bits = [];
+    if (L.added) bits.push(L.added + ' added'); if (L.updated) bits.push(L.updated + ' updated'); if (L.held) bits.push(L.held + ' waiting'); if (L.look) bits.push(L.look + ' need a look');
+    return syncWhen(L.at) + ': ' + (bits.length ? bits.join(', ') : 'nothing new');
+  }
+  function syncView() {
+    if (!syncOnC()) return chooseView();
+    hideToast(); S.signin = null; S.screen = 'kitimport'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Sync from another system', sub: 'Leads, customers and jobs from what you use now', back: kitSetupView, backLabel: 'Setup' });
+    view.textContent = ''; var box = q('div', 'card jnform coform kitp impv syncv'); box.appendChild(q('div', 'skel')); view.appendChild(box);
+    S.syncOpen = S.syncOpen || {};
+    api('sync').then(function (j) {
+      box.textContent = '';
+      if (!j || !j.ok) { box.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      S.sync = j; syncDraw(box);
+    }).catch(function () { box.textContent = ''; box.appendChild(kitRetry(syncView)); });
+  }
+  /* a save or action: the answer is the whole screen again */
+  function syncCall(box, action, body, okSaid, btn) {
+    if (btn) btn.disabled = true;
+    return api(action, { body: body }).then(function (j) {
+      if (btn) btn.disabled = false;
+      if (!j || !j.ok) { toast('Not done', (j && j.error) || 'Try again.', null); return j; }
+      if (j.hook) { S.sync = j; syncDraw(box); }
+      if (okSaid) toast(okSaid[0], typeof okSaid[1] === 'function' ? okSaid[1](j) : okSaid[1], null);
+      return j;
+    }).catch(function () { if (btn) btn.disabled = false; toast('No signal', 'Nothing was changed.', null); });
+  }
+  /* a folding section that stays open across redraws */
+  function syncFold(box, k, title, sub) {
+    var d = q('details', 'syncsec'); d.setAttribute('data-k', k); if (S.syncOpen[k]) d.open = true;
+    d.addEventListener('toggle', function () { S.syncOpen[k] = d.open; });
+    var su = q('summary'); su.appendChild(q('b', null, title)); if (sub) su.appendChild(q('small', null, sub)); d.appendChild(su);
+    var body = q('div', 'syncbody'); d.appendChild(body); box.appendChild(d); return body;
+  }
+  function syncBtn(cls, text, fn) { var b = q('button', cls, text); b.type = 'button'; b.addEventListener('click', function () { fn(b); }); return b; }
+  function syncOwnerSel(J, now, onPick, label) {
+    var l = q('label', null, label || 'Owner of new leads'), s = q('select'), o0 = q('option', null, 'Nobody (the Pipeline’s new leads)'); o0.value = ''; s.appendChild(o0);
+    (J.people || []).forEach(function (nm) { var o = q('option', null, nm); o.value = nm; if (now === nm) o.selected = true; s.appendChild(o); });
+    s.addEventListener('change', function () { onPick(s.value); }); l.appendChild(s); return l;
+  }
+  function syncKindSel(now, onPick, label) {
+    var l = q('label', null, label || 'What it holds'), s = q('select');
+    Object.keys(SYNC_KIND).forEach(function (k) { var o = q('option', null, SYNC_KIND[k]); o.value = k; if (now === k) o.selected = true; s.appendChild(o); });
+    s.addEventListener('change', function () { onPick(s.value); }); l.appendChild(s); return l;
+  }
+  /* columns or field names -> ours: the saved choice, else the Import's guess from the heading */
+  function syncMapper(kind, names, samples, saved) {
+    var F = syncFieldsC(kind), guess = impGuess(kind === 'jobs' ? 'work' : kind, names), map = {}, wrap = q('div', 'impmap');
+    names.forEach(function (h, i) {
+      var cur = saved && Object.prototype.hasOwnProperty.call(saved, h) ? saved[h] : (guess[i] || (F.some(function (f) { return f[0] === h; }) ? h : ''));
+      map[h] = cur;
+      var row = q('div', 'impcol'), hd = q('div'); hd.appendChild(q('b', null, String(h) || 'Column ' + (i + 1))); hd.appendChild(q('small', null, samples && samples[i] ? 'e.g. ' + String(samples[i]).slice(0, 60) : 'empty')); row.appendChild(hd);
+      var sel = q('select'); sel.setAttribute('aria-label', 'Field for ' + h); var o0 = q('option', null, 'Skip'); o0.value = ''; sel.appendChild(o0);
+      F.forEach(function (f) { var o = q('option', null, f[1]); o.value = f[0]; if (cur === f[0]) o.selected = true; sel.appendChild(o); });
+      sel.addEventListener('change', function () { map[h] = sel.value; });
+      row.appendChild(sel); wrap.appendChild(row);
+    });
+    return { el: wrap, map: map };
+  }
+  function syncDraw(box) {
+    var J = S.sync; box.textContent = '';
+    box.appendChild(q('div', 'sub2', 'Keep new leads, customers and jobs coming in from the system you use now, as they change there. Read-only: nothing in your other system is changed or deleted, and nothing here is deleted either. Each time something comes in it is an import, listed under Setup › Import, where it can be undone. Everything here starts off.'));
+    var H = J.held || { n: 0 };
+    if (H.n) {
+      var hw = q('div', 'msg syncheld'); hw.appendChild(q('b', null, H.n + (H.n === 1 ? ' record is waiting' : ' records are waiting')));
+      hw.appendChild(q('div', null, 'We could not tell who they are yet (no name, phone or email we can read, or a job with no date). Map the fields below, then bring them in.'));
+      (H.some || []).forEach(function (x) { hw.appendChild(q('small', null, syncWhen(x.at) + ' · ' + (x.src === 'hook' ? 'the link' : x.src) + ' · ' + SYNC_KIND[x.kind] + ' · ' + x.why + (x.fields.length ? ' · fields: ' + x.fields.join(', ') : ''))); });
+      var hb = q('div', 'kitbtns');
+      hb.appendChild(syncBtn('save', 'Bring them in now', function (b) { syncCall(box, 'synchold', {}, ['Waiting records', function (j) { var t = j.brought || {}; return (t.added || 0) + ' added, ' + (t.updated || 0) + ' updated' + (t.held ? ', ' + t.held + ' still waiting' : ''); }], b); }));
+      hb.appendChild(syncBtn('lnk danger', 'Let them go', function (b) { if (window.confirm('Let the waiting records go? They are not brought in. Send them again from the other app if you need them.')) syncCall(box, 'synchold', { clear: 1 }, ['Let go', ''], b); }));
+      hw.appendChild(hb); box.appendChild(hw);
+    }
+    syncDrawHook(box, J); syncDrawSheets(box, J); syncDrawConns(box, J);
+    var ot = syncFold(box, 'others', 'Jobber, ServiceTitan, AccuLynx, Salesforce, Zoho', 'Through Zapier or Make: why');
+    (J.others || []).forEach(function (o) { var d = q('div', 'improw'); d.appendChild(q('b', null, o[0])); d.appendChild(q('small', null, o[1])); var a = q('a', 'lnk', 'Their page'); a.href = o[2]; a.target = '_blank'; a.rel = 'noopener'; d.appendChild(a); ot.appendChild(d); });
+    if ((J.log || []).length) {
+      var lg = syncFold(box, 'log', 'Recent activity', '');
+      J.log.forEach(function (x) { lg.appendChild(q('small', 'synclog', syncWhen(x.at) + ' · ' + (x.label || x.src || '') + (x.kind ? ' · ' + SYNC_KIND[x.kind] : '') + ' · ' + (x.err ? x.err : x.cleared ? x.cleared + ' waiting let go' : (x.added || 0) + ' added, ' + (x.updated || 0) + ' updated' + (x.held ? ', ' + x.held + ' waiting' : '') + (x.look ? ', ' + x.look + ' need a look' : '')))); });
+    }
+  }
+  /* ---- 1. the link ---- */
+  function syncDrawHook(box, J) {
+    var Hk = J.hook || {}, on = !!Hk.on;
+    var b = syncFold(box, 'hook', 'Any app, through Zapier or Make', on ? 'On · ' + syncSaid(Hk.last) : 'Off');
+    b.appendChild(q('div', 'sub2', 'A private link only your company has. Zapier and Make connect it to thousands of apps (your CRM, your web forms, your scheduling app); any app that can send a webhook can use it directly.'));
+    var tg = q('div', 'kitbtns');
+    tg.appendChild(syncBtn('save', on ? 'Pause the link' : (Hk.urls ? 'Turn the link on' : 'Make my link and turn it on'), function (x) { syncCall(box, 'synchookset', { on: !on }, [on ? 'Link paused' : 'Link on', on ? 'Anything sent to it is refused until you turn it on.' : 'Copy a link below into Zapier or Make.'], x); }));
+    b.appendChild(tg);
+    if (Hk.urls) {
+      Object.keys(SYNC_KIND).forEach(function (k) {
+        var r = q('div', 'syncurl'), l = q('label', null, SYNC_KIND[k] + ' link'), inp = q('input'); inp.readOnly = true; inp.value = Hk.urls[k]; inp.setAttribute('data-kind', k);
+        l.appendChild(inp); r.appendChild(l); r.appendChild(syncBtn('lnk', 'Copy', function () { copyText(Hk.urls[k], SYNC_KIND[k] + ' link'); })); b.appendChild(r);
+      });
+      b.appendChild(q('small', 'sub2', 'Keep these private: anyone with a link can add records. Jobs that are done become past work on the customer; upcoming ones become the customer’s next visit.'));
+      b.appendChild(syncOwnerSel(J, Hk.owner || '', function (v) { syncCall(box, 'synchookset', { owner: v }, ['Saved', v ? 'New leads go to ' + v + '.' : 'New leads go to nobody yet.']); }));
+      b.appendChild(syncBtn('lnk danger', 'Make a new link (the old one stops working)', function (x) { if (window.confirm('Make a new link? The old one stops working at once: paste the new one into Zapier or Make.')) syncCall(box, 'synchookset', { rotate: 1 }, ['New link made', 'Paste it into Zapier or Make.'], x); }));
+    }
+    var fd = q('details', 'syncsub'); fd.appendChild(q('summary', null, 'Our field names'));
+    fd.appendChild(q('div', 'sub2', 'Send fields with these names and they need no mapping. Any other names: map them once under Fields we have seen.'));
+    Object.keys(SYNC_KIND).forEach(function (k) { var t = q('div', 'syncfields'); t.appendChild(q('b', null, SYNC_KIND[k])); syncFieldsC(k).forEach(function (f) { var r = q('div'); r.appendChild(q('code', null, f[0])); r.appendChild(q('span', null, f[1])); t.appendChild(r); }); fd.appendChild(t); });
+    b.appendChild(fd);
+    var zs = q('details', 'syncsub'); zs.appendChild(q('summary', null, 'Set it up in Zapier'));
+    var zo = q('ol', 'syncsteps');
+    ['In Zapier, make a Zap. Trigger: your CRM or form app and its event (for example New Contact, New Lead or New Job).',
+     'Action: Webhooks by Zapier, event POST. (Webhooks by Zapier is on Zapier’s paid plans.)',
+     'URL: paste the Leads link above (or the Customers or Jobs link, for what the Zap sends).',
+     'Payload Type: Json. Data: one line per field, our name on the left (name, phone, email, address, town, zip, notes, and the others under Our field names) and your app’s field on the right.',
+     'Test the step: it shows here under Last received. Then publish the Zap. Each new record arrives within seconds.'].forEach(function (s) { zo.appendChild(q('li', null, s)); });
+    zs.appendChild(zo); var za = q('a', 'lnk', 'Zapier’s help for Webhooks'); za.href = 'https://help.zapier.com/hc/en-us/articles/8496288690317'; za.target = '_blank'; za.rel = 'noopener'; zs.appendChild(za); b.appendChild(zs);
+    var ms = q('details', 'syncsub'); ms.appendChild(q('summary', null, 'Set it up in Make'));
+    var mo = q('ol', 'syncsteps');
+    ['In Make, make a scenario. First module: your CRM or form app, its Watch new records (or Watch updated records) trigger.',
+     'Add a module: HTTP › Make a request. URL: paste a link above. Method: POST.',
+     'Body type: Raw. Content type: JSON (application/json). Request content: {"name": "", "phone": "", "email": "", "address": ""} with your app’s fields mapped in between the quotes.',
+     'Run once: it shows here under Last received. Then turn the scenario on.'].forEach(function (s) { mo.appendChild(q('li', null, s)); });
+    ms.appendChild(mo); b.appendChild(ms);
+    var an = q('details', 'syncsub'); an.appendChild(q('summary', null, 'Any other app (a webhook)'));
+    an.appendChild(q('div', 'sub2', 'POST the fields as JSON or as a form to a link. One record, or a list of up to 200 under "records". Nested fields work too (customer.first_name). The answer says how many were added, updated, unchanged or waiting.'));
+    an.appendChild(q('pre', 'syncpre', 'curl -X POST "' + (Hk.urls ? Hk.urls.leads : 'your Leads link') + '" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"name":"Pat Example","phone":"(303) 555-0100","email":"pat@example.com","address":"123 Main St, Castle Rock, CO 80104","source":"Website"}\''));
+    b.appendChild(an);
+    if (Hk.last && Hk.last.at) b.appendChild(q('div', 'syncst', 'Last received: ' + SYNC_KIND[Hk.last.kind] + ' · ' + syncSaid(Hk.last)));
+    /* fields seen, per kind: map the names we do not know */
+    var seen = Hk.seen || {};
+    Object.keys(SYNC_KIND).forEach(function (k) {
+      var names = Object.keys(seen[k] || {}); if (!names.length) return;
+      var sd = q('details', 'syncsub'); if (S.syncOpen['map' + k]) sd.open = true; sd.addEventListener('toggle', function () { S.syncOpen['map' + k] = sd.open; });
+      sd.appendChild(q('summary', null, 'Fields we have seen: ' + SYNC_KIND[k] + ' (' + names.length + ')'));
+      var M = syncMapper(k, names, names.map(function (n) { return seen[k][n]; }), (Hk.map || {})[k] || null); sd.appendChild(M.el);
+      var sb = q('div', 'kitbtns'); sb.appendChild(syncBtn('save', 'Save the fields', function (x) { syncCall(box, 'syncmap', { kind: k, map: M.map }, ['Fields saved', H0(J) ? 'Waiting records: tap Bring them in now.' : 'The next records use them.'], x); })); sd.appendChild(sb);
+      b.appendChild(sd);
+    });
+    /* try a record: what it reads and would do, nothing saved */
+    var td = q('details', 'syncsub'); td.appendChild(q('summary', null, 'Try a record (nothing is saved)'));
+    var tk = 'leads'; td.appendChild(syncKindSel(tk, function (v) { tk = v; }, 'As'));
+    var ta = q('textarea', 'synctry'); ta.rows = 5; ta.value = '{"name": "Pat Example", "phone": "(303) 555-0100", "email": "pat@example.com", "address": "123 Main St, Castle Rock, CO 80104"}'; ta.setAttribute('aria-label', 'A record as JSON'); td.appendChild(ta);
+    var tout = q('div', 'syncst');
+    td.appendChild(syncBtn('lnk', 'Try it', function (x) {
+      var rec; try { rec = JSON.parse(ta.value); } catch (e) { tout.textContent = 'That is not JSON: check the quotes and commas.'; return; }
+      x.disabled = true;
+      api('synctest', { body: { kind: tk, rec: rec } }).then(function (j) {
+        x.disabled = false; if (!j || !j.ok) { tout.textContent = (j && j.error) || 'Could not try it.'; return; }
+        var rd = Object.keys(j.read || {}).map(function (f) { return f + ': ' + j.read[f]; }).join(' · ');
+        tout.textContent = 'Read as ' + (rd || 'nothing we know') + '. It would ' + ({ add: 'be added', update: 'update someone already here', skip: 'change nothing (already here)', hold: 'wait', look: 'need a look' }[j.act] || j.act) + (j.why ? ': ' + j.why : '.') + ((j.warn || []).length ? ' ' + j.warn.join('; ') : '');
+      }).catch(function () { x.disabled = false; tout.textContent = 'No signal.'; });
+    }));
+    td.appendChild(tout); b.appendChild(td);
+  }
+  function H0(J) { return !!(J.held && J.held.n); }
+  /* ---- 2. Google Sheets and CSV links ---- */
+  function syncDrawSheets(box, J) {
+    var sh = J.sheets || [];
+    var b = syncFold(box, 'sheets', 'Google Sheets or a CSV link', sh.length ? sh.filter(function (s) { return s.on; }).length + ' of ' + sh.length + ' on' : 'Read on a schedule');
+    b.appendChild(q('div', 'sub2', 'A sheet you keep leads, customers or jobs in, read again on a schedule. New and changed rows come in; rows you delete there stay here.'));
+    sh.forEach(function (s) {
+      var d = q('div', 'improw syncrow'); var top = q('div'); top.appendChild(q('b', null, s.name)); top.appendChild(q('span', 'tag', SYNC_KIND[s.kind])); top.appendChild(q('span', 'tag ' + (s.on ? 'impact add' : 'impact skip'), s.on ? 'On' : s.paused === 'failing' ? 'Paused: it kept failing' : 'Off')); d.appendChild(top);
+      d.appendChild(q('small', null, (s.host || '') + ' · every ' + (s.every >= 60 ? (s.every / 60) + (s.every === 60 ? ' hour' : ' hours') : s.every + ' minutes') + ' · ' + syncSaid(s.last)));
+      var bb = q('div', 'syncbtns');
+      bb.appendChild(syncBtn('lnk', s.on ? 'Pause' : 'Turn on', function (x) { syncCall(box, 'syncsheetset', { id: s.id, on: !s.on }, [s.on ? 'Paused' : 'On', s.on ? '' : 'Read every ' + s.every + ' minutes.'], x); }));
+      bb.appendChild(syncBtn('lnk', 'Read it now', function (x) { x.textContent = 'Reading…'; syncCall(box, 'syncrun', { src: 'sheet:' + s.id }, ['Read', function (j) { return syncSaid(Object.assign({ at: Math.floor(Date.now() / 1000) }, j.ran)); }], x); }));
+      bb.appendChild(syncBtn('lnk', 'Columns', function () { S.syncSheetEdit = s.id; S.syncOpen.sheets = true; syncDraw(box); }));
+      bb.appendChild(syncBtn('lnk danger', 'Remove', function (x) { if (window.confirm('Stop reading ' + s.name + '? What it brought in stays.')) syncCall(box, 'syncsheetset', { id: s.id, remove: 1 }, ['Removed', 'What it brought in stays.'], x); }));
+      d.appendChild(bb);
+      if (S.syncSheetEdit === s.id && (s.head || []).length) {
+        var M = syncMapper(s.kind, s.head, null, s.map || {}); d.appendChild(M.el);
+        d.appendChild(syncBtn('save', 'Save the columns', function (x) { S.syncSheetEdit = null; syncCall(box, 'syncsheetset', { id: s.id, map: M.map }, ['Columns saved', ''], x); }));
+      }
+      b.appendChild(d);
+    });
+    if (sh.length >= 10) return;
+    var A = S.syncAdd = S.syncAdd || { kind: 'leads', every: 15, name: '' };
+    var ad = q('details', 'syncsub'); if (S.syncOpen.addsheet) ad.open = true; ad.addEventListener('toggle', function () { S.syncOpen.addsheet = ad.open; });
+    ad.appendChild(q('summary', null, 'Add a sheet'));
+    var so = q('ol', 'syncsteps');
+    ['In Google Sheets: File › Share › Publish to web.', 'Pick the sheet (tab) and "Comma-separated values (.csv)", tick "Automatically republish when changes are made", and Publish.', 'Copy the link it gives and paste it here. Any link that gives a CSV file works too.'].forEach(function (x) { so.appendChild(q('li', null, x)); });
+    ad.appendChild(so);
+    var ul = q('label', null, 'The sheet’s link'), ui = q('input'); ui.type = 'url'; ui.placeholder = 'https://docs.google.com/spreadsheets/d/e/…/pub?output=csv'; ui.value = A.url || ''; ui.addEventListener('input', function () { A.url = ui.value.trim(); }); ul.appendChild(ui); ad.appendChild(ul);
+    var nl = q('label', null, 'A name for it'), ni = q('input'); ni.value = A.name || ''; ni.placeholder = 'Leads sheet'; ni.addEventListener('input', function () { A.name = ni.value; }); nl.appendChild(ni); ad.appendChild(nl);
+    ad.appendChild(syncKindSel(A.kind, function (v) { A.kind = v; A.head = null; syncDraw(box); }));
+    var el = q('label', null, 'Read it again every'), es = q('select');
+    (J.every || [15]).forEach(function (m) { var o = q('option', null, m >= 60 ? (m / 60) + (m === 60 ? ' hour' : ' hours') : m + ' minutes'); o.value = String(m); if (A.every === m) o.selected = true; es.appendChild(o); });
+    es.addEventListener('change', function () { A.every = +es.value; }); el.appendChild(es); ad.appendChild(el);
+    var err = q('div', 'msg bad'); err.hidden = true; ad.appendChild(err);
+    if (!A.head) {
+      ad.appendChild(syncBtn('save', 'Read the sheet', function (x) {
+        err.hidden = true; if (!A.url) { err.hidden = false; err.textContent = 'Paste the sheet’s link first.'; return; }
+        x.disabled = true; x.textContent = 'Reading…';
+        api('syncsheet', { body: { url: A.url } }).then(function (j) {
+          x.disabled = false; x.textContent = 'Read the sheet';
+          if (!j || !j.ok) { err.hidden = false; err.textContent = (j && j.error) || 'Could not read it.'; return; }
+          A.head = j.head; A.sample = (j.sample || [])[0] || []; A.rows = j.rows; S.syncOpen.addsheet = true; syncDraw(box);
+        }).catch(function () { x.disabled = false; x.textContent = 'Read the sheet'; err.hidden = false; err.textContent = 'No signal.'; });
+      }));
+    } else {
+      ad.appendChild(q('div', 'dwh', A.rows + (A.rows === 1 ? ' row' : ' rows') + ': which column is which?'));
+      var M = syncMapper(A.kind, A.head, A.sample, null); ad.appendChild(M.el);
+      var br = q('div', 'kitbtns');
+      var save = function (on, x) {
+        var m = M.map, have = Object.keys(m).map(function (k) { return m[k]; });
+        if (!['name', 'first', 'last', 'phone', 'email', 'address'].some(function (f) { return have.indexOf(f) >= 0; })) { err.hidden = false; err.textContent = 'Pick the column with a name, phone, email or address.'; return; }
+        if (A.kind === 'jobs' && have.indexOf('date') < 0) { err.hidden = false; err.textContent = 'Pick the column with the job’s date.'; return; }
+        syncCall(box, 'syncsheetset', { url: A.url, name: A.name || 'My sheet', kind: A.kind, every: A.every, map: m, head: A.head, on: on }, [on ? 'Sheet on' : 'Sheet saved', on ? 'Read every ' + A.every + ' minutes; the first read is within 5 minutes, or tap Read it now.' : 'Turn it on when you are ready.'], x).then(function (j) { if (j && j.ok) { S.syncAdd = null; S.syncOpen.addsheet = false; syncDraw(box); } });
+      };
+      br.appendChild(syncBtn('save', 'Save and turn on', function (x) { save(true, x); }));
+      br.appendChild(syncBtn('lnk', 'Save, keep it off', function (x) { save(false, x); }));
+      br.appendChild(syncBtn('lnk', 'Another link', function () { A.head = null; syncDraw(box); }));
+      ad.appendChild(br);
+    }
+    b.appendChild(ad);
+  }
+  /* ---- 3. the CRMs ---- */
+  function syncDrawConns(box, J) {
+    var cs = J.conns || [], onN = cs.filter(function (c) { return c.on; }).length;
+    var b = syncFold(box, 'conns', 'Connect your CRM', onN ? onN + ' connected and on' : 'HubSpot, Pipedrive, JobNimbus, ClickUp, Housecall Pro, HighLevel');
+    b.appendChild(q('div', 'sub2', 'With a key you make in your own account there. Read-only: we only read. Checked every 5 minutes for new and changed records.'));
+    cs.forEach(function (c) {
+      var d = q('details', 'syncconn'); d.setAttribute('data-k', c.k); if (S.syncOpen['c' + c.k]) d.open = true; d.addEventListener('toggle', function () { S.syncOpen['c' + c.k] = d.open; });
+      var su = q('summary'); su.appendChild(q('b', null, c.name)); su.appendChild(q('span', 'tag ' + (c.on ? 'impact add' : 'impact skip'), c.on ? 'On' : c.connected ? (c.paused === 'failing' ? 'Paused: it kept failing' : 'Connected, off') : 'Not connected')); d.appendChild(su);
+      var w = q('div', 'syncbody'); d.appendChild(w);
+      w.appendChild(q('div', 'sub2', c.what));
+      if (!c.connected) {
+        var ol = q('ol', 'syncsteps'); c.steps.forEach(function (s) { ol.appendChild(q('li', null, s)); }); w.appendChild(ol);
+        var vals = {};
+        c.fields.forEach(function (f) { var l = q('label', null, f.l), i = q('input'); i.type = f.secret ? 'password' : 'text'; i.autocomplete = 'off'; i.spellcheck = false; i.name = 'sync-' + c.k + '-' + f.k; i.addEventListener('input', function () { vals[f.k] = i.value.trim(); }); l.appendChild(i); w.appendChild(l); });
+        var cb = q('div', 'kitbtns');
+        cb.appendChild(syncBtn('save', 'Connect', function (x) { x.textContent = 'Checking the key…'; syncCall(box, 'syncconn', Object.assign({ k: c.k }, vals), ['Connected to ' + c.name, 'Turn it on to start reading.'], x).then(function () { x.textContent = 'Connect'; }); }));
+        if (c.k === 'jobnimbus' && J.jnHave) cb.appendChild(syncBtn('lnk', 'Use the JobNimbus key already connected here', function (x) { syncCall(box, 'syncconn', { k: c.k, reuse: 1 }, ['Connected to JobNimbus', 'Turn it on to start reading.'], x); }));
+        w.appendChild(cb);
+      } else {
+        w.appendChild(q('div', 'syncst', 'Connected' + (c.reuse ? ' (the JobNimbus key already here)' : c.fields.filter(function (f) { return f.secret && f.have; }).map(function (f) { return ' · ' + f.have; }).join('')) + (c.by ? ' · by ' + c.by : '') + (c.at ? ', ' + syncWhen(c.at) : '')));
+        w.appendChild(q('div', 'syncst' + (c.last && c.last.err ? ' bad' : ''), 'Last read: ' + syncSaid(c.last)));
+        w.appendChild(syncOwnerSel(J, c.owner || '', function (v) { syncCall(box, 'syncconn', { k: c.k, owner: v }, ['Saved', v ? 'New leads go to ' + v + '.' : 'New leads go to nobody yet.']); }));
+        var bb = q('div', 'kitbtns');
+        bb.appendChild(syncBtn('save', c.on ? 'Pause' : 'Turn on: read every 5 minutes', function (x) { syncCall(box, 'syncconn', { k: c.k, on: !c.on }, [c.on ? 'Paused' : c.name + ' is on', c.on ? 'Nothing is read until you turn it on.' : 'The first read is within 5 minutes, or tap Sync now.'], x); }));
+        bb.appendChild(syncBtn('lnk', 'Sync now', function (x) { x.textContent = 'Reading…'; syncCall(box, 'syncrun', { src: 'conn:' + c.k }, [c.name, function (j) { return syncSaid(Object.assign({ at: Math.floor(Date.now() / 1000) }, j.ran)); }], x); }));
+        bb.appendChild(syncBtn('lnk danger', 'Disconnect', function (x) { if (window.confirm('Disconnect ' + c.name + '? The key is forgotten here; what came in stays. Delete the key in ' + c.name + ' too.')) syncCall(box, 'syncconn', { k: c.k, remove: 1 }, ['Disconnected', 'What came in stays.'], x); }));
+        w.appendChild(bb);
+      }
+      var sa = q('a', 'lnk', c.name + '’s own page about the key'); sa.href = c.src; sa.target = '_blank'; sa.rel = 'noopener'; w.appendChild(sa);
+      b.appendChild(d);
+    });
+  }
+  /* ---- the Quick quote in the editions (2026-10-30, Matthew: "make quote online a permission but I don't think we need an extra role, I can't
+     expect them to pay for a quote only") ----
+     For a role with "Quote by phone or online" (the admin always, the office by default, any other role an admin gives it in Accounts): the
+     caller's details and address, then the quote builder on that lead. The same person already in the Pipeline is used, never a second lead. */
+  function pqOnC() { return edOn() && kitOnC() && S.role !== 'quote' && (S.role === 'admin' || (S.role === 'office' && pOn('quote.phone')) || pAdd('quote.phone')); }
+  function phoneQuoteView() {
+    if (!pqOnC()) return chooseView();
+    hideToast(); S.signin = null; S.screen = 'phonequote'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Quick quote', sub: 'Someone called or wrote in', back: chooseView, backLabel: 'Home' });
+    view.textContent = ''; var box = q('div', 'card jnform coform pqv'); view.appendChild(box);
+    box.appendChild(q('div', 'sub2', 'Their details and the address, then build the quote and send it. Someone already in the Pipeline by phone or email is used, never added twice.'));
+    var P = S.pq = S.pq || {}, inp = {};
+    [['name', 'Name', 'text', 'name'], ['phone', 'Phone', 'tel', 'tel'], ['email', 'Email', 'email', 'email'], ['address', 'Street address', 'text', 'street-address'], ['town', 'City or town', 'text', 'address-level2']].forEach(function (f) {
+      var l = q('label', null, f[1]), i = q('input'); i.type = f[2]; i.autocomplete = f[3]; i.name = 'pq-' + f[0]; i.value = P[f[0]] || ''; i.addEventListener('input', function () { P[f[0]] = i.value; }); l.appendChild(i); box.appendChild(l); inp[f[0]] = i;
+    });
+    var hl = q('label', null, 'How they reached you'), hs = q('select');
+    [['phone', 'Phone call or text'], ['messenger', 'Message (Facebook, website chat)'], ['referral', 'Referral'], ['inperson', 'In person'], ['other', 'Other (email, website)']].forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; if ((P.src || 'phone') === o[0]) op.selected = true; hs.appendChild(op); });
+    hs.addEventListener('change', function () { P.src = hs.value; }); hl.appendChild(hs); box.appendChild(hl);
+    var nl = q('label', null, 'What they want (optional)'), ni = q('input'); ni.name = 'pq-need'; ni.value = P.need || ''; ni.addEventListener('input', function () { P.need = ni.value; }); nl.appendChild(ni); box.appendChild(nl);
+    var err = q('div', 'msg bad'); err.hidden = true; box.appendChild(err);
+    var br = q('div', 'kitbtns'), go = q('button', 'save', 'Next: build the quote ›'); go.type = 'button'; br.appendChild(go); box.appendChild(br);
+    go.addEventListener('click', function () {
+      err.hidden = true; if (!(P.name || '').trim() && !(P.phone || '').trim() && !(P.email || '').trim()) { err.hidden = false; err.textContent = 'Add at least a name, a phone number or an email.'; return; }
+      go.disabled = true;
+      api('phonequote', { body: { name: P.name || '', phone: P.phone || '', email: P.email || '', address: P.address || '', town: P.town || '', src: P.src || 'phone', need: P.need || '' } }).then(function (j) {
+        go.disabled = false;
+        if (!j || !j.ok) { err.hidden = false; err.textContent = (j && j.error) || 'Not saved.'; return; }
+        if (j.had) toast('Already in the Pipeline', (j.lead.name || 'Their') + ' lead was used: nothing doubled.', null);
+        S.pq = null; kitQuoteView(Object.assign({}, j.lead, { _back: phoneQuoteView, _backLabel: 'Quick quote' }));
+      }).catch(function () { go.disabled = false; err.hidden = false; err.textContent = 'No signal: nothing was saved.'; });
+    });
   }
   /* ---- Your costs (2026-10-29, Matthew: pricing from the client's own costs, testable by him before clients see it) ----
      Each price line's labour (an hourly cost and crew minutes per unit) and materials (cost per pack, units a pack covers), the company's
