@@ -3713,6 +3713,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function setBar(mode, o) {
     o = homeBackFix(setupBackFix(o || {}));   /* Back to Setup from a screen Setup opened; Back to Home, where you were, from one a home tile opened (2026-10-30) */
     setupTop();   /* a setup screen opens at its top (2026-10-30) */
+    hideSplash();   /* any screen that draws its bar is past the logo (2026-10-30, Matthew: back from Google sign-in, Setup › Email stayed under the logo until a refresh; the Facebook, Billing and Quick quote screens had each needed the same line) */
     if (S.screen !== S._foldScreen) { S._foldScreen = S.screen;   /* folds start closed on every screen (2026-10-17, Matthew: not remembered after a refresh, leaving or coming back) */
       ['foldOpen', 'custOpenG', 'custAllL', 'qqAllG', 'teamOpen', 'cuCheckOpen', 'qqOpenRow', 'wonPendOpen', 'treeOpen', 'hailOpen', 'commOpen', 'flOpen', 'exOpen', 'mdOpen', 'photoOpen', 'qqInboxOpen', 'qqCustOpen', 'jobsReadyOpen', 'trainOpen', 'wonPendNew'].forEach(function (k) { delete S[k]; }); }
     hdr.hidden = false; tabPaint();   /* the phone menu bar follows the screen (2026-10-21) */
