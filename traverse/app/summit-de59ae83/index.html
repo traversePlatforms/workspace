@@ -1042,6 +1042,14 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .dbrowse .db-town.trr b{font:700 13.5px var(--sans)}
   .dbrowse .db-town.trr small{font-size:11.5px}
   .dbrowse .trrh{margin:8px 2px 0}
+  .tryours{display:grid;gap:6px}
+  .tryours .sect{margin:16px 4px 4px}
+  .trr.trmine{border-color:var(--go);background:var(--go-tint)}
+  .trr.trmine small{color:var(--go)}
+  .trall{justify-self:start;margin:2px 4px}
+  .dbrowse .db-yours{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .dbrowse .db-yh{margin:6px 4px 2px;font:800 11.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+  .dbrowse .db-town.trr.trmine{background:var(--go-tint)}
   .brow.tap{cursor:pointer}
   .door.acct .alive{display:flex;align-items:center;gap:7px;margin-top:6px;font-size:13px;font-weight:600;color:var(--soft)}
   .door.acct .alive .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
@@ -10951,8 +10959,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         });
       });
     });
+    var yh = q('div'); col.insertBefore(yh, tl); trYours(yh, true);
     var res = q('div', 'db-res'); res.hidden = true; col.insertBefore(res, tl);
-    trSearchBox(null, res, tl, true, tq);
+    trSearchBox(null, res, [yh, tl], true, tq);
   }
   /* ---- towns and neighbourhoods on a computer (2026-10-09, mock-up F): towns by county, the town's neighbourhoods as a table,
      and the town's map with the picked neighbourhood's summary ---- */
@@ -12166,6 +12175,49 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     stateView();
     var el = view.querySelector('button.trc[data-county="' + c + '"]'); if (el) el.scrollIntoView({ block: 'start' });
   }
+  /* ---- Yours (TR-47 part 1), at the top of the list so most reps never scroll: the neighbourhoods given to this person (open ones first, today's
+     and the dated ones first, as the computer's Assigned to you), then the places they knocked in the last 45 days (rounds.php myplaces, asked at
+     most once a minute) and the neighbourhood this device opened last. Nothing given and nothing knocked: no section. */
+  function trYours(box, desk) {
+    var wrap = q('div', desk ? 'db-yours' : 'tryours'); box.appendChild(wrap);
+    var MAX = desk ? 4 : 5;
+    var paint = function () {
+      wrap.textContent = '';
+      var byKey = {}; S.regions.forEach(function (r) { byKey[r.key] = r; });
+      var mine = []; S.regions.forEach(function (r) { r.areas.forEach(function (a) { if (a.who && a.who === S.me) mine.push([r, a]); }); });
+      mine.sort(function (x, y) { return (areaLeft(y[1]) ? 1 : 0) - (areaLeft(x[1]) ? 1 : 0) || mineSort(x[1], y[1]); });
+      var seen = {}; mine.forEach(function (x) { seen[x[0].key + '|' + x[1].name] = 1; });
+      var pl = (S.trPlaces && S.trPlaces.me === S.me ? S.trPlaces.list : []).slice(), last = null;
+      try { last = JSON.parse(localStorage.getItem('sixfold.desk.last') || 'null'); } catch (e) {}
+      if (last && last.r && last.a) pl.push({ r: last.r, a: last.a, opened: true });
+      var rec = [];
+      pl.forEach(function (p) {
+        var r = byKey[p.r], a = r && r.areas.filter(function (y) { return y.name === p.a; })[0], k = p.r + '|' + p.a;
+        if (a && !seen[k] && rec.length < 4) { seen[k] = 1; rec.push([r, a, p]); }
+      });
+      if (!mine.length && !rec.length) { wrap.hidden = true; return; }
+      wrap.hidden = false;
+      if (desk) wrap.appendChild(q('small', 'db-yh', 'Yours'));
+      else { var hd = q('div', 'sect'); hd.appendChild(q('h2', null, 'Yours')); hd.appendChild(q('span', null, mine.length ? 'Given to you, and where you knocked lately' : 'Where you knocked lately')); wrap.appendChild(hd); }
+      var left = function (a) { return areaLeft(a) ? trNum(areaLeft(a)) + ' left' : 'Done'; };
+      var row = function (r, a, sub, cls) { wrap.appendChild(trRow((desk ? 'db-town trr ' : 'trr ') + cls, a.name, sub, function () { openHood(r.key, a.name); }, { town: r.key, hood: a.name })); };
+      mine.slice(0, S.trMineAll ? mine.length : MAX).forEach(function (x) { row(x[0], x[1], (dayTag(x[1]) ? dayTag(x[1]) + ' · ' : '') + 'Given to you · ' + x[0].label + ' · ' + left(x[1]), 'trmine'); });
+      if (mine.length > MAX) { var mb = q('button', 'lnk trall', S.trMineAll ? 'Show fewer' : 'All ' + mine.length + ' given to you'); mb.type = 'button'; mb.addEventListener('click', function () { S.trMineAll = !S.trMineAll; paint(); }); wrap.appendChild(mb); }
+      rec.forEach(function (x) {
+        var p = x[2], when = p.opened ? 'Opened last on this device' : 'You knocked ' + p.n + (p.n === 1 ? pw(' door') : pw(' doors')) + ' here, ' + ago(p.at);
+        row(x[0], x[1], when + ' · ' + x[0].label + ' · ' + left(x[1]), 'trrecent');
+      });
+    };
+    paint();
+    if (!S.trPlaces || S.trPlaces.me !== S.me || Date.now() - S.trPlaces.t > 60000) {
+      api('myplaces').then(function (j) {
+        if (!j || !j.ok) return;
+        S.trPlaces = { me: S.me, t: Date.now(), list: j.places || [] };
+        if (document.body.contains(wrap)) paint();
+      }).catch(function () {});
+    }
+    return wrap;
+  }
   /** the search box; the typed words are kept (S.trQ) so Back from a town comes back to the same results */
   function trSearchBox(box, res, main, desk, inp) {
     if (!inp) {
@@ -12174,7 +12226,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     inp.type = 'search'; inp.autocomplete = 'off'; inp.enterKeyHint = 'search';
     inp.placeholder = 'Find a town, ZIP or neighborhood'; inp.setAttribute('aria-label', 'Find a town, ZIP or neighborhood');
-    var run = function () { S.trQ = inp.value; var on = trFind(inp.value, res, desk); res.hidden = !on; main.hidden = on; };
+    var run = function () { S.trQ = inp.value; var on = trFind(inp.value, res, desk); res.hidden = !on; [].concat(main).forEach(function (m) { m.hidden = on; }); };
     var tm = null;
     inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 180); });
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); var f = res.querySelector('button'); if (f && res.querySelectorAll('button').length === 1) f.click(); } if (e.key === 'Escape') { inp.value = ''; run(); } });
@@ -12183,11 +12235,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /** the town list below the state card (stateView) */
   function trBrowse(box) {
+    var yh = q('div'); box.appendChild(yh); trYours(yh, false);
     var sw = q('div', 'trsearch'); box.appendChild(sw);
     var res = q('div', 'trres'); res.hidden = true; box.appendChild(res);
     var main = q('div', 'trmain'); box.appendChild(main);
     trGroups(main);
-    trSearchBox(sw, res, main, false);
+    trSearchBox(sw, res, [yh, main], false);
   }
   function stateView() {
     if (deskWide()) { S.returnTo = null; return deskBrowse(); }

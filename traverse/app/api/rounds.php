@@ -3741,7 +3741,8 @@ if (!$viewing && $realMe === 'Claude Check') {
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     $roOk = array_merge($roOk, ['careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
-    $roOk[] = 'sync';   /* Sync from another system's screen, read only: keys never shown (2026-10-30) */
+    $roOk[] = 'sync';
+    $roOk[] = 'myplaces';   /* the town list's Yours section (TR-47, 2026-10-31) */   /* Sync from another system's screen, read only: keys never shown (2026-10-30) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
@@ -3802,7 +3803,7 @@ if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) 
  * every signed-in role: it holds towns and neighbourhood counts only (no doors, owners or phones), and the address search, the house lookup
  * and the jobs screens name towns from it. A tech with Doors off is also refused the single-door looks and saves (ED_DOOR_ONE); an office
  * account keeps them, because its house lookup opens one door at a time by address. */
-const ED_DOOR_LISTS = ['area', 'streets', 'mark', 'mydoors', 'walk', 'areaflag', 'work', 'stormdoors', 'others', 'planexport', 'doorassign', 'assign', 'assignmany', 'unassignall', 'skiptrace', 'skiplist', 'skipexport', 'skippick', 'houseposs'];
+const ED_DOOR_LISTS = ['area', 'streets', 'mark', 'mydoors', 'myplaces', 'walk', 'areaflag', 'work', 'stormdoors', 'others', 'planexport', 'doorassign', 'assign', 'assignmany', 'unassignall', 'skiptrace', 'skiplist', 'skipexport', 'skippick', 'houseposs'];
 const ED_DOOR_ONE = ['search', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget', 'walkics', 'lawnmask', 'soil', 'firecheck', 'lawnfix', 'matfix', 'communities', 'territories', 'terrlist', 'terrsave', 'stormdays', 'secmap', 'seclist', 'secrates', 'pestseason', 'climate', 'result', 'results', 'money', 'lawncheck'];
 /* a setter: no prices, quotes, customers or payments */
 const ED_SETTER_NO = ['kit', 'kitquote', 'signsend', 'leadquote', 'leadcontact', 'leadhouse', 'leadask', 'quotes', 'quoted', 'roofjob', 'jobcharge', 'jobpaylink', 'jobpaid', 'squarecheck', 'squarelook', 'squarepage', 'squareconfirm', 'squareconfirmlist',
@@ -4101,7 +4102,7 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'zelleqrset', 'svcarea', 'svcareaset', 'training', 'eodget', 'eodset', 'eodpreview', 'eodtest'];
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
 /* what a lock for payment shuts: Traverse's own data, for everyone but the super admin (2026-10-29) */
-const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
+const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'myplaces', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
     'others', 'walkics', 'results', 'money', 'flags', 'sample', 'stats', 'board',   /* not quotes, quoted, result, roofjob: the Pipeline's door bookings are the company's own work */
     'territories', 'terrlist', 'terrsave', 'assign', 'assignmany', 'unassignall', 'doorassign', 'planexport',
     'stormdays', 'stormdoors', 'alerts', 'alertcalls', 'climate', 'secmap', 'seclist', 'secrates', 'pestseason', 'soil', 'firecheck', 'communities', 'parcelat',
@@ -5462,6 +5463,57 @@ if ($action === 'mydoors') {
     }
     usort($rows, fn($x, $y) => $y['at'] <=> $x['at']);
     out(['ok' => true, 'who' => $who, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d'), 'doors' => $rows]);
+}
+
+/* ---- the places I worked lately (TR-47, 2026-10-31): the town list's Yours section ----------------------------------------------
+ * The neighbourhoods where this person marked doors in the last MYPLACES_DAYS days, newest first: {r: town, a: neighbourhood, at, n: doors}.
+ * Only the marks logs are read (not every door file, as mydoors does), and each door's neighbourhood comes from townDoorAreas(). A mark that
+ * was put back later still counts as a place they worked. Towns the viewer cannot see (another company's group, admin-only) are left out. */
+const MYPLACES_DAYS = 45;
+/** door id => neighbourhood name for one town, from its split files (townSplit), kept in town-cache/<town>/doorarea.txt until the door file
+    changes: the town's stamp on the first line, then "id<TAB>name" per door */
+function townDoorAreas(string $key): array {
+    static $memo = [];
+    if (isset($memo[$key])) return $memo[$key];
+    $sp = townSplit($key); if (!$sp) return $memo[$key] = [];
+    $f = $sp['dir'] . '/doorarea.txt'; $stamp = (string) ($sp['stamp'] ?? '');
+    $txt = (string) @file_get_contents($f);
+    if ($stamp === '' || strncmp($txt, $stamp . "\n", strlen($stamp) + 1) !== 0) {
+        /* a<i>.json in file order until every door of doors.txt is placed (a town that lost neighbourhoods can leave older files behind) */
+        $need = substr_count((string) @file_get_contents($sp['dir'] . '/doors.txt'), "\n") + 1; $seen = 0; $lines = [$stamp];
+        for ($i = 0; $seen < $need && is_file($sp['dir'] . '/a' . $i . '.json'); $i++) {
+            $a = json_decode((string) @file_get_contents($sp['dir'] . '/a' . $i . '.json'), true); if (!is_array($a)) continue;
+            $nm = str_replace(["\t", "\n", "\r"], ' ', (string) ($a['name'] ?? ''));
+            foreach ((array) ($a['doors'] ?? []) as $d) { if (isset($d['id'])) $lines[] = $d['id'] . "\t" . $nm; $seen++; }
+        }
+        $txt = implode("\n", $lines);
+        writeTextAtomic($f, $txt);
+    }
+    $out = [];
+    foreach (array_slice(explode("\n", $txt), 1) as $ln) { $t = strpos($ln, "\t"); if ($t) $out[substr($ln, 0, $t)] = substr($ln, $t + 1); }
+    return $memo[$key] = $out;
+}
+if ($action === 'myplaces') {
+    $since = time() - MYPLACES_DAYS * 86400;
+    $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
+    $byTown = [];
+    foreach (($idx['regions'] ?? []) as $r) {
+        $k = (string) ($r['key'] ?? ''); if ($k === '' || !regionAvailable($k)) continue;
+        $f = DATA_DIR . '/marks-' . $k . '.log'; if (!is_file($f)) continue;
+        foreach (jsonLines($f) as $m) {
+            if (($m['by'] ?? '') !== $me || ($m['outcome'] ?? null) === null || (int) ($m['at'] ?? 0) < $since || !isset($m['id'])) continue;
+            $id = (string) $m['id']; $byTown[$k][$id] = max($byTown[$k][$id] ?? 0, (int) $m['at']);
+        }
+    }
+    uasort($byTown, fn($a, $b) => max($b) <=> max($a));
+    $places = [];
+    foreach (array_slice($byTown, 0, 4, true) as $k => $ids) {   /* the four towns worked most lately is plenty for a few rows */
+        $da = townDoorAreas((string) $k); $per = [];
+        foreach ($ids as $id => $at) { $an = $da[(string) $id] ?? null; if ($an === null) continue; $per[$an] = [max($per[$an][0] ?? 0, $at), ($per[$an][1] ?? 0) + 1]; }
+        foreach ($per as $an => $v) $places[] = ['r' => (string) $k, 'a' => (string) $an, 'at' => $v[0], 'n' => $v[1]];
+    }
+    usort($places, fn($x, $y) => $y['at'] <=> $x['at']);
+    out(['ok' => true, 'days' => MYPLACES_DAYS, 'places' => array_slice($places, 0, 8)]);
 }
 
 /* ---- money sheets (2026-10-02, SX-23) --------------------------------------
