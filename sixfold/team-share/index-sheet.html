@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sixfold shared folder — what is in it</title>
+<title>Sixfold 365 shared folder</title>
 <style>
   /* Print register, same token set as the funding one-pager and the rate sheets,
      so the index reads as part of the same family as the things it indexes.
@@ -97,8 +97,9 @@
 
   @page { size: letter; margin: 0; }
   @media print {
-    body { background: #fff; padding: 0; }
-    .sheet { box-shadow: none; margin: 0; }
+    html, body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; margin: 0; break-after: page; page-break-after: always; }
+    .sheet:last-of-type { break-after: auto; page-break-after: auto; }
   }
 </style>
 </head>
@@ -121,48 +122,48 @@
   </div>
 
   <h1>Everything here is yours to open without asking.</h1>
-  <p class="standfirst">Nine folders, numbered in the order you are likely to need them. If you
-  are looking for something and it is not here, the last page says why — most of the gaps are
-  deliberate, and a few of them matter. <b>New crew: start with the Field Guide beside this file</b> — how we knock, what we say and what we never say, the same lessons as Training in the app.</p>
+  <p class="standfirst">Seven folders, numbered in the order you are likely to need them. <b>The
+  Sixfold 365 app is where the work is run</b> &mdash; your schedule, each job card, Done with your
+  time, job photos and the aftercare message all live there. The paper here is for walks and jobs
+  that need more detail than the app holds, for customers who sign on paper, and for when there is
+  no signal. <b>New crew: start with the Field Guide beside this file.</b> If something is not here,
+  the last page says why.</p>
 
   <div class="folders">
 
     <div class="fold">
-      <div class="no">01<span>What we do</span></div>
+      <div class="no">01<span>Agreements</span></div>
       <div>
-        <p class="when">Reading in · before a first conversation</p>
+        <p class="when">When a job is agreed &middot; read the crib sheet first</p>
         <ul>
-          <li><b>What Sixfold does — services, no prices.</b> The one-page answer to
-          "what do you actually do". <i>No figures on it by design — safe to show anyone.</i></li>
+          <li><b>Lawn job sheet</b> &mdash; one lawn job, three pages. <i>For aeration, mowing and the small work. Page 1 is the agreement; 2 and 3 are the cancellation forms.</i></li>
+          <li><b>Lawn care agreement &mdash; monthly.</b> Four pages, and it <b>runs month to month until the customer cancels.</b> <i>Section 4 is boxed: read it to them. It says how they stop it.</i></li>
+          <li><b>Service agreement &mdash; fire mitigation</b> and <b>&mdash; landscaping.</b> Five pages each. <i>Print all five: pages 4 and 5 are the customer&rsquo;s two cancellation forms.</i></li>
+          <li><b>Tablet version</b>, pages 1&ndash;3, for typing on a screen. <i>Pages 4 and 5 still have to be paper.</i></li>
+          <li><b>Two crib sheets</b> &mdash; signing at the door, and emailing it. <i>Internal. They are not the same rules.</i></li>
         </ul>
       </div>
     </div>
 
     <div class="fold">
-      <div class="no">02<span>Safety</span></div>
+      <div class="no">02<span>Job paperwork</span></div>
       <div>
-        <p class="when">Read once properly · then when something changes</p>
+        <p class="when">Walks and bigger jobs &middot; print or fill in on a screen</p>
         <ul>
-          <li><b>Crew safety and compliance.</b> What OSHA requires of us, which licences and
-          certifications apply, and what is not held yet. <i>The longest document here and the
-          one worth your time.</i></li>
+          <li><b>Quote walk sheet</b>, two versions &mdash; fill in on screen, or print and write on. Counts only: <i>no price is given on the property.</i></li>
+          <li><b>Job close-out sheet.</b> The day the job ends. Same rows as the walk sheet, so the two can be compared.</li>
+          <li><b>What the work takes</b> and <b>what things cost us.</b> Internal. A marked guess beats a blank.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fold">
+      <div class="no">03<span>Safety</span></div>
+      <div>
+        <p class="when">Read once properly &middot; then when something changes</p>
+        <ul>
+          <li><b>Crew safety and compliance.</b> What OSHA requires of us, which licences and certifications apply, and what is not held yet. <i>The one worth your time.</i></li>
           <li><b>Gear checklist.</b> What goes on the truck.</li>
-          <li><b>Crew shirt spec.</b> What the shirt is and why.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="fold">
-      <div class="no">03<span>Forms</span></div>
-      <div>
-        <p class="when">On the job · print or fill in on a screen</p>
-        <ul>
-          <li><b>Quote walk sheet</b>, two versions — one to fill in on screen, one to print
-          and write on. Filled in at the walk, before a price exists.</li>
-          <li><b>Job close-out sheet.</b> Fill in the day the job ends, while you still
-          remember. Same rows as the walk sheet on purpose — the value is the comparison.</li>
-          <li><b>What the work takes</b> and <b>what things cost us.</b> Internal. A marked
-          guess beats a blank.</li>
         </ul>
       </div>
     </div>
@@ -170,16 +171,11 @@
     <div class="fold">
       <div class="no">04<span>For the customer</span></div>
       <div>
-        <p class="when">Print and hand over · or email</p>
+        <p class="when">Print and hand over &middot; or email</p>
         <ul>
-          <li><b>Preparing your home for wildfire.</b> The pamphlet. Most of what is in it the
-          homeowner can do themselves, which is the point.</li>
-          <li><b>Who pays for wildfire mitigation.</b> The funding sheet — the tax credit and
-          the insurance law, on one page.</li>
-          <li><b>Referral packet — blank template.</b> What goes in the folder at the end of a
-          job.</li>
-          <li><b>What Sixfold does.</b> Same sheet as folder 01, here because it is also a
-          handout.</li>
+          <li><b>Preparing your home for wildfire.</b> The pamphlet. Most of it the homeowner can do themselves, which is the point.</li>
+          <li><b>Who pays for wildfire mitigation.</b> The tax credit and the insurance law, on one page.</li>
+          <li><b>Referral packet &mdash; blank template.</b> What goes in the folder at the end of a job.</li>
         </ul>
       </div>
     </div>
@@ -187,37 +183,11 @@
     <div class="fold">
       <div class="no">05<span>Money</span></div>
       <div>
-        <p class="when">Before you answer a question about cost or credits</p>
+        <p class="when">Before you answer a question about credits</p>
         <ul>
-          <li><b>Tax credit reference notebook.</b> What to say, and a "never say this" list.
-          Read the never-say list even if you read nothing else.</li>
-          <li><b>Tax credit — forms the customer needs.</b></li>
-          <li><b>Script kit.</b> What to say at a door and what never to say.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="fold">
-      <div class="no">07<span>Agreements</span></div>
-      <div>
-        <p class="when">When a job is agreed &middot; read the crib sheet first</p>
-        <ul>
-          <li><b>Service agreement — fire mitigation</b> and <b>— landscaping.</b> Two versions, five pages each. <i>Print all five. Pages 4 and 5 are the customer&rsquo;s two cancellation forms and they are part of the agreement.</i></li>
-          <li><b>Tablet version</b>, pages 1&ndash;3, for typing on a screen. <i>Pages 4 and 5 still have to be paper.</i></li>
-          <li><b>Two crib sheets</b> — one for signing at the door, one for emailing it. <i>Internal. They are not the same rules.</i></li>
-          <li><b>Lawn job sheet</b> — one lawn job, three pages. <i>Use this, not the five-page agreement, for aeration, mowing and the small work. Page 1 is the agreement; 2 and 3 are the cancellation forms.</i></li>
-          <li><b>Lawn care agreement — monthly.</b> Four pages, and it <b>runs month to month until the customer cancels.</b> <i>Section 4 is boxed: read it to them. It says how they stop it.</i></li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="fold">
-      <div class="no">08<span>Events</span></div>
-      <div>
-        <p class="when">Free events &middot; take a clipboard and a pen that works</p>
-        <ul>
-          <li><b>Event sign-up sheet.</b> Name, phone, email, county, and two tick boxes &mdash; one to enter the prize drawing, one for permission to contact them. <i>Thirteen people per sheet. Print plenty; do not cram two onto a line.</i></li>
-          <li><i>The drawing is free to enter and there is no purchase or obligation &mdash; say that out loud, it is on the sheet, and it is what keeps the whole thing simple.</i></li>
+          <li><b>Tax credit reference notebook.</b> What to say, and a never-say list. Read that list even if you read nothing else.</li>
+          <li><b>Tax credit &mdash; forms the customer needs.</b></li>
+          <li><b>Script kit.</b> What to say and what never to say.</li>
         </ul>
       </div>
     </div>
@@ -225,24 +195,20 @@
     <div class="fold">
       <div class="no">06<span>Look it up</span></div>
       <div>
-        <p class="when">Mid-job · when you need a number or an address</p>
+        <p class="when">Mid-job &middot; when you need an address</p>
         <ul>
-          <li><b>Debris disposal directory.</b> Every confirmed site, cheapest first.
-          <i>Phone ahead — rates move, and several sites bar commercial haulers.</i></li>
+          <li><b>Debris disposal directory.</b> Every confirmed site, cheapest first. <i>Phone ahead: rates move, and several sites bar commercial haulers.</i></li>
           <li><b>Mitigation funding directory.</b> The programmes, by county.</li>
         </ul>
       </div>
     </div>
 
     <div class="fold">
-      <div class="no">09<span>Pick the look</span></div>
+      <div class="no">07<span>Events</span></div>
       <div>
-        <p class="when">Have a look and say which &middot; nothing is ordered yet</p>
+        <p class="when">Events &middot; take a clipboard and a pen that works</p>
         <ul>
-          <li><b>Business cards</b> — four options, front and back. Green or orange, on black or white.</li>
-          <li><b>Vehicle magnets</b> — the green set and the orange set.</li>
-          <li><b>Mark colour</b> — four ways of letting the mark carry the seasons. <i>Just a question; nothing applied.</i></li>
-          <li><i>Proofs, not print files &mdash; do not send anything in here to a printer.</i></li>
+          <li><b>Event sign-up sheet.</b> Name, phone, email, ZIP code and a <b>Free quote</b> tick box. <i>Ticking it is their OK for us to call, text or email about the quote, and the sheet says so. Thirteen people per sheet.</i></li>
         </ul>
       </div>
     </div>
@@ -273,29 +239,30 @@
 
   <div class="callout">
     <h2>Two of these are not housekeeping. Read them.</h2>
-    <p><b>The agreements are in folder 07 now, and the paperwork is what bites — not the wording.</b> If a cancellation form goes out with the date left blank or wrong, the three-day clock <b>never starts</b> and the job stays cancellable for <b>three years</b>, with no payment for work already done. The contract itself is correct; the risk is entirely in filling it in. <b>Read the crib sheet in that folder before you send or sign one</b> — there are two, one for the door and one for email, and they are different.</p>
-    <p><b>There is no launch offer yet.</b> Two versions were drawn up and neither has been
-    picked. Do not quote a discount, a percentage, or a "first ten properties" deal to a
-    customer, because there is no minimum job size behind either of them.</p>
+    <p><b>The agreements are in folder 01, and the paperwork is what bites — not the wording.</b> If a cancellation form goes out with the date left blank or wrong, the three-day clock <b>never starts</b> and the job stays cancellable for <b>three years</b>, with no payment for work already done. The contract itself is correct; the risk is entirely in filling it in. <b>Read the crib sheet in that folder before you send or sign one</b> — there are two, one for the door and one for email, and they are different.</p>
+    <p><b>Don&rsquo;t promise a price, a discount or a deal.</b> Prices and any discount come
+    from the office, per job, through the app and in writing. A number said at a door or on a walk
+    becomes the number the customer holds us to.</p>
   </div>
 
   <ul class="notlist">
-    <li><b>Rate cards, rate sheets and hourly rates.</b> Pricing is not in a shared folder.
-    Two of the pricing files are marked do-not-quote because the numbers in them are known to
-    be wrong. Prices come from the office, in writing, per job.</li>
+    <li><b>Prices of any kind</b> &mdash; rate cards, price lists, sample invoices. Prices come
+    from the office, per job.</li>
 
     <li><b>Anything naming a real customer.</b> Past quotes and signed agreements name people,
-    addresses and prices. They are not here, and they should not be forwarded.</li>
+    addresses and prices. They are not here and should not be forwarded. Job photos live in the
+    separate <b>Photo content dump</b> drive.</li>
 
-    <li><b>Flyers.</b> They carry the launch offer that has not been chosen — see above.</li>
+    <li><b>The old Sixfold look.</b> The services sheet, the September flyers, door hangers, the old
+    business cards and the magnet and colour proofs were replaced by the Sixfold 365 cards, yard
+    signs and website. Don&rsquo;t print anything carrying the orange &ldquo;Land &amp; Fire&rdquo;
+    look. The old copies are in this drive&rsquo;s archive folder, for the record only.</li>
 
-    <li><b>The marketing plan, the platform sheet and the start-up plan.</b> Business planning
-    rather than crew material. Ask if you want to read one; nothing in them is secret, they
-    are just not what this folder is for.</li>
+    <li><b>The crew shirt spec.</b> It still shows the old design, so it stays out until it is
+    redone with the Sixfold 365 look.</li>
 
-    <li><b>Brand PRINT files</b> — the magnet and business-card PDFs themselves. The
-    proofs are in folder 09; the print-ready files stay out so nothing gets ordered
-    straight from here.</li>
+    <li><b>Business planning and brand print files.</b> Not crew material, and the print-ready
+    cards, signs and magnets stay with Matthew so nothing gets ordered straight from here.</li>
   </ul>
 
   <div class="callout">

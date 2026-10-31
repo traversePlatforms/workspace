@@ -121,8 +121,8 @@ h2.big{font-family:var(--f-display);font-weight:400;font-size:26pt;margin:0 0 .1
 <body><div class="doc">
 <section class="cover">
   ${RIDGE}
-  <p class="word">Sixfold</p>
-  <p class="desc">Lawn, Land &amp; Fire · Monument, CO</p>
+  <p class="word">Sixfold 365</p>
+  <p class="desc">Land · Aeration &amp; Seeding</p>
   <h1>Field<br>Guide</h1>
   <p class="lead">How we knock, what we say, and what we never say. For the Sixfold crew.</p>
   <div class="meta"><span><b>Internal</b> · never hand to a customer</span><span>${total} lessons · ${esc(today)}</span></div>

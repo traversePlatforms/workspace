@@ -207,8 +207,8 @@ function guard(n) {
 /* ---------- page 1 ---------- */
 newPage();
 drawMark(ML, y, 30);
-page.drawText('Sixfold', { x: ML + 34, y: y - 20, size: 20, font: serif, color: PINE });
-page.drawText('LAND & FIRE  ·  MONUMENT, CO', { x: ML + 34, y: y - 30, size: 6.5, font: body, color: MUTE });
+page.drawText('Sixfold 365', { x: ML + 34, y: y - 20, size: 20, font: serif, color: PINE });
+page.drawText('LAND  ·  AERATION & SEEDING', { x: ML + 34, y: y - 30, size: 6.5, font: body, color: MUTE });
 page.drawText('INTERNAL', { x: W - MR - 52, y: y - 8, size: 7, font: bold, color: EMBINK });
 {
   const t = 'WHAT THINGS COST US';

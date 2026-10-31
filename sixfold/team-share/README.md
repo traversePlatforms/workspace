@@ -1,5 +1,13 @@
 # Team share — the Google Drive folder
 
+> **Current shape, 2026-10-31: 25 files, seven folders** (01 Agreements, 02 Job paperwork,
+> 03 Safety and compliance, 04 Hand to the customer, 05 Talking about money, 06 Look it up,
+> 07 Events) plus START HERE and the Field Guide. Copied into the shared drive
+> `I:\Shared drives\Sixfold` (contact@sixfoldcolorado.com) on 31 Oct; the old September copies
+> are in that drive's `_Archive (outdated 2026-10-31)`. Services Sheet D, the crew shirt spec and
+> 09 Pick the look came out. File-by-file record and open questions:
+> [DRIVE-AUDIT-2026-10-31.md](DRIVE-AUDIT-2026-10-31.md). The sections below are the history.
+
 **Built:** 2026-09-18, at Matthew's request — a Drive folder the crew can open
 themselves instead of asking him for a file.
 

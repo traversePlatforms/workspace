@@ -15,7 +15,7 @@
    The originals are NOT moved. Every file below exists in both places, which is
    what was asked for.
 
-   WHAT IS DELIBERATELY NOT IN HERE — see EXCLUDED at the foot of this file. That
+   WHAT IS DELIBERATELY NOT IN HERE — see EXCLUDED below the build list. That
    list is the important half of this script: it is the reasoning for why a file
    a crew member might expect to find is missing, so nobody re-adds it by
    accident.
@@ -29,55 +29,80 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const SIXFOLD = resolve(HERE, '..');
 const OUT = join(HERE, 'files');
 
-/* [ source relative to sixfold/ , destination folder ('' = top level) , destination name ] */
+/* [ source relative to sixfold/ , destination folder ('' = top level) , destination name ]
+
+   REORGANISED 2026-10-31 (Matthew: reorganise the Sixfold Drive). The Drive copy had not been
+   refreshed since 2026-09-18, so the crew was reading the pre-Sixfold-365 versions. The folders
+   were renumbered in the order the crew reaches for them now that the Sixfold 365 app runs the
+   work (schedule, job card, Done with a time, photos, aftercare): agreements first, then the
+   paper job forms, then the reference material. The keep / update / archive record, file by
+   file, is DRIVE-AUDIT-2026-10-31.md beside this script. */
 const FILES = [
-  /* Sorts above the numbered folders in Drive, which is the whole reason for the
-     leading "00". Page 2 of it is the one that matters — what is deliberately NOT
-     in the folder, the blank-cancellation-date warning, and the no-launch-offer rule.
-     Rebuild it with
-     `node tools/html-to-pdf.mjs index-sheet` after editing index-sheet.html. */
+  /* Sorts above the numbered folders in Drive, which is the whole reason for the leading "00".
+     Page 2 of it is the one that matters: what is deliberately NOT in the folder and why.
+     Rebuild it with `node tools/html-to-pdf.mjs index-sheet` after editing index-sheet.html,
+     and check it is still exactly 2 pages. */
   ['team-share/index-sheet.pdf',
    '',
    '00 START HERE - what is in this folder.pdf'],
-  /* The field guide (2026-10-13): built from sixfold/training, the same lessons as the app's Training. Top level, beside START
-     HERE, because it is the first thing new crew should read. Rebuild: node training/build-field-guide.mjs, then
-     node tools/html-to-pdf.mjs Field-Guide. */
+  /* The field guide (2026-10-13): built from sixfold/training, the same lessons as the app's
+     Training. Top level, beside START HERE, because it is the first thing new crew should read.
+     Rebuild: node training/build-field-guide.mjs, then node tools/html-to-pdf.mjs Field-Guide. */
   ['training/Sixfold-Field-Guide.pdf',
    '',
    '00 FIELD GUIDE - how we knock, what we say, what we never say (INTERNAL).pdf'],
 
-  // ---- 01 What we do -----------------------------------------------------
-  ['../_archive/pricing-sheets-2026-09-30/Sixfold-Services-Sheet-D.pdf',   /* archived 2026-09-30 (d232333) but still shared; Matthew to decide (flagged 2026-10-13) */
-   '01 What we do',
-   'What Sixfold does - services, no prices.pdf'],
+  // ---- 01 Agreements -------------------------------------------------------
+  // The short lawn forms lead: aeration and lawn care are most of the work now. Blank
+  // templates, no price printed and no customer named. Both crib sheets ship beside the
+  // agreements on purpose: the three-year exposure comes from a blank date on a
+  // cancellation form, not from the contract wording.
+  ['agreements/lawn-job-sheet.pdf',
+   '01 Agreements',
+   'Lawn job sheet - ONE JOB (3 pages, print all of them).pdf'],
+  ['agreements/lawn-monthly-agreement.pdf',
+   '01 Agreements',
+   'Lawn care agreement - MONTHLY rolling (4 pages, print all of them).pdf'],
+  ['agreements/service-agreement.pdf',
+   '01 Agreements',
+   'Service agreement - FIRE MITIGATION (5 pages, print all of them).pdf'],
+  ['agreements/landscaping-agreement.pdf',
+   '01 Agreements',
+   'Service agreement - LANDSCAPING (5 pages, print all of them).pdf'],
+  ['agreements/service-agreement-tablet.pdf',
+   '01 Agreements',
+   'Service agreement - tablet version, pages 1-3 only.pdf'],
+  ['agreements/field-instructions.pdf',
+   '01 Agreements',
+   'Crib sheet - signing at the DOOR (INTERNAL).pdf'],
+  ['agreements/remote-signing.pdf',
+   '01 Agreements',
+   'Crib sheet - EMAILING an agreement to sign (INTERNAL).pdf'],
 
-  // ---- 02 Safety and compliance -----------------------------------------
-  ['research/Sixfold-Crew-Safety-and-Compliance.pdf',
-   '02 Safety and compliance',
-   'Crew safety and compliance - OSHA, licences, certs.pdf'],
-  ['operations/gear-checklist.pdf',
-   '02 Safety and compliance',
-   'Gear checklist.pdf'],
-  ['operations/crew-shirt-spec.pdf',
-   '02 Safety and compliance',
-   'Crew shirt spec.pdf'],
-
-  // ---- 03 Forms you fill in on a job ------------------------------------
+  // ---- 02 Job paperwork (walks and bigger jobs; the app holds the everyday job) ----
   ['operations/Sixfold-Quote-Walk-Sheet-FILLABLE.pdf',
-   '03 Forms for a job',
+   '02 Job paperwork',
    'Quote walk sheet - fill in on screen.pdf'],
   ['operations/quote-walk-sheet.pdf',
-   '03 Forms for a job',
+   '02 Job paperwork',
    'Quote walk sheet - print and write on.pdf'],
   ['operations/job-closeout.pdf',
-   '03 Forms for a job',
+   '02 Job paperwork',
    'Job close-out sheet - fill in the day the job ends.pdf'],
   ['operations/Sixfold-What-The-Work-Takes-FILLABLE.pdf',
-   '03 Forms for a job',
+   '02 Job paperwork',
    'What the work takes - fill in on screen.pdf'],
   ['operations/Sixfold-What-Things-Cost-FILLABLE.pdf',
-   '03 Forms for a job',
+   '02 Job paperwork',
    'What things cost us - fill in on screen (internal).pdf'],
+
+  // ---- 03 Safety and compliance -----------------------------------------
+  ['research/Sixfold-Crew-Safety-and-Compliance.pdf',
+   '03 Safety and compliance',
+   'Crew safety and compliance - OSHA, licences, certs.pdf'],
+  ['operations/gear-checklist.pdf',
+   '03 Safety and compliance',
+   'Gear checklist.pdf'],
 
   // ---- 04 Hand to the customer -------------------------------------------
   ['marketing/Sixfold-Home-Wildfire-Pamphlet.pdf',
@@ -89,9 +114,6 @@ const FILES = [
   ['marketing/Sixfold-Referral-Packet-TEMPLATE.pdf',
    '04 Hand to the customer',
    'Referral packet - blank template for the end of a job.pdf'],
-  ['../_archive/pricing-sheets-2026-09-30/Sixfold-Services-Sheet-D.pdf',   /* archived 2026-09-30 (d232333) but still shared; Matthew to decide (flagged 2026-10-13) */
-   '04 Hand to the customer',
-   'What Sixfold does - services, no prices.pdf'],
 
   // ---- 05 Talking about money --------------------------------------------
   ['tax-credit-notebook/reference-notebook.pdf',
@@ -104,38 +126,6 @@ const FILES = [
    '05 Talking about money',
    'Script kit - what to say and what never to say.pdf'],
 
-  // ---- 07 Agreements ------------------------------------------------------
-  // Added 2026-09-18. These were excluded while their Notice of Cancellation still
-  // carried the Englewood address; that was corrected the same day, so the reason is
-  // gone and the crew needs them. Both crib sheets ship beside them on purpose.
-  ['agreements/service-agreement.pdf',
-   '07 Agreements',
-   'Service agreement - FIRE MITIGATION (5 pages, print all of them).pdf'],
-  ['agreements/landscaping-agreement.pdf',
-   '07 Agreements',
-   'Service agreement - LANDSCAPING (5 pages, print all of them).pdf'],
-  ['agreements/service-agreement-tablet.pdf',
-   '07 Agreements',
-   'Service agreement - tablet version, pages 1-3 only.pdf'],
-  ['agreements/field-instructions.pdf',
-   '07 Agreements',
-   'Crib sheet - signing at the DOOR (INTERNAL).pdf'],
-  ['agreements/remote-signing.pdf',
-   '07 Agreements',
-   'Crib sheet - EMAILING an agreement to sign (INTERNAL).pdf'],
-  // Added 2026-09-28. The short forms, for the small recurring lawn work the
-  // five-page packet is the wrong shape for. Blank templates, no price printed
-  // and no customer named, so they clear both standing exclusions.
-  ['agreements/lawn-job-sheet.pdf',
-   '07 Agreements',
-   'Lawn job sheet - ONE JOB (3 pages, print all of them).pdf'],
-  ['agreements/lawn-monthly-agreement.pdf',
-   '07 Agreements',
-   'Lawn care agreement - MONTHLY rolling (4 pages, print all of them).pdf'],
-  // ---- 08 Events ----------------------------------------------------------
-  ['operations/Sixfold-Event-Signup-Sheet.pdf',
-   '08 Events',
-   'Event sign-up sheet - print one per 13 people.pdf'],
   // ---- 06 Look it up ------------------------------------------------------
   ['research/Sixfold-Debris-Disposal-Directory.pdf',
    '06 Look it up',
@@ -143,70 +133,54 @@ const FILES = [
   ['research/Sixfold-Mitigation-Funding-Directory.pdf',
    '06 Look it up',
    'Mitigation funding directory - the programmes, by county.pdf'],
-  // ---- 09 Pick the look ---------------------------------------------------
-  // Added 2026-09-28. The brand exclusion below said a separate brand folder was
-  // worth doing "later if anyone asks" — this is that. These are PROOFS, not
-  // print files: the crew is being asked to choose, and the print PDFs stay out
-  // so nobody can order straight from the share.
-  /* the old Sixfold business-card proof came out 2026-10-23: the cards were chosen long ago and replaced by the Sixfold 365 cards
-     (brand/combined-365-2026-10/print-ready/); the old sources are in _archive-2026-10-23-rebrand/ */
-  ['brand/vehicle/proof.png',
-   '09 Pick the look',
-   'Vehicle magnets - GREEN set (aeration-led).png'],
-  ['brand/vehicle/proof-fire.png',
-   '09 Pick the look',
-   'Vehicle magnets - EMBER set (the original).png'],
-  ['brand/vehicle/season-study.png',
-   '09 Pick the look',
-   'Mark colour - season study, NOTHING APPLIED.png'],
+
+  // ---- 07 Events ----------------------------------------------------------
+  // Never call anything on it a raffle (Colorado licenses raffles only to qualifying
+  // nonprofits). Since 29 Oct the sheet has no drawing column at all: ZIP code + Free quote.
+  ['operations/Sixfold-Event-Signup-Sheet.pdf',
+   '07 Events',
+   'Event sign-up sheet - print one per 13 people.pdf'],
 ];
 
 /* Kept here rather than in a note, so that anyone reading the build list also
    reads the reasons. Each entry: what, and why it is out. */
 const EXCLUDED = [
-  ['Rate card, rate sheets A/B/C, work-rates, cost-rates',
-   'Matthew, 2026-09-18. The card is named INTERNAL, two pricing files have carried ' +
-   'do-not-quote banners since 2026-09-16, and the Sedalia job lost money. A crew with ' +
-   'rates in a shared Drive will quote from them.'],
+  ['Rate card, rate sheets A/B/C, work-rates, cost-rates, the invoice example, the yard clean-up price card',
+   'Matthew, 2026-09-18: no pricing of any kind in the crew share. Prices come from the office, ' +
+   'per job, through the app. The invoice example also still prints the old phone number.'],
 
-  ['Every file naming a real customer — the Kara and Sedalia quotes and agreements, ' +
-   'and both _part-*.pdf',
-   'Matthew, 2026-09-18. Real names, real addresses, real prices. Nobody needs them to ' +
-   'do the job, and _part-* files are never-send by construction.'],
+  ['Every file naming a real customer: quotes, signed agreements, walk-throughs, both _part-*.pdf, ' +
+   'the door-territory sheet',
+   'Matthew, 2026-09-18. Real names, real addresses, real prices. Nobody needs them to do the job, ' +
+   'and _part-* files are never-send by construction. Job photos go to the separate Photo content ' +
+   'dump drive, in folders named by date, street and town (never a house number).'],
 
-  ['The blank service agreements — NO LONGER EXCLUDED, they are in folder 07',
-   'They were blocked while their Notice of Cancellation still printed the Englewood ' +
-   'address, which under 16 CFR 429 and C.R.S. 5-3-401 would have left a job voidable ' +
-   'for THREE YEARS. Corrected 2026-09-18 to 17890 Sierra Way, Monument, CO 80132, so ' +
-   'the reason is gone. Both crib sheets ship in the same folder on purpose: the ' +
-   'three-year exposure comes from a blank date on a cancellation form, not from the ' +
-   'contract wording, and no amount of correct drafting protects against that.'],
+  ['Services Sheet D ("What Sixfold does"), REMOVED 2026-10-31',
+   'Archived at source on 2026-09-30, fire-led, old Sixfold brand: the last pre-365 handout in the ' +
+   'share. Nothing replaces it yet. A new services sheet is a copy job for Matthew; the live site ' +
+   '(365aeration.com) is the current statement of services.'],
 
-  ['launch-flyers.pdf',
-   'The two flyers carry different, incompatible launch offers and Brandon has not ' +
-   'picked one; the minimum job size is not set for either. A flyer in a shared folder ' +
-   'gets printed. The script kit in folder 05 states the same position and deliberately ' +
-   'leaves the offer out.'],
+  ['Crew shirt spec, REMOVED 2026-10-31',
+   'Still the old Sixfold mark, Contact@SixfoldColorado.com and (303) 915-1045 (a Phase 4 physical ' +
+   'item, not redone). A spec in a shared folder gets ordered from.'],
 
-  ['marketing-plan.pdf, minimum-viable-start.pdf, platform-sheet.pdf',
-   'Business planning, not crew material — competitor analysis, exposure, channel ' +
-   'strategy. Also the register in the project notes: internal docs for the wider team ' +
-   'stay lean and non-alarming.'],
+  ['09 Pick the look (vehicle magnet proofs, season colour study), REMOVED 2026-10-31',
+   'The look was chosen: the Sixfold 365 badge, cards and yard signs (brand/combined-365-2026-10/). ' +
+   'The proofs show the superseded Sixfold green and ember sets.'],
 
-  ['The two Sedalia agreement PDFs still carrying (720) 772-6146',
-   'Excluded as customer files anyway, so the stale number does not reach anyone. They ' +
-   'stay stale on purpose — rebuilding the fillable one loses 30 form fields and the ' +
-   'DocuSign one has no generator. See agreements/README.md.'],
+  ['launch-flyers, door hanger, door flyer, the September ad kits',
+   'Archived in the 2026-10-23 rebrand (sixfold/_archive-2026-10-23-rebrand/README.md). The flyers ' +
+   'carried launch offers that were never chosen; a flyer in a shared folder gets printed.'],
 
-  ['brand/ PRINT files — the magnet and business-card PDFs themselves',
-   'Still out, and deliberately. Folder 09 carries the PROOFS so the crew can choose; ' +
-   'the print-ready PDFs stay with Matthew so nobody orders straight from the share. ' +
-   'Nothing in 09 is ordered, and the descriptor on it still needs Brandon.'],
+  ['marketing-plan, minimum-viable-start, platform-sheet',
+   'Business planning, not crew material. Archived 2026-10-23.'],
 
-  ['⚑ STALE, and not fixed here: Services Sheet D leads with fire mitigation',
-   'It is in folders 01 and 03 and it is the front-of-house sheet, but the company now ' +
-   'leads with aeration. Replacing it is a copy job, not a share job, so it ships as it ' +
-   'is and this line is the flag. Do not let the share be the reason nobody notices.'],
+  ['Water restrictions 2026 (research/Sixfold-Water-Restrictions-2026.pdf)',
+   'Useful to the crew, but researched 2026-09-30, still prints the old phone and website, and ' +
+   'says itself that it goes stale within weeks. Needs a re-check and rebrand before it is shared.'],
+
+  ['brand/ PRINT files: cards, yard signs, magnets',
+   'The print-ready PDFs stay with Matthew so nobody orders straight from the share.'],
 ];
 
 /* ------------------------------------------------------------------------- */
@@ -238,4 +212,4 @@ for (const f of folders) {
   console.log(`  ${f.padEnd(26)} ${n}`);
 }
 console.log(`\nDeliberately excluded (${EXCLUDED.length} groups) — reasons in this script and in README.md.`);
-console.log(`Drag sixfold/team-share/files/* into the Drive folder.`);
+console.log(`Copy sixfold/team-share/files/* into the Sixfold shared drive; see DRIVE-AUDIT-2026-10-31.md.`);
