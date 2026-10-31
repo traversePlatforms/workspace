@@ -37,8 +37,7 @@ from the ones marked otherwise.
 ## Left out (unsourced, conflicting or risky)
 
 - **"Trees taken out" on the landscaping post.** The 365 site says it, but `sixfold/README.md` records that Denver requires a Tree
-  Service Company licence (DRMC Ch. 57) to prune or remove a tree for pay anywhere in the city. Left out until Matthew or Brandon confirms
-  how tree removal is handled in Denver proper.
+  Service Company licence (DRMC Ch. 57) to prune or remove a tree for pay anywhere in the city. Matthew confirmed 31 Oct: it stays out.
 - **How common snow mold is on the Front Range.** PlantTalk says it "can occur on many Front Range lawns"; a 2007 CSU news release says
   gray snow mold is generally uncommon here. They conflict and the release is old, so no frequency is given.
 - **"Too thick a leaf cover smothers the turf"** (Arapahoe County Master Gardener, seen only as a search snippet). Not opened, not used.
@@ -51,9 +50,20 @@ from the ones marked otherwise.
 
 ## Pictures
 
-- **Generated (Gemini, gemini-3.1-flash-image, 6 pictures, about 1,120 image tokens each):** 3, 5, 12, 17, 24 and 26 Nov. Scenery only: no
-  people, no animals, no results (the clean-up picture shows leaves still down, not a cleared yard). Facebook may add an AI info label.
-  The 26 Nov foothills picture looks like the Flatirons near Boulder; it is a generated scene, not a photo of a place we work.
+- **No generated imagery anywhere** (Matthew, 31 Oct: "I would rather have real photos over AI photos, I don't want Facebook to flag
+  it"). The six Gemini pictures from the first build were deleted from the folder and from git. What replaced them:
+  - **3 Nov and 17 Nov: designed 365 card with a band of a real job photo** from Kara's September job (Colorado Springs, landscaping and
+    tree work; shared drive "Photo content dump", 2026-09 folder). 3 Nov: After/IMG_0198, cropped to grass and a pine trunk below the
+    horizon (houses, road and two people in the distance taken out). 17 Nov: Content/IMG_0215, a raked pile of needles and debris with a
+    rake under pines; the far houses, a car and the street are soft and small at the top edge. Neither is presented as aeration or as a
+    before/after.
+  - **5, 12, 24 and 26 Nov: designed 365 card, text and simple shapes only.** No suitable real photo: nothing in the job photos shows a
+    thin leaf layer, winter watering, snow mold or anything Thanksgiving, and a lawn photo under those words would imply it shows them.
+  - The cards follow the 31 Oct clean-up card (green ground, kicker pill, badge, cream rows, gold rule), with the CSU source named in the
+    footer of each tip card.
+- **Kara's photos checked and left out:** every frame with Brad or another crew member in it, the blue tarp shots (Content 0188–0190), the
+  stump-hole close-ups, the ones with the house front, a flag, a car or a readable house mailbox boulder; most of the "Before" set (brown,
+  patchy lawn); and the tree-felling and limbing shots (trees stay out of the copy, Matthew confirmed).
 - **Real job photos:** 10 Nov, 19 Nov and all 16 photo-set images. Brad's photos from 365 jobs, 16–27 Oct; the crew asks the customer at
   the job (Matthew, 26 Oct). Each was looked at full size: no person or person's shadow, no house number, street sign or readable plate,
   no close house front. Crops took out a street sign (14 Nov #1), another company's branded truck (14 Nov #3), a truck plate, porches and
@@ -64,5 +74,4 @@ from the ones marked otherwise.
 ## Unresolved
 
 1. Denver Water's ban status on the day the 12 Nov post goes out.
-2. Tree removal in the landscaping copy (licence question above).
-3. The 28 Nov photo set is the weakest four: the clean photo pool is nearly used up. Swap in newer job photos if they come in before then.
+2. The 28 Nov photo set is the weakest four: the clean photo pool is nearly used up. Swap in newer job photos if they come in before then.

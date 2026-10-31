@@ -50,6 +50,16 @@ Added 2026-10-31. The posts and crops are in `sixfold/content/november-2026/` (p
 | Sat 28 Nov photo set | 2026-10-23 | 2026-10-23 15.01 37e10d12.jpg (cropped to the lawn) |
 | Sat 28 Nov photo set | 2026-10-16 | 2026-10-22 18.38 5596d23a.jpg (cropped: truck, house front) |
 
+Also reserved for November, from Kara's September job (shared drive "Photo content dump", `2026-09/<job date> <street, town>/`):
+
+| Post | Job date | File |
+|---|---|---|
+| Tue 3 Nov, card band | 2026-09-17 | After/IMG_0198.HEIC (cropped to grass and trunk) |
+| Tue 17 Nov, card band | 2026-09-17 | Content/IMG_0215.HEIC (raked pile and rake) |
+
+The 6 generated pictures were dropped 31 Oct (Matthew: real photos over AI). The other four November cards are text only, so no extra
+October photos were taken from the Saturday pool.
+
 **The clean pool is nearly used up.** After these, what is left of the 12–31 Oct photos is mostly brown or patchy lawns, plates, house
 fronts or people. December photo days need new job photos.
 
