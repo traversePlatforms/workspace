@@ -3719,7 +3719,7 @@ if ($action === 'nlunsub') {
     header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribed</title></head><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c"><div style="max-width:520px;margin:60px auto;padding:0 18px">'
        . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($nm) . '</div>'
-       . ($busy ? '<p>Too many requests from your network just now, so this was not saved. Try the link again in an hour, or reply to the email and we will take you off the list.</p>' : ($ok ? '<p>You are unsubscribed. ' . $e($em) . ' will not get our newsletter again.</p><p style="color:#5a6858;font-size:14px">If that was a mistake, reply to any of our emails and we will add you back.</p>' : '<p>This unsubscribe link does not look right. Reply to the email and we will take you off the list.</p>'))
+       . ($busy ? '<p>Too many requests from your network just now, so this was not saved. Try the link again in an hour, or reply to the email and we will take you off the list.</p>' : ($ok ? '<p>You are unsubscribed. ' . $e($em) . ' will not get our newsletter or offers again.</p><p style="color:#5a6858;font-size:14px">If that was a mistake, reply to any of our emails and we will add you back.</p>' : '<p>This unsubscribe link does not look right. Reply to the email and we will take you off the list.</p>'))
        . '</div></body></html>';
     exit;
 }
@@ -7782,7 +7782,7 @@ function followupDue(array $j): ?string {
 }
 function fuDay(string $ymd): string { return (new DateTime($ymd . ' 12:00', new DateTimeZone(appTz())))->format('D j M'); }
 function fuDayOf(int $ts): string { return (new DateTime('@' . $ts))->setTimezone(new DateTimeZone(appTz()))->format('j M'); }
-function fuWhy(string $st): string { return ['config' => 'the 365 mailbox is not set up yet', 'noemail' => 'no email', 'noreview' => 'no Google review link is set', 'switch' => 'follow-up emails are switched off'][$st] ?? ('the mail server refused it: ' . $st); }
+function fuWhy(string $st): string { return ['config' => 'the 365 mailbox is not set up yet', 'noemail' => 'no email', 'noreview' => 'no Google review link is set', 'switch' => 'follow-up emails are switched off', 'unsub' => 'they unsubscribed from our emails'][$st] ?? ('the mail server refused it: ' . $st); }
 function fuMoney($p): string { $p = (float) $p; return '$' . (abs($p - round($p)) < 0.005 ? number_format($p, 0) : number_format($p, 2)); }
 /** where a job's follow-up email stands, for the job card and the customer page; null when it is not a 365 job */
 function followupState(array $j): ?array {
@@ -7801,51 +7801,45 @@ function followupState(array $j): ?array {
     return $o + ['s' => 'due', 'text' => 'Follow-up email: due ' . fuDay($due)];
 }
 /** the email itself: [subject, text, html]. Plain, short, the 365 brand only. */
+/** the 2-day follow-up email: Version A of the 29 Oct draft (sixfold/marketing/follow-up-email-2026-10-29.md; Matthew 31 Oct "the way we've been
+ *  planning"). It doesn't repeat Jen's text: one aftercare line (seeded jobs only), the review link, the crew's notes, one plan line, the spring
+ *  list and 10% off for every customer. It is a marketing email, so it carries the postal address and the newsletter's unsubscribe link (one list). */
 function followupBuild(array $j, array $l): array {
-    $co = company()['a365'] ?? []; $name = (string) (($co['name'] ?? '') ?: '365 Aeration & Seeding'); $ph = a365Phone($l);
+    $co = company()['a365'] ?? []; $name = (string) (($co['name'] ?? '') ?: '365 Aeration & Seeding'); $ph = a365Phone($l); $web = (string) ($co['web'] ?? '');
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $crew = trim((string) strtok((string) $j['crew'], ' ')) ?: 'Our crew';
     $day = (new DateTime((string) $j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j');
     $rv = followupReview(); $want = trim((string) ($j['want'] ?? '')); $sug = trim((string) ($j['suggest'] ?? ''));
-    $per = ['monthly' => ' a month', 'quarterly' => ' a quarter', 'yearly' => ' a year', 'custom' => ' a visit'];
-    $plans = [];
-    foreach (planTemplates() as $p) {
-        $pn = trim((string) ($p['name'] ?? '')); if ($pn === '') continue;
-        $pr = isset($p['price']) && $p['price'] !== null && (float) $p['price'] > 0 ? fuMoney($p['price']) . ($per[(string) ($p['plan'] ?? 'monthly')] ?? '') : '';
-        $reg = $pr !== '' && isset($p['listPrice']) && (float) $p['listPrice'] > (float) $p['price'] ? 'regular ' . fuMoney($p['listPrice']) : '';
-        $plans[] = ['name' => $pn, 'price' => $pr, 'reg' => $reg, 'every' => !empty($p['every']) ? 'Visits every ' . (int) $p['every'] . ' weeks.' : '',
-                    'inc' => array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string) ($p['includes'] ?? ''))), fn($x) => $x !== ''))];
-    }
-    $ask = 'reply to this email or call or text ' . $ph;
+    $seeded = in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true);
+    $to = trim((string) ($l['email'] ?? '')); $un = nlUnsubUrl(filter_var($to, FILTER_VALIDATE_EMAIL) ? $to : 'you@example.com'); $addr = nlAddress();
+    $why = 'You are getting this because we worked on your lawn.';
     $noted = []; if ($want !== '') $noted[] = ['Work you mentioned wanting', $want]; if ($sug !== '') $noted[] = ['Work ' . $crew . ' would suggest', $sug];
-    $planLine = fn($p) => $p['name'] . ($p['price'] !== '' ? ': ' . $p['price'] . ($p['reg'] !== '' ? ' (' . $p['reg'] . ')' : '') . '.' : '.') . ($p['every'] !== '' ? ' ' . $p['every'] : '');
+    $seedLine = 'Your new seed is in its first couple of weeks. Keep the top of the soil damp and hold off on mowing until the new grass is up.';
+    $planLine = 'Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control, with aeration when the lawn needs it. Jen sent the details by text. Reply here if you\'d like to set it up.';
+    $springLine = 'Want a spot? Reply "spring" and we\'ll put you on the list.';
+    $offLine = 'It\'s for every customer as a thank-you. Mention it when you book.';
     /* the text version */
-    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks for having us out on " . $day . ".\n\n";
+    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks again for having us out on " . $day . ".\n\n";
+    if ($seeded) $t .= $seedLine . "\n\n";
     if ($rv !== '') $t .= "If you have a minute, we'd appreciate an honest Google review:\n" . $rv . "\n\n";
-    if ($noted) $t .= $crew . " made a note of a few things while on your property:\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\nIf you'd like a price on any of it, " . $ask . ".\n\n";
-    if ($plans) { $t .= ($plans && count($plans) > 1 ? 'Our plans' : 'Our plan') . "\n"; foreach ($plans as $p) $t .= '- ' . $planLine($p) . ($p['inc'] ? ' Includes: ' . implode('; ', $p['inc']) . '.' : '') . "\n"; $t .= 'If a plan sounds useful, ' . $ask . " and we'll talk it through.\n\n"; }
-    else $t .= 'We also offer monthly lawn plans. If you would like to hear about them, ' . $ask . ".\n\n";
-    $t .= "10% off your next service\nAs a thank-you for being our customer, you get 10% off your next service with us. Mention it when you book.\n\nThanks again,\n" . $name . "\n" . $ph . "\n";
-    /* the HTML version: the aftercare's look */
+    if ($noted) $t .= $crew . " made a note of a few things while on your property:\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\nIf you'd like a price on any of it, reply to this email or call or text " . $ph . ".\n\n";
+    $t .= 'Keep it going all year. ' . $planLine . "\n\nSpring aeration. " . $springLine . "\n\n10% off your next service. " . $offLine . "\n\nThanks,\n" . $name . "\n" . $ph . ($web !== '' ? ' · ' . $web : '') . "\n\n--\n" . $why . "\nUnsubscribe: " . $un . "\n" . $addr . "\n";
+    /* the HTML version: the newsletter's look */
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8'); $tel = preg_replace('/\D/', '', $ph);
-    $box = 'background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin:0 0 16px';
-    $askH = 'reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>';
-    $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.45">'
+    $p = fn($x) => '<p style="margin:0 0 16px">' . $x . '</p>';
+    $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
        . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-       . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>'
-       . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 16px">Thanks for having us out on ' . $e($day) . '.</p>';
+       . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:16px">' . $e($name) . '</div>'
+       . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p>' . $p('Thanks again for having us out on ' . $e($day) . '.');
+    if ($seeded) $h .= $p($e($seedLine));
     if ($rv !== '') $h .= '<p style="margin:0 0 10px">If you have a minute, we&#39;d appreciate an honest Google review:</p><p style="margin:0 0 18px"><a href="' . $e($rv) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Leave a Google review</a></p>';
-    if ($noted) $h .= '<div style="' . $box . '"><div style="font-weight:700;margin:0 0 8px">' . $e($crew) . ' made a note of a few things while on your property</div><ul style="margin:0 0 10px;padding-left:20px">'
-       . implode('', array_map(fn($n) => '<li style="margin:0 0 6px"><b>' . $e($n[0]) . ':</b> ' . nl2br($e($n[1])) . '</li>', $noted)) . '</ul><div>If you&#39;d like a price on any of it, ' . $askH . '.</div></div>';
-    if ($plans) { $h .= '<div style="' . $box . '"><div style="font-weight:700;margin:0 0 8px">' . (count($plans) > 1 ? 'Our plans' : 'Our plan') . '</div>';
-        foreach ($plans as $p) $h .= '<div style="margin:0 0 10px"><b>' . $e($p['name']) . '</b>' . ($p['price'] !== '' ? ': ' . $e($p['price']) . ($p['reg'] !== '' ? ' <span style="color:#5a6858">(' . $e($p['reg']) . ')</span>' : '') : '') . ($p['every'] !== '' ? '<br>' . $e($p['every']) : '')
-            . ($p['inc'] ? '<ul style="margin:4px 0 0;padding-left:20px">' . implode('', array_map(fn($x) => '<li>' . $e($x) . '</li>', $p['inc'])) . '</ul>' : '') . '</div>';
-        $h .= '<div>If a plan sounds useful, ' . $askH . ' and we&#39;ll talk it through.</div></div>'; }
-    else $h .= '<p style="margin:0 0 16px">We also offer monthly lawn plans. If you would like to hear about them, ' . $askH . '.</p>';
-    $h .= '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin:0 0 18px"><div style="font-weight:700;margin:0 0 4px">10% off your next service</div>As a thank-you for being our customer, you get 10% off your next service with us. Mention it when you book.</div>'
-       . '<p style="margin:0 0 4px">Thanks again,</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a></p>'
+    if ($noted) $h .= '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin:0 0 16px"><div style="font-weight:700;margin:0 0 8px">' . $e($crew) . ' made a note of a few things while on your property</div><ul style="margin:0 0 10px;padding-left:20px">'
+       . implode('', array_map(fn($n) => '<li style="margin:0 0 6px"><b>' . $e($n[0]) . ':</b> ' . nl2br($e($n[1])) . '</li>', $noted)) . '</ul><div>If you&#39;d like a price on any of it, reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</div></div>';
+    $h .= $p('<b>Keep it going all year.</b> ' . $e($planLine)) . $p('<b>Spring aeration.</b> ' . $e($springLine)) . $p('<b>10% off your next service.</b> ' . $e($offLine))
+       . '<p style="margin:0 0 4px">Thanks,</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' . ($web !== '' ? ' · ' . $e($web) : '') . '</p>'
+       . '<div style="margin-top:28px;padding-top:14px;border-top:1px solid #dfe6da;color:#5a6858;font-size:12px;line-height:1.5">' . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</div>'
        . '</div></body></html>';
-    return ['Thanks from ' . $name, $t, $h];
+    return ['How\'s the lawn' . ($first !== '' ? ', ' . $first : '') . '?', $t, $h, ['List-Unsubscribe: <' . $un . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']];
 }
 /** send one job's follow-up email (the 5-minute job, or Send now). Records it on the job, the lead and the customer; a failure alerts the office. */
 function jobFollowup(string $jid, string $why, bool $byHand = false): array {
@@ -7872,8 +7866,9 @@ function jobFollowup(string $jid, string $why, bool $byHand = false): array {
         return $r + ['to' => $to];
     };
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
-    [$subject, $text, $html] = followupBuild($j, $l);
-    return $rec(a365Mail($to, $subject, $text, $html));
+    if (isset(nlUnsubs()[strtolower($to)])) return $rec(['ok' => false, 'stage' => 'unsub', 'error' => 'They unsubscribed from our emails.']);   /* one list with the newsletter (31 Oct) */
+    [$subject, $text, $html, $hd] = followupBuild($j, $l);
+    return $rec(a365Mail($to, $subject, $text, $html, $hd));
 }
 /** the 5-minute job's part (metapoll): every job whose follow-up is due, 9 am to 6 pm, at most ten a run; a failure tries again after an hour, three times */
 function followupSweep(?int $now = null): array {
@@ -7895,7 +7890,8 @@ function followupSweep(?int $now = null): array {
         $fu = is_array($j['fu'] ?? null) ? $j['fu'] : null;
         if ($fu) {
             $em = trim((string) ($leads[$j['lead']]['email'] ?? ''));
-            if (($fu['stage'] ?? '') === 'noemail' && !filter_var($em, FILTER_VALIDATE_EMAIL)) continue;   /* noted once; it goes when an email is added */
+            if (($fu['stage'] ?? '') === 'noemail' && !filter_var($em, FILTER_VALIDATE_EMAIL)) continue;
+            if (($fu['stage'] ?? '') === 'unsub') continue;   /* never retried (31 Oct) */   /* noted once; it goes when an email is added */
             if (($fu['stage'] ?? '') !== 'noemail' && ((int) ($fu['n'] ?? 1) >= FU_TRIES || $now - (int) ($fu['at'] ?? 0) < 3600)) continue;
         }
         $r = jobFollowup((string) $jid, 'two days after the job'); $out['tried']++; if (!empty($r['ok'])) $out['sent']++;
