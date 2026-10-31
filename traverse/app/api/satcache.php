@@ -164,14 +164,18 @@ function satcClean(): void {
     }
     satcWriteUsage(['bytes' => $b, 'files' => $n0 - $gone, 'counted' => time(), 'lastClean' => time(), 'cleaned' => $gone]);
     satcLog(sprintf('clean: %d of %d tiles removed, %.1f MB -> %.1f MB (cap %d MB) in %.1f s', $gone, $n0, $before / 1048576, $b / 1048576, satcCap() / 1048576, microtime(true) - $t0));
-    /* old rate-limit buckets and stats past two weeks */
+    satcSweep();
+    @flock($lk, LOCK_UN); fclose($lk);
+}
+/** old rate-limit buckets (over an hour) and stats past two weeks */
+function satcSweep(): void {
     foreach ((array) glob(satcDir() . '/rl/*') as $f) if (@filemtime($f) < time() - 3600) @unlink($f);
     foreach ((array) glob(satcDir() . '/stats/*.txt') as $f) if (@filemtime($f) < time() - 15 * 86400) @unlink($f);
-    @flock($lk, LOCK_UN); fclose($lk);
 }
 /** this visitor's fetches from Planetary Computer in the current 5 minutes; false when over the limit */
 function satcRateOk(): bool {
     $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '0');
+    if (mt_rand(1, 200) === 1) satcSweep();   /* the buckets would otherwise wait for the first clean-up, weeks away */
     $f = satcDir() . '/rl/' . substr(hash('sha256', $ip . '|' . intdiv(time(), SATC_RL_WINDOW)), 0, 24);
     $fh = @fopen($f, 'c+'); if (!$fh) return true;
     @flock($fh, LOCK_EX);
@@ -227,8 +231,9 @@ function satcServe(array $q): void {
         }
     }
     if (is_file($none) && @filemtime($none) > time() - SATC_NONE_AGE) { satcFail(404, 'No photo here.', 'n'); return; }
-    if (!satcRateOk()) { satcFail(429, 'Too many new tiles at once; try again in a few minutes.'); return; }
     foreach (['t', 'rl', 'stats'] as $s) if (!is_dir($dir . '/' . $s)) @mkdir($dir . '/' . $s, 0755, true);
+    if (!satcRateOk()) { satcFail(429, 'Too many new tiles at once; try again in a few minutes.'); return; }
+    @ignore_user_abort(true);   /* a phone that pans away mid-fetch still leaves the tile kept for the next one */
 
     $code = 0; $type = '';
     $tile = '/tiles/WebMercatorQuad/' . $z . '/' . $x . '/' . $y;
