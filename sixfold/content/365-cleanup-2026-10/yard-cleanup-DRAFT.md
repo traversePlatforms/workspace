@@ -56,3 +56,9 @@ Hashtags are a suggestion; trim to what the 365 page already uses.
 - **Angi** (aggregator): search results quoted a Denver average of about $438 for leaf removal; the page refused our fetch (403), so NOT verified and not used.
 - Left out: a search summary claiming Denver Pro Landscape lists "$150–$350 per visit, 4–6 visits" (not on the page when fetched); cost-guide and lead-generation sites.
 - **Read against Brad's prices:** his small-yard floor ($100) is under both published starting points (~$149–$200); his large-yard range ($600–$1,000) sits at and above Denver Pro's top and inside Junk Same Day's large/storm band. With haul-away optional and priced separately, his totals land in the same range as these.
+
+## POSTED 31 Oct 2026, 8:03 am MT (Matthew's go)
+- Facebook (Sixfold 365 page): https://www.facebook.com/122111709747510685/posts/122113270065510685
+- Instagram (@365aeration): https://www.instagram.com/p/DfKU-ido52h/
+- Image served from https://365aeration.com/assets/social/sixfold365-cleanup-2026-10-31.png
+- Caption as posted: "Fall clean-up is here." + what's included + the four prices + "Want a quote? Send us a message here (Instagram: a DM), or text a picture of your lawn to (720) 830-4553 and we'll send you a free quote." Instagram adds #coloradolawn #fallcleanup #frontrange.
