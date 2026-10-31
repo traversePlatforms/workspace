@@ -117,8 +117,11 @@ function render(array $l, array $tpl, array $set, string $unsubUrl, string $styl
         else $m['nomap'] = 'no map for ' . ((string) ($l['city'] ?? '') ?: 'a company with no city') . ': goes plain';
     } elseif (isset(APP_PICS[$style])) {   /* an app picture instead of the map (2026-10-30) */
         $pic = appPic($style, $mapTrade ?? (string) $l['trade']);
-        $m['style'] = $style; $m['map'] = ['img' => $pic['url'], 'text' => $pic['text'], 'city' => '']; $m['html'] = mailHtml($main, $set, $pic, $unsubUrl);
+        if ($pic) { $m['style'] = $style; $m['map'] = ['img' => $pic['url'], 'text' => $pic['text'], 'city' => '']; $m['html'] = mailHtml($main, $set, $pic, $unsubUrl); }
+        else $m['nomap'] = 'no app picture for ' . (TRADES[$l['trade']] ?? $l['trade']) . ': goes plain';
     }
+    /* a placeholder the template editor let through ({Company}, {name}) would go out as typed (review 2026-10-31) */
+    if (preg_match('/\{[a-z]+\}/i', $m['subject'] . "\n" . $m['body'], $ph)) $m['badph'] = $ph[0];
     return $m;
 }
 
@@ -141,7 +144,7 @@ const APP_PICS = [
 /** the picture block for an app style and trade, in mapFor's shape (url, text, w, h, alt) */
 function appPic(string $style, string $trade): ?array {
     $set = APP_PICS[$style] ?? null; if (!$set) return null;
-    $p = $set[$trade === 'yards' ? 'yards' : 'roofing'];
+    $p = $set[$trade] ?? null; if (!$p) return null;   /* a trade with no picture of its own goes plain (review 2026-10-31: pest, security and solar got the roofing picture and its roof caption) */
     return ['url' => deskBase() . '/m/' . $p[0], 'w' => $p[1], 'h' => $p[2], 'text' => $p[3], 'alt' => 'The Traverse app', 'city' => ''];
 }
 const MAP_FAMILY = ['roofing' => 'hail', 'roofing solar' => 'hail', 'solar' => 'hail', 'pest' => 'moved', 'security' => 'moved', 'yards' => 'lawn'];
@@ -276,8 +279,11 @@ function sendQueue(int $max): int {
         $S = state(); $set = $S['settings'];
         if (trim((string) $set['address']) === '') { echo "no postal address: not sending\n"; break; }
         if (sentToday() >= max(1, min(CAP_MAX, (int) $set['cap']))) { echo "today's cap reached\n"; break; }
-        $Q = jread('queue.json', []); if (!$Q) { echo "nothing waiting\n"; break; }
-        $m = array_shift($Q); jwrite('queue.json', $Q);
+        /* the pop under the same lock the desk's Queue and Clear take (review 2026-10-31: a Queue tap during a run could lose the new batch, or
+           put a just-popped message back and send it twice) */
+        $qa = fopen(DATA_DIR . '/queue.lock.add', 'c'); flock($qa, LOCK_EX);
+        $Q = jread('queue.json', []); if (!$Q) { flock($qa, LOCK_UN); echo "nothing waiting\n"; break; }
+        $m = array_shift($Q); jwrite('queue.json', $Q); flock($qa, LOCK_UN);
         $l = $S['leads'][$m['id']] ?? null;
         $why = $l ? noMail($l) : 'company gone';
         if ($l && $why === '' && strtolower((string) $l['email']) !== strtolower((string) $m['to'])) $why = 'email changed since it was queued';
@@ -291,8 +297,8 @@ function sendQueue(int $max): int {
         } else {
             $m['tries'] = (int) ($m['tries'] ?? 0) + 1;
             logAdd(['t' => 'sendfail', 'id' => $m['id'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 200), 'by' => 'queue', 'at' => time()]);
-            if ($m['tries'] < 3 && in_array($r['stage'], ['connect', 'greeting', 'ehlo', 'starttls', 'ehlo-tls', 'data'], true)) { $Q = jread('queue.json', []); $Q[] = $m; jwrite('queue.json', $Q); }   /* the mail server, not the address: try later */
-            if (in_array($r['stage'], ['config', 'auth'], true)) { echo "mail login problem: stopped\n"; $Q = jread('queue.json', []); array_unshift($Q, $m); jwrite('queue.json', $Q); break; }
+            if ($m['tries'] < 3 && in_array($r['stage'], ['connect', 'greeting', 'ehlo', 'starttls', 'ehlo-tls', 'data'], true)) { flock($qa, LOCK_EX); $Q = jread('queue.json', []); $Q[] = $m; jwrite('queue.json', $Q); flock($qa, LOCK_UN); }   /* the mail server, not the address: try later */
+            if (in_array($r['stage'], ['config', 'auth'], true)) { echo "mail login problem: stopped\n"; flock($qa, LOCK_EX); $Q = jread('queue.json', []); array_unshift($Q, $m); jwrite('queue.json', $Q); flock($qa, LOCK_UN); break; }
         }
     }
     echo "sent $sentN\n"; flock($lk, LOCK_UN); return 0;
@@ -335,13 +341,21 @@ if ($action === 'unsub') {
         echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Traverse</title><body style="margin:0;font:16px/1.5 system-ui,sans-serif;background:#f4f6f9;color:#0f1b2d;display:grid;place-items:center;min-height:100vh;padding:16px;text-align:center"><div><p style="font-size:20px;font-weight:700;margin:0 0 6px">The unsubscribe link works</p><p style="margin:0">This was a test email, so nobody was taken off the list. On a real email this page tells the company they are unsubscribed.</p></div>'; exit;
     }
     $S = state(); $ok = preg_match('/^[a-z0-9]{6,24}$/', $id) && isset($S['leads'][$id]) && hash_equals(unsubToken($id), $tk);
-    if ($ok && empty($S['leads'][$id]['unsub'])) logAdd(['t' => 'unsub', 'id' => $id, 'by' => 'the company', 'at' => time()]);
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') { header('Content-Type: text/plain; charset=utf-8'); echo $ok ? 'Unsubscribed.' : 'Link not recognised.'; exit; }
+    /* the link itself only shows the page; the button on it (one tap, a POST) takes the company off. Review 2026-10-31: mail scanners
+       (Safelinks, Proofpoint and the like) open every link in a message as it lands, and a GET that unsubscribed was taking companies off
+       before anyone had read the email. */
+    $post = $_SERVER['REQUEST_METHOD'] === 'POST';
+    if ($post && $ok && empty($S['leads'][$id]['unsub'])) logAdd(['t' => 'unsub', 'id' => $id, 'by' => 'the company', 'at' => time()]);
+    if ($post && !empty($_SERVER['HTTP_X_DESK'])) { header('Content-Type: text/plain; charset=utf-8'); echo $ok ? 'Unsubscribed.' : 'Link not recognised.'; exit; }
     header('Content-Type: text/html; charset=utf-8'); header('X-Robots-Tag: noindex');
+    $h = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
     echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Traverse</title>'
        . '<body style="margin:0;font:16px/1.5 system-ui,sans-serif;background:#f4f6f9;color:#0f1b2d;display:grid;place-items:center;min-height:100vh;padding:16px;text-align:center"><div>'
-       . ($ok ? '<p style="font-size:20px;font-weight:700;margin:0 0 6px">You are unsubscribed</p><p style="margin:0">Traverse will not email you again. Sorry for the bother.</p>'
-              : '<p style="font-size:20px;font-weight:700;margin:0 0 6px">That link did not work</p><p style="margin:0">Reply to the email with "no thanks" and we will take you off the list.</p>')
+       . (!$ok ? '<p style="font-size:20px;font-weight:700;margin:0 0 6px">That link did not work</p><p style="margin:0">Reply to the email with "no thanks" and we will take you off the list.</p>'
+          : ($post || !empty($S['leads'][$id]['unsub']) ? '<p style="font-size:20px;font-weight:700;margin:0 0 6px">You are unsubscribed</p><p style="margin:0">Traverse will not email you again. Sorry for the bother.</p>'
+             : '<p style="font-size:20px;font-weight:700;margin:0 0 6px">Unsubscribe from Traverse emails?</p><p style="margin:0 0 14px">One tap and we will not email you again.</p>'
+               . '<form method="post" action="' . $h((string) ($_SERVER['SCRIPT_NAME'] ?? '/api/desk.php')) . '?action=unsub&amp;id=' . $h($id) . '&amp;t=' . $h($tk) . '">'
+               . '<button type="submit" style="font:700 16px system-ui,sans-serif;background:#0f1b2d;color:#fff;border:0;border-radius:10px;padding:12px 22px">Unsubscribe</button></form>'))
        . '</div>';
     exit;
 }
@@ -477,6 +491,7 @@ switch ($action) {
         if ($action === 'preview') out(['ok' => true, 'messages' => $msgs, 'skipped' => $skip, 'addressSet' => trim((string) $S['settings']['address']) !== '', 'style' => $style]);
         if (trim((string) $S['settings']['address']) === '') fail('Add your postal address in Settings first. The law wants it in every email like this, so sending stays off until it is there.');
         if (!$msgs) fail('None of those can be emailed.');
+        foreach ($msgs as $m) if (!empty($m['badph'])) fail('The template still has ' . $m['badph'] . ' in it, which the email cannot fill. Fix it in Settings (the placeholders are {company}, {city}, {trade} and {first}).');
         $lk = fopen(DATA_DIR . '/queue.lock.add', 'c'); flock($lk, LOCK_EX);
         $Q = jread('queue.json', []);
         foreach ($msgs as $m) $Q[] = $m + ['unsub' => unsubUrl($m['id']), 'by' => $ME, 'at' => time()];
@@ -496,6 +511,7 @@ switch ($action) {
         $city = clean($body['city'] ?? '', 60) ?: 'Denver';   /* the sample company's city (2026-10-30: the map is the city's) */
         $sample = ['id' => 'testmsg', 'name' => 'Sample ' . TRADES[$tr] . ' Co', 'city' => $city, 'trade' => $tr, 'person' => '', 'email' => $to];
         $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u, $style);
+        if (!empty($m['badph'])) fail('The template still has ' . $m['badph'] . ' in it, which the email cannot fill. Fix it in Settings (the placeholders are {company}, {city}, {trade} and {first}).');
         $m['subject'] .= isset(APP_PICS[$m['style']]) ? ' (' . strtolower(STYLES[$m['style']]) . ')' : ($m['style'] === 'map' ? ' (with map)' : ($style === 'map' ? ' (plain: no map for ' . $city . ')' : ' (plain)'));   /* a test says which version it is */
         $r = mailSend($to, $m['subject'], $m['body'], [], (string) ($m['html'] ?? ''));   /* as the queue sends it: no bulk-mail headers (2026-10-29) */
         logAdd(['t' => 'test', 'to' => $to, 'trade' => $tr, 'style' => $m['style'], 'city' => $city, 'ok' => $r['ok'], 'by' => $ME, 'at' => time()]);
