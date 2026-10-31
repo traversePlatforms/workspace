@@ -2666,6 +2666,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   img.mkbg{box-sizing:border-box;background:#fff;border-radius:8px;padding:3px 6px}
   .splash img.splimg{display:block;height:88px;width:auto;max-width:70vw;object-fit:contain;animation:rise .5s ease both}
   .splash img.splimg.mkbg{border-radius:14px;padding:8px 12px}
+  .splash img.splimg.wait{visibility:hidden}   /* until the logo file has loaded (2026-10-30) */
   .lgbox{display:grid;gap:6px;margin-top:6px}
   /* 2026-10-30: the Company screen's two parts, the service area, the Billing card's lines and request */
   .coform .coh{margin-top:6px}.coform .coh:first-child{margin-top:0}
@@ -2831,7 +2832,12 @@ function paintSplashLogo(up, c) {
   if (!up) { if (im) im.remove(); if (svg) svg.style.display = ''; return; }
   if (!im) { im = document.createElement('img'); im.className = 'splimg'; im.alt = ''; sp.insertBefore(im, sp.firstChild); }
   im.classList.toggle('mkbg', !!(c.logoUp && c.logoUp.bg));
-  if (im.getAttribute('src') !== up) im.setAttribute('src', up);
+  if (im.getAttribute('src') !== up) {   /* hidden until the picture has loaded: an empty img with the white backing showed as a thin white bar for a second on a refresh (2026-10-30, Matthew) */
+    im.classList.add('wait'); im.onload = function () { im.classList.remove('wait'); };
+    im.onerror = function () { im.remove(); if (svg) svg.style.display = ''; };
+    im.setAttribute('src', up);
+    if (im.complete && im.naturalWidth) im.classList.remove('wait');
+  }
   if (svg) svg.style.display = 'none';
 }
 function paintCompany(c) {
