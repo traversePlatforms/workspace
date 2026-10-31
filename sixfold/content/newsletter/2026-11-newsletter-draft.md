@@ -1,7 +1,7 @@
 # Sixfold 365 newsletter: November 2026 (DRAFT)
 
 **Status:** draft for Matthew's approval. Nothing sent or scheduled.
-**Goes to:** Sixfold 365 customers with an email on file who haven't unsubscribed. Leads don't get it.
+**Goes to:** every email that has come into Sixfold 365, leads and customers, minus anyone unsubscribed (Matthew 31 Oct: "a monthly newsletter for every email we have that's come into sixfold"; it was customers only). 114 addresses on 31 Oct: 25 customers + 89 leads who haven't booked. The opening line is now one that fits both.
 **Sends:** Sun 1 Nov 2026, 9 am Mountain, once approved in the app's Newsletter screen.
 **Needs before it can send:**
 - The 365 mailbox connected. It is missing on the server, so no 365 email can send.
@@ -16,7 +16,7 @@ The footer adds the address, why they're getting it, and the unsubscribe link au
 
 Hi [first name],
 
-Thanks for having us out this season. Here are a few things that will help your lawn come through the winter.
+Thanks for being in touch with us this season. Here are a few things that will help your lawn come through the winter.
 
 ### Water a little this winter
 
