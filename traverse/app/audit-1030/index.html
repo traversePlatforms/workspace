@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Traverse audit 30 Oct</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#fff;--ink:#0f1b2d;--soft:#566476;--line:#dce2ea;--hi:#b42318;--md:#8a5a00;--lo:#1f7a4d}
+  @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b1220;--card:#131d2e;--ink:#e8edf5;--soft:#9aa8bc;--line:#24324a;--hi:#f0786a;--md:#e8b04f;--lo:#6fcf9b}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,Arial,sans-serif}
+  main{max-width:1280px;margin:0 auto;padding:16px}
+  h1{font-size:24px;margin:8px 0 4px}h2{font-size:19px;margin:28px 0 8px}h3{font-size:16px;margin:18px 0 6px}
+  .sub{color:var(--soft);margin:0 0 14px}
+  table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;vertical-align:top;padding:8px 10px;border-top:1px solid var(--line);font-size:14px}th{background:var(--bg);border-top:0}
+  .sev{font-weight:700;white-space:nowrap}.High{color:var(--hi)}.Medium{color:var(--md)}.Low{color:var(--lo)}.Info{color:var(--soft)}
+  code{font:13px ui-monospace,Consolas,monospace;background:var(--bg);padding:0 4px;border-radius:4px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+  figure img{width:100%;height:auto;display:block;border-radius:6px;border:1px solid var(--line)}
+  figcaption{font-size:12.5px;color:var(--soft);margin-top:6px;word-break:break-word}
+  .wide{grid-template-columns:repeat(auto-fill,minmax(560px,1fr))}
+  a{color:inherit}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+</style></head><body><main>
+<h1>Traverse app audit, 30 Oct 2026</h1>
+<p class="sub">Read-only. Five editions and Sixfold 365 mode, phone 390x844, tablet 820x1180 and 1180x820, desktop 1440x900, light and dark, as super, admin, crew/rep, office and manager. Main <code>6b383c6</code> for the full click-through (3,590 screen opens); merged main <code>bd946151</code> for the new screens. The full write-up is <a href="REPORT.md">REPORT.md</a>; the 13 items in <code>tablet-fixes-1030.md</code> are not repeated.</p>
+
+<h2>A. Findings, ranked</h2>
+<table><tr><th>#</th><th>Sev</th><th>Finding</th><th>Repro</th><th>Shot</th></tr>
+<tr><td>1</td><td class="sev High">High</td><td><b>Sixfold's ClickUp check shows in the editions' Pipeline</b>: "ClickUp and the app · 7 to look at · checked Thu 22 Oct". <code>rounds.php</code> ~8997 sends <code>cucheck</code> to any admin, <code>index.html</code> ~16582 draws it; not gated on <code>CO.a365</code>.</td><td>Roofing admin › Pipeline (every edition, every size)</td><td><a href="shots/roofing-admin-tabP-pipeline-clickup.jpg">tabP</a></td></tr>
+<tr><td>2</td><td class="sev High">High</td><td><b>Stats page in the editions</b>: "0 quoted so far (app or ClickUp)" (~21202, new) above the Sixfold Meta spend rows (fix item 10).</td><td>Roofing admin › Sales › Stats</td><td><a href="shots/roofing-admin-tabP-stats-sixfold-ads.jpg">tabP</a></td></tr>
+<tr><td>3</td><td class="sev Medium">Medium</td><td><b>Satellite imagery hangs on one hard-coded mosaic id.</b> <code>satSearch()</code> (~17331) rejects Planetary Computer's new id format (<code>pc1.&lt;time&gt;.&lt;hex&gt;</code>, checked 30 Oct), so every device uses <code>SAT_FALLBACK</code> from 9 Oct; when that expires, Photo and Hybrid go grey everywhere with no message. The out-of-state sample property is grey already (24 failed tiles a visit).</td><td>Roofing admin › Sample property › Photo</td><td><a href="shots/roofing-admin-tabL-sample-property-photo.jpg">tabL</a></td></tr>
+<tr><td>4</td><td class="sev Medium">Medium</td><td><b>Office dashboard opens scrolled down</b> on phone (609 px) and tablet upright (146 px): <code>officeView()</code> keeps the home's scroll, so the date and KPI cards are above the fold. "All towns and neighborhoods" opens 48-88 px down on tablet landscape and desktop.</td><td>Phone: Home › scroll to Office dashboard › tap</td><td><a href="shots/roofing-admin-phone-office-dashboard.jpg">phone</a> · <a href="shots/roofing-admin-tabP-office-dashboard.jpg">tabP</a></td></tr>
+<tr><td>5</td><td class="sev Medium">Medium</td><td><b>"Doors" where a rep reads it</b>, beyond fix item 4: Team stats "DOORS 7D" (~9907 not in <code>pw()</code>), desk/tablet-landscape home "Your week: doors", Pipeline chips "Door" / "At the door", Customers "Bookings made at the door".</td><td>Roofing admin › Team stats; tablet landscape Home</td><td><a href="shots/roofing-admin-tabP-team-stats-doors.jpg">tabP</a> · <a href="shots/roofing-admin-tabL-home.jpg">tabL</a></td></tr>
+<tr><td>6</td><td class="sev Medium">Medium</td><td><b>Every trade's price units in every edition</b>: "per 1,000 sq ft of lawn · per kW of solar · per foot" offered on a roofing price line; House lookup tile says "the lawn, the lot" in all five.</td><td>Roofing admin › Setup › Prices and terms</td><td><a href="shots/roofing-admin-tabP-prices-lawn-units.jpg">tabP</a></td></tr>
+<tr><td>7</td><td class="sev Medium">Medium</td><td><b>Sixfold's people and suppliers in every edition's page source</b>: "Brad's SiteOne Englewood receipt", "Brandon's price", 22 "Jen", 15 "ClickUp"; <code>build-editions.cjs</code> only gates on "Sixfold" and "365 Aeration".</td><td>view-source, search "SiteOne"</td><td>—</td></tr>
+<tr><td>8</td><td class="sev Medium">Medium</td><td><b>The update bar hides Back and the search box</b> on every size until dismissed; it shows on every open device after each deploy.</td><td>Deploy; open iPad</td><td><a href="shots/roofing-crew-tabL-property-card.jpg">tabL</a></td></tr>
+<tr><td>9</td><td class="sev Low">Low-Med</td><td><b>Hail list link-buttons run together</b>: "Show on the mapShow the neighborhoods hit"; "Live radar map Storm call list…".</td><td>Roofing admin › Storms and data › Hail</td><td><a href="shots/roofing-admin-tabP-dark-hail-links.jpg">tabP dark</a></td></tr>
+<tr><td>10</td><td class="sev Low">Low</td><td>Office role › Customers fires <code>backups</code> (~15733) which the server refuses (403): console error each visit.</td><td>Office › Customers</td><td><a href="shots/roofing-office-phone-customers.jpg">phone</a></td></tr>
+<tr><td>11</td><td class="sev Low">Low</td><td>A new admin's first screen shows a red 61 on the bell (harness: 61 weather alerts for 22 towns). Live count not checked.</td><td>Fresh admin › Home</td><td><a href="shots/roofing-admin-tabP-home.jpg">tabP</a></td></tr>
+<tr><td>12</td><td class="sev Low">Low (harness)</td><td>Stats, Jobs and Square wait ~2 s on <code>squareconfirmlist</code> against the harness's Square stand-in (400). Editions without Square answer at once.</td><td>—</td><td>—</td></tr>
+<tr><td>13</td><td class="sev Low">Low</td><td>Manager not on a team › Team sign-ins: right message, plus a 403 from <code>accounts</code> in the console.</td><td>Manager › Team sign-ins</td><td><a href="shots/roofing-manager-phone-team-sign-ins.jpg">phone</a></td></tr>
+<tr><td>14</td><td class="sev Info">Info</td><td>Dark theme: nothing white except the search box (by design) and My stats' selects (fix item 5).</td><td>—</td><td><a href="shots/roofing-admin-tabL-dark-home.jpg">tabL dark</a> · <a href="shots/roofing-admin-phone-dark-my-stats-white.jpg">phone dark</a></td></tr>
+<tr><td>15</td><td class="sev Info">Info</td><td>No JavaScript exceptions in 3,590 opens; no overflow or clipped labels on any size; every Back landed right except the Setup sub-screens (fix item 13).</td><td>—</td><td>—</td></tr>
+</table>
+
+<h3>Home on each size and edition</h3>
+<div class="grid">
+<figure><img src="shots/roofing-admin-tabP-home.jpg" alt=""><figcaption>Roofing admin, tablet 820x1180</figcaption></figure>
+<figure><img src="shots/roofing-admin-tabL-home.jpg" alt=""><figcaption>Roofing admin, tablet 1180x820 ("Your week: doors")</figcaption></figure>
+<figure><img src="shots/roofing-admin-desk-home.jpg" alt=""><figcaption>Roofing admin, desktop 1440x900</figcaption></figure>
+<figure><img src="shots/roofing-admin-tabL-dark-home.jpg" alt=""><figcaption>Roofing admin, tablet landscape, dark</figcaption></figure>
+<figure><img src="shots/yards-admin-tabP-home.jpg" alt=""><figcaption>Lawn &amp; Landscape admin, tablet</figcaption></figure>
+<figure><img src="shots/solar-admin-tabP-home.jpg" alt=""><figcaption>Solar admin, tablet</figcaption></figure>
+<figure><img src="shots/pest-admin-tabP-home.jpg" alt=""><figcaption>Pest admin, tablet</figcaption></figure>
+<figure><img src="shots/security-admin-tabP-home.jpg" alt=""><figcaption>Security admin, tablet</figcaption></figure>
+<figure><img src="shots/sixfold-admin-tabP-home.jpg" alt=""><figcaption>Sixfold mode admin, tablet (harness company name)</figcaption></figure>
+</div>
+
+<h2>B. Live radar</h2>
+<p class="note">Works on every size. It looks blocky because the IEM composite is a ~0.5 km grid, the app asks for it at zoom 8 (<code>RADAR_NATIVE = 8</code>) and stretches it 16-128x, and an iPad doubles every stretched pixel again. <b>Recommended:</b> NWS MRMS <code>conus_bref_qcd</code> from opengeo.ncep.noaa.gov, drawn with <code>interpolations=bicubic</code> at 512 px retina (panel C). NOAA/NWS public domain: "may be used without charge for any lawful purpose"; GetCapabilities <code>Fees none</code>, <code>AccessConstraints none</code>. Credit "Radar: NOAA NWS MRMS". Details and the other five options in REPORT.md part B; the comparison page is <a href="radar-compare.html">radar-compare.html</a>.</p>
+<div class="grid wide">
+<figure><img src="shots/radar-live-z12.jpg" alt=""><figcaption>Live, zoom 12, Bay City TX (where it was raining): A today's app, B IEM at native zoom, C NWS MRMS smoothed (recommended), D NWS single-radar super-res</figcaption></figure>
+<figure><img src="shots/radar-live-z10.jpg" alt=""><figcaption>Live, zoom 10</figcaption></figure>
+<figure><img src="shots/radar-parker-z12.jpg" alt=""><figcaption>Parker hail storm, 6 Sep 2026 5:10 pm (IEM archive), zoom 12: today's app vs the same layer at native zoom vs IEM's single radars</figcaption></figure>
+<figure><img src="shots/radar-parker-z10.jpg" alt=""><figcaption>Parker storm, zoom 10</figcaption></figure>
+<figure><img src="shots/roofing-admin-tabP-live-radar.jpg" alt=""><figcaption>The app's Live radar, tablet 820x1180, 3:50 pm</figcaption></figure>
+<figure><img src="shots/roofing-admin-tabL-live-radar.jpg" alt=""><figcaption>The app's Live radar, tablet 1180x820</figcaption></figure>
+</div>
+
+<h2>C. Office dashboard map</h2>
+<p class="note">Cold: Roofing desktop 0.71 s to the map (18 requests, 329 KB), tablet 1.5-2.0 s; Sixfold desktop 10.1 s because its home does not pre-load the 1.7 MB towns list and the harness cache was cold (live warms it hourly). Warm: 0.2-0.3 s. 8,619 SVG circles in the harness; the live editions have 49,662 neighbourhoods, which an iPad draws in 1.5 s (13 s with the CPU throttled 4x) and pans in 0.5-2.9 s. <b>Recommendation: the office does not need it.</b> The same answer is on Home ("Best neighborhoods to knock next"), Plan the properties and Territories; take the map off the dashboard and link to Plan. Numbers: REPORT.md part C, <code>results/officemap-*.json</code>, <a href="office-map-circles.html?n=49662">office-map-circles.html</a>.</p>
+<div class="grid wide">
+<figure><img src="shots/officemap-roofing-desk-cold.jpg" alt=""><figcaption>Roofing office dashboard, desktop, first visit</figcaption></figure>
+<figure><img src="shots/officemap-roofing-tabP-cold.jpg" alt=""><figcaption>Tablet 820x1180, first visit: the circles merge into one mass</figcaption></figure>
+<figure><img src="shots/officemap-roofing-tabL-cold.jpg" alt=""><figcaption>Tablet 1180x820</figcaption></figure>
+<figure><img src="shots/sixfold-admin-phone-office-dashboard.jpg" alt=""><figcaption>Sixfold mode, phone</figcaption></figure>
+</div>
+
+<h2>D. Merged main (bd946151): the new screens</h2>
+<div id="newscreens"><p class="note">See REPORT.md part D.</p></div>
+
+<h2>Everything else looked at</h2>
+<div class="grid">
+<figure><img src="shots/roofing-admin-tabP-company-scrolled.jpg" alt=""><figcaption>Setup › Company opens scrolled (fix item 11)</figcaption></figure>
+<figure><img src="shots/roofing-admin-phone-house-lookup-title.jpg" alt=""><figcaption>House lookup bar says Quote builder (fix item 9)</figcaption></figure>
+<figure><img src="shots/roofing-admin-phone-dark-my-stats-white.jpg" alt=""><figcaption>My stats, dark: white selects (fix item 5)</figcaption></figure>
+<figure><img src="shots/roofing-admin-tabP-prices-back.jpg" alt=""><figcaption>Prices and terms: Back goes to Setup (fix item 13)</figcaption></figure>
+<figure><img src="shots/roofing-crew-tabL-property-card.jpg" alt=""><figcaption>Rep, tablet landscape, a property card; the update bar over the top bar</figcaption></figure>
+<figure><img src="shots/security-admin-phone-pipeline-slow.jpg" alt=""><figcaption>Security admin, phone, Pipeline (the one 7.8 s open)</figcaption></figure>
+</div>
+</main></body></html>
