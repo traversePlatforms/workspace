@@ -149,7 +149,11 @@ Videos/                         Sixfold Coloradans.mov (moved), Sixfold Aeration
 Social posts/2026-10 Sixfold 365 posts/                 6
 Social posts/2026-10 Job photo posts/                   9 (post 01 posted 27 Oct; the rest drafts)
 Social posts/2026-10-31 Fall clean-up card/             1 (carries public prices; see below)
-Social posts/2026-11 November posts (drafts, not posted)/   8
+Social posts/2026-11 November posts (drafts, not posted)/   8 posts + photosets (16) + posts.md + 2 contact sheets
+                                (refreshed later on 31 Oct: the six Gemini-picture versions of Nov 3, 5, 12, 17,
+                                24, 26 replaced by the rebuilt real-photo / text cards (commit 24c0c7b); old copies in
+                                _Archive (outdated 2026-10-31)/Social posts/; posts.md on Drive has the customer's
+                                first name replaced by "the 2026-09-17 Colorado Springs job")
 Print pieces/2026-10 Business card Brandon + Jenn/      3
 Print pieces/2026-10 Christmas concert ad/              6
 _Archive (outdated 2026-10-31)/Old Sixfold brand graphics (pre-365)/   10
