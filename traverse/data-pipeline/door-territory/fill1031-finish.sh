@@ -9,6 +9,7 @@
 #   dougmat    material-<town>.json back for the Douglas towns -> Roofing + Solar
 #   newlidar   roof + sun + tree caches back, merged (also: a laser tree reading replaces a canopy-map one) -> roof/solar/photo/outline
 #              files and door files -> Roofing + Solar side files, door files to Sixfold and the five editions
+#   outlinefix as newlidar, for the towns whose outline tiles were cut short (re-measured with whole Microsoft tiles)
 #   trees2     tree cache back, merged -> door files -> Sixfold and the five editions
 #   values     value-extra.json back, merged into value-cache.json (fills gaps only) -> door files of the towns that gained values
 # Every push: backup on the server first (push-edition.sh / upload-towns-sixfold.sh), exact file filter, MD5 MATCH required, live
@@ -125,22 +126,22 @@ console.log('door files: with a lawn size '+l0+' -> '+l1);process.exit(bad?1:0)"
   editions
   push_doors "$LABEL" $GOOD
   step "done: lawn fixes live for $(echo $GOOD | wc -w) towns; old files in $S/before; note in TASKS.md TR-54" ;;
-roofsolar|newlidar)
+roofsolar|newlidar|outlinefix)
   TOWNS=$(okt); step "towns: $(echo $TOWNS | wc -w)"; [ -n "$TOWNS" ] || stop "no finished towns"
   if [ $STAGE = newlidar ]; then [ -f tree-zones/lidar-surveys-extra.json ] || stop "tree-zones/lidar-surveys-extra.json is not in this checkout (merge the fill1031 commit first)"; fi
   B0=$(counts "$ED/traverse-data/rounds" roof $TOWNS); BS=$(counts "$ED/traverse-solar-data/rounds" solar $TOWNS)
   merge_cache "$VT/roofs/roof-cache.json" roofs/roof-cache.json roof-cache.json
   merge_cache "$VT/solar/solar-cache.json" solar/solar-cache.json solar-cache.json
-  [ $STAGE = newlidar ] && merge_cache "$VT/tree-cache.json" tree-cache.json tree-cache.json
+  [ $STAGE != roofsolar ] && merge_cache "$VT/tree-cache.json" tree-cache.json tree-cache.json
   if [ ! -f "$S/before-side.tgz" ]; then (cd "$ED" && tar czf "$S/before-side.tgz" $(for t in $TOWNS; do for d in traverse-data traverse-solar-data; do for p in roof solar outline photo; do [ -f "$d/rounds/$p-$t.json" ] && echo "$d/rounds/$p-$t.json"; done; done; done) 2>/dev/null) || true; fi
   build_side
-  [ $STAGE = newlidar ] && doors_build
+  [ $STAGE != roofsolar ] && doors_build
   editions
   A0=$(counts "$ED/traverse-data/rounds" roof $TOWNS); AS=$(counts "$ED/traverse-solar-data/rounds" solar $TOWNS)
   node -e "const [b,a,bs,as]=process.argv.slice(1).map(JSON.parse);let r0=0,r1=0,s0=0,s1=0,bad=[];for(const t in a){r0+=b[t];r1+=a[t];s0+=bs[t]||0;s1+=as[t]||0;if(a[t]<b[t]||(as[t]||0)<(bs[t]||0))bad.push(t)}
 console.log('roof doors '+r0+' -> '+r1+', sun doors '+s0+' -> '+s1);if(bad.length){console.log('fewer than before: '+bad.join(' '));process.exit(1)}" "$B0" "$A0" "$BS" "$AS" || stop "a town has fewer roof or sun readings than before"
   push_side $TOWNS
-  [ $STAGE = newlidar ] && push_doors "$LABEL" $TOWNS
+  [ $STAGE != roofsolar ] && push_doors "$LABEL" $TOWNS
   step "done: $STAGE live for $(echo $TOWNS | wc -w) towns; old caches $S/before-*.json, old side files $S/before-side.tgz; note in TASKS.md TR-54" ;;
 dougmat)
   TOWNS=$(okt); step "towns: $TOWNS"; [ -n "$TOWNS" ] || stop "no finished towns"

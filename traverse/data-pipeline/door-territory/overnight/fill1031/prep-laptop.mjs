@@ -12,7 +12,7 @@ const [, , LISTS, OUT] = process.argv;
 const MAIN = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse';
 const DT = join(MAIN, 'data-pipeline', 'door-territory'), RD = join(MAIN, 'app', 'data', 'rounds'), ED = join(MAIN, 'editions', 'dist', 'traverse-data', 'rounds');
 const TZW = join(HERE, '..', '..', 'tree-zones');   /* this checkout's tree-zones (carries the newlidar code) */
-const STAGES = ['lawnfix', 'roofsolar', 'dougmat', 'newlidar', 'trees2', 'values'];
+const STAGES = ['lawnfix', 'roofsolar', 'dougmat', 'newlidar', 'trees2', 'outlinefix', 'values'];
 const mk = (d) => { mkdirSync(join(OUT, d), { recursive: true }); return join(OUT, d); };
 const list = (n) => readFileSync(join(LISTS, n), 'utf8').split(/\s+/).filter(Boolean);
 const doorFile = (t) => [join(RD, `${t}.json`), join(ED, `${t}.json`)].find(existsSync);
@@ -21,7 +21,7 @@ const slim = (t) => { const f = doorFile(t); if (!f) return null; const j = JSON
 mkdirSync(OUT, { recursive: true });
 for (const f of readdirSync(HERE)) if (/\.(sh|mjs)$/.test(f) && f !== 'prep-laptop.mjs') copyFileSync(join(HERE, f), join(OUT, f));
 writeFileSync(join(OUT, 'stages.txt'), '# fill1031 stages, in order (queue.sh reads this again after every stage)\n' + STAGES.join('\n') + '\n');
-for (const n of ['lawnfix-towns.txt', 'roofsolar-towns.txt', 'roofsolar-fixparcel.txt', 'trees2-towns.txt', 'newlidar-towns.txt']) copyFileSync(join(LISTS, n), join(OUT, n));
+for (const n of ['lawnfix-towns.txt', 'roofsolar-towns.txt', 'roofsolar-fixparcel.txt', 'trees2-towns.txt', 'newlidar-towns.txt', 'outlinefix-towns.txt']) copyFileSync(join(LISTS, n), join(OUT, n));
 const dougmat = ['highlands-ranch', 'parker', 'castle-pines', 'castle-rock'];
 writeFileSync(join(OUT, 'dougmat-towns.txt'), dougmat.join('\n') + '\n');
 /* values: Group 1 and Group 3 towns (not the address-point counties, whose rows have no parcel number on the state layer) */
@@ -36,7 +36,7 @@ for (const t of list('lawnfix-towns.txt')) { const s = slim(t); if (!s) { consol
 console.log('lawnfix house lists:', n);
 /* house lists for outline tiles and houses.mjs; door lists for the measuring scripts */
 const dd = mk('doors'), ad = mk('areas'); let na = 0, nd = 0;
-const measured = [...new Set([...list('roofsolar-towns.txt'), ...list('trees2-towns.txt'), ...list('newlidar-towns.txt'), ...dougmat])];
+const measured = [...new Set([...list('roofsolar-towns.txt'), ...list('trees2-towns.txt'), ...list('newlidar-towns.txt'), ...list('outlinefix-towns.txt'), ...dougmat])];
 for (const t of measured) { const s = slim(t); if (s) { writeFileSync(join(dd, `${t}.json`), s); nd++; }
   const a = join(DT, `${t}-areas.json`); if (existsSync(a)) { copyFileSync(a, join(ad, `${t}-areas.json`)); na++; } }
 console.log('house lists:', nd, 'door lists:', na, 'of', measured.length, 'towns (the rest use the cloud machine\'s own)');
