@@ -12,7 +12,7 @@
 #   5. the server's copy read back: days and towns as built.
 # Any failure stops with a "STOP:" line and exit 1; the finisher loop tries a stage at most 3 times. Safe to re-run.
 set -u
-cd "$(dirname "$0")"
+cd "/c/Users/Surge Inc/Desktop/claude test 2/traverse/data-pipeline/door-territory" || exit 1   # the data's folder (2026-10-31: also when run from a worktree)
 S0=/c/Users/SURGEI~1/AppData/Local/Temp/claude/c--Users-Surge-Inc-Desktop-claude-test-2/db3e1153-072f-46a3-b860-134f689b5a09/scratchpad
 S="$S0/hailhours"; RD=../../app/data/rounds; DIST=../../editions/dist/traverse-data/rounds
 VM="ssh -o ConnectTimeout=20 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101"
@@ -29,6 +29,12 @@ wifi() { while netsh wlan show interfaces 2>/dev/null | tr -d '\r' | grep -qE "^
 ## 1. the plan
 mkdir -p "$S" || stop "scratchpad"
 node --max-old-space-size=8192 hail/rebuild-hail-hours.mjs stage "$S/plan.json" || stop "staging the plan failed"
+# 2026-10-31: the plan carries its build date, so a re-stage after midnight UTC made a new tag for the same plan; the third try
+# then waited on a cloud build of the identical plan and stopped at the tag check. A cloud plan that differs only in "built" is used as is.
+$VM "cat ~/run/hailhours/plan.json 2>/dev/null" < /dev/null > "$S/plan.vm.json" 2>/dev/null
+if [ -s "$S/plan.vm.json" ] && node -e "const f=require('fs'),r=(p)=>{const j=JSON.parse(f.readFileSync(p,'utf8'));delete j.built;return JSON.stringify(j)};process.exit(r(process.argv[1])===r(process.argv[2])?0:1)" "$S/plan.json" "$S/plan.vm.json"; then
+  cp "$S/plan.vm.json" "$S/plan.json"; step "the cloud machine's plan is the same apart from its date: using it"
+fi
 TAG=$(md5sum "$S/plan.json" | cut -c1-16)
 step "plan tag $TAG: $(node -e "const p=require(process.argv[1]);console.log(Object.keys(p.towns).length+' towns, '+Object.keys(p.days).length+' days, '+Object.values(p.days).reduce((x,t)=>x+t.length,0)+' town-days')" "$S/plan.json")"
 
