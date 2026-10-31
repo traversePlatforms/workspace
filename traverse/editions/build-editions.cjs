@@ -291,6 +291,7 @@ function page(E) {
     "document.title = c.name || c.short || '" + E.name + "';", 1, 'doc title');   /* the company's name only (2026-10-30) */
   html = rep(html, "tile('button', 'door', 'Routes',", "tile('button', 'door', 'Properties',", 2, 'tile');   /* Properties, not Doors (2026-10-30, Matthew) */   /* 2 since 2026-10-29: the technician's own Routes tile (doors switched on) is renamed too */
   // sign-in: the client's mark and name stay on top; the product sits under them as a lockup
+  html = rep(html, WHO_SRC, WHO_ED, 1, 'people');   /* Sixfold's people and suppliers out of the page (2026-10-30 audit) */
   html = rep(html, "inn.appendChild(q('div', 'sub', 'Routes'));", '', 1, 'signin sub');   /* the company's mark and name only (2026-10-30, Matthew: zero Traverse branding for clients; was the Traverse mark and the edition's name) */
 
   // colours hard-coded outside the tokens
@@ -370,17 +371,26 @@ function page(E) {
   if (left) throw new Error("Sixfold is left in the page: " + left.join(" | "));
   const left365 = min.match(/.{0,40}365 Aeration.{0,20}/g);   /* nor 365's name (TR-29, 2026-10-22: an office header fell back to it) */
   if (left365) throw new Error("365 Aeration is left in the page: " + left365.join(" | "));
+  const leftWho = min.match(PEOPLE_RE);   /* nor its people and suppliers (2026-10-30 audit: "Jen", "Brad's SiteOne receipt" in every edition's source) */
+  if (leftWho) throw new Error("Sixfold's people are left in the page: " + leftWho.join(" | "));
   return min;
 }
+/* Sixfold 365's people and suppliers (the page's WHO table, 2026-10-30): the editions get plain words in its place. Those strings only draw on
+   Sixfold's own screens (CO.a365), so the words never show; they keep the names out of the page a client can view the source of. ClickUp
+   stays where it is named as a product a client might sync from (Sync from another system). */
+const WHO_SRC = "var WHO = { jen: 'Jen', brad: 'Brad', brandon: 'Brandon', bryce: 'Bryce', siteone: 'SiteOne', clickup: 'ClickUp' };";
+const WHO_ED = "var WHO = { jen: 'the office', brad: 'the crew', brandon: 'the owner', bryce: 'the supplier', siteone: 'the supplier', clickup: 'the old system' };";
+const PEOPLE_RE = /.{0,40}\b(?:Jen|Brandon|Brad|Bryce|SiteOne|Nneka|Cai)\b.{0,20}/g;
+const PEOPLE_WORD = /\b(?:Jen|Brandon|Brad|Bryce|SiteOne|Nneka|Cai)\b/;   /* the same names, for a plain test (no /g: its lastIndex would carry over) */
 
 /* ---------------------------------------------------------- Spanish dictionary */
 /* beside the page since 2026-10-27 (code review item 7b), so the page's own swaps and its Sixfold check no longer see it: entries
    naming Sixfold or 365 Aeration are left out here (the page used to drop "Sixfold Routes"), and the same check runs on the file */
 function spanish() {
   const d = JSON.parse(fs.readFileSync(path.join(APP, 'es.json'), 'utf8')), out = {};
-  for (const k of Object.keys(d)) if (!/Sixfold|365 Aeration/.test(k + d[k])) out[k] = d[k];
+  for (const k of Object.keys(d)) if (!/Sixfold|365 Aeration/.test(k + d[k]) && !PEOPLE_WORD.test(k + d[k])) out[k] = d[k];   /* nor entries naming its people (2026-10-30) */
   const s = JSON.stringify(out);
-  if (/Sixfold|365 Aeration/.test(s)) throw new Error('Sixfold is left in es.json');
+  if (/Sixfold|365 Aeration/.test(s) || PEOPLE_WORD.test(s)) throw new Error('Sixfold is left in es.json');
   return s;
 }
 
