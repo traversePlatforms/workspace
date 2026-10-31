@@ -2117,7 +2117,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'sq' => squareFileOn(), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'doors' => $payload['r'] === 'office' && acctFlag('doors', (string) $payload['c']), 'communities' => $payload['r'] === 'office' && acctFlag('communities', (string) $payload['c']), 'results' => $payload['r'] === 'office' && acctFlag('results', (string) $payload['c']), 'fq' => in_array($payload['r'], ['crew', 'manager'], true) && !empty(company()['a365']) && acctFlag('fq', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'onteam' => onTeamOf((string) $payload['n']), 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'sq' => squareFileOn(), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'doors' => $payload['r'] === 'office' && acctFlag('doors', (string) $payload['c']), 'communities' => $payload['r'] === 'office' && acctFlag('communities', (string) $payload['c']), 'results' => $payload['r'] === 'office' && acctFlag('results', (string) $payload['c']), 'fq' => in_array($payload['r'], ['crew', 'manager'], true) && !empty(company()['a365']) && acctFlag('fq', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -4376,7 +4376,7 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))], edMe()));   /* + edMe(): the editions' roles and terms (2026-10-29) */
+if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'onteam' => onTeamOf($me), 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))], edMe()));   /* + edMe(): the editions' roles and terms (2026-10-29) */
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -5717,6 +5717,9 @@ $clean = function ($v, int $max): string {
  *   member: account id => tid            (one team per person)
  * Crew on a team may LOOK at their teammates' calendars; crew on no team see only their own (Matthew 2026-10-05).
  * An admin sees anyone's. Everything below keys people by their sign-in name, as the logs do. */
+/** is this person on a team? sent with the sign-in and 'me', so a manager's Team sign-ins can say "not on a team yet" without asking and being
+    refused (2026-10-30 audit: a 403 in the console on every visit) */
+function onTeamOf(string $name): bool { return (string) (teamInfo($GLOBALS['basePeople'], $GLOBALS['acct'], (string) $GLOBALS['sessionKey'])['byName'][$name]['team'] ?? '') !== ''; }
 function teamInfo(array $basePeople, array $acct, string $key): array {
     $byName = []; $members = [];
     foreach (acctRows($basePeople, $acct, $key) as $r) {
@@ -10250,7 +10253,7 @@ function edSrcKey(array $l): string {
     return ['messenger' => 'messenger', 'website' => 'website', 'a365web' => 'website', 'door' => 'door', 'inperson' => 'door', 'phone' => 'phone', 'referral' => 'referral'][$s] ?? 'other';
 }
 function edSrcNames(): array {
-    return ['facebook' => 'Facebook ads', 'messenger' => 'Facebook Messenger', 'website' => 'Website', 'door' => 'At the door', 'phone' => 'Phone calls', 'referral' => 'Referrals', 'import' => 'Imported lists', 'other' => 'Other'];
+    return ['facebook' => 'Facebook ads', 'messenger' => 'Facebook Messenger', 'website' => 'Website', 'door' => edition() ? 'At the property' : 'At the door', 'phone' => 'Phone calls', 'referral' => 'Referrals', 'import' => 'Imported lists', 'other' => 'Other'];   /* the editions say property (2026-10-30 audit); Sixfold 365 knocks doors */
 }
 /** the sources an edition's ad can bring leads in as (Update ad spend): the lead's own src */
 function edAdSrc(): array {

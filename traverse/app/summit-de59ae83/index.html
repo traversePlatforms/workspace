@@ -1974,6 +1974,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hailmap .radarkey[hidden]{display:none}
   .crimecities button{margin-right:12px;font-weight:700}.crimecities button.on{text-decoration:underline}
   .hailc .hmax.big{color:var(--later)}
+  .hailc .lnk{margin-right:16px}.hailsl{margin-left:16px}   /* two link-buttons in a row ran together: "Show on the mapShow the neighborhoods hit" (2026-10-30 audit) */
   .hailc .calist .lq{font-weight:700;font-size:13px;margin-top:4px}
   .hailx{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13.5px}
   .hailx .ic{width:18px;height:18px;flex:none;color:var(--accent);margin-top:2px}
@@ -2050,7 +2051,9 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .freport .frfoot{margin-top:22px;font-size:12.5px;color:#5E6B60;border-top:1px solid #d8d0be;padding-top:10px}
   @media print { html,body.printing{background:#fff !important} body.printing > *:not(.freport){display:none !important} .freport{position:static;overflow:visible} .freport .frbar{display:none} .freport .frpage{padding:0;max-width:none} .freport .frtab tr,.freport .frphotos{break-inside:avoid} }
   .offbar{position:sticky;top:0;z-index:11;background:var(--later-tint);color:var(--later);font:700 13px/1.35 var(--sans);padding:8px 14px;text-align:center;border-bottom:1px solid var(--line)}
-  .updbar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:30;width:min(640px,calc(100% - 24px));display:flex;gap:10px;align-items:center;background:#1d2a1c;color:#fff;border-radius:14px;padding:10px 12px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px var(--sans)}.updbar span{flex:1}.updbar button{flex:none;border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}
+  .updbar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;width:min(640px,calc(100% - 24px));display:flex;gap:10px;align-items:center;background:#1d2a1c;color:#fff;border-radius:14px;padding:10px 12px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.25);font:600 14px var(--sans)}.updbar span{flex:1}.updbar button{flex:none;border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:#fff;font:700 14px var(--sans);cursor:pointer}
+  body.has-dock .updbar{bottom:calc(96px + env(safe-area-inset-bottom,0px))}   /* above the phone's tab bar; it sat over Back, the title and the search box (2026-10-30 audit) */
+  .updbar .updx{background:none;padding:4px 6px;font:700 20px/1 var(--sans);color:#fff;opacity:.85}
   .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:14;width:min(652px,calc(100% - 28px));
     background:var(--toast);color:var(--toast-ink);border-radius:14px;padding:11px 10px 11px 15px;display:flex;align-items:center;gap:10px;
     font-size:14px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5);transform:translate(-50%,24px);opacity:0;pointer-events:none;
@@ -3925,7 +3928,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         S.busy = false;
         if (!j.ok) return fail(j.error || 'That code was not recognized.');
         markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
+        S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.signin = null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
         flush(); warmSaved();                                    /* anything this person left waiting goes now (2026-10-03) */
         pushResend(); pushPrepare();                             /* this phone's alerts now follow this person (2026-10-05) */
         boxes.className = 'boxes ok';
@@ -4184,7 +4187,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     lr.addEventListener('click', function () { hailMapView(null); });
     box.appendChild(lr);
     if (S.role === 'admin') {
-      var cl = q('button', 'back', 'Storm call list: customers and quotes in these towns'); cl.type = 'button';
+      var cl = q('button', 'back hailsl', 'Storm call list: customers and quotes in these towns'); cl.type = 'button';
       cl.addEventListener('click', function () { callListView('storm'); });
       box.appendChild(cl);
     }
@@ -10713,6 +10716,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (adminView() && wdOn()) t.push(['House lookup', function () { houseLookupView(null); }]);   /* the admin's House lookup on the computer too: its address box searches doors (2026-10-22) */
     if (adminView() && feat('communities')) t.push(['Communities', communitiesView]);
     if (adminView() && feat('skiptrace')) t.push(['Skip trace', skipView]);   /* on the computer as on the phone (2026-10-22) */
+    if (adminView() && kitOnC()) t.push(['Setup', kitSetupView]);   /* the Setup checklist on a computer and an iPad held sideways too (2026-10-30 audit: it was only under Office › Setup there) */
     if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365) t.push(['Sample property', sampleView]);   /* not on Sixfold (2026-10-17) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk') && CO.a365) { t.push(['See ' + who('jen') + '\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
   }
@@ -16256,6 +16260,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('back', { title: mgr ? 'Team sign-ins' : 'Accounts', sub: mgr ? 'Your crew: add, new codes, sign out, remove' : 'Who can sign in to the field tools', back: chooseView, backLabel: 'Field tools' });
     view.textContent = '';
     var holder = q('div'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    /* a manager not yet on a team: the server would refuse the list (403), so say so without asking; 'me' first, in case an admin has just put
+       them on one (2026-10-30 audit) */
+    if (mgr && S.role !== 'admin' && S.onTeam === false) {
+      api('me').then(function (k) { if (k && k.ok && 'onteam' in k) S.onTeam = !!k.onteam; if (S.onTeam) return accountsView(); holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'You are not on a team yet. Ask an admin to put you on one.')); }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Accounts need signal.')); });
+      return;
+    }
     api('accounts').then(function (j) {
       if (j._status === 401) return signinView('Signed out. Enter your code again.');
       holder.textContent = '';
@@ -16900,7 +16910,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     ex.appendChild(q('div', 'sub2', pw('The backup is every log the app keeps (doors, numbers, notes, walks, results, leads, customers and visits) in one file. Save one somewhere safe each week. To rebuild, each log goes back where it came from on the server. Sign-in codes and photos are not in it.')));
     /* the nightly copies on the server: any of the last 30 nights can be downloaded */
     var nl = q('div', 'cnight'); ex.appendChild(nl);
-    api('backups').then(function (j) {
+    if (S.role === 'admin') api('backups').then(function (j) {   /* the admin's list; the server refuses anyone else, so nobody else asks (2026-10-30 audit: a 403 on every office visit) */
       if (!j || !j.ok || !nl.isConnected) return;
       nl.appendChild(q('div', 'wl', 'Nightly copies on the server'));
       if (!j.copies.length) { nl.appendChild(q('div', 'sub2', 'None yet. The nightly backup job is not running on the server; see DEPLOY-ROUNDS.md.')); return; }
@@ -20376,7 +20386,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var lr = q('button', 'back', 'Live radar map'); lr.type = 'button';
     lr.addEventListener('click', function () { hailMapView(null); });
     holder.appendChild(lr);
-    var scl = q('button', 'back', 'Storm call list: customers and quotes after a warning'); scl.type = 'button';
+    var scl = q('button', 'back hailsl', 'Storm call list: customers and quotes after a warning'); scl.type = 'button';
     scl.addEventListener('click', function () { callListView('storm'); });
     holder.appendChild(scl);
     var list = (H.storms || []).filter(function (s) { return big ? s.n1 > 0 : s.n34 > 0; });
@@ -23059,6 +23069,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var b = q('div', 'updbar'); b.id = 'updbar'; b.setAttribute('role', 'status');
     b.appendChild(q('span', null, 'There’s been an update. Close the app and open it again, or tap Update now.'));
     var u = q('button', null, 'Update now'); u.type = 'button'; u.addEventListener('click', function () { location.reload(); }); b.appendChild(u);
+    /* at the bottom, with a close and a 20-second life, so it never sits over Back, the title or the search box (2026-10-30 audit); the next
+       check (10 minutes, or coming back to the app) shows it again while the page is still old */
+    var x = q('button', 'updx', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', function () { b.remove(); }); b.appendChild(x);
+    setTimeout(function () { if (b.isConnected) b.remove(); }, 20000);
     document.body.appendChild(b);
   }
   setTimeout(verCheck, 4000); setInterval(verCheck, 10 * 60 * 1000);
@@ -23094,7 +23108,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api(hp[1] === 'start' ? 'startin' : 'hopin', { body: { pass: decodeURIComponent(hp[2]) } }).then(function (j) {
         if (!j || !j.ok) { signinView((j && j.error) || 'Sign in with your code.'); return; }
         markOut(false);
-        S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
+        S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
         flush(); warmSaved(); pushResend(); pushPrepare();
         chooseView();
       }).catch(function () { signinView('No signal. Sign in with your code.'); });
@@ -23102,7 +23116,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }
