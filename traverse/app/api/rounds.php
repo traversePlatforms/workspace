@@ -7832,7 +7832,10 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $owed = jobOwed($j); $cg = $j['sqcharge'] ?? null; $link = (string) ($j['sqlink']['url'] ?? '');
     $tips = ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'];
-    if (in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true)) { $tips[] = 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.'; $tips[] = 'Once the new grass is up and rooting, water less often but more deeply.'; }
+    if (in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true)) { $tips[] = 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.'; $tips[] = 'Once the new grass is up and rooting, water less often but more deeply.';
+        /* the three in Jen's aftercare that the email lacked (2026-11-01, Matthew: "add the three mission pieces that are in jens aftercare to our
+           aftercare"); the same words as afParts on the page (Randy's practice wins on mowing, fertilizer and clippings) */
+        $tips[] = 'Don\'t mow for 4 to 7 days.'; $tips[] = 'The fertilizer we put down stays active for about 60 days, so don\'t put down any fertilizer or weed killer for 2 months while the seed comes in.'; $tips[] = 'Bag your clippings if you can.'; }
     $bal = $cg && $owed < 1 ? 'Your $' . (int) $cg['amt'] . ' balance went on your ' . ((string) ($cg['brand'] ?? '') ?: 'card') . ' ending ' . (string) ($cg['last4'] ?? '') . ', so you are all set.'
          : ($owed < 1 ? 'Your balance is paid. Thank you!' : 'Your remaining balance is $' . $owed . '.' . ($link !== '' ? ' You can pay it here: ' . $link : ''));
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');

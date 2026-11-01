@@ -23031,7 +23031,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : mgrOn() ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
-      S.role === 'admin' && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,   /* 2026-11-01 */
+      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
