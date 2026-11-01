@@ -89,6 +89,10 @@ try {
               '-xr!days', '-xr!days-dfw', '-xr!cache', '-xr!logs-*', '-xr!*.pdf', '-xr!elpaso-imagery', '-xr!pictures')
     $tmp7z = Join-Path $stage "core-$day.7z"
     $args7 = @('a', '-t7z', '-mx=5', '-mhe=on', "-p$pass", '-bso0', '-bsp0', $tmp7z) + $items + $excl
+    # 29-31 Oct: the scheduled runs stopped here with no error logged (task result 0xC000013A, a Ctrl+C-type stop), while a run by hand
+    # on 31 Oct finished in 4 minutes. Log the start so the next stop shows it was inside 7-Zip (no stderr redirect: in PowerShell 5.1,
+    # with ErrorActionPreference Stop, a 7-Zip warning on stderr would itself stop the backup).
+    Say "archive started"
     & $SevenZip @args7
     if ($LASTEXITCODE -gt 1) { throw "7-Zip failed with exit $LASTEXITCODE" }   # 1 = warnings (a file in use), still a usable archive
     & $SevenZip t "-p$pass" -bso0 -bsp0 $tmp7z
