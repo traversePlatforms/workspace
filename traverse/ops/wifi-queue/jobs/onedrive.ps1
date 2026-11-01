@@ -8,6 +8,14 @@ $state = 'C:\Users\Surge Inc\Desktop\claude test 2\traverse\ops\wifi-queue\state
 $log = Join-Path $env:LOCALAPPDATA 'ProjectBackup\onedrive-move.log'
 New-Item -ItemType Directory -Force $state | Out-Null
 $units = @('Desktop\Documents for sixfold drive', 'Desktop\Marketing web content examples', 'Desktop\Surge Documents', 'Desktop\claude test 2', 'Documents', 'Videos', 'Apps', 'Desktop\Phone drop')
+# OneDrive itself must be running: online-only files download through it, and without it robocopy fails every file with error 362
+# "The cloud file provider is not running" (22 Oct: three failures, the job parked). Start it and give it two minutes to sign in.
+if (-not (Get-Process -Name OneDrive -ErrorAction SilentlyContinue)) {
+    $od = @("$env:LOCALAPPDATA\Microsoft\OneDrive\OneDrive.exe", 'C:\Program Files\Microsoft OneDrive\OneDrive.exe') | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $od) { Write-Output 'stopped: OneDrive is not installed where expected'; exit 1 }
+    Start-Process -FilePath $od -ArgumentList '/background'; Start-Sleep -Seconds 120
+    if (-not (Get-Process -Name OneDrive -ErrorAction SilentlyContinue)) { Write-Output 'stopped: OneDrive would not start'; exit 1 }
+}
 $freeGB = [math]::Round((Get-PSDrive C).Free / 1GB, 1)
 if ($freeGB -lt 40) { Write-Output "stopped: only $freeGB GB free on C:, under 40 GB"; exit 1 }
 $next = $units | Where-Object { -not (Test-Path (Join-Path $state (($_ -replace '[\\ ]', '_') + '.done'))) } | Select-Object -First 1
