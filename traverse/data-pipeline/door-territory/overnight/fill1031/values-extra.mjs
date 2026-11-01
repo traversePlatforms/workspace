@@ -37,7 +37,8 @@ let got = 0, empty = 0;
 for (const [county, towns] of byCounty) {
   const cn = byNorm.get(norm(county));
   if (!cn) { console.log(`${county}: not on the state layer (${towns.length} towns skipped)`); continue; }
-  const has = (await q({ where: `countyName='${cn}' AND apprValTot > 0`, returnCountOnly: 'true' })).count || 0;
+  /* 1 Nov: apprValTot is a text field, so "apprValTot > 0" is refused (and a whole-county count is heavy): ask for one valued row instead */
+  const has = ((await q({ where: `countyName='${cn}' AND apprValTot IS NOT NULL AND apprValTot <> '' AND apprValTot <> '0'`, outFields: 'parcel_id', returnGeometry: 'false', resultRecordCount: '1' })).features || []).length;
   if (!has) { console.log(`${cn}: the state layer carries no value here (${towns.length} towns skipped)`); continue; }
   const byParcel = new Map();
   for (const t of towns) {

@@ -214,6 +214,8 @@ function mailHtml(string $main, array $set, array $map, string $unsubUrl): strin
 /** why a company cannot be emailed ('' = it can) */
 function noMail(array $l): string {
     if (empty($l['email']) || !filter_var($l['email'], FILTER_VALIDATE_EMAIL)) return 'no email';
+    /* 1 Nov: three bounces from round 3 passed the check above: a website's placeholder (sample@gmail.com) and a scraped "%20" in front */
+    if (preg_match('/%[0-9a-f]{2}|^(sample|example|test|your|yourname|name|someone)@|@(example|domain|yourdomain)\./i', $l['email'])) return 'placeholder or broken address';
     if (!empty($l['unsub'])) return 'asked not to be emailed';
     if (($l['emailOk'] ?? '') === 'no') return 'email address cannot take mail';
     if (in_array($l['status'], OFF, true) || $l['status'] === 'customer') return 'knocked off or a customer';
