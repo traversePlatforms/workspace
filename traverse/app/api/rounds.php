@@ -3014,6 +3014,20 @@ const A365_SIGN_VERSION = 'v4-draft-2026-10-16';   /* v4: their phone and email 
    the lead's own form phone (fphone) when one is set, else 365's. And a house's town without an internal label: a property pulled in by
    itself carries one in brackets ("Brighton (Barnes)"), which reached Joseph's form. */
 function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? '')); return $f !== '' ? $f : (string) (company()['a365']['phone'] ?? company()['phone'] ?? ''); }   /* a kit install: the company's own phone (2026-10-27) */
+/* the 365 emails' logo header (1 Nov, Matthew: "none of them have our logos"): the green band with the badge and the name, as the newsletter has it.
+   Used by the aftercare, the 2-day follow-up and the signed-agreement copy; the badge is the one on the site (365aeration.com/assets/). */
+function a365MailHead(string $name): string {
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2e5e2c" style="background:#2e5e2c;border-radius:14px;margin:0 0 18px"><tr><td style="padding:16px 20px">'
+         . '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right:14px"><img src="https://365aeration.com/assets/sixfold365-badge-256.png" width="56" height="56" alt="' . $e($name) . '" style="display:block;width:56px;height:56px;border:0"></td>'
+         . '<td><div style="font-size:22px;font-weight:800;color:#ffffff;line-height:1.1">' . $e($name) . '</div><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#f2c14e;padding-top:5px">Land &middot; Aeration &amp; Seeding</div></td></tr></table></td></tr></table>';
+}
+/* the 365 emails' socials (1 Nov, Matthew: "lets include our socials in the footer also"): the same Facebook page and Instagram the site links to */
+function a365MailSocial(string $bg = ''): string {
+    $i = fn($href, $img, $alt) => '<td style="padding:0 6px 0 0"><a href="' . $href . '" style="text-decoration:none"><img src="https://365aeration.com/assets/email/' . $img . '" width="28" height="28" alt="' . $alt . '" style="display:block;width:28px;height:28px;border:0"></a></td>';
+    return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0 4px"><tr><td style="padding:0 10px 0 0;font-size:13px;font-weight:700;color:#21451f">Follow us</td>'
+         . $i('https://www.facebook.com/1418675127985724', 'so-fb.png', 'Facebook') . $i('https://www.instagram.com/365aeration/', 'so-ig.png', 'Instagram') . '</tr></table>';
+}
 function houseTown(array $h): string { return trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', (string) ($h['town'] ?? ''))); }
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
 function a365SignLink(string $id, string $k): string { return (kitOn() ? kitBase() . 'sign.html?s=' : 'https://365aeration.com/sign/?s=') . $id . '-' . a365SignKey($id, $k); }   /* a kit install: its own sign.html (2026-10-27) */
@@ -3462,14 +3476,14 @@ function a365SendSigned(array $l, array $sg, string $by): array {
     $lis = implode('', array_map(fn($t) => '<li style="margin:0 0 6px">' . $e($t) . '</li>', $terms));
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
           . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-          . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>'
+          . a365MailHead($name)
           . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for booking with ' . $e($name) . '. Here is a copy of the agreement you signed.</p>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">What we agreed</div><table style="border-collapse:collapse;font-size:15px">' . $rows . '</table></div>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">The details</div><ol style="margin:0;padding-left:20px;font-size:15px">' . $lis . '</ol></div>'
           . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:16px 18px;margin-bottom:18px"><div style="font-size:22px;font-style:italic;font-weight:700;color:#21451f">' . $e($sg['name']) . '</div><div style="color:#5a6858;font-size:14px;margin-top:4px">Signed electronically on ' . $e($when) . '.</div></div>'
           . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">View or print your agreement</a></p>'
           . '<p style="margin:0;color:#5a6858;font-size:14px">Questions or changes: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
-          . '</div></body></html>';
+          . a365MailSocial() . '</div></body></html>';
     $r = a365Mail($to, 'Your signed agreement with ' . $name, $text, $html);
     appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $l['id'], 'what' => 'signed', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
@@ -3713,7 +3727,8 @@ function nlRender(array $is, string $to, bool $test = false): array {
        /* the footer */
        . '<tr><td bgcolor="#e9e3d3" style="background:#e9e3d3;padding:14px 22px;border-radius:0 0 14px 14px;color:#5a6858;font-size:12px;line-height:1.5">'
        . '<b style="color:#21451f">' . $e($name) . '</b>' . ($ph !== '' ? ' · <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' : '') . ($web !== '' ? ' · <a href="https://' . $e($web) . '/" style="color:#2e5e2c">' . $e($web) . '</a>' : '')
-       . '<br>' . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</td></tr>'
+       . a365MailSocial()
+       . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</td></tr>'
        . '</table></td></tr></table></body></html>';
     return [($test ? '[Test] ' : '') . (string) ($is['subject'] ?? ''), $text, $h, ['List-Unsubscribe: <' . $un . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']];
 }
@@ -7806,13 +7821,13 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
           . implode("\n", array_map(fn($t) => '- ' . $t, $tips)) . "\n\n" . $bal . "\n\nAny questions: call or text " . $ph . ".\n\n" . $name . "\n";
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
           . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-          . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>'
+          . a365MailHead($name)
           . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for having us! Your lawn is done. A few tips for the next couple of weeks:</p>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><ul style="margin:0;padding-left:20px;font-size:15px">' . implode('', array_map(fn($t) => '<li style="margin:0 0 8px">' . $e($t) . '</li>', $tips)) . '</ul></div>'
           . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin-bottom:18px;font-size:15px">' . $e($cg || $owed < 1 || $link === '' ? $bal : 'Your remaining balance is $' . $owed . '.') . '</div>'
           . ($owed > 0 && $link !== '' ? '<p style="margin:0 0 18px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Pay the $' . $owed . ' balance</a></p>' : '')
           . '<p style="margin:0;color:#5a6858;font-size:14px">Any questions: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
-          . '</div></body></html>';
+          . a365MailSocial() . '</div></body></html>';
     return $rec(a365Mail($to, 'Your lawn after today: a few tips from ' . $name, $text, $html));
 }
 /* ---- the follow-up email, two days after a job (2026-10-27, Matthew: "all of our customers that we have done jobs for needs to get an email
@@ -7885,7 +7900,7 @@ function followupBuild(array $j, array $l): array {
     $p = fn($x) => '<p style="margin:0 0 16px">' . $x . '</p>';
     $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
        . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-       . '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:16px">' . $e($name) . '</div>'
+       . a365MailHead($name)
        . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p>' . $p('Thanks again for having us out on ' . $e($day) . '.');
     if ($seeded) $h .= $p($e($seedLine));
     if ($rv !== '') $h .= '<p style="margin:0 0 10px">If you have a minute, we&#39;d appreciate an honest Google review:</p><p style="margin:0 0 18px"><a href="' . $e($rv) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Leave a Google review</a></p>';
@@ -7893,6 +7908,7 @@ function followupBuild(array $j, array $l): array {
        . implode('', array_map(fn($n) => '<li style="margin:0 0 6px"><b>' . $e($n[0]) . ':</b> ' . nl2br($e($n[1])) . '</li>', $noted)) . '</ul><div>If you&#39;d like a price on any of it, reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</div></div>';
     $h .= $p('<b>Keep it going all year.</b> ' . $e($planLine)) . $p('<b>Spring aeration.</b> ' . $e($springLine)) . $p('<b>10% off your next service.</b> ' . $e($offLine))
        . '<p style="margin:0 0 4px">Thanks,</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' . ($web !== '' ? ' · ' . $e($web) : '') . '</p>'
+       . a365MailSocial()
        . '<div style="margin-top:28px;padding-top:14px;border-top:1px solid #dfe6da;color:#5a6858;font-size:12px;line-height:1.5">' . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</div>'
        . '</div></body></html>';
     return ['How\'s the lawn' . ($first !== '' ? ', ' . $first : '') . '?', $t, $h, ['List-Unsubscribe: <' . $un . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']];
