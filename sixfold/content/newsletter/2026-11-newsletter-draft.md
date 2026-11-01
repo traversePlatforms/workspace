@@ -47,6 +47,39 @@ Thanks again,
 Sixfold 365
 (720) 830-4553 · 365aeration.com
 
+## One-page version (1 Nov, Matthew: "the news letter needs to be a one page document, and I need it to have a bit more graphics and design")
+
+The app's newsletter template was redesigned (green header with the badge, photo banner, three tip cards with icons, a spring-list band). This is the November body in the app's markup; the facts are the same as above, only shorter. The photo is the 31 Oct carousel shot cropped to a banner: https://365aeration.com/assets/email/nl-2026-11-hero.jpg. Icons: 365aeration.com/assets/email/nl-water|leaf|mow|spring.png (drawn by us).
+
+**Subject:** November lawn notes from Sixfold 365  
+**Preheader:** Winter watering, leaves, and getting on the spring list.
+
+```
+# November lawn notes
+
+![One of this fall's lawns](https://365aeration.com/assets/email/nl-2026-11-hero.jpg)
+
+Hi there,
+
+Thanks for being in touch with us this season. Three things that help a lawn come through a dry Colorado winter:
+
+## Water a little this winter
+
+When the air and soil are above 40°F and there's no snow on the lawn, water at midday so it soaks in before night. In long dry spells, that's about once or twice a month. Newly seeded lawns need it most. Check your water provider's rules first.
+
+## Mulch the leaves
+
+Mow them into the lawn: highest setting, bag off, at least two passes. If you can't see grass through them, rake some off first. Whole leaves left on the lawn can smother it.
+
+## Keep mowing at 2½ to 3 inches
+
+No need to cut it shorter in the fall. Take off no more than a third of the blade at a time.
+
+## ! Get on the spring list
+
+Want aeration in the spring? Reply to this email or give us a call, and we'll reach out when the season opens. Ask us about monthly lawn plans too.
+```
+
 ---
 
 ## Alternate subject lines

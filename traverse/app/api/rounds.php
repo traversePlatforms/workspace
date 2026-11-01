@@ -3636,30 +3636,86 @@ function nlRecipients(): array {
 }
 /** the first of next month at 9 am, the install's clock */
 function nlNextFirst(?int $now = null): int { $tz = new DateTimeZone(appTz()); $d = (new DateTime('@' . ($now ?? time())))->setTimezone($tz); return (new DateTime($d->format('Y-m-01') . ' 09:00', $tz))->modify('+1 month')->getTimestamp(); }
-/** one issue as [subject, text, html] for one person. Markup: # heading, ## smaller heading, - list lines, [text](https://link), **bold**, ![alt](https://image) on its own line (two at most) */
+/** one issue as [subject, text, html] for one person. Markup: # headline (once, at the top), ## a section (each becomes a card with an icon),
+ *  ## ! a section shown as the green call-to-action band, - list lines, [text](https://link), **bold**, ![alt](https://image) on its own line
+ *  (the first is the photo under the header). Redesigned 1 Nov 2026 (Matthew: "the news letter needs to be a one page document, and I need it to
+ *  have a bit more graphics and design to it"): green header with the badge, the photo, two or three short sections side by side as cards
+ *  (stacked on a phone), the call-to-action band, then the footer. */
+function nlIcon(string $title): string {
+    $t = strtolower($title);
+    $k = preg_match('/water|winter|snow|dry|rain/', $t) ? 'water' : (preg_match('/lea(f|ves)|mulch|rake/', $t) ? 'leaf' : (preg_match('/mow|height|grass|cut/', $t) ? 'mow' : (preg_match('/spring|list|book|plan|season/', $t) ? 'spring' : '')));
+    return $k === '' ? '' : 'https://365aeration.com/assets/email/nl-' . $k . '.png';
+}
 function nlRender(array $is, string $to, bool $test = false): array {
     $co = company()['a365'] ?? []; $name = (string) (($co['name'] ?? '') ?: (company()['name'] ?? '')); $ph = (string) ($co['phone'] ?? (company()['phone'] ?? '')); $web = (string) ($co['web'] ?? '');
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
-    $inline = function (string $t) use ($e) { $t = $e($t); $t = preg_replace('/\*\*(.+?)\*\*/', '<b>$1</b>', $t); return preg_replace_callback('/\[([^\]]{1,200})\]\((https:\/\/[^\s)]{4,500})\)/', fn($m) => '<a href="' . $m[2] . '" style="color:#2e5e2c">' . $m[1] . '</a>', $t); };
+    $inline = function (string $t, string $c = '#2e5e2c') use ($e) { $t = $e($t); $t = preg_replace('/\*\*(.+?)\*\*/', '<b>$1</b>', $t); return preg_replace_callback('/\[([^\]]{1,200})\]\((https:\/\/[^\s)]{4,500})\)/', fn($m) => '<a href="' . $m[2] . '" style="color:' . $c . '">' . $m[1] . '</a>', $t); };
     $plain = fn(string $t) => preg_replace('/\[([^\]]{1,200})\]\((https:\/\/[^\s)]{4,500})\)/', '$1 ($2)', str_replace('**', '', $t));
-    $h = ''; $t = ''; $imgs = 0;
+    /* the body into: headline, intro blocks, sections (title + blocks), the photo */
+    $head = ''; $intro = []; $secs = []; $photo = null; $t = '';
     foreach (preg_split('/\n\s*\n/', str_replace("\r\n", "\n", trim((string) ($is['body'] ?? '')))) as $blk) {
         $blk = trim($blk); if ($blk === '') continue;
-        if (preg_match('/^!\[([^\]]{0,200})\]\((https:\/\/[^\s)]{4,500})\)$/D', $blk, $m)) { if (++$imgs <= 2) $h .= '<p style="margin:0 0 16px"><img src="' . $e($m[2]) . '" alt="' . $e($m[1]) . '" style="max-width:100%;height:auto;border-radius:12px;display:block"></p>'; continue; }
-        if (preg_match('/^(#{1,2}) (.+)$/D', $blk, $m)) { $h .= '<div style="font-size:' . ($m[1] === '#' ? '20' : '17') . 'px;font-weight:800;color:#21451f;margin:6px 0 10px">' . $inline($m[2]) . '</div>'; $t .= mb_strtoupper($plain($m[2])) . "\n\n"; continue; }
-        $lines = explode("\n", $blk);
-        if (count(array_filter($lines, fn($l) => preg_match('/^\s*- /', $l))) === count($lines)) { $h .= '<ul style="margin:0 0 16px;padding-left:20px">' . implode('', array_map(fn($l) => '<li style="margin:0 0 6px">' . $inline(preg_replace('/^\s*- /', '', $l)) . '</li>', $lines)) . '</ul>'; $t .= implode("\n", array_map($plain, $lines)) . "\n\n"; continue; }
-        $h .= '<p style="margin:0 0 16px">' . implode('<br>', array_map($inline, $lines)) . '</p>'; $t .= $plain($blk) . "\n\n";
+        if (preg_match('/^!\[([^\]]{0,200})\]\((https:\/\/[^\s)]{4,500})\)$/D', $blk, $m)) { if (!$photo) $photo = [$m[1], $m[2]]; continue; }
+        if (preg_match('/^# (.+)$/D', $blk, $m) && !$secs && $head === '') { $head = $m[1]; $t .= mb_strtoupper($plain($m[1])) . "\n\n"; continue; }
+        if (preg_match('/^#{2,3} (!\s*)?(.+)$/D', $blk, $m)) { $secs[] = ['title' => $m[2], 'cta' => $m[1] !== '', 'blocks' => []]; $t .= mb_strtoupper($plain($m[2])) . "\n\n"; continue; }
+        $lines = explode("\n", $blk); $t .= implode("\n", array_map($plain, $lines)) . "\n\n";
+        if ($secs) $secs[count($secs) - 1]['blocks'][] = $lines; else $intro[] = $lines;
     }
-    $un = nlUnsubUrl($to); $addr = nlAddress();
+    $isList = fn(array $lines) => count(array_filter($lines, fn($l) => preg_match('/^\s*- /', $l))) === count($lines);
+    $blocksHtml = function (array $blocks, string $fs, string $col, string $lc = '#2e5e2c') use ($isList, $inline) {
+        $h = ''; foreach ($blocks as $lines) $h .= $isList($lines)
+            ? '<ul style="margin:0 0 10px;padding-left:18px;font-size:' . $fs . ';color:' . $col . '">' . implode('', array_map(fn($l) => '<li style="margin:0 0 4px">' . $inline(preg_replace('/^\s*- /', '', $l), $lc) . '</li>', $lines)) . '</ul>'
+            : '<p style="margin:0 0 10px;font-size:' . $fs . ';color:' . $col . '">' . implode('<br>', array_map(fn($l) => $inline($l, $lc), $lines)) . '</p>';
+        return $h;
+    };
+    $tips = array_values(array_filter($secs, fn($s) => !$s['cta'])); $ctas = array_values(array_filter($secs, fn($s) => $s['cta']));
+    $short = count($tips) >= 2 && count($tips) <= 3 && !array_filter($tips, fn($s) => mb_strlen(implode(' ', array_map(fn($b) => implode(' ', $b), $s['blocks']))) > 420);
+    $card = function (array $s, bool $col) use ($e, $inline, $blocksHtml) {
+        $ic = nlIcon($s['title']);
+        /* the card is the cell itself, so the cards in one row end level (the table around them spaces them with cellspacing) */
+        return '<td class="col" valign="top" width="' . ($col ? '33%' : '100%') . '" bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e4dfcf;border-radius:12px;padding:16px 15px 8px">'
+             . ($ic !== '' ? '<img src="' . $e($ic) . '" width="44" height="44" alt="" style="display:block;width:44px;height:44px;border:0;margin:0 0 10px">' : '')
+             . '<div style="font-size:15.5px;font-weight:800;color:#21451f;line-height:1.25;margin:0 0 6px">' . $inline($s['title']) . '</div>'
+             . $blocksHtml($s['blocks'], '13.5px', '#33402f') . '</td>';
+    };
+    $un = nlUnsubUrl($to); $addr = nlAddress(); $tel = preg_replace('/\D/', '', $ph);
+    $reply = (string) ((a365MailCfg() ?? [])['reply_to'] ?? '');
     $why = 'You are getting this because you got in touch with ' . $name . ' or we have worked on your lawn.';   /* leads as well as customers (31 Oct) */
     $text = ($test ? "[TEST: what each customer gets]\n\n" : '') . trim($t) . "\n\n--\n" . $name . ($ph !== '' ? ' · ' . $ph : '') . ($web !== '' ? ' · ' . $web : '') . "\n" . $why . "\nUnsubscribe: " . $un . "\n" . $addr . "\n";
-    $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
-          . '<div style="display:none;max-height:0;overflow:hidden;opacity:0">' . $e((string) ($is['pre'] ?? '')) . '</div>'
-          . '<div style="max-width:600px;margin:0 auto;padding:24px 18px"><div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:16px">' . $e($name) . '</div>' . $h
-          . '<div style="margin-top:28px;padding-top:14px;border-top:1px solid #dfe6da;color:#5a6858;font-size:12px;line-height:1.5">' . $e($name) . ($ph !== '' ? ' · ' . $e($ph) : '') . ($web !== '' ? ' · ' . $e($web) : '') . '<br>' . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</div>'
-          . '</div></body></html>';
-    return [($test ? '[Test] ' : '') . (string) ($is['subject'] ?? ''), $text, $html, ['List-Unsubscribe: <' . $un . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']];
+    $h = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+       . '<style>@media (max-width:620px){.col{display:block!important;width:100%!important;box-sizing:border-box}.wrap{width:100%!important}}</style></head>'
+       . '<body style="margin:0;padding:0;background:#f3efe4;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
+       . '<div style="display:none;max-height:0;overflow:hidden;opacity:0">' . $e((string) ($is['pre'] ?? '')) . '</div>'
+       . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3efe4"><tr><td align="center" style="padding:20px 10px">'
+       . '<table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px">'
+       /* the header: badge, name, the month's headline */
+       . '<tr><td bgcolor="#2e5e2c" style="background:#2e5e2c;padding:18px 24px;border-radius:14px 14px 0 0"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>'
+       . '<td style="padding-right:14px"><img src="https://365aeration.com/assets/sixfold365-badge-256.png" width="58" height="58" alt="' . $e($name) . '" style="display:block;width:58px;height:58px;border:0"></td>'
+       . '<td><div style="font-size:23px;font-weight:800;color:#ffffff;line-height:1.1">' . $e($name) . '</div>'
+       . ($head !== '' ? '<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#f2c14e;padding-top:5px">' . $e($head) . '</div>' : '') . '</td></tr></table></td></tr>'
+       . ($photo ? '<tr><td style="padding:0;line-height:0"><img src="' . $e($photo[1]) . '" width="600" alt="' . $e($photo[0]) . '" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>' : '')
+       /* the intro and the sections */
+       . '<tr><td bgcolor="#fdf8ee" style="background:#fdf8ee;padding:20px 14px 8px">' . $blocksHtml($intro, '15px', '#1d2a1c')
+       . ($tips ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="8" border="0" style="margin:0">'
+           . ($short ? '<tr>' . implode('', array_map(fn($s) => $card($s, true), $tips)) . '</tr>' : implode('', array_map(fn($s) => '<tr>' . $card($s, false) . '</tr>', $tips))) . '</table>' : '');
+    foreach ($ctas as $c) {
+        $ic = nlIcon($c['title']);
+        $h .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2e5e2c" style="background:#2e5e2c;border-radius:12px;margin:12px 0 10px"><tr>'
+            . ($ic !== '' ? '<td valign="top" width="60" style="padding:18px 0 14px 18px"><img src="' . $e($ic) . '" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0"></td>' : '')
+            . '<td style="padding:16px 18px 10px 14px"><div style="font-size:17px;font-weight:800;color:#ffffff;margin:0 0 4px">' . $inline($c['title'], '#ffffff') . '</div>'
+            . $blocksHtml($c['blocks'], '14px', '#e4e9dc', '#f2c14e')
+            . '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:2px 0 8px"><tr>'
+            . ($reply !== '' ? '<td style="padding:0 8px 6px 0"><a href="mailto:' . $e($reply) . '?subject=' . rawurlencode('Spring list') . '" style="display:inline-block;background:#f2c14e;color:#1d2a1c;font-weight:800;font-size:14px;text-decoration:none;padding:10px 16px;border-radius:999px">Reply to get on the list</a></td>' : '')
+            . ($tel !== '' ? '<td style="padding:0 0 6px 0"><a href="tel:' . $e($tel) . '" style="display:inline-block;border:2px solid #fff8ec;color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:8px 14px;border-radius:999px">Call or text ' . $e($ph) . '</a></td>' : '')
+            . '</tr></table></td></tr></table>';
+    }
+    $h .= '</td></tr>'
+       /* the footer */
+       . '<tr><td bgcolor="#e9e3d3" style="background:#e9e3d3;padding:14px 22px;border-radius:0 0 14px 14px;color:#5a6858;font-size:12px;line-height:1.5">'
+       . '<b style="color:#21451f">' . $e($name) . '</b>' . ($ph !== '' ? ' · <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' : '') . ($web !== '' ? ' · <a href="https://' . $e($web) . '/" style="color:#2e5e2c">' . $e($web) . '</a>' : '')
+       . '<br>' . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</td></tr>'
+       . '</table></td></tr></table></body></html>';
+    return [($test ? '[Test] ' : '') . (string) ($is['subject'] ?? ''), $text, $h, ['List-Unsubscribe: <' . $un . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']];
 }
 /** an issue from a file or an admin: subject, preheader, body; a new draft (never approved by loading it) */
 function nlClean(array $in): array {
