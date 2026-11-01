@@ -1,0 +1,46 @@
+# Traverse: Nextdoor message to lawn and landscape companies (draft, 31 Oct 2026)
+
+Draft only. Matthew sends each one by hand from the Traverse Platforms Nextdoor page; nothing is sent from the desk. Built from the approved lawn email (Prospect Desk template, 30 Oct), cut down for a direct message, same shape as the roofing one (nextdoor-message-roofing-draft.md). Replace {name} with the owner's first name if the page shows it, or use "Hi there".
+
+After sending, tick **Messaged on Nextdoor** on that company's card on the Prospect Desk.
+
+---
+
+## Message
+
+Hi {name},
+
+I'm Matthew, a Colorado founder. I built Traverse, an all-in-one app for lawn and landscaping companies: door maps, CRM, quotes, crews and the office in one place.
+
+Every house card shows the lawn's size in square feet, so your reps know which doors are worth knocking, and a quote comes straight from that size and your own prices, sent from your phone.
+
+I'm offering founding pricing to small Colorado lawn companies, from $59 a month, with a 7-day money-back guarantee. Would you be open to a 15-minute demo of your area? traverseplatforms.com/demo
+
+Matthew
+(303) 596-9515
+
+## Shorter version (for a first touch)
+
+Hi {name}, I'm Matthew. I built Traverse here in Colorado: one app for lawn crews and the office, with the lawn size on every house card and quotes sent from your phone. I'm offering founding pricing to small lawn companies. Open to a quick 15-minute demo of your area? traverseplatforms.com/demo
+
+## For tree services
+
+The lawn wording fits them less well. Swap the second paragraph for: "Every house card shows the property line on an aerial photo and the trees close to the house, so your reps know which doors are worth knocking." (Trees close to the house and the outlined lot are on the website's Lawn & Landscape card.)
+
+## Notes
+
+- No data sources named: on Nextdoor a message can be screenshotted and shared.
+- No proof line. If added, use exactly "Our current clients have had success with it", with no trade named (never single out lawns or aeration).
+- Watering days are left out: they change by town and season, and a wrong one in a first message reads badly.
+- Spread sends over several days: Nextdoor limits unsolicited business messages.
+
+## Fact-check log
+
+| Claim | Source | Status |
+|---|---|---|
+| Door maps, CRM, quotes, crews, office in one place | Approved lawn template (30 Oct); traverseplatforms.com | Verified |
+| Lawn size in square feet on each house card | Approved lawn template; homepage Lawn & Landscape card | Verified |
+| Quote from lawn size and own prices, sent from the phone | Approved lawn template | Verified |
+| Property line on the photo, trees close to the house | Homepage Lawn & Landscape card | Verified |
+| From $59 a month founding; 7-day money-back guarantee | Homepage pricing; agreement v2 | Verified 31 Oct |
+| 15-minute demo, traverseplatforms.com/demo; (303) 596-9515 | Approved templates; Traverse-only number | Verified |
