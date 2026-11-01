@@ -37,7 +37,7 @@ const W = 7.25, H = 4.8;                       /* inches */
 const GO = 'https://365aeration.com/';
 const PHONE = '(720) 830-4553', SITE = '365aeration.com';
 const HEAD = 'From the lawn to the treeline, all year long.';
-const SVC = 'Core aeration, overseeding, fertilizing, landscaping and fire mitigation, all over Colorado.';
+const SVC = 'Core aeration, overseeding, fertilizing, landscaping and fire mitigation across the Colorado Front Range.';   /* "Colorado Front Range" (1 Nov, Matthew), was "all over Colorado" */
 /* the greeting is said in person (2026-10-29, Matthew: the ad "has to soley be about the business and services"); this line is the
    site's "Keeping it" and "Land & trees" */
 const MORE = '<b>Regular upkeep too:</b> fertilizer, mowing and edging, plus beds, brush and trees.';
@@ -146,13 +146,15 @@ h1{font-size:21pt;color:#FFF8EC}.svc{font-size:11.5pt;line-height:1.4;margin-top
 .tag{position:absolute;left:.16in;bottom:.16in;background:#FFF8EC;color:#2F5D2C;font-family:Outfit,sans-serif;font-weight:700;font-size:9pt;padding:4pt 9pt;border-radius:20pt}
 .p{color:#FFF8EC;padding:.26in .26in .24in .26in;display:flex;flex-direction:column;justify-content:space-between}
 .top{gap:.1in}.top img{width:.7in;height:.7in}.name{font-size:18pt;color:#FFF8EC}.desc{font-size:5.9pt;color:#F2C14E;margin-top:3pt}
-h1{font-size:15.5pt;color:#FFF8EC}.svc{font-size:8.9pt;line-height:1.38;margin-top:5pt;color:#e4e9dc}
+h1{font-size:14.5pt;color:#FFF8EC}
+.sl{list-style:none;margin:6pt 0 0;padding:0}.sl li{font-size:9.4pt;line-height:1.25;color:#FFF8EC;padding:2.2pt 0 2.2pt 12pt;position:relative}.sl li:before{content:"";position:absolute;left:0;top:6.4pt;width:5.5pt;height:5.5pt;border-radius:50%;background:#E4703A}.sl li b{color:#F2C14E;font-weight:700}
+.area{font-size:8.2pt;letter-spacing:.06em;color:#F2C14E;margin-top:5pt;font-weight:700}
 .foot{display:grid;grid-template-columns:1.02in 1fr;gap:.14in;align-items:center}
 .qr{width:1.02in;height:1.02in}.scan{font-size:10.5pt}.phone{font-size:12.5pt;color:#F2C14E;margin-top:4pt}.site{font-size:8.6pt;margin-top:1pt;color:#e4e9dc}
 </style><div class="ad">
 <div class="wall" style="position:relative"><img class="big" src="${photo('work-terraced.jpg')}" alt=""><img src="${photo('work-front.jpg')}" alt=""><img src="${photo('work-treeline.jpg')}" alt=""><span class="tag">Lawns we've aerated and seeded</span></div>
 <div class="p"><div class="top"><img src="${badgeC}" alt="Sixfold 365"><div><p class="name">Sixfold 365</p><p class="desc">Land · Aeration &amp; Seeding</p></div></div>
-  <div><h1>${HEAD}</h1><p class="svc">${SVC}</p></div>
+  <div><h1>${HEAD}</h1><ul class="sl"><li><b>Fall cleanup</b> and leaf removal</li><li><b>Debris hauling</b></li><li>Landscaping and bed clean-up</li><li>Fire mitigation</li><li>Core aeration and overseeding</li></ul><p class="area">Serving the Colorado Front Range</p></div>
   <div class="foot"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div></div>
 </div>` },
   /* E and E2: Gemini artwork (1 Nov, Matthew: "remake concert ad E using gemini so we can have some high quality designs"). Gemini
