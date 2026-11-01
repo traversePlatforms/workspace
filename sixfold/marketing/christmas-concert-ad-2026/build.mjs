@@ -37,7 +37,7 @@ const W = 7.25, H = 4.8;                       /* inches */
 const GO = 'https://365aeration.com/';
 const PHONE = '(720) 830-4553', SITE = '365aeration.com';
 const HEAD = 'From the lawn to the treeline, all year long.';
-const SVC = 'Core aeration, overseeding, fertilizing, landscaping and fire mitigation across the Colorado Front Range.';   /* "Colorado Front Range" (1 Nov, Matthew), was "all over Colorado" */
+const SVC = 'Core aeration, overseeding, fertilizing, landscaping and fire mitigation.';   /* no area line (1 Nov, Matthew: "we wanted to remove the colorado front range"); was "all over Colorado" */
 /* the greeting is said in person (2026-10-29, Matthew: the ad "has to soley be about the business and services"); this line is the
    site's "Keeping it" and "Land & trees" */
 const MORE = '<b>Regular upkeep too:</b> fertilizer, mowing and edging, plus beds, brush and trees.';
@@ -154,7 +154,7 @@ h1{font-size:14.5pt;color:#FFF8EC}
 </style><div class="ad">
 <div class="wall" style="position:relative"><img class="big" src="${photo('work-terraced.jpg')}" alt=""><img src="${photo('work-front.jpg')}" alt=""><img src="${photo('work-treeline.jpg')}" alt=""><span class="tag">Lawns we've aerated and seeded</span></div>
 <div class="p"><div class="top"><img src="${badgeC}" alt="Sixfold 365"><div><p class="name">Sixfold 365</p><p class="desc">Land · Aeration &amp; Seeding</p></div></div>
-  <div><h1>${HEAD}</h1><ul class="sl"><li><b>Fall cleanup</b> and leaf removal</li><li><b>Debris hauling</b></li><li>Landscaping and bed clean-up</li><li>Fire mitigation</li><li>Core aeration and overseeding</li></ul><p class="area">Serving the Colorado Front Range</p></div>
+  <div><h1>${HEAD}</h1><ul class="sl"><li><b>Fall cleanup</b> and leaf removal</li><li><b>Debris hauling</b></li><li>Landscaping and bed clean-up</li><li>Fire mitigation</li><li>Core aeration and overseeding</li></ul></div>
   <div class="foot"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div></div>
 </div>` },
   /* E and E2: Gemini artwork (1 Nov, Matthew: "remake concert ad E using gemini so we can have some high quality designs"). Gemini
