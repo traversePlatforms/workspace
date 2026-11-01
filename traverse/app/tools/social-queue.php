@@ -6,7 +6,8 @@
    The queue is sixfold-private/social-queue.json: a list of posts, each
      { id, at (unix, when to publish), page ("Sixfold 365" | "Surge Inc"), status ("approved" | "posted" | "failed" | "missed" | "held"),
        approved: "who and when, in words", fb: {...} | null, ig: {...} | null, result: {...} }
-   fb: { type: "photo", image, caption } | { type: "album", name, description, photos: [{ image, caption }] }
+   fb: { type: "photo", image, caption } | { type: "photos", message, photos: [{ image }] } (one post, several photos)
+       | { type: "album", name, description, photos: [{ image, caption }] } (Meta refuses albums to this app, 1 Nov: use "photos")
    ig: { type: "image", image, caption } | { type: "carousel", images: [..], caption }
    Images are public https URLs. Only "approved" posts go out: nothing is posted without Matthew's go for that post (the workspace's
    standing rule; scheduling counts as posting). A post more than 6 hours late is marked "missed", not posted.
@@ -62,6 +63,17 @@ foreach ($due as $i) {
     if (is_array($fb) && ($fb['type'] ?? '') === 'photo') {
         $r = $call('POST', $pg['id'] . '/photos', ['url' => $fb['image'], 'caption' => (string) ($fb['caption'] ?? ''), 'published' => 'true', 'access_token' => $pt]);
         if ($e = $err($r)) { $ok = false; $res['fb'] = 'failed: ' . $e; } else { $l = $call('GET', (string) ($r['post_id'] ?? $r['id']), ['fields' => 'permalink_url', 'access_token' => $pt]); $res['fb'] = (string) ($l['permalink_url'] ?? $r['post_id'] ?? $r['id']); }
+    } elseif (is_array($fb) && ($fb['type'] ?? '') === 'photos') {
+        /* 1 Nov: Meta refuses albums to this app ("(#3) Application does not have the capability"), so a photo set goes out as one post with
+           several photos: each photo uploaded unpublished, then one feed post that carries them all and the message */
+        $ids = []; $bad = '';
+        foreach ((array) $fb['photos'] as $ph) { $r = $call('POST', $pg['id'] . '/photos', ['url' => (string) ($ph['image'] ?? ''), 'published' => 'false', 'access_token' => $pt]); if ($e = $err($r)) { $bad = $e; break; } $ids[] = (string) $r['id']; }
+        if ($bad !== '' || !$ids) { $ok = false; $res['fb'] = 'failed: ' . ($bad ?: 'no photos'); }
+        else {
+            $f = ['message' => (string) ($fb['message'] ?? ''), 'access_token' => $pt]; foreach ($ids as $k => $id) $f["attached_media[$k]"] = json_encode(['media_fbid' => $id]);
+            $r = $call('POST', $pg['id'] . '/feed', $f);
+            if ($e = $err($r)) { $ok = false; $res['fb'] = 'failed: ' . $e; } else { $l = $call('GET', (string) $r['id'], ['fields' => 'permalink_url', 'access_token' => $pt]); $res['fb'] = count($ids) . ' photos: ' . (string) ($l['permalink_url'] ?? $r['id']); }
+        }
     } elseif (is_array($fb) && ($fb['type'] ?? '') === 'album') {
         $a = $call('POST', $pg['id'] . '/albums', ['name' => (string) $fb['name'], 'message' => (string) ($fb['description'] ?? ''), 'access_token' => $pt]);
         if ($e = $err($a)) { $ok = false; $res['fb'] = 'album failed: ' . $e; } else {

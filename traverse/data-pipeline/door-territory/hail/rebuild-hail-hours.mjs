@@ -18,7 +18,11 @@ const HERE = dirname(fileURLToPath(import.meta.url)), DATA = process.env.ROUNDS_
 const ARCHIVE = 'https://mtarchive.geol.iastate.edu', MIN_MM = 19.05, UA = { 'User-Agent': 'Traverse-hail/1.0 (M.Sharpe@TraversePlatforms.com)' };
 const [mode, a1, a2] = process.argv.slice(2);
 const CONC = +((process.argv.find((a) => a.startsWith('--conc=')) || '').split('=')[1] || 4);
-const SOURCE = 'NOAA/NSSL MRMS MESH every 2 minutes (sampled each 20), archived by Iowa State University';
+/* 1 Nov (Matthew: "use up that budget" on the cloud machine): --step=2 reads every 2-minute file, so short storms that fell between the
+   20-minute samples get their hours too (the audit had 66% of town storm days with hours). 2, 4, 5, 10 or 20 (the default). */
+const STEP = +((process.argv.find((a) => a.startsWith('--step=')) || '').split('=')[1] || 20);
+if (![2, 4, 5, 10, 20].includes(STEP)) { console.error('--step must be 2, 4, 5, 10 or 20'); process.exit(2); }
+const SOURCE = STEP === 2 ? 'NOAA/NSSL MRMS MESH every 2 minutes, archived by Iowa State University' : `NOAA/NSSL MRMS MESH every 2 minutes (sampled each ${STEP}), archived by Iowa State University`;
 const writeAtomic = (f, s) => { writeFileSync(f + '.tmp', s); renameSync(f + '.tmp', f); };
 
 if (mode === 'stage') {
@@ -68,7 +72,7 @@ async function files(utcDay) {           /* the 2-minute file names in one UTC d
 }
 async function sample(utc) {             /* the file nearest this time (within 4 minutes), decoded */
   const day = utc.toISOString().slice(0, 10), set = await files(day);
-  for (const dm of [0, 2, -2, 4, -4]) {
+  for (const dm of STEP === 2 ? [0] : [0, 2, -2, 4, -4]) {   /* every file is asked for at --step=2, so a near one would only repeat a neighbour */
     const t = new Date(utc.getTime() + dm * 60000); if (t.toISOString().slice(0, 10) !== day) continue;
     const name = 'MESH_00.50_' + t.toISOString().slice(0, 10).replace(/-/g, '') + '-' + t.toISOString().slice(11, 16).replace(':', '') + '00.grib2.gz';
     if (!set.has(name)) continue;
@@ -86,7 +90,7 @@ let n = 0, read = 0, missing = 0;
 for (const date of todo) {
   const towns = plan.days[date], hrs = {}; for (const k of towns) hrs[k] = new Set();
   const off = offsetH(date), times = [];
-  for (let h = 11; h <= 22; h++) for (let m = 0; m < 60; m += 20) times.push([h, new Date(Date.parse(date + 'T00:00:00Z') + ((h + off) * 60 + m) * 60000)]);
+  for (let h = 11; h <= 22; h++) for (let m = 0; m < 60; m += STEP) times.push([h, new Date(Date.parse(date + 'T00:00:00Z') + ((h + off) * 60 + m) * 60000)]);
   let i = 0, got = 0; const failed = [];
   const look = (h, g) => {
     for (const k of towns) {

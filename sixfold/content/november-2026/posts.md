@@ -213,7 +213,9 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 
 **Why:** Simple thank-you, no offer, the contact line kept soft.
 
-## Sat, Nov 7, 2:00 pm: photo set, Backyards
+## POSTED Sun, Nov 1 (Facebook only): photo set, Backyards
+
+**Posted to the Sixfold 365 Facebook page on 1 Nov at 10:50 am** (Matthew: "yeah we need photos added to facebook", picked this set for today), as one post with 4 photos and the Facebook caption below: Meta refuses albums to the posting app. Not on Instagram yet. Its Nov 7 slot goes to Front lawns, and every set after moves up a week; Nov 28 is open.
 
 **Photos** (Facebook album + Instagram carousel, in this order):
 
@@ -236,7 +238,7 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 >
 > #coloradolawn #lawnaeration #frontrange
 
-## Sat, Nov 14, 2:00 pm: photo set, Front lawns
+## Sat, Nov 7, 2:00 pm: photo set, Front lawns (was Nov 14)
 
 **Photos** (Facebook album + Instagram carousel, in this order):
 
@@ -259,7 +261,7 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 >
 > #coloradolawn #lawncare #frontrange
 
-## Sat, Nov 21, 2:00 pm: photo set, Big yards, tree-lined yards
+## Sat, Nov 14, 2:00 pm: photo set, Big yards, tree-lined yards (was Nov 21)
 
 **Photos** (Facebook album + Instagram carousel, in this order):
 
@@ -282,7 +284,9 @@ For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. 
 >
 > #coloradolawn #lawnaeration #frontrange
 
-## Sat, Nov 28, 2:00 pm: photo set, A few more from this fall
+## Sat, Nov 21, 2:00 pm: photo set, A few more from this fall (was Nov 28)
+
+<!-- Sat, Nov 28: open (1 Nov). -->
 
 **Photos** (Facebook album + Instagram carousel, in this order):
 
