@@ -154,7 +154,7 @@ h1{font-size:14.5pt;color:#FFF8EC}
 </style><div class="ad">
 <div class="wall" style="position:relative"><img class="big" src="${photo('work-terraced.jpg')}" alt=""><img src="${photo('work-front.jpg')}" alt=""><img src="${photo('work-treeline.jpg')}" alt=""><span class="tag">Lawns we've aerated and seeded</span></div>
 <div class="p"><div class="top"><img src="${badgeC}" alt="Sixfold 365"><div><p class="name">Sixfold 365</p><p class="desc">Land · Aeration &amp; Seeding</p></div></div>
-  <div><h1>${HEAD}</h1><ul class="sl"><li><b>Fall cleanup</b> and leaf removal</li><li><b>Debris hauling</b></li><li>Landscaping and bed clean-up</li><li>Fire mitigation</li><li>Core aeration and overseeding</li></ul></div>
+  <div><h1>${HEAD}</h1><ul class="sl"><li><b>Fall cleanup</b> and leaf removal</li><li><b>Core aeration</b> and overseeding</li><li>Debris hauling</li><li>Landscaping and bed clean-up</li><li>Fire mitigation</li></ul></div>
   <div class="foot"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div></div>
 </div>` },
   /* E and E2: Gemini artwork (1 Nov, Matthew: "remake concert ad E using gemini so we can have some high quality designs"). Gemini
