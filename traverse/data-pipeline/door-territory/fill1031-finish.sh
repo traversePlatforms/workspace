@@ -153,7 +153,7 @@ console.log('roof doors '+r0+' -> '+r1+', sun doors '+s0+' -> '+s1);if(bad.lengt
   [ $STAGE != roofsolar ] && push_doors "$LABEL" $TOWNS
   step "done: $STAGE live for $(echo $TOWNS | wc -w) towns; old caches $S/before-*.json, old side files $S/before-side.tgz; note in TASKS.md TR-54" ;;
 dougmat)
-  TOWNS=$(okt); step "towns: $TOWNS"; [ -n "$TOWNS" ] || stop "no finished towns"
+  TOWNS=$(okt | tr '\n' ' '); step "towns: $TOWNS"; [ -n "$TOWNS" ] || stop "no finished towns"   # one line: the list goes inside the VM command, where a newline split it (31 Oct: "syntax error near parker")
   $VM "cd ~/run/tv/traverse && tar czf - \$(for t in $TOWNS; do f=app/data/rounds/material-\$t.json; [ -f \$f ] && echo \$f; done) data-pipeline/door-territory/roofs/material/coverage.json" < /dev/null > "$S/back.tgz" || stop "copy back failed"
   rm -rf "${S:?}/back" && mkdir -p "$S/back" && tar xzf "$S/back.tgz" -C "$S/back" || stop "unpack failed"
   node -e "
