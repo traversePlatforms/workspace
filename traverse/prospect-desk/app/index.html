@@ -341,6 +341,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       l.socials.forEach(function (u) { var nm = 'Page'; for (var i = 0; i < SN.length; i++) if (SN[i][0].test(u)) { nm = SN[i][1]; break; } if (seen[nm]) return; seen[nm] = 1; var a = el('a', 'soc', nm + ' ›'); a.href = /^https?:/.test(u) ? u : 'https://' + u; a.target = '_blank'; a.rel = 'noopener'; so.appendChild(a); });
       ct.appendChild(so);
     }
+    /* 1 Nov (Matthew): a Nextdoor page with an error or no owner comes off the Nextdoor list in one tap, with Undo */
+    if (hasNd(l)) { var nb = el('button', 'lnk', 'Nextdoor page has an error or no owner: take it off the Nextdoor list'); nb.type = 'button'; nb.style.display = 'block'; nb.addEventListener('click', function () { save('ndbad', { id: l.id, on: true }, 'Taken off the Nextdoor list', function () { save('ndbad', { id: l.id, on: false }, 'Put back'); }); }); ct.appendChild(nb); }
+    else if (l.ndBad) { ct.appendChild(el('small', null, 'Nextdoor page taken off the list (an error or no owner).')); var pb = el('button', 'lnk', 'Put the Nextdoor page back'); pb.type = 'button'; pb.style.display = 'block'; pb.addEventListener('click', function () { save('ndbad', { id: l.id, on: false }, 'Put back'); }); ct.appendChild(pb); }
     if (l.record) { var ra = el('a', null, 'State business record ›'); ra.href = l.record; ra.target = '_blank'; ra.rel = 'noopener'; ct.appendChild(ra); }
     if (!l.phone && !l.email) ct.appendChild(el('small', null, 'No phone or email yet. Add one below when you find it.'));
     s2.appendChild(ct);

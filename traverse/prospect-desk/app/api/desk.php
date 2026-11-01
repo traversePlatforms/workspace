@@ -73,6 +73,18 @@ function state(): array {
             case 'next': if (isset($L[$id])) $L[$id]['next'] = $r['next']; break;
             case 'edit': if (isset($L[$id])) foreach ((array) $r['f'] as $k => $v) if ($k === 'nextdoor') { $L[$id]['nextdoor'] = (string) $v; $so = array_values(array_filter((array) ($L[$id]['socials'] ?? []), fn($u) => stripos((string) $u, 'nextdoor.com') === false)); if ((string) $v !== '') array_unshift($so, (string) $v); $L[$id]['socials'] = $so; } elseif (in_array($k, ['phone', 'email', 'site', 'person', 'name'], true)) {   /* + nextdoor (31 Oct): their business page, first among the social links */
                  $L[$id][$k] = $v; if ($k === 'email') { $L[$id]['emailOk'] = ''; $L[$id]['emailSrc'] = 'desk'; } } break;
+            case 'ndbad': if (isset($L[$id])) {   /* 1 Nov (Matthew): a Nextdoor page with an error or no owner comes off the Nextdoor list; the link is kept in ndBad so Undo puts it back */
+                if (!empty($r['on'])) {
+                    $u = (string) ($L[$id]['nextdoor'] ?? '') ?: (string) (array_values(array_filter((array) ($L[$id]['socials'] ?? []), fn($x) => stripos((string) $x, 'nextdoor.com') !== false))[0] ?? '');
+                    $L[$id]['ndBad'] = ['url' => $u, 'at' => $r['at']]; $L[$id]['nextdoor'] = '';
+                    $L[$id]['socials'] = array_values(array_filter((array) ($L[$id]['socials'] ?? []), fn($x) => stripos((string) $x, 'nextdoor.com') === false));
+                    $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Nextdoor page not usable: taken off the Nextdoor list'];
+                } elseif (!empty($L[$id]['ndBad'])) {
+                    $u = (string) $L[$id]['ndBad']['url']; unset($L[$id]['ndBad']);
+                    if ($u !== '') { $L[$id]['nextdoor'] = $u; $L[$id]['socials'] = array_values(array_merge([$u], (array) ($L[$id]['socials'] ?? []))); }
+                    $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Nextdoor page put back on the list'];
+                }
+            } break;
             case 'sent': if (isset($L[$id])) { $L[$id]['sent'][] = ['at' => $r['at'], 'subject' => $r['subject'], 'to' => $r['to']]; if (!in_array('emailed', $L[$id]['reached'], true)) $L[$id]['reached'][] = 'emailed'; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Emailed: ' . $r['subject']]; } break;
             case 'click': if (isset($L[$id])) { $L[$id]['clicks'] = ($L[$id]['clicks'] ?? 0) + 1; $L[$id]['log'][] = ['at' => $r['at'], 'by' => 'the company', 'what' => 'Clicked ' . (($r['to'] ?? '') === 'demo' ? 'Book a demo' : 'the website') . ' in the email']; } break;   /* 2026-10-30 */
             case 'bounce': if (isset($L[$id])) { $L[$id]['emailOk'] = 'no'; $L[$id]['emailWhy'] = 'the email to ' . ($r['to'] ?? 'it') . ' bounced'; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Email bounced: ' . ($r['to'] ?? '')]; } break;   /* 31 Oct: a bounce Matthew reports; the address is kept, the desk never emails it again */
@@ -434,6 +446,12 @@ switch ($action) {
         $id = (string) ($body['id'] ?? ''); needLead($S, $id); $w = (string) ($body['way'] ?? '');
         if (!in_array($w, WAYS, true)) fail('Pick Emailed, Called or Messaged on Nextdoor.');
         logAdd(['t' => 'reach', 'id' => $id, 'way' => $w, 'on' => !empty($body['on']), 'by' => $ME, 'at' => time()]); out(['ok' => true]);
+    }
+    case 'ndbad': {   /* take a broken or ownerless Nextdoor page off the list, or put it back (1 Nov) */
+        $id = (string) ($body['id'] ?? ''); $L = needLead($S, $id); $on = !empty($body['on']);
+        if ($on && empty($L['nextdoor']) && !array_filter((array) ($L['socials'] ?? []), fn($x) => stripos((string) $x, 'nextdoor.com') !== false)) fail('This company has no Nextdoor page on the desk.');
+        if (!$on && empty($L['ndBad'])) out(['ok' => true, 'same' => true]);
+        logAdd(['t' => 'ndbad', 'id' => $id, 'on' => $on, 'by' => $ME, 'at' => time()]); out(['ok' => true]);
     }
     case 'note': {
         $id = (string) ($body['id'] ?? ''); needLead($S, $id); $n = clean($body['note'] ?? '', 1000); if ($n === '') fail('Write the note first.');
