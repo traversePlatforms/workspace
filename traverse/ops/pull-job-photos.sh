@@ -15,6 +15,14 @@ fi
 mkdir -p "$DEST"
 $SG 'rm -rf ~/job-photos-export && php ~/www/traverseplatforms.com/sixfold-tools/job-photo-export.php' < /dev/null || { echo "job photos: export FAILED"; exit 1; }
 REMOTE=$($SG 'cd ~/job-photos-export && find . -type f -name "*.jpg" | sed "s#^\./##" | sort' < /dev/null)
+# 1 Nov: the server names every folder "date Customer - street, Town" now; a photo already here under an old folder name is moved, not
+# downloaded again (file names are unique: the time and a short hash), and emptied old folders are removed
+while IFS= read -r rp; do
+  [ -n "$rp" ] || continue; [ -f "$DEST/$rp" ] && continue
+  old=$(cd "$DEST" && find . -type f -name "$(basename "$rp")" | sed 's#^\./##' | head -1); [ -n "$old" ] || continue
+  mkdir -p "$DEST/$(dirname "$rp")" && mv "$DEST/$old" "$DEST/$rp"
+done <<< "$REMOTE"
+find "$DEST" -mindepth 1 -type d -empty -delete
 HAVE=$(cd "$DEST" && find . -type f -name "*.jpg" | sed 's#^\./##' | sort)
 MISSING=$(comm -23 <(printf '%s\n' "$REMOTE" | grep -v '^$') <(printf '%s\n' "$HAVE" | grep -v '^$'))
 N=$(printf '%s\n' "$MISSING" | grep -c . || true)
