@@ -8,6 +8,24 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-10-31 (Saturday)
+
+**Traverse prospecting** (site open since last night)
+- **Emails:** 179 sent, 40 more sending overnight (20 roofing, 20 lawn, founded 2016+); daily cap 240. 3 clicks (Keystone, Brian Williams, Birdie on the demo page), 0 unsubscribes, 1 bounce (Legacy Roofers, now recorded on the desk). Inbox test to Gmail and the Surge inbox: Primary.
+- **Nextdoor:** page field, filter and sort on the desk; Emailed / Called / Messaged on Nextdoor are ticks that can all be on at once. Website crawl + thorough web search: 26 pages became 230 (all Fit A, first ~200 Fit B); 132 messaged by Matthew; 27 unusable pages marked, 19 of them emailed, 8 on a call list. Fit B search paused at the 200-searches-a-turn limit.
+- **Nextdoor page and Google Ads:** bio within 500 characters, logo and covers; Google Ads set up with Matthew (appointment goal, services, headlines, themes) and four designed images in place of Google's generated people.
+- **Website visitors:** counter on the server from the daily log (bots and our own visits out), a line in the overnight check.
+
+**Traverse apps** (live): deep-review fixes (sign-in paths, read-only account, email retries, checkout payment check, unsubscribe needs a button press); TR-47 town list (Yours, search, regions, hide counties); TR-48 sample property in Setup + Payments received; TR-46 Jobber built, waits for the app registration; satellite tile cache; storm job town by town; hail hours on Roofing.
+
+**Map data:** coverage audit (407 towns, 1,237,418 homes); live: Larimer roof material, lawns re-measured (+4,517 lots), roofs and sun for 18 towns, Douglas roof material. Two queue bugs fixed (retry helper renamed towns to "1"; Douglas copy-back). Laser-scan, trees, outlines and values still running.
+
+**Sixfold 365:** Saturday weekly report for Brandon (first sent tonight); ad spend updated; fall clean-up card posted on Matthew's go; November posts drafted (no generated pictures); customer emails and newsletter wording; 365 mailbox alias.
+
+**Admin:** Surge and Sixfold Drives reorganised; Desktop tidied into folders (moves only, list on the Desktop); OneDrive move cause found (OneDrive not running), job fixed, still parked; Drive backup stopping at the archive step since 29 Oct, being run by hand to find out why.
+
+---
+
 ## 2026-10-30 (Friday)
 
 **Traverse editions, new** (eight deploys, every check passed; Sixfold unchanged unless named)
