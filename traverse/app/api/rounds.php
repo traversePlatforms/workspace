@@ -2561,7 +2561,7 @@ function squareApi(string $method, string $path, ?array $body = null): array {
 function squareLink(string $name, int $cents, string $back, string $email = ''): array {
     $c = squareCfg();
     $req = ['idempotency_key' => bin2hex(random_bytes(16)), 'quick_pay' => ['name' => $name, 'price_money' => ['amount' => $cents, 'currency' => 'USD'], 'location_id' => $c['location']]];
-    if ($back !== '') $req['checkout_options'] = ['redirect_url' => $back];
+    $req['checkout_options'] = ['accepted_payment_methods' => ['apple_pay' => true, 'google_pay' => true]] + ($back !== '' ? ['redirect_url' => $back] : []);   /* Apple Pay and Google Pay by name (2026-11-01, Matthew); Apple Pay shows only in Safari on an Apple device */
     if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) $req['pre_populated_data'] = ['buyer_email' => $email];
     $r = squareApi('POST', '/v2/online-checkout/payment-links', $req);
     if (empty($r['payment_link']) && isset($req['pre_populated_data'])) { unset($req['pre_populated_data']); $req['idempotency_key'] = bin2hex(random_bytes(16)); $r = squareApi('POST', '/v2/online-checkout/payment-links', $req); }   /* Square refuses some addresses */
