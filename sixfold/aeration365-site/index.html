@@ -311,7 +311,7 @@
       </div>
     </fieldset>
     <label>Your name<input name="name" autocomplete="name" maxlength="120" required></label>
-    <div class="row"><label>Phone<input name="phone" type="tel" autocomplete="tel" maxlength="40"></label><label>Email<input name="email" type="email" autocomplete="email" maxlength="160"></label></div>
+    <div class="row"><label>Phone<input name="phone" type="tel" autocomplete="tel" maxlength="40" required></label><label>Email<input name="email" type="email" autocomplete="email" maxlength="160" required></label></div>
     <fieldset><legend>How should we contact you?</legend>
       <div class="seg">
         <label><input type="radio" name="contact" value="text"> Text</label>
@@ -384,7 +384,9 @@
     if (!lawn && !land && !qq) { err.textContent = 'Please pick what you are looking for.'; f.elements.w_lawn.focus(); return; }
     var want = lawn && land ? 'multiple' : lawn ? 'lawnall' : land ? 'land' : 'question';
     if (!v('name')) { err.textContent = 'Please add your name.'; f.elements.name.focus(); return; }
-    if (!v('phone') && !v('email')) { err.textContent = 'Please add a phone number or an email so we can reply.'; f.elements.phone.focus(); return; }
+    /* both, 1 Nov 2026 (Matthew: email and phone mandatory on our website, so the aftercare and receipts can reach everyone) */
+    if (!v('phone')) { err.textContent = 'Please add your phone number.'; f.elements.phone.focus(); return; }
+    if (!v('email') || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v('email'))) { err.textContent = 'Please add your email, so we can send your quote and appointment details.'; f.elements.email.focus(); return; }
     var how = (f.querySelector('input[name=contact]:checked') || {}).value || '';
     if (!how) { err.textContent = 'Please choose how we should contact you.'; f.querySelector('input[name=contact]').focus(); return; }
     if (how === 'email' && !v('email')) { err.textContent = 'Please add your email, or choose text or call.'; f.elements.email.focus(); return; }

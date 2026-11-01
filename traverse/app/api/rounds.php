@@ -3016,6 +3016,10 @@ const A365_SIGN_VERSION = 'v4-draft-2026-10-16';   /* v4: their phone and email 
 function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? '')); return $f !== '' ? $f : (string) (company()['a365']['phone'] ?? company()['phone'] ?? ''); }   /* a kit install: the company's own phone (2026-10-27) */
 /* the 365 emails' logo header (1 Nov, Matthew: "none of them have our logos"): the green band with the badge and the name, as the newsletter has it.
    Used by the aftercare, the 2-day follow-up and the signed-agreement copy; the badge is the one on the site (365aeration.com/assets/). */
+/* the redesigned aftercare and signed-copy emails, and the balance pay link on Done, wait for Jen and Cai's review (2026-11-01, Matthew: 'dont send
+   anything yet, i am waiting for the conformation'): ON only when sixfold-data/rounds/emails2.json says {"on":true}. The follow-up, deposit reminders
+   and the newsletter have their own switches. */
+function a365Emails2(): bool { static $on = null; if ($on === null) $on = !empty((json_decode((string) @file_get_contents(DATA_DIR . '/emails2.json'), true) ?: [])['on']); return $on; }
 function a365MailHead(string $name): string {
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
     return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2e5e2c" style="background:#2e5e2c;border-radius:14px;margin:0 0 18px"><tr><td style="padding:16px 20px">'
@@ -3476,14 +3480,14 @@ function a365SendSigned(array $l, array $sg, string $by): array {
     $lis = implode('', array_map(fn($t) => '<li style="margin:0 0 6px">' . $e($t) . '</li>', $terms));
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
           . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-          . a365MailHead($name)
+          . (a365Emails2() ? a365MailHead($name) : '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>')
           . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for booking with ' . $e($name) . '. Here is a copy of the agreement you signed.</p>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">What we agreed</div><table style="border-collapse:collapse;font-size:15px">' . $rows . '</table></div>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">The details</div><ol style="margin:0;padding-left:20px;font-size:15px">' . $lis . '</ol></div>'
           . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:16px 18px;margin-bottom:18px"><div style="font-size:22px;font-style:italic;font-weight:700;color:#21451f">' . $e($sg['name']) . '</div><div style="color:#5a6858;font-size:14px;margin-top:4px">Signed electronically on ' . $e($when) . '.</div></div>'
           . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">View or print your agreement</a></p>'
           . '<p style="margin:0;color:#5a6858;font-size:14px">Questions or changes: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
-          . a365MailSocial() . '</div></body></html>';
+          . (a365Emails2() ? a365MailSocial() : '') . '</div></body></html>';
     $r = a365Mail($to, 'Your signed agreement with ' . $name, $text, $html);
     appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $l['id'], 'what' => 'signed', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
@@ -7779,6 +7783,21 @@ function jobSquareFound(string $jid, array $f, string $how): void {
     a365Alert('Balance paid in Square', $who . ' · $' . $f['amt'], false, false, isset(webLeadIds()[(string) $j['lead']]));
     jobAftercare($jid, 'paid');
 }
+/* the balance in the aftercare (2026-11-01, Matthew: "The balance reminder should go into the aftercare after we complete the job"): when a 365 job is
+   marked done with a balance still owed and nothing taken on the spot, a Square pay link for the balance is made (or the one already made for that
+   amount is used) and the aftercare email goes at once with its Pay button, instead of waiting for the payment. Needs Square, the 365 mailbox and
+   an email on file; otherwise nothing changes (the office is told to send the aftercare, as before). */
+function jobAutoPayLink(string $jid, string $by): array {
+    $j = jobsAll()[$jid] ?? null; if (!$j || $j['off'] || !jobIs365($j) || !squareFor() || !a365MailCfg()) return ['stage' => 'waiting'];
+    $left = jobOwed($j); if ($left < 1) return jobAftercare($jid, 'done');
+    $l = leadsAll()[$j['lead']] ?? []; $em = trim((string) ($l['email'] ?? '')); if (!filter_var($em, FILTER_VALIDATE_EMAIL)) return ['stage' => 'noemail'];
+    if (empty($j['sqlink']['url']) || (int) ($j['sqlink']['amt'] ?? 0) !== $left) {
+        $pl = squareLink('Balance: ' . (string) (company()['a365']['name'] ?? 'Aeration'), $left * 100, '', $em);
+        if (!empty($pl['err'])) return ['stage' => 'waiting', 'error' => (string) $pl['err']];
+        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'sqlink' => $pl, 'by' => $by . ' (marked done)', 'at' => time()]);
+    }
+    return jobAftercare($jid, 'link');
+}
 function jobOwed(array $j): int { $p = $j['pay'] ?? ['s' => 'unpaid']; if (in_array($p['s'] ?? '', ['paid', 'plan'], true)) return 0; return max(0, (int) $j['price'] - (($p['s'] ?? '') === 'deposit' ? (int) ($p['amt'] ?? 0) : 0)); }
 /* the aftercare email (2026-10-19, Matthew: "follow up with aftercare and a reminder to pay if he hasn't already ... how can we automate that
    email out"; "ask first" before any card is charged). Sent once per job, after it is marked Done, when the balance is settled: the card
@@ -7821,13 +7840,13 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
           . implode("\n", array_map(fn($t) => '- ' . $t, $tips)) . "\n\n" . $bal . "\n\nAny questions: call or text " . $ph . ".\n\n" . $name . "\n";
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
           . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-          . a365MailHead($name)
+          . (a365Emails2() ? a365MailHead($name) : '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>')
           . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for having us! Your lawn is done. A few tips for the next couple of weeks:</p>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><ul style="margin:0;padding-left:20px;font-size:15px">' . implode('', array_map(fn($t) => '<li style="margin:0 0 8px">' . $e($t) . '</li>', $tips)) . '</ul></div>'
           . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin-bottom:18px;font-size:15px">' . $e($cg || $owed < 1 || $link === '' ? $bal : 'Your remaining balance is $' . $owed . '.') . '</div>'
           . ($owed > 0 && $link !== '' ? '<p style="margin:0 0 18px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Pay the $' . $owed . ' balance</a></p>' : '')
           . '<p style="margin:0;color:#5a6858;font-size:14px">Any questions: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
-          . a365MailSocial() . '</div></body></html>';
+          . (a365Emails2() ? a365MailSocial() : '') . '</div></body></html>';
     return $rec(a365Mail($to, 'Your lawn after today: a few tips from ' . $name, $text, $html));
 }
 /* ---- the follow-up email, two days after a job (2026-10-27, Matthew: "all of our customers that we have done jobs for needs to get an email
@@ -8658,7 +8677,7 @@ if ($action === 'jobdone') {
     if ($o === 'done') custPlanAdvance((string) ($j['lead'] ?? ''), (string) ($j['date'] ?? ''));
     if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
     if ($o === 'could not' && !empty(company()['a365'])) a365Alert('Job not done: ' . ((string) ($j['title'] ?? '') ?: 'a customer'), $me . ': ' . mb_substr($note, 0, 140));   /* the office rebooks it */
-    $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ['stage' => 'waiting'];   /* nothing owed: the aftercare email now */
+    $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ($o === 'done' && $got < 1 && a365Emails2() ? jobAutoPayLink($id, $me) : ['stage' => 'waiting']);   /* nothing owed: the aftercare email now */   /* a balance still owed and nothing taken on the spot: a pay link, and the aftercare goes now with it (1 Nov) */
     /* never lost (2026-10-28): when it cannot go by itself (no 365 mailbox yet, or no email for them), the office is told it is Jen's to send */
     if ($o === 'done' && !empty(company()['a365']) && jobIs365($j) && empty(jobsAll()[$id]['aftercare']['ok']) && (!a365MailCfg() || in_array($af['stage'] ?? '', ['noemail', 'config'], true))) {
         $LA = leadsAll()[$j['lead']] ?? [];
