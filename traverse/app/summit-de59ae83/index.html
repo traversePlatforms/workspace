@@ -4862,6 +4862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* next to Accounts (2026-10-30, Matthew: the rest of Setup is on it); the quote and agreement kit (2026-10-27) */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
+        CO.a365 && wdOn() ? tile('button', 'mail', 'Deposit reminders', 'Emails to customers whose deposit is unpaid: 2 days before and the day before. Who is due one, Don’t send, preview.', 'Admin only', depremView) : null,   /* 2026-11-01 */
         CO.a365 && wdOn() ? tile('button', 'clip', 'Agreement terms', 'What the 365 form says under the price: each line yours to change. Signed forms keep theirs.', 'Admin only', a365TermsView) : null,   /* 2026-10-30 */
         CO.a365 && wdOn() ? tile('button', 'card', 'Other ways to pay', 'Venmo, Zelle with its QR code, Cash App and PayPal, beside Square. Off until you fill them in.', 'Admin only', a365WaysView) : null,   /* 2026-10-30 */
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and color, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
@@ -7429,6 +7430,59 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         api('followuptest', { body: { id: sel.value } }).then(function (k) { tb.disabled = false; toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || 'Try again.'), null); }).catch(function () { tb.disabled = false; toast('No signal', 'Try again.', null); });
       });
       sel.addEventListener('change', show); holder.appendChild(tb); holder.appendChild(q('div', 'sub2', 'The test goes only to your own email, marked [Test]. Nothing is recorded on the job or the customer.')); show();
+    }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
+  }
+  /* deposit reminders (2026-11-01, Jen via Matthew): who is due one, Don't send per customer, the on/off switch, a preview and a test */
+  function depremView() {
+    hideToast(); S.signin = null; S.screen = 'deprem'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Deposit reminders', sub: 'For forms with an unpaid deposit', back: chooseView, backLabel: 'Field tools' });
+    view.textContent = ''; var holder = q('div', 'card jnform fumail'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
+    api('deprem').then(function (j) {
+      holder.textContent = '';
+      if (!j || !j.ok) { holder.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; }
+      var row = q('div', 'lookrow'); row.appendChild(q('span', null, 'Email customers whose deposit is still unpaid'));
+      var seg = q('div', 'aseg');
+      [[false, 'Off'], [true, 'On']].forEach(function (o) {
+        var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!j.on === o[0])); b.disabled = !j.admin;
+        b.addEventListener('click', function () {
+          if (!!j.on === o[0]) return;
+          if (o[0] && !window.confirm('Turn on deposit reminders? A customer whose form has an unpaid Square deposit gets an email 2 days before their day and the day before, from 10 am. Reminders whose time has already passed are not sent.')) return;
+          api('depremset', { body: { on: o[0] } }).then(function (k) { if (!k.ok) { toast('Not saved', k.error || 'Try again.', null); return; } toast(o[0] ? 'Deposit reminders on' : 'Deposit reminders off', '', null); depremView(); }).catch(function () { toast('No signal', 'Not saved.', null); });
+        });
+        seg.appendChild(b);
+      });
+      row.appendChild(seg); holder.appendChild(row);
+      holder.appendChild(q('div', 'sub2', j.on ? 'On since ' + new Date(j.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + (j.by ? ', by ' + j.by : '') + '.' : 'Off: nothing is sent.' + (j.admin ? '' : ' An admin turns it on.')));
+      holder.appendChild(q('div', 'sub2', 'Who gets one: a form sent with a Square deposit link that is still unpaid, not signed, not booked and not lost. Square is asked again just before each email, so anyone who just paid never gets one. When: 2 days before their day and the day before, from 10 am, from the 365 mailbox; replies go to the office. The button in it opens their form, where they pay.'));
+      if (!j.mail) holder.appendChild(q('div', 'msg bad', 'The 365 mailbox is not set up on the server, so no email can go, even when this is on.'));
+      holder.appendChild(q('h2', 'tgrp', 'Due a reminder'));
+      if (!(j.list || []).length) { holder.appendChild(q('div', 'msg soft', 'Nobody right now: every form with a deposit link is paid, signed or booked.')); return; }
+      var pv = q('div', 'fupv'), cur = null;
+      var show = function (x, kind) {
+        cur = { id: x.id, kind: kind }; pv.textContent = ''; pv.appendChild(q('div', 'skel'));
+        api('deprempreview', { params: { id: x.id, kind: kind } }).then(function (p) {
+          pv.textContent = '';
+          if (!p.ok) { pv.appendChild(q('div', 'msg bad', p.error || 'Could not make the preview.')); return; }
+          pv.appendChild(q('div', 'sub2', 'To ' + (p.to || 'nobody: no email on file') + ' · Subject: ' + p.subject));
+          var fr = document.createElement('iframe'); fr.className = 'fuframe'; fr.setAttribute('sandbox', ''); fr.setAttribute('title', 'The email as it would look'); fr.srcdoc = p.html; pv.appendChild(fr);
+          if (j.admin) { var tb = q('button', 'lnk', 'Send me a test'); tb.type = 'button'; pv.appendChild(tb);
+            tb.addEventListener('click', function () { tb.disabled = true; api('depremtest', { body: { id: cur.id, kind: cur.kind } }).then(function (k) { tb.disabled = false; toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || 'Try again.'), null); }).catch(function () { tb.disabled = false; toast('No signal', 'Try again.', null); }); }); }
+        }).catch(function () { pv.textContent = ''; pv.appendChild(q('div', 'msg bad', 'No connection.')); });
+      };
+      j.list.forEach(function (x) {
+        var c = q('div', 'jfollow');
+        c.appendChild(q('div', 'dwh', x.name + ' · ' + fmtD(x.date) + ', ' + x.arrive + ' · $' + x.deposit + ' deposit'));
+        if (!x.email) c.appendChild(q('div', 'msg soft', 'No email on file, so no reminder can go. Call or text them.'));
+        x.lines.forEach(function (t) { c.appendChild(q('div', 'sub2', t)); });
+        var lab = q('label', 'lookrow'), ck = q('input'); ck.type = 'checkbox'; ck.checked = !!x.no;
+        lab.appendChild(ck); lab.appendChild(q('span', null, 'Don’t send reminders to them'));
+        ck.addEventListener('change', function () { ck.disabled = true; api('depremno', { body: { id: x.id, no: ck.checked } }).then(function (k) { ck.disabled = false; if (!k.ok) { ck.checked = !ck.checked; toast('Not saved', k.error || 'Try again.', null); return; } toast(ck.checked ? 'Won’t be sent' : 'Back on', x.name, null); }).catch(function () { ck.disabled = false; ck.checked = !ck.checked; toast('No signal', 'Not saved.', null); }); });
+        c.appendChild(lab);
+        var pr = q('div', 'lookrow');
+        [['d2', 'Preview: 2 days before'], ['d1', 'Preview: day before']].forEach(function (o) { var b = q('button', 'lnk', o[1]); b.type = 'button'; b.addEventListener('click', function () { show(x, o[0]); pv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); pr.appendChild(b); });
+        c.appendChild(pr); holder.appendChild(c);
+      });
+      holder.appendChild(q('h2', 'tgrp', 'Preview')); holder.appendChild(pv); show(j.list[0], 'd1');
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
   }
   /* photos on a job (2026-10-19, Matthew: "there also should be a spot to add photos") */
@@ -22977,6 +23031,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : mgrOn() ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
+      S.role === 'admin' && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,   /* 2026-11-01 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */

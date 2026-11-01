@@ -1803,7 +1803,7 @@ $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
 if (($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true)) || in_array($action, ['clickuppoll', 'metapoll'], true))   /* the polls run as GET too */
-    register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll' && PHP_SAPI === 'cli' && defined('SIXFOLD_CLI')) {   /* the command-line job only (review 2026-10-27 evening): this hook ran before the session check, so a signed-out web hit on ?action=metapoll was refused and yet ran the sweeps from a web worker */ try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } try { followupSweep(); } catch (Throwable $e) { error_log('rounds: follow-up emails: ' . $e->getMessage()); } try { nlSweep(); } catch (Throwable $e) { error_log('rounds: newsletter: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll; + the follow-up emails (2026-10-27) */
+    register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll' && PHP_SAPI === 'cli' && defined('SIXFOLD_CLI')) {   /* the command-line job only (review 2026-10-27 evening): this hook ran before the session check, so a signed-out web hit on ?action=metapoll was refused and yet ran the sweeps from a web worker */ try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } try { followupSweep(); } catch (Throwable $e) { error_log('rounds: follow-up emails: ' . $e->getMessage()); } try { depremSweep(); } catch (Throwable $e) { error_log('rounds: deposit reminders: ' . $e->getMessage()); } try { nlSweep(); } catch (Throwable $e) { error_log('rounds: newsletter: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll; + the follow-up emails (2026-10-27) */
 $body = [];
 if ($isPost) {
     $raw = file_get_contents('php://input') ?: '';
@@ -7971,6 +7971,116 @@ function followupSweep(?int $now = null): array {
     flock($lk, LOCK_UN);
     return $out;
 }
+/* ---- deposit reminders (2026-11-01, Jen via Matthew: "an automation for emails to go out to people who havent paid their deposit ...
+ * Definitely 24 hours before the appointment, we could do another reminder a couple days out"; "It needs to be in an image form like we do
+ * for the 2 day after follow up, aftercare, and news letter") ----
+ * A customer whose form went out with a Square deposit link, still unpaid (Square is asked again just before each send), not signed, not
+ * booked and not lost, gets up to two emails from the 365 mailbox: 2 days before the day on the form, and the day before, each from 10 am
+ * (to 6 pm) that day. A reminder whose time had passed when the form went out is skipped. In it: the day and arrival time, the deposit, and
+ * a big button to their form (where they pay). OFF until an admin turns it on (deprem.json); Don't send per customer. Sent by the 5-minute
+ * job (metapoll, depremSweep). Transactional (about a booking they asked for), so no newsletter unsubscribe line. */
+function depremFile(): string { return DATA_DIR . '/deprem.json'; }
+function depremLoad(): array { $j = json_decode((string) @file_get_contents(depremFile()), true); $j = is_array($j) ? $j : []; return ['on' => !empty($j['on']), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? ''), 'no' => (array) ($j['no'] ?? []), 'sent' => (array) ($j['sent'] ?? [])]; }
+function depremEdit(callable $fn): ?array {
+    $lk = @fopen(depremFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) return null;
+    $d = $fn(depremLoad()); $ok = writeJsonAtomic(depremFile(), $d); flock($lk, LOCK_UN); return $ok ? $d : null;
+}
+function depremKinds(): array { return ['d2' => 2, 'd1' => 1]; }   /* a function, not a const: this part of the file is not reached on every request */
+/** a lead's reminders: null when it gets none (no Square deposit link, paid, signed, booked, lost, no day) */
+function depremPlan(array $l): ?array {
+    $S = $l['sign'] ?? null; if (!is_array($S) || ($S['how'] ?? '') !== 'link' || (int) ($S['deposit'] ?? 0) < 1 || empty($S['key'])) return null;
+    if (!empty($l['signed']) || !empty($l['confirmed']) || ($l['status'] ?? '') === 'lost') return null;
+    $order = (string) ($S['pay']['order'] ?? ''); if ($order !== '' && ($l['sqpaid']['order'] ?? '') === $order) return null;
+    $o = $l['quote']['offer'] ?? null; if (!is_array($o) || !dateOk((string) ($o['date'] ?? ''))) return null;
+    if (jobForLead((string) $l['id'])) return null;
+    $tz = new DateTimeZone(appTz()); if ((string) $o['date'] < (new DateTime('today', $tz))->format('Y-m-d')) return null; $sent = (int) ($S['at'] ?? 0); $t = [];
+    foreach (depremKinds() as $k => $n) { $at = (new DateTime((string) $o['date'] . ' 10:00', $tz))->modify('-' . $n . ' days')->getTimestamp(); $t[$k] = ['at' => $at, 'skip' => $sent > $at]; }
+    return ['date' => (string) $o['date'], 'slot' => (string) ($o['slot'] ?? ''), 'deposit' => (int) $S['deposit'], 'times' => $t];
+}
+function depremArrive(string $slot): string { return ['s1' => '9:30 to 10:00 am', 's2' => '10:00 am to 12:00 pm', 's3' => '12:00 to 2:00 pm', 's4' => 'around 3:00 pm'][$slot] ?? a365Arrive($slot); }
+/** the email: [subject, text, html]. $kind d2 (two days before) or d1 (the day before) */
+function depremBuild(array $l, string $kind): array {
+    $co = company()['a365'] ?? []; $name = (string) (($co['name'] ?? '') ?: '365 Aeration & Seeding'); $ph = a365Phone($l); $web = (string) ($co['web'] ?? '');
+    $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
+    $o = $l['quote']['offer'] ?? []; $dep = (int) ($l['sign']['deposit'] ?? 0);
+    $day = (new DateTime((string) ($o['date'] ?? 'today') . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'); $arr = depremArrive((string) ($o['slot'] ?? ''));
+    $link = a365SignLink((string) $l['id'], (string) ($l['sign']['key'] ?? '')); $tel = preg_replace('/\D/', '', $ph);
+    $tomorrow = $kind === 'd1';
+    $subject = $tomorrow ? 'Your lawn service is tomorrow: your deposit is still open' : 'Reminder: your deposit for ' . (new DateTime((string) ($o['date'] ?? 'today') . ' 12:00', new DateTimeZone(appTz())))->format('l') . '\'s lawn service';
+    $lead = $tomorrow ? 'Your appointment is tomorrow, and our records show your deposit hasn\'t been paid yet.' : 'Our records show your deposit hasn\'t been paid yet.';
+    $ask = 'Please take care of the $' . $dep . ' deposit to hold your spot. It only takes a minute on your form.';
+    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nWe're looking forward to servicing your property!\n\nYour appointment: " . $day . ', arrival ' . $arr . ".\n\n" . $lead . ' ' . $ask . "\n\nPay your deposit here: " . $link
+       . "\n\nQuestions? Reply to this email or call or text " . $ph . ".\n\nThank you!\n" . $name . "\n" . $ph . ($web !== '' ? ' · ' . $web : '') . "\n";
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
+    $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
+       . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">' . a365MailHead($name)
+       . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 16px">We&#39;re looking forward to servicing your property!</p>'
+       . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e4dfcf;border-left:5px solid #2e5e2c;border-radius:12px;margin:0 0 16px"><tr><td style="padding:14px 18px">'
+       . '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#5a6858;margin:0 0 4px">' . ($tomorrow ? 'Tomorrow' : 'Your appointment') . '</div>'
+       . '<div style="font-size:20px;font-weight:800;color:#21451f;line-height:1.25">' . $e($day) . '</div><div style="font-size:15px;color:#33402f;margin-top:2px">Arrival ' . $e($arr) . '</div></td></tr></table>'
+       . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fff4e6" style="background:#fff4e6;border:1px solid #f1cfa6;border-radius:12px;margin:0 0 18px"><tr><td align="center" style="padding:18px 18px 16px">'
+       . '<div style="font-size:15px;color:#33402f;margin:0 0 6px">' . $e($lead) . '</div>'
+       . '<div style="font-size:13px;color:#5a6858;margin:0">Deposit to hold your spot</div><div style="font-size:30px;font-weight:800;color:#21451f;margin:0 0 12px">$' . $dep . '</div>'
+       . '<a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#ffffff;text-decoration:none;font-weight:800;font-size:16px;padding:13px 26px;border-radius:999px">Pay my $' . $dep . ' deposit</a>'
+       . '<div style="font-size:12px;color:#5a6858;margin:10px 0 0">It only takes a minute on your form. Secure payment through Square.</div></td></tr></table>'
+       . '<p style="margin:0 0 6px">Questions? Reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
+       . '<p style="margin:0 0 4px">Thank you!</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' . ($web !== '' ? ' · ' . $e($web) : '') . '</p>'
+       . a365MailSocial() . '</div></body></html>';
+    return [$subject, $t, $h];
+}
+/** one reminder for one lead (the 5-minute job, or a test). Square is asked first: a deposit paid since is never reminded (and books them). */
+function depremSend(string $id, string $kind): array {
+    $l = leadsAll()[$id] ?? null; if (!$l) return ['ok' => false, 'stage' => 'nolead', 'error' => 'No such customer.'];
+    if (!depremPlan($l)) return ['ok' => false, 'stage' => 'none', 'error' => 'No reminder for them (paid, signed, booked, lost or no deposit link).'];
+    if (a365DepositPaid($l, true)) return ['ok' => false, 'stage' => 'paid', 'error' => 'They have just paid.'];
+    $to = trim((string) ($l['email'] ?? ''));
+    $rec = function (array $r) use ($id, $kind, $to) {
+        $now = time();
+        depremEdit(function ($d) use ($id, $kind, $r, $to, $now) { $p = (array) ($d['sent'][$id][$kind] ?? []); $d['sent'][$id][$kind] = ['ok' => (bool) $r['ok'], 'stage' => (string) $r['stage'], 'to' => $to, 'at' => $now, 'n' => (int) ($p['n'] ?? 0) + 1]; return $d; });
+        appendLine(DATA_DIR . '/a365-mail.log', ['at' => $now, 'lead' => $id, 'what' => 'deposit reminder ' . $kind, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
+        appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'note' => $r['ok'] ? 'Deposit reminder (' . ($kind === 'd1' ? 'the day before' : '2 days before') . ') emailed to ' . $to . '.' : 'Deposit reminder NOT emailed (' . ($r['stage'] === 'noemail' ? 'no email' : (string) $r['error']) . ').', 'by' => 'deposit reminder', 'at' => $now]);
+        return $r + ['to' => $to];
+    };
+    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
+    [$s, $t, $h] = depremBuild($l, $kind);
+    return $rec(a365Mail($to, $s, $t, $h));
+}
+/** the 5-minute job's part: every reminder whose time has come, 10 am to 6 pm, at most ten a run; a failure tries again after an hour, 3 times */
+function depremSweep(?int $now = null): array {
+    $now = $now ?? time(); $out = ['ok' => true, 'sent' => 0, 'tried' => 0, 'skipped' => ''];
+    if (!feature('walkdesk') || empty(company()['a365'])) return ['skipped' => 'not here'] + $out;
+    $d = depremLoad(); if (!$d['on']) return ['skipped' => 'switched off'] + $out;
+    $h = (int) (new DateTime('@' . $now))->setTimezone(new DateTimeZone(appTz()))->format('G'); if ($h < 10 || $h >= 18) return ['skipped' => 'outside 10 am to 6 pm'] + $out;
+    if (!a365MailCfg()) return ['skipped' => 'no 365 mailbox'] + $out;
+    $lk = @fopen(depremFile() . '.sweep', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['skipped' => 'busy'] + $out;
+    foreach (leadsAll() as $id => $l) {
+        if ($out['tried'] >= 10) break;
+        if (!empty($d['no'][$id]) || !($p = depremPlan($l))) continue;
+        foreach ($p['times'] as $k => $tm) {
+            if ($tm['skip'] || $now < $tm['at'] || $now >= $tm['at'] + 8 * 3600) continue;   /* its day, 10 am to 6 pm */
+            if ((int) $tm['at'] < $d['at'] - 3600) continue;   /* due before it was switched on: never sent, so turning it on sends no backlog */
+            $s = $d['sent'][$id][$k] ?? null;
+            if ($s && (!empty($s['ok']) || in_array($s['stage'] ?? '', ['noemail', 'paid'], true) || (int) ($s['n'] ?? 0) >= 3 || $now - (int) ($s['at'] ?? 0) < 3600)) continue;
+            if ($k === 'd2' && !empty($d['sent'][$id]['d1']['ok'])) continue;
+            depremSend((string) $id, $k); $out['tried']++; $d = depremLoad();
+            if (!empty($d['sent'][$id][$k]['ok'])) $out['sent']++;
+            break;   /* one email a customer a run */
+        }
+    }
+    flock($lk, LOCK_UN);
+    return $out;
+}
+/** where one customer's reminders stand, in words, for the Deposit reminders screen */
+function depremState(string $id, array $l, ?array $d = null): ?array {
+    $p = depremPlan($l); if (!$p) return null; $d = $d ?? depremLoad(); $tz = new DateTimeZone(appTz()); $out = [];
+    foreach ($p['times'] as $k => $tm) {
+        $w = $k === 'd1' ? 'Day before' : '2 days before'; $s = $d['sent'][$id][$k] ?? null; $when = (new DateTime('@' . $tm['at']))->setTimezone($tz)->format('D j M, g:i a');
+        $out[] = $s && !empty($s['ok']) ? $w . ': sent ' . (new DateTime('@' . (int) $s['at']))->setTimezone($tz)->format('D j M, g:i a')
+               : ($tm['skip'] ? $w . ': skipped (the form went out after it)' : ($s ? $w . ': not sent (' . ($s['stage'] === 'noemail' ? 'no email' : $s['stage']) . ')' : $w . ': ' . $when));
+    }
+    return ['id' => $id, 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'date' => $p['date'], 'arrive' => depremArrive($p['slot']), 'deposit' => $p['deposit'],
+            'email' => (bool) filter_var(trim((string) ($l['email'] ?? '')), FILTER_VALIDATE_EMAIL), 'no' => !empty($d['no'][$id]), 'lines' => $out];
+}
 /* marked paid another way (cash, check, Zelle): the desk, or Jen on her own customer */
 if ($action === 'jobpaid') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
@@ -8356,6 +8466,47 @@ if (in_array($action, ['followup', 'followupset', 'followuppreview', 'followupte
     if ($myMail === '') fail('Save your own email first: the test goes only to you.');
     if (!throttleTake(rateFile('futest|' . $myId), 20, 3600)) fail('That is a lot of tests in an hour. Wait a little.', 429);
     $r = a365Mail($myMail, '[Test] ' . $subject, "TEST: this is what " . trim((string) ($l['name'] ?? 'the customer')) . " would get.\n\n" . $text, $html);   /* nothing recorded on the job or the customer */
+    out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
+}
+/* the Deposit reminders screen (2026-11-01): the office sees who is due a reminder and can stop one (Don't send); an admin turns the
+   reminders on or off and sends a test to their own email (the address saved on the Follow-up email screen) */
+if (in_array($action, ['deprem', 'depremset', 'depremno', 'deprempreview', 'depremtest'], true)) {
+    if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
+    if (!desk()) fail('Not allowed.', 403);
+    $myId = (string) ($session['c'] ?? ''); $myMail = (string) (($acct['email'] ?? [])[$myId] ?? '');
+    if ($action === 'deprem') {
+        $d = depremLoad(); $list = [];
+        foreach (leadsAll() as $id => $l) if ($st = depremState((string) $id, $l, $d)) $list[] = $st;
+        usort($list, fn($a, $b) => strcmp($a['date'], $b['date']));
+        out(['ok' => true, 'on' => $d['on'], 'at' => $d['at'], 'by' => $d['by'], 'admin' => $role === 'admin', 'mail' => (bool) a365MailCfg(), 'email' => $myMail, 'list' => $list]);
+    }
+    if ($action === 'depremset') {
+        if (!$isPost) fail('POST required', 405);
+        if ($role !== 'admin') fail('Only an admin turns deposit reminders on or off.', 403);
+        $on = !empty($body['on']);
+        $r = depremEdit(function ($d) use ($on, $me) { $d['at'] = $on ? ($d['on'] ? $d['at'] : time()) : 0; $d['on'] = $on; $d['by'] = $me; return $d; });
+        if (!$r) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => $on ? 'deposit reminders on' : 'deposit reminders off']);
+        out(['ok' => true, 'on' => $r['on'], 'at' => $r['at']]);
+    }
+    $id = (string) ($_GET['id'] ?? ($body['id'] ?? '')); $l = leadsAll()[$id] ?? null;
+    if (!leadOk($id) || !$l) fail('No such customer.', 404);
+    if ($action === 'depremno') {
+        if (!$isPost) fail('POST required', 405);
+        $no = !empty($body['no']);
+        if (!depremEdit(function ($d) use ($id, $no) { if ($no) $d['no'][$id] = true; else unset($d['no'][$id]); return $d; })) fail('Could not save that. Try again.', 500);
+        appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'note' => $no ? 'Deposit reminders set to not send, by ' . $me . '.' : 'Deposit reminders back on, by ' . $me . '.', 'by' => $me, 'at' => time()]);
+        out(['ok' => true, 'state' => depremState($id, leadsAll()[$id])]);
+    }
+    if (!depremPlan($l)) fail('No deposit reminder for them: paid, signed, booked, lost, or no Square deposit link.');
+    $kind = (string) ($_GET['kind'] ?? ($body['kind'] ?? 'd2')); if (!isset(depremKinds()[$kind])) $kind = 'd2';
+    [$subject, $text, $html] = depremBuild($l, $kind);
+    if ($action === 'deprempreview') out(['ok' => true, 'subject' => $subject, 'text' => $text, 'html' => $html, 'to' => (string) ($l['email'] ?? '')]);
+    if (!$isPost) fail('POST required', 405);
+    if ($role !== 'admin') fail('Only an admin sends tests.', 403);
+    if ($myMail === '') fail('Save your own email first (on the Follow-up email screen): the test goes only to you.');
+    if (!throttleTake(rateFile('dptest|' . $myId), 20, 3600)) fail('That is a lot of tests in an hour. Wait a little.', 429);
+    $r = a365Mail($myMail, '[Test] ' . $subject, "TEST: this is what " . trim((string) ($l['name'] ?? 'the customer')) . " would get.\n\n" . $text, $html);   /* nothing recorded */
     out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
 }
 /* notes on a job (2026-10-26, Matthew: "i need brad to be able to add notes to his jobs ... theres someone that wants extra work done ... he needs
