@@ -9,7 +9,7 @@
      B  Photos    7.25 x 4.8 in: two of our own job photos, How we do it (3 steps) and Why it helps
      C  Forest    7.25 x 4.8 in: all forest green, C-Light badge, cream type
      D  Work      7.25 x 4.8 in: a wall of three of our job photos, forest green panel with the headline and QR
-     E  Drawn     4.8 x 7.25 in PORTRAIT: no photos, a drawing of core aeration, the three steps, QR in a green footer
+     E  Drawn     7.25 x 4.8 in: no photos, a drawing of core aeration, the three steps, QR in a green box
    Sixfold 365 brand: Forest green #2F5D2C, Cream #FFF8EC, Ember #E4703A, Sun gold #F2C14E, Outfit + DM Sans (brand pack fonts).
    Words come from 365aeration.com (headline, "all over Colorado", the aeration line, phone). The QR is the plain website address,
    https://365aeration.com/ (no tracking), error correction H with the Ridge mark in the middle like the cards; each finished PNG is
@@ -154,28 +154,33 @@ h1{font-size:15.5pt;color:#FFF8EC}.svc{font-size:8.9pt;line-height:1.38;margin-t
   <div><h1>${HEAD}</h1><p class="svc">${SVC}</p></div>
   <div class="foot"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div></div>
 </div>` },
-  /* E: no photos, a different shape: PORTRAIT 4.8 x 7.25 in (the same half page stood up), with a drawing of core aeration in place of
-     photos (1 Nov: "one without photos but a different style and format") */
-  e: { w: H, h: W, body: `<style>${BASE(H, W)}
-.ad{display:flex;flex-direction:column;border:1.2pt solid #2F5D2C}
-.hd{padding:.2in .3in 0;text-align:center}.hd img{width:.7in;height:.7in;display:block;margin:0 auto 5pt}
-.name{font-size:18pt;color:#2F5D2C}.desc{color:#4C7A3F;font-size:6.2pt}
-h1{font-size:17pt;color:#1D2A1C;margin:.13in .25in 0;text-align:center}
-.dg{margin:.1in .32in 0}.dg svg{width:100%;display:block}
-.why{font-size:8.6pt;line-height:1.38;color:#33402f;margin:.09in .32in 0;text-align:center;text-wrap:pretty}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:.1in;margin:.12in .26in 0}
-.st{border-top:2.4pt solid #E4703A;padding-top:5pt;font-size:7.8pt;line-height:1.32;color:#33402f}.st b{display:block;font-family:Outfit,sans-serif;font-size:9.6pt;color:#2F5D2C;margin-bottom:2pt}
-.more{font-size:8pt;line-height:1.35;text-align:center;margin:.1in .32in .12in;color:#33402f}.more b{color:#2F5D2C}
-.ft{margin-top:auto;background:#2F5D2C;color:#FFF8EC;display:grid;grid-template-columns:1.1in 1fr;gap:.2in;align-items:center;padding:.16in .34in}
-.qr{width:1.1in;height:1.1in}.scan{font-size:12pt}.phone{font-size:15pt;color:#F2C14E;margin-top:5pt}.site{font-size:9.6pt;margin-top:2pt}
+  /* E: no photos, a different style: a drawing of core aeration in place of photos, the three steps down the side, the QR in a green
+     box (1 Nov: "one without photos but a different style and format"; then "it needs to be the measurements of the half pamphlet",
+     so the same 7.25 x 4.8 in as the others) */
+  e: { w: W, h: H, body: `<style>${BASE(W, H)}
+.ad{display:grid;grid-template-columns:3.95in 1fr;gap:.24in;padding:.2in .24in .2in .26in;border:1.2pt solid #2F5D2C}
+.l{display:flex;flex-direction:column;justify-content:space-between}
+.top{gap:.1in}.top img{width:.62in;height:.62in}.name{font-size:15.5pt;color:#2F5D2C}.desc{font-size:5.9pt;color:#4C7A3F;margin-top:2pt}
+h1{font-size:20pt;color:#1D2A1C;margin:0}
+.dg{margin:0}.dg svg{width:100%;display:block}
+.why{font-size:8.9pt;line-height:1.4;color:#33402f;margin:0;text-wrap:pretty}
+.r{display:flex;flex-direction:column}
+h2{font-size:11pt;color:#2F5D2C;margin:.02in 0 6pt}
+.st{display:grid;grid-template-columns:15pt 1fr;gap:5pt;font-size:8pt;line-height:1.32;color:#33402f;margin-bottom:6pt}
+.st i{font-style:normal;width:15pt;height:15pt;border-radius:50%;background:#E4703A;color:#FFF8EC;font-weight:700;font-size:8pt;display:flex;align-items:center;justify-content:center}
+.st b{display:block;font-family:Outfit,sans-serif;font-size:9.2pt;color:#1D2A1C;margin-bottom:1pt}
+.more{font-size:7.4pt;line-height:1.32;color:#5a6858;margin:2pt 0 0}
+.ft{margin-top:auto;background:#2F5D2C;color:#FFF8EC;border-radius:8pt;display:grid;grid-template-columns:.98in 1fr;gap:.12in;align-items:center;padding:.1in .12in}
+.qr{width:.98in;height:.98in}.scan{font-size:9pt;white-space:nowrap}.phone{font-size:11.4pt;color:#F2C14E;margin-top:4pt}.site{font-size:8pt;margin-top:1pt}
 </style><div class="ad">
-<div class="hd"><img src="${badgeA}" alt="Sixfold 365"><p class="name">Sixfold 365</p><p class="desc">Land · Aeration &amp; Seeding</p></div>
-<h1>Pull a plug. Grow a lawn.</h1>
-<div class="dg">${diagram}</div>
-<p class="why">${WHY}</p>
-<div class="steps">${STEPS.map(([t, d]) => `<div class="st"><b>${t}</b>${d}</div>`).join('')}</div>
-<p class="more">Also: fertilizing, mowing and edging, landscaping and fire mitigation, all over Colorado.</p>
-<div class="ft"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div>
+<div class="l"><div class="top"><img src="${badgeA}" alt="Sixfold 365"><div><p class="name">Sixfold 365</p><p class="desc">Land · Aeration &amp; Seeding</p></div></div>
+  <h1>Pull a plug. Grow a lawn.</h1>
+  <div class="dg">${diagram}</div>
+  <p class="why"><b style="color:#2F5D2C">Why it helps:</b> ${WHY}</p></div>
+<div class="r"><h2>How we do it</h2>
+  ${STEPS.map(([t, d], i) => `<div class="st"><i>${i + 1}</i><span><b>${t}</b>${d}</span></div>`).join('')}
+  <p class="more">Also: fertilizing, mowing and edging, landscaping and fire mitigation, all over Colorado.</p>
+  <div class="ft"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div></div>
 </div>` },
 };
 
