@@ -10,7 +10,7 @@ https://voicesreunited.webflow.io/locations/join-us-for-our-2nd-annual-holiday-c
 - `concert-ad-b`: photos, with How we do it (3 steps) and Why it helps (gitignored with the photos/ folder)
 - `concert-ad-c`: forest green
 - `concert-ad-d`: a wall of three of our job photos and a forest green panel (gitignored, photos)
-- `concert-ad-e`: no photos, 7.25 x 4.8 in like the rest (Matthew: "it needs to be the measurements of the half pamphlet"), a drawing of core aeration and the three steps
+- `concert-ad-e` and `concert-ad-e2`: no photos, 7.25 x 4.8 in; Gemini artwork (Matthew: "remake concert ad E using gemini"), painted (E) and 3D clay (E2), in `art/` with the prompt script. Gemini drew only the picture; every word, the badge and the QR are ours. The drawn E is in `superseded/concert-ad-e-drawn.*`
 - A (clean cream) is dropped; its last files are in `superseded/`.
 
 The QR is https://365aeration.com/ (the website, no tracking). Each finished picture is decoded again by the build.

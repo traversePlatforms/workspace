@@ -9,12 +9,13 @@
      B  Photos    7.25 x 4.8 in: two of our own job photos, How we do it (3 steps) and Why it helps
      C  Forest    7.25 x 4.8 in: all forest green, C-Light badge, cream type
      D  Work      7.25 x 4.8 in: a wall of three of our job photos, forest green panel with the headline and QR
-     E  Drawn     7.25 x 4.8 in: no photos, a drawing of core aeration, the three steps, QR in a green box
+     E  Painted   7.25 x 4.8 in: Gemini painted cut-away of an aerated lawn (art/), headline and why on it, steps + QR on forest green
+     E2 Clay      the same layout with Gemini 3D clay art
    Sixfold 365 brand: Forest green #2F5D2C, Cream #FFF8EC, Ember #E4703A, Sun gold #F2C14E, Outfit + DM Sans (brand pack fonts).
    Words come from 365aeration.com (headline, "all over Colorado", the aeration line, phone). The QR is the plain website address,
    https://365aeration.com/ (no tracking), error correction H with the Ridge mark in the middle like the cards; each finished PNG is
    decoded again and the build fails if it does not read back.
-   Needs: QR_DEPS = a node_modules with qrcode, jsqr, pngjs.   node build.mjs   -> concert-ad-<b|c|d|e>.html, .pdf, .png (300 dpi) */
+   Needs: QR_DEPS = a node_modules with qrcode, jsqr, pngjs.   node build.mjs   -> concert-ad-<b|c|d|e|e2>.html, .pdf, .png (300 dpi) */
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -154,34 +155,31 @@ h1{font-size:15.5pt;color:#FFF8EC}.svc{font-size:8.9pt;line-height:1.38;margin-t
   <div><h1>${HEAD}</h1><p class="svc">${SVC}</p></div>
   <div class="foot"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div></div>
 </div>` },
-  /* E: no photos, a different style: a drawing of core aeration in place of photos, the three steps down the side, the QR in a green
-     box (1 Nov: "one without photos but a different style and format"; then "it needs to be the measurements of the half pamphlet",
-     so the same 7.25 x 4.8 in as the others) */
-  e: { w: W, h: H, body: `<style>${BASE(W, H)}
-.ad{display:grid;grid-template-columns:3.95in 1fr;gap:.24in;padding:.2in .24in .2in .26in;border:1.2pt solid #2F5D2C}
-.l{display:flex;flex-direction:column;justify-content:space-between}
-.top{gap:.1in}.top img{width:.62in;height:.62in}.name{font-size:15.5pt;color:#2F5D2C}.desc{font-size:5.9pt;color:#4C7A3F;margin-top:2pt}
-h1{font-size:20pt;color:#1D2A1C;margin:0}
-.dg{margin:0}.dg svg{width:100%;display:block}
-.why{font-size:8.9pt;line-height:1.4;color:#33402f;margin:0;text-wrap:pretty}
-.r{display:flex;flex-direction:column}
-h2{font-size:11pt;color:#2F5D2C;margin:.02in 0 6pt}
-.st{display:grid;grid-template-columns:15pt 1fr;gap:5pt;font-size:8pt;line-height:1.32;color:#33402f;margin-bottom:6pt}
-.st i{font-style:normal;width:15pt;height:15pt;border-radius:50%;background:#E4703A;color:#FFF8EC;font-weight:700;font-size:8pt;display:flex;align-items:center;justify-content:center}
-.st b{display:block;font-family:Outfit,sans-serif;font-size:9.2pt;color:#1D2A1C;margin-bottom:1pt}
-.more{font-size:7.4pt;line-height:1.32;color:#5a6858;margin:2pt 0 0}
-.ft{margin-top:auto;background:#2F5D2C;color:#FFF8EC;border-radius:8pt;display:grid;grid-template-columns:.98in 1fr;gap:.12in;align-items:center;padding:.1in .12in}
-.qr{width:.98in;height:.98in}.scan{font-size:9pt;white-space:nowrap}.phone{font-size:11.4pt;color:#F2C14E;margin-top:4pt}.site{font-size:8pt;margin-top:1pt}
+  /* E and E2: Gemini artwork (1 Nov, Matthew: "remake concert ad E using gemini so we can have some high quality designs"). Gemini
+     (gemini-3-pro-image, 2K, art/gen-gemini.mjs) drew only the picture: a cut-away of lawn and soil with plug holes, seed and water, no
+     text, no people, no "result" lawn. Every word, the badge and the QR are ours, laid on top here. E = painted, E2 = 3D clay.
+     The drawn E it replaced is in superseded/concert-ad-e-drawn.* */
+  ...Object.fromEntries([['e', 'gemini-aeration-painted.jpg', 'center 62%'], ['e2', 'gemini-aeration-clay.jpg', 'center 70%']].map(([k, file, pos]) => [k, { w: W, h: H, body: `<style>${BASE(W, H)}
+.ad{display:grid;grid-template-columns:3.84in 1fr;background:#2F5D2C}
+.art{position:relative;overflow:hidden;background:#FDF2DD}
+.art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${pos};display:block}
+.cap{position:absolute;left:.24in;right:.22in;top:.2in}
+h1{font-size:21pt;color:#1D2A1C}
+.why{font-size:8.4pt;line-height:1.38;color:#33402f;margin-top:5pt;text-wrap:pretty}.why b{color:#2F5D2C}
+.p{color:#FFF8EC;padding:.2in .22in .2in .24in;display:flex;flex-direction:column;justify-content:space-between}
+.top{gap:.1in}.top img{width:.58in;height:.58in}.name{font-size:15pt;color:#FFF8EC}.desc{font-size:5.6pt;color:#F2C14E;margin-top:2pt}
+h2{font-size:10.4pt;color:#F2C14E;margin:0 0 5pt}
+.st{display:grid;grid-template-columns:14pt 1fr;gap:5pt;font-size:7.7pt;line-height:1.3;color:#e4e9dc;margin-bottom:5pt}
+.st i{font-style:normal;width:14pt;height:14pt;border-radius:50%;background:#E4703A;color:#FFF8EC;font-weight:700;font-size:7.6pt;display:flex;align-items:center;justify-content:center}
+.st b{display:block;font-family:Outfit,sans-serif;font-size:8.9pt;color:#FFF8EC;margin-bottom:1pt}
+.ft{display:grid;grid-template-columns:.95in 1fr;gap:.12in;align-items:center;border-top:1pt solid rgba(255,248,236,.22);padding-top:.12in}
+.qr{width:.95in;height:.95in}.scan{font-size:9.4pt;white-space:nowrap}.phone{font-size:11.6pt;color:#F2C14E;margin-top:4pt}.site{font-size:8pt;margin-top:1pt;color:#e4e9dc}
 </style><div class="ad">
-<div class="l"><div class="top"><img src="${badgeA}" alt="Sixfold 365"><div><p class="name">Sixfold 365</p><p class="desc">Land · Aeration &amp; Seeding</p></div></div>
-  <h1>Pull a plug. Grow a lawn.</h1>
-  <div class="dg">${diagram}</div>
-  <p class="why"><b style="color:#2F5D2C">Why it helps:</b> ${WHY}</p></div>
-<div class="r"><h2>How we do it</h2>
-  ${STEPS.map(([t, d], i) => `<div class="st"><i>${i + 1}</i><span><b>${t}</b>${d}</span></div>`).join('')}
-  <p class="more">Also: fertilizing, mowing and edging, landscaping and fire mitigation, all over Colorado.</p>
+<div class="art"><img src="${u(join(HERE, 'art', file))}" alt=""><div class="cap"><h1>Pull a plug. Grow a lawn.</h1><p class="why"><b>Why it helps:</b> ${WHY}</p></div></div>
+<div class="p"><div class="top"><img src="${badgeC}" alt="Sixfold 365"><div><p class="name">Sixfold 365</p><p class="desc">Land · Aeration &amp; Seeding</p></div></div>
+  <div><h2>How we do it</h2>${STEPS.map(([t, d], i) => `<div class="st"><i>${i + 1}</i><span><b>${t}</b>${d}</span></div>`).join('')}</div>
   <div class="ft"><div class="qr">${qr}</div><div><p class="scan">Scan for a free quote</p><p class="phone">${PHONE}</p><p class="site">${SITE}</p></div></div></div>
-</div>` },
+</div>` }])),
 };
 
 const run = (args) => execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--no-first-run', '--allow-file-access-from-files', `--user-data-dir=${cdpDir()}`, ...args], { stdio: 'pipe', timeout: 120000 });
