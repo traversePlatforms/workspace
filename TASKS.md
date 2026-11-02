@@ -1334,6 +1334,11 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **P-3 — Clear the phone photos.** ⚑ **Confirm they're in the OneDrive mirror before
       deleting anything** — and Sixfold has a standing photo gap, so check whether any job
       photos on there are the only copies before they go.
+- [ ] **P-5 — Fiverr side gigs: finish publishing once the W-9 clears.** (1 Nov 2026) Seven gigs are saved as drafts on Fiverr;
+      publishing is blocked until Fiverr verifies Matthew's W-9. Everything to paste is ready and kept as is in
+      [matthew/fiverr/](matthew/fiverr/): [listing-sheet.md](matthew/fiverr/listing-sheet.md) (every field per gig, in form order),
+      [portfolio-entries.md](matthew/fiverr/portfolio-entries.md), covers/, gallery/, pdf/ (one PDF per sample), profile-photo.png.
+      When he says it lets him publish: walk each draft to the Publish step; he publishes, never us.
 - [x] **P-4 — Matthew's assistant (personal + business clerical), email first: LIVE 22 Oct: keys in, 4 inboxes connected (personal Gmail, Traverse, contact@sixfoldcolorado.com, Surge) and sorting; drafts only.** Page traverseplatforms.com/a-e018bb82/ (setup code given once in chat). He: set his password, paste an Anthropic API key, make the Google OAuth client (steps in assistant/README.md, publish "In production"), connect personal Gmail, Traverse, Sixfold/365. Then I check the first real run. **Anthropic key "Assistant (Traverse Server)", Default workspace, expires 22 Oct 2027 1:00 PM MDT: make a new one and paste it into Setup before then (remind him early October 2027).** Next parts: socials by each platform's own API (drop Blotato), eBay Sell API, links to this workspace and Claude Desktop; everything posts only on his approval.
 
 ---
