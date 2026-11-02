@@ -2215,6 +2215,26 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   #vabar.vawrite button{color:#c2410c}
   #vabar.vawrite button.alt{color:#fff}
   body.dk-on #vabar{bottom:86px}
+  /* the practice copy (2026-11-02): a strip across the top of every screen, the bars below it moved down by its height (--prh). Only with CO.practice */
+  #prbar{position:fixed;left:0;right:0;top:0;z-index:9500;box-sizing:border-box;height:calc(var(--prh) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 10px 0;display:flex;align-items:center;justify-content:center;gap:10px;background:repeating-linear-gradient(135deg,#8a4500 0 14px,#7a3c00 14px 28px);color:#fff;font:700 12.5px/1.25 var(--sans);text-align:center}
+  #prbar button{flex:0 0 auto;border:0;border-radius:7px;padding:4px 9px;background:#fff;color:#7a3c00;font:800 12px var(--sans);cursor:pointer}
+  body.pr-on{--prh:30px;padding-top:var(--prh)}
+  @media (max-width:640px){body.pr-on{--prh:40px} #prbar{font-size:11.5px;justify-content:space-between;text-align:left}}
+  body.pr-on .appbar,body.pr-on .dnav,body.pr-on .offbar{top:var(--prh)}
+  body.pr-on.dnav-on .appbar{top:calc(56px + var(--prh))}
+  body.pr-on .signin,body.pr-on .splash{top:var(--prh)}
+  body.pr-on #view > .desk{top:calc(65px + var(--prh))}
+  body.pr-on .fbar,body.pr-on .plan .planbar{top:calc(64px + var(--prh))}
+  body.pr-on .dbrowse .db-towns,body.pr-on .dbrowse .db-side{top:calc(56px + var(--prh));height:calc(100vh - 56px - var(--prh))}
+  body.pr-on.dnav-on.dk-top .plan .planbar{top:calc(56px + var(--prh))}
+  @media (min-width:1280px){body.pr-on .dnav{top:var(--prh)}}
+  .prlog{position:fixed;inset:0;z-index:9600;background:rgba(10,20,15,.55);display:grid;place-items:center;padding:16px}
+  .prlog .prbox{width:min(720px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--card);color:var(--ink);border-radius:16px;padding:18px;box-sizing:border-box}
+  .prlog h2{margin:0 0 4px;font:800 18px var(--sans)}
+  .prlog .prrow{border-top:1px solid var(--line);padding:10px 0}
+  .prlog .prrow b{font:800 13px var(--sans)}
+  .prlog .prbox>button{margin-top:12px;border:0;border-radius:10px;padding:10px 16px;background:var(--bar);color:var(--bar-ink,#fff);font:800 14px var(--sans);cursor:pointer}
+  .prlog .prrow .prt{white-space:pre-wrap;font:13px/1.4 var(--sans);color:var(--soft);margin-top:4px;max-height:220px;overflow:auto}
   body.va-on{padding-bottom:72px}
   .vapick{position:fixed;inset:0;z-index:9001;background:rgba(10,20,15,.55);display:grid;place-items:center;padding:16px}
   .vapick .vbox{background:#fff;color:#16201C;border-radius:18px;max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:20px}
@@ -3315,6 +3335,44 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (WORK.length) CAP.push(['work', 'list', 'Extra work']);
     if (feat('firecheck')) CAP.push(['fc', 'flame', 'Fire check']);
     paintCompany(CO);
+    practiceBar();
+  }
+  /* the practice copy (2026-11-02, Matthew: testers sign in and try everything): the server says so (company practice, set in its code), and then
+     every screen carries this strip; "What would have gone out" lists the emails, texts, alerts and payment links it logged instead of sending */
+  function practiceBar() {
+    if (!document.body) return;
+    var on = !!(CO && CO.practice), b = document.getElementById('prbar');
+    document.body.classList.toggle('pr-on', on);
+    if (!on) { if (b) b.remove(); return; }
+    if (b) return;
+    b = q('div'); b.id = 'prbar'; b.setAttribute('role', 'note');
+    b.appendChild(q('span', null, 'Practice copy: nothing here is real and nothing is sent.'));
+    var x = q('button', null, 'What would have gone out'); x.type = 'button'; x.addEventListener('click', practiceSends); b.appendChild(x);
+    document.body.insertBefore(b, document.body.firstChild);
+  }
+  function practiceSends() {
+    var old = document.querySelector('.prlog'); if (old) old.remove();
+    var ov = q('div', 'prlog'), box = q('div', 'prbox'); ov.appendChild(box);
+    var close = function () { ov.remove(); };
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    box.appendChild(q('h2', null, 'What would have gone out'));
+    box.appendChild(q('p', 'muted', 'In the real app these would have been sent. Here they were only written down. Newest first.'));
+    var list = q('div'); list.appendChild(q('p', 'muted', 'Loading...')); box.appendChild(list);
+    var cb = q('button', 'btn', 'Close'); cb.type = 'button'; cb.addEventListener('click', close); box.appendChild(cb);
+    document.body.appendChild(ov);
+    api('practicelog').then(function (j) {
+      list.textContent = '';
+      if (!j || !j.ok) { list.appendChild(q('p', 'muted', (j && j.error) || 'Sign in at the office desk to see this.')); return; }
+      if (!j.rows.length) { list.appendChild(q('p', 'muted', 'Nothing yet. Mark a job done, send a quote or an agreement, and it shows here.')); return; }
+      j.rows.forEach(function (r) {
+        var row = q('div', 'prrow'), when = new Date((r.at || 0) * 1000);
+        row.appendChild(q('b', null, (r.kind || 'sent') + (r.to ? ' to ' + r.to : '') + (r.method ? ' · ' + r.method + ' ' + (r.path || r.url || '') : '')));
+        row.appendChild(q('div', 'muted', when.toLocaleString() + (r.via ? ' · ' + r.via : '') + (r.amount ? ' · $' + (r.amount / 100).toFixed(2) : '') + (r.from ? ' · from ' + r.from : '')));
+        if (r.subject || r.title || r.name) row.appendChild(q('div', null, r.subject || r.title || r.name));
+        if (r.text) row.appendChild(q('div', 'prt', String(r.text).slice(0, 3000)));
+        list.appendChild(row);
+      });
+    });
   }
   /* the Sample door (Matthew 2026-10-05): anything sent for its region is answered here and never reaches the server.
      Saves say ok (so the card behaves as it would), the door comes from the sample, anything else is refused. */

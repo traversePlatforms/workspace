@@ -118,6 +118,8 @@ function smsValid(array $c, string $url, array $params, string $sig): bool {
 }
 /** send one message; returns ['ok' => bool, 'sid' => ?, 'status' => ?, 'error' => ?] */
 function smsSend(array $c, string $to, string $body): array {
+    /* the practice copy (2026-11-02, rounds.php PRACTICE): no text leaves the server; it is logged as if it went */
+    if (function_exists('practiceOn') && practiceOn()) { practiceLog('text', ['to' => $to, 'text' => $body]); return ['ok' => true, 'sid' => 'SMpractice' . bin2hex(random_bytes(8)), 'status' => 'queued']; }
     $fields = ['To' => $to, 'Body' => $body];
     if ($c['messaging_service_sid'] !== '') $fields['MessagingServiceSid'] = $c['messaging_service_sid']; else $fields['From'] = $c['from'];
     if (!empty($c['mock_file'])) {

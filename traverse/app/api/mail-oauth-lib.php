@@ -121,6 +121,8 @@ function moOpen(string $priv, string $box): ?array {
 }
 /** one HTTP call to Google or Microsoft: [status, body]; never throws; 0 = no answer */
 function moHttp(string $method, string $url, array $headers, ?string $body): array {
+    /* the practice copy (2026-11-02, rounds.php PRACTICE): Google, Microsoft, Facebook and Jobber are never called from it */
+    if (function_exists('practiceOn') && practiceOn()) { practiceLog('outside system', ['method' => $method, 'url' => (string) preg_replace('/[?#].*$/', '', $url)]); return [0, '']; }
     if (function_exists('curl_init')) {
         $h = curl_init($url);
         curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 10, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_HTTPHEADER => $headers, CURLOPT_FOLLOWLOCATION => false]);

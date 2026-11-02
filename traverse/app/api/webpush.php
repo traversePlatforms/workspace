@@ -244,6 +244,8 @@ function webpushSubscriptionError(array $s): ?string {
  *  payload to a 32-byte multiple), timeout (seconds, default 20). */
 function webpushSend(array $subscription, ?string $payload, array $vapid, int $ttl = 3600, array $opts = []): array {
     $r = ['ok' => false, 'status' => 0, 'gone' => false, 'error' => null, 'body' => '', 'retryAfter' => null];
+    /* the practice copy (2026-11-02, rounds.php PRACTICE): no phone alert leaves the server; it is logged as if it went */
+    if (function_exists('practiceOn') && practiceOn()) { $pj = json_decode((string) $payload, true); practiceLog('phone alert', ['title' => is_array($pj) ? (string) ($pj['title'] ?? '') : '', 'text' => is_array($pj) ? (string) ($pj['body'] ?? '') : (string) $payload]); return ['ok' => true, 'status' => 201] + $r; }
     $endpoint = (string) ($subscription['endpoint'] ?? '');
     /* allowHttp is for test-webpush.php only (a plain listener on 127.0.0.1); real push services are all https */
     $check = $subscription;

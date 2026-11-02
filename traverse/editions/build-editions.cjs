@@ -643,13 +643,119 @@ function syncSixfoldTowns() {
   fs.writeFileSync(cf, next);
   console.log('Sixfold: town groups now ' + want.join(', ') + ' (as Yards)');
 }
+/* ------------------------------------------------------------ the practice copy (2026-11-02)
+   Matthew: "do the practice copy ... so i can add other people to the practice copy because my goal is to make sure others can log in and test
+   it and give their input". Sixfold 365 as it is (its look, a365, every screen), as a separate install beside it: its own page folder, API files,
+   data and private folders, cookie and phone storage, so nothing of it touches Sixfold's. rounds.php's PRACTICE switch is true in its API only:
+   nothing leaves the server (emails, texts, alerts, Square, Stripe, outside systems), and what would have is logged (practice-sends.log). It is NOT
+   in EDITIONS: no client template, no push-alerts.sh line, and its API name (sixfold-practice-*) matches none of the scheduled jobs' globs
+   (traverse*-rounds.php, traverse-c*-data), so no cron job ever runs for it. Out: dist/practice/, laid out like the server. Its towns are copied
+   on the server from sixfold-data by traverse/ops/practice-towns.php (read-only there); the made-up customers by traverse/ops/practice-seed.mjs.
+   Upload: bash traverse/ops/deploy-practice.sh. */
+const PRACTICE_ED = { name: 'Sixfold 365 Practice', short: 'Practice', folder: 'practice-5dbe8f',
+  api: 'sixfold-practice', data: 'sixfold-practice-data', priv: 'sixfold-practice-private', cookie: 'sfp',
+  store: 'sfpractice.', storeApp: 'sfpractice.app.', idb: 'sfpractice-rounds', cache: 'sfpractice-' };
+const PRACTICE_LIBS = ['mail-oauth-lib', 'care-lib', 'eod-lib', 'fb-leads-lib', 'jobber-lib'];   /* its own copies, so the shared ones are never its */
+const PRACTICE_STRIP = '<div style="position:sticky;top:0;z-index:99;padding:7px 12px;background:#7a3c00;color:#fff;font:700 13px/1.3 system-ui,sans-serif;text-align:center">Practice copy: nothing here is real and nothing is sent.</div>';
+function practicePage(E) {
+  let html = fs.readFileSync(path.join(APP, 'index.html'), 'utf8');
+  html = rep(html, "'../api/rounds.php'", "'../api/" + E.api + "-rounds.php'", 1, 'practice api');
+  html = html.replace(/'sixfold\.([a-zA-Z0-9.]+)'/g, "'" + E.store + "$1'").replace(/'doorapp\.([a-zA-Z0-9.]+)'/g, "'" + E.storeApp + "$1'");
+  html = rep(html, "indexedDB.open('sixfold-rounds'", "indexedDB.open('" + E.idb + "'", 1, 'practice indexeddb');
+  html = rep(html, "'X-Sixfold-Offline'", "'X-Traverse-Offline'", 1, 'practice offline header');   /* worker() names it so */
+  html = rep(html, "var API_CACHE = 'rounds-api';", "var API_CACHE = '" + E.cache + "api';", 1, 'practice api cache');
+  if (/'(sixfold|doorapp)[.-]/.test(html)) throw new Error('practice: a Sixfold storage key is left in the page');
+  html = rep(html, '<title>Sixfold Routes</title>', '<title>Practice · Sixfold 365</title>', 1, 'practice title');
+  html = rep(html, '<meta name="apple-mobile-web-app-title" content="Sixfold 365">', '<meta name="apple-mobile-web-app-title" content="Practice">', 1, 'practice home-screen label');
+  html = rep(html, "document.title = c.short ? c.short + ' Routes' : 'Routes';", "document.title = 'Practice · ' + (c.short ? c.short + ' Routes' : 'Routes');", 1, 'practice doc title');
+  html = rep(html, '<meta name="viewport"', '<meta name="robots" content="noindex, nofollow">\n<meta name="viewport"', 1, 'practice robots');
+  return minifyPage(html);
+}
+function practiceApi(E) {
+  const f = apiFiles(E);
+  let r = rep(f.rounds, 'const PRACTICE = false;', 'const PRACTICE = true;', 1, 'practice switch');
+  for (const lib of PRACTICE_LIBS) r = rep(r, "__DIR__ . '/" + lib + ".php'", "__DIR__ . '/" + E.api + '-' + lib + ".php'", 2, 'practice require ' + lib);
+  /* the old website-lead mail (api/config.php + smtp.php beside Sixfold's API): never the practice copy's, and its flush is off there anyway */
+  r = rep(r, "__DIR__ . '/config.php'", "__DIR__ . '/" + E.api + "-config.php'", 1, 'practice web-lead config');
+  r = rep(r, "__DIR__ . '/smtp.php'", "__DIR__ . '/" + E.api + "-smtp.php'", 2, 'practice web-lead smtp');
+  const out = { rounds: r, skiptrace: f.skiptrace, webpush: f.webpush, sms: f.sms, billing: f.billing };
+  /* the libraries load each other (fb-leads-lib and jobber-lib load mail-oauth-lib): their own copies too, or a shared one is loaded beside the
+     practice one and PHP stops on the second declaration (found live 2026-11-02, a local copy has no shared files beside it) */
+  for (const lib of PRACTICE_LIBS) { let s = api(E, lib + '.php'); for (const o of PRACTICE_LIBS) s = s.split("__DIR__ . '/" + o + ".php'").join("__DIR__ . '/" + E.api + '-' + o + ".php'"); out[lib] = s; }
+  for (const [k, s] of Object.entries(out)) for (const bad of ['sixfold-data', 'sixfold-private']) if (s.indexOf(bad) >= 0) throw new Error('practice ' + k + ' still names ' + bad);
+  /* every file it loads beside itself is its own, but the client-install library (read-only use: tcGeocode, the clients list) */
+  for (const [k, s] of Object.entries(out)) for (const m of s.matchAll(/__DIR__ \. '\/([a-z0-9-]+\.php)'/g)) if (!m[1].startsWith(E.api + '-') && m[1] !== 'traverse-clients-lib.php') throw new Error('practice ' + k + ' loads the shared ' + m[1]);
+  if (r.indexOf('const PRACTICE = true;') < 0 || r.indexOf('const PRACTICE = false;') >= 0) throw new Error('practice switch not on');
+  return out;
+}
+/* six-digit codes nobody would guess: no digit three times, no run of three (123, 987) */
+function practiceCode(used) {
+  for (;;) {
+    const c = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
+    const counts = {}; for (const d of c) counts[d] = (counts[d] || 0) + 1;
+    if (Object.values(counts).some((n) => n > 2) || used.has(c)) continue;
+    let run = false; for (let i = 0; i + 2 < 6; i++) { const a = +c[i], b = +c[i + 1], d = +c[i + 2]; if ((b - a === 1 && d - b === 1) || (a - b === 1 && b - d === 1)) run = true; }
+    if (run) continue;
+    used.add(c); return c;
+  }
+}
+/* who signs in to the practice copy at the start (2026-11-02): Matthew and Lance as admins, Practice Check for the live checks, and one of each
+   other role so a tester can see that person's screens. More testers: Accounts in the app. */
+const PRACTICE_PEOPLE = [['Matthew Sharpe', 'admin'], ['Lance', 'admin'], ['Practice Check', 'admin'], ['Office Tester', 'office'], ['Crew Tester', 'crew'], ['Quote Tester', 'quote']];
+async function buildPractice() {
+  const E = PRACTICE_ED, base = 'practice', app = path.join(base, 'public_html', E.folder);
+  const pg = practicePage(E); write(path.join(app, 'index.html'), pg);
+  write(path.join(app, 'version.txt'), buildStamp(pg) + '\n');
+  write(path.join(app, 'sw.js'), worker(E));
+  write(path.join(app, 'es.json'), fs.readFileSync(path.join(APP, 'es.json')));   /* Sixfold's own words, as Sixfold's page has them */
+  const man = JSON.parse(fs.readFileSync(path.join(APP, 'manifest.json'), 'utf8'));
+  write(path.join(app, 'manifest.json'), JSON.stringify(Object.assign(man, { name: E.name, short_name: E.short, description: 'The practice copy of Sixfold 365: nothing here is real and nothing is sent.' }), null, 2) + '\n');
+  for (const f of fs.readdirSync(APP)) if (/\.png$/.test(f)) write(path.join(app, f), fs.readFileSync(path.join(APP, f)));
+  for (const p of ['q.html', 'sign.html']) {
+    let s = rep(fs.readFileSync(path.join(APP, p), 'utf8'), "'../api/rounds.php'", "'../api/" + E.api + "-rounds.php'", 1, 'practice ' + p + ' api');
+    s = rep(s, '<body>', '<body>' + PRACTICE_STRIP, 1, 'practice ' + p + ' strip');
+    write(path.join(app, p), s.replace('<head>', '<head>\n<meta name="robots" content="noindex, nofollow">'));
+  }
+  /* where a made-up Square pay link goes (rounds.php practiceSquare) */
+  write(path.join(app, 'practice-pay.html'), '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>Practice payment</title>'
+    + '<style>body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3efe6;color:#1b211e}main{max-width:460px;margin:12vh auto;padding:24px;background:#fff;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.08)}h1{font-size:22px;margin:0 0 8px}b{color:#7a3c00}</style></head><body>' + PRACTICE_STRIP
+    + '<main><h1>This is where the customer would pay</h1><p id="amt"></p><p>In the real app this link opens Square\'s payment page. In the practice copy <b>nothing was charged</b> and no card was asked for.</p><p>Close this tab to go back.</p></main>'
+    + '<script>var a=+(new URLSearchParams(location.search).get("amt")||0);if(a)document.getElementById("amt").textContent="Amount: $"+(a/100).toFixed(2);</script></body></html>\n');
+  write(path.join(app, '.htaccess'), fs.readFileSync(path.join(APP, '.htaccess'), 'utf8').replace('<IfModule mod_headers.c>', '<IfModule mod_headers.c>\nHeader set X-Robots-Tag "noindex, nofollow"'));
+  for (const [k, s] of Object.entries(practiceApi(E))) write(path.join(base, 'public_html', 'api', E.api + '-' + k + '.php'), s);
+  /* its settings: Sixfold's own (editions/practice-company.json, taken from live 2026-11-02 with a made-up phone and email), at its own address;
+     emails2.json on, so the follow-up and deposit reminders run (and are logged) */
+  const co = JSON.parse(fs.readFileSync(path.join(__dirname, 'practice-company.json'), 'utf8')); delete co._about;
+  co.appUrl = 'https://traverseplatforms.com/' + E.folder + '/';
+  write(path.join(base, E.data, 'rounds', 'company.json'), JSON.stringify(co, null, 2) + '\n');
+  write(path.join(base, E.data, 'rounds', 'emails2.json'), JSON.stringify({ on: true, by: 'practice copy', at: Math.floor(Date.now() / 1000) }) + '\n');
+  /* the sign-in codes, made once: the file for the server, and the same codes for Matthew in ~/.ssh/practice-codes.txt (never printed) */
+  const codes = path.join(OUT, base, E.priv, 'rounds-codes.php');
+  const codesTxt = path.join(process.env.USERPROFILE || process.env.HOME, '.ssh', 'practice-codes.txt');
+  if (!fs.existsSync(codes) && fs.existsSync(codesTxt) && !process.env.PRACTICE_NEW_CODES) throw new Error('practice: ' + codesTxt + ' exists but ' + codes + ' does not; copy the codes file back (or set PRACTICE_NEW_CODES=1 to make new ones for everyone)');
+  if (!fs.existsSync(codes)) {
+    const used = new Set(), rows = PRACTICE_PEOPLE.map(([n, r]) => [n, r, practiceCode(used)]);
+    write(path.join(base, E.priv, 'rounds-codes.php'), '<?php\n/* Sign-in codes for the practice copy of Sixfold 365 (made by build-editions.cjs ' + new Date().toISOString().slice(0, 10) + ').\n'
+      + '   Lives in ' + E.priv + '/ BESIDE public_html, never inside it. Not in git. Add testers from the app\'s Accounts screen. */\nreturn [\n'
+      + "    'session_key' => '" + crypto.randomBytes(32).toString('hex') + "',\n    'session_days' => 45,\n    'people' => [\n"
+      + rows.map(([n, r, c]) => "        '" + c + "' => ['" + n + "', '" + r + "'],\n").join('') + '    ],\n];\n');
+    const home = process.env.USERPROFILE || process.env.HOME;
+    fs.mkdirSync(path.join(home, '.ssh'), { recursive: true });
+    fs.writeFileSync(path.join(home, '.ssh', 'practice-codes.txt'), rows.map(([n, r, c]) => n + '\t' + r + '\t' + c).join('\n') + '\n');
+    console.log('practice: made ' + E.priv + '/rounds-codes.php and ~/.ssh/practice-codes.txt (' + rows.length + ' sign-ins; open the file to read them)');
+  }
+  console.log('practice: built ' + E.folder + ' (page, API, settings) in ' + path.relative(REPO, path.join(OUT, base)));
+}
+
 (async () => {
+  if (process.argv[2] === 'practice') { await buildPractice(); return; }
   if (!CODE_ONLY) syncSixfoldTowns();
   const only = process.argv[2];
-  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar, pest, security, or c-<client> from editions/clients/)');
+  if (only && !EDITIONS[only]) throw new Error('no edition "' + only + '" (roofing, yards, solar, pest, security, practice, or c-<client> from editions/clients/)');
   fs.rmSync(path.join(OUT, 'upload', '1-extract-in-HOME-beside-public_html--traverse-data.zip'), { force: true });   // the single-edition packs of the first build
   fs.rmSync(path.join(OUT, 'upload', '4-extract-in-public_html--app-tr-cb2e8587.zip'), { force: true });
   for (const k of only ? [only] : Object.keys(EDITIONS)) { await build(k); if (!EDITIONS[k].client) clientTemplate(k); }   /* + the client templates (2026-10-29) */
+  if (!only) await buildPractice();   /* the practice copy keeps step with every full build (2026-11-02) */
   tools();
 })().catch((e) => { console.error(e); process.exit(1); });
 

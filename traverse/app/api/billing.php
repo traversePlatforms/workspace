@@ -202,6 +202,8 @@ function billingFoundingSchedule(array $c, string $subId): array {
 }
 /** one Stripe API call: form-encoded, Bearer key. Returns the decoded answer, or ['error' => message] */
 function stripeCall(array $c, string $method, string $path, array $fields = []): array {
+    /* the practice copy (2026-11-02, rounds.php PRACTICE): Stripe is never called */
+    if (function_exists('practiceOn') && practiceOn()) { practiceLog('stripe', ['method' => $method, 'path' => $path]); return ['error' => 'Practice copy: Stripe is not called.']; }
     if (!empty($c['mock_file'])) {
         @file_put_contents($c['mock_file'] . '.requests.log', json_encode(['method' => $method, 'path' => $path, 'fields' => $fields], JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
         $canned = json_decode((string) @file_get_contents($c['mock_file']), true) ?: [];

@@ -295,6 +295,7 @@ function skipProvider(array $cfg, ?callable $http = null): SkipTraceProvider {
 /** Real HTTP. cURL when the host has it, PHP streams otherwise (the test server has no curl). */
 function skipHttpTransport(int $timeout): callable {
     return function (string $url, array $headers, string $body) use ($timeout): array {
+        if (function_exists('practiceOn') && practiceOn()) throw new RuntimeException('Practice copy: no lookups are bought');   /* 2026-11-02 */
         if (!preg_match('#^https://#i', $url)) throw new RuntimeException('the endpoint must be https');
         if (function_exists('curl_init')) {
             $ch = curl_init($url);

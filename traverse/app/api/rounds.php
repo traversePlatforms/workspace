@@ -40,6 +40,37 @@ declare(strict_types=1);
 @ini_set('log_errors', '1');
 @ini_set('serialize_precision', '-1');   /* the host sets 100: 10.4 went out as 10.40000000000000035... (2026-10-15) */
 
+/* ---- the practice copy (2026-11-02, Matthew: "do the practice copy ... so i can add other people to the practice copy because my goal is to make sure
+ * others can log in and test it and give their input"). build-editions.cjs (practice) makes a separate install from this file, with its own page folder,
+ * api/sixfold-practice-*.php, sixfold-practice-data and sixfold-practice-private, and sets this to true there. When it is true nothing leaves the
+ * server: every email, text, phone alert, Square / Stripe call, Facebook / Jobber / CRM / Google call, paid lookup and AI import is answered as if
+ * it went, and what would have gone is written to practice-sends.log in its data folder (practiceLog) for the Practice bar's "What would have gone
+ * out". The actions that only connect to the outside world are shut (PRACTICE_SHUT). false here = Sixfold and every edition, exactly as before. */
+const PRACTICE = false;
+function practiceOn(): bool { return PRACTICE; }
+function practiceLog(string $kind, array $row): void {
+    if (!PRACTICE || !defined('DATA_DIR')) return;
+    foreach ($row as $k => $v) if (is_string($v) && strlen($v) > 20000) $row[$k] = substr($v, 0, 20000) . ' [...]';
+    @file_put_contents(DATA_DIR . '/practice-sends.log', json_encode(['at' => time(), 'kind' => $kind] + $row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) . "\n", FILE_APPEND | LOCK_EX);
+}
+/* Square in the practice copy: the answers the app expects, made up here; nothing is called. A pay link opens the practice copy's own
+   practice-pay.html (it says nothing was charged); a card is never saved or charged. */
+function practiceSquare(string $method, string $path, ?array $body): array {
+    practiceLog('square', ['method' => $method, 'path' => preg_replace('/\?.*$/', '', $path), 'amount' => $body['quick_pay']['price_money']['amount'] ?? ($body['amount_money']['amount'] ?? null), 'name' => $body['quick_pay']['name'] ?? null]);
+    $id = 'PRACTICE' . strtoupper(bin2hex(random_bytes(6)));
+    if ($method === 'POST' && str_starts_with($path, '/v2/online-checkout/payment-links')) {
+        $cents = (int) ($body['quick_pay']['price_money']['amount'] ?? 0);
+        return ['_status' => 200, 'payment_link' => ['id' => $id, 'url' => kitBase() . 'practice-pay.html?amt=' . $cents, 'order_id' => $id . 'ORDER']];
+    }
+    if ($method === 'POST' && $path === '/v2/customers') return ['_status' => 200, 'customer' => ['id' => $id]];
+    if ($method === 'POST' && $path === '/v2/customers/search') return ['_status' => 200, 'customers' => []];
+    if ($method === 'GET' && str_starts_with($path, '/v2/customers/')) return ['_status' => 200, 'customer' => ['id' => substr($path, 14), 'cards' => []]];
+    if ($method === 'GET' && str_starts_with($path, '/v2/orders/')) return ['_status' => 200, 'order' => ['id' => substr($path, 11), 'state' => 'OPEN', 'tenders' => []]];
+    if ($method === 'GET' && str_starts_with($path, '/v2/payments?')) return ['_status' => 200, 'payments' => []];
+    if ($method === 'GET' && $path === '/v2/locations') return ['_status' => 200, 'locations' => [['id' => 'PRACTICE', 'name' => 'Practice copy', 'status' => 'ACTIVE']]];
+    return ['_status' => 400, 'errors' => [['detail' => 'Practice copy: no card is saved or charged here']]];
+}
+
 /* ---- WHERE THE DOOR DATA LIVES, AND WHY IT MOVED ------------------------
  *
  * ⚑ It used to be public_html/data/rounds, protected by an .htaccess deny.
@@ -150,6 +181,7 @@ function company(): array {
     /* the name each person signs with, by account name (2026-10-16, Jen: "I usually go by Jenn"); never sent with the company, only to that person */
     $c['_signAs'] = [];
     foreach ((array) ($a['signAs'] ?? []) as $k => $v) if (is_string($k) && is_string($v) && trim($v) !== '') $c['_signAs'][mb_substr($k, 0, 40)] = mb_substr(trim($v), 0, 40);
+    if (PRACTICE) $c['practice'] = true;   /* the page's Practice bar (2026-11-02); from the code, never from company.json, and no key at all elsewhere */
     return $c;
 }
 /** the market this install sells in (2026-10-11): Colorado unless company.json names another. Every value checked, since the
@@ -1801,6 +1833,13 @@ function tapTime(array $body): int {
 /* ---- routing ----------------------------------------------------------- */
 $action = (string) ($_REQUEST['action'] ?? '');
 $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+/* the practice copy's shut doors (2026-11-02): what only connects to the outside world (accounts, keys, webhooks and polls from outside, paid
+   lookups, AI imports, the edition switch, client installs). What would send is answered as sent further down; these have no such answer. */
+const PRACTICE_SHUT = ['squarehook', 'billinghook', 'synchook', 'smsin', 'sitelead', 'fbpoll', 'metapoll', 'metasetup', 'msgpreview', 'clickuppoll',
+    'squarenightly', 'squaresweep', 'payset', 'squareoauth', 'mailoauth', 'mailset', 'fboauth', 'fbleadsset', 'fbleadstoken', 'fbpollnow', 'fbforms',
+    'jobberoauth', 'syncconn', 'syncrun', 'synctest', 'synchookset', 'syncsheet', 'syncsheetset', 'jnset', 'jnsync', 'billingcheckout', 'billingportal',
+    'billingrefund', 'billinglive', 'billinglivecli', 'skiptrace', 'skippick', 'prcimport', 'hop', 'hopin', 'installs', 'clients', 'startin'];
+if (PRACTICE && in_array($action, PRACTICE_SHUT, true)) fail('Not in the practice copy: it never connects to outside accounts or services.', 404);
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
 if (($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true)) || in_array($action, ['clickuppoll', 'metapoll'], true))   /* the polls run as GET too */
     register_shutdown_function(function () use ($action) { try { ensureBookedCustomers(); } catch (Throwable $e) { error_log('rounds: booked customers: ' . $e->getMessage()); } if ($action === 'metapoll' && PHP_SAPI === 'cli' && defined('SIXFOLD_CLI')) {   /* the command-line job only (review 2026-10-27 evening): this hook ran before the session check, so a signed-out web hit on ?action=metapoll was refused and yet ran the sweeps from a web worker */ try { adSpendReminder(); } catch (Throwable $e) { error_log('rounds: ad spend reminder: ' . $e->getMessage()); } try { followupSweep(); } catch (Throwable $e) { error_log('rounds: follow-up emails: ' . $e->getMessage()); } try { depremSweep(); } catch (Throwable $e) { error_log('rounds: deposit reminders: ' . $e->getMessage()); } try { nlSweep(); } catch (Throwable $e) { error_log('rounds: newsletter: ' . $e->getMessage()); } } });   /* + the 7 pm ad spend reminder, on the 5-minute poll; + the follow-up emails (2026-10-27) */
@@ -2539,6 +2578,7 @@ if ($action === 'calfeed') {
  * page, from "Check" buttons, and from Square's payment webhook once its signature key is in. Keys in sixfold-private/square.json
  * (env, token, location, sigKey), never shown, never in git; no file = off. Sandbox first: no real money. */
 function squareCfg(): ?array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) return ['env' => 'production', 'token' => 'practice', 'location' => 'PRACTICE', 'practice' => true];   /* made-up Square, as live as Sixfold's (squareFor), answered by practiceSquare: never called */
     static $c = false;
     if ($c === false) { $j = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/square.json'), true);
         $c = is_array($j) && !empty($j['token']) && !empty($j['location']) && in_array($j['env'] ?? '', ['sandbox', 'production'], true) ? $j : null;
@@ -2547,8 +2587,9 @@ function squareCfg(): ?array {
 }
 /* the Office "Square" page only where this install has a square.json (2026-10-27): the editions showed an empty page for a Square they
    never connected. A file check, not squareCfg(), which can renew a token over the network; Connect Square writes the same file. */
-function squareFileOn(): bool { return is_file(dirname(__DIR__, 2) . '/sixfold-private/square.json'); }
+function squareFileOn(): bool { return PRACTICE || is_file(dirname(__DIR__, 2) . '/sixfold-private/square.json'); }   /* the practice copy's made-up Square (2026-11-02) */
 function squareApi(string $method, string $path, ?array $body = null): array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) return practiceSquare($method, $path, $body);
     $c = squareCfg(); if (!$c || !function_exists('curl_init')) return ['_status' => 0, 'errors' => [['detail' => 'Square is not connected.']]];
     $h = curl_init((!empty($c['api']) && $c['env'] === 'sandbox' ? rtrim((string) $c['api'], '/') : ($c['env'] === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com')) . $path);   /* api: a stand-in Square for the tests, sandbox only */
     curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_CUSTOMREQUEST => $method,
@@ -2840,6 +2881,7 @@ function a365WebMail(array $r, string $already): void {
     appendLine(DATA_DIR . '/weblead-mail-queue.jsonl', ['at' => time(), 'subject' => 'Website lead: ' . ($r['name'] ?? '') . ' · ' . ($r['want'] ?? ''), 'body' => $body, 'tries' => 0]);
 }
 function a365WebMailFlush(): int {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) return 0;
     $q = DATA_DIR . '/weblead-mail-queue.jsonl'; if (!is_file($q) || !filesize($q)) return 0;
     $cf = __DIR__ . '/config.php'; if (!is_readable($cf) || !is_readable(__DIR__ . '/smtp.php')) return 0;
     $lk = @fopen($q . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return 0;
@@ -2866,7 +2908,7 @@ function a365WebMailFlush(): int {
  * to set one. Never the lawn size, the seed, the photo or anything else we measured, and never Sixfold. The key is a keyed hash
  * of the lead, so the same link always shows that lead's latest quote; a yes counts only for the price it was given to. */
 function a365QuoteKey(string $id): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365quote|' . $id, $sessionKey), 0, 16); }
-function a365QuoteLink(string $id): string { return (kitOn() ? kitBase() . 'q.html?q=' : 'https://365aeration.com/q/?q=') . $id . '-' . a365QuoteKey($id); }   /* a kit install: its own q.html (2026-10-27) */
+function a365QuoteLink(string $id): string { return (kitOn() || PRACTICE ? kitBase() . 'q.html?q=' : 'https://365aeration.com/q/?q=') . $id . '-' . a365QuoteKey($id); }   /* a kit install: its own q.html (2026-10-27) */
 function a365Arrive(string $slot): string { $w = ['s1' => 'between 9:30 and 10:00', 's2' => 'between 10:00 and 12:00', 's3' => 'between 12:00 and 2:00', 's4' => 'around 3:00'][$slot] ?? ''; if ($w === '' && ($sl = jobSlot($slot))) $w = 'at ' . $sl[1]; return $w; }
 function a365Day(string $date): string { return (new DateTime($date . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'); }
 /** the live job for a lead, if any */
@@ -3034,7 +3076,7 @@ function a365MailSocial(string $bg = ''): string {
 }
 function houseTown(array $h): string { return trim((string) preg_replace('/\s*\([^)]*\)\s*$/', '', (string) ($h['town'] ?? ''))); }
 function a365SignKey(string $id, string $k): string { global $sessionKey; return substr(hash_hmac('sha256', 'a365sign|' . $id . '|' . $k, $sessionKey), 0, 16); }
-function a365SignLink(string $id, string $k): string { return (kitOn() ? kitBase() . 'sign.html?s=' : 'https://365aeration.com/sign/?s=') . $id . '-' . a365SignKey($id, $k); }   /* a kit install: its own sign.html (2026-10-27) */
+function a365SignLink(string $id, string $k): string { return (kitOn() || PRACTICE ? kitBase() . 'sign.html?s=' : 'https://365aeration.com/sign/?s=') . $id . '-' . a365SignKey($id, $k); }   /* a kit install: its own sign.html (2026-10-27) */
 /* ---- the quote and agreement kit for every install but Sixfold (2026-10-27, TR-33; Matthew: "Everything we built in terms of the quote
  * generator, the agreements, square apps we mostly manually integrated. So how do we prepare that for other companies?").
  * Sixfold (company a365) keeps its own aeration pricing and its 365aeration.com pages, untouched. Every other install (the five editions,
@@ -3142,6 +3184,7 @@ function stripePayCfg(): ?array {
     return $c;
 }
 function stripePayApi(string $method, string $path, array $fields = []): array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) { practiceLog('stripe', ['method' => $method, 'path' => $path]); return ['_status' => 0, 'error' => ['message' => 'Practice copy: Stripe is not called.']]; }
     $c = stripePayCfg(); if (!$c || !function_exists('curl_init')) return ['_status' => 0, 'error' => ['message' => 'Stripe is not connected.']];
     $base = getenv('TRAVERSE_STRIPEPAY_BASE') ?: 'https://api.stripe.com';   /* the override is for the test copy only */
     $q = http_build_query($fields);
@@ -3249,6 +3292,7 @@ function a365Agreement(array $l): array {
  * password kept in sixfold-private/a365-mail.json {"user", "pass", "from_name", "bcc"}; never shown, never in git. No file = no email,
  * and signing still works. The office inbox gets a hidden copy (bcc). Sending is the same as the Traverse demo emails (demo/_lib.php). */
 function a365MailCfg(): ?array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) return ['user' => 'practice@example.com', 'pass' => 'practice', 'from_name' => (string) (company()['a365']['name'] ?? 'Practice copy'), 'practice' => true];   /* the mailbox "is there", so every email path runs and is logged */
     $j = json_decode((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/a365-mail.json'), true);
     if (!is_array($j) || empty($j['user']) || empty($j['pass'])) return null;
     $j['pass'] = (string) preg_replace('/\s+/', '', (string) $j['pass']); return $j;
@@ -3256,6 +3300,7 @@ function a365MailCfg(): ?array {
 function a365MimeH(string $s): string { return preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s; }
 /** one message through Gmail as 365's mailbox, text and HTML; never throws. [ok, stage, error] */
 function a365Mail(string $to, string $subject, string $text, string $html, array $extra = []): array {   /* $extra: more header lines, e.g. List-Unsubscribe on the newsletter (2026-10-28) */
+    /* the practice copy (2026-11-02): */ if (PRACTICE) { practiceLog('email', ['to' => $to, 'subject' => $subject, 'text' => $text, 'via' => 'the 365 mailbox']); return ['ok' => true, 'stage' => 'sent', 'error' => '']; }
     $c = a365MailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     if (!$c) return $fail('config', 'no 365 mailbox set up yet (sixfold-private/a365-mail.json)');
     /* a test copy only (2026-10-27, the follow-up email's tests): "dryrun": true in the mailbox file writes each message to a365-dryrun.log
@@ -3268,6 +3313,7 @@ function a365Mail(string $to, string $subject, string $text, string $html, array
 /** one message over SMTP with a login, text and HTML; never throws. $c: host, port (587 STARTTLS, 465 TLS from the start), user, pass, from_name,
  *  domain (EHLO and Message-ID), bcc. [ok, stage, error]. Only the test server may talk to 127.0.0.1 without TLS (the mock mail server). */
 function smtpSend(array $c, string $to, string $subject, string $text, string $html, array $extra = []): array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) { practiceLog('email', ['to' => $to, 'subject' => $subject, 'text' => $text, 'via' => 'SMTP ' . (string) ($c['host'] ?? '')]); return ['ok' => true, 'stage' => 'sent', 'error' => '']; }
     $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     $host = (string) $c['host']; $port = (int) $c['port']; $dom = (string) ($c['domain'] ?? 'localhost');
     $plain = PHP_SAPI === 'cli-server' && $host === '127.0.0.1';
@@ -3356,6 +3402,7 @@ function mailDomain(string $addr): string { $d = strtolower(substr((string) strr
 /** one email from the install: 365 through a365Mail exactly as before; an edition from its connected address */
 function sendMail(string $to, string $subject, string $text, string $html, array $extra = []): array {
     if (!empty(company()['a365'])) return a365Mail($to, $subject, $text, $html, $extra);
+    /* the practice copy (2026-11-02): */ if (PRACTICE) { practiceLog('email', ['to' => $to, 'subject' => $subject, 'text' => $text, 'via' => 'the company email']); return ['ok' => true, 'stage' => 'sent', 'error' => '']; }
     $c = mailOwnCfg(); if (!$c) return ['ok' => false, 'stage' => 'config', 'error' => 'Email is not connected yet (Setup, Email).'];
     if (!empty($c['oauth'])) return moSend(pushPrivDir(), mailMime($c, $to, $subject, $text, $html, $extra, mailDomain((string) $c['user'])));   /* Gmail API or Microsoft Graph (2026-10-30) */
     return smtpSend($c + ['domain' => mailDomain((string) $c['user'])], $to, $subject, $text, $html, $extra);
@@ -8600,6 +8647,13 @@ function helpAll(): array {
     }
     return $T;
 }
+/* the practice copy's "What would have gone out" (2026-11-02): the newest 200 of practice-sends.log, for anyone at the desk. Nowhere else. */
+if ($action === 'practicelog') {
+    if (!PRACTICE) fail('Not here.', 404);
+    if (!desk()) fail('Not allowed.', 403);
+    $rows = array_slice(jsonLines(DATA_DIR . '/practice-sends.log'), -200);
+    out(['ok' => true, 'rows' => array_reverse(array_map(fn($r) => array_intersect_key($r, array_flip(['at', 'kind', 'to', 'subject', 'text', 'via', 'method', 'path', 'url', 'amount', 'name', 'from', 'title'])), $rows))]);
+}
 if (in_array($action, ['helplist', 'helpsend', 'helpclose'], true)) {
     if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
     if (!desk()) fail('Not allowed.', 403);
@@ -8615,6 +8669,8 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose'], true)) {
         $c = is_array($body['ctx'] ?? null) ? $body['ctx'] : []; $ctx = [];
         foreach (['screen' => 40, 'lead' => 40, 'job' => 40, 'name' => 80] as $k => $max) if (isset($c[$k]) && is_string($c[$k]) && $c[$k] !== '') $ctx[$k] = mb_substr($c[$k], 0, $max);
         if (!appendLine(helpFile(), ['t' => 'msg', 'id' => $id, 'from' => $me, 'text' => $text, 'ctx' => $ctx ?: null, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        /* the practice copy (2026-11-02): the live help desk's watcher never sees this folder; the note stays here for Matthew to read, and says so */
+        if (PRACTICE) { practiceLog('help desk', ['from' => $me, 'text' => $text]); appendLine(helpFile(), ['t' => 'reply', 'id' => $id, 'from' => 'Practice copy', 'text' => 'Thanks, this is kept for Matthew to read. This is the practice copy, so it does not go to the live help desk and nothing here is fixed by itself.', 'status' => 'answered', 'at' => time()]); }
         out(['ok' => true, 'ticket' => helpAll()[$id]]);
     }
     if ($action === 'helpclose') {
@@ -12002,6 +12058,7 @@ function syncMock(): string { return rtrim((string) getenv('TRAVERSE_SYNC_MOCK')
 function syncBase(string $k, string $real): string { return syncMock() !== '' ? syncMock() . '/' . $k : $real; }
 /** one outside call: [HTTP status, decoded JSON or null, error text, raw]. HTTPS only (the test copy's stand-in excepted); no redirects for APIs */
 function syncHttp(string $method, string $url, array $hdr, $body = null, int $timeout = 25, int $redirects = 0, int $maxBytes = 5242880): array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) { practiceLog('outside system', ['method' => $method, 'url' => (string) preg_replace('/[?#].*$/', '', $url)]); return [0, null, 'Practice copy: no outside system is called', '']; }
     $mock = syncMock() !== '' && str_starts_with($url, syncMock());
     if (!$mock && !preg_match('#^https://#i', $url)) return [0, null, 'not an https link', ''];
     $hdr[] = agentHeader(); $hdr[] = 'Accept: application/json, text/csv, text/plain, */*';
@@ -14580,6 +14637,7 @@ function kitSetup(): array {
 }
 /** renew a Connect Square token with Traverse's Square app; the file is rewritten; null when it could not */
 function squareOauthRefresh(array $c): ?array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) return null;
     $app = squareAppCfg(); if (!$app || empty($c['refresh']) || !function_exists('curl_init')) return null;
     $h = curl_init('https://connect.squareup.com/oauth2/token');
     curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_POST => true, CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Square-Version: 2025-01-23'],
@@ -14592,6 +14650,7 @@ function squareOauthRefresh(array $c): ?array {
 }
 /** a Square call with a token that is not saved yet (payset), against the real Square or the test copy's stand-in */
 function squareTry(string $token, string $env, string $path): array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) return ['_status' => 0, 'errors' => [['detail' => 'Practice copy: Square is not called']]];
     $base = getenv('KIT_SQUARE_BASE') ?: ($env === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com');
     $h = curl_init(rtrim($base, '/') . $path);
     curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token, 'Square-Version: 2025-01-23', 'Content-Type: application/json']]);
@@ -15293,6 +15352,7 @@ function prcFeedback(int $days): array {
  * tokens out), counted in prc-imports.log with its tokens and cost (and Traverse-wide in traverse-shared/claude-usage.log), limited per
  * install per day and per month in dollars, and refused with a plain reason when anything fails. "baseUrl" is for the test copy only. */
 function prcAiCfg(): ?array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) return null;   /* no AI imports: they cost money */
     $j = json_decode((string) @file_get_contents(hopDir() . '/claude.json'), true);
     if (!is_array($j) || strlen((string) ($j['anthropicKey'] ?? '')) < 20) return null;
     return ['key' => (string) $j['anthropicKey'], 'model' => preg_match('/^claude-[a-z0-9-]{3,40}$/', (string) ($j['model'] ?? '')) ? (string) $j['model'] : 'claude-sonnet-5-5',
@@ -16190,6 +16250,7 @@ function jnConf(): array { $j = json_decode((string) @file_get_contents(jnFile('
 function jnBase(): string { return rtrim((string) (getenv('TRAVERSE_JOBNIMBUS_BASE') ?: 'https://app.jobnimbus.com/api1'), '/'); }   /* the override is for the test copy only */
 /** one JobNimbus call: [HTTP status, decoded answer or null, error text] */
 function jnCall(string $method, string $path, ?array $body, string $key): array {
+    /* the practice copy (2026-11-02): */ if (PRACTICE) { practiceLog('outside system', ['method' => $method, 'url' => 'JobNimbus ' . $path]); return [0, null, 'Practice copy: JobNimbus is not called']; }
     $url = jnBase() . $path;
     $hdr = ['Authorization: Bearer ' . $key, 'Content-Type: application/json', 'Accept: application/json', agentHeader()];
     if (function_exists('curl_init')) {
