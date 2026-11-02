@@ -1077,7 +1077,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .door.acct .aacts .lnk.danger{color:var(--fire-h)}
   /* pipeline (2026-10-04) */
   .pipetop{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
-  .pipetop .addlead{margin:0}
+  .pipetop .addlead{margin:0;flex:1 1 0;width:auto;min-width:0}   /* + Add a lead and Import from Meta side by side, half each (2026-11-01, Matthew: "two med bars on the same line") */
   .pipeseg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0 8px}
   .sblk{margin:10px 0}.sblkhd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
   .sblkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}.sblkrow small{display:block;color:var(--soft)}
@@ -7353,7 +7353,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      every email must carry; nothing goes without approval, the address and the 365 mailbox */
   function newsletterView(openId) {
     hideToast(); S.signin = null; S.screen = 'newsletter'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Newsletter', sub: 'The 1st of each month, to customers', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', offBack({ title: 'Newsletter', sub: 'The 1st of each month, to customers' }));
     view.textContent = ''; var w = q('div', 'card jnform nlview'); w.appendChild(q('div', 'skel')); view.appendChild(w);
     var fmtAt = function (t) { return new Date(t * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
     api('nlist').then(function (j) {
@@ -7403,7 +7403,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* the company switch, the preview and Send me a test (2026-10-27): admins. Off until Matthew turns it on. */
   function followupMailView() {
     hideToast(); S.signin = null; S.screen = 'followupmail'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Follow-up email', sub: 'Two days after each job', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', offBack({ title: 'Follow-up email', sub: 'Two days after each job' }));
     view.textContent = ''; var holder = q('div', 'card jnform fumail'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     api('followup').then(function (j) {
       holder.textContent = '';
@@ -7457,7 +7457,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* deposit reminders (2026-11-01, Jen via Matthew): who is due one, Don't send per customer, the on/off switch, a preview and a test */
   function depremView() {
     hideToast(); S.signin = null; S.screen = 'deprem'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Deposit reminders', sub: 'For forms with an unpaid deposit', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', offBack({ title: 'Deposit reminders', sub: 'For forms with an unpaid deposit' }));
     view.textContent = ''; var holder = q('div', 'card jnform fumail'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     api('deprem').then(function (j) {
       holder.textContent = '';
@@ -15205,6 +15205,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var go = function () { if (S.screen === 'tools') window.scrollTo(0, y); };
     go(); setTimeout(go, 60); setTimeout(go, 400);   /* again as the cards that load late (walks, territories) land */
   }
+  /* Back from a screen the Office menu opened (2026-11-01, Matthew: Agreement terms and Other ways to pay went 'all the way back to the beginning'):
+     the Office on a computer, as Setup does; Home on a phone */
+  function offBack(o) { var toOffice = S.inOffice && planOk() && dnavOn(); return Object.assign(o, toOffice ? { back: officeView, backLabel: 'Office' } : { back: chooseView, backLabel: 'Field tools' }); }
   function kitSetupView() {
     hideToast(); S.signin = null; S.screen = 'kitsetup'; foot.hidden = true; setDock(null); setupClear(true);
     var toOffice = S.inOffice && planOk() && dnavOn();   /* Back from the Setup list: the Office on a computer, Home on a phone */
@@ -15776,7 +15779,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      form is aeration, aeration with seed and feed, or a custom job). Signed forms keep the words they were signed with. */
   function a365TermsView() {
     hideToast(); S.signin = null; S.screen = 'a365terms'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Agreement terms', sub: 'What the 365 form says under the price', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', offBack({ title: 'Agreement terms', sub: 'What the 365 form says under the price' }));
     view.textContent = ''; var box = q('div', 'card jnform coform kitp prct a365t'); box.appendChild(q('div', 'skel')); view.appendChild(box);
     api('a365terms').then(function (D) {
       box.textContent = ''; if (!D || !D.ok) { box.appendChild(q('div', 'msg bad', (D && D.error) || 'Could not load it.')); return; }
@@ -15835,7 +15838,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Sixfold 365's other ways to pay (2026-10-30): Venmo, Zelle (with its QR code), Cash App and PayPal beside Square, off until filled in */
   function a365WaysView() {
     hideToast(); S.signin = null; S.screen = 'a365ways'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Other ways to pay', sub: 'Beside Square: Venmo, Zelle, Cash App, PayPal', back: chooseView, backLabel: 'Field tools' });
+    setBar('back', offBack({ title: 'Other ways to pay', sub: 'Beside Square: Venmo, Zelle, Cash App, PayPal' }));
     view.textContent = ''; var box = q('div', 'card jnform coform kitpay'); view.appendChild(box);
     kitWaysForm(box);
   }
@@ -18458,7 +18461,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var add = q('button', 'addlead', S.leadAdd ? 'Close the form' : '+ Add a lead'); add.type = 'button';
     add.addEventListener('click', function () { S.leadAdd = !S.leadAdd; drawPipe(); });
     top.appendChild(add);
-    var imp = q('button', 'addlead metaimp', 'Import leads from Meta'); imp.type = 'button'; if (asOffice()) imp.hidden = true;   /* not for the office: Facebook leads come in by themselves (2026-10-21, Matthew) */
+    var imp = q('button', 'addlead metaimp', 'Import leads from Meta'); imp.type = 'button'; if (asOffice() || (CO && CO.a365)) imp.hidden = true;   /* Sixfold: none at all, its Meta leads arrive by themselves (2026-11-01, Matthew); the editions keep it */   /* not for the office: Facebook leads come in by themselves (2026-10-21, Matthew) */
     var fileIn = q('input'); fileIn.type = 'file'; fileIn.accept = '.csv,.tsv,.txt,text/csv,text/tab-separated-values'; fileIn.hidden = true; fileIn.id = 'metafile';
     imp.addEventListener('click', function () { fileIn.value = ''; fileIn.click(); });
     fileIn.addEventListener('change', function () { if (fileIn.files && fileIn.files[0]) readMetaFile(fileIn.files[0]); });
