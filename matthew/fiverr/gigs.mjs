@@ -41,9 +41,9 @@ export const gigs = [
       'More than one domain or more than three sending services? Message me first.',
     ],
     packages: [
-      { name: 'Check and records', price: 40, days: 3, revisions: 1, items: ['Check of your domain today', 'The exact records, written for you', 'Step-by-step paste guide', '1 sending service'] },
-      { name: 'Set up for you', price: 75, days: 3, revisions: 1, items: ['Everything in Basic', 'I add the records (helper access)', 'DKIM switched on', 'Test send and pass report', 'Up to 2 sending services'] },
-      { name: 'Fix and clean up', price: 125, days: 5, revisions: 2, items: ['Everything in Standard', 'Broken or duplicate records fixed', 'Up to 3 sending services', 'DMARC reports read after one week'] },
+      { name: 'Check and records', price: 40, days: 1, revisions: 1, items: ['Check of your domain today', 'The exact records, written for you', 'Step-by-step paste guide', '1 sending service'] },
+      { name: 'Set up for you', price: 75, days: 2, revisions: 1, items: ['Everything in Basic', 'I add the records (helper access)', 'DKIM switched on', 'Test send and pass report', 'Up to 2 sending services'] },
+      { name: 'Fix and clean up', price: 125, days: 3, revisions: 2, items: ['Everything in Standard', 'Broken or duplicate records fixed', 'Up to 3 sending services', 'Follow-up check one week later'] },
     ],
     extras: [FAST, { name: 'Extra domain', price: 35, note: 'same package on a second domain' }],
     requirements: [
