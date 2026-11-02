@@ -7525,7 +7525,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function helpDot() {
     var b = document.getElementById('helpfab'); if (!b || HC.el) return;
-    api('helplist').then(function (j) { if (!j || !j.ok) return; var s = helpSeen(), unread = (j.tickets || []).some(function (t) { var last = t.msgs[t.msgs.length - 1]; return last && !last.mine && (s[t.id] || 0) < t.updated; }); var d = b.querySelector('.helpdot'); if (d) d.hidden = !unread; }).catch(function () {});
+    api('helplist').then(function (j) { if (!j || !j.ok) return; var s = helpSeen(), unread = (j.tickets || []).some(function (t) { var last = t.msgs[t.msgs.length - 1]; return t.status !== 'closed' && last && !last.mine && (s[t.id] || 0) < t.updated; });   /* closed chats never light it (1 Nov) */ var d = b.querySelector('.helpdot'); if (d) d.hidden = !unread; }).catch(function () {});
   }
   function helpChat(openId) {
     if (!helpOk()) return;
@@ -7534,7 +7534,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var w = q('div', 'hchat'); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', 'Help chat');
     var hd = q('div', 'hchd');
     hd.appendChild(q('div', 'hcttl', 'Help · ' + HELP_NAME));
-    var nw = q('button', 'hcbtn', 'New chat'), er = q('button', 'hcbtn', 'Earlier'), cx = q('button', 'hcbtn hcx', '✕'); [nw, er, cx].forEach(function (x) { x.type = 'button'; });
+    var nw = q('button', 'hcbtn', 'Clear'), er = q('button', 'hcbtn', 'Earlier'), cx = q('button', 'hcbtn hcx', '✕'); [nw, er, cx].forEach(function (x) { x.type = 'button'; });
     cx.setAttribute('aria-label', 'Close');
     hd.appendChild(nw); hd.appendChild(er); hd.appendChild(cx); w.appendChild(hd);
     var body = q('div', 'hcbody'); w.appendChild(body);
@@ -7546,7 +7546,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var close = function () { clearInterval(HC.tick); if (HC.el) HC.el.remove(); HC.el = null; document.body.classList.remove('hchat-on'); helpDot(); };
     cx.addEventListener('click', close);
     er.addEventListener('click', function () { close(); helpView(); });
-    nw.addEventListener('click', function () { fresh = true; cur = null; HC.id = null; openId = null; draw(null); ta.focus(); });
+    /* Clear (1 Nov, Matthew: New chat then close reopened the old chat): the conversation is closed, so the chat opens blank next time; it is
+       still under Earlier, and a reply still on its way reopens it there */
+    nw.addEventListener('click', function () { var was = HC.id; fresh = true; cur = null; HC.id = null; openId = null; draw(null); ta.focus(); if (was) api('helpclose', { body: { id: was } }).catch(function () {}); });
     var bubble = function (cls, who, text) { var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(q('div', 'hctxt noi18n', text)); body.appendChild(b); };
     var draw = function (t) {
       body.textContent = '';
@@ -7565,6 +7567,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       api('helplist').then(function (j) {
         if (!HC.el || !j || !j.ok) return;
         var ts = j.tickets || [], pick = null;
+        ts.forEach(function (t) { helpSeen(t); });   /* opening the chat reads them all, so the dot goes (1 Nov) */
         if (HC.id) pick = ts.filter(function (t) { return t.id === HC.id; })[0] || null;
         else if (fresh) pick = null;
         else if (openId) pick = ts.filter(function (t) { return t.id === openId; })[0] || null;
