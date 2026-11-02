@@ -201,6 +201,7 @@ const gigDetail = (g, c) => `
           <div class="pkc">
             <div class="pkh"><span>${['Basic', 'Standard', 'Premium'][i]}</span><b>${money(p.price)}</b></div>
             <div class="pkn">${esc(p.name)}</div>
+            <div class="pkd">${esc(p.desc || '')} <span class="ck ${(p.desc || '').length <= 100 ? 'ok' : 'no'}">${(p.desc || '').length}/100</span></div>
             <div class="pkm">${p.days}-day delivery &middot; ${p.revisions} revision${p.revisions > 1 ? 's' : ''}</div>
             <ul>${p.items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
             <div class="pkfee">You receive about ${money(Math.round(p.price * 0.8))} after Fiverr's 20%</div>
@@ -246,7 +247,7 @@ const css = `
   details{border-top:1px solid var(--line);padding:10px 0}summary{font-weight:700;cursor:pointer}details p{margin:6px 0 0;color:var(--soft)}
   .pk{display:grid;gap:12px}.pkc{border:1px solid var(--line);border-radius:12px;padding:14px 16px}
   .pkh{display:flex;justify-content:space-between;align-items:baseline}.pkh span{font-weight:800;color:var(--soft);text-transform:uppercase;font-size:13px;letter-spacing:.06em}.pkh b{font-size:24px}
-  .pkn{font-weight:700;margin-top:2px}.pkm{font-size:13.5px;color:var(--soft);margin:2px 0 6px}
+  .pkn{font-weight:700;margin-top:2px}.pkd{font-size:14px;margin:4px 0 2px}.pkm{font-size:13.5px;color:var(--soft);margin:2px 0 6px}
   .pkc ul{margin:0;padding-left:18px;font-size:14.5px}.pkfee{margin-top:8px;font-size:12.5px;color:var(--soft)}
   .side h4{margin:18px 0 6px;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--soft)}
   .side ul{margin:0;padding-left:18px;font-size:14.5px}.side small{display:block;color:var(--soft)}.small{font-size:14px;margin:0}
