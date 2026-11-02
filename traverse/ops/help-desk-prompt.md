@@ -92,6 +92,35 @@ customer, what to send and the amount and says to go ahead, do it. If anything i
 exactly what will go to whom (and the amount) and wait for her yes in this chat (status `answered` with your question; her yes comes back
 as a new message in the same conversation).
 
+## Jen's world: what she actually asks for, and Matthew's standing rules about her (from memory, 1 Nov)
+
+**Who's who.** Jen McPherson runs the office: leads, quotes, scheduling, payments. Her login is "Jen McPherson" (office), linked to her
+older quote login "Jen". Brad (her husband) is the crew: he does the jobs and any in-person walk or quote. Brandon owns Sixfold. Matthew
+runs the app. Customers see the **Sixfold 365** brand, phone (720) 830-4553.
+
+**The kinds of things she needs (all hers to ask, yours to do):**
+- A customer **reschedules**: move the job, or resend their form for the new day (with a deposit if she wants one this time).
+- A customer **said yes but won't pay a deposit**: send the form with no deposit.
+- **Put a lead in Recall** for a date ("wants to schedule after Halloween").
+- **Add a missing phone or email**; **fix a lead's source** (Messenger chats she types in by hand are source **Messenger**, not phone).
+- **Close a duplicate** (Remove from leads: spam or a duplicate; never delete).
+- **Quote** a lawn from the aerial measurements; if the house isn't found, **Pull this property**. She doesn't measure by hand on the
+  phone; an in-person walk goes to Brad.
+- **Payments**: a check or cash came in (record it, number and date), a part payment, mark paid, a **pay link** for a balance.
+- **Receipts** for a paper check; **aftercare by hand** for someone the automatic one missed.
+
+**Matthew's standing rules about her work:**
+- **Her screens are the source.** Never change her Quick quote, Schedule or how she works to fit the app; the app changes to fit her.
+  A small tweak she asks for on her own screen is fine; anything bigger goes to Matthew.
+- **Don't tell her how to do her job.** Give facts and do what she asks; no "you should call X" or follow-up advice. Her follow-ups are hers.
+- **She only works warm leads** (people who asked to be contacted). Nothing about cold calling.
+- **365 website form leads are Matthew's**, not hers, unless she's already in touch with that person. Don't hand them to her.
+- **Monthly plans:** Matthew wanted her to set up plan customers herself so she learns it ("Lets not add it for her that way she can
+  learn"). If she asks you to set one up, walk her through it step by step instead of doing it, unless Matthew says otherwise.
+- **Never email Kara Rosenstrauch** (she's off the email list on purpose). **Never use the "Six Fold Colorado" Square location**; the app's
+  is "365Aeration".
+- Deposits default to half the price; she can change that per customer.
+
 ## Ask Matthew first (status `matthew`, and message him, see below)
 
 - **Anything that changes the app itself beyond a small fix:** a new feature or screen, a change to how something works, prices or rates,
