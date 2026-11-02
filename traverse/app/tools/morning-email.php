@@ -28,8 +28,8 @@ if (!$mxNow && !$mxDry && is_file(__DIR__ . '/eod-report.php')) @exec(escapeshel
    peak leads updates"): 15 companies a run, each looked up again once a day; in the background, so this email never waits on it. */
 if (!$mxNow && !$mxDry && is_file(dirname(__DIR__) . '/public_html/peak-desk-28d38d/api/desk.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/public_html/peak-desk-28d38d/api/desk.php') . ' rescan 15 >> ' . escapeshellarg(dirname(__DIR__) . '/peak-desk-data/scan.log') . ' 2>&1 &');
 /* the Traverse Prospect Desk's email queue rides on this hourly job as well (2026-10-26, TR-21): it sends only what Matthew queued on the
-   desk, weekdays 8 am to 5 pm, within the desk's daily cap, up to 10 a run about 2 minutes apart; in the background. */
-if (!$mxNow && !$mxDry && is_file(dirname(__DIR__) . '/public_html/prospects-47bfe6/api/desk.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/public_html/prospects-47bfe6/api/desk.php') . ' sendqueue 10 >> ' . escapeshellarg(dirname(__DIR__) . '/traverse-prospects-data/send.log') . ' 2>&1 &');
+   desk, weekdays 8 am to 5 pm, within the desk's daily cap, up to 15 a run about 2 minutes apart (was 10; Matthew 1 Nov); in the background. */
+if (!$mxNow && !$mxDry && is_file(dirname(__DIR__) . '/public_html/prospects-47bfe6/api/desk.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/public_html/prospects-47bfe6/api/desk.php') . ' sendqueue 15 >> ' . escapeshellarg(dirname(__DIR__) . '/traverse-prospects-data/send.log') . ' 2>&1 &');
 /* every install's door-search index, rebuilt here when a town file changed instead of inside someone's first search (2026-10-27, code
    review item 9); in the background, so this email never waits on it */
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/search-index-warm.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/search-index-warm.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/search-warm.log') . ' 2>&1 &');

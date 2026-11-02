@@ -34,7 +34,7 @@ const STATUSES = ['new' => 'Not contacted', 'emailed' => 'Emailed', 'called' => 
 const OFF = ['notnow', 'no'];   /* knocked off the list: hidden unless asked for */
 const WAYS = ['emailed', 'called', 'nextdoor'];   /* ways we reached them (31 Oct, Matthew): ticks that can all be on at once; while a company is still at the first stage its status is the last one ticked, or Not contacted with none */
 const TRADES = ['roofing' => 'Roofing', 'roofing solar' => 'Roofing and solar', 'solar' => 'Solar', 'pest' => 'Pest control', 'security' => 'Security', 'yards' => 'Lawn and yards'];
-const CAP_MAX = 240;   /* 10 an hour around the clock (Matthew 31 Oct: "10 emails an hour", no daily stop); the hourly 10 is the pace */
+const CAP_MAX = 360;   /* 15 an hour around the clock (Matthew 1 Nov: "up the email amount" to make up the days the picture emails lost to spam; was 10 an hour, 240) */
 
 /* the starting templates, one a trade (2026-10-26): drafts for Matthew to make his own in Settings. They say what the app does in
    plain words and make no claim about any company's results; no data source is named. */
