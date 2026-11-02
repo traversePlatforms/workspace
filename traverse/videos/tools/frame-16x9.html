@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- The 16:9 frame for the demo-editions video (2 Nov 2026), 1920x1080, in the Traverse look (navy #13294b with the grid, flag orange,
+     Familjen Grotesk / Atkinson Hyperlegible / JetBrains Mono, as the website and its link picture). Query parameters:
+       layout = card | desk | deskphone | phone
+       card:  eyebrow, title, sub, foot           (a designed title card, no app screen)
+       other: section, cap (the caption line), desk / phone (image URLs of the app screens; left out = an empty screen, where the build
+              lays the recording over the frame at the same box)
+     Never shows anything generated: real app screens or text only. -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&display=block">
+<style>
+  html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transparent}
+  .bg{position:absolute;inset:0;background-color:#13294b;background-image:linear-gradient(rgba(255,255,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.06) 1px,transparent 1px);background-size:44px 44px}
+  .glow{position:absolute;inset:0;background:radial-gradient(ellipse at 18% 0%,rgba(214,64,12,.18),transparent 55%)}
+  body{color:#fff;font-family:"Atkinson Hyperlegible",sans-serif}
+  .brand{position:absolute;left:64px;top:30px;display:flex;align-items:center;gap:14px}
+  .brand b{font:700 30px/1 "Familjen Grotesk",sans-serif;letter-spacing:-.02em}
+  .sect{position:absolute;right:64px;top:42px;font:500 18px/1 "JetBrains Mono",monospace;letter-spacing:.17em;color:#ff7a45;text-transform:uppercase}
+  /* a screen: the hole is see-through (box-shadow paints the background around it), the image sits in it in the dry run */
+  .scr{position:absolute;overflow:hidden;background:transparent}
+  .scr img{display:block;width:100%;height:100%}
+  .desk{border-radius:10px;box-shadow:0 0 0 12px #0b1526,0 0 0 14px #2c3f5c,0 30px 70px rgba(0,0,0,.45)}
+  .phone{border-radius:44px;box-shadow:0 0 0 12px #05080c,0 0 0 15px #3a4658,0 30px 70px rgba(0,0,0,.5)}
+  .cap{position:absolute;left:64px;right:64px;bottom:22px;font:700 30px/1.25 "Atkinson Hyperlegible",sans-serif;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+  .cap:empty{display:none}
+  /* phone-only: the line large beside the phone */
+  .side{position:absolute;left:120px;top:300px;width:880px}
+  .side .eb{font:500 20px/1 "JetBrains Mono",monospace;letter-spacing:.17em;color:#ff7a45;text-transform:uppercase;margin-bottom:26px}
+  .side h2{margin:0;font:700 58px/1.12 "Familjen Grotesk",sans-serif;letter-spacing:-.02em}
+  /* title cards */
+  .card{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 160px}
+  .card .mk{margin-bottom:44px}
+  .card .eb{font:500 24px/1 "JetBrains Mono",monospace;letter-spacing:.2em;color:#ff7a45;text-transform:uppercase;margin-bottom:30px}
+  .card h1{margin:0;font:700 112px/1.02 "Familjen Grotesk",sans-serif;letter-spacing:-.03em;max-width:1500px}
+  .card p{margin:34px 0 0;font:400 40px/1.35 "Atkinson Hyperlegible",sans-serif;color:#d9e2ef;max-width:1400px}
+  .card .ft{position:absolute;left:160px;bottom:90px;font:500 30px/1.5 "JetBrains Mono",monospace;color:#c9d6ea;white-space:pre-line}
+  .card .ft b{color:#fff;font-weight:500}
+</style></head>
+<body>
+<script>
+  const p = new URLSearchParams(location.search), L = p.get('layout') || 'card', esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const MARK = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#ffffff"/><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#13294b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="47" r="5.2" fill="#ffffff" stroke="#13294b" stroke-width="3.6"/><circle cx="24" cy="31" r="5.2" fill="#ffffff" stroke="#13294b" stroke-width="3.6"/><circle cx="37" cy="40" r="5.2" fill="#ffffff" stroke="#13294b" stroke-width="3.6"/><circle cx="53" cy="17" r="8" fill="#d6400c"/></g></svg>`;
+  /* the screens' places: computer 1440x900 and phone 390x844 at their own shape */
+  const BOX = {
+    desk: { desk: [256, 96, 1408, 880] },
+    deskphone: { desk: [64, 128, 1312, 820], phone: [1468, 100, 390, 844] },
+    phone: { phone: [1200, 96, 410, 888] },
+  };
+  let h = '<div class="bg"></div><div class="glow"></div>';
+  if (L === 'card') {
+    h += `<div class="card"><div class="mk">${MARK(96)}</div>${p.get('eyebrow') ? `<div class="eb">${esc(p.get('eyebrow'))}</div>` : ''}<h1>${esc(p.get('title'))}</h1>${p.get('sub') ? `<p>${esc(p.get('sub'))}</p>` : ''}${p.get('foot') ? `<div class="ft">${esc(p.get('foot'))}</div>` : ''}</div>`;
+  } else {
+    h += `<div class="brand">${MARK(46)}<b>Traverse</b></div><div class="sect">${esc(p.get('section'))}</div>`;
+    for (const [k, b] of Object.entries(BOX[L] || {})) { const src = p.get(k);
+      h += `<div class="scr ${k}" style="left:${b[0]}px;top:${b[1]}px;width:${b[2]}px;height:${b[3]}px">${src ? `<img src="${esc(src)}">` : ''}</div>`; }
+    if (L === 'phone') h += `<div class="side"><div class="eb">${esc(p.get('section'))}</div><h2>${esc(p.get('cap'))}</h2></div>`;
+    else h += `<div class="cap">${esc(p.get('cap'))}</div>`;
+  }
+  document.body.innerHTML = h;
+</script>
+</body></html>

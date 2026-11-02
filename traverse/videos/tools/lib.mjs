@@ -1,9 +1,20 @@
 // Shared bits for the app walkthrough videos: headless Chrome over CDP, the API as a person, and helpers.
-import { spawn } from 'node:child_process'; import { mkdtempSync } from 'node:fs'; import { tmpdir } from 'node:os'; import { join } from 'node:path';
+import { spawn, spawnSync } from 'node:child_process'; import { mkdtempSync, rmSync } from 'node:fs'; import { tmpdir } from 'node:os'; import { join } from 'node:path';
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/* every throwaway Chrome profile is deleted when the process ends (2026-10-25: 208 GB of cdp-* folders had piled up) */
+const cdpDirs = [], chromes = [];
+export const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
+/* the whole Chrome tree is ended first (its helper processes hold the profile open; a plain kill left the folder behind), then the folder goes */
+process.on('exit', () => {
+  for (const p of chromes) try { if (process.platform === 'win32') spawnSync('taskkill', ['/PID', String(p.pid), '/T', '/F'], { stdio: 'ignore' }); else p.kill('SIGKILL'); } catch {}
+  /* a Chrome helper can hold a file a few seconds after the tree is ended: try again for up to 15 s (a real wait, not a busy loop) */
+  const nap = new Int32Array(new SharedArrayBuffer(4));
+  for (const d of cdpDirs) for (let i = 0; i < 50; i++) { try { rmSync(d, { recursive: true, force: true }); break; } catch { Atomics.wait(nap, 0, 0, 300); } }
+});
+for (const s of ['SIGINT', 'SIGTERM']) process.on(s, () => process.exit(130));
 export function chrome(port) {
-  const p = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--mute-audio', `--remote-debugging-port=${port}`, `--user-data-dir=${mkdtempSync(join(tmpdir(), 'vid-'))}`, 'about:blank'], { stdio: 'ignore' });
-  return p;
+  const p = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--mute-audio', '--disable-breakpad', '--disable-crash-reporter', `--remote-debugging-port=${port}`, `--user-data-dir=${cdpDir()}`, 'about:blank'], { stdio: 'ignore' });
+  chromes.push(p); return p;
 }
 export async function attach(port, match) {
   for (let i = 0; i < 80; i++) { try { const l = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); const p = l.find(match); if (p) return p; } catch {} await sleep(250); }
