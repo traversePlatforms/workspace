@@ -40,6 +40,7 @@ export const SCRUB = [
   [/ ?· CSU Extension\b/g, ''], [/CSU Extension: /g, ''], [/Colorado State University Extension/g, 'lawn experts'],
   /* a source shown as its own little label (the quote builder's "from the house card" tiles) */
   [/^(\s*)county record(\s*)$/, '$1on record$2'], [/^(\s*)county parcel(\s*)$/, '$1lot line$2'], [/^(\s*)aerial photo(\s*)$/, '$1photo$2'],
+  [/,? ?USDA NAIP \d{4} \(public domain\)/g, ''], [/, \d{4} \(public domain\)/g, ''],
   /* single words and short asides */
   [/Lot size · county parcel/g, 'Lot size'], [/ · (?:county parcel|aerial photo|county record|laser scan)\b/g, ''],
   [/ ?\((?:county record|county|from the photo|photo\u2019s guess|NOAA reports|NOAA|radar estimate|NOAA radar estimate|spotter|Census[^)]*)\)/g, ''], [/\(county record, /g, '('],

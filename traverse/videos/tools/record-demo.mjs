@@ -3,16 +3,18 @@
 // phone (390x844); each scene is put in the 16:9 Traverse frame (frame-16x9.html): computer screen, phone inset, or a title card.
 // Homeowners' names, real streets and house numbers, and every data-source word are masked in the page first (mask-demo.mjs).
 //   node record-demo.mjs --dry [--only 7,8]    one composited 1920x1080 PNG per scene -> ../demo-editions/dry/scene-NN.png + README.md
-// Before a run: bash reset-demo.sh (fresh copies, people, the demo leads). Recording the video itself comes after Matthew approves the dry run.
+//   node record-demo.mjs --record               each scene's screens recorded (screencast) for as long as its voice line
+//                                               (voice-demo.mjs first) -> out/demo-editions/rec/; then build-demo.mjs makes the video
+// Before a run: bash demo-copies.sh reset (fresh copies, people, the demo leads): a run signs and books on the copies.
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs'; import { resolve, join } from 'node:path'; import { pathToFileURL } from 'node:url';
 import { chrome, attach, session, sleep } from './lib.mjs';
 import { DEMO_DIR, ADMIN, ED, origin, local } from './demo-config.mjs';
 import { buildMask, maskScript, leakExpr } from './mask-demo.mjs';
 import { SCENES, NOTES } from './story-demo-editions.mjs';
 
-const DRY = process.argv.includes('--dry');
+const DRY = process.argv.includes('--dry'), REC = process.argv.includes('--record');
 const oi = process.argv.indexOf('--only'); const ONLY = oi > 0 ? process.argv[oi + 1].split(',').map(Number) : null;
-if (!DRY) { console.log('Recording the demo-editions video comes after the dry run is approved: run with --dry.'); process.exit(1); }
+if (!DRY && !REC) { console.log('Run with --dry (a picture per scene) or --record (the video, after voice-demo.mjs).'); process.exit(1); }
 const OUT = resolve('out/demo-editions'), RAW = join(OUT, 'raw'), DRYDIR = resolve('../demo-editions/dry');
 mkdirSync(RAW, { recursive: true }); mkdirSync(DRYDIR, { recursive: true });
 const DEMO = JSON.parse(readFileSync(DEMO_DIR + '/demo.json', 'utf8'));
@@ -92,6 +94,11 @@ function makeScreen(P, ed, dev, who, W, H) {
   return s;
 }
 
+/* the frame's fonts asked for by name and loaded (a check on document.fonts alone could pass before they were even asked for) */
+async function waitFrame(C) {
+  await C.js(`(async () => { await Promise.all(['700 112px "Familjen Grotesk"', '700 30px "Atkinson Hyperlegible"', '400 40px "Atkinson Hyperlegible"', '500 24px "JetBrains Mono"'].map((x) => document.fonts.load(x))); await document.fonts.ready; return 1; })()`);
+  await C.until(`[...document.images].every((i) => i.complete)`, 20000); await sleep(400);
+}
 /* the composite: frame-16x9.html with the scene's screens in it, drawn by Chrome at 1920x1080 */
 const C = await newPage(1920, 1080, 1, false);
 async function compose(sc, files) {
@@ -99,13 +106,42 @@ async function compose(sc, files) {
   if (sc.layout === 'card') for (const k of ['eyebrow', 'title', 'sub', 'foot']) { if (sc[k]) q.set(k, sc[k]); }
   else { q.set('section', sc.section || ''); q.set('cap', sc.cap || ''); for (const [k, f] of Object.entries(files)) q.set(k, pathToFileURL(f).href); }
   await C.send('Page.navigate', { url: pathToFileURL(resolve('frame-16x9.html')).href + '?' + q.toString() });
-  await C.until(`document.fonts && document.fonts.status === 'loaded' && [...document.images].every((i) => i.complete)`, 20000); await sleep(400);
+  await waitFrame(C);
   const f = join(DRYDIR, `scene-${String(sc.n).padStart(2, '0')}.png`);
   writeFileSync(f, Buffer.from((await C.send('Page.captureScreenshot', { format: 'png' })).data, 'base64')); return f;
 }
 
+/* ---- recording: each screen's screencast for the scene's length (its voice line, plus a breath), while its show() moves ---- */
+const RECDIR = join(OUT, 'rec'); if (REC) mkdirSync(RECDIR, { recursive: true });
+const VOICE = existsSync(join(OUT, 'voice/voice.json')) ? JSON.parse(readFileSync(join(OUT, 'voice/voice.json'), 'utf8')) : {};
+if (REC && !Object.keys(VOICE).length) { console.log('No voice clips: run node voice-demo.mjs first.'); process.exit(1); }
+const sceneSecs = (sc) => Math.max(3.5, (VOICE[sc.n] ? VOICE[sc.n].secs : 0) + 2.2);   /* the voice starts 0.3 s in; a breath and a look after it */
+async function recordScene(sc, got) {
+  const dir = join(RECDIR, 'scene-' + String(sc.n).padStart(2, '0')); mkdirSync(dir, { recursive: true });
+  const secs = sceneSecs(sc), out = {};
+  const streams = Object.entries(got).map(([k, s]) => {
+    const d = join(dir, k); mkdirSync(d, { recursive: true }); const frames = []; let t0 = null, done = false;
+    const on = async (x) => { if (done || x.method !== 'Page.screencastFrame') return; s.P.send('Page.screencastFrameAck', { sessionId: x.params.sessionId }); if (t0 === null) return;
+      const ff = join(d, String(frames.length).padStart(5, '0') + '.jpg'); writeFileSync(ff, Buffer.from(x.params.data, 'base64')); frames.push({ f: ff, t: (Date.now() - t0) / 1000 }); };
+    s.P.on(on);
+    return { k, s, d, frames, start: async () => {
+      /* the first frame is the screen as it is (the screencast sends a frame only on a change) */
+      const first = join(d, '00000.jpg'); writeFileSync(first, Buffer.from((await s.P.send('Page.captureScreenshot', { format: 'jpeg', quality: 92 })).data, 'base64'));
+      t0 = Date.now(); frames.push({ f: first, t: 0 });
+      const W = s.dev === 'desk' ? 1440 : 780, H = s.dev === 'desk' ? 900 : 1688;
+      await s.P.send('Page.startScreencast', { format: 'jpeg', quality: 90, maxWidth: W, maxHeight: H, everyNthFrame: 1 });
+    }, stop: async () => { await s.P.send('Page.stopScreencast'); t0 = null; done = true; } };
+  });
+  for (const st of streams) await st.start();
+  const t = Date.now();
+  if (sc.show) { try { await sc.show(got, secs); } catch (e) { console.log('  (show: ' + e.message + ')'); } }
+  const left = secs * 1000 - (Date.now() - t); if (left > 0) await sleep(left);
+  for (const st of streams) { await st.stop(); out[st.k] = { dir: st.d, dev: st.s.dev, frames: st.frames.map((x) => ({ f: x.f, t: x.t })) }; }
+  return { secs, screens: out };
+}
+
 /* ---- run ---- */
-const RES = join(OUT, 'results.json'); const results = existsSync(RES) && ONLY ? JSON.parse(readFileSync(RES, 'utf8')) : {};
+const RES = join(OUT, REC ? 'rec-results.json' : 'results.json'); const results = existsSync(RES) && ONLY ? JSON.parse(readFileSync(RES, 'utf8')) : {};
 const ctx = { screen, sleep, DEMO, MASK, ED, origin, local, notes: [], signed: {}, state: {} };
 /* a scene that shows what a later one makes (the signed agreement in the opening) runs after it */
 const ORDER = SCENES.slice().sort((a, b) => (a.run_after ?? a.n) - (b.run_after ?? b.n) || a.n - b.n);
@@ -124,17 +160,24 @@ for (const sc of ORDER) {
         const leaks = await s.P.js(MASK[s.ed].leak); if (Array.isArray(leaks) && leaks.length) r.problems.push(`${k} screen: ${leaks.join('; ')} still on screen`);
         const f = join(RAW, `scene-${String(sc.n).padStart(2, '0')}-${k}.png`); writeFileSync(f, await s.shot()); files[k] = f;
       }
+      if (REC) {
+        r.rec = await recordScene(sc, got || {});
+        /* and again at the end: whatever the show() brought on screen is checked too */
+        for (const [k, s] of Object.entries(got || {})) { const leaks = await s.P.js(MASK[s.ed].leak); if (Array.isArray(leaks) && leaks.length) r.problems.push(`${k} screen at the end: ${leaks.join('; ')}`); }
+      }
     }
-    r.file = await compose(sc, files); console.log('ok' + (r.problems.length ? ' (' + r.problems.length + ' notes)' : ''));
+    if (DRY) r.file = await compose(sc, files);
+    console.log('ok' + (r.problems.length ? ' (' + r.problems.length + ' notes): ' + r.problems.join(' | ').slice(0, 300) : ''));
   } catch (e) {
     r.ok = false; r.problems.push('NOT SHOWN: ' + e.message); console.log('FAILED: ' + e.message);
     /* what the screen showed when it stopped goes to out/ (gitignored: it can be unmasked), and the frame says the beat is missing */
     for (const s of Object.values(SCR)) try { writeFileSync(join(RAW, `scene-${String(sc.n).padStart(2, '0')}-stopped-${s.ed}-${s.dev}.png`), await s.shot()); } catch {}
-    r.file = await compose({ n: sc.n, layout: 'card', eyebrow: 'Not shown in the dry run', title: sc.shows || sc.cap || 'Scene ' + sc.n, sub: 'See README.md: ' + e.message.slice(0, 140) }, {});
+    if (DRY) r.file = await compose({ n: sc.n, layout: 'card', eyebrow: 'Not shown in the dry run', title: sc.shows || sc.cap || 'Scene ' + sc.n, sub: 'See README.md: ' + e.message.slice(0, 140) }, {});
   }
   results[sc.n] = r;
 }
 writeFileSync(RES, JSON.stringify(results, null, 1));
+if (REC) { writeFileSync(join(RECDIR, 'timeline.json'), JSON.stringify({ story: 'demo-editions', scenes: Object.values(results).sort((a, b) => a.n - b.n) }, null, 1)); console.log('recorded', join(RECDIR, 'timeline.json')); process.exit(0); }
 
 /* the README for Matthew: every scene, its time in the script, what it shows, and any problem */
 const rows = Object.values(results).sort((a, b) => a.n - b.n);

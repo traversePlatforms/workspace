@@ -8,12 +8,13 @@ const ST = DEMO_DIR + '/demo.json';
 const st = existsSync(ST) ? JSON.parse(readFileSync(ST, 'utf8')) : {};
 const PEOPLE = [['Alex Rivera', 'crew'], ['Sam Ortiz', 'crew'], ['Riley Chen', 'tech']];
 const accept = async (call, who, j) => { const t = j?.terms; if (t && t.due) { const r = await call(who, 'termsaccept', {}, { terms: t.terms, agreement: t.agreement || '' }); if (!r.j?.ok) throw new Error('terms ' + who + ': ' + (r.j?.error || r.status)); } };
-let LAWNMASK = new Set();
+let LAWNMASK = new Map();   /* door id -> share of its lot drawn green (counted lawn) on the photo */
 const recent = (ym, months) => { if (!ym) return false; const [y, m] = ym.split('-').map(Number), n = new Date(); return (n.getFullYear() - y) * 12 + (n.getMonth() + 1 - m) <= months; };
 /* the house each edition's story opens: the most of what the script says the card shows */
 const PICK = {
   roofing: (d) => (d.hail || []).length >= 3 && (d.hail || []).some((h) => h[1] >= 1) && (d.wind || []).length && d.roof && !d.roof.flat && d.mat ? 10 + (d.permit && d.permit.r ? 5 : 0) + (d.mv && recent(d.mv.s, 18) ? 6 : 0) + (d.hail || []).length : 0,
-  yards: (d) => LAWNMASK.has(d.id) && d.lawn && d.lawn.sq >= 2500 && d.lawn.sq <= 9000 && d.trees && d.trees.z1 >= 0.15 ? 10 + Math.min(5, d.lawn.sq / 1500) + (d.trees.z1 >= 0.3 ? 2 : 0) : 0,
+  /* Lawn: a house whose lawn shows green on the photo (a good share counted), a real lawn size and trees by the house */
+  yards: (d) => (LAWNMASK.get(d.id) || 0) >= 0.25 && d.lawn && d.lawn.sq >= 2500 && d.lawn.sq <= 9000 && d.trees && d.trees.z1 >= 0.15 ? 10 + 20 * LAWNMASK.get(d.id) + Math.min(3, d.lawn.sq / 3000) : 0,
   solar: (d) => d.solar && d.solar.kw >= 7 && d.solar.sh === 'open' && !(d.permit && d.permit.s) ? 10 + Math.min(6, d.solar.kw / 2) : 0,
 };
 for (const ed of process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(ED)) {
@@ -32,7 +33,11 @@ for (const ed of process.argv.slice(2).length ? process.argv.slice(2) : Object.k
   const reg = (await call('admin', 'regions')).j.regions[0]; s.town = reg.key; s.townLabel = reg.label;
   /* Lawn: only a house with its lawn outline on the photo */
   const lmf = DEMO_DIR + '/' + ed + '/' + ED[ed].data + '/rounds/lawnmask-' + reg.key + '.json';
-  LAWNMASK = new Set(existsSync(lmf) ? Object.keys(JSON.parse(readFileSync(lmf, 'utf8')).doors || {}) : []);
+  LAWNMASK = new Map();
+  if (existsSync(lmf)) for (const [id, m] of Object.entries(JSON.parse(readFileSync(lmf, 'utf8')).doors || {})) {
+    let c1 = 0, c2 = 0; for (const run of String(m.r || '').split(',')) { const [v, n] = run.split(':').map(Number); if (v === 1) c1 += n; else if (v === 2) c2 += n; }
+    if (c1 + c2) LAWNMASK.set(id, c1 / (c1 + c2));
+  }
   let best = null;
   for (const a of reg.areas.slice().sort((x, y) => (y.sc || 0) - (x.sc || 0) || y.total - x.total).slice(0, 40)) {
     const ds = (await call('admin', 'area', { region: reg.key, area: a.name })).j?.doors || [];

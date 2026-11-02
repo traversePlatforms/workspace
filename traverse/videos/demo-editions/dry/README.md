@@ -18,13 +18,13 @@ real streets and house numbers swapped for made-up ones, 555 phone numbers). 192
 | [scene-11.png](scene-11.png) | 1:20 | Assigned: the street on the rep’s phone before they leave the lot *(computer + phone)* | none |
 | [scene-12.png](scene-12.png) | 1:27 | Live radar over the map *(computer)* | none |
 | [scene-13.png](scene-13.png) | 1:35 | Section card: Lawn & Landscape | none |
-| [scene-14.png](scene-14.png) | 1:37 | A house card: lawn size, the property line on the photo with the lawn shaded, how much is near the house, trees close to the house *(computer + phone)* | The photo shows the yellow property line, but no green lawn shading came up on the card or the opened photo for this house. If the shaded lawn matters, it needs a look (a layer switch, or a house whose lawn outline draws), or the line "with the lawn shaded in" is cut. |
+| [scene-14.png](scene-14.png) | 1:37 | A house card: lawn size, the property line on the photo with the lawn shaded, how much is near the house, trees close to the house *(computer + phone)* | none |
 | [scene-15.png](scene-15.png) | 1:52 | The town’s watering days on the card *(phone)* | none |
 | [scene-16.png](scene-16.png) | 1:56 | The quote builder filled in from the lawn’s own size, at the company’s own prices *(computer)* | Shows the made-up company’s starter prices in dollars (the customer’s pricing, not Traverse’s). Blur if wanted. |
 | [scene-17.png](scene-17.png) | 2:03 | The agreement on the homeowner’s phone, signed *(phone)* | none |
 | [scene-18.png](scene-18.png) | 2:07 | The deposit: what the homeowner’s page says, and the job booked on the office side *(computer + phone)* | Paying ON the homeowner’s phone needs the company’s own Square or Stripe connected; the demo copies have neither. Shown: the deposit taken at the door by card and recorded, the agreement saying it is paid, and the job booked. Script line to reword (see below). |
 | [scene-19.png](scene-19.png) | 2:12 | The job marked Done on the Jobs board *(computer)* | The pop-up "Aftercare email has gone out" is Sixfold 365’s only. On an edition the aftercare goes from the hourly job a set number of hours after Done, once a mailbox is connected; the demo copies have none. Shown: the job marked Done (its note says so). Script line to reword (see below). |
-| [scene-20.png](scene-20.png) | 2:20 | Setup, Customer emails: the aftercare and follow-up emails, with a preview *(computer)* | Shown off and not sending: the demo copies have no mailbox connected (the screen says so). The follow-up here is for quotes that go quiet, not a two-day note after the job. |
+| [scene-20.png](scene-20.png) | 2:20 | Setup, Customer emails: the aftercare email after a job, switched on *(computer)* | The demo copies have no mailbox connected, so nothing is really sent; the screen shows the aftercare email set up. |
 | [scene-21.png](scene-21.png) | 2:30 | Section card: Solar | none |
 | [scene-22.png](scene-22.png) | 2:32 | A house card: the system that fits, panels, a year’s output, shade from tall trees *(computer + phone)* | none |
 | [scene-23.png](scene-23.png) | 2:42 | Best doors first: houses that already have solar sit lower, and say so *(computer)* | none |
@@ -60,7 +60,7 @@ real streets and house numbers swapped for made-up ones, 555 phone numbers). 192
 | 17 | The homeowner signs on their phone. | and the homeowner signs on their phone |
 | 18 | The deposit is taken right there, and the job is booked. | and pays the deposit right there. |
 | 19 | After the job: aftercare tips, a follow-up, your plan offer. | After the job, Traverse sends the aftercare tips, the two-day follow-up with your review link, and your monthly plan offer, all on their own. |
-| 20 | All on their own. | — |
+| 20 | Aftercare tips and your review link go out on their own. | After the job, the aftercare tips and your review link go out on their own. |
 | 21 | Solar | — |
 | 22 | The system that fits, and a year’s output for that spot. | For solar teams, every roof shows its sun-facing area, the shade from tall trees, the system that fits it, and a year’s output for that exact spot. |
 | 23 | Houses that already have solar move down. | Houses that already have solar are moved down, so nobody wastes a knock. |
