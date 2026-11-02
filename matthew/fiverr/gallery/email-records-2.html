@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0}html,body{width:1280px;height:769px;overflow:hidden}
+body{background:#13202F;color:#fff;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif;position:relative}
+.glow{position:absolute;right:-160px;top:-200px;width:820px;height:820px;border-radius:50%;background:radial-gradient(circle,#1D2E42 0%,#13202F 70%)}
+.txt{position:absolute;left:60px;top:0;bottom:0;width:340px;display:flex;flex-direction:column;justify-content:center}
+.k{font:700 17px 'Segoe UI','Helvetica Neue',Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#F0A63A;margin-bottom:16px}
+h1{font:800 38px/1.12 'Segoe UI','Helvetica Neue',Arial,sans-serif}.cap{margin-top:16px;font:500 19px/1.45 'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#9FB0C2}
+.tag{display:inline-block;margin-top:22px;font:700 13px 'Segoe UI','Helvetica Neue',Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#13202F;background:#3BA99C;padding:6px 12px;border-radius:999px;align-self:flex-start}
+.art{position:absolute;left:440px;right:40px;top:40px;bottom:40px;display:flex;align-items:center;justify-content:center;gap:24px}
+.shot{background:#fff;border-radius:12px;box-shadow:0 22px 60px rgba(0,0,0,.4);overflow:hidden;display:block}
+.shot img{display:block;width:100%}
+.phone{border-radius:28px;border:8px solid #0B141F;box-shadow:0 22px 60px rgba(0,0,0,.45);overflow:hidden;background:#fff}
+.phone img{display:block;width:100%}
+.browser{border-radius:12px;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.4);background:#fff}
+.browser .bar{height:28px;background:#E6E1D6;display:flex;gap:7px;align-items:center;padding:0 12px}.browser .bar i{width:10px;height:10px;border-radius:50%;background:#C6BFB1}
+.browser .bar span{margin-left:10px;font:600 12px 'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#6B6457;background:#F4F1EA;border-radius:6px;padding:3px 10px}
+.browser img{display:block;width:100%}</style></head><body><div class="glow"></div>
+<div class="txt"><div class="k">Real report</div><h1>A live check on my own domain</h1><div class="cap">SPF, DKIM and DMARC records as published today, with what each one does. Every order ends with a report like this.</div><div class="tag">traverseplatforms.com</div></div>
+<div class="art"><div class="shot" style="width:640px;padding:26px 30px;color:#13202F">
+    <div style="font:700 13px 'Segoe UI','Helvetica Neue',Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7A8796">Domain check &middot; November 1, 2026</div>
+    <div style="font:800 26px 'Segoe UI','Helvetica Neue',Arial,sans-serif;margin:4px 0 12px">traverseplatforms.com</div>
+    <div style="padding:14px 0;border-top:1px solid #E6E1D6"><div style="display:flex;justify-content:space-between;align-items:center">
+  <b style="font:800 22px 'Segoe UI','Helvetica Neue',Arial,sans-serif">SPF</b><span style="font:800 15px 'Segoe UI','Helvetica Neue',Arial,sans-serif;padding:5px 12px;border-radius:999px;background:#E1F3EE;color:#1E7A6C">&#10003; Pass</span></div>
+  <div style="font:13px/1.4 Consolas,monospace;color:#46525F;margin-top:6px;word-break:break-all">v=spf1 +a +mx include:traverseplatforms.com.spf.auto.dnssmarthost.net include:_spf.google.com ~all</div><div style="font:500 13px 'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#7A8796;margin-top:4px">Lists the servers allowed to send as this domain</div></div>
+    <div style="padding:14px 0;border-top:1px solid #E6E1D6"><div style="display:flex;justify-content:space-between;align-items:center">
+  <b style="font:800 22px 'Segoe UI','Helvetica Neue',Arial,sans-serif">DKIM</b><span style="font:800 15px 'Segoe UI','Helvetica Neue',Arial,sans-serif;padding:5px 12px;border-radius:999px;background:#E1F3EE;color:#1E7A6C">&#10003; Pass</span></div>
+  <div style="font:13px/1.4 Consolas,monospace;color:#46525F;margin-top:6px;word-break:break-all">google._domainkey: v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAm61WAT2cl9OpAppfcxOw4MJIHuzJVhq/xAkm3B/SgZIXs/7YuOFiPAfjXo2fNH6WR9aQV…</div><div style="font:500 13px 'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#7A8796;margin-top:4px">Signs each email so it cannot be faked</div></div>
+    <div style="padding:14px 0;border-top:1px solid #E6E1D6"><div style="display:flex;justify-content:space-between;align-items:center">
+  <b style="font:800 22px 'Segoe UI','Helvetica Neue',Arial,sans-serif">DMARC</b><span style="font:800 15px 'Segoe UI','Helvetica Neue',Arial,sans-serif;padding:5px 12px;border-radius:999px;background:#E1F3EE;color:#1E7A6C">&#10003; Pass</span></div>
+  <div style="font:13px/1.4 Consolas,monospace;color:#46525F;margin-top:6px;word-break:break-all">v=DMARC1; p=none; aspf=r; adkim=r;</div><div style="font:500 13px 'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#7A8796;margin-top:4px">Tells inboxes what to do with mail that fails</div></div>
+  </div></div></body></html>
