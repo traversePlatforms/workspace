@@ -1806,6 +1806,16 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .fubook{margin-top:10px}.fuform,.fuconf{display:grid;gap:8px;margin-top:8px}.fudays{display:flex;flex-wrap:wrap;gap:8px}.fudays[hidden]{display:none}.fuform label[hidden]{display:none}.tosched{display:grid;gap:8px;margin:0 0 12px}.tosched[hidden]{display:none}.fubline{background:#fff4dc;color:#6b4a00}tr.sfub td{background:#fff8e6}   /* crew follow-ups (2026-10-28) */
   .afpanel{display:grid;gap:8px;margin:8px 0}.afpanel[hidden]{display:none}.aftext{width:100%;box-sizing:border-box;font:13px/1.45 inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:inherit}   /* aftercare by hand (2026-10-28) */
   .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}
+  .helpfab{position:fixed;right:18px;bottom:18px;z-index:900;width:56px;height:56px;border-radius:50%;border:0;background:var(--go);color:var(--on-go,#fff);box-shadow:0 6px 18px rgba(0,0,0,.25);display:grid;place-items:center;cursor:pointer}.helpfab .helpdot{position:absolute;top:6px;right:6px;width:13px;height:13px;border-radius:50%;background:#E4703A;border:2px solid #fff}.hchat-on .helpfab{display:none}
+  @media (max-width:760px){.helpfab{bottom:84px;right:14px;width:52px;height:52px}}
+  .hchat{position:fixed;right:18px;bottom:18px;z-index:950;width:380px;height:min(600px,calc(100vh - 36px));display:flex;flex-direction:column;background:var(--bg,#fff);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.28);overflow:hidden}
+  @media (max-width:760px){.hchat{inset:0;width:auto;height:auto;border-radius:0;border:0}}
+  .hchd{display:flex;align-items:center;gap:6px;padding:10px 10px 10px 14px;background:var(--go);color:var(--on-go,#fff)}.hcttl{flex:1;font:800 16px var(--sans)}.hcbtn{background:rgba(255,255,255,.16);color:inherit;border:0;border-radius:999px;padding:6px 10px;font:700 12.5px var(--sans);cursor:pointer}.hcx{width:32px;padding:6px 0}
+  .hcbody{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--card)}
+  .hcmsg{max-width:84%;border-radius:16px;padding:8px 12px}.hcmsg.me{align-self:flex-end;background:var(--go);color:var(--on-go,#fff);border-bottom-right-radius:5px}.hcmsg.them{align-self:flex-start;background:var(--bg,#fff);border:1px solid var(--line);border-bottom-left-radius:5px}.hcwho{font-size:11px;font-weight:800;opacity:.7;margin-bottom:2px}.hctxt{white-space:pre-wrap;font-size:14.5px;line-height:1.42}
+  .hcwork,.hcnote{align-self:center;font-size:12.5px;color:var(--soft);display:flex;align-items:center;gap:8px;padding:4px 10px}.hcnote{background:var(--bg,#fff);border:1px dashed var(--line);border-radius:999px}
+  .hcdots{width:28px;height:8px;background:radial-gradient(circle,var(--soft) 3px,transparent 3.5px) 0 50%/9.3px 8px repeat-x;animation:hcd 1s steps(3) infinite}@keyframes hcd{from{width:10px}to{width:28px}}
+  .hcbar{display:flex;gap:8px;align-items:flex-end;padding:10px;border-top:1px solid var(--line);background:var(--bg,#fff)}.hcbar textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:18px;padding:9px 13px;font:15px var(--sans);max-height:140px;background:var(--card);color:var(--ink)}.hcsend{width:42px;height:42px;border-radius:50%;border:0;background:var(--go);color:var(--on-go,#fff);display:grid;place-items:center;cursor:pointer;flex:none}.hcsend:disabled{opacity:.5}
   .hlp textarea,.hlpt textarea{width:100%;box-sizing:border-box;font:15px var(--sans)}.hlplist{display:grid;gap:10px;margin-top:12px}.hlpt{display:grid;gap:8px}.hlpopen{outline:2px solid var(--go)}.hlphd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.hlpst{font-weight:800;font-size:12.5px;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--ink)}.hlp-answered{background:#dff0d8;color:#21451f}.hlp-matthew{background:#fff1d6;color:#7a4b00}.hlp-working{background:#e3ecf8;color:#21406e}.hlpmsg{border-radius:12px;padding:8px 11px;max-width:92%}.hlpmsg.me{justify-self:end;background:var(--card);border:1px solid var(--line)}.hlpmsg.them{justify-self:start;background:#eef6ea;border:1px solid #cfe3c6;color:#1d2a1c}.hlpwho{font-size:11.5px;font-weight:700;opacity:.75;margin-bottom:2px}.hlptxt{white-space:pre-wrap;font-size:14.5px;line-height:1.4}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
   .keepbg{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,15,.5)}.keepbox{width:100%;max-width:420px;display:grid;gap:10px;padding:18px}.keepbox b{font:800 18px var(--sans)}.keeprow{display:grid;gap:8px}   /* Matthew's lead reached out to the office (2026-10-26) */
@@ -3717,7 +3727,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function alertOpen(x) {
     var u = String(x.u || ''), m;
     if ((m = /[?&]job=(j[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return jobView(m[1], alertsView, wdOn() ? '' : S.me);
-    if ((m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(u)) && CO.a365) return helpView(m[1]);   /* a Help reply (2026-11-01) */
+    if ((m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(u)) && CO.a365) return helpChat(m[1]);   /* a Help reply (2026-11-01): opens the chat */
     if ((m = /[?&]walk=(v[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return walkView(m[1], alertsView);
     if ((m = /[?&]lead=([wm]\d{14}[0-9a-f]{6})\b/.exec(u))) { if (qView()) return quickQuoteView(); if (asOffice() || S.role === 'admin') { S.pipeStage = null; S.pipeSel = 'lead:' + m[1]; S.pipeFocus = m[1]; return pipelineView(); } return teamLeadsView(); }
     if (/[?&]tosched=1/.test(u) && feat('walkdesk')) return qView() ? schedView() : jobsView();   /* To schedule (2026-10-28) */
@@ -7497,13 +7507,93 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(q('h2', 'tgrp', 'Preview')); holder.appendChild(pv); show(j.list[0], 'd1');
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
   }
+  /* Help as a chat (2026-11-01, Matthew: "can we make it into like a message chat bot?"): a round button on every screen for the office and
+     an admin; it opens a chat window (full screen on a phone) with the latest conversation: her messages on the right, Claude's on the
+     left, newest at the bottom, a "looking into it" line while the laptop session works. Enter sends, Shift+Enter is a new line. Each
+     conversation is still one Help ticket underneath; New chat starts another; Earlier lists them all (helpView). */
+  var HC = { el: null, id: null, tick: null, seenKey: 'helpSeen' };
+  function helpOk() { return !!(CO.a365 && (S.role === 'admin' || S.role === 'office') && feat('walkdesk')); }
+  function helpSeen(t) { try { var s = JSON.parse(localStorage.getItem(HC.seenKey) || '{}'); if (t) { s[t.id] = t.updated; localStorage.setItem(HC.seenKey, JSON.stringify(s)); } return s; } catch (e) { return {}; } }
+  function helpFab() {
+    if (!helpOk() || document.getElementById('helpfab')) return;
+    var b = q('button', 'helpfab'); b.id = 'helpfab'; b.type = 'button'; b.setAttribute('aria-label', 'Help: chat with Claude');
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-4.5 3.6A.6.6 0 0 1 3.5 21V18H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 6.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm5 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm5 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z"/></svg><span class="helpdot" hidden></span>';
+    b.addEventListener('click', function () { helpChat(); });
+    document.body.appendChild(b); helpDot();
+    setInterval(helpDot, 120000);
+  }
+  function helpDot() {
+    var b = document.getElementById('helpfab'); if (!b || HC.el) return;
+    api('helplist').then(function (j) { if (!j || !j.ok) return; var s = helpSeen(), unread = (j.tickets || []).some(function (t) { var last = t.msgs[t.msgs.length - 1]; return last && !last.mine && (s[t.id] || 0) < t.updated; }); var d = b.querySelector('.helpdot'); if (d) d.hidden = !unread; }).catch(function () {});
+  }
+  function helpChat(openId) {
+    if (!helpOk()) return;
+    if (HC.el) HC.el.remove();
+    var from = S.screen || '';
+    var w = q('div', 'hchat'); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', 'Help chat');
+    var hd = q('div', 'hchd');
+    hd.appendChild(q('div', 'hcttl', 'Help · Claude'));
+    var nw = q('button', 'hcbtn', 'New chat'), er = q('button', 'hcbtn', 'Earlier'), cx = q('button', 'hcbtn hcx', '✕'); [nw, er, cx].forEach(function (x) { x.type = 'button'; });
+    cx.setAttribute('aria-label', 'Close');
+    hd.appendChild(nw); hd.appendChild(er); hd.appendChild(cx); w.appendChild(hd);
+    var body = q('div', 'hcbody'); w.appendChild(body);
+    var bar = q('div', 'hcbar'), ta = q('textarea'), sb = q('button', 'hcsend'); ta.rows = 1; ta.maxLength = 2000; ta.placeholder = 'Message Claude…'; sb.type = 'button'; sb.setAttribute('aria-label', 'Send');
+    sb.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>';
+    bar.appendChild(ta); bar.appendChild(sb); w.appendChild(bar);
+    document.body.appendChild(w); document.body.classList.add('hchat-on');
+    var cur = null, fresh = false;   /* fresh: New chat pressed, nothing sent yet */
+    var close = function () { clearInterval(HC.tick); if (HC.el) HC.el.remove(); HC.el = null; document.body.classList.remove('hchat-on'); helpDot(); };
+    cx.addEventListener('click', close);
+    er.addEventListener('click', function () { close(); helpView(); });
+    nw.addEventListener('click', function () { fresh = true; cur = null; HC.id = null; openId = null; draw(null); ta.focus(); });
+    var bubble = function (cls, who, text) { var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(q('div', 'hctxt noi18n', text)); body.appendChild(b); };
+    var draw = function (t) {
+      body.textContent = '';
+      bubble('them', 'Claude', 'Hi! Tell me what’s going on, the way you’d text Matthew. Name the customer if it’s about one. I’ll look into it and fix what I can; anything about money, prices, what customers see, or deleting goes to Matthew first.');
+      if (t) {
+        t.msgs.forEach(function (m) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : 'Claude', m.text); });
+        if (t.status === 'new' || t.status === 'working') { var wk = q('div', 'hcwork'); wk.appendChild(q('span', 'hcdots')); wk.appendChild(q('span', null, t.status === 'new' ? 'Sent. Claude picks it up within a few minutes…' : 'Claude is looking into it…')); body.appendChild(wk); }
+        else if (t.status === 'matthew') body.appendChild(q('div', 'hcnote', 'Passed to Matthew. He’ll get back to you.'));
+        else if (t.status === 'closed') body.appendChild(q('div', 'hcnote', 'This chat is closed. Start a new one any time.'));
+        helpSeen(t);
+      }
+      body.scrollTop = body.scrollHeight;
+    };
+    var load = function () {
+      if (!HC.el) return;
+      api('helplist').then(function (j) {
+        if (!HC.el || !j || !j.ok) return;
+        var ts = j.tickets || [], pick = null;
+        if (HC.id) pick = ts.filter(function (t) { return t.id === HC.id; })[0] || null;
+        else if (fresh) pick = null;
+        else if (openId) pick = ts.filter(function (t) { return t.id === openId; })[0] || null;
+        else pick = ts.filter(function (t) { return t.status !== 'closed' && t.by === S.me; })[0] || null;
+        if (pick) { HC.id = pick.id; cur = pick; }
+        draw(cur);
+      }).catch(function () {});
+    };
+    var send = function () {
+      var v = ta.value.trim(); if (v.length < 3) return;
+      sb.disabled = true;
+      api('helpsend', { body: { text: v, id: HC.id || '', ctx: { screen: from } } }).then(function (j) {
+        sb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; }
+        ta.value = ''; ta.style.height = ''; fresh = false; HC.id = j.ticket.id; cur = j.ticket; draw(cur);
+      }).catch(function () { sb.disabled = false; toast('No signal', 'Not sent.', null); });
+    };
+    sb.addEventListener('click', send);
+    ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+    ta.addEventListener('input', function () { ta.style.height = ''; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px'; });
+    HC.id = openId || null; draw(null); load();
+    clearInterval(HC.tick); HC.tick = setInterval(load, 15000);
+    setTimeout(function () { try { ta.focus(); } catch (e) {} }, 50);
+  }
   /* Help (2026-11-01, Matthew: an assistant in the app Jen can message that "leads directly to you", on his plan): she writes the problem,
      Claude (a session on Matthew's laptop, picked up within a few minutes) looks into it, fixes what it safely can and replies here. */
   var HELP_ST = { new: ['Sent', 'Claude picks it up within a few minutes'], working: ['Claude is on it', 'Looking into it now'], answered: ['Answered', ''], matthew: ['Waiting on Matthew', 'Needs his OK'], closed: ['Closed', ''] };
   function helpReturn() {
     var m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(location.search); if (!m || !CO.a365) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
-    helpView(m[1]); return true;
+    chooseView(); helpChat(m[1]); return true;   /* the chat over the home screen */
   }
   function helpView(openId) {
     var from = S.screen && S.screen !== 'help' ? S.screen : (S.helpFrom || '');
@@ -23092,7 +23182,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
       (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,
-      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Help', function () { helpView(); }, false, null, ['help']] : null,   /* 2026-11-01: Jen writes a problem, Claude replies */   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
+      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Help', function () { helpChat(); }, false, null, ['help']] : null,   /* 2026-11-01: Jen writes a problem, Claude replies */   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
@@ -23862,7 +23952,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !helpReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); setTimeout(helpFab, 0); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !helpReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }
