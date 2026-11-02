@@ -4862,7 +4862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* next to Accounts (2026-10-30, Matthew: the rest of Setup is on it); the quote and agreement kit (2026-10-27) */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
-        CO.a365 && wdOn() ? tile('button', 'mail', 'Deposit reminders', 'Emails to customers whose deposit is unpaid: 2 days before and the day before. Who is due one, Don’t send, preview.', 'Admin only', depremView) : null,   /* 2026-11-01 */
+        CO.a365 && wdOn() ? tile('button', 'mail', 'Deposit reminders', 'Emails to customers whose deposit is unpaid: one, 24 hours before the job, when booked 5+ days ahead. Who is due one, Don’t send, preview.', 'Admin only', depremView) : null,   /* 2026-11-01 */
         CO.a365 && wdOn() ? tile('button', 'clip', 'Agreement terms', 'What the 365 form says under the price: each line yours to change. Signed forms keep theirs.', 'Admin only', a365TermsView) : null,   /* 2026-10-30 */
         CO.a365 && wdOn() ? tile('button', 'card', 'Other ways to pay', 'Venmo, Zelle with its QR code, Cash App and PayPal, beside Square. Off until you fill them in.', 'Admin only', a365WaysView) : null,   /* 2026-10-30 */
         feat('company') ? tile('button', 'flag', 'Company', 'Your company name, phone, email, website and color, as the app shows them.', 'Admin only', companyView) : null,   /* 2026-10-08 */
@@ -7456,14 +7456,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(!!j.on === o[0])); b.disabled = !j.admin;
         b.addEventListener('click', function () {
           if (!!j.on === o[0]) return;
-          if (o[0] && !window.confirm('Turn on deposit reminders? A customer whose form has an unpaid Square deposit gets an email 2 days before their day and the day before, from 10 am. Reminders whose time has already passed are not sent.')) return;
+          if (o[0] && !window.confirm('Turn on deposit reminders? A customer whose form went out 5 or more days before the job, with an unpaid Square deposit, gets one email 24 hours before their arrival time. Reminders whose time has already passed are not sent.')) return;
           api('depremset', { body: { on: o[0] } }).then(function (k) { if (!k.ok) { toast('Not saved', k.error || 'Try again.', null); return; } toast(o[0] ? 'Deposit reminders on' : 'Deposit reminders off', '', null); depremView(); }).catch(function () { toast('No signal', 'Not saved.', null); });
         });
         seg.appendChild(b);
       });
       row.appendChild(seg); holder.appendChild(row);
       holder.appendChild(q('div', 'sub2', j.on ? 'On since ' + new Date(j.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + (j.by ? ', by ' + j.by : '') + '.' : 'Off: nothing is sent.' + (j.admin ? '' : ' An admin turns it on.')));
-      holder.appendChild(q('div', 'sub2', 'Who gets one: a form sent with a Square deposit link that is still unpaid, not signed, not booked and not lost. Square is asked again just before each email, so anyone who just paid never gets one. When: 2 days before their day and the day before, from 10 am, from the 365 mailbox; replies go to the office. The button in it opens their form, where they pay.'));
+      holder.appendChild(q('div', 'sub2', 'Who gets one: a form sent with a Square deposit link at least 5 days before the job, still unpaid, not signed, not booked and not lost. Square is asked again just before the email, so anyone who just paid never gets it. When: once, 24 hours before their arrival time, from the 365 mailbox; replies go to the office. The button in it opens their form, where they pay.'));
       if (!j.mail) holder.appendChild(q('div', 'msg bad', 'The 365 mailbox is not set up on the server, so no email can go, even when this is on.'));
       holder.appendChild(q('h2', 'tgrp', 'Due a reminder'));
       if (!(j.list || []).length) { holder.appendChild(q('div', 'msg soft', 'Nobody right now: every form with a deposit link is paid, signed or booked.')); return; }
@@ -7489,7 +7489,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         ck.addEventListener('change', function () { ck.disabled = true; api('depremno', { body: { id: x.id, no: ck.checked } }).then(function (k) { ck.disabled = false; if (!k.ok) { ck.checked = !ck.checked; toast('Not saved', k.error || 'Try again.', null); return; } toast(ck.checked ? 'Won’t be sent' : 'Back on', x.name, null); }).catch(function () { ck.disabled = false; ck.checked = !ck.checked; toast('No signal', 'Not saved.', null); }); });
         c.appendChild(lab);
         var pr = q('div', 'lookrow');
-        [['d2', 'Preview: 2 days before'], ['d1', 'Preview: day before']].forEach(function (o) { var b = q('button', 'lnk', o[1]); b.type = 'button'; b.addEventListener('click', function () { show(x, o[0]); pv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); pr.appendChild(b); });
+        [['d1', 'Preview']].forEach(function (o) { var b = q('button', 'lnk', o[1]); b.type = 'button'; b.addEventListener('click', function () { show(x, o[0]); pv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); pr.appendChild(b); });
         c.appendChild(pr); holder.appendChild(c);
       });
       holder.appendChild(q('h2', 'tgrp', 'Preview')); holder.appendChild(pv); show(j.list[0], 'd1');

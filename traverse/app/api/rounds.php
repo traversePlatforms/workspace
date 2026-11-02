@@ -8005,8 +8005,9 @@ function followupSweep(?int $now = null): array {
  * Definitely 24 hours before the appointment, we could do another reminder a couple days out"; "It needs to be in an image form like we do
  * for the 2 day after follow up, aftercare, and news letter") ----
  * A customer whose form went out with a Square deposit link, still unpaid (Square is asked again just before each send), not signed, not
- * booked and not lost, gets up to two emails from the 365 mailbox: 2 days before the day on the form, and the day before, each from 10 am
- * (to 6 pm) that day. A reminder whose time had passed when the form went out is skipped. In it: the day and arrival time, the deposit, and
+ * booked and not lost, gets ONE email from the 365 mailbox, 24 hours before the arrival time on the form, and only when the form went out 5 or
+ * more days before the job (2026-11-01, Matthew: "send only 1 24 hours before their job ... only ... people who were booked out 5 days or more";
+ * it was two, 2 days before and the day before). In it: the day and arrival time, the deposit, and
  * a big button to their form (where they pay). OFF until an admin turns it on (deprem.json); Don't send per customer. Sent by the 5-minute
  * job (metapoll, depremSweep). Transactional (about a booking they asked for), so no newsletter unsubscribe line. */
 function depremFile(): string { return DATA_DIR . '/deprem.json'; }
@@ -8016,7 +8017,7 @@ function depremEdit(callable $fn): ?array {
     $raw = json_decode((string) @file_get_contents(depremFile()), true); $raw = is_array($raw) ? $raw : [];   /* the switch as saved, not as it reads now: a start time in the future must survive a save */
     $d = $fn(['on' => !empty($raw['on'])] + depremLoad()); $ok = writeJsonAtomic(depremFile(), $d); flock($lk, LOCK_UN); return $ok ? $d : null;
 }
-function depremKinds(): array { return ['d2' => 2, 'd1' => 1]; }   /* a function, not a const: this part of the file is not reached on every request */
+function depremKinds(): array { return ['d1' => 1]; }   /* one reminder since 2026-11-01 (was d2 + d1) */   /* a function, not a const: this part of the file is not reached on every request */
 /** a lead's reminders: null when it gets none (no Square deposit link, paid, signed, booked, lost, no day) */
 function depremPlan(array $l): ?array {
     $S = $l['sign'] ?? null; if (!is_array($S) || ($S['how'] ?? '') !== 'link' || (int) ($S['deposit'] ?? 0) < 1 || empty($S['key'])) return null;
@@ -8025,7 +8026,9 @@ function depremPlan(array $l): ?array {
     $o = $l['quote']['offer'] ?? null; if (!is_array($o) || !dateOk((string) ($o['date'] ?? ''))) return null;
     if (jobForLead((string) $l['id'])) return null;
     $tz = new DateTimeZone(appTz()); if ((string) $o['date'] < (new DateTime('today', $tz))->format('Y-m-d')) return null; $sent = (int) ($S['at'] ?? 0); $t = [];
-    foreach (depremKinds() as $k => $n) { $at = (new DateTime((string) $o['date'] . ' 10:00', $tz))->modify('-' . $n . ' days')->getTimestamp(); $t[$k] = ['at' => $at, 'skip' => $sent > $at]; }
+    $start = (new DateTime((string) $o['date'] . ' ' . slotSpan((string) ($o['slot'] ?? ''))[0], $tz))->getTimestamp();   /* the arrival time on the form */
+    if ($sent > 0 && $start - $sent < 5 * 86400) return null;   /* booked less than 5 days ahead: no reminder (Matthew, 1 Nov) */
+    $t['d1'] = ['at' => $start - 86400, 'skip' => $sent > $start - 86400];   /* 24 hours before it */
     return ['date' => (string) $o['date'], 'slot' => (string) ($o['slot'] ?? ''), 'deposit' => (int) $S['deposit'], 'times' => $t];
 }
 function depremArrive(string $slot): string { return ['s1' => '9:30 to 10:00 am', 's2' => '10:00 am to 12:00 pm', 's3' => '12:00 to 2:00 pm', 's4' => 'around 3:00 pm'][$slot] ?? a365Arrive($slot); }
@@ -8081,7 +8084,7 @@ function depremSweep(?int $now = null): array {
     $now = $now ?? time(); $out = ['ok' => true, 'sent' => 0, 'tried' => 0, 'skipped' => ''];
     if (!feature('walkdesk') || empty(company()['a365'])) return ['skipped' => 'not here'] + $out;
     $d = depremLoad(); if (!$d['on']) return ['skipped' => 'switched off'] + $out;
-    $h = (int) (new DateTime('@' . $now))->setTimezone(new DateTimeZone(appTz()))->format('G'); if ($h < 10 || $h >= 18) return ['skipped' => 'outside 10 am to 6 pm'] + $out;
+    $h = (int) (new DateTime('@' . $now))->setTimezone(new DateTimeZone(appTz()))->format('G'); if ($h < 8 || $h >= 18) return ['skipped' => 'outside 8 am to 6 pm'] + $out;   /* 8 am (was 10): a 9:30 job's reminder goes at 9:30 the day before */
     if (!a365MailCfg()) return ['skipped' => 'no 365 mailbox'] + $out;
     $lk = @fopen(depremFile() . '.sweep', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['skipped' => 'busy'] + $out;
     foreach (leadsAll() as $id => $l) {
@@ -8105,7 +8108,7 @@ function depremSweep(?int $now = null): array {
 function depremState(string $id, array $l, ?array $d = null): ?array {
     $p = depremPlan($l); if (!$p) return null; $d = $d ?? depremLoad(); $tz = new DateTimeZone(appTz()); $out = [];
     foreach ($p['times'] as $k => $tm) {
-        $w = $k === 'd1' ? 'Day before' : '2 days before'; $s = $d['sent'][$id][$k] ?? null; $when = (new DateTime('@' . $tm['at']))->setTimezone($tz)->format('D j M, g:i a');
+        $w = '24 hours before'; $s = $d['sent'][$id][$k] ?? null; $when = (new DateTime('@' . $tm['at']))->setTimezone($tz)->format('D j M, g:i a');
         $out[] = $s && !empty($s['ok']) ? $w . ': sent ' . (new DateTime('@' . (int) $s['at']))->setTimezone($tz)->format('D j M, g:i a')
                : ($tm['skip'] ? $w . ': skipped (the form went out after it)' : ($s ? $w . ': not sent (' . ($s['stage'] === 'noemail' ? 'no email' : $s['stage']) . ')' : $w . ': ' . $when));
     }
