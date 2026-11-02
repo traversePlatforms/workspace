@@ -7552,7 +7552,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var bubble = function (cls, who, text) { var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(q('div', 'hctxt noi18n', text)); body.appendChild(b); };
     var draw = function (t) {
       body.textContent = '';
-      bubble('them', HELP_NAME, 'Hi! Tell me what’s going on, and name the customer if it’s about one. I’ll look into it and get back to you here.');
+      /* the J.A.R.V.I.S. voice (Matthew, 1 Nov): a composed butler with a dry wit; by the time of day; nothing about customers (she may need anything) */
+      var hr = new Date().getHours(), tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+      bubble('them', HELP_NAME, tod + '. J.A.R.V.I.S. at your service. Tell me what’s gone sideways, and I’ll see to it. Nothing is too small, though I do have opinions about typos.');
       if (t) {
         t.msgs.forEach(function (m) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text); });
         if (t.status === 'new' || t.status === 'working') { var wk = q('div', 'hcwork'); wk.appendChild(q('span', 'hcdots')); wk.appendChild(q('span', null, t.status === 'new' ? 'Sent. ' + HELP_NAME + ' picks it up within a few minutes…' : HELP_NAME + ' is looking into it…')); body.appendChild(wk); }
