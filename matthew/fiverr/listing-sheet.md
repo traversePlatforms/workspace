@@ -95,7 +95,7 @@ Works with Google Workspace, Microsoft 365, Zoho, Mailchimp, Square and most CRM
 |---|---|---|---|
 | Name | One email | Set of 3 | Set of 5, loaded in |
 | Description | One branded email with your logo, colours and socials, plus a plain-text version. (81/100) | Three branded emails in one look, each with a plain-text version and loading steps. (83/100) | Five branded emails with plain-text versions, loaded into your Mailchimp or similar. (84/100) |
-| Delivery | 3 days | 4 days | 5 days |
+| Delivery | 1 day | 2 days | 3 days |
 | Revisions | 1 | 2 | 3 |
 | Price | $50 | $120 | $200 |
 
@@ -157,7 +157,7 @@ You send them yourself; I never need your customer list.
 |---|---|---|---|
 | Name | One page | Up to 5 pages | Up to 7 pages, Google ready |
 | Description | A one-page site built for phones, with a contact form and basic Google setup. (77/100) | Up to 5 pages, wording written, a contact or quote form, put live on your hosting. (82/100) | Up to 7 pages and forms, linked to your Google Business Profile, plus a review QR code. (87/100) |
-| Delivery | 4 days | 6 days | 8 days |
+| Delivery | 2 days | 4 days | 5 days |
 | Revisions | 2 | 2 | 3 |
 | Price | $150 | $350 | $600 |
 
@@ -223,7 +223,7 @@ Best for trades, home services, local shops and nonprofits. Not for online store
 |---|---|---|---|
 | Name | One side | Two sides or two designs | Print set |
 | Description | A one-sided flyer or ad as a print-ready PDF and PNG, with the QR code tested. (78/100) | A two-sided piece, or two designs to choose from, as print-ready PDF and PNG. (77/100) | Flyer, door hanger and business card in one matching look, all print-ready. (75/100) |
-| Delivery | 2 days | 3 days | 5 days |
+| Delivery | 1 day | 2 days | 3 days |
 | Revisions | 2 | 2 | 3 |
 | Price | $35 | $60 | $100 |
 
@@ -282,8 +282,8 @@ Tell me where it's being printed and I'll match their size and file rules. I wor
 | | Basic | Standard | Premium |
 |---|---|---|---|
 | Name | Staff assistant | Website chat | Both, tuned |
-| Description | A Claude Project or custom GPT on your account, set up with your documents and rules. (85/100) | A chat on your website that answers from your information and emails you what it can't. (87/100) | Website chat plus a staff assistant, with two weeks of tuning from real questions. (82/100) |
-| Delivery | 3 days | 6 days | 8 days |
+| Description | A Claude Project or custom GPT on your account, set up with your documents and rules. (85/100) | A chat on your website that answers from your information and emails you what it can't. (87/100) | Website chat plus a staff assistant, with two weeks of tuning after delivery. (77/100) |
+| Delivery | 2 days | 4 days | 6 days |
 | Revisions | 2 | 3 | 3 |
 | Price | $100 | $300 | $500 |
 
@@ -346,7 +346,7 @@ I write the instructions, organise your documents, test it with real questions a
 |---|---|---|---|
 | Name | 100 companies | 300 companies | 750 companies |
 | Description | 100 companies: name, website, phone and business email, with email domains checked. (83/100) | 300 companies with city and year formed added, and email domains checked. (73/100) | 750 companies plus notes from their own websites, with email domains checked. (77/100) |
-| Delivery | 3 days | 4 days | 6 days |
+| Delivery | 1 day | 2 days | 3 days |
 | Revisions | 1 | 1 | 1 |
 | Price | $30 | $75 | $150 |
 
@@ -409,7 +409,7 @@ Company information only, no personal data. Message me your target first so I ca
 |---|---|---|---|
 | Name | Up to 3 pages | Up to 10 pages | Manual or packet |
 | Description | Up to 3 pages in your brand, as a PDF and an editable Word copy. (64/100) | Up to 10 pages, or one fillable form, with the wording tidied. PDF and Word. (76/100) | A manual or packet up to 25 pages with a contents page. PDF and Word or Google Docs. (84/100) |
-| Delivery | 2 days | 4 days | 6 days |
+| Delivery | 1 day | 2 days | 4 days |
 | Revisions | 1 | 2 | 3 |
 | Price | $30 | $75 | $150 |
 

@@ -86,9 +86,9 @@ export const gigs = [
       "You send them yourself; I never need your customer list.",
     ],
     packages: [
-      { name: 'One email', desc: 'One branded email with your logo, colours and socials, plus a plain-text version.', price: 50, days: 3, revisions: 1, items: ['1 designed email', 'Plain-text version', 'Wording written or tidied', 'Loading steps'] },
-      { name: 'Set of 3', desc: 'Three branded emails in one look, each with a plain-text version and loading steps.', price: 120, days: 4, revisions: 2, items: ['3 designed emails, one look', 'Plain-text versions', 'Wording written or tidied', 'Loading steps'] },
-      { name: 'Set of 5, loaded in', desc: 'Five branded emails with plain-text versions, loaded into your Mailchimp or similar.', price: 200, days: 5, revisions: 3, items: ['5 designed emails, one look', 'Plain-text versions', 'Loaded into your Mailchimp or similar (added user)', 'Test send to you'] },
+      { name: 'One email', desc: 'One branded email with your logo, colours and socials, plus a plain-text version.', price: 50, days: 1, revisions: 1, items: ['1 designed email', 'Plain-text version', 'Wording written or tidied', 'Loading steps'] },
+      { name: 'Set of 3', desc: 'Three branded emails in one look, each with a plain-text version and loading steps.', price: 120, days: 2, revisions: 2, items: ['3 designed emails, one look', 'Plain-text versions', 'Wording written or tidied', 'Loading steps'] },
+      { name: 'Set of 5, loaded in', desc: 'Five branded emails with plain-text versions, loaded into your Mailchimp or similar.', price: 200, days: 3, revisions: 3, items: ['5 designed emails, one look', 'Plain-text versions', 'Loaded into your Mailchimp or similar (added user)', 'Test send to you'] },
     ],
     extras: [FAST, REV],
     requirements: [
@@ -133,9 +133,9 @@ export const gigs = [
       "Best for trades, home services, local shops and nonprofits. Not for online stores or booking systems.",
     ],
     packages: [
-      { name: 'One page', desc: 'A one-page site built for phones, with a contact form and basic Google setup.', price: 150, days: 4, revisions: 2, items: ['1 page', 'Contact form', 'Phone-first design', 'Basic Google setup'] },
-      { name: 'Up to 5 pages', desc: 'Up to 5 pages, wording written, a contact or quote form, put live on your hosting.', price: 350, days: 6, revisions: 2, items: ['Up to 5 pages', 'Contact or quote form', 'Wording written', 'Put live on your hosting'] },
-      { name: 'Up to 7 pages, Google ready', desc: 'Up to 7 pages and forms, linked to your Google Business Profile, plus a review QR code.', price: 600, days: 8, revisions: 3, items: ['Up to 7 pages', 'Forms', 'Linked to your Google Business Profile', 'Review link and QR code', 'Put live on your hosting'] },
+      { name: 'One page', desc: 'A one-page site built for phones, with a contact form and basic Google setup.', price: 150, days: 2, revisions: 2, items: ['1 page', 'Contact form', 'Phone-first design', 'Basic Google setup'] },
+      { name: 'Up to 5 pages', desc: 'Up to 5 pages, wording written, a contact or quote form, put live on your hosting.', price: 350, days: 4, revisions: 2, items: ['Up to 5 pages', 'Contact or quote form', 'Wording written', 'Put live on your hosting'] },
+      { name: 'Up to 7 pages, Google ready', desc: 'Up to 7 pages and forms, linked to your Google Business Profile, plus a review QR code.', price: 600, days: 5, revisions: 3, items: ['Up to 7 pages', 'Forms', 'Linked to your Google Business Profile', 'Review link and QR code', 'Put live on your hosting'] },
     ],
     extras: [FAST, { name: 'Extra page', price: 40, note: 'one more page in the same design' }],
     requirements: [
@@ -178,9 +178,9 @@ export const gigs = [
       "Tell me where it's being printed and I'll match their size and file rules. I work with your logo and photos, or a clean graphic layout if you have none.",
     ],
     packages: [
-      { name: 'One side', desc: 'A one-sided flyer or ad as a print-ready PDF and PNG, with the QR code tested.', price: 35, days: 2, revisions: 2, items: ['1 design, one side', 'Print-ready PDF and PNG', 'QR code tested'] },
-      { name: 'Two sides or two designs', desc: 'A two-sided piece, or two designs to choose from, as print-ready PDF and PNG.', price: 60, days: 3, revisions: 2, items: ['Two-sided piece, or 2 designs to choose from', 'Print-ready PDF and PNG', 'QR code tested'] },
-      { name: 'Print set', desc: 'Flyer, door hanger and business card in one matching look, all print-ready.', price: 100, days: 5, revisions: 3, items: ['Flyer, door hanger and business card', 'One matching look', 'Print-ready PDFs and PNGs', 'QR codes tested'] },
+      { name: 'One side', desc: 'A one-sided flyer or ad as a print-ready PDF and PNG, with the QR code tested.', price: 35, days: 1, revisions: 2, items: ['1 design, one side', 'Print-ready PDF and PNG', 'QR code tested'] },
+      { name: 'Two sides or two designs', desc: 'A two-sided piece, or two designs to choose from, as print-ready PDF and PNG.', price: 60, days: 2, revisions: 2, items: ['Two-sided piece, or 2 designs to choose from', 'Print-ready PDF and PNG', 'QR code tested'] },
+      { name: 'Print set', desc: 'Flyer, door hanger and business card in one matching look, all print-ready.', price: 100, days: 3, revisions: 3, items: ['Flyer, door hanger and business card', 'One matching look', 'Print-ready PDFs and PNGs', 'QR codes tested'] },
     ],
     extras: [FAST, REV, { name: 'Editable source file', price: 15, note: 'the working file as well as the PDF' }],
     requirements: [
@@ -221,9 +221,9 @@ export const gigs = [
       "I write the instructions, organise your documents, test it with real questions and show you how to update it. It answers; it never sends, charges or changes anything on its own.",
     ],
     packages: [
-      { name: 'Staff assistant', desc: 'A Claude Project or custom GPT on your account, set up with your documents and rules.', price: 100, days: 3, revisions: 2, items: ['Claude Project or custom GPT on your account', 'Instructions written', 'Up to 10 of your documents organised', 'Tested with your questions'] },
-      { name: 'Website chat', desc: "A chat on your website that answers from your information and emails you what it can't.", price: 300, days: 6, revisions: 3, items: ['Chat on your website', 'Answers from your information', "Hand-off to your email when it can't answer", 'Installed and tested'] },
-      { name: 'Both, tuned', desc: 'Website chat plus a staff assistant, with two weeks of tuning from real questions.', price: 500, days: 8, revisions: 3, items: ['Website chat', 'Staff assistant', 'Two weeks of tuning from real questions'] },
+      { name: 'Staff assistant', desc: 'A Claude Project or custom GPT on your account, set up with your documents and rules.', price: 100, days: 2, revisions: 2, items: ['Claude Project or custom GPT on your account', 'Instructions written', 'Up to 10 of your documents organised', 'Tested with your questions'] },
+      { name: 'Website chat', desc: "A chat on your website that answers from your information and emails you what it can't.", price: 300, days: 4, revisions: 3, items: ['Chat on your website', 'Answers from your information', "Hand-off to your email when it can't answer", 'Installed and tested'] },
+      { name: 'Both, tuned', desc: 'Website chat plus a staff assistant, with two weeks of tuning after delivery.', price: 500, days: 6, revisions: 3, items: ['Website chat', 'Staff assistant', 'Two weeks of tuning after delivery'] },
     ],
     extras: [FAST, { name: 'Monthly upkeep', price: 50, note: 'monthly, as a custom offer: update its information and fix wrong answers' }],
     requirements: [
@@ -268,9 +268,9 @@ export const gigs = [
       "Company information only, no personal data. Message me your target first so I can check how many businesses are there.",
     ],
     packages: [
-      { name: '100 companies', desc: '100 companies: name, website, phone and business email, with email domains checked.', price: 30, days: 3, revisions: 1, items: ['100 companies', 'Name, website, phone, business email', 'Email domains checked', 'Spreadsheet'] },
-      { name: '300 companies', desc: '300 companies with city and year formed added, and email domains checked.', price: 75, days: 4, revisions: 1, items: ['300 companies', 'Plus city and year formed', 'Email domains checked', 'Spreadsheet'] },
-      { name: '750 companies', desc: '750 companies plus notes from their own websites, with email domains checked.', price: 150, days: 6, revisions: 1, items: ['750 companies', 'Plus notes from their own sites', 'Email domains checked', 'Spreadsheet'] },
+      { name: '100 companies', desc: '100 companies: name, website, phone and business email, with email domains checked.', price: 30, days: 1, revisions: 1, items: ['100 companies', 'Name, website, phone, business email', 'Email domains checked', 'Spreadsheet'] },
+      { name: '300 companies', desc: '300 companies with city and year formed added, and email domains checked.', price: 75, days: 2, revisions: 1, items: ['300 companies', 'Plus city and year formed', 'Email domains checked', 'Spreadsheet'] },
+      { name: '750 companies', desc: '750 companies plus notes from their own websites, with email domains checked.', price: 150, days: 3, revisions: 1, items: ['750 companies', 'Plus notes from their own sites', 'Email domains checked', 'Spreadsheet'] },
     ],
     extras: [FAST, { name: 'Extra 100 companies', price: 25, note: 'same target, same columns' }],
     requirements: [
@@ -313,9 +313,9 @@ export const gigs = [
       "Contracts: formatting only, not legal advice.",
     ],
     packages: [
-      { name: 'Up to 3 pages', desc: 'Up to 3 pages in your brand, as a PDF and an editable Word copy.', price: 30, days: 2, revisions: 1, items: ['Up to 3 pages', 'In your brand', 'PDF and Word copy'] },
-      { name: 'Up to 10 pages', desc: 'Up to 10 pages, or one fillable form, with the wording tidied. PDF and Word.', price: 75, days: 4, revisions: 2, items: ['Up to 10 pages, or one fillable form', 'Wording tidied', 'PDF and Word copy'] },
-      { name: 'Manual or packet', desc: 'A manual or packet up to 25 pages with a contents page. PDF and Word or Google Docs.', price: 150, days: 6, revisions: 3, items: ['Up to 25 pages', 'Table of contents', 'Wording tidied', 'PDF and Word or Google Docs copy'] },
+      { name: 'Up to 3 pages', desc: 'Up to 3 pages in your brand, as a PDF and an editable Word copy.', price: 30, days: 1, revisions: 1, items: ['Up to 3 pages', 'In your brand', 'PDF and Word copy'] },
+      { name: 'Up to 10 pages', desc: 'Up to 10 pages, or one fillable form, with the wording tidied. PDF and Word.', price: 75, days: 2, revisions: 2, items: ['Up to 10 pages, or one fillable form', 'Wording tidied', 'PDF and Word copy'] },
+      { name: 'Manual or packet', desc: 'A manual or packet up to 25 pages with a contents page. PDF and Word or Google Docs.', price: 150, days: 4, revisions: 3, items: ['Up to 25 pages', 'Table of contents', 'Wording tidied', 'PDF and Word or Google Docs copy'] },
     ],
     extras: [FAST, REV, { name: 'Extra 5 pages', price: 25, note: 'same document, same look' }],
     requirements: [
