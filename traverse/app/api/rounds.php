@@ -8556,6 +8556,53 @@ if (in_array($action, ['deprem', 'depremset', 'depremno', 'deprempreview', 'depr
     $r = a365Mail($myMail, '[Test] ' . $subject, "TEST: this is what " . trim((string) ($l['name'] ?? 'the customer')) . " would get.\n\n" . $text, $html);   /* nothing recorded */
     out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
 }
+/* ---- Help (2026-11-01, Matthew: "build an ai assistant in the app where jen can message it and it leads directly to you ... and you can fix
+ * it the same way we do here"; "plan only no card"). The office (and an admin) writes a problem; it is a ticket in help.log. A watcher on
+ * Matthew's laptop (traverse/ops/help-watch.sh, every 2 minutes) takes the next new ticket (sixfold-tools/help-next.php), starts a Claude
+ * Code session on his plan to look into it and fix what it safely can, and that session replies here (sixfold-tools/help-reply.php), which
+ * pings the writer's phone. Prices, money, anything a customer sees or receives, and deleting go to Matthew ("waiting on Matthew").
+ * help.log rows: {t:msg, id, from, text, ctx, at} | {t:reply, id, from, text, status, at} | {t:status, id, status, at}
+ * status: new (waiting for the watcher) · working · answered · matthew (waiting on Matthew) · closed */
+function helpFile(): string { return DATA_DIR . '/help.log'; }
+function helpAll(): array {
+    $T = [];
+    foreach (readLines(helpFile()) as $r) {
+        $id = (string) ($r['id'] ?? ''); if ($id === '') continue;
+        if (!isset($T[$id])) $T[$id] = ['id' => $id, 'by' => (string) ($r['from'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'status' => 'new', 'msgs' => [], 'ctx' => $r['ctx'] ?? null];
+        $t = &$T[$id];
+        if (($r['t'] ?? '') === 'msg') { $t['msgs'][] = ['from' => (string) $r['from'], 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => true]; $t['status'] = 'new'; }
+        elseif (($r['t'] ?? '') === 'reply') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? 'Claude'), 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => false]; $t['status'] = (string) ($r['status'] ?? 'answered'); }
+        elseif (($r['t'] ?? '') === 'status') $t['status'] = (string) ($r['status'] ?? $t['status']);
+        $t['updated'] = (int) ($r['at'] ?? 0); unset($t);
+    }
+    return $T;
+}
+if (in_array($action, ['helplist', 'helpsend', 'helpclose'], true)) {
+    if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
+    if (!desk()) fail('Not allowed.', 403);
+    $T = helpAll(); $mine = fn($t) => $role === 'admin' || $t['by'] === $me;
+    if ($action === 'helpsend') {
+        if (!$isPost) fail('POST required', 405);
+        $text = trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", (string) ($body['text'] ?? ''))));
+        if (mb_strlen($text) < 3) fail('Write what is going on.'); $text = mb_substr($text, 0, 2000);
+        if (!throttleTake(rateFile('help|' . $me), 30, 3600)) fail('That is a lot of messages in an hour. Give it a few minutes.', 429);
+        $id = (string) ($body['id'] ?? '');
+        if ($id !== '') { if (!isset($T[$id]) || !$mine($T[$id])) fail('No such conversation.', 404); }
+        else $id = 'h' . (new DateTime('now', new DateTimeZone(appTz())))->format('YmdHis') . bin2hex(random_bytes(2));
+        $c = is_array($body['ctx'] ?? null) ? $body['ctx'] : []; $ctx = [];
+        foreach (['screen' => 40, 'lead' => 40, 'job' => 40, 'name' => 80] as $k => $max) if (isset($c[$k]) && is_string($c[$k]) && $c[$k] !== '') $ctx[$k] = mb_substr($c[$k], 0, $max);
+        if (!appendLine(helpFile(), ['t' => 'msg', 'id' => $id, 'from' => $me, 'text' => $text, 'ctx' => $ctx ?: null, 'at' => time()])) fail('Could not save that. Try again.', 500);
+        out(['ok' => true, 'ticket' => helpAll()[$id]]);
+    }
+    if ($action === 'helpclose') {
+        if (!$isPost) fail('POST required', 405);
+        $id = (string) ($body['id'] ?? ''); if (!isset($T[$id]) || !$mine($T[$id])) fail('No such conversation.', 404);
+        appendLine(helpFile(), ['t' => 'status', 'id' => $id, 'status' => 'closed', 'by' => $me, 'at' => time()]);
+        out(['ok' => true]);
+    }
+    $list = array_values(array_filter($T, $mine)); usort($list, fn($a, $b) => $b['updated'] <=> $a['updated']);
+    out(['ok' => true, 'admin' => $role === 'admin', 'tickets' => array_slice($list, 0, 40)]);
+}
 /* notes on a job (2026-10-26, Matthew: "i need brad to be able to add notes to his jobs ... theres someone that wants extra work done ... he needs
    to be able to put that info in his job and it needs to alert me"): the crew on the job (or the office) adds a note; each is kept with who
    and when, and Matthew's phones get it at once (the office's too, unless it is one of Matthew's own leads). */

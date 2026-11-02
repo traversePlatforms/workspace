@@ -1805,7 +1805,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hoursform .hrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 0;border-bottom:1px solid var(--line)}.hoursform .hrow>b{min-width:7em}.hoursform .hoff{display:flex;align-items:center;gap:4px}.hoursform .htimes{display:flex;align-items:center;gap:6px}.hoursform .htimes[hidden]{display:none}   /* work hours (2026-10-27) */
   .fubook{margin-top:10px}.fuform,.fuconf{display:grid;gap:8px;margin-top:8px}.fudays{display:flex;flex-wrap:wrap;gap:8px}.fudays[hidden]{display:none}.fuform label[hidden]{display:none}.tosched{display:grid;gap:8px;margin:0 0 12px}.tosched[hidden]{display:none}.fubline{background:#fff4dc;color:#6b4a00}tr.sfub td{background:#fff8e6}   /* crew follow-ups (2026-10-28) */
   .afpanel{display:grid;gap:8px;margin:8px 0}.afpanel[hidden]{display:none}.aftext{width:100%;box-sizing:border-box;font:13px/1.45 inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);color:inherit}   /* aftercare by hand (2026-10-28) */
-  .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
+  .jwork,.jfollow{display:grid;gap:8px;margin-top:12px}
+  .hlp textarea,.hlpt textarea{width:100%;box-sizing:border-box;font:15px var(--sans)}.hlplist{display:grid;gap:10px;margin-top:12px}.hlpt{display:grid;gap:8px}.hlpopen{outline:2px solid var(--go)}.hlphd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.hlpst{font-weight:800;font-size:12.5px;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--ink)}.hlp-answered{background:#dff0d8;color:#21451f}.hlp-matthew{background:#fff1d6;color:#7a4b00}.hlp-working{background:#e3ecf8;color:#21406e}.hlpmsg{border-radius:12px;padding:8px 11px;max-width:92%}.hlpmsg.me{justify-self:end;background:var(--card);border:1px solid var(--line)}.hlpmsg.them{justify-self:start;background:#eef6ea;border:1px solid #cfe3c6;color:#1d2a1c}.hlpwho{font-size:11.5px;font-weight:700;opacity:.75;margin-bottom:2px}.hlptxt{white-space:pre-wrap;font-size:14.5px;line-height:1.4}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
   .keepbg{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,15,.5)}.keepbox{width:100%;max-width:420px;display:grid;gap:10px;padding:18px}.keepbox b{font:800 18px var(--sans)}.keeprow{display:grid;gap:8px}   /* Matthew's lead reached out to the office (2026-10-26) */
   .billwas{color:var(--soft);font-weight:700;font-size:.62em;text-decoration:line-through}   /* the list price, struck, beside the founding price (2026-10-26) */
@@ -3716,6 +3717,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function alertOpen(x) {
     var u = String(x.u || ''), m;
     if ((m = /[?&]job=(j[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return jobView(m[1], alertsView, wdOn() ? '' : S.me);
+    if ((m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(u)) && CO.a365) return helpView(m[1]);   /* a Help reply (2026-11-01) */
     if ((m = /[?&]walk=(v[0-9a-f]{12})\b/.exec(u)) && feat('walkdesk')) return walkView(m[1], alertsView);
     if ((m = /[?&]lead=([wm]\d{14}[0-9a-f]{6})\b/.exec(u))) { if (qView()) return quickQuoteView(); if (asOffice() || S.role === 'admin') { S.pipeStage = null; S.pipeSel = 'lead:' + m[1]; S.pipeFocus = m[1]; return pipelineView(); } return teamLeadsView(); }
     if (/[?&]tosched=1/.test(u) && feat('walkdesk')) return qView() ? schedView() : jobsView();   /* To schedule (2026-10-28) */
@@ -7494,6 +7496,54 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       holder.appendChild(q('h2', 'tgrp', 'Preview')); holder.appendChild(pv); show(j.list[0], 'd1');
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
+  }
+  /* Help (2026-11-01, Matthew: an assistant in the app Jen can message that "leads directly to you", on his plan): she writes the problem,
+     Claude (a session on Matthew's laptop, picked up within a few minutes) looks into it, fixes what it safely can and replies here. */
+  var HELP_ST = { new: ['Sent', 'Claude picks it up within a few minutes'], working: ['Claude is on it', 'Looking into it now'], answered: ['Answered', ''], matthew: ['Waiting on Matthew', 'Needs his OK'], closed: ['Closed', ''] };
+  function helpReturn() {
+    var m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(location.search); if (!m || !CO.a365) return false;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    helpView(m[1]); return true;
+  }
+  function helpView(openId) {
+    var from = S.screen && S.screen !== 'help' ? S.screen : (S.helpFrom || '');
+    hideToast(); S.signin = null; S.helpFrom = from; S.screen = 'help'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Help', sub: 'Write the problem; Claude replies here', back: chooseView, backLabel: 'Home' });
+    view.textContent = '';
+    var box = q('div', 'card jnform hlp'); view.appendChild(box);
+    box.appendChild(q('h2', 'tgrp', 'What’s going on?'));
+    var ta = q('textarea'); ta.rows = 4; ta.maxLength = 2000; ta.placeholder = 'Say it the way you would text Matthew, e.g. “Joseph Barnes’s job shows the wrong price” or “the deposit link won’t open”. Name the customer if it’s about one.';
+    box.appendChild(ta);
+    var send = q('button', 'save', 'Send to Claude'); send.type = 'button'; box.appendChild(send);
+    box.appendChild(q('div', 'sub2', 'Claude reads it within a few minutes while Matthew’s laptop is on, fixes what it safely can, and replies here; your phone gets a ping. Prices, money, anything a customer sees, and deleting go to Matthew first.'));
+    var list = q('div', 'hlplist'); view.appendChild(list);
+    var draw = function (tickets) {
+      list.textContent = '';
+      if (!tickets.length) { list.appendChild(q('div', 'msg soft', 'Nothing sent yet.')); return; }
+      tickets.forEach(function (t) {
+        var c = q('div', 'card hlpt' + (t.id === openId ? ' hlpopen' : '')), st = HELP_ST[t.status] || [t.status, ''];
+        var hd = q('div', 'hlphd'); hd.appendChild(q('span', 'hlpst hlp-' + t.status, st[0])); hd.appendChild(q('span', 'sub2', (t.by ? t.by + ' · ' : '') + new Date(t.updated * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + (st[1] ? ' · ' + st[1] : '')));
+        c.appendChild(hd);
+        t.msgs.forEach(function (m) { var b = q('div', 'hlpmsg ' + (m.mine ? 'me' : 'them')); b.appendChild(q('div', 'hlpwho', m.mine ? m.from : 'Claude')); b.appendChild(q('div', 'hlptxt noi18n', m.text)); c.appendChild(b); });
+        if (t.status !== 'closed') {
+          var rt = q('textarea'); rt.rows = 2; rt.maxLength = 2000; rt.placeholder = 'Add to this, or say if it’s fixed'; c.appendChild(rt);
+          var row = q('div', 'lookrow'), rb = q('button', 'lnk', 'Send'), cl = q('button', 'lnk', 'Close it, all sorted'); rb.type = 'button'; cl.type = 'button';
+          rb.addEventListener('click', function () { var v = rt.value.trim(); if (v.length < 3) return; rb.disabled = true; api('helpsend', { body: { id: t.id, text: v } }).then(function (j) { rb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent', 'Claude will pick it up', null); load(); }).catch(function () { rb.disabled = false; toast('No signal', 'Not sent.', null); }); });
+          cl.addEventListener('click', function () { api('helpclose', { body: { id: t.id } }).then(function (j) { if (j.ok) load(); }); });
+          row.appendChild(rb); row.appendChild(cl); c.appendChild(row);
+        }
+        list.appendChild(c);
+        if (t.id === openId) setTimeout(function () { try { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 60);
+      });
+    };
+    var load = function () { if (S.screen !== 'help') return; api('helplist').then(function (j) { if (S.screen !== 'help') return; if (!j || !j.ok) { list.textContent = ''; list.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; } draw(j.tickets || []); }).catch(function () {}); };
+    send.addEventListener('click', function () {
+      var v = ta.value.trim(); if (v.length < 3) { toast('Write a little more', 'What is going on?', null); return; }
+      send.disabled = true;
+      api('helpsend', { body: { text: v, ctx: { screen: S.helpFrom || '' } } }).then(function (j) { send.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } ta.value = ''; openId = j.ticket.id; toast('Sent', 'Claude picks it up within a few minutes', null); load(); }).catch(function () { send.disabled = false; toast('No signal', 'Not sent.', null); });
+    });
+    load();
+    clearInterval(S.helpTick); S.helpTick = setInterval(function () { if (S.screen !== 'help') { clearInterval(S.helpTick); return; } load(); }, 30000);
   }
   /* photos on a job (2026-10-19, Matthew: "there also should be a spot to add photos") */
   function jobPhotoBox(jb, redraw) {
@@ -23041,7 +23091,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : mgrOn() ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
-      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
+      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,
+      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Help', function () { helpView(); }, false, null, ['help']] : null,   /* 2026-11-01: Jen writes a problem, Claude replies */   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
@@ -23811,7 +23862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !helpReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }
