@@ -7877,7 +7877,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (btn) btn.disabled = false;
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { if (err) err.textContent = j.error || 'Not saved. Try again.'; else toast('Not saved', j.error || 'Try again.', null); return; }
-        toast(o === 'undo' ? 'Undone' : o === 'done' ? 'Job done' : 'Marked not done', name + (o === 'could not' ? ' \u00b7 the office sees why' : ''), null); redraw();
+        var afs = o === 'done' ? String(j.aftercare || '') : '';   /* what happened to the aftercare email (2026-11-01, Matthew: a pop-up that says it has gone out) */
+        var afMsg = afs === 'sent' ? 'Aftercare email has gone out.' : afs === 'already' ? 'Aftercare email went out earlier.' : afs === 'noemail' ? 'No email on file: the aftercare did not go. Add their email or send it by text.' : '';
+        toast(o === 'undo' ? 'Undone' : o === 'done' ? 'Job done' : 'Marked not done', afMsg || (name + (o === 'could not' ? ' \u00b7 the office sees why' : '')), null); redraw();
       }).catch(function () { if (btn) btn.disabled = false; toast('No signal', 'Not saved. Try again when you have signal.', null); });
     }
     return c;

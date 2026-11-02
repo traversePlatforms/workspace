@@ -7788,8 +7788,8 @@ function jobSquareFound(string $jid, array $f, string $how): void {
    amount is used) and the aftercare email goes at once with its Pay button, instead of waiting for the payment. Needs Square, the 365 mailbox and
    an email on file; otherwise nothing changes (the office is told to send the aftercare, as before). */
 function jobAutoPayLink(string $jid, string $by): array {
-    $j = jobsAll()[$jid] ?? null; if (!$j || $j['off'] || !jobIs365($j) || !squareFor() || !a365MailCfg()) return ['stage' => 'waiting'];
-    $left = jobOwed($j); if ($left < 1) return jobAftercare($jid, 'done');
+    $j = jobsAll()[$jid] ?? null; if (!$j || $j['off'] || !jobIs365($j) || !a365MailCfg()) return ['stage' => 'waiting'];
+    $left = jobOwedNow($j); if ($left < 1 || !squareFor()) return jobAftercare($jid, 'done');   /* no Square: the aftercare still goes, the balance without a button (1 Nov night) */
     $l = leadsAll()[$j['lead']] ?? []; $em = trim((string) ($l['email'] ?? '')); if (!filter_var($em, FILTER_VALIDATE_EMAIL)) return ['stage' => 'noemail'];
     if (empty($j['sqlink']['url']) || (int) ($j['sqlink']['amt'] ?? 0) !== $left) {
         $pl = squareLink('Balance: ' . (string) (company()['a365']['name'] ?? 'Aeration'), $left * 100, '', $em);
@@ -7798,6 +7798,8 @@ function jobAutoPayLink(string $jid, string $by): array {
     }
     return jobAftercare($jid, 'link');
 }
+/** what is still owed once cash taken on the spot at Done is counted (1 Nov night: the aftercare said a balance even when the crew collected it) */
+function jobOwedNow(array $j): int { return max(0, jobOwed($j) - max(0, (int) ($j['done']['collected'] ?? 0))); }
 function jobOwed(array $j): int { $p = $j['pay'] ?? ['s' => 'unpaid']; if (in_array($p['s'] ?? '', ['paid', 'plan'], true)) return 0; return max(0, (int) $j['price'] - (($p['s'] ?? '') === 'deposit' ? (int) ($p['amt'] ?? 0) : 0)); }
 /* the aftercare email (2026-10-19, Matthew: "follow up with aftercare and a reminder to pay if he hasn't already ... how can we automate that
    email out"; "ask first" before any card is charged). Sent once per job, after it is marked Done, when the balance is settled: the card
@@ -7830,7 +7832,8 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
     $co = company()['a365']; $name = (string) ($co['name'] ?? (kitOn() ? company()['name'] : '365 Aeration & Seeding')); $ph = a365Phone($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
-    $owed = jobOwed($j); $cg = $j['sqcharge'] ?? null; $link = (string) ($j['sqlink']['url'] ?? '');
+    $owed = jobOwedNow($j); $cg = $j['sqcharge'] ?? null; $link = (int) ($j['sqlink']['amt'] ?? 0) === $owed ? (string) ($j['sqlink']['url'] ?? '') : '';   /* a link only for the amount owed now (1 Nov night) */
+    $disc = 'If you\'ve already paid, please disregard this.';   /* 1 Nov night (Matthew): a payment can land after the email goes */
     $tips = ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'];
     if (in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true)) { $tips[] = 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.'; $tips[] = 'Once the new grass is up and rooting, water less often but more deeply.';
         /* the three in Jen's aftercare that the email lacked (2026-11-01, Matthew: "add the three mission pieces that are in jens aftercare to our
@@ -7840,14 +7843,15 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
          : ($owed < 1 ? 'Your balance is paid. Thank you!' : 'Your remaining balance is $' . $owed . '.' . ($link !== '' ? ' You can pay it here: ' . $link : ''));
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
     $text = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks for having us! Your lawn is done. A few tips for the next couple of weeks:\n\n"
-          . implode("\n", array_map(fn($t) => '- ' . $t, $tips)) . "\n\n" . $bal . "\n\nAny questions: call or text " . $ph . ".\n\n" . $name . "\n";
+          . implode("\n", array_map(fn($t) => '- ' . $t, $tips)) . "\n\n" . $bal . ($owed > 0 && !$cg ? ' ' . $disc : '') . "\n\nAny questions: call or text " . $ph . ".\n\n" . $name . "\n";
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
           . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
           . (a365Emails2() ? a365MailHead($name) : '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>')
           . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for having us! Your lawn is done. A few tips for the next couple of weeks:</p>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><ul style="margin:0;padding-left:20px;font-size:15px">' . implode('', array_map(fn($t) => '<li style="margin:0 0 8px">' . $e($t) . '</li>', $tips)) . '</ul></div>'
           . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin-bottom:18px;font-size:15px">' . $e($cg || $owed < 1 || $link === '' ? $bal : 'Your remaining balance is $' . $owed . '.') . '</div>'
-          . ($owed > 0 && $link !== '' ? '<p style="margin:0 0 18px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Pay the $' . $owed . ' balance</a></p>' : '')
+          . ($owed > 0 && $link !== '' ? '<p style="margin:0 0 8px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Pay the $' . $owed . ' balance</a></p>' : '')
+          . ($owed > 0 && !$cg ? '<p style="margin:0 0 18px;color:#5a6858;font-size:13px">' . $e($disc) . '</p>' : '')
           . '<p style="margin:0;color:#5a6858;font-size:14px">Any questions: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
           . (a365Emails2() ? a365MailSocial() : '') . '</div></body></html>';
     return $rec(a365Mail($to, 'Your lawn after today: a few tips from ' . $name, $text, $html));
@@ -7867,6 +7871,19 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
 /** Brad wrote a note on the job but nobody has written the customer's version yet (2026-11-01) */
 function fuNeedsWords(array $j): bool { return trim((string) ($j['want'] ?? '') . (string) ($j['suggest'] ?? '')) !== '' && trim((string) ($j['fuWant'] ?? '') . (string) ($j['fuSuggest'] ?? '')) === ''; }
 function followupCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/followup.json'), true); return ['on' => !empty($j['on']) && time() >= (int) ($j['from'] ?? 0), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? ''), 'from' => (int) ($j['from'] ?? 0)]; }   /* 'from': on from a set time (2026-11-01) */
+/* every past customer once (1 Nov night, Matthew: "make sure you email all the clients weve had with the exception of kara ... in terms of the
+   follow up email"): a job done before follow-ups were switched on gets one too, but only a customer's latest done job, never a customer who
+   already had one, never Kara Rosenstrauch (off the list on purpose), and only once followup.json says 'past' (set with the go-live). */
+function fuPastOk(array $j): bool {
+    $c = json_decode((string) @file_get_contents(DATA_DIR . '/followup.json'), true); if (empty($c['past'])) return false;
+    $lid = (string) ($j['lead'] ?? ''); if ($lid === '') return false;
+    $nm = strtolower(trim((string) ((leadsAll()[$lid] ?? [])['name'] ?? ($j['title'] ?? '')))); if (preg_match('/\brosens?t?r?auch\b|\bkara\b.*\brosen/', $nm)) return false;   /* 'Rosenstauch' in the app, 'Rosenstrauch' elsewhere */
+    static $byLead = null;
+    if ($byLead === null) { $byLead = []; foreach (jobsAll() as $x) { if ($x['off'] || ($x['done']['o'] ?? '') !== 'done') continue; $k = (string) ($x['lead'] ?? ''); if ($k === '') continue;
+        $b = $byLead[$k] ?? ['last' => '', 'at' => -1, 'had' => false]; if (!empty($x['fu']['ok'])) $b['had'] = true;
+        $t = (int) ($x['done']['at'] ?? 0); if ($t > $b['at']) { $b['at'] = $t; $b['last'] = (string) $x['id']; } $byLead[$k] = $b; } }
+    $b = $byLead[$lid] ?? null; return $b && !$b['had'] && $b['last'] === (string) ($j['id'] ?? '');
+}
 function followupReview(): string { $r = (string) (company()['links']['googleReview'] ?? ''); return preg_match('#^https://[^\s<>"]{8,300}$#D', $r) ? $r : ''; }
 /** the day it goes: two days after the day the job was marked done (the install's clock) */
 function followupDue(array $j): ?string {
@@ -7890,9 +7907,8 @@ function followupState(array $j): ?array {
     if (!empty($j['funo'])) return $o + ['s' => 'off', 'text' => 'Follow-up email: not sent: Don\'t send is on for this job'];
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $o + ['s' => 'noemail', 'text' => 'Follow-up email: not sent: no email'];
     if (!$cfg['on']) return $o + ['s' => 'switch', 'text' => 'Follow-up email: due ' . fuDay($due) . ', but follow-up emails are switched off'];
-    if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400) return $o + ['s' => 'old', 'text' => 'Follow-up email: not sent: the job was done before follow-up emails were switched on'];
+    if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400 && !fuPastOk($j)) return $o + ['s' => 'old', 'text' => 'Follow-up email: not sent: the job was done before follow-up emails were switched on'];
     if (fuNeedsWords($j) && $due >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) return $o + ['s' => 'words', 'text' => 'Follow-up email: due ' . fuDay($due) . '. The crew left notes: write what the customer reads below, or it goes the day after without them'];
-    if (jobOwed($j) > 0) return $o + ['s' => 'owed', 'text' => 'Follow-up email: due ' . fuDay($due) . ', once the $' . jobOwed($j) . ' balance is paid'];
     if ($fu) return $o + ['s' => 'failed', 'text' => 'Follow-up email: not sent (' . fuWhy((string) ($fu['stage'] ?? '')) . ')' . ((int) ($fu['n'] ?? 1) >= FU_TRIES ? '. Tried ' . FU_TRIES . ' times: use Send now' : '. It tries again within the hour')];
     return $o + ['s' => 'due', 'text' => 'Follow-up email: due ' . fuDay($due)];
 }
@@ -7906,17 +7922,22 @@ function followupBuild(array $j, array $l): array {
     $crew = trim((string) strtok((string) $j['crew'], ' ')) ?: 'Our crew';
     $day = (new DateTime((string) $j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j');
     $rv = followupReview(); $want = trim((string) ($j['fuWant'] ?? '')); $sug = trim((string) ($j['fuSuggest'] ?? ''));   /* the customer's version the office wrote, never Brad's own words (2026-11-01, Matthew) */
-    $seeded = in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true);
+    $fresh = (string) ($j['date'] ?? '') >= (new DateTime('-14 days', new DateTimeZone(appTz())))->format('Y-m-d');   /* a past customer's job (the one-time send): no new-seed line, no 'Jen sent the details by text' (1 Nov night) */
+    $seeded = $fresh && in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true);
+    $owed = jobOwedNow($j); $plink = $owed > 0 && (int) ($j['sqlink']['amt'] ?? 0) === $owed ? (string) ($j['sqlink']['url'] ?? '') : '';
+    $balLine = $owed > 0 ? 'Your remaining balance is ' . fuMoney($owed) . '.' . ($plink !== '' ? '' : ' Call or text ' . $ph . ' to pay it.') : '';
+    $disc = 'If you\'ve already paid, please disregard this.';
     $to = trim((string) ($l['email'] ?? '')); $un = nlUnsubUrl(filter_var($to, FILTER_VALIDATE_EMAIL) ? $to : 'you@example.com'); $addr = nlAddress();
     $why = 'You are getting this because we worked on your lawn.';
     $noted = []; if ($want !== '') $noted[] = ['Work you mentioned wanting', $want]; if ($sug !== '') $noted[] = ['Work ' . $crew . ' would suggest', $sug];
     $seedLine = 'Your new seed is in its first couple of weeks. Keep the top of the soil damp and hold off on mowing until the new grass is up.';
-    $planLine = 'Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control, with aeration when the lawn needs it. Jen sent the details by text. Reply here if you\'d like to set it up.';
+    $planLine = 'Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control, with aeration when the lawn needs it.' . ($fresh ? ' Jen sent the details by text.' : '') . ' Reply here if you\'d like to set it up.';
     $springLine = 'Want a spot? Reply "spring" and we\'ll put you on the list.';
     $offLine = 'It\'s for every customer as a thank-you. Mention it when you book.';
     /* the text version */
     $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks again for having us out on " . $day . ".\n\n";
     if ($seeded) $t .= $seedLine . "\n\n";
+    if ($balLine !== '') $t .= $balLine . ($plink !== '' ? ' You can pay it here: ' . $plink : '') . ' ' . $disc . "\n\n";
     if ($rv !== '') $t .= "If you have a minute, we'd appreciate an honest Google review:\n" . $rv . "\n\n";
     if ($noted) $t .= $crew . " made a note of a few things while on your property:\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\nIf you'd like a price on any of it, reply to this email or call or text " . $ph . ".\n\n";
     $t .= 'Keep it going all year. ' . $planLine . "\n\nSpring aeration. " . $springLine . "\n\n10% off your next service. " . $offLine . "\n\nThanks,\n" . $name . "\n" . $ph . ($web !== '' ? ' · ' . $web : '') . "\n\n--\n" . $why . "\nUnsubscribe: " . $un . "\n" . $addr . "\n";
@@ -7928,6 +7949,9 @@ function followupBuild(array $j, array $l): array {
        . a365MailHead($name)
        . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p>' . $p('Thanks again for having us out on ' . $e($day) . '.');
     if ($seeded) $h .= $p($e($seedLine));
+    if ($balLine !== '') $h .= '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin:0 0 16px">' . $e($balLine)
+       . ($plink !== '' ? '<div style="margin-top:10px"><a href="' . $e($plink) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:10px 18px;border-radius:999px">Pay the ' . $e(fuMoney($owed)) . ' balance</a></div>' : '')
+       . '<div style="margin-top:8px;color:#5a6858;font-size:13px">' . $e($disc) . '</div></div>';
     if ($rv !== '') $h .= '<p style="margin:0 0 10px">If you have a minute, we&#39;d appreciate an honest Google review:</p><p style="margin:0 0 18px"><a href="' . $e($rv) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Leave a Google review</a></p>';
     if ($noted) $h .= '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin:0 0 16px"><div style="font-weight:700;margin:0 0 8px">' . $e($crew) . ' made a note of a few things while on your property</div><ul style="margin:0 0 10px;padding-left:20px">'
        . implode('', array_map(fn($n) => '<li style="margin:0 0 6px"><b>' . $e($n[0]) . ':</b> ' . nl2br($e($n[1])) . '</li>', $noted)) . '</ul><div>If you&#39;d like a price on any of it, reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</div></div>';
@@ -7947,7 +7971,6 @@ function jobFollowup(string $jid, string $why, bool $byHand = false): array {
     if (!jobIs365($j)) return ['ok' => false, 'stage' => 'brand', 'error' => 'This is not a 365 job.'];
     if (!followupCfg()['on']) return ['ok' => false, 'stage' => 'switch', 'error' => 'Follow-up emails are switched off. An admin turns them on under Follow-up email.'];
     if (!empty($j['funo'])) return ['ok' => false, 'stage' => 'no', 'error' => 'Don\'t send is on for this job. Turn it off first.'];
-    if (!$byHand && jobOwed($j) > 0) return ['ok' => false, 'stage' => 'owed', 'error' => 'There is still a balance.'];
     if (!a365MailCfg()) return ['ok' => false, 'stage' => 'config', 'error' => 'The 365 mailbox is not set up yet, so nothing was emailed.'];   /* nothing tried, nothing noted (as the aftercare) */
     if (followupReview() === '') return ['ok' => false, 'stage' => 'noreview', 'error' => 'No Google review link is set, so nothing was emailed.'];
     $l = leadsAll()[$j['lead']] ?? []; $to = trim((string) ($l['email'] ?? ''));
@@ -7982,8 +8005,8 @@ function followupSweep(?int $now = null): array {
         if ($out['tried'] >= 10) break;
         if ($j['off'] || ($j['done']['o'] ?? '') !== 'done' || !empty($j['funo']) || !empty($j['fu']['ok'])) continue;
         $due = followupDue($j); if ($due === null || $due > $today) continue;
-        if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400) continue;   /* done before it was switched on: never sent */
-        if (!jobIs365($j) || jobOwed($j) > 0) continue;
+        if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400 && !fuPastOk($j)) continue;   /* done before it was switched on: only the one-time send to past customers */
+        if (!jobIs365($j)) continue;   /* a balance no longer holds it: the balance is in the email (1 Nov night) */
         if (fuNeedsWords($j) && $due >= $today) {   /* Brad left notes and nobody has worded them for the customer: wait the due day, tell the office once */
             if (empty($j['fuWait'])) { appendLine(DATA_DIR . '/jobs.log', ['id' => (string) $jid, 'fuWait' => $now, 'by' => 'follow-up', 'at' => $now]); $lw = $leads[$j['lead']] ?? [];
                 a365Alert('Follow-up waits for your wording: ' . (trim((string) ($lw['name'] ?? ($j['title'] ?? ''))) ?: 'a customer'), 'The crew left notes on the job. Open it and write what the customer reads; if it stays empty, the email goes tomorrow without them.', false, false, false, true, './?job=' . $jid); }
@@ -8043,7 +8066,7 @@ function depremBuild(array $l, string $kind): array {
     $subject = $tomorrow ? 'Your lawn service is tomorrow: your deposit is still open' : 'Reminder: your deposit for ' . (new DateTime((string) ($o['date'] ?? 'today') . ' 12:00', new DateTimeZone(appTz())))->format('l') . '\'s lawn service';
     $lead = $tomorrow ? 'Your appointment is tomorrow, and our records show your deposit hasn\'t been paid yet.' : 'Our records show your deposit hasn\'t been paid yet.';
     $ask = 'Please take care of the $' . $dep . ' deposit to hold your spot. It only takes a minute on your form.';
-    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nWe're looking forward to servicing your property!\n\nYour appointment: " . $day . ', arrival ' . $arr . ".\n\n" . $lead . ' ' . $ask . "\n\nPay your deposit here: " . $link
+    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nWe're looking forward to servicing your property!\n\nYour appointment: " . $day . ', arrival ' . $arr . ".\n\n" . $lead . ' ' . $ask . "\n\nPay your deposit here: " . $link . "\nIf you've already paid, please disregard this."
        . "\n\nQuestions? Reply to this email or call or text " . $ph . ".\n\nThank you!\n" . $name . "\n" . $ph . ($web !== '' ? ' · ' . $web : '') . "\n";
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
     $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
@@ -8056,7 +8079,7 @@ function depremBuild(array $l, string $kind): array {
        . '<div style="font-size:15px;color:#33402f;margin:0 0 6px">' . $e($lead) . '</div>'
        . '<div style="font-size:13px;color:#5a6858;margin:0">Deposit to hold your spot</div><div style="font-size:30px;font-weight:800;color:#21451f;margin:0 0 12px">$' . $dep . '</div>'
        . '<a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#ffffff;text-decoration:none;font-weight:800;font-size:16px;padding:13px 26px;border-radius:999px">Pay my $' . $dep . ' deposit</a>'
-       . '<div style="font-size:12px;color:#5a6858;margin:10px 0 0">It only takes a minute on your form. Secure payment through Square.</div></td></tr></table>'
+       . '<div style="font-size:12px;color:#5a6858;margin:10px 0 0">It only takes a minute on your form. Secure payment through Square.</div><div style="font-size:12px;color:#5a6858;margin:6px 0 0">If you&#39;ve already paid, please disregard this.</div></td></tr></table>'
        . '<p style="margin:0 0 6px">Questions? Reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
        . '<p style="margin:0 0 4px">Thank you!</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' . ($web !== '' ? ' · ' . $e($web) : '') . '</p>'
        . a365MailSocial() . '</div></body></html>';
@@ -8752,7 +8775,7 @@ if ($action === 'jobdone') {
     if ($o === 'done') custPlanAdvance((string) ($j['lead'] ?? ''), (string) ($j['date'] ?? ''));
     if ($o !== 'undo') appendLine(leadsDir() . '/leadst.log', ['id' => $j['lead'], 'note' => mb_substr('Job ' . ($o === 'done' ? 'done' . ($took !== '' ? ' in about ' . $took : '') : 'not done') . ($note !== '' ? ': ' . $note : ''), 0, 1100), 'by' => $me, 'at' => time()]);
     if ($o === 'could not' && !empty(company()['a365'])) a365Alert('Job not done: ' . ((string) ($j['title'] ?? '') ?: 'a customer'), $me . ': ' . mb_substr($note, 0, 140));   /* the office rebooks it */
-    $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ($o === 'done' && $got < 1 && a365Emails2() ? jobAutoPayLink($id, $me) : ['stage' => 'waiting']);   /* nothing owed: the aftercare email now */   /* a balance still owed and nothing taken on the spot: a pay link, and the aftercare goes now with it (1 Nov) */
+    $af = ($o === 'done' && (jobOwed($j) < 1 || $got >= jobOwed($j))) ? jobAftercare($id, 'done') : ($o === 'done' && a365Emails2() ? jobAutoPayLink($id, $me) : ['stage' => 'waiting']);   /* 1 Nov night (Matthew: "as soon as someone clicks job done the aftercare email should go out"): part paid on the spot too, with a link for what is left */   /* nothing owed: the aftercare email now */   /* a balance still owed and nothing taken on the spot: a pay link, and the aftercare goes now with it (1 Nov) */
     /* never lost (2026-10-28): when it cannot go by itself (no 365 mailbox yet, or no email for them), the office is told it is Jen's to send */
     if ($o === 'done' && !empty(company()['a365']) && jobIs365($j) && empty(jobsAll()[$id]['aftercare']['ok']) && (!a365MailCfg() || in_array($af['stage'] ?? '', ['noemail', 'config'], true))) {
         $LA = leadsAll()[$j['lead']] ?? [];
