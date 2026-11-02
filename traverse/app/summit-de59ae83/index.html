@@ -7201,7 +7201,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         sv.disabled = false;
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
-        jb.want = j.want; jb.suggest = j.suggest; toast('Saved', CO.a365 ? 'It goes in their follow-up email' : 'On the job', null);
+        jb.want = j.want; jb.suggest = j.suggest; toast('Saved', CO.a365 ? 'The office words it for their follow-up email' : 'On the job', null);
       }).catch(function () { sv.disabled = false; toast('No signal', 'What you wrote is kept. Tap Save again when you have signal.', null); });
     });
     w.appendChild(sv);
@@ -7290,6 +7290,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         api('followupjob', { body: { id: jb.id, no: ck.checked } }).then(function (j) { ck.disabled = false; if (!j.ok) { ck.checked = !ck.checked; toast('Not saved', j.error || 'Try again.', null); return; } jb.fuState = j.fuState; redraw(); }).catch(function () { ck.disabled = false; ck.checked = !ck.checked; toast('No signal', 'Not saved.', null); });
       });
       w.appendChild(ckL);
+      /* the customer's version of Brad's notes (2026-11-01, Matthew): his own words stay here, staff only; the email uses only what is written below */
+      if ((jb.want || jb.suggest || jb.fuWant || jb.fuSuggest) && !F.no) {
+        var bw = q('div', 'sub2', 'Brad\u2019s notes (staff only, never in the email): ' + [jb.want ? 'Want: ' + jb.want : '', jb.suggest ? 'Suggests: ' + jb.suggest : ''].filter(Boolean).join(' \u00b7 ')); w.appendChild(bw);
+        var mkw = function (lab, val, ph) { var l = q('label', 'jwl', lab), t = q('textarea'); t.rows = 2; t.maxLength = 300; t.value = val || ''; t.placeholder = ph; l.appendChild(t); w.appendChild(l); return t; };
+        var cw = mkw('In the email: work they mentioned wanting', jb.fuWant, jb.want ? 'Say it simply for the customer, e.g. \u201ca fall leaf clean-up in the back yard\u201d' : 'Leave empty if nothing');
+        var cs = mkw('In the email: work we would suggest', jb.fuSuggest, jb.suggest ? 'Say it simply for the customer, e.g. \u201ctrimming the shrubs along the front walk\u201d' : 'Leave empty if nothing');
+        var sv = q('button', 'lnk', 'Save what the customer reads'); sv.type = 'button';
+        sv.addEventListener('click', function () { sv.disabled = true; api('followupwords', { body: { id: jb.id, want: cw.value.trim(), suggest: cs.value.trim() } }).then(function (j) { sv.disabled = false; if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; } jb.fuWant = j.fuWant; jb.fuSuggest = j.fuSuggest; jb.fuState = j.fuState; toast('Saved', 'That is what the customer reads', null); redraw(); }).catch(function () { sv.disabled = false; toast('No signal', 'Not saved.', null); }); });
+        w.appendChild(sv);
+      }
       if (F.on && !F.no && jb.done && jb.done.o === 'done') {
         var sn = q('button', 'lnk', 'Send now'); sn.type = 'button';
         sn.addEventListener('click', function () {

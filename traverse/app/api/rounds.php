@@ -6889,7 +6889,7 @@ function jobsAll(): array {
             if (!isset($o[$id])) { if (empty($r['crew']) || empty($r['date'])) continue; $o[$id] = $r + ['off' => false, 'done' => null, 'chg' => (int) ($r['at'] ?? 0), 'cnotes' => []]; continue; }
             if (is_array($r['cnote'] ?? null)) { $o[$id]['cnotes'][] = ['t' => (string) ($r['cnote']['t'] ?? ''), 'by' => (string) ($r['cnote']['by'] ?? ''), 'at' => (int) ($r['cnote']['at'] ?? 0)]; continue; }   /* notes on the job from the crew or office (2026-10-26) */
             $moved = false;
-            foreach (['crew', 'date', 'slot', 'price', 'pkg', 'svc', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts', 'want', 'suggest', 'fu', 'funo', 'rcpt', 'payinfo', 'fub'] as $k) if (array_key_exists($k, $r)) {   /* + Brad's two lines and the follow-up email (2026-10-27) */ if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
+            foreach (['crew', 'date', 'slot', 'price', 'pkg', 'svc', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'wx', 'sqlink', 'sqpaid', 'sqcharge', 'chgfail', 'aftercare', 'cudone', 'sqparts', 'want', 'suggest', 'fuWant', 'fuSuggest', 'fuWait', 'fu', 'funo', 'rcpt', 'payinfo', 'fub'] as $k) if (array_key_exists($k, $r)) {   /* + Brad's two lines and the follow-up email (2026-10-27) */ if (in_array($k, ['crew', 'date', 'slot'], true)) $moved = true; $o[$id][$k] = $r[$k]; }
             if ($moved) $o[$id]['chg'] = (int) ($r['at'] ?? 0);
             if (!empty($r['del'])) $o[$id]['off'] = true;
             if (array_key_exists('done', $r)) $o[$id]['done'] = $r['done'];
@@ -6941,7 +6941,7 @@ function jobItemItems(array $j): array {
 }
 function jobItemsText(array $j): string { return implode(', ', jobItemItems($j)); }
 function jobShow(array $j, ?array $leads = null): array {
-    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'svc', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet', 'want', 'suggest', 'funo', 'rcpt', 'payinfo', 'fub']));
+    $o = array_intersect_key($j, array_flip(['id', 'lead', 'title', 'crew', 'date', 'slot', 'price', 'pkg', 'svc', 'scope', 'seedLb', 'fertLb', 'pay', 'card', 'note', 'addr', 'by', 'at', 'chg', 'done', 'sqlink', 'sqcharge', 'aftercare', 'ridet', 'want', 'suggest', 'fuWant', 'fuSuggest', 'funo', 'rcpt', 'payinfo', 'fub']));
     $sl = jobSlot((string) $j['slot']); $o['slotLabel'] = $sl ? $sl[1] : (string) $j['slot'];
     if ($fs = followupState($j)) $o['fuState'] = $fs;   /* the follow-up email: due, sent, or why not (2026-10-27) */
     $o['photos'] = jobPhotos((string) $j['id']);   /* 2026-10-19 */
@@ -7864,6 +7864,8 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
  * ties them. OFF until an admin turns it on (followup.json): while off nothing is sent or saved up, and once on only jobs marked done after it
  * was turned on, or in the two days before, get one, so turning it on sends no backlog. Sent by the 5-minute job (metapoll, followupSweep). */
 /* FU_DAYS, FU_TRIES: defined at the top, beside QUOTE_INBOX_FROM (the job board reads them before this line runs) */
+/** Brad wrote a note on the job but nobody has written the customer's version yet (2026-11-01) */
+function fuNeedsWords(array $j): bool { return trim((string) ($j['want'] ?? '') . (string) ($j['suggest'] ?? '')) !== '' && trim((string) ($j['fuWant'] ?? '') . (string) ($j['fuSuggest'] ?? '')) === ''; }
 function followupCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/followup.json'), true); return ['on' => !empty($j['on']) && time() >= (int) ($j['from'] ?? 0), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? ''), 'from' => (int) ($j['from'] ?? 0)]; }   /* 'from': on from a set time (2026-11-01) */
 function followupReview(): string { $r = (string) (company()['links']['googleReview'] ?? ''); return preg_match('#^https://[^\s<>"]{8,300}$#D', $r) ? $r : ''; }
 /** the day it goes: two days after the day the job was marked done (the install's clock) */
@@ -7889,6 +7891,7 @@ function followupState(array $j): ?array {
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $o + ['s' => 'noemail', 'text' => 'Follow-up email: not sent: no email'];
     if (!$cfg['on']) return $o + ['s' => 'switch', 'text' => 'Follow-up email: due ' . fuDay($due) . ', but follow-up emails are switched off'];
     if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400) return $o + ['s' => 'old', 'text' => 'Follow-up email: not sent: the job was done before follow-up emails were switched on'];
+    if (fuNeedsWords($j) && $due >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) return $o + ['s' => 'words', 'text' => 'Follow-up email: due ' . fuDay($due) . '. Brad left notes: write what the customer reads below, or it goes the day after without them'];
     if (jobOwed($j) > 0) return $o + ['s' => 'owed', 'text' => 'Follow-up email: due ' . fuDay($due) . ', once the $' . jobOwed($j) . ' balance is paid'];
     if ($fu) return $o + ['s' => 'failed', 'text' => 'Follow-up email: not sent (' . fuWhy((string) ($fu['stage'] ?? '')) . ')' . ((int) ($fu['n'] ?? 1) >= FU_TRIES ? '. Tried ' . FU_TRIES . ' times: use Send now' : '. It tries again within the hour')];
     return $o + ['s' => 'due', 'text' => 'Follow-up email: due ' . fuDay($due)];
@@ -7902,7 +7905,7 @@ function followupBuild(array $j, array $l): array {
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $crew = trim((string) strtok((string) $j['crew'], ' ')) ?: 'Our crew';
     $day = (new DateTime((string) $j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j');
-    $rv = followupReview(); $want = trim((string) ($j['want'] ?? '')); $sug = trim((string) ($j['suggest'] ?? ''));
+    $rv = followupReview(); $want = trim((string) ($j['fuWant'] ?? '')); $sug = trim((string) ($j['fuSuggest'] ?? ''));   /* the customer's version the office wrote, never Brad's own words (2026-11-01, Matthew) */
     $seeded = in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true);
     $to = trim((string) ($l['email'] ?? '')); $un = nlUnsubUrl(filter_var($to, FILTER_VALIDATE_EMAIL) ? $to : 'you@example.com'); $addr = nlAddress();
     $why = 'You are getting this because we worked on your lawn.';
@@ -7981,6 +7984,11 @@ function followupSweep(?int $now = null): array {
         $due = followupDue($j); if ($due === null || $due > $today) continue;
         if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400) continue;   /* done before it was switched on: never sent */
         if (!jobIs365($j) || jobOwed($j) > 0) continue;
+        if (fuNeedsWords($j) && $due >= $today) {   /* Brad left notes and nobody has worded them for the customer: wait the due day, tell the office once */
+            if (empty($j['fuWait'])) { appendLine(DATA_DIR . '/jobs.log', ['id' => (string) $jid, 'fuWait' => $now, 'by' => 'follow-up', 'at' => $now]); $lw = $leads[$j['lead']] ?? [];
+                a365Alert('Follow-up waits for your wording: ' . (trim((string) ($lw['name'] ?? ($j['title'] ?? ''))) ?: 'a customer'), 'Brad left notes on the job. Open it and write what the customer reads; if it stays empty, the email goes tomorrow without them.', false, false, false, true, './?job=' . $jid); }
+            continue;
+        }
         $fu = is_array($j['fu'] ?? null) ? $j['fu'] : null;
         if ($fu) {
             $em = trim((string) ($leads[$j['lead']]['email'] ?? ''));
@@ -8440,6 +8448,19 @@ if ($action === 'tosched' || $action === 'fuconfirm') {
 }
 /* the follow-up email on a job: Don't send, and Send now (2026-10-27). The office, or Jen on a job she manages. Send now only while the
    company switch is on: nothing reaches a customer until Matthew turns it on. */
+/* the customer's version of Brad's two notes, for the follow-up email (2026-11-01, Matthew: curated, not his words): the office, or a quote
+   person on their own job. Empty both and the email has no notes section. */
+if ($action === 'followupwords') {
+    if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
+    $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
+    if (!$j || $j['off']) fail('No such job.', 404);
+    if (!desk() && !($role === 'quote' && qJob($j))) fail('Not allowed.', 403);
+    if (!empty($j['fu']['ok'])) fail('The follow-up email has gone out already.');
+    $row = ['id' => $jid, 'fuWant' => $clean($body['want'] ?? '', 300), 'fuSuggest' => $clean($body['suggest'] ?? '', 300), 'by' => $me, 'at' => time()];
+    if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
+    $j2 = jobsAll()[$jid];
+    out(['ok' => true, 'fuWant' => (string) ($j2['fuWant'] ?? ''), 'fuSuggest' => (string) ($j2['fuSuggest'] ?? ''), 'fuState' => followupState($j2)]);
+}
 if ($action === 'followupjob' || $action === 'followupsend') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
     $jid = (string) ($body['id'] ?? ''); $j = jobsAll()[$jid] ?? null;
