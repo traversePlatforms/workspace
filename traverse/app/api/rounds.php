@@ -8571,7 +8571,7 @@ function helpAll(): array {
         if (!isset($T[$id])) $T[$id] = ['id' => $id, 'by' => (string) ($r['from'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'status' => 'new', 'msgs' => [], 'ctx' => $r['ctx'] ?? null];
         $t = &$T[$id];
         if (($r['t'] ?? '') === 'msg') { $t['msgs'][] = ['from' => (string) $r['from'], 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => true]; $t['status'] = 'new'; }
-        elseif (($r['t'] ?? '') === 'reply') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? 'Claude'), 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => false]; $t['status'] = (string) ($r['status'] ?? 'answered'); }
+        elseif (($r['t'] ?? '') === 'reply') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? 'Claude'), 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => false, 'refresh' => !empty($r['refresh'])]; $t['status'] = (string) ($r['status'] ?? 'answered'); }   /* refresh: the reply changed something on screen (1 Nov) */
         elseif (($r['t'] ?? '') === 'status') $t['status'] = (string) ($r['status'] ?? $t['status']);
         $t['updated'] = (int) ($r['at'] ?? 0); unset($t);
     }
