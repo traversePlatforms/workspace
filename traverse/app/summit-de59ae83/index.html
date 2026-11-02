@@ -7292,7 +7292,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       w.appendChild(ckL);
       /* the customer's version of Brad's notes (2026-11-01, Matthew): his own words stay here, staff only; the email uses only what is written below */
       if ((jb.want || jb.suggest || jb.fuWant || jb.fuSuggest) && !F.no) {
-        var bw = q('div', 'sub2', 'Brad\u2019s notes (staff only, never in the email): ' + [jb.want ? 'Want: ' + jb.want : '', jb.suggest ? 'Suggests: ' + jb.suggest : ''].filter(Boolean).join(' \u00b7 ')); w.appendChild(bw);
+        var bw = q('div', 'sub2', 'The crew\u2019s notes (staff only, never in the email): ' + [jb.want ? 'Want: ' + jb.want : '', jb.suggest ? 'Suggests: ' + jb.suggest : ''].filter(Boolean).join(' \u00b7 ')); w.appendChild(bw);
         var mkw = function (lab, val, ph) { var l = q('label', 'jwl', lab), t = q('textarea'); t.rows = 2; t.maxLength = 300; t.value = val || ''; t.placeholder = ph; l.appendChild(t); w.appendChild(l); return t; };
         var cw = mkw('In the email: work they mentioned wanting', jb.fuWant, jb.want ? 'Say it simply for the customer, e.g. \u201ca fall leaf clean-up in the back yard\u201d' : 'Leave empty if nothing');
         var cs = mkw('In the email: work we would suggest', jb.fuSuggest, jb.suggest ? 'Say it simply for the customer, e.g. \u201ctrimming the shrubs along the front walk\u201d' : 'Leave empty if nothing');

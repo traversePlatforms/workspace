@@ -7891,7 +7891,7 @@ function followupState(array $j): ?array {
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $o + ['s' => 'noemail', 'text' => 'Follow-up email: not sent: no email'];
     if (!$cfg['on']) return $o + ['s' => 'switch', 'text' => 'Follow-up email: due ' . fuDay($due) . ', but follow-up emails are switched off'];
     if ((int) ($j['done']['at'] ?? 0) < $cfg['at'] - FU_DAYS * 86400) return $o + ['s' => 'old', 'text' => 'Follow-up email: not sent: the job was done before follow-up emails were switched on'];
-    if (fuNeedsWords($j) && $due >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) return $o + ['s' => 'words', 'text' => 'Follow-up email: due ' . fuDay($due) . '. Brad left notes: write what the customer reads below, or it goes the day after without them'];
+    if (fuNeedsWords($j) && $due >= (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d')) return $o + ['s' => 'words', 'text' => 'Follow-up email: due ' . fuDay($due) . '. The crew left notes: write what the customer reads below, or it goes the day after without them'];
     if (jobOwed($j) > 0) return $o + ['s' => 'owed', 'text' => 'Follow-up email: due ' . fuDay($due) . ', once the $' . jobOwed($j) . ' balance is paid'];
     if ($fu) return $o + ['s' => 'failed', 'text' => 'Follow-up email: not sent (' . fuWhy((string) ($fu['stage'] ?? '')) . ')' . ((int) ($fu['n'] ?? 1) >= FU_TRIES ? '. Tried ' . FU_TRIES . ' times: use Send now' : '. It tries again within the hour')];
     return $o + ['s' => 'due', 'text' => 'Follow-up email: due ' . fuDay($due)];
@@ -7986,7 +7986,7 @@ function followupSweep(?int $now = null): array {
         if (!jobIs365($j) || jobOwed($j) > 0) continue;
         if (fuNeedsWords($j) && $due >= $today) {   /* Brad left notes and nobody has worded them for the customer: wait the due day, tell the office once */
             if (empty($j['fuWait'])) { appendLine(DATA_DIR . '/jobs.log', ['id' => (string) $jid, 'fuWait' => $now, 'by' => 'follow-up', 'at' => $now]); $lw = $leads[$j['lead']] ?? [];
-                a365Alert('Follow-up waits for your wording: ' . (trim((string) ($lw['name'] ?? ($j['title'] ?? ''))) ?: 'a customer'), 'Brad left notes on the job. Open it and write what the customer reads; if it stays empty, the email goes tomorrow without them.', false, false, false, true, './?job=' . $jid); }
+                a365Alert('Follow-up waits for your wording: ' . (trim((string) ($lw['name'] ?? ($j['title'] ?? ''))) ?: 'a customer'), 'The crew left notes on the job. Open it and write what the customer reads; if it stays empty, the email goes tomorrow without them.', false, false, false, true, './?job=' . $jid); }
             continue;
         }
         $fu = is_array($j['fu'] ?? null) ? $j['fu'] : null;
