@@ -8,6 +8,35 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-11-01 (Sunday)
+
+**Sixfold 365 customer emails** (start Mon 2 Nov 8 am, newsletter 9 am; approved by Jen and Cai)
+- **Aftercare:** goes the moment a job is marked Done, balance or not (pay link in it); pop-up "Aftercare email has gone out."
+- **Balances:** "If you've already paid, please disregard this." under every balance. The follow-up no longer waits for payment.
+- **Past customers:** every past customer gets the follow-up once, never Kara. Dry check: 19 emails, names, dates and balances all correct.
+- **Brad's notes:** never word for word; nothing shown when the office hasn't written the customer's version.
+- **Deposit reminder:** one, 24 h before, only when booked 5+ days ahead.
+- **Look:** logos and socials on every email; one-page newsletter.
+- **DNS:** Matthew added DKIM + DMARC on aeration365.com, 365aeration.com and sixfoldcolorado.com; verified.
+
+**J.A.R.V.I.S.** (live): Jen's AI chat in the Sixfold app on Matthew's plan.
+- **Voice and speed:** Iron Man butler voice; about 15 s for a quick reply; times, working notes, Refresh now, one notification per reply; blue.
+- **What it does:** Jen's office work, checking with her before anything reaches a customer or moves money; Matthew is asked before drastic app changes. Monthly plans walked through step by step with her own scope and price.
+
+**Sixfold app / all editions** (live)
+- Pipeline buttons side by side, no Meta import on Sixfold.
+- Back from any Office screen returns to the Office (all editions).
+- Part payment box follows dark mode; Apple Pay on pay links.
+- Ad spend and the Messenger sources fixed. Concert ad D final.
+
+**Traverse prospecting**
+- **Emails:** standing go to email everyone, 15 an hour, plain only (the picture version hit spam on Workspace). 402 sent, about 1,250 queued; 3 clicks, 4 bounces. Bounces become notes; placeholder addresses are refused.
+- **Nextdoor:** 407 pages on the desk; all young batches done.
+
+**Fiverr** (Matthew's own): seven gigs, covers, 11 portfolio samples (images + PDFs), profile photo, listing sheet within every limit. Drafts on Fiverr until the W-9 clears.
+
+**Running overnight:** website finder v2 on the cloud machine (6,933 companies), hail hours, prospect emails.
+
 ## 2026-10-31 (Saturday)
 
 **Traverse prospecting** (site open since last night)
