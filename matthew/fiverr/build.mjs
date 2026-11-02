@@ -165,7 +165,7 @@ if (!process.argv.includes('--no-png')) {
 // ---- checks ----
 const checks = gigs.map((g) => {
   const t = g.title.length, d = descText(g).length;
-  return { slug: g.slug, t, d, ok: t <= LIM.title && d <= LIM.desc && g.tags.length <= 5, tCard: t <= LIM.titleCard };
+  return { slug: g.slug, t, d, ok: t <= LIM.title && d <= LIM.desc && g.tags.length <= 5 && g.tags.every((x) => x.length <= 20), tCard: t <= LIM.titleCard };
 });
 
 // ---- preview ----
@@ -184,7 +184,7 @@ const gigCard = (g) => `
 const gigDetail = (g, c) => `
   <section class="gig" id="${g.slug}">
     <h2>${esc(g.title)}</h2>
-    <div class="checks">${pill(c.t <= LIM.title, `Title ${c.t}/${LIM.title}`)} ${pill(c.tCard, c.tCard ? 'fits on the gig card' : 'may be cut on the gig card (over 50)')} ${pill(c.d <= LIM.desc, `Description ${c.d}/${LIM.desc}`)} ${pill(g.tags.length <= 5, `${g.tags.length} tags`)}</div>
+    <div class="checks">${pill(c.t <= LIM.title, `Title ${c.t}/${LIM.title}`)} ${pill(c.tCard, c.tCard ? 'fits on the gig card' : 'may be cut on the gig card (over 50)')} ${pill(c.d <= LIM.desc, `Description ${c.d}/${LIM.desc}`)} ${pill(g.tags.length <= 5 && g.tags.every((x) => x.length <= 20), `${g.tags.length} tags, each 20 or under`)}</div>
     <div class="cols">
       <div class="main">
         <img class="hero" src="covers/${g.slug}.png" alt="">

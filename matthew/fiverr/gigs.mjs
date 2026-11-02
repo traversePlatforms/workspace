@@ -23,7 +23,7 @@ export const gigs = [
     cover: { kicker: 'Email deliverability', h: ['SPF, DKIM and DMARC', 'set up right'], sub: 'Emails that prove they are really from you', mock: 'checks' },
     title: 'I will set up SPF, DKIM and DMARC for your domain',
     category: 'Programming & Tech > Support & IT (pick an email or DNS service type if offered)',
-    tags: ['spf', 'dkim', 'dmarc', 'email deliverability', 'email spam'],
+    tags: ['spf', 'dkim', 'dmarc', 'email deliverability', 'dns records'],
     description: [
       'If your emails land in spam, or customers say they never got your invoice, your domain is often missing the records that prove your mail is really from you.',
       '',
@@ -70,7 +70,7 @@ export const gigs = [
     cover: { kicker: 'Email templates', h: ['Branded emails', 'your customers open'], sub: 'Newsletters, follow-ups, receipts and reminders', mock: 'email' },
     title: 'I will design branded email templates for your business',
     category: 'Graphics & Design > Email Design (backup: Digital Marketing > Email Marketing)',
-    tags: ['email template', 'newsletter', 'html email', 'mailchimp template', 'email design'],
+    tags: ['email template', 'html email', 'newsletter design', 'mailchimp template', 'email design'],
     description: [
       'Branded emails for the messages your business sends again and again: a newsletter, a thank-you after a job, a follow-up, a receipt or a reminder.',
       '',
@@ -116,7 +116,7 @@ export const gigs = [
     cover: { kicker: 'Small business websites', h: ['A clean website', 'that looks the part'], sub: 'Fast, phone-first, and yours to keep', mock: 'site' },
     title: 'I will build a clean small business website',
     category: 'Programming & Tech > Website Development (service type: business or custom website)',
-    tags: ['small business website', 'business website', 'landing page', 'website design', 'local business'],
+    tags: ['business website', 'website design', 'landing page', 'website developer', 'small business site'],
     description: [
       'A fast, clean website for a local or small business: who you are, what you do, where you work, and how to reach you.',
       '',
@@ -165,7 +165,7 @@ export const gigs = [
     cover: { kicker: 'Print design', h: ['Print-ready flyers,', 'ads and door hangers'], sub: 'Sized to your printer, QR codes tested', mock: 'print' },
     title: 'I will design a print-ready flyer, ad or door hanger',
     category: 'Graphics & Design > Flyer Design (backup: Postcard Design or Brochure Design)',
-    tags: ['flyer design', 'door hanger', 'print ad', 'postcard design', 'business card'],
+    tags: ['flyer design', 'door hanger', 'print ad design', 'postcard design', 'business card'],
     description: [
       'Print pieces that look professional and are ready for the printer: flyers, half-page or quarter-page ads, door hangers, postcards, rack cards and business cards.',
       '',
@@ -207,7 +207,7 @@ export const gigs = [
     cover: { kicker: 'AI assistants', h: ['An AI assistant that', 'knows your business'], sub: 'For your staff, or on your website', mock: 'chat' },
     title: 'I will set up an AI assistant for your business',
     category: 'AI Services > AI Chatbots (backup: AI Agents)',
-    tags: ['ai assistant', 'ai chatbot', 'website chatbot', 'claude', 'custom gpt'],
+    tags: ['ai chatbot', 'ai assistant', 'website chatbot', 'custom gpt', 'claude ai'],
     description: [
       'An AI assistant that knows your business: your services, prices, hours, policies and the questions customers keep asking.',
       '',
@@ -250,7 +250,7 @@ export const gigs = [
     cover: { kicker: 'B2B lead lists', h: ['Business lead lists', 'for your trade and area'], sub: 'Websites, phones and business emails', mock: 'sheet' },
     title: 'I will build a B2B lead list for your trade and area',
     category: 'Lead Generation > Prospects List Creation (backup: Lead Research)',
-    tags: ['b2b leads', 'lead list', 'lead generation', 'business email list', 'local business'],
+    tags: ['b2b lead generation', 'prospect list', 'lead list', 'business email list', 'contractor leads'],
     description: [
       'A clean list of businesses to contact, built for your target: a trade or industry, in a city, a county or a whole state.',
       '',
@@ -297,7 +297,7 @@ export const gigs = [
     cover: { kicker: 'Professional documents', h: ['Your notes, turned into', 'a professional PDF'], sub: 'Handbooks, SOPs, proposals and forms', mock: 'docs' },
     title: 'I will turn your notes into a professional PDF document',
     category: 'Business > Virtual Assistant > Template Docs & Formatting (backup: Graphics & Design > Presentation Design)',
-    tags: ['pdf design', 'document formatting', 'employee handbook', 'sop', 'fillable pdf'],
+    tags: ['pdf design', 'document formatting', 'employee handbook', 'sop', 'fillable pdf form'],
     description: [
       "Send me your notes, an old Word file, a messy Google Doc or a list of bullet points, and I'll turn it into a clean, professional document in your brand.",
       '',
