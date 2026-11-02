@@ -164,7 +164,7 @@
   },
   "water": {
     "checked": "2026-09-30",
-    "footer": "Aeration and water: Colorado State University Extension (PlantTalk 1505 and 1534), checked 4 Oct 2026. Watering rules checked 30 Sep 2026 against each provider's own page. Drought stages change without warning: Denver went from normal rules to a total ban in about five weeks. Check the provider's page that week before telling anyone a watering schedule. Sources and the fact-check log: sixfold/research/water-restrictions-2026.md.",
+    "footer": "Watering rules checked 30 Sep 2026 against each water provider's own page. Drought stages can change without warning, so check the provider's page that week before telling anyone a watering schedule.",
     "wellTowns": [
       "black-forest",
       "franktown",

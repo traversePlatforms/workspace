@@ -1809,7 +1809,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .helpfab{position:fixed;right:18px;bottom:18px;z-index:900;width:56px;height:56px;border-radius:50%;border:0;background:var(--jv);color:var(--on-jv,#fff);box-shadow:0 6px 18px rgba(0,0,0,.25);display:grid;place-items:center;cursor:pointer}.helpfab .helpdot{position:absolute;top:6px;right:6px;width:13px;height:13px;border-radius:50%;background:#E4703A;border:2px solid #fff}.hchat-on .helpfab{display:none}
   @media (max-width:760px){.helpfab{bottom:84px;right:14px;width:52px;height:52px}}
   .hchat{position:fixed;right:18px;bottom:18px;z-index:950;width:380px;height:min(600px,calc(100vh - 36px));display:flex;flex-direction:column;background:var(--bg,#fff);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.28);overflow:hidden}
-  @media (max-width:760px){.hchat{inset:0;width:auto;height:auto;border-radius:0;border:0}}
+  .hchat.hcfull{inset:0;width:auto;height:auto;border-radius:0;border:0;box-shadow:none}   /* the hub's J.A.R.V.I.S. tab (?jarvis=1, 2026-11-02): the chat is the whole page */
+@media (max-width:760px){.hchat{inset:0;width:auto;height:auto;border-radius:0;border:0}}
   .hchd{display:flex;align-items:center;gap:6px;padding:10px 10px 10px 14px;background:var(--jv);color:var(--on-jv,#fff);cursor:pointer}.hcttl{flex:1;font:800 16px var(--sans)}.hcbtn{background:rgba(255,255,255,.16);color:inherit;border:0;border-radius:999px;padding:6px 10px;font:700 12.5px var(--sans);cursor:pointer}.hcx{width:32px;padding:6px 0}
   .hcbody{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--card)}
   .hcmsg{max-width:84%;border-radius:16px;padding:8px 12px}.hcmsg.me{align-self:flex-end;background:var(--jv);color:var(--on-jv,#fff);border-bottom-right-radius:5px}.hcmsg.them{align-self:flex-start;background:var(--bg,#fff);border:1px solid var(--line);border-bottom-left-radius:5px}.hcwho{font-size:11px;font-weight:800;opacity:.7;margin-bottom:2px}.hctxt{white-space:pre-wrap;font-size:14.5px;line-height:1.42}.hctime{font-size:10.5px;opacity:.62;margin-top:3px;text-align:right}.hcrefresh{margin-top:7px;border:0;border-radius:999px;padding:6px 12px;font:700 13px var(--sans);background:var(--jv);color:var(--on-jv,#fff);cursor:pointer}
@@ -7589,7 +7590,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!helpOk()) return;
     if (HC.el) HC.el.remove();
     var from = S.screen || '';
-    var w = q('div', 'hchat'); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', HELP_NAME);
+    var w = q('div', 'hchat' + (S.jarvisTab ? ' hcfull' : '')); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', HELP_NAME);
     var hd = q('div', 'hchd');
     hd.appendChild(q('div', 'hcttl', HELP_NAME));
     var nw = q('button', 'hcbtn', 'Clear'), er = q('button', 'hcbtn', 'Earlier'), cx = q('button', 'hcbtn hcx', '✕'); [nw, er, cx].forEach(function (x) { x.type = 'button'; });
@@ -7664,9 +7665,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Claude (a session on Matthew's laptop, picked up within a few minutes) looks into it, fixes what it safely can and replies here. */
   var HELP_ST = { new: ['Sent', 'Picked up within a few minutes'], working: ['On it', 'Looking into it now'], answered: ['Answered', ''], matthew: ['Waiting on Matthew', 'Needs his OK'], closed: ['Closed', ''] };
   function helpReturn() {
-    var m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(location.search); if (!m || !CO.a365) return false;
-    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
-    chooseView(); helpChat(m[1]); return true;   /* the chat over the home screen */
+    var m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(location.search), jv = /[?&]jarvis=1\b/.test(location.search);
+    if ((!m && !jv) || !CO.a365) return false;
+    /* ?jarvis=1 (2026-11-02, Matthew: "add jarvis to my assistant hub ... so i can access it easier and individually"): the hub's own tab opens
+       straight into the chat, full page, the same conversations as the chat bubble; the address keeps it, so a reload comes back to it */
+    if (jv) S.jarvisTab = true; else { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {} }
+    chooseView(); helpChat(m ? m[1] : undefined); return true;   /* the chat over the home screen */
   }
   function helpView(openId) {
     var from = S.screen && S.screen !== 'help' ? S.screen : (S.helpFrom || '');
