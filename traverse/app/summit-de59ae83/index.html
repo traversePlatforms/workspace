@@ -3782,7 +3782,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     load();
   }
   function setBar(mode, o) {
-    o = homeBackFix(setupBackFix(o || {}));   /* Back to Setup from a screen Setup opened; Back to Home, where you were, from one a home tile opened (2026-10-30) */
+    o = officeBackFix(homeBackFix(setupBackFix(o || {})));   /* Back to Setup from a screen Setup opened; Back to Home, where you were, from one a home tile opened (2026-10-30) */
     setupTop();   /* a setup screen opens at its top (2026-10-30) */
     hideSplash();   /* any screen that draws its bar is past the logo (2026-10-30, Matthew: back from Google sign-in, Setup › Email stayed under the logo until a refresh; the Facebook, Billing and Quick quote screens had each needed the same line) */
     if (S.screen !== S._foldScreen) { S._foldScreen = S.screen;   /* folds start closed on every screen (2026-10-17, Matthew: not remembered after a refresh, leaving or coming back) */
@@ -15198,6 +15198,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.screen !== S.homeScr || !o.back || (o.back !== chooseView && o.back !== kitSetupView && o.back !== officeView)) return o;   /* a step inside keeps its own Back */
     var y = S.homeRet.y, to = S.homeRet.to || null, lbl = S.homeRet.label || (o.back === chooseView ? o.backLabel : 'Field tools');
     return Object.assign({}, o, { back: function () { homeBack(y, to); }, backLabel: lbl });
+  }
+  /* Back from any screen opened inside the Office on a computer returns to the Office, not Home (2026-11-01, Matthew: "if its an issue on
+     sixfold office ... it might be an issue across the other editions"): Customers, Stats, Square, Calendar, Team stats, Usage, Accounts,
+     Company, Billing and the rest sent Back to Home. One rule for all of them; a screen with its own Back (a step inside) keeps it. */
+  function officeBackFix(o) {
+    if (!o.back || o.back !== chooseView || S.screen === 'office' || !S.inOffice || !dnavOn() || !planOk()) return o;
+    return Object.assign({}, o, { back: officeView, backLabel: 'Office' });
   }
   function homeBack(y, to) {
     if (to) { homeRetClear(); to(); return; }
