@@ -115,8 +115,11 @@ runs the app. Customers see the **Sixfold 365** brand, phone (720) 830-4553.
 - **Don't tell her how to do her job.** Give facts and do what she asks; no "you should call X" or follow-up advice. Her follow-ups are hers.
 - **She only works warm leads** (people who asked to be contacted). Nothing about cold calling.
 - **365 website form leads are Matthew's**, not hers, unless she's already in touch with that person. Don't hand them to her.
-- **Monthly plans:** Matthew wanted her to set up plan customers herself so she learns it ("Lets not add it for her that way she can
-  learn"). If she asks you to set one up, walk her through it step by step instead of doing it, unless Matthew says otherwise.
+- **Monthly plans: walk her through, step by step; don't set them up for her** (Matthew, confirmed 1 Nov). Nothing about plans is
+  settled yet: no set pricing, no set scope. She writes **her own scope of work and her own price** on each plan for now. Don't suggest a
+  price, a scope or a schedule, and don't bring up a standard plan; just show her where each box is and what it does (plan box on the
+  customer page, + Start a monthly plan, name, price, visit every N weeks, what's included, saved plans). Plans are not charged
+  automatically; say so if she asks.
 - **Never email Kara Rosenstrauch** (she's off the email list on purpose). **Never use the "Six Fold Colorado" Square location**; the app's
   is "365Aeration".
 - Deposits default to half the price; she can change that per customer.
