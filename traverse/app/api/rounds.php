@@ -7978,36 +7978,30 @@ function followupBuild(array $j, array $l): array {
     $why = 'You are getting this because we worked on your lawn.';
     $noted = []; if ($want !== '') $noted[] = ['Work you mentioned wanting', $want]; if ($sug !== '') $noted[] = ['Work ' . $crew . ' would suggest', $sug];
     $seedLine = 'Your new seed is in its first couple of weeks. Keep the top of the soil damp and hold off on mowing until the new grass is up.';
-    $planLine = 'Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control, with aeration when the lawn needs it.' . ($fresh ? ' Jen sent the details by text.' : '') . ' Reply here if you\'d like to set it up.';
-    $springLine = 'Want a spot? Reply "spring" and we\'ll put you on the list.';
-    $offLine = 'It\'s for every customer as a thank-you. Mention it when you book.';
+    /* 2 Nov (Matthew, "option 2 ... as much into inbox as i can"): a personal note, the way a person types it. Gmail put the designed version
+       (band, boxes, buttons, offer blocks, List-Unsubscribe) in Promotions; the aftercare and deposit reminder landed in the inbox. */
+    $offer = 'As a thank-you, you get 10% off your next service (mention it when you book). Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control' . ($fresh ? '; Jen sent the details by text' : '') . '. And if you\'d like a spot for spring aeration, just reply "spring".';
     /* the text version */
-    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks again for having us out on " . $day . ".\n\n";
+    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks again for having us out on " . $day . ". How's the lawn looking? If anything doesn't look right, just reply to this email.\n\n";
     if ($seeded) $t .= $seedLine . "\n\n";
     if ($balLine !== '') $t .= $balLine . ($plink !== '' ? ' You can pay it here: ' . $plink : '') . ' ' . $disc . "\n\n";
-    if ($rv !== '') $t .= "If you have a minute, we'd appreciate an honest Google review:\n" . $rv . "\n\n";
-    if ($noted) $t .= $crew . " made a note of a few things while on your property:\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\nIf you'd like a price on any of it, reply to this email or call or text " . $ph . ".\n\n";
-    $t .= 'Keep it going all year. ' . $planLine . "\n\nSpring aeration. " . $springLine . "\n\n10% off your next service. " . $offLine . "\n\nThanks,\n" . $name . "\n" . $ph . ($web !== '' ? ' · ' . $web : '') . "\n\n--\n" . $why . "\nUnsubscribe: " . $un . "\n" . $addr . "\n";
-    /* the HTML version: the newsletter's look */
+    if ($rv !== '') $t .= "If you have a minute, we'd appreciate an honest Google review: " . $rv . "\n\n";
+    if ($noted) $t .= $crew . " noticed a few things while he was there:\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\nIf you'd like a price on any of it, just reply.\n\n";
+    $t .= $offer . "\n\nThanks,\n" . $name . "\n" . $ph . "\n\n--\n" . $why . " Unsubscribe: " . $un . "\n" . $addr . "\n";
+    /* the HTML version: plain paragraphs and plain links, nothing else */
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8'); $tel = preg_replace('/\D/', '', $ph);
-    $p = fn($x) => '<p style="margin:0 0 16px">' . $x . '</p>';
-    $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
-       . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
-       . a365MailHead($name)
-       . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p>' . $p('Thanks again for having us out on ' . $e($day) . '.');
+    $p = fn($x) => '<p style="margin:0 0 14px">' . $x . '</p>';
+    $a = fn($u, $txt) => '<a href="' . $e($u) . '">' . $e($txt) . '</a>';
+    $h = '<!doctype html><html><body style="margin:0;font-family:Arial,Helvetica,sans-serif;color:#222;font-size:15px;line-height:1.5"><div style="max-width:600px;padding:8px 4px">'
+       . $p('Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',') . $p('Thanks again for having us out on ' . $e($day) . '. How&#39;s the lawn looking? If anything doesn&#39;t look right, just reply to this email.');
     if ($seeded) $h .= $p($e($seedLine));
-    if ($balLine !== '') $h .= '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin:0 0 16px">' . $e($balLine)
-       . ($plink !== '' ? '<div style="margin-top:10px"><a href="' . $e($plink) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:10px 18px;border-radius:999px">Pay the ' . $e(fuMoney($owed)) . ' balance</a></div>' : '')
-       . '<div style="margin-top:8px;color:#5a6858;font-size:13px">' . $e($disc) . '</div></div>';
-    if ($rv !== '') $h .= '<p style="margin:0 0 10px">If you have a minute, we&#39;d appreciate an honest Google review:</p><p style="margin:0 0 18px"><a href="' . $e($rv) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Leave a Google review</a></p>';
-    if ($noted) $h .= '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin:0 0 16px"><div style="font-weight:700;margin:0 0 8px">' . $e($crew) . ' made a note of a few things while on your property</div><ul style="margin:0 0 10px;padding-left:20px">'
-       . implode('', array_map(fn($n) => '<li style="margin:0 0 6px"><b>' . $e($n[0]) . ':</b> ' . nl2br($e($n[1])) . '</li>', $noted)) . '</ul><div>If you&#39;d like a price on any of it, reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</div></div>';
-    $h .= $p('<b>Keep it going all year.</b> ' . $e($planLine)) . $p('<b>Spring aeration.</b> ' . $e($springLine)) . $p('<b>10% off your next service.</b> ' . $e($offLine))
-       . '<p style="margin:0 0 4px">Thanks,</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' . ($web !== '' ? ' · ' . $e($web) : '') . '</p>'
-       . a365MailSocial()
-       . '<div style="margin-top:28px;padding-top:14px;border-top:1px solid #dfe6da;color:#5a6858;font-size:12px;line-height:1.5">' . $e($why) . ' <a href="' . $e($un) . '" style="color:#5a6858">Unsubscribe</a><br>' . nl2br($e($addr)) . '</div>'
+    if ($balLine !== '') $h .= $p($e($balLine) . ($plink !== '' ? ' ' . $a($plink, 'You can pay it here.') : '') . ' ' . $e($disc));
+    if ($rv !== '') $h .= $p('If you have a minute, we&#39;d appreciate an ' . $a($rv, 'honest Google review') . '.');
+    if ($noted) $h .= $p($e($crew) . ' noticed a few things while he was there:<br>' . implode('<br>', array_map(fn($n) => '- ' . $e($n[0]) . ': ' . nl2br($e($n[1])), $noted)) . '<br>If you&#39;d like a price on any of it, just reply.');
+    $h .= $p($e($offer)) . $p('Thanks,<br>' . $e($name) . '<br><a href="tel:' . $e($tel) . '">' . $e($ph) . '</a>')
+       . '<p style="margin:24px 0 0;color:#777;font-size:12px">' . $e($why) . ' <a href="' . $e($un) . '" style="color:#777">Unsubscribe</a><br>' . nl2br($e($addr)) . '</p>'
        . '</div></body></html>';
-    return ['How\'s the lawn' . ($first !== '' ? ', ' . $first : '') . '?', $t, $h, ['List-Unsubscribe: <' . $un . '>', 'List-Unsubscribe-Post: List-Unsubscribe=One-Click']];
+    return ['How\'s the lawn' . ($first !== '' ? ', ' . $first : '') . '?', $t, $h, []];
 }
 /** send one job's follow-up email (the 5-minute job, or Send now). Records it on the job, the lead and the customer; a failure alerts the office. */
 function jobFollowup(string $jid, string $why, bool $byHand = false): array {
