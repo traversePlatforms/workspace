@@ -6,7 +6,7 @@ if (PHP_SAPI !== 'cli') exit;
 final class SixfoldOut extends Exception { public array $body; public function __construct(array $b) { parent::__construct('out'); $this->body = $b; } }
 define('SIXFOLD_CLI', true);
 $_REQUEST = $_GET = ['action' => 'none']; $_SERVER['REQUEST_METHOD'] = 'GET';
-try { require getenv('HOME') . '/www/traverseplatforms.com/public_html/api/rounds.php'; } catch (SixfoldOut $e) { }
+try { require getenv('HOME') . '/www/traverseplatforms.com/public_html/api/' . (in_array('--practice', $argv, true) ? 'sixfold-practice-rounds.php' : 'rounds.php'); }   /* --practice: the practice copy (2 Nov) */ catch (SixfoldOut $e) { }
 $peek = in_array('--peek', $argv, true);
 $lk = fopen(helpFile() . '.lock', 'c'); flock($lk, LOCK_EX);
 $T = helpAll(); $now = time();

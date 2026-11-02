@@ -39,6 +39,29 @@ $T"
   rm -f "$LOCK"
 }
 
+# The practice copy's chat (2 Nov, Matthew: "make jarvis aware that it is only a tester version and give it no way to make changes but act
+# like its changing things ... then give a disclaimer"). A session with NO tools, NO MCP servers and no settings or CLAUDE.md (run from a
+# folder outside the user profile), only traverse/ops/help-practice-prompt.md; its text output is posted as the reply.
+PCWD=/c/ProgramData/jarvis-practice
+one_practice() {
+  local T ID OUT CLAUDE
+  CLAUDE=$(claude_bin); [ -n "$CLAUDE" ] && [ -f "$CLAUDE" ] || { log "no claude.exe found"; return 1; }
+  T=$($SG 'php $HOME/www/traverseplatforms.com/sixfold-tools/help-next.php --practice' < /dev/null 2>>"$LOG") || { log "practice: server not reachable"; return 0; }
+  [ -n "$T" ] || return 0
+  ID=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).id)}catch(e){}})")
+  [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { log "practice: could not read the ticket"; return 1; }
+  local CONV; CONV=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const t=JSON.parse(s);console.log(t.conversation.map(m=>m.from+' ('+m.when+'): '+m.text).join('\n\n'))}catch(e){}})")
+  log "practice $ID: session started"
+  mkdir -p "$PCWD"
+  OUT=$(cd "$PCWD" && "$CLAUDE" -p "The chat so far (answer the last message):
+
+$CONV" --tools "" --strict-mcp-config --setting-sources project --model sonnet --system-prompt "$(cat "$REPO/traverse/ops/help-practice-prompt.md")" --output-format text 2>>"$ST/p-$ID.out")
+  [ -n "$OUT" ] || OUT="My apologies, I seem to have lost my train of thought. Could you send that again?"
+  printf '%s' "$OUT" > "$ST/p-$ID.reply"
+  printf '%s' "$OUT" | $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-reply.php $ID answered --practice" >> "$LOG" 2>&1
+  log "practice $ID: done"
+}
+
 if [ -f "$LOCK" ]; then
   [ $(( $(date +%s) - $(stat -c %Y "$LOCK") )) -lt 6000 ] && exit 0   # a session is running (another copy): leave it
   log "stale lock removed"; rm -f "$LOCK"
@@ -49,6 +72,8 @@ while [ "$(date +%s)" -lt "$END" ]; do
   if [ ! -f "$ST/pause" ]; then
     N=$(curl -s -m 8 "$CHECK" 2>/dev/null)
     if [[ "$N" =~ ^[0-9]+$ ]] && [ "$N" -gt 0 ]; then one_ticket; continue; fi
+    P=$(curl -s -m 8 "$CHECK&p=1" 2>/dev/null)
+    if [[ "$P" =~ ^[0-9]+$ ]] && [ "$P" -gt 0 ]; then one_practice; continue; fi
   fi
   sleep 5
 done

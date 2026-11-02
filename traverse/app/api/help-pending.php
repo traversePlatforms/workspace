@@ -8,7 +8,7 @@ $base = dirname(__DIR__, 2);
 $key = trim((string) @file_get_contents($base . '/sixfold-private/help-poll.key'));
 if ($key === '' || !hash_equals($key, (string) ($_GET['k'] ?? ''))) { http_response_code(404); exit; }
 $st = [];
-$f = @fopen($base . '/sixfold-data/rounds/help.log', 'r');
+$f = @fopen($base . (($_GET['p'] ?? '') === '1' ? '/sixfold-practice-data/rounds/help.log' : '/sixfold-data/rounds/help.log'), 'r');   /* p=1: the practice copy's chat (2 Nov) */
 if ($f) { while (($ln = fgets($f)) !== false) { $r = json_decode($ln, true); if (!is_array($r) || empty($r['id'])) continue;
     $t = (string) ($r['t'] ?? ''); $st[$r['id']] = $t === 'msg' ? 'new' : (string) ($r['status'] ?? ($st[$r['id']] ?? 'new')); } fclose($f); }
 echo count(array_filter($st, fn($s) => $s === 'new'));

@@ -8669,8 +8669,9 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose'], true)) {
         $c = is_array($body['ctx'] ?? null) ? $body['ctx'] : []; $ctx = [];
         foreach (['screen' => 40, 'lead' => 40, 'job' => 40, 'name' => 80] as $k => $max) if (isset($c[$k]) && is_string($c[$k]) && $c[$k] !== '') $ctx[$k] = mb_substr($c[$k], 0, $max);
         if (!appendLine(helpFile(), ['t' => 'msg', 'id' => $id, 'from' => $me, 'text' => $text, 'ctx' => $ctx ?: null, 'at' => time()])) fail('Could not save that. Try again.', 500);
-        /* the practice copy (2026-11-02): the live help desk's watcher never sees this folder; the note stays here for Matthew to read, and says so */
-        if (PRACTICE) { practiceLog('help desk', ['from' => $me, 'text' => $text]); appendLine(helpFile(), ['t' => 'reply', 'id' => $id, 'from' => 'Practice copy', 'text' => 'Thanks, this is kept for Matthew to read. This is the practice copy, so it does not go to the live help desk and nothing here is fixed by itself.', 'status' => 'answered', 'at' => time()]); }
+        /* the practice copy (2026-11-02): the note stays here for Matthew to read; the laptop watcher answers it with the practice J.A.R.V.I.S.
+           (no tools, plays along, says nothing really changed: traverse/ops/help-practice-prompt.md), never the live help desk */
+        if (PRACTICE) practiceLog('help desk', ['from' => $me, 'text' => $text]);
         out(['ok' => true, 'ticket' => helpAll()[$id]]);
     }
     if ($action === 'helpclose') {
