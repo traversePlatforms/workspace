@@ -29,6 +29,10 @@ if (!$mxNow && !$mxDry && is_file(__DIR__ . '/eod-report.php')) @exec(escapeshel
 if (!$mxNow && !$mxDry && is_file(dirname(__DIR__) . '/public_html/peak-desk-28d38d/api/desk.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/public_html/peak-desk-28d38d/api/desk.php') . ' rescan 15 >> ' . escapeshellarg(dirname(__DIR__) . '/peak-desk-data/scan.log') . ' 2>&1 &');
 /* the Traverse Prospect Desk's email queue rides on this hourly job as well (2026-10-26, TR-21): it sends only what Matthew queued on the
    desk, weekdays 8 am to 5 pm, within the desk's daily cap, up to 15 a run about 2 minutes apart (was 10; Matthew 1 Nov); in the background. */
+/* the Prospect Desk's bounces, every hour before the queue sends (2026-11-02, Matthew: "run a bounce scan every hour"): the bounce notices
+   in the Traverse inbox (read through the assistant's Gmail connection) logged on the desk, so a bounced address is never mailed again */
+if (!$mxNow && !$mxDry && is_file(__DIR__ . '/prospect-bounce-scan.php') && is_dir(dirname(__DIR__) . '/assistant-private')) { $b = dirname(__DIR__);
+    @exec('cd ' . escapeshellarg($b . '/assistant-private') . ' && ' . escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/prospect-bounce-scan.php') . ' 3 2>/dev/null | (cd ' . escapeshellarg($b . '/public_html/prospects-47bfe6/api') . ' && ' . escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/prospect-bounce-log.php') . ' 2>&1 | grep -v "^usage") >> ' . escapeshellarg($b . '/traverse-prospects-data/bounce-scan.log') . ' 2>&1'); }
 if (!$mxNow && !$mxDry && is_file(dirname(__DIR__) . '/public_html/prospects-47bfe6/api/desk.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/public_html/prospects-47bfe6/api/desk.php') . ' sendqueue 15 >> ' . escapeshellarg(dirname(__DIR__) . '/traverse-prospects-data/send.log') . ' 2>&1 &');
 /* every install's door-search index, rebuilt here when a town file changed instead of inside someone's first search (2026-10-27, code
    review item 9); in the background, so this email never waits on it */
