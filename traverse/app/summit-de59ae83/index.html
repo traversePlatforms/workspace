@@ -7511,12 +7511,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      an admin; it opens a chat window (full screen on a phone) with the latest conversation: her messages on the right, Claude's on the
      left, newest at the bottom, a "looking into it" line while the laptop session works. Enter sends, Shift+Enter is a new line. Each
      conversation is still one Help ticket underneath; New chat starts another; Earlier lists them all (helpView). */
+  var HELP_NAME = 'J.A.R.V.I.S.';   /* the chat's name in the app (Matthew, 1 Nov); the work behind it is a Claude Code session */
   var HC = { el: null, id: null, tick: null, seenKey: 'helpSeen' };
   function helpOk() { return !!(CO.a365 && (S.role === 'admin' || S.role === 'office') && feat('walkdesk')); }
   function helpSeen(t) { try { var s = JSON.parse(localStorage.getItem(HC.seenKey) || '{}'); if (t) { s[t.id] = t.updated; localStorage.setItem(HC.seenKey, JSON.stringify(s)); } return s; } catch (e) { return {}; } }
   function helpFab() {
     if (!helpOk() || document.getElementById('helpfab')) return;
-    var b = q('button', 'helpfab'); b.id = 'helpfab'; b.type = 'button'; b.setAttribute('aria-label', 'Help: chat with Claude');
+    var b = q('button', 'helpfab'); b.id = 'helpfab'; b.type = 'button'; b.setAttribute('aria-label', 'Help: chat with ' + HELP_NAME);
     b.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-4.5 3.6A.6.6 0 0 1 3.5 21V18H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 6.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm5 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm5 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z"/></svg><span class="helpdot" hidden></span>';
     b.addEventListener('click', function () { helpChat(); });
     document.body.appendChild(b); helpDot();
@@ -7532,12 +7533,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var from = S.screen || '';
     var w = q('div', 'hchat'); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', 'Help chat');
     var hd = q('div', 'hchd');
-    hd.appendChild(q('div', 'hcttl', 'Help · Claude'));
+    hd.appendChild(q('div', 'hcttl', 'Help · ' + HELP_NAME));
     var nw = q('button', 'hcbtn', 'New chat'), er = q('button', 'hcbtn', 'Earlier'), cx = q('button', 'hcbtn hcx', '✕'); [nw, er, cx].forEach(function (x) { x.type = 'button'; });
     cx.setAttribute('aria-label', 'Close');
     hd.appendChild(nw); hd.appendChild(er); hd.appendChild(cx); w.appendChild(hd);
     var body = q('div', 'hcbody'); w.appendChild(body);
-    var bar = q('div', 'hcbar'), ta = q('textarea'), sb = q('button', 'hcsend'); ta.rows = 1; ta.maxLength = 2000; ta.placeholder = 'Message Claude…'; sb.type = 'button'; sb.setAttribute('aria-label', 'Send');
+    var bar = q('div', 'hcbar'), ta = q('textarea'), sb = q('button', 'hcsend'); ta.rows = 1; ta.maxLength = 2000; ta.placeholder = 'Message ' + HELP_NAME + '…'; sb.type = 'button'; sb.setAttribute('aria-label', 'Send');
     sb.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>';
     bar.appendChild(ta); bar.appendChild(sb); w.appendChild(bar);
     document.body.appendChild(w); document.body.classList.add('hchat-on');
@@ -7549,10 +7550,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var bubble = function (cls, who, text) { var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(q('div', 'hctxt noi18n', text)); body.appendChild(b); };
     var draw = function (t) {
       body.textContent = '';
-      bubble('them', 'Claude', 'Hi! Tell me what’s going on, the way you’d text Matthew. Name the customer if it’s about one. I’ll look into it and fix what I can; anything about money, prices, what customers see, or deleting goes to Matthew first.');
+      bubble('them', HELP_NAME, 'Hi! Tell me what’s going on, and name the customer if it’s about one. I’ll look into it and fix what I can. Anything about money, prices, what customers see, or deleting goes to Matthew first.');
       if (t) {
-        t.msgs.forEach(function (m) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : 'Claude', m.text); });
-        if (t.status === 'new' || t.status === 'working') { var wk = q('div', 'hcwork'); wk.appendChild(q('span', 'hcdots')); wk.appendChild(q('span', null, t.status === 'new' ? 'Sent. Claude picks it up within a few minutes…' : 'Claude is looking into it…')); body.appendChild(wk); }
+        t.msgs.forEach(function (m) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text); });
+        if (t.status === 'new' || t.status === 'working') { var wk = q('div', 'hcwork'); wk.appendChild(q('span', 'hcdots')); wk.appendChild(q('span', null, t.status === 'new' ? 'Sent. ' + HELP_NAME + ' picks it up within a few minutes…' : HELP_NAME + ' is looking into it…')); body.appendChild(wk); }
         else if (t.status === 'matthew') body.appendChild(q('div', 'hcnote', 'Passed to Matthew. He’ll get back to you.'));
         else if (t.status === 'closed') body.appendChild(q('div', 'hcnote', 'This chat is closed. Start a new one any time.'));
         helpSeen(t);
@@ -7589,7 +7590,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* Help (2026-11-01, Matthew: an assistant in the app Jen can message that "leads directly to you", on his plan): she writes the problem,
      Claude (a session on Matthew's laptop, picked up within a few minutes) looks into it, fixes what it safely can and replies here. */
-  var HELP_ST = { new: ['Sent', 'Claude picks it up within a few minutes'], working: ['Claude is on it', 'Looking into it now'], answered: ['Answered', ''], matthew: ['Waiting on Matthew', 'Needs his OK'], closed: ['Closed', ''] };
+  var HELP_ST = { new: ['Sent', 'Picked up within a few minutes'], working: ['On it', 'Looking into it now'], answered: ['Answered', ''], matthew: ['Waiting on Matthew', 'Needs his OK'], closed: ['Closed', ''] };
   function helpReturn() {
     var m = /[?&]help=(h\d{14}[0-9a-f]{4})\b/.exec(location.search); if (!m || !CO.a365) return false;
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
@@ -7598,14 +7599,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function helpView(openId) {
     var from = S.screen && S.screen !== 'help' ? S.screen : (S.helpFrom || '');
     hideToast(); S.signin = null; S.helpFrom = from; S.screen = 'help'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Help', sub: 'Write the problem; Claude replies here', back: chooseView, backLabel: 'Home' });
+    setBar('back', { title: 'Help', sub: 'Write the problem; ' + HELP_NAME + ' replies here', back: chooseView, backLabel: 'Home' });
     view.textContent = '';
     var box = q('div', 'card jnform hlp'); view.appendChild(box);
     box.appendChild(q('h2', 'tgrp', 'What’s going on?'));
-    var ta = q('textarea'); ta.rows = 4; ta.maxLength = 2000; ta.placeholder = 'Say it the way you would text Matthew, e.g. “Joseph Barnes’s job shows the wrong price” or “the deposit link won’t open”. Name the customer if it’s about one.';
+    var ta = q('textarea'); ta.rows = 4; ta.maxLength = 2000; ta.placeholder = 'Describe the problem, e.g. “Joseph Barnes’s job shows the wrong price” or “the deposit link won’t open”. Name the customer if it’s about one.';
     box.appendChild(ta);
-    var send = q('button', 'save', 'Send to Claude'); send.type = 'button'; box.appendChild(send);
-    box.appendChild(q('div', 'sub2', 'Claude reads it within a few minutes while Matthew’s laptop is on, fixes what it safely can, and replies here; your phone gets a ping. Prices, money, anything a customer sees, and deleting go to Matthew first.'));
+    var send = q('button', 'save', 'Send to ' + HELP_NAME); send.type = 'button'; box.appendChild(send);
+    box.appendChild(q('div', 'sub2', HELP_NAME + ' usually picks it up within a few minutes, fixes what it safely can, and replies here; your phone gets a ping. Prices, money, anything a customer sees, and deleting go to Matthew first.'));
     var list = q('div', 'hlplist'); view.appendChild(list);
     var draw = function (tickets) {
       list.textContent = '';
@@ -7614,11 +7615,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var c = q('div', 'card hlpt' + (t.id === openId ? ' hlpopen' : '')), st = HELP_ST[t.status] || [t.status, ''];
         var hd = q('div', 'hlphd'); hd.appendChild(q('span', 'hlpst hlp-' + t.status, st[0])); hd.appendChild(q('span', 'sub2', (t.by ? t.by + ' · ' : '') + new Date(t.updated * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + (st[1] ? ' · ' + st[1] : '')));
         c.appendChild(hd);
-        t.msgs.forEach(function (m) { var b = q('div', 'hlpmsg ' + (m.mine ? 'me' : 'them')); b.appendChild(q('div', 'hlpwho', m.mine ? m.from : 'Claude')); b.appendChild(q('div', 'hlptxt noi18n', m.text)); c.appendChild(b); });
+        t.msgs.forEach(function (m) { var b = q('div', 'hlpmsg ' + (m.mine ? 'me' : 'them')); b.appendChild(q('div', 'hlpwho', m.mine ? m.from : HELP_NAME)); b.appendChild(q('div', 'hlptxt noi18n', m.text)); c.appendChild(b); });
         if (t.status !== 'closed') {
           var rt = q('textarea'); rt.rows = 2; rt.maxLength = 2000; rt.placeholder = 'Add to this, or say if it’s fixed'; c.appendChild(rt);
           var row = q('div', 'lookrow'), rb = q('button', 'lnk', 'Send'), cl = q('button', 'lnk', 'Close it, all sorted'); rb.type = 'button'; cl.type = 'button';
-          rb.addEventListener('click', function () { var v = rt.value.trim(); if (v.length < 3) return; rb.disabled = true; api('helpsend', { body: { id: t.id, text: v } }).then(function (j) { rb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent', 'Claude will pick it up', null); load(); }).catch(function () { rb.disabled = false; toast('No signal', 'Not sent.', null); }); });
+          rb.addEventListener('click', function () { var v = rt.value.trim(); if (v.length < 3) return; rb.disabled = true; api('helpsend', { body: { id: t.id, text: v } }).then(function (j) { rb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent', HELP_NAME + ' will pick it up', null); load(); }).catch(function () { rb.disabled = false; toast('No signal', 'Not sent.', null); }); });
           cl.addEventListener('click', function () { api('helpclose', { body: { id: t.id } }).then(function (j) { if (j.ok) load(); }); });
           row.appendChild(rb); row.appendChild(cl); c.appendChild(row);
         }
@@ -7630,7 +7631,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     send.addEventListener('click', function () {
       var v = ta.value.trim(); if (v.length < 3) { toast('Write a little more', 'What is going on?', null); return; }
       send.disabled = true;
-      api('helpsend', { body: { text: v, ctx: { screen: S.helpFrom || '' } } }).then(function (j) { send.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } ta.value = ''; openId = j.ticket.id; toast('Sent', 'Claude picks it up within a few minutes', null); load(); }).catch(function () { send.disabled = false; toast('No signal', 'Not sent.', null); });
+      api('helpsend', { body: { text: v, ctx: { screen: S.helpFrom || '' } } }).then(function (j) { send.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } ta.value = ''; openId = j.ticket.id; toast('Sent', HELP_NAME + ' picks it up within a few minutes', null); load(); }).catch(function () { send.disabled = false; toast('No signal', 'Not sent.', null); });
     });
     load();
     clearInterval(S.helpTick); S.helpTick = setInterval(function () { if (S.screen !== 'help') { clearInterval(S.helpTick); return; } load(); }, 30000);
