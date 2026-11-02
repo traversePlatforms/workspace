@@ -15,9 +15,9 @@ $T = helpAll(); if (!isset($T[$id])) { fwrite(STDERR, "no such ticket\n"); exit(
 $text = trim((string) stream_get_contents(STDIN)); if ($text === '') { fwrite(STDERR, "empty reply\n"); exit(2); }
 $text = mb_substr($text, 0, 4000);
 appendLine(helpFile(), ['t' => 'reply', 'id' => $id, 'from' => 'J.A.R.V.I.S.', 'text' => $text, 'status' => $status, 'at' => time()]);
-$who = (string) $T[$id]['by']; $title = $status === 'matthew' ? 'Help: passed to Matthew' : 'Help: J.A.R.V.I.S. replied';   /* the chat's name in the app (Matthew, 1 Nov) */
+$who = (string) $T[$id]['by']; $title = $status === 'matthew' ? 'J.A.R.V.I.S.: passed to Matthew' : 'J.A.R.V.I.S. replied';   /* the chat's name in the app (Matthew, 1 Nov) */
 $short = mb_substr(preg_replace('/\s+/', ' ', $text), 0, 140);
 try { feedAdd($who, $title, $short, './?help=' . $id, 'help-' . $id . '-' . time()); } catch (Throwable $e) {}
 try { pushName($who, $title, $short, './?help=' . $id, 'help-' . $id); } catch (Throwable $e) {}
-if ($status === 'matthew') { try { a365Alert('Help: ' . $who . ' needs you', $short, true, false, false, true, './?help=' . $id); } catch (Throwable $e) {} }
+if ($status === 'matthew') { try { a365Alert('J.A.R.V.I.S.: ' . $who . ' needs you', $short, true, false, false, true, './?help=' . $id); } catch (Throwable $e) {} }
 echo "replied ($status) to $who\n";

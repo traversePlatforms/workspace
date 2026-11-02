@@ -7517,7 +7517,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function helpSeen(t) { try { var s = JSON.parse(localStorage.getItem(HC.seenKey) || '{}'); if (t) { s[t.id] = t.updated; localStorage.setItem(HC.seenKey, JSON.stringify(s)); } return s; } catch (e) { return {}; } }
   function helpFab() {
     if (!helpOk() || document.getElementById('helpfab')) return;
-    var b = q('button', 'helpfab'); b.id = 'helpfab'; b.type = 'button'; b.setAttribute('aria-label', 'Help: chat with ' + HELP_NAME);
+    var b = q('button', 'helpfab'); b.id = 'helpfab'; b.type = 'button'; b.setAttribute('aria-label', 'Chat with ' + HELP_NAME);
     b.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-4.5 3.6A.6.6 0 0 1 3.5 21V18H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm3 6.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm5 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zm5 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z"/></svg><span class="helpdot" hidden></span>';
     b.addEventListener('click', function () { helpChat(); });
     document.body.appendChild(b); helpDot();
@@ -7531,9 +7531,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!helpOk()) return;
     if (HC.el) HC.el.remove();
     var from = S.screen || '';
-    var w = q('div', 'hchat'); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', 'Help chat');
+    var w = q('div', 'hchat'); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', HELP_NAME);
     var hd = q('div', 'hchd');
-    hd.appendChild(q('div', 'hcttl', 'Help · ' + HELP_NAME));
+    hd.appendChild(q('div', 'hcttl', HELP_NAME));
     var nw = q('button', 'hcbtn', 'Clear'), er = q('button', 'hcbtn', 'Earlier'), cx = q('button', 'hcbtn hcx', '✕'); [nw, er, cx].forEach(function (x) { x.type = 'button'; });
     cx.setAttribute('aria-label', 'Close');
     hd.appendChild(nw); hd.appendChild(er); hd.appendChild(cx); w.appendChild(hd);
@@ -7602,7 +7602,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function helpView(openId) {
     var from = S.screen && S.screen !== 'help' ? S.screen : (S.helpFrom || '');
     hideToast(); S.signin = null; S.helpFrom = from; S.screen = 'help'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Help', sub: 'Write the problem; ' + HELP_NAME + ' replies here', back: chooseView, backLabel: 'Home' });
+    setBar('back', { title: HELP_NAME, sub: 'Earlier conversations', back: chooseView, backLabel: 'Home' });
     view.textContent = '';
     var box = q('div', 'card jnform hlp'); view.appendChild(box);
     box.appendChild(q('h2', 'tgrp', 'What’s going on?'));
@@ -23186,7 +23186,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
       (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,
-      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Help', function () { helpChat(); }, false, null, ['help']] : null,   /* 2026-11-01: Jen writes a problem, Claude replies */   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
+      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['J.A.R.V.I.S.', function () { helpChat(); }, false, null, ['help']] : null,   /* 2026-11-01: Jen writes a problem, Claude replies */   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
