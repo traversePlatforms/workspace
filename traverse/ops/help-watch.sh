@@ -23,12 +23,14 @@ one_ticket() {
   [ -n "$T" ] || return 0
   ID=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).id)}catch(e){}})")
   [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { log "could not read the ticket"; return 1; }
-  touch "$LOCK"; log "$ID: session started ($MODEL)"
+  BY=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).by||'')}catch(e){}})")
+  local M="$MODEL"; [ "$BY" = "Matthew Sharpe" ] && M="${HELP_MODEL_MATTHEW:-opus}"   # Matthew's own messages: app work, the heavier model (2 Nov)
+  touch "$LOCK"; log "$ID: session started ($M, from $BY)"
   PROMPT="A new message in the Sixfold app's J.A.R.V.I.S. chat. Handle it now under the rules in traverse/ops/help-desk-prompt.md (also appended to your instructions), and reply with traverse/ops/help-reply.sh.
 
 Ticket (JSON from the server):
 $T"
-  (cd "$REPO" && "$CLAUDE" -p "$PROMPT" --model "$MODEL" --permission-mode auto --append-system-prompt "$(cat "$REPO/traverse/ops/help-desk-prompt.md")" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
+  (cd "$REPO" && "$CLAUDE" -p "$PROMPT" --model "$M" --permission-mode auto --append-system-prompt "$(cat "$REPO/traverse/ops/help-desk-prompt.md")" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
   LAST=$($SG "grep '\"id\":\"$ID\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | tail -1" < /dev/null 2>/dev/null)
   if ! printf '%s' "$LAST" | grep -q '"t":"reply"' || printf '%s' "$LAST" | grep -q '"status":"working"'; then
     printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you." | bash "$REPO/traverse/ops/help-reply.sh" "$ID" matthew >> "$LOG" 2>&1
