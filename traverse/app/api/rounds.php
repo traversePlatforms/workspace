@@ -3019,7 +3019,7 @@ function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? 
 /* the redesigned aftercare and signed-copy emails, and the balance pay link on Done, wait for Jen and Cai's review (2026-11-01, Matthew: 'dont send
    anything yet, i am waiting for the conformation'): ON only when sixfold-data/rounds/emails2.json says {"on":true}. The follow-up, deposit reminders
    and the newsletter have their own switches. */
-function a365Emails2(): bool { static $on = null; if ($on === null) $on = !empty((json_decode((string) @file_get_contents(DATA_DIR . '/emails2.json'), true) ?: [])['on']); return $on; }
+function a365Emails2(): bool { static $on = null; if ($on === null) $j = json_decode((string) @file_get_contents(DATA_DIR . '/emails2.json'), true) ?: []; $on = !empty($j['on']) && time() >= (int) ($j['from'] ?? 0); return $on; }   /* 'from': a start time (2026-11-01, Matthew: approved, "starting on monday") */
 function a365MailHead(string $name): string {
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
     return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2e5e2c" style="background:#2e5e2c;border-radius:14px;margin:0 0 18px"><tr><td style="padding:16px 20px">'
@@ -7864,7 +7864,7 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
  * ties them. OFF until an admin turns it on (followup.json): while off nothing is sent or saved up, and once on only jobs marked done after it
  * was turned on, or in the two days before, get one, so turning it on sends no backlog. Sent by the 5-minute job (metapoll, followupSweep). */
 /* FU_DAYS, FU_TRIES: defined at the top, beside QUOTE_INBOX_FROM (the job board reads them before this line runs) */
-function followupCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/followup.json'), true); return ['on' => !empty($j['on']), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? '')]; }
+function followupCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/followup.json'), true); return ['on' => !empty($j['on']) && time() >= (int) ($j['from'] ?? 0), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? ''), 'from' => (int) ($j['from'] ?? 0)]; }   /* 'from': on from a set time (2026-11-01) */
 function followupReview(): string { $r = (string) (company()['links']['googleReview'] ?? ''); return preg_match('#^https://[^\s<>"]{8,300}$#D', $r) ? $r : ''; }
 /** the day it goes: two days after the day the job was marked done (the install's clock) */
 function followupDue(array $j): ?string {
@@ -8002,10 +8002,11 @@ function followupSweep(?int $now = null): array {
  * a big button to their form (where they pay). OFF until an admin turns it on (deprem.json); Don't send per customer. Sent by the 5-minute
  * job (metapoll, depremSweep). Transactional (about a booking they asked for), so no newsletter unsubscribe line. */
 function depremFile(): string { return DATA_DIR . '/deprem.json'; }
-function depremLoad(): array { $j = json_decode((string) @file_get_contents(depremFile()), true); $j = is_array($j) ? $j : []; return ['on' => !empty($j['on']), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? ''), 'no' => (array) ($j['no'] ?? []), 'sent' => (array) ($j['sent'] ?? [])]; }
+function depremLoad(): array { $j = json_decode((string) @file_get_contents(depremFile()), true); $j = is_array($j) ? $j : []; return ['on' => !empty($j['on']) && time() >= (int) ($j['from'] ?? 0), 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? ''), 'from' => (int) ($j['from'] ?? 0), 'no' => (array) ($j['no'] ?? []), 'sent' => (array) ($j['sent'] ?? [])]; }   /* 'from': on from a set time (2026-11-01) */
 function depremEdit(callable $fn): ?array {
     $lk = @fopen(depremFile() . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) return null;
-    $d = $fn(depremLoad()); $ok = writeJsonAtomic(depremFile(), $d); flock($lk, LOCK_UN); return $ok ? $d : null;
+    $raw = json_decode((string) @file_get_contents(depremFile()), true); $raw = is_array($raw) ? $raw : [];   /* the switch as saved, not as it reads now: a start time in the future must survive a save */
+    $d = $fn(['on' => !empty($raw['on'])] + depremLoad()); $ok = writeJsonAtomic(depremFile(), $d); flock($lk, LOCK_UN); return $ok ? $d : null;
 }
 function depremKinds(): array { return ['d2' => 2, 'd1' => 1]; }   /* a function, not a const: this part of the file is not reached on every request */
 /** a lead's reminders: null when it gets none (no Square deposit link, paid, signed, booked, lost, no day) */
