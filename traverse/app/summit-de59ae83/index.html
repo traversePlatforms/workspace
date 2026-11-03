@@ -1810,6 +1810,12 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   @media (max-width:760px){.helpfab{bottom:84px;right:14px;width:52px;height:52px}}
   .hchat{position:fixed;right:18px;bottom:18px;z-index:950;width:380px;height:min(600px,calc(100vh - 36px));display:flex;flex-direction:column;background:var(--bg,#fff);color:var(--ink);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.28);overflow:hidden}
   .hchat.hcfull{inset:0;width:auto;height:auto;border-radius:0;border:0;box-shadow:none}   /* the hub's J.A.R.V.I.S. tab (?jarvis=1, 2026-11-02): the chat is the whole page */
+  /* ...and only the chat (Matthew 2 Nov: "it loads the jarvis under the sixfold ... so that it will just be jarvis"): no Sixfold splash, and once
+     the chat is open nothing of the app is left on the page behind it (the toast stays for "Not sent") */
+  html.jvtab .splash{display:none}
+  html.jvtab body.hchat-on > :not(.hchat):not(#toast){display:none!important}
+  .hcold{display:block;width:100%;text-align:left;margin:0 0 8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);cursor:pointer;font:inherit}
+  .hcold:hover{border-color:var(--jv)}.hcoldtxt{font-size:15px;line-height:1.35}
 @media (max-width:760px){.hchat{inset:0;width:auto;height:auto;border-radius:0;border:0}}
   .hchd{display:flex;align-items:center;gap:6px;padding:10px 10px 10px 14px;background:var(--jv);color:var(--on-jv,#fff);cursor:pointer}.hcttl{flex:1;font:800 16px var(--sans)}.hcbtn{background:rgba(255,255,255,.16);color:inherit;border:0;border-radius:999px;padding:6px 10px;font:700 12.5px var(--sans);cursor:pointer}.hcx{width:32px;padding:6px 0}
   .hcbody{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--card)}
@@ -2950,6 +2956,7 @@ function paintCompany(c) {
   }
   var n = document.getElementById('splashName'); if (n) n.textContent = c.short || '';
   document.title = c.short ? c.short + ' Routes' : 'Routes';   /* 2026-10-12 (Matthew): Sixfold Routes, not Door rounds */
+  if (/[?&]jarvis=1\b/.test(location.search)) { document.title = 'J.A.R.V.I.S.'; document.documentElement.classList.add('jvtab'); }   /* the hub's own tab (2 Nov) */
   var st = document.getElementById('coColors');
   if (!st) { st = document.createElement('style'); st.id = 'coColors'; document.head.appendChild(st); }
   var col = c.colors || {};
@@ -7595,20 +7602,39 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     hd.appendChild(q('div', 'hcttl', HELP_NAME));
     var nw = q('button', 'hcbtn', 'Clear'), er = q('button', 'hcbtn', 'Earlier'), cx = q('button', 'hcbtn hcx', '✕'); [nw, er, cx].forEach(function (x) { x.type = 'button'; });
     cx.setAttribute('aria-label', 'Close');
-    hd.appendChild(nw); hd.appendChild(er); hd.appendChild(cx); w.appendChild(hd);
+    hd.appendChild(nw); hd.appendChild(er); if (!S.jarvisTab) hd.appendChild(cx); w.appendChild(hd);   /* the hub's tab has nothing to close back to (2 Nov) */
     var body = q('div', 'hcbody'); w.appendChild(body);
     var bar = q('div', 'hcbar'), ta = q('textarea'), sb = q('button', 'hcsend'); ta.rows = 1; ta.maxLength = 2000; ta.placeholder = 'Message ' + HELP_NAME + '…'; sb.type = 'button'; sb.setAttribute('aria-label', 'Send');
     sb.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>';
     bar.appendChild(ta); bar.appendChild(sb); w.appendChild(bar);
     document.body.appendChild(w); document.body.classList.add('hchat-on');
-    var cur = null, fresh = false;   /* fresh: New chat pressed, nothing sent yet */
+    var cur = null, fresh = false, listing = false;   /* fresh: New chat pressed, nothing sent yet; listing: Earlier's list is showing */
     var close = function () { clearInterval(HC.tick); if (HC.el) HC.el.remove(); HC.el = null; document.body.classList.remove('hchat-on'); helpDot(); };
     cx.addEventListener('click', close);
-    hd.addEventListener('click', function (e) { if (!e.target.closest('button')) close(); });   /* a tap on the top bar minimizes it (1 Nov, Matthew) */
-    er.addEventListener('click', function () { close(); helpView(); });
+    hd.addEventListener('click', function (e) { if (!S.jarvisTab && !e.target.closest('button')) close(); });   /* a tap on the top bar minimizes it (1 Nov, Matthew) */
+    /* Earlier: in the app it opens the Help screen; in the hub's tab (2 Nov) the earlier conversations are listed inside the chat itself, a tap
+       opens one, and Earlier again goes back */
+    er.addEventListener('click', function () {
+      if (!S.jarvisTab) { close(); helpView(); return; }
+      if (listing) { listing = false; er.textContent = 'Earlier'; draw(cur); return; }
+      listing = true; er.textContent = 'Back'; body.textContent = ''; body.appendChild(q('div', 'hcnote', 'Loading earlier conversations…'));
+      api('helplist').then(function (j) {
+        if (!listing || !HC.el) return; body.textContent = '';
+        var ts = (j && j.ok && j.tickets) || [];
+        if (!ts.length) { body.appendChild(q('div', 'hcnote', 'No earlier conversations.')); return; }
+        ts.forEach(function (t) {
+          var first = (t.msgs.filter(function (m) { return m.mine; })[0] || t.msgs[0] || {}).text || '', st = HELP_ST[t.status] || [t.status];
+          var b = q('button', 'hcold'); b.type = 'button';
+          b.appendChild(q('div', 'hcoldtxt noi18n', first.length > 160 ? first.slice(0, 160) + '…' : first));
+          b.appendChild(q('div', 'hctime', (t.by && t.by !== S.me ? t.by + ' · ' : '') + when(t.updated) + ' · ' + st[0]));
+          b.addEventListener('click', function () { listing = false; er.textContent = 'Earlier'; fresh = false; openId = t.id; HC.id = t.id; cur = t; draw(t); ta.focus(); });
+          body.appendChild(b);
+        });
+      }).catch(function () { if (listing && HC.el) { body.textContent = ''; body.appendChild(q('div', 'hcnote', 'Could not load them. Try again.')); } });
+    });
     /* Clear (1 Nov, Matthew: New chat then close reopened the old chat): the conversation is closed, so the chat opens blank next time; it is
        still under Earlier, and a reply still on its way reopens it there */
-    nw.addEventListener('click', function () { var was = HC.id; fresh = true; cur = null; HC.id = null; openId = null; draw(null); ta.focus(); if (was) api('helpclose', { body: { id: was } }).catch(function () {}); });
+    nw.addEventListener('click', function () { var was = HC.id; fresh = true; listing = false; er.textContent = 'Earlier'; cur = null; HC.id = null; openId = null; draw(null); ta.focus(); if (was) api('helpclose', { body: { id: was } }).catch(function () {}); });
     /* each message with its time, and a Refresh now button under a reply that changed something on screen (1 Nov, Matthew: "time stamps
        next to it"; "it should tell who ever is using it to refresh if it needs to be refreshed") */
     var when = function (at) { if (!at) return ''; var d = new Date(at * 1000), t = d.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }); return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString(LOCALE, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + t; };
@@ -7643,7 +7669,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         else if (openId) pick = ts.filter(function (t) { return t.id === openId; })[0] || null;
         else pick = ts.filter(function (t) { return t.status !== 'closed' && t.by === S.me; })[0] || null;
         if (pick) { HC.id = pick.id; cur = pick; }
-        draw(cur);
+        if (!listing) draw(cur);
       }).catch(function () {});
     };
     var send = function () {
@@ -7651,7 +7677,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       sb.disabled = true;
       api('helpsend', { body: { text: v, id: HC.id || '', ctx: { screen: from } } }).then(function (j) {
         sb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; }
-        ta.value = ''; ta.style.height = ''; fresh = false; HC.id = j.ticket.id; cur = j.ticket; draw(cur);
+        ta.value = ''; ta.style.height = ''; fresh = false; listing = false; er.textContent = 'Earlier'; HC.id = j.ticket.id; cur = j.ticket; draw(cur);
       }).catch(function () { sb.disabled = false; toast('No signal', 'Not sent.', null); });
     };
     sb.addEventListener('click', send);
