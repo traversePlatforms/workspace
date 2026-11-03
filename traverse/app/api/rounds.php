@@ -8004,7 +8004,7 @@ function followupBuild(array $j, array $l): array {
     $crew = trim((string) strtok((string) $j['crew'], ' ')) ?: 'Our crew';
     $day = (new DateTime((string) $j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j');
     $rv = followupReview(); $want = trim((string) ($j['fuWant'] ?? '')); $sug = trim((string) ($j['fuSuggest'] ?? ''));   /* the customer's version the office wrote, never Brad's own words (2026-11-01, Matthew) */
-    $fresh = (string) ($j['date'] ?? '') >= (new DateTime('-14 days', new DateTimeZone(appTz())))->format('Y-m-d');   /* a past customer's job (the one-time send): no new-seed line, no 'Jen sent the details by text' (1 Nov night) */
+    $fresh = (string) ($j['date'] ?? '') >= (new DateTime('-14 days', new DateTimeZone(appTz())))->format('Y-m-d');   /* a past customer's job (the one-time send): no new-seed line (1 Nov night); 'Jen sent the details by text' dropped for everyone 3 Nov (Matthew: she may not text them at all now aftercare is automatic) */
     $seeded = $fresh && in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true);
     $owed = jobOwedNow($j); $plink = $owed > 0 && (int) ($j['sqlink']['amt'] ?? 0) === $owed ? (string) ($j['sqlink']['url'] ?? '') : '';
     $balLine = $owed > 0 ? 'Your remaining balance is ' . fuMoney($owed) . '.' . ($plink !== '' ? '' : ' Call or text ' . $ph . ' to pay it.') : '';
@@ -8015,7 +8015,7 @@ function followupBuild(array $j, array $l): array {
     $seedLine = 'Your new seed is in its first couple of weeks. Keep the top of the soil damp and hold off on mowing until the new grass is up.';
     /* 2 Nov (Matthew, "option 2 ... as much into inbox as i can"): a personal note, the way a person types it. Gmail put the designed version
        (band, boxes, buttons, offer blocks, List-Unsubscribe) in Promotions; the aftercare and deposit reminder landed in the inbox. */
-    $offer = 'As a thank-you, you get 10% off your next service (mention it when you book). Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control' . ($fresh ? '; Jen sent the details by text' : '') . '. And if you\'d like a spot for spring aeration, just reply "spring".';
+    $offer = 'As a thank-you, you get 10% off your next service (mention it when you book). Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control; just reply if you\'d like it' . '. And if you\'d like a spot for spring aeration, just reply "spring".';
     /* the text version */
     $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks again for having us out on " . $day . ". How's the lawn looking? If anything doesn't look right, just reply to this email.\n\n";
     if ($seeded) $t .= $seedLine . "\n\n";
