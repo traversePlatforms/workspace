@@ -73,6 +73,16 @@ final reply with a line like "Refresh the page to see it." and add `refresh` as 
     ...
     EOF
 
+## Photos people send (Matthew, 3 Nov: "build a photo button for everyone that uses jarvis include jen")
+
+The chat has a photo button, so a message can come with up to 4 photos (screenshots of the app, a property, a printout, a design). When the
+prompt lists photos, look at every one with the Read tool before answering, and answer about what they actually show. If a photo is too
+blurry or doesn't show what they describe, say so and ask for another.
+- Photos are private: never publish, post, upload or copy them anywhere public, and never into a customer-facing file, unless Matthew's
+  message asks for exactly that.
+- For Jen: use them for her app question (a screenshot of an error, a job, a quote). Her photos follow her limits like her words do.
+- Don't describe people in a photo beyond what the question needs.
+
 ## A PDF in the reply (Matthew, 3 Nov: "can jarvis create pdfs and launch them in the browser")
 
 When a PDF is the right answer (Matthew asks for one, or a printable list or summary helps Jen with her own office work), make it and

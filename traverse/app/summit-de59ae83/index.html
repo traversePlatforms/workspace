@@ -1825,7 +1825,14 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hclink{color:inherit;text-decoration:underline;overflow-wrap:anywhere}
   .hcwork,.hcnote{align-self:center;font-size:12.5px;color:var(--soft);display:flex;align-items:center;gap:8px;padding:4px 10px}.hcnote{background:var(--bg,#fff);border:1px dashed var(--line);border-radius:999px}
   .hcdots{width:28px;height:8px;background:radial-gradient(circle,var(--soft) 3px,transparent 3.5px) 0 50%/9.3px 8px repeat-x;animation:hcd 1s steps(3) infinite}@keyframes hcd{from{width:10px}to{width:28px}}
-  .hcbar{display:flex;gap:8px;align-items:flex-end;padding:10px;border-top:1px solid var(--line);background:var(--bg,#fff)}.hcbar textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:18px;padding:9px 13px;font:15px var(--sans);max-height:140px;background:var(--card);color:var(--ink)}.hcsend{width:42px;height:42px;border-radius:50%;border:0;background:var(--jv);color:var(--on-jv,#fff);display:grid;place-items:center;cursor:pointer;flex:none}.hcsend:disabled{opacity:.5}
+  .hcbar{display:flex;gap:8px;align-items:flex-end;padding:10px;border-top:1px solid var(--line);background:var(--bg,#fff)}.hcbar textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:18px;padding:9px 13px;font:15px var(--sans);max-height:140px;background:var(--card);color:var(--ink)}.hcsend{width:42px;height:42px;border-radius:50%;border:0;background:var(--jv);color:var(--on-jv,#fff);display:grid;place-items:center;cursor:pointer;flex:none}
+  /* photos in the J.A.R.V.I.S. chat (3 Nov) */
+  .hcphoto{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none}.hcphoto:hover{border-color:var(--jv);color:var(--jv)}.hcphoto:disabled{opacity:.5}
+  .hctray{display:flex;gap:8px;padding:10px 10px 0;border-top:1px solid var(--line);background:var(--bg,#fff);overflow-x:auto}.hctray[hidden]{display:none}
+  .hctray1{position:relative;flex:none;width:64px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.hctray1 img{width:100%;height:100%;object-fit:cover;display:block}
+  .hctrayx{position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font:700 15px/24px var(--sans);padding:0;cursor:pointer}
+  .hcpics{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.hcpics.one{grid-template-columns:1fr}
+  .hcpic{padding:0;border:0;border-radius:10px;overflow:hidden;background:var(--line);cursor:zoom-in;aspect-ratio:1/1}.hcpics.one .hcpic{aspect-ratio:auto;max-height:260px}.hcpic img{width:100%;height:100%;object-fit:cover;display:block}.hcsend:disabled{opacity:.5}
   .hlp textarea,.hlpt textarea{width:100%;box-sizing:border-box;font:15px var(--sans)}.hlplist{display:grid;gap:10px;margin-top:12px}.hlpt{display:grid;gap:8px}.hlpopen{outline:2px solid var(--jv)}.hlphd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.hlpst{font-weight:800;font-size:12.5px;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--ink)}.hlp-answered{background:#dff0d8;color:#21451f}.hlp-matthew{background:#fff1d6;color:#7a4b00}.hlp-working{background:#e3ecf8;color:#21406e}.hlpmsg{border-radius:12px;padding:8px 11px;max-width:92%}.hlpmsg.me{justify-self:end;background:var(--card);border:1px solid var(--line)}.hlpmsg.them{justify-self:start;background:var(--jv-tint);border:1px solid var(--line);color:var(--ink)}.hlpwho{font-size:11.5px;font-weight:700;opacity:.75;margin-bottom:2px}.hlptxt{white-space:pre-wrap;font-size:14.5px;line-height:1.4}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
   .keepbg{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,20,15,.5)}.keepbox{width:100%;max-width:420px;display:grid;gap:10px;padding:18px}.keepbox b{font:800 18px var(--sans)}.keeprow{display:grid;gap:8px}   /* Matthew's lead reached out to the office (2026-10-26) */
@@ -7596,6 +7603,55 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var b = document.getElementById('helpfab'); if (!b || HC.el) return;
     api('helplist').then(function (j) { if (!j || !j.ok) return; var s = helpSeen(), unread = (j.tickets || []).some(function (t) { var last = t.msgs[t.msgs.length - 1]; return t.status !== 'closed' && last && !last.mine && (s[t.id] || 0) < t.updated; });   /* closed chats never light it (1 Nov) */ var d = b.querySelector('.helpdot'); if (d) d.hidden = !unread; }).catch(function () {});
   }
+  /* what a J.A.R.V.I.S. message carries besides words (3 Nov): photos the person sent (thumbnails; a tap shows one full size) and PDFs a
+     reply made (an Open button). Served only to people who may see that chat (action=helpfile). Used by the chat and the Help screen. */
+  function helpExtras(box, m, tid) {
+    if (!tid) return; var src = function (n) { return API + '?action=helpfile&id=' + encodeURIComponent(tid) + '&f=' + encodeURIComponent(n); };
+    var ph = (m.photos || []).filter(function (p) { return p && p.n; });
+    if (ph.length) {
+      var g = q('div', 'hcpics' + (ph.length === 1 ? ' one' : ''));
+      ph.forEach(function (p, i) {
+        var bt = q('button', 'hcpic'); bt.type = 'button'; bt.setAttribute('aria-label', 'Photo ' + (i + 1));
+        var im = document.createElement('img'); im.loading = 'lazy'; im.alt = ''; im.src = src(p.n); bt.appendChild(im);
+        bt.addEventListener('click', function () { docViewer('Photo ' + (i + 1) + (ph.length > 1 ? ' of ' + ph.length : ''), src(p.n), 'hcdoc'); });
+        g.appendChild(bt);
+      });
+      box.appendChild(g);
+    }
+    (m.files || []).forEach(function (f) {
+      if (!f || !f.n) return; var url = src(f.n);
+      var fb = q('button', 'hcfile'); fb.type = 'button'; fb.appendChild(ico('clip', 2.2)); var tx = q('span', 'noi18n');
+      tx.appendChild(q('b', null, 'Open ' + String(f.n).replace(/\.pdf$/i, '').replace(/[-_]+/g, ' '))); tx.appendChild(q('small', null, 'PDF \u00b7 ' + Math.max(1, Math.round((f.size || 0) / 1024)) + ' KB'));
+      fb.appendChild(tx); fb.addEventListener('click', function () { docViewer(String(f.n), url, 'hcdoc'); }); box.appendChild(fb);
+    });
+  }
+  /* photos picked for the next message (3 Nov, Matthew: "build a photo button for everyone that uses jarvis include jen"): shrunk on the
+     phone (shrinkPhoto, 1600 px JPEG) and sent with the words; up to 4 a message */
+  function helpPicker(tray) {
+    var pics = [];
+    var paint = function () {
+      tray.textContent = ''; tray.hidden = !pics.length;
+      pics.forEach(function (p, i) {
+        var c = q('div', 'hctray1'), im = document.createElement('img'); im.src = p.url; im.alt = ''; c.appendChild(im);
+        var x = q('button', 'hctrayx', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Remove photo');
+        x.addEventListener('click', function () { URL.revokeObjectURL(p.url); pics.splice(i, 1); paint(); }); c.appendChild(x); tray.appendChild(c);
+      });
+    };
+    var add = function (files) {
+      files = files.filter(function (f) { return /^image\//.test(f.type || '') || /\.(jpe?g|png|heic|heif|webp)$/i.test(f.name || ''); });
+      var room = 4 - pics.length; if (files.length > room) toast('Up to 4 photos', 'Send these, then add more in the next message.', null);
+      files.slice(0, Math.max(0, room)).forEach(function (f) {
+        shrinkPhoto(f).then(function (bl) { return new Promise(function (res) { var r = new FileReader(); r.onload = function () { res({ bl: bl, data: String(r.result).split(',')[1] || '' }); }; r.readAsDataURL(bl); }); })
+          .then(function (o) { if (pics.length >= 4) return; pics.push({ data: o.data, url: URL.createObjectURL(o.bl) }); paint(); })
+          .catch(function (e) { toast('Not added', (e && e.message) || 'That photo could not be read.', null); });
+      });
+    };
+    return {
+      pick: function () { var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.addEventListener('change', function () { add([].slice.call(inp.files || [])); }); inp.click(); },
+      add: add, count: function () { return pics.length; }, data: function () { return pics.map(function (p) { return p.data; }); },
+      clear: function () { pics.forEach(function (p) { URL.revokeObjectURL(p.url); }); pics = []; paint(); }
+    };
+  }
   function helpChat(openId) {
     if (!helpOk()) return;
     if (HC.el) HC.el.remove();
@@ -7609,7 +7665,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var body = q('div', 'hcbody'); w.appendChild(body);
     var bar = q('div', 'hcbar'), ta = q('textarea'), sb = q('button', 'hcsend'); ta.rows = 1; ta.maxLength = 2000; ta.placeholder = 'Message ' + HELP_NAME + '…'; sb.type = 'button'; sb.setAttribute('aria-label', 'Send');
     sb.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg>';
-    bar.appendChild(ta); bar.appendChild(sb); w.appendChild(bar);
+    var pb = q('button', 'hcphoto'); pb.type = 'button'; pb.setAttribute('aria-label', 'Add a photo'); pb.title = 'Add a photo';
+    pb.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+    var tray = q('div', 'hctray'); tray.hidden = true; var picks = helpPicker(tray);
+    pb.addEventListener('click', function () { picks.pick(); });
+    ta.addEventListener('paste', function (e) { var fs = [].slice.call((e.clipboardData && e.clipboardData.files) || []); if (fs.length) { e.preventDefault(); picks.add(fs); } });   /* a pasted screenshot on a computer */
+    bar.appendChild(pb); bar.appendChild(ta); bar.appendChild(sb); w.appendChild(tray); w.appendChild(bar);
     document.body.appendChild(w); document.body.classList.add('hchat-on');
     var cur = null, fresh = false, listing = false;   /* fresh: New chat pressed, nothing sent yet; listing: Earlier's list is showing */
     var close = function () { clearInterval(HC.tick); if (HC.el) HC.el.remove(); HC.el = null; document.body.classList.remove('hchat-on'); helpDot(); };
@@ -7626,7 +7687,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var ts = (j && j.ok && j.tickets) || [];
         if (!ts.length) { body.appendChild(q('div', 'hcnote', 'No earlier conversations.')); return; }
         ts.forEach(function (t) {
-          var first = (t.msgs.filter(function (m) { return m.mine; })[0] || t.msgs[0] || {}).text || '', st = HELP_ST[t.status] || [t.status];
+          var m0 = t.msgs.filter(function (m) { return m.mine; })[0] || t.msgs[0] || {}, first = m0.text || ((m0.photos || []).length ? 'Photo' : ''), st = HELP_ST[t.status] || [t.status];
           var b = q('button', 'hcold'); b.type = 'button';
           b.appendChild(q('div', 'hcoldtxt noi18n', first.length > 160 ? first.slice(0, 160) + '…' : first));
           b.appendChild(q('div', 'hctime', (t.by && t.by !== S.me ? t.by + ' · ' : '') + when(t.updated) + ' · ' + st[0]));
@@ -7652,14 +7713,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (last < s.length) d.appendChild(document.createTextNode(s.slice(last)));
       return d;
     };
-    var bubble = function (cls, who, text, at, refresh, files, tid) {
+    var bubble = function (cls, who, text, at, refresh, files, tid, photos) {
       var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(linked(text));
-      (files || []).forEach(function (f) {
-        if (!f || !f.n || !tid) return; var url = API + '?action=helpfile&id=' + encodeURIComponent(tid) + '&f=' + encodeURIComponent(f.n);
-        var fb = q('button', 'hcfile'); fb.type = 'button'; fb.appendChild(ico('clip', 2.2)); var tx = q('span', 'noi18n');
-        tx.appendChild(q('b', null, 'Open ' + String(f.n).replace(/\.pdf$/i, '').replace(/[-_]+/g, ' '))); tx.appendChild(q('small', null, 'PDF · ' + Math.max(1, Math.round((f.size || 0) / 1024)) + ' KB'));
-        fb.appendChild(tx); fb.addEventListener('click', function () { docViewer(String(f.n), url, 'hcdoc'); }); b.appendChild(fb);
-      });
+      helpExtras(b, { files: files, photos: photos }, tid);
       if (at) b.appendChild(q('div', 'hctime', when(at)));
       if (refresh) { var rb = q('button', 'hcrefresh', 'Refresh now'); rb.type = 'button'; rb.addEventListener('click', function () { location.reload(); }); b.appendChild(rb); }
       body.appendChild(b);
@@ -7670,7 +7726,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var hr = new Date().getHours(), tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
       bubble('them', HELP_NAME, tod + '. J.A.R.V.I.S. at your service. Tell me what’s gone sideways, and I’ll see to it. Nothing is too small, though I do have opinions about typos.');
       if (t) {
-        t.msgs.forEach(function (m, i) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text, m.at, !m.mine && m.refresh && i === t.msgs.length - 1, m.files, t.id); });
+        t.msgs.forEach(function (m, i) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text, m.at, !m.mine && m.refresh && i === t.msgs.length - 1, m.files, t.id, m.photos); });
         if (t.status === 'new' || t.status === 'working') { var wk = q('div', 'hcwork'); wk.appendChild(q('span', 'hcdots')); wk.appendChild(q('span', null, t.status === 'new' ? 'Sent. ' + HELP_NAME + ' picks it up within a few minutes…' : HELP_NAME + ' is looking into it…')); body.appendChild(wk); }
         else if (t.status === 'matthew') body.appendChild(q('div', 'hcnote', 'Passed to Matthew. He’ll get back to you.'));
         else if (t.status === 'closed') body.appendChild(q('div', 'hcnote', 'This chat is closed. Start a new one any time.'));
@@ -7693,12 +7749,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }).catch(function () {});
     };
     var send = function () {
-      var v = ta.value.trim(); if (v.length < 3) return;
-      sb.disabled = true;
-      api('helpsend', { body: { text: v, id: HC.id || '', ctx: { screen: from } } }).then(function (j) {
-        sb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; }
-        ta.value = ''; ta.style.height = ''; fresh = false; listing = false; er.textContent = 'Earlier'; HC.id = j.ticket.id; cur = j.ticket; draw(cur);
-      }).catch(function () { sb.disabled = false; toast('No signal', 'Not sent.', null); });
+      var v = ta.value.trim(), np = picks.count(); if (v.length < 3 && !np) return;
+      sb.disabled = true; pb.disabled = true;
+      api('helpsend', { body: { text: v, id: HC.id || '', ctx: { screen: from }, photos: picks.data() } }).then(function (j) {
+        sb.disabled = false; pb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; }
+        ta.value = ''; picks.clear(); ta.style.height = ''; fresh = false; listing = false; er.textContent = 'Earlier'; HC.id = j.ticket.id; cur = j.ticket; draw(cur);
+      }).catch(function () { sb.disabled = false; pb.disabled = false; toast('No signal', 'Not sent.', null); });
     };
     sb.addEventListener('click', send);
     ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
@@ -7737,7 +7793,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var c = q('div', 'card hlpt' + (t.id === openId ? ' hlpopen' : '')), st = HELP_ST[t.status] || [t.status, ''];
         var hd = q('div', 'hlphd'); hd.appendChild(q('span', 'hlpst hlp-' + t.status, st[0])); hd.appendChild(q('span', 'sub2', (t.by ? t.by + ' · ' : '') + new Date(t.updated * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + (st[1] ? ' · ' + st[1] : '')));
         c.appendChild(hd);
-        t.msgs.forEach(function (m) { var b = q('div', 'hlpmsg ' + (m.mine ? 'me' : 'them')); b.appendChild(q('div', 'hlpwho', (m.mine ? m.from : HELP_NAME) + (m.at ? ' · ' + new Date(m.at * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''))); b.appendChild(q('div', 'hlptxt noi18n', m.text)); c.appendChild(b); });
+        t.msgs.forEach(function (m) { var b = q('div', 'hlpmsg ' + (m.mine ? 'me' : 'them')); b.appendChild(q('div', 'hlpwho', (m.mine ? m.from : HELP_NAME) + (m.at ? ' · ' + new Date(m.at * 1000).toLocaleString(LOCALE, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''))); b.appendChild(q('div', 'hlptxt noi18n', m.text)); helpExtras(b, m, t.id); c.appendChild(b); });
         if (t.status !== 'closed') {
           var rt = q('textarea'); rt.rows = 2; rt.maxLength = 2000; rt.placeholder = 'Add to this, or say if it’s fixed'; c.appendChild(rt);
           var row = q('div', 'lookrow'), rb = q('button', 'lnk', 'Send'), cl = q('button', 'lnk', 'Close it, all sorted'); rb.type = 'button'; cl.type = 'button';
