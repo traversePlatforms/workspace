@@ -7492,8 +7492,15 @@ function squareToConfirm(array $pays): array {
             if ($sc < 3) continue;
             $qp = (int) ($l['quote']['price'] ?? 0);
             if ($qp && $net === $qp * 100) { $sc += 2; $why[] = 'the exact $' . $qp . ' quoted'; }
+            /* a form sent with a deposit by link, not paid by the link (3 Nov, Jen: Mark "was having trouble with the deposit link so I just charged
+               him directly through Square ... I don't want it to cover the entire appointment just the deposit"): offered as the deposit */
+            $S2 = $l['sign'] ?? null; $dep = 0; $depDay = '';
+            if (is_array($S2) && ($S2['how'] ?? '') === 'link' && (int) ($S2['deposit'] ?? 0) > 0 && empty($l['confirmed']) && empty($l['signed']) && !a365DepositPaid($l, false)) {
+                $dep = (int) $S2['deposit']; $depDay = (string) ($l['quote']['offer']['date'] ?? '');
+                if ($net === $dep * 100) { $sc += 2; $why[] = 'the exact $' . $dep . ' deposit on their form'; }
+            }
             $why[] = 'no job on the board yet';
-            $cands[] = ['lead' => (string) $l['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => (int) round($net / 100), 'price' => $qp, 'date' => '', 'score' => $sc, 'nojob' => true, 'why' => $why];
+            $cands[] = ['lead' => (string) $l['id'], 'name' => (string) ($l['name'] ?? ''), 'owed' => (int) round($net / 100), 'price' => $qp, 'date' => '', 'score' => $sc, 'nojob' => true, 'why' => $why] + ($dep ? ['dep' => $dep, 'depday' => $depDay, 'signneeded' => empty($S2['nosign'])] : []);
         }
         usort($cands, fn($a, $b) => $b['score'] <=> $a['score']);
         $card = trim((string) (($p['card_details']['card']['card_brand'] ?? '') . ' ' . ($p['card_details']['card']['last_4'] ?? '')));
@@ -7748,7 +7755,7 @@ if ($action === 'squareconfirm') {
     if (!feature('walkdesk') || !desk() || !$isPost) fail('Not allowed.', 403);
     $pid = (string) ($body['payment'] ?? ''); $act = (string) ($body['act'] ?? '');
     if (!preg_match('/^[A-Za-z0-9]{4,64}$/D', $pid)) fail('No such payment.');
-    if (!in_array($act, ['full', 'part', 'ignore', 'link', 'newjob', 'visit'], true)) fail('Pick what to do with it.');
+    if (!in_array($act, ['full', 'part', 'ignore', 'link', 'newjob', 'visit', 'deposit'], true)) fail('Pick what to do with it.');
     $clk = @fopen(squareConfirmFile() . '.lock', 'c'); if (!$clk || !flock($clk, LOCK_EX)) fail('Could not save that. Try again.', 500);
     if (isset(squareConfirmed()[$pid])) fail('Someone already confirmed that payment.', 409);
     [$used] = squarePayUsed(); if (isset($used[$pid])) fail('That payment is already counted on a job.', 409);
@@ -7756,7 +7763,27 @@ if ($action === 'squareconfirm') {
     if (!is_array($p) || ($p['status'] ?? '') !== 'COMPLETED' || (string) ($p['location_id'] ?? '') !== (string) (squareCfg()['location'] ?? '')) fail('Square does not show that payment here.', 404);
     $net = (int) round(((int) ($p['amount_money']['amount'] ?? 0) - (int) ($p['refunded_money']['amount'] ?? 0)) / 100);
     $row = ['id' => $pid, 'payment' => $pid, 'act' => $act, 'amt' => $net, 'by' => $me, 'at' => time()]; $res = ['ok' => true];   /* id: readLines() keeps only rows that have one */
-    if ($act === 'newjob') {   /* no job on the board yet (2026-10-26, Marc S.): book it for the day it was paid, done and paid in full, this payment tied to it */
+    if ($act === 'deposit') {   /* the deposit on their form, taken in Square by hand (3 Nov, Jen: Mark and Arleen could not pay the link): recorded
+           exactly as if the link had been paid, so the form shows it paid and a no-signature form books the held day with the deposit on the
+           job; the unpaid link is deleted in Square so nobody can pay it a second time */
+        $lid = (string) ($body['lead'] ?? ''); $l = leadOk($lid) ? (leadsAll()[$lid] ?? null) : null;
+        if (!$l || in_array($l['status'] ?? '', ['lost', 'unreached'], true)) fail('No such lead.', 404);
+        $S2 = $l['sign'] ?? null;
+        if (!is_array($S2) || ($S2['how'] ?? '') !== 'link' || empty($S2['pay']['order'])) fail('Their form has no deposit link to pay.');
+        if (!empty($l['confirmed']) || !empty($l['signed']) || a365DepositPaid($l, false)) fail('Their deposit is already in.', 409);
+        foreach (jobsAll() as $jx) if (!$jx['off'] && $jx['lead'] === $lid && !$jx['done']) fail('They have a job on the board already: record it there as a part payment.', 409);
+        $dep = (int) $S2['deposit'];
+        appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'sqpaid' => ['order' => (string) $S2['pay']['order'], 'payment' => $pid, 'amt' => $net, 'at' => time(), 'byhand' => true],
+            'note' => 'Deposit $' . $net . ' taken in Square by ' . $me . ' (not through the link)' . ($net !== $dep ? '; the form asked for $' . $dep : '') . '.', 'by' => $me, 'at' => time()]);
+        /* every deposit link this form ever had (sending it again made a new one each time): turned off unless its order was paid */
+        if (($S2['pay']['kind'] ?? '') !== 'stripe') { $seenL = [];
+            foreach (readLines(leadsDir() . '/leadst.log') as $r) { $pl = $r['sign']['pay'] ?? null; if (($r['id'] ?? '') !== $lid || !is_array($pl) || empty($pl['id']) || isset($seenL[$pl['id']]) || ($pl['kind'] ?? '') === 'stripe') continue; $seenL[$pl['id']] = 1;
+                try { [$opaid] = !empty($pl['order']) ? squareOrderPaid((string) $pl['order']) : [false]; if (!$opaid) squareApi('DELETE', '/v2/online-checkout/payment-links/' . rawurlencode((string) $pl['id'])); } catch (Throwable $e) {} } }
+        try { a365AfterPaid($lid); } catch (Throwable $e) { error_log('rounds deposit by hand: ' . $e->getMessage()); }
+        $jid = !empty($S2['nosign']) ? a365BookNoSign($lid, $me) : null;
+        $row['lead'] = $lid; if ($jid) $row['job'] = $jid; $res['job'] = $jid; $res['booked'] = (bool) $jid; $res['signneeded'] = empty($S2['nosign']);
+        if ($jid) { $jb = jobsAll()[$jid] ?? null; if ($jb) { $res['date'] = (string) $jb['date']; $res['left'] = jobOwed($jb); } }
+    } elseif ($act === 'newjob') {   /* no job on the board yet (2026-10-26, Marc S.): book it for the day it was paid, done and paid in full, this payment tied to it */
         $lid = (string) ($body['lead'] ?? ''); $l = leadOk($lid) ? (leadsAll()[$lid] ?? null) : null;
         if (!$l || in_array($l['status'] ?? '', ['lost', 'unreached'], true)) fail('No such lead.', 404);
         foreach (jobsAll() as $jx) if (!$jx['off'] && $jx['lead'] === $lid) fail('They have a job on the board already: use that one.', 409);

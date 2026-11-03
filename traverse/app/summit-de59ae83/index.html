@@ -9000,6 +9000,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
               : kind === 'part' ? 'Record ' + money0(x.amt) + ' as a part payment on ' + c.name + '\u2019s job? ' + money0(c.owed - Math.round(x.amt)) + ' stays owed.'
               : kind === 'link' ? 'Tie this ' + money0(x.amt) + ' payment to ' + c.name + '\u2019s job, already marked paid? Nothing owed changes.'
               : kind === 'visit' ? 'Tie this ' + money0(x.amt) + ' payment to ' + c.name + '\u2019s visit on ' + dayName(c.date) + (c.svc ? ' (' + c.svc + ')' : '') + '? It shows as paid on that visit.'
+              : kind === 'deposit' ? 'Record this ' + money0(x.amt) + ' as ' + c.name + '’s deposit' + (Math.round(x.amt) !== c.dep ? ' (their form asked for ' + money0(c.dep) + ')' : '') + '? ' + (c.signneeded ? 'Their form shows the deposit paid, and the job is booked when they sign.' : (c.depday ? 'Their job is booked for ' + dayName(c.depday) + ', the day held on the form, with ' + money0(c.price - Math.round(x.amt)) + ' left to pay.' : 'Their job is booked with the rest left to pay.')) + ' The unpaid deposit link is turned off so they are not charged twice.'
               : kind === 'newjob' ? c.name + ' has no job on the board yet. Add one for the day they paid, marked done and paid in full with this ' + money0(x.amt) + '? You can change the crew or day on the job after.'
               : 'Set this ' + money0(x.amt) + ' payment aside as not one of ours? It will not be offered again.';
             var svc = '';
@@ -9011,6 +9012,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             api('squareconfirm', { body: { payment: x.payment, act: kind, job: c ? c.job || '' : '', lead: c ? c.lead || '' : '', visit: c ? c.visit || '' : '', svc: svc } }).then(function (r) {
               btn.disabled = false;
               if (!r.ok) { toast('Not saved', r.error || 'Try again.', null); return; }
+              if (kind === 'deposit') { toast('Deposit recorded', r.booked ? 'Booked for ' + dayName(r.date) + (r.left ? ' · ' + money0(r.left) + ' left to pay' : '') : r.signneeded ? 'Booked once they sign' : 'Set the day on the Jobs board', null); if (redraw) redraw(); else draw(); return; }
               toast(kind === 'ignore' ? 'Set aside' : kind === 'visit' ? 'Linked to the visit' : kind === 'newjob' ? 'Job added, done and paid' : kind === 'link' ? 'Linked' : kind === 'full' ? 'Marked paid' : 'Part payment recorded', kind === 'part' ? money0(r.tot) + ' paid so far \u00b7 ' + money0(r.left) + ' left' : (x.name || ''), null);
               if (redraw) redraw(); else draw();
             }).catch(function () { btn.disabled = false; toast('No signal', 'Not saved.', null); });
@@ -9024,6 +9026,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             }
             var t = q('div'); t.appendChild(q('b', null, c.name + ' \u00b7 ' + (c.nojob ? (c.price ? 'quoted ' + money0(c.price) : 'no quote saved') : c.done ? 'already paid (' + money0(c.price) + ')' : money0(c.owed) + ' owed'))); t.appendChild(q('small', null, (c.nojob ? '' : 'Job ' + dayName(c.date) + ' \u00b7 ') + c.why.join(', '))); cr.appendChild(t);
             var bs = q('div', 'sqcbtns');
+            if (c.nojob && c.dep) { var bd = q('button', 'save', 'It’s the deposit: book ' + (c.depday && !c.signneeded ? dayName(c.depday) : 'it')); bd.type = 'button'; bd.addEventListener('click', function () { act('deposit', c, bd); }); bs.appendChild(bd); var bn2 = q('button', null, 'Done and paid in full'); bn2.type = 'button'; bn2.addEventListener('click', function () { act('newjob', c, bn2); }); bs.appendChild(bn2); cr.appendChild(bs); row.appendChild(cr); return; }   /* a deposit taken by hand (3 Nov, Jen) */
             if (c.nojob) { var bn = q('button', 'save', 'Book it as done and paid'); bn.type = 'button'; bn.addEventListener('click', function () { act('newjob', c, bn); }); bs.appendChild(bn); cr.appendChild(bs); row.appendChild(cr); return; }   /* no job on the board yet (2026-10-26, Marc S.) */
             if (c.done) { var bl = q('button', 'save', 'Already recorded: link it'); bl.type = 'button'; bl.addEventListener('click', function () { act('link', c, bl); }); bs.appendChild(bl); cr.appendChild(bs); row.appendChild(cr); return; }   /* marked paid by hand (2026-10-20) */
             var bf = q('button', 'save', 'Paid in full'); bf.type = 'button'; bf.addEventListener('click', function () { act('full', c, bf); }); bs.appendChild(bf);
