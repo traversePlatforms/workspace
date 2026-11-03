@@ -1,6 +1,6 @@
 # Peak Pickleball: website price and timeline (3 Nov 2026)
 
-For Brandon, to take to Peak. Matthew's own client work (not Surge, not the sponsor desk). **Draft: not sent.** Matthew sends it.
+For Brandon, to take to Peak. Matthew's own client work (not Surge, not the sponsor desk). **The one-page quote was SENT to Brandon by Matthew on 3 Nov 2026** (the version edited through J.A.R.V.I.S.: $3,000 up front, or $583.33 a week for 6 weeks, $3,500 total). The two-page version was not sent.
 
 - `peak-website-proposal.html`: the source. Print with Chrome: `chrome.exe --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=<out.pdf> file:///<this folder>/peak-website-proposal.html`
 - `Peak-Pickleball-Website-Price-and-Timeline.pdf`: the two pages Brandon gets.
