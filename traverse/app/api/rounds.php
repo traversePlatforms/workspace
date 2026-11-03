@@ -3561,8 +3561,16 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     if (!throttleTake(rateFile('a365sign|' . visitorKey()), 120, 3600)) fail('Too many tries from here. Please call or text us.', 429);
     $sk = (string) ($_GET['s'] ?? ($body['s'] ?? ''));
     $all = leadsAll();
+    /* an earlier link to the same form opens the newest one (3 Nov: Jen sent Mark's form three times in four minutes, fixing the deposit, and
+       Arleen's twice; a customer who tapped the first text got "a newer form was sent" and could not pay). The link is still theirs alone:
+       only keys this lead's own forms had are accepted, and the page shows what is current, with the current deposit link. */
+    $keyOk = function (string $id, string $given) use ($all): bool {
+        if (hash_equals(a365SignKey($id, (string) $all[$id]['sign']['key']), $given)) return true;
+        foreach (readLines(leadsDir() . '/leadst.log') as $r) if (($r['id'] ?? '') === $id && !empty($r['sign']['key']) && hash_equals(a365SignKey($id, (string) $r['sign']['key']), $given)) return true;
+        return false;
+    };
     if (!preg_match('/^([wm]\d{14}[0-9a-f]{6})-([0-9a-f]{16})$/D', $sk, $sm) || !isset($all[$sm[1]]) || empty($all[$sm[1]]['sign'])
-        || !hash_equals(a365SignKey($sm[1], (string) $all[$sm[1]]['sign']['key']), $sm[2])) fail('This link does not look right, or a newer form was sent. Please call or text us.', 404);
+        || !$keyOk($sm[1], $sm[2])) fail('This link does not look right. Please call or text us.', 404);
     $l = $all[$sm[1]];
     if ($l['status'] === 'lost') fail('This form is no longer open. Please call or text us.', 410);
     if (empty($l['signed']) && ($l['sign']['how'] ?? '') === 'link' && a365DepositPaid($l)) $l = leadsAll()[$l['id']];   /* SX-58: back from Square */
