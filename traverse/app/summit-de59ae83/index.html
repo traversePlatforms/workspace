@@ -2369,6 +2369,8 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .lrecall .save{min-height:38px;padding:0 14px}.lrecallon{font-size:13.5px;font-weight:800;color:var(--ink);flex-basis:100%;display:flex;gap:12px;align-items:baseline}
   .lunreach{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13.5px;font-weight:700;margin-top:8px}.lunreach .save{min-height:36px;padding:0 14px}
   .lback{font-size:13px;font-weight:700;color:var(--booked);margin:6px 0 2px}
+  .ldup{display:grid;gap:6px;margin:8px 0 2px;padding:8px 10px;border-radius:10px;background:var(--later-tint);border-left:4px solid var(--later);font-size:13px;font-weight:600}   /* the same person on another lead (2026-11-03) */
+  .ldupr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}.ldup .lnk{min-height:32px;padding:0 4px}
   .amodal{position:fixed;inset:0;z-index:300;background:rgba(15,20,18,.45);display:flex;align-items:center;justify-content:center;padding:16px}
   .amodalbox{background:var(--card);color:var(--ink);border-radius:18px;padding:20px;max-width:420px;width:100%;box-shadow:var(--shadow)}
   .amodalbox h2{font:800 18px var(--sans);margin:0 0 8px}.amodalbox p{margin:0 0 10px;font-size:15px;line-height:1.45}.amodalbox p.soft{font-size:13px;color:var(--soft)}
@@ -5749,6 +5751,27 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (m < 1440) return Math.round(m / 60) + ' h ago';
     return dayName(isoOf(new Date(ts * 1000)));
   }
+  /* the same person on another lead (2026-11-03, Matthew: Ira Kauffman was his from a Facebook ad and Jen's from Messenger): said on the
+     card and while Add a lead is typed; one of Matthew's shows only as his */
+  function dupBox(list) {
+    var w = q('div', 'ldup');
+    (list || []).forEach(function (d) {
+      var why = 'same ' + (d.why || []).join(', ').replace(/, ([^,]*)$/, ' and $1'), r = q('div', 'ldupr');
+      if (d.hidden) r.appendChild(q('span', null, d.whose === 'Matthew' ? 'Already in the app as one of Matthew’s leads (' + why + '). Check with Matthew so only one of you reaches out.' : 'Already in the app as another lead (' + why + ').'));
+      else {
+        var st = LEAD_ST.filter(function (x) { return x[0] === d.status; })[0];
+        var mine = d.whose === S.me || (d.whose === 'Matthew' && /^Matthew\b/.test(S.me || ''));
+        r.appendChild(q('span', null, 'Possible double: ' + (d.name || 'No name') + ' · ' + (st ? st[1] : d.status) + ' · ' + (mine ? 'yours' : d.whose + '’s') + (d.job ? ' · booked ' + dayName(d.job) : '') + ' (' + why + ')'));
+        if ((asOffice() || S.role === 'admin') && !qView()) {
+          var b = q('button', 'lnk', 'Open it'); b.type = 'button';
+          b.addEventListener('click', function () { S.leadAdd = false; S.pipeStage = null; S.pipeSel = 'lead:' + d.id; S.pipeFocus = d.id; pipelineView(); });
+          r.appendChild(b);
+        }
+      }
+      w.appendChild(r);
+    });
+    return w;
+  }
   function leadCard(l) {
     var c = q('div', 'door lead'); c.setAttribute('data-id', l.id);
     var h = q('div', 'lhead'); h.appendChild(q('div', 'addr', l.name || l.phone || l.email || 'No name')); h.appendChild(q('span', 'lage', ago(l.at))); c.appendChild(h);
@@ -5776,6 +5799,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     }
     c.appendChild(meta);
+    if (l.dup && l.dup.length && l.status !== 'lost' && l.status !== 'unreached') c.appendChild(dupBox(l.dup));
     /* Couldn't reach (2026-10-21): kept, with a way back; and a lead that came back says so, with the calls before */
     if (l.status === 'unreached' && wdOn() && (adminView() || asOffice())) {
       var un = q('div', 'lunreach'); un.appendChild(q('span', null, 'Couldn’t reach' + (l.statusAt ? ' since ' + ago(l.statusAt) : '') + ' · ' + (l.tries || []).length + ((l.tries || []).length === 1 ? ' call' : ' calls')));
@@ -10364,6 +10388,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var ph = field('Phone', q('input')); ph.type = 'tel'; ph.maxLength = 40;
     var em = field('Email', q('input')); em.type = 'email'; em.maxLength = 160;
     var tw = field('Town or address', q('input')); tw.maxLength = 160;
+    /* already in the app? (2026-11-03): checked as they are typed, by phone, email, full name or house */
+    var dw = q('div'); f.appendChild(dw);
+    var dT = 0, dLast = '';
+    var dCheck = function () {
+      clearTimeout(dT);
+      dT = setTimeout(function () {
+        var p = { name: nm.value.trim(), phone: ph.value.trim(), email: em.value.trim(), town: tw.value.trim() }, k = JSON.stringify(p);
+        if (k === dLast) return; dLast = k;
+        if (!(/\S \S/.test(p.name) || digits(p.phone).length >= 10 || p.email.indexOf('@') > 0 || /^\d+ \S/.test(p.town))) { dw.textContent = ''; return; }
+        api('leadmatch', { params: p }).then(function (j) { if (k !== dLast) return; dw.textContent = ''; if (j && j.ok && j.dup && j.dup.length) dw.appendChild(dupBox(j.dup)); }).catch(function () {});
+      }, 600);
+    };
+    [nm, ph, em, tw].forEach(function (x) { x.addEventListener('input', dCheck); });
     var nd = q('select'); [''].concat(LEAD_NEED).forEach(function (o) { var op = q('option', null, o || 'What do they want?'); op.value = o; nd.appendChild(op); });
     field('Service', nd);
     var msg = field('What they said', q('textarea')); msg.rows = 3; msg.maxLength = 2000;

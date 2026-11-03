@@ -3890,7 +3890,7 @@ if (!$viewing && $realMe === 'Claude Check') {
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
-    $roOk = array_merge($roOk, ['careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
+    $roOk = array_merge($roOk, ['leadmatch', 'careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
     $roOk[] = 'sync';   /* Sync from another system's screen, read only: keys never shown (2026-10-30) */
     $roOk[] = 'myplaces'; $roOk[] = 'cohide';   /* the town list's Yours section and its hidden counties, read only (TR-47, 2026-10-31) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
@@ -3910,7 +3910,7 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!$qL || !(qMine($qL) || quoteInbox($qL, true))) fail('Not allowed.', 403);
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
-if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'tosched', 'fuconfirm', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear', 'pwmine', 'pwadd', 'pwoff'], true))   /* + her own email sign-in (2026-10-30) */   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadmatch', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'tosched', 'fuconfirm', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear', 'pwmine', 'pwadd', 'pwoff'], true))   /* + her own email sign-in (2026-10-30) */   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = sessionTag($cookieNow);
     $sessNow = sessLoad();
@@ -6147,7 +6147,7 @@ function leadsAllRaw(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'mhand', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src', 'qtold'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'mhand', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src', 'qtold', 'removed'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) {
@@ -6158,7 +6158,7 @@ function leadsAllRaw(): array {
         if (array_key_exists('house', $u)) $leads[$u['id']]['house'] = is_array($u['house']) ? $u['house'] : null;   /* 2026-10-14, the house lookup */
         if (!empty($u['ask']) && is_array($u['ask'])) $leads[$u['id']]['ask'] = $u['ask'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];
         /* back from Couldn't reach (2026-10-21): calls start again; the earlier ones are kept */
-        if (!empty($u['back'])) { $leads[$u['id']]['oldTries'] = array_merge($leads[$u['id']]['oldTries'] ?? [], $leads[$u['id']]['tries']); $leads[$u['id']]['tries'] = []; $leads[$u['id']]['back'] = ['how' => (string) $u['back'], 'at' => (int) ($u['at'] ?? 0)]; $leads[$u['id']]['recall'] = null; }
+        if (!empty($u['back'])) { unset($leads[$u['id']]['removed']); $leads[$u['id']]['oldTries'] = array_merge($leads[$u['id']]['oldTries'] ?? [], $leads[$u['id']]['tries']); $leads[$u['id']]['tries'] = []; $leads[$u['id']]['back'] = ['how' => (string) $u['back'], 'at' => (int) ($u['at'] ?? 0)]; $leads[$u['id']]['recall'] = null; }
         if (array_key_exists('recall', $u)) $leads[$u['id']]['recall'] = is_string($u['recall']) && $u['recall'] !== '' ? ['date' => $u['recall'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)] : null;   /* the day to call back (2026-10-21) */
         if (!empty($u['untry'])) $leads[$u['id']]['tries'] = array_values(array_filter($leads[$u['id']]['tries'], fn($t) => !($t['at'] === (int) $u['untry'] && $t['by'] === (string) ($u['by'] ?? ''))));
         if (!empty($u['try'])) $leads[$u['id']]['tries'][] = ['o' => (string) $u['try'], 'by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0)];   /* call tries (2026-10-14) */
@@ -9732,6 +9732,9 @@ if ($action === 'leads') {
     if ($isSuper) foreach ($list as &$ml) $ml['mine'] = webLead($ml); unset($ml);   /* Matthew's own leads, for his To contact view (2026-10-26) */
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
     if (!empty($_REQUEST['count'])) out(['ok' => true, 'new' => $new]);
+    /* the same person on another lead (2026-11-03, Ira Kauffman): shown on the card; one of Matthew's only as "Matthew's" */
+    $dm = leadDupMap(); $raw = leadsAllRaw();
+    foreach ($list as &$dl) if (!empty($dm[$dl['id']])) { $dl['dup'] = []; foreach ($dm[$dl['id']] as $oid => $why) if (isset($raw[$oid])) $dl['dup'][] = leadDupOther($raw[$oid], $why); } unset($dl);
     out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' && !empty(company()['a365']) ? ['cucheck' => cuCheckShown()] : []) + ($handTo ? ['handTo' => $handTo] : []));   /* + who his own leads can go to (2026-10-27) */   /* the ClickUp sync check (2026-10-17); Sixfold 365 only (2026-10-30 audit: it showed in the editions) */
 }
 if ($action === 'cucheckok') {   /* Leave it, on the Pipeline's ClickUp check */
@@ -9762,6 +9765,23 @@ if ($action === 'crewlead') {
     appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h ?: ['address' => $addr, 'town' => $town, 'typed' => true], 'note' => 'Found at the door by ' . $me . ($h ? '.' : ' (not on our lists yet).'), 'by' => $me, 'at' => time()]);
     out(['ok' => true, 'id' => $row['id'], 'onList' => (bool) $h]);
 }
+/* the double check while Add a lead is typed (2026-11-03, Matthew: "build both", after Ira Kauffman was added twice): anyone already in the
+   app with the same phone, email, full name or house. One of Matthew's shows only as his, nothing else about it. */
+if ($action === 'leadmatch') {
+    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if (!throttleTake(rateFile('leadmatch|' . $me), 900, 3600)) out(['ok' => true, 'dup' => []]);
+    $t = ['name' => $clean($_GET['name'] ?? '', 120), 'phone' => $clean($_GET['phone'] ?? '', 40), 'email' => $clean($_GET['email'] ?? '', 160), 'house' => null];
+    $mt = $clean($_GET['town'] ?? '', 160);
+    if (feature('walkdesk') && preg_match('/^\d+ \S/', $mt)) { $mp = array_map('trim', explode(',', $mt)); $t['house'] = a365Match($mp[0], $mp[1] ?? ''); }
+    $keys = leadKeys($t); $found = [];
+    if ($keys) foreach (leadsAllRaw() as $id => $l) {
+        if (leadGone($l)) continue;
+        $why = array_values(array_unique(array_map(fn($k) => explode(' ', $k)[0], array_values(array_intersect($keys, leadKeys($l))))));
+        if ($why) $found[] = leadDupOther($l + ['id' => (string) $id], $why);
+        if (count($found) >= 5) break;
+    }
+    out(['ok' => true, 'dup' => $found]);
+}
 if ($action === 'leadadd') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
     /* one of Matthew's leads (website or his Facebook ads) reached out to the office (2026-10-26, Matthew: "if one of the leads contacts her
@@ -9770,8 +9790,12 @@ if ($action === 'leadadd') {
        lead is hers (jenkeep), everything on it kept, and Matthew's phones get a note. Never a second lead for the same person. */
     if (webHide()) {
         $md = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $me2 = strtolower(trim((string) ($body['email'] ?? ''))); $mine = null;
-        foreach (leadsAllRaw() as $ml) if (webLead($ml) && ($ml['status'] ?? '') !== 'lost'
-            && ((strlen($md) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ml['phone'] ?? '')), -10) === $md) || ($me2 !== '' && strtolower((string) ($ml['email'] ?? '')) === $me2))) { $mine = $ml; break; }
+        /* + the same house (2026-11-03, Ira Kauffman: added with the name and address only, so neither phone nor email was there to match) */
+        $mt = trim((string) ($body['town'] ?? '')); $mhh = feature('walkdesk') && preg_match('/^\d+ \S/', $mt) ? a365Match(trim(explode(',', $mt)[0]), trim(explode(',', $mt)[1] ?? '')) : null;
+        $mhk = $mhh && !empty($mhh['door']) ? 'house ' . ($mhh['region'] ?? '') . '/' . $mhh['door'] : '';
+        foreach (leadsAllRaw() as $ml) if (webLead($ml) && ($ml['status'] ?? '') !== 'lost' && ($ml['removed'] ?? '') !== 'junk'   /* not one taken off as a duplicate */
+            && ((strlen($md) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ml['phone'] ?? '')), -10) === $md) || ($me2 !== '' && strtolower((string) ($ml['email'] ?? '')) === $me2)
+                || ($mhk !== '' && in_array($mhk, leadKeys($ml), true)))) { $mine = $ml; break; }
         if ($mine) {
             $came = (string) ($body['came'] ?? '');
             if (!in_array($came, ['call', 'text', 'email'], true)) out(['ok' => false, 'why' => 'matthew', 'error' => 'This is one of Matthew\'s leads (from a Facebook ad or the website). If they reached out to you, say how and they are yours.'], 409);
@@ -10039,13 +10063,48 @@ function cuCheckShown(): ?array {
     return ['at' => (int) ($j['at'] ?? 0), 'items' => array_values(array_filter((array) ($j['items'] ?? []), fn($i) => !isset($ok[$i['key'] ?? '']))), 'quiet' => count(array_filter((array) ($j['items'] ?? []), fn($i) => isset($ok[$i['key'] ?? ''])))];
 }
 function cuName(string $n): string { return trim((string) preg_replace('/\s+/', ' ', (string) preg_replace('/[^a-z ]/', '', strtolower($n)))); }
+/* one person, two leads (2026-11-03, Matthew: Ira Kauffman sat in his Pipeline from a Facebook ad and in Jen's from Messenger; she added her
+   with the name and address only, so the phone and email check on Add a lead never ran): what two leads share when they are one person:
+   the same phone, email, full name or house. Lost and Couldn't reach leads (Remove puts them there) are left out. */
+function leadGone(array $l): bool { return in_array((string) ($l['status'] ?? 'new'), ['lost', 'unreached'], true); }
+function leadKeys(array $l): array {
+    $k = [];
+    $d = substr((string) preg_replace('/\D/', '', (string) ($l['phone'] ?? '')), -10); if (strlen($d) === 10) $k[] = 'phone ' . $d;
+    $e = strtolower(trim((string) ($l['email'] ?? ''))); if (strpos($e, '@') > 0) $k[] = 'email ' . $e;
+    $n = cuName((string) ($l['name'] ?? '')); if (substr_count($n, ' ') >= 1 && !preg_match('/\b(no name|tbd|unknown|not given|direct text)\b/', $n)) $k[] = 'name ' . $n;
+    $h = $l['house'] ?? null; if (is_array($h) && !empty($h['door']) && empty($h['typed'])) $k[] = 'house ' . ($h['region'] ?? '') . '/' . $h['door'];
+    return $k;
+}
+/** every open lead that shares a key with another: id => [other id => ['phone', 'house', ...]] */
+function leadDupMap(): array {
+    static $c = null; $sig = fileSig(leadsDir() . '/leads.log') . '|' . fileSig(leadsDir() . '/leadst.log');
+    if ($c !== null && $c[0] === $sig) return $c[1];
+    $by = []; foreach (leadsAllRaw() as $id => $l) if (!leadGone($l)) foreach (leadKeys($l) as $k) $by[$k][] = (string) $id;
+    $m = [];
+    foreach ($by as $k => $ids) if (count($ids) > 1) { $why = explode(' ', $k)[0]; foreach ($ids as $a) foreach ($ids as $b) if ($a !== $b && !in_array($why, $m[$a][$b] ?? [], true)) $m[$a][$b][] = $why; }
+    $c = [$sig, $m];
+    return $m;
+}
+/** a lead the person asking may not open (Matthew's own, on an office, quote or manager sign-in) */
+function leadHiddenHere(array $l): bool { return webHide() && webLead($l) && !sentToMe($l); }
+/** who works a lead, in words, for the double warnings */
+function leadWhose(array $l): string {
+    if (webLead($l)) return 'Matthew';
+    foreach ([(string) ($l['owner'] ?? ''), (string) (((array) ($l['qown'] ?? []))[0] ?? ''), (string) ($l['by'] ?? '')] as $w)
+        if ($w !== '' && (activeName($w) || preg_match('/^[A-Z][a-z]+ [A-Z][A-Za-z\'-]+$/', $w))) return $w;   /* a person's name, not "Facebook" or "ClickUp" (office sign-ins are not on the team list) */
+    return 'the office';
+}
+/** what a double warning shows about the other lead: everything when the asker may open it, else only whose it is */
+function leadDupOther(array $o, array $why): array {
+    if (leadHiddenHere($o)) return ['hidden' => true, 'whose' => leadWhose($o), 'why' => $why];
+    $j = jobForLead((string) $o['id']);
+    return ['id' => (string) $o['id'], 'name' => (string) ($o['name'] ?? ''), 'status' => (string) ($o['status'] ?? 'new'), 'whose' => leadWhose($o), 'why' => $why, 'job' => $j ? (string) ($j['date'] ?? '') : ''];
+}
 function leadDupes(array $leads): array {
     $by = [];
     foreach ($leads as $l) {
-        if (($l['status'] ?? '') === 'lost') continue;
-        $d = substr((string) preg_replace('/\D/', '', (string) ($l['phone'] ?? '')), -10); if (strlen($d) === 10) $by['phone ' . $d][$l['id']] = (string) ($l['name'] ?? '');
-        $e = strtolower(trim((string) ($l['email'] ?? ''))); if ($e !== '') $by['email ' . $e][$l['id']] = (string) ($l['name'] ?? '');
-        $n = cuName((string) ($l['name'] ?? '')); if (substr_count($n, ' ') >= 1) $by['name ' . $n][$l['id']] = (string) ($l['name'] ?? '');
+        if (leadGone($l)) continue;
+        foreach (leadKeys($l) as $k) $by[$k][$l['id']] = (string) ($l['name'] ?? '');
     }
     $out = [];
     foreach ($by as $k => $ids) if (count($ids) > 1) { ksort($ids); $out[implode(',', array_keys($ids))][] = ['why' => explode(' ', $k)[0], 'ids' => array_keys($ids), 'names' => array_values(array_unique($ids))]; }
