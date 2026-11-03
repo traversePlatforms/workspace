@@ -1,0 +1,15 @@
+# Post calendar pictures (2026-10-31): plain image files only, fetched by Facebook and Instagram at publish time. No scripts run here,
+# no folder listing, and only .jpg and .png files are served.
+Options -Indexes
+<IfModule mod_php.c>
+php_flag engine off
+</IfModule>
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+RemoveType .php .phtml .phar
+<FilesMatch "\.(?!(jpg|png)$)[^.]+$">
+Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+Header set Cache-Control "public, max-age=31536000, immutable"
+Header set X-Robots-Tag "noindex"
+</IfModule>

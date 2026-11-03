@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>/* the look: the field app's own setting (localStorage "sixfold.theme": light, dark, or auto when absent), shared by every Traverse page on this site */(function(){function a(){try{var t=localStorage.getItem("sixfold.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}catch(e){}}a();window.addEventListener("storage",function(e){if(!e.key||e.key==="sixfold.theme")a()})})();</script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Post Calendar</title>
+<meta name="theme-color" content="#13294b">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Posts"><meta name="mobile-web-app-capable" content="yes">
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});   /* only so it installs as an app; it keeps nothing */</script>
+<style>
+/* Post calendar (2026-10-31): Matthew's approval calendar for the clients' Facebook and Instagram posts. One client on screen at a time,
+   in that client's colour; Traverse navy for the frame, flagging-tape orange for the one action that matters (Approve). */
+:root{--bg:#f4f6f9;--card:#fff;--ink:#0f1b2d;--soft:#566476;--line:#dce2ea;--accent:#13294b;--accent2:#e6ecf5;--onaccent:#fff;--flag:#d6400c;--onflag:#fff;--warn:#b42318;--warnbg:#fdecea;--ok:#1f7a4d;--okbg:#ddf3e7;--note:#fff6dc;--noteink:#6b4e00;--chip:#edf1f6;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--client:#13294b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d131c;--card:#1b2535;--ink:#e8eef6;--soft:#9ba9ba;--line:#3e4f68;--accent:#9fbbe6;--accent2:#24344e;--onaccent:#0d131c;--flag:#ff7a45;--onflag:#1a0d06;--chip:#273449;--warn:#ff8a80;--warnbg:#3a1d1d;--ok:#5cc98f;--okbg:#16352a;--note:#3a3016;--noteink:#f3d98a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d131c;--card:#1b2535;--ink:#e8eef6;--soft:#9ba9ba;--line:#3e4f68;--accent:#9fbbe6;--accent2:#24344e;--onaccent:#0d131c;--flag:#ff7a45;--onflag:#1a0d06;--chip:#273449;--warn:#ff8a80;--warnbg:#3a1d1d;--ok:#5cc98f;--okbg:#16352a;--note:#3a3016;--noteink:#f3d98a;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans)}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}a{color:var(--accent)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--flag);outline-offset:2px}
+.bar{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
+.brand{font-weight:800}.brand small{display:block;font-weight:500;color:var(--soft);font-size:12px}
+.picker{margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-weight:700;max-width:60vw}
+.picker span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+main{max-width:860px;margin:0 auto;padding:16px}
+.signin{max-width:360px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center}
+.signin h1{margin:0 0 4px;font-size:22px}.signin p{color:var(--soft);margin:0 0 16px}
+.signin input{width:100%;font-size:26px;letter-spacing:.25em;text-align:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.btn{border:0;background:var(--accent);color:var(--onaccent);font-weight:700;padding:11px 16px;border-radius:10px;min-height:44px}
+.btn.flag{background:var(--flag);color:var(--onflag)}.btn.ghost{background:var(--chip);color:var(--ink)}.btn.warn{background:var(--warnbg);color:var(--warn)}
+.btn.small{padding:7px 12px;font-size:14px;min-height:36px}.btn.wide{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.err{color:var(--warn);min-height:1.3em;margin:8px 0 0;font-size:14px}
+.backlink{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--accent);font-weight:700;font-size:15px;padding:6px 2px;margin:0 0 8px;min-height:44px}
+.backlink:hover{text-decoration:underline}
+.band{background:var(--card);border:1px solid var(--line);border-left:8px solid var(--client);border-radius:14px;padding:14px 16px;margin:0 0 14px}
+.band h1{margin:0;font-size:21px;display:flex;align-items:center;gap:8px}.band .where{color:var(--soft);font-size:13.5px;margin:2px 0 8px}
+details.rules{background:var(--note);color:var(--noteink);border-radius:10px;padding:8px 12px;font-size:13.5px}
+details.rules summary{font-weight:700;cursor:pointer}details.rules p{margin:6px 0 0;white-space:pre-wrap}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--soft);margin:22px 0 8px}
+.week{font-size:13px;font-weight:700;color:var(--soft);margin:14px 0 6px}
+.card{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--client);border-radius:12px;padding:10px;margin:0 0 8px;width:100%;text-align:left}
+.card:hover{background:var(--accent2)}
+.thumb{width:64px;height:80px;border-radius:8px;background:var(--chip) center/cover no-repeat;position:relative;display:grid;place-items:center;color:var(--soft);font-size:12px}
+.thumb b{position:absolute;right:3px;bottom:3px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;border-radius:6px;padding:0 5px}
+.card .when{font-weight:700}.card .line{color:var(--soft);font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin:3px 0}
+.pill{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--chip);white-space:nowrap}
+.s-approved{background:var(--okbg);color:var(--ok)}.s-published{background:var(--accent2);color:var(--accent)}.s-failed,.s-changes{background:var(--warnbg);color:var(--warn)}.s-publishing{background:var(--note);color:var(--noteink)}
+.open{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 8px;color:var(--soft)}
+.open .btn{white-space:nowrap;flex:none}
+.empty{color:var(--soft);font-size:14px;margin:4px 0 0}
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.sheethead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;background:var(--card);border-bottom:1px solid var(--line);border-top:5px solid var(--client);padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
+.sheethead b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheetbody{max-width:760px;margin:0 auto;padding:16px 16px 120px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+.box h3{margin:0 0 8px;font-size:15px}
+.req{background:var(--note);color:var(--noteink);border-radius:12px;padding:12px;margin:0 0 12px}
+.req p{margin:4px 0;white-space:pre-wrap}.req small{opacity:.8}
+.bad{background:var(--warnbg);color:var(--warn);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+.bad ul{margin:4px 0 0;padding-left:18px}
+.good{background:var(--okbg);color:var(--ok);border-radius:12px;padding:10px 12px;margin:0 0 12px;font-size:14px}
+label.f{display:block;font-weight:700;font-size:13.5px;margin:12px 0 4px}label.f small{font-weight:500;color:var(--soft)}
+input[type=text],input[type=date],input[type=time],select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;min-height:44px}
+textarea{min-height:120px;resize:vertical;line-height:1.45}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:650;min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--client);border-color:var(--client);color:#fff}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}.quick button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 9px;font-size:13px}
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.pic{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.pic img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;background:var(--chip)}
+.pic .pa{display:flex;gap:4px;padding:6px;flex-wrap:wrap}.pic .pa button{border:0;background:var(--chip);border-radius:7px;padding:4px 8px;font-size:12.5px}
+.pic textarea{min-height:60px;border-radius:0;border:0;border-top:1px solid var(--line);font-size:13px}
+.pic .sz{font-size:11.5px;color:var(--soft);padding:0 6px 6px}
+.count{font-size:12px;color:var(--soft);text-align:right}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:3;background:var(--card);border-top:1px solid var(--line);padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center}
+.savebar .btn{flex:1;max-width:360px}
+.log{font-size:13px;color:var(--soft);margin:0;padding-left:18px}.log li{margin:2px 0}
+.links a{display:block;margin:2px 0;word-break:break-all}
+/* the previews: close to what Facebook and Instagram show, not a copy of either */
+.pv{max-width:420px;margin:0 auto;background:#fff;color:#050505;border:1px solid #dadde1;border-radius:10px;overflow:hidden;font:14px/1.38 -apple-system,system-ui,"Segoe UI",Roboto,Arial,sans-serif}
+.pvh{display:flex;align-items:center;gap:8px;padding:10px 12px}.pva{width:36px;height:36px;border-radius:50%;background:var(--client);color:#fff;display:grid;place-items:center;font-weight:800}
+.pvh b{display:block;font-size:14px}.pvh small{color:#65676b;font-size:12.5px}
+.pvt{padding:0 12px 10px;white-space:pre-wrap;word-wrap:break-word}.pvt .more{color:#65676b;font-weight:600}
+.pvi{display:grid;gap:2px;background:#000}.pvi img{display:block;width:100%;object-fit:cover}
+.pvi.g2{grid-template-columns:1fr 1fr}.pvi.g2 img{aspect-ratio:1}
+.pvc{padding:8px 12px 12px;white-space:pre-wrap;word-wrap:break-word}.pvc b{margin-right:4px}
+.dots{display:flex;gap:4px;justify-content:center;padding:8px}.dots i{width:6px;height:6px;border-radius:50%;background:#c7c7c7}.dots i:first-child{background:#0095f6}
+.igimg{position:relative}.igimg span{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;border-radius:10px;padding:1px 8px}
+.ov{display:grid;gap:10px}.ovc{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-left:8px solid var(--client);border-radius:12px;padding:12px 14px}
+.ovc b{font-size:16px}.ovc .tags{margin-top:6px}
+.cl{background:var(--card);border:1px solid var(--line);border-left:8px solid var(--client);border-radius:12px;padding:12px 14px;margin:0 0 10px}
+.cl b{font-size:16px}.cl small{display:block;color:var(--soft)}
+.slotrow{display:grid;grid-template-columns:1fr 1fr 1.2fr auto;gap:6px;margin:0 0 6px}
+.radio{display:flex;gap:8px;align-items:flex-start;margin:6px 0}.radio input{margin-top:4px}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:40;font-weight:600;max-width:90vw}
+.menu{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.35);display:flex;align-items:flex-start;justify-content:flex-end;padding:60px 12px}
+.menu .mbox{background:var(--card);border:1px solid var(--line);border-radius:14px;min-width:260px;max-width:92vw;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:12px;border-radius:10px;font-weight:650}
+.menu button:hover{background:var(--accent2)}.menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+/* a picture full size (2026-11-03, Matthew: "click the picture and it goes fullsize because right now its to small") */
+.pic img,.pvi img,.igimg img{cursor:zoom-in}
+.zoom{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;overflow:auto}
+.zoom img{max-width:100vw;max-height:100vh;object-fit:contain;cursor:zoom-in}.zoom.real{display:block}.zoom.real img{max-width:none;max-height:none;cursor:zoom-out}
+.zoom button{position:fixed;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:22px;font-weight:700;width:48px;height:48px;border-radius:50%;cursor:pointer}
+.zoom .zx{top:12px;right:12px}.zoom .zp{left:12px;top:50%;transform:translateY(-50%)}.zoom .zn{right:12px;top:50%;transform:translateY(-50%)}
+.zoom .zc{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);color:#fff;font-size:13px;background:rgba(0,0,0,.5);border-radius:10px;padding:3px 10px}
+</style>
+</head>
+<body>
+<div id="signin" class="signin" hidden>
+  <h1>Post calendar</h1><p>Enter your code.</p>
+  <form id="sf"><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" aria-label="Sign-in code"><div class="err" id="serr"></div><button class="btn flag wide" style="margin-top:10px">Sign in</button></form>
+</div>
+<div id="app" hidden>
+  <div class="bar"><div class="brand">Post calendar<small id="who"></small></div><button class="picker" id="pick" aria-haspopup="true"><i class="dot" id="pdot"></i><span id="pname">Clients</span> &#9662;</button></div>
+  <main id="main"></main>
+</div>
+<div id="sheet" class="sheet" hidden></div>
+<div id="menu" class="menu" hidden><div class="mbox" id="mbox"></div></div>
+<div id="toast" class="toast" hidden></div>
+<script>
+(function () {
+  'use strict';
+  var API = 'api/cal.php', TZ = 'America/Denver';
+  var D = { me: null, clients: [], client: null, posts: [], slots: [], counts: null, pages: null, statuses: {} };
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  function toast(m) { var t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 2600); }
+  function api(action, body, query) {
+    var url = API + '?action=' + action + (query || ''), o = { credentials: 'same-origin', headers: {} };
+    if (body instanceof FormData) { o.method = 'POST'; o.body = body; o.headers['X-PC'] = '1'; }
+    else if (body) { o.method = 'POST'; o.body = JSON.stringify(body); o.headers['Content-Type'] = 'application/json'; o.headers['X-PC'] = '1'; }
+    return fetch(url, o).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'The server did not answer properly.' }; }).then(function (j) { if (r.status === 401 && action !== 'signin') { showSignin(); throw new Error('Signed out.'); } if (!j.ok) throw new Error(j.error || 'Something went wrong.'); return j; }); });
+  }
+  /* times: always Mountain, whatever the phone's own zone */
+  var fmtW = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+  var fmtD = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
+  var fmtT = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  var fmtWk = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short' });
+  function when(ts) { return ts ? fmtW.format(new Date(ts * 1000)) : 'No time yet'; }
+  function dstr(ts) { return fmtD.format(new Date(ts * 1000)); }
+  function tstr(ts) { return fmtT.format(new Date(ts * 1000)); }
+  function weekOf(ts) { var d = new Date(dstr(ts) + 'T12:00:00Z'), dow = d.getUTCDay(), m = new Date(d.getTime() - ((dow + 6) % 7) * 864e5); return m.toISOString().slice(0, 10); }
+  function weekLabel(k) { var d = new Date(k + 'T12:00:00Z'); return 'Week of ' + d.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }); }
+  function cur() { return D.clients.filter(function (c) { return c.id === D.client; })[0] || null; }
+  function clientCss(c) { document.documentElement.style.setProperty('--client', c ? c.color : '#13294b'); }
+  function tLabel(t) { return t === 'fb' ? 'Facebook' : 'Instagram'; }
+  function statusOf(p) { return p.status === 'draft' && p.openRequest ? 'changes' : p.status; }
+
+  /* ---- sign-in ---- */
+  function showSignin() { $('app').hidden = true; $('sheet').hidden = true; $('signin').hidden = false; $('code').focus(); }
+  $('sf').addEventListener('submit', function (e) {
+    e.preventDefault(); $('serr').textContent = '';
+    api('signin', { code: $('code').value }).then(function () { $('code').value = ''; start(); }).catch(function (er) { $('serr').textContent = er.message; });
+  });
+
+  /* ---- loading ---- */
+  function load(cid) {
+    return api('data', null, cid ? '&client=' + encodeURIComponent(cid) : '').then(function (j) {
+      D.me = j.me; D.clients = j.clients; D.statuses = j.statuses; D.pages = j.pages; D.client = j.client || null; D.posts = j.posts || []; D.slots = j.slots || []; D.counts = j.counts || null;
+      $('who').textContent = j.me.name + (j.me.role === 'admin' ? '' : ' (drafts only)');
+      if (D.client) store('postcal.client', D.client);
+      render();
+    });
+  }
+  /* where we are, kept in the browser's history (2026-10-31, Matthew: no way back to the client list from a client's calendar): the client
+     list, one client, or a post or the Clients screen on top. The phone's Back goes one step up: post -> client -> client list. */
+  function nav(state, replace) { try { history[replace ? 'replaceState' : 'pushState'](Object.assign({ pc: 1, client: '' }, state), '', location.pathname + location.search); } catch (e) {} }
+  function showClient(cid) { cid = cid || ''; store('postcal.client', cid || 'all'); nav({ client: cid }); return load(cid).catch(function () {}); }
+  function start() {
+    $('signin').hidden = true; $('app').hidden = false;
+    var c = store('postcal.client'); c = c && c !== 'all' ? c : '';
+    nav({ client: '' }, true); if (c) nav({ client: c });   /* the list always sits underneath, so Back from the remembered client reaches it */
+    load(c).catch(function () {});
+  }
+  function hideSheet() { $('sheet').hidden = true; document.body.style.overflow = ''; P = W = null; dirty = false; }
+  window.addEventListener('popstate', function (e) {
+    var s = e.state && e.state.pc ? e.state : { client: '' };
+    if (!$('sheet').hidden && !s.post && !s.sheet) {
+      if (dirty && !confirm('Leave without saving your changes?')) { nav({ client: D.client || '', post: P && P.id }); return; }
+      hideSheet();
+    }
+    if ((s.client || '') !== (D.client || '')) { store('postcal.client', s.client || 'all'); load(s.client || '').catch(function () {}); }
+    else if (!s.post && !s.sheet) load(D.client || '').catch(function () {});
+  });
+  function render() {
+    var c = cur(); clientCss(c);
+    $('pdot').style.background = c ? c.color : 'transparent'; $('pname').textContent = c ? c.name : 'All clients';
+    if (!c) return renderOverview();
+    renderClient(c);
+  }
+
+  /* ---- the picker: one client at a time ---- */
+  $('pick').addEventListener('click', function () {
+    var h = D.clients.filter(function (c) { return !c.archived; }).map(function (c) { return '<button data-c="' + esc(c.id) + '"><i class="dot" style="background:' + esc(c.color) + '"></i>' + esc(c.name) + '</button>'; }).join('');
+    h += '<hr><button data-c="">All clients (counts)</button>';
+    if (D.me.role === 'admin') h += '<button data-a="clients">Manage clients</button>';
+    h += '<button data-a="look">Look: ' + ({ light: 'Light', dark: 'Dark' }[store('sixfold.theme')] || 'Auto') + '</button><button data-a="out">Sign out</button>';
+    $('mbox').innerHTML = h; $('menu').hidden = false;
+  });
+  $('menu').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) { $('menu').hidden = true; return; }
+    $('menu').hidden = true;
+    if (b.hasAttribute('data-c')) { showClient(b.getAttribute('data-c')); return; }
+    var a = b.getAttribute('data-a');
+    if (a === 'clients') openClients();
+    if (a === 'look') { var t = store('sixfold.theme'), n = t === 'light' ? 'dark' : t === 'dark' ? null : 'light'; try { if (n) localStorage.setItem('sixfold.theme', n); else localStorage.removeItem('sixfold.theme'); } catch (er) {} if (n) document.documentElement.setAttribute('data-theme', n); else document.documentElement.removeAttribute('data-theme'); }
+    if (a === 'out') api('signout', {}).then(showSignin).catch(showSignin);
+  });
+
+  function renderOverview() {
+    var h = '<h2 style="margin-top:4px">All clients</h2><p class="empty">Counts only. Pick a client to see and approve its posts.</p><div class="ov">';
+    D.clients.forEach(function (c) {
+      var n = (D.counts && D.counts[c.id]) || {}, tags = Object.keys(n).map(function (k) { return '<span class="pill s-' + k + '">' + n[k] + ' ' + esc((D.statuses[k] || k).toLowerCase()) + '</span>'; }).join('');
+      h += '<button class="ovc" data-c="' + esc(c.id) + '" style="--client:' + esc(c.color) + '"><b>' + esc(c.name) + '</b>' + (c.archived ? ' <span class="pill">archived</span>' : '') + '<div class="tags">' + (tags || '<span class="empty">No posts yet</span>') + '</div></button>';
+    });
+    $('main').innerHTML = h + '</div>';
+    $('main').querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { showClient(b.getAttribute('data-c')); }; });
+  }
+
+  /* ---- one client's calendar ---- */
+  function card(p) {
+    var im = p.images[0], st = statusOf(p);
+    var th = '<div class="thumb"' + (im ? ' style="background-image:url(\'' + esc(im.url) + '\')"' : '') + '>' + (im ? '' : 'No picture') + (p.images.length > 1 ? '<b>' + p.images.length + '</b>' : '') + '</div>';
+    var line = (p.fb || p.ig || '').split('\n')[0] || '(no caption yet)';
+    var tags = '<span class="pill s-' + st + '">' + esc(D.statuses[st] || st) + '</span>' + (p.type === 'photoset' ? '<span class="pill">Photo set</span>' : '') + p.targets.map(function (t) { return '<span class="pill">' + (t === 'fb' ? 'FB' : 'IG') + '</span>'; }).join('')
+      + (/needs matthew/i.test(p.note || '') && st === 'draft' ? '<span class="pill s-publishing">Needs review</span>' : '');
+    return '<button class="card" data-p="' + esc(p.id) + '">' + th + '<div><div class="when">' + esc(when(p.at)) + '</div><div class="tags">' + tags + '</div><div class="line">' + esc(line) + '</div></div></button>';
+  }
+  function renderClient(c) {
+    var admin = D.me.role === 'admin';
+    var where = (c.page_id ? 'Facebook: ' + esc(c.page_name || c.page_id) : 'No Facebook Page assigned') + ' &middot; ' + (c.ig_id ? 'Instagram: @' + esc(c.ig_user) : 'No Instagram assigned');
+    var h = '<button class="backlink" id="toall">&#8249; All clients</button><section class="band"><h1><i class="dot" style="background:' + esc(c.color) + '"></i>' + esc(c.name) + (c.archived ? ' <span class="pill">archived</span>' : '') + '</h1><div class="where">' + where + '</div>'
+      + (c.rules ? '<details class="rules"><summary>Rules for ' + esc(c.name) + '</summary><p>' + linkify(c.rules) + '</p></details>' : '')
+      + (c.archived ? '' : '<div class="acts"><button class="btn small" id="newp">+ New post</button><button class="btn small ghost" id="news">+ New photo set</button></div>') + '</section>';
+    var now = Date.now() / 1000, att = [], up = [], uns = [], pub = [];
+    D.posts.forEach(function (p) {
+      var st = statusOf(p);
+      if (st === 'failed' || st === 'changes') att.push(p);
+      else if (st === 'published') pub.push(p);
+      else if (!p.at) uns.push(p);
+      else up.push(p);
+    });
+    if (att.length) h += '<h2>Needs attention</h2>' + att.map(card).join('');
+    h += '<h2>Coming up</h2>';
+    var taken = {}; D.posts.forEach(function (p) { if (p.at) taken[p.at] = 1; });
+    var items = up.map(function (p) { return { at: p.at, p: p }; }).concat(D.slots.filter(function (s) { return !taken[s.at]; }).slice(0, 8).map(function (s) { return { at: s.at, s: s }; }));
+    items.sort(function (a, b) { return a.at - b.at; });
+    var wk = '';
+    items.forEach(function (it) {
+      var k = weekOf(it.at); if (k !== wk) { wk = k; h += '<div class="week">' + weekLabel(k) + '</div>'; }
+      if (it.p) h += card(it.p);
+      else h += '<div class="open"><span>Open: ' + esc(when(it.at)) + (it.s.type === 'photoset' ? ' (photo set)' : '') + '</span>' + (c.archived ? '' : '<button class="btn small ghost" data-slot="' + it.at + '" data-type="' + esc(it.s.type) + '">+ Add</button>') + '</div>';
+    });
+    if (!items.length) h += '<p class="empty">Nothing coming up.</p>';
+    if (uns.length) h += '<h2>Not scheduled yet</h2>' + uns.map(card).join('');
+    if (pub.length) h += '<h2>Published</h2>' + pub.slice().reverse().slice(0, 20).map(card).join('');
+    $('main').innerHTML = h;
+    var m = $('main');
+    m.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { openPost(b.getAttribute('data-p')); }; });
+    m.querySelectorAll('[data-slot]').forEach(function (b) { b.onclick = function () { var at = +b.getAttribute('data-slot'); newPost(b.getAttribute('data-type'), { date: dstr(at), time: tstr(at) }); }; });
+    $('toall').onclick = function () { showClient(''); };
+    if ($('newp')) $('newp').onclick = function () { newPost('single'); };
+    if ($('news')) $('news').onclick = function () { newPost('photoset'); };
+    void admin; void now;
+  }
+  function linkify(t) { return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+  function newPost(type, at) {
+    var b = { client: D.client, type: type, targets: type === 'photoset' ? ['fb', 'ig'] : ['fb', 'ig'] };
+    var c = cur(); if (c && !c.ig_id) b.targets = ['fb'];
+    if (at) { b.date = at.date; b.time = at.time; }
+    api('create', b).then(function (j) { return load(D.client).then(function () { openPost(j.id || j.dup); }); }).catch(function (e) { toast(e.message); });
+  }
+
+  /* ---- one post: edit while draft, approve, request changes, preview, results, log ---- */
+  var P = null, W = null, dirty = false;
+  function openPost(id) {
+    P = D.posts.filter(function (p) { return p.id === id; })[0]; if (!P) return;
+    W = JSON.parse(JSON.stringify(P)); dirty = false; drawPost();
+    $('sheet').hidden = false; $('sheet').scrollTop = 0; document.body.style.overflow = 'hidden';
+    nav({ client: D.client || '', post: id });
+  }
+  function closeSheet() {
+    if (dirty && !confirm('Leave without saving your changes?')) return;
+    dirty = false;
+    if (history.state && history.state.pc && (history.state.post || history.state.sheet)) { history.back(); return; }   /* popstate closes it */
+    hideSheet(); load(D.client).catch(function () {});
+  }
+  function canEdit(p) { return ['draft', 'approved', 'changes'].indexOf(p.status) >= 0; }
+  function drawPost() {
+    var c = cur(), p = W, admin = D.me.role === 'admin', st = statusOf(P), ed = canEdit(P);
+    var h = '<div class="sheethead"><button class="btn small ghost" id="back" aria-label="Back">&#8592; Back</button><b>' + esc(c.name) + ' &middot; ' + (p.type === 'photoset' ? 'Photo set' : 'Post') + '</b><span class="pill s-' + st + '">' + esc(D.statuses[st] || st) + '</span></div><div class="sheetbody">';
+    if (c.rules) h += '<details class="rules" style="margin:0 0 12px"><summary>Rules for ' + esc(c.name) + '</summary><p>' + linkify(c.rules) + '</p></details>';
+    if (/needs matthew/i.test(P.note || '') && P.status === 'draft') h += '<div class="req"><b>Needs your review.</b><p>' + esc(P.note) + '</p></div>';
+    var orq = P.openRequest;
+    if (orq) h += '<div class="req"><b>Change requested</b><p>' + esc(orq.text) + '</p><small>' + esc(orq.by) + ', ' + esc(when(orq.at)) + '</small>' + (admin ? '<div class="acts"><button class="btn small ghost" id="withdraw">Close the request (no new version needed)</button></div>' : '') + '</div>';
+    /* status and the one action */
+    if (P.status === 'approved') h += '<div class="good"><b>Approved</b> by ' + esc(P.approval.by) + ', ' + esc(when(P.approval.at)) + '. It goes out ' + esc(when(P.at)) + '.' + (admin ? '<div class="acts"><button class="btn small ghost" id="unapprove">Unapprove</button></div>' : '') + '</div>';
+    if (P.status === 'publishing') h += '<div class="req"><b>Going out now.</b></div>';
+    if (P.status === 'failed') h += '<div class="bad"><b>Did not go out.</b> ' + esc(P.error) + (admin ? '<div class="acts"><button class="btn small" id="todraft">Back to draft</button></div>' : '') + '</div>';
+    var done = Object.keys(P.done || {});
+    if (done.length) h += '<div class="box links"><h3>' + (P.status === 'published' ? 'Published' : 'Already went') + '</h3>' + done.map(function (k) { var d = P.done[k]; return '<a href="' + esc(d.link || '#') + '" target="_blank" rel="noopener">' + tLabel(k) + ': ' + esc(d.link || d.id) + '</a>'; }).join('') + '</div>';
+    if (P.status === 'draft' && !orq) {
+      if (P.problems.length) h += '<div class="bad"><b>Before it can be approved:</b><ul>' + P.problems.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+      else if (admin) h += '<div class="box"><button class="btn flag wide" id="approve">Approve for ' + esc(when(P.at)) + '</button><p class="empty" style="margin-top:8px">Goes to ' + P.targets.map(tLabel).join(' and ') + ' as shown in the preview below. Nothing else is approved by this tap.</p></div>';
+      else h += '<div class="box empty">Ready for Matthew to look at. Only his sign-in can approve.</div>';
+    }
+    /* the fields */
+    var dis = ed ? '' : ' disabled';
+    h += '<div class="box"><h3>Post</h3>';
+    h += '<div class="seg" role="group" aria-label="Type"><button data-type="single" aria-pressed="' + (p.type === 'single') + '"' + dis + '>One picture</button><button data-type="photoset" aria-pressed="' + (p.type === 'photoset') + '"' + dis + '>Photo set (album + carousel)</button></div>';
+    h += '<label class="f">Where</label><div class="seg" role="group" aria-label="Where"><button data-t="fb" aria-pressed="' + (p.targets.indexOf('fb') >= 0) + '"' + dis + '>Facebook</button><button data-t="ig" aria-pressed="' + (p.targets.indexOf('ig') >= 0) + '"' + dis + '>Instagram' + (c.ig_id ? '' : ' (none assigned)') + '</button></div>';
+    var dv = p.at ? dstr(p.at) : '', tv = p.at ? tstr(p.at) : '';
+    h += '<label class="f">When <small>(Mountain time)</small></label><div class="row2"><input type="date" id="fdate" value="' + dv + '"' + dis + ' aria-label="Date"><input type="time" id="ftime" value="' + tv + '"' + dis + ' aria-label="Time"></div>';
+    if (ed) { var taken = {}; D.posts.forEach(function (q) { if (q.at && q.id !== P.id) taken[q.at] = 1; }); var qs = D.slots.filter(function (s) { return !taken[s.at] && (s.type === p.type); }).slice(0, 4); if (qs.length) h += '<div class="quick">' + qs.map(function (s) { return '<button data-q="' + s.at + '">' + esc(when(s.at).replace(/, \d{4}/, '')) + '</button>'; }).join('') + '</div>'; }
+    h += '<label class="f">' + (p.type === 'photoset' ? 'Pictures <small>(2 to 10; Instagram shows them as a carousel)</small>' : 'Picture') + '</label><div class="pics">';
+    p.images.forEach(function (im, i) {
+      h += '<div class="pic"><img src="' + esc(im.url) + '" alt="Picture ' + (i + 1) + '" loading="lazy"><div class="sz">' + (im.w ? im.w + ' x ' + im.h : '') + '</div>'
+        + (p.type === 'photoset' ? '<textarea data-cap="' + i + '" placeholder="Caption for this photo (Facebook, optional)"' + dis + '>' + esc(im.caption || '') + '</textarea>' : '')
+        + (ed ? '<div class="pa">' + (p.type === 'photoset' ? '<button data-mv="' + i + ',-1">&#8593;</button><button data-mv="' + i + ',1">&#8595;</button><button data-rm="' + i + '">Remove</button>' : '') + '<button data-rep="' + i + '">Replace</button></div>' : '') + '</div>';
+    });
+    h += '</div>' + (ed && (p.type === 'photoset' ? p.images.length < 10 : !p.images.length) ? '<div class="acts"><button class="btn small ghost" id="addpic">+ Add picture' + (p.type === 'photoset' ? 's' : '') + '</button></div>' : '') + '<input type="file" id="file" accept="image/*"' + (p.type === 'photoset' ? ' multiple' : '') + ' hidden>';
+    if (p.type === 'photoset') h += '<label class="f" for="falbum">Facebook album name</label><input type="text" id="falbum" maxlength="120" value="' + esc(p.album) + '"' + dis + '>';
+    h += '<label class="f" for="ffb">Facebook caption' + (p.type === 'photoset' ? ' <small>(the album post)</small>' : '') + '</label><textarea id="ffb"' + dis + '>' + esc(p.fb) + '</textarea>';
+    h += '<label class="f" for="fig">Instagram caption</label><textarea id="fig"' + dis + '>' + esc(p.ig) + '</textarea><div class="count" id="igc"></div>' + (ed ? '<div class="quick"><button id="copyfb">Copy the Facebook caption</button></div>' : '');
+    h += '<label class="f" for="fnote">Note <small>(only here; never posted)</small></label><textarea id="fnote" style="min-height:60px"' + dis + '>' + esc(p.note) + '</textarea></div>';
+    /* change request */
+    if (admin && ['draft', 'approved', 'changes', 'failed'].indexOf(P.status) >= 0) h += '<div class="box"><h3>Request changes</h3><textarea id="rq" placeholder="What should change in the picture or the words?" style="min-height:80px"></textarea><div class="acts"><button class="btn small" id="rqgo">Send request</button></div><p class="empty">The post cannot be approved until the change comes back.</p></div>';
+    var past = (P.requests || []).filter(function (r) { return r.answered; });
+    if (past.length) h += '<div class="box"><h3>Earlier requests</h3><ul class="log">' + past.map(function (r) { return '<li>' + esc(r.text) + ' <small>(' + esc(r.by) + ', ' + esc(when(r.at)) + '; ' + (r.answered.how === 'closed' ? 'closed' : 'answered') + ' by ' + esc(r.answered.by) + ')</small></li>'; }).join('') + '</ul></div>';
+    /* preview */
+    h += '<div class="box"><h3>Preview</h3><div class="seg" role="group" aria-label="Preview"><button data-pv="fb" aria-pressed="' + (pvWhich === 'fb') + '">Facebook</button><button data-pv="ig" aria-pressed="' + (pvWhich === 'ig') + '">Instagram</button></div><div style="margin-top:10px" id="pv"></div></div>';
+    h += '<div class="box"><h3>Log</h3><ul class="log">' + (P.log || []).slice().reverse().slice(0, 20).map(function (l) { return '<li>' + esc(when(l.at)) + ', ' + esc(l.by) + ': ' + esc(l.what) + '</li>'; }).join('') + '</ul></div>';
+    h += '</div><div class="savebar" id="savebar" hidden><button class="btn ghost" id="undo">Undo changes</button><button class="btn" id="save">Save' + (P.status === 'approved' ? ' (drops the approval)' : '') + '</button></div>';
+    $('sheet').innerHTML = h; wire(); drawPreview(); igCount(); $('savebar').hidden = !dirty; if (dirty && $('approve')) $('approve').disabled = true;
+  }
+  var pvWhich = 'fb';
+  function mark() { dirty = true; $('savebar').hidden = false; if ($('approve')) { $('approve').disabled = true; $('approve').textContent = 'Save first, then approve'; } drawPreview(); }
+  function readFields() {
+    if (!canEdit(P)) return;
+    var d = $('fdate').value, t = $('ftime').value;
+    W.fb = $('ffb').value; W.ig = $('fig').value; W.note = $('fnote').value; if ($('falbum')) W.album = $('falbum').value;
+    W._date = d; W._time = t;
+    if (d && t) { /* approximate for the preview only; the server works out the moment in Mountain time */ W._when = d + ' ' + t; }
+    document.querySelectorAll('[data-cap]').forEach(function (el) { W.images[+el.getAttribute('data-cap')].caption = el.value; });
+  }
+  function igCount() { var n = ($('fig') ? $('fig').value : W.ig).length; if ($('igc')) $('igc').textContent = n + ' / 2,200' + (n > 2200 ? ' (too long)' : ''); }
+  function wire() {
+    var s = $('sheet');
+    $('back').onclick = closeSheet;
+    s.querySelectorAll('input,textarea').forEach(function (el) { if (el.id === 'rq' || el.id === 'file') return; el.addEventListener('input', function () { readFields(); igCount(); mark(); }); });
+    s.querySelectorAll('[data-type]').forEach(function (b) { b.onclick = function () { readFields(); W.type = b.getAttribute('data-type'); if (W.type === 'single' && W.images.length > 1) W.images = W.images.slice(0, 1); dirty = true; drawPost(); }; });
+    s.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { readFields(); var t = b.getAttribute('data-t'), i = W.targets.indexOf(t); if (i >= 0) W.targets.splice(i, 1); else W.targets.push(t); dirty = true; drawPost(); }; });
+    s.querySelectorAll('[data-q]').forEach(function (b) { b.onclick = function () { var at = +b.getAttribute('data-q'); $('fdate').value = dstr(at); $('ftime').value = tstr(at); readFields(); mark(); }; });
+    s.querySelectorAll('[data-pv]').forEach(function (b) { b.onclick = function () { pvWhich = b.getAttribute('data-pv'); s.querySelectorAll('[data-pv]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); }); drawPreview(); }; });
+    s.querySelectorAll('[data-mv]').forEach(function (b) { b.onclick = function () { readFields(); var a = b.getAttribute('data-mv').split(','), i = +a[0], j = i + (+a[1]); if (j < 0 || j >= W.images.length) return; var t = W.images[i]; W.images[i] = W.images[j]; W.images[j] = t; dirty = true; drawPost(); }; });
+    s.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () { readFields(); W.images.splice(+b.getAttribute('data-rm'), 1); dirty = true; drawPost(); }; });
+    s.querySelectorAll('[data-rep]').forEach(function (b) { b.onclick = function () { pickFiles(+b.getAttribute('data-rep')); }; });
+    if ($('addpic')) $('addpic').onclick = function () { pickFiles(null); };
+    if ($('copyfb')) $('copyfb').onclick = function () { $('fig').value = $('ffb').value; readFields(); igCount(); mark(); };
+    if ($('save')) $('save').onclick = save;
+    if ($('undo')) $('undo').onclick = function () { W = JSON.parse(JSON.stringify(P)); dirty = false; drawPost(); };
+    if ($('approve')) $('approve').onclick = function () { act('approve', {}); };
+    if ($('unapprove')) $('unapprove').onclick = function () { act('unapprove', {}); };
+    if ($('todraft')) $('todraft').onclick = function () { act('todraft', {}); };
+    if ($('withdraw')) $('withdraw').onclick = function () { act('withdraw', {}); };
+    if ($('rqgo')) $('rqgo').onclick = function () { var t = $('rq').value.trim(); if (!t) { toast('Say what should change.'); return; } if (dirty && !confirm('Your unsaved edits will be lost. Send the request anyway?')) return; act('request', { text: t }); };
+  }
+  function body() {
+    readFields();
+    return { id: P.id, type: W.type, targets: W.targets, fb: W.fb, ig: W.ig, album: W.album, note: W.note, date: $('fdate').value, time: $('ftime').value,
+      images: W.images.map(function (im) { return { file: im.file || im.url, caption: im.caption || '' }; }) };
+  }
+  function save() {
+    var b = body(); if ((b.date && !b.time) || (!b.date && b.time)) { toast('Set both the date and the time.'); return; }
+    if (P.status === 'approved' && !confirm('Saving changes this post, so its approval is dropped and it goes back to draft. Save?')) return;
+    $('save').disabled = true;
+    api('edit', b).then(function (j) { swap(j.post); toast('Saved'); }).catch(function (e) { toast(e.message); $('save').disabled = false; });
+  }
+  function act(a, extra) {
+    var b = Object.assign({ id: P.id }, extra);
+    if (a === 'approve') b.fingerprint = P.fingerprint || '';
+    api(a, b).then(function (j) { swap(j.post); toast({ approve: 'Approved', unapprove: 'Unapproved: back to draft', todraft: 'Back to draft', withdraw: 'Request closed', request: 'Change requested' }[a] || 'Done'); }).catch(function (e) { toast(e.message); });
+  }
+  function swap(p) { if (!p) return; D.posts = D.posts.map(function (q) { return q.id === p.id ? p : q; }); P = p; W = JSON.parse(JSON.stringify(p)); dirty = false; drawPost(); }
+
+  /* pictures: made into a JPEG in the browser (no location data, at most 2160 px), then stored on the server */
+  function pickFiles(replace) {
+    if (dirty) { toast('Save your changes first.'); return; }
+    var f = $('file'); f.value = ''; f.multiple = replace === null && W.type === 'photoset';
+    f.onchange = function () { var list = Array.prototype.slice.call(f.files || []); if (!list.length) return; upAll(list, replace); };
+    f.click();
+  }
+  function toJpeg(file) {
+    return (window.createImageBitmap ? createImageBitmap(file, { imageOrientation: 'from-image' }) : Promise.reject()).catch(function () {
+      return new Promise(function (res, rej) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { rej(new Error('This picture could not be read. Use a JPEG or PNG.')); }; im.src = u; });
+    }).then(function (bm) {
+      var w = bm.width, h = bm.height, k = Math.min(1, 2160 / Math.max(w, h)), cv = document.createElement('canvas');
+      cv.width = Math.round(w * k); cv.height = Math.round(h * k); cv.getContext('2d').drawImage(bm, 0, 0, cv.width, cv.height);
+      return new Promise(function (res, rej) { cv.toBlob(function (b) { b ? res(b) : rej(new Error('Could not prepare the picture.')); }, 'image/jpeg', 0.9); });
+    });
+  }
+  function upAll(list, replace) {
+    var i = 0; toast('Uploading...');
+    (function next() {
+      if (i >= list.length) return;
+      var file = list[i++];
+      toJpeg(file).then(function (blob) {
+        var fd = new FormData(); fd.append('id', P.id); fd.append('file', blob, (file.name || 'picture').replace(/\.\w+$/, '') + '.jpg'); if (replace !== null) fd.append('replace', String(replace));
+        return api('upload', fd);
+      }).then(function (j) { swap(j.post); if (i < list.length) next(); else toast('Picture saved'); }).catch(function (e) { toast(e.message); });
+    })();
+  }
+
+  /* previews */
+  function clip(t, n) { t = t || ''; return t.length > n ? esc(t.slice(0, n)) + '... <span class="more">See more</span>' : esc(t); }
+  function drawPreview() {
+    var el = $('pv'); if (!el || !W) return; var c = cur(), p = W, ims = p.images, at = W._date && W._time ? W._date + ' ' + W._time : (p.at ? when(p.at) : '');
+    var ini = esc((c.name || '?').charAt(0));
+    if (pvWhich === 'fb') {
+      if (p.targets.indexOf('fb') < 0) { el.innerHTML = '<p class="empty">Not going to Facebook.</p>'; return; }
+      var g = ims.length > 1 ? '<div class="pvi g2">' + ims.slice(0, 4).map(function (im) { return '<img src="' + esc(im.url) + '" alt="">'; }).join('') + '</div>' : ims[0] ? '<div class="pvi"><img src="' + esc(ims[0].url) + '" alt=""></div>' : '<p class="empty" style="padding:0 12px 12px">No picture yet</p>';
+      el.innerHTML = '<div class="pv"><div class="pvh"><div class="pva">' + ini + '</div><div><b>' + esc(c.page_name || c.name) + (p.type === 'photoset' && p.album ? ' added ' + ims.length + ' photos to ' + esc(p.album) : '') + '</b><small>' + esc(at) + '</small></div></div><div class="pvt">' + clip(p.fb, 480) + '</div>' + g + '</div>';
+    } else {
+      if (p.targets.indexOf('ig') < 0) { el.innerHTML = '<p class="empty">Not going to Instagram.</p>'; return; }
+      var u = c.ig_user || 'instagram';
+      el.innerHTML = '<div class="pv"><div class="pvh"><div class="pva">' + ini + '</div><div><b>' + esc(u) + '</b></div></div>'
+        + (ims[0] ? '<div class="igimg"><img src="' + esc(ims[0].url) + '" alt="" style="display:block;width:100%;aspect-ratio:4/5;object-fit:cover">' + (ims.length > 1 ? '<span>1/' + ims.length + '</span>' : '') + '</div>' : '<p class="empty" style="padding:0 12px">No picture yet</p>')
+        + (ims.length > 1 ? '<div class="dots">' + ims.map(function () { return '<i></i>'; }).join('') + '</div>' : '')
+        + '<div class="pvc"><b>' + esc(u) + '</b>' + clip(p.ig, 125) + '</div></div>';
+    }
+  }
+
+  /* ---- clients (Matthew only) ---- */
+  function openClients() {
+    clientCss(null);
+    var h = '<div class="sheethead"><button class="btn small ghost" id="cback">&#8592; Back</button><b>Clients</b></div><div class="sheetbody"><p class="empty">Each client posts only to its own Facebook Page and Instagram account. A Page belongs to one client at a time.</p>';
+    D.clients.forEach(function (c) {
+      h += '<div class="cl" style="--client:' + esc(c.color) + '"><b>' + esc(c.name) + '</b>' + (c.archived ? ' <span class="pill">archived</span>' : '')
+        + '<small>' + (c.page_id ? 'Facebook: ' + esc(c.page_name || c.page_id) : 'No Page') + ' &middot; ' + (c.ig_id ? 'Instagram @' + esc(c.ig_user) : 'no Instagram') + ' &middot; ' + (c.conn === 'own' ? 'own Page token' + (c.ownToken ? ' saved' : ' MISSING') : 'through Matthew\'s business') + '</small>'
+        + '<small>' + (c.slots || []).map(function (s) { return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][s.d] + ' ' + s.t + (s.type === 'photoset' ? ' (photo set)' : ''); }).join(', ') + '</small>'
+        + '<div class="acts"><button class="btn small ghost" data-ed="' + esc(c.id) + '">Edit</button><button class="btn small ghost" data-ar="' + esc(c.id) + '">' + (c.archived ? 'Restore' : 'Archive') + '</button></div></div>';
+    });
+    h += '<button class="btn wide" id="cadd">+ Add a client</button></div>';
+    $('sheet').innerHTML = h; $('sheet').hidden = false; document.body.style.overflow = 'hidden';
+    if (!(history.state && history.state.sheet)) nav({ client: D.client || '', sheet: 'clients' });
+    $('cback').onclick = closeSheet;
+    $('cadd').onclick = function () { clientForm(null); };
+    $('sheet').querySelectorAll('[data-ed]').forEach(function (b) { b.onclick = function () { clientForm(D.clients.filter(function (c) { return c.id === b.getAttribute('data-ed'); })[0]); }; });
+    $('sheet').querySelectorAll('[data-ar]').forEach(function (b) { b.onclick = function () {
+      var c = D.clients.filter(function (x) { return x.id === b.getAttribute('data-ar'); })[0];
+      if (!c.archived && !confirm('Archive ' + c.name + '? Its approved posts go back to draft and nothing of it is posted.')) return;
+      api('clientarchive', { id: c.id, archived: !c.archived }).then(function () { return load(D.client); }).then(openClients).catch(function (e) { toast(e.message); });
+    }; });
+  }
+  function clientForm(c) {
+    c = c || { id: '', name: '', color: '#13294b', conn: 'pipeline', page_id: '', ig_id: '', slots: [{ d: 2, t: '15:00', type: 'single' }, { d: 4, t: '15:00', type: 'single' }], rules: '' };
+    var slots = JSON.parse(JSON.stringify(c.slots || []));
+    var h = '<div class="sheethead"><button class="btn small ghost" id="fback">&#8592; Clients</button><b>' + (c.id ? 'Edit ' + esc(c.name) : 'Add a client') + '</b></div><div class="sheetbody"><div class="box">'
+      + '<label class="f" for="cn">Name</label><input type="text" id="cn" maxlength="60" value="' + esc(c.name) + '">'
+      + '<label class="f" for="cc">Colour <small>(the client\'s lane colour)</small></label><input type="color" id="cc" value="' + esc(c.color) + '" style="width:80px;height:44px;border:0;background:none">'
+      + '<label class="f">How we post for them</label>'
+      + '<label class="radio"><input type="radio" name="conn" value="pipeline"' + (c.conn !== 'own' ? ' checked' : '') + '><span>Through Matthew\'s business (the client added it as a partner on their Page and Instagram)</span></label>'
+      + '<label class="radio"><input type="radio" name="conn" value="own"' + (c.conn === 'own' ? ' checked' : '') + '><span>With the client\'s own Page access token (kept on the server, never shown again)</span></label>'
+      + '<div id="pipe"><label class="f" for="cp">Facebook Page</label><select id="cp"><option value="">Loading the Pages...</option></select><label class="f" for="ci">Instagram account</label><select id="ci"></select></div>'
+      + '<div id="own" hidden><label class="f" for="ct">Page access token' + (c.ownToken ? ' <small>(one is saved; paste a new one to replace it)</small>' : '') + '</label><textarea id="ct" style="min-height:70px" autocomplete="off" spellcheck="false"></textarea><label class="radio"><input type="checkbox" id="cig"' + (c.ig_id ? ' checked' : '') + '><span>Also post to the Instagram account linked to that Page</span></label></div>'
+      + '<label class="f">Default posting days and times <small>(Mountain)</small></label><div id="slots"></div><button class="btn small ghost" id="sadd">+ Add a slot</button>'
+      + '<label class="f" for="cr">Rules for this client <small>(shown on every draft; a note or a link)</small></label><textarea id="cr">' + esc(c.rules || '') + '</textarea>'
+      + '<div class="err" id="cerr"></div><button class="btn wide" id="csave" style="margin-top:8px">Save client</button></div></div>';
+    $('sheet').innerHTML = h;
+    $('fback').onclick = openClients;
+    function drawSlots() {
+      $('slots').innerHTML = slots.map(function (s, i) { return '<div class="slotrow"><select data-sd="' + i + '">' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(function (n, d) { return '<option value="' + d + '"' + (+s.d === d ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select><input type="time" data-st="' + i + '" value="' + esc(s.t) + '"><select data-sy="' + i + '"><option value="single">One picture</option><option value="photoset"' + (s.type === 'photoset' ? ' selected' : '') + '>Photo set</option></select><button class="btn small ghost" data-sx="' + i + '" aria-label="Remove">&times;</button></div>'; }).join('');
+      $('slots').querySelectorAll('[data-sd]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-sd')].d = +el.value; }; });
+      $('slots').querySelectorAll('[data-st]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-st')].t = el.value; }; });
+      $('slots').querySelectorAll('[data-sy]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-sy')].type = el.value; }; });
+      $('slots').querySelectorAll('[data-sx]').forEach(function (el) { el.onclick = function () { slots.splice(+el.getAttribute('data-sx'), 1); drawSlots(); }; });
+    }
+    drawSlots(); $('sadd').onclick = function () { slots.push({ d: 2, t: '15:00', type: 'single' }); drawSlots(); };
+    function connMode() { var own = document.querySelector('input[name=conn]:checked').value === 'own'; $('pipe').hidden = own; $('own').hidden = !own; }
+    document.querySelectorAll('input[name=conn]').forEach(function (r) { r.onchange = connMode; }); connMode();
+    var pages = [];
+    function drawIg() {
+      var pg = pages.filter(function (x) { return x.page_id === $('cp').value; })[0];
+      var o = '<option value="">None</option>';
+      if (pg && pg.ig_id) o += '<option value="' + esc(pg.ig_id) + '"' + (pg.ig_client && pg.ig_client !== c.id ? ' disabled' : '') + (c.ig_id === pg.ig_id ? ' selected' : '') + '>@' + esc(pg.ig_user) + (pg.ig_client && pg.ig_client !== c.id ? ' (assigned to ' + esc(nameOf(pg.ig_client)) + ')' : '') + '</option>';
+      $('ci').innerHTML = o;
+    }
+    api('pages').then(function (j) {
+      pages = j.pages;
+      $('cp').innerHTML = '<option value="">None yet</option>' + pages.map(function (pg) { var taken = pg.client && pg.client !== c.id; return '<option value="' + esc(pg.page_id) + '"' + (taken ? ' disabled' : '') + (c.page_id === pg.page_id ? ' selected' : '') + '>' + esc(pg.page_name) + (taken ? ' (assigned to ' + esc(nameOf(pg.client)) + ')' : pg.client ? '' : ' (free)') + '</option>'; }).join('');
+      $('cp').onchange = drawIg; drawIg();
+    }).catch(function (e) { $('cp').innerHTML = '<option value="">Could not read the Pages: ' + esc(e.message) + '</option>'; });
+    $('csave').onclick = function () {
+      var own = document.querySelector('input[name=conn]:checked').value === 'own';
+      var b = { id: c.id, name: $('cn').value, color: $('cc').value, conn: own ? 'own' : 'pipeline', slots: slots, rules: $('cr').value };
+      if (own) { b.token = $('ct').value.trim(); b.ig_id = $('cig').checked ? 'linked' : ''; } else { b.page_id = $('cp').value; b.ig_id = $('ci').value; }
+      $('cerr').textContent = ''; $('csave').disabled = true;
+      api('client', b).then(function () { return load(D.client); }).then(openClients).catch(function (e) { $('cerr').textContent = e.message; $('csave').disabled = false; });
+    };
+  }
+  function nameOf(id) { var c = D.clients.filter(function (x) { return x.id === id; })[0]; return c ? c.name : id; }
+
+  /* a picture full size (2026-11-03, Matthew): tap any picture in a post or its preview; it fills the screen, a second tap shows it at its
+     real size (scroll around it), arrows or the keys step through the post's other pictures, the X, Escape or a tap beside it closes */
+  var zoomEl = null;
+  function zoomClose() { if (zoomEl) { zoomEl.remove(); zoomEl = null; } }
+  function zoomOpen(urls, i) {
+    zoomClose(); var z = document.createElement('div'); z.className = 'zoom'; z.setAttribute('role', 'dialog'); z.setAttribute('aria-label', 'Picture, full size');
+    var img = document.createElement('img'); img.alt = ''; z.appendChild(img);
+    var cnt = document.createElement('div'); cnt.className = 'zc';
+    var show = function () { img.src = urls[i]; z.classList.remove('real'); cnt.textContent = (i + 1) + ' of ' + urls.length; cnt.hidden = urls.length < 2; };
+    var btn = function (cls, label, txt, fn) { var b = document.createElement('button'); b.type = 'button'; b.className = cls; b.setAttribute('aria-label', label); b.innerHTML = txt; b.onclick = function (e) { e.stopPropagation(); fn(); }; z.appendChild(b); return b; };
+    btn('zx', 'Close', '&#10005;', zoomClose);
+    if (urls.length > 1) { btn('zp', 'Previous picture', '&#8249;', function () { i = (i + urls.length - 1) % urls.length; show(); }); btn('zn', 'Next picture', '&#8250;', function () { i = (i + 1) % urls.length; show(); }); z.appendChild(cnt); }
+    img.onclick = function (e) { e.stopPropagation(); z.classList.toggle('real'); };
+    z.onclick = zoomClose; z._step = function (d) { if (urls.length > 1) { i = (i + d + urls.length) % urls.length; show(); } };
+    show(); document.body.appendChild(z); zoomEl = z;
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target; if (!t || t.tagName !== 'IMG' || !t.closest || zoomEl) return;
+    var box = t.closest('.pics, .pvi, .igimg, .pv'); if (!box) return;
+    var all = [].slice.call(box.querySelectorAll('img')).filter(function (x) { return x.closest('.pics, .pvi, .igimg'); }).map(function (x) { return x.src; });
+    var pics = document.querySelector('#sheet .pics'), ps = pics ? [].slice.call(pics.querySelectorAll('img')).map(function (x) { return x.src; }) : [];
+    if (ps.length > all.length && ps.indexOf(t.src) >= 0) all = ps;   /* a preview shows four of a photo set: step through every one */
+    e.preventDefault(); e.stopPropagation();
+    zoomOpen(all, Math.max(0, all.indexOf(t.src)));
+  }, true);
+  window.addEventListener('keydown', function (e) {
+    if (zoomEl) { if (e.key === 'Escape') zoomClose(); else if (e.key === 'ArrowLeft') zoomEl._step(-1); else if (e.key === 'ArrowRight') zoomEl._step(1); return; }
+    if (e.key === 'Escape' && !$('sheet').hidden && $('back')) closeSheet();
+  });
+  api('me').then(start).catch(function () {});
+})();
+</script>
+</body>
+</html>
