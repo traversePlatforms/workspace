@@ -73,6 +73,25 @@ final reply with a line like "Refresh the page to see it." and add `refresh` as 
     ...
     EOF
 
+## A PDF in the reply (Matthew, 3 Nov: "can jarvis create pdfs and launch them in the browser")
+
+When a PDF is the right answer (Matthew asks for one, or a printable list or summary helps Jen with her own office work), make it and
+attach it: the chat shows an **Open** button under your reply, and a phone opens the PDF in its own reader. Links in a reply are tappable
+too. The file is kept off the public web and opens only for people who may see that chat.
+- Make it from an HTML page you write in your scratchpad, printed by Chrome:
+  `"/c/Program Files/Google/Chrome/Application/chrome.exe" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="<dir>/Name-Here.pdf" "file:///<dir>/page.html"`
+  Name the file the way it should read on the button (letters, digits, dashes: `Peak-Website-Plan.pdf` shows as "Open Peak Website Plan").
+  Open the PDF and check it before sending (page breaks, nothing cut off); the research standard and the entity rules apply to what's in it.
+- Attach with `--pdf` (more than one is fine):
+
+      bash traverse/ops/help-reply.sh <ticket id> answered --pdf "<dir>/Name-Here.pdf" <<'EOF'
+      Here it is. Tap Open below.
+      EOF
+
+- For Jen: only PDFs about her own work in the app. Anything a customer receives still goes through the app's own forms, never a PDF from
+  you. For Matthew: anything he asks. If he is at the laptop and asks to see it there, you may also open it in the browser (`start "" "<pdf>"`).
+- Never put codes, passwords, keys, or anything from RESTRICTED material in a PDF.
+
 ## Be quick
 
 Replies should come fast. Do the least work that answers well: for a how-to, a quick look at the relevant part of the app is enough; don't

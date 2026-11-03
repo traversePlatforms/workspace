@@ -8635,11 +8635,28 @@ function helpAll(): array {
         if (!isset($T[$id])) $T[$id] = ['id' => $id, 'by' => (string) ($r['from'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'status' => 'new', 'msgs' => [], 'ctx' => $r['ctx'] ?? null];
         $t = &$T[$id];
         if (($r['t'] ?? '') === 'msg') { $t['msgs'][] = ['from' => (string) $r['from'], 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => true]; $t['status'] = 'new'; }
-        elseif (($r['t'] ?? '') === 'reply') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? 'Claude'), 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => false, 'refresh' => !empty($r['refresh'])]; $t['status'] = (string) ($r['status'] ?? 'answered'); }   /* refresh: the reply changed something on screen (1 Nov) */
+        elseif (($r['t'] ?? '') === 'reply') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? 'Claude'), 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => false, 'refresh' => !empty($r['refresh']), 'files' => array_values(array_filter((array) ($r['files'] ?? []), 'is_array'))]; $t['status'] = (string) ($r['status'] ?? 'answered'); }   /* refresh: the reply changed something on screen (1 Nov); files: PDFs J.A.R.V.I.S. made, [{n, size}] (3 Nov) */
         elseif (($r['t'] ?? '') === 'status') $t['status'] = (string) ($r['status'] ?? $t['status']);
         $t['updated'] = (int) ($r['at'] ?? 0); unset($t);
     }
     return $T;
+}
+/* PDFs a J.A.R.V.I.S. reply carries (2026-11-03, Matthew: "can jarvis create pdfs and launch them in the browser"): kept outside the web
+   folder, one folder per ticket, put there by sixfold-tools/help-attach.php; opened only through action=helpfile */
+function helpFilesDir(): string { return DATA_DIR . '/help-files'; }
+function helpFileName(string $f): bool { return (bool) preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}\.pdf$/D', $f) && strpos($f, '..') === false; }
+/* a J.A.R.V.I.S. alert for Matthew only (3 Nov, Matthew: "does jarvis send alerts to my phone when jen needs something? if not go ahead and
+   build that out"): his super accounts, the bell list and every phone he turned alerts on; never the office (a365Alert's $super also told
+   every office login, so Jen got "Jen McPherson needs you" about herself). One tag per ticket and kind, so a repeat replaces the last. */
+function helpAlertMatthew(string $title, string $text, string $url, string $tag): void {
+    global $basePeople, $acct, $sessionKey;
+    try {
+        $to = []; foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'super') $to[] = $r;
+        foreach ($to as $r) feedAdd((string) $r['name'], $title, $text, $url, $tag);
+        $v = pushVapid(false); if (!$v) return;
+        $subs = pushSubs(); $payload = json_encode(['title' => $title, 'body' => $text, 'url' => $url, 'tag' => $tag, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        foreach ($to as $r) foreach (($subs[$r['id']] ?? []) as $d) webpushSend($d['sub'], $payload, $v, 86400, ['urgency' => 'high']);
+    } catch (Throwable $e) { error_log('rounds help alert: ' . $e->getMessage()); }
 }
 /* the practice copy's "What would have gone out" (2026-11-02): the newest 200 of practice-sends.log, for anyone at the desk. Nowhere else. */
 if ($action === 'practicelog') {
@@ -8648,10 +8665,19 @@ if ($action === 'practicelog') {
     $rows = array_slice(jsonLines(DATA_DIR . '/practice-sends.log'), -200);
     out(['ok' => true, 'rows' => array_reverse(array_map(fn($r) => array_intersect_key($r, array_flip(['at', 'kind', 'to', 'subject', 'text', 'via', 'method', 'path', 'url', 'amount', 'name', 'from', 'title'])), $rows))]);
 }
-if (in_array($action, ['helplist', 'helpsend', 'helpclose'], true)) {
+if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) {
     if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
     if (!desk()) fail('Not allowed.', 403);
     $T = helpAll(); $mine = fn($t) => $role === 'admin' || $t['by'] === $me;
+    /* a PDF from a reply, for whoever may see that conversation (3 Nov); a phone opens it in its own reader */
+    if ($action === 'helpfile') {
+        $id = (string) ($_GET['id'] ?? ''); $f = (string) ($_GET['f'] ?? '');
+        if (!preg_match('/^h[0-9]{14}[0-9a-f]{4}$/D', $id) || !isset($T[$id]) || !$mine($T[$id])) fail('No such conversation.', 404);
+        if (!helpFileName($f)) fail('No such file.', 404);
+        $p = helpFilesDir() . '/' . $id . '/' . $f; if (!is_file($p)) fail('That file is missing.', 404);
+        header('Content-Type: application/pdf'); header('Content-Disposition: ' . (!empty($_GET['dl']) ? 'attachment' : 'inline') . '; filename="' . $f . '"'); header('Cache-Control: private, no-store'); header('X-Content-Type-Options: nosniff');
+        header('Content-Length: ' . filesize($p)); readfile($p); exit;
+    }
     if ($action === 'helpsend') {
         if (!$isPost) fail('POST required', 405);
         $text = trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", (string) ($body['text'] ?? ''))));
@@ -8666,6 +8692,9 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose'], true)) {
         /* the practice copy (2026-11-02): the note stays here for Matthew to read; the laptop watcher answers it with the practice J.A.R.V.I.S.
            (no tools, plays along, says nothing really changed: traverse/ops/help-practice-prompt.md), never the live help desk */
         if (PRACTICE) practiceLog('help desk', ['from' => $me, 'text' => $text]);
+        /* Matthew hears when someone else starts a conversation (3 Nov): the first message only, so a back-and-forth doesn't ring all day;
+           "needs you" alerts come from help-reply.php. Not on the practice copy (testers' chats are his to read there, no alerts). */
+        elseif (($body['id'] ?? '') === '' && empty($isSuper)) helpAlertMatthew('J.A.R.V.I.S.: ' . $me . ' wrote in', mb_substr(preg_replace('/\s+/', ' ', $text), 0, 140), './?help=' . $id, 'help-new-' . $id);
         out(['ok' => true, 'ticket' => helpAll()[$id]]);
     }
     if ($action === 'helpclose') {

@@ -1813,13 +1813,16 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   /* ...and only the chat (Matthew 2 Nov: "it loads the jarvis under the sixfold ... so that it will just be jarvis"): no Sixfold splash, and once
      the chat is open nothing of the app is left on the page behind it (the toast stays for "Not sent") */
   html.jvtab .splash{display:none}
-  html.jvtab body.hchat-on > :not(.hchat):not(#toast){display:none!important}
+  html.jvtab body.hchat-on > :not(.hchat):not(#toast):not(.hcdoc){display:none!important}.docov.hcdoc{z-index:1000}
   .hcold{display:block;width:100%;text-align:left;margin:0 0 8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);cursor:pointer;font:inherit}
   .hcold:hover{border-color:var(--jv)}.hcoldtxt{font-size:15px;line-height:1.35}
 @media (max-width:760px){.hchat{inset:0;width:auto;height:auto;border-radius:0;border:0}}
   .hchd{display:flex;align-items:center;gap:6px;padding:10px 10px 10px 14px;background:var(--jv);color:var(--on-jv,#fff);cursor:pointer}.hcttl{flex:1;font:800 16px var(--sans)}.hcbtn{background:rgba(255,255,255,.16);color:inherit;border:0;border-radius:999px;padding:6px 10px;font:700 12.5px var(--sans);cursor:pointer}.hcx{width:32px;padding:6px 0}
   .hcbody{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--card)}
   .hcmsg{max-width:84%;border-radius:16px;padding:8px 12px}.hcmsg.me{align-self:flex-end;background:var(--jv);color:var(--on-jv,#fff);border-bottom-right-radius:5px}.hcmsg.them{align-self:flex-start;background:var(--bg,#fff);border:1px solid var(--line);border-bottom-left-radius:5px}.hcwho{font-size:11px;font-weight:800;opacity:.7;margin-bottom:2px}.hctxt{white-space:pre-wrap;font-size:14.5px;line-height:1.42}.hctime{font-size:10.5px;opacity:.62;margin-top:3px;text-align:right}.hcrefresh{margin-top:7px;border:0;border-radius:999px;padding:6px 12px;font:700 13px var(--sans);background:var(--jv);color:var(--on-jv,#fff);cursor:pointer}
+  /* a PDF J.A.R.V.I.S. made, and links in a message (3 Nov) */
+  .hcfile{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card,transparent);color:var(--ink);font:inherit;text-align:left;cursor:pointer}.hcfile:hover{border-color:var(--jv)}.hcfile svg{flex:none;width:20px;height:20px;color:var(--jv)}.hcfile span{display:flex;flex-direction:column;min-width:0}.hcfile b{font-size:15px;overflow-wrap:anywhere}.hcfile small{font-size:13px;opacity:.75}
+  .hclink{color:inherit;text-decoration:underline;overflow-wrap:anywhere}
   .hcwork,.hcnote{align-self:center;font-size:12.5px;color:var(--soft);display:flex;align-items:center;gap:8px;padding:4px 10px}.hcnote{background:var(--bg,#fff);border:1px dashed var(--line);border-radius:999px}
   .hcdots{width:28px;height:8px;background:radial-gradient(circle,var(--soft) 3px,transparent 3.5px) 0 50%/9.3px 8px repeat-x;animation:hcd 1s steps(3) infinite}@keyframes hcd{from{width:10px}to{width:28px}}
   .hcbar{display:flex;gap:8px;align-items:flex-end;padding:10px;border-top:1px solid var(--line);background:var(--bg,#fff)}.hcbar textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:18px;padding:9px 13px;font:15px var(--sans);max-height:140px;background:var(--card);color:var(--ink)}.hcsend{width:42px;height:42px;border-radius:50%;border:0;background:var(--jv);color:var(--on-jv,#fff);display:grid;place-items:center;cursor:pointer;flex:none}.hcsend:disabled{opacity:.5}
@@ -7638,8 +7641,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* each message with its time, and a Refresh now button under a reply that changed something on screen (1 Nov, Matthew: "time stamps
        next to it"; "it should tell who ever is using it to refresh if it needs to be refreshed") */
     var when = function (at) { if (!at) return ''; var d = new Date(at * 1000), t = d.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' }); return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString(LOCALE, { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + t; };
-    var bubble = function (cls, who, text, at, refresh) {
-      var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(q('div', 'hctxt noi18n', text));
+    /* 3 Nov (Matthew: "can jarvis create pdfs and launch them in the browser"): web addresses in a message open in a new tab, and each PDF a
+       reply carries gets an Open button (the file is served only to people who may see this chat; a phone opens it in its own reader) */
+    var linked = function (text) {
+      var d = q('div', 'hctxt noi18n'), s = String(text || ''), re = /https?:\/\/[^\s<>"]+/g, last = 0, m;
+      while ((m = re.exec(s))) {
+        var u = m[0].replace(/[.,;:!?)\]]+$/, ''); if (m.index > last) d.appendChild(document.createTextNode(s.slice(last, m.index)));
+        var a = q('a', 'hclink', u); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; d.appendChild(a); last = m.index + u.length; re.lastIndex = last;
+      }
+      if (last < s.length) d.appendChild(document.createTextNode(s.slice(last)));
+      return d;
+    };
+    var bubble = function (cls, who, text, at, refresh, files, tid) {
+      var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(linked(text));
+      (files || []).forEach(function (f) {
+        if (!f || !f.n || !tid) return; var url = API + '?action=helpfile&id=' + encodeURIComponent(tid) + '&f=' + encodeURIComponent(f.n);
+        var fb = q('button', 'hcfile'); fb.type = 'button'; fb.appendChild(ico('clip', 2.2)); var tx = q('span', 'noi18n');
+        tx.appendChild(q('b', null, 'Open ' + String(f.n).replace(/\.pdf$/i, '').replace(/[-_]+/g, ' '))); tx.appendChild(q('small', null, 'PDF · ' + Math.max(1, Math.round((f.size || 0) / 1024)) + ' KB'));
+        fb.appendChild(tx); fb.addEventListener('click', function () { docViewer(String(f.n), url, 'hcdoc'); }); b.appendChild(fb);
+      });
       if (at) b.appendChild(q('div', 'hctime', when(at)));
       if (refresh) { var rb = q('button', 'hcrefresh', 'Refresh now'); rb.type = 'button'; rb.addEventListener('click', function () { location.reload(); }); b.appendChild(rb); }
       body.appendChild(b);
@@ -7650,7 +7670,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var hr = new Date().getHours(), tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
       bubble('them', HELP_NAME, tod + '. J.A.R.V.I.S. at your service. Tell me what’s gone sideways, and I’ll see to it. Nothing is too small, though I do have opinions about typos.');
       if (t) {
-        t.msgs.forEach(function (m, i) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text, m.at, !m.mine && m.refresh && i === t.msgs.length - 1); });
+        t.msgs.forEach(function (m, i) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text, m.at, !m.mine && m.refresh && i === t.msgs.length - 1, m.files, t.id); });
         if (t.status === 'new' || t.status === 'working') { var wk = q('div', 'hcwork'); wk.appendChild(q('span', 'hcdots')); wk.appendChild(q('span', null, t.status === 'new' ? 'Sent. ' + HELP_NAME + ' picks it up within a few minutes…' : HELP_NAME + ' is looking into it…')); body.appendChild(wk); }
         else if (t.status === 'matthew') body.appendChild(q('div', 'hcnote', 'Passed to Matthew. He’ll get back to you.'));
         else if (t.status === 'closed') body.appendChild(q('div', 'hcnote', 'This chat is closed. Start a new one any time.'));
@@ -17782,9 +17802,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'Customers need signal.')); });
   }
   /* a PDF or a signed form, opened inside the app (2026-10-15); a phone opens it in a new tab, where its own reader shows every page */
-  function docViewer(title, url) {
+  function docViewer(title, url, cls) {   /* cls: hcdoc from the J.A.R.V.I.S. chat, so it sits above the chat (3 Nov) */
     if (onPhone()) { window.open(url, '_blank', 'noopener'); return; }
-    var ov = q('div', 'docov'), bx = q('div', 'docbox'), hd = q('div', 'dochd');
+    var ov = q('div', 'docov' + (cls ? ' ' + cls : '')), bx = q('div', 'docbox'), hd = q('div', 'dochd');
     hd.appendChild(q('b', null, title));
     var nt = q('a', 'lnk', 'Open in a new tab \u203a'); nt.href = url; nt.target = '_blank'; nt.rel = 'noopener'; hd.appendChild(nt);
     var x = q('button', 'docx', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); hd.appendChild(x);
