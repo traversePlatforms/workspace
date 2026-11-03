@@ -19,7 +19,7 @@ while [ $# -gt 0 ]; do
     --pdf) P="${2:?--pdf needs a file}"; shift 2
       [ -f "$P" ] || { echo "no such file: $P"; exit 2; }
       N=$(basename "$P" | sed -E 's/[^A-Za-z0-9._-]+/-/g; s/^[^A-Za-z0-9]+//'); case "$N" in *.pdf|*.PDF) N="${N%.*}.pdf";; *) N="$N.pdf";; esac
-      N="${N: -84}"; N=$(printf '%s' "$N" | sed -E 's/^[^A-Za-z0-9]+//')
+      [ ${#N} -gt 84 ] && N="${N: -84}"; N=$(printf '%s' "$N" | sed -E 's/^[^A-Za-z0-9]+//')
       $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-attach.php $ID '$N'" < "$P" || { echo "could not store $P"; exit 1; }
       FILES="$FILES file=$N";;
     *) echo "unknown option: $1"; exit 2;;
