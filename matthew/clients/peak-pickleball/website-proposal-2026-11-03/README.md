@@ -40,3 +40,7 @@ For Brandon, to take to Peak. Matthew's own client work (not Surge, not the spon
 | CourtReserve first-time approval is a setting | not checked | Worded as a question for Peak |
 
 Left out on purpose: the 16,000 subscribers / 69% open rate (Matthew wasn't sure of either; Apple Mail Privacy Protection inflates open rates), and which service Peak pays $500 a month for (conflicting in the 2 Nov notes).
+
+## One-page quote (Peak-Pickleball-Website-Quote.pdf, from peak-website-1page.html)
+
+3 Nov, 1:28 pm, Matthew via J.A.R.V.I.S. (h202611031308229592): no 12-month version; make it a six-week build and divide the $3,000 across the six weeks. The page now shows $3,000 up front (half to start, half at launch) or $500 a week for 6 weeks, and a six-week timeline (weeks 1-6) starting when Peak sends logins, answers and photos. The earlier $250 a month for 12 months copy is kept as the `.pre-help-h202611031308229592` files. Draft, not sent.
