@@ -16,7 +16,7 @@ rm -rf "$MIRROR"
 git clone -q --no-local --single-branch --branch main "$REPO" "$MIRROR"
 cd "$MIRROR"
 args=(); for p in "${KEEP_OFF[@]}"; do args+=(--path "$p"); done
-git filter-repo --quiet --force --invert-paths "${args[@]}"
+git filter-repo --quiet --force --invert-paths "${args[@]}" < /dev/null   # a real stdin: Python fails "handle is invalid" when the backup runs windowless (conhost --headless, 3 Nov)
 
 # check: none of the kept-off paths in any commit
 for p in "${KEEP_OFF[@]}"; do
