@@ -579,7 +579,9 @@ h2 + .note{margin-top:.9rem}
 .form .field-hint{margin:.45rem 0 0;font-size:.8rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--soft)}
 .form .consent{display:grid;gap:.8rem;margin:.2rem 0 1.3rem}
 .form .check{display:flex;gap:.6rem;align-items:flex-start;margin:0;font-size:.9rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text);cursor:pointer}
-.form .check input{width:auto;flex:0 0 auto;margin-top:.15rem;accent-color:var(--brand-green)}
+.form .check input{width:1.35rem;height:1.35rem;flex:0 0 auto;margin-top:0;accent-color:var(--brand-green)}
+/* bigger checkbox, taller hit box on the privacy link: a phone on its side found both crowded (device audit 2026-11-04) */
+.form .check a{display:inline-block;padding:.45rem 0;margin:-.45rem 0}
 
 /* ---- booking widget (/book/) -------------------------------------------
    Client-side calendar + time-slot picker. Fills two hidden fields and shows
