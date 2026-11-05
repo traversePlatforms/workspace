@@ -134,5 +134,61 @@
   "g1-bald-mountain-rural": [
     "g1-coal-creek",
     "g1-golden-rural"
+  ],
+  "woodland-park": [
+    "g3-divide-rural"
+  ],
+  "g3-divide-rural": [
+    "divide",
+    "florissant",
+    "woodland-park"
+  ],
+  "divide": [
+    "g3-divide-rural"
+  ],
+  "florissant": [
+    "g3-divide-rural"
+  ],
+  "elizabeth": [
+    "g3-elizabeth-rural"
+  ],
+  "g3-elizabeth-rural": [
+    "elizabeth"
+  ],
+  "g3-bayfield": [
+    "g3-bayfield-rural"
+  ],
+  "g3-bayfield-rural": [
+    "g3-bayfield"
+  ],
+  "g3-el-jebel": [
+    "g3-glenwood-springs-rural"
+  ],
+  "g3-glenwood-springs-rural": [
+    "g3-el-jebel"
+  ],
+  "g3-hayden": [
+    "g3-hayden-rural"
+  ],
+  "g3-hayden-rural": [
+    "g3-hayden"
+  ],
+  "g3-cortez": [
+    "g3-cortez-rural"
+  ],
+  "g3-cortez-rural": [
+    "g3-cortez"
+  ],
+  "g3-del-norte": [
+    "g3-del-norte-rural"
+  ],
+  "g3-del-norte-rural": [
+    "g3-del-norte"
+  ],
+  "g3-yuma": [
+    "g3-yuma-rural"
+  ],
+  "g3-yuma-rural": [
+    "g3-yuma"
   ]
 }

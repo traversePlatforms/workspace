@@ -14,7 +14,7 @@ LOG="$ST/help-watch.log"; SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; LOCK="$ST
 KEY=$(cat /c/Users/SURGEI~1/.ssh/help-poll-key.txt 2>/dev/null); CHECK="https://traverseplatforms.com/api/help-pending.php?k=$KEY"
 MODEL="${HELP_MODEL:-sonnet}"   # Sonnet: quick and light on the plan; HELP_MODEL=opus for a heavier one
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
-claude_bin() { ls -d "/c/Users/Surge Inc/.vscode/extensions"/anthropic.claude-code-*-win32-x64/resources/native-binary/claude.exe 2>/dev/null | sort -V | tail -1; }
+claude_bin() { ls -d "/c/Users/Surge Inc/.vscode/extensions"/anthropic.claude-code-*-win32-*/resources/native-binary/claude.exe 2>/dev/null | sort -V | tail -1; }
 
 # photos sent in the chat (3 Nov, Matthew: "build a photo button for everyone that uses jarvis include jen"): copied from the server's
 # private folder to $ST/photos/<ticket>/ so the session can look at them; prints a line per photo for the prompt

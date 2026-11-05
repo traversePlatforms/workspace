@@ -2095,5 +2095,81 @@
    "tile": 1,
    "flat": 4
   }
+ },
+ "highlands-ranch": {
+  "doors": 26742,
+  "structural_data": true,
+  "crops": 26742,
+  "clear_crops": 26726,
+  "usable_crops": 26726,
+  "county": 25134,
+  "imagery": 506,
+  "guess": 1091,
+  "labelled": 25640,
+  "share": 1,
+  "by_class": {
+   "asphalt": 20102,
+   "shake": 2020,
+   "tile": 4600,
+   "metal": 7,
+   "flat": 2
+  }
+ },
+ "parker": {
+  "doors": 24642,
+  "structural_data": true,
+  "crops": 24642,
+  "clear_crops": 24056,
+  "usable_crops": 24056,
+  "county": 23513,
+  "imagery": 283,
+  "guess": 784,
+  "labelled": 23796,
+  "share": 0.997,
+  "by_class": {
+   "asphalt": 21230,
+   "shake": 365,
+   "tile": 2931,
+   "metal": 39,
+   "flat": 15
+  }
+ },
+ "castle-pines": {
+  "doors": 7080,
+  "structural_data": true,
+  "crops": 7080,
+  "clear_crops": 6806,
+  "usable_crops": 6806,
+  "county": 6685,
+  "imagery": 102,
+  "guess": 221,
+  "labelled": 6787,
+  "share": 0.99,
+  "by_class": {
+   "asphalt": 5176,
+   "tile": 1512,
+   "shake": 264,
+   "metal": 35,
+   "flat": 21
+  }
+ },
+ "castle-rock": {
+  "doors": 19531,
+  "structural_data": true,
+  "crops": 19531,
+  "clear_crops": 18789,
+  "usable_crops": 18789,
+  "county": 18170,
+  "imagery": 755,
+  "guess": 591,
+  "labelled": 18925,
+  "share": 0.999,
+  "by_class": {
+   "asphalt": 17661,
+   "flat": 8,
+   "shake": 52,
+   "metal": 11,
+   "tile": 1784
+  }
  }
 }

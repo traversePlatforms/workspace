@@ -546,5 +546,674 @@
  ],
  "g2-huerfano-valley-rural": [
   "Pueblo"
+ ],
+ "g3-durango": [
+  "La Plata"
+ ],
+ "g3-bayfield": [
+  "La Plata"
+ ],
+ "g3-ignacio": [
+  "La Plata"
+ ],
+ "g3-durango-rural": [
+  "La Plata"
+ ],
+ "g3-bayfield-rural": [
+  "La Plata"
+ ],
+ "g3-durango-southwest-rural": [
+  "La Plata"
+ ],
+ "g3-ignacio-rural": [
+  "La Plata"
+ ],
+ "g3-edwards": [
+  "Eagle"
+ ],
+ "g3-vail": [
+  "Eagle"
+ ],
+ "g3-gypsum": [
+  "Eagle"
+ ],
+ "g3-avon": [
+  "Eagle"
+ ],
+ "g3-basalt": [
+  "Eagle"
+ ],
+ "g3-el-jebel": [
+  "Eagle"
+ ],
+ "g3-dotsero": [
+  "Eagle"
+ ],
+ "g3-minturn-red-cliff-rural": [
+  "Eagle"
+ ],
+ "g3-eagle-gypsum-rural": [
+  "Eagle"
+ ],
+ "g3-basalt-rural": [
+  "Eagle"
+ ],
+ "g3-rifle": [
+  "Garfield"
+ ],
+ "g3-glenwood-springs": [
+  "Garfield"
+ ],
+ "g3-carbondale": [
+  "Garfield"
+ ],
+ "g3-new-castle": [
+  "Garfield"
+ ],
+ "g3-battlement-mesa": [
+  "Garfield"
+ ],
+ "g3-silt": [
+  "Garfield"
+ ],
+ "g3-parachute": [
+  "Garfield"
+ ],
+ "g3-mulford": [
+  "Garfield"
+ ],
+ "g3-chacra": [
+  "Garfield"
+ ],
+ "g3-cattle-creek": [
+  "Garfield"
+ ],
+ "g3-glenwood-springs-rural": [
+  "Garfield"
+ ],
+ "g3-new-castle-rural": [
+  "Garfield"
+ ],
+ "g3-rifle-rural": [
+  "Garfield"
+ ],
+ "g3-west-garfield-rural": [
+  "Garfield"
+ ],
+ "g3-breckenridge": [
+  "Summit"
+ ],
+ "g3-silverthorne": [
+  "Summit"
+ ],
+ "g3-frisco": [
+  "Summit"
+ ],
+ "g3-blue-river": [
+  "Summit"
+ ],
+ "g3-keystone": [
+  "Summit"
+ ],
+ "g3-dillon": [
+  "Summit"
+ ],
+ "g3-breckenridge-rural": [
+  "Summit"
+ ],
+ "g3-silverthorne-rural": [
+  "Summit"
+ ],
+ "g3-fairplay": [
+  "Park"
+ ],
+ "g3-alma": [
+  "Park"
+ ],
+ "g3-fairplay-rural": [
+  "Park"
+ ],
+ "g3-lake-george-rural": [
+  "Park"
+ ],
+ "g3-granby": [
+  "Grand"
+ ],
+ "g3-fraser": [
+  "Grand"
+ ],
+ "g3-winter-park": [
+  "Grand"
+ ],
+ "g3-kremmling": [
+  "Grand"
+ ],
+ "g3-grand-lake": [
+  "Grand"
+ ],
+ "g3-tabernash": [
+  "Grand"
+ ],
+ "g3-hot-sulphur-springs": [
+  "Grand"
+ ],
+ "g3-granby-rural": [
+  "Grand"
+ ],
+ "g3-kremmling-rural": [
+  "Grand"
+ ],
+ "g3-steamboat-springs": [
+  "Routt"
+ ],
+ "g3-hayden": [
+  "Routt"
+ ],
+ "g3-oak-creek": [
+  "Routt"
+ ],
+ "g3-yampa": [
+  "Routt"
+ ],
+ "g3-steamboat-springs-rural": [
+  "Routt"
+ ],
+ "g3-oak-creek-rural": [
+  "Routt"
+ ],
+ "g3-hayden-rural": [
+  "Routt"
+ ],
+ "g3-yampa-rural": [
+  "Routt"
+ ],
+ "g3-ponderosa-park": [
+  "Elbert"
+ ],
+ "g3-elizabeth-rural": [
+  "Elbert"
+ ],
+ "g3-simla-rural": [
+  "Elbert"
+ ],
+ "g3-agate-rural": [
+  "Elbert"
+ ],
+ "g3-cortez": [
+  "Montezuma"
+ ],
+ "g3-mancos": [
+  "Montezuma"
+ ],
+ "g3-dolores": [
+  "Montezuma"
+ ],
+ "g3-lewis": [
+  "Montezuma"
+ ],
+ "g3-cortez-rural": [
+  "Montezuma"
+ ],
+ "g3-dolores-rural": [
+  "Montezuma"
+ ],
+ "g3-mancos-rural": [
+  "Montezuma"
+ ],
+ "g3-ute-mountain-rural": [
+  "Montezuma"
+ ],
+ "g3-pleasant-view-rural": [
+  "Montezuma"
+ ],
+ "g3-gunnison": [
+  "Gunnison"
+ ],
+ "g3-crested-butte": [
+  "Gunnison"
+ ],
+ "g3-mount-crested-butte": [
+  "Gunnison"
+ ],
+ "g3-pitkin": [
+  "Gunnison"
+ ],
+ "g3-marble": [
+  "Gunnison"
+ ],
+ "g3-gunnison-rural": [
+  "Gunnison"
+ ],
+ "g3-crested-butte-rural": [
+  "Gunnison"
+ ],
+ "g3-sapinero-rural": [
+  "Gunnison"
+ ],
+ "g3-somerset-rural": [
+  "Gunnison"
+ ],
+ "g3-fort-morgan": [
+  "Morgan"
+ ],
+ "g3-brush": [
+  "Morgan"
+ ],
+ "g3-wiggins": [
+  "Morgan"
+ ],
+ "g3-log-lane-village": [
+  "Morgan"
+ ],
+ "g3-fort-morgan-rural": [
+  "Morgan"
+ ],
+ "g3-brush-rural": [
+  "Morgan"
+ ],
+ "g3-wiggins-rural": [
+  "Morgan"
+ ],
+ "g3-weldona-rural": [
+  "Morgan"
+ ],
+ "g3-victor": [
+  "Teller"
+ ],
+ "g3-cripple-creek-rural": [
+  "Teller"
+ ],
+ "g3-pagosa-springs": [
+  "Archuleta"
+ ],
+ "g3-arboles": [
+  "Archuleta"
+ ],
+ "g3-pagosa-springs-rural": [
+  "Archuleta"
+ ],
+ "g3-arboles-rural": [
+  "Archuleta"
+ ],
+ "g3-sterling": [
+  "Logan"
+ ],
+ "g3-fleming": [
+  "Logan"
+ ],
+ "g3-sterling-rural": [
+  "Logan"
+ ],
+ "g3-fleming-rural": [
+  "Logan"
+ ],
+ "g3-merino-rural": [
+  "Logan"
+ ],
+ "g3-crook-rural": [
+  "Logan"
+ ],
+ "g3-peetz-rural": [
+  "Logan"
+ ],
+ "g3-aspen": [
+  "Pitkin"
+ ],
+ "g3-snowmass-village": [
+  "Pitkin"
+ ],
+ "g3-snowmass-village-rural": [
+  "Pitkin"
+ ],
+ "g3-aspen-rural": [
+  "Pitkin"
+ ],
+ "g3-monte-vista": [
+  "Rio Grande"
+ ],
+ "g3-south-fork": [
+  "Rio Grande"
+ ],
+ "g3-del-norte": [
+  "Rio Grande"
+ ],
+ "g3-alpine": [
+  "Rio Grande"
+ ],
+ "g3-del-norte-rural": [
+  "Rio Grande"
+ ],
+ "g3-monte-vista-rural": [
+  "Rio Grande"
+ ],
+ "g3-sargent-rural": [
+  "Rio Grande"
+ ],
+ "g3-upper-bear-creek": [
+  "Clear Creek"
+ ],
+ "g3-georgetown": [
+  "Clear Creek"
+ ],
+ "g3-floyd-hill": [
+  "Clear Creek"
+ ],
+ "g3-upper-witter-gulch": [
+  "Clear Creek"
+ ],
+ "g3-empire": [
+  "Clear Creek"
+ ],
+ "g3-st-mary-s": [
+  "Clear Creek"
+ ],
+ "g3-downieville-lawson-dumont": [
+  "Clear Creek"
+ ],
+ "g3-pine-valley": [
+  "Clear Creek"
+ ],
+ "g3-idaho-springs-rural": [
+  "Clear Creek"
+ ],
+ "g3-georgetown-rural": [
+  "Clear Creek"
+ ],
+ "g3-silver-cliff": [
+  "Custer"
+ ],
+ "g3-westcliffe": [
+  "Custer"
+ ],
+ "g3-westcliffe-rural": [
+  "Custer"
+ ],
+ "g3-mountain-village": [
+  "San Miguel"
+ ],
+ "g3-telluride": [
+  "San Miguel"
+ ],
+ "g3-norwood": [
+  "San Miguel"
+ ],
+ "g3-placerville": [
+  "San Miguel"
+ ],
+ "g3-telluride-rural": [
+  "San Miguel"
+ ],
+ "g3-norwood-rural": [
+  "San Miguel"
+ ],
+ "g3-west-san-miguel-rural": [
+  "San Miguel"
+ ],
+ "g3-central": [
+  "Gilpin"
+ ],
+ "g3-central-city-rural": [
+  "Gilpin"
+ ],
+ "g3-yuma": [
+  "Yuma"
+ ],
+ "g3-wray": [
+  "Yuma"
+ ],
+ "g3-yuma-rural": [
+  "Yuma"
+ ],
+ "g3-wray-rural": [
+  "Yuma"
+ ],
+ "g3-idalia-joes-rural": [
+  "Yuma"
+ ],
+ "g3-leadville": [
+  "Lake"
+ ],
+ "g3-leadville-north": [
+  "Lake"
+ ],
+ "g3-twin-lakes": [
+  "Lake"
+ ],
+ "g3-leadville-rural": [
+  "Lake"
+ ],
+ "g3-leadville-north-rural": [
+  "Lake"
+ ],
+ "g3-ouray": [
+  "Ouray"
+ ],
+ "g3-ridgway": [
+  "Ouray"
+ ],
+ "g3-loghill-village": [
+  "Ouray"
+ ],
+ "g3-ouray-rural": [
+  "Ouray"
+ ],
+ "g3-meeker": [
+  "Rio Blanco"
+ ],
+ "g3-rangely": [
+  "Rio Blanco"
+ ],
+ "g3-meeker-rural": [
+  "Rio Blanco"
+ ],
+ "g3-rangely-rural": [
+  "Rio Blanco"
+ ],
+ "g3-rico": [
+  "Dolores"
+ ],
+ "g3-dove-creek": [
+  "Dolores"
+ ],
+ "g3-dove-creek-rural": [
+  "Dolores"
+ ],
+ "g3-rico-rural": [
+  "Dolores"
+ ],
+ "g3-lake-city-rural": [
+  "Hinsdale"
+ ],
+ "g3-silverton": [
+  "San Juan"
+ ],
+ "g3-silverton-rural": [
+  "San Juan"
+ ],
+ "g3-divide-rural": [
+  "Teller"
+ ],
+ "g3-montrose": [
+  "Montrose"
+ ],
+ "g3-olathe": [
+  "Montrose"
+ ],
+ "g3-nucla": [
+  "Montrose"
+ ],
+ "g3-montrose-rural": [
+  "Montrose"
+ ],
+ "g3-olathe-rural": [
+  "Montrose"
+ ],
+ "g3-nucla-rural": [
+  "Montrose"
+ ],
+ "g3-delta": [
+  "Delta"
+ ],
+ "g3-orchard-city": [
+  "Delta"
+ ],
+ "g3-cedaredge": [
+  "Delta"
+ ],
+ "g3-paonia": [
+  "Delta"
+ ],
+ "g3-hotchkiss": [
+  "Delta"
+ ],
+ "g3-delta-rural": [
+  "Delta"
+ ],
+ "g3-cedaredge-rural": [
+  "Delta"
+ ],
+ "g3-hotchkiss-rural": [
+  "Delta"
+ ],
+ "g3-paonia-rural": [
+  "Delta"
+ ],
+ "g3-trinidad": [
+  "Las Animas"
+ ],
+ "g3-aguilar": [
+  "Las Animas"
+ ],
+ "g3-trinidad-rural": [
+  "Las Animas"
+ ],
+ "g3-weston-rural": [
+  "Las Animas"
+ ],
+ "g3-aguilar-rural": [
+  "Las Animas"
+ ],
+ "g3-kim-rural": [
+  "Las Animas"
+ ],
+ "g3-branson-rural": [
+  "Las Animas"
+ ],
+ "g3-model-rural": [
+  "Las Animas"
+ ],
+ "g3-alamosa": [
+  "Alamosa"
+ ],
+ "g3-alamosa-east": [
+  "Alamosa"
+ ],
+ "g3-alamosa-rural": [
+  "Alamosa"
+ ],
+ "g3-mosca-hooper-rural": [
+  "Alamosa"
+ ],
+ "g3-sanford": [
+  "Conejos"
+ ],
+ "g3-antonito": [
+  "Conejos"
+ ],
+ "g3-manassa": [
+  "Conejos"
+ ],
+ "g3-la-jara": [
+  "Conejos"
+ ],
+ "g3-romeo": [
+  "Conejos"
+ ],
+ "g3-la-jara-rural": [
+  "Conejos"
+ ],
+ "g3-west-conejos-rural": [
+  "Conejos"
+ ],
+ "g3-manassa-rural": [
+  "Conejos"
+ ],
+ "g3-antonito-rural": [
+  "Conejos"
+ ],
+ "g3-center": [
+  "Saguache"
+ ],
+ "g3-saguache": [
+  "Saguache"
+ ],
+ "g3-saguache-rural": [
+  "Saguache"
+ ],
+ "g3-center-rural": [
+  "Saguache"
+ ],
+ "g3-cochetopa-rural": [
+  "Saguache"
+ ],
+ "g3-san-luis": [
+  "Costilla"
+ ],
+ "g3-fort-garland": [
+  "Costilla"
+ ],
+ "g3-blanca-rural": [
+  "Costilla"
+ ],
+ "g3-san-luis-rural": [
+  "Costilla"
+ ],
+ "g3-akron": [
+  "Washington"
+ ],
+ "g3-otis": [
+  "Washington"
+ ],
+ "g3-akron-rural": [
+  "Washington"
+ ],
+ "g3-otis-rural": [
+  "Washington"
+ ],
+ "g3-cope-rural": [
+  "Washington"
+ ],
+ "g3-woodlin-rural": [
+  "Washington"
+ ],
+ "g3-las-animas": [
+  "Bent"
+ ],
+ "g3-las-animas-rural": [
+  "Bent"
+ ],
+ "g3-mcclave-rural": [
+  "Bent"
+ ],
+ "g3-south-bent-rural": [
+  "Bent"
+ ],
+ "g3-city-of-creede": [
+  "Mineral"
+ ],
+ "g3-creede-rural": [
+  "Mineral"
+ ],
+ "g3-julesburg": [
+  "Sedgwick"
+ ],
+ "g3-ovid": [
+  "Sedgwick"
+ ],
+ "g3-julesburg-rural": [
+  "Sedgwick"
+ ],
+ "g3-south-sedgwick-rural": [
+  "Sedgwick"
  ]
 }

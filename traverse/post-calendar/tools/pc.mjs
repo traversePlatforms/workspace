@@ -11,7 +11,7 @@
  * A manifest is a JSON array; each item:
  *   { "brand": "sixfold" | "surge" | <client id>, "type": "single" | "photoset" (default single),
  *     "date": "YYYY-MM-DD", "time": "15:00" (Mountain; leave both out for "not scheduled yet"), "targets": ["fb", "ig"],
- *     "image": "<path>"  (single)   or   "images": ["<path>", ...] or [{ "path": "<path>", "caption": "..." }]  (photoset, 2-10),
+ *     "image": "<path>"  (single; a .mp4 here makes it a video post: Facebook video + Instagram Reel)   or   "images": ["<path>", ...] or [{ "path": "<path>", "caption": "..." }]  (photoset, 2-10),
  *     "fb_caption": "...", "ig_caption": "...", "album": "Facebook album name (photoset)", "note": "shown on the draft only", "key": "optional id" }
  * Relative image paths are read from the manifest's folder. An item already loaded (same key, or same client, time, pictures and caption)
  * is skipped, so a manifest can be imported again after it grows. Env for tests: PC_BASE (the api address), PC_CODE_FILE. */
@@ -42,9 +42,9 @@ async function signIn() {
   if (j.role !== 'editor') console.log('note: signed in as ' + j.role + ' (' + j.name + ')');
 }
 async function upload(id, path, extra = {}) {
-  const buf = readFileSync(path); const png = /\.png$/i.test(path);
+  const buf = readFileSync(path); const png = /\.png$/i.test(path); const mp4 = /\.mp4$/i.test(path);   /* + an MP4 video for a one-post item (2026-11-05) */
   const fd = new FormData(); fd.append('id', id); for (const [k, v] of Object.entries(extra)) if (v !== undefined && v !== null) fd.append(k, String(v));
-  fd.append('file', new Blob([buf], { type: png ? 'image/png' : 'image/jpeg' }), basename(path));
+  fd.append('file', new Blob([buf], { type: mp4 ? 'video/mp4' : png ? 'image/png' : 'image/jpeg' }), basename(path));
   return call('upload', fd);
 }
 const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : undefined; };
@@ -87,7 +87,7 @@ async function importManifest(file, dry, refresh = false) {
       continue;
     }
     if (j.dup) { console.log(label + ': already loaded (' + j.dup + '), skipped'); skipped++; continue; }
-    for (const x of it.pics) await upload(j.id, x.path, x.caption ? { caption: x.caption } : {});
+    for (const x of it.pics) await upload(j.id, x.path, { caption: x.caption || undefined, w: it.m.w, h: it.m.h, sec: it.m.sec });   /* w/h/sec: a video's size when the server can't read it */
     console.log(label + ': loaded as draft ' + j.id); made++;
   }
   console.log(`done: ${made} loaded, ${refresh ? refreshed + ' refreshed, ' : ''}${skipped} already there, ${bad} skipped with a problem. Nothing is approved; Matthew approves each post on the calendar.`);

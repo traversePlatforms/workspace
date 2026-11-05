@@ -134,15 +134,16 @@ switch ($action) {
     case 'upload': {   /* multipart: id, file, [replace = index], [answer = request id] */
         $f = $_FILES['file'] ?? null; if (!$f || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) fail('The picture did not arrive (or it is over the upload limit).');
         $S0 = pcState(); $p0 = needPost($S0, $id); editable($p0);
-        $img = pcStoreImage((string) $f['tmp_name'], (string) ($f['name'] ?? '')); if (isset($img['error'])) fail($img['error']);
+        $img = pcStoreMedia((string) $f['tmp_name'], (string) ($f['name'] ?? ''), ['w' => $body['w'] ?? 0, 'h' => $body['h'] ?? 0, 'sec' => $body['sec'] ?? 0]); if (isset($img['error'])) fail($img['error']);   /* + video (2026-11-05) */
         $p = pcMutate(function (array &$S) use ($id, $img, $body, $ME) {
             $p = needPost($S, $id); editable($p); $before = pcFingerprint($p); $old = null;
+            if (pcIsVideo($img) && $p['type'] !== 'single') fail('A video goes in its own post, not a photo set.');
             $rep = isset($body['replace']) && $body['replace'] !== '' ? (int) $body['replace'] : null;
             if (isset($body['caption'])) $img['caption'] = pcText($body['caption'], 1000);
             if ($p['type'] === 'single') { $old = $p['images'][0] ?? null; $p['images'] = [$img]; }
             elseif ($rep !== null && isset($p['images'][$rep])) { $old = $p['images'][$rep]; $img['caption'] = $img['caption'] ?: (string) ($old['caption'] ?? ''); $p['images'][$rep] = $img; }
             else { if (count($p['images']) >= 10) fail('A photo set holds at most 10 pictures.'); $p['images'][] = $img; }
-            pcLog($p, $ME, 'Picture ' . ($old ? 'replaced' : 'added') . ($img['name'] !== '' ? ' (' . $img['name'] . ')' : ''));
+            pcLog($p, $ME, (pcIsVideo($img) ? 'Video ' : 'Picture ') . ($old ? 'replaced' : 'added') . ($img['name'] !== '' ? ' (' . $img['name'] . ')' : ''));
             afterChange($p, $before, $ME, $body['answer'] ?? null);
             $S['posts'][$id] = $p;
             if ($old) pcDropUnused($S, $p, $old);

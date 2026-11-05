@@ -126,6 +126,18 @@ function pcSendFacebook(array $p, array $tg): array {
         /* the album exists now, so Facebook counts as done either way (a retry would make a second album); missing photos are the error */
         return $bad ? ['done' => $done, 'error' => 'the album went up with ' . $n . ' of ' . count($imgs) . ' photos; add the rest on Facebook by hand (' . implode('; ', $bad) . ')'] : ['done' => $done];
     }
+    if (pcIsVideo($imgs[0])) {   /* a video goes up as a Facebook Reel (Matthew 2026-11-05): start an upload, hand Meta the video's address, publish */
+        $s = pcGraph('POST', $tg['page'] . '/video_reels', ['upload_phase' => 'start', 'access_token' => $tok]);
+        if ($e = pcErr($s)) return ['error' => 'the Reel upload did not start: ' . $e];
+        $vid = (string) ($s['video_id'] ?? ''); if ($vid === '') return ['error' => 'the Reel upload did not start: no video id came back'];
+        $u = pcRupload($vid, (string) $imgs[0]['url'], $tok);
+        if ($e = pcErr($u)) return ['error' => 'the video was not handed to Facebook: ' . $e];
+        $f = pcGraph('POST', $tg['page'] . '/video_reels', ['upload_phase' => 'finish', 'video_id' => $vid, 'video_state' => 'PUBLISHED', 'description' => (string) $p['fb'], 'access_token' => $tok]);
+        if ($e = pcErr($f)) return ['error' => 'the Reel was not published: ' . $e];
+        if (empty($f['success'])) return ['error' => 'the Reel was not published: Facebook did not confirm it'];
+        $l = pcGraph('GET', $vid, ['fields' => 'permalink_url', 'access_token' => $tok]); $link = (string) ($l['permalink_url'] ?? '');   /* may be empty while Facebook is still processing */
+        return ['done' => ['id' => $vid, 'link' => $link === '' ? 'https://www.facebook.com/reel/' . $vid : ($link[0] === '/' ? 'https://www.facebook.com' . $link : $link)]];
+    }
     $r = pcGraph('POST', $tg['page'] . '/photos', ['url' => (string) $imgs[0]['url'], 'caption' => (string) $p['fb'], 'published' => 'true', 'access_token' => $tok]);
     if ($e = pcErr($r)) return ['error' => $e];
     $pid = (string) ($r['post_id'] ?? $r['id'] ?? '');
@@ -133,9 +145,9 @@ function pcSendFacebook(array $p, array $tg): array {
     return ['done' => ['id' => $pid, 'link' => (string) ($l['permalink_url'] ?? '')]];
 }
 /* ---- Instagram: POST /{ig}/media, wait until Meta has fetched the picture, POST /{ig}/media_publish; a photo set is a carousel ---- */
-function pcIgReady(string $cid, string $tok): bool {
+function pcIgReady(string $cid, string $tok, int $tries = 24): bool {   /* a Reel takes longer to process than a picture: 72 tries, about 6 minutes */
     $wait = getenv('PC_POLL_SLEEP'); $wait = $wait === false || $wait === '' ? 5 : (int) $wait;
-    for ($i = 0; $i < 24; $i++) { $s = pcGraph('GET', $cid, ['fields' => 'status_code', 'access_token' => $tok]); $c = (string) ($s['status_code'] ?? ''); if ($c === 'FINISHED') return true; if ($c === 'ERROR' || $c === 'EXPIRED') return false; if ($wait) sleep($wait); }
+    for ($i = 0; $i < $tries; $i++) { $s = pcGraph('GET', $cid, ['fields' => 'status_code', 'access_token' => $tok]); $c = (string) ($s['status_code'] ?? ''); if ($c === 'FINISHED') return true; if ($c === 'ERROR' || $c === 'EXPIRED') return false; if ($wait) sleep($wait); }
     return false;
 }
 function pcSendInstagram(array $p, array $tg): array {
@@ -149,11 +161,13 @@ function pcSendInstagram(array $p, array $tg): array {
             $kids[] = (string) $c['id'];
         }
         $c = pcGraph('POST', $ig . '/media', ['media_type' => 'CAROUSEL', 'children' => implode(',', $kids), 'caption' => (string) $p['ig'], 'access_token' => $tok]);
+    } elseif (pcIsVideo($imgs[0])) {   /* a video goes up as a Reel, shown in the feed too */
+        $c = pcGraph('POST', $ig . '/media', ['media_type' => 'REELS', 'video_url' => (string) $imgs[0]['url'], 'caption' => (string) $p['ig'], 'share_to_feed' => 'true', 'access_token' => $tok]);
     } else {
         $c = pcGraph('POST', $ig . '/media', ['image_url' => (string) $imgs[0]['url'], 'caption' => (string) $p['ig'], 'access_token' => $tok]);
     }
     if ($e = pcErr($c)) return ['error' => $e];
-    if (!pcIgReady((string) $c['id'], $tok)) return ['error' => 'Instagram did not finish processing the post'];
+    if (!pcIgReady((string) $c['id'], $tok, pcIsVideo($imgs[0]) ? 72 : 24)) return ['error' => 'Instagram did not finish processing the ' . (pcIsVideo($imgs[0]) ? 'video' : 'post')];
     $r = pcGraph('POST', $ig . '/media_publish', ['creation_id' => (string) $c['id'], 'access_token' => $tok]);
     if ($e = pcErr($r)) return ['error' => $e];
     $l = pcGraph('GET', (string) $r['id'], ['fields' => 'permalink', 'access_token' => $tok]);

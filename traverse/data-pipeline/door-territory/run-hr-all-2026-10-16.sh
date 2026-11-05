@@ -13,7 +13,7 @@ while [ "$(running)" != "0" ]; do sleep 60; done
 SSID=$(netsh wlan show interfaces 2>/dev/null | tr -d '\r' | awk -F': ' '/^ *SSID/{print $2; exit}')
 case "$SSID" in *iPhone*|*iphone*) echo "on the hotspot ($SSID) - not starting"; exit 1;; esac
 BPS=$(curl -s -o /dev/null --max-time 10 -w '%{speed_download}' "https://speed.cloudflare.com/__down?bytes=20000000" | cut -d. -f1)
-[ "${BPS:-0}" -lt 1000000 ] && { echo "line too slow ($BPS B/s) - not starting"; exit 1; }
+[ "${BPS:-0}" -lt "${MINBPS:-1000000}" ] && { echo "line too slow ($BPS B/s) - not starting"; exit 1; }
 echo "$(date +%T) network: ${SSID:-wired}, $((BPS/1000000)) MB/s"
 bash hotspot-watchdog2.sh run-hr-all > "$L/watchdog.log" 2>&1 &
 cp highlands-ranch.csv highlands-ranch.csv.bak-2026-10-16; cp highlands-ranch-areas.json highlands-ranch-areas.json.bak-2026-10-16

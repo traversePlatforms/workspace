@@ -230,7 +230,8 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   /* ---- one client's calendar ---- */
   function card(p) {
     var im = p.images[0], st = statusOf(p);
-    var th = '<div class="thumb"' + (im ? ' style="background-image:url(\'' + esc(im.url) + '\')"' : '') + '>' + (im ? '' : 'No picture') + (p.images.length > 1 ? '<b>' + p.images.length + '</b>' : '') + '</div>';
+    var th = im && isVid(im) ? '<div class="thumb" style="background:#111;color:#fff;display:grid;place-items:center;font-weight:700">&#9654; Video</div>'   /* + video (2026-11-05) */
+      : '<div class="thumb"' + (im ? ' style="background-image:url(\'' + esc(im.url) + '\')"' : '') + '>' + (im ? '' : 'No picture') + (p.images.length > 1 ? '<b>' + p.images.length + '</b>' : '') + '</div>';
     var line = (p.fb || p.ig || '').split('\n')[0] || '(no caption yet)';
     var tags = '<span class="pill s-' + st + '">' + esc(D.statuses[st] || st) + '</span>' + (p.type === 'photoset' ? '<span class="pill">Photo set</span>' : '') + p.targets.map(function (t) { return '<span class="pill">' + (t === 'fb' ? 'FB' : 'IG') + '</span>'; }).join('')
       + (/needs matthew/i.test(p.note || '') && st === 'draft' ? '<span class="pill s-publishing">Needs review</span>' : '');
@@ -317,18 +318,19 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     /* the fields */
     var dis = ed ? '' : ' disabled';
     h += '<div class="box"><h3>Post</h3>';
-    h += '<div class="seg" role="group" aria-label="Type"><button data-type="single" aria-pressed="' + (p.type === 'single') + '"' + dis + '>One picture</button><button data-type="photoset" aria-pressed="' + (p.type === 'photoset') + '"' + dis + '>Photo set (album + carousel)</button></div>';
+    h += '<div class="seg" role="group" aria-label="Type"><button data-type="single" aria-pressed="' + (p.type === 'single') + '"' + dis + '>One picture or video</button><button data-type="photoset" aria-pressed="' + (p.type === 'photoset') + '"' + dis + '>Photo set (album + carousel)</button></div>';
     h += '<label class="f">Where</label><div class="seg" role="group" aria-label="Where"><button data-t="fb" aria-pressed="' + (p.targets.indexOf('fb') >= 0) + '"' + dis + '>Facebook</button><button data-t="ig" aria-pressed="' + (p.targets.indexOf('ig') >= 0) + '"' + dis + '>Instagram' + (c.ig_id ? '' : ' (none assigned)') + '</button></div>';
     var dv = p.at ? dstr(p.at) : '', tv = p.at ? tstr(p.at) : '';
     h += '<label class="f">When <small>(Mountain time)</small></label><div class="row2"><input type="date" id="fdate" value="' + dv + '"' + dis + ' aria-label="Date"><input type="time" id="ftime" value="' + tv + '"' + dis + ' aria-label="Time"></div>';
     if (ed) { var taken = {}; D.posts.forEach(function (q) { if (q.at && q.id !== P.id) taken[q.at] = 1; }); var qs = D.slots.filter(function (s) { return !taken[s.at] && (s.type === p.type); }).slice(0, 4); if (qs.length) h += '<div class="quick">' + qs.map(function (s) { return '<button data-q="' + s.at + '">' + esc(when(s.at).replace(/, \d{4}/, '')) + '</button>'; }).join('') + '</div>'; }
     h += '<label class="f">' + (p.type === 'photoset' ? 'Pictures <small>(2 to 10; Instagram shows them as a carousel)</small>' : 'Picture') + '</label><div class="pics">';
     p.images.forEach(function (im, i) {
-      h += '<div class="pic"><img src="' + esc(im.url) + '" alt="Picture ' + (i + 1) + '" loading="lazy"><div class="sz">' + (im.w ? im.w + ' x ' + im.h : '') + '</div>'
+      h += '<div class="pic">' + (isVid(im) ? '<video src="' + esc(im.url) + '" controls playsinline muted preload="metadata" style="display:block;width:100%;max-height:420px;background:#000"></video>' : '<img src="' + esc(im.url) + '" alt="Picture ' + (i + 1) + '" loading="lazy">')
+        + '<div class="sz">' + (isVid(im) ? 'Video' + (im.sec ? ', ' + Math.round(im.sec) + ' s' : '') + (im.w ? ', ' : '') : '') + (im.w ? im.w + ' x ' + im.h : '') + '</div>'
         + (p.type === 'photoset' ? '<textarea data-cap="' + i + '" placeholder="Caption for this photo (Facebook, optional)"' + dis + '>' + esc(im.caption || '') + '</textarea>' : '')
         + (ed ? '<div class="pa">' + (p.type === 'photoset' ? '<button data-mv="' + i + ',-1">&#8593;</button><button data-mv="' + i + ',1">&#8595;</button><button data-rm="' + i + '">Remove</button>' : '') + '<button data-rep="' + i + '">Replace</button></div>' : '') + '</div>';
     });
-    h += '</div>' + (ed && (p.type === 'photoset' ? p.images.length < 10 : !p.images.length) ? '<div class="acts"><button class="btn small ghost" id="addpic">+ Add picture' + (p.type === 'photoset' ? 's' : '') + '</button></div>' : '') + '<input type="file" id="file" accept="image/*"' + (p.type === 'photoset' ? ' multiple' : '') + ' hidden>';
+    h += '</div>' + (ed && (p.type === 'photoset' ? p.images.length < 10 : !p.images.length) ? '<div class="acts"><button class="btn small ghost" id="addpic">+ Add picture' + (p.type === 'photoset' ? 's' : '') + '</button></div>' : '') + '<input type="file" id="file" accept="image/*' + (p.type === 'photoset' ? '" multiple' : ',video/mp4"') + ' hidden>';
     if (p.type === 'photoset') h += '<label class="f" for="falbum">Facebook album name</label><input type="text" id="falbum" maxlength="120" value="' + esc(p.album) + '"' + dis + '>';
     h += '<label class="f" for="ffb">Facebook caption' + (p.type === 'photoset' ? ' <small>(the album post)</small>' : '') + '</label><textarea id="ffb"' + dis + '>' + esc(p.fb) + '</textarea>';
     h += '<label class="f" for="fig">Instagram caption</label><textarea id="fig"' + dis + '>' + esc(p.ig) + '</textarea><div class="count" id="igc"></div>' + (ed ? '<div class="quick"><button id="copyfb">Copy the Facebook caption</button></div>' : '');
@@ -413,28 +415,32 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     var i = 0; toast('Uploading...');
     (function next() {
       if (i >= list.length) return;
-      var file = list[i++];
-      toJpeg(file).then(function (blob) {
-        var fd = new FormData(); fd.append('id', P.id); fd.append('file', blob, (file.name || 'picture').replace(/\.\w+$/, '') + '.jpg'); if (replace !== null) fd.append('replace', String(replace));
+      var file = list[i++], vid = /^video\//.test(file.type || '');
+      if (vid && !/mp4$/i.test(file.type)) { toast('Use an MP4 video.'); return; }
+      if (vid && file.size > 100 * 1024 * 1024) { toast('The video is over 100 MB. Save it smaller.'); return; }
+      (vid ? Promise.resolve(file) : toJpeg(file)).then(function (blob) {   /* a video goes up as it is (2026-11-05) */
+        var fd = new FormData(); fd.append('id', P.id); fd.append('file', blob, vid ? (file.name || 'video.mp4') : (file.name || 'picture').replace(/\.\w+$/, '') + '.jpg'); if (replace !== null) fd.append('replace', String(replace));
+        if (vid) toast('Uploading the video...');
         return api('upload', fd);
-      }).then(function (j) { swap(j.post); if (i < list.length) next(); else toast('Picture saved'); }).catch(function (e) { toast(e.message); });
+      }).then(function (j) { swap(j.post); if (i < list.length) next(); else toast(vid ? 'Video saved' : 'Picture saved'); }).catch(function (e) { toast(e.message); });
     })();
   }
 
   /* previews */
+  function isVid(im) { return !!im && im.kind === 'video'; }   /* a one-post video (2026-11-05) */
   function clip(t, n) { t = t || ''; return t.length > n ? esc(t.slice(0, n)) + '... <span class="more">See more</span>' : esc(t); }
   function drawPreview() {
     var el = $('pv'); if (!el || !W) return; var c = cur(), p = W, ims = p.images, at = W._date && W._time ? W._date + ' ' + W._time : (p.at ? when(p.at) : '');
     var ini = esc((c.name || '?').charAt(0));
     if (pvWhich === 'fb') {
       if (p.targets.indexOf('fb') < 0) { el.innerHTML = '<p class="empty">Not going to Facebook.</p>'; return; }
-      var g = ims.length > 1 ? '<div class="pvi g2">' + ims.slice(0, 4).map(function (im) { return '<img src="' + esc(im.url) + '" alt="">'; }).join('') + '</div>' : ims[0] ? '<div class="pvi"><img src="' + esc(ims[0].url) + '" alt=""></div>' : '<p class="empty" style="padding:0 12px 12px">No picture yet</p>';
+      var g = ims.length > 1 ? '<div class="pvi g2">' + ims.slice(0, 4).map(function (im) { return '<img src="' + esc(im.url) + '" alt="">'; }).join('') + '</div>' : ims[0] ? '<div class="pvi">' + (isVid(ims[0]) ? '<video src="' + esc(ims[0].url) + '" controls playsinline muted preload="metadata" style="display:block;width:100%;max-height:520px;background:#000"></video>' : '<img src="' + esc(ims[0].url) + '" alt="">') + '</div>' : '<p class="empty" style="padding:0 12px 12px">No picture yet</p>';
       el.innerHTML = '<div class="pv"><div class="pvh"><div class="pva">' + ini + '</div><div><b>' + esc(c.page_name || c.name) + (p.type === 'photoset' && p.album ? ' added ' + ims.length + ' photos to ' + esc(p.album) : '') + '</b><small>' + esc(at) + '</small></div></div><div class="pvt">' + clip(p.fb, 480) + '</div>' + g + '</div>';
     } else {
       if (p.targets.indexOf('ig') < 0) { el.innerHTML = '<p class="empty">Not going to Instagram.</p>'; return; }
       var u = c.ig_user || 'instagram';
       el.innerHTML = '<div class="pv"><div class="pvh"><div class="pva">' + ini + '</div><div><b>' + esc(u) + '</b></div></div>'
-        + (ims[0] ? '<div class="igimg"><img src="' + esc(ims[0].url) + '" alt="" style="display:block;width:100%;aspect-ratio:4/5;object-fit:cover">' + (ims.length > 1 ? '<span>1/' + ims.length + '</span>' : '') + '</div>' : '<p class="empty" style="padding:0 12px">No picture yet</p>')
+        + (ims[0] ? '<div class="igimg">' + (isVid(ims[0]) ? '<video src="' + esc(ims[0].url) + '" controls playsinline muted preload="metadata" style="display:block;width:100%;aspect-ratio:9/16;object-fit:cover;background:#000"></video>' : '<img src="' + esc(ims[0].url) + '" alt="" style="display:block;width:100%;aspect-ratio:4/5;object-fit:cover">') + (ims.length > 1 ? '<span>1/' + ims.length + '</span>' : '') + '</div>' : '<p class="empty" style="padding:0 12px">No picture yet</p>')
         + (ims.length > 1 ? '<div class="dots">' + ims.map(function () { return '<i></i>'; }).join('') + '</div>' : '')
         + '<div class="pvc"><b>' + esc(u) + '</b>' + clip(p.ig, 125) + '</div></div>';
     }

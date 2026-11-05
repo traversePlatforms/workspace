@@ -33,13 +33,13 @@ const PAGES = [
   { name: 'Peak Pickleball', id: '555000', access_token: 'PT-PEAK', instagram_business_account: { id: '777000', username: 'peakpb' } },
 ];
 const OWN = { 'OWN-VAA': { id: '888000', name: 'VAA Page', instagram_business_account: { id: '999000', username: 'vaa' } } };
-let calls = [], failOn = {}, seq = 0;
+let calls = [], failOn = {}, seq = 0; const reels = {};   /* reels: video id -> the address Meta was handed (Facebook Reels, 2026-11-05) */
 const tokenPage = (t) => PAGES.find((p) => p.access_token === t) || (OWN[t] ? { ...OWN[t], access_token: t } : null);
 const graph = http.createServer((req, res) => {
   let b = ''; req.on('data', (d) => (b += d)); req.on('end', () => {
     const u = new URL(req.url, 'http://x'); const path = u.pathname.replace(/^\/+/, '');
     const q = Object.fromEntries(req.method === 'POST' ? new URLSearchParams(b) : u.searchParams);
-    calls.push({ m: req.method, path, q });
+    calls.push({ m: req.method, path, q, h: req.headers });
     const send = (o) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(o)); };
     const err = (m) => send({ error: { message: m + ' (token ' + q.access_token + ')', type: 'OAuthException' } });
     const tp = tokenPage(q.access_token);
@@ -51,6 +51,14 @@ const graph = http.createServer((req, res) => {
     if ((m = /^(alb\d+)\/photos$/.exec(path)) && req.method === 'POST') { if (failOn.albumphoto && /bad/.test(q.caption || '')) return err('album photo refused'); return send({ id: 'ap' + ++seq }); }
     if ((m = /^(\d+)\/media$/.exec(path)) && req.method === 'POST') { if (!tp || (tp.instagram_business_account || {}).id !== m[1]) return err('token is not linked to this instagram'); if (failOn.igmedia) return err('ig media refused'); return send({ id: 'c' + ++seq }); }
     if ((m = /^(\d+)\/media_publish$/.exec(path)) && req.method === 'POST') { if (!tp || (tp.instagram_business_account || {}).id !== m[1]) return err('token is not linked to this instagram'); return send({ id: 'm' + ++seq }); }
+    if ((m = /^(\d+)\/video_reels$/.exec(path)) && req.method === 'POST') {   /* Facebook Reels (2026-11-05): start, then finish once the video was handed over */
+      if (!tp || tp.id !== m[1]) return err('token is not this page\'s');
+      if (q.upload_phase === 'start') { const id = 'rv' + ++seq; return send({ video_id: id, upload_url: 'https://rupload.test/' + id }); }
+      if (q.upload_phase === 'finish') return reels[q.video_id] ? send({ success: true }) : err('nothing uploaded for ' + q.video_id);
+      return err('bad phase');
+    }
+    if ((m = /^rup\/(rv\d+)$/.exec(path)) && req.method === 'POST') { if (!tokenPage(String(req.headers.authorization || '').replace(/^OAuth /, ''))) return err('bad upload token'); if (!req.headers.file_url) return err('no file_url'); reels[m[1]] = req.headers.file_url; return send({ success: true }); }
+    if (/^rv\d+$/.test(path)) return send({ permalink_url: '/reel/' + path });
     if (/^c\d+$/.test(path)) return send({ status_code: 'FINISHED', id: path });
     if (/^m\d+$/.test(path)) return send({ permalink: 'https://ig.test/p/' + path });
     if (/^alb\d+$/.test(path)) return send({ link: 'https://fb.test/album/' + path });
@@ -71,7 +79,7 @@ writeFileSync(join(SITE, 'post-calendar-data', 'private', 'meta-token.json'), JS
 const MAIL = join(T, 'mail.jsonl');
 const port = 18000 + Math.floor(Math.random() * 2000);
 const ORIGIN = 'http://127.0.0.1:' + port;
-const env = { ...process.env, PC_SITE: SITE, PC_PUBLIC: PUB, PC_ORIGIN: ORIGIN, PC_GRAPH: 'http://127.0.0.1:' + GPORT + '/', PC_POLL_SLEEP: '0', TRAV_MAIL_MOCK: MAIL };
+const env = { ...process.env, PC_SITE: SITE, PC_PUBLIC: PUB, PC_ORIGIN: ORIGIN, PC_GRAPH: 'http://127.0.0.1:' + GPORT + '/', PC_POLL_SLEEP: '0', TRAV_MAIL_MOCK: MAIL, PC_RUPLOAD: 'http://127.0.0.1:' + GPORT + '/rup/' };
 const php = spawn('php', ['-S', '127.0.0.1:' + port, '-t', join(SITE, 'public_html')], { env, stdio: 'ignore' });
 const runPhp = (args, extra = {}) => new Promise((r) => execFile('php', [join(SITE, 'post-calendar-tools', 'runner.php'), ...args], { env: { ...env, ...extra } }, (e, so, se) => r({ code: e ? e.code : 0, out: so, err: se })));
 const runner = (nowIso) => runPhp([], { PC_NOW: String(Math.floor(Date.parse(nowIso) / 1000)) });
@@ -319,6 +327,30 @@ ok(state().posts[mA.id].status === 'approved' && calls.filter((x) => x.m === 'PO
 rmSync(join(OLDQ, 'social-queue.json'));
 calls = []; await runner('2027-12-04T21:02:00Z');
 ok(state().posts[mA.id].status === 'published' && calls.filter((x) => x.path === '17841460337871226/media' && x.q.media_type === 'CAROUSEL').length === 1, 'once the old file is retired, the new runner sends it, once');
+
+console.log('video (2026-11-05)');
+{
+  const MP4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom'), Buffer.alloc(4000, 1)]);   /* an MP4 header is enough here: no ffprobe on the test machine, so the uploader's numbers stand */
+  const upV = (id, extra = {}) => { const fd = new FormData(); fd.append('id', id); for (const [k, v] of Object.entries(extra)) fd.append(k, String(v)); fd.append('file', new Blob([MP4], { type: 'video/mp4' }), 'pov.mp4'); return E.call('upload', fd); };
+  const v = await E.call('create', { client: 'sixfold', type: 'single', date: '2027-12-14', time: '15:00', targets: ['fb', 'ig'], fb: 'POV: a week of aerations.', ig: 'POV: a week of aerations. #LawnAeration' });
+  let rv = await upV(v.id, { w: 1080, h: 1920, sec: 11 });
+  ok(rv.ok && rv.post.images[0].kind === 'video' && /\.mp4$/.test(rv.post.images[0].file) && rv.post.images[0].h === 1920, 'a video uploads into a one-post item, kept as an .mp4 and marked as video');
+  ok(rv.post.problems.length === 0, 'a tall 9:16 video passes the checks (the 4:5 limit is for pictures)');
+  rv = await A.call('approve', { id: v.id }); ok(rv.ok && rv.post.status === 'approved', 'a video post is approved the same way, one tap by Matthew');
+  calls = []; await runner('2027-12-14T22:01:00Z');
+  const sv = state().posts[v.id];
+  const fr = calls.filter((x) => x.path === '1418675127985724/video_reels'), up = calls.find((x) => /^rup\//.test(x.path)), igv = calls.find((x) => x.path === '17841460337871226/media');
+  ok(sv.status === 'published' && fr.length === 2 && fr[0].q.upload_phase === 'start' && fr[1].q.upload_phase === 'finish' && fr[1].q.video_state === 'PUBLISHED' && fr[1].q.description === 'POV: a week of aerations.', 'Facebook gets it as a Reel: start, then publish with the caption');
+  ok(up && up.h.file_url === sv.images[0].url && /^OAuth PT-SIX/.test(up.h.authorization || '') && up.path === 'rup/' + fr[1].q.video_id, 'the video is handed to Meta\'s upload host by its address, with the Page token');
+  ok(!calls.some((x) => x.path === '1418675127985724/videos'), 'no plain Page video as well');
+  ok(igv && igv.q.media_type === 'REELS' && igv.q.video_url === sv.images[0].url && igv.q.share_to_feed === 'true' && !igv.q.image_url, 'Instagram gets it as a Reel, shared to the feed');
+  ok(sv.done.fb.link === 'https://www.facebook.com/reel/' + sv.done.fb.id, 'the Facebook link is made whole');
+  calls = []; await runner('2027-12-14T22:06:00Z'); ok(calls.filter((x) => x.m === 'POST').length === 0, 'a published video is never sent again');
+  const ps = await E.call('create', { client: 'sixfold', type: 'photoset', date: '2027-12-18', time: '14:00' });
+  rv = await upV(ps.id, { w: 1080, h: 1920, sec: 11 }); ok(!rv.ok && /own post/.test(rv.error), 'a video cannot go into a photo set');
+  const lg = await E.call('create', { client: 'sixfold', type: 'single', date: '2027-12-16', time: '15:00' });
+  rv = await upV(lg.id, { w: 1080, h: 1920, sec: 120 }); ok(!rv.ok && /90 seconds/.test(rv.error), 'a video over 90 seconds is refused');
+}
 
 console.log('check (read-only)');
 t1 = await runPhp(['check']);

@@ -133,7 +133,8 @@ function pcProblems(array $S, array $p): array {
     if (!$p['at']) $why[] = 'Pick a date and time.';
     elseif ((int) $p['at'] < pcNow() + 60) $why[] = 'The time has passed. Pick a time in the future.';
     $t = (array) $p['targets']; if (!$t) $why[] = 'Pick Facebook, Instagram or both.';
-    $n = count((array) $p['images']);
+    $n = count((array) $p['images']); $vid = pcHasVideo($p);
+    if ($p['type'] === 'photoset' && $vid) $why[] = 'A photo set takes pictures only. Make the video its own post.';
     if ($p['type'] === 'photoset') {
         if ($n < 2) $why[] = 'A photo set needs at least 2 pictures.';
         if ($n > 10 && in_array('ig', $t, true)) $why[] = 'An Instagram carousel takes at most 10 pictures.';
@@ -144,7 +145,7 @@ function pcProblems(array $S, array $p): array {
         if (trim((string) $p['ig']) === '') $why[] = 'Write the Instagram caption.';
         if (mb_strlen((string) $p['ig']) > PC_IG_MAX) $why[] = 'The Instagram caption is over 2,200 characters.';
         if (preg_match_all('/(^|\s)#\w/u', (string) $p['ig']) > 30) $why[] = 'Instagram allows at most 30 hashtags.';
-        foreach ((array) $p['images'] as $i) if (!empty($i['w']) && !empty($i['h'])) { $r = $i['w'] / $i['h']; if ($r < 0.795 || $r > 1.915) { $why[] = 'Instagram needs pictures between 4:5 (tall) and 1.91:1 (wide); one is ' . $i['w'] . ' x ' . $i['h'] . '.'; break; } }
+        foreach ((array) $p['images'] as $i) if (!pcIsVideo($i) && !empty($i['w']) && !empty($i['h'])) { $r = $i['w'] / $i['h'];   /* a Reel can be tall (9:16); the 4:5 limit is for pictures */ if ($r < 0.795 || $r > 1.915) { $why[] = 'Instagram needs pictures between 4:5 (tall) and 1.91:1 (wide); one is ' . $i['w'] . ' x ' . $i['h'] . '.'; break; } }
         if ($c && ($c['ig_id'] ?? '') === '') $why[] = 'No Instagram account is assigned to ' . $c['name'] . ' yet (Clients).';
     }
     if ($c && in_array('fb', $t, true) && ($c['page_id'] ?? '') === '') $why[] = 'No Facebook Page is assigned to ' . $c['name'] . ' yet (Clients).';
@@ -185,6 +186,22 @@ function pcGraph(string $method, string $path, array $f = []): array {
     return $j;
 }
 function pcErr(array $r): string { return isset($r['error']) ? (string) ($r['error']['message'] ?? 'error') : ''; }
+/* Facebook Reels (2026-11-05, Matthew: "lets do videos are reels for facebook"): the video goes to Meta's upload host, not the Graph host.
+   The middle of the three steps hands it the video's public address (header file_url); Meta fetches it from there. PC_RUPLOAD: test hook. */
+define('PC_RUPLOAD', (string) (getenv('PC_RUPLOAD') ?: 'https://rupload.facebook.com/video-upload/v21.0/'));
+function pcRupload(string $videoId, string $fileUrl, string $tok): array {
+    pcTokensSeen($tok);
+    $ch = curl_init(PC_RUPLOAD . rawurlencode($videoId));
+    curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => '', CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 180, CURLOPT_CONNECTTIMEOUT => 20,
+        CURLOPT_HTTPHEADER => ['Authorization: OAuth ' . $tok, 'file_url: ' . $fileUrl]]);
+    $r = curl_exec($ch); $e = curl_error($ch); curl_close($ch);
+    if ($r === false) return ['error' => ['message' => 'no answer from Meta\'s upload host: ' . pcScrub($e)]];
+    $j = json_decode((string) $r, true);
+    if (!is_array($j)) return ['error' => ['message' => 'unreadable answer from Meta\'s upload host']];
+    if (isset($j['error'])) $j['error']['message'] = pcScrub((string) ($j['error']['message'] ?? (is_string($j['error']) ? $j['error'] : 'error')));
+    elseif (empty($j['success'])) $j['error'] = ['message' => 'Meta\'s upload host did not take the video'];
+    return $j;
+}
 /** the Pages (and their Instagram accounts) the Pipeline token can post to, tokens included: for this file only, never sent anywhere */
 function pcPipelinePages(): array {
     $tok = pcPipelineToken(); if ($tok === '') return ['error' => 'No Meta token on the server.'];
@@ -286,11 +303,45 @@ function pcStoreImage(string $tmp, string $origName = ''): array {
     @chmod($dest, 0644);
     return ['file' => $name, 'url' => PC_ORIGIN . '/' . PC_PUBLIC . '/media/' . $name, 'w' => $w, 'h' => $h, 'bytes' => (int) $sz, 'md5' => (string) md5_file($dest), 'name' => pcClean(basename($origName), 80), 'caption' => ''];
 }
+/* ---- video (2026-11-05, Matthew: "get this pov one posted for our thursday post. Add it to the post build in the hub so i can approve it"):
+   a one-post item whose single file is an MP4 instead of a picture, marked kind "video". Facebook gets it as a Page video, Instagram as a
+   Reel. Same approval, fingerprint and once-only rules as a picture. MP4 only (H.264 + AAC is what both accept everywhere: the laptop
+   converts a phone .mov before loading it); at most 100 MB and 90 seconds, Instagram's Reel limits through the API. */
+const PC_VIDEO_MAX = 100 * 1024 * 1024;
+function pcIsVideo(array $im): bool { return ($im['kind'] ?? '') === 'video'; }
+function pcHasVideo(array $p): bool { foreach ((array) ($p['images'] ?? []) as $im) if (pcIsVideo($im)) return true; return false; }
+/** width, height and seconds from ffprobe when the server lets PHP run it; otherwise what the uploader said (or nothing) */
+function pcProbeVideo(string $path, array $said): array {
+    $w = (int) ($said['w'] ?? 0); $h = (int) ($said['h'] ?? 0); $sec = (float) ($said['sec'] ?? 0);
+    if (function_exists('shell_exec') && is_executable('/usr/local/bin/ffprobe')) {
+        $j = json_decode((string) @shell_exec('/usr/local/bin/ffprobe -v error -select_streams v:0 -show_entries stream=width,height:format=duration -of json ' . escapeshellarg($path) . ' 2>/dev/null'), true);
+        if (is_array($j)) { $s = $j['streams'][0] ?? []; $w = (int) ($s['width'] ?? $w); $h = (int) ($s['height'] ?? $h); $sec = (float) ($j['format']['duration'] ?? $sec); }
+    }
+    return [$w ?: null, $h ?: null, $sec ?: null];
+}
+function pcStoreVideo(string $tmp, string $origName = '', array $said = []): array {
+    $sz = @filesize($tmp); if (!$sz) return ['error' => 'The video did not arrive.'];
+    if ($sz > PC_VIDEO_MAX) return ['error' => 'The video is over 100 MB. Save it smaller.'];
+    $head = (string) @file_get_contents($tmp, false, null, 0, 12);
+    if (substr($head, 4, 4) !== 'ftyp') return ['error' => 'Use an MP4 video.'];
+    [$w, $h, $sec] = pcProbeVideo($tmp, $said);
+    if ($sec !== null && $sec > 90.5) return ['error' => 'The video is over 90 seconds (the longest Reel Instagram takes from here).'];
+    if (!is_dir(PC_MEDIA_DIR)) @mkdir(PC_MEDIA_DIR, 0755, true);
+    $name = bin2hex(random_bytes(12)) . '.mp4'; $dest = PC_MEDIA_DIR . '/' . $name;
+    if (!(is_uploaded_file($tmp) ? move_uploaded_file($tmp, $dest) : copy($tmp, $dest))) return ['error' => 'Could not save the video.'];
+    @chmod($dest, 0644);
+    return ['file' => $name, 'url' => PC_ORIGIN . '/' . PC_PUBLIC . '/media/' . $name, 'kind' => 'video', 'w' => $w, 'h' => $h, 'sec' => $sec, 'bytes' => (int) $sz, 'md5' => (string) md5_file($dest), 'name' => pcClean(basename($origName), 80), 'caption' => ''];
+}
+/** a picture or a video, told apart by what the file is (an MP4 starts with "ftyp" at byte 4), not by its name */
+function pcStoreMedia(string $tmp, string $origName = '', array $said = []): array {
+    $head = (string) @file_get_contents($tmp, false, null, 0, 12);
+    return substr($head, 4, 4) === 'ftyp' ? pcStoreVideo($tmp, $origName, $said) : pcStoreImage($tmp, $origName);
+}
 /** a replaced picture's file goes too when nothing else uses it and the post never went anywhere (a published picture stays where Meta saw it) */
 function pcDropUnused(array $S, array $p, array $old): void {
     $f = (string) ($old['file'] ?? ''); if ($f === '' || !empty($p['done'])) return;
     foreach ($S['posts'] as $q) foreach ((array) $q['images'] as $im) if (($im['file'] ?? '') === $f) return;
-    if (preg_match('/^[0-9a-f]{24}\.(jpg|png)$/', $f)) @unlink(PC_MEDIA_DIR . '/' . $f);
+    if (preg_match('/^[0-9a-f]{24}\.(jpg|png|mp4)$/', $f)) @unlink(PC_MEDIA_DIR . '/' . $f);
 }
 
 /* ---- what the page and the CLI may see of a post and a client (no tokens; nothing else is secret in them) ---- */
