@@ -194,12 +194,17 @@ function pcRupload(string $videoId, string $fileUrl, string $tok): array {
     $ch = curl_init(PC_RUPLOAD . rawurlencode($videoId));
     curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => '', CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 180, CURLOPT_CONNECTTIMEOUT => 20,
         CURLOPT_HTTPHEADER => ['Authorization: OAuth ' . $tok, 'file_url: ' . $fileUrl]]);
-    $r = curl_exec($ch); $e = curl_error($ch); curl_close($ch);
+    $r = curl_exec($ch); $e = curl_error($ch); $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
     if ($r === false) return ['error' => ['message' => 'no answer from Meta\'s upload host: ' . pcScrub($e)]];
+    /* 2026-11-05: the first real Reel (p36f0744116) failed here with no reason kept. Keep Meta's own words: rupload reports errors as
+       debug_info {type, message}, not Graph's error {message}; failing that, the HTTP status and the start of the reply (tokens scrubbed). */
+    $said = 'HTTP ' . $code . ': ' . pcScrub(substr(trim(preg_replace('/\s+/', ' ', (string) $r) ?? ''), 0, 300));
     $j = json_decode((string) $r, true);
-    if (!is_array($j)) return ['error' => ['message' => 'unreadable answer from Meta\'s upload host']];
+    if (!is_array($j)) return ['error' => ['message' => 'unreadable answer from Meta\'s upload host (' . $said . ')']];
     if (isset($j['error'])) $j['error']['message'] = pcScrub((string) ($j['error']['message'] ?? (is_string($j['error']) ? $j['error'] : 'error')));
-    elseif (empty($j['success'])) $j['error'] = ['message' => 'Meta\'s upload host did not take the video'];
+    elseif (isset($j['debug_info']['message'])) $j['error'] = ['message' => 'Meta\'s upload host said: ' . pcScrub((string) $j['debug_info']['message'])
+        . (isset($j['debug_info']['type']) ? ' (' . pcScrub((string) $j['debug_info']['type']) . ')' : '')];
+    elseif (empty($j['success'])) $j['error'] = ['message' => 'Meta\'s upload host did not take the video (' . $said . ')'];
     return $j;
 }
 /** the Pages (and their Instagram accounts) the Pipeline token can post to, tokens included: for this file only, never sent anywhere */
