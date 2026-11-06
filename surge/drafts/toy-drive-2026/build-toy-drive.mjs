@@ -34,15 +34,16 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const gap = (s) => `<var class="gap">[${esc(s)}]</var>`;            // a fact still to come
 const n = (x) => x.toLocaleString('en-US');
 const daysLeft = (iso) => Math.round((END - Date.parse(iso + 'T00:00:00Z')) / 864e5);
-const PARTNER = 'With the Veterans Association of America';            // named on Matthew's call 6 Nov, held for VAA's written OK
+const PARTNER = 'With the Veterans Association of America';            // Matthew 6 Nov: we have permission to name VAA and the beneficiaries
+const H = esc(D.hours);                                                 // drop-off hours, one setting (poster and event doc disagree: data.json)
 
 /* The 14 posts, Mondays and Wednesdays, clear of the Tue/Thu November set. */
 const POSTS = [
-  { n: 1, iso: '2026-11-09', time: '3:00 pm', slug: 'announce', kind: 'goal', photo: 'b' },
+  { n: 1, iso: '2026-11-09', time: '3:00 pm', slug: 'announce', kind: 'goal', photo: 'poster' },
   { n: 2, iso: '2026-11-11', time: '3:00 pm', slug: 'where-to-drop-off', kind: 'events', head: 'Where to find the boxes', photo: 'c' },
   { n: 3, iso: '2026-11-16', time: '3:00 pm', slug: 'week-1', kind: 'tally', week: 'Week one', photo: 'a' },
   { n: 4, iso: '2026-11-18', time: '3:00 pm', slug: 'at-the-boxes', kind: 'photo', photo: 'd' },
-  { n: 5, iso: '2026-11-23', time: '3:00 pm', slug: 'week-2', kind: 'tally', week: 'Week two' },
+  { n: 5, iso: '2026-11-23', time: '3:00 pm', slug: 'week-2', kind: 'tally', week: 'Week two', photo: 'b' },
   { n: 6, iso: '2026-11-25', time: '3:00 pm', slug: 'thanksgiving-table', kind: 'challenge' },
   { n: 7, iso: '2026-11-30', time: '3:00 pm', slug: 'week-3', kind: 'tally', week: 'Week three' },
   { n: 8, iso: '2026-12-07', time: '3:00 pm', slug: 'week-4', kind: 'tally', week: 'Week four' },
@@ -71,8 +72,8 @@ function meter(count) {
 }
 
 function eventRows() {
-  if (!D.events.length) return [1, 2, 3].map((i) => `<li><b>${gap('date ' + i)}</b><span>${gap('place, town')}</span><i>12&ndash;6 pm</i></li>`).join('');
-  return D.events.map((e) => `<li><b>${esc(e.date)}</b><span>${esc(e.place)}</span><i>12&ndash;6 pm</i></li>`).join('');
+  if (!D.events.length) return [1, 2, 3].map((i) => `<li><b>${gap('date ' + i)}</b><span>${gap('place, town')}</span><i>${H}</i></li>`).join('');
+  return D.events.map((e) => `<li><b>${e.date ? esc(e.date) : gap('date')}</b><span>${esc(e.place)}</span><i>${H}</i></li>`).join('');
 }
 
 function body(p) {
@@ -85,10 +86,10 @@ function body(p) {
       main: `<div class="huge">${n(GOAL)}</div><h1>toys by <em>December 23.</em></h1>
         <p class="partner">${esc(PARTNER)}</p>${meter(0)}
         <ul class="ask"><li>New, unwrapped toys</li><li>New clothing for kids</li><li>Holiday items and family essentials</li></ul>`,
-      foot: ['Drop-off boxes at our events', '12&ndash;6 pm'] };
+      foot: ['Drop-off boxes at our events', H] };
     case 'events': return {
       tag: p.n === 11 ? `${left} days left` : 'Holiday toy drive',
-      main: `<h1 class="top">${esc(p.head)}</h1><p class="lede">${p.n === 11 ? 'The last chances to drop a toy in a box before December 23.' : 'Every event runs 12 to 6 pm. Bring a new, unwrapped toy.'}</p>
+      main: `<h1 class="top">${esc(p.head)}</h1><p class="lede">${p.n === 11 ? 'The last chances to drop a toy in a box before December 23.' : 'Every event runs ${H}. Bring a new, unwrapped toy.'}</p>
         <ul class="events">${eventRows()}</ul>`,
       foot: ['Goal', `${n(GOAL)} by Dec 23`] };
     case 'tally': return {
@@ -100,7 +101,7 @@ function body(p) {
       tag: 'Holiday toy drive',
       main: `<div class="huge">${left === 0 ? 'Today' : left}</div><h1>${left === 0 ? 'is the <em>last day.</em>' : `days <em>left.</em>`}</h1>${meter(c)}
         <div class="stats"><div><b>${countHtml}</b><span>collected</span></div><div><b>${remaining}</b><span>to go</span></div></div>`,
-      foot: [left === 0 ? 'Last boxes' : 'Drop-off boxes at our events', '12&ndash;6 pm'] };
+      foot: [left === 0 ? 'Last boxes' : 'Drop-off boxes at our events', H] };
     case 'challenge': return {
       tag: 'Thanksgiving week',
       main: `<h1 class="top big">One toy for every seat at <em>your table.</em></h1>
@@ -126,8 +127,8 @@ function body(p) {
 function photoPage(p) {
   const c = countFor(p), left = daysLeft(p.iso), cnt = c == null ? gap('count') : n(c);
   const T = {
-    goal: ['Holiday toy drive', `${n(GOAL)} toys by <em>December 23.</em>`, `${esc(PARTNER)}. New, unwrapped toys, new clothing for kids, and holiday essentials.`, ['Drop-off boxes at our events', '12&ndash;6 pm']],
-    events: ['Holiday toy drive', 'Where to find <em>the boxes.</em>', D.events.length ? D.events.map((e) => esc(e.date + ', ' + e.place)).join(' &middot; ') : gap('event dates and places'), ['Every event', '12&ndash;6 pm']],
+    goal: ['Holiday toy drive', `${n(GOAL)} toys by <em>December 23.</em>`, `${esc(PARTNER)}. New, unwrapped toys, new clothing for kids, and holiday essentials.`, ['Drop-off boxes at our events', H]],
+    events: ['Holiday toy drive', 'Where to find <em>the boxes.</em>', D.events.length ? D.events.map((e) => esc(e.place)).join(' &middot; ') : gap('event dates and places'), ['Every event', H]],
     tally: [p.week, `${cnt} of ${n(GOAL)} <em>toys so far.</em>`, `${left} days left to reach the goal.`, ['Holiday toy drive', 'Ends Dec 23']],
     photo: ['Holiday toy drive', 'Out at our <em>events.</em>', `${cnt} of ${n(GOAL)} toys so far, with ${left} days left.`, ['Holiday toy drive', 'Ends Dec 23']],
   }[p.kind];
@@ -153,7 +154,28 @@ function photoPage(p) {
 </body></html>`;
 }
 
+/* Post 1: the photo of the printed poster (Matthew 6 Nov: "the photo would be a good post itself"). Cropped to the sheet:
+   the phone photo also caught the monitor's taskbar above it and the desk below. */
+const POSTER = { file: '2026-11-06-poster-photo.png', w: 576, h: 1024, top: 52, bottom: 846 };
+function posterPage(p) {
+  const P = POSTER, ch = P.bottom - P.top, boxH = 1130, sc = boxH / ch, boxW = Math.round(P.w * sc);
+  return `<!doctype html><html><head><meta charset="utf-8">
+  <link rel="stylesheet" href="${KIT}/_fonts.css"><link rel="stylesheet" href="${KIT}/_logo.css"><style>
+  * { box-sizing: border-box; margin: 0; } html, body { width: 1080px; height: 1350px; overflow: hidden; background: #0a0a0a; color: #f5f5f5; }
+  .top { position: absolute; top: 0; left: 64px; right: 64px; height: 150px; display: flex; align-items: center; justify-content: space-between; }
+  .top .wordmark { width: 210px; height: 58px; background: #fff; }
+  .tag { font: 700 24px Archivo, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #4abe4a; border: 2.5px solid #4abe4a; border-radius: 999px; padding: 12px 24px; }
+  .sheet { position: absolute; top: 170px; left: ${Math.round((1080 - boxW) / 2)}px; width: ${boxW}px; height: ${boxH}px;
+    background: url('${pathToFileURL(join(PHOTOS, P.file)).href}') 0 ${-P.top * sc}px / ${P.w * sc}px ${P.h * sc}px no-repeat;
+    box-shadow: 0 18px 60px rgba(0,0,0,.6); }
+</style></head><body>
+  <div class="top"><i class="wordmark"></i><span class="tag">Holiday toy drive</span></div>
+  <div class="sheet"></div>
+</body></html>`;
+}
+
 function page(p) {
+  if (p.photo === 'poster') return posterPage(p);
   if (p.photo) return photoPage(p);
   const b = body(p);
   return `<!doctype html><html><head><meta charset="utf-8">

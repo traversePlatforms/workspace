@@ -13,6 +13,18 @@ Checked 6 November 2026. Covers every factual claim in `posts.md` and the 14 ima
 | Recipients: Children's Hospital Colorado, Boys & Girls Clubs, Brent's Place, nominated families | 1, 14 | **Unresolved** | Not named until each confirms (Matthew 6 Nov). Posts say "local children's charities and families in need". |
 | Weekly counts | 3-14 | **Unresolved** | No count exists yet. Each needs a dated tally (who counted, when). |
 
+## Update, 6 Nov 2026 (later): the poster and its QR code
+
+| Claim | Status | Source |
+|---|---|---|
+| VAA as partner; the four beneficiaries | **Internal, confirmed** | Matthew 6 Nov: "we have permission to use the VAA Surge and the list of who the donations will benefit". The list as printed on the poster. |
+| Locations: Chuck and Don's, Castle Rock; Chuck and Don's, Greenwood Village | Internal | The "Toy Drive!" Google Doc the poster's QR code opens (decoded from Matthew's photo; doc read as text 6 Nov; copy in `event-locations-doc-2026-11-06.txt`). No dates or days given. |
+| Hours | **Unresolved (conflict)** | Poster: 12:00-6:00 pm. Event doc: 11:30 am-6:00 pm. Neither is more authoritative; images use `data.json` → `hours` until Matthew says which. |
+| What to bring | **Verified internally, poster conflicts** | Event doc: "All donated toys must be new and unwrapped"; accepted: board games, plush toys, action figures, art supplies, puzzles, sports equipment; avoid: used toys, realistic toy weapons, food/perishables. Poster: "new or slightly used". Captions follow the doc. |
+| "Our team is there to help" (post 2) | Internal | Event doc: "Staff and volunteers will be on-site to assist you." |
+| "annual Toy Drive" | **Cut** | Event doc wording; a claim about past years with no record. |
+| "Boys & Girls Club of America" | **Corrected** to "the Boys & Girls Club" | The national body is Boys & Girls Clubs of America (plural); which club receives isn't stated. |
+
 ## Checked outside
 
 | Claim or decision | Status | Source |
