@@ -15,6 +15,20 @@ const KIT = pathToFileURL(resolve(HERE, '../visual-set-2026-09-14')).href;
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const D = JSON.parse(readFileSync(join(HERE, 'data.json'), 'utf8'));
 const GOAL = D.goal, END = Date.UTC(2026, 11, 23);
+const PHOTOS = resolve(HERE, '../../brand/photos/Toy drive 2026');
+/* Real photos from the drive (Matthew 6 Nov: use these first). Crops are in the photo's pixels at the size it was viewed
+   (dw x dh). Each crop leaves out VAA's tablecloth logo, the 'Stop Veteran Suicide' signs and the donor tally clipboard
+   (client gear, and a Tier 2 number). The box's own printed poster stays in: it is the subject. */
+const PH = {
+  a: { file: '2026-11-02-rep-holding-box-a.jpeg', dw: 1659, dh: 2212, cx: 0, cy: 218, cw: 1659 },
+  b: { file: '2026-11-02-rep-with-box-on-table-b.jpeg', dw: 2212, dh: 1659, cx: 760, cy: 190, cw: 1097 },
+  c: { file: '2026-11-02-box-on-table-c.jpeg', dw: 2212, dh: 1659, cx: 560, cy: 0, cw: 1100 },
+  d: { file: '2026-11-03-rep-with-gift-box-d.jpeg', dw: 768, dh: 1024, cx: 0, cy: 80, cw: 768 },
+};
+function photoCss(k) {
+  const p = PH[k], sc = 952 / p.cw;
+  return `background:url('${pathToFileURL(join(PHOTOS, p.file)).href}') ${-p.cx * sc}px ${-p.cy * sc}px / ${p.dw * sc}px ${p.dh * sc}px no-repeat`;
+}
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const gap = (s) => `<var class="gap">[${esc(s)}]</var>`;            // a fact still to come
@@ -24,10 +38,10 @@ const PARTNER = 'With the Veterans Association of America';            // named 
 
 /* The 14 posts, Mondays and Wednesdays, clear of the Tue/Thu November set. */
 const POSTS = [
-  { n: 1, iso: '2026-11-09', time: '3:00 pm', slug: 'announce', kind: 'goal' },
-  { n: 2, iso: '2026-11-11', time: '3:00 pm', slug: 'where-to-drop-off', kind: 'events', head: 'Where to find the boxes' },
-  { n: 3, iso: '2026-11-16', time: '3:00 pm', slug: 'week-1', kind: 'tally', week: 'Week one' },
-  { n: 4, iso: '2026-11-18', time: '3:00 pm', slug: 'at-the-boxes', kind: 'photo' },
+  { n: 1, iso: '2026-11-09', time: '3:00 pm', slug: 'announce', kind: 'goal', photo: 'b' },
+  { n: 2, iso: '2026-11-11', time: '3:00 pm', slug: 'where-to-drop-off', kind: 'events', head: 'Where to find the boxes', photo: 'c' },
+  { n: 3, iso: '2026-11-16', time: '3:00 pm', slug: 'week-1', kind: 'tally', week: 'Week one', photo: 'a' },
+  { n: 4, iso: '2026-11-18', time: '3:00 pm', slug: 'at-the-boxes', kind: 'photo', photo: 'd' },
   { n: 5, iso: '2026-11-23', time: '3:00 pm', slug: 'week-2', kind: 'tally', week: 'Week two' },
   { n: 6, iso: '2026-11-25', time: '3:00 pm', slug: 'thanksgiving-table', kind: 'challenge' },
   { n: 7, iso: '2026-11-30', time: '3:00 pm', slug: 'week-3', kind: 'tally', week: 'Week three' },
@@ -108,7 +122,39 @@ function body(p) {
   }
 }
 
+/* Photo posts: the November layout B (photo on top, headline and line below). */
+function photoPage(p) {
+  const c = countFor(p), left = daysLeft(p.iso), cnt = c == null ? gap('count') : n(c);
+  const T = {
+    goal: ['Holiday toy drive', `${n(GOAL)} toys by <em>December 23.</em>`, `${esc(PARTNER)}. New, unwrapped toys, new clothing for kids, and holiday essentials.`, ['Drop-off boxes at our events', '12&ndash;6 pm']],
+    events: ['Holiday toy drive', 'Where to find <em>the boxes.</em>', D.events.length ? D.events.map((e) => esc(e.date + ', ' + e.place)).join(' &middot; ') : gap('event dates and places'), ['Every event', '12&ndash;6 pm']],
+    tally: [p.week, `${cnt} of ${n(GOAL)} <em>toys so far.</em>`, `${left} days left to reach the goal.`, ['Holiday toy drive', 'Ends Dec 23']],
+    photo: ['Holiday toy drive', 'Out at our <em>events.</em>', `${cnt} of ${n(GOAL)} toys so far, with ${left} days left.`, ['Holiday toy drive', 'Ends Dec 23']],
+  }[p.kind];
+  return `<!doctype html><html><head><meta charset="utf-8">
+  <link rel="stylesheet" href="${KIT}/_fonts.css"><link rel="stylesheet" href="${KIT}/_logo.css"><style>
+  * { box-sizing: border-box; margin: 0; } html, body { width: 1080px; height: 1350px; overflow: hidden; background: #0a0a0a; color: #f5f5f5; }
+  .top { position: absolute; top: 0; left: 64px; right: 64px; height: 150px; display: flex; align-items: center; justify-content: space-between; }
+  .top .wordmark { width: 210px; height: 58px; background: #fff; }
+  .tag { font: 700 24px Archivo, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #4abe4a; border: 2.5px solid #4abe4a; border-radius: 999px; padding: 12px 24px; }
+  .pic { position: absolute; top: 150px; left: 64px; width: 952px; height: 690px; ${photoCss(p.photo)}; }
+  .rule { position: absolute; top: 840px; left: 64px; width: 220px; height: 10px; background: #4abe4a; }
+  .panel { position: absolute; top: 884px; left: 64px; right: 64px; bottom: 52px; display: flex; flex-direction: column; }
+  h1 { font: 400 84px/1.02 Anton, 'Bahnschrift Condensed', sans-serif; text-transform: uppercase; margin-bottom: 18px; } h1 em { font-style: normal; color: #4abe4a; }
+  .sub { font: 500 31px/1.38 Archivo, sans-serif; color: #cfd3d0; }
+  .gap { font-style: normal; color: #f2b53a; font-family: Archivo, sans-serif; font-weight: 700; font-size: .6em; text-transform: none; vertical-align: middle; } .sub .gap { font-size: 31px; }
+  .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid #2b2f2c; padding-top: 18px; font: 600 28px Archivo, sans-serif; color: #cfd3d0; }
+  .foot b { font: 400 42px Anton, sans-serif; color: #4abe4a; letter-spacing: .02em; }
+</style></head><body>
+  <div class="top"><i class="wordmark"></i><span class="tag">${esc(T[0])}</span></div>
+  <div class="pic"></div><div class="rule"></div>
+  <div class="panel"><h1>${T[1]}</h1><div class="sub">${T[2]}</div>
+    <div class="foot"><span>${T[3][0]}</span><b>${T[3][1]}</b></div></div>
+</body></html>`;
+}
+
 function page(p) {
+  if (p.photo) return photoPage(p);
   const b = body(p);
   return `<!doctype html><html><head><meta charset="utf-8">
   <link rel="stylesheet" href="${KIT}/_fonts.css"><link rel="stylesheet" href="${KIT}/_logo.css"><style>

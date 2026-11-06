@@ -24,6 +24,26 @@
 4. **Weekly counts from a dated tally**: who counted, when. Each Monday post needs that week's number. I won't put in a figure without one.
 5. **Photos for post 4** from the first events (see the photo rules in the flags).
 
+## Photos (Matthew 6 Nov: use these first, before any graphic-only post)
+
+Four WhatsApp photos from the drive's first days, moved off the Desktop to `surge/brand/photos/Toy drive 2026/`:
+
+| File | Shows | Used in |
+|---|---|---|
+| `2026-11-02-rep-with-box-on-table-b.jpeg` | Rep beside the pink box on the table | Post 1 (announcement) |
+| `2026-11-02-box-on-table-c.jpeg` | The box on the table, shop window behind | Post 2 (where to drop off) |
+| `2026-11-02-rep-holding-box-a.jpeg` | Rep holding the box on the sidewalk | Post 3 (week one) |
+| `2026-11-03-rep-with-gift-box-d.jpeg` | Man holding a wrapped gift prop, downtown street | Post 4 |
+
+**What the crops leave out:** VAA's tablecloth logo, the "Stop Veteran Suicide" signs and the clipboard with a donor tally on it. All four photos have the tablecloth. The crops follow the no-client-gear rule (2026-10-05), and a sign-up tally is a Tier 2 number.
+
+**What the crops can't leave out: the box's own printed poster.** It carries Surge's and VAA's logos, the logos of Children's Hospital Colorado, Boys & Girls Club, Brent's Place and "individual families", and the line "Bring new or slightly used items". At post size the charity logos are small but recognisable. Three questions for you:
+1. **VAA's logo on the poster** is client branding in a photo. Is it OK for this campaign, given VAA is named in the text anyway?
+2. **The charity logos** say who benefits before each charity has confirmed with us. Did the office confirm them when it printed the poster? If so, the captions can name them too.
+3. **"New or slightly used"** on the poster vs "new, unwrapped" in the captions. Either the captions go back to the poster's wording, or the team swaps the poster.
+
+**Also to check:** where photo d was taken (a downtown street with a "General Store 45" sign). It should run only if it's one of this drive's events. Also check that the three people shown are OK being posted. Post 3 has a passer-by far in the background, too small to identify.
+
 ## The series at a glance
 
 | # | Date | Kind | Image | Holds on |
@@ -163,12 +183,12 @@ Hashtags on every post: `#ToyDrive #HolidayGiving #GiveBack #Colorado` (post 6 s
 
 ---
 
-## 4. Wed 18 Nov, 3:00 pm: the team at the boxes (needs a real photo)
+## 4. Wed 18 Nov, 3:00 pm: out at our events
 
-**Image:** `posts/toy-drive-04-at-the-boxes.png` is a placeholder. The slot takes one real photo from the first events. No stock photos and no generated pictures.
+**Image:** `posts/toy-drive-04-at-the-boxes.png`, photo d (man with the gift prop). Headline "Out at our events": the photo shows a gift prop, not a drop-off box, so it doesn't claim the boxes are filling.
 
 **Facebook caption:**
-> The boxes are filling up. This is the team at [EVENT] on [DATE].
+> Out at our events this month with the toy drive. This is [NAME or "our team"] at [EVENT] on [DATE].
 >
 > [ANECDOTE: one real thing from the box, e.g. what someone dropped off and why. Leave the slot empty rather than invent one.]
 >
