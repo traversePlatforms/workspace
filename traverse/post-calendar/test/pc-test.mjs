@@ -36,10 +36,12 @@ const OWN = { 'OWN-VAA': { id: '888000', name: 'VAA Page', instagram_business_ac
 let calls = [], failOn = {}, seq = 0; const reels = {};   /* reels: video id -> the address Meta was handed (Facebook Reels, 2026-11-05) */
 const tokenPage = (t) => PAGES.find((p) => p.access_token === t) || (OWN[t] ? { ...OWN[t], access_token: t } : null);
 const graph = http.createServer((req, res) => {
-  let b = ''; req.on('data', (d) => (b += d)); req.on('end', () => {
+  const parts = []; req.on('data', (d) => parts.push(d)); req.on('end', () => {
+    const raw = Buffer.concat(parts); const b = raw.toString('utf8');
     const u = new URL(req.url, 'http://x'); const path = u.pathname.replace(/^\/+/, '');
-    const q = Object.fromEntries(req.method === 'POST' ? new URLSearchParams(b) : u.searchParams);
-    calls.push({ m: req.method, path, q, h: req.headers });
+    const isRup = /^rup\//.test(path);
+    const q = Object.fromEntries(req.method === 'POST' && !isRup ? new URLSearchParams(b) : u.searchParams);
+    calls.push({ m: req.method, path, q, h: req.headers, body: isRup ? raw : null });
     const send = (o) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(o)); };
     const err = (m) => send({ error: { message: m + ' (token ' + q.access_token + ')', type: 'OAuthException' } });
     const tp = tokenPage(q.access_token);
@@ -57,7 +59,9 @@ const graph = http.createServer((req, res) => {
       if (q.upload_phase === 'finish') return reels[q.video_id] ? send({ success: true }) : err('nothing uploaded for ' + q.video_id);
       return err('bad phase');
     }
-    if ((m = /^rup\/(rv\d+)$/.exec(path)) && req.method === 'POST') { if (!tokenPage(String(req.headers.authorization || '').replace(/^OAuth /, ''))) return err('bad upload token'); if (!req.headers.file_url) return err('no file_url'); reels[m[1]] = req.headers.file_url; return send({ success: true }); }
+    if ((m = /^rup\/(rv\d+)$/.exec(path)) && req.method === 'POST') { if (!tokenPage(String(req.headers.authorization || '').replace(/^OAuth /, ''))) return err('bad upload token'); if (failOn.rupload) return send({ debug_info: { type: 'FileUrlProcessingError', message: 'test refusal' } });
+      if (raw.length) { if (String(req.headers.offset) !== '0' || Number(req.headers.file_size) !== raw.length) return send({ debug_info: { type: 'BadUpload', message: 'offset/file_size do not match the body' } }); reels[m[1]] = 'bytes:' + raw.length; return send({ success: true }); }
+      if (!req.headers.file_url) return err('no file_url'); reels[m[1]] = req.headers.file_url; return send({ success: true }); }
     if (/^rv\d+$/.test(path)) return send({ permalink_url: '/reel/' + path });
     if (/^c\d+$/.test(path)) return send({ status_code: 'FINISHED', id: path });
     if (/^m\d+$/.test(path)) return send({ permalink: 'https://ig.test/p/' + path });
@@ -341,7 +345,7 @@ console.log('video (2026-11-05)');
   const sv = state().posts[v.id];
   const fr = calls.filter((x) => x.path === '1418675127985724/video_reels'), up = calls.find((x) => /^rup\//.test(x.path)), igv = calls.find((x) => x.path === '17841460337871226/media');
   ok(sv.status === 'published' && fr.length === 2 && fr[0].q.upload_phase === 'start' && fr[1].q.upload_phase === 'finish' && fr[1].q.video_state === 'PUBLISHED' && fr[1].q.description === 'POV: a week of aerations.', 'Facebook gets it as a Reel: start, then publish with the caption');
-  ok(up && up.h.file_url === sv.images[0].url && /^OAuth PT-SIX/.test(up.h.authorization || '') && up.path === 'rup/' + fr[1].q.video_id, 'the video is handed to Meta\'s upload host by its address, with the Page token');
+  ok(up && !up.h.file_url && up.body && up.body.equals(MP4) && up.h.offset === '0' && up.h.file_size === String(MP4.length) && /^OAuth PT-SIX/.test(up.h.authorization || '') && up.path === 'rup/' + fr[1].q.video_id, 'the video\'s own bytes go to Meta\'s upload host (offset 0, file_size), with the Page token; no address to fetch (2026-11-06)');
   ok(!calls.some((x) => x.path === '1418675127985724/videos'), 'no plain Page video as well');
   ok(igv && igv.q.media_type === 'REELS' && igv.q.video_url === sv.images[0].url && igv.q.share_to_feed === 'true' && !igv.q.image_url, 'Instagram gets it as a Reel, shared to the feed');
   ok(sv.done.fb.link === 'https://www.facebook.com/reel/' + sv.done.fb.id, 'the Facebook link is made whole');
@@ -350,6 +354,20 @@ console.log('video (2026-11-05)');
   rv = await upV(ps.id, { w: 1080, h: 1920, sec: 11 }); ok(!rv.ok && /own post/.test(rv.error), 'a video cannot go into a photo set');
   const lg = await E.call('create', { client: 'sixfold', type: 'single', date: '2027-12-16', time: '15:00' });
   rv = await upV(lg.id, { w: 1080, h: 1920, sec: 120 }); ok(!rv.ok && /90 seconds/.test(rv.error), 'a video over 90 seconds is refused');
+  /* 2026-11-06: if the server's copy of the video is gone, the address is handed over instead (the old way), so the post still has a chance */
+  const fbk = await E.call('create', { client: 'sixfold', type: 'single', date: '2027-12-20', time: '15:00', targets: ['fb'], fb: 'Fallback video.' });
+  rv = await upV(fbk.id, { w: 1080, h: 1920, sec: 11 }); const fk = rv.post.images[0];
+  rv = await A.call('approve', { id: fbk.id }); ok(rv.ok, 'fallback video approved');
+  rmSync(join(SITE, 'public_html', PUB, 'media', fk.file));
+  calls = []; await runner('2027-12-20T22:01:00Z');
+  const up2 = calls.find((x) => /^rup\//.test(x.path));
+  ok(state().posts[fbk.id].status === 'published' && up2 && up2.h.file_url === fk.url && !(up2.body && up2.body.length), 'with the server copy missing, Meta is given the address instead');
+  /* a refusal from the upload host keeps Meta's own words and fails only Facebook */
+  const rf = await E.call('create', { client: 'sixfold', type: 'single', date: '2027-12-21', time: '15:00', targets: ['fb'], fb: 'Refused video.' });
+  rv = await upV(rf.id, { w: 1080, h: 1920, sec: 11 }); rv = await A.call('approve', { id: rf.id });
+  failOn.rupload = true; calls = []; await runner('2027-12-21T22:01:00Z'); failOn.rupload = false;
+  const rfp = state().posts[rf.id];
+  ok(rfp.status === 'failed' && /upload host said: test refusal \(FileUrlProcessingError\)/.test(JSON.stringify(rfp)), 'an upload-host refusal is kept in Meta\'s words and the post shows failed');
 }
 
 console.log('check (read-only)');

@@ -187,14 +187,26 @@ function pcGraph(string $method, string $path, array $f = []): array {
 }
 function pcErr(array $r): string { return isset($r['error']) ? (string) ($r['error']['message'] ?? 'error') : ''; }
 /* Facebook Reels (2026-11-05, Matthew: "lets do videos are reels for facebook"): the video goes to Meta's upload host, not the Graph host.
-   The middle of the three steps hands it the video's public address (header file_url); Meta fetches it from there. PC_RUPLOAD: test hook. */
+   The middle of the three steps sends the video's bytes (since 2026-11-06; before that it handed over the public address, header
+   file_url, and Meta's fetch failed twice). PC_RUPLOAD: test hook. */
 define('PC_RUPLOAD', (string) (getenv('PC_RUPLOAD') ?: 'https://rupload.facebook.com/video-upload/v21.0/'));
-function pcRupload(string $videoId, string $fileUrl, string $tok): array {
+function pcRupload(string $videoId, array $media, string $tok): array {
     pcTokensSeen($tok);
-    $ch = curl_init(PC_RUPLOAD . rawurlencode($videoId));
-    curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => '', CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 180, CURLOPT_CONNECTTIMEOUT => 20,
-        CURLOPT_HTTPHEADER => ['Authorization: OAuth ' . $tok, 'file_url: ' . $fileUrl]]);
-    $r = curl_exec($ch); $e = curl_error($ch); $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+    /* 2026-11-06: twice (5 Nov 5 pm and 10 pm) Meta's upload host failed to FETCH the video from its address (no request reached our
+       server; then "502 Server reset stream before response", FileUrlProcessingError), while Instagram fetched the same file fine. So the
+       bytes are now sent from the server's own copy (headers offset 0 + file_size, body = the file, streamed, not held in memory). The
+       address (file_url) is only a fallback for when the copy is missing. */
+    $path = PC_MEDIA_DIR . '/' . basename((string) ($media['file'] ?? ''));
+    $ch = curl_init(PC_RUPLOAD . rawurlencode($videoId)); $fh = null;
+    $opts = [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 600, CURLOPT_CONNECTTIMEOUT => 20];
+    if (($media['file'] ?? '') !== '' && is_file($path) && ($size = filesize($path)) > 0 && ($fh = fopen($path, 'rb'))) {
+        $opts += [CURLOPT_UPLOAD => true, CURLOPT_CUSTOMREQUEST => 'POST', CURLOPT_INFILE => $fh, CURLOPT_INFILESIZE => $size,
+            CURLOPT_HTTPHEADER => ['Authorization: OAuth ' . $tok, 'offset: 0', 'file_size: ' . $size, 'Content-Type: application/octet-stream', 'Expect:']];
+    } else {
+        $opts += [CURLOPT_POST => true, CURLOPT_POSTFIELDS => '', CURLOPT_HTTPHEADER => ['Authorization: OAuth ' . $tok, 'file_url: ' . (string) ($media['url'] ?? '')]];
+    }
+    curl_setopt_array($ch, $opts);
+    $r = curl_exec($ch); $e = curl_error($ch); $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch); if ($fh) fclose($fh);
     if ($r === false) return ['error' => ['message' => 'no answer from Meta\'s upload host: ' . pcScrub($e)]];
     /* 2026-11-05: the first real Reel (p36f0744116) failed here with no reason kept. Keep Meta's own words: rupload reports errors as
        debug_info {type, message}, not Graph's error {message}; failing that, the HTTP status and the start of the reply (tokens scrubbed). */

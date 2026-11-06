@@ -126,11 +126,11 @@ function pcSendFacebook(array $p, array $tg): array {
         /* the album exists now, so Facebook counts as done either way (a retry would make a second album); missing photos are the error */
         return $bad ? ['done' => $done, 'error' => 'the album went up with ' . $n . ' of ' . count($imgs) . ' photos; add the rest on Facebook by hand (' . implode('; ', $bad) . ')'] : ['done' => $done];
     }
-    if (pcIsVideo($imgs[0])) {   /* a video goes up as a Facebook Reel (Matthew 2026-11-05): start an upload, hand Meta the video's address, publish */
+    if (pcIsVideo($imgs[0])) {   /* a video goes up as a Facebook Reel (Matthew 2026-11-05): start an upload, send Meta the video, publish */
         $s = pcGraph('POST', $tg['page'] . '/video_reels', ['upload_phase' => 'start', 'access_token' => $tok]);
         if ($e = pcErr($s)) return ['error' => 'the Reel upload did not start: ' . $e];
         $vid = (string) ($s['video_id'] ?? ''); if ($vid === '') return ['error' => 'the Reel upload did not start: no video id came back'];
-        $u = pcRupload($vid, (string) $imgs[0]['url'], $tok);
+        $u = pcRupload($vid, $imgs[0], $tok);   /* sends the file's bytes from the server's copy (2026-11-06) */
         if ($e = pcErr($u)) return ['error' => 'the video was not handed to Facebook: ' . $e];
         $f = pcGraph('POST', $tg['page'] . '/video_reels', ['upload_phase' => 'finish', 'video_id' => $vid, 'video_state' => 'PUBLISHED', 'description' => (string) $p['fb'], 'access_token' => $tok]);
         if ($e = pcErr($f)) return ['error' => 'the Reel was not published: ' . $e];
