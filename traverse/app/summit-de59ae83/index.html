@@ -2552,7 +2552,10 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .handaddr label{display:grid;gap:4px;font-weight:700;font-size:13.5px;margin:10px 0 0}.handaddr input{font:15px var(--sans);padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}.handaddr .save{margin-top:12px}
   .hrow small{display:block;flex-basis:100%;color:var(--soft);font-size:12.5px;font-weight:500}
   .qqsched{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:50px;margin:0 0 12px;padding:10px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:700 15px var(--sans);cursor:pointer;text-align:left}.qqsched:hover{border-color:var(--accent)}
-  .qqwho{position:relative}.qqnew{position:absolute;top:10px;right:12px;min-height:34px;padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}.qqnew:hover{border-color:var(--accent)}
+  /* Start a new search takes the box's first row, at the right, and the heading follows below it (overnight check 2026-11-07: pinned
+     absolutely it sat on top of "Who it's for (optional, not saved)" at every width, phone to desktop, hiding half the heading; the box is
+     a grid, so a float would not do) */
+  .qqwho{position:relative}.qqnew{justify-self:end;width:auto;margin:0 0 -4px;min-height:34px;padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}.qqnew:hover{border-color:var(--accent)}
   .qqwho .lnk,.qqsize{background:none;border:0;padding:4px 0;margin:4px 0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer;justify-self:start;text-align:left}
   .pullbox{display:grid;gap:8px;margin:8px 0}.pullbox .row2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px}.pullbox input{min-width:0;font:15px var(--sans);padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}.pullbox .save{justify-self:start}
   .hpmap{min-height:240px;margin:10px 0}
