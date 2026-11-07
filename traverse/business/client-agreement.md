@@ -121,15 +121,15 @@ The Client will not, and will not let anyone else:
 **9.2 Seats.** One plan per company. Each plan includes one admin account plus a number of other Authorized Users (Duo 1, Team up to 5, Company up to 12; more than 12 as stated on the Order Form). Each Authorized User beyond that is an extra Seat at the Order Form price. To add or remove Seats, the Client asks Traverse at **billing@traverseplatforms.com**; Seats are not changed automatically. Added Seats are billed pro-rata for the rest of the billing period, and removed Seats come off from the next bill. If more people can sign in than the Client has paid for, Traverse may notify the Client and bill the extra Seats from the date they were added. Booking several plans to get extra Seats, or other abuse of plans and Seats, may lead to suspension under §11 or termination under §10.3, without a refund.
 
 
-**9.3 Setup and the money-back guarantee.** There is no free trial. The first payment is charged when the Client subscribes. Traverse then sets up the Client's Install (its towns, branding, sign-in codes, prices and terms) and tells the Client the day the Install is live (the **"Go-Live Date"**). If the Client is not satisfied, it may cancel by email to **billing@traverseplatforms.com** at any time before the Go-Live Date or within 7 days after it, and Traverse will refund that first payment in full and end the subscription. The guarantee applies once per client, to its first subscription. Traverse makes all refunds, to the payment method used.
+**9.3 Setup and the free trial.** The Client gives a payment method when it subscribes, and nothing is charged then. Traverse sets up the Client's Install (its towns, branding, sign-in codes, prices and terms) and tells the Client the day the Install is live (the **"Go-Live Date"**). The 7 days from the Go-Live Date are free (the **"Free Trial"**). The first payment is charged when the Free Trial ends, and the subscription then continues under §10.2, unless the Client cancels before the Free Trial ends, by email to **billing@traverseplatforms.com** or, where the Install has it, in the app (Setup › Billing). If the Client cancels before the Go-Live Date or during the Free Trial, nothing is charged and the subscription ends. The Free Trial applies once per client, to its first subscription; a later subscription is charged when it starts.
 
 **9.4 Late payment.** If a payment fails or is late, Traverse will notify the Client. If it is not paid within 14 days of that notice, Traverse may suspend the Service under §11 until payment is made.
 
 **9.5 Taxes.** Fees exclude taxes. The Client pays any sales, use or similar taxes on its purchase, other than taxes on Traverse's income.
 
-**9.6 Price changes.** Traverse may change its prices for any renewal by giving at least 30 days' notice before the renewal date. For a founding client, the list price on its Order Form is locked in: it does not increase while the subscription continues without a break. The founding-client discount itself lasts only for the period stated on the Order Form (the first 12 months); after that the Client pays that locked-in list price. A founding client also keeps every feature of the Service its plan includes, at no extra charge, while the subscription continues without a break. If the subscription ends and the Client later subscribes again, the terms and prices current at that time apply.
+**9.6 Price changes.** Traverse may change its prices for any renewal by giving at least 30 days' notice before the renewal date. For a founding client, the list price on its Order Form is locked in: it does not increase while the subscription continues without a break. The founding-client discount itself lasts only for the period stated on the Order Form (the first 12 months of billing, from the end of the Free Trial); after that the Client pays that locked-in list price. A founding client also keeps every feature of the Service its plan includes, at no extra charge, while the subscription continues without a break. If the subscription ends and the Client later subscribes again, the terms and prices current at that time apply.
 
-**9.7 Refunds.** Fees are non-refundable except as this Agreement expressly provides (§2.6, §9.3, §10.4, §14.1), and except a charge made by mistake that the Client reports to **billing@traverseplatforms.com** within 60 days.
+**9.7 Refunds.** Fees are non-refundable except as this Agreement expressly provides (§2.6, §10.4, §14.1), and except a charge made by mistake that the Client reports to **billing@traverseplatforms.com** within 60 days.
 
 
 ### 10. Term and ending
@@ -241,15 +241,15 @@ Traverse will give notice before suspending where practical, will limit the susp
 | **Seats** | [ ] (people beyond those the plan includes; changed by asking Traverse at billing@traverseplatforms.com) |
 | **Billing** | [Monthly / Yearly], in advance, by card through Stripe |
 | **Fees** | [Duo $99 a month or $79 a month billed yearly / Team $249 a month or $199 billed yearly, extra people $45 or $35 each / Company $549 a month or $439 billed yearly, extra people $39 or $29 each]. |
-| **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): the founding prices on this Order Form (25% off, rounded to whole dollars) for the first 12 months, and the list price on this Order Form is locked in, with every feature the plan includes, for as long as the subscription continues without a break (§9.6) |
-| **Setup and guarantee** | No free trial. Install set up after the first payment; 7-day money-back guarantee from the Go-Live Date (§9.3) |
+| **Founding client** | [Yes / No]. If yes (the company signs up within a year of Traverse's first paying client): the founding prices on this Order Form (25% off, rounded to whole dollars) for the first 12 months of billing after the Free Trial, and the list price on this Order Form is locked in, with every feature the plan includes, for as long as the subscription continues without a break (§9.6) |
+| **Setup and free trial** | Payment method taken at sign-up; nothing charged until the Free Trial ends. Install set up after sign-up; 7 days free from the Go-Live Date, then billed unless the Client cancels before then (§9.3) |
 | **Start date** | [ ] |
 | **Initial Subscription Term** | [1 month / 12 months], renewing under §10.2 |
 | **Install address** | Provided by Traverse at setup |
 | **Optional features** (Client's own accounts and cost) | Texting (Twilio) · JobNimbus · Phone lookups · Deposits (Square, Stripe or the Client's own pay links) |
 | **Special terms** | [None] |
 
-This Order Form is governed by the Traverse Subscription Agreement version 3, dated 29 October 2026, which the Client has read and accepts.
+This Order Form is governed by the Traverse Subscription Agreement version 4, dated 6 November 2026, which the Client has read and accepts.
 
 Signed for **Traverse Platforms LLC**: ______________________ Name: Matthew Sharpe Title: Owner Date: ________
 
