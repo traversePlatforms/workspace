@@ -126,6 +126,8 @@ deploy.
 7. **Example Scheduling Spreadsheet** (Google Sheet in the share root) came from Bryce's Houston
    business. It may hold that business's customer names and phone numbers, and the app now has
    Jen's Schedule. Left in place because Jen may still open it. Matthew decides: keep, or archive.
+   **6 Nov: archived.** Matthew asked that the share hold only what the team needs to run the business, so it moved to
+   `_Archive (outdated 2026-10-31)/` (not deleted). The same day all 25 files were re-checked against a fresh build: identical.
 8. The event sign-up sheet footer reads "Englewood, Colorado" (Matthew's 29 Oct choice); the
    agreements carry the Monument notice address. Not a defect, just noted.
 

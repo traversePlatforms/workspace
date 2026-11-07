@@ -14,7 +14,7 @@ Traverse is a territory sales platform, built in Colorado, for roofing, lawn and
 
 ## Your Story (484 characters)
 
-I'm Matthew. I built Traverse in Colorado for companies that sell door to door. It puts the whole day in one app: the homes in your territory, calls and follow-ups, quotes signed on the homeowner's phone, the job schedule and the office. It works offline, in English or Spanish. We've mapped more than 1.2 million Colorado homes, with the facts for your trade. Every plan has every feature and a 7-day money-back guarantee. Book a demo at traverseplatforms.com or call (303) 596-9515.
+I'm Matthew. I built Traverse in Colorado for companies that sell door to door. It puts the whole day in one app: the homes in your territory, calls and follow-ups, quotes signed on the homeowner's phone, the job schedule and the office. It works offline, in English or Spanish. We've mapped more than 1.2 million Colorado homes, with the facts for your trade. Every plan has every feature and starts with 7 days free once your app is live. Book a demo at traverseplatforms.com or call (303) 596-9515.
 
 ## First, longer Your Story (too long for the 500 limit; kept for the cut lines)
 
@@ -24,7 +24,7 @@ It puts the whole day in one app: the homes in your territory with what you need
 
 We've mapped more than 1.2 million Colorado homes, and each trade gets the facts it needs: hail at the house and roof age for roofers, lawn size for lawn and landscape, sun-facing roof area for solar.
 
-Every plan has every feature and your logo, and comes with a 7-day money-back guarantee. You deal with me directly.
+Every plan has every feature and your logo, and starts with 7 days free once your app is live. You deal with me directly.
 
 Book a demo at traverseplatforms.com or call (303) 596-9515.
 
@@ -63,7 +63,7 @@ Book a demo at traverseplatforms.com or call (303) 596-9515.
 | Works with no signal | Homepage "Works offline" and FAQ | Verified |
 | Hail at the house, roof age, lawn size, sun-facing roof area | Homepage trade cards (Roofing, Lawn & Landscape, Solar) | Verified |
 | Every plan has every feature, with your logo | Homepage pricing and FAQ | Verified |
-| 7-day money-back guarantee on every plan | Homepage pricing line; agreement v2 (attorney-approved 28 Oct) | Verified |
+| 7 days free on every plan, from go-live (replaced the money-back guarantee 6 Nov) | Homepage pricing line; agreement v4 (6 Nov) | Verified 6 Nov |
 | Phone (303) 596-9515 | Traverse-only number since 13 Oct | Verified |
 | hello@traverseplatforms.com | Homepage FAQ | Verified |
 | Nextdoor field names (Business info, Your Story) | help.nextdoor.com "Edit your business page information" | Verified 31 Oct |

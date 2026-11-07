@@ -14,7 +14,7 @@ I'm Matthew, a Colorado founder. I built Traverse, an all-in-one app for roofing
 
 Every house card shows its hail history, roof size and pitch, an aerial photo of the roof, year built and owner of record, so your reps knock the best doors first.
 
-I'm offering founding pricing to small Colorado roofers, from $59 a month, with a 7-day money-back guarantee. Would you be open to a 15-minute demo of your area? traverseplatforms.com/demo
+I'm offering founding pricing to small Colorado roofers, from $59 a month, with 7 days free once your app is live. Would you be open to a 15-minute demo of your area? traverseplatforms.com/demo
 
 Matthew
 (303) 596-9515
@@ -36,6 +36,6 @@ Hi {name}, I'm Matthew. I built Traverse here in Colorado: one app for roofing c
 | Door maps, CRM, quotes with signatures and deposits, crews, office | Approved roofing template (Prospect Desk, 30 Oct); traverseplatforms.com | Verified |
 | Hail history, roof size and pitch, aerial photo, year built, owner of record on the house card | Approved roofing template; homepage Roofing card | Verified |
 | From $59 a month founding | Homepage pricing: Duo $59/month founding, billed yearly | Verified 31 Oct |
-| 7-day money-back guarantee | Homepage pricing; agreement v2 | Verified |
+| 7 days free from go-live | Homepage pricing; agreement v4 | Verified 6 Nov |
 | 15-minute demo at traverseplatforms.com/demo | Approved template | Verified |
 | (303) 596-9515 | Traverse-only number | Verified |

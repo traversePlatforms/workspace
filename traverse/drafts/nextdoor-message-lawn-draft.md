@@ -14,7 +14,7 @@ I'm Matthew, a Colorado founder. I built Traverse, an all-in-one app for lawn an
 
 Every house card shows the lawn's size in square feet, so your reps know which doors are worth knocking, and a quote comes straight from that size and your own prices, sent from your phone.
 
-I'm offering founding pricing to small Colorado lawn companies, from $59 a month, with a 7-day money-back guarantee. Would you be open to a 15-minute demo of your area? traverseplatforms.com/demo
+I'm offering founding pricing to small Colorado lawn companies, from $59 a month, with 7 days free once your app is live. Would you be open to a 15-minute demo of your area? traverseplatforms.com/demo
 
 Matthew
 (303) 596-9515
@@ -42,5 +42,5 @@ The lawn wording fits them less well. Swap the second paragraph for: "Every hous
 | Lawn size in square feet on each house card | Approved lawn template; homepage Lawn & Landscape card | Verified |
 | Quote from lawn size and own prices, sent from the phone | Approved lawn template | Verified |
 | Property line on the photo, trees close to the house | Homepage Lawn & Landscape card | Verified |
-| From $59 a month founding; 7-day money-back guarantee | Homepage pricing; agreement v2 | Verified 31 Oct |
+| From $59 a month founding; 7 days free from go-live | Homepage pricing; agreement v4 | Verified 6 Nov |
 | 15-minute demo, traverseplatforms.com/demo; (303) 596-9515 | Approved templates; Traverse-only number | Verified |

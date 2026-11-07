@@ -24,7 +24,7 @@ I'm Matthew. I built Traverse here in Colorado: a field-sales app for lawn and l
 - The town's watering days, so you have an opener at the door
 - A quote from that lawn size and your own prices, sent from your phone
 
-A client has had success with it, and I'm opening it to small companies at a price a start-up can carry: Duo is $59 a month for your first year as a founding company (25% off, billed yearly), then $79, locked in for as long as you stay. No setup fee, and a 7-day money-back guarantee from the day your app is live.
+A client has had success with it, and I'm opening it to small companies at a price a start-up can carry: Duo is $59 a month for your first year as a founding company (25% off, billed yearly), then $79, locked in for as long as you stay. No setup fee, and 7 days free once your app is live.
 
 You'd deal with me directly, and in return for the founding price I'd ask for your honest feedback on what to build next.
 
@@ -58,8 +58,8 @@ pricing section, 2026-10-30) and `/cancellation/`.
 | "A client has had success with it" | The only proof wording allowed (Matthew 29 Oct). No client named, no trade named, no "daily" | OK |
 | "Duo is $59 a month for your first year as a founding company (25% off, billed yearly), then $79" | Pricing page Duo card (Solo until the evening of 30 Oct): "Founding price ~~$79~~ $59 / month ... Billed yearly. 25% off your first 12 months, then $79. Month to month: ~~$99~~ $74." | OK |
 | "locked in for as long as you stay" | Pricing page: "Your price is locked in, and you keep every feature, for as long as you stay with us. If you leave and come back, current terms apply." (the $79 is what is locked, not the $59) | OK |
-| "No setup fee" | Pricing page: "No setup fee, and a 7-day money-back guarantee on every plan." | OK |
-| "7-day money-back guarantee from the day your app is live" | Pricing page FAQ and `/cancellation/`; the same line is in the roofing template | OK |
+| "No setup fee" | Pricing page: "No setup fee." (6 Nov: the money-back guarantee is replaced by 7 days free from go-live) | OK |
+| "7 days free once your app is live" | Pricing page and `/cancellation/` (6 Nov, agreement v4) | OK |
 | "You'd deal with me directly" | Every plan includes "A set-up call and a first-week check-in" (pricing page); Matthew is the owner and the only person at Traverse (signature "Owner, Traverse Platforms LLC"). The first cut spelled this out ("I do the set-up call and the first-week check-in myself"); cut for length | OK |
 | "In return for the founding price I'd ask for your honest feedback" | Matthew's direction (30 Oct): founding price in exchange for feedback. An ask, not a claim | OK |
 | "15-minute demo (traverseplatforms.com/demo)" | `/demo/` page exists; the same line is in the roofing template | OK |
@@ -93,7 +93,7 @@ Subject: Colorado lawn map for {company}
 
     Your crew works the best doors first, and the office runs the pipeline, quotes, signed agreements with deposits and the jobs board from the same app.
 
-    I'd be glad to show you your area in a 15-minute demo (traverseplatforms.com/demo). Every plan has a 7-day money-back guarantee from the day your app is live.
+    I'd be glad to show you your area in a 15-minute demo (traverseplatforms.com/demo). every plan starts with 7 days free from the day your app is live.
 
     If you start with us now, you'd get 25% off your first year, and your price is locked in for life as long as you're with us.
 
