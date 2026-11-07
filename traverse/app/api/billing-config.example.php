@@ -41,12 +41,18 @@ return [
         'uplift'      => ['month' => 'price_...', 'year' => 'price_...'],
         'addon'       => ['month' => 'price_...', 'year' => 'price_...'],
     ],
-    // A founding company: founding_pct off the whole plan for 12 months (a coupon made per checkout). No trial: the card is charged at
-    // checkout, the app is set up within setup_days business days, and the money-back guarantee runs guarantee_days from go-live (2026-10-27).
-    'founding'        => false,
-    'founding_pct'    => 25,
-    'setup_days'      => 2,
-    'guarantee_days'  => 7,
+    // A founding company: founding_pct off the whole plan for 12 months (a coupon made per checkout). The free trial (2026-11-06): the card
+    // is taken at checkout, nothing is charged; free_days free from go-live (checkout opens the trial at free_days; Release to client only
+    // ever extends it to go-live + free_days). While not live, the daily sweep keeps the trial setup_push_days ahead and cancels with no
+    // charge setup_cancel_days after sign-up. The app is set up within setup_days business days. Traverse's own Refund and cancel runs until
+    // refund_days after the trial. trial_days and guarantee_days are old keys and are no longer read.
+    'founding'          => false,
+    'founding_pct'      => 25,
+    'free_days'         => 7,
+    'setup_days'        => 2,
+    'setup_push_days'   => 3,
+    'setup_cancel_days' => 14,
+    'refund_days'       => 7,
     // Where Stripe sends people back after paying or managing billing. Empty = the app page they came from.
     'return_url'      => '',
 ];

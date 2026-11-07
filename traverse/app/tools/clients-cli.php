@@ -6,7 +6,8 @@ declare(strict_types=1);
  *   php traverse-tools/clients.php regen [id]        remake each client's page folder and API files from its edition's template
  *                                                    (deploy-app.sh runs this after every deploy, so clients get every fix with the editions)
  *   php traverse-tools/clients.php relink [id]       link each client's towns again (new towns in its radius appear) and send the reminders to
- *                                                    companies that paid but never filled in the welcome page. Cron, once a day:
+ *                                                    companies that paid but never filled in the welcome page; keeps their free trial
+ *                                                    3 days ahead, cancelling with no charge 14 days after sign-up (2026-11-06). Cron, once a day:
  *                                                    30 4 * * *  php /home/customer/www/traverseplatforms.com/traverse-tools/clients.php relink
  *   php traverse-tools/clients.php area <id> <miles> [<lat> <lon> <state>]   change a client's radius (or place it by hand), then relink
  *   php traverse-tools/clients.php setup <file with the whsec_ secret>        make traverse-shared/clients/billing-config.php from TraverseRoofing's
@@ -35,6 +36,9 @@ switch ($cmd) {
         foreach ($only() as $cid => $e) { if (($e['status'] ?? '') !== 'live') continue; $lk = tcLock((string) $cid); $r = tcLinkTowns((string) $cid); if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
             echo $cid . ' ' . (isset($r['error']) ? 'FAILED: ' . $r['error'] : $r['status'] . ', ' . $r['towns'] . ' towns, ' . $r['doors'] . ' homes, ' . $r['made'] . ' new links, ' . $r['removed'] . ' removed' . ($r['failed'] ? ', ' . $r['failed'] . ' FAILED' : '') . ($r['unknownKinds'] ? ', not linked (new kinds): ' . implode(' ', $r['unknownKinds']) : '')) . "\n"; }
         if ($arg === '') echo 'reminders sent: ' . tcRemind() . "\n";
+        /* nobody is charged without an app (2026-11-06): website sign-ups whose welcome page is not finished keep their free trial 3 days ahead,
+           and are cancelled with no charge 14 days after sign-up (tcTrialSweepPending; installs already made: sixfold-tools/setup-trial-sweep.php) */
+        if ($arg === '') { $ts = tcTrialSweepPending(); echo 'unfinished sign-ups (free trial): ' . $ts['push'] . ' pushed, ' . $ts['cancel'] . ' cancelled, ' . $ts['error'] . " failed\n"; }
         exit(0);
     case 'link':   /* one company's towns now, made or not yet made (the welcome page's area step does this by itself) */
         if (!tcCidOk($arg)) { fwrite(STDERR, "usage: clients.php link <id>\n"); exit(1); }

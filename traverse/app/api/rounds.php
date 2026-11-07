@@ -245,7 +245,7 @@ function edWords(string $s): string {
 }
 /* the terms each person accepts (2026-10-29): bump a version when its text changes and everyone is asked again. See "the terms" further down. */
 const TERMS_VERSION = '2026-10-29';       /* Terms of Use v2 + Privacy Policy, as published 29 October 2026 */
-const AGREEMENT_VERSION = '2026-10-29';   /* the Subscription Agreement v3 (admins), as published 29 October 2026 */
+const AGREEMENT_VERSION = '2026-11-06';   /* the Subscription Agreement v4 (admins): the free trial replaces the money-back guarantee, 6 November 2026 (v3: 29 October) */
 const TERMS_LINKS = ['terms' => 'https://traverseplatforms.com/terms-of-use/', 'privacy' => 'https://traverseplatforms.com/privacy/', 'agreement' => 'https://traverseplatforms.com/terms/'];
 /* who sees the card's trade parts (2026-10-08): admins, and everyone signed in where the company sets features.crew (the editions,
    and Sixfold for its yard parts). These began as an admin-only preview inside Sixfold. Office tools (accounts, JobNimbus) stay admin. */
@@ -1838,7 +1838,7 @@ $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 const PRACTICE_SHUT = ['squarehook', 'billinghook', 'synchook', 'smsin', 'sitelead', 'fbpoll', 'metapoll', 'metasetup', 'msgpreview', 'clickuppoll',
     'squarenightly', 'squaresweep', 'payset', 'squareoauth', 'mailoauth', 'mailset', 'fboauth', 'fbleadsset', 'fbleadstoken', 'fbpollnow', 'fbforms',
     'jobberoauth', 'syncconn', 'syncrun', 'synctest', 'synchookset', 'syncsheet', 'syncsheetset', 'jnset', 'jnsync', 'billingcheckout', 'billingportal',
-    'billingrefund', 'billinglive', 'billinglivecli', 'skiptrace', 'skippick', 'prcimport', 'hop', 'hopin', 'installs', 'clients', 'startin'];
+    'billingrefund', 'billinglive', 'billinglivecli', 'trialsweep', 'skiptrace', 'skippick', 'prcimport', 'hop', 'hopin', 'installs', 'clients', 'startin'];
 if (PRACTICE && in_array($action, PRACTICE_SHUT, true)) fail('Not in the practice copy: it never connects to outside accounts or services.', 404);
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
 if (($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true)) || in_array($action, ['clickuppoll', 'metapoll'], true))   /* the polls run as GET too */
@@ -2485,7 +2485,7 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fbpoll') $sessi
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE') && in_array($action, ['regions', 'regionsig'], true)) {
     $session = ['n' => 'Command line', 'r' => (string) SIXFOLD_WARM_ROLE, 'c' => ''];
 }
-/* "Mark live" (Release to client since 2026-10-29) from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, the guarantee starts */
+/* "Mark live" (Release to client since 2026-10-29) from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, its free days start (2026-11-06) */
 /* the weekly fuel prices (2026-10-30, the fuel cost; see prcFuel): tools/fuel-prices.php, started by the hourly morning email, asks EIA when
    a new week is due (force=1: now, at most every 10 minutes). The copy is shared by every install on the host, so one install asks. */
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fuelcron') {
@@ -2497,7 +2497,24 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'caresweep') $se
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli') {
     $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
     $b = billingLoad();
-    out($e === null ? ['ok' => true, 'liveAt' => $b['live_at'] ?? null] : ['ok' => false, 'error' => $e]);
+    out($e === null ? ['ok' => true, 'liveAt' => $b['live_at'] ?? null, 'trialEnd' => billingTrialUntil($b), 'trialErr' => $b['trial_err']['why'] ?? null] : ['ok' => false, 'error' => $e]);
+}
+/* nobody is charged without an app (Matthew 2026-11-06): once a day (sixfold-tools/setup-trial-sweep.php, started by morning-email.php at the
+   4 am run), a trialing plan that is not live yet has its trial pushed to stay 3 days ahead; 14 days after sign-up with no go-live it is
+   cancelled in Stripe with no charge, and Matthew is emailed (also when Stripe refused a push or a cancel). billing.php billingSetupSweep. */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'trialsweep') {
+    if (!feature('billing')) out(['ok' => true, 'did' => '', 'why' => 'billing off']);
+    $tsNow = isset($_GET['now']) && ctype_digit((string) $_GET['now']) ? (int) $_GET['now'] : null;   /* the test copy only */
+    $r = billingSetupSweep(billingConfig(__DIR__), $tsNow);
+    if (in_array($r['did'], ['cancel', 'error'], true)) {
+        $co = company(); $bb = billingLoad();
+        $r['mailed'] = travMail(seatNoteTo(), 'Traverse: ' . ($r['did'] === 'cancel' ? 'sign-up cancelled, no app after 14 days: ' : 'free trial NOT pushed: ') . (string) $co['name'],
+            ($r['did'] === 'cancel'
+                ? "A company signed up but its app was never released, so its free trial would have run out with no app. The subscription was cancelled in Stripe; nothing was charged.\n\nWhy: " . $r['why']
+                : "A company that is not live yet is still on a trial that could run out before its app is released.\n\nWhat went wrong: " . $r['error'])
+            . "\n\nCompany: " . (string) $co['name'] . "\nInstall: " . COOKIE . ' (' . (string) billingConfig(__DIR__)['install'] . ")\nSubscription: " . (string) ($bb['subscription'] ?? '') . "\nSigned up: " . (!empty($bb['paid_at']) ? date('j M Y', (int) $bb['paid_at']) : '?') . "\n")['ok'];
+    }
+    out(['ok' => true] + $r);
 }
 
 /* ---- calendar sync (Matthew 2026-10-11): a person's calendar as an iCalendar feed ----
@@ -4281,8 +4298,8 @@ function billLockFor(string $r): ?array { return $r === 'super' ? null : billLoc
 function billLockWords(array $L, bool $admin): string {
     if (!$admin) return $L['lock'] === 'billing' ? 'Property data is paused: your company\'s account needs attention.' : 'Your company\'s app is being set up. Your admin will let you know when it\'s ready.';
     if ($L['lock'] === 'billing') return 'Property data is paused until the plan is paid. Update the card in Billing and it opens again at once. Your pipeline, customers and jobs stay open.';
-    return $L['phase'] === 'unpaid' ? 'Properties, maps and lists open once your plan is paid and your app is set up: up to 2 business days, often sooner.'
-        : 'Properties, maps and lists open when your app is released: up to 2 business days after paying, often sooner.';
+    return $L['phase'] === 'unpaid' ? 'Properties, maps and lists open once you pick a plan and your app is set up: up to 2 business days, often sooner.'
+        : 'Properties, maps and lists open when your app is released: up to 2 business days after you sign up, often sooner.';   /* the free trial, nothing paid yet (2026-11-06) */
 }
 /** a lock for payment is told once per lapse: Traverse by email, the client's admins in their alerts ("Your admin has been told") */
 function billLockNote(array $L): void {
@@ -13163,22 +13180,23 @@ if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billingli
     $bc = billingConfig(__DIR__);
     $rows = acctRows($basePeople, $acct, $sessionKey);
     /* exempt: never locked (Traverse's own installs); more: the extra time given, for the super admin's eyes (2026-10-29) */
-    $billMore = function () use ($isSuper) { return ['exempt' => feature('billexempt'), 'more' => $isSuper ? array_slice((array) (billingLoad()['more'] ?? []), -5) : []]; };
+    $billMore = function () use ($isSuper) { $bl = billingLoad(); return ['exempt' => feature('billexempt'), 'more' => $isSuper ? array_slice((array) ($bl['more'] ?? []), -5) : [],
+        'trialErr' => $isSuper && !empty($bl['trial_err']['why']) ? (string) $bl['trial_err']['why'] : null]; };   /* the free trial not moved in Stripe at go-live (2026-11-06), Traverse's eyes only */
     if ($action === 'billing') seatWatch();   /* the note to Traverse when the install has gone over (2026-10-29) */
     if ($action === 'billing') out(['ok' => true, 'super' => $isSuper] + $billMore() + billingState($bc, $rows));
     if (!$isPost) fail('POST required', 405);
-    /* go-live and the money-back guarantee (2026-10-27): only Traverse (the super admin) marks an app live or refunds. "Release to client"
+    /* go-live (2026-10-27; since 2026-11-06 it starts the free trial): only Traverse (the super admin) marks an app live or refunds. "Release to client"
        (2026-10-29) is the same go-live: it opens the whole app to the client's team at once. "Give more time" moves the past-due lock. */
     if ($action === 'billinglive' || $action === 'billingrefund' || $action === 'billingmore') {
         if (!$isSuper) fail('Only Traverse does this.', 403);
         if ($action === 'billinglive') { $e = billingMarkLive($bc, $me); if ($e !== null) fail($e); out(['ok' => true, 'super' => true] + $billMore() + billingState($bc, $rows)); }
         if ($action === 'billingmore') { $e = billingMoreTime((int) ($body['days'] ?? 0), $me); if ($e !== null) fail($e); out(['ok' => true, 'super' => true] + $billMore() + billingState($bc, $rows)); }
         if (!billingConfigured($bc)) fail('Billing is not set up yet: the Stripe keys are missing.', 503);
-        if (!billingRefundable($bc, billingLoad())) fail('Refunds are only for a paid plan within the money-back guarantee.');
+        if (!billingRefundable($bc, billingLoad())) fail(BILLING_REFUND_WINDOW);
         if (empty($body['confirm'])) fail('Confirm the refund first.');
         $r = billingRefundCancel($bc, $me);
         if (isset($r['error'])) fail($r['error'], 502);
-        out(['ok' => true, 'super' => true, 'amount' => $r['amount']] + billingState($bc, $rows));
+        out(['ok' => true, 'super' => true, 'amount' => $r['amount'], 'trial' => !empty($r['trial'])] + $billMore() + billingState($bc, $rows));
     }
     /* a request to change the plan or add people (2026-10-30, Matthew: Stripe's portal cannot change a subscription of several prices): one
        email to Traverse with what they asked, at most once every ten minutes per install. Nothing changes in Stripe until Traverse does it. */

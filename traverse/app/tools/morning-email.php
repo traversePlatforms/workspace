@@ -40,6 +40,9 @@ if (!$mxNow && !$mxDry && is_file(__DIR__ . '/search-index-warm.php')) @exec(esc
 /* client installs pick up towns that came into their radius (new towns, e.g. Group 3) once a day, at the 4 am run (2026-10-30: there is
    no crontab command on this host, so it rides on this hourly job) */
 if (!$mxNow && !$mxDry && date('G') === '4' && is_file(dirname(__DIR__) . '/traverse-tools/clients.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__) . '/traverse-tools/clients.php') . ' relink >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/clients-relink.log') . ' 2>&1 &');
+/* nobody is charged without an app (2026-11-06, setup-trial-sweep.php): once a day at the same 4 am run, every edition and client install's
+   free trial that is not live yet is pushed to stay 3 days ahead, or cancelled with no charge 14 days after sign-up (Matthew is emailed) */
+if (!$mxNow && !$mxDry && date('G') === '4' && is_file(__DIR__ . '/setup-trial-sweep.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/setup-trial-sweep.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/setup-trial-sweep.log') . ' 2>&1 &');
 /* and every install's towns answer, so the first phone after midnight or a settings save doesn't wait for all the towns (2026-10-29) */
 if (!$mxNow && !$mxDry && is_file(__DIR__ . '/regions-warm.php')) @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/regions-warm.php') . ' >> ' . escapeshellarg(dirname(__DIR__) . '/sixfold-data/digest/regions-warm.log') . ' 2>&1 &');
 /* the weekly fuel prices for the quote's fuel cost (2026-10-30): fuel-prices.php asks EIA only when a new week is due; in the background */

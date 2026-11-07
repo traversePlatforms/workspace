@@ -244,7 +244,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
   call('welcome').then(function (j) {
     if (!j.ok) { msg('That link did not work', j.error || 'Email hello@traverseplatforms.com.'); return; }
     if (j.ready) { msg('Your Traverse is ready', 'Open it here: ' + j.url + ' — sign in with your email and password (we emailed you).'); var a = document.createElement('a'); a.className = 'go'; a.href = j.url; a.textContent = 'Open my app'; a.style.cssText = 'display:inline-flex;align-items:center;text-decoration:none'; $('msg').appendChild(a); return; }
-    if (!j.paid) { msg('Waiting for your payment', j.error || 'It can take a moment.', true); return; }
+    if (!j.paid) { msg('Waiting for Stripe', j.error || 'It can take a moment.', true); return; }
     W = j; $('flow').hidden = false;
     $('lead').textContent = 'You subscribed to ' + tradeOf(j) + ', ' + (PLAN[j.plan] || j.plan) + ' plan. A few questions to set up your app.';
     $('ptg').textContent = tradeOf(j);
