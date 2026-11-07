@@ -27,15 +27,19 @@ declare(strict_types=1);
  * the free 7-day pilot) ---------------------------------------------------------------------------------------------------------
  * free_days (7) free, counted from the day the company's app is LIVE, not from sign-up. The card is taken at Stripe Checkout,
  * nothing is charged during the trial, and billing starts by itself unless they cancel. How:
- *   1. Checkout opens the subscription with subscription_data.trial_period_days = trial_cap_days (14), a ceiling so setup (up to
- *      setup_days business days) can never eat the free days. Card collected (payment_method_collection always). Once per company
- *      (billingTrialOk: never after a subscription, a trial or a release here).
+ *   1. Checkout opens the subscription with subscription_data.trial_period_days = free_days (7), so the date Stripe's page shows is the
+ *      EARLIEST the card can be charged (Matthew 2026-11-06: never show a date later than we charge). Card collected
+ *      (payment_method_collection always). Once per company (billingTrialOk: never after a subscription, a trial or a release here).
  *   2. Stripe's first "trialing" (or "active") subscription event records paid_at (= signed up, card on file; the setup clock).
- *   3. Traverse sets the app up and the super admin presses "Release to client" (Mark live), or runs traverse/ops/billing-mark-live.php,
- *      or the website's welcome page finishes (tcProvision): live_at is recorded, and billingTrialFromLive() moves Stripe's trial_end
- *      to live_at + free_days (proration_behavior none; through the founding Subscription Schedule's first phase when there is one).
- *      The first real bill comes then, with the founding price on it.
- *   4. Cancelling during the trial costs nothing. Traverse's own "Refund and cancel" (super admin only) ends the plan during setup and
+ *   3. While the app is not live, the daily sweep (billingSetupSweep: sixfold-tools/setup-trial-sweep.php for every edition and client
+ *      install, and traverse-tools/clients.php relink for website sign-ups not provisioned yet, tcTrialSweepPending) keeps Stripe's
+ *      trial_end at least setup_push_days (3) ahead, so nobody is charged without an app. setup_cancel_days (14) after sign-up with no
+ *      go-live, it cancels the subscription in Stripe (nothing has been charged) and emails Matthew.
+ *   4. Traverse sets the app up and the super admin presses "Release to client" (Mark live), or runs traverse/ops/billing-mark-live.php,
+ *      or the website's welcome page finishes (tcProvision): live_at is recorded, and billingTrialFromLive() makes Stripe's trial_end
+ *      max(its current trial_end, live_at + free_days): it only ever moves the first charge LATER (proration_behavior none; through the
+ *      founding Subscription Schedule's first phase when there is one). The first real bill comes then, with the founding price on it.
+ *   5. Cancelling during the trial costs nothing. Traverse's own "Refund and cancel" (super admin only) ends the plan during setup and
  *      the trial (nothing to refund) and, for refund_days after the trial, refunds the first charge in full. Never automatic, and
  *      never promised to customers.
  *
@@ -105,12 +109,13 @@ function billingConfigDefaults(): array {
            year of the first customer: put that date + 1 year in founding_until (YYYY-MM-DD) once the first customer signs; after it
            the offer stops by itself. Empty = no end date yet. */
         'founding' => true, 'founding_pct' => 25, 'founding_until' => '',
-        /* the free trial (Matthew 2026-11-06, every company, once): free_days from the day the app is live; checkout opens it with
-           trial_cap_days as a ceiling, and Release to client sets Stripe's trial_end to live + free_days. The app is set up within
-           setup_days business days. Traverse's own Refund and cancel runs until refund_days after the trial ends. The old keys
-           trial_days (the pilot) and guarantee_days (the money-back guarantee) are no longer read: a stale private config cannot
-           bring either back. */
-        'free_days' => 7, 'trial_cap_days' => 14, 'setup_days' => 2, 'refund_days' => 7,
+        /* the free trial (Matthew 2026-11-06, every company, once): free_days from the day the app is live; checkout opens it at
+           free_days (Stripe's page shows the earliest charge date), Release to client extends it to live + free_days, and while the app
+           is not live the daily sweep keeps it setup_push_days ahead, cancelling with no charge setup_cancel_days after sign-up. The app
+           is set up within setup_days business days. Traverse's own Refund and cancel runs until refund_days after the trial ends. The
+           old keys trial_days (the pilot) and guarantee_days (the money-back guarantee) are no longer read: a stale private config
+           cannot bring either back. */
+        'free_days' => 7, 'setup_days' => 2, 'setup_push_days' => 3, 'setup_cancel_days' => 14, 'refund_days' => 7,
         'return_url' => '',              /* where Stripe sends people back; empty = the page they came from */
         'timeout' => 20,
         'mock_file' => null,
@@ -225,11 +230,39 @@ function billingSchedulePhases(array $items, array $list, int $start, ?int $tria
 function billingTrialOk(array $c, array $b): bool {
     return (int) $c['free_days'] > 0 && empty($b['subscription']) && empty($b['paid_sub']) && empty($b['had_trial']) && empty($b['released_at']);
 }
+/** the subscription's founding schedule id, if one is attached (Stripe's answer first, then what billing.json kept) */
+function billingSubSchedule(array $sub, string $fallback = ''): string {
+    return !empty($sub['schedule']) ? (is_array($sub['schedule']) ? (string) ($sub['schedule']['id'] ?? '') : (string) $sub['schedule']) : $fallback;
+}
 /**
- * The free days start at go-live (2026-11-06): Stripe's trial_end becomes live_at + free_days, with no proration. Run by billingMarkLive()
- * right after live_at is recorded. A subscription on the founding schedule is changed through the schedule (Stripe: "If a subscription has a
- * subscription schedule attached, use the Subscription Schedule API to modify the subscription"), every other one directly.
- * Returns null (done, or nothing to do: no trial on this subscription) or a note for Traverse, also kept in billing.json as trial_err.
+ * Move a trialing subscription's trial end to $want in Stripe, with no proration (2026-11-06). A subscription on the founding schedule is
+ * changed through the schedule (Stripe: "If a subscription has a subscription schedule attached, use the Subscription Schedule API to modify
+ * the subscription"): both phases sent again, the trial on phase 1, phase 1 ending 12 months after the new trial end; every other one
+ * directly (POST /v1/subscriptions/{id} trial_end). No billing.json: the website's sign-ups not yet provisioned use it too.
+ * Returns ['via' => 'schedule'|'subscription'] or ['error' => a note saying what to set by hand].
+ */
+function billingTrialSet(array $c, array $sub, int $want, string $schedule = ''): array {
+    $subId = (string) ($sub['id'] ?? ''); $day = date('j M Y H:i', $want);
+    $sid = billingSubSchedule($sub, $schedule);
+    if ($sid !== '') {
+        $s = stripeCall($c, 'GET', '/v1/subscription_schedules/' . rawurlencode($sid));
+        if (isset($s['error'])) return ['error' => 'Stripe did not answer about the schedule (' . $s['error'] . '). In Stripe, set the trial on ' . $subId . ' to end ' . $day . '.'];
+        $ph = array_values(array_filter((array) ($s['phases'] ?? []), fn($p) => empty($p['end_date']) || (int) $p['end_date'] > time()));
+        $pick = function (array $p): array { $o = []; foreach ((array) ($p['items'] ?? []) as $it) $o[] = ['price' => is_array($it['price'] ?? null) ? (string) ($it['price']['id'] ?? '') : (string) ($it['price'] ?? ''), 'quantity' => (int) ($it['quantity'] ?? 1)]; return $o; };
+        if (count($ph) !== 2 || !$pick($ph[0]) || !$pick($ph[1])) return ['error' => 'The subscription has a schedule that is not the founding step-up (' . $sid . '). In Stripe, set its first phase to end the trial ' . $day . '.'];
+        $u = stripeCall($c, 'POST', '/v1/subscription_schedules/' . rawurlencode($sid), billingSchedulePhases($pick($ph[0]), $pick($ph[1]), (int) $ph[0]['start_date'], $want));
+        if (isset($u['error'])) return ['error' => 'Stripe refused the new trial end (' . $u['error'] . '). In Stripe, set the schedule ' . $sid . ' to end the trial ' . $day . '.'];
+        return ['via' => 'schedule'];
+    }
+    $u = stripeCall($c, 'POST', '/v1/subscriptions/' . rawurlencode($subId), ['trial_end' => $want, 'proration_behavior' => 'none']);
+    if (isset($u['error'])) return ['error' => 'Stripe refused the new trial end (' . $u['error'] . '). In Stripe, set the trial on ' . $subId . ' to end ' . $day . '.'];
+    return ['via' => 'subscription'];
+}
+/**
+ * The free days start at go-live (2026-11-06), and the first charge only ever moves LATER (Matthew: never show a date later than we charge):
+ * Stripe's trial_end becomes max(its current trial_end, live_at + free_days). When the current one is already later (the setup sweep pushed
+ * it), Stripe is not touched. Run by billingMarkLive() right after live_at is recorded. Returns null (done, or nothing to do: no trial on this
+ * subscription) or a note for Traverse, also kept in billing.json as trial_err.
  */
 function billingTrialFromLive(array $c): ?string {
     $b = billingLoad();
@@ -242,27 +275,55 @@ function billingTrialFromLive(array $c): ?string {
     };
     $subId = (string) $b['subscription'];
     $sub = stripeCall($c, 'GET', '/v1/subscriptions/' . rawurlencode($subId));
-    if (isset($sub['error'])) return $note('Stripe did not answer (' . $sub['error'] . '). In Stripe, set the trial on ' . $subId . ' to end ' . $day . '.');
+    if (isset($sub['error'])) return $note('Stripe did not answer (' . $sub['error'] . '). In Stripe, set the trial on ' . $subId . ' to end ' . $day . ' (or later).');
+    $sub['id'] = $sub['id'] ?? $subId;
     $st = (string) ($sub['status'] ?? ($b['status'] ?? '')); $te = (int) ($sub['trial_end'] ?? ($b['trial_end'] ?? 0));
     if ($te === 0) return null;   /* this subscription never had a trial (paid again, or a second plan): nothing to move */
-    /* released after the 14-day ceiling: the trial ran out and the first bill has gone; Stripe cannot give the days back without a credit */
+    /* the trial ran out before go-live (the setup sweep did not run, or Stripe refused it): the first bill has gone; Stripe cannot give the
+       days back without a refund or credit */
     if ($st !== 'trialing' || $te <= time()) return $note('The trial had already ended in Stripe on ' . date('j M Y', $te) . ', before the app went live, so the first charge has gone through. If the 7 free days should still apply, refund or credit that charge in Stripe.');
-    $sid = !empty($sub['schedule']) ? (is_array($sub['schedule']) ? (string) ($sub['schedule']['id'] ?? '') : (string) $sub['schedule']) : (string) ($b['schedule'] ?? '');
-    if ($sid !== '') {
-        $s = stripeCall($c, 'GET', '/v1/subscription_schedules/' . rawurlencode($sid));
-        if (isset($s['error'])) return $note('Stripe did not answer about the schedule (' . $s['error'] . '). In Stripe, set the trial on ' . $subId . ' to end ' . $day . '.');
-        $ph = array_values(array_filter((array) ($s['phases'] ?? []), fn($p) => empty($p['end_date']) || (int) $p['end_date'] > time()));
-        $pick = function (array $p): array { $o = []; foreach ((array) ($p['items'] ?? []) as $it) $o[] = ['price' => is_array($it['price'] ?? null) ? (string) ($it['price']['id'] ?? '') : (string) ($it['price'] ?? ''), 'quantity' => (int) ($it['quantity'] ?? 1)]; return $o; };
-        if (count($ph) !== 2 || !$pick($ph[0]) || !$pick($ph[1])) return $note('The subscription has a schedule that is not the founding step-up (' . $sid . '). In Stripe, set its first phase to end the trial ' . $day . '.');
-        $u = stripeCall($c, 'POST', '/v1/subscription_schedules/' . rawurlencode($sid), billingSchedulePhases($pick($ph[0]), $pick($ph[1]), (int) $ph[0]['start_date'], $want));
-        if (isset($u['error'])) return $note('Stripe refused the new trial end (' . $u['error'] . '). In Stripe, set the schedule ' . $sid . ' to end the trial ' . $day . '.');
-    } else {
-        $u = stripeCall($c, 'POST', '/v1/subscriptions/' . rawurlencode($subId), ['trial_end' => $want, 'proration_behavior' => 'none']);
-        if (isset($u['error'])) return $note('Stripe refused the new trial end (' . $u['error'] . '). In Stripe, set the trial on ' . $subId . ' to end ' . $day . '.');
+    if ($te >= $want) {   /* already later than live + 7: keep it, never shorten */
+        billingSave(function (array $x) use ($te) { $x['trial_end'] = $te; $x['period_end'] = $te; unset($x['trial_err']); return $x; });
+        billingLog(['what' => 'trial from live', 'trial_end' => $te, 'via' => 'kept (already later)']);
+        return null;
     }
+    $r = billingTrialSet($c, $sub, $want, (string) ($b['schedule'] ?? ''));
+    if (isset($r['error'])) return $note($r['error']);
     billingSave(function (array $x) use ($want) { $x['trial_end'] = $want; $x['period_end'] = $want; $x['trial_set'] = time(); unset($x['trial_err']); return $x; });
-    billingLog(['what' => 'trial from live', 'trial_end' => $want, 'via' => $sid !== '' ? 'schedule' : 'subscription']);
+    billingLog(['what' => 'trial from live', 'trial_end' => $want, 'via' => $r['via']]);
     return null;
+}
+/**
+ * Nobody is charged without an app (Matthew 2026-11-06). Run once a day for an install (sixfold-tools/setup-trial-sweep.php, rounds.php
+ * trialsweep): a trialing subscription whose company signed up (paid_at) but is not live yet (no live_at) has its trial pushed so trial_end
+ * stays at least setup_push_days ahead; setup_cancel_days after sign-up with still no go-live, the subscription is cancelled in Stripe
+ * (DELETE; nothing has been charged) and the caller emails Matthew. A live or non-trialing subscription is never touched. Every push and
+ * cancel is logged in billing.log. Returns ['did' => ''|'push'|'cancel'|'error', ...].
+ */
+function billingSetupSweep(array $c, ?int $now = null): array {
+    $now = $now ?? time(); $b = billingLoad();
+    if (($b['status'] ?? '') !== 'trialing' || empty($b['paid_at']) || !empty($b['live_at']) || empty($b['subscription'])) return ['did' => ''];
+    $subId = (string) $b['subscription'];
+    $sub = stripeCall($c, 'GET', '/v1/subscriptions/' . rawurlencode($subId));
+    if (isset($sub['error'])) { billingLog(['what' => 'setup sweep', 'error' => $sub['error']]); return ['did' => 'error', 'error' => $sub['error']]; }
+    $sub['id'] = $sub['id'] ?? $subId;
+    if ((string) ($sub['status'] ?? $b['status']) !== 'trialing') return ['did' => ''];   /* Stripe says otherwise: its event will update billing.json */
+    $te = (int) ($sub['trial_end'] ?? ($b['trial_end'] ?? 0));
+    if ($now >= (int) $b['paid_at'] + (int) $c['setup_cancel_days'] * 86400) {
+        $x = stripeCall($c, 'DELETE', '/v1/subscriptions/' . rawurlencode($subId));
+        if (isset($x['error'])) { billingLog(['what' => 'setup cancel failed', 'error' => $x['error']]); return ['did' => 'error', 'error' => 'Could not cancel ' . $subId . ' in Stripe: ' . $x['error'] . '. Cancel it in Stripe before ' . date('j M Y H:i', $te) . ' or the card is charged.']; }
+        $why = 'not live ' . (int) $c['setup_cancel_days'] . ' days after sign-up (' . date('j M Y', (int) $b['paid_at']) . ')';
+        billingSave(function (array $x) use ($now, $why) { $x['status'] = 'canceled'; $x['ended'] = $now; $x['setup_canceled'] = ['at' => $now, 'why' => $why]; return $x; });
+        billingLog(['what' => 'setup cancel', 'subscription' => $subId, 'why' => $why]);
+        return ['did' => 'cancel', 'subscription' => $subId, 'why' => $why, 'paidAt' => (int) $b['paid_at']];
+    }
+    $min = $now + (int) $c['setup_push_days'] * 86400;
+    if ($te >= $min) return ['did' => '', 'trialEnd' => $te];
+    $r = billingTrialSet($c, $sub, $min, (string) ($b['schedule'] ?? ''));
+    if (isset($r['error'])) { billingLog(['what' => 'setup push failed', 'error' => $r['error'], 'want' => $min]); return ['did' => 'error', 'error' => $r['error']]; }
+    billingSave(function (array $x) use ($min) { $x['trial_end'] = $min; $x['period_end'] = $min; return $x; });
+    billingLog(['what' => 'setup push', 'from' => $te, 'trial_end' => $min, 'via' => $r['via']]);
+    return ['did' => 'push', 'from' => $te, 'trialEnd' => $min, 'via' => $r['via']];
 }
 /** one Stripe API call: form-encoded, Bearer key. Returns the decoded answer, or ['error' => message] */
 function stripeCall(array $c, string $method, string $path, array $fields = []): array {
@@ -495,7 +556,7 @@ function billingState(array $c, array $rows): array {
         'cancelAtEnd' => !empty($b['cancel_at_end']), 'portal' => !empty($b['customer']), 'pending' => !empty($b['pending']) && !$st,
         'warn' => $warn, 'founding' => billingFoundingOn($c), 'foundingPct' => billingFoundingOn($c) ? (int) $c['founding_pct'] : 0,
         'foundingUntil' => billingFoundingOn($c) ? ((string) ($c['founding_until'] ?? '') ?: null) : null,
-        /* the free trial (2026-11-06): freeDays from go-live; trialUntil once live; the trial's end before go-live is only Stripe's ceiling */
+        /* the free trial (2026-11-06): freeDays from go-live; trialUntil once live; the trial's end before go-live is provisional (the setup sweep pushes it) */
         'setupDays' => (int) $c['setup_days'], 'freeDays' => (int) $c['free_days'], 'trialOffer' => billingTrialOk($c, $b),
         'paidAt' => $b['paid_at'] ?? null, 'liveAt' => $b['live_at'] ?? null, 'trialUntil' => billingTrialUntil($b),
         'refunded' => !empty($b['refunded']), 'refundedAmount' => (int) ($b['refunded']['amount'] ?? 0), 'refundedInTrial' => !empty($b['refunded']['trial']),
@@ -506,7 +567,7 @@ function billingState(array $c, array $rows): array {
         /* what is charged now (the founding price while it lasts) and when it steps up; the next charge (2026-10-30) */
         'monthlyNow' => in_array($b['plan'] ?? '', BILLING_PLANS, true) ? billingMonthly($c, (string) $b['plan'], (string) ($b['interval'] ?? 'month'), $paid, !empty($b['addon']), $fdOn) : null,
         'foundingNow' => $fdOn, 'stepUp' => $setupTrial ? null : $fdStep,
-        /* in the trial before go-live the period's end is only the 14-day ceiling: no date is shown until the app is live (2026-11-06) */
+        /* in the trial before go-live the period's end is provisional (the setup sweep pushes it while not live): no date is shown until the app is live (2026-11-06) */
         'nextCharge' => in_array($st, BILLING_GOOD, true) && !$setupTrial && empty($b['cancel_at_end']) && !empty($b['period_end']) ? (int) $b['period_end'] : null,
         'client' => billingClient(), 'contact' => BILLING_CONTACT, 'asked' => $b['asked'] ?? null,
         'offer' => array_values(array_filter(BILLING_PLANS, fn($p) => ($c['prices'][$p]['month'] ?? '') !== '' || ($c['prices'][$p]['year'] ?? '') !== '')),
@@ -553,14 +614,14 @@ function billingCheckoutFields(array $c, array $b, string $plan, string $iv, int
     if (billingUplift($c) && $add($plan === 'solo' ? 'uplift_solo' : 'uplift', 1)) return ['error' => 'This edition is not offered ' . $ivWord . ' yet.'];
     if ($addon && $add('addon', 1)) return ['error' => 'The second edition is not offered ' . $ivWord . ' yet.'];
     if (!empty($b['customer'])) $f['customer'] = (string) $b['customer'];
-    /* the free trial (2026-11-06): the card is taken now and nothing is charged; trial_cap_days is a ceiling so setup cannot eat the free
-       days, and Release to client sets the real end (billingTrialFromLive). Stripe's page shows the ceiling, so the note under the pay
-       button says how it works. Once per company. */
+    /* the free trial (2026-11-06): the card is taken now and nothing is charged. The trial opens at free_days, so the date Stripe's page
+       shows is the earliest the card can be charged; the setup sweep and Release to client only ever move it later (never show a date
+       later than we charge). Once per company. */
     if (billingTrialOk($c, $b)) {
-        $f['subscription_data']['trial_period_days'] = max((int) $c['trial_cap_days'], (int) $c['free_days']);
+        $f['subscription_data']['trial_period_days'] = (int) $c['free_days'];
         $f['payment_method_collection'] = 'always';
         $f['metadata']['trial'] = '1';
-        $f['custom_text']['submit']['message'] = 'Free for ' . (int) $c['free_days'] . ' days from the day your app is live. Nothing is charged today. Stripe shows the latest your first charge can be; when your app goes live we move it to ' . (int) $c['free_days'] . ' days from that day. Cancel before then and you pay nothing. ' . $f['custom_text']['submit']['message'];
+        $f['custom_text']['submit']['message'] = 'Free for ' . (int) $c['free_days'] . ' days from the day your app is live. Nothing is charged today. If your app goes live after the date shown here, we move your first charge to ' . (int) $c['free_days'] . ' days after go-live. It never comes earlier. Cancel before then and you pay nothing. ' . $f['custom_text']['submit']['message'];
     }
     /* Stripe takes a coupon or a promotion-code box, not both. The founding coupon is made per checkout by billingFoundingCoupon()
        (the caller runs it before opening Checkout): what it takes off depends on the plan, people and add-ons picked. */

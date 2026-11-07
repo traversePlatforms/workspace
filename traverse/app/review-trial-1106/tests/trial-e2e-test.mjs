@@ -2,7 +2,7 @@
    test server, mock Stripe (TRAVERSE_BILLING_MOCK, the editions' name for SIXFOLD_BILLING_MOCK), mock mail. A fresh temp folder every run: the edition's page and API copied in, its
    company.json with billing on and not exempt, an empty town list, throwaway sign-in codes made here. Nothing touches the live server or Stripe.
    Run (after the editions build):  node traverse/app/review-trial-1106/tests/trial-e2e-test.mjs */
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -32,6 +32,10 @@ writeFileSync(MOCK, '{}');
 const reqs = () => existsSync(MOCK + '.requests.log') ? readFileSync(MOCK + '.requests.log', 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : [];
 const find = (m, p) => reqs().filter((r) => r.method === m && r.path === p);
 const bj = () => JSON.parse(readFileSync(BFILE, 'utf8'));
+/* the daily setup sweep (sixfold-tools/setup-trial-sweep.php) on this install, as the 4 am run starts it */
+const SWEEP = join(REPO, 'traverse', 'app', 'tools', 'setup-trial-sweep.php'), MAIL = join(T, 'mail.log');
+const sweep = () => { const o = execFileSync('php', [SWEEP, join(WWW, 'api', 'traverse-rounds.php')], { encoding: 'utf8', env: { ...process.env, TRAVERSE_BILLING_MOCK: MOCK, SIXFOLD_BILLING_MOCK: MOCK, TRAV_MAIL_MOCK: MAIL } }); try { return JSON.parse(o); } catch { return { raw: o.slice(0, 300) }; } };
+const near = (a, b) => Math.abs(Number(a) - b) <= 10;
 
 const srv = spawn('php', ['-d', 'memory_limit=768M', '-S', '127.0.0.1:' + PORT, '-t', WWW], { env: { ...process.env, TRAVERSE_BILLING_MOCK: MOCK, SIXFOLD_BILLING_MOCK: MOCK, TRAV_MAIL_MOCK: join(T, 'mail.log') }, stdio: 'ignore' });
 const jars = {};
@@ -64,12 +68,12 @@ try {
   const co1 = await call('admin', 'billingcheckout', { plan: 'crew', interval: 'month', seats: 5, addon: false, back: ORIGIN + '/' + FOLDER + '/' });
   const cs = find('POST', '/v1/checkout/sessions').pop();
   t(co1.ok && /checkout\.stripe\.test/.test(co1.url || ''), 'the admin gets a Stripe Checkout address');
-  t(cs && cs.fields.subscription_data.trial_period_days === 14 && cs.fields.payment_method_collection === 'always' && cs.fields.mode === 'subscription', 'Stripe got subscription_data.trial_period_days 14 and payment_method_collection always');
-  t(cs && /Free for 7 days from the day your app is live/.test(cs.fields.custom_text.submit.message), "Stripe's page carries the trial note");
+  t(cs && cs.fields.subscription_data.trial_period_days === 7 && cs.fields.payment_method_collection === 'always' && cs.fields.mode === 'subscription', 'Stripe got subscription_data.trial_period_days 7 and payment_method_collection always');
+  t(cs && /Free for 7 days from the day your app is live/.test(cs.fields.custom_text.submit.message) && /It never comes earlier/.test(cs.fields.custom_text.submit.message) && !/14/.test(cs.fields.custom_text.submit.message), "Stripe's page carries the trial note (the charge only moves later; no 14 days)");
   t(cs && cs.fields.discounts && cs.fields.discounts[0] && find('POST', '/v1/coupons').length === 1, 'the founding coupon rides on the same checkout');
   console.log('Stripe says: trialing');
-  const ceil = now() + 14 * DAY;
-  const sub = { id: 'sub_e2e', object: 'subscription', customer: 'cus_e2e', status: 'trialing', trial_end: ceil, start_date: now(), cancel_at_period_end: false, metadata: { install: 'traverse-data' }, items: { data: [{ price: { id: 'price_mock_crew_month' }, quantity: 1, current_period_end: ceil }] } };
+  const ceil = now() - 3600 + 7 * DAY;   /* Stripe's 7 days from checkout, an hour ago */
+  const sub = { id: 'sub_e2e', object: 'subscription', customer: 'cus_e2e', status: 'trialing', trial_end: ceil, start_date: now() - 3600, cancel_at_period_end: false, metadata: { install: 'traverse-data' }, items: { data: [{ price: { id: 'price_mock_crew_month' }, quantity: 1, current_period_end: ceil }] } };
   t(await hook('checkout.session.completed', { client_reference_id: 'traverse-data', customer: 'cus_e2e', subscription: 'sub_e2e', payment_status: 'no_payment_required', metadata: { install: 'traverse-data' } }) === 200, 'checkout.session.completed taken (payment_status no_payment_required)');
   t(await hook('customer.subscription.created', sub) === 200, 'customer.subscription.created (trialing) taken');
   let B = bj();
@@ -81,16 +85,25 @@ try {
   t(b.trialOffer === false, 'no second trial on offer');
   const den = await call('admin', 'billinglive', {});
   t(den._status === 403, "the client's admin cannot release the app (" + den._status + ')');
+  console.log('The daily sweep while it is still being set up');
+  writeFileSync(BFILE, JSON.stringify({ ...bj(), paid_at: now() - 5 * DAY, trial_end: now() + DAY }));
+  writeFileSync(MOCK, JSON.stringify({ get: { '/v1/subscriptions/sub_e2e': { ...sub, trial_end: now() + DAY } } }));
+  let sw = sweep(), pu = find('POST', '/v1/subscriptions/sub_e2e');
+  t(sw.ok && sw.did === 'push' && pu.length === 1 && near(pu[0].fields.trial_end, now() + 3 * DAY) && pu[0].fields.proration_behavior === 'none', 'not live, 1 day left: the sweep pushed the trial to 3 days ahead' + (sw.ok ? '' : ' ' + JSON.stringify(sw)));
+  B = bj(); t(near(B.trial_end, now() + 3 * DAY) && !B.live_at && B.status === 'trialing', 'billing.json: the pushed date, still not live');
+  t(/"setup push"/.test(readFileSync(join(DATA, 'billing.log'), 'utf8')), 'the push is in billing.log');
   console.log('Release to client');
-  writeFileSync(MOCK, JSON.stringify({ get: { '/v1/subscriptions/sub_e2e': sub } }));
+  writeFileSync(MOCK, JSON.stringify({ get: { '/v1/subscriptions/sub_e2e': { ...sub, trial_end: B.trial_end } } }));
   const rel = await call('super', 'billinglive', {});
   B = bj(); const want = B.live_at + 7 * DAY, up = find('POST', '/v1/subscriptions/sub_e2e');
   t(rel.ok && rel.liveAt === B.live_at && rel.trialUntil === want && !rel.trialErr, 'Traverse releases it: live now, free trial until live + 7 days');
-  t(up.length === 1 && Number(up[0].fields.trial_end) === want && up[0].fields.proration_behavior === 'none', 'Stripe got POST /v1/subscriptions/sub_e2e trial_end = live + 7 days, proration_behavior none');
+  t(up.length === 2 && Number(up[1].fields.trial_end) === want && up[1].fields.proration_behavior === 'none' && want > Number(up[0].fields.trial_end), 'Release: one more POST /v1/subscriptions/sub_e2e, trial_end = live + 7 days (later than the pushed date), proration_behavior none');
   me = await call('admin', 'me');
   t(me.ok && !me.lock, 'the whole app opens for the client');
   b = await call('admin', 'billing');
   t(b.trialUntil === want && b.nextCharge === want && b.refundable === true, 'Billing: free trial until ' + new Date(want * 1000).toDateString() + ', the next charge that day');
+  let n0 = reqs().length; sw = sweep();
+  t(sw.ok && sw.did === '' && reqs().length === n0, 'the sweep leaves a live company alone (no Stripe call)');
   console.log('Release when Stripe says no');
   writeFileSync(BFILE, JSON.stringify({ ...B, live_at: null, live_by: null, trial_end: ceil, trial_err: null }));
   writeFileSync(MOCK, JSON.stringify({ fail: 'Stripe is down (test)' }));
@@ -99,8 +112,18 @@ try {
   b = await call('admin', 'billing');
   t(b.trialErr === null, "the client's admin is not shown Traverse's note");
   writeFileSync(MOCK, '{}');
+  console.log('14 days after sign-up, still not live');
+  writeFileSync(BFILE, JSON.stringify({ ...bj(), live_at: null, live_by: null, status: 'trialing', paid_at: now() - 14 * DAY - 120, trial_end: now() + 2 * DAY, trial_err: null }));
+  writeFileSync(MOCK, JSON.stringify({ get: { '/v1/subscriptions/sub_e2e': { ...sub, trial_end: now() + 2 * DAY } } }));
+  const d0 = find('DELETE', '/v1/subscriptions/sub_e2e').length; sw = sweep(); B = bj();
+  t(sw.ok && sw.did === 'cancel' && find('DELETE', '/v1/subscriptions/sub_e2e').length === d0 + 1 && find('POST', '/v1/refunds').length === 0, 'the sweep cancels it in Stripe (DELETE), no refund: nothing was charged');
+  t(B.status === 'canceled' && B.setup_canceled && /"setup cancel"/.test(readFileSync(join(DATA, 'billing.log'), 'utf8')), 'billing.json: canceled with why; in billing.log');
+  const ml = existsSync(MAIL) ? readFileSync(MAIL, 'utf8') : '';
+  t(/"to":"m\.sharpe@traverseplatforms\.com"/.test(ml) && ml.includes('sign-up cancelled, no app after 14 days: ' + company.name) && ml.includes('nothing was charged'), 'Matthew is emailed: the company and why' + (sw.mailed ? '' : ' (mailed false)'));
+  n0 = reqs().length; sw = sweep();
+  t(sw.ok && sw.did === '' && reqs().length === n0, 'a cancelled (not trialing) subscription: the sweep does nothing');
   console.log("Traverse's cancel during the trial");
-  writeFileSync(BFILE, JSON.stringify({ ...bj(), trial_err: null, trial_end: want }));
+  writeFileSync(BFILE, JSON.stringify({ ...bj(), status: 'trialing', live_at: now() - 3600, ended: undefined, setup_canceled: undefined, trial_err: null, trial_end: want }));
   const del0 = find('DELETE', '/v1/subscriptions/sub_e2e').length;
   const rf = await call('super', 'billingrefund', { confirm: true });
   t(rf.ok && rf.trial === true && rf.amount === 0 && rf.refundedInTrial === true && rf.status === 'canceled', 'Cancel in the trial: ended, nothing charged');

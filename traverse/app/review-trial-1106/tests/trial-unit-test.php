@@ -30,15 +30,18 @@ $plus12 = fn(int $ts) => (new DateTimeImmutable('@' . $ts))->modify('+12 months'
 $back = 'https://app.test/tr-x/';
 
 echo "Config\n";
-t($c['free_days'] === 7 && $c['trial_cap_days'] === 14 && $c['setup_days'] === 2 && $c['refund_days'] === 7, 'defaults: 7 free days, 14-day ceiling, 2 business days setup, refund window 7 days');
+t($c['free_days'] === 7 && $c['setup_days'] === 2 && $c['setup_push_days'] === 3 && $c['setup_cancel_days'] === 14 && $c['refund_days'] === 7, 'defaults: 7 free days, 2 business days setup, pushed 3 days ahead while not live, cancelled 14 days after sign-up, refund window 7 days');
+t(!isset($c['trial_cap_days']), 'no 14-day ceiling any more');
 t(!isset($c['guarantee_days']) && !isset($c['trial_days']), 'no guarantee_days or trial_days left in the defaults');
 
 echo "Checkout (in the app)\n";
 $r = billingCheckoutFields($c, [], 'crew', 'year', 5, false, $back); $f = $r['fields'] ?? [];
-t(($f['subscription_data']['trial_period_days'] ?? null) === 14, 'a new company: subscription_data.trial_period_days = 14 (the ceiling)');
+t(($f['subscription_data']['trial_period_days'] ?? null) === 7, 'a new company: subscription_data.trial_period_days = 7 (Stripe shows the earliest charge date)');
 t(($f['payment_method_collection'] ?? '') === 'always', 'the card is collected up front (payment_method_collection always)');
 t(($f['metadata']['trial'] ?? '') === '1', 'the session is marked as a trial');
-t(str_contains($f['custom_text']['submit']['message'] ?? '', 'Free for 7 days from the day your app is live') && str_contains($f['custom_text']['submit']['message'], 'Nothing is charged today') && str_contains($f['custom_text']['submit']['message'], 'Subscription Agreement'), "Stripe's page says how the trial works, and still names the agreement");
+$msg = (string) ($f['custom_text']['submit']['message'] ?? '');
+t(str_contains($msg, 'Free for 7 days from the day your app is live') && str_contains($msg, 'Nothing is charged today') && str_contains($msg, 'It never comes earlier') && str_contains($msg, 'Subscription Agreement'), "Stripe's page says how the trial works (the charge only ever moves later), and still names the agreement");
+t(!preg_match('/14 days|14-day|latest your first charge/i', $msg), 'the note says nothing of 14 days or a "latest" date');
 t(strlen($f['custom_text']['submit']['message']) <= 1200, 'the note fits Stripe\'s 1,200-character limit (' . strlen($f['custom_text']['submit']['message']) . ')');
 t(!empty($f['_founding']), 'the founding coupon still rides along (coupon path)');
 fresh();
@@ -52,13 +55,13 @@ foreach ([['had a subscription', ['subscription' => 'sub_old', 'status' => 'canc
 }
 putenv('SIXFOLD_BILLING_MOCK_FOUNDING=1'); $cf = billingConfig($T . '/x/api'); putenv('SIXFOLD_BILLING_MOCK_FOUNDING');
 $f3 = billingCheckoutFields($cf, [], 'team', 'month', 12, false, $back)['fields'] ?? [];
-t(($f3['subscription_data']['trial_period_days'] ?? null) === 14 && ($f3['line_items'][0]['price'] ?? '') === 'price_mock_f_team_month', 'founding by real prices: the founding price on the line and the 14-day trial');
+t(($f3['subscription_data']['trial_period_days'] ?? null) === 7 && ($f3['line_items'][0]['price'] ?? '') === 'price_mock_f_team_month', 'founding by real prices: the founding price on the line and the 7-day trial');
 
 echo "Checkout (the website)\n";
 fresh();
 $w = tcCheckout($c, ['edition' => 'roofing', 'plan' => 'solo', 'iv' => 'month', 'seats' => 1, 'agree' => true, 'terms' => '2026-10-29', 'agreement' => '2026-11-06'], '127.0.0.1');
 $cs = find('POST', '/v1/checkout/sessions')[0]['fields'] ?? [];
-t(!empty($w['url']) && ($cs['subscription_data']['trial_period_days'] ?? null) === 14 && ($cs['payment_method_collection'] ?? '') === 'always', 'the website checkout opens the same 14-day trial with the card');
+t(!empty($w['url']) && ($cs['subscription_data']['trial_period_days'] ?? null) === 7 && ($cs['payment_method_collection'] ?? '') === 'always', 'the website checkout opens the same 7-day trial with the card');
 t(($cs['subscription_data']['metadata']['install'] ?? '') === ($w['cid'] ?? '?') && str_starts_with((string) ($cs['success_url'] ?? ''), 'https://traverseplatforms.com/start/welcome/?c='), 'it is the new client id, back to the welcome page');
 $p = tcPlans($c); $q = tcQuote($c, 'crew', 'year', 5);
 t(($p['freeDays'] ?? 0) === 7 && !isset($p['guaranteeDays']), 'the plans answer says freeDays 7, no guaranteeDays');
@@ -68,7 +71,7 @@ t(!tcSessionPaid(['status' => 'open', 'payment_status' => 'unpaid', 'client_refe
 t(str_contains(tcMoney(['interval' => 'year', 'quote' => $q]), 'billed yearly ($1788)'), "Matthew's note still shows the yearly amount");
 
 echo "Webhook: the trial starts, the app is set up\n";
-$ceil = $now + 14 * $day;
+$ceil = $now - 3600 + 7 * $day;   /* signed up an hour ago: Stripe's 7 days from then */
 $sub = ['id' => 'sub_t1', 'object' => 'subscription', 'customer' => 'cus_t1', 'status' => 'trialing', 'trial_end' => $ceil, 'start_date' => $now, 'metadata' => ['install' => 'trial-test'],
         'items' => ['data' => [['price' => ['id' => 'price_mock_crew_year'], 'quantity' => 1, 'current_period_end' => $ceil]]]];
 fresh();
@@ -76,11 +79,11 @@ billingTakeEvent($c, ['id' => 'evt_1', 'type' => 'checkout.session.completed', '
 $did = billingTakeEvent($c, ['id' => 'evt_2', 'type' => 'customer.subscription.created', 'created' => $now, 'data' => ['object' => $sub]]);
 $b = billingLoad();
 t($did === 'trialing' && !empty($b['paid_at']) && ($b['paid_sub'] ?? '') === 'sub_t1', 'a trialing subscription records paid_at (the setup clock), as an active one did');
-t(!empty($b['had_trial']) && ($b['trial_end'] ?? 0) === $ceil, 'had_trial is kept; trial_end is the ceiling for now');
+t(!empty($b['had_trial']) && ($b['trial_end'] ?? 0) === $ceil, "had_trial is kept; trial_end is Stripe's 7 days from sign-up for now");
 $L = billingLockState($b);
 t($L['phase'] === 'setup' && $L['lock'] === 'setup', 'trialing and not released: setup mode (the app is still being set up)');
 $S = billingState($c, []);
-t($S['status'] === 'trialing' && $S['freeDays'] === 7 && $S['trialUntil'] === null && $S['nextCharge'] === null, 'Billing during setup: no trial-until date and no next-charge date yet (the ceiling is not shown)');
+t($S['status'] === 'trialing' && $S['freeDays'] === 7 && $S['trialUntil'] === null && $S['nextCharge'] === null, 'Billing during setup: no trial-until date and no next-charge date yet (provisional while not live)');
 t(!billingTrialOk($c, $b), 'that company can no longer start another trial');
 t(billingRefundable($c, $b), "Traverse's Cancel is open during setup");
 
@@ -89,7 +92,7 @@ fresh(billingLoad(), ['get' => ['/v1/subscriptions/sub_t1' => $sub]]);
 $err = billingMarkLive($c, 'Matthew Sharpe'); $b = billingLoad(); $want = (int) $b['live_at'] + 7 * $day;
 $up = find('POST', '/v1/subscriptions/sub_t1');
 t($err === null && !empty($b['live_at']), 'released: live_at recorded');
-t(count($up) === 1 && (int) $up[0]['fields']['trial_end'] === $want && ($up[0]['fields']['proration_behavior'] ?? '') === 'none', 'Stripe: POST /v1/subscriptions/sub_t1 trial_end = live + 7 days, proration_behavior none');
+t(count($up) === 1 && (int) $up[0]['fields']['trial_end'] === $want && ($up[0]['fields']['proration_behavior'] ?? '') === 'none' && $want > $ceil, 'Stripe: POST /v1/subscriptions/sub_t1 trial_end = live + 7 days (later than before), proration_behavior none');
 t(($b['trial_end'] ?? 0) === $want && empty($b['trial_err']), 'billing.json: trial_end = live + 7 days, no error');
 $S = billingState($c, []);
 t($S['trialUntil'] === $want && $S['nextCharge'] === $want && $S['liveAt'] === $b['live_at'], 'Billing: free trial until live + 7, the next charge that day');
@@ -108,6 +111,12 @@ t($b['status'] === 'active' && !empty($b['live_at']) && ($b['paid_sub'] ?? '') =
 t(billingRefundable($c, $b), "Traverse's Refund and cancel: open the week after the first charge");
 $b['trial_end'] = $now - 8 * $day; file_put_contents(DATA_DIR . '/billing.json', json_encode($b));
 t(!billingRefundable($c, billingLoad()), '... and shut after it');
+/* extend, never shorten: a trial already later than live + 7 (the setup sweep pushed it) is kept and Stripe is not touched */
+$late = $now + 10 * $day;
+fresh(['subscription' => 'sub_k1', 'customer' => 'cus_k', 'status' => 'trialing', 'paid_at' => $now - 9 * $day, 'paid_sub' => 'sub_k1', 'trial_end' => $late, 'had_trial' => true], ['get' => ['/v1/subscriptions/sub_k1' => array_replace($sub, ['id' => 'sub_k1', 'trial_end' => $late])]]);
+$err = billingMarkLive($c, 'Matthew Sharpe'); $bk = billingLoad();
+t($err === null && count(find('POST', '/v1/subscriptions/sub_k1')) === 0 && count(reqs()) === 1, 'Release with a trial already later than live + 7: Stripe is only read, never changed');
+t(($bk['trial_end'] ?? 0) === $late && billingTrialUntil($bk) === $late && empty($bk['trial_err']), 'the later date stands: free trial until ' . date('j M Y', $late) . ' (never shortened)');
 
 echo "Release to client with the founding schedule\n";
 $S0 = $now - 3600; $fsub = array_replace($sub, ['id' => 'sub_f1', 'schedule' => 'sub_sched_f1', 'start_date' => $S0, 'items' => ['data' => [['price' => ['id' => 'price_mock_f_crew_month'], 'quantity' => 1], ['price' => ['id' => 'price_mock_f_crew_extra_month'], 'quantity' => 2]]]]);
@@ -140,7 +149,7 @@ echo "Edge cases at go-live\n";
 fresh(['subscription' => 'sub_e1', 'customer' => 'cus_e', 'status' => 'active', 'paid_at' => $now - 16 * $day, 'paid_sub' => 'sub_e1', 'trial_end' => $now - 2 * $day, 'had_trial' => true],
       ['get' => ['/v1/subscriptions/sub_e1' => array_replace($sub, ['id' => 'sub_e1', 'status' => 'active', 'trial_end' => $now - 2 * $day])]]);
 $err = billingMarkLive($c, 'Matthew Sharpe'); $b = billingLoad();
-t($err === null && !empty($b['live_at']) && count(find('POST', '/v1/subscriptions/sub_e1')) === 0, 'released after the 14-day ceiling: still released, nothing changed in Stripe');
+t($err === null && !empty($b['live_at']) && count(find('POST', '/v1/subscriptions/sub_e1')) === 0, 'released after the trial ran out (the sweep did not run): still released, nothing changed in Stripe');
 t(str_contains((string) ($b['trial_err']['why'] ?? ''), 'already ended'), 'and Traverse is told the first charge has gone through (trial_err)');
 fresh(['subscription' => 'sub_e2', 'customer' => 'cus_e', 'status' => 'active', 'paid_at' => $now, 'paid_sub' => 'sub_e2'], ['get' => ['/v1/subscriptions/sub_e2' => array_replace($sub, ['id' => 'sub_e2', 'status' => 'active', 'trial_end' => null])]]);
 $err = billingMarkLive($c, 'Matthew Sharpe'); $b = billingLoad();
@@ -148,7 +157,7 @@ t($err === null && empty($b['trial_err']) && count(find('POST', '/v1/subscriptio
 fresh(['subscription' => 'sub_e3', 'customer' => 'cus_e', 'status' => 'trialing', 'paid_at' => $now, 'paid_sub' => 'sub_e3', 'trial_end' => $ceil], ['fail' => 'Stripe is down (test)']);
 $err = billingMarkLive($c, 'Matthew Sharpe'); $b = billingLoad();
 t($err === null && !empty($b['live_at']) && str_contains((string) ($b['trial_err']['why'] ?? ''), 'set the trial on sub_e3 to end') && (int) ($b['trial_err']['want'] ?? 0) === (int) $b['live_at'] + 7 * $day, 'Stripe refuses: the release stands, and trial_err says which date to set by hand');
-t(($b['trial_end'] ?? 0) === $ceil, 'billing.json keeps the ceiling it really has');
+t(($b['trial_end'] ?? 0) === $ceil, 'billing.json keeps the trial end Stripe really has');
 fresh(['subscription' => 'sub_e4', 'customer' => 'cus_e', 'status' => 'trialing', 'paid_at' => $now, 'paid_sub' => 'sub_e4', 'trial_end' => $ceil, 'schedule' => 'sub_sched_odd'],
       ['get' => ['/v1/subscriptions/sub_e4' => array_replace($sub, ['id' => 'sub_e4', 'schedule' => 'sub_sched_odd']), '/v1/subscription_schedules/sub_sched_odd' => ['id' => 'sub_sched_odd', 'phases' => [['start_date' => $now, 'end_date' => $now + 99 * $day, 'items' => [['price' => 'price_x', 'quantity' => 1]]]]]]]);
 billingMarkLive($c, 'Matthew Sharpe'); $b = billingLoad();
@@ -170,6 +179,68 @@ t(!str_contains(json_encode(find('POST', '/v1/refunds')), 'money-back'), 'the re
 fresh(['subscription' => 'sub_c3', 'customer' => 'cus_c', 'status' => 'active', 'paid_at' => $now - 30 * $day, 'paid_sub' => 'sub_c3', 'trial_end' => $now - 20 * $day, 'live_at' => $now - 27 * $day]);
 $x = billingRefundCancel($c, 'Matthew Sharpe');
 t(isset($x['error']) && $x['error'] === BILLING_REFUND_WINDOW && count(reqs()) === 0, 'three weeks after the first charge: refused, nothing sent to Stripe');
+
+echo "Setup sweep: nobody is charged without an app (an install)\n";
+$base = ['customer' => 'cus_s', 'status' => 'trialing', 'paid_sub' => 'sub_s1', 'subscription' => 'sub_s1', 'had_trial' => true];
+$ssub = fn(array $o) => array_replace($sub, ['id' => 'sub_s1', 'schedule' => null], $o);
+fresh($base + ['paid_at' => $now - 5 * $day, 'trial_end' => $now + 2 * $day], ['get' => ['/v1/subscriptions/sub_s1' => $ssub(['trial_end' => $now + 2 * $day])]]);
+$r = billingSetupSweep($c, $now); $b = billingLoad(); $up = find('POST', '/v1/subscriptions/sub_s1');
+t($r['did'] === 'push' && count($up) === 1 && (int) $up[0]['fields']['trial_end'] === $now + 3 * $day && ($up[0]['fields']['proration_behavior'] ?? '') === 'none', 'not live, 2 days left: pushed to 3 days ahead (POST trial_end, no proration)');
+t(($b['trial_end'] ?? 0) === $now + 3 * $day && str_contains((string) @file_get_contents(DATA_DIR . '/billing.log'), '"setup push"'), 'billing.json follows; the push is in billing.log');
+fresh($base + ['paid_at' => $now - 2 * $day, 'trial_end' => $now + 5 * $day], ['get' => ['/v1/subscriptions/sub_s1' => $ssub(['trial_end' => $now + 5 * $day])]]);
+$r = billingSetupSweep($c, $now);
+t($r['did'] === '' && count(reqs()) === 1, 'not live, 5 days left: nothing to do (Stripe only read)');
+/* daily runs: the trial never comes within 3 days while not live */
+fresh($base + ['paid_at' => $now, 'trial_end' => $now + 7 * $day]); $ok = true;
+for ($d = 0; $d < 14; $d++) { $at = $now + $d * $day; $cur = (int) billingLoad()['trial_end']; file_put_contents($MOCK, json_encode(['get' => ['/v1/subscriptions/sub_s1' => $ssub(['trial_end' => $cur])]])); billingSetupSweep($c, $at); if ((int) billingLoad()['trial_end'] < $at + 3 * $day) $ok = false; }
+t($ok && count(find('POST', '/v1/subscriptions/sub_s1')) >= 9, 'thirteen daily runs: the trial end is always at least 3 days ahead (' . count(find('POST', '/v1/subscriptions/sub_s1')) . ' pushes)');
+fresh($base + ['paid_at' => $now - 5 * $day, 'trial_end' => $now + $day, 'schedule' => 'sub_sched_s1'],
+      ['get' => ['/v1/subscriptions/sub_s1' => $ssub(['trial_end' => $now + $day, 'schedule' => 'sub_sched_s1']), '/v1/subscription_schedules/sub_sched_s1' => array_replace($sched, ['id' => 'sub_sched_s1'])]]);
+$r = billingSetupSweep($cf, $now); $ph = find('POST', '/v1/subscription_schedules/sub_sched_s1')[0]['fields']['phases'] ?? [];
+t($r['did'] === 'push' && $r['via'] === 'schedule' && (int) ($ph[0]['trial_end'] ?? 0) === $now + 3 * $day && (int) ($ph[0]['end_date'] ?? 0) === $plus12($now + 3 * $day) && count(find('POST', '/v1/subscriptions/sub_s1')) === 0, 'on the founding schedule: pushed through the schedule, phase 1 ends 12 months after the new trial end');
+fresh($base + ['paid_at' => $now - 14 * $day - 60, 'trial_end' => $now + 3 * $day], ['get' => ['/v1/subscriptions/sub_s1' => $ssub(['trial_end' => $now + 3 * $day])]]);
+$r = billingSetupSweep($c, $now); $b = billingLoad();
+t($r['did'] === 'cancel' && count(find('DELETE', '/v1/subscriptions/sub_s1')) === 1 && count(find('POST', '/v1/refunds')) === 0 && count(find('POST', '/v1/subscriptions/sub_s1')) === 0, '14 days after sign-up, still not live: DELETE /v1/subscriptions/sub_s1, no refund (nothing was charged)');
+t($b['status'] === 'canceled' && !empty($b['setup_canceled']['why']) && str_contains((string) @file_get_contents(DATA_DIR . '/billing.log'), '"setup cancel"'), 'billing.json: canceled, with why; the cancel is in billing.log');
+fresh($base + ['paid_at' => $now - 20 * $day, 'trial_end' => $now + $day, 'live_at' => $now - 10 * $day]);
+t(billingSetupSweep($c, $now)['did'] === '' && count(reqs()) === 0, 'a live company: never touched (no Stripe call), even past 14 days');
+fresh(array_replace($base, ['status' => 'active']) + ['paid_at' => $now - 20 * $day, 'trial_end' => $now - 2 * $day]);
+t(billingSetupSweep($c, $now)['did'] === '' && count(reqs()) === 0, 'a subscription that is not trialing: never touched (no Stripe call)');
+fresh($base + ['paid_at' => $now - 20 * $day, 'trial_end' => $now + $day], ['get' => ['/v1/subscriptions/sub_s1' => $ssub(['status' => 'active'])]]);
+t(billingSetupSweep($c, $now)['did'] === '' && count(reqs()) === 1, 'billing.json says trialing but Stripe says active: only read, nothing pushed or cancelled');
+fresh($base + ['paid_at' => $now - 5 * $day, 'trial_end' => $now + $day], ['fail' => 'Stripe is down (test)']);
+t(billingSetupSweep($c, $now)['did'] === 'error', 'Stripe down: reported as an error (the caller emails Matthew)');
+
+echo "Setup sweep: website sign-ups with no install yet\n";
+file_put_contents($T . '/site/traverse-shared/clients/billing-config.php', "<?php return ['install' => 'site'];\n");
+file_put_contents($T . '/site/traverse-shared/clients/settings.json', '{"notify":"m.sharpe@traverseplatforms.com"}');
+$pend = function (string $cid, array $o) use ($T) { file_put_contents($T . '/site/traverse-shared/clients/pending/' . $cid . '.json', json_encode(['cid' => $cid, 'cs' => 'cs_test_' . $cid, 'edition' => 'roofing', 'plan' => 'crew', 'interval' => 'month', 'seats' => 5, 'email' => 'buyer@example.test', 'company_hint' => 'Buyer ' . $cid] + $o)); };
+@unlink($T . '/mail.log');
+$pend('c00000001', ['paid_at' => $now - 3 * $day, 'subscription' => 'sub_p1']);
+$pend('c00000002', ['paid_at' => $now - 15 * $day, 'subscription' => 'sub_p2']);
+$pend('c00000003', ['paid_at' => $now - 15 * $day, 'subscription' => 'sub_p3', 'provisioned_at' => $now - 14 * $day]);
+$pend('c00000004', ['paid_at' => $now - 2 * $day, 'subscription' => 'sub_p4']);
+$pend('c00000005', ['paid_at' => $now - 1 * $day, 'subscription' => 'sub_p5']);
+fresh([], ['get' => ['/v1/subscriptions/sub_p1' => array_replace($sub, ['id' => 'sub_p1', 'trial_end' => $now + $day]), '/v1/subscriptions/sub_p2' => array_replace($sub, ['id' => 'sub_p2', 'trial_end' => $now + 3 * $day]),
+    '/v1/subscriptions/sub_p3' => array_replace($sub, ['id' => 'sub_p3']), '/v1/subscriptions/sub_p4' => array_replace($sub, ['id' => 'sub_p4', 'status' => 'active']), '/v1/subscriptions/sub_p5' => array_replace($sub, ['id' => 'sub_p5', 'trial_end' => $now + 6 * $day])]]);
+$n = tcTrialSweepPending($now);
+t($n === ['push' => 1, 'cancel' => 1, 'error' => 0], 'one pushed, one cancelled, nothing failed (' . json_encode($n) . ')');
+$pp = find('POST', '/v1/subscriptions/sub_p1');
+t(count($pp) === 1 && (int) $pp[0]['fields']['trial_end'] === $now + 3 * $day, 'unfinished 3 days, 1 day left: pushed to 3 days ahead');
+t(count(find('DELETE', '/v1/subscriptions/sub_p2')) === 1 && !empty(tcPend('c00000002')['setup_canceled']), 'unfinished 15 days: cancelled in Stripe, the pending record marked');
+$ml = (string) @file_get_contents($T . '/mail.log');
+t(str_contains($ml, 'sign-up cancelled, no app after 14 days: Buyer c00000002') && str_contains($ml, 'm.sharpe@traverseplatforms.com') && str_contains($ml, 'nothing (cancelled during the free trial)'), 'Matthew is emailed: the company, why, and that nothing was charged');
+t(!str_contains($ml, '"to":"buyer@example.test"'), 'the buyer is not emailed by the sweep');
+t(count(find('GET', '/v1/subscriptions/sub_p3')) === 0, 'a provisioned company is skipped (its install has its own sweep)');
+t(count(find('POST', '/v1/subscriptions/sub_p4')) === 0 && count(find('DELETE', '/v1/subscriptions/sub_p4')) === 0, 'not trialing: only read');
+t(count(find('POST', '/v1/subscriptions/sub_p5')) === 0, '6 days left: nothing to do');
+$wl = tcWelcome($c, 'c00000002', 'cs_test_c00000002');
+t(($wl['code'] ?? 0) === 410 && $wl['error'] === TC_SETUP_CANCELED && !preg_match('/14 days/', TC_SETUP_CANCELED), "the cancelled sign-up's welcome link says so (no app, nothing charged) and makes nothing");
+t(isset(tcProvision($c, 'c00000002', 'cs_test_c00000002', [])['error']) && isset(tcArea($c, 'c00000002', 'cs_test_c00000002', [])['error']), '... and its area and provision steps refuse too');
+$cl = (string) @file_get_contents($T . '/site/traverse-shared/clients/clients.log');
+t(str_contains($cl, '"setup push"') && str_contains($cl, '"setup cancel"'), 'both are in clients.log');
+$mk = json_decode((string) file_get_contents($MOCK), true); $mk['get']['/v1/subscriptions/sub_p1']['trial_end'] = $now + 3 * $day; file_put_contents($MOCK, json_encode($mk));   /* Stripe now answers the pushed date */
+t(tcTrialSweepPending($now) === ['push' => 0, 'cancel' => 0, 'error' => 0] && count(find('DELETE', '/v1/subscriptions/sub_p2')) === 1, 'a second run the same day does nothing more');
 
 echo "The website's ready email\n";
 t(str_contains(tcTrialLine(['trial_end' => $now + 7 * $day]), 'Your 7 free days started today. Your card is charged on ' . date('j M Y', $now + 7 * $day) . ' unless you cancel'), 'ready email: the free days and the charge date');

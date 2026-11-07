@@ -34,6 +34,19 @@ t(read('marketing-site/site/public_html/demo/index.html').includes('Every plan s
 const st = read('marketing-site/site/public_html/start/index.html');
 t(st.includes("P.freeDays ? '$0' : first") && st.includes(" days free once your app is live. Cancel before day "), 'checkout page: $0 due today, the first charge after the trial, the trial line');
 t(read('marketing-site/site/public_html/cancellation/index.html').includes('Last updated: 6 November 2026'), 'cancellation page dated 6 November 2026');
+/* no 14 days (2026-11-06: the trial opens at 7, so Stripe's date is the earliest charge; no 14-day ceiling anywhere a customer reads) */
+const D14 = /14[ -]d(?:ays?|[ií]as)/i;
+for (const p of ['marketing-site/site/public_html/index.html', 'marketing-site/site/public_html/demo/index.html', 'marketing-site/site/public_html/start/index.html', 'marketing-site/site/public_html/start/welcome/index.html', 'marketing-site/project/Main.dc.html'])
+  t(!D14.test(bare(read(p))), 'no "14 days" at all: ' + p);
+/* the legal pages say 14 days only in the late-payment clause (§9.4 and "If a payment fails"), never about the trial */
+for (const p of ['marketing-site/site/public_html/terms/index.html', 'marketing-site/site/public_html/cancellation/index.html', 'business/client-agreement.md', 'business/cancellation-policy-DRAFT.md']) {
+  const src = bare(read(p)).split('## Fact-check log')[0], hits = src.match(/[^.<>|]*14[ -]d(?:ays?)[^.<>|]*/gi) || [];
+  t(hits.every((h) => /paid within 14 days of that notice|still not made 14 days after that email/.test(h)), '"14 days" only in the late-payment clause: ' + p + ' (' + hits.length + ')');
+}
+/* the app: the stats screens keep "Last 14 days"; nothing about the trial or a free period says 14 */
+const TRIAL14 = /(?:free|trial|prueba|gratis|charge|cobr)[^'"\n]{0,80}14[ -]d(?:ays?|[ií]as)|14[ -]d(?:ays?|[ií]as)[^'"\n]{0,80}(?:free|trial|prueba|gratis|charge|cobr)/i;
+for (const p of ['app/summit-de59ae83/index.html', 'app/i18n/es.json', 'editions/dist/public_html/tr-cb2e8587/index.html']) t(!TRIAL14.test(bare(read(p))), 'no "14 days" in the trial words: ' + p);
+t(!/trial_cap_days|trial_period_days\] = max/.test(read('app/api/billing.php')) && /'trial_period_days'\] = \(int\) \$c\['free_days'\]/.test(read('app/api/billing.php')), 'billing.php: checkout opens the trial at free_days, no 14-day ceiling');
 const rounds = read('app/api/rounds.php');
 t(/const AGREEMENT_VERSION = '2026-11-06';/.test(rounds) && read('app/api/traverse-start.php').includes("'agreement' => '2026-11-06'"), 'the agreement version admins accept is 2026-11-06 (app and website)');
 console.log('\n' + pass + ' passed, ' + fail + ' failed'); process.exit(fail ? 1 : 0);

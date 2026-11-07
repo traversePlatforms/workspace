@@ -188,6 +188,8 @@ function tcSessionGet(array $c, string $cs): ?array {
     $s = stripeCall($c, 'GET', '/v1/checkout/sessions/' . rawurlencode($cs), ['expand' => ['subscription']]);
     return isset($s['error']) || empty($s['id']) ? null : $s;
 }
+/* the welcome link of a sign-up the setup sweep cancelled (tcTrialSweepPending, 2026-11-06) */
+const TC_SETUP_CANCELED = 'This sign-up was cancelled because your app was never set up. Nothing was charged. To start again, email hello@traverseplatforms.com.';
 function tcSessionPaid(?array $s, string $cid): bool {
     if (!$s || ($s['status'] ?? '') !== 'complete' || !in_array($s['payment_status'] ?? '', ['paid', 'no_payment_required'], true)) return false;
     return ($s['client_reference_id'] ?? '') === $cid || ($s['metadata']['install'] ?? '') === $cid;
@@ -196,6 +198,7 @@ function tcSessionPaid(?array $s, string $cid): bool {
 function tcWelcome(array $c, string $cid, string $cs): array {
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know. Use the link from your email, or email hello@traverseplatforms.com.', 'code' => 404];
+    if (!empty($p['setup_canceled'])) return ['error' => TC_SETUP_CANCELED, 'code' => 410];   /* no app 14 days after sign-up: cancelled, nothing charged (2026-11-06) */
     $reg = tcReg()[$cid] ?? null;
     if ($reg && ($reg['status'] ?? '') === 'live') return ['ready' => true] + tcReadyInfo($reg, null);
     $s = tcSessionGet($c, $cs);
@@ -466,6 +469,7 @@ function tcCounties(string $ed): array {
 function tcArea(array $c, string $cid, string $cs, array $in): array {
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know.', 'code' => 404];
+    if (!empty($p['setup_canceled'])) return ['error' => TC_SETUP_CANCELED, 'code' => 410];   /* no app 14 days after sign-up: cancelled, nothing charged (2026-11-06) */
     if (!tcSessionPaid(tcSessionGet($c, $cs), $cid)) return ['error' => 'We have not seen your sign-up go through at Stripe yet. Wait a moment and try again.', 'code' => 402];
     $S = tcSettings(); $mode = (string) ($in['mode'] ?? 'radius');
     if ($mode === 'counties') {
@@ -492,6 +496,7 @@ function tcArea(array $c, string $cid, string $cs, array $in): array {
 function tcBrand(array $c, string $cid, string $cs, array $in): array {
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know.', 'code' => 404];
+    if (!empty($p['setup_canceled'])) return ['error' => TC_SETUP_CANCELED, 'code' => 410];   /* no app 14 days after sign-up: cancelled, nothing charged (2026-11-06) */
     /* paid first, as the area step (review 2026-10-31: the session id is in Stripe's own checkout address, so an unpaid visitor knew the link and could park logo files here) */
     if (empty($p['paid_at']) && !tcSessionPaid(tcSessionGet($c, $cs), $cid)) return ['error' => 'We have not seen your sign-up go through at Stripe yet. Wait a moment and try again.', 'code' => 402];
     $color = strtolower(trim((string) ($in['color'] ?? '')));
@@ -512,6 +517,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     $lock = tcLock($cid);
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know.', 'code' => 404];
+    if (!empty($p['setup_canceled'])) return ['error' => TC_SETUP_CANCELED, 'code' => 410];   /* no app 14 days after sign-up: cancelled, nothing charged (2026-11-06) */
     $reg = tcReg()[$cid] ?? null;
     if ($reg && ($reg['status'] ?? '') === 'live') return ['ok' => true, 'again' => true] + tcReadyInfo($reg, null);
     $s = tcSessionGet($c, $cs);
@@ -602,7 +608,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     $b = billingLoad();
     if (empty($b['live_at'])) { $why = billingMarkLive($cc, 'Ready on payment'); if ($why !== null) tcLog(['what' => 'not released', 'cid' => $cid, 'why' => $why]); }
     /* the free days start now: Stripe's trial moved to end 7 days from now (billingTrialFromLive, run by billingMarkLive); if Stripe refused,
-       Matthew is told, since the card would otherwise be charged at the 14-day ceiling (2026-11-06) */
+       Matthew is told, since the card would otherwise be charged when the shorter trial runs out (2026-11-06) */
     $te = billingLoad()['trial_err'] ?? null;
     if (is_array($te) && !empty($te['why']) && empty($p['trial_err_mailed'])) {
         tcMailMatthew('free trial NOT moved in Stripe: ' . $v['company'], ['Client id' => $cid, 'Subscription' => (string) (billingLoad()['subscription'] ?? ''), 'Why' => (string) $te['why'], 'Do' => 'set the trial end in Stripe to ' . date('j M Y H:i', (int) ($te['want'] ?? 0))]);
@@ -700,6 +706,48 @@ function tcHookPending(string $cid, array $ev): string {
     }
     return $type;
 }
+/**
+ * Nobody is charged without an app (Matthew 2026-11-06), for website sign-ups whose install is not made yet (a pending record with paid_at
+ * and no provisioned_at): run once a day by traverse-tools/clients.php relink. The trial is pushed (billing.php billingTrialSet) so it stays
+ * setup_push_days ahead; setup_cancel_days after sign-up the subscription is cancelled in Stripe (DELETE; nothing has been charged), the
+ * welcome link stops working, and Matthew is emailed. A subscription that is not trialing is left alone. Every push and cancel is in
+ * clients.log. Installs already made are swept by sixfold-tools/setup-trial-sweep.php. Returns ['push' => n, 'cancel' => n, 'error' => n].
+ */
+function tcTrialSweepPending(?int $now = null): array {
+    $now = $now ?? time(); $n = ['push' => 0, 'cancel' => 0, 'error' => 0];
+    $c = tcBilling(); if (!$c) return $n;
+    foreach (glob(tcDir() . '/pending/c*.json') ?: [] as $f) {
+        $p = tcJson($f); $cid = (string) ($p['cid'] ?? '');
+        if (!tcCidOk($cid) || empty($p['paid_at']) || !empty($p['provisioned_at']) || !empty($p['setup_canceled']) || empty($p['subscription'])) continue;
+        $lk = tcLock($cid); $p = tcPend($cid);
+        if (!empty($p['provisioned_at']) || !empty($p['setup_canceled'])) { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } continue; }   /* made or cancelled meanwhile */
+        $cc = tcClientBilling($c, $cid); $subId = (string) $p['subscription'];
+        $who = ['Client id' => $cid, 'Buyer' => (string) ($p['company_hint'] ?? ''), 'Email' => (string) ($p['email'] ?? ''), 'Edition' => (string) ($p['edition'] ?? ''), 'Subscription' => $subId, 'Signed up' => date('j M Y', (int) $p['paid_at'])];
+        $sub = stripeCall($cc, 'GET', '/v1/subscriptions/' . rawurlencode($subId));
+        if (isset($sub['error'])) { tcLog(['what' => 'setup sweep', 'cid' => $cid, 'error' => $sub['error']]); $n['error']++; }
+        elseif (($sub['status'] ?? '') === 'trialing') {
+            $sub['id'] = $sub['id'] ?? $subId; $te = (int) ($sub['trial_end'] ?? 0);
+            if ($now >= (int) $p['paid_at'] + (int) $c['setup_cancel_days'] * 86400) {
+                $x = stripeCall($cc, 'DELETE', '/v1/subscriptions/' . rawurlencode($subId));
+                if (isset($x['error'])) { tcLog(['what' => 'setup cancel failed', 'cid' => $cid, 'error' => $x['error']]); $n['error']++;
+                    tcMailMatthew('sign-up NOT cancelled in Stripe: ' . ($p['company_hint'] ?? $cid), $who + ['Why' => $x['error'], 'Do' => 'cancel it in Stripe before ' . date('j M Y H:i', $te) . ' or the card is charged with no app']); }
+                else {
+                    $why = 'the welcome page was never finished, so no app ' . (int) $c['setup_cancel_days'] . ' days after sign-up';
+                    tcPendSave($cid, fn($x) => array_replace($x, ['setup_canceled' => ['at' => $now, 'why' => $why]]));
+                    tcLog(['what' => 'setup cancel', 'cid' => $cid, 'subscription' => $subId]); $n['cancel']++;
+                    tcMailMatthew('sign-up cancelled, no app after 14 days: ' . ($p['company_hint'] ?? $cid), $who + ['Why' => $why, 'Charged' => 'nothing (cancelled during the free trial)']);
+                }
+            } elseif ($te < $now + (int) $c['setup_push_days'] * 86400) {
+                $want = $now + (int) $c['setup_push_days'] * 86400;
+                $r = billingTrialSet($cc, $sub, $want, (string) ($p['schedule'] ?? ''));
+                if (isset($r['error'])) { tcLog(['what' => 'setup push failed', 'cid' => $cid, 'error' => $r['error']]); $n['error']++; tcMailMatthew('free trial NOT pushed: ' . ($p['company_hint'] ?? $cid), $who + ['Why' => $r['error']]); }
+                else { tcLog(['what' => 'setup push', 'cid' => $cid, 'from' => $te, 'trial_end' => $want, 'via' => $r['via']]); $n['push']++; }
+            }
+        }
+        if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
+    }
+    return $n;
+}
 /** reminders for companies that paid and never filled in the welcome page: once a day after the first, for up to three days */
 function tcRemind(): int {
     $n = 0;
@@ -708,7 +756,7 @@ function tcRemind(): int {
         if (empty($p['paid_at']) && empty($p['events']) && empty($p['area']) && empty($p['provisioned_at']) && (int) ($p['created'] ?? 0) < time() - 14 * 86400) {   /* a checkout started and never paid: gone after two weeks, its logo too */
             @unlink($f); @unlink($f . '.lock'); foreach (['png', 'jpg', 'svg'] as $x) @unlink(substr($f, 0, -5) . '-logo.' . $x); continue;
         }
-        if (empty($p['paid_at']) || !empty($p['provisioned_at']) || empty($p['email'])) continue;
+        if (empty($p['paid_at']) || !empty($p['provisioned_at']) || !empty($p['setup_canceled']) || empty($p['email'])) continue;
         $sent = (array) ($p['reminded'] ?? []); $last = $sent ? max($sent) : (int) $p['paid_at'];
         if (count($sent) >= 3 || time() - $last < 86400) continue;
         tcMail((string) $p['email'], 'Your Traverse is waiting for you', "You subscribed to " . tcTrade((string) $p['edition']) . " but your app is not open yet: it needs your company name, business address and color (about two minutes).\n\n" . tcWelcomeUrl($p) . "\n\nTraverse Platforms\n");

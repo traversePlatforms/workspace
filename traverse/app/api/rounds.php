@@ -1838,7 +1838,7 @@ $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
 const PRACTICE_SHUT = ['squarehook', 'billinghook', 'synchook', 'smsin', 'sitelead', 'fbpoll', 'metapoll', 'metasetup', 'msgpreview', 'clickuppoll',
     'squarenightly', 'squaresweep', 'payset', 'squareoauth', 'mailoauth', 'mailset', 'fboauth', 'fbleadsset', 'fbleadstoken', 'fbpollnow', 'fbforms',
     'jobberoauth', 'syncconn', 'syncrun', 'synctest', 'synchookset', 'syncsheet', 'syncsheetset', 'jnset', 'jnsync', 'billingcheckout', 'billingportal',
-    'billingrefund', 'billinglive', 'billinglivecli', 'skiptrace', 'skippick', 'prcimport', 'hop', 'hopin', 'installs', 'clients', 'startin'];
+    'billingrefund', 'billinglive', 'billinglivecli', 'trialsweep', 'skiptrace', 'skippick', 'prcimport', 'hop', 'hopin', 'installs', 'clients', 'startin'];
 if (PRACTICE && in_array($action, PRACTICE_SHUT, true)) fail('Not in the practice copy: it never connects to outside accounts or services.', 404);
 /* Won or booked gives the customer (2026-10-21): after the requests that can book a job or win a lead, from the customer's side or ours */
 if (($isPost && in_array($action, ['a365accept', 'a365signed', 'a365savecard', 'qwon', 'jobsave', 'leadstatus', 'squareconfirm', 'jobpaid'], true)) || in_array($action, ['clickuppoll', 'metapoll'], true))   /* the polls run as GET too */
@@ -2498,6 +2498,23 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'billinglivecli'
     $e = billingMarkLive(billingConfig(__DIR__), 'Command line');
     $b = billingLoad();
     out($e === null ? ['ok' => true, 'liveAt' => $b['live_at'] ?? null, 'trialEnd' => billingTrialUntil($b), 'trialErr' => $b['trial_err']['why'] ?? null] : ['ok' => false, 'error' => $e]);
+}
+/* nobody is charged without an app (Matthew 2026-11-06): once a day (sixfold-tools/setup-trial-sweep.php, started by morning-email.php at the
+   4 am run), a trialing plan that is not live yet has its trial pushed to stay 3 days ahead; 14 days after sign-up with no go-live it is
+   cancelled in Stripe with no charge, and Matthew is emailed (also when Stripe refused a push or a cancel). billing.php billingSetupSweep. */
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'trialsweep') {
+    if (!feature('billing')) out(['ok' => true, 'did' => '', 'why' => 'billing off']);
+    $tsNow = isset($_GET['now']) && ctype_digit((string) $_GET['now']) ? (int) $_GET['now'] : null;   /* the test copy only */
+    $r = billingSetupSweep(billingConfig(__DIR__), $tsNow);
+    if (in_array($r['did'], ['cancel', 'error'], true)) {
+        $co = company(); $bb = billingLoad();
+        $r['mailed'] = travMail(seatNoteTo(), 'Traverse: ' . ($r['did'] === 'cancel' ? 'sign-up cancelled, no app after 14 days: ' : 'free trial NOT pushed: ') . (string) $co['name'],
+            ($r['did'] === 'cancel'
+                ? "A company signed up but its app was never released, so its free trial would have run out with no app. The subscription was cancelled in Stripe; nothing was charged.\n\nWhy: " . $r['why']
+                : "A company that is not live yet is still on a trial that could run out before its app is released.\n\nWhat went wrong: " . $r['error'])
+            . "\n\nCompany: " . (string) $co['name'] . "\nInstall: " . COOKIE . ' (' . (string) billingConfig(__DIR__)['install'] . ")\nSubscription: " . (string) ($bb['subscription'] ?? '') . "\nSigned up: " . (!empty($bb['paid_at']) ? date('j M Y', (int) $bb['paid_at']) : '?') . "\n")['ok'];
+    }
+    out(['ok' => true] + $r);
 }
 
 /* ---- calendar sync (Matthew 2026-10-11): a person's calendar as an iCalendar feed ----
