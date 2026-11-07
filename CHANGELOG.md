@@ -8,6 +8,72 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-11-06 (Friday)
+
+**Traverse: 7-day free trial** (live everywhere)
+- **Trial:** card at sign-up, nothing charged, billing starts by itself unless they cancel; the 7 days count from go-live. Replaces the 7-day money-back guarantee.
+- **Website and agreement:** homepage, demo, start, welcome, terms and cancellation pages say "7 days free"; checkout shows $0 due today; Subscription Agreement version 4. Whether v4 goes back to the attorney is Matthew's call.
+- **Safety:** first charge never earlier than shown; nobody charged without an app (daily check; cancelled with nothing charged 14 days after sign-up with no go-live, Matthew emailed). Stripe test-mode check 14/14. Prospect Desk templates (all 6) now say 7 days free.
+- **Manual and checklist:** billing and Terms step moved to live; "Mark live starts the free trial".
+
+**Traverse: free-map emails**
+- Free one-page town map per town and trade; 55-word plain email, one question, two follow-ups. Desk now sends timed messages; follow-ups only while the company is still Emailed.
+- **1,117 queued on Matthew's go:** 11 new companies from Mon 9 Nov 9:00 MT (follow-ups Thu 12 and Thu 19 Nov), then 1,084 already-emailed (748 lawn, 336 roofing) at 100 per weekday 19 Nov to 7 Dec, not 26-27 Nov.
+- **Address check:** 1 domain takes no mail, 3 doubtful, of 1,117.
+- Marketing push so far: 1,823 emails, about 85 site visits, 1 reply, no demos. 152 new prospects drafted; private call list of 971.
+
+**Posts and content** (drafts only)
+- **Toy drive:** 14 Facebook drafts, Mon/Wed 9 Nov to 28 Dec, posts 1-4 on Matthew's photos; VAA and the four charities named on his permission. Nothing posted or scheduled. Poster hours (12-6) vs charity doc (11:30-6) still open.
+- **Facebook Reels:** now send the video itself to Meta (the fetch method failed twice on 5 Nov). Live.
+
+**Admin:** TASKS ticked for what had shipped; SX-6, SX-7, SX-46, SX-57, SX-60 closed on Matthew's word. Bryce's scheduling sheet archived. Touchpad fix for gaming. Laptop tools added.
+
+**Running overnight:** cloud computer's hail-hours job for the 10 am and 11 pm storms; code, phone and tablet review; free-trial sweep in the 4 am run.
+
+## 2026-11-05 (Thursday)
+
+- **Traverse:** the prospect queue finished 10:18 pm: 1,823 sent, about 4% bounced.
+- **Posts:** first real Facebook Reel failed at 5 pm and again at 10 pm (Instagram took the same video). The calendar now reports Meta's own reason (live 7:53 pm); the real fix went in 6 Nov.
+- **Admin:** move to the new laptop completed; unsaved changes from the old PC carried over.
+- **Waiting:** Traverse Google Workspace trial ends 7 Nov; check plan and price.
+
+## 2026-11-04 (Wednesday)
+
+**Surge website** (on staging, not live)
+- **Lance's round 2:** Home, How Surge Works (three channels, no cold prospecting), About, Careers (resume asked for) reworded; three research blog posts retired.
+- **Full audit:** door-to-door and "close-knit" wording out; promotion described as on performance; 23 pages OK, 0 broken links, 0 SEO failures, noindex on. Bigger consent box on the booking form.
+
+**Peak:** read-only CourtReserve reader and year pull built after Matthew's permission email; personal details dropped before saving; data kept out of git and backups.
+
+**Server:** Lightsail move plan with prices (about $25-27 a month); nothing bought.
+
+## 2026-11-03 (Tuesday)
+
+**Sixfold 365 app** (live)
+- **Lead doubles:** matches phone, email, full name or house; "Possible double" on cards; Add a lead checks as typed. Matthew's duplicate Ira removed.
+- **Old form links:** an earlier link opens the newest form (Mark and Arleen's deposits).
+- **Square deposits:** "It's the deposit: book that day" records the payment, turns off other deposit links and books the day.
+- **Follow-up email:** "Jen sent the details by text" removed for everyone.
+
+**J.A.R.V.I.S.** (live): photo button for everyone (up to 4 per message); PDFs with an Open button, tappable links; "needs you" alerts go to Matthew's phones only.
+
+**Peak:** one-page website quote sent to Brandon by Matthew: $3,000 up front or $583.33 a week for six weeks ($3,500).
+
+**Admin:** post calendar source saved in main; GitHub backup fixed after a failed night (Drive copy fine); OneDrive Wi-Fi job fixed.
+
+## 2026-11-02 (Monday)
+
+**Sixfold 365 app** (live)
+- **Follow-up email:** personal note, no designed banner or unsubscribe header, for the inbox.
+- **Practice copy:** separate install for testers, made-up customers, everything outgoing faked and logged; real app checked unchanged.
+- **Water screen:** no source names in the footer.
+
+**J.A.R.V.I.S.:** own tab in the hub (chat only); Matthew's chats skip help-desk limits and run on the strongest model; practice copy plays along with a "nothing was really changed" note.
+
+**Traverse:** website finder v2 gave 337 sites and 263 emails, 245 clean ones queued on Matthew's go; hourly bounce scan; demo video v1 recorded (3:34), not uploaded.
+
+**Admin:** Peak meeting notes saved (internal systems work not started).
+
 ## 2026-11-01 (Sunday)
 
 **Sixfold 365 customer emails** (start Mon 2 Nov 8 am, newsletter 9 am; approved by Jen and Cai)

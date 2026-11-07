@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day: Monday 2 November 2026</title>
+<!-- Matthew's end-of-day change log (started 2026-10-27). Same layout as Brandon's end-of-day picture: a header band, number tiles two by two,
+     then sections with plain rows. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). Cards stay on one page when printed. -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:13px;line-height:1.42}.page{padding:0 4px 8px}.head{padding:20px 24px}.kpis{margin:14px 0 4px;gap:10px}.kpi{padding:12px 16px}.kpi b{font-size:34px}.kpi small{font-size:12px}h2{font-size:18px;margin:16px 0 8px}.row{padding:8px 16px;grid-template-columns:140px 1fr}.foot{margin-top:18px}}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="head">
+  <div><div class="tag">End of day</div><h1>Monday 2 November 2026</h1><div class="d">Everything we changed today across the apps, sites and data</div></div>
+  <div class="d">Practice copy · J.A.R.V.I.S. hub tab · Demo video · Prospecting</div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><b>11</b><span>Changes saved</span><small>Each one recorded in the change history</small></div>
+  <div class="kpi"><b>245</b><span>Companies queued</span><small>Found by the website finder and added to the desk on your go</small></div>
+  <div class="kpi"><b>3:34</b><span>Demo video, version 1</span><small>Recorded, not uploaded anywhere</small></div>
+  <div class="kpi warn"><b>2</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+
+<div class="sec">
+<h2>Sixfold 365 app <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Follow-up email</div><div class="v"><span class="pill live">Live</span>Now a short personal note instead of the designed email: no banner, boxes, buttons or social icons, and no unsubscribe link hidden in the email header. This is so more of them land in the inbox. The offer is one sentence, links are plain, and the visible unsubscribe line and address stay.</div></div>
+  <div class="row"><div class="k">Practice copy</div><div class="v"><span class="pill live">Live</span>A separate practice version of the app for testers such as Lance, at its own address. Made-up customers only. Every email, text, payment, phone alert and outside connection is pretended: it is written to a list called "What would have gone out" and nothing really leaves. Cards are never saved or charged. We checked that the real Sixfold app and its data did not change. Testers do not get the "See Jen's screen" tile; you keep "See through their eyes".</div></div>
+  <div class="row"><div class="k">Water screen</div><div class="v"><span class="pill live">Live</span>The footer no longer shows source names or a file path. Fixed on Sixfold, Yards and the practice copy.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Traverse <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Website finder</div><div class="v"><span class="pill live">Live</span>The second run found 337 websites and 263 business emails. 245 clean ones were added to the Prospect Desk and queued, on your go.</div></div>
+  <div class="row"><div class="k">Bounce scan</div><div class="v"><span class="pill live">Live</span>Every hour the desk now reads the bounce notices in the Traverse inbox and notes them on the company before the next emails go out.</div></div>
+  <div class="row"><div class="k">Demo video</div><div class="v"><span class="pill off">Built, off</span>Version 1 recorded, 3 minutes 34 seconds: Roofing, Lawn and Solar demo copies, a different voice per scene, a phone shown inside the picture, captions, a thumbnail and the YouTube text. Names, streets and data sources are masked. Not uploaded.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Email and admin <span class="n">1</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Peak meeting</div><div class="v"><span class="pill live">Live</span>Notes from your 2 November call saved. Peak's internal systems and website redesign are on the task list as not started.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Assistant <span class="n">4</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Hub tab</div><div class="v"><span class="pill live">Live</span>J.A.R.V.I.S. has its own tab in your assistant hub and opens straight into the full chat. Just J.A.R.V.I.S.: no Sixfold splash, no app behind it, no close button. Earlier lists your past chats inside the chat. Same conversations as the bubble in the app.</div></div>
+  <div class="row"><div class="k">Your chats</div><div class="v"><span class="pill live">Live</span>Anything you open from your own account has no help-desk limits and runs on the strongest model. Jen's limits are unchanged.</div></div>
+  <div class="row"><div class="k">Practice chat</div><div class="v"><span class="pill live">Live</span>In the practice copy, J.A.R.V.I.S. plays along as if it is changing things, then ends with "Practice copy: just testing, so nothing was really changed." It cannot change anything there.</div></div>
+  <div class="row"><div class="k">Hub Posts tab</div><div class="v"><span class="pill live">Live</span>Synced from the live calendar.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Running tonight <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Prospect emails</div><div class="v"><span class="pill live">Live</span>Queue keeps sending.</div></div>
+  <div class="row"><div class="k">Bounce scan</div><div class="v"><span class="pill live">Live</span>Hourly.</div></div>
+  <div class="row"><div class="k">J.A.R.V.I.S.</div><div class="v"><span class="pill live">Live</span>Answers Jen while the laptop is on.</div></div>
+</div>
+</div>
+
+<div class="sec wait">
+<h2>Waiting on you <span class="n">2</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Demo video</div><div class="v">Watch version 1 and say what to change before anything goes on YouTube.</div></div>
+  <div class="row"><div class="k">Peak</div><div class="v">Internal systems and the website redesign wait for your word to start.</div></div>
+</div>
+</div>
+
+<p class="foot">Full detail of every change: the workspace change history (git log) for 2 November 2026, and CHANGELOG.md. This document: changelog/2026-11-02.html, with a copy in Desktop › End of Day Reports.</p>
+</div>
+</body>
+</html>
