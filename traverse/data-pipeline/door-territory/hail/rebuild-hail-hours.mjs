@@ -22,6 +22,9 @@ const CONC = +((process.argv.find((a) => a.startsWith('--conc=')) || '').split('
    20-minute samples get their hours too (the audit had 66% of town storm days with hours). 2, 4, 5, 10 or 20 (the default). */
 const STEP = +((process.argv.find((a) => a.startsWith('--step=')) || '').split('=')[1] || 20);
 if (![2, 4, 5, 10, 20].includes(STEP)) { console.error('--step must be 2, 4, 5, 10 or 20'); process.exit(2); }
+/* 6 Nov (CLOUD-PLAN 9-15 Nov, "hail hours from 10 am to midnight"): --hours=10,23 reads only those local hours, into its own out file, for
+   merge-hail-hours.mjs to add to the main file. Default 11-22 (11 am to 11 pm), as before. */
+const HOURS = (() => { const v = (process.argv.find((a) => a.startsWith('--hours=')) || '').split('=')[1]; if (!v) return Array.from({ length: 12 }, (_, i) => 11 + i); const h = v.split(',').map(Number); if (h.some((x) => !Number.isInteger(x) || x < 0 || x > 23)) { console.error('--hours: local hours 0-23, comma separated'); process.exit(2); } return h; })();
 const SOURCE = STEP === 2 ? 'NOAA/NSSL MRMS MESH every 2 minutes, archived by Iowa State University' : `NOAA/NSSL MRMS MESH every 2 minutes (sampled each ${STEP}), archived by Iowa State University`;
 const writeAtomic = (f, s) => { writeFileSync(f + '.tmp', s); renameSync(f + '.tmp', f); };
 
@@ -90,7 +93,7 @@ let n = 0, read = 0, missing = 0;
 for (const date of todo) {
   const towns = plan.days[date], hrs = {}; for (const k of towns) hrs[k] = new Set();
   const off = offsetH(date), times = [];
-  for (let h = 11; h <= 22; h++) for (let m = 0; m < 60; m += STEP) times.push([h, new Date(Date.parse(date + 'T00:00:00Z') + ((h + off) * 60 + m) * 60000)]);
+  for (const h of HOURS) for (let m = 0; m < 60; m += STEP) times.push([h, new Date(Date.parse(date + 'T00:00:00Z') + ((h + off) * 60 + m) * 60000)]);
   let i = 0, got = 0; const failed = [];
   const look = (h, g) => {
     for (const k of towns) {

@@ -54,5 +54,7 @@ grep -qE "MD5 MATCH|: 0 files to send" "$S/push.txt" && grep -q "json ok" "$S/pu
 
 ## 3. the server's copy
 LIVESUM=$($SG "cd $LIVE && md5sum hail-hours.json | cut -c1-32" < /dev/null)
-[ "$LIVESUM" = "$(md5sum "$S/hail-hours.json" | cut -c1-32)" ] || stop "the server's hail-hours.json is not the one built"
+# md5sum reads stdin here: $S holds Windows backslashes, and md5sum prefixes a "\" to its output for such a path (5 Nov: that
+# made this check fail on 4 Nov although the server's copy was the built one)
+[ "$LIVESUM" = "$(md5sum < "$S/hail-hours.json" | cut -c1-32)" ] || stop "the server's hail-hours.json is not the one built"
 step "done: 2-minute hail-hours.json live on Roofing (md5 ${LIVESUM:0:12}); old copy $S/hail-hours.before.json; note in TASKS.md"
