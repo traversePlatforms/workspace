@@ -73,6 +73,16 @@ t(count($s) === 2 && $s[1]['subject'] === 'Follow-up g1', 'first email then its 
 fresh([lead('g2')], [msg('g2', $now - 10, ['followup' => 1])]);
 run(); t(sent() === [] && count(events('skipped')) === 1, 'a follow-up with no first email behind it is skipped (still Not contacted)');
 
+echo "The free map is held once a company books (2026-11-07)\n";
+fresh([lead('h1', 'demo'), lead('h2', 'pilot'), lead('h3', 'talking'), lead('h4', 'demo'), lead('h5')],
+      [msg('h1', $now - 5, ['batch' => 'freemap-b2']), msg('h2', $now - 5, ['batch' => 'freemap-b1']), msg('h3', $now - 5, ['batch' => 'freemap-b2']), msg('h4', $now - 5), msg('h5', $now - 5, ['batch' => 'freemap-b2'])],
+      [['t' => 'mailbad', 'id' => 'h5', 'to' => 'h5@example-co.test', 'why' => 'its domain takes no mail (address check, 6 Nov)', 'by' => 'Test', 'at' => $now - 50]]);
+run(); $s = sent(); $why = array_column(events('skipped'), 'why', 'id');
+t(($why['h1'] ?? '') === 'free map held: Demo booked' && ($why['h2'] ?? '') === 'free map held: Pilot', 'Demo booked and Pilot: the free map is held');
+t(in_array('h3@example-co.test', array_column($s, 'to'), true), 'Talking still gets the free map');
+t(in_array('h4@example-co.test', array_column($s, 'to'), true), 'a message that is not a free map still goes to a Demo booked company');
+t(($why['h5'] ?? '') === 'email address cannot take mail' && !in_array('h5@example-co.test', array_column($s, 'to'), true), 'an address marked as not taking mail is skipped');
+
 echo "Never to these\n";
 fresh([lead('u1'), lead('u2'), lead('u3'), lead('u4', 'customer'), lead('u5')],
       [msg('u1', $now - 1), msg('u2', $now - 1), msg('u3', $now - 1), msg('u4', $now - 1), msg('u5', $now - 1, ['to' => 'old@example-co.test'])],
