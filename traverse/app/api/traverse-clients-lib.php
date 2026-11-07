@@ -14,7 +14,8 @@ declare(strict_types=1);
  *   2. Stripe sends the buyer to /start/welcome/?c=<id>&cs=<session>. The session is checked with Stripe on every visit (tcWelcome).
  *      If they leave before finishing, the webhook's checkout.session.completed emails them that link, and Matthew hears of every payment.
  *   3. The welcome form (company, business address, service radius, colour, logo, admin name/email/mobile) -> tcProvision(): the install is
- *      made from its edition already on the server, in seconds, and released at once (live_at = now: the money-back guarantee starts).
+ *      made from its edition already on the server, in seconds, and released at once (live_at = now: its 7 free days start, and Stripe's
+ *      trial is moved to end then: billing.php billingTrialFromLive; the checkout took the card and charged nothing).
  *      The buyer lands straight in their app (a one-use sign-in pass, rounds.php startin), on the welcome checklist, with the admin code on
  *      screen and by email.
  *   4. Their homes: every town of the edition whose centre, or any door, is within the radius of the business address (U.S. Census
@@ -132,7 +133,7 @@ function tcCidOf(array $o): string {
 /** every price the checkout page shows: billing.php's display numbers and its founding rule (each part, rounded to whole dollars) */
 function tcPlans(array $c): array {
     $on = billingFoundingOn($c); $pct = (int) $c['founding_pct']; $f = fn($v) => $on ? (int) round($v * (100 - $pct) / 100) : $v;
-    $o = ['founding' => $on, 'foundingPct' => $on ? $pct : 0, 'guaranteeDays' => (int) $c['guarantee_days'], 'plans' => []];
+    $o = ['founding' => $on, 'foundingPct' => $on ? $pct : 0, 'freeDays' => (int) $c['free_days'], 'setupDays' => (int) $c['setup_days'], 'plans' => []];   /* the free trial (2026-11-06) */
     foreach (BILLING_PLANS as $p) foreach (['month', 'year'] as $iv) {
         if (($c['prices'][$p][$iv] ?? '') === '') continue;
         $base = (int) ($c['display'][$p][$iv] ?? 0); $ex = $p === 'solo' ? 0 : (int) ($c['display'][$p . '_extra'][$iv] ?? 0);
@@ -144,7 +145,9 @@ function tcPlans(array $c): array {
 function tcQuote(array $c, string $plan, string $iv, int $seats): array {
     $seats = max($seats, (int) ($c['included'][$plan] ?? 1));
     $list = billingMonthly($c, $plan, $iv, $seats, false); $now = billingFoundingOn($c) ? billingMonthly($c, $plan, $iv, $seats, false, true) : $list;
-    return ['plan' => $plan, 'interval' => $iv, 'seats' => $seats, 'list' => $list, 'monthly' => $now, 'dueToday' => $iv === 'year' ? $now * 12 : $now];
+    /* the free trial (2026-11-06): nothing is due today on the website (every checkout there is a new company); firstCharge is the first bill */
+    $first = $iv === 'year' ? $now * 12 : $now;
+    return ['plan' => $plan, 'interval' => $iv, 'seats' => $seats, 'list' => $list, 'monthly' => $now, 'firstCharge' => $first, 'dueToday' => (int) $c['free_days'] > 0 ? 0 : $first];
 }
 
 /* ---------------------------------------------------------------- 1. checkout */
@@ -196,7 +199,7 @@ function tcWelcome(array $c, string $cid, string $cs): array {
     $reg = tcReg()[$cid] ?? null;
     if ($reg && ($reg['status'] ?? '') === 'live') return ['ready' => true] + tcReadyInfo($reg, null);
     $s = tcSessionGet($c, $cs);
-    if (!tcSessionPaid($s, $cid)) return ['paid' => false, 'error' => 'We have not seen this payment go through yet. If you just paid, wait a moment and reload.'];
+    if (!tcSessionPaid($s, $cid)) return ['paid' => false, 'error' => 'We have not seen your sign-up go through at Stripe yet. If you just finished, wait a moment and reload.'];
     $cd = (array) ($s['customer_details'] ?? []); $ad = (array) ($cd['address'] ?? []);
     return ['paid' => true, 'ready' => false, 'edition' => $p['edition'], 'editionName' => TC_EDITIONS[$p['edition']] ?? '', 'plan' => $p['plan'], 'interval' => $p['interval'], 'seats' => $p['seats'],
             'prefill' => ['email' => (string) ($cd['email'] ?? ''), 'name' => (string) ($cd['name'] ?? ''), 'phone' => (string) ($cd['phone'] ?? ''),
@@ -463,7 +466,7 @@ function tcCounties(string $ed): array {
 function tcArea(array $c, string $cid, string $cs, array $in): array {
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know.', 'code' => 404];
-    if (!tcSessionPaid(tcSessionGet($c, $cs), $cid)) return ['error' => 'We have not seen this payment go through yet. Wait a moment and try again.', 'code' => 402];
+    if (!tcSessionPaid(tcSessionGet($c, $cs), $cid)) return ['error' => 'We have not seen your sign-up go through at Stripe yet. Wait a moment and try again.', 'code' => 402];
     $S = tcSettings(); $mode = (string) ($in['mode'] ?? 'radius');
     if ($mode === 'counties') {
         $have = array_column(tcCounties((string) $p['edition']), 'name', 'key');
@@ -490,7 +493,7 @@ function tcBrand(array $c, string $cid, string $cs, array $in): array {
     $p = tcPend($cid);
     if (!$p || !hash_equals((string) ($p['cs'] ?? ''), $cs)) return ['error' => 'That link is not one we know.', 'code' => 404];
     /* paid first, as the area step (review 2026-10-31: the session id is in Stripe's own checkout address, so an unpaid visitor knew the link and could park logo files here) */
-    if (empty($p['paid_at']) && !tcSessionPaid(tcSessionGet($c, $cs), $cid)) return ['error' => 'We have not seen this payment go through yet. Wait a moment and try again.', 'code' => 402];
+    if (empty($p['paid_at']) && !tcSessionPaid(tcSessionGet($c, $cs), $cid)) return ['error' => 'We have not seen your sign-up go through at Stripe yet. Wait a moment and try again.', 'code' => 402];
     $color = strtolower(trim((string) ($in['color'] ?? '')));
     if (!preg_match('/^#[0-9a-f]{6}$/', $color)) return ['error' => 'Pick your brand color.', 'field' => 'color'];
     $logo = tcLogo((string) ($in['logo'] ?? '')); if (isset($logo['error'])) return $logo + ['field' => 'logo'];
@@ -512,7 +515,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     $reg = tcReg()[$cid] ?? null;
     if ($reg && ($reg['status'] ?? '') === 'live') return ['ok' => true, 'again' => true] + tcReadyInfo($reg, null);
     $s = tcSessionGet($c, $cs);
-    if (!tcSessionPaid($s, $cid)) return ['error' => 'We have not seen this payment go through yet. Wait a moment and try again.', 'code' => 402];
+    if (!tcSessionPaid($s, $cid)) return ['error' => 'We have not seen your sign-up go through at Stripe yet. Wait a moment and try again.', 'code' => 402];
     $v = tcForm($in); if (isset($v['error'])) return $v;
     if (empty($p['area'])) return ['error' => 'Start with your service area.', 'field' => 'area', 'step' => 1];
     if (empty($p['brand'])) return ['error' => 'Pick your color first.', 'field' => 'color', 'step' => 2];
@@ -598,6 +601,13 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
     if (is_array($sub)) billingTakeEvent($cc, ['id' => '', 'type' => 'customer.subscription.created', 'created' => time(), 'data' => ['object' => $sub]]);
     $b = billingLoad();
     if (empty($b['live_at'])) { $why = billingMarkLive($cc, 'Ready on payment'); if ($why !== null) tcLog(['what' => 'not released', 'cid' => $cid, 'why' => $why]); }
+    /* the free days start now: Stripe's trial moved to end 7 days from now (billingTrialFromLive, run by billingMarkLive); if Stripe refused,
+       Matthew is told, since the card would otherwise be charged at the 14-day ceiling (2026-11-06) */
+    $te = billingLoad()['trial_err'] ?? null;
+    if (is_array($te) && !empty($te['why']) && empty($p['trial_err_mailed'])) {
+        tcMailMatthew('free trial NOT moved in Stripe: ' . $v['company'], ['Client id' => $cid, 'Subscription' => (string) (billingLoad()['subscription'] ?? ''), 'Why' => (string) $te['why'], 'Do' => 'set the trial end in Stripe to ' . date('j M Y H:i', (int) ($te['want'] ?? 0))]);
+        $p = tcPendSave($cid, fn($x) => $x + ['trial_err_mailed' => time()]);
+    }
     /* founding prices step up to the list prices after 12 months: the schedule (made when the webhook saw the payment; here if it has not been) */
     if (($s['metadata']['founding'] ?? '') === '1' && empty($b['schedule'])) {
         $fs = !empty($p['schedule']) ? ['schedule' => $p['schedule']] : billingFoundingSchedule($cc, (string) ($b['subscription'] ?? ''));
@@ -612,7 +622,7 @@ function tcProvision(array $c, string $cid, string $cs, array $in): array {
 
     $e += ['status' => 'live', 'customer' => (string) ($b['customer'] ?? ($s['customer'] ?? '')), 'subscription' => (string) ($b['subscription'] ?? ''), 'plan' => (string) ($b['plan'] ?? $p['plan']),
            'interval' => (string) ($b['interval'] ?? $p['interval']), 'seats' => (int) ($b['seats'] ?? $p['seats']), 'admin' => $v['admin'], 'email' => $v['email'], 'area' => $area,
-           'live_at' => (int) ($b['live_at'] ?? 0)];
+           'live_at' => (int) ($b['live_at'] ?? 0), 'trial_end' => (int) (billingTrialUntil($b) ?? 0)];
     tcRegSave(function ($all) use ($cid, $e) { $all[$cid] = array_replace($all[$cid] ?? [], $e); return $all; });
     tcPendSave($cid, fn($x) => $x + ['provisioned_at' => time()]);
     if ($logoFile !== '') @unlink($logoFile);   /* the welcome page's copy has been handed to the install (review 2026-10-31: it was kept for good) */
@@ -634,7 +644,7 @@ function tcMail(string $to, string $subject, string $body): bool {
     return (bool) $r['ok'];
 }
 function tcWelcomeUrl(array $p): string { return rtrim(tcSettings()['site_base'], '/') . '/start/welcome/?c=' . $p['cid'] . '&cs=' . rawurlencode((string) $p['cs']); }
-function tcMoney(array $p): string { $q = (array) ($p['quote'] ?? []); return '$' . ($q['monthly'] ?? '?') . '/month' . (($p['interval'] ?? '') === 'year' ? ', billed yearly ($' . ($q['dueToday'] ?? '?') . ')' : ''); }
+function tcMoney(array $p): string { $q = (array) ($p['quote'] ?? []); return '$' . ($q['monthly'] ?? '?') . '/month' . (($p['interval'] ?? '') === 'year' ? ', billed yearly ($' . ($q['firstCharge'] ?? ($q['dueToday'] ?? '?')) . ')' : ''); }
 /** the buyer's email: their app is ready, with the address and their admin code */
 function tcMailReady(array $e, string $code): bool {
     $a = (array) ($e['area'] ?? []);
@@ -643,8 +653,14 @@ function tcMailReady(array $e, string $code): bool {
         . "Keep both to yourself: they open the admin side of your company's app. The welcome checklist inside the app walks you through inviting your team (each person gets an email to set their own password), connecting your email and payments, and importing customers.\n\n"
         . (($a['mode'] ?? '') === 'counties' ? 'Your homes: every town we cover in ' . ($a['place'] ?? 'your counties') . '. You can change this later in the app.'
             : (isset($a['lat']) && strtoupper((string) ($a['state'] ?? '')) === tcSettings()['state'] ? 'Your homes: every town within ' . (int) ($a['miles'] ?? 0) . ' miles of ' . ($a['place'] ?: 'your business') . '. You can change this later in the app.' : 'Property data for your area is being added; we will email you when your homes are in. Everything else works now.'))
-        . "\n\nYour 7-day money-back guarantee started today. Questions: reply to this email or call (303) 596-9515.\n\nMatthew Sharpe\nTraverse Platforms\n";
+        . "\n\n" . tcTrialLine($e) . " Questions: reply to this email or call (303) 596-9515.\n\nMatthew Sharpe\nTraverse Platforms\n";
     return tcMail((string) $e['email'], 'Your Traverse is ready: ' . $e['name'], $body);
+}
+/** the ready email's trial line (2026-11-06): the free days started today, and the day the card is charged */
+function tcTrialLine(array $e): string {
+    $te = (int) ($e['trial_end'] ?? 0);
+    return $te > time() ? 'Your 7 free days started today. Your card is charged on ' . date('j M Y', $te) . ' unless you cancel before then (Billing in the app, or reply to this email).'
+        : 'Your app is live today.';
 }
 /** Matthew's note about a company: paid, ready, or needing door data by hand */
 function tcMailMatthew(string $what, array $x): bool {

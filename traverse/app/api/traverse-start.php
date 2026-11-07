@@ -27,7 +27,7 @@ if (!$c) fail('Sign-up is not open yet. Book a demo instead, or email hello@trav
 
 if ($action === 'plans') {
     $eds = []; foreach (TC_EDITIONS as $k => $n) if (is_file(tcTplDir($k) . '/edition.json')) $eds[] = ['key' => $k, 'name' => $n];
-    out(['ok' => true, 'editions' => $eds, 'terms' => '2026-10-29', 'agreement' => '2026-10-29', 'seatsMax' => BILLING_SEATS_MAX] + tcPlans($c));
+    out(['ok' => true, 'editions' => $eds, 'terms' => '2026-10-29', 'agreement' => '2026-11-06', 'seatsMax' => BILLING_SEATS_MAX] + tcPlans($c));
 }
 if ($action === 'quote') {
     if (!$isPost) fail('POST required', 405);
@@ -108,7 +108,7 @@ if ($action === 'provision') {
         'Admin' => $e['admin'] . ' <' . $e['email'] . '>', 'Address' => ($a['address'] ?? '') . (($a['matched'] ?? '') !== '' ? ' (map: ' . $a['matched'] . ')' : ''),
         'Area' => ($a['mode'] ?? '') === 'counties' ? 'counties: ' . ($a['place'] ?? '') : ($a['miles'] ?? '') . ' miles' . (($a['place'] ?? '') !== '' ? ' around ' . $a['place'] : ''),
         'Homes' => isset($l['towns']) ? $l['towns'] . ' towns, ' . number_format((int) $l['doors']) . ' homes' : ('link failed: ' . ($l['error'] ?? '?')),
-        'Status' => $hand ? ($l['status'] === 'outside' ? 'outside Colorado: the app is open (pipeline, customers, jobs); add their towns' : ($l['status'] === 'nomatch' ? 'the address was not found on the map: set area.lat/lon in the registry, then clients.php relink ' . $cid : 'no towns in the radius yet: their towns need adding')) : 'live and released; money-back guarantee started',
+        'Status' => $hand ? ($l['status'] === 'outside' ? 'outside Colorado: the app is open (pipeline, customers, jobs); add their towns' : ($l['status'] === 'nomatch' ? 'the address was not found on the map: set area.lat/lon in the registry, then clients.php relink ' . $cid : 'no towns in the radius yet: their towns need adding')) : 'live and released; free trial started' . (!empty($e['trial_end']) ? ' (first charge ' . date('j M Y', (int) $e['trial_end']) . ')' : ''),
         'App' => $e['url'], 'Client id' => $cid]);
     exit;
 }

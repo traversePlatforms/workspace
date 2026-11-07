@@ -14022,8 +14022,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var box = q('div', 'choose setuph'), hero = q('div', 'hero');
     hero.appendChild(q('div', 'hi', bill ? 'Your plan needs attention' : 'Welcome, ' + (myName() || 'there')));
     hero.appendChild(q('div', 'dt', bill ? 'The app is paused for your team until the plan is paid. Update the card in Billing and everything opens again at once.'
-      : L.paid ? 'Paid: we’re setting up your towns and data; ready in up to ' + days + ' business days, often sooner.'
-      : 'Get your company ready while we set up your app. We release it in up to ' + days + ' business days after you pay, often sooner.'));
+      : L.paid ? 'Plan started: we’re setting up your towns and data; ready in up to ' + days + ' business days, often sooner. Your 7 free days start when it’s live.'
+      : 'Get your company ready while we set up your app. We release it in up to ' + days + ' business days after you pick a plan, often sooner.'));   /* the free trial (2026-11-06): nothing is paid before it */
     box.appendChild(hero);
     var card = q('div', 'card coform kitsetup setupck'), marks = {};
     var step = function (key, n, title, sub, fn, links) {
@@ -14042,7 +14042,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (kit) step('setup', '', 'Setup', 'Email, payments, prices and import, as before.', kitSetupView);
     } else {
       card.appendChild(q('div', 'dwh', 'Get ready'));
-      step('pay', String(++n), L.paid ? 'Paid' : 'Pay to start setup', L.paid ? 'Your plan is paid. Billing has the details.' : 'Pick your plan. The money-back guarantee starts the day your app opens.', billingView);
+      step('pay', String(++n), L.paid ? 'Plan started' : 'Pick a plan to start setup', L.paid ? 'Your plan is in. Billing has the details.' : 'Pick your plan. Your 7 free days start the day your app opens.', billingView);
       step('team', String(++n), 'Add your team', 'A sign-in for each person. They can sign in once your app is released.', accountsView);
       if (kit) step('connect', String(++n), 'Connect email and payments', 'Your email for agreements and receipts; Square, Stripe or other ways customers pay.', mailSetupView, [['Email', mailSetupView], ['Payments', kitPayView]]);
       if (kit) step('prices', String(++n), 'Set your prices', 'Your price list, Good, Better, Best, and your agreement terms. Claude can read your current price list in.', function () { prcPricesView(); });   /* the smart price list (2026-10-30) */
@@ -14107,7 +14107,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     api(action, { body: body }).then(function (r) {
       if (!r.ok) { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = r.error || 'That did not go through.'; return; }
       drawBilling(holder, r);
-      if (action === 'billingrefund') toast('Refunded and canceled', (r.amount ? money2(r.amount / 100) + ' goes back to the card. ' : '') + 'Stripe sends the receipt.', null);
+      if (action === 'billingrefund') toast(r.trial ? 'Canceled' : 'Refunded and canceled', r.trial ? 'Nothing was charged.' : (r.amount ? money2(r.amount / 100) + ' goes back to the card. ' : '') + 'Stripe sends the receipt.', null);   /* in the trial it only cancels (2026-11-06) */
       if (action === 'billinglive') toast('Released', 'Their whole team can sign in now.', null);   /* 2026-10-29 */
       if (action === 'billingmore') toast('More time given', r.lock && r.lock.moreUntil ? 'Open until ' + billDate(r.lock.moreUntil) + '.' : 'Noted.', null);
     }).catch(function () { btn.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Try again when you have signal.'; });
@@ -14128,7 +14128,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
          charge, the founding price and the day it steps up, then Manage billing and how to change the plan or add people */
       var c = q('div', 'card billcard'), P = BILL_PLAN[j.plan] || ['Plan', '', ''];
       var head = q('div', 'billhead'); head.appendChild(q('b', null, P[0] + (j.addon ? ' + second edition' : '')));
-      var label = { active: 'Active', trialing: 'Active', past_due: 'Payment failed', unpaid: 'Unpaid', canceled: 'Canceled', incomplete: 'Payment not finished', incomplete_expired: 'Payment not finished', paused: 'Paused' }[j.status] || j.status;
+      var label = { active: 'Active', trialing: 'Free trial', past_due: 'Payment failed', unpaid: 'Unpaid', canceled: 'Canceled', incomplete: 'Payment not finished', incomplete_expired: 'Payment not finished', paused: 'Paused' }[j.status] || j.status;
       head.appendChild(q('span', 'billst ' + (j.status === 'active' || j.status === 'trialing' ? 'ok' : 'bad'), label));
       c.appendChild(head);
       var dl = q('dl', 'billdl'), row = function (k, v) { if (!v) return; dl.appendChild(q('dt', null, k)); dl.appendChild(q('dd', null, v)); };
@@ -14140,24 +14140,35 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (live && j.cancelAtEnd && j.periodEnd) row('Ends', billDate(j.periodEnd));
       if (!live && j.interval) row('Was', j.interval === 'year' ? 'Paid yearly' : 'Paid monthly');
       if (dl.children.length) c.appendChild(dl);
-      /* setup, then the money-back guarantee (Matthew 2026-10-27, replacing the free pilot): set up within setupDays business days of
-         paying; money back for guaranteeDays from the day the app is live. Only Traverse marks it live or refunds. */
+      /* setup, then the free trial (Matthew 2026-11-06, replacing the money-back guarantee): set up within setupDays business days of
+         signing up; freeDays free from the day the app is live; the card is charged when the trial ends unless they cancel. Only Traverse
+         marks it live (which moves Stripe's trial end) or cancels for them. */
       var good = j.status === 'active' || j.status === 'trialing';
-      if (good && j.paidAt && !j.liveAt) c.appendChild(q('div', 'billfd', 'Setting up your app: ready in up to ' + j.setupDays + ' business days, often sooner'));   /* 2026-10-29 wording */
-      if (good && j.liveAt) c.appendChild(q('div', 'billfd', 'Live since ' + billDate(j.liveAt) + (j.guaranteeUntil && j.guaranteeUntil * 1000 > Date.now() ? ' · money-back guarantee until ' + billDate(j.guaranteeUntil) + ' (' + j.guaranteeDays + ' days)' : '')));
-      if (j.refunded) c.appendChild(q('div', 'sub2', 'Refunded under the money-back guarantee.'));
-      /* Release to client (2026-10-29; was Mark live, same action): the whole app opens to the client's team at once, and the guarantee starts */
+      if (good && j.paidAt && !j.liveAt) c.appendChild(q('div', 'billfd', 'Setting up your app (up to ' + j.setupDays + (j.status === 'trialing' ? ' business days). Your ' + j.freeDays + ' free days start when it’s live.' : ' business days). We let you know when it’s live.')));
+      if (good && j.liveAt) {
+        var inTrial = j.status === 'trialing' && j.trialUntil && j.trialUntil * 1000 > Date.now();
+        c.appendChild(q('div', 'billfd', 'Live since ' + billDate(j.liveAt) + (inTrial ? ' · free trial until ' + billDate(j.trialUntil) : '')));
+        if (inTrial) c.appendChild(q('div', 'sub2', (j.cancelAtEnd ? 'Canceled: the plan ends on ' + billDate(j.trialUntil) + ' and nothing is charged.' : 'Your card is charged on ' + billDate(j.trialUntil) + ' unless you cancel. Cancel before then and you pay nothing.')));
+      }
+      if (j.refunded) c.appendChild(q('div', 'sub2', j.refundedInTrial ? 'Canceled by Traverse during the free trial. Nothing was charged.' : 'Refunded and canceled by Traverse.'));
+      /* the trial could not be moved in Stripe at go-live (2026-11-06): Traverse's eyes only, with what to do */
+      if (j.super && j.trialErr) c.appendChild(q('div', 'msg bad', 'Traverse only: ' + j.trialErr));
+      /* Release to client (2026-10-29; was Mark live, same action): the whole app opens to the client's team at once, and the free days start */
       if (j.super && good && j.paidAt && !j.liveAt) {
-        var lb = q('button', 'billgo', 'Release to client'); lb.type = 'button'; var lm = q('div', 'sub2', 'Traverse only: the app is set up. Everything opens for their team now, and the money-back guarantee starts.');
-        lb.addEventListener('click', function () { if (!window.confirm('Release the app to ' + (CO.name || 'this client') + ' now? Their whole team can sign in, and the money-back guarantee starts today.')) return; billAct(lb, lm, 'billinglive', {}, holder); });
+        var lb = q('button', 'billgo', 'Release to client'); lb.type = 'button'; var lm = q('div', 'sub2', 'Traverse only: the app is set up. Everything opens for their team now, and their ' + j.freeDays + ' free days start (Stripe’s first charge moves to ' + j.freeDays + ' days from now).');
+        lb.addEventListener('click', function () { if (!window.confirm('Release the app to ' + (CO.name || 'this client') + ' now? Their whole team can sign in, and their ' + j.freeDays + ' free days start today.')) return; billAct(lb, lm, 'billinglive', {}, holder); });
         c.appendChild(lb); c.appendChild(lm);
       }
       billLockLines(c, j, holder);
+      /* Traverse's own tool (2026-11-06): in setup or the trial it only cancels (nothing charged); for a week after the first charge it
+         refunds that charge and cancels. Never offered to the client as a promise. */
       if (j.super && j.refundable) {
-        var rb = q('button', 'billgo billrf', 'Refund and cancel'); rb.type = 'button'; var rm = q('div', 'sub2', 'Traverse only, within the money-back guarantee: refunds the last payment in full and ends the plan now.');
+        var trialNow = j.status === 'trialing';
+        var rb = q('button', 'billgo billrf', trialNow ? 'Cancel the plan' : 'Refund and cancel'); rb.type = 'button';
+        var rm = q('div', 'sub2', trialNow ? 'Traverse only: ends the plan now. Nothing has been charged, so there is nothing to refund.' : 'Traverse only: refunds the last payment in full and ends the plan now.');
         rb.disabled = !j.ready;
         rb.addEventListener('click', function () {
-          if (!window.confirm('Refund the last payment in full and cancel the plan now? This cannot be undone.')) return;
+          if (!window.confirm(trialNow ? 'Cancel the plan now? Nothing has been charged. This cannot be undone.' : 'Refund the last payment in full and cancel the plan now? This cannot be undone.')) return;
           billAct(rb, rm, 'billingrefund', { confirm: true }, holder);
         });
         c.appendChild(rb); c.appendChild(rm);
@@ -14303,7 +14314,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (off) sum.appendChild(q('div', 'sub2', 'The founding price, for your first 12 months; then ' + money(m) + ' a month. Stripe shows the discount on the next page.'));
       /* the agreement (2026-10-13) */
       var agr = q('div', 'sub2'); agr.appendChild(document.createTextNode('By choosing a plan you agree to the ')); var la = q('a', null, 'Subscription Agreement'); la.href = 'https://traverseplatforms.com/terms/'; la.target = '_blank'; la.rel = 'noopener'; agr.appendChild(la); agr.appendChild(document.createTextNode(' and ')); var lp = q('a', null, 'Privacy Policy'); lp.href = 'https://traverseplatforms.com/privacy/'; lp.target = '_blank'; lp.rel = 'noopener'; agr.appendChild(lp); agr.appendChild(document.createTextNode('.')); sum.appendChild(agr);
-      if (j.guaranteeDays) sum.appendChild(q('div', 'sub2', 'The card is charged today. We set your app up in up to ' + j.setupDays + ' business days, often sooner, and you get a ' + j.guaranteeDays + '-day money-back guarantee from the day it is live.'));
+      /* the free trial (2026-11-06): once per company; a company that has had a plan here pays at checkout */
+      if (j.trialOffer && j.freeDays) sum.appendChild(q('div', 'sub2', 'Nothing is charged today. We set your app up in up to ' + j.setupDays + ' business days, often sooner. Your ' + j.freeDays + ' free days start when it’s live; cancel before they end and you pay nothing.'));
+      else sum.appendChild(q('div', 'sub2', 'The card is charged today. We set your app up in up to ' + j.setupDays + ' business days, often sooner.'));
       sum.appendChild(q('div', 'sub2', 'Prices in US dollars. Stripe takes the card; this app never sees it.'));
     }
     go.disabled = !j.ready;
