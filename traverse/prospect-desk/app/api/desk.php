@@ -303,10 +303,16 @@ function sendQueue(int $max): int {
            put a just-popped message back and send it twice) */
         $qa = fopen(DATA_DIR . '/queue.lock.add', 'c'); flock($qa, LOCK_EX);
         $Q = jread('queue.json', []); if (!$Q) { flock($qa, LOCK_UN); echo "nothing waiting\n"; break; }
-        $m = array_shift($Q); jwrite('queue.json', $Q); flock($qa, LOCK_UN);
+        /* 'after' (2026-11-06, Matthew: the free-map batches go out on set days, business hours, ~100 a day): a message waits until its
+           time; the first one that is due goes, the rest keep their place. Messages without 'after' go as before. */
+        $k = null; $now = time(); foreach ($Q as $j => $q) if ((int) ($q['after'] ?? 0) <= $now) { $k = $j; break; }
+        if ($k === null) { flock($qa, LOCK_UN); echo "nothing due yet (" . count($Q) . " waiting)\n"; break; }
+        $m = $Q[$k]; array_splice($Q, $k, 1); jwrite('queue.json', $Q); flock($qa, LOCK_UN);
         $l = $S['leads'][$m['id']] ?? null;
         $why = $l ? noMail($l) : 'company gone';
         if ($l && $why === '' && strtolower((string) $l['email']) !== strtolower((string) $m['to'])) $why = 'email changed since it was queued';
+        /* a follow-up only goes while the company is still just "Emailed": a reply marked Talking, a demo, No, Not now, unsubscribe all stop it */
+        if ($l && $why === '' && !empty($m['followup']) && ($l['status'] ?? '') !== 'emailed') $why = 'follow-up not needed: ' . (STATUSES[$l['status']] ?? $l['status']);
         if ($why !== '') { logAdd(['t' => 'skipped', 'id' => $m['id'], 'why' => $why, 'by' => 'queue', 'at' => time()]); $i--; continue; }   /* a skip costs no send */
         if ($sentN > 0 && $gap) sleep($gap);
         $r = mailSend($m['to'], $m['subject'], $m['body'], [], trackLinks((string) ($m['html'] ?? ''), (string) $m['id']));   /* links counted (2026-10-30) */   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day. html: queued "With map" (2026-10-30) */

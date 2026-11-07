@@ -39,7 +39,7 @@ for (const r of rows) {
       : `I've been mapping roofs and hail history across Colorado, house by house, and I can put the best streets in ${r.city} for roofing on a one-page map. Want me to send it to you? It's free.`;
   }
   out.push(`## ${++i}. ${clean(r.company)} (${trade}, ${r.city}, since ${r.formed})${r.verified === 'accept_all' ? ' · email domain accepts all, may not reach a person' : ''}`, '',
-    `**Subject:** ${subject}`, '', '> Hi there,', '>', ...body.split('\n').map((l) => '> ' + l), '>', '> Matthew', '',
+    `**Subject:** ${subject}`, '', '> Hi there,', '>', ...body.split('\n').map((l) => '> ' + l), '',
     `Map on hand: ${s ? `yes (${s.town}, data as of ${s.dataDate})` : 'no: ' + (trade === 'roofing' ? 'no hail data for this town, so the no-number version' : 'no lawn report for this town, so the no-number version') + (r.city.toLowerCase() === 'colorado springs' ? '. Colorado Springs is four quarters in our data; a combined Colorado Springs map is a small build if wanted' : '')}`, '');
 }
 if (held.length) out.push('## Held: no map for their town, so no email yet (we would be offering something we cannot send)', '', ...held.map((h) => '- ' + h), '');

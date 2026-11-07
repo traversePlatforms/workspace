@@ -23,10 +23,10 @@ Matthew 6 Nov, after ~1,823 "with map" emails brought ~80-90 site visits, 1 repl
 > I mapped {homes} homes in {city} and found {n} with lawns over 5,000 sq ft. The biggest cluster is on {street}.
 >
 > I put the best streets for lawn care on a one-page map. Want me to send you the {city} one? It's free.
->
-> Matthew
 
-**No-number version** (city without a report): "(none: a town without a report gets no email; we only offer a map we can send)"
+No sign-off in the body: the desk adds the full signature, the postal address and the unsubscribe line.
+
+**A town without a report gets no email:** we only offer a map we can send.
 
 ## Email 1: roofing (about 55 words)
 
@@ -37,10 +37,8 @@ Matthew 6 Nov, after ~1,823 "with map" emails brought ~80-90 site visits, 1 repl
 > Radar put hail an inch or larger over {n} homes in {city} in the last {window}. {street} had the most.
 >
 > I put the hardest-hit streets on a one-page map. Want me to send you the {city} one? It's free.
->
-> Matthew
 
-`{window}` matches what the hail data covers (the generator states it). If the town had no qualifying hail, use the roof-age version: "I mapped every home in {city} and found {n} roofs 20 years or older..." (only if the roofing data carries year built).
+`{window}` matches what the hail data covers (the generator states it: two years, October 2024 to October 2026).
 
 ## Follow-up 1: 3-4 days later, same thread
 
@@ -58,7 +56,7 @@ Matthew 6 Nov, after ~1,823 "with map" emails brought ~80-90 site visits, 1 repl
 >
 > If you'd like to see your own area in it, I can walk you through it in 15 minutes: traverseplatforms.com/demo
 >
-> Matthew
+> You can try it free for 7 days once your app is set up, and cancel before then without paying anything. *(this line only once the trial is live on the site)*
 
 **Trial line (Matthew 6 Nov: the 7-day free trial is back; use once it's live on the site):** "You can try it free for 7 days once your app is set up, and cancel before then without paying anything."
 

@@ -13,8 +13,6 @@ Matthew 6 Nov: start with the 152 companies new on the register since 11 Oct. 18
 > Radar put hail an inch or larger over 34,962 homes in Colorado Springs in the last two years. W Pikes Peak Ave had the most.
 > 
 > I put the hardest-hit streets on a one-page map. Want me to send you the Colorado Springs one? It's free.
->
-> Matthew
 
 Map on hand: yes (colorado-springs, data as of 2026-10-07)
 
@@ -27,8 +25,6 @@ Map on hand: yes (colorado-springs, data as of 2026-10-07)
 > Radar put hail an inch or larger over 66,546 homes in Denver in the last two years. N Adams St had the most.
 > 
 > I put the hardest-hit streets on a one-page map. Want me to send you the Denver one? It's free.
->
-> Matthew
 
 Map on hand: yes (denver, data as of 2026-10-26)
 
@@ -41,8 +37,6 @@ Map on hand: yes (denver, data as of 2026-10-26)
 > I mapped 19,531 homes in Castle Rock and found 576 with lawns over 5,000 sq ft. The biggest cluster is on Collins St.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Castle Rock one? It's free.
->
-> Matthew
 
 Map on hand: yes (castle-rock, data as of 2026-10-17)
 
@@ -55,8 +49,6 @@ Map on hand: yes (castle-rock, data as of 2026-10-17)
 > I mapped 99,990 homes in Colorado Springs and found 2,865 with lawns over 5,000 sq ft. The biggest cluster is on Wood Ave.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Colorado Springs one? It's free.
->
-> Matthew
 
 Map on hand: yes (colorado-springs, data as of 2026-10-07)
 
@@ -69,8 +61,6 @@ Map on hand: yes (colorado-springs, data as of 2026-10-07)
 > I mapped 99,990 homes in Colorado Springs and found 2,865 with lawns over 5,000 sq ft. The biggest cluster is on Wood Ave.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Colorado Springs one? It's free.
->
-> Matthew
 
 Map on hand: yes (colorado-springs, data as of 2026-10-07)
 
@@ -83,8 +73,6 @@ Map on hand: yes (colorado-springs, data as of 2026-10-07)
 > I mapped 105,486 homes in Denver and found 2,617 with lawns over 5,000 sq ft. The biggest cluster is on S Niagara Way.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Denver one? It's free.
->
-> Matthew
 
 Map on hand: yes (denver, data as of 2026-10-26)
 
@@ -97,8 +85,6 @@ Map on hand: yes (denver, data as of 2026-10-26)
 > I mapped 105,486 homes in Denver and found 2,617 with lawns over 5,000 sq ft. The biggest cluster is on S Niagara Way.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Denver one? It's free.
->
-> Matthew
 
 Map on hand: yes (denver, data as of 2026-10-26)
 
@@ -111,8 +97,6 @@ Map on hand: yes (denver, data as of 2026-10-26)
 > I mapped 105,486 homes in Denver and found 2,617 with lawns over 5,000 sq ft. The biggest cluster is on S Niagara Way.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Denver one? It's free.
->
-> Matthew
 
 Map on hand: yes (denver, data as of 2026-10-26)
 
@@ -125,8 +109,6 @@ Map on hand: yes (denver, data as of 2026-10-26)
 > I mapped 105,486 homes in Denver and found 2,617 with lawns over 5,000 sq ft. The biggest cluster is on S Niagara Way.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Denver one? It's free.
->
-> Matthew
 
 Map on hand: yes (denver, data as of 2026-10-26)
 
@@ -139,8 +121,6 @@ Map on hand: yes (denver, data as of 2026-10-26)
 > I mapped 39,332 homes in Lakewood and found 5,201 with lawns over 5,000 sq ft. The biggest cluster is on Garrison St.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Lakewood one? It's free.
->
-> Matthew
 
 Map on hand: yes (lakewood, data as of 2026-10-17)
 
@@ -153,8 +133,6 @@ Map on hand: yes (lakewood, data as of 2026-10-17)
 > I mapped 9,984 homes in Littleton and found 2,332 with lawns over 5,000 sq ft. The biggest cluster is on W Dry Creek Rd.
 > 
 > I put the best streets for lawn care on a one-page map. Want me to send you the Littleton one? It's free.
->
-> Matthew
 
 Map on hand: yes (littleton, data as of 2026-10-25)
 
