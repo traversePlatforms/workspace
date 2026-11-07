@@ -53,7 +53,7 @@ function defaultTemplates(): array {
 function defaultSettings(): array { return ['address' => '', 'signature' => "Matthew Sharpe\nTraverse Platforms LLC\n(303) 596-9515", 'cap' => 40]; }
 
 /* ---- the state: the seed, replayed with the log ---- */
-function noteKey(array $r): string { return substr(sha1($r['at'] . '|' . $r['by'] . '|' . $r['note']), 0, 8); }
+function noteKey(array $r): string { return substr(sha1($r['at'] . '|' . $r['by'] . '|' . (string) ($r['note'] ?? '')), 0, 8); }   /* a bounce row has no 'note' (its key is at|by|, the same as before; 2026-11-06: it warned on every replay) */
 function state(): array {
     $seed = jread('seed.json', ['leads' => []]);
     $base = ['status' => 'new', 'reached' => [], 'notes' => [], 'next' => null, 'log' => [], 'person' => '', 'unsub' => false, 'sent' => []];
@@ -259,6 +259,7 @@ function mailPayload(array $s, string $to, string $subject, string $body, array 
 /** one message to one address (see mailPayload); never throws. DESK_MAIL_MOCK writes it to a file instead, with the raw message (tests). */
 function mailSend(string $to, string $subject, string $body, array $extra, string $html = ''): array {
     $mock = getenv('DESK_MAIL_MOCK');
+    if ($mock && ($st = (string) getenv('DESK_MAIL_MOCK_FAIL')) !== '') { [$st, $err] = array_pad(explode('|', $st, 2), 2, ''); return ['ok' => false, 'stage' => $st, 'error' => $err !== '' ? $err : 'mock failure at ' . $st]; }   /* tests: every send fails at this stage ("stage" or "stage|what the server said") */
     if ($mock) { file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $subject, 'body' => $body, 'html' => $html, 'headers' => $extra, 'raw' => mailPayload(mailCfg(), $to, $subject, $body, $extra, $html)]) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '']; }
     $s = mailCfg(); $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     if ($s['pass'] === '') return $fail('config', 'no Gmail app password in traverse-site-private/site-config.php');
@@ -307,7 +308,7 @@ function sendQueue(int $max): int {
            time; the first one that is due goes, the rest keep their place. Messages without 'after' go as before. */
         $k = null; $now = time(); foreach ($Q as $j => $q) if ((int) ($q['after'] ?? 0) <= $now) { $k = $j; break; }
         if ($k === null) { flock($qa, LOCK_UN); echo "nothing due yet (" . count($Q) . " waiting)\n"; break; }
-        $m = $Q[$k]; array_splice($Q, $k, 1); jwrite('queue.json', $Q); flock($qa, LOCK_UN);
+        $m = $Q[$k]; array_splice($Q, $k, 1); jwrite('queue.json', $Q); flock($qa, LOCK_UN); fclose($qa);   /* closed each turn (2026-11-06): a long run of skips opened a handle a message and never let go */
         $l = $S['leads'][$m['id']] ?? null;
         $why = $l ? noMail($l) : 'company gone';
         if ($l && $why === '' && strtolower((string) $l['email']) !== strtolower((string) $m['to'])) $why = 'email changed since it was queued';
@@ -321,10 +322,20 @@ function sendQueue(int $max): int {
             if ($l['status'] === 'new') logAdd(['t' => 'status', 'id' => $m['id'], 'status' => 'emailed', 'by' => $m['by'], 'at' => time()]);
             $sentN++;
         } else {
-            $m['tries'] = (int) ($m['tries'] ?? 0) + 1;
             logAdd(['t' => 'sendfail', 'id' => $m['id'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 200), 'by' => 'queue', 'at' => time()]);
-            if ($m['tries'] < 3 && in_array($r['stage'], ['connect', 'greeting', 'ehlo', 'starttls', 'ehlo-tls', 'data'], true)) { flock($qa, LOCK_EX); $Q = jread('queue.json', []); $Q[] = $m; jwrite('queue.json', $Q); flock($qa, LOCK_UN); }   /* the mail server, not the address: try later */
-            if (in_array($r['stage'], ['config', 'auth'], true)) { echo "mail login problem: stopped\n"; flock($qa, LOCK_EX); $Q = jread('queue.json', []); array_unshift($Q, $m); jwrite('queue.json', $Q); flock($qa, LOCK_UN); break; }
+            /* back on the queue under the add lock (its own handle: the pop's was closed) */
+            $putBack = function (array $m, bool $front): void { $h = fopen(DATA_DIR . '/queue.lock.add', 'c'); flock($h, LOCK_EX); $Q = jread('queue.json', []); if ($front) array_unshift($Q, $m); else $Q[] = $m; jwrite('queue.json', $Q); flock($h, LOCK_UN); fclose($h); };
+            /* Review 2026-11-06 (the night 1,117 timed messages were queued). Before: a message that failed went to the back and was popped
+               again in the same run, so a mail server that was down for a minute burned its three tries in seconds and DROPPED it, up to five
+               messages a run, each logged only as sendfail. Now the server's own trouble (no connection, no greeting, TLS, the login, a
+               4xx "try again later", a sending limit) puts the message back at the FRONT untouched and stops the run: the next hour tries
+               again and nothing is lost. A refusal of this one address or message (5xx at MAIL FROM, RCPT TO or DATA) counts a try, waits an
+               hour, and is dropped after three. */
+            $serverSide = in_array($r['stage'], ['config', 'auth', 'connect', 'greeting', 'ehlo', 'starttls', 'ehlo-tls'], true)
+                || preg_match('/^4\d\d|(^|\D)4\.\d\.\d|limit exceeded|try again later|temporar|rate ?limit|too many|connection closed/i', (string) $r['error']);
+            if ($serverSide) { echo 'mail server problem (' . $r['stage'] . '): stopped, ' . $m['id'] . " kept for the next run\n"; $putBack($m, true); break; }
+            $m['tries'] = (int) ($m['tries'] ?? 0) + 1;
+            if ($m['tries'] < 3) { $m['after'] = max((int) ($m['after'] ?? 0), time() + 3600); $putBack($m, false); }   /* this address or message: once more next hour, three tries in all */
         }
     }
     echo "sent $sentN\n"; flock($lk, LOCK_UN); return 0;
