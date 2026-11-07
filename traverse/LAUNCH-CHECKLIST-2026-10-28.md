@@ -27,7 +27,7 @@ Already done and checked tonight: email login for sending works (Gmail accepted 
 - **DMARC reports**: add a reporting address to the DMARC record so spoofing or delivery problems show up.
 - **Measure the funnel**: emails sent → replies → demo bookings → trials/sign-ups, from the desk and the demo bookings. There is no analytics on the site; if you want site visits counted, add a cookie-free counter or UTM tags on the email links.
 - **Support readiness**: support@ watched daily (an auto-reply with response time), the (303) 596-9515 voicemail greeting says Traverse, a short "how to get set up" email for new customers.
-- **First-customer path rehearsed**: who creates the install, codes and data region within the promised 2 business days; Mark live; the 7-day money-back and Refund-and-cancel steps (Traverse-only); set the founding end date when the first customer signs (TR-31).
+- **First-customer path rehearsed**: who creates the install, codes and data region within the promised 2 business days; Mark live; Mark live starting the 7-day free trial (6 Nov: replaced the money-back guarantee) and the Refund-and-cancel steps (Traverse-only); set the founding end date when the first customer signs (TR-31).
 - **Google Workspace trial ends 7 Nov**: check the plan and price before it charges.
 
 ## C. What startups normally have in place at launch (general practice, not a legal opinion)
