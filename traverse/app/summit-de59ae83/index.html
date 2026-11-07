@@ -2162,6 +2162,15 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   :where(button.lnk){background:none;border:0;padding:6px 0;color:var(--accent);font:700 14px var(--sans);cursor:pointer;text-align:left}
   /* F5: finger-sized on touch screens; desktop density unchanged */
   @media (pointer:coarse){.toast button{min-height:40px;min-width:52px}.findsel,.fbar .search input,.fbar select{min-height:42px}.pipesrc button{min-height:40px}button.lnk.subnav{min-height:40px}}
+  /* fingers (overnight check 2026-11-07): the small text buttons keep their look and get a 40 px tall hit area around them; the Customers
+     filter chips, the door card's Look up number and the calendar's month arrows grow to 40 px */
+  @media (pointer:coarse){
+    .cfilt button,.lookbtn{min-height:40px}
+    .cal button[aria-label="Previous month"],.cal button[aria-label="Next month"],button[aria-label="Previous month"],button[aria-label="Next month"]{min-width:40px;min-height:40px}
+    button.lnk:not(.subnav),.ftog,.instno,.cfold{position:relative}
+    button.lnk:not(.subnav)::after,.ftog::after,.instno::after,.cfold::after{content:'';position:absolute;left:-6px;right:-6px;top:50%;height:40px;transform:translateY(-50%);pointer-events:auto}
+    .cfold::after{height:36px}   /* the fold bars sit right above a row: a little less, so a tap near the row's top still opens the row */
+  }
   .toast span{flex:1;min-width:0;overflow-wrap:anywhere}
   .toast button{border:0;background:transparent;color:var(--toast-link,var(--ember));font-weight:700;cursor:pointer;padding:6px 8px;font-size:14px}
   .burst{position:fixed;width:0;height:0;z-index:30;pointer-events:none}
@@ -4216,6 +4225,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setTimeout(function () { try { ad.focus(); } catch (e) {} }, 50);
     return f;
   }
+  /* the home's 14-day stats, asked once per home open (overnight check 2026-11-07): the greeting's three numbers take today's row from it
+     and the tip card reads the fortnight; before, the two asked separately (days 1 and days 14) at the same moment as the towns download */
+  function homeStats() {
+    if (S.hsP && S.hsWho === S.me && Date.now() - S.hsT < 30000) return S.hsP;
+    S.hsWho = S.me; S.hsT = Date.now();
+    S.hsP = api('stats', { params: { days: 14, who: S.me || '' } });
+    S.hsP.catch(function () { S.hsP = null; });
+    return S.hsP;
+  }
   function territoryList(host) {
     var draw = function () {
       host.textContent = '';
@@ -4235,7 +4253,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       host.appendChild(crewAddButton(draw, ''));   /* a house not on the list (2026-10-16) */
     };
     if (S.regions && S.regions.length) draw();
-    else if (!S.offline) api('regions').then(function (j) { if (j && j.ok) { S.regions = j.regions; if (host.isConnected) draw(); } }).catch(function () {});
+    /* the towns answer is the biggest thing the app downloads (about 1 MB packed, 8 MB open, 2-3 s on a phone). On the home it only feeds this
+       list, so it waits a moment for the home's own small answers (the greeting's numbers, leads, alerts, jobs) to land first instead of
+       sharing the line with them (overnight check 2026-11-07: with it in the way those took about a second each; alone they take 0.2 s).
+       It still comes, so Routes opens on towns already in hand as before. */
+    else if (!S.offline) setTimeout(function () {
+      if (!host.isConnected || (S.regions && S.regions.length)) { if (host.isConnected) draw(); return; }
+      if (S.screen !== 'tools') return;   /* already gone to Routes or elsewhere: that screen asks for the towns itself */
+      api('regions').then(function (j) { if (j && j.ok) { S.regions = j.regions; if (host.isConnected) draw(); } }).catch(function () {});
+    }, 1500);
   }
   function tile(tag, icn, title, text, tagText, fn, href) {
     var t = q(tag, 'tile');
@@ -4849,7 +4875,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(hero);
     var sc0 = startCard(); if (sc0) box.appendChild(sc0);   /* a client install's welcome checklist (2026-10-29) */
     box.appendChild(tipCard());
-    api('stats', { params: { days: 1, who: S.me || '' } }).then(function (j) {
+    homeStats().then(function (j) {   /* one stats call for the greeting and the tip (overnight check 2026-11-07: it was two, days 1 and days 14, each about a second on a phone) */
       var p = j && j.ok ? (j.people || []).filter(function (x) { return x.name === S.me; })[0] : null;
       var t = p ? (p.days || []).filter(function (x) { return x.date === j.today; })[0] : null;
       var dd = t ? t.doors : 0, tk = t ? t.doors - t.miss - (t.nosolicit || 0) : 0, bk = t ? t.booked : 0;
@@ -11643,7 +11669,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var more = q('button', 'lnk', 'Another tip'); more.type = 'button';
     more.addEventListener('click', function () { i = (i + 1 + Math.floor(Math.random() * (pool.length - 1))) % pool.length; lab.textContent = 'Sales tip'; p.textContent = pool[i]; why.hidden = true; });
     c.appendChild(more);
-    if (S.me && !S.offline) api('stats', { params: { days: 14, who: S.me } }).then(function (j) {
+    if (S.me && !S.offline) homeStats().then(function (j) {
       var pp = j && j.ok ? (j.people || []).filter(function (x) { return x.name === S.me; })[0] : null;
       var t = pp ? tipFromStats(pp.days || [], j.goal || j.company || {}) : null;
       if (!t || !c.isConnected) return;
@@ -18546,12 +18572,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.qholder = holder;
     }
     S.leadRedraw = pipelineView;
-    if (!S.leadPeople) api('calpeople').then(function (j) { if (j && j.ok) { var myT = (j.people.filter(function (x) { return x.me; })[0] || {}).team; S.leadPeople = j.people.filter(function (p) { return !(S.role === 'office' && S.runsTeam) || p.me || (myT && p.team === myT); }).map(function (p) { return p.name; }); if (S.screen === 'pipeline') pipelineView(); } }).catch(function () {});
+    var tok = S.pipeTok = {};   /* this open of the Pipeline (overnight check 2026-11-07) */
+    if (!S.leadPeople) api('calpeople').then(function (j) { if (j && j.ok) { var myT = (j.people.filter(function (x) { return x.me; })[0] || {}).team; S.leadPeople = j.people.filter(function (p) { return !(S.role === 'office' && S.runsTeam) || p.me || (myT && p.team === myT); }).map(function (p) { return p.name; }); if (S.screen === 'pipeline' && S.pipeDrawn === tok) drawPipe(); } }).catch(function () {});   /* redraw with the people, from the lists in hand (overnight check 2026-11-07: this called pipelineView again, so every first open fetched quotes, leads and walks twice); not drawn yet: the load below draws with them */
     Promise.all([api('quotes'), api('leads'), deskLoad()]).then(function (rs) {
       if (rs[0]._status === 401 || rs[1]._status === 401) return signinView('Signed out. Enter your code again.');
       if (!rs[0].ok || !rs[1].ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', (rs[0].error || rs[1].error) || 'Could not load the pipeline.')); return; }
       S.qlist = rs[0].quotes || []; S.pleads = rs[1].leads || []; S.cucheck = rs[1].cucheck || null; S.handTo = rs[1].handTo || [];   /* the ClickUp sync check (2026-10-17) */
-      drawPipe();
+      S.pipeDrawn = tok; drawPipe();
       if (!asOffice() && S.role === 'admin') api('customers').then(function (cj) { if (!cj || !cj.ok) return; var cl = {}, cd = {}; cj.customers.forEach(function (c) { if (c.lead) cl[c.lead] = 1; if (c.door) cd[c.door] = 1; }); S.custLinks = { lead: cl, door: cd }; if (S.screen === 'pipeline') drawPipe(); }).catch(function () {});
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }

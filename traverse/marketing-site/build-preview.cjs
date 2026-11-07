@@ -40,6 +40,9 @@ for (const [from, to] of Object.entries(links)) body = body.split('href="' + fro
 // header row); a function replacement so nothing in the markup is read as a $-pattern.
 const NAV_OPEN = '<nav id="mainnav"';
 if (body.split(NAV_OPEN).length !== 2 || body.split('</nav>').length !== 2) throw new Error('expected one nav');
+/* the sample property's drawing has height="auto" on its <svg>, which is not a length: Chrome logs an error on every visit (overnight check
+   2026-11-07). Without the attribute the viewBox and width="100%" give the same height. */
+body = body.replace(/(<svg\b[^>]*?)\sheight="auto"/g, (m, open) => open);
 body = body.replace(NAV_OPEN, () => '<button class="navtoggle" type="button" aria-controls="mainnav" aria-expanded="false" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>\n' + NAV_OPEN);
 const menuJs = `<script>
 (function () {

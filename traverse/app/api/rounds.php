@@ -5877,28 +5877,49 @@ function metresBetween(float $la1, float $lo1, float $la2, float $lo2): float {
     return hypot(($la1 - $la2) * 111320.0, ($lo1 - $lo2) * 111320.0 * cos(deg2rad($la1)));
 }
 if ($action === 'aroundjobs') {
+    /* Speed (overnight check 2026-11-07): this used to decode EVERY town's door file and hold every open door in memory to find the
+       doors near twenty jobs. With 406 towns on Sixfold's list it ran 4-5 s and died on the memory limit (500) on every
+       neighbourhood open, on every install. Now the won results come first (small logs, no door files), only the towns that hold
+       one of the twenty newest wins are decoded, and the answer is kept in town-cache/ until a result, mark, customer or door file
+       it read changes. The nearby doors come from the job's own town and the towns it shares marks with. */
     $idx = json_decode((string) @file_get_contents(DATA_DIR . '/index.json'), true) ?: ['regions' => []];
     $since = time() - AROUND_DAYS * 86400;
-    $jobs = []; $all = [];
+    $labels = []; $wins = []; $sigR = [];
     foreach (($idx['regions'] ?? []) as $r) {
-        $data = loadRegion($r['key']);
+        $k = (string) $r['key']; $labels[$k] = $r['label'] ?? $k;
+        $sigR[] = fileSig(DATA_DIR . '/result-' . $k . '.log');
+        foreach (loadResults($k) as $id => $rs) if ($rs['result'] === 'won' && (int) $rs['at'] >= $since) $wins[] = ['region' => $k, 'id' => (string) $id, 'won' => (int) $rs['at']];
+    }
+    usort($wins, fn($x, $y) => $y['won'] <=> $x['won']);
+    $wins = array_slice($wins, 0, 20);
+    $need = [];   /* the towns to decode: each job's own, plus the ones it shares marks with */
+    foreach ($wins as $w) foreach (array_merge([$w['region']], sharedWith($w['region'])) as $p) $need[$p] = true;
+    $need = array_keys(array_intersect_key($need, $labels));
+    $sigs = [implode('|', $sigR), fileSig(custDir() . '/customers.log'), $role, date('Y-m-d')];
+    foreach ($need as $k) { $sigs[] = fileSig((string) regionFile($k)); $sigs[] = fileSig(DATA_DIR . '/marks-' . $k . '.log'); }
+    $asig = md5(implode('|', $sigs));
+    $acf = DATA_DIR . '/town-cache/aroundjobs-' . ($role === 'admin' ? 'a' : 'c') . '.json';
+    $ac = json_decode((string) @file_get_contents($acf), true);
+    if (is_array($ac) && ($ac['sig'] ?? '') === $asig && isset($ac['jobs'])) out(['ok' => true, 'days' => AROUND_DAYS, 'jobs' => $ac['jobs'], 'cached' => true]);
+    $jobs = []; $all = []; $wantId = [];
+    foreach ($wins as $w) $wantId[$w['region'] . '/' . $w['id']] = $w['won'];
+    foreach ($need as $k) {
+        $data = loadRegion($k);
         if (!$data) continue;
-        $marks = loadMarks($r['key']); $res = loadResults($r['key']); $custOpen ??= customerDoors();
+        $marks = loadMarks($k); $custOpen ??= customerDoors();
         foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
             if (!isset($d['lat'], $d['lon']) || !is_numeric($d['lat'])) continue;
             $m = freshMark($d, $marks[$d['id']] ?? null);
-            $rs = $res[$d['id']] ?? null;
-            if ($rs && $rs['result'] === 'won' && (int) $rs['at'] >= $since) {
-                $jobs[] = ['region' => $r['key'], 'town' => $r['label'] ?? $r['key'], 'area' => $a['name'], 'id' => $d['id'],
-                           'address' => $d['address'], 'street' => streetName((string) $d['address']), 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'], 'won' => (int) $rs['at']];
+            if (isset($wantId[$k . '/' . $d['id']])) {
+                $jobs[] = ['region' => $k, 'town' => $labels[$k], 'area' => $a['name'], 'id' => $d['id'],
+                           'address' => $d['address'], 'street' => streetName((string) $d['address']), 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'], 'won' => $wantId[$k . '/' . $d['id']]];
             }
-            $open = (!$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'))) && !isset($custOpen[$r['key'] . '/' . $d['id']]);   /* customers are not doors to knock (2026-10-13) */
-            if ($open) $all[] = ['region' => $r['key'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'],
+            $open = (!$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'))) && !isset($custOpen[$k . '/' . $d['id']]);   /* customers are not doors to knock (2026-10-13) */
+            if ($open) $all[] = ['region' => $k, 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'],
                                  'fire' => $d['fire'] ?? null, 'lawn' => $d['lawn']['lv'] ?? null];
         }
     }
     usort($jobs, fn($x, $y) => $y['won'] <=> $x['won']);
-    $jobs = array_slice($jobs, 0, 20);
     foreach ($jobs as &$j) {
         $near = [];
         foreach ($all as $d) {
@@ -5910,6 +5931,7 @@ if ($action === 'aroundjobs') {
         $j['doors'] = array_slice($near, 0, AROUND_MAX);
     }
     unset($j);
+    if (is_dir(dirname($acf)) || @mkdir(dirname($acf), 0700, true)) writeJsonAtomic($acf, ['sig' => $asig, 'jobs' => $jobs]);
     out(['ok' => true, 'days' => AROUND_DAYS, 'jobs' => $jobs]);
 }
 
