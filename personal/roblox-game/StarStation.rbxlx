@@ -212,6 +212,46 @@ Config.Sounds = {
 	countdown = { id = 9117060347, volume = 0.6 },
 	liftoff = { id = 12222065, volume = 0.8 }, -- Roblox "Launching rocket"
 	roar = { id = 9119414091, volume = 0.6, stopAfter = 8 },
+	-- Splash Lagoon (2026-11-07). No new asset ids were looked up for the park, so it reuses the ids above where one fits.
+	-- id = 0 means "no sound yet": the game skips it and everything still works silently. Put a Creator Store id in to hear it.
+	parkMusic = { id = 0, volume = 0.25 }, -- PLACEHOLDER: a sunny looping track for the park. Until then the station's music plays there.
+	splash = { asset = "rbxasset://sounds/impact_water.mp3", volume = 0.6 }, -- Roblox's own built-in splash (the one characters make jumping in water)
+	slide = { id = 12222095, volume = 0.45, stopAfter = 2 }, -- the station's "Rocket whoosh 01", for the start of a slide
+	token = { id = 9126073001, volume = 0.35 }, -- the station's star pickup sound
+	duck = { id = 1839901345, volume = 0.6 }, -- the station's upgrade sound, for finding a duck
+	bucket = { id = 0, volume = 0.7 }, -- PLACEHOLDER: a big sloshing pour for the tipping bucket (the splash sound plays as well)
+	wave = { id = 0, volume = 0.5 }, -- PLACEHOLDER: a wave rolling in (the Captain's Giant Wave)
+}
+-- the sound to play for a Config.Sounds entry, or nil when it is a placeholder
+function Config.soundId(def)
+	if typeof(def) ~= "table" then
+		return nil
+	end
+	if typeof(def.asset) == "string" and def.asset ~= "" then
+		return def.asset
+	end
+	if typeof(def.id) == "number" and def.id > 0 then
+		return "rbxassetid://" .. def.id
+	end
+	return nil
+end
+
+-- Splash Lagoon, the water park (2026-11-07). Picked on the title screen or with the Switch game button. Stardust earned here is
+-- the same Stardust as on the station, kept small so the park can't outpace a base full of critters.
+Config.Park = {
+	enabled = true, -- false hides the park from the title screen
+	tokenCount = 14, -- Splash Tokens out at once
+	tokenValue = 4, -- Stardust per token (a station star is worth at least 5)
+	tokenRespawn = { 5, 9 }, -- seconds before a picked-up token comes back somewhere else
+	tokenPickup = 5, -- studs
+	duckValue = 100, -- Stardust for each hidden rubber duck, once ever per duck
+	duckAllBonus = 500, -- and this once you've found every duck
+	bucketEvery = 45, -- seconds between the big bucket tipping
+	soakRange = 30, -- how far the water blaster reaches
+	soakCooldown = 0.5,
+	bubbleCount = 20, -- bubbles in the Captain's Bubble Party (each pays like a token)
+	bubbleSeconds = 25,
+	captainCooldowns = { wave = 20, bubbles = 40 },
 }
 -- Character upgrades (2026-10-18, Matthew: "character upgrade, slightly faster speed, maybe double jump, long stun on hits").
 -- Bought at the Upgrade Lab by the spawn, kept for good; prices are per level.
@@ -772,17 +812,234 @@ return CritterModels
 ]]></string>
         </Properties>
       </Item>
+      <Item class="ModuleScript" referent="4">
+        <Properties>
+          <string name="Name">ParkLayout</string>
+          <string name="Source"><![CDATA[-- Splash Lagoon (2026-11-07, Matthew: "add another game to it but its a water park style game"): where everything in the water
+-- park sits. Shared by the server, which builds it (ParkBuilder.lua), and each player's screen, which rides the slides, pushes the
+-- waves and runs the lazy river (ParkPlay.client.lua). Positions here are local to the park: x east, z south, y up from the deck
+-- (the deck's top is y = 0, the water's top is y = 0 too). L.at() turns them into world positions.
+local L = {}
+
+L.Name = "Splash Lagoon"
+-- 4,000 studs east of the station: far past anything either side can see (the park also has its own fog on park players' screens)
+L.Origin = Vector3.new(4000, 0, 0)
+L.HalfX, L.HalfZ = 184, 168 -- half the park's size
+L.GroundDepth = 16 -- the terrain ground is this thick (whole 4-stud terrain voxels)
+
+function L.at(x, y, z)
+	return L.Origin + Vector3.new(x, y, z)
+end
+
+local function loc(pos)
+	return pos - L.Origin
+end
+L.toLocal = loc
+
+local function inRect(p, r)
+	return p.X >= r.x1 and p.X <= r.x2 and p.Z >= r.z1 and p.Z <= r.z2
+end
+L.inRect = inRect
+
+-- anywhere in the park, with some room round the edge
+function L.inPark(pos, margin)
+	local p = loc(pos)
+	margin = margin or 0
+	return math.abs(p.X) <= L.HalfX + margin and math.abs(p.Z) <= L.HalfZ + margin and p.Y > -80 and p.Y < 220
+end
+
+-- where you arrive, facing into the park (east)
+L.Spawn = CFrame.new(L.at(-160, 4, 0)) * CFrame.Angles(0, math.rad(-90), 0)
+
+-- ---------- water (rectangles on the 4-stud terrain grid) ----------
+-- the wave pool: a beach on its west side, getting deeper to the east; waves roll in from the deep end toward the beach
+L.WavePool = { x1 = -136, x2 = -40, z1 = -136, z2 = -40 }
+L.WaveBands = { { x1 = -136, x2 = -124, depth = 4 }, { x1 = -124, x2 = -108, depth = 8 }, { x1 = -108, x2 = -40, depth = 12 } }
+L.Beach = { x1 = -168, x2 = -136, z1 = -136, z2 = -40 }
+L.WaveEvery = 9 -- seconds between waves
+L.WaveTravel = 5 -- seconds a wave takes to cross the pool
+
+-- the lazy river: a square loop with an island in the middle; the current carries you round clockwise
+L.River = {
+	outer = { x1 = -136, x2 = -24, z1 = 40, z2 = 144 },
+	inner = { x1 = -112, x2 = -48, z1 = 64, z2 = 120 },
+	depth = 8,
+	speed = 9, -- studs per second the current carries you
+}
+L.River.cx = (L.River.inner.x1 + L.River.inner.x2) / 2
+L.River.cz = (L.River.inner.z1 + L.River.inner.z2) / 2
+
+-- the splash pool: every slide ends here, and the cannonball tower stands over its north edge
+L.SplashPool = { x1 = 16, x2 = 176, z1 = -152, z2 = -60, depth = 12 }
+
+-- the splash pad (no deep water): fountains and the big tipping bucket
+L.SplashPad = { x1 = 40, x2 = 168, z1 = 32, z2 = 152 }
+L.Bucket = { x = 104, z = 90, height = 30, soakRadius = 16 }
+
+-- is this world position in the water of...
+local function wet(p)
+	return p.Y < 1.5
+end
+function L.inWavePool(pos)
+	local p = loc(pos)
+	return wet(p) and inRect(p, L.WavePool)
+end
+function L.inRiver(pos)
+	local p = loc(pos)
+	return wet(p) and inRect(p, L.River.outer) and not inRect(p, L.River.inner)
+end
+function L.inSplashPool(pos)
+	local p = loc(pos)
+	return wet(p) and inRect(p, L.SplashPool)
+end
+function L.inAnyWater(pos)
+	return L.inWavePool(pos) or L.inRiver(pos) or L.inSplashPool(pos)
+end
+
+-- which way the lazy river flows at a spot (a flat unit vector): along whichever side of the loop you are on, clockwise seen from above
+function L.riverFlow(pos)
+	local p = loc(pos)
+	local dx, dz = p.X - L.River.cx, p.Z - L.River.cz
+	local ix = (L.River.inner.x2 - L.River.inner.x1) / 2
+	local iz = (L.River.inner.z2 - L.River.inner.z1) / 2
+	if math.abs(dx) - ix > math.abs(dz) - iz then
+		return Vector3.new(0, 0, dx > 0 and 1 or -1) -- east side flows south, west side flows north
+	end
+	return Vector3.new(dz < 0 and 1 or -1, 0, 0) -- north side flows east, south side flows west
+end
+
+-- the middle line of the river, as a loop of world points (for the drifting rings)
+function L.riverLoop()
+	local o, i = L.River.outer, L.River.inner
+	local x1, x2 = (o.x1 + i.x1) / 2, (o.x2 + i.x2) / 2
+	local z1, z2 = (o.z1 + i.z1) / 2, (o.z2 + i.z2) / 2
+	return { L.at(x1, 0, z1), L.at(x2, 0, z1), L.at(x2, 0, z2), L.at(x1, 0, z2) } -- clockwise, same as the current
+end
+
+-- where the wave's crest is (local x), or nil between waves. t is the server's clock.
+function L.waveCrestX(t)
+	local phase = t % L.WaveEvery
+	if phase > L.WaveTravel then
+		return nil
+	end
+	return L.WavePool.x2 - (L.WavePool.x2 - L.WavePool.x1) * (phase / L.WaveTravel)
+end
+
+-- ---------- the slides ----------
+-- Each slide is a list of points along its floor (world positions). Your own screen carries you along them at a set speed, seated,
+-- and drops you in the splash pool at the end: no physics, so nobody can get stuck. speed = base + gain * sqrt(how far you've dropped).
+local function corkscrew()
+	local cx, cz, r = 40, -34, 13
+	local top, bottom, turns = 40, 8, 2
+	local pts = {}
+	local steps = turns * 24 -- a point every 15 degrees
+	for i = 0, steps do
+		local a = -3 * math.pi + (i / steps) * turns * 2 * math.pi -- starts and ends on the west side, heading north
+		local y = top - (top - bottom) * (i / steps)
+		table.insert(pts, L.at(cx + r * math.cos(a), y, cz + r * math.sin(a)))
+	end
+	for _, q in ipairs({ { 7, -40 }, { 5.5, -48 }, { 4.2, -56 }, { 3.2, -62 }, { 2.6, -68 } }) do -- the run-out north into the pool
+		table.insert(pts, L.at(cx - r, q[1], q[2]))
+	end
+	return pts
+end
+
+local function bigDrop()
+	local x = 92
+	local pts = {}
+	for _, q in ipairs({
+		{ 52, -38 }, { 51.8, -41 }, { 51, -43.5 }, { 49.4, -46 }, { 47, -48.5 }, { 44, -51 }, -- over the lip
+		{ 36, -58 }, { 28, -65 }, { 20, -72 }, { 12, -79 }, -- straight down
+		{ 8, -83 }, { 5.3, -87.5 }, { 3.8, -92.5 }, { 3.1, -98 }, { 2.8, -104 }, -- and out over the water
+	}) do
+		table.insert(pts, L.at(x, q[1], q[2]))
+	end
+	return pts
+end
+
+local function racer(x)
+	local pts = {}
+	local n = 16
+	for k = 0, n do
+		local d = k / n
+		local y = 30 - 27 * d + 1.2 * math.sin(d * math.pi * 4) * (1 - d) -- gentle bumps on the way down
+		table.insert(pts, L.at(x, y, -38 - 82 * d))
+	end
+	return pts
+end
+
+L.Slides = {
+	{ id = "corkscrew", name = "Corkscrew", color = Color3.fromRGB(255, 120, 90), color2 = Color3.fromRGB(255, 220, 120),
+		points = corkscrew(), splash = L.at(27, -2, -78), base = 22, gain = 2, tower = { x = 40, z = -34, w = 12, top = 40 },
+		pad = L.at(40, 0, -16) },
+	{ id = "bigdrop", name = "Big Drop", color = Color3.fromRGB(80, 170, 255), color2 = Color3.fromRGB(255, 255, 255),
+		points = bigDrop(), splash = L.at(92, -2, -116), base = 20, gain = 5, tower = { x = 92, z = -34, w = 12, top = 52 },
+		pad = L.at(92, 0, -16) },
+	{ id = "racer1", name = "Rainbow Racer (left)", color = Color3.fromRGB(180, 110, 255), color2 = Color3.fromRGB(120, 230, 160),
+		points = racer(140), splash = L.at(140, -2, -130), base = 18, gain = 2, countdown = true, tower = { x = 144, z = -34, w = 16, top = 30 },
+		pad = L.at(140, 0, -16) },
+	{ id = "racer2", name = "Rainbow Racer (right)", color = Color3.fromRGB(255, 200, 70), color2 = Color3.fromRGB(255, 130, 190),
+		points = racer(148), splash = L.at(148, -2, -130), base = 18, gain = 2, countdown = true, noTower = true,
+		pad = L.at(148, 0, -16) },
+}
+function L.slideById(id)
+	for _, s in ipairs(L.Slides) do
+		if s.id == id then
+			return s
+		end
+	end
+	return nil
+end
+
+-- ---------- the cannonball tower and the springboard ----------
+L.Cannonball = { x = 96, z = -160, top = 24, pad = L.at(86, 0, -160), stand = CFrame.lookAt(L.at(96, 27, -160), L.at(96, 27, -150)) }
+L.Springboard = { cf = CFrame.new(L.at(13, 1.4, -120)), size = Vector3.new(14, 0.6, 5), bounce = 70, push = 14 } -- sticks out over the pool's west edge
+
+-- ---------- hidden rubber ducks (local x, y, z) ----------
+L.Ducks = {
+	{ id = "d1", at = Vector3.new(-164, 0.9, -132) }, -- the far corner of the beach
+	{ id = "d2", at = Vector3.new(-178, 0.9, 30) }, -- behind where you arrive, by the hedge
+	{ id = "d3", at = Vector3.new(-80, 0.9, 92) }, -- on the lazy river's island
+	{ id = "d4", at = Vector3.new(-60, -11.1, -60) }, -- the bottom of the wave pool's deep end
+	{ id = "d5", at = Vector3.new(92, 0.9, -52) }, -- under the Big Drop
+	{ id = "d6", at = Vector3.new(99, 24.9, -163) }, -- up on the cannonball tower
+	{ id = "d7", at = Vector3.new(130, -11.1, -136) }, -- the bottom of the splash pool
+	{ id = "d8", at = Vector3.new(104, 0.9, 132) }, -- behind the bucket tower
+	{ id = "d9", at = Vector3.new(178, 0.9, 160) }, -- the far south-east corner
+	{ id = "d10", at = Vector3.new(0, 0.9, 20) }, -- by a palm tree on the main path
+	{ id = "d11", at = Vector3.new(-178, 0.9, 162) }, -- the far south-west corner
+	{ id = "d12", at = Vector3.new(-128, 0.4, 136), floats = true }, -- floating in a corner of the lazy river
+}
+
+-- ---------- where Splash Tokens can appear: { x1, x2, z1, z2, y } ----------
+L.TokenAreas = {
+	{ x1 = -140, x2 = 176, z1 = -10, z2 = 10, y = 2.6 }, -- the main path
+	{ x1 = 44, x2 = 164, z1 = 36, z2 = 148, y = 2.6 }, -- the splash pad
+	{ x1 = -168, x2 = -140, z1 = -132, z2 = -44, y = 2.6 }, -- the beach
+	{ x1 = -36, x2 = 12, z1 = -148, z2 = 148, y = 2.6 }, -- the path between the pools
+	{ x1 = -132, x2 = -28, z1 = 44, z2 = 60, y = 1.2 }, -- floating on the lazy river
+	{ x1 = -132, x2 = -28, z1 = 124, z2 = 140, y = 1.2 },
+	{ x1 = -132, x2 = -116, z1 = 64, z2 = 120, y = 1.2 },
+	{ x1 = -44, x2 = -28, z1 = 64, z2 = 120, y = 1.2 },
+	{ x1 = -132, x2 = -44, z1 = -132, z2 = -44, y = 1.2 }, -- floating on the wave pool
+	{ x1 = 20, x2 = 172, z1 = -148, z2 = -64, y = 1.2 }, -- floating on the splash pool
+}
+
+return L
+]]></string>
+        </Properties>
+      </Item>
     </Item>
   </Item>
-  <Item class="ServerScriptService" referent="4">
+  <Item class="ServerScriptService" referent="5">
     <Properties>
       <string name="Name">ServerScriptService</string>
     </Properties>
-    <Item class="Folder" referent="5">
+    <Item class="Folder" referent="6">
       <Properties>
         <string name="Name">Server</string>
       </Properties>
-      <Item class="ModuleScript" referent="6">
+      <Item class="ModuleScript" referent="7">
         <Properties>
           <string name="Name">Decor</string>
           <string name="Source"><![CDATA[-- The station's looks (2026-10-18, Matthew: "it didn't look like much in a sense of the walls and the overall station"):
@@ -1740,7 +1997,7 @@ return Decor
 ]]></string>
         </Properties>
       </Item>
-      <Item class="ModuleScript" referent="7">
+      <Item class="ModuleScript" referent="8">
         <Properties>
           <string name="Name">Furniture</string>
           <string name="Source"><![CDATA[-- Furniture for the bases (2026-10-18, Matthew: "furniture in the base you can interact with, maybe a furniture store").
@@ -1900,7 +2157,7 @@ return Furniture
 ]]></string>
         </Properties>
       </Item>
-      <Item class="ModuleScript" referent="8">
+      <Item class="ModuleScript" referent="9">
         <Properties>
           <string name="Name">GearTools</string>
           <string name="Source"><![CDATA[-- The Gear Bay's items, built from simple parts (2026-10-18): the Boing Glove and Star Blaster as Roblox Tools,
@@ -2099,7 +2356,7 @@ return GearTools
 ]]></string>
         </Properties>
       </Item>
-      <Item class="Script" referent="9">
+      <Item class="Script" referent="10">
         <Properties>
           <string name="Name">Main</string>
           <token name="RunContext">0</token>
@@ -2118,6 +2375,27 @@ local PlayerData = require(script.Parent.PlayerData)
 local map = MapBuilder.build()
 local stationFolder = map.critterFolder.Parent
 
+-- Splash Lagoon, the water park (2026-11-07), built far away from the station. All inside a pcall: if anything in the park goes
+-- wrong, parkInfo stays nil, the park stays closed on the title screen, and the station runs exactly as before.
+local parkInfo = nil
+if Config.Park and Config.Park.enabled then
+	local okPark, res = pcall(function()
+		return require(script.Parent.ParkBuilder).build()
+	end)
+	if okPark then
+		parkInfo = res
+	else
+		warn("[Splash Lagoon] the park did not build, so it stays closed: " .. tostring(res))
+	end
+end
+-- which game a player is in: "park" for Splash Lagoon, anything else is the station
+local function inPark(player)
+	return player ~= nil and player:GetAttribute("Zone") == "park"
+end
+local function parkSpawn()
+	return parkInfo.spawn * CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
+end
+
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
 remotes.Parent = ReplicatedStorage
@@ -2133,6 +2411,8 @@ local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on e
 local SetPet = remote("SetPet") -- pick which of your critters follows you around
 local Expand = remote("Expand") -- buy two more pedestals
 local Drop = remote("Drop") -- put down what you are carrying (2026-10-18: to grab something better)
+local PickGame = remote("PickGame") -- the title screen and the Switch game button: "station" or "park" (2026-11-07)
+local ParkRemote = remote("Park") -- everything in Splash Lagoon (ParkServer.lua, ParkPlay.client.lua)
 
 -- a sound from Config.Sounds: at a spot in the world for everyone nearby, or just for one player (2026-10-18)
 local function sfx(name, pos, player)
@@ -2158,6 +2438,22 @@ end
 
 local function tellAll(text, kind)
 	Notify:FireAllClients(text, kind or "info")
+end
+
+-- station news (showers, Black Hole Night, low gravity...) only for players on the station, not those at Splash Lagoon
+local function tellStation(text, kind)
+	for _, p in ipairs(Players:GetPlayers()) do
+		if not inPark(p) then
+			Notify:FireClient(p, text, kind or "info")
+		end
+	end
+end
+local function fxStation(...)
+	for _, p in ipairs(Players:GetPlayers()) do
+		if not inPark(p) then
+			FX:FireClient(p, ...)
+		end
+	end
 end
 
 local function addCommas(n)
@@ -2458,6 +2754,10 @@ tryStealing = function(thief, base, slot)
 	if not (owner and st) or owner == thief then
 		return
 	end
+	if inPark(owner) then -- nobody can guard a base from the water park, so it is safe while its owner is there (2026-11-07)
+		tell(thief, owner.DisplayName .. " is at Splash Lagoon, so their critters are safe until they come back.", "info")
+		return
+	end
 	if base.shieldUntil > now() then
 		tell(thief, "Their door is locked! Wait for it to open.", "bad")
 		return
@@ -2617,10 +2917,15 @@ local function onCharacter(player, character)
 		end)
 	end
 	local st = state[player]
-	if st and st.base then -- start each life at your own base
+	if st then -- start each life at your own base, or back at Splash Lagoon if that's where you were playing (2026-11-07)
 		task.defer(function()
 			local hrp = character:WaitForChild("HumanoidRootPart", 5)
-			if hrp then
+			if not hrp then
+				return
+			end
+			if inPark(player) and parkInfo then
+				character:PivotTo(parkSpawn())
+			elseif st.base then
 				character:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
 			end
 		end)
@@ -2756,9 +3061,9 @@ local function spawnOnPad()
 	if def.family then -- one of Nolan's own friends
 		tellAll("Nolan's friend " .. crit.name .. " landed on the launch pad! Quick, grab them!", "cosmic")
 	elseif crit.mut and crit.mut.id == "rainbow" then
-		tellAll("A RAINBOW critter landed on the launch pad: " .. crit.name .. "!", "cosmic")
+		tellStation("A RAINBOW critter landed on the launch pad: " .. crit.name .. "!", "cosmic")
 	elseif order >= 4 then
-		tellAll("A " .. def.rarity:upper() .. " critter landed on the launch pad: " .. crit.name .. "!", def.rarity == "Cosmic" and "cosmic" or "rare")
+		tellStation("A " .. def.rarity:upper() .. " critter landed on the launch pad: " .. crit.name .. "!", def.rarity == "Cosmic" and "cosmic" or "rare")
 	end
 end
 
@@ -2895,7 +3200,7 @@ local function meteorStar()
 	tw.Completed:Connect(function()
 		if s.Parent then
 			s:SetAttribute("Ready", true)
-			FX:FireAllClients("meteor", land) -- a burst, and a little screen shake for anyone close (FX.client.lua)
+			fxStation("meteor", land) -- a burst, and a little screen shake for anyone close (FX.client.lua); never in the park
 			task.delay(25, function() -- uncollected shower stars fade away
 				if s.Parent then
 					stars[s] = nil
@@ -2913,8 +3218,8 @@ local function meteorShower()
 		return false
 	end
 	showerOn = true
-	tellAll("METEOR SHOWER! Grab the falling stars, they're worth double!", "cosmic")
-	FX:FireAllClients("shower", Config.MeteorSeconds)
+	tellStation("METEOR SHOWER! Grab the falling stars, they're worth double!", "cosmic")
+	fxStation("shower", Config.MeteorSeconds)
 	local t0 = os.clock()
 	while os.clock() - t0 < Config.MeteorSeconds do
 		meteorStar()
@@ -3134,6 +3439,7 @@ local function buildCreeper(at)
 	local tag = Instance.new("BillboardGui")
 	tag.Size = UDim2.fromOffset(220, 40)
 	tag.StudsOffsetWorldSpace = Vector3.new(0, 6, 0)
+	tag.MaxDistance = 250 -- (2026-11-07) so its name never floats on the horizon for anyone at Splash Lagoon
 	tag.LightInfluence = 0
 	tag.Parent = body
 	local l = Instance.new("TextLabel")
@@ -3150,9 +3456,24 @@ local function buildCreeper(at)
 end
 
 local nightLighting = { Ambient = Color3.fromRGB(28, 16, 48), OutdoorAmbient = Color3.fromRGB(34, 20, 60), Brightness = 0.25 }
+-- what the station's lighting is (or is heading to), kept on Lighting as attributes (2026-11-07). Lighting is the same for the whole
+-- server, so a Splash Lagoon player's screen paints its own sunny day over it, and reads these to put the station back on the way out.
+local function stationLook(ambient, outdoor, brightness, tint)
+	Lighting:SetAttribute("StAmbient", ambient)
+	Lighting:SetAttribute("StOutdoor", outdoor)
+	Lighting:SetAttribute("StBrightness", brightness)
+	if tint then
+		Lighting:SetAttribute("StTint", tint)
+	end
+end
+do
+	local cc0 = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+	stationLook(Lighting.Ambient, Lighting.OutdoorAmbient, Lighting.Brightness, cc0 and cc0.TintColor or Color3.new(1, 1, 1))
+end
 local function setNight(on)
 	local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
 	if on then
+		stationLook(nightLighting.Ambient, nightLighting.OutdoorAmbient, nightLighting.Brightness, Color3.fromRGB(190, 160, 255))
 		Lighting:SetAttribute("DayAmbient", Lighting.Ambient)
 		Lighting:SetAttribute("DayOutdoor", Lighting.OutdoorAmbient)
 		Lighting:SetAttribute("DayBrightness", Lighting.Brightness)
@@ -3161,11 +3482,13 @@ local function setNight(on)
 			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.fromRGB(190, 160, 255) }):Play()
 		end
 	else
-		TweenService:Create(Lighting, TweenInfo.new(2.5), {
+		local day = {
 			Ambient = Lighting:GetAttribute("DayAmbient") or Color3.fromRGB(70, 80, 115),
 			OutdoorAmbient = Lighting:GetAttribute("DayOutdoor") or Color3.fromRGB(90, 100, 140),
 			Brightness = Lighting:GetAttribute("DayBrightness") or 1.2,
-		}):Play()
+		}
+		stationLook(day.Ambient, day.OutdoorAmbient, day.Brightness, Color3.new(1, 1, 1))
+		TweenService:Create(Lighting, TweenInfo.new(2.5), day):Play()
 		if cc then
 			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.new(1, 1, 1) }):Play()
 		end
@@ -3185,8 +3508,8 @@ end
 
 local function blackHoleNight()
 	workspace:SetAttribute("BlackHoleUntil", now() + Config.NightSeconds)
-	tellAll("BLACK HOLE NIGHT! The Void Creeper is loose. Hide in a locker or run!", "cosmic")
-	FX:FireAllClients("night", Config.NightSeconds)
+	tellStation("BLACK HOLE NIGHT! The Void Creeper is loose. Hide in a locker or run!", "cosmic")
+	fxStation("night", Config.NightSeconds)
 	setNight(true)
 	local creeper = buildCreeper(CFrame.new(-60, 40, 0))
 	local pos = Vector3.new(-60, 40, 0)
@@ -3204,7 +3527,7 @@ local function blackHoleNight()
 		local target, best = nil, math.huge
 		for player in pairs(state) do
 			local hrp = rootOf(player)
-			if hrp and not hidden[player] and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) then
+			if hrp and not hidden[player] and not inPark(player) and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) then
 				local dist = (hrp.Position - pos).Magnitude
 				if dist < best then
 					target, best = hrp, dist
@@ -3245,7 +3568,7 @@ local function blackHoleNight()
 		-- boop! anyone it reaches drops what they carry and is sent back to their base
 		for player, st in pairs(state) do
 			local hrp = rootOf(player)
-			if hrp and not hidden[player] and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
+			if hrp and not hidden[player] and not inPark(player) and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
 				ignore[player] = t + 6
 				pauseUntil = t + 1.5
 				if st.carrying then
@@ -3264,7 +3587,7 @@ local function blackHoleNight()
 	creeper:Destroy()
 	setNight(false)
 	workspace:SetAttribute("BlackHoleUntil", 0)
-	tellAll("The lights are back on. The Void Creeper has gone... for now.", "good")
+	tellStation("The lights are back on. The Void Creeper has gone... for now.", "good")
 end
 
 if Config.BlackHoleNight then
@@ -3284,7 +3607,7 @@ local bots = {}
 
 local function sendHome(player)
 	local st = state[player]
-	if st and st.base and player.Character then
+	if st and st.base and player.Character and not inPark(player) then
 		player.Character:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
 	end
 end
@@ -3518,7 +3841,7 @@ local function findTarget(player, hrp, reach, minDot)
 	local look = hrp.CFrame.LookVector
 	local best, bestD, kind, pos = nil, math.huge, nil, nil
 	for other in pairs(state) do
-		local oh = other ~= player and not hidden[other] and rootOf(other)
+		local oh = other ~= player and not hidden[other] and not inPark(other) and rootOf(other)
 		if oh then
 			local v = oh.Position - hrp.Position
 			local d = v.Magnitude
@@ -3586,7 +3909,7 @@ Punch.OnServerEvent:Connect(function(player)
 	end
 	lastPunch[player] = t
 	local hrp = rootOf(player)
-	if not hrp or hidden[player] then
+	if not hrp or hidden[player] or inPark(player) then -- no punching at Splash Lagoon: the water blaster is the only thing there
 		return
 	end
 	local look = hrp.CFrame.LookVector
@@ -3734,7 +4057,7 @@ RunService.Heartbeat:Connect(function(dt)
 			local bd = Config.Bots.sight
 			for player, st in pairs(state) do
 				local hrp = rootOf(player)
-				if st.carrying and hrp and not hidden[player] then
+				if st.carrying and hrp and not hidden[player] and not inPark(player) then
 					local safe = false
 					for _, b in ipairs(map.bases) do
 						if insideBase(b, hrp.Position) then
@@ -3908,20 +4231,23 @@ end
 
 -- ---------- Low Gravity (2026-10-18, Matthew: "add a low gravity event, like we have the meteor shower and the black hole") ----------
 local NORMAL_GRAVITY = workspace.Gravity
+workspace:SetAttribute("NormalGravity", NORMAL_GRAVITY)
 local lowGravOn = false
 local function lowGravity()
 	if lowGravOn then
 		return false
 	end
 	lowGravOn = true
+	-- gravity is one number for the whole server, but each character falls on its own player's screen, so Splash Lagoon players'
+	-- screens hold normal gravity for themselves (ParkWorld.client.lua) and the park never floats
 	workspace.Gravity = Config.LowGravityValue
 	workspace:SetAttribute("LowGravityUntil", now() + Config.LowGravitySeconds)
-	tellAll("LOW GRAVITY! Everyone floats. Jump!", "cosmic")
-	FX:FireAllClients("lowgrav", Config.LowGravitySeconds)
+	tellStation("LOW GRAVITY! Everyone floats. Jump!", "cosmic")
+	fxStation("lowgrav", Config.LowGravitySeconds)
 	task.delay(Config.LowGravitySeconds, function()
 		workspace.Gravity = NORMAL_GRAVITY
 		lowGravOn = false
-		tellAll("Gravity is back to normal.", "info")
+		tellStation("Gravity is back to normal.", "info")
 	end)
 	return true
 end
@@ -3963,7 +4289,7 @@ for _, m in ipairs(map.rockets or {}) do
 		prompt.Parent = button
 		prompt.Triggered:Connect(function(player)
 			if launchRocket(m) then
-				tellAll(player.DisplayName .. " is launching a rocket! " .. Config.RocketCountdown .. "... ", "cosmic")
+				tellStation(player.DisplayName .. " is launching a rocket! " .. Config.RocketCountdown .. "... ", "cosmic")
 			else
 				tell(player, "That rocket is already on its way. A new one will be on the pad soon!", "info")
 			end
@@ -4150,13 +4476,14 @@ local function press(player, id)
 		end
 		themeIndex = themeIndex % #themes + 1
 		local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+		Lighting:SetAttribute("StTint", themes[themeIndex].tint) -- for Splash Lagoon players' screens (2026-11-07)
 		if cc then
 			TweenService:Create(cc, TweenInfo.new(1.2), { TintColor = themes[themeIndex].tint }):Play()
 		end
-		tellAll("Captain's orders: " .. themes[themeIndex].name .. " lights!", "good")
+		tellStation("Captain's orders: " .. themes[themeIndex].name .. " lights!", "good")
 	elseif id == "rain" then
-		tellAll("The Captain made it rain Stardust! Grab them!", "cosmic")
-		FX:FireAllClients("sfx", "shower")
+		tellStation("The Captain made it rain Stardust! Grab them!", "cosmic")
+		fxStation("sfx", "shower")
 		task.spawn(function()
 			for _ = 1, 24 do
 				meteorStar()
@@ -4177,7 +4504,7 @@ local function press(player, id)
 			tell(player, "The rockets are already flying!", "info")
 			return
 		end
-		tellAll("Captain's orders: launch all rockets!", "cosmic")
+		tellStation("Captain's orders: launch all rockets!", "cosmic")
 	end
 	lastUse[id] = t
 end
@@ -4433,6 +4760,93 @@ for id, stand in pairs(map.furnitureStands or {}) do
 	end)
 end
 
+-- ---------- picking a game: Star Station or Splash Lagoon (2026-11-07) ----------
+-- The title screen and the Switch game button send "station" or "park". Your base, your critters and their income all stay put
+-- while you're in the park, so switching back is instant.
+local lastPick = {}
+local function leaveStation(player)
+	local st = state[player]
+	if st and st.carrying then -- a stolen critter goes back to its owner; a bought one is refunded
+		dropCarried(player, "dropped")
+	end
+	if hidden[player] then
+		unhide(player)
+	end
+	local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if hum and hum.SeatPart then -- out of the Moon Rover first
+		hum.Sit = false
+		task.wait(0.2)
+	end
+end
+PickGame.OnServerEvent:Connect(function(player, which)
+	if which ~= "park" and which ~= "station" then
+		return
+	end
+	local t = os.clock()
+	if (lastPick[player] or 0) + 1 > t then
+		return
+	end
+	lastPick[player] = t
+	local ok, err = pcall(function()
+		local st = state[player]
+		local ch = player.Character
+		if which == "park" then
+			if not (parkInfo and workspace:GetAttribute("ParkReady")) then
+				player:SetAttribute("Zone", "station")
+				tell(player, "Splash Lagoon is closed right now. Have fun on the station!", "info")
+				return
+			end
+			if not inPark(player) then
+				leaveStation(player)
+			end
+			player:SetAttribute("Zone", "park")
+			if ch then
+				ch:PivotTo(parkSpawn())
+			end
+			tell(player, "Welcome to Splash Lagoon! Your critters keep earning back on the station.", "good")
+		else
+			local was = inPark(player)
+			if was then
+				ParkRemote:FireClient(player, "stopride") -- off any slide before the move
+				task.wait(0.15)
+			end
+			player:SetAttribute("Zone", "station")
+			if ch then
+				if st and st.base then
+					ch:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
+				else
+					local sp = stationFolder:FindFirstChild("Spawn")
+					if sp then
+						ch:PivotTo(sp.CFrame * CFrame.new(0, 4, 0))
+					end
+				end
+			end
+			if was then
+				tell(player, "Back on " .. Config.GameTitle .. "!", "good")
+			end
+		end
+	end)
+	if not ok then
+		warn("[Splash Lagoon] switching games: " .. tostring(err))
+	end
+end)
+Players.PlayerRemoving:Connect(function(player)
+	lastPick[player] = nil
+end)
+
+if parkInfo then
+	local okStart, errStart = pcall(function()
+		require(script.Parent.ParkServer).start({
+			info = parkInfo, remote = ParkRemote, PlayerData = PlayerData, refreshStats = refreshStats, tell = tell,
+			isCaptain = isCaptain, now = now, addCommas = addCommas, sfx = sfx,
+		})
+	end)
+	if not okStart then
+		warn("[Splash Lagoon] the park's rules did not start, so it stays closed: " .. tostring(errStart))
+		workspace:SetAttribute("ParkReady", false)
+	end
+end
+
 -- ---------- every second: income; four times a second: home and catch checks ----------
 task.spawn(function()
 	while true do
@@ -4480,7 +4894,7 @@ end)
 ]]></string>
         </Properties>
       </Item>
-      <Item class="ModuleScript" referent="10">
+      <Item class="ModuleScript" referent="11">
         <Properties>
           <string name="Name">MapBuilder</string>
           <string name="Source"><![CDATA[-- Builds the whole station from code when the server starts: deck, launch pad, six bases, the Commander statue, sky.
@@ -4855,7 +5269,848 @@ return MapBuilder
 ]]></string>
         </Properties>
       </Item>
-      <Item class="ModuleScript" referent="11">
+      <Item class="ModuleScript" referent="12">
+        <Properties>
+          <string name="Name">ParkBuilder</string>
+          <string name="Source"><![CDATA[-- Builds Splash Lagoon, the water park (2026-11-07), far from the station: terrain ground and real terrain water (so everyone
+-- swims the normal Roblox way), the slides, the cannonball tower, the splash pad and its tipping bucket, palms, and the hidden
+-- rubber ducks. Every section is built inside its own pcall: a mistake in one part of the park only loses that part, and nothing
+-- here can ever stop the station from loading. Where things go is in ReplicatedStorage.Shared.ParkLayout.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local L = require(ReplicatedStorage.Shared.ParkLayout)
+
+local ParkBuilder = {}
+
+local WHITE = Color3.fromRGB(250, 250, 252)
+local SUN = Color3.fromRGB(255, 205, 70)
+local AQUA = Color3.fromRGB(70, 200, 230)
+local CORAL = Color3.fromRGB(255, 120, 100)
+local LEAF = Color3.fromRGB(70, 175, 80)
+local BARK = Color3.fromRGB(140, 100, 64)
+
+local function part(parent, props)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	p.Material = Enum.Material.SmoothPlastic
+	for k, v in pairs(props) do
+		p[k] = v
+	end
+	-- the iPad rule from the station: glowing, see-through, small and paper-thin pieces cast no shadow
+	if props.CastShadow == nil then
+		local sz = props.Size
+		if props.Material == Enum.Material.Neon or (props.Transparency or 0) > 0 or (sz and (math.max(sz.X, sz.Y, sz.Z) < 2 or math.min(sz.X, sz.Y, sz.Z) <= 0.3)) then
+			p.CastShadow = false
+		end
+	end
+	p.Parent = parent
+	return p
+end
+
+local UPRIGHT = CFrame.Angles(0, 0, math.rad(90)) -- turns a cylinder (its length runs along x) to stand up
+
+local function surfaceText(target, face, text, color, ppS)
+	local g = Instance.new("SurfaceGui")
+	g.Face = face
+	g.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	g.PixelsPerStud = ppS or 30
+	g.LightInfluence = 0
+	g.Parent = target
+	local l = Instance.new("TextLabel")
+	l.Name = "Label"
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = color
+	l.TextStrokeTransparency = 0.4
+	l.Text = text
+	l.Parent = g
+	return l
+end
+
+-- a floating sign like the station's: a rounded panel sized in studs, so it shrinks with distance
+local function sign(parent, pos, text, color, w, h)
+	local holder = part(parent, { Name = "SignHolder", Size = Vector3.new(1, 1, 1), Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CFrame = CFrame.new(pos) })
+	local g = Instance.new("BillboardGui")
+	g.Size = UDim2.fromScale(w or 18, h or 3.6)
+	g.LightInfluence = 0
+	g.MaxDistance = 320
+	g.Parent = holder
+	local panel = Instance.new("Frame")
+	panel.Size = UDim2.fromScale(1, 1)
+	panel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	panel.BackgroundTransparency = 0.1
+	panel.Parent = g
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.3, 0)
+	corner.Parent = panel
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color
+	stroke.Thickness = 3
+	stroke.Parent = panel
+	local l = Instance.new("TextLabel")
+	l.AnchorPoint = Vector2.new(0.5, 0.5)
+	l.Position = UDim2.fromScale(0.5, 0.5)
+	l.Size = UDim2.fromScale(0.9, 0.78)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = color
+	l.Text = text
+	l.Parent = panel
+	return l
+end
+
+-- ---------- terrain: the ground, sand, grass, and the water ----------
+local function rectBlock(r, top, thick, material)
+	local T = workspace.Terrain
+	local cx, cz = (r.x1 + r.x2) / 2, (r.z1 + r.z2) / 2
+	T:FillBlock(CFrame.new(L.at(cx, top - thick / 2, cz)), Vector3.new(r.x2 - r.x1, thick, r.z2 - r.z1), material)
+end
+
+local function terrain()
+	local T = workspace.Terrain
+	-- terrain colours and water looks are for the whole place, but the station has no terrain or water, so only the park shows them
+	T:SetMaterialColor(Enum.Material.Concrete, Color3.fromRGB(238, 226, 204))
+	T:SetMaterialColor(Enum.Material.Grass, Color3.fromRGB(112, 200, 92))
+	T:SetMaterialColor(Enum.Material.Sand, Color3.fromRGB(242, 222, 164))
+	T.WaterColor = Color3.fromRGB(40, 190, 230)
+	T.WaterTransparency = 0.4
+	T.WaterReflectance = 0.3
+	T.WaterWaveSize = 0.12
+	T.WaterWaveSpeed = 8
+	-- the whole park's ground first, then grass and sand on top, then the water cut into it
+	rectBlock({ x1 = -L.HalfX, x2 = L.HalfX, z1 = -L.HalfZ, z2 = L.HalfZ }, 0, L.GroundDepth, Enum.Material.Concrete)
+	for _, g in ipairs({
+		{ x1 = -184, x2 = -140, z1 = 24, z2 = 168 },
+		{ x1 = -136, x2 = -24, z1 = 148, z2 = 168 },
+		L.River.inner,
+		{ x1 = -184, x2 = -168, z1 = -168, z2 = -24 },
+		{ x1 = -136, x2 = -40, z1 = -168, z2 = -140 },
+	}) do
+		rectBlock(g, 0, 4, Enum.Material.Grass)
+	end
+	rectBlock(L.Beach, 0, 4, Enum.Material.Sand)
+	-- water: the wave pool gets deeper away from the beach
+	for _, b in ipairs(L.WaveBands) do
+		rectBlock({ x1 = b.x1, x2 = b.x2, z1 = L.WavePool.z1, z2 = L.WavePool.z2 }, 0, b.depth, Enum.Material.Water)
+	end
+	local o, i, d = L.River.outer, L.River.inner, L.River.depth
+	rectBlock({ x1 = o.x1, x2 = o.x2, z1 = o.z1, z2 = i.z1 }, 0, d, Enum.Material.Water)
+	rectBlock({ x1 = o.x1, x2 = o.x2, z1 = i.z2, z2 = o.z2 }, 0, d, Enum.Material.Water)
+	rectBlock({ x1 = o.x1, x2 = i.x1, z1 = i.z1, z2 = i.z2 }, 0, d, Enum.Material.Water)
+	rectBlock({ x1 = i.x2, x2 = o.x2, z1 = i.z1, z2 = i.z2 }, 0, d, Enum.Material.Water)
+	rectBlock(L.SplashPool, 0, L.SplashPool.depth, Enum.Material.Water)
+end
+
+-- a low tiled edge round a pool (the water is level with the deck, so this is only a colour line)
+local function coping(folder, r, color, skipWest)
+	local t, h = 1.6, 0.3
+	local w, dz = r.x2 - r.x1, r.z2 - r.z1
+	local cx, cz = (r.x1 + r.x2) / 2, (r.z1 + r.z2) / 2
+	part(folder, { Name = "Edge", Size = Vector3.new(w + t * 2, h, t), Color = color, CanCollide = false, CFrame = CFrame.new(L.at(cx, h / 2, r.z1 - t / 2)) })
+	part(folder, { Name = "Edge", Size = Vector3.new(w + t * 2, h, t), Color = color, CanCollide = false, CFrame = CFrame.new(L.at(cx, h / 2, r.z2 + t / 2)) })
+	part(folder, { Name = "Edge", Size = Vector3.new(t, h, dz), Color = color, CanCollide = false, CFrame = CFrame.new(L.at(r.x2 + t / 2, h / 2, cz)) })
+	if not skipWest then
+		part(folder, { Name = "Edge", Size = Vector3.new(t, h, dz), Color = color, CanCollide = false, CFrame = CFrame.new(L.at(r.x1 - t / 2, h / 2, cz)) })
+	end
+end
+
+-- ---------- the edge of the park: a hedge you can see, and walls you can't, up high ----------
+local function boundary(folder)
+	local hx, hz = L.HalfX, L.HalfZ
+	for _, s in ipairs({ -1, 1 }) do
+		part(folder, { Name = "Hedge", Size = Vector3.new(3, 4, hz * 2), Color = LEAF, Material = Enum.Material.Grass, CFrame = CFrame.new(L.at(s * (hx - 1.5), 2, 0)) })
+		part(folder, { Name = "Hedge", Size = Vector3.new(hx * 2, 4, 3), Color = LEAF, Material = Enum.Material.Grass, CFrame = CFrame.new(L.at(0, 2, s * (hz - 1.5))) })
+		part(folder, { Name = "InvisibleWall", Size = Vector3.new(2, 170, hz * 2 + 4), Transparency = 1, CanQuery = false, CastShadow = false, CFrame = CFrame.new(L.at(s * (hx + 1), 75, 0)) })
+		part(folder, { Name = "InvisibleWall", Size = Vector3.new(hx * 2 + 4, 170, 2), Transparency = 1, CanQuery = false, CastShadow = false, CFrame = CFrame.new(L.at(0, 75, s * (hz + 1))) })
+	end
+end
+
+-- ---------- palms, umbrellas, the welcome arch ----------
+local function palm(folder, x, z, h)
+	h = h or 14
+	local m = Instance.new("Model")
+	m.Name = "Palm"
+	m.Parent = folder
+	local base = L.at(x, 0, z)
+	part(m, { Name = "Trunk", Shape = Enum.PartType.Cylinder, Size = Vector3.new(h, 1.6, 1.6), Color = BARK, Material = Enum.Material.Wood, CFrame = CFrame.new(base + Vector3.new(0, h / 2, 0)) * UPRIGHT })
+	local top = base + Vector3.new(0, h, 0)
+	for k = 0, 5 do
+		part(m, { Name = "Leaf", Size = Vector3.new(2.4, 0.4, 8), Color = (k % 2 == 0) and LEAF or Color3.fromRGB(90, 195, 95), CanCollide = false,
+			CFrame = CFrame.new(top) * CFrame.Angles(0, k * math.pi / 3, 0) * CFrame.Angles(-0.35, 0, 0) * CFrame.new(0, 0, -3.8) })
+	end
+	for k = 0, 2 do
+		local a = k * math.pi * 2 / 3
+		part(m, { Name = "Coconut", Shape = Enum.PartType.Ball, Size = Vector3.new(1.1, 1.1, 1.1), Color = Color3.fromRGB(110, 76, 46), CanCollide = false,
+			CFrame = CFrame.new(top + Vector3.new(math.cos(a) * 0.8, -0.8, math.sin(a) * 0.8)) })
+	end
+end
+
+local function umbrella(folder, x, z, color)
+	local base = L.at(x, 0, z)
+	part(folder, { Name = "UmbrellaPole", Shape = Enum.PartType.Cylinder, Size = Vector3.new(9, 0.5, 0.5), Color = WHITE, CFrame = CFrame.new(base + Vector3.new(0, 4.5, 0)) * UPRIGHT })
+	part(folder, { Name = "Umbrella", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.6, 11, 11), Color = color, CanCollide = false, CFrame = CFrame.new(base + Vector3.new(0, 9, 0)) * UPRIGHT })
+	part(folder, { Name = "Towel", Size = Vector3.new(3, 0.12, 6), Color = color, CanCollide = false, CFrame = CFrame.new(base + Vector3.new(2.8, 0.06, 0)) })
+end
+
+local function decor(folder)
+	-- the welcome arch you walk through from where you arrive
+	local ax = -148
+	for _, s in ipairs({ -1, 1 }) do
+		part(folder, { Name = "ArchPillar", Size = Vector3.new(3, 18, 3), Color = AQUA, CFrame = CFrame.new(L.at(ax, 9, s * 14)) })
+	end
+	local beam = part(folder, { Name = "ArchSign", Size = Vector3.new(3, 5, 34), Color = WHITE, CFrame = CFrame.new(L.at(ax, 19.5, 0)) })
+	surfaceText(beam, Enum.NormalId.Left, L.Name, Color3.fromRGB(30, 150, 210), 24)
+	surfaceText(beam, Enum.NormalId.Right, "Have a splashing time!", CORAL, 24)
+	part(folder, { Name = "ArchStripe", Size = Vector3.new(3.2, 0.8, 34.2), Color = SUN, CFrame = CFrame.new(L.at(ax, 17.3, 0)) })
+	-- where you arrive: a bright pad (not a SpawnLocation: a second one would change where people appear on the station)
+	part(folder, { Name = "ArrivalPad", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.2, 14, 14), Color = AQUA, CanCollide = false, CFrame = CFrame.new(L.at(-160, 0.1, 0)) * UPRIGHT })
+	-- a board beside the arch, facing you as you arrive, telling you what to do
+	local board = part(folder, { Name = "HowToPlay", Size = Vector3.new(0.6, 8, 14), Color = WHITE, CFrame = CFrame.new(L.at(-152, 5, -28)) })
+	surfaceText(board, Enum.NormalId.Left, "Ride the slides!\nGrab Splash Tokens for Stardust\nFind all " .. #L.Ducks .. " rubber ducks!", Color3.fromRGB(30, 150, 210), 20)
+	part(folder, { Name = "BoardLeg", Size = Vector3.new(0.6, 1.2, 1), Color = AQUA, CFrame = CFrame.new(L.at(-152, 0.6, -33)) })
+	part(folder, { Name = "BoardLeg", Size = Vector3.new(0.6, 1.2, 1), Color = AQUA, CFrame = CFrame.new(L.at(-152, 0.6, -23)) })
+	-- palms along the paths, on the beach and on the river's island
+	for _, p in ipairs({ { -128, 22 }, { -90, 22 }, { -50, 22 }, { -128, -22 }, { -90, -22 }, { -50, -22 }, { 2, 22 }, { 2, -24 },
+		{ -160, -60, 16 }, { -158, -112, 13 }, { -90, 80, 12 }, { -68, 104, 15 }, { 48, 144 }, { 160, 40 }, { 172, -20 }, { -176, 100 } }) do
+		palm(folder, p[1], p[2], p[3])
+	end
+	umbrella(folder, -152, -76, CORAL)
+	umbrella(folder, -152, -96, SUN)
+	umbrella(folder, -152, -120, AQUA)
+	-- the wave machine at the deep end of the wave pool
+	local wm = part(folder, { Name = "WaveMachine", Size = Vector3.new(4, 9, 60), Color = AQUA, CFrame = CFrame.new(L.at(-36, 4.5, -88)) })
+	surfaceText(wm, Enum.NormalId.Left, "WAVE POOL", WHITE, 14)
+	part(folder, { Name = "WaveMachineTop", Size = Vector3.new(4.4, 1, 60.4), Color = SUN, CFrame = CFrame.new(L.at(-36, 9.5, -88)) })
+	-- coloured edges round the pools
+	coping(folder, L.WavePool, WHITE, true)
+	coping(folder, L.SplashPool, WHITE, false)
+	coping(folder, L.River.outer, SUN, false)
+	local i = L.River.inner -- the island edge sits on the island, not in the water
+	coping(folder, { x1 = i.x1 + 1.6, x2 = i.x2 - 1.6, z1 = i.z1 + 1.6, z2 = i.z2 - 1.6 }, SUN, false)
+	-- signs over the places to go
+	sign(folder, L.at(-88, 18, -88), "WAVE POOL", Color3.fromRGB(30, 150, 210), 16, 3.4)
+	sign(folder, L.at(-80, 20, 92), "LAZY RIVER", Color3.fromRGB(40, 160, 90), 16, 3.4)
+	sign(folder, L.at(104, 44, 90), "SPLASH PAD", CORAL, 16, 3.4)
+	sign(folder, L.at(92, 66, -34), "WATER SLIDES", Color3.fromRGB(150, 90, 230), 18, 3.6)
+end
+
+-- ---------- the slides: towers, open troughs to ride in, and a pad at the bottom to start ----------
+local function slides(folder)
+	local sf = Instance.new("Folder")
+	sf.Name = "Slides"
+	sf.Parent = folder
+	for _, s in ipairs(L.Slides) do
+		local ok, err = pcall(function()
+			local m = Instance.new("Model")
+			m.Name = s.id
+			m.Parent = sf
+			if s.tower and not s.noTower then
+				local tw = s.tower
+				local half = tw.w / 2
+				part(m, { Name = "Core", Size = Vector3.new(tw.w * 0.5, tw.top, tw.w * 0.5), Color = s.color, CFrame = CFrame.new(L.at(tw.x, tw.top / 2, tw.z)) })
+				for _, cx in ipairs({ -1, 1 }) do
+					for _, cz in ipairs({ -1, 1 }) do
+						part(m, { Name = "Post", Size = Vector3.new(1.6, tw.top + 6, 1.6), Color = WHITE, CFrame = CFrame.new(L.at(tw.x + cx * (half - 0.8), (tw.top + 6) / 2, tw.z + cz * (half - 0.8))) })
+					end
+				end
+				part(m, { Name = "Platform", Size = Vector3.new(tw.w, 1, tw.w), Color = WHITE, CFrame = CFrame.new(L.at(tw.x, tw.top - 0.5, tw.z)) })
+				part(m, { Name = "Roof", Size = Vector3.new(tw.w + 2, 0.8, tw.w + 2), Color = s.color2, CFrame = CFrame.new(L.at(tw.x, tw.top + 6.4, tw.z)) })
+				for k = 1, math.floor(tw.top / 10) do -- coloured bands up the core
+					part(m, { Name = "Band", Size = Vector3.new(tw.w * 0.5 + 0.3, 1.2, tw.w * 0.5 + 0.3), Color = s.color2, CFrame = CFrame.new(L.at(tw.x, k * 10, tw.z)) })
+				end
+			end
+			-- the trough: a floor and two rails per piece, stripes in the slide's two colours. Nobody stands on it (your screen
+			-- carries you down), so it doesn't collide: no snagging, no getting stuck on a seam.
+			local pts = s.points
+			for i = 1, #pts - 1 do
+				local a, b = pts[i], pts[i + 1]
+				local len = (b - a).Magnitude
+				if len > 0.05 then
+					local cf = CFrame.lookAt((a + b) / 2, b)
+					local col = (i % 2 == 0) and s.color or s.color2
+					part(m, { Name = "Trough", Size = Vector3.new(6, 0.6, len + 0.5), Color = col, CanCollide = false, CanQuery = false, CanTouch = false, CFrame = cf * CFrame.new(0, -0.3, 0) })
+					for _, side in ipairs({ -1, 1 }) do
+						part(m, { Name = "Rail", Size = Vector3.new(0.6, 1.8, len + 0.5), Color = s.color, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, CFrame = cf * CFrame.new(side * 3, 0.6, 0) })
+					end
+				end
+				-- a support every few pieces, down to the deck or the pool floor, but never one that would poke up through a lower
+				-- part of the same slide (the corkscrew passes over the same spot three times)
+				local below = false
+				for j = 1, #pts do
+					local q = pts[j]
+					if math.abs(j - i) > 3 and q.Y < a.Y - 6 and (Vector3.new(q.X - a.X, 0, q.Z - a.Z)).Magnitude < 5 then
+						below = true
+						break
+					end
+				end
+				if i % 4 == 0 and a.Y > 4 and not below then
+					local floorY = L.inSplashPool(Vector3.new(a.X, 0, a.Z)) and -L.SplashPool.depth or 0
+					local h = (a.Y - 0.6) - L.Origin.Y - floorY
+					if h > 1 then
+						part(m, { Name = "Support", Size = Vector3.new(1.2, h, 1.2), Color = WHITE, CFrame = CFrame.new(Vector3.new(a.X, L.Origin.Y + floorY + h / 2, a.Z)) })
+					end
+				end
+			end
+			-- the pad at the bottom: stand on it and press Ride
+			local pad = part(m, { Name = "RidePad_" .. s.id, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 8, 8), Color = s.color, Material = Enum.Material.Neon, CanCollide = false,
+				CFrame = CFrame.new(s.pad + Vector3.new(0, 0.15, 0)) * UPRIGHT })
+			pad:SetAttribute("SlideId", s.id)
+			sign(m, s.pad + Vector3.new(0, 8, 0), s.name, s.color, 14, 2.8)
+		end)
+		if not ok then
+			warn("[Splash Lagoon] slide " .. tostring(s.id) .. " failed: " .. tostring(err))
+		end
+	end
+end
+
+-- ---------- the cannonball tower and the springboard ----------
+local function cannonball(folder)
+	local m = Instance.new("Model")
+	m.Name = "CannonballTower"
+	m.Parent = folder
+	local c = L.Cannonball
+	for _, cx in ipairs({ -1, 1 }) do
+		for _, cz in ipairs({ -1, 1 }) do
+			part(m, { Name = "Post", Size = Vector3.new(1.6, c.top + 4, 1.6), Color = WHITE, CFrame = CFrame.new(L.at(c.x + cx * 4.5, (c.top + 4) / 2, c.z + cz * 4.5)) })
+		end
+	end
+	part(m, { Name = "Platform", Size = Vector3.new(10.6, 1, 10.6), Color = CORAL, CFrame = CFrame.new(L.at(c.x, c.top - 0.5, c.z)) })
+	part(m, { Name = "MidPlatform", Size = Vector3.new(10.6, 1, 10.6), Color = SUN, CFrame = CFrame.new(L.at(c.x, c.top / 2, c.z)) })
+	-- rails on three sides; the board side (south, over the water) is open
+	part(m, { Name = "Rail", Size = Vector3.new(10.6, 3, 0.4), Color = WHITE, CFrame = CFrame.new(L.at(c.x, c.top + 1.5, c.z - 5.1)) })
+	for _, s in ipairs({ -1, 1 }) do
+		part(m, { Name = "Rail", Size = Vector3.new(0.4, 3, 10.6), Color = WHITE, CFrame = CFrame.new(L.at(c.x + s * 5.1, c.top + 1.5, c.z)) })
+	end
+	part(m, { Name = "Board", Size = Vector3.new(4, 0.6, 12), Color = AQUA, CFrame = CFrame.new(L.at(c.x, c.top - 0.3, c.z + 11)) })
+	local climb = part(m, { Name = "ClimbPad", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 7, 7), Color = CORAL, Material = Enum.Material.Neon, CanCollide = false,
+		CFrame = CFrame.new(c.pad + Vector3.new(0, 0.15, 0)) * UPRIGHT })
+	climb:SetAttribute("Climb", true)
+	sign(m, L.at(c.x, c.top + 10, c.z), "CANNONBALL TOWER", CORAL, 18, 3.4)
+	-- the springboard at the pool's west edge: land on it and it flings you out over the water
+	local sb = L.Springboard
+	local board = part(folder, { Name = "Springboard", Size = sb.size, Color = SUN, CFrame = sb.cf })
+	board:SetAttribute("Bounce", sb.bounce)
+	board:SetAttribute("Push", sb.push)
+	part(folder, { Name = "SpringboardBase", Size = Vector3.new(4, 1.4, 5), Color = WHITE, CFrame = sb.cf * CFrame.new(-4, -1.0, 0) })
+	sign(folder, sb.cf.Position + Vector3.new(-4, 7, 0), "SPRINGBOARD", Color3.fromRGB(30, 150, 210), 12, 2.6)
+end
+
+-- ---------- the splash pad: fountains, coloured spots, and the big tipping bucket ----------
+local function fountain(parent, pos, height)
+	local nozzle = part(parent, { Name = "Fountain", Size = Vector3.new(1.4, 0.4, 1.4), Color = WHITE, CFrame = CFrame.new(pos + Vector3.new(0, 0.2, 0)) })
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	e.Color = ColorSequence.new(Color3.fromRGB(225, 248, 255), Color3.fromRGB(120, 210, 255))
+	e.LightEmission = 0.3
+	e.Size = NumberSequence.new(0.8, 0.3)
+	e.Transparency = NumberSequence.new(0.15, 1)
+	e.Lifetime = NumberRange.new(0.9, 1.3)
+	e.Rate = 14
+	e.Speed = NumberRange.new(height or 24, (height or 24) + 4)
+	e.SpreadAngle = Vector2.new(6, 6)
+	e.Acceleration = Vector3.new(0, -45, 0)
+	e.EmissionDirection = Enum.NormalId.Top
+	e.Parent = nozzle
+	return nozzle
+end
+
+local function splashPad(folder)
+	local m = Instance.new("Model")
+	m.Name = "SplashPad"
+	m.Parent = folder
+	local B = L.Bucket
+	local colors = { CORAL, SUN, AQUA, Color3.fromRGB(150, 110, 240), Color3.fromRGB(110, 220, 140) }
+	local rng = Random.new(77)
+	for k = 1, 14 do -- bright spots painted on the floor
+		local x, z = rng:NextNumber(L.SplashPad.x1 + 8, L.SplashPad.x2 - 8), rng:NextNumber(L.SplashPad.z1 + 8, L.SplashPad.z2 - 8)
+		local d = rng:NextNumber(6, 12)
+		part(m, { Name = "Spot", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.1, d, d), Color = colors[(k - 1) % #colors + 1], CanCollide = false, CanQuery = false,
+			CFrame = CFrame.new(L.at(x, 0.05, z)) * UPRIGHT })
+	end
+	for k = 0, 7 do -- a ring of fountains round the bucket tower
+		local a = k * math.pi / 4
+		fountain(m, L.at(B.x + math.cos(a) * 26, 0, B.z + math.sin(a) * 26), 22 + (k % 2) * 6)
+	end
+	for _, q in ipairs({ { 56, 44 }, { 152, 44 }, { 56, 140 }, { 152, 140 } }) do
+		fountain(m, L.at(q[1], 0, q[2]), 16)
+	end
+	-- the bucket tower: four legs, a frame on top, and the bucket on an axle. Every player's screen tips it (ParkPlay.client.lua).
+	local tower = Instance.new("Model")
+	tower.Name = "BucketTower"
+	tower.Parent = m
+	local H = B.height
+	for _, cx in ipairs({ -1, 1 }) do
+		for _, cz in ipairs({ -1, 1 }) do
+			part(tower, { Name = "Leg", Size = Vector3.new(1.8, H, 1.8), Color = (cx == cz) and CORAL or AQUA, CFrame = CFrame.new(L.at(B.x + cx * 7, H / 2, B.z + cz * 7)) })
+		end
+		part(tower, { Name = "Beam", Size = Vector3.new(1.4, 1.4, 15.8), Color = SUN, CFrame = CFrame.new(L.at(B.x + cx * 7, H, B.z)) })
+	end
+	part(tower, { Name = "Axle", Shape = Enum.PartType.Cylinder, Size = Vector3.new(15.8, 0.8, 0.8), Color = WHITE, CFrame = CFrame.new(L.at(B.x, H, B.z)) })
+	local bucket = Instance.new("Model")
+	bucket.Name = "Bucket"
+	bucket.Parent = tower
+	local hinge = part(bucket, { Name = "Hinge", Size = Vector3.new(1, 1, 1), Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CFrame = CFrame.new(L.at(B.x, H, B.z)) })
+	bucket.PrimaryPart = hinge
+	part(bucket, { Name = "Pail", Shape = Enum.PartType.Cylinder, Size = Vector3.new(8, 11, 11), Color = SUN, CanCollide = false, CFrame = CFrame.new(L.at(B.x, H + 4.2, B.z)) * UPRIGHT })
+	part(bucket, { Name = "Rim", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.8, 11.8, 11.8), Color = CORAL, CanCollide = false, CFrame = CFrame.new(L.at(B.x, H + 7.9, B.z)) * UPRIGHT })
+	part(bucket, { Name = "Water", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.3, 10, 10), Color = Color3.fromRGB(90, 200, 255), Material = Enum.Material.Neon, CanCollide = false,
+		CFrame = CFrame.new(L.at(B.x, H + 8.45, B.z)) * UPRIGHT })
+	-- a sign on two legs counting down to the next tip (your screen updates it)
+	local board = part(tower, { Name = "BucketSign", Size = Vector3.new(14, 3.2, 0.4), Color = WHITE, CFrame = CFrame.new(L.at(B.x, 9, B.z - 7.4)) })
+	local l1 = surfaceText(board, Enum.NormalId.Front, "Bucket tips soon!", CORAL, 20)
+	l1.Name = "BucketTimer"
+	local l2 = surfaceText(board, Enum.NormalId.Back, "Bucket tips soon!", CORAL, 20)
+	l2.Name = "BucketTimer"
+	-- drips off the beams
+	for _, cx in ipairs({ -1, 1 }) do
+		local drip = part(tower, { Name = "Drip", Size = Vector3.new(1, 0.2, 10), Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CFrame = CFrame.new(L.at(B.x + cx * 7, H - 0.8, B.z)) })
+		local e = Instance.new("ParticleEmitter")
+		e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		e.Color = ColorSequence.new(Color3.fromRGB(200, 240, 255))
+		e.Size = NumberSequence.new(0.5, 0.3)
+		e.Lifetime = NumberRange.new(0.8, 1.1)
+		e.Rate = 5
+		e.Speed = NumberRange.new(2, 4)
+		e.Acceleration = Vector3.new(0, -40, 0)
+		e.EmissionDirection = Enum.NormalId.Bottom
+		e.Parent = drip
+	end
+	return bucket
+end
+
+-- ---------- the hidden rubber ducks ----------
+local function ducks(folder)
+	local df = Instance.new("Folder")
+	df.Name = "Ducks"
+	df.Parent = folder
+	local list = {}
+	for _, d in ipairs(L.Ducks) do
+		local ok, err = pcall(function()
+			local m = Instance.new("Model")
+			m.Name = "Duck_" .. d.id
+			m:SetAttribute("DuckId", d.id)
+			if d.floats then
+				m:SetAttribute("Floats", true)
+			end
+			local at = CFrame.new(L.at(d.at.X, d.at.Y, d.at.Z)) * CFrame.Angles(0, (tonumber(d.id:match("%d+")) or 1) * 0.9, 0)
+			local function bit(name, shape, size, color, offset)
+				return part(m, { Name = name, Shape = shape, Size = size, Color = color, CanCollide = false, CastShadow = false, CFrame = at * offset })
+			end
+			local body = bit("Body", Enum.PartType.Ball, Vector3.new(1.8, 1.8, 1.8), Color3.fromRGB(255, 220, 60), CFrame.new())
+			bit("Head", Enum.PartType.Ball, Vector3.new(1.2, 1.2, 1.2), Color3.fromRGB(255, 220, 60), CFrame.new(0, 1.0, -0.55))
+			bit("Beak", Enum.PartType.Block, Vector3.new(0.7, 0.25, 0.55), Color3.fromRGB(255, 140, 40), CFrame.new(0, 0.9, -1.25))
+			for _, s in ipairs({ -1, 1 }) do
+				bit("Eye", Enum.PartType.Ball, Vector3.new(0.25, 0.25, 0.25), Color3.fromRGB(20, 20, 24), CFrame.new(s * 0.32, 1.18, -1.05))
+			end
+			bit("Tail", Enum.PartType.Ball, Vector3.new(0.7, 0.7, 0.7), Color3.fromRGB(255, 210, 50), CFrame.new(0, 0.35, 0.85))
+			m.PrimaryPart = body
+			local prompt = Instance.new("ProximityPrompt")
+			prompt.ActionText = "Pick up"
+			prompt.ObjectText = "Rubber Duck"
+			prompt.HoldDuration = 0
+			prompt.MaxActivationDistance = 8
+			prompt.RequiresLineOfSight = false
+			prompt:SetAttribute("DuckId", d.id)
+			prompt.Parent = body
+			m.Parent = df
+			table.insert(list, { id = d.id, model = m, prompt = prompt })
+		end)
+		if not ok then
+			warn("[Splash Lagoon] duck " .. tostring(d.id) .. " failed: " .. tostring(err))
+		end
+	end
+	return list
+end
+
+-- builds the whole park; returns what the game logic needs, or nil if even the folder failed
+function ParkBuilder.build()
+	local folder = Instance.new("Folder")
+	folder.Name = "SplashLagoon"
+	folder.Parent = workspace
+	local info = { folder = folder, spawn = L.Spawn, ducks = {}, bucket = nil }
+	local function section(name, fn)
+		local ok, res = pcall(fn)
+		if not ok then
+			warn("[Splash Lagoon] " .. name .. " failed to build: " .. tostring(res))
+			return nil
+		end
+		return res
+	end
+	-- the ground and water are the one part the park can't do without: if they fail, the park stays closed (the station is untouched)
+	local ground = section("terrain", function()
+		terrain()
+		return true
+	end)
+	if not ground then
+		folder:Destroy()
+		return nil
+	end
+	section("boundary", function()
+		boundary(folder)
+		return true
+	end)
+	section("decor", function()
+		decor(folder)
+		return true
+	end)
+	section("slides", function()
+		slides(folder)
+		return true
+	end)
+	section("cannonball tower", function()
+		cannonball(folder)
+		return true
+	end)
+	info.bucket = section("splash pad", function()
+		return splashPad(folder)
+	end)
+	info.ducks = section("ducks", function()
+		return ducks(folder)
+	end) or {}
+	local tokens = Instance.new("Folder")
+	tokens.Name = "Tokens"
+	tokens.Parent = folder
+	info.tokens = tokens
+	return info
+end
+
+return ParkBuilder
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="13">
+        <Properties>
+          <string name="Name">ParkServer</string>
+          <string name="Source"><![CDATA[-- Splash Lagoon's rules on the server (2026-11-07): Splash Tokens to grab (they pay Stardust), the hidden rubber ducks (saved),
+-- the water blaster (only ever a splash and a "SOAKED!": no damage, no knock-back, nobody sent anywhere), the bucket's timer,
+-- splashes passed on to everyone in the park, and the Captain's two park buttons. Main.server.lua starts it inside a pcall, and
+-- each piece below starts in its own, so a mistake here can't touch the station.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local L = require(ReplicatedStorage.Shared.ParkLayout)
+
+local ParkServer = {}
+
+-- ctx: { info (from ParkBuilder), remote (the Park RemoteEvent), PlayerData, refreshStats, tell, isCaptain, now, addCommas, sfx }
+function ParkServer.start(ctx)
+	local P = Config.Park
+	local info, remote = ctx.info, ctx.remote
+	local folder = info.folder
+	local rng = Random.new()
+
+	local function inPark(p)
+		return p and p.Parent and p:GetAttribute("Zone") == "park"
+	end
+	local function rootOf(p)
+		local ch = p.Character
+		return ch and ch:FindFirstChild("HumanoidRootPart")
+	end
+	-- send to everyone in the park (except one, if given)
+	local function toPark(except, ...)
+		for _, p in ipairs(Players:GetPlayers()) do
+			if p ~= except and inPark(p) then
+				remote:FireClient(p, ...)
+			end
+		end
+	end
+	local function tellPark(text, kind)
+		for _, p in ipairs(Players:GetPlayers()) do
+			if inPark(p) then
+				ctx.tell(p, text, kind)
+			end
+		end
+	end
+	local function pay(player, amount)
+		local d = ctx.PlayerData.get(player)
+		if not d then
+			return false
+		end
+		d.stardust += amount
+		ctx.refreshStats(player)
+		return true
+	end
+	local function safe(name, fn)
+		local ok, err = pcall(fn)
+		if not ok then
+			warn("[Splash Lagoon] " .. name .. " failed to start: " .. tostring(err))
+		end
+	end
+	local handlers = {} -- [kind] = function(player, ...) for messages from players' screens
+
+	-- ---------- Splash Tokens ----------
+	safe("tokens", function()
+		local tokens = {} -- [part] = { bubble = bool }
+		local function spot()
+			local a = L.TokenAreas[rng:NextInteger(1, #L.TokenAreas)]
+			return L.at(rng:NextNumber(a.x1, a.x2), a.y, rng:NextNumber(a.z1, a.z2))
+		end
+		local function makeToken(pos, bubble)
+			local p = Instance.new("Part")
+			p.Name = bubble and "Bubble" or "SplashToken"
+			if bubble then
+				p.Shape = Enum.PartType.Ball
+				p.Size = Vector3.new(3, 3, 3)
+				p.Material = Enum.Material.ForceField
+				p.Color = Color3.fromRGB(150, 220, 255)
+			else
+				p.Shape = Enum.PartType.Cylinder -- a coin: its face looks along x, and your screen spins it
+				p.Size = Vector3.new(0.5, 2.6, 2.6)
+				p.Material = Enum.Material.Neon
+				p.Color = Color3.fromRGB(255, 205, 70)
+			end
+			p.Anchored = true
+			p.CanCollide = false
+			p.CanQuery = false
+			p.CanTouch = false
+			p.CastShadow = false
+			p.CFrame = CFrame.new(pos)
+			p:SetAttribute("Ready", true)
+			p.Parent = info.tokens
+			tokens[p] = { bubble = bubble }
+			return p
+		end
+		local function spawnToken()
+			makeToken(spot(), false)
+		end
+		local function collect(player, p, rec)
+			tokens[p] = nil
+			if pay(player, P.tokenValue) then
+				remote:FireClient(player, "pop", p.Position, "+" .. P.tokenValue .. " ★")
+			end
+			toPark(player, "poof", p.Position, rec.bubble)
+			p:Destroy()
+			if not rec.bubble then
+				task.delay(rng:NextNumber(P.tokenRespawn[1], P.tokenRespawn[2]), spawnToken)
+			end
+		end
+		for _ = 1, P.tokenCount do
+			spawnToken()
+		end
+		task.spawn(function() -- the server's own check, a few times a second (your screen usually gets there first)
+			local reach = P.tokenPickup
+			while true do
+				task.wait(0.15)
+				for _, player in ipairs(Players:GetPlayers()) do
+					local hrp = inPark(player) and rootOf(player)
+					if hrp then
+						local at = hrp.Position
+						for p, rec in pairs(tokens) do
+							if p.Parent and (p.Position - at).Magnitude <= reach then
+								collect(player, p, rec)
+							end
+						end
+					end
+				end
+			end
+		end)
+		handlers.token = function(player, p)
+			if typeof(p) ~= "Instance" then
+				return
+			end
+			local rec = tokens[p]
+			local hrp = rootOf(player)
+			if rec and hrp and p.Parent and (p.Position - hrp.Position).Magnitude <= P.tokenPickup + 8 then
+				collect(player, p, rec)
+			end
+		end
+		-- the Captain's Bubble Party: bubbles over the splash pad and the main path, each worth a token, gone after a while
+		ParkServer.bubbleParty = function()
+			for _ = 1, P.bubbleCount do
+				local onPad = rng:NextNumber() < 0.6
+				local r = onPad and L.SplashPad or { x1 = -120, x2 = 170, z1 = -10, z2 = 10 }
+				local p = makeToken(L.at(rng:NextNumber(r.x1 + 6, r.x2 - 6), rng:NextNumber(3.2, 6.5), rng:NextNumber(r.z1 + 6, r.z2 - 6)), true)
+				task.delay(P.bubbleSeconds, function()
+					if p.Parent then
+						tokens[p] = nil
+						toPark(nil, "poof", p.Position, true)
+						p:Destroy()
+					end
+				end)
+			end
+		end
+	end)
+
+	-- ---------- rubber ducks (saved with the rest of your PlayerData) ----------
+	safe("ducks", function()
+		local total = #L.Ducks
+		local function refreshDucks(player)
+			local d = ctx.PlayerData.get(player)
+			if not d then
+				return
+			end
+			local list, n = {}, 0
+			for id in pairs(d.ducks or {}) do
+				table.insert(list, id)
+				n += 1
+			end
+			player:SetAttribute("DucksFound", table.concat(list, ","))
+			player:SetAttribute("DuckCount", n)
+			player:SetAttribute("DuckTotal", total)
+		end
+		local function hook(player)
+			task.spawn(function()
+				local t0 = os.clock()
+				while player.Parent and not ctx.PlayerData.get(player) and os.clock() - t0 < 20 do
+					task.wait(0.25)
+				end
+				if player.Parent then
+					refreshDucks(player)
+				end
+			end)
+		end
+		Players.PlayerAdded:Connect(hook)
+		for _, p in ipairs(Players:GetPlayers()) do
+			hook(p)
+		end
+		for _, duck in ipairs(info.ducks or {}) do
+			duck.prompt.Triggered:Connect(function(player)
+				if not inPark(player) then
+					return
+				end
+				local d = ctx.PlayerData.get(player)
+				if not d then
+					return
+				end
+				d.ducks = d.ducks or {}
+				if d.ducks[duck.id] then
+					ctx.tell(player, "You've already found this duck!", "info")
+					return
+				end
+				d.ducks[duck.id] = true
+				local n = 0
+				for _ in pairs(d.ducks) do
+					n += 1
+				end
+				pay(player, P.duckValue)
+				refreshDucks(player)
+				ctx.sfx("duck", nil, player)
+				remote:FireClient(player, "duck", duck.model:GetPivot().Position, n, total)
+				ctx.tell(player, "You found a rubber duck! " .. n .. " of " .. total .. ". +" .. ctx.addCommas(P.duckValue) .. " Stardust", "good")
+				if n >= total then
+					pay(player, P.duckAllBonus)
+					ctx.tell(player, "You found EVERY rubber duck! Duck Master! +" .. ctx.addCommas(P.duckAllBonus) .. " Stardust", "cosmic")
+					tellPark(player.DisplayName .. " found all " .. total .. " rubber ducks!", "rare")
+				end
+			end)
+		end
+	end)
+
+	-- ---------- the water blaster: a splash and a SOAKED!, nothing else ----------
+	safe("blaster", function()
+		local last = {}
+		handlers.soak = function(player)
+			local t = os.clock()
+			if (last[player] or 0) + P.soakCooldown > t then
+				return
+			end
+			last[player] = t
+			local hrp = rootOf(player)
+			if not (hrp and inPark(player)) then
+				return
+			end
+			local look = hrp.CFrame.LookVector
+			local best, bestD = nil, math.huge
+			for _, other in ipairs(Players:GetPlayers()) do
+				local oh = other ~= player and inPark(other) and rootOf(other)
+				if oh then
+					local v = oh.Position - hrp.Position
+					local d = v.Magnitude
+					if d <= P.soakRange and d < bestD and (d < 4 or v.Unit:Dot(look) > 0.6) then
+						best, bestD = other, d
+					end
+				end
+			end
+			local landAt = hrp.Position + look * (P.soakRange * 0.8) + Vector3.new(0, -2, 0)
+			if best then
+				local oh = rootOf(best)
+				landAt = oh and oh.Position or landAt
+				remote:FireClient(best, "soaked", player.DisplayName)
+				remote:FireClient(player, "soakhit", best)
+			end
+			toPark(player, "spray", player, landAt)
+		end
+	end)
+
+	-- ---------- splashes from slides and cannonballs, passed on to everyone else in the park ----------
+	safe("splashes", function()
+		local last = {}
+		handlers.splash = function(player, pos, size)
+			local t = os.clock()
+			if typeof(pos) ~= "Vector3" or not L.inPark(pos, 10) or (last[player] or 0) + 0.4 > t then
+				return
+			end
+			last[player] = t
+			size = typeof(size) == "number" and math.clamp(size, 0.5, 3) or 1
+			toPark(player, "splash", pos, size)
+		end
+	end)
+
+	-- ---------- the big bucket on the splash pad tips every Config.Park.bucketEvery seconds ----------
+	safe("bucket", function()
+		task.spawn(function()
+			while true do
+				folder:SetAttribute("BucketNext", ctx.now() + P.bucketEvery)
+				task.wait(P.bucketEvery)
+				toPark(nil, "bucket")
+			end
+		end)
+	end)
+
+	-- ---------- the Captain's park buttons: Giant Wave and Bubble Party ----------
+	safe("captain", function()
+		local lastUse = {}
+		handlers.captain = function(player, id)
+			if not (ctx.isCaptain(player) and inPark(player)) then
+				return
+			end
+			if id ~= "wave" and id ~= "bubbles" then
+				return
+			end
+			local t = os.clock()
+			local cd = P.captainCooldowns[id] or 20
+			if (lastUse[id] or 0) + cd > t then
+				ctx.tell(player, "Recharging: " .. math.ceil(lastUse[id] + cd - t) .. "s", "info")
+				return
+			end
+			lastUse[id] = t
+			if id == "wave" then
+				folder:SetAttribute("GiantWaveAt", ctx.now())
+				toPark(nil, "giantwave")
+				tellPark("Captain's orders: a GIANT WAVE in the wave pool!", "cosmic")
+			else
+				if ParkServer.bubbleParty then
+					ParkServer.bubbleParty()
+				end
+				toPark(nil, "bubbles", P.bubbleSeconds)
+				tellPark("Captain's orders: BUBBLE PARTY! Pop the bubbles for Stardust!", "cosmic")
+			end
+		end
+	end)
+
+	remote.OnServerEvent:Connect(function(player, kind, ...)
+		local h = typeof(kind) == "string" and handlers[kind]
+		if h then
+			local ok, err = pcall(h, player, ...)
+			if not ok then
+				warn("[Splash Lagoon] " .. kind .. ": " .. tostring(err))
+			end
+		end
+	end)
+	folder:SetAttribute("Ready", true)
+	workspace:SetAttribute("ParkReady", true)
+end
+
+return ParkServer
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="ModuleScript" referent="14">
         <Properties>
           <string name="Name">PlayerData</string>
           <string name="Source"><![CDATA[-- Saves each player's Stardust and critters between visits (Roblox DataStores).
@@ -4872,7 +6127,7 @@ pcall(function()
 end)
 
 local function default()
-	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase, gear = {}, furniture = {}, upgrades = {} } -- found: the Collection Book; pet: the critter that follows you; gear: what you bought in the Gear Bay
+	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase, gear = {}, furniture = {}, upgrades = {}, ducks = {} } -- ducks: the rubber ducks found in Splash Lagoon; found: the Collection Book; pet: the critter that follows you; gear: what you bought in the Gear Bay
 end
 
 -- keep only what the game understands, so a bad save can't break anything
@@ -4916,6 +6171,13 @@ local function clean(d)
 			local u = Config.upgradeById(id)
 			if u and typeof(lv) == "number" then
 				out.upgrades[id] = math.clamp(math.floor(lv), 0, #u.prices)
+			end
+		end
+	end
+	if typeof(d.ducks) == "table" then -- Splash Lagoon's rubber ducks: "d1" to "d12"
+		for id, v in pairs(d.ducks) do
+			if v == true and typeof(id) == "string" and id:match("^d%d+$") then
+				out.ducks[id] = true
 			end
 		end
 	end
@@ -4988,23 +6250,25 @@ return PlayerData
       </Item>
     </Item>
   </Item>
-  <Item class="StarterPlayer" referent="12">
+  <Item class="StarterPlayer" referent="15">
     <Properties>
       <string name="Name">StarterPlayer</string>
     </Properties>
-    <Item class="StarterPlayerScripts" referent="13">
+    <Item class="StarterPlayerScripts" referent="16">
       <Properties>
         <string name="Name">StarterPlayerScripts</string>
       </Properties>
-      <Item class="Folder" referent="14">
+      <Item class="Folder" referent="17">
         <Properties>
           <string name="Name">Client</string>
         </Properties>
-        <Item class="LocalScript" referent="15">
+        <Item class="LocalScript" referent="18">
           <Properties>
             <string name="Name">Audio</string>
             <string name="Source"><![CDATA[-- Music (2026-10-18, Matthew: "is there any sound involved in this?"): a looping space track, a spooky drone instead
 -- during Black Hole Night, and a music button (top right) to turn the music off and on. Sound effects are in FX.client.lua.
+-- (2026-11-07) At Splash Lagoon there's no Black Hole Night drone, and the park's own track plays once Config.Sounds.parkMusic
+-- has an id; until then the station's music carries on there.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
@@ -5016,51 +6280,77 @@ local player = Players.LocalPlayer
 local C = Config.Colors
 
 local function track(def, looped)
+	local id = Config.soundId(def)
+	if not id then
+		return nil
+	end
 	local s = Instance.new("Sound")
-	s.SoundId = "rbxassetid://" .. def.id
-	s.Volume = def.volume or 0.3
+	s.SoundId = id
+	s.Volume = 0
 	s.Looped = looped
 	s.Parent = SoundService
 	return s
 end
 local music = track(Config.Sounds.music, true)
 local night = track(Config.Sounds.night, true)
+local parkMusic = track(Config.Sounds.parkMusic, true) -- nil while it is a placeholder
+local volumes = {}
+if music then
+	volumes[music] = Config.Sounds.music.volume or 0.25
+end
+if night then
+	volumes[night] = Config.Sounds.night.volume or 0.5
+end
+if parkMusic then
+	volumes[parkMusic] = Config.Sounds.parkMusic.volume or 0.25
+end
 local musicOn = true
-local isNight = false
+local nightUntil = 0 -- from the "night" event, in case the attribute is late
 
 local function fade(s, to, secs)
 	TweenService:Create(s, TweenInfo.new(secs or 1.5), { Volume = to }):Play()
 end
 
+local lastKey = nil
 local function refresh()
-	if musicOn and not isNight then
-		if not music.IsPlaying then
-			music.Volume = 0
-			music:Play()
-		end
-		fade(music, Config.Sounds.music.volume)
-	else
-		fade(music, 0, 0.8)
+	local inPark = player:GetAttribute("Zone") == "park"
+	local t = workspace:GetServerTimeNow()
+	local isNight = not inPark and ((workspace:GetAttribute("BlackHoleUntil") or 0) > t or nightUntil > t)
+	local main = (inPark and parkMusic) or music
+	local want = nil -- the one track that should be playing
+	if musicOn then
+		want = isNight and night or main
 	end
-	if isNight and musicOn then
-		if not night.IsPlaying then
-			night.Volume = 0
-			night:Play()
+	local key = tostring(want)
+	if key == lastKey then
+		return
+	end
+	lastKey = key
+	for s, vol in pairs(volumes) do
+		if s == want then
+			if not s.IsPlaying then
+				s.Volume = 0
+				s:Play()
+			end
+			fade(s, vol, 1.5)
+		else
+			fade(s, 0, 0.8)
 		end
-		fade(night, Config.Sounds.night.volume)
-	else
-		fade(night, 0, 1.5)
 	end
 end
 
 FX.OnClientEvent:Connect(function(kind, a)
 	if kind == "night" then
-		isNight = true
+		nightUntil = workspace:GetServerTimeNow() + (a or Config.NightSeconds)
 		refresh()
-		task.delay(a or Config.NightSeconds, function()
-			isNight = false
-			refresh()
-		end)
+	end
+end)
+workspace:GetAttributeChangedSignal("BlackHoleUntil"):Connect(refresh)
+player:GetAttributeChangedSignal("Zone"):Connect(refresh)
+task.spawn(function() -- catches the end of a night, a switch of games, anything missed
+	while true do
+		task.wait(1)
+		refresh()
 	end
 end)
 
@@ -5097,7 +6387,7 @@ refresh()
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="16">
+        <Item class="LocalScript" referent="19">
           <Properties>
             <string name="Name">Book</string>
             <string name="Source"><![CDATA[-- The Critter Collection Book: every critter in the game, the ones you've found in colour and the rest as "???",
@@ -5345,7 +6635,7 @@ end
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="17">
+        <Item class="LocalScript" referent="20">
           <Properties>
             <string name="Name">FX</string>
             <string name="Source"><![CDATA[-- The "juice", drawn on this player's screen only: sounds, punch and weapon animations, sparkles and confetti, pop-up numbers, the steal alarm, a guide beam
@@ -5487,11 +6777,12 @@ end
 local SoundService = game:GetService("SoundService")
 local function sfx(name, pos)
 	local def = Config.Sounds[name]
-	if not def then
+	local id = Config.soundId(def) -- nil for a placeholder sound (id = 0): skipped
+	if not id then
 		return
 	end
 	local s = Instance.new("Sound")
-	s.SoundId = "rbxassetid://" .. def.id
+	s.SoundId = id
 	s.Volume = def.volume or 0.5
 	s.PlaybackSpeed = def.pitch or 1
 	local holder = s
@@ -5997,7 +7288,12 @@ local function meteorLanded(pos)
 	end
 end
 
+-- station events never reach Splash Lagoon (2026-11-07): no shower shout or shake, no night, no low gravity sparkles, no alarm
+local PARK_SKIPS = { shower = true, meteor = true, night = true, lowgrav = true, alarm = true, booped = true, zapped = true, knock = true }
 FX.OnClientEvent:Connect(function(kind, a, b, c, d)
+	if PARK_SKIPS[kind] and player:GetAttribute("Zone") == "park" then
+		return
+	end
 	if kind == "burst" then
 		burst(a, b)
 	elseif kind == "confetti" then
@@ -6116,7 +7412,7 @@ task.spawn(function()
 		task.wait(1)
 		local income = player:GetAttribute("Income") or 0
 		local base = myBase()
-		if income > 0 and base and base.PrimaryPart then
+		if income > 0 and base and base.PrimaryPart and player:GetAttribute("Zone") ~= "park" then -- it shows through walls, so not from the park
 			local s = tostring(income):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 			pop(base.PrimaryPart.Position + Vector3.new(0, 9, 8), "+" .. s .. " ★", C.Orange)
 		end
@@ -6231,7 +7527,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="18">
+        <Item class="LocalScript" referent="21">
           <Properties>
             <string name="Name">Gear</string>
             <string name="Source"><![CDATA[-- Gear on this player's screen (2026-10-18): the Jet Boots' mid-air rocket boost for you, jet flames under everyone
@@ -6361,7 +7657,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="19">
+        <Item class="LocalScript" referent="22">
           <Properties>
             <string name="Name">HUD</string>
             <string name="Source"><![CDATA[-- What each player sees: the title screen, their Stardust, the airlock button, messages, and a marker over their own base.
@@ -6380,6 +7676,10 @@ local ShieldRequest = remotes:WaitForChild("ShieldRequest")
 
 local player = Players.LocalPlayer
 local C = Config.Colors
+-- at Splash Lagoon (2026-11-07) the station's buttons (door, expand, drop, punch) hide and the park's own show (ParkPlay.client.lua)
+local function inPark()
+	return player:GetAttribute("Zone") == "park"
+end
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "StarStationHUD"
@@ -6511,7 +7811,7 @@ dp.PaddingLeft, dp.PaddingRight, dp.PaddingTop, dp.PaddingBottom = UDim.new(0, 1
 dp.Parent = dropBtn
 local function refreshDrop()
 	local c = player:GetAttribute("Carrying")
-	dropBtn.Visible = c ~= nil
+	dropBtn.Visible = c ~= nil and not inPark()
 	if c then
 		dropBtn.Text = "Drop " .. c .. " (G)"
 	end
@@ -6607,6 +7907,9 @@ local function swingArm(kind, speed)
 end
 
 local function punch()
+	if inPark() then -- the park has the water blaster instead (ParkPlay.client.lua)
+		return
+	end
 	local tool = heldTool()
 	if os.clock() - lastPunch < (tool and tool:GetAttribute("Cooldown") or Config.Punch.cooldown) then
 		return
@@ -6628,8 +7931,10 @@ UIS.InputBegan:Connect(function(input, typing)
 		punch()
 	end
 end)
+local punchBtn = nil
 if UIS.TouchEnabled then
 	local pb = Instance.new("TextButton")
+	punchBtn = pb
 	pb.Name = "Punch"
 	pb.AnchorPoint = Vector2.new(1, 1)
 	pb.Position = UDim2.new(1, -180, 1, -40)
@@ -6693,7 +7998,22 @@ RunService.Heartbeat:Connect(function()
 		end
 	end
 	updateMarker()
+	if marker then
+		marker.Enabled = not inPark()
+	end
 end)
+
+local function applyZone()
+	local park = inPark()
+	shieldBtn.Visible = not park
+	expandBtn.Visible = not park
+	if punchBtn then
+		punchBtn.Visible = not park
+	end
+	refreshDrop()
+end
+player:GetAttributeChangedSignal("Zone"):Connect(applyZone)
+applyZone()
 
 -- ---------- hide "Steal" on your own critters ----------
 -- the Captain's control panel shows only for the Captain (2026-10-18)
@@ -6784,47 +8104,1374 @@ Notify.OnClientEvent:Connect(function(text, kind)
 	end
 end)
 
--- ---------- title screen ----------
+-- ---------- title screen: pick a game (2026-11-07, Matthew: "when the game loads up you can select which game you want to play") ----------
+-- Two big cards, Star Station or Splash Lagoon. The Switch game button (top right) brings the cards back any time. Your base and
+-- your critters stay on the station either way, still earning.
+local PickGame = remotes:WaitForChild("PickGame", 15)
+local inParkNow = function()
+	return player:GetAttribute("Zone") == "park"
+end
+
 local title = Instance.new("Frame")
 title.Name = "TitleScreen"
 title.Size = UDim2.fromScale(1, 1)
 title.BackgroundColor3 = C.Dark
 title.ZIndex = 10
+title.Active = true -- taps on the background don't fall through to the game
 title.Parent = gui
 local grad = Instance.new("UIGradient")
 grad.Color = ColorSequence.new(Color3.fromRGB(20, 26, 48), Color3.fromRGB(10, 12, 22))
 grad.Rotation = 90
 grad.Parent = title
-label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.fromScale(0.8, 0.16), TextColor3 = C.Orange, ZIndex = 11, Text = Config.GameTitle })
-label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.48), Size = UDim2.fromScale(0.7, 0.06), TextColor3 = C.Blue, Font = Enum.Font.GothamBold, ZIndex = 11,
-	Text = "Grab space critters. Guard your base. Catch the thieves!" })
-local play = Instance.new("TextButton")
-play.AnchorPoint = Vector2.new(0.5, 0.5)
-play.Position = UDim2.fromScale(0.5, 0.65)
-play.Size = UDim2.fromOffset(260, 80)
-play.BackgroundColor3 = C.Blue
-play.Font = Enum.Font.FredokaOne
-play.TextScaled = true
-play.TextColor3 = C.Dark
-play.Text = "PLAY"
-play.ZIndex = 11
-play.Parent = title
-corner(play, 20)
-play.Activated:Connect(function()
-	local tw = TweenService:Create(title, TweenInfo.new(0.5), { BackgroundTransparency = 1 })
-	for _, ch in ipairs(title:GetChildren()) do
-		if ch:IsA("TextLabel") or ch:IsA("TextButton") then
-			ch.Visible = false
-		end
+local heading = label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.13), Size = UDim2.fromScale(0.8, 0.1), TextColor3 = C.Orange, ZIndex = 11, Text = Config.GameTitle })
+label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.235), Size = UDim2.fromScale(0.7, 0.06), TextColor3 = C.Blue, Font = Enum.Font.GothamBold, ZIndex = 11,
+	Text = "Which game do you want to play?" })
+
+local cardRow = Instance.new("Frame")
+cardRow.Name = "Cards"
+cardRow.AnchorPoint = Vector2.new(0.5, 0.5)
+cardRow.Position = UDim2.fromScale(0.5, 0.58)
+cardRow.Size = UDim2.fromScale(0.92, 0.56)
+cardRow.BackgroundTransparency = 1
+cardRow.ZIndex = 11
+cardRow.Parent = title
+local rowLimit = Instance.new("UISizeConstraint")
+rowLimit.MaxSize = Vector2.new(980, 420)
+rowLimit.Parent = cardRow
+
+-- a card: a coloured panel with the game's name, one line about it and a big PLAY, under one invisible button the size of the card
+local function card(xScale, bg, fg, name, blurb)
+	local f = Instance.new("Frame")
+	f.AnchorPoint = Vector2.new(0.5, 0.5)
+	f.Position = UDim2.fromScale(xScale, 0.5)
+	f.Size = UDim2.fromScale(0.47, 1)
+	f.BackgroundColor3 = bg
+	f.ZIndex = 12
+	f.Parent = cardRow
+	corner(f, 24)
+	local st = Instance.new("UIStroke")
+	st.Color = Color3.new(1, 1, 1)
+	st.Thickness = 3
+	st.Transparency = 0.4
+	st.Parent = f
+	label(f, { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromScale(0.5, 0.08), Size = UDim2.fromScale(0.88, 0.26), TextColor3 = fg, ZIndex = 13, Text = name })
+	label(f, { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromScale(0.5, 0.38), Size = UDim2.fromScale(0.86, 0.24), TextColor3 = fg, Font = Enum.Font.GothamBold, ZIndex = 13, Text = blurb })
+	local pill = Instance.new("Frame")
+	pill.AnchorPoint = Vector2.new(0.5, 1)
+	pill.Position = UDim2.fromScale(0.5, 0.92)
+	pill.Size = UDim2.fromScale(0.6, 0.22)
+	pill.BackgroundColor3 = fg
+	pill.ZIndex = 13
+	pill.Parent = f
+	corner(pill, 18)
+	local playL = label(pill, { Size = UDim2.fromScale(1, 1), TextColor3 = bg, ZIndex = 14, Text = "PLAY" })
+	local hit = Instance.new("TextButton")
+	hit.Name = "Pick"
+	hit.Size = UDim2.fromScale(1, 1)
+	hit.BackgroundTransparency = 1
+	hit.Text = ""
+	hit.ZIndex = 20
+	hit.Parent = f
+	return f, hit, playL, pill
+end
+local _stationCard, stationHit, stationPlay = card(0.25, Color3.fromRGB(34, 44, 86), C.Orange, "Star Station",
+	"Grab space critters, guard your base and catch the thieves!")
+local _parkCard, parkHit, parkPlay, parkPill = card(0.75, Color3.fromRGB(40, 170, 220), Color3.fromRGB(255, 255, 255), "Splash Lagoon",
+	"Water slides, a wave pool, a lazy river and hidden rubber ducks!")
+
+-- "Keep playing" closes the cards again when they were opened with Switch game
+local keep = Instance.new("TextButton")
+keep.Name = "KeepPlaying"
+keep.AnchorPoint = Vector2.new(0.5, 1)
+keep.Position = UDim2.new(0.5, 0, 1, -24)
+keep.Size = UDim2.fromOffset(260, 60)
+keep.BackgroundColor3 = Color3.fromRGB(120, 128, 150)
+keep.Font = Enum.Font.FredokaOne
+keep.TextScaled = true
+keep.TextColor3 = Color3.new(1, 1, 1)
+keep.Text = "Keep playing"
+keep.ZIndex = 15
+keep.Visible = false
+keep.Parent = title
+corner(keep, 16)
+local kp = Instance.new("UIPadding")
+kp.PaddingTop, kp.PaddingBottom = UDim.new(0, 8), UDim.new(0, 8)
+kp.Parent = keep
+
+local parkOpen = false
+local function refreshCards()
+	parkOpen = Config.Park ~= nil and Config.Park.enabled == true and workspace:GetAttribute("ParkReady") == true
+	parkPlay.Text = parkOpen and (inParkNow() and "YOU'RE HERE" or "PLAY") or "Opening soon"
+	parkPill.BackgroundTransparency = parkOpen and 0 or 0.5
+	stationPlay.Text = (title:GetAttribute("Opened") and not inParkNow()) and "YOU'RE HERE" or "PLAY"
+end
+workspace:GetAttributeChangedSignal("ParkReady"):Connect(refreshCards)
+
+local function showPicker(fromSwitch)
+	title:SetAttribute("Opened", fromSwitch == true)
+	title.BackgroundTransparency = fromSwitch and 0.25 or 0
+	keep.Visible = fromSwitch == true
+	heading.Text = fromSwitch and "Switch game" or Config.GameTitle
+	refreshCards()
+	title.Visible = true
+end
+local hiding = false
+local function hidePicker()
+	if hiding then
+		return
 	end
+	hiding = true
+	cardRow.Visible = false
+	keep.Visible = false
+	local tw = TweenService:Create(title, TweenInfo.new(0.35), { BackgroundTransparency = 1 })
 	tw:Play()
 	tw.Completed:Wait()
-	title:Destroy()
+	title.Visible = false
+	cardRow.Visible = true
+	hiding = false
+end
+local function pick(which)
+	if hiding then
+		return
+	end
+	if which == "park" and not parkOpen then
+		return
+	end
+	if title:GetAttribute("Opened") and ((which == "park") == inParkNow()) then -- already playing that one: just close
+		hidePicker()
+		return
+	end
+	if PickGame then
+		PickGame:FireServer(which)
+	end
+	hidePicker()
+end
+stationHit.Activated:Connect(function()
+	pick("station")
+end)
+parkHit.Activated:Connect(function()
+	pick("park")
+end)
+keep.Activated:Connect(hidePicker)
+
+-- the Switch game button, top right under the Music button
+local switch = Instance.new("TextButton")
+switch.Name = "SwitchGame"
+switch.AnchorPoint = Vector2.new(1, 0)
+switch.Position = UDim2.new(1, -16, 0, 114)
+switch.Size = UDim2.fromOffset(150, 50)
+switch.BackgroundColor3 = Color3.fromRGB(40, 170, 220)
+switch.Font = Enum.Font.FredokaOne
+switch.TextScaled = true
+switch.TextColor3 = Color3.new(1, 1, 1)
+switch.Text = "Switch game"
+switch.Parent = gui
+corner(switch, 12)
+local swp = Instance.new("UIPadding")
+swp.PaddingLeft, swp.PaddingRight, swp.PaddingTop, swp.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10), UDim.new(0, 8), UDim.new(0, 8)
+swp.Parent = switch
+switch.Activated:Connect(function()
+	if not title.Visible then
+		showPicker(true)
+	end
+end)
+player:GetAttributeChangedSignal("Zone"):Connect(refreshCards)
+
+showPicker(false)
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="23">
+          <Properties>
+            <string name="Name">ParkPlay</string>
+            <string name="Source"><![CDATA[-- Playing Splash Lagoon on this player's screen (2026-11-07): riding the slides, the lazy river's current, the wave pool's waves,
+-- cannonballs and the springboard, the water blaster, Splash Tokens, the rubber duck count, the tipping bucket, and the Captain's
+-- park buttons. All of it only runs while you're in the park (your Zone is "park"), and every piece is wrapped so a mistake in one
+-- can't stop the others or the station.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local SoundService = game:GetService("SoundService")
+local Debris = game:GetService("Debris")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local L = require(ReplicatedStorage.Shared.ParkLayout)
+local player = Players.LocalPlayer
+local P = Config.Park
+
+local park = workspace:WaitForChild("SplashLagoon", 30)
+local remotes = ReplicatedStorage:WaitForChild("Remotes", 30)
+local Park = remotes and remotes:WaitForChild("Park", 30)
+if not (park and Park) then
+	return -- the park didn't build: nothing to do, the station is untouched
+end
+
+local TOUCH = UIS.TouchEnabled and not UIS.KeyboardEnabled
+local AQUA = Color3.fromRGB(70, 200, 230)
+local SUN = Color3.fromRGB(255, 205, 70)
+local CORAL = Color3.fromRGB(255, 120, 100)
+
+local function here()
+	return player:GetAttribute("Zone") == "park"
+end
+local function char()
+	local ch = player.Character
+	local hum = ch and ch:FindFirstChildOfClass("Humanoid")
+	local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+	return ch, hum, hrp
+end
+local function try(name, fn, ...)
+	local ok, err = pcall(fn, ...)
+	if not ok then
+		warn("[Splash Lagoon] " .. name .. ": " .. tostring(err))
+	end
+	return ok
+end
+
+local fx = Instance.new("Folder")
+fx.Name = "ParkFX"
+fx.Parent = workspace
+
+-- ---------- sounds and effects ----------
+local function sfx(name, pos)
+	local def = Config.Sounds[name]
+	local id = Config.soundId(def) -- nil for a placeholder: skipped
+	if not id then
+		return
+	end
+	local s = Instance.new("Sound")
+	s.SoundId = id
+	s.Volume = def.volume or 0.5
+	local holder = s
+	if pos then
+		local p = Instance.new("Part")
+		p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.Transparency = true, false, false, false, 1
+		p.Size = Vector3.new(1, 1, 1)
+		p.CFrame = CFrame.new(pos)
+		p.Parent = fx
+		s.RollOffMinDistance, s.RollOffMaxDistance = 14, 160
+		s.Parent = p
+		holder = p
+	else
+		s.Parent = SoundService
+	end
+	s:Play()
+	if def.stopAfter then
+		task.delay(def.stopAfter, function()
+			if s.Parent then
+				s:Stop()
+			end
+		end)
+	end
+	Debris:AddItem(holder, math.max(def.stopAfter or 0, 6))
+end
+
+local function anchorAt(pos)
+	local p = Instance.new("Part")
+	p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.Transparency = true, false, false, false, 1
+	p.Size = Vector3.new(1, 1, 1)
+	p.CFrame = CFrame.new(pos)
+	p.Parent = fx
+	return p
+end
+
+-- a splash of water: spray flying up and out, bigger for a bigger size (0.5 to 3)
+local function splash(pos, size)
+	size = size or 1
+	local p = anchorAt(pos)
+	local e = Instance.new("ParticleEmitter")
+	e.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	e.Color = ColorSequence.new(Color3.fromRGB(240, 252, 255), Color3.fromRGB(150, 220, 255))
+	e.Size = NumberSequence.new(1.2 * size, 2.4 * size)
+	e.Transparency = NumberSequence.new(0.2, 1)
+	e.Lifetime = NumberRange.new(0.5, 0.9)
+	e.Speed = NumberRange.new(10 * size, 18 * size)
+	e.SpreadAngle = Vector2.new(35, 35)
+	e.Acceleration = Vector3.new(0, -40, 0)
+	e.EmissionDirection = Enum.NormalId.Top
+	e.Rate = 0
+	e.Parent = p
+	e:Emit(math.floor(14 * size))
+	local d = Instance.new("ParticleEmitter")
+	d.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	d.Color = ColorSequence.new(Color3.fromRGB(200, 240, 255))
+	d.Size = NumberSequence.new(0.6, 0.2)
+	d.Lifetime = NumberRange.new(0.6, 1)
+	d.Speed = NumberRange.new(14 * size, 24 * size)
+	d.SpreadAngle = Vector2.new(50, 50)
+	d.Acceleration = Vector3.new(0, -50, 0)
+	d.EmissionDirection = Enum.NormalId.Top
+	d.Rate = 0
+	d.Parent = p
+	d:Emit(math.floor(18 * size))
+	Debris:AddItem(p, 2)
+end
+
+local function pop(pos, text, color)
+	local p = anchorAt(pos)
+	local g = Instance.new("BillboardGui")
+	g.Size = UDim2.fromOffset(180, 54)
+	g.AlwaysOnTop = true
+	g.LightInfluence = 0
+	g.MaxDistance = 200
+	g.Parent = p
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Font = Enum.Font.FredokaOne
+	l.TextScaled = true
+	l.TextColor3 = color or SUN
+	l.TextStrokeTransparency = 0.2
+	l.Text = text
+	l.Parent = g
+	TweenService:Create(p, TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { CFrame = CFrame.new(pos + Vector3.new(0, 6, 0)) }):Play()
+	TweenService:Create(l, TweenInfo.new(1.1), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+	Debris:AddItem(p, 1.2)
+end
+
+-- ---------- the park's buttons and big words on screen ----------
+local gui = Instance.new("ScreenGui")
+gui.Name = "SplashLagoonHUD"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 4
+gui.Enabled = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local function corner(o, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 12)
+	c.Parent = o
+end
+local function button(name, text, color, pos, size, anchor)
+	local b = Instance.new("TextButton")
+	b.Name = name
+	b.AnchorPoint = anchor or Vector2.new(1, 1)
+	b.Position = pos
+	b.Size = size
+	b.BackgroundColor3 = color
+	b.Font = Enum.Font.FredokaOne
+	b.TextScaled = true
+	b.TextColor3 = Color3.new(1, 1, 1)
+	b.TextStrokeTransparency = 0.6
+	b.Text = text
+	b.Parent = gui
+	corner(b, 16)
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft, pad.PaddingRight, pad.PaddingTop, pad.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10), UDim.new(0, 8), UDim.new(0, 8)
+	pad.Parent = b
+	return b
+end
+
+local flash = Instance.new("Frame")
+flash.Size = UDim2.fromScale(1, 1)
+flash.BackgroundColor3 = Color3.fromRGB(90, 190, 255)
+flash.BackgroundTransparency = 1
+flash.BorderSizePixel = 0
+flash.Parent = gui
+local big = Instance.new("TextLabel")
+big.AnchorPoint = Vector2.new(0.5, 0.5)
+big.Position = UDim2.fromScale(0.5, 0.3)
+big.Size = UDim2.fromScale(0.6, 0.12)
+big.BackgroundTransparency = 1
+big.Font = Enum.Font.FredokaOne
+big.TextScaled = true
+big.TextColor3 = Color3.new(1, 1, 1)
+big.TextTransparency = 1
+big.TextStrokeTransparency = 1
+big.Parent = gui
+local small = Instance.new("TextLabel")
+small.AnchorPoint = Vector2.new(0.5, 0.5)
+small.Position = UDim2.fromScale(0.5, 0.39)
+small.Size = UDim2.fromScale(0.5, 0.05)
+small.BackgroundTransparency = 1
+small.Font = Enum.Font.FredokaOne
+small.TextScaled = true
+small.TextColor3 = Color3.new(1, 1, 1)
+small.TextTransparency = 1
+small.TextStrokeTransparency = 1
+small.Parent = gui
+local shoutId = 0
+local function shout(text, color, seconds, sub)
+	shoutId += 1
+	local my = shoutId
+	big.Text = text
+	big.TextColor3 = color or Color3.new(1, 1, 1)
+	big.TextTransparency, big.TextStrokeTransparency = 0, 0
+	small.Text = sub or ""
+	small.TextTransparency, small.TextStrokeTransparency = sub and 0 or 1, sub and 0.3 or 1
+	task.delay(seconds or 2, function()
+		if shoutId == my then
+			TweenService:Create(big, TweenInfo.new(0.5), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+			TweenService:Create(small, TweenInfo.new(0.5), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
+		end
+	end)
+end
+local function blueFlash(amount)
+	flash.BackgroundTransparency = 1 - (amount or 0.45)
+	TweenService:Create(flash, TweenInfo.new(0.8), { BackgroundTransparency = 1 }):Play()
+end
+
+-- the rubber duck count, top left under the Stardust counter (and under the Book button on a tablet)
+local duckPanel = Instance.new("Frame")
+duckPanel.Name = "Ducks"
+duckPanel.Position = UDim2.new(0, 16, 0, TOUCH and 236 or 156)
+duckPanel.Size = UDim2.fromOffset(220, 54)
+duckPanel.BackgroundColor3 = Color3.fromRGB(255, 220, 60)
+duckPanel.BackgroundTransparency = 0.05
+duckPanel.Parent = gui
+corner(duckPanel, 14)
+local duckL = Instance.new("TextLabel")
+duckL.Position = UDim2.fromOffset(12, 6)
+duckL.Size = UDim2.new(1, -24, 1, -12)
+duckL.BackgroundTransparency = 1
+duckL.Font = Enum.Font.FredokaOne
+duckL.TextScaled = true
+duckL.TextXAlignment = Enum.TextXAlignment.Left
+duckL.TextColor3 = Color3.fromRGB(110, 70, 10)
+duckL.Text = "Ducks: 0 / " .. #L.Ducks
+duckL.Parent = duckPanel
+
+-- the water blaster: where PUNCH is on a tablet (it hides in the park), bottom right on a computer
+local splashBtn
+if UIS.TouchEnabled then
+	splashBtn = button("Splash", "SPLASH", Color3.fromRGB(40, 150, 230), UDim2.new(1, -180, 1, -40), UDim2.fromOffset(100, 100))
+	corner(splashBtn, 50)
+else
+	splashBtn = button("Splash", "Splash! (Q or click)", Color3.fromRGB(40, 150, 230), UDim2.new(1, -16, 1, -24), UDim2.fromOffset(240, 70))
+end
+
+-- the Captain's park buttons (only the Captain sees them; in Studio everyone is the Captain)
+-- top right, under the Music and Switch game buttons (the station's door buttons are hidden in the park)
+local capLabel = Instance.new("TextLabel")
+capLabel.AnchorPoint = Vector2.new(1, 0)
+capLabel.Position = UDim2.new(1, -16, 0, 172)
+capLabel.Size = UDim2.fromOffset(190, 28)
+capLabel.BackgroundTransparency = 1
+capLabel.Font = Enum.Font.FredokaOne
+capLabel.TextScaled = true
+capLabel.TextColor3 = Color3.fromRGB(255, 186, 125)
+capLabel.TextStrokeTransparency = 0.3
+capLabel.Text = "★ Captain's buttons"
+capLabel.Parent = gui
+local capWave = button("GiantWave", "Giant Wave", Color3.fromRGB(40, 130, 220), UDim2.new(1, -16, 0, 204), UDim2.fromOffset(190, 62), Vector2.new(1, 0))
+local capBubbles = button("BubbleParty", "Bubble Party", Color3.fromRGB(150, 110, 240), UDim2.new(1, -16, 0, 274), UDim2.fromOffset(190, 62), Vector2.new(1, 0))
+local function refreshCaptain()
+	local on = player:GetAttribute("Captain") == true
+	capWave.Visible, capBubbles.Visible, capLabel.Visible = on, on, on
+end
+player:GetAttributeChangedSignal("Captain"):Connect(refreshCaptain)
+refreshCaptain()
+capWave.Activated:Connect(function()
+	Park:FireServer("captain", "wave")
+end)
+capBubbles.Activated:Connect(function()
+	Park:FireServer("captain", "bubbles")
+end)
+
+-- ---------- rubber ducks: the count, and found ones vanish from your screen ----------
+local foundSet = {}
+local duckModels = {} -- [model] = true
+local function duckLook(m)
+	local id = m:GetAttribute("DuckId")
+	local found = id and foundSet[id] or false
+	for _, d in ipairs(m:GetDescendants()) do
+		if d:IsA("BasePart") then
+			d.LocalTransparencyModifier = found and 1 or 0
+		elseif d:IsA("ProximityPrompt") then
+			d.MaxActivationDistance = found and 0 or 8
+		end
+	end
+end
+local function refreshDucks()
+	table.clear(foundSet)
+	for id in string.gmatch(player:GetAttribute("DucksFound") or "", "[^,]+") do
+		foundSet[id] = true
+	end
+	duckL.Text = "Ducks: " .. (player:GetAttribute("DuckCount") or 0) .. " / " .. (player:GetAttribute("DuckTotal") or #L.Ducks)
+	for m in pairs(duckModels) do
+		if m.Parent then
+			duckLook(m)
+		else
+			duckModels[m] = nil
+		end
+	end
+end
+local function trackDuck(m)
+	if m:IsA("Model") and m:GetAttribute("DuckId") then
+		duckModels[m] = true
+		task.defer(duckLook, m)
+	end
+end
+try("ducks", function()
+	local df = park:WaitForChild("Ducks", 20)
+	if df then
+		for _, m in ipairs(df:GetChildren()) do
+			trackDuck(m)
+		end
+		df.ChildAdded:Connect(trackDuck)
+	end
+end)
+player:GetAttributeChangedSignal("DucksFound"):Connect(refreshDucks)
+player:GetAttributeChangedSignal("DuckCount"):Connect(refreshDucks)
+refreshDucks()
+
+-- ---------- finding things in the park by name (they may arrive a little after the park folder) ----------
+local function whenPart(name, fn)
+	local found = park:FindFirstChild(name, true)
+	if found then
+		task.spawn(try, name, fn, found)
+		return
+	end
+	local conn
+	conn = park.DescendantAdded:Connect(function(d)
+		if d.Name == name then
+			conn:Disconnect()
+			task.spawn(try, name, fn, d)
+		end
+	end)
+end
+
+local function prompt(parent, action, object, reach)
+	local pp = Instance.new("ProximityPrompt")
+	pp.ActionText = action
+	pp.ObjectText = object
+	pp.HoldDuration = 0
+	pp.MaxActivationDistance = reach or 10
+	pp.RequiresLineOfSight = false
+	pp.Parent = parent
+	return pp
+end
+
+-- ---------- the slides ----------
+-- Press Ride on the pad at the bottom (E, or tap it): you're lifted to the top, sat down, and your own screen carries you along the
+-- slide's points at its speed, then drops you into the splash pool with a splash. Nothing is left to physics on the way down, the
+-- ride always ends (it has a time limit too), and anything odd (you reset, you leave the park, an error) ends it straight away.
+local riding = nil
+local UP = Vector3.new(0, 2.4, 0) -- the seat of your pants sits this far above the slide's floor
+
+local function endRide(r, intoPool)
+	if riding ~= r then
+		return
+	end
+	riding = nil
+	if r.conn then
+		r.conn:Disconnect()
+	end
+	try("ending a ride", function()
+		r.hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+		r.hum.Sit = false
+		if intoPool and r.hrp.Parent then
+			local at = r.slide.splash
+			r.hrp.CFrame = CFrame.lookAt(at, at + r.flat)
+			r.hrp.AssemblyLinearVelocity = r.flat * 18 + Vector3.new(0, -6, 0)
+		end
+	end)
+	if intoPool then
+		local at = r.slide.splash + Vector3.new(0, 2, 0)
+		splash(at, 2)
+		sfx("splash", at)
+		pop(at + Vector3.new(0, 3, 0), "SPLASH!", AQUA)
+		Park:FireServer("splash", at, 2)
+		if r.slide.countdown then
+			shout(string.format("%.1f seconds!", os.clock() - r.started), SUN, 2)
+		end
+	end
+end
+
+local function ride(slide)
+	if riding or not here() then
+		return
+	end
+	local ch, hum, hrp = char()
+	if not (ch and hum and hrp) or hum.Health <= 0 or hum.SeatPart then
+		return
+	end
+	local pts = slide.points
+	if #pts < 2 then
+		return
+	end
+	local cum = { 0 }
+	for i = 2, #pts do
+		cum[i] = cum[i - 1] + (pts[i] - pts[i - 1]).Magnitude
+	end
+	local total = cum[#pts]
+	local last = pts[#pts] - pts[#pts - 1]
+	local flat = Vector3.new(last.X, 0, last.Z)
+	flat = flat.Magnitude > 0.01 and flat.Unit or Vector3.new(0, 0, -1)
+	local r = { slide = slide, hum = hum, hrp = hrp, ch = ch, flat = flat, started = os.clock(), moving = false, conn = nil }
+	riding = r
+	pcall(function()
+		hum:UnequipTools()
+	end)
+	hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+	hum.Sit = true
+	local startDir = (pts[2] - pts[1]).Unit
+	local hold = slide.countdown and 1.8 or 0.5
+	local t0 = os.clock()
+	local dist, seg, y = 0, 1, pts[1].Y
+	local topY = pts[1].Y
+	local maxTime = hold + total / slide.base + 3
+	local lastPlaced = pts[1] + UP
+	local counted = 0
+	local function place(pos, dir)
+		lastPlaced = pos + UP
+		hrp.CFrame = CFrame.lookAt(lastPlaced, lastPlaced + dir)
+	end
+	place(pts[1], startDir)
+	r.conn = RunService.RenderStepped:Connect(function(dt)
+		local ok, err = pcall(function()
+			if riding ~= r then
+				return
+			end
+			if not (ch.Parent and hrp.Parent and hum.Health > 0) or not here() then
+				endRide(r, false)
+				return
+			end
+			if (hrp.Position - lastPlaced).Magnitude > 30 then -- something moved you (a switch of games): stop, leave you there
+				endRide(r, false)
+				return
+			end
+			if not hum.Sit then
+				hum.Sit = true
+			end
+			local el = os.clock() - t0
+			if el < hold then -- a moment at the top (3, 2, 1 on the racer)
+				place(pts[1], startDir)
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				if slide.countdown then
+					local n = 3 - math.floor(el / 0.6)
+					if n ~= counted and n >= 1 then
+						counted = n
+						shout(tostring(n), SUN, 0.5)
+					end
+				end
+				return
+			end
+			if not r.moving then
+				r.moving = true
+				r.started = os.clock()
+				if slide.countdown then
+					shout("GO!", Color3.fromRGB(120, 255, 150), 0.8)
+				end
+				sfx("slide")
+			end
+			dt = math.min(dt, 0.1)
+			local speed = slide.base + slide.gain * math.sqrt(math.max(0, topY - y))
+			dist += speed * dt
+			if dist >= total or el > maxTime then
+				endRide(r, true)
+				return
+			end
+			while seg < #pts - 1 and cum[seg + 1] < dist do
+				seg += 1
+			end
+			local a, b = pts[seg], pts[seg + 1]
+			local f = math.clamp((dist - cum[seg]) / math.max(0.001, cum[seg + 1] - cum[seg]), 0, 1)
+			local pos = a:Lerp(b, f)
+			local dir = (b - a).Unit
+			y = pos.Y
+			place(pos, dir)
+			hrp.AssemblyLinearVelocity = dir * speed
+		end)
+		if not ok then
+			warn("[Splash Lagoon] ride: " .. tostring(err))
+			endRide(r, true)
+		end
+	end)
+end
+
+for _, s in ipairs(L.Slides) do
+	whenPart("RidePad_" .. s.id, function(pad)
+		local pp = prompt(pad, "Ride!", s.name, 9)
+		pp.Triggered:Connect(function()
+			ride(s)
+		end)
+	end)
+end
+
+-- ---------- the cannonball tower, the springboard, and cannonballs ----------
+whenPart("ClimbPad", function(pad)
+	local pp = prompt(pad, "Climb up", "Cannonball Tower", 9)
+	pp.Triggered:Connect(function()
+		local _, hum, hrp = char()
+		if hrp and hum and not riding and here() and not hum.SeatPart then
+			hrp.CFrame = L.Cannonball.stand
+			hrp.AssemblyLinearVelocity = Vector3.zero
+			shout("Walk off the board!", SUN, 2, "Jump in for a CANNONBALL!")
+		end
+	end)
+end)
+
+local lastBounce = 0
+whenPart("Springboard", function(board)
+	board.Touched:Connect(function(hit)
+		local ch, _, hrp = char()
+		if not (ch and hrp and hit:IsDescendantOf(ch)) or riding or os.clock() - lastBounce < 0.6 then
+			return
+		end
+		lastBounce = os.clock()
+		hrp.AssemblyLinearVelocity = Vector3.new(board:GetAttribute("Push") or 14, board:GetAttribute("Bounce") or 70, 0)
+		sfx("bounce", board.Position)
+	end)
+end)
+
+-- a big jump into the water makes a big splash
+local fallFrom = nil
+local function hookFalls(ch)
+	local hum = ch:WaitForChild("Humanoid", 10)
+	if not hum then
+		return
+	end
+	hum.StateChanged:Connect(function(_, new)
+		local hrp = ch:FindFirstChild("HumanoidRootPart")
+		if not (hrp and here()) or riding then
+			fallFrom = nil
+			return
+		end
+		if new == Enum.HumanoidStateType.Freefall then
+			fallFrom = hrp.Position.Y
+		elseif new == Enum.HumanoidStateType.Swimming then
+			local h = fallFrom and (fallFrom - L.Origin.Y) or 0
+			fallFrom = nil
+			if h >= 9 and L.inAnyWater(hrp.Position) then
+				local size = math.clamp(h / 9, 1, 3)
+				local at = Vector3.new(hrp.Position.X, L.Origin.Y + 0.5, hrp.Position.Z)
+				splash(at, size)
+				sfx("splash", at)
+				shout(h >= 18 and "MEGA CANNONBALL!" or "CANNONBALL!", AQUA, 1.6)
+				Park:FireServer("splash", at, size)
+			end
+		elseif new == Enum.HumanoidStateType.Landed or new == Enum.HumanoidStateType.Running then
+			fallFrom = nil
+		end
+	end)
+end
+player.CharacterAdded:Connect(function(ch)
+	if riding then -- reset mid-ride: tidy the old ride away
+		endRide(riding, false)
+	end
+	fallFrom = nil
+	hookFalls(ch)
+end)
+if player.Character then
+	task.spawn(hookFalls, player.Character)
+end
+
+-- ---------- the lazy river's current and the wave pool's waves (only your own character) ----------
+local pushedWave = nil
+RunService.Heartbeat:Connect(function(dt)
+	if not here() or riding then
+		return
+	end
+	local _, hum, hrp = char()
+	if not (hum and hrp) or hum.SeatPart then
+		return
+	end
+	dt = math.min(dt, 0.1)
+	local pos = hrp.Position
+	if L.inRiver(pos) then
+		-- carried along: a steady nudge downstream each frame, so you drift round the loop even if you stop swimming
+		hrp.CFrame = hrp.CFrame + L.riverFlow(pos) * (L.River.speed * dt)
+	elseif L.inWavePool(pos) then
+		local t = workspace:GetServerTimeNow()
+		local gw = park:GetAttribute("GiantWaveAt") or -1000
+		local giant = t - gw < L.WaveTravel
+		local crest, id
+		if giant then
+			crest = L.WavePool.x2 - (L.WavePool.x2 - L.WavePool.x1) * ((t - gw) / L.WaveTravel)
+			id = "g" .. tostring(gw)
+		else
+			crest = L.waveCrestX(t)
+			id = "w" .. math.floor(t / L.WaveEvery)
+		end
+		local lx = pos.X - L.Origin.X
+		if crest and math.abs(lx - crest) < 7 then
+			-- ride the wave toward the beach while it passes you, with a bob up as it arrives
+			hrp.CFrame = hrp.CFrame + Vector3.new(-(giant and 22 or 9) * dt, 0, 0)
+			if pushedWave ~= id then
+				pushedWave = id
+				local v = hrp.AssemblyLinearVelocity
+				hrp.AssemblyLinearVelocity = Vector3.new(v.X - (giant and 20 or 8), giant and 26 or 12, v.Z)
+			end
+		end
+	end
+end)
+
+-- ---------- what moves on your screen: the wave crest, rings in the river, floats, spinning tokens, the floating duck ----------
+local visualOk = try("park visuals", function()
+	local crestPart = Instance.new("Part")
+	crestPart.Name = "WaveCrest"
+	crestPart.Anchored, crestPart.CanCollide, crestPart.CanQuery, crestPart.CanTouch, crestPart.CastShadow = true, false, false, false, false
+	crestPart.Material = Enum.Material.SmoothPlastic
+	crestPart.Color = Color3.fromRGB(235, 250, 255)
+	crestPart.Transparency = 1
+	crestPart.Size = Vector3.new(3, 1.2, (L.WavePool.z2 - L.WavePool.z1) - 4)
+	crestPart.Parent = fx
+	local midZ = (L.WavePool.z1 + L.WavePool.z2) / 2
+
+	local function ring(color, dia)
+		local p = Instance.new("Part")
+		p.Name = "Float"
+		p.Shape = Enum.PartType.Cylinder
+		p.Size = Vector3.new(0.9, dia, dia)
+		p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
+		p.Color = color
+		p.Parent = fx
+		return p
+	end
+	local colors = { CORAL, SUN, AQUA, Color3.fromRGB(150, 110, 240), Color3.fromRGB(110, 220, 140), Color3.fromRGB(255, 150, 200) }
+	local loop = L.riverLoop()
+	local legs, perim = {}, 0
+	for i = 1, #loop do
+		local a, b = loop[i], loop[i % #loop + 1]
+		table.insert(legs, { a = a, b = b, len = (b - a).Magnitude, start = perim })
+		perim += (b - a).Magnitude
+	end
+	local function onLoop(d)
+		d = d % perim
+		for _, leg in ipairs(legs) do
+			if d <= leg.start + leg.len then
+				return leg.a:Lerp(leg.b, (d - leg.start) / leg.len)
+			end
+		end
+		return loop[1]
+	end
+	local tubes = {}
+	for i = 1, 6 do
+		table.insert(tubes, { part = ring(colors[i], 5), off = perim * (i - 1) / 6 })
+	end
+	local floats = {}
+	local frng = Random.new(5)
+	for i = 1, 5 do
+		local x = frng:NextNumber(L.WavePool.x1 + 16, L.WavePool.x2 - 10)
+		local z = frng:NextNumber(L.WavePool.z1 + 10, L.WavePool.z2 - 10)
+		table.insert(floats, { part = ring(colors[i + 1], 4.5), x = x, z = z, phase = i * 1.3 })
+	end
+	local spinning = {} -- [token] = its home position
+	local floater = nil
+	local acc, clock = 0, 0
+	local UPRIGHT = CFrame.Angles(0, 0, math.rad(90))
+	RunService.RenderStepped:Connect(function(dt)
+		if not here() then
+			if crestPart.Transparency < 1 then
+				crestPart.Transparency = 1
+			end
+			return
+		end
+		clock += dt
+		acc += dt
+		if acc < 1 / 30 then -- 30 times a second is smooth enough and kinder to an iPad
+			return
+		end
+		acc = 0
+		local t = workspace:GetServerTimeNow()
+		-- the wave
+		local gw = park:GetAttribute("GiantWaveAt") or -1000
+		local giant = t - gw < L.WaveTravel
+		local crest = giant and (L.WavePool.x2 - (L.WavePool.x2 - L.WavePool.x1) * ((t - gw) / L.WaveTravel)) or L.waveCrestX(t)
+		if crest then
+			local h = giant and 3.5 or 1.2
+			crestPart.Size = Vector3.new(giant and 5 or 3, h, crestPart.Size.Z)
+			crestPart.CFrame = CFrame.new(L.at(crest, h / 2 - 0.3, midZ))
+			crestPart.Transparency = 0.35
+		else
+			crestPart.Transparency = 1
+		end
+		-- rings drifting round the lazy river
+		for _, tb in ipairs(tubes) do
+			local pos = onLoop(tb.off + clock * L.River.speed)
+			tb.part.CFrame = CFrame.new(pos + Vector3.new(0, 0.25 + math.sin(clock * 2 + tb.off) * 0.12, 0)) * CFrame.Angles(0, clock * 0.4 + tb.off, 0) * UPRIGHT
+		end
+		-- floats bobbing on the wave pool, lifted as a wave goes under
+		for _, fl in ipairs(floats) do
+			local lift = (crest and math.abs(fl.x - crest) < 8) and (giant and 2.5 or 0.9) or 0
+			fl.part.CFrame = CFrame.new(L.at(fl.x, 0.25 + math.sin(clock * 1.5 + fl.phase) * 0.2 + lift, fl.z)) * UPRIGHT
+		end
+		-- tokens spin, bubbles bob
+		local tokens = park:FindFirstChild("Tokens")
+		if tokens then
+			for _, p in ipairs(tokens:GetChildren()) do
+				if p:IsA("BasePart") then
+					local home = spinning[p]
+					if not home then
+						home = p.Position
+						spinning[p] = home
+					end
+					if p.Name == "Bubble" then
+						p.CFrame = CFrame.new(home + Vector3.new(0, math.sin(clock * 2 + home.X) * 0.6, 0))
+					else
+						p.CFrame = CFrame.new(home + Vector3.new(0, math.sin(clock * 3 + home.Z) * 0.3, 0)) * CFrame.Angles(0, clock * 2.5 + home.X, 0)
+					end
+				end
+			end
+			for p in pairs(spinning) do
+				if not p.Parent then
+					spinning[p] = nil
+				end
+			end
+		end
+		-- the duck floating in the river bobs
+		if not floater then
+			local df = park:FindFirstChild("Ducks")
+			for _, m in ipairs(df and df:GetChildren() or {}) do
+				if m:IsA("Model") and m:GetAttribute("Floats") then
+					floater = { model = m, home = m:GetPivot() }
+				end
+			end
+		end
+		if floater and floater.model.Parent then
+			floater.model:PivotTo(floater.home * CFrame.new(0, math.sin(clock * 1.8) * 0.15, 0) * CFrame.Angles(0, 0, math.sin(clock * 1.3) * 0.08))
+		end
+	end)
+end)
+if not visualOk then
+	warn("[Splash Lagoon] park visuals are off")
+end
+
+-- ---------- Splash Tokens: your screen grabs one the moment you touch it, and the server checks and pays ----------
+local claimed = {} -- [token] = os.clock() when we grabbed it
+task.spawn(function()
+	while true do
+		task.wait(0.1)
+		if here() then
+			try("tokens", function()
+				local _, _, hrp = char()
+				local tokens = park:FindFirstChild("Tokens")
+				if not (hrp and tokens) then
+					return
+				end
+				local now0 = os.clock()
+				for _, p in ipairs(tokens:GetChildren()) do
+					local c = claimed[p]
+					if c then
+						if now0 - c > 2 and p.Parent then -- someone else got it first: show it again
+							claimed[p] = nil
+							p.LocalTransparencyModifier = 0
+						end
+					elseif p:IsA("BasePart") and p:GetAttribute("Ready") and (p.Position - hrp.Position).Magnitude <= P.tokenPickup then
+						claimed[p] = now0
+						p.LocalTransparencyModifier = 1
+						splash(p.Position, 0.5)
+						sfx("token", p.Position)
+						Park:FireServer("token", p)
+					end
+				end
+				for p in pairs(claimed) do
+					if not p.Parent then
+						claimed[p] = nil
+					end
+				end
+			end)
+		end
+	end
+end)
+
+-- ---------- the big bucket: a countdown on its sign, and every so often it tips ----------
+local bucketTip
+try("bucket", function()
+	local tower = park:WaitForChild("SplashPad", 20)
+	tower = tower and tower:WaitForChild("BucketTower", 10)
+	local bucket = tower and tower:WaitForChild("Bucket", 10)
+	if not (bucket and bucket.PrimaryPart) then
+		return
+	end
+	local home = bucket:GetPivot()
+	local angle = Instance.new("NumberValue")
+	angle.Changed:Connect(function(a)
+		bucket:PivotTo(home * CFrame.Angles(math.rad(a), 0, 0))
+	end)
+	local labels = {}
+	for _, d in ipairs(tower:GetDescendants()) do
+		if d:IsA("TextLabel") and d.Name == "BucketTimer" then
+			table.insert(labels, d)
+		end
+	end
+	local B = L.Bucket
+	local ground = L.at(B.x, 0.5, B.z)
+	local warned = false
+	task.spawn(function()
+		while true do
+			task.wait(0.25)
+			if here() then
+				local left = math.ceil((park:GetAttribute("BucketNext") or 0) - workspace:GetServerTimeNow())
+				local text = left > 0 and ("Bucket tips in " .. left .. "s") or "SPLASH!"
+				for _, l in ipairs(labels) do
+					l.Text = text
+				end
+				local _, _, hrp = char()
+				local near = hrp and (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(ground.X, 0, ground.Z)).Magnitude < 40
+				if left == 3 and near and not warned then
+					warned = true
+					shout("The bucket is tipping!", SUN, 1.5, "Stand under it to get SOAKED!")
+				elseif left > 3 then
+					warned = false
+				end
+			end
+		end
+	end)
+	bucketTip = function()
+		TweenService:Create(angle, TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Value = 115 }):Play()
+		task.delay(0.7, function()
+			-- the water comes down: a big splash on the pad and spray off the bucket's lip
+			splash(ground, 3)
+			splash(ground + Vector3.new(0, B.height * 0.6, 0), 2)
+			sfx("splash", ground)
+			sfx("bucket", ground)
+			local _, _, hrp = char()
+			if hrp then
+				local flatD = (Vector3.new(hrp.Position.X, 0, hrp.Position.Z) - Vector3.new(ground.X, 0, ground.Z)).Magnitude
+				if flatD <= B.soakRadius and hrp.Position.Y - L.Origin.Y < 20 then
+					blueFlash(0.5)
+					shout("SOAKED!", AQUA, 1.6, "The big bucket got you!")
+				end
+			end
+		end)
+		task.delay(2.3, function()
+			TweenService:Create(angle, TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Value = 0 }):Play()
+		end)
+	end
+end)
+
+-- ---------- the water blaster: a spray of water, a splash, and SOAKED! on whoever it hits ----------
+local lastSpray = 0
+local function sprayFrom(fromPos, toPos)
+	local drops = {}
+	for k = 1, 6 do
+		local d = Instance.new("Part")
+		d.Name = "Droplet"
+		d.Shape = Enum.PartType.Ball
+		d.Size = Vector3.new(0.7, 0.7, 0.7)
+		d.Color = Color3.fromRGB(110, 200, 255)
+		d.Material = Enum.Material.SmoothPlastic
+		d.Transparency = 0.2
+		d.Anchored, d.CanCollide, d.CanQuery, d.CanTouch, d.CastShadow = true, false, false, false, false
+		d.CFrame = CFrame.new(fromPos)
+		d.Parent = fx
+		drops[k] = d
+	end
+	local t0 = os.clock()
+	local flight = 0.4
+	local conn
+	conn = RunService.RenderStepped:Connect(function()
+		local el = os.clock() - t0
+		local done = true
+		for k, d in ipairs(drops) do
+			local a = math.clamp((el - (k - 1) * 0.04) / flight, 0, 1)
+			if a < 1 then
+				done = false
+			end
+			d.CFrame = CFrame.new(fromPos:Lerp(toPos, a) + Vector3.new(0, 4 * a * (1 - a) * 2.5, 0))
+		end
+		if done then
+			conn:Disconnect()
+			for _, d in ipairs(drops) do
+				d:Destroy()
+			end
+			splash(toPos, 0.7)
+		end
+	end)
+end
+local function spray()
+	if not here() or riding or os.clock() - lastSpray < P.soakCooldown then
+		return
+	end
+	local _, _, hrp = char()
+	if not hrp then
+		return
+	end
+	lastSpray = os.clock()
+	local look = hrp.CFrame.LookVector
+	local from = hrp.Position + look * 2 + Vector3.new(0, 1, 0)
+	local to = hrp.Position + look * (P.soakRange * 0.8) + Vector3.new(0, -2, 0)
+	sprayFrom(from, to)
+	Park:FireServer("soak")
+end
+splashBtn.Activated:Connect(spray)
+UIS.InputBegan:Connect(function(input, typing)
+	if typing or not here() then
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.Q or input.KeyCode == Enum.KeyCode.ButtonX or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		spray()
+	end
+end)
+
+-- ---------- news from the server ----------
+Park.OnClientEvent:Connect(function(kind, a, b, c)
+	if kind == "stopride" then
+		if riding then
+			endRide(riding, false)
+		end
+		return
+	end
+	if not here() then
+		return
+	end
+	try("park event " .. tostring(kind), function()
+		if kind == "pop" then
+			pop(a, b, SUN)
+		elseif kind == "poof" then
+			splash(a, b and 0.8 or 0.5)
+		elseif kind == "splash" then
+			splash(a, b)
+			sfx("splash", a)
+		elseif kind == "spray" then
+			local hrp = a and a.Character and a.Character:FindFirstChild("HumanoidRootPart")
+			if hrp and typeof(b) == "Vector3" then
+				sprayFrom(hrp.Position + hrp.CFrame.LookVector * 2 + Vector3.new(0, 1, 0), b)
+			end
+		elseif kind == "soaked" then
+			blueFlash(0.45)
+			shout("SOAKED!", AQUA, 1.4, tostring(a) .. " got you!")
+			local _, _, hrp = char()
+			if hrp then -- drips for a couple of seconds
+				local e = Instance.new("ParticleEmitter")
+				e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+				e.Color = ColorSequence.new(Color3.fromRGB(150, 220, 255))
+				e.Size = NumberSequence.new(0.4, 0.2)
+				e.Lifetime = NumberRange.new(0.4, 0.7)
+				e.Rate = 18
+				e.Speed = NumberRange.new(1, 3)
+				e.Acceleration = Vector3.new(0, -30, 0)
+				e.SpreadAngle = Vector2.new(60, 60)
+				e.Parent = hrp
+				Debris:AddItem(e, 2)
+			end
+		elseif kind == "soakhit" then
+			local head = a and a.Character and a.Character:FindFirstChild("Head")
+			if head then
+				pop(head.Position + Vector3.new(0, 2, 0), "SOAKED!", AQUA)
+			end
+		elseif kind == "bucket" then
+			if bucketTip then
+				bucketTip()
+			end
+		elseif kind == "duck" then
+			splash(a, 0.8)
+			pop(a + Vector3.new(0, 2, 0), "QUACK!", SUN)
+			shout("Rubber duck " .. tostring(b) .. " of " .. tostring(c) .. "!", SUN, 2)
+		elseif kind == "giantwave" then
+			shout("GIANT WAVE!", AQUA, 2.5, "Captain's orders!")
+			sfx("wave")
+		elseif kind == "bubbles" then
+			shout("BUBBLE PARTY!", Color3.fromRGB(190, 230, 255), 2.5, "Pop the bubbles for Stardust!")
+			local _, _, hrp = char()
+			if hrp then
+				local e = Instance.new("ParticleEmitter")
+				e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+				e.Color = ColorSequence.new(Color3.fromRGB(190, 235, 255), Color3.fromRGB(255, 200, 240))
+				e.Size = NumberSequence.new(0.8, 1.4)
+				e.Transparency = NumberSequence.new(0.3, 1)
+				e.Lifetime = NumberRange.new(2, 3)
+				e.Rate = 6
+				e.Speed = NumberRange.new(1, 3)
+				e.Acceleration = Vector3.new(0, 2, 0)
+				e.SpreadAngle = Vector2.new(180, 180)
+				e.Parent = hrp
+				Debris:AddItem(e, tonumber(a) or 20)
+			end
+		end
+	end)
+end)
+
+-- ---------- coming and going ----------
+local function onZone()
+	local inside = here()
+	gui.Enabled = inside
+	if inside then
+		local _, hum = char()
+		if hum then
+			pcall(function()
+				hum:UnequipTools() -- the station's weapons stay in the backpack here
+			end)
+		end
+		refreshDucks()
+		shout(L.Name, AQUA, 2.5, "Ride the slides and find the rubber ducks!")
+	elseif riding then
+		endRide(riding, false)
+	end
+end
+player:GetAttributeChangedSignal("Zone"):Connect(onZone)
+onZone()
+]]></string>
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="24">
+          <Properties>
+            <string name="Name">ParkWorld</string>
+            <string name="Source"><![CDATA[-- Splash Lagoon's sky on this player's screen (2026-11-07). Roblox has one Lighting and one gravity for the whole server, and the
+-- station's events change them (Black Hole Night goes purple, Low Gravity floats everyone, the Captain changes the lights). So while
+-- you're in the park, your own screen paints a bright sunny day with a little haze, and keeps your gravity normal: your character's
+-- falling is worked out on your own device, so the station's low gravity never reaches you. Leaving the park puts the station's look
+-- back, read from the attributes the server keeps on Lighting.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local player = Players.LocalPlayer
+
+local WHITE = Color3.new(1, 1, 1)
+local PARK = {
+	ClockTime = 14,
+	Brightness = 2,
+	Ambient = Color3.fromRGB(150, 150, 158),
+	OutdoorAmbient = Color3.fromRGB(160, 170, 186),
+	FogColor = Color3.fromRGB(200, 232, 255),
+	FogStart = 250,
+	FogEnd = 1100, -- the station is 4,000 studs away: well inside the haze
+	ExposureCompensation = 0,
+}
+local SKY = { StarCount = 0, CelestialBodiesShown = true }
+
+local here = false
+local applying = false -- set while this script changes things, so its own change doesn't call it again
+local saved = nil -- the station's values for the things the server never changes after it starts
+
+local function cc()
+	return Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+end
+local function sky()
+	return Lighting:FindFirstChildOfClass("Sky")
+end
+local function normalGravity()
+	return workspace:GetAttribute("NormalGravity") or 196.2
+end
+
+local function set(obj, prop, value)
+	if obj and obj[prop] ~= value then
+		obj[prop] = value
+	end
+end
+
+local function applyPark()
+	applying = true
+	local ok, err = pcall(function()
+		for k, v in pairs(PARK) do
+			set(Lighting, k, v)
+		end
+		set(cc(), "TintColor", WHITE)
+		local s = sky()
+		if s then
+			for k, v in pairs(SKY) do
+				set(s, k, v)
+			end
+		end
+		set(workspace, "Gravity", normalGravity())
+	end)
+	applying = false
+	if not ok then
+		warn("[Splash Lagoon] park sky: " .. tostring(err))
+	end
+end
+
+local function restore()
+	if not saved then
+		return
+	end
+	applying = true
+	local ok, err = pcall(function()
+		for k in pairs(PARK) do
+			if saved[k] ~= nil then
+				Lighting[k] = saved[k]
+			end
+		end
+		-- the server changes these during the station's events: put back what they are now, not what they were when we left
+		Lighting.Ambient = Lighting:GetAttribute("StAmbient") or saved.Ambient
+		Lighting.OutdoorAmbient = Lighting:GetAttribute("StOutdoor") or saved.OutdoorAmbient
+		Lighting.Brightness = Lighting:GetAttribute("StBrightness") or saved.Brightness
+		local c = cc()
+		if c then
+			c.TintColor = Lighting:GetAttribute("StTint") or WHITE
+		end
+		local s = sky()
+		if s and saved.sky then
+			for k, v in pairs(saved.sky) do
+				s[k] = v
+			end
+		end
+		local low = (workspace:GetAttribute("LowGravityUntil") or 0) > workspace:GetServerTimeNow()
+		workspace.Gravity = low and Config.LowGravityValue or normalGravity()
+	end)
+	applying = false
+	if not ok then
+		warn("[Splash Lagoon] putting the station sky back: " .. tostring(err))
+	end
+end
+
+local function snapshot()
+	saved = {}
+	for k in pairs(PARK) do
+		saved[k] = Lighting[k]
+	end
+	local s = sky()
+	if s then
+		saved.sky = {}
+		for k in pairs(SKY) do
+			saved.sky[k] = s[k]
+		end
+	end
+end
+
+local function update()
+	local want = player:GetAttribute("Zone") == "park"
+	if want == here then
+		return
+	end
+	here = want
+	if here then
+		if not saved then
+			snapshot()
+		end
+		applyPark()
+	else
+		restore()
+	end
+end
+player:GetAttributeChangedSignal("Zone"):Connect(update)
+update()
+
+-- the server's own changes (a Black Hole Night starting, low gravity) arrive here too: paint the park's back over them straight away
+Lighting.Changed:Connect(function(prop)
+	if here and not applying and PARK[prop] ~= nil then
+		applyPark()
+	end
+end)
+workspace:GetPropertyChangedSignal("Gravity"):Connect(function()
+	if here and not applying then
+		applyPark()
+	end
+end)
+local function watchCC(c)
+	if c:IsA("ColorCorrectionEffect") then
+		c:GetPropertyChangedSignal("TintColor"):Connect(function()
+			if here and not applying then
+				applyPark()
+			end
+		end)
+	end
+end
+for _, c in ipairs(Lighting:GetChildren()) do
+	watchCC(c)
+end
+Lighting.ChildAdded:Connect(watchCC)
+
+-- and once a second, in case anything slipped past
+task.spawn(function()
+	while true do
+		task.wait(1)
+		if here then
+			applyPark()
+		end
+	end
 end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="20">
+        <Item class="LocalScript" referent="25">
           <Properties>
             <string name="Name">Pets</string>
             <string name="Source"><![CDATA[-- Draws every player's pet (the critter they picked in the Collection Book) floating along beside them.
@@ -6918,7 +9565,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="21">
+        <Item class="LocalScript" referent="26">
           <Properties>
             <string name="Name">Rover</string>
             <string name="Source"><![CDATA[-- Driving the Moon Rover (2026-10-18): while you sit in its seat, your screen steers it. WASD / arrow keys or the
@@ -6971,7 +9618,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="22">
+        <Item class="LocalScript" referent="27">
           <Properties>
             <string name="Name">Spin</string>
             <string name="Source"><![CDATA[-- Turns everything marked with a "SpinSpeed" attribute (degrees per second) on this player's screen only,
@@ -7119,7 +9766,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="23">
+        <Item class="LocalScript" referent="28">
           <Properties>
             <string name="Name">Sprint</string>
             <string name="Source"><![CDATA[-- Sprint (2026-10-18, Matthew: "a sprint feature that has a meter to it that drains and slowly brings back up").
@@ -7255,7 +9902,7 @@ end)
 ]]></string>
           </Properties>
         </Item>
-        <Item class="LocalScript" referent="24">
+        <Item class="LocalScript" referent="29">
           <Properties>
             <string name="Name">Station</string>
             <string name="Source"><![CDATA[-- The station's moving parts on this player's screen (2026-10-18, Matthew's batch): the metal gates rolling down and up
@@ -7276,11 +9923,12 @@ end
 
 local function sfx(name, pos)
 	local def = Config.Sounds[name]
-	if not def then
+	local id = Config.soundId(def)
+	if not id then
 		return
 	end
 	local s = Instance.new("Sound")
-	s.SoundId = "rbxassetid://" .. def.id
+	s.SoundId = id
 	s.Volume = def.volume or 0.5
 	s.PlaybackSpeed = def.pitch or 1
 	local holder = s

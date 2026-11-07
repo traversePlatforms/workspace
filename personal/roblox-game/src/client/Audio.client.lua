@@ -1,5 +1,7 @@
 -- Music (2026-10-18, Matthew: "is there any sound involved in this?"): a looping space track, a spooky drone instead
 -- during Black Hole Night, and a music button (top right) to turn the music off and on. Sound effects are in FX.client.lua.
+-- (2026-11-07) At Splash Lagoon there's no Black Hole Night drone, and the park's own track plays once Config.Sounds.parkMusic
+-- has an id; until then the station's music carries on there.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
@@ -11,51 +13,77 @@ local player = Players.LocalPlayer
 local C = Config.Colors
 
 local function track(def, looped)
+	local id = Config.soundId(def)
+	if not id then
+		return nil
+	end
 	local s = Instance.new("Sound")
-	s.SoundId = "rbxassetid://" .. def.id
-	s.Volume = def.volume or 0.3
+	s.SoundId = id
+	s.Volume = 0
 	s.Looped = looped
 	s.Parent = SoundService
 	return s
 end
 local music = track(Config.Sounds.music, true)
 local night = track(Config.Sounds.night, true)
+local parkMusic = track(Config.Sounds.parkMusic, true) -- nil while it is a placeholder
+local volumes = {}
+if music then
+	volumes[music] = Config.Sounds.music.volume or 0.25
+end
+if night then
+	volumes[night] = Config.Sounds.night.volume or 0.5
+end
+if parkMusic then
+	volumes[parkMusic] = Config.Sounds.parkMusic.volume or 0.25
+end
 local musicOn = true
-local isNight = false
+local nightUntil = 0 -- from the "night" event, in case the attribute is late
 
 local function fade(s, to, secs)
 	TweenService:Create(s, TweenInfo.new(secs or 1.5), { Volume = to }):Play()
 end
 
+local lastKey = nil
 local function refresh()
-	if musicOn and not isNight then
-		if not music.IsPlaying then
-			music.Volume = 0
-			music:Play()
-		end
-		fade(music, Config.Sounds.music.volume)
-	else
-		fade(music, 0, 0.8)
+	local inPark = player:GetAttribute("Zone") == "park"
+	local t = workspace:GetServerTimeNow()
+	local isNight = not inPark and ((workspace:GetAttribute("BlackHoleUntil") or 0) > t or nightUntil > t)
+	local main = (inPark and parkMusic) or music
+	local want = nil -- the one track that should be playing
+	if musicOn then
+		want = isNight and night or main
 	end
-	if isNight and musicOn then
-		if not night.IsPlaying then
-			night.Volume = 0
-			night:Play()
+	local key = tostring(want)
+	if key == lastKey then
+		return
+	end
+	lastKey = key
+	for s, vol in pairs(volumes) do
+		if s == want then
+			if not s.IsPlaying then
+				s.Volume = 0
+				s:Play()
+			end
+			fade(s, vol, 1.5)
+		else
+			fade(s, 0, 0.8)
 		end
-		fade(night, Config.Sounds.night.volume)
-	else
-		fade(night, 0, 1.5)
 	end
 end
 
 FX.OnClientEvent:Connect(function(kind, a)
 	if kind == "night" then
-		isNight = true
+		nightUntil = workspace:GetServerTimeNow() + (a or Config.NightSeconds)
 		refresh()
-		task.delay(a or Config.NightSeconds, function()
-			isNight = false
-			refresh()
-		end)
+	end
+end)
+workspace:GetAttributeChangedSignal("BlackHoleUntil"):Connect(refresh)
+player:GetAttributeChangedSignal("Zone"):Connect(refresh)
+task.spawn(function() -- catches the end of a night, a switch of games, anything missed
+	while true do
+		task.wait(1)
+		refresh()
 	end
 end)
 

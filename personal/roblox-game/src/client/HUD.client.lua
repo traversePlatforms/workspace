@@ -14,6 +14,10 @@ local ShieldRequest = remotes:WaitForChild("ShieldRequest")
 
 local player = Players.LocalPlayer
 local C = Config.Colors
+-- at Splash Lagoon (2026-11-07) the station's buttons (door, expand, drop, punch) hide and the park's own show (ParkPlay.client.lua)
+local function inPark()
+	return player:GetAttribute("Zone") == "park"
+end
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "StarStationHUD"
@@ -145,7 +149,7 @@ dp.PaddingLeft, dp.PaddingRight, dp.PaddingTop, dp.PaddingBottom = UDim.new(0, 1
 dp.Parent = dropBtn
 local function refreshDrop()
 	local c = player:GetAttribute("Carrying")
-	dropBtn.Visible = c ~= nil
+	dropBtn.Visible = c ~= nil and not inPark()
 	if c then
 		dropBtn.Text = "Drop " .. c .. " (G)"
 	end
@@ -241,6 +245,9 @@ local function swingArm(kind, speed)
 end
 
 local function punch()
+	if inPark() then -- the park has the water blaster instead (ParkPlay.client.lua)
+		return
+	end
 	local tool = heldTool()
 	if os.clock() - lastPunch < (tool and tool:GetAttribute("Cooldown") or Config.Punch.cooldown) then
 		return
@@ -262,8 +269,10 @@ UIS.InputBegan:Connect(function(input, typing)
 		punch()
 	end
 end)
+local punchBtn = nil
 if UIS.TouchEnabled then
 	local pb = Instance.new("TextButton")
+	punchBtn = pb
 	pb.Name = "Punch"
 	pb.AnchorPoint = Vector2.new(1, 1)
 	pb.Position = UDim2.new(1, -180, 1, -40)
@@ -327,7 +336,22 @@ RunService.Heartbeat:Connect(function()
 		end
 	end
 	updateMarker()
+	if marker then
+		marker.Enabled = not inPark()
+	end
 end)
+
+local function applyZone()
+	local park = inPark()
+	shieldBtn.Visible = not park
+	expandBtn.Visible = not park
+	if punchBtn then
+		punchBtn.Visible = not park
+	end
+	refreshDrop()
+end
+player:GetAttributeChangedSignal("Zone"):Connect(applyZone)
+applyZone()
 
 -- ---------- hide "Steal" on your own critters ----------
 -- the Captain's control panel shows only for the Captain (2026-10-18)
@@ -418,40 +442,177 @@ Notify.OnClientEvent:Connect(function(text, kind)
 	end
 end)
 
--- ---------- title screen ----------
+-- ---------- title screen: pick a game (2026-11-07, Matthew: "when the game loads up you can select which game you want to play") ----------
+-- Two big cards, Star Station or Splash Lagoon. The Switch game button (top right) brings the cards back any time. Your base and
+-- your critters stay on the station either way, still earning.
+local PickGame = remotes:WaitForChild("PickGame", 15)
+local inParkNow = function()
+	return player:GetAttribute("Zone") == "park"
+end
+
 local title = Instance.new("Frame")
 title.Name = "TitleScreen"
 title.Size = UDim2.fromScale(1, 1)
 title.BackgroundColor3 = C.Dark
 title.ZIndex = 10
+title.Active = true -- taps on the background don't fall through to the game
 title.Parent = gui
 local grad = Instance.new("UIGradient")
 grad.Color = ColorSequence.new(Color3.fromRGB(20, 26, 48), Color3.fromRGB(10, 12, 22))
 grad.Rotation = 90
 grad.Parent = title
-label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.34), Size = UDim2.fromScale(0.8, 0.16), TextColor3 = C.Orange, ZIndex = 11, Text = Config.GameTitle })
-label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.48), Size = UDim2.fromScale(0.7, 0.06), TextColor3 = C.Blue, Font = Enum.Font.GothamBold, ZIndex = 11,
-	Text = "Grab space critters. Guard your base. Catch the thieves!" })
-local play = Instance.new("TextButton")
-play.AnchorPoint = Vector2.new(0.5, 0.5)
-play.Position = UDim2.fromScale(0.5, 0.65)
-play.Size = UDim2.fromOffset(260, 80)
-play.BackgroundColor3 = C.Blue
-play.Font = Enum.Font.FredokaOne
-play.TextScaled = true
-play.TextColor3 = C.Dark
-play.Text = "PLAY"
-play.ZIndex = 11
-play.Parent = title
-corner(play, 20)
-play.Activated:Connect(function()
-	local tw = TweenService:Create(title, TweenInfo.new(0.5), { BackgroundTransparency = 1 })
-	for _, ch in ipairs(title:GetChildren()) do
-		if ch:IsA("TextLabel") or ch:IsA("TextButton") then
-			ch.Visible = false
-		end
+local heading = label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.13), Size = UDim2.fromScale(0.8, 0.1), TextColor3 = C.Orange, ZIndex = 11, Text = Config.GameTitle })
+label(title, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.235), Size = UDim2.fromScale(0.7, 0.06), TextColor3 = C.Blue, Font = Enum.Font.GothamBold, ZIndex = 11,
+	Text = "Which game do you want to play?" })
+
+local cardRow = Instance.new("Frame")
+cardRow.Name = "Cards"
+cardRow.AnchorPoint = Vector2.new(0.5, 0.5)
+cardRow.Position = UDim2.fromScale(0.5, 0.58)
+cardRow.Size = UDim2.fromScale(0.92, 0.56)
+cardRow.BackgroundTransparency = 1
+cardRow.ZIndex = 11
+cardRow.Parent = title
+local rowLimit = Instance.new("UISizeConstraint")
+rowLimit.MaxSize = Vector2.new(980, 420)
+rowLimit.Parent = cardRow
+
+-- a card: a coloured panel with the game's name, one line about it and a big PLAY, under one invisible button the size of the card
+local function card(xScale, bg, fg, name, blurb)
+	local f = Instance.new("Frame")
+	f.AnchorPoint = Vector2.new(0.5, 0.5)
+	f.Position = UDim2.fromScale(xScale, 0.5)
+	f.Size = UDim2.fromScale(0.47, 1)
+	f.BackgroundColor3 = bg
+	f.ZIndex = 12
+	f.Parent = cardRow
+	corner(f, 24)
+	local st = Instance.new("UIStroke")
+	st.Color = Color3.new(1, 1, 1)
+	st.Thickness = 3
+	st.Transparency = 0.4
+	st.Parent = f
+	label(f, { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromScale(0.5, 0.08), Size = UDim2.fromScale(0.88, 0.26), TextColor3 = fg, ZIndex = 13, Text = name })
+	label(f, { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromScale(0.5, 0.38), Size = UDim2.fromScale(0.86, 0.24), TextColor3 = fg, Font = Enum.Font.GothamBold, ZIndex = 13, Text = blurb })
+	local pill = Instance.new("Frame")
+	pill.AnchorPoint = Vector2.new(0.5, 1)
+	pill.Position = UDim2.fromScale(0.5, 0.92)
+	pill.Size = UDim2.fromScale(0.6, 0.22)
+	pill.BackgroundColor3 = fg
+	pill.ZIndex = 13
+	pill.Parent = f
+	corner(pill, 18)
+	local playL = label(pill, { Size = UDim2.fromScale(1, 1), TextColor3 = bg, ZIndex = 14, Text = "PLAY" })
+	local hit = Instance.new("TextButton")
+	hit.Name = "Pick"
+	hit.Size = UDim2.fromScale(1, 1)
+	hit.BackgroundTransparency = 1
+	hit.Text = ""
+	hit.ZIndex = 20
+	hit.Parent = f
+	return f, hit, playL, pill
+end
+local _stationCard, stationHit, stationPlay = card(0.25, Color3.fromRGB(34, 44, 86), C.Orange, "Star Station",
+	"Grab space critters, guard your base and catch the thieves!")
+local _parkCard, parkHit, parkPlay, parkPill = card(0.75, Color3.fromRGB(40, 170, 220), Color3.fromRGB(255, 255, 255), "Splash Lagoon",
+	"Water slides, a wave pool, a lazy river and hidden rubber ducks!")
+
+-- "Keep playing" closes the cards again when they were opened with Switch game
+local keep = Instance.new("TextButton")
+keep.Name = "KeepPlaying"
+keep.AnchorPoint = Vector2.new(0.5, 1)
+keep.Position = UDim2.new(0.5, 0, 1, -24)
+keep.Size = UDim2.fromOffset(260, 60)
+keep.BackgroundColor3 = Color3.fromRGB(120, 128, 150)
+keep.Font = Enum.Font.FredokaOne
+keep.TextScaled = true
+keep.TextColor3 = Color3.new(1, 1, 1)
+keep.Text = "Keep playing"
+keep.ZIndex = 15
+keep.Visible = false
+keep.Parent = title
+corner(keep, 16)
+local kp = Instance.new("UIPadding")
+kp.PaddingTop, kp.PaddingBottom = UDim.new(0, 8), UDim.new(0, 8)
+kp.Parent = keep
+
+local parkOpen = false
+local function refreshCards()
+	parkOpen = Config.Park ~= nil and Config.Park.enabled == true and workspace:GetAttribute("ParkReady") == true
+	parkPlay.Text = parkOpen and (inParkNow() and "YOU'RE HERE" or "PLAY") or "Opening soon"
+	parkPill.BackgroundTransparency = parkOpen and 0 or 0.5
+	stationPlay.Text = (title:GetAttribute("Opened") and not inParkNow()) and "YOU'RE HERE" or "PLAY"
+end
+workspace:GetAttributeChangedSignal("ParkReady"):Connect(refreshCards)
+
+local function showPicker(fromSwitch)
+	title:SetAttribute("Opened", fromSwitch == true)
+	title.BackgroundTransparency = fromSwitch and 0.25 or 0
+	keep.Visible = fromSwitch == true
+	heading.Text = fromSwitch and "Switch game" or Config.GameTitle
+	refreshCards()
+	title.Visible = true
+end
+local hiding = false
+local function hidePicker()
+	if hiding then
+		return
 	end
+	hiding = true
+	cardRow.Visible = false
+	keep.Visible = false
+	local tw = TweenService:Create(title, TweenInfo.new(0.35), { BackgroundTransparency = 1 })
 	tw:Play()
 	tw.Completed:Wait()
-	title:Destroy()
+	title.Visible = false
+	cardRow.Visible = true
+	hiding = false
+end
+local function pick(which)
+	if hiding then
+		return
+	end
+	if which == "park" and not parkOpen then
+		return
+	end
+	if title:GetAttribute("Opened") and ((which == "park") == inParkNow()) then -- already playing that one: just close
+		hidePicker()
+		return
+	end
+	if PickGame then
+		PickGame:FireServer(which)
+	end
+	hidePicker()
+end
+stationHit.Activated:Connect(function()
+	pick("station")
 end)
+parkHit.Activated:Connect(function()
+	pick("park")
+end)
+keep.Activated:Connect(hidePicker)
+
+-- the Switch game button, top right under the Music button
+local switch = Instance.new("TextButton")
+switch.Name = "SwitchGame"
+switch.AnchorPoint = Vector2.new(1, 0)
+switch.Position = UDim2.new(1, -16, 0, 114)
+switch.Size = UDim2.fromOffset(150, 50)
+switch.BackgroundColor3 = Color3.fromRGB(40, 170, 220)
+switch.Font = Enum.Font.FredokaOne
+switch.TextScaled = true
+switch.TextColor3 = Color3.new(1, 1, 1)
+switch.Text = "Switch game"
+switch.Parent = gui
+corner(switch, 12)
+local swp = Instance.new("UIPadding")
+swp.PaddingLeft, swp.PaddingRight, swp.PaddingTop, swp.PaddingBottom = UDim.new(0, 10), UDim.new(0, 10), UDim.new(0, 8), UDim.new(0, 8)
+swp.Parent = switch
+switch.Activated:Connect(function()
+	if not title.Visible then
+		showPicker(true)
+	end
+end)
+player:GetAttributeChangedSignal("Zone"):Connect(refreshCards)
+
+showPicker(false)

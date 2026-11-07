@@ -16,11 +16,12 @@ end
 
 local function sfx(name, pos)
 	local def = Config.Sounds[name]
-	if not def then
+	local id = Config.soundId(def)
+	if not id then
 		return
 	end
 	local s = Instance.new("Sound")
-	s.SoundId = "rbxassetid://" .. def.id
+	s.SoundId = id
 	s.Volume = def.volume or 0.5
 	s.PlaybackSpeed = def.pitch or 1
 	local holder = s

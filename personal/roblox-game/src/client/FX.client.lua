@@ -137,11 +137,12 @@ end
 local SoundService = game:GetService("SoundService")
 local function sfx(name, pos)
 	local def = Config.Sounds[name]
-	if not def then
+	local id = Config.soundId(def) -- nil for a placeholder sound (id = 0): skipped
+	if not id then
 		return
 	end
 	local s = Instance.new("Sound")
-	s.SoundId = "rbxassetid://" .. def.id
+	s.SoundId = id
 	s.Volume = def.volume or 0.5
 	s.PlaybackSpeed = def.pitch or 1
 	local holder = s
@@ -647,7 +648,12 @@ local function meteorLanded(pos)
 	end
 end
 
+-- station events never reach Splash Lagoon (2026-11-07): no shower shout or shake, no night, no low gravity sparkles, no alarm
+local PARK_SKIPS = { shower = true, meteor = true, night = true, lowgrav = true, alarm = true, booped = true, zapped = true, knock = true }
 FX.OnClientEvent:Connect(function(kind, a, b, c, d)
+	if PARK_SKIPS[kind] and player:GetAttribute("Zone") == "park" then
+		return
+	end
 	if kind == "burst" then
 		burst(a, b)
 	elseif kind == "confetti" then
@@ -766,7 +772,7 @@ task.spawn(function()
 		task.wait(1)
 		local income = player:GetAttribute("Income") or 0
 		local base = myBase()
-		if income > 0 and base and base.PrimaryPart then
+		if income > 0 and base and base.PrimaryPart and player:GetAttribute("Zone") ~= "park" then -- it shows through walls, so not from the park
 			local s = tostring(income):reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 			pop(base.PrimaryPart.Position + Vector3.new(0, 9, 8), "+" .. s .. " ★", C.Orange)
 		end

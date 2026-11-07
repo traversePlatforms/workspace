@@ -6,7 +6,7 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 
 1. Install **Roblox Studio** (free) from roblox.com/create and sign in.
 2. Double-click **`StarStation.rbxlx`** in this folder. It opens in Studio with the whole game inside.
-3. Press **Play** (F5). You get a title screen, then you spawn at your base.
+3. Press **Play** (F5). The title screen asks which game: **Star Station** (you spawn at your base) or **Splash Lagoon**, the water park.
 4. To test stealing with friends in Studio: Test tab → Clients and Servers → 2 players → Start.
 
 **Saving between visits** only works in Studio if you turn it on: Home → Game Settings → Security → **Enable Studio Access to API Services**. Without it the game still runs; it just starts fresh each time.
@@ -46,6 +46,53 @@ A Roblox game for Nolan (age 7). Players collect space critters from a launch pa
 - **Pets:** in the Book, tap **Make my pet** on any critter in your base and it floats along beside you (everyone sees it).
 - **Black Hole Night** (6 minutes in, then every 8): the lights go purple and the **Void Creeper** roams. It chases the nearest player (a bit slower than you), and a boop sends you home and drops what you carry. Hide in a **locker** (E) and it ignores you. Switch it off with `Config.BlackHoleNight = false`.
 - 19 critters across Common, Rare, Epic, Legendary, **Mythic** and Cosmic, plus the surprise slot.
+
+## Splash park: Splash Lagoon (added 2026-11-07)
+
+A second game inside the same place: a sunny water park. It is built 4,000 studs east of the station, so the two never see or touch each other, and it is all original (no other game's name, map or characters).
+
+**Picking a game.** The title screen now shows two big cards: **Star Station** and **Splash Lagoon**. Tap one to play it. The **Switch game** button (top right, under Music) brings the cards back at any time; **Keep playing** closes them. Picking moves you to that game's arrival spot. If you reset or fall, you come back in the game you were playing. Star Station plays exactly as before for anyone who picks it.
+
+**Your base while you're away.** Your base, critters and income all stay on the station and keep earning. Nobody can steal from you while you're at Splash Lagoon (you can't guard it from there). Going to the park while carrying a critter puts it back (a stolen one goes home to its owner, a bought one is refunded).
+
+**What's in the park and how it's played:**
+
+- **Real swimming:** the pools are Roblox terrain water, so everyone swims the normal Roblox way. The water edge is level with the path, so you just walk in and climb out.
+- **Wave pool** (north-west, with a sandy beach): a wave rolls in every 9 seconds from the deep end to the beach. Swim near it and it carries you toward the beach with a bob up. Floats bob on top.
+- **Lazy river** (south-west): a square loop round a palm-tree island. The current carries you round, even if you stop swimming. Rubber rings drift round with you.
+- **Water slides** (north of the main path, all ending in the big splash pool). Stand on a slide's glowing pad and press **Ride!** (E, or tap the button). You go up, sit down, and slide down; you always land in the pool with a SPLASH.
+  - **Corkscrew**: two turns round a tower (about 7 seconds).
+  - **Big Drop**: the tall one, straight down, fastest.
+  - **Rainbow Racer**: two lanes side by side, with a 3-2-1-GO countdown and your time at the bottom. Two friends press Ride together and race.
+- **Cannonball Tower** (north side of the splash pool): press **Climb up** on its pad to go to the high board, walk off or jump. A big jump into the water makes a CANNONBALL! splash (MEGA from higher up). The **Springboard** at the pool's west edge flings you out over the water.
+- **Splash pad** (south-east): fountains, coloured spots, and the **big bucket** on its tower, which tips every 45 seconds (the sign counts down). Stand under it to get SOAKED!
+- **Water blaster:** the **SPLASH** button (where PUNCH is on a tablet; Q or a click on a computer) sprays water in front of you. Hit a friend and they get a splash and a "SOAKED!" on their screen. That's all it does: no damage, no knock-back, nobody sent anywhere. There's no punching and no weapons in the park.
+- **Splash Tokens** (gold coins on the paths and floating on the pools): run or swim through one for **4 Stardust**, the same Stardust as on the station. Kept small on purpose so the park can't outpace a base full of critters.
+- **Rubber ducks:** 12 hidden around the park (one floats in the river, two are on pool floors, one is up the Cannonball Tower). Press **Pick up**. Each is worth 100 Stardust once, all 12 another 500. The count is on screen ("Ducks: 3 / 12") and saved with the rest of your save, so ducks you've found stay found.
+- **Captain Nolan** keeps his hat and name tag in the park, and gets two buttons there (top right, only he sees them; in Studio everyone does): **Giant Wave** (a huge wave in the wave pool) and **Bubble Party** (20 bubbles over the splash pad and path, each paying like a token, gone after 25 seconds).
+- **Bright daytime look:** lighting is shared by the whole server, so each park player's own screen paints a sunny day with a little haze and puts the station's look back when they switch.
+
+**Station events stay on the station.** Players at Splash Lagoon are never chased by the Void Creeper or Parker Bots, never sent home, never punched, never floated by Low Gravity (each park player's screen holds normal gravity for its own character), never turned purple by Black Hole Night or tinted by the Captain's lights, and never shaken by a Meteor Shower. The station's event messages, shouts and the night music don't play for them either.
+
+**Sounds:** the park reuses ids already in `Config.Sounds` (the whoosh, the star ding, the upgrade sound) plus Roblox's own built-in splash file (`rbxasset://sounds/impact_water.mp3`, the one characters make jumping in water). Three are placeholders with `id = 0`, so they're silent until you put a Creator Store id in: `parkMusic` (until then the station's music plays in the park), `bucket` and `wave`.
+
+**Tuning:** prices, timings and amounts are in `Config.Park`. Where everything sits (pools, slide paths, ducks, token spots) is in `src/shared/ParkLayout.lua`. `Config.Park.enabled = false` closes the park (its card then says "Opening soon").
+
+**If something in the park breaks,** it can't stop the station: every part of the park is built and started inside its own safety wrapper. Look in Studio's Output window for lines starting `[Splash Lagoon]`; they say which part failed. If the ground and water themselves fail, the park stays closed and the title card says "Opening soon".
+
+### What to test in Studio first
+
+None of this has been run in Roblox yet, so these are the things most likely to need a small tweak:
+
+1. **Press Play, watch Output** for any red errors or `[Splash Lagoon]` warnings. Then pick Splash Lagoon on the title screen: you should land by the arch in bright daylight.
+2. **Each slide** (Corkscrew, Big Drop, both Racer lanes): does the character sit and follow the slide smoothly, and land in the pool? If a rider sits too high or low on the slide, change `UP` near the top of the slides section in `ParkPlay.client.lua` (2.4 now).
+3. **Swimming:** walk into each pool. Check you can climb out at the edges, the lazy river carries you round (speed is `L.River.speed`), and the wave pool's waves push you gently toward the beach.
+4. **Cannonball Tower and Springboard:** climb, jump, and look for the CANNONBALL! splash.
+5. **The bucket:** stand under it until it tips (45 seconds), and check you get SOAKED!.
+6. **Two players** (Test tab → Clients and Servers → 2): soak each other with SPLASH, race on the Rainbow Racer, check tokens pay Stardust.
+7. **Switch game** back to the station: lights, gravity and music should be the station's again, and your critters still there. Press the Captain's Black Hole Night or Low Gravity button on the station with a second player in the park: the park player should see and feel nothing.
+8. **Ducks:** pick one up, stop and start the test with saving on, and check it stays found.
+9. **On the iPad:** the park adds terrain water and roughly 700 parts, no lights and small particle effects, so it should be fine, but check FPS there with the Stats overlay as described above.
 
 ## Changing things
 
@@ -93,7 +140,12 @@ The game lives as code files in `src/`; **Rojo** syncs them into Studio live.
 | `src/client/Rover.client.lua` | Steering the Moon Rover while you drive |
 | `src/client/Audio.client.lua` | Music and the Music button |
 | `src/client/Gear.client.lua` | Jet Boots boost and flames, Gear Bay prompt labels |
-| `src/client/HUD.client.lua` | Title screen, Stardust counter, door button, punch, messages |
+| `src/client/HUD.client.lua` | Title screen with the game picker, Switch game button, Stardust counter, door button, punch, messages |
+| `src/shared/ParkLayout.lua` | Splash Lagoon: where the pools, slides, ducks and token spots are, the slide paths, the river's current |
+| `src/server/ParkBuilder.lua` | Builds Splash Lagoon: terrain ground and water, slides, towers, splash pad, bucket, palms, ducks |
+| `src/server/ParkServer.lua` | Splash Lagoon's rules: tokens, ducks (saved), the water blaster, the bucket timer, the Captain's park buttons |
+| `src/client/ParkPlay.client.lua` | Playing the park: riding slides, river current, waves, cannonballs, the SPLASH button, duck count |
+| `src/client/ParkWorld.client.lua` | The park's sunny sky and normal gravity on park players' screens, and putting the station's back |
 
 ## Next ideas
 

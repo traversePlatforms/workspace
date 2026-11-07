@@ -200,6 +200,46 @@ Config.Sounds = {
 	countdown = { id = 9117060347, volume = 0.6 },
 	liftoff = { id = 12222065, volume = 0.8 }, -- Roblox "Launching rocket"
 	roar = { id = 9119414091, volume = 0.6, stopAfter = 8 },
+	-- Splash Lagoon (2026-11-07). No new asset ids were looked up for the park, so it reuses the ids above where one fits.
+	-- id = 0 means "no sound yet": the game skips it and everything still works silently. Put a Creator Store id in to hear it.
+	parkMusic = { id = 0, volume = 0.25 }, -- PLACEHOLDER: a sunny looping track for the park. Until then the station's music plays there.
+	splash = { asset = "rbxasset://sounds/impact_water.mp3", volume = 0.6 }, -- Roblox's own built-in splash (the one characters make jumping in water)
+	slide = { id = 12222095, volume = 0.45, stopAfter = 2 }, -- the station's "Rocket whoosh 01", for the start of a slide
+	token = { id = 9126073001, volume = 0.35 }, -- the station's star pickup sound
+	duck = { id = 1839901345, volume = 0.6 }, -- the station's upgrade sound, for finding a duck
+	bucket = { id = 0, volume = 0.7 }, -- PLACEHOLDER: a big sloshing pour for the tipping bucket (the splash sound plays as well)
+	wave = { id = 0, volume = 0.5 }, -- PLACEHOLDER: a wave rolling in (the Captain's Giant Wave)
+}
+-- the sound to play for a Config.Sounds entry, or nil when it is a placeholder
+function Config.soundId(def)
+	if typeof(def) ~= "table" then
+		return nil
+	end
+	if typeof(def.asset) == "string" and def.asset ~= "" then
+		return def.asset
+	end
+	if typeof(def.id) == "number" and def.id > 0 then
+		return "rbxassetid://" .. def.id
+	end
+	return nil
+end
+
+-- Splash Lagoon, the water park (2026-11-07). Picked on the title screen or with the Switch game button. Stardust earned here is
+-- the same Stardust as on the station, kept small so the park can't outpace a base full of critters.
+Config.Park = {
+	enabled = true, -- false hides the park from the title screen
+	tokenCount = 14, -- Splash Tokens out at once
+	tokenValue = 4, -- Stardust per token (a station star is worth at least 5)
+	tokenRespawn = { 5, 9 }, -- seconds before a picked-up token comes back somewhere else
+	tokenPickup = 5, -- studs
+	duckValue = 100, -- Stardust for each hidden rubber duck, once ever per duck
+	duckAllBonus = 500, -- and this once you've found every duck
+	bucketEvery = 45, -- seconds between the big bucket tipping
+	soakRange = 30, -- how far the water blaster reaches
+	soakCooldown = 0.5,
+	bubbleCount = 20, -- bubbles in the Captain's Bubble Party (each pays like a token)
+	bubbleSeconds = 25,
+	captainCooldowns = { wave = 20, bubbles = 40 },
 }
 -- Character upgrades (2026-10-18, Matthew: "character upgrade, slightly faster speed, maybe double jump, long stun on hits").
 -- Bought at the Upgrade Lab by the spawn, kept for good; prices are per level.

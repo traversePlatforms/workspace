@@ -12,7 +12,7 @@ pcall(function()
 end)
 
 local function default()
-	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase, gear = {}, furniture = {}, upgrades = {} } -- found: the Collection Book; pet: the critter that follows you; gear: what you bought in the Gear Bay
+	return { stardust = Config.StartStardust, slots = {}, caught = 0, found = {}, pet = nil, pedestals = Config.PedestalsPerBase, gear = {}, furniture = {}, upgrades = {}, ducks = {} } -- ducks: the rubber ducks found in Splash Lagoon; found: the Collection Book; pet: the critter that follows you; gear: what you bought in the Gear Bay
 end
 
 -- keep only what the game understands, so a bad save can't break anything
@@ -56,6 +56,13 @@ local function clean(d)
 			local u = Config.upgradeById(id)
 			if u and typeof(lv) == "number" then
 				out.upgrades[id] = math.clamp(math.floor(lv), 0, #u.prices)
+			end
+		end
+	end
+	if typeof(d.ducks) == "table" then -- Splash Lagoon's rubber ducks: "d1" to "d12"
+		for id, v in pairs(d.ducks) do
+			if v == true and typeof(id) == "string" and id:match("^d%d+$") then
+				out.ducks[id] = true
 			end
 		end
 	end

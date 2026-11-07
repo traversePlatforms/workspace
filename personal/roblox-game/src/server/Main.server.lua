@@ -13,6 +13,27 @@ local PlayerData = require(script.Parent.PlayerData)
 local map = MapBuilder.build()
 local stationFolder = map.critterFolder.Parent
 
+-- Splash Lagoon, the water park (2026-11-07), built far away from the station. All inside a pcall: if anything in the park goes
+-- wrong, parkInfo stays nil, the park stays closed on the title screen, and the station runs exactly as before.
+local parkInfo = nil
+if Config.Park and Config.Park.enabled then
+	local okPark, res = pcall(function()
+		return require(script.Parent.ParkBuilder).build()
+	end)
+	if okPark then
+		parkInfo = res
+	else
+		warn("[Splash Lagoon] the park did not build, so it stays closed: " .. tostring(res))
+	end
+end
+-- which game a player is in: "park" for Splash Lagoon, anything else is the station
+local function inPark(player)
+	return player ~= nil and player:GetAttribute("Zone") == "park"
+end
+local function parkSpawn()
+	return parkInfo.spawn * CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
+end
+
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
 remotes.Parent = ReplicatedStorage
@@ -28,6 +49,8 @@ local FX = remote("FX") -- sparkles, pop-up numbers, the steal alarm (drawn on e
 local SetPet = remote("SetPet") -- pick which of your critters follows you around
 local Expand = remote("Expand") -- buy two more pedestals
 local Drop = remote("Drop") -- put down what you are carrying (2026-10-18: to grab something better)
+local PickGame = remote("PickGame") -- the title screen and the Switch game button: "station" or "park" (2026-11-07)
+local ParkRemote = remote("Park") -- everything in Splash Lagoon (ParkServer.lua, ParkPlay.client.lua)
 
 -- a sound from Config.Sounds: at a spot in the world for everyone nearby, or just for one player (2026-10-18)
 local function sfx(name, pos, player)
@@ -53,6 +76,22 @@ end
 
 local function tellAll(text, kind)
 	Notify:FireAllClients(text, kind or "info")
+end
+
+-- station news (showers, Black Hole Night, low gravity...) only for players on the station, not those at Splash Lagoon
+local function tellStation(text, kind)
+	for _, p in ipairs(Players:GetPlayers()) do
+		if not inPark(p) then
+			Notify:FireClient(p, text, kind or "info")
+		end
+	end
+end
+local function fxStation(...)
+	for _, p in ipairs(Players:GetPlayers()) do
+		if not inPark(p) then
+			FX:FireClient(p, ...)
+		end
+	end
 end
 
 local function addCommas(n)
@@ -353,6 +392,10 @@ tryStealing = function(thief, base, slot)
 	if not (owner and st) or owner == thief then
 		return
 	end
+	if inPark(owner) then -- nobody can guard a base from the water park, so it is safe while its owner is there (2026-11-07)
+		tell(thief, owner.DisplayName .. " is at Splash Lagoon, so their critters are safe until they come back.", "info")
+		return
+	end
 	if base.shieldUntil > now() then
 		tell(thief, "Their door is locked! Wait for it to open.", "bad")
 		return
@@ -512,10 +555,15 @@ local function onCharacter(player, character)
 		end)
 	end
 	local st = state[player]
-	if st and st.base then -- start each life at your own base
+	if st then -- start each life at your own base, or back at Splash Lagoon if that's where you were playing (2026-11-07)
 		task.defer(function()
 			local hrp = character:WaitForChild("HumanoidRootPart", 5)
-			if hrp then
+			if not hrp then
+				return
+			end
+			if inPark(player) and parkInfo then
+				character:PivotTo(parkSpawn())
+			elseif st.base then
 				character:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
 			end
 		end)
@@ -651,9 +699,9 @@ local function spawnOnPad()
 	if def.family then -- one of Nolan's own friends
 		tellAll("Nolan's friend " .. crit.name .. " landed on the launch pad! Quick, grab them!", "cosmic")
 	elseif crit.mut and crit.mut.id == "rainbow" then
-		tellAll("A RAINBOW critter landed on the launch pad: " .. crit.name .. "!", "cosmic")
+		tellStation("A RAINBOW critter landed on the launch pad: " .. crit.name .. "!", "cosmic")
 	elseif order >= 4 then
-		tellAll("A " .. def.rarity:upper() .. " critter landed on the launch pad: " .. crit.name .. "!", def.rarity == "Cosmic" and "cosmic" or "rare")
+		tellStation("A " .. def.rarity:upper() .. " critter landed on the launch pad: " .. crit.name .. "!", def.rarity == "Cosmic" and "cosmic" or "rare")
 	end
 end
 
@@ -790,7 +838,7 @@ local function meteorStar()
 	tw.Completed:Connect(function()
 		if s.Parent then
 			s:SetAttribute("Ready", true)
-			FX:FireAllClients("meteor", land) -- a burst, and a little screen shake for anyone close (FX.client.lua)
+			fxStation("meteor", land) -- a burst, and a little screen shake for anyone close (FX.client.lua); never in the park
 			task.delay(25, function() -- uncollected shower stars fade away
 				if s.Parent then
 					stars[s] = nil
@@ -808,8 +856,8 @@ local function meteorShower()
 		return false
 	end
 	showerOn = true
-	tellAll("METEOR SHOWER! Grab the falling stars, they're worth double!", "cosmic")
-	FX:FireAllClients("shower", Config.MeteorSeconds)
+	tellStation("METEOR SHOWER! Grab the falling stars, they're worth double!", "cosmic")
+	fxStation("shower", Config.MeteorSeconds)
 	local t0 = os.clock()
 	while os.clock() - t0 < Config.MeteorSeconds do
 		meteorStar()
@@ -1029,6 +1077,7 @@ local function buildCreeper(at)
 	local tag = Instance.new("BillboardGui")
 	tag.Size = UDim2.fromOffset(220, 40)
 	tag.StudsOffsetWorldSpace = Vector3.new(0, 6, 0)
+	tag.MaxDistance = 250 -- (2026-11-07) so its name never floats on the horizon for anyone at Splash Lagoon
 	tag.LightInfluence = 0
 	tag.Parent = body
 	local l = Instance.new("TextLabel")
@@ -1045,9 +1094,24 @@ local function buildCreeper(at)
 end
 
 local nightLighting = { Ambient = Color3.fromRGB(28, 16, 48), OutdoorAmbient = Color3.fromRGB(34, 20, 60), Brightness = 0.25 }
+-- what the station's lighting is (or is heading to), kept on Lighting as attributes (2026-11-07). Lighting is the same for the whole
+-- server, so a Splash Lagoon player's screen paints its own sunny day over it, and reads these to put the station back on the way out.
+local function stationLook(ambient, outdoor, brightness, tint)
+	Lighting:SetAttribute("StAmbient", ambient)
+	Lighting:SetAttribute("StOutdoor", outdoor)
+	Lighting:SetAttribute("StBrightness", brightness)
+	if tint then
+		Lighting:SetAttribute("StTint", tint)
+	end
+end
+do
+	local cc0 = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+	stationLook(Lighting.Ambient, Lighting.OutdoorAmbient, Lighting.Brightness, cc0 and cc0.TintColor or Color3.new(1, 1, 1))
+end
 local function setNight(on)
 	local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
 	if on then
+		stationLook(nightLighting.Ambient, nightLighting.OutdoorAmbient, nightLighting.Brightness, Color3.fromRGB(190, 160, 255))
 		Lighting:SetAttribute("DayAmbient", Lighting.Ambient)
 		Lighting:SetAttribute("DayOutdoor", Lighting.OutdoorAmbient)
 		Lighting:SetAttribute("DayBrightness", Lighting.Brightness)
@@ -1056,11 +1120,13 @@ local function setNight(on)
 			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.fromRGB(190, 160, 255) }):Play()
 		end
 	else
-		TweenService:Create(Lighting, TweenInfo.new(2.5), {
+		local day = {
 			Ambient = Lighting:GetAttribute("DayAmbient") or Color3.fromRGB(70, 80, 115),
 			OutdoorAmbient = Lighting:GetAttribute("DayOutdoor") or Color3.fromRGB(90, 100, 140),
 			Brightness = Lighting:GetAttribute("DayBrightness") or 1.2,
-		}):Play()
+		}
+		stationLook(day.Ambient, day.OutdoorAmbient, day.Brightness, Color3.new(1, 1, 1))
+		TweenService:Create(Lighting, TweenInfo.new(2.5), day):Play()
 		if cc then
 			TweenService:Create(cc, TweenInfo.new(2.5), { TintColor = Color3.new(1, 1, 1) }):Play()
 		end
@@ -1080,8 +1146,8 @@ end
 
 local function blackHoleNight()
 	workspace:SetAttribute("BlackHoleUntil", now() + Config.NightSeconds)
-	tellAll("BLACK HOLE NIGHT! The Void Creeper is loose. Hide in a locker or run!", "cosmic")
-	FX:FireAllClients("night", Config.NightSeconds)
+	tellStation("BLACK HOLE NIGHT! The Void Creeper is loose. Hide in a locker or run!", "cosmic")
+	fxStation("night", Config.NightSeconds)
 	setNight(true)
 	local creeper = buildCreeper(CFrame.new(-60, 40, 0))
 	local pos = Vector3.new(-60, 40, 0)
@@ -1099,7 +1165,7 @@ local function blackHoleNight()
 		local target, best = nil, math.huge
 		for player in pairs(state) do
 			local hrp = rootOf(player)
-			if hrp and not hidden[player] and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) then
+			if hrp and not hidden[player] and not inPark(player) and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) then
 				local dist = (hrp.Position - pos).Magnitude
 				if dist < best then
 					target, best = hrp, dist
@@ -1140,7 +1206,7 @@ local function blackHoleNight()
 		-- boop! anyone it reaches drops what they carry and is sent back to their base
 		for player, st in pairs(state) do
 			local hrp = rootOf(player)
-			if hrp and not hidden[player] and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
+			if hrp and not hidden[player] and not inPark(player) and (ignore[player] or 0) < t and not inAnyBase(hrp.Position, 0) and (hrp.Position - pos).Magnitude <= Config.CreeperReach then
 				ignore[player] = t + 6
 				pauseUntil = t + 1.5
 				if st.carrying then
@@ -1159,7 +1225,7 @@ local function blackHoleNight()
 	creeper:Destroy()
 	setNight(false)
 	workspace:SetAttribute("BlackHoleUntil", 0)
-	tellAll("The lights are back on. The Void Creeper has gone... for now.", "good")
+	tellStation("The lights are back on. The Void Creeper has gone... for now.", "good")
 end
 
 if Config.BlackHoleNight then
@@ -1179,7 +1245,7 @@ local bots = {}
 
 local function sendHome(player)
 	local st = state[player]
-	if st and st.base and player.Character then
+	if st and st.base and player.Character and not inPark(player) then
 		player.Character:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
 	end
 end
@@ -1413,7 +1479,7 @@ local function findTarget(player, hrp, reach, minDot)
 	local look = hrp.CFrame.LookVector
 	local best, bestD, kind, pos = nil, math.huge, nil, nil
 	for other in pairs(state) do
-		local oh = other ~= player and not hidden[other] and rootOf(other)
+		local oh = other ~= player and not hidden[other] and not inPark(other) and rootOf(other)
 		if oh then
 			local v = oh.Position - hrp.Position
 			local d = v.Magnitude
@@ -1481,7 +1547,7 @@ Punch.OnServerEvent:Connect(function(player)
 	end
 	lastPunch[player] = t
 	local hrp = rootOf(player)
-	if not hrp or hidden[player] then
+	if not hrp or hidden[player] or inPark(player) then -- no punching at Splash Lagoon: the water blaster is the only thing there
 		return
 	end
 	local look = hrp.CFrame.LookVector
@@ -1629,7 +1695,7 @@ RunService.Heartbeat:Connect(function(dt)
 			local bd = Config.Bots.sight
 			for player, st in pairs(state) do
 				local hrp = rootOf(player)
-				if st.carrying and hrp and not hidden[player] then
+				if st.carrying and hrp and not hidden[player] and not inPark(player) then
 					local safe = false
 					for _, b in ipairs(map.bases) do
 						if insideBase(b, hrp.Position) then
@@ -1803,20 +1869,23 @@ end
 
 -- ---------- Low Gravity (2026-10-18, Matthew: "add a low gravity event, like we have the meteor shower and the black hole") ----------
 local NORMAL_GRAVITY = workspace.Gravity
+workspace:SetAttribute("NormalGravity", NORMAL_GRAVITY)
 local lowGravOn = false
 local function lowGravity()
 	if lowGravOn then
 		return false
 	end
 	lowGravOn = true
+	-- gravity is one number for the whole server, but each character falls on its own player's screen, so Splash Lagoon players'
+	-- screens hold normal gravity for themselves (ParkWorld.client.lua) and the park never floats
 	workspace.Gravity = Config.LowGravityValue
 	workspace:SetAttribute("LowGravityUntil", now() + Config.LowGravitySeconds)
-	tellAll("LOW GRAVITY! Everyone floats. Jump!", "cosmic")
-	FX:FireAllClients("lowgrav", Config.LowGravitySeconds)
+	tellStation("LOW GRAVITY! Everyone floats. Jump!", "cosmic")
+	fxStation("lowgrav", Config.LowGravitySeconds)
 	task.delay(Config.LowGravitySeconds, function()
 		workspace.Gravity = NORMAL_GRAVITY
 		lowGravOn = false
-		tellAll("Gravity is back to normal.", "info")
+		tellStation("Gravity is back to normal.", "info")
 	end)
 	return true
 end
@@ -1858,7 +1927,7 @@ for _, m in ipairs(map.rockets or {}) do
 		prompt.Parent = button
 		prompt.Triggered:Connect(function(player)
 			if launchRocket(m) then
-				tellAll(player.DisplayName .. " is launching a rocket! " .. Config.RocketCountdown .. "... ", "cosmic")
+				tellStation(player.DisplayName .. " is launching a rocket! " .. Config.RocketCountdown .. "... ", "cosmic")
 			else
 				tell(player, "That rocket is already on its way. A new one will be on the pad soon!", "info")
 			end
@@ -2045,13 +2114,14 @@ local function press(player, id)
 		end
 		themeIndex = themeIndex % #themes + 1
 		local cc = Lighting:FindFirstChildOfClass("ColorCorrectionEffect")
+		Lighting:SetAttribute("StTint", themes[themeIndex].tint) -- for Splash Lagoon players' screens (2026-11-07)
 		if cc then
 			TweenService:Create(cc, TweenInfo.new(1.2), { TintColor = themes[themeIndex].tint }):Play()
 		end
-		tellAll("Captain's orders: " .. themes[themeIndex].name .. " lights!", "good")
+		tellStation("Captain's orders: " .. themes[themeIndex].name .. " lights!", "good")
 	elseif id == "rain" then
-		tellAll("The Captain made it rain Stardust! Grab them!", "cosmic")
-		FX:FireAllClients("sfx", "shower")
+		tellStation("The Captain made it rain Stardust! Grab them!", "cosmic")
+		fxStation("sfx", "shower")
 		task.spawn(function()
 			for _ = 1, 24 do
 				meteorStar()
@@ -2072,7 +2142,7 @@ local function press(player, id)
 			tell(player, "The rockets are already flying!", "info")
 			return
 		end
-		tellAll("Captain's orders: launch all rockets!", "cosmic")
+		tellStation("Captain's orders: launch all rockets!", "cosmic")
 	end
 	lastUse[id] = t
 end
@@ -2326,6 +2396,93 @@ for id, stand in pairs(map.furnitureStands or {}) do
 		FX:FireAllClients("confetti", stand.Position + Vector3.new(0, 5, 0))
 		tell(player, "The " .. def.name .. " is in your base now! " .. def.blurb, "good")
 	end)
+end
+
+-- ---------- picking a game: Star Station or Splash Lagoon (2026-11-07) ----------
+-- The title screen and the Switch game button send "station" or "park". Your base, your critters and their income all stay put
+-- while you're in the park, so switching back is instant.
+local lastPick = {}
+local function leaveStation(player)
+	local st = state[player]
+	if st and st.carrying then -- a stolen critter goes back to its owner; a bought one is refunded
+		dropCarried(player, "dropped")
+	end
+	if hidden[player] then
+		unhide(player)
+	end
+	local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if hum and hum.SeatPart then -- out of the Moon Rover first
+		hum.Sit = false
+		task.wait(0.2)
+	end
+end
+PickGame.OnServerEvent:Connect(function(player, which)
+	if which ~= "park" and which ~= "station" then
+		return
+	end
+	local t = os.clock()
+	if (lastPick[player] or 0) + 1 > t then
+		return
+	end
+	lastPick[player] = t
+	local ok, err = pcall(function()
+		local st = state[player]
+		local ch = player.Character
+		if which == "park" then
+			if not (parkInfo and workspace:GetAttribute("ParkReady")) then
+				player:SetAttribute("Zone", "station")
+				tell(player, "Splash Lagoon is closed right now. Have fun on the station!", "info")
+				return
+			end
+			if not inPark(player) then
+				leaveStation(player)
+			end
+			player:SetAttribute("Zone", "park")
+			if ch then
+				ch:PivotTo(parkSpawn())
+			end
+			tell(player, "Welcome to Splash Lagoon! Your critters keep earning back on the station.", "good")
+		else
+			local was = inPark(player)
+			if was then
+				ParkRemote:FireClient(player, "stopride") -- off any slide before the move
+				task.wait(0.15)
+			end
+			player:SetAttribute("Zone", "station")
+			if ch then
+				if st and st.base then
+					ch:PivotTo(st.base.cf * CFrame.new(0, 4, -10))
+				else
+					local sp = stationFolder:FindFirstChild("Spawn")
+					if sp then
+						ch:PivotTo(sp.CFrame * CFrame.new(0, 4, 0))
+					end
+				end
+			end
+			if was then
+				tell(player, "Back on " .. Config.GameTitle .. "!", "good")
+			end
+		end
+	end)
+	if not ok then
+		warn("[Splash Lagoon] switching games: " .. tostring(err))
+	end
+end)
+Players.PlayerRemoving:Connect(function(player)
+	lastPick[player] = nil
+end)
+
+if parkInfo then
+	local okStart, errStart = pcall(function()
+		require(script.Parent.ParkServer).start({
+			info = parkInfo, remote = ParkRemote, PlayerData = PlayerData, refreshStats = refreshStats, tell = tell,
+			isCaptain = isCaptain, now = now, addCommas = addCommas, sfx = sfx,
+		})
+	end)
+	if not okStart then
+		warn("[Splash Lagoon] the park's rules did not start, so it stays closed: " .. tostring(errStart))
+		workspace:SetAttribute("ParkReady", false)
+	end
 end
 
 -- ---------- every second: income; four times a second: home and catch checks ----------
