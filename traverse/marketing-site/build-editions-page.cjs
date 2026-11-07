@@ -48,7 +48,7 @@ const ED = {
     rank: 'Large and medium lawns still to knock, lot size and trees against the house, then the owner’s ability to pay.',
     tools: [['Plans and customer emails', 'Weekly, monthly and seasonal plans with the next visit, and the follow-up, aftercare and newsletter emails that go with them.'], ['Quotes from the lawn', 'A quote priced from the lawn’s square feet and your own prices, signed on the homeowner’s phone with the deposit.'], ['Stats and the end-of-day email', 'Leads by source, quotes and close rate, jobs and money; an evening email if you want one.'], ['Facebook leads', 'Lead-ad forms land in the pipeline within minutes, and the person they go to is alerted.'], ['Fire check', 'For crews that also sell fuel reduction: a walk-around check with a printable homeowner report.']],
     sample: [['Lawn', 'Large · 6,200 sq ft'], ['Near the house', '4,900 sq ft'], ['Lot', '0.84 acres · outlined'], ['Trees', 'Against the house'], ['Watering days', 'Tue · Fri'], ['Moved in', 'This spring']], score: 9,
-    shot: ['../shots/lawn-lot-phone.png', 'A real lot in the app: the aerial photo, the property line in yellow and the lawn we counted shaded green. Address and owner left out.'],
+    shot: ['../shots/lawn-lot-phone.webp',   /* WebP, 82 KB against the PNG's 530 KB (overnight check 2026-11-07); every browser since 2020 shows it */ 'A real lot in the app: the aerial photo, the property line in yellow and the lawn we counted shaded green. Address and owner left out.'],
   },
   solar: {
     name: 'Solar', colour: '#f2a900', ink: '#0f1b2d', deep: '#8a5a00',

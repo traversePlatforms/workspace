@@ -17,8 +17,17 @@ const here = __dirname, PREV = path.join(here, 'preview', 'tp-5ea36a05'), OUT = 
    pages are not for the public. The build refuses a page that names an app folder. */
 const APP_FOLDERS = ['summit-de59ae83', 'tr-cb2e8587', 'ty-25604fff', 'ts-016064fc', 'tq-9cf8d9de', 'tg-3b0b89e7'];
 
-const home = fs.readFileSync(path.join(PREV, 'index.html'), 'utf8');
-const eds = fs.readFileSync(path.join(PREV, 'editions', 'index.html'), 'utf8');
+/* WebP beside each PNG screenshot (overnight check 2026-11-07): the pictures were 1.6 MB of PNG, the biggest 554 KB, and on a tablet the
+   homepage's first paint waited on them. Each <img src="shots/X.png"> becomes <picture> with a WebP source when site-src/shots/X.webp
+   exists (made once with: ffmpeg -i X.png -c:v libwebp -quality 82 X.webp; 554 KB -> 149 KB); the PNG stays as the fallback. */
+function webpPictures(html) {
+  return html.replace(/<img\b([^>]*?)\bsrc="((?:\.\.\/)?shots\/([a-z0-9-]+))\.png"([^>]*)>/g, (m, pre, base, name, post) => {
+    if (!fs.existsSync(path.join(here, 'site-src', 'shots', name + '.webp'))) return m;
+    return '<picture><source type="image/webp" srcset="' + base + '.webp">' + m + '</picture>';
+  });
+}
+const home = webpPictures(fs.readFileSync(path.join(PREV, 'index.html'), 'utf8'));
+const eds = webpPictures(fs.readFileSync(path.join(PREV, 'editions', 'index.html'), 'utf8'));
 for (const [name, page] of [['homepage', home], ['editions page', eds]]) {
   const hit = APP_FOLDERS.find((f) => page.includes(f));
   if (hit) throw new Error('the ' + name + ' names an app folder (' + hit + '); the public pages must not lead to a sign-in');
