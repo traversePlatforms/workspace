@@ -7724,16 +7724,21 @@ if ($action === 'adreport') {
     if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
     $leads = leadsAll(); $real = fn($l) => !preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''));
     $short = function ($n) { $p = preg_split('/\s+/', trim((string) $n)); return ($p[0] ?? 'Someone') . (isset($p[1]) && $p[1] !== '' ? ' ' . mb_substr($p[1], 0, 1) . '.' : ''); };
-    $jobOf = []; foreach (jobsAll() as $j) if (!$j['off']) $jobOf[(string) $j['lead']] = $j;
+    /* every job a customer has (8 Nov 2026, Matthew: "go ahead and do it"): keeping one job per lead let a later $0 return visit hide
+       Daniel C.'s $403 job. Each priced job counts; $0 jobs (return visits, redos) are not sales and are left out. */
+    $jobsOf = []; foreach (jobsAll() as $j) if (!$j['off']) $jobsOf[(string) $j['lead']][] = $j;
+    $priced = fn($id) => array_values(array_filter($jobsOf[$id] ?? [], fn($j) => (int) $j['price'] > 0));
+    $jobOf = []; foreach ($jobsOf as $id => $js) { $p = $priced((string) $id); $jobOf[$id] = $p ? end($p) : end($js); }   /* the website list shows one job: the latest priced one */
     $today = (new DateTime('today', new DateTimeZone(appTz())))->format('Y-m-d');
-    $src = ['meta' => ['label' => 'Instant Form', 'jobs' => [], 'held' => [], 'leads' => 0], 'messenger' => ['label' => 'Messenger', 'jobs' => [], 'held' => [], 'leads' => 0]];
+    $src = ['meta' => ['label' => 'Instant Form', 'jobs' => [], 'held' => [], 'leads' => 0, 'customers' => 0], 'messenger' => ['label' => 'Messenger', 'jobs' => [], 'held' => [], 'leads' => 0, 'customers' => 0]];
     $web = [];
     foreach ($leads as $l) {
         if (!$real($l)) continue; $s = (string) ($l['src'] ?? '');
         if ($s === 'a365web' && ($l['by'] ?? '') !== 'ClickUp') { $j = $jobOf[$l['id']] ?? null; $web[] = ['name' => $short($l['name']), 'came' => (string) ($l['came'] ?? ''), 'job' => $j ? ['price' => (int) $j['price'], 'date' => $j['date'], 'paid' => jobPaidSoFar($j), 'done' => ($j['done']['o'] ?? '') === 'done'] : null]; continue; }
         if (!isset($src[$s])) continue;
         $src[$s]['leads']++;
-        if (isset($jobOf[$l['id']])) { $j = $jobOf[$l['id']]; $src[$s]['jobs'][] = ['name' => $short($l['name']), 'price' => (int) $j['price'], 'date' => $j['date'], 'paid' => jobPaidSoFar($j), 'owed' => jobOwed($j), 'done' => ($j['done']['o'] ?? '') === 'done', 'future' => $j['date'] >= $today]; }
+        if (isset($jobsOf[$l['id']])) { $pj = $priced((string) $l['id']); if ($pj) $src[$s]['customers']++;
+            foreach ($pj as $j) $src[$s]['jobs'][] = ['name' => $short($l['name']), 'price' => (int) $j['price'], 'date' => $j['date'], 'paid' => jobPaidSoFar($j), 'owed' => jobOwed($j), 'done' => ($j['done']['o'] ?? '') === 'done', 'future' => $j['date'] >= $today]; }
         elseif (is_array($l['quote']['offer'] ?? null) && ($l['quote']['offer']['date'] ?? '') >= $today && ($l['status'] ?? '') !== 'lost') $src[$s]['held'][] = ['name' => $short($l['name']), 'price' => (int) ($l['quote']['price'] ?? 0), 'date' => (string) $l['quote']['offer']['date'], 'form' => !empty($l['sign'])];
     }
     foreach ($src as &$x) usort($x['jobs'], fn($a, $b) => strcmp($a['date'], $b['date'])); unset($x);
