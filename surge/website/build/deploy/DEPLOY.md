@@ -39,6 +39,9 @@ logo — both slot in after launch if late.
    **"Call Us" button dialling `tel:7193157742`** while displaying the 720
    number beside it — found 2026-09-20. That is the current live state, so the
    number on the domain today cannot be used to confirm anything.
+   **Fixed on the old live site 8 Nov 2026** (Matthew: "Fix the call button"): the Elementor
+   button on 10 pages now dials `tel:7207195495`. Matthew confirmed on 1 Nov that (720) 719-5495
+   is the number Surge uses, so this step only needs that one test call.
 
 4. Matthew's go. Then, in this order:
 5. `node deploy/toggle-noindex.mjs off`; delete the `Disallow: /` line in
