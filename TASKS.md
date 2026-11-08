@@ -910,7 +910,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       that disappears on someone else's schedule.
 - [ ] **SG-6 — Get team leaders into reviews and content.** The one-page field guide for
       capturing raw material already exists and has never been handed out.
-- [ ] **SG-7 — Update the website blog every 2 weeks (recurring, Matthew 2026-10-21).** **4 Nov cycle DONE:** Lance's round-2 notes (commit 39067f08, on staging): the three research posts retired to surge/website/retired/blog-2026-11-04/, the blog index and the two remaining posts (leadership-skills, scale-your-team) updated, sitemap trimmed. **Next due 18 Nov.** A new or
+- [ ] **SG-7 — Update the website blog every 2 weeks (recurring, Matthew 2026-10-21).** **4 Nov cycle DONE:** Lance's round-2 notes (commit 39067f08, on staging): the three research posts retired to surge/website/retired/blog-2026-11-04/, the blog index and the two remaining posts (leadership-skills, scale-your-team) updated, sitemap trimmed. **Next due 18 Nov.** **Lance's direction (round-2 email, 3 Nov, re-read 8 Nov): keep the three old WordPress posts; new posts should feel like "a morning meeting on the website": leadership, growth, team building and lessons from the work, NOT industry research.** A new or
       refreshed post on surgeftw.com /blog/ every two weeks, starting from 21 Oct 2026; first due
       **4 Nov 2026**, then 18 Nov, 2 Dec, and on. Surge rules apply in full: read
       `surge/brand-voice-company.md` and `surge/brand/notes/RESTRICTED.md` first, research standard
