@@ -38,6 +38,12 @@ export const SCRUB = [
   /* the Solar bill block cites the rate pages; the water and seed lines cite CSU */
   [/ ?\(Colorado PUC and Xcel[^)]*\)/g, ''], [/Xcel Energy/g, 'the power company'], [/Xcel’s/g, 'the power company’s'], [/\bXcel\b/g, 'the power company'], [/\bColorado PUC\b/g, 'the state'],
   [/ ?· CSU Extension\b/g, ''], [/CSU Extension: /g, ''], [/Colorado State University Extension/g, 'lawn experts'],
+  /* the Solar block names the federal energy survey (7 Nov 2026, demo-universal) */
+  [/ ?\((?:[A-Z][a-z]+ )+(?:County|City|Town) building (?:division|department)\)/g, ''], [/(?:[A-Z][a-z]+ )+(?:County|City|Town) building (?:division|department)/g, 'records'],
+  [/ ?\(permit(?:, [a-z ]+)?\)/g, ''], [/ ?\(records\)/g, ''],
+  [/ ?· ?CoAgMet\b/g, ''], [/\bCoAgMet\b ?/g, ''],
+  [/no CSU weather station/g, 'no weather station'], [/\bCSU\b ?/g, ''],
+  [/ ?\((?:U\.S\. )?Energy Information Administration\)/g, ''], [/ ?\(Form EIA-861\)/g, ''], [/\bEIA\b ?/g, ''],
   /* a source shown as its own little label (the quote builder's "from the house card" tiles) */
   [/^(\s*)county record(\s*)$/, '$1on record$2'], [/^(\s*)county parcel(\s*)$/, '$1lot line$2'], [/^(\s*)aerial photo(\s*)$/, '$1photo$2'],
   [/,? ?USDA NAIP \d{4} \(public domain\)/g, ''], [/, \d{4} \(public domain\)/g, ''],
@@ -49,7 +55,7 @@ export const SCRUB = [
   [/\bPVWatts\b ?/g, ''], [/ ?\(NREL, now NLR\)/g, ''], [/\b(?:NREL|NLR)\b ?/g, ''], [/laser scans?/gi, 'measurement'], [/\bLiDAR\b|\blidar\b/g, 'measured'], [/\bassessor\b/gi, 'records'],
   [/\bcensus tract\b/gi, 'area'], [/\bCensus\b ?/g, ''], [/\bSatellite\b/g, 'Aerial'], [/\bsatellite\b/g, 'aerial'],
 ];
-export const SOURCE_WORDS = /\b(NOAA|NWS|MRMS|radar estimate|county record|assessor|LiDAR|lidar|laser|satellite|FEMA|permits? on record|building permits?|re-roof permit|solar permit|Census|Extension|research\/|USDA|NAIP|NREL|NLR|PVWatts|Xcel|Planetary|Sixfold|Surge|365 Aeration)\b/i;
+export const SOURCE_WORDS = /\(permit\b|\b(NOAA|NWS|MRMS|radar estimate|county record|assessor|LiDAR|lidar|laser|satellite|FEMA|permits? on record|building permits?|re-roof permit|solar permit|Census|Extension|research\/|USDA|NAIP|NREL|NLR|PVWatts|Xcel|Planetary|EIA|Energy Information|CSU|CoAgMet|building division|building department|Sixfold|Surge|365 Aeration)\b/i;
 
 export function buildMask(townFile, extra = {}) {
   const T = JSON.parse(readFileSync(townFile, 'utf8'));

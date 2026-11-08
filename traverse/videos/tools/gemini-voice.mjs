@@ -1,10 +1,10 @@
 // Gemini text-to-speech for the demo videos (2 Nov 2026). The key is read from ~/.ssh/gemini.json and never printed.
 //   node gemini-voice.mjs <voice> <out.wav> "<text>" ["<style direction>"]
 // Writes 24 kHz 16-bit mono WAV. Voices are Gemini's prebuilt ones (Charon, Kore, Iapetus, Puck, ...).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs'; import { homedir } from 'node:os'; import { join } from 'node:path';
 const [voice, out, text, style] = process.argv.slice(2);
 if (!voice || !out || !text) { console.error('usage: node gemini-voice.mjs <voice> <out.wav> "<text>" ["<style>"]'); process.exit(1); }
-const key = JSON.parse(readFileSync('C:/Users/Surge Inc/.ssh/gemini.json', 'utf8')).key;
+const key = JSON.parse(readFileSync(join(homedir(), '.ssh', 'gemini.json'), 'utf8')).key;   /* the home folder moved with the laptop (5 Nov) */
 const model = process.env.TTS_MODEL || 'gemini-3.8-flash-tts';
 const prompt = style === 'none' ? text : (style || 'Say in a brisk, upbeat, confident narrator voice') + ': ' + text;   /* the documented "Say ...:" form; a longer direction got read aloud (2 Nov); 'none' = the words alone (2 Nov: even the short prefix was read aloud on some clips) */
 const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
