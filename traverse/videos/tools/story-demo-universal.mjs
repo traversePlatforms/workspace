@@ -71,6 +71,12 @@ async function toBlock(s, sel, open = true) {
 async function settleCard(s) { await s.until(`(() => { const c = document.querySelector('.dkcard'); return c && !/Loading/i.test(c.innerText) && [...c.querySelectorAll('img')].every((i) => i.complete); })()`, 30000); await wait(1500); }
 const clearSearch = (s) => s.js(`document.querySelectorAll('input[type=search]').forEach((i) => { i.value = ''; })`);
 async function settleMap(s, ms = 30000) { await s.until(`document.querySelectorAll('.leaflet-tile-loaded').length > 4 || document.querySelector('.leaflet-container canvas')`, ms); await wait(2500); }
+/* every map tile on screen fully loaded, nothing still fading in (8 Nov, Matthew: the opening "isnt fully loaded and its loading partially
+   while the video is playing. That makes the app looks slow") */
+async function settleTiles(s, ms = 90000) {
+  await s.until(`(() => { const t = [...document.querySelectorAll('.leaflet-tile')]; return t.length > 4 && t.every((i) => i.classList.contains('leaflet-tile-loaded') && i.complete && i.naturalWidth > 0); })()`, ms);
+  await wait(2500);
+}
 async function reload(s) { await s.go(s.appUrl); await s.until(`!document.querySelector('.keys') && document.querySelector('#dnav button, #dnav a, nav button, button.tile')`, 60000); await wait(2000); await s.dismiss(); }
 async function deskTool(s, label) { await s.nav('Home'); await s.tap('#view button, #view a', '^' + label + '$', { after: 3000 }); }
 /* a smooth scroll of the page (or one scroll box), spread over ms */
@@ -93,6 +99,11 @@ export const SCENES = [
     run: async ({ screen }) => {
       const d = await screen('one', 'desk');
       await d.nav('Home'); await d.tap('button', '^Open the workspace', { after: 4000 }); await settleMap(d);
+      /* warm-up (8 Nov): open the card once so its lot photo and the map tiles are cached, then start again from a clean page and
+         wait for every tile, so nothing loads on camera */
+      /* (no reload: the app keeps the photo search and the last card's lot map in the page, and reopening that card reuses them) */
+      await d.tap('.dkrow', null, { after: 0 }); await settleCard(d);
+      await d.js(`const x = document.querySelector('.dkc-x'); if (x) x.click();`); await wait(1500); await settleTiles(d);
       return { desk: d };
     },
     show: async ({ desk }) => { await wait(3500); await desk.tap('.dkrow', null, { after: 0 }); } },
@@ -183,6 +194,9 @@ export const SCENES = [
     cap: 'Every plan comes with every feature.',
     run: async ({ screen, DEMO }) => {
       const d = await screen('one', 'desk'); await openHouse(d, DEMO.one.house.address);
+      /* warm-up (8 Nov): open each card the scene flips through, so their lot photos and lines are already fetched */
+      for (let k = 2; k <= 5; k++) { await d.js(`const r = [...document.querySelectorAll('.dkrow')][${k}]; if (r) { r.scrollIntoView({ block: 'nearest' }); r.click(); }`); await settleCard(d); }
+      await openHouse(d, DEMO.one.house.address); await settleCard(d); await settleTiles(d);
       const p = await screen('one', 'phone'); await openHouse(p, DEMO.one.house.address);
       await p.js('window.scrollTo(0, 0)'); await wait(500);
       return { desk: d, phone: p };
