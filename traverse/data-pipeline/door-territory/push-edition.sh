@@ -1,11 +1,11 @@
 #!/bin/bash
-# (kept with the door-territory scripts 2026-10-26; temp files go to the session scratchpad named below)
+# (kept with the door-territory scripts 2026-10-26; temp files go to %LOCALAPPDATA%/ProjectBackup/push-tmp since 8 Nov (the old session scratchpad did not survive the laptop move))
 # 2026-10-26: push one edition's new and changed town data to the live server (all Colorado towns). Never index.json/company.json
 # (merged, not replaced) and never hail-storms.json (the server's storm job owns it). Backup first, md5 every file, merge, clear caches.
 # 2026-10-28 (Group 1 re-clip): optional second argument, an extended regex on file names, sends only the matching changed files
 # (e.g. 'g1-' for the Group 1 towns and their side files); DRY=1 lists what would go, by name, and sends nothing.
 set -u
-d="$1"; ONLY="${2:-}"; S=/c/Users/SURGEI~1/AppData/Local/Temp/claude/c--Users-Surge-Inc-Desktop-claude-test-2/db3e1153-072f-46a3-b860-134f689b5a09/scratchpad
+d="$1"; ONLY="${2:-}"; S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp"; mkdir -p "$S"   # short path: $S is used unquoted below
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
 cd "/c/Users/Surge Inc/Desktop/claude test 2/traverse/editions/dist/$d/rounds" || exit 1
 find . -maxdepth 1 -type f -name '*.json' ! -name index.json ! -name company.json ! -name hail-storms.json -printf '%f\n' | sort > $S/p-$d.all

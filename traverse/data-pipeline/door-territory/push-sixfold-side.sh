@@ -8,7 +8,7 @@
 set -u
 PRE="${1:-}"; [ -z "$PRE" ] && { echo "usage: push-sixfold-side.sh <prefix>   e.g. moved-"; exit 1; }
 case "$PRE" in *[!a-z0-9-]*) echo "prefix: letters, digits and - only"; exit 1;; esac
-S=/c/Users/SURGEI~1/AppData/Local/Temp/claude/c--Users-Surge-Inc-Desktop-claude-test-2/db3e1153-072f-46a3-b860-134f689b5a09/scratchpad
+S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp"; mkdir -p "$S"   # short path: $S is used unquoted below
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
 R="~/www/traverseplatforms.com/sixfold-data/rounds"
 cd "/c/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds" || exit 1
