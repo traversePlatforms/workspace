@@ -25,7 +25,9 @@ function diff(want, got) {
   return { miss, extra };
 }
 /* whisper hears the same word several ways; these are the same word for the check */
-const SAME = [[/\bre roofed\b/g, 'reroofed'], [/\ballinone\b/g, 'all in one'], [/\btraverseplatformscom\b/g, 'traverse platforms dot com'], [/\btraverse platforms com\b/g, 'traverse platforms dot com']];
+const SAME = [[/\bre roofed\b/g, 'reroofed'], [/\ballinone\b/g, 'all in one'], [/\btraverseplatformscom\b/g, 'traverse platforms dot com'], [/\btraverse platforms com\b/g, 'traverse platforms dot com'],
+  /* 8 Nov: whisper writes the address as one word, and "roof's size" sounds exactly like "roof size" */
+  [/\btraverseplatforms com\b/g, 'traverse platforms dot com'], [/\btraverseplatforms\b/g, 'traverse platforms dot'], [/\broof size\b/g, 'roofs size']];
 const canon = (t) => { let v = norm(t); for (const [re, to] of SAME) v = v.replace(re, to); return v; };
 const W = whisperOn(); if (!W) console.log('(whisper.cpp not found: length check only)');
 for (const [id, line] of Object.entries(VOICES)) {
