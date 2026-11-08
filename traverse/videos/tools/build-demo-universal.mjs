@@ -6,7 +6,7 @@
 // voice starts in the first second. Then H.264 + AAC MP4 (faststart), captions (.srt, the script's exact words), a poster for the site
 // cut, a 1280x720 thumbnail from a real app screen, and youtube.md (title, description, chapters).
 //   node build-demo-universal.mjs [site|yt]   -> ../demo-universal/out/
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'; import { execFileSync, spawnSync } from 'node:child_process'; import { join, resolve } from 'node:path'; import { pathToFileURL } from 'node:url';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs'; import { execFileSync, spawnSync } from 'node:child_process'; import { join, resolve } from 'node:path'; import { pathToFileURL } from 'node:url';
 import { chrome, attach, session, sleep } from './lib.mjs';
 import { SCENES, VOICES } from './story-demo-universal.mjs'; import { partRange } from './voice-parts.mjs';
 const FF = process.env.FFMPEG || 'ffmpeg', FP = process.env.FFPROBE || 'ffprobe';
@@ -53,16 +53,19 @@ const frames = {};
 for (const sc of SCENES) { const f = join(WORK, `frame-${String(sc.n).padStart(2, '0')}.png`); await draw(frameUrl(sc), 1920, 1080, f); frames[sc.n] = f; }
 
 /* one silent clip per scene and length; fades only where the voice does not run on into the next scene */
+/* a kept clip is reused only if it is newer than its scene's recording (8 Nov: a re-recorded scene came out as the old take) */
+const recAt = (sc) => Math.max(0, ...Object.values((byN[sc.n] && byN[sc.n].rec && byN[sc.n].rec.screens) || {}).map((s) => statSync(s.frames[0].f).mtimeMs));
+const fresh = (f, sc) => existsSync(f) && statSync(f).mtimeMs > recAt(sc);
 function sceneClip(sc, D, fadeIn, fadeOut) {
   const id = String(sc.n).padStart(2, '0'), clip = join(WORK, `clip-${id}-${D.toFixed(2)}-${+fadeIn}${+fadeOut}.mp4`);
-  if (existsSync(clip)) return clip;
+  if (fresh(clip, sc)) return clip;
   const inputs = ['-loop', '1', '-framerate', '30', '-t', D.toFixed(3), '-i', frames[sc.n]]; let filt = '[0:v]format=rgba[b0]', last = 'b0', n = 1;
   if (sc.layout !== 'card') for (const [k, s] of Object.entries(byN[sc.n].rec.screens)) {
     const [x, y, w, h] = BOX[sc.layout][k], list = join(WORK, `frames-${id}-${k}.txt`), fr = s.frames; let txt = '';
     fr.forEach((f, i) => { const next = i + 1 < fr.length ? fr[i + 1].t : Math.max(D, f.t + 0.05); txt += `file '${f.f.replace(/\\/g, '/')}'\nduration ${Math.max(0.02, next - f.t).toFixed(3)}\n`; });
     txt += `file '${fr[fr.length - 1].f.replace(/\\/g, '/')}'\n`; writeFileSync(list, txt);
     const scr = join(WORK, `screen-${id}-${k}-${D.toFixed(2)}.mp4`);
-    if (!existsSync(scr)) run(['-f', 'concat', '-safe', '0', '-i', list, '-vf', `fps=30,scale=${w}:${h}:flags=lanczos,format=yuv420p`, '-t', D.toFixed(3), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '12', scr]);
+    if (!fresh(scr, sc)) run(['-f', 'concat', '-safe', '0', '-i', list, '-vf', `fps=30,scale=${w}:${h}:flags=lanczos,format=yuv420p`, '-t', D.toFixed(3), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '12', scr]);
     inputs.push('-i', scr, '-loop', '1', '-i', masks[sc.layout + k]);
     filt += `;[${n}:v]format=rgba[s${n}];[${n + 1}:v]format=gray,scale=${w}:${h}[m${n}];[s${n}][m${n}]alphamerge[a${n}];[${last}][a${n}]overlay=${x}:${y}:eof_action=repeat[o${n}]`;
     last = 'o' + n; n += 2;
