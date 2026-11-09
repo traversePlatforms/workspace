@@ -18,7 +18,6 @@ RewriteRule ^ https://traverseplatforms.com%{REQUEST_URI} [R=301,L]
 </FilesMatch>
 RedirectMatch 404 /\.(?!well-known)
 <IfModule mod_headers.c>
-Header set X-Robots-Tag "noindex, nofollow"
 Header set Cache-Control "private, no-cache"
 Header always set X-Content-Type-Options "nosniff"
 Header always set X-Frame-Options "SAMEORIGIN"
@@ -33,12 +32,12 @@ Header always set Strict-Transport-Security "max-age=31536000"
 # opens, take "start|" out of this list and chmod 644 the files in start/ (its API, api/traverse-start.php and api/traverse-hook.php, is never
 # behind the password). The welcome page must be reachable by anyone who has paid, so it opens with /start/ or with the site.
 # find/ (Find my app, 2026-10-30) is private with the rest; its API, api/traverse-findapp.php, is not. To open it early, take "find|" out.
-<If "%{REQUEST_URI} =~ m#^/(index\.html)?$# || %{REQUEST_URI} =~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation|shots|start|find)(/|$)# || %{REQUEST_URI} =~ m#^/og\.png$#">
-  AuthType Basic
-  AuthName "Traverse Platforms (private for now)"
-  AuthUserFile /home/customer/www/traverseplatforms.com/traverse-site-private/.htpasswd
-  Require valid-user
-</If>
+# 2026-10-28: the marketing pages are public (launch); the password block that stood here is in upload-backups/open-site-*.
 # Since 2026-10-15 the marketing pages are private: plain files are served by the host's front server, which skips
 # this password rule, so after uploading the site run on the server:
 #   chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots start find -type f -exec chmod 600 {} \;
+
+# 2026-10-28 launch: only the seven marketing pages may be indexed; every app, api, map and desk keeps noindex
+<If "%{REQUEST_URI} !~ m#^/(index\.html)?$# && %{REQUEST_URI} !~ m#^/(demo|editions|privacy|terms|terms-of-use|cancellation)(/|$)# && %{REQUEST_URI} !~ m#^/(robots\.txt|sitemap\.xml|og\.png)$#">
+  Header set X-Robots-Tag "noindex, nofollow"
+</If>

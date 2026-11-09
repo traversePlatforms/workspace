@@ -37,7 +37,11 @@ for (const [name, page] of [['homepage', home], ['editions page', eds]]) {
 /* the live .htaccess is kept in site-src/htaccess.txt (2026-10-26): the template that was here had fallen behind it (no password
    block from 15 Oct, no security rules from 25 Oct), so a rebuild would have taken both off the live site. Edit that file. */
 const htaccess = fs.readFileSync(path.join(here, 'site-src', 'htaccess.txt'), 'utf8');
-if (!/AuthUserFile/.test(htaccess) || !/Strict-Transport-Security/.test(htaccess)) throw new Error('site-src/htaccess.txt lost the password or security rules');
+/* 8 Nov 2026: the site is OPEN since 30 Oct, so htaccess.txt is now the live open copy (no password; noindex only on non-marketing paths).
+   Refuse a template that would lock it again or hide it from search. */
+if (!/Strict-Transport-Security/.test(htaccess)) throw new Error('site-src/htaccess.txt lost the security rules');
+if (/AuthUserFile/.test(htaccess)) throw new Error('site-src/htaccess.txt has a password block again: the site is open (30 Oct); a rebuild would lock it');
+if (/^Header set X-Robots-Tag/m.test(htaccess)) throw new Error('site-src/htaccess.txt hides every page from search again');
 fs.rmSync(path.join(here, 'site'), { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'editions'), { recursive: true });
 fs.writeFileSync(path.join(OUT, 'index.html'), home);
@@ -47,6 +51,13 @@ fs.writeFileSync(path.join(OUT, '.htaccess'), htaccess);
 const SRC = path.join(here, 'site-src'), EXTRA = ['demo', 'terms', 'terms-of-use', 'privacy', 'cancellation', 'og.png', 'shots', 'start', 'find'];   /* + start/ (checkout and welcome page, 2026-10-29), find/ (Find my app, 2026-10-30) */
 for (const x of EXTRA) { if (!fs.existsSync(path.join(SRC, x))) throw new Error('site-src/' + x + ' is missing (run build-legal.cjs?)'); fs.cpSync(path.join(SRC, x), path.join(OUT, x), { recursive: true }); }
 for (const d of EXTRA.filter((x) => !x.includes('.'))) for (const f of fs.readdirSync(path.join(OUT, d))) { const t = /\.(html|php)$/.test(f) ? fs.readFileSync(path.join(OUT, d, f), 'utf8') : ''; const hit = APP_FOLDERS.find((a) => t.includes(a)); if (hit) throw new Error(d + '/' + f + ' names an app folder (' + hit + ')'); }
+/* 8 Nov 2026: the marketing pages were opened to search on 30 Oct (open-site.sh), but build-preview.cjs and build-legal.cjs still write
+   a noindex meta, so every rebuild since quietly hid the homepage, demo, trades, terms and cancellation pages again. Strip it from the
+   public pages here (checkout start/ and find/ stay noindex). */
+const NOINDEX = /<meta name="robots" content="noindex, nofollow">s*/g;
+for (const rel of ['index.html', 'editions/index.html', 'demo/index.html', 'demo/index.php', 'terms/index.html', 'terms-of-use/index.html', 'privacy/index.html', 'cancellation/index.html']) {
+  const p = path.join(OUT, rel); if (!fs.existsSync(p)) continue; const t = fs.readFileSync(p, 'utf8'); if (NOINDEX.test(t)) fs.writeFileSync(p, t.replace(NOINDEX, '')); NOINDEX.lastIndex = 0;
+}
 /* bsdtar (Windows' own tar) writes forward-slash zips; Compress-Archive's backslash paths do not extract on the host */
 execFileSync('C:/Windows/System32/tar.exe', ['-a', '-c', '-f', path.join(here, 'site', 'extract-in-traverseplatforms-public_html.zip'), 'index.html', 'editions', '.htaccess', ...EXTRA], { cwd: OUT });
 console.log('wrote site/public_html and site/extract-in-traverseplatforms-public_html.zip');
