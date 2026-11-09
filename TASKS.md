@@ -1303,6 +1303,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 - [ ] **TR-57 — Nextdoor outreach: about 220 roofing + lawn pages not yet messaged (Matthew 8 Nov: digital first, email + Nextdoor, then Facebook).** Desk: 382 Nextdoor pages, 109 ticked messaged. He messages by hand. Next channel: Facebook (380 roofing + 592 lawn pages already on file from their websites; add a "Messaged on Facebook" tick when he is ready).
 - [ ] **TR-58 — Every Colorado house on the list (Matthew 8 Nov).** Census ACS 2020-24: 1,788,606 houses + townhomes; we have 1,237,418 (69%), gap ~563,000 (El Paso 96k, Jefferson 46k, Denver 45k, Larimer 39k, Arapahoe 35k, Boulder 33k ... and 14 counties with none). Gap plan + builds on the cloud computer before its credit ends ~23 Nov: door-territory/GAP-PLAN-2026-11-08.md. Nothing goes live before his OK on the first numbers.
 
+- [ ] **TR-59 — Check Google Search Console, Sun 15 Nov (set up 8 Nov).** search.google.com/search-console, signed in as m.sharpe@traverseplatforms.com, property traverseplatforms.com. Look at **Indexing > Pages** (are /, /demo/, /editions/ and the legal pages indexed? any "not indexed" reasons: screenshot to Claude) and **Performance** (searches and clicks). Sitemap https://traverseplatforms.com/sitemap.xml submitted; indexing requested for /, /demo/, /editions/ on 8 Nov. Pages hidden by a stray noindex tag ~1-8 Nov (fixed 8 Nov) may show "Excluded by noindex" for a few days.
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
@@ -1397,6 +1399,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 | **15 Oct** | Brian Skelton's aeration job (SX-3b) |
 | **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
 | ~~1 Nov~~ | ~~Kara's first monthly payment · 19 Nov first monthly visit~~ **REMOVED 8 Nov (Matthew): Kara is no longer doing monthlies with Sixfold.** |
+| **15 Nov** | **TR-59 — Google Search Console check** (set up 8 Nov): remind Matthew to look at Indexing > Pages and Performance, or ask him for screenshots. |
 | **4 Nov, then every 2 weeks** (18 Nov, 2 Dec, 16 Dec…) | **SG-7 — Surge blog update due.** Remind Matthew; offer a draft post (Surge voice spec + RESTRICTED.md first; draft only). |
 | **early Jan 2027**, then every quarter (Apr, Jul, Oct) | **SX-33 — re-pull the county parcel records** and rebuild the door lists, so a house that sold shows "new owner since" and the old owner's phone, email and notes are set aside (SX-35, built 2026-10-03). Matthew 2026-10-03: quarterly, as a reminder rather than automated. Run the gate (DEPLOY-ROUNDS.md "Refreshing the door lists") |
 
