@@ -5900,7 +5900,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(dt);
     }
     if ((wdOn() || qView()) && String(l.id).indexOf('preview-') !== 0 && (tel.length < 10 || !l.email)) c.appendChild(leadAddRow(l, c, tel.length < 10, !l.email));   /* Add phone / Add email, every stage (2026-10-23, Matthew: Jen could not add Deano's email) */
-    if ((wdOn() && S.screen === 'pipeline') || qView()) c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
+    if ((wdOn() && (S.screen === 'pipeline' || S.screen === 'calendar')) || qView()) c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* + Calendar, My leads (2026-11-09, Matthew: "I cant currently open up their property cards in the calendar then leads section") */   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
     if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));
     if (wdOn() && CO.a365 && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */
     if (S.role === 'admin' && S.screen === 'pipeline' && (l.mine || l.src === 'a365web') && ((S.handTo || []).length || l.mhand) && ['won', 'lost'].indexOf(l.status || 'new') < 0) c.appendChild(handRow(l));   /* Send to Cai (2026-10-27) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
@@ -8550,7 +8550,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function toJenRow(l) {
     var r = q('div', 'qlinks tojen');
-    if ((l.src === 'a365web' && !l.mhand && !l.tojen && !l.jenkeep) || l.mine) { r.appendChild(q('span', 'dwsub', (l.src === 'a365web' ? '365 website lead' : 'Your Facebook ad lead') + ': yours. ' + who('jen') + ' and the office only see it if you send it to them below; once it is booked, they see the job.'   /* Send to Jen is back (2026-10-28) */)); return r; }   /* 2026-10-22; booked jobs shown to the office 2026-10-27 */
+    if ((l.src === 'a365web' && !l.mhand && !l.tojen && !l.jenkeep) || l.mine) { r.appendChild(q('span', 'dwsub', (l.src === 'a365web' ? '365 website lead' : l.fromjen ? 'Transferred from ' + who('jen') : 'Your Facebook ad lead') + ': yours. ' + who('jen') + ' and the office only see it if you send it to them below; once it is booked, they see the job.'   /* Send to Jen is back (2026-10-28) */)); return r; }   /* 2026-10-22; booked jobs shown to the office 2026-10-27 */
     if (l.qinbox && CO.a365) { r.appendChild(q('span', 'dwsub', 'In ' + who('jen') + '\u2019s Leads to follow up')); if (l.tojen) { var tb = q('button', 'lnk', 'Take it back'); tb.type = 'button'; tb.addEventListener('click', function () { api('tojen', { body: { id: l.id, on: false } }).then(function (j) { if (!j.ok) { toast('Not saved', j.error || '', null); return; } (S.leadRedraw || pipelineView)(); }).catch(function () {}); }); r.appendChild(tb); } return r; }
     var b = q('button', 'lnk', 'Send to ' + who('jen') + ' \u203a'); b.type = 'button';
     b.addEventListener('click', function () { b.disabled = true; api('tojen', { body: { id: l.id, on: true } }).then(function (j) { b.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; } toast('Sent to ' + who('jen'), (l.name || l.phone || 'The lead') + ' is in her Leads to call.', null); (S.leadRedraw || pipelineView)(); }).catch(function () { b.disabled = false; toast('No signal', 'Try again.', null); }); });
@@ -18868,8 +18868,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var labM = { quoted: 'Quoted', sent: 'Form sent' }; PIPE_ST.forEach(function (st) { if (!labM[st[0]]) labM[st[0]] = st[1]; });
       var waitM = function (it) { var x = lastTry(it.x); return x ? x.at : (it.at || 0); };
       var groupsM = [];
+      /* Transferred from Jen (2026-11-09, Matthew: Jen out sick, her texted leads to him in "a new section just called transferred from jen"):
+         their own group on top, whatever the stage, until won, lost or sent back */
+      var fromJ = mineItems.filter(function (it) { return it.x.fromjen; }).sort(function (a, b) { return waitM(a) - waitM(b); });
+      if (fromJ.length) groupsM.push(['Transferred from ' + who('jen'), fromJ]);
       MINE_ST.forEach(function (k) {
-        var its = mineItems.filter(function (it) { return mineStage(it) === k; }).sort(function (a, b) { return waitM(a) - waitM(b); });
+        var its = mineItems.filter(function (it) { return !it.x.fromjen && mineStage(it) === k; }).sort(function (a, b) { return waitM(a) - waitM(b); });
         if (its.length) groupsM.push([labM[k] || k, its]);
       });
       var cardM = function (it, into) { var card = leadCard(it.x); if (flc) { var lcm = pipeContactAt(it); card.insertBefore(q('span', 'lctag', lcm ? 'Last contacted ' + ago(lcm) : 'Not contacted yet'), card.firstChild); } card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild); (into || holder).appendChild(card); };

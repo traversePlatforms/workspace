@@ -6213,6 +6213,10 @@ function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_st
 function metaMineFrom(): int { static $t = null; if ($t === null) { $d = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) (company()['metaMine'] ?? '')) ? (string) company()['metaMine'] : ''; $t = $d !== '' ? (int) strtotime($d . ' 00:00:00 America/Denver') : 0; } return $t; }
 function webLead(array $l): bool { if (!empty($l['jenkeep']) || !empty($l['tojen'])) return false;
     if (!empty($l['mhand']) && (string) ($l['owner'] ?? '') !== '') return false;   /* sent on with Send to (handTo): the owner's now (2026-10-29, Matthew: Randall Carrera, sent to Jen, still in his pipeline) */   /* reached out to the office themselves: theirs now (2026-10-26); handed to Jen: hers (2026-10-26, Matthew: David Marshall) */
+    /* Transferred from Jen (2026-11-09, Matthew, Jen out sick: "removed out of the main pipeline and put into my pipeline only ... a new section
+       just called transferred from jen"): a leadst row {fromjen: true} makes any lead his, hidden from Jen and the office, until he sends it back
+       (Send to Jen sets tojen, Send to <name> sets mhand: both above win) */
+    if (!empty($l['fromjen'])) return true;
     $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom() && (metaMineTo() === 0 || (int) ($l['at'] ?? 0) < metaMineTo())); }
 /* the end of that (2026-10-28, Matthew: "switch the intake leads back to jen ... give her any of the ones i havent called, texted or emailed yet.
    Leave website leads to me"): company.json "metaMineTo", set just before the first Facebook lead he had not reached; the ones he had stay his */
@@ -6266,7 +6270,7 @@ function leadsAllRaw(): array {
         if (!empty($u['accept']) && is_array($u['accept'])) $leads[$u['id']]['accept'] = $u['accept'] + ['at' => (int) ($u['at'] ?? 0)];   /* 2026-10-14, a yes on the customer's quote page */
         if (!empty($u['sign']) && is_array($u['sign'])) { $leads[$u['id']]['sign'] = $u['sign'] + ['by' => (string) ($u['by'] ?? ''), 'at' => (int) ($u['at'] ?? 0), 'link' => a365SignLink((string) $u['id'], (string) $u['sign']['key'])]; unset($leads[$u['id']]['signed']); }   /* 2026-10-14, the one-page form */
         if (!empty($u['sqpaid']) && is_array($u['sqpaid'])) $leads[$u['id']]['sqpaid'] = $u['sqpaid'];
-        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'mhand', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src', 'qtold', 'removed'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
+        foreach (['sqcust', 'sqcard', 'sqafter', 'savecard', 'seen', 'signview', 'tojen', 'jenkeep', 'mhand', 'fromjen', 'stown', 'cu', 'cus', 'cud', 'cutry', 'confirmed', 'wpay', 'mconv', 'fphone', 'src', 'qtold', 'removed'] as $sk) if (array_key_exists($sk, $u)) $leads[$u['id']][$sk] = $u[$sk];   /* seen: the customer opened the form (2026-10-15) */   /* Square customer, saved card, consent (2026-10-15) */
         if (!empty($u['qown'])) $leads[$u['id']]['qown'][] = (string) $u['qown'];   /* a quote-only person took this lead on (2026-10-15) */
         if (!empty($u['mailed']) && is_array($u['mailed'])) $leads[$u['id']]['mailed'] = $u['mailed'];   /* the signed copy emailed (2026-10-15) */
         if (!empty($u['contact']) && is_array($u['contact'])) foreach (['name', 'phone', 'email'] as $ck) if (isset($u['contact'][$ck]) && is_string($u['contact'][$ck])) {
