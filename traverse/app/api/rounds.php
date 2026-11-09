@@ -6711,7 +6711,7 @@ const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 39
     /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "another option in the quote builder where its just pricing for seeding, pricing
        for fertilizing, pricing for seeding and fertilizing ... Using the same math we do for everything else"): each its own ladder with the full
        price's anchor lawn size, power and "...99" rounding, its own price at the anchor size and its own minimum. null = not priced yet: typed. */
-    'seedOnlyAnchor' => null, 'seedOnlyMin' => null, 'fertOnlyAnchor' => null, 'fertOnlyMin' => null, 'seedFertAnchor' => null, 'seedFertMin' => null,
+    'aerOnlyAnchor' => null, 'aerOnlyMin' => null, 'seedOnlyAnchor' => null, 'seedOnlyMin' => null, 'fertOnlyAnchor' => null, 'fertOnlyMin' => null, 'seedFertAnchor' => null, 'seedFertMin' => null,
     'crewShare' => 0.2,
     /* the aerator's gas (2026-10-21, Matthew): Bobcat AE26-HON, Honda GX120 at 1.0 L/h at full power (0.2642 gal; Honda's figure as its dealers
        publish it), up to 40,400 sq ft an hour (Bobcat). aerPace = the share of Bobcat's top rate a real job manages (1 = Bobcat's figure). */
@@ -6769,7 +6769,7 @@ function a365ListPrice(int $sq, array $P, $anchor = null, $min = null): int { $x
 /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "pricing for seeding, pricing for fertilizing, pricing for seeding and fertilizing ...
    Using the same math we do for everything else"): the package's ladder (a365ListPrice with its own anchor and minimum) plus the drive; 0 while
    its anchor is empty (not priced yet: the price is typed). No minimum set = none, at least $1. */
-function a365PkgKeys(string $pkg): ?array { return ['seed' => ['seedOnlyAnchor', 'seedOnlyMin'], 'fert' => ['fertOnlyAnchor', 'fertOnlyMin'], 'seedfert' => ['seedFertAnchor', 'seedFertMin']][$pkg] ?? null; }
+function a365PkgKeys(string $pkg): ?array { return ['aerate' => ['aerOnlyAnchor', 'aerOnlyMin'], 'seed' => ['seedOnlyAnchor', 'seedOnlyMin'], 'fert' => ['fertOnlyAnchor', 'fertOnlyMin'], 'seedfert' => ['seedFertAnchor', 'seedFertMin']][$pkg] ?? null; }
 function a365PkgPriced(string $pkg, array $P): bool { $k = a365PkgKeys($pkg); return $k && is_numeric($P[$k[0]] ?? null) && (float) $P[$k[0]] > 0; }
 function a365PkgPrice(int $sq, array $P, string $pkg, float $drive): int {
     $k = a365PkgKeys($pkg); if (!$k || $sq <= 0 || !a365PkgPriced($pkg, $P)) return 0;
@@ -6803,7 +6803,7 @@ if ($action === 'a365calc') {
             $drive = $mi * (float) ($P['roadFactor'] ?: 1.3) * 2 / (float) ($P['mpg'] ?: 18) * (float) $gas['price']; $hasDrive = true;
         }
     }
-    $ladder = $pkg === 'other' ? 0 : ($pkg === 'aerate' ? ($sq > 0 ? a365AerOnly($sq, $P, $drive) : 0) : (a365PkgKeys($pkg) ? a365PkgPrice($sq, $P, $pkg, $drive) : a365ListPrice($sq, $P) + (int) ceil($drive)));   /* aerate only: the full price less seed and fertilizer (2026-10-28) */   /* seed / fertilize only, seed & feed: their own ladders (2026-11-09) */
+    $ladder = $pkg === 'other' ? 0 : (a365PkgKeys($pkg) ? a365PkgPrice($sq, $P, $pkg, $drive) : a365ListPrice($sq, $P) + (int) ceil($drive));   /* aerate only: its own ladder too, empty = typed (2026-11-09, Matthew: "do the same set your own price thing for aeration only as well for now until we decide on a price"; the full-less-seed-and-fertilizer math of 28 Oct is a365AerOnly(), no longer used) */   /* seed / fertilize only, seed & feed: their own ladders (2026-11-09) */
     $want = (int) ($_GET['price'] ?? 0); $price = $want > 0 ? min($want, 100000) : $ladder;
     $seedLb = 0.0; $fertLb = 0.0; $fName = '';
     $fPick = function () use ($P) { $fk = (string) ($_GET['fert'] ?? ''); $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $fk) $F = $f; if (!$F) foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null; return $F; };
@@ -6929,13 +6929,13 @@ if ($action === 'a365pricingset') {
     if (!$isPost) fail('POST required', 405);
     $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
             'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1], 'diyAer4h' => [0, 10000], 'diyAerDay' => [0, 10000], 'diySeedLb' => [0, 1000], 'diyFertBag' => [0, 10000], 'diyFertLb' => [0.1, 1000], 'diyFertCover' => [100, 1000000], 'aerGalHr' => [0, 5], 'aerSqHr' => [1000, 500000], 'aerPace' => [0.05, 1],
-            'seedOnlyAnchor' => [1, 100000], 'seedOnlyMin' => [0, 100000], 'fertOnlyAnchor' => [1, 100000], 'fertOnlyMin' => [0, 100000], 'seedFertAnchor' => [1, 100000], 'seedFertMin' => [0, 100000]];   /* seed / fertilize only, seed & feed (2026-11-09): empty = not priced yet */
+            'aerOnlyAnchor' => [1, 100000], 'aerOnlyMin' => [0, 100000], 'seedOnlyAnchor' => [1, 100000], 'seedOnlyMin' => [0, 100000], 'fertOnlyAnchor' => [1, 100000], 'fertOnlyMin' => [0, 100000], 'seedFertAnchor' => [1, 100000], 'seedFertMin' => [0, 100000]];   /* seed / fertilize only, seed & feed (2026-11-09): empty = not priced yet */
     $jw = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true); $p = array_merge(is_array($jw) ? $jw : [], a365Pricing());   /* merged into what is there: keys this screen does not know stay (2026-10-28) */
     foreach (['diyAerSrc', 'diySeedSrc', 'diyFertSrc'] as $sk) if (array_key_exists($sk, $body)) { $sv0 = $clean($body[$sk] ?? '', 240); if ($sv0 !== '') $p[$sk] = $sv0; }
     foreach ($lim as $k => [$lo, $hi]) {
         if (!array_key_exists($k, $body)) continue;
         $v = $body[$k];
-        if ($v === null || $v === '') { if (in_array($k, ['seedBagLb', 'fertBagCost', 'fertBagLb', 'fertRate', 'aerateOnly', 'seedOnlyAnchor', 'seedOnlyMin', 'fertOnlyAnchor', 'fertOnlyMin', 'seedFertAnchor', 'seedFertMin'], true)) { $p[$k] = null; continue; } fail('Give ' . $k . ' a number.'); }
+        if ($v === null || $v === '') { if (in_array($k, ['seedBagLb', 'fertBagCost', 'fertBagLb', 'fertRate', 'aerateOnly', 'aerOnlyAnchor', 'aerOnlyMin', 'seedOnlyAnchor', 'seedOnlyMin', 'fertOnlyAnchor', 'fertOnlyMin', 'seedFertAnchor', 'seedFertMin'], true)) { $p[$k] = null; continue; } fail('Give ' . $k . ' a number.'); }
         if (!is_numeric($v) || (float) $v < $lo || (float) $v > $hi) fail('That number for ' . $k . ' is out of range.');
         $p[$k] = (float) $v == (int) $v ? (int) $v : round((float) $v, 4);
     }

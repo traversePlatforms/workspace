@@ -10068,7 +10068,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "Using the same math we do for everything else"): a365Price with the package's own
      price at the anchor size and its own minimum (none set: at least $1), plus the drive; 0 while not priced yet. As a365PkgPrice() in the API */
-  var PKG_LADDER = { seed: ['seedOnlyAnchor', 'seedOnlyMin'], fert: ['fertOnlyAnchor', 'fertOnlyMin'], seedfert: ['seedFertAnchor', 'seedFertMin'] };
+  var PKG_LADDER = { aerate: ['aerOnlyAnchor', 'aerOnlyMin'], seed: ['seedOnlyAnchor', 'seedOnlyMin'], fert: ['fertOnlyAnchor', 'fertOnlyMin'], seedfert: ['seedFertAnchor', 'seedFertMin'] };
   function a365PkgPriced(p, P) { var k = PKG_LADDER[p]; return !!(k && P[k[0]] != null && P[k[0]] !== '' && +P[k[0]] > 0); }
   function a365PkgMin(p, P) { var k = PKG_LADDER[p]; return k && P[k[1]] != null && P[k[1]] !== '' && !isNaN(+P[k[1]]) ? +P[k[1]] : 1; }
   function a365PkgPrice(sq, P, p, drive) {
@@ -10198,8 +10198,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var HIDE = !!P.hidden || asOffice() || qView();   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
       var trv = HIDE ? null : a365Travel(h, P), calcSeq = 0, calcT = null;
       /* the list price: the ladder plus the drive (in whole dollars); aerate only = that less seed and fertilizer (2026-10-28, Matthew; was: no list price, Jen typed hers) */
-      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'other' ? 0 : st.pkg === 'aerate' ? a365AerOnly(st.sq || 0, P, trv ? trv.cost : 0) : PKG_LADDER[st.pkg] ? a365PkgPrice(st.sq || 0, P, st.pkg, trv ? trv.cost : 0) : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };   /* + seed / fertilize only, seed & feed: their own ladders (2026-11-09) */
-      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : PKG_LADDER[st.pkg] ? Math.max(1, a365PkgMin(st.pkg, P)) : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
+      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'other' ? 0 : PKG_LADDER[st.pkg] ? a365PkgPrice(st.sq || 0, P, st.pkg, trv ? trv.cost : 0) : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };   /* + seed / fertilize only, seed & feed: their own ladders (2026-11-09) */
+      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = Math.max(HIDE ? 1 : PKG_LADDER[st.pkg] ? Math.max(1, a365PkgMin(st.pkg, P)) : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
       up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
       own.addEventListener('input', function () { clearInfl(); var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
       sqIn.addEventListener('input', function () { st.sq = parseInt(sqIn.value.replace(/\D/g, ''), 10) || 0; st.price = null; clearInfl(); paint(); });
@@ -10444,6 +10444,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       drawFerts();
       /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "Using the same math we do for everything else"): each its own price at the
          anchor size and minimum; the anchor size, scaling, "...99" rounding and the drive are the ones above. Empty = not priced yet (typed) */
+      /* aerate only (2026-11-09, Matthew: "do the same set your own price thing for aeration only as well for now until we decide on a price"):
+         its own price at the anchor size and minimum, like the three below; empty = not priced yet, the price is typed */
+      f.appendChild(q('div', 'dwh', 'Aerate only'));
+      f.appendChild(q('div', 'lsub', 'Aerate only has its own ladder, worked out the same way as the price above. Leave it empty until the price is decided: the quote builder then asks for the price to be typed.'));
+      field('aerOnlyAnchor', 'Aerate only: price at ' + Number(P.anchorSq || 2500).toLocaleString(LOCALE) + ' sq ft ($)', '', 'not priced yet'); field('aerOnlyMin', 'Aerate only: minimum ($)', 'Empty: no minimum');
       f.appendChild(q('div', 'dwh', 'Without aeration'));
       f.appendChild(q('div', 'lsub', 'Seed only, Fertilize only and Seed & feed each have their own ladder, worked out the same way as the price above: their price at ' + Number(P.anchorSq || 2500).toLocaleString(LOCALE) + ' sq ft, scaled by the lawn size, rounded to “...99”, never under their minimum, plus the drive. Leave a price empty until it is set: that option then has no list price and the price is typed.'));
       var atSq = Number(P.anchorSq || 2500).toLocaleString(LOCALE) + ' sq ft ($)';
