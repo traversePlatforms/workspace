@@ -4713,5 +4713,10 @@
  "Saved. The door lists load again now.": "Guardado. Las listas de puertas se cargan de nuevo ahora.",
  "Saved. The property lists load again now.": "Guardado. Las listas de propiedades se cargan de nuevo ahora.",
  "Gray: not a door to knock (business, PO box)": "Gris: no es una puerta para tocar (negocio, apartado postal)",
- "Gray: not a property to knock (business, PO box)": "Gris: no es una propiedad para visitar (negocio, apartado postal)"
+ "Gray: not a property to knock (business, PO box)": "Gris: no es una propiedad para visitar (negocio, apartado postal)",
+ "Seed only": "Solo semilla",
+ "Fertilize only": "Solo fertilizante",
+ "Seed & feed": "Semilla y fertilizante",
+ "Not priced yet. Set it in Pricing.": "Sin precio todavía. Ponlo en Precios.",
+ "No list price yet: type the price": "Aún no hay precio de lista: escribe el precio"
 }

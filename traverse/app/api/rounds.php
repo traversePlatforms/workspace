@@ -3349,7 +3349,7 @@ function a365Agreement(array $l): array {
     $Q = $l['quote']; $S2 = $l['sign']; $o = $Q['offer'] ?? null;
     $h = $l['house'] ?? null;
     $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : trim((string) ($l['town'] ?? ''));
-    $inc = $Q['pkg'] === 'other' ? [trim((string) ($Q['svc'] ?? '')) ?: 'The work we discussed'] : ($Q['pkg'] === 'aerate' ? ['Core aeration'] : ['Core aeration', 'Overseeding', 'Fertilizer']);   /* a custom quote lists its own service (2026-10-28) */
+    $inc = $Q['pkg'] === 'other' ? [trim((string) ($Q['svc'] ?? '')) ?: 'The work we discussed'] : (['aerate' => ['Core aeration'], 'seed' => ['Overseeding'], 'fert' => ['Fertilizer'], 'seedfert' => ['Overseeding', 'Fertilizer']][$Q['pkg']] ?? ['Core aeration', 'Overseeding', 'Fertilizer']);   /* a custom quote lists its own service (2026-10-28) */   /* + seed only, fertilize only, seed & feed (2026-11-09) */
     foreach (a365Extras($Q['extras'] ?? []) as $x) $inc[] = $x['t'];   /* the extra work, in her words (2026-10-21); its price is in the Price */
     $how = ['square' => 'Square', 'link' => 'Square', 'card' => 'card', 'cash' => 'cash', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'cashapp' => 'Cash App', 'paypal' => 'PayPal', 'check' => 'check', 'other' => 'other', 'none' => 'no deposit'][$S2['how']] ?? $S2['how'];
     $due = ($S2['how'] ?? '') === 'link' && !a365DepositPaid($l, false);
@@ -6708,6 +6708,10 @@ const A365_PRICING = ['minPrice' => 299, 'anchorSq' => 2500, 'anchorPrice' => 39
        Bryce gave no rate per sq ft, only "$25 in fertilizer" on a $399 job. Travel: the drive from the storage at 333 W Hampden Ave,
        there and back, at an 18 mpg truck and the week's Denver gas price (EIA). */
     'fertDefault' => 'fert', 'mpg' => 18, 'roadFactor' => 1.3,
+    /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "another option in the quote builder where its just pricing for seeding, pricing
+       for fertilizing, pricing for seeding and fertilizing ... Using the same math we do for everything else"): each its own ladder with the full
+       price's anchor lawn size, power and "...99" rounding, its own price at the anchor size and its own minimum. null = not priced yet: typed. */
+    'seedOnlyAnchor' => null, 'seedOnlyMin' => null, 'fertOnlyAnchor' => null, 'fertOnlyMin' => null, 'seedFertAnchor' => null, 'seedFertMin' => null,
     'crewShare' => 0.2,
     /* the aerator's gas (2026-10-21, Matthew): Bobcat AE26-HON, Honda GX120 at 1.0 L/h at full power (0.2642 gal; Honda's figure as its dealers
        publish it), up to 40,400 sq ft an hour (Bobcat). aerPace = the share of Bobcat's top rate a real job manages (1 = Bobcat's figure). */
@@ -6761,7 +6765,21 @@ if ($action === 'a365pricing') {
 }
 /* the quote worked out here, for anyone who must not see how (the office, quote-only accounts, an admin looking as the office):
    the price for the lawn and the drive, and the seed and fertilizer pounds; never the costs or the formula */
-function a365ListPrice(int $sq, array $P): int { $x = $P['anchorPrice'] * pow(max($sq, 1) / $P['anchorSq'], $P['power']); return (int) max($P['minPrice'], round($x / 100) * 100 - 1); }
+function a365ListPrice(int $sq, array $P, $anchor = null, $min = null): int { $x = ($anchor ?? $P['anchorPrice']) * pow(max($sq, 1) / $P['anchorSq'], $P['power']); return (int) max($min ?? $P['minPrice'], round($x / 100) * 100 - 1); }   /* + its own anchor and minimum: the seed / fertilize packages (2026-11-09) */
+/* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "pricing for seeding, pricing for fertilizing, pricing for seeding and fertilizing ...
+   Using the same math we do for everything else"): the package's ladder (a365ListPrice with its own anchor and minimum) plus the drive; 0 while
+   its anchor is empty (not priced yet: the price is typed). No minimum set = none, at least $1. */
+function a365PkgKeys(string $pkg): ?array { return ['seed' => ['seedOnlyAnchor', 'seedOnlyMin'], 'fert' => ['fertOnlyAnchor', 'fertOnlyMin'], 'seedfert' => ['seedFertAnchor', 'seedFertMin']][$pkg] ?? null; }
+function a365PkgPriced(string $pkg, array $P): bool { $k = a365PkgKeys($pkg); return $k && is_numeric($P[$k[0]] ?? null) && (float) $P[$k[0]] > 0; }
+function a365PkgPrice(int $sq, array $P, string $pkg, float $drive): int {
+    $k = a365PkgKeys($pkg); if (!$k || $sq <= 0 || !a365PkgPriced($pkg, $P)) return 0;
+    return max(1, a365ListPrice($sq, $P, (float) $P[$k[0]], is_numeric($P[$k[1]] ?? null) ? (float) $P[$k[1]] : 1)) + (int) ceil($drive);
+}
+/* what each package puts down (2026-11-09): seed for full, plan, seed only and seed & feed; fertilizer for full, plan, fertilize only and seed &
+   feed; the core aeration for every package but the three without it */
+function a365PkgSeeds(string $pkg): bool { return in_array($pkg, ['full', 'plan', 'seed', 'seedfert'], true); }
+function a365PkgFeeds(string $pkg): bool { return in_array($pkg, ['full', 'plan', 'fert', 'seedfert'], true); }
+function a365PkgAerates(string $pkg): bool { return !in_array($pkg, ['seed', 'fert', 'seedfert'], true); }
 /* aerate only (2026-10-28, Matthew: "shouldnt we just do the quote cost minus seed and fertilizer?"): the full list price (drive included)
    less the seed at the base rate and the default fertilizer that job would use, at today's bag prices; whole dollars. Jen can still type hers. */
 function a365AerOnly(int $sq, array $P, float $drive): int {
@@ -6774,7 +6792,7 @@ function a365AerOnly(int $sq, array $P, float $drive): int {
 }
 if ($action === 'a365calc') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
-    $P = a365Pricing(); $sq = max(0, min(1000000, (int) ($_GET['sq'] ?? 0))); $pkg = in_array($_GET['pkg'] ?? 'full', ['aerate', 'other'], true) ? (string) $_GET['pkg'] : 'full';   /* + other: a custom quote, no list price (2026-10-28) */
+    $P = a365Pricing(); $sq = max(0, min(1000000, (int) ($_GET['sq'] ?? 0))); $pkg = in_array($_GET['pkg'] ?? 'full', ['aerate', 'other', 'seed', 'fert', 'seedfert'], true) ? (string) $_GET['pkg'] : 'full';   /* + other: a custom quote, no list price (2026-10-28) */   /* + seed only, fertilize only, seed & feed (2026-11-09) */
     $drive = 0.0; $hasDrive = false;
     $reg = (string) ($_GET['region'] ?? ''); $hid = (string) ($_GET['id'] ?? '');
     if ($reg !== '' && $hid !== '' && preg_match('/^[a-z0-9-]{1,80}$/D', $hid)) {
@@ -6785,20 +6803,26 @@ if ($action === 'a365calc') {
             $drive = $mi * (float) ($P['roadFactor'] ?: 1.3) * 2 / (float) ($P['mpg'] ?: 18) * (float) $gas['price']; $hasDrive = true;
         }
     }
-    $ladder = $pkg === 'other' ? 0 : ($pkg === 'aerate' ? ($sq > 0 ? a365AerOnly($sq, $P, $drive) : 0) : a365ListPrice($sq, $P) + (int) ceil($drive));   /* aerate only: the full price less seed and fertilizer (2026-10-28) */
+    $ladder = $pkg === 'other' ? 0 : ($pkg === 'aerate' ? ($sq > 0 ? a365AerOnly($sq, $P, $drive) : 0) : (a365PkgKeys($pkg) ? a365PkgPrice($sq, $P, $pkg, $drive) : a365ListPrice($sq, $P) + (int) ceil($drive)));   /* aerate only: the full price less seed and fertilizer (2026-10-28) */   /* seed / fertilize only, seed & feed: their own ladders (2026-11-09) */
     $want = (int) ($_GET['price'] ?? 0); $price = $want > 0 ? min($want, 100000) : $ladder;
     $seedLb = 0.0; $fertLb = 0.0; $fName = '';
+    $fPick = function () use ($P) { $fk = (string) ($_GET['fert'] ?? ''); $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $fk) $F = $f; if (!$F) foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null; return $F; };
     if ($pkg === 'full' && $sq > 0) {
         $rate = max($P['seedLow'], min($P['seedHigh'], $P['seedBase'] * $price / max($ladder, 1)));
         $seedLb = round($sq / 1000 * $rate, 1);
-        $fk = (string) ($_GET['fert'] ?? ''); $F = null; foreach ($P['ferts'] as $f) if ($f['k'] === $fk) $F = $f; if (!$F) foreach ($P['ferts'] as $f) if ($f['k'] === $P['fertDefault']) $F = $f; if (!$F) $F = $P['ferts'][0] ?? null;
+        $F = $fPick();
+        if ($F && $F['coverSq'] > 0) { $fertLb = round($sq / 1000 * ($F['bagLb'] * 1000 / $F['coverSq']), 1); $fName = (string) $F['name']; }
+    } elseif (a365PkgKeys($pkg) && $sq > 0) {   /* seed only, fertilize only, seed & feed (2026-11-09): the seed at the base rate, the fertilizer at the bag's rate; only what the package puts down */
+        if (a365PkgSeeds($pkg)) $seedLb = round($sq / 1000 * max($P['seedLow'], min($P['seedHigh'], $P['seedBase'])), 1);
+        $F = a365PkgFeeds($pkg) ? $fPick() : null;
         if ($F && $F['coverSq'] > 0) { $fertLb = round($sq / 1000 * ($F['bagLb'] * 1000 / $F['coverSq']), 1); $fName = (string) $F['name']; }
     }
     /* what is left after seed, fertilizer, the drive and the crew's share (2026-10-21): the total only, never the parts (Matthew 2026-10-15) */
-    $gasNow = a365Gas(); $aerGas = ($sq > 0 && $gasNow && !empty($gasNow['price']) && (float) $P['aerSqHr'] > 0) ? $sq / ((float) $P['aerSqHr'] * max(0.05, (float) $P['aerPace'])) * (float) $P['aerGalHr'] * (float) $gasNow['price'] : 0.0;   /* the aerator's gas (2026-10-21) */
+    $gasNow = a365Gas(); $aerGas = (a365PkgAerates($pkg) && $sq > 0 && $gasNow && !empty($gasNow['price']) && (float) $P['aerSqHr'] > 0) ? $sq / ((float) $P['aerSqHr'] * max(0.05, (float) $P['aerPace'])) * (float) $P['aerGalHr'] * (float) $gasNow['price'] : 0.0;   /* the aerator's gas (2026-10-21); none when nothing is aerated (2026-11-09) */
     $cost = $drive + $aerGas + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0) + $price * (float) ($P['crewShare'] ?? 0);
     if ($fertLb > 0) foreach ($P['ferts'] as $f) if ($f['name'] === $fName && $f['bagLb'] > 0) $cost += $fertLb * $f['bagCost'] / $f['bagLb'];
-    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'aerGas' => round($aerGas, 2), 'left' => $price ? (int) round($price - $cost) : null]);
+    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'aerGas' => round($aerGas, 2), 'left' => $price ? (int) round($price - $cost) : null]
+        + (a365PkgKeys($pkg) ? ['unpriced' => !a365PkgPriced($pkg, $P)] : []));   /* a seed / fertilize package with no price at the anchor yet (2026-11-09) */
 }
 /* ---- the field quick quote (2026-10-21, Matthew: "Christian needs access to a quick quote system. he just needs it so that he can give the
  * person a accurate estimate, so it needs limited functions ... if the person approved have him click a button that says send to office. And
@@ -6904,13 +6928,14 @@ if ($action === 'a365pricingset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
     $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
-            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1], 'diyAer4h' => [0, 10000], 'diyAerDay' => [0, 10000], 'diySeedLb' => [0, 1000], 'diyFertBag' => [0, 10000], 'diyFertLb' => [0.1, 1000], 'diyFertCover' => [100, 1000000], 'aerGalHr' => [0, 5], 'aerSqHr' => [1000, 500000], 'aerPace' => [0.05, 1]];
+            'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1], 'diyAer4h' => [0, 10000], 'diyAerDay' => [0, 10000], 'diySeedLb' => [0, 1000], 'diyFertBag' => [0, 10000], 'diyFertLb' => [0.1, 1000], 'diyFertCover' => [100, 1000000], 'aerGalHr' => [0, 5], 'aerSqHr' => [1000, 500000], 'aerPace' => [0.05, 1],
+            'seedOnlyAnchor' => [1, 100000], 'seedOnlyMin' => [0, 100000], 'fertOnlyAnchor' => [1, 100000], 'fertOnlyMin' => [0, 100000], 'seedFertAnchor' => [1, 100000], 'seedFertMin' => [0, 100000]];   /* seed / fertilize only, seed & feed (2026-11-09): empty = not priced yet */
     $jw = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true); $p = array_merge(is_array($jw) ? $jw : [], a365Pricing());   /* merged into what is there: keys this screen does not know stay (2026-10-28) */
     foreach (['diyAerSrc', 'diySeedSrc', 'diyFertSrc'] as $sk) if (array_key_exists($sk, $body)) { $sv0 = $clean($body[$sk] ?? '', 240); if ($sv0 !== '') $p[$sk] = $sv0; }
     foreach ($lim as $k => [$lo, $hi]) {
         if (!array_key_exists($k, $body)) continue;
         $v = $body[$k];
-        if ($v === null || $v === '') { if (in_array($k, ['seedBagLb', 'fertBagCost', 'fertBagLb', 'fertRate', 'aerateOnly'], true)) { $p[$k] = null; continue; } fail('Give ' . $k . ' a number.'); }
+        if ($v === null || $v === '') { if (in_array($k, ['seedBagLb', 'fertBagCost', 'fertBagLb', 'fertRate', 'aerateOnly', 'seedOnlyAnchor', 'seedOnlyMin', 'fertOnlyAnchor', 'fertOnlyMin', 'seedFertAnchor', 'seedFertMin'], true)) { $p[$k] = null; continue; } fail('Give ' . $k . ' a number.'); }
         if (!is_numeric($v) || (float) $v < $lo || (float) $v > $hi) fail('That number for ' . $k . ' is out of range.');
         $p[$k] = (float) $v == (int) $v ? (int) $v : round((float) $v, 4);
     }
@@ -7022,11 +7047,11 @@ if ($action === 'leadquote') {
     if (!leadOk($id) || !isset($all[$id])) fail('No such lead.', 404);
     if (!empty($all[$id]['signed']) && $role !== 'admin') fail('They already signed for this price. Change the job on the Jobs board.', 409);   /* Fable review 2026-10-14 */
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the quote a price.');
-    $pkg = (string) ($body['pkg'] ?? ''); if (!in_array($pkg, ['full', 'aerate', 'other'], true)) fail('Pick the package.');
+    $pkg = (string) ($body['pkg'] ?? ''); if (!in_array($pkg, ['full', 'aerate', 'other', 'seed', 'fert', 'seedfert'], true)) fail('Pick the package.');   /* + seed only, fertilize only, seed & feed (2026-11-09) */
     $svc = $pkg === 'other' ? $clean($body['svc'] ?? '', 80) : ''; if ($pkg === 'other' && $svc === '') fail('Say what the service is (for example: Native seed, double aeration).');   /* a custom quote (2026-10-28) */
     $sq = (int) ($body['sq'] ?? 0); if ($sq < 0 || $sq > 2000000) fail('That lawn size does not look right.');
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : null;
-    $q = ['price' => $price, 'pkg' => $pkg, 'svc' => $svc, 'sq' => $sq, 'seedLb' => $pkg === 'other' ? null : $num('seedLb', 5000), 'fertLb' => $pkg === 'other' ? null : $num('fertLb', 5000), 'note' => $clean($body['note'] ?? '', 200), 'sent' => !empty($body['sent'])];
+    $q = ['price' => $price, 'pkg' => $pkg, 'svc' => $svc, 'sq' => $sq, 'seedLb' => in_array($pkg, ['other', 'fert'], true) ? null : $num('seedLb', 5000), 'fertLb' => in_array($pkg, ['other', 'seed'], true) ? null : $num('fertLb', 5000), 'note' => $clean($body['note'] ?? '', 200), 'sent' => !empty($body['sent'])];
     $ex = array_key_exists('extras', $body) ? a365Extras($body['extras']) : ($all[$id]['quote']['extras'] ?? []); if ($ex) $q['extras'] = $ex;   /* extra work (2026-10-21) */
     /* the day offered with the quote (2026-10-14): kept across re-saves unless changed or cleared; it holds that slot on the board */
     $prevOffer = $all[$id]['quote']['offer'] ?? null;
@@ -7286,7 +7311,7 @@ function jobPkgText(array $j, bool $short = false): string {
     $p = (string) ($j['pkg'] ?? 'full');
     if ($p === 'other') return trim((string) ($j['svc'] ?? '')) ?: 'Another service';
     if (kitOn() && $p !== 'plan') return jobItemsText($j) ?: 'The quoted work';   /* an edition: the quote's own work, never the aeration packages (2026-10-29) */
-    return $p === 'aerate' ? 'Aerate only' : ($p === 'plan' ? 'Service plan' : ($short ? 'Full' : 'Aerate, seed & feed'));
+    return ['aerate' => 'Aerate only', 'plan' => 'Service plan', 'seed' => 'Seed only', 'fert' => 'Fertilize only', 'seedfert' => 'Seed & feed'][$p] ?? ($short ? 'Full' : 'Aerate, seed & feed');   /* + seed only, fertilize only, seed & feed (2026-11-09) */
 }
 /* book, change or cancel a job; one job per crew per slot; booking marks the lead Won */
 if ($action === 'jobsave') {
@@ -7321,7 +7346,7 @@ if ($action === 'jobsave') {
     if ($why = slotFree($crew, $date, $slot, $lead, $id)) fail($why, 409);   /* a job there, or another quote's offered day (2026-10-14) */
     $price = (int) ($body['price'] ?? ($have['price'] ?? 0)); $tbd = desk() && $price === 0 && (!empty($body['tbd']) || ($have && (int) ($have['price'] ?? 0) === 0 && !array_key_exists('price', $body)));   /* price to confirm (2026-10-15, Russ and Erik: Brandon gives the price) */
     if (!$tbd && ($price < 1 || $price > 100000)) fail('Give the job a price.');
-    $pkg = (string) ($body['pkg'] ?? ($have['pkg'] ?? 'full')); if (!in_array($pkg, array_merge(['full', 'aerate', 'plan', 'other'], kitOn() ? ['job'] : []), true)) fail('Pick what is included.');   /* + job: an edition's quoted work (2026-10-29; Change the booking on a job from a kit quote was refused) */
+    $pkg = (string) ($body['pkg'] ?? ($have['pkg'] ?? 'full')); if (!in_array($pkg, array_merge(['full', 'aerate', 'plan', 'other'], kitOn() ? ['job'] : ['seed', 'fert', 'seedfert']), true)) fail('Pick what is included.');   /* + seed only, fertilize only, seed & feed, Sixfold only (2026-11-09) */   /* + job: an edition's quoted work (2026-10-29; Change the booking on a job from a kit quote was refused) */
     $svc = $pkg === 'other' ? (array_key_exists('svc', $body) ? $clean($body['svc'], 80) : (string) ($have['svc'] ?? '')) : '';   /* "Another service": what it is (2026-10-28) */
     if ($pkg === 'other' && $svc === '') fail('Say what the service is (for example: Fall cleanup).');
     $scope = (string) ($body['scope'] ?? ($have['scope'] ?? 'all')); if (!in_array($scope, ['all', 'front', 'back'], true)) fail('Pick front, back or all.');
@@ -7340,7 +7365,7 @@ if ($action === 'jobsave') {
     $addr = array_key_exists('addr', $body) ? $clean($body['addr'], 160) : (string) ($have['addr'] ?? ($house ? streetCaseServer((string) $house['address']) . ', ' . $house['town'] : (string) ($l['town'] ?? '')));
     if ($addr === '') fail('Add the address.');
     $title = trim((string) ($l['name'] ?? '')) ?: (trim((string) ($l['phone'] ?? '')) ?: 'Job');
-    $fields = ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'pkg' => $pkg, 'svc' => $svc, 'scope' => $scope, 'seedLb' => $pkg === 'other' ? null : $num('seedLb'), 'fertLb' => $pkg === 'other' ? null : $num('fertLb'), 'pay' => $pay, 'card' => $card, 'note' => $note, 'addr' => $addr];
+    $fields = ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'price' => $price, 'pkg' => $pkg, 'svc' => $svc, 'scope' => $scope, 'seedLb' => in_array($pkg, ['other', 'fert'], true) ? null : $num('seedLb'), 'fertLb' => in_array($pkg, ['other', 'seed'], true) ? null : $num('fertLb'), 'pay' => $pay, 'card' => $card, 'note' => $note, 'addr' => $addr];
     if ($have) { $row = ['id' => $id]; foreach ($fields as $k => $v) if (json_encode($v) !== json_encode($have[$k] ?? null)) $row[$k] = $v; if (count($row) === 1) out(['ok' => true, 'id' => $id, 'same' => true]); $row += ['by' => $me, 'at' => time()]; }
     else { $id = 'j' . bin2hex(random_bytes(6)); $row = ['id' => $id, 'lead' => $lead, 'title' => $title] + $fields + ['by' => $me, 'at' => time()]; if ($wp0) $row['payat'] = (int) ($wp0['at'] ?? time()); }   /* payat: the day the money came in (2026-10-18) */
     if (!appendLine(DATA_DIR . '/jobs.log', $row)) fail('Could not save that. Try again.', 500);
@@ -8044,11 +8069,12 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $owed = jobOwedNow($j); $cg = $j['sqcharge'] ?? null; $link = (int) ($j['sqlink']['amt'] ?? 0) === $owed ? (string) ($j['sqlink']['url'] ?? '') : '';   /* a link only for the amount owed now (1 Nov night) */
     $disc = 'If you\'ve already paid, please disregard this.';   /* 1 Nov night (Matthew): a payment can land after the email goes */
-    $tips = ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'];
-    if (in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true)) { $tips[] = 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.'; $tips[] = 'Once the new grass is up and rooting, water less often but more deeply.';
+    $jp = (string) ($j['pkg'] ?? 'full');   /* seed only, fertilize only, seed & feed (2026-11-09): no plugs without aeration; the seed tips when seed went down */
+    $tips = a365PkgAerates($jp) ? ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'] : ['Give the lawn a good watering soon.'];
+    if (a365PkgSeeds($jp)) { $tips[] = 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.'; $tips[] = 'Once the new grass is up and rooting, water less often but more deeply.';
         /* the three in Jen's aftercare that the email lacked (2026-11-01, Matthew: "add the three mission pieces that are in jens aftercare to our
            aftercare"); the same words as afParts on the page (Randy's practice wins on mowing, fertilizer and clippings) */
-        $tips[] = 'Don\'t mow for 4 to 7 days.'; $tips[] = 'The fertilizer we put down stays active for about 60 days, so don\'t put down any fertilizer or weed killer for 2 months while the seed comes in.'; $tips[] = 'Bag your clippings if you can.'; }
+        $tips[] = 'Don\'t mow for 4 to 7 days.'; if (a365PkgFeeds($jp)) $tips[] = 'The fertilizer we put down stays active for about 60 days, so don\'t put down any fertilizer or weed killer for 2 months while the seed comes in.'; $tips[] = 'Bag your clippings if you can.'; }
     $bal = $cg && $owed < 1 ? 'Your $' . (int) $cg['amt'] . ' balance went on your ' . ((string) ($cg['brand'] ?? '') ?: 'card') . ' ending ' . (string) ($cg['last4'] ?? '') . ', so you are all set.'
          : ($owed < 1 ? 'Your balance is paid. Thank you!' : 'Your remaining balance is $' . $owed . '.' . ($link !== '' ? ' You can pay it here: ' . $link : ''));
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
@@ -8133,7 +8159,7 @@ function followupBuild(array $j, array $l): array {
     $day = (new DateTime((string) $j['date'] . ' 12:00', new DateTimeZone(appTz())))->format('l, F j');
     $rv = followupReview(); $want = trim((string) ($j['fuWant'] ?? '')); $sug = trim((string) ($j['fuSuggest'] ?? ''));   /* the customer's version the office wrote, never Brad's own words (2026-11-01, Matthew) */
     $fresh = (string) ($j['date'] ?? '') >= (new DateTime('-14 days', new DateTimeZone(appTz())))->format('Y-m-d');   /* a past customer's job (the one-time send): no new-seed line (1 Nov night); 'Jen sent the details by text' dropped for everyone 3 Nov (Matthew: she may not text them at all now aftercare is automatic) */
-    $seeded = $fresh && in_array(($j['pkg'] ?? 'full'), ['full', 'plan'], true);
+    $seeded = $fresh && a365PkgSeeds((string) ($j['pkg'] ?? 'full'));   /* + seed only, seed & feed (2026-11-09) */
     $owed = jobOwedNow($j); $plink = $owed > 0 && (int) ($j['sqlink']['amt'] ?? 0) === $owed ? (string) ($j['sqlink']['url'] ?? '') : '';
     $balLine = $owed > 0 ? 'Your remaining balance is ' . fuMoney($owed) . '.' . ($plink !== '' ? '' : ' Call or text ' . $ph . ' to pay it.') : '';
     $disc = 'If you\'ve already paid, please disregard this.';
@@ -8429,7 +8455,8 @@ function receiptBuild(array $j, array $l, bool $page = false): array {
     $addr = trim((string) ($j['addr'] ?? '')); $ap = array_map('trim', explode(',', $addr)); $st = array_shift($ap); $town = implode(', ', $ap);
     if ($town !== '' && !preg_match('/\b[A-Z]{2}$/', $town)) $town .= ', ' . market()['state'];
     $no = strtoupper(substr((string) $j['id'], 0, 8)); $issued = (new DateTime('now', $tz))->format('F j, Y'); $svc = (new DateTime((string) $j['date'] . ' 12:00', $tz))->format('F j, Y');
-    $pkgs = ['full' => ['Aerate, seed & feed', 'Core aeration, overseeding and fertilizing'], 'aerate' => ['Aerate only', 'Core aeration'], 'plan' => ['Service plan', 'Visit on their service plan']];
+    $pkgs = ['full' => ['Aerate, seed & feed', 'Core aeration, overseeding and fertilizing'], 'aerate' => ['Aerate only', 'Core aeration'], 'plan' => ['Service plan', 'Visit on their service plan'],
+             'seed' => ['Seed only', 'Overseeding'], 'fert' => ['Fertilize only', 'Fertilizing'], 'seedfert' => ['Seed & feed', 'Overseeding and fertilizing']];   /* 2026-11-09 */
     $pk = ($j['pkg'] ?? '') === 'other' ? [jobPkgText($j), ''] : ($pkgs[(string) ($j['pkg'] ?? 'full')] ?? $pkgs['full']);   /* "Another service" receipts: what it was (2026-10-28) */ $scope = ['all' => 'whole lawn', 'front' => 'front yard only', 'back' => 'back yard only'][(string) ($j['scope'] ?? 'all')] ?? 'whole lawn';
     $lines = [];
     if (!$a && !empty($l['quote']['items']) && is_array($l['quote']['items'])) foreach ($l['quote']['items'] as $it) $lines[] = [(string) ($it['t'] ?? 'Item'), '', (int) ($it['amt'] ?? 0)];   /* an edition's quote lines (TR-33) */
@@ -8586,14 +8613,14 @@ function jenAlert(string $title, string $text, string $url, bool $web = false): 
     a365Alert($title, $text, false, false, $web, true, $url);
     if (!$web) foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'quote') pushName((string) $r['name'], $title, $text, $url, 'fub-' . md5($url . $title));
 }
-function fubPkgText(string $pkg, string $other): string { return $pkg === 'other' ? ($other !== '' ? $other : 'Another service') : (['full' => 'Aerate, seed & feed', 'aerate' => 'Aerate only', 'plan' => 'Service plan'][$pkg] ?? 'Aerate, seed & feed'); }
+function fubPkgText(string $pkg, string $other): string { return $pkg === 'other' ? ($other !== '' ? $other : 'Another service') : (['full' => 'Aerate, seed & feed', 'aerate' => 'Aerate only', 'plan' => 'Service plan', 'seed' => 'Seed only', 'fert' => 'Fertilize only', 'seedfert' => 'Seed & feed'][$pkg] ?? 'Aerate, seed & feed'); }   /* + 2026-11-09 */
 if ($action === 'fubook') {
     if (!feature('walkdesk') || !$isPost) fail('Not allowed.', 403);
     $jid = (string) ($body['job'] ?? ''); $j = jobsAll()[$jid] ?? null;
     if (!preg_match('/^j[0-9a-f]{12}$/D', $jid) || !$j || $j['off']) fail('No such job.', 404);
     if (!jobMine($j)) fail('Not allowed.', 403);
     $L = leadsAll()[(string) $j['lead']] ?? null; if (!$L) fail('This job has no lead to book on.', 404);
-    $pkg = in_array($body['pkg'] ?? '', ['full', 'aerate', 'plan', 'other'], true) ? (string) $body['pkg'] : (string) ($j['pkg'] ?? 'full');
+    $pkg = in_array($body['pkg'] ?? '', ['full', 'aerate', 'plan', 'other', 'seed', 'fert', 'seedfert'], true) ? (string) $body['pkg'] : (string) ($j['pkg'] ?? 'full');   /* + seed only, fertilize only, seed & feed (2026-11-09) */
     $other = $clean($body['other'] ?? '', 80); if ($pkg === 'other' && $other === '') fail('Say what the other service is.');
     $note = $clean($body['note'] ?? '', 1000); $agreed = !empty($body['agreed']);
     $price = $agreed ? (int) round((float) ($body['price'] ?? $j['price'])) : 0; if ($agreed && ($price < 1 || $price > 100000)) fail('Give the price they agreed to.');
@@ -10587,7 +10614,7 @@ if ($action === 'signsend') {
     $byWays = !$depIn && ($body['how'] ?? '') === 'ways';   /* they pay the deposit on the form another way: Venmo, Cash App, PayPal, Zelle, the company's link (2026-10-29) */
     if (empty($body['taken']) && !$byLink && !$depIn && !$noDep && !$byWays) fail('The form goes out only after they said yes and you took the deposit.');
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
-    $pkg = (string) ($body['pkg'] ?? (kitOn() ? 'job' : 'full')); if (!in_array($pkg, kitOn() ? ['job'] : ['full', 'aerate'], true)) fail('Pick what is included.');   /* a kit install: the quoted work (2026-10-27) */
+    $pkg = (string) ($body['pkg'] ?? (kitOn() ? 'job' : 'full')); if (!in_array($pkg, kitOn() ? ['job'] : ['full', 'aerate', 'seed', 'fert', 'seedfert'], true)) fail('Pick what is included.');   /* a kit install: the quoted work (2026-10-27) */   /* + seed only, fertilize only, seed & feed (2026-11-09) */
     $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'cashapp', 'paypal', 'check', 'other', 'none', 'ways'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
     if ($depIn) { $dep = (int) $S0['deposit']; if ($dep > $price) fail('The $' . $dep . ' deposit is already ' . ($linkPaid ? 'paid' : 'in') . '; the price cannot be less than that.'); }

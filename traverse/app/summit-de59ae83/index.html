@@ -5905,7 +5905,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (wdOn() && CO.a365 && S.role === 'admin' && S.screen === 'pipeline' && !l.quote && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(toJenRow(l));   /* Send to Jen (2026-10-16) */
     if (S.role === 'admin' && S.screen === 'pipeline' && (l.mine || l.src === 'a365web') && ((S.handTo || []).length || l.mhand) && ['won', 'lost'].indexOf(l.status || 'new') < 0) c.appendChild(handRow(l));   /* Send to Cai (2026-10-27) */   /* the admin sees the form line too (2026-10-15) */   /* the one-page form (2026-10-14) */
     else if (wdOn() && S.screen === 'pipeline' && l.quote && l.quote.pkg === 'job') c.appendChild(q('div', 'qline', quoteState(l) + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + ((l.quote.items || []).filter(function (x) { return x.id !== 'min' && x.id !== 'adj'; }).map(function (x) { return x.t; }).join(', ') || 'the job') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));   /* a kit quote (2026-10-27) */
-    else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', quoteState(l) + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'other' ? (l.quote.svc || 'another service') : l.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
+    else if (wdOn() && S.screen === 'pipeline' && l.quote) c.appendChild(q('div', 'qline', quoteState(l) + '$' + Number(l.quote.price).toLocaleString(LOCALE) + ' \u00b7 ' + (l.quote.pkg === 'other' ? (l.quote.svc || 'another service') : pkgLow(l.quote.pkg)) + (l.quote.seedLb ? ' \u00b7 ' + l.quote.seedLb + ' lb seed' : '') + ' \u00b7 ' + l.quote.by + ', ' + ago(l.quote.at)));
     if (wdOn() && S.screen === 'pipeline' && acceptOf(l)) c.appendChild(q('div', 'qline qyes', acceptText(acceptOf(l))));   /* the customer's quote page */
     /* the deposit and the one-page form straight from the card (2026-10-20, Matthew: Joseph Barnes said yes on the phone, "how can i build a quote
        and send it to him from my super admin page"): an open lead with no form yet; the office also has it after a logged talk */
@@ -6354,7 +6354,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      times (9:30-10:00, 12:00, 12-2, 3:00) and a town for the day; each job carries the price, what is included, how it is paid
      and whether a card is on file, and the notes (gate codes). The month's booked total sits at the top. Sunday is closed.
      The crew are the people marked "Does walks" (Brad for now); a booked job goes on their calendar with an alert. */
-  var JOB_PKG = { full: 'Aerate, seed & feed', aerate: 'Aerate only', plan: 'Service plan', other: 'Another service' };   /* + Another service: a fall cleanup, a one-off (2026-10-28) */
+  var JOB_PKG = { full: 'Aerate, seed & feed', aerate: 'Aerate only', seed: 'Seed only', fert: 'Fertilize only', seedfert: 'Seed & feed', plan: 'Service plan', other: 'Another service' };   /* + Another service: a fall cleanup, a one-off (2026-10-28) */   /* + seed only, fertilize only, seed & feed (2026-11-09) */
+  /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "another option in the quote builder where its just pricing for seeding, pricing for
+     fertilizing, pricing for seeding and fertilizing. Similar to how we have pricing for aeration only"): no aeration in them; the customer's words */
+  var PKG_NOAER = { seed: 1, fert: 1, seedfert: 1 };
+  function pkgSeeds(p) { return p === 'full' || p === 'plan' || p === 'seed' || p === 'seedfert'; }
+  function pkgFeeds(p) { return p === 'full' || p === 'plan' || p === 'fert' || p === 'seedfert'; }
+  function pkgLow(p) { return { aerate: 'aerate only', seed: 'seed only', fert: 'fertilize only', seedfert: 'seed & feed' }[p] || 'aerate, seed & feed'; }   /* a quote's package on staff lines */
+  function pkgLawnSays(p) { return { seed: 'overseeding', fert: 'fertilizing', seedfert: 'overseeding and fertilizing' }[p] || 'core aeration' + (p === 'full' ? ' with overseeding and fertilizer' : ''); }   /* "For your lawn ..., core aeration with ... comes to $" */
   /* an edition (2026-10-29, Matthew: edition job cards said "Doing: Aerate, seed & feed"): the job's own work, from its quote's lines (the
      server sends them as items), never the aeration packages */
   var JOB_PKG_ED = { job: 'The quoted work', plan: 'Service plan', other: 'Another service' };
@@ -6758,7 +6765,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     };
     if (kitOnC() && !job && (P.pkg === 'full' || P.pkg === 'aerate')) P.pkg = 'job';   /* an edition books the quoted work (2026-10-29) */
     chips(pkRow, kitOnC() ? JOB_PKG_ED : JOB_PKG, function () { return P.pkg; }, function (k) { P.pkg = k; if (k === 'plan' && P.pay.s === 'unpaid') { P.pay = { s: 'plan' }; drawPay(); } svcPaint(); });
-    function svcPaint() { var o = P.pkg === 'other'; svcL.hidden = !o; seedIn.parentNode.hidden = o || kitOnC(); fertIn.parentNode.hidden = o || kitOnC();   /* no seed or fertilizer on an edition (2026-10-29) */ if (o) setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); }   /* Another service: what it is; no seed or fertilizer */
+    function svcPaint() { var o = P.pkg === 'other'; svcL.hidden = !o; seedIn.parentNode.hidden = o || kitOnC() || P.pkg === 'fert'; fertIn.parentNode.hidden = o || kitOnC() || P.pkg === 'seed';   /* fertilize only: no seed; seed only: no fertilizer (2026-11-09) */   /* no seed or fertilizer on an edition (2026-10-29) */ if (o) setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); }   /* Another service: what it is; no seed or fertilizer */
     svcPaint();
     chips(scRow, JOB_SCOPE, function () { return P.scope; }, function (k) { P.scope = k; });
     if (kitOnC()) scRow.hidden = true;   /* whole lawn, front or back: Sixfold's (2026-10-29) */
@@ -6788,7 +6795,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       [al, scRow, pr, payRow, payMore, cardRow].forEach(function (x) { x.hidden = true; });
       [].forEach.call(box.querySelectorAll('.dwh'), function (x) { if (/Payment/.test(x.textContent)) x.hidden = true; });
       if (kitOnC()) { pkRow.hidden = true; [].forEach.call(box.querySelectorAll('.dwh'), function (x) { if (/What is included/.test(x.textContent)) x.hidden = true; }); P.pkg = 'job'; if (!S.kit) api('kit').then(function (j) { if (j && j.ok) { S.kit = j; if (typeof paint === 'function') paint(); } }).catch(function () {}); }   /* the quote's own work (2026-10-27) */
-      else chips(pkRow, { full: JOB_PKG.full, aerate: JOB_PKG.aerate }, function () { return P.pkg === 'aerate' ? 'aerate' : 'full'; }, function (k) { P.pkg = k; });
+      else chips(pkRow, { full: JOB_PKG.full, aerate: JOB_PKG.aerate, seed: JOB_PKG.seed, fert: JOB_PKG.fert, seedfert: JOB_PKG.seedfert }, function () { return P.pkg === 'aerate' || PKG_NOAER[P.pkg] ? P.pkg : 'full'; }, function (k) { P.pkg = k; });   /* + seed only, fertilize only, seed & feed (2026-11-09) */
       depBox = q('div', 'jdep');
       var pl = q('label', null, 'Price you quoted ($)'); dPrice = q('input'); dPrice.inputMode = 'numeric'; dPrice.maxLength = 6; dPrice.value = P.price || ''; pl.appendChild(dPrice); depBox.appendChild(pl);
       var dl = q('label', null, 'Deposit ($)'), dDep = q('input'); dDep.inputMode = 'numeric'; dDep.maxLength = 6; dl.appendChild(dDep); depBox.appendChild(dl);
@@ -6923,7 +6930,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (P.how !== 'link' && P.how !== 'none' && P.how !== 'ways' && takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
         if (S.depNow > sp) { err.textContent = 'The deposit cannot be more than the price.'; return; }
         sv.disabled = true;
-        api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, nosign: P.nosign ? 1 : 0, pkg: kitOnC() ? 'job' : P.pkg === 'aerate' ? 'aerate' : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb, extras: pre.extras || qt.extras || [] } }).then(function (j) {
+        api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, nosign: P.nosign ? 1 : 0, pkg: kitOnC() ? 'job' : P.pkg === 'aerate' || PKG_NOAER[P.pkg] ? P.pkg : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb, extras: pre.extras || qt.extras || [] } }).then(function (j) {
           sv.disabled = false;
           if (j._status === 401) return signinView('Signed out. Enter your code again.');
           if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; if (j._status === 409) loadWeek(); return; }
@@ -7189,14 +7196,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      as a text from her phone. Same tips as the email (CSU PlantTalk 1505 and 1516, see aeration365-site/FACT-CHECK.md) */
   function afWhy(st) { return st === 'config' ? 'the 365 mailbox is not set up yet' : st === 'noemail' ? 'there is no email address for them' : st === 'brand' ? 'this is not a 365 job' : st === 'notdone' ? 'the job is not marked done' : (st || 'try again'); }
   function afParts(jb, owe) {   /* our notes and Randy's together; where they disagree, Randy's (2026-10-19, Matthew; see sixfold/content/aftercare-365-2026-10-19.md) */
-    var seeded = jb.pkg !== 'aerate';
-    var did = seeded ? ['Core aerated the lawn', 'Spot sprayed the large weeds', 'Laid seed with a root and soil conditioner'] : ['Core aerated the lawn'];
-    var notes = ['Leave the plugs on the lawn. They break down back into the grass on their own.'];
+    var seeded = jb.pkg !== 'aerate', noAer = !!PKG_NOAER[jb.pkg];
+    if (noAer) seeded = pkgSeeds(jb.pkg);   /* seed only, fertilize only, seed & feed (2026-11-09): no plugs; the seed notes only when seed went down */
+    var did = noAer ? (seeded ? ['Laid seed with a root and soil conditioner'] : []).concat(pkgFeeds(jb.pkg) ? ['Put down fertilizer'] : []) : seeded ? ['Core aerated the lawn', 'Spot sprayed the large weeds', 'Laid seed with a root and soil conditioner'] : ['Core aerated the lawn'];
+    var notes = noAer ? [] : ['Leave the plugs on the lawn. They break down back into the grass on their own.'];
     if (seeded) notes.push('Give the lawn a good watering soon, then water lightly and often enough to keep the soil surface moist while the new seed comes up. Germination can take up to two weeks.',
       'Once the new grass is up and rooting, water less often but more deeply.',
-      'Don\u2019t mow for 4 to 7 days.',
-      'The fertilizer we put down stays active for about 60 days, so don\u2019t lay any fertilizer or weed killer for 2 months while the seed comes in.',
-      'Bag your clippings if you can.');
+      'Don\u2019t mow for 4 to 7 days.');
+    if (seeded && (!noAer || pkgFeeds(jb.pkg))) notes.push('The fertilizer we put down stays active for about 60 days, so don\u2019t lay any fertilizer or weed killer for 2 months while the seed comes in.');
+    if (seeded) notes.push('Bag your clippings if you can.');
     else notes.push('Give the lawn a good watering soon.');
     notes.push('How quickly the lawn recovers depends on how much damage it had, and it can take a few months.',
       'This adds to your regular lawn care, so keep up the basics: pull weeds, clean up debris regularly, and water when you can.');
@@ -7218,6 +7226,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function aftercareShort(jb, owe) {
     var a = afParts(jb, owe), seeded = jb.pkg !== 'aerate';
     var tips = seeded ? 'Leave the plugs on the lawn. Water lightly and often to keep the soil moist while the seed comes up (up to 2 weeks). Don’t mow for 4 to 7 days, and no fertilizer or weed killer for 2 months.' : 'Leave the plugs on the lawn and give it a good watering soon.';
+    if (PKG_NOAER[jb.pkg]) tips = jb.pkg === 'fert' ? 'Give the lawn a good watering soon.' : 'Water lightly and often to keep the soil moist while the seed comes up (up to 2 weeks). Don’t mow for 4 to 7 days' + (jb.pkg === 'seedfert' ? ', and no fertilizer or weed killer for 2 months.' : '.');   /* no plugs without aeration (2026-11-09) */
     return 'Hi ' + a.first + ', this is ' + myName() + ' with ' + a.B.name + '. Thanks for having us! ' + tips + ' ' + a.bal + (a.B.phone ? ' Questions: call or text ' + a.B.phone + '.' : '');
   }
   function aftercareLine(A, isDone, owe) {
@@ -7394,7 +7403,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function fuBookForm(jb, done, cancel) {
     var f = q('div', 'phf fuform'); f.appendChild(q('div', 'wl', 'Book a follow-up'));
     var fl = function (label, el) { var lb = q('label', null, label); lb.appendChild(el); f.appendChild(lb); return el; };
-    var sv = q('select'); [[jb.pkg || 'full', 'Same as this job (' + jobPkgLabel(jb) + ')'], ['aerate', 'Aerate only'], ['full', 'Aerate, seed & feed'], ['other', 'Another service']].forEach(function (o, i) { if (i > 0 && o[0] === (jb.pkg || 'full')) return; var op = q('option', null, o[1]); op.value = i === 0 ? '=' + o[0] : o[0]; sv.appendChild(op); });
+    var sv = q('select'); [[jb.pkg || 'full', 'Same as this job (' + jobPkgLabel(jb) + ')'], ['aerate', 'Aerate only'], ['full', 'Aerate, seed & feed'], ['seed', 'Seed only'], ['fert', 'Fertilize only'], ['seedfert', 'Seed & feed'], ['other', 'Another service']].forEach(function (o, i) {   /* + seed only, fertilize only, seed & feed (2026-11-09) */ if (i > 0 && o[0] === (jb.pkg || 'full')) return; var op = q('option', null, o[1]); op.value = i === 0 ? '=' + o[0] : o[0]; sv.appendChild(op); });
     fl('Service', sv); var ot = q('input'); ot.maxLength = 80; ot.placeholder = 'Which service'; var otl = fl('Other service', ot); otl.parentNode.hidden = true;
     sv.addEventListener('change', function () { otl.parentNode.hidden = sv.value !== 'other'; });
     var mode = q('div', 'aseg'), byDay = q('button', null, 'A day and time'), byMonth = q('button', null, 'Just a month'); byDay.type = byMonth.type = 'button'; mode.appendChild(byDay); mode.appendChild(byMonth); f.appendChild(mode);
@@ -8210,7 +8219,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function quoteState(l) { return l.quote && l.quote.sent ? 'Quote sent: ' : quoteGiven(l) ? 'Quote given (' + (TOLD_HOW[l.qtold.how] || l.qtold.how) + ' ' + ago(l.qtold.at) + '): ' : quoteOld(l) ? 'Quote saved: ' : 'Price ready, not given yet: '; }
   function quoteMsg(l, Q, street) {
     Q = Q || l.quote; var B = leadBrand(l), st = street != null ? street : l.house ? streetCase(l.house.address) : '';
-    var what = Q.pkg === 'other' ? (Q.svc || 'the work we discussed') : Q.pkg === 'aerate' ? 'core aeration' : Q.pkg === 'job' ? 'the job' : 'core aeration, overseeding and fertilizer';
+    var what = Q.pkg === 'other' ? (Q.svc || 'the work we discussed') : Q.pkg === 'aerate' ? 'core aeration' : Q.pkg === 'job' ? 'the job' : PKG_NOAER[Q.pkg] ? pkgLawnSays(Q.pkg) : 'core aeration, overseeding and fertilizer';   /* + seed / fertilize only, seed & feed (2026-11-09) */
     return 'Hi ' + greetName(l.name) + ', this is ' + myName() + ' with ' + B.name + '. Here is your quote' + (st ? ' for ' + st : '') + ': ' + money0(Q.price) + ' for ' + what + '. Reply here' + (B.phone ? ' or call ' + B.phone : '') + ' to pick a day.';
   }
   /* the quote went out from the Quote builder (2026-10-28): save the price first if it isn't saved yet, then log it as given */
@@ -8945,7 +8954,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     api('leads').then(function (L) {
       var ex = ((L && L.leads) || []).filter(function (l) { return l.status !== 'lost' && ((tel.length === 10 && digits(l.phone).slice(-10) === tel) || (em && String(l.email || '').toLowerCase() === em)); })[0];
       if (ex) { had = true; return api('leadcontact', { body: { id: ex.id, name: Q.name, phone: Q.phone || '', email: Q.email || '' } }).then(function (c) { if (c && !c.ok) throw new Error(c.error || 'Could not update their details.'); if (c && c.changed && c.changed.length) had = 'updated'; return { ok: true, id: ex.id }; }); }   /* what was typed on the quote wins (2026-10-15) */
-      return leadAddKeep({ src: Q.src || 'phone', name: Q.name, phone: Q.phone || '', email: Q.email || '', town: h && h.address ? streetCase(h.address) + (h.town ? ', ' + h.town : '') : '', need: st.pkg === 'aerate' ? 'Aeration' : 'Aeration and overseeding', msg: 'Quoted in the Quick quote' });
+      return leadAddKeep({ src: Q.src || 'phone', name: Q.name, phone: Q.phone || '', email: Q.email || '', town: h && h.address ? streetCase(h.address) + (h.town ? ', ' + h.town : '') : '', need: st.pkg === 'aerate' ? 'Aeration' : PKG_NOAER[st.pkg] ? { seed: 'Overseeding', fert: 'Fertilizing', seedfert: 'Overseeding and fertilizing' }[st.pkg] : 'Aeration and overseeding', msg: 'Quoted in the Quick quote' });   /* + 2026-11-09 */
     }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'Could not add the lead.');
       id = r.id;
@@ -9472,7 +9481,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     lines.push(co + ' quote, ' + new Date().toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', year: 'numeric' }));
     var who = [Q.name, Q.phone, Q.email].filter(Boolean).join(' \u00b7 '); if (who) lines.push('Customer: ' + who);
     if (h && h.address) lines.push('Address: ' + streetCase(h.address) + (h.town ? ', ' + h.town : ''));
-    lines.push('Service: ' + (st.pkg === 'aerate' ? 'Aerate only' : 'Aerate, seed & feed'));
+    lines.push('Service: ' + (st.pkg === 'aerate' || PKG_NOAER[st.pkg] ? JOB_PKG[st.pkg] : 'Aerate, seed & feed'));   /* + seed / fertilize only, seed & feed (2026-11-09) */
     if (st.sq) lines.push('Lawn priced at: ' + Number(st.sq).toLocaleString(LOCALE) + ' sq ft' + (E && !E.none ? ' (our estimate ' + Number(E.mid).toLocaleString(LOCALE) + ', likely ' + Number(E.a).toLocaleString(LOCALE) + '\u2013' + Number(E.b).toLocaleString(LOCALE) + ')' : ''));
     lines.push('Price: ' + money0(st.cur.price) + (sm.ladder && sm.ladder !== st.cur.price ? ' (list ' + money0(sm.ladder) + ')' : ''));
     var dep = Math.ceil(st.cur.price / 2); lines.push('Deposit (half): ' + money0(dep) + ' \u00b7 balance on the day: ' + money0(st.cur.price - dep));
@@ -9483,7 +9492,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function quickCustomerText(h, st) {
     var Q = S.qq || {}, B = leadBrand({ src: 'a365web', name: Q.name }), first = greetName(Q.name), dep = Math.ceil(st.cur.price / 2);
-    return 'Hi' + (first ? ' ' + first : '') + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+    return 'Hi' + (first ? ' ' + first : '') + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', ' + pkgLawnSays(st.pkg) + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
   }
   /* under Text and Email buttons: what they open, and what to do when that does not work (Matthew 2026-10-15) */
   function sendNote(el) {
@@ -10057,6 +10066,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var fert = F && F.coverSq > 0 && F.bagLb > 0 ? sq / F.coverSq * F.bagCost : 0;
     return Math.max(1, Math.round(a365Price(sq, P) + Math.ceil(drive || 0) - seed - fert));
   }
+  /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "Using the same math we do for everything else"): a365Price with the package's own
+     price at the anchor size and its own minimum (none set: at least $1), plus the drive; 0 while not priced yet. As a365PkgPrice() in the API */
+  var PKG_LADDER = { seed: ['seedOnlyAnchor', 'seedOnlyMin'], fert: ['fertOnlyAnchor', 'fertOnlyMin'], seedfert: ['seedFertAnchor', 'seedFertMin'] };
+  function a365PkgPriced(p, P) { var k = PKG_LADDER[p]; return !!(k && P[k[0]] != null && P[k[0]] !== '' && +P[k[0]] > 0); }
+  function a365PkgMin(p, P) { var k = PKG_LADDER[p]; return k && P[k[1]] != null && P[k[1]] !== '' && !isNaN(+P[k[1]]) ? +P[k[1]] : 1; }
+  function a365PkgPrice(sq, P, p, drive) {
+    if (!sq || !a365PkgPriced(p, P)) return 0;
+    var T = {}; for (var x in P) T[x] = P[x]; T.anchorPrice = +P[PKG_LADDER[p][0]]; T.minPrice = a365PkgMin(p, P);
+    return Math.max(1, a365Price(sq, T)) + Math.ceil(drive || 0);
+  }
   function seedRateFor(price, ladder, P) { return Math.max(P.seedLow, Math.min(P.seedHigh, P.seedBase * price / Math.max(ladder, 1))); }
   function loadPricing(then, fresh) {
     if (S.a365p && !fresh) return then(S.a365p);
@@ -10113,7 +10132,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (said) chip('They said', said);
       box.appendChild(basis); box.appendChild(chips);
       var pk = q('div', 'dwlen');
-      [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only']].concat(quick ? [] : [['other', 'Another service']]).forEach(function (o) {   /* + Another service: a custom quote with your own price (2026-10-28), not on the Quick quote */
+      [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only'], ['seed', 'Seed only'], ['fert', 'Fertilize only'], ['seedfert', 'Seed & feed']].concat(quick ? [] : [['other', 'Another service']]).forEach(function (o) {   /* + Another service: a custom quote with your own price (2026-10-28), not on the Quick quote */   /* + seed only, fertilize only, seed & feed, each with its own ladder (2026-11-09) */
         var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(st.pkg === o[0]));
         b.addEventListener('click', function () { st.pkg = o[0]; st.price = null; clearInfl(); [].forEach.call(pk.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); svcL.hidden = st.pkg !== 'other'; if (st.pkg === 'other') setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); paint(); });
         pk.appendChild(b);
@@ -10179,8 +10198,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var HIDE = !!P.hidden || asOffice() || qView();   /* the office and quote-only accounts: the server works out the price, and only the price and pounds come back (Matthew 2026-10-15) */
       var trv = HIDE ? null : a365Travel(h, P), calcSeq = 0, calcT = null;
       /* the list price: the ladder plus the drive (in whole dollars); aerate only = that less seed and fertilizer (2026-10-28, Matthew; was: no list price, Jen typed hers) */
-      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'other' ? 0 : st.pkg === 'aerate' ? a365AerOnly(st.sq || 0, P, trv ? trv.cost : 0) : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };
-      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
+      var ladderFor = function () { return HIDE ? (st.srvLadder || 0) : st.pkg === 'other' ? 0 : st.pkg === 'aerate' ? a365AerOnly(st.sq || 0, P, trv ? trv.cost : 0) : PKG_LADDER[st.pkg] ? a365PkgPrice(st.sq || 0, P, st.pkg, trv ? trv.cost : 0) : a365Price(st.sq || 0, P) + (trv ? Math.ceil(trv.cost) : 0); };   /* + seed / fertilize only, seed & feed: their own ladders (2026-11-09) */
+      dn.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = Math.max(st.pkg === 'aerate' || HIDE ? 1 : PKG_LADDER[st.pkg] ? Math.max(1, a365PkgMin(st.pkg, P)) : P.minPrice, (st.price || ladderFor()) - 100); own.value = ''; paint(); });
       up.addEventListener('click', function () { if (!(st.price || ladderFor())) return; clearInfl(); st.price = (st.price || ladderFor()) + 100; own.value = ''; paint(); });
       own.addEventListener('input', function () { clearInfl(); var v = parseInt(own.value.replace(/\D/g, ''), 10); st.price = v > 0 ? v : null; paint(); });
       sqIn.addEventListener('input', function () { st.sq = parseInt(sqIn.value.replace(/\D/g, ''), 10) || 0; st.price = null; clearInfl(); paint(); });
@@ -10193,11 +10212,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             if (!j || !j.ok) { big.textContent = ''; big.appendChild(q('div', 'msg', (j && j.error) || 'Could not work out the price.')); return; }
             st.srvLadder = j.ladder; var price = j.price, ladder = j.ladder, exS = exSum(), total = price ? price + exS : 0;
             big.textContent = '';
-            if (!price) { big.appendChild(q('b', null, '$\u2014')); big.appendChild(q('span', null, st.pkg === 'other' ? 'Another service: type your price below' : 'Type the lawn size to work out the price')); }
-            else { big.appendChild(q('b', null, money0(total))); big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + (st.pkg === 'aerate' ? ' (aerate only: the full price less seed and fertilizer)' : '') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft')); if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work')); }
+            if (!price) { big.appendChild(q('b', null, '$\u2014')); big.appendChild(q('span', null, st.pkg === 'other' ? 'Another service: type your price below' : j.unpriced ? 'No list price yet: type the price' : 'Type the lawn size to work out the price')); }   /* a seed / fertilize package not priced yet (2026-11-09) */
+            else { big.appendChild(q('b', null, money0(total))); big.appendChild(q('span', null, !ladder ? 'your price, ' + (PKG_NOAER[st.pkg] ? pkgLow(st.pkg) : 'aerate only') : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + (st.pkg === 'aerate' ? ' (aerate only: the full price less seed and fertilizer)' : PKG_NOAER[st.pkg] ? ' (' + pkgLow(st.pkg) + ')' : '') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft')); if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work')); }
             detail.textContent = ''; noteBox.textContent = '';
             var rows = [];
             if (st.pkg === 'full' && st.sq) { rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName) rows.push(['Fertilizer', (j.fertName !== 'Fertilizer' ? j.fertName + ' \u00b7 ' : '') + j.fertLb + ' lb', '']); }
+            else if (PKG_NOAER[st.pkg] && st.sq) { if (j.seedLb) rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName && j.fertLb) rows.push(['Fertilizer', (j.fertName !== 'Fertilizer' ? j.fertName + ' \u00b7 ' : '') + j.fertLb + ' lb', '']); }   /* only what the package puts down (2026-11-09) */
             if (rows.length || (price && j.left != null)) { var tb = q('div', 'qcost'); rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); tb.appendChild(d); });
               if (price && j.left != null) { var lf = q('div', 'qcrow qcleft'); var la = q('div'); la.appendChild(q('b', null, 'Left after expenses')); la.appendChild(q('small', null, 'After seed, fertilizer, the drive and the crew (' + (j.crewPct != null ? j.crewPct : 20) + '% of the price)')); lf.appendChild(la); lf.appendChild(q('span', null, money0(j.left + exS * (1 - (j.crewPct != null ? j.crewPct : 20) / 100)))); tb.appendChild(lf); }   /* the total only (Matthew 2026-10-15) */
               detail.appendChild(tb); }
@@ -10211,11 +10231,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (HIDE) { if (!st.cur) st.cur = { price: 0, seedLb: 0, fertLb: 0 }; paintHidden(); return; }
         var ladder = ladderFor(), price = st.price || ladder, exS = exSum(), total = price ? price + exS : 0;
         big.textContent = '';
-        if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, st.pkg === 'other' ? 'Another service: type your price below' : 'Type the lawn size to work out the price')); }
+        if (!price) { big.appendChild(q('b', null, '$—')); big.appendChild(q('span', null, st.pkg === 'other' ? 'Another service: type your price below' : PKG_LADDER[st.pkg] && !a365PkgPriced(st.pkg, P) ? 'Not priced yet. Set it in Pricing.' : 'Type the lawn size to work out the price')); }   /* a seed / fertilize package with no price yet (2026-11-09) */
         else {
           big.appendChild(q('b', null, money0(total)));
           if (exS) big.appendChild(q('span', 'qexin', money0(price) + ' + ' + money0(exS) + ' extra work'));
-          big.appendChild(q('span', null, !ladder ? 'your price, aerate only' : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + (st.pkg === 'aerate' ? ' (aerate only: the full price less seed and fertilizer)' : '') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft' + (trv ? ', drive included' : '')));
+          big.appendChild(q('span', null, !ladder ? 'your price, ' + (PKG_NOAER[st.pkg] ? pkgLow(st.pkg) : 'aerate only') : (st.price && st.price !== ladder ? 'list price ' + money0(ladder) : 'list price') + (st.pkg === 'aerate' ? ' (aerate only: the full price less seed and fertilizer)' : PKG_NOAER[st.pkg] ? ' (' + pkgLow(st.pkg) + ')' : '') + ' for ' + Number(st.sq || 0).toLocaleString(LOCALE) + ' sq ft' + (trv ? ', drive included' : '')));
         }
         detail.textContent = '';
         var lines = [], notes = [], rows = [];   /* rows: [what, how much of it, $]; lines: anything else; notes: where the numbers come from */
@@ -10231,6 +10251,20 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             rows.push(['Fertilizer', (F.name !== 'Fertilizer' ? F.name + ' \u00b7 ' : '') + who('brandon') + '\u2019s price, $' + F.bagCost + ' for ' + F.bagLb + ' lb \u00b7 ' + fertLb + ' lb at the bag\u2019s rate (' + (Math.round(fRate * 10) / 10) + ' per 1,000 sq ft) \u00b7 ' + money2(fPer) + '/lb', money2(fertLb * fPer)]);
             cost += fertLb * fPer; notes.push('Fertilizer: ' + (F.src || F.name) + ' Goes down at the bag’s rate whatever the price (too much burns the lawn).');
           } else { rows.push(['Fertilizer', 'add one under Pricing', '\u2014']); known = false; }
+        } else if (PKG_NOAER[st.pkg] && st.sq) {   /* seed only, fertilize only, seed & feed (2026-11-09): the seed at the normal rate, the fertilizer at the bag's rate; only what the package puts down */
+          if (pkgSeeds(st.pkg)) {
+            var rate1 = Math.max(P.seedLow, Math.min(P.seedHigh, P.seedBase)), seedPer1 = P.seedBagLb ? P.seedBagCost / P.seedBagLb : 0; seedLb = Math.round(st.sq / 1000 * rate1 * 10) / 10;
+            rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + seedLb + ' lb \u00b7 ' + (Math.round(rate1 * 10) / 10) + ' lb per 1,000 sq ft (the normal rate)' + (seedPer1 ? ' \u00b7 ' + money2(seedPer1) + '/lb' : ''), seedPer1 ? money2(seedLb * seedPer1) : '\u2014']);
+            if (seedPer1) { cost += seedLb * seedPer1; notes.push('Seed: ' + (P.seedSrc || 'the seed receipt') + ': $' + P.seedBagCost + ' per ' + P.seedBagLb + ' lb bag.'); } else known = false;
+          }
+          if (pkgFeeds(st.pkg)) {
+            var F1 = fertOf(P, st.fert);
+            if (F1) {
+              var fRate1 = F1.bagLb * 1000 / F1.coverSq, fPer1 = F1.bagCost / F1.bagLb; fertLb = Math.round(st.sq / 1000 * fRate1 * 10) / 10;
+              rows.push(['Fertilizer', (F1.name !== 'Fertilizer' ? F1.name + ' \u00b7 ' : '') + fertLb + ' lb at the bag\u2019s rate (' + (Math.round(fRate1 * 10) / 10) + ' per 1,000 sq ft) \u00b7 ' + money2(fPer1) + '/lb', money2(fertLb * fPer1)]);
+              cost += fertLb * fPer1; notes.push('Fertilizer: ' + (F1.src || F1.name) + ' Goes down at the bag\u2019s rate whatever the price (too much burns the lawn).');
+            } else { rows.push(['Fertilizer', 'add one under Pricing', '\u2014']); known = false; }
+          }
         }
         if (trv) {
           rows.push(['Drive', Math.round(trv.miles) + ' miles there and back \u00b7 ' + (Math.round(trv.gal * 10) / 10) + ' gal \u00d7 ' + money2(trv.gas.price) + (ladder ? ' \u00b7 in the list price' : ''), money2(trv.cost)]);
@@ -10238,7 +10272,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           cost += trv.cost;
         } else rows.push(['Drive', h && h.lat != null ? 'no gas price this week, so not in the price' : 'find the house to price the drive', '\u2014']);
         /* the aerator's gas (2026-10-21, Matthew: "we work on data so the more of it we have the better") */
-        if (st.sq && P.aerSqHr && P.gas && P.gas.price) {
+        if (st.sq && P.aerSqHr && P.gas && P.gas.price && !PKG_NOAER[st.pkg]) {   /* none when nothing is aerated (2026-11-09) */
           var aerGal = st.sq / (P.aerSqHr * (P.aerPace || 1)) * (P.aerGalHr || 0), aerCost = aerGal * P.gas.price;
           rows.push(['Aerator gas', 'Bobcat AE26 \u00b7 ' + (Math.round(aerGal * 1000) / 1000) + ' gal at ' + ((P.aerPace || 1) < 1 ? Math.round(P.aerPace * 100) + '% of ' : '') + 'its top rate, ' + Number(P.aerSqHr).toLocaleString(LOCALE) + ' sq ft an hour', money2(aerCost)]);
           cost += aerCost; notes.push('Aerator gas: the Bobcat AE26-HON\u2019s Honda GX120 burns about 0.26 gal an hour at full power (Honda: 1.0 L/h) and covers up to 40,400 sq ft an hour (Bobcat). Real jobs are slower, so this is the least it uses.');
@@ -10247,7 +10281,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var tb = q('div', 'qcost');
         rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); d.appendChild(q('span', null, r[2])); tb.appendChild(d); });
         if (price && rows.length) {
-          var t1 = q('div', 'qcrow qctot'); t1.appendChild(q('b', null, st.pkg === 'full' ? 'Seed, fertilizer, drive and aerator gas' : 'Drive and aerator gas')); t1.appendChild(q('span', null, known ? money2(cost) : '\u2014')); tb.appendChild(t1);
+          var t1 = q('div', 'qcrow qctot'); t1.appendChild(q('b', null, st.pkg === 'full' ? 'Seed, fertilizer, drive and aerator gas' : PKG_NOAER[st.pkg] ? { seed: 'Seed and drive', fert: 'Fertilizer and drive', seedfert: 'Seed, fertilizer and drive' }[st.pkg] : 'Drive and aerator gas')); t1.appendChild(q('span', null, known ? money2(cost) : '\u2014')); tb.appendChild(t1);
           var cs = P.crewShare != null ? Number(P.crewShare) : 0.2, crew = total * cs;   /* the crew: a share of every job's price (2026-10-21) */
           var tc = q('div', 'qcrow'); var tca = q('div'); tca.appendChild(q('b', null, 'Crew')); tca.appendChild(q('small', null, Math.round(cs * 100) + '% of the price')); tc.appendChild(tca); tc.appendChild(q('span', null, money2(crew))); tb.appendChild(tc);
           var t2 = q('div', 'qcrow qcleft'); t2.appendChild(q('b', null, 'Left after the crew')); t2.appendChild(q('span', null, known ? money0(total - cost - crew) : '\u2014')); tb.appendChild(t2);
@@ -10304,7 +10338,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var B = leadBrand(lead), first = greetName(lead.name), street = h.address ? streetCase(h.address) : '';
           var is365 = !!(CO.a365 && B.name === CO.a365.name);   /* the page is 365's: only on a 365 message */
           var lk = is365 && lead.quote && lead.quote.link && lead.quote.price === st.cur.price && lead.quote.pkg === st.pkg && lead.quote.link;   /* the customer's quote page, once this price is saved */
-          var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', core aeration' + (st.pkg === 'full' ? ' with overseeding and fertilizer' : '') + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+          var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', ' + pkgLawnSays(st.pkg) + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
           var ensure1 = function () {   /* 2026-10-28: logged as given; saved first when this price isn't */
@@ -10321,7 +10355,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           row.appendChild(mq);
           var ms = q('button', 'lnk', lead.quote && lead.quote.sent ? 'Sent ✓' : 'Mark as sent'); ms.type = 'button'; ms.addEventListener('click', function () { save(true); });
           row.appendChild(ms); acts.appendChild(row); addSendNote(acts, row);
-          if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'other' ? (lead.quote.svc || 'another service') : lead.quote.pkg === 'aerate' ? 'aerate only' : 'aerate, seed & feed') + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
+          if (lead.quote) acts.appendChild(q('div', 'dwsub', (lead.quote.sent ? 'Sent ' : 'Saved ') + money0(lead.quote.price) + ' (' + (lead.quote.pkg === 'other' ? (lead.quote.svc || 'another service') : pkgLow(lead.quote.pkg)) + ') by ' + lead.quote.by + ', ' + ago(lead.quote.at)));
           if (lk && wdOn()) {   /* the day offered (2026-10-14): one tap on their page books it */
             var ob = q('div', 'qoffer');
             if (lead.quote.offer) {
@@ -10408,6 +10442,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var ad = q('button', 'lnk', '+ Add a fertilizer'); ad.type = 'button'; ad.addEventListener('click', function () { FL.push({ name: '', bagLb: '', bagCost: '', coverSq: '' }); drawFerts(); }); fBox.appendChild(ad);
       };
       drawFerts();
+      /* seed only, fertilize only, seed & feed (2026-11-09, Matthew: "Using the same math we do for everything else"): each its own price at the
+         anchor size and minimum; the anchor size, scaling, "...99" rounding and the drive are the ones above. Empty = not priced yet (typed) */
+      f.appendChild(q('div', 'dwh', 'Without aeration'));
+      f.appendChild(q('div', 'lsub', 'Seed only, Fertilize only and Seed & feed each have their own ladder, worked out the same way as the price above: their price at ' + Number(P.anchorSq || 2500).toLocaleString(LOCALE) + ' sq ft, scaled by the lawn size, rounded to “...99”, never under their minimum, plus the drive. Leave a price empty until it is set: that option then has no list price and the price is typed.'));
+      var atSq = Number(P.anchorSq || 2500).toLocaleString(LOCALE) + ' sq ft ($)';
+      field('seedOnlyAnchor', 'Seed only: price at ' + atSq, '', 'not priced yet'); field('seedOnlyMin', 'Seed only: minimum ($)', 'Empty: no minimum');
+      field('fertOnlyAnchor', 'Fertilize only: price at ' + atSq, '', 'not priced yet'); field('fertOnlyMin', 'Fertilize only: minimum ($)', 'Empty: no minimum');
+      field('seedFertAnchor', 'Seed & feed: price at ' + atSq, '', 'not priced yet'); field('seedFertMin', 'Seed & feed: minimum ($)', 'Empty: no minimum');
       f.appendChild(q('div', 'dwh', 'Travel'));
       field('mpg', 'Truck miles per gallon', 'Matthew: 18 for now');
       field('roadFactor', 'Road miles per straight-line mile', 'Roads are longer than the straight line; 1.3 is a usual allowance');
@@ -10426,7 +10468,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       f.appendChild(sv);
       var ex = q('div', 'qexample'); f.appendChild(ex);
-      var paintEx = function () { var T = {}; Object.keys(P).forEach(function (k) { T[k] = P[k]; }); Object.keys(F).forEach(function (k) { var v = parseFloat(F[k].value); if (!isNaN(v)) T[k] = v; }); ex.textContent = 'With these numbers: ' + [1500, 2500, 5000, 10000, 22000, 43560].map(function (s) { return Number(s).toLocaleString(LOCALE) + ' sq ft ' + money0(a365Price(s, T)); }).join(' · '); };
+      var paintEx = function () { var T = {}; Object.keys(P).forEach(function (k) { T[k] = P[k]; }); Object.keys(F).forEach(function (k) { var v = parseFloat(F[k].value); if (!isNaN(v)) T[k] = v; }); ex.textContent = 'With these numbers: ' + [1500, 2500, 5000, 10000, 22000, 43560].map(function (s) { return Number(s).toLocaleString(LOCALE) + ' sq ft ' + money0(a365Price(s, T)); }).join(' · ');
+        Object.keys(PKG_LADDER).forEach(function (p) { PKG_LADDER[p].forEach(function (k) { if (F[k] && F[k].value.trim() === '') T[k] = null; }); if (a365PkgPriced(p, T)) ex.appendChild(q('div', null, JOB_PKG[p] + ': ' + [1500, 2500, 5000, 10000, 22000].map(function (s) { return Number(s).toLocaleString(LOCALE) + ' sq ft ' + money0(a365PkgPrice(s, T, p, 0)); }).join(' · ') + ' (before the drive)')); });   /* 2026-11-09 */ };
       Object.keys(F).forEach(function (k) { F[k].addEventListener('input', paintEx); }); paintEx();
       holder.appendChild(f);
     }, true);

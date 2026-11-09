@@ -91,7 +91,7 @@
   var API = /^\/a365\//.test(location.pathname) ? '/api/rounds.php' : '/api/lead.php';   /* 2026-10-14: this site's own relay (api/lead.php) passes it to the app server to server; a browser posting to the app directly was stopped by its bot check. /a365/ is the test copy inside the app's test server */
   var key = (/[?&]q=([A-Za-z0-9-]+)/.exec(location.search) || [])[1] || '';
   var main = document.getElementById('main');
-  var INC = { full: ['Core aeration', 'Overseeding', 'Fertilizer'], aerate: ['Core aeration'] };
+  var INC = { full: ['Core aeration', 'Overseeding', 'Fertilizer'], aerate: ['Core aeration'], seed: ['Overseeding'], fert: ['Fertilizer'], seedfert: ['Overseeding', 'Fertilizer'] };   /* + seed only, fertilize only, seed & feed (2026-11-09), as the agreement lists them */
   function el(n, c, t) { var e = document.createElement(n); if (c) e.className = c; if (t != null) e.textContent = t; return e; }
   function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
   function sorry(msg) { main.textContent = ''; var c = el('div', 'card'); c.appendChild(el('h2', null, 'We could not open this quote')); c.appendChild(el('p', 'muted', msg)); var a = el('a', 'btn', 'Call or text (720) 830-4553'); a.href = 'tel:+17208304553'; c.appendChild(a); main.appendChild(c); }
