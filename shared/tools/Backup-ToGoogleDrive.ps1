@@ -93,6 +93,9 @@ try {
     # on 31 Oct finished in 4 minutes. Log the start so the next stop shows it was inside 7-Zip (no stderr redirect: in PowerShell 5.1,
     # with ErrorActionPreference Stop, a 7-Zip warning on stderr would itself stop the backup).
     Say "archive started"
+    # 8 Nov 2026 (Matthew: "what is bogging down my computer"): 7-Zip took every core at 5 pm. Low priority for this run and the
+    # 7-Zip it starts (a child takes its parent's priority class), so the laptop stays usable; the backup only takes a little longer.
+    try { (Get-Process -Id $PID).PriorityClass = 'BelowNormal' } catch { }
     & $SevenZip @args7
     if ($LASTEXITCODE -gt 1) { throw "7-Zip failed with exit $LASTEXITCODE" }   # 1 = warnings (a file in use), still a usable archive
     & $SevenZip t "-p$pass" -bso0 -bsp0 $tmp7z
