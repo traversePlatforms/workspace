@@ -19,7 +19,14 @@ import { metroTowns } from './metros/registry.mjs';   /* towns outside Colorado 
 import { limitedFor } from './group3/limited-doors.mjs';   /* Group 3's "Limited data" doors: lim (2026-10-29) */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, '..', '..', 'app', 'data', 'rounds');
+/* ROUNDS_OUT + ROUNDS_PREVIEW=1 (2026-11-08, gap plan): build somewhere else and leave shared-towns.json and owner-history.json
+   untouched, so the counts of a change can be seen without anything a push would pick up. */
+const OUT = process.env.ROUNDS_OUT || join(HERE, '..', '..', 'app', 'data', 'rounds');
+const PREVIEW = process.env.ROUNDS_PREVIEW === '1';
+/* Rented doors (2026-11-08, Matthew: "go ahead and the rented doors, just make sure its obvious which are owner lived in and which
+   arent"): the office-lookup homes (<town>-lookup-areas.json) join the town's door lists with occ 'away'. ONLY when
+   gap1108/GO-rented exists (his go after the counts), or ROUNDS_PROMOTE=1 for a preview. Spec: gap1108/OWNER-FIELD-SPEC.md */
+const PROMOTE = process.env.ROUNDS_PROMOTE === '1' || existsSync(join(HERE, 'gap1108', 'GO-rented'));
 const SOURCES = [
   ['monument', 'Monument', 'monument-areas.json'],
   ['palmer-lake', 'Palmer Lake', 'palmer-lake-areas.json'],
@@ -308,7 +315,10 @@ for (const [key, label, fileName, group] of SOURCES) {
       while (seen.has(id)) id += 'x';
       seen.add(id);
       const lim = limOf ? limOf(d.a) : null; if (lim) { limN++; limTowns.add(key); }
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), ...(commonGround(d, key) ? { cg: 1 } : {}), ...(lim ? { lim } : {}) };
+      /* occ (2026-11-08, OWNER-FIELD-SPEC.md): every door on a town's own list passed the owner-lives-here test ('here'), except Group 3's
+         doors with no owner on record or no mailing address, where nobody can tell ('unk') */
+      const occ = lim === 'noowner' || lim === 'noocc' ? 'unk' : 'here';
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), occ, ...(commonGround(d, key) ? { cg: 1 } : {}), ...(lim ? { lim } : {}) };
     }),
   }));
   built.push({ key, label, group, j, areas });
@@ -354,8 +364,47 @@ for (const b of built) for (const a of b.areas) {
   a.doors = keep.map((x) => x.d); a.src = keep.map((x) => x.src);
 }
 for (const k of Object.keys(shared)) shared[k].sort();
-writeFileSync(SHARED_FILE, JSON.stringify(shared, null, 2) + '\n', 'utf8');
+if (!PREVIEW) writeFileSync(SHARED_FILE, JSON.stringify(shared, null, 2) + '\n', 'utf8');
 if (owner.size) console.log(`${owner.size} doors were listed by two towns: each kept by the nearest town (${moved} copies dropped)`);
+
+/* ---- rented doors (2026-11-08; PROMOTE above) --------------------------------
+ * Each home in <town>-lookup-areas.json (build-lookup.mjs on the core towns; gap1108/rent-lists-vm.mjs on Groups 1-3) that is not a
+ * door in any town within 150 m becomes a door of that town: put in the neighbourhood of the nearest door, right after it, so a crew
+ * walking the street meets it in order. occ 'away' when the owner lives elsewhere (rent 1), else 'here' (an owner-lives-here row the
+ * walk list left out, e.g. a second parcel). Existing doors keep their ids and order: the new ids are given after every existing one
+ * (address slug, 'x' added on a repeat). Lawn: yard v2 read under '<town>-lookup/<lookup id>' when the cloud machine measured it there,
+ * else the coordinate caches, as every door. */
+let promoted = 0, promotedAway = 0;
+const PUBLIC_OWNER = /\b(CHURCH|MINISTR\w*|DISTRICT|METROPOLITAN|CITY OF|TOWN OF|COUNTY|STATE OF|UNITED STATES|SCHOOL|ACADEMY|ASSOCIATION|ASSN|HOA|HOMEOWNERS|CEMETERY|SANITATION|WATER|UTILIT\w*|HOUSING AUTHORITY)\b/i;
+if (PROMOTE) {
+  const allAt = new Map(); for (const b of built) for (const a of b.areas) for (const d of a.doors) (allAt.get(d.id) || allAt.set(d.id, []).get(d.id)).push(d);
+  for (const b of built) for (const suffix of ['lookup', 'lookup2']) {   /* lookup2: Groups 1-3, gap1108/rent-lists-vm.mjs */
+    const p = join(HERE, `${b.key}-${suffix}-areas.json`); if (!existsSync(p)) continue;
+    const ids = new Set(b.areas.flatMap((a) => a.doors.map((d) => d.id)));
+    const CELL = 0.002, grid = new Map();
+    b.areas.forEach((a, ai) => a.doors.forEach((d) => { if (d.lat == null) return; const k = `${Math.floor(d.lat / CELL)},${Math.floor(d.lon / CELL)}`; (grid.get(k) || grid.set(k, []).get(k)).push({ ai, d }); }));
+    const nearest = (la, lo) => { const ci = Math.floor(la / CELL), cj = Math.floor(lo / CELL); let best = null, bd = Infinity;
+      for (let r = 1; r <= 40 && !best; r *= 2) for (let di = -r; di <= r; di++) for (let dj = -r; dj <= r; dj++) for (const x of grid.get(`${ci + di},${cj + dj}`) || []) { const dd = km(la, lo, x.d.lat, x.d.lon); if (dd < bd) { bd = dd; best = x; } }
+      return best; };
+    const lseen = new Set(), seenAddr = new Set();
+    for (const d of JSON.parse(readFileSync(p, 'utf8')).areas.flatMap((a) => a.doors)) {
+      let lid = slug(d.a); while (lseen.has(lid)) lid += 'x'; lseen.add(lid);   /* group1/mkdoors.mjs's ids, which the cloud measured under */
+      const base = slug(d.a); if (seenAddr.has(base) || typeof d.la !== 'number') continue;
+      if (PUBLIC_OWNER.test(d.o || '')) continue;   /* a church, district, city or HOA parcel is not a home; landlords' LLCs stay */
+      if ((allAt.get(base) || []).some((x) => x.lat == null || km(x.lat, x.lon, d.la, d.lo) < SAME_KM)) continue;
+      const at = nearest(d.la, d.lo); if (!at) continue;
+      seenAddr.add(base);
+      let id = base; while (ids.has(id)) id += 'x'; ids.add(id);
+      const v2 = yardV2[`${b.key}-${suffix}/${lid}`];
+      const nd = { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la, lon: d.lo, fire: fireOf(d), lawn: v2 ? { ...v2 } : lawnFor(d, b.key, id), trees: treesOf(d), val: valueOf(d), occ: d.rent ? 'away' : 'here', ...(commonGround(d, b.key) ? { cg: 1 } : {}) };
+      const area = b.areas[at.ai], i = area.doors.indexOf(at.d);
+      area.doors.splice(i + 1, 0, nd); area.src.splice(i + 1, 0, d);
+      (allAt.get(id) || allAt.set(id, []).get(id)).push(nd);
+      promoted++; if (d.rent) promotedAway++;
+    }
+  }
+  console.log(`rented doors: ${promoted} office-lookup homes joined the door lists (${promotedAway} owner elsewhere)`);
+}
 
 /* ---- when a house sells (2026-10-03) ---------------------------------------
  * owner-history.json remembers each door's owner across rebuilds. When the county record names
@@ -386,7 +435,7 @@ for (const b of built) for (const ar of b.areas) for (const d of ar.doors) {
   if (r.sale) newOwners++;
   if (r.os) { d.os = r.os; d.oa = r.oa; }
 }
-writeFileSync(OWNERS + '.tmp', JSON.stringify(hist), 'utf8'); renameSync(OWNERS + '.tmp', OWNERS);
+if (!PREVIEW) { writeFileSync(OWNERS + '.tmp', JSON.stringify(hist), 'utf8'); renameSync(OWNERS + '.tmp', OWNERS); }
 console.log(firstOwnerBuild ? `owner history started: ${Object.keys(hist).length} doors recorded (changes are detected from the next rebuild)` : `${newOwners} doors have a new owner since the last rebuild`);
 
 const index = [];
@@ -395,7 +444,9 @@ for (const { key, label, group, j, areas: raw } of built) {
   writeFileSync(join(OUT, `${key}.json`), JSON.stringify({ key, label, built: j.built, areas }), 'utf8');
   /* c: the town's centre, where the server asks the weather service for alerts (2026-10-07) */
   const mt = METRO_TOWN[key];   /* a metro town carries its metro and county (2026-10-11): the editions need the county */
-  index.push({ key, label, ...(group ? { group } : {}), ...(mt ? { metro: mt.metro, county: mt.county } : {}), ...(CENTRE[key] ? { c: CENTRE[key] } : {}), areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0) });
+  index.push({ key, label, ...(group ? { group } : {}), ...(mt ? { metro: mt.metro, county: mt.county } : {}), ...(CENTRE[key] ? { c: CENTRE[key] } : {}), areas: areas.length, doors: areas.reduce((s, a) => s + a.doors.length, 0),
+    /* occ counts (2026-11-08, OWNER-FIELD-SPEC.md): doors = all of them; occ.here is the owner-lives-here list Sixfold shows by default */
+    occ: areas.reduce((o, a) => { for (const d of a.doors) o[d.occ] = (o[d.occ] || 0) + 1; return o; }, { here: 0, away: 0, unk: 0 }) });
   console.log(`${key}.json  ${areas.length} areas, ${index[index.length - 1].doors} doors`);
 }
 writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, shared, built: new Date().toISOString().slice(0, 10) }), 'utf8');
