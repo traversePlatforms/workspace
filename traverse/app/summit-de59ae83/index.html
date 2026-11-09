@@ -1451,7 +1451,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .desk .dkc-tile small{display:block;font-size:12.5px;color:var(--soft)}
   .desk .dkc-tile span{font:500 13px/1.35 var(--mono,ui-monospace,monospace)}
   #view .desk .dk-card .door.open{margin:6px 0 0;padding:0;border:0;background:none;box-shadow:none}
-  #view .desk .dk-card .door.open > .d-top,#view .desk .dk-card .door.open > .bestwhy,#view .desk .dk-card .door.open .meta .own{display:none}
+  #view .desk .dk-card .door.open > .d-top,#view .desk .dk-card .door.open > .bestwhy,#view .desk .dk-card .door.open .meta .own,#view .desk .dk-card .door.open > .meta .occtag{display:none}
   #view .desk .dk-card .door.open .acts{position:sticky;bottom:0;z-index:2;margin:14px -18px 0;padding:12px 18px;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 14px rgba(0,0,0,.06)}
   /* desktop panels (2026-10-09, Matthew: in the editions an empty panel vanished into the page): every panel gets an outline and a
      soft shadow, the page sits a shade darker than the panels, and an empty panel says so in a tinted box. Works in every palette and dark. */
@@ -1642,6 +1642,38 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hscore{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--soft);font-weight:700}
   .hscore .dscore{height:22px;min-width:34px;font-size:12.5px}
   .tag.reptag{background:color-mix(in srgb,#13294b 12%,transparent);color:var(--ink)}
+  /* who lives there (2026-11-08): the shape in front of the words is the map pin's (round = owner lives here, square = elsewhere,
+     square with ? = not known), so it reads without colour */
+  .tag.occtag{display:inline-flex;align-items:center;gap:5px;font-weight:700}
+  .tag.occ-here{background:color-mix(in srgb,#1f8a4c 14%,transparent);color:var(--ink)}
+  .tag.occ-away{background:color-mix(in srgb,#7a4a12 16%,transparent);color:var(--ink);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,#7a4a12 55%,transparent)}
+  .tag.occ-unk{background:color-mix(in srgb,#55635B 14%,transparent);color:var(--ink)}
+  i.occmk{display:inline-block;width:9px;height:9px;box-sizing:border-box;border:2px solid currentColor;border-radius:50%;background:currentColor;flex:none}
+  .occ-away i.occmk,.occ-unk i.occmk{border-radius:1px;background:transparent}
+  .occ-unk i.occmk{position:relative}
+  .occ-unk i.occmk::after{content:"?";position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font:800 7px/1 var(--sans)}
+  .meta.occl{font-size:13px;color:var(--soft,#55635B)}
+  .occrow{margin:6px 0 4px}
+  .occrow .fph{margin:8px 0 6px}
+  .occch button{display:inline-flex;align-items:center;gap:6px}
+  .planocc{margin:4px 0 8px}
+  .planocc .fph{font-size:13px;margin:4px 0}
+  .dkpin .pin.oa{border-radius:3px}
+  .dkpin .pin.ou::before{content:"?";position:absolute;top:-8px;left:-8px;width:14px;height:14px;border-radius:3px;background:#55635B;color:#fff;font:800 10px/14px var(--sans);text-align:center;box-shadow:0 0 0 1.5px #fff}
+  .occpin{background:none;border:0}
+  .occpin .sq{display:block;width:100%;height:100%;box-sizing:border-box;border:2.5px solid #fff;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.25);opacity:.95;position:relative}
+  .occpin .sq.dn{opacity:.65}
+  .occpin .sq.uq::after{content:"?";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:800 12px var(--sans)}
+  .legend i.occk{width:11px;height:11px;display:inline-block;box-sizing:border-box;border:2px solid var(--ink);background:transparent;box-shadow:none}
+  .legend i.occk-here{border-radius:50%}
+  .legend i.occk-away,.legend i.occk-unk{border-radius:2px}
+  .legend i.occk-unk{position:relative}
+  .legend i.occk-unk::after{content:"?";position:absolute;left:50%;top:50%;transform:translate(-50%,-55%);font:800 8px/1 var(--sans);color:var(--ink)}
+  .legend .occnow{font-weight:700}
+  .whoset .whoopt{display:block;width:100%;text-align:left;margin:10px 0;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line,#d5dae0);background:var(--card);color:var(--ink);font:inherit}
+  .whoset .whoopt[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--ink)}
+  .whoset .whoopt b{display:block;margin-bottom:4px}
+  .whoset .whoopt span{font-size:14px;color:var(--soft,#55635B)}
   /* the office dashboard (2026-10-08) */
   .wrap:has(> #view > .office){max-width:1560px}
   .office{display:grid;gap:18px}
@@ -4978,6 +5010,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         feat('communities') ? tile('button', 'map', 'Communities', 'HOAs and Firewise sites to pitch as one job.', 'Admin only', communitiesView) : null]);
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
+        S.role === 'admin' ? tile('button', 'home', 'Rented and second homes', occOn() ? pw('On the door lists, each marked: owner lives here or owner lives elsewhere.') : pw('Off: the door lists keep homes where the owner lives there, as before.'), 'Admin only', whoSetView) : null,   /* 2026-11-08 */
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* next to Accounts (2026-10-30, Matthew: the rest of Setup is on it); the quote and agreement kit (2026-10-27) */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
@@ -5242,7 +5275,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var sub = q('div', 'sub');
       var hd = mode === 'near' ? hoodDist(a) : null;
       if (hd !== null) { sub.appendChild(q('span', 'dist', distText(hd))); sub.appendChild(document.createTextNode(' \u00b7 ')); }
-      sub.appendChild(document.createTextNode((a.place ? a.place.n + ' \u00b7 ' : '') + a.total + (a.total === 1 ? pw(' door') : pw(' doors')) + (a.avg ? ' \u00b7 average lot ' + a.avg.toFixed(2) + ' acres' : '')));
+      sub.appendChild(document.createTextNode((a.place ? a.place.n + ' \u00b7 ' : '') + a.total + (a.total === 1 ? pw(' door') : pw(' doors')) + occAreaWords(a) + (a.avg ? ' \u00b7 average lot ' + a.avg.toFixed(2) + ' acres' : '')));
       mid.appendChild(sub);
       var chips = q('div', 'chips');
       if (a.who) chips.appendChild(chipEl('mine' + (a.who === S.me ? ' me' : ''), 'users', a.who === S.me ? 'Yours' : 'Assigned to ' + a.who));
@@ -5827,6 +5860,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         });
       });
     }
+    var otL = l.house && l.house.occ && !qView() ? occTag({ occ: l.house.occ }) : null; if (otL) meta.appendChild(otL);   /* the house's owner lives elsewhere (2026-11-08) */
     c.appendChild(meta);
     if (l.dup && l.dup.length && l.status !== 'lost' && l.status !== 'unreached') c.appendChild(dupBox(l.dup));
     /* Couldn't reach (2026-10-21): kept, with a way back; and a lead that came back says so, with the calls before */
@@ -8764,7 +8798,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var E = lawnEstimate(h), box = q('div', 'door hpanel');
     box.appendChild(q('div', 'addr', streetCase(h.address)));
     box.appendChild(q('div', 'meta', h.lookup ? h.town + pw(' · not on the door lists') + (h.rent ? ': the owner lives elsewhere (likely rented)' : '') : h.town + ' · ' + streetCase(h.area)));
-    if (h.owner) box.appendChild(q('div', 'meta', (h.rent ? 'Owner of record (the landlord, likely): ' : 'Owner of record: ') + ownerText(h.owner)));
+    if (h.owner) box.appendChild(q('div', 'meta', (h.rent || (occOn() && occOf(h) === 'away') ? 'Owner of record (the landlord, likely): ' : 'Owner of record: ') + ownerText(h.owner)));
+    var ot7 = !h.lookup && !(quick && qView()) ? occTag(h, true) : null; if (ot7) { var om7 = q('div', 'meta'); om7.appendChild(ot7); box.appendChild(om7); }   /* who lives there, a door (2026-11-08) */
     var limH = limLine(h); if (limH) box.appendChild(limH);   /* limited county data (2026-10-29, Group 3) */
     var ml0 = mapsLink(h); if (ml0) box.appendChild(ml0);   /* map position (2026-10-21) */
     if (h.lat != null) {   /* the 2023 photo with the property line, as on the lead card (Matthew 2026-10-15) */
@@ -9671,10 +9706,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (lead && !quick) res.appendChild(byHand(v));
           return;
         }
-        j.results.forEach(function (r) {
+        (quick && qView() ? j.results : searchOcc(res, j.results, run)).forEach(function (r) {   /* who lives there (2026-11-08): the office lookup, never the quote-only Quick quote */
           var b = q('button', 'door drow srow'); b.type = 'button';
           b.appendChild(q('div', 'addr', r.address)); b.appendChild(q('div', 'swhere', r.town + (r.lookup ? pw(' · not on the door lists') : ' · ' + r.area)));
-          if (r.lawn) { var m = q('div', 'meta'); var lc = lawnChip({ lawn: r.lawn }, false); if (lc) m.appendChild(lc); b.appendChild(m); }
+          var ot6 = quick && qView() ? null : occTag(r);
+          if (r.lawn || ot6) { var m = q('div', 'meta'); var lc = r.lawn ? lawnChip({ lawn: r.lawn }, false) : null; if (lc) m.appendChild(lc); if (ot6) m.appendChild(ot6); b.appendChild(m); }
           b.addEventListener('click', function () { show(r.region, r.id); });
           res.appendChild(b);
         });
@@ -11202,6 +11238,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }   /* worth knowing before the knock */
     var st0 = soldTag(d); if (st0) meta.appendChild(st0);   /* sold in the last 12 months, the county's record (2026-10-29, editions) */
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
+    var ot0 = occTag(d); if (ot0) meta.appendChild(ot0);   /* the owner lives elsewhere, or not known (2026-11-08) */
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));   /* from the planning table (2026-10-08) */
     if (meta.children.length) row.appendChild(meta);
     var open = function () {
@@ -11781,6 +11818,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var m = q('span', 'dkr-m'); m.appendChild(q('b', null, d.address));
     var bb0 = backBadge(d); if (bb0) m.appendChild(bb0);
     var fx = deskFacts(d); if (fx) m.appendChild(q('small', null, fx));
+    var ot1 = occTag(d); if (ot1) m.appendChild(ot1);   /* 2026-11-08 */
     row.appendChild(m);
     var dl = distLabel(d); if (dl) row.appendChild(q('span', 'dist', dl));
     var sc = scoreChip(d); if (sc) row.appendChild(sc);
@@ -11824,6 +11862,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), d.lim && !d.owner ? '' : 'Owner: ' + ownerText(d.owner)].filter(Boolean).join(' \u00b7 ')));
     var lim1 = limLine(d); if (lim1) tt.appendChild(lim1);   /* limited county data (2026-10-29) */
     var wx1 = wxLine(d); if (wx1) tt.appendChild(wx1);   /* a weather warning over the house (2026-10-29) */
+    var ot3 = occTag(d, true); if (ot3) { var om3 = q('div', 'meta dkc-occ'); om3.appendChild(ot3); tt.appendChild(om3); }   /* who lives there (2026-11-08) */
     top.appendChild(tt);
     var sc = scoreChip(d); if (sc) { sc.classList.add('big'); top.appendChild(sc); }
     var x = q('button', 'dkc-x'); x.type = 'button'; x.setAttribute('aria-label', pw('Close this door', 'Close this card')); x.appendChild(ico('close', 2.4));
@@ -11948,8 +11987,20 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var cls = st === 'x' ? 'done' : st === 'a' ? 'miss' : sc === null ? (st === 'd' ? 'back' : 'plain') : sc === 10 ? 'top' : sc >= 7 ? 'hi' : sc >= 4 ? 'mid' : 'lo';
     var size = st === 'x' || st === 'a' ? 14 : sc === 10 ? 32 : sc === null ? 18 : 28;
     if (st === 'd') cls += ' cb';   /* a door to come back to: blue ring + clock (2026-10-19) */
+    if (occOn() && occOf(d) !== 'here') cls += occOf(d) === 'away' ? ' oa' : ' oa ou';   /* square: the owner lives elsewhere; with a ?: not known (2026-11-08) */
     if (sel) { cls += ' sel'; size += 4; } if (dim) cls += ' dim';
     return { cls: cls, txt: sc === null ? '' : String(sc), size: size };
+  }
+  /* the map keys for who lives there (2026-11-08): round = owner lives here, square = elsewhere, square with ? = not known */
+  function occLegend(lg, phone) {
+    if (!occOn()) return;
+    var has = {}; (S.doors || []).forEach(function (d) { has[occOf(d)] = true; });
+    if (!has.away && !has.unk) return;
+    [['here', 'Round: owner lives here'], ['away', 'Square: owner lives elsewhere'], ['unk', 'Square with ?: not known']].forEach(function (x) {
+      if (x[0] === 'unk' && !has.unk) return;
+      var sp = q('span', 'occkey'); sp.appendChild(q('i', 'occk occk-' + x[0])); sp.appendChild(document.createTextNode(x[1])); lg.appendChild(sp);
+    });
+    var pk = occPick(); if (phone && pk) lg.appendChild(q('span', 'occkey occnow', pk === 'here' ? 'Showing: owner lives here (Sort & filter)' : 'Showing: owner lives elsewhere (Sort & filter)'));   /* the phone map leaves the others off */
   }
   function deskIcon(p) { return L.divIcon({ className: 'dkpin', html: '<span class="pin ' + p.cls + '">' + p.txt + '</span>', iconSize: [p.size, p.size], iconAnchor: [p.size / 2, p.size / 2] }); }
   function deskOpen(id) {
@@ -11965,6 +12016,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     keys.forEach(function (x) { var sp = q('span'), i = q('i'); i.style.background = x[0]; i.style.borderColor = x[1]; sp.appendChild(i); sp.appendChild(document.createTextNode(x[2])); lg.appendChild(sp); });
     if (S.doors.some(function (d) { return statusOf(d) === 'd'; })) { var cbs = q('span'); cbs.appendChild(q('i', 'cbk')); cbs.appendChild(document.createTextNode('Come back to')); lg.appendChild(cbs); }
     var hs = q('span'), hi = q('i', 'ring'); hs.appendChild(hi); hs.appendChild(document.createTextNode('Other neighborhoods')); lg.appendChild(hs);
+    occLegend(lg);
     return lg;
   }
   function deskMap(col) {
@@ -12159,9 +12211,58 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     ['due', 'clock', 'Due back', function () { return true; }, function (d) { return !!(d.mark && backOn(d)); }],
     /* building permits (2026-10-29): Solar skips houses with a solar permit; the other trades find a recent pool, fence, addition ... */
     ['nosolar', 'sun', 'No solar on record', function () { return feat('solar'); }, function (d) { return !(d.permit && d.permit.s && !d.permit.so); }],
-    ['bprec', 'clip', 'Permit in the last 2 years', function () { var b = bestTrade(); return edOn() && (b === 'yards' || b === 'pest' || b === 'security'); }, permitRecent]
+    ['bprec', 'clip', 'Permit in the last 2 years', function () { var b = bestTrade(); return edOn() && (b === 'yards' || b === 'pest' || b === 'security'); }, permitRecent],
+    /* who lives there (2026-11-08): one choice of the two, shown as its own row ("Who lives there") in Sort & filter and the Plan; the
+       sixth part is how the "No door to knock here has ..." line says it */
+    ['occh', 'home', 'Owner lives here', occOn, function (d) { return occOf(d) === 'here'; }, 'an owner who lives there'],
+    ['occa', 'home', 'Owner lives elsewhere', occOn, function (d) { return occOf(d) === 'away'; }, 'an owner who lives elsewhere']
   ];
   function secLotFilt() { return feat('security') && cardOn('security') && crewSees(); }
+  /* ---- who lives there (2026-11-08, Matthew: "go ahead and the rented doors, just make sure its obvious which are owner lived in and
+     which arent. Also add a filter into the searches and stuff to be able to mark to find owner listed homes.") ----
+     The server sends d.occ only where the owner does not live there ('a': elsewhere, rented or a second home) or is not known to ('u');
+     every other door is owner-lived (rounds.php doorOcc reads the data's field, one place). The mark is a shape as well as words, for
+     colour-blind eyes: a round pin for owner lives here, a square one for owner lives elsewhere, a square with a ? for not known, the same
+     shape in front of the label. Where the install keeps owner-lived doors only (CO.occShow 'here': Sixfold 365 until an admin changes it
+     under Setup), nothing here shows, so its crews see what they always did. The score is not touched. */
+  function occOn() { return !!CO && CO.occShow !== 'here'; }
+  function occOf(d) { var o = d && d.occ; return o === 'a' ? 'away' : o === 'u' ? 'unk' : 'here'; }
+  var OCC_WORD = { here: 'Owner lives here', away: 'Owner lives elsewhere (rented or second home)', unk: 'Occupancy unknown' };
+  var OCC_SHORT = { here: 'Owner lives here', away: 'Owner lives elsewhere', unk: 'Occupancy unknown' };
+  /* the tag: on the card always (full words), in a list row only where the owner does not live there (a row without one is owner-lived) */
+  function occTag(d, card) {
+    if (!occOn()) return null;
+    var o = occOf(d); if (o === 'here' && !card) return null;
+    var t = q('span', 'tag occtag occ-' + o); t.appendChild(q('i', 'occmk')); t.appendChild(document.createTextNode(card ? OCC_WORD[o] : OCC_SHORT[o]));
+    t.title = OCC_WORD[o];
+    return t;
+  }
+  /* the one choice: '' (everyone), 'here' or 'away', from the saved filters */
+  function occPick(F) { F = F || (filtLoad(), S.filt); return F.occh ? 'here' : F.occa ? 'away' : ''; }
+  function occSet(F, v) { delete F.occh; delete F.occa; if (v === 'here') F.occh = true; else if (v === 'away') F.occa = true; }
+  /* the row of three: Everyone / Owner lives here / Owner lives elsewhere; counts beside each when given ({all, here, away}) */
+  function occChoice(cur, onPick, n) {
+    var w = q('div', 'occrow'); w.appendChild(q('h3', 'fph', 'Who lives there'));
+    var c = q('div', 'chips matchb occch'); c.setAttribute('role', 'group'); c.setAttribute('aria-label', 'Who lives there');
+    [['', 'Everyone', 'users'], ['here', 'Owner lives here', 'home'], ['away', 'Owner lives elsewhere', 'home']].forEach(function (o) {
+      var b = q('button', o[0] ? 'occ-' + o[0] : null); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0])); b.setAttribute('data-occ', o[0] || 'all');
+      if (o[0]) b.appendChild(q('i', 'occmk')); else b.appendChild(ico(o[2], 2.2));
+      b.appendChild(document.createTextNode(o[1] + (n ? ' · ' + (n[o[0] || 'all'] || 0).toLocaleString(LOCALE) : '')));
+      b.addEventListener('click', function () { onPick(o[0]); });
+      c.appendChild(b);
+    });
+    w.appendChild(c); return w;
+  }
+  function occCount(list) { var n = { all: list.length, here: 0, away: 0 }; list.forEach(function (d) { var o = occOf(d); if (o !== 'unk') n[o]++; }); return n; }
+  /* a neighbourhood's line (2026-11-08): how many of its doors have the owner living elsewhere, or, with a choice made, how many it keeps */
+  function occAreaWords(a) {
+    if (!occOn()) return '';
+    var away = a.ocA || 0, unk = a.ocU || 0, pk = occPick();
+    if (pk === 'here') return ' · ' + (a.total - away - unk) + ' owner lives here';
+    if (pk === 'away') return ' · ' + away + ' owner lives elsewhere';
+    return away ? ' · ' + away + ' owner lives elsewhere' : '';
+  }
+  function occMatch(d, pick) { return !pick || occOf(d) === pick; }
   var ORDER = [['street', 'Street order', 'list'], ['best', 'Best first', 'chart'], ['near', 'Nearest', 'near'], ['bestnear', 'Best near me', 'near'], ['route', 'Route', 'route']];
   function orderOk(v) { return v === 'street' || v === 'near' || v === 'route' || ((v === 'best' || v === 'bestnear') && !!bestTrade() && (v === 'best' || crewSees())); }
   function filtLoad() { if (S.filt) return; S.filt = {}; try { S.filt = JSON.parse(localStorage.getItem('sixfold.rounds.filters') || '{}') || {}; } catch (e) {} }
@@ -12169,7 +12270,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   if (CO) FILT.forEach(function (x) { if (x[0] === 'lawn') x[2] = CO.a365 ? 'Lawn to aerate' : 'Has a lawn'; });
   function filtOn() { filtLoad(); if (S.region === SAMPLE_KEY) return []; return FILT.filter(function (x) { return S.filt[x[0]] && x[3](); }); }
   function matchOn() { return filtOn().length > 0; }
-  function matchWords() { return filtOn().map(function (x) { return x[2].toLowerCase(); }).join(' and '); }
+  function matchWords() { return filtOn().map(function (x) { return x[5] || x[2].toLowerCase(); }).join(' and '); }
   function doorMatches(d) { return filtOn().every(function (x) { return x[4](d); }); }
   function setOrder(v) {
     if (!orderOk(v)) return;
@@ -12190,7 +12291,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     box.appendChild(ob);
     if (S.dview === 'bestnear') box.appendChild(q('small', 'sub2', pw('The door score, less a point for every 200 m (about two blocks) from you: a 9 two blocks away comes before an 8 next door.')));
-    var fs0 = FILT.filter(function (x) { return x[3](); });
+    var fs0 = FILT.filter(function (x) { return x[3]() && !/^occ/.test(x[0]); });   /* who lives there has its own row, below */
+    if (occOn() && S.region !== SAMPLE_KEY) box.appendChild(occChoice(occPick(), function (v) { occSet(S.filt, v); filtSave(); S.openDoor = null; renderDoors(); }, occCount((S.doors || []).filter(function (d) { return toKnock(d) && filtOn().every(function (x) { return /^occ/.test(x[0]) || x[4](d); }); }))));   /* each count with the other filters on */
     if (fs0.length) {
       box.appendChild(q('h3', 'fph', 'Show only'));
       var mb = q('div', 'chips matchb');
@@ -17203,6 +17305,36 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg', 'This needs signal.')); });
     window.scrollTo(0, 0);
   }
+  /* ---- Rented and second homes (2026-11-08): an admin chooses whether the door lists carry the homes whose owner lives elsewhere ----
+     All: every home, each marked, with Who lives there in Sort & filter, the Plan, the storm list and search (the editions' default).
+     Owner-lived only: the lists as they were before rented homes came in (Sixfold 365's default); the office House lookup still finds the
+     rest. Saved on the server for everyone in this company (rounds.php whoset); the page loads again to take it. */
+  function whoSetView() {
+    hideToast(); S.signin = null; S.screen = 'whoset'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Rented and second homes', sub: pw('Who the door lists carry'), back: chooseView, backLabel: 'Back' });
+    view.textContent = '';
+    var box = q('div', 'card whoset'), cur = occOn() ? 'all' : 'here';
+    box.appendChild(q('p', 'sub2', pw('A rented house or a second home is one whose owner gets mail at another address. Choose whether your door lists carry them. This is for everyone in your company.')));
+    var msg = q('div', 'msg'); msg.hidden = true;
+    [['all', 'Every home, marked', pw('Rented and second homes are on the door lists too. Each card, pin and row says who lives there (a square pin: the owner lives elsewhere), and Sort & filter, the Plan, the storm list and search can show only one kind.')],
+     ['here', 'Owner-lived homes only', pw('The door lists keep homes where the owner lives there, as before. The office House lookup still finds the others.')]].forEach(function (o) {
+      var b = q('button', 'whoopt'); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0]));
+      b.appendChild(q('b', null, o[1] + (cur === o[0] ? ' (now)' : ''))); b.appendChild(q('span', null, o[2]));
+      b.addEventListener('click', function () {
+        if (cur === o[0]) return;
+        if (!window.confirm(o[0] === 'all' ? pw('Put rented and second homes on the door lists for everyone?') : pw('Take rented and second homes off the door lists for everyone?'))) return;
+        b.disabled = true; msg.hidden = false; msg.className = 'msg'; msg.textContent = 'Saving…';
+        api('whoset', { body: { show: o[0] } }).then(function (j) {
+          if (!j || !j.ok) { b.disabled = false; msg.className = 'msg bad'; msg.textContent = (j && j.error) || 'Not saved. Try again.'; return; }
+          msg.textContent = pw('Saved. The door lists load again now.'); S.regions = null; setTimeout(function () { location.reload(); }, 900);
+        }).catch(function () { b.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Nothing was saved.'; });
+      });
+      box.appendChild(b);
+    });
+    box.appendChild(msg);
+    view.appendChild(box);
+    window.scrollTo(0, 0);
+  }
   function accountsView() {
     if (S.screen !== 'accounts') { S.pins = null; S.pinAsk = false; S.permCat = null; S.permOpen = null; S.permDraft = null; }   /* PINs hide whenever you leave the screen */
     hideToast(); S.signin = null; S.screen = 'accounts';
@@ -18946,8 +19078,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work. Try again.')); return; }
         if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, for example “1840 Ponderosa” or just “Ponderosa”.')); return; }
-        if (!j.results.length) { res.appendChild(q('div', 'msg', pw('No door on our lists matches “') + v + '”. Our lists cover owner-occupied homes in our 11 towns; check the spelling, or try just the number and the street name.')); return; }
-        j.results.forEach(function (r) { res.appendChild(searchRow(r)); });
+        if (!j.results.length) { res.appendChild(q('div', 'msg', pw('No door on our lists matches “') + v + (occOn() ? '”. Check the spelling, or try just the number and the street name.' : '”. Our lists cover owner-occupied homes in our 11 towns; check the spelling, or try just the number and the street name.'))); return; }
+        var rs0 = searchOcc(res, j.results, run);   /* who lives there (2026-11-08): the saved choice narrows the results */
+        rs0.forEach(function (r) { res.appendChild(searchRow(r)); });
         if (j.more) res.appendChild(q('div', 'msg soft', pw('More doors match. Add more of the address to narrow it down.')));
       }).catch(function () { if (my === seq) { res.textContent = ''; res.appendChild(q('div', 'msg', 'No signal. Search needs signal.')); } });
     }
@@ -18957,6 +19090,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
     window.scrollTo(0, 0);
   }
+  /* the Who lives there row over search results (2026-11-08): the choice Sort & filter keeps; answers the results it leaves */
+  function searchOcc(res, list, redo) {
+    if (!occOn()) return list;
+    var pk = occPick();
+    if (!pk && !list.some(function (r) { return occOf(r) !== 'here'; })) return list;
+    res.appendChild(occChoice(pk, function (v) { filtLoad(); occSet(S.filt, v); filtSave(); redo(); }, occCount(list)));
+    var out = list.filter(function (r) { return occMatch(r, pk); });
+    if (!out.length) res.appendChild(q('div', 'msg', pk === 'here' ? 'None of these has an owner who lives there. Pick Everyone to see them.' : 'None of these has an owner who lives elsewhere. Pick Everyone to see them.'));
+    return out;
+  }
   function searchRow(r) {
     var b = q('button', 'door drow srow ' + fireClass(r.fire)); b.type = 'button';
     var top = q('div', 'd-top'); top.appendChild(q('div', 'addr', r.address)); top.appendChild(ico('chev', 2.4)); b.appendChild(top);
@@ -18965,6 +19108,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var fb = fireBadge({ fire: r.fire }); if (fb) meta.appendChild(fb);
     var lc = r.lawn ? lawnChip({ lawn: r.lawn }, false) : null; if (lc) meta.appendChild(lc);
     if (r.tl) { var tc = q('span', 'tree tl-' + r.tl); tc.appendChild(ico('tree', 2.2)); tc.appendChild(document.createTextNode(TREE_LV[r.tl] || r.tl)); meta.appendChild(tc); }
+    var ot5 = occTag(r); if (ot5) meta.appendChild(ot5);   /* 2026-11-08 */
     if (meta.children.length) b.appendChild(meta);
     b.addEventListener('click', function () {
       var go = function () {
@@ -20012,12 +20156,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (S.doors.some(function (d) { return d.cust; })) keys.push(['c', 'Customer']);   /* where we already work (2026-10-04) */
     if (S.here) keys.push(['u', 'You']);
     keys.push(['r', 'Other neighborhoods: tap one']);   /* 2026-10-09 */
-    keys.push(['g', pw('Gray: not a door to knock (rental, business, PO box)')]);   /* 2026-10-12 */
+    keys.push(['g', occOn() ? pw('Gray: not a door to knock (business, PO box)') : pw('Gray: not a door to knock (rental, business, PO box)')]);   /* 2026-10-12; rentals are doors where the lists carry them (2026-11-08) */
     keys.forEach(function (x) {
       var sp = q('span'); var i = q('i', x[0] === 'h' ? 'h' : x[0] === 'c' ? 'c' : x[0] === 'r' ? 'ring' : x[0] === 'g' ? 'gdot' : x[0] === 'd' ? 'cbk' : null);
       if (x[0] !== 'h' && x[0] !== 'c' && x[0] !== 'r' && x[0] !== 'g' && x[0] !== 'd') i.style.background = x[0] === 'u' ? '#111' : MAPC[x[0]];
       sp.appendChild(i); sp.appendChild(document.createTextNode(x[1])); lg.appendChild(sp);
     });
+    occLegend(lg, true);   /* round, square, square with ? (2026-11-08) */
     box.appendChild(lg);
     view.appendChild(box);
     loadLeaflet(function () {
@@ -20040,9 +20185,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         sheetFor(d, box);
       }
       /* marking from the card redraws the dots in place: no new map, no lost position */
+      /* a door whose owner lives elsewhere is a square pin (2026-11-08): the same size and colours as the round one, drawn as an icon */
+      function sqIcon(d, sel) {
+        var st = statusOf(d), hot = d.fire === 4 || d.fire === 5, r = base(d) + (sel ? 4 : 0), sz = Math.round(r * 1.8);
+        return L.divIcon({ className: 'occpin', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2],
+          html: '<span class="sq' + (occOf(d) === 'unk' ? ' uq' : '') + (st === 'x' ? ' dn' : '') + '" style="background:' + MAPC[st] + ';border-color:' + (hot ? '#9E2A1C' : '#ffffff') + ';border-width:' + (hot ? 3.5 : 2.5) + 'px"></span>' });
+      }
       function restyle() {
         Object.keys(markers).forEach(function (k) {
           var x = markers[k], st = statusOf(x.d), hot = x.d.fire === 4 || x.d.fire === 5;
+          if (x.sq) { x.m.setIcon(sqIcon(x.d, k === S.mapSel)); if (x.ring) { x.ring.setStyle({ opacity: st === 'd' ? 1 : 0 }); x.ring.setRadius(base(x.d) + (k === S.mapSel ? 4 : 0) + 6); } return; }
           x.m.setStyle({ fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.65 : 0.95, color: hot ? '#9E2A1C' : '#ffffff' });
           x.m.setRadius(base(x.d) + (k === S.mapSel ? 4 : 0));
           if (x.ring) { x.ring.setStyle({ opacity: st === 'd' ? 1 : 0 }); x.ring.setRadius(base(x.d) + (k === S.mapSel ? 4 : 0) + 6); }
@@ -20050,20 +20202,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       }
       S.liveMap = { el: el, box: box, area: S.area, restyle: restyle,
         refresh: function () { restyle(); var sd = S.mapSel && markers[S.mapSel]; if (sd) sheetFor(sd.d, box); } };
+      var opk = occOn() ? occPick() : '';
       S.doors.forEach(function (d) {
         if (typeof d.lat !== 'number') return;
-        var st = statusOf(d), hot = d.fire === 4 || d.fire === 5;
-        var m = L.circleMarker([d.lat, d.lon], { radius: base(d), color: hot ? '#9E2A1C' : '#ffffff', weight: hot ? 3.5 : 2.5,
+        if (!occMatch(d, opk)) return;   /* Sort & filter's Who lives there, on the map too (2026-11-08) */
+        var st = statusOf(d), hot = d.fire === 4 || d.fire === 5, sq = occOn() && occOf(d) !== 'here';
+        var m = sq ? L.marker([d.lat, d.lon], { icon: sqIcon(d, false), keyboard: false }).addTo(map) : L.circleMarker([d.lat, d.lon], { radius: base(d), color: hot ? '#9E2A1C' : '#ffffff', weight: hot ? 3.5 : 2.5,
           fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.65 : 0.95 }).addTo(map);
         m.on('click', function (e) { L.DomEvent.stopPropagation(e); select(d); });
         if (d.cust) L.circleMarker([d.lat, d.lon], { radius: base(d) + 6, color: '#16201C', weight: 3, fill: false, interactive: false }).addTo(map);
         var ring = st === 'd' ? L.circleMarker([d.lat, d.lon], { radius: base(d) + 6, color: '#1d6fe0', weight: 4, fill: false, interactive: false }).addTo(map) : null;   /* come back to (2026-10-19) */
-        markers[d.id] = { m: m, d: d, ring: ring };
+        markers[d.id] = { m: m, d: d, ring: ring, sq: sq };
         pts.push([d.lat, d.lon]);
       });
       map.on('click', function () {
-        if (S.mapSel && markers[S.mapSel]) markers[S.mapSel].m.setRadius(base(markers[S.mapSel].d));
-        S.mapSel = null;
+        var was = S.mapSel && markers[S.mapSel]; S.mapSel = null;
+        if (was) { if (was.sq) was.m.setIcon(sqIcon(was.d, false)); else was.m.setRadius(base(was.d)); }
         var sh = box.querySelector('.msheet'); if (sh) sh.parentNode.removeChild(sh);
         box.classList.remove('has-sheet');
       });
@@ -20108,6 +20262,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var c = q('div', 'door qc ' + fireClass(x.fire) + (x.quoted ? ' sent' : ''));
     c.appendChild(q('div', 'addr', x.address));
     c.appendChild(q('div', 'meta', x.town + ' · ' + x.area));
+    var otQ = occTag(x, true); if (otQ) { var omQ = q('div', 'meta'); omQ.appendChild(otQ); c.appendChild(omQ); }   /* the booked door: who lives there (2026-11-08) */
     var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
     var lq = lawnChip(x, false); if (lq) meta.appendChild(lq);
     meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres' + (x.val ? ' · County value ' + fmtVal(x.val) : '') + ' · Owner: ' + ownerText(x.owner))); c.appendChild(meta);
@@ -21275,6 +21430,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         holder.appendChild(tw);
       }
       if (j.pick) { holder.appendChild(q('div', 'msg', j.total.toLocaleString(LOCALE) + pw(' doors were within reach of this storm. Pick a town.'))); return; }
+      /* who lives there (2026-11-08): the list's own choice, the same one Sort & filter keeps, counted on this storm's doors */
+      var all0 = j.doors;
+      if (occOn() && all0.length) {
+        var spk = occPick();
+        holder.appendChild(occChoice(spk, function (v) { filtLoad(); occSet(S.filt, v); filtSave(); S.stormMore = 0; stormDayView(day); }, occCount(all0)));
+        j.doors = all0.filter(function (x) { return occMatch(x, spk); });
+      }
       var rows = j.doors.map(function (x) { var v = stormVerdict(x, rs); var p = rs.price[x.mat || ''] ; var est = p && x.roof && x.roof.sqs ? Math.round(p * x.roof.sqs) : null; return { x: x, v: v, est: est }; });
       var nL = rows.filter(function (r) { return r.v === 'likely'; }).length, nP = rows.filter(function (r) { return r.v === 'possible'; }).length;
       var show = S.stormShow || 'likely';
@@ -21319,6 +21481,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var m3 = q('div', 'meta');
     if (x.owner) m3.appendChild(q('span', 'own', 'Owner: ' + ownerText(x.owner)));
     if (r.est) m3.appendChild(q('span', 'tag sest', 'About $' + r.est.toLocaleString(LOCALE)));
+    var ot4 = occTag(x); if (ot4) m3.appendChild(ot4);   /* 2026-11-08 */
     if (x.mark) m3.appendChild(q('span', 'tag', x.mark === 'booked' ? (x.mq ? 'Quote sent' : 'Walk booked') : x.mark === 'later' ? 'Not now' : x.mark === 'miss' ? 'No answer' : x.mark === 'nosolicit' ? 'No soliciting' : x.mark));
     c.appendChild(m3);
     var acts = q('div', 'lcontact');
@@ -22503,6 +22666,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
     if (d.lim && LIM_TEXT[d.lim]) { var lp = [d.acres > 0 ? d.acres.toFixed(2) + '-acre lot (house and driveway included)' : '', d.val ? 'County value ' + fmtVal(d.val) : '', d.owner ? 'Owner: ' + ownerText(d.owner) : ''].filter(Boolean); if (lp.length) meta.appendChild(q('span', 'own', lp.join(' · '))); }   /* limited data: no empty owner or 0-acre lot (2026-10-29) */
     else meta.appendChild(q('span', 'own', d.acres.toFixed(2) + '-acre lot (house and driveway included)' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + ownerText(d.owner)));
+    /* who lives there (2026-11-08): the label leads the tags, every door; where the owner lives elsewhere, who answers the door */
+    var ot2 = occTag(d, true); if (ot2) meta.appendChild(ot2);
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
@@ -22510,6 +22675,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);
+    if (occOn() && occOf(d) === 'away') card.appendChild(q('div', 'meta occl', 'The owner of record is likely the landlord; whoever answers is likely a tenant or a guest.'));
     var lot0 = edCardLot(d, full); if (lot0) card.appendChild(lot0);   /* the photo near the top (2026-10-30) */
     var lim0 = limLine(d); if (lim0) card.appendChild(lim0);   /* limited county data (2026-10-29) */
     var wx0 = wxLine(d); if (wx0) card.appendChild(wx0);   /* a weather warning over the house (2026-10-29) */
@@ -22906,6 +23072,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (t && crewSees()) c.push(['score', 'Score', function (d) { return d._sc === null ? '' : String(d._sc); }, function (d) { return d._sc === null ? -1 : d._sc; }, true]);
     c.push(['addr', 'Address', function (d) { return d.address; }, function (d) { return d.address; }, false]);
     c.push(['area', 'Neighborhood', function (d) { return d._area; }, function (d) { return d._area; }, false]);
+    if (occOn()) c.push(['occ', 'Who lives there', function (d) { return OCC_SHORT[occOf(d)]; }, function (d) { return ({ here: 0, unk: 1, away: 2 })[occOf(d)]; }, false]);   /* 2026-11-08; in the CSV too */
     if (t === 'roof') {
       if (cardOn('hail')) c.push(['hail', 'Biggest hail', function (d) { var h = hailMax(d); return h ? inch(h) : ''; }, hailMax, true]);
       c.push(['roof', 'Roof', function (d) { return d.roof && d.roof.sqs ? d.roof.sqs + ' sq' : ''; }, function (d) { return d.roof ? d.roof.sqs || 0 : null; }, true]);
@@ -22944,7 +23111,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setDock(null); foot.hidden = true;
     setBar('back', { title: pw('Plan the doors'), sub: r.label, back: function () { S.region = key; renderAreas(); }, backLabel: 'Back' });
     document.body.classList.add('dk-top');
-    if (!S.plan || S.plan.key !== key) S.plan = { key: key, rows: [], got: {}, order: planOrder(r), sort: bestTrade() && crewSees() ? ['score', -1] : ['addr', 1], filt: { open: true }, sel: {}, people: null, limit: 500 };
+    if (!S.plan || S.plan.key !== key) S.plan = { key: key, rows: [], got: {}, order: planOrder(r), sort: bestTrade() && crewSees() ? ['score', -1] : ['addr', 1], filt: planWhoSaved({ open: true }), sel: {}, people: null, limit: 500 };
     view.textContent = '';
     var P = S.plan;
     if (P.stale) {   /* back from a door: that neighbourhood again, so its marks are current */
@@ -22999,8 +23166,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       planDraw();
     });
   }
-  function planShown() {
-    var P = S.plan, on = FILT.filter(function (x) { return P.filt[x[0]] && x[3](); }), yr = new Date().getFullYear(), F = P.filt;
+  function planShown(F0) {
+    var P = S.plan, F = F0 || P.filt, on = FILT.filter(function (x) { return F[x[0]] && x[3](); }), yr = new Date().getFullYear();
     /* a property search (2026-10-11) looks past the other filters: every word in the address */
     if (F.q) { var qw = F.q.toUpperCase().split(/\s+/).filter(Boolean); return P.rows.filter(function (d) { var A = String(d.address).toUpperCase(); return qw.every(function (w) { return A.indexOf(w) >= 0; }); }); }
     return P.rows.filter(function (d) {
@@ -23038,6 +23205,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return k === 'min' ? (v === 10 ? 'Score 10 only' : 'Score ' + v + ' or more') : k === 'hail' ? 'Hail ' + v + ' in or more' : k === 'age' ? 'Roof ' + v + ' years or older'
       : k === 'noperm' ? 'No re-roof permit' : k === 'nosol' ? 'No solar on record' : k === 'kwh' ? 'Solar ' + v.toLocaleString(LOCALE) + ' kWh+' : k === 'area' ? v : k;
   }
+  /* Who lives there on the Plan (2026-11-08): remembered on this device like the list's filters, so a manager who plans owner-lived
+     streets only finds it that way next time */
+  function planWhoSaved(F) { if (occOn()) { var v = ''; try { v = localStorage.getItem('sixfold.plan.who') || ''; } catch (e) {} occSet(F, v); } return F; }
   function planHidden() { try { return JSON.parse(localStorage.getItem('sixfold.plan.hide') || '[]') || []; } catch (e) { return []; } }
   /* the preview beside the table: what the door's card would say first, and the way into it */
   function planPeek(d) {
@@ -23050,6 +23220,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     x.addEventListener('click', function () { P.peek = null; planDraw(); }); top.appendChild(x);
     box.appendChild(top);
     var why = scoreWhy(d); if (why) { why.classList.add('dkc-why'); box.appendChild(why); }
+    var opk = occTag(d, true); if (opk) { var om = q('div', 'meta'); om.appendChild(opk); box.appendChild(om); }   /* who lives there (2026-11-08) */
     if (typeof d.lat === 'number' && typeof d.lon === 'number') box.appendChild(lotPreview(d));   /* the lot with its property line (2026-10-19) */
     var tl = deskTiles(d);
     if (tl.length) { var g = q('div', 'dkc-tiles'); tl.forEach(function (t) { var c = q('div', 'dkc-tile'); c.appendChild(q('small', null, t[0])); c.appendChild(q('span', null, t[1])); g.appendChild(c); }); box.appendChild(g); }
@@ -23188,7 +23359,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       fl.appendChild(b);
     };
     chip('open', 'Not knocked yet', 'door');
-    FILT.forEach(function (x) { if (x[3]()) chip(x[0], x[2], x[1]); });
+    FILT.forEach(function (x) { if (x[3]() && !/^occ/.test(x[0])) chip(x[0], x[2], x[1]); });   /* who lives there: its own row, below */
     chip('free', 'Nobody assigned', 'users'); chip('mine', 'Assigned', 'users');
     var wide = planWide();
     if (P.filt.q) { var xq = q('button', 'xchip'); xq.type = 'button'; xq.setAttribute('aria-pressed', 'true'); xq.setAttribute('aria-label', 'Clear the search'); xq.appendChild(document.createTextNode('\u201c' + P.filt.q + '\u201d ')); xq.appendChild(ico('close', 2.4)); xq.addEventListener('click', function () { delete P.filt.q; planDraw(); }); fl.appendChild(xq); }
@@ -23216,6 +23387,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       fl.appendChild(ms);
     }
     wrap.appendChild(fl); if (fl2) wrap.appendChild(fl2);
+    if (occOn()) {   /* 2026-11-08: Everyone / Owner lives here / Owner lives elsewhere, each with how many it leaves on the table */
+      var F3 = Object.assign({}, P.filt); occSet(F3, ''); delete F3.q;
+      var ow = occChoice(occPick(P.filt), function (v) { occSet(P.filt, v); try { localStorage.setItem('sixfold.plan.who', v); } catch (e) {} planDraw(); }, occCount(planShown(F3)));
+      ow.classList.add('planocc'); wrap.appendChild(ow);
+    }
 
     var shown = planShown();
     var sc = P.sort, col = cols.filter(function (c) { return c[0] === sc[0]; })[0] || cols[0];
@@ -23306,6 +23482,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       cols.forEach(function (c) {
         var td = q('td', PLAN_NUM[c[0]] ? 'n' : c[0] === 'addr' ? 'ad' : null);
         if (c[0] === 'score') { var ch = scoreChip(d); if (ch) td.appendChild(ch); }
+        else if (c[0] === 'occ') { var oc = occTag(d); if (oc) td.appendChild(oc); else td.textContent = c[2](d); }   /* the square shape where the owner lives elsewhere */
         else td.textContent = c[2](d);
         if (c[0] === 'rep' && d.rep) td.className = 'rp';   /* this door's own person, not its neighbourhood's */
         tr.appendChild(td);
