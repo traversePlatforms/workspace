@@ -123,6 +123,11 @@ traverse/app/data/rounds/hail-*.json
 
 # County assessor downloads (2026-10-04): owners names and addresses, regenerable from the county sites
 traverse/data-pipeline/door-territory/assessor/raw/
+# Gap plan 2026-11-08: parcel pulls and door-point exports (addresses) stay out of git; only counts are tracked
+traverse/data-pipeline/door-territory/gap1108/door-points*
+traverse/data-pipeline/door-territory/gap1108/*.tsv.gz
+traverse/data-pipeline/door-territory/gap1108/state/
+traverse/data-pipeline/door-territory/gap1108/*/*.csv
 # Roof measurements (2026-10-04): cache and the built files, regenerable with roofs/sample-roofs.mjs
 traverse/data-pipeline/door-territory/roofs/roof-cache*.json*
 traverse/data-pipeline/door-territory/roofs/sample.log

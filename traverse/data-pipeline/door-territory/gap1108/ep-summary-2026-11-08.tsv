@@ -1,0 +1,23 @@
+key	kind	census	rows	owner_lives_here	local_po_box	post
+g1-black-forest-peyton-rural	rural	20505	14244	12930	74	1240
+g1-calhan	town	211	241	151	18	72
+g1-cascade-chipita-park	cdp	778	755	439	86	230
+g1-cimarron-hills	cdp	5800	4092	3519	0	573
+g1-el-paso-other	other		445	329	13	103
+g1-elsmere-rural	rural	11355	3325	2897	3	425
+g1-fountain-rural	rural	14820	5944	5360	4	580
+g1-green-mountain-falls	town	422	410	57	152	201
+g1-manitou-springs	town	1943	1489	1173	19	297
+g1-monument-rural	rural	4270	147	126	2	19
+g1-southeastern-el-paso-rural	rural	6466	4787	4272	6	509
+g1-stratmoor	cdp	1648	1311	1110	0	201
+merge-black-forest	merge		1580	1134	19	427
+merge-cs-northeast	merge		1346	952	0	394
+merge-cs-northwest	merge		2958	2231	1	726
+merge-cs-southeast	merge		4041	3282	0	759
+merge-cs-southwest	merge		1991	1405	0	586
+merge-fountain	merge		1690	1390	0	300
+merge-monument	merge		3565	2788	81	696
+merge-palmer-lake	merge		294	67	146	81
+merge-security-widefield	merge		558	465	0	93
+merge-walden	merge		103	61	0	42

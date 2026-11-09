@@ -1,0 +1,5044 @@
+{
+ "built": "2026-11-08T22:15:28.277Z",
+ "note": "counts only; see gap-classify.mjs for the buckets",
+ "counties": {
+  "adams": {
+   "parcels": 188474,
+   "matchedDoor": 113050,
+   "matchedLookup": 43210,
+   "matchedByCls": {
+    "door:house": 112982,
+    "lookup:house": 43116,
+    "door:nonres": 68,
+    "lookup:nonres": 94
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 5164,
+     "addrs": 0,
+     "byCls": {
+      "house": 5164
+     }
+    },
+    "nonres": {
+     "parcels": 19448,
+     "addrs": 11022,
+     "byCls": {
+      "nonres": 19448
+     }
+    },
+    "big": {
+     "parcels": 1010,
+     "addrs": 1008,
+     "byCls": {
+      "house": 1010
+     }
+    },
+    "org": {
+     "parcels": 959,
+     "addrs": 958,
+     "byCls": {
+      "house": 959
+     }
+    },
+    "absent": {
+     "parcels": 969,
+     "addrs": 969,
+     "byCls": {
+      "house": 969
+     }
+    },
+    "ownerY": {
+     "parcels": 4664,
+     "addrs": 4655,
+     "byCls": {
+      "house": 4664
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "NO CITY",
+     4638
+    ],
+    [
+     "BENNETT",
+     26
+    ]
+   ],
+   "absentCities": [
+    [
+     "NO CITY",
+     961
+    ],
+    [
+     "BRIGHTON",
+     4
+    ],
+    [
+     "BENNETT",
+     4
+    ]
+   ]
+  },
+  "arapahoe": {
+   "parcels": 231438,
+   "matchedDoor": 132216,
+   "matchedLookup": 36780,
+   "matchedByCls": {
+    "door:condo": 10,
+    "door:house": 131226,
+    "lookup:house": 28051,
+    "lookup:condo": 36,
+    "lookup:nonres": 5862,
+    "lookup:mobile": 1045,
+    "door:mobile": 336,
+    "door:nonres": 392,
+    "lookup:multi": 943,
+    "lookup:attached": 835,
+    "door:attached": 217,
+    "door:multi": 23,
+    "door:farmres": 12,
+    "lookup:farmres": 8
+   },
+   "buckets": {
+    "condo": {
+     "parcels": 27946,
+     "addrs": 27943,
+     "byCls": {
+      "condo": 27946
+     }
+    },
+    "condo:lives": {
+     "parcels": 8460,
+     "addrs": 8459,
+     "byCls": {
+      "condo": 8460
+     }
+    },
+    "condo:away": {
+     "parcels": 17179,
+     "addrs": 17178,
+     "byCls": {
+      "condo": 17179
+     }
+    },
+    "nonres": {
+     "parcels": 17088,
+     "addrs": 6590,
+     "byCls": {
+      "nonres": 17088
+     }
+    },
+    "nositus": {
+     "parcels": 5383,
+     "addrs": 0,
+     "byCls": {
+      "house": 5383
+     }
+    },
+    "multi": {
+     "parcels": 158,
+     "addrs": 103,
+     "byCls": {
+      "multi": 158
+     }
+    },
+    "mobile:away": {
+     "parcels": 234,
+     "addrs": 234,
+     "byCls": {
+      "mobile": 234
+     }
+    },
+    "mobile": {
+     "parcels": 509,
+     "addrs": 503,
+     "byCls": {
+      "mobile": 509
+     }
+    },
+    "mobile:lives": {
+     "parcels": 80,
+     "addrs": 80,
+     "byCls": {
+      "mobile": 80
+     }
+    },
+    "org": {
+     "parcels": 346,
+     "addrs": 345,
+     "byCls": {
+      "house": 345,
+      "attached": 1
+     }
+    },
+    "absent": {
+     "parcels": 806,
+     "addrs": 805,
+     "byCls": {
+      "house": 806
+     }
+    },
+    "ownerY": {
+     "parcels": 8579,
+     "addrs": 8579,
+     "byCls": {
+      "house": 8579
+     }
+    },
+    "localpo": {
+     "parcels": 59,
+     "addrs": 58,
+     "byCls": {
+      "house": 59
+     }
+    },
+    "big": {
+     "parcels": 860,
+     "addrs": 854,
+     "byCls": {
+      "house": 860
+     }
+    },
+    "farmres:lives": {
+     "parcels": 568,
+     "addrs": 568,
+     "byCls": {
+      "farmres": 568
+     }
+    },
+    "farmres": {
+     "parcels": 708,
+     "addrs": 691,
+     "byCls": {
+      "farmres": 708
+     }
+    },
+    "farmres:away": {
+     "parcels": 88,
+     "addrs": 88,
+     "byCls": {
+      "farmres": 88
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "AURORA",
+     7787
+    ],
+    [
+     "WATKINS",
+     333
+    ],
+    [
+     "BENNETT",
+     263
+    ],
+    [
+     "LITTLETON",
+     162
+    ],
+    [
+     "ENGLEWOOD",
+     13
+    ],
+    [
+     "STRASBURG",
+     5
+    ],
+    [
+     "BYERS",
+     5
+    ],
+    [
+     "ENGELWOOD",
+     4
+    ],
+    [
+     "CENTENNIAL",
+     3
+    ],
+    [
+     "DEER TRAIL",
+     2
+    ],
+    [
+     "ENGLWOOD",
+     1
+    ],
+    [
+     "COLUMBINE VALLEY",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "AURORA",
+     699
+    ],
+    [
+     "DEER TRAIL",
+     99
+    ],
+    [
+     "LITTLETON",
+     29
+    ],
+    [
+     "BENNETT",
+     17
+    ],
+    [
+     "WATKINS",
+     12
+    ],
+    [
+     "ENGLEWOOD",
+     4
+    ],
+    [
+     "DENVER",
+     3
+    ],
+    [
+     "STRASBURG",
+     2
+    ]
+   ]
+  },
+  "archuleta": {
+   "parcels": 17892,
+   "matchedDoor": 2930,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 2930
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 9147,
+     "addrs": 8764,
+     "byCls": {
+      "house": 9147
+     }
+    },
+    "org": {
+     "parcels": 2457,
+     "addrs": 2069,
+     "byCls": {
+      "house": 2457
+     }
+    },
+    "big": {
+     "parcels": 2620,
+     "addrs": 1896,
+     "byCls": {
+      "house": 2620
+     }
+    },
+    "ownerY": {
+     "parcels": 3,
+     "addrs": 2,
+     "byCls": {
+      "house": 3
+     }
+    },
+    "nositus": {
+     "parcels": 735,
+     "addrs": 0,
+     "byCls": {
+      "house": 735
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "NO CITY",
+     3
+    ]
+   ],
+   "absentCities": [
+    [
+     "NO CITY",
+     9147
+    ]
+   ]
+  },
+  "boulder": {
+   "parcels": 144551,
+   "matchedDoor": 82843,
+   "matchedLookup": 36542,
+   "matchedByCls": {
+    "door:house": 82843,
+    "lookup:house": 36542
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 7195,
+     "addrs": 5221,
+     "byCls": {
+      "house": 7195
+     }
+    },
+    "org": {
+     "parcels": 4188,
+     "addrs": 2204,
+     "byCls": {
+      "house": 4188
+     }
+    },
+    "big": {
+     "parcels": 7036,
+     "addrs": 4888,
+     "byCls": {
+      "house": 7036
+     }
+    },
+    "ownerY": {
+     "parcels": 5720,
+     "addrs": 5297,
+     "byCls": {
+      "house": 5720
+     }
+    },
+    "nositus": {
+     "parcels": 798,
+     "addrs": 0,
+     "byCls": {
+      "house": 798
+     }
+    },
+    "localpo": {
+     "parcels": 229,
+     "addrs": 196,
+     "byCls": {
+      "house": 229
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "UNINCORPORATED",
+     5556
+    ],
+    [
+     "LAFAYETTE",
+     129
+    ],
+    [
+     "LONGMONT",
+     33
+    ],
+    [
+     "BOULDER",
+     2
+    ]
+   ],
+   "absentCities": [
+    [
+     "UNINCORPORATED",
+     6836
+    ],
+    [
+     "JAMESTOWN",
+     182
+    ],
+    [
+     "WARD",
+     137
+    ],
+    [
+     "LAFAYETTE",
+     79
+    ],
+    [
+     "LONGMONT",
+     73
+    ],
+    [
+     "BOULDER",
+     37
+    ],
+    [
+     "LOUISVILLE",
+     34
+    ],
+    [
+     "ERIE",
+     23
+    ],
+    [
+     "SUPERIOR",
+     11
+    ],
+    [
+     "NEDERLAND",
+     11
+    ],
+    [
+     "LYONS",
+     1
+    ]
+   ]
+  },
+  "broomfield": {
+   "parcels": 27476,
+   "matchedDoor": 18335,
+   "matchedLookup": 5649,
+   "matchedByCls": {
+    "door:attached": 1203,
+    "lookup:attached": 392,
+    "door:house": 17098,
+    "lookup:house": 3174,
+    "lookup:nonres": 2056,
+    "lookup:condo": 25,
+    "door:nonres": 34,
+    "lookup:multi": 2
+   },
+   "buckets": {
+    "nonres": {
+     "parcels": 1305,
+     "addrs": 716,
+     "byCls": {
+      "nonres": 1305
+     }
+    },
+    "condo:lives": {
+     "parcels": 869,
+     "addrs": 869,
+     "byCls": {
+      "condo": 869
+     }
+    },
+    "condo": {
+     "parcels": 1648,
+     "addrs": 1640,
+     "byCls": {
+      "condo": 1648
+     }
+    },
+    "condo:away": {
+     "parcels": 643,
+     "addrs": 641,
+     "byCls": {
+      "condo": 643
+     }
+    },
+    "nositus": {
+     "parcels": 222,
+     "addrs": 0,
+     "byCls": {
+      "attached": 9,
+      "house": 213
+     }
+    },
+    "multi": {
+     "parcels": 217,
+     "addrs": 212,
+     "byCls": {
+      "multi": 217
+     }
+    },
+    "mobile:away": {
+     "parcels": 3,
+     "addrs": 3,
+     "byCls": {
+      "mobile": 3
+     }
+    },
+    "mobile": {
+     "parcels": 7,
+     "addrs": 6,
+     "byCls": {
+      "mobile": 7
+     }
+    },
+    "org": {
+     "parcels": 2,
+     "addrs": 2,
+     "byCls": {
+      "house": 2
+     }
+    },
+    "ownerY": {
+     "parcels": 3,
+     "addrs": 3,
+     "byCls": {
+      "house": 3
+     }
+    },
+    "absent": {
+     "parcels": 4,
+     "addrs": 4,
+     "byCls": {
+      "house": 4
+     }
+    },
+    "big": {
+     "parcels": 84,
+     "addrs": 84,
+     "byCls": {
+      "house": 84
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "BROOMFIELD",
+     3
+    ]
+   ],
+   "absentCities": [
+    [
+     "BROOMFIELD",
+     4
+    ]
+   ]
+  },
+  "clear-creek": {
+   "parcels": 26844,
+   "matchedDoor": 5108,
+   "matchedLookup": 872,
+   "matchedByCls": {
+    "door:house": 5108,
+    "lookup:house": 872
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 16135,
+     "addrs": 0,
+     "byCls": {
+      "house": 16135
+     }
+    },
+    "org": {
+     "parcels": 980,
+     "addrs": 428,
+     "byCls": {
+      "house": 980
+     }
+    },
+    "absent": {
+     "parcels": 2600,
+     "addrs": 1579,
+     "byCls": {
+      "house": 2600
+     }
+    },
+    "big": {
+     "parcels": 972,
+     "addrs": 278,
+     "byCls": {
+      "house": 972
+     }
+    },
+    "ownerY": {
+     "parcels": 121,
+     "addrs": 83,
+     "byCls": {
+      "house": 121
+     }
+    },
+    "localpo": {
+     "parcels": 56,
+     "addrs": 32,
+     "byCls": {
+      "house": 56
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "EVERGREEN",
+     76
+    ],
+    [
+     "IDAHO SPRINGS",
+     44
+    ],
+    [
+     "DUMONT",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "IDAHO SPRINGS",
+     779
+    ],
+    [
+     "EVERGREEN",
+     637
+    ],
+    [
+     "GEORGETOWN",
+     523
+    ],
+    [
+     "EMPIRE",
+     361
+    ],
+    [
+     "DUMONT",
+     133
+    ],
+    [
+     "SILVER PLUME",
+     127
+    ],
+    [
+     "LAWSON",
+     62
+    ],
+    [
+     "NO CITY",
+     31
+    ],
+    [
+     "IDAHO SPRINS",
+     2
+    ],
+    [
+     "DOWNIEVILLE",
+     1
+    ]
+   ]
+  },
+  "custer": {
+   "parcels": 9489,
+   "matchedDoor": 486,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 486
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 9003,
+     "addrs": 0,
+     "byCls": {
+      "house": 9003
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": []
+  },
+  "denver": {
+   "parcels": 240257,
+   "matchedDoor": 134119,
+   "matchedLookup": 43182,
+   "matchedByCls": {
+    "lookup:multi": 1799,
+    "lookup:nonres": 1819,
+    "lookup:house": 25645,
+    "door:condo": 171,
+    "lookup:condo": 2226,
+    "lookup:attached": 11594,
+    "door:nonres": 511,
+    "door:multi": 72,
+    "door:attached": 22131,
+    "door:house": 111026,
+    "door:mobile": 208,
+    "lookup:mobile": 99
+   },
+   "buckets": {
+    "condo:lives": {
+     "parcels": 23932,
+     "addrs": 23904,
+     "byCls": {
+      "condo": 23932
+     }
+    },
+    "condo": {
+     "parcels": 41786,
+     "addrs": 41441,
+     "byCls": {
+      "condo": 41786
+     }
+    },
+    "condo:away": {
+     "parcels": 14265,
+     "addrs": 14106,
+     "byCls": {
+      "condo": 14265
+     }
+    },
+    "nonres": {
+     "parcels": 19818,
+     "addrs": 18562,
+     "byCls": {
+      "nonres": 19818
+     }
+    },
+    "multi": {
+     "parcels": 1264,
+     "addrs": 1262,
+     "byCls": {
+      "multi": 1264
+     }
+    },
+    "big": {
+     "parcels": 67,
+     "addrs": 63,
+     "byCls": {
+      "house": 57,
+      "attached": 10
+     }
+    },
+    "org": {
+     "parcels": 7,
+     "addrs": 4,
+     "byCls": {
+      "attached": 5,
+      "house": 2
+     }
+    },
+    "mobile": {
+     "parcels": 2,
+     "addrs": 2,
+     "byCls": {
+      "mobile": 2
+     }
+    },
+    "absent": {
+     "parcels": 5,
+     "addrs": 4,
+     "byCls": {
+      "house": 1,
+      "attached": 4
+     }
+    },
+    "ownerY": {
+     "parcels": 7,
+     "addrs": 2,
+     "byCls": {
+      "attached": 7
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "DENVER",
+     7
+    ]
+   ],
+   "absentCities": [
+    [
+     "DENVER",
+     5
+    ]
+   ]
+  },
+  "dolores": {
+   "parcels": 4513,
+   "matchedDoor": 86,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 86
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 1308,
+     "addrs": 1193,
+     "byCls": {
+      "house": 1308
+     }
+    },
+    "nositus": {
+     "parcels": 1061,
+     "addrs": 0,
+     "byCls": {
+      "house": 1061
+     }
+    },
+    "big": {
+     "parcels": 1552,
+     "addrs": 1083,
+     "byCls": {
+      "house": 1552
+     }
+    },
+    "org": {
+     "parcels": 506,
+     "addrs": 452,
+     "byCls": {
+      "house": 506
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "NO CITY",
+     1308
+    ]
+   ]
+  },
+  "douglas": {
+   "parcels": 164818,
+   "matchedDoor": 107011,
+   "matchedLookup": 15273,
+   "matchedByCls": {
+    "door:house": 106542,
+    "lookup:house": 14875,
+    "lookup:nonres": 290,
+    "door:nonres": 467,
+    "door:mobile": 2,
+    "lookup:mobile": 108
+   },
+   "buckets": {
+    "nonres": {
+     "parcels": 32801,
+     "addrs": 14208,
+     "byCls": {
+      "nonres": 32801
+     }
+    },
+    "nositus": {
+     "parcels": 457,
+     "addrs": 0,
+     "byCls": {
+      "house": 457
+     }
+    },
+    "ownerY": {
+     "parcels": 6022,
+     "addrs": 6008,
+     "byCls": {
+      "house": 6022
+     }
+    },
+    "localpo": {
+     "parcels": 73,
+     "addrs": 73,
+     "byCls": {
+      "house": 73
+     }
+    },
+    "big": {
+     "parcels": 1457,
+     "addrs": 1454,
+     "byCls": {
+      "house": 1457
+     }
+    },
+    "absent": {
+     "parcels": 1354,
+     "addrs": 1326,
+     "byCls": {
+      "house": 1354
+     }
+    },
+    "org": {
+     "parcels": 275,
+     "addrs": 273,
+     "byCls": {
+      "house": 275
+     }
+    },
+    "mobile:away": {
+     "parcels": 60,
+     "addrs": 60,
+     "byCls": {
+      "mobile": 60
+     }
+    },
+    "mobile": {
+     "parcels": 95,
+     "addrs": 92,
+     "byCls": {
+      "mobile": 95
+     }
+    },
+    "mobile:lives": {
+     "parcels": 26,
+     "addrs": 26,
+     "byCls": {
+      "mobile": 26
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "LITTLETON",
+     2549
+    ],
+    [
+     "CASTLE ROCK",
+     1306
+    ],
+    [
+     "FRANKTOWN",
+     639
+    ],
+    [
+     "SEDALIA",
+     603
+    ],
+    [
+     "LARKSPUR",
+     377
+    ],
+    [
+     "PARKER",
+     375
+    ],
+    [
+     "WOODLAND PARK",
+     100
+    ],
+    [
+     "ENGLEWOOD",
+     71
+    ],
+    [
+     "PALMER LAKE",
+     2
+    ]
+   ],
+   "absentCities": [
+    [
+     "LITTLETON",
+     641
+    ],
+    [
+     "ENGLEWOOD",
+     194
+    ],
+    [
+     "SEDALIA",
+     179
+    ],
+    [
+     "CASTLE ROCK",
+     150
+    ],
+    [
+     "WOODLAND PARK",
+     103
+    ],
+    [
+     "FRANKTOWN",
+     83
+    ],
+    [
+     "LARKSPUR",
+     57
+    ],
+    [
+     "PARKER",
+     16
+    ],
+    [
+     "PALMER LAKE",
+     3
+    ],
+    [
+     "LOUVIERS",
+     1
+    ]
+   ]
+  },
+  "eagle": {
+   "parcels": 25064,
+   "matchedDoor": 2038,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 1871,
+    "door:farmres": 16,
+    "door:nonres": 139,
+    "door:mobile": 4,
+    "door:condo": 1,
+    "door:attached": 7
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 14485,
+     "addrs": 0,
+     "byCls": {
+      "house": 14414,
+      "attached": 71
+     }
+    },
+    "mobile": {
+     "parcels": 119,
+     "addrs": 0,
+     "byCls": {
+      "mobile": 119
+     }
+    },
+    "nonres": {
+     "parcels": 7361,
+     "addrs": 40,
+     "byCls": {
+      "nonres": 7361
+     }
+    },
+    "org": {
+     "parcels": 126,
+     "addrs": 69,
+     "byCls": {
+      "house": 126
+     }
+    },
+    "multi": {
+     "parcels": 97,
+     "addrs": 0,
+     "byCls": {
+      "multi": 97
+     }
+    },
+    "condo": {
+     "parcels": 654,
+     "addrs": 19,
+     "byCls": {
+      "condo": 654
+     }
+    },
+    "farmres": {
+     "parcels": 177,
+     "addrs": 2,
+     "byCls": {
+      "farmres": 177
+     }
+    },
+    "big": {
+     "parcels": 7,
+     "addrs": 6,
+     "byCls": {
+      "house": 7
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": []
+  },
+  "el-paso": {
+   "parcels": 277007,
+   "matchedDoor": 132294,
+   "matchedLookup": 29590,
+   "matchedByCls": {
+    "lookup:house": 28521,
+    "lookup:nonres": 890,
+    "door:house": 130466,
+    "door:attached": 162,
+    "door:nonres": 1611,
+    "lookup:farmres": 10,
+    "door:farmres": 3,
+    "lookup:mobile": 7,
+    "door:mobile": 13,
+    "lookup:multi": 31,
+    "door:condo": 13,
+    "lookup:attached": 127,
+    "door:multi": 26,
+    "lookup:condo": 4
+   },
+   "buckets": {
+    "nonres": {
+     "parcels": 37442,
+     "addrs": 27982,
+     "byCls": {
+      "nonres": 37442
+     }
+    },
+    "multi": {
+     "parcels": 2157,
+     "addrs": 2156,
+     "byCls": {
+      "multi": 2157
+     }
+    },
+    "absent": {
+     "parcels": 9911,
+     "addrs": 9883,
+     "byCls": {
+      "attached": 907,
+      "house": 9004
+     }
+    },
+    "ownerY": {
+     "parcels": 46666,
+     "addrs": 46662,
+     "byCls": {
+      "attached": 387,
+      "house": 46279
+     }
+    },
+    "org": {
+     "parcels": 4373,
+     "addrs": 4348,
+     "byCls": {
+      "attached": 436,
+      "house": 3937
+     }
+    },
+    "condo:lives": {
+     "parcels": 3536,
+     "addrs": 3528,
+     "byCls": {
+      "condo": 3536
+     }
+    },
+    "condo": {
+     "parcels": 8434,
+     "addrs": 8405,
+     "byCls": {
+      "condo": 8434
+     }
+    },
+    "condo:away": {
+     "parcels": 4037,
+     "addrs": 4032,
+     "byCls": {
+      "condo": 4037
+     }
+    },
+    "mobile": {
+     "parcels": 790,
+     "addrs": 788,
+     "byCls": {
+      "mobile": 790
+     }
+    },
+    "big": {
+     "parcels": 3451,
+     "addrs": 3411,
+     "byCls": {
+      "house": 3448,
+      "attached": 3
+     }
+    },
+    "mobile:lives": {
+     "parcels": 369,
+     "addrs": 369,
+     "byCls": {
+      "mobile": 369
+     }
+    },
+    "mobile:away": {
+     "parcels": 291,
+     "addrs": 290,
+     "byCls": {
+      "mobile": 291
+     }
+    },
+    "farmres:lives": {
+     "parcels": 818,
+     "addrs": 816,
+     "byCls": {
+      "farmres": 818
+     }
+    },
+    "farmres": {
+     "parcels": 1227,
+     "addrs": 1210,
+     "byCls": {
+      "farmres": 1227
+     }
+    },
+    "farmres:away": {
+     "parcels": 308,
+     "addrs": 298,
+     "byCls": {
+      "farmres": 308
+     }
+    },
+    "localpo": {
+     "parcels": 672,
+     "addrs": 669,
+     "byCls": {
+      "house": 667,
+      "attached": 5
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "ZIP 80831",
+     9824
+    ],
+    [
+     "ZIP 80925",
+     5724
+    ],
+    [
+     "ZIP 80921",
+     4414
+    ],
+    [
+     "ZIP 80911",
+     3681
+    ],
+    [
+     "ZIP 80132",
+     3159
+    ],
+    [
+     "ZIP 80915",
+     3005
+    ],
+    [
+     "ZIP 80906",
+     1959
+    ],
+    [
+     "ZIP 80922",
+     1883
+    ],
+    [
+     "ZIP 80908",
+     1855
+    ],
+    [
+     "ZIP 80829",
+     1464
+    ],
+    [
+     "ZIP 80951",
+     1333
+    ],
+    [
+     "ZIP 80106",
+     888
+    ],
+    [
+     "ZIP 80918",
+     781
+    ],
+    [
+     "ZIP 80923",
+     714
+    ],
+    [
+     "ZIP 80917",
+     705
+    ],
+    [
+     "ZIP 80808",
+     659
+    ],
+    [
+     "ZIP 80916",
+     637
+    ],
+    [
+     "ZIP 80817",
+     582
+    ],
+    [
+     "ZIP 80919",
+     532
+    ],
+    [
+     "ZIP 80809",
+     419
+    ],
+    [
+     "ZIP 80910",
+     364
+    ],
+    [
+     "ZIP 80920",
+     337
+    ],
+    [
+     "ZIP 80907",
+     313
+    ],
+    [
+     "ZIP 80926",
+     220
+    ],
+    [
+     "ZIP 80909",
+     203
+    ],
+    [
+     "ZIP 80904",
+     179
+    ],
+    [
+     "ZIP 80903",
+     135
+    ],
+    [
+     "ZIP 80930",
+     133
+    ],
+    [
+     "ZIP 80928",
+     103
+    ],
+    [
+     "ZIP 80929",
+     74
+    ],
+    [
+     "ZIP 80819",
+     72
+    ],
+    [
+     "ZIP 80133",
+     57
+    ],
+    [
+     "ZIP 80905",
+     55
+    ],
+    [
+     "ZIP ",
+     52
+    ],
+    [
+     "ZIP 80927",
+     43
+    ],
+    [
+     "ZIP 80924",
+     29
+    ],
+    [
+     "ZIP 80863",
+     26
+    ],
+    [
+     "ZIP 80832",
+     25
+    ],
+    [
+     "ZIP 80864",
+     20
+    ],
+    [
+     "ZIP 80833",
+     4
+    ]
+   ],
+   "absentCities": [
+    [
+     "ZIP 80831",
+     1061
+    ],
+    [
+     "ZIP 80132",
+     800
+    ],
+    [
+     "ZIP 80908",
+     659
+    ],
+    [
+     "ZIP 80925",
+     629
+    ],
+    [
+     "ZIP 80915",
+     532
+    ],
+    [
+     "ZIP 80906",
+     526
+    ],
+    [
+     "ZIP 80921",
+     513
+    ],
+    [
+     "ZIP 80911",
+     506
+    ],
+    [
+     "ZIP 80829",
+     442
+    ],
+    [
+     "ZIP 80819",
+     403
+    ],
+    [
+     "ZIP 80916",
+     320
+    ],
+    [
+     "ZIP 80809",
+     317
+    ],
+    [
+     "ZIP 80907",
+     300
+    ],
+    [
+     "ZIP 80923",
+     293
+    ],
+    [
+     "ZIP 80918",
+     292
+    ],
+    [
+     "ZIP 80904",
+     292
+    ],
+    [
+     "ZIP 80910",
+     289
+    ],
+    [
+     "ZIP 80922",
+     270
+    ],
+    [
+     "ZIP 80917",
+     257
+    ],
+    [
+     "ZIP 80133",
+     255
+    ],
+    [
+     "ZIP 80817",
+     223
+    ],
+    [
+     "ZIP 80951",
+     202
+    ],
+    [
+     "ZIP 80903",
+     191
+    ],
+    [
+     "ZIP 80808",
+     183
+    ],
+    [
+     "ZIP 80909",
+     176
+    ]
+   ]
+  },
+  "elbert": {
+   "parcels": 17710,
+   "matchedDoor": 7348,
+   "matchedLookup": 188,
+   "matchedByCls": {
+    "door:house": 7344,
+    "door:nonres": 4,
+    "lookup:house": 188
+   },
+   "buckets": {
+    "nonres": {
+     "parcels": 8056,
+     "addrs": 5290,
+     "byCls": {
+      "nonres": 8056
+     }
+    },
+    "absent": {
+     "parcels": 654,
+     "addrs": 652,
+     "byCls": {
+      "house": 654
+     }
+    },
+    "org": {
+     "parcels": 96,
+     "addrs": 93,
+     "byCls": {
+      "house": 96
+     }
+    },
+    "big": {
+     "parcels": 1171,
+     "addrs": 1170,
+     "byCls": {
+      "house": 1171
+     }
+    },
+    "nositus": {
+     "parcels": 193,
+     "addrs": 0,
+     "byCls": {
+      "house": 193
+     }
+    },
+    "ownerY": {
+     "parcels": 4,
+     "addrs": 4,
+     "byCls": {
+      "house": 4
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "ELIZABETH",
+     3
+    ],
+    [
+     "ELBERT",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "ELIZABETH",
+     351
+    ],
+    [
+     "PARKER",
+     116
+    ],
+    [
+     "SIMLA",
+     51
+    ],
+    [
+     "ELBERT",
+     34
+    ],
+    [
+     "KIOWA",
+     27
+    ],
+    [
+     "MATHESON",
+     27
+    ],
+    [
+     "AGATE",
+     22
+    ],
+    [
+     "DEER TRAIL",
+     20
+    ],
+    [
+     "PEYTON",
+     5
+    ],
+    [
+     "RAMAH",
+     1
+    ]
+   ]
+  },
+  "garfield": {
+   "parcels": 28676,
+   "matchedDoor": 10806,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 10806
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 8741,
+     "addrs": 5485,
+     "byCls": {
+      "house": 8741
+     }
+    },
+    "org": {
+     "parcels": 4906,
+     "addrs": 2985,
+     "byCls": {
+      "house": 4906
+     }
+    },
+    "big": {
+     "parcels": 4165,
+     "addrs": 1760,
+     "byCls": {
+      "house": 4165
+     }
+    },
+    "localpo": {
+     "parcels": 47,
+     "addrs": 6,
+     "byCls": {
+      "house": 47
+     }
+    },
+    "ownerY": {
+     "parcels": 7,
+     "addrs": 7,
+     "byCls": {
+      "house": 7
+     }
+    },
+    "nositus": {
+     "parcels": 4,
+     "addrs": 0,
+     "byCls": {
+      "house": 4
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "CARBONDALE",
+     4
+    ],
+    [
+     "NEW CASTLE",
+     2
+    ],
+    [
+     "SILT",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "NO CITY",
+     2649
+    ],
+    [
+     "GLENWOOD SPRINGS",
+     1638
+    ],
+    [
+     "CARBONDALE",
+     1332
+    ],
+    [
+     "RIFLE",
+     1163
+    ],
+    [
+     "NEW CASTLE",
+     781
+    ],
+    [
+     "SILT",
+     714
+    ],
+    [
+     "PARACHUTE",
+     471
+    ],
+    [
+     "GYPSUM",
+     24
+    ],
+    [
+     "DEBEQUE",
+     15
+    ],
+    [
+     "LOMA",
+     1
+    ]
+   ]
+  },
+  "gilpin": {
+   "parcels": 7724,
+   "matchedDoor": 1586,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 1586
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 1135,
+     "addrs": 1025,
+     "byCls": {
+      "house": 1135
+     }
+    },
+    "org": {
+     "parcels": 434,
+     "addrs": 317,
+     "byCls": {
+      "house": 434
+     }
+    },
+    "nositus": {
+     "parcels": 4315,
+     "addrs": 0,
+     "byCls": {
+      "house": 4315
+     }
+    },
+    "big": {
+     "parcels": 221,
+     "addrs": 210,
+     "byCls": {
+      "house": 221
+     }
+    },
+    "localpo": {
+     "parcels": 28,
+     "addrs": 13,
+     "byCls": {
+      "house": 28
+     }
+    },
+    "ownerY": {
+     "parcels": 5,
+     "addrs": 5,
+     "byCls": {
+      "house": 5
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "GOLDEN",
+     3
+    ],
+    [
+     "BLACK HAWK",
+     2
+    ]
+   ],
+   "absentCities": [
+    [
+     "BLACK HAWK",
+     803
+    ],
+    [
+     "CENTRAL CITY",
+     249
+    ],
+    [
+     "ROLLINSVILLE",
+     46
+    ],
+    [
+     "GOLDEN",
+     34
+    ],
+    [
+     "NO CITY",
+     22
+    ],
+    [
+     "PINECLIFFE",
+     8
+    ],
+    [
+     "IDAHO SPRINGS",
+     1
+    ]
+   ]
+  },
+  "grand": {
+   "parcels": 28955,
+   "matchedDoor": 4189,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 4189
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 4300,
+     "addrs": 0,
+     "byCls": {
+      "house": 4300
+     }
+    },
+    "org": {
+     "parcels": 4266,
+     "addrs": 4146,
+     "byCls": {
+      "house": 4266
+     }
+    },
+    "absent": {
+     "parcels": 14371,
+     "addrs": 13887,
+     "byCls": {
+      "house": 14371
+     }
+    },
+    "localpo": {
+     "parcels": 62,
+     "addrs": 20,
+     "byCls": {
+      "house": 62
+     }
+    },
+    "ownerY": {
+     "parcels": 17,
+     "addrs": 5,
+     "byCls": {
+      "house": 17
+     }
+    },
+    "big": {
+     "parcels": 1750,
+     "addrs": 1371,
+     "byCls": {
+      "house": 1750
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "NO CITY",
+     16
+    ],
+    [
+     "KREMMLING",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "NO CITY",
+     9949
+    ],
+    [
+     "WINTER PARK",
+     1474
+    ],
+    [
+     "FRASER",
+     1119
+    ],
+    [
+     "GRANBY",
+     896
+    ],
+    [
+     "GRAND LAKE",
+     656
+    ],
+    [
+     "KREMMLING",
+     208
+    ],
+    [
+     "HOT SULPHUR SPRINGS",
+     131
+    ]
+   ]
+  },
+  "gunnison": {
+   "parcels": 21291,
+   "matchedDoor": 2794,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 2794
+   },
+   "buckets": {
+    "big": {
+     "parcels": 4423,
+     "addrs": 2298,
+     "byCls": {
+      "house": 4423
+     }
+    },
+    "absent": {
+     "parcels": 9916,
+     "addrs": 8518,
+     "byCls": {
+      "house": 9916
+     }
+    },
+    "org": {
+     "parcels": 4120,
+     "addrs": 3436,
+     "byCls": {
+      "house": 4120
+     }
+    },
+    "nositus": {
+     "parcels": 24,
+     "addrs": 0,
+     "byCls": {
+      "house": 24
+     }
+    },
+    "ownerY": {
+     "parcels": 14,
+     "addrs": 14,
+     "byCls": {
+      "house": 14
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "NA",
+     14
+    ]
+   ],
+   "absentCities": [
+    [
+     "NA",
+     9916
+    ]
+   ]
+  },
+  "hinsdale": {
+   "parcels": 2909,
+   "matchedDoor": 9,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 4,
+    "door:farmres": 2,
+    "door:mobile": 3
+   },
+   "buckets": {
+    "nonres": {
+     "parcels": 1194,
+     "addrs": 477,
+     "byCls": {
+      "nonres": 1194
+     }
+    },
+    "absent": {
+     "parcels": 948,
+     "addrs": 760,
+     "byCls": {
+      "house": 940,
+      "attached": 8
+     }
+    },
+    "nositus": {
+     "parcels": 389,
+     "addrs": 0,
+     "byCls": {
+      "house": 389
+     }
+    },
+    "condo:away": {
+     "parcels": 63,
+     "addrs": 60,
+     "byCls": {
+      "condo": 63
+     }
+    },
+    "condo": {
+     "parcels": 74,
+     "addrs": 69,
+     "byCls": {
+      "condo": 74
+     }
+    },
+    "farmres:away": {
+     "parcels": 15,
+     "addrs": 10,
+     "byCls": {
+      "farmres": 15
+     }
+    },
+    "farmres": {
+     "parcels": 26,
+     "addrs": 14,
+     "byCls": {
+      "farmres": 26
+     }
+    },
+    "big": {
+     "parcels": 48,
+     "addrs": 45,
+     "byCls": {
+      "house": 48
+     }
+    },
+    "org": {
+     "parcels": 126,
+     "addrs": 124,
+     "byCls": {
+      "house": 122,
+      "attached": 4
+     }
+    },
+    "multi": {
+     "parcels": 8,
+     "addrs": 7,
+     "byCls": {
+      "multi": 8
+     }
+    },
+    "mobile:away": {
+     "parcels": 59,
+     "addrs": 20,
+     "byCls": {
+      "mobile": 59
+     }
+    },
+    "mobile": {
+     "parcels": 87,
+     "addrs": 22,
+     "byCls": {
+      "mobile": 87
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "NO CITY",
+     948
+    ]
+   ]
+  },
+  "huerfano": {
+   "parcels": 18042,
+   "matchedDoor": 0,
+   "matchedLookup": 0,
+   "matchedByCls": {},
+   "buckets": {
+    "org": {
+     "parcels": 714,
+     "addrs": 372,
+     "byCls": {
+      "house": 714
+     }
+    },
+    "absent": {
+     "parcels": 5062,
+     "addrs": 3548,
+     "byCls": {
+      "house": 5062
+     }
+    },
+    "nositus": {
+     "parcels": 10642,
+     "addrs": 0,
+     "byCls": {
+      "house": 10642
+     }
+    },
+    "big": {
+     "parcels": 1624,
+     "addrs": 1245,
+     "byCls": {
+      "house": 1624
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "NO CITY",
+     5062
+    ]
+   ]
+  },
+  "jefferson": {
+   "parcels": 258817,
+   "matchedDoor": 152036,
+   "matchedLookup": 32874,
+   "matchedByCls": {
+    "door:house": 132920,
+    "lookup:house": 22218,
+    "lookup:attached": 7990,
+    "door:attached": 18813,
+    "lookup:nonres": 2481,
+    "lookup:condo": 160,
+    "door:condo": 195,
+    "lookup:multi": 25,
+    "door:nonres": 108
+   },
+   "buckets": {
+    "condo:away": {
+     "parcels": 4450,
+     "addrs": 4439,
+     "byCls": {
+      "condo": 4450
+     }
+    },
+    "condo": {
+     "parcels": 12961,
+     "addrs": 12936,
+     "byCls": {
+      "condo": 12961
+     }
+    },
+    "ownerY": {
+     "parcels": 5308,
+     "addrs": 5297,
+     "byCls": {
+      "house": 4742,
+      "attached": 566
+     }
+    },
+    "big": {
+     "parcels": 3080,
+     "addrs": 2823,
+     "byCls": {
+      "house": 3078,
+      "attached": 2
+     }
+    },
+    "multi": {
+     "parcels": 1350,
+     "addrs": 1328,
+     "byCls": {
+      "multi": 1350
+     }
+    },
+    "nositus": {
+     "parcels": 41678,
+     "addrs": 0,
+     "byCls": {
+      "house": 41656,
+      "attached": 22
+     }
+    },
+    "condo:lives": {
+     "parcels": 7497,
+     "addrs": 7485,
+     "byCls": {
+      "condo": 7497
+     }
+    },
+    "absent": {
+     "parcels": 4116,
+     "addrs": 3973,
+     "byCls": {
+      "house": 3852,
+      "attached": 264
+     }
+    },
+    "nonres": {
+     "parcels": 2530,
+     "addrs": 2373,
+     "byCls": {
+      "nonres": 2530
+     }
+    },
+    "org": {
+     "parcels": 1852,
+     "addrs": 1773,
+     "byCls": {
+      "house": 1769,
+      "attached": 83
+     }
+    },
+    "localpo": {
+     "parcels": 1017,
+     "addrs": 959,
+     "byCls": {
+      "house": 992,
+      "attached": 25
+     }
+    },
+    "mobile": {
+     "parcels": 15,
+     "addrs": 15,
+     "byCls": {
+      "mobile": 15
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "GOLDEN",
+     2250
+    ],
+    [
+     "LITTLETON",
+     1752
+    ],
+    [
+     "ARVADA",
+     466
+    ],
+    [
+     "MORRISON",
+     459
+    ],
+    [
+     "LAKEWOOD",
+     175
+    ],
+    [
+     "DENVER",
+     123
+    ],
+    [
+     "MOUNTAIN VIEW",
+     68
+    ],
+    [
+     "EVERGREEN",
+     5
+    ],
+    [
+     "PINE",
+     3
+    ],
+    [
+     "CONIFER",
+     3
+    ],
+    [
+     "NO CITY",
+     2
+    ],
+    [
+     "BUFFALO CREEK",
+     1
+    ],
+    [
+     "INDIAN HILLS",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "GOLDEN",
+     1168
+    ],
+    [
+     "EVERGREEN",
+     857
+    ],
+    [
+     "CONIFER",
+     803
+    ],
+    [
+     "PINE",
+     626
+    ],
+    [
+     "INDIAN HILLS",
+     473
+    ],
+    [
+     "MORRISON",
+     397
+    ],
+    [
+     "LITTLETON",
+     306
+    ],
+    [
+     "KITTREDGE",
+     160
+    ],
+    [
+     "IDLEDALE",
+     100
+    ],
+    [
+     "BUFFALO CREEK",
+     53
+    ],
+    [
+     "ARVADA",
+     44
+    ],
+    [
+     "LAKEWOOD",
+     42
+    ],
+    [
+     "DENVER",
+     37
+    ],
+    [
+     "SEDALIA",
+     20
+    ],
+    [
+     "MOUNTAIN VIEW",
+     19
+    ],
+    [
+     "FOXTON",
+     18
+    ],
+    [
+     "NO CITY",
+     5
+    ],
+    [
+     "BAILEY",
+     2
+    ],
+    [
+     "WESTMINSTER",
+     1
+    ],
+    [
+     "LAKESIDE",
+     1
+    ],
+    [
+     "WHEAT RIDGE",
+     1
+    ]
+   ]
+  },
+  "la-plata": {
+   "parcels": 35635,
+   "matchedDoor": 12453,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 12392,
+    "door:nonres": 61
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 2767,
+     "addrs": 0,
+     "byCls": {
+      "house": 2767
+     }
+    },
+    "nonres": {
+     "parcels": 8210,
+     "addrs": 3682,
+     "byCls": {
+      "nonres": 8210
+     }
+    },
+    "absent": {
+     "parcels": 7719,
+     "addrs": 7654,
+     "byCls": {
+      "house": 7719
+     }
+    },
+    "org": {
+     "parcels": 2309,
+     "addrs": 2294,
+     "byCls": {
+      "house": 2309
+     }
+    },
+    "big": {
+     "parcels": 2163,
+     "addrs": 2089,
+     "byCls": {
+      "house": 2163
+     }
+    },
+    "ownerY": {
+     "parcels": 9,
+     "addrs": 9,
+     "byCls": {
+      "house": 9
+     }
+    },
+    "localpo": {
+     "parcels": 5,
+     "addrs": 4,
+     "byCls": {
+      "house": 5
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "DURANGO",
+     6
+    ],
+    [
+     "HESPERUS",
+     2
+    ],
+    [
+     "NO CITY",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "DURANGO",
+     5621
+    ],
+    [
+     "BAYFIELD",
+     1747
+    ],
+    [
+     "IGNACIO",
+     206
+    ],
+    [
+     "HESPERUS",
+     117
+    ],
+    [
+     "NO CITY",
+     23
+    ],
+    [
+     "MARVEL",
+     9
+    ],
+    [
+     "MANCOS",
+     1
+    ]
+   ]
+  },
+  "lake": {
+   "parcels": 9904,
+   "matchedDoor": 1559,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 1398,
+    "door:nonres": 82,
+    "door:attached": 22,
+    "door:multi": 9,
+    "door:mobile": 48
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 1628,
+     "addrs": 1599,
+     "byCls": {
+      "house": 1580,
+      "attached": 48
+     }
+    },
+    "org": {
+     "parcels": 224,
+     "addrs": 213,
+     "byCls": {
+      "house": 209,
+      "attached": 15
+     }
+    },
+    "nonres": {
+     "parcels": 5789,
+     "addrs": 3996,
+     "byCls": {
+      "nonres": 5789
+     }
+    },
+    "multi": {
+     "parcels": 55,
+     "addrs": 51,
+     "byCls": {
+      "multi": 55
+     }
+    },
+    "ownerY": {
+     "parcels": 4,
+     "addrs": 4,
+     "byCls": {
+      "house": 4
+     }
+    },
+    "mobile:away": {
+     "parcels": 347,
+     "addrs": 346,
+     "byCls": {
+      "mobile": 347
+     }
+    },
+    "mobile": {
+     "parcels": 449,
+     "addrs": 444,
+     "byCls": {
+      "mobile": 449
+     }
+    },
+    "nositus": {
+     "parcels": 9,
+     "addrs": 0,
+     "byCls": {
+      "house": 9
+     }
+    },
+    "condo:lives": {
+     "parcels": 3,
+     "addrs": 3,
+     "byCls": {
+      "condo": 3
+     }
+    },
+    "condo": {
+     "parcels": 35,
+     "addrs": 34,
+     "byCls": {
+      "condo": 35
+     }
+    },
+    "condo:away": {
+     "parcels": 30,
+     "addrs": 29,
+     "byCls": {
+      "condo": 30
+     }
+    },
+    "big": {
+     "parcels": 139,
+     "addrs": 125,
+     "byCls": {
+      "house": 139
+     }
+    },
+    "farmres:away": {
+     "parcels": 4,
+     "addrs": 4,
+     "byCls": {
+      "farmres": 4
+     }
+    },
+    "farmres": {
+     "parcels": 13,
+     "addrs": 11,
+     "byCls": {
+      "farmres": 13
+     }
+    },
+    "mobile:lives": {
+     "parcels": 36,
+     "addrs": 34,
+     "byCls": {
+      "mobile": 36
+     }
+    },
+    "farmres:lives": {
+     "parcels": 6,
+     "addrs": 5,
+     "byCls": {
+      "farmres": 6
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "LEADVILLE",
+     4
+    ]
+   ],
+   "absentCities": [
+    [
+     "LEADVILLE",
+     1351
+    ],
+    [
+     "TWIN LAKES",
+     277
+    ]
+   ]
+  },
+  "larimer": {
+   "parcels": 180960,
+   "matchedDoor": 87504,
+   "matchedLookup": 679,
+   "matchedByCls": {
+    "door:house": 87162,
+    "lookup:nonres": 28,
+    "lookup:house": 639,
+    "door:nonres": 156,
+    "door:mobile": 156,
+    "door:multi": 30,
+    "lookup:multi": 12
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 30936,
+     "addrs": 30719,
+     "byCls": {
+      "house": 30936
+     }
+    },
+    "nonres": {
+     "parcels": 27903,
+     "addrs": 13472,
+     "byCls": {
+      "nonres": 27903
+     }
+    },
+    "org": {
+     "parcels": 12042,
+     "addrs": 11990,
+     "byCls": {
+      "house": 12042
+     }
+    },
+    "big": {
+     "parcels": 3282,
+     "addrs": 3263,
+     "byCls": {
+      "house": 3282
+     }
+    },
+    "localpo": {
+     "parcels": 2258,
+     "addrs": 2222,
+     "byCls": {
+      "house": 2258
+     }
+    },
+    "nositus": {
+     "parcels": 8415,
+     "addrs": 0,
+     "byCls": {
+      "house": 8415
+     }
+    },
+    "mobile:lives": {
+     "parcels": 335,
+     "addrs": 319,
+     "byCls": {
+      "mobile": 335
+     }
+    },
+    "mobile": {
+     "parcels": 5543,
+     "addrs": 5450,
+     "byCls": {
+      "mobile": 5543
+     }
+    },
+    "multi": {
+     "parcels": 2373,
+     "addrs": 2133,
+     "byCls": {
+      "multi": 2373
+     }
+    },
+    "mobile:away": {
+     "parcels": 4756,
+     "addrs": 4716,
+     "byCls": {
+      "mobile": 4756
+     }
+    },
+    "ownerY": {
+     "parcels": 25,
+     "addrs": 25,
+     "byCls": {
+      "house": 25
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "FORT COLLINS",
+     8
+    ],
+    [
+     "LOVELAND",
+     8
+    ],
+    [
+     "WELLINGTON",
+     2
+    ],
+    [
+     "ESTES PARK",
+     2
+    ],
+    [
+     "BELLVUE",
+     2
+    ],
+    [
+     "LAPORTE",
+     1
+    ],
+    [
+     "DRAKE",
+     1
+    ],
+    [
+     "BERTHOUD",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "FORT COLLINS",
+     16213
+    ],
+    [
+     "LOVELAND",
+     5464
+    ],
+    [
+     "ESTES PARK",
+     3937
+    ],
+    [
+     "RED FEATHER LAKES",
+     2285
+    ],
+    [
+     "BERTHOUD",
+     919
+    ],
+    [
+     "WELLINGTON",
+     908
+    ],
+    [
+     "DRAKE",
+     719
+    ],
+    [
+     "BELLVUE",
+     685
+    ],
+    [
+     "LIVERMORE",
+     472
+    ],
+    [
+     "TIMNATH",
+     422
+    ],
+    [
+     "GLEN HAVEN",
+     409
+    ],
+    [
+     "LAPORTE",
+     387
+    ],
+    [
+     "LYONS",
+     224
+    ],
+    [
+     "JOHNSTOWN",
+     107
+    ],
+    [
+     "JELM",
+     37
+    ],
+    [
+     "LONGMONT",
+     5
+    ],
+    [
+     "SAND CREEK TOWNSHIP",
+     1
+    ]
+   ]
+  },
+  "logan": {
+   "parcels": 12139,
+   "matchedDoor": 4402,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 4402
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 1665,
+     "addrs": 1610,
+     "byCls": {
+      "house": 1665
+     }
+    },
+    "org": {
+     "parcels": 1131,
+     "addrs": 1072,
+     "byCls": {
+      "house": 1131
+     }
+    },
+    "nositus": {
+     "parcels": 798,
+     "addrs": 0,
+     "byCls": {
+      "house": 798
+     }
+    },
+    "localpo": {
+     "parcels": 26,
+     "addrs": 24,
+     "byCls": {
+      "house": 26
+     }
+    },
+    "ownerY": {
+     "parcels": 5,
+     "addrs": 5,
+     "byCls": {
+      "house": 5
+     }
+    },
+    "big": {
+     "parcels": 4112,
+     "addrs": 2904,
+     "byCls": {
+      "house": 4112
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "STERLING",
+     5
+    ]
+   ],
+   "absentCities": [
+    [
+     "STERLING",
+     1276
+    ],
+    [
+     "FLEMING",
+     92
+    ],
+    [
+     "MERINO",
+     74
+    ],
+    [
+     "ILIFF",
+     63
+    ],
+    [
+     "CROOK",
+     49
+    ],
+    [
+     "PEETZ",
+     48
+    ],
+    [
+     "PADRONI",
+     28
+    ],
+    [
+     "WILLARD",
+     20
+    ],
+    [
+     "ATWOOD",
+     17
+    ],
+    [
+     "DAILEY",
+     11
+    ],
+    [
+     "PROCTOR",
+     7
+    ],
+    [
+     "HAXTUN",
+     6
+    ]
+   ]
+  },
+  "mesa": {
+   "parcels": 78984,
+   "matchedDoor": 38971,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 37712,
+    "door:attached": 1228,
+    "door:multi": 22,
+    "door:nonres": 9
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 13166,
+     "addrs": 13158,
+     "byCls": {
+      "house": 10999,
+      "attached": 2167
+     }
+    },
+    "condo:away": {
+     "parcels": 1502,
+     "addrs": 1502,
+     "byCls": {
+      "condo": 1502
+     }
+    },
+    "condo": {
+     "parcels": 2199,
+     "addrs": 2107,
+     "byCls": {
+      "condo": 2199
+     }
+    },
+    "nonres": {
+     "parcels": 15097,
+     "addrs": 10926,
+     "byCls": {
+      "nonres": 15097
+     }
+    },
+    "nositus": {
+     "parcels": 2563,
+     "addrs": 0,
+     "byCls": {
+      "house": 2499,
+      "attached": 64
+     }
+    },
+    "multi": {
+     "parcels": 697,
+     "addrs": 690,
+     "byCls": {
+      "multi": 697
+     }
+    },
+    "org": {
+     "parcels": 4061,
+     "addrs": 4020,
+     "byCls": {
+      "house": 3257,
+      "attached": 804
+     }
+    },
+    "localpo": {
+     "parcels": 1017,
+     "addrs": 1016,
+     "byCls": {
+      "house": 956,
+      "attached": 61
+     }
+    },
+    "condo:lives": {
+     "parcels": 82,
+     "addrs": 82,
+     "byCls": {
+      "condo": 82
+     }
+    },
+    "ownerY": {
+     "parcels": 18,
+     "addrs": 18,
+     "byCls": {
+      "house": 16,
+      "attached": 2
+     }
+    },
+    "big": {
+     "parcels": 1195,
+     "addrs": 1192,
+     "byCls": {
+      "house": 1195
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "GRAND JUNCTION",
+     16
+    ],
+    [
+     "FRUITA",
+     1
+    ],
+    [
+     "CLIFTON",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "GRAND JUNCTION",
+     9690
+    ],
+    [
+     "CLIFTON",
+     1675
+    ],
+    [
+     "FRUITA",
+     1089
+    ],
+    [
+     "PALISADE",
+     623
+    ],
+    [
+     "COLLBRAN",
+     326
+    ],
+    [
+     "MESA",
+     239
+    ],
+    [
+     "DEBEQUE",
+     182
+    ],
+    [
+     "WHITEWATER",
+     111
+    ],
+    [
+     "LOMA",
+     103
+    ],
+    [
+     "MACK",
+     77
+    ],
+    [
+     "GATEWAY",
+     27
+    ],
+    [
+     "GLADE PARK",
+     25
+    ],
+    [
+     "MOLINA",
+     15
+    ],
+    [
+     "NO CITY",
+     1
+    ]
+   ]
+  },
+  "moffat": {
+   "parcels": 10541,
+   "matchedDoor": 0,
+   "matchedLookup": 0,
+   "matchedByCls": {},
+   "buckets": {
+    "nositus": {
+     "parcels": 10541,
+     "addrs": 0,
+     "byCls": {
+      "house": 10541
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": []
+  },
+  "montezuma": {
+   "parcels": 15476,
+   "matchedDoor": 5517,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 5502,
+    "door:nonres": 15
+   },
+   "buckets": {
+    "big": {
+     "parcels": 2279,
+     "addrs": 2249,
+     "byCls": {
+      "house": 2279
+     }
+    },
+    "nonres": {
+     "parcels": 4873,
+     "addrs": 2255,
+     "byCls": {
+      "nonres": 4873
+     }
+    },
+    "absent": {
+     "parcels": 2252,
+     "addrs": 2206,
+     "byCls": {
+      "house": 2252
+     }
+    },
+    "mobile:lives": {
+     "parcels": 17,
+     "addrs": 17,
+     "byCls": {
+      "mobile": 17
+     }
+    },
+    "mobile": {
+     "parcels": 28,
+     "addrs": 28,
+     "byCls": {
+      "mobile": 28
+     }
+    },
+    "org": {
+     "parcels": 427,
+     "addrs": 408,
+     "byCls": {
+      "house": 427
+     }
+    },
+    "ownerY": {
+     "parcels": 8,
+     "addrs": 6,
+     "byCls": {
+      "house": 8
+     }
+    },
+    "mobile:away": {
+     "parcels": 6,
+     "addrs": 6,
+     "byCls": {
+      "mobile": 6
+     }
+    },
+    "localpo": {
+     "parcels": 1,
+     "addrs": 1,
+     "byCls": {
+      "house": 1
+     }
+    },
+    "nositus": {
+     "parcels": 91,
+     "addrs": 0,
+     "byCls": {
+      "house": 91
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "CORTEZ",
+     6
+    ],
+    [
+     "MANCOS",
+     1
+    ],
+    [
+     "DOLORES",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "CORTEZ",
+     1177
+    ],
+    [
+     "DOLORES",
+     518
+    ],
+    [
+     "MANCOS",
+     458
+    ],
+    [
+     "LEWIS",
+     63
+    ],
+    [
+     "YELLOW_JACKET",
+     21
+    ],
+    [
+     "PLEASANT_VIEW",
+     16
+    ]
+   ]
+  },
+  "morgan": {
+   "parcels": 15956,
+   "matchedDoor": 4965,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 4965
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 3612,
+     "addrs": 3601,
+     "byCls": {
+      "house": 3612
+     }
+    },
+    "nositus": {
+     "parcels": 4943,
+     "addrs": 0,
+     "byCls": {
+      "house": 4943
+     }
+    },
+    "org": {
+     "parcels": 1060,
+     "addrs": 1006,
+     "byCls": {
+      "house": 1060
+     }
+    },
+    "big": {
+     "parcels": 1374,
+     "addrs": 1368,
+     "byCls": {
+      "house": 1374
+     }
+    },
+    "localpo": {
+     "parcels": 1,
+     "addrs": 1,
+     "byCls": {
+      "house": 1
+     }
+    },
+    "ownerY": {
+     "parcels": 1,
+     "addrs": 1,
+     "byCls": {
+      "house": 1
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "FORT MORGAN",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "FORT MORGAN",
+     2212
+    ],
+    [
+     "BRUSH",
+     639
+    ],
+    [
+     "WIGGINS",
+     276
+    ],
+    [
+     "WELDONA",
+     268
+    ],
+    [
+     "LOG LANE VILLAGE",
+     130
+    ],
+    [
+     "SNYDER",
+     33
+    ],
+    [
+     "HILLROSE",
+     28
+    ],
+    [
+     "ORCHARD",
+     22
+    ],
+    [
+     "GOODRICH",
+     5
+    ]
+   ]
+  },
+  "ouray": {
+   "parcels": 8406,
+   "matchedDoor": 1652,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 1652
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 2393,
+     "addrs": 1205,
+     "byCls": {
+      "house": 2393
+     }
+    },
+    "org": {
+     "parcels": 1921,
+     "addrs": 493,
+     "byCls": {
+      "house": 1921
+     }
+    },
+    "big": {
+     "parcels": 2427,
+     "addrs": 910,
+     "byCls": {
+      "house": 2427
+     }
+    },
+    "localpo": {
+     "parcels": 13,
+     "addrs": 7,
+     "byCls": {
+      "house": 13
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "RIDGWAY",
+     959
+    ],
+    [
+     "NO CITY",
+     887
+    ],
+    [
+     "OURAY",
+     476
+    ],
+    [
+     "MONTROSE",
+     83
+    ],
+    [
+     "PLACERVILLE",
+     1
+    ]
+   ]
+  },
+  "park": {
+   "parcels": 43241,
+   "matchedDoor": 4737,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 4670,
+    "door:nonres": 64,
+    "door:farmres": 3
+   },
+   "buckets": {
+    "nonres": {
+     "parcels": 28810,
+     "addrs": 17394,
+     "byCls": {
+      "nonres": 28810
+     }
+    },
+    "absent": {
+     "parcels": 6367,
+     "addrs": 6282,
+     "byCls": {
+      "house": 6367
+     }
+    },
+    "big": {
+     "parcels": 1502,
+     "addrs": 1482,
+     "byCls": {
+      "house": 1502
+     }
+    },
+    "farmres:lives": {
+     "parcels": 80,
+     "addrs": 77,
+     "byCls": {
+      "farmres": 80
+     }
+    },
+    "farmres": {
+     "parcels": 403,
+     "addrs": 382,
+     "byCls": {
+      "farmres": 403
+     }
+    },
+    "farmres:away": {
+     "parcels": 247,
+     "addrs": 238,
+     "byCls": {
+      "farmres": 247
+     }
+    },
+    "org": {
+     "parcels": 483,
+     "addrs": 478,
+     "byCls": {
+      "house": 483
+     }
+    },
+    "localpo": {
+     "parcels": 100,
+     "addrs": 99,
+     "byCls": {
+      "house": 100
+     }
+    },
+    "nositus": {
+     "parcels": 562,
+     "addrs": 0,
+     "byCls": {
+      "house": 562
+     }
+    },
+    "ownerY": {
+     "parcels": 11,
+     "addrs": 11,
+     "byCls": {
+      "house": 11
+     }
+    },
+    "mobile:away": {
+     "parcels": 179,
+     "addrs": 178,
+     "byCls": {
+      "mobile": 179
+     }
+    },
+    "mobile": {
+     "parcels": 266,
+     "addrs": 259,
+     "byCls": {
+      "mobile": 266
+     }
+    },
+    "mobile:lives": {
+     "parcels": 68,
+     "addrs": 68,
+     "byCls": {
+      "mobile": 68
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "PINE",
+     8
+    ],
+    [
+     "GUFFEY",
+     2
+    ],
+    [
+     "FAIRPLAY",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "FAIRPLAY",
+     1412
+    ],
+    [
+     "BAILEY",
+     1256
+    ],
+    [
+     "COMO",
+     958
+    ],
+    [
+     "ALMA",
+     649
+    ],
+    [
+     "HARTSEL",
+     621
+    ],
+    [
+     "JEFFERSON",
+     571
+    ],
+    [
+     "LAKE GEORGE",
+     485
+    ],
+    [
+     "GUFFEY",
+     115
+    ],
+    [
+     "FLORISSANT",
+     112
+    ],
+    [
+     "PINE",
+     111
+    ],
+    [
+     "GRANT",
+     83
+    ],
+    [
+     "SHAWNEE",
+     58
+    ],
+    [
+     "NO CITY",
+     33
+    ],
+    [
+     "FLORRISANT",
+     1
+    ],
+    [
+     "FLORISANT",
+     1
+    ],
+    [
+     "FARIPLAY",
+     1
+    ]
+   ]
+  },
+  "pitkin": {
+   "parcels": 19146,
+   "matchedDoor": 2892,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:nonres": 164,
+    "door:condo": 251,
+    "door:house": 2402,
+    "door:attached": 24,
+    "door:mobile": 47,
+    "door:multi": 4
+   },
+   "buckets": {
+    "condo:away": {
+     "parcels": 3188,
+     "addrs": 2701,
+     "byCls": {
+      "condo": 3188
+     }
+    },
+    "condo": {
+     "parcels": 7122,
+     "addrs": 6228,
+     "byCls": {
+      "condo": 7122
+     }
+    },
+    "nonres": {
+     "parcels": 3549,
+     "addrs": 1986,
+     "byCls": {
+      "nonres": 3549
+     }
+    },
+    "condo:lives": {
+     "parcels": 1776,
+     "addrs": 1534,
+     "byCls": {
+      "condo": 1776
+     }
+    },
+    "big": {
+     "parcels": 565,
+     "addrs": 463,
+     "byCls": {
+      "house": 565
+     }
+    },
+    "absent": {
+     "parcels": 2607,
+     "addrs": 2184,
+     "byCls": {
+      "house": 2598,
+      "attached": 9
+     }
+    },
+    "org": {
+     "parcels": 1723,
+     "addrs": 1667,
+     "byCls": {
+      "house": 1695,
+      "attached": 28
+     }
+    },
+    "multi": {
+     "parcels": 49,
+     "addrs": 48,
+     "byCls": {
+      "multi": 49
+     }
+    },
+    "ownerY": {
+     "parcels": 22,
+     "addrs": 20,
+     "byCls": {
+      "house": 22
+     }
+    },
+    "nositus": {
+     "parcels": 535,
+     "addrs": 0,
+     "byCls": {
+      "house": 535
+     }
+    },
+    "localpo": {
+     "parcels": 17,
+     "addrs": 12,
+     "byCls": {
+      "house": 17
+     }
+    },
+    "mobile": {
+     "parcels": 65,
+     "addrs": 27,
+     "byCls": {
+      "mobile": 65
+     }
+    },
+    "mobile:away": {
+     "parcels": 27,
+     "addrs": 24,
+     "byCls": {
+      "mobile": 27
+     }
+    },
+    "mobile:lives": {
+     "parcels": 1,
+     "addrs": 1,
+     "byCls": {
+      "mobile": 1
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "ASPEN",
+     11
+    ],
+    [
+     "BASALT",
+     6
+    ],
+    [
+     "SNOWMASS",
+     2
+    ],
+    [
+     "MEREDITH",
+     1
+    ],
+    [
+     "SNOWMASS VILLAGE",
+     1
+    ],
+    [
+     "REDSTONE",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "ASPEN",
+     1337
+    ],
+    [
+     "SNOWMASS VILLAGE",
+     526
+    ],
+    [
+     "BASALT",
+     258
+    ],
+    [
+     "SNOWMASS",
+     190
+    ],
+    [
+     "REDSTONE",
+     121
+    ],
+    [
+     "CARBONDALE",
+     69
+    ],
+    [
+     "WOODY CREEK",
+     56
+    ],
+    [
+     "MEREDITH",
+     43
+    ],
+    [
+     "THOMASVILLE",
+     24
+    ]
+   ]
+  },
+  "pueblo": {
+   "parcels": 101146,
+   "matchedDoor": 41321,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 41321
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 59825,
+     "addrs": 0,
+     "byCls": {
+      "house": 59825
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": []
+  },
+  "rio-blanco": {
+   "parcels": 5103,
+   "matchedDoor": 1502,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 1495,
+    "door:nonres": 6,
+    "door:multi": 1
+   },
+   "buckets": {
+    "big": {
+     "parcels": 267,
+     "addrs": 248,
+     "byCls": {
+      "house": 267
+     }
+    },
+    "nonres": {
+     "parcels": 2595,
+     "addrs": 1297,
+     "byCls": {
+      "nonres": 2595
+     }
+    },
+    "multi": {
+     "parcels": 19,
+     "addrs": 15,
+     "byCls": {
+      "multi": 19
+     }
+    },
+    "mobile": {
+     "parcels": 73,
+     "addrs": 67,
+     "byCls": {
+      "mobile": 73
+     }
+    },
+    "org": {
+     "parcels": 164,
+     "addrs": 160,
+     "byCls": {
+      "house": 164
+     }
+    },
+    "absent": {
+     "parcels": 448,
+     "addrs": 426,
+     "byCls": {
+      "house": 448
+     }
+    },
+    "nositus": {
+     "parcels": 35,
+     "addrs": 0,
+     "byCls": {
+      "house": 35
+     }
+    },
+    "mobile:lives": {
+     "parcels": 28,
+     "addrs": 28,
+     "byCls": {
+      "mobile": 28
+     }
+    },
+    "mobile:away": {
+     "parcels": 32,
+     "addrs": 32,
+     "byCls": {
+      "mobile": 32
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "MEEKER",
+     260
+    ],
+    [
+     "RANGELY",
+     172
+    ],
+    [
+     "NO CITY",
+     16
+    ]
+   ]
+  },
+  "rio-grande": {
+   "parcels": 13171,
+   "matchedDoor": 1841,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 1841
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 6673,
+     "addrs": 6091,
+     "byCls": {
+      "house": 6673
+     }
+    },
+    "org": {
+     "parcels": 1331,
+     "addrs": 1084,
+     "byCls": {
+      "house": 1331
+     }
+    },
+    "nositus": {
+     "parcels": 1405,
+     "addrs": 0,
+     "byCls": {
+      "house": 1405
+     }
+    },
+    "big": {
+     "parcels": 1904,
+     "addrs": 1405,
+     "byCls": {
+      "house": 1904
+     }
+    },
+    "ownerY": {
+     "parcels": 17,
+     "addrs": 3,
+     "byCls": {
+      "house": 17
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "MONTE VISTA",
+     15
+    ],
+    [
+     "DEL NORTE",
+     2
+    ]
+   ],
+   "absentCities": [
+    [
+     "SOUTH FORK",
+     3911
+    ],
+    [
+     "MONTE VISTA",
+     1477
+    ],
+    [
+     "DEL NORTE",
+     930
+    ],
+    [
+     "NO CITY",
+     195
+    ],
+    [
+     "CENTER",
+     99
+    ],
+    [
+     "JASPER",
+     55
+    ],
+    [
+     "ALAMOSA",
+     5
+    ],
+    [
+     "LA JARA",
+     1
+    ]
+   ]
+  },
+  "routt": {
+   "parcels": 25414,
+   "matchedDoor": 5416,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 3888,
+    "door:attached": 916,
+    "door:nonres": 479,
+    "door:condo": 63,
+    "door:mobile": 2,
+    "door:farmres": 68
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 3165,
+     "addrs": 3158,
+     "byCls": {
+      "house": 2037,
+      "attached": 1128
+     }
+    },
+    "nonres": {
+     "parcels": 9323,
+     "addrs": 2888,
+     "byCls": {
+      "nonres": 9323
+     }
+    },
+    "org": {
+     "parcels": 1148,
+     "addrs": 1107,
+     "byCls": {
+      "house": 724,
+      "attached": 424
+     }
+    },
+    "mobile:away": {
+     "parcels": 26,
+     "addrs": 26,
+     "byCls": {
+      "mobile": 26
+     }
+    },
+    "mobile": {
+     "parcels": 109,
+     "addrs": 99,
+     "byCls": {
+      "mobile": 109
+     }
+    },
+    "condo": {
+     "parcels": 4009,
+     "addrs": 3991,
+     "byCls": {
+      "condo": 4009
+     }
+    },
+    "condo:away": {
+     "parcels": 2687,
+     "addrs": 2681,
+     "byCls": {
+      "condo": 2687
+     }
+    },
+    "condo:lives": {
+     "parcels": 367,
+     "addrs": 367,
+     "byCls": {
+      "condo": 367
+     }
+    },
+    "mobile:lives": {
+     "parcels": 41,
+     "addrs": 41,
+     "byCls": {
+      "mobile": 41
+     }
+    },
+    "nositus": {
+     "parcels": 112,
+     "addrs": 0,
+     "byCls": {
+      "house": 107,
+      "attached": 5
+     }
+    },
+    "multi": {
+     "parcels": 53,
+     "addrs": 53,
+     "byCls": {
+      "multi": 53
+     }
+    },
+    "farmres": {
+     "parcels": 1382,
+     "addrs": 1346,
+     "byCls": {
+      "farmres": 1382
+     }
+    },
+    "farmres:away": {
+     "parcels": 500,
+     "addrs": 497,
+     "byCls": {
+      "farmres": 500
+     }
+    },
+    "big": {
+     "parcels": 697,
+     "addrs": 694,
+     "byCls": {
+      "house": 695,
+      "attached": 2
+     }
+    },
+    "farmres:lives": {
+     "parcels": 485,
+     "addrs": 484,
+     "byCls": {
+      "farmres": 485
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "STEAMBOAT SPRINGS",
+     2174
+    ],
+    [
+     "OAK CREEK",
+     398
+    ],
+    [
+     "CLARK",
+     204
+    ],
+    [
+     "HAYDEN",
+     165
+    ],
+    [
+     "HAHNS PEAK",
+     87
+    ],
+    [
+     "YAMPA",
+     51
+    ],
+    [
+     "MILNER",
+     46
+    ],
+    [
+     "PHIPPSBURG",
+     34
+    ],
+    [
+     "MCCOY",
+     2
+    ],
+    [
+     "SLATER",
+     2
+    ],
+    [
+     "HAMILTON",
+     1
+    ],
+    [
+     "TOPONAS",
+     1
+    ]
+   ]
+  },
+  "saguache": {
+   "parcels": 14371,
+   "matchedDoor": 83,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 83
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 14288,
+     "addrs": 0,
+     "byCls": {
+      "house": 14288
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": []
+  },
+  "san-juan": {
+   "parcels": 2781,
+   "matchedDoor": 368,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 255,
+    "door:nonres": 12,
+    "door:condo": 79,
+    "door:attached": 22
+   },
+   "buckets": {
+    "nonres": {
+     "parcels": 1949,
+     "addrs": 309,
+     "byCls": {
+      "nonres": 1949
+     }
+    },
+    "org": {
+     "parcels": 59,
+     "addrs": 58,
+     "byCls": {
+      "house": 57,
+      "attached": 2
+     }
+    },
+    "big": {
+     "parcels": 45,
+     "addrs": 43,
+     "byCls": {
+      "house": 45
+     }
+    },
+    "absent": {
+     "parcels": 267,
+     "addrs": 260,
+     "byCls": {
+      "house": 259,
+      "attached": 8
+     }
+    },
+    "mobile:lives": {
+     "parcels": 30,
+     "addrs": 26,
+     "byCls": {
+      "mobile": 30
+     }
+    },
+    "mobile": {
+     "parcels": 44,
+     "addrs": 38,
+     "byCls": {
+      "mobile": 44
+     }
+    },
+    "mobile:away": {
+     "parcels": 13,
+     "addrs": 11,
+     "byCls": {
+      "mobile": 13
+     }
+    },
+    "condo:away": {
+     "parcels": 35,
+     "addrs": 1,
+     "byCls": {
+      "condo": 35
+     }
+    },
+    "condo": {
+     "parcels": 48,
+     "addrs": 1,
+     "byCls": {
+      "condo": 48
+     }
+    },
+    "condo:lives": {
+     "parcels": 4,
+     "addrs": 1,
+     "byCls": {
+      "condo": 4
+     }
+    },
+    "localpo": {
+     "parcels": 1,
+     "addrs": 1,
+     "byCls": {
+      "house": 1
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "SILVERTON",
+     231
+    ],
+    [
+     "DURANGO",
+     37
+    ]
+   ]
+  },
+  "san-miguel": {
+   "parcels": 10732,
+   "matchedDoor": 2884,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 2884
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 3435,
+     "addrs": 0,
+     "byCls": {
+      "house": 3435
+     }
+    },
+    "org": {
+     "parcels": 1875,
+     "addrs": 1847,
+     "byCls": {
+      "house": 1875
+     }
+    },
+    "big": {
+     "parcels": 838,
+     "addrs": 831,
+     "byCls": {
+      "house": 838
+     }
+    },
+    "absent": {
+     "parcels": 1696,
+     "addrs": 1668,
+     "byCls": {
+      "house": 1696
+     }
+    },
+    "localpo": {
+     "parcels": 4,
+     "addrs": 4,
+     "byCls": {
+      "house": 4
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "MOUNTAIN VILLAGE",
+     723
+    ],
+    [
+     "TELLURIDE",
+     484
+    ],
+    [
+     "PLACERVILLE",
+     200
+    ],
+    [
+     "OPHIR",
+     142
+    ],
+    [
+     "NORWOOD",
+     107
+    ],
+    [
+     "SAWPIT",
+     26
+    ],
+    [
+     "NO CITY",
+     11
+    ],
+    [
+     "EGNAR",
+     5
+    ],
+    [
+     "REDVALE",
+     1
+    ],
+    [
+     "B",
+     1
+    ]
+   ]
+  },
+  "sedgwick": {
+   "parcels": 3160,
+   "matchedDoor": 456,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 453,
+    "door:nonres": 3
+   },
+   "buckets": {
+    "big": {
+     "parcels": 289,
+     "addrs": 244,
+     "byCls": {
+      "house": 289
+     }
+    },
+    "nositus": {
+     "parcels": 1547,
+     "addrs": 0,
+     "byCls": {
+      "house": 1547
+     }
+    },
+    "nonres": {
+     "parcels": 217,
+     "addrs": 182,
+     "byCls": {
+      "nonres": 217
+     }
+    },
+    "absent": {
+     "parcels": 551,
+     "addrs": 544,
+     "byCls": {
+      "house": 551
+     }
+    },
+    "mobile:away": {
+     "parcels": 9,
+     "addrs": 9,
+     "byCls": {
+      "mobile": 9
+     }
+    },
+    "mobile": {
+     "parcels": 10,
+     "addrs": 10,
+     "byCls": {
+      "mobile": 10
+     }
+    },
+    "org": {
+     "parcels": 90,
+     "addrs": 77,
+     "byCls": {
+      "house": 90
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "JULESBURG",
+     391
+    ],
+    [
+     "OVID",
+     87
+    ],
+    [
+     "SEDGWICK",
+     71
+    ],
+    [
+     "AMHERST",
+     1
+    ],
+    [
+     "NO CITY",
+     1
+    ]
+   ]
+  },
+  "summit": {
+   "parcels": 38372,
+   "matchedDoor": 8301,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 8301
+   },
+   "buckets": {
+    "absent": {
+     "parcels": 25693,
+     "addrs": 25293,
+     "byCls": {
+      "house": 25693
+     }
+    },
+    "nositus": {
+     "parcels": 2327,
+     "addrs": 0,
+     "byCls": {
+      "house": 2327
+     }
+    },
+    "big": {
+     "parcels": 1449,
+     "addrs": 1444,
+     "byCls": {
+      "house": 1449
+     }
+    },
+    "localpo": {
+     "parcels": 582,
+     "addrs": 578,
+     "byCls": {
+      "house": 582
+     }
+    },
+    "ownerY": {
+     "parcels": 20,
+     "addrs": 20,
+     "byCls": {
+      "house": 20
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "KEYSTONE",
+     10
+    ],
+    [
+     "SILVERTHORNE",
+     5
+    ],
+    [
+     "UNINCORPORATED SUMMIT COUNTY",
+     2
+    ],
+    [
+     "FRISCO",
+     2
+    ],
+    [
+     "DILLON",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "UNINCORPORATED SUMMIT COUNTY",
+     12840
+    ],
+    [
+     "BRECKENRIDGE",
+     4517
+    ],
+    [
+     "KEYSTONE",
+     2936
+    ],
+    [
+     "SILVERTHORNE",
+     2178
+    ],
+    [
+     "FRISCO",
+     1816
+    ],
+    [
+     "DILLON",
+     1072
+    ],
+    [
+     "BLUE RIVER",
+     871
+    ],
+    [
+     "MONTEZUMA",
+     45
+    ]
+   ]
+  },
+  "teller": {
+   "parcels": 31494,
+   "matchedDoor": 6568,
+   "matchedLookup": 4222,
+   "matchedByCls": {
+    "lookup:house": 4190,
+    "door:house": 6555,
+    "lookup:attached": 25,
+    "door:attached": 8,
+    "door:nonres": 2,
+    "lookup:farmres": 4,
+    "lookup:mobile": 3,
+    "door:farmres": 3
+   },
+   "buckets": {
+    "farmres": {
+     "parcels": 156,
+     "addrs": 112,
+     "byCls": {
+      "farmres": 156
+     }
+    },
+    "nositus": {
+     "parcels": 11195,
+     "addrs": 0,
+     "byCls": {
+      "house": 11195
+     }
+    },
+    "absent": {
+     "parcels": 6816,
+     "addrs": 6577,
+     "byCls": {
+      "house": 6804,
+      "attached": 12
+     }
+    },
+    "org": {
+     "parcels": 825,
+     "addrs": 784,
+     "byCls": {
+      "house": 819,
+      "attached": 6
+     }
+    },
+    "nonres": {
+     "parcels": 41,
+     "addrs": 36,
+     "byCls": {
+      "nonres": 41
+     }
+    },
+    "big": {
+     "parcels": 1650,
+     "addrs": 1486,
+     "byCls": {
+      "house": 1649,
+      "attached": 1
+     }
+    },
+    "farmres:away": {
+     "parcels": 92,
+     "addrs": 67,
+     "byCls": {
+      "farmres": 92
+     }
+    },
+    "ownerY": {
+     "parcels": 13,
+     "addrs": 13,
+     "byCls": {
+      "house": 13
+     }
+    },
+    "farmres:lives": {
+     "parcels": 25,
+     "addrs": 22,
+     "byCls": {
+      "farmres": 25
+     }
+    },
+    "mobile:away": {
+     "parcels": 6,
+     "addrs": 6,
+     "byCls": {
+      "mobile": 6
+     }
+    },
+    "mobile": {
+     "parcels": 8,
+     "addrs": 7,
+     "byCls": {
+      "mobile": 8
+     }
+    },
+    "mobile:lives": {
+     "parcels": 1,
+     "addrs": 1,
+     "byCls": {
+      "mobile": 1
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "NO CITY",
+     13
+    ]
+   ],
+   "absentCities": [
+    [
+     "NO CITY",
+     6816
+    ]
+   ]
+  },
+  "washington": {
+   "parcels": 6505,
+   "matchedDoor": 901,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 901
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 5604,
+     "addrs": 0,
+     "byCls": {
+      "house": 5604
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": []
+  },
+  "weld": {
+   "parcels": 163491,
+   "matchedDoor": 75407,
+   "matchedLookup": 13097,
+   "matchedByCls": {
+    "door:house": 75315,
+    "lookup:house": 13048,
+    "door:nonres": 92,
+    "lookup:nonres": 49
+   },
+   "buckets": {
+    "org": {
+     "parcels": 5975,
+     "addrs": 5954,
+     "byCls": {
+      "house": 5975
+     }
+    },
+    "absent": {
+     "parcels": 13109,
+     "addrs": 13077,
+     "byCls": {
+      "house": 13109
+     }
+    },
+    "nositus": {
+     "parcels": 5385,
+     "addrs": 0,
+     "byCls": {
+      "house": 5385
+     }
+    },
+    "nonres": {
+     "parcels": 46497,
+     "addrs": 20844,
+     "byCls": {
+      "nonres": 46497
+     }
+    },
+    "localpo": {
+     "parcels": 1262,
+     "addrs": 1259,
+     "byCls": {
+      "house": 1262
+     }
+    },
+    "ownerY": {
+     "parcels": 2304,
+     "addrs": 2297,
+     "byCls": {
+      "house": 2304
+     }
+    },
+    "big": {
+     "parcels": 455,
+     "addrs": 455,
+     "byCls": {
+      "house": 455
+     }
+    }
+   },
+   "ownerYCities": [
+    [
+     "WELD",
+     1878
+    ],
+    [
+     "DACONO",
+     281
+    ],
+    [
+     "FREDERICK",
+     95
+    ],
+    [
+     "GROVER",
+     22
+    ],
+    [
+     "NO CITY",
+     20
+    ],
+    [
+     "NEW RAYMER",
+     4
+    ],
+    [
+     "PLATTEVILLE",
+     1
+    ],
+    [
+     "WINDSOR",
+     1
+    ],
+    [
+     "BRIGGSDALE",
+     1
+    ],
+    [
+     "GREELEY",
+     1
+    ]
+   ],
+   "absentCities": [
+    [
+     "GREELEY",
+     6125
+    ],
+    [
+     "WELD",
+     4134
+    ],
+    [
+     "EVANS",
+     1002
+    ],
+    [
+     "JOHNSTOWN",
+     476
+    ],
+    [
+     "AULT",
+     441
+    ],
+    [
+     "MILLIKEN",
+     424
+    ],
+    [
+     "SEVERANCE",
+     338
+    ],
+    [
+     "EATON",
+     325
+    ],
+    [
+     "GILCREST",
+     238
+    ],
+    [
+     "KERSEY",
+     214
+    ],
+    [
+     "PIERCE",
+     199
+    ],
+    [
+     "LA SALLE",
+     117
+    ],
+    [
+     "NUNN",
+     82
+    ],
+    [
+     "NO CITY",
+     44
+    ],
+    [
+     "FIRESTONE",
+     44
+    ],
+    [
+     "GROVER",
+     43
+    ],
+    [
+     "NEW RAYMER",
+     42
+    ],
+    [
+     "FREDERICK",
+     32
+    ],
+    [
+     "GARDEN CITY",
+     14
+    ],
+    [
+     "MEAD",
+     11
+    ],
+    [
+     "DACONO",
+     11
+    ],
+    [
+     "BERTHOUD",
+     5
+    ],
+    [
+     "LASALLE",
+     3
+    ],
+    [
+     "HUDSON",
+     2
+    ],
+    [
+     "GILL",
+     1
+    ]
+   ]
+  },
+  "yuma": {
+   "parcels": 11862,
+   "matchedDoor": 1559,
+   "matchedLookup": 0,
+   "matchedByCls": {
+    "door:house": 1559
+   },
+   "buckets": {
+    "nositus": {
+     "parcels": 7224,
+     "addrs": 0,
+     "byCls": {
+      "house": 7224
+     }
+    },
+    "big": {
+     "parcels": 1115,
+     "addrs": 1073,
+     "byCls": {
+      "house": 1115
+     }
+    },
+    "org": {
+     "parcels": 433,
+     "addrs": 411,
+     "byCls": {
+      "house": 433
+     }
+    },
+    "absent": {
+     "parcels": 1531,
+     "addrs": 1503,
+     "byCls": {
+      "house": 1531
+     }
+    }
+   },
+   "ownerYCities": [],
+   "absentCities": [
+    [
+     "WRAY",
+     630
+    ],
+    [
+     "YUMA",
+     616
+    ],
+    [
+     "ECKLEY",
+     79
+    ],
+    [
+     "IDALIA",
+     60
+    ],
+    [
+     "KIRK",
+     58
+    ],
+    [
+     "JOES",
+     57
+    ],
+    [
+     "VERNON",
+     23
+    ],
+    [
+     "HAXTUN",
+     3
+    ],
+    [
+     "BURLINGTON",
+     2
+    ],
+    [
+     "NO CITY",
+     2
+    ],
+    [
+     "HOLYOKE",
+     1
+    ]
+   ]
+  }
+ },
+ "doorsInCounty": {
+  "elpaso": 130261,
+  "douglas": 102276,
+  "teller": 6376,
+  "jefferson": 138322,
+  "arapahoe": 143751,
+  "adams": 114762,
+  "weld": 87529,
+  "denver": 132461,
+  "boulder": 62072,
+  "broomfield": 18325,
+  "clearcreek": 3010,
+  "elbert": 7328,
+  "larimer": 79118,
+  "mesa": 38895,
+  "pueblo": 41277,
+  "laplata": 11862,
+  "eagle": 2004,
+  "garfield": 10557,
+  "summit": 3070,
+  "park": 4627,
+  "grand": 2009,
+  "routt": 4835,
+  "montezuma": 5439,
+  "gunnison": 2279,
+  "morgan": 4952,
+  "archuleta": 2873,
+  "logan": 4389,
+  "pitkin": 2075,
+  "riogrande": 1703,
+  "custer": 482,
+  "sanmiguel": 1577,
+  "gilpin": 1431,
+  "yuma": 1526,
+  "lake": 1525,
+  "ouray": 1443,
+  "rioblanco": 1450,
+  "dolores": 71,
+  "hinsdale": 5,
+  "sanjuan": 258,
+  "montrose": 16954,
+  "delta": 13466,
+  "lasanimas": 7249,
+  "alamosa": 5742,
+  "conejos": 4083,
+  "saguache": 531,
+  "costilla": 1448,
+  "washington": 1417,
+  "bent": 1201,
+  "mineral": 1136,
+  "sedgwick": 898
+ },
+ "lookupsInCounty": {
+  "elpaso": 30606,
+  "douglas": 18612,
+  "teller": 4064,
+  "jefferson": 30240,
+  "arapahoe": 44979,
+  "adams": 39286,
+  "weld": 15184,
+  "denver": 40332,
+  "boulder": 39856,
+  "broomfield": 5595,
+  "clearcreek": 320,
+  "elbert": 185
+ },
+ "unmatchedDoorPoints": {
+  "door:elpaso": 888,
+  "lookup:elpaso": 2214,
+  "door:douglas": 449,
+  "lookup:douglas": 5457,
+  "lookup:arapahoe": 1635,
+  "lookup:adams": 1382,
+  "door:jefferson": 493,
+  "lookup:jefferson": 723,
+  "door:adams": 526,
+  "lookup:weld": 44,
+  "door:weld": 18,
+  "door:denver": 44,
+  "lookup:denver": 755,
+  "door:boulder": 2047,
+  "lookup:boulder": 13264,
+  "door:larimer": 34,
+  "door:park": 1,
+  "door:grand": 123,
+  "door:routt": 2,
+  "door:gunnison": 67,
+  "door:riogrande": 2,
+  "door:sanmiguel": 334,
+  "door:montrose": 16954,
+  "door:delta": 13466,
+  "door:lasanimas": 7249,
+  "door:alamosa": 5742,
+  "door:conejos": 4083,
+  "door:saguache": 448,
+  "door:costilla": 1448,
+  "door:washington": 516,
+  "door:bent": 1201,
+  "door:mineral": 1136,
+  "door:sedgwick": 447
+ }
+}

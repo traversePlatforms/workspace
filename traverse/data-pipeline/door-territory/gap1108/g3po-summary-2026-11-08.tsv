@@ -1,0 +1,169 @@
+key	county	live	rows	yes	po_box_rows	local_po_new	already_ours	added
+g3-durango	La Plata	live	7273	3679	472	372	245	124
+g3-bayfield	La Plata	live	1053	568	220	213	164	49
+g3-ignacio	La Plata	live	304	22	199	194	182	11
+g3-durango-rural	La Plata	live	8324	3840	558	336	201	135
+g3-bayfield-rural	La Plata	live	3686	1722	305	200	138	58
+g3-durango-southwest-rural	La Plata	live	1074	698	90	68	51	17
+g3-ignacio-rural	La Plata	live	682	423	118	111	87	21
+g3-edwards	Eagle	live	2699	351	1085	1011	4	1000
+g3-vail	Eagle	live	1141	258	158	114	4	107
+g3-eagle	Eagle	new	2116	0	1865	1761	0	1742
+g3-gypsum	Eagle	live	2415	62	2061	2022	0	1987
+g3-avon	Eagle	live	382	1	200	185	0	179
+g3-basalt	Eagle	live	897	347	252	182	2	180
+g3-el-jebel	Eagle	live	969	604	76	40	0	40
+g3-minturn	Eagle	new	337	0	210	207	0	207
+g3-dotsero	Eagle	live	274	134	122	119	0	119
+g3-minturn-red-cliff-rural	Eagle	live	1184	25	393	258	0	246
+g3-eagle-gypsum-rural	Eagle	live	820	55	499	424	0	422
+g3-basalt-rural	Eagle	live	369	179	66	42	2	40
+g3-rifle	Garfield	live	3780	1963	449	359	147	137
+g3-glenwood-springs	Garfield	live	4072	1477	375	245	109	94
+g3-carbondale	Garfield	live	2893	1225	232	132	91	29
+g3-new-castle	Garfield	live	2246	1044	372	323	148	88
+g3-battlement-mesa	Garfield	live	1764	965	72	50	25	17
+g3-silt	Garfield	live	1713	862	201	172	72	79
+g3-parachute	Garfield	live	614	161	205	167	87	28
+g3-mulford	Garfield	live	235	75	11	3	2	1
+g3-chacra	Garfield	live	127	69	8	5	1	4
+g3-cattle-creek	Garfield	live	181	63	26	19	3	11
+g3-glenwood-springs-rural	Garfield	live	4092	1461	442	267	114	67
+g3-new-castle-rural	Garfield	live	1134	334	126	109	48	45
+g3-rifle-rural	Garfield	live	980	204	105	78	37	30
+g3-west-garfield-rural	Garfield	live	255	10	63	24	3	10
+g3-breckenridge	Summit	live	3620	87	1269	1166	1100	66
+g3-silverthorne	Summit	live	2700	400	942	872	593	279
+g3-frisco	Summit	live	1833	6	748	699	651	48
+g3-blue-river	Summit	live	843	8	227	206	0	206
+g3-keystone	Summit	live	838	10	144	110	15	95
+g3-dillon	Summit	live	509	11	189	175	134	40
+g3-breckenridge-rural	Summit	live	5682	48	1624	1482	1	1478
+g3-silverthorne-rural	Summit	live	2679	22	1028	951	0	951
+g3-fairplay	Park	live	336	11	225	168	127	41
+g3-alma	Park	live	209	8	130	85	59	17
+g3-fairplay-rural	Park	live	9352	3053	1539	1200	891	300
+g3-lake-george-rural	Park	live	1689	406	214	131	97	34
+g3-granby	Grand	live	3041	95	927	815	441	365
+g3-fraser	Grand	live	1873	34	525	500	247	230
+g3-winter-park	Grand	live	4032	32	728	586	374	199
+g3-kremmling	Grand	live	684	7	543	471	378	87
+g3-grand-lake	Grand	live	1098	16	277	233	142	90
+g3-tabernash	Grand	live	444	6	219	214	0	214
+g3-hot-sulphur-springs	Grand	live	364	9	265	257	180	74
+g3-granby-rural	Grand	live	9642	113	2723	2490	4	2481
+g3-kremmling-rural	Grand	live	1100	101	327	253	0	253
+g3-steamboat-springs	Routt	live	6848	1697	1543	1395	949	424
+g3-hayden	Routt	live	922	6	644	629	476	150
+g3-oak-creek	Routt	live	408	10	283	274	231	43
+g3-yampa	Routt	live	202	5	160	156	130	26
+g3-steamboat-springs-rural	Routt	live	1810	567	559	525	366	156
+g3-oak-creek-rural	Routt	live	930	343	219	200	128	72
+g3-hayden-rural	Routt	live	79	15	41	39	29	10
+g3-yampa-rural	Routt	live	24	0	17	9	7	2
+g3-ponderosa-park	Elbert	live	1114	994	26	20	19	1
+g3-elizabeth-rural	Elbert	live	5912	4888	388	359	311	46
+g3-simla-rural	Elbert	live	280	72	139	136	124	12
+g3-agate-rural	Elbert	live	60	18	15	13	9	4
+g3-cortez	Montezuma	live	3101	2038	226	179	98	81
+g3-mancos	Montezuma	live	479	217	92	83	79	4
+g3-towaoc	Montezuma	new	0	0	0	0	0	0
+g3-dolores	Montezuma	live	383	37	206	189	168	21
+g3-lewis	Montezuma	live	91	37	17	16	11	5
+g3-cortez-rural	Montezuma	live	2354	1540	233	209	116	58
+g3-dolores-rural	Montezuma	live	910	503	136	114	89	25
+g3-mancos-rural	Montezuma	live	746	379	100	81	70	11
+g3-ute-mountain-rural	Montezuma	live	26	21	0	0	0	0
+g3-pleasant-view-rural	Montezuma	live	124	27	71	68	56	11
+g3-gunnison	Gunnison	live	2569	911	466	374	24	286
+g3-crested-butte	Gunnison	live	1459	4	787	750	0	703
+g3-mount-crested-butte	Gunnison	live	2741	6	631	505	3	466
+g3-pitkin	Gunnison	live	251	2	75	58	0	50
+g3-marble	Gunnison	live	242	36	23	8	0	8
+g3-gunnison-rural	Gunnison	live	3346	952	580	347	9	307
+g3-crested-butte-rural	Gunnison	live	2765	272	1020	920	37	799
+g3-sapinero-rural	Gunnison	live	1835	88	170	55	0	49
+g3-somerset-rural	Gunnison	live	995	95	297	136	0	85
+g3-fort-morgan	Morgan	live	3672	1237	174	110	52	57
+g3-brush	Morgan	live	1779	1012	130	88	44	44
+g3-wiggins	Morgan	live	720	547	76	68	59	9
+g3-log-lane-village	Morgan	live	376	234	5	4	0	4
+g3-fort-morgan-rural	Morgan	live	1272	839	72	51	36	15
+g3-brush-rural	Morgan	live	838	516	127	115	94	21
+g3-wiggins-rural	Morgan	live	490	202	23	20	10	10
+g3-weldona-rural	Morgan	live	433	67	76	68	59	8
+g3-cripple-creek	Teller	live	889	31	430	399	3	362
+g3-victor	Teller	live	422	12	204	192	0	187
+g3-cripple-creek-rural	Teller	live	3003	344	409	292	0	283
+g3-divide-rural	Teller	live	10115	2325	1182	839	9	820
+g3-pagosa-springs	Archuleta	live	1765	86	904	0	0	0
+g3-arboles	Archuleta	live	410	12	213	0	0	0
+g3-pagosa-springs-rural	Archuleta	live	11013	2582	1715	0	0	0
+g3-arboles-rural	Archuleta	live	1143	237	220	0	0	0
+g3-sterling	Logan	live	4320	2447	508	407	154	241
+g3-fleming	Logan	live	226	69	81	75	55	20
+g3-sterling-rural	Logan	live	1665	1020	256	234	169	57
+g3-fleming-rural	Logan	live	234	122	21	12	3	9
+g3-merino-rural	Logan	live	396	97	165	157	125	27
+g3-crook-rural	Logan	live	182	36	67	62	53	9
+g3-peetz-rural	Logan	live	199	32	87	83	71	11
+g3-aspen	Pitkin	live	1945	581	204	147	109	31
+g3-snowmass-village	Pitkin	live	1090	24	390	345	232	105
+g3-snowmass-village-rural	Pitkin	live	1779	721	248	212	118	94
+g3-aspen-rural	Pitkin	live	1308	250	324	264	186	78
+g3-monte-vista	Rio Grande	live	1976	922	266	0	0	0
+g3-south-fork	Rio Grande	live	1062	84	221	0	0	0
+g3-del-norte	Rio Grande	live	1023	357	218	0	0	0
+g3-alpine	Rio Grande	live	1819	44	295	0	0	0
+g3-del-norte-rural	Rio Grande	live	2597	168	438	0	0	0
+g3-monte-vista-rural	Rio Grande	live	759	213	84	0	0	0
+g3-sargent-rural	Rio Grande	live	430	28	56	0	0	0
+g3-idaho-springs	Clear Creek	live	787	50	523	506	406	95
+g3-upper-bear-creek	Clear Creek	live	463	305	44	38	35	3
+g3-georgetown	Clear Creek	live	766	18	422	390	326	63
+g3-floyd-hill	Clear Creek	live	535	384	20	12	6	6
+g3-upper-witter-gulch	Clear Creek	live	185	128	12	11	11	0
+g3-empire	Clear Creek	live	209	12	136	131	102	27
+g3-st-mary-s	Clear Creek	live	362	148	22	16	11	3
+g3-downieville-lawson-dumont	Clear Creek	live	270	32	176	172	120	52
+g3-pine-valley	Clear Creek	live	153	98	8	5	5	0
+g3-idaho-springs-rural	Clear Creek	live	1077	470	192	162	144	18
+g3-georgetown-rural	Clear Creek	live	523	30	226	203	154	49
+g3-silver-cliff	Custer	live	330	102	88	81	0	81
+g3-westcliffe	Custer	live	340	54	98	81	0	81
+g3-westcliffe-rural	Custer	live	2754	326	327	185	0	185
+g3-mountain-village	San Miguel	live	2014	176	261	167	50	116
+g3-telluride	San Miguel	live	2436	7	1086	960	726	232
+g3-norwood	San Miguel	live	300	2	241	233	137	96
+g3-placerville	San Miguel	live	185	0	147	142	76	65
+g3-telluride-rural	San Miguel	live	1238	190	568	420	292	128
+g3-norwood-rural	San Miguel	live	226	0	198	191	140	49
+g3-west-san-miguel-rural	San Miguel	live	12	3	7	4	3	1
+g3-central	Gilpin	live	382	4	234	210	171	34
+g3-central-city-rural	Gilpin	live	2390	1015	579	409	251	157
+g3-yuma	Yuma	live	1430	818	94	71	41	30
+g3-wray	Yuma	live	1009	516	83	73	39	34
+g3-yuma-rural	Yuma	live	374	62	59	47	39	8
+g3-wray-rural	Yuma	live	419	27	38	30	21	9
+g3-idalia-joes-rural	Yuma	live	245	1	51	10	1	9
+g3-leadville	Lake	live	1555	595	154	114	95	19
+g3-leadville-north	Lake	live	755	398	64	51	45	6
+g3-twin-lakes	Lake	live	338	69	22	15	1	14
+g3-leadville-rural	Lake	live	1126	198	123	87	70	17
+g3-leadville-north-rural	Lake	live	453	47	67	42	41	1
+g3-ouray	Ouray	live	923	3	502	471	305	88
+g3-ridgway	Ouray	live	964	211	427	341	210	83
+g3-loghill-village	Ouray	live	801	292	98	47	22	9
+g3-ouray-rural	Ouray	live	1438	332	389	276	129	83
+g3-meeker	Rio Blanco	live	926	263	494	465	415	45
+g3-rangely	Rio Blanco	live	755	510	60	49	41	8
+g3-meeker-rural	Rio Blanco	live	311	94	97	78	69	8
+g3-rangely-rural	Rio Blanco	live	81	54	12	12	12	0
+g3-rico	Dolores	live	430	4	10	4	0	4
+g3-dove-creek	Dolores	live	567	5	12	12	0	12
+g3-dove-creek-rural	Dolores	live	396	61	13	11	0	11
+g3-rico-rural	Dolores	live	430	6	70	4	0	4
+g3-lake-city	Hinsdale	new	444	0	175	149	0	147
+g3-lake-city-rural	Hinsdale	live	812	7	158	101	0	101
+g3-silverton	San Juan	live	474	0	291	257	236	16
+g3-silverton-rural	San Juan	live	129	5	36	23	19	2
