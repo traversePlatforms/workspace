@@ -104,9 +104,12 @@ function scanParse(string $html, string $base): array {
         if (preg_match('#^https?://([a-z]+\.)?(facebook|instagram|linkedin|x|twitter|youtube|tiktok)\.com/#i', $abs)) { if (!preg_match('#/(sharer|share|intent|dialog|plugins|embed)[/?.]#i', $abs)) $o['social'][] = $abs; continue; }
         $o['links'][] = [$abs, mb_substr(trim(preg_replace('/\s+/', ' ', strip_tags($a[2]))), 0, 60)];
     }
-    $t = preg_replace('#<(script|style|noscript|svg|template)\b.*?</\1>#is', ' ', $html);
-    $t = html_entity_decode(strip_tags(preg_replace('#<br\s*/?>|</(p|div|li|h\d|td|address|span)>#i', "\n", $t)), ENT_QUOTES | ENT_HTML5);
-    $t = preg_replace('/[ \t\x{00A0}]+/u', ' ', $t);
+    $t = preg_replace('#<(script|style|noscript|svg|template)\b.*?</\1>#is', ' ', $html) ?? $html;
+    $t = html_entity_decode(strip_tags(preg_replace('#<br\s*/?>|</(p|div|li|h\d|td|address|span)>#i', "\n", $t) ?? $t), ENT_QUOTES | ENT_HTML5);
+    /* review 2026-11-09: a page that is not UTF-8 (Latin-1 / Windows-1252) made the /u regex below return null, so every phone, email
+       and address on the page was missed and PHP logged "Passing null to parameter #2" on every hourly rescan (7-9 Nov) */
+    if (!mb_check_encoding($t, 'UTF-8')) $t = mb_convert_encoding($t, 'UTF-8', 'Windows-1252');
+    $t = preg_replace('/[ \t\x{00A0}]+/u', ' ', $t) ?? $t;
     if (preg_match_all('/(?<![\d-])(?:\+?1[ .-]?)?(?:\((\d{3})\)\s?|(\d{3})[ .-])(\d{3})[ .-](\d{4})(?![\d-])/', $t, $m, PREG_SET_ORDER)) foreach ($m as $x) $o['phones'][] = ($x[1] ?: $x[2]) . $x[3] . $x[4];
     if (preg_match_all('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $t, $m)) foreach ($m[0] as $e) $o['emails'][] = $e;
     if (!$o['addr'] && preg_match('/\b\d{2,6}\s+(?:[NSEW]\.?\s+)?[A-Za-z0-9.\' -]{2,40}?\b(?:Street|St|Avenue|Ave|Boulevard|Blvd|Road|Rd|Drive|Dr|Lane|Ln|Way|Parkway|Pkwy|Court|Ct|Circle|Cir|Place|Pl|Highway|Hwy|Loop|Point|Pt|Trail|Trl|Grove|Heights|Hts)\b\.?(?:,?\s*(?:Suite|Ste|Unit|#)\.?\s*[\w-]+)?[,\s]+[A-Za-z .]{3,30},?\s+(?:CO|Colorado)\s+8\d{4}\b/', $t, $m)) $o['addr'] = trim(preg_replace('/\s+/', ' ', $m[0]));

@@ -14,6 +14,7 @@
  * keeps them, the desk stops showing them); a profit and loss page. */
 declare(strict_types=1);
 define('DESK', 1);
+date_default_timezone_set('America/Denver');   /* review 2026-11-09: the server's clock is UTC, so after 5 pm Colorado time "today" was already tomorrow and a tour booked for today was refused ("Pick today or a later day") */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
 $outside = dirname(__DIR__, 3) . '/peak-desk-data';
 define('DATA_DIR', getenv('DESK_DATA') ?: (is_dir($outside) ? $outside : ($LOCAL ? dirname(__DIR__) . '/../desk-data-local' : $outside)));
