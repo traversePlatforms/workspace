@@ -267,6 +267,7 @@ function build() {
   for (const town of Object.keys(TOWNS)) {
     const f = join(DATA, `${town}.json`); if (!existsSync(f)) continue;
     const d = JSON.parse(readFileSync(f, 'utf8')), doors = {}, houses = {};
+    if (!Array.isArray(d.areas)) { console.log(`  ${town}: ${town}.json has no neighbourhoods (${Object.keys(d).slice(0, 4).join(',')}), skipped`); continue; }
     for (const a of d.areas) for (const x of a.doors) {
       tot++;
       const r = cache[`${x.lat},${x.lon}`];

@@ -15,6 +15,8 @@ cd "$(dirname "$0")/.." || exit 1
 S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp/gap-rent"; mkdir -p "$S"   # short path ("Matthew sharpe" has a space)
 VM="ssh -o ConnectTimeout=20 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101"; RD=../../app/data/rounds
 step() { echo "$(date +%T) $*"; }
+# 10 Nov: a dropped connection (the laptop changing networks) killed the gap upload; each upload now gets two more tries
+retry() { "$@" || { sleep 120; "$@"; } || { sleep 300; "$@"; }; }
 case "$(netsh wlan show interfaces 2>/dev/null | grep -E '^\s+SSID' | head -1)" in *iPhone*) step "on the iPhone hotspot: not copying back"; exit 1;; esac
 $VM 'test -f ~/run/gap1108/rentb.vmdone' < /dev/null || { step "rentb is not finished: $($VM 'cat ~/run-status.txt' < /dev/null)"; exit 1; }
 step "copy back"
@@ -41,9 +43,9 @@ node -e "const fs=require('fs');for(const f of ['$RD/index.json',...['traverse-d
 [ -f gap1108/APP-READY ] || { step "built locally; NOT uploaded: gap1108/APP-READY does not exist (the app's owner label and filter must be live first)"; exit 0; }
 step "upload to Sixfold (every town)"
 set -- $(node -e "console.log(JSON.parse(require('fs').readFileSync('$RD/index.json')).regions.map(r=>r.key).join(' '))")
-while [ $# -gt 0 ]; do batch="$1 ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} ${7:-} ${8:-}"; shift 8 2>/dev/null || shift $#; bash upload-towns-sixfold.sh "rent-$(echo $batch | cut -d' ' -f1)-$(date +%Y%m%d)" $batch || { step "Sixfold upload failed at $batch"; exit 1; }; done
+while [ $# -gt 0 ]; do batch="$1 ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} ${7:-} ${8:-}"; shift 8 2>/dev/null || shift $#; retry bash upload-towns-sixfold.sh "rent-$(echo $batch | cut -d' ' -f1)-$(date +%Y%m%d)" $batch || { step "Sixfold upload failed at $batch"; exit 1; }; done
 # the towns' door files and side files by name, but NEVER hail-<town>.json: the server's storm job owns those
 KEYS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('../../editions/dist/traverse-data/rounds/index.json')).regions.map(r=>r.key).filter(k=>!/^com-/.test(k)).join('|'))")
 RX="^((census|hailrep|naip|nri|others|pest|photo|roof|solar|wind|year|permit|material|outline|security|lawnmask|com)-)?($KEYS)\.json\$"
-for d in traverse-yards-data traverse-pest-data traverse-security-data traverse-solar-data traverse-data; do bash ./push-edition.sh "$d" "$RX" || { step "push $d failed"; exit 1; }; done
+for d in traverse-yards-data traverse-pest-data traverse-security-data traverse-solar-data traverse-data; do retry bash ./push-edition.sh "$d" "$RX" || { step "push $d failed"; exit 1; }; done
 step "done: commit; then a roof-material pass for the towns (material is keyed by door id)"

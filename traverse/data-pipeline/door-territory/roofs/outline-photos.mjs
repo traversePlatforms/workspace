@@ -40,7 +40,7 @@ for (const r of regions) {
     doors.push(d); s = Math.min(s, d.lat); n = Math.max(n, d.lat); w = Math.min(w, d.lon); e = Math.max(e, d.lon);
   }
   if (!doors.length) continue;
-  const blds = await loadBuildings(BLD, [w - 0.002, s - 0.002, e + 0.002, n + 0.002]);
+  let blds; try { blds = await loadBuildings(BLD, [w - 0.002, s - 0.002, e + 0.002, n + 0.002]); } catch (err) { console.log(`  ${key}: skipped, ${err.message}`); continue; }   /* 2026-11-10: one missing tile stopped every town after it */
   /* a ~110 m grid of building centres for the lookups */
   const G = 0.001, grid = new Map(), cell = (lo, la) => Math.floor(lo / G) + ',' + Math.floor(la / G);
   for (const b of blds) { const k = cell(b.c[0], b.c[1]); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(b); }
