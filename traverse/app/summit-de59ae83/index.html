@@ -2759,7 +2759,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .door.lead .lrecallon{color:var(--accent)}
   .door.lead .lnote{margin-top:12px}
   .door.lead .lremove{display:block;margin:12px 0 0 auto;font:700 13px var(--sans);color:var(--soft);background:none;border:0;text-decoration:underline;cursor:pointer}
-  .rmwhy{flex-direction:column;align-items:stretch}.rmwhy .rmopt{display:grid;gap:2px;text-align:left;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer}.rmwhy .rmopt b{font:700 15px var(--sans)}.rmwhy .rmopt span{font-size:13px;color:var(--soft)}.rmwhy .rmopt:hover{border-color:var(--accent)}
+  .rmwhy{flex-direction:column;align-items:stretch}.rmwhy .rmopt{display:grid;gap:2px;text-align:left;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer}.rmwhy .rmopt b{font:700 15px var(--sans)}.rmwhy .rmopt span{font-size:13px;color:var(--soft)}.rmwhy .rmopt:hover{border-color:var(--accent)}.rmwhy .rmother{display:flex;gap:8px}.rmwhy .rmother[hidden]{display:none}.rmwhy .rmother input{flex:1;min-width:0;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
   /* the schedule: This week and Pick a day (2026-10-22) */
   .schedjump{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .schedjump button,.schedpick{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 14px var(--sans);cursor:pointer}
@@ -8335,6 +8335,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       row.appendChild(b);
     });
+    /* Other, in his own words (2026-11-10, Matthew: "for remove lead option there needs to be an option to put in your own input, like other or
+       something like that"): marked Lost with the reason as the note. His sign-in only for now (Jen's screens unchanged unless he asks) */
+    if (adminView()) {
+      var ob = q('button', 'rmopt'); ob.type = 'button'; ob.appendChild(q('b', null, 'Other')); ob.appendChild(q('span', null, 'Type the reason. Marked Lost, with your reason on the lead.'));
+      var ow = q('div', 'rmother'); ow.hidden = true;
+      var oi = q('input'); oi.type = 'text'; oi.maxLength = 200; oi.placeholder = 'Why? e.g. renter, landlord said no'; oi.setAttribute('aria-label', 'Why remove this lead');
+      var og = q('button', 'btn', 'Remove'); og.type = 'button';
+      ow.appendChild(oi); ow.appendChild(og);
+      ob.addEventListener('click', function () { ow.hidden = false; setTimeout(function () { try { oi.focus(); } catch (e) {} }, 20); });
+      var goOther = function () {
+        var t = String(oi.value || '').trim(); if (t.length < 3) { oi.focus(); toast('Type a reason', 'A few words is enough.', null); return; }
+        [].forEach.call(bx.querySelectorAll('button'), function (y) { y.disabled = true; });
+        api('leadremove', { body: { id: l.id, why: 'other', text: t } }).then(function (j) {
+          close();
+          if (!j || !j.ok) { toast('Not removed', (j && j.error) || 'Try again.', null); return; }
+          toast('Removed', (l.name || l.phone || '') + ': ' + t, null); (S.leadRedraw || pipelineView)();
+        }, function () { close(); toast('Not removed', 'Needs signal.', null); });
+      };
+      og.addEventListener('click', goOther);
+      oi.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); goOther(); } });
+      row.appendChild(ob); row.appendChild(ow);
+    }
     var no = q('button', 'lnk', 'Keep it'); no.type = 'button'; no.addEventListener('click', close); row.appendChild(no);
     bg.addEventListener('click', function (e) { if (e.target === bg) close(); });
     document.addEventListener('keydown', esc);

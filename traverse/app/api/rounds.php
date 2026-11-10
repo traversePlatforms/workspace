@@ -6365,6 +6365,8 @@ if ($action === 'leadremove') {
     $id = (string) ($body['id'] ?? ''); $l = leadOk($id) ? (leadsAll()[$id] ?? null) : null;
     if (!$l) fail('No such lead.', 404);
     $W = ['noreach' => ['unreached', 'Removed from the leads: could not reach them'], 'notint' => ['lost', 'Removed from the leads: not interested'], 'junk' => ['unreached', 'Removed from the leads: spam or a duplicate']];
+    /* Other, in their own words (2026-11-10, Matthew): Lost, the reason as the note */
+    if ((string) ($body['why'] ?? '') === 'other') { $ot = trim(preg_replace('/\s+/u', ' ', (string) ($body['text'] ?? ''))); if (mb_strlen($ot) < 3) fail('Type a reason.'); $W['other'] = ['lost', 'Removed from the leads: ' . mb_substr($ot, 0, 200)]; }
     $why = (string) ($body['why'] ?? ''); if (!isset($W[$why])) fail('Pick why.');
     if (!in_array((string) ($l['status'] ?? 'new'), ['new', 'contacted', 'hold', 'quoted'], true)) fail('Only a lead that is still open can be removed.');
     if (jobForLead($id)) fail('That lead has a job booked. Cancel the job first.');
