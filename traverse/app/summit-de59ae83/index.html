@@ -18680,7 +18680,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Jen's stages for Matthew's Full pipeline too (2026-11-10, Matthew: 'make my full pipeline look like jens pipeline in terms of the organizing,
      right now its just one big drop down of names'): Quoted and Form sent apart, Signed and No sale tabs. Sixfold only (the walk desk); the
      editions keep theirs */
-  function officeStages() { return asOffice() || (feat('walkdesk') && adminView() && !edOn()); }
+  function officeStages() { return asOffice() || (feat('walkdesk') && adminView() && S.super && !edOn()); }   /* Matthew's sign-in only (2026-11-10: 'i just wanted it copied over to mine'); other admins and Jen unchanged */
   function pipeStage(it) {
     if (it.kind === 'door') { var x = it.x, ds = x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; return officeStages() ? ({ won: 'signed', lost: 'nosale', walk: 'call' })[ds] || ds : ds; }
     var st = it.x.status || 'new';
