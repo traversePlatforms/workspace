@@ -1,89 +1,120 @@
 # Surge site — deploying to SiteGround
 
-**Status 2026-09-16: build is launch-ready; waiting on photos + video.** Static
-site plus a PHP form handler. `surgeftw.com` currently serves the Aug-2025
-WordPress restore as a placeholder — uploading this bundle **replaces it**, so
-the upload is the publish step and needs Matthew's explicit go.
+**Status 2026-11-10: launch-ready, waiting on Matthew's go.** Static site plus a
+PHP form handler. `staging.surgeftw.com` is file-for-file the current bundle and
+the office has approved it. `surgeftw.com` still serves the WordPress site —
+uploading this bundle to its `public_html` **replaces it**, so that upload is the
+publish step and needs Matthew's explicit go.
 
-## Launch day — the runbook (dry-run 2026-09-16, everything below passed)
+## Launch day — the runbook (revised 2026-11-10 after the launch-readiness review)
 
-Dry-run state: `dist/surge-site-2026-09-16.zip`, 83 files, 6,069 KB. 28 pages,
-tags balanced, no comments shipped, no broken links / assets / anchors, no
-placeholders. `noindex` on 28/28, `robots.txt` `Disallow: /`, sitemap 26 URLs,
-www → non-www, JSON-LD carries phone + `info@surgeftw.com` + Englewood CO (no
-street address). **No analytics — and `/privacy/` states that in writing.**
+What ships: `dist/surge-site-<date>.zip`, 72 files, ~7.5 MB, 23 pages, **files at
+the archive root** (no wrapper folder since 2026-11-04; the SiteGround "extracts
+into a subfolder" trap is gone). Entry paths use `/`, so Info-ZIP `unzip` on the
+server extracts it cleanly. Every page carries `noindex` and `robots.txt` says
+`Disallow: /` until step 2 below — that is the staging posture, not a bug.
 
-Content gates are closed: two review rounds (09-14), RESTRICTED.md check, form
-test on all four paths (09-16, local). Not gated on Lance's figures or Donny's
-logo — both slot in after launch if late.
+Server access: `bash ~/.ssh/sg.sh surge '<cmd>' < /dev/null`. Staging root is
+`~/www/staging.surgeftw.com/public_html`; the live root is
+`~/www/surgeftw.com/public_html` (WordPress, 676 MB, read-only until step 6).
+Name staging vs live in every command.
 
-**When the photos are in:**
+### Before the go — nothing public changes
 
-1. Drop the shoot in a dated folder under `brand/photos/`, then
-   `node deploy/optimise-images.mjs <that folder>` — HEIC or JPEG in,
-   1440×1080 JPEG (+ WebP where it wins) out in `assets/img/`, metadata
-   stripped. It warns on portrait or undersized frames; the shot list says
-   reshoot those. `--name` renames a single file, `--slot hero` for the hero
-   background. Then reference the files and check every `<picture>` slot at
-   1280 and at 420.
-2. `node deploy/make-bundle.mjs` → extract → `verify-bundle` + `audit-links`
-   **on the extracted copy** (against the repo both false-positive on comments).
-3. **⚑ CONFIRM THE PHONE NUMBER BEFORE THE GO.** Matthew said 2026-09-20 he
-   would verify it and asked to be reminded here. The build is internally
-   consistent — **92 `tel:` links, every one `+17207195495`, and 96 displayed
-   as 720-719-5495, with no trace of any other number.** So this is not a
-   find-the-bug check; it is one question: **is 720-719-5495 the number that
-   should ring in 96 places, and does it reach someone?** Dial it.
+1. **Phone number — done.** Matthew confirmed 1 Nov that (720) 719-5495 is the
+   number; the old site's "Call Us" button was fixed 8 Nov. The build has 72
+   `tel:+17207195495` links and 75 displays of 720-719-5495, nothing else.
+2. **Flip the three launch switches in `build/`** — these and nothing else:
+   - `node deploy/toggle-noindex.mjs off` — removes
+     `<meta name="robots" content="noindex">` from 21 pages and **keeps it on
+     `404.html` and `thank-you/`** (neither belongs in Google).
+   - `robots.txt` — delete the `Disallow: /` line and the STAGING POSTURE
+     comment; keep `Sitemap: https://surgeftw.com/sitemap.xml`.
+   - `sitemap.xml` — add `<lastmod>YYYY-MM-DD</lastmod>` (launch day) inside
+     each of the 21 `<url>` blocks. Same commit, optional: `datePublished`
+     (launch day) in the three `BlogPosting` blocks — each carries a comment
+     saying where.
+3. `node deploy/make-bundle.mjs` → extract → `verify-bundle` + `audit-links` on
+   the extracted copy → `node deploy/seo-audit.mjs` (expect **0 failures and
+   "0 of 23 pages carry noindex"**). Commit. Do **not** put this bundle on
+   staging: staging is a full duplicate of the site and must stay `noindex`.
+4. **Matthew's go.** Nothing below runs without it.
 
-   Why it is a step at all: the WordPress site this replaces has the hero
-   **"Call Us" button dialling `tel:7193157742`** while displaying the 720
-   number beside it — found 2026-09-20. That is the current live state, so the
-   number on the domain today cannot be used to confirm anything.
-   **Fixed on the old live site 8 Nov 2026** (Matthew: "Fix the call button"): the Elementor
-   button on 10 pages now dials `tel:7207195495`. Matthew confirmed on 1 Nov that (720) 719-5495
-   is the number Surge uses, so this step only needs that one test call.
+### The swap — after the go, in this order
 
-4. Matthew's go. Then, in this order:
-5. `node deploy/toggle-noindex.mjs off`; delete the `Disallow: /` line in
-   `robots.txt`; rebuild (step 2 again — the bundle must be the one without
-   noindex).
-6. **Rehearse on `staging.surgeftw.com` first.** It already exists on SiteGround
-   (the 09-08 form test ran there) and `website@surgeftw.com` was created then.
-   Upload the launch bundle to the staging subdomain's root and run every check
-   in step 8 there — `mail()`, the `.htaccess` redirects, HTTPS — while the
-   placeholder on the main domain is untouched. Confirm someone reads
-   `info@surgeftw.com` (the `to` in `api/config.php`).
-7. **Site Tools → File Manager → `public_html`**: delete the WordPress files,
-   upload the zip, Extract, delete the zip. `api/uploads/` must be writable.
-8. Live checks, in a private window (on staging first, then again on the real
-   domain): home, one bio page, `/careers/`, `/contact/#feedback`, a made-up URL
-   (404 page), `/how-it-works/` and `/sectors/` (301s), `http://` → `https://`,
-   `www.` → bare, phone width. **Submit the feedback form once** and confirm
-   the email lands in `info@` — the one hop the local test could not prove.
-9. Google Search Console: submit `https://surgeftw.com/sitemap.xml`. Google
-   review link and the WordPress-era URLs are covered by the `.htaccess`
-   redirect map (item 7 on the punch list).
-   **SEO, at this point and not before** (`node deploy/seo-audit.mjs`, 0 failures
-   expected — re-run it after step 5, since it reports the noindex count):
-   - **Add `datePublished` to the six `BlogPosting` blocks.** Each carries a
-     comment saying so. Left out deliberately — nothing has been published, and a
-     publication date that is not true is worse than a missing one.
-   - **Add `<lastmod>` to `sitemap.xml`**: launch day on every URL, the real date
-     on each edit after. It is how a crawler decides what to re-crawl.
-10. **Analytics — decided 2026-09-16: no tracking script at launch.** Measure
-   with SiteGround's built-in traffic stats (Site Tools → Statistics →
-   Traffic — server-side, no cookies, and the same kind of numbers as the
-   July-2026 baseline), Search Console (step 9), and the form log. `/privacy/`
-   stays as written. Revisit only with a specific question the three cannot
-   answer; then a cookieless tool (Plausible / Fathom) and a one-sentence
-   privacy edit. Not GA4.
+5. **Back up live, on the server** (the site is not touched by this):
+   ```
+   S=$(date +%Y%m%d-%H%M)
+   cd ~/www/surgeftw.com/public_html && wp db export ~/upload-backups/surge-wp-db-before-launch-$S.sql
+   tar czf ~/upload-backups/surge-wp-public_html-before-launch-$S.tgz -C ~/www/surgeftw.com public_html
+   ls -la ~/upload-backups/ | tail -3; tar tzf ~/upload-backups/surge-wp-public_html-before-launch-$S.tgz | wc -l
+   ```
+   The tree includes `wp-config.php` (database credentials) and the `.htaccess`;
+   the tgz keeps both. The MySQL database itself is never dropped by anything
+   below, so WordPress can come back from the files alone.
+6. **Move WordPress out, do not delete it:**
+   ```
+   mkdir -p ~/retired-wp-$S && cd ~/www/surgeftw.com/public_html
+   mv .htaccess * ~/retired-wp-$S/      # leaves .well-known in place (certificates)
+   ls -la                                # only .well-known should remain
+   ```
+7. **Upload and extract at the root:** `scp` the zip to `~/tmp/`, then
+   `unzip -o ~/tmp/surge-site-<date>.zip -d ~/www/surgeftw.com/public_html` and
+   delete the zip. `ls -la public_html` must show `index.html` and `.htaccess`
+   at the top, and `api/uploads/` (0755, owned by the account — PHP runs as the
+   account on SiteGround, so it is writable).
+8. **Verify byte-identical:** `find . -type f | sort | xargs md5sum` on the server
+   against the same listing of the extracted bundle — 72 lines, all equal.
+9. **Flush the cache:** `site-tools-client domain-all list -f id,name`, then
+   `site-tools-client domain-all update id=<surgeftw.com id> flush_cache=1`
+   (answers `msg=OK`). SiteGround's dynamic cache (`X-Proxy-Cache-Info: DT:1`)
+   otherwise serves the WordPress homepage for a while. Cache-bust every URL
+   you check (`?cb=123`).
+10. **Live checks, private window:** home, `/careers/`, one bio page,
+    `/contact/#feedback`, a made-up URL (404 page **with a 404 status**),
+    `/how-it-works/`, `/our-focus/`, `/privacy-policy/`, `/clients/` and
+    `/leadership-skills/` (all 301 to the right page), `/sitemap_index.xml` →
+    `/sitemap.xml`, `http://` → `https://`, `www.` → bare, `/api/config.php`
+    and `/api/submissions.log` → 403, `/wp-admin/` → 410, hero video playing
+    (phone loads only `hero-mobile.mp4`), tap a form field on a real iPhone (no
+    zoom). Response headers: HSTS, nosniff, X-Frame-Options, Referrer-Policy.
+    Then `node deploy/mobile-audit.mjs --devices --base=https://surgeftw.com`
+    (0 failures) and `node deploy/seo-audit.mjs` once more.
+11. **Matthew submits the feedback form once.** The mail must land in
+    `info@surgeftw.com` (a Google Workspace mailbox; the domain's SPF already
+    includes SiteGround, DMARC is `p=none`). If it does not arrive: check spam,
+    confirm `website@surgeftw.com` exists in Site Tools → Email, turn on DKIM
+    in Site Tools → Email → Authentication, and as a last resort switch the
+    handler to SMTP or Formspree (see "Forms" below). Every submission is also
+    in `api/submissions.log`, so nothing is lost while that is sorted.
+12. **Google Search Console:** submit `https://surgeftw.com/sitemap.xml`
+    (the old Yoast sitemap URLs now 301 to it), then URL Inspection → Request
+    indexing on `/`. Site Kit and Yoast go with WordPress; Search Console itself
+    stays verified if it was verified by DNS — check the property's verification
+    method before the swap, and if it was an HTML file or the Site Kit plugin,
+    re-verify by DNS TXT afterwards.
+13. **Staging afterwards:** leave it on the `noindex` + `Disallow: /` bundle
+    (it is still useful for the next round) — never the launch bundle.
+14. **Next day:** `public_html/php_errorlog` (should not exist), `api/submissions.log`,
+    Search Console coverage, SiteGround Site Tools → Statistics → Traffic. **No
+    analytics script** — decided 2026-09-16, `/privacy/` says so in writing.
+
+### Roll back (minutes, no DNS)
+
+The database was never touched, so the WordPress site comes back from its files:
+```
+cd ~/www/surgeftw.com/public_html && mkdir -p ~/new-site-pulled-$S && mv .htaccess * ~/new-site-pulled-$S/
+mv ~/retired-wp-$S/.htaccess ~/retired-wp-$S/* ~/www/surgeftw.com/public_html/
+site-tools-client domain-all update id=<id> flush_cache=1
+```
+If the retired folder is gone, `tar xzf` the step-5 tgz into `~/www/surgeftw.com/`
+and `wp db import` the `.sql` only if the database was changed (it is not, by this
+runbook). Older copies: `surge/website/wp-restore/` in the repo and
+`~/upload-backups/surge-live-database-20250805.sql` on the server.
 
 `info@surgeftw.com` is read by the recruitment team, who also handle client
 acquisition — confirmed 2026-09-16, so both form types land with the people
 who act on them.
-
-Roll back: re-upload the WordPress backup (`drafts/surge-wp-restore/`) — or,
-faster, put `noindex` back with `toggle-noindex.mjs on` and re-upload.
 
 ---
 
@@ -107,17 +138,14 @@ faster, put `noindex` back with `toggle-noindex.mjs on` and re-upload.
   security headers, gzip).
 - Orphan `team.png` (1.2 MB) removed.
 
-## What is NOT done
+## What is NOT done (2026-11-10)
 
-- Not uploaded; no DNS touched. (The WordPress placeholder on the domain is a
-  separate, earlier upload.)
-- `mail()` deliverability not proven — only testable live (runbook step 8).
+- Not launched; no DNS touched. Live `surgeftw.com` is still WordPress.
+- `mail()` deliverability not proven end to end — only testable live (runbook step 11).
 - `noindex` on every page and `Disallow: /` in `robots.txt` — deliberate until
-  runbook step 5.
+  runbook step 2.
+- No `<lastmod>` in the sitemap and no `datePublished` on the posts — runbook step 2.
 - No analytics (and `/privacy/` says so).
-- Photos + hero video — the only open content item.
-- ~~Content not re-checked against RESTRICTED.md~~ — done, two review rounds
-  by 2026-09-14; record in `index-draft-notes.md`.
 
 ---
 

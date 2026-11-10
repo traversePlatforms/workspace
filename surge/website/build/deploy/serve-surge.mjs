@@ -36,6 +36,21 @@ const REDIRECTS = [
   [/^\/training\/?$/,       '/careers/#how-you-are-trained'],
   [/^\/careers\/apply\/?$/, '/careers/#apply'],
   [/^\/sectors(\/.*)?$/,    '/what-we-do/'],
+  [/^\/team\/(ryan-conger|jon-wallace)\/?$/, '/team/'],
+  // The WordPress site's URLs (mapped 2026-11-10) — same table as .htaccess.
+  [/^\/(our-focus|generate-revenue)\/?$/, '/what-we-do/'],
+  [/^\/clients\/?$/, '/about/#sectors'],
+  [/^\/(personal-growth|career-growth)\/?$/, '/careers/'],
+  [/^\/locations(\/.*)?$/, '/contact/'],
+  [/^\/(denver-co|asheville-nc|houston-tx)\/?$/, '/contact/'],
+  [/^\/privacy-policy\/?$/, '/privacy/'],
+  [/^\/terms-conditions\/?$/, '/terms/'],
+  [/^\/(leadership-skills|entering-new-markets|scale-your-team)\/?$/, (m) => `/blog/${m[1]}/`],
+  [/^\/blog\/page\/\d+\/?$/, '/blog/'],
+  [/^\/\d{4}\/\d{2}(\/\d{2})?\/?$/, '/blog/'],
+  [/^\/(category|tag|author)(\/.*)?$/, '/blog/'],
+  [/^\/(feed|comments\/feed)\/?$/, '/blog/'],
+  [/^\/(sitemap_index|page-sitemap|post-sitemap|category-sitemap|author-sitemap|sitemap-post-type-[a-z]+)\.xml$/, '/sitemap.xml'],
 ];
 
 const send = (res, code, body, type = 'text/plain; charset=utf-8', extra = {}) => {
@@ -99,7 +114,8 @@ const server = createServer(async (req, res) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed');
 
     for (const [re, to] of REDIRECTS) {
-      if (re.test(path)) { res.writeHead(301, { location: to }); return res.end(); }
+      const m = path.match(re);
+      if (m) { res.writeHead(301, { location: typeof to === 'function' ? to(m) : to }); return res.end(); }
     }
 
     path = normalize(path).replace(/\\/g, '/').replace(/^(\.\.\/)+/, '');

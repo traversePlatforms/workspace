@@ -30,7 +30,37 @@ AddType application/manifest+json .webmanifest
   RewriteRule ^sectors(/.*)?$         /what-we-do/                        [R=301,L]
   # people who have left (2026-10-05): their pages go to the team page
   RewriteRule ^team/(ryan-conger|jon-wallace)/?$ /team/ [R=301,L]
+
+  # The WordPress site this replaces (mapped 2026-11-10 from its sitemaps, menus and
+  # wp post list). Every URL Google or an inbound link may hold goes to the page that
+  # now does that job, so the launch does not turn them into 404s. /contact/, /careers/,
+  # /team/ and /blog/ keep their addresses and need no rule.
+  RewriteRule ^(our-focus|generate-revenue)/?$                 /what-we-do/      [R=301,L]
+  RewriteRule ^clients/?$                                      /about/#sectors   [R=301,L,NE]
+  RewriteRule ^(personal-growth|career-growth)/?$              /careers/         [R=301,L]
+  RewriteRule ^locations(/.*)?$                                /contact/         [R=301,L]
+  RewriteRule ^(denver-co|asheville-nc|houston-tx)/?$          /contact/         [R=301,L]
+  RewriteRule ^privacy-policy/?$                               /privacy/         [R=301,L]
+  RewriteRule ^terms-conditions/?$                             /terms/           [R=301,L]
+  # the three posts kept their slugs, one level down
+  RewriteRule ^(leadership-skills|entering-new-markets|scale-your-team)/?$ /blog/$1/ [R=301,L]
+  # WordPress archives, feeds and paging
+  RewriteRule ^blog/page/[0-9]+/?$                             /blog/            [R=301,L]
+  RewriteRule ^[0-9]{4}/[0-9]{2}(/[0-9]{2})?/?$                /blog/            [R=301,L]
+  RewriteRule ^(category|tag|author)(/.*)?$                    /blog/            [R=301,L]
+  RewriteRule ^(feed|comments/feed)/?$                         /blog/            [R=301,L]
+  # Yoast and core sitemaps -> the one sitemap
+  RewriteRule ^(sitemap_index|page-sitemap|post-sitemap|category-sitemap|author-sitemap|sitemap-post-type-[a-z]+)\.xml$ /sitemap.xml [R=301,L]
+  # WordPress itself is gone: say so (410) rather than 404, so crawlers drop it quickly
+  RewriteRule ^(wp-admin|wp-includes|wp-content|wp-json)(/|$)   - [G,L]
+  RewriteRule ^(wp-login|wp-cron|xmlrpc)\.php$                 - [G,L]
 </IfModule>
+
+# The form handler's settings file is PHP and prints nothing, but it should not answer
+# over the web at all (DEPLOY.md expects 403; flagged by the 2026-11-09 review).
+<Files "config.php">
+  Require all denied
+</Files>
 
 # Never serve notes, sources, logs, dotfiles
 <FilesMatch "\.(md|log|sh|mjs|map)$">

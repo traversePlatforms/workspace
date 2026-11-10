@@ -25,8 +25,13 @@ async function walk(d) {
   return out;
 }
 
+// Two pages keep noindex after launch: the 404 page and the form thank-you page.
+// Neither is in the sitemap and neither should be in Google (2026-11-10).
+const KEEP = /(^|[\\/])(404\.html|thank-you[\\/]index\.html)$/;
+
 let n = 0;
 for (const p of await walk(site)) {
+  if (mode === 'off' && KEEP.test(p)) { console.log('kept   ', relative(site, p)); continue; }
   let html = await readFile(p, 'utf8');
   const has = html.includes(META);
   if (mode === 'off' && has) {
