@@ -78,7 +78,10 @@ a{color:#d6400c}
 <?php foreach ($c['blocked_dates'] as $d): ?>
  <form method="post" class="inline" style="margin:8px 8px 0 0"><input type="hidden" name="k" value="<?= $e($k) ?>"><input type="hidden" name="do" value="unblock"><input type="hidden" name="date" value="<?= $e($d) ?>"><span><?= $e($d) ?></span><button>Open again</button></form>
 <?php endforeach; ?>
-<div style="margin-top:8px;color:#566476">Regular hours: Monday to Friday, 9 am to 5 pm, set in site-config.php.</div>
+<div style="margin-top:8px;color:#566476">Regular hours (set in site-config.php): <?php
+  $dn = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun']; $hh = [];
+  foreach ($c['hours'] as $wd => $ws) { $hh[] = ($dn[(int) $wd] ?? $wd) . ' ' . implode(', ', array_map(fn($w) => date('g:i a', strtotime($w[0])) . ' to ' . date('g:i a', strtotime($w[1])), (array) $ws)); }
+  echo $e(implode(' · ', $hh)); ?></div>
 </div>
 <h2>Past and cancelled (<?= count($past) ?>)</h2>
 <div class="tw"><table><?php foreach (array_slice($past, 0, 100) as $b) echo $row($b, false); if (!$past) echo '<tr><td>None yet.</td></tr>'; ?></table></div>

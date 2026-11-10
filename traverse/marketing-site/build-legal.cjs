@@ -12,11 +12,11 @@ const BIZ = path.join(__dirname, '..', 'business'), OUT = path.join(__dirname, '
 const DATE = '26 October 2026';   /* a page changed later carries its own date (p.date) */
 
 const PAGES = [
-  { dir: 'terms', md: 'client-agreement.md', start: '# Traverse Subscription Agreement', end: null, title: 'Subscription agreement' },   /* the client copy (2026-10-26) */
-  { dir: 'terms-of-use', md: 'terms-of-use-DRAFT.md', start: '## Terms of Use', end: '## Questions for counsel', title: 'Terms of use', date: '29 October 2026' },   /* version 2: accepted in the app, one plan per company (2026-10-29) */
-  { dir: 'privacy', md: 'privacy-policy-DRAFT.md', start: '## Privacy Policy', end: '## Fact-check log', title: 'Privacy policy', date: '29 October 2026' },   /* signature records, deposits, three devices (2026-10-29) */
-  { dir: 'cancellation', md: 'cancellation-policy-DRAFT.md', start: '## Cancellation and Refund Policy', end: '## Fact-check log', title: 'Cancellation and refunds', date: '6 November 2026' }   /* the money-back guarantee replaced the pilot (2026-10-27); seats, founding features (2026-10-29); the free trial replaced the guarantee (2026-11-06) */
-];
+  { dir: 'terms', md: 'client-agreement.md', start: '# Traverse Subscription Agreement', end: null, title: 'Subscription agreement', desc: 'The Traverse Platforms subscription agreement: the plan, the people on it, payment, data, and how either side ends it.' },   /* the client copy (2026-10-26) */
+  { dir: 'terms-of-use', md: 'terms-of-use-DRAFT.md', start: '## Terms of Use', end: '## Questions for counsel', title: 'Terms of use', date: '29 October 2026', desc: 'The terms for using the Traverse app and the traverseplatforms.com website.' },   /* version 2: accepted in the app, one plan per company (2026-10-29) */
+  { dir: 'privacy', md: 'privacy-policy-DRAFT.md', start: '## Privacy Policy', end: '## Fact-check log', title: 'Privacy policy', date: '29 October 2026', desc: 'What Traverse Platforms collects, what it is used for, who sees it and how long it is kept.' },   /* signature records, deposits, three devices (2026-10-29) */
+  { dir: 'cancellation', md: 'cancellation-policy-DRAFT.md', start: '## Cancellation and Refund Policy', end: '## Fact-check log', title: 'Cancellation and refunds', date: '6 November 2026', desc: 'How to cancel a Traverse plan, when the free trial ends, and when a refund applies.' }   /* the money-back guarantee replaced the pilot (2026-10-27); seats, founding features (2026-10-29); the free trial replaced the guarantee (2026-11-06) */
+];   /* desc (2026-11-09, overnight review): the pages had no meta description, no canonical link and no h1 (the markdown title was turned into an h2) */
 
 function publicText(src, p) {
   const i = src.indexOf(p.start), j = p.end ? src.indexOf(p.end, i) : src.length;
@@ -44,6 +44,7 @@ const icon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.
 const page = (p, html) => `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow">
 <title>${p.title} · Traverse Platforms</title><link rel="icon" href="${icon}">
+<meta name="description" content="${p.desc}"><link rel="canonical" href="https://traverseplatforms.com/${p.dir}/">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@600;700&display=swap">
 <style>
@@ -54,7 +55,7 @@ header a{color:#0f1b2d;text-decoration:none;font:700 19px/1 "Familjen Grotesk",s
 header nav a{font:15px/1 "Atkinson Hyperlegible",sans-serif;color:#566476}
 main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
 .draft{background:#fde6dc;border:1px solid #f3c2ad;border-radius:12px;padding:12px 16px;font-size:15px;margin:0 0 24px}
-h2{font:700 36px/1.1 "Familjen Grotesk",sans-serif;letter-spacing:-.02em;margin:0 0 6px}
+h1,h2{font:700 36px/1.1 "Familjen Grotesk",sans-serif;letter-spacing:-.02em;margin:0 0 6px}
 h3{font:700 22px/1.25 "Familjen Grotesk",sans-serif;margin:30px 0 8px}
 p,li{max-width:72ch} a{color:#b83608}
 table{border-collapse:collapse;width:100%;background:#fff;font-size:15px} td,th{border:1px solid #dce2ea;padding:8px 10px;text-align:left;vertical-align:top}
@@ -65,7 +66,7 @@ footer a{color:#566476}
 <header><div><a href="../"><svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"/><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="53" cy="17" r="8" fill="#d6400c"/></g></svg>Traverse Platforms</a><nav><a href="../#contact">Contact</a></nav></div></header>
 <main>
 ${DRAFT ? '<p class="draft"><b>Draft for review.</b> This page is being reviewed and is not yet in effect.</p>' : ''}
-${html.replace(/<table>/g, '<div class="tw"><table>').replace(/<\/table>/g, '</table></div>')}
+${html.replace(/<table>/g, '<div class="tw"><table>').replace(/<\/table>/g, '</table></div>').replace(/<h2>([^<]*)<\/h2>/, '<h1>$1</h1>')}
 </main>
 <footer>${PAGES.map((x) => x.dir === p.dir ? `<span>${x.title}</span>` : `<a href="../${x.dir}/">${x.title}</a>`).join('')}<a href="mailto:hello@traverseplatforms.com">hello@traverseplatforms.com</a><span>(303) 596-9515</span></footer>
 </body></html>

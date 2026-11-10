@@ -64,7 +64,7 @@ if ($action === 'book') {
     if (strlen(preg_replace('/\D+/', '', $f['phone'])) < 10) fail('Please add a phone number with the area code.');
     if (!in_array($f['meet'], ['phone', 'video'], true)) $f['meet'] = 'video';
     $date = (string) ($in['date'] ?? ''); $time = (string) ($in['time'] ?? '');
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date) || !preg_match('/^\d{2}:\d{2}$/D', $time)) fail('Pick a day and a time.');
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $dm) || !checkdate((int) $dm[2], (int) $dm[3], (int) $dm[1]) || !preg_match('/^\d{2}:\d{2}$/D', $time)) fail('Pick a day and a time.');   /* a made-up day like 2026-13-45 used to throw (a 500), not answer */
 
     $res = with_bookings(function (array &$all) use ($cfg, $date, $time, $f) {
         if (!slot_is_open($cfg, $date, $time, $all)) return ['ok' => false, 'error' => 'That time was just taken. Please pick another.'];

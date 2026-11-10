@@ -1,9 +1,31 @@
 # 365aeration.com is the main address (2026-10-14). The old aeration365.com forwards to it, keeping the path.
 # Let's Encrypt renewals (.well-known) are left alone on both names.
+# This file is the LIVE copy of ~/www/365aeration.com/public_html/.htaccess (a365 account; 365aeration.com is a symlink to
+# the aeration365.com folder, one file serves both names). Brought back in step 2026-11-09 (overnight review): it had fallen
+# behind the server since 25 Oct. Edit here, upload with a backup, flush the cache.
 RewriteEngine On
 RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteCond %{HTTP_HOST} ^(www\.)?aeration365\.com$ [NC]
 RewriteRule ^ https://365aeration.com%{REQUEST_URI} [L,R=301]
+# 2026-11-09 (overnight review): www.365aeration.com answered 200 with the same page, a second address for the one site; the
+# canonical tag, the sitemap and every printed QR code say the bare name.
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{HTTP_HOST} ^www\.365aeration\.com$ [NC]
+RewriteRule ^ https://365aeration.com%{REQUEST_URI} [L,R=301]
 RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Old previews retired 2026-10-26 (Matthew): both go to the homepage; the files are in ~/upload-backups/previews-retired-20261026.tgz.
+RewriteRule ^(s365-preview-7c2e1a|s365-new-7571c6)(/.*)?$ https://365aeration.com/ [L,R=301]
+
+# Browser safety headers (2026-10-25, security check: none were sent). frame-ancestors, not X-Frame-Options SAMEORIGIN: the
+# Sixfold app on traverseplatforms.com shows the signed forms in a frame on computers. Deploy backups never sit beside live files.
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Content-Security-Policy "frame-ancestors 'self' https://traverseplatforms.com"
+Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
+<FilesMatch "\.(pre|before)-|\.(bak|old|orig|tgz|zip|sql)$">
+  Require all denied
+</FilesMatch>

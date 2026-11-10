@@ -5,6 +5,9 @@ Options -Indexes -MultiViews
 DirectoryIndex index.html
 ErrorDocument 404 /404.html
 AddDefaultCharset utf-8
+# 2026-11-09 (overnight review): the host sent site.webmanifest with no Content-Type, and Chrome logged
+# "Manifest: Line: 1, column: 1, Syntax error" on every page. Apache has no type for .webmanifest unless told.
+AddType application/manifest+json .webmanifest
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
@@ -42,6 +45,8 @@ AddDefaultCharset utf-8
   Header set Referrer-Policy "strict-origin-when-cross-origin"
   Header set X-Frame-Options "SAMEORIGIN"
   Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  # HTTPS is forced above, so browsers may remember it (the Traverse and 365 sites send the same header)
+  Header always set Strict-Transport-Security "max-age=31536000"
   <FilesMatch "\.(?:css|js|svg|webp|jpg|jpeg|png|ico|woff2)$">
     Header set Cache-Control "public, max-age=2592000"
   </FilesMatch>

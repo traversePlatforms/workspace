@@ -27,6 +27,16 @@ const homeLinks = (s) => s.replace(/href="#(top|product|trades|how|pricing|demo|
 header = homeLinks(header); tail = homeLinks(tail);
 head = head.replace(/<title>[^<]*<\/title>/, '<title>Traverse trades</title>');
 if (!/<title>Traverse trades<\/title>/.test(head)) throw new Error('title not set');
+/* 2026-11-09 (overnight review): this page carried the homepage's description, og:url and canonical word for word, so a search engine saw
+   two pages with one description and a shared link pointed at the homepage. Its own, and one canonical for every ?e= variant. */
+const EDS_DESC = 'Traverse comes as an edition for your trade: Roofing, Lawn &amp; Landscape, Solar, Pest and Security. What each one shows on every property, and what every edition has.';
+head = head.replace(/<meta name="description" content="[^"]*">/, '<meta name="description" content="' + EDS_DESC + '">')
+  .replace(/<meta property="og:title" content="[^"]*">/, '<meta property="og:title" content="Traverse trades: an edition for your trade">')
+  .replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="' + EDS_DESC + '">')
+  .replace(/<meta property="og:url" content="[^"]*">/, '<meta property="og:url" content="https://traverseplatforms.com/editions/">')
+  .replace(/<link rel="canonical" href="[^"]*">/, '<link rel="canonical" href="https://traverseplatforms.com/editions/">');
+for (const must of ['content="' + EDS_DESC + '"', 'og:url" content="https://traverseplatforms.com/editions/"', 'canonical" href="https://traverseplatforms.com/editions/"'])
+  if (!head.includes(must)) throw new Error('editions head not set: ' + must.slice(0, 40));
 
 /* ---- the editions ---- */
 /* colour = the band; ink = text on the band; deep = the accent as text on white (Solar's yellow is too light for that) */

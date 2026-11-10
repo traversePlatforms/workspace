@@ -54,7 +54,7 @@ for (const d of EXTRA.filter((x) => !x.includes('.'))) for (const f of fs.readdi
 /* 8 Nov 2026: the marketing pages were opened to search on 30 Oct (open-site.sh), but build-preview.cjs and build-legal.cjs still write
    a noindex meta, so every rebuild since quietly hid the homepage, demo, trades, terms and cancellation pages again. Strip it from the
    public pages here (checkout start/ and find/ stay noindex). */
-const NOINDEX = /<meta name="robots" content="noindex, nofollow">s*/g;
+const NOINDEX = /<meta name="robots" content="noindex, nofollow">\s*/g;
 for (const rel of ['index.html', 'editions/index.html', 'demo/index.html', 'demo/index.php', 'terms/index.html', 'terms-of-use/index.html', 'privacy/index.html', 'cancellation/index.html']) {
   const p = path.join(OUT, rel); if (!fs.existsSync(p)) continue; const t = fs.readFileSync(p, 'utf8'); if (NOINDEX.test(t)) fs.writeFileSync(p, t.replace(NOINDEX, '')); NOINDEX.lastIndex = 0;
 }

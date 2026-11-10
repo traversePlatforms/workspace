@@ -1,0 +1,4 @@
+User-agent: *
+Crawl-delay: 10
+
+Sitemap: https://365aeration.com/sitemap.xml
