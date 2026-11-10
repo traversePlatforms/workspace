@@ -8,6 +8,15 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-11-09 (Monday)
+
+- **Sixfold 365 app (live):** "Transferred from Jen" section in My pipeline (Jen out sick; her 7 weekend ad leads are Matthew's until sent back); lead cards in Calendar › My leads open the property. New quote options Seed only, Fertilize only, Seed & feed, and Aerate only on its own price ladder; all four prices left empty (typed by hand) until decided.
+- **Leads:** the 7 leads pulled, addresses matched by owner name, two lawns hand-measured and saved (Tom 4,330, Catherine 1,942), call script; 5 follow-up emails sent from m.sharpe@sixfoldcolorado.com on Matthew's go (Michele skipped); Catherine call-back Wed 11 Nov 3pm.
+- **Lawn measuring:** two new hand checks; ours read ~22% low on Tom's tree lot and 0 on Catherine's (one tree hides the lawn: new failure case).
+- **Laptop:** LG ultrawide made the main screen at 2560×1080 (dock's HDMI limit), brightness/sharpness raised; Traverse Hub pinned, its and Bitwarden's icons fixed.
+- **Running overnight:** three Fable agents reviewing and fixing the app and JARVIS, the websites (Surge staging only), and the side apps and scheduled jobs; reports in `shared/reviews/2026-11-09-overnight/`.
+- The 7 and 8 November end-of-day reports were not made.
+
 ## 2026-11-06 (Friday)
 
 **Traverse: 7-day free trial** (live everywhere)
