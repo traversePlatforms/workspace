@@ -190,5 +190,27 @@
   ],
   "g3-yuma-rural": [
     "g3-yuma"
+  ],
+  "cripple-creek": [
+    "g3-cripple-creek-rural"
+  ],
+  "g3-cripple-creek-rural": [
+    "cripple-creek",
+    "g3-victor"
+  ],
+  "g3-basalt": [
+    "g3-basalt-rural"
+  ],
+  "g3-basalt-rural": [
+    "g3-basalt"
+  ],
+  "g3-crested-butte": [
+    "g3-crested-butte-rural"
+  ],
+  "g3-crested-butte-rural": [
+    "g3-crested-butte"
+  ],
+  "g3-victor": [
+    "g3-cripple-creek-rural"
   ]
 }
