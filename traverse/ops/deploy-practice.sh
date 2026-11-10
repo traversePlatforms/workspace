@@ -36,9 +36,12 @@ if [ "${1:-}" = "--first" ]; then
   cat "$R/ops/practice-towns.php" | $SG "cat > /tmp/practice-towns-$STAMP.php && php /tmp/practice-towns-$STAMP.php $SITE/sixfold-data/rounds $SITE/sixfold-practice-data/rounds; rm -f /tmp/practice-towns-$STAMP.php" | tail -2
 fi
 bad=0
-live=$(curl -s "https://traverseplatforms.com/$F/version.txt?x=$RANDOM"); want=$(cat "$F/version.txt")
+# fetched from the server in one SSH call, not from this laptop (9 Nov 2026: SiteGround's captcha on the laptop's address failed sound uploads)
+CHK=$($SG "U=https://traverseplatforms.com; echo \"v \$(curl -s \"\$U/$F/version.txt?x=\$RANDOM\" | head -c 40 | tr -d '\r\n')\"; echo \"a \$(curl -s -o /dev/null -w '%{http_code}' \"\$U/api/sixfold-practice-rounds.php?action=leads\")\"; echo \"c \$(curl -s \"\$U/api/sixfold-practice-rounds.php?action=company\" | grep -c '\"practice\":true')\"; echo \"p \$(curl -s -o /dev/null -w '%{http_code}' \"\$U/$F/\")\"" < /dev/null)
+chk() { printf '%s\n' "$CHK" | awk -v k="$1" '$1==k {print $2}'; }
+live=$(chk v); want=$(cat "$F/version.txt")
 [ "$live" = "$want" ] && echo "  version $live" || { echo "  VERSION live=$live want=$want"; bad=1; }
-c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/sixfold-practice-rounds.php?action=leads"); [ "$c" = 401 ] && echo "  api signed out: 401" || { echo "  api answered $c"; bad=1; }
-curl -s "https://traverseplatforms.com/api/sixfold-practice-rounds.php?action=company" | grep -q '"practice":true' && echo "  company: practice" || { echo "  company does not say practice"; bad=1; }
-c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/$F/"); [ "$c" = 200 ] && echo "  page: 200" || { echo "  page answered $c"; bad=1; }
+c=$(chk a); [ "$c" = 401 ] && echo "  api signed out: 401" || { echo "  api answered $c"; bad=1; }
+[ "$(chk c)" = 1 ] && echo "  company: practice" || { echo "  company does not say practice"; bad=1; }
+c=$(chk p); [ "$c" = 200 ] && echo "  page: 200" || { echo "  page answered $c"; bad=1; }
 [ $bad = 0 ] && echo "deploy practice: all checks passed" || { echo "deploy practice: CHECK FAILED"; exit 1; }

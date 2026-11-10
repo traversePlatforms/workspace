@@ -25,6 +25,10 @@ $mlAsst = dirname(__DIR__) . '/assistant-private/cron.php';
 if (!$mlArgs && is_file($mlAsst) && intdiv(time(), 300) % 2 === 0) exec(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg($mlAsst) . ' >> ' . escapeshellarg(dirname($mlAsst) . '/data/cron.log') . ' 2>&1 &');
 /* approved social posts at their time (2026-10-27): in the background, as it may wait on Meta while Instagram fetches the pictures */
 if (!$mlArgs && is_file(__DIR__ . '/social-queue.php')) exec(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(__DIR__ . '/social-queue.php') . ' > /dev/null 2>&1 &');
+/* the post calendar's runner (2026-10-31): Matthew's approved posts for every client, at their time; in the background too. It leaves posts
+   brought over from social-queue.json alone while that file still exists, so the two runners never both send one. */
+$mlPc = dirname(__DIR__) . '/post-calendar-tools/runner.php';
+if (!$mlArgs && is_file($mlPc)) exec(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg($mlPc) . ' > /dev/null 2>&1 &');
 /* a setup still waiting on Meta (2026-10-19: the app was "API access restricted" after the developer-account check, so the new token
    could not be swapped): retried once an hour by itself; the setup deletes the file when it works, and this run then polls as usual */
 $mlPend = (getenv('SIXFOLD_PRIVATE_DIR') ?: dirname(__DIR__) . '/sixfold-private') . '/meta-setup.json';

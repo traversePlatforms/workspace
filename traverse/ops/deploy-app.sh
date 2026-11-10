@@ -47,7 +47,12 @@ SH="$(mktemp -d)"; trap 'rm -rf "$ST" "$SH"' EXIT
 TPL="$R/editions/dist/client-templates"
 for e in roofing yards solar pest security; do [ -s "$TPL/$e/edition.json" ] || { echo "MISSING $TPL/$e: run build-editions.cjs first"; exit 1; }; done
 mkdir -p "$SH/traverse-shared" "$SH/traverse-tools"; cp -r "$TPL" "$SH/traverse-shared/"; cp "$R/editions/dist/traverse-tools/clients.php" "$R/editions/dist/traverse-tools/push-alerts.sh" "$R/editions/dist/traverse-tools/fb-leads.php" "$SH/traverse-tools/"   # push-alerts.sh: + every client install's alerts; + fb-leads.php, the Facebook lead ads (2026-10-30)
-mkdir -p "$SH/sixfold-tools"; cp "$R/app/tools/nightly-backup.php" "$R/app/tools/regions-warm.php" "$R/app/tools/fuel-prices.php" "$R/app/tools/morning-email.php" "$R/app/tools/edition-eod.php" "$R/app/tools/care-sweep.php" "$R/app/tools/setup-trial-sweep.php" "$R/app/tools/prospect-bounce-scan.php" "$R/app/tools/prospect-bounce-log.php" "$SH/sixfold-tools/"   # + plans and customer emails (care-sweep.php) + the free-trial setup sweep (setup-trial-sweep.php, 2026-11-06) + the editions' end-of-day emails (2026-10-30); backups and the towns warm-up include client installs; + the weekly EIA fuel prices (2026-10-30)
+# the rest of what push-alerts.sh runs every 5 minutes, and the storm job (review 9 Nov 2026: push-alerts.sh had been shipped with its
+# "crm-sync.php --pull" line since 30 Oct while the server still ran the 8 Oct crm-sync.php, which knew no --pull, so the editions'
+# Sync from another system never pulled on schedule). Everything the built traverse-tools folder holds goes up together now.
+cp "$R/editions/dist/traverse-tools/crm-sync.php" "$R/editions/dist/traverse-tools/push-alerts.php" "$R/editions/dist/traverse-tools/storm-update.php" "$SH/traverse-tools/"
+cp "$R/ops/billing-mark-live.php" "$SH/traverse-tools/"   # the command-line Release to client (ops/ is its source; the server copy was the 27 Oct one)
+mkdir -p "$SH/sixfold-tools"; cp "$R/app/tools/nightly-backup.php" "$R/app/tools/regions-warm.php" "$R/app/tools/fuel-prices.php" "$R/app/tools/morning-email.php" "$R/app/tools/edition-eod.php" "$R/app/tools/care-sweep.php" "$R/app/tools/setup-trial-sweep.php" "$R/app/tools/prospect-bounce-scan.php" "$R/app/tools/prospect-bounce-log.php" "$R/app/tools/push-alerts.php" "$SH/sixfold-tools/"   # + Sixfold's push-alerts.php (9 Nov 2026: the server ran the 5 Oct copy; same behaviour with no --api, now the one file)   # + plans and customer emails (care-sweep.php) + the free-trial setup sweep (setup-trial-sweep.php, 2026-11-06) + the editions' end-of-day emails (2026-10-30); backups and the towns warm-up include client installs; + the weekly EIA fuel prices (2026-10-30)
 for f in $(find "$SH" -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
 cd "$ST" || exit 1
 for f in $(find api -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
@@ -70,19 +75,25 @@ if diff -q "$SH/../sh-local.md5" sh-placed.md5 > /dev/null; then echo "templates
 rm -f "$SH/../sh.tgz" "$SH/../sh-files.txt" "$SH/../sh-local.md5"
 $SG "cd ~/www/traverseplatforms.com && php traverse-tools/clients.php regen && { php traverse-tools/clients.php check || echo '  (check: see above; the shared config waits for clients.php setup)'; }" < /dev/null || { echo "client regen FAILED"; exit 1; }
 bad=0
+# the checks are fetched FROM THE SERVER (one SSH call), not from this laptop: on 9 Nov 2026 SiteGround's bot captcha was answering the
+# laptop's address with a 202 page, which would have failed every check below after a sound upload. Same checks, same pass rule.
+CHK=$($SG 'U=https://traverseplatforms.com; for p in summit-de59ae83 tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7; do echo "v $p $(curl -s "$U/$p/version.txt?x=$RANDOM" | head -c 40 | tr -d "\r\n")"; done
+for a in rounds traverse-rounds traverse-yards-rounds traverse-solar-rounds traverse-pest-rounds traverse-security-rounds; do echo "a $a $(curl -s -o /dev/null -w "%{http_code}" "$U/api/$a.php?action=leads")"; done
+echo "s $(curl -s -o /dev/null -w "%{http_code}" "$U/api/satcache.php?l=xx&z=1&x=0&y=0")"; echo "j $(curl -s -o /dev/null -w "%{http_code}" "$U/api/jobber-oauth.php")"; echo "h $(curl -s -o /dev/null -w "%{http_code}" "$U/api/jobber-hook.php")"' < /dev/null)
+chk() { printf '%s\n' "$CHK" | awk -v k="$1" -v n="$2" '$1==k && $2==n {print $3}'; }
 for p in summit-de59ae83 $EDS; do
   [ -f "$p/version.txt" ] || continue
-  live=$(curl -s "https://traverseplatforms.com/$p/version.txt?x=$RANDOM"); want=$(cat "$p/version.txt")
+  live=$(chk v "$p"); want=$(cat "$p/version.txt")
   [ "$live" = "$want" ] && echo "  $p version $live" || { echo "  $p VERSION live=$live want=$want"; bad=1; }
 done
 for a in rounds traverse-rounds traverse-yards-rounds traverse-solar-rounds traverse-pest-rounds traverse-security-rounds; do
-  c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/$a.php?action=leads"); [ "$c" = 401 ] || { echo "  api/$a.php answered $c"; bad=1; }
+  c=$(chk a "$a"); [ "$c" = 401 ] || { echo "  api/$a.php answered $c"; bad=1; }
 done
 # the tile cache refuses anything but a Colorado NAIP tile (400), without fetching (TR-52)
-c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/satcache.php?l=xx&z=1&x=0&y=0"); [ "$c" = 400 ] || { echo "  api/satcache.php answered $c"; bad=1; }
+c=$(printf '%s\n' "$CHK" | awk '$1=="s"{print $2}'); [ "$c" = 400 ] || { echo "  api/satcache.php answered $c"; bad=1; }
 # Jobber's callback with no state answers 400 in plain words; its webhook refuses a GET (405) (TR-46)
-c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/jobber-oauth.php"); [ "$c" = 400 ] || { echo "  api/jobber-oauth.php answered $c"; bad=1; }
-c=$(curl -s -o /dev/null -w '%{http_code}' "https://traverseplatforms.com/api/jobber-hook.php"); [ "$c" = 405 ] || { echo "  api/jobber-hook.php answered $c"; bad=1; }
+c=$(printf '%s\n' "$CHK" | awk '$1=="j"{print $2}'); [ "$c" = 400 ] || { echo "  api/jobber-oauth.php answered $c"; bad=1; }
+c=$(printf '%s\n' "$CHK" | awk '$1=="h"{print $2}'); [ "$c" = 405 ] || { echo "  api/jobber-hook.php answered $c"; bad=1; }
 [ $bad = 0 ] && echo "deploy $LABEL: all checks passed (backup before-$LABEL-$STAMP.tgz)" || { echo "deploy $LABEL: CHECK FAILED"; exit 1; }
 # the towns answer rebuilt now, in the background on the server, so the first phone after a deploy doesn't wait 7-16 s (2026-10-29)
 $SG "f=~/www/traverseplatforms.com/sixfold-tools/regions-warm.php; [ -f \$f ] && (nohup php \$f >> ~/www/traverseplatforms.com/sixfold-data/digest/regions-warm.log 2>&1 &) ; echo '  towns answer: warming in the background'" < /dev/null

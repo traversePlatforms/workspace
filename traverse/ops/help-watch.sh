@@ -84,13 +84,30 @@ if [ -f "$LOCK" ]; then
   log "stale lock removed"; rm -f "$LOCK"
 fi
 if [ "${1:-}" = "--once" ]; then [ -f "$ST/pause" ] || one_ticket; exit 0; fi
+# When the quick HTTPS check stops answering a number (9 Nov 2026: SiteGround's bot captcha answered this laptop's address with a 202 HTML
+# page for hours, so the loop saw nothing and no ticket was picked up), the count is read over SSH instead (sixfold-tools/help-next.php
+# --peek, which only looks), every 30 seconds, until HTTPS answers a number again. Logged once each way so it is seen.
+BAD=0; VIA=https
+peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
 END=$(( $(date +%s) + 3480 ))
 while [ "$(date +%s)" -lt "$END" ]; do
   if [ ! -f "$ST/pause" ]; then
-    N=$(curl -s -m 8 "$CHECK" 2>/dev/null)
-    if [[ "$N" =~ ^[0-9]+$ ]] && [ "$N" -gt 0 ]; then one_ticket; continue; fi
-    P=$(curl -s -m 8 "$CHECK&p=1" 2>/dev/null)
-    if [[ "$P" =~ ^[0-9]+$ ]] && [ "$P" -gt 0 ]; then one_practice; continue; fi
+    N=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK" 2>/dev/null)
+    if [[ "$N" =~ ^[0-9]+$ ]]; then
+      BAD=0; [ "$VIA" = ssh ] && { log "https check answers again: back to the 5 s poll"; VIA=https; }
+      if [ "$N" -gt 0 ]; then one_ticket; continue; fi
+      P=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&p=1" 2>/dev/null)
+      if [[ "$P" =~ ^[0-9]+$ ]] && [ "$P" -gt 0 ]; then one_practice; continue; fi
+    else
+      BAD=$(( BAD + 1 ))
+      if [ "$BAD" -ge 3 ]; then
+        [ "$VIA" = https ] && { log "https check is not answering a number (got: $(printf '%s' "$N" | tr -d '\r\n' | cut -c1-60)): reading over SSH every 30 s"; VIA=ssh; }
+        R=$(peek_ssh); L="${R%%|*}"; PR="${R##*|}"
+        if [[ "$L" =~ ^[0-9]+$ ]] && [ "$L" -gt 0 ]; then one_ticket; continue; fi
+        if [[ "$PR" =~ ^[0-9]+$ ]] && [ "$PR" -gt 0 ]; then one_practice; continue; fi
+        sleep 25
+      fi
+    fi
   fi
   sleep 5
 done

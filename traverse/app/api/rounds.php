@@ -14363,6 +14363,18 @@ if ($action === 'results') {
     $leads = leadsAll(); $jobOf = []; foreach (jobsAll() as $j) if (!$j['off'] && !empty($j['lead'])) $jobOf[(string) $j['lead']] = $j;
     $leadAt = []; $unmatched = [];
     $homeOf = function (string $key, string $id): ?string { if ($key === '' || $id === '') return null; if (isset(doorIds($key)[$id])) return $key; foreach (sharedWith($key) as $p) if (isset(doorIds($p)[$id])) return $p; return null; };
+    /* the address matches kept between calls (review 9 Nov 2026: the 45 leads with no house tied were matched against the 1.1-million-line
+       index on every call, two passes each, 17 of the Results screen's 25 s). Per lead and text, hits and misses alike, good while the
+       search index is the same file; a rebuilt index (new towns, new doors) throws the kept matches away so a miss can become a hit. */
+    $mcF = DATA_DIR . '/results-match.json'; $mcIx = (string) (int) @filemtime((string) searchIndexFile());
+    $mc = json_decode((string) @file_get_contents($mcF), true); if (!is_array($mc) || ($mc['ix'] ?? '') !== $mcIx || !is_array($mc['m'] ?? null)) $mc = ['ix' => $mcIx, 'm' => []];
+    $mcDirty = false;
+    $match = function (string $lid, string $txt, array $p) use (&$mc, &$mcDirty): ?array {
+        $k = $lid . '|' . $txt;
+        if (array_key_exists($k, $mc['m'])) return is_array($mc['m'][$k]) ? $mc['m'][$k] : null;
+        $m = a365Match($p[0], $p[1] ?? ''); $mc['m'][$k] = $m; $mcDirty = true;
+        return $m;
+    };
     foreach ($leads as $l) {
         $src = (string) ($l['src'] ?? 'other');
         if (in_array($src, ['door', 'inperson'], true) || preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''))) continue;
@@ -14375,17 +14387,22 @@ if ($action === 'results') {
         if ($h && empty($h['typed']) && !empty($h['region']) && !empty($h['door'])) { $key = $homeOf((string) $h['region'], (string) $h['door']); $did = (string) $h['door']; }
         if (!$key) foreach ([$h ? trim((string) ($h['address'] ?? '') . ', ' . (string) ($h['town'] ?? ''), ', ') : '', (string) ($j['addr'] ?? ''), (string) ($l['town'] ?? '')] as $txt) {
             if (!preg_match('/^\s*\d+\s+\S/', $txt)) continue;
-            $p = array_map('trim', explode(',', $txt)); $m = a365Match($p[0], $p[1] ?? '');
+            $p = array_map('trim', explode(',', $txt)); $m = $match((string) ($l['id'] ?? ''), $txt, $p);
             if ($m && ($key = $homeOf((string) $m['region'], (string) $m['door']))) { $did = (string) $m['door']; break; }
         }
         if ($key) $leadAt[$key][$did][] = ['src' => $src, 'row' => $row];
         else { foreach ($row as $f => $v) $total[$f] += $v; $add('src', $src, $row); $unmatched[$src] = ($unmatched[$src] ?? 0) + 1; }
     }
+    if ($mcDirty) { if (count($mc['m']) > 5000) $mc['m'] = array_slice($mc['m'], -5000, null, true); writeJsonAtomic($mcF, $mc); }
     foreach (($idx['regions'] ?? []) as $r) {
+        /* a town nobody has knocked in and no lead was tied to counts nothing below, so its door file is not read (review 9 Nov 2026: the
+           Results screen took 27 s on Sixfold because every one of the ~100 towns' door files was decoded for the handful with marks) */
+        $marks = loadMarks($r['key']); $here = $leadAt[$r['key']] ?? [];
+        if (!$marks && !$here) continue;
         $data = loadRegion($r['key']);
         if (!$data) continue;
-        $marks = loadMarks($r['key']); $quoted = loadQuoted($r['key']); $res = loadResults($r['key']);
-        $lfix = loadLawnFix($r['key']); $work = loadWork($r['key']); $here = $leadAt[$r['key']] ?? [];
+        $quoted = loadQuoted($r['key']); $res = loadResults($r['key']);
+        $lfix = loadLawnFix($r['key']); $work = loadWork($r['key']);
         foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
             $m = $marks[$d['id']] ?? null; $came = $here[$d['id']] ?? [];
             if ((!$m || $m['outcome'] === 'nosolicit') && !$came) continue;
