@@ -147,6 +147,10 @@ function company(): array {
             /* ...and up to this time (2026-10-28, YYYY-MM-DD HH:MM, Denver; Matthew: 'switch the intake leads back to jen'): from it on they are the
                office's again. '' = no end */
             'metaMineTo' => '',
+            /* a second time (2026-11-10, Matthew: 'make all facebook leads from intake forms go to me from now on, jen is sick so until shes feeling
+               better ill fill the role'): his again from this time (YYYY-MM-DD HH:MM, Denver) up to metaMineAgainTo ('' = no end yet). The first
+               period and the leads Jen worked between them are untouched. */
+            'metaMineAgain' => '', 'metaMineAgainTo' => '',
             /* who Matthew can send his own leads to (2026-10-27, Matthew: 'I need to also be able to send some leads to cai'): account names; see mhand */
             'handTo' => [],
             /* a client install made on the server (2026-10-29, api/traverse-clients-lib.php): its homes' area as the welcome checklist shows it,
@@ -6217,7 +6221,9 @@ function webLead(array $l): bool { if (!empty($l['jenkeep']) || !empty($l['tojen
        just called transferred from jen"): a leadst row {fromjen: true} makes any lead his, hidden from Jen and the office, until he sends it back
        (Send to Jen sets tojen, Send to <name> sets mhand: both above win) */
     if (!empty($l['fromjen'])) return true;
-    $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom() && (metaMineTo() === 0 || (int) ($l['at'] ?? 0) < metaMineTo())); }
+    $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom() && (metaMineTo() === 0 || (int) ($l['at'] ?? 0) < metaMineTo())) || ($s === 'meta' && metaMineAgain(false) > 0 && (int) ($l['at'] ?? 0) >= metaMineAgain(false) && (metaMineAgain(true) === 0 || (int) ($l['at'] ?? 0) < metaMineAgain(true))); }
+/* the second period of Facebook leads to Matthew (2026-11-10, Jen out sick): company.json metaMineAgain / metaMineAgainTo, YYYY-MM-DD HH:MM Denver */
+function metaMineAgain(bool $end): int { static $t = []; if (!isset($t[$end])) { $d = (string) (company()[$end ? 'metaMineAgainTo' : 'metaMineAgain'] ?? ''); $t[$end] = preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $d) ? (int) strtotime($d . ':00 America/Denver') : 0; } return $t[$end]; }
 /* the end of that (2026-10-28, Matthew: "switch the intake leads back to jen ... give her any of the ones i havent called, texted or emailed yet.
    Leave website leads to me"): company.json "metaMineTo", set just before the first Facebook lead he had not reached; the ones he had stay his */
 function metaMineTo(): int { static $t = null; if ($t === null) { $d = (string) (company()['metaMineTo'] ?? ''); $t = preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $d) ? (int) strtotime($d . ':00 America/Denver') : 0; } return $t; }
