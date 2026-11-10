@@ -18916,22 +18916,44 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
     if (S.leadAdd) holder.appendChild(leadForm());
     if (S.metaPrev) holder.appendChild(metaPreview());
-    if (mineMode) {   /* My pipeline: grouped by where each one is, the longest waiting first */
-      var labM = { quoted: 'Quoted', sent: 'Form sent' }; PIPE_ST.forEach(function (st) { if (!labM[st[0]]) labM[st[0]] = st[1]; });
+    if (mineMode) {   /* My pipeline, in Jen's stage tabs (2026-11-10, Matthew: it was "one big drop down of names"; "make my ... pipeline look like
+                         jens pipeline in terms of the organizing"): nothing open until a stage is picked, as everywhere; inside a stage, Transferred
+                         from Jen on top (2026-11-09, Matthew: Jen out sick, her leads to him in "a new section just called transferred from jen"),
+                         then his own leads; To call in the same call groups as Jen's; the longest waiting first */
       var waitM = function (it) { var x = lastTry(it.x); return x ? x.at : (it.at || 0); };
-      var groupsM = [];
-      /* Transferred from Jen (2026-11-09, Matthew: Jen out sick, her texted leads to him in "a new section just called transferred from jen"):
-         their own group on top, whatever the stage, until won, lost or sent back */
-      var fromJ = mineItems.filter(function (it) { return it.x.fromjen; }).sort(function (a, b) { return waitM(a) - waitM(b); });
-      if (fromJ.length) groupsM.push(['Transferred from ' + who('jen'), fromJ]);
-      MINE_ST.forEach(function (k) {
-        var its = mineItems.filter(function (it) { return !it.x.fromjen && mineStage(it) === k; }).sort(function (a, b) { return waitM(a) - waitM(b); });
-        if (its.length) groupsM.push([labM[k] || k, its]);
-      });
+      var stM = OFFICE_ST.filter(function (st) { return MINE_ST.indexOf(st[0]) >= 0 && (st[0] !== 'recall' || wdOn()); });
+      var stageM = S.pipeStageM || null; if (stageM && !stM.some(function (x) { return x[0] === stageM; })) stageM = null;
       var cardM = function (it, into) { var card = leadCard(it.x); if (flc) { var lcm = pipeContactAt(it); card.insertBefore(q('span', 'lctag', lcm ? 'Last contacted ' + ago(lcm) : 'Not contacted yet'), card.firstChild); } card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild); (into || holder).appendChild(card); };
-      if (!groupsM.length) holder.appendChild(q('div', 'msg soft pipepick', 'Nothing open right now. New Facebook ad and website leads show here the moment they come in.'));
+      if (!mineItems.length) { holder.appendChild(q('div', 'msg soft pipepick', finding ? 'Nobody in My pipeline matches.' : 'Nothing open right now. New Facebook ad and website leads show here the moment they come in.')); window.scrollTo(0, y); return; }
+      var segM = q('div', 'pipeseg'); segM.style.gridTemplateColumns = 'repeat(' + stM.length + ',1fr)';
+      stM.forEach(function (st) {
+        var nM = mineItems.filter(function (it) { return mineStage(it) === st[0]; }).length;
+        var bM = q('button'); bM.type = 'button'; bM.setAttribute('aria-pressed', String(stageM === st[0])); bM.setAttribute('data-st', st[0]);
+        bM.appendChild(q('b', null, String(nM))); bM.appendChild(q('span', null, st[1]));
+        bM.addEventListener('click', function () { S.pipeStageM = stageM === st[0] ? null : st[0]; drawPipe(); });   /* tap it again to close it */
+        segM.appendChild(bM);
+      });
+      holder.appendChild(segM);
+      var groupsM = [];
+      var addStage = function (k, label) {
+        var its = mineItems.filter(function (it) { return mineStage(it) === k; }).sort(function (a, b) { return waitM(a) - waitM(b); });
+        var fj = its.filter(function (it) { return it.x.fromjen; }), rest = its.filter(function (it) { return !it.x.fromjen; });
+        if (fj.length) groupsM.push([(label ? label + ' \u00b7 ' : '') + 'Transferred from ' + who('jen'), fj]);
+        if (!rest.length) return;
+        if (k === 'call' && wdOn() && !label) {
+          [['new', 'Not tried yet'], ['today', 'Try again today'], ['talked', 'Talked to them, not booked yet'], ['wait', 'Waiting to try again'], ['out', LEAD_TRIES + ' tries, no answer']].forEach(function (g) {
+            var gi = rest.filter(function (it) { return callGroup(it.x) === g[0]; }); if (gi.length) groupsM.push([g[1], gi]);
+          });
+          var known = ['new', 'today', 'talked', 'wait', 'out'], other = rest.filter(function (it) { return known.indexOf(callGroup(it.x)) < 0; });
+          if (other.length) groupsM.push(['Your leads', other]);
+        } else groupsM.push([label || (fj.length ? 'Your leads' : ''), rest]);
+      };
+      if (stageM) addStage(stageM, '');
+      else if (finding) stM.forEach(function (st) { addStage(st[0], st[1]); });
+      if (!stageM && !finding) holder.appendChild(q('div', 'msg soft pipepick', 'Pick a stage to see who is in it.'));
+      else if (!groupsM.length) holder.appendChild(q('div', 'msg', 'Nothing at this stage.'));
       else if (wdOn() && deskWide()) pipeTwo(holder, groupsM, cardM);
-      else groupsM.forEach(function (g) { holder.appendChild(q('h2', 'pipegrp', g[0] + ' · ' + g[1].length)); g[1].forEach(function (it) { cardM(it); }); });
+      else groupsM.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { cardM(it); }); });
       window.scrollTo(0, y);
       return;
     }
