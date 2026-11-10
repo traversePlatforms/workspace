@@ -18677,10 +18677,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      source. The data stays where it is: a door booking keeps its door (fire, lawn, trees, walk),
      a lead keeps its contact details. Each keeps its own card. Admin only, like both screens. */
   var PIPE_ST = [];   /* setCompany() */
+  /* Jen's stages for Matthew's Full pipeline too (2026-11-10, Matthew: 'make my full pipeline look like jens pipeline in terms of the organizing,
+     right now its just one big drop down of names'): Quoted and Form sent apart, Signed and No sale tabs. Sixfold only (the walk desk); the
+     editions keep theirs */
+  function officeStages() { return asOffice() || (feat('walkdesk') && adminView() && !edOn()); }
   function pipeStage(it) {
-    if (it.kind === 'door') { var x = it.x; return x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; }
+    if (it.kind === 'door') { var x = it.x, ds = x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; return officeStages() ? ({ won: 'signed', lost: 'nosale', walk: 'call' })[ds] || ds : ds; }
     var st = it.x.status || 'new';
-    var cs = asOffice() ? (st === 'quoted' && !it.x.sign ? 'quoted' : (OFFICE_MAP[st] || 'call')) : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
+    var cs = officeStages() ? (st === 'quoted' && !it.x.sign ? 'quoted' : (OFFICE_MAP[st] || 'call')) : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
     if ((cs === 'call' || cs === 'quoted') && wdOn() && recallOf(it.x)) return 'recall';   /* a day set to call back (2026-10-21) */
     if (cs === 'call' && wdOn()) { var cg = callGroup(it.x); if (cg === 'vm' || cg === 'email' || cg === 'text') return cg; }   /* Left voicemail, Emailed, Texted (2026-10-15/16) */   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
     return cs;
@@ -18868,8 +18872,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (S.pipeFindNote) { S.pipeFindNote.hidden = !finding; S.pipeFindNote.textContent = finding ? (items.length ? items.length + (items.length === 1 ? ' match' : ' matches') + ' of ' + allN + '. Tap a stage to narrow it.' : 'Nobody matches. Check the spelling, or try part of the phone number.') : ''; }
     var stage = S.pipeStage || null, src = S.pipeSrc || 'all';   /* nothing open until a stage is picked (2026-10-21) */
-    if (stage && !asOffice() && !PIPE_ST.some(function (x) { return x[0] === stage; })) stage = 'call';
-    if (stage && asOffice() && !OFFICE_ST.some(function (x) { return x[0] === stage; })) stage = OFFICE_MAP[stage] || ({ walk: 'call' })[stage] || 'call';
+    if (stage && !officeStages() && !PIPE_ST.some(function (x) { return x[0] === stage; })) stage = 'call';
+    if (stage && officeStages() && !OFFICE_ST.some(function (x) { return x[0] === stage; })) stage = OFFICE_MAP[stage] || ({ walk: 'call' })[stage] || 'call';
     /* two Pipelines for Matthew (2026-10-26, Matthew: "one that is just the pipeline with people i need to contact and the other allows me to see
        the full pipeline"): To contact = his own leads (Facebook ad and website, not handed to Jen) still waiting on a call, text or email, all
        showing at once, longest waiting first; Full pipeline = as before. This device remembers which. */
@@ -18935,7 +18939,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (CO.a365 && S.role === 'admin' && !asOffice() && S.cucheck && S.cucheck.items && S.cucheck.items.length) holder.appendChild(cuCheckBox(S.cucheck));   /* Sixfold 365 only: its ClickUp (2026-10-30 audit) */
     /* stages */
     /* Walk booked only while someone is in it (2026-10-21, Matthew: "walk booked wouldn't really be used") */
-    var stList = (asOffice() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()); });   /* Recall: the lead desk only (2026-10-21) */
+    var stList = (officeStages() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()); });   /* Recall: the lead desk only (2026-10-21) */
     var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + stList.length + ',1fr)';
     stList.forEach(function (st) {
       var n = items.filter(function (it) { return pipeStage(it) === st[0] && (src === 'all' || pipeSrc(it) === src); }).length;
@@ -19000,7 +19004,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     else groups.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { drawCard(it); }); });
     /* won, not in Customers yet (2026-10-15: no Won tab any more; a won door from the crew, or a lead won before Won made the customer) */
     if (!asOffice() && S.custLinks) {
-      var pend = items.filter(function (it) { return pipeStage(it) === 'won' && (src === 'all' || pipeSrc(it) === src) && (it.kind === 'lead' ? !S.custLinks.lead[it.x.id] : !S.custLinks.door[it.x.region + '/' + it.x.id]); });
+      var pend = items.filter(function (it) { return (pipeStage(it) === 'won' || pipeStage(it) === 'signed') && (src === 'all' || pipeSrc(it) === src) && (it.kind === 'lead' ? !S.custLinks.lead[it.x.id] : !S.custLinks.door[it.x.region + '/' + it.x.id]); });
       if (pend.length) {
         /* one line until opened, and by the source picked (2026-10-17, Matthew: the Pipeline "super stretched out" under Phone call and
            the other tabs: these full cards sat under every view, whatever was picked) */
