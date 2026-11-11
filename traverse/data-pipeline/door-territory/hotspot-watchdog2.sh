@@ -12,7 +12,7 @@
 #    way comes back from `wait` as exit 0, which the queue was counting as "finished".)
 PAT="${1:-resume-trees}"
 cd "/c/Users/Surge Inc/Desktop/claude test 2/traverse/data-pipeline/door-territory"
-PF="logs-watchdog-$(printf '%s' "$PAT" | tr -c 'A-Za-z0-9' '_').pid"
+PF="/tmp/hotspot-watchdog-$(printf '%s' "$PAT" | tr -c 'A-Za-z0-9' '_').pid"
 OLD=$(cat "$PF" 2>/dev/null)
 if [ -n "$OLD" ] && [ "$OLD" != "$$" ] && tr '\0' ' ' < "/proc/$OLD/cmdline" 2>/dev/null | grep -q 'hotspot-watchdog2'; then
   echo "$(date +%T) a watchdog for $PAT is already running (pid $OLD); this one is not needed"; exit 0
