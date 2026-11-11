@@ -1864,6 +1864,16 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .hctray1{position:relative;flex:none;width:64px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.hctray1 img{width:100%;height:100%;object-fit:cover;display:block}
   .hctrayx{position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font:700 15px/24px var(--sans);padding:0;cursor:pointer}
   .hcpics{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.hcpics.one{grid-template-columns:1fr}
+  /* voice notes in the J.A.R.V.I.S. chat (11 Nov): the mic beside the camera, the recording strip above the bar, the note in a message */
+  .hcmic.on{background:var(--bad);border-color:var(--bad);color:#fff}.hcmic.on:hover{color:#fff;border-color:var(--bad)}
+  .hcrec{display:flex;align-items:center;gap:10px;padding:10px 12px 0;border-top:1px solid var(--line);background:var(--bg,#fff)}.hcrec[hidden]{display:none}
+  .hcrecdot{width:12px;height:12px;border-radius:50%;background:var(--bad);flex:none;animation:hcpulse 1.1s ease-in-out infinite}@keyframes hcpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.75)}}
+  @media (prefers-reduced-motion: reduce){.hcrecdot{animation:none}}
+  .hcrectime{flex:1;font:700 14px var(--sans);font-variant-numeric:tabular-nums;color:var(--ink)}.hcrectime small{font-weight:400;opacity:.65}
+  .hcrec audio{flex:1;min-width:0;height:36px}.hcreclen{font-size:12.5px;color:var(--soft);font-variant-numeric:tabular-nums}
+  .hcrecb{flex:none;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:7px 12px;font:700 13px var(--sans);cursor:pointer}.hcrecb.go{background:var(--jv);color:var(--on-jv,#fff);border-color:var(--jv)}
+  .hcvoice{margin-top:6px;display:grid;gap:4px;width:min(270px,64vw);max-width:100%}.hcvoice audio{width:100%;height:40px;display:block}
+  .hcvlen{font-size:11.5px;opacity:.75}.hctrans{font-size:13px;line-height:1.38;opacity:.85;white-space:pre-wrap}
   .hcpic{padding:0;border:0;border-radius:10px;overflow:hidden;background:var(--line);cursor:zoom-in;aspect-ratio:1/1}.hcpics.one .hcpic{aspect-ratio:auto;max-height:260px}.hcpic img{width:100%;height:100%;object-fit:cover;display:block}.hcsend:disabled{opacity:.5}
   .hlp textarea,.hlpt textarea{width:100%;box-sizing:border-box;font:15px var(--sans)}.hlplist{display:grid;gap:10px;margin-top:12px}.hlpt{display:grid;gap:8px}.hlpopen{outline:2px solid var(--jv)}.hlphd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.hlpst{font-weight:800;font-size:12.5px;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--ink)}.hlp-answered{background:#dff0d8;color:#21451f}.hlp-matthew{background:#fff1d6;color:#7a4b00}.hlp-working{background:#e3ecf8;color:#21406e}.hlpmsg{border-radius:12px;padding:8px 11px;max-width:92%}.hlpmsg.me{justify-self:end;background:var(--card);border:1px solid var(--line)}.hlpmsg.them{justify-self:start;background:var(--jv-tint);border:1px solid var(--line);color:var(--ink)}.hlpwho{font-size:11.5px;font-weight:700;opacity:.75;margin-bottom:2px}.hlptxt{white-space:pre-wrap;font-size:14.5px;line-height:1.4}.jwl{display:grid;gap:4px;font-size:14px;color:var(--soft)}.jdone .jwl textarea{width:100%;box-sizing:border-box}.cpwork{display:block;color:var(--soft);white-space:pre-wrap}.tag.coff10{background:#e6f2df;color:#21451f}
   .fupv{display:grid;gap:8px;margin:8px 0}.fuframe{width:100%;height:560px;border:1px solid var(--line);border-radius:10px;background:#fff}.futext{white-space:pre-wrap;font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--sunk);padding:10px;border-radius:10px;max-height:320px;overflow:auto}   /* Brad's two lines, the follow-up email (2026-10-27) */
@@ -7720,7 +7730,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       tx.appendChild(q('b', null, 'Open ' + String(f.n).replace(/\.pdf$/i, '').replace(/[-_]+/g, ' '))); tx.appendChild(q('small', null, 'PDF \u00b7 ' + Math.max(1, Math.round((f.size || 0) / 1024)) + ' KB'));
       fb.appendChild(tx); fb.addEventListener('click', function () { docViewer(String(f.n), url, 'hcdoc'); }); box.appendChild(fb);
     });
+    /* a voice note (11 Nov): a player (nothing loads until it is played: the chat redraws every 15 s), its length, and the transcript
+       under it once the laptop has made it */
+    (m.audio || []).forEach(function (a) {
+      if (!a || !a.n) return;
+      var v = q('div', 'hcvoice'), au = document.createElement('audio'); au.controls = true; au.preload = 'none'; au.src = src(a.n); v.appendChild(au);
+      v.appendChild(q('div', 'hcvlen', 'Voice note · ' + helpLen(a.secs)));
+      if (a.text) { var tr = q('div', 'hctrans'); tr.appendChild(document.createTextNode('Transcript: ')); var it = q('i', 'noi18n', a.text); tr.appendChild(it); v.appendChild(tr); }
+      else if (a.failed) v.appendChild(q('div', 'hctrans', 'Transcript: could not be made.'));
+      box.appendChild(v);
+    });
   }
+  function helpLen(s) { s = Math.max(0, Math.round(+s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
   /* photos picked for the next message (3 Nov, Matthew: "build a photo button for everyone that uses jarvis include jen"): shrunk on the
      phone (shrinkPhoto, 1600 px JPEG) and sent with the words; up to 4 a message */
   function helpPicker(tray) {
@@ -7748,8 +7769,88 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       clear: function () { pics.forEach(function (p) { URL.revokeObjectURL(p.url); }); pics = []; paint(); }
     };
   }
+  /* a voice note for the next message (11 Nov, Matthew: "Lets go ahead and build in the voice notes"): tap the mic to record, tap it again
+     (or Done) to stop, up to 2 minutes, with a red dot and the time while it records; Cancel throws it away. The note then waits above the
+     bar with a player and an x until Send, and goes with the words like a photo (helpsend audio: base64, the recorder's own type, the
+     seconds). The laptop turns it into text and the transcript shows under it. One a message. A browser with no recorder, or a refused
+     microphone, gets a short message, nothing else. */
+  function helpVoice(strip, btn, changed) {
+    var MAX = 120, rec = null, stream = null, chunks = [], t0 = 0, tick = null, note = null, drop = false, then = null, gen = 0, stopping = false;
+    var MIC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
+    var STOP = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>';
+    var secsNow = function () { return Math.min(MAX, (Date.now() - t0) / 1000); };
+    var release = function () { if (stream) { try { stream.getTracks().forEach(function (k) { k.stop(); }); } catch (e) {} } stream = null; };
+    var paint = function () {
+      strip.textContent = '';
+      btn.innerHTML = rec ? STOP : MIC; btn.classList.toggle('on', !!rec); btn.disabled = !!note && !rec;
+      btn.setAttribute('aria-label', rec ? 'Stop recording' : 'Record a voice note'); btn.title = rec ? 'Stop recording' : (note ? 'One voice note a message' : 'Record a voice note');
+      if (rec) {
+        strip.appendChild(q('span', 'hcrecdot'));
+        var tm = q('span', 'hcrectime', 'Recording ' + helpLen(secsNow())); tm.appendChild(q('small', null, ' / ' + helpLen(MAX))); strip.appendChild(tm);
+        var cn = q('button', 'hcrecb', 'Cancel'), dn = q('button', 'hcrecb go', 'Done'); cn.type = dn.type = 'button';
+        cn.addEventListener('click', function () { stop(true); }); dn.addEventListener('click', function () { stop(false); });
+        strip.appendChild(cn); strip.appendChild(dn);
+      } else if (note) {
+        var au = document.createElement('audio'); au.controls = true; au.preload = 'metadata'; au.src = note.url; strip.appendChild(au);
+        strip.appendChild(q('span', 'hcreclen', helpLen(note.secs)));
+        var x = q('button', 'hcrecb', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove the voice note'); x.addEventListener('click', function () { clear(); }); strip.appendChild(x);
+      }
+      strip.hidden = !rec && !note;
+    };
+    var clear = function () { if (note) URL.revokeObjectURL(note.url); note = null; paint(); changed(); };
+    var finish = function (r, mine) {
+      if (mine !== gen || rec !== r) return;   /* once per recording (an error can be followed by a stop) */
+      var secs = secsNow(), type = (r.mimeType || (chunks[0] && chunks[0].type) || 'audio/webm'), bl = new Blob(chunks, { type: type }), go = then;
+      clearInterval(tick); tick = null; rec = null; chunks = []; then = null; stopping = false; release();
+      if (drop) { paint(); return; }
+      if (secs < 1 || bl.size < 300) { paint(); toast('Too short', 'Nothing was recorded. Tap the mic, talk, then tap it again.', null); return; }
+      if (bl.size > 6 * 1024 * 1024) { paint(); toast('Too long to send', 'Keep a voice note under 2 minutes.', null); return; }
+      var fr = new FileReader();
+      fr.onload = function () { note = { data: String(fr.result).split(',')[1] || '', mime: type.split(';')[0], secs: Math.max(1, Math.round(secs)), url: URL.createObjectURL(bl) }; paint(); changed(); if (go) go(); };
+      fr.onerror = function () { paint(); toast('Not added', 'That recording could not be read. Try again.', null); };
+      fr.readAsDataURL(bl);
+    };
+    var stop = function (cancel, after) {
+      if (!rec) { if (after) after(); return; }
+      if (stopping) { if (cancel) { drop = true; then = null; } else if (after) then = after; return; }   /* already stopping: the recorder answers once */
+      stopping = true; drop = !!cancel; then = cancel ? null : (after || null);
+      try { if (rec.state !== 'inactive') rec.stop(); else finish(rec, gen); } catch (e) { finish(rec, gen); }
+    };
+    var start = function () {
+      if (rec || note) return;
+      if (!window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Voice notes don’t work here', 'This browser can’t record. Type it instead.', null); return; }
+      var mine = ++gen; btn.disabled = true;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) {
+        btn.disabled = false;
+        if (mine !== gen || !document.body.contains(strip)) { try { s.getTracks().forEach(function (k) { k.stop(); }); } catch (e) {} return; }   /* the chat closed meanwhile */
+        stream = s; var mt = '', c = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/aac'];
+        if (MediaRecorder.isTypeSupported) for (var i = 0; i < c.length; i++) if (MediaRecorder.isTypeSupported(c[i])) { mt = c[i]; break; }
+        var r; try { r = mt ? new MediaRecorder(s, { mimeType: mt }) : new MediaRecorder(s); } catch (e) { try { r = new MediaRecorder(s); } catch (e2) { release(); toast('Voice notes don’t work here', 'This browser can’t record. Type it instead.', null); return; } }
+        chunks = []; drop = false; then = null; stopping = false; rec = r;
+        r.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        r.onstop = function () { finish(r, mine); };
+        r.onerror = function () { drop = true; finish(r, mine); toast('Recording stopped', 'Something went wrong with the microphone. Try again.', null); };
+        r.start(); t0 = Date.now();   /* no timeslice: older iPhones made broken files with one */
+        tick = setInterval(function () { if (!rec || stopping) return; if (secsNow() >= MAX) { stop(false); toast('2 minutes is the limit', 'The voice note is ready to send.', null); return; } var tm = strip.querySelector('.hcrectime'); if (tm) tm.firstChild.nodeValue = 'Recording ' + helpLen(secsNow()); }, 250);
+        paint();
+      }, function (e) {
+        btn.disabled = false; var n = (e && e.name) || '';
+        if (n === 'NotAllowedError' || n === 'SecurityError' || n === 'PermissionDeniedError') toast('Microphone not allowed', 'Allow the microphone for this site in your browser’s settings, then tap the mic again.', null);
+        else toast('No microphone', 'No microphone could be used. Type it instead.', null);
+      });
+    };
+    paint();
+    return {
+      toggle: function () { if (rec) stop(false); else start(); },
+      stop: stop, busy: function () { return !!rec; },
+      data: function () { return note ? { data: note.data, mime: note.mime, secs: note.secs } : null; },
+      clear: clear,
+      off: function () { gen++; if (rec) { drop = true; try { rec.stop(); } catch (e) {} } rec = null; clearInterval(tick); tick = null; release(); if (note) URL.revokeObjectURL(note.url); note = null; }   /* the chat closed: the mic is let go */
+    };
+  }
   function helpChat(openId) {
     if (!helpOk()) return;
+    if (HC.voiceOff) { HC.voiceOff(); HC.voiceOff = null; }   /* a recording in an earlier window lets go of the mic (11 Nov) */
     if (HC.el) HC.el.remove();
     var from = S.screen || '';
     var w = q('div', 'hchat' + (S.jarvisTab ? ' hcfull' : '')); HC.el = w; w.setAttribute('role', 'dialog'); w.setAttribute('aria-label', HELP_NAME);
@@ -7765,11 +7866,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     pb.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
     var tray = q('div', 'hctray'); tray.hidden = true; var picks = helpPicker(tray);
     pb.addEventListener('click', function () { picks.pick(); });
+    var mb = q('button', 'hcphoto hcmic'); mb.type = 'button';
+    var rstrip = q('div', 'hcrec'); rstrip.hidden = true; var voice = helpVoice(rstrip, mb, function () {}); HC.voiceOff = voice.off;
+    mb.addEventListener('click', function () { voice.toggle(); });
     ta.addEventListener('paste', function (e) { var fs = [].slice.call((e.clipboardData && e.clipboardData.files) || []); if (fs.length) { e.preventDefault(); picks.add(fs); } });   /* a pasted screenshot on a computer */
-    bar.appendChild(pb); bar.appendChild(ta); bar.appendChild(sb); w.appendChild(tray); w.appendChild(bar);
+    bar.appendChild(pb); bar.appendChild(mb); bar.appendChild(ta); bar.appendChild(sb); w.appendChild(tray); w.appendChild(rstrip); w.appendChild(bar);
     document.body.appendChild(w); document.body.classList.add('hchat-on');
     var cur = null, fresh = false, listing = false;   /* fresh: New chat pressed, nothing sent yet; listing: Earlier's list is showing */
-    var close = function () { clearInterval(HC.tick); if (HC.el) HC.el.remove(); HC.el = null; document.body.classList.remove('hchat-on'); helpDot(); };
+    var close = function () { clearInterval(HC.tick); if (HC.voiceOff) { HC.voiceOff(); HC.voiceOff = null; } if (HC.el) HC.el.remove(); HC.el = null; document.body.classList.remove('hchat-on'); helpDot(); };
     cx.addEventListener('click', close);
     hd.addEventListener('click', function (e) { if (!S.jarvisTab && !e.target.closest('button')) close(); });   /* a tap on the top bar minimizes it (1 Nov, Matthew) */
     /* Earlier: in the app it opens the Help screen; in the hub's tab (2 Nov) the earlier conversations are listed inside the chat itself, a tap
@@ -7783,7 +7887,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var ts = (j && j.ok && j.tickets) || [];
         if (!ts.length) { body.appendChild(q('div', 'hcnote', 'No earlier conversations.')); return; }
         ts.forEach(function (t) {
-          var m0 = t.msgs.filter(function (m) { return m.mine; })[0] || t.msgs[0] || {}, first = m0.text || ((m0.photos || []).length ? 'Photo' : ''), st = HELP_ST[t.status] || [t.status];
+          var m0 = t.msgs.filter(function (m) { return m.mine; })[0] || t.msgs[0] || {}, first = m0.text || ((m0.photos || []).length ? 'Photo' : (m0.audio || []).length ? 'Voice note' : ''), st = HELP_ST[t.status] || [t.status];
           var b = q('button', 'hcold'); b.type = 'button';
           b.appendChild(q('div', 'hcoldtxt noi18n', first.length > 160 ? first.slice(0, 160) + '…' : first));
           b.appendChild(q('div', 'hctime', (t.by && t.by !== S.me ? t.by + ' · ' : '') + when(t.updated) + ' · ' + st[0]));
@@ -7809,9 +7913,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (last < s.length) d.appendChild(document.createTextNode(s.slice(last)));
       return d;
     };
-    var bubble = function (cls, who, text, at, refresh, files, tid, photos) {
-      var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); b.appendChild(linked(text));
-      helpExtras(b, { files: files, photos: photos }, tid);
+    var bubble = function (cls, who, text, at, refresh, files, tid, photos, audio) {
+      var b = q('div', 'hcmsg ' + cls); if (who) b.appendChild(q('div', 'hcwho', who)); if (text || !(audio || []).length) b.appendChild(linked(text));
+      helpExtras(b, { files: files, photos: photos, audio: audio }, tid);
       if (at) b.appendChild(q('div', 'hctime', when(at)));
       if (refresh) { var rb = q('button', 'hcrefresh', 'Refresh now'); rb.type = 'button'; rb.addEventListener('click', function () { location.reload(); }); b.appendChild(rb); }
       body.appendChild(b);
@@ -7822,7 +7926,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var hr = new Date().getHours(), tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
       bubble('them', HELP_NAME, tod + '. J.A.R.V.I.S. at your service. Tell me what’s gone sideways, and I’ll see to it. Nothing is too small, though I do have opinions about typos.');
       if (t) {
-        t.msgs.forEach(function (m, i) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text, m.at, !m.mine && m.refresh && i === t.msgs.length - 1, m.files, t.id, m.photos); });
+        t.msgs.forEach(function (m, i) { bubble(m.mine ? 'me' : 'them', m.mine ? '' : HELP_NAME, m.text, m.at, !m.mine && m.refresh && i === t.msgs.length - 1, m.files, t.id, m.photos, m.audio); });
         if (t.status === 'new' || t.status === 'working') { var wk = q('div', 'hcwork'); wk.appendChild(q('span', 'hcdots')); wk.appendChild(q('span', null, t.status === 'new' ? 'Sent. ' + HELP_NAME + ' picks it up within a few minutes…' : HELP_NAME + ' is looking into it…')); body.appendChild(wk); }
         else if (t.status === 'matthew') body.appendChild(q('div', 'hcnote', 'Passed to Matthew. He’ll get back to you.'));
         else if (t.status === 'closed') body.appendChild(q('div', 'hcnote', 'This chat is closed. Start a new one any time.'));
@@ -7841,16 +7945,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         else if (openId) pick = ts.filter(function (t) { return t.id === openId; })[0] || null;
         else pick = ts.filter(function (t) { return t.status !== 'closed' && t.by === S.me; })[0] || null;
         if (pick) { HC.id = pick.id; cur = pick; }
-        if (!listing) draw(cur);
+        /* not while a voice note in the chat is playing (11 Nov): the redraw would stop it; the next 15 s look catches up */
+        if (!listing && ![].some.call(body.querySelectorAll('audio'), function (a) { return !a.paused && !a.ended; })) draw(cur);
       }).catch(function () {});
     };
     var send = function () {
-      var v = ta.value.trim(), np = picks.count(); if (v.length < 3 && !np) return;
-      sb.disabled = true; pb.disabled = true;
-      api('helpsend', { body: { text: v, id: HC.id || '', ctx: { screen: from }, photos: picks.data() } }).then(function (j) {
-        sb.disabled = false; pb.disabled = false; if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; }
-        ta.value = ''; picks.clear(); ta.style.height = ''; fresh = false; listing = false; er.textContent = 'Earlier'; HC.id = j.ticket.id; cur = j.ticket; draw(cur);
-      }).catch(function () { sb.disabled = false; pb.disabled = false; toast('No signal', 'Not sent.', null); });
+      if (voice.busy()) { voice.stop(false, send); return; }   /* Send while recording: stop, then send it (11 Nov) */
+      var v = ta.value.trim(), np = picks.count(), vn = voice.data(); if (v.length < 3 && !np && !vn) return;
+      sb.disabled = true; pb.disabled = true; mb.disabled = true;
+      api('helpsend', { body: { text: v, id: HC.id || '', ctx: { screen: from }, photos: picks.data(), audio: vn || undefined } }).then(function (j) {
+        sb.disabled = false; pb.disabled = false; mb.disabled = !!voice.data(); if (!j.ok) { toast('Not sent', j.error || 'Try again.', null); return; }
+        ta.value = ''; picks.clear(); voice.clear(); ta.style.height = ''; fresh = false; listing = false; er.textContent = 'Earlier'; HC.id = j.ticket.id; cur = j.ticket; draw(cur);
+      }).catch(function () { sb.disabled = false; pb.disabled = false; mb.disabled = !!voice.data(); toast('No signal', 'Not sent.', null); });
     };
     sb.addEventListener('click', send);
     ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
@@ -7901,7 +8007,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (t.id === openId) setTimeout(function () { try { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }, 60);
       });
     };
-    var load = function () { if (S.screen !== 'help') return; api('helplist').then(function (j) { if (S.screen !== 'help') return; if (!j || !j.ok) { list.textContent = ''; list.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; } draw(j.tickets || []); }).catch(function () {}); };
+    var load = function () { if (S.screen !== 'help') return; api('helplist').then(function (j) { if (S.screen !== 'help') return; if ([].some.call(list.querySelectorAll('audio'), function (a) { return !a.paused && !a.ended; })) return;   /* a voice note playing (11 Nov) */ if (!j || !j.ok) { list.textContent = ''; list.appendChild(q('div', 'msg bad', (j && j.error) || 'Could not load it.')); return; } draw(j.tickets || []); }).catch(function () {}); };
     send.addEventListener('click', function () {
       var v = ta.value.trim(); if (v.length < 3) { toast('Write a little more', 'What is going on?', null); return; }
       send.disabled = true;

@@ -8830,9 +8830,19 @@ function helpAll(): array {
     $T = [];
     foreach (readLines(helpFile()) as $r) {
         $id = (string) ($r['id'] ?? ''); if ($id === '') continue;
+        /* a voice note's transcript (11 Nov; sixfold-tools/help-transcript.php, from the laptop's watcher): goes under its note, as
+           text (or failed: it could not be made); changes neither the status nor the time */
+        if (($r['t'] ?? '') === 'transcript') {
+            if (!isset($T[$id])) continue;
+            foreach ($T[$id]['msgs'] as $i => $m) foreach (($m['audio'] ?? []) as $k => $a) if ((string) ($a['n'] ?? '') === (string) ($r['n'] ?? '-')) {
+                $T[$id]['msgs'][$i]['audio'][$k]['text'] = (string) ($r['text'] ?? '');
+                if (!empty($r['failed'])) $T[$id]['msgs'][$i]['audio'][$k]['failed'] = true; else unset($T[$id]['msgs'][$i]['audio'][$k]['failed']);
+            }
+            continue;
+        }
         if (!isset($T[$id])) $T[$id] = ['id' => $id, 'by' => (string) ($r['from'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'status' => 'new', 'msgs' => [], 'ctx' => $r['ctx'] ?? null];
         $t = &$T[$id];
-        if (($r['t'] ?? '') === 'msg') { $t['msgs'][] = ['from' => (string) $r['from'], 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => true, 'photos' => array_values(array_filter((array) ($r['photos'] ?? []), 'is_array'))]; $t['status'] = 'new'; }   /* photos: [{n, w, h, size}] sent with it (3 Nov) */
+        if (($r['t'] ?? '') === 'msg') { $t['msgs'][] = ['from' => (string) $r['from'], 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => true, 'photos' => array_values(array_filter((array) ($r['photos'] ?? []), 'is_array')), 'audio' => array_values(array_filter((array) ($r['audio'] ?? []), 'is_array'))]; $t['status'] = 'new'; }   /* photos: [{n, w, h, size}] sent with it (3 Nov); audio: a voice note [{n, size, mime, secs}] (11 Nov) */
         elseif (($r['t'] ?? '') === 'reply') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? 'Claude'), 'text' => (string) $r['text'], 'at' => (int) $r['at'], 'mine' => false, 'refresh' => !empty($r['refresh']), 'files' => array_values(array_filter((array) ($r['files'] ?? []), 'is_array'))]; $t['status'] = (string) ($r['status'] ?? 'answered'); }   /* refresh: the reply changed something on screen (1 Nov); files: PDFs J.A.R.V.I.S. made, [{n, size}] (3 Nov) */
         elseif (($r['t'] ?? '') === 'status') $t['status'] = (string) ($r['status'] ?? $t['status']);
         $t['updated'] = (int) ($r['at'] ?? 0); unset($t);
@@ -8845,6 +8855,21 @@ function helpFilesDir(): string { return DATA_DIR . '/help-files'; }
 function helpFileName(string $f): bool { return (bool) preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}\.pdf$/D', $f) && strpos($f, '..') === false; }
 /* photos people send with a message (3 Nov, Matthew: "build a photo button for everyone that uses jarvis include jen"): same folder, named by us */
 function helpPhotoName(string $f): bool { return (bool) preg_match('/^p[0-9]{10}[0-9a-f]{6}\.(jpg|png|webp)$/D', $f); }
+/* voice notes (11 Nov, Matthew: "Lets go ahead and build in the voice notes"): one a message, recorded in the chat (MediaRecorder: Chrome
+   gives WebM/Opus, an iPhone MP4/AAC), same folder, named by us. The kind is read from the file's own first bytes, never taken on trust. */
+function helpAudioName(string $f): bool { return (bool) preg_match('/^a[0-9]{10}[0-9a-f]{6}\.(webm|ogg|m4a|mp3|aac)$/D', $f); }
+function helpAudioMimes(): array { return ['webm' => 'audio/webm', 'ogg' => 'audio/ogg', 'm4a' => 'audio/mp4', 'mp3' => 'audio/mpeg', 'aac' => 'audio/aac']; }
+function helpAudioSniff(string $b): string {
+    if (strlen($b) < 12) return '';
+    if (strncmp($b, "\x1A\x45\xDF\xA3", 4) === 0) return 'webm';   /* EBML: WebM / Matroska */
+    if (strncmp($b, 'OggS', 4) === 0) return 'ogg';
+    if (substr($b, 4, 4) === 'ftyp') return 'm4a';                  /* MP4 / M4A (an iPhone's recording) */
+    if (strncmp($b, 'ID3', 3) === 0) return 'mp3';
+    $w = unpack('n', substr($b, 0, 2))[1];
+    if (($w & 0xFFF6) === 0xFFF0) return 'aac';                      /* ADTS AAC: sync word, layer 00 */
+    if (($w & 0xFFE0) === 0xFFE0 && ($w & 0x0006) !== 0) return 'mp3';   /* an MPEG audio frame */
+    return '';
+}
 /* a J.A.R.V.I.S. alert for Matthew only (3 Nov, Matthew: "does jarvis send alerts to my phone when jen needs something? if not go ahead and
    build that out"): his super accounts, the bell list and every phone he turned alerts on; never the office (a365Alert's $super also told
    every office login, so Jen got "Jen McPherson needs you" about herself). One tag per ticket and kind, so a repeat replaces the last. */
@@ -8873,8 +8898,21 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) 
     if ($action === 'helpfile') {
         $id = (string) ($_GET['id'] ?? ''); $f = (string) ($_GET['f'] ?? '');
         if (!preg_match('/^h[0-9]{14}[0-9a-f]{4}$/D', $id) || !isset($T[$id]) || !$mine($T[$id])) fail('No such conversation.', 404);
-        $pic = helpPhotoName($f); if (!$pic && !helpFileName($f)) fail('No such file.', 404);
+        $pic = helpPhotoName($f); $aud = !$pic && helpAudioName($f); if (!$pic && !$aud && !helpFileName($f)) fail('No such file.', 404);
         $p = helpFilesDir() . '/' . $id . '/' . $f; if (!is_file($p)) fail('That file is missing.', 404);
+        /* a voice note (11 Nov): played in the page's audio player, which asks for byte ranges (an iPhone will not play one without them) */
+        if ($aud) {
+            $size = (int) filesize($p); $from = 0; $to = $size - 1;
+            header('Content-Type: ' . helpAudioMimes()[pathinfo($f, PATHINFO_EXTENSION)]); header('Content-Disposition: inline; filename="' . $f . '"'); header('Cache-Control: private, no-store'); header('X-Content-Type-Options: nosniff'); header('Accept-Ranges: bytes');
+            if (preg_match('/^bytes=(\d*)-(\d*)$/D', trim((string) ($_SERVER['HTTP_RANGE'] ?? '')), $rg) && ($rg[1] !== '' || $rg[2] !== '')) {
+                if ($rg[1] === '') $from = max(0, $size - (int) $rg[2]); else { $from = (int) $rg[1]; if ($rg[2] !== '') $to = min($to, (int) $rg[2]); }
+                if ($from > $to || $from >= $size) { http_response_code(416); header('Content-Range: bytes */' . $size); exit; }
+                http_response_code(206); header('Content-Range: bytes ' . $from . '-' . $to . '/' . $size);
+            }
+            header('Content-Length: ' . ($to - $from + 1));
+            if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') { $fh = fopen($p, 'rb'); fseek($fh, $from); echo fread($fh, max(1, $to - $from + 1)); fclose($fh); }
+            exit;
+        }
         header('Content-Type: ' . ($pic ? ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'][pathinfo($f, PATHINFO_EXTENSION)] : 'application/pdf')); header('Content-Disposition: ' . (!empty($_GET['dl']) ? 'attachment' : 'inline') . '; filename="' . $f . '"'); header('Cache-Control: private, no-store'); header('X-Content-Type-Options: nosniff');
         header('Content-Length: ' . filesize($p)); readfile($p); exit;
     }
@@ -8892,7 +8930,19 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) 
             if ($ext === '' || $gi[0] < 1 || $gi[1] < 1) fail('That photo could not be read. Try a JPEG or PNG.');
             $bins[] = [$bin, $ext, (int) $gi[0], (int) $gi[1]];
         }
-        if (mb_strlen($text) < 3 && !$bins) fail('Write what is going on.'); $text = mb_substr($text, 0, 2000);
+        /* a voice note (11 Nov): one a message, {data: base64, mime, secs}, up to 6 MB (two minutes is well under); may go without words.
+           secs is the phone's own count, kept within 1 to 120 */
+        $voice = null;
+        if (is_array($body['audio'] ?? null) && ($body['audio']['data'] ?? '') !== '') {
+            $a = $body['audio']; $bin = base64_decode((string) $a['data'], true);
+            if ($bin === false || strlen($bin) < 200) fail('The voice note did not come through. Try again.');
+            if (strlen($bin) > 6 * 1024 * 1024) fail('That voice note is over 6 MB. Keep it under 2 minutes.');
+            $cm = strtolower(trim(explode(';', (string) ($a['mime'] ?? ''))[0]));
+            if ($cm !== '' && !in_array($cm, ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/x-m4a', 'audio/aac'], true)) fail('That kind of recording can’t be sent. Type it instead.');
+            $ext = helpAudioSniff($bin); if ($ext === '') fail('That voice note could not be read. Try recording it again.');
+            $voice = [$bin, $ext, max(1, min(120, (int) round((float) ($a['secs'] ?? 0))))];
+        }
+        if (mb_strlen($text) < 3 && !$bins && !$voice) fail('Write what is going on.'); $text = mb_substr($text, 0, 2000);
         if (!throttleTake(rateFile('help|' . $me), 30, 3600)) fail('That is a lot of messages in an hour. Give it a few minutes.', 429);
         $id = (string) ($body['id'] ?? '');
         if ($id !== '') { if (!isset($T[$id]) || !$mine($T[$id])) fail('No such conversation.', 404); }
@@ -8908,13 +8958,21 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) 
                 @chmod($d . '/' . $n, 0600); $photos[] = ['n' => $n, 'w' => $pw, 'h' => $ph, 'size' => strlen($bin)];
             }
         }
-        if (!appendLine(helpFile(), ['t' => 'msg', 'id' => $id, 'from' => $me, 'text' => $text, 'ctx' => $ctx ?: null, 'at' => time()] + ($photos ? ['photos' => $photos] : []))) fail('Could not save that. Try again.', 500);
+        $audio = [];
+        if ($voice) {
+            [$bin, $ext, $secs] = $voice;
+            $d = helpFilesDir() . '/' . $id; if (!is_dir($d) && !@mkdir($d, 0700, true)) fail('Could not save the voice note. Try again.', 500);
+            $n = 'a' . time() . bin2hex(random_bytes(3)) . '.' . $ext;
+            if (@file_put_contents($d . '/' . $n, $bin, LOCK_EX) === false) fail('Could not save the voice note. Try again.', 500);
+            @chmod($d . '/' . $n, 0600); $audio[] = ['n' => $n, 'size' => strlen($bin), 'mime' => helpAudioMimes()[$ext], 'secs' => $secs];
+        }
+        if (!appendLine(helpFile(), ['t' => 'msg', 'id' => $id, 'from' => $me, 'text' => $text, 'ctx' => $ctx ?: null, 'at' => time()] + ($photos ? ['photos' => $photos] : []) + ($audio ? ['audio' => $audio] : []))) fail('Could not save that. Try again.', 500);
         /* the practice copy (2026-11-02): the note stays here for Matthew to read; the laptop watcher answers it with the practice J.A.R.V.I.S.
            (no tools, plays along, says nothing really changed: traverse/ops/help-practice-prompt.md), never the live help desk */
-        if (PRACTICE) practiceLog('help desk', ['from' => $me, 'text' => $text . ($photos ? ' [' . count($photos) . ' photo(s)]' : '')]);
+        if (PRACTICE) practiceLog('help desk', ['from' => $me, 'text' => $text . ($photos ? ' [' . count($photos) . ' photo(s)]' : '') . ($audio ? ' [voice note]' : '')]);
         /* Matthew hears when someone else starts a conversation (3 Nov): the first message only, so a back-and-forth doesn't ring all day;
            "needs you" alerts come from help-reply.php. Not on the practice copy (testers' chats are his to read there, no alerts). */
-        elseif (($body['id'] ?? '') === '' && empty($isSuper)) helpAlertMatthew('J.A.R.V.I.S.: ' . $me . ' wrote in', mb_substr(trim(preg_replace('/\s+/', ' ', $text) . ($photos ? ' (' . count($photos) . ' photo' . (count($photos) > 1 ? 's' : '') . ')' : '')), 0, 140), './?help=' . $id, 'help-new-' . $id);
+        elseif (($body['id'] ?? '') === '' && empty($isSuper)) helpAlertMatthew('J.A.R.V.I.S.: ' . $me . ' wrote in', mb_substr(trim(preg_replace('/\s+/', ' ', $text) . ($photos ? ' (' . count($photos) . ' photo' . (count($photos) > 1 ? 's' : '') . ')' : '') . ($audio ? ' (voice note)' : '')), 0, 140), './?help=' . $id, 'help-new-' . $id);
         out(['ok' => true, 'ticket' => helpAll()[$id]]);
     }
     if ($action === 'helpclose') {

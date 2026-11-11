@@ -18,6 +18,8 @@ if (!$peek) appendLine(helpFile(), ['t' => 'status', 'id' => $t['id'], 'status' 
 flock($lk, LOCK_UN);
 $tz = new DateTimeZone(appTz());
 /* photos (3 Nov): their names, and the folder on the server; the watcher copies them to the laptop so the session can look at them */
-$t['msgs'] = array_map(fn($m) => ['from' => $m['from'], 'when' => (new DateTime('@' . $m['at']))->setTimezone($tz)->format('D j M g:i a'), 'text' => $m['text']] + (!empty($m['photos']) ? ['photos' => array_column($m['photos'], 'n')] : []), $t['msgs']);
+/* voice notes (11 Nov): name, length and any transcript already made (so the watcher transcribes each note once); same folder (audioDir) */
+$t['msgs'] = array_map(fn($m) => ['from' => $m['from'], 'when' => (new DateTime('@' . $m['at']))->setTimezone($tz)->format('D j M g:i a'), 'text' => $m['text']] + (!empty($m['photos']) ? ['photos' => array_column($m['photos'], 'n')] : [])
+    + (!empty($m['audio']) ? ['audio' => array_map(fn($a) => ['n' => (string) ($a['n'] ?? ''), 'secs' => (int) ($a['secs'] ?? 0)] + (isset($a['text']) ? ['text' => (string) $a['text']] : []) + (!empty($a['failed']) ? ['failed' => true] : []), $m['audio'])] : []), $t['msgs']);
 $t['photoDir'] = helpFilesDir() . '/' . $t['id'];
-echo json_encode(['id' => $t['id'], 'by' => $t['by'], 'ctx' => $t['ctx'], 'waiting' => count($new), 'conversation' => $t['msgs'], 'photoDir' => $t['photoDir']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
+echo json_encode(['id' => $t['id'], 'by' => $t['by'], 'ctx' => $t['ctx'], 'waiting' => count($new), 'conversation' => $t['msgs'], 'photoDir' => $t['photoDir'], 'audioDir' => $t['photoDir']], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
