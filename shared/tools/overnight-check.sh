@@ -94,7 +94,8 @@ v() { echo "$SRV" | awk -v k="$1" '$1==k{print $2}'; }
 # 4. Windows tasks on this computer (backups)
 TASKS=$(powershell.exe -NoProfile -Command "foreach(\$n in 'Backup claude test 2 to Google Drive','Traverse server backup'){ \$i=Get-ScheduledTaskInfo -TaskName \$n -ErrorAction SilentlyContinue; if(\$i){ '{0}|{1:MM-dd HH:mm}|{2}' -f \$n,\$i.LastRunTime,\$i.LastTaskResult } }" 2>/dev/null | tr -d '\r')
 while IFS='|' read -r n t r; do [ -z "$n" ] && continue
-  [ "$r" = 0 ] && ok "$n: last run $t ok" || bad "$n: last run $t ended with code $r"
+  # 267009 (0x41301) is Task Scheduler for "running right now", not a failure: the check used to land mid-backup and call it a problem (10 Nov)
+  if [ "$r" = 0 ]; then ok "$n: last run $t ok"; elif [ "$r" = 267009 ]; then ok "$n: running now (started $t)"; else bad "$n: last run $t ended with code $r"; fi
 done <<< "$TASKS"
 GD=$(tail -1 "$LOGDIR/gdrive.log" 2>/dev/null); say "  info  Drive backup log: ${GD:-none}"
 
