@@ -18945,6 +18945,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waitM = function (it) { var x = lastTry(it.x); return x ? x.at : (it.at || 0); };
       var stM = OFFICE_ST.filter(function (st) { return MINE_ST.indexOf(st[0]) >= 0 && (st[0] !== 'recall' || wdOn()); });
       var stageM = S.pipeStageM || null; if (stageM && !stM.some(function (x) { return x[0] === stageM; })) stageM = null;
+      /* a link straight to one of his leads (an alert, Person search, Open it) opens the stage it is in (overnight check 2026-11-10: since the
+         stage tabs nothing was open, so the lead the link pointed at was not on the screen) */
+      var focM = S.pipeFocus, focIt = focM ? mineItems.filter(function (it) { return it.x.id === focM; })[0] : null;
+      if (focIt && stM.some(function (x) { return x[0] === mineStage(focIt); })) { stageM = S.pipeStageM = mineStage(focIt); S.pipeFocus = null; } else focIt = null;
       var cardM = function (it, into) { var card = leadCard(it.x); if (flc) { var lcm = pipeContactAt(it); card.insertBefore(q('span', 'lctag', lcm ? 'Last contacted ' + ago(lcm) : 'Not contacted yet'), card.firstChild); } card.insertBefore(q('span', 'srctag s-' + pipeSrc(it), pipeSrcName(pipeSrc(it))), card.firstChild); (into || holder).appendChild(card); };
       if (!mineItems.length) { holder.appendChild(q('div', 'msg soft pipepick', finding ? 'Nobody in My pipeline matches.' : 'Nothing open right now. New Facebook ad and website leads show here the moment they come in.')); window.scrollTo(0, y); return; }
       var segM = q('div', 'pipeseg'); segM.style.gridTemplateColumns = 'repeat(' + stM.length + ',1fr)';
@@ -18977,6 +18981,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       else if (wdOn() && deskWide()) pipeTwo(holder, groupsM, cardM);
       else groupsM.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { cardM(it); }); });
       window.scrollTo(0, y);
+      if (focIt && !deskWide()) { var fcM = holder.querySelector('[data-id="' + focM + '"]'); if (fcM) setTimeout(function () { fcM.scrollIntoView({ block: 'start' }); }, 30); }
       return;
     }
     /* the walks coming up list is gone from the Pipeline (2026-10-21, Matthew); booked walks show on the calendar and the office home */
