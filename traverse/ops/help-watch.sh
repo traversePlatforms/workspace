@@ -156,24 +156,47 @@ if [ "${1:-}" = "--once" ]; then [ -f "$ST/pause" ] || one_ticket; exit 0; fi
 # page for hours, so the loop saw nothing and no ticket was picked up), the count is read over SSH instead (sixfold-tools/help-next.php
 # --peek, which only looks), every 30 seconds, until HTTPS answers a number again. Logged once each way so it is seen.
 BAD=0; VIA=https
+# 11 Nov (Matthew, the "free fix"): while HTTPS is captcha'd, ONE long SSH connection stays open and the server prints the two counts
+# every 5 s ("L|P"), instead of a fresh SSH login every 30 s. If the stream dies it is reopened; after 3 failures in a row it falls back
+# to the old fresh look every 30 s until HTTPS answers again. bash sets STREAM_PID and STREAM[0] for the coproc.
+SFAIL=0
+stream_open() {
+  coproc STREAM { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && for i in $(seq 1 720); do L=$(php help-next.php --peek | grep -c "\"waiting\""); P=$(php help-next.php --peek --practice | grep -c "\"waiting\""); echo "$L|$P"; sleep 5; done' < /dev/null 2>>"$LOG"; }
+}
+stream_close() { [ -n "${STREAM_PID:-}" ] && kill "$STREAM_PID" 2>/dev/null; wait "${STREAM_PID:-}" 2>/dev/null; unset STREAM_PID; }
+stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent for 20 s
+  local line="" x fd="${STREAM[0]:-}"
+  [ -n "$fd" ] || return 1
+  read -r -t 20 -u "$fd" line || return 1
+  while read -r -t 0.2 -u "$fd" x; do line="$x"; done   # skip lines that piled up during a session
+  printf '%s' "$line"
+}
 peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
 END=$(( $(date +%s) + 3480 ))
 while [ "$(date +%s)" -lt "$END" ]; do
   if [ ! -f "$ST/pause" ]; then
     N=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK" 2>/dev/null)
     if [[ "$N" =~ ^[0-9]+$ ]]; then
-      BAD=0; [ "$VIA" = ssh ] && { log "https check answers again: back to the 5 s poll"; VIA=https; }
+      BAD=0; [ "$VIA" = ssh ] && { log "https check answers again: back to the 5 s poll"; VIA=https; stream_close; SFAIL=0; }
       if [ "$N" -gt 0 ]; then one_ticket; continue; fi
       P=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&p=1" 2>/dev/null)
       if [[ "$P" =~ ^[0-9]+$ ]] && [ "$P" -gt 0 ]; then one_practice; continue; fi
     else
       BAD=$(( BAD + 1 ))
       if [ "$BAD" -ge 3 ]; then
-        [ "$VIA" = https ] && { log "https check is not answering a number (got: $(printf '%s' "$N" | tr -d '\r\n' | cut -c1-60)): reading over SSH every 30 s"; VIA=ssh; }
-        R=$(peek_ssh); L="${R%%|*}"; PR="${R##*|}"
+        [ "$VIA" = https ] && { log "https check is not answering a number (got: $(printf '%s' "$N" | tr -d '\r\n' | cut -c1-60)): reading over one open SSH connection every 5 s"; VIA=ssh; }
+        R=""
+        if [ "$SFAIL" -lt 3 ]; then
+          { [ -n "${STREAM_PID:-}" ] && kill -0 "$STREAM_PID" 2>/dev/null; } || { stream_close; stream_open; }
+          R=$(stream_read) || R=""
+          if [[ "$R" =~ ^[0-9]+\|[0-9]+$ ]]; then SFAIL=0
+          else SFAIL=$(( SFAIL + 1 )); R=""; stream_close; [ "$SFAIL" -ge 3 ] && log "the open SSH connection keeps dropping: back to a fresh SSH look every 30 s"; fi
+        fi
+        if [ -z "$R" ]; then R=$(peek_ssh); [ "$SFAIL" -ge 3 ] && sleep 25; fi
+        L="${R%%|*}"; PR="${R##*|}"
         if [[ "$L" =~ ^[0-9]+$ ]] && [ "$L" -gt 0 ]; then one_ticket; continue; fi
         if [[ "$PR" =~ ^[0-9]+$ ]] && [ "$PR" -gt 0 ]; then one_practice; continue; fi
-        sleep 25
+        continue
       fi
     fi
   fi
