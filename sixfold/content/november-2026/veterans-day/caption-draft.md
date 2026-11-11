@@ -2,7 +2,7 @@
 
 Draft only. Loaded into the post calendar as an unapproved draft; nothing goes out until Matthew taps Approve.
 
-**Card:** `2026-11-11-veterans-day.png` (1080x1350), built from the Thanksgiving card's design (`../.render/2026-11-26.html`): kicker "Veterans Day", headline "Thank you to everyone who has served.", "From all of us at 365 Aeration & Seeding.", footer "Thinking of every veteran and their family today." + phone and site. Text and shapes only.
+**Card:** `2026-11-11-veterans-day.png` (1080x1350), built from the Thanksgiving card's design (`../.render/2026-11-26.html`): kicker "Veterans Day", headline "Thank you to everyone who has served.", "From all of us at 365 Aeration & Seeding.", footer "Thinking of every veteran and their family today." + phone and site. A US flag drawn to the official proportions (1.9:1, 13 stripes, 50 stars in 9 rows, Old Glory red #B22234 and blue #3C3B6E) sits above the headline. Text and shapes only.
 
 **Facebook:**
 Today is Veterans Day.
