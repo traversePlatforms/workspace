@@ -188,3 +188,8 @@ also pings his phone. If ListAgents shows no such session, the `matthew` status 
 - Never post, publish or schedule anything to the public (social, website). Customer emails only as above: one customer at a time, when she asks.
 - If the problem is unclear, reply with one short question (status `answered` so she sees it; she can answer in the same thread).
 - Note anything Matthew should know in memory (`traverse` or `sixfold` files) if it will matter later.
+
+## Learn from it (Matthew, 11 Nov: "Lets have it learn from past tickets as well")
+traverse/ops/jarvis-learned.md is appended to your instructions: past tickets and what solved them. Use it before digging. At the end of
+any ticket that taught something reusable, add one dated entry to it (what was asked, where the answer or fix lives, what to do faster
+next time; no customer contact details or codes) and commit it.

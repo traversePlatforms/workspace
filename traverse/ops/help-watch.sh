@@ -47,7 +47,16 @@ $T"
 
 Photos sent in this conversation, copied to this laptop. Look at each one with the Read tool before you answer:
 $PICS"
-  (cd "$REPO" && "$CLAUDE" -p "$PROMPT" --model "$M" --permission-mode auto --append-system-prompt "$(cat "$REPO/traverse/ops/help-desk-prompt.md")" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
+  # 11 Nov (Matthew): his tickets add jarvis-matthew-prompt.md (his personal assistant across Surge, Sixfold, Traverse, Peak, Donny,
+  # personal); every ticket adds jarvis-learned.md (what past tickets taught; the session adds to it)
+  local SYS; SYS="$(cat "$REPO/traverse/ops/help-desk-prompt.md")"
+  [ "$BY" = "Matthew Sharpe" ] && [ -f "$REPO/traverse/ops/jarvis-matthew-prompt.md" ] && SYS="$SYS
+
+$(cat "$REPO/traverse/ops/jarvis-matthew-prompt.md")"
+  [ -f "$REPO/traverse/ops/jarvis-learned.md" ] && SYS="$SYS
+
+$(tail -n 150 "$REPO/traverse/ops/jarvis-learned.md")"
+  (cd "$REPO" && "$CLAUDE" -p "$PROMPT" --model "$M" --permission-mode auto --append-system-prompt "$SYS" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
   LAST=$($SG "grep '\"id\":\"$ID\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | tail -1" < /dev/null 2>/dev/null)
   if ! printf '%s' "$LAST" | grep -q '"t":"reply"' || printf '%s' "$LAST" | grep -q '"status":"working"'; then
     printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you." | bash "$REPO/traverse/ops/help-reply.sh" "$ID" matthew >> "$LOG" 2>&1
