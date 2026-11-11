@@ -949,6 +949,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 ## Cross-cutting
 
+- [ ] **X-15 — J.A.R.V.I.S. always on (plan, then move)** (Matthew, 11 Nov 2026: "we build in the free fix for now and then we plan for a move ... I want it to respond fast ... store data, answer questions based on data ... i also need a way for jarvis to be a live the whole time")
+      Now (laptop): open-connection check (persistent SSH, 5 s polls instead of 30 s when SiteGround captchas the laptop) + the quick first pass
+      (fast model, read-only notes/TASKS/app data, answers in ~10-20 s; real work goes to the full session). After the voice-notes build.
+      The move (to plan): small Azure VM (B2s, ~$30-35/mo + disk) running the watcher on his Claude plan; repo cloned from GitHub
+      (github-sync.sh), gitignored data synced only where needed; Google Drive read through rclone; Tailscale so the cloud can reach the laptop
+      when it is on (Desktop files, Notepad, Windows jobs) and queue those jobs when it is off; server keys copied to the VM, locked down;
+      laptop watcher stays as a fallback, one runs at a time.
+
 - [ ] **X-14 — One big nightly overview of everything Matthew works on** (Matthew, 11 Nov 2026: "we need to have a big daily summary thing that has sixfold, jarvis, surge, peak, donny etc all the stuf i work on in so for a big overview of tonight but thats something we can discuss what needs to go in. So add that to my to-do list.")
       To DISCUSS with him first: what goes in per company (Sixfold leads/jobs/money, J.A.R.V.I.S. tickets and what it changed, Surge site/ADA/posts,
       Peak, Donny, Traverse Prospect Desk/sites/editions, laptop and server health, reminders due tomorrow), when it arrives, and where
