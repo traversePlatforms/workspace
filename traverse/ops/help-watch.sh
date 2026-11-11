@@ -112,6 +112,27 @@ $(cat "$REPO/traverse/ops/jarvis-matthew-prompt.md")"
   [ -f "$REPO/traverse/ops/jarvis-learned.md" ] && SYS="$SYS
 
 $(tail -n 150 "$REPO/traverse/ops/jarvis-learned.md")"
+  # 11 Nov (Matthew: "respond fast ... answer questions based on data"): a quick first pass for his messages, read-only (memory, TASKS,
+  # jarvis-learned, the repo), no photos. ANSWER = it replies in seconds and the full session never starts; HANDOFF = an instant
+  # "on it" note, then the full session as before. Any failure of the quick pass just falls through to the full session.
+  if [ "$BY" = "Matthew Sharpe" ] && [ -z "$PICS" ] && [ -f "$REPO/traverse/ops/jarvis-quick-prompt.md" ] && [ "${JARVIS_QUICK:-1}" = 1 ]; then
+    local Q QH QT QS; QS=$(date +%s)
+    Q=$(cd "$REPO" && timeout 90 "$CLAUDE" -p "$PROMPT" --model "${HELP_MODEL_QUICK:-sonnet}" --tools "Read,Grep,Glob" --permission-mode auto \
+        --add-dir "/c/Users/Matthew sharpe/.claude/projects/c--Users-Matthew-sharpe-Desktop-claude-test-2/memory" \
+        --append-system-prompt "$(cat "$REPO/traverse/ops/jarvis-quick-prompt.md")" --output-format text 2>>"$ST/$ID.quick.err")
+    printf '%s\n' "$Q" > "$ST/$ID.quick"
+    QH=$(printf '%s\n' "$Q" | sed -n '1{s/[^A-Z]//g;p}'); QT=$(printf '%s\n' "$Q" | sed '1d')
+    if [ "$QH" = ANSWER ] && [ -n "$(printf '%s' "$QT" | tr -d '[:space:]')" ]; then
+      printf '%s' "$QT" | bash "$REPO/traverse/ops/help-reply.sh" "$ID" answered >> "$LOG" 2>&1
+      log "$ID: quick pass answered in $(( $(date +%s) - QS )) s"; rm -f "$LOCK"; return 0
+    elif [ "$QH" = HANDOFF ] && [ -n "$(printf '%s' "$QT" | tr -d '[:space:]')" ]; then
+      printf '%s' "$QT" | bash "$REPO/traverse/ops/help-reply.sh" "$ID" working >> "$LOG" 2>&1
+      log "$ID: quick pass handed off in $(( $(date +%s) - QS )) s"
+      PROMPT="$PROMPT
+
+(A quick 'on it' note has already been sent to him. Don't send another progress note unless this will take more than a few minutes.)"
+    else log "$ID: quick pass gave no usable answer ($(( $(date +%s) - QS )) s): full session"; fi
+  fi
   (cd "$REPO" && "$CLAUDE" -p "$PROMPT" --model "$M" --permission-mode auto --append-system-prompt "$SYS" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
   LAST=$($SG "grep '\"id\":\"$ID\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | tail -1" < /dev/null 2>/dev/null)
   if ! printf '%s' "$LAST" | grep -q '"t":"reply"' || printf '%s' "$LAST" | grep -q '"status":"working"'; then
