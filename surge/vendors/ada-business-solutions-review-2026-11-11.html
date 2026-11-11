@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADA Business Solutions: what it is and what it costs</title>
+<style>
+  :root { --ink:#1b1f24; --muted:#5b6470; --line:#e3e6ea; --bg:#ffffff; --soft:#f5f7f9; --accent:#2f6f4f; --warn:#8a5a00; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width:780px; margin:0 auto; padding:40px 22px 64px; }
+  h1 { font-size:1.75rem; line-height:1.25; margin:0 0 6px; }
+  .sub { color:var(--muted); margin:0 0 28px; }
+  h2 { font-size:1.2rem; margin:36px 0 10px; padding-top:18px; border-top:1px solid var(--line); }
+  p, li { margin:0 0 10px; }
+  ul, ol { padding-left:22px; margin:0 0 12px; }
+  .answer { background:var(--soft); border-left:4px solid var(--accent); padding:16px 18px; border-radius:4px; margin:0 0 8px; }
+  .answer p:last-child { margin-bottom:0; }
+  table { width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:.95rem; }
+  th, td { text-align:left; vertical-align:top; padding:9px 10px; border-bottom:1px solid var(--line); }
+  th { background:var(--soft); font-weight:600; }
+  td.num { white-space:nowrap; }
+  .note { color:var(--muted); font-size:.92rem; }
+  .flag { color:var(--warn); font-weight:600; }
+  code { background:var(--soft); padding:1px 5px; border-radius:3px; font-size:.9em; }
+  a { color:var(--accent); }
+  .sources li { font-size:.92rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ADA Business Solutions: what it is, what it runs on, and the alternatives</h1>
+  <p class="sub">Review for Surge, 11 November 2026. Everything here is from public pages and public DNS records; nothing was logged into.</p>
+
+  <div class="answer">
+    <p><strong>The short version.</strong> ADA's app (<code>app.adabusinesssol.com</code>) is GoHighLevel with ADA's name and logo on it. GoHighLevel is a large CRM and marketing platform that lets agencies resell it under their own brand, which is a normal, allowed arrangement. ADA itself is a small agency (1 to 10 people) in Effort, Pennsylvania. What Surge pays ADA for is the setup, the support and a markup on top of GoHighLevel.</p>
+    <p>The same software can be bought directly from GoHighLevel from <strong>$97 a month</strong>, plus usage charges for texts, calls, email and AI. Whether that is cheaper depends on what Surge pays ADA today, which this review does not have.</p>
+  </div>
+
+  <h2>1. Is it a skinned version of another company? Yes: GoHighLevel</h2>
+  <p>Three separate things point to GoHighLevel:</p>
+  <ol>
+    <li><strong>The app's address points to GoHighLevel.</strong> <code>app.adabusinesssol.com</code> is a DNS alias for <code>whitelabel.ludicrous.cloud</code>. GoHighLevel's own help article tells agencies to point their branded app address at exactly that name.</li>
+    <li><strong>The login page loads GoHighLevel's files.</strong> The page's code pulls its files from <code>leadconnectorhq.com</code>, GoHighLevel's platform (LeadConnector is GoHighLevel's company name for the software).</li>
+    <li><strong>The feature list matches GoHighLevel's.</strong> ADA's pricing page lists Missed Call Text Back, AI SMS Conversations, AI Web Chat, Automated Review Requests, Call Recording &amp; Transcripts, Multi-Location Management and similar. These are GoHighLevel's standard features, under GoHighLevel's own names.</li>
+  </ol>
+  <p><strong>Surge is already connected to it.</strong> Surge's own address <code>hr.surgeftw.com</code> is set up to send email through LeadConnector (GoHighLevel) and Mailgun, the mail service GoHighLevel uses. So candidate emails already go out as Surge from this GoHighLevel account.</p>
+  <p><strong>"ADA AI"</strong> is most likely GoHighLevel's built-in AI (its "AI Employee": AI replies to texts and web chat, AI booking, call summaries), set up and worded by ADA. That can't be confirmed from outside the account.</p>
+
+  <h2>2. Who ADA is</h2>
+  <ul>
+    <li><strong>Location:</strong> Effort, Pennsylvania (their privacy policy names "ADA Business Solutions, Effort, PA"; Glassdoor lists the same).</li>
+    <li><strong>Size:</strong> 1 to 10 employees (job-board listing). Public contact: Hannah Roybal.</li>
+    <li><strong>What they sell:</strong> the branded CRM (GoHighLevel), AI setup, Meta / Google / LinkedIn ads including recruiting ads, and WordPress websites. They describe themselves as women-owned and operated.</li>
+    <li><strong>Their website:</strong> WordPress, built from a bought design template (Envato). The site has been up since at least May 2022 and most pages were rebuilt in July 2026.</li>
+  </ul>
+  <p class="flag">Worth knowing before trusting the website's claims:</p>
+  <ul>
+    <li>The pricing page shows "Starting at $0 / Month" on all three plans: real prices are not published.</li>
+    <li>The homepage says "Trusted by 5,000+ teams worldwide", and the About page shows a four-person team (Founder &amp; CEO, CTO, Product Designer, Head of Growth) with photos named <code>founder-1.png</code> to <code>founder-5.png</code>. These read like text and photos left over from the design template; the only named contact found in public listings is Hannah Roybal. Not proven either way, but worth asking who actually works on Surge's account.</li>
+  </ul>
+
+  <h2>3. What the same software costs direct</h2>
+  <p>GoHighLevel's published prices (gohighlevel.com/pricing, checked 11 Nov 2026):</p>
+  <table>
+    <tr><th>Plan</th><th>Price</th><th>What it is for</th></tr>
+    <tr><td>Starter</td><td class="num">$97 / month<br><span class="note">$970 / year</span></td><td>One business using the CRM, calendar, email and text automations, pipelines. This covers what Surge uses ADA for.</td></tr>
+    <tr><td>Unlimited</td><td class="num">$297 / month<br><span class="note">$2,970 / year</span></td><td>Unlimited accounts; for agencies running many clients.</td></tr>
+    <tr><td>Agency Pro</td><td class="num">$497 / month<br><span class="note">$4,970 / year</span></td><td>Reselling under your own brand. This is the plan ADA is on (or above).</td></tr>
+  </table>
+  <p class="note">On top of any plan: usage for texts, phone calls, email sending and the AI features is billed separately. That is true whether Surge pays GoHighLevel or ADA.</p>
+
+  <h2>4. The three options</h2>
+  <table>
+    <tr><th>Option</th><th>Monthly cost</th><th>Upside</th><th>Downside</th></tr>
+    <tr><td><strong>Stay with ADA</strong></td><td>Whatever ADA charges now</td><td>Someone else sets up and maintains the automations, AI and ads. Nothing changes for the team.</td><td>Paying a markup. If ADA holds the account, ADA holds Surge's candidate data.</td></tr>
+    <tr><td><strong>Go direct to GoHighLevel</strong></td><td>From $97 + usage</td><td>Same software, likely much cheaper. Surge owns the account and the data.</td><td>Someone at Surge has to build and look after the workflows, calendars and AI. The move from ADA's account needs ADA's cooperation (a transfer, or exporting contacts and rebuilding).</td></tr>
+    <tr><td><strong>Build our own</strong></td><td>Hosting plus texting fees; build time</td><td>Fully custom; no per-month platform fee.</td><td>Texting to candidates needs carrier registration (A2P 10DLC) and careful opt-in handling, and email deliverability and AI replies all have to be built and kept working. GoHighLevel at $97 already does all of this.</td></tr>
+  </table>
+
+  <h2>5. Recommendation</h2>
+  <ol>
+    <li><strong>Get the numbers first.</strong> What does Surge pay ADA each month, what is in the contract (term, cancellation notice), and who owns the GoHighLevel account and the candidate data?</li>
+    <li><strong>Compare against $97 to $297 a month plus usage.</strong> If ADA charges several hundred dollars a month or more and mostly keeps things running, going direct is likely the cheaper path. If ADA also runs Surge's recruiting ads and builds the workflows, part of that fee is real work that would have to be replaced.</li>
+    <li><strong>Building our own is not worth it for Surge alone.</strong> It only makes sense if Surge needs something GoHighLevel cannot do. It would be a project in its own right, not a cost saving.</li>
+  </ol>
+
+  <h2>Questions for ADA (or whoever holds the contract)</h2>
+  <ul>
+    <li>Is the account on your agency's GoHighLevel, and can it be transferred to Surge's own GoHighLevel account if Surge moves?</li>
+    <li>What exactly is "ADA AI" built on, and what does Surge pay for usage (texts, calls, AI) on top of the monthly fee?</li>
+    <li>Who on your team works on Surge's account?</li>
+    <li>Can Surge get an export of all candidates, conversations and calendars at any time?</li>
+  </ul>
+
+  <h2>Sources</h2>
+  <ul class="sources">
+    <li>ADA's site: <a href="https://adabusinesssol.com/">home</a>, <a href="https://adabusinesssol.com/pricing">pricing</a>, <a href="https://adabusinesssol.com/crm">CRM</a>, <a href="https://adabusinesssol.com/ada-ai">ADA AI</a>, <a href="https://adabusinesssol.com/about-us">about</a>, <a href="https://adabusinesssol.com/privacy-policy">privacy policy</a> (read 11 Nov 2026); page dates from the site's public WordPress page list.</li>
+    <li>DNS for <code>app.adabusinesssol.com</code> and <code>hr.surgeftw.com</code>, looked up 11 Nov 2026 (Google public DNS and Surge's SiteGround DNS records).</li>
+    <li>GoHighLevel help: <a href="https://help.gohighlevel.com/support/solutions/articles/48000982207-white-label-the-desktop-web-app">How to set up a whitelabel domain for the desktop web app</a> (names <code>whitelabel.ludicrous.cloud</code>).</li>
+    <li>GoHighLevel: <a href="https://www.gohighlevel.com/pricing">pricing page</a> ($97 / $297 / $497 a month), read 11 Nov 2026.</li>
+    <li>Company listings: <a href="https://www.glassdoor.com/Overview/Working-at-ADA-Business-Solutions-EI_IE10595766.11,33.htm">Glassdoor</a>, <a href="https://www.linkedin.com/company/ada-business-solutions">LinkedIn</a>, <a href="https://www.seo-for-jobs.com/companies/ada-business-solutions/ada-business-solutions-profile">SEO for Jobs profile</a> (1 to 10 employees, contact Hannah Roybal). ZoomInfo lists a different website (adasolutions.biz) and may be a different company; it was not used.</li>
+  </ul>
+</main>
+</body>
+</html>
