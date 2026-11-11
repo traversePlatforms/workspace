@@ -8337,7 +8337,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     /* Other, in his own words (2026-11-10, Matthew: "for remove lead option there needs to be an option to put in your own input, like other or
        something like that"): marked Lost with the reason as the note. His sign-in only for now (Jen's screens unchanged unless he asks) */
-    if (adminView()) {
+    if (adminView() && S.super) {   /* Matthew's sign-in only, as he was told (overnight review 10 Nov: adminView() alone let every admin see it) */
       var ob = q('button', 'rmopt'); ob.type = 'button'; ob.appendChild(q('b', null, 'Other')); ob.appendChild(q('span', null, 'Type the reason. Marked Lost, with your reason on the lead.'));
       var ow = q('div', 'rmother'); ow.hidden = true;
       var oi = q('input'); oi.type = 'text'; oi.maxLength = 200; oi.placeholder = 'Why? e.g. renter, landlord said no'; oi.setAttribute('aria-label', 'Why remove this lead');
