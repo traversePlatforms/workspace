@@ -1,5 +1,17 @@
 # Surge site — deploying to SiteGround
 
+**LAUNCHED 2026-11-11 ~10:06 MT on Matthew's go** ("go ahead and replace the current site
+with the new staging"). Bundle `surge-site-2026-11-11.zip` (commit 7341b749), 72/72 files
+md5-identical on live, cache id=1 flushed. Backups: `~/upload-backups/surge-wp-db-before-launch-20261111-launch.sql`
+and `surge-wp-public_html-before-launch-20261111-launch.tgz` (18,165 entries); WordPress moved
+(not deleted) to `~/retired-wp-20261111-launch/` — the roll-back below uses `S=20261111-launch`.
+Live checks passed (pages, 301s, 404, 403s, headers, http/www); 8 of 9 devices x 23 pages 0
+failures (the run timed out in the last, ipad-pro-land); a click-through of every link, menu,
+audience switch and Send button passed. Test feedback form sent on staging (17:03 UTC) and
+live (17:06 UTC), both `ok` and in `submissions.log`; arrival in info@ is Matthew's to confirm.
+`/wp-admin/` answers 403 (not 410) — blocked either way. Left: Search Console (step 12),
+next-day checks (step 14). Staging untouched (still noindex).
+
 **Status 2026-11-10: launch-ready, waiting on Matthew's go.** Static site plus a
 PHP form handler. `staging.surgeftw.com` is file-for-file the current bundle and
 the office has approved it. `surgeftw.com` still serves the WordPress site —
