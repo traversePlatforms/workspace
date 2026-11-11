@@ -6,7 +6,8 @@
 # build-rounds-data.mjs run promote the homes, so making it earlier would put unmeasured homes on the lists.
 . "$(dirname "$0")/_common.sh"
 VM="ssh -o ConnectTimeout=20 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101"
-$VM 'test -f ~/run/gap1108/rentb.vmdone' < /dev/null || { echo "$(date +%T) rentb still measuring: $($VM 'tail -1 ~/run-status.txt' < /dev/null)"; exit 4; }
+# while it waits, check about every 25 minutes, not every 2 (the queue retries an exit-4 job after 2 minutes; 10 Nov)
+$VM 'test -f ~/run/gap1108/rentb.vmdone' < /dev/null || { echo "$(date +%T) rentb still measuring: $($VM 'tail -1 ~/run-status.txt' < /dev/null)"; sleep 1380; exit 4; }
 # another gap finisher or edition push still going: wait
 BUSY=$(powershell.exe -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='bash.exe'\" | Where-Object { \$_.CommandLine -match 'finish-gap|upload-gap|push-edition|finish-rent' }).Count" 2>/dev/null | tr -d '\r')
 [ "${BUSY:-0}" != "0" ] && { echo "$(date +%T) another town upload is running - waiting"; exit 4; }
