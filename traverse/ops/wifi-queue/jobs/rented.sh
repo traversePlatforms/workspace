@@ -5,6 +5,9 @@
 # every town to Sixfold and each edition. GO-rented is made only here, after rentb is done: it is also the switch that makes every
 # build-rounds-data.mjs run promote the homes, so making it earlier would put unmeasured homes on the lists.
 . "$(dirname "$0")/_common.sh"
+# the finisher already got to the end (overnight check 2026-11-10: when this job is stopped for the hotspot the finisher it started carries
+# on by itself; without this the queue would copy back, build and upload every town a second time)
+[ -f gap1108/GO-rented ] && [ logs-finish-rent.log -nt gap1108/GO-rented ] && tail -1 logs-finish-rent.log | grep -q "done: commit" && { echo "$(date +%T) the finisher already ran to the end: $(tail -1 logs-finish-rent.log | cut -c1-60)"; exit 0; }
 VM="ssh -o ConnectTimeout=20 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101"
 # while it waits, check about every 25 minutes, not every 2 (the queue retries an exit-4 job after 2 minutes; 10 Nov)
 $VM 'test -f ~/run/gap1108/rentb.vmdone' < /dev/null || { echo "$(date +%T) rentb still measuring: $($VM 'tail -1 ~/run-status.txt' < /dev/null)"; sleep 1380; exit 4; }

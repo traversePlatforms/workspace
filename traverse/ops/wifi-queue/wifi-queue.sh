@@ -57,6 +57,11 @@ while true; do
   ( cd "$DT" && bash hotspot-watchdog2.sh "jobs/$PICK.sh" ) > "logs/watchdog-$STAMP.log" 2>&1 &
   wait $JP; RC=$?
   LAST="$PICK"
+  # stopped from outside by the hotspot watchdog (overnight check 2026-11-10): `wait` gives exit 0 for a job ended that way (tested), and
+  # the queue was counting that as finished: the rented job, which now waits 23 minutes at a time, would have been marked done the first
+  # time the laptop joined the hotspot and the finisher would never have run. The watchdog writes logs-paused.flag (removed above before
+  # every start) before it stops anything; the network is looked at too in case the flag did not get written.
+  if [ -f "$DT/logs-paused.flag" ] || { [ $RC -eq 0 ] && case "$(ssid)" in *iPhone*|*iphone*) true;; *) false;; esac; }; then log "$PICK was stopped for the hotspot (exit $RC): not counted as finished or failed"; RC=4; fi
   # a job that stopped in the middle of a step is not finished (2026-10-21: the refine ended mid "trees-parker" with exit 0 and was marked
   # done with 39 towns left); its log's last line is then a step's start
   if [ $RC -eq 0 ] && tail -1 "$OUT" | grep -q '^[0-9:]* start '; then log "$PICK ended in the middle of a step: not counted as finished"; RC=9; fi

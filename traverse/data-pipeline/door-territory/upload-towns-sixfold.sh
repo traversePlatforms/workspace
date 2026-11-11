@@ -7,8 +7,17 @@ set -u
 LABEL="$1"; shift; NEW="$*"
 DT="/c/Users/Surge Inc/Desktop/claude test 2/traverse/data-pipeline/door-territory"; mkdir -p "$DT/logs-upload"
 [ -f "$DT/logs-upload/$LABEL.done" ] && { echo "$LABEL already uploaded"; exit 0; }
-mkdir "$DT/logs-upload/lock" 2>/dev/null || { echo "another upload is running"; exit 0; }
-trap 'rmdir "$DT/logs-upload/lock"' EXIT
+# overnight check 2026-11-10: the lock names its owner. An upload that was stopped from outside (the hotspot watchdog, a restart) never
+# removed its lock, and from then on EVERY upload said "another upload is running" and ended with exit 0, sending nothing. A lock whose
+# owner is gone is taken over; one with no owner written (the old kind) after 90 minutes.
+LK="$DT/logs-upload/lock"
+if [ -d "$LK" ]; then OWN=$(cat "$LK/pid" 2>/dev/null)
+  if [ -n "$OWN" ]; then kill -0 "$OWN" 2>/dev/null || { echo "$LABEL: the upload that held the lock (pid $OWN) is gone; taking it over"; rm -f "$LK/pid"; rmdir "$LK"; }
+  elif [ -n "$(find "$LK" -maxdepth 0 -mmin +90 2>/dev/null)" ]; then echo "$LABEL: lock older than 90 minutes with no owner; taking it over"; rmdir "$LK"; fi
+fi
+mkdir "$LK" 2>/dev/null || { echo "another upload is running"; exit 0; }
+echo $$ > "$LK/pid"
+trap 'rm -f "$LK/pid"; rmdir "$LK"' EXIT
 RD="/c/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds"
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
 cd "$RD"
