@@ -1406,6 +1406,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 | **15 Oct** | Brian Skelton's aeration job (SX-3b) |
 | **late Oct** | **SX-1b(3)** — if the snow blower is still unconfirmed, there is time to rent or subcontract; in December there is not |
 | ~~1 Nov~~ | ~~Kara's first monthly payment · 19 Nov first monthly visit~~ **REMOVED 8 Nov (Matthew): Kara is no longer doing monthlies with Sixfold.** |
+| **18 Nov** | **Surge Search Console check** (site launched 11 Nov; sitemap https://surgeftw.com/sitemap.xml submitted, domain property verified by DNS TXT): ask Matthew for a screenshot of Indexing > Pages. Old WordPress URLs as "Page with redirect" are expected; flag any new page that is 404 or server error. Also the next-day log check (api/submissions.log, no php_errorlog) if not done 12 Nov. |
 | **15 Nov** | **TR-59 — Google Search Console check** (set up 8 Nov): remind Matthew to look at Indexing > Pages and Performance, or ask him for screenshots. |
 | **4 Nov, then every 2 weeks** (18 Nov, 2 Dec, 16 Dec…) | **SG-7 — Surge blog update due.** Remind Matthew; offer a draft post (Surge voice spec + RESTRICTED.md first; draft only). |
 | **early Jan 2027**, then every quarter (Apr, Jul, Oct) | **SX-33 — re-pull the county parcel records** and rebuild the door lists, so a house that sold shows "new owner since" and the old owner's phone, email and notes are set aside (SX-35, built 2026-10-03). Matthew 2026-10-03: quarterly, as a reminder rather than automated. Run the gate (DEPLOY-ROUNDS.md "Refreshing the door lists") |
