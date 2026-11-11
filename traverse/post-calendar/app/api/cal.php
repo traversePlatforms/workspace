@@ -31,9 +31,9 @@ if ($action === 'signin') {
     $acc = pcJread('accounts.json', ['codes' => []]); $a = $acc['codes'][pcCodeHash($code)] ?? null;
     if (!$a || strlen($code) !== 8) { $mine[] = $now; $tries[$ip] = $mine; pcJwrite('tries.json', $tries); fail('That code did not work.', 401); }
     $tok = bin2hex(random_bytes(24)); $ses = pcJread('sessions.json', []);
-    foreach ($ses as $k => $s) if (($s['at'] ?? 0) < $now - 60 * 86400) unset($ses[$k]);
+    foreach ($ses as $k => $s) if (($s['at'] ?? 0) < $now - 365 * 86400) unset($ses[$k]);   /* a year (2026-11-10, Matthew: 'stays logged in'); was 60 days */
     $ses[hash('sha256', $tok)] = ['name' => $a['name'], 'role' => $a['role'], 'at' => $now]; pcJwrite('sessions.json', $ses, 0600);
-    setcookie('postcal', $tok, ['expires' => $now + 60 * 86400, 'path' => $cookiePath, 'httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
+    setcookie('postcal', $tok, ['expires' => $now + 365 * 86400, 'path' => $cookiePath, 'httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
     pcEvent(['t' => 'signin', 'by' => $a['name']]);
     out(['ok' => true, 'name' => $a['name'], 'role' => $a['role']]);
 }

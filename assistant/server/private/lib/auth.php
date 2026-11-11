@@ -7,12 +7,13 @@ function aSessionStart(): void {
     if (session_status() === PHP_SESSION_ACTIVE) return;
     $https = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
     session_name('asst');
-    session_set_cookie_params(['lifetime' => 0, 'path' => rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/') . '/', 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
+    /* stays signed in for a year on this device (2026-11-10, Matthew: 'make it so when i log in it stays logged in'); was a browser-session cookie (lost whenever the hub window closed) and 14 days at most */
+    session_set_cookie_params(['lifetime' => 365 * 86400, 'path' => rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/') . '/', 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
     ini_set('session.save_path', aDataDir());
-    ini_set('session.gc_maxlifetime', (string) (14 * 86400));
+    ini_set('session.gc_maxlifetime', (string) (365 * 86400));
     session_start();
 }
-function signedIn(): bool { aSessionStart(); return !empty($_SESSION['ok']) && ($_SESSION['at'] ?? 0) > time() - 14 * 86400; }
+function signedIn(): bool { aSessionStart(); return !empty($_SESSION['ok']) && ($_SESSION['at'] ?? 0) > time() - 365 * 86400; }
 function ip(): string { return (string) ($_SERVER['REMOTE_ADDR'] ?? '?'); }
 function tooManyTries(): bool {
     $r = jget('tries.json'); $mine = array_filter((array) ($r[ip()] ?? []), fn($t) => $t > time() - 900);
