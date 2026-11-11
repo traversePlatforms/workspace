@@ -949,6 +949,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 ## Cross-cutting
 
+- [ ] **X-14 — One big nightly overview of everything Matthew works on** (Matthew, 11 Nov 2026: "we need to have a big daily summary thing that has sixfold, jarvis, surge, peak, donny etc all the stuf i work on in so for a big overview of tonight but thats something we can discuss what needs to go in. So add that to my to-do list.")
+      To DISCUSS with him first: what goes in per company (Sixfold leads/jobs/money, J.A.R.V.I.S. tickets and what it changed, Surge site/ADA/posts,
+      Peak, Donny, Traverse Prospect Desk/sites/editions, laptop and server health, reminders due tomorrow), when it arrives, and where
+      (email, PDF on the Desktop, the hub). Likely replaces or absorbs the end-of-day report and the overnight check summary.
+
 - [ ] **X-1 — Account inventory** (read the section above — inventory, not passwords).
       Underpins X-4 and X-5.
       **2026-10-25: mostly in place.** The inventory is Home Base (every account, owning login, sub, domain, per company).
