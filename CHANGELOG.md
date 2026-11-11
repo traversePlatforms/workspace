@@ -8,6 +8,16 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-11-10 (Tuesday)
+
+- **Towns (live):** El Paso batch (12 new towns, more doors in 10) and mountain-town PO-box batch (3 new, 152 towns) on Sixfold (409 to 424 towns) and all five editions (Roofing 422, others 418); 34,810 doors added. Fixed the roof build crash on office-lookup files and photo outlines stopping at Deer Trail (61 map tiles). First upload dropped on a Wi-Fi change; resumed. Rented/second homes (about 218,500) set to add themselves when the cloud computer finishes (~12 Nov).
+- **Sixfold 365 app (live, Matthew's login only):** Full pipeline and My pipeline use Jen's stage tabs; Remove lead has an Other reason. Facebook form leads go to Matthew from 12:40 pm while Jen is out.
+- **Leads:** 7 Facebook leads moved to Matthew with addresses matched; Rich Rooney won and booked; hand measures saved (Chase Gardner, Tracy Acosta, Rich Rooney; save tool now works for rented homes); contact history logged; emails sent by Matthew; removal timers set for 12 Nov. Hand checks 23-25: our scans read 25-60% low.
+- **Laptop:** touchpad Low, screen auto-dim off; slowdown fixed (107 stuck helpers, memory 2.7 to 16.9 GB); drag guard written, Matthew must run drag-guard-install.ps1 once.
+- **Surge:** website launch-readiness review (ready after launch switches and his go; WordPress 301 map, config file, noindex fixed); 14 toy drive Facebook posts loaded in the post calendar as drafts, none approved.
+- **Other:** assistant and post calendar stay signed in for a year; spend list by company made; companion bot declined as designed to hide it is an AI (Telegram suggested).
+- **Running overnight:** two Fable reviews (today's code; live health and data) in `shared/reviews/2026-11-10-overnight/`.
+
 ## 2026-11-09 (Monday)
 
 - **Sixfold 365 app (live):** "Transferred from Jen" section in My pipeline (Jen out sick; her 7 weekend ad leads are Matthew's until sent back); lead cards in Calendar › My leads open the property. New quote options Seed only, Fertilize only, Seed & feed, and Aerate only on its own price ladder; all four prices left empty (typed by hand) until decided.

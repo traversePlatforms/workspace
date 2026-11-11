@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day: Tuesday 10 November 2026</title>
+<!-- Matthew's end-of-day change log (started 2026-10-27). Same layout as Brandon's end-of-day picture: a header band, number tiles two by two,
+     then sections with plain rows. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). Cards stay on one page when printed. -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:13px;line-height:1.42}.page{padding:0 4px 8px}.head{padding:20px 24px}.kpis{margin:14px 0 4px;gap:10px}.kpi{padding:12px 16px}.kpi b{font-size:34px}.kpi small{font-size:12px}h2{font-size:18px;margin:16px 0 8px}.row{padding:8px 16px;grid-template-columns:140px 1fr}.foot{margin-top:18px}}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+.page>.sec:last-of-type{margin-bottom:0}.foot{margin-top:12px}
+@media print{.row{padding:6px 16px}h2{margin:12px 0 6px}}
+@media print{body{font-size:12px;line-height:1.36}.row{padding:4px 14px}h2{margin:9px 0 5px;font-size:16px}.kpi{padding:8px 14px}.kpi b{font-size:28px}.head{padding:14px 22px}.head h1{font-size:26px}.foot{margin-top:6px;padding-top:6px;font-size:11px}.row{padding:3px 14px}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="head">
+  <div><div class="tag">End of day</div><h1>Tuesday 10 November 2026</h1><div class="d">Everything we changed today across the apps, sites and data</div></div>
+  <div class="d">424 towns · Jen’s tabs for you · Laptop fixed</div>
+</div>
+<div class="kpis">
+  <div class="kpi"><b>424</b><span>Sixfold towns</span><small>Up from 409; 34,810 doors added to the five editions</small></div>
+  <div class="kpi"><b>16.9 GB</b><span>Laptop memory free</span><small>Was 2.7 GB before the slowdown fix</small></div>
+  <div class="kpi"><b>14</b><span>Toy drive posts ready</span><small>In the post calendar, none approved</small></div>
+  <div class="kpi warn"><b>8</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+<div class="sec">
+<h2>Towns and doors <span class="n">6</span></h2>
+<div class="card">
+  <div class="row"><div class="k">El Paso batch</div><div class="v"><span class="pill live">Live</span>12 new towns, and more doors in 10 towns that were already there.</div></div>
+  <div class="row"><div class="k">Mountain-town PO boxes</div><div class="v"><span class="pill live">Live</span>3 new towns plus 152 towns that gained doors.</div></div>
+  <div class="row"><div class="k">Where it is live</div><div class="v"><span class="pill live">Live</span>Sixfold went from 409 to 424 towns. All five editions got the doors too (Roofing 422, the others 418). 34,810 doors added to the editions.</div></div>
+  <div class="row"><div class="k">Two old bugs</div><div class="v"><span class="pill live">Live</span>The roof build crashed on office-lookup files. The photo outlines stopped at Deer Trail on every run; 61 map tiles were copied over from the cloud computer. Both fixed.</div></div>
+  <div class="row"><div class="k">Upload hiccup</div><div class="v"><span class="pill live">Live</span>The first upload was dropped when the laptop changed Wi-Fi. It was resumed and finished.</div></div>
+  <div class="row"><div class="k">Rented and second homes</div><div class="v"><span class="pill off">Built, off</span>About 218,500 homes. You said go. They add themselves when the cloud computer finishes measuring, around 12 Nov.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Sixfold 365 app <span class="n">4</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Your pipelines</div><div class="v"><span class="pill live">Live</span>Your Full pipeline and My pipeline now use Jen’s stage tabs. Your login only.</div></div>
+  <div class="row"><div class="k">Remove lead</div><div class="v"><span class="pill live">Live</span>New “Other” reason with your own words. It marks the lead Lost and keeps your words as the note. Your login only for now.</div></div>
+  <div class="row"><div class="k">Facebook leads</div><div class="v"><span class="pill live">Live</span>From 12:40 pm new Facebook form leads come to you until Jen is back. Michele Kramer was the first.</div></div>
+  <div class="row"><div class="k">Hand measures</div><div class="v"><span class="pill live">Live</span>Save tool now works for rented homes too. Saved: Chase Gardner 2,594, Tracy Acosta 2,022, Rich Rooney 11,233 sq ft.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Leads <span class="n">6</span></h2>
+<div class="card">
+  <div class="row"><div class="k">7 new Facebook leads</div><div class="v"><span class="pill live">Live</span>Moved to you. Addresses matched: Linda Kyer is a townhome. Lu Ley (Minneapolis) and Wilfredo Zavala (California) are out of state. Michele Kramer moved to you.</div></div>
+  <div class="row"><div class="k">Rich Rooney</div><div class="v"><span class="pill live">Live</span>Won, with a job booked. His Morrison property is 2.86 acres. We scanned it every way, and you traced it by hand.</div></div>
+  <div class="row"><div class="k">Contact history</div><div class="v"><span class="pill live">Live</span>Logged for Andrew Laib, David Quintana, Neal Wagner, Deborah Hall, Jake Guildner and others.</div></div>
+  <div class="row"><div class="k">Emails</div><div class="v"><span class="pill posted">Sent</span>Written for Charlie Robinson, Michael Lucero and six follow-ups. You sent them.</div></div>
+  <div class="row"><div class="k">Removal timers</div><div class="v"><span class="pill live">Live</span>Set for Thursday 12 Nov. Nothing is removed without asking you first.</div></div>
+  <div class="row"><div class="k">Lawn hand checks</div><div class="v"><span class="pill live">Live</span>Our scans read 25 to 60% low on all three. Shaded lawns, and even the open lawn at Tracy’s. This is the proof for re-tuning the measure.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Laptop <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Touchpad and screen</div><div class="v"><span class="pill live">Live</span>Touchpad sensitivity set to Low. Screen auto-dim turned off (the presence sensor was dimming it after 5 seconds).</div></div>
+  <div class="row"><div class="k">Slowdown</div><div class="v"><span class="pill live">Live</span>Found 107 stuck helpers left behind by one of my own jobs. Fixed. Free memory went from 2.7 GB to 16.9 GB.</div></div>
+  <div class="row"><div class="k">Drag guard</div><div class="v"><span class="pill off">Built, off</span>Written. It checks every 10 minutes and stops runaway helpers. It needs you to run it once (see below), because I am not allowed to schedule it.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Surge <span class="n">2</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Website review</div><div class="v"><span class="pill live">Live</span>Fable checked the site before launch: ready after the launch switches and your go. Fixed old WordPress addresses so they forward to the new pages, a readable settings file, and the noindex switch. Launch steps rewritten.</div></div>
+  <div class="row"><div class="k">Toy drive posts</div><div class="v"><span class="pill off">Built, off</span>14 Facebook posts updated with your answers (Mon and Wed from 11 Nov, 12 to 6 pm, new or slightly used, no counts). Loaded in the post calendar as drafts. None approved.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Assistant, spend and other <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Stay signed in</div><div class="v"><span class="pill live">Live</span>The assistant and the post calendar now keep you signed in for a year.</div></div>
+  <div class="row"><div class="k">Spend list</div><div class="v"><span class="pill live">Live</span>Everything you pay for, by company, ready for moving to a credit card. Meta ads at $50 a day is the big one. Squarespace bills six items.</div></div>
+  <div class="row"><div class="k">Companion bot</div><div class="v">We talked it through. I said no to building one that hides it is an AI. Telegram is the one I suggest.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Running tonight <span class="n">1</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Two overnight reviews</div><div class="v"><span class="pill live">Live</span>Two Fable agents are checking today’s code, and the live health and data. Reports go in shared/reviews/2026-11-10-overnight/.</div></div>
+</div>
+</div>
+<div class="sec wait">
+<h2>Tomorrow <span class="n">8</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Bea Nino, Catherine</div><div class="v">Remind Bea. Call Catherine.</div></div>
+  <div class="row"><div class="k">Texts</div><div class="v">Text Nowak, KC, Kevin, Jose and Margo again.</div></div>
+  <div class="row"><div class="k">Thomas Good</div><div class="v">Email him if there is no reply.</div></div>
+  <div class="row"><div class="k">Drag guard</div><div class="v">Run shared/tools/drag-guard-install.ps1 once.</div></div>
+  <div class="row"><div class="k">Toy drive post 1</div><div class="v">Goes Wed 11 Nov at 3 pm if you approve it. The QR code shows an editable doc.</div></div>
+  <div class="row"><div class="k">Workspace</div><div class="v">The Traverse Google Workspace trial ended 10 Nov. Check if it went paid.</div></div>
+  <div class="row"><div class="k">JARVIS key</div><div class="v">Change the JARVIS poll key (from 9 Nov).</div></div>
+  <div class="row"><div class="k">Thursday 12 Nov</div><div class="v">Remove Andrew, David, Neal, Deborah, Jake and Wilfredo if no reply. I ask you first.</div></div>
+</div>
+</div>
+</div>
+</body>
+</html>
