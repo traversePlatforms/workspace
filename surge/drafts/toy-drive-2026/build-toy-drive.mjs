@@ -2,6 +2,8 @@
    Same look as ../november-2026 (dark ground, Surge green, Anton + Archivo from ../visual-set-2026-09-14).
    Every fact the images need comes from data.json. Anything not filled in yet renders as an amber [BRACKET],
    so an unfinished image can't pass for a finished one.
+   Matthew 10 Nov 2026: Mon/Wed from Wed 11 Nov; no counts, no meter, no 'to go' (just the goal); 12-6 pm; 'new or slightly used';
+   never a date or a day for the boxes. data.json still holds counts, but nothing here shows them.
      node build-toy-drive.mjs            all posts + contact sheet
      node build-toy-drive.mjs --only 3   one post                                                              */
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
@@ -35,89 +37,75 @@ const gap = (s) => `<var class="gap">[${esc(s)}]</var>`;            // a fact st
 const n = (x) => x.toLocaleString('en-US');
 const daysLeft = (iso) => Math.round((END - Date.parse(iso + 'T00:00:00Z')) / 864e5);
 const PARTNER = 'With the Veterans Association of America';            // Matthew 6 Nov: we have permission to name VAA and the beneficiaries
-const H = esc(D.hours);                                                 // drop-off hours, one setting (poster and event doc disagree: data.json)
+const H = esc(D.hours);                                                 // drop-off hours, one setting (Matthew 10 Nov: 12-6 pm, the poster)
+const PLACES = D.places_line ? esc(D.places_line) : gap('places');      // never with a date or a day (Matthew 10 Nov)
+const ITEMS = esc(D.items || 'New or slightly used toys');              // Matthew 10 Nov: the poster's wording
 
-/* The 14 posts, Mondays and Wednesdays, clear of the Tue/Thu November set. */
+/* The 14 posts, Mondays and Wednesdays from Wed 11 Nov (Matthew 10 Nov), clear of the Tue/Thu November set. */
 const POSTS = [
-  { n: 1, iso: '2026-11-09', time: '3:00 pm', slug: 'announce', kind: 'goal', photo: 'poster' },
-  { n: 2, iso: '2026-11-11', time: '3:00 pm', slug: 'where-to-drop-off', kind: 'events', head: 'Where to find the boxes', photo: 'c' },
-  { n: 3, iso: '2026-11-16', time: '3:00 pm', slug: 'week-1', kind: 'tally', week: 'Week one', photo: 'a' },
-  { n: 4, iso: '2026-11-18', time: '3:00 pm', slug: 'at-the-boxes', kind: 'photo', photo: 'd' },
-  { n: 5, iso: '2026-11-23', time: '3:00 pm', slug: 'week-2', kind: 'tally', week: 'Week two', photo: 'b' },
-  { n: 6, iso: '2026-11-25', time: '3:00 pm', slug: 'thanksgiving-table', kind: 'challenge' },
-  { n: 7, iso: '2026-11-30', time: '3:00 pm', slug: 'week-3', kind: 'tally', week: 'Week three' },
-  { n: 8, iso: '2026-12-07', time: '3:00 pm', slug: 'week-4', kind: 'tally', week: 'Week four' },
-  { n: 9, iso: '2026-12-09', time: '3:00 pm', slug: 'two-weeks-left', kind: 'countdown', head: 'Two weeks left' },
-  { n: 10, iso: '2026-12-14', time: '3:00 pm', slug: 'week-5', kind: 'tally', week: 'Week five' },
+  { n: 1, iso: '2026-11-11', time: '3:00 pm', slug: 'announce', kind: 'goal', photo: 'poster' },
+  { n: 2, iso: '2026-11-16', time: '3:00 pm', slug: 'where-to-drop-off', kind: 'events', head: 'Where to find the boxes', photo: 'c' },
+  { n: 3, iso: '2026-11-18', time: '3:00 pm', slug: 'reminder-35-days', kind: 'reminder', photo: 'a' },
+  { n: 4, iso: '2026-11-23', time: '3:00 pm', slug: 'out-with-the-boxes', kind: 'photo', photo: 'd' },
+  { n: 5, iso: '2026-11-25', time: '3:00 pm', slug: 'thanksgiving-table', kind: 'challenge' },
+  { n: 6, iso: '2026-11-30', time: '3:00 pm', slug: 'reminder-23-days', kind: 'reminder', photo: 'b' },
+  { n: 7, iso: '2026-12-02', time: '3:00 pm', slug: 'three-weeks-left', kind: 'reminder', tag: 'Three weeks left' },
+  { n: 8, iso: '2026-12-07', time: '3:00 pm', slug: 'sixteen-days-left', kind: 'reminder' },
+  { n: 9, iso: '2026-12-09', time: '3:00 pm', slug: 'two-weeks-left', kind: 'countdown' },
+  { n: 10, iso: '2026-12-14', time: '3:00 pm', slug: 'nine-days-left', kind: 'countdown' },
   { n: 11, iso: '2026-12-16', time: '3:00 pm', slug: 'final-week', kind: 'events', head: 'Final week' },
-  { n: 12, iso: '2026-12-21', time: '3:00 pm', slug: 'week-6', kind: 'tally', week: 'Week six' },
-  { n: 13, iso: '2026-12-23', time: '9:00 am', slug: 'last-day', kind: 'countdown', head: 'Last day' },
+  { n: 12, iso: '2026-12-21', time: '3:00 pm', slug: 'two-days-left', kind: 'countdown' },
+  { n: 13, iso: '2026-12-23', time: '9:00 am', slug: 'last-day', kind: 'countdown' },
   { n: 14, iso: '2026-12-28', time: '3:00 pm', slug: 'thank-you', kind: 'thanks' },
 ];
 const dayLabel = (iso) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const fileName = (p) => `toy-drive-${String(p.n).padStart(2, '0')}-${p.slug}.png`;
 
-/* Latest count on or before a date: the weekly tally posts each carry their own. */
-function countFor(p) {
-  const key = p.kind === 'thanks' ? 'final' : p.iso;
-  if (key in D.counts) return D.counts[key];
-  const before = Object.keys(D.counts).filter((k) => k !== 'final' && k <= p.iso).sort().pop();
-  return before ? D.counts[before] : null;
-}
-
-function meter(count) {
-  const pct = count == null ? 0 : Math.min(100, (count / GOAL) * 100);
-  return `<div class="meter"><div class="fill" style="width:${pct}%"></div></div>
-    <div class="scale"><span>0</span><span>${n(GOAL)}</span></div>`;
-}
-
+/* Places and hours only: never a date or a day (Matthew 10 Nov: which days is unknown). */
 function eventRows() {
-  if (!D.events.length) return [1, 2, 3].map((i) => `<li><b>${gap('date ' + i)}</b><span>${gap('place, town')}</span><i>${H}</i></li>`).join('');
-  return D.events.map((e) => `<li><b>${e.date ? esc(e.date) : gap('date')}</b><span>${esc(e.place)}</span><i>${H}</i></li>`).join('');
+  if (!D.events.length) return `<li><span>${gap('places')}</span><i>${H}</i></li>`;
+  return D.events.map((e) => `<li><span>${esc(e.place)}</span><i>${H}</i></li>`).join('');
 }
+
+const leftTag = (left) => (left === 0 ? 'Last day' : left === 1 ? '1 day left' : `${left} days left`);
+const andList = (a) => a.join(', ').replace(/, (?=[^,]*$)/, ', and ');
 
 function body(p) {
-  const c = countFor(p), left = daysLeft(p.iso);
-  const countHtml = c == null ? gap('count') : n(c);
-  const remaining = c == null ? gap('to go') : n(Math.max(0, GOAL - c));
+  const left = daysLeft(p.iso);
   switch (p.kind) {
     case 'goal': return {
       tag: 'Holiday toy drive',
       main: `<div class="huge">${n(GOAL)}</div><h1>toys by <em>December 23.</em></h1>
-        <p class="partner">${esc(PARTNER)}</p>${meter(0)}
-        <ul class="ask"><li>New, unwrapped toys</li><li>New clothing for kids</li><li>Holiday items and family essentials</li></ul>`,
-      foot: ['Drop-off boxes at our events', H] };
+        <p class="partner">${esc(PARTNER)}</p>
+        <ul class="ask"><li>${ITEMS}</li><li>New clothing for kids</li><li>Holiday items</li></ul>`,
+      foot: ['Drop-off hours', H] };
     case 'events': return {
-      tag: p.n === 11 ? `${left} days left` : 'Holiday toy drive',
-      main: `<h1 class="top">${esc(p.head)}</h1><p class="lede">${p.n === 11 ? 'The last chances to drop a toy in a box before December 23.' : 'Every event runs ${H}. Bring a new, unwrapped toy.'}</p>
+      tag: p.n === 11 ? leftTag(left) : 'Holiday toy drive',
+      main: `<h1 class="top">${esc(p.head)}</h1><p class="lede">${p.n === 11 ? 'The last chances to drop a toy in a box before December 23.' : `Drop-off ${H}. ${ITEMS}.`}</p>
         <ul class="events">${eventRows()}</ul>`,
       foot: ['Goal', `${n(GOAL)} by Dec 23`] };
-    case 'tally': return {
-      tag: p.week,
-      main: `<div class="huge">${countHtml}</div><h1>of ${n(GOAL)} <em>toys so far.</em></h1>${meter(c)}
-        <div class="stats"><div><b>${remaining}</b><span>to go</span></div><div><b>${left}</b><span>days left</span></div></div>`,
+    case 'reminder': return {
+      tag: p.tag || leftTag(left),
+      main: `<div class="huge">${n(GOAL)}</div><h1>toys by <em>December 23.</em></h1>
+        <div class="stats"><div><b>${left}</b><span>days left</span></div><div><b>${H}</b><span>drop-off hours</span></div></div>
+        <p class="lede where">Boxes at ${PLACES}. ${ITEMS}, new clothing for kids and holiday items.</p>`,
       foot: ['Holiday toy drive', 'Ends Dec 23'] };
     case 'countdown': return {
       tag: 'Holiday toy drive',
-      main: `<div class="huge">${left === 0 ? 'Today' : left}</div><h1>${left === 0 ? 'is the <em>last day.</em>' : `days <em>left.</em>`}</h1>${meter(c)}
-        <div class="stats"><div><b>${countHtml}</b><span>collected</span></div><div><b>${remaining}</b><span>to go</span></div></div>`,
-      foot: [left === 0 ? 'Last boxes' : 'Drop-off boxes at our events', H] };
+      main: `<div class="huge">${left === 0 ? 'Today' : left === 14 ? 'Two weeks' : left}</div><h1>${left === 0 ? 'is the <em>last day.</em>' : left === 14 ? '<em>left.</em>' : left === 1 ? 'day <em>left.</em>' : 'days <em>left.</em>'}</h1>
+        <p class="lede where">${n(GOAL)} toys by December 23. Boxes at ${PLACES}.</p>`,
+      foot: ['Drop-off hours', H] };
     case 'challenge': return {
       tag: 'Thanksgiving week',
       main: `<h1 class="top big">One toy for every seat at <em>your table.</em></h1>
-        <p class="lede">Count the chairs at Thanksgiving. Bring that many new, unwrapped toys to one of our toy drive boxes before December 23.</p>${meter(c)}
-        <div class="stats"><div><b>${countHtml}</b><span>collected</span></div><div><b>${left}</b><span>days left</span></div></div>`,
+        <p class="lede">Count the chairs at Thanksgiving. Bring that many toys, new or slightly used, to one of our toy drive boxes before December 23.</p>
+        <div class="stats"><div><b>${left}</b><span>days left</span></div><div><b>${H}</b><span>drop-off hours</span></div></div>
+        <p class="lede where">Boxes at ${PLACES}.</p>`,
       foot: ['Holiday toy drive', `${n(GOAL)} by Dec 23`] };
-    case 'photo': return {
-      tag: 'Holiday toy drive',
-      main: `<div class="photo-slot"><p>${gap('PHOTO from the first events: the team at the boxes')}</p>
-        <small>Real photo only. No children. No client shirts, banners or signage. Everyone shown OK with it.</small></div>
-        <h1 class="under">The boxes are <em>filling up.</em></h1>`,
-      foot: ['So far', c == null ? gap('count') : `${n(c)} of ${n(GOAL)}`] };
     case 'thanks': return {
       tag: 'Holiday toy drive',
-      main: `<h1 class="top big">Thank <em>you.</em></h1><div class="huge">${c == null ? gap('final count') : n(c)}</div>
-        <p class="lede">toys collected for ${D.recipients_confirmed.length ? esc(D.recipients_confirmed.join(', ')) : gap('confirmed recipients')}.</p>
+      main: `<h1 class="top big">Thank <em>you.</em></h1>
+        <p class="lede">To everyone who dropped a toy in a box. Every one goes to ${D.recipients_confirmed.length ? esc(andList(D.recipients_confirmed)) : gap('confirmed recipients')}.</p>
         <p class="partner">${esc(PARTNER)}</p>`,
       foot: ['Holiday toy drive 2026', 'Surge'] };
   }
@@ -125,12 +113,12 @@ function body(p) {
 
 /* Photo posts: the November layout B (photo on top, headline and line below). */
 function photoPage(p) {
-  const c = countFor(p), left = daysLeft(p.iso), cnt = c == null ? gap('count') : n(c);
+  const left = daysLeft(p.iso);
   const T = {
-    goal: ['Holiday toy drive', `${n(GOAL)} toys by <em>December 23.</em>`, `${esc(PARTNER)}. New, unwrapped toys, new clothing for kids, and holiday essentials.`, ['Drop-off boxes at our events', H]],
-    events: ['Holiday toy drive', 'Where to find <em>the boxes.</em>', D.events.length ? D.events.map((e) => esc(e.place)).join(' &middot; ') : gap('event dates and places'), ['Every event', H]],
-    tally: [p.week, `${cnt} of ${n(GOAL)} <em>toys so far.</em>`, `${left} days left to reach the goal.`, ['Holiday toy drive', 'Ends Dec 23']],
-    photo: ['Holiday toy drive', 'Out at our <em>events.</em>', `${cnt} of ${n(GOAL)} toys so far, with ${left} days left.`, ['Holiday toy drive', 'Ends Dec 23']],
+    goal: ['Holiday toy drive', `${n(GOAL)} toys by <em>December 23.</em>`, `${esc(PARTNER)}. ${ITEMS}, new clothing for kids, and holiday items.`, ['Drop-off hours', H]],
+    events: ['Holiday toy drive', 'Where to find <em>the boxes.</em>', D.events.length ? D.events.map((e) => esc(e.place)).join(' &middot; ') : gap('places'), ['Drop-off hours', H]],
+    reminder: [leftTag(left), `${n(GOAL)} toys by <em>December 23.</em>`, `Boxes at ${PLACES}. ${ITEMS}, new clothing for kids and holiday items.`, ['Drop-off hours', H]],
+    photo: ['Holiday toy drive', 'Out with the <em>toy drive.</em>', `Boxes at ${PLACES}. ${n(GOAL)} toys by December 23.`, ['Drop-off hours', H]],
   }[p.kind];
   return `<!doctype html><html><head><meta charset="utf-8">
   <link rel="stylesheet" href="${KIT}/_fonts.css"><link rel="stylesheet" href="${KIT}/_logo.css"><style>
@@ -192,20 +180,15 @@ function page(p) {
   h1 em { font-style: normal; color: #4abe4a; }
   .partner { font: 600 32px Archivo, sans-serif; color: #cfd3d0; margin-top: 22px; }
   .lede { font: 500 36px/1.38 Archivo, sans-serif; color: #cfd3d0; max-width: 900px; margin-top: 8px; }
-  .meter { height: 30px; background: #1f2621; border-radius: 999px; overflow: hidden; margin-top: 46px; }
-  .meter .fill { height: 100%; background: #4abe4a; border-radius: 999px; }
-  .scale { display: flex; justify-content: space-between; font: 600 24px Archivo, sans-serif; color: #8d968f; margin-top: 10px; }
+  .lede.where { margin-top: 44px; }
   .ask { list-style: none; margin-top: 40px; font: 500 36px/1.6 Archivo, sans-serif; color: #f5f5f5; }
   .ask li::before { content: ''; display: inline-block; width: 16px; height: 16px; background: #4abe4a; margin-right: 22px; vertical-align: 6px; }
   .stats { display: flex; gap: 80px; margin-top: 44px; }
-  .stats b { display: block; font: 400 96px/1 Anton, sans-serif; color: #f5f5f5; }
+  .stats b { display: block; font: 400 96px/1 Anton, sans-serif; color: #f5f5f5; text-transform: uppercase; margin-bottom: 10px; }
   .stats span { font: 700 24px Archivo, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #8d968f; }
   .events { list-style: none; margin-top: 40px; border-top: 2px solid #2b2f2c; }
-  .events li { display: grid; grid-template-columns: 290px 1fr 150px; gap: 20px; align-items: baseline; padding: 30px 0; border-bottom: 2px solid #2b2f2c; }
-  .events b { font: 400 50px Anton, sans-serif; color: #4abe4a; text-transform: uppercase; }
-  .events span { font: 600 36px Archivo, sans-serif; } .events i { font: 600 28px Archivo, sans-serif; font-style: normal; color: #8d968f; text-align: right; }
-  .photo-slot { height: 640px; border: 3px dashed #6b5a2a; background: #15130c; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; gap: 24px; }
-  .photo-slot p { font: 700 40px Archivo, sans-serif; } .photo-slot small { font: 500 26px/1.4 Archivo, sans-serif; color: #cbb98a; max-width: 760px; }
+  .events li { display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: baseline; padding: 30px 0; border-bottom: 2px solid #2b2f2c; }
+  .events span { font: 600 44px Archivo, sans-serif; } .events i { font: 600 34px Archivo, sans-serif; font-style: normal; color: #8d968f; text-align: right; }
   .gap { font-style: normal; color: #f2b53a; font-family: Archivo, sans-serif; font-weight: 700; font-size: .5em; letter-spacing: 0; text-transform: none; vertical-align: middle; }
   .huge .gap, .stats .gap { font-size: 56px; } .lede .gap { font-size: 36px; } .events .gap { font-size: 32px; }
   .foot { position: absolute; left: 64px; right: 64px; bottom: 52px; display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid #2b2f2c; padding-top: 18px; font: 600 28px Archivo, sans-serif; color: #cfd3d0; }
@@ -241,7 +224,7 @@ if (!only) {
     .grid { display: grid; grid-template-columns: repeat(7, 320px); gap: 24px 22px; padding: 0 40px; }
     figure img { width: 320px; height: 400px; display: block; border: 1px solid #333a35; }
     figcaption { font-size: 18px; padding-top: 8px; color: #cfd3d0; } figcaption b { color: #4abe4a; margin-right: 6px; }
-  </style></head><body><header><h1>Surge &middot; <em>Holiday toy drive</em></h1><p>Facebook, Mon + Wed &middot; DRAFTS, each needs Matthew's review &middot; amber = still to fill in &middot; nothing posted or scheduled</p></header>
+  </style></head><body><header><h1>Surge &middot; <em>Holiday toy drive</em></h1><p>Facebook, Mon + Wed from 11 Nov &middot; DRAFTS, each waits for Matthew's Approve &middot; amber = still to fill in &middot; nothing posted</p></header>
   <div class="grid">${tiles}</div></body></html>`;
   shoot(sheet, join(HERE, 'contact-sheet.png'), 2480, 1520);
   console.log('contact sheet: contact-sheet.png');

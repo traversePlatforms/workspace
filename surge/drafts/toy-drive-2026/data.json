@@ -1,27 +1,28 @@
 {
-  "_read_me": "Fill this in as facts arrive, then run: node build-toy-drive.mjs. Anything left null or empty renders as an amber [BRACKET] so an unfinished image can't pass for a finished one.",
+  "_read_me": "Facts the images use. Change one here, then run: node build-toy-drive.mjs. Anything a post needs that is missing renders as an amber [BRACKET] so an unfinished image can't pass for a finished one.",
   "goal": 1500,
   "end": "2026-12-23",
   "vaa_permission": true,
-  "vaa_permission_note": "Matthew 6 Nov 2026: 'we have permission to use the VAA Surge and the list of who the donations will benefit'. If VAA's OK is in an email, keep a copy with the campaign.",
+  "vaa_permission_note": "Matthew 6 Nov 2026: 'we have permission to use the VAA Surge and the list of who the donations will benefit'. 8 Nov: 'The VAA gave us confirmation already'. If VAA's OK is in an email, keep a copy with the campaign.",
   "recipients_confirmed": ["Children's Hospital Colorado", "the Boys & Girls Club", "Brent's Place", "local families who have reached out or been nominated"],
   "recipients_note": "Confirmed by Matthew 6 Nov (permission to use the list on the poster). Names as on the poster; the poster's 'Boys & Girls Club of America' is not the national body's exact name (Boys & Girls Clubs of America), so the posts say 'the Boys & Girls Club'.",
   "hours": "12–6 pm",
-  "hours_note": "CONFLICT: the poster says 12:00-6:00 pm, the event-locations Google Doc (the poster's QR code) says 11:30 am-6:00 pm. Matthew to say which; one change here updates every image.",
+  "hours_note": "Matthew 10 Nov 2026: 12-6 pm, as on the poster. (The event doc says 11:30 am-6 pm; the poster wins.)",
+  "items": "New or slightly used toys",
+  "items_note": "Matthew 10 Nov 2026: 'new or slightly used', as on the poster, replacing 'new, unwrapped'. The event doc still says new and unwrapped only and lists used toys under 'avoid'.",
+  "places_line": "Chuck and Don's in Castle Rock and Greenwood Village",
   "events": [
-    { "date": null, "place": "Chuck and Don's, Castle Rock" },
-    { "date": null, "place": "Chuck and Don's, Greenwood Village" }
+    { "place": "Chuck and Don's, Castle Rock" },
+    { "place": "Chuck and Don's, Greenwood Village" }
   ],
-  "events_note": "From the Google Doc the poster's QR code opens (read 6 Nov, copy in event-locations-doc-2026-11-06.txt). It gives places and hours but NO dates or days. Add each date when known.",
-  "events_doc": "https://docs.google.com/document/d/1-lUkKTJ03nnv4PZtEKmwsUsFx4qxS2qtcp23TZyFHo0/edit?usp=drivesdk",
+  "events_note": "From the Google Doc the poster's QR code opens (read 6 Nov, copy in event-locations-doc-2026-11-06.txt): places and hours, no days. Matthew 10 Nov: which days is unknown, likely every day. NEVER give a date or a day for the boxes, in images or captions. The doc link goes in no caption or comment (its sharing is Maya's call, Matthew asked her to make it view-only).",
   "counts": {
-    "2026-11-16": null,
-    "2026-11-23": null,
+    "2026-11-18": null,
     "2026-11-30": null,
     "2026-12-07": null,
     "2026-12-14": null,
     "2026-12-21": null,
     "final": null
   },
-  "counts_note": "Each count must come from the team's dated tally (who counted, when). A figure without a source doesn't go in."
+  "counts_note": "Matthew 10 Nov 2026: NO counts in the posts for now (no 'X of 1,500', no meter, no 'to go'); just the goal. He will send numbers later. Record them here with who counted and when; the build does not show them. Putting counts back in needs a build change and his OK."
 }

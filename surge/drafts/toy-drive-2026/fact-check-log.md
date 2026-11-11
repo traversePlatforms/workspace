@@ -1,6 +1,6 @@
 # Fact-check log: Surge holiday toy drive 2026
 
-Checked 6 November 2026. Covers every factual claim in `posts.md` and the 14 images. Status: **Verified** (traced to the source named), **Internal** (from Surge's own brief, not checkable outside), **Corrected** (changed from the brief, with the reason), **Unresolved** (needs Matthew or the organisation).
+Checked 6 November 2026; **updated 10 November 2026 with Matthew's decisions (section "Update, 10 Nov 2026" governs where it disagrees with the rows above; post numbers above are the old 6 Nov order)**. Covers every factual claim in `posts.md` and the 14 images. Status: **Verified** (traced to the source named), **Internal** (from Surge's own brief, not checkable outside), **Corrected** (changed from the brief, with the reason), **Unresolved** (needs Matthew or the organisation).
 
 ## From Surge's brief (pasted by Matthew, 6 Nov 2026)
 
@@ -24,6 +24,20 @@ Checked 6 November 2026. Covers every factual claim in `posts.md` and the 14 ima
 | "Our team is there to help" (post 2) | Internal | Event doc: "Staff and volunteers will be on-site to assist you." |
 | "annual Toy Drive" | **Cut** | Event doc wording; a claim about past years with no record. |
 | "Boys & Girls Club of America" | **Corrected** to "the Boys & Girls Club" | The national body is Boys & Girls Clubs of America (plural); which club receives isn't stated. |
+
+## Update, 10 Nov 2026: Matthew's decisions
+
+| Claim or item | Status | Source / note |
+|---|---|---|
+| Hours: 12-6 pm | **Resolved** | Matthew 10 Nov: the poster's hours. The event doc's 11:30 am-6 pm is not used. |
+| What to bring: "new or slightly used" toys | **Corrected** (from "new, unwrapped") | Matthew 10 Nov: the poster's wording. "No used toys" removed. "No realistic toy weapons or food" kept in post 1 only (event doc's avoid list). New clothing for kids and holiday items kept. The event doc still says new and unwrapped; flagged in posts.md. |
+| Which days the boxes are at each Chuck and Don's | **Unresolved, and left out on purpose** | Matthew 10 Nov: unknown, likely every day; never give a date or a day. No post names a day. Post 13 ("Today is the last day... The boxes are at...") is the one day-specific line: flagged for him to confirm or cut. |
+| The event doc link | **Kept out** | Matthew 10 Nov: no link in any caption or first comment; view-only is Maya's call. The poster photo (post 1) still shows the QR code: flagged. |
+| Counts ("X of 1,500", meter, "to go", final count) | **Removed** | Matthew 10 Nov: goal only, "1,500 toys by December 23". He'll send numbers later; `data.json` → `counts` holds them, the build shows none. The thank-you post has no number; a final count can be added later from a dated tally. |
+| Post 4 place, date, person, anecdote | **Removed** | Matthew 10 Nov: rewrite so it needs no unknown facts. "Our team has been out with the toy drive this month" rests on photos a-c (2 Nov, reps with the box). Where photo d was taken: **still unconfirmed**. |
+| VAA's OK | **Internal, confirmed** | Matthew 8 Nov: "The VAA gave us confirmation already". |
+
+**Arithmetic, redone 10 Nov** for the new dates, counted to Wed 23 Dec 2026: Wed 11 Nov 42, Mon 16 Nov 37, Wed 18 Nov 35, Mon 23 Nov 30, Wed 25 Nov 28, Mon 30 Nov 23, Wed 2 Dec 21 ("three weeks"), Mon 7 Dec 16, Wed 9 Dec 14 ("two weeks"), Mon 14 Dec 9, Wed 16 Dec 7 ("final week"), Mon 21 Dec 2, Wed 23 Dec 0 ("today"). Thanksgiving 2026 is Thu 26 Nov, so post 5 (Wed 25 Nov) says "tomorrow". 1 Dec 2026 is a Tuesday, so post 6 (Mon 30 Nov) says "December starts tomorrow". The images compute days left from the post date in the build.
 
 ## Checked outside
 

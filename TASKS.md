@@ -940,6 +940,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       is now his photo of the poster; the poster's QR opens the team's "Toy Drive!" Google Doc: Chuck and Don's Castle Rock +
       Greenwood Village, no days. Open: which days; hours (poster 12-6 vs doc 11:30-6); doc must be view-only before its link
       goes public; poster says "slightly used", doc says new only.
+      **10 Nov, Matthew's decisions applied and ALL 14 IN THE POST CALENDAR AS UNAPPROVED DRAFTS** (Surge Inc Facebook, editor
+      account, keys surge-toy-drive-2026-01..14; `make-manifest.mjs` → manifest.json, loaded from the server because the laptop IP
+      hit sgcaptcha). Mon/Wed from Wed 11 Nov, 3 pm MT, last day Wed 23 Dec 9 am, thank-you Mon 28 Dec. Box days never given
+      (unknown); 12-6 pm; "new or slightly used"; no doc link anywhere; no counts (goal only; he'll send numbers later, data.json
+      holds them); post 4 rewritten with no place/date/anecdote. **Waiting on Matthew:** his Approve on each post. Still open:
+      poster photo (post 1) shows the editable doc's QR; where photo d was taken; post 13 says the boxes are out on 23 Dec.
 
 ## Cross-cutting
 
