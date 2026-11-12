@@ -211,11 +211,18 @@ $body = implode("\n", $lines);
     FILE_APPEND | LOCK_EX
 );
 
-$head = [
+// 2026-11-12 (review fix): a name with a comma or a quote ("Smith, John") used to break the Reply-To header,
+// so it is quoted, and a name with accents is MIME-encoded.
+$replyName = trim(str_replace(['"', '\\'], '', $name));
+$replyName = preg_match('/[^\x20-\x7E]/', $replyName)
+    ? mb_encode_mimeheader($replyName, 'UTF-8', 'B', "\r\n")
+    : '"' . $replyName . '"';
+$headBase = [
     'From: Surge website <' . $cfg['from'] . '>',
-    'Reply-To: ' . $name . ' <' . $email . '>',
+    'Reply-To: ' . $replyName . ' <' . $email . '>',
     'X-Mailer: surge-site',
 ];
+$head = $headBase;
 $mime = ['pdf' => 'application/pdf', 'doc' => 'application/msword', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'xls' => 'application/vnd.ms-excel', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'ppt' => 'application/vnd.ms-powerpoint', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -233,13 +240,15 @@ if ($parts) {
     $bnd = 'surge-' . bin2hex(random_bytes(12));
     $head[] = 'MIME-Version: 1.0';
     $head[] = 'Content-Type: multipart/mixed; boundary="' . $bnd . '"';
-    $mailBody = "--$bnd\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n" . str_replace("\n", "\r\n", $body) . "\r\n";
+    // 2026-11-12 (review fix): the body uses plain \n. The server's mail program turns each \n into \r\n itself,
+    // so the earlier \r\n arrived as \r\r\n (doubled line breaks in some mail apps).
+    $mailBody = "--$bnd\nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: 8bit\n\n" . $body . "\n";
     foreach ($parts as [$type, $fname, $data]) {
         $enc = '=?UTF-8?B?' . base64_encode($fname) . '?=';
-        $mailBody .= "--$bnd\r\nContent-Type: $type; name=\"$enc\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"$enc\"\r\n\r\n"
-            . chunk_split(base64_encode($data)) . "\r\n";
+        $mailBody .= "--$bnd\nContent-Type: $type; name=\"$enc\"\nContent-Transfer-Encoding: base64\nContent-Disposition: attachment; filename=\"$enc\"\n\n"
+            . chunk_split(base64_encode($data), 76, "\n") . "\n";
     }
-    $mailBody .= "--$bnd--\r\n";
+    $mailBody .= "--$bnd--\n";
 } else {
     $head[] = 'Content-Type: text/plain; charset=utf-8';
     $mailBody = $body;
@@ -247,6 +256,14 @@ if ($parts) {
 $headers = implode("\r\n", $head);
 
 $sent = @mail($cfg['to'], $cfg['subject_prefix'] . $title, $mailBody, $headers);
+
+// 2026-11-12 (review fix): if the email with the file attached fails (too big for the mail server, a rejected
+// file type), send it again without the attachment, so the enquiry still reaches the inbox. The file stays in api/uploads/.
+if (!$sent && $parts) {
+    $kept = implode(', ', array_filter([$resumeStored, $docStored]));
+    $plain = $body . "\n\n(The attached file could not be emailed. It is saved on the server in api/uploads/ as " . $kept . ".)";
+    $sent = @mail($cfg['to'], $cfg['subject_prefix'] . $title, $plain, implode("\r\n", array_merge($headBase, ['Content-Type: text/plain; charset=utf-8'])));
+}
 
 // Logged above either way, so a mail failure never loses the enquiry.
 finish($sent, $sent ? '' : "We couldn't send that just now.", $cfg, $sent ? 200 : 502);
