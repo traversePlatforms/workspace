@@ -121,7 +121,7 @@
       main.appendChild(vc); return;
     }
     var W = A.ways && A.ways.length;   /* other ways to pay (2026-10-30): only once the admin sets them */
-    if (A.signed) { main.appendChild(signedCard(A.signed, null)); if (W) main.appendChild(waysCard(A, 'balance')); return; }
+    if (A.signed) { main.appendChild(signedCard(A.signed, null)); addFull(A.full); if (W && !(A.full && A.full.paid)) main.appendChild(waysCard(A, 'balance')); return; }
     if (A.nosign) {   /* no signature needed (2026-10-17): the deposit if it is by card, then this page is their confirmation */
       if (A.pay && !A.pay.paid && A.pay.url) { main.appendChild(payCard(A, 'Your day is booked as soon as it’s paid.')); if (W) main.appendChild(waysCard(A, 'alt')); }
       var nc = el('div', 'card' + (A.confirmed ? ' ok' : ''));
@@ -130,11 +130,11 @@
       nc.appendChild(el('p', 'muted', A.confirmed ? 'No signature needed. This page is your confirmation, so keep it for your records.' : 'No signature needed. Your day is held until the deposit is paid.'));
       nc.appendChild(el('p', 'muted', 'Questions? Call or text ' + (A.phone || '(720) 830-4553') + '.'));
       var np = el('button', 'btn ghost noprint', 'Print or save a copy'); np.type = 'button'; np.addEventListener('click', function () { window.print(); }); nc.appendChild(np);
-      main.appendChild(nc); if (W && !(A.pay && !A.pay.paid && A.pay.url)) main.appendChild(waysCard(A, 'balance')); return;
+      main.appendChild(nc); addFull(A.full); if (W && !(A.pay && !A.pay.paid && A.pay.url) && !(A.full && A.full.paid)) main.appendChild(waysCard(A, 'balance')); return;
     }
     if (A.pay && !A.pay.paid && A.pay.url) { main.appendChild(payCard(A, 'You come straight back here to sign.')); if (W) main.appendChild(waysCard(A, 'alt')); }
     else if (A.pay && A.pay.paid) { var ok = el('div', 'card ok'); ok.appendChild(el('h2', null, 'Deposit paid')); ok.appendChild(el('p', 'muted', 'Thank you. $' + A.pay.amount + ' received by Square. Now sign below.')); main.appendChild(ok); }
-    signBox(A);
+    addFull(A.full); signBox(A);
   }).catch(function () { sorry('We could not reach our system just now. Try again in a minute, or call or text us.'); });
   /* other ways to pay (2026-10-30, Matthew: Venmo, Zelle with QR, Cash App and PayPal beside Square). 'alt': beside the Square deposit (the office
      confirms it and sends a fresh link); 'balance': for what is left when the work is done. The Zelle QR comes through this site's relay. */
@@ -155,6 +155,22 @@
     c.appendChild(el('p', 'muted', mode === 'alt' ? 'These do not confirm by themselves: we mark it received when it arrives. Put your name and address in the note.' : 'Put your name and address in the note.'));
     return c;
   }
+  /* Pay now (optional) (2026-11-12, Matthew: "I want people to be able to pay ahead of time even if they dont have a deposit"): booked with no
+     deposit, and a button to pay what the job owes now, by card, if they want to. Before they sign it only says so; the button comes once booked. */
+  function fullCard(F) {
+    if (!F) return null;
+    if (F.paid) { var ok = el('div', 'card ok fullpay'); ok.appendChild(el('h2', null, 'Paid in full')); ok.appendChild(el('p', 'muted', 'Thank you. $' + F.amount + ' received. Nothing is owed when the work is done.')); return ok; }
+    if (!F.booked) { var pre = el('div', 'card noprint fullpay'); pre.appendChild(el('p', 'muted', 'Once you have signed, you can pay the $' + F.amount + ' now if you like, or when the work is done.')); return pre; }
+    var c = el('div', 'card noprint fullpay');
+    c.appendChild(el('h2', null, 'Pay now if you like'));
+    c.appendChild(el('p', null, 'You\u2019re booked. Pay $' + F.amount + ' now if you\u2019d like, or when the work is done.'));
+    if (!F.url) { c.appendChild(el('p', 'muted', 'The card payment is not ready just now. You can pay when the work is done, or ask us for a link.')); return c; }
+    var a = el('a', 'btn', 'Pay $' + F.amount + ' now'); a.href = F.url; c.appendChild(a);
+    c.appendChild(el('p', 'muted', 'By card on ' + (F.via || 'our payment') + '\u2019s secure page. You come straight back here.'));
+    var rf = el('button', 'btn ghost', 'I paid: refresh'); rf.type = 'button'; rf.addEventListener('click', function () { location.reload(); }); c.appendChild(rf);
+    return c;
+  }
+  function addFull(F) { var fc = fullCard(F); if (fc) main.appendChild(fc); }
   /* the deposit by Square (2026-10-15); shared by the signing form and the no-signature one (2026-10-17) */
   function payCard(A, after) {
     {
@@ -187,7 +203,8 @@
       fetch(API + '?action=a365signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, name: ni.value.trim(), agree: true, read: true }) })
         .then(function (r) { return r.json(); }).then(function (j) {
           if (!j || !j.ok) { go.disabled = false; go.textContent = 'Sign'; err.textContent = (j && j.error) || 'That did not go through. Try again, or call or text us.'; return; }
-          c.replaceWith(signedCard(j.signed, j.booked, j.mailed)); if (j.ways && j.ways.length) main.appendChild(waysCard({ ways: j.ways }, 'balance')); window.scrollTo(0, 0);
+          var pre = main.querySelector('.fullpay'); if (pre) pre.remove();
+          var sc = signedCard(j.signed, j.booked, j.mailed); c.replaceWith(sc); var fc = fullCard(j.full); if (fc) sc.after(fc); if (j.ways && j.ways.length && !(j.full && j.full.paid)) main.appendChild(waysCard({ ways: j.ways }, 'balance')); window.scrollTo(0, 0);
         }).catch(function () { go.disabled = false; go.textContent = 'Sign'; err.textContent = 'No connection. Try again, or call or text us.'; });
     });
     main.appendChild(c);
