@@ -161,6 +161,22 @@ if ($form === 'client') {
     [$docNote, $docStored] = save_upload($cfg, 'document', (array) $cfg['allowed_ext_doc'], (int) $cfg['max_upload_doc']);
 }
 
+// 2026-11-11 (Matthew): the file goes to info@ as an attachment, named after the person, so the team opens it straight from the email.
+// It is still kept in api/uploads/ as a backup copy.
+$attach = [];
+$friendly = function (string $label, string $stored) use ($name): string {
+    $who = trim(preg_replace('/[^A-Za-z0-9 .\'-]+/', '', $name)) ?: 'applicant';
+    return $label . ' - ' . mb_substr($who, 0, 60) . '.' . strtolower(pathinfo($stored, PATHINFO_EXTENSION));
+};
+if ($resumeStored !== '') {
+    $attach[] = [$cfg['upload_dir'] . '/' . $resumeStored, $friendly('Resume', $resumeStored)];
+    $resumeNote = 'attached: ' . end($attach)[1] . '  (also kept on the server as ' . $resumeStored . ')';
+}
+if ($docStored !== '') {
+    $attach[] = [$cfg['upload_dir'] . '/' . $docStored, $friendly('Document', $docStored)];
+    $docNote = 'attached: ' . end($attach)[1] . '  (also kept on the server as ' . $docStored . ')';
+}
+
 $lines = ['New: ' . $title, str_repeat('-', 40), 'Name:    ' . $name, 'Email:   ' . $email];
 if ($phone !== '') {
     $lines[] = 'Phone:   ' . $phone;
@@ -195,14 +211,42 @@ $body = implode("\n", $lines);
     FILE_APPEND | LOCK_EX
 );
 
-$headers = implode("\r\n", [
+$head = [
     'From: Surge website <' . $cfg['from'] . '>',
     'Reply-To: ' . $name . ' <' . $email . '>',
-    'Content-Type: text/plain; charset=utf-8',
     'X-Mailer: surge-site',
-]);
+];
+$mime = ['pdf' => 'application/pdf', 'doc' => 'application/msword', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls' => 'application/vnd.ms-excel', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'ppt' => 'application/vnd.ms-powerpoint', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'csv' => 'text/csv', 'txt' => 'text/plain', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg'];
+$parts = [];
+foreach ($attach as [$path, $fname]) {
+    $data = @file_get_contents($path);
+    if ($data === false) {
+        continue;
+    }
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $parts[] = [$mime[$ext] ?? 'application/octet-stream', $fname, $data];
+}
+if ($parts) {
+    $bnd = 'surge-' . bin2hex(random_bytes(12));
+    $head[] = 'MIME-Version: 1.0';
+    $head[] = 'Content-Type: multipart/mixed; boundary="' . $bnd . '"';
+    $mailBody = "--$bnd\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n" . str_replace("\n", "\r\n", $body) . "\r\n";
+    foreach ($parts as [$type, $fname, $data]) {
+        $enc = '=?UTF-8?B?' . base64_encode($fname) . '?=';
+        $mailBody .= "--$bnd\r\nContent-Type: $type; name=\"$enc\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment; filename=\"$enc\"\r\n\r\n"
+            . chunk_split(base64_encode($data)) . "\r\n";
+    }
+    $mailBody .= "--$bnd--\r\n";
+} else {
+    $head[] = 'Content-Type: text/plain; charset=utf-8';
+    $mailBody = $body;
+}
+$headers = implode("\r\n", $head);
 
-$sent = @mail($cfg['to'], $cfg['subject_prefix'] . $title, $body, $headers);
+$sent = @mail($cfg['to'], $cfg['subject_prefix'] . $title, $mailBody, $headers);
 
 // Logged above either way, so a mail failure never loses the enquiry.
 finish($sent, $sent ? '' : "We couldn't send that just now.", $cfg, $sent ? 200 : 502);
