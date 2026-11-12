@@ -50,12 +50,17 @@ for name in layers group1 material g1fix g2b photos g3b g3hail hailhours g2mat c
     hailhours) VMQ='';;   # the hail hours for every town and day (Matthew 29 Oct); finish-hailhours-2026-10-29.sh starts its own cloud job, after g3hail here
     g2mat|centlawn|commercial) VMQ='^NEVER-MATCHES$';;   # the VM's .vmdone file only (below); finish-<stage>-2026-10-31.sh
     lawnfix|roofsolar|dougmat|newlidar|trees2|outlinefix|values|hail2min|hail1023|yardv3) VMQ='^NEVER-MATCHES$'   # ~/run/fill1031/<stage>.vmdone only (below)
-      if ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "test -f ~/run/fill1031/$name.failed && ! test -f ~/run/fill1031/$name.vmdone" < /dev/null 2>/dev/null; then
+      # yardv3 (12 Nov): its repair stage yardv3fix (lost readings, run after it on the VM) decides; yardv3 failing alone is not final
+      VF=$name; [ $name = yardv3 ] && VF=yardv3fix
+      if ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "test -f ~/run/fill1031/$VF.failed && ! test -f ~/run/fill1031/$VF.vmdone" < /dev/null 2>/dev/null; then
         echo 3 > "$ST/$name.tries"; FAILED="$FAILED $name(cloud)"; continue
       fi;;
   esac
   if [ "$name" = g3hail ]; then
     [ -f "$ST/g3b.done" ] || { echo "cloud finish: waiting for g3hail (after g3b)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
+  elif [ "$name" = yardv3 ]; then
+    # 12 Nov: ready only when the VM repair stage yardv3fix is done too (the damaged towns re-run, yard-v3 tarred again)
+    ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "test -f ~/run/fill1031/yardv3fix.vmdone" < /dev/null 2>/dev/null || { echo "cloud finish: waiting for yardv3 (repair stage yardv3fix on the VM)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   elif [ "$name" = hailhours ]; then
     [ -f "$ST/g3hail.done" ] || { echo "cloud finish: waiting for hailhours (after g3hail)${FAILED:+ (FAILED 3 times:$FAILED, see $DT/logs-finish-<stage>.log)}"; exit 0; }
   else

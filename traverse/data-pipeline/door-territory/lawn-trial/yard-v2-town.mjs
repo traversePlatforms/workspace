@@ -6,7 +6,7 @@
 // Output: yard-v2/<town>.json { built, settings, doors: { id: { l, s, u, o, t, dt, lot, sv, ph, pk, lk } | { big } | { shared } | null } }
 //   l lawn (sq ft) · s seen in the photo · u filled under tree crowns · o open ground · t tree crown · dt DRCOG turf · lot · sv laser survey
 //   ph photo date. null = no lot line at the door's point. Nothing reaches the app until build-yard-v2.mjs puts it in the door files.
-import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { yardSources, yardClassify, V2 } from './yard-scan-v2.mjs';
 import { markShared } from './build-yard-v2.mjs';
@@ -22,7 +22,34 @@ const PCD = new URL('./drcog-turf/', import.meta.url); mkdirSync(PCD, { recursiv
 const PCACHE = new URL(`parcels-${TOWN}.json`, PCD);   /* the same lot-line cells drcog-turf-town.mjs keeps */
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const get = async (u) => { for (let i = 0; i < 4; i++) { try { const r = await fetch(u); if (r.ok) return await r.json(); } catch {} await sleep(1500 * (i + 1)); } throw new Error('fetch failed ' + u.slice(0, 70)); };
+/* 12 Nov 2026 (cloud-jobs review, finding 1): the state map sometimes answers HTTP 200 with an error body or no features list. That was
+   saved as "no lots" for good and every door in the cell went out as null (yardv3: Thornton 571 readings, Westminster 314). Now an answer
+   without a features list, or with an error, is a failed fetch: tried again with back-off (2 s .. 2 min, about 4 min in all), never saved.
+   One request at a time to gis.colorado.gov from every town run on this machine (a lock folder beside the parcel caches), so three
+   workers on the cloud machine count as one parcel job (the rule: one parcel-heavy job at a time on gis.colorado.gov). */
+const LOCK = new URL('.gis-lock', PCD);
+async function gisTurn(fn) {
+  for (;;) {
+    try { mkdirSync(LOCK); break; } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      try { if (Date.now() - statSync(LOCK).mtimeMs > 240000) rmSync(LOCK, { recursive: true, force: true }); } catch {}   /* holder died */
+      await sleep(200 + Math.random() * 300);
+    }
+  }
+  try { return await fn(); } finally { await sleep(300); try { rmSync(LOCK, { recursive: true, force: true }); } catch {} }
+}
+async function gisGet(params) {
+  const waits = [2, 5, 15, 30, 60, 120]; let last = '';
+  for (let i = 0; ; i++) {
+    try {
+      const j = await gisTurn(async () => { const r = await fetch(PARCELS + '?' + new URLSearchParams(params), { signal: AbortSignal.timeout(90000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+      if (j && !j.error && (Array.isArray(j.features) || typeof j.count === 'number')) return j;
+      last = j && j.error ? `error ${j.error.code || ''} ${String(j.error.message || '').slice(0, 60)}` : 'no features list in the answer';
+    } catch (e) { last = String((e && e.message) || e).slice(0, 80); }
+    if (i >= waits.length) throw new Error('gis.colorado.gov: ' + last);
+    await sleep(waits[i] * 1000 * (+process.env.YV2_WAIT_SCALE || 1));   /* YV2_WAIT_SCALE: tests only */
+  }
+}
 const inRing = (x, y, ring) => { let ins = false; for (let i = 0, k = ring.length - 1; i < ring.length; k = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[k]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) ins = !ins; } return ins; };
 const inRings = (x, y, rr) => { let n = 0; for (const r of rr) if (inRing(x, y, r)) n++; return n % 2 === 1; };
 const acres = (ring) => { const k = Math.cos(ring[0][1] * Math.PI / 180) * 111320, m = 110540; let a = 0; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += (ring[j][0] * k) * (ring[i][1] * m) - (ring[i][0] * k) * (ring[j][1] * m); return Math.abs(a / 2) / 4046.86; };
@@ -35,21 +62,33 @@ const todo = doors.filter((d) => !(d.id in out.doors));
 console.log(`${TOWN}: ${doors.length} doors, ${todo.length} to do, ${CONC} at a time`);
 if (!todo.length) process.exit(0);
 const pc = existsSync(PCACHE) ? JSON.parse(readFileSync(PCACHE, 'utf8')) : { cells: {} };
-const lats = doors.map((d) => d.lat), lons = doors.map((d) => d.lon), S = 0.008;
+const S = 0.008; let minLat = Infinity, minLon = Infinity;
+for (const d of doors) { if (d.lat < minLat) minLat = d.lat; if (d.lon < minLon) minLon = d.lon; }   /* a loop, not Math.min(...): the spread overflows the stack on Denver-sized lists (12 Nov) */
 /* origin on a fixed 0.008° grid (2026-10-26): it was the town's lowest house, so new houses to the south or west (the 25 Oct gap fix)
    shifted every cell and the saved cells answered for the wrong ground. A cache saved on another origin starts again. */
-const la0 = Math.floor((Math.min(...lats) - 0.002) / S) * S, lo0 = Math.floor((Math.min(...lons) - 0.002) / S) * S;
+const la0 = Math.floor((minLat - 0.002) / S) * S, lo0 = Math.floor((minLon - 0.002) / S) * S;
 if (!pc.o || pc.o[0] !== la0 || pc.o[1] !== lo0) pc.cells = {}, pc.o = [la0, lo0];
 const cellOf = (lat, lon) => Math.floor((lat - la0) / S) + ':' + Math.floor((lon - lo0) / S);
+/* Only cells with doors in them are asked for, so a cell with no lots is suspect: it is asked for its count, and saved empty (with a
+   mark in pc.zero) only when the map says 0. Otherwise nothing is saved and the cell's homes wait for the next run. An empty cell saved
+   before 12 Nov has no mark and is fetched again. */
 async function fetchCell(c) {
-  if (pc.cells[c]) return pc.cells[c];
+  const had = pc.cells[c];
+  if (had && (had.length || (pc.zero && pc.zero[c]))) return had;
   const [i, k] = c.split(':').map(Number), env = [lo0 + k * S, la0 + i * S, lo0 + (k + 1) * S, la0 + (i + 1) * S];
+  const base = { f: 'json', geometry: env.join(','), geometryType: 'esriGeometryEnvelope', inSR: '4326', spatialRel: 'esriSpatialRelIntersects' };
   const feats = []; let off = 0;
   for (;;) {
-    const j = await get(PARCELS + '?' + new URLSearchParams({ f: 'json', geometry: env.join(','), geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326', spatialRel: 'esriSpatialRelIntersects', returnGeometry: 'true', outFields: 'OBJECTID', resultOffset: String(off), resultRecordCount: '2000', geometryPrecision: '7' }));
-    for (const f of j.features || []) if (f.geometry && f.geometry.rings) feats.push(f.geometry.rings);
-    if (!j.exceededTransferLimit && (j.features || []).length < 2000) break;
-    off += (j.features || []).length;
+    const j = await gisGet({ ...base, outSR: '4326', returnGeometry: 'true', outFields: 'OBJECTID', resultOffset: String(off), resultRecordCount: '2000', geometryPrecision: '7' });
+    for (const f of j.features) if (f.geometry && f.geometry.rings) feats.push(f.geometry.rings);
+    if (!j.exceededTransferLimit && j.features.length < 2000) break;
+    if (!j.features.length) throw new Error(`area ${c}: the map says there is more but sent nothing`);
+    off += j.features.length;
+  }
+  if (!feats.length) {
+    const n = await gisGet({ ...base, returnCountOnly: 'true' });
+    if (n.count !== 0) throw new Error(`area ${c}: no lot lines in the answer, but the map counts ${n.count} lots there`);
+    (pc.zero = pc.zero || {})[c] = new Date().toISOString().slice(0, 10);
   }
   pc.cells[c] = feats; writeSafe(PCACHE, JSON.stringify(pc));
   return feats;
@@ -66,12 +105,13 @@ async function one(d, lots, pkCount) {
   out.doors[d.id] = { l: R.lawn, s: R.seen, u: R.under, o: R.open, t: R.trees, dt: R.drcogTurf ?? null, lot: R.lot, sv: R.survey || null, ph: R.photo23 || null, pk, lk };
   return 'ok';
 }
-let done = 0, err = 0, nolot = 0; const t0 = Date.now();
+let done = 0, err = 0, nolot = 0, cellErr = 0; const t0 = Date.now();
 const byCell = {}; for (const d of todo) (byCell[cellOf(d.lat, d.lon)] = byCell[cellOf(d.lat, d.lon)] || []).push(d);
 const save = () => { out.built = new Date().toISOString().slice(0, 10); writeSafe(OUT, JSON.stringify(out)); };
 for (const c of Object.keys(byCell)) {   /* area by area, saved after each: a stop loses at most one area */
   if (Date.now() - t0 > MINS * 60000) break;
-  const lots = await fetchCell(c), q = byCell[c].slice();
+  let lots; try { lots = await fetchCell(c); } catch (e) { cellErr++; console.log(`  area ${c}: lot lines not fetched (${String(e.message).slice(0, 110)}); its ${byCell[c].length} homes wait for the next run`); continue; }
+  const q = byCell[c].slice();
   await Promise.all(Array.from({ length: CONC }, async () => {
     for (let d; (d = q.shift());) {
       try { const r = await one(d, lots); if (r === 'nolot') nolot++; done++; }
@@ -85,5 +125,5 @@ for (const c of Object.keys(byCell)) {   /* area by area, saved after each: a st
 markShared(out.doors);
 save();
 const left = doors.filter((d) => !(d.id in out.doors)).length;
-console.log(`slice done: ${done} (no lot ${nolot}, errors ${err}) in ${((Date.now() - t0) / 60000).toFixed(1)} min; ${left} left`);
+console.log(`slice done: ${done} (no lot ${nolot}, errors ${err}, areas not fetched ${cellErr}) in ${((Date.now() - t0) / 60000).toFixed(1)} min; ${left} left`);
 process.exit(left ? 3 : 0);

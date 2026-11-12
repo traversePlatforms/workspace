@@ -10,7 +10,8 @@
 #      files present);
 #   5. every town's door file to Sixfold (upload-towns-sixfold.sh, 8 at a time, each batch confirmed) and the five editions (door files
 #      only, never hail-*; MD5 MATCH required), then a live md5 read-back of three towns on Sixfold and Yards.
-# Runs from traverse/ops/run-cloud-finishers.sh (stage yardv3) once ~/run/fill1031/yardv3.vmdone exists, or by hand:
+# Runs from traverse/ops/run-cloud-finishers.sh (stage yardv3) once ~/run/fill1031/yardv3fix.vmdone exists (12 Nov: the repair stage
+# after yardv3, overnight/fill1031/yardv3fix.sh, re-runs the towns that lost readings and tars yard-v3 again), or by hand:
 #   bash finish-yardv3-2026-11-11.sh > logs-finish-yardv3.log 2>&1 < /dev/null
 set -u
 exec < /dev/null   # md5sum (push-edition.sh) fails with a closed stdin, and a closed stdin is what a scheduled job gets (11 Nov)
@@ -29,7 +30,7 @@ up6() { local label=$1 i; for i in 1 2 3; do offhot; bash upload-towns-sixfold.s
 busy() { powershell.exe -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='bash.exe'\" | Where-Object { \$_.CommandLine -match 'finish-gap|upload-gap|finish-rent|refresh-permits|refresh-weekly|deploy-app|push-edition|push-sixfold-side|upload-towns-sixfold' }).Count" 2>/dev/null | tr -d '\r'; }
 
 case "$(netsh wlan show interfaces 2>/dev/null | grep -E '^\s+SSID' | head -1)" in *iPhone*) step "on the iPhone hotspot: not copying back"; exit 1;; esac
-$VM 'test -f ~/run/fill1031/yardv3.vmdone && test -s ~/run/fill1031/yardv3-result.tgz' || stop "yardv3 is not finished: $($VM 'cat ~/run-status.txt')"
+$VM 'test -f ~/run/fill1031/yardv3fix.vmdone && test -s ~/run/fill1031/yardv3-result.tgz' || stop "yardv3 is not finished: $($VM 'cat ~/run-status.txt')"
 i=0; while [ "$(busy)" != "0" ]; do i=$((i + 1)); [ $i -gt 36 ] && stop "another upload or build has run for 3 hours"; step "another upload/build is running: waiting"; sleep 300; done
 
 step "copy back"
