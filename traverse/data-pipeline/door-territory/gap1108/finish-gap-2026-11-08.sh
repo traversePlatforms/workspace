@@ -51,7 +51,10 @@ step "build"; (cd lawn-trial && node build-yard-v2.mjs | head -1)
 node --max-old-space-size=8192 assessor/build-year.mjs | tail -1
 node --max-old-space-size=8192 build-rounds-data.mjs | grep -E "wrote|listed by two|limited data" || exit 1
 node --max-old-space-size=8192 census/build-census.mjs | tail -1; node --max-old-space-size=8192 nri/build-nri.mjs | tail -1
-node --max-old-space-size=8192 pest/build-pest.mjs | tail -1; node --max-old-space-size=8192 build-others.mjs $KEYS $MERGE | tail -3
+# 12 Nov: pipefail, so a crashed pest build stops the run (11 Nov: build-pest overflowed at Denver and | tail -1 hid it; pest files from
+# Denver on stayed old)
+(set -o pipefail; node --max-old-space-size=8192 pest/build-pest.mjs | tail -n 2) || { step "build-pest failed"; exit 1; }
+node --max-old-space-size=8192 build-others.mjs $KEYS $MERGE | tail -3
 (cd roofs && node --max-old-space-size=8192 sample-roofs.mjs --build --all-towns | tail -1 && node --max-old-space-size=8192 photo-index.mjs build --all-towns | tail -1 && node --max-old-space-size=8192 outline-photos.mjs | tail -1)
 (cd solar && node --max-old-space-size=8192 sample-solar.mjs --build --all-towns | tail -1)
 step "index check"

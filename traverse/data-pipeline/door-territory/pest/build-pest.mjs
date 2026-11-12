@@ -92,15 +92,18 @@ function parseCSV(t) { const rows = []; let r = [], f = '', q = false; for (let 
 const idx = JSON.parse(readFileSync(join(DATA, 'index.json'), 'utf8'));
 const sales = await elPasoSales();
 console.log(`El Paso parcels with a sale date: ${sales.size}`);
-let tot = 0; const hit = { os: 0, wa: 0, yb: 0, sold: 0 };
+let tot = 0; const hit = { os: 0, wa: 0, yb: 0, sold: 0 }; let towns = 0, want = 0, skipped = 0;
 for (const reg of idx.regions) {
   const town = reg.key; if (town.startsWith('com-')) continue;
-  const f = join(DATA, `${town}.json`); if (!existsSync(f)) continue;
+  const f = join(DATA, `${town}.json`); if (!existsSync(f)) continue; want++;
   const d = JSON.parse(readFileSync(f, 'utf8'));
   const pts = d.areas.flatMap((a) => a.doors).filter((x) => x.lat != null);
-  if (!pts.length) continue;
-  const lats = pts.map((x) => x.lat), lons = pts.map((x) => x.lon), pad = 0.004;
-  const box = [Math.min(...lons) - pad, Math.min(...lats) - pad, Math.max(...lons) + pad, Math.max(...lats) + pad];
+  if (!pts.length) { skipped++; continue; }
+  /* a loop, not Math.min(...lons): the spread overflows the call stack once a town has ~135,000 doors (12 Nov: the 11 Nov rented build
+     stopped at Denver, town 24 of 421, and '| tail -1' in the finisher hid it, so every pest file from Denver on stayed old) */
+  const pad = 0.004; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const x of pts) { if (x.lon < x0) x0 = x.lon; if (x.lon > x1) x1 = x.lon; if (x.lat < y0) y0 = x.lat; if (x.lat > y1) y1 = x.lat; }
+  const box = [x0 - pad, y0 - pad, x1 + pad, y1 + pad];
   const P = proj((box[1] + box[3]) / 2);
   /* COMaP also carries unnamed private shapes that cover whole subdivisions (2026-10-06: every Monument and Castle Rock house
      sat inside one). Those are not open land a house backs onto: drop them, and never count a house inside a shape (below). */
@@ -127,7 +130,7 @@ for (const reg of idx.regions) {
     let bo = null; for (const s of os) { if (!near(p, s.bb, OS_M)) continue; const dd = polyDist(p, s.rings); if (dd > 0 && dd <= OS_M && (!bo || dd < bo.d)) bo = { n: s.n, k: s.k, d: Math.round(dd) }; }
     if (bo) { o.os = bo; hit.os++; }
     let bw = null;
-    for (const c of creeks) { if (!near(p, c.bb, CREEK_M)) continue; const dd = Math.min(...c.paths.map((pp) => lineDist(p, pp))); if (dd <= CREEK_M && (!bw || dd < bw.d)) bw = { n: c.n, k: c.k, d: Math.round(dd) }; }
+    for (const c of creeks) { if (!near(p, c.bb, CREEK_M)) continue; let dd = Infinity; for (const pp of c.paths) dd = Math.min(dd, lineDist(p, pp)); if (dd <= CREEK_M && (!bw || dd < bw.d)) bw = { n: c.n, k: c.k, d: Math.round(dd) }; }
     for (const w of ponds) { if (!near(p, w.bb, POND_M)) continue; const dd = polyDist(p, w.rings); if (dd > 0 && dd <= POND_M && (!bw || dd < bw.d)) bw = { n: w.n, k: w.k, d: Math.round(dd) }; }
     if (bw) { o.wa = bw; hit.wa++; }
     if (years[x.id] && years[x.id].yb) { o.yb = years[x.id].yb; hit.yb++; }
@@ -135,7 +138,12 @@ for (const reg of idx.regions) {
     if (Object.keys(o).length) doors[x.id] = o;
   }
   writeFileSync(join(DATA, `pest-${town}.json`), JSON.stringify({ built: new Date().toISOString().slice(0, 10), doors }));
+  towns++;
   console.log(`  pest-${town}.json: ${Object.keys(doors).length} doors (${os.length} open-space areas, ${creeks.length} creek lines, ${ponds.length} ponds)`);
 }
 copyFileSync(join(HERE, 'pest-season.json'), join(DATA, 'pest-season.json'));
 console.log(`${tot} doors: open space ${hit.os}, water ${hit.wa}, year built ${hit.yb}, sale month ${hit.sold}`);
+/* 12 Nov: say how many towns were written, and fail (exit 1) when it is not every town with doors; callers must not hide the exit code
+   behind | tail or | head (use set -o pipefail) */
+console.log(`pest files written: ${towns} of ${want - skipped} towns with doors`);
+if (towns !== want - skipped || !towns) { console.error('build-pest: not every town was written'); process.exit(1); }
