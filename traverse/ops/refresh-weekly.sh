@@ -9,6 +9,7 @@
 # Run by Windows Task Scheduler ("Traverse weekly refresh", Mondays 4:40 am; runs when the laptop next wakes if it was off).
 # By hand:  bash traverse/ops/refresh-weekly.sh [--no-upload]
 set -u
+exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov), and here that read as "no change"
 export PATH="/c/Users/Surge Inc/AppData/Local/nodejs:/usr/bin:/mingw64/bin:$PATH"
 REPO="/c/Users/Surge Inc/Desktop/claude test 2"
 DT="$REPO/traverse/data-pipeline/door-territory"
@@ -59,6 +60,7 @@ if [ $UPLOAD = 1 ]; then
     for pat in 'security-*.json' 'hailrep-*.json' 'hail-reports.json' 'hail-hours.json'; do
       ls $pat >/dev/null 2>&1 || continue
       md5sum $pat | sed 's/ [ *]*/  /' | LC_ALL=C sort -k2 > "$SAVE/loc.md5"
+      [ -s "$SAVE/loc.md5" ] || fail "$d: could not checksum the local $pat files"   # review 12 Nov
       $SG "cd ~/www/traverseplatforms.com/$d/rounds && md5sum $pat 2>/dev/null" < /dev/null | sed 's/ [ *]*/  /' | LC_ALL=C sort -k2 > "$SAVE/srv.md5"
       CH=$(awk 'NR==FNR { s[$2] = $1; next } s[$2] != $1 { print $2 }' "$SAVE/srv.md5" "$SAVE/loc.md5" | tr '\n' ' ')
       [ -n "${CH// /}" ] || continue

@@ -6,6 +6,7 @@
 # each file into place (a phone never reads half a file), then every placed file's md5 is compared. DRY=1 lists what would go and sends nothing.
 # The editions get the same files from build-editions.cjs (keep() filters) and push-edition.sh; Sixfold reads data/rounds directly.
 set -u
+exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov), and here that read as "no change"
 PRE="${1:-}"; [ -z "$PRE" ] && { echo "usage: push-sixfold-side.sh <prefix>   e.g. moved-"; exit 1; }
 case "$PRE" in *[!a-z0-9-]*) echo "prefix: letters, digits and - only"; exit 1;; esac
 S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp"; mkdir -p "$S"   # short path: $S is used unquoted below
@@ -23,6 +24,7 @@ sed -n '/^--$/,$p' "$T.live" | grep -v '^--$' > "$T.livemd5"
 while read -r f; do t="${f#$PRE}"; t="${t%.json}"; grep -qx -- "$t" "$T.towns" && echo "$f" >> "$T.want"; done < "$T.mine"
 echo "$PRE: $(wc -l < "$T.mine") here, $(wc -l < "$T.want") for towns Sixfold has"
 md5sum $(cat "$T.want") | sed 's/ \*/  /' | sort -k2 > "$T.local"
+[ "$(wc -l < "$T.local")" -eq "$(wc -l < "$T.want")" ] || { echo "$PRE: local md5 list incomplete ($(wc -l < "$T.local") of $(wc -l < "$T.want")): nothing sent"; exit 1; }   # review 12 Nov, as push-edition.sh
 join -1 2 -2 2 -a 1 -e NONE -o 0,1.1,2.1 "$T.local" "$T.livemd5" | awk '$2!=$3{print $1}' > "$T.up"
 n=$(wc -l < "$T.up"); echo "$PRE: $n new or changed to send"
 if [ "${DRY:-}" = 1 ]; then cat "$T.up"; exit 0; fi

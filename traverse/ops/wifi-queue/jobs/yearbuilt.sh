@@ -4,6 +4,7 @@
 # and a checksum check after. The door card uses only the year, and only for houses built in or after the aerial photo's year.
 # Counties with no bulk file yet (Jefferson, Arapahoe, Broomfield, Elbert, Teller, Clear Creek) are not in this job.
 source "$(dirname "$0")/_common.sh"
+exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov)
 step build-year bash -c "cd assessor && node build-year.mjs"
 DATA="/c/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds"
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"

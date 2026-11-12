@@ -15,6 +15,7 @@
 # Run by Windows Task Scheduler ("Traverse permit refresh", 1st of each month, 4:10 am; runs when the laptop next wakes if
 # it was off). By hand:  bash traverse/ops/refresh-permits.sh  [--no-upload]
 set -u
+exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov), and here that read as "no change"
 export PATH="/c/Users/Surge Inc/AppData/Local/nodejs:/usr/bin:/mingw64/bin:$PATH"
 REPO="/c/Users/Surge Inc/Desktop/claude test 2"
 P="$REPO/traverse/data-pipeline/door-territory/permits"
@@ -81,6 +82,7 @@ if [ $UPLOAD = 1 ]; then
     [ "${has:-0}" -gt 0 ] || continue                                   # only installs that already carry permits
     cd "$dd/rounds" || continue
     md5sum permit-*.json | sed 's/ \*/  /' | LC_ALL=C sort -k2 > "$SAVE/loc.md5"
+    [ -s "$SAVE/loc.md5" ] || fail "$d: could not checksum the local permit files"   # review 12 Nov
     $SG "cd ~/www/traverseplatforms.com/$d/rounds && md5sum permit-*.json" < /dev/null | LC_ALL=C sort -k2 > "$SAVE/srv.md5"
     CH=$(awk 'NR==FNR { s[$2] = $1; next } s[$2] != $1 { print $2 }' "$SAVE/srv.md5" "$SAVE/loc.md5" | tr '\n' ' ')   # new or different
     [ -n "${CH// /}" ] || { say "$d: no change"; continue; }
