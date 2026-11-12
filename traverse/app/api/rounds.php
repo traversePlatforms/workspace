@@ -2798,14 +2798,45 @@ function a365Norm(string $a): string {
 }
 /** an address without its direction words (N, S, E, W...): the door lists write "11663 SETTLERS DR" where people say "11663 N Settlers" (2026-10-21) */
 function a365NoDir(string $norm): string { $w = explode(' ', $norm); return implode(' ', array_values(array_filter($w, fn($x, $i) => $i === 0 || !in_array($x, SEARCH_DIRS, true), ARRAY_FILTER_USE_BOTH))); }
+/* a typed address as one line, the same way everywhere (2026-11-12, Matthew: Doug Farnham's "665, Ash St, Broomfield CO 80020" never found
+   his house: split on the first comma, the street was "665"). A house number on its own before the first comma belongs to the street. */
+function addrJoinNum(string $s): string { return (string) preg_replace('/^\s*(\d+[A-Za-z]?)\s*,\s*(?=[A-Za-z0-9])/', '$1 ', $s); }
+/** [street, town] from one typed line ("665, Ash St, Broomfield CO" -> ["665 Ash St", "Broomfield CO"]); $town when the line has none */
+function addrSplit(string $s, string $town = ''): array { $p = array_map('trim', explode(',', addrJoinNum($s))); return [$p[0], ($p[1] ?? '') !== '' ? $p[1] : $town]; }
 /** the one house on our lists at this street address (the city they gave breaks a tie); null when none or unsure */
 function a365Match(string $street, string $city): ?array {
+    $street = addrJoinNum($street); if (str_contains($street, ',')) [$street, $city] = addrSplit($street, $city);   /* a whole line passed as the street (2026-11-12) */
     $want = a365Norm($street); if (!preg_match('/^(\d+) \S+/', $want, $hm)) return null;
-    $hits = [];   /* only lines carrying the house number are compared (review 2026-10-25); the comparison itself is unchanged */
-    foreach (searchIndexGrep($hm[1]) as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365Norm($p[4]) === $want) $hits[] = $p; }
-    if (!$hits) { $wd = a365NoDir($want); foreach (searchIndexGrep($hm[1]) as $line) { $p = explode("\t", $line); if (count($p) >= 5 && a365NoDir(a365Norm($p[4])) === $wd) $hits[] = $p; } }   /* with or without N/S/E/W (2026-10-21) */
+    $wd = a365NoDir($want);
+    /* the looser passes (2026-11-12, Keith Heavilin's "12524 LAKE VIEW ST" against the rural list's "12524 LAKE VIEW ST FIRESTONE"): an address on
+       the lists that is the one they gave plus 1-3 words (the town a rural list tacks on), or the one they gave is an address on the lists plus
+       town, state and zip words. Never a street word or a direction in the extra words, so "665 ASH" is not "665 ASH ST", and still only one
+       house counts: two and it is left to a person. */
+    static $typeW = null; if ($typeW === null) $typeW = array_flip(array_merge(['ST', 'DR', 'RD', 'LN', 'CT', 'CIR', 'AVE', 'PL', 'TRL', 'BLVD', 'PKWY', 'TER', 'WAY', 'HWY', 'LOOP', 'UNIT', 'APT'], SEARCH_DIRS));
+    $tail = function (string $long, string $short, int $max) use ($typeW): ?string {
+        if (!str_starts_with($long, $short . ' ')) return null;
+        $r = explode(' ', substr($long, strlen($short) + 1)); if (count($r) > $max) return null;
+        foreach ($r as $w) if (isset($typeW[$w])) return null;
+        return implode(' ', $r);
+    };
+    $T = [[], [], []];   /* exact; without N/S/E/W (2026-10-21); the looser passes */
+    foreach (searchIndexGrep($hm[1]) as $line) {   /* only lines carrying the house number are compared (review 2026-10-25) */
+        $p = explode("\t", $line); if (count($p) < 5) continue;
+        $n = a365Norm($p[4]); if ($n === $want) { $T[0][] = $p; continue; }
+        if (!str_starts_with($n, $hm[1] . ' ')) continue;
+        $nd = a365NoDir($n); if ($nd === $wd) { $T[1][] = $p; continue; }
+        if (($s = $tail($nd, $wd, 3)) !== null && preg_match('/^[A-Z]+( [A-Z]+)*$/D', $s)) { $p['suf'] = $s; $T[2][] = $p; continue; }   /* the list's address + its town */
+        if (($s = $tail($wd, $nd, 6)) !== null && preg_match('/^([A-Z]+|\d{4,5})( ([A-Z]+|\d{4,5}))*$/D', $s)) { $p['suf'] = $s; $p['given'] = 1; $T[2][] = $p; }   /* theirs + town, state, zip */
+    }
+    $hits = $T[0] ?: ($T[1] ?: $T[2]);
     $listed = array_values(array_filter($hits, fn($p) => ($p[9] ?? '') !== 'L')); if ($listed) $hits = $listed;   /* the door-list house over a pulled-in copy of it */
-    if (count($hits) > 1 && $city !== '') { $c = strtoupper(trim($city)); $hits = array_values(array_filter($hits, fn($p) => str_contains(strtoupper($p[1]), $c) || str_contains($c, strtoupper($p[1])))); }
+    $c = strtoupper(trim($city));
+    $townOk = function (array $p) use ($c): bool {
+        $lab = strtoupper((string) $p[1]); $suf = (string) ($p['suf'] ?? '');
+        if ($c !== '' && (str_contains($lab, $c) || str_contains($c, $lab) || ($suf !== '' && (str_contains($suf, $c) || str_contains($c, $suf))))) return true;
+        return $c === '' && !empty($p['given']) && $lab !== '' && str_contains($suf, $lab);   /* the town came in the address itself */
+    };
+    if (count($hits) > 1) $hits = array_values(array_filter($hits, $townOk));
     return count($hits) === 1 ? ['region' => $hits[0][0], 'door' => $hits[0][3], 'address' => $hits[0][4], 'town' => $hits[0][1]] : null;
 }
 /** an alert to everyone with the office role (their phones and computers that took alerts) */
@@ -3815,7 +3846,7 @@ if ($action === 'sitelead') {
             'town' => a365Clean($body['town'] ?? '', 160), 'msg' => a365Clean($body['msg'] ?? '', 2000), 'by' => ''];
     if ($row['name'] === '' && $row['phone'] === '' && $row['email'] === '') fail('Empty.');
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that.', 500);
-    if (preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
+    if (preg_match('/^\d+ \S/', addrJoinNum($row['town']))) { $parts = addrSplit($row['town']); $h = a365Match($parts[0], $parts[1]); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
     a365Alert('New website lead (yours)', ($row['name'] ?: 'Someone') . ($row['need'] !== '' ? ' · ' . $row['need'] : ''), false, true, true);   /* Matthew's phones, always (2026-10-26, Matthew: "I need the app to send me a notification every time a new lead comes into my pipeline"); it went to the office before */
     out(['ok' => true, 'id' => $row['id']]);
 }
@@ -6657,7 +6688,7 @@ const LOOKED_UP = 'looked-up';
 if ($action === 'proppull') {
     if (!feature('walkdesk') || !$isPost || !in_array($role, ['admin', 'office', 'quote', 'manager', 'crew'], true)) fail('Not allowed.', 403);
     $street = $clean($body['address'] ?? '', 120); $town = $clean($body['town'] ?? '', 60);
-    if ($town === '' && strpos($street, ',') !== false) { $pp = array_map('trim', explode(',', $street)); $street = $pp[0]; $town = $pp[1] ?? ''; }
+    $street = addrJoinNum($street); if ($town === '' && strpos($street, ',') !== false) [$street, $town] = addrSplit($street);   /* "665, Ash St" (2026-11-12) */
     if (!preg_match('/^\d+\s+\S/', $street)) fail('Type the house number and the street.');
     if (!preg_match("/^\\p{L}[\\p{L} .'-]{1,59}$/u", $town)) fail('Add the town.');
     if ($h = a365Match($street, $town)) out(['ok' => true, 'had' => true, 'house' => ['region' => $h['region'], 'id' => $h['door'], 'address' => $h['address'], 'town' => $h['town']]]);
@@ -8607,6 +8638,27 @@ if ($action === 'receipt' || $action === 'receiptmail') {
     out(['ok' => true, 'to' => $to, 'rcpt' => ['to' => $to, 'at' => time(), 'by' => $me]]);
 }
 /* the Newsletter screen (2026-10-28): admins. Issues, the mailing address, a preview, Send me a test, Approve for the 1st, Unapprove, add someone back */
+/* "Don't email" (2026-11-12; it took a server edit before): the office or an admin marks a lead or customer who asked not to be emailed. It goes
+   on the same list the unsubscribe link writes (newsletter-unsub.json, which every automatic email checks: the newsletter, follow-ups, plans
+   and customer emails), marked how "office: <name>". The undo takes off only an office mark; someone who unsubscribed themselves comes back
+   only by an admin, as nlresub does. Every install with the walk desk.
+     nomail      GET   {list: {email: {at, how}}}
+     nomailset   POST  {email, on: 1|0} */
+if ($action === 'nomail' || $action === 'nomailset') {
+    if (!feature('walkdesk') || !desk()) fail('Not allowed.', 403);
+    if ($action === 'nomail') out(['ok' => true, 'list' => (object) array_map(fn($x) => ['at' => (int) ($x['at'] ?? 0), 'how' => (string) ($x['how'] ?? '')], nlUnsubs())]);
+    if (!$isPost) fail('POST required', 405);
+    $em = strtolower(trim((string) ($body['email'] ?? ''))); if (!filter_var($em, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
+    $f = DATA_DIR . '/newsletter-unsub.json'; $lk = @fopen($f . '.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX)) fail('Could not save that.', 500);
+    $u = nlUnsubs(); $on = !empty($body['on']);
+    if ($on && !isset($u[$em])) { $u[$em] = ['at' => time(), 'how' => 'office: ' . $me]; if (!writeJsonAtomic($f, $u)) fail('Could not save that. Try again.', 500); accountLog(['by' => $me, 'what' => 'emails: marked not to email', 'email' => $em]); }
+    elseif (!$on && isset($u[$em])) {
+        if (!str_starts_with((string) ($u[$em]['how'] ?? ''), 'office:') && $role !== 'admin') fail('They unsubscribed themselves, so only an admin can add them back.', 403);
+        unset($u[$em]); if (!writeJsonAtomic($f, $u)) fail('Could not save that. Try again.', 500); accountLog(['by' => $me, 'what' => 'emails: added back', 'email' => $em]);
+    }
+    flock($lk, LOCK_UN);
+    out(['ok' => true, 'email' => $em, 'entry' => isset($u[$em]) ? ['at' => (int) $u[$em]['at'], 'how' => (string) $u[$em]['how']] : null]);
+}
 if (in_array($action, ['nlist', 'nlsave', 'nldel', 'nlpreview', 'nltest', 'nlapprove', 'nlsettings', 'nlresub'], true)) {
     if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
     if ($role !== 'admin') fail('Not allowed.', 403);
@@ -9150,7 +9202,7 @@ if ($action === 'crewwalk') {
     if (empty($body['force']) && $time !== '') { $cl = deskClashes($me, $date, $time, $mins, '', ''); if ($cl) out(['ok' => false, 'clash' => $cl, 'error' => 'You already have something then.']); }
     $lid = 'm' . date('YmdHis') . bin2hex(random_bytes(3));
     if (!appendLine(leadsDir() . '/leads.log', ['id' => $lid, 'src' => 'inperson', 'at' => time(), 'need' => 'A walk', 'name' => $name, 'phone' => $phone, 'email' => '', 'town' => $addr, 'msg' => $note, 'by' => $me])) fail('Could not save that. Try again.', 500);
-    $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? '');
+    $parts = addrSplit($addr); $h = a365Match($parts[0], $parts[1]);
     if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $lid, 'house' => $h, 'by' => $me, 'at' => time()]);
     $vid = 'v' . bin2hex(random_bytes(6)); $title = $name !== '' ? $name : $phone;
     if (!appendLine(DATA_DIR . '/deskwalks.log', ['id' => $vid, 'kind' => 'lead', 'lead' => $lid, 'title' => $title, 'walker' => $me, 'date' => $date, 'time' => $time, 'mins' => $mins, 'addr' => $addr, 'note' => $note, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
@@ -10066,7 +10118,7 @@ if ($action === 'leadmatch') {
     if (!throttleTake(rateFile('leadmatch|' . $me), 900, 3600)) out(['ok' => true, 'dup' => []]);
     $t = ['name' => $clean($_GET['name'] ?? '', 120), 'phone' => $clean($_GET['phone'] ?? '', 40), 'email' => $clean($_GET['email'] ?? '', 160), 'house' => null];
     $mt = $clean($_GET['town'] ?? '', 160);
-    if (feature('walkdesk') && preg_match('/^\d+ \S/', $mt)) { $mp = array_map('trim', explode(',', $mt)); $t['house'] = a365Match($mp[0], $mp[1] ?? ''); }
+    if (feature('walkdesk') && preg_match('/^\d+ \S/', addrJoinNum($mt))) { $mp = addrSplit($mt); $t['house'] = a365Match($mp[0], $mp[1]); }
     $keys = leadKeys($t); $found = [];
     if ($keys) foreach (leadsAllRaw() as $id => $l) {
         if (leadGone($l)) continue;
@@ -10085,7 +10137,7 @@ if ($action === 'leadadd') {
     if (webHide()) {
         $md = substr((string) preg_replace('/\D/', '', (string) ($body['phone'] ?? '')), -10); $me2 = strtolower(trim((string) ($body['email'] ?? ''))); $mine = null;
         /* + the same house (2026-11-03, Ira Kauffman: added with the name and address only, so neither phone nor email was there to match) */
-        $mt = trim((string) ($body['town'] ?? '')); $mhh = feature('walkdesk') && preg_match('/^\d+ \S/', $mt) ? a365Match(trim(explode(',', $mt)[0]), trim(explode(',', $mt)[1] ?? '')) : null;
+        $mt = trim((string) ($body['town'] ?? '')); $mhh = feature('walkdesk') && preg_match('/^\d+ \S/', addrJoinNum($mt)) ? a365Match(...addrSplit($mt)) : null;
         $mhk = $mhh && !empty($mhh['door']) ? 'house ' . ($mhh['region'] ?? '') . '/' . $mhh['door'] : '';
         foreach (leadsAllRaw() as $ml) if (webLead($ml) && ($ml['status'] ?? '') !== 'lost' && ($ml['removed'] ?? '') !== 'junk'   /* not one taken off as a duplicate */
             && ((strlen($md) === 10 && substr((string) preg_replace('/\D/', '', (string) ($ml['phone'] ?? '')), -10) === $md) || ($me2 !== '' && strtolower((string) ($ml['email'] ?? '')) === $me2)
@@ -10128,7 +10180,7 @@ if ($action === 'leadadd') {
     }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
     /* an address typed in finds its house (2026-10-14), as the website and Facebook leads do */
-    if (feature('walkdesk') && preg_match('/^\d+ \S/', $row['town'])) { $parts = array_map('trim', explode(',', $row['town'])); $h = a365Match($parts[0], $parts[1] ?? ''); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => $me, 'at' => time()]); }
+    if (feature('walkdesk') && preg_match('/^\d+ \S/', addrJoinNum($row['town']))) { $parts = addrSplit($row['town']); $h = a365Match($parts[0], $parts[1]); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => $me, 'at' => time()]); }
     out(['ok' => true, 'id' => $row['id']]);
 }
 
@@ -10494,7 +10546,7 @@ if ($action === 'clickuppoll') {
             if ($want !== '' && $want !== 'new') { $u['status'] = $want; $u['note'] = 'From Jen\'s ClickUp (' . ($t['status']['status'] ?? '') . ').'; }
             if ($cst === 'scheduled') $u['note'] = $SCHED_NOTE;   /* a sale, nothing booked here yet: Won, and a note to book it (2026-10-17) */
             appendLine(leadsDir() . '/leadst.log', $u);
-            if ($addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', $addr, $m)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'ClickUp', 'at' => $now]); }
+            if ($addr !== '' && preg_match('/^\s*\d+\s+[^,]+/', addrJoinNum($addr), $m)) { $parts = addrSplit($addr, $city); $h = a365Match($parts[0], $parts[1]); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'ClickUp', 'at' => $now]); }
             $row['cu'] = $tid; $row['status'] = $want ?: 'new'; $leads[$row['id']] = $row; $index($row);
             $cuTry(['status' => $row['status'], 'tries' => []], $row['id'], $cst, $t);
             $taskOf[$tid] = $row['id']; $added[] = $name ?: $phone; continue;
@@ -10524,7 +10576,7 @@ if ($action === 'clickuppoll') {
         if ($tgt !== '' && $tgt !== $st) { $u['status'] = $tgt; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $tgt . ')'; }
         $syncState[$id] = ['cst' => $cst, 'proof' => $proof, 'tgt' => $tgt, 'name' => (string) ($l['name'] ?? $name)];
         if ($deal && $deal !== (int) ($l['cud'] ?? 0)) { $u['cud'] = $deal; $notes[] = 'ClickUp deal value $' . number_format($deal) . '.'; }
-        if ((empty($l['house']) || !empty($l['house']['typed'])) && $addr !== ''   /* a typed address gives way to the house on our lists */ && preg_match('/^\s*\d+\s+[^,]+/', $addr)) { $parts = array_map('trim', explode(',', $addr)); $h = a365Match($parts[0], $parts[1] ?? $city); if ($h) $u['house'] = $h; }
+        if ((empty($l['house']) || !empty($l['house']['typed'])) && $addr !== ''   /* a typed address gives way to the house on our lists */ && preg_match('/^\s*\d+\s+[^,]+/', addrJoinNum($addr))) { $parts = addrSplit($addr, $city); $h = a365Match($parts[0], $parts[1]); if ($h) $u['house'] = $h; }
         if (count($u) > 3) { if ($notes) $u['note'] = implode(' ', $notes); appendLine(leadsDir() . '/leadst.log', $u); }
         $cuTry(['status' => $u['status'] ?? ($l['status'] ?? 'new')] + $l, $id, $cst, $t);
         /* completed in her ClickUp: the job done here (2026-10-19, Matthew). Once per job ('cudone'), so an Undo here is not fought every pull;
@@ -13243,7 +13295,7 @@ if ($action === 'phonequote') {
             'town' => trim($addr . ($town !== '' ? ', ' . $town : ''), ', '), 'msg' => $clean($body['msg'] ?? '', 1000), 'by' => $me, 'pq' => $me];
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Could not save that. Try again.', 500);
     if (!$mineOk) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'owner' => $me, 'by' => $me, 'at' => time()]);
-    if ($addr !== '' && preg_match('/^\d+ \S/', $addr)) { $h = a365Match($addr, $town); appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h ?: ['address' => $addr, 'town' => $town, 'typed' => true], 'by' => $me, 'at' => time()]); }
+    $addr = addrJoinNum($addr); if ($addr !== '' && preg_match('/^\d+ \S/', $addr)) { $h = a365Match($addr, $town); appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h ?: ['address' => $addr, 'town' => $town, 'typed' => true], 'by' => $me, 'at' => time()]); }
     out(['ok' => true, 'lead' => leadsAll()[$row['id']] ?? $row]);
 }
 
@@ -14536,8 +14588,8 @@ if ($action === 'results') {
         $h = is_array($l['house'] ?? null) ? $l['house'] : null; $key = null; $did = '';
         if ($h && empty($h['typed']) && !empty($h['region']) && !empty($h['door'])) { $key = $homeOf((string) $h['region'], (string) $h['door']); $did = (string) $h['door']; }
         if (!$key) foreach ([$h ? trim((string) ($h['address'] ?? '') . ', ' . (string) ($h['town'] ?? ''), ', ') : '', (string) ($j['addr'] ?? ''), (string) ($l['town'] ?? '')] as $txt) {
-            if (!preg_match('/^\s*\d+\s+\S/', $txt)) continue;
-            $p = array_map('trim', explode(',', $txt)); $m = $match((string) ($l['id'] ?? ''), $txt, $p);
+            $txt = addrJoinNum($txt); if (!preg_match('/^\s*\d+\s+\S/', $txt)) continue;
+            $p = addrSplit($txt); $m = $match((string) ($l['id'] ?? ''), $txt, $p);
             if ($m && ($key = $homeOf((string) $m['region'], (string) $m['door']))) { $did = (string) $m['door']; break; }
         }
         if ($key) $leadAt[$key][$did][] = ['src' => $src, 'row' => $row];
@@ -15634,8 +15686,8 @@ function prcPlace(string $txt) {
         $g = tcGeocode($txt);
         if (is_array($g) && isset($g['lat'], $g['lon'])) return ['label' => $txt, 'lat' => (float) $g['lat'], 'lon' => (float) $g['lon']];
     }
-    $parts = array_map('trim', explode(',', $txt, 2));
-    $h = a365Match($parts[0], $parts[1] ?? ''); $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
+    $parts = addrSplit($txt);
+    $h = a365Match($parts[0], $parts[1]); $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
     if ($hf && isset($hf['lat'], $hf['lon'])) return ['label' => streetCaseServer((string) $hf['address']) . ', ' . (string) $hf['town'], 'lat' => (float) $hf['lat'], 'lon' => (float) $hf['lon']];
     return 'Fuel cost: that start address was not found. Type the whole address, like "123 Main St, Denver, CO 80202", or use Where I am now while you are there.';
 }
@@ -16012,8 +16064,8 @@ if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget'
         foreach (array_slice((array) ($body['lines'] ?? []), 0, 60) as $i => $r) { $x = prcLine($r, $i, $no); if (!$x) continue; while (isset($seen[$x['id']])) $x['id'] = 'l' . substr(bin2hex(random_bytes(3)), 0, 6); $seen[$x['id']] = 1; $lines[] = $x; }
         if (!$lines) fail('Add at least one price line.');
         if (is_array($body['rules']['travel']['base'] ?? null) && isset($body['rules']['travel']['base']['text'])) {   /* an address on the house lists, as Your costs takes it */
-            $txt = $clean($body['rules']['travel']['base']['text'], 160); $parts = array_map('trim', explode(',', $txt, 2));
-            $h = $txt !== '' ? a365Match($parts[0], $parts[1] ?? '') : null; $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
+            $txt = $clean($body['rules']['travel']['base']['text'], 160); $parts = addrSplit($txt);
+            $h = $txt !== '' ? a365Match($parts[0], $parts[1]) : null; $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
             if (!$hf || !isset($hf['lat'], $hf['lon'])) fail('That base address is not on your house lists. Type it as "123 Main St, Town", or use Where I am now while you are there.');
             $body['rules']['travel']['base'] = ['label' => streetCaseServer((string) $hf['address']) . ', ' . (string) $hf['town'], 'lat' => (float) $hf['lat'], 'lon' => (float) $hf['lon']];
         }
@@ -16384,8 +16436,8 @@ if (in_array($action, ['costs', 'costsset', 'costsapply'], true)) {
                 if (!is_numeric($b['lat']) || !is_numeric($b['lon']) || abs((float) $b['lat']) > 90 || abs((float) $b['lon']) > 180) fail('That place could not be read.');
                 $j['base'] = ['label' => $clean($b['label'] ?? '', 120) ?: 'Where you stood when you saved it', 'lat' => round((float) $b['lat'], 5), 'lon' => round((float) $b['lon'], 5)];
             } elseif (is_array($b)) {   /* an address on the door lists */
-                $txt = $clean($b['text'] ?? '', 160); $parts = array_map('trim', explode(',', $txt, 2));
-                $h = a365Match($parts[0], $parts[1] ?? ''); $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
+                $txt = $clean($b['text'] ?? '', 160); $parts = addrSplit($txt);
+                $h = a365Match($parts[0], $parts[1]); $hf = $h ? houseFacts((string) $h['region'], (string) $h['door']) : null;
                 if (!$hf || !isset($hf['lat'], $hf['lon'])) fail('That address is not on your house lists. Type it as "123 Main St, Town", or use Where I am now while you are there.');
                 $j['base'] = ['label' => streetCaseServer((string) $hf['address']) . ', ' . (string) $hf['town'], 'lat' => round((float) $hf['lat'], 5), 'lon' => round((float) $hf['lon'], 5)];
             }
