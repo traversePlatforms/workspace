@@ -79,6 +79,12 @@ get_audio() {
   done
 }
 
+# true when a final reply (status answered or matthew) to ticket $1 was written at or after unix time $2 (a few seconds' slack for clocks)
+final_since() {
+  local R; R=$($SG "grep '\"id\":\"$1\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | grep '\"t\":\"reply\"'" < /dev/null 2>/dev/null) || return 1
+  printf '%s\n' "$R" | SINCE="$2" node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const t=+process.env.SINCE;const ok=s.split('\n').some(l=>{try{const r=JSON.parse(l);return (r.status==='answered'||r.status==='matthew')&&+r.at>=t-5}catch(e){return false}});process.exit(ok?0:1)})"
+}
+
 one_ticket() {
   local T ID PROMPT RC LAST CLAUDE PICS AUD
   CLAUDE=$(claude_bin); [ -n "$CLAUDE" ] && [ -f "$CLAUDE" ] || { log "no claude.exe found"; return 1; }
@@ -87,7 +93,11 @@ one_ticket() {
   ID=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).id)}catch(e){}})")
   [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { log "could not read the ticket"; return 1; }
   BY=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).by||'')}catch(e){}})")
-  local M="$MODEL"; [ "$BY" = "Matthew Sharpe" ] && M="${HELP_MODEL_MATTHEW:-opus}"   # Matthew's own messages: app work, the heavier model (2 Nov)
+  # Matthew mode (his prompt, Opus, the quick pass) only when EVERY person-written message in the conversation is his (overnight review
+  # 11 Nov: any admin login can add to any conversation, and the ticket's `by` alone let another admin speak with his powers)
+  local ONLYM MM=0; ONLYM=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const c=JSON.parse(s).conversation||[];const p=c.filter(m=>!/^(claude|j\.?a\.?r\.?v\.?i\.?s\.?)$/i.test(String(m.from||'').trim()));console.log(p.length&&p.every(m=>m.from==='Matthew Sharpe')?1:0)}catch(e){console.log(0)}})")
+  [ "$BY" = "Matthew Sharpe" ] && [ "$ONLYM" = 1 ] && MM=1
+  local M="$MODEL"; [ "$MM" = 1 ] && M="${HELP_MODEL_MATTHEW:-opus}"   # Matthew's own messages: app work, the heavier model (2 Nov)
   touch "$LOCK"; log "$ID: session started ($M, from $BY)"
   PICS=$(get_photos "$T" "$ID")
   AUD=$(get_audio "$T" "$ID")
@@ -106,16 +116,21 @@ $AUD"
   # 11 Nov (Matthew): his tickets add jarvis-matthew-prompt.md (his personal assistant across Surge, Sixfold, Traverse, Peak, Donny,
   # personal); every ticket adds jarvis-learned.md (what past tickets taught; the session adds to it)
   local SYS; SYS="$(cat "$REPO/traverse/ops/help-desk-prompt.md")"
-  [ "$BY" = "Matthew Sharpe" ] && [ -f "$REPO/traverse/ops/jarvis-matthew-prompt.md" ] && SYS="$SYS
+  [ "$MM" = 1 ] && [ -f "$REPO/traverse/ops/jarvis-matthew-prompt.md" ] && SYS="$SYS
 
 $(cat "$REPO/traverse/ops/jarvis-matthew-prompt.md")"
-  [ -f "$REPO/traverse/ops/jarvis-learned.md" ] && SYS="$SYS
+  [ "$BY" = "Matthew Sharpe" ] && [ "$MM" = 0 ] && PROMPT="$PROMPT
 
-$(tail -n 150 "$REPO/traverse/ops/jarvis-learned.md")"
+(Watcher note: someone other than Matthew has written in this conversation, so it gets the office limits, not his.)"
+  # learned notes: Matthew's (hold his private work) only for his tickets; office tickets read and write jarvis-learned-office.md (review 11 Nov)
+  local LF="$REPO/traverse/ops/jarvis-learned-office.md"; [ "$MM" = 1 ] && LF="$REPO/traverse/ops/jarvis-learned.md"
+  [ -f "$LF" ] && SYS="$SYS
+
+$(tail -n 150 "$LF")"
   # 11 Nov (Matthew: "respond fast ... answer questions based on data"): a quick first pass for his messages, read-only (memory, TASKS,
   # jarvis-learned, the repo), no photos. ANSWER = it replies in seconds and the full session never starts; HANDOFF = an instant
   # "on it" note, then the full session as before. Any failure of the quick pass just falls through to the full session.
-  if [ "$BY" = "Matthew Sharpe" ] && [ -z "$PICS" ] && [ -f "$REPO/traverse/ops/jarvis-quick-prompt.md" ] && [ "${JARVIS_QUICK:-1}" = 1 ]; then
+  if [ "$MM" = 1 ] && [ -z "$PICS" ] && [ -f "$REPO/traverse/ops/jarvis-quick-prompt.md" ] && [ "${JARVIS_QUICK:-1}" = 1 ]; then
     local Q QH QT QS; QS=$(date +%s)
     Q=$(cd "$REPO" && timeout 90 "$CLAUDE" -p "$PROMPT" --model "${HELP_MODEL_QUICK:-sonnet}" --tools "Read,Grep,Glob" --permission-mode auto \
         --add-dir "/c/Users/Matthew sharpe/.claude/projects/c--Users-Matthew-sharpe-Desktop-claude-test-2/memory" \
@@ -124,7 +139,8 @@ $(tail -n 150 "$REPO/traverse/ops/jarvis-learned.md")"
     QH=$(printf '%s\n' "$Q" | sed -n '1{s/[^A-Z]//g;p}'); QT=$(printf '%s\n' "$Q" | sed '1d')
     if [ "$QH" = ANSWER ] && [ -n "$(printf '%s' "$QT" | tr -d '[:space:]')" ]; then
       printf '%s' "$QT" | bash "$REPO/traverse/ops/help-reply.sh" "$ID" answered >> "$LOG" 2>&1
-      log "$ID: quick pass answered in $(( $(date +%s) - QS )) s"; rm -f "$LOCK"; return 0
+      if final_since "$ID" "$QS"; then log "$ID: quick pass answered in $(( $(date +%s) - QS )) s"; rm -f "$LOCK"; return 0; fi
+      log "$ID: quick answer did not reach the chat: full session"   # review 11 Nov: a dropped SSH left the ticket 'working' for 90 min
     elif [ "$QH" = HANDOFF ] && [ -n "$(printf '%s' "$QT" | tr -d '[:space:]')" ]; then
       printf '%s' "$QT" | bash "$REPO/traverse/ops/help-reply.sh" "$ID" working >> "$LOG" 2>&1
       log "$ID: quick pass handed off in $(( $(date +%s) - QS )) s"
@@ -133,9 +149,11 @@ $(tail -n 150 "$REPO/traverse/ops/jarvis-learned.md")"
 (A quick 'on it' note has already been sent to him. Don't send another progress note unless this will take more than a few minutes.)"
     else log "$ID: quick pass gave no usable answer ($(( $(date +%s) - QS )) s): full session"; fi
   fi
+  local SS; SS=$(date +%s)
   (cd "$REPO" && "$CLAUDE" -p "$PROMPT" --model "$M" --permission-mode auto --append-system-prompt "$SYS" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
-  LAST=$($SG "grep '\"id\":\"$ID\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | tail -1" < /dev/null 2>/dev/null)
-  if ! printf '%s' "$LAST" | grep -q '"t":"reply"' || printf '%s' "$LAST" | grep -q '"status":"working"'; then
+  # a final reply (answered or matthew) written since the session started; the last log line alone misread a follow-up that arrived after
+  # the answer as "no reply" (review 11 Nov). The follow-up itself makes the conversation new again and is picked up next round.
+  if ! final_since "$ID" "$SS"; then
     printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you." | bash "$REPO/traverse/ops/help-reply.sh" "$ID" matthew >> "$LOG" 2>&1
     log "$ID: no final reply from the session (exit $RC): passed to Matthew"
   else log "$ID: done (exit $RC)"; fi
@@ -208,7 +226,7 @@ while [ "$(date +%s)" -lt "$END" ]; do
         [ "$VIA" = https ] && { log "https check is not answering a number (got: $(printf '%s' "$N" | tr -d '\r\n' | cut -c1-60)): reading over one open SSH connection every 5 s"; VIA=ssh; }
         R=""
         if [ "$SFAIL" -lt 3 ]; then
-          { [ -n "${STREAM_PID:-}" ] && kill -0 "$STREAM_PID" 2>/dev/null; } || { stream_close; stream_open; }
+          { [ -n "${STREAM_PID:-}" ] && kill -0 "$STREAM_PID" 2>/dev/null; } || { stream_close; [ "$SFAIL" -gt 0 ] && sleep 10; stream_open; }   # a pause before reopening after a drop (review 11 Nov)
           R=$(stream_read) || R=""
           if [[ "$R" =~ ^[0-9]+\|[0-9]+$ ]]; then SFAIL=0
           else SFAIL=$(( SFAIL + 1 )); R=""; stream_close; [ "$SFAIL" -ge 3 ] && log "the open SSH connection keeps dropping: back to a fresh SSH look every 30 s"; fi
