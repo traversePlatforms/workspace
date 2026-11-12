@@ -9967,7 +9967,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         w.appendChild(q('span', 'sub2', off ? 'Marked by ' + String(x.how).slice(7).trim() + ', ' + fmtDay(x.at) : 'They unsubscribed, ' + fmtDay(x.at)));
         if (off || S.role === 'admin') { var u = q('button', 'lnk', 'Email them again'); u.type = 'button'; u.addEventListener('click', function () { set(false, u); }); w.appendChild(u); }
       } else {
-        var b = q('button', 'lnk', 'Don\u2019t email'); b.type = 'button'; b.title = 'No newsletter, follow-up or other automatic emails to ' + em;
+        var b = q('button', 'lnk', 'Take off email list'); b.type = 'button';   /* was "Don't email" (12 Nov): Matthew read it as a status on every new lead */ b.title = 'No newsletter, follow-up or other automatic emails to ' + em;
         b.addEventListener('click', function () { if (window.confirm('Stop every automatic email to ' + em + '? (Newsletter, follow-ups, plan emails.)')) set(true, b); });
         w.appendChild(b);
       }
