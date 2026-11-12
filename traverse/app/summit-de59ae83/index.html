@@ -10025,8 +10025,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var bqt = q('span'); bqt.appendChild(q('b', null, l.quote ? 'Open the quote \u00b7 ' + money0(l.quote.price) : 'Start the quote')); bqt.appendChild(q('small', null, l.quote ? 'Change it, send it or book it' : 'Price this lawn in the Quote builder')); bq.appendChild(bqt); bq.appendChild(q('i', null, '\u203a'));
       bq.addEventListener('click', function () { houseLookupView(l, l.house); }); box.appendChild(bq);
     }
-    var go = function () {
-      api('a365house', { params: { region: l.house.region, id: l.house.door } }).then(function (j) {
+    /* the house's facts are kept for the visit (2026-11-12, Matthew: on a computer the action buttons 'clip'): fetched after the card was drawn,
+       they arrived above the call-try buttons and pushed them down under the pointer, and again on every redraw after an action. A card drawn
+       again now fills them in at once, so only the first look at a house waits for them. */
+    var hk = l.house.region + '/' + l.house.door; S.houseFacts = S.houseFacts || {};
+    var fill = function (j) {
         facts.textContent = '';
         if (!j || !j.ok) { facts.appendChild(q('div', 'msg', 'Could not load the house.')); return; }
         var h = j.house, E = lawnEstimate(h);
@@ -10055,12 +10058,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (h.lookup) row('Note', pw('Not on the door lists') + (h.rent ? ': likely rented' : ''));
         if (l.ask && l.ask.size) row('They said', l.ask.size);
         if (h.lat != null) {
-          miniAerial(pic, h);
+          setTimeout(function () { miniAerial(pic, h); }, 0);   /* once the card is on the page */
           pic.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres }); });
         } else pic.hidden = true;
-      }).catch(function () { facts.textContent = ''; facts.appendChild(q('div', 'msg', 'The house needs signal.')); });
     };
-    if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); go(); } }, { rootMargin: '200px' }); setTimeout(function () { io.observe(box); }, 0); }
+    var go = function () {
+      api('a365house', { params: { region: l.house.region, id: l.house.door } }).then(function (j) { if (j && j.ok) S.houseFacts[hk] = { j: j, at: Date.now() }; fill(j); })
+        .catch(function () { facts.textContent = ''; facts.appendChild(q('div', 'msg', 'The house needs signal.')); });
+    };
+    var hc = S.houseFacts[hk];
+    if (hc && Date.now() - hc.at < 300000) fill(hc.j);
+    else if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); go(); } }, { rootMargin: '200px' }); setTimeout(function () { io.observe(box); }, 0); }
     else go();
     return box;
   }
