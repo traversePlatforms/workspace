@@ -4724,5 +4724,11 @@
  " now on the form, or when the work is done": " ahora en el formulario, o cuando se termine el trabajo",
  " · no deposit; they can pay it all now on the form, or when the work is done": " · sin depósito; pueden pagar todo ahora en el formulario, o cuando se termine el trabajo",
  ", no deposit, pay now on the form if they like": ", sin depósito, pueden pagar ahora en el formulario si quieren",
- "This is the same link that is on their form, so they can only pay it once.": "Es el mismo enlace que está en su formulario, así que solo lo pueden pagar una vez."
+ "This is the same link that is on their form, so they can only pay it once.": "Es el mismo enlace que está en su formulario, así que solo lo pueden pagar una vez.",
+ "Don’t email": "No enviar correos",
+ "Email them again": "Volver a enviarle correos",
+ "Emails back on": "Correos activados de nuevo",
+ "Marked by ": "Marcado por ",
+ "They unsubscribed, ": "Se dio de baja, ",
+ "Marked: no emails": "Marcado: sin correos"
 }

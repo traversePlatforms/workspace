@@ -2612,7 +2612,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .qline.qyes,small.qyes{color:var(--booked)}.qacts .qpage{text-decoration:none}
   .qoffer{display:grid;gap:6px;justify-items:start}
   /* a lead's house on its card (2026-10-14) */
-  .ldetails{display:grid;gap:4px;margin-top:6px}
+  .ldetails{display:grid;gap:4px;margin-top:6px}.nomail{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:6px 0 2px;min-height:30px}.nomail .nomailtag{color:var(--bad)}
   .laddc{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
   .laddf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%}
   .laddf input{flex:1;min-width:180px;font:inherit;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
@@ -5909,6 +5909,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       c.appendChild(dt);
     }
+    if (wdOn() && l.email && String(l.id).indexOf('preview-') !== 0) c.appendChild(noMailRow(l.email));   /* Don't email (2026-11-12) */
     if ((wdOn() || qView()) && String(l.id).indexOf('preview-') !== 0 && (tel.length < 10 || !l.email)) c.appendChild(leadAddRow(l, c, tel.length < 10, !l.email));   /* Add phone / Add email, every stage (2026-10-23, Matthew: Jen could not add Deano's email) */
     if ((wdOn() && (S.screen === 'pipeline' || S.screen === 'calendar')) || qView()) c.appendChild(l.house && l.house.region ? leadProperty(l) : leadHouseRow(l));   /* + Calendar, My leads (2026-11-09, Matthew: "I cant currently open up their property cards in the calendar then leads section") */   /* typed by hand (no region): the row, no photo */   /* the house lookup (2026-10-14); with a house, its photo and numbers on the card */
     if (wdOn() && S.screen === 'pipeline' && l.sign) c.appendChild(signLine(l));
@@ -8495,7 +8496,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* several steps in one entry (2026-10-28, Matthew: Jen quotes, texts, calls and leaves a voicemail): tick what you did, at most one call
        result, then Save; Undo on the toast takes the whole entry back */
     var row = q('div', 'ltrybtns'); row.appendChild(q('span', null, 'Reached out? Tick what you did'));
-    var pick = {}, CALL = ['none', 'vm', 'talk'], btns = {}, tel = digits(l.phone), redraw = again || S.leadRedraw || pipelineView;
+    S.tryPick = S.tryPick || {}; var kept = S.tryPick[l.id] || null;   /* kept across a redraw (2026-11-12) */
+    var pick = kept ? JSON.parse(JSON.stringify(kept.pick)) : {}, CALL = ['none', 'vm', 'talk'], btns = {}, tel = digits(l.phone), redraw = again || S.leadRedraw || pipelineView;
     var vmBox = q('div', 'lvm'); vmBox.hidden = true;
     var vt = q('textarea'); vt.rows = 2; vt.maxLength = 400; vt.placeholder = 'What you said in the voicemail (for whoever calls next)'; vt.setAttribute('aria-label', 'What you said in the voicemail');
     var vp = q('div', 'lvmpick');
@@ -8509,6 +8511,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       vp.appendChild(b);
     });
     vmBox.appendChild(vp); vmBox.appendChild(vt);
+    if (kept) vt.value = kept.note || '';
+    vt.addEventListener('input', function () { if (S.tryPick[l.id]) S.tryPick[l.id].note = vt.value; });
     var toldL = q('label', 'ltold'), toldC = q('input'); toldC.type = 'checkbox'; toldL.appendChild(toldC);
     toldL.appendChild(document.createTextNode(l.quote ? ' The quote (' + money0(l.quote.price) + ') was in it' : '')); toldL.hidden = true;
     var acts = q('div', 'ltrysave'), sv = q('button', 'save', 'Save'), err = q('div', 'err'); sv.type = 'button'; acts.appendChild(sv); acts.appendChild(err); acts.hidden = true;
@@ -8517,6 +8521,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       vmBox.hidden = !(pick.vm || (pick.none && vt.value.trim()));
       toldL.hidden = !(l.quote && !l.signed && !quoteGiven(l) && (pick.text || pick.msgr || pick.email || pick.talk || pick.vm));
       acts.hidden = !Object.keys(pick).length; err.textContent = '';
+      if (Object.keys(pick).length) S.tryPick[l.id] = { pick: JSON.parse(JSON.stringify(pick)), note: vt.value }; else delete S.tryPick[l.id];
     };
     ['none', 'vm', 'talk', 'text', 'msgr', 'email'].forEach(function (o) {
       var b = q('button', null, TRY_N[o]); b.type = 'button'; btns[o] = b;
@@ -8533,6 +8538,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         btn.disabled = false;
         if (j._status === 401) return signinView('Signed out. Enter your code again.');
         if (!j.ok) { toast('Not saved', j.error || 'Try again.', null); return; }
+        delete S.tryPick[l.id];
         redraw();
         var call = steps.filter(function (s) { return CALL.indexOf(s) >= 0; })[0], n = miss + (call === 'none' || call === 'vm' ? 1 : 0);
         if (call && call !== 'talk' && n >= UNREACH_AT && unreachOk(l)) { unreachAsk(l, n); return; }   /* the third call in a row with no answer (2026-10-21) */
@@ -8546,6 +8552,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       send(steps, note, !toldL.hidden && toldC.checked, sv);
     });
     box.appendChild(row); box.appendChild(vmBox); box.appendChild(toldL); box.appendChild(acts);
+    if (kept) paint();
     /* the quote in writing, logged as it goes (2026-10-28, Jen: "If I generate a quote ... I was either texting it to them or sending to them in the Facebook chat") */
     if (l.quote && l.quote.price && !l.signed && !l.sign) {
       var qr = q('div', 'ltryq'); qr.appendChild(q('span', null, quoteGiven(l) ? 'Send it again:' : 'Send the quote:'));
@@ -9933,6 +9940,41 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function leadAddr(l) { return l.house ? streetCase(l.house.address) + (l.house.town ? ', ' + l.house.town : '') : String(l.town || '').trim(); }
   /* Add phone number / Add email on a lead that has none (2026-10-23, Matthew: "There should be an add email and add phone number for everyone
      throughout all stages of the pipeline if they dont have an email or phone number already attached"). Saves through leadcontact. */
+  /* "Don't email" (2026-11-12): the office or an admin marks someone who asked not to be emailed; it goes on the same list the unsubscribe link
+     writes, which every automatic email checks. Shown as "Not emailed". The undo takes off only an office mark (someone who unsubscribed
+     themselves comes back only by an admin). The list is read again on each new screen, and at most once a minute while one stays open. */
+  function noMailLoad(cb) {
+    if (!S.nomailP || Date.now() - (S.nomailAt || 0) > 60000 || S.nomailScr !== S.screen) { S.nomailAt = Date.now(); S.nomailScr = S.screen;   /* fresh on each screen (a mark made on another device shows) */ S.nomailP = api('nomail').then(function (j) { S.nomail = j && j.ok && j.list && !Array.isArray(j.list) ? j.list : {}; }).catch(function () { S.nomail = S.nomail || {}; }); }
+    S.nomailP.then(cb);
+  }
+  function noMailRow(email) {
+    var w = q('div', 'nomail'), em = String(email || '').trim().toLowerCase();
+    var set = function (on, btn) {
+      btn.disabled = true;
+      api('nomailset', { body: { email: em, on: on ? 1 : 0 } }).then(function (k) {
+        btn.disabled = false;
+        if (k._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!k.ok) { toast('Not saved', k.error || 'Try again.', null); return; }
+        S.nomail = S.nomail || {}; if (k.entry) S.nomail[em] = k.entry; else delete S.nomail[em];
+        paint(); toast(on ? 'Marked: no emails' : 'Emails back on', em, null);
+      }).catch(function () { btn.disabled = false; toast('No signal', 'Not saved. Try again.', null); });
+    };
+    var paint = function () {
+      w.textContent = ''; var x = S.nomail && S.nomail[em];
+      if (x) {
+        var off = /^office:/.test(x.how || '');
+        w.appendChild(q('b', 'nomailtag noi18n', 'Not emailed'));
+        w.appendChild(q('span', 'sub2', off ? 'Marked by ' + String(x.how).slice(7).trim() + ', ' + fmtDay(x.at) : 'They unsubscribed, ' + fmtDay(x.at)));
+        if (off || S.role === 'admin') { var u = q('button', 'lnk', 'Email them again'); u.type = 'button'; u.addEventListener('click', function () { set(false, u); }); w.appendChild(u); }
+      } else {
+        var b = q('button', 'lnk', 'Don\u2019t email'); b.type = 'button'; b.title = 'No newsletter, follow-up or other automatic emails to ' + em;
+        b.addEventListener('click', function () { if (window.confirm('Stop every automatic email to ' + em + '? (Newsletter, follow-ups, plan emails.)')) set(true, b); });
+        w.appendChild(b);
+      }
+    };
+    paint(); noMailLoad(paint);   /* drawn at once (the button, or what this screen already knows), so nothing below it moves when the list comes in */
+    return w;
+  }
   function leadAddRow(l, card, needPhone, needEmail) {
     var w = q('div', 'laddc');
     [[needPhone, 'phone', 'Add phone number', 'tel', 'Phone number'], [needEmail, 'email', 'Add email', 'email', 'Email address']].forEach(function (x) {
@@ -18711,6 +18753,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       a5.addEventListener('click', function () { openCustomerDoor(c); }); ct.appendChild(a5);
     }
     if (ct.children.length) holder.appendChild(ct);
+    if (wdOn() && c.email) holder.appendChild(noMailRow(c.email));   /* Don't email (2026-11-12) */
     if (c.reviewAsked) holder.appendChild(q('div', 'sub2', 'Review asked ' + fmtD(c.reviewAsked)));
     else if (!(rv && /^https:\/\//.test(rv)) && S.role === 'admin' && feat('company')) holder.appendChild(q('div', 'sub2', 'To ask customers for reviews, add your Google review link on the Company screen.'));
     if (c.notes) holder.appendChild(q('div', 'lmsg', c.notes));
@@ -18867,7 +18910,28 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     S.pipeFindNote = note;
     return row;
   }
-  function pipeOpen() { S.pipeStage = null; S.pipeSel = null; S.pipeFocus = null; S.pipeQ = ''; S.pipeLc = ''; pipelineView(); }   /* + the search starts empty (2026-10-29) */
+  function pipeOpen() { S.pipeStage = null; S.pipeSel = null; S.pipeFocus = null; S.pipeQ = ''; S.pipeLc = ''; S.tryPick = {}; S.pipeWork = null; pipelineView(); }   /* + the search starts empty (2026-10-29) */
+  /* follow the card (2026-11-12, Matthew: "when an action moves a customer card to another section like after clicking texted them. It puts you
+     on a new card, it should instead follow that card into the texted them section"): the lead someone was working (a tap inside its card,
+     S.pipeWork) has moved out of the stage on screen, so the stage it is in now opens, with that lead open (computer) or scrolled to (phone).
+     A stage picked by hand afterwards is never overridden: the follow only runs while the stage on screen is still the one they were working in. */
+  function pipeFollow(stage, items, stOf, stList, key, pre) {
+    var w = S.pipeWork; pre = pre || 'all:';
+    if (!w || !stage || Date.now() - w.at > 600000 || w.stage !== pre + stage) return stage;
+    var it = items.filter(function (x) { return x.kind === 'lead' && x.x.id === w.id; })[0];
+    if (!it) return stage;
+    var ns = stOf(it);
+    if (ns === stage || !stList.some(function (x) { return x[0] === ns; })) return stage;
+    S[key] = ns; w.stage = pre + ns; S.pipeSel = 'lead:' + w.id; S.pipeScrollTo = w.id;
+    return ns;
+  }
+  function pipeFollowScroll(holder) {
+    var id = S.pipeScrollTo; if (!id) return; S.pipeScrollTo = null;
+    setTimeout(function () {
+      if (deskWide()) { var on = holder.querySelector('.p2row.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest' }); return; }
+      var c = holder.querySelector('.door.lead[data-id="' + id + '"]'); if (c) c.scrollIntoView({ block: 'start' });
+    }, 30);
+  }
   function pipelineView() {
     /* a save made on the pipeline refreshes it in place: the list stays up until the new one arrives,
        rather than blanking for the half-second the door bookings take to load */
@@ -18889,13 +18953,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     S.leadRedraw = pipelineView;
     var tok = S.pipeTok = {};   /* this open of the Pipeline (overnight check 2026-11-07) */
-    if (!S.leadPeople) api('calpeople').then(function (j) { if (j && j.ok) { var myT = (j.people.filter(function (x) { return x.me; })[0] || {}).team; S.leadPeople = j.people.filter(function (p) { return !(S.role === 'office' && S.runsTeam) || p.me || (myT && p.team === myT); }).map(function (p) { return p.name; }); if (S.screen === 'pipeline' && S.pipeDrawn === tok) drawPipe(); } }).catch(function () {});   /* redraw with the people, from the lists in hand (overnight check 2026-11-07: this called pipelineView again, so every first open fetched quotes, leads and walks twice); not drawn yet: the load below draws with them */
+    if (!S.leadPeople) api('calpeople').then(function (j) { if (j && j.ok) { var myT = (j.people.filter(function (x) { return x.me; })[0] || {}).team; S.leadPeople = j.people.filter(function (p) { return !(S.role === 'office' && S.runsTeam) || p.me || (myT && p.team === myT); }).map(function (p) { return p.name; }); if (S.screen === 'pipeline' && S.pipeDrawn === tok) drawPipe(true); } }).catch(function () {});   /* redraw with the people, from the lists in hand (overnight check 2026-11-07: this called pipelineView again, so every first open fetched quotes, leads and walks twice); not drawn yet: the load below draws with them */
     Promise.all([api('quotes'), api('leads'), deskLoad()]).then(function (rs) {
       if (rs[0]._status === 401 || rs[1]._status === 401) return signinView('Signed out. Enter your code again.');
       if (!rs[0].ok || !rs[1].ok) { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', (rs[0].error || rs[1].error) || 'Could not load the pipeline.')); return; }
       S.qlist = rs[0].quotes || []; S.pleads = rs[1].leads || []; S.cucheck = rs[1].cucheck || null; S.handTo = rs[1].handTo || [];   /* the ClickUp sync check (2026-10-17) */
-      S.pipeDrawn = tok; drawPipe();
-      if (!asOffice() && S.role === 'admin') api('customers').then(function (cj) { if (!cj || !cj.ok) return; var cl = {}, cd = {}; cj.customers.forEach(function (c) { if (c.lead) cl[c.lead] = 1; if (c.door) cd[c.door] = 1; }); S.custLinks = { lead: cl, door: cd }; if (S.screen === 'pipeline') drawPipe(); }).catch(function () {});
+      S.pipeDrawn = tok; drawPipe(true);
+      if (!asOffice() && S.role === 'admin') api('customers').then(function (cj) { if (!cj || !cj.ok) return; var cl = {}, cd = {}; cj.customers.forEach(function (c) { if (c.lead) cl[c.lead] = 1; if (c.door) cd[c.door] = 1; }); S.custLinks = { lead: cl, door: cd }; if (S.screen === 'pipeline') drawPipe(true); }).catch(function () {});
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
   /* ---- Meta leads (2026-10-04) ----
@@ -18986,8 +19050,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     row.appendChild(go); row.appendChild(cx); box.appendChild(row);
     return box;
   }
-  function drawPipe() {
+  /* fromData (2026-11-12, Matthew: on a computer "when i click on an action like left voicemail texted them etc it clips and i end up having to
+     press it again"): the loads that land after the Pipeline is up (the reload after a save, the customer links an admin's Pipeline fetches
+     afterwards, the people list) rebuilt every card each time, so a click pressed on the old card and released on the new one never happened,
+     and ticks made in between were wiped. A load that changed nothing now leaves the screen alone; a person's own taps (a stage, a filter) still
+     redraw as before. */
+  function drawPipe(fromData) {
     var holder = S.qholder; if (!holder) return;
+    var sig = JSON.stringify([S.qlist, S.pleads, S.custLinks, S.leadPeople, S.cucheck, S.handTo, S.pipeStage, S.pipeStageM, S.pipeSrc, S.pipeQ, S.pipeLc]);
+    if (fromData && sig === S.pipeSig && holder.isConnected && holder.firstChild && !holder.querySelector('.skel')) return;
+    /* never under a pressed pointer: a load landing between press and release replaced the button, so the release met a new one and no click
+       happened (found 12 Nov in Chrome: mousedown and mouseup on Left voicemail, no click). It waits until the press ends, then draws. */
+    if (fromData && S.pipePress && Date.now() - S.pipePress < 5000 && holder.isConnected) { S.pipeLater = true; return; }   /* 5 s at most: a release outside the window never holds it */
+    S.pipeLater = false;
+    S.pipeSig = sig;
+    /* which lead was being worked (a tap on a button inside its card), and in which stage: after an action moves it, the Pipeline follows it */
+    if (!holder._work) { holder._work = true;
+      holder.addEventListener('pointerdown', function () { S.pipePress = Date.now(); }, true);
+      var upP = function () { if (!S.pipePress) return; S.pipePress = 0; if (S.pipeLater) setTimeout(function () { if (S.pipeLater && !S.pipePress && S.screen === 'pipeline') drawPipe(true); }, 0); };   /* after the click has gone through */
+      document.addEventListener('pointerup', upP, true); document.addEventListener('pointercancel', upP, true);
+      holder.addEventListener('click', function (e) { var el = e.target && e.target.closest ? e.target : null; var c = el && el.closest('.door.lead[data-id]'); if (c && el.closest('button, a, input, label') && holder.contains(c)) S.pipeWork = { id: c.getAttribute('data-id'), stage: S.pipeCur || null, at: Date.now() }; }, true); }
     var y = window.scrollY;
     holder.textContent = '';
     var items = (S.qlist || []).map(function (x) { return { kind: 'door', x: x, at: x.at }; })
@@ -19052,6 +19134,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waitM = function (it) { var x = lastTry(it.x); return x ? x.at : (it.at || 0); };
       var stM = OFFICE_ST.filter(function (st) { return MINE_ST.indexOf(st[0]) >= 0 && (st[0] !== 'recall' || wdOn()); });
       var stageM = S.pipeStageM || null; if (stageM && !stM.some(function (x) { return x[0] === stageM; })) stageM = null;
+      stageM = pipeFollow(stageM, mineItems, mineStage, stM, 'pipeStageM', 'mine:'); S.pipeCur = 'mine:' + (stageM || '');   /* 2026-11-12 */
       /* a link straight to one of his leads (an alert, Person search, Open it) opens the stage it is in (overnight check 2026-11-10: since the
          stage tabs nothing was open, so the lead the link pointed at was not on the screen) */
       var focM = S.pipeFocus, focIt = focM ? mineItems.filter(function (it) { return it.x.id === focM; })[0] : null;
@@ -19087,7 +19170,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       else if (!groupsM.length) holder.appendChild(q('div', 'msg', 'Nothing at this stage.'));
       else if (wdOn() && deskWide()) pipeTwo(holder, groupsM, cardM);
       else groupsM.forEach(function (g) { if (g[0]) holder.appendChild(q('h2', 'pipegrp', g[0] + ' \u00b7 ' + g[1].length)); g[1].forEach(function (it) { cardM(it); }); });
-      window.scrollTo(0, y);
+      window.scrollTo(0, y); pipeFollowScroll(holder);
       if (focIt && !deskWide()) { var fcM = holder.querySelector('[data-id="' + focM + '"]'); if (fcM) setTimeout(function () { fcM.scrollIntoView({ block: 'start' }); }, 30); }
       return;
     }
@@ -19096,6 +19179,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* stages */
     /* Walk booked only while someone is in it (2026-10-21, Matthew: "walk booked wouldn't really be used") */
     var stList = (officeStages() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()); });   /* Recall: the lead desk only (2026-10-21) */
+    stage = pipeFollow(stage, items.filter(function (it) { return src === 'all' || pipeSrc(it) === src; }), pipeStage, stList, 'pipeStage');   /* 2026-11-12 */
+    S.pipeCur = 'all:' + (stage || '');
     var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + stList.length + ',1fr)';
     stList.forEach(function (st) {
       var n = items.filter(function (it) { return pipeStage(it) === st[0] && (src === 'all' || pipeSrc(it) === src); }).length;
@@ -19195,7 +19280,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (S.pipeFocus && !deskWide()) { var fc = holder.querySelector('[data-id="' + S.pipeFocus + '"]'); if (fc) setTimeout(function () { fc.scrollIntoView({ block: 'start' }); }, 30); }
     S.pipeFocus = null;
-    window.scrollTo(0, y);
+    window.scrollTo(0, y); pipeFollowScroll(holder);
   }
   /* ---- address search (2026-10-04) ----
      Matthew: someone driving past a property that needs us can type the address and get its card,
