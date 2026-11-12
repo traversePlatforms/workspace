@@ -53,7 +53,7 @@ srv() {   # srv '<command>' [< stdin]: run one allowed command on the Traverse s
   if ! allowed "$1"; then log "GUARD: refused a server command that is not practice-only: $(printf '%s' "$1" | tr '\n' ' ' | cut -c1-140)"; return 97; fi
   # dry runs: TEST=1 (--peek) still reads (a peek, a voice note) but only shows what it would write; TEST=2 (--test-ticket) runs nothing
   if [ "$TEST" = 2 ] || { [ "$TEST" = 1 ] && [[ ! "$1" =~ ^cat\ |help-next\.php\ --peek\ --practice$ ]]; }; then log "test: would run on the server: $1"; cat > /dev/null; return 96; fi
-  ssh -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o StrictHostKeyChecking=yes \
+  ssh -F /dev/null -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o StrictHostKeyChecking=yes \
     -o "UserKnownHostsFile=$SEC/known_hosts" -o IdentitiesOnly=yes -i "$SGKEY" -p 18765 "$SGDEST" "$1"
 }
 is_practice_ticket() {   # the ticket's own files folder must be the practice copy's
@@ -62,12 +62,29 @@ is_practice_ticket() {   # the ticket's own files folder must be the practice co
 }
 
 # ---- readiness --------------------------------------------------------------------------------------------------------------------------
-signed_in() { [ -x "$CLAUDE" ] && "$CLAUDE" auth status 2>/dev/null | jq -e '.loggedIn == true' > /dev/null 2>&1; }
+# review 12 Nov: the sign-in must be the Claude plan itself. A Console sign-in (claude auth login --console) is billed per use, so it counts as not signed in.
+signed_in() { [ -x "$CLAUDE" ] && "$CLAUDE" auth status 2>/dev/null | jq -e '.loggedIn == true and .authMethod == "claude.ai"' > /dev/null 2>&1; }
+# review 12 Nov: every 10 minutes, keep the log and the session error file from growing without end, and drop voice notes and reply copies after 14 days
+tidy() {
+  local f; for f in "$LOG" "$ST/p-session.err"; do
+    [ -f "$f" ] && [ "$(stat -c %s "$f" 2>/dev/null || echo 0)" -gt 5000000 ] && { tail -n 2000 "$f" > "$f.tmp" 2>/dev/null && mv "$f.tmp" "$f"; }
+  done
+  find "$ST/audio" -mindepth 1 -mtime +14 -delete 2>/dev/null; find "$ST" -maxdepth 1 -name 'p-h*.reply' -mtime +14 -delete 2>/dev/null
+  return 0
+}
+disk_ok() { local a; a=$(df -k --output=avail "$ST" 2>/dev/null | tail -1 | tr -d ' '); [[ "$a" =~ ^[0-9]+$ ]] && [ "$a" -gt 512000 ]; }   # 500 MB free
 READY_AT=0; READY=1; LASTSTATE=""
 ready() {   # cached 10 minutes; logs only when the state changes
   local now; now=$(date +%s)
-  if [ $(( now - READY_AT )) -ge 600 ]; then READY_AT=$now; signed_in && READY=0 || READY=1; fi
-  local s; [ "$READY" = 0 ] && s="ready" || s="waiting for sign-in: Claude Code on this machine is not signed in to Matthew's plan, so no practice ticket is taken"
+  if [ $(( now - READY_AT )) -ge 600 ]; then
+    READY_AT=$now; tidy
+    if ! signed_in; then READY=1; elif ! disk_ok; then READY=2; else READY=0; fi
+  fi
+  local s; case "$READY" in
+    0) s="ready";;
+    2) s="disk nearly full on this machine (under 500 MB free): no practice ticket is taken until there is room (the laptop still answers)";;
+    *) s="waiting for sign-in: Claude Code on this machine is not signed in to Matthew's plan, so no practice ticket is taken";;
+  esac
   [ "$s" != "$LASTSTATE" ] && { log "$s"; LASTSTATE="$s"; }
   return "$READY"
 }
@@ -115,6 +132,7 @@ conversation() {   # conversation <ticket JSON> <ticket id>: the chat as text, t
   printf '%s' "$1" | AD="$ST/audio/$2" node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const t=JSON.parse(s);const fs=require('fs'),vt=a=>{try{return /^a[0-9]{10}[0-9a-f]{6}[.][a-z0-9]+$/.test(a.n||'')?fs.readFileSync(process.env.AD+'/'+a.n+'.txt','utf8').trim():''}catch(e){return ''}};console.log(t.conversation.map(m=>m.from+' ('+m.when+'): '+m.text+((m.photos||[]).length?' [sent '+m.photos.length+' photo'+(m.photos.length>1?'s':'')+']':'')+(m.audio||[]).map(a=>{const x=vt(a);return x?' [voice note: '+x+']':' [sent a voice note]'}).join('')).join('\n\n'))}catch(e){}})"
 }
 session() {   # session <conversation text>: Claude with NO tools, NO MCP, no user settings, only help-practice-prompt.md; prints the reply
+  [ -s "$OPS/help-practice-prompt.md" ] || { log "practice: help-practice-prompt.md is missing: no session (run jarvis-cloud.sh deploy)"; return 1; }
   mkdir -p "$PCWD"
   (cd "$PCWD" && timeout 300 "$CLAUDE" -p "The chat so far (answer the last message):
 
@@ -124,6 +142,7 @@ $1" --tools "" --strict-mcp-config --setting-sources project --model "${HELP_MOD
 # ---- one practice ticket ----------------------------------------------------------------------------------------------------------------
 one_practice() {
   local T ID OUT CONV T0
+  DID=0
   ready || return 0
   T=$(srv "${TOOLS}help-next.php --practice" < /dev/null 2>>"$LOG") || { log "practice: server not reachable (has Matthew added the VM's SSH key in SiteGround?)"; sleep 25; return 0; }
   [ -n "$T" ] || return 0
@@ -137,8 +156,13 @@ one_practice() {
   [ -n "$OUT" ] || { OUT="My apologies, I seem to have lost my train of thought. Could you send that again?"; log "practice $ID: the session gave no reply"; }
   printf '%s' "$OUT" > "$ST/p-$ID.reply"
   printf '%s' "$OUT" | srv "${TOOLS}help-reply.php $ID answered --practice" >> "$LOG" 2>&1
-  log "practice $ID: done in $(( $(date +%s) - T0 )) s"
+  log "practice $ID: done in $(( $(date +%s) - T0 )) s"; DID=1
 }
+# review 12 Nov: a look that took nothing (the laptop got there first, the count and the server disagree, an unreadable ticket) used to go
+# straight round again with no pause: a new SSH login every second or two for as long as it lasted. Now each empty look waits 5 s longer
+# than the last, up to a minute, and a ticket that was answered resets it.
+MISS=0; DID=0
+take() { one_practice; if [ "$DID" = 1 ]; then MISS=0; else MISS=$(( MISS + 1 )); sleep $(( MISS > 12 ? 60 : MISS * 5 )); fi; }
 
 # ---- test modes -------------------------------------------------------------------------------------------------------------------------
 guard_test() {
@@ -149,7 +173,13 @@ guard_test() {
     "cat '/home/x/sixfold-practice-data/rounds/help-files/../../../sixfold-data/rounds/help-files/h20261111120000abcd/a1762900000abcdef.webm'"
     "${TOOLS}help-next.php --practice; ${TOOLS}help-next.php" "${TOOLS}help-next.php --practice && cat /etc/passwd"
     "${TOOLS}help-next.php --practice"$'\n'"${TOOLS}help-next.php" "${TOOLS}help-attach.php h20261111120000abcd 'x.pdf' --practice"
-    "${TOOLS}help-next.php --practice --live" "rm -rf \$HOME" "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-next.php --practice \$(id)")
+    "${TOOLS}help-next.php --practice --live" "rm -rf \$HOME"
+    "${TOOLS}help-reply.php h20261111120000abcd working --practice" "${TOOLS}help-reply.php h20261111120000abcd answered refresh --practice"
+    "${TOOLS}help-reply.php h20261111120000abcd answered file=x.pdf --practice" "${TOOLS}help-reply.php h20261111120000abcd answered --practice extra"
+    " ${TOOLS}help-next.php --practice" "${TOOLS}help-next.php  --practice" "${TOOLS}../sixfold-tools/help-next.php --practice" "${TOOLS}help-next.php --practice #"
+    "${TOOLS}help-transcript.php h20261111120000abcd a1762900000abcdef.exe --practice" "cat '/home/x/sixfold-practice-data/rounds/help.log'" "scp x y"
+    "cat '/home/x/sixfold-practice-data/rounds/help-files/h20261111120000abcd/a1762900000abcdef.webm' '/home/x/sixfold-data/rounds/help.log'"
+    "cat '/home/x/sixfold-practice-data/rounds/help-files/h20261111120000abcd/a1762900000abcdef.webm' --practice""php \$HOME/www/traverseplatforms.com/sixfold-tools/help-next.php --practice \$(id)")
   local -a YES=("${TOOLS}help-next.php --practice" "${TOOLS}help-next.php --peek --practice" "${TOOLS}help-reply.php h20261111120000abcd answered --practice"
     "${TOOLS}help-transcript.php h20261111120000abcd a1762900000abcdef.webm --practice" "${TOOLS}help-transcript.php h20261111120000abcd a1762900000abcdef.m4a --failed --practice"
     "cat '/home/x/www/traverseplatforms.com/sixfold-practice-data/rounds/help-files/h20261111120000abcd/a1762900000abcdef.webm'")
@@ -210,12 +240,12 @@ while true; do
   P=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK" 2>/dev/null)
   if [[ "$P" =~ ^[0-9]+$ ]]; then
     [ "$BAD" -ge 3 ] && log "https check answers again"; BAD=0
-    if [ "$P" -gt 0 ] && ready; then one_practice; continue; fi
+    if [ "$P" -gt 0 ] && ready; then take; continue; fi
   else
     BAD=$(( BAD + 1 ))
     if [ "$BAD" -ge 3 ]; then   # the HTTPS check is captcha'd or down: a fresh SSH look every 30 s (practice only)
       [ "$BAD" = 3 ] && log "https check is not answering a number (got: $(printf '%s' "$P" | tr -d '\r\n' | cut -c1-60)): looking over SSH every 30 s"
-      if ready && srv "${TOOLS}help-next.php --peek --practice" < /dev/null 2>>"$LOG" | grep -q '"waiting"'; then one_practice; continue; fi
+      if ready && srv "${TOOLS}help-next.php --peek --practice" < /dev/null 2>>"$LOG" | grep -q '"waiting"'; then take; continue; fi
       sleep 25
     fi
   fi

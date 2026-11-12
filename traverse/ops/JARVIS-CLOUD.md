@@ -39,17 +39,32 @@ In `help-watch-cloud.sh`, not in config:
 1. **Every server command goes through `srv()`, which runs only what `allowed()` lists:** `help-next.php [--peek] --practice`,
    `help-reply.php <id> answered --practice`, `help-transcript.php <id> <note> [--failed] --practice`, and `cat` of a voice note under
    `sixfold-practice-data/rounds/help-files/`. Anything else (no `--practice`, chained commands, `..`, `$(`, redirects, other tools such
-   as help-attach) is refused and logged as `GUARD:`. `--guard-test` checks 14 live/hostile commands are refused and 6 practice ones
-   pass; `deploy` will not start the service unless it prints "all PASS".
+   as help-attach) is refused and logged as `GUARD:`. `--guard-test` checks 26 live/hostile commands are refused and 6 practice ones
+   pass; `deploy` uploads the new watcher beside the old one and swaps it in only if it prints "all PASS" (a failed test leaves the
+   old watcher in place and running).
 2. **A taken ticket must carry the practice copy's own files folder** (`.../sixfold-practice-data/rounds/help-files/<id>`), or it is
    dropped untouched.
 3. The HTTPS check only asks for the practice count, and there is **no live code path in the file at all** (no Matthew mode, no
    help-desk prompt, no tools in the session). Live tickets need a new version of the script (switch-over below), not a setting.
 4. **No ticket is taken unless Claude Code is signed in** (`claude auth status`); `ANTHROPIC_API_KEY` and the other provider/token
-   variables are cleared before every session, so it can only ever run on Matthew's plan.
+   variables are cleared before every session, so it can only ever run on Matthew's plan. A Console sign-in (billed per use) counts as
+   not signed in: the check needs the sign-in method to be the Claude plan (review 12 Nov).
+
+**What the guard does not cover (review 12 Nov).** The guard is in the watcher script. The SSH key itself is an ordinary SiteGround
+key: once it is added (step 1 below) it can open the whole Traverse site account, live data included, for anything on the VM that
+runs as `yard` (the data jobs under `~/run`, anyone holding the laptop's `azure_yard` key). The watcher will not use it that way,
+but the key could be used that way. So adding the key means trusting the VM with the server, the same as the laptop. To close it
+later: have the server run only a fixed practice-only script for this key (a `command=` restriction on its `authorized_keys` line),
+if SiteGround's key manager keeps such a line. Not built.
 
 During the trial **both** watchers answer practice tickets: whichever takes one first. That is safe: `help-next.php` marks a ticket
-"working" under a file lock, so one ticket goes to one watcher only. No double replies.
+"working" under a file lock, so one ticket goes to one watcher only. No double replies to the same message. One edge: if the tester sends a second message while
+a reply is being written, the conversation is new again and the other watcher can take it, so two replies can arrive close together
+(the first written without seeing the second message). Practice only; it matters for the switch-over (below).
+
+Kept in check on the VM (review 12 Nov): an empty look waits 5 s longer each time, up to a minute, instead of going straight round
+again; the log is cut to its last 2,000 lines past 5 MB; voice notes and reply copies are dropped after 14 days; under 500 MB of
+free disk it stops taking tickets and says so in the log (the laptop still answers).
 
 ## Start, stop, look
 
@@ -68,6 +83,8 @@ dry runs: `bash ~/jarvis/ops/help-watch-cloud.sh --peek` (next practice ticket, 
 
 ## What Matthew must do (each sign-in)
 
+Do 1, then 2, then 3. Nothing is taken until both 1 and 2 are done. Read "What the guard does not cover" above before step 1.
+
 1. **Add the VM's server key in SiteGround (Traverse account).** Site Tools for traverseplatforms.com → **Devs → SSH Keys Manager** →
    **Import** tab. Key name `jarvis-cloud`. Public key: open `C:\Users\Surge Inc\.ssh\jarvis-cloud-traverse_sg.pub` in Notepad, copy the
    one line (starts `ssh-rsa`, ends `jarvis-cloud-yardtest-2026-11-12`), paste, **Import**. No passphrase to set (it has none).
@@ -76,6 +93,8 @@ dry runs: `bash ~/jarvis/ops/help-watch-cloud.sh --peek` (next practice ticket, 
    (choose the Claude subscription, not the Console/API), click Authorize, copy the code it shows, paste it into the terminal, Enter.
    It shows `"loggedIn": true` and restarts the service.
 3. **Check:** `bash traverse/ops/jarvis-cloud.sh status` should show `SSH to the server: OK`, `Claude Code: signed in`, `guard: all PASS`.
+   If SSH says `NOT YET`, the key in step 1 did not take (paste it again as one line). If Claude Code says `NOT signed in`, run step 2
+   again. To turn the trial off at any point: `bash traverse/ops/jarvis-cloud.sh stop` (the laptop keeps answering everything).
 4. **Test:** send a message (and one voice note) in the **practice** copy's chat. The log shows `practice h...: session started (cloud)`
    if the VM took it (the laptop may take some: either is fine).
 5. **Later, for the repo clone (switch-over only):** GitHub → `traversePlatforms/workspace` → Settings → **Deploy keys** → Add deploy
@@ -89,11 +108,20 @@ Claude session on the VM (timing).
 1. **Repo on the VM:** read-only clone over the deploy key (step 5) to `~/workspace`; `git pull --ff-only` from GitHub before each
    session (the GitHub copy lags the laptop until the 6 PM `github-sync.sh`, so after a laptop change run the sync, never `git push`).
    Gitignored data the sessions need (app data copies, door data) is synced only where a ticket needs it, or read from the server.
+   Not solved yet (review 12 Nov): live sessions change code and upload it. A read-only clone that lags the laptop could upload an
+   older copy of the app over newer laptop work, and nothing a cloud session writes (code fixes, `jarvis-learned*.md`) gets back to
+   the laptop. Until there is a two-way answer, cloud live sessions should answer and look things up only, and pass anything that
+   needs a code change or an upload to the laptop.
 2. **One owner at a time, decided on the server:** a one-word file, e.g. `sixfold-private/jarvis-owner` = `laptop` or `cloud`. Each
    watcher takes LIVE tickets only while that file names it; flipping it is the switch. The laptop watcher then needs a two-line check
    (its only change), and keeps running as the fallback: if the cloud watcher's heartbeat (a timestamp it writes each minute) is older
    than ~5 minutes, the laptop takes over until it is fresh again. The ticket-take lock in `help-next.php` already prevents two
    watchers taking the same ticket.
+   Two gaps to close before this is built (review 12 Nov): (a) the watcher loop is busy for the whole of a session, so the heartbeat
+   must be written by its own small background loop, or a long session looks like a dead cloud and the laptop takes over while the
+   cloud is still working; (b) the take lock stops two watchers taking the same ticket, not the same conversation twice: a follow-up
+   message makes it new again, so the fallback must not take a conversation that is still marked working by the other side (record
+   who took it in the status line, and have the fallback skip it until the 90-minute requeue).
 3. **A live `help-watch-cloud.sh`** = the laptop's `one_ticket` ported to Linux, from the **fixed** `help-watch.sh` (the 11 Nov review;
    carry over all five): Matthew mode only when **every** person-written message in the conversation is from "Matthew Sharpe" (not just
    the ticket's `by`); "no final reply" decided by a reply row (answered/matthew) written **after the session started**, not the last
@@ -137,6 +165,10 @@ From the Azure retail price list (prices.azure.com, Sweden Central, checked 12 N
 | Public IPv4 (Standard, static) | $0.005 / h | $3.65 |
 | Outbound data | first 100 GB/mo free | $0 |
 | **Total** | | **≈ $40 / mo** (≈ $37.60 on a fresh VM with a 32 GB disk; disk transactions add cents) |
+
+The $0.0432/h, $4.80, $2.40 and $0.005/h figures were checked again against prices.azure.com on 12 Nov (review). When the free
+credit ends (~23 Nov) the VM stops unless the subscription is moved to pay-as-you-go; the laptop watcher is not affected, but the
+data job output under `~/run` lives only on that VM, so decide before then.
 
 Claude usage is on Matthew's plan (no API cost). B2s is a burstable size: it builds CPU credits at idle (the watcher is idle almost all
 the time), so whisper and session bursts run at full speed. Measured on this VM: small.en transcribes the test note in 7–8 s with

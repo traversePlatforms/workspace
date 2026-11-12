@@ -12,9 +12,13 @@ case "${1:-status}" in
   signin) echo "A link appears below. Open it, sign in with your Claude account (the plan, not the Console), and paste the code back here."
           ssh -t -i "$VK" "$VM" '~/.local/bin/claude auth login --claudeai && ~/.local/bin/claude auth status | grep -E "loggedIn|subscriptionType"; systemctl --user restart jarvis-cloud';;
   status) v 'bash ~/jarvis/ops/help-watch-cloud.sh --check; echo; tail -n 8 ~/jarvis/state/help-watch.log';;
-  deploy) scp -q -o BatchMode=yes -i "$VK" "$OPS/help-watch-cloud.sh" "$OPS/help-practice-prompt.md" "$VM:jarvis/ops/" &&
+  # review 12 Nov: the new watcher goes up beside the old one (.new) and replaces it only after its guard test passes, so a copy that
+  # fails the guard is never the file the service (or a reboot) would start; a failed test leaves the running service as it was
+  deploy) scp -q -o BatchMode=yes -i "$VK" "$OPS/help-watch-cloud.sh" "$VM:jarvis/ops/help-watch-cloud.sh.new" &&
+          v 'chmod 700 ~/jarvis/ops/help-watch-cloud.sh.new; bash -n ~/jarvis/ops/help-watch-cloud.sh.new && bash ~/jarvis/ops/help-watch-cloud.sh.new --guard-test | tail -1 | grep -q "all PASS" || { echo "guard test FAILED: the old watcher was left in place and running"; rm -f ~/jarvis/ops/help-watch-cloud.sh.new; exit 1; }; mv ~/jarvis/ops/help-watch-cloud.sh.new ~/jarvis/ops/help-watch-cloud.sh' &&
+          scp -q -o BatchMode=yes -i "$VK" "$OPS/help-practice-prompt.md" "$VM:jarvis/ops/" &&
           scp -q -o BatchMode=yes -i "$VK" "$OPS/jarvis-cloud.service" "$VM:.config/systemd/user/jarvis-cloud.service" &&
-          v 'chmod 700 ~/jarvis/ops/help-watch-cloud.sh; bash ~/jarvis/ops/help-watch-cloud.sh --guard-test | tail -1 | grep -q "all PASS" || { echo "guard test FAILED: not started"; systemctl --user stop jarvis-cloud; exit 1; }; systemctl --user daemon-reload; systemctl --user enable --now jarvis-cloud >/dev/null 2>&1; systemctl --user restart jarvis-cloud; sleep 2; systemctl --user is-active jarvis-cloud';;
+          v 'systemctl --user daemon-reload; systemctl --user enable --now jarvis-cloud >/dev/null 2>&1; systemctl --user restart jarvis-cloud; sleep 2; systemctl --user is-active jarvis-cloud';;
   stop|start) v "systemctl --user $1 jarvis-cloud; systemctl --user is-active jarvis-cloud";;
   log) v 'tail -n 40 ~/jarvis/state/help-watch.log';;
   pubkey) v 'cat ~/jarvis/secrets/traverse_sg_cloud.pub';;
