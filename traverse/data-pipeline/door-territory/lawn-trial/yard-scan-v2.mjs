@@ -45,7 +45,11 @@ const b64 = (ta) => Buffer.from(ta.buffer, ta.byteOffset, ta.byteLength).toStrin
 const unb64 = (s, T) => { const b = Buffer.from(s, 'base64'); const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); return new T(ab); };
 
 /* the winning settings (see yard-v2-results-2026-10-23.md); yard-eval-v2.mjs scores the others */
-export const V2 = { green: 'lated6g', gate: 0.2, struct: true, roofBuf: 2, ever: 'lidar', everLow: 0.2, everGnd: 0.15, speck: 5, house: 25, fill: 12 };
+/* 2026-11-11 retune (yard-v2-retune.mjs, yard-v2-retune-score.mjs, CLOUD-JOBS-2026-11-11.md): green line 0.36 -> 0.33, despeckle 5 -> 4,
+   roof buffer 2 -> 1 m. Picked on the 19 lots of the 29 Oct re-score, then checked on the 7 hand measures made since (never used to pick):
+   median miss there 51% -> 31%, within 25% 1/7 -> 3/7. V2_1023 is the 23 Oct setting, live 26 Oct - Nov 2026. */
+export const V2_1023 = { green: 'lated6g', gate: 0.2, struct: true, roofBuf: 2, ever: 'lidar', everLow: 0.2, everGnd: 0.15, speck: 5, house: 25, fill: 12 };
+export const V2 = { ...V2_1023, ndvi: 0.33, speck: 4, roofBuf: 1 };
 
 /* batch speed-ups (2026-10-24, for the whole-territory run): the photo and land-cover searches, the opened photo files and the laser
    surveys' ept.json are kept for the run, so neighbouring lots share them instead of asking again for every lot. A Planetary Computer
@@ -166,6 +170,20 @@ const freeze = (S) => JSON.parse(JSON.stringify(S, (k, v) => (ArrayBuffer.isView
 function thaw(S) { const T = { Uint8Array, Uint16Array, Float32Array, Int16Array }; return JSON.parse(JSON.stringify(S), (k, v) => (v && v.$t ? unb64(v.$b, T[v.$t]) : v)); }
 const sampler = (W) => (lo, la) => { if (!W || W.err) return null; const [X, Y] = proj4('EPSG:4326', W.epsg, [lo, la]); const c = Math.floor((X - W.o[0]) / W.rs[0]) - W.x0, r = Math.floor((Y - W.o[1]) / W.rs[1]) - W.y0; if (c < 0 || r < 0 || c >= W.w || r >= W.h) return null; return r * W.w + c; };
 
+/* 2026-11-11 (retune): the per-cell projections depend only on the lot, not on the settings, so they are worked out once per sources
+   object and kept (the retune scores ~1,000 settings on the same lots). Same numbers as working them out every time. */
+const PRE = new WeakMap();
+function preOf(S, W, H, M, s23, s21, sdc) {
+  let p = PRE.get(S); if (p) return p;
+  const N = W * H, { box, cell } = S; p = { di: new Int32Array(N).fill(-1), ia: new Int32Array(N).fill(-1), ib: new Int32Array(N).fill(-1), inL: new Uint8Array(N) };
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const X = box[0] + (c + 0.5) * cell, Y = box[3] - (r + 0.5) * cell, o = r * W + c, [lo, la] = proj4('EPSG:3857', 'EPSG:4326', [X, Y]);
+    const di = sdc(lo, la); if (di != null) p.di[o] = di;
+    if (!inRings(X, Y, M)) continue;
+    p.inL[o] = 1; const ia = s23(lo, la), ib = s21(lo, la); if (ia != null) p.ia[o] = ia; if (ib != null) p.ib[o] = ib;
+  }
+  PRE.set(S, p); return p;
+}
 /** classify one lot's sources with one set of settings */
 export function yardClassify(S, opt = {}) {
   const v = { ...V2, ...opt }, { box, cell, rings, lz } = S;
@@ -179,16 +197,17 @@ export function yardClassify(S, opt = {}) {
   const use23 = late(S.n23) || !late(S.n21), use21 = late(S.n21);
   const nd = (Wn, i) => { if (i == null) return -1; const [R, , , NIR] = Wn.bands; return (NIR[i] - R[i]) / (NIR[i] + R[i] + 1e-6); };
   /* per cell: 0 outside, 1 other, 2 roof, 3 tree high, 4 tree low/shrub, 5 seen lawn, 6 under-tree lawn, 7 paving/water/structure */
-  const cls = new Uint8Array(N), roofish = new Uint8Array(N), dcl = new Uint8Array(N);
+  const cls = new Uint8Array(N), roofish = new Uint8Array(N), dcl = new Uint8Array(N), glA = new Float32Array(N).fill(-1);
+  const NDV = v.ndvi ?? 0.36, P = preOf(S, W, H, M, s23, s21, sdc);   /* 2026-11-11 retune knob: the seen-lawn green line (V2 = 0.36) */
   let lot = 0, turf = 0;
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
-    const X = box[0] + (c + 0.5) * cell, Y = box[3] - (r + 0.5) * cell, o = r * W + c, [lo, la] = proj4('EPSG:3857', 'EPSG:4326', [X, Y]);
-    const h = lz ? lz.hgt[o] : NaN, multi = lz ? lz.multi[o] : 0, di = sdc(lo, la), d = di == null ? null : S.dc.bands[0][di] || null;
+    const o = r * W + c;
+    const h = lz ? lz.hgt[o] : NaN, multi = lz ? lz.multi[o] : 0, di = P.di[o] < 0 ? null : P.di[o], d = di == null ? null : S.dc.bands[0][di] || null;
     dcl[o] = d || 0;
     if (d === 1) roofish[o] = 1; else if (h >= 2.5 && !multi) roofish[o] = 2;   /* roofs, inside the lot or not: the buffer looks over the line too */
-    if (!inRings(X, Y, M)) continue;
+    if (!P.inL[o]) continue;
     lot++; if (d === 6) turf++;
-    const ia = s23(lo, la), ib = s21(lo, la), g23 = S.n23 && !S.n23.err ? nd(S.n23, ia) : -1, g21 = S.n21 && !S.n21.err ? nd(S.n21, ib) : -1, gmax = Math.max(g23, g21);
+    const ia = P.ia[o] < 0 ? null : P.ia[o], ib = P.ib[o] < 0 ? null : P.ib[o], g23 = S.n23 && !S.n23.err ? nd(S.n23, ia) : -1, g21 = S.n21 && !S.n21.err ? nd(S.n21, ib) : -1, gmax = Math.max(g23, g21);
     if (d === 1 && v.struct) { cls[o] = 2; continue; }   /* v2: DRCOG's building outline is roof, split pulses or not (roof edges and ridges split) */
     if (d === 1 || d === 2 || d === 3) { cls[o] = h >= 2 && multi ? (h >= 3 ? 3 : 4) : 7; continue; }
     if (h >= 2.5 && !multi) { cls[o] = 2; continue; }
@@ -200,9 +219,9 @@ export function yardClassify(S, opt = {}) {
       : v.green === 'g23d6' ? (g23 > 0.36 || d === 6)
       : v.green === 'd6' ? (hasDc ? d === 6 : g23 > 0.36)
       : v.green === 'g23' ? g23 > 0.36
-      : v.green === 'lated6g' ? (gl > 0.36 || (d === 6 && gl > v.gate))
+      : v.green === 'lated6g' ? (gl > NDV || (d === 6 && gl > v.gate))
       : /* g23d6g */ (g23 > 0.36 || (d === 6 && g23 > v.gate));
-    const A = S.n23 && !S.n23.err && ia != null ? S.n23.bands : null;
+    const A = S.n23 && !S.n23.err && ia != null ? S.n23.bands : null; glA[o] = gl;
     cls[o] = grassy ? 5 : (g < 0.12 && A && Math.max(A[0][ia], A[1][ia], A[2][ia]) - Math.min(A[0][ia], A[1][ia], A[2][ia]) < 28 ? 7 : 1);
   }
   /* laser roofs count for the buffer only as solid blobs (12+ single-return high cells in the 5x5 around): dense crown tops also give
@@ -211,7 +230,8 @@ export function yardClassify(S, opt = {}) {
   /* despeckle: a seen-lawn cell stays only with at least `speck` of its 8 neighbours seen too (dry native grass greens in specks) */
   if (v.speck) { const keep = new Uint8Array(N); for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) { const o = r * W + c; if (cls[o] !== 5) continue; let n = 0; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; const rr = r + dr, cc = c + dc; if (rr >= 0 && cc >= 0 && rr < H && cc < W && cls[rr * W + cc] === 5) n++; } keep[o] = n >= v.speck ? 1 : 0; } for (let o = 0; o < N; o++) if (cls[o] === 5 && !keep[o]) cls[o] = 1; }
   /* near the house: seen lawn only within `house` metres of a roof (the watered lawn is round the house; acreage beyond is field) */
-  if (v.house) { const dd = new Int16Array(N).fill(-1), qq = []; for (let o = 0; o < N; o++) if (roofish[o] === 1) { dd[o] = 0; qq.push(o); }
+  let dd = null;
+  if (v.house) { dd = new Int16Array(N).fill(-1); const qq = []; for (let o = 0; o < N; o++) if (roofish[o] === 1) { dd[o] = 0; qq.push(o); }
     if (qq.length) { for (let qi = 0; qi < qq.length; qi++) { const o = qq[qi], r = Math.floor(o / W), c = o % W; if (dd[o] >= v.house) continue; for (const [dr, dcol] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const rr = r + dr, cc = c + dcol; if (rr < 0 || cc < 0 || rr >= H || cc >= W) continue; const p = rr * W + cc; if (dd[p] !== -1) continue; dd[p] = dd[o] + 1; qq.push(p); } }
       for (let o = 0; o < N; o++) if (cls[o] === 5 && dd[o] === -1) cls[o] = 1; } }
   /* which crowns may be filled */
@@ -234,6 +254,18 @@ export function yardClassify(S, opt = {}) {
       if (g / Math.max(1, a) < v.everGnd) { blockedEver++; continue; }
     }
     fillable[o] = 1;
+  }
+  /* 2026-11-11 retune knob 'edge' (off in V2): shaded grass at the edge of a lawn or a fillable crown is less green than the 0.36 line.
+     Ground cells (class 1) inside the lot with green above `edge` that touch seen lawn or a fillable crown count as seen lawn, grown
+     `edgeIter` cells out; still only within `house` metres of a roof. Aimed at the narrow strips and fence-line shade v2 missed. */
+  if (v.edge != null) for (let it = 0; it < (v.edgeIter || 1); it++) {
+    const add = [];
+    for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+      const o = r * W + c; if (cls[o] !== 1 || !(glA[o] > v.edge) || (dd && dd[o] === -1)) continue;
+      let ok = false; for (let dr = -1; dr <= 1 && !ok; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; const rr = r + dr, cc = c + dc; if (rr < 0 || cc < 0 || rr >= H || cc >= W) continue; const p = rr * W + cc; if (cls[p] === 5 || fillable[p]) { ok = true; break; } }
+      if (ok) add.push(o);
+    }
+    if (!add.length) break; for (const o of add) cls[o] = 5;
   }
   const dist = new Int16Array(N).fill(-1), q = [];
   for (let o = 0; o < N; o++) if (cls[o] === 5) { dist[o] = 0; q.push(o); }

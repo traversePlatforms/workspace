@@ -5,11 +5,13 @@
 # 2026-10-28 (Group 1 re-clip): optional second argument, an extended regex on file names, sends only the matching changed files
 # (e.g. 'g1-' for the Group 1 towns and their side files); DRY=1 lists what would go, by name, and sends nothing.
 set -u
+exec < /dev/null   # 11 Nov: with a closed stdin (a scheduled job: the Wi-Fi queue's rented finisher) md5sum failed and every push sent 0 files without an error
 d="$1"; ONLY="${2:-}"; S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp"; mkdir -p "$S"   # short path: $S is used unquoted below
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
 cd "/c/Users/Surge Inc/Desktop/claude test 2/traverse/editions/dist/$d/rounds" || exit 1
 find . -maxdepth 1 -type f -name '*.json' ! -name index.json ! -name company.json ! -name hail-storms.json -printf '%f\n' | sort > $S/p-$d.all
 md5sum $(cat $S/p-$d.all) | sed 's/ \*/  /' | sort -k2 > $S/p-$d.local
+[ "$(wc -l < $S/p-$d.local)" -eq "$(wc -l < $S/p-$d.all)" ] || { echo "$d: local md5 list incomplete ($(wc -l < $S/p-$d.local) of $(wc -l < $S/p-$d.all)): nothing sent"; exit 1; }   # 11 Nov
 $SG "cd ~/www/traverseplatforms.com/$d/rounds && md5sum *.json 2>/dev/null | sort -k2" < /dev/null > $S/p-$d.live
 join -1 2 -2 2 -a 1 -e NONE -o 0,1.1,2.1 $S/p-$d.local $S/p-$d.live | awk '$2!=$3{print $1}' > $S/p-$d.up
 if [ -n "$ONLY" ]; then echo "$d: $(wc -l < $S/p-$d.up) changed, $(grep -cvE "$ONLY" $S/p-$d.up) left out (not matching $ONLY)"; grep -E "$ONLY" $S/p-$d.up > $S/p-$d.up2; mv $S/p-$d.up2 $S/p-$d.up; fi

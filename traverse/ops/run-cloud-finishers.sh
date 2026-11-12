@@ -32,7 +32,9 @@ if netsh wlan show interfaces 2>/dev/null | tr -d "" | grep -qE "^ +SSID +: iPh
 # never-measured doors; home values for Groups 1 and 3; hail2min (1 Nov): the hail hours from every 2-minute radar file. Each is ready only when ~/run/fill1031/<stage>.vmdone exists; every finisher is
 # finish-<stage>-2026-10-31.sh -> fill1031-finish.sh <stage>.
 # A fill1031 stage the VM gave up on (~/run/fill1031/<stage>.failed, no .vmdone) is counted as failed here, so the later ones still run.
-for name in layers group1 material g1fix g2b photos g3b g3hail hailhours g2mat centlawn commercial lawnfix roofsolar dougmat newlidar trees2 outlinefix values hail2min hail1023; do
+# yardv3 (11 Nov, Matthew "go ahead and run ... 3"): every yard v2 door re-measured with the retuned lawn settings (CLOUD-JOBS-2026-11-11.md);
+# finish-yardv3-2026-11-11.sh checks, merges, builds and uploads every town to Sixfold and the five editions.
+for name in layers group1 material g1fix g2b photos g3b g3hail hailhours g2mat centlawn commercial lawnfix roofsolar dougmat newlidar trees2 outlinefix values hail2min hail1023 yardv3; do
   [ -f "$ST/$name.done" ] && continue
   tries=$(cat "$ST/$name.tries" 2>/dev/null || echo 0)
   [ "$tries" -ge 3 ] && { FAILED="$FAILED $name"; continue; }
@@ -47,7 +49,7 @@ for name in layers group1 material g1fix g2b photos g3b g3hail hailhours g2mat c
     g3hail) VMQ='';;   # storm history for the Group 3 towns (Matthew 29 Oct); finish-g3hail-2026-10-29.sh starts its own cloud job, so it waits for g3b here, not for the VM
     hailhours) VMQ='';;   # the hail hours for every town and day (Matthew 29 Oct); finish-hailhours-2026-10-29.sh starts its own cloud job, after g3hail here
     g2mat|centlawn|commercial) VMQ='^NEVER-MATCHES$';;   # the VM's .vmdone file only (below); finish-<stage>-2026-10-31.sh
-    lawnfix|roofsolar|dougmat|newlidar|trees2|outlinefix|values|hail2min|hail1023) VMQ='^NEVER-MATCHES$'   # ~/run/fill1031/<stage>.vmdone only (below)
+    lawnfix|roofsolar|dougmat|newlidar|trees2|outlinefix|values|hail2min|hail1023|yardv3) VMQ='^NEVER-MATCHES$'   # ~/run/fill1031/<stage>.vmdone only (below)
       if ssh -o ConnectTimeout=15 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101 "test -f ~/run/fill1031/$name.failed && ! test -f ~/run/fill1031/$name.vmdone" < /dev/null 2>/dev/null; then
         echo 3 > "$ST/$name.tries"; FAILED="$FAILED $name(cloud)"; continue
       fi;;

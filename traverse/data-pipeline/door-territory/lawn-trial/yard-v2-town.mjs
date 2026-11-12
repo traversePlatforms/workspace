@@ -16,7 +16,7 @@ const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith('--' + k
 const TOWN = arg('town'), MINS = +arg('mins', 45), CONC = +arg('conc', 6);
 if (!TOWN) { console.error('--town= needed'); process.exit(1); }
 const DATA = process.env.YV2_DATA || 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';   /* YV2_DATA: the cloud run's slim door files (2026-10-24) */
-const OUTD = new URL('./yard-v2/', import.meta.url); mkdirSync(OUTD, { recursive: true });
+const OUTD = new URL((process.env.YV2_OUT || 'yard-v2') + '/', import.meta.url);   /* YV2_OUT (2026-11-11): the retuned re-measure writes yard-v3/ beside the live yard-v2/ */ mkdirSync(OUTD, { recursive: true });
 const OUT = new URL(`${TOWN}.json`, OUTD);
 const PCD = new URL('./drcog-turf/', import.meta.url); mkdirSync(PCD, { recursive: true });
 const PCACHE = new URL(`parcels-${TOWN}.json`, PCD);   /* the same lot-line cells drcog-turf-town.mjs keeps */
