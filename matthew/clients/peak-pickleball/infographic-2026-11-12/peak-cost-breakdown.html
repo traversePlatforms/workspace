@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Peak Pickleball: cost breakdown, November 2026</title>
+<style>
+  @page { size: 816px 1312px; margin: 0; }
+  :root { --navy:#0d366b; --blue:#256abf; --blue2:#2a78d6; --pale:#eef4fc; --line:#cde2fb; --ink:#1d2733; --mute:#5b6878; --sand:#f3f2ef; --gold:#eda100; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", Arial, Helvetica, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 816px; height: 1312px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+  header { background: var(--navy); color: #fff; padding: 26px 40px 22px; }
+  header .kick { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9fc3f2; font-weight: 600; }
+  header h1 { margin: 6px 0 6px; font-size: 27px; line-height: 1.15; font-weight: 700; }
+  header p { margin: 0; font-size: 12.5px; color: #d6e6fa; max-width: 680px; line-height: 1.45; }
+  main { padding: 18px 40px 0; flex: 1; }
+  h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin: 0 0 9px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .now { display: grid; grid-template-columns: 1fr 1fr 1fr 1.15fr; gap: 10px; margin-bottom: 8px; }
+  .tile { background: var(--pale); border-radius: 8px; padding: 11px 13px 10px; }
+  .tile .lab { font-size: 11.5px; font-weight: 600; color: var(--navy); }
+  .tile .big { font-size: 25px; font-weight: 700; color: var(--navy); margin: 3px 0 1px; }
+  .tile .big small { font-size: 12px; font-weight: 600; color: var(--mute); }
+  .tile .sub { font-size: 10.5px; color: var(--mute); line-height: 1.35; }
+  .tile.total { background: var(--navy); }
+  .tile.total .lab, .tile.total .big { color: #fff; }
+  .tile.total .big small, .tile.total .sub { color: #b9d3f5; }
+  .tip { font-size: 10.8px; color: var(--ink); background: #fff7e3; border-left: 3px solid var(--gold); padding: 6px 10px; margin: 0 0 15px; border-radius: 0 6px 6px 0; line-height: 1.4; }
+  .rows { margin-bottom: 14px; }
+  .row { display: grid; grid-template-columns: 196px 1fr 112px; align-items: center; gap: 14px; padding: 7px 0; border-bottom: 1px solid #edf1f6; }
+  .row:last-child { border-bottom: 0; }
+  .row .what { font-size: 12.5px; font-weight: 600; color: var(--navy); line-height: 1.25; }
+  .row .what span { display: block; font-size: 10.3px; font-weight: 400; color: var(--mute); margin-top: 1px; }
+  .bar { position: relative; height: 22px; }
+  .bar .track { position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: #e6ebf1; }
+  .bar .rng { position: absolute; top: 6px; height: 10px; border-radius: 5px; background: var(--line); }
+  .bar .rng.f { background: #b5d2f6; }
+  .bar .rng.a { background: #d9dfe7; }
+  .bar .dot { position: absolute; top: 4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--blue); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--blue); }
+  .bar .dot.a { background: #7c8796; box-shadow: 0 0 0 1px #7c8796; }
+  .bar .end { position: absolute; top: -3px; font-size: 9.5px; color: var(--mute); white-space: nowrap; }
+  .bar .tag { position: absolute; top: 9px; font-size: 9.5px; font-weight: 600; white-space: nowrap; }
+  .row .typ { text-align: right; font-size: 17px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+  .row .typ small { display: block; font-size: 10px; font-weight: 500; color: var(--mute); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pair .typ { font-size: 15px; }
+  .legend { font-size: 10px; color: var(--mute); display: flex; gap: 16px; margin: -3px 0 6px; }
+  .legend i { display: inline-block; width: 18px; height: 8px; border-radius: 4px; vertical-align: middle; margin-right: 5px; }
+  .sum { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+  .sumcard { border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 15px 11px; }
+  .sumcard.f { border-color: #b5d2f6; background: var(--pale); }
+  .sumcard h3 { margin: 0 0 6px; font-size: 13px; color: var(--navy); }
+  .sumcard table { width: 100%; border-collapse: collapse; font-size: 11.3px; }
+  .sumcard td { padding: 2.5px 0; }
+  .sumcard td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .sumcard tr.t td { border-top: 1px solid var(--line); padding-top: 5px; font-weight: 700; color: var(--navy); font-size: 12.5px; }
+  .sumcard tr.y td { font-weight: 700; color: var(--navy); font-size: 14px; }
+  .notinc { font-size: 10.6px; color: var(--mute); line-height: 1.4; margin: 0 0 4px; }
+  footer { padding: 9px 40px 14px; font-size: 8.6px; color: var(--mute); line-height: 1.42; border-top: 1px solid #e6ebf1; background: #fafbfc; }
+  footer b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="kick">Peak Pickleball · November 2026</div>
+  <h1>What Peak pays now, and what the rest typically costs</h1>
+  <p>Peak's current software bills, from its own invoices, next to typical US market prices for the work on Peak's list: the website, socials, ads, Google listing, member emails and texts, and the TVs.</p>
+</header>
+<main>
+
+  <h2>What Peak pays now</h2>
+  <div class="now">
+    <div class="tile"><div class="lab">CourtReserve (Momentum)</div><div class="big">$549<small>/mo</small></div><div class="sub">Bookings, memberships, check-in. On Momentum since 15 Oct, billed monthly.</div></div>
+    <div class="tile"><div class="lab">Patch Retention</div><div class="big">$499<small>/mo</small></div><div class="sub">Member email and texts. Patch publishes no prices to compare.</div></div>
+    <div class="tile"><div class="lab">Branded app setup</div><div class="big">$499<small> once</small></div><div class="sub">CourtReserve branded mobile app fee, paid 10 Nov 2026.</div></div>
+    <div class="tile total"><div class="lab">Regular software spend</div><div class="big">$1,048<small>/mo</small></div><div class="sub">$12,576 a year, before the one-time app fee.</div></div>
+  </div>
+  <div class="tip"><b>Worth knowing:</b> CourtReserve lists the same Momentum plan at <b>$499/mo billed yearly</b>, which it says saves $600 a year. Peak needs Momentum: the cheaper Advance plan ($369) stops at 16 courts.</div>
+
+  <h2>Software Peak would need either way</h2>
+  <div class="rows">
+    <div class="row">
+      <div class="what">Court booking and club software<span>24 courts, ~650 members · list prices</span></div>
+      <div class="bar"><div class="track"></div><div class="rng" style="left:12%;right:12%"></div><div class="dot" style="left:50%"></div><div class="end" style="left:12%;transform:translateX(-50%)">$399</div><div class="end" style="left:88%;transform:translateX(-50%)">$599</div></div>
+      <div class="typ">~$500<small>per month</small></div>
+    </div>
+    <div class="row">
+      <div class="what">Email platform with automations<span>~16,000 contacts · 4 platforms' list prices</span></div>
+      <div class="bar"><div class="track"></div><div class="rng" style="left:12%;right:12%"></div><div class="dot" style="left:63.8%"></div><div class="end" style="left:12%;transform:translateX(-50%)">$139</div><div class="end" style="left:88%;transform:translateX(-50%)">$375</div></div>
+      <div class="typ">~$300<small>per month</small></div>
+    </div>
+    <div class="row">
+      <div class="what">Text messages<span>US carrier cost per text, before platform markup</span></div>
+      <div class="bar"><div class="track"></div><div class="rng" style="left:12%;right:12%"></div><div class="dot" style="left:22.1%"></div><div class="end" style="left:12%;transform:translateX(-50%)">1.18¢</div><div class="end" style="left:88%;transform:translateX(-50%)">1.33¢</div></div>
+      <div class="typ">~$12<small>per 1,000 texts</small></div>
+    </div>
+    <div class="row">
+      <div class="what">TV screen software<span>Branding and sponsor ads on the TVs</span></div>
+      <div class="bar"><div class="track"></div><div class="rng" style="left:12%;right:12%"></div><div class="dot" style="left:25.8%"></div><div class="end" style="left:12%;transform:translateX(-50%)">$8</div><div class="end" style="left:88%;transform:translateX(-50%)">$30</div></div>
+      <div class="typ">~$12<small>per screen, per month</small></div>
+    </div>
+  </div>
+
+  <h2>Hiring out the work: typical market prices</h2>
+  <div class="legend"><span><i style="background:#b5d2f6"></i>Freelancer range</span><span><i style="background:#d9dfe7"></i>Agency range</span><span>Dot = typical (middle of the range)</span></div>
+  <div class="rows">
+    <div class="row pair">
+      <div class="what">Website rebuild<span>10–20 pages, one-time · freelancer $1,500–$8,000 · agency $5,000–$30,000</span></div>
+      <div class="bar"><div class="track"></div>
+        <div class="rng f" style="left:6.8%;width:20.8%;top:2px;height:8px"></div><div class="dot" style="left:18%;top:-1px;width:12px;height:12px;margin-left:-6px"></div>
+        <div class="rng a" style="left:18%;width:80%;top:13px;height:8px"></div><div class="dot a" style="left:34%;top:11px;width:12px;height:12px;margin-left:-6px"></div>
+              </div>
+      <div class="typ">$5k / $10k<small>freelancer / agency</small></div>
+    </div>
+    <div class="row">
+      <div class="what">Website care and hosting<span>Updates, backups, security, hosting</span></div>
+      <div class="bar"><div class="track"></div><div class="rng" style="left:12%;right:12%"></div><div class="dot" style="left:46.3%"></div><div class="end" style="left:12%;transform:translateX(-50%)">$35</div><div class="end" style="left:88%;transform:translateX(-50%)">$400</div></div>
+      <div class="typ">~$200<small>per month</small></div>
+    </div>
+    <div class="row pair">
+      <div class="what">Social media management<span>2–3 platforms · freelancer $500–$3,000 · agency $2,000–$10,000+</span></div>
+      <div class="bar"><div class="track"></div>
+        <div class="rng f" style="left:6.8%;width:24%;top:2px;height:8px"></div><div class="dot" style="left:18.8%;top:-1px;width:12px;height:12px;margin-left:-6px"></div>
+        <div class="rng a" style="left:21.2%;width:76.8%;top:13px;height:8px"></div><div class="dot a" style="left:59.6%;top:11px;width:12px;height:12px;margin-left:-6px"></div>
+              </div>
+      <div class="typ">$1,750 / $6,000<small>per month, freelancer / agency</small></div>
+    </div>
+    <div class="row">
+      <div class="what">Google and Facebook ads management<span>Management fee only; ad spend is extra</span></div>
+      <div class="bar"><div class="track"></div><div class="rng" style="left:12%;right:12%"></div><div class="dot" style="left:37.3%"></div><div class="end" style="left:12%;transform:translateX(-50%)">$500</div><div class="end" style="left:88%;transform:translateX(-50%)">$2,000</div></div>
+      <div class="typ">~$1,000<small>per month, or 10–20% of spend</small></div>
+    </div>
+    <div class="row">
+      <div class="what">Local SEO and Google Business Profile<span>Measured average; most common band shown</span></div>
+      <div class="bar"><div class="track"></div><div class="rng" style="left:12%;width:38%"></div><div class="dot" style="left:78.2%"></div><div class="end" style="left:12%;transform:translateX(-50%)">$250</div><div class="end" style="left:50%;transform:translateX(-50%)">$1,000</div><div class="end" style="left:78.2%;transform:translateX(-50%);top:15px;font-weight:600;color:#256abf">avg $1,557</div></div>
+      <div class="typ">$1,557<small>per month (average)</small></div>
+    </div>
+  </div>
+
+  <h2>What it adds up to</h2>
+  <div class="sum">
+    <div class="sumcard f">
+      <h3>Software now + freelancers at typical prices</h3>
+      <table>
+        <tr><td>Current software (CourtReserve + Patch)</td><td>$1,048</td></tr>
+        <tr><td>Social media, website care, ads fee, local SEO</td><td>$4,507</td></tr>
+        <tr class="t"><td>Per month</td><td>$5,555</td></tr>
+        <tr><td>Per year</td><td>$66,660</td></tr>
+        <tr><td>Website rebuild, one-time</td><td>+ $5,000</td></tr>
+        <tr class="y"><td>First year</td><td>$71,660</td></tr>
+      </table>
+    </div>
+    <div class="sumcard">
+      <h3>Software now + agencies at typical prices</h3>
+      <table>
+        <tr><td>Current software (CourtReserve + Patch)</td><td>$1,048</td></tr>
+        <tr><td>Social media, website care, ads fee, local SEO</td><td>$8,757</td></tr>
+        <tr class="t"><td>Per month</td><td>$9,805</td></tr>
+        <tr><td>Per year</td><td>$117,660</td></tr>
+        <tr><td>Website rebuild, one-time</td><td>+ $10,000</td></tr>
+        <tr class="y"><td>First year</td><td>$127,660</td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="notinc"><b>Not included:</b> ad spend itself; TV screen software (depends on the number of screens); text-message costs; and someone to build and run the email and text campaigns (no reliable monthly price exists; hourly rates run about $15–$40 for freelancers, often overseas, and $100–$149 for agencies).</p>
+</main>
+<footer>
+  <b>How to read this.</b> "Typical" is the middle of a published range, except local SEO, which is a measured average. National US prices; no Colorado Springs figures were found. Software prices are each company's own pricing page, read 12 Nov 2026.
+  <b>Sources:</b> Peak's CourtReserve receipts (Aug–Nov 2026) and Peak's figure for Patch Retention · CourtReserve, Playbypoint pricing pages · Mailchimp, Klaviyo, ActiveCampaign, Brevo pricing pages (~16,000 contacts) · Twilio US SMS pricing · Yodeck, OptiSigns, ScreenCloud pricing pages · WP Buffs and Kinsta pricing pages (website care) · Clutch web design, PPC and email pricing guides (Sept 2026) · Sprout Social, small-business social media packages (May 2026) · Ahrefs SEO pricing poll, n=439 (Aug 2024, the oldest figure here) · Website freelancer range and ads-management fees are commonly quoted industry ranges with no single survey behind them.
+</footer>
+</div>
+</body>
+</html>
