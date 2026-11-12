@@ -117,7 +117,7 @@
       main.appendChild(details(A)); main.appendChild(terms(A));
       if (A.view) { var vc = el('div', 'card'); vc.appendChild(el('p', 'muted', callLine())); vc.appendChild(printBtn()); main.appendChild(vc); return; }
       var W = A.ways && A.ways.length;   /* other ways to pay (2026-10-29) */
-      if (A.signed) { if (W && A.waysDue) main.appendChild(waysCard(A, 'deposit')); main.appendChild(signedCard(A.signed, null)); if (W && !A.waysDue) main.appendChild(waysCard(A, 'balance')); return; }
+      if (A.signed) { if (W && A.waysDue) main.appendChild(waysCard(A, 'deposit')); main.appendChild(signedCard(A.signed, null)); addFull(A.full); if (W && !A.waysDue && !(A.full && A.full.paid)) main.appendChild(waysCard(A, 'balance')); return; }
       if (A.nosign) {
         if (A.pay && !A.pay.paid && A.pay.url) { main.appendChild(payCard(A, 'Your day is booked as soon as it’s paid.')); if (W) main.appendChild(waysCard(A, 'alt')); }
         else if (W && A.waysDue) main.appendChild(waysCard(A, 'deposit'));
@@ -125,14 +125,14 @@
         nc.appendChild(el('h2', null, A.confirmed ? 'You’re booked' : 'Almost done'));
         if (A.confirmed && A.booked) nc.appendChild(el('p', 'big', A.booked.day + (A.booked.arrive ? ', arriving ' + A.booked.arrive : '') + '.'));
         nc.appendChild(el('p', 'muted', A.confirmed ? 'No signature needed. This page is your confirmation, so keep it for your records.' : 'No signature needed. Your day is held until the deposit is paid.'));
-        nc.appendChild(el('p', 'muted', callLine())); nc.appendChild(printBtn()); main.appendChild(nc);
-        if (W && !A.waysDue && !(A.pay && !A.pay.paid && A.pay.url)) main.appendChild(waysCard(A, 'balance'));
+        nc.appendChild(el('p', 'muted', callLine())); nc.appendChild(printBtn()); main.appendChild(nc); addFull(A.full);
+        if (W && !A.waysDue && !(A.pay && !A.pay.paid && A.pay.url) && !(A.full && A.full.paid)) main.appendChild(waysCard(A, 'balance'));
         return;
       }
       if (A.pay && !A.pay.paid && A.pay.url) { main.appendChild(payCard(A, 'You come straight back here to sign.')); if (W) main.appendChild(waysCard(A, 'alt')); }
       else if (W && A.waysDue) main.appendChild(waysCard(A, 'deposit'));
       else if (A.pay && A.pay.paid) { var ok = el('div', 'card ok'); ok.appendChild(el('h2', null, 'Deposit paid')); ok.appendChild(el('p', 'muted', 'Thank you. $' + A.pay.amount + ' received. Now sign below.')); main.appendChild(ok); }
-      signBox(A);
+      addFull(A.full); signBox(A);
       if (W && !A.waysDue && !(A.pay && !A.pay.paid)) main.appendChild(waysCard(A, 'balance'));
     }).catch(function () { sorry('We could not reach our system just now. Try again in a minute. ' + callLine()); });
   }
@@ -156,6 +156,22 @@
     if (mode !== 'balance') c.appendChild(el('p', 'muted', 'These do not confirm by themselves: we mark it received when it arrives.' + (mode === 'deposit' && !A.signed && !A.nosign ? ' You can sign below now.' : '')));
     return c;
   }
+  /* Pay now (optional) (2026-11-12, Matthew: "I want people to be able to pay ahead of time even if they dont have a deposit"): booked with no
+     deposit, and a button to pay what the job owes now, by card, if they want to. Before they sign it only says so; the button comes once booked. */
+  function fullCard(F) {
+    if (!F) return null;
+    if (F.paid) { var ok = el('div', 'card ok fullpay'); ok.appendChild(el('h2', null, 'Paid in full')); ok.appendChild(el('p', 'muted', 'Thank you. $' + F.amount + ' received. Nothing is owed when the work is done.')); return ok; }
+    if (!F.booked) { var pre = el('div', 'card noprint fullpay'); pre.appendChild(el('p', 'muted', 'Once you have signed, you can pay the $' + F.amount + ' now if you like, or when the work is done.')); return pre; }
+    var c = el('div', 'card noprint fullpay');
+    c.appendChild(el('h2', null, 'Pay now if you like'));
+    c.appendChild(el('p', null, 'You\u2019re booked. Pay $' + F.amount + ' now if you\u2019d like, or when the work is done.'));
+    if (!F.url) { c.appendChild(el('p', 'muted', 'The card payment is not ready just now. You can pay when the work is done, or ask us for a link.')); return c; }
+    var a = el('a', 'btn', 'Pay $' + F.amount + ' now'); a.href = F.url; c.appendChild(a);
+    c.appendChild(el('p', 'muted', 'By card on ' + (F.via || 'our payment') + '\u2019s secure page. You come straight back here.'));
+    var rf = el('button', 'btn ghost', 'I paid: refresh'); rf.type = 'button'; rf.addEventListener('click', function () { location.reload(); }); c.appendChild(rf);
+    return c;
+  }
+  function addFull(F) { var fc = fullCard(F); if (fc) main.appendChild(fc); }
   function payCard(A, after) {
     var pc = el('div', 'card noprint'); pc.appendChild(el('h2', null, 'Pay your deposit'));
     pc.appendChild(el('p', null, 'Pay the $' + A.pay.amount + ' deposit by card on ' + (A.pay.via || 'our payment') + '’s secure page. ' + after));
@@ -181,7 +197,8 @@
       fetch(API + '?action=a365signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, name: ni.value.trim(), agree: true, read: true }) })
         .then(function (r) { return r.json(); }).then(function (j) {
           if (!j || !j.ok) { go.disabled = false; go.textContent = 'Sign'; err.textContent = (j && j.error) || 'That did not go through. Try again. ' + callLine(); return; }
-          c.replaceWith(signedCard(j.signed, j.booked, j.mailed)); window.scrollTo(0, 0);
+          var pre = main.querySelector('.fullpay'); if (pre) pre.remove();
+          var sc = signedCard(j.signed, j.booked, j.mailed); c.replaceWith(sc); var fc = fullCard(j.full); if (fc) sc.after(fc); window.scrollTo(0, 0);
         }).catch(function () { go.disabled = false; go.textContent = 'Sign'; err.textContent = 'No connection. Try again.'; });
     });
     main.appendChild(c);

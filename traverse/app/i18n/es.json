@@ -4718,5 +4718,11 @@
  "Fertilize only": "Solo fertilizante",
  "Seed & feed": "Semilla y fertilizante",
  "Not priced yet. Set it in Pricing.": "Sin precio todavía. Ponlo en Precios.",
- "No list price yet: type the price": "Aún no hay precio de lista: escribe el precio"
+ "No list price yet: type the price": "Aún no hay precio de lista: escribe el precio",
+ "Pay now (optional)": "Pagar ahora (opcional)",
+ "No deposit · they can pay ": "Sin depósito · pueden pagar ",
+ " now on the form, or when the work is done": " ahora en el formulario, o cuando se termine el trabajo",
+ " · no deposit; they can pay it all now on the form, or when the work is done": " · sin depósito; pueden pagar todo ahora en el formulario, o cuando se termine el trabajo",
+ ", no deposit, pay now on the form if they like": ", sin depósito, pueden pagar ahora en el formulario si quieren",
+ "This is the same link that is on their form, so they can only pay it once.": "Es el mismo enlace que está en su formulario, así que solo lo pueden pagar una vez."
 }
