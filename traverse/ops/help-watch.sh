@@ -231,7 +231,7 @@ while [ "$(date +%s)" -lt "$END" ]; do
           if [[ "$R" =~ ^[0-9]+\|[0-9]+$ ]]; then SFAIL=0
           else SFAIL=$(( SFAIL + 1 )); R=""; stream_close; [ "$SFAIL" -ge 3 ] && log "the open SSH connection keeps dropping: back to a fresh SSH look every 30 s"; fi
         fi
-        if [ -z "$R" ]; then R=$(peek_ssh); [ "$SFAIL" -ge 3 ] && sleep 25; fi
+        if [ -z "$R" ]; then R=$(peek_ssh); if [ "$SFAIL" -ge 3 ]; then sleep 25; else sleep 5; fi; fi   # never straight round again (cloud review 11 Nov)
         L="${R%%|*}"; PR="${R##*|}"
         if [[ "$L" =~ ^[0-9]+$ ]] && [ "$L" -gt 0 ]; then one_ticket; continue; fi
         if [[ "$PR" =~ ^[0-9]+$ ]] && [ "$PR" -gt 0 ]; then one_practice; continue; fi
