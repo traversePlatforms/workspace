@@ -956,6 +956,9 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       (github-sync.sh), gitignored data synced only where needed; Google Drive read through rclone; Tailscale so the cloud can reach the laptop
       when it is on (Desktop files, Notepad, Windows jobs) and queue those jobs when it is off; server keys copied to the VM, locked down;
       laptop watcher stays as a fallback, one runs at a time.
+      **12 Nov: TRIAL RUN 1 on the Azure VM (practice copy only)** — traverse/ops/JARVIS-CLOUD.md. Service jarvis-cloud running, guard in
+      code (practice commands only), whisper.cpp small.en (7-8 s). Waiting on Matthew: (1) SiteGround SSH key `jarvis-cloud` (Import the
+      .pub), (2) `bash traverse/ops/jarvis-cloud.sh signin`. B2s after the trial ≈ $40/mo all in. Switch-over (live tickets) needs his go.
 
 - [ ] **X-14 — One big nightly overview of everything Matthew works on** (Matthew, 11 Nov 2026: "we need to have a big daily summary thing that has sixfold, jarvis, surge, peak, donny etc all the stuf i work on in so for a big overview of tonight but thats something we can discuss what needs to go in. So add that to my to-do list.")
       To DISCUSS with him first: what goes in per company (Sixfold leads/jobs/money, J.A.R.V.I.S. tickets and what it changed, Surge site/ADA/posts,
