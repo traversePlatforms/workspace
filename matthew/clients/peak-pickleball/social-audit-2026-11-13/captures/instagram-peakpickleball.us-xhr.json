@@ -1,0 +1,37 @@
+[
+ {
+  "u": "https://www.instagram.com/api/graphql",
+  "status": 200,
+  "t": "{\"data\":{\"experiments\":[{\"id\":\"ig_desktop_dynamic_interaction_dialogs_launch\",\"param\":null,\"value\":\"true\"}]},\"extensions\":{\"server_metadata\":{\"request_start_time_ms\":1794610140801,\"time_at_flush_ms\":1794610140812},\"is_final\":true}}"
+ },
+ {
+  "u": "https://www.instagram.com/api/graphql",
+  "status": 200,
+  "t": "{\"data\":{\"experiments\":[{\"id\":\"ig_desktop_dynamic_blocking_dialogs_launch\",\"param\":null,\"value\":\"true\"}]},\"extensions\":{\"server_metadata\":{\"request_start_time_ms\":1794610140804,\"time_at_flush_ms\":1794610140815},\"is_final\":true}}"
+ },
+ {
+  "u": "https://www.instagram.com/api/graphql",
+  "status": 200,
+  "t": "{\"data\":{\"xig_user_by_igid_v2\":{\"ayml_logged_out\":[],\"id\":\"17841467525521988\"}},\"extensions\":{\"server_metadata\":{\"request_start_time_ms\":1794610140839,\"time_at_flush_ms\":1794610140869},\"is_final\":true}}"
+ },
+ {
+  "u": "https://www.instagram.com/api/graphql",
+  "status": 200,
+  "t": "{\"data\":{\"experiments\":[]},\"extensions\":{\"server_metadata\":{\"request_start_time_ms\":1794610140876,\"time_at_flush_ms\":1794610140888},\"is_final\":true}}"
+ },
+ {
+  "u": "https://www.instagram.com/api/graphql",
+  "status": 200,
+  "t": "{\"data\":{},\"extensions\":{\"server_metadata\":{\"request_start_time_ms\":1794610140891,\"time_at_flush_ms\":1794610140901},\"is_final\":true}}"
+ },
+ {
+  "u": "https://www.instagram.com/api/graphql",
+  "status": 200,
+  "t": "{\"errors\":[{\"message\":\"Unauthorized logged out query.\",\"severity\":\"CRITICAL\",\"code\":1675002}],\"extensions\":{\"is_final\":true}}"
+ },
+ {
+  "u": "https://www.instagram.com/api/graphql",
+  "status": 200,
+  "t": "{\"errors\":[{\"message\":\"Unauthorized logged out query.\",\"severity\":\"CRITICAL\",\"code\":1675002}],\"extensions\":{\"is_final\":true}}"
+ }
+]

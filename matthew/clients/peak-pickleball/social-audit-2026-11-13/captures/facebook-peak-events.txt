@@ -1,0 +1,67 @@
+URL: https://www.facebook.com/profile.php?id=61559624409713&sk=events
+FINAL: https://www.facebook.com/people/Peak-Pickleball/61559624409713/?sk=events
+TITLE: Peak Pickleball | Facebook
+FETCHED: 2026-11-13T22:49:51.916Z
+
+== META ==
+og:type = video.other
+og:title = Peak Pickleball | Colorado Springs CO
+og:description = Peak Pickleball, Colorado Springs. 1,820 followers · 283 talking about this · 1,219 were here. Colorado’s Largest Indoor Pickleball Club
+A place to Learn. Play. CONNECT. Belong. 
+Start here → FREE...
+og:url = https://www.facebook.com/p/Peak-Pickleball-61559624409713/
+og:image:alt = Peak Pickleball | Colorado Springs CO
+og:locale = en_US
+description = Peak Pickleball, Colorado Springs. 1,820 followers · 283 talking about this · 1,219 were here. Colorado’s Largest Indoor Pickleball Club
+A place to...
+twitter:card = summary
+twitter:title = Peak Pickleball | Colorado Springs CO
+twitter:description = Peak Pickleball, Colorado Springs. 1,820 followers · 283 talking about this · 1,219 were here. Colorado’s Largest Indoor Pickleball Club
+A place to Learn. Play. CONNECT. Belong. 
+Start here → FREE...
+twitter:image:alt = Peak Pickleball | Colorado Springs CO
+twitter:site = @facebookapp
+
+== TIMES ==
+
+
+== TEXT ==
+Log In
+Forgot Account?
+Peak Pickleball 
+1.8K followers • 6 following
+More
+Posts
+About
+Reels
+Photos
+Events
+More
+Upcoming
+Past
+No Upcoming to Show
+Log in or sign up for Facebook to connect with friends, family and people you know.
+Log In
+or
+Create new account
+
+== IMG ALTS ==
+
+
+== LINKS ==
+Log In | https://www.facebook.com/login/device-based/regular/login/?login_attempt=1&next=%2Fpeople%2FPeak-Pickleball%2F61559624409713%2F%3Fsk%3Devents
+Forgot Account? | https://www.facebook.com/recover/initiate?ars=royal_blue_bar
+View profile cover photo | https://www.facebook.com/photo/?fbid=122120115980320813&set=a.122104590914320813
+Peak Pickleball | https://www.facebook.com/photo/?fbid=122142250334320813&set=a.122103637718320813&__tn__=%3C
+1.8K followers | https://www.facebook.com/profile.php?id=61559624409713&sk=followers
+6 following | https://www.facebook.com/profile.php?id=61559624409713&sk=following
+Posts | https://www.facebook.com/profile.php?id=61559624409713
+About | https://www.facebook.com/profile.php?id=61559624409713&sk=about
+Reels | https://www.facebook.com/profile.php?id=61559624409713&sk=reels_tab
+Photos | https://www.facebook.com/profile.php?id=61559624409713&sk=photos
+ | https://www.facebook.com/people/Peak-Pickleball/61559624409713/
+Events | https://www.facebook.com/profile.php?id=61559624409713&sk=events
+Upcoming | https://www.facebook.com/people/Peak-Pickleball/61559624409713/?sk=upcoming_hosted_events
+Past | https://www.facebook.com/people/Peak-Pickleball/61559624409713/?sk=past_hosted_events
+Log In | https://www.facebook.com/login/?next=%2Fpeople%2FPeak-Pickleball%2F61559624409713%2F%3Fsk%3Devents
+Create new account | https://www.facebook.com/reg/?next=%2Fpeople%2FPeak-Pickleball%2F61559624409713%2F%3Fsk%3Devents
