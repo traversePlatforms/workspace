@@ -11,7 +11,13 @@
  *   php desk.php rescan [15]          (started by the hourly morning-email cron job; 15 companies a run)
  *   php desk.php scan <lead id> [--hunter]
  * Also: signed sponsors with what they bought, renewal dates and to-dos; tour outcomes and moves; notes that can be removed (the log
- * keeps them, the desk stops showing them); a profit and loss page. */
+ * keeps them, the desk stops showing them); a profit and loss page.
+ * 2026-11-13 (Matthew: "attach the expo leads to our current peak lead system. Make an additional system in there just for expo leads
+ * separate from the sponsor prospects but accessible in the same app. I also need an account made for lance"): Expo leads, a world of
+ * its own. Organisations that could rent Peak for an expo start from expo-seed.json (tools/build_expo.cjs) and everything after is its
+ * own append-only log, expo-events.log, so the sponsor leads, their log and their counts never see an expo lead. A third role, expo,
+ * sees the Expo leads and nothing else, enforced here: its data holds no sponsor, Peak record, P&L or package, and every other action
+ * is refused.   php desk.php addaccount "Lance" expo */
 declare(strict_types=1);
 define('DESK', 1);
 date_default_timezone_set('America/Denver');   /* review 2026-11-09: the server's clock is UTC, so after 5 pm Colorado time "today" was already tomorrow and a tour booked for today was refused ("Pick today or a later day") */
@@ -22,8 +28,8 @@ if (!is_dir(DATA_DIR)) { if ($LOCAL) @mkdir(DATA_DIR, 0770, true); else { http_r
 
 function jread(string $f, $def) { $s = @file_get_contents(DATA_DIR . '/' . $f); if ($s === false) return $def; $j = json_decode($s, true); return $j === null ? $def : $j; }
 function jwrite(string $f, $v): bool { $t = DATA_DIR . '/' . $f . '.tmp' . bin2hex(random_bytes(3)); if (file_put_contents($t, json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) === false) return false; return rename($t, DATA_DIR . '/' . $f); }
-function logAdd(array $row): bool { return (bool) file_put_contents(DATA_DIR . '/events.log', json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); }
-function logRows(): array { $out = []; $fh = @fopen(DATA_DIR . '/events.log', 'r'); if (!$fh) return $out; while (($l = fgets($fh)) !== false) { $r = json_decode($l, true); if (is_array($r)) $out[] = $r; } fclose($fh); return $out; }
+function logAdd(array $row, string $f = 'events.log'): bool { return (bool) file_put_contents(DATA_DIR . '/' . $f, json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); }
+function logRows(string $f = 'events.log'): array { $out = []; $fh = @fopen(DATA_DIR . '/' . $f, 'r'); if (!$fh) return $out; while (($l = fgets($fh)) !== false) { $r = json_decode($l, true); if (is_array($r)) $out[] = $r; } fclose($fh); return $out; }
 function clean($v, int $max): string { $t = trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string) $v) ?? ''); return mb_substr($t, 0, $max); }
 function codeHash(string $c): string { return hash('sha256', 'peakdesk|' . $c); }
 const STATUSES = ['new' => 'Not contacted', 'contacted' => 'Contacted', 'tour' => 'Tour booked', 'toured' => 'Toured', 'proposal' => 'Proposal sent', 'signed' => 'Signed', 'notnow' => 'Not now', 'no' => 'No'];
@@ -78,10 +84,39 @@ function state(): array {
     return ['leads' => $L, 'tours' => array_values(array_filter($tours, fn($t) => !$t['off'])), 'proposals' => array_values($props), 'packages' => $pk, 'pl' => $pl, 'team' => $team];
 }
 
+/* ---- Expo leads (2026-11-13): their own seed and their own log, never mixed into state() ---- */
+const XSTAGES = ['new' => 'New', 'contacted' => 'Contacted', 'talking' => 'Talking', 'visit' => 'Site visit booked', 'proposal' => 'Proposal sent', 'booked' => 'Booked', 'notfit' => 'Not a fit'];
+const XLOG = 'expo-events.log';
+function expoState(): array {
+    $seed = jread('expo-seed.json', ['orgs' => []]);
+    $base = ['stage' => 'new', 'notes' => [], 'next' => null, 'log' => [], 'added' => []];
+    $O = []; foreach (($seed['orgs'] ?? []) as $o) $O[$o['id']] = $o + $base;
+    foreach (logRows(XLOG) as $r) {
+        $id = (string) ($r['id'] ?? '');
+        switch ((string) ($r['t'] ?? '')) {
+            case 'xlead': $O[$id] = $r['org'] + $base; break;
+            case 'xstage': if (isset($O[$id])) { $O[$id]['stage'] = $r['stage']; $O[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Stage: ' . (XSTAGES[$r['stage']] ?? $r['stage'])]; } break;
+            case 'xnote': if (isset($O[$id])) $O[$id]['notes'][] = ['k' => noteKey($r), 'at' => $r['at'], 'by' => $r['by'], 'note' => $r['note']]; break;
+            case 'xnotedel': if (isset($O[$id])) $O[$id]['notes'] = array_values(array_filter($O[$id]['notes'], fn($n) => $n['k'] !== ($r['nk'] ?? ''))); break;
+            case 'xnext': if (isset($O[$id])) $O[$id]['next'] = $r['next']; break;
+            case 'xcontact': if (isset($O[$id])) $O[$id]['added'][] = $r['contact'] + ['by' => $r['by'], 'at' => $r['at']]; break;
+            case 'xdel': if (isset($O[$id])) $O[$id]['off'] = ['at' => $r['at'], 'by' => $r['by']]; break;   /* removed: the log keeps it, it can come back */
+            case 'xback': if (isset($O[$id])) unset($O[$id]['off']); break;
+        }
+    }
+    return ['orgs' => $O, 'seed' => $seed];
+}
+function expoOut(): array {
+    $X = expoState(); $sd = $X['seed'];
+    $removed = []; foreach ($X['orgs'] as $o) if (!empty($o['off'])) $removed[] = ['id' => $o['id'], 'name' => $o['name'], 'cat' => $o['cat'] ?? '', 'stage' => $o['stage'], 'at' => $o['off']['at'], 'by' => $o['off']['by']];
+    return ['stages' => XSTAGES, 'orgs' => array_values(array_filter($X['orgs'], fn($o) => empty($o['off']))), 'removed' => $removed,
+        'questions' => $sd['questions'] ?? [], 'venues' => $sd['venues'] ?? [], 'venueNote' => $sd['venueNote'] ?? '', 'built' => $sd['built'] ?? '', 'from' => $sd['from'] ?? ''];
+}
+
 /* ---- the command line: accounts, look-ups ---- */
 if (PHP_SAPI === 'cli') {
     [$cmd, $name, $role] = [$argv[1] ?? '', $argv[2] ?? '', $argv[3] ?? 'seller'];
-    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller'], true)) {
+    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller', 'expo'], true)) {
         $acc = jread('accounts.json', ['codes' => []]);
         do { $code = (string) random_int(100000, 999999); } while (isset($acc['codes'][codeHash($code)]));
         $acc['codes'][codeHash($code)] = ['name' => clean($name, 40), 'role' => $role, 'at' => time()];
@@ -92,7 +127,7 @@ if (PHP_SAPI === 'cli') {
         $L = state()['leads'][$name] ?? null; if (!$L) { fwrite(STDERR, "No such lead.\n"); exit(1); }
         echo json_encode(scanAndSave($L, in_array('--hunter', $argv, true) ? 'hunter' : 'site'), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n"; exit(0);
     }
-    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller | rescan [n] | scan <lead id> [--hunter]\n"); exit(1);
+    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller|expo | rescan [n] | scan <lead id> [--hunter]\n"); exit(1);
 }
 
 header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff');
@@ -124,9 +159,12 @@ if ($action === 'signin') {
 }
 $ses = jread('sessions.json', []); $tokH = hash('sha256', (string) ($_COOKIE['peakdesk'] ?? '')); $me = $ses[$tokH] ?? null;
 if (!$me) fail('Signed out.', 401);
-$ME = (string) $me['name'];   /* the role is sent back to the page but gates nothing here: admin and seller have the same powers (2026-10-21) */
+$ME = (string) $me['name'];   /* admin and seller have the same powers (2026-10-21); expo (2026-11-13) has the Expo leads only */
+$EXPO = ($me['role'] ?? '') === 'expo';
 if ($action === 'signout') { unset($ses[$tokH]); jwrite('sessions.json', $ses); setcookie('peakdesk', '', ['expires' => 1, 'path' => '/']); out(['ok' => true]); }
 if ($action === 'me') out(['ok' => true, 'name' => $ME, 'role' => $me['role']]);
+const XACTS = ['xstage', 'xnote', 'xnotedel', 'xnext', 'xcontact', 'xlead', 'xdel', 'xback'];
+if ($EXPO && $action !== 'data' && !in_array($action, XACTS, true)) fail('This account is for the Expo leads only.', 403);   /* every sponsor action, read or write */
 
 function needLead(array $S, string $id, bool $removedOk = false): array {
     if (!preg_match('/^[a-z0-9]{6,24}$/', $id) || !isset($S['leads'][$id])) fail('No such lead.', 404);
@@ -158,14 +196,72 @@ function okDay(string $d): bool { return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$
 function okTime(string $t): bool { return (bool) preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $t); }
 
 if ($action === 'data') {
+    if ($EXPO) out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'expo' => expoOut()]);   /* the expo account: the Expo leads and nothing of the sponsors' */
     $S = state(); $sd = jread('seed.json', []);
-    /* who can sign in (names only) with what each has done; the read-only check account is left out */
-    $people = []; foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) if ($a['name'] !== 'Claude Check') $people[$a['name']] = $S['team'][$a['name']] ?? [];
+    /* who can sign in (names only) with what each has done; the read-only check account and expo-only accounts are left out */
+    $people = []; foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) if ($a['name'] !== 'Claude Check' && ($a['role'] ?? '') !== 'expo') $people[$a['name']] = $S['team'][$a['name']] ?? [];
     $removed = []; foreach ($S['leads'] as $l) if (!empty($l['off'])) $removed[] = ['id' => $l['id'], 'name' => $l['name'], 'list' => $l['list'], 'status' => $l['status'], 'at' => $l['off']['at'], 'by' => $l['off']['by']];
-    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'leads' => array_values(array_filter($S['leads'], fn($l) => empty($l['off']))), 'removed' => $removed, 'tours' => $S['tours'], 'proposals' => $S['proposals'], 'packages' => $S['packages'], 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? [], 'pl' => $S['pl'], 'team' => $people, 'hunterLeft' => hunterLeft()]);
+    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'leads' => array_values(array_filter($S['leads'], fn($l) => empty($l['off']))), 'removed' => $removed, 'tours' => $S['tours'], 'proposals' => $S['proposals'], 'packages' => $S['packages'], 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? [], 'pl' => $S['pl'], 'team' => $people, 'hunterLeft' => hunterLeft(), 'expo' => expoOut()]);
 }
 if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);   /* read-only check account (2026-10-26): everything below saves */
 if (!$isPost) fail('POST required', 405);
+
+/* ---- Expo leads: the writes. Only expoState() is read and only expo-events.log is written ---- */
+function needOrg(array $X, string $id, bool $removedOk = false): array {
+    if (!preg_match('/^x[0-9a-f]{9}$/', $id) || !isset($X['orgs'][$id])) fail('No such expo lead.', 404);
+    if (!$removedOk && !empty($X['orgs'][$id]['off'])) fail('That lead was removed. Bring it back first.', 409);
+    return $X['orgs'][$id];
+}
+if (in_array($action, XACTS, true)) {
+    $X = expoState(); $id = (string) ($body['id'] ?? ''); $now = time();
+    $okMail = fn(string $e) => $e === '' || filter_var($e, FILTER_VALIDATE_EMAIL);
+    switch ($action) {
+        case 'xstage': {
+            needOrg($X, $id); $st = (string) ($body['stage'] ?? ''); if (!isset(XSTAGES[$st])) fail('Pick a stage.');
+            logAdd(['t' => 'xstage', 'id' => $id, 'stage' => $st, 'by' => $ME, 'at' => $now], XLOG); out(['ok' => true]);
+        }
+        case 'xnote': {
+            needOrg($X, $id); $n = clean($body['note'] ?? '', 1000); if ($n === '') fail('Write the note first.');
+            logAdd(['t' => 'xnote', 'id' => $id, 'note' => $n, 'by' => $ME, 'at' => $now], XLOG); out(['ok' => true]);
+        }
+        case 'xnotedel': {
+            $O = needOrg($X, $id); $nk = (string) ($body['nk'] ?? ''); if (!in_array($nk, array_column($O['notes'], 'k'), true)) fail('No such note.', 404);
+            logAdd(['t' => 'xnotedel', 'id' => $id, 'nk' => $nk, 'by' => $ME, 'at' => $now], XLOG); out(['ok' => true]);
+        }
+        case 'xnext': {
+            needOrg($X, $id); $d = (string) ($body['date'] ?? ''); $w = clean($body['what'] ?? '', 160); if ($d !== '' && !okDay($d)) fail('Pick a date.');
+            logAdd(['t' => 'xnext', 'id' => $id, 'next' => $d === '' && $w === '' ? null : ['date' => $d, 'what' => $w], 'by' => $ME, 'at' => $now], XLOG); out(['ok' => true]);
+        }
+        case 'xcontact': {
+            needOrg($X, $id);
+            $c = ['name' => clean($body['name'] ?? '', 80), 'role' => clean($body['role'] ?? '', 80), 'email' => clean($body['email'] ?? '', 120), 'phone' => clean($body['phone'] ?? '', 40), 'notes' => clean($body['notes'] ?? '', 400)];
+            if ($c['name'] === '' && $c['email'] === '' && $c['phone'] === '') fail('Give a name, email or phone.');
+            if (!$okMail($c['email'])) fail('That email does not look right.');
+            logAdd(['t' => 'xcontact', 'id' => $id, 'contact' => $c, 'by' => $ME, 'at' => $now], XLOG); out(['ok' => true]);
+        }
+        case 'xlead': {
+            /* an expo lead added by hand: it lives in the Expo leads only */
+            $n = clean($body['name'] ?? '', 100); if ($n === '') fail('Give the organisation name.');
+            foreach ($X['orgs'] as $o) if (strtolower(trim($o['name'])) === strtolower($n)) fail(!empty($o['off']) ? 'That lead was removed. Bring it back from Removed.' : 'That organisation is already in the Expo leads.');
+            $site = clean($body['site'] ?? '', 160); if ($site !== '' && !preg_match('#^(https?://)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(/\S*)?$#i', $site)) fail('That website does not look right.');
+            if ($site !== '' && !preg_match('#^https?://#i', $site)) $site = 'https://' . $site;
+            $em = clean($body['email'] ?? '', 120); if (!$okMail($em)) fail('That email does not look right.');
+            $pri = (int) ($body['pri'] ?? 2); if ($pri < 1 || $pri > 3) $pri = 2;
+            $nid = 'x' . substr(sha1('expo-added|' . $n . '|' . microtime()), 0, 9);
+            $org = ['id' => $nid, 'pri' => $pri, 'cat' => clean($body['cat'] ?? '', 60), 'name' => $n, 'events' => clean($body['events'] ?? '', 400), 'venue' => clean($body['venue'] ?? '', 160),
+                'size' => clean($body['size'] ?? '', 120), 'last' => '', 'why' => clean($body['why'] ?? '', 400), 'site' => $site, 'route' => '', 'srcs' => [], 'checked' => '', 'contacts' => [], 'by' => $ME, 'mine' => true];
+            $c = ['name' => clean($body['cname'] ?? '', 80), 'role' => clean($body['crole'] ?? '', 80), 'email' => $em, 'phone' => clean($body['phone'] ?? '', 40), 'notes' => ''];
+            logAdd(['t' => 'xlead', 'id' => $nid, 'org' => $org, 'by' => $ME, 'at' => $now], XLOG);
+            if ($c['name'] !== '' || $c['email'] !== '' || $c['phone'] !== '') logAdd(['t' => 'xcontact', 'id' => $nid, 'contact' => $c, 'by' => $ME, 'at' => $now], XLOG);
+            out(['ok' => true, 'id' => $nid]);
+        }
+        case 'xdel': { needOrg($X, $id); logAdd(['t' => 'xdel', 'id' => $id, 'by' => $ME, 'at' => $now], XLOG); out(['ok' => true]); }
+        case 'xback': {
+            $O = needOrg($X, $id, true); if (empty($O['off'])) fail('That lead is in the Expo leads already.');
+            logAdd(['t' => 'xback', 'id' => $id, 'by' => $ME, 'at' => $now], XLOG); out(['ok' => true]);
+        }
+    }
+}
 $S = state();
 switch ($action) {
     case 'status': {

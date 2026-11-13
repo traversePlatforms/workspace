@@ -149,6 +149,17 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   .shead h1{font-size:19px}.sdesc{font-size:13.5px;margin-bottom:8px}
   .controls{gap:8px}.controls .search{flex:1 1 150px}.sortby span{display:none}.sortby select{max-width:44vw}
 }
+/* Expo leads (2026-11-13): their stages, priority, how sure each contact is */
+.pill.xs-booked{background:#d9f0e2;color:#1d6b3f}.pill.xs-talking,.pill.xs-visit,.pill.xs-proposal{background:#e6eefc;color:#2b4f8f}.pill.xs-notfit{color:var(--soft)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--chip);color:var(--soft);margin-left:6px;white-space:nowrap}
+.tag.good{background:#d9f0e2;color:#1d6b3f}.tag.careful{background:#fff2d9;color:#8a5a00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.xs-booked,:root:not([data-theme="light"]) .tag.good{background:#1f3b2a;color:#8fdcae}:root:not([data-theme="light"]) .pill.xs-talking,:root:not([data-theme="light"]) .pill.xs-visit,:root:not([data-theme="light"]) .pill.xs-proposal{background:#1e2a40;color:#9fbaf0}:root:not([data-theme="light"]) .tag.careful{background:#3a2c12;color:#f0c46a}}
+:root[data-theme="dark"] .pill.xs-booked,:root[data-theme="dark"] .tag.good{background:#1f3b2a;color:#8fdcae}:root[data-theme="dark"] .pill.xs-talking,:root[data-theme="dark"] .pill.xs-visit,:root[data-theme="dark"] .pill.xs-proposal{background:#1e2a40;color:#9fbaf0}:root[data-theme="dark"] .tag.careful{background:#3a2c12;color:#f0c46a}
+.xct .xn{font-size:13.5px;margin-top:3px;overflow-wrap:anywhere}.xct .xn.chk{margin-top:5px}.xct small a,.xsrc a{word-break:normal;overflow-wrap:anywhere}
+.xsrc{font-size:13px;color:var(--soft);overflow-wrap:anywhere}
+.xq{margin:0;padding-left:22px}.xq li{padding:5px 0;border-top:1px solid var(--line)}.xq li:first-child{border-top:0}
+.xvenues td:first-child{min-width:160px}.xvenues td{overflow-wrap:anywhere}
+@media (max-width:640px){.xvenues{font-size:13px}.xvenues td:first-child{min-width:110px}}
 @media print{@page{size:letter;margin:.5in} html,body{background:#fff!important} .bar,.printbar,.toast{display:none!important} main{padding:0;max-width:none} .paper{box-shadow:none;padding:0;max-width:none}}
 /* finger-sized targets on touch screens (device QA D2/D3, 2026-10-27): at least 40 px tall; desktop density unchanged */
 @media (pointer:coarse),(max-width:640px){.chips button,.tabs button,.seg button,.btn,.btn.small{min-height:40px}.who .lnk,#signout{min-height:40px;padding:0 6px}}
@@ -156,7 +167,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
 </head>
 <body>
 <div class="bar" id="bar" hidden>
-  <div class="brand">Peak Sponsor Desk<small>Peak Pickleball · corporate sponsors</small></div>
+  <div class="brand">Peak Sponsor Desk<small id="brandSub">Peak Pickleball · corporate sponsors</small></div>
   <nav class="tabs" id="tabs"></nav>
   <div class="who"><span id="whoName"></span><button class="lnk" id="signout" type="button">Sign out</button></div>
 </div>
@@ -225,6 +236,11 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
       if (j._status === 401) return signin();
       if (!j.ok) { main.textContent = ''; main.appendChild(el('div', 'empty', j.error || 'Could not load.')); return; }
       S.data = j; $('bar').hidden = false; $('whoName').textContent = j.me.name + (j.me.role === 'admin' ? ' (admin)' : '');
+      /* an expo-only account: its own line under the name, and the look under its one tab (it has no More) */
+      $('brandSub').textContent = isExpo() ? 'Peak Pickleball · expo leads' : 'Peak Pickleball · corporate sponsors';
+      var hasLook = SUBS.expo.some(function (x) { return x[0] === 'look'; });
+      if (isExpo() && !hasLook) SUBS.expo.push(['look', 'Look']); else if (!isExpo() && hasLook) SUBS.expo.pop();
+      if (!isExpo() && S.sub.expo === 'look') S.sub.expo = 'all';
       tabs(); (then || draw)();
     }).catch(function () { main.textContent = ''; main.appendChild(el('div', 'empty', 'No connection. Try again when you have signal.')); });
   }
@@ -243,6 +259,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     ['new', 'New leads', 'The companies we researched as new sponsors, the ones a call reaches best at the top.'],
     ['peak', 'Peak sponsors', 'Every sponsor on Peak’s own tracker, active ones first.'],
     ['local', 'Local businesses', 'Added by us: local businesses from our research and companies added on the desk.'],
+    ['expo', 'Expo leads', 'Organisations that run expos, shows and fairs and could rent Peak as their venue. Kept apart from the sponsor lists: nothing here counts there.'],
     ['more', 'More', 'The report, profit and loss, packages, what Peak offers sponsors, and the look (light or dark).']
   ];
   var SUBS = {
@@ -250,15 +267,20 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     board: [['stages', 'Stages'], ['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
     peak: [['all', 'All'], ['Active', 'Active'], ['Pending', 'Pending'], ['Inactive', 'Inactive']],
     local: [['all', 'All'], ['local', 'From our research'], ['added', 'Added on the desk']],
+    expo: [['all', 'All'], ['due', 'Follow-ups due'], ['removed', 'Removed'], ['ref', 'Questions and venues']],   /* + Look for an expo-only account */
     more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['look', 'Look']]
   };
   var SORTS = {
     lists: [['name', 'Name A to Z'], ['reach', 'Best contact first'], ['next', 'Next step soonest']],
     'new': [['reach', 'Best contact first'], ['score', 'Score'], ['name', 'Name A to Z']],
     peak: [['peak', 'Active first'], ['end', 'Contract ends soonest'], ['name', 'Name A to Z']],
-    local: [['reach', 'Best contact first'], ['score', 'Fit score'], ['miles', 'Nearest first'], ['name', 'Name A to Z']]
+    local: [['reach', 'Best contact first'], ['score', 'Fit score'], ['miles', 'Nearest first'], ['name', 'Name A to Z']],
+    expo: [['pri', 'Priority first'], ['next', 'Next step soonest'], ['name', 'Name A to Z']]
   };
-  var SEARCH = { lists: 'Search every company', 'new': 'Search new leads', peak: 'Search Peak sponsors', local: 'Search local businesses', board: 'Search the board' };
+  var SEARCH = { lists: 'Search every company', 'new': 'Search new leads', peak: 'Search Peak sponsors', local: 'Search local businesses', board: 'Search the board', expo: 'Search expo leads, events, venues, people' };
+  /* an expo-only account (2026-11-13, Lance) sees the Expo leads and the look, nothing else; the server holds the line too */
+  var isExpo = function () { return !!(S.data && S.data.me && S.data.me.role === 'expo'); };
+  var secs = function () { return isExpo() ? SECS.filter(function (x) { return x[0] === 'expo'; }) : SECS; };
   var STAGES = ['contacted', 'tour', 'toured', 'proposal', 'signed'];
   var onBoard = function (l) { return STAGES.indexOf(l.status) >= 0; };
   /* each company lives in exactly one of the three list sections: its list decides */
@@ -267,6 +289,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   var sortOf = function (t) { return S.sort[t] || (SORTS[t] ? SORTS[t][0][0] : 'reach'); };
   var upTours = function () { return S.data.tours.filter(function (t) { return t.date >= today(); }); };
   function tabCount(t) {
+    if (t === 'expo') return S.data.expo ? S.data.expo.orgs.length : null;
     var L = S.data.leads;
     if (t === 'lists') return L.length;
     if (t === 'board') return L.filter(onBoard).length;
@@ -275,6 +298,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   }
   function subCount(t, k) {
     var D = S.data, L = D.leads;
+    if (t === 'expo') { var X = D.expo; return k === 'all' ? X.orgs.length : k === 'due' ? X.orgs.filter(xDue).length : k === 'removed' ? X.removed.length : null; }
     if (t === 'lists') return k === 'all' ? L.length : k === 'due' ? L.filter(isDue).length : (D.removed || []).length;
     if (t === 'board') return k === 'stages' ? L.filter(onBoard).length : k === 'tours' ? upTours().length : k === 'props' ? D.proposals.length : L.filter(function (l) { return l.status === 'signed'; }).length;
     if (t === 'peak' || t === 'local') return sectionLeads(t, k).length;
@@ -292,7 +316,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
   /* ---- tabs ---- */
   function tabs() {
     var t = $('tabs'); t.textContent = '';
-    SECS.forEach(function (x) {
+    secs().forEach(function (x) {
       var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(el('span', 'tl', x[1]));
       var n = S.data ? tabCount(x[0]) : null; if (n != null) b.appendChild(el('b', 'tn', String(n)));
       if (S.tab === x[0]) b.setAttribute('aria-current', 'page');
@@ -306,17 +330,19 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     main.textContent = '';
     document.documentElement.classList.remove('lock');
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
+    if (!secs().some(function (x) { return x[0] === S.tab; })) { S.tab = secs()[0][0]; remember(); tabs(); }
     S.q = S.qs[S.tab] || '';
     main.setAttribute('data-section', S.tab);
     secHead();
     var sub = subOf(S.tab);
-    ({ lists: drawLists, board: drawBoardSec, 'new': drawLeadList, peak: drawLeadList, local: drawLeadList, more: drawMore })[S.tab](sub);
+    ({ lists: drawLists, board: drawBoardSec, 'new': drawLeadList, peak: drawLeadList, local: drawLeadList, expo: drawExpoSec, more: drawMore })[S.tab](sub);
   }
   /* the section's name, its one line, and its chips */
   function secHead() {
     var x = SECS.filter(function (s) { return s[0] === S.tab; })[0], h = el('div', 'shead'), top = el('div', 'shtop');
     top.appendChild(el('h1', null, x[1]));
     if (S.tab === 'local') { var add = el('button', 'btn ghost small', '+ Add a company'); add.type = 'button'; add.addEventListener('click', addForm); top.appendChild(add); }
+    if (S.tab === 'expo') { var ax = el('button', 'btn ghost small', '+ Add an expo lead'); ax.type = 'button'; ax.addEventListener('click', expoAddForm); top.appendChild(ax); }
     h.appendChild(top); h.appendChild(el('p', 'sdesc', x[2]));
     if (SUBS[S.tab]) {
       var sc = el('div', 'chips subchips'), cur = subOf(S.tab);
@@ -1032,7 +1058,219 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}   /* a compan
     });
   }
 
-  (function () { var h = (location.hash || '').slice(1).split('/'); if (SECS.some(function (x) { return x[0] === h[0]; })) { S.tab = h[0]; if (h[1] && SUBS[h[0]] && SUBS[h[0]].some(function (x) { return x[0] === h[1]; })) S.sub[h[0]] = h[1]; } })();
+  /* ---- Expo leads (2026-11-13, Matthew: "Make an additional system in there just for expo leads separate from the sponsor prospects
+     but accessible in the same app"): organisations that could rent Peak for an expo, from the venue research (venue-rental-2026-11,
+     tools/build_expo.cjs). Their own list, stages, notes and follow-ups, their own log on the server; never counted in the sponsor
+     sections, the board, the report or the P&L. Not looked up by the hourly rescan or Hunter. ---- */
+  var xPeople = function (o) { return (o.contacts || []).concat(o.added || []); };
+  var xHasMail = function (o) { return xPeople(o).some(function (c) { return c.email; }); };
+  var xHasPhone = function (o) { return xPeople(o).some(function (c) { return c.phone; }); };
+  var xDue = function (o) { return o.next && o.next.date && o.next.date <= today() && ['booked', 'notfit'].indexOf(o.stage) < 0; };
+  var xOrg = function (id) { return S.data.expo.orgs.filter(function (o) { return o.id === id; })[0]; };
+  var xStName = function (k) { return S.data.expo.stages[k] || k; };
+  var hostOf = function (u) { return String(u).replace(/^https?:\/\/(www\.)?/i, '').split(/[/?#]/)[0]; };
+  /* the research's free text with its links, emails and phones made tappable; everything else stays text */
+  function linkify(text, into) {
+    var re = /(https?:\/\/[^\s;,)]+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(\(?\b\d{3}\)?[ .-]?\d{3}-\d{4}\b)/g, s = String(text || ''), at = 0, m;
+    while ((m = re.exec(s))) {
+      if (m.index > at) into.appendChild(document.createTextNode(s.slice(at, m.index)));
+      var raw = m[0], tail = ''; if (m[1]) { var t = raw.match(/[.]+$/); if (t) { tail = t[0]; raw = raw.slice(0, -tail.length); } }
+      var a = el('a', null, raw);
+      if (m[1]) { a.href = raw; a.target = '_blank'; a.rel = 'noopener'; } else if (m[2]) a.href = 'mailto:' + raw; else a.href = 'tel:' + raw.replace(/[^\d+]/g, '');
+      into.appendChild(a); if (tail) into.appendChild(document.createTextNode(tail)); at = m.index + m[0].length;
+    }
+    if (at < s.length) into.appendChild(document.createTextNode(s.slice(at)));
+    return into;
+  }
+  function srcLinks(urls, into, label) {
+    if (!urls || !urls.length) return;
+    var d = el('div', 'xsrc', label || 'Sources: ');
+    urls.forEach(function (u, i) { if (i) d.appendChild(document.createTextNode(' · ')); var a = el('a', null, hostOf(u) + ' ›'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; a.title = u; d.appendChild(a); });
+    into.appendChild(d);
+  }
+  function drawExpoSec(sub) {
+    if (sub === 'ref') return drawExpoRef();
+    if (sub === 'removed') return drawExpoRemoved();
+    if (sub === 'look') return drawLook();
+    drawExpoList(sub);
+  }
+  function drawExpoList(sub) {
+    var X = S.data.expo, due = sub === 'due', inList = due ? X.orgs.filter(xDue) : X.orgs.slice();
+    var st = S.st.expo || 'all', pr = S.xpri || 'all', cat = S.xcat || 'all';
+    var c = el('div', 'controls'); searchBox(c, function () { drawRows(); });
+    if (!due) {
+      var lab = el('label', 'sortby'); lab.appendChild(el('span', null, 'Sort')); var sel = el('select'); sel.setAttribute('aria-label', 'Sort');
+      SORTS.expo.forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; sel.appendChild(x); }); sel.value = sortOf('expo');
+      sel.addEventListener('change', function () { S.sort.expo = sel.value; drawRows(); }); lab.appendChild(sel); c.appendChild(lab);
+    }
+    /* the category: one of the research's sixteen, or any */
+    var cats = {}; inList.forEach(function (o) { if (o.cat) cats[o.cat] = (cats[o.cat] || 0) + 1; });
+    var cl = el('label', 'sortby'); cl.appendChild(el('span', null, 'Category')); var cs = el('select'); cs.setAttribute('aria-label', 'Category'); cs.className = 'xcat';
+    [['all', 'Every category']].concat(Object.keys(cats).sort().map(function (k) { return [k, k + ' (' + cats[k] + ')']; })).forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; cs.appendChild(x); });
+    if (cat !== 'all' && !cats[cat]) cat = S.xcat = 'all'; cs.value = cat;
+    cs.addEventListener('change', function () { S.xcat = cs.value; S.sel = null; draw(); }); cl.appendChild(cs); c.appendChild(cl);
+    main.appendChild(c);
+    var inCat = inList.filter(function (o) { return cat === 'all' || o.cat === cat; });
+    /* stage and priority chips: only what someone is in, with counts */
+    var chipRow = function (label, cls, opts, cur, val, pick) {
+      var r = el('div', 'chips stagechips ' + cls); r.appendChild(el('span', 'chiplab', label));
+      opts.forEach(function (x) {
+        var n = x[0] === 'all' ? inCat.length : inCat.filter(function (o) { return val(o) === x[0]; }).length; if (!n && x[0] !== 'all' && cur !== x[0]) return;
+        var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('data-x', x[0]); b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(cur === x[0]));
+        b.addEventListener('click', function () { pick(x[0]); S.sel = null; draw(); }); r.appendChild(b);
+      });
+      main.appendChild(r);
+    };
+    chipRow('Stage', 'xstagechips', [['all', 'Any']].concat(Object.keys(X.stages).map(function (k) { return [k, X.stages[k]]; })), st, function (o) { return o.stage; }, function (v) { S.st.expo = v; });
+    chipRow('Priority', 'xprichips', [['all', 'Any'], ['1', '1'], ['2', '2'], ['3', '3']], pr, function (o) { return String(o.pri); }, function (v) { S.xpri = v; });
+    var p = el('p', null, 'Priority 1: a recurring indoor show in Colorado Springs or north El Paso County that rents its venue. 2: a good fit with a catch. 3: a long shot.'); p.style.cssText = 'color:var(--soft);font-size:13px;margin:-4px 0 10px'; main.appendChild(p);
+    var split = el('div', 'split' + (S.sel ? ' open' : '')), list = el('div', 'list'); split.appendChild(list); main.appendChild(split);
+    var reach = function (o) { return (xHasPhone(o) ? 1 : 0) + (xHasMail(o) ? 1 : 0); };
+    var byName = function (a, b) { return a.name.localeCompare(b.name); };
+    var nextOf = function (o) { return (o.next && o.next.date) || '9999'; };
+    var ORDER = { pri: function (a, b) { return a.pri - b.pri || reach(b) - reach(a) || byName(a, b); }, next: function (a, b) { return nextOf(a).localeCompare(nextOf(b)) || a.pri - b.pri || byName(a, b); }, name: byName };
+    function drawRows() {
+      list.textContent = '';
+      var q = S.q.trim().toLowerCase();
+      var hay = function (o) { return [o.name, o.cat, o.events, o.venue, o.why].concat(xPeople(o).map(function (c) { return (c.name || '') + ' ' + (c.role || ''); })).join(' ').toLowerCase(); };
+      var rows = inCat.filter(function (o) { return (st === 'all' || o.stage === st) && (pr === 'all' || String(o.pri) === pr) && (!q || hay(o).indexOf(q) >= 0); });
+      rows.sort(due ? ORDER.next : ORDER[sortOf('expo')] || ORDER.pri);
+      if (!rows.length) { list.appendChild(el('div', 'empty', q ? 'No expo lead here matches “' + S.q.trim() + '”.' : due ? 'No follow-ups due. A next step with a date shows here on the day.' : 'Nobody here.')); return; }
+      rows.forEach(function (o) {
+        var r = el('button', 'row' + (S.sel === o.id ? ' on' : '')); r.type = 'button'; r.setAttribute('data-id', o.id);
+        var s = el('div', 'sc', String(o.pri)); s.appendChild(el('small', null, 'priority')); r.appendChild(s);
+        var venue = o.venue ? (o.venue.length > 70 ? o.venue.slice(0, 68) + '…' : o.venue) : '';
+        var nm = el('div', 'nm'); nm.appendChild(el('b', null, o.name)); nm.appendChild(el('small', null, [o.cat, venue ? 'now at ' + venue : ''].filter(Boolean).join(' · '))); r.appendChild(nm);
+        var right = el('div'); right.style.textAlign = 'right';
+        var mk = el('span', 'reach', (xHasPhone(o) ? '☎' : '') + (xHasMail(o) ? ' ✉' : '')); mk.title = (xHasMail(o) ? 'Has an email' : 'No email') + ' · ' + (xHasPhone(o) ? 'has a phone' : 'no phone'); right.appendChild(mk);
+        right.appendChild(el('span', 'pill xs-' + o.stage, xStName(o.stage)));
+        if (o.next && o.next.date) right.appendChild(el('div', 'due' + (o.next.date < today() ? ' late' : ''), 'Next: ' + fmtDay(o.next.date)));
+        r.appendChild(right);
+        r.addEventListener('click', function () { if (!S.sel) S.listY = window.scrollY; S.sel = o.id; draw(); });
+        list.appendChild(r);
+      });
+    }
+    drawRows();
+    if (S.sel && xOrg(S.sel)) { split.appendChild(expoDetail(xOrg(S.sel))); if (window.matchMedia('(max-width: 999px)').matches) document.documentElement.classList.add('lock'); }
+  }
+  function expoDetail(o) {
+    var X = S.data.expo, d = el('aside', 'detail');
+    var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); window.scrollTo(0, S.listY || 0); }); d.appendChild(cx);
+    d.appendChild(el('h2', null, o.name));
+    d.appendChild(el('div', 'sub', ['Priority ' + o.pri, o.cat, o.mine ? 'added on the desk by ' + o.by : ''].filter(Boolean).join(' · ')));
+    if (o.why) { var w = el('div'); w.appendChild(el('b', null, 'Why Peak: ')); w.appendChild(document.createTextNode(o.why)); d.appendChild(w); }
+    /* stage */
+    var s1 = el('div', 'sec'); s1.appendChild(el('h3', null, 'Stage')); var seg = el('div', 'seg');
+    Object.keys(X.stages).forEach(function (k) { var b = el('button', null, X.stages[k]); b.type = 'button'; b.setAttribute('data-x', k); b.setAttribute('aria-pressed', String(o.stage === k)); b.addEventListener('click', function () { if (o.stage !== k) save('xstage', { id: o.id, stage: k }, 'Marked ' + X.stages[k]); }); seg.appendChild(b); });
+    s1.appendChild(seg); d.appendChild(s1);
+    /* their events */
+    var s2 = el('div', 'sec'); s2.appendChild(el('h3', null, 'Their events')); var dl = el('dl', 'kv');
+    var kv = function (k, v) { if (!v) return; dl.appendChild(el('dt', null, k)); dl.appendChild(linkify(v, el('dd'))); };
+    kv('Events', o.events); kv('Held at now', o.venue); kv('Typical size', o.size); kv('Last held', o.last); kv('Researched', o.checked ? fmtD(o.checked) : '');
+    s2.appendChild(dl);
+    if (o.site) { var sw = el('div'); sw.style.marginTop = '6px'; var sa = el('a', null, hostOf(o.site) + ' ›'); sa.href = /^https?:/i.test(o.site) ? o.site : 'https://' + o.site; sa.target = '_blank'; sa.rel = 'noopener'; sw.appendChild(el('span', null, 'Website: ')).style.color = 'var(--soft)'; sw.appendChild(sa); s2.appendChild(sw); }
+    srcLinks(o.srcs, s2);
+    d.appendChild(s2);
+    /* who to reach: the research's contacts (best route first), then ones added on the desk */
+    var s3 = el('div', 'sec'); s3.appendChild(el('h3', null, 'Who to contact'));
+    if (o.route) { var rt = el('div', 'callhow'); rt.appendChild(el('b', null, 'Public route: ')); linkify(o.route, rt); s3.appendChild(rt); }
+    var CAREFUL = /correction|stale|unconfirmed|unverified|not verified|do not use|don'?t use|check (it |this |them )?before|before pitching|before sending|outdated|no longer|caution|expect a slow/i;   /* a note that warns: shown in the amber box */
+    xPeople(o).forEach(function (p) {
+      var ct = el('div', 'ct xct'), top = el('div');
+      top.appendChild(el('b', null, p.name || 'General route')); if (p.best) top.appendChild(el('span', 'tag good', 'best route'));
+      if (p.conf) top.appendChild(el('span', 'tag' + (p.conf === 'high' ? ' good' : p.conf === 'low' ? ' careful' : ''), 'confidence ' + p.conf));
+      ct.appendChild(top);
+      if (p.role) ct.appendChild(el('small', null, p.role));
+      if (p.email) {
+        var er = el('div'), e = el('a', null, p.email); e.href = 'mailto:' + p.email; er.appendChild(e);
+        var es = p.estat === 'published' ? ['published', 'good'] : /pattern/i.test(p.estat || '') ? ['pattern, not verified: check before sending', 'careful'] : p.by ? ['added by ' + p.by, ''] : p.estat ? [p.estat, ''] : null;
+        if (es) er.appendChild(el('span', 'tag' + (es[1] ? ' ' + es[1] : ''), es[0]));
+        ct.appendChild(er);
+      }
+      if (p.phone) { var t = el('a', null, p.phone); t.href = 'tel:' + p.phone.replace(/[^\d+]/g, ''); ct.appendChild(t); }
+      if (p.other) { var ot = el('small'); ot.appendChild(document.createTextNode('Other route: ')); linkify(p.other, ot); ct.appendChild(ot); }
+      if (p.sdate || (p.by && p.at)) ct.appendChild(el('small', null, p.sdate ? 'Source date: ' + p.sdate : 'Added by ' + p.by + ', ' + ago(p.at)));
+      if (p.notes) ct.appendChild(linkify(p.notes, el('div', 'xn' + (CAREFUL.test(p.notes) ? ' chk' : ''))));
+      srcLinks(p.srcs, ct);
+      s3.appendChild(ct);
+    });
+    if (!xPeople(o).length && !o.route) s3.appendChild(el('div', null, 'No contact yet.'));
+    var addc = el('button', 'lnk', '+ Add a contact'); addc.type = 'button'; addc.style.cssText = 'display:block;margin-top:6px'; s3.appendChild(addc);
+    var cf = el('div', 'form'); cf.hidden = true; s3.appendChild(cf);
+    var cN = el('input'), cR = el('input'), cE = el('input'), cT = el('input'), cO = el('input'); cN.placeholder = 'Name'; cR.placeholder = 'Role (e.g. Show manager)'; cE.placeholder = 'Email'; cE.type = 'email'; cT.placeholder = 'Phone'; cO.placeholder = 'Note (where you got it)';
+    var cS = el('button', 'btn small', 'Save contact'); cS.type = 'button';
+    [cN, cR, cE, cT, cO, cS].forEach(function (x) { cf.appendChild(x); });
+    addc.addEventListener('click', function () { cf.hidden = !cf.hidden; });
+    cS.addEventListener('click', function () { save('xcontact', { id: o.id, name: cN.value, role: cR.value, email: cE.value, phone: cT.value, notes: cO.value }, 'Contact saved'); });
+    d.appendChild(s3);
+    /* next follow-up */
+    var s4 = el('div', 'sec'); s4.appendChild(el('h3', null, 'Next follow-up')); var nf = el('div', 'form'), two = el('div', 'two');
+    var nD = el('input'); nD.type = 'date'; nD.value = o.next ? o.next.date : ''; nD.setAttribute('aria-label', 'Follow-up date'); var nW = el('input'); nW.placeholder = 'e.g. call after their spring show'; nW.value = o.next ? o.next.what : '';
+    two.appendChild(nD); two.appendChild(nW); nf.appendChild(two);
+    var nS = el('button', 'btn small', 'Save follow-up'); nS.type = 'button'; nS.addEventListener('click', function () { save('xnext', { id: o.id, date: nD.value, what: nW.value }, 'Follow-up saved'); }); nf.appendChild(nS);
+    s4.appendChild(nf); d.appendChild(s4);
+    /* notes: removable, the log keeps them */
+    var s5 = el('div', 'sec'); s5.appendChild(el('h3', null, 'Notes')); var ta = el('textarea'); ta.rows = 2; ta.placeholder = 'What happened, what they said'; ta.style.cssText = 'width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)';
+    var nb = el('button', 'btn small', 'Save note'); nb.type = 'button'; nb.style.marginTop = '6px'; nb.addEventListener('click', function () { if (ta.value.trim()) save('xnote', { id: o.id, note: ta.value }, 'Note saved'); });
+    s5.appendChild(ta); s5.appendChild(nb);
+    (o.notes || []).slice().reverse().forEach(function (n) { var x = el('div', 'note', n.note), sm = el('small', null, n.by + ', ' + ago(n.at) + ' · '), rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.style.fontSize = '12px'; rm.addEventListener('click', function () { if (confirm('Remove this note?')) save('xnotedel', { id: o.id, nk: n.k }, 'Note removed'); }); sm.appendChild(rm); x.appendChild(sm); s5.appendChild(x); });
+    d.appendChild(s5);
+    if ((o.log || []).length) { var s6 = el('div', 'sec'); s6.appendChild(el('h3', null, 'History')); o.log.slice().reverse().slice(0, 8).forEach(function (n) { var x = el('div', 'note', n.what); x.appendChild(el('small', null, n.by + ', ' + ago(n.at))); s6.appendChild(x); }); d.appendChild(s6); }
+    var rmv = el('button', 'lnk', 'Remove this lead from the Expo leads'); rmv.type = 'button'; rmv.style.cssText = 'color:var(--warn);margin-top:14px;display:block';
+    rmv.addEventListener('click', function () { if (!confirm('Remove ' + o.name + ' from the Expo leads?\n\nIts notes and history are kept, and you can bring it back from Expo leads › Removed.')) return; save('xdel', { id: o.id }, 'Removed: ' + o.name).then(function (j) { if (j && j.ok) { S.sel = null; draw(); } }); });
+    d.appendChild(rmv);
+    return d;
+  }
+  function drawExpoRemoved() {
+    var R = S.data.expo.removed.slice().sort(function (a, b) { return b.at - a.at; }), list = el('div', 'list');
+    if (!R.length) { S.sub.expo = 'all'; remember(); return draw(); }
+    R.forEach(function (x) {
+      var r = el('div', 'row'); r.style.cursor = 'default'; r.setAttribute('data-id', x.id); r.appendChild(el('div', 'sc', '–'));
+      var nm = el('div', 'nm'); nm.appendChild(el('b', null, x.name)); nm.appendChild(el('small', null, [x.cat, xStName(x.stage), 'removed by ' + x.by + ', ' + ago(x.at)].filter(Boolean).join(' · '))); r.appendChild(nm);
+      var bb = el('button', 'btn small ghost', 'Bring back'); bb.type = 'button'; bb.addEventListener('click', function () { save('xback', { id: x.id }, 'Back in the Expo leads: ' + x.name); }); r.appendChild(bb);
+      list.appendChild(r);
+    });
+    main.appendChild(list);
+  }
+  /* what Peak has to answer before an expo can be pitched, and what the competing venues publish (the venue research's README) */
+  function drawExpoRef() {
+    var X = S.data.expo;
+    var c1 = el('div', 'card info'); c1.appendChild(el('h3', null, 'Questions for Peak')); c1.appendChild(el('p', 'soft', 'Open because no public source answers them. Ask Peak before promising a promoter any of it.'));
+    var ol = el('ol', 'xq'); X.questions.forEach(function (q) { var li = el('li'); li.appendChild(el('b', null, q.h + ': ')); li.appendChild(document.createTextNode(q.p)); ol.appendChild(li); }); c1.appendChild(ol);
+    main.appendChild(c1);
+    var c2 = el('div', 'card info'); c2.appendChild(el('h3', null, 'Competing venues and published rates')); if (X.venueNote) c2.appendChild(el('p', 'soft', X.venueNote));
+    var t = el('table', 'xvenues'), h = el('tr'); ['Venue', 'Space (as published)', 'Rate', 'Source, date seen'].forEach(function (x) { h.appendChild(el('th', null, x)); }); t.appendChild(h);
+    X.venues.forEach(function (v) {
+      var tr = el('tr'); tr.appendChild(el('td', null, v.venue)); tr.appendChild(el('td', null, v.space)); tr.appendChild(linkify(v.rate, el('td')));
+      /* the source is a page named on the venue's own site: its domain and path made a link, the rest left as written */
+      var sd = el('td'), m = /^([a-z0-9-]+(\.[a-z0-9-]+)*\.(com|gov|us|org|net)(\/[^\s,]*)?)/i.exec(v.src || '');
+      if (m) { var a = el('a', null, m[1]); a.href = 'https://' + m[1]; a.target = '_blank'; a.rel = 'noopener'; sd.appendChild(a); sd.appendChild(document.createTextNode((v.src || '').slice(m[1].length))); } else sd.textContent = v.src || '';
+      tr.appendChild(sd); t.appendChild(tr);
+    });
+    var tw = el('div', 'tw'); tw.appendChild(t); c2.appendChild(tw); main.appendChild(c2);
+    var f = el('p', null, 'From ' + (X.from || 'the venue research') + (X.built ? '; on the desk since ' + fmtD(X.built) : '') + '.'); f.style.cssText = 'color:var(--soft);font-size:13px'; main.appendChild(f);
+  }
+  function expoAddForm() {
+    var old = main.querySelector('.addcard'); if (old) { old.remove(); return; }
+    var c = el('div', 'card addcard'); c.appendChild(el('h3', null, 'Add an expo lead')); var f = el('div', 'form');
+    var inp = function (ph) { var i = el('input'); i.placeholder = ph; return i; };
+    var n = inp('Organisation name'), k = inp('Category (e.g. Craft, holiday & vintage markets)'), ev = inp('Their events'), vn = inp('Where they hold it now'), sz = inp('Typical size'), w = inp('Why Peak fits'), st = inp('Website');
+    var dlst = el('datalist'); dlst.id = 'xcats'; var seen = {}; S.data.expo.orgs.forEach(function (o) { if (o.cat && !seen[o.cat]) { seen[o.cat] = 1; var op = el('option'); op.value = o.cat; dlst.appendChild(op); } }); k.setAttribute('list', 'xcats');
+    var pr = el('select'); pr.setAttribute('aria-label', 'Priority'); [['1', 'Priority 1: strong fit'], ['2', 'Priority 2: a fit with a catch'], ['3', 'Priority 3: a long shot']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; pr.appendChild(x); }); pr.value = '2';
+    var lab = el('label', 'lab', 'Who to contact'); lab.style.cssText = 'font-size:12.5px;color:var(--soft);font-weight:650';
+    var cn = inp('Name'), cr = inp('Role'), ce = inp('Email'), cp = inp('Phone'); ce.type = 'email';
+    var b = el('button', 'btn small', 'Add'); b.type = 'button';
+    [n, k, dlst, pr, ev, vn, sz, w, st, lab, cn, cr, ce, cp, b].forEach(function (x) { f.appendChild(x); }); c.appendChild(f);
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      save('xlead', { name: n.value, cat: k.value, pri: +pr.value, events: ev.value, venue: vn.value, size: sz.value, why: w.value, site: st.value, cname: cn.value, crole: cr.value, email: ce.value, phone: cp.value }, 'Added').then(function (j) {
+        b.disabled = false; if (j && j.ok) { S.tab = 'expo'; S.sub.expo = 'all'; S.st.expo = 'all'; S.xpri = 'all'; S.xcat = 'all'; S.qs.expo = ''; S.sel = j.id; remember(); tabs(); draw(); }
+      });
+    });
+    var hd = main.querySelector('.shead'); main.insertBefore(c, hd ? hd.nextSibling : main.firstChild); n.focus();
+  }
+
+  (function () { var h = (location.hash || '').slice(1).split('/'); if (SECS.some(function (x) { return x[0] === h[0]; })) { S.tab = h[0]; if (h[1] && SUBS[h[0]] && (SUBS[h[0]].some(function (x) { return x[0] === h[1]; }) || (h[0] === 'expo' && h[1] === 'look'))) S.sub[h[0]] = h[1]; } })();
   load();
 })();
 </script>

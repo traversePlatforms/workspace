@@ -1,18 +1,23 @@
 /* Peak Sponsor Desk: the server rules and the screens, against the local server (php -S 127.0.0.1:8790 -t app).
    Uses the test codes in desk-data-local/; restores the event log at the end.
    The screens follow the 2026-10-25 sections: Lists, Board, New leads, Peak sponsors, Local businesses, More. */
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 /* throwaway Chrome profiles are removed when the script ends (2026-10-25: 10,717 were left in Temp, about 170 GB) */
 const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
 process.on('exit', () => { for (const d of cdpDirs) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
-const ROOT = 'C:/Users/Surge Inc/Desktop/claude test 2/matthew/peak-pickleball-sponsorship';
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..').replace(/\\/g, '/');   /* the folder this test sits in (the laptop move changed the user folder, 2026-11) */
 const LD = ROOT + '/desk-data-local', ORIGIN = 'http://127.0.0.1:8790', API = ORIGIN + '/api/desk.php';
 const code = (f) => readFileSync(join(LD, f), 'utf8').match(/(\d{6})/)[1];
 const ADMIN = code('test-admin-code.txt'), SELLER = code('test-seller-code.txt');
 const LOG = join(LD, 'events.log'), log0 = existsSync(LOG) ? readFileSync(LOG, 'utf8') : null;
+/* Expo leads (2026-11-13): their own log, and two accounts made for the test (an expo-only one and the read-only Claude Check), both put back after */
+const XLOG = join(LD, 'expo-events.log'), xlog0 = existsSync(XLOG) ? readFileSync(XLOG, 'utf8') : null;
+const ACC = join(LD, 'accounts.json'), acc0 = readFileSync(ACC, 'utf8');
+const addAccount = (name, role) => execFileSync('php', [join(ROOT, 'app/api/desk.php'), 'addaccount', name, role], { encoding: 'utf8' }).match(/(\d{6})/)[1];
 const SCANS = join(LD, 'scans.json'), scans0 = existsSync(SCANS) ? readFileSync(SCANS, 'utf8') : null;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, failN = 0; const ok = (c, m) => { if (c) { pass++; console.log('  ok  ' + m); } else { failN++; console.log('  FAIL ' + m); } };
@@ -99,6 +104,52 @@ try {
   /* two follow-ups due (yesterday and today) on new leads, for Lists › Follow-ups due */
   const FU = D.leads.filter((l) => l.list === 'new' && l.id !== L.id && l.status === 'new').slice(0, 2);
   ok((await b('next', { id: FU[0].id, date: today(), what: 'ring back' })).ok && (await b('next', { id: FU[1].id, date: later(-1), what: 'ring back' })).ok, 'two follow-ups due: one today, one late');
+  /* Expo leads (2026-11-13): their own seed, log, stages and an expo-only account */
+  console.log('Expo leads (2026-11-13)');
+  const EXPO = addAccount('Test Expo', 'expo'), CHECK = addAccount('Claude Check', 'admin');
+  const sponsorPart = (j) => { const { expo, _status, ...rest } = j; return JSON.stringify(rest); };
+  const sp0 = sponsorPart(await b('data')), slog0 = readFileSync(LOG, 'utf8');
+  let XD = (await b('data')).expo;
+  ok(XD && XD.orgs.length === 64 && XD.orgs.reduce((n, o) => n + o.contacts.length, 0) === 80 && XD.questions.length === 10 && XD.venues.length >= 8 && XD.removed.length === 0, `the expo seed loads: ${XD && XD.orgs.length} organisations, ${XD && XD.orgs.reduce((n, o) => n + o.contacts.length, 0)} contacts, ${XD && XD.questions.length} questions for Peak, ${XD && XD.venues.length} venues`);
+  ok(Object.keys(XD.stages).join() === 'new,contacted,talking,visit,proposal,booked,notfit' && XD.orgs.every((o) => o.stage === 'new' && /^x[0-9a-f]{9}$/.test(o.id)), 'seven expo stages, every lead starts at New');
+  const XO = XD.orgs.find((o) => o.name === 'Tri-Lakes Chamber of Commerce'), XO2 = XD.orgs.find((o) => o.name === 'The Expo Pros');
+  ok(XO && XO.pri === 1 && XO.contacts.some((c) => c.name === 'Terri Hayes' && c.estat === 'published' && c.conf === 'high' && c.best) && XO.srcs.length > 0, 'a lead carries its priority, contacts (email status, confidence, best route) and sources');
+  ok((await b('xstage', { id: XO.id, stage: 'nope' })).error === 'Pick a stage.' && (await b('xstage', { id: 'x000000000', stage: 'contacted' }))._status === 404, 'a wrong stage or lead is refused');
+  ok((await b('xstage', { id: XO.id, stage: 'talking' })).ok && (await b('xnote', { id: XO.id, note: '<b>Terri</b> asked for dates' })).ok && (await b('xnext', { id: XO.id, date: today(), what: 'send dates' })).ok, 'stage, note and follow-up save');
+  ok((await b('xcontact', { id: XO.id, name: 'Pat Expo', email: 'nope' })).error === 'That email does not look right.' && (await b('xcontact', { id: XO.id, name: 'Pat Expo', role: 'Events', email: 'pat@example.com' })).ok, 'a contact saves; a bad email is refused');
+  XD = (await b('data')).expo; let xo = XD.orgs.find((o) => o.id === XO.id);
+  ok(xo.stage === 'talking' && xo.notes.length === 1 && xo.next.date === today() && xo.added[0].email === 'pat@example.com' && xo.log.length === 1, 'they come back: Talking, the note, the follow-up, the contact, the history');
+  ok((await b('xnotedel', { id: XO.id, nk: xo.notes[0].k })).ok && (await b('data')).expo.orgs.find((o) => o.id === XO.id).notes.length === 0, 'a note is removed (the log keeps it)');
+  await b('xnote', { id: XO.id, note: '<img src=x onerror=alert(1)> asked for dates' });
+  ok((await b('xlead', { name: 'tri-lakes chamber of commerce' })).error === 'That organisation is already in the Expo leads.', 'an organisation already there is not added twice');
+  const xn = await b('xlead', { name: 'Test Expo Promoter', cat: 'Home & garden shows', pri: 1, events: 'Spring home show', site: 'example.com', cname: 'Sam Show', email: 'sam@example.com' });
+  ok(xn.ok && /^x[0-9a-f]{9}$/.test(xn.id), 'an expo lead is added by hand');
+  XD = (await b('data')).expo; xo = XD.orgs.find((o) => o.id === xn.id);
+  ok(XD.orgs.length === 65 && xo && xo.pri === 1 && xo.stage === 'new' && xo.added[0].name === 'Sam Show' && xo.site === 'https://example.com', 'it is in the Expo leads with its contact');
+  ok((await b('xdel', { id: XO2.id })).ok && (XD = (await b('data')).expo) && !XD.orgs.some((o) => o.id === XO2.id) && XD.removed.some((r) => r.id === XO2.id), 'Remove takes a lead out and lists it under Removed');
+  ok((await b('xnote', { id: XO2.id, note: 'x' })).error === 'That lead was removed. Bring it back first.', 'a removed lead takes no changes');
+  ok((await b('xback', { id: XO2.id })).ok && (await b('data')).expo.orgs.some((o) => o.id === XO2.id), 'Bring back restores it');
+  ok((await b('xdel', { id: xn.id })).ok, 'the hand-added one removed again (for the screens)');
+  /* the sponsor side never sees any of it */
+  ok(sponsorPart(await b('data')) === sp0 && readFileSync(LOG, 'utf8') === slog0, 'the sponsor data and the sponsor log are byte-for-byte the same after all of that');
+  const ids = new Set(XD.orgs.map((o) => o.id)), DS0 = await b('data');
+  ok(!DS0.leads.some((l) => ids.has(l.id)) && !DS0.removed.some((r) => ids.has(r.id)) && DS0.leads.length === JSON.parse(sp0).leads.length, 'no expo lead is among the sponsor leads');
+  /* the expo-only account */
+  const ex = client(), si = await ex('signin', { code: EXPO });
+  ok(si.ok && si.role === 'expo', 'the expo-only account signs in');
+  const XJ = await ex('data');
+  ok(XJ.ok && XJ.expo.orgs.length === 65 - 1 && Object.keys(XJ).filter((k) => k !== '_status').sort().join() === 'expo,me,ok', 'its data is the Expo leads and nothing else: no leads, tours, proposals, packages, P&L, team, Peak records');
+  ok(!JSON.stringify(XJ).includes('Kaiser Permanente') && !JSON.stringify(XJ).includes('"peak":'), 'no sponsor or Peak record anywhere in it');
+  const deny = [['status', { id: L.id, status: 'new' }], ['note', { id: L.id, note: 'x' }], ['packages', { packages: [] }], ['pl', { services: [] }], ['scan', { id: ABC.id }], ['lead', { name: 'X' }], ['proposal', { lead: L.id, lines: [] }], ['tour', { lead: L.id, date: today(), time: '10:00' }], ['leaddel', { id: L.id }]];
+  let denied = 0; for (const [act, body] of deny) if ((await ex(act, body))._status === 403) denied++;
+  ok(denied === deny.length, `every sponsor action is refused to it (403 on ${denied} of ${deny.length})`);
+  ok((await ex('xnote', { id: XO.id, note: 'expo account note' })).ok && (await ex('me')).role === 'expo', 'it can work the Expo leads');
+  ok(!('Test Expo' in (await b('data')).team), 'and it is not listed in the sponsor desk’s team');
+  /* Claude Check: reads the Expo leads, saves nothing */
+  const cc = client(); await cc('signin', { code: CHECK }); const CJ = await cc('data');
+  ok(CJ.ok && CJ.expo.orgs.length === 64 && CJ.leads.length > 0, 'Claude Check reads the Expo leads beside the sponsor desk');
+  ok((await cc('xnote', { id: XO.id, note: 'x' }))._status === 403 && (await cc('xstage', { id: XO.id, stage: 'booked' }))._status === 403 && (await cc('xlead', { name: 'CC Test' }))._status === 403, 'but cannot write to them (403)');
+  await cc('signout', {});
   /* the screens */
   console.log('The screens');
   const PORT = 9397;
@@ -122,12 +173,13 @@ try {
   ws = new WebSocket(tg.webSocketDebuggerUrl); await new Promise((r) => (ws.onopen = r));
   ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); if (m.method === 'Page.javascriptDialogOpening') send('Page.handleJavaScriptDialog', { accept: true }); if (m.id && pend.has(m.id)) { const q = pend.get(m.id); pend.delete(m.id); m.error ? q.rej(new Error(m.error.message)) : q.res(m.result); } };
   await send('Page.enable'); await send('Runtime.enable');
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });   /* a light device, whatever this computer's own setting (the new laptop runs dark, 2026-11) */
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
   await send('Page.navigate', { url: ORIGIN + '/' });
   await waitFor(`!!document.querySelector('.signin input')`, 'sign-in');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${SELLER}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
   await waitFor(`!!document.querySelector('.row')`, 'the first list');
-  ok(await js(`[...document.querySelectorAll('.tabs button .tl')].map(b=>b.textContent).join(',')==='Lists,Board,New leads,Peak sponsors,Local businesses,More'`), 'the tabs: Lists, Board, New leads, Peak sponsors, Local businesses (Matthew\u2019s order), then More');
+  ok(await js(`[...document.querySelectorAll('.tabs button .tl')].map(b=>b.textContent).join(',')==='Lists,Board,New leads,Peak sponsors,Local businesses,Expo leads,More'`), 'the tabs: Lists, Board, New leads, Peak sponsors, Local businesses (Matthew\u2019s order), Expo leads (2026-11-13), then More');
   ok(await js(`document.querySelector('main').dataset.section==='lists'&&document.querySelector('.shead h1').textContent==='Lists'&&document.querySelector('.sdesc').textContent.length>20`), 'it opens on Lists, with a line saying what is in it');
   /* every section: its header, its line, its count, the companies it should list */
   let DS = await b('data');
@@ -285,13 +337,62 @@ try {
     ok((await js(`document.querySelectorAll('.detail .kv').length`)) === 2, 'a sponsor with two agreements shows both (Rally Back: tenant and sponsor)');
     await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
   }
+  /* Expo leads on the screen (2026-11-13) */
+  await tab('expo');
+  const XS = (await b('data')).expo, DSn = await b('data');
+  ok(await js(`document.querySelector('.shead h1').textContent==='Expo leads'&&location.hash==='#expo/all'`) && (await tabN('expo')) === XS.orgs.length, `Expo leads opens (#expo/all); its tab says ${XS.orgs.length}`);
+  ok(same(await rowIds(), XS.orgs.map((o) => o.id)), 'it lists exactly the expo organisations, none of the sponsor companies');
+  ok(await js(`document.querySelector('.sortby select').value==='pri'&&(()=>{const p=[...document.querySelectorAll('.list .row .sc')].map(s=>parseInt(s.textContent));return p.every((v,i)=>!i||v>=p[i-1])})()`), 'priority 1 first by default');
+  ok((await tabN('lists')) === DSn.leads.length && (await tabN('board')) === DSn.leads.filter((l) => BOARD.includes(l.status)).length && (await tabN('local')) === DSn.leads.filter((l) => SECOF(l) === 'local').length, 'the sponsor tabs keep their own counts (no expo lead in them)');
+  await js(`document.querySelector('.xprichips [data-x="1"]').click()`); await sleep(250);
+  ok(same(await rowIds(), XS.orgs.filter((o) => o.pri === 1).map((o) => o.id)), `the Priority 1 chip shows the ${XS.orgs.filter((o) => o.pri === 1).length} priority-1 leads`);
+  await js(`document.querySelector('.xprichips [data-x="all"]').click()`); await sleep(250);
+  await js(`document.querySelector('.xstagechips [data-x="talking"]').click()`); await sleep(250);
+  ok(same(await rowIds(), [XO.id]), 'the Talking stage chip shows the Tri-Lakes Chamber only');
+  await js(`document.querySelector('.xstagechips [data-x="all"]').click()`); await sleep(250);
+  await js(`(()=>{const s=document.querySelector('select.xcat');s.value='Bridal & family expos';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(250);
+  ok(same(await rowIds(), XS.orgs.filter((o) => o.cat === 'Bridal & family expos').map((o) => o.id)), 'the category filter shows that category only');
+  await js(`(()=>{const s=document.querySelector('select.xcat');s.value='all';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(250);
+  await js(`(()=>{const q=document.querySelector('.controls .search');q.value='terri hayes';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
+  ok(same(await rowIds(), [XO.id]), 'search finds a lead by its contact’s name');
+  await js(`(()=>{const q=document.querySelector('.controls .search');q.value='';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
+  await sub('due');
+  ok(same(await rowIds(), XS.orgs.filter((o) => o.next && o.next.date && o.next.date <= today() && !['booked', 'notfit'].includes(o.stage)).map((o) => o.id)) && (await rowIds()).includes(XO.id), 'Follow-ups due lists the Tri-Lakes Chamber (due today)');
+  await sub('all');
+  await js(`[...document.querySelectorAll('.list .row')].find(r=>r.dataset.id==='${XO.id}').click()`); await sleep(300);
+  ok(await js(`(()=>{const d=document.querySelector('.detail');return !!d&&/Tri-Lakes/.test(d.querySelector('h2').textContent)&&[...d.querySelectorAll('a')].some(a=>a.href.toLowerCase()==='mailto:terri@trilakeschamber.com')&&/published/.test(d.textContent)&&/confidence high/.test(d.textContent)&&/best route/.test(d.textContent)&&[...d.querySelectorAll('a')].some(a=>/^tel:/.test(a.href))})()`), 'a lead opens with its contacts: tap-to-email, tap-to-call, email published, confidence, best route');
+  ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')&&/Their events/.test(document.querySelector('.detail').textContent)&&/Talking/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)`), 'its events, its stage (Talking), and a note with HTML shown as text');
+  await js(`[...document.querySelectorAll('.detail .seg button')].find(b=>b.dataset.x==='visit').click()`); await sleep(700);
+  ok((await b('data')).expo.orgs.find((o) => o.id === XO.id).stage === 'visit' && await js(`/Site visit booked/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)`), 'tapping Site visit booked saves it and the page stays on the lead');
+  await shot('expo-desktop-light.png');
+  await js(`(()=>{localStorage.setItem('peakdesk.theme','dark');window.__lookApply();return 1})()`); await sleep(300);
+  ok((await js(bgSum)) < 120, 'Expo leads in dark mode'); await shot('expo-desktop-dark.png');
+  await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(200);
+  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
+  await js(`[...document.querySelectorAll('.list .row')].find(r=>/American Consumer Shows/.test(r.textContent)).click()`); await sleep(300);
+  ok(await js(`[...document.querySelectorAll('.detail .xn.chk')].some(n=>/CORRECTION/.test(n.textContent))`), 'a contact note that warns (a correction) shows in the amber box');
+  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
+  await sub('ref');
+  ok(await js(`location.hash==='#expo/ref'&&document.querySelectorAll('main .xq li').length===10&&document.querySelectorAll('main .xvenues tr').length>=9&&/Douglas County Fairgrounds/.test(document.querySelector('.xvenues').textContent)&&/\\$40\\/court\\/hour/.test(document.querySelector('.xvenues').textContent)`), 'Questions and venues: the 10 questions for Peak and the competing venues with rates (#expo/ref)');
+  await shot('expo-ref-desktop.png');
+  await sub('removed');
+  ok(await js(`/Test Expo Promoter/.test(document.querySelector('main .list').textContent)`), 'Expo leads › Removed lists the removed lead');
+  await js(`(()=>{const r=[...document.querySelectorAll('main .row')].find(r=>/Test Expo Promoter/.test(r.textContent));r.querySelector('button').click();return 1})()`); await sleep(700);
+  ok((await b('data')).expo.orgs.some((o) => o.id === xn.id), 'Bring back puts it in the Expo leads again');
+  await sub('all');
+  await js(`[...document.querySelectorAll('.shead button')].find(b=>b.textContent==='+ Add an expo lead').click()`); await sleep(200);
+  await js(`(()=>{const i=document.querySelectorAll('.addcard input');i[0].value='Screen Expo Co';i[1].value='Senior expos';[...document.querySelectorAll('.addcard button')].find(b=>b.textContent==='Add').click();return 1})()`); await sleep(800);
+  ok(await js(`document.querySelector('main').dataset.section==='expo'&&/Screen Expo Co/.test(document.querySelector('.detail h2').textContent)`), '+ Add an expo lead adds it and opens it');
+  ok(!(await b('data')).leads.some((l) => l.name === 'Screen Expo Co' || l.name === 'Test Expo Promoter'), 'and it never reaches the sponsor leads');
+  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Remove this lead/.test(b.textContent)).click()`); await sleep(700);
+  ok((await b('data')).expo.removed.some((r) => r.name === 'Screen Expo Co') && !(await js(`!!document.querySelector('.detail')`)), 'Remove this lead takes it out (to Removed)');
   /* a picture of every section, desktop then phone, for a look at the layout */
-  const SECTIONS = ['lists', 'board', 'new', 'peak', 'local', 'more'];
+  const SECTIONS = ['lists', 'board', 'new', 'peak', 'local', 'expo', 'more'];
   const firstChip = async () => { await js(`(()=>{const b=document.querySelector('.subchips button');if(b&&b.getAttribute('aria-pressed')!=='true')b.click();return 1})()`); await sleep(250); };   /* each section as it first opens */
   for (const t of SECTIONS) { await tab(t); await firstChip(); await js('window.scrollTo(0,0)'); await shot(`reorg-${t}-desktop.png`); }
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await tab('lists'); await sleep(200);
-  ok(await js(`[...document.querySelectorAll('.tabs button')].every(b=>{const r=b.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=document.documentElement.clientWidth+1})`), 'on a phone all six tabs are in view, no swiping');
+  ok(await js(`[...document.querySelectorAll('.tabs button')].every(b=>{const r=b.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=document.documentElement.clientWidth+1})`), 'on a phone all seven tabs are in view, no swiping');
   let wide = [];
   for (const t of SECTIONS) {
     await tab(t);
@@ -308,12 +409,39 @@ try {
   await js(`document.querySelector('.row').click()`); await sleep(300);
   ok(await js(`getComputedStyle(document.querySelector('.detail')).position==='fixed'`), 'on a phone a company opens full screen');
   await shot('desk-phone.png');
+  /* Expo leads on a phone, light and dark */
+  const fits = `document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`;
+  await tab('expo'); await sub('all'); await js('window.scrollTo(0,0)'); await shot('expo-phone-light.png');
+  await js(`[...document.querySelectorAll('.list .row')].find(r=>r.dataset.id==='${XO.id}').click()`); await sleep(300);
+  const xph = await js(`(()=>{const d=document.querySelector('.detail');const small=[...d.querySelectorAll('.seg button,.btn')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<40).map(b=>b.textContent);return {fixed:getComputedStyle(d).position==='fixed',wide:d.scrollWidth-d.clientWidth,small}})()`);
+  ok(xph.fixed && xph.wide <= 1 && !xph.small.length, 'on a phone an expo lead opens full screen, nothing wider than the screen, buttons finger-sized' + (xph.fixed && xph.wide <= 1 && !xph.small.length ? '' : ': ' + JSON.stringify(xph)));
+  await shot('expo-phone-detail.png');
+  await js(`(()=>{localStorage.setItem('peakdesk.theme','dark');window.__lookApply();return 1})()`); await sleep(300); await shot('expo-phone-detail-dark.png');
+  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200); await js('window.scrollTo(0,0)'); await shot('expo-phone-dark.png');
+  await sub('ref'); ok(await js(fits), 'Questions and venues fits a phone (the table swipes inside)'); await shot('expo-ref-phone-dark.png');
+  await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(200);
+  /* the expo-only account in the browser: one tab, the look, nothing of the sponsors' */
+  await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
+  await js(`(()=>{const i=document.querySelector('.signin input');i.value='${EXPO}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
+  await waitFor(`!!document.querySelector('.shead')`, 'the expo account’s page'); await sub('all'); await waitFor(`!!document.querySelector('.row')`, 'the expo account’s list');
+  ok(await js(`[...document.querySelectorAll('.tabs button .tl')].map(b=>b.textContent).join(',')==='Expo leads'&&document.querySelector('main').dataset.section==='expo'&&/expo leads/.test(document.getElementById('brandSub').textContent)`), 'the expo account sees one tab, Expo leads');
+  ok(await js(`[...document.querySelectorAll('.subchips button')].map(b=>b.dataset.sub).join(',')`) === 'all,due,removed,ref,look', 'with its chips and the Look');
+  const nX = (await ex('data')).expo.orgs.length; ok((await rowIds()).length === nX && nX >= 64, `and the ${nX} expo organisations (the 64 researched, one added in the test)`);
+  await js(`location.hash='#more/report'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+  ok(await js(`document.querySelector('main').dataset.section==='expo'&&!document.querySelector('.tabs [data-tab="more"]')&&!/Kaiser/.test(document.body.textContent)`), 'an address for a sponsor page still lands on Expo leads');
+  await sub('look'); ok(await js(`!!document.querySelector('[data-look="dark"]')`), 'Look is there for it');
+  await sub('all'); await js('window.scrollTo(0,0)'); await shot('expo-account-phone.png');
+  ok(await js(fits), 'the expo account’s page fits a phone');
+  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
+  await shot('expo-account-desktop.png');
   ok(!errors.length, 'no page errors' + (errors.length ? ': ' + errors[0] : ''));
 } catch (e) { failN++; console.log('  FAIL threw: ' + e.stack); }
 finally {
   try { ws && ws.close(); } catch {} try { chrome && chrome.kill(); } catch {}
   if (log0 === null) { try { rmSync(LOG); } catch {} } else writeFileSync(LOG, log0);
   if (scans0 === null) { try { rmSync(SCANS); } catch {} } else writeFileSync(SCANS, scans0);
+  if (xlog0 === null) { try { rmSync(XLOG); } catch {} } else writeFileSync(XLOG, xlog0);
+  writeFileSync(ACC, acc0);
   try { rmSync(join(LD, 'tries.json')); } catch {}
 }
 console.log(`desk ${pass}/${pass + failN}`); process.exit(failN ? 1 : 0);
