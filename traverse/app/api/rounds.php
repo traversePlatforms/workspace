@@ -457,7 +457,7 @@ function accountLog(array $row): void {
 /* ---- who is signed in (2026-10-04) ----
  * Matthew: the Accounts screen could not say who was signed in, so a Sign out had nothing to show it
  * worked. The cookie is the session and the server kept no list; now it keeps one, beside the accounts:
- *   s:     tag => [id, exp, seen, device]   one line per sign-in (a phone, an iPad); tag = sessionTag(cookie),
+ *   s:     tag => [id, exp, seen, device, class(, days: Matthew's own, STAY_DAYS)]   one line per sign-in (a phone, an iPad); tag = sessionTag(cookie),
  *                                           so the file never holds a cookie or a code
  *   o:     id => when they were last signed out
  *   since: when the list was started
@@ -663,6 +663,25 @@ function sessionTag(string $tok): string { return substr(hash('sha256', 'sid|' .
    ('c'), never the code itself. Cookies from before this change have no 'c' and are refused,
    so everyone signs in once after the upload. */
 function codeId(string $code, string $key): string { return substr(hash_hmac('sha256', 'code|' . $code, $key), 0, 20); }
+/* Matthew stays signed in (2026-11-13, Matthew: "i also need to stay logged in when im on this computer, i am noticing i am having to constantly
+   login on my phone and on this computer"; asked, "Yes, my account only"). HIS sign-in alone: Traverse's super line named Matthew Sharpe, which
+   only the server's codes files make (the app never writes the super role, and no client admin can rename or re-role it). His cookie lasts
+   STAY_DAYS and carries 'd' (signed with the rest of it); once it is more than STAY_RENEW old, using the app gives him a fresh one, so the
+   year starts again as he uses it. His sign-ins never end his other phones or computers (no one-device rule for him). Everyone else: as before.
+   The renewed cookie carries 't', its first cookie's tag, so the signed-in list, Sign out and the page's own sid keep naming the same sign-in.
+   'Since' for his line is when the cookie was last renewed (exp - d days), the same sum the admin sign-out and the signed-in list use. */
+const STAY_DAYS = 365, STAY_RENEW = 86400;
+function staysIn(array $who): bool { return ($who[1] ?? '') === 'super' && strcasecmp(trim((string) ($who[0] ?? '')), 'Matthew Sharpe') === 0; }
+/** how many days a cookie (its payload) or a signed-in list line was given */
+function sessDays(array $p): int { global $sessionDays; return isset($p['d']) ? (int) $p['d'] : $sessionDays; }
+function lineDays(array $l): int { global $sessionDays; return isset($l[5]) ? (int) $l[5] : $sessionDays; }
+/** this request's sign-in tag: a renewed cookie names its first cookie's ('t'), any other is the cookie's own */
+function curTag(): string { global $sessRaw; $t = is_array($sessRaw) ? (string) ($sessRaw['t'] ?? '') : ''; return preg_match('/^[0-9a-f]{20}$/D', $t) ? $t : sessionTag((string) ($_COOKIE[COOKIE] ?? '')); }
+function setSessCookie(string $tok, int $exp): void {
+    $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
+    setcookie(COOKIE, $tok, ['expires' => $exp, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => $secure]);
+}
+$sessRaw = $session; $stays = false;   /* the cookie as signed, before the lookups below rename or re-role it; $stays: it is Matthew's own */
 if ($session) {
     $line = null;
     foreach ($people as $c => $who) {
@@ -670,9 +689,11 @@ if ($session) {
     }
     /* signed out by an admin (2026-10-04): a session that began before the sign-out is refused; the code still works */
     $kick = (int) ($acct['kick'][(string) ($session['c'] ?? '')] ?? 0);
-    if ($line !== null && $kick && ((int) ($session['exp'] ?? 0) - $sessionDays * 86400) <= $kick) $line = null;   // <=: a sign-in in the same second as the sign-out ends too
-    if ($line === null) $session = null;
-    else { $session['n'] = (string) ($line[0] ?? ''); $session['r'] = (string) ($line[1] ?? 'crew'); }
+    if ($line !== null && $kick && ((int) ($session['exp'] ?? 0) - sessDays($session) * 86400) <= $kick) $line = null;   // <=: a sign-in in the same second as the sign-out ends too
+    /* a long cookie whose line is no longer Matthew's super line keeps only the usual length from when it was given (2026-11-13) */
+    if ($line !== null && isset($session['d']) && !staysIn($line) && (int) $session['exp'] - sessDays($session) * 86400 + $sessionDays * 86400 < time()) $line = null;
+    if ($line === null) { $session = null; $sessRaw = null; }
+    else { $session['n'] = (string) ($line[0] ?? ''); $session['r'] = (string) ($line[1] ?? 'crew'); $stays = staysIn($line); }
 }
 /* the super admin (2026-10-11, Matthew): Traverse's own sign-in inside a client's install. Only the server's codes file makes one (role
    'super' on its line; the app never writes that role, accountedit takes crew, manager or admin). It works as an admin everywhere, no
@@ -2263,20 +2284,17 @@ if ($action === 'logo') logoServe();   /* the company's uploaded logo, for the s
 /* a session for a person on this install's codes list: the cookie, the signed-in list, and the answer the page expects
    (sign-in, and since 2026-10-12 the super admin arriving from another install) */
 function startSession(array $hit, string $hitCode, string $sessionKey, int $sessionDays): array {
-    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + $sessionDays * 86400, 'j' => bin2hex(random_bytes(4))];
-    $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
+    $stay = staysIn($hit);   /* Matthew's own: a year, renewed as he uses it, on as many devices as he likes (2026-11-13) */
+    $payload = ['n' => $hit[0], 'r' => $hit[1] ?? 'crew', 'c' => codeId($hitCode, $sessionKey), 'exp' => time() + ($stay ? STAY_DAYS : $sessionDays) * 86400, 'j' => bin2hex(random_bytes(4))] + ($stay ? ['d' => STAY_DAYS] : []);
     $tok = sign($payload, $sessionKey);
-    setcookie(COOKIE, $tok, [
-        'expires'  => $payload['exp'], 'path' => '/', 'httponly' => true,
-        'samesite' => 'Lax', 'secure' => $secure,
-    ]);
+    setSessCookie($tok, $payload['exp']);
     $cls = devClass(isset($GLOBALS['body']['dev']) ? (string) $GLOBALS['body']['dev'] : null);
-    $line = [$payload['c'], $payload['exp'], time(), deviceName(), $cls];
+    $line = [$payload['c'], $payload['exp'], time(), deviceName(), $cls] + ($stay ? [5 => STAY_DAYS] : []);
     if (!defined('SIXFOLD_CLI') && in_array($payload['r'], ['office', 'quote'], true)) { geoCheck((string) $payload['n'], (string) $payload['c'], (string) $payload['r']); geoDevice((string) $payload['n'], (string) $payload['c'], (string) $payload['r']); }   /* 2026-10-15 */
     $ended = [];
-    sessEdit(function ($a) use ($tok, $line, $cls, &$ended) {
+    sessEdit(function ($a) use ($tok, $line, $cls, $stay, &$ended) {
         $mine = sessionTag($tok);
-        if (oneDeviceOn()) foreach ($a['s'] as $t => $l) {
+        if (oneDeviceOn() && !$stay) foreach ($a['s'] as $t => $l) {
             if ($t === $mine || ($l[0] ?? '') !== $line[0] || devClassOf($l) !== $cls) continue;
             if ((int) ($l[1] ?? 0) < time()) continue;   /* 2026-10-13 (Fable review): a sign-in that has run out ends nothing; sessEdit drops it below. It was being logged as a move between devices (Flags) */
             unset($a['s'][$t]); $a['x'][$t] = [time(), $line[3], $cls]; $ended[] = (string) ($l[3] ?? '');   /* + the class, for the signed-out message (2026-10-29) */
@@ -2530,11 +2548,11 @@ if ($action === 'signin') {
 if ($action === 'signout') {
     $sid = (string) ($_GET['sid'] ?? '');
     $cur = (string) ($_COOKIE[COOKIE] ?? '');
-    if ($sid !== '' && $cur !== '' && !hash_equals(sessionTag($cur), $sid)) out(['ok' => true, 'kept' => true]);
+    if ($sid !== '' && $cur !== '' && !hash_equals(curTag(), $sid)) out(['ok' => true, 'kept' => true]);
     /* review 2026-10-05: a link someone taps (a GET without this session's tag) signs nobody out; the page posts */
     if (!$isPost && $sid === '') out(['ok' => true, 'kept' => true]);
     if ($cur !== '') {
-        $gone = sessionTag($cur); $who = (string) ($session['c'] ?? '');
+        $gone = curTag(); $who = (string) ($session['c'] ?? '');
         sessEdit(function ($a) use ($gone, $who) { unset($a['s'][$gone]); if ($who !== '') $a['o'][$who] = time(); return $a; });
     }
     $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
@@ -4096,12 +4114,18 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
 }
 if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadmatch', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'tosched', 'fuconfirm', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear', 'pwmine', 'pwadd', 'pwoff'], true))   /* + her own email sign-in (2026-10-30) */   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
-    $tagNow = sessionTag($cookieNow);
+    $tagNow = curTag();
     $sessNow = sessLoad();
     if (isset($sessNow['x'][$tagNow])) out(['ok' => false, 'why' => 'elsewhere', 'error' => 'Signed out: your code was used to sign in on another ' . devClassWords((string) ($sessNow['x'][$tagNow][2] ?? devClass())) . '. Each code works on one phone' . (edition() ? ', one tablet' : '') . ' and one computer at a time. If that was not you, tell your manager.'], 401);
     $lineNow = $sessNow['s'][$tagNow] ?? null;
-    if (!is_array($lineNow) || (int) ($lineNow[2] ?? 0) < time() - SEEN_EVERY) {
-        $fresh = [$realC, (int) ($session['exp'] ?? 0), time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName(), is_array($lineNow) ? devClassOf($lineNow) : devClass()];
+    /* Matthew's own sign-in (2026-11-13): a day after his cookie was given, a fresh one for another year, same sign-in tag ('t') */
+    $expNow = (int) ($sessRaw['exp'] ?? 0); $renewed = false;
+    if ($stays && is_array($sessRaw) && $expNow - sessDays($sessRaw) * 86400 < time() - STAY_RENEW) {
+        $expNow = time() + STAY_DAYS * 86400; $renewed = true;
+        setSessCookie(sign(['exp' => $expNow, 'd' => STAY_DAYS, 't' => $tagNow] + $sessRaw, $sessionKey), $expNow);
+    }
+    if ($renewed || !is_array($lineNow) || (int) ($lineNow[2] ?? 0) < time() - SEEN_EVERY) {
+        $fresh = [$realC, $expNow, time(), is_array($lineNow) ? (string) ($lineNow[3] ?? deviceName()) : deviceName(), is_array($lineNow) ? devClassOf($lineNow) : devClass()] + (isset($sessRaw['d']) || $renewed ? [5 => $renewed ? STAY_DAYS : sessDays($sessRaw)] : []);
         sessEdit(function ($a) use ($tagNow, $fresh) { $a['s'][$tagNow] = $fresh; return $a; });
     }
 }
@@ -4779,7 +4803,7 @@ if ($action === 'viewaslist') {
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'onteam' => onTeamOf($me), 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => sessionTag((string) ($_COOKIE[COOKIE] ?? '')), 'avatar' => avatarVer((string) ($session['c'] ?? ''))], edMe()));   /* + edMe(): the editions' roles and terms (2026-10-29) */
+if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'onteam' => onTeamOf($me), 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => curTag(), 'avatar' => avatarVer((string) ($session['c'] ?? ''))], edMe()));   /* + edMe(): the editions' roles and terms (2026-10-29) */
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -13822,8 +13846,8 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $sess = sessLoad(); $live = [];
         foreach ((array) ($sess['s'] ?? []) as $l) {
             $lid = (string) ($l[0] ?? ''); $kick = (int) ($acct['kick'][$lid] ?? 0);
-            if ((int) ($l[1] ?? 0) < time() || ($kick && (int) $l[1] - $sessionDays * 86400 <= $kick)) continue;
-            $live[$lid][] = ['device' => (string) ($l[3] ?? ''), 'seen' => (int) ($l[2] ?? 0), 'since' => (int) $l[1] - $sessionDays * 86400];
+            if ((int) ($l[1] ?? 0) < time() || ($kick && (int) $l[1] - lineDays($l) * 86400 <= $kick)) continue;
+            $live[$lid][] = ['device' => (string) ($l[3] ?? ''), 'seen' => (int) ($l[2] ?? 0), 'since' => (int) $l[1] - lineDays($l) * 86400];   /* lineDays: Matthew's own lines run a year (2026-11-13) */
         }
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
