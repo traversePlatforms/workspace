@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peak Pickleball: court booking and membership, how it would work (demo)</title>
+<style>
+:root{
+  --ink:#17212e; --soft:#5a6573; --faint:#8a94a1; --line:#e1e5ea; --bg:#f4f6f9; --card:#fff;
+  --accent:#1f5fae; --accent-dark:#0f2f57; --tint:#eaf1fb;
+  --ok:#1e7a4c; --ok-bg:#e6f4ec; --hold:#9a5b00; --hold-bg:#fdf1dc; --wait:#5a6573; --wait-bg:#eef0f3;
+  --bad:#a3322a; --bad-bg:#fbeae8;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:15px;line-height:1.5}
+button{font:inherit;cursor:pointer}
+select,input{font:inherit}
+button:disabled{cursor:not-allowed}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* header */
+.top{background:var(--accent-dark);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.top h1{font-size:19px;margin:0;font-weight:600;letter-spacing:.1px}
+.top .sub{font-size:13px;color:#b9cbe4;margin:2px 0 0}
+.top .demo-flag{margin-left:auto;font-size:12.5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:5px 12px;color:#e6eef9}
+
+/* layout */
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 66px)}
+nav.side{background:#fff;border-right:1px solid var(--line);padding:22px 14px}
+nav.side button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;color:var(--soft);font-size:14.5px;margin-bottom:2px}
+nav.side button .n{width:24px;height:24px;border-radius:50%;background:var(--wait-bg);color:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex:none}
+nav.side button:hover{background:var(--bg)}
+nav.side button.on{background:var(--tint);color:var(--accent-dark);font-weight:600}
+nav.side button.on .n{background:var(--accent);color:#fff}
+nav.side .navnote{margin:22px 12px 0;font-size:12px;color:var(--faint);line-height:1.45}
+main{padding:28px 34px 40px;min-width:0}
+section.pane{display:none;max-width:1180px}
+section.pane.on{display:block}
+.pane > h2{font-size:24px;margin:0 0 4px;font-weight:600}
+.lead{color:var(--soft);margin:0 0 20px;max-width:780px}
+.src{font-size:12px;color:var(--faint);margin-top:26px;border-top:1px solid var(--line);padding-top:10px;max-width:900px}
+.chip{display:inline-block;font-size:11.5px;font-weight:600;color:var(--accent-dark);background:var(--tint);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.rowlabel{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:14px 0 6px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;min-width:0}
+.panel h3{margin:0 0 2px;font-size:17px}
+.panel .sl{margin:0 0 12px;font-size:13px;color:var(--soft)}
+.lab{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 8px;margin-bottom:8px}
+.lab.real{background:var(--tint);color:var(--accent-dark)}
+.lab.ex{background:var(--hold-bg);color:var(--hold)}
+.btn{border:1px solid #c7cfda;background:#fff;color:var(--ink);border-radius:8px;padding:7px 13px;font-size:14px;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{background:var(--bg)}
+.btn.primary{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.primary:hover{background:#18653f}
+.btn.blue{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.blue:hover{background:#1a5297}
+.btn:disabled,.btn:disabled:hover{background:#f1f3f6;border-color:#dde2e8;color:#a3abb6}
+.btn svg.i{width:15px;height:15px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;align-self:flex-start;white-space:nowrap}
+.pill.waiting{background:var(--wait-bg);color:var(--wait)}
+.pill.approved{background:var(--ok-bg);color:var(--ok)}
+.pill.held{background:var(--hold-bg);color:var(--hold)}
+.pill.auto{background:var(--tint);color:var(--accent)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill svg.i{width:14px;height:14px}
+.seg{display:inline-flex;border:1px solid #c7cfda;border-radius:8px;overflow:hidden;flex:none;max-width:100%}
+.seg button{border:0;background:#fff;padding:6px 10px;font-size:12.5px;color:var(--soft);white-space:nowrap}
+.seg button + button{border-left:1px solid #c7cfda}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.seg.wrap{flex-wrap:wrap}
+.log{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 18px;margin-top:16px}
+.log h3{font-size:14px;margin:0 0 6px}
+.log ul{list-style:none;margin:0;padding:0;font-size:13px;color:var(--soft);max-height:150px;overflow:auto}
+.log li{padding:3px 0;border-top:1px solid var(--line)}
+.log li:first-child{border-top:0}
+.log .tm{color:var(--faint);display:inline-block;width:64px}
+.counts{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.count{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;min-width:120px}
+.count b{display:block;font-size:24px;line-height:1.1}
+.count span{font-size:12.5px;color:var(--soft)}
+.rulebox{background:var(--accent-dark);color:#fff;border-radius:var(--radius);padding:16px 18px}
+.rulebox b{display:block;font-size:16px;margin-bottom:4px}
+.rulebox p{margin:0;color:#c9d8ec;font-size:14px}
+.rulebox ul{margin:6px 0 0;padding-left:18px;color:#c9d8ec;font-size:14px}
+.note-inline{font-size:12.5px;color:var(--soft);background:var(--hold-bg);border-radius:6px;padding:7px 10px;margin-top:12px}
+.real-inline{font-size:13px;color:var(--ink);background:var(--tint);border-radius:6px;padding:8px 11px;margin-top:12px}
+.real-inline b{color:var(--accent-dark)}
+ul.plain{margin:0;padding-left:18px;font-size:14px}
+ul.plain li{margin-bottom:5px}
+
+/* sms phone (same as the email and text demo) */
+.phone{width:300px;max-width:100%;margin:0 auto;background:#fff;border:10px solid #1d2530;border-radius:36px;overflow:hidden;box-shadow:0 2px 8px rgba(15,47,87,.12)}
+.phone .ph-top{text-align:center;padding:12px 10px 10px;border-bottom:1px solid var(--line);background:#f8f9fb}
+.phone .ph-top .av{width:38px;height:38px;border-radius:50%;background:var(--accent-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 4px;font-size:15px}
+.phone .ph-top .nm{font-size:12.5px;font-weight:600}
+.phone .ph-body{padding:14px 12px 20px;min-height:220px;background:#fff;display:flex;flex-direction:column;gap:8px}
+.phone .ts{text-align:center;font-size:11px;color:var(--faint)}
+.bubble{background:#e9ebef;border-radius:18px 18px 18px 6px;padding:10px 13px;font-size:14px;line-height:1.42;max-width:92%;white-space:pre-wrap;align-self:flex-start}
+.bubble.me{background:var(--accent);color:#fff;border-radius:18px 18px 6px 18px;align-self:flex-end}
+.bubble .lnk{color:#1a5fd0;text-decoration:underline}
+.phone .ph-bar{border-top:1px solid var(--line);padding:9px 12px;font-size:12px;color:var(--faint)}
+.phone .empty{font-size:13px;color:var(--faint);text-align:center;margin-top:60px}
+
+/* 1 BOOK: member app inside a phone */
+.book{display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:28px;align-items:start}
+.book > div,.play > div,.fail > div{min-width:0}
+.device{width:392px;max-width:100%;margin:0 auto;background:#fff;border:10px solid #1d2530;border-radius:34px;overflow:hidden;box-shadow:0 2px 10px rgba(15,47,87,.14)}
+.scr{position:relative;background:#fff;padding-bottom:8px}
+.appbar{background:var(--accent-dark);color:#fff;padding:12px 14px 10px;display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.appbar .wm{font-weight:700;letter-spacing:.14em;font-size:12px}
+.appbar .ttl{font-size:16px;font-weight:600;margin-top:1px}
+.appbar .who{font-size:11.5px;color:#c9d8ec;text-align:right;line-height:1.35}
+.appbar .who b{color:#fff;display:block;font-size:12.5px}
+.days{display:flex;gap:4px;padding:10px 8px 6px}
+.days button{flex:1 1 0;min-width:0;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 0 3px;font-size:10.5px;line-height:1.2;text-align:center;color:var(--soft)}
+.days button b{display:block;font-size:14px;color:var(--ink)}
+.days button.on{background:var(--accent);border-color:var(--accent);color:#dbe7f7}
+.days button.on b{color:#fff}
+.days button.locked{background:#f3f4f6;color:#a3abb6}
+.days button.locked b{color:#a3abb6}
+.floorbar{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 8px 8px}
+.floorbar .seg button{padding:5px 10px;font-size:12px}
+.floorbar .fx{font-size:11px;color:var(--ok);font-weight:600;display:flex;align-items:center;gap:5px}
+.floorbar .fx i{width:12px;height:12px;border-radius:3px;background:var(--ok-bg);border:1px solid #9fd0b5;display:inline-block}
+.cg{display:grid;gap:2px;padding:0 8px}
+.cg .ch{font-size:10px;text-align:center;color:var(--soft);font-weight:700;line-height:1.05;padding:2px 0 3px;border-radius:3px}
+.cg .ch small{display:block;font-size:8.5px;font-weight:700;letter-spacing:.02em}
+.cg .ch.champ{background:var(--accent-dark);color:#fff}
+.cg .ch.priv{background:#4b5563;color:#fff}
+.cg .rl{font-size:10px;color:var(--soft);display:flex;align-items:center;white-space:nowrap;padding-left:2px;border-left:3px solid transparent}
+.cg .rl.flexrow{border-left-color:var(--ok);color:var(--ok);font-weight:600}
+.cell{height:22px;min-width:0;border-radius:3px;border:1px solid #d5dbe3;background:#fff;padding:0;font-size:9.5px;font-weight:700;color:var(--accent-dark);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cell.flexh{background:var(--ok-bg);border-color:#a9d6bd}
+.cell.free:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.cell.booked{background:#c9d1dc;border-color:#c9d1dc}
+.cell.prog{background:#dbe7f7;border-color:#b8cdea}
+.cell.mine{background:var(--accent);border-color:var(--accent);color:#fff}
+.cell.mine svg.i{width:12px;height:12px;stroke-width:2.6}
+.cell.past{background:repeating-linear-gradient(45deg,#f3f4f6 0 3px,#e7eaee 3px 5px);border-color:#e7eaee;color:#a3abb6}
+.cell.lock{background:repeating-linear-gradient(135deg,#fff 0 3px,#eceef2 3px 5px);border-color:#e1e4e9}
+.cell.private{background:#4b5563;border-color:#4b5563}
+.cell.desk{background:#c9d1dc;border-color:#c9d1dc}
+.cell.sel{outline:2px solid var(--hold);outline-offset:0}
+.mybk{margin:10px 8px 0;border-top:1px solid var(--line);padding-top:8px}
+.mybk h4{margin:0 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.mybk .none{font-size:12.5px;color:var(--faint)}
+.mybk .bk{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--line)}
+.mybk .bk:first-of-type{border-top:0}
+.mybk .bk span{flex:1;min-width:0}
+.mybk .bk small{display:block;color:var(--soft);font-size:11.5px}
+.mybk .bk button{border:1px solid #c7cfda;background:#fff;border-radius:6px;font-size:12px;padding:3px 8px;font-weight:600}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -6px 24px rgba(15,47,87,.22);padding:14px 16px 16px;z-index:3}
+.sheet .grab{width:38px;height:4px;border-radius:2px;background:#d5dbe3;margin:0 auto 10px}
+.sheet h4{margin:0;font-size:16px}
+.sheet .when{font-size:13.5px;color:var(--soft);margin-bottom:8px}
+.sheet .row{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
+.sheet .row b{white-space:nowrap}
+.sheet .rule{font-size:12.5px;background:var(--hold-bg);color:#6b4300;border-radius:6px;padding:6px 9px;margin:8px 0 10px}
+.sheet .btns{justify-content:flex-end}
+.toast{pointer-events:none;position:absolute;left:10px;right:10px;top:62px;background:var(--ink);color:#fff;font-size:12.5px;border-radius:8px;padding:8px 11px;z-index:4;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.planpick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.planpick button{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;text-align:left;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.25}
+.planpick button small{display:block;font-weight:400;color:var(--soft);font-size:12px}
+.planpick button.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;background:var(--tint)}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.fact{background:var(--bg);border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--soft)}
+.fact b{display:block;font-size:15px;color:var(--ink);line-height:1.25}
+.legend2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;font-size:12.5px;color:var(--soft);margin-top:4px}
+.legend2 span{display:flex;align-items:center;gap:7px}
+.legend2 i{width:18px;height:14px;border-radius:3px;border:1px solid #d5dbe3;flex:none;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:9px;font-weight:700;color:var(--accent-dark)}
+
+/* 2 PLAY */
+.play{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:24px;align-items:start}
+.vis{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px}
+.vis .nm{flex:1 1 260px;font-size:14px;min-width:0}
+.vis .nm small{display:block;color:var(--faint);font-size:12px;line-height:1.35}
+.sess{display:flex;flex-direction:column;gap:8px}
+.ses{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:11px 14px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.ses.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.ses .tm{font-weight:700;font-size:14px}
+.ses .nm{font-weight:600;font-size:14.5px;line-height:1.3}
+.ses .nm small{font-weight:400;color:var(--soft);font-size:12.5px}
+.ses .st{font-size:13px;color:var(--soft);display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.ses .names{display:flex;gap:4px;flex-wrap:wrap}
+.ses .nmchip{font-size:11.5px;background:var(--bg);border-radius:999px;padding:1px 7px;color:var(--ink)}
+.ses .act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ses .act .btn{padding:5px 10px;font-size:13px}
+.st-full{color:var(--hold);font-weight:600}
+.st-ok{color:var(--ok);font-weight:600}
+.wl{position:sticky;top:16px}
+.wlist{list-style:none;margin:0 0 12px;padding:0}
+.wlist li{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.wlist li:first-child{border-top:0}
+.wlist .pos{width:22px;height:22px;border-radius:50%;background:var(--wait-bg);color:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+.wlist .who{flex:1;min-width:0}
+.clock{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--soft);margin:0 0 10px}
+.clock b{color:var(--ink)}
+.wlbtns{display:flex;flex-direction:column;gap:8px;margin:10px 0 14px}
+.wlbtns .btn{justify-content:flex-start}
+
+/* 3 DESK */
+.desk{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.desk .col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.arr{list-style:none;margin:0;padding:0}
+.arr li{display:flex;align-items:center;gap:10px;padding:8px 6px;border-top:1px solid var(--line);border-radius:6px;cursor:pointer}
+.arr li:first-child{border-top:0}
+.arr li:hover{background:var(--bg)}
+.arr li.sel{background:var(--tint)}
+.arr .av{width:34px;height:34px;border-radius:50%;background:var(--wait-bg);color:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.arr li.in .av{background:var(--ok-bg);color:var(--ok)}
+.arr .who{flex:1;min-width:0;font-size:14px;line-height:1.3}
+.arr .who small{display:block;color:var(--soft);font-size:12.5px}
+.arr .flag{display:inline-block;font-size:11px;font-weight:700;color:var(--hold);background:var(--hold-bg);border-radius:4px;padding:0 6px;margin-left:4px}
+.arr .flag.bal{color:var(--bad);background:var(--bad-bg)}
+.arr .btn{padding:4px 10px;font-size:13px}
+.scanrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.scanmsg{font-size:13px;color:var(--ok);font-weight:600}
+.mcard .mhead{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.mcard .mav{width:46px;height:46px;border-radius:50%;background:var(--accent-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex:none}
+.mcard .mname{font-size:18px;font-weight:600;line-height:1.2}
+.mcard .mplan{font-size:13px;color:var(--soft)}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kv div{background:var(--bg);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--soft);min-width:0}
+.kv div b{display:block;font-size:14px;color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.mflag{margin-top:12px;border:1px solid #f0d49a;background:var(--hold-bg);border-radius:8px;padding:10px 12px;font-size:13.5px}
+.mflag b{display:block;color:#6b4300}
+.mflag.ok{border-color:#a9d6bd;background:var(--ok-bg)}
+.mflag.ok b{color:var(--ok)}
+.mflag.bal{border-color:#efc2bd;background:var(--bad-bg)}
+.mflag.bal b{color:var(--bad)}
+.mflag .btns{margin-top:8px}
+.board h4{margin:10px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+.board h4:first-of-type{margin-top:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.tile{border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-size:11.5px;line-height:1.3;background:#fff;min-width:0}
+.tile b{display:flex;justify-content:space-between;font-size:12px}
+.tile b em{font-style:normal;font-size:10px;color:#fff;background:var(--accent-dark);border-radius:3px;padding:0 4px}
+.tile span{color:var(--soft);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.busy{background:#eef1f5}
+.tile.op{background:#dbe7f7;border-color:#b8cdea}
+.tile.free{background:var(--ok-bg);border-color:#a9d6bd}
+.tile.free span{color:var(--ok);font-weight:600}
+.tile.priv{background:#4b5563;border-color:#4b5563;color:#fff}
+.tile.priv span{color:#d6dbe2}
+.tile.sold{background:#fff6cf;border-color:#e3cb6c}
+.walk .frm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.walk label{font-size:12px;color:var(--soft);display:flex;flex-direction:column;gap:3px;min-width:0}
+.walk select,.walk input{border:1px solid #c7cfda;border-radius:7px;padding:6px 8px;background:#fff;color:var(--ink);font-size:14px;min-width:0;width:100%}
+.walk .tot{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:14px}
+.walk .tot b{font-size:18px}
+.sales{list-style:none;margin:10px 0 0;padding:0;font-size:13px;color:var(--soft)}
+.sales li{padding:4px 0;border-top:1px solid var(--line)}
+
+/* 4 PLANS */
+.ladder{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:20px}
+.rung{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 12px 10px;text-align:left;display:flex;flex-direction:column;gap:4px;position:relative;color:var(--ink)}
+.rung:hover{border-color:#b9c6d8}
+.rung.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.rung .step{font-size:11px;color:var(--faint);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.rung .t{font-weight:600;font-size:15px}
+.rung .p{font-size:20px;font-weight:700;color:var(--accent-dark);line-height:1.15}
+.rung .p small{font-size:12px;font-weight:400;color:var(--soft)}
+.rung ul{margin:4px 0 0;padding-left:16px;font-size:12.5px;color:var(--soft)}
+.rung ul li{margin-bottom:3px}
+.plans2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;margin-bottom:20px}
+.upg .frm{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.upg label{font-size:12px;color:var(--soft);display:flex;flex-direction:column;gap:3px;flex:1 1 150px;min-width:0}
+.upg select{border:1px solid #c7cfda;border-radius:7px;padding:6px 8px;background:#fff;font-size:13.5px;color:var(--ink);width:100%}
+.upg .arrow{padding-bottom:7px;color:var(--faint)}
+.diff{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.diff .dr{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:13.5px}
+.diff .dr:first-child{border-top:0}
+.diff .dr span{color:var(--soft)}
+.diff .dr.big b{font-size:16px;color:var(--accent-dark)}
+.bill-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
+.brow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.3fr) 90px minmax(0,1.1fr) minmax(0,1.3fr);gap:10px;align-items:center;padding:9px 4px;border-top:1px solid var(--line);font-size:14px}
+.brow.h{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;border-top:0}
+.brow .amt{font-weight:700;white-space:nowrap}
+.brow .card{color:var(--soft);font-size:13px}
+.brow small{display:block;color:var(--soft);font-size:12px;font-weight:400}
+.bsum{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.bsum div{background:var(--bg);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--soft)}
+.bsum b{display:block;font-size:17px;color:var(--ink)}
+.fail{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start;margin-top:20px}
+.tl{list-style:none;margin:0 0 12px;padding:0;position:relative}
+.tl:before{content:"";position:absolute;left:11px;top:10px;bottom:10px;width:2px;background:var(--line)}
+.tl li{position:relative;display:flex;gap:12px;padding:6px 0;font-size:14px}
+.tl .d{width:24px;height:24px;border-radius:50%;background:#fff;border:2px solid var(--line);flex:none;z-index:1;display:flex;align-items:center;justify-content:center;color:var(--soft)}
+.tl .d svg.i{width:13px;height:13px}
+.tl li.done .d{border-color:var(--ok);color:var(--ok)}
+.tl li.bad .d{border-color:var(--bad);color:var(--bad)}
+.tl .w{font-size:12px;color:var(--soft);font-weight:600;display:block}
+
+/* 5 REPORTS */
+.reps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.reps .wide{grid-column:1/-1}
+.tilesrow{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+.stat{background:var(--bg);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--soft);flex:1 1 120px;min-width:0}
+.stat b{display:block;font-size:20px;color:var(--accent-dark);line-height:1.2}
+.hm{display:grid;gap:2px;font-size:10.5px}
+.hm .hl{color:var(--soft);text-align:center;padding-bottom:2px;white-space:nowrap}
+.hm .rl{color:var(--soft);display:flex;align-items:center;font-weight:600}
+.hm .c{height:24px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--ink)}
+.hm .c.dk{color:#fff}
+.hm .c.no{background:#f3f2ef}
+.scale{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11.5px;color:var(--soft);margin-top:8px}
+.scale i{width:22px;height:10px;border-radius:2px;display:inline-block}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar .bl{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:3px}
+.bar .bl b{white-space:nowrap}
+.bar .tr{height:14px;background:#eef1f5;border-radius:4px;overflow:hidden}
+.bar .fl{height:100%;background:var(--accent);border-radius:0 4px 4px 0}
+.bar .fl.lt{background:#8fb1df}
+.split{display:flex;height:26px;border-radius:5px;overflow:hidden;gap:2px;margin:6px 0 4px}
+.split div{display:flex;align-items:center;padding:0 8px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden}
+.ex-block{border-top:1px dashed #e0c48a;margin-top:14px;padding-top:12px}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;border-radius:6px;padding:6px 9px;max-width:240px;display:none;line-height:1.35}
+
+/* 6 SWITCH */
+.sw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.steps6{list-style:none;margin:0;padding:0;position:relative}
+.steps6:before{content:"";position:absolute;left:19px;top:16px;bottom:16px;width:2px;background:var(--line)}
+.steps6 button{display:flex;gap:12px;align-items:flex-start;width:100%;background:none;border:1px solid transparent;border-radius:8px;padding:8px 10px 8px 4px;text-align:left;color:var(--ink)}
+.steps6 button:hover{background:var(--bg)}
+.steps6 button.on{background:var(--tint);border-color:#c9d9ef}
+.steps6 .dot{width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--soft);flex:none;position:relative;z-index:1;font-size:13px}
+.steps6 button.on .dot{border-color:var(--accent);color:var(--accent)}
+.steps6 .what{font-size:14.5px;font-weight:600;line-height:1.35;padding-top:5px}
+.steps6 .what small{display:block;font-weight:400;color:var(--soft);font-size:12.5px}
+.stepdetail{margin-top:12px;background:var(--bg);border-radius:8px;padding:12px 14px;font-size:14px}
+.stepdetail b{display:block;margin-bottom:4px}
+.checks{list-style:none;margin:0;padding:0}
+.checks li{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.checks li:first-child{border-top:0}
+.checks li .ic{width:30px;height:30px;border-radius:8px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+.checks li b{display:block}
+.checks li span{color:var(--soft)}
+.cost{margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cost .box{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:14px 16px}
+.cost .box .v{font-size:24px;font-weight:700;color:var(--accent-dark);line-height:1.2}
+.cost .box p{margin:4px 0 0;font-size:13.5px;color:var(--soft)}
+.same{margin-top:18px;background:var(--accent-dark);color:#fff;border-radius:var(--radius);padding:18px 20px}
+.same b{font-size:16px;display:block;margin-bottom:4px}
+.same p{margin:0;color:#c9d8ec}
+
+/* responsive */
+@media (max-width:1280px){
+  .ladder{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .book{grid-template-columns:minmax(0,1fr) 380px;gap:22px}
+  .device{width:380px}
+  .planpick{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .facts{grid-template-columns:1fr}
+  .brow{grid-template-columns:minmax(0,1.3fr) minmax(0,1.2fr) 80px minmax(0,1fr) minmax(0,1.3fr)}
+}
+@media (max-width:1100px){
+  .book,.play,.desk,.plans2,.fail,.sw{grid-template-columns:1fr}
+  .book > div:last-child{order:-1}
+  .wl{position:static}
+  .reps{grid-template-columns:1fr}
+  .planpick{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  .top{padding:12px 16px}
+  .top .demo-flag{margin-left:0}
+  .shell{grid-template-columns:1fr}
+  nav.side{position:sticky;top:0;z-index:5;display:flex;overflow-x:auto;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line);gap:4px}
+  nav.side button{width:auto;white-space:nowrap;margin:0;padding:8px 10px;font-size:13.5px}
+  nav.side .navnote{display:none}
+  main{padding:18px 14px 30px}
+  .pane > h2{font-size:21px}
+  .panel{padding:16px}
+  .ladder{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .planpick{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .counts{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .ses{grid-template-columns:62px minmax(0,1fr)}
+  .ses .act{grid-column:1/-1;justify-content:flex-start}
+  .brow.h{display:none}
+  .brow{grid-template-columns:minmax(0,1fr) auto;gap:2px 10px}
+  .brow .pl,.brow .card{grid-column:1}
+  .brow .amt{grid-column:2;grid-row:1;text-align:right}
+  .brow .stt{grid-column:2;grid-row:2 / span 2;justify-self:end}
+  .cost{grid-template-columns:1fr}
+  .hm .c span{display:none}
+  .hm{font-size:9.5px}
+  .walk .frm{grid-template-columns:1fr}
+  .diff .dr{grid-template-columns:90px minmax(0,1fr)}
+}
+@media (max-width:400px){
+  .seg button{padding:6px 8px;font-size:12px}
+  .legend2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>Peak Pickleball: court booking and membership, how it would work</h1>
+    <p class="sub">Concept demo for Tyler · 13 November 2026 · Matthew Sharpe</p>
+  </div>
+  <div class="demo-flag">Demo: sample data and made-up members. Nothing on this page books or charges.</div>
+</header>
+
+<div class="shell">
+  <nav class="side" id="nav">
+    <button data-go="book" class="on"><span class="n">1</span>Book a court</button>
+    <button data-go="play"><span class="n">2</span>Open Play and classes</button>
+    <button data-go="desk"><span class="n">3</span>Front desk</button>
+    <button data-go="plans"><span class="n">4</span>Plans and billing</button>
+    <button data-go="reports"><span class="n">5</span>Reports</button>
+    <button data-go="switch"><span class="n">6</span>How a switch would work</button>
+    <p class="navnote">Keys 1 to 6 switch sections.<br><br>A concept of how a Peak-owned system would work. It is not built and not live. CourtReserve runs Peak today.</p>
+  </nav>
+
+  <main>
+    <!-- 1 BOOK -->
+    <section class="pane on" id="book">
+      <h2>Book a court</h2>
+      <p class="lead">What a member would see on their phone: all 24 courts for the day, hour by hour. Tap a free court to book it. The price and the cancel rule come from the member's plan. Pick a plan under "Viewing as" to see how the same day looks to each member.</p>
+      <div class="book">
+        <div>
+          <div class="panel">
+            <h3>Viewing as</h3>
+            <p class="sl">Each plan sees its own price, booking window and hours.</p>
+            <div class="planpick" id="planpick"></div>
+            <div class="facts" id="planfacts"></div>
+            <div class="rowlabel">On the grid</div>
+            <div class="legend2">
+              <span><i></i>Free: tap to book</span>
+              <span><i style="background:var(--ok-bg);border-color:#a9d6bd"></i>Flex hours (quiet times)</span>
+              <span><i style="background:#c9d1dc;border-color:#c9d1dc"></i>Booked by another member</span>
+              <span><i style="background:var(--accent);border-color:var(--accent)"></i>Your booking</span>
+              <span><i style="background:#dbe7f7;border-color:#b8cdea">O</i>Open Play, classes, leagues</span>
+              <span><i style="background:repeating-linear-gradient(135deg,#fff 0 3px,#eceef2 3px 5px)"></i>Not open to this plan</span>
+              <span><i style="background:var(--accent-dark);border-color:var(--accent-dark);color:#fff">C</i>Championship court, seating</span>
+              <span><i style="background:#4b5563;border-color:#4b5563;color:#fff">P</i>Private court</span>
+            </div>
+            <div class="note-inline">Programme letters: O Open Play, G Guided Open Play, S Social Play, D DUPR Play, C class, L league. Court numbers, and which floor each court type sits on, are made up for the demo. Peak's real layout would be used.</div>
+          </div>
+          <div class="panel" style="margin-top:16px">
+            <h3>What the member is told</h3>
+            <ul class="plain" style="margin-top:8px">
+              <li>Other members' bookings show as "Booked". Names stay hidden.</li>
+              <li>The price on the confirm screen is the member's own: $12 an hour for drop-in, $7 an hour on Starter and Play, nothing extra on Flex (in Flex hours), Unlimited and Platinum.</li>
+              <li>The cancel time is spelled out on every booking: 4 hours before the start.</li>
+              <li>Flex hours are marked for everyone, so the quiet times are easy to spot.</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="device"><div class="scr" id="scr">
+            <div class="appbar"><div><div class="wm">PEAK PICKLEBALL</div><div class="ttl">Book a court</div></div><div class="who" id="appwho"></div></div>
+            <div class="days" id="days"></div>
+            <div class="floorbar"><div class="seg" id="floorseg"><button data-floor="up" class="on">Upstairs · 11</button><button data-floor="down">Downstairs · 13</button></div><span class="fx"><i></i>Flex hours</span></div>
+            <div class="cg" id="cgrid"></div>
+            <div class="mybk" id="mybk"></div>
+            <div id="sheet"></div>
+            <div id="toast"></div>
+          </div></div>
+          <p style="text-align:center;font-size:12px;color:var(--faint);margin:8px 0 0">Demo clock: Monday 16 November, 9:40 am</p>
+        </div>
+      </div>
+      <p class="src">Courts (24: 4 championship with seating, 19 recreational, 1 private; 11 upstairs, 13 downstairs), hours (Mon to Fri 7 am to 9 pm, Sat and Sun 7 am to 8 pm), plan prices and booking windows: Peak's website, read 21 Oct 2026. Starter at $35 with $7 courts, and the 4-hour court cancel rule: Tyler, 11 Nov 2026. Booking windows for Starter and Flex aren't on Peak's page, so the demo leaves them open. Bookings on the grid are made up.</p>
+    </section>
+
+    <!-- 2 PLAY -->
+    <section class="pane" id="play">
+      <h2>Open Play and classes</h2>
+      <p class="lead">Peak said members hold back when they see only one or two names on a session, and that it has tried showing and hiding the list. Here that becomes a setting Peak controls. Full sessions keep a waitlist, and a cancelled spot is offered to the next person by text with 30 minutes to claim it.</p>
+      <div class="vis">
+        <div class="nm">What members see before they sign up<small>Peak's choice. It could also be set per session type.</small></div>
+        <div class="seg" id="visseg"><button data-vis="names">Show names</button><button data-vis="count">Count only</button><button data-vis="fill" class="on">"Filling up"</button></div>
+      </div>
+      <div class="play">
+        <div>
+          <div class="rowlabel">Monday 16 November · sample sessions</div>
+          <div class="sess" id="sess"></div>
+          <div class="rulebox" style="margin-top:16px"><b>Late-cancel rule, shown on every sign-up</b><ul><li>Open Play and courts: cancel at least 4 hours before the start.</li><li>Classes: cancel at least 24 hours before. University classes carry a $10 late-cancel fee.</li><li>A late cancel still frees the spot for the waitlist. It is just marked as late.</li></ul></div>
+          <div class="real-inline"><span class="lab real" style="margin:0 6px 0 0">Peak's 2025-26 numbers</span>About <b>1,400</b> waitlist sign-ups never got a spot, mostly Monday and Friday mornings, while <b>51%</b> of Open Play sessions that ran had 2 people or fewer. <b>60%</b> of Open Play cancellations came in the last 24 hours.</div>
+        </div>
+        <div class="wl">
+          <div class="panel">
+            <h3 id="wltitle">Waitlist: Open Play, 8:00 am</h3>
+            <p class="sl" id="wlsub"></p>
+            <div class="clock"><span>When the player cancels</span><div class="seg" id="lateseg"><button data-late="0" class="on">The evening before</button><button data-late="1">2 hours before</button></div></div>
+            <div class="clock">Demo clock: <b id="wlclock"></b></div>
+            <ul class="wlist" id="wlist"></ul>
+            <div class="wlbtns">
+              <button class="btn blue" id="wlcancel">Simulate: a player cancels</button>
+              <button class="btn primary" id="wlclaim">Simulate: they claim the spot</button>
+              <button class="btn" id="wlexpire">Simulate: 30 minutes pass, no claim</button>
+              <button class="btn" id="wlreset">Reset the waitlist</button>
+            </div>
+            <div class="rowlabel" id="wlphonelabel">Text to the person offered the spot</div>
+            <div id="wlphone"></div>
+          </div>
+          <div class="log"><h3>What happened</h3><ul id="wllog"><li><span class="tm">-</span>Nothing yet. Press "a player cancels".</li></ul></div>
+        </div>
+      </div>
+      <p class="src">"Members hold back when only one or two have signed up" and "Peak has tried hiding the list and showing it": Matthew's notes of the 2 Nov 2026 meeting with Peak. Cancel rules: Peak's website and Tyler, 11 Nov 2026. Waitlist, fill and cancellation figures: Peak's Year Review and Plan, 4 Nov 2026 (Peak's CourtReserve data, 1 Nov 2025 to 31 Oct 2026). Session sizes, times and names here are made up.</p>
+    </section>
+
+    <!-- 3 DESK -->
+    <section class="pane" id="desk">
+      <h2>Front desk</h2>
+      <p class="lead">The desk screen: who is arriving, who is on which court, walk-in sales and each member's card. Members check in by showing the QR code in the app.</p>
+      <div class="counts" id="deskcounts"></div>
+      <div class="desk">
+        <div class="col">
+          <div class="panel">
+            <h3>Arriving next</h3>
+            <p class="sl">Bookings from 10 am. Click a person to open their card.</p>
+            <div class="scanrow"><button class="btn blue" id="scan">Simulate a QR scan</button><span class="scanmsg" id="scanmsg"></span></div>
+            <ul class="arr" id="arr"></ul>
+          </div>
+          <div class="panel walk">
+            <h3>Walk-in drop-in</h3>
+            <p class="sl">A player with no plan books a court at the desk. $12 an hour.</p>
+            <div class="frm">
+              <label>Name<input id="wname" value="Walk-in player"></label>
+              <label>Start time<select id="whour"><option value="10">10:00 am</option><option value="11">11:00 am</option><option value="12">12:00 pm</option></select></label>
+              <label>Court (free at that time)<select id="wcourt"></select></label>
+              <label>Hours<select id="whrs"><option value="1">1 hour</option><option value="2">2 hours</option></select></label>
+            </div>
+            <div class="tot"><span>Drop-in court fee</span><b id="wtot">$12</b></div>
+            <div class="btns"><button class="btn primary" id="wsell">Charge on the card reader (demo)</button></div>
+            <ul class="sales" id="sales"></ul>
+          </div>
+        </div>
+        <div class="col">
+          <div class="panel mcard" id="mcard"></div>
+          <div class="panel board">
+            <h3>On the courts now</h3>
+            <p class="sl">Monday 9:40 am. Free courts are green.</p>
+            <div id="board"></div>
+          </div>
+        </div>
+      </div>
+      <div class="log"><h3>Desk activity</h3><ul id="desklog"><li><span class="tm">-</span>Nothing yet. Try "Simulate a QR scan".</li></ul></div>
+      <p class="src">Check-in by QR, drop-in at $12 an hour and Starter at $35: Peak's website (21 Oct 2026) and Tyler (11 Nov 2026). The free-class follow-up is flow 3 of the email and text demo. Members, counts, balances and court assignments here are made up.</p>
+    </section>
+
+    <!-- 4 PLANS -->
+    <section class="pane" id="plans">
+      <h2>Plans and billing</h2>
+      <p class="lead">Peak's plan ladder with Peak's prices, the step up from each plan, and what a monthly billing run would look like. Cards stay with the payment processor (Stripe or Square). The system would never store card numbers.</p>
+      <div class="ladder" id="ladder" style="margin-bottom:8px"></div>
+      <p class="sl" style="font-size:13px;color:var(--soft);margin:0 0 20px">Also on Peak's list, outside the ladder: Senior Play ($29 a month in Peak's sales data), Student ($9 a month, ages 14 to 22, courts $7 an hour) and the Family Plan (under-18s on a parent's plan).</p>
+      <div class="plans2">
+        <div class="panel upg">
+          <h3>Moving up a plan</h3>
+          <p class="sl">Pick a member's plan and the one they're moving to. Clicking a plan above sets "Moving to".</p>
+          <div class="frm">
+            <label>Now on<select id="ufrom"></select></label>
+            <span class="arrow">to</span>
+            <label>Moving to<select id="uto"></select></label>
+          </div>
+          <div class="diff" id="udiff"></div>
+          <div class="btns" style="margin-top:12px"><button class="btn blue" id="udo">Make the change (demo)</button></div>
+          <div class="note-inline" id="unote" style="display:none"></div>
+        </div>
+        <div class="panel">
+          <h3>Cards on file</h3>
+          <p class="sl">How payment would be handled.</p>
+          <ul class="plain">
+            <li>Members save a card once, on the payment processor's own secure form (Stripe or Square).</li>
+            <li>Peak's system keeps only the processor's reference and the last four digits. It never sees or stores the card number.</li>
+            <li>Monthly dues, court fees and drop-ins all charge that saved card, or the card reader at the desk.</li>
+            <li>Memberships can't be paused, and cancelling needs 15 days' notice, as on Peak's page today.</li>
+          </ul>
+          <div class="note-inline">Moving over means members re-enter their card once. Saved cards usually can't be moved from one booking system's processor to another.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="bill-head">
+          <div><span class="lab ex">Example</span><h3>Billing run preview: Tuesday 1 December</h3><p class="sl" style="margin:0">A sample of nine members. Peak would see this the day before and could hold any row.</p></div>
+          <div class="btns"><button class="btn blue" id="brun">Run the sample billing</button><button class="btn" id="breset">Reset</button></div>
+        </div>
+        <div id="bill"></div>
+        <div class="bsum" id="bsum"></div>
+      </div>
+      <div class="fail" id="failbox"></div>
+      <p class="src">Plan prices and terms: Peak's membership page (read 21 Oct 2026). Starter $35; Unlimited $159 list with $149 kept for price-protected members; upgrades pay $159: Tyler, 11 Nov 2026. Senior Play $29: the rate seen in Peak's sales data (Year Review and Plan, 4 Nov 2026). Members, cards and the billing run are made up.</p>
+    </section>
+
+    <!-- 5 REPORTS -->
+    <section class="pane" id="reports">
+      <h2>Reports</h2>
+      <p class="lead">The reports Peak has asked about, on one screen and up to date each morning. Where Peak's own 2025-26 numbers exist, they're shown and labelled. Anything else is an example of the layout. Hover a cell or bar for the detail.</p>
+      <div class="reps">
+        <div class="panel wide">
+          <span class="lab ex">Example</span>
+          <h3>Court use by day and hour</h3>
+          <p class="sl">Share of the 23 bookable courts in use, one sample week. The shape follows Peak's busy and quiet times.</p>
+          <div class="tilesrow"><div class="stat"><span class="lab real" style="margin:0 0 2px">Peak's 2025-26 numbers</span><b>42%</b>Courts in use, all hours</div><div class="stat"><b>9 am to noon</b>Busiest on weekdays, and Mon to Thu 5 to 7 pm</div><div class="stat"><b>3 to 5 pm</b>Quietest Mon, Tue, Thu, Fri, with early mornings</div></div>
+          <div id="hmcourt"></div>
+        </div>
+        <div class="panel wide">
+          <span class="lab real">Peak's 2025-26 numbers</span>
+          <h3>Open Play: how full, and who was turned away</h3>
+          <p class="sl">Share of Open Play spots filled, by day and start time. 1 Nov 2025 to 31 Oct 2026.</p>
+          <div class="tilesrow"><div class="stat"><b>3,500</b>Waitlist sign-ups</div><div class="stat"><b>60%</b>Got a spot</div><div class="stat"><b>about 1,400</b>Never got one</div><div class="stat"><b>51%</b>Sessions that ran with 2 or fewer</div></div>
+          <div id="hmop"></div>
+        </div>
+        <div class="panel">
+          <span class="lab real">Peak's 2025-26 numbers</span>
+          <h3>When Open Play cancellations happen</h3>
+          <p class="sl">6,543 cancellations. 60% came in the last 24 hours.</p>
+          <div class="bars" id="cbars"></div>
+        </div>
+        <div class="panel">
+          <span class="lab real">Peak's 2025-26 numbers</span>
+          <h3>Free class to paid plan</h3>
+          <p class="sl">Learn to Play is free. 45% went on to pay for a plan, most within a day.</p>
+          <div class="bars" id="fbars"></div>
+        </div>
+        <div class="panel wide">
+          <span class="lab real">Peak's 2025-26 numbers</span>
+          <h3>Starter retention</h3>
+          <p class="sl">Starter members typically stayed about 3 months. Of the 459 who started on Starter by the end of May, this is where they were in October.</p>
+          <div class="split" id="ssplit"></div>
+          <p class="sl" style="margin:0">Dark: still paying for a plan in October (127). Light: stopped paying (332).</p>
+          <div class="ex-block">
+            <span class="lab ex">Example</span>
+            <div style="font-weight:600;font-size:14px">Still paying 3 months after joining, by the month they joined</div>
+            <p class="sl">How the monthly report would show it. These bars are made up to show the layout, not Peak's figures.</p>
+            <div class="bars" id="sbars"></div>
+          </div>
+        </div>
+      </div>
+      <p class="src">Peak's 2025-26 numbers: Year Review and Plan, 4 Nov 2026 (Peak's CourtReserve reports and read-only API data, 1 Nov 2025 to 31 Oct 2026). Fill figures count sign-ups, not check-ins. Grey cells had no regular session. Anything labelled Example is made up.</p>
+    </section>
+
+    <!-- 6 SWITCH -->
+    <section class="pane" id="switch">
+      <h2>How a switch would work</h2>
+      <p class="lead">The honest version. Booking is how the club runs day to day, so nothing would switch until Peak says so. Both systems would run side by side first.</p>
+      <div class="sw">
+        <div class="panel">
+          <h3>The steps</h3>
+          <p class="sl">Click a step for the detail.</p>
+          <ul class="steps6" id="steps6"></ul>
+          <div class="stepdetail" id="stepdetail"></div>
+        </div>
+        <div class="panel">
+          <h3>To confirm before anything moves</h3>
+          <p class="sl">The parts that decide whether a switch makes sense.</p>
+          <ul class="checks" id="checks"></ul>
+        </div>
+      </div>
+      <div class="cost">
+        <div class="box"><span class="lab real">From Tyler's receipts</span><div class="v">$549 a month</div><p>What CourtReserve costs Peak now: the Momentum plan since 15 October. Peak also paid a one-time $499 on 10 November to set up the branded app.</p></div>
+        <div class="box"><span class="lab ex">Not priced</span><div class="v">No price yet</div><p>This page shows how it would work, not what it costs. A price would come with a written scope, after Peak decides it wants to look at this.</p></div>
+      </div>
+      <div class="same"><b>Nothing switches until Peak says so</b><p>CourtReserve keeps running bookings, billing and the branded app the whole time both systems run. If the new one isn't right, Peak simply stays where it is.</p></div>
+      <p class="src">CourtReserve cost: Tyler's CourtReserve receipts, sent 11 Nov 2026 (Momentum $549 a month from 15 Oct 2026; branded mobile app setup fee $499, paid 10 Nov 2026). Swish for league play and DUPR for ratings: Peak's "Must-Have Apps" page (read 21 Oct 2026).</p>
+    </section>
+  </main>
+</div>
+<div id="tip"></div>
+
+<script>
+(function(){
+"use strict";
+
+var IC = {
+  check:'<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  clock:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  x:'<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  card:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
+  text:'<svg class="i" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-5 4v-4H4z"/></svg>',
+  shield:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"/></svg>',
+  doc:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>',
+  trophy:'<svg class="i" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8.5 20h7M10 17h4"/></svg>',
+  phone:'<svg class="i" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg>',
+  db:'<svg class="i" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6"/><path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>',
+  moon:'<svg class="i" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 019.5 5a7.5 7.5 0 109.5 9.5z"/></svg>'
+};
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function money(n){ return '$'+n.toLocaleString('en-US'); }
+function hLabel(h){ var ap=h>=12?'pm':'am', x=h%12||12; return x+':00 '+ap; }
+function hShort(h){ var x=h%12||12; return x+(h>=12?'p':'a'); }
+function clockNow(){ var d=new Date(), hh=d.getHours(), mm=('0'+d.getMinutes()).slice(-2), ap=hh>=12?'pm':'am'; hh=hh%12||12; return hh+':'+mm+' '+ap; }
+function pushLog(arr, elId, msg){ arr.unshift('<li><span class="tm">'+clockNow()+'</span>'+msg+'</li>'); $(elId).innerHTML = arr.join(''); }
+
+/* ---------- shared: plans ---------- */
+var PLANS = {
+  dropin:   {name:'Drop-in',   monthly:0,   fee:12, window:3,    who:'Guest player',  sub:'$12 an hour'},
+  starter:  {name:'Starter',   monthly:35,  fee:7,  window:null, who:'Jordan R.',     sub:'$35/mo · $7 an hour'},
+  play:     {name:'Play',      monthly:39,  fee:7,  window:7,    who:'Quinn S.',      sub:'$39/mo · $7 an hour'},
+  flex:     {name:'Flex',      monthly:99,  fee:0,  window:null, who:'Casey L.',      sub:'$99/mo · Flex hours', flexOnly:true},
+  unlimited:{name:'Unlimited', monthly:159, fee:0,  window:10,   who:'Morgan P.',     sub:'$159/mo · any time'},
+  platinum: {name:'Platinum',  monthly:199, fee:0,  window:14,   who:'Lee R.',        sub:'$199/mo · any time'}
+};
+var PLAN_ORDER = ['dropin','starter','play','flex','unlimited','platinum'];
+
+/* ---------- shared: courts and the sample week ---------- */
+var DAYS = [];
+(function(){ var nm=['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; for(var i=0;i<7;i++){ var dow=(1+i)%7; DAYS.push({i:i, dow:dow, d:16+i, short:nm[dow], long:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dow]}); } })();
+function openHours(dow){ var last = (dow===0||dow===6) ? 19 : 20, a=[]; for(var h=7;h<=last;h++) a.push(h); return a; }
+var UP=[], DOWN=[]; for(var c=1;c<=24;c++){ (c<=11?UP:DOWN).push(c); }
+function courtType(c){ return c===24 ? 'private' : (c>=12 && c<=15) ? 'champ' : 'rec'; }
+function rnd(a,b,c){ var x=(Math.imul(a+1,73856093) ^ Math.imul(b+7,19349663) ^ Math.imul(c+3,83492791))>>>0; x=Math.imul(x^(x>>>13),1274126177)>>>0; x=(x^(x>>>16))>>>0; return x/4294967296; }
+function busy(dow,h){
+  var wk = dow>=1 && dow<=5;
+  if(wk){
+    if(h>=9 && h<=11) return .8;
+    if(h===8) return .45;
+    if(h===7) return .08;
+    if(h===15 || h===16) return dow===3 ? .45 : .08;
+    if(h===17 || h===18) return dow<=4 ? .75 : .25;
+    if(h>=12 && h<=14) return .28;
+    return .3;
+  }
+  if(dow===6) return (h>=8 && h<=11) ? .55 : .25;
+  return (h>=9 && h<=12) ? .4 : .25;
+}
+function prog(dow,h,c){
+  if(dow>=1 && dow<=5 && h>=8 && h<=10 && c>=5 && c<=10) return 'O';
+  if(dow===1 && h===11 && c>=1 && c<=3) return 'G';
+  if(dow===1 && h===13 && c>=20 && c<=22) return 'D';
+  if(dow>=1 && dow<=4 && h===17 && c>=16 && c<=19) return 'S';
+  if(dow===1 && h===18 && c>=1 && c<=4) return 'C';
+  if(dow===2 && h>=18 && h<=19 && c>=12 && c<=15) return 'L';
+  return null;
+}
+var PROGNAME = {O:'Open Play', G:'Guided Open Play', S:'Social Play', D:'DUPR Play', C:'Class: Learn to Play and University 101', L:'League night'};
+var FIXED = {'0_10_3':1, '0_10_16':1};   // Monday 10 am bookings the desk expects
+var MINE = {};      // key day_h_c -> {price, plan}
+var DESKSOLD = {};  // key day_h_c -> name
+var NOW_DAY = 0, NOW_MIN = 9*60+40;
+function key(i,h,c){ return i+'_'+h+'_'+c; }
+function baseState(i,h,c){
+  var dow = DAYS[i].dow;
+  if(courtType(c)==='private') return 'private';
+  var p = prog(dow,h,c); if(p) return 'prog';
+  if(FIXED[key(i,h,c)]) return 'booked';
+  return rnd(i,h,c) < busy(dow,h) ? 'booked' : 'free';
+}
+function isFlexHour(dow,h){ return dow===0 || (dow>=1 && dow<=6 && h>=12 && h<=16); }
+function cellState(i,h,c,planId){
+  var k = key(i,h,c);
+  if(i===NOW_DAY && h*60+60 <= NOW_MIN + 20) return 'past';   // slot already started
+  if(MINE[k]) return 'mine';
+  if(DESKSOLD[k]) return 'desk';
+  var s = baseState(i,h,c);
+  if(s!=='free') return s;
+  var pl = PLANS[planId];
+  if(pl.window!=null && i>pl.window) return 'lock';
+  if(pl.flexOnly && !isFlexHour(DAYS[i].dow,h)) return 'lock';
+  return 'free';
+}
+
+/* ---------- 1 BOOK ---------- */
+var BK = {plan:'starter', day:0, floor:'up', sel:null, toastT:null};
+function drawPlanPick(){
+  $('planpick').innerHTML = PLAN_ORDER.map(function(id){ var p=PLANS[id]; return '<button data-plan="'+id+'" class="'+(BK.plan===id?'on':'')+'">'+p.name+'<small>'+p.sub+'</small></button>'; }).join('');
+  var p = PLANS[BK.plan];
+  var fee = p.flexOnly ? 'No court fee' : p.fee ? '$'+p.fee+' an hour' : 'No court fee';
+  var feeSub = p.flexOnly ? 'in Flex hours: Mon to Sat 12 to 5 pm, all day Sunday' : p.fee ? (p.monthly? 'plus $'+p.monthly+' a month' : 'no monthly plan') : 'included in $'+p.monthly+' a month';
+  var win = p.window!=null ? p.window+' days ahead' : 'Peak sets it';
+  var winSub = p.window!=null ? 'from Peak\'s membership page' : 'not on Peak\'s page today';
+  $('planfacts').innerHTML = '<div class="fact"><b>'+fee+'</b>'+feeSub+'</div><div class="fact"><b>'+win+'</b>Booking window, '+winSub+'</div><div class="fact"><b>4 hours</b>Cancel at least 4 hours before the start</div>';
+}
+function drawDays(){
+  var p = PLANS[BK.plan];
+  $('days').innerHTML = DAYS.map(function(d){ var locked = p.window!=null && d.i>p.window; return '<button data-day="'+d.i+'" class="'+(BK.day===d.i?'on ':'')+(locked?'locked':'')+'" aria-label="'+d.long+' '+d.d+' November">'+d.short+'<b>'+d.d+'</b></button>'; }).join('');
+}
+function drawGrid(){
+  var d = DAYS[BK.day], courts = BK.floor==='up'?UP:DOWN, hrs = openHours(d.dow);
+  var g = $('cgrid'); g.style.gridTemplateColumns = '34px repeat('+courts.length+',minmax(0,1fr))';
+  var h = '<div></div>' + courts.map(function(c){ var t=courtType(c); return '<div class="ch '+(t==='champ'?'champ':t==='private'?'priv':'')+'">'+c+(t==='champ'?'<small>C</small>':t==='private'?'<small>P</small>':'<small>&nbsp;</small>')+'</div>'; }).join('');
+  hrs.forEach(function(hr){
+    var fx = isFlexHour(d.dow,hr);
+    h += '<div class="rl'+(fx?' flexrow':'')+'">'+hShort(hr)+'</div>';
+    courts.forEach(function(c){
+      var s = cellState(BK.day,hr,c,BK.plan), cls='cell '+s, txt='';
+      if(s==='free' && fx) cls+=' flexh';
+      if(s==='prog') txt = prog(d.dow,hr,c);
+      if(s==='mine') txt = IC.check;
+      if(BK.sel && BK.sel.h===hr && BK.sel.c===c) cls+=' sel';
+      var lab = 'Court '+c+', '+hLabel(hr)+': '+({free:'free',booked:'booked',prog:PROGNAME[prog(d.dow,hr,c)]||'',mine:'your booking',past:'time has passed',lock:'not open to this plan','private':'private court',desk:'booked'})[s];
+      h += '<button class="'+cls+'" data-h="'+hr+'" data-c="'+c+'" aria-label="'+esc(lab)+'">'+txt+'</button>';
+    });
+  });
+  g.innerHTML = h;
+  // my bookings
+  var keys = Object.keys(MINE).sort(function(a,b){ var A=a.split('_').map(Number), B=b.split('_').map(Number); return A[0]-B[0] || A[1]-B[1] || A[2]-B[2]; });
+  var m = '<h4>My bookings</h4>';
+  if(!keys.length) m += '<div class="none">None yet. Tap a free court on the grid.</div>';
+  keys.forEach(function(k){ var a=k.split('_').map(Number), dd=DAYS[a[0]], b=MINE[k];
+    m += '<div class="bk"><span>Court '+a[2]+' · '+dd.short+' '+dd.d+' Nov, '+hLabel(a[1])+'<small>'+(b.price?'$'+b.price+' court fee':'No court fee')+' · '+b.planName+' · cancel by '+cancelBy(a[0],a[1])+'</small></span><button data-cancel="'+k+'">Cancel</button></div>'; });
+  $('mybk').innerHTML = m;
+}
+function cancelBy(i,h){ var d=DAYS[i], ch=h-4; return (ch<0?'':(d.short+' '))+hLabel(ch).replace(':00',':00'); }
+function priceFor(planId, dow, h){ var p=PLANS[planId]; if(p.flexOnly) return 0; return p.fee; }
+function drawSheet(){
+  var el = $('sheet');
+  if(!BK.sel){ el.innerHTML=''; return; }
+  var d=DAYS[BK.day], s=BK.sel, p=PLANS[BK.plan], price=priceFor(BK.plan,d.dow,s.h);
+  var late = (BK.day===NOW_DAY && (s.h-4)*60 < NOW_MIN);
+  var priceTxt = price ? '$'+price : '$0';
+  var priceSub = p.flexOnly ? 'Inside your Flex hours' : price ? (p.monthly? p.name+' rate: $'+price+' an hour' : 'Drop-in rate: $12 an hour') : 'Included in '+p.name;
+  el.innerHTML = '<div class="sheet"><div class="grab"></div><h4>Court '+s.c+' · '+(s.c<=11?'Upstairs':'Downstairs')+(courtType(s.c)==='champ'?' · Championship':'')+'</h4>'+
+    '<div class="when">'+d.long+' '+d.d+' November · '+hLabel(s.h)+' to '+hLabel(s.h+1)+'</div>'+
+    '<div class="row"><span>Court fee ('+priceSub+')</span><b>'+priceTxt+'</b></div>'+
+    '<div class="row"><span>Paid with</span><b>'+(price?'Card on file':'Nothing to pay')+'</b></div>'+
+    '<div class="rule">'+(late ? 'This starts within 4 hours, so cancelling it would count as a late cancel.' : 'Cancel by '+cancelBy(BK.day,s.h)+' (4 hours before) to cancel on time.')+'</div>'+
+    '<div class="btns"><button class="btn" id="bkno">Not now</button><button class="btn blue" id="bkyes">Book this court</button></div></div>';
+}
+function toast(msg){
+  var t=$('toast'); t.innerHTML='<div class="toast">'+msg+'</div>';
+  clearTimeout(BK.toastT); BK.toastT=setTimeout(function(){ t.innerHTML=''; }, 4200);
+}
+function drawBook(){ $('toast').innerHTML=''; drawPlanPick(); drawDays(); drawGrid(); drawSheet(); $('appwho').innerHTML = '<b>'+PLANS[BK.plan].who+'</b>'+PLANS[BK.plan].name; }
+$('planpick').addEventListener('click', function(e){ var b=e.target.closest('[data-plan]'); if(!b) return; BK.plan=b.getAttribute('data-plan'); BK.sel=null; drawBook(); });
+$('days').addEventListener('click', function(e){
+  var b=e.target.closest('[data-day]'); if(!b) return; var i=+b.getAttribute('data-day'), p=PLANS[BK.plan];
+  if(p.window!=null && i>p.window){ toast(p.name+' players can book '+p.window+' days ahead. '+DAYS[i].long+' opens to them on '+DAYS[i-p.window].long+'.'); return; }
+  BK.day=i; BK.sel=null; drawBook();
+});
+$('floorseg').addEventListener('click', function(e){ var b=e.target.closest('[data-floor]'); if(!b) return; BK.floor=b.getAttribute('data-floor'); BK.sel=null;
+  [].forEach.call(this.querySelectorAll('button'), function(x){ x.classList.toggle('on', x===b); }); drawBook(); });
+$('cgrid').addEventListener('click', function(e){
+  var b=e.target.closest('.cell'); if(!b) return; var h=+b.getAttribute('data-h'), c=+b.getAttribute('data-c'), d=DAYS[BK.day];
+  var s = cellState(BK.day,h,c,BK.plan);
+  if(s==='free'){ BK.sel={h:h,c:c}; $('toast').innerHTML=''; drawGrid(); drawSheet(); return; }
+  BK.sel=null; drawSheet();
+  var msg = {
+    booked:'Court '+c+' is booked by another member at '+hLabel(h)+'. Names stay hidden.',
+    desk:'Court '+c+' was sold at the front desk for '+hLabel(h)+'.',
+    prog:PROGNAME[prog(d.dow,h,c)]+' has this court at '+hLabel(h)+'. Sign up for it in Open Play and classes.',
+    past:'That time has already started.',
+    'private':'Court 24 is the private court. How it is offered is Peak\'s call; in this demo it isn\'t booked online.',
+    lock: PLANS[BK.plan].flexOnly ? 'Flex covers Monday to Saturday 12 to 5 pm and all day Sunday. This hour is outside it.' : 'Not open to this plan yet.',
+    mine:'This is your booking. Cancel it under My bookings.'
+  }[s];
+  toast(msg); drawGrid();
+});
+$('scr').addEventListener('click', function(e){
+  if(e.target.id==='bkno'){ BK.sel=null; drawGrid(); drawSheet(); }
+  else if(e.target.id==='bkyes' && BK.sel){
+    var s=BK.sel, d=DAYS[BK.day], price=priceFor(BK.plan,d.dow,s.h);
+    MINE[key(BK.day,s.h,s.c)] = {price:price, planName:PLANS[BK.plan].name};
+    BK.sel=null; drawGrid(); drawSheet(); refreshDesk();
+    toast('Booked: court '+s.c+', '+d.short+' '+d.d+' Nov, '+hLabel(s.h)+(price?'. $'+price+' would go on the card on file':'')+'. Demo only: nothing was booked or charged.');
+  } else {
+    var cb = e.target.closest('[data-cancel]'); if(!cb) return;
+    var k=cb.getAttribute('data-cancel'), a=k.split('_').map(Number);
+    var late = (a[0]===NOW_DAY && (a[1]-4)*60 < NOW_MIN);
+    delete MINE[k]; drawGrid(); refreshDesk();
+    toast(late ? 'Cancelled inside the 4 hours, so it is marked as a late cancel under Peak\'s rule. The court goes back on the grid.' : 'Cancelled on time. The court is free again for other members.');
+  }
+});
+
+/* ---------- 2 OPEN PLAY ---------- */
+var NAMEPOOL = ['Pat K.','Dana W.','Chris B.','Kelly F.','Jesse H.','Avery D.','Finley J.','Logan V.','Parker S.','Reese G.','Skyler M.','Blake C.','Emerson T.','Hayden L.','Rowan E.','Sydney A.','Marley O.'];
+var SEED_SESS = [
+  {id:'op7',  time:'7:00 am',  name:'Open Play', cap:16, n:2},
+  {id:'op8',  time:'8:00 am',  name:'Open Play', cap:16, n:16, wl:true},
+  {id:'op9',  time:'9:00 am',  name:'Open Play', cap:16, n:16, wl:true, wlCount:3},
+  {id:'gop',  time:'11:00 am', name:'Guided Open Play', sub:'Free', cap:12, n:5},
+  {id:'dupr', time:'1:00 pm',  name:'DUPR Play', cap:12, n:1},
+  {id:'op15', time:'3:00 pm',  name:'Open Play', cap:16, n:2},
+  {id:'soc',  time:'5:00 pm',  name:'Social Play', cap:16, n:13},
+  {id:'ltp',  time:'6:00 pm',  name:'Learn to Play', sub:'Free class · 24-hour cancel', cap:12, n:9, cls:true},
+  {id:'u101', time:'6:00 pm',  name:'Peak Pickleball University 101', sub:'$25 class · 24-hour cancel, $10 late fee', cap:10, n:7, cls:true}
+];
+var SESS, VIS='fill', WL, WLLOG=[];
+function resetSess(){ SESS = SEED_SESS.map(function(s){ var o={}; for(var k in s) o[k]=s[k]; o.joined=false; o.waitJoined=false; return o; }); }
+function sessById(id){ return SESS.filter(function(s){return s.id===id;})[0]; }
+function visText(s){
+  var left = s.cap - s.n, full = left<=0;
+  if(VIS==='names'){
+    var nm = NAMEPOOL.slice(0, Math.min(s.n,5)).map(function(x,i){ return '<span class="nmchip">'+NAMEPOOL[(i+s.id.length*3)%NAMEPOOL.length]+'</span>'; }).join('');
+    var more = s.n>5 ? '<span class="nmchip">+'+(s.n-5)+' more</span>' : '';
+    return '<span class="names">'+nm+more+'</span>'+(full?'<span class="st-full">Full</span>':'<span>'+s.n+' of '+s.cap+'</span>');
+  }
+  if(VIS==='count') return full ? '<span class="st-full">Full · '+s.n+' of '+s.cap+'</span>' : '<span>'+s.n+' of '+s.cap+' signed up · '+left+' spot'+(left===1?'':'s')+' left</span>';
+  if(full) return '<span class="st-full">Full · waitlist open</span>';
+  if(left<=3) return '<span class="st-full">'+left+' spot'+(left===1?'':'s')+' left</span>';
+  if(s.n/s.cap >= .5) return '<span class="st-ok">Filling up</span>';
+  return '<span class="st-ok">Spots open</span>';
+}
+function drawSess(){
+  var op8 = sessById('op8'); op8.n = WL.signed + (op8.joined?0:0);
+  $('sess').innerHTML = SESS.map(function(s){
+    var full = s.n>=s.cap, act='';
+    if(s.joined) act = '<span class="pill approved">'+IC.check+'You\'re in</span><button class="btn" data-leave="'+s.id+'">Cancel</button>';
+    else if(full){
+      if(s.id==='op8') act = s.waitJoined ? '<span class="pill waiting">On the waitlist</span>' : '<button class="btn" data-wait="'+s.id+'">Join waitlist</button>';
+      else act = '<span class="pill waiting">'+(s.wlCount||0)+' waiting</span>';
+      if(s.id==='op8') act += '<button class="btn" data-showwl="1">See waitlist</button>';
+    } else act = '<button class="btn blue" data-join="'+s.id+'">Sign up</button>';
+    return '<div class="ses'+(s.id==='op8'?' sel':'')+'" data-s="'+s.id+'"><div class="tm">'+s.time+'</div><div><div class="nm">'+s.name+(s.sub?' <small>· '+s.sub+'</small>':'')+'</div><div class="st">'+visText(s)+'</div></div><div class="act">'+act+'</div></div>';
+  }).join('');
+}
+function wlReset(late){
+  WL = {late:!!late, base: late ? 6*60 : 18*60+10, mins:0, signed:16, offer:-1, view:-1,
+        list:[{n:'Casey L.',st:'wait'},{n:'Drew N.',st:'wait'},{n:'Jamie P.',st:'wait'},{n:'Robin T.',st:'wait'}], threads:{}};
+  if(SESS){ var o=sessById('op8'); if(o.waitJoined){ WL.list.push({n:'You (Jordan R.)',st:'wait'}); } }
+}
+function wlTime(add){ var m = WL.base + WL.mins + (add||0); var day = WL.late ? 'Mon 16 Nov' : 'Sun 15 Nov'; var h=Math.floor(m/60), mm=('0'+(m%60)).slice(-2), ap=h>=12?'pm':'am'; return {day:day, t:(h%12||12)+':'+mm+' '+ap}; }
+function wlLog(msg){ pushLog(WLLOG,'wllog','<b>'+wlTime().t+'</b> · '+msg); }
+function offerNext(){
+  var i=-1; for(var k=0;k<WL.list.length;k++){ if(WL.list[k].st==='wait'){ i=k; break; } }
+  if(i<0){ WL.offer=-1; wlLog('No one left waiting. The spot shows as open to everyone.'); return; }
+  WL.list[i].st='offered'; WL.offer=i; WL.view=i;
+  var exp = wlTime(30).t;
+  WL.list[i].exp = exp;
+  WL.threads[i] = [{me:false, ts:wlTime().t, txt:'Peak Pickleball: a spot opened in Open Play, Mon 16 Nov, 8:00 am. It\'s held for you until '+exp+'. Reply YES or tap to claim: <span class="lnk">[claim link]</span>\n\nReply STOP to opt out.'}];
+  wlLog('Spot offered to '+WL.list[i].n+' by text. Held until '+exp+'.');
+}
+function drawWL(){
+  var o = sessById('op8');
+  o.n = WL.signed;
+  $('wlsub').innerHTML = 'Monday 16 November · '+(WL.signed>=16?'<b>Full</b>, 16 of 16':'<b>'+(16-WL.signed)+' spot open</b>, '+WL.signed+' of 16')+' · '+WL.list.filter(function(x){return x.st==='wait'||x.st==='offered';}).length+' waiting';
+  $('wlclock').textContent = wlTime().day+', '+wlTime().t;
+  $('wlist').innerHTML = WL.list.map(function(p,i){
+    var pill = p.st==='wait' ? '<span class="pill waiting">Waiting</span>' : p.st==='offered' ? '<span class="pill held">'+IC.clock+'Offered · until '+p.exp+'</span>' : p.st==='claimed' ? '<span class="pill approved">'+IC.check+'Claimed · in</span>' : '<span class="pill waiting">Hold ended</span>';
+    return '<li><span class="pos">'+(i+1)+'</span><span class="who">'+p.n+'</span>'+pill+'</li>';
+  }).join('');
+  var anyWait = WL.list.some(function(x){return x.st==='wait';});
+  $('wlcancel').disabled = !(WL.signed>=16 && WL.offer<0 && anyWait);
+  $('wlclaim').disabled = WL.offer<0;
+  $('wlexpire').disabled = WL.offer<0;
+  [].forEach.call($('lateseg').querySelectorAll('button'), function(b){ b.classList.toggle('on', b.getAttribute('data-late')===(WL.late?'1':'0')); });
+  var th = WL.threads[WL.view];
+  $('wlphonelabel').textContent = WL.view>=0 ? 'Text to '+WL.list[WL.view].n : 'Text to the person offered the spot';
+  $('wlphone').innerHTML = '<div class="phone"><div class="ph-top"><div class="av">P</div><div class="nm">Peak Pickleball</div></div><div class="ph-body">'+
+    (th ? th.map(function(m){ return (m.ts?'<div class="ts">Text Message · '+m.ts+'</div>':'')+'<div class="bubble'+(m.me?' me':'')+'">'+m.txt+'</div>'; }).join('') : '<div class="empty">No text yet. It goes out the moment a spot opens.</div>')+
+    '</div><div class="ph-bar">Text Message</div></div>';
+  drawSess();
+}
+$('wlcancel').addEventListener('click', function(){
+  WL.signed = 15;
+  wlLog(WL.late ? 'A player cancels 2 hours before the start. That is inside the 4-hour rule, so it is marked as a late cancel. The spot still goes to the waitlist.' : 'A player cancels the evening before, well inside the rules. Their spot opens.');
+  offerNext(); drawWL();
+});
+$('wlclaim').addEventListener('click', function(){
+  var i=WL.offer; if(i<0) return; var p=WL.list[i];
+  p.st='claimed'; WL.signed=16; WL.offer=-1; WL.mins += 4;
+  WL.threads[i].push({me:true, ts:'', txt:'YES'});
+  WL.threads[i].push({me:false, ts:wlTime().t, txt:'You\'re in: Open Play, Mon 16 Nov, 8:00 am. If plans change, cancel at least 4 hours before so the next person gets the spot.'});
+  wlLog(p.n+' claims the spot. The session is full again.');
+  drawWL();
+});
+$('wlexpire').addEventListener('click', function(){
+  var i=WL.offer; if(i<0) return; var p=WL.list[i];
+  WL.mins += 30; p.st='passed';
+  WL.threads[i].push({me:false, ts:wlTime().t, txt:'The hold on Open Play, Mon 16 Nov, 8:00 am has ended and the spot went to the next person. You\'re still on waitlists for other sessions.'});
+  wlLog('30 minutes pass with no claim from '+p.n+'. The hold ends.');
+  offerNext(); drawWL();
+});
+$('wlreset').addEventListener('click', function(){ wlReset(WL.late); WLLOG=[]; $('wllog').innerHTML='<li><span class="tm">-</span>Waitlist reset.</li>'; drawWL(); });
+$('lateseg').addEventListener('click', function(e){ var b=e.target.closest('[data-late]'); if(!b) return; wlReset(b.getAttribute('data-late')==='1'); WLLOG=[]; $('wllog').innerHTML='<li><span class="tm">-</span>'+(WL.late?'Now the player cancels 2 hours before the start (a late cancel).':'Now the player cancels the evening before.')+'</li>'; drawWL(); });
+$('visseg').addEventListener('click', function(e){ var b=e.target.closest('[data-vis]'); if(!b) return; VIS=b.getAttribute('data-vis');
+  [].forEach.call(this.querySelectorAll('button'), function(x){ x.classList.toggle('on', x===b); }); drawSess(); });
+$('sess').addEventListener('click', function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  var id = b.getAttribute('data-join')||b.getAttribute('data-leave')||b.getAttribute('data-wait');
+  if(b.hasAttribute('data-showwl')){ var w=document.querySelector('.wl'); if(w && w.scrollIntoView && window.innerWidth<=1100) w.scrollIntoView({block:'start'}); return; }
+  var s = sessById(id); if(!s) return;
+  if(b.hasAttribute('data-join')){ s.joined=true; s.n++; if(id==='op8'){ WL.signed++; drawWL(); return; } }
+  else if(b.hasAttribute('data-leave')){ s.joined=false; s.n--; if(id==='op8'){ WL.signed--; wlLog('You cancelled your Open Play spot. It goes to the waitlist.'); if(WL.offer<0) offerNext(); drawWL(); return; } }
+  else if(b.hasAttribute('data-wait')){ s.waitJoined=true; WL.list.push({n:'You (Jordan R.)',st:'wait'}); wlLog('You joined the waitlist for Open Play, 8:00 am, at position '+WL.list.length+'.'); drawWL(); return; }
+  drawSess();
+});
+
+/* ---------- 3 FRONT DESK ---------- */
+var ARR_SEED = [
+  {id:'m1', name:'Morgan P.', plan:'Unlimited', price:'$159 a month', what:'Court 3 · 10:00 am', since:'Mar 2025', visits:9, bal:0, card:'Visa ending 4242', waiver:'Signed 2 Mar 2025'},
+  {id:'m2', name:'Taylor B.', plan:'Unlimited', price:'$149 a month, price protected', what:'Court 3 · 10:00 am', since:'Nov 2024', visits:11, bal:0, card:'Mastercard ending 5100', waiver:'Signed 4 Nov 2024'},
+  {id:'m3', name:'Sam T.', plan:'Starter', price:'$35 a month · courts $7 an hour', what:'Court 16 · 10:00 am', since:'Sep 2026', visits:6, bal:0, card:'Visa ending 0019', waiver:'Signed 12 Sep 2026'},
+  {id:'m4', name:'Riley K.', plan:'Play', price:'$39 a month · courts $7 an hour', what:'Open Play · 10:00 am', since:'Jun 2025', visits:2, bal:14, card:'Visa ending 7731', waiver:'Signed 9 Jun 2025'},
+  {id:'m5', name:'Alex M.', plan:null, price:'No plan yet', what:'Guided Open Play · 11:00 am', since:'Learn to Play, Sat 14 Nov', visits:1, bal:0, card:'None saved', waiver:'Signed 14 Nov 2026', grad:true},
+  {id:'m6', name:'Jordan R.', plan:'Starter', price:'$35 a month · courts $7 an hour', what:'Open Play · 10:00 am', since:'Oct 2026', visits:5, bal:0, card:'Amex ending 1008', waiver:'Signed 3 Oct 2026'}
+];
+var ARR, DSEL='m5', DESKLOG=[], SALES=[];
+function resetDesk(){ ARR = ARR_SEED.map(function(a){ var o={}; for(var k in a) o[k]=a[k]; o.inn=false; return o; }); }
+function arrById(id){ return ARR.filter(function(a){return a.id===id;})[0]; }
+function initials(n){ return n.split(' ').map(function(x){return x[0];}).join('').replace('.',''); }
+function drawCounts(){
+  var inn = ARR.filter(function(a){return a.inn;}).length;
+  var used = 0; for(var c=1;c<=23;c++){ var s=boardState(c); if(s.t!=='free') used++; }
+  var sold = SALES.reduce(function(t,s){return t+s.amt;},0);
+  $('deskcounts').innerHTML =
+    '<div class="count"><b>'+(41+inn)+'</b><span>Checked in today</span></div>'+
+    '<div class="count"><b>'+(ARR.length-inn)+'</b><span>Still to arrive, next 2 hours</span></div>'+
+    '<div class="count"><b>'+used+' of 23</b><span>Bookable courts in use now</span></div>'+
+    '<div class="count"><b>'+(3+SALES.length)+'</b><span>Walk-in sales today'+(sold?' · '+money(36+sold):' · $36')+'</span></div>';
+}
+function drawArr(){
+  $('arr').innerHTML = ARR.map(function(a){
+    var flags = (a.grad?'<span class="flag">Free class, not joined</span>':'')+(a.bal?'<span class="flag bal">Owes $'+a.bal+'</span>':'');
+    return '<li data-m="'+a.id+'" class="'+(a.inn?'in ':'')+(DSEL===a.id?'sel':'')+'"><span class="av">'+(a.inn?IC.check:initials(a.name))+'</span><span class="who"><b>'+a.name+'</b>'+flags+'<small>'+(a.plan||'No plan')+' · '+a.what+'</small></span>'+
+      (a.inn?'<span class="pill approved">In</span>':'<button class="btn" data-checkin="'+a.id+'">Check in</button>')+'</li>';
+  }).join('');
+}
+function drawCard(){
+  var a = arrById(DSEL); if(!a){ $('mcard').innerHTML=''; return; }
+  var h = '<div class="mhead"><div class="mav">'+initials(a.name)+'</div><div><div class="mname">'+a.name+'</div><div class="mplan">'+(a.plan?a.plan+' · '+a.price:a.price)+'</div></div>'+(a.inn?'<span class="pill approved" style="margin-left:auto">'+IC.check+'Checked in</span>':'<span class="pill waiting" style="margin-left:auto">Not in yet</span>')+'</div>';
+  h += '<div class="kv"><div>Next<b>'+a.what+'</b></div><div>'+(a.plan?'Member since':'First visit')+'<b>'+a.since+'</b></div><div>Visits in November<b>'+a.visits+'</b></div><div>Balance<b>'+(a.bal?'$'+a.bal+' due':'$0')+'</b></div><div>Card<b>'+a.card+'</b></div><div>Waiver<b>'+a.waiver+'</b></div></div>';
+  if(a.grad) h += '<div class="mflag"><b>Free-class graduate, not joined yet</b>Took Learn to Play on Saturday 14 November. The free-class follow-up (flow 3 in the email and text demo) sent the Day 1 email on Sunday. If Alex joins here, that series stops at once.<div class="btns"><button class="btn primary" data-join="'+a.id+'">Join Starter at the desk ($35 a month)</button></div></div>';
+  if(a.joinedDesk) h += '<div class="mflag ok"><b>Joined Starter at the desk</b>Card taken on the reader and saved with the payment processor (demo: nothing charged). The free-class follow-up stopped.</div>';
+  if(a.bal) h += '<div class="mflag bal"><b>$'+a.bal+' owed</b>Two court hours from 9 November weren\'t paid: the card was declined.<div class="btns"><button class="btn" data-pay="'+a.id+'">Take $'+a.bal+' on the reader</button></div></div>';
+  if(a.plan==='Unlimited' && /protected/.test(a.price)) h += '<div class="mflag ok"><b>Price protected</b>Keeps the old $149 Unlimited rate. New members and upgrades pay $159.</div>';
+  $('mcard').innerHTML = h;
+}
+var BOARDNAMES = ['Lee R.','Pat K.','Dana W.','Chris B.','Kelly F.','Jesse H.','Avery D.','Finley J.','Logan V.','Parker S.','Reese G.','Skyler M.','Blake C.','Emerson T.','Hayden L.','Rowan E.'];
+function boardState(c){
+  var s = baseState(0,9,c);
+  if(s==='private') return {t:'priv', txt:'Private'};
+  if(s==='prog') return {t:'op', txt:PROGNAME[prog(1,9,c)]};
+  if(MINE[key(0,9,c)]) return {t:'busy', txt:'You (app)'};
+  if(s==='booked') return {t:'busy', txt:BOARDNAMES[c%BOARDNAMES.length]+' +'+(1+c%3)};
+  return {t:'free', txt:'Free now'};
+}
+function drawBoard(){
+  function tiles(arr){ return '<div class="tiles">'+arr.map(function(c){ var s=boardState(c), t=courtType(c);
+    var nxt = DESKSOLD[key(0,10,c)] ? ' sold' : '';
+    return '<div class="tile '+s.t+nxt+'" data-tip="Court '+c+(t==='champ'?' (championship)':'')+': '+esc(s.txt)+(nxt?'. Walk-in sold for 10 am':'')+'"><b>'+c+(t==='champ'?'<em>C</em>':'')+'</b><span>'+esc(s.txt)+'</span></div>'; }).join('')+'</div>'; }
+  $('board').innerHTML = '<h4>Upstairs · 11 courts</h4>'+tiles(UP)+'<h4>Downstairs · 13 courts</h4>'+tiles(DOWN);
+}
+function freeCourtsAt(h, hrs){ var out=[]; for(var c=1;c<=24;c++){ var ok=true; for(var k=0;k<hrs;k++){ var hh=h+k, s=baseState(0,hh,c); if(s!=='free' || MINE[key(0,hh,c)] || DESKSOLD[key(0,hh,c)]) ok=false; } if(ok) out.push(c); } return out; }
+function drawWalk(){
+  var h=+$('whour').value, n=+$('whrs').value, cur=$('wcourt').value, fr=freeCourtsAt(h,n);
+  $('wcourt').innerHTML = fr.length ? fr.map(function(c){ return '<option value="'+c+'"'+(String(c)===cur?' selected':'')+'>Court '+c+(c<=11?' · upstairs':' · downstairs')+(courtType(c)==='champ'?' · championship':'')+'</option>'; }).join('') : '<option value="">No court free</option>';
+  $('wtot').textContent = '$'+(12*n);
+  $('wsell').disabled = !fr.length;
+  $('sales').innerHTML = SALES.map(function(s){ return '<li>'+s.txt+'</li>'; }).join('');
+}
+function refreshDesk(){ drawCounts(); drawArr(); drawCard(); drawBoard(); drawWalk(); }
+function checkIn(id, how){
+  var a=arrById(id); if(!a || a.inn) return; a.inn=true; DSEL=id;
+  $('scanmsg').textContent = (how==='qr'?'QR scanned: ':'Checked in: ')+a.name;
+  pushLog(DESKLOG,'desklog', a.name+' checked in '+(how==='qr'?'by QR code from the app':'by hand at the desk')+'.'+(a.bal?' Flag: owes $'+a.bal+'.':'')+(a.grad?' Flag: took the free class, hasn\'t joined.':''));
+  refreshDesk();
+}
+$('scan').addEventListener('click', function(){
+  var next = ARR.filter(function(a){return !a.inn;})[0];
+  if(!next){ $('scanmsg').textContent='Everyone on the list is in.'; return; }
+  checkIn(next.id,'qr');
+});
+$('arr').addEventListener('click', function(e){
+  var b=e.target.closest('[data-checkin]'); if(b){ checkIn(b.getAttribute('data-checkin'),'hand'); return; }
+  var li=e.target.closest('[data-m]'); if(li){ DSEL=li.getAttribute('data-m'); drawArr(); drawCard(); }
+});
+$('mcard').addEventListener('click', function(e){
+  var b=e.target.closest('button'); if(!b) return;
+  if(b.hasAttribute('data-join')){ var a=arrById(b.getAttribute('data-join')); a.grad=false; a.joinedDesk=true; a.plan='Starter'; a.price='$35 a month · courts $7 an hour'; a.since='Nov 2026'; a.card='Visa ending 3321';
+    pushLog(DESKLOG,'desklog', a.name+' joined Starter at the desk. The free-class follow-up stops. (Demo: nothing charged.)'); refreshDesk(); }
+  if(b.hasAttribute('data-pay')){ var r=arrById(b.getAttribute('data-pay')); var amt=r.bal; r.bal=0;
+    pushLog(DESKLOG,'desklog', 'Took $'+amt+' from '+r.name+' on the card reader. Balance cleared. (Demo: nothing charged.)'); refreshDesk(); }
+});
+['whour','whrs'].forEach(function(id){ $(id).addEventListener('change', drawWalk); });
+$('wsell').addEventListener('click', function(){
+  var c=+$('wcourt').value, h=+$('whour').value, n=+$('whrs').value, nm=($('wname').value||'Walk-in player').trim();
+  if(!c) return;
+  for(var k=0;k<n;k++) DESKSOLD[key(0,h+k,c)] = nm;
+  var amt = 12*n;
+  SALES.unshift({amt:amt, txt:'<b>'+esc(nm)+'</b> · court '+c+', '+hLabel(h)+' for '+n+' hour'+(n>1?'s':'')+' · $'+amt+' on the reader'});
+  pushLog(DESKLOG,'desklog','Walk-in sale: '+esc(nm)+', court '+c+' at '+hLabel(h)+', $'+amt+'. The court now shows as booked in the member app. (Demo: nothing charged.)');
+  refreshDesk(); drawGrid();
+});
+
+/* ---------- 4 PLANS AND BILLING ---------- */
+var RUNGS = [
+  {id:'dropin', t:'Drop-in', p:'$12', u:'an hour', li:['No monthly plan','Book 3 days ahead','Loaner paddles']},
+  {id:'starter', t:'Starter', p:'$35', u:'a month', li:['Courts $7 an hour','Intro plan for new players','Leads on from Learn to Play']},
+  {id:'play', t:'Play', p:'$39', u:'a month', li:['Courts $7 an hour','Book 7 days ahead','Family Plan eligible']},
+  {id:'flex', t:'Flex', p:'$99', u:'a month', li:['No court fees Mon to Sat 12 to 5 pm and all day Sunday','Play limited to those hours']},
+  {id:'unlimited', t:'Unlimited', p:'$159', u:'a month', li:['No court fees, any time','Book 10 days ahead','12 guest passes a year','$149 kept for price-protected members']},
+  {id:'platinum', t:'Platinum', p:'$199', u:'a month', li:['No court fees','Book 14 days ahead','2 guest passes a month, parking pass','Free in-house leagues and tournaments']}
+];
+var UPG = {
+  dropin:{name:'Drop-in', m:0, fee:'$12 an hour', win:'3 days ahead'},
+  starter:{name:'Starter', m:35, fee:'$7 an hour', win:'Not stated on Peak\'s page'},
+  play:{name:'Play', m:39, fee:'$7 an hour', win:'7 days ahead'},
+  flex:{name:'Flex', m:99, fee:'None, Mon to Sat 12 to 5 pm and all day Sunday', win:'Not stated on Peak\'s page'},
+  unlimitedpp:{name:'Unlimited, protected', m:149, fee:'None', win:'10 days ahead'},
+  unlimited:{name:'Unlimited', m:159, fee:'None', win:'10 days ahead'},
+  platinum:{name:'Platinum', m:199, fee:'None', win:'14 days ahead'}
+};
+var UFROM='starter', UTO='flex';
+function drawLadder(){
+  $('ladder').innerHTML = RUNGS.map(function(r,i){ return '<button class="rung'+(UTO===r.id?' on':'')+'" data-rung="'+r.id+'"><span class="step">Step '+(i+1)+'</span><span class="t">'+r.t+'</span><span class="p">'+r.p+' <small>'+r.u+'</small></span><ul>'+r.li.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></button>'; }).join('');
+}
+function drawUpg(){
+  var opts = function(sel, list){ return list.map(function(id){ return '<option value="'+id+'"'+(id===sel?' selected':'')+'>'+UPG[id].name+(UPG[id].m?' · $'+UPG[id].m+'/mo':'')+'</option>'; }).join(''); };
+  $('ufrom').innerHTML = opts(UFROM, ['dropin','starter','play','flex','unlimitedpp','unlimited','platinum']);
+  $('uto').innerHTML = opts(UTO, ['starter','play','flex','unlimited','platinum']);
+  var a=UPG[UFROM], b=UPG[UTO], d=b.m-a.m;
+  var rows = [];
+  if(UFROM===UTO) rows.push(['Change','Same plan. Nothing changes.']);
+  else {
+    rows.push(['Monthly', '<b>'+(a.m?'$'+a.m:'$0')+' to $'+b.m+'</b> ('+(d>=0?'+':'−')+'$'+Math.abs(d)+' a month)', 'big']);
+    rows.push(['Court fees', a.fee+' → '+b.fee]);
+    rows.push(['Booking', a.win+' → '+b.win]);
+    if(UTO==='unlimited') rows.push(['Price', 'Upgrades pay the $159 list price. The $149 rate stays only with members already price protected.']);
+    if(UFROM==='unlimitedpp') rows.push(['Note', 'This member keeps $149 while they stay on Unlimited. Whether a move ends that is Peak\'s rule.']);
+    rows.push(['Starts', 'Peak picks: straight away with the difference prorated, or on the next billing date.']);
+  }
+  $('udiff').innerHTML = rows.map(function(r){ return '<div class="dr'+(r[2]?' '+r[2]:'')+'"><span>'+r[0]+'</span><div>'+r[1]+'</div></div>'; }).join('');
+  $('udo').disabled = UFROM===UTO;
+}
+$('ladder').addEventListener('click', function(e){ var b=e.target.closest('[data-rung]'); if(!b) return; UTO=b.getAttribute('data-rung'); $('unote').style.display='none'; drawLadder(); drawUpg(); });
+$('ufrom').addEventListener('change', function(){ UFROM=this.value; $('unote').style.display='none'; drawUpg(); });
+$('uto').addEventListener('change', function(){ UTO=this.value; $('unote').style.display='none'; drawLadder(); drawUpg(); });
+$('udo').addEventListener('click', function(){ var a=UPG[UFROM], b=UPG[UTO]; var n=$('unote'); n.style.display='block';
+  n.textContent = 'Demo: the member would move from '+a.name+' to '+b.name+', and the payment processor would charge the new amount from the date Peak picks. Nothing changed here.'; });
+
+var BILL_SEED = [
+  {n:'Morgan P.', pl:'Unlimited', amt:159, card:'Visa ending 4242'},
+  {n:'Taylor B.', pl:'Unlimited', sub:'Price protected', amt:149, card:'Mastercard ending 5100'},
+  {n:'Lee R.', pl:'Platinum', amt:199, card:'Visa ending 8890'},
+  {n:'Casey L.', pl:'Flex', amt:99, card:'Visa ending 6612'},
+  {n:'Quinn S.', pl:'Play', amt:39, card:'Discover ending 2204'},
+  {n:'Riley K.', pl:'Play', amt:39, card:'Visa ending 7731', fails:true},
+  {n:'Jordan R.', pl:'Starter', amt:35, card:'Amex ending 1008'},
+  {n:'Sam T.', pl:'Starter', amt:35, card:'Visa ending 0019'},
+  {n:'Pat K.', pl:'Unlimited', sub:'Prepaid for the year in October', amt:0, card:'Mastercard ending 4410', skip:true}
+];
+var BILL, BRAN=false, BFIX=false;
+function resetBill(){ BILL = BILL_SEED.map(function(r){ var o={}; for(var k in r) o[k]=r[k]; o.st = r.skip?'skip':'due'; return o; }); BRAN=false; BFIX=false; }
+function stPill(st){
+  if(st==='due') return '<span class="pill waiting">'+IC.clock+'Due 1 Dec</span>';
+  if(st==='skip') return '<span class="pill auto">Skipped: paid ahead</span>';
+  if(st==='ok') return '<span class="pill approved">'+IC.check+'Charged</span>';
+  if(st==='fixed') return '<span class="pill approved">'+IC.check+'Charged on retry</span>';
+  return '<span class="pill bad">'+IC.x+'Declined</span>';
+}
+function drawBill(){
+  var h = '<div class="brow h"><div>Member</div><div>Plan</div><div>Amount</div><div>Card (held by the processor)</div><div>Status</div></div>';
+  h += BILL.map(function(r){ return '<div class="brow"><div class="pl"><b>'+r.n+'</b></div><div class="pl">'+r.pl+(r.sub?'<small>'+r.sub+'</small>':'')+'</div><div class="amt">'+(r.skip?'$0':'$'+r.amt)+'</div><div class="card">'+r.card+'</div><div class="stt">'+stPill(r.st)+'</div></div>'; }).join('');
+  $('bill').innerHTML = h;
+  var due = BILL.filter(function(r){return !r.skip;}), tot = due.reduce(function(t,r){return t+r.amt;},0);
+  var got = BILL.filter(function(r){return r.st==='ok'||r.st==='fixed';}).reduce(function(t,r){return t+r.amt;},0);
+  var bad = BILL.filter(function(r){return r.st==='bad';});
+  $('bsum').innerHTML = '<div><b>'+due.length+'</b>To charge</div><div><b>'+money(tot)+'</b>Due in this sample</div><div><b>'+(BRAN?money(got):'-')+'</b>Collected</div><div><b>'+(BRAN?bad.length:'-')+'</b>Declined</div><div><b>1</b>Skipped, prepaid annual</div>';
+  $('brun').disabled = BRAN;
+  drawFail();
+}
+function drawFail(){
+  var r = BILL.filter(function(x){return x.fails;})[0];
+  var st = !BRAN ? 0 : (BFIX ? 2 : 1);
+  var h = '<div class="panel"><span class="lab ex">Example</span><h3>When a payment fails</h3><p class="sl">'+(st===0?'Run the sample billing above to see a declined card handled.':r.n+'\'s $39 Play payment was declined on 1 December.')+'</p>';
+  h += '<ul class="tl">'+
+    '<li class="'+(st>=1?'bad':'')+'"><span class="d">'+(st>=1?IC.x:IC.card)+'</span><span><span class="w">1 Dec</span>Card declined. The member gets an email and a text with a secure link to update the card.</span></li>'+
+    '<li class="'+(st===2?'done':'')+'"><span class="d">'+(st===2?IC.check:IC.clock)+'</span><span><span class="w">4 Dec</span>First retry'+(st===2?': the updated card went through.':'.')+'</span></li>'+
+    '<li><span class="d">'+IC.clock+'</span><span><span class="w">8 Dec</span>Second retry, if still unpaid.</span></li>'+
+    '<li><span class="d">'+IC.clock+'</span><span><span class="w">After that</span>The front desk sees "Payment due" on the member card. What happens to booking is Peak\'s rule.</span></li></ul>';
+  h += '<div class="btns"><button class="btn primary" id="bfix"'+(st===1?'':' disabled')+'>Simulate: Riley updates the card</button></div>';
+  h += '<p class="sl" style="margin-top:12px">Retry days and wording are Peak\'s to set. Card updates happen on the processor\'s page, so the card number never passes through Peak\'s system.</p></div>';
+  var msgs = st===0 ? '<div class="empty">No notice yet.</div>' :
+    '<div class="ts">Text Message · 1 Dec, 10:00 AM</div><div class="bubble">Peak Pickleball: your $39 Play payment on 1 Dec didn\'t go through. Update your card here: <span class="lnk">[secure link]</span>. We\'ll try again on 4 Dec.\n\nReply STOP to opt out.</div>'+
+    (st===2 ? '<div class="ts">Text Message · 4 Dec, 9:00 AM</div><div class="bubble">Peak Pickleball: thanks, your $39 Play payment went through. You\'re all set.</div>' : '');
+  h += '<div><div class="rowlabel" style="margin-top:0">Notice to the member</div><div class="phone"><div class="ph-top"><div class="av">P</div><div class="nm">Peak Pickleball</div></div><div class="ph-body">'+msgs+'</div><div class="ph-bar">Text Message</div></div></div>';
+  $('failbox').innerHTML = h;
+}
+$('brun').addEventListener('click', function(){ BILL.forEach(function(r){ if(r.st==='due') r.st = r.fails ? 'bad' : 'ok'; }); BRAN=true; drawBill(); });
+$('breset').addEventListener('click', function(){ resetBill(); drawBill(); });
+$('failbox').addEventListener('click', function(e){ if(e.target.closest('#bfix')){ BILL.forEach(function(r){ if(r.st==='bad') r.st='fixed'; }); BFIX=true; drawBill(); } });
+
+/* ---------- 5 REPORTS ---------- */
+var SEQ = ['#eef3fa','#c9daf0','#93b5e0','#5487c9','#1f5fae','#0f2f57'];
+function seqColor(v){ if(v<10) return SEQ[0]; if(v<30) return SEQ[1]; if(v<50) return SEQ[2]; if(v<70) return SEQ[3]; if(v<90) return SEQ[4]; return SEQ[5]; }
+function scaleLegend(no){ return '<div class="scale">0%'+SEQ.map(function(c){return '<i style="background:'+c+'"></i>';}).join('')+'100% <i style="background:#f3f2ef;margin-left:10px"></i>'+no+'</div>'; }
+var DAYROWS = [[1,'Mon'],[2,'Tue'],[3,'Wed'],[4,'Thu'],[5,'Fri'],[6,'Sat'],[0,'Sun']];
+function heatmap(hours, val, tipf, no){ no = no || 'no regular session';
+  var h = '<div class="hm" style="grid-template-columns:34px repeat('+hours.length+',minmax(0,1fr))"><div></div>'+hours.map(function(x){return '<div class="hl">'+hShort(x)+'</div>';}).join('');
+  DAYROWS.forEach(function(d){
+    h += '<div class="rl">'+d[1]+'</div>';
+    hours.forEach(function(hr){ var v = val(d[0],hr);
+      if(v==null) h += '<div class="c no" data-tip="'+d[1]+' '+hLabel(hr)+': '+no+'"></div>';
+      else h += '<div class="c'+(v>=50?' dk':'')+'" style="background:'+seqColor(v)+'" data-tip="'+esc(tipf(d[1],hr,v))+'"><span>'+v+'%</span></div>';
+    });
+  });
+  return h + '</div>' + scaleLegend(no);
+}
+var OPHEAT = {"1_9":[51,96],"2_9":[50,80],"3_9":[49,85],"4_9":[50,73],"5_9":[46,90],"1_11":[54,29],"2_11":[50,5],"3_11":[49,16],"4_11":[50,5],"5_11":[52,24],"1_13":[54,3],"2_13":[53,3],"3_13":[51,13],"4_13":[51,4],"5_13":[48,8],"1_15":[20,0],"2_15":[20,1],"3_15":[20,5],"4_15":[20,1],"5_15":[29,5],"1_17":[51,75],"2_17":[47,80],"4_17":[47,54],"5_17":[2,50],"1_19":[37,6],"1_8":[47,91],"2_8":[42,64],"3_8":[41,79],"4_8":[42,37],"5_8":[41,73],"1_10":[22,93],"2_10":[21,87],"3_10":[20,89],"4_10":[20,82],"5_10":[22,87],"6_9":[45,79],"0_9":[43,18],"6_11":[52,11],"0_11":[75,3],"6_13":[45,30],"0_13":[41,24],"6_15":[29,8],"0_15":[18,28],"6_17":[22,10],"0_17":[35,6],"6_7":[25,4],"0_7":[27,2],"1_5":[17,5],"2_5":[17,5],"3_5":[16,50],"4_5":[17,3],"5_5":[17,42],"3_17":[49,81],"3_19":[30,6],"4_19":[58,6],"2_19":[40,8],"5_19":[20,11],"6_14":[4,29],"0_10":[11,3],"6_10":[10,63],"6_8":[2,6],"5_7":[13,1],"0_16":[1,75],"0_8":[2,0],"2_18":[1,54],"6_18":[1,0],"0_18":[1,0],"2_7":[9,0],"3_7":[13,0],"4_7":[9,0],"4_16":[1,0],"1_7":[14,0],"3_12":[17,1],"6_12":[1,4]};
+function drawReports(){
+  // example court use from the same sample week the booking grid uses
+  var dowToI = {}; DAYS.forEach(function(d){ dowToI[d.dow]=d.i; });
+  $('hmcourt').innerHTML = heatmap([7,8,9,10,11,12,13,14,15,16,17,18,19,20], function(dow,h){
+    if(h>openHours(dow)[openHours(dow).length-1]) return null;
+    var i=dowToI[dow], used=0; for(var c=1;c<=23;c++){ if(baseState(i,h,c)!=='free') used++; } return Math.round(used/23*100);
+  }, function(d,h,v){ return 'Example · '+d+' '+hLabel(h)+': '+v+'% of courts in use'; }, 'closed');
+  $('hmop').innerHTML = heatmap([5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], function(dow,h){ var c=OPHEAT[dow+'_'+h]; return (!c || c[0]<4) ? null : c[1]; },
+    function(d,h,v){ var c=null; DAYROWS.forEach(function(r){ if(r[1]===d) c=OPHEAT[r[0]+'_'+h]; }); return d+' '+hLabel(h)+': '+v+'% of spots filled, '+c[0]+' sessions'; });
+  var C = [['More than a day ahead',2631],['4 to 24 hours ahead',3196],['Under 4 hours (late)',488],['After the start',228]], T=6543;
+  $('cbars').innerHTML = C.map(function(x,i){ var p=Math.round(x[1]/T*100); return '<div class="bar" data-tip="'+x[0]+': '+x[1].toLocaleString('en-US')+' of 6,543 ('+p+'%)"><div class="bl"><span>'+x[0]+'</span><b>'+p+'% · '+x[1].toLocaleString('en-US')+'</b></div><div class="tr"><div class="fl'+(i===0?' lt':'')+'" style="width:'+(x[1]/3196*100)+'%"></div></div></div>'; }).join('')+
+    '<p class="sl" style="margin:4px 0 0">Light bar: cancelled more than a day ahead. Dark bars: the last 24 hours, together 60%.</p>';
+  var F = [['Took the free class',1163,'1,163'],['Paid for a plan afterwards',526,'526 (45%)'],['Still paying in October',201,'201 (17%)']];
+  $('fbars').innerHTML = F.map(function(x){ return '<div class="bar" data-tip="'+x[0]+': '+x[2]+'"><div class="bl"><span>'+x[0]+'</span><b>'+x[2]+'</b></div><div class="tr"><div class="fl" style="width:'+(x[1]/1163*100)+'%"></div></div></div>'; }).join('')+
+    '<p class="sl" style="margin:4px 0 0">About 620 never joined. A join button at the desk (section 3) and the email follow-up both aim at them.</p>';
+  $('ssplit').innerHTML = '<div style="flex:28;background:var(--accent);color:#fff" data-tip="Still paying in October: 127 of 459 (28%)">28% · 127</div><div style="flex:72;background:#dfe5ee;color:var(--ink)" data-tip="Stopped paying by October: 332 of 459 (72%)">72% · 332</div>';
+  var S = [['Joined July',58],['Joined August',52],['Joined September',61]];
+  $('sbars').innerHTML = S.map(function(x){ return '<div class="bar" data-tip="Example only: '+x[0]+', '+x[1]+'% still paying at 3 months"><div class="bl"><span>'+x[0]+'</span><b>'+x[1]+'% (example)</b></div><div class="tr"><div class="fl lt" style="width:'+x[1]+'%"></div></div></div>'; }).join('');
+}
+// tooltip
+var tip = $('tip');
+document.addEventListener('mousemove', function(e){
+  var t = e.target.closest ? e.target.closest('[data-tip]') : null;
+  if(!t){ tip.style.display='none'; return; }
+  tip.textContent = t.getAttribute('data-tip'); tip.style.display='block';
+  var x = e.clientX+14, y = e.clientY+14, w = tip.offsetWidth, hh = tip.offsetHeight;
+  if(x+w > window.innerWidth-8) x = e.clientX-w-10; if(y+hh > window.innerHeight-8) y = e.clientY-hh-10;
+  tip.style.left = Math.max(4,x)+'px'; tip.style.top = Math.max(4,y)+'px';
+});
+
+/* ---------- 6 SWITCH ---------- */
+var STEPS = [
+  ['Agree what it must do','List what Peak uses in CourtReserve today.','Go through bookings, Open Play, classes, leagues, memberships, check-in, billing and reports with Tyler and the desk, and write down what the new system must match before anything is built.'],
+  ['Build and test on made-up data','Staff try it with practice members.','A practice copy with made-up members, so the desk can try check-in, walk-ins and billing without touching a real account or card.'],
+  ['Run alongside CourtReserve','CourtReserve stays in charge.','Both run at once. CourtReserve keeps taking every booking and payment, and the branded app keeps working. The new system would show the same schedule, so Peak can compare the two side by side.'],
+  ['Try it with one group','A small pilot, by Peak\'s choice.','For example staff, or one programme such as Guided Open Play. If anything goes wrong, those players go straight back to CourtReserve.'],
+  ['Members move over','Re-enter the card once, confirm the waiver.','Saved cards usually can\'t be moved between payment processors, so each member adds their card once on the processor\'s form. Bookings and plans are carried across. Peak decides the pace.'],
+  ['Switch, only when Peak says so','CourtReserve kept until the last bill closes.','Peak picks the day. CourtReserve stays available until the last billing cycle has closed and the data has been exported and checked.']
+];
+var CHECKS = [
+  [IC.card,'Cards on file','Members re-enter cards. Saved cards usually can\'t be exported from one processor to another.'],
+  [IC.doc,'Waivers','How Peak\'s waivers are signed and stored today, and whether they carry over or are signed again.'],
+  [IC.trophy,'DUPR, leagues and ladders','Peak uses DUPR for ratings and Swish for league play. Each tie-in needs checking before a switch.'],
+  [IC.moon,'Support hours','Who answers when booking is down at 6 am on a Monday, and how fast. This has to be agreed in writing.'],
+  [IC.db,'Peak owns its data','The member list, bookings and payment history belong to Peak, with a full export whenever Peak wants it.'],
+  [IC.phone,'The branded app','Peak paid to set up the branded CourtReserve app on 10 November. It keeps working for as long as CourtReserve runs.']
+];
+var SSEL = 2;
+function drawSteps(){
+  $('steps6').innerHTML = STEPS.map(function(s,i){ return '<li><button class="'+(i===SSEL?'on':'')+'" data-st="'+i+'"><span class="dot">'+(i+1)+'</span><span class="what">'+s[0]+'<small>'+s[1]+'</small></span></button></li>'; }).join('');
+  $('stepdetail').innerHTML = '<b>Step '+(SSEL+1)+': '+STEPS[SSEL][0]+'</b>'+STEPS[SSEL][2];
+}
+$('steps6').addEventListener('click', function(e){ var b=e.target.closest('[data-st]'); if(!b) return; SSEL=+b.getAttribute('data-st'); drawSteps(); });
+$('checks').innerHTML = CHECKS.map(function(c){ return '<li><span class="ic">'+c[0]+'</span><span><b>'+c[1]+'</b><span>'+c[2]+'</span></span></li>'; }).join('');
+
+/* ---------- nav ---------- */
+var IDS = ['book','play','desk','plans','reports','switch'];
+function go(id){
+  document.querySelectorAll('section.pane').forEach(function(s){ s.classList.toggle('on', s.id===id); });
+  document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go')===id); });
+  window.scrollTo(0,0); tip.style.display='none';
+  var nb=document.querySelector('#nav button.on'); if(nb && nb.scrollIntoView && window.innerWidth<=860) nb.scrollIntoView({inline:'center',block:'nearest'});
+  if(history.replaceState) history.replaceState(null,'','#'+id);
+}
+$('nav').addEventListener('click', function(e){ var b=e.target.closest('[data-go]'); if(b) go(b.getAttribute('data-go')); });
+document.addEventListener('keydown', function(e){
+  if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable) return;
+  var k=parseInt(e.key,10); if(k>=1 && k<=6) go(IDS[k-1]);
+});
+
+resetSess(); wlReset(false); resetDesk(); resetBill();
+drawBook(); drawWL(); refreshDesk(); drawLadder(); drawUpg(); drawBill(); drawReports(); drawSteps();
+var h0=(location.hash||'').slice(1); if(IDS.indexOf(h0)>-1) go(h0);
+})();
+</script>
+</body>
+</html>
