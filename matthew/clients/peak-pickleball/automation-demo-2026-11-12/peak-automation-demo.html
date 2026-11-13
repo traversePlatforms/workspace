@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peak Pickleball: member email and text, automated (demo)</title>
+<style>
+:root{
+  --ink:#17212e; --soft:#5a6573; --faint:#8a94a1; --line:#e1e5ea; --bg:#f4f6f9; --card:#fff;
+  --accent:#1f5fae; --accent-dark:#0f2f57; --tint:#eaf1fb;
+  --ok:#1e7a4c; --ok-bg:#e6f4ec; --hold:#9a5b00; --hold-bg:#fdf1dc; --wait:#5a6573; --wait-bg:#eef0f3;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:15px;line-height:1.5}
+button{font:inherit;cursor:pointer}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* header */
+.top{background:var(--accent-dark);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.top h1{font-size:19px;margin:0;font-weight:600;letter-spacing:.1px}
+.top .sub{font-size:13px;color:#b9cbe4;margin:2px 0 0}
+.top .demo-flag{margin-left:auto;font-size:12.5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:5px 12px;color:#e6eef9}
+
+/* layout */
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 66px)}
+nav.side{background:#fff;border-right:1px solid var(--line);padding:22px 14px}
+nav.side button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:10px 12px;color:var(--soft);font-size:14.5px;margin-bottom:2px}
+nav.side button .n{width:24px;height:24px;border-radius:50%;background:var(--wait-bg);color:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex:none}
+nav.side button:hover{background:var(--bg)}
+nav.side button.on{background:var(--tint);color:var(--accent-dark);font-weight:600}
+nav.side button.on .n{background:var(--accent);color:#fff}
+nav.side .navnote{margin:22px 12px 0;font-size:12px;color:var(--faint);line-height:1.45}
+main{padding:28px 34px 40px;min-width:0}
+section.pane{display:none;max-width:1180px}
+section.pane.on{display:block}
+.pane > h2{font-size:24px;margin:0 0 4px;font-weight:600}
+.lead{color:var(--soft);margin:0 0 20px;max-width:760px}
+.src{font-size:12px;color:var(--faint);margin-top:26px;border-top:1px solid var(--line);padding-top:10px;max-width:900px}
+
+/* flow picker */
+.picker{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.pick{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 12px 10px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:104px;transition:border-color .12s, box-shadow .12s}
+.pick:hover{border-color:#b9c6d8}
+.pick.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.pick .t{font-weight:600;font-size:14px;line-height:1.3;color:var(--ink)}
+.pick .m{font-size:12px;color:var(--soft);margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pick .cnt{font-size:12px;color:var(--faint)}
+.serves{display:inline-flex;gap:4px;flex-wrap:wrap}
+.chip{display:inline-block;font-size:11.5px;font-weight:600;color:var(--accent-dark);background:var(--tint);border-radius:999px;padding:1px 8px;white-space:nowrap}
+
+/* flow detail */
+.flow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:24px;align-items:start}
+.fcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+.fcard h3{margin:0 0 4px;font-size:19px}
+.fcard .why{color:var(--soft);margin:0 0 14px;font-size:14px}
+.servesline{font-size:13px;color:var(--soft);margin:0 0 16px;display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap}
+.servesline .chip{white-space:normal}
+.rowlabel{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:14px 0 6px}
+.trigger{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:14px}
+.steps{list-style:none;margin:0;padding:0;position:relative}
+.steps:before{content:"";position:absolute;left:19px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.steps li{position:relative}
+.step{display:flex;gap:12px;align-items:center;width:100%;background:none;border:1px solid transparent;border-radius:8px;padding:7px 10px 7px 4px;text-align:left;color:var(--ink)}
+.step:hover{background:var(--bg)}
+.step.on{background:var(--tint);border-color:#c9d9ef}
+.step .dot{width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--soft);flex:none;position:relative;z-index:1}
+.step.on .dot{border-color:var(--accent);color:var(--accent);background:#fff}
+.step .when{font-size:12px;color:var(--soft);width:120px;flex:none;font-weight:600;line-height:1.3}
+.step .what{font-size:14px;line-height:1.35}
+.step .what small{display:block;color:var(--faint);font-size:12px}
+.rules{margin:0;padding-left:18px;font-size:14px}
+.rules li{margin-bottom:4px}
+.measure{font-size:14px}
+.measure .base{display:block;margin-top:4px;font-size:13px;color:var(--soft)}
+.measure .base b{color:var(--accent-dark)}
+.note-inline{font-size:12.5px;color:var(--soft);background:var(--hold-bg);border-radius:6px;padding:7px 10px;margin-top:12px}
+
+.preview-wrap{position:sticky;top:16px}
+.preview-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px;font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.legend{font-size:12px;color:var(--soft);text-transform:none;letter-spacing:0;font-weight:400}
+
+/* email preview */
+.mail{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(15,47,87,.05)}
+.mail .hdr{padding:10px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--soft);background:#fbfcfd}
+.mail .hdr div{display:flex;gap:8px;padding:1px 0}
+.mail .hdr b{color:var(--ink);font-weight:600}
+.mail .hdr .k{width:56px;color:var(--faint);flex:none}
+.mail .hdr .em-subject{color:var(--ink);font-weight:600}
+.mail .body{background:#eef1f5;padding:16px}
+.em{background:#fff;max-width:480px;margin:0 auto;border-radius:6px;overflow:hidden;font-size:14.5px;line-height:1.55}
+.em .band{background:var(--accent-dark);color:#fff;padding:14px 20px}
+.em .band .wm{font-weight:700;letter-spacing:.16em;font-size:14px}
+.em .band .tag{font-size:11px;color:#b9cbe4;letter-spacing:.04em;margin-top:2px}
+.em .band.staff{background:#4b5563}
+.em .em-body{padding:18px 20px 6px}
+.em .em-body p{margin:0 0 12px}
+.em .em-body ul{margin:0 0 12px;padding-left:18px}
+.em .em-body li{margin-bottom:6px}
+.em .em-body h4{margin:16px 0 4px;font-size:14.5px;color:var(--accent-dark)}
+.em .cta{display:inline-block;background:var(--accent);color:#fff;border-radius:6px;padding:9px 16px;font-weight:600;font-size:14px;margin:4px 0 14px;text-decoration:none}
+.em .opts{display:flex;flex-direction:column;gap:6px;margin:4px 0 14px}
+.em .opts span{border:1px solid #c9d9ef;color:var(--accent-dark);border-radius:6px;padding:7px 12px;font-size:14px}
+.em table.plans{width:100%;border-collapse:collapse;margin:4px 0 14px;font-size:13.5px}
+.em table.plans td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.em table.plans td:first-child{font-weight:600;white-space:nowrap}
+.em table.plans td.p{white-space:nowrap;color:var(--accent-dark);font-weight:600}
+.em table.plans tr.cur td{background:var(--bg)}
+.em .foot{border-top:1px solid var(--line);padding:12px 20px 16px;font-size:11.5px;color:var(--faint);line-height:1.5}
+.em .foot u{color:var(--soft)}
+.tok{background:#fff6cf;border-bottom:1px dotted #b38f00;padding:0 2px;border-radius:2px}
+.ph{background:#fff1c2;color:#7a5a00;border:1px dashed #d4a72c;border-radius:4px;padding:1px 6px;font-size:13px}
+
+/* sms preview */
+.phone{width:300px;margin:0 auto;background:#fff;border:10px solid #1d2530;border-radius:36px;overflow:hidden;box-shadow:0 2px 8px rgba(15,47,87,.12)}
+.phone .ph-top{text-align:center;padding:12px 10px 10px;border-bottom:1px solid var(--line);background:#f8f9fb}
+.phone .ph-top .av{width:38px;height:38px;border-radius:50%;background:var(--accent-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 4px;font-size:15px}
+.phone .ph-top .nm{font-size:12.5px;font-weight:600}
+.phone .ph-body{padding:14px 12px 26px;min-height:300px;background:#fff}
+.phone .ts{text-align:center;font-size:11px;color:var(--faint);margin-bottom:10px}
+.bubble{background:#e9ebef;border-radius:18px 18px 18px 6px;padding:10px 13px;font-size:14px;line-height:1.42;max-width:92%;white-space:pre-wrap}
+.bubble .lnk{color:#1a5fd0;text-decoration:underline}
+.phone .ph-bar{border-top:1px solid var(--line);padding:9px 12px;font-size:12px;color:var(--faint)}
+
+/* queue */
+.qtop{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap;margin-bottom:18px}
+.rulebox{flex:1 1 420px;background:var(--accent-dark);color:#fff;border-radius:var(--radius);padding:16px 18px}
+.rulebox b{display:block;font-size:16px;margin-bottom:4px}
+.rulebox p{margin:0;color:#c9d8ec;font-size:14px}
+.counts{display:flex;gap:10px;flex-wrap:wrap}
+.count{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;min-width:110px}
+.count b{display:block;font-size:24px;line-height:1.1}
+.count span{font-size:12.5px;color:var(--soft)}
+.count.w b{color:var(--ink)} .count.a b{color:var(--ok)} .count.h b{color:var(--hold)} .count.u b{color:var(--accent)}
+.switches{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px 8px;margin-bottom:20px}
+.switches h3{font-size:15px;margin:0 0 2px}
+.switches .sl{font-size:13px;color:var(--soft);margin:0 0 10px}
+.swgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+.swrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.swrow .nm{flex:1;font-size:14px;min-width:0}
+.swrow .nm small{display:block;color:var(--faint);font-size:12px;line-height:1.35}
+.seg{display:inline-flex;border:1px solid #c7cfda;border-radius:8px;overflow:hidden;flex:none}
+.seg button{border:0;background:#fff;padding:6px 10px;font-size:12.5px;color:var(--soft);white-space:nowrap}
+.seg button + button{border-left:1px solid #c7cfda}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.seg button:disabled{cursor:not-allowed}
+.seg.locked button.on{background:#6b7785}
+.qlist{display:flex;flex-direction:column;gap:14px}
+.qcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);display:grid;grid-template-columns:330px minmax(0,1fr);overflow:hidden}
+.qcard.st-approved{border-left:4px solid var(--ok)}
+.qcard.st-held{border-left:4px solid var(--hold)}
+.qcard.st-auto{border-left:4px solid var(--accent)}
+.qcard.st-waiting{border-left:4px solid #b7c0cc}
+.qmeta{padding:16px 18px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.qmeta .fl{font-size:12px;color:var(--soft);display:flex;gap:6px;align-items:center}
+.qmeta .tt{font-weight:600;font-size:15px;line-height:1.35}
+.qmeta .who, .qmeta .time{font-size:13.5px;color:var(--soft);display:flex;gap:7px;align-items:flex-start}
+.qmeta .who b, .qmeta .time b{color:var(--ink);font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:999px;padding:3px 10px;align-self:flex-start}
+.pill.waiting{background:var(--wait-bg);color:var(--wait)}
+.pill.approved{background:var(--ok-bg);color:var(--ok)}
+.pill.held{background:var(--hold-bg);color:var(--hold)}
+.pill.auto{background:var(--tint);color:var(--accent)}
+.qbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.btn{border:1px solid #c7cfda;background:#fff;color:var(--ink);border-radius:8px;padding:7px 13px;font-size:14px;font-weight:600;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{background:var(--bg)}
+.btn.primary{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.primary:hover{background:#18653f}
+.btn.blue{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn svg.i{width:15px;height:15px}
+.qprev{padding:14px 16px;background:#f7f8fa;position:relative;min-width:0}
+.qprev .clip{max-height:300px;overflow:hidden;position:relative}
+.qprev .clip:after{content:"";position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(rgba(247,248,250,0),#f7f8fa)}
+.qprev.open .clip{max-height:none}
+.qprev.open .clip:after{display:none}
+.qprev .more{margin-top:8px;background:none;border:0;color:var(--accent);font-weight:600;font-size:13px;padding:2px 0}
+.qprev .phone{transform:none}
+.editing [contenteditable="true"]{outline:2px dashed var(--accent);outline-offset:3px;border-radius:3px}
+.editbar{display:none;font-size:12.5px;color:var(--accent-dark);background:var(--tint);border-radius:6px;padding:6px 10px;margin-bottom:10px}
+.editing .editbar{display:block}
+.edited-tag{font-size:12px;color:var(--hold);font-weight:600}
+.log{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 18px;margin-top:20px}
+.log h3{font-size:14px;margin:0 0 6px}
+.log ul{list-style:none;margin:0;padding:0;font-size:13px;color:var(--soft);max-height:150px;overflow:auto}
+.log li{padding:3px 0;border-top:1px solid var(--line)}
+.log li:first-child{border-top:0}
+.log .tm{color:var(--faint);display:inline-block;width:64px}
+.qfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;font-size:12.5px;color:var(--faint);flex-wrap:wrap}
+
+/* impact */
+.impact{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.panel h3{margin:0 0 2px;font-size:17px}
+.panel .sl{margin:0 0 12px;font-size:13px;color:var(--soft)}
+.lab{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 8px;margin-bottom:8px}
+.lab.real{background:var(--tint);color:var(--accent-dark)}
+.lab.ex{background:var(--hold-bg);color:var(--hold)}
+table.base{width:100%;border-collapse:collapse;font-size:14px}
+table.base th{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.base td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.base td.v{font-weight:700;color:var(--accent-dark);white-space:nowrap;font-size:16px}
+table.base td.v small{display:block;font-weight:400;color:var(--soft);font-size:12px}
+table.base td.f{font-size:12.5px;color:var(--soft);white-space:nowrap}
+.slider{padding:12px 0;border-top:1px solid var(--line)}
+.slider:first-of-type{border-top:0}
+.slider .top2{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.slider .q{font-size:14px}
+.slider .q small{display:block;color:var(--faint);font-size:12px}
+.slider .val{font-weight:700;font-size:17px;color:var(--accent-dark);white-space:nowrap}
+.slider input[type=range]{width:100%;margin:8px 0 0;accent-color:var(--accent)}
+.slider .n{font-size:13px;color:var(--soft)}
+.total{background:var(--accent-dark);color:#fff;border-radius:8px;padding:14px 16px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.total span{font-size:13px;color:#c9d8ec}
+.total b{font-size:24px}
+.caveat{font-size:12.5px;color:var(--soft);margin-top:10px}
+.measure90{margin-top:18px}
+
+/* guardrails */
+.rails{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.rail{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.rail .ic{width:34px;height:34px;border-radius:8px;background:var(--tint);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.rail h3{font-size:15px;margin:0 0 4px}
+.rail p{margin:0;font-size:14px;color:var(--soft)}
+.fit{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:center}
+.fit .box{border:1px solid var(--line);border-radius:8px;padding:12px 14px;text-align:center;font-size:14px}
+.fit .box b{display:block;font-size:15px;margin-bottom:2px}
+.fit .box small{color:var(--soft)}
+.fit .box.mid{border-color:var(--accent);background:var(--tint)}
+.fit-cap{grid-column:1/-1;font-size:13px;color:var(--soft);margin:0}
+
+/* elsewhere */
+.else{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.else .rail p{color:var(--ink)}
+.else .rail ul{margin:8px 0 0;padding-left:18px;font-size:14px;color:var(--soft)}
+.same{margin-top:18px;background:var(--accent-dark);color:#fff;border-radius:var(--radius);padding:18px 20px}
+.same b{font-size:16px;display:block;margin-bottom:4px}
+.same p{margin:0;color:#c9d8ec}
+
+/* responsive */
+@media (max-width:1280px){
+  .picker{grid-template-columns:repeat(3,1fr)}
+  .pick{min-height:0}
+}
+@media (max-width:1100px){
+  .flow{grid-template-columns:1fr}
+  .preview-wrap{position:static}
+  .impact{grid-template-columns:1fr}
+  .rails{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .swgrid{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .top{padding:12px 16px}
+  .top .demo-flag{margin-left:0}
+  .shell{grid-template-columns:1fr}
+  nav.side{position:sticky;top:0;z-index:5;display:flex;overflow-x:auto;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line);gap:4px}
+  nav.side button{width:auto;white-space:nowrap;margin:0;padding:8px 10px;font-size:13.5px}
+  nav.side .navnote{display:none}
+  main{padding:18px 14px 30px}
+  .pane > h2{font-size:21px}
+  .picker{grid-template-columns:repeat(2,1fr);gap:8px}
+  .fcard{padding:16px}
+  .qcard{grid-template-columns:1fr}
+  .qmeta{border-right:0;border-bottom:1px solid var(--line)}
+  .counts{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .swrow{flex-wrap:wrap;gap:6px 12px}
+  .swrow .nm{flex-basis:100%}
+  .rails,.else{grid-template-columns:1fr}
+  .fit{grid-template-columns:1fr}
+  .step .when{width:84px}
+  .mail .body{padding:10px}
+  .em .em-body{padding:16px 14px 4px}
+  .em .foot{padding:12px 14px 14px}
+  table.base td.f{white-space:normal}
+}
+@media (max-width:400px){
+  .phone{width:100%;max-width:290px}
+  .seg button{padding:6px 8px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>Peak Pickleball: member email and text, automated</h1>
+    <p class="sub">Working demo for Tyler · 13 November 2026 · Matthew Sharpe</p>
+  </div>
+  <div class="demo-flag">Demo: sample messages and made-up members. Nothing on this page sends.</div>
+</header>
+
+<div class="shell">
+  <nav class="side" id="nav">
+    <button data-go="flows" class="on"><span class="n">1</span>The flows</button>
+    <button data-go="queue"><span class="n">2</span>Approval queue</button>
+    <button data-go="impact"><span class="n">3</span>What it could mean</button>
+    <button data-go="rules"><span class="n">4</span>How it's handled</button>
+    <button data-go="else"><span class="n">5</span>Already running</button>
+    <p class="navnote">Keys 1 to 5 switch sections.</p>
+  </nav>
+
+  <main>
+    <!-- 1 FLOWS -->
+    <section class="pane on" id="flows">
+      <h2>The flows</h2>
+      <p class="lead">Six automations, each tied to one of the six places to grow from Peak's Year Review and Plan. Pick a flow, then click any step to see the message it sends.</p>
+      <div class="picker" id="picker"></div>
+      <div class="flow">
+        <div class="fcard" id="fdetail"></div>
+        <div class="preview-wrap">
+          <div class="preview-head"><span id="pvlabel">Preview</span><span class="legend"><span class="tok">Highlighted</span> = filled in for each person from CourtReserve</span></div>
+          <div id="fpreview"></div>
+        </div>
+      </div>
+      <p class="src">Numbers on this page: Peak's Year Review and Plan (4 Nov 2026), from Peak's CourtReserve data, 1 Nov 2025 to 31 Oct 2026. Plan prices and rules: Peak's membership page (read Oct 2026) and Tyler's answers of 11 Nov 2026. Members named in the samples are made up.</p>
+    </section>
+
+    <!-- 2 QUEUE -->
+    <section class="pane" id="queue">
+      <h2>Approval queue</h2>
+      <p class="lead">Every message waits here until someone at Peak approves it. Approve sends it at the time shown. Edit changes the wording, and an edited message needs approving again. Hold keeps it back until it is released.</p>
+      <div class="qtop">
+        <div class="rulebox"><b>Nothing goes out without Approve.</b><p>The only exception is a flow Peak switches to "Send automatically" below. Held messages never send, in either mode.</p></div>
+        <div class="counts" id="counts"></div>
+      </div>
+      <div class="switches">
+        <h3>How each flow sends</h3>
+        <p class="sl">Every flow starts on "Hold for approval". Peak can switch one to automatic once it trusts the wording, and switch it back at any time.</p>
+        <div class="swgrid" id="swgrid"></div>
+      </div>
+      <div class="qlist" id="qlist"></div>
+      <div class="qfoot"><span>Sample queue for the week of 16 November. The recipient counts are examples, not Peak's lists.</span><button class="btn" id="resetq">Reset the demo</button></div>
+      <div class="log"><h3>Activity</h3><ul id="log"><li><span class="tm">-</span>No actions yet. Try Approve, Edit or Hold on a message above.</li></ul></div>
+    </section>
+
+    <!-- 3 IMPACT -->
+    <section class="pane" id="impact">
+      <h2>What it could mean for Peak</h2>
+      <p class="lead">On the left, Peak's own numbers: the starting point each flow would be measured against. On the right, examples worked out with the same arithmetic as the plan. The examples are not forecasts.</p>
+      <div class="impact">
+        <div class="panel">
+          <span class="lab real">Peak's 2025-26 numbers</span>
+          <h3>Where things stand now</h3>
+          <p class="sl">1 Nov 2025 to 31 Oct 2026, from Peak's CourtReserve data.</p>
+          <table class="base">
+            <thead><tr><th>Measure</th><th>Now</th><th>Flow</th></tr></thead>
+            <tbody>
+              <tr><td>Free Learn to Play players who went on to pay for a plan</td><td class="v">45%<small>526 of 1,163</small></td><td class="f">Free-class follow-up</td></tr>
+              <tr><td>Free-class players who never joined</td><td class="v">about 620</td><td class="f">Free-class follow-up</td></tr>
+              <tr><td>Starter members who started by May and were still paying in October</td><td class="v">28%<small>127 of 459</small></td><td class="f">Welcome series,<br>We miss you</td></tr>
+              <tr><td>People who paid the $35 Starter rate this year (typical stay about 3 months)</td><td class="v">606</td><td class="f">Welcome series</td></tr>
+              <tr><td>Starter members who moved up to a higher plan</td><td class="v">about 40<small>of 606</small></td><td class="f">Next step for Starter</td></tr>
+              <tr><td>Peak Flex members ($99 a month, on sale since 1 Oct)</td><td class="v">6</td><td class="f">Next step for Starter</td></tr>
+              <tr><td>Open Play waitlist sign-ups that never got a spot</td><td class="v">about 1,400</td><td class="f">Reminders and open spots</td></tr>
+              <tr><td>Open Play cancellations made in the last 24 hours</td><td class="v">60%</td><td class="f">Reminders and open spots</td></tr>
+            </tbody>
+          </table>
+          <p class="caveat measure90">How we'd measure it: in 90 days, pull the same CourtReserve reports and compare against this column.</p>
+        </div>
+        <div class="panel">
+          <span class="lab ex">Example only</span>
+          <h3>What a few moves would add each month</h3>
+          <p class="sl">Drag to try other numbers. Each line is plain arithmetic on Peak's list prices.</p>
+          <div class="slider">
+            <div class="top2"><div class="q">Starter members who move to Peak Flex<small>$99 − $35 = $64 more a month each</small></div><div class="val" id="v1"></div></div>
+            <input type="range" id="s1" min="0" max="50" value="10" aria-label="Starter members who move to Flex"><div class="n" id="n1"></div>
+          </div>
+          <div class="slider">
+            <div class="top2"><div class="q">Starter members who move to Unlimited<small>$159 − $35 = $124 more a month each (upgrades pay the $159 list price)</small></div><div class="val" id="v2"></div></div>
+            <input type="range" id="s2" min="0" max="50" value="10" aria-label="Starter members who move to Unlimited"><div class="n" id="n2"></div>
+          </div>
+          <div class="slider">
+            <div class="top2"><div class="q">Free-class players who join on Starter after the follow-up<small>$35 a month each, before any court fees</small></div><div class="val" id="v3"></div></div>
+            <input type="range" id="s3" min="0" max="50" value="10" aria-label="Free-class players who join Starter"><div class="n" id="n3"></div>
+          </div>
+          <div class="total"><span>Example total, added dues per month</span><b id="vt"></b></div>
+          <p class="caveat">The plan's own figures: every 10 Starter members who move to Flex add $640 a month; every 10 who move to Unlimited add $1,240 at the $159 list price. These are examples to show the scale, not results anyone has measured.</p>
+        </div>
+      </div>
+      <p class="src">Peak's 2025-26 numbers: Year Review and Plan, 4 Nov 2026 (Peak's CourtReserve reports and read-only API data, 1 Nov 2025 to 31 Oct 2026). Prices: Peak's membership page; $159 for Starter upgrades per Tyler, 11 Nov 2026.</p>
+    </section>
+
+    <!-- 4 RULES -->
+    <section class="pane" id="rules">
+      <h2>How it's handled</h2>
+      <p class="lead">The rules every flow runs under, whatever it sends.</p>
+      <div class="rails" id="rails"></div>
+      <div class="fit">
+        <div class="box"><b>CourtReserve</b><small>Members, bookings, billing. Stays the system of record.</small></div>
+        <div class="box mid"><b>The flows</b><small>Read who joined, booked or went quiet, then draft the right message.</small></div>
+        <div class="box"><b>Peak approves</b><small>Then it sends from Peak's name, to people who opted in.</small></div>
+        <p class="fit-cap">Today Peak's email and text go through Patch Retention ($499 a month, per Tyler on 11 Nov). These flows are that kind of work: they sit beside CourtReserve and never replace it.</p>
+      </div>
+      <p class="src">Cancellation rules (4 hours for Open Play and courts, 24 hours for classes, $10 late fee for University classes): Peak's website and Tyler, 11 Nov 2026.</p>
+    </section>
+
+    <!-- 5 ELSEWHERE -->
+    <section class="pane" id="else">
+      <h2>Already running elsewhere</h2>
+      <p class="lead">This isn't a new idea being tried on Peak. I already run automated, approval-first email systems for other businesses. The same pieces would carry over.</p>
+      <div class="else" id="elsewhere"></div>
+      <div class="same"><b>The same approach for Peak</b><p>Drafted, approved, then sent. A flow only runs on its own once Peak says so, and anyone can be taken off any list at once.</p></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- icons ---------- */
+var IC = {
+  mail:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>',
+  text:'<svg class="i" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-5 4v-4H4z"/></svg>',
+  staff:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.8 4.2-5.6 7.5-5.6s6.1 1.8 7.5 5.6"/></svg>',
+  bolt:'<svg class="i" viewBox="0 0 24 24"><path d="M13 2.5L4.5 13.5h6.5l-1 8 8.5-11h-6.5z"/></svg>',
+  stop:'<svg class="i" viewBox="0 0 24 24"><path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M9 12h6"/></svg>',
+  chart:'<svg class="i" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M6 20v-6M11 20V8M16 20v-9M21 20V5" /></svg>',
+  check:'<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  pause:'<svg class="i" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg>',
+  pencil:'<svg class="i" viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg>',
+  people:'<svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c1-3 3-4.6 5.5-4.6s4.5 1.6 5.5 4.6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.6c2.3 0 4 1.3 5 4.4"/></svg>',
+  clock:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  shield:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"/></svg>',
+  out:'<svg class="i" viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></svg>',
+  moon:'<svg class="i" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 019.5 5a7.5 7.5 0 109.5 9.5z"/></svg>',
+  gauge:'<svg class="i" viewBox="0 0 24 24"><path d="M4 18a8 8 0 1116 0"/><path d="M12 18l4-6"/></svg>',
+  db:'<svg class="i" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6"/><path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>',
+  send:'<svg class="i" viewBox="0 0 24 24"><path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/></svg>',
+  news:'<svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>',
+  grid:'<svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>'
+};
+
+var GROW = {
+  1:"1 · Keep new members past the first few months",
+  2:"2 · Give Starter members a next step",
+  3:"3 · Follow up with free-class players who didn't join",
+  4:"4 · Rebalance the Open Play schedule",
+  5:"5 · Free up spots earlier for the waitlist",
+  6:"6 · Advertise the quiet times"
+};
+function t(s){ return '<span class="tok">'+s+'</span>'; }
+function L(s){ return '<span class="lnk">'+(s||'[booking link]')+'</span>'; }
+var STOP = '\n\nReply STOP to opt out.';
+var ADDR = 'Peak Pickleball · 1730 Briargate Blvd, Colorado Springs, CO 80920';
+
+/* ---------- flows ---------- */
+var FLOWS = [
+ { id:'welcome', name:'Welcome series', short:'New member, first 3 months', serves:[1],
+   why:'New members typically stayed about three months. This series covers exactly that window, so each new member has a reason to keep coming back.',
+   trigger:'A new membership starts in CourtReserve, on any plan.',
+   stops:['Ends at day 90.','Stops at once if the membership ends.','Skips any step the member has already done (for example, the Guided Open Play text if they have already booked it).'],
+   measure:'Share of new members still paying after three months.',
+   base:'Now: <b>28%</b> of members who started on Starter by May were still paying in October.',
+   steps:[
+    {when:'Day 0', ch:'email', title:'Welcome to Peak', to:'Jordan R.', subject:'Welcome to Peak, '+t('Jordan'),
+     body:'<p>Hi '+t('Jordan')+',</p><p>Welcome to Peak Pickleball. Your '+t('Starter')+' membership is active. Here is how to make the most of your first few weeks:</p><ul><li><b>Book in the CourtReserve app.</b> Courts are '+t('$7 an hour')+' on your plan.</li><li><b>Guided Open Play is free</b> and the easiest next step after Learn to Play.</li><li><b>Social Play</b> is the session that fills best, so book a few days ahead.</li></ul><p>We are open 7 am to 9 pm on weekdays and 7 am to 8 pm at weekends. Questions? Reply to this email or ask at the front desk.</p><span class="cta">See this week\'s sessions</span><p>See you on the courts,<br>The Peak team</p>'},
+    {when:'Day 3', ch:'text', title:'Guided Open Play nudge', to:'Jordan R.',
+     sms:'Hi '+t('Jordan')+', it\'s Peak Pickleball. Guided Open Play is free and a good next step after Learn to Play. Pick a time: '+L()+STOP},
+    {when:'Day 14', ch:'email', title:'Find your regular game', to:'Jordan R.', subject:'Two weeks in: find your regular game',
+     body:'<p>Hi '+t('Jordan')+',</p><p>A regular time and a few familiar faces make it easy to keep playing. Three ways to find yours:</p><ul><li><b>Social Play</b> for relaxed games and meeting regulars.</li><li><b>Leagues and ladders</b> if you like a fixed night and a bit of competition.</li><li><b>Guided Open Play</b> if you want more games at your own pace.</li></ul><span class="cta">Find a session</span><p>The Peak team</p>'},
+    {when:'Day 30', ch:'email', title:'Your first month', to:'Jordan R.', subject:'Your first month at Peak',
+     body:'<p>Hi '+t('Jordan')+',</p><p>You have played '+t('5 times')+' since you joined. Nice start.</p><p>Ready to build on Learn to Play? Peak Pickleball University 101 and 102 take you through the next steps with a coach.</p><span class="cta">See University classes</span><p>The Peak team</p>'},
+    {when:'Day 60', ch:'text', title:'How is it going?', to:'Jordan R.',
+     sms:'Hi '+t('Jordan')+', two months at Peak. How is it going? Reply with anything we could do better and the front desk will read it.'+STOP},
+    {when:'Day 90', ch:'email', title:'One quick question', to:'Jordan R.', subject:'Three months at Peak: one quick question',
+     body:'<p>Hi '+t('Jordan')+',</p><p>You have been with us three months. What would make Peak better for you? Tap one:</p><div class="opts"><span>More session times that suit me</span><span>Players at my level</span><span>More coaching</span><span>It\'s great as it is</span><span>Something else</span></div><p>Your answer goes straight to the Peak team.</p>'}
+   ]},
+ { id:'starter', name:'Next step for Starter', short:'Flex or Unlimited, a few months in', serves:[2],
+   why:'Starter is where most members begin, but only about 40 of 606 moved up. Starter members typically stayed about three months, so this arrives before that point.',
+   trigger:'A Starter member reaches week 8 and is still booking. Members who mostly play afternoons or Sundays see Flex first; morning and evening players see Unlimited first.',
+   stops:['Stops the moment they change plan.','Ends after week 11.','Runs once per member in any six months.'],
+   measure:'Starter members who move up to a higher plan, and Flex members.',
+   base:'Now: about <b>40 of 606</b> Starter members moved up; <b>6</b> Flex members since 1 October.',
+   steps:[
+    {when:'Week 8', ch:'email', title:'Your next step at Peak', to:'Sam T.', subject:'Your next step at Peak, '+t('Sam'),
+     body:'<p>Hi '+t('Sam')+',</p><p>You have been playing at Peak for two months. Here is how the plans compare, so you can pick what fits how you play.</p><table class="plans"><tr class="cur"><td>Starter (yours)</td><td class="p">$35/mo</td><td>Courts $7 an hour</td></tr><tr><td>Peak Flex</td><td class="p">$99/mo</td><td>No court fees, Monday to Saturday 12 to 5 pm and all day Sunday</td></tr><tr><td>Peak Unlimited</td><td class="p">$159/mo</td><td>No court fees, any time. Book 10 days ahead. 12 guest passes a year</td></tr></table><p>'+t('Most of your games have been in the afternoon, so Flex is the one to look at.')+'</p><span class="cta">Compare plans</span><p>The Peak team</p>'},
+    {when:'Week 9', ch:'text', title:'Flex reminder', to:'Sam T.',
+     sms:'Hi '+t('Sam')+', it\'s Peak. You played '+t('3 afternoons')+' this month. Peak Flex covers Monday to Saturday 12 to 5 pm and all day Sunday for $99 a month, with no court fees. Details: '+L('[plan link]')+STOP},
+    {when:'Week 11', ch:'email', title:'Questions about plans?', to:'Sam T.', subject:'Questions about Flex or Unlimited?',
+     body:'<p>Hi '+t('Sam')+',</p><p>If you are weighing up Flex or Unlimited, reply to this email and the front desk will answer, or ask next time you are in. You can switch plans in the CourtReserve app or at the desk.</p><p>This is the last note about plans for now.</p><p>The Peak team</p>'}
+   ]},
+ { id:'freeclass', name:'Free-class follow-up', short:'Learn to Play players who haven\'t joined', serves:[3],
+   why:'Most people who join after Learn to Play do it within a day, and five in six within a week. About 620 never joined. This picks up the ones who didn\'t join on the day.',
+   trigger:'Took the free Learn to Play class and hasn\'t bought a plan by the next day.',
+   stops:['Stops the moment they buy any plan.','Skips the Guided Open Play steps if they have already booked it.','Ends at day 14.'],
+   measure:'Free-class players who go on to pay for a plan.',
+   base:'Now: <b>45%</b> (526 of 1,163); about <b>620</b> never joined.',
+   note:'Peak decides whether Starter is offered this way. The plan left that choice with Peak.',
+   steps:[
+    {when:'Day 1', ch:'email', title:'Thanks for coming', to:'Alex M.', subject:'Thanks for coming to Learn to Play, '+t('Alex'),
+     body:'<p>Hi '+t('Alex')+',</p><p>Thanks for coming to Learn to Play on '+t('Saturday')+'. The best way to keep the momentum is to get some games in while it is fresh.</p><p><b>Guided Open Play is free</b> and made for exactly this point: real games, at a gentle pace.</p><span class="cta">Book Guided Open Play</span><p>See you soon,<br>The Peak team</p>'},
+    {when:'Day 3', ch:'text', title:'Guided Open Play', to:'Alex M.',
+     sms:'Hi '+t('Alex')+', it\'s Peak Pickleball. Ready for more after Learn to Play? Guided Open Play is free. Pick a time: '+L()+STOP},
+    {when:'Day 7', ch:'email', title:'The Starter plan', to:'Alex M.', subject:'Keep playing for $35 a month',
+     body:'<p>Hi '+t('Alex')+',</p><p>Learn to Play players can join Peak on the <b>Starter plan: $35 a month</b>, with courts at $7 an hour instead of the $12 drop-in rate.</p><span class="cta">Join on Starter</span><p>Or ask at the front desk next time you are in.</p><p>The Peak team</p>'},
+    {when:'Day 14', ch:'text', title:'Last note', to:'Alex M.',
+     sms:'Hi '+t('Alex')+', last note from Peak: the $35 Starter plan is open to Learn to Play players. Join here '+L('[join link]')+' or at the front desk.'+STOP}
+   ]},
+ { id:'reminders', name:'Reminders and open spots', short:'Day-before reminders, "a spot opened" texts', serves:[5,4],
+   why:'60% of Open Play cancellations come in the last 24 hours, and about 1,400 waitlist sign-ups never got a spot. A reminder with a one-tap cancel gets unused spots back to the waitlist sooner.',
+   trigger:'A booking for tomorrow (Open Play) or in two days (classes, so there is still time inside the 24-hour rule). A spot opening on a full session.',
+   stops:['Only for bookings the member made.','No reminder if they booked in the last 24 hours.','If CourtReserve already sends a waitlist notice, Peak keeps that one and this step stays off.'],
+   measure:'Open Play cancellations made in the last 24 hours, and waitlist sign-ups that never get a spot.',
+   base:'Now: <b>60%</b> of cancellations in the last 24 hours; about <b>1,400</b> waitlist sign-ups never got a spot.',
+   steps:[
+    {when:'Day before, 5 pm', ch:'text', title:'Open Play reminder', to:'Casey L.',
+     sms:'Reminder from Peak: Open Play tomorrow, '+t('Mon 16 Nov, 8:00 am')+'. Can\'t make it? Cancel here so the next person on the waitlist gets your spot: '+L('[cancel link]')+'. Please cancel at least 4 hours ahead.'+STOP},
+    {when:'2 days before', ch:'email', title:'Class reminder', to:'Casey L.', subject:'Your class on '+t('Wednesday')+': '+t('University 102, 6:00 pm'),
+     body:'<p>Hi '+t('Casey')+',</p><p>You are booked for '+t('Peak Pickleball University 102')+' on '+t('Wednesday 18 Nov at 6:00 pm')+'.</p><p>If you can\'t make it, please cancel by '+t('Tuesday at 6:00 pm')+' (24 hours ahead). That avoids the $10 late fee, and someone on the waitlist can take your place.</p><span class="cta">Cancel or change</span><p>The Peak team</p>'},
+    {when:'When a spot opens', ch:'text', title:'A spot opened', to:'Casey L.',
+     sms:'A spot just opened in Open Play, '+t('Mon 16 Nov, 8:00 am')+', at Peak. First to claim it gets it: '+L('[claim link]')+STOP}
+   ]},
+ { id:'missyou', name:'We miss you', short:'Check-in when a member stops booking', serves:[1],
+   why:'A member who stops booking usually stops paying later. This reaches them while they are still a member, and hands the hard cases to a person.',
+   trigger:'A paying member who usually plays every week hasn\'t booked in 14 days.',
+   stops:['Stops the moment they book anything.','Not in a member\'s first two weeks (the welcome series covers that).','Once per member in any 90 days.'],
+   measure:'Members still paying three months on, and why members drift away.',
+   base:'Peak\'s cancellation reason field is optional and often blank (Tyler, 11 Nov), so the answers here add a second source.',
+   steps:[
+    {when:'Day 14', ch:'text', title:'Friendly check-in', to:'Riley K.',
+     sms:'Hi '+t('Riley')+', it\'s Peak. We haven\'t seen you on the courts for a couple of weeks. Here\'s what\'s open this week if you want an easy way back: '+L()+STOP},
+    {when:'Day 21', ch:'email', title:'Everything OK?', to:'Riley K.', subject:'Everything OK, '+t('Riley')+'?',
+     body:'<p>Hi '+t('Riley')+',</p><p>We noticed you haven\'t booked in a few weeks. No pressure. We would just like to know if there is something we can do. Tap one:</p><div class="opts"><span>Busy lately</span><span>The times don\'t suit me</span><span>Looking for players at my level</span><span>Taking a break or injured</span><span>Something else</span></div><p>Your answer goes to the Peak team.</p>'},
+    {when:'Day 30', ch:'staff', title:'List for the front desk', to:'Peak front desk', subject:'3 members to call this week',
+     body:'<p>These members usually play every week, haven\'t booked in 30 days and haven\'t answered the check-in. Each has had a text and an email.</p><table class="plans"><tr><td>'+t('Riley K.')+'</td><td>'+t('Play')+'</td><td>Last played '+t('14 Oct')+'</td></tr><tr><td>'+t('Taylor B.')+'</td><td>'+t('Unlimited')+'</td><td>Last played '+t('12 Oct')+'</td></tr><tr><td>'+t('Quinn S.')+'</td><td>'+t('Starter')+'</td><td>Last played '+t('10 Oct')+'</td></tr></table><p>The next step is a short call from someone they know at the desk.</p>'}
+   ]},
+ { id:'newsletter', name:'Monthly newsletter', short:'Approved issue by issue', serves:[1,4],
+   why:'Keeps members in touch between visits, and points them to the quiet times so busy slots ease.',
+   trigger:'The 1st of each month, to members and players who opted in. The draft is ready for review on the 25th.',
+   stops:['Every issue is approved on its own. This flow can\'t be switched to automatic.','Anyone who unsubscribes is off the list at once.'],
+   measure:'Bookings that came from the newsletter\'s links.',
+   base:'Quiet times from the plan: early mornings, and 3 to 5 pm on Monday, Tuesday, Thursday and Friday.',
+   steps:[
+    {when:'25th', ch:'staff', title:'Draft ready for review', to:'Tyler', subject:'December newsletter ready for your review',
+     body:'<p>The December issue is drafted and waiting in the approval queue.</p><ul><li>Three spaces need Peak\'s input: events, holiday hours, a photo.</li><li>It sends on Tuesday 1 December at 9:00 am, but only after you approve it.</li></ul><span class="cta">Open the approval queue</span>'},
+    {when:'1st, 9 am', ch:'email', title:'The issue itself', to:'Morgan P.', subject:'December at Peak',
+     body:'<p>Hi '+t('Morgan')+',</p><p>Here is what is on at Peak this month.</p><h4>Easy courts to get</h4><p>Early mornings and weekday afternoons from 3 to 5 pm (Monday, Tuesday, Thursday and Friday) are the quietest times at Peak. Peak Flex covers Monday to Saturday 12 to 5 pm and all day Sunday for $99 a month.</p><h4>This month</h4><p><span class="ph">Peak adds December\'s events, leagues and classes</span></p><h4>Holiday notes</h4><p>Guest passes can\'t be used from 18 December to 1 January. <span class="ph">Peak confirms holiday hours</span></p><p><span class="ph">A photo from the month</span></p><span class="cta">See December\'s sessions</span><p>The Peak team</p>'}
+   ]}
+];
+var FLOWMAP = {}; FLOWS.forEach(function(f){ FLOWMAP[f.id]=f; });
+
+/* ---------- renderers ---------- */
+function chIcon(ch){ return ch==='email'?IC.mail:ch==='text'?IC.text:IC.staff; }
+function chName(ch){ return ch==='email'?'Email':ch==='text'?'Text':'To Peak staff'; }
+
+function renderEmail(step, ov){
+  var staff = step.ch==='staff';
+  var subj = ov && ov.subject!=null ? ov.subject : step.subject;
+  var body = ov && ov.body!=null ? ov.body : step.body;
+  return '<div class="mail"><div class="hdr">'+
+    '<div><span class="k">From</span><b>Peak Pickleball</b></div>'+
+    '<div><span class="k">To</span>'+(staff? step.to : t(step.to))+'</div>'+
+    '<div><span class="k">Subject</span><span class="em-subject" data-edit="subject">'+subj+'</span></div></div>'+
+    '<div class="body"><div class="em">'+
+      '<div class="band'+(staff?' staff':'')+'"><div class="wm">PEAK PICKLEBALL</div><div class="tag">'+(staff?'Internal: for Peak staff, never sent to members':'Learn. Play. Connect. Belong.')+'</div></div>'+
+      '<div class="em-body" data-edit="body">'+body+'</div>'+
+      (staff?'':'<div class="foot">'+ADDR+'<br>You are getting this because you are a Peak member or player and opted in to email. <u>Unsubscribe</u> · <u>Email preferences</u></div>')+
+    '</div></div></div>';
+}
+function renderSms(step, ov){
+  var body = ov && ov.body!=null ? ov.body : step.sms;
+  return '<div class="phone"><div class="ph-top"><div class="av">P</div><div class="nm">Peak Pickleball</div></div>'+
+    '<div class="ph-body"><div class="ts">Text Message · '+(step.when.indexOf('5 pm')>-1?'5:00 PM':'10:00 AM')+'</div>'+
+    '<div class="bubble" data-edit="body">'+body+'</div></div><div class="ph-bar">Text Message</div></div>';
+}
+function renderMsg(step, ov){ return step.ch==='text' ? renderSms(step, ov) : renderEmail(step, ov); }
+
+/* ---------- section 1: flows ---------- */
+var curFlow = 'welcome', curStep = 0;
+function drawPicker(){
+  document.getElementById('picker').innerHTML = FLOWS.map(function(f){
+    var nE=0,nT=0,nS=0; f.steps.forEach(function(s){ if(s.ch==='email')nE++; else if(s.ch==='text')nT++; else nS++; });
+    var parts=[]; if(nE)parts.push(nE+' email'+(nE>1?'s':'')); if(nT)parts.push(nT+' text'+(nT>1?'s':'')); if(nS)parts.push(nS+' to staff');
+    return '<button class="pick'+(f.id===curFlow?' on':'')+'" data-flow="'+f.id+'"><span class="t">'+f.name+'</span><span style="font-size:12.5px;color:var(--soft);line-height:1.35">'+f.short+'</span><span class="m"><span class="serves">'+f.serves.map(function(n){return '<span class="chip">Grow #'+n+'</span>';}).join('')+'</span></span><span class="cnt">'+parts.join(' · ')+'</span></button>';
+  }).join('');
+}
+function drawFlow(){
+  var f = FLOWMAP[curFlow];
+  var h = '<h3>'+f.name+'</h3><p class="why">'+f.why+'</p>';
+  h += '<div class="servesline">Serves: '+f.serves.map(function(n){return '<span class="chip">'+GROW[n]+'</span>';}).join(' ')+'</div>';
+  h += '<div class="rowlabel">'+IC.bolt+'Starts when</div><div class="trigger">'+f.trigger+'</div>';
+  h += '<div class="rowlabel">'+IC.clock+'Steps (click one to preview)</div><ul class="steps">';
+  f.steps.forEach(function(s,i){
+    h += '<li><button class="step'+(i===curStep?' on':'')+'" data-step="'+i+'"><span class="dot">'+chIcon(s.ch)+'</span><span class="when">'+s.when+'</span><span class="what">'+s.title+'<small>'+chName(s.ch)+'</small></span></button></li>';
+  });
+  h += '</ul>';
+  h += '<div class="rowlabel">'+IC.stop+'Stops when</div><ul class="rules">'+f.stops.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>';
+  h += '<div class="rowlabel">'+IC.chart+'What it measures</div><div class="measure">'+f.measure+'<span class="base">'+f.base+'</span></div>';
+  if(f.note) h += '<div class="note-inline">'+f.note+'</div>';
+  document.getElementById('fdetail').innerHTML = h;
+  var s = f.steps[curStep];
+  document.getElementById('pvlabel').textContent = 'Preview · '+s.when+' · '+chName(s.ch);
+  document.getElementById('fpreview').innerHTML = renderMsg(s);
+}
+document.getElementById('picker').addEventListener('click', function(e){
+  var b = e.target.closest('[data-flow]'); if(!b) return;
+  curFlow = b.getAttribute('data-flow'); curStep = 0; drawPicker(); drawFlow();
+});
+document.getElementById('fdetail').addEventListener('click', function(e){
+  var b = e.target.closest('[data-step]'); if(!b) return;
+  curStep = +b.getAttribute('data-step'); drawFlow();
+  if(window.innerWidth<=1100){ var pw=document.querySelector('.preview-wrap'); if(pw && pw.scrollIntoView) pw.scrollIntoView({block:'start'}); }
+});
+
+/* ---------- section 2: queue ---------- */
+var QSEED = [
+  {id:'q1', flow:'welcome',   step:0, who:'9 new members',                         when:'Mon 16 Nov · 10:00 am'},
+  {id:'q2', flow:'freeclass', step:0, who:'14 free-class players who haven\'t joined', when:'Mon 16 Nov · 11:00 am'},
+  {id:'q3', flow:'reminders', step:0, who:'186 Open Play bookings for Tue 17 Nov',  when:'Mon 16 Nov · 5:00 pm'},
+  {id:'q4', flow:'starter',   step:0, who:'38 Starter members at week 8',           when:'Tue 17 Nov · 10:00 am'},
+  {id:'q5', flow:'missyou',   step:0, who:'11 members with no booking in 14 days',  when:'Wed 18 Nov · 12:00 pm'},
+  {id:'q6', flow:'freeclass', step:1, who:'12 free-class players',                  when:'Wed 18 Nov · 4:00 pm'},
+  {id:'q7', flow:'newsletter',step:1, who:'1,250 opted-in members and players',     when:'Tue 1 Dec · 9:00 am'}
+];
+var Q, MODE, editingId, openIds;
+function resetState(){
+  Q = QSEED.map(function(x){ return {id:x.id, flow:x.flow, step:x.step, who:x.who, when:x.when, status:'waiting', edited:false, ov:null}; });
+  MODE = {}; FLOWS.forEach(function(f){ MODE[f.id]='hold'; });
+  editingId = null; openIds = {};
+}
+resetState();
+function eff(q){
+  if(q.status==='held') return 'held';
+  if(MODE[q.flow]==='auto') return 'auto';
+  return q.status==='approved' ? 'approved' : 'waiting';
+}
+function stepOf(q){ return FLOWMAP[q.flow].steps[q.step]; }
+function titleOf(q){
+  var s = stepOf(q); var subj = (q.ov && q.ov.subject!=null) ? q.ov.subject : s.subject;
+  if(s.ch==='text') return s.title;
+  var d=document.createElement('div'); d.innerHTML=subj; return d.textContent;
+}
+function plainTitle(q){ return titleOf(q); }
+
+function drawSwitches(){
+  document.getElementById('swgrid').innerHTML = FLOWS.map(function(f){
+    var locked = f.id==='newsletter';
+    var hint = locked ? 'Always approved issue by issue' : f.id==='reminders' ? 'Usually switched to automatic once the wording is approved: a reminder held for approval arrives late' : f.short;
+    return '<div class="swrow"><div class="nm">'+f.name+'<small>'+hint+'</small></div>'+
+      '<div class="seg'+(locked?' locked':'')+'" data-sw="'+f.id+'">'+
+      '<button data-mode="hold" class="'+(MODE[f.id]==='hold'?'on':'')+'"'+(locked?' disabled':'')+'>Hold for approval</button>'+
+      '<button data-mode="auto" class="'+(MODE[f.id]==='auto'?'on':'')+'"'+(locked?' disabled title="The newsletter is always approved issue by issue"':'')+'>Send automatically</button></div></div>';
+  }).join('');
+}
+function drawCounts(){
+  var c={waiting:0,approved:0,held:0,auto:0}; Q.forEach(function(q){ c[eff(q)]++; });
+  document.getElementById('counts').innerHTML =
+    '<div class="count w"><b>'+c.waiting+'</b><span>Waiting for approval</span></div>'+
+    '<div class="count a"><b>'+c.approved+'</b><span>Approved</span></div>'+
+    '<div class="count h"><b>'+c.held+'</b><span>Held</span></div>'+
+    '<div class="count u"><b>'+c.auto+'</b><span>Sending automatically</span></div>';
+}
+function pillOf(q){
+  var e=eff(q);
+  if(e==='approved') return '<span class="pill approved">'+IC.check+'Approved · sends '+q.when.split(' · ')[1]+'</span>';
+  if(e==='held') return '<span class="pill held">'+IC.pause+'Held · won\'t send</span>';
+  if(e==='auto') return '<span class="pill auto">'+IC.send+'Sends automatically</span>';
+  return '<span class="pill waiting">'+IC.clock+'Waiting for approval</span>';
+}
+function drawQueue(){
+  var h = Q.map(function(q){
+    var e=eff(q), s=stepOf(q), f=FLOWMAP[q.flow], editing = editingId===q.id;
+    var b='';
+    if(editing){
+      b = '<button class="btn blue" data-act="save">'+IC.check+'Save changes</button><button class="btn" data-act="cancel">Cancel</button>';
+    } else {
+      if(e==='waiting') b += '<button class="btn primary" data-act="approve">'+IC.check+'Approve</button>';
+      if(e==='approved') b += '<button class="btn" data-act="unapprove">Undo approval</button>';
+      b += '<button class="btn" data-act="edit">'+IC.pencil+'Edit</button>';
+      b += e==='held' ? '<button class="btn" data-act="release">Release</button>' : '<button class="btn" data-act="hold">'+IC.pause+'Hold</button>';
+    }
+    return '<div class="qcard st-'+e+(editing?' editing':'')+'" data-q="'+q.id+'">'+
+      '<div class="qmeta">'+
+        '<div class="fl">'+chIcon(s.ch)+'<span>'+f.name+' · '+s.when+' '+chName(s.ch).toLowerCase()+'</span></div>'+
+        '<div class="tt">'+titleOf(q)+'</div>'+
+        '<div class="who">'+IC.people+'<span>To <b>'+q.who+'</b></span></div>'+
+        '<div class="time">'+IC.clock+'<span><b>'+q.when+'</b></span></div>'+
+        pillOf(q)+
+        (q.edited && e==='waiting' ? '<span class="edited-tag">Edited, so it needs approving again</span>' : '')+
+        (q.edited && e!=='waiting' ? '<span class="edited-tag" style="color:var(--soft)">Wording edited</span>' : '')+
+        '<div class="qbtns">'+b+'</div>'+
+      '</div>'+
+      '<div class="qprev'+(openIds[q.id]||editing?' open':'')+'"><div class="editbar">Editing: click into the subject or message and type. Saving drops any approval.</div><div class="clip">'+renderMsg(s, q.ov)+'</div>'+
+        (editing?'':'<button class="more" data-act="more">'+(openIds[q.id]?'Show less':'Show the whole message')+'</button>')+
+      '</div></div>';
+  }).join('');
+  document.getElementById('qlist').innerHTML = h;
+  if(editingId){
+    var card = document.querySelector('.qcard[data-q="'+editingId+'"]');
+    card.querySelectorAll('[data-edit]').forEach(function(el){ el.setAttribute('contenteditable','true'); });
+    var first = card.querySelector('[data-edit]'); if(first) first.focus();
+  }
+  drawCounts();
+}
+var LOG = [];
+function log(msg){
+  var d=new Date(), hh=d.getHours(), mm=('0'+d.getMinutes()).slice(-2), ap=hh>=12?'pm':'am'; hh=hh%12||12;
+  LOG.unshift('<li><span class="tm">'+hh+':'+mm+' '+ap+'</span>'+msg+'</li>');
+  document.getElementById('log').innerHTML = LOG.join('');
+}
+document.getElementById('qlist').addEventListener('click', function(e){
+  var b = e.target.closest('[data-act]'); if(!b) return;
+  var card = b.closest('[data-q]'); var id = card.getAttribute('data-q');
+  var q = Q.filter(function(x){return x.id===id;})[0]; var act=b.getAttribute('data-act'); var nm='"'+plainTitle(q)+'"';
+  if(act==='approve'){ q.status='approved'; log('Approved '+nm+' for '+q.who+'. Sends '+q.when+'.'); }
+  else if(act==='unapprove'){ q.status='waiting'; log('Approval taken back: '+nm+'.'); }
+  else if(act==='hold'){ q.status='held'; log('Held '+nm+'. It will not send until released.'); }
+  else if(act==='release'){ q.status='waiting'; log('Released '+nm+'. Back to waiting for approval.'); }
+  else if(act==='more'){ openIds[id]=!openIds[id]; }
+  else if(act==='edit'){ editingId=id; }
+  else if(act==='cancel'){ editingId=null; }
+  else if(act==='save'){
+    var ov = {};
+    card.querySelectorAll('[data-edit]').forEach(function(el){ ov[el.getAttribute('data-edit')] = el.innerHTML; });
+    q.ov = ov; q.edited = true; editingId=null;
+    var was = q.status; if(q.status==='approved') q.status='waiting';
+    log('Edited '+nm+'.'+(was==='approved'?' Its approval was dropped; it needs approving again.':''));
+  }
+  drawQueue();
+});
+document.getElementById('swgrid').addEventListener('click', function(e){
+  var b = e.target.closest('[data-mode]'); if(!b || b.disabled) return;
+  var id = b.parentNode.getAttribute('data-sw'), m=b.getAttribute('data-mode');
+  if(MODE[id]===m) return;
+  MODE[id]=m;
+  log(FLOWMAP[id].name+' switched to '+(m==='auto'?'"Send automatically". Its messages send at their times unless held.':'"Hold for approval". Its messages wait for Approve again.'));
+  drawSwitches(); drawQueue();
+});
+document.getElementById('resetq').addEventListener('click', function(){
+  resetState(); LOG=[]; document.getElementById('log').innerHTML='<li><span class="tm">-</span>Demo reset. Every message is back to waiting for approval.</li>';
+  drawSwitches(); drawQueue();
+});
+
+/* ---------- section 3: impact ---------- */
+function money(n){ return '$'+n.toLocaleString('en-US'); }
+function calc(){
+  var a=+document.getElementById('s1').value, b=+document.getElementById('s2').value, c=+document.getElementById('s3').value;
+  document.getElementById('v1').textContent='+'+money(a*64)+'/mo';
+  document.getElementById('v2').textContent='+'+money(b*124)+'/mo';
+  document.getElementById('v3').textContent='+'+money(c*35)+'/mo';
+  document.getElementById('n1').textContent='Example: '+a+' member'+(a===1?'':'s')+' (about 40 of 606 moved up to any plan last year)';
+  document.getElementById('n2').textContent='Example: '+b+' member'+(b===1?'':'s');
+  document.getElementById('n3').textContent='Example: '+c+' of the roughly 620 who didn\'t join';
+  document.getElementById('vt').textContent='+'+money(a*64+b*124+c*35)+'/mo';
+}
+['s1','s2','s3'].forEach(function(id){ document.getElementById(id).addEventListener('input', calc); });
+
+/* ---------- section 4: rails ---------- */
+var RAILS = [
+  [IC.shield,'Only people who opted in','Email goes to members and players who gave Peak their address and agreed to hear from Peak. Text goes only to people who agreed to texts.'],
+  [IC.out,'Easy to leave, every time','Every email has an unsubscribe link and Peak\'s address. Every text ends "Reply STOP to opt out". Opting out takes effect at once, across every flow.'],
+  [IC.moon,'Quiet hours','Texts only between 9 am and 8 pm Mountain time. Day-before reminders go at 5 pm.'],
+  [IC.gauge,'A cap per person','No one gets more than two marketing messages a week from all the flows together. If two flows want the same person the same day, the later one waits.'],
+  [IC.stop,'Stops when the job is done','Each flow ends the moment its goal happens: they join, book, or change plan. Nobody is sent an offer for something they already did.'],
+  [IC.check,'Approval first','Nothing sends until someone at Peak approves it, unless Peak switches that flow to automatic. Any edit drops the approval.'],
+  [IC.db,'Peak\'s data stays Peak\'s','The lists, the wording and the results belong to Peak. The connection to CourtReserve reads members and bookings; it doesn\'t change bookings or billing.'],
+  [IC.grid,'CourtReserve stays in charge','Members still book, cancel and pay in CourtReserve. Cancel and join buttons in the messages open CourtReserve.'],
+  [IC.mail,'From Peak, to Peak','Messages go out in Peak\'s name, and replies land in Peak\'s inbox where the front desk can answer them.']
+];
+document.getElementById('rails').innerHTML = RAILS.map(function(r){ return '<div class="rail"><div class="ic">'+r[0]+'</div><h3>'+r[1]+'</h3><p>'+r[2]+'</p></div>'; }).join('');
+
+/* ---------- section 5: elsewhere ---------- */
+var ELSE = [
+  [IC.send,'A paced outreach campaign','Emails go out a set number an hour, not all at once.',['Automatic follow-ups that stop the moment someone replies','Bounced addresses come off the list on their own','Nothing new is queued without the owner\'s go-ahead']],
+  [IC.people,'Customer follow-ups after a job','Each customer hears back at the right point after the work is done.',['Triggered by the job being marked done','Wording reviewed before it was switched on']],
+  [IC.news,'A monthly newsletter','One issue a month to the business\'s mailing list.',['Every issue approved on its own before it sends','Unsubscribes honoured at once']],
+  [IC.check,'Content posts approved in a hub','Social posts are drafted ahead and sit in a calendar.',['Each post goes out only after Approve is tapped','Any change to a post drops its approval','The approval queue in this demo works the same way']]
+];
+document.getElementById('elsewhere').innerHTML = ELSE.map(function(r){ return '<div class="rail"><div class="ic">'+r[0]+'</div><h3>'+r[1]+'</h3><p>'+r[2]+'</p><ul>'+r[3].map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>'; }).join('');
+
+/* ---------- nav ---------- */
+function go(id){
+  document.querySelectorAll('section.pane').forEach(function(s){ s.classList.toggle('on', s.id===id); });
+  document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-go')===id); });
+  window.scrollTo(0,0);
+  var nb=document.querySelector('#nav button.on'); if(nb && nb.scrollIntoView && window.innerWidth<=860) nb.scrollIntoView({inline:'center',block:'nearest'});
+  if(history.replaceState) history.replaceState(null,'','#'+id);
+}
+document.getElementById('nav').addEventListener('click', function(e){ var b=e.target.closest('[data-go]'); if(b) go(b.getAttribute('data-go')); });
+document.addEventListener('keydown', function(e){
+  if(editingId || /INPUT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable) return;
+  var ids=['flows','queue','impact','rules','else'], k=parseInt(e.key,10);
+  if(k>=1 && k<=5) go(ids[k-1]);
+});
+
+drawPicker(); drawFlow(); drawSwitches(); drawQueue(); calc();
+var h0 = (location.hash||'').slice(1); if(['flows','queue','impact','rules','else'].indexOf(h0)>-1) go(h0);
+})();
+</script>
+</body>
+</html>
