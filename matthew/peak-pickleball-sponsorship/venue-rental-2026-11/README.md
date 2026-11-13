@@ -2,11 +2,14 @@
 
 Checked 12 November 2026. Matthew's ask (12 Nov): "Need to congregate people who might want to rent out Peak's 80,000 sq ft property in a mall for expos and things like that."
 
-This is Matthew's own client work for Peak, not Surge's, so Surge's voice specs and RESTRICTED.md don't apply. Nothing here has been sent, and nobody has been contacted or signed up. Every contact route in the list is the organisation's own published general route (contact page, general or events email, main phone). There are no personal emails or phones, no people-search and no LinkedIn.
+This is Matthew's own client work for Peak, not Surge's, so Surge's voice specs and RESTRICTED.md don't apply. Nothing here has been sent, and nobody has been contacted or signed up. Every contact route in the 12 Nov list is the organisation's own published general route: a contact page, a general or events email, or a main phone. The 13 Nov contacts add named people, using only the business details their organisations or named outlets publish (see "Contacts (13 Nov)"). No people-search sites or LinkedIn were used for either.
 
 Files:
 - `prospects.csv`: 64 organisations, one row each, sorted by priority then category.
-- `Peak-Venue-Prospects-2026-11.xlsx`: the same list, plus a sheet of competing venues and rates. Built by `build_xlsx.py` from the CSV.
+- `Peak-Venue-Prospects-2026-11.xlsx`: the same list, plus a sheet of competing venues and rates. Built by `build_xlsx.py` from the CSV. Since 13 Nov it also has a "Best contact (13 Nov)" column and a Contacts sheet, both from `contacts.csv`.
+- `contacts.csv` (13 Nov): named contacts, 80 rows covering all 64 organisations. See "Contacts (13 Nov)" below.
+- `hunter-queue-2026-11-22.csv` (13 Nov): 41 organisations to run through Hunter when credits reset on 22 Nov.
+- `Peak-Venue-Prospects-2026-11.pdf`: the readable landscape version. `build-pdf.cjs` writes `venue-prospects.html`, then headless Chrome prints it to PDF.
 
 ## Summary
 
@@ -136,3 +139,166 @@ Checked 12 Nov 2026 unless stated. "Verified" means seen on the source named. Ro
 | Searched, found nothing usable: church/ministry conferences with expo halls; Pikes Peak REALTORS expo; HBA indoor show (Parade of Homes is in model homes) | Searches (fork B) | 12 Nov 2026 | A gap in the list, not proof none exist |
 
 Outside this list but worth knowing: the Colorado Roofing Association trade show was at the Arapahoe County Fairgrounds on 29 Jan 2026 (aggregator only). The Colorado Senior Games (5-7 Jun 2026, Colorado Springs) include pickleball, so they would book courts, not an expo floor.
+
+## Contacts (13 Nov)
+
+Matthew's ask (13 Nov): find the right named person at each organisation to pitch a venue rental to, with business contact details, so outreach can start. Nothing has been sent, and nobody has been contacted. No forms were submitted.
+
+### Method
+
+Work went in priority order. Four research passes ran in parallel (P1 rows 1-12, P1 rows 13-24, P2, P3), each to the same written brief. Sources were checked in this order:
+1. The organisation's own pages: about, team, staff, contact, exhibitor, vendor and press pages, plus footers.
+2. Press releases (PR.com, EIN Presswire, PR Newswire) and named outlets: the Gazette, KOAA, KRDO, FOX21, KOA, KUNC, Deseret News, Springs Magazine and army.mil.
+3. Event listings that name the organiser (Colorado Gives, FairsAndFestivals, tabletop.events, the venue calendars), used only to point back to a primary source.
+
+The rules held throughout:
+- No people-search sites, no LinkedIn and no email-finder API. The Hunter account has 0 credits until 22 Nov.
+- No personal cells, home addresses or private emails, unless the organisation itself publishes that address as its contact. Seven addresses are org-published consumer accounts, marked "published by the org" in the notes:
+  - Gmail: Front Range Makers Market, CSLE, Villain Arts, Colorado Record Show, CSCA and AFCEA Rocky Mountain's conference VP.
+  - Comcast: All C's.
+- Every name, email and phone traces to a page that was read. The few taken from search snippets are marked low confidence and say so.
+- Names whose only source is older than about two years are kept, flagged "stale (year)" and marked low confidence.
+- One email is inferred from a pattern: Karen Hogan at the Gazette, "pattern, unverified". The pattern is first.last@gazette.com, shown by april.borjon@gazette.com on a 4 Jun 2026 Gazette page. It is not used as the Gazette's best contact.
+- Where sources conflicted, the detail was left out and the conflict recorded in the row's notes.
+
+I re-read seven of the strongest leads myself on 13 Nov, and all matched what the research passes recorded:
+- Pikes Peak Senior News about page
+- Marketplace Events show-team page
+- RJ Promotions Colorado Springs show page
+- Visit COS meetings page
+- CS Chamber & EDC staff page
+- Tri-Lakes Chamber contact page
+- ISE contact page
+
+`contacts.csv` columns are: priority, organisation, best contact (yes on one row per organisation), contact name, role, business email, email status, business phone, other route, source URL(s), source date, confidence, notes. The best contact is the strongest row for that organisation: a named person first, then a direct email, then confidence. There is one judgement override. Altered Reality's best contact is the organisers, Steven and Connie Perry, not their press contact.
+
+### Counts (by organisation, using the best route found for each)
+
+"Direct email" means the address is the person's own, such as Terri@ or kelleyz@. A shared inbox (info@, vet@, an org-published gmail) counts as a general route, even when a named person sits behind it.
+
+| Priority | Named person + direct email | Named person + general route | General route only | Total |
+|---|---|---|---|---|
+| 1 | 6 | 15 | 3 | 24 |
+| 2 | 1 | 15 | 6 | 22 |
+| 3 | 6 | 8 | 4 | 18 |
+| **All** | **13** | **38** | **13** | **64** |
+
+- **P1 with a direct email:**
+  - Pikes Peak Senior News (Anne Jensen, publisher)
+  - Tri-Lakes Chamber (Terri Hayes, plus Ashley Maniscalco)
+  - Visit COS (Dina Worthen, Cheryl McCullough, Kim Griffis)
+  - Marketplace Events (Jenna Naffin, plus Christie Elig)
+  - Dana Cain Events (Dana Cain)
+  - RJ Promotions (Kelley Zwick, show manager, plus Kevin Hummer)
+- **P1 general route only:** American Consumer Shows, The Expo Pros, L&L Exhibition Management. The Gazette has a general route plus the stale, pattern-only Karen Hogan.
+
+### Leads to move on first
+
+1. **Anne Jensen**, Publisher, Pikes Peak Senior News. Anne@pikespeakseniornews.com, (719) 321-1971. She ran the April 2026 expo at Peak, so this is a rebooking for 2027.
+2. **Terri Hayes**, President & CEO, Tri-Lakes Chamber. Terri@trilakeschamber.com, with Ashley@trilakeschamber.com (Event Coordinator) copied; (719) 481-3282. Their expo is sold out at the Tri-Lakes YMCA, and the chamber is about 10 miles north of Peak.
+3. **Kelley Zwick**, Show Manager, RJ Promotions. kelleyz@rjpromotions.com, (816) 558-6069. Next Colorado Springs show is the Oddity & Bizarre Expo, 20-21 Mar 2027, at the CS Event Center.
+4. **Jenna Naffin**, Show Manager, Colorado Country Christmas Gift Show (Marketplace Events). JennaN@mpeshows.com, 484.854.9084. The show runs 13-15 Nov, so wait until after load-out.
+5. **Dana Cain**, producer, Dana Cain Events. dana@danacainevents.com, 303-347-8252. She runs two Colorado Springs events a year at Norris Penrose: Cat Fest and the Chocolate & Cheese Fest.
+6. **BEACON Senior News**: no named person. Booth line 719-900-7664. beaconfest.com lists a Colorado Springs BeaconFest "coming 2027" (spring), with no venue set yet.
+7. **Dina Worthen**, Director of Sales, Visit COS. Dina@VisitCOS.com, 719-685-7632. For sports bookings: **Cheryl McCullough**, Cheryl@VisitCOS.com, 719-685-7642. Visit COS refers planners to venues.
+8. **Michelle Alt**, Director, CSLE (Candy Cane Showcase, plus May and August shows). csladiesevents@gmail.com (published by the org), 719-231-5970.
+9. **Sandi Griffin**, founder, COS Health & Fitness Expo. contact@cosfitnessexpo.com, 719-246-6705. Peak's sponsor page already links the expo.
+10. **Craig Carle**, VP Membership, Marketing & Events, CS Chamber & EDC. ccarle@cscedc.com, 719-575-4329. Copy **Lisa Martinez**, lmartinez@cscedc.com. They are priority 3 as a venue prospect, but this is a direct line to the events lead.
+
+### Hunter queue (22 Nov)
+
+`hunter-queue-2026-11-22.csv` lists 41 organisations that have no named person with a direct email, but do have a domain worth searching. They are ranked by priority, then by how likely Hunter is to help. Where a person is already named, the queue suggests an Email Finder call for that person; otherwise a Domain Search with a department filter. That uses about 41 of the 50 monthly credits.
+
+Two notes on domains:
+- gazette.com and coloradospringschamberedc.com were already searched for the sponsor list (`../data/hunter-results.json`). The chamber's staff addresses turned out to be published on cscedc.com, so it needs no search.
+- Ten organisations have no domain Hunter can search: Front Range Makers Market, Vintage Market Days, CSLE, Turco Spirit Events, All C's, Colorado Record Show, Pikes Peak Card Show, CSCA, the Coin Club and the Kennel Club. They have gmail, comcast or Facebook routes, or none at all. Reach them through their published routes instead.
+
+### Fact-check log (13 Nov)
+
+**Verified** (own current page, 2026):
+- **Named contacts:**
+  - Visit COS sales and sports team
+  - Marketplace Events show team
+  - RJ Promotions show manager and CEO
+  - Pikes Peak Senior News publisher and managing editor
+  - Tri-Lakes Chamber staff
+  - CS Chamber & EDC events staff
+  - ISE contact page (Brent Layng, John Caulfield). These emails were decoded from Cloudflare-protected links, so check the spelling before use.
+  - Dana Cain (decoded the same way)
+  - CHSAA (Rashaan Davis, esports)
+  - Tacticon (Andre'a Arnold)
+  - AASC (Codi Foley, Laura Nelson)
+  - Destination Colorado (Kelly Layton)
+  - RMC (Javier Munoz)
+  - CSLE (Michelle Alt)
+  - Pikes Peak Outdoors (Becky Leinweber)
+  - PALS Chess (the McConnells)
+  - TECO (Elizabeth Maline)
+  - Black Forest guild (Amanda Kennedy)
+  - YMCA (Jeremy Strom)
+  - BMSE (Steve Strickland, Katie Wright)
+  - Show Me Reptile Show (Micky Meyer)
+- **Confirmed by a dated 2025-2026 outlet:**
+  - Lisa Cooper, gem show chair (Gazette, 4 Jun 2026)
+  - Crystal LaTier, interim ED at the Workforce Center (Gazette, 17 Jun 2026)
+  - Deborah Hendrix (PR Newswire, Jan 2025)
+  - Sol Lee (Gazette, 13 Nov 2025)
+  - Sandi Griffin (Springs Magazine, Aug 2026)
+  - Debbie English (KOA, Apr 2026)
+  - Lissa Shaw (Gazette, Oct 2025)
+  - Jon Dix (KXRM, Jan 2025)
+
+**Corrected** (the 12 Nov list was wrong or out of date; details in each row's notes):
+- **American Consumer Shows:** the listed acsshows.com/contact-choice/ page has no contact details. The Colorado Springs show has its own site, bridalshowsco-co.com, with exhibitor line 888-433-3976. Its Contact Us page is an unfilled template, so don't use the placeholder number or email.
+- **Pikes Peak Workforce Center:**
+  - The employer inbox is ppwbrg@elpasoco.com.
+  - CEO Traci Marques left in June 2026; Crystal LaTier is interim.
+- **Veterans Services:** elpasoco.com/veterans-expo/ now returns 404. The 4 Feb 2026 announcement (elpasoco.com/?p=19735) still loads.
+- **Parents Challenge:** the route was unverified on 12 Nov. It is info@parentschallenge.org and 719-306-8557, from the org's Colorado Gives profile.
+- **Dana Cain:** she runs two Colorado Springs events a year, not one (Chocolate & Cheese Fest, 4 Apr 2026).
+- **Show Me Reptile Show:** it is a Troy, Missouri company running about 25 shows a year. Its email domain is showmereptileshows.com, with an s.
+- **RJ Promotions:** no Colorado Springs RV show is on its current schedule; its RV shows are in Kansas. Its Colorado shows are the Oddity & Fear Fest (Sep) and the Oddity & Bizarre Expo (Mar 2027), both at the CS Event Center.
+- **JBF:** the sale runs three times a year, and the listed route is a corporate form.
+- **Vintage Market Days:** the local inbox is coloradosprings@vintagemarketdays.com.
+- **BMSE:** its own site shows no upcoming Colorado Springs date. The Gazette lists 10-12 Apr 2026 as the 2026 show, so the Oct 2026 date on the 12 Nov list is unconfirmed.
+- **LANFest:** the 2026 event did happen, 24-27 Sep at the Douglas County Event Center.
+- **Villain Arts:** it does publish a contact: TattooedKingpin@gmail.com and 215-423-4780.
+- **RMC:** its own site is rmcdmc.com.
+- **CSLE:** its own site is csladiesevents.com, and it runs shows in May and August as well as the Candy Cane show.
+- **PPORA:** it is now Pikes Peak Outdoors. ppora.org redirects to pikespeakoutdoors.org, and the inbox is info@pikespeakoutdoors.org.
+- **CSCA:** it does publish ColoradoCSCA@gmail.com.
+- **BEACON Senior News:** a Colorado Springs BeaconFest is announced for spring 2027.
+- **Donnell Productions:** the site is womenslivingexpo.com, with phone 203-259-3351.
+- **Tacticon:** andrea@gamergirlgames.com is a business-domain address the org publishes, so it is usable.
+- **CHSAA and Varsity Spirit:** routes are now verified.
+- **CS Chamber & EDC:** staff addresses are on cscedc.com.
+
+**Unresolved:**
+- **Stale or unconfirmed names; confirm before using them:**
+  - Stephanie Floyd, HFGF (2022-23). How she relates to Springtime Productions isn't stated anywhere.
+  - Bethany Oliver, Vintage Market Days (about 2022).
+  - Karen Hogan, Gazette (2023).
+  - Scott Schulz, Motorcycle Expos (Mar 2024).
+  - Barbara Donnell, Donnell Productions (undated KOAA piece, probably 2022). KOAA also reported vendor complaints about attendance.
+  - Erica Romero, Workforce Center (one undated KOAA article).
+  - Roxanne Bennett, Pinners Conference (2023).
+- **Conflicts:**
+  - CSCA: the Board page says Earle Wikle is President, but 2026 posts are signed by Kevin McConnell as President.
+  - Pikes Peak Outdoors: the page shows (719) 247-5828, but its tel: link dials (719) 575-4311.
+  - Motorcycle Expos: the coloradosupershow.com links go to info@coloradomotorcycleexpo.com and 303-835-6967, not the events@ and 720-674-8999 shown as text.
+  - Marketplace Events: Hannah Bergey's mailto link points to NicoleP@mpeshows.com.
+  - L&L Shows: one PDF prints 800-374-6364 against 800-374-6463 everywhere else.
+  - Show Me Reptile Show: its own page now lists Widefield High School, but the Gazette's Sep 2026 listing says the CS Event Center.
+- **Couldn't read on 13 Nov:**
+  - Blocked by a bot check: hfgf.com, cosfitnessexpo.com. Their routes are carried over from 12 Nov.
+  - Returned 403 to every request: spacefoundation.org, spacesymposium.org, coloradofirst.org, parentschallenge.org, beaconseniornews.com. Thomas Dorame (Space Foundation) is from search snippets only.
+  - nationwideexpos.com returned empty pages.
+  - Tanner Gun Show and Totally Rad Vintage Fest render by script, so no text came through.
+- **No usable contact found:** Pikes Peak Card Show (Facebook only), the Coin Club, the Quilt, Craft & Sewing Festival (Rusty Barn), and Turco Spirit Events (phone from a search snippet only).
+- **Left out on purpose:**
+  - A Kennel Club event chair's aol.com email and phone (snippet only, personal domain).
+  - A 719 number tied to Lisa Cooper (likely personal).
+  - Names seen only in search snippets of 403 pages (Westword, CPR, Issuu).
+- **Check before pitching:**
+  - Altered Reality: a Gazette snippet says the 2018 Colorado Springs Comic Con was at Chapel Hills Mall.
+  - Sports Corp: the Rocky Mountain State Games pickleball director works for Springs Pickleball, a competitor. Pitch through Shelbi Lowery instead.

@@ -1,6 +1,7 @@
 """Peak venue-rental prospects (2026-11-12, Matthew: "people who might want to rent out Peak's 80,000 sq ft ... for expos").
 
 Builds Peak-Venue-Prospects-2026-11.xlsx beside this file from prospects.csv, plus a Venues & rates sheet.
+2026-11-13: adds a "Best contact" column on Prospects and a Contacts sheet, both from contacts.csv.
 Nothing here is sent anywhere. Run: python build_xlsx.py
 """
 import csv
@@ -54,13 +55,46 @@ def sheet(ws, rows, widths):
     ws.auto_filter.ref = ws.dimensions
 
 
+CONTACT_WIDTHS = [8, 30, 7, 24, 30, 32, 16, 26, 40, 50, 22, 11, 70]
+
+
+def best_contact(c):
+    """One-cell summary of the best contact: name, role, then email/phone, else the general route."""
+    who = ', '.join(x for x in (c['contact name'], c['role']) if x)
+    reach = ' / '.join(x for x in (c['business email'] + (' (pattern, unverified)' if c['email status'].startswith('pattern') else ''),
+                                   c['business phone']) if x.strip())
+    if not reach:
+        reach = c['other route']
+    text = (who + '\n' if who else 'No named person. ') + reach
+    return text + ('' if c['confidence'] == 'high' else f" [{c['confidence']} confidence]")
+
+
 rows = list(csv.reader((HERE / 'prospects.csv').open(encoding='utf-8-sig')))
+contacts = list(csv.reader((HERE / 'contacts.csv').open(encoding='utf-8-sig')))
+chead = contacts[0]
+best = {}
+for r in contacts[1:]:
+    c = dict(zip(chead, r))
+    if c['best contact'] == 'yes':
+        best[c['organisation']] = best_contact(c)
+org_i = rows[0].index('organisation')
+rows[0].insert(org_i + 1, 'Best contact (13 Nov)')
+for r in rows[1:]:
+    if r[org_i] not in best:
+        raise SystemExit('no contact row for ' + r[org_i])
+    r.insert(org_i + 1, best[r[org_i]])
+widths = WIDTHS[:org_i + 1] + [44] + WIDTHS[org_i + 1:]
+
 wb = Workbook()
 ws = wb.active
 ws.title = 'Prospects'
-sheet(ws, rows, WIDTHS)
+sheet(ws, rows, widths)
 for row in ws.iter_rows(min_row=2, max_col=1):
+    row[0].value = int(row[0].value)
+cws = wb.create_sheet('Contacts', 1)
+sheet(cws, contacts, CONTACT_WIDTHS)
+for row in cws.iter_rows(min_row=2, max_col=1):
     row[0].value = int(row[0].value)
 sheet(wb.create_sheet('Venues & rates'), VENUES, [40, 44, 60, 60, 24])
 wb.save(OUT)
-print('wrote', OUT, len(rows) - 1, 'prospects')
+print('wrote', OUT, len(rows) - 1, 'prospects,', len(contacts) - 1, 'contact rows')
