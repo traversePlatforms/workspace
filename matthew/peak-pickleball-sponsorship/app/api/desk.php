@@ -32,6 +32,11 @@ function logAdd(array $row, string $f = 'events.log'): bool { return (bool) file
 function logRows(string $f = 'events.log'): array { $out = []; $fh = @fopen(DATA_DIR . '/' . $f, 'r'); if (!$fh) return $out; while (($l = fgets($fh)) !== false) { $r = json_decode($l, true); if (is_array($r)) $out[] = $r; } fclose($fh); return $out; }
 function clean($v, int $max): string { $t = trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string) $v) ?? ''); return mb_substr($t, 0, $max); }
 function codeHash(string $c): string { return hash('sha256', 'peakdesk|' . $c); }
+/* how long a sign-in lasts: 60 days, a rolling year for Matthew (2026-11-13, his account only) */
+function sesDays(string $name): int { return strcasecmp($name, 'Matthew Sharpe') === 0 ? 365 : 60; }
+function sesCookie(string $tok, string $name, int $now): void {
+    setcookie('peakdesk', $tok, ['expires' => $now + sesDays($name) * 86400, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
+}
 const STATUSES = ['new' => 'Not contacted', 'contacted' => 'Contacted', 'tour' => 'Tour booked', 'toured' => 'Toured', 'proposal' => 'Proposal sent', 'signed' => 'Signed', 'notnow' => 'Not now', 'no' => 'No'];
 require __DIR__ . '/scan.php';
 
@@ -122,6 +127,15 @@ if (PHP_SAPI === 'cli') {
         $acc['codes'][codeHash($code)] = ['name' => clean($name, 40), 'role' => $role, 'at' => time()];
         jwrite('accounts.json', $acc); echo "Code for $name ($role): $code\n"; exit(0);
     }
+    /* a fresh code for someone who lost theirs (2026-11-13, Matthew): their old code stops working, their role stays, their sign-ins stay */
+    if ($cmd === 'newcode' && $name !== '') {
+        $acc = jread('accounts.json', ['codes' => []]); $old = null;
+        foreach ($acc['codes'] as $h => $a) if (strcasecmp((string) $a['name'], $name) === 0) { $old = $a; unset($acc['codes'][$h]); }
+        if (!$old) { fwrite(STDERR, "No account named $name.\n"); exit(1); }
+        do { $code = (string) random_int(100000, 999999); } while (isset($acc['codes'][codeHash($code)]));
+        $acc['codes'][codeHash($code)] = ['name' => $old['name'], 'role' => $old['role'], 'at' => time()];
+        jwrite('accounts.json', $acc); echo "New code for {$old['name']} ({$old['role']}): $code\n"; exit(0);
+    }
     if ($cmd === 'rescan') exit(rescanDue(max(1, min(60, (int) ($name ?: 15)))));
     if ($cmd === 'scan' && $name !== '') {
         $L = state()['leads'][$name] ?? null; if (!$L) { fwrite(STDERR, "No such lead.\n"); exit(1); }
@@ -152,13 +166,17 @@ if ($action === 'signin') {
     $acc = jread('accounts.json', ['codes' => []]); $a = $acc['codes'][codeHash($code)] ?? null;
     if (!$a || strlen($code) !== 6) { $mine[] = $now; $tries[$ip] = $mine; jwrite('tries.json', $tries); fail('That code did not work.', 401); }
     $tok = bin2hex(random_bytes(24)); $ses = jread('sessions.json', []);
-    foreach ($ses as $k => $s) if (($s['at'] ?? 0) < $now - 60 * 86400) unset($ses[$k]);
+    foreach ($ses as $k => $s) if (($s['at'] ?? 0) < $now - sesDays((string) ($s['name'] ?? '')) * 86400) unset($ses[$k]);
     $ses[hash('sha256', $tok)] = ['name' => $a['name'], 'role' => $a['role'], 'at' => $now]; jwrite('sessions.json', $ses);
-    setcookie('peakdesk', $tok, ['expires' => $now + 60 * 86400, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
+    sesCookie($tok, (string) $a['name'], $now);
     out(['ok' => true, 'name' => $a['name'], 'role' => $a['role']]);
 }
 $ses = jread('sessions.json', []); $tokH = hash('sha256', (string) ($_COOKIE['peakdesk'] ?? '')); $me = $ses[$tokH] ?? null;
 if (!$me) fail('Signed out.', 401);
+/* Matthew stays signed in (2026-11-13: "i also need to stay logged in"): a year from his last use, renewed at most once a day */
+if (sesDays((string) $me['name']) > 60 && (int) ($me['at'] ?? 0) < time() - 86400) {
+    $ses[$tokH]['at'] = time(); jwrite('sessions.json', $ses); sesCookie((string) $_COOKIE['peakdesk'], (string) $me['name'], time());
+}
 $ME = (string) $me['name'];   /* admin and seller have the same powers (2026-10-21); expo (2026-11-13) has the Expo leads only */
 $EXPO = ($me['role'] ?? '') === 'expo';
 if ($action === 'signout') { unset($ses[$tokH]); jwrite('sessions.json', $ses); setcookie('peakdesk', '', ['expires' => 1, 'path' => '/']); out(['ok' => true]); }
