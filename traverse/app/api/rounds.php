@@ -1425,6 +1425,7 @@ function searchIndexFile(): ?string {
     $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); $newest = max($newest, (int) @filemtime(DATA_DIR . '/' . $r['key'] . '-lookup.json')); }
     $newest = max($newest, (int) @filemtime(DATA_DIR . '/door-who.json'));   /* who the lists keep changed (2026-11-08): the left-off doors move to the lookup lines */
     if (!is_readable($f) || (int) @filemtime($f) < $newest) {
+        @ini_set('memory_limit', '1536M'); @set_time_limit(120);   /* the rebuild peaks near 900 MB (Denver alone is 35 MB of JSON); at the 768 MB default it died and every search answered 500 until someone rebuilt it (14 Nov, Jen: "server did not answer properly") */
         $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp'; $w = @fopen($tmp, 'w');
         if ($w) {
             foreach (($idx['regions'] ?? []) as $r) {
