@@ -7659,7 +7659,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         tb.disabled = true;
         api('followuptest', { body: { id: sel.value } }).then(function (k) { tb.disabled = false; toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || 'Try again.'), null); }).catch(function () { tb.disabled = false; toast('No signal', 'Try again.', null); });
       });
-      sel.addEventListener('change', show); holder.appendChild(tb); holder.appendChild(q('div', 'sub2', 'The test goes to Jen’s email, marked [Test]. Nothing is recorded on the job or the customer.')); show();
+      sel.addEventListener('change', show); holder.appendChild(tb); holder.appendChild(q('div', 'sub2', 'The test goes to ' + who('jen') + '\u2019s email, marked [Test]. Nothing is recorded on the job or the customer.')); show();
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
   }
   /* deposit reminders (2026-11-01, Jen via Matthew): who is due one, Don't send per customer, the on/off switch, a preview and a test */
@@ -7685,7 +7685,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(q('div', 'sub2', j.on ? 'On since ' + new Date(j.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + (j.by ? ', by ' + j.by : '') + '.' : 'Off: nothing is sent.' + (j.admin ? '' : ' An admin turns it on.')));
       holder.appendChild(q('div', 'sub2', 'Who gets one: a form sent with a Square deposit link at least 5 days before the job, still unpaid, not signed, not booked and not lost. Square is asked again just before the email, so anyone who just paid never gets it. When: once, 24 hours before their arrival time, from the 365 mailbox; replies go to the office. The button in it opens their form, where they pay.'));
       if (!j.mail) holder.appendChild(q('div', 'msg bad', 'The 365 mailbox is not set up on the server, so no email can go, even when this is on.'));
-      if (j.admin) { var st0 = q('div', 'lookrow'), sb0 = q('button', 'lnk', 'Send me a test'); sb0.type = 'button'; st0.appendChild(sb0); st0.appendChild(q('span', 'sub2', 'A made-up customer\u2019s reminder, to Jen’s email.')); holder.appendChild(st0);
+      if (j.admin) { var st0 = q('div', 'lookrow'), sb0 = q('button', 'lnk', 'Send me a test'); sb0.type = 'button'; st0.appendChild(sb0); st0.appendChild(q('span', 'sub2', 'A made-up customer\u2019s reminder, to ' + who('jen') + '\u2019s email.')); holder.appendChild(st0);
         sb0.addEventListener('click', function () { sb0.disabled = true; api('depremtest', { body: { sample: 1 } }).then(function (k) { sb0.disabled = false; toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || 'Try again.'), null); }).catch(function () { sb0.disabled = false; toast('No signal', 'Try again.', null); }); }); }
       holder.appendChild(q('h2', 'tgrp', 'Due a reminder'));
       if (!(j.list || []).length) { holder.appendChild(q('div', 'msg soft', 'Nobody right now: every form with a deposit link is paid, signed or booked.')); return; }
