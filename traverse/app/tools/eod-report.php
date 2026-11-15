@@ -27,6 +27,7 @@ date_default_timezone_set('America/Denver');
 
 const EOD_HOUR = 20;
 const EOD_BRANDON = 'Bincline@gmail.com';
+const EOD_JEN = 'jmcpherson@aeration365.com';   /* 2026-11-15, Matthew (Jen and Brad take Sixfold over): 'End of day reports will still go to brandon but we can also add Jen at her jmcpherson email for aeration 365'; her own email, like Brandon's */
 $eArgs = array_slice($argv ?? [], 1);
 $eDry = in_array('--dry-run', $eArgs, true); $eTest = in_array('--test', $eArgs, true);
 $W = in_array('--week', $eArgs, true);
@@ -332,7 +333,7 @@ $mime = '--' . $b1 . $e . 'Content-Type: text/plain; charset=UTF-8' . $e . 'Cont
       . '--' . $b2 . '--' . $e . '--' . $b1 . '--' . $e;
 $eCfg = require $eApi . '/config.php';
 require_once $eApi . '/smtp.php';
-$to = $eTest ? [(string) $eCfg['to']] : (in_array('--brandon', $eArgs, true) ? [EOD_BRANDON] : [EOD_BRANDON, (string) $eCfg['to']]);   /* --brandon: his copy only (a resend) */
+$to = $eTest ? [(string) $eCfg['to']] : (in_array('--brandon', $eArgs, true) ? [EOD_BRANDON] : [EOD_BRANDON, EOD_JEN, (string) $eCfg['to']]);   /* --brandon: his copy only (a resend) */
 $fails = 0;
 foreach ($to as $addr) {
     $eRes = smtp_send((array) ($eCfg['smtp'] ?? []), $addr, '[Sixfold 365] ' . $subject, $mime, ['X-Mailer: sixfold-app', 'Content-Type: multipart/alternative; boundary="' . $b1 . '"']);

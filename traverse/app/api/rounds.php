@@ -151,6 +151,9 @@ function company(): array {
                better ill fill the role'): his again from this time (YYYY-MM-DD HH:MM, Denver) up to metaMineAgainTo ('' = no end yet). The first
                period and the leads Jen worked between them are untouched. */
             'metaMineAgain' => '', 'metaMineAgainTo' => '',
+            /* website-form leads stop being Matthew's from this time (2026-11-15, Matthew: Jen and Brad take Sixfold over, "make it so that all
+               leads go to her. Including website leads now. Leave the people in my pipeline in my pipeline"): YYYY-MM-DD HH:MM Denver; '' = his */
+            'webMineTo' => '',
             /* who Matthew can send his own leads to (2026-10-27, Matthew: 'I need to also be able to send some leads to cai'): account names; see mhand */
             'handTo' => [],
             /* a client install made on the server (2026-10-29, api/traverse-clients-lib.php): its homes' area as the welcome checklist shows it,
@@ -3061,13 +3064,13 @@ if ($action === 'a365lead') {
         if ($fill) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'contact' => $fill, 'by' => 'website', 'at' => $now]);
         if (empty($x['house']) && $street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $x['id'], 'house' => $h, 'by' => 'website', 'at' => $now]); }
         if (($x['status'] ?? '') === 'unreached') leadRevive((string) $x['id'], 'sent the 365 website form', 'website');
-        a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), true, true, ($x['src'] ?? '') === 'a365web', leadAlertsOn());   /* the in-app list always; pushed only with leadAlerts (2026-10-27) */
+        a365Alert('Website form from someone already here', ($x['name'] ?? $name) . ' · ' . (['meta' => 'Facebook', 'messenger' => 'Messenger', 'a365web' => '365 website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')), webLead($x), true, webLead($x), leadAlertsOn());   /* the in-app list always; pushed only with leadAlerts (2026-10-27) */
         a365WebMail($row + ['want' => $wants[$want], 'said' => $said], 'already in the app as ' . (trim((string) ($x['name'] ?? '')) ?: 'a lead') . ' (' . (['meta' => 'Facebook ad', 'messenger' => 'Messenger', 'a365web' => 'website'][$x['src'] ?? ''] ?? ($x['src'] ?? '')) . '); the form went on that lead as a note');
         out(['ok' => true]);
     }
     if (!appendLine(leadsDir() . '/leads.log', $row)) fail('Something went wrong saving that. Please call or text us.', 500);
     if ($street !== '') { $h = a365Match($street, $city); if ($h) appendLine(leadsDir() . '/leadst.log', ['id' => $row['id'], 'house' => $h, 'by' => 'website', 'at' => time()]); }
-    a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want], true, true, true, leadAlertsOn());   /* Matthew's phones only: website leads are his (2026-10-23: the office was still getting this push) */
+    a365Alert('New quote request', $name . ($city !== '' ? ' · ' . $city : '') . ' · ' . $wants[$want], webMineTo() === 0, true, webMineTo() === 0, leadAlertsOn());   /* 2026-11-15: from webMineTo on, website leads are the office's (Jen), so the push goes to the office, not Matthew */   /* Matthew's phones only: website leads are his (2026-10-23: the office was still getting this push) */
     a365WebMail($row + ['want' => $wants[$want], 'said' => $said], '');
     out(['ok' => true]);
 }
@@ -3083,7 +3086,7 @@ function a365WebMail(array $r, string $already): void {
         'A new form on the website.',
         $line('Name', $r['name'] ?? ''), $line('Phone', $r['phone'] ?? ''), $line('Email', $r['email'] ?? ''), $line('Looking for', $r['want'] ?? ''),
         $line('Address', $r['town'] ?? ''), $line('Message', $r['msg'] ?? ''), ($r['said'] ?? []) ? 'Also: ' . implode('; ', (array) $r['said']) : '',
-        $already !== '' ? 'Note: ' . $already . '.' : 'It is in the app as a website lead (you only).',
+        $already !== '' ? 'Note: ' . $already . '.' : (webMineTo() === 0 ? 'It is in the app as a website lead (you only).' : 'It is in the app as a website lead (in the office pipeline).'),
         'Open the app: https://traverseplatforms.com/summit-de59ae83/']));
     appendLine(DATA_DIR . '/weblead-mail-queue.jsonl', ['at' => time(), 'subject' => 'Website lead: ' . ($r['name'] ?? '') . ' · ' . ($r['want'] ?? ''), 'body' => $body, 'tries' => 0]);
 }
@@ -6411,7 +6414,9 @@ function webLead(array $l): bool { if (!empty($l['jenkeep']) || !empty($l['tojen
        just called transferred from jen"): a leadst row {fromjen: true} makes any lead his, hidden from Jen and the office, until he sends it back
        (Send to Jen sets tojen, Send to <name> sets mhand: both above win) */
     if (!empty($l['fromjen'])) return true;
-    $s = (string) ($l['src'] ?? ''); return $s === 'a365web' || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom() && (metaMineTo() === 0 || (int) ($l['at'] ?? 0) < metaMineTo())) || ($s === 'meta' && metaMineAgain(false) > 0 && (int) ($l['at'] ?? 0) >= metaMineAgain(false) && (metaMineAgain(true) === 0 || (int) ($l['at'] ?? 0) < metaMineAgain(true))); }
+    $s = (string) ($l['src'] ?? ''); return ($s === 'a365web' && (webMineTo() === 0 || (int) ($l['at'] ?? 0) < webMineTo())) || ($s === 'meta' && metaMineFrom() > 0 && (int) ($l['at'] ?? 0) >= metaMineFrom() && (metaMineTo() === 0 || (int) ($l['at'] ?? 0) < metaMineTo())) || ($s === 'meta' && metaMineAgain(false) > 0 && (int) ($l['at'] ?? 0) >= metaMineAgain(false) && (metaMineAgain(true) === 0 || (int) ($l['at'] ?? 0) < metaMineAgain(true))); }
+/* website leads to the office from company.json webMineTo on (2026-11-15, the handover to Jen); the ones before stay Matthew's */
+function webMineTo(): int { static $t = null; if ($t === null) { $d = (string) (company()['webMineTo'] ?? ''); $t = preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $d) ? (int) strtotime($d . ':00 America/Denver') : 0; } return $t; }
 /* the second period of Facebook leads to Matthew (2026-11-10, Jen out sick): company.json metaMineAgain / metaMineAgainTo, YYYY-MM-DD HH:MM Denver */
 function metaMineAgain(bool $end): int { static $t = []; if (!isset($t[$end])) { $d = (string) (company()[$end ? 'metaMineAgainTo' : 'metaMineAgain'] ?? ''); $t[$end] = preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $d) ? (int) strtotime($d . ':00 America/Denver') : 0; } return $t[$end]; }
 /* the end of that (2026-10-28, Matthew: "switch the intake leads back to jen ... give her any of the ones i havent called, texted or emailed yet.
