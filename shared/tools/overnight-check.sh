@@ -92,10 +92,10 @@ v() { echo "$SRV" | awk -v k="$1" '$1==k{print $2}'; }
 }
 
 # 4. Windows tasks on this computer (backups)
-TASKS=$(powershell.exe -NoProfile -Command "foreach(\$n in 'Backup claude test 2 to Google Drive','Traverse server backup'){ \$i=Get-ScheduledTaskInfo -TaskName \$n -ErrorAction SilentlyContinue; if(\$i){ '{0}|{1:MM-dd HH:mm}|{2}' -f \$n,\$i.LastRunTime,\$i.LastTaskResult } }" 2>/dev/null | tr -d '\r')
+TASKS=$(powershell.exe -NoProfile -Command "foreach(\$n in 'Backup claude test 2 to Google Drive','Traverse server backup','Traverse new homes refresh'){ \$i=Get-ScheduledTaskInfo -TaskName \$n -ErrorAction SilentlyContinue; if(\$i){ '{0}|{1:MM-dd HH:mm}|{2}' -f \$n,\$i.LastRunTime,\$i.LastTaskResult } }" 2>/dev/null | tr -d '\r')
 while IFS='|' read -r n t r; do [ -z "$n" ] && continue
   # 267009 (0x41301) is Task Scheduler for "running right now", not a failure: the check used to land mid-backup and call it a problem (10 Nov)
-  if [ "$r" = 0 ]; then ok "$n: last run $t ok"; elif [ "$r" = 267009 ]; then ok "$n: running now (started $t)"; else bad "$n: last run $t ended with code $r"; fi
+  if [ "$r" = 0 ]; then ok "$n: last run $t ok"; elif [ "$r" = 267009 ]; then ok "$n: running now (started $t)"; elif [ "$r" = 267011 ]; then ok "$n: not run yet"; else bad "$n: last run $t ended with code $r"; fi
 done <<< "$TASKS"
 GD=$(tail -1 "$LOGDIR/gdrive.log" 2>/dev/null); say "  info  Drive backup log: ${GD:-none}"
 
@@ -123,6 +123,11 @@ SV=$($SG 'php ~/www/traverseplatforms.com/traverse-tools/site-visitors.php --lin
 PF=$($SG 'cd ~/www/traverseplatforms.com/sixfold-tools && php profit-check.php --line && php profit-check.php --alert' < /dev/null 2>/dev/null)
 [ -n "$PF" ] && say "  info  $(printf '%s' "$PF" | head -1)"
 case "$PF" in *"alert sent"*) say "  info  PROFIT ALERT emailed to Matthew";; *"NOT sent"*) bad "profit alert could not be emailed";; esac
+
+# 10. The quarterly new-construction refresh on this laptop (2026-11-15, Matthew: "Go ahead and schedule that"): its last log line. The task
+# names the run; the Wi-Fi queue job everyq runs it off the hotspot (traverse/data-pipeline/door-territory/every1115/refresh-quarterly.sh).
+NH=$(tail -1 "$DT/logs-refresh-quarterly.log" 2>/dev/null)
+case "$NH" in *FAILED*|*STOPPED*) bad "new homes refresh: $(printf '%s' "$NH" | cut -c1-160)";; "") ;; *) say "  info  new homes refresh: $(printf '%s' "$NH" | cut -c1-160)";; esac
 
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"

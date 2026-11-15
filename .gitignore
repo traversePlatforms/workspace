@@ -401,3 +401,6 @@ matthew/clients/peak-pickleball/data/
 traverse/research/prospects/new152-contacts.csv
 traverse/research/prospects/call-list-2026-11-06/*.csv
 traverse/research/prospects/call-list-2026-11-06/call-sheet.*
+# every-home quarterly refresh runs (owner names in the lists; 15 Nov 2026)
+traverse/data-pipeline/door-territory/every1115/runs/
+traverse/data-pipeline/door-territory/every1115/refresh-run.txt

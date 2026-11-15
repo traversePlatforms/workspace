@@ -15,7 +15,7 @@ set -u
 # EH_RUN: the run folder under ~/run on the VM (every1115 for the 15 Nov batch; every-<yyyymmdd> for a quarterly refresh, refresh-quarterly.sh)
 RUN=${EH_RUN:-every1115}
 cd "$(dirname "$0")/.." || exit 1
-S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp/$RUN"; mkdir -p "$S"
+S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp/$RUN"; mkdir -p "$S"; SN=$(cygpath -m "$S")   # SN: the same folder as Node on Windows reads it
 VM="ssh -o ConnectTimeout=20 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101"; RD=../../app/data/rounds
 step() { echo "$(date +%T) $*"; }
 stop() { step "STOP: $*"; exit 1; }
@@ -23,35 +23,44 @@ retry() { "$@" || { sleep 120; "$@"; } || { sleep 300; "$@"; }; }
 offhot() { while netsh wlan show interfaces 2>/dev/null | grep SSID | grep -v BSSID | head -1 | grep -qi iphone; do step "on the iPhone hotspot: waiting"; sleep 120; done; }
 up6() { local label=$1 i; for i in 1 2 3; do offhot; bash upload-towns-sixfold.sh "$@"; [ -f "logs-upload/$label.done" ] && return 0; step "batch $label not confirmed (try $i)"; sleep $((i * 120)); done; return 1; }
 busy() { powershell.exe -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='bash.exe'\" | Where-Object { \$_.CommandLine -match 'finish-gap|upload-gap|finish-rent|finish-yardv3|finish-yardgap|rebuild-upload-all|refresh-permits|refresh-weekly|deploy-app|push-edition|push-sixfold-side|upload-towns-sixfold' }).Count" 2>/dev/null | tr -d '\r'; }
+# EH_LOCAL=1 + EH_DIR=<run dir> (15 Nov, the quarterly refresh on this laptop: every1115/refresh-quarterly.sh): measured here, nothing to copy back
+LOCAL=${EH_LOCAL:-}; EDIR=${EH_DIR:-}
 offhot
+if [ -z "$LOCAL" ]; then
 $VM "test -f ~/run/$RUN/ehb.vmdone" < /dev/null || stop "ehb is not finished: $($VM 'cat ~/run-status.txt' < /dev/null)"
+fi
 i=0; while [ "$(busy)" != "0" ]; do i=$((i + 1)); [ $i -gt 72 ] && stop "another upload or build has run for 6 hours"; step "another upload/build is running: waiting"; sleep 300; done
 
+if [ -n "$LOCAL" ]; then
+  [ -f "$EDIR/ehb.done" ] || stop "the laptop measuring ($EDIR) is not finished"
+  B=""; W="$EDIR/lists"; T="$(pwd)"
+else
 step "copy back"
 $VM "RUN=$RUN; "'cd ~/run && T=tv/traverse; D=$T/data-pipeline/door-territory; W=$RUN/lists; N=$(awk -F"\t" "\$2==\"new\"{print \$1}" $W/keys.tsv); tar czf - $W $(cut -f1 $W/keys.tsv | while read -r k; do [ -f lawn-trial/yard-v2/$k.json ] && echo lawn-trial/yard-v2/$k.json; done) $(for k in $N; do for f in $D/$k-areas.json $T/app/data/rounds/material-$k.json $T/app/data/rounds/naip-$k.json $D/roofs/houses-$k.json; do [ -f $f ] && echo $f; done; done) $(for f in $D/tree-cache.json $D/tree-zones/town-surveys-extra.json $D/roofs/roof-cache.json $D/solar/solar-cache.json $D/value-cache.json; do [ -f $f ] && echo $f; done)' < /dev/null > "$S/back.tgz.part" || stop "copy back failed"
 mv -f "$S/back.tgz.part" "$S/back.tgz"
 rm -rf "$S/back" && mkdir -p "$S/back" && tar xzf "$S/back.tgz" -C "$S/back" || stop "unpack failed"
 B="$S/back"; W="$B/$RUN/lists"; T="$B/tv/traverse/data-pipeline/door-territory"
+fi
 mkdir -p every1115/b every1115/marks && cp "$W/summary.tsv" "$W/kinds.json" "$W/new/registered.json" every1115/b/
 
 step "door counts and ids before"
-node -e "const fs=require('fs');const R='$RD';const idx=JSON.parse(fs.readFileSync(R+'/index.json')).regions;const o={};for(const r of idx){const f=R+'/'+r.key+'.json';if(!fs.existsSync(f))continue;const j=JSON.parse(fs.readFileSync(f));o[r.key]=j.areas.flatMap(a=>a.doors.map(d=>d.id))}fs.writeFileSync('$S/ids-before.json',JSON.stringify(o));console.log('towns',Object.keys(o).length,'doors',Object.values(o).reduce((s,l)=>s+l.length,0))" || stop "could not read the door files"
+node -e "const fs=require('fs');const R='$RD';const idx=JSON.parse(fs.readFileSync(R+'/index.json')).regions;const o={};for(const r of idx){const f=R+'/'+r.key+'.json';if(!fs.existsSync(f))continue;const j=JSON.parse(fs.readFileSync(f));o[r.key]=j.areas.flatMap(a=>a.doors.map(d=>d.id))}fs.writeFileSync('$SN/ids-before.json',JSON.stringify(o));console.log('towns',Object.keys(o).length,'doors',Object.values(o).reduce((s,l)=>s+l.length,0))" || stop "could not read the door files"
 (cd "$RD" && md5sum *.json | LC_ALL=C sort -k2) > "$S/md5-before.txt"
 
 step "place the lists"
 n=0; for f in "$W"/add/*-add1115-areas.json "$W"/add/*-bld1115-areas.json; do [ -f "$f" ] && cp "$f" . && n=$((n+1)); done; step "add lists: $n"
-NEWK=$(node -e "console.log(require('$W/new/registered.json').map(t=>t.key).join(' '))")
-for k in $NEWK; do cp "$W/new/$k.csv" "$k.csv" && cp "$T/$k-areas.json" "$k-areas.json" || stop "missing door list or neighbourhoods for $k"
+NEWK=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1])).map(t=>t.key).join(' '))" "$W/new/registered.json")
+for k in $NEWK; do { [ -n "$LOCAL" ] || { cp "$W/new/$k.csv" "$k.csv" && cp "$T/$k-areas.json" "$k-areas.json"; }; } && [ -s "$k-areas.json" ] || stop "missing door list or neighbourhoods for $k"
   for f in material naip; do [ -f "$B/tv/traverse/app/data/rounds/$f-$k.json" ] && cp "$B/tv/traverse/app/data/rounds/$f-$k.json" "$RD/$f-$k.json"; done
   [ -f "$T/roofs/houses-$k.json" ] && cp "$T/roofs/houses-$k.json" "roofs/houses-$k.json"; done
 step "new towns: $(echo $NEWK | wc -w)"
 rm -f every1115/marks/*.json; for f in "$W"/marks/*.json; do [ -f "$f" ] && cp "$f" every1115/marks/; done
 n=0; for f in "$B"/lawn-trial/yard-v2/*.json; do [ -f "$f" ] && cp "$f" lawn-trial/yard-v2/ && n=$((n+1)); done; step "yard v2 files: $n"
-for pair in "tree-cache.json:$T/tree-cache.json" "roofs/roof-cache.json:$T/roofs/roof-cache.json" "solar/solar-cache.json:$T/solar/solar-cache.json" "value-cache.json:$T/value-cache.json"; do
+[ -n "$LOCAL" ] || for pair in "tree-cache.json:$T/tree-cache.json" "roofs/roof-cache.json:$T/roofs/roof-cache.json" "solar/solar-cache.json:$T/solar/solar-cache.json" "value-cache.json:$T/value-cache.json"; do
   loc=${pair%%:*}; cl=${pair#*:}; [ -f "$cl" ] || { step "no cloud $loc"; continue; }; [ -f "$loc" ] && cp "$loc" "$loc.before-every-$(date +%Y%m%d)"
   node -e "const fs=require('fs');const [a,b]=process.argv.slice(1);const L=fs.existsSync(a)?JSON.parse(fs.readFileSync(a)):{};const C=JSON.parse(fs.readFileSync(b));let n=0;for(const [k,v] of Object.entries(C))if(!L[k]||(L[k].err&&!v.err)){L[k]=v;n++}fs.writeFileSync(a+'.tmp',JSON.stringify(L));fs.renameSync(a+'.tmp',a);console.log(a,'+',n)" "$loc" "$cl" || stop "cache merge $loc"
 done
-node -e "const fs=require('fs');const a='tree-zones/town-surveys-extra.json';const L=fs.existsSync(a)?JSON.parse(fs.readFileSync(a)):{};const C=JSON.parse(fs.readFileSync(process.argv[1]));let n=0;for(const [k,v] of Object.entries(C))if(!(k in L)){L[k]=v;n++}fs.writeFileSync(a,JSON.stringify(L));console.log(a,'+',n)" "$T/tree-zones/town-surveys-extra.json" || stop "laser keys"
+[ -n "$LOCAL" ] || node -e "const fs=require('fs');const a='tree-zones/town-surveys-extra.json';const L=fs.existsSync(a)?JSON.parse(fs.readFileSync(a)):{};const C=JSON.parse(fs.readFileSync(process.argv[1]));let n=0;for(const [k,v] of Object.entries(C))if(!(k in L)){L[k]=v;n++}fs.writeFileSync(a,JSON.stringify(L));console.log(a,'+',n)" "$T/tree-zones/town-surveys-extra.json" || stop "laser keys"
 step "register"
 node -e "
 const fs=require('fs');const reg=JSON.parse(fs.readFileSync(process.argv[1]));const add=(file,keys)=>{const L=fs.existsSync(file)?JSON.parse(fs.readFileSync(file)):[];let n=0;for(const t of keys)if(!L.some(u=>u.key===t.key)){L.push(t);n++}fs.writeFileSync(file,JSON.stringify(L,null,1));console.log(file,'+',n)};
@@ -71,7 +80,7 @@ node --max-old-space-size=8192 build-others.mjs | tail -3
 
 step "check: no town of ours lost a door, no door id went missing"
 node -e "
-const fs=require('fs');const R='$RD';const before=JSON.parse(fs.readFileSync('$S/ids-before.json'));let bad=[];let gained=0;
+const fs=require('fs');const R='$RD';const before=JSON.parse(fs.readFileSync('$SN/ids-before.json'));let bad=[];let gained=0;
 for(const [k,ids] of Object.entries(before)){const f=R+'/'+k+'.json';if(!fs.existsSync(f)){bad.push(k+' gone');continue}const now=new Set(JSON.parse(fs.readFileSync(f)).areas.flatMap(a=>a.doors.map(d=>d.id)));const miss=ids.filter(i=>!now.has(i));if(miss.length)bad.push(k+' -'+miss.length+' ('+miss.slice(0,3).join(' ')+')');gained+=now.size-ids.length}
 const idx=JSON.parse(fs.readFileSync(R+'/index.json')).regions;const hk={th:0,mh:0,b:0};let all=0;for(const r of idx){const f=R+'/'+r.key+'.json';if(!fs.existsSync(f))continue;for(const a of JSON.parse(fs.readFileSync(f)).areas)for(const d of a.doors){all++;if(d.hk)hk[d.hk]++}}
 console.log('doors gained in towns of ours',gained,'| doors now',all,'| kinds',JSON.stringify(hk));if(bad.length){console.log('LOST:',bad.slice(0,20).join('; '));process.exit(1)}" || stop "a town of ours lost doors: nothing uploaded"
