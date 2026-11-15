@@ -40,12 +40,14 @@ const marksFor = (key) => { const p = join(MARKS_DIR, `${key}.json`); return exi
 const markKey = (a) => String(a || '').toUpperCase().replace(/s+/g, ' ').trim();
 /* the door fields a kind adds (the same for a town's own door and a promoted one) */
 function kindFields(m) {
-  if (!m || !m.k) return {};
-  if (m.k === 'th' || m.k === 'mh') return { hk: m.k };
+  if (!m) return {};
+  const eo = m.eo ? { eo: 1 } : {};   /* editions only (Matthew 15 Nov): new mobile homes and owner-lived houses over 10 acres; the server keeps them off Sixfold */
+  if (!m.k) return eo;
+  if (m.k === 'th' || m.k === 'mh') return { hk: m.k, ...eo };
   if (m.k !== 'b') return {};
-  return { hk: 'b', bk: ['apt', 'condo', 'mhp'].includes(m.bk) ? m.bk : 'apt', ...(m.u > 0 ? { units: m.u } : {}), ...(m.ub ? { ub: m.ub } : {}), ...(m.bn ? { bname: m.bn } : {}), ...(m.ow > 1 ? { owners: m.ow } : {}) };
+  return { hk: 'b', bk: ['apt', 'condo', 'mhp'].includes(m.bk) ? m.bk : 'apt', ...(m.u > 0 ? { units: m.u } : {}), ...(m.ub ? { ub: m.ub } : {}), ...(m.bn ? { bname: m.bn } : {}), ...(m.ow > 1 ? { owners: m.ow } : {}), ...eo };
 }
-const kindShown = (k) => !k || k === 'th' || KINDS;
+const kindShown = (k, eo) => KINDS || (!eo && (!k || k === 'th'));
 let kindsHeld = 0;
 const SOURCES = [
   ['monument', 'Monument', 'monument-areas.json'],
@@ -340,13 +342,16 @@ for (const [key, label, fileName, group] of SOURCES) {
       /* occ (2026-11-08, OWNER-FIELD-SPEC.md): every door on a town's own list passed the owner-lives-here test ('here'), except Group 3's
          doors with no owner on record or no mailing address, where nobody can tell ('unk') */
       /* every1115 marks: a new town's rows carry their own occ and kind; a door of ours can be marked a mobile home or townhome */
-      const m = mk ? (mk[markKey(d.a)] || mk['@' + id.toUpperCase()] || null) : null;
+      /* a mark on a door of ours ('@' + id) only labels it: without KINDS-READY the label waits, the door never leaves (Matthew 15 Nov:
+         the county's mobile homes we already have stay on every list, Sixfold's too) */
+      const own = mk ? mk[markKey(d.a)] || null : null, ours_ = !own && mk ? mk['@' + id.toUpperCase()] || null : null;
+      const m = own || (ours_ && (KINDS || ours_.k === 'th') ? ours_ : null);
       const occ = m && ['here', 'away', 'unk'].includes(m.occ) ? m.occ : lim === 'noowner' || lim === 'noocc' ? 'unk' : 'here';
       return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), occ, ...(commonGround(d, key) ? { cg: 1 } : {}), ...(lim ? { lim } : {}), ...kindFields(m) };
     }),
   }));
   /* mobile homes and buildings wait for KINDS-READY: left out after the ids are given, so no other door's id moves when they come in */
-  for (const a of areas) { const keep = a.doors.map((d, i) => kindShown(d.hk) ? i : -1).filter((i) => i >= 0); if (keep.length === a.doors.length) continue;
+  for (const a of areas) { const keep = a.doors.map((d, i) => kindShown(d.hk, d.eo) ? i : -1).filter((i) => i >= 0); if (keep.length === a.doors.length) continue;
     kindsHeld += a.doors.length - keep.length; a.doors = keep.map((i) => a.doors[i]); a.src = keep.map((i) => a.src[i]); }
   built.push({ key, label, group, j, areas });
 }
@@ -423,7 +428,7 @@ if (PROMOTE) {
       let lid = slug(d.a); while (lseen.has(lid)) lid += 'x'; lseen.add(lid);   /* group1/mkdoors.mjs's ids, which the cloud measured under */
       const base = slug(d.a); if (seenAddr.has(base) || typeof d.la !== 'number') continue;
       if (PUBLIC_OWNER.test(d.o || '')) continue;   /* a church, district, city or HOA parcel is not a home; landlords' LLCs stay */
-      if (!kindShown(d.k === 'th' || d.k === 'mh' || d.k === 'b' ? d.k : null)) { kindsHeld++; continue; }   /* every1115: mh / b wait for KINDS-READY */
+      if (!kindShown(d.k === 'th' || d.k === 'mh' || d.k === 'b' ? d.k : null, d.eo)) { kindsHeld++; continue; }   /* every1115: mh / b wait for KINDS-READY */
       if ((allAt.get(base) || []).some((x) => x.lat == null || km(x.lat, x.lon, d.la, d.lo) < SAME_KM)) continue;
       const at = nearest(d.la, d.lo); if (!at) continue;
       seenAddr.add(base);

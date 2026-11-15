@@ -45,6 +45,7 @@ const num = (v) => (v === '' || v == null || !Number.isFinite(+v) ? null : +v);
 function door(r) {
   const d = { a: r.address, ac: num(r.acres), o: r.owner || null, la: +r.lat, lo: +r.lon, why: null, occ: occOf(r) };
   if (d.occ === 'away') d.rent = 1;
+  if (r.eo === '1') d.eo = 1;   /* editions only (Matthew 15 Nov): new mobile homes and owner-lived houses over 10 acres */
   if (r.kind === 'mh' || r.kind === 'th') d.k = r.kind;
   if (r.kind === 'b') {
     d.k = 'b'; d.bk = r.band === 'apt' || r.band === 'condo' || r.band === 'mhp' ? r.band : 'apt';
@@ -71,7 +72,7 @@ for (const r of rows) {
   if (r.join === 'add') { const M = r.kind === 'b' ? bld : add; (M.get(r.town) || M.set(r.town, []).get(r.town)).push(d); }
   else {
     (csv.get(r.town) || csv.set(r.town, []).get(r.town)).push({ r, d });
-    const m = {}; for (const k of ['occ', 'k', 'bk', 'u', 'ub', 'bn', 'ow']) if (d[k] != null && !(k === 'occ' && d[k] === 'here')) m[k] = d[k];
+    const m = {}; for (const k of ['occ', 'k', 'bk', 'u', 'ub', 'bn', 'ow', 'eo']) if (d[k] != null && !(k === 'occ' && d[k] === 'here')) m[k] = d[k];
     if (Object.keys(m).length) (marks.get(r.town) || marks.set(r.town, {}).get(r.town))[d.a.toUpperCase().replace(/\s+/g, ' ').trim()] = m;
   }
 }
@@ -105,9 +106,8 @@ writeFileSync(join(OUT, 'b-towns.txt'), reg.map((t) => t.key).join('\n') + (reg.
 /* marks for doors of ours (the county says mobile home or townhome) */
 if (existsSync(join(CLS, 'marks-existing.tsv'))) for (const l of readFileSync(join(CLS, 'marks-existing.tsv'), 'utf8').split('\n').slice(1)) {
   const [town, a, k] = l.split('\t'); if (!town || !k) continue;
-  /* a door of ours the county codes as a mobile home stays an ordinary door: labelling it would hide it from Sixfold's lists and its
-     crews' marks (1,110 doors, 15 Nov); Matthew's call (EVERY-HOME-2026-11-15.md) */
-  if (k === 'mh') continue;
+  /* a door of ours the county codes as a mobile home is labelled one and stays on every list, Sixfold's too (Matthew 15 Nov: "leave them as
+     they are and add a filter or switch"); it carries no eo */
   (marks.get(town) || marks.set(town, {}).get(town))[`@${a}`] = { k };   /* '@' + address slug: a door of ours, matched by its id */
 }
 for (const [t, m] of marks) writeFileSync(join(OUT, 'marks', `${t}.json`), JSON.stringify(m));

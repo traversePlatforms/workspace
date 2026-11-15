@@ -165,7 +165,7 @@ if (arg('epc') && existsSync(arg('epc'))) {
 
 const counts = { built: new Date().toISOString(), note: 'counts only (distinct addresses where it says addrs); every1115/classify-vm.mjs', counties: {} };
 const cand = createWriteStream(join(OUT, 'cand.tsv'));
-const CH = ['kind', 'county', 'town', 'join', 'oid', 'parcel', 'use', 'acres', 'address', 'city', 'zip', 'occ', 'owner', 'mail', 'lat', 'lon', 'sub', 'units', 'band', 'owners', 'recv', 'yb', 'why'];
+const CH = ['kind', 'county', 'town', 'join', 'oid', 'parcel', 'use', 'acres', 'address', 'city', 'zip', 'occ', 'owner', 'mail', 'lat', 'lon', 'sub', 'units', 'band', 'owners', 'recv', 'yb', 'why', 'eo'];
 cand.write(CH.join('\t') + '\n');
 const marks = createWriteStream(join(OUT, 'marks-existing.tsv')); marks.write('town\taddress\tkind\n');
 const clean = (s) => String(s ?? '').replace(/[\t\r\n]+/g, ' ').trim();
@@ -227,7 +227,7 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.tsv.gz')).sort()) {
     return (atPt.get(pk(x)) || []).filter((y) => y !== x && y.bkey === x.bkey).length >= 1; };
   const doneBld = new Set();
   const out = (kind, x, town, join_, extra = {}) => cand.write([kind, county, town, join_, x.oid, x.parcel, x.use, (+x.acres || 0).toFixed(3), extra.address || x.situs, x.city, x.zip,
-    extra.occ || (x.occ === 'Y' || x.occ === 'L' ? 'here' : x.occ === 'N' ? 'unk' : 'away'), extra.owner ?? x.owner, extra.mail ?? x.mail, x.la.toFixed(6), x.lo.toFixed(6), clean(x.sub), extra.units ?? x.units ?? '', extra.band ?? '', extra.owners ?? '', x.recv, x.yb ?? '', extra.why || ''].map(clean).join('\t') + '\n');
+    extra.occ || (x.occ === 'Y' || x.occ === 'L' ? 'here' : x.occ === 'N' ? 'unk' : 'away'), extra.owner ?? x.owner, extra.mail ?? x.mail, x.la.toFixed(6), x.lo.toFixed(6), clean(x.sub), extra.units ?? x.units ?? '', extra.band ?? '', extra.owners ?? '', x.recv, x.yb ?? '', extra.why || '', extra.eo ? 1 : ''].map(clean).join('\t') + '\n');
   const doorTown = (x) => {
     if (isHU) return { town: huerfanoTown(x.la, x.lo), join: 'new' };
     const n = nearestTown(x.la, x.lo, 3000); if (n) return { town: n.town, join: 'add' };
@@ -268,15 +268,20 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.tsv.gz')).sort()) {
     }
     if (x.c === 'multi') { const t = bldTown(x); add('bld-apt'); add('bld-apt-units', x.units || 0); out('b', x, t.town, t.join, { address: baseAddr(x.situs) || x.situs, band: 'apt', units: x.units ?? '', why: band(x.use) || '' }); continue; }
     if (x.c === 'mhp' || (x.c === 'mobile' && x.acres > 3 && x.org)) { const t = bldTown(x); add('bld-mhp'); out('b', x, t.town, t.join, { address: baseAddr(x.situs) || x.situs, band: 'mhp', units: x.units ?? '', why: 'park' }); continue; }
-    if (x.acres > 10) { add('big'); if (x.c === 'house' || x.c === 'farmres' || x.c === 'attached') add(`big-${x.occ === 'Y' || x.occ === 'L' ? 'here' : 'away'}`); continue; }
+    /* over 10 acres (Matthew 15 Nov: "Add them to the editions"): an owner-lived house joins the editions only (eo: never on Sixfold's lists,
+       which keep the 10-acre cap); every other big parcel stays out */
+    let eo = false;
+    if (x.acres > 10) { add('big'); const h = x.c === 'house' || x.c === 'farmres' || x.c === 'attached'; const lives = x.occ === 'Y' || x.occ === 'L';
+      if (h) add(`big-${lives ? 'here' : 'away'}`); if (!(h && lives && !x.org)) continue; eo = true; add('big-eo'); }
     if (x.org && (x.occ === 'Y' || x.occ === 'L')) { add('bizhere'); continue; }
     const t = doorTown(x); const key = `${t.town}|${slug(x.situs)}`;
     if (seenAddr.has(key)) { add('repeat'); continue; } seenAddr.add(key);
     const here = x.occ === 'Y' || x.occ === 'L';   /* bucket names say here / away; occ 'N' (no mailing address) is written as unk */
-    if (x.c === 'mobile') { add(`mh-${here ? 'here' : 'away'}`); out('mh', x, t.town, t.join); continue; }
-    if (x.c === 'condo' || x.unit || TOWNUSE.test(x.use)) { add(`th-${here ? 'here' : 'away'}`); out('th', x, t.town, t.join, { why: x.unit ? 'only unit at its address' : '' }); continue; }
+    /* a new mobile home joins the editions only (eo); doors of ours the county codes as mobile homes stay on Sixfold's lists (marks) */
+    if (x.c === 'mobile') { add(`mh-${here ? 'here' : 'away'}`); out('mh', x, t.town, t.join, { eo: true }); continue; }
+    if (x.c === 'condo' || x.unit || TOWNUSE.test(x.use)) { add(`th-${here ? 'here' : 'away'}`); out('th', x, t.town, t.join, { why: x.unit ? 'only unit at its address' : eo ? 'over 10 acres' : '', eo }); continue; }
     add(`house-${here ? 'here' : 'away'}`); add(`house-${here ? 'here' : 'away'}-${t.join}`);
-    out('house', x, t.town, t.join);
+    out('house', x, t.town, t.join, eo ? { eo: true, why: 'over 10 acres' } : {});
   }
   counts.counties[county] = C;
   console.log(`${county}: ${C.parcels} parcels, ${C.ours} ours; ${Object.entries(C.b).filter(([k]) => !/units|-add|-new/.test(k)).map(([k, v]) => `${k} ${v}`).join(', ')}`);
