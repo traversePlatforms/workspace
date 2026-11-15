@@ -118,5 +118,11 @@ case "$CF" in *FAILED*) bad "$CF";; *) say "  info  $CF";; esac
 SV=$($SG 'php ~/www/traverseplatforms.com/traverse-tools/site-visitors.php --line' < /dev/null 2>/dev/null | tail -1)
 [ -n "$SV" ] && say "  info  $SV"
 
+# 9. Sixfold profit, for Matthew's 5% share (2026-11-15, Matthew: "alert me when we are profitable"). Source: traverse/app/tools/profit-check.php
+# (sixfold-tools on the server). --alert emails him once, and only after the unknown costs are set (profit-costs.json unknownMonthly).
+PF=$($SG 'cd ~/www/traverseplatforms.com/sixfold-tools && php profit-check.php --line && php profit-check.php --alert' < /dev/null 2>/dev/null)
+[ -n "$PF" ] && say "  info  $(printf '%s' "$PF" | head -1)"
+case "$PF" in *"alert sent"*) say "  info  PROFIT ALERT emailed to Matthew";; *"NOT sent"*) bad "profit alert could not be emailed";; esac
+
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"

@@ -27,7 +27,7 @@ date_default_timezone_set('America/Denver');
 
 const EOD_HOUR = 20;
 const EOD_BRANDON = 'Bincline@gmail.com';
-const EOD_JEN = 'jmcpherson@aeration365.com';   /* 2026-11-15, Matthew (Jen and Brad take Sixfold over): 'End of day reports will still go to brandon but we can also add Jen at her jmcpherson email for aeration 365'; her own email, like Brandon's */
+const EOD_JEN = 'J.McPherson@365aeration.com';   /* 2026-11-15, Matthew (Jen and Brad take Sixfold over): 'End of day reports will still go to brandon but we can also add Jen at her jmcpherson email for aeration 365'; her own email, like Brandon's */
 $eArgs = array_slice($argv ?? [], 1);
 $eDry = in_array('--dry-run', $eArgs, true); $eTest = in_array('--test', $eArgs, true);
 $W = in_array('--week', $eArgs, true);
