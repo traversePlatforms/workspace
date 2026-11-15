@@ -15,7 +15,9 @@
              caches, walk lists, roof, solar, pest, security, permit, wind and commercial results), minus the big downloaded
              caches that can simply be downloaded again (laser scans, building outlines, roof photo crops, county raw files)
            - surge/clients (client material is kept out of git)
-         It is built in a temp folder and moved in whole, so Drive never uploads a half-written file. The newest 7 are kept.
+         It is built in a temp folder and moved in whole, so Drive never uploads a half-written file. Made once a week since
+         15 Nov 2026 (-EveryDays 7; -Now forces one); the newest 2 are kept. Every deleted archive sits in Drive's trash for 30
+         days and still counts against the Workspace storage, so keep -Keep and the pace low.
 
       1c. The GitHub copy (github.com/traversePlatforms/workspace, private) via shared\tools\github-sync.sh, which leaves out
          Surge's restricted notes. Its failure is logged, not fatal.
@@ -44,9 +46,15 @@ param(
     [string]$Project  = "C:\Users\Surge Inc\Desktop\claude test 2",
     [string]$Drive    = "G:\My Drive",
     [string]$PassFile = "C:\Users\Surge Inc\.ssh\backup-archive-pass.txt",
-    [int]$Keep        = 7,
-    [switch]$Media
+    [int]$Keep        = 2,
+    [int]$EveryDays   = 7,
+    [switch]$Media,
+    [switch]$Now
 )
+# 15 Nov 2026 (Google: "You've exceeded the pooled storage limit" for traverseplatforms.com, read-only from 27 Nov; Matthew: "do 1
+# and 2"): a 1.7 GB archive every night, keeping 7, meant one 1.7 GB file deleted every night, and Drive keeps deleted files in its
+# trash for 30 days, still counted against the storage (30-50 GB of old archives). Now the archive is made once a week (-EveryDays)
+# and only the newest 2 are kept; -Now forces one. The GitHub copy (git history, minus Surge's notes) still goes out every night.
 $ErrorActionPreference = 'Stop'
 $SevenZip = "C:\Program Files\7-Zip\7z.exe"
 $Memory   = "C:\Users\Surge Inc\.claude\projects\c--Users-Surge-Inc-Desktop-claude-test-2\memory"
@@ -72,10 +80,14 @@ try {
     New-Item -ItemType Directory -Force -Path $Dest | Out-Null
 
     $day   = "{0:yyyy-MM-dd}" -f (Get-Date)
+    $newest = Get-ChildItem -LiteralPath $Dest -Filter "core-*.7z" -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+    $archiveDue = $Now -or -not $newest -or ((Get-Date) - $newest.LastWriteTime).TotalDays -ge ($EveryDays - 0.5)
     $stage = Join-Path $env:TEMP "gdrive-backup-stage"
     if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
     New-Item -ItemType Directory -Force -Path $stage | Out-Null
 
+    if (-not $archiveDue) { Say ("archive not due: newest is {0}, made every {1} days" -f $newest.Name, $EveryDays) }
+    else {
     # 1a. git history as one file
     $bundle = Join-Path $stage "repo.bundle"
     & git -C $Project bundle create $bundle --all 2>&1 | Out-Null
@@ -107,6 +119,7 @@ try {
     # keep the newest $Keep
     $old = Get-ChildItem -LiteralPath $Dest -Filter "core-*.7z" | Sort-Object Name -Descending | Select-Object -Skip $Keep
     foreach ($o in $old) { Remove-Item -LiteralPath $o.FullName -Force; Say ("removed old {0}" -f $o.Name) }
+    }
 
     # 1c. GitHub copy (2026-10-25, Matthew): github-sync.sh strips Surge's notes and pushes. A failure here (offline, sign-in)
     # is logged but does not fail the backup.
