@@ -27,6 +27,26 @@ const PREVIEW = process.env.ROUNDS_PREVIEW === '1';
    arent"): the office-lookup homes (<town>-lookup-areas.json) join the town's door lists with occ 'away'. ONLY when
    gap1108/GO-rented exists (his go after the counts), or ROUNDS_PROMOTE=1 for a preview. Spec: gap1108/OWNER-FIELD-SPEC.md */
 const PROMOTE = process.env.ROUNDS_PROMOTE === '1' || existsSync(join(HERE, 'gap1108', 'GO-rented'));
+/* Every home (2026-11-15, every1115/EVERY-HOME-2026-11-15.md; Matthew: "every residential property in Colorado ... that we possibly can").
+   Doors can carry hk (home kind): 'th' townhome (a condo parcel with its own footprint: an ordinary door, Sixfold too), 'mh' mobile home, 'b' an
+   apartment / condo building or mobile home park (one entry: bk apt|condo|mhp, units, ub unit band, bname, owners). mh and b doors are
+   built ONLY when every1115/KINDS-READY exists (or ROUNDS_KINDS=1 for a preview): the server and page must hide them on Sixfold and
+   label / filter them in the editions first, as gap1108/APP-READY did for occ. Without it they are left out, ids unchanged.
+   every1115/marks/<town>.json: { ADDRESS: { occ, k, bk, u, ub, bn, ow } } for a town's own doors (new towns' rows, and '@<ID SLUG>' for
+   doors of ours the county codes as a mobile home or townhome). */
+const KINDS = process.env.ROUNDS_KINDS === '1' || existsSync(join(HERE, 'every1115', 'KINDS-READY'));
+const MARKS_DIR = join(HERE, 'every1115', 'marks');
+const marksFor = (key) => { const p = join(MARKS_DIR, `${key}.json`); return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : null; };
+const markKey = (a) => String(a || '').toUpperCase().replace(/s+/g, ' ').trim();
+/* the door fields a kind adds (the same for a town's own door and a promoted one) */
+function kindFields(m) {
+  if (!m || !m.k) return {};
+  if (m.k === 'th' || m.k === 'mh') return { hk: m.k };
+  if (m.k !== 'b') return {};
+  return { hk: 'b', bk: ['apt', 'condo', 'mhp'].includes(m.bk) ? m.bk : 'apt', ...(m.u > 0 ? { units: m.u } : {}), ...(m.ub ? { ub: m.ub } : {}), ...(m.bn ? { bname: m.bn } : {}), ...(m.ow > 1 ? { owners: m.ow } : {}) };
+}
+const kindShown = (k) => !k || k === 'th' || KINDS;
+let kindsHeld = 0;
 const SOURCES = [
   ['monument', 'Monument', 'monument-areas.json'],
   ['palmer-lake', 'Palmer Lake', 'palmer-lake-areas.json'],
@@ -305,7 +325,7 @@ for (const [key, label, fileName, group] of SOURCES) {
   const p = join(HERE, fileName);
   if (!existsSync(p)) { console.log(`skipping ${label} — no ${fileName}`); continue; }
   const j = JSON.parse(readFileSync(p, 'utf8'));
-  const seen = new Set(), limOf = limitedFor(key);
+  const seen = new Set(), limOf = limitedFor(key), mk = marksFor(key);
   const areas = j.areas.map((a) => ({
     name: a.name,
     avg: a.avg ? +a.avg.toFixed(2) : null,
@@ -317,10 +337,15 @@ for (const [key, label, fileName, group] of SOURCES) {
       const lim = limOf ? limOf(d.a) : null; if (lim) { limN++; limTowns.add(key); }
       /* occ (2026-11-08, OWNER-FIELD-SPEC.md): every door on a town's own list passed the owner-lives-here test ('here'), except Group 3's
          doors with no owner on record or no mailing address, where nobody can tell ('unk') */
-      const occ = lim === 'noowner' || lim === 'noocc' ? 'unk' : 'here';
-      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), occ, ...(commonGround(d, key) ? { cg: 1 } : {}), ...(lim ? { lim } : {}) };
+      /* every1115 marks: a new town's rows carry their own occ and kind; a door of ours can be marked a mobile home or townhome */
+      const m = mk ? (mk[markKey(d.a)] || mk['@' + id.toUpperCase()] || null) : null;
+      const occ = m && ['here', 'away', 'unk'].includes(m.occ) ? m.occ : lim === 'noowner' || lim === 'noocc' ? 'unk' : 'here';
+      return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), occ, ...(commonGround(d, key) ? { cg: 1 } : {}), ...(lim ? { lim } : {}), ...kindFields(m) };
     }),
   }));
+  /* mobile homes and buildings wait for KINDS-READY: left out after the ids are given, so no other door's id moves when they come in */
+  for (const a of areas) { const keep = a.doors.map((d, i) => kindShown(d.hk) ? i : -1).filter((i) => i >= 0); if (keep.length === a.doors.length) continue;
+    kindsHeld += a.doors.length - keep.length; a.doors = keep.map((i) => a.doors[i]); a.src = keep.map((i) => a.src[i]); }
   built.push({ key, label, group, j, areas });
 }
 if (limN) console.log(`limited data: ${limN} doors marked lim in ${limTowns.size} towns`);
@@ -378,7 +403,7 @@ let promoted = 0, promotedAway = 0;
 const PUBLIC_OWNER = /\b(CHURCH|MINISTR\w*|DISTRICT|METROPOLITAN|CITY OF|TOWN OF|COUNTY|STATE OF|UNITED STATES|SCHOOL|ACADEMY|ASSOCIATION|ASSN|HOA|HOMEOWNERS|CEMETERY|SANITATION|WATER|UTILIT\w*|HOUSING AUTHORITY)\b/i;
 if (PROMOTE) {
   const allAt = new Map(); for (const b of built) for (const a of b.areas) for (const d of a.doors) (allAt.get(d.id) || allAt.set(d.id, []).get(d.id)).push(d);
-  for (const b of built) for (const suffix of ['lookup', 'lookup2']) {   /* lookup2: Groups 1-3, gap1108/rent-lists-vm.mjs */
+  for (const b of built) for (const suffix of ['lookup', 'lookup2', 'add1115', 'bld1115']) {   /* lookup2: Groups 1-3, gap1108/rent-lists-vm.mjs; add1115 / bld1115: every1115/make-lists-vm.mjs (homes, buildings) */
     const p = join(HERE, `${b.key}-${suffix}-areas.json`); if (!existsSync(p)) continue;
     const ids = new Set(b.areas.flatMap((a) => a.doors.map((d) => d.id)));
     const CELL = 0.002, grid = new Map();
@@ -391,12 +416,13 @@ if (PROMOTE) {
       let lid = slug(d.a); while (lseen.has(lid)) lid += 'x'; lseen.add(lid);   /* group1/mkdoors.mjs's ids, which the cloud measured under */
       const base = slug(d.a); if (seenAddr.has(base) || typeof d.la !== 'number') continue;
       if (PUBLIC_OWNER.test(d.o || '')) continue;   /* a church, district, city or HOA parcel is not a home; landlords' LLCs stay */
+      if (!kindShown(d.k === 'th' || d.k === 'mh' || d.k === 'b' ? d.k : null)) { kindsHeld++; continue; }   /* every1115: mh / b wait for KINDS-READY */
       if ((allAt.get(base) || []).some((x) => x.lat == null || km(x.lat, x.lon, d.la, d.lo) < SAME_KM)) continue;
       const at = nearest(d.la, d.lo); if (!at) continue;
       seenAddr.add(base);
       let id = base; while (ids.has(id)) id += 'x'; ids.add(id);
       const v2 = yardV2[`${b.key}-${suffix}/${lid}`];
-      const nd = { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la, lon: d.lo, fire: fireOf(d), lawn: v2 ? { ...v2 } : lawnFor(d, b.key, id), trees: treesOf(d), val: valueOf(d), occ: d.rent ? 'away' : 'here', ...(commonGround(d, b.key) ? { cg: 1 } : {}) };
+      const nd = { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la, lon: d.lo, fire: fireOf(d), lawn: v2 ? { ...v2 } : lawnFor(d, b.key, id), trees: treesOf(d), val: valueOf(d), occ: ['here', 'away', 'unk'].includes(d.occ) ? d.occ : d.rent ? 'away' : 'here', ...(commonGround(d, b.key) ? { cg: 1 } : {}), ...kindFields(d) };
       const area = b.areas[at.ai], i = area.doors.indexOf(at.d);
       area.doors.splice(i + 1, 0, nd); area.src.splice(i + 1, 0, d);
       (allAt.get(id) || allAt.set(id, []).get(id)).push(nd);
@@ -404,6 +430,7 @@ if (PROMOTE) {
     }
   }
   console.log(`rented doors: ${promoted} office-lookup homes joined the door lists (${promotedAway} owner elsewhere)`);
+  if (kindsHeld) console.log(`every1115: ${kindsHeld} mobile homes / buildings held back (no every1115/KINDS-READY)`);
 }
 
 /* ---- when a house sells (2026-10-03) ---------------------------------------
