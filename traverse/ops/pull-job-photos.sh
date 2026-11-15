@@ -31,5 +31,24 @@ if [ "$N" -gt 0 ]; then
 else
   $SG 'cat ~/job-photos-export/photos.csv' < /dev/null > "$DEST/photos.csv"
 fi
+# 15 Nov 2026 (Matthew, the handover to Jen and Brad: "put it in a shared drive and give her access so she has everything. And we keep
+# pulling you and I on our end as brad adds new photos"): every photo is also copied into the Sixfold "Photo content dump" shared drive
+# (I:, the contact@sixfoldcolorado.com account), named as that drive already is: "YYYY-MM/YYYY-MM-DD Street, Town", with no customer name
+# and no house number. Copy only, never delete; a missing drive is a note, not a failure.
+SHARE="/i/Shared drives/Photo content dump"; SN=0
+if [ -d "$SHARE" ]; then
+  while IFS= read -r rp; do
+    [ -n "$rp" ] || continue; d=$(dirname "$rp"); day=${d:0:10}
+    rest=$(printf '%s' "${d:11}" | sed -E 's/^.* - //; s/^[0-9]+[A-Za-z]? +//')
+    case "${d:11}" in *" - "*) ;; *) rest="";; esac   # no " - ": the folder holds only a name, never copy it
+    [ -n "$rest" ] || rest="Street not on file"
+    tgt="$SHARE/${day:0:7}/$day $rest"; f=$(basename "$rp")
+    [ -f "$tgt/$f" ] && continue
+    mkdir -p "$tgt" && cp -p "$DEST/$rp" "$tgt/$f" && SN=$((SN + 1))
+  done <<< "$(cd "$DEST" && find . -type f -name "*.jpg" | sed 's#^\./##' | sort)"
+  echo "job photos: $SN copied to the shared drive"
+else
+  echo "job photos: shared drive I: not mounted, nothing copied there"
+fi
 echo "$TODAY" > "$STAMP"
 echo "job photos: $N new, $(printf '%s\n' "$REMOTE" | grep -c .) on the server, folders $(find "$DEST" -mindepth 1 -maxdepth 1 -type d | wc -l)"
