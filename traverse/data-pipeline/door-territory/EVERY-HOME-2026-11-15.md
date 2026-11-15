@@ -23,7 +23,7 @@ Plus two asks from the main session the same day:
 | Lawns for doors with no yard reading (76,260) | **Measuring** on the VM (stage `yardgap`) |
 | A + B + C + D lists | **Built**. Measuring (stage `ehb`) is queued after `yardgap` |
 | Going live with A–D | Automatic, through the Wi-Fi queue jobs `yardgap` then `every` |
-| E: quarterly refresh | Scheduled. Windows task "Traverse new homes refresh", 15 Feb / May / Aug / Nov at 02:00. It needs the cloud machine |
+| E: quarterly refresh | Scheduled on this laptop. Windows task "Traverse new homes refresh", 15 Feb / May / Aug / Nov at 02:00, run through the Wi-Fi queue job `everyq` |
 
 ## The rule for what is a door
 
@@ -208,40 +208,80 @@ Gates in `build-rounds-data.mjs`:
   - Live read-back: monument 224a46826f24, highlands-ranch f118c491dcad and welby eb74628f684b, identical on Sixfold, Yards and Roofing.
   - Before the push, all 2,094 edition door files were checked equal to the build.
 
-## E: the quarterly refresh
+## E: the quarterly refresh (on this laptop)
 
-`every1115/refresh-quarterly.sh`, run by the Windows task "Traverse new homes refresh" (`ops/refresh-new-homes.sh`). First run: 15 Feb 2027, 02:00.
+Matthew, 15 Nov: "Go ahead and schedule that." It runs on this laptop, so no cloud machine is needed after 22 Nov.
 
-Each run:
-
-1. Exports today's doors to the cloud machine.
-2. Adds three dated stages (`eq<date>pull` / `list` / `meas`) to the fill1031 queue. These are the same pull, recount and measuring as above, so any house on the layer that is not a door yet comes in: houses built or first recorded since the last run, and anything missed.
-3. Hands the finish to the Wi-Fi queue job `everyq`.
-
-If the cloud machine does not answer, the run writes so in `logs-refresh-quarterly.log` and does nothing. After 22 Nov that will be the case unless the VM is kept or restarted for a day each quarter.
+- **The Windows task "Traverse new homes refresh"** (`ops/refresh-new-homes.sh`) runs 15 Feb, 15 May, 15 Aug and 15 Nov at 02:00, registered like the other laptop tasks. First run: 15 Feb 2027. It only names the run (`every1115/refresh-run.txt`).
+- **The Wi-Fi queue job `everyq`** then runs `every1115/refresh-quarterly.sh`:
+  - It skips with exit 4 on the "iPhone" hotspot or with no internet; the queue retries later, and the run resumes where it stopped.
+  - The steps are: a fresh read of the state parcel layer (~2–3 h), today's doors exported, the same recount and lists as above, laptop measuring (`every1115/ehb-laptop.sh`: yard, trees, roof and sun where a laser survey covers, values; no roof-material pass on the laptop), then the same finisher in local mode, which stops before any upload if a town of ours loses a door.
+  - The run folder `every1115/runs/<run>/` is gitignored (owner names).
+- **Logging:** the overnight check now reports the task's last result ("not run yet" until February), the refresh log's last line (`logs-refresh-quarterly.log`; FAILED or STOPPED counts as a problem), and, as before, the Wi-Fi queue's status.
 
 ## Left out, and why
 
-- **Fremont, Chaffee, Otero:** their terms forbid it. **Cheyenne, Phillips, Moffat:** they need the county's permission. Moffat is on the layer and is skipped by the pull (TR-36).
+- **TR-36 counties (Fremont, Chaffee, Otero, Cheyenne, Phillips, Moffat): stopped, not built.** Matthew answered "We have permission for these counties", relayed by the coordinating session. The public layers were found (see the fact-check log). The pull itself was refused by this session's permission check, because:
+  - Fremont's and Chaffee's published terms forbid this use without purchase or consent;
+  - the permission reached this session second-hand.
+
+  It was not retried county by county. Matthew can allow it directly (a permission rule for this session, or saying so himself). Then `every1115/tr36-pull-vm.mjs` is ready: it writes the six counties in the state-pull format, and the recount takes them like any other county.
+- **Otero beyond La Junta:** the county publishes no parcel layer (a viewer only). Only the City of La Junta's parcels are public, so the rest of Otero would need a request or agreement.
 - **Prowers, Kit Carson, Lincoln, Baca, Crowley, Jackson, Kiowa:** no public bulk source (8 Nov plan).
-- **Houses on more than 10 acres:** 57,718 parcels, 23,244 of them owner-lived. This is the walk lists' cap (Matthew 16 Oct: keep it).
-- **Mobile homes in parks:** the ~90,000 Census mobile homes are mostly not separate parcels. A park is one parcel, and its spaces have no addresses on the layer. They come in as 368 park entries, not doors.
-- **Counties that give no unit-level land use** (Adams, Boulder, Douglas, Weld say only "Residential"): a single-parcel apartment block there can't be told from a house by the record. Units under one address are still caught by the address rule.
-- **1,110 doors we already have that the county codes as mobile homes:** left as ordinary doors. Labelling them would hide them from Sixfold's lists and from its crews' marks. This is Matthew's call.
+- **Houses over 10 acres that are not owner-lived** (31,188), and organisation-owned ones (1,419): still out. The 21,825 owner-lived ones now join the editions (below).
+- **Mobile homes in parks:** a park is one parcel, and its spaces have no addresses on the layer. They come in as 368 park entries, not doors.
+- **Counties that give no unit-level land use** (Adams, Boulder, Douglas, Weld say only "Residential"): a single-parcel apartment block there can't be told from a house by the record.
 
-## Decisions for Matthew
+## Matthew's decisions (15 Nov) and what was done
 
-1. **Mobile homes in the editions: shown by default (with "Hide mobile homes"), or hidden until switched on?**
-   - Built as shown, following "with a filter so crews can hide them".
-   - It is one admin switch per install, or a one-line default change.
-2. **The 1,110 existing doors the county calls mobile homes:** label them (they then leave Sixfold's lists) or leave them as they are (current choice).
-3. **The 10-acre cap:** 23,244 owner-lived houses on bigger parcels are out.
-4. **The quarterly refresh needs a cloud machine after 22 Nov:** keep the VM, restart it for a day each quarter, or skip E.
-5. **TR-36 counties:** unchanged (emails, or buying Fremont / Chaffee).
+1. **"leave them on, add a switch or filter to turn them off".** Mobile homes are shown by default in every edition. Each install has an admin switch (Office > Setup > Mobile homes and buildings) and the Sort & filter chip "Hide mobile homes".
+   - Tested on the harness, edition config: on by default, switch off hides them, the big lot stays.
+   - The same page code is live on all five editions (deploy `homekinds2-1115`, md5 checked).
+   - On real data it can only be seen once the finisher puts the mobile homes live.
+2. **"leave them as they are and add a filter or switch".** The 1,110 doors we already have that the county calls mobile homes now carry the mobile home label and stay on every list, Sixfold's included.
+   - Sixfold now has the same switch (Setup > Mobile homes), default shown.
+   - Buildings stay off Sixfold, always.
+   - Harness, Sixfold config: 9/9 checks.
+3. **"Add them to the editions".** 21,825 owner-lived houses over 10 acres join the five editions as doors marked `eo` (editions only). The 1,419 organisation-owned ones are left out.
+   - `eo` doors never reach Sixfold's lists or search; tested.
+   - New mobile homes (979) are `eo` too, following the original brief (mobile homes to the editions). Only the ones already on Sixfold's lists stay there.
+   - They are measured in `ehb`. Yard v2 answers "big lot" for most, so they get trees, roof and sun but usually no lawn size.
+4. **"Go ahead and schedule that".** Done on this laptop (above).
+5. **"We have permission for these counties".** Stopped, as above. Sources and the quote are in the fact-check log.
+
+**Deploys:**
+
+- `deploy-app.sh homekinds2-1115`: all checks passed. Backup `before-homekinds2-1115-20261115-131839.tgz`. It also carried the admin-account builder's work, committed before the deploy.
+- `deploy-practice.sh`: all checks passed.
+- `every1115/KINDS-READY`: withdrawn while the app was changed, made again after the deploy.
+
+**Counts after the decisions** (lists of 15 Nov 20:05Z; `ehb` measuring them):
+
+- Houses: 54,825 owner-lived (21,825 of them over 10 acres, editions only), 16,432 owner elsewhere, 2,266 not known.
+- Townhomes: 17,894.
+- New mobile homes: 979.
+- Buildings: 15,596.
+- Towns: 323 of ours plus 91 new.
+- Labels on doors we already have: 40,835 townhomes, 1,110 mobile homes.
+
+**Before → after (doors on the lists, buildings not counted):**
+
+- 1,770,653 → about 1,863,000 in the editions.
+- Sixfold gets the same minus about 22,800 editions-only doors.
 
 ## Fact-check log
 
 **Verified:**
+
+- **TR-36 permission.** "Matthew, 15 Nov 2026: we have permission" (relayed by the coordinating session). The sources found 15 Nov:
+  - Cheyenne: CheyenneCO_Parcels, Cheyenne County's ArcGIS Online layer (4,646 parcels).
+  - Phillips: PhillipsCountyParcels, Phillips County (5,504).
+  - Chaffee: CHAFFEE_PARCELS_20250603, published by Salida GIS (18,247).
+  - Moffat: MC_Parcels, Moffat County GIS (10,590).
+  - Fremont: the Fremont County GIS Authority's AUT_AGOL_BASEMAP_DATA_Public, layers "FC Parcels" (28,809; no owner mailing address) and "FC Addresses".
+  - Otero: only the City of La Junta's parcel layer (3,821).
+
+  Not pulled: the session's permission check refused it.
 
 - **Census targets.** ACS 2020-24 B25024 and B25032, as fetched for the 8 Nov plan (`gap1108/acs-county-2026-11-08.json`). Not re-fetched today.
 - **State layer read 15 Nov.** 43 counties, 2,589,396 parcels. That is exactly the 8 Nov count (2,599,937) minus Moffat (10,541), so the layer's parcel counts have not moved in a week.
