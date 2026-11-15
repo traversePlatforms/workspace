@@ -1,5 +1,5 @@
 #!/bin/bash
-# Stage yardgap (fill1031, 15 Nov 2026; every1115/EVERY-HOME-2026-11-15.md; main session: "So many of these lawns are still check before
+# Stage yardgap (fill1031, 15 Nov 2026; EVERY-HOME-2026-11-15.md; main session: "So many of these lawns are still check before
 # quoting"): the doors that have NO yard reading at all (about 215,000, mostly towns added since the last yard run: El Paso, PO-box,
 # rented batches), measured with the 11 Nov settings (yard-scan-v2.mjs V2: green line 0.33, despeckle 4, roof buffer 1 m), the yardv3
 # stage's own way (three workers, one town run per core). Slim lists from the laptop (every1115/yardgap-lists.mjs) in

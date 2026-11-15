@@ -1,5 +1,5 @@
 #!/bin/bash
-# Laptop finisher for VM stage yardgap (fill1031, 15 Nov 2026; every1115/EVERY-HOME-2026-11-15.md; main session 15 Nov: "So many of these
+# Laptop finisher for VM stage yardgap (fill1031, 15 Nov 2026; EVERY-HOME-2026-11-15.md; main session 15 Nov: "So many of these
 # lawns are still check before quoting"). The VM measured, with the 11 Nov settings, the doors that had no yard reading (no entry in
 # lawn-trial/yard-v2/<town>.json, or a "no lot found" answer outside the eight address-point counties) into ~/run/lawn-trial/yard-gap/.
 # finish-yardv3-2026-11-11.sh's own copy-back, backup, build, checks, uploads and live md5 read-back; only the merge differs:

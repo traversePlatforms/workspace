@@ -101,6 +101,17 @@ const houseNo = (s) => (String(s || '').match(/\b(\d+)\b/) || [])[1] || '';
 const ORG = /\b(LLC|INC|CORP|CORPORATION|COMPANY|LP|LLP|LTD|CHURCH|DISTRICT|METROPOLITAN|ASSOCIATION|ASSN|HOA|TOWN OF|CITY OF|COUNTY|STATE OF|UNITED STATES|SCHOOL|ACADEMY|MINISTR\w*|PARTNERS|PARTNERSHIP|HOLDINGS|PROPERTIES|DEVELOPMENT|INVESTMENTS|BANK|MOTEL|HOTEL|STORAGE|VILLAGE|SANITATION|WATER|UTILIT\w*|CEMETERY|FOUNDATION|HOUSING AUTHORITY)\b/i;
 const PUBLIC_OWNER = /\b(CHURCH|MINISTR\w*|DISTRICT|METROPOLITAN|CITY OF|TOWN OF|COUNTY|STATE OF|UNITED STATES|SCHOOL|ACADEMY|ASSOCIATION|ASSN|HOA|HOMEOWNERS|CEMETERY|SANITATION|WATER|UTILIT\w*|HOUSING AUTHORITY)\b/i;
 const UNIT = /(#|\b(APT|UNIT|STE|SUITE|BLDG|SPC|SPACE)\b)\s*\S/i;
+const TOWNUSE = /TOWN ?HO|ROW ?HO|TOWNHOUSE|ROWHOUSE/i;
+const SUFFIX = /^(ST|STREET|AVE|AV|AVENUE|PL|PLACE|WAY|DR|DRIVE|CT|COURT|LN|LANE|CIR|CIRCLE|BLVD|TRL|TRAIL|PKWY|PARKWAY|TER|TERRACE|PT|POINT|LOOP|ALY|ROW|SQ|CV|XING|PATH|WALK|GRN|RUN)$/i;
+/* { base, unit }: the street address without its unit, and the unit ('' when none). Roads (RD, HWY) never take a bare unit: "COUNTY RD 830" */
+function unitOf(situs) {
+  const s = String(situs || '').replace(/\s+/g, ' ').trim();
+  const m = s.match(/^(.*?)\s*(?:#|\b(?:APT|UNIT|STE|SUITE|BLDG|SPC|SPACE)\b\.?)\s*(.*)$/i);
+  if (m && m[1]) return { base: m[1].trim().toUpperCase(), unit: (m[2] || '?').trim().toUpperCase() };
+  const t = s.split(' ');
+  if (t.length >= 4 && SUFFIX.test(t[t.length - 2]) && /^([A-Z]?\d{1,5}[A-Z]?|[A-Z]|\d+-[A-Z0-9]+|[A-Z]-?\d+)$/i.test(t[t.length - 1])) return { base: t.slice(0, -1).join(' ').toUpperCase(), unit: t[t.length - 1].toUpperCase() };
+  return { base: s.toUpperCase(), unit: '' };
+}
 const baseAddr = (s) => String(s || '').replace(/\s*(#|\b(APT|UNIT|STE|SUITE|BLDG|SPC|SPACE)\b).*$/i, '').trim();
 const zip5 = (z) => String(z || '').replace(/\D/g, '').slice(0, 5);
 function occOf(situs, mailStreet, mailCity, mailZip, sitCity, sitZip) {
@@ -132,9 +143,9 @@ function occAgain(x, localZips) {
 }
 /* Huerfano: "01ST ST W # 00101" -> "101 W 1ST ST"; "MAIN ST # 00512" -> "512 MAIN ST" (a slash or letter after the number is kept) */
 function huerfanoAddr(s) {
-  const m = String(s || '').match(/^(.*?)\s*#\s*0*(\d+(?:\.\d+)?)([A-Z]?(?:\s*[-&\/]\s*[\d.]+[A-Z]?)*)\s*(?:\(.*\))?\s*$/i); if (!m) return s;
-  let street = m[1].trim().replace(/^0+(\d)/, '$1'); const dm = street.match(/^(.*)\s+(N|S|E|W)$/);
-  return dm ? `${m[2]}${m[3] || ''} ${dm[2]} ${dm[1]}` : `${m[2]}${m[3] || ''} ${street}`;
+  const m = String(s || '').match(/^(.*?)\s*#\s*0*(\d+(?:\.\d+)?)([A-Z]?(?:\s*[-&\/]\s*[\d.]+[A-Z]?)*)\s*(\bUNIT\s+\S+)?\s*(?:\(.*\))?\s*$/i); if (!m) return s;
+  let street = m[1].trim().replace(/^0+(\d)/, '$1'); const dm = street.match(/^(.*)\s+(N|S|E|W)$/); const unit = m[4] ? ` ${m[4].toUpperCase()}` : '';
+  return dm ? `${m[2]}${m[3] || ''} ${dm[2]} ${dm[1]}${unit}` : `${m[2]}${m[3] || ''} ${street}${unit}`;
 }
 const HUERFANO_T = arg('g3') && existsSync(arg('g3')) ? JSON.parse(readFileSync(arg('g3'), 'utf8')).filter((t) => t.county === 'Huerfano') : [];
 const huerfanoTown = (la, lo) => {
@@ -197,10 +208,24 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.tsv.gz')).sort()) {
   { const zc = new Map(); for (const x of rows) if (x.occ === 'Y') { const z = mailParts(x.mail).zip; if (z) zc.set(z, (zc.get(z) || 0) + 1); }
     const localZips = new Set([...zc].filter(([, n]) => n >= 3).map(([z]) => z));
     for (const x of rows) x.occ = occAgain(x, localZips); }
-  /* home parcels per point (~1 m): stacked condo flats share one footprint */
+  /* buildings (15 Nov, revised after the first run): a home with its own street address is a door; units under one shared street address
+     are ONE building entry. A unit is written after #, UNIT, APT, STE, BLDG, SPC, or as a bare unit token after the street type
+     ("12354 W NEVADA PL 304", Jefferson). Parcels with the same address and no unit on one footprint (Denver's stacked condos) are units
+     too. A first run that called every condo parcel with its own footprint a townhome gave Arapahoe 27,870 "townhomes", mostly flats
+     ("2575 S SYRACUSE WAY Ste I306"). */
   const HOMEC = new Set(['house', 'attached', 'condo', 'multi', 'farmres', 'mobile']);
   const pk = (x) => `${x.la.toFixed(5)},${x.lo.toFixed(5)}`;
-  const atPt = new Map(); for (const x of rows) if (HOMEC.has(x.c) && Math.abs(x.la) > 0 && x.situs) { const k = pk(x); (atPt.get(k) || atPt.set(k, []).get(k)).push(x); }
+  const groups = new Map(); const atPt = new Map();
+  for (const x of rows) {
+    if (!HOMEC.has(x.c) || !(Math.abs(x.la) > 0) || !x.situs) continue;
+    const u = unitOf(x.situs); x.base = u.base; x.unit = u.unit; x.bkey = x.base + '|' + (x.zip || x.city);
+    (groups.get(x.bkey) || groups.set(x.bkey, []).get(x.bkey)).push(x);
+    const k = pk(x); (atPt.get(k) || atPt.set(k, []).get(k)).push(x);
+  }
+  const member = (x) => { if (!x.base) return false; const g = groups.get(x.bkey) || [];
+    if (x.unit) return g.filter((y) => y.unit).length >= 2;
+    return (atPt.get(pk(x)) || []).filter((y) => y !== x && y.bkey === x.bkey).length >= 1; };
+  const doneBld = new Set();
   const out = (kind, x, town, join_, extra = {}) => cand.write([kind, county, town, join_, x.oid, x.parcel, x.use, (+x.acres || 0).toFixed(3), extra.address || x.situs, x.city, x.zip,
     extra.occ || (x.occ === 'Y' || x.occ === 'L' ? 'here' : x.occ === 'N' ? 'unk' : 'away'), extra.owner ?? x.owner, extra.mail ?? x.mail, x.la.toFixed(6), x.lo.toFixed(6), clean(x.sub), extra.units ?? x.units ?? '', extra.band ?? '', extra.owners ?? '', x.recv, x.yb ?? '', extra.why || ''].map(clean).join('\t') + '\n');
   const doorTown = (x) => {
@@ -224,23 +249,21 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.tsv.gz')).sort()) {
     const m = ours(x.la, x.lo, slug(x.situs), isEP ? 15 : 6);
     if (m) {
       C.ours++; C.oursByCls[x.c] = (C.oursByCls[x.c] || 0) + 1;
-      if (m.kind === 'door' && (x.c === 'mobile' || (x.c === 'condo' && (atPt.get(pk(x)) || []).length < 2))) marks.write([m.town, m.a, x.c === 'mobile' ? 'mh' : 'th'].join('\t') + '\n');
+      if (m.kind === 'door' && !member(x) && (x.c === 'mobile' || x.c === 'condo' || TOWNUSE.test(x.use))) marks.write([m.town, m.a, x.c === 'mobile' ? 'mh' : 'th'].join('\t') + '\n');
       continue;
     }
     if (PUBLIC_OWNER.test(x.owner)) { add('public'); continue; }
-    const stack = atPt.get(pk(x)) || [];
-    if (stack.length >= 2 && x.c !== 'mhp') {
-      /* one building entry per footprint: units = home parcels on it; skipped when half or more of them are doors of ours already */
-      const k = pk(x); if (doneStack.has(k)) { add('stacked-unit'); continue; } doneStack.add(k);
-      const mine = stack.filter((y) => ours(y.la, y.lo, slug(y.situs), isEP ? 15 : 6)).length;
-      if (mine * 2 >= stack.length) { add('stacked-ours'); continue; }
-      const own = new Map(); for (const y of stack) own.set(y.owner, (own.get(y.owner) || 0) + 1);
-      const top = [...own.entries()].sort((a, b) => b[1] - a[1])[0];
-      const bases = new Map(); for (const y of stack) { const b = baseAddr(y.situs); bases.set(b, (bases.get(b) || 0) + 1); }
-      const addr = [...bases.entries()].sort((a, b) => b[1] - a[1])[0][0];
-      const bk = stack.some((y) => y.c === 'multi') ? 'apt' : 'condo';
-      const t = bldTown(x); add(`bld-${bk}`); add(`bld-${bk}-units`, stack.length); add('stacked-unit');
-      out('b', x, t.town, t.join, { address: addr, units: stack.length, owner: top[1] * 2 > stack.length ? top[0] : '', mail: top[1] * 2 > stack.length ? stack.find((y) => y.owner === top[0]).mail : '', owners: own.size, occ: 'away', band: bk, why: 'stacked' });
+    if (x.c !== 'mhp' && member(x)) {
+      /* one building entry per shared street address: units = its home parcels; skipped when half or more are doors of ours already */
+      if (doneBld.has(x.bkey)) { add('bld-unit'); continue; } doneBld.add(x.bkey);
+      const mem = (groups.get(x.bkey) || []).filter(member); const units = new Set(mem.map((y) => y.situs)).size || mem.length;
+      const mine = mem.filter((y) => ours(y.la, y.lo, slug(y.situs), isEP ? 15 : 6)).length;
+      if (mine * 2 >= mem.length) { add('bld-ours'); continue; }
+      const own = new Map(); for (const y of mem) own.set(y.owner, (own.get(y.owner) || 0) + 1);
+      const top = [...own.entries()].sort((p, q) => q[1] - p[1])[0];
+      const bk = mem.some((y) => y.c === 'multi') ? 'apt' : mem.every((y) => y.c === 'mobile') ? 'mhp' : 'condo';
+      const t = bldTown(x); add(`bld-${bk}`); add(`bld-${bk}-units`, units); add('bld-unit');
+      out('b', x, t.town, t.join, { address: x.base, units, owner: top[1] * 2 > mem.length ? top[0] : '', mail: top[1] * 2 > mem.length ? mem.find((y) => y.owner === top[0]).mail : '', owners: own.size, occ: 'away', band: bk, why: x.unit ? 'units' : 'stacked' });
       continue;
     }
     if (x.c === 'multi') { const t = bldTown(x); add('bld-apt'); add('bld-apt-units', x.units || 0); out('b', x, t.town, t.join, { address: baseAddr(x.situs) || x.situs, band: 'apt', units: x.units ?? '', why: band(x.use) || '' }); continue; }
@@ -251,8 +274,7 @@ for (const f of readdirSync(DIR).filter((x) => x.endsWith('.tsv.gz')).sort()) {
     if (seenAddr.has(key)) { add('repeat'); continue; } seenAddr.add(key);
     const here = x.occ === 'Y' || x.occ === 'L';   /* bucket names say here / away; occ 'N' (no mailing address) is written as unk */
     if (x.c === 'mobile') { add(`mh-${here ? 'here' : 'away'}`); out('mh', x, t.town, t.join); continue; }
-    if (x.c === 'condo') { add(`th-${here ? 'here' : 'away'}`); out('th', x, t.town, t.join); continue; }
-    if (UNIT.test(x.situs)) { add(`th-${here ? 'here' : 'away'}`); out('th', x, t.town, t.join, { why: 'unit, own footprint' }); continue; }
+    if (x.c === 'condo' || x.unit || TOWNUSE.test(x.use)) { add(`th-${here ? 'here' : 'away'}`); out('th', x, t.town, t.join, { why: x.unit ? 'only unit at its address' : '' }); continue; }
     add(`house-${here ? 'here' : 'away'}`); add(`house-${here ? 'here' : 'away'}-${t.join}`);
     out('house', x, t.town, t.join);
   }

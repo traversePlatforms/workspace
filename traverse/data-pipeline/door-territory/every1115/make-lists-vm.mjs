@@ -105,6 +105,9 @@ writeFileSync(join(OUT, 'b-towns.txt'), reg.map((t) => t.key).join('\n') + (reg.
 /* marks for doors of ours (the county says mobile home or townhome) */
 if (existsSync(join(CLS, 'marks-existing.tsv'))) for (const l of readFileSync(join(CLS, 'marks-existing.tsv'), 'utf8').split('\n').slice(1)) {
   const [town, a, k] = l.split('\t'); if (!town || !k) continue;
+  /* a door of ours the county codes as a mobile home stays an ordinary door: labelling it would hide it from Sixfold's lists and its
+     crews' marks (1,110 doors, 15 Nov); Matthew's call (EVERY-HOME-2026-11-15.md) */
+  if (k === 'mh') continue;
   (marks.get(town) || marks.set(town, {}).get(town))[`@${a}`] = { k };   /* '@' + address slug: a door of ours, matched by its id */
 }
 for (const [t, m] of marks) writeFileSync(join(OUT, 'marks', `${t}.json`), JSON.stringify(m));
