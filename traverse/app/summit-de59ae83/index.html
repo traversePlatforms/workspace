@@ -8826,7 +8826,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var why = [], conf = 'Good', lo = 0.85, hi = 1.0;
     /* no tree reading is not an open lot (2026-10-22, Matthew: 3855 S Valentia read "Good to quote" at 3,000 sq ft and measured 8,111 by hand;
        pulled-in houses and towns without the tree scan have no reading, and the photo misses lawn under trees) */
-    if (!treesKnown(h)) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('trees not measured for this house, so the photo may miss lawn under them'); }
+    /* the yard measurement (lawn.y, 2026-11-15, Matthew: "So many of these lawns are still check before quoting"): it already counts lawn under
+       the tree crowns, and on the 25 hand-measured lawns it missed tree-heavy lots no worse than open ones (about 24% either way). So for it,
+       trees alone mean "Fair: ask them", not "Check"; a range under trees, no green, or a house built after the photo still say Check below */
+    if (L.y) { if (tc >= 0.35 || L.lv === 'T') { conf = 'Fair'; why.push('lots of trees: the measurement counts lawn under them, but ask how much is grass'); } else why.push(treesKnown(h) ? 'open lot' : 'measured from the yard photo and tree heights'); }
+    else if (!treesKnown(h)) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('trees not measured for this house, so the photo may miss lawn under them'); }
     else if (L.lv === 'T' || tc >= 0.35) { conf = 'Check'; lo = 0.95; hi = 1.5; why.push('lots of trees, and the photo misses lawn under them'); }
     else if (tc >= 0.2) { conf = 'Fair'; lo = 0.9; hi = 1.25; why.push('some trees over the lawn'); }
     else why.push('open lot');

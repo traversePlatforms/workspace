@@ -217,7 +217,9 @@ function builtYear(key, id) {
   const y = yearOf[key][id]; return y && y.yb ? +y.yb : null;
 }
 function lawnFor(d, key, id) {
-  const L = yardV2[key + '/' + id] ? { ...yardV2[key + '/' + id] } : lawnOf(d);
+  /* y: 1 = the yard measurement (2026-11-15), which already counts lawn under tree crowns, so the card's tree rules (made for the old
+     photo-only figure) don't mark it "Check before quoting" just for trees; the old photo figure has no y */
+  const L = yardV2[key + '/' + id] ? { ...yardV2[key + '/' + id], y: 1 } : lawnOf(d);
   if (!L) return null;
   const yb = builtYear(key, id); if (yb && yb >= (L.yr || 2023)) L.nb = yb;
   return L;
