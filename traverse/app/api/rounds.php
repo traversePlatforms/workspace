@@ -9129,7 +9129,10 @@ if ($action === 'practicelog') {
 if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) {
     if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
     if (!desk()) fail('Not allowed.', 403);
-    $T = helpAll(); $mine = fn($t) => $role === 'admin' || $t['by'] === $me;
+    /* 2026-11-15 (the Sixfold handover; Jen becomes an admin): an admin sees the staff's conversations, never the super admin's. Matthew uses
+       J.A.R.V.I.S. as his own assistant across all his work, and until today every admin (Brandon, Lance, Shelly T) could open his chats */
+    $supers = []; foreach (acctRows($basePeople, $acct, $sessionKey) as $sr) if ($sr['role'] === 'super') $supers[(string) $sr['name']] = true;
+    $T = helpAll(); $mine = fn($t) => $t['by'] === $me || ($role === 'admin' && !isset($supers[(string) $t['by']]));
     /* a PDF from a reply, for whoever may see that conversation (3 Nov); a phone opens it in its own reader */
     if ($action === 'helpfile') {
         $id = (string) ($_GET['id'] ?? ''); $f = (string) ($_GET['f'] ?? '');
