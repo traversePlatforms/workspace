@@ -2375,7 +2375,7 @@ function startSession(array $hit, string $hitCode, string $sessionKey, int $sess
         $a['s'][$mine] = $line; return $a;
     });
     if ($ended) accountLog(['what' => 'elsewhere', 'who' => (string) $hit[0], 'from' => $ended[0], 'to' => $line[3]]);
-    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'onteam' => onTeamOf((string) $payload['n']), 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'sq' => squareFileOn(), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => $payload['r'] === 'office' && acctFlag('wonlost', (string) $payload['c']), 'doors' => $payload['r'] === 'office' && acctFlag('doors', (string) $payload['c']), 'communities' => $payload['r'] === 'office' && acctFlag('communities', (string) $payload['c']), 'results' => $payload['r'] === 'office' && acctFlag('results', (string) $payload['c']), 'fq' => in_array($payload['r'], ['crew', 'manager'], true) && !empty(company()['a365']) && acctFlag('fq', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
+    return ['ok' => true, 'name' => $payload['n'], 'sign' => (string) (company()['_signAs'][$payload['n']] ?? ''), 'role' => $payload['r'] === 'super' ? 'admin' : $payload['r'], 'super' => $payload['r'] === 'super', 'officeui' => $payload['r'] === 'admin' && offAdmId((string) $payload['c']), 'ownhide' => $payload['r'] === 'admin' && !empty(company()['a365']), 'onteam' => onTeamOf((string) $payload['n']), 'walker' => !empty($GLOBALS['acct']['walker'][(string) $payload['c']]), 'pays' => paysOn((string) $payload['c']), 'sq' => squareFileOn(), 'runsteam' => $payload['r'] === 'office' && acctFlag('runsteam', (string) $payload['c']), 'wonlost' => ($payload['r'] === 'office' || ($payload['r'] === 'admin' && offAdmId((string) $payload['c']))) && acctFlag('wonlost', (string) $payload['c']), 'doors' => ($payload['r'] === 'office' || ($payload['r'] === 'admin' && offAdmId((string) $payload['c']))) && acctFlag('doors', (string) $payload['c']), 'communities' => ($payload['r'] === 'office' || ($payload['r'] === 'admin' && offAdmId((string) $payload['c']))) && acctFlag('communities', (string) $payload['c']), 'results' => ($payload['r'] === 'office' || ($payload['r'] === 'admin' && offAdmId((string) $payload['c']))) && acctFlag('results', (string) $payload['c']), 'fq' => in_array($payload['r'], ['crew', 'manager'], true) && !empty(company()['a365']) && acctFlag('fq', (string) $payload['c']), 'mail' => (bool) a365MailCfg(), 'sid' => sessionTag($tok), 'avatar' => avatarVer((string) $payload['c'])];
 }
 
 /* ---- moving between installs (2026-10-12, Matthew: "my super admin account just have all of it ... a drop bar function that lets
@@ -2971,7 +2971,7 @@ function a365Alert(string $title, string $text, bool $super = false, bool $newLe
     global $basePeople, $acct, $sessionKey;
     try {
         $to = []; $tag = 'a365-' . time() . '-' . bin2hex(random_bytes(2));
-        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && (($r['role'] === 'office' && !$web && !($newLead && acctFlag('runsteam', $r['id']))) || (($super || $web) && $r['role'] === 'super'))) $to[] = $r;
+        foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && ((($r['role'] === 'office' || ($r['role'] === 'admin' && offAdmId($r['id']))) && !$web && !($newLead && acctFlag('runsteam', $r['id']))) || (($super || $web) && $r['role'] === 'super'))) $to[] = $r;
         foreach ($to as $r) feedAdd((string) $r['name'], $title, $text, $url, $tag, $newLead ? 'lead' : '');   /* the in-app list (2026-10-27) */
         if ($newLead && !$web) foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && $r['role'] === 'quote') feedAdd((string) $r['name'], $title, $text, $url, $tag, 'lead');   /* Jen's quote login gets new leads in her Leads to call: in her list too, never pushed */
         if (!$push) return;
@@ -4151,7 +4151,7 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
     $vaRole = strncmp($vaId, 'role:', 5) === 0 ? substr($vaId, 5) : null;
     $vaRow = $vaRole !== null ? (in_array($vaRole, previewRoles(), true) ? ['name' => 'Preview', 'role' => $vaRole, 'off' => false] : null)
         : (acctRows($basePeople, $acct, $sessionKey)[$vaId] ?? null);
-    if (!$vaRow || $vaRow['off'] || ($vaRole === null && in_array($vaRow['role'], ['admin', 'super'], true))) out(['ok' => false, 'why' => 'viewgone', 'error' => 'That account is not there any more. Back to your own screen.'], 409);
+    if (!$vaRow || $vaRow['off'] || ($vaRole === null && ($vaRow['role'] === 'super' || ($vaRow['role'] === 'admin' && empty(company()['a365'])))))   /* + a Sixfold 365 admin who is not the super admin (2026-11-15: Jen's admin account sees less than his) */ out(['ok' => false, 'why' => 'viewgone', 'error' => 'That account is not there any more. Back to your own screen.'], 409);
     $viewing = ['by' => $realMe, 'name' => $vaRow['name'], 'role' => $vaRow['role'], 'preview' => $vaRole !== null];
     $me = $vaRow['name']; $role = $vaRow['role']; $session['c'] = $vaId; $isSuper = false;
     $sub = ''; if (edition() && in_array($role, ['setter', 'tech'], true)) { $sub = $role; $role = 'crew'; }   /* a setter or technician, as they see it (2026-10-29) */
@@ -4167,10 +4167,13 @@ if (!$viewing && $realMe === 'Claude Check') {
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
     $roOk = array_merge($roOk, ['leadmatch', 'careplans', 'carecust', 'caredue', 'carecfg', 'carenews', 'carelog']);   /* plans and customer emails, read only (2026-10-30) */
     $roOk[] = 'sync';   /* Sync from another system's screen, read only: keys never shown (2026-10-30) */
-    $roOk[] = 'myplaces'; $roOk[] = 'cohide';   /* the town list's Yours section and its hidden counties, read only (TR-47, 2026-10-31) */
+    $roOk[] = 'myplaces'; $roOk[] = 'cohide'; $roOk[] = 'msgrpipe';   /* the town list's Yours section and its hidden counties, read only (TR-47, 2026-10-31) */
     if (!in_array($action, $roOk, true) || ($isPost && !in_array($action, ['area', 'signout'], true)))
         out(['ok' => false, 'why' => 'readonly', 'error' => 'This account only looks, so nothing is saved.'], 403);
 }
+/* the super admin's own screens (2026-11-15, Jen's admin account): refused to any other Sixfold 365 admin, whatever the page shows. Training
+   changes go through Matthew; Usage, skip trace and the door-list download stay his. */
+if (ownerHide() && in_array($action, ['taplogread', 'skiptrace', 'skiplist', 'skipexport', 'skippick', 'trainingsave', 'a365pricingset', 'planexport', 'viewaslist', 'msgpreview'], true)) fail('That is kept for the owner. Ask J.A.R.V.I.S. to pass it to Matthew.', 403);
 if (!defined('SIXFOLD_CLI') && !$viewing && in_array($role, ['office', 'quote'], true)) geoCheck($me, (string) ($session['c'] ?? ''), $role);   /* where the account is used (2026-10-15) */
 /* one of Matthew's leads asked for by id from an account that does not see it: as if it were not there (2026-10-22). Since 2026-10-27 only
    a lead with no job: a booked one, its job and its customer are the office's to see and manage (Matthew), see leadsAll() */
@@ -4870,13 +4873,13 @@ if ($action === 'viewaslist') {
     $onJobs = []; if (feature('walkdesk')) foreach (jobsAll() as $j) if (!$j['off']) $onJobs[(string) $j['crew']] = true;
     $list = [];
     foreach (acctRows($basePeople, $acct, $sessionKey) as $r) {
-        if ($r['off'] || in_array($r['role'], ['admin', 'super'], true) || boardHidden($r['name']) || trim($r['name']) === '') continue;
-        $list[] = ['id' => $r['id'], 'name' => $r['name'], 'role' => $r['role'], 'walker' => !empty($acct['walker'][$r['id']]), 'jobs' => isset($onJobs[$r['name']])];
+        if ($r['off'] || $r['role'] === 'super' || ($r['role'] === 'admin' && empty(company()['a365'])) || boardHidden($r['name']) || trim($r['name']) === '') continue;
+        $list[] = ['id' => $r['id'], 'name' => $r['name'], 'role' => $r['role'], 'officeui' => $r['role'] === 'admin' && offAdmId($r['id']), 'walker' => !empty($acct['walker'][$r['id']]), 'jobs' => isset($onJobs[$r['name']])];
     }
     usort($list, fn($a, $b) => strcasecmp($a['name'], $b['name']));
     out(['ok' => true, 'people' => $list]);
 }
-if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'onteam' => onTeamOf($me), 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => $role === 'office' && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => $role === 'office' && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => $role === 'office' && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => $role === 'office' && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'sid' => curTag(), 'avatar' => avatarVer((string) ($session['c'] ?? ''))], edMe()));   /* + edMe(): the editions' roles and terms (2026-10-29) */
+if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'name' => $me, 'sign' => (string) (company()['_signAs'][$me] ?? ''), 'role' => $role, 'onteam' => onTeamOf($me), 'walker' => !empty($acct['walker'][(string) ($session['c'] ?? '')]), 'pays' => paysOn((string) ($session['c'] ?? '')), 'sq' => squareFileOn(), 'runsteam' => $role === 'office' && acctFlag('runsteam', (string) ($session['c'] ?? '')), 'wonlost' => officeLike() && acctFlag('wonlost', (string) ($session['c'] ?? '')), 'doors' => officeLike() && acctFlag('doors', (string) ($session['c'] ?? '')), 'communities' => officeLike() && acctFlag('communities', (string) ($session['c'] ?? '')), 'results' => officeLike() && acctFlag('results', (string) ($session['c'] ?? '')), 'fq' => $role !== 'admin' && fqOn(), 'mail' => (bool) a365MailCfg(), 'super' => $isSuper, 'officeui' => offAdm(), 'ownhide' => ownerHide(), 'sid' => curTag(), 'avatar' => avatarVer((string) ($session['c'] ?? ''))], edMe()));   /* + edMe(): the editions' roles and terms (2026-10-29) */
 
 /* the Sample door (Matthew 2026-10-05): one made-up door with every part of the card filled in, admins only. Kept in the
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
@@ -5838,7 +5841,9 @@ if ($action === 'stats') {
     $who = whoFor((string) ($_REQUEST['who'] ?? ''));
     /* a manager's Team stats: their team, all at once (team=1) */
     if (mgr() && !empty($_REQUEST['team']) && trim((string) ($_REQUEST['who'] ?? '')) === '') $who = '';
+    if (ownerHide() && $who !== '' && $who !== $me && meHides($who)) fail('Not allowed.', 403);   /* 2026-11-15 */
     $list = teamDays($days, $who);
+    if (ownerHide()) $list = array_values(array_filter($list, fn($p) => $p['name'] === $me || !meHides((string) $p['name'])));
     if (($role === 'manager' || (mgr() && !empty($_REQUEST['team']))) && $who === '') $list = array_values(array_filter($list, fn($p) => $p['name'] === $me || sameTeam($p['name'])));
     out(['ok' => true, 'days' => $days, 'today' => (new DateTime('now', new DateTimeZone(appTz())))->format('Y-m-d'), 'who' => $who, 'people' => $list, 'goal' => $who !== '' ? (loadPGoals()[$who] ?? null) : null, 'company' => $who !== '' && edition() ? goalFor($who) : loadGoals()]);   /* + their team's goal (editions, 2026-10-29) */
 }
@@ -6351,7 +6356,7 @@ if ($action === 'teams') {
     $list = [];
     foreach ((array) ($acct['teams'] ?? []) as $tid => $t) {
         if ($role !== 'admin' && (string) $tid !== $myTeam) continue;
-        $mem = array_map(fn($n) => ['name' => $n, 'role' => $TEAM['byName'][$n]['role'] ?? 'crew'], $TEAM['members'][$tid] ?? []);
+        $mem = array_map(fn($n) => ['name' => $n, 'role' => $TEAM['byName'][$n]['role'] ?? 'crew'], array_values(array_filter($TEAM['members'][$tid] ?? [], fn($n) => !meHides((string) $n))));   /* + meHides (2026-11-15) */
         usort($mem, fn($x, $y) => [$x['role'] !== 'manager', mb_strtolower($x['name'])] <=> [$y['role'] !== 'manager', mb_strtolower($y['name'])]);
         $list[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? ''), 'members' => $mem];
     }
@@ -6402,7 +6407,31 @@ if ($action === 'teamsave' || $action === 'teammember') {
    "Booked" without the name, address or note; its customer record, its Square payments and its alerts are left out too, and asking for one
    by its id is refused. Admins (Matthew is the super admin) see everything; the crew still see their own jobs in full (Brad does the work);
    the command-line jobs (ClickUp, Square, the morning email to Contact@) see everything. View-as follows the account looked through. */
-function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_string($role ?? null) && in_array($role, ['office', 'quote', 'manager'], true); }
+function webHide(): bool { global $role; return !defined('SIXFOLD_CLI') && is_string($role ?? null) && (in_array($role, ['office', 'quote', 'manager'], true) || ownerHide()); }   /* + an admin who is not the super admin, on Sixfold 365 (2026-11-15, Jen's admin account) */
+/* ---- the owner's things (2026-11-15, Matthew: "we are building this admin account for jen and giving her almost full access other then some
+ * data points which belongs to just me"; spec traverse/JEN-ADMIN-SPEC-2026-11-15.md). On Sixfold 365 only, every admin who is not the super
+ * admin (Jen, and any admin after her) is refused, by the server: the pricing math, Matthew's pipeline (webHide above), Traverse billing and
+ * its lock, the super admin's, Claude Check's and the test sign-ins (lists, team, leaderboard, PINs), view-as, Usage and skip trace; and may not
+ * change an admin or make one. The editions are untouched: their admins own their company. View-as through an admin's eyes answers as them. */
+function ownerOnly(): bool { global $isSuper; return !empty($isSuper) || defined('SIXFOLD_CLI') || empty(company()['a365']); }
+function ownerHide(): bool { global $role; return ($role ?? '') === 'admin' && !ownerOnly(); }
+/** a sign-in such an admin never sees: Traverse's own (super), Claude Check / Fable, and the test logins */
+function ownerHidden(string $name, string $role = ''): bool { return $role === 'super' || boardHidden($name) || (bool) preg_match('/\b(test|tester|practice)\b/i', $name); }
+/** a name left out of what the signed-in person sees (the team, the leaderboard, calendars, hours): the check accounts for everyone, and for a
+    Sixfold 365 admin who is not the super admin also the super admin's own name and the test sign-ins (2026-11-15). Never used for alerts. */
+function meHides(string $name): bool {
+    if (boardHidden($name)) return true;
+    if (!ownerHide()) return false;
+    static $sup = null; if ($sup === null) { global $basePeople, $acct, $sessionKey; $sup = []; foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if ($r['role'] === 'super') $sup[mb_strtolower(trim($r['name']))] = true; }
+    return isset($sup[mb_strtolower(trim($name))]) || ownerHidden($name);
+}
+/* an admin with the office's screens and alerts (acct "officeui", 2026-11-15): Jen keeps her office Pipeline, Quote builder, Schedule and Jobs
+   board and every office alert and to-do now that she is an admin. Set by the super admin only; Sixfold 365 only. */
+function offAdmId(string $id): bool { return !empty(company()['a365']) && acctFlag('officeui', $id); }
+function offAdm(): bool { global $role, $session; return ($role ?? '') === 'admin' && !ownerOnly() && offAdmId((string) ($session['c'] ?? '')); }
+function officeLike(): bool { global $role; return $role === 'office' || offAdm(); }
+/** who a test email goes to on Sixfold 365 (2026-11-15, Matthew: tests go to Jen's email, not his; he sees his in his Claude session) */
+function a365TestTo(): string { if (PRACTICE) return 'office.tests@example.com'; $t = (string) (company()['a365']['testTo'] ?? ''); return filter_var($t, FILTER_VALIDATE_EMAIL) ? $t : 'J.McPherson@365aeration.com'; }
 /* Matthew's own leads (2026-10-26, Matthew: "Brandon wants me to handle all the intake ads ... so that jen and I dont get crossed up"): the
    365-website form, and the Facebook lead-form leads that came in on or after company.json "metaMine" (a date, Denver time; set to
    2026-10-26: "only new leads from today"). Messenger stays Jen's, and so do the Facebook leads from before. He takes them end to end; the
@@ -6625,7 +6654,7 @@ function calRange(): array {
 if ($action === 'calpeople') {
     $list = [];
     foreach ($TEAM['byName'] as $n => $x) {
-        if ($n !== $me && boardHidden($n)) continue;
+        if ($n !== $me && meHides($n)) continue;
         if (!canViewCal((string) $n)) continue;
         $list[] = ['name' => (string) $n, 'role' => $x['role'], 'team' => $x['team'], 'lead' => $x['role'] === 'manager' || ($x['role'] === 'office' && acctFlag('runsteam', (string) $x['id'])), 'edit' => canManage((string) $n), 'me' => $n === $me, 'walker' => !empty($x['walker'])];
     }
@@ -6962,7 +6991,7 @@ function a365Gas(): ?array {
 if (in_array($action, ['a365pricing', 'a365pricingset', 'a365calc', 'leadquote'], true) && (!feature('walkdesk') || !company()['a365'])) fail('Not here.', 404);
 if ($action === 'a365pricing') {
     if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
-    if ($role === 'office' || $role === 'quote') { $pp = a365Pricing(); out(['ok' => true, 'pricing' => ['hidden' => true, 'seedName' => $pp['seedName'], 'fertDefault' => $pp['fertDefault'], 'ferts' => array_map(fn($f) => ['k' => $f['k'], 'name' => $f['name']], $pp['ferts'])] + array_intersect_key($pp, array_flip(['diyAer4h', 'diyAerDay', 'diySeedLb', 'diyFertBag', 'diyFertLb', 'diyFertCover', 'diyAerSrc', 'diySeedSrc', 'diyFertSrc']))]); }   /* + the retail prices for the do-it-yourself comparison: public prices, not our math (2026-10-28) */   /* the math stays here (Matthew 2026-10-15: "hide the internal math") */
+    if ($role === 'office' || $role === 'quote' || ownerHide()) { $pp = a365Pricing(); out(['ok' => true, 'pricing' => ['hidden' => true, 'seedName' => $pp['seedName'], 'fertDefault' => $pp['fertDefault'], 'ferts' => array_map(fn($f) => ['k' => $f['k'], 'name' => $f['name']], $pp['ferts'])] + array_intersect_key($pp, array_flip(['diyAer4h', 'diyAerDay', 'diySeedLb', 'diyFertBag', 'diyFertLb', 'diyFertCover', 'diyAerSrc', 'diySeedSrc', 'diyFertSrc']))]); }   /* + the retail prices for the do-it-yourself comparison: public prices, not our math (2026-10-28) */   /* the math stays here (Matthew 2026-10-15: "hide the internal math") */
     $j = json_decode((string) @file_get_contents(DATA_DIR . '/a365-pricing.json'), true);
     out(['ok' => true, 'pricing' => a365Pricing(), 'gas' => a365Gas(), 'by' => is_array($j) ? ($j['_by'] ?? null) : null, 'at' => is_array($j) ? ($j['_at'] ?? null) : null]);
 }
@@ -7024,7 +7053,8 @@ if ($action === 'a365calc') {
     $gasNow = a365Gas(); $aerGas = (a365PkgAerates($pkg) && $sq > 0 && $gasNow && !empty($gasNow['price']) && (float) $P['aerSqHr'] > 0) ? $sq / ((float) $P['aerSqHr'] * max(0.05, (float) $P['aerPace'])) * (float) $P['aerGalHr'] * (float) $gasNow['price'] : 0.0;   /* the aerator's gas (2026-10-21); none when nothing is aerated (2026-11-09) */
     $cost = $drive + $aerGas + ($P['seedBagLb'] ? $seedLb * $P['seedBagCost'] / $P['seedBagLb'] : 0) + $price * (float) ($P['crewShare'] ?? 0);
     if ($fertLb > 0) foreach ($P['ferts'] as $f) if ($f['name'] === $fName && $f['bagLb'] > 0) $cost += $fertLb * $f['bagCost'] / $f['bagLb'];
-    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'aerGas' => round($aerGas, 2), 'left' => $price ? (int) round($price - $cost) : null]
+    out(['ok' => true, 'ladder' => $ladder, 'price' => $price, 'seedLb' => $seedLb, 'fertLb' => $fertLb, 'fertName' => $fName, 'drive' => $hasDrive, 'left' => $price ? (int) round($price - $cost) : null]
+        + (ownerOnly() ? ['crewPct' => (int) round(100 * (float) ($P['crewShare'] ?? 0)), 'aerGas' => round($aerGas, 2)] : [])   /* the crew's share and the gas: the super admin's (2026-11-15); everyone else gets the total left only */
         + (a365PkgKeys($pkg) ? ['unpriced' => !a365PkgPriced($pkg, $P)] : []));   /* a seed / fertilize package with no price at the anchor yet (2026-11-09) */
 }
 /* ---- the field quick quote (2026-10-21, Matthew: "Christian needs access to a quick quote system. he just needs it so that he can give the
@@ -7128,7 +7158,7 @@ if ($action === 'fqmine') {   /* what they have sent to the office, the last two
     out(['ok' => true, 'sent' => array_slice($list, 0, 30)]);
 }
 if ($action === 'a365pricingset') {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($role !== 'admin' || ownerHide()) fail('Not allowed.', 403);   /* the formula is the super admin's (2026-11-15): price changes go through J.A.R.V.I.S. */
     if (!$isPost) fail('POST required', 405);
     $lim = ['minPrice' => [1, 100000], 'anchorSq' => [100, 1000000], 'anchorPrice' => [1, 100000], 'power' => [0.1, 1], 'seedLow' => [0, 20], 'seedBase' => [0, 20], 'seedHigh' => [0, 20],
             'seedBagCost' => [0, 10000], 'seedBagLb' => [1, 1000], 'fertBagCost' => [0, 10000], 'fertBagLb' => [1, 1000], 'fertRate' => [0, 50], 'aerateOnly' => [1, 100], 'deposit' => [0, 100000], 'mpg' => [5, 60], 'roadFactor' => [1, 3], 'crewShare' => [0, 1], 'diyAer4h' => [0, 10000], 'diyAerDay' => [0, 10000], 'diySeedLb' => [0, 1000], 'diyFertBag' => [0, 10000], 'diyFertLb' => [0.1, 1000], 'diyFertCover' => [100, 1000000], 'aerGalHr' => [0, 5], 'aerSqHr' => [1000, 500000], 'aerPace' => [0.05, 1],
@@ -7503,7 +7533,7 @@ if ($action === 'hours' || $action === 'hoursset') {
 if ($action === 'hoursall') {
     $people = [];
     foreach ($TEAM['byName'] as $name => $p) {
-        if (boardHidden((string) $name)) continue;
+        if (meHides((string) $name)) continue;
         $people[] = ['name' => (string) $name, 'role' => (string) ($p['role'] ?? ''), 'hours' => hoursOf((string) $name)];
     }
     usort($people, fn($a, $b) => strcasecmp($a['name'], $b['name']));
@@ -7906,7 +7936,7 @@ function payInfo(array $b, string $how): ?array {
 function jobAddPart(array $j, int $amt, string $how, string $by, ?array $sq = null, ?array $pi = null): array {
     $prev = ($j['pay']['s'] ?? '') === 'deposit' ? (int) ($j['pay']['amt'] ?? 0) : 0; $tot = $prev + $amt; $price = (int) $j['price'];
     $pay = $tot >= $price ? ['s' => 'paid', 'how' => $how] : ['s' => 'deposit', 'amt' => $tot, 'how' => $how, 'part' => 1];
-    $row = ['id' => (string) $j['id'], 'pay' => $pay, 'by' => $by, 'at' => time()] + ($pi ? ['payinfo' => $pi] : []);
+    $row = ['id' => (string) $j['id'], 'pay' => $pay, 'got' => ['amt' => $amt, 'how' => $how], 'by' => $by, 'at' => time()] + ($pi ? ['payinfo' => $pi] : []);   /* + got: this payment's own amount and method, for the profit check (2026-11-15) */
     if ($sq) { $parts = (array) ($j['sqparts'] ?? []); $parts[] = $sq; $row['sqparts'] = $parts; }
     appendLine(DATA_DIR . '/jobs.log', $row);
     return ['tot' => $tot, 'left' => max(0, $price - $tot), 'paid' => $tot >= $price];
@@ -7966,10 +7996,12 @@ if ($action === 'statspage' && !edition()) {   /* an edition's Stats page: edSta
     $thisFrom = $d($mon); $thisTo = $d((clone $mon)->modify('+6 days'));
     $lastFrom = $d((clone $mon)->modify('-7 days')); $lastTo = $d((clone $mon)->modify('-1 day'));
     $ts = fn(string $ymd, bool $end = false) => (new DateTime($ymd . ($end ? ' 23:59:59' : ' 00:00:00'), $tz))->getTimestamp();
-    $leads = leadsAll(); $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && !preg_match('/\btest\b|claude/i', (string) ($leads[$j['lead']]['name'] ?? '')));
+    /* the figures count every lead, whoever looks (2026-11-15, Jen's admin account: Matthew's own leads were left out of the office's leads by
+       source, quotes, close rate and six weeks, so their numbers and his differed); names only for the leads this person sees */
+    $vis = leadsAll(); $leads = leadsAllRaw(); $jobs = array_filter(jobsAll(), fn($j) => !$j['off'] && !preg_match('/\btest\b|claude/i', (string) ($leads[$j['lead']]['name'] ?? '')));
     $realLead = fn($l) => !preg_match('/\btest\b|claude/i', (string) ($l['name'] ?? ''));
     $jobOfLead = []; foreach ($jobs as $j) $jobOfLead[(string) $j['lead']] = $j;
-    $row = function (array $j) use ($leads) { $l = $leads[$j['lead']] ?? []; return ['id' => (string) $j['id'], 'name' => trim((string) ($l['name'] ?? '')) ?: 'A customer', 'src' => (string) ($l['src'] ?? ''), 'date' => (string) $j['date'], 'slot' => (string) (jobSlot((string) $j['slot'])[1] ?? $j['slot']), 'crew' => (string) $j['crew'], 'price' => (int) $j['price'], 'paid' => jobPaidSoFar($j), 'owed' => jobOwed($j), 'done' => (string) ($j['done']['o'] ?? '')]; };
+    $row = function (array $j) use ($leads, $vis) { $l = $leads[$j['lead']] ?? []; return ['id' => (string) $j['id'], 'name' => isset($vis[$j['lead']]) || !isset($leads[$j['lead']]) ? (trim((string) ($l['name'] ?? '')) ?: 'A customer') : 'Booked', 'src' => (string) ($l['src'] ?? ''), 'date' => (string) $j['date'], 'slot' => (string) (jobSlot((string) $j['slot'])[1] ?? $j['slot']), 'crew' => (string) $j['crew'], 'price' => (int) $j['price'], 'paid' => jobPaidSoFar($j), 'owed' => jobOwed($j), 'done' => (string) ($j['done']['o'] ?? '')]; };
     /* 1. last week */
     /* quoted: in the app or in Jen's ClickUp (2026-10-21: the app alone showed 9 of 40; 21 were quoted) */
     $wasQuoted = fn($l) => !empty($l['quote']) || in_array($l['status'] ?? '', ['quoted', 'won'], true) || isset($jobOfLead[$l['id']]) || in_array(strtolower(trim((string) ($l['cus'] ?? ''))), ['quote sent', 'scheduled', 'completed'], true);
@@ -7983,7 +8015,7 @@ if ($action === 'statspage' && !edition()) {   /* an edition's Stats page: edSta
     $tw = ['from' => $thisFrom, 'to' => $thisTo, 'jobs' => [], 'holds' => []];
     foreach ($jobs as $j) if ($j['date'] >= $thisFrom && $j['date'] <= $thisTo) $tw['jobs'][] = $row($j);
     usort($tw['jobs'], fn($a, $b) => [$a['date'], $a['slot']] <=> [$b['date'], $b['slot']]);
-    $holds = jobHolds($leads);
+    $holds = jobHolds($vis);
     foreach ($holds as $h) if ($h['date'] >= $thisFrom && $h['date'] <= $thisTo) $tw['holds'][] = ['name' => $h['name'], 'date' => $h['date'], 'slot' => (string) (jobSlot((string) $h['slot'])[1] ?? $h['slot']), 'crew' => $h['crew'], 'price' => (int) ($leads[$h['lead']]['quote']['price'] ?? 0)];
     /* 3. ads: spend as typed, leads and jobs by the lead's source */
     $ads = adSpend(); $bySrc = [];
@@ -8043,10 +8075,10 @@ function adSpendReminder(): void {
     $j = json_decode((string) @file_get_contents(adSpendFile()), true);
     if (is_array($j) && !empty($j['at']) && (new DateTime('@' . (int) $j['at']))->setTimezone($tz)->format('Y-m-d') === $today) { @file_put_contents($f, $today); return; }
     @file_put_contents($f, $today);
-    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true) && !boardHidden((string) $r['name'])) feedAdd((string) $r['name'], 'End of day: ad spend', "Type today's Meta spend in Stats, Update ad spend.", './', 'adspend-' . $today);   /* the in-app list too (2026-10-27) */
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true) && !boardHidden((string) $r['name']) && !offAdmId($r['id'])) feedAdd((string) $r['name'], 'End of day: ad spend', "Type today's Meta spend in Stats, Update ad spend.", './', 'adspend-' . $today);   /* the in-app list too (2026-10-27) */
     $v = pushVapid(false); if (!$v) return;
     $subs = pushSubs(); $payload = json_encode(['title' => 'End of day: ad spend', 'body' => 'Type today\'s Meta spend in Stats \u2192 Update ad spend. The ad report updates from it.', 'url' => './', 'tag' => 'adspend-' . $today, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true) && !boardHidden((string) $r['name'])) foreach (($subs[$r['id']] ?? []) as $d) { try { webpushSend($d['sub'], $payload, $v, 43200, ['urgency' => 'normal']); } catch (Throwable $e) {} }
+    foreach (acctRows($basePeople, $acct, $sessionKey) as $r) if (!$r['off'] && in_array($r['role'], ['admin', 'super'], true) && !boardHidden((string) $r['name']) && !offAdmId($r['id'])) foreach (($subs[$r['id']] ?? []) as $d) { try { webpushSend($d['sub'], $payload, $v, 43200, ['urgency' => 'normal']); } catch (Throwable $e) {} }
 }
 /* the ad report (2026-10-21): Instant Form vs Messenger, as on the sheets of 19 and 20 Oct, from the app's own records and the typed spend */
 if ($action === 'adreport') {
@@ -8600,7 +8632,7 @@ if ($action === 'jobpaid') {
     if (jobOwed($j) < 1) fail('This job is already paid.');
     $how = in_array($body['how'] ?? '', ['cash', 'check', 'zelle', 'venmo', 'cashapp', 'paypal', 'card', 'square', 'other'], true) ? (string) $body['how'] : 'other';
     $pi = payInfo($body, $how);   /* the check number and the day it came in (2026-10-27, receipts) */
-    if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => $how], 'by' => $me, 'at' => time()] + ($pi ? ['payinfo' => $pi] : []))) fail('Could not save that. Try again.', 500);
+    if (!appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => ['s' => 'paid', 'how' => $how], 'got' => ['amt' => jobOwed($j), 'how' => $how], 'by' => $me, 'at' => time()] + ($pi ? ['payinfo' => $pi] : []))) fail('Could not save that. Try again.', 500);
     appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => 'Balance of $' . jobOwed($j) . ' marked paid (' . $how . ') by ' . $me . '.', 'by' => $me, 'at' => time()]);
     $af = jobAftercare($jid, 'paid');
     out(['ok' => true, 'aftercare' => $af['stage']]);
@@ -8804,7 +8836,7 @@ if (in_array($action, ['nlist', 'nlsave', 'nldel', 'nlpreview', 'nltest', 'nlapp
     }
     $x = $issue($id);
     if ($action === 'nltest') {
-        if ($myMail === '') fail('Save your own email first (Follow-up email screen): the test goes only to you.');
+        $myMail = a365TestTo();   /* every test to Jen's email (2026-11-15, Matthew: "not mine"), whoever taps it */
         if (!throttleTake(rateFile('nltest|' . (string) ($session['c'] ?? '')), 20, 3600)) fail('That is a lot of tests in an hour.', 429);
         [$s, $t, $h, $hd] = nlRender($x, $myMail, true); $r = a365Mail($myMail, $s, $t, $h, $hd);
         out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
@@ -9008,7 +9040,7 @@ if (in_array($action, ['followup', 'followupset', 'followuppreview', 'followupte
     [$subject, $text, $html] = followupBuild($j, $l);
     if ($action === 'followuppreview') out(['ok' => true, 'subject' => $subject, 'text' => $text, 'html' => $html, 'to' => (string) ($l['email'] ?? ''), 'state' => followupState($j)]);
     if (!$isPost) fail('POST required', 405);
-    if ($myMail === '') fail('Save your own email first: the test goes only to you.');
+    $myMail = a365TestTo();   /* Send me a test goes to Jen's email (2026-11-15) */
     if (!throttleTake(rateFile('futest|' . $myId), 20, 3600)) fail('That is a lot of tests in an hour. Wait a little.', 429);
     $r = a365Mail($myMail, '[Test] ' . $subject, "TEST: this is what " . trim((string) ($l['name'] ?? 'the customer')) . " would get.\n\n" . $text, $html);   /* nothing recorded on the job or the customer */
     out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
@@ -9034,6 +9066,16 @@ if (in_array($action, ['deprem', 'depremset', 'depremno', 'deprempreview', 'depr
         accountLog(['by' => $me, 'what' => $on ? 'deposit reminders on' : 'deposit reminders off']);
         out(['ok' => true, 'on' => $r['on'], 'at' => $r['at']]);
     }
+    /* Send me a test with nobody due (2026-11-15, Matthew: "add a Send me a test button that goes to Jen's email"): a made-up customer, a week out */
+    if ($action === 'depremtest' && !empty($body['sample'])) {
+        if (!$isPost) fail('POST required', 405);
+        if ($role !== 'admin') fail('Only an admin sends tests.', 403);
+        if (!throttleTake(rateFile('dptest|' . $myId), 20, 3600)) fail('That is a lot of tests in an hour. Wait a little.', 429);
+        $sl = ['id' => 'm00000000000000sample', 'name' => 'Alex Sample', 'quote' => ['offer' => ['date' => (new DateTime('today', new DateTimeZone(appTz())))->modify('+7 days')->format('Y-m-d'), 'slot' => 's2']], 'sign' => ['deposit' => 150, 'key' => 'sample', 'how' => 'link']];
+        [$subject, $text, $html] = depremBuild($sl, 'd1'); $to = a365TestTo();
+        $r = a365Mail($to, '[Test] ' . $subject, "TEST: a made-up customer, Alex Sample. The pay link in a test goes nowhere.\n\n" . $text, $html);   /* nothing recorded */
+        out(['ok' => (bool) $r['ok'], 'to' => $to, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
+    }
     $id = (string) ($_GET['id'] ?? ($body['id'] ?? '')); $l = leadsAll()[$id] ?? null;
     if (!leadOk($id) || !$l) fail('No such customer.', 404);
     if ($action === 'depremno') {
@@ -9049,7 +9091,7 @@ if (in_array($action, ['deprem', 'depremset', 'depremno', 'deprempreview', 'depr
     if ($action === 'deprempreview') out(['ok' => true, 'subject' => $subject, 'text' => $text, 'html' => $html, 'to' => (string) ($l['email'] ?? '')]);
     if (!$isPost) fail('POST required', 405);
     if ($role !== 'admin') fail('Only an admin sends tests.', 403);
-    if ($myMail === '') fail('Save your own email first (on the Follow-up email screen): the test goes only to you.');
+    $myMail = a365TestTo();   /* to Jen's email (2026-11-15) */
     if (!throttleTake(rateFile('dptest|' . $myId), 20, 3600)) fail('That is a lot of tests in an hour. Wait a little.', 429);
     $r = a365Mail($myMail, '[Test] ' . $subject, "TEST: this is what " . trim((string) ($l['name'] ?? 'the customer')) . " would get.\n\n" . $text, $html);   /* nothing recorded */
     out(['ok' => (bool) $r['ok'], 'to' => $myMail, 'error' => $r['ok'] ? '' : ($r['stage'] === 'config' ? 'The 365 mailbox is not set up yet, so nothing was emailed.' : (string) $r['error'])]);
@@ -9482,7 +9524,7 @@ function jobCrewList(): array {
     global $TEAM;
     if (empty(company()['a365'])) return walkerList();
     $o = [];
-    foreach ($TEAM['byName'] as $n => $x) if (!in_array($x['role'] ?? '', ['office', 'quote'], true) && stripos((string) $n, 'Claude Check') !== 0) $o[] = (string) $n;
+    foreach ($TEAM['byName'] as $n => $x) if (!in_array($x['role'] ?? '', ['office', 'quote'], true) && !(($x['role'] ?? '') === 'admin' && offAdmId((string) ($x['id'] ?? ''))) && stripos((string) $n, 'Claude Check') !== 0) $o[] = (string) $n;   /* + Jen's admin account: never a job crew (2026-11-15) */
     usort($o, fn($a, $b) => strcmp(mb_strtolower($a), mb_strtolower($b)));
     return $o;
 }
@@ -9737,7 +9779,7 @@ if ($action === 'training') {
        data carries one (sixfold/training/build-field-guide.mjs); the editions' builds never copy it. */
     $gf = DATA_DIR . '/docs/field-guide.pdf';
     $guide = is_file($gf) ? ['kb' => (int) round(filesize($gf) / 1024), 'at' => (int) filemtime($gf)] : null;
-    out(['ok' => true, 'training' => is_array($j) && is_array($j['lessons'] ?? null) ? $j : ['lessons' => []], 'edit' => $role === 'admin', 'guide' => $guide]);
+    out(['ok' => true, 'training' => is_array($j) && is_array($j['lessons'] ?? null) ? $j : ['lessons' => []], 'edit' => $role === 'admin' && !ownerHide(), 'guide' => $guide]);
 }
 /* the field guide itself, to anyone signed in to this install (2026-10-13): internal, so it is served here and not from public_html */
 if ($action === 'guidepdf') {
@@ -9993,7 +10035,7 @@ function feedDerive(): void {
     foreach (leadsAll() as $id => $l) {
         if (in_array((string) ($l['status'] ?? 'new'), ['lost', 'won', 'unreached'], true)) continue;
         $own = (string) ($l['owner'] ?? '');
-        $forMe = $own !== '' ? in_array($own, $mine, true) : ($role === 'office' ? !webLead($l) : ($role === 'quote' ? (qMine($l) || quoteInbox($l, true)) : ($role === 'admin' && $isSuper && webLead($l))));
+        $forMe = $own !== '' ? in_array($own, $mine, true) : (officeLike() ? !webLead($l) : ($role === 'quote' ? (qMine($l) || quoteInbox($l, true)) : ($role === 'admin' && $isSuper && webLead($l))));
         if (!$forMe) continue;
         $nm = trim((string) ($l['name'] ?? '')) ?: (trim((string) ($l['phone'] ?? '')) ?: 'A lead'); $u = './?lead=' . $id;
         $rc = (string) ($l['recall']['date'] ?? ''); if ($rc !== '' && $rc <= $today) feedAdd($me, 'Call back: ' . $nm, 'Their call-back day (' . fuDay($rc) . ') has come.', $u, 'due-recall-' . $id . '-' . $rc, 'due', true);
@@ -10002,7 +10044,7 @@ function feedDerive(): void {
         if (is_array($Q) && ($l['status'] ?? '') === 'quoted' && empty($l['accept']) && empty($l['sign']) && !isset($jobLead[$id]) && $now - (int) ($Q['at'] ?? $now) >= 86400)
             feedAdd($me, 'Quote with no answer: ' . $nm, '$' . (int) ($Q['price'] ?? 0) . ' quote sent ' . fuDayOf((int) $Q['at']) . '; no answer yet.', $u, 'due-quote-' . $id . '-' . (int) $Q['at'], 'due', true);
     }
-    if (feature('walkdesk') && in_array($role, ['office', 'quote'], true)) {
+    if (feature('walkdesk') && (in_array($role, ['office', 'quote'], true) || offAdm())) {   /* + Jen's admin account (2026-11-15) */
         $leads = leadsAll();
         foreach (jobsAll() as $j) {
             /* aftercare not sent on a done 365 job of the last two weeks (2026-10-28): Jen's to send, by Send aftercare */
@@ -10188,10 +10230,12 @@ if ($action === 'leads') {
         || !webLead($l));   /* the whole list to call, untouched leads included (2026-10-21, Matthew: 'Nneka should still be able to see the list of people to call. She has just been notified by me and brandon to not make any calls yet. But allow her to see the list.'); website forms only when handed to her */
     /* the 365 website's forms are Matthew's (2026-10-20: "make sure website leads are not being forwarded to jen"): an office account sees one only
        when it is handed to them (owner), or sent to Jen (her office account; not a team lead's), or it came from Jen's own ClickUp list */
-    if ($role === 'office') $leads = array_filter($leads, fn($l) => !webLead($l) || in_array((string) ($l['owner'] ?? ''), meNames(), true) || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
+    if (officeLike()) $leads = array_filter($leads, fn($l) => !webLead($l) || in_array((string) ($l['owner'] ?? ''), meNames(), true) || (string) ($l['by'] ?? '') === $me || (string) ($l['by'] ?? '') === 'ClickUp' || (!empty($l['tojen']) && !mgr()) || (mgr() && ($l['owner'] ?? '') !== '' && sameTeam((string) $l['owner'])));
     $list = array_reverse(array_values($leads)); // later in the file = newer, for leads filed in the same second (usort is stable)
     usort($list, fn($a, $b) => ($b['at'] ?? 0) <=> ($a['at'] ?? 0));
     if ($isSuper) foreach ($list as &$ml) $ml['mine'] = webLead($ml); unset($ml);   /* Matthew's own leads, for his To contact view (2026-10-26) */
+    /* Jen's own work, for her My stats (2026-11-15): a lead she owns, added, called, texted, emailed or quoted (her quote login's name counts too) */
+    if (!$isSuper && offAdm()) { $mn = meNames(); foreach ($list as &$ml) $ml['mine'] = in_array((string) ($ml['owner'] ?? ''), $mn, true) || in_array((string) ($ml['by'] ?? ''), $mn, true) || in_array((string) ($ml['quote']['by'] ?? ''), $mn, true) || (bool) array_filter((array) ($ml['tries'] ?? []), fn($t) => in_array((string) ($t['by'] ?? ''), $mn, true)); unset($ml); }
     $new = count(array_filter($list, fn($l) => $l['status'] === 'new'));
     if (!empty($_REQUEST['count'])) out(['ok' => true, 'new' => $new]);
     /* the same person on another lead (2026-11-03, Ira Kauffman): shown on the card; one of Matthew's only as "Matthew's" */
@@ -10201,7 +10245,7 @@ if ($action === 'leads') {
     /* and what kind of home (2026-11-15), on every install: a townhome, a mobile home or a building */
     foreach ($list as &$ol) { $hh = $ol['house'] ?? null; if (is_array($hh) && isset($hh['region'], $hh['door']) && is_string($hh['region']) && preg_match('/^[a-z0-9-]{1,40}$/D', $hh['region']) && ($hk1 = townHk($hh['region'])[(string) $hh['door']] ?? null) && ($hk1['hk'] ?? '?') !== '?') $ol['house'] += $hk1; } unset($ol);
     foreach ($list as &$dl) if (!empty($dm[$dl['id']])) { $dl['dup'] = []; foreach ($dm[$dl['id']] as $oid => $why) if (isset($raw[$oid])) $dl['dup'][] = leadDupOther($raw[$oid], $why); } unset($dl);
-    out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' && !empty(company()['a365']) ? ['cucheck' => cuCheckShown()] : []) + ($handTo ? ['handTo' => $handTo] : []));   /* + who his own leads can go to (2026-10-27) */   /* the ClickUp sync check (2026-10-17); Sixfold 365 only (2026-10-30 audit: it showed in the editions) */
+    out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' && !ownerHide() && !empty(company()['a365']) ? ['cucheck' => cuCheckShown()] : []) + ($handTo ? ['handTo' => $handTo] : []));   /* + who his own leads can go to (2026-10-27) */   /* the ClickUp sync check (2026-10-17); Sixfold 365 only (2026-10-30 audit: it showed in the editions) */
 }
 if ($action === 'cucheckok') {   /* Leave it, on the Pipeline's ClickUp check */
     if ($role !== 'admin' || !$isPost || empty(company()['a365'])) fail('Not allowed.', 403);
@@ -10393,6 +10437,26 @@ function metaMessenger(string $g, callable $gget, array $P, callable $digits, bo
     $res['page']['mseen'] = array_slice(array_merge((array) ($P['mseen'] ?? []), $took), -500);
     return $res;
 }
+/* Messenger into the Pipeline, the office's yes (2026-11-15, Matthew: a button "Do you want to start adding messages to the pipeline?"; yes =
+   the conversations come into the Pipeline as their own Messenger section). Stored in <data>/messenger-pipe.json {on, at, by}; read by the
+   5-minute Facebook job (metapoll) with the page key it already holds, from the moment it was turned on (older chats stay out). Each new
+   conversation is one lead (source messenger), matched first to an open lead by this chat, phone, email or full name (then it is a note on
+   that lead). Nothing is ever sent from the app. feature('fbmessenger') still switches it on for an install by itself. */
+function msgrCfg(): array { $j = json_decode((string) @file_get_contents(DATA_DIR . '/messenger-pipe.json'), true); return ['on' => is_array($j) && !empty($j['on']), 'at' => is_array($j) ? (int) ($j['at'] ?? 0) : 0, 'by' => is_array($j) ? (string) ($j['by'] ?? '') : ''];
+}
+function msgrOn(): bool { return feature('fbmessenger') || (!empty(company()['a365']) && msgrCfg()['on']); }
+function msgrAt(): int { return feature('fbmessenger') ? 0 : msgrCfg()['at']; }
+if ($action === 'msgrpipe') {
+    if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
+    if (!desk()) fail('Not allowed.', 403);
+    if ($isPost) {
+        if ($role !== 'admin') fail('An admin turns this on.', 403);
+        $on = !empty($body['on']); $was = msgrCfg();
+        if (!writeJsonAtomic(DATA_DIR . '/messenger-pipe.json', ['on' => $on, 'at' => $on ? ($was['on'] ? $was['at'] : time()) : 0, 'by' => $me, 'changed' => time()])) fail('Could not save that. Try again.', 500);
+        accountLog(['by' => $me, 'what' => $on ? 'Messenger into the Pipeline: on' : 'Messenger into the Pipeline: off']);
+    }
+    $c = msgrCfg(); out(['ok' => true, 'on' => msgrOn(), 'at' => $c['at'], 'by' => $c['by'], 'admin' => $role === 'admin', 'key' => is_file(metaFile())]);
+}
 /* the Messenger preview (2026-10-20, Matthew: "show me this on our app but only for my account ... just so i can see what it looks like"):
    Traverse's own sign-in only. The last few days of the Page's Messenger chats, run through the same matching, showing what each would become
    (a New lead, or a note on a lead already here). Nothing is saved, nothing is marked handled. Uses its own key file,
@@ -10490,7 +10554,7 @@ if ($action === 'metasetup' || $action === 'metapoll') {
             }
         }
         if (count($errors) === $errBefore) $M['pages'][$pi]['last'] = max($since, $newest - 60);   /* a minute of overlap: Meta's clock and ours; the ids stop doubles. Fable review 2026-10-14: not past a form that failed */
-        if (feature('fbmessenger')) { $mr = metaMessenger($g, $gget, $P, $digits); $M['pages'][$pi] = $mr['page']; $added = array_merge($added, $mr['added']); $mnotes += $mr['notes']; if ($mr['error'] !== '') $errors[] = $P['name'] . ' / Messenger: ' . $mr['error']; }
+        if (msgrOn()) { $P0 = $P; if (msgrAt() > (int) ($P['mlast'] ?? 0)) $P0['mlast'] = msgrAt(); $mr = metaMessenger($g, $gget, $P0, $digits); $M['pages'][$pi] = $mr['page'];   /* + the office's own switch, from the moment it was turned on (2026-11-15) */ $added = array_merge($added, $mr['added']); $mnotes += $mr['notes']; if ($mr['error'] !== '') $errors[] = $P['name'] . ' / Messenger: ' . $mr['error']; }
     }
     $M['ran'] = date('c'); $M['errors'] = $errors;
     writeJsonAtomic(metaFile(), $M); @chmod(metaFile(), 0600);
@@ -13637,7 +13701,7 @@ function inviteSend(string $id, string $name, string $role, string $by): bool {
 /* ---- billing (2026-10-10, api/billing.php): the admin sees the plan, pays through Stripe Checkout, manages it in Stripe's portal.
  * Setup mode and the past-due lock (2026-10-29) are billGate() further up; here Traverse releases the app and gives more time. */
 if (in_array($action, ['billing', 'billingcheckout', 'billingportal', 'billinglive', 'billingrefund', 'billingmore', 'billingask'], true)) {
-    if ($role !== 'admin') fail('Not allowed.', 403);
+    if ($role !== 'admin' || ownerHide()) fail('Not allowed.', 403);   /* Traverse's billing: never a Sixfold 365 admin's but the super admin's (2026-11-15) */
     if (!feature('billing')) fail('Billing is not on for this install.', 403);
     $bc = billingConfig(__DIR__);
     $rows = acctRows($basePeople, $acct, $sessionKey);
@@ -13811,6 +13875,7 @@ if ($action === 'paysset') {
     $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+    if (ownerHide() && (in_array($rows[$id]['role'], ['admin', 'super'], true) || ownerHidden($rows[$id]['name'], $rows[$id]['role']))) fail('Only Matthew changes an admin.', 403);   /* 2026-11-15 */
     if (!empty($body['on']) && $rows[$id]['role'] === 'setter' && edition()) fail('A setter does not take payments.');   /* 2026-10-29 */
     if (!isset($acct['pays'])) $acct['pays'] = array_map(fn($v) => 1, (array) ($acct['walker'] ?? []));   /* the first change keeps everyone who had it */
     if (!empty($body['on'])) $acct['pays'][$id] = 1; else unset($acct['pays'][$id]);
@@ -13835,14 +13900,18 @@ if ($action === 'acctflag') {   /* "Runs a team" / "Marks won and lost" on an of
     if (!feature('walkdesk')) fail('Not here.', 404);
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
-    $flag = (string) ($body['flag'] ?? ''); if (!in_array($flag, ['runsteam', 'wonlost', 'doors', 'communities', 'results', 'fq'], true)) fail('No such setting.');   /* + fq: the field quick quote, on a crew account (2026-10-21) */   /* + doors, communities, results (2026-10-21) */
+    $flag = (string) ($body['flag'] ?? ''); if (!in_array($flag, ['runsteam', 'wonlost', 'doors', 'communities', 'results', 'fq', 'officeui'], true)) fail('No such setting.');   /* + fq: the field quick quote, on a crew account (2026-10-21) */   /* + doors, communities, results (2026-10-21) */   /* + officeui: an admin with the office's screens (2026-11-15) */
+    if ($flag === 'officeui' && (!$isSuper || empty(company()['a365']))) fail('Only Matthew sets this.', 403);
     $acctLock = @fopen(accountsFile() . '.lock', 'c');
     if (!$acctLock || !flock($acctLock, LOCK_EX)) fail('Could not save that. Try again.', 500);
     $acct = loadAccounts(); $rows = acctRows($basePeople, $acct, $sessionKey);
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
+    if (ownerHide() && (in_array($rows[$id]['role'], ['admin', 'super'], true) || ownerHidden($rows[$id]['name'], $rows[$id]['role']))) fail('Only Matthew changes an admin.', 403);   /* 2026-11-15 */
+    if ($flag === 'officeui' && $rows[$id]['role'] !== 'admin') fail('Office screens are for an admin account.');
+    $offAdmRow = $rows[$id]['role'] === 'admin' && offAdmId($id) && in_array($flag, ['wonlost', 'doors', 'communities', 'results'], true);   /* Jen's admin account keeps her office settings (2026-11-15) */
     $techDoors = $flag === 'doors' && edition() && $rows[$id]['role'] === 'tech';   /* a technician's Doors switch (2026-10-29) */
-    if (!$techDoors && ($flag === 'fq' ? !in_array($rows[$id]['role'], ['crew', 'manager'], true) : $rows[$id]['role'] !== 'office')) fail($flag === 'fq' ? 'The quick quote is for crew accounts.' : 'Only an Office account takes this.');
+    if (!$techDoors && !$offAdmRow && $flag !== 'officeui' && ($flag === 'fq' ? !in_array($rows[$id]['role'], ['crew', 'manager'], true) : $rows[$id]['role'] !== 'office')) fail($flag === 'fq' ? 'The quick quote is for crew accounts.' : 'Only an Office account takes this.');
     if ($flag === 'runsteam' && !empty($body['on']) && (string) ($acct['member'][$id] ?? '') === '') fail('Put them on a team first.');
     $acct[$flag] = (array) ($acct[$flag] ?? []);
     if (!empty($body['on'])) $acct[$flag][$id] = 1; else unset($acct[$flag][$id]);
@@ -13860,6 +13929,7 @@ if ($action === 'walkerset') {
     $id = (string) ($body['id'] ?? '');
     if (!isset($rows[$id]) || $rows[$id]['off']) fail('No such account.', 404);
     if ($rows[$id]['role'] === 'super' || boardHidden($rows[$id]['name'])) fail('That sign-in does not do walks.');
+    if (ownerHide() && ($rows[$id]['role'] === 'admin' || ownerHidden($rows[$id]['name'], $rows[$id]['role']))) fail('Only Matthew changes an admin.', 403);   /* 2026-11-15 */
     if ($rows[$id]['role'] === 'setter' && edition() && !permAddedFor('jobs.own', 'setter')) fail('A setter does not do the jobs. Make them a technician or a sales rep first.');   /* 2026-10-29 */
     $acct['walker'] = (array) ($acct['walker'] ?? []);
     if (!empty($body['on'])) $acct['walker'][$id] = 1; else unset($acct['walker'][$id]);
@@ -13948,8 +14018,8 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $outAt = function ($id) use ($sess, $acct) { return max((int) ($sess['o'][$id] ?? 0), (int) ($acct['kick'][$id] ?? 0)); };
         $list = array_map(function ($r) use ($myId, $live, $outAt, $acct) {
             $l = $live[$r['id']] ?? []; usort($l, fn($x, $y) => $y['seen'] <=> $x['seen']);
-            return array_diff_key($r, ['code' => 1]) + ['invited' => inviteInfo($r['id']), 'login' => (string) ($acct['login'][$r['id']]['email'] ?? ''), 'you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id']), 'doors' => acctFlag('doors', $r['id']), 'communities' => acctFlag('communities', $r['id']), 'results' => acctFlag('results', $r['id']), 'fq' => acctFlag('fq', $r['id'])];
-        }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : $rows));
+            return array_diff_key($r, ['code' => 1]) + ['invited' => inviteInfo($r['id']), 'login' => (string) ($acct['login'][$r['id']]['email'] ?? ''), 'you' => $r['id'] === $myId, 'live' => $l, 'out' => $outAt($r['id']), 'team' => (string) ($acct['member'][$r['id']] ?? ''), 'walker' => !empty($acct['walker'][$r['id']]), 'pays' => paysOn($r['id']), 'runsteam' => acctFlag('runsteam', $r['id']), 'wonlost' => acctFlag('wonlost', $r['id']), 'doors' => acctFlag('doors', $r['id']), 'communities' => acctFlag('communities', $r['id']), 'results' => acctFlag('results', $r['id']), 'fq' => acctFlag('fq', $r['id']), 'officeui' => $r['role'] === 'admin' && offAdmId($r['id'])];   /* + Jen's admin account (2026-11-15) */
+        }, array_values($isMgr ? array_filter($rows, fn($r) => $r['id'] === $myId || $mgrMay($r)) : (ownerHide() ? array_filter($rows, fn($r) => $r['id'] === $myId || !ownerHidden($r['name'], $r['role'])) : $rows)));   /* a Sixfold 365 admin who is not the super admin never sees his, Claude Check's or the test sign-ins (2026-11-15) */
         usort($list, fn($x, $y) => [$x['off'], mb_strtolower($x['name'])] <=> [$y['off'], mb_strtolower($y['name'])]);
         $tn = []; foreach ((array) ($acct['teams'] ?? []) as $tid => $t) if (!$isMgr || (string) $tid === $myTeam) $tn[] = ['id' => (string) $tid, 'name' => (string) ($t[0] ?? '')];
         usort($tn, fn($x, $y) => strcmp(mb_strtolower($x['name']), mb_strtolower($y['name'])));
@@ -13975,7 +14045,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         $mine = preg_replace('/\D/', '', (string) ($body['code'] ?? ''));
         if ($mine === '' || !hash_equals($myId, codeId($mine, $sessionKey)) || !isset($people[$mine])) fail('That is not your code.', 401);
         throttleGiveBack($addrFile); throttleGiveBack($siteFile);
-        $pins = []; foreach ($rows as $r) if (!$r['off'] && ($isSuper || $r['role'] !== 'super')) $pins[$r['id']] = $r['code'];
+        $pins = []; foreach ($rows as $r) if (!$r['off'] && ($isSuper || $r['role'] !== 'super') && !(ownerHide() && $r['id'] !== $myId && (in_array($r['role'], ['admin', 'super'], true) || ownerHidden($r['name'], $r['role'])))) $pins[$r['id']] = $r['code'];   /* a Sixfold 365 admin who is not the super admin: never another admin's or a hidden sign-in's (2026-11-15) */
         accountLog(['by' => $me, 'what' => 'showed pins', 'n' => count($pins)]);
         out(['ok' => true, 'pins' => $pins]);
     }
@@ -13985,6 +14055,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         if (!acctNameOk($name)) fail('Use a name of 2 to 40 letters (spaces, hyphens and apostrophes are fine).');
         if (acctNameReserved($name)) fail('That name is kept for Traverse\'s own sign-ins. Use another.');
         if (!in_array($r, ROLES, true)) fail(edition() ? 'Pick a role from the list.' : (feature('walkdesk') ? 'Pick crew, office' . (company()['a365'] ? ', quote only' : '') . ', manager or admin.' : 'Pick crew, manager or admin.'));
+        if ($r === 'admin' && ownerHide()) fail('Only Matthew makes someone an admin.', 403);   /* 2026-11-15 */
         if (acctTaken($rows, $name)) fail('Someone already signs in as ' . $name . '. Use a different name (a last initial works).');
         if (($full = seatFull($rows + ['__new' => ['id' => '__new', 'name' => $name, 'role' => $r, 'off' => false, 'source' => 'app', 'at' => time()]])) !== '') fail($full, 409);   /* over the plan's seats: refused (2026-10-30) */
         $inv = inviteFields($body);   /* an email address: the person is invited by email (2026-10-29), editions and client installs */
@@ -14015,6 +14086,11 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
     $t = $rows[$id];
     if ($t['role'] === 'super' && !$isSuper) fail('That is Traverse\'s own sign-in. Only Traverse changes it.', 403);
     if ($isMgr && !$mgrMay($t)) fail('A manager changes the crew on their own team.', 403);
+    /* a Sixfold 365 admin who is not the super admin changes no admin (2026-11-15, Matthew: "she cant make any changes to the admins"): no edit,
+       code, sign-out, removal or restore on an admin row or a hidden one (her own code excepted), and makes nobody an admin */
+    if (ownerHide() && ownerHidden($t['name'], $t['role'])) fail('No such account.', 404);
+    if (ownerHide() && $t['role'] === 'admin' && !($action === 'accountcode' && $id === $myId)) fail('Only Matthew changes an admin.', 403);
+    if (ownerHide() && $action === 'accountedit' && (string) ($body['role'] ?? '') === 'admin') fail('Only Matthew makes someone an admin.', 403);
     if ($action === 'accountedit') {
         $name = array_key_exists('name', $body) ? acctName((string) $body['name']) : $t['name'];
         $r = array_key_exists('role', $body) ? (string) $body['role'] : $t['role'];
@@ -14053,7 +14129,7 @@ if (in_array($action, ['accounts', 'accountadd', 'accountedit', 'accountcode', '
         /* and every per-person setting (walks 2026-10-14; all of them 2026-10-21: Nneka's Runs a team and Marks won and lost stayed on her old
            code's id when she was given a new code on 20 Oct) */
         $nid = codeId($code, $sessionKey);
-        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq', 'email', 'hours', 'rides', 'terms', 'inv', 'login', 'reset'] as $mk)   /* + an email invite, the password and a reset link (2026-10-29) */   /* + the terms they accepted (2026-10-29) */   /* + the test email, work hours and rides with (2026-10-27) */ if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
+        foreach (['walker', 'pays', 'runsteam', 'wonlost', 'doors', 'communities', 'results', 'also', 'fq', 'officeui', 'email', 'hours', 'rides', 'terms', 'inv', 'login', 'reset'] as $mk)   /* + an email invite, the password and a reset link (2026-10-29) */   /* + the terms they accepted (2026-10-29) */   /* + the test email, work hours and rides with (2026-10-27) */ if (isset($acct[$mk]) && is_array($acct[$mk]) && array_key_exists($id, $acct[$mk])) { $acct[$mk][$nid] = $acct[$mk][$id]; unset($acct[$mk][$id]); }
         if (!saveAccounts($acct)) fail('Could not save that. Try again.', 500);
         sessEnd($id);
         accountLog(['by' => $me, 'what' => 'new code', 'name' => $t['name'], 'id' => $id, 'new' => codeId($code, $sessionKey)]);
@@ -14102,7 +14178,7 @@ if ($action === 'board') {
     $zero = ['doors' => 0, 'talked' => 0, 'booked' => 0, 'won' => 0, 'value' => 0];
     $rows = [];
     foreach (teamDays(90, '') as $p) {
-        if (boardHidden($p['name'])) continue;
+        if (meHides($p['name'])) continue;
         $r = ['name' => $p['name'], 'today' => $zero, 'week' => $zero, 'month' => $zero, 'quarter' => $zero];
         foreach ($p['days'] as $d) foreach ($from as $per => $since) {
             if ($d['date'] < $since) continue;
@@ -14118,7 +14194,7 @@ if ($action === 'board') {
         $ks = townKnockStats($rg['key']); if (!$ks) continue;   /* cached per town (2026-10-11): the same counts, without decoding every town */
         $assign = loadAssign($rg['key']);
         foreach ($ks['won'] as $wn) {
-            $who = (string) $wn[0]; if ($who === '' || boardHidden($who)) continue;
+            $who = (string) $wn[0]; if ($who === '' || meHides($who)) continue;
             $day = (new DateTime('@' . (int) $wn[1]))->setTimezone($tz)->format('Y-m-d');
             if (!isset($rows[$who])) $rows[$who] = ['name' => $who, 'today' => $zero, 'week' => $zero, 'month' => $zero, 'quarter' => $zero];
             foreach ($from as $per => $since) if ($day >= $since) { $rows[$who][$per]['won']++; $rows[$who][$per]['value'] += (int) $wn[2]; }
@@ -14126,7 +14202,7 @@ if ($action === 'board') {
         foreach ($ks['areas'] as $ar) if (isset($assign[$ar[0]])) $terr[] = ['region' => $rg['key'], 'town' => $rg['label'], 'area' => $ar[0], 'who' => $assign[$ar[0]], 'total' => $ar[1], 'knocked' => $ar[2]];
     }
     $names = [];
-    foreach ($people as $code => $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !boardHidden($n)) $names[$n] = true; }   /* names only, never codes */
+    foreach ($people as $code => $pp) { $n = (string) ($pp[0] ?? ''); if ($n !== '' && !meHides($n)) $names[$n] = true; }   /* names only, never codes */
     ksort($names);
     if (mgr() && !BOARD_OPEN) {   /* a manager's board is their team's (2026-10-05) */
         $rows = array_filter($rows, fn($r) => $r['name'] === $me || sameTeam($r['name']));

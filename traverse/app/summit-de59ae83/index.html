@@ -3495,8 +3495,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     vaSet(id); vaWriteSet(false); location.reload();
   }
   var VA_TABS = [['office', 'Office'], ['quote', 'Quote only'], ['manager', 'Manager'], ['rep', 'Door reps'], ['jobcrew', 'Job crew']];
-  function vaGroup(p) { return p.role === 'office' || p.role === 'quote' || p.role === 'manager' ? p.role : (p.jobs || p.walker || p.role === 'tech') ? 'jobcrew' : 'rep'; }
-  function vaRoleName(r) { if (edOn()) return roleName(r); return r === 'office' ? 'Office' : r === 'quote' ? 'Quote only' : r === 'manager' ? 'Manager' : 'Crew'; }
+  function vaGroup(p) { if (p.role === 'admin') return 'office'; return p.role === 'office' || p.role === 'quote' || p.role === 'manager' ? p.role : (p.jobs || p.walker || p.role === 'tech') ? 'jobcrew' : 'rep'; }
+  function vaRoleName(r) { if (edOn()) return roleName(r); return r === 'admin' ? 'Admin' : r === 'office' ? 'Office' : r === 'quote' ? 'Quote only' : r === 'manager' ? 'Manager' : 'Crew'; }
   function vaBar() {
     var old = document.getElementById('vabar'); if (old) old.remove();
     document.body.classList.toggle('va-on', !!S.viewing);
@@ -4114,7 +4114,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function signinView(err) {
     if (S.outWhy) { err = S.outWhy; S.outWhy = null; }
-    S.me = null; S.role = 'crew'; S.sub = ''; permFrom(null); S.terms = null; S.lock = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
+    S.me = null; S.role = 'crew'; S.sub = ''; permFrom(null); S.terms = null; S.lock = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.offAdm = false; S.ownHide = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); document.body.classList.remove('dk-on'); if (typeof dnavPaint === 'function') dnavPaint();   /* review 2026-10-05: else the 60 s flush got 401 and redrew this screen mid-typing */
     hideSplash(); hideToast();
     S.screen = 'signin'; tabPaint();
     hdr.hidden = true; foot.hidden = true; setDock(null);
@@ -4827,7 +4827,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var waiting = queue().filter(mine).length + (S.photoPending || 0);
       if (waiting && !window.confirm(waiting + (waiting === 1 ? ' change has' : ' changes have') + " not sent yet. They stay on this phone and send next time you sign in here. Sign out anyway?")) return;
       var forget = pushForget();                                 /* the server stops sending this phone their alerts, before the session ends */
-      markOut(true); S.me = null; S.role = 'crew'; S.sub = ''; permFrom(null); S.terms = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); clearTimeout(warmT);
+      markOut(true); S.me = null; S.role = 'crew'; S.sub = ''; permFrom(null); S.terms = null; S.walker = false; S.viewAs = null; S.super = false; S.runsTeam = false; S.wonlost = false; S.offAdm = false; S.ownHide = false; S.doorsOn = false; S.commOn = false; S.resultsOn = false; S.fqOn = false; S.repSend = false; S.mailFrom = ''; S.sid = null; officeReset(); clearTimeout(warmT);
       clearSaved().then(function () { signinView(); });
       forget.then(tellServerOut);
     });
@@ -5008,7 +5008,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var otl = [];
       if (S.super) otl.push(tile('button', 'users', 'See through their eyes', (CO.a365 ? 'Open the app as the office, ' + who('jen') + ', a manager, a door rep or a crew, looking only. No signing out and in.' : pw('Open the app as the office, a manager, a door rep or a crew, looking only. No signing out and in.', 'Open the app as the office, a manager, a sales rep or a crew, looking only. No signing out and in.')), 'Traverse only', vaPicker));
       if (S.super && !S.viewing && CO.a365) otl.push(tile('button', 'chat', 'Messenger preview', 'Facebook messages as they would come into the Pipeline. Looking only: nothing is saved.', 'Traverse only', msgPreview));   /* 2026-10-20 */
-      else if (feat('walkdesk') && CO.a365 && !CO.practice) otl.push(tile('button', 'users', 'See ' + who('jen')   /* not in the practice copy: testers never see it (Matthew 2026-11-02: "that is just for me"; he has See through their eyes there as super) */ + '\u2019s screen', 'Exactly what ' + who('jen') + ' sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
+      else if (feat('walkdesk') && CO.a365 && !CO.practice && !ownHide()) otl.push(tile('button', 'users', 'See ' + who('jen')   /* not in the practice copy: testers never see it (Matthew 2026-11-02: "that is just for me"; he has See through their eyes there as super) */ + '\u2019s screen', 'Exactly what ' + who('jen') + ' sees on her quote-only account: the Quick quote, her customers and the schedule.', 'Admin only', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }));
       /* the Office screen preview is off for now (Matthew 2026-10-15); See Jen's screen stays */
       otl.push(tile('button', 'chart', 'Office dashboard', pw('Today and this week, the map of best doors left, the team, walks and live radar.'), 'Admin only', officeView));
       homeFold(box, 'office', 'Dashboard', otl);
@@ -5018,7 +5018,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         wdOn() ? tile('button', 'chart', 'Stats', 'Last week, this week, the ads and the next six weeks.', 'Admin only', statsPageView) : null,   /* on the phone as on the computer (2026-10-22) */
         squarePageOn() ? tile('button', 'card', 'Square', 'Payments in, and which job each belongs to.', 'Admin only', squareView) : null,
         qt,
-        feat('skiptrace') ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null]);
+        feat('skiptrace') && !ownHide() ? tile('button', 'phone', 'Skip trace', 'Owner phone numbers from a provider, checked against the Do Not Call list before any Call link.', 'Admin only · costs money', skipView) : null]);
       officeGroup(box, 'team', 'Team', [
         tile('button', 'users', 'Team stats', "Everyone's numbers, and the leaderboard.", 'Admin only', teamView),
         tile('button', 'route', 'Territories', 'Assign neighborhoods to people.', 'Admin only', territoriesView)]);
@@ -5046,7 +5046,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         kitOnC() ? tile('button', 'clip', 'Import', 'Customers, leads and past work from a spreadsheet. Every import can be undone.', 'Admin only', function () { importView(); }) : null,   /* 2026-10-29 */
         fbOnC() && S.role === 'admin' ? tile('button', 'chat', 'Facebook leads', 'Your Facebook and Instagram lead ads straight into the Pipeline, every 5 minutes.', 'Admin only', fbLeadsView) : null,   /* 2026-10-30 */
         costsOnC() ? tile('button', 'calc', 'Your costs', 'What each price line costs you, and a suggested price. Staff-only margin on each quote.', feat('costs') ? 'Admin only' : 'Traverse only \u00b7 testing', costsView) : null,   /* 2026-10-29, behind features.costs */
-        feat('billing') ? tile('button', 'card', 'Billing', 'Your plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10; no product name outside the Billing screen itself (2026-10-31) */
+        feat('billing') && !ownHide() ? tile('button', 'card', 'Billing', 'Your plan, seats and payment, through Stripe.', 'Admin only', billingView) : null,   /* 2026-10-10; no product name outside the Billing screen itself (2026-10-31) */
         CO.a365 || !S.super ? null : tile('button', 'door', 'Sample property', 'One made-up property with this app\u2019s card on it, to try things. Nothing you do there is saved.', 'Traverse only', function () { sampleView(); })].filter(Boolean));   /* not on Sixfold (2026-10-17, Matthew); a client's admin finds it in the Setup checklist instead (TR-48, 2026-10-31) */
     }
     [].forEach.call(box.querySelectorAll('.hero, .tile'), function (el, i) { el.style.animationDelay = Math.min(i, 10) * 30 + 'ms'; el.classList.add('enter'); });
@@ -5487,7 +5487,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function pipeStatsView(back) {
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
-    setBar('back', { title: 'My stats', sub: 'Your pipeline', back: back || chooseView, backLabel: 'Back' });
+    setBar('back', { title: 'My stats', sub: offAdm() ? 'Your leads, quotes, bookings and follow-ups' : 'Your pipeline', back: back || chooseView, backLabel: 'Back' });
     view.textContent = '';
     var holder = q('div', 'pstats'); holder.appendChild(q('div', 'skel')); view.appendChild(holder);
     var d0 = new Date(), iso = function (n) { var d = new Date(d0.getTime() + n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -5523,6 +5523,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         card.appendChild(q('div', 'stcmp', 'Reached ' + pct(o.reached, o.leads) + ' \u00b7 quoted ' + pct(o.quoted, o.leads) + ' \u00b7 closed ' + pct(o.won, o.leads) + ' of leads' + (o.won ? ' \u00b7 average job ' + money0(o.sold / o.won) : '')));
         holder.appendChild(card);
       });
+      if (offAdm()) {   /* her follow-ups (2026-11-15): call-back and follow-up days come or coming, on every open lead she sees; bookings this week */
+        var t0 = todayISO(), t7 = iso(7), fu = { due: 0, week: 0 }, bk = 0, wk0 = Date.now() / 1000 - 7 * 86400;
+        (L.leads || []).forEach(function (l) { if (l.removed || ['new', 'contacted', 'quoted', 'hold'].indexOf(l.status || 'new') < 0) return; var r = recallOf(l), d = [r && r.date, l.follow && l.follow.date].filter(Boolean).sort()[0]; if (!d) return; if (d <= t0) fu.due++; else if (d <= t7) fu.week++; });
+        jobs.forEach(function (j) { if ((j.at || 0) >= wk0) bk++; });
+        var fc = q('div', 'stoday'); fc.appendChild(q('h3', null, 'Follow-ups and bookings')); var fg = q('div', 'stgrid');
+        [[fu.due, 'Follow-ups due now', fu.due ? 'hl' : null], [fu.week, 'Due in the next 7 days'], [bk, 'Jobs booked, last 7 days']].forEach(function (c) { var x = q('div', c[2] || null); x.appendChild(q('b', null, String(c[0]))); x.appendChild(q('span', null, c[1])); fg.appendChild(x); });
+        fc.appendChild(fg); holder.appendChild(fc);
+      }
       var won = mine.filter(function (l) { return l.status === 'won' || jobOf[l.id]; });
       won.sort(function (a, b) { var ja = jobOf[a.id], jb = jobOf[b.id]; return String(jb ? jb.date : '').localeCompare(String(ja ? ja.date : '')) || (b.at || 0) - (a.at || 0); });
       holder.appendChild(q('h2', null, 'Jobs you landed'));
@@ -5546,7 +5554,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection. Try again when you have signal.')); });
   }
   function statsView(name, back) {
-    if (name === S.me && pipeMine()) return pipeStatsView(back);   /* 2026-10-29: the pipeline, not doors */
+    if (name === S.me && (pipeMine() || offAdm())) return pipeStatsView(back);   /* + Jen's admin account: her own work (2026-11-15) */   /* 2026-10-29: the pipeline, not doors */
     hideToast(); S.signin = null; S.screen = 'stats';
     foot.hidden = true; setDock(null);
     setBar('back', { title: name === S.me ? 'My stats' : name, sub: S.statTab === 'doors' ? pw('Doors you worked, last 30 days') : 'Last 30 days · chart: last 14', back: back || chooseView, backLabel: 'Back' });
@@ -5977,8 +5985,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       sb.appendChild(b);
     });
-    if (sb.children.length && (!asOffice() || (S.role === 'office' && S.wonlost))) c.appendChild(sb);   /* + an office account ticked Marks won and lost (2026-10-20) */   /* the office: no won/lost buttons; the calls and the form move the lead */
-    if (l.status === 'won' && (adminView() || (S.role === 'office' && S.wonlost))) {
+    if (sb.children.length && (!asOffice() || (offRole() && S.wonlost))) c.appendChild(sb);   /* + an office account ticked Marks won and lost (2026-10-20) */   /* the office: no won/lost buttons; the calls and the form move the lead */
+    if (l.status === 'won' && (adminView() || (offRole() && S.wonlost))) {
       var mcl = q('button', 'addlead mkcust', 'Make customer'); mcl.type = 'button';
       mcl.addEventListener('click', function () { makeCustomer({ lead: l.id }); });
       c.appendChild(mcl);
@@ -6003,10 +6011,16 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* an admin can look at the app as the office sees it (2026-10-14, Matthew: "as admin I can see exactly what Jen sees from my login"):
      S.viewAs = 'office' changes only what is shown; the admin's own rights stay, and Back to admin ends it */
   function commOk() { return S.role === 'admin' || (S.role === 'office' && (!!S.runsTeam || !!S.commOn)); }   /* Communities: admins, office accounts that run a team or are set to it (2026-10-21) */
-  function asOffice() { return feat('walkdesk') && (S.role === 'office' || (S.role === 'admin' && S.viewAs === 'office')); }
+  function asOffice() { return feat('walkdesk') && (S.role === 'office' || offAdm() || (S.role === 'admin' && S.viewAs === 'office')); }
+  /* Jen's admin account (2026-11-15, spec traverse/JEN-ADMIN-SPEC-2026-11-15.md): an admin with the office's screens (Pipeline, Quote builder,
+     Schedule, Jobs board, her home) and the admin's screens in the menu; the server keeps the owner's things from any admin who is not the super
+     admin (S.ownHide) */
+  function offAdm() { return !!(CO && CO.a365 && feat('walkdesk') && S.role === 'admin' && S.offAdm && !S.super); }
+  function offRole() { return S.role === 'office' || offAdm(); }
+  function ownHide() { return !!(CO && CO.a365 && S.role === 'admin' && !!S.ownHide); }
   /* the quote-only screen (Jen's): her account, or an admin looking at it (2026-10-15, Matthew: "make it so i see the quick quote") */
   function qView() { return S.role === 'quote' || (S.role === 'admin' && S.viewAs === 'quote' && feat('walkdesk')); }
-  function adminView() { return S.role === 'admin' && !S.viewAs; }
+  function adminView() { return S.role === 'admin' && !S.viewAs && !offAdm(); }
   function viewAsBar() {
     var b = q('div', 'viewas'); b.appendChild(q('span', null, S.viewAs === 'quote' ? 'You are seeing ' + who('jen') + '\u2019s screen: her quote-only account, the Quick quote and the schedule.' : 'You are seeing the Office screen (the full office account).'));
     var x = q('button', null, 'Back to admin'); x.type = 'button'; x.addEventListener('click', function () { S.viewAs = null; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }); b.appendChild(x);
@@ -7568,7 +7582,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         c.appendChild(q('div', 'meta', st)); if (x.pre) c.appendChild(q('div', 'sub2', x.pre));
         var acts = q('div', 'aacts'), pv = q('div', 'fupv'); var b = function (t, fn, cls) { var bt = q('button', 'lnk' + (cls ? ' ' + cls : ''), t); bt.type = 'button'; bt.addEventListener('click', fn); acts.appendChild(bt); return bt; };
         b('Preview', function () { pv.textContent = ''; api('nlpreview', { params: { id: x.id } }).then(function (p) { if (!p.ok) { pv.appendChild(q('div', 'msg bad', p.error || '')); return; } pv.appendChild(q('div', 'sub2', 'Subject: ' + p.subject + ' · to ' + p.recipients + ' customers')); var fr = document.createElement('iframe'); fr.className = 'fuframe'; fr.setAttribute('sandbox', ''); fr.title = 'The newsletter as it would look'; fr.srcdoc = p.html; pv.appendChild(fr); }).catch(function () {}); });
-        b('Send me a test', function () { if (!j.email) { toast('Your email first', 'Save it on the Follow-up email screen: the test goes only to you.', null); return; } api('nltest', { body: { id: x.id } }).then(function (k) { toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || ''), null); }).catch(function () {}); });
+        b('Send me a test', function () { api('nltest', { body: { id: x.id } }).then(function (k) { toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || ''), null); }).catch(function () {}); });
         if (!si) {
           if (!x.approved) {
             b('Change', function () { c.appendChild(nlForm(x)); });
@@ -7641,11 +7655,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         }).catch(function () { pv.textContent = ''; pv.appendChild(q('div', 'msg bad', 'No connection.')); });
       };
       tb.addEventListener('click', function () {
-        if (!j.email) { toast('Your email first', 'Save your own email above: the test goes only to you.', null); return; }
+        /* the test goes to Jen's email whoever taps it (2026-11-15) */
         tb.disabled = true;
         api('followuptest', { body: { id: sel.value } }).then(function (k) { tb.disabled = false; toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || 'Try again.'), null); }).catch(function () { tb.disabled = false; toast('No signal', 'Try again.', null); });
       });
-      sel.addEventListener('change', show); holder.appendChild(tb); holder.appendChild(q('div', 'sub2', 'The test goes only to your own email, marked [Test]. Nothing is recorded on the job or the customer.')); show();
+      sel.addEventListener('change', show); holder.appendChild(tb); holder.appendChild(q('div', 'sub2', 'The test goes to Jen’s email, marked [Test]. Nothing is recorded on the job or the customer.')); show();
     }).catch(function () { holder.textContent = ''; holder.appendChild(q('div', 'msg bad', 'No connection.')); });
   }
   /* deposit reminders (2026-11-01, Jen via Matthew): who is due one, Don't send per customer, the on/off switch, a preview and a test */
@@ -7671,6 +7685,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       holder.appendChild(q('div', 'sub2', j.on ? 'On since ' + new Date(j.at * 1000).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' }) + (j.by ? ', by ' + j.by : '') + '.' : 'Off: nothing is sent.' + (j.admin ? '' : ' An admin turns it on.')));
       holder.appendChild(q('div', 'sub2', 'Who gets one: a form sent with a Square deposit link at least 5 days before the job, still unpaid, not signed, not booked and not lost. Square is asked again just before the email, so anyone who just paid never gets it. When: once, 24 hours before their arrival time, from the 365 mailbox; replies go to the office. The button in it opens their form, where they pay.'));
       if (!j.mail) holder.appendChild(q('div', 'msg bad', 'The 365 mailbox is not set up on the server, so no email can go, even when this is on.'));
+      if (j.admin) { var st0 = q('div', 'lookrow'), sb0 = q('button', 'lnk', 'Send me a test'); sb0.type = 'button'; st0.appendChild(sb0); st0.appendChild(q('span', 'sub2', 'A made-up customer\u2019s reminder, to Jen’s email.')); holder.appendChild(st0);
+        sb0.addEventListener('click', function () { sb0.disabled = true; api('depremtest', { body: { sample: 1 } }).then(function (k) { sb0.disabled = false; toast(k.ok ? 'Test sent' : 'Not sent', k.ok ? k.to : (k.error || 'Try again.'), null); }).catch(function () { sb0.disabled = false; toast('No signal', 'Try again.', null); }); }); }
       holder.appendChild(q('h2', 'tgrp', 'Due a reminder'));
       if (!(j.list || []).length) { holder.appendChild(q('div', 'msg soft', 'Nobody right now: every form with a deposit link is paid, signed or booked.')); return; }
       var pv = q('div', 'fupv'), cur = null;
@@ -10134,13 +10150,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      uses a computer's width) ---- */
   function a365Brand() { var on = asOffice() || qView(); document.body.classList.remove('a365'); return on; }   /* no palette of its own any more (2026-10-22) */
   /* the office home: find a house, who to contact next, what is booked with Brad */
-  function officeHome() {
+  function officeHome(into) {
     hideSplash(); hideToast();
-    S.signin = null; S.screen = 'tools'; S.inOffice = false;
+    if (!into) { S.signin = null; S.screen = 'tools'; S.inOffice = false; }
     foot.hidden = true; setDock(null);
-    setBar('tools', { title: (CO.a365 && CO.a365.name) || CO.short || CO.name || 'Lead desk', sub: 'Lead desk', avatar: true });   /* an edition's office: its own name, not 365's (TR-29, 2026-10-22) */
+    if (!into) setBar('tools', { title: (CO.a365 && CO.a365.name) || CO.short || CO.name || 'Lead desk', sub: 'Lead desk', avatar: true });   /* an edition's office: its own name, not 365's (TR-29, 2026-10-22) */
     document.body.classList.add('owide'); if (deskWide()) document.body.classList.add('dk-top');   /* a computer: the top bar is enough */
-    view.textContent = '';
+    if (!into) view.textContent = '';
     var box = q('div', 'ohome');
     if (S.viewAs) box.appendChild(viewAsBar());
     if (payLockOn()) box.appendChild(payLockBar());   /* locked for payment (2026-10-29) */
@@ -10155,6 +10171,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (pqOnC()) { var pqb = q('button', 'ohqq', 'Quick quote: someone called or wrote in ›'); pqb.type = 'button'; pqb.addEventListener('click', phoneQuoteView); hero.appendChild(pqb); }   /* the editions' Quick quote, a permission (2026-10-30) */
     var grid = q('div', 'ogrid'), c1 = q('div', 'ocol'), c2 = q('div', 'ocol');
     grid.appendChild(c1); grid.appendChild(c2); box.appendChild(grid);
+    /* Priority contacts (2026-11-15, Matthew: "Best neighborhood to knock" becomes "Priority contacts" from the pipeline, only 4 or 5): Jen's
+       admin account. The rule, in this order, oldest first within each: (1) a follow-up or call-back day that has come, (2) a new lead nobody
+       has called, texted or emailed yet, (3) a quote with no answer for a day or more (no form, no yes, no job). Five at most. */
+    var pc = null, pcl = null;
+    if (offAdm()) { pc = q('section', 'ocard opri'); pc.appendChild(q('h2', null, 'Priority contacts')); pcl = q('div', 'olist'); pcl.appendChild(q('div', 'skel')); pc.appendChild(pcl); c1.appendChild(pc); }
     /* who to contact */
     var lc = q('section', 'ocard'); lc.appendChild(q('h2', null, 'Who to contact'));
     var nums = q('div', 'onums'), list = q('div', 'olist'); lc.appendChild(nums); lc.appendChild(list); list.appendChild(q('div', 'skel'));
@@ -10164,15 +10185,19 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c2.appendChild(wc);
     var tc = q('section', 'ocard otools'); tc.appendChild(q('h2', null, 'Quick'));
     [['clip', 'Open the Pipeline', function () { pipelineView(); }], ['leaf', 'Jobs board', function () { jobsView(); }], ['card', 'Customers', function () { customersView(); }]].concat(quickCanBook() ? [['door', qqName(), function () { quickQuoteView(); }]] : [], [
-     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }], ['book', 'Training', function () { trainingView(); }], ['card', 'Square', function () { squareView(); }]].concat(S.doorsOn ? [['door', pw('Doors'), function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }]] : [], commOk() ? [['users', 'Communities', function () { communitiesView(); }]] : [], S.resultsOn ? [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]] : []).concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : [])).forEach(function (x) {
+     ['note', 'Add a lead', function () { S.leadAdd = true; S.pipeStage = 'call'; pipelineView(); }], ['cal', 'Calendars', function () { S.calWho = S.me; calendarView(); }], ['chart', 'Stats', function () { statsPageView(); }], ['book', 'Training', function () { trainingView(); }], ['card', 'Square', function () { squareView(); }]].concat(S.doorsOn ? [['door', pw('Doors'), function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }]] : [], commOk() ? [['users', 'Communities', function () { communitiesView(); }]] : [], S.resultsOn ? [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]] : []).concat(mgrOn() ? [['users', 'Team sign-ins', function () { accountsView(); }], ['chart', 'Team stats', function () { teamView(); }], ['route', 'Territories', function () { territoriesView(); }]] : [])
+     .concat(offAdm() ? [['chart', 'My stats', function () { statsView(S.me, chooseView); }], ['users', 'Accounts', function () { accountsView(); }], ['users', 'Team stats', function () { teamView(); }]].concat(S.resultsOn ? [] : [['chart', 'Results', function () { S.resultsBack = null; resultsView(); }]],   /* Jen's admin account (2026-11-15): the admin's screens, kept off the owner's */
+       [['mail', 'Newsletter', function () { newsletterView(); }], ['mail', 'Follow-up email', function () { followupMailView(); }], ['mail', 'Deposit reminders', function () { depremView(); }], ['clip', 'Agreement terms', function () { a365TermsView(); }], ['card', 'Other ways to pay', function () { a365WaysView(); }]]) : [])).forEach(function (x) {
       var b = q('button', 'otool'); b.type = 'button'; b.appendChild(ico(x[0], 2.2)); b.appendChild(q('span', null, x[1])); b.addEventListener('click', x[2]); tc.appendChild(b);
     });
     c2.appendChild(tc);
     permTiles(box);   /* the screens the role was given (2026-10-29) */
-    view.appendChild(box);
+    (into || view).appendChild(box);
     api('leads').then(function (j) {
       list.textContent = '';
+      if (pcl) pcl.textContent = '';
       if (!j || !j.ok) { list.appendChild(q('div', 'msg', 'The leads need signal.')); return; }
+      if (pcl) priorityContacts(pcl, j.leads || []);
       var open = j.leads.filter(function (l) { return ['new', 'contacted'].indexOf(l.status || 'new') >= 0; });
       var G = { new: [], today: [], vm: [], talked: [], wait: [], out: [], email: [], text: [], recall: [] }; open.forEach(function (l) { (recallOf(l) ? G.recall : (G[callGroup(l)] || G.wait)).push(l); });   /* emailed and texted are groups since 2026-10-16; one lead in them emptied this box (found 2026-10-20) */   /* + Recall (2026-10-21) */
       var web = open.filter(function (l) { return l.src === 'a365web' && !(l.tries || []).length; }).length;
@@ -10218,6 +10243,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     }).catch(function () { wl.textContent = ''; wl.appendChild(q('div', 'msg', 'Could not load them.')); });
     window.scrollTo(0, 0);
+  }
+  /* Priority contacts (2026-11-15), see officeHome */
+  function priorityPick(leads) {
+    var today = todayISO(), now = Date.now() / 1000, open = leads.filter(function (l) { return !l.removed && ['new', 'contacted', 'quoted', 'hold'].indexOf(l.status || 'new') >= 0 && !l.sign && !l.signed && !l.job; });
+    var due = function (l) { var r = recallOf(l), fd = l.follow && l.follow.date; var d = [r && r.date, fd].filter(function (x) { return x && x <= today; }).sort()[0]; return d || null; };
+    var A = open.filter(due).sort(function (a, b) { return String(due(a)).localeCompare(String(due(b))) || (a.at || 0) - (b.at || 0); }).map(function (l) { return [l, 'Follow-up due', due(l) === today ? 'today' : fmtDayStr(due(l))]; });
+    var B = open.filter(function (l) { return !due(l) && (l.status || 'new') === 'new' && !(l.tries || []).length; }).sort(function (a, b) { return (a.at || 0) - (b.at || 0); }).map(function (l) { return [l, 'New, not contacted', ago(l.at)]; });
+    var C = open.filter(function (l) { return !due(l) && l.status === 'quoted' && l.quote && !l.accept && now - (l.quote.at || now) >= 86400; }).sort(function (a, b) { return (a.quote.at || 0) - (b.quote.at || 0); }).map(function (l) { return [l, 'Quote, no answer', money0(l.quote.price) + ' sent ' + ago(l.quote.at)]; });
+    return A.concat(B, C).slice(0, 5);
+  }
+  function priorityContacts(host, leads) {
+    var P = priorityPick(leads);
+    if (!P.length) { host.appendChild(q('div', 'msg soft', 'Nobody is waiting on you: no follow-ups due, no new leads to call and no quotes waiting on an answer.')); return; }
+    P.forEach(function (x) {
+      var l = x[0], b = q('button', 'orow'); b.type = 'button';
+      var tx = q('span'); tx.appendChild(q('b', null, l.name || l.phone || l.email || 'No name')); tx.appendChild(q('small', null, [x[2], l.need, LEAD_SRC[l.src] || l.src].filter(Boolean).join(' \u00b7 '))); b.appendChild(tx);
+      b.appendChild(q('span', 'otag' + (x[1] === 'New, not contacted' ? '' : ' again'), x[1]));
+      b.addEventListener('click', function () { S.pipeStage = null; S.pipeSel = 'lead:' + l.id; S.pipeFocus = l.id; pipelineView(); });
+      host.appendChild(b);
+    });
   }
   /* the Pipeline on a computer: the list on the left, the whole lead on the right (2026-10-14) */
   function pipeKey(it) { return it.kind === 'door' ? 'door:' + it.x.region + ':' + it.x.id : 'lead:' + it.x.id; }
@@ -10414,7 +10459,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
             if (st.pkg === 'full' && st.sq) { rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName) rows.push(['Fertilizer', (j.fertName !== 'Fertilizer' ? j.fertName + ' \u00b7 ' : '') + j.fertLb + ' lb', '']); }
             else if (PKG_NOAER[st.pkg] && st.sq) { if (j.seedLb) rows.push(['Seed', (P.seedName ? P.seedName + ' \u00b7 ' : '') + j.seedLb + ' lb', '']); if (j.fertName && j.fertLb) rows.push(['Fertilizer', (j.fertName !== 'Fertilizer' ? j.fertName + ' \u00b7 ' : '') + j.fertLb + ' lb', '']); }   /* only what the package puts down (2026-11-09) */
             if (rows.length || (price && j.left != null)) { var tb = q('div', 'qcost'); rows.forEach(function (r) { var d = q('div', 'qcrow'); var a = q('div'); a.appendChild(q('b', null, r[0])); a.appendChild(q('small', null, r[1])); d.appendChild(a); tb.appendChild(d); });
-              if (price && j.left != null) { var lf = q('div', 'qcrow qcleft'); var la = q('div'); la.appendChild(q('b', null, 'Left after expenses')); la.appendChild(q('small', null, 'After seed, fertilizer, the drive and the crew (' + (j.crewPct != null ? j.crewPct : 20) + '% of the price)')); lf.appendChild(la); lf.appendChild(q('span', null, money0(j.left + exS * (1 - (j.crewPct != null ? j.crewPct : 20) / 100)))); tb.appendChild(lf); }   /* the total only (Matthew 2026-10-15) */
+              if (price && j.left != null) { var lf = q('div', 'qcrow qcleft'); var la = q('div'); la.appendChild(q('b', null, 'Left after expenses')); la.appendChild(q('small', null, 'After seed, fertilizer, the drive and the crew' + (j.crewPct != null ? ' (' + j.crewPct + '% of the price)' : '')));   /* the share only for the super admin (2026-11-15) */ lf.appendChild(la); lf.appendChild(q('span', null, money0(j.left + exS * (1 - (j.crewPct != null ? j.crewPct : 20) / 100)))); tb.appendChild(lf); }   /* the total only (Matthew 2026-10-15) */
               detail.appendChild(tb); }
             if (st.pkg === 'full' && !st.sq) detail.appendChild(q('div', null, 'Type the lawn size to work out the seed and fertilizer.'));
             st.cur = { price: total, base: price, seedLb: j.seedLb, fertLb: j.fertLb, extras: exList() }; st.sum = { rows: rows, cost: 0, known: false, ladder: ladder, left: j.left };
@@ -10589,7 +10634,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (ct.children.length) { acts.appendChild(ct); addSendNote(acts, ct); }
           acts.appendChild(q('div', 'ltrynote', ((P.hidden || asOffice() || qView()) ? 'The summary is for your own notes.' : 'The summary has our figures, for your own notes.') + ' The customer\u2019s text carries the price only. Nothing here is saved in the app.'));
         }
-        if (S.role === 'admin') { var pr = q('button', 'lnk', 'Pricing settings ›'); pr.type = 'button'; pr.addEventListener('click', function () { a365PricingView(); }); acts.appendChild(pr); }
+        if (S.role === 'admin' && !ownHide() && !P.hidden) { var pr = q('button', 'lnk', 'Pricing settings ›'); pr.type = 'button'; pr.addEventListener('click', function () { a365PricingView(); }); acts.appendChild(pr); }
       }
       paint();
     }
@@ -11544,7 +11589,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (radarOn()) t.push(['Live radar', function () { hailMapView(null, chooseView); }]);
     if (adminView() && wdOn()) t.push(['House lookup', function () { houseLookupView(null); }]);   /* the admin's House lookup on the computer too: its address box searches doors (2026-10-22) */
     if (adminView() && feat('communities')) t.push(['Communities', communitiesView]);
-    if (adminView() && feat('skiptrace')) t.push(['Skip trace', skipView]);   /* on the computer as on the phone (2026-10-22) */
+    if (adminView() && feat('skiptrace') && !ownHide()) t.push(['Skip trace', skipView]);   /* on the computer as on the phone (2026-10-22) */
     if (adminView() && kitOnC()) t.push(['Setup', kitSetupView]);   /* the Setup checklist on a computer and an iPad held sideways too (2026-10-30 audit: it was only under Office › Setup there) */
     if (adminView()) { t.push(['Accounts', accountsView]); if (feat('company')) t.push(['Company', companyView]); if (!CO.a365 && S.super) t.push(['Sample property', function () { sampleView(); }]);   /* not on Sixfold (2026-10-17); Traverse only here, the Setup checklist for a client (TR-48) */ if (S.super) t.push(['See through their eyes', vaPicker]); else if (feat('walkdesk') && CO.a365) { t.push(['See ' + who('jen') + '\u2019s screen', function () { S.viewAs = 'quote'; var dn0 = document.getElementById('dnav'); if (dn0) dn0._sig = null; chooseView(); }]); } }
     return t;
@@ -11976,7 +12021,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function dnavItems0() {
     if (qView()) return [['house', 'Quick quote', function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Schedule', function () { schedView(); }, ['sched']]];   /* the schedule is back, to look up what she booked (Matthew 2026-10-15) */
     if (asOffice()) return ([['home', 'Home', chooseView, ['tools']], ['pipe', 'Pipeline', pipeOpen, ['pipeline', 'deskbook', 'walk', 'results']], ['jobs', 'Jobs', jobsView, ['jobs', 'jobbook', 'jobpick', 'job']], ['card', 'Customers', customersView, ['customers', 'customer']],
-      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(S.doorsOn ? [['doors', pw('Doors'), function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : [], S.doorsOn && planOk() ? [['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]] : [], commOk() && !mgrOn() ? [['comm', 'Communities', communitiesView, ['communities']]] : [], S.resultsOn ? [['res', 'Results', function () { S.resultsBack = null; resultsView(); }, ['results']]] : [], mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : [])).filter(function (x) { return x[0] !== 'house' || quickCanBook(); });   /* + Doors/Plan, Communities, Results by setting (2026-10-21) */   /* no Quote builder where 365's quote engine is not (editions, 2026-10-26) */   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
+      ['house', qqName(), function () { quickQuoteView(); }, ['house', 'quickquote']], ['cal', 'Calendar', function () { S.calWho = S.me; calendarView(); }, ['calendar']], ['numbers', 'Stats', statsPageView, ['statspage']]].concat(S.doorsOn ? [['doors', pw('Doors'), function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : [], S.doorsOn && planOk() ? [['plan', 'Plan', function () { withRegions(function () { var k = S.region || (S.regions[0] && S.regions[0].key); if (k) planView(k); else start(); }); }, ['plan']]] : [], commOk() && !mgrOn() ? [['comm', 'Communities', communitiesView, ['communities']]] : [], S.resultsOn ? [['res', 'Results', function () { S.resultsBack = null; resultsView(); }, ['results']]] : [], mgrOn() ? [['team', 'Team', teamView, ['team', 'board', 'territories', 'stats', 'accounts']]] : [], offAdm() ? [['office', 'Office', officeView, ['office']]] : [])).filter(function (x) { return x[0] !== 'house' || quickCanBook(); });   /* + Office for Jen's admin account (2026-11-15) */   /* + Doors/Plan, Communities, Results by setting (2026-10-21) */   /* no Quote builder where 365's quote engine is not (editions, 2026-10-26) */   /* + Team for an office account that runs one (2026-10-20) */   /* the office: no doors, no stats (2026-10-14) */
     if (jobCrew()) return [['home', 'Home', chooseView, ['tools']], ['cal', 'My schedule', function () { crewSchedView(); }, ['crewsched', 'job', 'crewwalk']], ['walks', 'My ' + vw() + 's', function () { myWalksView(); }, ['mywalks']], ['team', 'My stats', function () { crewStatsView(); }, ['crewstats']]].concat(squarePageOn() ? [['card', 'Square', squareView, ['square']]] : [], techOn() && S.doorsOn ? [['doors', pw('Doors'), function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]] : []);   /* + a technician with the Doors switch (2026-10-29) */   /* the field crew (2026-10-19): no doors, no sales; + Square for those who take payments (2026-10-21) */
     var it = [['home', 'Home', chooseView, ['tools']], ['doors', pw('Doors'), function () { S.returnTo = null; if (S.regions.length) renderAreas(); else start(); }, ['areas', 'doors', 'state', 'followups', 'around']]];
     if (S.fqOn && !asOffice() && !adminView()) it.push(['fq', 'Quick quote', function () { fieldQuoteView(); }, ['fieldquote']]);   /* the field quick quote in the computer menu (2026-10-22) */
@@ -14147,7 +14192,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      Ticks come from the server (accounts, kit, imports); the list can be hidden on this device once read. */
   function signedIn(j) {   /* the sign-in answer into S: the code pad, an email and password sign-in or set-password, and the welcome page's pass or a super's hop all come through here (2026-10-31: the password path used to miss the permissions, team, lock, super and session id) */
     markOut(false);
-    S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
+    S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.offAdm = !!j.officeui; S.ownHide = !!j.ownhide; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null;
     flush(); warmSaved(); pushResend(); pushPrepare();
   }
   function startOn() { return feat('clientstart') && S.role === 'admin' && !S.viewing; }
@@ -17842,7 +17887,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function roleSeg(cur, onPick, only) {
     var seg = q('div', 'aseg' + (edOn() ? ' aseg-ed' : ''));
     var opts = edOn() ? (only || edRoles()).map(function (k) { return [k, roleName(k)]; })   /* the editions' roles (2026-10-29) */
-      : [['crew', 'Crew']].concat(feat('walkdesk') ? [['office', 'Office']] : [], feat('walkdesk') && CO.a365 ? [['quote', 'Quote only']] : [], [['manager', 'Manager'], ['admin', 'Admin']]);
+      : [['crew', 'Crew']].concat(feat('walkdesk') ? [['office', 'Office']] : [], feat('walkdesk') && CO.a365 ? [['quote', 'Quote only']] : [], [['manager', 'Manager']], ownHide() ? [] : [['admin', 'Admin']]);   /* only Matthew makes an admin on Sixfold 365 (2026-11-15) */
     /* every role offered, one line each (2026-10-29, was the picked role's line only): the picked one stands out (.rolesay) */
     var all = edOn() ? q('ul', 'lsub rolesall') : null;
     var mark = function (k) { [].forEach.call(all.children, function (li) { li.className = li.getAttribute('data-role') === k ? 'on rolesay' : ''; }); };
@@ -17983,13 +18028,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       return c;
     }
     if (a.role === 'super' && !S.super) { c.appendChild(q('div', 'anote', 'Traverse\u2019s own sign-in, for support. Only Traverse changes it.')); return c; }
+    if (a.officeui && a.role === 'admin' && !a.off) meta.appendChild(q('span', 'tag teamtag', 'Office screens'));   /* Jen's admin account (2026-11-15) */
+    if (ownHide() && a.role === 'admin' && !a.you) { c.appendChild(q('div', 'anote', 'An admin. Only Matthew changes an admin.')); return c; }   /* 2026-11-15 */
     var acts = q('div', 'aacts');
     var btn = function (label, cls, fn) { var b = q('button', 'lnk' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.addEventListener('click', fn); acts.appendChild(b); };
     if (a.off) {
       btn('Turn back on', null, function () { acctCall('accountrestore', { id: a.id }, function () { toast('Back on', a.name, null); }); });
     } else {
-      var adm = S.role === 'admin';
+      var adm = S.role === 'admin' && !(ownHide() && a.you);   /* her own row: her code only (2026-11-15) */
       if (adm) btn('Change', null, function () { S.acctEdit = a.id; drawAccounts(holder); });
+      if (S.super && !S.viewing && CO.a365 && feat('walkdesk') && a.role === 'admin') btn(a.officeui ? 'Stop: Office screens' : 'Office screens', null, function () {   /* the super admin only (2026-11-15): an admin who works on the office's screens and gets its alerts */
+        acctCall('acctflag', { id: a.id, flag: 'officeui', on: !a.officeui }, function () { toast(a.name + (a.officeui ? ': admin screens' : ': office screens'), a.officeui ? 'They see the admin\u2019s screens again.' : 'Pipeline, Quote builder, Schedule and Jobs as the office has them, and the office alerts.', null); });
+      });
       if (adm && feat('walkdesk') && a.role !== 'super' && !(edOn() && ((a.role === 'setter' && !(S.permCat && roleAllows('setter', 'jobs.own'))) || a.role === 'tech')) && roleAllows(a.role, 'jobs.own')) btn(a.walker ? 'Stop ' + vw() + 's' : 'Does ' + vw() + 's', null, function () {   /* a setter never, a technician always (2026-10-29) */   /* the walk desk (2026-10-14) */
         acctCall('walkerset', { id: a.id, on: !a.walker }, function () { toast(a.walker ? a.name + ' no longer does ' + vw() + 's' : a.name + ' does ' + vw() + 's now', a.walker ? 'Walks already booked with them stay booked.' : 'The office can book ' + vw() + 's with them.', null); });
       });
@@ -18009,8 +18059,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         btn(a.wonlost ? 'Stop won and lost' : 'Marks won and lost', null, function () { acctCall('acctflag', { id: a.id, flag: 'wonlost', on: !a.wonlost }, function () { toast(a.wonlost ? a.name + ' no longer marks won and lost' : a.name + ' marks won and lost now', a.wonlost ? 'Calls and the signed form still move their leads along.' : 'Won makes the customer.', null); }); });
       }
       /* a new code: an admin may pick it, and change their own (2026-10-11, Matthew); a manager gives their crew a random one */
-      if (adm || !a.you) btn(a.you ? 'Change my code' : 'New code', null, function () {
-        if (adm) { S.acctCode = S.acctCode === a.id ? null : a.id; drawAccounts(holder); return; }
+      if (adm || !a.you || ownHide()) btn(a.you ? 'Change my code' : 'New code', null, function () {
+        if (adm || ownHide()) { S.acctCode = S.acctCode === a.id ? null : a.id; drawAccounts(holder); return; }
         if (!window.confirm('Give ' + a.name + ' a new code? Their old code stops working at once.')) return;
         acctCall('accountcode', { id: a.id }, function (j) { S.newCode = { name: j.name, role: j.role, code: j.code, fresh: false }; });
       });
@@ -18965,18 +19015,37 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* Jen's stages for Matthew's Full pipeline too (2026-11-10, Matthew: 'make my full pipeline look like jens pipeline in terms of the organizing,
      right now its just one big drop down of names'): Quoted and Form sent apart, Signed and No sale tabs. Sixfold only (the walk desk); the
      editions keep theirs */
+  /* "Do you want to start adding messages to the pipeline?" (2026-11-15, Matthew): yes = the 5-minute job brings each new Messenger chat in as
+     a lead (or a note on the lead it matches), from that moment; the app never sends a message. Asked of an admin while it is off. */
+  function msgrAsk(redraw) {
+    var box = q('div');
+    if (S.msgrOn === undefined) api('msgrpipe').then(function (j) { if (j && j.ok) { S.msgrOn = !!j.on; if (S.msgrOn) redraw(); else paint(); } }).catch(function () {});
+    var paint = function () {
+      box.textContent = ''; if (S.msgrOn !== false) return; var snooze = false; try { snooze = sessionStorage.getItem('msgrask') === '1'; } catch (e) {} if (snooze) return;
+      var c = q('div', 'card msgrask'); c.appendChild(q('b', null, 'Do you want to start adding messages to the pipeline?'));
+      c.appendChild(q('div', 'sub2', 'Each new Facebook Messenger chat comes in as a lead in its own Messenger section, about every 5 minutes. Someone already in the Pipeline (same chat, phone, email or full name) gets the message as a note instead. Nothing is ever sent from the app, and chats from before you say yes stay out.'));
+      var row = q('div', 'lookrow'), yes = q('button', 'addlead', 'Yes, start'), no = q('button', 'lnk', 'Not now'); yes.type = 'button'; no.type = 'button'; row.appendChild(yes); row.appendChild(no); c.appendChild(row);
+      yes.addEventListener('click', function () { yes.disabled = true; api('msgrpipe', { body: { on: true } }).then(function (k) { yes.disabled = false; if (!k.ok) { toast('Not saved', k.error || 'Try again.', null); return; } S.msgrOn = true; toast('Messenger is on', 'New chats come into the Messenger section.', null); redraw(); }).catch(function () { yes.disabled = false; toast('No signal', 'Not saved.', null); }); });
+      no.addEventListener('click', function () { try { sessionStorage.setItem('msgrask', '1'); } catch (e) {} box.textContent = ''; });
+      box.appendChild(c);
+    };
+    paint();
+    return box;
+  }
+  function msgrLead(l) { return /^mc:/.test(String(l.ext || '')) || (l.src === 'messenger' && l.by === 'Facebook'); }   /* a lead made from a Messenger chat by the 5-minute job */
   function officeStages() { return asOffice() || (feat('walkdesk') && adminView() && S.super && !edOn()); }   /* Matthew's sign-in only (2026-11-10: 'i just wanted it copied over to mine'); other admins and Jen unchanged */
   function pipeStage(it) {
     if (it.kind === 'door') { var x = it.x, ds = x.result ? x.result.result : x.quoted ? 'quoted' : x.walk ? 'walk' : 'call'; return officeStages() ? ({ won: 'signed', lost: 'nosale', walk: 'call' })[ds] || ds : ds; }
     var st = it.x.status || 'new';
     var cs = officeStages() ? (st === 'quoted' && !it.x.sign ? 'quoted' : (OFFICE_MAP[st] || 'call')) : (st === 'new' || st === 'contacted' ? 'call' : st);   /* the office: the phone-quote flow (2026-10-14) */
+    if (cs === 'call' && officeStages() && CO.a365 && st === 'new' && msgrLead(it.x) && !(it.x.tries || []).length && !recallOf(it.x)) return 'msgr';   /* Messenger into the Pipeline (2026-11-15): its own section until someone reaches out */
     if ((cs === 'call' || cs === 'quoted') && wdOn() && recallOf(it.x)) return 'recall';   /* a day set to call back (2026-10-21) */
     if (cs === 'call' && wdOn()) { var cg = callGroup(it.x); if (cg === 'vm' || cg === 'email' || cg === 'text') return cg; }   /* Left voicemail, Emailed, Texted (2026-10-15/16) */   /* last call left a voicemail: the Left voicemail tab (2026-10-15) */
     return cs;
   }
   /* the office's stages (2026-10-14, Matthew: no won/lost/quote/walk for Jen; she calls, quotes by phone, takes half as a deposit and
      sends a one-page form to sign) */
-  var OFFICE_ST = [['call', 'To call'], ['vm', 'Left voicemail'], ['recall', 'Recall'], ['email', 'Emailed'], ['text', 'Texted'], ['quoted', 'Quoted'], ['sent', 'Form sent'], ['hold', 'On hold'], ['signed', 'Signed'], ['nosale', 'No sale']];   /* Quoted: a phone quote, no form yet (2026-10-16); On hold (2026-10-17) */   /* + Recall (2026-10-21) */
+  var OFFICE_ST = [['msgr', 'Messenger'], ['call', 'To call'], ['vm', 'Left voicemail'], ['recall', 'Recall'], ['email', 'Emailed'], ['text', 'Texted'], ['quoted', 'Quoted'], ['sent', 'Form sent'], ['hold', 'On hold'], ['signed', 'Signed'], ['nosale', 'No sale']];   /* Quoted: a phone quote, no form yet (2026-10-16); On hold (2026-10-17) */   /* + Recall (2026-10-21) */
   var OFFICE_MAP = { 'new': 'call', contacted: 'call', walk: 'call', quoted: 'sent', won: 'signed', lost: 'nosale', hold: 'hold', unreached: 'unreached' };   /* Couldn't reach: no tab, its own folded list (2026-10-21) */
   function pipeSrc(it) { return it.kind === 'door' ? 'door' : (it.x.src || 'other'); }
   function pipeSrcName(k) { return k === 'door' ? pw('Door', 'Property') : (LEAD_SRC[k] || k); }   /* Property in the editions (2026-10-30) */
@@ -19236,6 +19305,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (feat('roof')) jb.title = 'A JobNimbus contact import: in JobNimbus, Contacts, Import. Names are the county owner of record as written; fix them after the walk.';
     /* tabled 2026-10-15 (Matthew: "table the export to Jobber for now"; TASKS.md keeps it): if (adminView()) top.appendChild(jb); */
     holder.appendChild(top);
+    if (CO.a365 && wdOn() && S.role === 'admin' && officeStages()) holder.appendChild(msgrAsk(drawPipe));   /* 2026-11-15 */
     if (feat('roof') && S.role === 'admin') holder.appendChild(edOn() ? ioFold(jnPanel()) : jnPanel());
     var rw = feat('roof') ? roofWindows(S.qlist || []) : null; if (rw) holder.appendChild(rw);   /* the 72-hour windows open now (2026-10-09) */   /* send booked doors straight into JobNimbus (2026-10-08) */
     if (S.leadAdd) holder.appendChild(leadForm());
@@ -19291,7 +19361,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (CO.a365 && S.role === 'admin' && !asOffice() && S.cucheck && S.cucheck.items && S.cucheck.items.length) holder.appendChild(cuCheckBox(S.cucheck));   /* Sixfold 365 only: its ClickUp (2026-10-30 audit) */
     /* stages */
     /* Walk booked only while someone is in it (2026-10-21, Matthew: "walk booked wouldn't really be used") */
-    var stList = (officeStages() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()); });   /* Recall: the lead desk only (2026-10-21) */
+    var stList = (officeStages() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()) && (st[0] !== 'msgr' || S.msgrOn || stage === 'msgr' || items.some(function (it) { return pipeStage(it) === 'msgr'; })); });   /* Messenger: while it is on or holds someone (2026-11-15) */   /* Recall: the lead desk only (2026-10-21) */
     stage = pipeFollow(stage, items.filter(function (it) { return src === 'all' || pipeSrc(it) === src; }), pipeStage, stList, 'pipeStage');   /* 2026-11-12 */
     S.pipeCur = 'all:' + (stage || '');
     var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + stList.length + ',1fr)';
@@ -24056,21 +24126,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       wdOn() ? ['Stats', statsPageView, false, null, ['statspage']] : null,   /* 2026-10-20 */
       squarePageOn() ? ['Square', squareView, false, null, ['square']] : null,   /* 2026-10-21 */
       ['Calendar', function () { S.calWho = S.me; calendarView(); }, false, null, ['calendar']],
-      pipeMine() ? ['My stats', function () { statsView(S.me, chooseView); }, false, null, ['stats']] : null,   /* his pipeline on a computer too (2026-10-29: it was a phone tile only) */
+      pipeMine() || offAdm() ? ['My stats', function () { statsView(S.me, chooseView); }, false, null, ['stats']] : null,   /* his pipeline on a computer too (2026-10-29: it was a phone tile only) */   /* + Jen's own work (2026-11-15) */
       ['Team stats', teamView, false, null, pipeMine() ? ['team'] : ['team', 'stats']],
       ['Leaderboard', boardView, false, null, ['board']],
       ['Training', trainingView, false, null, ['training']],
       S.role === 'admin' ? ['Results', resultsView, false, null, ['results']] : null,
-      S.role === 'admin' ? ['Usage', usageView, false, null, ['usage']] : null,   /* the tap log (2026-10-12) */
+      S.role === 'admin' && !ownHide() ? ['Usage', usageView, false, null, ['usage']] : null,   /* the tap log (2026-10-12) */   /* the super admin's only on Sixfold 365 (2026-11-15) */
       S.role === 'admin' ? ['Accounts', accountsView, false, null, ['accounts']] : mgrOn() ? ['Team sign-ins', accountsView, false, null, ['accounts']] : null,
       S.role === 'admin' && feat('company') ? ['Company', companyView, false, null, ['company']] : null,
       S.role === 'admin' && CO.a365 && wdOn() ? ['Follow-up email', followupMailView, false, null, ['followupmail']] : null,   /* 2026-10-27 */
       (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['Deposit reminders', depremView, false, null, ['deprem']] : null,
-      (S.role === 'admin' || S.role === 'office') && CO.a365 && wdOn() ? ['J.A.R.V.I.S.', function () { helpChat(); }, false, null, ['help']] : null,   /* 2026-11-01: Jen writes a problem, Claude replies */   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
+      /* the J.A.R.V.I.S. item went from this menu (2026-11-15, Matthew, for Jen and for him): the chat bubble is on every screen */   /* 2026-11-01: Jen writes a problem, Claude replies */   /* 2026-11-01; the office too (Matthew: "Jen can see the deposit reminders"): she sees who is due one and can tick Don’t send; only an admin switches them on */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Newsletter', function () { newsletterView(); }, false, null, ['newsletter']] : null,   /* 2026-10-28 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Agreement terms', a365TermsView, false, null, ['a365terms']] : null,   /* 2026-10-30 */
       S.role === 'admin' && CO.a365 && wdOn() ? ['Other ways to pay', a365WaysView, false, null, ['a365ways']] : null,   /* 2026-10-30 */
-      S.role === 'admin' && feat('billing') ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
+      S.role === 'admin' && feat('billing') && !ownHide() ? ['Billing', billingView, false, null, ['billing']] : null,   /* on a computer too (2026-10-26: Billing was only a phone tile) */
       S.role === 'admin' && kitOnC() ? ['Setup', kitSetupView, false, null, ['kitsetup', 'kitprices', 'kitpay', 'kitimport', 'kitcosts', 'mailsetup', 'svcarea', 'fbleads', 'cohide']] : null,   /* the quote and agreement kit (2026-10-27) */
       S.role === 'admin' && careOnC() ? ['Plans', function () { carePlansView(); }, false, null, ['careplans']] : null,   /* plans and customer emails (2026-10-30) */
       S.role === 'admin' && careOnC() ? ['Customer emails', careMailView, false, null, ['caremail', 'carenews']] : null,
@@ -24532,6 +24602,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function officeView() {
     if (!planOk()) return chooseView();
+    if (offAdm()) {   /* Jen's admin account (2026-11-15, Matthew: "Call list, not a door list"): Today is her pipeline, in the Office frame */
+      hideSplash(); hideToast(); S.signin = null; S.screen = 'office'; S.inOffice = true; setDock(null); foot.hidden = true;
+      setBar('back', { title: 'Office', sub: 'Today', back: chooseView, backLabel: 'Home' }); document.body.classList.add('dk-top');
+      view.textContent = ''; var pg = q('div', 'office'), bd = q('div', 'obody'); pg.appendChild(officeMenu()); pg.appendChild(bd); view.appendChild(pg);
+      officeHome(bd); return;
+    }
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'office'; S.region = S.region || null; S.inOffice = true;
     setDock(null); foot.hidden = true;
@@ -24836,7 +24912,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     }
     if (isOut()) { signinView(); tellServerOut(); }
     else api('me').then(function (j) {
-      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); setTimeout(helpFab, 0); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !helpReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
+      if (j.ok) { S.me = j.name; S.sub = j.sub || ''; permFrom(j); S.onTeam = 'onteam' in j ? !!j.onteam : S.onTeam; S.terms = j.terms || null; S.sign = j.sign || ''; S.role = j.role; S.walker = !!j.walker; S.pays = !!j.pays; S.sqOn = !!j.sq; S.runsTeam = !!j.runsteam; S.wonlost = !!j.wonlost; S.offAdm = !!j.officeui; S.ownHide = !!j.ownhide; S.doorsOn = !!j.doors; S.commOn = !!j.communities; S.resultsOn = !!j.results; S.fqOn = !!j.fq; S.repSend = !!j.repSend; S.mailFrom = j.mailFrom || ''; S.a365mail = !!j.mail; S.super = !!j.super; S.sid = j.sid || null; S.avatar = j.avatar || 0; S.lock = j.lock || null; S.viewing = j.viewing || null; if (vaId() && !S.viewing) vaSet(''); vaBar(); setTimeout(helpFab, 0); if (!(feat('billing') && billingReturn()) && !(kitOnC() && kitSquareReturn()) && !walkReturn() && !helpReturn() && !jobReturn() && !quoteReturn()) chooseView(); }
       else signinView();
     }).catch(function () { signinView('No signal, and nothing saved on this device yet. Sign in once with signal and it will open next time without.'); });
   }

@@ -84,6 +84,26 @@ foreach ($months as $m) {
     $net = $rev - $crew - $mat - $fee - $ads - $fx; $cum += $net;
     $rows[] = ['m' => $m, 'done' => $m < $cur, 'jobs' => (int) ($r['jobs'] ?? 0), 'rev' => $rev, 'cash' => (float) ($r['cash'] ?? 0), 'crew' => $crew, 'mat' => $mat, 'fee' => $fee, 'ads' => $ads, 'fixed' => $fx, 'net' => $net, 'cum' => $cum];
 }
+/* money taken outside Square, by method, per month (2026-11-15, Matthew: "i wanna make sure i get paid when im suppose to"): every payment the
+   office records by hand (Mark it paid, Record a part payment, a deposit taken another way) is in jobs.log with its method; the amount is the
+   row's own 'got' (since 15 Nov) or, for older rows, what that row added to the job's paid-so-far. Square money is counted from Square above. */
+$outside = []; $jst = [];
+foreach (@file(DATA_DIR . '/jobs.log', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $ln) {
+    $r = json_decode($ln, true); if (!is_array($r) || !isset($r['id'])) continue; $id = (string) $r['id'];
+    $s = $jst[$id] ?? ['price' => 0, 'paid' => 0, 'lead' => '']; if (isset($r['price'])) $s['price'] = (int) $r['price']; if (isset($r['lead'])) $s['lead'] = (string) $r['lead'];
+    if (isset($r['pay']) && is_array($r['pay'])) {
+        $st = (string) ($r['pay']['s'] ?? 'unpaid'); $now = $st === 'paid' ? $s['price'] : ($st === 'deposit' ? (int) ($r['pay']['amt'] ?? 0) : 0);
+        $got = is_array($r['got'] ?? null) ? (int) ($r['got']['amt'] ?? 0) : $now - $s['paid']; $how = (string) (is_array($r['got'] ?? null) ? ($r['got']['how'] ?? '') : ($r['pay']['how'] ?? ''));
+        $sq = $how === 'square' || isset($r['sqpaid']) || isset($r['sqcharge']) || isset($r['sqparts']);
+        if ($got > 0 && !$sq && $how !== '' && $real($all[$s['lead']] ?? ['name' => ''])) {
+            $d = (string) ($r['payinfo']['date'] ?? ''); $m = preg_match('/^\d{4}-\d{2}/', $d) ? substr($d, 0, 7) : date('Y-m', (int) ($r['at'] ?? time()));
+            $outside[$m][$how] = ($outside[$m][$how] ?? 0) + $got;
+        }
+        $s['paid'] = $now;
+    }
+    $jst[$id] = $s;
+}
+ksort($outside);
 $usd = fn($v) => ($v < 0 ? '-$' : '$') . number_format(abs($v), 0);
 $label = fn($m) => (new DateTime($m . '-01'))->format('M Y');
 $last = end($rows) ?: null; $done = array_values(array_filter($rows, fn($r) => $r['done']));
@@ -103,6 +123,10 @@ $lines[] = ''; $lines[] = '* this month so far (fixed costs counted to today).';
 $lines[] = 'Revenue = jobs marked done that month. Crew = ' . round($crewShare * 100) . '% of it. Material = fertilizer and seed on those jobs at the quote engine\'s bag prices. Ads from November = Meta lifetime totals (ad spend as of ' . ($adAsof ?: '?') . ') minus 31 Oct.';
 $lines[] = 'Not counted, because no figure exists: ' . implode('; ', (array) ($C['unknown'] ?? [])) . '.';
 if (!$feesOk) $lines[] = 'Square did not answer, so card fees and Square money are missing.';
+$lines[] = ''; $lines[] = 'Money taken outside Square (recorded on the jobs by hand), by method:';
+$hw = ['cash' => 'cash', 'check' => 'check', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'cashapp' => 'Cash App', 'paypal' => 'PayPal', 'card' => 'card (not Square)', 'other' => 'other', 'ways' => 'another way'];
+if (!$outside) $lines[] = '  none recorded yet';
+foreach ($outside as $m => $by) { arsort($by); $lines[] = sprintf('  %-9s %8s  ', $label($m), $usd(array_sum($by))) . implode(', ', array_map(fn($k, $v) => ($hw[$k] ?? $k) . ' ' . $usd($v), array_keys($by), $by)); }
 $text = implode("\n", $lines) . "\n";
 
 if (in_array('--alert', $args, true)) {
