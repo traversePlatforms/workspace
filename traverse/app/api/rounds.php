@@ -198,7 +198,9 @@ function company(): array {
     $ow = json_decode((string) @file_get_contents(DATA_DIR . '/door-who.json'), true);
     $c['occShow'] = in_array($ow['show'] ?? null, ['all', 'here'], true) ? $ow['show'] : (in_array($c['occShow'], ['all', 'here'], true) ? $c['occShow'] : ($c['a365'] ? 'here' : 'all'));
     $hs0 = is_array($c['hkShow']) ? $c['hkShow'] : [];
-    $c['hkShow'] = $c['a365'] ? ['mh' => false, 'b' => false]   /* never on Sixfold 365, not even by an admin's choice */
+    /* Sixfold 365 (Matthew 15 Nov: "leave them as they are and add a filter or switch"): mobile homes it already lists stay, on by default
+       with the admin's switch; buildings never (lawn and yard only). New mobile homes and big lots carry eo and never reach it (doorHkHidden). */
+    $c['hkShow'] = $c['a365'] ? ['mh' => is_bool($ow['mh'] ?? null) ? $ow['mh'] : true, 'b' => false]
         : ['mh' => is_bool($ow['mh'] ?? null) ? $ow['mh'] : (is_bool($hs0['mh'] ?? null) ? $hs0['mh'] : true),
            'b' => is_bool($ow['b'] ?? null) ? $ow['b'] : (is_bool($hs0['b'] ?? null) ? $hs0['b'] : false)];
     if (PRACTICE) $c['practice'] = true;   /* the page's Practice bar (2026-11-02); from the code, never from company.json, and no key at all elsewhere */
@@ -895,9 +897,10 @@ function hkShow(): array { return company()['hkShow']; }
 /** a kind as the search index carries it ('' house, th, mh, b, or ? for a kind this code does not know): listed by this install or not */
 function hkKindHidden(string $k): bool { if ($k === '' || $k === 'th') return false; if ($k === 'mh') return !hkShow()['mh']; if ($k === 'b') return !hkShow()['b']; return true; }
 /** not on this install's lists, for its kind (a kind this code does not know is never listed) */
-function doorHkHidden(array $d): bool { $v = $d['hk'] ?? null; return $v !== null && $v !== '' && hkKindHidden(doorHk($d) ?: '?'); }
+/* eo (2026-11-15, Matthew: big lots "Add them to the editions"): a door for the editions only, never on Sixfold 365's lists */
+function doorHkHidden(array $d): bool { if (!empty($d['eo']) && !empty(company()['a365'])) return true; $v = $d['hk'] ?? null; return $v !== null && $v !== '' && hkKindHidden(doorHk($d) ?: '?'); }
 /** for the cache stamps: '' while the install's own default stands (so a deploy rebuilds nothing), else what is shown */
-function hkSig(): string { $h = hkShow(); $def = !empty(company()['a365']) ? [false, false] : [true, false]; return [$h['mh'], $h['b']] === $def ? '' : '-k' . (int) $h['mh'] . (int) $h['b']; }
+function hkSig(): string { $h = hkShow(); $def = [true, false]; return [$h['mh'], $h['b']] === $def ? '' : '-k' . (int) $h['mh'] . (int) $h['b']; }
 const HK_BK = ['apt', 'condo', 'mhp']; const HK_UB = ['2-3', '4-8', '9+'];
 /** the kind as it goes out with a door: nothing on a house; hk, and for a building what is known of it */
 function hkOut(array $d): array {
@@ -1509,7 +1512,7 @@ function searchIndexFile(): ?string {
 /* the kind of home on an index line (2026-11-15): columns 11-14 (hk, bk, units, ub), on a line that is not a house only, so every
    house's line is as it was. Both readers below leave out a line whose kind this install does not list, so no search, address match
    or lookup ever finds one, even in an index built before an admin's change (door-who.json also rebuilds it). */
-function srchKindCols(array $d): array { $k = hkOut($d); if (!$k && !empty($d['hk'])) $k = ['hk' => '?']; return $k ? [$k['hk'], $k['bk'] ?? '', (string) ($k['units'] ?? ''), $k['ub'] ?? ''] : []; }
+function srchKindCols(array $d): array { if (!empty($d['eo']) && !empty(company()['a365'])) return ['?', '', '', '']; $k = hkOut($d); if (!$k && !empty($d['hk'])) $k = ['hk' => '?']; return $k ? [$k['hk'], $k['bk'] ?? '', (string) ($k['units'] ?? ''), $k['ub'] ?? ''] : []; }
 function srchLineHidden(string $line): bool { if (substr_count($line, "\t") < 11) return false; $p = explode("\t", $line, 13); return hkKindHidden($p[11]); }
 /** the kind fields of a search hit, from an index line's columns */
 function srchKindOut(array $p): array {
@@ -16681,13 +16684,13 @@ if ($action === 'whoset') {
     $any = false;
     if (array_key_exists('show', $body)) { $show = (string) $body['show']; if (!in_array($show, ['all', 'here'], true)) fail('Pick one.'); $cur['show'] = $show; $any = true; }
     foreach (['mh', 'b'] as $hk0) if (array_key_exists($hk0, $body)) {
-        if (!empty(company()['a365'])) fail('Not on this install.', 404);   /* Sixfold 365: lawn and yard only, never by choice */
+        if (!empty(company()['a365']) && $hk0 === 'b') fail('Not on this install.', 404);   /* Sixfold 365: buildings never (lawn and yard only); mobile homes by the admin's switch (15 Nov) */
         if (!is_bool($body[$hk0])) fail('Pick yes or no.');
         $cur[$hk0] = $body[$hk0]; $any = true;
     }
     if (!$any) fail('Pick one.');
     if (!writeJsonAtomic(DATA_DIR . '/door-who.json', $cur + ['by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
-    $hs1 = ['mh' => !empty(company()['a365']) ? false : ($cur['mh'] ?? hkShow()['mh']), 'b' => !empty(company()['a365']) ? false : ($cur['b'] ?? hkShow()['b'])];
+    $hs1 = ['mh' => $cur['mh'] ?? hkShow()['mh'], 'b' => !empty(company()['a365']) ? false : ($cur['b'] ?? hkShow()['b'])];
     out(['ok' => true, 'show' => $cur['show'] ?? occShow(), 'hkShow' => $hs1]);
 }
 
