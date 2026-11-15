@@ -424,7 +424,7 @@ if (PROMOTE) {
       seenAddr.add(base);
       let id = base; while (ids.has(id)) id += 'x'; ids.add(id);
       const v2 = yardV2[`${b.key}-${suffix}/${lid}`];
-      const nd = { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la, lon: d.lo, fire: fireOf(d), lawn: v2 ? { ...v2 } : lawnFor(d, b.key, id), trees: treesOf(d), val: valueOf(d), occ: ['here', 'away', 'unk'].includes(d.occ) ? d.occ : d.rent ? 'away' : 'here', ...(commonGround(d, b.key) ? { cg: 1 } : {}), ...kindFields(d) };
+      const nd = { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la, lon: d.lo, fire: fireOf(d), lawn: v2 ? { ...v2, y: 1 } : lawnFor(d, b.key, id), trees: treesOf(d), val: valueOf(d), occ: ['here', 'away', 'unk'].includes(d.occ) ? d.occ : d.rent ? 'away' : 'here', ...(commonGround(d, b.key) ? { cg: 1 } : {}), ...kindFields(d) };
       const area = b.areas[at.ai], i = area.doors.indexOf(at.d);
       area.doors.splice(i + 1, 0, nd); area.src.splice(i + 1, 0, d);
       (allAt.get(id) || allAt.set(id, []).get(id)).push(nd);

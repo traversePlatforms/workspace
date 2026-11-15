@@ -2,6 +2,7 @@
 # kind: pipeline = rebuilds and uploads town files (one at a time); parcel = needs the state parcel map to answer from this network
 # moved to the Azure machine 2026-10-24 (lawn-trial/cloud/run-all.sh); un-comment only if the cloud run stops:
 #yardv2|parcel|Yard v2 lawn sizes for every house, lead towns first (lawn-trial/yard-v2/order.txt); not uploaded until build-yard-v2.mjs
+yardgap|pipeline|Lawn readings for the 76,260 doors that had none (15 Nov), once the cloud stage yardgap is done; add-only merge, uploads every town
 every|pipeline|Every home (15 Nov): the swept houses, Huerfano, townhomes (and mobile homes / buildings once KINDS-READY) onto the lists once the cloud stage ehb is done; uploads the changed towns
 everyq|pipeline|Quarterly new-construction refresh: finishes the run every1115/refresh-quarterly.sh queued on the cloud machine (every1115/refresh-run.txt); uploads the changed towns
 rented|pipeline|Rented and second homes onto the door lists once the cloud stage rentb is done (Matthew 10 Nov); marked owner-lived or not, Sixfold shows owner-lived only; uploads every town
