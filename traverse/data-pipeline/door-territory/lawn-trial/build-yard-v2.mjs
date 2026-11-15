@@ -20,8 +20,14 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url)), APP = join(HERE, '..', '..', '..', 'app', 'data', 'rounds');
 const LATE = /-(08-(2\d|3[01])|09-\d\d)$/;
 const r100 = (x) => Math.round(x / 100) * 100;
-export function yardLawn(v) {
-  if (!v || v.big || v.shared || typeof v.l !== 'number' || typeof v.lot !== 'number') return null;
+/* 15 Nov 2026 (Matthew: "do what you think is best ... more accurate, have more lawns"): on lots of an acre or more the under-crown fill
+   (u) turns woods and scrub into lawn, the known wooded-acreage failure. The retuned run made it worse (651 Potomac, 3.1 ac: hand 7,100,
+   read 26,900); there the card counts only the green ground the photos see (s): Potomac 7,500 (+6%), Upton 3,900 (was 4,500; hand 2,595).
+   9% of doors. Lots under an acre are unchanged. */
+export const ACRE = 43560;
+export function yardLawn(v0) {
+  if (!v0 || v0.big || v0.shared || typeof v0.l !== 'number' || typeof v0.lot !== 'number') return null;
+  const v = v0.lot >= ACRE && typeof v0.s === 'number' && v0.s < v0.l ? { ...v0, l: v0.s, u: 0 } : v0;
   const yr = !v.ph || LATE.test(v.ph) ? 2023 : 2021;
   const tree = v.lot > 0 && v.t > 0.25 * v.lot && v.l < 1200;
   const lv = tree ? 'T' : v.l < 300 ? 'N' : v.l < 1200 ? 'S' : v.l < 3000 ? 'M' : 'L';
