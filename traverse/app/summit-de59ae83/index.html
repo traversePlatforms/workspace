@@ -1670,6 +1670,15 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .legend i.occk-unk{position:relative}
   .legend i.occk-unk::after{content:"?";position:absolute;left:50%;top:50%;transform:translate(-50%,-55%);font:800 8px/1 var(--sans);color:var(--ink)}
   .legend .occnow{font-weight:700}
+  /* the kind of home (2026-11-15): a shape before the words, for colour-blind eyes */
+  .tag.hktag{display:inline-flex;align-items:center;gap:6px;font-weight:700;background:color-mix(in srgb,#3a4f8a 14%,transparent);color:var(--ink)}
+  i.hkmk{display:inline-block;box-sizing:border-box;flex:none;border:2px solid currentColor}
+  i.hkmk-th{width:5px;height:9px;border:0;background:currentColor;box-shadow:6px 0 0 currentColor;margin-right:6px}
+  i.hkmk-mh{width:14px;height:7px;border-radius:1px}
+  i.hkmk-b{width:9px;height:13px;background:linear-gradient(currentColor,currentColor) center/100% 2px no-repeat}
+  .meta.hkname{font-weight:700}
+  .meta.hkl{font-size:13px;color:var(--soft,#55635B)}
+  .hkrow .chips button{display:inline-flex;align-items:center;gap:6px}
   .whoset .whoopt{display:block;width:100%;text-align:left;margin:10px 0;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line,#d5dae0);background:var(--card);color:var(--ink);font:inherit}
   .whoset .whoopt[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--ink)}
   .whoset .whoopt b{display:block;margin-bottom:4px}
@@ -5021,6 +5030,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
         S.role === 'admin' ? tile('button', 'home', 'Rented and second homes', occOn() ? pw('On the door lists, each marked: owner lives here or owner lives elsewhere.') : pw('Off: the door lists keep homes where the owner lives there, as before.'), 'Admin only', whoSetView) : null,   /* 2026-11-08 */
+        S.role === 'admin' && !CO.a365 && CO.hkShow ? tile('button', 'home', 'Mobile homes and buildings', (CO.hkShow.mh ? 'Mobile homes on the property lists' : 'Mobile homes off') + ' \u00b7 ' + (CO.hkShow.b ? 'apartment and condo buildings on' : 'apartment and condo buildings off') + '.', 'Admin only', hkSetView) : null,   /* 2026-11-15; never Sixfold 365 */
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* next to Accounts (2026-10-30, Matthew: the rest of Setup is on it); the quote and agreement kit (2026-10-27) */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
@@ -5871,6 +5881,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     }
     var otL = l.house && l.house.occ && !qView() ? occTag({ occ: l.house.occ }) : null; if (otL) meta.appendChild(otL);   /* the house's owner lives elsewhere (2026-11-08) */
+    var hkL = l.house && !qView() ? hkTag(l.house) : null; if (hkL) meta.appendChild(hkL);   /* the kind of home (2026-11-15) */
     c.appendChild(meta);
     if (l.dup && l.dup.length && l.status !== 'lost' && l.status !== 'unreached') c.appendChild(dupBox(l.dup));
     /* Couldn't reach (2026-10-21): kept, with a way back; and a lead that came back says so, with the calls before */
@@ -8943,6 +8954,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var E = lawnEstimate(h), box = q('div', 'door hpanel');
     box.appendChild(q('div', 'addr', streetCase(h.address)));
     box.appendChild(q('div', 'meta', h.lookup ? h.town + pw(' · not on the door lists') + (h.rent ? ': the owner lives elsewhere (likely rented)' : '') : h.town + ' · ' + streetCase(h.area)));
+    var hk7 = !(quick && qView()) ? hkTag(h, true) : null; if (hk7) { var hm7 = q('div', 'meta'); hm7.appendChild(hk7); box.appendChild(hm7); if (h.bname) box.appendChild(q('div', 'meta hkname', h.bname)); }   /* the kind of home (2026-11-15) */
     if (h.owner) box.appendChild(q('div', 'meta', (h.rent || (occOn() && occOf(h) === 'away') ? 'Owner of record (the landlord, likely): ' : 'Owner of record: ') + ownerText(h.owner)));
     var ot7 = !h.lookup && !(quick && qView()) ? occTag(h, true) : null; if (ot7) { var om7 = q('div', 'meta'); om7.appendChild(ot7); box.appendChild(om7); }   /* who lives there, a door (2026-11-08) */
     var limH = limLine(h); if (limH) box.appendChild(limH);   /* limited county data (2026-10-29, Group 3) */
@@ -9854,8 +9866,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         (quick && qView() ? j.results : searchOcc(res, j.results, run)).forEach(function (r) {   /* who lives there (2026-11-08): the office lookup, never the quote-only Quick quote */
           var b = q('button', 'door drow srow'); b.type = 'button';
           b.appendChild(q('div', 'addr', r.address)); b.appendChild(q('div', 'swhere', r.town + (r.lookup ? pw(' · not on the door lists') : ' · ' + r.area)));
-          var ot6 = quick && qView() ? null : occTag(r);
-          if (r.lawn || ot6) { var m = q('div', 'meta'); var lc = r.lawn ? lawnChip({ lawn: r.lawn }, false) : null; if (lc) m.appendChild(lc); if (ot6) m.appendChild(ot6); b.appendChild(m); }
+          var ot6 = quick && qView() ? null : occTag(r), hk6 = quick && qView() ? null : hkTag(r);   /* + the kind of home (2026-11-15) */
+          if (r.lawn || ot6 || hk6) { var m = q('div', 'meta'); var lc = r.lawn ? lawnChip({ lawn: r.lawn, hk: r.hk }, false) : null; if (lc) m.appendChild(lc); if (ot6) m.appendChild(ot6); if (hk6) m.appendChild(hk6); b.appendChild(m); }
           b.addEventListener('click', function () { show(r.region, r.id); });
           res.appendChild(b);
         });
@@ -11466,6 +11478,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var st0 = soldTag(d); if (st0) meta.appendChild(st0);   /* sold in the last 12 months, the county's record (2026-10-29, editions) */
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     var ot0 = occTag(d); if (ot0) meta.appendChild(ot0);   /* the owner lives elsewhere, or not known (2026-11-08) */
+    var hk0 = hkTag(d); if (hk0) meta.appendChild(hk0);   /* the kind of home (2026-11-15) */
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));   /* from the planning table (2026-10-08) */
     if (meta.children.length) row.appendChild(meta);
     var open = function () {
@@ -12046,6 +12059,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var bb0 = backBadge(d); if (bb0) m.appendChild(bb0);
     var fx = deskFacts(d); if (fx) m.appendChild(q('small', null, fx));
     var ot1 = occTag(d); if (ot1) m.appendChild(ot1);   /* 2026-11-08 */
+    var hk1 = hkTag(d); if (hk1) m.appendChild(hk1);   /* 2026-11-15 */
     row.appendChild(m);
     var dl = distLabel(d); if (dl) row.appendChild(q('span', 'dist', dl));
     var sc = scoreChip(d); if (sc) row.appendChild(sc);
@@ -12086,10 +12100,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var top = q('div', 'dkc-top'), tt = q('div', 'dkc-t');
     tt.appendChild(q('h2', null, d.address));
     var bb3 = backBadge(d); if (bb3) tt.appendChild(bb3);
-    tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), d.lim && !d.owner ? '' : 'Owner: ' + ownerText(d.owner)].filter(Boolean).join(' \u00b7 ')));
+    tt.appendChild(q('div', 'dkc-sub', [townLabel() + (d.zip ? ' ' + d.zip : ''), d.lim && !d.owner ? '' : 'Owner: ' + hkOwner(d)].filter(Boolean).join(' \u00b7 ')));
     var lim1 = limLine(d); if (lim1) tt.appendChild(lim1);   /* limited county data (2026-10-29) */
     var wx1 = wxLine(d); if (wx1) tt.appendChild(wx1);   /* a weather warning over the house (2026-10-29) */
     var ot3 = occTag(d, true); if (ot3) { var om3 = q('div', 'meta dkc-occ'); om3.appendChild(ot3); tt.appendChild(om3); }   /* who lives there (2026-11-08) */
+    var hk3 = hkTag(d, true); if (hk3) { var hm3 = q('div', 'meta dkc-occ'); hm3.appendChild(hk3); tt.appendChild(hm3); if (d.bname) tt.appendChild(q('div', 'meta hkname', d.bname)); }   /* the kind of home (2026-11-15) */
     top.appendChild(tt);
     var sc = scoreChip(d); if (sc) { sc.classList.add('big'); top.appendChild(sc); }
     var x = q('button', 'dkc-x'); x.type = 'button'; x.setAttribute('aria-label', pw('Close this door', 'Close this card')); x.appendChild(ico('close', 2.4));
@@ -12442,7 +12457,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* who lives there (2026-11-08): one choice of the two, shown as its own row ("Who lives there") in Sort & filter and the Plan; the
        sixth part is how the "No door to knock here has ..." line says it */
     ['occh', 'home', 'Owner lives here', occOn, function (d) { return occOf(d) === 'here'; }, 'an owner who lives there'],
-    ['occa', 'home', 'Owner lives elsewhere', occOn, function (d) { return occOf(d) === 'away'; }, 'an owner who lives elsewhere']
+    ['occa', 'home', 'Owner lives elsewhere', occOn, function (d) { return occOf(d) === 'away'; }, 'an owner who lives elsewhere'],
+    /* the kind of home (2026-11-15): offered only where the install lists that kind (CO.hkShow); a row of its own, "Kind of home" */
+    ['hkmh', 'home', 'Hide mobile homes', function () { return hkOn('mh'); }, function (d) { return hkOf(d) !== 'mh'; }, 'a home that is not a mobile home'],
+    ['hkb', 'home', 'Buildings only', function () { return hkOn('b'); }, function (d) { return hkOf(d) === 'b'; }, 'a whole building (apartments, condos or a park)']
   ];
   function secLotFilt() { return feat('security') && cardOn('security') && crewSees(); }
   /* ---- who lives there (2026-11-08, Matthew: "go ahead and the rented doors, just make sure its obvious which are owner lived in and
@@ -12490,6 +12508,52 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return away ? ' · ' + away + ' owner lives elsewhere' : '';
   }
   function occMatch(d, pick) { return !pick || occOf(d) === pick; }
+  /* ---- what kind of home (2026-11-15, Matthew: every residential property in Colorado) ----
+     The server sends d.hk only where a door is not a house: 'th' a townhome, 'mh' a mobile home on its own lot, 'b' ONE entry for a whole
+     apartment building, condo building or mobile home park (d.bk apt | condo | mhp, and d.units, d.ub, d.bname, d.owners when known).
+     Which kinds an install lists is the server's one rule (rounds.php doorHkHidden, sent as CO.hkShow): Sixfold 365 never gets a mobile
+     home or a building; the editions get mobile homes, and buildings once an admin turns them on under Setup. A townhome is an ordinary
+     door everywhere with its label. A shape leads the words (colour-blind rule): two bars a townhome, a long low box a mobile home, a
+     tall block a building. Scores are not touched. */
+  function hkOf(d) { var k = d && d.hk; return k === 'th' || k === 'mh' || k === 'b' ? k : ''; }
+  function hkOn(k) { return !!(CO && CO.hkShow && CO.hkShow[k]); }
+  var HK_BK = { apt: 'Apartment building', condo: 'Condo building', mhp: 'Mobile home park' }, HK_BK_SHORT = { apt: 'Apartments', condo: 'Condos', mhp: 'Mobile home park' };
+  /* the words: full on a card, short in a list row */
+  function hkWords(d, card) {
+    var k = hkOf(d); if (!k) return '';
+    if (k !== 'b') return k === 'th' ? 'Townhome' : 'Mobile home';
+    var bk = HK_BK[d.bk] ? d.bk : 'apt', w = (card ? HK_BK : HK_BK_SHORT)[bk];
+    if (bk === 'mhp') return w;
+    var u = d.units ? d.units + ' units' : d.ub ? d.ub + ' units' : card ? 'units not on record' : '';
+    if (card && bk === 'condo' && d.owners) u += (u ? ', ' : '') + d.owners + ' owners';
+    return w + (u ? ' \u00b7 ' + u : '');
+  }
+  function hkTag(d, card) {
+    var k = hkOf(d); if (!k) return null;
+    var t = q('span', 'tag hktag hk-' + k); t.appendChild(q('i', 'hkmk hkmk-' + k)); t.appendChild(document.createTextNode(hkWords(d, card)));
+    t.title = hkWords(d, true);
+    return t;
+  }
+  /* who the owner is on a building's card: a condo building with many owners has none of record */
+  function hkOwner(d) { return hkOf(d) === 'b' && !d.owner ? (d.owners ? d.owners + ' unit owners' : 'the unit owners') : ownerText(d.owner); }
+  /* the kind filters a list of doors passes: Sort & filter's (S.filt) unless another set is given (the Plan's) */
+  function hkMatch(d, F) { F = F || (filtLoad(), S.filt); return FILT.every(function (x) { return !/^hk/.test(x[0]) || !F[x[0]] || !x[3]() || x[4](d); }); }
+  function hkFiltOn(F) { F = F || (filtLoad(), S.filt); return FILT.some(function (x) { return /^hk/.test(x[0]) && F[x[0]] && x[3](); }); }
+  function hkAny(list) { return (list || []).some(function (d) { var k = hkOf(d); return k === 'mh' || k === 'b'; }); }
+  /* the row "Kind of home": Hide mobile homes / Buildings only, those this install offers, each with how many of the list it names */
+  function hkChoice(F, onChange, list) {
+    var fs = FILT.filter(function (x) { return /^hk/.test(x[0]) && x[3](); }); if (!fs.length) return null;
+    var w = q('div', 'occrow hkrow'); w.appendChild(q('h3', 'fph', 'Kind of home'));
+    var c = q('div', 'chips matchb'); c.setAttribute('role', 'group'); c.setAttribute('aria-label', 'Kind of home');
+    fs.forEach(function (x) {
+      var on = !!F[x[0]], kd = x[0] === 'hkmh' ? 'mh' : 'b', n = list ? list.filter(function (d) { return hkOf(d) === kd; }).length : null;
+      var b = q('button', null); b.type = 'button'; b.setAttribute('aria-pressed', String(on)); b.setAttribute('data-m', x[0]);
+      b.appendChild(q('i', 'hkmk hkmk-' + kd)); b.appendChild(document.createTextNode(x[2] + (n !== null ? ' \u00b7 ' + n.toLocaleString(LOCALE) : '')));
+      b.addEventListener('click', function () { F[x[0]] = !on; if (!F[x[0]]) delete F[x[0]]; onChange(); });
+      c.appendChild(b);
+    });
+    w.appendChild(c); return w;
+  }
   var ORDER = [['street', 'Street order', 'list'], ['best', 'Best first', 'chart'], ['near', 'Nearest', 'near'], ['bestnear', 'Best near me', 'near'], ['route', 'Route', 'route']];
   function orderOk(v) { return v === 'street' || v === 'near' || v === 'route' || ((v === 'best' || v === 'bestnear') && !!bestTrade() && (v === 'best' || crewSees())); }
   function filtLoad() { if (S.filt) return; S.filt = {}; try { S.filt = JSON.parse(localStorage.getItem('sixfold.rounds.filters') || '{}') || {}; } catch (e) {} }
@@ -12518,8 +12582,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     });
     box.appendChild(ob);
     if (S.dview === 'bestnear') box.appendChild(q('small', 'sub2', pw('The door score, less a point for every 200 m (about two blocks) from you: a 9 two blocks away comes before an 8 next door.')));
-    var fs0 = FILT.filter(function (x) { return x[3]() && !/^occ/.test(x[0]); });   /* who lives there has its own row, below */
+    var fs0 = FILT.filter(function (x) { return x[3]() && !/^occ|^hk/.test(x[0]); });   /* who lives there and the kind of home have their own rows, below */
     if (occOn() && S.region !== SAMPLE_KEY) box.appendChild(occChoice(occPick(), function (v) { occSet(S.filt, v); filtSave(); S.openDoor = null; renderDoors(); }, occCount((S.doors || []).filter(function (d) { return toKnock(d) && filtOn().every(function (x) { return /^occ/.test(x[0]) || x[4](d); }); }))));   /* each count with the other filters on */
+    if (S.region !== SAMPLE_KEY) { var hkc0 = hkChoice(S.filt, function () { filtSave(); S.openDoor = null; renderDoors(); }, (S.doors || []).filter(toKnock)); if (hkc0) box.appendChild(hkc0); }   /* the kind of home (2026-11-15) */
     if (fs0.length) {
       box.appendChild(q('h3', 'fph', 'Show only'));
       var mb = q('div', 'chips matchb');
@@ -17562,6 +17627,42 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     view.appendChild(box);
     window.scrollTo(0, 0);
   }
+  /* ---- Mobile homes and buildings (2026-11-15): an admin chooses whether the property lists carry mobile homes (on by default) and
+     apartment buildings, condo buildings and mobile home parks, one entry a building (off by default). Saved on the server for everyone
+     in this company (rounds.php whoset, door-who.json mh / b); the page loads again to take it. Never Sixfold 365: lawn and yard only. */
+  function hkSetView() {
+    if (!CO || CO.a365 || !CO.hkShow) return chooseView();
+    hideToast(); S.signin = null; S.screen = 'hkset'; foot.hidden = true; setDock(null);
+    setBar('back', { title: 'Mobile homes and buildings', sub: 'What the property lists carry', back: chooseView, backLabel: 'Back' });
+    view.textContent = '';
+    var box = q('div', 'card whoset');
+    box.appendChild(q('p', 'sub2', 'Choose whether your property lists carry mobile homes, and apartment and condo buildings. This is for everyone in your company. Townhomes are always on the lists, each marked.'));
+    var msg = q('div', 'msg'); msg.hidden = true;
+    [['mh', 'Mobile homes', 'A mobile home on its own lot. Each card and row says Mobile home, and Sort & filter can hide them.', 'Put mobile homes on the property lists for everyone?', 'Take mobile homes off the property lists for everyone?'],
+     ['b', 'Apartment and condo buildings', 'One entry for a whole apartment building, condo building or mobile home park, with its units where the record has them. The owner of record is often a management company. Sort & filter can show buildings only.', 'Put apartment and condo buildings on the property lists for everyone?', 'Take apartment and condo buildings off the property lists for everyone?']].forEach(function (o) {
+      var cur = !!CO.hkShow[o[0]];
+      box.appendChild(q('h3', 'fph', o[1]));
+      box.appendChild(q('p', 'sub2', o[2]));
+      [[true, 'On the property lists'], [false, 'Off the property lists']].forEach(function (v) {
+        var b = q('button', 'whoopt'); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === v[0])); b.setAttribute('data-hk', o[0] + (v[0] ? '-on' : '-off'));
+        b.appendChild(q('b', null, v[1] + (cur === v[0] ? ' (now)' : '')));
+        b.addEventListener('click', function () {
+          if (cur === v[0]) return;
+          if (!window.confirm(v[0] ? o[3] : o[4])) return;
+          var bd = {}; bd[o[0]] = v[0];
+          b.disabled = true; msg.hidden = false; msg.className = 'msg'; msg.textContent = 'Saving…';
+          api('whoset', { body: bd }).then(function (j) {
+            if (!j || !j.ok) { b.disabled = false; msg.className = 'msg bad'; msg.textContent = (j && j.error) || 'Not saved. Try again.'; return; }
+            msg.textContent = 'Saved. The property lists load again now.'; S.regions = null; setTimeout(function () { location.reload(); }, 900);
+          }).catch(function () { b.disabled = false; msg.className = 'msg bad'; msg.textContent = 'No signal. Nothing was saved.'; });
+        });
+        box.appendChild(b);
+      });
+    });
+    box.appendChild(msg);
+    view.appendChild(box);
+    window.scrollTo(0, 0);
+  }
   function accountsView() {
     if (S.screen !== 'accounts') { S.pins = null; S.pinAsk = false; S.permCat = null; S.permOpen = null; S.permDraft = null; }   /* PINs hide whenever you leave the screen */
     hideToast(); S.signin = null; S.screen = 'accounts';
@@ -19397,6 +19498,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* the Who lives there row over search results (2026-11-08): the choice Sort & filter keeps; answers the results it leaves */
   function searchOcc(res, list, redo) {
+    /* the kind of home first (2026-11-15): offered where the results hold a mobile home or a building, or a kind filter is on */
+    if (hkAny(list) || hkFiltOn()) {
+      var hc0 = hkChoice(S.filt, function () { filtSave(); redo(); }, list); if (hc0) res.appendChild(hc0);
+      var l0 = list.filter(function (r) { return hkMatch(r); });
+      if (!l0.length && list.length) res.appendChild(q('div', 'msg', 'None of these is that kind of home. Turn the kind of home off to see them.'));
+      list = l0;
+    }
     if (!occOn()) return list;
     var pk = occPick();
     if (!pk && !list.some(function (r) { return occOf(r) !== 'here'; })) return list;
@@ -19411,9 +19519,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     b.appendChild(q('div', 'swhere', r.town + ' · ' + r.area));
     var meta = q('div', 'meta');
     var fb = fireBadge({ fire: r.fire }); if (fb) meta.appendChild(fb);
-    var lc = r.lawn ? lawnChip({ lawn: r.lawn }, false) : null; if (lc) meta.appendChild(lc);
+    var lc = r.lawn ? lawnChip({ lawn: r.lawn, hk: r.hk }, false) : null; if (lc) meta.appendChild(lc);
     if (r.tl) { var tc = q('span', 'tree tl-' + r.tl); tc.appendChild(ico('tree', 2.2)); tc.appendChild(document.createTextNode(TREE_LV[r.tl] || r.tl)); meta.appendChild(tc); }
     var ot5 = occTag(r); if (ot5) meta.appendChild(ot5);   /* 2026-11-08 */
+    var hk5 = hkTag(r); if (hk5) meta.appendChild(hk5);   /* the kind of home (2026-11-15) */
     if (meta.children.length) b.appendChild(meta);
     b.addEventListener('click', function () {
       var go = function () {
@@ -20511,6 +20620,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       S.doors.forEach(function (d) {
         if (typeof d.lat !== 'number') return;
         if (!occMatch(d, opk)) return;   /* Sort & filter's Who lives there, on the map too (2026-11-08) */
+        if (!hkMatch(d)) return;   /* and its kind of home (2026-11-15) */
         var st = statusOf(d), hot = d.fire === 4 || d.fire === 5, sq = occOn() && occOf(d) !== 'here';
         var m = sq ? L.marker([d.lat, d.lon], { icon: sqIcon(d, false), keyboard: false }).addTo(map) : L.circleMarker([d.lat, d.lon], { radius: base(d), color: hot ? '#9E2A1C' : '#ffffff', weight: hot ? 3.5 : 2.5,
           fillColor: MAPC[st], fillOpacity: st === 'x' ? 0.65 : 0.95 }).addTo(map);
@@ -20568,6 +20678,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.appendChild(q('div', 'addr', x.address));
     c.appendChild(q('div', 'meta', x.town + ' · ' + x.area));
     var otQ = occTag(x, true); if (otQ) { var omQ = q('div', 'meta'); omQ.appendChild(otQ); c.appendChild(omQ); }   /* the booked door: who lives there (2026-11-08) */
+    var hkQ = hkTag(x, true); if (hkQ) { var hmQ = q('div', 'meta'); hmQ.appendChild(hkQ); c.appendChild(hmQ); }   /* the kind of home (2026-11-15) */
     var meta = q('div', 'meta'); var fb = fireBadge(x); if (fb) meta.appendChild(fb);
     var lq = lawnChip(x, false); if (lq) meta.appendChild(lq);
     meta.appendChild(document.createTextNode(x.acres.toFixed(2) + ' acres' + (x.val ? ' · County value ' + fmtVal(x.val) : '') + ' · Owner: ' + ownerText(x.owner))); c.appendChild(meta);
@@ -21737,6 +21848,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (j.pick) { holder.appendChild(q('div', 'msg', j.total.toLocaleString(LOCALE) + pw(' doors were within reach of this storm. Pick a town.'))); return; }
       /* who lives there (2026-11-08): the list's own choice, the same one Sort & filter keeps, counted on this storm's doors */
       var all0 = j.doors;
+      if (hkAny(all0) || hkFiltOn()) {   /* the kind of home (2026-11-15) */
+        var hcS = hkChoice(S.filt, function () { filtSave(); S.stormMore = 0; stormDayView(day); }, all0); if (hcS) holder.appendChild(hcS);
+        all0 = j.doors = all0.filter(function (x) { return hkMatch(x); });
+      }
       if (occOn() && all0.length) {
         var spk = occPick();
         holder.appendChild(occChoice(spk, function (v) { filtLoad(); occSet(S.filt, v); filtSave(); S.stormMore = 0; stormDayView(day); }, occCount(all0)));
@@ -21787,6 +21902,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (x.owner) m3.appendChild(q('span', 'own', 'Owner: ' + ownerText(x.owner)));
     if (r.est) m3.appendChild(q('span', 'tag sest', 'About $' + r.est.toLocaleString(LOCALE)));
     var ot4 = occTag(x); if (ot4) m3.appendChild(ot4);   /* 2026-11-08 */
+    var hk4 = hkTag(x); if (hk4) m3.appendChild(hk4);   /* 2026-11-15 */
     if (x.mark) m3.appendChild(q('span', 'tag', x.mark === 'booked' ? (x.mq ? 'Quote sent' : 'Walk booked') : x.mark === 'later' ? 'Not now' : x.mark === 'miss' ? 'No answer' : x.mark === 'nosolicit' ? 'No soliciting' : x.mark));
     c.appendChild(m3);
     var acts = q('div', 'lcontact');
@@ -22363,6 +22479,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function MONTHS_LONG() { return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; }
   function lawnChip(d, tappable) {
     if (!cardOn('lawn')) return null;   /* lawn hidden for this company or in the Roofing preview: no Lawn? prompt either */
+    if (hkOf(d) === 'b') return null;   /* a whole building: no lawn is measured (2026-11-15) */
     var lv = lawnLevelOf(d);
     if (!lv && !tappable) return null;
     var el = q(tappable ? 'button' : 'span', 'lawn lv-' + (lv || 'x'));
@@ -22970,9 +23087,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var lc = lawnChip(d, true); if (lc) meta.appendChild(lc);
     var tc = treeChip(d); if (tc) meta.appendChild(tc);
     if (d.lim && LIM_TEXT[d.lim]) { var lp = [d.acres > 0 ? d.acres.toFixed(2) + '-acre lot (house and driveway included)' : '', d.val ? 'County value ' + fmtVal(d.val) : '', d.owner ? 'Owner: ' + ownerText(d.owner) : ''].filter(Boolean); if (lp.length) meta.appendChild(q('span', 'own', lp.join(' · '))); }   /* limited data: no empty owner or 0-acre lot (2026-10-29) */
-    else meta.appendChild(q('span', 'own', d.acres.toFixed(2) + '-acre lot (house and driveway included)' + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + ownerText(d.owner)));
+    else meta.appendChild(q('span', 'own', d.acres.toFixed(2) + (hkOf(d) === 'b' ? '-acre lot' : '-acre lot (house and driveway included)') + (d.val ? ' · County value ' + fmtVal(d.val) : '') + ' · Owner: ' + hkOwner(d)));
     /* who lives there (2026-11-08): the label leads the tags, every door; where the owner lives elsewhere, who answers the door */
     var ot2 = occTag(d, true); if (ot2) meta.appendChild(ot2);
+    var hk2 = hkTag(d, true); if (hk2) meta.appendChild(hk2);   /* the kind of home (2026-11-15) */
     /* a new owner since the last county pull (2026-10-03): what was recorded before is the
        previous owner's, shown below as such; the door is back on the list */
     if (d.os) { var op = d.os.split('-'); meta.appendChild(q('span', 'tag newown', 'New owner since ' + MONTHS[+op[1] - 1] + ' ' + op[0])); }
@@ -22980,7 +23098,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.cust) meta.appendChild(q('span', 'tag custtag', custTagText(d.cust)));
     if (d.rep) meta.appendChild(q('span', 'tag reptag', d.rep === S.me ? 'Assigned to you' : 'Assigned to ' + d.rep));
     card.appendChild(meta);
-    if (occOn() && occOf(d) === 'away') card.appendChild(q('div', 'meta occl', 'The owner of record is likely the landlord; whoever answers is likely a tenant or a guest.'));
+    if (hkOf(d) === 'b') {   /* one entry for a whole building (2026-11-15) */
+      if (d.bname) card.appendChild(q('div', 'meta hkname', d.bname));
+      card.appendChild(q('div', 'meta hkl', d.bk === 'condo' && !d.owner ? 'One entry for the whole building. Each unit has its own owner; whoever answers is the owner or a tenant.' : 'One entry for the whole building. The owner of record is often a management company; whoever answers is likely a tenant.'));
+    } else if (occOn() && occOf(d) === 'away') card.appendChild(q('div', 'meta occl', 'The owner of record is likely the landlord; whoever answers is likely a tenant or a guest.'));
     var lot0 = edCardLot(d, full); if (lot0) card.appendChild(lot0);   /* the photo near the top (2026-10-30) */
     var lim0 = limLine(d); if (lim0) card.appendChild(lim0);   /* limited county data (2026-10-29) */
     var wx0 = wxLine(d); if (wx0) card.appendChild(wx0);   /* a weather warning over the house (2026-10-29) */
@@ -23027,7 +23148,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
     var facts = [], fn = [];
     if (cardOn('money')) { facts.push(moneyLine(d)); fn.push('funding'); }
-    if (cardOn('lawn') && d.lawn && d.lawn.sq && !(d.cg && !d.lawnfix)) { facts.push(lawnPlan(d)); fn.push('lawn plan'); }   /* 2026-10-12 */
+    if (cardOn('lawn') && d.lawn && d.lawn.sq && !(d.cg && !d.lawnfix) && hkOf(d) !== 'b') { facts.push(lawnPlan(d)); fn.push('lawn plan'); }   /* 2026-10-12 */
     var wl = cardOn('water') ? waterLine(d) : null; if (wl) { facts.push(wl); fn.push('water'); }
     if (facts.length) card.appendChild(factsFold(facts, fn));
     if (S.areaHoa && S.areaHoa.length) { var hl = q('div', 'meta hoal'); hl.appendChild(q('span', 'tag', 'HOA')); hl.appendChild(document.createTextNode(' ' + S.areaHoa[0].hoa + (S.areaHoa.length > 1 ? ' (or ' + (S.areaHoa.length - 1) + ' more in this subdivision)' : '') + ' \u00b7 check their rules before quoting')); card.appendChild(hl); }   /* 2026-10-12 */
@@ -23378,6 +23499,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     c.push(['addr', 'Address', function (d) { return d.address; }, function (d) { return d.address; }, false]);
     c.push(['area', 'Neighborhood', function (d) { return d._area; }, function (d) { return d._area; }, false]);
     if (occOn()) c.push(['occ', 'Who lives there', function (d) { return OCC_SHORT[occOf(d)]; }, function (d) { return ({ here: 0, unk: 1, away: 2 })[occOf(d)]; }, false]);   /* 2026-11-08; in the CSV too */
+    if (((S.plan && S.plan.rows) || []).some(hkOf)) c.push(['hk', 'Kind of home', function (d) { return hkWords(d) || 'House'; }, function (d) { return ({ '': 0, th: 1, mh: 2, b: 3 })[hkOf(d)]; }, false]);   /* 2026-11-15; in the CSV too */
     if (t === 'roof') {
       if (cardOn('hail')) c.push(['hail', 'Biggest hail', function (d) { var h = hailMax(d); return h ? inch(h) : ''; }, hailMax, true]);
       c.push(['roof', 'Roof', function (d) { return d.roof && d.roof.sqs ? d.roof.sqs + ' sq' : ''; }, function (d) { return d.roof ? d.roof.sqs || 0 : null; }, true]);
@@ -23526,6 +23648,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(top);
     var why = scoreWhy(d); if (why) { why.classList.add('dkc-why'); box.appendChild(why); }
     var opk = occTag(d, true); if (opk) { var om = q('div', 'meta'); om.appendChild(opk); box.appendChild(om); }   /* who lives there (2026-11-08) */
+    var hpk = hkTag(d, true); if (hpk) { var hm = q('div', 'meta'); hm.appendChild(hpk); box.appendChild(hm); if (d.bname) box.appendChild(q('div', 'meta hkname', d.bname)); }   /* the kind of home (2026-11-15) */
     if (typeof d.lat === 'number' && typeof d.lon === 'number') box.appendChild(lotPreview(d));   /* the lot with its property line (2026-10-19) */
     var tl = deskTiles(d);
     if (tl.length) { var g = q('div', 'dkc-tiles'); tl.forEach(function (t) { var c = q('div', 'dkc-tile'); c.appendChild(q('small', null, t[0])); c.appendChild(q('span', null, t[1])); g.appendChild(c); }); box.appendChild(g); }
@@ -23788,6 +23911,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         var td = q('td', PLAN_NUM[c[0]] ? 'n' : c[0] === 'addr' ? 'ad' : null);
         if (c[0] === 'score') { var ch = scoreChip(d); if (ch) td.appendChild(ch); }
         else if (c[0] === 'occ') { var oc = occTag(d); if (oc) td.appendChild(oc); else td.textContent = c[2](d); }   /* the square shape where the owner lives elsewhere */
+        else if (c[0] === 'hk') { var hkc = hkTag(d); if (hkc) td.appendChild(hkc); else td.textContent = c[2](d); }   /* the kind's shape (2026-11-15) */
         else td.textContent = c[2](d);
         if (c[0] === 'rep' && d.rep) td.className = 'rp';   /* this door's own person, not its neighbourhood's */
         tr.appendChild(td);

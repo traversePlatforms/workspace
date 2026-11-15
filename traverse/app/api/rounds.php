@@ -158,7 +158,11 @@ function company(): array {
             'area' => null,
             /* who the door lists keep (2026-11-08): 'all' or 'here' (owner-lived only); null = Sixfold 365 'here', every edition 'all'. An admin's
                choice in door-who.json comes first (see doorOcc) */
-            'occShow' => null];
+            'occShow' => null,
+            /* which kinds of home the door lists keep (2026-11-15, the hk door field; see doorHk): {mh: mobile homes, b: apartment and condo
+               buildings and mobile home parks}, each true or false; null = every edition mobile homes yes, buildings no. An admin's choice in
+               door-who.json comes first. Sixfold 365 (a365) is lawn and yard only: both always false there, whatever is set */
+            'hkShow' => null];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -190,6 +194,10 @@ function company(): array {
     foreach ((array) ($a['signAs'] ?? []) as $k => $v) if (is_string($k) && is_string($v) && trim($v) !== '') $c['_signAs'][mb_substr($k, 0, 40)] = mb_substr(trim($v), 0, 40);
     $ow = json_decode((string) @file_get_contents(DATA_DIR . '/door-who.json'), true);
     $c['occShow'] = in_array($ow['show'] ?? null, ['all', 'here'], true) ? $ow['show'] : (in_array($c['occShow'], ['all', 'here'], true) ? $c['occShow'] : ($c['a365'] ? 'here' : 'all'));
+    $hs0 = is_array($c['hkShow']) ? $c['hkShow'] : [];
+    $c['hkShow'] = $c['a365'] ? ['mh' => false, 'b' => false]   /* never on Sixfold 365, not even by an admin's choice */
+        : ['mh' => is_bool($ow['mh'] ?? null) ? $ow['mh'] : (is_bool($hs0['mh'] ?? null) ? $hs0['mh'] : true),
+           'b' => is_bool($ow['b'] ?? null) ? $ow['b'] : (is_bool($hs0['b'] ?? null) ? $hs0['b'] : false)];
     if (PRACTICE) $c['practice'] = true;   /* the page's Practice bar (2026-11-02); from the code, never from company.json, and no key at all elsewhere */
     return $c;
 }
@@ -809,7 +817,7 @@ function siteAddrs(?string $add = null): int {
 function lookupDoors(string $key): array {
     if (!preg_match('/^[a-z0-9-]{1,40}$/D', $key)) return [];
     static $memo = [];
-    if (!isset($memo[$key])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $key . '-lookup.json'), true); $memo[$key] = array_merge(is_array($j['doors'] ?? null) ? $j['doors'] : [], occDropped($key)); }   /* + the doors 'here' mode leaves off the lists (2026-11-08) */
+    if (!isset($memo[$key])) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . $key . '-lookup.json'), true); $memo[$key] = array_merge(is_array($j['doors'] ?? null) ? array_values(array_filter($j['doors'], fn($d) => is_array($d) && !doorHkHidden($d))) : [], occDropped($key)); }   /* + the doors 'here' mode leaves off the lists (2026-11-08); never a kind of home this install does not list (2026-11-15) */
     return $memo[$key];
 }
 function regionFile(string $key): ?string {
@@ -869,43 +877,85 @@ function doorOcc(array $d): string {
 function occOut(array $d): array { $o = doorOcc($d); return $o === 'here' ? [] : ['occ' => $o === 'away' ? 'a' : 'u']; }
 function occShow(): string { return company()['occShow']; }
 const OCC_WORDS = ['here' => 'Owner lives here', 'away' => 'Owner lives elsewhere (rented or second home)', 'unk' => 'Not known'];
-/** a decoded town file as this install lists it: in 'here' mode without the owner-elsewhere doors (and no neighbourhood left empty).
-    'unk' doors stay: they are Group 3's "Limited data" doors, on the lists before rented homes came in (build-rounds-data.mjs) */
+/* ---- what kind of home (2026-11-15, Matthew: every residential property in Colorado) ----
+ * New door data carries hk, the kind of home: none = a house (every door before it); 'th' a townhome (a condo parcel with its own
+ * footprint: an ordinary door everywhere, a label only); 'mh' a mobile home on its own lot; 'b' ONE entry for a whole apartment
+ * building, condo building or mobile home park, with bk 'apt' | 'condo' | 'mhp', units (count on record), ub '2-3' | '4-8' | '9+'
+ * (the land use's unit band), bname (the complex's name) and owners (how many own the condo units), all optional; its occ is always
+ * 'away' and its owner the owner of record (often a management company), or none for a condo building with many owners.
+ * doorHk() is the ONE reader of the field and doorHkHidden() the ONE rule of which kinds an install lists (company()['hkShow']):
+ * Sixfold 365 never lists mobile homes or buildings (lawn and yard only, not even by an admin's choice); every edition lists mobile
+ * homes and not buildings until an admin switches either under Office > Setup (door-who.json mh / b, action whoset). The rule is
+ * applied where occ's is, in occKeep(), so every list, count, score, search and cache follows; the score itself is untouched. */
+function doorHk(array $d): string { $v = $d['hk'] ?? null; return ($v === 'th' || $v === 'mh' || $v === 'b') ? $v : ''; }
+function hkShow(): array { return company()['hkShow']; }
+/** a kind as the search index carries it ('' house, th, mh, b, or ? for a kind this code does not know): listed by this install or not */
+function hkKindHidden(string $k): bool { if ($k === '' || $k === 'th') return false; if ($k === 'mh') return !hkShow()['mh']; if ($k === 'b') return !hkShow()['b']; return true; }
+/** not on this install's lists, for its kind (a kind this code does not know is never listed) */
+function doorHkHidden(array $d): bool { $v = $d['hk'] ?? null; return $v !== null && $v !== '' && hkKindHidden(doorHk($d) ?: '?'); }
+/** for the cache stamps: '' while the install's own default stands (so a deploy rebuilds nothing), else what is shown */
+function hkSig(): string { $h = hkShow(); $def = !empty(company()['a365']) ? [false, false] : [true, false]; return [$h['mh'], $h['b']] === $def ? '' : '-k' . (int) $h['mh'] . (int) $h['b']; }
+const HK_BK = ['apt', 'condo', 'mhp']; const HK_UB = ['2-3', '4-8', '9+'];
+/** the kind as it goes out with a door: nothing on a house; hk, and for a building what is known of it */
+function hkOut(array $d): array {
+    $k = doorHk($d); if ($k === '') return [];
+    if ($k !== 'b') return ['hk' => $k];
+    $o = ['hk' => 'b'];
+    if (in_array($d['bk'] ?? null, HK_BK, true)) $o['bk'] = $d['bk'];
+    if (is_numeric($d['units'] ?? null) && (int) $d['units'] > 0) $o['units'] = (int) $d['units'];
+    if (in_array($d['ub'] ?? null, HK_UB, true)) $o['ub'] = $d['ub'];
+    if (is_string($d['bname'] ?? null) && trim($d['bname']) !== '') $o['bname'] = mb_substr(trim($d['bname']), 0, 120);
+    if (is_numeric($d['owners'] ?? null) && (int) $d['owners'] > 0) $o['owners'] = (int) $d['owners'];
+    return $o;
+}
+/** the kind in words, for the doors-worked CSV */
+function hkWords(array $d): string { $o = hkOut($d); $k = $o['hk'] ?? ''; if ($k === 'b') return ['apt' => 'Apartment building', 'condo' => 'Condo building', 'mhp' => 'Mobile home park'][$o['bk'] ?? 'apt'] . (isset($o['units']) ? ', ' . $o['units'] . ' units' : (isset($o['ub']) ? ', ' . $o['ub'] . ' units' : '')); return ['th' => 'Townhome', 'mh' => 'Mobile home'][$k] ?? 'House'; }
+/** occ and the kind together, wherever a door goes out */
+function doorOut(array $d): array { return occOut($d) + hkOut($d); }
+/** a decoded town file as this install lists it: without the kinds of home it does not list (in every mode), and in 'here' mode without
+    the owner-elsewhere doors too (no neighbourhood left empty). 'unk' doors stay: they are Group 3's "Limited data" doors, on the lists
+    before rented homes came in (build-rounds-data.mjs) */
 function occKeep($data) {
-    if (!is_array($data) || occShow() !== 'here' || !is_array($data['areas'] ?? null)) return $data;
+    if (!is_array($data) || !is_array($data['areas'] ?? null)) return $data;
+    $here = occShow() === 'here';
     $areas = [];
     foreach ($data['areas'] as $a) {
         if (!is_array($a['doors'] ?? null)) { $areas[] = $a; continue; }
         $n0 = count($a['doors']);
-        $a['doors'] = array_values(array_filter($a['doors'], fn($d) => is_array($d) && doorOcc($d) !== 'away'));
+        $a['doors'] = array_values(array_filter($a['doors'], fn($d) => is_array($d) && !doorHkHidden($d) && !($here && doorOcc($d) === 'away')));
         if ($a['doors'] || !$n0) $areas[] = $a;
     }
     $data['areas'] = $areas;
     return $data;
 }
-/** in 'here' mode, the town's doors the lists leave out, as the office lookup's homes (what rented homes were before they were doors) */
-function occDropped(string $key): array { return occShow() === 'here' ? (townOccFile($key)['away'] ?? []) : []; }
+/** in 'here' mode, the town's doors the lists leave out, as the office lookup's homes (what rented homes were before they were doors);
+    never a kind of home this install does not list (2026-11-15) */
+function occDropped(string $key): array { return occShow() === 'here' ? array_values(array_filter(townOccFile($key)['away'] ?? [], fn($d) => !doorHkHidden($d))) : []; }
 /** id => 'a' | 'u' for the town's doors whose owner does not live there or is not known to (every other door is 'here') */
 function townOcc(string $key): array { return townOccFile($key)['occ'] ?? []; }
+/** id => the kind of home as hkOut() sends it, for the town's doors that are not houses (2026-11-15) */
+function townHk(string $key): array { return townOccFile($key)['hk'] ?? []; }
 /** both, kept in town-cache/<town>/occ.json until the town file changes (the whole file is decoded once, not on every lookup) */
 function townOccFile(string $key): array {
     static $memo = [];
     if (isset($memo[$key])) return $memo[$key];
     if (regionHidden($key) || !($f = regionFile($key))) return $memo[$key] = [];
-    $stamp = (string) @filesize($f) . '-' . (string) @filemtime($f) . '-v1';   /* v: doorOcc's rule */
+    $stamp = (string) @filesize($f) . '-' . (string) @filemtime($f) . '-v2';   /* v: doorOcc's rule; v2: the kind of home rides on the away list (2026-11-15) */
     $cf = DATA_DIR . '/town-cache/' . $key . '/occ.json';
     $c = json_decode((string) @file_get_contents($cf), true);
     if (is_array($c) && ($c['stamp'] ?? '') === $stamp) return $memo[$key] = $c;
-    $j = json_decode((string) @file_get_contents($f), true); $occ = []; $away = [];
+    $j = json_decode((string) @file_get_contents($f), true); $occ = []; $away = []; $kind = [];
     foreach ((is_array($j['areas'] ?? null) ? $j['areas'] : []) as $a) foreach ((is_array($a['doors'] ?? null) ? $a['doors'] : []) as $d) {
-        if (!is_array($d) || !isset($d['id']) || ($o = doorOcc($d)) === 'here') continue;
+        if (!is_array($d) || !isset($d['id'])) continue;
+        if (($hk0 = hkOut($d)) || !empty($d['hk'])) $kind[(string) $d['id']] = $hk0 ?: ['hk' => '?'];   /* the kind of home, for a lead's house (2026-11-15) */
+        if (($o = doorOcc($d)) === 'here') continue;
         $occ[(string) $d['id']] = $o === 'away' ? 'a' : 'u';
-        if ($o === 'away') $away[] = array_intersect_key($d, array_flip(['id', 'address', 'owner', 'acres', 'lawn', 'trees', 'val', 'lat', 'lon', 'fire'])) + ['rent' => true, 'occ' => 'a'];
+        if ($o === 'away') $away[] = array_intersect_key($d, array_flip(['id', 'address', 'owner', 'acres', 'lawn', 'trees', 'val', 'lat', 'lon', 'fire', 'hk', 'bk', 'units', 'ub', 'bname', 'owners'])) + ['rent' => true, 'occ' => 'a'];
     }
     unset($j);
-    $c = ['stamp' => $stamp, 'occ' => (object) $occ, 'away' => $away];
+    $c = ['stamp' => $stamp, 'occ' => (object) $occ, 'away' => $away, 'hk' => (object) $kind];
     if (is_dir(dirname($cf)) || @mkdir(dirname($cf), 0700, true)) writeJsonAtomic($cf, $c);
-    $c['occ'] = $occ;
+    $c['occ'] = $occ; $c['hk'] = $kind;
     return $memo[$key] = $c;
 }
 /* ---- light reads of a town (2026-10-10, TR-7) ------------------------------
@@ -926,7 +976,7 @@ function townSplit(string $key): ?array {
     static $memo = [];
     if (array_key_exists($key, $memo)) return $memo[$key];
     $f = regionFile($key); if (!$f) return $memo[$key] = null;
-    $dir = DATA_DIR . '/town-cache/' . $key; $stamp = (string) @filesize($f) . '-' . (string) @filemtime($f) . (occShow() === 'here' ? '-h' : '');   /* + who the lists keep (2026-11-08) */
+    $dir = DATA_DIR . '/town-cache/' . $key; $stamp = (string) @filesize($f) . '-' . (string) @filemtime($f) . (occShow() === 'here' ? '-h' : '') . hkSig();   /* + who the lists keep (2026-11-08); + the kinds of home (2026-11-15) */
     $meta = json_decode((string) @file_get_contents($dir . '/meta.json'), true);
     if (!is_array($meta) || ($meta['stamp'] ?? '') !== $stamp) {
         $data = occKeep(json_decode((string) @file_get_contents($f), true));
@@ -953,7 +1003,7 @@ function townSplit(string $key): ?array {
 function townKnockStats(string $key): ?array {
     if (!regionAvailable($key)) return null;   /* hidden and admin-only towns, as loadRegion() */
     $f = regionFile($key); if (!$f) return null;
-    $sig = [(string) @filesize($f) . '-' . (string) @filemtime($f), occShow()];
+    $sig = [(string) @filesize($f) . '-' . (string) @filemtime($f), occShow() . hkSig()];   /* + the kinds of home (2026-11-15) */
     foreach (['marks', 'result'] as $k) foreach (array_merge([$key], sharedWith($key)) as $p) {   /* the logs logRows() reads: marks-<town>.log, result-<town>.log */ $lf = DATA_DIR . '/' . $k . '-' . $p . '.log'; $sig[] = $k . ':' . $p . ':' . (string) @filesize($lf) . '-' . (string) @filemtime($lf); }
     $sig = md5(implode('|', $sig));
     $cf = DATA_DIR . '/town-cache/' . $key . '/knocks.json';
@@ -1424,7 +1474,11 @@ function searchIndexFile(): ?string {
     $f = DATA_DIR . '/search-index.txt';
     $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); $newest = max($newest, (int) @filemtime(DATA_DIR . '/' . $r['key'] . '-lookup.json')); }
     $newest = max($newest, (int) @filemtime(DATA_DIR . '/door-who.json'));   /* who the lists keep changed (2026-11-08): the left-off doors move to the lookup lines */
-    if (!is_readable($f) || (int) @filemtime($f) < $newest) {
+    /* what the index was built for (2026-11-15): who the lists keep and the kinds of home. door-who.json's time alone missed a change made in the
+       same second as the last rebuild (seen in the harness). No file yet (the first request after this code): taken as the index's own, no rebuild */
+    $sigF = DATA_DIR . '/search-index.sig'; $wantSig = occShow() . hkSig(); $haveSig = is_readable($sigF) ? (string) @file_get_contents($sigF) : null;
+    if ($haveSig === null && is_readable($f)) { @file_put_contents($sigF, $wantSig, LOCK_EX); $haveSig = $wantSig; }
+    if (!is_readable($f) || (int) @filemtime($f) < $newest || $haveSig !== $wantSig) {
         @ini_set('memory_limit', '1536M'); @set_time_limit(120);   /* the rebuild peaks near 900 MB (Denver alone is 35 MB of JSON); at the 768 MB default it died and every search answered 500 until someone rebuilt it (14 Nov, Jen: "server did not answer properly") */
         $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp'; $w = @fopen($tmp, 'w');
         if ($w) {
@@ -1433,25 +1487,40 @@ function searchIndexFile(): ?string {
                 $data = loadRegion($r['key']); $out = '';
                 if ($data) foreach ($data['areas'] as $a) foreach ($a['doors'] as $d) {
                     $out .= implode("\t", [$r['key'], $r['label'], $a['name'], $d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
-                        $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', '', occOut($d)['occ'] ?? '']) . "\n";   /* + who lives there: a, u or nothing (2026-11-08) */
+                        $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', '', occOut($d)['occ'] ?? '', ...srchKindCols($d)]) . "\n";   /* + who lives there: a, u or nothing (2026-11-08); + the kind of home (2026-11-15) */
                 }
                 $data = null;
                 $lk = json_decode((string) @file_get_contents(DATA_DIR . '/' . $r['key'] . '-lookup.json'), true);   /* read directly: lookupDoors() would keep every town in memory */
-                foreach (array_merge(is_array($lk['doors'] ?? null) ? $lk['doors'] : [], occDropped($r['key'])) as $d) $out .= implode("\t", [$r['key'], ((string) ($d['town'] ?? '')) ?: $r['label'], $r['key'] === 'looked-up' ? 'Pulled in on request' : 'Not on the door lists',$d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
-                    $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', 'L', !empty($d['rent']) ? 'a' : (string) ($d['occ'] ?? '')]) . "\n";   /* the office lookup (2026-10-14); + the doors 'here' mode leaves off the lists (2026-11-08) */
+                foreach (array_merge(is_array($lk['doors'] ?? null) ? array_filter($lk['doors'], fn($d) => is_array($d) && !doorHkHidden($d)) : [], occDropped($r['key'])) as $d) $out .= implode("\t", [$r['key'], ((string) ($d['town'] ?? '')) ?: $r['label'], $r['key'] === 'looked-up' ? 'Pulled in on request' : 'Not on the door lists',$d['id'], strtoupper((string) $d['address']), (int) ($d['fire'] ?? 0),
+                    $d['lawn']['lv'] ?? '', $d['lawn']['yr'] ?? '', treeLevel($d) ?? '', 'L', !empty($d['rent']) ? 'a' : (string) ($d['occ'] ?? ''), ...srchKindCols($d)]) . "\n";   /* the office lookup (2026-10-14); + the doors 'here' mode leaves off the lists (2026-11-08); + the kind (2026-11-15) */
                 $lk = null;
                 if ($out !== '' && @fwrite($w, $out) === false) { $ok = false; break; }
             }
             fclose($w);
             if (($ok ?? true) === false || !@rename($tmp, $f)) @unlink($tmp);   /* a half-written index never replaces the old one */
+            else @file_put_contents($sigF, $wantSig, LOCK_EX);
         }
     }
     return $memo = (is_readable($f) ? $f : null);
 }
+/* the kind of home on an index line (2026-11-15): columns 11-14 (hk, bk, units, ub), on a line that is not a house only, so every
+   house's line is as it was. Both readers below leave out a line whose kind this install does not list, so no search, address match
+   or lookup ever finds one, even in an index built before an admin's change (door-who.json also rebuilds it). */
+function srchKindCols(array $d): array { $k = hkOut($d); if (!$k && !empty($d['hk'])) $k = ['hk' => '?']; return $k ? [$k['hk'], $k['bk'] ?? '', (string) ($k['units'] ?? ''), $k['ub'] ?? ''] : []; }
+function srchLineHidden(string $line): bool { if (substr_count($line, "\t") < 11) return false; $p = explode("\t", $line, 13); return hkKindHidden($p[11]); }
+/** the kind fields of a search hit, from an index line's columns */
+function srchKindOut(array $p): array {
+    $k = (string) ($p[11] ?? ''); if ($k === '' || $k === '?') return [];
+    $o = ['hk' => $k]; if ($k !== 'b') return $o;
+    if (in_array($p[12] ?? '', HK_BK, true)) $o['bk'] = $p[12];
+    if ((int) ($p[13] ?? 0) > 0) $o['units'] = (int) $p[13];
+    if (in_array($p[14] ?? '', HK_UB, true)) $o['ub'] = $p[14];
+    return $o;
+}
 function searchIndex(): iterable {
     $f = searchIndexFile(); if ($f === null) return;
     $h = @fopen($f, 'r'); if (!$h) return;
-    while (($line = fgets($h)) !== false) { $line = rtrim($line, "\r\n"); if ($line !== '') yield $line; }
+    while (($line = fgets($h)) !== false) { $line = rtrim($line, "\r\n"); if ($line !== '' && !srchLineHidden($line)) yield $line; }
     fclose($h);
 }
 /** only the index lines that contain $needle (any case), read in 4 MB blocks (Fable review 2026-10-25): the PHP loop over every one of the
@@ -1471,7 +1540,7 @@ function searchIndexGrep(string $needle): iterable {
         while ($pos < $len && ($i = stripos($buf, $needle, $pos)) !== false) {
             $s = strrpos($buf, "\n", $i - $len); $s = $s === false ? 0 : $s + 1;   /* the line around the hit */
             $e = strpos($buf, "\n", $i); if ($e === false) $e = $len;
-            $line = rtrim(substr($buf, $s, $e - $s), "\r"); if ($line !== '') yield $line;
+            $line = rtrim(substr($buf, $s, $e - $s), "\r"); if ($line !== '' && !srchLineHidden($line)) yield $line;
             $pos = $e + 1;
         }
     } while (!$eof);
@@ -4914,7 +4983,7 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
        rebuilds one town. The whole answer is still kept for the common case where nothing changed, keyed on every town key together,
        and a lock stops two phones rebuilding at once (the second gets what the first built). */
     $bestT = crewSees($role) ? company()['best'] : null;   /* admins plan territories now; the crew see theirs once TERRITORIES_OPEN is true */
-    $gsig = implode('|', [$today, (string) @filemtime(__FILE__), $rkind, fileSig(custDir() . '/customers.log'), fileSig(DATA_DIR . '/company.json'), fileSig(DATA_DIR . '/cwpp.json'), fileSig(DATA_DIR . '/county-hide.json'), occShow()]);
+    $gsig = implode('|', [$today, (string) @filemtime(__FILE__), $rkind, fileSig(custDir() . '/customers.log'), fileSig(DATA_DIR . '/company.json'), fileSig(DATA_DIR . '/cwpp.json'), fileSig(DATA_DIR . '/county-hide.json'), occShow() . hkSig()]);
     $tsigs = [];
     foreach (($idx['regions'] ?? []) as $r) {
         $k = (string) $r['key']; $tp = [$gsig, fileSig((string) regionFile($k))];
@@ -5518,7 +5587,7 @@ if ($action === 'area') {
                 'email' => $em ? $em + ownerFlag($d, $em) : null,
                 'photos' => $photos[$d['id']] ?? [],
             ];
-            $doors[array_key_last($doors)] += occOut($d);   /* who lives there (2026-11-08): only on a door whose owner does not, or is not known to */
+            $doors[array_key_last($doors)] += doorOut($d);   /* who lives there (2026-11-08): only on a door whose owner does not, or is not known to; + the kind of home (2026-11-15) */
             if (isset($mvOf[$d['id']])) $doors[array_key_last($doors)]['mv'] = $mvOf[$d['id']];   /* only where there is one: Sixfold's doors stay as they were */
             if (isset($hsOf[$d['id']])) $doors[array_key_last($doors)]['hs'] = $hsOf[$d['id']];
             if (isset($hmaxOf[$d['id']])) $doors[count($doors) - 1]['hmax'] = $hmaxOf[$d['id']];   /* Solar only (2026-10-29) */
@@ -6100,7 +6169,7 @@ if ($action === 'aroundjobs') {
     $need = [];   /* the towns to decode: each job's own, plus the ones it shares marks with */
     foreach ($wins as $w) foreach (array_merge([$w['region']], sharedWith($w['region'])) as $p) $need[$p] = true;
     $need = array_keys(array_intersect_key($need, $labels));
-    $sigs = [implode('|', $sigR), fileSig(custDir() . '/customers.log'), $role, date('Y-m-d')];
+    $sigs = [implode('|', $sigR), fileSig(custDir() . '/customers.log'), $role, date('Y-m-d'), occShow() . hkSig()];   /* + which doors the lists keep (2026-11-15) */
     foreach ($need as $k) { $sigs[] = fileSig((string) regionFile($k)); $sigs[] = fileSig(DATA_DIR . '/marks-' . $k . '.log'); }
     $asig = md5(implode('|', $sigs));
     $acf = DATA_DIR . '/town-cache/aroundjobs-' . ($role === 'admin' ? 'a' : 'c') . '.json';
@@ -6121,7 +6190,7 @@ if ($action === 'aroundjobs') {
             }
             $open = (!$m || $m['outcome'] === 'miss' || ($m['outcome'] === 'later' && ($m['revisit'] ?? '') !== '' && $m['revisit'] <= date('Y-m-d'))) && !isset($custOpen[$k . '/' . $d['id']]);   /* customers are not doors to knock (2026-10-13) */
             if ($open) $all[] = ['region' => $k, 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'lat' => (float) $d['lat'], 'lon' => (float) $d['lon'],
-                                 'fire' => $d['fire'] ?? null, 'lawn' => $d['lawn']['lv'] ?? null];
+                                 'fire' => $d['fire'] ?? null, 'lawn' => $d['lawn']['lv'] ?? null] + hkOut($d);   /* + the kind of home (2026-11-15) */
         }
     }
     usort($jobs, fn($x, $y) => $y['won'] <=> $x['won']);
@@ -6691,13 +6760,13 @@ function houseFacts(string $key, string $id): ?array {
                 'lim' => in_array($d['lim'] ?? null, ['noowner', 'noocc', 'noname'], true) ? $d['lim'] : null,   /* limited county data (2026-10-29, Group 3) */
                 'mark' => (function () use ($key, $d, $id) { $m = freshMark($d, loadMarks($key)[$id] ?? null); return $m ? ['o' => (string) ($m['outcome'] ?? ''), 'by' => (string) ($m['by'] ?? ''), 'at' => (int) ($m['at'] ?? 0)] : null; })(),
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))]
-               + moverFacts($key, $id);   /* the last sale and, in Pest, the house facts (2026-10-29): the editions only */
+               + doorOut($d) + moverFacts($key, $id);   /* the last sale and, in Pest, the house facts (2026-10-29): the editions only; + who lives there, the kind of home (2026-11-15) */
     }
     foreach (lookupDoors($k0) as $d) {   /* not on a door list (2026-10-14): rented, mostly */
         if ($d['id'] !== $id) continue;
         return ['region' => $k0, 'id' => $id, 'address' => (string) $d['address'], 'town' => ((string) ($d['town'] ?? '')) ?: regionLabel($k0), 'area' => $k0 === LOOKED_UP ? 'Pulled in on request' : edWords('Not on the door lists'),'owner' => $d['owner'] ?? null,
                 'acres' => $d['acres'] ?? null, 'lawn' => $d['lawn'] ?? null, 'trees' => $d['trees'] ?? null, 'val' => $d['val'] ?? null, 'lat' => $d['lat'] ?? null, 'lon' => $d['lon'] ?? null,
-                'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']), 'hand' => loadLawnHand($k0)[$id] ?? null, 'range' => lawnRangeCache()[$k0 . '/' . $id] ?? null,
+                'yb' => null, 'bsf' => null, 'lookup' => true, 'rent' => !empty($d['rent']), ...hkOut($d), 'hand' => loadLawnHand($k0)[$id] ?? null, 'range' => lawnRangeCache()[$k0 . '/' . $id] ?? null,
                 'checks' => array_values(array_map(fn($r) => array_intersect_key($r, array_flip(['v', 'sq', 'by', 'at'])), array_filter(readLines(DATA_DIR . '/lawncheck.log'), fn($r) => ($r['region'] ?? '') === $key && $r['id'] === $id)))];
     }
     return null;
@@ -9797,7 +9866,7 @@ if ($action === 'stormdoors') {
             elseif (isset($traces[$d['id']])) { foreach ((skipPublic($traces[$d['id']])['phones'] ?? []) as $tp) if (!empty($tp['clear'])) { $ph = ['n' => (string) $tp['n'], 'src' => 'trace']; break; } }
             $list[] = ['region' => $k, 'town' => $r['label'], 'area' => $a['name'], 'id' => $d['id'], 'address' => $d['address'], 'owner' => (string) ($d['owner'] ?? ''),
                        'hail' => $h['hail'] ?? null, 'wind' => $h['wind'] ?? null, 'roof' => $un($roof[$d['id']] ?? null), 'yb' => $y['yb'] ?? null, 'rm' => $y['rm'] ?? null,
-                       'mat' => $cls, 'matSrc' => $src, 'matP' => $m['p'] ?? null, 'mark' => $mk ? $mk['outcome'] : null, 'mq' => ($mk && !empty($mk['qs'])) ? 1 : 0, 'phone' => $ph, 'traced' => isset($traces[$d['id']])] + occOut($d);
+                       'mat' => $cls, 'matSrc' => $src, 'matP' => $m['p'] ?? null, 'mark' => $mk ? $mk['outcome'] : null, 'mq' => ($mk && !empty($mk['qs'])) ? 1 : 0, 'phone' => $ph, 'traced' => isset($traces[$d['id']])] + doorOut($d);
         }
     }
     usort($list, fn($x, $y) => [($y['hail'] ?? 0), ($y['wind'][0] ?? 0)] <=> [($x['hail'] ?? 0), ($x['wind'][0] ?? 0)]);
@@ -10105,6 +10174,8 @@ if ($action === 'leads') {
     $dm = leadDupMap(); $raw = leadsAllRaw();
     /* who lives at the lead's house (2026-11-08), where the lists carry it: a door whose owner lives elsewhere or is not known to */
     if (occShow() === 'all') foreach ($list as &$ol) { $hh = $ol['house'] ?? null; if (is_array($hh) && isset($hh['region'], $hh['door']) && is_string($hh['region']) && preg_match('/^[a-z0-9-]{1,40}$/D', $hh['region'])) { $oc = townOcc($hh['region'])[(string) $hh['door']] ?? null; if ($oc) $ol['house']['occ'] = $oc; } } unset($ol);
+    /* and what kind of home (2026-11-15), on every install: a townhome, a mobile home or a building */
+    foreach ($list as &$ol) { $hh = $ol['house'] ?? null; if (is_array($hh) && isset($hh['region'], $hh['door']) && is_string($hh['region']) && preg_match('/^[a-z0-9-]{1,40}$/D', $hh['region']) && ($hk1 = townHk($hh['region'])[(string) $hh['door']] ?? null) && ($hk1['hk'] ?? '?') !== '?') $ol['house'] += $hk1; } unset($ol);
     foreach ($list as &$dl) if (!empty($dm[$dl['id']])) { $dl['dup'] = []; foreach ($dm[$dl['id']] as $oid => $why) if (isset($raw[$oid])) $dl['dup'][] = leadDupOther($raw[$oid], $why); } unset($dl);
     out(['ok' => true, 'new' => $new, 'leads' => $list] + ($role === 'admin' && !empty(company()['a365']) ? ['cucheck' => cuCheckShown()] : []) + ($handTo ? ['handTo' => $handTo] : []));   /* + who his own leads can go to (2026-10-27) */   /* the ClickUp sync check (2026-10-17); Sixfold 365 only (2026-10-30 audit: it showed in the editions) */
 }
@@ -14326,7 +14397,7 @@ if ($action === 'search') {
             if ($ok && !$streetHit) $ok = false;   /* the town alone is not an address */
             if (!$ok) continue;
             $hits[] = ['rank' => ($exactNo ? 0 : 1), 'region' => $p[0], 'town' => $p[1], 'area' => $p[2], 'id' => $p[3], 'address' => $p[4],
-                       'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : []), ...(in_array($p[10] ?? '', ['a', 'u'], true) && occShow() === 'all' || ($p[10] ?? '') === 'a' && $look ? ['occ' => $p[10]] : [])];
+                       'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : []), ...(in_array($p[10] ?? '', ['a', 'u'], true) && occShow() === 'all' || ($p[10] ?? '') === 'a' && $look ? ['occ' => $p[10]] : []), ...srchKindOut($p)];
             if (count($hits) > 400) break;
         }
         return $hits;
@@ -14367,7 +14438,7 @@ if ($action === 'search') {
                 if (!$ok) foreach ([implode('', $raw), implode('', $can)] as $rj) if (srchClose($qj, $rj)) { $ok = true; break; }   /* joined or split words */
                 if (!$ok) continue;
                 $hits[] = ['rank' => 2, 'region' => $p[0], 'town' => $p[1], 'area' => $p[2], 'id' => $p[3], 'address' => $p[4],
-                           'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : []), ...(in_array($p[10] ?? '', ['a', 'u'], true) && occShow() === 'all' || ($p[10] ?? '') === 'a' && $look ? ['occ' => $p[10]] : [])];
+                           'fire' => (int) $p[5] ?: null, 'lawn' => $p[6] !== '' ? ['lv' => $p[6], 'yr' => (int) $p[7] ?: null] : null, 'tl' => $p[8] !== '' ? $p[8] : null, ...($look ? ['lookup' => true] : []), ...(in_array($p[10] ?? '', ['a', 'u'], true) && occShow() === 'all' || ($p[10] ?? '') === 'a' && $look ? ['occ' => $p[10]] : []), ...srchKindOut($p)];
                 if (count($hits) > 100) break;
             }
         }
@@ -14756,7 +14827,7 @@ if ($action === 'quotes') {
                     /* a result from before this booking belongs to an earlier one */
                     'result' => (($res[$d['id']] ?? null) && (int) $res[$d['id']]['at'] >= (int) $m['at']) ? $res[$d['id']] : null,
                     'email' => $em ? $em + ownerFlag($d, $em) : null, 'photos' => $photos[$d['id']] ?? [],
-                ] + occOut($d);   /* who lives there (2026-11-08) */
+                ] + doorOut($d);   /* who lives there (2026-11-08); + the kind of home (2026-11-15) */
             }
         }
     }
@@ -16498,15 +16569,26 @@ if ($action === 'companyset') {
 
 /* ---- rented and second homes on the door lists (2026-11-08; see doorOcc) ----
  *   whoset  POST {show: 'all' | 'here'}  admins: every door with who lives there on it, or the owner-lived doors only (as before).
- * Saved in door-who.json, over company.json's occShow and the install's default (Sixfold 365 'here', the editions 'all'). The towns,
- * the neighbourhood files and the search index are made again on the next request (each one's cache key carries the choice). */
+ *           POST {mh: true | false} / {b: true | false}  (2026-11-15, see doorHk): mobile homes, and apartment and condo buildings
+ *           (with mobile home parks), on the door lists or not. Never on Sixfold 365, which is lawn and yard only.
+ * Saved in door-who.json, over company.json's occShow / hkShow and the install's default (Sixfold 365 'here', the editions 'all';
+ * mobile homes yes, buildings no). Each choice keeps the others. The towns, the neighbourhood files and the search index are made
+ * again on the next request (each one's cache key carries the choice). */
 if ($action === 'whoset') {
     if ($role !== 'admin') fail('Not allowed.', 403);
     if (!$isPost) fail('POST required', 405);
-    $show = (string) ($body['show'] ?? '');
-    if (!in_array($show, ['all', 'here'], true)) fail('Pick one.');
-    if (!writeJsonAtomic(DATA_DIR . '/door-who.json', ['show' => $show, 'by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
-    out(['ok' => true, 'show' => $show]);
+    $cur = json_decode((string) @file_get_contents(DATA_DIR . '/door-who.json'), true); $cur = is_array($cur) ? array_intersect_key($cur, ['show' => 1, 'mh' => 1, 'b' => 1]) : [];
+    $any = false;
+    if (array_key_exists('show', $body)) { $show = (string) $body['show']; if (!in_array($show, ['all', 'here'], true)) fail('Pick one.'); $cur['show'] = $show; $any = true; }
+    foreach (['mh', 'b'] as $hk0) if (array_key_exists($hk0, $body)) {
+        if (!empty(company()['a365'])) fail('Not on this install.', 404);   /* Sixfold 365: lawn and yard only, never by choice */
+        if (!is_bool($body[$hk0])) fail('Pick yes or no.');
+        $cur[$hk0] = $body[$hk0]; $any = true;
+    }
+    if (!$any) fail('Pick one.');
+    if (!writeJsonAtomic(DATA_DIR . '/door-who.json', $cur + ['by' => $me, 'at' => time()])) fail('Could not save that. Try again.', 500);
+    $hs1 = ['mh' => !empty(company()['a365']) ? false : ($cur['mh'] ?? hkShow()['mh']), 'b' => !empty(company()['a365']) ? false : ($cur['b'] ?? hkShow()['b'])];
+    out(['ok' => true, 'show' => $cur['show'] ?? occShow(), 'hkShow' => $hs1]);
 }
 
 /* ---- the service area (2026-10-30, Matthew: "the admin can widen or narrow the radius (or counties) that the self-serve build set") ----
@@ -17004,7 +17086,7 @@ if ($action === 'report' || $action === 'export') {
                   'note', 'note_by', 'note_added',
                   'lawn_photo_level', 'lawn_photo_sqft_approx', 'lawn_photo_year', 'lawn_crew_level', 'lawn_crew_by',
                   'trees_0_5ft', 'trees_5_30ft', 'trees_30_100ft', 'tallest_tree_m', 'trees_source',
-                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason', 'fire_check', 'walk'], occShow() === 'all' ? ['who_lives_there'] : []), ',', '"', '');
+                  'email', 'email_by', 'email_added', 'photos', 'owner_since', 'previous_owner_before', 'county_value', 'extra_work', 'result', 'job_value', 'lost_reason', 'fire_check', 'walk'], occShow() === 'all' ? ['who_lives_there'] : [], empty(company()['a365']) ? ['home_kind'] : []), ',', '"', '');   /* + the kind of home (2026-11-15): the editions */
     $srcName = ['door' => 'given at the door', 'tps' => 'True People Search', 'fps' => 'Fast People Search', 'other' => 'other', 'trace' => 'skip trace (not on DNC list)'];
     foreach (($idx['regions'] ?? []) as $r) {
         $data = loadRegion($r['key']);
@@ -17043,7 +17125,7 @@ if ($action === 'report' || $action === 'export') {
                               $wk ? implode('; ', array_map(fn($t) => (workLabels()[$t] ?? $t), $wk['tags'])) : '',
                               $rs['result'] ?? '', $rs['value'] ?? '', $rs ? (LOST_LABEL[$rs['why']] ?? '') : '',
                               $fc ? (count(array_filter($fc['items'], fn($v) => $v === 'ok')) . ' done, ' . count(array_filter($fc['items'], fn($v) => $v === 'fix')) . ' to fix (' . date('Y-m-d', (int) $fc['at']) . ')') : '',
-                              ($wk2 = walkFor($m, $walks[$d['id']] ?? null)) ? trim($wk2['date'] . ' ' . $wk2['time']) : ''], occShow() === 'all' ? [OCC_WORDS[doorOcc($d)]] : [])), ',', '"', '');   /* + who lives there (2026-11-08) */
+                              ($wk2 = walkFor($m, $walks[$d['id']] ?? null)) ? trim($wk2['date'] . ' ' . $wk2['time']) : ''], occShow() === 'all' ? [OCC_WORDS[doorOcc($d)]] : [], empty(company()['a365']) ? [hkWords($d)] : [])), ',', '"', '');   /* + who lives there (2026-11-08) */
             }
         }
     }
