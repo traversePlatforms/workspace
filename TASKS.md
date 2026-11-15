@@ -880,6 +880,8 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 - [ ] **SX-77 — Leann G. got no aftercare or follow-up email (8 Nov check).** Her lead was added by hand as "other" with no quote or form, so the app does not count her as a 365 customer. **Matthew is asking Jen;** then: send both by hand and/or change the rule.
 
+- [ ] **SX-78 — Matthew: ask Brandon for Sixfold's other monthly costs (added 15 Nov).** Insurance, gas, phone, and anything else paid every month that isn't the truck ($1,000), aerator ($325), storage ($414) or trailer card ($500). Once he has the number, I put it in `sixfold-private/profit-costs.json` as `unknownMonthly`. The profit check (Matthew's 5% share) then counts it, and the "you're profitable" email switches on. Until then the alert stays off, so it can't fire on half the costs.
+
 ## Surge
 
 - [x] **SG-1 — Site edits from Brandon's and Lance's evaluations.** **DONE (ticked 6 Nov): the office review (29 Sep) went in 5 Oct; Lance's round 2 (3 Nov) and the full audit against it went in 4 Nov (39067f08, 110aabd4), including "Out the mud" becoming "Promoted from within." All on staging; launch still needs Matthew's go.** **Blocked on you sending me

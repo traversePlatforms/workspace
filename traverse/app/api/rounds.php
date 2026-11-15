@@ -11810,6 +11810,8 @@ function squareCheckOk(): array { $j = json_decode((string) @file_get_contents(D
 function squareCheckShown(): ?array {
     $j = json_decode((string) @file_get_contents(squareCheckFile()), true); if (!is_array($j)) return null;
     $ok = array_flip(squareCheckOk());
+    /* Matthew 2026-11-16: an admin who is not the super admin (Jen) sees the 365 location's payments only, never the old "Six Fold Colorado" one */
+    if (ownerHide()) { $c = squareCfg(); $j['items'] = array_values(array_filter((array) ($j['items'] ?? []), function ($i) use ($c) { $l = (string) ($i['loc'] ?? ''); return $l === '' ? !str_contains((string) ($i['text'] ?? ''), '(Six Fold Colorado)') : (!$c || $l === (string) $c['location']); })); }
     return ['at' => (int) ($j['at'] ?? 0), 'items' => array_values(array_filter((array) ($j['items'] ?? []), fn($i) => !isset($ok[$i['key'] ?? '']))), 'payments' => (int) ($j['payments'] ?? 0), 'quiet' => count(array_filter((array) ($j['items'] ?? []), fn($i) => isset($ok[$i['key'] ?? ''])))];
 }
 function squareNightly(): array {
@@ -11855,7 +11857,7 @@ function squareNightly(): array {
         if ($lid === '' && ($nm = cuName($cu['name'])) !== '' && isset($byName[$nm])) $lid = $byName[$nm];
         $at = (int) strtotime((string) ($p['created_at'] ?? '')); $card = trim((string) (($p['card_details']['card']['card_brand'] ?? '') . ' ' . ($p['card_details']['card']['last_4'] ?? '')));
         $where = $locName[(string) ($p['location_id'] ?? '')] ?? 'Square';
-        if ($lid === '') { $items[] = ['key' => 'p:' . $p['id'], 'kind' => 'unmatched', 'text' => 'Square took $' . number_format($amt - $back, 2) . ' on ' . $day($at) . ' from ' . ($cu['name'] !== '' ? $cu['name'] : ($card !== '' ? 'a card ending ' . substr($card, -4) : 'someone')) . ' (' . $where . '), and nobody in the app matches it.']; continue; }
+        if ($lid === '') { $items[] = ['key' => 'p:' . $p['id'], 'kind' => 'unmatched', 'loc' => (string) ($p['location_id'] ?? ''), 'text' => 'Square took $' . number_format($amt - $back, 2) . ' on ' . $day($at) . ' from ' . ($cu['name'] !== '' ? $cu['name'] : ($card !== '' ? 'a card ending ' . substr($card, -4) : 'someone')) . ' (' . $where . '), and nobody in the app matches it.']; continue; }
         $sq[$lid][] = ['amt' => $amt, 'back' => $back, 'at' => $at];
     }
     $app = []; foreach ($rows as $rw) if ($rw['lead'] !== '' && in_array($rw['how'], ['square', 'card'], true) && $rw['at'] >= strtotime($since)) $app[$rw['lead']] = ($app[$rw['lead']] ?? 0) + $rw['amt'];
