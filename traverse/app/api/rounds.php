@@ -7691,9 +7691,23 @@ function squarePaymentsSince(int $from, int $pages = 4, bool $allLocs = false): 
     /* $allLocs (2026-10-22, Matthew: Brian Skelton paid his $200 by an invoice made in the Square dashboard, which landed in the "Six Fold Colorado"
        location; the balance check only read the 365 location and never saw it): every location the account can see */
     $cfg = squareCfg(); if (!$cfg) return null;
+    /* 2026-11-15: with no location_id Square answers for the account's MAIN location only (checked: since 1 Oct, 4 payments from "Six Fold
+       Colorado" and none of the 43 from "Sixfold 365", the app's own). So "every location" now reads each active location in turn. */
+    if ($allLocs) {
+        static $locIds = null;
+        if ($locIds === null) { $lr = squareApi('GET', '/v2/locations'); $locIds = []; foreach (($lr['locations'] ?? []) as $L) if (($L['status'] ?? 'ACTIVE') === 'ACTIVE' && !empty($L['id'])) $locIds[] = (string) $L['id']; }
+        if ($locIds) {
+            $all = []; $any = false;
+            foreach ($locIds as $lid) { $one = squarePaymentsAt($from, $pages, $lid); if ($one === null) continue; $any = true; foreach ($one as $py) $all[(string) ($py['id'] ?? '')] = $py; }
+            return $any ? array_values($all) : null;
+        }
+    }
+    return squarePaymentsAt($from, $pages, $allLocs ? '' : (string) $cfg['location']);
+}
+function squarePaymentsAt(int $from, int $pages, string $loc): ?array {
     $since = gmdate('Y-m-d\TH:i:s\Z', $from); $cur = ''; $out = [];
     for ($pg = 0; $pg < $pages; $pg++) {
-        $r = squareApi('GET', '/v2/payments?begin_time=' . rawurlencode($since) . ($allLocs ? '' : '&location_id=' . rawurlencode((string) $cfg['location'])) . '&limit=100' . ($cur !== '' ? '&cursor=' . rawurlencode($cur) : ''));
+        $r = squareApi('GET', '/v2/payments?begin_time=' . rawurlencode($since) . ($loc === '' ? '' : '&location_id=' . rawurlencode($loc)) . '&limit=100' . ($cur !== '' ? '&cursor=' . rawurlencode($cur) : ''));
         if (($r['_status'] ?? 0) !== 200 && empty($r['payments'])) return $pg ? $out : null;
         foreach (($r['payments'] ?? []) as $py) $out[] = $py;
         $cur = (string) ($r['cursor'] ?? ''); if ($cur === '') break;
