@@ -9131,8 +9131,10 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) 
     if (!desk()) fail('Not allowed.', 403);
     /* 2026-11-15 (the Sixfold handover; Jen becomes an admin): an admin sees the staff's conversations, never the super admin's. Matthew uses
        J.A.R.V.I.S. as his own assistant across all his work, and until today every admin (Brandon, Lance, Shelly T) could open his chats */
-    $supers = []; foreach (acctRows($basePeople, $acct, $sessionKey) as $sr) if ($sr['role'] === 'super') $supers[(string) $sr['name']] = true;
-    $T = helpAll(); $mine = fn($t) => $t['by'] === $me || ($role === 'admin' && !isset($supers[(string) $t['by']]));
+    /* later the same day (Matthew: "Everyone should only be able to see their own conversations with jarvis and no one elses. Except for me i
+       should be allowed to see all the chats"): your own, and the super admin sees every one (view-as turns $isSuper off, so a look through
+       someone's eyes shows only theirs) */
+    $T = helpAll(); $mine = fn($t) => $t['by'] === $me || $isSuper;
     /* a PDF from a reply, for whoever may see that conversation (3 Nov); a phone opens it in its own reader */
     if ($action === 'helpfile') {
         $id = (string) ($_GET['id'] ?? ''); $f = (string) ($_GET['f'] ?? '');
@@ -9221,7 +9223,7 @@ if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) 
         out(['ok' => true]);
     }
     $list = array_values(array_filter($T, $mine)); usort($list, fn($a, $b) => $b['updated'] <=> $a['updated']);
-    out(['ok' => true, 'admin' => $role === 'admin', 'tickets' => array_slice($list, 0, 40)]);
+    out(['ok' => true, 'admin' => $isSuper, 'tickets' => array_slice($list, 0, 40)]);   /* 'admin' = sees everyone's (the super admin only, 15 Nov) */
 }
 /* notes on a job (2026-10-26, Matthew: "i need brad to be able to add notes to his jobs ... theres someone that wants extra work done ... he needs
    to be able to put that info in his job and it needs to alert me"): the crew on the job (or the office) adds a note; each is kept with who
