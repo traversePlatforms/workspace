@@ -1474,7 +1474,11 @@ function searchIndexFile(): ?string {
     $f = DATA_DIR . '/search-index.txt';
     $newest = 0; foreach (($idx['regions'] ?? []) as $r) { $rf = regionFile($r['key']); if ($rf) $newest = max($newest, (int) @filemtime($rf)); $newest = max($newest, (int) @filemtime(DATA_DIR . '/' . $r['key'] . '-lookup.json')); }
     $newest = max($newest, (int) @filemtime(DATA_DIR . '/door-who.json'));   /* who the lists keep changed (2026-11-08): the left-off doors move to the lookup lines */
-    if (!is_readable($f) || (int) @filemtime($f) < $newest) {
+    /* what the index was built for (2026-11-15): who the lists keep and the kinds of home. door-who.json's time alone missed a change made in the
+       same second as the last rebuild (seen in the harness). No file yet (the first request after this code): taken as the index's own, no rebuild */
+    $sigF = DATA_DIR . '/search-index.sig'; $wantSig = occShow() . hkSig(); $haveSig = is_readable($sigF) ? (string) @file_get_contents($sigF) : null;
+    if ($haveSig === null && is_readable($f)) { @file_put_contents($sigF, $wantSig, LOCK_EX); $haveSig = $wantSig; }
+    if (!is_readable($f) || (int) @filemtime($f) < $newest || $haveSig !== $wantSig) {
         @ini_set('memory_limit', '1536M'); @set_time_limit(120);   /* the rebuild peaks near 900 MB (Denver alone is 35 MB of JSON); at the 768 MB default it died and every search answered 500 until someone rebuilt it (14 Nov, Jen: "server did not answer properly") */
         $tmp = $f . '.' . bin2hex(random_bytes(4)) . '.tmp'; $w = @fopen($tmp, 'w');
         if ($w) {
@@ -1494,6 +1498,7 @@ function searchIndexFile(): ?string {
             }
             fclose($w);
             if (($ok ?? true) === false || !@rename($tmp, $f)) @unlink($tmp);   /* a half-written index never replaces the old one */
+            else @file_put_contents($sigF, $wantSig, LOCK_EX);
         }
     }
     return $memo = (is_readable($f) ? $f : null);
