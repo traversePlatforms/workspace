@@ -12,8 +12,10 @@
 #   5. STOPS before any upload if a town of ours has fewer doors than before, or an existing door id went missing;
 #   6. uploads the towns whose door files changed to Sixfold (batches of 8) and each edition (never hail-*).
 set -u
+# EH_RUN: the run folder under ~/run on the VM (every1115 for the 15 Nov batch; every-<yyyymmdd> for a quarterly refresh, refresh-quarterly.sh)
+RUN=${EH_RUN:-every1115}
 cd "$(dirname "$0")/.." || exit 1
-S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp/every1115"; mkdir -p "$S"
+S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp/$RUN"; mkdir -p "$S"
 VM="ssh -o ConnectTimeout=20 -o BatchMode=yes -i /c/Users/SURGEI~1/.ssh/azure_yard yard@20.91.198.101"; RD=../../app/data/rounds
 step() { echo "$(date +%T) $*"; }
 stop() { step "STOP: $*"; exit 1; }
@@ -22,14 +24,14 @@ offhot() { while netsh wlan show interfaces 2>/dev/null | grep SSID | grep -v BS
 up6() { local label=$1 i; for i in 1 2 3; do offhot; bash upload-towns-sixfold.sh "$@"; [ -f "logs-upload/$label.done" ] && return 0; step "batch $label not confirmed (try $i)"; sleep $((i * 120)); done; return 1; }
 busy() { powershell.exe -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='bash.exe'\" | Where-Object { \$_.CommandLine -match 'finish-gap|upload-gap|finish-rent|finish-yardv3|refresh-permits|refresh-weekly|deploy-app|push-edition|push-sixfold-side|upload-towns-sixfold' }).Count" 2>/dev/null | tr -d '\r'; }
 offhot
-$VM 'test -f ~/run/every1115/ehb.vmdone' < /dev/null || stop "ehb is not finished: $($VM 'cat ~/run-status.txt' < /dev/null)"
+$VM "test -f ~/run/$RUN/ehb.vmdone" < /dev/null || stop "ehb is not finished: $($VM 'cat ~/run-status.txt' < /dev/null)"
 i=0; while [ "$(busy)" != "0" ]; do i=$((i + 1)); [ $i -gt 72 ] && stop "another upload or build has run for 6 hours"; step "another upload/build is running: waiting"; sleep 300; done
 
 step "copy back"
-$VM 'cd ~/run && T=tv/traverse; D=$T/data-pipeline/door-territory; W=every1115/lists; N=$(awk -F"\t" "\$2==\"new\"{print \$1}" $W/keys.tsv); tar czf - $W $(cut -f1 $W/keys.tsv | while read -r k; do [ -f lawn-trial/yard-v2/$k.json ] && echo lawn-trial/yard-v2/$k.json; done) $(for k in $N; do for f in $D/$k-areas.json $T/app/data/rounds/material-$k.json $T/app/data/rounds/naip-$k.json $D/roofs/houses-$k.json; do [ -f $f ] && echo $f; done; done) $(for f in $D/tree-cache.json $D/tree-zones/town-surveys-extra.json $D/roofs/roof-cache.json $D/solar/solar-cache.json $D/value-cache.json; do [ -f $f ] && echo $f; done)' < /dev/null > "$S/back.tgz.part" || stop "copy back failed"
+$VM "RUN=$RUN; "'cd ~/run && T=tv/traverse; D=$T/data-pipeline/door-territory; W=$RUN/lists; N=$(awk -F"\t" "\$2==\"new\"{print \$1}" $W/keys.tsv); tar czf - $W $(cut -f1 $W/keys.tsv | while read -r k; do [ -f lawn-trial/yard-v2/$k.json ] && echo lawn-trial/yard-v2/$k.json; done) $(for k in $N; do for f in $D/$k-areas.json $T/app/data/rounds/material-$k.json $T/app/data/rounds/naip-$k.json $D/roofs/houses-$k.json; do [ -f $f ] && echo $f; done; done) $(for f in $D/tree-cache.json $D/tree-zones/town-surveys-extra.json $D/roofs/roof-cache.json $D/solar/solar-cache.json $D/value-cache.json; do [ -f $f ] && echo $f; done)' < /dev/null > "$S/back.tgz.part" || stop "copy back failed"
 mv -f "$S/back.tgz.part" "$S/back.tgz"
 rm -rf "$S/back" && mkdir -p "$S/back" && tar xzf "$S/back.tgz" -C "$S/back" || stop "unpack failed"
-B="$S/back"; W="$B/every1115/lists"; T="$B/tv/traverse/data-pipeline/door-territory"
+B="$S/back"; W="$B/$RUN/lists"; T="$B/tv/traverse/data-pipeline/door-territory"
 mkdir -p every1115/b every1115/marks && cp "$W/summary.tsv" "$W/kinds.json" "$W/new/registered.json" every1115/b/
 
 step "door counts and ids before"
@@ -80,7 +82,7 @@ step "towns whose door files changed: $(echo $KEYS | wc -w)"
 [ -n "$KEYS" ] || stop "no town changed"
 (cd ../../app && node ../editions/build-editions.cjs 2>&1 | grep -E "built|rror")
 step "upload to Sixfold"
-set -- $KEYS; while [ $# -gt 0 ]; do batch="$1 ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} ${7:-} ${8:-}"; shift 8 2>/dev/null || shift $#; up6 "every-$(echo $batch | cut -d' ' -f1)-$(date +%Y%m%d)" $batch || stop "Sixfold upload failed at $batch"; done
+set -- $KEYS; while [ $# -gt 0 ]; do batch="$1 ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} ${7:-} ${8:-}"; shift 8 2>/dev/null || shift $#; up6 "$RUN-$(echo $batch | cut -d' ' -f1)-$(date +%Y%m%d)" $batch || stop "Sixfold upload failed at $batch"; done
 RX="^((census|hailrep|naip|nri|others|pest|photo|roof|solar|wind|year|permit|material|outline|security|lawnmask|com)-)?($(echo $KEYS | tr ' ' '|'))\.json\$"
 for d in traverse-yards-data traverse-pest-data traverse-security-data traverse-solar-data traverse-data; do offhot; retry bash ./push-edition.sh "$d" "$RX" || stop "push $d failed"; done
 step "done: commit group1/ group3/ registered.json, town-county.json, town-surveys-extra.json, every1115/b; storm history for the new towns = the g3hail method; roof material pass for the added doors"

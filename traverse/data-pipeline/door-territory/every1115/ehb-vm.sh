@@ -9,7 +9,7 @@
 #   add/<town>-bld1115-areas.json  buildings: not measured (no lawn, trees or roof pass for an apartment block)
 # Resumable (lists/s-<key>.<step>.done), stops under 5 GB free. Ends with ~/run/every1115/ehb.vmdone.
 . "$HOME/run/fill1031/lib.sh"
-E="$HOME/run/every1115"; W="$E/lists"; cd "$W" || exit 1; mkdir -p "$LT/data"; room
+E="${EH_ROOT:-$HOME/run/every1115}"; W="$E/lists"; cd "$W" || exit 1; mkdir -p "$LT/data"; room   # EH_ROOT: a dated run (refresh-quarterly.sh)
 LIST="$W/keys.tsv"   # key <tab> kind (add|new) <tab> town <tab> county
 { for f in add/*-add1115-areas.json; do [ -f "$f" ] || continue; t=$(basename "$f" -add1115-areas.json); printf '%s-add1115\tadd\t%s\t\n' "$t" "$t"; done
   node -e "for(const t of require('$W/new/registered.json'))console.log([t.key,'new',t.key,t.county].join('\t'))"; } > "$LIST"
