@@ -27,7 +27,7 @@ const PREVIEW = process.env.ROUNDS_PREVIEW === '1';
    arent"): the office-lookup homes (<town>-lookup-areas.json) join the town's door lists with occ 'away'. ONLY when
    gap1108/GO-rented exists (his go after the counts), or ROUNDS_PROMOTE=1 for a preview. Spec: gap1108/OWNER-FIELD-SPEC.md */
 const PROMOTE = process.env.ROUNDS_PROMOTE === '1' || existsSync(join(HERE, 'gap1108', 'GO-rented'));
-/* Every home (2026-11-15, every1115/EVERY-HOME-2026-11-15.md; Matthew: "every residential property in Colorado ... that we possibly can").
+/* Every home (2026-11-15, EVERY-HOME-2026-11-15.md; Matthew: "every residential property in Colorado ... that we possibly can").
    Doors can carry hk (home kind): 'th' townhome (a condo parcel with its own footprint: an ordinary door, Sixfold too), 'mh' mobile home, 'b' an
    apartment / condo building or mobile home park (one entry: bk apt|condo|mhp, units, ub unit band, bname, owners). mh and b doors are
    built ONLY when every1115/KINDS-READY exists (or ROUNDS_KINDS=1 for a preview): the server and page must hide them on Sixfold and
@@ -405,7 +405,12 @@ let promoted = 0, promotedAway = 0;
 const PUBLIC_OWNER = /\b(CHURCH|MINISTR\w*|DISTRICT|METROPOLITAN|CITY OF|TOWN OF|COUNTY|STATE OF|UNITED STATES|SCHOOL|ACADEMY|ASSOCIATION|ASSN|HOA|HOMEOWNERS|CEMETERY|SANITATION|WATER|UTILIT\w*|HOUSING AUTHORITY)\b/i;
 if (PROMOTE) {
   const allAt = new Map(); for (const b of built) for (const a of b.areas) for (const d of a.doors) (allAt.get(d.id) || allAt.set(d.id, []).get(d.id)).push(d);
-  for (const b of built) for (const suffix of ['lookup', 'lookup2', 'add1115', 'bld1115']) {   /* lookup2: Groups 1-3, gap1108/rent-lists-vm.mjs; add1115 / bld1115: every1115/make-lists-vm.mjs (homes, buildings) */
+  /* lookup2: Groups 1-3, gap1108/rent-lists-vm.mjs; add1115 / bld1115: every1115/make-lists-vm.mjs (homes, buildings). Every town's
+     lookup lists go first, town by town in the old order (so no live door moves), then the new lists (15 Nov preview: in one pass a
+     neighbour's add1115 list claimed a rented home Orchard Mesa already had as a door, 2847 B RD, and the door left Orchard Mesa with its
+     id and marks) */
+  const PASSES = [...built.flatMap((b) => ['lookup', 'lookup2'].map((suffix) => [b, suffix])), ...['add1115', 'bld1115'].flatMap((suffix) => built.map((b) => [b, suffix]))];
+  for (const [b, suffix] of PASSES) {
     const p = join(HERE, `${b.key}-${suffix}-areas.json`); if (!existsSync(p)) continue;
     const ids = new Set(b.areas.flatMap((a) => a.doors.map((d) => d.id)));
     const CELL = 0.002, grid = new Map();

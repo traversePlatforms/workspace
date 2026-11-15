@@ -165,6 +165,14 @@ The every-home doors are measured in `ehb` with the same settings. This covers h
    - storm history for the new towns (the g3hail method);
    - a roof-material pass for the added doors.
 
+**Preview build, 15 Nov 12:55 MT.** The real lists for our towns (not the 54 new towns, whose neighbourhoods are made on the VM) were built into the scratchpad; nothing live was touched. Result:
+
+- Colorado entries in our towns: 1,770,653 → 1,848,378 (+77,725, of which 14,948 are building entries, hidden by default);
+- 43,745 townhome labels and 977 mobile homes;
+- **0 existing door ids lost**.
+
+The first preview lost one: "2847 B RD", a rented home in Orchard Mesa. A neighbour's new list, promoted earlier in the same pass, claimed it. Fixed in `build-rounds-data.mjs`: the existing lookup lists keep their old order, and the new lists run only after every town's.
+
 Gates in `build-rounds-data.mjs`:
 
 - **Mobile homes and buildings** are built only while `every1115/KINDS-READY` exists. It was made 15 Nov, after the app went live. Delete it to hold them back; door ids don't move either way.
@@ -193,7 +201,12 @@ Gates in `build-rounds-data.mjs`:
 - Doors with a lawn size: 1,645,097 → 1,645,097.
 - Promoted rented doors with a yard reading carry `y: 1` too (one more line in `build-rounds-data.mjs`).
 - Backup of the old door files: `ProjectBackup/rebuild-20261115-before/door-files-before.tgz`.
-- Upload results: <!-- rebuild-results -->
+- Upload results:
+  - Sixfold: all 421 towns uploaded 12:05–12:28 MT in batches of 8, each batch confirmed (server backups `~/upload-backups/before-rebuild-<town>-20261115.tgz`).
+  - The editions push then failed on a DNS loss (12:37, the laptop dropped off the hotel Wi-Fi). It was re-run 12:40–12:49 on Surge WiFi (`every1115/push-editions-20261115.sh`, log `logs-push-editions-20261115.log`).
+  - Yards, Pest, Security, Solar and Roofing: each **MD5 MATCH (374)** and json ok. Backups: `before-push-traverse-yards-data-20261115-124032.tgz`, `...-pest-data-...-124111`, `...-security-data-...-124221`, `...-solar-data-...-124732`, `before-push-traverse-data-20261115-124840.tgz`.
+  - Live read-back: monument 224a46826f24, highlands-ranch f118c491dcad and welby eb74628f684b, identical on Sixfold, Yards and Roofing.
+  - Before the push, all 2,094 edition door files were checked equal to the build.
 
 ## E: the quarterly refresh
 
