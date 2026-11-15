@@ -5030,7 +5030,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       officeGroup(box, 'setup', 'Setup', [
         tile('button', 'users', 'Accounts', 'Add, change, sign out and remove sign-ins.', 'Admin only', accountsView),
         S.role === 'admin' ? tile('button', 'home', 'Rented and second homes', occOn() ? pw('On the door lists, each marked: owner lives here or owner lives elsewhere.') : pw('Off: the door lists keep homes where the owner lives there, as before.'), 'Admin only', whoSetView) : null,   /* 2026-11-08 */
-        S.role === 'admin' && !CO.a365 && CO.hkShow ? tile('button', 'home', 'Mobile homes and buildings', (CO.hkShow.mh ? 'Mobile homes on the property lists' : 'Mobile homes off') + ' \u00b7 ' + (CO.hkShow.b ? 'apartment and condo buildings on' : 'apartment and condo buildings off') + '.', 'Admin only', hkSetView) : null,   /* 2026-11-15; never Sixfold 365 */
+        S.role === 'admin' && CO.hkShow ? tile('button', 'home', CO.a365 ? 'Mobile homes' : 'Mobile homes and buildings', (CO.hkShow.mh ? 'Mobile homes on the property lists' : 'Mobile homes off') + (CO.a365 ? '' : ' \u00b7 ' + (CO.hkShow.b ? 'apartment and condo buildings on' : 'apartment and condo buildings off')) + '.', 'Admin only', hkSetView) : null,   /* 2026-11-15; Sixfold 365: the mobile home switch only (Matthew 15 Nov) */
         kitOnC() ? tile('button', 'check', 'Setup checklist', 'What to set before your first quote: prices, terms, payments, people.', 'Admin only', kitSetupView) : null,   /* next to Accounts (2026-10-30, Matthew: the rest of Setup is on it); the quote and agreement kit (2026-10-27) */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Newsletter', 'The monthly email to customers: issues, preview, approve for the 1st.', 'Admin only', function () { newsletterView(); }) : null,   /* 2026-10-28 */
         CO.a365 && wdOn() ? tile('button', 'mail', 'Follow-up email', 'The email two days after each job: on or off, a preview, a test to yourself.', 'Admin only', followupMailView) : null,   /* 2026-10-27 */
@@ -17680,15 +17680,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      apartment buildings, condo buildings and mobile home parks, one entry a building (off by default). Saved on the server for everyone
      in this company (rounds.php whoset, door-who.json mh / b); the page loads again to take it. Never Sixfold 365: lawn and yard only. */
   function hkSetView() {
-    if (!CO || CO.a365 || !CO.hkShow) return chooseView();
+    if (!CO || !CO.hkShow) return chooseView();   /* Sixfold 365 (Matthew 15 Nov): the mobile home switch only, buildings never */
     hideToast(); S.signin = null; S.screen = 'hkset'; foot.hidden = true; setDock(null);
-    setBar('back', { title: 'Mobile homes and buildings', sub: 'What the property lists carry', back: chooseView, backLabel: 'Back' });
+    setBar('back', { title: CO.a365 ? 'Mobile homes' : 'Mobile homes and buildings', sub: 'What the property lists carry', back: chooseView, backLabel: 'Back' });
     view.textContent = '';
     var box = q('div', 'card whoset');
-    box.appendChild(q('p', 'sub2', 'Choose whether your property lists carry mobile homes, and apartment and condo buildings. This is for everyone in your company. Townhomes are always on the lists, each marked.'));
+    box.appendChild(q('p', 'sub2', CO.a365 ? 'Choose whether your property lists carry mobile homes. This is for everyone in your company. Townhomes are always on the lists, each marked.' : 'Choose whether your property lists carry mobile homes, and apartment and condo buildings. This is for everyone in your company. Townhomes are always on the lists, each marked.'));
     var msg = q('div', 'msg'); msg.hidden = true;
     [['mh', 'Mobile homes', 'A mobile home on its own lot. Each card and row says Mobile home, and Sort & filter can hide them.', 'Put mobile homes on the property lists for everyone?', 'Take mobile homes off the property lists for everyone?'],
-     ['b', 'Apartment and condo buildings', 'One entry for a whole apartment building, condo building or mobile home park, with its units where the record has them. The owner of record is often a management company. Sort & filter can show buildings only.', 'Put apartment and condo buildings on the property lists for everyone?', 'Take apartment and condo buildings off the property lists for everyone?']].forEach(function (o) {
+     ['b', 'Apartment and condo buildings', 'One entry for a whole apartment building, condo building or mobile home park, with its units where the record has them. The owner of record is often a management company. Sort & filter can show buildings only.', 'Put apartment and condo buildings on the property lists for everyone?', 'Take apartment and condo buildings off the property lists for everyone?']].filter(function (o) { return !CO.a365 || o[0] === 'mh'; }).forEach(function (o) {
       var cur = !!CO.hkShow[o[0]];
       box.appendChild(q('h3', 'fph', o[1]));
       box.appendChild(q('p', 'sub2', o[2]));
