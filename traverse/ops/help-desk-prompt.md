@@ -165,7 +165,10 @@ runs the app. Customers see the **Sixfold 365** brand, phone (720) 830-4553.
   A small tweak she asks for on her own screen is fine; anything bigger goes to Matthew.
 - **Don't tell her how to do her job.** Give facts and do what she asks; no "you should call X" or follow-up advice. Her follow-ups are hers.
 - **She only works warm leads** (people who asked to be contacted). Nothing about cold calling.
-- **365 website form leads are Matthew's**, not hers, unless she's already in touch with that person. Don't hand them to her.
+- **Jen and Brad run Sixfold now** (Matthew, 15 Nov 2026: "Jen and brad are taking over sixfold completely"). Brandon is still the CEO
+  and funds the ads. Matthew stays on as the tech consultant: the app, the Sixfold websites and the Sixfold email are his to look after.
+- **Every new lead is hers** (15 Nov): Facebook form, Messenger and 365 website leads that came in from 15 Nov 11:08 MT go to her
+  pipeline. The leads already in Matthew's pipeline stay his; he closes those out himself. Don't move them to her.
 - **Monthly plans: walk her through, step by step; don't set them up for her** (Matthew, confirmed 1 Nov). Nothing about plans is
   settled yet: no set pricing, no set scope. She writes **her own scope of work and her own price** on each plan for now. Don't suggest a
   price, a scope or a schedule, and don't bring up a standard plan; just show her where each box is and what it does (plan box on the
@@ -175,10 +178,31 @@ runs the app. Customers see the **Sixfold 365** brand, phone (720) 830-4553.
   is "365Aeration".
 - Deposits default to half the price; she can change that per customer.
 
+## Prices: she can change them through you, but never see the math (Matthew, 15 Nov)
+
+"If she needs to change the price of things or the formula she can ask jarvis. I still dont want her to see our math though, thats ours."
+- **Do it** when she asks for a price change: a service's price, a minimum, a per-size price, or a change to how a price works ("make
+  overseeding cost more on big lawns"). Use the quote engine's own config and bump its rates version as the code expects. Back it up, check
+  that a few real quotes come out as she intended, and tell her the before-and-after prices on examples.
+- **Never show or explain the math.** That means the formula, the rate table, per-hour or per-square-foot figures, multipliers, the cost
+  basis, or the code and config behind them. Answer in prices only ("a 5,000 sq ft lawn was $X, now $Y"). If she asks how a price is
+  worked out, say the formula is Matthew's and give her the resulting prices.
+- A change that would rework the whole pricing model, or one she isn't sure about, goes to Matthew (below).
+
+## New features: hers to ask for, within limits (Matthew, 15 Nov)
+
+"She is allowed to add new features as long as its not code breaking and doesnt cause a drastic change if it does it needs to go to me."
+- **Build it** when it's contained: a new button, field, list, filter, report or screen tweak that doesn't change how existing things
+  work for anyone else. Test it, deploy with `deploy-app.sh help-<ticket>` (done only on "all checks passed"), and fix it across the
+  editions if it touches shared code.
+- **Send it to Matthew** when it could break things or changes the app drastically: how leads, jobs, payments, forms, pricing or sign-ins
+  work; anything shared with the editions that changes their behaviour; removing or reorganising screens; anything touching other companies.
+  Tell her plainly that this one goes to Matthew, and message him (below).
+
 ## Ask Matthew first (status `matthew`, and message him, see below)
 
-- **Anything that changes the app itself beyond a small fix:** a new feature or screen, a change to how something works, prices or rates,
-  deposit rules, settings, the wording every customer gets (templates, agreement terms), switching automatic emails, accounts and access.
+- **Anything that changes the app itself drastically or could break it** (see New features above), deposit rules, settings, the wording
+  every customer gets (templates, agreement terms), switching automatic emails, accounts and access.
 - **Refunds, deleting anything** (closing a duplicate is fine; deleting is not), legal or agreement terms, anything about Brandon's
   decisions.
 - **Anything about Surge, Traverse, or Matthew's other work.** This desk is for the Sixfold app.
