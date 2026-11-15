@@ -8,6 +8,40 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-11-15 (Sunday)
+
+- **Sixfold handover to Jen and Brad (live):** all new leads go to Jen from 11:08 MT (Matthew's 59 stay his); end-of-day and weekly reports also go to Jen's address; J.A.R.V.I.S. rules for price changes (no math shown) and contained vs drastic features; job photos copy nightly to the "Photo content dump" shared drive; profit check built into the overnight check; J.A.R.V.I.S. privacy (own chats only, Matthew sees all); Jen's admin account spec written, build in progress for Monday; December newsletter draft due 24 Nov.
+- **Square (live):** the all-locations read had missed all 43 Sixfold 365 payments since 1 Oct; each location is now read in turn.
+- **Lawn sizes (live):** Yard v3 on Sixfold and the five editions with the acreage rule; typical miss 26% to 24%, +2,388 houses with a lawn size. "Check before quoting" rule fixed (owner-lived Check 66% to about 37% once door files carry the marker; editions' in progress).
+- **Every-home push (cloud, built off):** gap recount, Front Range sweep, townhome condos, mobile homes, apartment buildings, quarterly new-construction refresh, and measuring for never-measured doors (76,260 doors).
+- **Traverse:** free-map follow-up finished (1,210 of 1,211 sent, 9 bounces); new rule that every bulk send gets tracked links and a stats readout. Prospect Desk +141 companies (9,019), nothing queued. Google Workspace storage over its limit: Drive backup now weekly, keep 2; old archives trashed.
+- **Waiting on you:** share the Photo content dump with Jen; a monthly figure for unknown Sixfold costs; the TR-36 county emails; remove BofA/Stride bank links from Square.
+
+## 2026-11-14 (Saturday)
+
+- **Sixfold:** ad spend updated (form $2,206.92 / 114 leads, Messenger $2,485.60 / 159); weekly and 7-day numbers pulled (read-only). Search index rebuild given 1,536 MB after it died at the default and every search errored (Jen's report).
+
+## 2026-11-13 (Friday)
+
+- **Sixfold Square audit (read-only):** $2,694.10 of Six Fold Colorado payouts went to Matthew's accounts 8 Sep to 16 Oct; fees $424.36; two unpaid crew amounts and two bank checks to confirm. sixfold/finance/square-audit-2026-11-13.md.
+- **Peak:** expo leads added to the Peak desk as their own section with an expo-only account for Lance (later moved to seller, whole process); Matthew stays signed in on the Peak desk and the field app (his account only); socials audit plus short text summary for Brandon; Patch Retention data pulled read-only (texting unused, 4 automations, 15 blasts); venue-rental contacts deep dive (80 contacts, Hunter queue for 22 Nov).
+- **Sixfold ads:** spend updated from Ads Manager screenshot; no AI labels on Instagram.
+
+## 2026-11-12 (Thursday)
+
+- **Sixfold 365 and editions (live):** Pay now (optional) on the send-form screen and the 365 form page (70/70 tests); lead address matcher fix; Pipeline click and layout-jump fixes; "Don't email" renamed "Take off email list".
+- **Cloud and data:** yard v2 re-tuned (held-out miss 51% to 31%) with a fix for empty county answers saved as "no lots"; pest build overflow at Denver fixed; finishers stop on a crashed build.
+- **Surge:** site form review fixes (attachment email, resend, names).
+- **Peak (built off):** venue-rental prospects (64 organisations, PDF), cost breakdown infographic, email/text automation demo, court booking demo, for the Tyler meeting 13 Nov.
+
+## 2026-11-11 (Wednesday)
+
+- **Surge site live:** launch switches on Matthew's go (noindex off, robots and sitemap, post dates); WordPress retired, not deleted. Site form attaches resumes and documents to the info@ email.
+- **ADA vendor review (built off):** for Brandon; ADA is a white-label GoHighLevel; full comparison and bottom line.
+- **J.A.R.V.I.S. (live):** voice notes, quick first pass for Matthew, personal-assistant prompt, watcher fixes from the overnight review. Cloud trial run 1 on the Azure computer, practice only.
+- **Posts:** Veterans Day card and captions posted on Matthew's go.
+- **Admin:** Traverse Workspace paid for the month (reminder 8 Dec); Search Console reminder 18 Nov.
+
 ## 2026-11-10 (Tuesday)
 
 - **Towns (live):** El Paso batch (12 new towns, more doors in 10) and mountain-town PO-box batch (3 new, 152 towns) on Sixfold (409 to 424 towns) and all five editions (Roofing 422, others 418); 34,810 doors added. Fixed the roof build crash on office-lookup files and photo outlines stopping at Deer Trail (61 map tiles). First upload dropped on a Wi-Fi change; resumed. Rented/second homes (about 218,500) set to add themselves when the cloud computer finishes (~12 Nov).

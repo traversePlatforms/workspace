@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day: Thursday 12 November 2026</title>
+<!-- Matthew's end-of-day change log. Same layout as Brandon's end-of-day picture. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:13px;line-height:1.42}.page{padding:0 4px 8px}.head{padding:20px 24px}.kpis{margin:14px 0 4px;gap:10px}.kpi{padding:12px 16px}.kpi b{font-size:34px}.kpi small{font-size:12px}h2{font-size:18px;margin:16px 0 8px}.row{padding:8px 16px;grid-template-columns:140px 1fr}.foot{margin-top:18px}}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+.page>.sec:last-of-type{margin-bottom:0}.foot{margin-top:12px}
+@media print{.row{padding:6px 16px}h2{margin:12px 0 6px}}
+@media print{body{font-size:12px;line-height:1.36}.row{padding:4px 14px}h2{margin:9px 0 5px;font-size:16px}.kpi{padding:8px 14px}.kpi b{font-size:28px}.head{padding:14px 22px}.head h1{font-size:26px}.foot{margin-top:6px;padding-top:6px;font-size:11px}.row{padding:3px 14px}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="head">
+  <div><div class="tag">End of day</div><h1>Thursday 12 November 2026</h1><div class="d">Everything we changed today across the apps, sites and data</div></div>
+  <div class="d">Pay now option · Lead fixes · Peak demos</div>
+</div>
+<div class="kpis">
+  <div class="kpi"><b>70/70</b><span>Pay now tests passed</span><small>Three throwaway installs, Square and Stripe stand-ins</small></div>
+  <div class="kpi"><b>2</b><span>Peak demos built</span><small>Email/text automation and court booking, for the Tyler meeting</small></div>
+  <div class="kpi"><b>64</b><span>Venue prospects</span><small>Front Range expo and event organisers, public contacts only</small></div>
+  <div class="kpi warn"><b>3</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+<div class="sec">
+<h2>Sixfold 365 and editions <span class="n">4</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Pay now (optional)</div><div class="v"><span class="pill live">Live</span>You asked that people can pay ahead even without a deposit. The send-form screen has “Pay now (optional)” after “No deposit”: it books the same with $0 deposit and no-deposit terms. The customer text and the form say they can pay it all now. The 365 form page has the same card, and shows “Paid in full” afterwards. Nothing else on Jen’s screen moved.</div></div>
+  <div class="row"><div class="k">Lead address matcher</div><div class="v"><span class="pill live">Live</span>Fixed after Keith’s and Doug’s addresses did not fill in. A house number on its own before the first comma now joins the street. 15 matcher cases tested, including ties and ambiguous rural rows.</div></div>
+  <div class="row"><div class="k">Pipeline clicks</div><div class="v"><span class="pill live">Live</span>On a computer, the cards were rebuilt after every save, so a press on the old button was lost. Fixed. A second jump of the call buttons as house facts arrived was also fixed; facts are kept for 5 minutes and a redrawn card fills them in at once.</div></div>
+  <div class="row"><div class="k">Take off email list</div><div class="v"><span class="pill live">Live</span>The “Don’t email” link is renamed “Take off email list” (it read like a status on every new lead). Spanish: “Quitar de la lista de correo”.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Cloud jobs and data <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Yard v2 re-tune</div><div class="v"><span class="pill off">Built, off</span>Overnight work on 26 hand measures: held-out median miss 51% down to 31%. Every door is re-measuring on the cloud computer. The review found it was losing 1 to 2% of each town’s readings to empty answers from the county map; fixed so an empty answer is retried, not saved as “no lots”.</div></div>
+  <div class="row"><div class="k">Pest build</div><div class="v"><span class="pill live">Live</span>The pest build overflowed at Denver (135,569 doors). Fixed, and it now fails loudly if any town is missing.</div></div>
+  <div class="row"><div class="k">Finisher checks</div><div class="v"><span class="pill live">Live</span>The finishers stop the run if a build crashes, and only use a result that is the right size.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Surge <span class="n">1</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Site form review fixes</div><div class="v"><span class="pill live">Live</span>Your “fix the Surge issues”: no doubled line breaks in the attachment email, a resend without the attachment if mail fails, and names with commas or accents handled in the reply address. Tested locally.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Peak Pickleball (for the Tyler meeting 13 Nov) <span class="n">4</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Venue-rental prospects</div><div class="v"><span class="pill off">Built, off</span>64 Front Range expo, show and event organisers, public business contacts only. The venue is 80,380 sq ft (county assessor via the Gazette). Peak already hosted the Senior Lifestyle Expo in April 2026. Includes competitor venue rates and questions for Peak. Landscape PDF, best fits first.</div></div>
+  <div class="row"><div class="k">Cost breakdown</div><div class="v"><span class="pill off">Built, off</span>One-page infographic: what Peak pays now (CourtReserve $549, Patch $499, app fee $499) next to sourced market prices for the services on its list. No prices of yours. Software section relabelled “Comparable software: market list prices”.</div></div>
+  <div class="row"><div class="k">Email and text demo</div><div class="v"><span class="pill off">Built, off</span>One offline page: six flows with message previews, approval queue, Peak’s 2025-26 baseline beside labelled examples, guardrails. Checked in headless Chrome, 137 of 137.</div></div>
+  <div class="row"><div class="k">Court booking demo</div><div class="v"><span class="pill off">Built, off</span>One offline page: a member booking grid of 24 courts, plan prices, Flex hours, the 4-hour cancel rule, Open Play visibility, a waitlist with 30-minute text offers, and a front-desk view.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Overnight review (12 Nov) <span class="n">1</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Cloud jobs report</div><div class="v"><span class="pill live">Live</span>Found the yard re-measure problem above, and that the finisher would refuse the run as it stood. Fixes went in during the day.</div></div>
+</div>
+</div>
+<div class="sec wait">
+<h2>Waiting on you <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Peak meeting</div><div class="v">Take the demos and the prospect PDF to Tyler on 13 Nov.</div></div>
+  <div class="row"><div class="k">Lead removals</div><div class="v">Andrew, David, Neal, Deborah, Jake, Wilfredo if no reply. I ask first.</div></div>
+  <div class="row"><div class="k">Cloud trial</div><div class="v">Still waiting on the SiteGround key and a sign-in.</div></div>
+</div>
+</div>
+</div>
+</body>
+</html>
