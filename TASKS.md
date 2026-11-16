@@ -888,7 +888,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
   With Jen running Sixfold, consider adding contact@365aeration.com (or Jen) as a Manager at the same time.
 
-- [ ] **SX-79 — Matthew: share the "Photo content dump" shared drive with Jen (handover, 16 Nov).** The job photos are copied there every night (YYYY-MM / "date Street, Town", no customer names or house numbers). Drive → Shared drives → Photo content dump → Manage members → add J.McPherson@365aeration.com.
+- [ ] **SX-79 — Matthew: share the **Sixfold** shared drive with Jen (handover, 16 Nov; the Photo content dump drive was merged into it as 08 Photos and content the same day, so delete that empty drive).** The job photos are copied there every night (YYYY-MM / "date Street, Town", no customer names or house numbers). Drive → Shared drives → Photo content dump → Manage members → add J.McPherson@365aeration.com.
 
 - [ ] **SX-78 — Matthew: ask Brandon for Sixfold's other monthly costs (added 15 Nov).** Insurance, gas, phone, and anything else paid every month that isn't the truck ($1,000), aerator ($325), storage ($414) or trailer card ($500). Once he has the number, I put it in `sixfold-private/profit-costs.json` as `unknownMonthly`. The profit check (Matthew's 5% share) then counts it, and the "you're profitable" email switches on. Until then the alert stays off, so it can't fire on half the costs.
 
