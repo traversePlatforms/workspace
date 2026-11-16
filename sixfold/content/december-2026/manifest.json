@@ -1,0 +1,15 @@
+[
+  {
+    "brand": "sixfold",
+    "type": "photoset",
+    "key": "dec-2026-12-12-photoset",
+    "date": "2026-12-12",
+    "time": "14:00",
+    "targets": ["fb", "ig"],
+    "images": ["photosets/2026-12-12/2026-12-12-1.jpg", "photosets/2026-12-12/2026-12-12-2.jpg", "photosets/2026-12-12/2026-12-12-3.jpg", "photosets/2026-12-12/2026-12-12-4.jpg"],
+    "album": "2026 season lawns",
+    "fb_caption": "A few of the lawns we worked on this season, from Colorado Springs to Brighton.\n\nMessage us here, or text a picture of your lawn to (720) 830-4553 for a free quote.",
+    "ig_caption": "A few of the lawns we worked on this season, from Colorado Springs to Brighton.\n\nSend us a DM, or text a picture of your lawn to (720) 830-4553 for a free quote.\n\n#coloradolawn #lawncare #frontrange",
+    "note": "New December photo set (16 Nov, Matthew: replaces the one posted early). 4 real job photos, Nov 4 Colorado Springs x2, Oct 30 Brighton (cropped: house front and garage out), Oct 28 Northglenn; re-saved without EXIF/GPS. DRAFT: waits for Matthew's approve."
+  }
+]
