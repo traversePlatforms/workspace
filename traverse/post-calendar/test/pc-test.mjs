@@ -48,8 +48,11 @@ const graph = http.createServer((req, res) => {
     if (path === 'me/accounts') return q.access_token === 'PIPE-TOKEN' ? send({ data: PAGES }) : err('bad system token');
     if (path === 'me') return OWN[q.access_token] ? send(OWN[q.access_token]) : err('bad page token');
     let m;
-    if ((m = /^(\d+)\/photos$/.exec(path)) && req.method === 'POST') { if (!tp || tp.id !== m[1]) return err('token is not this page\'s'); if (failOn.fbphoto) return err('fb photo refused'); const id = 'ph' + ++seq; return send({ id, post_id: m[1] + '_' + id }); }
-    if ((m = /^(\d+)\/albums$/.exec(path)) && req.method === 'POST') { if (!tp || tp.id !== m[1]) return err('token is not this page\'s'); return send({ id: 'alb' + ++seq }); }
+    if ((m = /^(\d+)\/photos$/.exec(path)) && req.method === 'POST') { if (!tp || tp.id !== m[1]) return err('token is not this page\'s'); if (failOn.fbphoto) return err('fb photo refused'); if (q.published === 'false') { if (failOn.unpub && failOn.unpub === q.caption) return err('unpublished photo refused'); return send({ id: 'up' + ++seq }); } const id = 'ph' + ++seq; return send({ id, post_id: m[1] + '_' + id }); }
+    if ((m = /^(\d+)\/feed$/.exec(path)) && req.method === 'POST') { if (!tp || tp.id !== m[1]) return err('token is not this page\'s'); if (failOn.fbfeed) return err('feed post refused');
+      const att = Object.keys(q).filter((k) => /^attached_media\[\d+\]$/.test(k)).sort((a, b) => +a.match(/\d+/)[0] - +b.match(/\d+/)[0]).map((k) => JSON.parse(q[k]).media_fbid);
+      if (!att.length || att.some((x) => !/^up\d+$/.test(x))) return err('attached_media must be unpublished photo ids'); const id = m[1] + '_fp' + ++seq; return send({ id }); }
+    if ((m = /^(\d+)\/albums$/.exec(path)) && req.method === 'POST') return err('(#3) Application does not have the capability to make this API call.');   /* as Meta answered live, 16 Nov */
     if ((m = /^(alb\d+)\/photos$/.exec(path)) && req.method === 'POST') { if (failOn.albumphoto && /bad/.test(q.caption || '')) return err('album photo refused'); return send({ id: 'ap' + ++seq }); }
     if ((m = /^(\d+)\/media$/.exec(path)) && req.method === 'POST') { if (!tp || (tp.instagram_business_account || {}).id !== m[1]) return err('token is not linked to this instagram'); if (failOn.igmedia) return err('ig media refused'); return send({ id: 'c' + ++seq }); }
     if ((m = /^(\d+)\/media_publish$/.exec(path)) && req.method === 'POST') { if (!tp || (tp.instagram_business_account || {}).id !== m[1]) return err('token is not linked to this instagram'); return send({ id: 'm' + ++seq }); }
@@ -66,6 +69,7 @@ const graph = http.createServer((req, res) => {
     if (/^c\d+$/.test(path)) return send({ status_code: 'FINISHED', id: path });
     if (/^m\d+$/.test(path)) return send({ permalink: 'https://ig.test/p/' + path });
     if (/^alb\d+$/.test(path)) return send({ link: 'https://fb.test/album/' + path });
+    if (/_fp\d+$/.test(path)) return send({ permalink_url: 'https://fb.test/' + path });
     if (/_ph\d+$/.test(path)) return send({ permalink_url: 'https://fb.test/' + path });
     return err('stand-in has no answer for ' + req.method + ' ' + path);
   });
@@ -210,13 +214,39 @@ calls = [];
 await runner('2027-11-13T21:01:00Z');
 S1 = state().posts; const pp = calls.filter((x) => x.m === 'POST');
 ok(S1[PG].status === 'published', 'photo set published');
-ok(pp.filter((x) => x.path === '1418675127985724/albums').length === 1 && pp.find((x) => x.path === '1418675127985724/albums').q.name === 'Saturday jobs' && pp.filter((x) => /^alb\d+\/photos$/.test(x.path)).length === 3, 'Facebook: one album, three photos');
-ok(pp.filter((x) => /^alb\d+\/photos$/.test(x.path)).map((x) => x.q.caption).join() === 'photo 1,photo 2,photo 3', 'per-photo captions in order');
+const unpub = pp.filter((x) => x.path === '1418675127985724/photos' && x.q.published === 'false'), feed = pp.filter((x) => x.path === '1418675127985724/feed');
+ok(!pp.some((x) => /albums/.test(x.path)) && unpub.length === 3 && feed.length === 1 && feed[0].q.message === 'Album words', 'Facebook: three unpublished photos, then one feed post with the caption (no album)');
+ok(unpub.map((x) => x.q.caption).join() === 'photo 1,photo 2,photo 3', 'per-photo captions in order');
+const att = [0, 1, 2].map((i) => JSON.parse(feed[0].q['attached_media[' + i + ']'] || '{}').media_fbid || '');
+ok(new Set(att).size === 3 && att.every((x) => /^up\d+$/.test(x)) && att.map((x) => +x.slice(2)).every((n, i, a) => !i || n > a[i - 1]), 'the feed post attaches the three photos, in order');
+ok(S1[PG].done.fb.link === 'https://fb.test/' + S1[PG].done.fb.id && /_fp\d+$/.test(S1[PG].done.fb.id) && S1[PG].done.fb.photos === '3 of 3', 'the post\'s link is kept');
 const kids = pp.filter((x) => x.path === '17841460337871226/media' && x.q.is_carousel_item === 'true');
 const car = pp.find((x) => x.path === '17841460337871226/media' && x.q.media_type === 'CAROUSEL');
 ok(kids.length === 3 && car && car.q.children.split(',').length === 3 && car.q.caption === 'Carousel words', 'Instagram: carousel of three with the caption');
 const PS1 = await mk('sixfold', { type: 'photoset', album: 'x', fb: 'x', ig: 'x', targets: ['fb', 'ig'], date: '2027-11-20', time: '14:00' }, 1);
 r = await A.call('approve', { id: PS1 }); ok(r._status === 409 && /at least 2/.test(r.error), 'a photo set needs 2+ pictures');
+
+console.log('photo set: Facebook fails, Instagram went (the 16 Nov 1:15 pm case)');
+{
+  const PX = await mk('sixfold', { type: 'photoset', fb: 'Set words', ig: 'Set ig', targets: ['fb', 'ig'], date: '2027-11-27', time: '14:00' }, 3);
+  let rx = await A.call('approve', { id: PX }); ok(rx.ok && rx.post.album === '', 'a photo set is approved with no album name');
+  failOn = { fbfeed: true }; calls = [];
+  await runner('2027-11-27T21:01:00Z'); failOn = {};
+  let px = state().posts[PX];
+  ok(px.status === 'failed' && px.done.ig && !px.done.fb && /photos was not made: feed post refused/.test(px.error), 'feed post refused: failed, Instagram kept as done, Facebook not done');
+  const igCalls = (cs) => cs.filter((x) => x.m === 'POST' && x.path.startsWith('17841460337871226/')).length;
+  calls = []; await runner('2027-11-27T21:10:00Z'); ok(calls.filter((x) => x.m === 'POST').length === 0, 'a failed photo set is not retried by itself');
+  rx = await A.call('todraft', { id: PX }); ok(rx.ok && rx.post.status === 'draft' && rx.post.done.ig, 'Back to draft: Instagram still recorded as done');
+  await A.call('edit', { id: PX, date: '2027-11-28', time: '14:00' }); rx = await A.call('approve', { id: PX }); ok(rx.ok, 'approved again');
+  calls = []; await runner('2027-11-28T21:01:00Z'); px = state().posts[PX];
+  ok(px.status === 'published' && igCalls(calls) === 0 && calls.filter((x) => x.path === '1418675127985724/feed').length === 1 && calls.filter((x) => x.path === '1418675127985724/photos' && x.q.published === 'false').length === 3, 'after re-approval only Facebook went: three photos and one post; Instagram not sent again');
+  /* a photo refused part-way: nothing posted, Facebook not done */
+  const PY = await mk('sixfold', { type: 'photoset', fb: 'Y words', ig: '', targets: ['fb'], date: '2027-11-29', time: '14:00' }, 3);
+  await A.call('approve', { id: PY }); failOn = { unpub: 'photo 2' }; calls = [];
+  await runner('2027-11-29T21:01:00Z'); failOn = {};
+  const py = state().posts[PY];
+  ok(py.status === 'failed' && !py.done.fb && /photo 2 of 3 was not uploaded, so nothing was posted/.test(py.error) && calls.filter((x) => x.path === '1418675127985724/feed').length === 0, 'a photo refused part-way: no feed post, Facebook not done, plain error');
+}
 
 console.log('failure path');
 const PJ = await mk('sixfold', { fb: 'j', ig: 'j', targets: ['fb', 'ig'], date: '2027-11-16', time: '15:00' }); await A.call('approve', { id: PJ });

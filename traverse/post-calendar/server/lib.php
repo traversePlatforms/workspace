@@ -139,7 +139,7 @@ function pcProblems(array $S, array $p): array {
     if ($p['type'] === 'photoset') {
         if ($n < 2) $why[] = 'A photo set needs at least 2 pictures.';
         if ($n > 10 && in_array('ig', $t, true)) $why[] = 'An Instagram carousel takes at most 10 pictures.';
-        if (in_array('fb', $t, true) && trim((string) $p['album']) === '') $why[] = 'Give the Facebook album a name.';
+        /* no album name needed since 2026-11-16: Facebook gets a photo set as one post with several photos, not an album (see runner.php) */
     } elseif ($n !== 1) $why[] = 'Add the picture.';
     if (in_array('fb', $t, true) && trim((string) $p['fb']) === '') $why[] = 'Write the Facebook caption.';
     if (in_array('ig', $t, true)) {

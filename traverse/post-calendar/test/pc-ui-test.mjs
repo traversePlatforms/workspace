@@ -93,7 +93,7 @@ await shot('06-changes');
 await click(`document.getElementById('back')`); await sleep(700);
 ok(await js(`document.body.textContent.indexOf('Needs attention')>=0`), 'requested post listed under Needs attention');
 await click(`[].find.call(document.querySelectorAll('.card'),function(c){return c.textContent.indexOf('Photo set')>=0})`); await sleep(500);
-ok(await js(`document.querySelectorAll('.pic').length===2 && !!document.getElementById('falbum')`), 'photo set: two pictures and the album name');
+ok(await js(`document.querySelectorAll('.pic').length===2 && !document.getElementById('falbum') && document.getElementById('sheet').innerText.toLowerCase().indexOf('album')<0`), 'photo set: two pictures, no album name asked for');
 await shot('07-photoset');
 /* a picture full size (2026-11-03) */
 await click(`document.querySelectorAll('.pic img')[1]`); await sleep(300);

@@ -13,7 +13,7 @@ Matthew's approval calendar for the clients' Facebook and Instagram posts, with 
   changing its scope counts on the next call.
 - **Client sign-ins (16 Nov 2026, Matthew: "Create a sixfold only sign in for jen. I want her to be able to write, schedule, and approve the
   content. And make changes and request changes as its needed ... she needs to be able to change the dates as well"):** role `client` with
-  `clients: ["sixfold"]` on the account. Inside its clients it does everything a post needs: write, edit captions, pictures, album, date and
+  `clients: ["sixfold"]` on the account. Inside its clients it does everything a post needs: write, edit captions, pictures, date and
   time, upload/replace/remove/reorder pictures and videos, approve, unapprove, request changes, withdraw a request, answer by editing, failed
   back to draft, remove. It may change the **posting days** (slots) of its own client and nothing else of the client: the API refuses
   (403) a `client` call carrying anything but `id` and `slots`, never calls Meta for it, and refuses add, archive and the Meta Pages list.
@@ -32,7 +32,7 @@ Matthew's approval calendar for the clients' Facebook and Instagram posts, with 
   goes within about 5 minutes of its time. Posts each approved, due post once (claimed under a lock first, each platform recorded as it
   goes), never retries a failed one (Back to draft, then Approve again; what already went is not sent twice), skips anything over 6 hours
   late, and emails m.sharpe@traverseplatforms.com once per failure through the travMail sender. Same Graph calls as the 27 Oct scripts:
-  FB `/{page}/photos` with the picture's address (photo set: `/{page}/albums` + one photo each), IG `/{ig}/media` then `/media_publish`
+  FB `/{page}/photos` with the picture's address (photo set since 16 Nov: each photo to `/{page}/photos` with `published=false`, then one `/{page}/feed` post with `attached_media`; Meta refused this app Page albums at the first real photo set, 16 Nov 1:15 pm, "(#3) Application does not have the capability", so no album name is asked for any more), IG `/{ig}/media` then `/media_publish`
   (photo set: carousel). Token: `post-calendar-data/private/meta-token.json` if present, else `sixfold-private/meta-social.json` (the same
   Pipeline token, checked 31 Oct). `php runner.php check` is a read-only look at which Pages the token sees.
 - **Pictures:** `public_html/posts-ab8c57/media/` under random names (Instagram fetches them from there). The page turns a phone picture
@@ -53,7 +53,7 @@ Matthew's approval calendar for the clients' Facebook and Instagram posts, with 
 
 `node traverse/post-calendar/tools/pc.mjs import <manifest.json>` (add `--dry-run` first to see what would load). Each item: `brand`
 ("sixfold", "surge" or a client id), `type` ("single" or "photoset"), `date` + `time` (Mountain; leave both out for "not scheduled yet"),
-`targets`, `image` or `images` (2-10, paths or `{path, caption}`), `fb_caption`, `ig_caption`, `album` (photo sets), `note`. Everything
+`targets`, `image` or `images` (2-10, paths or `{path, caption}`), `fb_caption`, `ig_caption`, `album` (photo sets; kept but not used since 16 Nov), `note`. Everything
 arrives as an unapproved draft; importing the same manifest again adds nothing twice. `pc.mjs list <client>` shows each post and what still
 blocks its approval; `pc.mjs requests` (or `php runner.php requests` on the server) lists open change requests as JSON; `pc.mjs answer
 <post-id> --image new.png --fb fb.txt --ig ig.txt` sends the new version and puts the post back to draft.
@@ -63,7 +63,7 @@ blocks its approval; `pc.mjs requests` (or `php runner.php requests` on the serv
 - `bash traverse/post-calendar/tools/deploy.sh` (backup to `~/upload-backups/before-postcal-<stamp>.tgz`, rename-into-place, md5 of every
   file); `--check` compares with live and sends nothing. `tools/token.sh compare|push` handles the token without printing it.
 - `node traverse/post-calendar/test/pc-test.mjs`: API and runner against a local stand-in for graph.facebook.com (nothing reaches Meta):
-  199 checks on 16 Nov (the client sign-in and phone-video sections need ffmpeg + ffprobe on PATH, else the video part is skipped).
+  208 checks on 16 Nov (the client sign-in and phone-video sections need ffmpeg + ffprobe on PATH, else the video part is skipped).
   `node traverse/post-calendar/test/pc-ui-test.mjs [shots-folder]`: the page in headless Chrome at phone size, 49 checks on 16 Nov.
 - The old runner (`sixfold-tools/social-queue.php`, queue `sixfold-private/social-queue.json`) is folded in with `php runner.php
   migrate-queue <file>`: approvals kept; the new runner leaves migrated posts alone until the old queue file is retired.

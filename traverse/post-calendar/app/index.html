@@ -336,12 +336,12 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     /* the fields */
     var dis = ed ? '' : ' disabled';
     h += '<div class="box"><h3>Post</h3>';
-    h += '<div class="seg" role="group" aria-label="Type"><button data-type="single" aria-pressed="' + (p.type === 'single') + '"' + dis + '>One picture or video</button><button data-type="photoset" aria-pressed="' + (p.type === 'photoset') + '"' + dis + '>Photo set (album + carousel)</button></div>';
+    h += '<div class="seg" role="group" aria-label="Type"><button data-type="single" aria-pressed="' + (p.type === 'single') + '"' + dis + '>One picture or video</button><button data-type="photoset" aria-pressed="' + (p.type === 'photoset') + '"' + dis + '>Photo set (several pictures in one post)</button></div>';
     h += '<label class="f">Where</label><div class="seg" role="group" aria-label="Where"><button data-t="fb" aria-pressed="' + (p.targets.indexOf('fb') >= 0) + '"' + dis + '>Facebook</button><button data-t="ig" aria-pressed="' + (p.targets.indexOf('ig') >= 0) + '"' + dis + '>Instagram' + (c.ig_id ? '' : ' (none assigned)') + '</button></div>';
     var dv = p.at ? dstr(p.at) : '', tv = p.at ? tstr(p.at) : '';
     h += '<label class="f">When <small>(Mountain time)</small></label><div class="row2"><input type="date" id="fdate" value="' + dv + '"' + dis + ' aria-label="Date"><input type="time" id="ftime" value="' + tv + '"' + dis + ' aria-label="Time"></div>';
     if (ed) { var taken = {}; D.posts.forEach(function (q) { if (q.at && q.id !== P.id) taken[q.at] = 1; }); var qs = D.slots.filter(function (s) { return !taken[s.at] && (s.type === p.type); }).slice(0, 4); if (qs.length) h += '<div class="quick">' + qs.map(function (s) { return '<button data-q="' + s.at + '">' + esc(when(s.at).replace(/, \d{4}/, '')) + '</button>'; }).join('') + '</div>'; }
-    h += '<label class="f">' + (p.type === 'photoset' ? 'Pictures <small>(2 to 10; Instagram shows them as a carousel)</small>' : 'Picture') + '</label><div class="pics">';
+    h += '<label class="f">' + (p.type === 'photoset' ? 'Pictures <small>(2 to 10; one Facebook post with all of them, an Instagram carousel)</small>' : 'Picture') + '</label><div class="pics">';
     p.images.forEach(function (im, i) {
       h += '<div class="pic">' + (isVid(im) ? '<video src="' + esc(im.url) + '" controls playsinline muted preload="metadata" style="display:block;width:100%;max-height:420px;background:#000"></video>' : '<img src="' + esc(im.url) + '" alt="Picture ' + (i + 1) + '" loading="lazy">')
         + '<div class="sz">' + (isVid(im) ? 'Video' + (im.sec ? ', ' + Math.round(im.sec) + ' s' : '') + (im.w ? ', ' : '') : '') + (im.w ? im.w + ' x ' + im.h : '') + '</div>'
@@ -351,8 +351,8 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     h += '</div>' + (ed && (p.type === 'photoset' ? p.images.length < 10 : !p.images.length) ? '<div class="acts"><button class="btn small ghost" id="addpic">+ Add ' + (p.type === 'photoset' ? 'pictures' : 'a picture or video') + '</button></div>' : '')
       + (ed && p.type === 'single' ? '<p class="empty">Phone videos: record in 1080p, under 90 seconds. A video goes out as a Reel on Facebook and Instagram.</p>' : '')
       + '<input type="file" id="file" accept="image/*' + (p.type === 'photoset' ? '" multiple' : ',video/mp4,video/quicktime,video/x-m4v,.mp4,.mov,.m4v"') + ' hidden>';   /* + mov and m4v, made into an MP4 on the server (2026-11-16) */
-    if (p.type === 'photoset') h += '<label class="f" for="falbum">Facebook album name</label><input type="text" id="falbum" maxlength="120" value="' + esc(p.album) + '"' + dis + '>';
-    h += '<label class="f" for="ffb">Facebook caption' + (p.type === 'photoset' ? ' <small>(the album post)</small>' : '') + '</label><textarea id="ffb"' + dis + '>' + esc(p.fb) + '</textarea>';
+    /* no album name field since 2026-11-16: Facebook gets a photo set as one post with all the pictures (Meta refuses this app albums) */
+    h += '<label class="f" for="ffb">Facebook caption' + (p.type === 'photoset' ? ' <small>(the post with all the pictures)</small>' : '') + '</label><textarea id="ffb"' + dis + '>' + esc(p.fb) + '</textarea>';
     h += '<label class="f" for="fig">Instagram caption</label><textarea id="fig"' + dis + '>' + esc(p.ig) + '</textarea><div class="count" id="igc"></div>' + (ed ? '<div class="quick"><button id="copyfb">Copy the Facebook caption</button></div>' : '');
     h += '<label class="f" for="fnote">Note <small>(only here; never posted)</small></label><textarea id="fnote" style="min-height:60px"' + dis + '>' + esc(p.note) + '</textarea></div>';
     /* change request */
@@ -490,7 +490,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     if (pvWhich === 'fb') {
       if (p.targets.indexOf('fb') < 0) { el.innerHTML = '<p class="empty">Not going to Facebook.</p>'; return; }
       var g = ims.length > 1 ? '<div class="pvi g2">' + ims.slice(0, 4).map(function (im) { return '<img src="' + esc(im.url) + '" alt="">'; }).join('') + '</div>' : ims[0] ? '<div class="pvi">' + (isVid(ims[0]) ? '<video src="' + esc(ims[0].url) + '" controls playsinline muted preload="metadata" style="display:block;width:100%;max-height:520px;background:#000"></video>' : '<img src="' + esc(ims[0].url) + '" alt="">') + '</div>' : '<p class="empty" style="padding:0 12px 12px">No picture yet</p>';
-      el.innerHTML = '<div class="pv"><div class="pvh"><div class="pva">' + ini + '</div><div><b>' + esc(c.page_name || c.name) + (p.type === 'photoset' && p.album ? ' added ' + ims.length + ' photos to ' + esc(p.album) : '') + '</b><small>' + esc(at) + '</small></div></div><div class="pvt">' + clip(p.fb, 480) + '</div>' + g + '</div>';
+      el.innerHTML = '<div class="pv"><div class="pvh"><div class="pva">' + ini + '</div><div><b>' + esc(c.page_name || c.name) + (p.type === 'photoset' && ims.length > 1 ? ' added ' + ims.length + ' photos' : '') + '</b><small>' + esc(at) + '</small></div></div><div class="pvt">' + clip(p.fb, 480) + '</div>' + g + '</div>';
     } else {
       if (p.targets.indexOf('ig') < 0) { el.innerHTML = '<p class="empty">Not going to Instagram.</p>'; return; }
       var u = c.ig_user || 'instagram';

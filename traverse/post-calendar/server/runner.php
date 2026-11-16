@@ -128,18 +128,31 @@ foreach ($claimed as $id) {
 flock($lk, LOCK_UN);
 exit(0);
 
-/* ---- Facebook: one photo (POST /{page}/photos with the picture's address), or a photo set as an album with a caption per photo ---- */
+/* ---- Facebook: one photo (POST /{page}/photos with the picture's address), or a photo set as one post with several photos ----
+   A photo set (2026-11-16): each photo goes up unpublished (POST /{page}/photos, published=false, with its own caption if it has one), then one
+   feed post carries them all (POST /{page}/feed, message + attached_media[i]={"media_fbid":"<id>"}). It used to be a Page album, but Meta
+   refuses this app album-making ("(#3) Application does not have the capability to make this API call", the first real photo set, 16 Nov 1:15
+   pm). Unpublished photos show nowhere on their own, so a failure part-way leaves nothing on the Page and Facebook is simply not done: Back to
+   draft + Approve tries Facebook again, and what already went (Instagram) is never sent twice. */
 function pcSendFacebook(array $p, array $tg): array {
     $imgs = (array) $p['images']; $tok = $tg['token'];
     if ($p['type'] === 'photoset') {
-        $a = pcGraph('POST', $tg['page'] . '/albums', ['name' => (string) $p['album'], 'message' => (string) $p['fb'], 'access_token' => $tok]);
-        if ($e = pcErr($a)) return ['error' => 'the album was not made: ' . $e];
-        $n = 0; $bad = [];
-        foreach ($imgs as $k => $im) { $r = pcGraph('POST', $a['id'] . '/photos', ['url' => (string) $im['url'], 'caption' => (string) ($im['caption'] ?? ''), 'access_token' => $tok]); if ($e = pcErr($r)) $bad[] = 'photo ' . ($k + 1) . ': ' . $e; else $n++; }
-        $l = pcGraph('GET', (string) $a['id'], ['fields' => 'link', 'access_token' => $tok]);
-        $done = ['id' => (string) $a['id'], 'link' => (string) ($l['link'] ?? ''), 'photos' => $n . ' of ' . count($imgs)];
-        /* the album exists now, so Facebook counts as done either way (a retry would make a second album); missing photos are the error */
-        return $bad ? ['done' => $done, 'error' => 'the album went up with ' . $n . ' of ' . count($imgs) . ' photos; add the rest on Facebook by hand (' . implode('; ', $bad) . ')'] : ['done' => $done];
+        $ids = [];
+        foreach ($imgs as $k => $im) {
+            $f = ['url' => (string) $im['url'], 'published' => 'false', 'access_token' => $tok];
+            if (trim((string) ($im['caption'] ?? '')) !== '') $f['caption'] = (string) $im['caption'];
+            $r = pcGraph('POST', $tg['page'] . '/photos', $f);
+            if ($e = pcErr($r)) return ['error' => 'photo ' . ($k + 1) . ' of ' . count($imgs) . ' was not uploaded, so nothing was posted: ' . $e];
+            $id = (string) ($r['id'] ?? ''); if ($id === '') return ['error' => 'photo ' . ($k + 1) . ' of ' . count($imgs) . ': Facebook gave no photo id, so nothing was posted'];
+            $ids[] = $id;
+        }
+        $q = ['message' => (string) $p['fb'], 'access_token' => $tok];
+        foreach ($ids as $i => $id) $q['attached_media[' . $i . ']'] = json_encode(['media_fbid' => $id]);
+        $r = pcGraph('POST', $tg['page'] . '/feed', $q);
+        if ($e = pcErr($r)) return ['error' => 'the post with the ' . count($ids) . ' photos was not made: ' . $e];
+        $pid = (string) ($r['id'] ?? ''); if ($pid === '') return ['error' => 'the post with the photos was not made: Facebook gave no post id'];
+        $l = pcGraph('GET', $pid, ['fields' => 'permalink_url', 'access_token' => $tok]);
+        return ['done' => ['id' => $pid, 'link' => (string) ($l['permalink_url'] ?? ''), 'photos' => count($ids) . ' of ' . count($imgs)]];
     }
     if (pcIsVideo($imgs[0])) {   /* a video goes up as a Facebook Reel (Matthew 2026-11-05): start an upload, send Meta the video, publish */
         $s = pcGraph('POST', $tg['page'] . '/video_reels', ['upload_phase' => 'start', 'access_token' => $tok]);
