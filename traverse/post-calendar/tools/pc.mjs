@@ -15,11 +15,13 @@
  *     "fb_caption": "...", "ig_caption": "...", "album": "Facebook album name (photoset)", "note": "shown on the draft only", "key": "optional id" }
  * Relative image paths are read from the manifest's folder. An item already loaded (same key, or same client, time, pictures and caption)
  * is skipped, so a manifest can be imported again after it grows. Env for tests: PC_BASE (the api address), PC_CODE_FILE. */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, appendFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve, dirname, basename, isAbsolute } from 'node:path';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
+const LOADED = process.env.PC_LOADED || join(dirname(fileURLToPath(import.meta.url)), '..', 'loaded.jsonl');   /* 16 Nov: every draft this tool loads */
 const BASE = process.env.PC_BASE || 'https://traverseplatforms.com/posts-ab8c57/api/cal.php';
 const CODE_FILE = process.env.PC_CODE_FILE || join(homedir(), '.ssh', 'post-calendar-editor-code.txt');
 const BRANDS = { sixfold: 'sixfold', 'sixfold365': 'sixfold', 'sixfold 365': 'sixfold', surge: 'surge' };
@@ -89,6 +91,8 @@ async function importManifest(file, dry, refresh = false) {
     if (j.dup) { console.log(label + ': already loaded (' + j.dup + '), skipped'); skipped++; continue; }
     for (const x of it.pics) await upload(j.id, x.path, { caption: x.caption || undefined, w: it.m.w, h: it.m.h, sec: it.m.sec });   /* w/h/sec: a video's size when the server can't read it */
     console.log(label + ': loaded as draft ' + j.id); made++;
+    /* 16 Nov: what was handed over, so jen-learn.mjs can compare it with what the approver changed and approved */
+    appendFileSync(LOADED, JSON.stringify({ id: j.id, client: body.client || '', date: it.m.date || null, type: body.type, fb: body.fb || '', ig: body.ig || '', pics: it.pics.map((x) => basename(x.path)), note: body.note || '', loaded: new Date().toISOString() }) + '\n');
   }
   console.log(`done: ${made} loaded, ${refresh ? refreshed + ' refreshed, ' : ''}${skipped} already there, ${bad} skipped with a problem. Nothing is approved; Matthew approves each post on the calendar.`);
 }

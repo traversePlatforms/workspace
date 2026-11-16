@@ -4,6 +4,8 @@ You are run on Matthew's laptop by `request-watch.sh` (every 10 minutes) because
 
 The request is in `REQUEST_JSON` below: the post id, her words (`text`), the post's current captions, its pictures (urls) and its type (single or photoset).
 
+**Read `sixfold/content/jen-style.md` first.** It holds what Jen likes and what she has changed before; follow its rules.
+
 ## What you can do
 Work from the repository root. The only command that touches the calendar is `node traverse/post-calendar/tools/pc.mjs`. It signs in with the **editor** code, which can **never** approve, publish or schedule anything. Never look for another way.
 
