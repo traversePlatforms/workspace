@@ -1,0 +1,77 @@
+{
+ "key": "hou",
+ "label": "Greater Houston",
+ "state": "TX",
+ "stateFips": "48",
+ "timezone": "America/Chicago",
+ "stateName": "Texas",
+ "stateBox": [25.8, -106.7, 36.6, -93.5],
+ "naip": { "state": "tx", "year": "2022" },
+ "appNote": "For an install (clients.cjs market): stateName and timezone drive the app's labels and clock, stateBox the drawn-outline check, naip the aerial photo search (Planetary Computer: Texas 2022, flown 13-21 Sep 2022 over Houston; checked 2026-11-16). Houston's sources are bulk files, not query services, so they carry no url for the lot outline on the door map (the doors' own lot lines are in metros/out/<town>-lots.json).",
+ "group": "hou",
+ "note": "Houston market (Matthew 2026-11-16: 'just sixfold but texas edition ... focus houston and surronding markets ... only lawn care and aeration'), to test with Bryce (aeration and seeding, Houston). Each county's appraisal district publishes its roll as bulk files; each file's terms were read before it was pulled (terms below). Every single-family home (state class A1) is a door; the homestead exemption marks whether the owner lives there (occ here / away). Data only: no install, client file or login yet.",
+ "plan": { "centre": [29.7604, -95.3698], "innerKm": 9, "maxDoors": 90000, "minDoors": 400 },
+ "lawn": {
+  "years": [2022, 2024],
+  "surveys": ["TX_Coastal_B1_2018", "TX_Coastal_B3_2018", "TX_Coastal_B2_Z15_2018", "TX_Hurricane_B5B_2018"],
+  "depth": 10,
+  "note": "Yard v2 lawn measuring (metros/yard-metro.mjs, V2 settings). Photos: NAIP Texas 2022 (13-21 Sep 2022, late summer by the classifier's rule) first, 2024 (10 Oct - 19 Nov 2024) second; the classifier uses the late-summer one. Laser: USGS 3DEP 2018 coastal surveys on the public Entwine bucket, depth 10 (1.4-1.6 m tiles, like Colorado's 1.2-1.8 m). No DRCOG (Denver only)."
+ },
+ "sources": {
+  "harris": {
+   "label": "Harris Central Appraisal District",
+   "type": "file",
+   "norm": "assessor/raw/hou/harris/norm.ndjson",
+   "reader": "metros/readers/prep-harris.mjs",
+   "files": ["https://download.hcad.org/data/GIS/Parcels.zip", "https://download.hcad.org/data/CAMA/2026/Real_acct_owner.zip", "https://download.hcad.org/data/CAMA/2026/Real_building_land.zip", "https://download.hcad.org/data/CAMA/2026/Real_jur_exempt.zip"],
+   "residential": "state_class A1 (real, residential, single-family)",
+   "ownerOccupied": "a residence homestead exemption on the account",
+   "countyName": "Harris",
+   "countyFips": "201",
+   "terms": { "verdict": "allowed", "read": "2026-11-16", "url": "https://hcad.org/hcad-online-services/pdata/", "also": ["https://hcad.org/pdata/pdata-gis-downloads.html", "https://hcad.org/hcad-help/hcad-disclaimer/", "https://hcad.org/assets/uploads/pdf/resources/2026/GIS-ReadMeV2-2.pdf"], "text": "Free public downloads, no licence, fee, sign-up or agreement stated. GIS readme: 'for informational purposes and may not have been prepared for or be suitable for legal, engineering, or surveying purposes'. 'HCAD does not provide technical support for the usage of this data.'" }
+  },
+  "fortbend": {
+   "label": "Fort Bend Central Appraisal District",
+   "type": "file",
+   "norm": "assessor/raw/hou/fortbend/norm.ndjson",
+   "reader": "metros/readers/prep-fortbend.mjs",
+   "files": ["https://www.fbcad.org/wp-content/uploads/2026/07/FBCAD2026CertifiedGISData-ParcelsShapefiles.zip", "https://www.fbcad.org/wp-content/uploads/2026/10/October2026-PropertyDataExport.zip", "https://www.fbcad.org/wp-content/uploads/2026/10/WebsiteResidentialSegments-October.zip"],
+   "residential": "state code A1 (single-family)",
+   "ownerOccupied": "a homestead exemption on the account",
+   "countyName": "Fort Bend",
+   "countyFips": "157",
+   "terms": { "verdict": "allowed", "read": "2026-11-16", "url": "https://www.fbcad.org/gis-data", "also": ["https://www.fbcad.org/?p=1802"], "text": "Free public downloads, no fee, sign-up or agreement. 'provided ... \"as is\" without any warranty'; 'The user shall hold harmless, indemnify and defend the Fort Bend Central Appraisal District and their agents' (a liability term on the user, not a restriction on use). Confidential owners (Tax Code ch. 25) are already redacted from the export files." }
+  },
+  "brazoria": {
+   "label": "Brazoria County Appraisal District",
+   "type": "file",
+   "norm": "assessor/raw/hou/brazoria/norm.ndjson",
+   "reader": "metros/readers/prep-brazoria.mjs",
+   "files": ["PARCELS_W_OWNER.zip (Sep 2026) and 2026_BRAZORIA_COUNTY_CERTIFIED.zip (23 Jul 2026), the district's own pCloud links on its download page"],
+   "residential": "state_cd A1 (single-family)",
+   "ownerOccupied": "a homestead (HS) exemption on the account",
+   "countyName": "Brazoria",
+   "countyFips": "039",
+   "terms": { "verdict": "allowed", "read": "2026-11-16", "url": "https://brazoriacad.org/public-gis-and-property-data-downloads/", "text": "Free public downloads, no licence, fee, sign-up or agreement. Disclaimers only: 'for informational purposes and may not have been prepared for or be suitable for legal ...', 'distributed without warranty of any kind'." }
+  },
+  "galveston": {
+   "label": "Galveston Central Appraisal District",
+   "type": "file",
+   "norm": "assessor/raw/hou/galveston/norm.ndjson",
+   "reader": "metros/readers/prep-galveston.mjs",
+   "files": ["https://galvestoncad.org/wp-content/uploads/2026/10/parcels.zip", "https://galvestoncad.org/wp-content/uploads/2026/08/2026-CERTIFIED-ROLL-WEB-EXPORT-W-EXPORT-LAYOUT.zip"],
+   "residential": "state code A1 (single-family)",
+   "ownerOccupied": "EXEMPT includes HS (residence homestead)",
+   "countyName": "Galveston",
+   "countyFips": "167",
+   "terms": { "verdict": "allowed", "read": "2026-11-16", "url": "https://galvestoncad.org/gis-data/", "also": ["https://galvestoncad.org/preliminary-and-certified-roll-export-data/"], "text": "Free public downloads, no licence, fee, sign-up or agreement. Disclaimer only: 'may not have been prepared for or be suitable for legal, engineering, or surveying purposes'." }
+  }
+ },
+ "skipped": {
+  "montgomery": { "countyFips": "339", "why": "The district's data is marked 'The Montgomery Central Appraisal District retains all rights to the data. Redistribution or commercial use of this data is prohibited without prior authorization from the Montgomery Central Appraisal District.' The fuller tax-parcel view (owner, homestead, year built) says 'Users must comply with Montgomery County's data access policies'. Traverse is commercial use, so this needs MCAD's written authorisation first. Nothing pulled.", "url": "https://www.arcgis.com/home/item.html?id=1d4dfd0e7d9646269a4e9054dc426742", "also": ["https://www.arcgis.com/home/item.html?id=44060ff2f5d94a2381f4c8f52ded3c34"], "read": "2026-11-16" },
+  "waller": { "countyFips": "473", "why": "Not cheap: no bulk download found from the appraisal district itself (resellers and the state's StratMap layer only); not looked into further.", "read": "2026-11-16" },
+  "liberty": { "countyFips": "291", "why": "Not cheap: the district offers an interactive map only; no bulk download found.", "read": "2026-11-16" },
+  "chambers": { "countyFips": "071", "why": "Not cheap: no download from the district found (resellers only).", "read": "2026-11-16" }
+ },
+ "towns": []
+}

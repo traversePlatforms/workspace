@@ -28,7 +28,8 @@ export const ACRE = 43560;
 export function yardLawn(v0) {
   if (!v0 || v0.big || v0.shared || typeof v0.l !== 'number' || typeof v0.lot !== 'number') return null;
   const v = v0.lot >= ACRE && typeof v0.s === 'number' && v0.s < v0.l ? { ...v0, l: v0.s, u: 0 } : v0;
-  const yr = !v.ph || LATE.test(v.ph) ? 2023 : 2021;
+  /* py (16 Nov 2026, metros/yard-metro.mjs): a metro reading carries the year of the photo its green came from (Texas: 2022 or 2020) */
+  const yr = v.py ? +v.py : !v.ph || LATE.test(v.ph) ? 2023 : 2021;
   const tree = v.lot > 0 && v.t > 0.25 * v.lot && v.l < 1200;
   const lv = tree ? 'T' : v.l < 300 ? 'N' : v.l < 1200 ? 'S' : v.l < 3000 ? 'M' : 'L';
   const out = { lv, sq: r100(v.l), yr };

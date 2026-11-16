@@ -35,7 +35,8 @@ const PC = 'https://planetarycomputer.microsoft.com/api', SQFT = 10.7639;
 const SURVEYS = ['CO_DRCOG_2_2020', 'CO_DRCOG_1_2020', 'CO_DRCOG_3_2020', 'CO_Eastern_ElPaso_2018', 'CO_Eastern_B1_2018', 'CO_CameronPkFire_1_2021', 'CO_NWCO_2_2020', 'CO_Eastern_B5_2018'];
 const BASE = 'https://s3-us-west-2.amazonaws.com/usgs-lidar-public/';
 const PROJECT_DEPTH = { CO_Eastern_ElPaso_2018: 9, CO_DRCOG_2_2020: 10, CO_DRCOG_1_2020: 10, CO_Eastern_B1_2018: 9, CO_CameronPkFire_1_2021: 9, CO_NWCO_2_2020: 11, CO_Eastern_B5_2018: 10 };
-for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);
+/* 10-19 (16 Nov 2026): the photos of a metro outside Colorado come in its own UTM zone (Houston's NAIP is EPSG:26915); Colorado is 12-14 */
+for (const z of [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);
 proj4.defs('EPSG:6428', '+proj=lcc +lat_0=37.8333333333333 +lon_0=-105.5 +lat_1=39.75 +lat_2=38.45 +x_0=914401.828803658 +y_0=304800.609601219 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs');
 const get = async (u, o) => { for (let i = 0; i < 3; i++) { try { const r = await fetch(u, o); if (r.ok) return await r.json(); } catch {} await new Promise((ok) => setTimeout(ok, 1200 * (i + 1))); } throw new Error('fetch failed ' + u.slice(0, 70)); };
 const merc = (lo, la) => proj4('EPSG:4326', 'EPSG:3857', [lo, la]);
@@ -118,15 +119,18 @@ async function nodesFor(p, box) {
     if (!(key in h)) return; let cnt = h[key];
     if (cnt === -1) { h = await hget(key); cnt = h[key]; }
     if (!cnt || !hits(nodeBox(key), box)) return;
-    out.push(key); const [d, x, y, z] = key.split('-').map(Number); if (d >= (PROJECT_DEPTH[p] || 10)) return;
+    out.push(key); const [d, x, y, z] = key.split('-').map(Number); if (d >= (depthOver || PROJECT_DEPTH[p] || 10)) return;
     for (const dx of [0, 1]) for (const dy of [0, 1]) for (const dz of [0, 1]) await walk(`${d + 1}-${2 * x + dx}-${2 * y + dy}-${2 * z + dz}`, h);
   }
   await walk('0-0-0-0', await hget('0-0-0-0'));
   return out;
 }
-async function laserWin(lon, lat, box, cell, cacheDir) {
+/* surveys + depthOver (16 Nov 2026, metros/yard-metro.mjs): a market outside Colorado passes its own laser surveys and the tile depth
+   to read them at (the same depth for lidar.mjs heightGrid via setMaxDepth, so both read the same tiles). Colorado passes neither. */
+let depthOver = 0;
+async function laserWin(lon, lat, box, cell, cacheDir, surveys = SURVEYS) {
   const bounds = new Map();
-  for (const p of SURVEYS) {
+  for (const p of surveys) {
     if (!eptBounds.has(p)) { let e = null; try { e = await get(BASE + p + '/ept.json'); } catch {} eptBounds.set(p, e ? e.boundsConforming || e.bounds : null); }
     const b = eptBounds.get(p);
     const [X, Y] = merc(lon, lat); if (!b || X < b[0] || X > b[3] || Y < b[1] || Y > b[4]) continue;
@@ -160,8 +164,13 @@ export async function yardSources(rings, opt = {}) {
   const k = Math.cos(lat * Math.PI / 180), cell = 1 / k;
   const M = rings.map((r) => r.map(([lo, la]) => merc(lo, la))), xs = M.flat().map((p) => p[0]), ys = M.flat().map((p) => p[1]), pad = 8 / k;
   const box = [Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) + pad, Math.max(...ys) + pad];
-  const [n23, n21, dc] = await Promise.all([naipWin(2023, lon, lat, rings), naipWin(2021, lon, lat, rings), drcogWin(lon, lat, rings)]);
-  const lz = await laserWin(lon, lat, box, cell, lidarCache);
+  /* a metro (16 Nov 2026, metros/yard-metro.mjs) passes { years: [newer, older], surveys, depth, drcog: false }: Texas is photographed
+     in even years (2022, 2020), so n23/n21 then hold those photos; the classifier reads each photo's own date, never the slot name.
+     DRCOG land cover is the Denver region's only: outside Colorado it is not asked for (a search per lot that can never answer). */
+  const [yA, yB] = opt.years || [2023, 2021];
+  if (opt.depth && opt.depth !== depthOver) { depthOver = opt.depth; L.setMaxDepth(opt.depth); }
+  const [n23, n21, dc] = await Promise.all([naipWin(yA, lon, lat, rings), naipWin(yB, lon, lat, rings), opt.drcog === false ? null : drcogWin(lon, lat, rings)]);
+  const lz = await laserWin(lon, lat, box, cell, lidarCache, opt.surveys || SURVEYS);
   const S = { rings, box, cell, n23, n21, dc, lz };
   if (cf) writeFileSync(cf, JSON.stringify(freeze(S)));
   return S;

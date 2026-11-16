@@ -11,7 +11,7 @@
    Run:  node build-walklist-pdf.mjs <each csv>   # the sidecars
          node build-rounds-data.mjs                                            */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { recordOwner, isHistoryKey } from './owner-names.mjs';
@@ -171,6 +171,16 @@ if (existsSync(G2_REG)) G1.push(...JSON.parse(readFileSync(G2_REG, 'utf8')).filt
 const G3_REG = join(HERE, 'group3', 'registered.json');
 if (existsSync(G3_REG)) G1.push(...JSON.parse(readFileSync(G3_REG, 'utf8')).filter((t) => !G1.some((u) => u.key === t.key)));
 for (const t of G1) if (existsSync(join(HERE, t.key + '-areas.json'))) SOURCES.push([t.key, t.label, t.key + '-areas.json', t.key]);
+/* ROUNDS_METRO=<metro> (16 Nov 2026, Houston; build-metro.mjs's towns step): build that metro's towns only and MERGE their entries into
+   the index.json already in OUT, so a metro build never rewrites a Colorado door file or the Colorado index (other sessions build and
+   push those). shared-towns.json is left as it is (a metro shares no house with Colorado); owner history records the metro's doors only. */
+const ONLY_METRO = process.env.ROUNDS_METRO || '';
+if (ONLY_METRO) {
+  const keep = new Set(metroTowns().filter((t) => t.metro === ONLY_METRO).map((t) => t.key));
+  if (!keep.size) { console.error(`ROUNDS_METRO=${ONLY_METRO}: no built town in metros/${ONLY_METRO}.json`); process.exit(1); }
+  SOURCES.splice(0, SOURCES.length, ...SOURCES.filter((s) => keep.has(s[0])));
+  console.log(`metro ${ONLY_METRO} only: ${SOURCES.length} towns (Colorado door files and index entries untouched)`);
+}
 
 /* same slug rule as build-walk-tool.mjs, so a door has one id everywhere */
 const slug = (s) => s.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 60);
@@ -211,6 +221,10 @@ function lawnOf(d) {
    T lots carry rng, the lawn the photo can see up to what may be under the trees. */
 const YARD_V2 = join(HERE, 'lawn-trial', 'yard-v2-lawn.json');
 const yardV2 = existsSync(YARD_V2) ? JSON.parse(readFileSync(YARD_V2, 'utf8')) : {};
+/* + a metro's own yard measurement (16 Nov 2026, metros/build-lawn.mjs): lawn-trial/yard-metro/<metro>-lawn.json, the same "<town>/<id>"
+   keys (metro town keys carry the metro's prefix, so they never meet a Colorado key), so Colorado's yard-v2-lawn.json is never rewritten */
+{ const d = join(HERE, 'lawn-trial', 'yard-metro');
+  if (existsSync(d)) for (const f of readdirSync(d).filter((x) => /^[a-z0-9]+-lawn\.json$/.test(x))) Object.assign(yardV2, JSON.parse(readFileSync(join(d, f), 'utf8'))); }
 /* nb (2026-10-26): the county says the house was built in or after the photo's year, so the photo shows a building site: the card
    says to measure by hand instead of giving a size (year-<town>.json, assessor year built; Matthew: "show built after our photo") */
 const yearOf = {};
@@ -330,6 +344,9 @@ for (const [key, label, fileName, group] of SOURCES) {
   if (!existsSync(p)) { console.log(`skipping ${label} — no ${fileName}`); continue; }
   const j = JSON.parse(readFileSync(p, 'utf8'));
   const seen = new Set(), limOf = limitedFor(key), mk = marksFor(key);
+  /* occ for a metro town (16 Nov 2026, Houston): every single-family home is pulled, and the county's homestead exemption says whether the
+     owner lives there (metros/build-doors.mjs writes hs per door; DFW's file has none, so its doors, all homesteads, stay 'here') */
+  const mOcc = METRO_TOWN[key] && existsSync(join(HERE, 'metros', 'out', `${key}-parcels.json`)) ? JSON.parse(readFileSync(join(HERE, 'metros', 'out', `${key}-parcels.json`), 'utf8')).doors : null;
   const areas = j.areas.map((a) => ({
     name: a.name,
     avg: a.avg ? +a.avg.toFixed(2) : null,
@@ -346,7 +363,8 @@ for (const [key, label, fileName, group] of SOURCES) {
          the county's mobile homes we already have stay on every list, Sixfold's too) */
       const own = mk ? mk[markKey(d.a)] || null : null, ours_ = !own && mk ? mk['@' + id.toUpperCase()] || null : null;
       const m = own || (ours_ && (KINDS || ours_.k === 'th') ? ours_ : null);
-      const occ = m && ['here', 'away', 'unk'].includes(m.occ) ? m.occ : lim === 'noowner' || lim === 'noocc' ? 'unk' : 'here';
+      const mo = !m && mOcc ? mOcc[`${d.la},${d.lo}`] : null;   /* a metro door: the county's homestead flag (metros/out/<town>-parcels.json hs) */
+      const occ = m && ['here', 'away', 'unk'].includes(m.occ) ? m.occ : mo && typeof mo.hs === 'boolean' ? (mo.hs ? 'here' : 'away') : lim === 'noowner' || lim === 'noocc' ? 'unk' : 'here';
       return { id, address: d.a, acres: d.ac, owner: d.o, lat: d.la ?? null, lon: d.lo ?? null, fire: fireOf(d), lawn: lawnFor(d, key, id), trees: treesOf(d), val: valueOf(d), occ, ...(commonGround(d, key) ? { cg: 1 } : {}), ...(lim ? { lim } : {}), ...kindFields(m) };
     }),
   }));
@@ -376,7 +394,8 @@ const addPair = (x, y) => { (shared[x] ||= []); if (!shared[x].includes(y)) shar
 const realPair = new Set();
 for (const list of towns.values()) if (list.length > 1) for (const t of list) for (const u of list) if (t !== u) realPair.add(t + '|' + u);
 let pruned = 0;
-for (const k of Object.keys(shared)) { const keep = shared[k].filter((u) => realPair.has(k + '|' + u)); pruned += shared[k].length - keep.length; if (keep.length) shared[k] = keep; else delete shared[k]; }
+/* a metro-only build sees none of Colorado's towns, so it must not prune their pairs (it would drop every one) */
+if (!ONLY_METRO) for (const k of Object.keys(shared)) { const keep = shared[k].filter((u) => realPair.has(k + '|' + u)); pruned += shared[k].length - keep.length; if (keep.length) shared[k] = keep; else delete shared[k]; }
 if (pruned) console.log(`${pruned / 2} town pairs unlinked: they share no house, only street addresses`);
 let moved = 0;
 const owner = new Map();
@@ -396,7 +415,7 @@ for (const b of built) for (const a of b.areas) {
   a.doors = keep.map((x) => x.d); a.src = keep.map((x) => x.src);
 }
 for (const k of Object.keys(shared)) shared[k].sort();
-if (!PREVIEW) writeFileSync(SHARED_FILE, JSON.stringify(shared, null, 2) + '\n', 'utf8');
+if (!PREVIEW && !ONLY_METRO) writeFileSync(SHARED_FILE, JSON.stringify(shared, null, 2) + '\n', 'utf8');
 if (owner.size) console.log(`${owner.size} doors were listed by two towns: each kept by the nearest town (${moved} copies dropped)`);
 
 /* ---- rented doors (2026-11-08; PROMOTE above) --------------------------------
@@ -488,6 +507,15 @@ for (const { key, label, group, j, areas: raw } of built) {
     occ: areas.reduce((o, a) => { for (const d of a.doors) o[d.occ] = (o[d.occ] || 0) + 1; return o; }, { here: 0, away: 0, unk: 0 }) });
   console.log(`${key}.json  ${areas.length} areas, ${index[index.length - 1].doors} doors`);
 }
+if (ONLY_METRO) {
+  /* merge: the metro's entries replace their old selves (or are added at the end); every other entry, shared and built stay as they were */
+  const ip = join(OUT, 'index.json'), old = existsSync(ip) ? JSON.parse(readFileSync(ip, 'utf8')) : { regions: [], shared: {} };
+  const mine = new Map(index.map((r) => [r.key, r])), regions = [];
+  for (const r of old.regions || []) { if (r.metro === ONLY_METRO && !mine.has(r.key)) continue; regions.push(mine.get(r.key) || r); mine.delete(r.key); }
+  regions.push(...mine.values());
+  writeFileSync(ip + '.tmp', JSON.stringify({ ...old, regions }), 'utf8'); renameSync(ip + '.tmp', ip);
+  console.log(`index.json: ${index.length} ${ONLY_METRO} entries merged (${regions.length} regions in all)`);
+} else
 writeFileSync(join(OUT, 'index.json'), JSON.stringify({ regions: index, shared, built: new Date().toISOString().slice(0, 10) }), 'utf8');
 
 /* ---- the office lookup's extra homes (2026-10-14, build-lookup.mjs) ----

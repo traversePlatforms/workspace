@@ -1,0 +1,10 @@
+{
+  "name": "metros",
+  "private": true,
+  "type": "module",
+  "description": "The metro builder's county file readers (Houston, 16 Nov 2026): shapefile/dbf reading and state-plane reprojection",
+  "dependencies": {
+    "proj4": "^2.23.0",
+    "shapefile": "^0.6.6"
+  }
+}

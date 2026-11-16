@@ -25,20 +25,32 @@ const M = JSON.parse(readFileSync(join(HERE, 'metros', metro + '.json'), 'utf8')
 const pick = args.slice(1).filter((a) => !a.startsWith('--')); const towns = pick.length ? M.towns.filter((t) => pick.includes(t.key)) : M.towns;
 if (!towns.length) throw new Error('no such town in ' + metro);
 const LOG = join(HERE, 'logs-metros', metro); mkdirSync(LOG, { recursive: true });
+/* file sources (Houston, 16 Nov 2026: the appraisal districts publish bulk files): prep runs each county's reader once (its norm file),
+   split puts every row in its town (metros/split-doors.mjs; the towns list itself comes from `node metros/split-doors.mjs <metro> --plan`,
+   run once by hand and checked). Metros with feature-service sources only (DFW) skip both. */
+const FILES = Object.values(M.sources).filter((s) => s.type === 'file');
+const BIG = '--max-old-space-size=12000';
 const STEPS = [
+  ...FILES.map((s) => [`prep-${s.countyName.toLowerCase().replace(/[^a-z]+/g, '')}`, () => ['node', [BIG, s.reader]], 'once']),
+  ...(FILES.length ? [['split', () => ['node', [BIG, 'metros/split-doors.mjs', metro]], 'once']] : []),
   ['doors', (t) => ['node', ['metros/build-doors.mjs', metro, t.key]], 'town'],
-  ['areas', (t) => ['node', ['build-walklist-pdf.mjs', `${t.key}.csv`, '--no-pdf']], 'town'],
+  ['areas', (t) => ['node', [BIG, 'build-walklist-pdf.mjs', `${t.key}.csv`, '--no-pdf']], 'town'],
   ['values', (t) => ['node', ['metros/county-data.mjs', t.key, '--values']], 'town'],
   ['wildfire', () => ['node', ['sample-wildfire.mjs']], 'once'],
-  ['towns', () => ['node', ['build-rounds-data.mjs']], 'once'],
+  /* ROUNDS_METRO (16 Nov 2026): this metro's door files only, merged into index.json; Colorado's door files are never rewritten here */
+  ['towns', () => ['node', [BIG, 'build-rounds-data.mjs'], { ROUNDS_METRO: metro }], 'once'],
   ['years', (t) => ['node', ['metros/county-data.mjs', t.key, '--years']], 'town'],
   ['hail', () => ['node', ['hail/build-hail.mjs', 'fetch', '2020-04-01', new Date().toISOString().slice(0, 10)], { HAIL_METRO: metro }], 'once'],
   ['hail-build', () => ['node', ['hail/build-hail.mjs', 'build'], { HAIL_METRO: metro }], 'once'],
   ['wind', () => ['node', ['wind/build-wind.mjs', 'all'], { WIND_METRO: metro }], 'once'],
   ['nri', () => ['node', ['nri/build-nri.mjs'], { METRO: metro }], 'once'],
   ['census', () => ['node', ['census/build-census.mjs', '--fetch'], { METRO: metro }], 'once'],
+  /* lawn (16 Nov 2026): the yard v2 readings (metros/yard-metro.mjs, run on the cloud machine for a whole metro) into
+     lawn-trial/yard-metro/<metro>-lawn.json, then the door files again so the doors carry them. With no readings yet it writes nothing. */
+  ['lawn', () => ['node', ['metros/build-lawn.mjs', metro]], 'once'],
+  ['lawn-towns', () => ['node', [BIG, 'build-rounds-data.mjs'], { ROUNDS_METRO: metro }], 'once'],
 ];
-const SKIPPED = ['laser-scan roof size, pitch and solar (no public USGS survey reaches these towns yet)', 'aerial photo, building outline and roof material', 'lawn and trees', 'permits (city by city)', 'crime (police data, city by city)'];
+const SKIPPED = ['laser-scan roof size, pitch and solar (no public USGS survey reaches these towns yet)', 'aerial photo, building outline and roof material', 'trees near the house (the lawn measuring reads tree crowns, but the tree card is Colorado-wired)', 'permits (city by city)', 'crime (police data, city by city)'];
 const from = opt('from'), only = opt('only'), dry = args.includes('--dry');
 let started = !from; const ran = [];
 console.log(`${M.label}: ${towns.map((t) => t.label).join(', ')}`);
