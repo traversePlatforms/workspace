@@ -19362,6 +19362,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     /* stages */
     /* Walk booked only while someone is in it (2026-10-21, Matthew: "walk booked wouldn't really be used") */
     var stList = (officeStages() ? OFFICE_ST : PIPE_ST).filter(function (st) { return (st[0] !== 'walk' || !wdOn() || stage === 'walk' || items.some(function (it) { return pipeStage(it) === 'walk'; })) && (st[0] !== 'recall' || wdOn()) && (st[0] !== 'msgr' || S.msgrOn || stage === 'msgr' || items.some(function (it) { return pipeStage(it) === 'msgr'; })); });   /* Messenger: while it is on or holds someone (2026-11-15) */   /* Recall: the lead desk only (2026-10-21) */
+    /* a link straight to one lead with no stage given (Priority contacts, Person search, an alert) opens the stage it is in (2026-11-16, Matthew:
+       Jen's Priority contacts "doesnt lead to the right person. or any person": nothing is open until a stage is picked, so it showed nobody) */
+    if (S.pipeFocus && !stage) { var focA = items.filter(function (it) { return it.kind === 'lead' && it.x.id === S.pipeFocus; })[0]; if (focA && stList.some(function (x) { return x[0] === pipeStage(focA); })) { stage = S.pipeStage = pipeStage(focA); if (src !== 'all' && pipeSrc(focA) !== src) src = S.pipeSrc = 'all'; S.pipeSel = 'lead:' + focA.x.id; } }
     stage = pipeFollow(stage, items.filter(function (it) { return src === 'all' || pipeSrc(it) === src; }), pipeStage, stList, 'pipeStage');   /* 2026-11-12 */
     S.pipeCur = 'all:' + (stage || '');
     var seg = q('div', 'pipeseg' + (asOffice() ? ' four' : '')); seg.style.gridTemplateColumns = 'repeat(' + stList.length + ',1fr)';
