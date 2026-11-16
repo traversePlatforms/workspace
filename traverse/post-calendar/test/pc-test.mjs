@@ -4,10 +4,10 @@
  * (public_html/<path>/ + post-calendar-tools/ + post-calendar-data/), served by php -S.
  *   node traverse/post-calendar/test/pc-test.mjs */
 import http from 'node:http';
-import { spawn, execFile } from 'node:child_process';
-import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { spawn, execFile, spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve, dirname } from 'node:path';
+import { join, resolve, dirname, basename } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
@@ -84,7 +84,7 @@ const MAIL = join(T, 'mail.jsonl');
 const port = 18000 + Math.floor(Math.random() * 2000);
 const ORIGIN = 'http://127.0.0.1:' + port;
 const env = { ...process.env, PC_SITE: SITE, PC_PUBLIC: PUB, PC_ORIGIN: ORIGIN, PC_GRAPH: 'http://127.0.0.1:' + GPORT + '/', PC_POLL_SLEEP: '0', TRAV_MAIL_MOCK: MAIL, PC_RUPLOAD: 'http://127.0.0.1:' + GPORT + '/rup/' };
-const php = spawn('php', ['-S', '127.0.0.1:' + port, '-t', join(SITE, 'public_html')], { env, stdio: 'ignore' });
+const php = spawn('php', ['-d', 'upload_max_filesize=2M', '-d', 'post_max_size=8M', '-S', '127.0.0.1:' + port, '-t', join(SITE, 'public_html')], { env, stdio: 'ignore' });
 const runPhp = (args, extra = {}) => new Promise((r) => execFile('php', [join(SITE, 'post-calendar-tools', 'runner.php'), ...args], { env: { ...env, ...extra } }, (e, so, se) => r({ code: e ? e.code : 0, out: so, err: se })));
 const runner = (nowIso) => runPhp([], { PC_NOW: String(Math.floor(Date.parse(nowIso) / 1000)) });
 for (let i = 0; i < 50; i++) { try { await fetch(ORIGIN + '/'); break; } catch { await sleep(100); } }
@@ -93,12 +93,12 @@ const ADMIN = (await runPhp(['addaccount', 'Matthew Sharpe', 'admin', '--code-on
 const EDITOR = (await runPhp(['addaccount', 'Claude drafts', 'editor', '--code-only'])).out.trim();
 ok(/^\d{8}$/.test(ADMIN) && /^\d{8}$/.test(EDITOR), 'addaccount --code-only prints only an 8-digit code');
 
-function client() {
+function client(origin = ORIGIN) {
   let cookie = '';
   const call = async (action, body, query = '') => {
     const o = { method: body ? 'POST' : 'GET', headers: { Cookie: cookie } };
     if (body instanceof FormData) { o.body = body; o.headers['X-PC'] = '1'; } else if (body) { o.body = JSON.stringify(body); o.headers['Content-Type'] = 'application/json'; o.headers['X-PC'] = '1'; }
-    const r = await fetch(ORIGIN + '/' + PUB + '/api/cal.php?action=' + action + query, o);
+    const r = await fetch(origin + '/' + PUB + '/api/cal.php?action=' + action + query, o);
     const sc = r.headers.get('set-cookie'); if (sc && /postcal=/.test(sc)) cookie = sc.split(';')[0];
     const txt = await r.text(); let j; try { j = JSON.parse(txt); } catch { j = { ok: false, error: 'not JSON', raw: txt.slice(0, 600) }; console.log('  (raw answer to ' + action + '): ' + txt.slice(0, 600)); }
     j._status = r.status; j._headers = r.headers; return j;
@@ -368,6 +368,159 @@ console.log('video (2026-11-05)');
   failOn.rupload = true; calls = []; await runner('2027-12-21T22:01:00Z'); failOn.rupload = false;
   const rfp = state().posts[rf.id];
   ok(rfp.status === 'failed' && /upload host said: test refusal \(FileUrlProcessingError\)/.test(JSON.stringify(rfp)), 'an upload-host refusal is kept in Meta\'s words and the post shows failed');
+}
+
+console.log('client sign-in, one client only (2026-11-16)');
+{
+  ok((await runPhp(['addaccount', 'No Scope', 'client', '--code-only'])).code !== 0, 'a client sign-in without --clients is refused');
+  ok((await runPhp(['addaccount', 'Bad Scope', 'client', '--clients', 'nope', '--code-only'])).code !== 0, 'a client sign-in for a client that does not exist is refused');
+  ok((await runPhp(['addaccount', 'Bad Editor', 'editor', '--clients', 'sixfold', '--code-only'])).code !== 0, '--clients only goes with a client sign-in');
+  const JCODE = (await runPhp(['addaccount', 'Jen Test', 'client', '--clients', 'sixfold', '--code-only'])).out.trim();
+  ok(/^\d{8}$/.test(JCODE), 'client sign-in made: an 8-digit code');
+  const acl = await runPhp(['accounts']);
+  ok(/Jen Test \| client \| sixfold/.test(acl.out) && !acl.out.includes(JCODE) && !acl.out.includes(ADMIN), 'accounts lists names, roles and scope, never codes');
+  const J = client();
+  let j = await J.call('signin', { code: JCODE }); ok(j.ok && j.role === 'client' && JSON.stringify(j.clients) === '["sixfold"]', 'client sign-in: role client, scope sixfold');
+  /* a Surge post with a picture, a Surge post with an open request, and a Sixfold post, made by Matthew and the editor */
+  const SG1 = await mk('surge', { fb: 'Surge secret words', targets: ['fb'], date: '2028-01-11', time: '15:00' });
+  const SG2 = await mk('surge', { fb: 'Surge second', targets: ['fb'], date: '2028-01-13', time: '15:00' }); await A.call('request', { id: SG2, text: 'Surge-only request text' });
+  const before = JSON.stringify(state().posts[SG1]) + JSON.stringify(state().posts[SG2]) + JSON.stringify(state().clients.surge);
+  /* reading */
+  let d = await J.call('data'); ok(d.ok && d.clients.length === 1 && d.clients[0].id === 'sixfold' && d.me.role === 'client', 'data: only Sixfold in the client list');
+  ok(d.pages === null && Object.keys(d.counts).join() === 'sixfold', 'overview: Sixfold counts only, no Meta Pages list');
+  ok(!JSON.stringify(d).includes('Surge') && !JSON.stringify(d).includes('surge'), 'nothing about Surge anywhere in her data');
+  d = await J.call('data', null, '&client=surge'); ok(!d.posts && !JSON.stringify(d).includes('Surge secret'), 'asking for Surge by name gives no Surge posts');
+  d = await J.call('data', null, '&client=sixfold'); ok(d.posts.length > 0 && d.posts.every((p) => p.client === 'sixfold'), 'Sixfold calendar: her posts');
+  ok((await J.call('slots', null, '&client=surge'))._status === 404, 'slots for Surge: no such client');
+  j = await J.call('requests'); ok(j.ok && j.requests.every((r) => r.client === 'sixfold') && !JSON.stringify(j).includes('Surge-only'), 'requests: Sixfold only');
+  ok((await J.call('requests', null, '&client=surge')).requests.length === 0, 'requests asked for Surge: none');
+  ok((await J.call('pages'))._status === 403, 'Meta Pages list refused');
+  /* every post action on a Surge post: no such post */
+  const refused = [];
+  for (const [a, b] of [['edit', { id: SG1, fb: 'hacked' }], ['edit', { id: SG1, date: '2028-01-12', time: '09:00' }], ['approve', { id: SG1 }], ['unapprove', { id: SG1 }], ['request', { id: SG1, text: 'x' }],
+    ['withdraw', { id: SG2 }], ['todraft', { id: SG1 }], ['remove', { id: SG1 }], ['edit', { id: SG2, fb: 'answer', answer: 'true' }]]) {
+    const r = await J.call(a, b); if (r._status !== 404) refused.push(a + ' ' + r._status);
+  }
+  ok(!refused.length, 'every post action on a Surge post answers 404' + (refused.length ? ': ' + refused.join(', ') : ''));
+  const media0 = readdirSync(join(SITE, 'public_html', PUB, 'media')).length;
+  j = await J.up(SG1, IMG); ok(j._status === 404 && readdirSync(join(SITE, 'public_html', PUB, 'media')).length === media0, 'upload to a Surge post: 404 and no file kept');
+  ok((await J.call('create', { client: 'surge', fb: 'x' }))._status === 404, 'a new Surge post: no such client');
+  ok((await J.call('client', { id: 'surge', slots: [{ d: 1, t: '09:00', type: 'single' }] }))._status === 404, 'Surge posting days: no such client');
+  ok((await J.call('client', { name: 'New Co', slots: [] }))._status === 403, 'cannot add a client');
+  ok((await J.call('clientarchive', { id: 'surge', archived: true }))._status === 403 && (await J.call('clientarchive', { id: 'sixfold', archived: true }))._status === 403, 'cannot archive Surge or her own client');
+  ok(JSON.stringify(state().posts[SG1]) + JSON.stringify(state().posts[SG2]) + JSON.stringify(state().clients.surge) === before, 'Surge posts and client exactly as they were');
+  /* her own client: everything a post needs */
+  const c1 = await J.call('create', { client: 'sixfold', type: 'single', targets: ['fb', 'ig'], fb: 'Jen words', ig: 'Jen ig', date: '2028-01-18', time: '15:00' });
+  ok(!!c1.id, 'she writes a new Sixfold post');
+  j = await J.up(c1.id, IMG); ok(j.ok && j.post.images.length === 1, 'she uploads its picture');
+  j = await J.up(c1.id, png(1080, 1080), { replace: 0 }); ok(j.ok && j.post.images[0].h === 1080, 'she replaces the picture');
+  j = await J.call('edit', { id: c1.id, fb: 'Jen words, edited', date: '2028-01-20', time: '10:30' }); ok(j.ok && j.post.fb === 'Jen words, edited' && j.post.at === ts('2028-01-20T17:30:00Z'), 'she edits the caption and moves the date and time');
+  j = await J.call('approve', { id: c1.id, fingerprint: j.post.fingerprint }); ok(j.ok && j.post.status === 'approved' && j.post.approval.by === 'Jen Test', 'she approves a Sixfold post; the approval says it was her');
+  ok(state().posts[c1.id].log.some((l) => l.by === 'Jen Test' && /^Approved for/.test(l.what)), 'the post log shows her approval');
+  ok((await A.call('data', null, '&client=sixfold')).posts.find((p) => p.id === c1.id).approval.by === 'Jen Test', 'Matthew sees who approved it');
+  j = await J.call('unapprove', { id: c1.id }); ok(j.ok && j.post.status === 'draft', 'she unapproves');
+  j = await J.call('request', { id: c1.id, text: 'Brighter picture please' }); ok(j.ok && j.post.status === 'changes', 'she requests changes');
+  j = await J.call('withdraw', { id: c1.id }); ok(j.ok && j.post.status === 'draft', 'she withdraws the request');
+  await J.call('request', { id: c1.id, text: 'New caption' });
+  j = await J.call('edit', { id: c1.id, fb: 'New caption', answer: 'true' }); ok(j.ok && j.post.status === 'draft' && !j.post.openRequest, 'she answers a change request by editing');
+  const c2 = await J.call('create', { client: 'sixfold', type: 'photoset', targets: ['fb', 'ig'], album: 'Jen set', fb: 'set', ig: 'set', date: '2028-01-22', time: '14:00' });
+  await J.up(c2.id, IMG, { caption: 'one' }); j = await J.up(c2.id, png(1080, 1080), { caption: 'two' });
+  const files = j.post.images.map((im) => im.file);
+  j = await J.call('edit', { id: c2.id, album: 'Jen set renamed', images: [{ file: files[1], caption: 'two' }, { file: files[0], caption: 'one' }] });
+  ok(j.ok && j.post.album === 'Jen set renamed' && j.post.images[0].file === files[1], 'she renames the album and reorders the pictures');
+  j = await J.call('edit', { id: c2.id, images: [{ file: files[1], caption: 'two' }] }); ok(j.ok && j.post.images.length === 1, 'she removes a picture');
+  let raw2 = state(); raw2.posts[c1.id].status = 'failed'; raw2.posts[c1.id].error = 'test failure'; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(raw2));
+  j = await J.call('todraft', { id: c1.id }); ok(j.ok && j.post.status === 'draft', 'she moves a failed post back to draft');
+  j = await J.call('remove', { id: c2.id }); ok(j.ok && state().posts[c2.id].status === 'removed', 'she removes a post');
+  /* posting days: the slots of her own client, nothing else */
+  const six0 = state().clients.sixfold; calls = [];
+  j = await J.call('client', { id: 'sixfold', slots: [{ d: 1, t: '10:00', type: 'single' }, { d: 3, t: '16:30', type: 'single' }, { d: 6, t: '09:00', type: 'photoset' }] });
+  const six1 = state().clients.sixfold;
+  ok(j.ok && six1.slots.map((s) => s.d + s.t + s.type).join() === '110:00single,316:30single,609:00photoset', 'she changes Sixfold\'s posting days and times');
+  ok(six1.page_id === six0.page_id && six1.ig_id === six0.ig_id && six1.name === six0.name && six1.conn === six0.conn && six1.color === six0.color && six1.rules === six0.rules, 'nothing else about Sixfold changed');
+  j = await J.call('slots', null, '&client=sixfold&n=3&from=' + ts('2028-02-01T12:00:00Z')); ok(j.slots[0].at === ts('2028-02-02T23:30:00Z'), 'the new days are what the calendar offers (Wed 4:30 pm)');
+  for (const [what, extra] of [['its Page', { page_id: '555000' }], ['its Instagram', { ig_id: '777000' }], ['its token', { conn: 'own', token: 'OWN-VAA' }], ['its name', { name: 'Renamed' }], ['its connection', { conn: 'own' }]]) {
+    j = await J.call('client', { id: 'sixfold', slots: [{ d: 2, t: '15:00', type: 'single' }], ...extra });
+    ok(j._status === 403, 'she cannot change ' + what);
+  }
+  const six2 = state().clients.sixfold;
+  ok(six2.page_id === six0.page_id && six2.ig_id === six0.ig_id && six2.conn === six0.conn && six2.slots.length === 3 && !existsSync(join(SITE, 'post-calendar-data', 'private', 'client-sixfold.json')), 'after the refusals: Page, Instagram, connection and slots as she left them, no token saved');
+  ok(calls.length === 0, 'no call to Meta for her posting days or the refused changes');
+  /* Matthew and the editor are as they were */
+  const eP = await E.call('create', { client: 'sixfold', fb: 'editor draft', targets: ['fb'], date: '2028-01-25', time: '15:00' }); await E.up(eP.id, IMG);
+  ok((await E.call('approve', { id: eP.id }))._status === 403, 'the editor still cannot approve');
+  ok((await E.call('client', { id: 'sixfold', slots: [] }))._status === 403, 'the editor cannot change posting days');
+  ok((await A.call('data')).clients.length >= 2 && (await A.call('data', null, '&client=surge')).posts.some((p) => p.id === SG1), 'Matthew still sees every client, Surge included');
+  ok((await A.call('client', { id: 'sixfold', name: 'Sixfold 365', color: six0.color, conn: 'pipeline', page_id: six0.page_id, ig_id: six0.ig_id, slots: six0.slots, rules: six0.rules })).ok, 'Matthew still edits the client setup (and puts the days back)');
+  /* taking the sign-in away signs it out at once */
+  ok((await runPhp(['removeaccount', 'Jen Test'])).code === 0, 'removeaccount');
+  ok((await J.call('data'))._status === 401, 'a removed client sign-in is signed out on its next call');
+  ok((await A.call('data'))._status === 200, 'Matthew still signed in');
+}
+
+console.log('phone videos: converted or re-packed on the server (2026-11-16)');
+{
+  const which = spawnSync(process.platform === 'win32' ? 'where' : 'which', ['ffprobe'], { encoding: 'utf8' });
+  const FFPROBE = (which.stdout || '').split(/\r?\n/)[0].trim(); const FFMPEG = FFPROBE ? join(dirname(FFPROBE), process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg') : '';
+  if (!FFPROBE || !existsSync(FFMPEG)) console.log('  SKIPPED: no ffmpeg/ffprobe on this machine');
+  else {
+    const V = join(T, 'videos'); mkdirSync(V);
+    const ff = (args) => spawnSync(FFMPEG, ['-nostdin', '-hide_banner', '-loglevel', 'error', '-y', ...args], { encoding: 'utf8' });
+    const probe = (f) => JSON.parse(spawnSync(FFPROBE, ['-v', 'error', '-show_entries', 'stream=codec_type,codec_name,codec_tag_string,width,height:stream_side_data=rotation:format=duration:format_tags', '-of', 'json', f], { encoding: 'utf8' }).stdout);
+    const src = (size, sec, rate = 30) => ['-f', 'lavfi', '-i', 'testsrc2=size=' + size + ':rate=' + rate + ':duration=' + sec, '-f', 'lavfi', '-i', 'sine=frequency=440:duration=' + sec];
+    const x265 = ['-c:v', 'libx265', '-preset', 'ultrafast', '-x265-params', 'log-level=error', '-tag:v', 'hvc1', '-c:a', 'aac', '-shortest'];
+    ff([...src('1080x1920', 4), ...x265, '-metadata', 'location=+39.6500-104.9900/', join(V, 'phone.mov')]);
+    ff([...src('1920x1080', 3), ...x265, join(V, 'sideways-raw.mov')]); ff(['-display_rotation', '90', '-i', join(V, 'sideways-raw.mov'), '-c', 'copy', join(V, 'turned.mov')]);
+    ff([...src('2160x3840', 1), ...x265, join(V, 'four-k.mov')]);
+    ff([...src('180x320', 91, 5), ...x265, join(V, 'long.mov')]);
+    ff([...src('640x1136', 2), '-c:v', 'mpeg4', '-c:a', 'aac', '-shortest', join(V, 'old-codec.mp4')]);
+    ff(['-f', 'lavfi', '-i', 'testsrc2=size=720x1280:rate=30:duration=3', '-vf', 'noise=alls=80:allf=t', '-c:v', 'libx265', '-preset', 'ultrafast', '-x265-params', 'log-level=error:crf=8', '-tag:v', 'hvc1', join(V, 'big.mov')]);
+    ok(['phone.mov', 'turned.mov', 'four-k.mov', 'long.mov', 'old-codec.mp4', 'big.mov'].every((f) => existsSync(join(V, f))), 'test videos made (HEVC .mov, turned, 4K, 91 s, MPEG-4 part 2, a noisy one)');
+    ok(probe(join(V, 'phone.mov')).format.tags.location && probe(join(V, 'phone.mov')).streams[0].codec_name === 'hevc', 'the phone-style clip is HEVC in a .mov with a location tag');
+    /* the page's way in, against a second php -S that has ffmpeg with an H.264 encoder */
+    const port2 = port + 1, ORIGIN2 = 'http://127.0.0.1:' + port2;
+    const php2 = spawn('php', ['-d', 'upload_max_filesize=256M', '-d', 'post_max_size=256M', '-S', '127.0.0.1:' + port2, '-t', join(SITE, 'public_html')], { env: { ...env, PC_ORIGIN: ORIGIN2, PC_FFMPEG: FFMPEG, PC_FFPROBE: FFPROBE }, stdio: 'ignore' });
+    for (let i = 0; i < 50; i++) { try { await fetch(ORIGIN2 + '/'); break; } catch { await sleep(100); } }
+    const E2 = client(ORIGIN2); await E2.call('signin', { code: EDITOR });
+    const upF = (id, f, type = 'video/quicktime') => { const fd = new FormData(); fd.append('id', id); fd.append('file', new Blob([readFileSync(f)], { type }), basename(f)); return E2.call('upload', fd); };
+    ok((await E2.call('data')).video.convert === true && (await E.call('data')).video.convert === false, 'the page is told whether the server can convert');
+    const v1 = await E2.call('create', { client: 'sixfold', type: 'single', targets: ['fb', 'ig'], fb: 'phone video', ig: 'phone video', date: '2028-02-08', time: '15:00' });
+    let t0 = Date.now(); let r = await upF(v1.id, join(V, 'phone.mov')); const took = Date.now() - t0;
+    const im = r.post && r.post.images[0];
+    ok(r.ok && im.kind === 'video' && /\.mp4$/.test(im.file) && im.prepared === 'converted' && im.w === 1080 && im.h === 1920 && Math.round(im.sec) === 4, 'an HEVC .mov from a phone becomes a one-video post (converted, 1080 x 1920, 4 s)');
+    const stored = join(SITE, 'public_html', PUB, 'media', im.file), sp = probe(stored), buf = readFileSync(stored);
+    ok(sp.streams.find((s) => s.codec_type === 'video').codec_name === 'h264' && sp.streams.find((s) => s.codec_type === 'audio').codec_name === 'aac', 'stored as H.264 video with AAC sound');
+    ok(buf.indexOf('moov') > 0 && buf.indexOf('moov') < buf.indexOf('mdat'), 'faststart: the index comes before the video data');
+    ok(!(sp.format.tags || {}).location, 'the location tag is gone');
+    ok(r.post.problems.length === 0 && (await A.call('approve', { id: v1.id })).ok, 'a converted video post can be approved like any other');
+    await A.call('unapprove', { id: v1.id });
+    console.log('    (4 s clip converted in ' + took + ' ms)');
+    const v2 = await E2.call('create', { client: 'sixfold', type: 'single', date: '2028-02-10', time: '15:00' });
+    r = await upF(v2.id, join(V, 'turned.mov')); ok(r.ok && r.post.images[0].w === 1080 && r.post.images[0].h === 1920 && probe(join(SITE, 'public_html', PUB, 'media', r.post.images[0].file)).streams[0].width === 1080, 'a phone\'s turned video comes out upright (1080 x 1920)');
+    r = await upF(v2.id, join(V, 'four-k.mov')); ok(r.ok && r.post.images[0].w === 1080 && r.post.images[0].h === 1920, '4K is brought down to 1920 on the long side');
+    r = await upF(v2.id, join(V, 'long.mov')); ok(!r.ok && r.error === 'The video is 1 min 31 s; Reels from here can be up to 90 seconds. Trim it on your phone and upload again.', 'over 90 seconds: refused in plain words');
+    r = await upF(v2.id, join(V, 'old-codec.mp4'), 'video/mp4'); ok(r.ok && probe(join(SITE, 'public_html', PUB, 'media', r.post.images[0].file)).streams[0].codec_name === 'h264', 'another codec is converted to H.264');
+    { const fd = new FormData(); fd.append('id', v2.id); fd.append('file', new Blob([readFileSync(join(V, 'long.mov'))], { type: 'video/quicktime' }), 'long.mov'); const r1 = await E.call('upload', fd);
+      ok(r1._status === 413 && /over the upload limit \(2 MB\)\. Phone videos: record in 1080p, under 90 seconds\./.test(r1.error), 'over PHP\'s upload limit: said in plain words with the limit'); }
+    const ps2 = await E2.call('create', { client: 'sixfold', type: 'photoset', date: '2028-02-12', time: '14:00' });
+    r = await upF(ps2.id, join(V, 'phone.mov')); ok(!r.ok && /own post/.test(r.error), 'a photo set still refuses a video');
+    ok(readdirSync(join(SITE, 'post-calendar-data', 'tmp')).length === 0, 'nothing left behind in the work folder');
+    php2.kill();
+    /* the host's case: an ffmpeg with no H.264 encoder (PC_X264=0): re-pack what phones record, refuse what would need converting */
+    writeFileSync(join(T, 'store.php'), "<?php define('PC', 1); require getenv('PC_LIB'); echo json_encode(pcStoreMedia($argv[1], basename($argv[1])), JSON_UNESCAPED_SLASHES);");
+    const store = (f, extra = {}) => new Promise((res) => execFile('php', [join(T, 'store.php'), f], { env: { ...env, PC_LIB: join(SITE, 'post-calendar-tools', 'lib.php'), PC_FFMPEG: FFMPEG, PC_FFPROBE: FFPROBE, ...extra } }, (e, so) => { try { res(JSON.parse(so)); } catch { res({ error: 'not JSON: ' + so.slice(0, 300) }); } }));
+    const nox = { PC_X264: '0' };
+    r = await store(join(V, 'phone.mov'), nox); let rp = r.file && probe(join(SITE, 'public_html', PUB, 'media', r.file));
+    ok(r.prepared === 'repacked' && rp.streams[0].codec_name === 'hevc' && rp.streams[0].codec_tag_string === 'hvc1' && rp.format.tags.major_brand === 'isom' && !rp.format.tags.location, 'no H.264 encoder: HEVC re-packed into MP4 (hvc1), location gone');
+    r = await store(join(V, 'turned.mov'), nox); rp = r.file && probe(join(SITE, 'public_html', PUB, 'media', r.file));
+    ok(r.w === 1080 && r.h === 1920 && (rp.streams[0].side_data_list || []).some((x) => Math.abs(x.rotation) === 90), 'no H.264 encoder: a turned video keeps its turn and is counted upright');
+    r = await store(join(V, 'four-k.mov'), nox); ok(/2160 x 3840 \(4K\)/.test(r.error || '') && /1080p/.test(r.error), 'no H.264 encoder: 4K refused, asking for 1080p');
+    r = await store(join(V, 'old-codec.mp4'), nox); ok(/format \(mpeg4\) cannot be posted/.test(r.error || ''), 'no H.264 encoder: another codec refused in plain words');
+    r = await store(join(V, 'long.mov'), nox); ok(/^The video is 1 min 31 s; Reels/.test(r.error || ''), 'no H.264 encoder: over 90 seconds refused');
+    r = await store(join(V, 'big.mov'), { ...nox, PC_VIDEO_MAX: String(1024 * 1024) }); ok(/^The video is \d+ MB; the most is 1 MB\. Record it in 1080p/.test(r.error || ''), 'over the size limit: refused (re-packed)');
+    r = await store(join(V, 'big.mov'), { PC_VIDEO_MAX: String(1024 * 1024) }); ok(/^The video is \d+ MB after converting; the most is 1 MB/.test(r.error || ''), 'over the size limit after converting: refused');
+    ok(readdirSync(join(SITE, 'post-calendar-data', 'tmp')).length === 0, 'refused conversions leave nothing behind');
+  }
 }
 
 console.log('check (read-only)');

@@ -134,7 +134,11 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
-  function toast(m) { var t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 2600); }
+  function toast(m, stay) { var t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.t); if (!stay) toast.t = setTimeout(function () { t.hidden = true; }, m.length > 90 ? 7000 : 2600); }   /* stay: until the next one (a video upload) */
+  /* who is signed in (2026-11-16): admin = Matthew, every client; client = a client's own approver, only the clients on its account; editor = drafts only */
+  function approver() { return !!D.me && (D.me.role === 'admin' || D.me.role === 'client'); }
+  function scoped() { return !!D.me && !!D.me.clients; }
+  function home() { return scoped() && D.me.clients.length === 1 ? D.me.clients[0] : ''; }   /* a one-client sign-in lives on that client's calendar */
   function api(action, body, query) {
     var url = API + '?action=' + action + (query || ''), o = { credentials: 'same-origin', headers: {} };
     if (body instanceof FormData) { o.method = 'POST'; o.body = body; o.headers['X-PC'] = '1'; }
@@ -157,17 +161,22 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   function statusOf(p) { return p.status === 'draft' && p.openRequest ? 'changes' : p.status; }
 
   /* ---- sign-in ---- */
-  function showSignin() { $('app').hidden = true; $('sheet').hidden = true; $('signin').hidden = false; $('code').focus(); }
+  function showSignin() {   /* nothing of the last sign-in stays in the page (2026-11-16: two people may share a phone) */
+    $('app').hidden = true; $('sheet').hidden = true; $('menu').hidden = true; $('main').innerHTML = ''; $('sheet').innerHTML = ''; $('mbox').innerHTML = ''; $('who').textContent = '';
+    D.me = null; D.clients = []; D.client = null; D.posts = []; D.slots = []; D.counts = null; D.pages = null; D.video = null;
+    $('signin').hidden = false; $('code').focus();
+  }
   $('sf').addEventListener('submit', function (e) {
     e.preventDefault(); $('serr').textContent = '';
-    api('signin', { code: $('code').value }).then(function () { $('code').value = ''; start(); }).catch(function (er) { $('serr').textContent = er.message; });
+    api('signin', { code: $('code').value }).then(function (j) { $('code').value = ''; start(j); }).catch(function (er) { $('serr').textContent = er.message; });
   });
 
   /* ---- loading ---- */
   function load(cid) {
+    if (scoped() && D.me.clients.indexOf(cid) < 0) cid = home();   /* a client sign-in never asks for another client (a remembered one from Matthew's use of this phone, say) */
     return api('data', null, cid ? '&client=' + encodeURIComponent(cid) : '').then(function (j) {
-      D.me = j.me; D.clients = j.clients; D.statuses = j.statuses; D.pages = j.pages; D.client = j.client || null; D.posts = j.posts || []; D.slots = j.slots || []; D.counts = j.counts || null;
-      $('who').textContent = j.me.name + (j.me.role === 'admin' ? '' : ' (drafts only)');
+      D.me = j.me; D.clients = j.clients; D.statuses = j.statuses; D.pages = j.pages; D.client = j.client || null; D.posts = j.posts || []; D.slots = j.slots || []; D.counts = j.counts || null; D.video = j.video || null;
+      $('who').textContent = j.me.name + (approver() ? '' : ' (drafts only)');
       if (D.client) store('postcal.client', D.client);
       render();
     });
@@ -176,9 +185,11 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
      list, one client, or a post or the Clients screen on top. The phone's Back goes one step up: post -> client -> client list. */
   function nav(state, replace) { try { history[replace ? 'replaceState' : 'pushState'](Object.assign({ pc: 1, client: '' }, state), '', location.pathname + location.search); } catch (e) {} }
   function showClient(cid) { cid = cid || ''; store('postcal.client', cid || 'all'); nav({ client: cid }); return load(cid).catch(function () {}); }
-  function start() {
+  function start(me) {
+    if (me && me.name) D.me = { name: me.name, role: me.role, clients: me.clients };
     $('signin').hidden = true; $('app').hidden = false;
     var c = store('postcal.client'); c = c && c !== 'all' ? c : '';
+    if (home()) c = home();
     nav({ client: '' }, true); if (c) nav({ client: c });   /* the list always sits underneath, so Back from the remembered client reaches it */
     load(c).catch(function () {});
   }
@@ -201,9 +212,13 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
 
   /* ---- the picker: one client at a time ---- */
   $('pick').addEventListener('click', function () {
-    var h = D.clients.filter(function (c) { return !c.archived; }).map(function (c) { return '<button data-c="' + esc(c.id) + '"><i class="dot" style="background:' + esc(c.color) + '"></i>' + esc(c.name) + '</button>'; }).join('');
-    h += '<hr><button data-c="">All clients (counts)</button>';
+    var h = '';
+    if (!home()) {   /* a one-client sign-in has nothing to switch to */
+      h += D.clients.filter(function (c) { return !c.archived; }).map(function (c) { return '<button data-c="' + esc(c.id) + '"><i class="dot" style="background:' + esc(c.color) + '"></i>' + esc(c.name) + '</button>'; }).join('');
+      h += '<hr><button data-c="">All clients (counts)</button>';
+    }
     if (D.me.role === 'admin') h += '<button data-a="clients">Manage clients</button>';
+    else if (scoped() && cur()) h += '<button data-a="days">Posting days</button>';
     h += '<button data-a="look">Look: ' + ({ light: 'Light', dark: 'Dark' }[store('sixfold.theme')] || 'Auto') + '</button><button data-a="out">Sign out</button>';
     $('mbox').innerHTML = h; $('menu').hidden = false;
   });
@@ -213,6 +228,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     if (b.hasAttribute('data-c')) { showClient(b.getAttribute('data-c')); return; }
     var a = b.getAttribute('data-a');
     if (a === 'clients') openClients();
+    if (a === 'days') daysForm(cur());
     if (a === 'look') { var t = store('sixfold.theme'), n = t === 'light' ? 'dark' : t === 'dark' ? null : 'light'; try { if (n) localStorage.setItem('sixfold.theme', n); else localStorage.removeItem('sixfold.theme'); } catch (er) {} if (n) document.documentElement.setAttribute('data-theme', n); else document.documentElement.removeAttribute('data-theme'); }
     if (a === 'out') api('signout', {}).then(showSignin).catch(showSignin);
   });
@@ -235,14 +251,14 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     var line = (p.fb || p.ig || '').split('\n')[0] || '(no caption yet)';
     var tags = '<span class="pill s-' + st + '">' + esc(D.statuses[st] || st) + '</span>' + (p.type === 'photoset' ? '<span class="pill">Photo set</span>' : '') + p.targets.map(function (t) { return '<span class="pill">' + (t === 'fb' ? 'FB' : 'IG') + '</span>'; }).join('')
       + (/needs matthew/i.test(p.note || '') && st === 'draft' ? '<span class="pill s-publishing">Needs review</span>' : '');
-    return '<button class="card" data-p="' + esc(p.id) + '">' + th + '<div><div class="when">' + esc(when(p.at)) + '</div><div class="tags">' + tags + '</div><div class="line">' + esc(line) + '</div></div></button>';
+    var by = p.approval && p.approval.by && ['approved', 'publishing', 'published', 'failed'].indexOf(st) >= 0 ? '<div class="line">Approved by ' + esc(p.approval.by) + '</div>' : '';   /* who approved (2026-11-16: two approvers now) */
+    return '<button class="card" data-p="' + esc(p.id) + '">' + th + '<div><div class="when">' + esc(when(p.at)) + '</div><div class="tags">' + tags + '</div><div class="line">' + esc(line) + '</div>' + by + '</div></button>';
   }
   function renderClient(c) {
-    var admin = D.me.role === 'admin';
     var where = (c.page_id ? 'Facebook: ' + esc(c.page_name || c.page_id) : 'No Facebook Page assigned') + ' &middot; ' + (c.ig_id ? 'Instagram: @' + esc(c.ig_user) : 'No Instagram assigned');
-    var h = '<button class="backlink" id="toall">&#8249; All clients</button><section class="band"><h1><i class="dot" style="background:' + esc(c.color) + '"></i>' + esc(c.name) + (c.archived ? ' <span class="pill">archived</span>' : '') + '</h1><div class="where">' + where + '</div>'
+    var h = (home() ? '' : '<button class="backlink" id="toall">&#8249; All clients</button>') + '<section class="band"><h1><i class="dot" style="background:' + esc(c.color) + '"></i>' + esc(c.name) + (c.archived ? ' <span class="pill">archived</span>' : '') + '</h1><div class="where">' + where + '</div>'
       + (c.rules ? '<details class="rules"><summary>Rules for ' + esc(c.name) + '</summary><p>' + linkify(c.rules) + '</p></details>' : '')
-      + (c.archived ? '' : '<div class="acts"><button class="btn small" id="newp">+ New post</button><button class="btn small ghost" id="news">+ New photo set</button></div>') + '</section>';
+      + (c.archived ? '' : '<div class="acts"><button class="btn small" id="newp">+ New post</button><button class="btn small ghost" id="news">+ New photo set</button>' + (scoped() ? '<button class="btn small ghost" id="days">Posting days</button>' : '') + '</div>') + '</section>';
     var now = Date.now() / 1000, att = [], up = [], uns = [], pub = [];
     D.posts.forEach(function (p) {
       var st = statusOf(p);
@@ -269,10 +285,11 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     var m = $('main');
     m.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { openPost(b.getAttribute('data-p')); }; });
     m.querySelectorAll('[data-slot]').forEach(function (b) { b.onclick = function () { var at = +b.getAttribute('data-slot'); newPost(b.getAttribute('data-type'), { date: dstr(at), time: tstr(at) }); }; });
-    $('toall').onclick = function () { showClient(''); };
+    if ($('toall')) $('toall').onclick = function () { showClient(''); };
+    if ($('days')) $('days').onclick = function () { daysForm(c); };
     if ($('newp')) $('newp').onclick = function () { newPost('single'); };
     if ($('news')) $('news').onclick = function () { newPost('photoset'); };
-    void admin; void now;
+    void now;
   }
   function linkify(t) { return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
   function newPost(type, at) {
@@ -298,7 +315,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   }
   function canEdit(p) { return ['draft', 'approved', 'changes'].indexOf(p.status) >= 0; }
   function drawPost() {
-    var c = cur(), p = W, admin = D.me.role === 'admin', st = statusOf(P), ed = canEdit(P);
+    var c = cur(), p = W, admin = approver(), st = statusOf(P), ed = canEdit(P);   /* admin here = may approve: Matthew, or the client's own approver */
     var h = '<div class="sheethead"><button class="btn small ghost" id="back" aria-label="Back">&#8592; Back</button><b>' + esc(c.name) + ' &middot; ' + (p.type === 'photoset' ? 'Photo set' : 'Post') + '</b><span class="pill s-' + st + '">' + esc(D.statuses[st] || st) + '</span></div><div class="sheetbody">';
     if (c.rules) h += '<details class="rules" style="margin:0 0 12px"><summary>Rules for ' + esc(c.name) + '</summary><p>' + linkify(c.rules) + '</p></details>';
     if (/needs matthew/i.test(P.note || '') && P.status === 'draft') h += '<div class="req"><b>Needs your review.</b><p>' + esc(P.note) + '</p></div>';
@@ -308,12 +325,13 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     if (P.status === 'approved') h += '<div class="good"><b>Approved</b> by ' + esc(P.approval.by) + ', ' + esc(when(P.approval.at)) + '. It goes out ' + esc(when(P.at)) + '.' + (admin ? '<div class="acts"><button class="btn small ghost" id="unapprove">Unapprove</button></div>' : '') + '</div>';
     if (P.status === 'publishing') h += '<div class="req"><b>Going out now.</b></div>';
     if (P.status === 'failed') h += '<div class="bad"><b>Did not go out.</b> ' + esc(P.error) + (admin ? '<div class="acts"><button class="btn small" id="todraft">Back to draft</button></div>' : '') + '</div>';
+    if (P.approval && P.approval.by && ['publishing', 'published', 'failed'].indexOf(P.status) >= 0) h += '<p class="empty" style="margin:0 0 10px">Approved by ' + esc(P.approval.by) + ', ' + esc(when(P.approval.at)) + '.</p>';
     var done = Object.keys(P.done || {});
     if (done.length) h += '<div class="box links"><h3>' + (P.status === 'published' ? 'Published' : 'Already went') + '</h3>' + done.map(function (k) { var d = P.done[k]; return '<a href="' + esc(d.link || '#') + '" target="_blank" rel="noopener">' + tLabel(k) + ': ' + esc(d.link || d.id) + '</a>'; }).join('') + '</div>';
     if (P.status === 'draft' && !orq) {
       if (P.problems.length) h += '<div class="bad"><b>Before it can be approved:</b><ul>' + P.problems.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
       else if (admin) h += '<div class="box"><button class="btn flag wide" id="approve">Approve for ' + esc(when(P.at)) + '</button><p class="empty" style="margin-top:8px">Goes to ' + P.targets.map(tLabel).join(' and ') + ' as shown in the preview below. Nothing else is approved by this tap.</p></div>';
-      else h += '<div class="box empty">Ready for Matthew to look at. Only his sign-in can approve.</div>';
+      else h += '<div class="box empty">Ready for an approver to look at. This sign-in cannot approve.</div>';
     }
     /* the fields */
     var dis = ed ? '' : ' disabled';
@@ -330,7 +348,9 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
         + (p.type === 'photoset' ? '<textarea data-cap="' + i + '" placeholder="Caption for this photo (Facebook, optional)"' + dis + '>' + esc(im.caption || '') + '</textarea>' : '')
         + (ed ? '<div class="pa">' + (p.type === 'photoset' ? '<button data-mv="' + i + ',-1">&#8593;</button><button data-mv="' + i + ',1">&#8595;</button><button data-rm="' + i + '">Remove</button>' : '') + '<button data-rep="' + i + '">Replace</button></div>' : '') + '</div>';
     });
-    h += '</div>' + (ed && (p.type === 'photoset' ? p.images.length < 10 : !p.images.length) ? '<div class="acts"><button class="btn small ghost" id="addpic">+ Add picture' + (p.type === 'photoset' ? 's' : '') + '</button></div>' : '') + '<input type="file" id="file" accept="image/*' + (p.type === 'photoset' ? '" multiple' : ',video/mp4"') + ' hidden>';
+    h += '</div>' + (ed && (p.type === 'photoset' ? p.images.length < 10 : !p.images.length) ? '<div class="acts"><button class="btn small ghost" id="addpic">+ Add ' + (p.type === 'photoset' ? 'pictures' : 'a picture or video') + '</button></div>' : '')
+      + (ed && p.type === 'single' ? '<p class="empty">Phone videos: record in 1080p, under 90 seconds. A video goes out as a Reel on Facebook and Instagram.</p>' : '')
+      + '<input type="file" id="file" accept="image/*' + (p.type === 'photoset' ? '" multiple' : ',video/mp4,video/quicktime,video/x-m4v,.mp4,.mov,.m4v"') + ' hidden>';   /* + mov and m4v, made into an MP4 on the server (2026-11-16) */
     if (p.type === 'photoset') h += '<label class="f" for="falbum">Facebook album name</label><input type="text" id="falbum" maxlength="120" value="' + esc(p.album) + '"' + dis + '>';
     h += '<label class="f" for="ffb">Facebook caption' + (p.type === 'photoset' ? ' <small>(the album post)</small>' : '') + '</label><textarea id="ffb"' + dis + '>' + esc(p.fb) + '</textarea>';
     h += '<label class="f" for="fig">Instagram caption</label><textarea id="fig"' + dis + '>' + esc(p.ig) + '</textarea><div class="count" id="igc"></div>' + (ed ? '<div class="quick"><button id="copyfb">Copy the Facebook caption</button></div>' : '');
@@ -411,16 +431,51 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
       return new Promise(function (res, rej) { cv.toBlob(function (b) { b ? res(b) : rej(new Error('Could not prepare the picture.')); }, 'image/jpeg', 0.9); });
     });
   }
+  /* a phone video (2026-11-16, Matthew: "What if she wants to do a video, how will that work"): mp4, mov or m4v. The server makes it an MP4
+     both platforms take (converted, or re-packed when it already is H.264 or HEVC) and checks it again; the page checks what it can first so
+     nobody waits for an upload that will be refused */
+  function isVidFile(f) { return /^video\//.test(f.type || '') || /\.(mp4|mov|m4v)$/i.test(f.name || ''); }
+  function durStr(s) { s = Math.round(s); var m = Math.floor(s / 60), r = s % 60; return m ? m + ' min' + (r ? ' ' + r + ' s' : '') : r + ' s'; }
+  function vidMeta(file) {   /* length and size as the phone plays it; null when this browser cannot read the file (the server still checks) */
+    return new Promise(function (res) {
+      var v = document.createElement('video'), u = URL.createObjectURL(file), done = function (x) { clearTimeout(t); URL.revokeObjectURL(u); res(x); }, t = setTimeout(function () { done(null); }, 5000);
+      v.preload = 'metadata'; v.muted = true;
+      v.onloadedmetadata = function () { done(isFinite(v.duration) ? { sec: v.duration, w: v.videoWidth, h: v.videoHeight } : null); };
+      v.onerror = function () { done(null); }; v.src = u;
+    });
+  }
+  function vidCheck(file) {
+    var V = D.video || { convert: false, maxMB: 100, uploadMB: 256, edge: 1920 }, mb = file.size / 1048576;
+    if (mb > V.uploadMB) return Promise.resolve('The video is ' + Math.round(mb) + ' MB; the most that can be uploaded is ' + V.uploadMB + ' MB. Phone videos: record in 1080p, under 90 seconds.');
+    if (!V.convert && mb > V.maxMB) return Promise.resolve('The video is ' + Math.round(mb) + ' MB; the most is ' + V.maxMB + ' MB. Record it in 1080p, or shorter, and upload again.');
+    return vidMeta(file).then(function (m) {
+      if (!m) return '';
+      if (m.sec > 90.5) return 'The video is ' + durStr(m.sec) + '; Reels from here can be up to 90 seconds. Trim it on your phone and upload again.';
+      if (!V.convert && Math.max(m.w, m.h) > V.edge) return 'This video is ' + m.w + ' x ' + m.h + (Math.max(m.w, m.h) >= 3000 ? ' (4K)' : '') + '. Videos from here can be up to ' + V.edge + ' pixels on the long side: set the phone camera to record 1080p, record it again and upload that.';
+      return '';
+    });
+  }
+  /* a video goes up with a progress count, then waits while the server converts it */
+  function upVideo(fd) {
+    return new Promise(function (res, rej) {
+      var x = new XMLHttpRequest(); x.open('POST', API + '?action=upload'); x.setRequestHeader('X-PC', '1'); x.withCredentials = true; x.timeout = 15 * 60 * 1000;
+      x.upload.onprogress = function (e) { if (e.lengthComputable) toast('Uploading the video... ' + Math.round(e.loaded / e.total * 100) + '%', true); };
+      x.upload.onload = function () { toast((D.video && D.video.convert ? 'Converting the video...' : 'Preparing the video...') + ' This can take a minute. Keep this page open.', true); };
+      x.onload = function () { var j; try { j = JSON.parse(x.responseText); } catch (e) { j = { ok: false, error: x.status === 413 ? 'That file is over the upload limit. Phone videos: record in 1080p, under 90 seconds.' : 'The server did not answer properly.' }; } if (x.status === 401) { showSignin(); rej(new Error('Signed out.')); return; } if (!j.ok) rej(new Error(j.error || 'Something went wrong.')); else res(j); };
+      x.onerror = function () { rej(new Error('The upload stopped (the connection dropped). Try again on Wi-Fi.')); };
+      x.ontimeout = function () { rej(new Error('The upload took too long. Try again on Wi-Fi.')); };
+      x.send(fd);
+    });
+  }
   function upAll(list, replace) {
-    var i = 0; toast('Uploading...');
+    var i = 0; toast('Uploading...', true);
     (function next() {
       if (i >= list.length) return;
-      var file = list[i++], vid = /^video\//.test(file.type || '');
-      if (vid && !/mp4$/i.test(file.type)) { toast('Use an MP4 video.'); return; }
-      if (vid && file.size > 100 * 1024 * 1024) { toast('The video is over 100 MB. Save it smaller.'); return; }
-      (vid ? Promise.resolve(file) : toJpeg(file)).then(function (blob) {   /* a video goes up as it is (2026-11-05) */
+      var file = list[i++], vid = isVidFile(file);
+      if (vid && W.type === 'photoset') { toast('A video goes in its own post, not a photo set.'); return; }
+      (vid ? vidCheck(file).then(function (why) { if (why) throw new Error(why); return file; }) : toJpeg(file)).then(function (blob) {   /* a video goes up as it is (2026-11-05) */
         var fd = new FormData(); fd.append('id', P.id); fd.append('file', blob, vid ? (file.name || 'video.mp4') : (file.name || 'picture').replace(/\.\w+$/, '') + '.jpg'); if (replace !== null) fd.append('replace', String(replace));
-        if (vid) toast('Uploading the video...');
+        if (vid) { toast('Uploading the video...', true); return upVideo(fd); }
         return api('upload', fd);
       }).then(function (j) { swap(j.post); if (i < list.length) next(); else toast(vid ? 'Video saved' : 'Picture saved'); }).catch(function (e) { toast(e.message); });
     })();
@@ -484,14 +539,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
       + '<div class="err" id="cerr"></div><button class="btn wide" id="csave" style="margin-top:8px">Save client</button></div></div>';
     $('sheet').innerHTML = h;
     $('fback').onclick = openClients;
-    function drawSlots() {
-      $('slots').innerHTML = slots.map(function (s, i) { return '<div class="slotrow"><select data-sd="' + i + '">' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(function (n, d) { return '<option value="' + d + '"' + (+s.d === d ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select><input type="time" data-st="' + i + '" value="' + esc(s.t) + '"><select data-sy="' + i + '"><option value="single">One picture</option><option value="photoset"' + (s.type === 'photoset' ? ' selected' : '') + '>Photo set</option></select><button class="btn small ghost" data-sx="' + i + '" aria-label="Remove">&times;</button></div>'; }).join('');
-      $('slots').querySelectorAll('[data-sd]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-sd')].d = +el.value; }; });
-      $('slots').querySelectorAll('[data-st]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-st')].t = el.value; }; });
-      $('slots').querySelectorAll('[data-sy]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-sy')].type = el.value; }; });
-      $('slots').querySelectorAll('[data-sx]').forEach(function (el) { el.onclick = function () { slots.splice(+el.getAttribute('data-sx'), 1); drawSlots(); }; });
-    }
-    drawSlots(); $('sadd').onclick = function () { slots.push({ d: 2, t: '15:00', type: 'single' }); drawSlots(); };
+    slotEditor(slots);
     function connMode() { var own = document.querySelector('input[name=conn]:checked').value === 'own'; $('pipe').hidden = own; $('own').hidden = !own; }
     document.querySelectorAll('input[name=conn]').forEach(function (r) { r.onchange = connMode; }); connMode();
     var pages = [];
@@ -512,6 +560,35 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
       if (own) { b.token = $('ct').value.trim(); b.ig_id = $('cig').checked ? 'linked' : ''; } else { b.page_id = $('cp').value; b.ig_id = $('ci').value; }
       $('cerr').textContent = ''; $('csave').disabled = true;
       api('client', b).then(function () { return load(D.client); }).then(openClients).catch(function (e) { $('cerr').textContent = e.message; $('csave').disabled = false; });
+    };
+  }
+  /* the default posting days and times: rows in #slots, a "+ Add a slot" button #sadd; changes go straight into the array given */
+  function slotEditor(slots) {
+    function drawSlots() {
+      $('slots').innerHTML = slots.map(function (s, i) { return '<div class="slotrow"><select data-sd="' + i + '" aria-label="Day">' + ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(function (n, d) { return '<option value="' + d + '"' + (+s.d === d ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select><input type="time" data-st="' + i + '" value="' + esc(s.t) + '" aria-label="Time"><select data-sy="' + i + '" aria-label="Kind"><option value="single">One picture</option><option value="photoset"' + (s.type === 'photoset' ? ' selected' : '') + '>Photo set</option></select><button class="btn small ghost" data-sx="' + i + '" aria-label="Remove">&times;</button></div>'; }).join('');
+      $('slots').querySelectorAll('[data-sd]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-sd')].d = +el.value; }; });
+      $('slots').querySelectorAll('[data-st]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-st')].t = el.value; }; });
+      $('slots').querySelectorAll('[data-sy]').forEach(function (el) { el.onchange = function () { slots[+el.getAttribute('data-sy')].type = el.value; }; });
+      $('slots').querySelectorAll('[data-sx]').forEach(function (el) { el.onclick = function () { slots.splice(+el.getAttribute('data-sx'), 1); drawSlots(); }; });
+    }
+    drawSlots(); $('sadd').onclick = function () { slots.push({ d: 2, t: '15:00', type: 'single' }); drawSlots(); };
+  }
+  /* a client's own approver (2026-11-16): only the posting days of its own client; the Page, Instagram, token and the rest stay Matthew's */
+  function daysForm(c) {
+    if (!c) return;
+    var slots = JSON.parse(JSON.stringify(c.slots || []));
+    var h = '<div class="sheethead"><button class="btn small ghost" id="dback">&#8592; Back</button><b>Posting days: ' + esc(c.name) + '</b></div><div class="sheetbody"><div class="box">'
+      + '<p class="empty" style="margin:0 0 10px">The days and times new posts are offered (Mountain time). Changing them does not move posts already on the calendar: open a post to change its own date and time.</p>'
+      + '<div id="slots"></div><button class="btn small ghost" id="sadd">+ Add a slot</button>'
+      + '<div class="err" id="cerr"></div><button class="btn wide" id="dsave" style="margin-top:8px">Save posting days</button></div></div>';
+    $('sheet').innerHTML = h; $('sheet').hidden = false; document.body.style.overflow = 'hidden';
+    if (!(history.state && history.state.sheet)) nav({ client: D.client || '', sheet: 'days' });
+    $('dback').onclick = closeSheet;
+    slotEditor(slots);
+    $('dsave').onclick = function () {
+      $('cerr').textContent = ''; $('dsave').disabled = true;
+      api('client', { id: c.id, slots: slots }).then(function () { toast('Posting days saved'); hideSheet(); if (history.state && history.state.sheet) history.back(); else load(D.client).catch(function () {}); })
+        .catch(function (e) { $('cerr').textContent = e.message; $('dsave').disabled = false; });
     };
   }
   function nameOf(id) { var c = D.clients.filter(function (x) { return x.id === id; })[0]; return c ? c.name : id; }

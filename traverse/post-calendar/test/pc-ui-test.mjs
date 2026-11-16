@@ -32,6 +32,7 @@ const runPhp = (args) => new Promise((r) => execFile('php', [join(SITE, 'post-ca
 for (let i = 0; i < 50; i++) { try { await fetch(ORIGIN + '/'); break; } catch { await sleep(100); } }
 const ADMIN = (await runPhp(['addaccount', 'Matthew Sharpe', 'admin', '--code-only'])).trim();
 const EDITOR = (await runPhp(['addaccount', 'Claude drafts', 'editor', '--code-only'])).trim();
+const JEN = (await runPhp(['addaccount', 'Jen Test', 'client', '--clients', 'sixfold', '--code-only'])).trim();   /* a client's own approver (2026-11-16) */
 /* two drafts per client through the API as the editor */
 let ck = ''; const call = async (a, b) => { const o = { method: b ? 'POST' : 'GET', headers: { Cookie: ck } }; if (b instanceof FormData) { o.body = b; o.headers['X-PC'] = '1'; } else if (b) { o.body = JSON.stringify(b); o.headers['Content-Type'] = 'application/json'; o.headers['X-PC'] = '1'; } const r = await fetch(ORIGIN + '/' + PUB + '/api/cal.php?action=' + a, o); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; return r.json(); };
 await call('signin', { code: EDITOR });
@@ -143,6 +144,28 @@ await send('Page.navigate', { url: ORIGIN + '/' + PUB + '/' }); await sleep(1200
 ok(await js(`!!document.getElementById('toall') && document.querySelector('.band h1').textContent.indexOf('Surge')>=0`), 'reopened: lands on the remembered client (Surge)');
 await js(`history.back()`); await sleep(800);
 ok(await js(onList), 'reopened: Back reaches the client list');
+/* a Sixfold-only sign-in (2026-11-16): straight to Sixfold 365, no client switcher, no client setup, Approve, and its posting days */
+await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+await click(`document.getElementById('pick')`); await sleep(200);
+await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent==='Sign out'})`); await sleep(700);
+ok(await js(`!document.getElementById('signin').hidden`), 'signed out');
+await js(`document.getElementById('code').value=${JSON.stringify(JEN)};document.getElementById('sf').requestSubmit()`); await sleep(1200);
+ok(await js(`!!document.querySelector('.band h1') && document.querySelector('.band h1').textContent.indexOf('Sixfold 365')>=0 && !document.getElementById('toall')`), 'client sign-in: opens on Sixfold 365 (remembered Surge ignored), no "All clients"');
+{ const t = await js(`document.body.textContent`); const i = t.indexOf('Surge'); ok(t.indexOf('Building a sales team') < 0 && i < 0, 'client sign-in: no Surge anywhere on the page' + (i >= 0 ? ' (found: ...' + t.slice(Math.max(0, i - 60), i + 40) + ')' : '')); }
+await click(`document.getElementById('pick')`); await sleep(200);
+ok(await js(`(function(){var t=[].map.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent});return t.indexOf('Posting days')>=0 && t.indexOf('Manage clients')<0 && !t.some(function(x){return /All clients|Surge|Sixfold/.test(x)})})()`), 'menu: Posting days, no client list, no Manage clients');
+await shot('11-client-menu');
+await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent==='Posting days'})`); await sleep(400);
+ok(await js(`document.querySelectorAll('.slotrow').length===3 && !document.getElementById('cp') && !document.getElementById('ct') && !document.getElementById('cn')`), 'posting days: the three slots, no Page, token or name fields');
+await shot('12-client-days');
+await js(`(function(){var s=document.querySelector('[data-sd="0"]');s.value='1';s.dispatchEvent(new Event('change'))})()`);
+await click(`document.getElementById('dsave')`); await sleep(900);
+ok(await js(`document.getElementById('sheet').hidden && [].some.call(document.querySelectorAll('.open'),function(o){return o.textContent.indexOf('Mon')>=0})`), 'saved: the calendar offers Monday now');
+await click(`[].find.call(document.querySelectorAll('.card'),function(c){return c.textContent.indexOf('Photo set')<0})`); await sleep(500);
+ok(await js(`!!document.querySelector('.req') || !!document.getElementById('approve') || !!document.getElementById('withdraw')`), 'her post sheet offers the approver\'s buttons');
+ok(await js(`document.body.textContent.indexOf('Only his sign-in')<0 && document.body.textContent.indexOf('Ready for Matthew')<0`), 'no "Matthew only" wording');
+ok(await js(`/\\.mov/.test(document.getElementById('file').accept) && document.body.textContent.indexOf('Phone videos: record in 1080p, under 90 seconds')>=0`), 'a single post takes a phone video (.mov too) and says how to record it');
+await shot('13-client-post');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 ws.close(); chrome.kill(); php.kill();
 setTimeout(() => { try { rmSync(prof, { recursive: true, force: true }); rmSync(T, { recursive: true, force: true }); } catch {} }, 500);

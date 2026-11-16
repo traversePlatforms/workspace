@@ -6,7 +6,8 @@ declare(strict_types=1);
  * One private page (public_html/<path>/, the sign-in page and api/cal.php) and one runner (runner.php beside this file, started every five
  * minutes by sixfold-tools/meta-leads.php). Both read and write the same state through this file.
  *
- * THE RULE: nothing is published unless Matthew tapped Approve on that one post. Approve records who and when, and a fingerprint of what
+ * THE RULE: nothing is published unless an approver tapped Approve on that one post (Matthew for every client; since 2026-11-16 a client's
+ * own approver for that client only, see "accounts" below). Approve records who and when, and a fingerprint of what
  * was approved (client, time, targets, captions, pictures). Any later change drops the post back to draft, and the runner checks the
  * fingerprint again before it sends anything. Nothing approves itself, there is no bulk approve, and an "editor" sign-in (the account the
  * laptop uses to load drafts and answer change requests) can never approve.
@@ -297,13 +298,37 @@ function pcMail(string $subject, string $text): array {
     return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
 }
 
-/* ---- accounts: a code per person, kept hashed. admin = Matthew (approves); editor = the laptop's loader (drafts, pictures, answers; never approves) ---- */
+/* ---- accounts: a code per person, kept hashed.
+ *   admin  = Matthew: every client, approves, and the client setup (Pages, tokens, archive).
+ *   editor = the laptop's loader: drafts, pictures, answers to change requests, every client; never approves.
+ *   client = a client's own approver (2026-11-16, Matthew: "Create a sixfold only sign in for jen. I want her to be able to write, schedule,
+ *            and approve the content"): writes, edits, approves, requests changes and removes posts, and changes the posting days, but only
+ *            for the clients listed in its "clients"; every other client does not exist for it. Never the Pages, tokens or client setup. ---- */
+const PC_ROLES = ['admin', 'editor', 'client'];
 function pcCodeHash(string $c): string { return hash('sha256', 'postcal|' . $c); }
-function pcAddAccount(string $name, string $role): string {
+function pcAddAccount(string $name, string $role, array $clients = []): string {
     $acc = pcJread('accounts.json', ['codes' => []]);
     do { $code = (string) random_int(10000000, 99999999); } while (isset($acc['codes'][pcCodeHash($code)]));
-    $acc['codes'][pcCodeHash($code)] = ['name' => pcClean($name, 40), 'role' => $role, 'at' => pcNow()];
+    $a = ['name' => pcClean($name, 40), 'role' => $role, 'at' => pcNow()];
+    if ($role === 'client') $a['clients'] = array_values(array_unique(array_map('strval', $clients)));
+    $acc['codes'][pcCodeHash($code)] = $a;
     pcJwrite('accounts.json', $acc, 0600); return $code;
+}
+/** take accounts away by name (and role, if given) and sign out every session they had; returns how many accounts went */
+function pcRemoveAccount(string $name, string $role = ''): int {
+    $acc = pcJread('accounts.json', ['codes' => []]); $gone = [];
+    foreach ($acc['codes'] as $h => $a) if (($a['name'] ?? '') === $name && ($role === '' || ($a['role'] ?? '') === $role)) { $gone[] = $h; unset($acc['codes'][$h]); }
+    if (!$gone) return 0;
+    pcJwrite('accounts.json', $acc, 0600);
+    $ses = pcJread('sessions.json', []);
+    foreach ($ses as $k => $s) if (in_array($s['acct'] ?? '', $gone, true) || (!isset($s['acct']) && ($s['name'] ?? '') === $name && ($role === '' || ($s['role'] ?? '') === $role))) unset($ses[$k]);
+    pcJwrite('sessions.json', $ses, 0600);
+    return count($gone);
+}
+/** the accounts without their codes: name, role and, for a client sign-in, its clients (never the hashes) */
+function pcAccountsList(): array {
+    $out = []; foreach ((array) (pcJread('accounts.json', ['codes' => []])['codes'] ?? []) as $a) $out[] = ['name' => (string) ($a['name'] ?? ''), 'role' => (string) ($a['role'] ?? ''), 'clients' => isset($a['clients']) ? (array) $a['clients'] : null];
+    return $out;
 }
 
 /* ---- pictures: kept under public_html/<path>/media/ with random names (an address nobody can guess, stable for Meta to fetch) ---- */
@@ -321,38 +346,129 @@ function pcStoreImage(string $tmp, string $origName = ''): array {
     return ['file' => $name, 'url' => PC_ORIGIN . '/' . PC_PUBLIC . '/media/' . $name, 'w' => $w, 'h' => $h, 'bytes' => (int) $sz, 'md5' => (string) md5_file($dest), 'name' => pcClean(basename($origName), 80), 'caption' => ''];
 }
 /* ---- video (2026-11-05, Matthew: "get this pov one posted for our thursday post. Add it to the post build in the hub so i can approve it"):
-   a one-post item whose single file is an MP4 instead of a picture, marked kind "video". Facebook gets it as a Page video, Instagram as a
-   Reel. Same approval, fingerprint and once-only rules as a picture. MP4 only (H.264 + AAC is what both accept everywhere: the laptop
-   converts a phone .mov before loading it); at most 100 MB and 90 seconds, Instagram's Reel limits through the API. */
-const PC_VIDEO_MAX = 100 * 1024 * 1024;
+   a one-post item whose single file is an MP4 instead of a picture, marked kind "video". Facebook gets it as a Reel, Instagram as a Reel.
+   Same approval, fingerprint and once-only rules as a picture. At most 100 MB and 90 seconds, Instagram's Reel limits through the API.
+   2026-11-16 (Matthew: "What if she wants to do a video, how will that work"): the page takes a phone video (mp4, mov or m4v) and the server
+   makes it an MP4 both platforms take, checked again after:
+   - with an ffmpeg that has an H.264 encoder (libx264): anything that is not H.264 video with AAC sound, or is over 1920 px on its long
+     side, is converted to H.264 (CRF 23) + AAC, long side at most 1920, at most 60 frames a second, +faststart;
+   - with an ffmpeg that has no H.264 encoder (the host's /usr/local/bin/ffmpeg, checked 16 Nov): the video is re-packed into MP4 without
+     re-encoding when it is H.264 or HEVC (what phones record; Facebook and Instagram Reels take either) and at most 1920 px; the sound is
+     made AAC when it is not. A video that would need a real conversion (4K, over 60 frames a second, another codec) is refused in plain words.
+   Either way the location and other metadata are left out, and nothing is kept of the upload but the result. Which ffmpeg: the path in
+   ffmpeg-path.txt beside this file if there is one, else /usr/local/bin/ffmpeg or /usr/bin/ffmpeg (test hooks PC_FFMPEG, PC_FFPROBE,
+   PC_X264=0 to act as if there were no H.264 encoder, PC_VIDEO_MAX for the size limit). With no ffprobe at all, the uploader's numbers stand
+   and an MP4 is kept as it came (the 5 Nov behaviour). */
+define('PC_VIDEO_MAX', (int) (getenv('PC_VIDEO_MAX') ?: 100 * 1024 * 1024));
+const PC_VIDEO_SEC = 90.5;          /* a 90-second clip often measures 90.0x */
+const PC_VIDEO_EDGE = 1920;         /* Instagram: at most 1920 px across */
 function pcIsVideo(array $im): bool { return ($im['kind'] ?? '') === 'video'; }
 function pcHasVideo(array $p): bool { foreach ((array) ($p['images'] ?? []) as $im) if (pcIsVideo($im)) return true; return false; }
-/** width, height and seconds from ffprobe when the server lets PHP run it; otherwise what the uploader said (or nothing) */
-function pcProbeVideo(string $path, array $said): array {
-    $w = (int) ($said['w'] ?? 0); $h = (int) ($said['h'] ?? 0); $sec = (float) ($said['sec'] ?? 0);
-    if (function_exists('shell_exec') && is_executable('/usr/local/bin/ffprobe')) {
-        $j = json_decode((string) @shell_exec('/usr/local/bin/ffprobe -v error -select_streams v:0 -show_entries stream=width,height:format=duration -of json ' . escapeshellarg($path) . ' 2>/dev/null'), true);
-        if (is_array($j)) { $s = $j['streams'][0] ?? []; $w = (int) ($s['width'] ?? $w); $h = (int) ($s['height'] ?? $h); $sec = (float) ($j['format']['duration'] ?? $sec); }
+function pcNull(): string { return PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null'; }
+/** the ffmpeg and ffprobe this server can run, and whether that ffmpeg can make H.264 (asked once, kept in video-tools.json by path and file time) */
+function pcVideoTools(): array {
+    static $t = null; if ($t !== null) return $t;
+    $t = ['ffmpeg' => '', 'ffprobe' => '', 'x264' => false];
+    if (!function_exists('shell_exec')) return $t;
+    $pick = function (string $env, array $cands): string { $e = getenv($env); foreach ($e !== false && $e !== '' ? [$e] : $cands as $c) if ($c !== '' && @is_file($c)) return $c; return ''; };
+    $cfg = trim((string) @file_get_contents(__DIR__ . '/ffmpeg-path.txt'));
+    $t['ffmpeg'] = $pick('PC_FFMPEG', [$cfg, '/usr/local/bin/ffmpeg', '/usr/bin/ffmpeg']);
+    $t['ffprobe'] = $pick('PC_FFPROBE', ['/usr/local/bin/ffprobe', '/usr/bin/ffprobe']);
+    if ($t['ffmpeg'] !== '' && getenv('PC_X264') !== '0') {
+        $key = $t['ffmpeg'] . '|' . (int) @filemtime($t['ffmpeg']); $c = pcJread('video-tools.json', []);
+        if (($c['key'] ?? '') === $key) $t['x264'] = !empty($c['x264']);
+        else { $t['x264'] = strpos((string) @shell_exec(escapeshellarg($t['ffmpeg']) . ' -hide_banner -encoders 2>' . pcNull()), ' libx264 ') !== false; pcJwrite('video-tools.json', ['key' => $key, 'x264' => $t['x264']]); }
     }
+    return $t;
+}
+/** what the page needs to know before an upload: whether the server can shrink or convert, and the size limits */
+function pcVideoCaps(): array {
+    $mb = function (string $v): int { $v = trim($v); $n = (float) $v; $u = strtoupper(substr($v, -1)); return (int) floor($u === 'G' ? $n * 1024 : ($u === 'M' ? $n : ($u === 'K' ? $n / 1024 : $n / 1048576))); };
+    $T = pcVideoTools(); $up = min($mb((string) ini_get('upload_max_filesize')) ?: 2, $mb((string) ini_get('post_max_size')) ?: 8);
+    return ['convert' => $T['x264'], 'repack' => $T['ffmpeg'] !== '', 'maxMB' => (int) floor(PC_VIDEO_MAX / 1048576), 'maxSec' => 90, 'edge' => PC_VIDEO_EDGE, 'uploadMB' => $up];
+}
+/** codecs, size as shown (a phone's turned video counted the way it plays), seconds and frame rate, from ffprobe; null when it cannot read it */
+function pcVideoInfo(string $path): ?array {
+    $T = pcVideoTools(); if ($T['ffprobe'] === '') return null;
+    $j = json_decode((string) @shell_exec(escapeshellarg($T['ffprobe']) . ' -v error -show_entries stream=codec_type,codec_name,width,height,pix_fmt,avg_frame_rate:stream_side_data=rotation:format=duration -of json ' . escapeshellarg($path) . ' 2>' . pcNull()), true);
+    if (!is_array($j) || !isset($j['streams'])) return null;
+    $v = null; $a = null;
+    foreach ((array) $j['streams'] as $s) {
+        if (($s['codec_type'] ?? '') === 'video' && !$v && !in_array($s['codec_name'] ?? '', ['mjpeg', 'png'], true)) $v = $s;   /* not a cover picture */
+        if (($s['codec_type'] ?? '') === 'audio' && !$a) $a = $s;
+    }
+    if (!$v) return ['video' => false];
+    $w = (int) ($v['width'] ?? 0); $h = (int) ($v['height'] ?? 0); $rot = 0;
+    foreach ((array) ($v['side_data_list'] ?? []) as $sd) if (isset($sd['rotation'])) $rot = (int) $sd['rotation'];
+    if (abs($rot) % 180 === 90) [$w, $h] = [$h, $w];
+    $fr = explode('/', (string) ($v['avg_frame_rate'] ?? '0/1')); $fps = (float) ($fr[0] ?? 0) / max(1, (float) ($fr[1] ?? 1));
+    return ['video' => true, 'vcodec' => (string) ($v['codec_name'] ?? ''), 'acodec' => $a ? (string) ($a['codec_name'] ?? '') : '', 'w' => $w, 'h' => $h,
+            'sec' => (float) ($j['format']['duration'] ?? 0), 'fps' => $fps, 'pix' => (string) ($v['pix_fmt'] ?? '')];
+}
+function pcDur(float $s): string { $s = (int) round($s); $m = intdiv($s, 60); $r = $s % 60; return $m ? $m . ' min' . ($r ? ' ' . $r . ' s' : '') : $r . ' s'; }
+function pcTooLong(float $sec): string { return 'The video is ' . pcDur($sec) . '; Reels from here can be up to 90 seconds. Trim it on your phone and upload again.'; }
+function pcTooBig(int $bytes, bool $converted): string { return 'The video is ' . round($bytes / 1048576) . ' MB' . ($converted ? ' after converting' : '') . '; the most is ' . (int) floor(PC_VIDEO_MAX / 1048576) . ' MB. Record it in 1080p, or shorter, and upload again.'; }
+/** width, height and seconds: ffprobe's when it can read the file, otherwise what the uploader said (kept for the runner and older callers) */
+function pcProbeVideo(string $path, array $said): array {
+    $i = pcVideoInfo($path);
+    if ($i && !empty($i['video'])) return [$i['w'] ?: null, $i['h'] ?: null, $i['sec'] ?: null];
+    $w = (int) ($said['w'] ?? 0); $h = (int) ($said['h'] ?? 0); $sec = (float) ($said['sec'] ?? 0);
     return [$w ?: null, $h ?: null, $sec ?: null];
 }
+/** make the MP4 that is stored: converted, re-packed, or refused (['error' => plain words]) */
+function pcMakeMp4(string $in, array $i): array {
+    $T = pcVideoTools(); $long = max($i['w'], $i['h']);
+    $encode = $i['vcodec'] !== 'h264' || $long > PC_VIDEO_EDGE || $i['fps'] > 60.5 || ($i['pix'] !== '' && $i['pix'] !== 'yuv420p' && $i['pix'] !== 'yuvj420p');
+    if ($encode && !$T['x264']) {
+        if ($long > PC_VIDEO_EDGE) return ['error' => 'This video is ' . $i['w'] . ' x ' . $i['h'] . ($long >= 3000 ? ' (4K)' : '') . '. Videos from here can be up to 1920 pixels on the long side: set the phone camera to record 1080p, record it again and upload that.'];
+        if ($i['fps'] > 60.5) return ['error' => 'This video is ' . round($i['fps']) . ' frames a second (slow motion?). Videos from here can be up to 60: record it at 30 or 60 and upload that.'];
+        if (!in_array($i['vcodec'], ['h264', 'hevc'], true)) return ['error' => 'This video\'s format (' . $i['vcodec'] . ') cannot be posted from here. Use a video recorded with the phone\'s camera (MP4 or MOV).'];
+        $encode = false;   /* H.264 in another colour format, or HEVC (10-bit HDR included): both platforms take it as it is */
+    }
+    $out = pcDir('tmp') . '/v' . bin2hex(random_bytes(8)) . '.mp4';
+    $cmd = escapeshellarg($T['ffmpeg']) . ' -nostdin -hide_banner -loglevel error -y -i ' . escapeshellarg($in) . ' -map 0:v:0 -map 0:a:0? -map_metadata -1 -dn -sn';
+    if ($encode) $cmd .= ' -c:v libx264 -preset veryfast -crf 23 -profile:v high -pix_fmt yuv420p -fpsmax 60 -threads 4'
+        . ' -vf ' . escapeshellarg('scale=if(gte(iw\,ih)\,min(' . PC_VIDEO_EDGE . '\,iw)\,-2):if(gte(iw\,ih)\,-2\,min(' . PC_VIDEO_EDGE . '\,ih))');
+    else $cmd .= ' -c:v copy' . ($i['vcodec'] === 'hevc' ? ' -tag:v hvc1' : '');
+    $cmd .= ($i['acodec'] === 'aac' ? ' -c:a copy' : ' -c:a aac -b:a 128k -ac 2') . ' -movflags +faststart -f mp4 ' . escapeshellarg($out);
+    if (PHP_OS_FAMILY !== 'Windows' && is_executable('/usr/bin/timeout')) $cmd = '/usr/bin/timeout 600 ' . $cmd;
+    @set_time_limit(900);
+    $said = trim((string) @shell_exec($cmd . ' 2>&1'));
+    if (!is_file($out) || !@filesize($out)) { @unlink($out); return ['error' => 'The video could not be ' . ($encode ? 'converted' : 'prepared') . ($said !== '' ? ' (' . mb_substr(strtok($said, "\n"), 0, 160) . ')' : '') . '. Use a video recorded with the phone\'s camera (MP4 or MOV).']; }
+    return ['path' => $out, 'how' => $encode ? 'converted' : 'repacked'];
+}
 function pcStoreVideo(string $tmp, string $origName = '', array $said = []): array {
-    $sz = @filesize($tmp); if (!$sz) return ['error' => 'The video did not arrive.'];
-    if ($sz > PC_VIDEO_MAX) return ['error' => 'The video is over 100 MB. Save it smaller.'];
-    $head = (string) @file_get_contents($tmp, false, null, 0, 12);
-    if (substr($head, 4, 4) !== 'ftyp') return ['error' => 'Use an MP4 video.'];
-    [$w, $h, $sec] = pcProbeVideo($tmp, $said);
-    if ($sec !== null && $sec > 90.5) return ['error' => 'The video is over 90 seconds (the longest Reel Instagram takes from here).'];
+    $sz = (int) @filesize($tmp); if (!$sz) return ['error' => 'The video did not arrive.'];
+    $T = pcVideoTools(); $i = pcVideoInfo($tmp); $src = $tmp; $how = '';
+    if ($i === null && $T['ffprobe'] !== '') return ['error' => 'This video could not be read. Use a video recorded with the phone\'s camera (MP4 or MOV).'];
+    if ($i !== null && empty($i['video'])) return ['error' => 'That file has no video in it.'];
+    if ($i !== null) {
+        if ($i['sec'] > PC_VIDEO_SEC) return ['error' => pcTooLong($i['sec'])];
+        if ($T['ffmpeg'] !== '') { $m = pcMakeMp4($tmp, $i); if (isset($m['error'])) return $m; $src = $m['path']; $how = $m['how']; $i = pcVideoInfo($src) ?: $i; }
+        elseif (!in_array($i['vcodec'], ['h264', 'hevc'], true) || max($i['w'], $i['h']) > PC_VIDEO_EDGE) return ['error' => 'This video cannot be posted from here as it is. Record it in 1080p with the phone\'s camera and upload that.'];
+        [$w, $h, $sec] = [$i['w'] ?: null, $i['h'] ?: null, $i['sec'] ?: null];
+    } else {   /* no ffprobe: the 5 Nov behaviour */
+        $head = (string) @file_get_contents($tmp, false, null, 0, 12);
+        if (substr($head, 4, 4) !== 'ftyp') return ['error' => 'Use an MP4 video.'];
+        [$w, $h, $sec] = pcProbeVideo($tmp, $said);
+    }
+    $drop = function () use ($src, $tmp) { if ($src !== $tmp) @unlink($src); };
+    if ($sec !== null && $sec > PC_VIDEO_SEC) { $drop(); return ['error' => pcTooLong((float) $sec)]; }
+    $bytes = (int) @filesize($src);
+    if ($bytes > PC_VIDEO_MAX) { $drop(); return ['error' => pcTooBig($bytes, $how === 'converted')]; }
     if (!is_dir(PC_MEDIA_DIR)) @mkdir(PC_MEDIA_DIR, 0755, true);
     $name = bin2hex(random_bytes(12)) . '.mp4'; $dest = PC_MEDIA_DIR . '/' . $name;
-    if (!(is_uploaded_file($tmp) ? move_uploaded_file($tmp, $dest) : copy($tmp, $dest))) return ['error' => 'Could not save the video.'];
+    $moved = $src !== $tmp ? (@rename($src, $dest) || (@copy($src, $dest) && @unlink($src))) : (is_uploaded_file($tmp) ? move_uploaded_file($tmp, $dest) : copy($tmp, $dest));
+    if (!$moved) { $drop(); return ['error' => 'Could not save the video.']; }
     @chmod($dest, 0644);
-    return ['file' => $name, 'url' => PC_ORIGIN . '/' . PC_PUBLIC . '/media/' . $name, 'kind' => 'video', 'w' => $w, 'h' => $h, 'sec' => $sec, 'bytes' => (int) $sz, 'md5' => (string) md5_file($dest), 'name' => pcClean(basename($origName), 80), 'caption' => ''];
+    $im = ['file' => $name, 'url' => PC_ORIGIN . '/' . PC_PUBLIC . '/media/' . $name, 'kind' => 'video', 'w' => $w, 'h' => $h, 'sec' => $sec, 'bytes' => $bytes, 'md5' => (string) md5_file($dest), 'name' => pcClean(basename($origName), 80), 'caption' => ''];
+    if ($how !== '') $im['prepared'] = $how;
+    return $im;
 }
-/** a picture or a video, told apart by what the file is (an MP4 starts with "ftyp" at byte 4), not by its name */
+/** a picture or a video, told apart by what the file is (an MP4, MOV or M4V has a box name such as "ftyp" at byte 4), not by its name */
 function pcStoreMedia(string $tmp, string $origName = '', array $said = []): array {
     $head = (string) @file_get_contents($tmp, false, null, 0, 12);
-    return substr($head, 4, 4) === 'ftyp' ? pcStoreVideo($tmp, $origName, $said) : pcStoreImage($tmp, $origName);
+    return in_array(substr($head, 4, 4), ['ftyp', 'wide', 'moov', 'mdat', 'free', 'skip'], true) ? pcStoreVideo($tmp, $origName, $said) : pcStoreImage($tmp, $origName);
 }
 /** a replaced picture's file goes too when nothing else uses it and the post never went anywhere (a published picture stays where Meta saw it) */
 function pcDropUnused(array $S, array $p, array $old): void {

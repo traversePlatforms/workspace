@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 /* Post calendar, the page's API (2026-10-31). The rules and the storage are in post-calendar-tools/lib.php beside public_html; the runner
- * that publishes is post-calendar-tools/runner.php. Sign-in: an 8-digit code per person (admin = Matthew, the only one who can approve;
- * editor = the laptop's loader, which adds drafts, pictures and answers to change requests and can never approve). Every write is a POST
+ * that publishes is post-calendar-tools/runner.php. Sign-in: an 8-digit code per person (admin = Matthew: every client, approves, client setup;
+ * editor = the laptop's loader, which adds drafts, pictures and answers to change requests and can never approve; client = a client's own
+ * approver (2026-11-16, Jen for Sixfold 365): everything a post needs, approving included, and its posting days, but only for the clients on
+ * its account. For a client sign-in every other client and its posts answer "no such" (404), and the Meta Pages list is refused.) Every write is a POST
  * with the X-PC header (a form on another site cannot set it). Framed only by pages on this site (the Traverse hub), like the Prospect Desk. */
 define('PC', 1);
 require (getenv('PC_LIB') ?: dirname(__DIR__, 3) . '/post-calendar-tools/lib.php');
@@ -32,31 +34,47 @@ if ($action === 'signin') {
     if (!$a || strlen($code) !== 8) { $mine[] = $now; $tries[$ip] = $mine; pcJwrite('tries.json', $tries); fail('That code did not work.', 401); }
     $tok = bin2hex(random_bytes(24)); $ses = pcJread('sessions.json', []);
     foreach ($ses as $k => $s) if (($s['at'] ?? 0) < $now - 365 * 86400) unset($ses[$k]);   /* a year (2026-11-10, Matthew: 'stays logged in'); was 60 days */
-    $ses[hash('sha256', $tok)] = ['name' => $a['name'], 'role' => $a['role'], 'at' => $now]; pcJwrite('sessions.json', $ses, 0600);
+    $ses[hash('sha256', $tok)] = ['name' => $a['name'], 'role' => $a['role'], 'at' => $now, 'acct' => pcCodeHash($code)]; pcJwrite('sessions.json', $ses, 0600);   /* acct: the account is read again on every call, so a removed account or a changed scope counts at once */
     setcookie('postcal', $tok, ['expires' => $now + 365 * 86400, 'path' => $cookiePath, 'httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
     pcEvent(['t' => 'signin', 'by' => $a['name']]);
-    out(['ok' => true, 'name' => $a['name'], 'role' => $a['role']]);
+    out(['ok' => true, 'name' => $a['name'], 'role' => $a['role']] + (isset($a['clients']) ? ['clients' => array_values((array) $a['clients'])] : []));
 }
 $ses = pcJread('sessions.json', []); $tokH = hash('sha256', (string) ($_COOKIE['postcal'] ?? '')); $me = $ses[$tokH] ?? null;
 if (!$me) fail('Signed out.', 401);
-$ME = (string) $me['name']; $ADMIN = ($me['role'] ?? '') === 'admin';
+if (isset($me['acct'])) {   /* sessions since 2026-11-16 point at their account: gone means signed out, and the role and scope are the account's now */
+    $a = pcJread('accounts.json', ['codes' => []])['codes'][$me['acct']] ?? null;
+    if (!$a) { unset($ses[$tokH]); pcJwrite('sessions.json', $ses, 0600); fail('Signed out.', 401); }
+    $me = ['name' => (string) $a['name'], 'role' => (string) $a['role'], 'clients' => $a['clients'] ?? null] + $me;
+}
+$ROLE = (string) ($me['role'] ?? ''); if (!in_array($ROLE, PC_ROLES, true)) fail('Signed out.', 401);
+$ME = (string) $me['name']; $ADMIN = $ROLE === 'admin'; $APPROVER = $ADMIN || $ROLE === 'client';
+$SCOPE = $ROLE === 'client' ? array_values(array_map('strval', (array) ($me['clients'] ?? []))) : null;   /* null = every client; a client sign-in with none sees nothing */
+$MEVIEW = ['name' => $ME, 'role' => $ROLE] + ($SCOPE !== null ? ['clients' => $SCOPE] : []);
 if ($action === 'signout') { unset($ses[$tokH]); pcJwrite('sessions.json', $ses, 0600); setcookie('postcal', '', ['expires' => 1, 'path' => $cookiePath]); out(['ok' => true]); }
 function needAdmin(): void { global $ADMIN; if (!$ADMIN) fail('Only Matthew\'s sign-in can do that.', 403); }
-function needClient(array $S, string $id): array { $c = $S['clients'][$id] ?? null; if (!$c) fail('No such client.', 404); return $c; }
-function needPost(array &$S, string $id): array { $p = $S['posts'][$id] ?? null; if (!$p || $p['status'] === 'removed') fail('No such post.', 404); return $p; }
+function needApprover(): void { global $APPROVER; if (!$APPROVER) fail('Only an approver\'s sign-in can do that. This one adds drafts and answers change requests.', 403); }
+function inScope(string $cid): bool { global $SCOPE; return $SCOPE === null || in_array($cid, $SCOPE, true); }
+/* a client or post outside a client sign-in's scope answers exactly like one that does not exist */
+function needClient(array $S, string $id): array { $c = $S['clients'][$id] ?? null; if (!$c || !inScope($id)) fail('No such client.', 404); return $c; }
+function needPost(array &$S, string $id): array { $p = $S['posts'][$id] ?? null; if (!$p || $p['status'] === 'removed' || !inScope((string) $p['client'])) fail('No such post.', 404); return $p; }
+function slotsFrom($raw): array {
+    $slots = []; foreach (array_slice((array) $raw, 0, 21) as $s) { $s = (array) $s; $d = (int) ($s['d'] ?? -1); $t = (string) ($s['t'] ?? ''); $ty = ($s['type'] ?? 'single') === 'photoset' ? 'photoset' : 'single'; if ($d >= 0 && $d <= 6 && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $t)) $slots[] = ['d' => $d, 't' => $t, 'type' => $ty]; }
+    return $slots;
+}
 
 /* ---- reading ---- */
-if ($action === 'me') out(['ok' => true, 'name' => $ME, 'role' => $me['role']]);
+if ($action === 'me') out(['ok' => true] + $MEVIEW);
 if ($action === 'data') {
     $S = pcState(); $cid = (string) ($_GET['client'] ?? '');
-    $clients = array_values(array_map('pcClientView', $S['clients']));
-    $o = ['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'clients' => $clients, 'statuses' => PC_STATUSES, 'now' => pcNow(), 'pages' => pcJread('pages.json', null)];
-    if ($cid !== '' && isset($S['clients'][$cid])) {   /* one client at a time: the page never gets two clients' posts in one answer */
+    $vis = array_filter($S['clients'], fn($c) => inScope((string) $c['id']));   /* a client sign-in: its own clients only */
+    $clients = array_values(array_map('pcClientView', $vis));
+    $o = ['ok' => true, 'me' => $MEVIEW, 'clients' => $clients, 'statuses' => PC_STATUSES, 'now' => pcNow(), 'pages' => $SCOPE === null ? pcJread('pages.json', null) : null, 'video' => pcVideoCaps()];
+    if ($cid !== '' && isset($vis[$cid])) {   /* one client at a time: the page never gets two clients' posts in one answer */
         $posts = []; foreach ($S['posts'] as $p) if ($p['client'] === $cid && $p['status'] !== 'removed') $posts[] = pcPostView($S, $p);
         usort($posts, fn($a, $b) => [$a['at'] === null, $a['at']] <=> [$b['at'] === null, $b['at']]);
         $o += ['client' => $cid, 'posts' => $posts, 'slots' => pcSlots($S['clients'][$cid], pcNow(), 16)];
     } else {   /* the overview: counts only */
-        $cnt = []; foreach ($S['posts'] as $p) if ($p['status'] !== 'removed') { $k = $p['status']; if ($k === 'draft' && pcOpenRequest($p)) $k = 'changes'; $cnt[$p['client']][$k] = ($cnt[$p['client']][$k] ?? 0) + 1; }
+        $cnt = []; foreach ($S['posts'] as $p) if ($p['status'] !== 'removed' && inScope((string) $p['client'])) { $k = $p['status']; if ($k === 'draft' && pcOpenRequest($p)) $k = 'changes'; $cnt[$p['client']][$k] = ($cnt[$p['client']][$k] ?? 0) + 1; }
         $o['counts'] = $cnt;
     }
     out($o);
@@ -65,7 +83,7 @@ if ($action === 'slots') {
     $S = pcState(); $c = needClient($S, (string) ($_GET['client'] ?? ''));
     out(['ok' => true, 'slots' => pcSlots($c, (int) ($_GET['from'] ?? 0) ?: pcNow(), max(1, min(40, (int) ($_GET['n'] ?? 8))), (string) ($_GET['type'] ?? ''))]);
 }
-if ($action === 'requests') out(['ok' => true, 'requests' => pcRequestsOpen(pcState(), (string) ($_GET['client'] ?? ''))]);
+if ($action === 'requests') out(['ok' => true, 'requests' => array_values(array_filter(pcRequestsOpen(pcState(), (string) ($_GET['client'] ?? '')), fn($r) => inScope((string) $r['client'])))]);
 if ($action === 'pages') { needAdmin(); out(pcPagesView(pcState())); }   /* read-only call to Meta: which Pages and Instagram accounts the token sees */
 
 if (!$isPost) fail('POST required', 405);
@@ -97,7 +115,7 @@ function afterChange(array &$p, string $before, string $ME, $answer): void {
         $all = $answer === true || $answer === 'true' || $answer === '1';
         foreach ($p['requests'] as &$r) if (empty($r['answered']) && ($all || $r['id'] === $answer)) $r['answered'] = ['by' => $ME, 'at' => pcNow(), 'how' => 'changed'];
         unset($r);
-        if (!pcOpenRequest($p)) { $p['status'] = 'draft'; pcLog($p, $ME, 'Change request answered: back to draft for Matthew to look at'); }
+        if (!pcOpenRequest($p)) { $p['status'] = 'draft'; pcLog($p, $ME, 'Change request answered: back to draft for approval'); }
     }
 }
 function editable(array $p): void {
@@ -132,7 +150,11 @@ switch ($action) {
         out(['ok' => true, 'post' => $p]);
     }
     case 'upload': {   /* multipart: id, file, [replace = index], [answer = request id] */
-        $f = $_FILES['file'] ?? null; if (!$f || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) fail('The picture did not arrive (or it is over the upload limit).');
+        $f = $_FILES['file'] ?? null;
+        if (!$f || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) {   /* over post_max_size PHP drops the whole form, so nothing arrives at all */
+            $big = ($f && in_array($f['error'] ?? 0, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) || (!$f && !$body && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0);
+            fail($big ? 'That file is over the upload limit (' . pcVideoCaps()['uploadMB'] . ' MB). Phone videos: record in 1080p, under 90 seconds.' : 'The picture or video did not arrive. Try again.', $big ? 413 : 400);
+        }
         $S0 = pcState(); $p0 = needPost($S0, $id); editable($p0);
         $img = pcStoreMedia((string) $f['tmp_name'], (string) ($f['name'] ?? ''), ['w' => $body['w'] ?? 0, 'h' => $body['h'] ?? 0, 'sec' => $body['sec'] ?? 0]); if (isset($img['error'])) fail($img['error']);   /* + video (2026-11-05) */
         $p = pcMutate(function (array &$S) use ($id, $img, $body, $ME) {
@@ -151,8 +173,8 @@ switch ($action) {
         });
         out(['ok' => true, 'post' => $p]);
     }
-    case 'approve': {   /* one post, one tap, Matthew only */
-        needAdmin();
+    case 'approve': {   /* one post, one tap, an approver only (Matthew, or a client's own approver for its own posts) */
+        needApprover();
         $p = pcMutate(function (array &$S) use ($id, $ME) {
             $p = needPost($S, $id);
             if ($p['status'] !== 'draft') fail($p['status'] === 'changes' ? 'A change request is still open.' : 'Only a draft can be approved.', 409);
@@ -165,7 +187,7 @@ switch ($action) {
         out(['ok' => true, 'post' => $p]);
     }
     case 'unapprove': {
-        needAdmin();
+        needApprover();
         $p = pcMutate(function (array &$S) use ($id, $ME) {
             $p = needPost($S, $id); if ($p['status'] !== 'approved') fail('It is not approved.', 409);
             $p['status'] = 'draft'; $p['approval'] = null; pcLog($p, $ME, 'Unapproved'); $S['posts'][$id] = $p; return pcPostView($S, $p);
@@ -173,7 +195,7 @@ switch ($action) {
         out(['ok' => true, 'post' => $p]);
     }
     case 'request': {   /* "Request changes": what to change in the picture or the words; the post cannot be approved until it is answered */
-        needAdmin(); $text = pcText($body['text'] ?? '', 2000); if ($text === '') fail('Say what should change.');
+        needApprover(); $text = pcText($body['text'] ?? '', 2000); if ($text === '') fail('Say what should change.');
         $p = pcMutate(function (array &$S) use ($id, $text, $ME) {
             $p = needPost($S, $id); if (in_array($p['status'], ['publishing', 'published'], true)) fail('This post has gone out already.', 409);
             $p['requests'][] = ['id' => pcId('r'), 'text' => $text, 'by' => $ME, 'at' => pcNow(), 'answered' => null];
@@ -183,8 +205,8 @@ switch ($action) {
         });
         out(['ok' => true, 'post' => $p]);
     }
-    case 'withdraw': {   /* Matthew closes his own request without a new version (he fixed it himself, or changed his mind) */
-        needAdmin();
+    case 'withdraw': {   /* an approver closes the request without a new version (fixed by hand, or a change of mind) */
+        needApprover();
         $p = pcMutate(function (array &$S) use ($id, $ME) {
             $p = needPost($S, $id); if ($p['status'] !== 'changes') fail('No open change request.', 409);
             foreach ($p['requests'] as &$r) if (empty($r['answered'])) $r['answered'] = ['by' => $ME, 'at' => pcNow(), 'how' => 'closed'];
@@ -193,7 +215,7 @@ switch ($action) {
         out(['ok' => true, 'post' => $p]);
     }
     case 'todraft': {
-        needAdmin();
+        needApprover();
         $p = pcMutate(function (array &$S) use ($id, $ME) {
             $p = needPost($S, $id); if ($p['status'] !== 'failed') fail('Only a failed post goes back to draft this way.', 409);
             $p['status'] = 'draft'; $p['approval'] = null; $p['emailed'] = false; $p['errors'] = [];
@@ -203,18 +225,32 @@ switch ($action) {
         out(['ok' => true, 'post' => $p]);
     }
     case 'remove': {
-        needAdmin();
+        needApprover();
         pcMutate(function (array &$S) use ($id, $ME) { $p = needPost($S, $id); if (in_array($p['status'], ['publishing', 'published', 'approved'], true)) fail($p['status'] === 'approved' ? 'Unapprove it first.' : 'It has gone out.', 409); $p['status'] = 'removed'; pcLog($p, $ME, 'Removed'); $S['posts'][$id] = $p; });
         out(['ok' => true]);
     }
 
-    /* ---- clients (Matthew only): name, colour, the Page and Instagram account, the default days and times, the rules note ---- */
+    /* ---- clients (Matthew only): name, colour, the Page and Instagram account, the default days and times, the rules note.
+       A client sign-in may change only the default days and times of its own client: never the name, Page, Instagram, connection or token,
+       never archive, never add a client. Anything else in what it sends is refused, not ignored, so nothing looks saved that was not. ---- */
     case 'client': {
+        if ($SCOPE !== null) {
+            if ($id === '') fail('Only Matthew\'s sign-in can add a client.', 403);
+            needClient(pcState(), $id);
+            if (array_diff(array_keys($body), ['id', 'slots'])) fail('This sign-in can change only the posting days and times.', 403);
+            $slots = slotsFrom($body['slots'] ?? []);
+            $r = pcMutate(function (array &$S) use ($id, $slots, $ME) {
+                needClient($S, $id); $S['clients'][$id]['slots'] = $slots;
+                pcEvent(['t' => 'client', 'id' => $id, 'by' => $ME, 'what' => 'posting days: ' . implode(', ', array_map(fn($s) => PC_DAYS[$s['d']] . ' ' . $s['t'] . ($s['type'] === 'photoset' ? ' (photo set)' : ''), $slots))]);
+                return pcClientView($S['clients'][$id]);
+            });
+            out(['ok' => true, 'client' => $r]);
+        }
         needAdmin();
         $name = pcClean($body['name'] ?? '', 60); if ($name === '') fail('Give the client a name.');
         $color = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($body['color'] ?? '')) ? strtolower((string) $body['color']) : '#13294b';
         $conn = ($body['conn'] ?? 'pipeline') === 'own' ? 'own' : 'pipeline';
-        $slots = []; foreach ((array) ($body['slots'] ?? []) as $s) { $d = (int) ($s['d'] ?? -1); $t = (string) ($s['t'] ?? ''); $ty = ($s['type'] ?? 'single') === 'photoset' ? 'photoset' : 'single'; if ($d >= 0 && $d <= 6 && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $t)) $slots[] = ['d' => $d, 't' => $t, 'type' => $ty]; }
+        $slots = slotsFrom($body['slots'] ?? []);
         $pageId = preg_replace('/\D/', '', (string) ($body['page_id'] ?? '')); $igLinked = ($body['ig_id'] ?? '') === 'linked'; $igId = preg_replace('/\D/', '', (string) ($body['ig_id'] ?? ''));
         $token = trim((string) ($body['token'] ?? ''));
         /* where it posts, checked against Meta now: a Page the token sees (or the client's own Page token), and only the Instagram account linked to that Page */

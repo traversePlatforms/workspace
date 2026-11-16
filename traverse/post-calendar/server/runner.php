@@ -8,7 +8,10 @@ declare(strict_types=1);
  *   php runner.php check                 read-only: the Pages and Instagram accounts the Meta token sees, and each client's connection
  *   php runner.php requests [client]     open change requests as JSON (no codes, no tokens)
  *   php runner.php show [client]         the posts, one line each
- *   php runner.php addaccount "Name" admin|editor [--code-only]   a sign-in code (printed once; --code-only prints just the code)
+ *   php runner.php addaccount "Name" admin|editor|client [--clients id,..] [--code-only]   a sign-in code (printed once; --code-only prints
+ *                                        just the code). client = a client's own approver, limited to the clients after --clients
+ *   php runner.php removeaccount "Name" [role]   take a sign-in away and sign out its sessions
+ *   php runner.php accounts              names, roles and client scopes (never codes)
  *   php runner.php migrate-queue <file>  bring the old social-queue.json posts in, approvals kept (see the end of this file)
  *
  * Once each: a post is claimed ("publishing") under the state lock before any call to Meta, each platform is recorded the moment it goes,
@@ -24,10 +27,22 @@ $say = function (string $m) { @file_put_contents(pcDir() . '/runner.log', date('
 
 if ($cmd === 'addaccount') {
     [$name, $role] = [$args[1] ?? '', $args[2] ?? 'admin'];
-    if ($name === '' || !in_array($role, ['admin', 'editor'], true)) { fwrite(STDERR, "usage: php runner.php addaccount \"Name\" admin|editor [--code-only]\n"); exit(1); }
-    $code = pcAddAccount($name, $role);
-    echo in_array('--code-only', $args, true) ? $code . "\n" : "Code for $name ($role): $code\n"; exit(0);
+    $ci = array_search('--clients', $args, true); $clients = $ci !== false ? array_values(array_filter(array_map('trim', explode(',', (string) ($args[$ci + 1] ?? ''))))) : [];
+    $usage = "usage: php runner.php addaccount \"Name\" admin|editor|client [--clients id1,id2] [--code-only]\n  (client: --clients is required; that sign-in sees and approves only those clients)\n";
+    if ($name === '' || !in_array($role, PC_ROLES, true)) { fwrite(STDERR, $usage); exit(1); }
+    if ($role === 'client') {
+        $S = pcState(); $bad = array_filter($clients, fn($c) => !isset($S['clients'][$c]));
+        if (!$clients || $bad) { fwrite(STDERR, ($bad ? 'no such client: ' . implode(', ', $bad) . "\n" : '') . $usage); exit(1); }
+    } elseif ($clients) { fwrite(STDERR, "--clients is only for a client sign-in\n" . $usage); exit(1); }
+    $code = pcAddAccount($name, $role, $clients);
+    echo in_array('--code-only', $args, true) ? $code . "\n" : "Code for $name ($role" . ($clients ? ': ' . implode(', ', $clients) : '') . "): $code\n"; exit(0);
 }
+if ($cmd === 'removeaccount') {   /* by name (and role, if given); its sessions are signed out too */
+    $name = (string) ($args[1] ?? ''); $role = (string) ($args[2] ?? '');
+    if ($name === '') { fwrite(STDERR, "usage: php runner.php removeaccount \"Name\" [admin|editor|client]\n"); exit(1); }
+    $n = pcRemoveAccount($name, $role); echo "removed $n account(s) named $name\n"; exit($n ? 0 : 1);
+}
+if ($cmd === 'accounts') { foreach (pcAccountsList() as $a) echo $a['name'], ' | ', $a['role'], $a['clients'] !== null ? ' | ' . implode(',', $a['clients']) : '', "\n"; exit(0); }   /* names and roles only, never codes */
 if ($cmd === 'requests') { echo json_encode(pcRequestsOpen(pcState(), (string) ($args[1] ?? '')), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n"; exit(0); }
 if ($cmd === 'show') {
     $S = pcState();
