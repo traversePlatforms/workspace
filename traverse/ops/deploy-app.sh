@@ -7,6 +7,8 @@
 # -billing, -sms, -webpush.php. Backup first (~/upload-backups/before-<label>-<stamp>.tgz), then ~/bin/safe-extract.sh renames every
 # file into place (no half-written rounds.php ever served), md5 of every placed file against the local one, version stamps, and each
 # API answering 401 to a signed-out request. Exits non-zero on any mismatch.
+# Not sent here: the practice copy (bash traverse/ops/deploy-practice.sh) and the client installs built from editions/clients/*.json
+# (bash traverse/ops/deploy-client.sh c-<slug>, e.g. c-houston-lawn-test, 2026-11-16): run both after this one, or they lag.
 # + (2026-10-29) the website's checkout and central Stripe webhook (api/traverse-start.php, traverse-hook.php, traverse-clients-lib.php), the five
 # client templates (traverse-shared/client-templates/, from build-editions.cjs) and traverse-tools/clients.php; then on the server
 # "clients.php regen" remakes every client install's page and API from the new templates.
@@ -97,3 +99,4 @@ c=$(printf '%s\n' "$CHK" | awk '$1=="h"{print $2}'); [ "$c" = 405 ] || { echo " 
 [ $bad = 0 ] && echo "deploy $LABEL: all checks passed (backup before-$LABEL-$STAMP.tgz)" || { echo "deploy $LABEL: CHECK FAILED"; exit 1; }
 # the towns answer rebuilt now, in the background on the server, so the first phone after a deploy doesn't wait 7-16 s (2026-10-29)
 $SG "f=~/www/traverseplatforms.com/sixfold-tools/regions-warm.php; [ -f \$f ] && (nohup php \$f >> ~/www/traverseplatforms.com/sixfold-data/digest/regions-warm.log 2>&1 &) ; echo '  towns answer: warming in the background'" < /dev/null
+echo "  next: bash traverse/ops/deploy-practice.sh$(cd "$R/editions/clients" 2>/dev/null && for f in *.json; do [ -f "$f" ] && printf ', bash traverse/ops/deploy-client.sh c-%s' "${f%.json}"; done)"

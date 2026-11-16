@@ -4837,7 +4837,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
        app only, never on the marketing pages) */
     var cr = q('div', 'datacred');
     cr.appendChild(q('b', null, 'Data credits'));
-    cr.appendChild(q('p', null, 'Map and property data: county assessor records; building outlines © OpenStreetMap contributors (ODbL) and Microsoft (ODbL); aerial photos USDA NAIP; laser scans USGS 3DEP; land cover DRCOG; weather NWS/NOAA; soil temperature CSU CoAgMET.'));
+    cr.appendChild(q('p', null, 'Map and property data: county assessor records; building outlines © OpenStreetMap contributors (ODbL) and Microsoft (ODbL); aerial photos USDA NAIP; laser scans USGS 3DEP; ' + (inCO() ? 'land cover DRCOG; weather NWS/NOAA; soil temperature CSU CoAgMET.' : 'weather NWS/NOAA.')));   /* DRCOG and CoAgMet are Colorado's (2026-11-16) */
     var crl = q('p');
     [['OpenStreetMap copyright', 'https://www.openstreetmap.org/copyright'], ['ODbL license', 'https://opendatacommons.org/licenses/odbl/']].forEach(function (l, i) {
       var a = q('a', 'lnk', l[0]); a.href = l[1]; a.target = '_blank'; a.rel = 'noopener'; if (i) crl.appendChild(document.createTextNode(' · ')); crl.appendChild(a);
@@ -11893,7 +11893,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       mapEl.addEventListener('click', function (e) { var a = e.target && e.target.closest ? e.target.closest('.leaflet-control-attribution a') : null; if (a) { a.target = '_blank'; a.rel = 'noopener noreferrer'; } }, true);
       baseLayer(map, 19);
       var pts = r.areas.filter(function (a) { return typeof a.la === 'number'; }).map(function (a) { return [a.la, a.lo]; });
-      if (pts.length) map.fitBounds(pts, { padding: [24, 24], maxZoom: 15 }); else map.setView([39.1, -104.85], 10);
+      if (pts.length) map.fitBounds(pts, { padding: [24, 24], maxZoom: 15 }); else map.setView(inCO() ? [39.1, -104.85] : MK().centre, 10);   /* the market's middle outside Colorado (2026-11-16) */
       satSwitch(map, true);   /* photos first (2026-10-18) */
       r.areas.forEach(function (a) {
         if (typeof a.la !== 'number') return;
@@ -16363,7 +16363,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function prcFuelBlock(D, C, redraw) {
     var R = C.rules; if (!R.fuel) R.fuel = JSON.parse(JSON.stringify(D.starter.rules.fuel));
     var F = R.fuel, S0 = D.fuel || {};
-    var fb = q('div', 'prcrule prcblock prcfuel'); fb.appendChild(prcChk(F.on, 'Fuel cost', function (v) { F.on = v; redraw(); }));
+    var fb = q('div', 'prcrule prcblock prcfuel');
+    /* outside Colorado (2026-11-16, the Houston test install): the weekly EIA price the server fetches is Colorado's, so the rule is not offered */
+    if (!inCO() && !F.on) { fb.appendChild(q('b', null, 'Fuel cost')); fb.appendChild(q('small', 'sub2', 'Not available in ' + (MK().stateName || 'your state') + ' yet: the weekly fuel price it uses is Colorado’s.')); return fb; }
+    fb.appendChild(prcChk(F.on, 'Fuel cost', function (v) { F.on = v; redraw(); }));
     if (!F.on) { fb.appendChild(q('small', 'sub2', 'On: the fuel for the drive there and back, from where your trips start, your truck’s miles per gallon and the week’s Colorado fuel price.')); return fb; }
     /* where trips start: their own, else the travel fee's base */
     var trav = R.travel.base && R.travel.base.lat != null ? R.travel.base : null, own = !!(F.base && (F.base.lat != null || F.base.text));
@@ -16439,7 +16442,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           top.appendChild(act); card.appendChild(top);
           card.appendChild(prcIn(c.title, 'Heading (optional)', function (v) { c.title = v; paintPrev(); }));
           var ta = q('textarea'); ta.rows = 3; ta.maxLength = 2000; ta.value = c.text; ta.setAttribute('aria-label', 'Wording'); ta.addEventListener('input', function () { c.text = ta.value; paintPrev(); }); card.appendChild(ta);
-          if (c.id === 'cancel3') card.appendChild(q('small', 'prcnote', 'For you, not the customer: federal rules (the FTC’s Cooling-Off Rule, 16 CFR Part 429) and Colorado law can give a customer 3 business days to cancel a sale made at their home, with set wording and a cancellation form. Have your attorney check what applies to you.'));
+          if (c.id === 'cancel3') card.appendChild(q('small', 'prcnote', 'For you, not the customer: federal rules (the FTC’s Cooling-Off Rule, 16 CFR Part 429) and ' + (inCO() ? 'Colorado' : 'state') + ' law can give a customer 3 business days to cancel a sale made at their home, with set wording and a cancellation form. Have your attorney check what applies to you.'));
           var opts = q('div', 'prccopts'); opts.appendChild(prcSel(WHEN, c.when, 'When it is used', function (v) { c.when = v; paintPrev(); }));
           var sv = q('details', 'prcsvc'); var su = q('summary', null, c.svc.length ? 'Only for ' + c.svc.length + ' of your services' : 'For every service'); sv.appendChild(su);
           lines.forEach(function (r) { sv.appendChild(prcChk(c.svc.indexOf(r.id) >= 0, r.label, function (v) { var k = c.svc.indexOf(r.id); if (v && k < 0) c.svc.push(r.id); if (!v && k >= 0) c.svc.splice(k, 1); su.textContent = c.svc.length ? 'Only for ' + c.svc.length + ' of your services' : 'For every service'; })); });
@@ -23225,7 +23228,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (d.photos && d.photos.length) card.appendChild(q('div', 'phrule', 'Photos: only with the owner' + "'" + 's OK · the property, not people'));
     var facts = [], fn = [];
     if (cardOn('money')) { facts.push(moneyLine(d)); fn.push('funding'); }
-    if (cardOn('lawn') && d.lawn && d.lawn.sq && !(d.cg && !d.lawnfix) && hkOf(d) !== 'b') { facts.push(lawnPlan(d)); fn.push('lawn plan'); }   /* 2026-10-12 */
+    if (cardOn('lawn') && inCO() && d.lawn && d.lawn.sq && !(d.cg && !d.lawnfix) && hkOf(d) !== 'b') { facts.push(lawnPlan(d)); fn.push('lawn plan'); }   /* 2026-10-12 */   /* Colorado only (2026-11-16): CSU's cool-season seed, feeding and month advice is wrong for a Texas lawn */
     var wl = cardOn('water') ? waterLine(d) : null; if (wl) { facts.push(wl); fn.push('water'); }
     if (facts.length) card.appendChild(factsFold(facts, fn));
     if (S.areaHoa && S.areaHoa.length) { var hl = q('div', 'meta hoal'); hl.appendChild(q('span', 'tag', 'HOA')); hl.appendChild(document.createTextNode(' ' + S.areaHoa[0].hoa + (S.areaHoa.length > 1 ? ' (or ' + (S.areaHoa.length - 1) + ' more in this subdivision)' : '') + ' \u00b7 check their rules before quoting')); card.appendChild(hl); }   /* 2026-10-12 */
@@ -23340,7 +23343,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       view.appendChild(hb);
     }
     if (feat('fieldguide')) view.appendChild(sayLink());   /* the field guide's door visit, one tap from the doors (2026-10-13) */
-    if (cardOn('lawn')) view.appendChild(soilLine());   /* 2026-10-12 */
+    if (cardOn('lawn') && inCO()) view.appendChild(soilLine());   /* 2026-10-12 */   /* CSU's CoAgMet stations are Colorado's (2026-11-16: a Houston town would read 'nearest' 800 miles off) */
 
     /* show only doors with the drivers picked; one door open at a time */
     if (S.dview !== 'map') {
@@ -24744,7 +24747,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (S.officeMap !== map || !document.body.contains(el)) return;
       var pts = [], scored = !!bestTrade(), list = [];
       (S.regions || []).forEach(function (r) { r.areas.forEach(function (a) { if (typeof a.la === 'number' && typeof a.lo === 'number') { list.push([r, a]); pts.push([a.la, a.lo]); } }); });
-      if (S.officeView) map.setView(S.officeView.c, S.officeView.z); else if (pts.length) map.fitBounds(pts, { padding: [20, 20] }); else map.setView([39.1, -104.85], 9);   /* the Front Range */
+      if (S.officeView) map.setView(S.officeView.c, S.officeView.z); else if (pts.length) map.fitBounds(pts, { padding: [20, 20] }); else map.setView(inCO() ? [39.1, -104.85] : MK().centre, 9);   /* the Front Range (the market's middle elsewhere, 2026-11-16) */
       map.on('moveend', function () { var c = map.getCenter(); S.officeView = { c: [c.lat, c.lng], z: map.getZoom() }; });
       setRadar();
       wxOutlines(map, function (l) { warns = l; key(); });   /* the warnings' own outlines (2026-10-29) */

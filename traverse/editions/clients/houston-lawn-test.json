@@ -1,0 +1,112 @@
+{
+  "trade": "yards",
+  "name": "Houston Lawn (test)",
+  "short": "Houston Lawn",
+  "color": "#2f7a3a",
+  "tagline": "Lawn care and aeration",
+  "phone": "",
+  "email": "",
+  "site": "",
+  "towns": null,
+  "host": "https://traverseplatforms.com",
+  "market": "hou",
+  "_about": "Matthew's private test install for the Houston market (16 Nov 2026), before anything is shown to Bryce. Lawn care and aeration only. Billing and texting off; Matthew's super sign-in only (code in ~/.ssh/houston-test-codes.txt). Upload: bash traverse/ops/deploy-client.sh c-houston-lawn-test",
+  "keepAlso": [
+    "year"
+  ],
+  "features": {
+    "billing": false,
+    "billexempt": true,
+    "sms": false,
+    "skiptrace": false,
+    "walkdesk": true,
+    "hail": false,
+    "roof": false,
+    "solar": false,
+    "pest": false,
+    "security": false,
+    "communities": false,
+    "firecheck": false,
+    "quote": false
+  },
+  "card": {
+    "lawn": true,
+    "trees": true,
+    "fire": false,
+    "money": false,
+    "water": false,
+    "fc": false,
+    "hail": false,
+    "roof": false
+  },
+  "alerts": [
+    "Severe Thunderstorm Warning",
+    "Tornado Warning",
+    "Flash Flood Warning",
+    "Tropical Storm Warning",
+    "Hurricane Warning",
+    "Heat Advisory",
+    "Extreme Heat Warning",
+    "Freeze Watch",
+    "Freeze Warning",
+    "Hard Freeze Warning",
+    "Frost Advisory",
+    "Winter Storm Warning",
+    "Ice Storm Warning",
+    "High Wind Warning",
+    "Wind Advisory",
+    "Extreme Cold Warning"
+  ],
+  "services": [
+    [
+      "aeration",
+      "Aeration"
+    ],
+    [
+      "overseed",
+      "Overseeding"
+    ],
+    [
+      "fert",
+      "Fertilizer and weed control"
+    ],
+    [
+      "mowing",
+      "Mowing plan"
+    ],
+    [
+      "other",
+      "Other"
+    ]
+  ],
+  "leadNeeds": [
+    "Aeration",
+    "Overseeding",
+    "Lawn care plan",
+    "Weeds",
+    "Question"
+  ],
+  "extraWork": [
+    [
+      "thin",
+      "Thin or patchy lawn"
+    ],
+    [
+      "weeds",
+      "Weeds"
+    ],
+    [
+      "bare",
+      "Bare spots"
+    ],
+    [
+      "compact",
+      "Hard, compacted soil"
+    ],
+    [
+      "leaves",
+      "Leaves or debris"
+    ]
+  ],
+  "folder": "hl-f98938"
+}

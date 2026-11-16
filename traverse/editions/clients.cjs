@@ -13,6 +13,10 @@
 //           The install then shows only that market's towns, runs on its clock, and gets its storm lists and nothing
 //           statewide from Colorado (2026-10-11, Matthew chose one install per market). Without it: Colorado, as before.
 //   folder  written back on the first build (a random name, like the editions'): its address never changes after that
+//   features, card   optional: switches laid over the trade's (and the market's) last, e.g. {"billing": false} for a free test install
+//   alerts  optional: the weather warnings this install shows and pushes, in place of the trade's list
+//   keepAlso optional: side-file kinds the trade's own filter leaves out but this install needs, e.g. ["year"] (year built and house
+//           size, which the quote kit and the house sheet read) for a lawn install (2026-11-16, the Houston test install)
 //
 // node new-client.cjs makes the file; node build-editions.cjs <slug> builds it (and everything else without a name).
 // The client's admin can change the name, contact details and colour later from the app's Company screen; this file is the start.
@@ -81,7 +85,10 @@ module.exports = function addClients(EDITIONS) {
       store: id + '.', storeApp: id + '.app.', idb: id + '-rounds', cache: id + '-',
       blurb: C.tagline || base.blurb, icon: pal.accent, iconInk: '#ffffff', c: pal,
       extraRegions: undefined,   /* the demo editions' showcase towns stay out of a client's install */
-      host: (C.host || 'https://sixfoldcolorado.com').replace(/\/+$/, ''), client: slug, trade: C.trade,
+      host: (C.host || 'https://traverseplatforms.com').replace(/\/+$/, ''), client: slug, trade: C.trade,   /* every app has lived on traverseplatforms.com since 2026-10-09 */
+      keep: Array.isArray(C.keepAlso) && C.keepAlso.length
+        ? ((kinds) => (f) => base.keep(f) || kinds.some((k) => f.startsWith(k + '-')))(C.keepAlso.filter((k) => /^[a-z]{2,20}$/.test(k)))
+        : base.keep,
       market: mk ? mk.co.key : null, marketGroup: mk ? mk.group : null, money: mk ? false : base.money,
       company: () => {
         const co = base.company();
@@ -94,6 +101,12 @@ module.exports = function addClients(EDITIONS) {
           co.card = Object.assign({}, co.card, { fire: false, money: false, water: false, fc: false });
         }
         if (C.logo && C.logo.viewBox && C.logo.path) co.logo = { viewBox: C.logo.viewBox, path: C.logo.path };
+        /* the client file's own switches, last (2026-11-16): a free test install turns billing off and keeps billexempt, so no setup mode or lock */
+        if (C.features && typeof C.features === 'object') co.features = Object.assign({}, co.features, C.features);
+        if (C.card && typeof C.card === 'object') co.card = Object.assign({}, co.card, C.card);
+        if (Array.isArray(C.alerts)) co.alerts = C.alerts.filter((e) => typeof e === 'string' && e.trim());
+        for (const k of ['services', 'extraWork']) if (Array.isArray(C[k])) co[k] = C[k].filter((p) => Array.isArray(p) && p.length >= 2);   /* the work it sells, in place of the trade's */
+        if (Array.isArray(C.leadNeeds)) co.leadNeeds = C.leadNeeds.filter((e) => typeof e === 'string' && e.trim());
         return co;
       },
     });
