@@ -329,6 +329,9 @@ sixfold/leads-archive/*.csv
 # yard v2 results per town (2026-10-24): lawn figures per house, large; order.txt stays tracked
 traverse/data-pipeline/door-territory/lawn-trial/yard-v2/*.json
 traverse/data-pipeline/door-territory/lawn-trial/yard-v2/*.finished
+# a metro's yard readings and lawn file (2026-11-16, Houston: metros/yard-metro.mjs, metros/build-lawn.mjs): keyed by street address
+traverse/data-pipeline/door-territory/lawn-trial/yard-metro/
+traverse/data-pipeline/door-territory/lawn-trial/yard-metro.before-*.tgz
 
 # Matthew's pay review and tax figures (2026-10-25): personal, kept off git and GitHub; the Drive backup does not cover personal/ either
 personal/pay/
