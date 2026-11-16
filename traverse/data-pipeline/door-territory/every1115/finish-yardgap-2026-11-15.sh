@@ -49,6 +49,10 @@ for(const f of fs.readdirSync(N+'/yard-gap').filter(f=>f.endsWith('.json'))){con
  for(const [id,v] of Object.entries(n.doors||{})){if(id in od&&od[id]!==null)continue;if(od[id]===null&&v===null){still++;continue}od[id]=v;a++;if(isM(v))added++;else nulls+=v===null?1:0}
  if(a){fs.writeFileSync(of+'.tmp',JSON.stringify({...o,gapAdded:'2026-11-15'}));towns++}}
 console.log('towns with new readings '+towns+', doors given a lawn reading '+added+', still no lot '+still+', new no-lot answers '+nulls+(bad.length?'; refused: '+bad.join('; '):''));
+/* 16 Nov: a restart (15 Nov 17:33) cut the 17:25 try off after its merge, so every later try found nothing to add and stopped. Nothing to
+   add because an earlier try of THIS stage already merged (its gapAdded mark on 300+ towns) goes on to the build; anything else stops as before */
+const prior=fs.readdirSync(O).filter(f=>f.endsWith('.json')&&fs.readFileSync(O+'/'+f,'utf8').includes('\"gapAdded\":\"2026-11-15\"')).length;
+if(!bad.length&&!added&&!towns&&prior>=300){console.log('already merged by an earlier try ('+prior+' towns carry it): going on to the build');process.exit(0)}
 if(bad.length>5||!added){for(const f of fs.readdirSync(O).filter(f=>f.endsWith('.json.tmp')))fs.unlinkSync(O+'/'+f);console.log('NOT MERGED');process.exit(1)}
 for(const f of fs.readdirSync(O).filter(f=>f.endsWith('.json.tmp')))fs.renameSync(O+'/'+f,O+'/'+f.slice(0,-4));" "$S/new" lawn-trial/yard-v2 || stop "the check did not pass; yard-v2 untouched"
 
