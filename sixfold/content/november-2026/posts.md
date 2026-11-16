@@ -1,6 +1,6 @@
 # 365 Aeration & Seeding: November 2026 posts (DRAFT, nothing posted or scheduled)
 
-For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31. **Every post needs Matthew's go in the posting calendar; approval for one is not approval for the next.**
+For the Sixfold 365 Facebook page and @365aeration Instagram. Built 2026-10-31.
 
 - Designed posts: Tue/Thu 3:00 pm Mountain, 1080 x 1350, in `posts/`. Photo sets: Saturdays 2:00 pm Mountain, 4 photos each at 1440 x 1080, in `photosets/`.
 - Rebuild: `node build-november.mjs` (no generated imagery: real job photos and designed cards only, Matthew 31 Oct). This file and `manifest.json` are written by the script: edit captions there, not here.
