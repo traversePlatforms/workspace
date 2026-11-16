@@ -49,6 +49,9 @@ foreach (jobsAll() as $j) {
     if ($j['off'] || !$real($all[$j['lead']] ?? ['name' => '']) || ($j['done']['o'] ?? '') !== 'done') continue;
     $m = substr((string) $j['date'], 0, 7); $p = (float) $j['price'];
     $M[$m]['jobs'] = ($M[$m]['jobs'] ?? 0) + 1; $M[$m]['rev'] = ($M[$m]['rev'] ?? 0) + $p;
+    /* the office's share (2026-11-16, Matthew: "Jen i believe is on 10% for each job she books"): every job on a lead that is not Matthew's own
+       (webLead: his website and Facebook leads before 15 Nov 11:08), from profit-costs.json officeShare.from */
+    $os = (array) ($C['officeShare'] ?? []); if ($os && $m >= (string) ($os['from'] ?? '9999') && !webLead($all[$j['lead']] ?? [])) $M[$m]['office'] = ($M[$m]['office'] ?? 0) + $p * (float) ($os['rate'] ?? 0);
     $M[$m]['mat'] = ($M[$m]['mat'] ?? 0) + (float) ($j['fertLb'] ?? 0) * $fertLb + (float) ($j['seedLb'] ?? 0) * $seedLb;
 }
 $pays = squarePaymentsSince(strtotime('2026-08-01'), 20, true);
@@ -79,10 +82,11 @@ foreach ($months as $m) {
     $r = $M[$m] ?? [];
     $ads = isset($typed[$m]) ? (float) $typed[$m] : ($m > '2026-10' ? max(0.0, ($m === $cur ? $adNow : (float) ($close[$m] ?? $adNow)) - (float) ($close[$prevOf($m)] ?? $adNow)) : 0.0);
     /* a month before the app had jobs (Sep 2026: Kara's and Brian's first jobs) counts the money Square took as its revenue */
-    $rev = isset($r['rev']) ? (float) $r['rev'] : (float) ($r['cash'] ?? 0); $crew = $rev * $crewShare; $mat = (float) ($r['mat'] ?? 0); $fee = (float) ($r['fee'] ?? 0);
+    $rev = isset($r['rev']) ? (float) $r['rev'] : (float) ($r['cash'] ?? 0); $crew = $rev * $crewShare; $off = (float) ($r['office'] ?? 0); $mat = (float) ($r['mat'] ?? 0); $fee = (float) ($r['fee'] ?? 0);
     $fx = $m === $cur ? $fixed * ((int) date('j') / (int) date('t')) : $fixed;   /* this month: fixed costs so far, by day */
-    $net = $rev - $crew - $mat - $fee - $ads - $fx; $cum += $net;
-    $rows[] = ['m' => $m, 'done' => $m < $cur, 'jobs' => (int) ($r['jobs'] ?? 0), 'rev' => $rev, 'cash' => (float) ($r['cash'] ?? 0), 'crew' => $crew, 'mat' => $mat, 'fee' => $fee, 'ads' => $ads, 'fixed' => $fx, 'net' => $net, 'cum' => $cum];
+    $net = $rev - $crew - $off - $mat - $fee - $ads - $fx; $cum += $net;
+    $sh = (array) ($C['share'] ?? []); $mine = $sh && $m >= (string) ($sh['from'] ?? '9999') && $net > 0 ? $net * (float) ($sh['rate'] ?? 0) : 0.0;   /* Matthew's 5%, from November (Matthew 16 Nov) */
+    $rows[] = ['m' => $m, 'done' => $m < $cur, 'jobs' => (int) ($r['jobs'] ?? 0), 'rev' => $rev, 'cash' => (float) ($r['cash'] ?? 0), 'crew' => $crew, 'office' => $off, 'mine' => $mine, 'mat' => $mat, 'fee' => $fee, 'ads' => $ads, 'fixed' => $fx, 'net' => $net, 'cum' => $cum];
 }
 /* money taken outside Square, by method, per month (2026-11-15, Matthew: "i wanna make sure i get paid when im suppose to"): every payment the
    office records by hand (Mark it paid, Record a part payment, a deposit taken another way) is in jobs.log with its method; the amount is the
@@ -112,16 +116,16 @@ $firstPos = null; foreach ($done as $r) if ($r['net'] > 0) { $firstPos = $r; bre
 if (in_array('--line', $args, true)) {
     $ld = end($done) ?: null;
     echo 'Sixfold profit: ' . ($ld ? $label($ld['m']) . ' ' . $usd($ld['net']) . ', ' : '') . ($last ? $label($last['m']) . ' so far ' . $usd($last['net']) . ', ' : '')
-        . 'since Sep ' . $usd($cum) . ($firstPos ? ' | first month positive on known costs: ' . $label($firstPos['m']) : ' | no month positive yet')
+        . 'since Sep ' . $usd($cum) . ', your 5% since Nov ' . $usd(array_sum(array_column($rows, 'mine'))) . ($firstPos ? ' | first month positive on known costs: ' . $label($firstPos['m']) : ' | no month positive yet')
         . (is_numeric($C['unknownMonthly'] ?? null) ? '' : ' (insurance, gas, phone not counted yet)') . "\n";
     exit(0);
 }
 $lines = ['Sixfold profit check (' . date('j M Y') . '), known costs only', ''];
-$lines[] = sprintf('%-9s %4s %9s %8s %8s %7s %7s %8s %8s %9s %10s', 'Month', 'Jobs', 'Revenue', 'Crew', 'Material', 'Fees', 'Ads', 'Fixed', 'Net', 'Since Sep', 'Square in');
-foreach ($rows as $r) $lines[] = sprintf('%-9s %4d %9s %8s %8s %7s %7s %8s %8s %9s %10s', $label($r['m']) . ($r['done'] ? '' : '*'), $r['jobs'], $usd($r['rev']), $usd($r['crew']), $usd($r['mat']), $usd($r['fee']), $usd($r['ads']), $usd($r['fixed']), $usd($r['net']), $usd($r['cum']), $usd($r['cash']));
+$lines[] = sprintf('%-9s %4s %9s %8s %8s %8s %7s %7s %8s %8s %9s %10s', 'Month', 'Jobs', 'Revenue', 'Crew', 'Office', 'Material', 'Fees', 'Ads', 'Fixed', 'Net', 'Your 5%', 'Square in');
+foreach ($rows as $r) $lines[] = sprintf('%-9s %4d %9s %8s %8s %8s %7s %7s %8s %8s %9s %10s', $label($r['m']) . ($r['done'] ? '' : '*'), $r['jobs'], $usd($r['rev']), $usd($r['crew']), $usd($r['office']), $usd($r['mat']), $usd($r['fee']), $usd($r['ads']), $usd($r['fixed']), $usd($r['net']), $r['m'] >= (string) ($C['share']['from'] ?? '9999') ? $usd($r['mine']) : '-', $usd($r['cash']));
 $lines[] = ''; $lines[] = '* this month so far (fixed costs counted to today).';
-$lines[] = 'Revenue = jobs marked done that month. Crew = ' . round($crewShare * 100) . '% of it. Material = fertilizer and seed on those jobs at the quote engine\'s bag prices. Ads from November = Meta lifetime totals (ad spend as of ' . ($adAsof ?: '?') . ') minus 31 Oct.';
-$lines[] = 'Not counted, because no figure exists: ' . implode('; ', (array) ($C['unknown'] ?? [])) . '.';
+$lines[] = 'Revenue = jobs marked done that month. Crew = ' . round($crewShare * 100) . '% of it (Brad). Office = ' . round((float) ($C['officeShare']['rate'] ?? 0) * 100) . '% of the jobs the office booked, from ' . ($C['officeShare']['from'] ?? '-') . ' (Jen). Your 5% = 5% of the month net when it is positive, from ' . ($C['share']['from'] ?? '-') . '; a losing month pays nothing. Material = fertilizer and seed on those jobs at the quote engine\'s bag prices. Ads from November = Meta lifetime totals (ad spend as of ' . ($adAsof ?: '?') . ') minus 31 Oct.';
+$lines[] = (array) ($C['unknown'] ?? []) ? 'Not counted, because no figure exists: ' . implode('; ', (array) $C['unknown']) . '.' : 'Not counted yet: phone and business insurance (Matthew is asking Brandon).';
 if (!$feesOk) $lines[] = 'Square did not answer, so card fees and Square money are missing.';
 $lines[] = ''; $lines[] = 'Money taken outside Square (recorded on the jobs by hand), by method:';
 $hw = ['cash' => 'cash', 'check' => 'check', 'zelle' => 'Zelle', 'venmo' => 'Venmo', 'cashapp' => 'Cash App', 'paypal' => 'PayPal', 'card' => 'card (not Square)', 'other' => 'other', 'ways' => 'another way'];
@@ -129,6 +133,32 @@ if (!$outside) $lines[] = '  none recorded yet';
 foreach ($outside as $m => $by) { arsort($by); $lines[] = sprintf('  %-9s %8s  ', $label($m), $usd(array_sum($by))) . implode(', ', array_map(fn($k, $v) => ($hw[$k] ?? $k) . ' ' . $usd($v), array_keys($by), $by)); }
 $text = implode("\n", $lines) . "\n";
 
+/* the monthly email (2026-11-16, Matthew: "You can send me a mothly email ... just so i have the information"): once, at the first run after a
+   month ends, the month just finished; from October 2026 (October as information, the 5% from November) */
+if (in_array('--monthly', $args, true)) {
+    $mark = $state . '/profit-monthly.txt'; $ld = end($done) ?: null;
+    if (!$ld || $ld['m'] < '2026-10') { echo "profit: no finished month to send
+"; exit(0); }
+    if (trim((string) @file_get_contents($mark)) === $ld['m']) { echo "profit: " . $ld['m'] . " already sent
+"; exit(0); }
+    $shareOn = $ld['m'] >= (string) ($C['share']['from'] ?? '9999');
+    $subj = 'Sixfold ' . $label($ld['m']) . ': ' . ($ld['net'] >= 0 ? 'profit ' : 'loss ') . $usd($ld['net']) . ($shareOn ? ', your 5%: ' . $usd($ld['mine']) : '');
+    $body = "Matthew,
+
+" . $label($ld['m']) . ": " . $ld['jobs'] . " jobs done, revenue " . $usd($ld['rev']) . ", costs " . $usd($ld['rev'] - $ld['net']) . ", net " . $usd($ld['net']) . ".
+"
+        . ($shareOn ? "Your 5% profit share for the month: " . $usd($ld['mine']) . ($ld['net'] <= 0 ? " (a losing month pays nothing)" : "") . ".
+" : "For information only: your 5% share counts from " . $label((string) ($C['share']['from'] ?? '2026-11')) . ".
+")
+        . "
+" . $text;
+    $cfg = require $api . '/config.php'; require_once $api . '/smtp.php';
+    $res = smtp_send((array) ($cfg['smtp'] ?? []), (string) $cfg['to'], '[Sixfold 365] ' . $subj, $body, ['X-Mailer: sixfold-profit']);
+    if (!empty($res['ok'])) { file_put_contents($mark, $ld['m']); echo "profit: " . $ld['m'] . " monthly email sent
+"; } else { echo 'profit: monthly email NOT sent (' . ($res['stage'] ?? '?') . ")
+"; exit(1); }
+    exit(0);
+}
 if (in_array('--alert', $args, true)) {
     $mark = $state . '/profit-alerted.txt';
     /* no alert on partial costs: the costs nobody has given us (insurance, phone, gas...) must be set as one monthly figure first,

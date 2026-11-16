@@ -120,9 +120,9 @@ SV=$($SG 'php ~/www/traverseplatforms.com/traverse-tools/site-visitors.php --lin
 
 # 9. Sixfold profit, for Matthew's 5% share (2026-11-15, Matthew: "alert me when we are profitable"). Source: traverse/app/tools/profit-check.php
 # (sixfold-tools on the server). --alert emails him once, and only after the unknown costs are set (profit-costs.json unknownMonthly).
-PF=$($SG 'cd ~/www/traverseplatforms.com/sixfold-tools && php profit-check.php --line && php profit-check.php --alert' < /dev/null 2>/dev/null)
+PF=$($SG 'cd ~/www/traverseplatforms.com/sixfold-tools && php profit-check.php --line && php profit-check.php --monthly' < /dev/null 2>/dev/null)
 [ -n "$PF" ] && say "  info  $(printf '%s' "$PF" | head -1)"
-case "$PF" in *"alert sent"*) say "  info  PROFIT ALERT emailed to Matthew";; *"NOT sent"*) bad "profit alert could not be emailed";; esac
+case "$PF" in *"monthly email sent"*) say "  info  monthly profit email sent to Matthew";; *"NOT sent"*) bad "monthly profit email could not be sent";; esac   # 16 Nov: monthly email replaces the one-time alert
 
 # 10. The quarterly new-construction refresh on this laptop (2026-11-15, Matthew: "Go ahead and schedule that"): its last log line. The task
 # names the run; the Wi-Fi queue job everyq runs it off the hotspot (traverse/data-pipeline/door-territory/every1115/refresh-quarterly.sh).
