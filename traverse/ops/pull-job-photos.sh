@@ -35,7 +35,7 @@ fi
 # pulling you and I on our end as brad adds new photos"): every photo is also copied into the Sixfold "Photo content dump" shared drive
 # (I:, the contact@sixfoldcolorado.com account), named as that drive already is: "YYYY-MM/YYYY-MM-DD Street, Town", with no customer name
 # and no house number. Copy only, never delete; a missing drive is a note, not a failure.
-SHARE="/i/Shared drives/Photo content dump"; SN=0
+SHARE="/i/Shared drives/Sixfold/08 Photos and content/Job photos"; SN=0   # 16 Nov: the Photo content dump drive was merged into the Sixfold drive (Matthew: one drive to share with Jen)
 if [ -d "$SHARE" ]; then
   while IFS= read -r rp; do
     [ -n "$rp" ] || continue; d=$(dirname "$rp"); day=${d:0:10}
