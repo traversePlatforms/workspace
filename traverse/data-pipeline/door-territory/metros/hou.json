@@ -25,7 +25,8 @@
   ],
   "innerKm": 9,
   "maxDoors": 90000,
-  "minDoors": 400
+  "minDoors": 400,
+  "sectorCity": "HOUSTON"
  },
  "lawn": {
   "years": [
@@ -176,5 +177,1625 @@
    "read": "2026-11-16"
   }
  },
- "towns": []
+ "towns": [
+  {
+   "key": "hou-houston-inner-south",
+   "label": "Houston Inner South",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "inner": true
+   },
+   "half": [
+    {
+     "axis": "lat",
+     "cut": 29.76874,
+     "side": "lo"
+    }
+   ],
+   "center": [
+    29.7306,
+    -95.3752
+   ],
+   "homes": 60983
+  },
+  {
+   "key": "hou-houston-inner-north",
+   "label": "Houston Inner North",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "inner": true
+   },
+   "half": [
+    {
+     "axis": "lat",
+     "cut": 29.76874,
+     "side": "hi"
+    }
+   ],
+   "center": [
+    29.798,
+    -95.3797
+   ],
+   "homes": 60973
+  },
+  {
+   "key": "hou-houston-north",
+   "label": "Houston North",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 0
+   },
+   "center": [
+    29.9306,
+    -95.398
+   ],
+   "homes": 60487
+  },
+  {
+   "key": "hou-houston-northeast",
+   "label": "Houston Northeast",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 1
+   },
+   "center": [
+    29.8714,
+    -95.2392
+   ],
+   "homes": 40446
+  },
+  {
+   "key": "hou-houston-east",
+   "label": "Houston East",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 2
+   },
+   "center": [
+    29.788,
+    -95.1983
+   ],
+   "homes": 23987
+  },
+  {
+   "key": "hou-houston-southeast",
+   "label": "Houston Southeast",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 3
+   },
+   "center": [
+    29.6233,
+    -95.2189
+   ],
+   "homes": 67558
+  },
+  {
+   "key": "hou-houston-south",
+   "label": "Houston South",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 4
+   },
+   "center": [
+    29.6365,
+    -95.3715
+   ],
+   "homes": 36789
+  },
+  {
+   "key": "hou-houston-southwest",
+   "label": "Houston Southwest",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 5
+   },
+   "center": [
+    29.6569,
+    -95.4949
+   ],
+   "homes": 61865
+  },
+  {
+   "key": "hou-houston-west-near",
+   "label": "Houston West (near)",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 6,
+    "near": true,
+    "cut": 23.24
+   },
+   "center": [
+    29.7601,
+    -95.5434
+   ],
+   "homes": 63447
+  },
+  {
+   "key": "hou-houston-west-far",
+   "label": "Houston West (far)",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 6,
+    "near": false,
+    "cut": 23.24
+   },
+   "center": [
+    29.7564,
+    -95.6549
+   ],
+   "homes": 63491
+  },
+  {
+   "key": "hou-houston-northwest-near",
+   "label": "Houston Northwest (near)",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 7,
+    "near": true,
+    "cut": 25
+   },
+   "center": [
+    29.873,
+    -95.4869
+   ],
+   "homes": 73385
+  },
+  {
+   "key": "hou-houston-northwest-far",
+   "label": "Houston Northwest (far)",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "HOUSTON"
+   ],
+   "sector": {
+    "s": 7,
+    "near": false,
+    "cut": 25
+   },
+   "center": [
+    29.9323,
+    -95.5955
+   ],
+   "homes": 73337
+  },
+  {
+   "key": "hou-katy-south",
+   "label": "Katy South",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "KATY"
+   ],
+   "half": [
+    {
+     "axis": "lat",
+     "cut": 29.7966,
+     "side": "lo"
+    }
+   ],
+   "center": [
+    29.7442,
+    -95.7937
+   ],
+   "homes": 59634
+  },
+  {
+   "key": "hou-katy-north",
+   "label": "Katy North",
+   "county": "harris",
+   "counties": [
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "KATY"
+   ],
+   "half": [
+    {
+     "axis": "lat",
+     "cut": 29.7966,
+     "side": "hi"
+    }
+   ],
+   "center": [
+    29.8423,
+    -95.7567
+   ],
+   "homes": 59639
+  },
+  {
+   "key": "hou-spring",
+   "label": "Spring",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "SPRING"
+   ],
+   "center": [
+    30.0611,
+    -95.4719
+   ],
+   "homes": 76337
+  },
+  {
+   "key": "hou-cypress",
+   "label": "Cypress",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "CYPRESS"
+   ],
+   "center": [
+    29.9579,
+    -95.6989
+   ],
+   "homes": 69485
+  },
+  {
+   "key": "hou-richmond",
+   "label": "Richmond",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "RICHMOND"
+   ],
+   "center": [
+    29.6326,
+    -95.7404
+   ],
+   "homes": 62779
+  },
+  {
+   "key": "hou-humble",
+   "label": "Humble",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "HUMBLE"
+   ],
+   "center": [
+    29.9922,
+    -95.2249
+   ],
+   "homes": 58619
+  },
+  {
+   "key": "hou-sugar-land",
+   "label": "Sugar Land",
+   "county": "fortbend",
+   "counties": [
+    "fortbend",
+    "harris"
+   ],
+   "cities": [
+    "SUGAR LAND"
+   ],
+   "center": [
+    29.5988,
+    -95.6327
+   ],
+   "homes": 50198
+  },
+  {
+   "key": "hou-pearland",
+   "label": "Pearland",
+   "county": "brazoria",
+   "counties": [
+    "brazoria",
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "PEARLAND"
+   ],
+   "center": [
+    29.5525,
+    -95.3287
+   ],
+   "homes": 41990
+  },
+  {
+   "key": "hou-missouri-city",
+   "label": "Missouri City",
+   "county": "fortbend",
+   "counties": [
+    "fortbend",
+    "harris"
+   ],
+   "cities": [
+    "MISSOURI CITY"
+   ],
+   "center": [
+    29.5549,
+    -95.531
+   ],
+   "homes": 41277
+  },
+  {
+   "key": "hou-league-city",
+   "label": "League City",
+   "county": "galveston",
+   "counties": [
+    "galveston",
+    "harris",
+    "fortbend"
+   ],
+   "cities": [
+    "LEAGUE CITY"
+   ],
+   "center": [
+    29.4939,
+    -95.0937
+   ],
+   "homes": 34898
+  },
+  {
+   "key": "hou-tomball",
+   "label": "Tomball",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "TOMBALL"
+   ],
+   "center": [
+    30.0693,
+    -95.6115
+   ],
+   "homes": 34836
+  },
+  {
+   "key": "hou-pasadena",
+   "label": "Pasadena",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "PASADENA"
+   ],
+   "center": [
+    29.6754,
+    -95.1779
+   ],
+   "homes": 30534
+  },
+  {
+   "key": "hou-baytown",
+   "label": "Baytown",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "BAYTOWN"
+   ],
+   "center": [
+    29.7725,
+    -94.9775
+   ],
+   "homes": 25334
+  },
+  {
+   "key": "hou-rosenberg",
+   "label": "Rosenberg",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "ROSENBERG"
+   ],
+   "center": [
+    29.5338,
+    -95.7808
+   ],
+   "homes": 19901
+  },
+  {
+   "key": "hou-galveston",
+   "label": "Galveston",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "GALVESTON"
+   ],
+   "center": [
+    29.2509,
+    -94.8713
+   ],
+   "homes": 18293
+  },
+  {
+   "key": "hou-texas-city",
+   "label": "Texas City",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "TEXAS CITY"
+   ],
+   "center": [
+    29.4015,
+    -94.9712
+   ],
+   "homes": 17106
+  },
+  {
+   "key": "hou-friendswood",
+   "label": "Friendswood",
+   "county": "galveston",
+   "counties": [
+    "galveston",
+    "harris",
+    "brazoria"
+   ],
+   "cities": [
+    "FRIENDSWOOD"
+   ],
+   "center": [
+    29.5172,
+    -95.1896
+   ],
+   "homes": 16995
+  },
+  {
+   "key": "hou-fulshear",
+   "label": "Fulshear",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "FULSHEAR"
+   ],
+   "center": [
+    29.713,
+    -95.8888
+   ],
+   "homes": 15630
+  },
+  {
+   "key": "hou-crosby",
+   "label": "Crosby",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "CROSBY"
+   ],
+   "center": [
+    29.9247,
+    -95.0785
+   ],
+   "homes": 12118
+  },
+  {
+   "key": "hou-la-porte",
+   "label": "La Porte",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "LA PORTE"
+   ],
+   "center": [
+    29.6608,
+    -95.0579
+   ],
+   "homes": 11589
+  },
+  {
+   "key": "hou-alvin",
+   "label": "Alvin",
+   "county": "brazoria",
+   "counties": [
+    "brazoria",
+    "galveston"
+   ],
+   "cities": [
+    "ALVIN"
+   ],
+   "center": [
+    29.4165,
+    -95.2559
+   ],
+   "homes": 10641
+  },
+  {
+   "key": "hou-kingwood",
+   "label": "Kingwood",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "KINGWOOD"
+   ],
+   "center": [
+    30.0629,
+    -95.1749
+   ],
+   "homes": 10524
+  },
+  {
+   "key": "hou-hockley",
+   "label": "Hockley",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "HOCKLEY"
+   ],
+   "center": [
+    30.0313,
+    -95.8008
+   ],
+   "homes": 10465
+  },
+  {
+   "key": "hou-iowa-colony",
+   "label": "Iowa Colony",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "IOWA COLONY"
+   ],
+   "center": [
+    29.4439,
+    -95.4318
+   ],
+   "homes": 10459
+  },
+  {
+   "key": "hou-deer-park",
+   "label": "Deer Park",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "DEER PARK"
+   ],
+   "center": [
+    29.6855,
+    -95.1168
+   ],
+   "homes": 9945
+  },
+  {
+   "key": "hou-manvel",
+   "label": "Manvel",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "MANVEL"
+   ],
+   "center": [
+    29.498,
+    -95.3842
+   ],
+   "homes": 9732
+  },
+  {
+   "key": "hou-angleton",
+   "label": "Angleton",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "ANGLETON"
+   ],
+   "center": [
+    29.1738,
+    -95.4383
+   ],
+   "homes": 9504
+  },
+  {
+   "key": "hou-lake-jackson",
+   "label": "Lake Jackson",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "LAKE JACKSON"
+   ],
+   "center": [
+    29.0426,
+    -95.4416
+   ],
+   "homes": 9213
+  },
+  {
+   "key": "hou-fresno",
+   "label": "Fresno",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "FRESNO"
+   ],
+   "center": [
+    29.5325,
+    -95.4797
+   ],
+   "homes": 8282
+  },
+  {
+   "key": "hou-channelview",
+   "label": "Channelview",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "CHANNELVIEW"
+   ],
+   "center": [
+    29.7931,
+    -95.1388
+   ],
+   "homes": 7046
+  },
+  {
+   "key": "hou-seabrook",
+   "label": "Seabrook",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "SEABROOK"
+   ],
+   "center": [
+    29.5779,
+    -95.0346
+   ],
+   "homes": 6985
+  },
+  {
+   "key": "hou-la-marque",
+   "label": "La Marque",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "LA MARQUE"
+   ],
+   "center": [
+    29.3715,
+    -94.9931
+   ],
+   "homes": 6957
+  },
+  {
+   "key": "hou-dickinson",
+   "label": "Dickinson",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "DICKINSON"
+   ],
+   "center": [
+    29.4601,
+    -95.0586
+   ],
+   "homes": 6843
+  },
+  {
+   "key": "hou-santa-fe",
+   "label": "Santa Fe",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "SANTA FE"
+   ],
+   "center": [
+    29.3764,
+    -95.1
+   ],
+   "homes": 6373
+  },
+  {
+   "key": "hou-bellaire",
+   "label": "Bellaire",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "BELLAIRE"
+   ],
+   "center": [
+    29.703,
+    -95.4609
+   ],
+   "homes": 6147
+  },
+  {
+   "key": "hou-rosharon",
+   "label": "Rosharon",
+   "county": "fortbend",
+   "counties": [
+    "fortbend",
+    "brazoria"
+   ],
+   "cities": [
+    "ROSHARON"
+   ],
+   "center": [
+    29.4764,
+    -95.459
+   ],
+   "homes": 5739
+  },
+  {
+   "key": "hou-huffman",
+   "label": "Huffman",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "HUFFMAN"
+   ],
+   "center": [
+    30.0604,
+    -95.1106
+   ],
+   "homes": 4807
+  },
+  {
+   "key": "hou-stafford",
+   "label": "Stafford",
+   "county": "fortbend",
+   "counties": [
+    "fortbend",
+    "harris"
+   ],
+   "cities": [
+    "STAFFORD"
+   ],
+   "center": [
+    29.6232,
+    -95.565
+   ],
+   "homes": 4807
+  },
+  {
+   "key": "hou-freeport",
+   "label": "Freeport",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "FREEPORT"
+   ],
+   "center": [
+    28.9822,
+    -95.3328
+   ],
+   "homes": 4614
+  },
+  {
+   "key": "hou-west-columbia",
+   "label": "West Columbia",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "WEST COLUMBIA"
+   ],
+   "center": [
+    29.1357,
+    -95.637
+   ],
+   "homes": 3521
+  },
+  {
+   "key": "hou-needville",
+   "label": "Needville",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "NEEDVILLE"
+   ],
+   "center": [
+    29.4026,
+    -95.8234
+   ],
+   "homes": 3456
+  },
+  {
+   "key": "hou-crystal-beach",
+   "label": "Crystal Beach",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "CRYSTAL BEACH"
+   ],
+   "center": [
+    29.456,
+    -94.6318
+   ],
+   "homes": 3433
+  },
+  {
+   "key": "hou-south-houston",
+   "label": "South Houston",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "SOUTH HOUSTON"
+   ],
+   "center": [
+    29.6608,
+    -95.2263
+   ],
+   "homes": 3037
+  },
+  {
+   "key": "hou-highlands",
+   "label": "Highlands",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "HIGHLANDS"
+   ],
+   "center": [
+    29.8209,
+    -95.0427
+   ],
+   "homes": 3020
+  },
+  {
+   "key": "hou-brazoria",
+   "label": "Brazoria",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "BRAZORIA"
+   ],
+   "center": [
+    29.0168,
+    -95.5834
+   ],
+   "homes": 2989
+  },
+  {
+   "key": "hou-clute",
+   "label": "Clute",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "CLUTE"
+   ],
+   "center": [
+    29.0331,
+    -95.4049
+   ],
+   "homes": 2941
+  },
+  {
+   "key": "hou-webster",
+   "label": "Webster",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "WEBSTER"
+   ],
+   "center": [
+    29.541,
+    -95.137
+   ],
+   "homes": 2887
+  },
+  {
+   "key": "hou-brookshire",
+   "label": "Brookshire",
+   "county": "fortbend",
+   "counties": [
+    "fortbend",
+    "harris"
+   ],
+   "cities": [
+    "BROOKSHIRE"
+   ],
+   "center": [
+    29.7451,
+    -95.9082
+   ],
+   "homes": 2821
+  },
+  {
+   "key": "hou-hitchcock",
+   "label": "Hitchcock",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "HITCHCOCK"
+   ],
+   "center": [
+    29.3437,
+    -95.0112
+   ],
+   "homes": 2791
+  },
+  {
+   "key": "hou-galena-park",
+   "label": "Galena Park",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "GALENA PARK"
+   ],
+   "center": [
+    29.7396,
+    -95.2416
+   ],
+   "homes": 2479
+  },
+  {
+   "key": "hou-bacliff",
+   "label": "Bacliff",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "BACLIFF"
+   ],
+   "center": [
+    29.506,
+    -94.9866
+   ],
+   "homes": 2440
+  },
+  {
+   "key": "hou-sweeny",
+   "label": "Sweeny",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "SWEENY"
+   ],
+   "center": [
+    29.0467,
+    -95.687
+   ],
+   "homes": 2237
+  },
+  {
+   "key": "hou-san-leon",
+   "label": "San Leon",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "SAN LEON"
+   ],
+   "center": [
+    29.4896,
+    -94.9341
+   ],
+   "homes": 1912
+  },
+  {
+   "key": "hou-jersey-village",
+   "label": "Jersey Village",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "JERSEY VILLAGE"
+   ],
+   "center": [
+    29.8897,
+    -95.5684
+   ],
+   "homes": 1646
+  },
+  {
+   "key": "hou-weston-lakes",
+   "label": "Weston Lakes",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "WESTON LAKES"
+   ],
+   "center": [
+    29.6649,
+    -95.9358
+   ],
+   "homes": 1621
+  },
+  {
+   "key": "hou-meadows-place",
+   "label": "Meadows Place",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "MEADOWS PLACE"
+   ],
+   "center": [
+    29.6522,
+    -95.5898
+   ],
+   "homes": 1579
+  },
+  {
+   "key": "hou-waller",
+   "label": "Waller",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "WALLER"
+   ],
+   "center": [
+    30.0786,
+    -95.9025
+   ],
+   "homes": 1317
+  },
+  {
+   "key": "hou-jamaica-beach",
+   "label": "Jamaica Beach",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "JAMAICA BEACH"
+   ],
+   "center": [
+    29.1905,
+    -94.9802
+   ],
+   "homes": 1215
+  },
+  {
+   "key": "hou-richwood",
+   "label": "Richwood",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "RICHWOOD"
+   ],
+   "center": [
+    29.0662,
+    -95.4136
+   ],
+   "homes": 1187
+  },
+  {
+   "key": "hou-beasley",
+   "label": "Beasley",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "cities": [
+    "BEASLEY"
+   ],
+   "center": [
+    29.4794,
+    -95.9475
+   ],
+   "homes": 1181
+  },
+  {
+   "key": "hou-bayou-vista",
+   "label": "Bayou Vista",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "BAYOU VISTA"
+   ],
+   "center": [
+    29.3257,
+    -94.9391
+   ],
+   "homes": 1071
+  },
+  {
+   "key": "hou-kemah",
+   "label": "Kemah",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "KEMAH"
+   ],
+   "center": [
+    29.5323,
+    -95.0211
+   ],
+   "homes": 1070
+  },
+  {
+   "key": "hou-surfside",
+   "label": "Surfside",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "SURFSIDE"
+   ],
+   "center": [
+    28.9549,
+    -95.2829
+   ],
+   "homes": 1035
+  },
+  {
+   "key": "hou-porter",
+   "label": "Porter",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "PORTER"
+   ],
+   "center": [
+    30.0887,
+    -95.1834
+   ],
+   "homes": 979
+  },
+  {
+   "key": "hou-tiki-island",
+   "label": "Tiki Island",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "TIKI ISLAND"
+   ],
+   "center": [
+    29.2979,
+    -94.9167
+   ],
+   "homes": 965
+  },
+  {
+   "key": "hou-danbury",
+   "label": "Danbury",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "DANBURY"
+   ],
+   "center": [
+    29.2288,
+    -95.3435
+   ],
+   "homes": 856
+  },
+  {
+   "key": "hou-port-bolivar",
+   "label": "Port Bolivar",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "PORT BOLIVAR"
+   ],
+   "center": [
+    29.3968,
+    -94.7338
+   ],
+   "homes": 764
+  },
+  {
+   "key": "hou-algoa",
+   "label": "Algoa",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "ALGOA"
+   ],
+   "center": [
+    29.4083,
+    -95.1723
+   ],
+   "homes": 729
+  },
+  {
+   "key": "hou-damon",
+   "label": "Damon",
+   "county": "brazoria",
+   "counties": [
+    "brazoria",
+    "fortbend"
+   ],
+   "cities": [
+    "DAMON"
+   ],
+   "center": [
+    29.303,
+    -95.6581
+   ],
+   "homes": 703
+  },
+  {
+   "key": "hou-shoreacres",
+   "label": "Shoreacres",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "cities": [
+    "SHOREACRES"
+   ],
+   "center": [
+    29.6206,
+    -95.0172
+   ],
+   "homes": 682
+  },
+  {
+   "key": "hou-clear-lake-shores",
+   "label": "Clear Lake Shores",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "CLEAR LAKE SHORES"
+   ],
+   "center": [
+    29.5467,
+    -95.0323
+   ],
+   "homes": 502
+  },
+  {
+   "key": "hou-jones-creek",
+   "label": "Jones Creek",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "JONES CREEK"
+   ],
+   "center": [
+    28.9744,
+    -95.4702
+   ],
+   "homes": 479
+  },
+  {
+   "key": "hou-brookside",
+   "label": "Brookside",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "cities": [
+    "BROOKSIDE"
+   ],
+   "center": [
+    29.5904,
+    -95.314
+   ],
+   "homes": 429
+  },
+  {
+   "key": "hou-gilchrist",
+   "label": "Gilchrist",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "cities": [
+    "GILCHRIST"
+   ],
+   "center": [
+    29.5068,
+    -94.5086
+   ],
+   "homes": 418
+  },
+  {
+   "key": "hou-brazoria-county-other",
+   "label": "Brazoria County, other towns",
+   "county": "brazoria",
+   "counties": [
+    "brazoria"
+   ],
+   "other": true,
+   "cities": [
+    "BAILEYS PRAIRIE",
+    "BROOKSIDE VILLAGE",
+    "HILLCREST VILLAGE",
+    "HOLIDAY LAKES",
+    "LIVERPOOL",
+    "OYSTER CREEK",
+    "QUINTANA",
+    "UNKNOWN"
+   ],
+   "center": [
+    29.4251,
+    -95.371
+   ],
+   "homes": 4217
+  },
+  {
+   "key": "hou-fort-bend-county-other",
+   "label": "Fort Bend County, other towns",
+   "county": "fortbend",
+   "counties": [
+    "fortbend"
+   ],
+   "other": true,
+   "cities": [
+    "APT",
+    "ARCOLA",
+    "BLDG A",
+    "BOLING",
+    "BOOTH",
+    "CANYON LAKE",
+    "DALLAS",
+    "EAST BERNARD",
+    "FRNT",
+    "GUY",
+    "HOUTON",
+    "KENDLETON",
+    "LOT",
+    "LOT A",
+    "MISSOUI CITY",
+    "MISSOUR CITY",
+    "MISSOURI",
+    "ORCHARD",
+    "PLEAK",
+    "REAR",
+    "RICHMND",
+    "ROSEBNERG",
+    "ROWLETT",
+    "SIMONTON",
+    "STE D",
+    "STE E",
+    "SUGAR LAND TAX",
+    "SUGARLAND",
+    "THOMPHSONS",
+    "THOMPSON",
+    "THOMPSONS",
+    "TX",
+    "UNIT",
+    "UNIT A",
+    "UNIT B",
+    "WALLIS"
+   ],
+   "center": [
+    29.5431,
+    -95.8231
+   ],
+   "homes": 2138
+  },
+  {
+   "key": "hou-harris-county-other",
+   "label": "Harris County, other towns",
+   "county": "harris",
+   "counties": [
+    "harris"
+   ],
+   "other": true,
+   "cities": [
+    "A",
+    "BAYTWON",
+    "COLLEGEPORT",
+    "CYPRES",
+    "CYRESS",
+    "DAYTON",
+    "EL LAGO",
+    "HEMPSTEAD",
+    "HOCKELY",
+    "HOSTON",
+    "HOUISTON",
+    "HOUSON",
+    "HOUSOTN",
+    "HOUSTN",
+    "HOUSTON TEXAS",
+    "HOUSTONT",
+    "HUSTON",
+    "JACINTO CITY",
+    "KATY TX",
+    "KAY",
+    "LA PORTE TX",
+    "LN",
+    "MEADOWS",
+    "MORGANS POINT",
+    "NASSAU BAY",
+    "NEW CANEY",
+    "NONE",
+    "R",
+    "SPRING VALLEY",
+    "THE WOODLANDS",
+    "TOMABLL",
+    "WALLISVILLE",
+    "WEST UNIVERSITY PLACE"
+   ],
+   "center": [
+    29.9346,
+    -95.1852
+   ],
+   "homes": 681
+  },
+  {
+   "key": "hou-galveston-county-other",
+   "label": "Galveston County, other towns",
+   "county": "galveston",
+   "counties": [
+    "galveston"
+   ],
+   "other": true,
+   "cities": [
+    "ARCADIA",
+    "CRYSTL BEACH",
+    "HIGH ISLAND"
+   ],
+   "center": [
+    29.5625,
+    -94.3986
+   ],
+   "homes": 166
+  }
+ ]
 }

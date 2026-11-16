@@ -37,11 +37,26 @@ function townFinder(towns) {
   return (county, r) => {
     const list = byCity.get(cityKey(r.city));
     if (!list) return other.get(county) || null;
-    if (list.length === 1 && !list[0].sector) return list[0];
+    if (list.length === 1 && !list[0].sector && !list[0].half) return list[0];
     const [la, lo] = mid(r), d = km(la, lo, ...P.centre), s = sectorOf(la, lo);
-    return list.find((t) => t.sector && (t.sector.inner ? d < P.innerKm : d >= P.innerKm && t.sector.s === s && (t.sector.near == null || (t.sector.near ? d < t.sector.cut : d >= t.sector.cut)))) || null;
+    const inHalf = (hs) => !hs || hs.every((h) => ((h.axis === 'lat' ? la : lo) < h.cut) === (h.side === 'lo'));
+    const inSector = (x) => !x || (x.inner ? d < P.innerKm : d >= P.innerKm && x.s === s && (x.near == null || (x.near ? d < x.cut : d >= x.cut)));
+    return list.find((t) => inSector(t.sector) && inHalf(t.half)) || null;
   };
 }
+/* a piece over plan.maxDoors is halved along its longer spread (north/south or east/west) at the median, again if need be */
+function halves(name, key, pts, base, extra) {
+  if (pts.length <= P.maxDoors) return [{ key, label: name, ...base, ...extra, center: cen(pts), homes: pts.length }];
+  const sLat = spread(pts.map((p) => p[2])), sLon = spread(pts.map((p) => p[3]) .map((x) => x * Math.cos(P.centre[0] * Math.PI / 180)));
+  const axis = sLat >= sLon ? 'lat' : 'lon', ix = axis === 'lat' ? 2 : 3, v = pts.map((p) => p[ix]).sort((a, b) => a - b), cut = +v[v.length >> 1].toFixed(5);
+  const [loName, hiName] = axis === 'lat' ? ['South', 'North'] : ['West', 'East'];
+  const lo = pts.filter((p) => p[ix] < cut), hi = pts.filter((p) => p[ix] >= cut);
+  const h0 = (extra && extra.half) || [];
+  return [...halves(`${name} ${loName}`, `${key}-${loName.toLowerCase()}`, lo, base, { ...extra, half: [...h0, { axis, cut, side: 'lo' }] }),
+    ...halves(`${name} ${hiName}`, `${key}-${hiName.toLowerCase()}`, hi, base, { ...extra, half: [...h0, { axis, cut, side: 'hi' }] })];
+}
+const cen = (pts) => [+(pts.reduce((s, p) => s + p[2], 0) / pts.length).toFixed(4), +(pts.reduce((s, p) => s + p[3], 0) / pts.length).toFixed(4)];
+const spread = (a) => { const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length * 0.9)] - s[Math.floor(s.length * 0.1)]; };
 if (PLAN) {
   const C = new Map();   /* city -> { n, byCounty, la, lo, pts (for big cities: [d, s]) } */
   for await (const [county, r] of rows()) {
@@ -52,13 +67,14 @@ if (PLAN) {
   for (const [k, c] of [...C.entries()].sort((a, b) => b[1].n - a[1].n)) {
     const counties = Object.entries(c.byCounty).sort((a, b) => b[1] - a[1]).map(([x]) => x), county = counties[0];
     if (c.n < P.minDoors || k === 'UNKNOWN') { const o = (others[county] = others[county] || { n: 0, la: 0, lo: 0, cities: [] }); o.n += c.n; o.la += c.la; o.lo += c.lo; o.cities.push(k); continue; }
-    if (c.n <= P.maxDoors) { towns.push({ key: `${metro}-${slug(k)}`, label: title(k), county, counties, cities: [k], center: [+(c.la / c.n).toFixed(4), +(c.lo / c.n).toFixed(4)], homes: c.n }); continue; }
-    const cen = (pts) => [+(pts.reduce((s, p) => s + p[2], 0) / pts.length).toFixed(4), +(pts.reduce((s, p) => s + p[3], 0) / pts.length).toFixed(4)];
+    const base = { county, counties, cities: [k] };
+    /* only the centre city (plan.sectorCity, Houston) is cut into a ring and compass sectors; any other city over the size is halved */
+    if (k !== P.sectorCity) { towns.push(...halves(title(k), `${metro}-${slug(k)}`, c.pts, base, {})); continue; }
     const inner = c.pts.filter((p) => p[0] < P.innerKm);
-    towns.push({ key: `${metro}-${slug(k)}-inner`, label: `${title(k)} Inner`, county, counties, cities: [k], sector: { inner: true }, center: cen(inner), homes: inner.length });
+    towns.push(...halves(`${title(k)} Inner`, `${metro}-${slug(k)}-inner`, inner, base, { sector: { inner: true } }));
     for (let s = 0; s < 8; s++) {
       const pts = c.pts.filter((p) => p[0] >= P.innerKm && p[1] === s); if (!pts.length) continue;
-      const base = { county, counties, cities: [k] }, name = `${title(k)} ${SECT[s]}`;
+      const name = `${title(k)} ${SECT[s]}`;
       if (pts.length <= P.maxDoors) { towns.push({ key: `${metro}-${slug(name)}`, label: name, ...base, sector: { s }, center: cen(pts), homes: pts.length }); continue; }
       const ds = pts.map((p) => p[0]).sort((a, b) => a - b), cut = +ds[ds.length >> 1].toFixed(2);
       const near = pts.filter((p) => p[0] < cut), far = pts.filter((p) => p[0] >= cut);

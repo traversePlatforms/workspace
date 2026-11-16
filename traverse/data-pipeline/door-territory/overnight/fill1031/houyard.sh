@@ -12,7 +12,7 @@
 H="$HOME/run/hou"; IN="$Q/hou"
 [ -f "$IN/towns.txt" ] || { echo "no $IN/towns.txt"; exit 1; }
 mkdir -p "$H/lawn-trial/yard-metro" "$H/tree-zones" "$H/metros" "$H/data" "$H/lots"
-cp "$IN/yard-scan-v2.mjs" "$IN/build-yard-v2.mjs" "$H/lawn-trial/" && cp "$IN/lidar.mjs" "$H/tree-zones/" && cp "$IN/yard-metro.mjs" "$IN/hou.json" "$H/metros/" || exit 1
+cp "$IN/yard-scan-v2.mjs" "$IN/build-yard-v2.mjs" "$H/lawn-trial/" && cp "$IN/lidar.mjs" "$IN/zones.mjs" "$H/tree-zones/" &&cp "$IN/yard-metro.mjs" "$IN/hou.json" "$H/metros/" || exit 1
 [ -e "$H/lawn-trial/node_modules" ] || ln -s "$HOME/run/lawn-trial/node_modules" "$H/lawn-trial/node_modules"
 [ -e "$H/tree-zones/node_modules" ] || ln -s "$HOME/run/tree-zones/node_modules" "$H/tree-zones/node_modules"
 [ -f "$H/data/.unpacked" ] || { tar xzf "$IN/hou-data.tgz" -C "$H" && touch "$H/data/.unpacked"; } || exit 1

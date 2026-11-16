@@ -51,19 +51,22 @@ for await (const e of tsv(join(exDir, exFile))) {
 }
 log(`exemptions (${exFile}, code column ${codeCol}): ${nHs} homesteads; codes ${Object.entries(codes).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => k + ' ' + v).join(', ')}`);
 
-/* 3. outlines: the geodatabase to GeoJSON lines (once), then joined on HCAD_NUM */
+/* 3. outlines: the geodatabase to GeoJSON lines (once), then joined on LOWPARCELID (the account number) */
 const GJ = join(RAW, 'parcels.ndjson');
 if (!existsSync(GJ) || statSync(GJ).size === 0) {
   if (existsSync(GJ)) unlinkSync(GJ);
-  const OGR = process.env.OGR2OGR || join(process.env.LOCALAPPDATA || '', 'micromamba', 'envs', 'gdal', 'Library', 'bin', 'ogr2ogr.exe');
-  const r = spawnSync(OGR, ['-f', 'GeoJSONSeq', '-t_srs', 'EPSG:4326', '-lco', 'COORDINATE_PRECISION=7', '-select', 'HCAD_NUM', GJ, join(RAW, 'g', 'Parcels.gdb')], { encoding: 'utf8', maxBuffer: 1 << 26 });
+  /* GDAL 3.13 from conda-forge (micromamba env "gdal" under %LOCALAPPDATA%\micromamba; x64, runs under emulation on this laptop).
+     The account number is LOWPARCELID (the 2026 layer has no HCAD_NUM); the outlines are 3D, flattened with -dim XY */
+  const LIB = join(process.env.LOCALAPPDATA || '', 'micromamba', 'envs', 'gdal', 'Library'), OGR = process.env.OGR2OGR || join(LIB, 'bin', 'ogr2ogr.exe');
+  const r = spawnSync(OGR, ['-f', 'GeoJSONSeq', '-t_srs', 'EPSG:4326', '-dim', 'XY', '-lco', 'COORDINATE_PRECISION=7', '-select', 'LOWPARCELID', GJ, join(RAW, 'g', 'Parcels.gdb')],
+    { encoding: 'utf8', maxBuffer: 1 << 26, env: { ...process.env, PROJ_DATA: join(LIB, 'share', 'proj'), GDAL_DATA: join(LIB, 'share', 'gdal') } });
   if (r.status !== 0) throw new Error('ogr2ogr failed: ' + (r.stderr || r.error));
   log('parcels.ndjson written by ogr2ogr');
 }
 let nShp = 0, nHit = 0;
 for await (const ln of createInterface({ input: createReadStream(GJ, { encoding: 'utf8' }), crlfDelay: Infinity })) {
   if (!ln) continue; nShp++; const f = JSON.parse(ln), g = f.geometry; if (!g) continue;
-  const h = homes.get(String(f.properties.HCAD_NUM || '').trim()); if (!h) continue;
+  const h = homes.get(String(f.properties.LOWPARCELID || '').trim()); if (!h) continue;
   const polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
   for (const poly of polys) for (const ring of poly) h.rings.push(ring);
   nHit++;

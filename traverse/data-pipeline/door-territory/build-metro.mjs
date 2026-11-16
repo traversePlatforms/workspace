@@ -50,7 +50,7 @@ const STEPS = [
   ['lawn', () => ['node', ['metros/build-lawn.mjs', metro]], 'once'],
   ['lawn-towns', () => ['node', [BIG, 'build-rounds-data.mjs'], { ROUNDS_METRO: metro }], 'once'],
 ];
-const SKIPPED = ['laser-scan roof size, pitch and solar (no public USGS survey reaches these towns yet)', 'aerial photo, building outline and roof material', 'trees near the house (the lawn measuring reads tree crowns, but the tree card is Colorado-wired)', 'permits (city by city)', 'crime (police data, city by city)'];
+const SKIPPED = ['laser-scan roof size, pitch and solar (not wired for metros; DFW has no public survey, Houston has the 2018 coastal ones)', 'aerial photo, building outline and roof material', 'trees near the house (the lawn measuring reads tree crowns, but the tree card is Colorado-wired)', 'permits (city by city)', 'crime (police data, city by city)'];
 const from = opt('from'), only = opt('only'), dry = args.includes('--dry');
 let started = !from; const ran = [];
 console.log(`${M.label}: ${towns.map((t) => t.label).join(', ')}`);
