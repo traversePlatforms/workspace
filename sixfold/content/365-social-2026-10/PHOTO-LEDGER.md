@@ -63,6 +63,28 @@ October photos were taken from the Saturday pool.
 **The clean pool is nearly used up.** After these, what is left of the 12–31 Oct photos is mostly brown or patchy lawns, plates, house
 fronts or people. December photo days need new job photos.
 
+## Reserved: December 2026 calendar (DRAFT, for Jen to approve)
+
+Added 2026-11-16. Posts and crops are in `sixfold/content/december-2026/` (`posts.md` lists what each crop took out). Job photos are
+now read from the Sixfold shared drive, `08 Photos and content/Job photos/YYYY-MM/<job date> <street, town>/`.
+
+| Post | Job date | File |
+|---|---|---|
+| Sat 12 Dec photo set (matched to its sources by image, 16 Nov) | 2026-11-04 | 2026-11-04 18.30 876f0343.jpg |
+| Sat 12 Dec photo set | 2026-11-04 | 2026-11-04 18.30 240d7116.jpg |
+| Sat 12 Dec photo set | 2026-10-30 | 2026-10-30 13.47 52135127.jpg (cropped: house front, garage) |
+| Sat 12 Dec photo set | 2026-10-28 | 2026-10-28 11.59 6c8824f2.jpg |
+| Sat 19 Dec photo set | 2026-09-17 | After/IMG_8207.HEIC (cropped: photographer's shadow, road) |
+| Sat 19 Dec photo set | 2026-09-17 | After/IMG_8210.HEIC (cropped: house wall, sidewalk) |
+| Sat 19 Dec photo set | 2026-09-17 | After/IMG_8208.HEIC (cropped: neighbour's house, utility boxes) |
+| Sat 26 Dec photo set | 2026-11-04 | 2026-11-04 18.29 f472b313.jpg (cropped: aspens, yield sign) |
+| Sat 26 Dec photo set | 2026-09-17 | After/IMG_8203.HEIC (cropped: house) |
+| Sat 26 Dec photo set | 2026-09-17 | After/IMG_8209.HEIC (cropped: garage, parked truck) |
+
+**After December the clean, seasonless pool is empty.** Nothing unused from October or November passes the checks, and Kara's
+September job has few clean shots left, mostly pines with fresh pruning cuts, which stay out of posts (Colorado Springs tree licence).
+Kara's IMG_8211 has a yellow flag with a logo in the bed. January photo sets need new job photos.
+
 ## Used
 
 | Where | When | Job date | File |

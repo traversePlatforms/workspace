@@ -1,2 +1,5 @@
 # real job photos stay local (customers' homes)
 photosets/
+# decoded job photos and render pages; the contact sheets show job photos too
+.render/
+contact-sheet*.png

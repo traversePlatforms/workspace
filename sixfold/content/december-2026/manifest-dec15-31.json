@@ -1,0 +1,70 @@
+[
+  {
+    "brand": "sixfold",
+    "type": "photoset",
+    "key": "dec-2026-2026-12-19-photoset",
+    "date": "2026-12-19",
+    "time": "14:00",
+    "targets": [
+      "fb",
+      "ig"
+    ],
+    "images": [
+      "photosets/2026-12-19/2026-12-19-1.jpg",
+      "photosets/2026-12-19/2026-12-19-2.jpg",
+      "photosets/2026-12-19/2026-12-19-3.jpg"
+    ],
+    "fb_caption": "Rock beds and lawn edges after one of our landscaping jobs this year. Bed clean-up and plant removal are a service on their own with us, no aeration booking needed.\n\nMessage us here, or text a picture of your lawn to (720) 830-4553 for a free quote.",
+    "ig_caption": "Rock beds and lawn edges after one of our landscaping jobs this year. Bed clean-up and plant removal are a service on their own, no aeration booking needed.\n\nSend us a DM, or text a picture of your lawn to (720) 830-4553 for a free quote.\n\n#coloradolawn #lawncare #frontrange",
+    "note": "Photo set: Landscaping: rock beds and lawn edges. 3 real job photos (2026-09-17 jobs), cropped to 4:3 and re-saved without EXIF/GPS. DRAFT for Jen to approve."
+  },
+  {
+    "brand": "sixfold",
+    "type": "single",
+    "key": "dec-2026-2026-12-24-christmas",
+    "date": "2026-12-24",
+    "time": "15:00",
+    "targets": [
+      "fb",
+      "ig"
+    ],
+    "image": "posts/2026-12-24-christmas.png",
+    "fb_caption": "Merry Christmas from all of us at 365 Aeration & Seeding. Thank you to every customer who had us out this year, and to everyone who sent us a message or a picture of their lawn.\n\nMessage us here, or text a picture of your lawn to (720) 830-4553 for a free quote.",
+    "ig_caption": "Merry Christmas from all of us at 365 Aeration & Seeding. Thank you to every customer who had us out this year.\n\nSend us a DM, or text a picture of your lawn to (720) 830-4553 for a free quote.\n\n#coloradolawn #lawncare #frontrange",
+    "note": "Merry Christmas card (text and shapes only, no photo; holiday card, seasonal by design). DRAFT for Jen to approve."
+  },
+  {
+    "brand": "sixfold",
+    "type": "photoset",
+    "key": "dec-2026-2026-12-26-photoset",
+    "date": "2026-12-26",
+    "time": "14:00",
+    "targets": [
+      "fb",
+      "ig"
+    ],
+    "images": [
+      "photosets/2026-12-26/2026-12-26-1.jpg",
+      "photosets/2026-12-26/2026-12-26-2.jpg",
+      "photosets/2026-12-26/2026-12-26-3.jpg"
+    ],
+    "fb_caption": "Wide-open lawns from two of this year's jobs. Big or small, every lawn gets its own quote.\n\nMessage us here, or text a picture of your lawn to (720) 830-4553 for a free quote.",
+    "ig_caption": "Wide-open lawns from two of this year's jobs. Big or small, every lawn gets its own quote.\n\nSend us a DM, or text a picture of your lawn to (720) 830-4553 for a free quote.\n\n#coloradolawn #lawncare #frontrange",
+    "note": "Photo set: Wide-open lawns. 3 real job photos (2026-11-04, 2026-09-17 jobs), cropped to 4:3 and re-saved without EXIF/GPS. DRAFT for Jen to approve."
+  },
+  {
+    "brand": "sixfold",
+    "type": "single",
+    "key": "dec-2026-2026-12-31-new-year",
+    "date": "2026-12-31",
+    "time": "15:00",
+    "targets": [
+      "fb",
+      "ig"
+    ],
+    "image": "posts/2026-12-31-new-year.png",
+    "fb_caption": "Happy New Year from all of us at 365 Aeration & Seeding. Thank you to everyone who had us out in 2026, and we'll see you in the spring.\n\nMessage us here, or text a picture of your lawn to (720) 830-4553 for a free quote.",
+    "ig_caption": "Happy New Year from all of us at 365 Aeration & Seeding. Thank you to everyone who had us out in 2026, and we'll see you in the spring.\n\nSend us a DM, or text a picture of your lawn to (720) 830-4553 for a free quote.\n\n#coloradolawn #lawncare #frontrange",
+    "note": "Happy New Year card (text and shapes only, no photo; holiday card, seasonal by design). DRAFT for Jen to approve."
+  }
+]
