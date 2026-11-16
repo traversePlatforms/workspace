@@ -98,6 +98,12 @@ async function answer(id) {
   if (arg('--fb')) { body.fb = readFileSync(arg('--fb'), 'utf8').trim(); any = true; }
   if (arg('--ig')) { body.ig = readFileSync(arg('--ig'), 'utf8').trim(); any = true; }
   if (arg('--album')) { body.album = arg('--album'); any = true; }
+  if (arg('--note')) { body.note = arg('--note'); any = true; }   /* what changed, shown on the post (16 Nov) */
+  if (arg('--keep')) {   /* 16 Nov: keep these pictures, in this order (1-based, as the post shows them now): removes and reorders */
+    const d = await call('data', null, '&client=' + encodeURIComponent(arg('--client') || 'sixfold')); const p = d.posts.find((q) => q.id === id); if (!p) throw new Error('no such post: ' + id);
+    const n = arg('--keep').split(',').map((x) => Number(x.trim())); if (!n.length || n.some((k) => !(k >= 1 && k <= p.images.length))) throw new Error('--keep takes picture numbers 1..' + p.images.length);
+    body.images = n.map((k) => ({ file: p.images[k - 1].file })); any = true;
+  }
   const imgs = (arg('--image') || '').split(',').filter(Boolean);
   if (imgs.length) {
     const rep = arg('--replace');
@@ -105,7 +111,11 @@ async function answer(id) {
   }
   if (any) await call('edit', body);
   if (!any && !imgs.length) throw new Error('Give --image, --fb, --ig or --album.');
-  console.log('answered: ' + id + ' is back to draft for Matthew to look at');
+  console.log('answered: ' + id + ' is back to draft for the approver to look at');
+}
+async function note(id) {   /* 16 Nov: a note on the post WITHOUT answering the request (e.g. why it could not be done) */
+  if (!arg('--note')) throw new Error('Give --note "text".');
+  await call('edit', { id, note: arg('--note') }); console.log('note set on ' + id + ' (request still open)');
 }
 
 const [cmd, a1] = process.argv.slice(2);
@@ -114,10 +124,11 @@ try {
   if (cmd === 'import' && a1) await importManifest(a1, process.argv.includes('--dry-run'), process.argv.includes('--refresh'));
   else if (cmd === 'requests') console.log(JSON.stringify((await call('requests', null, a1 ? '&client=' + encodeURIComponent(a1) : '')).requests, null, 2));
   else if (cmd === 'answer' && a1) await answer(a1);
+  else if (cmd === 'note' && a1) await note(a1);
   else if (cmd === 'list') {   /* one client's posts: id, time (Mountain), status, what still blocks Approve */
     const d = await call('data', null, '&client=' + encodeURIComponent(a1 || 'sixfold'));
     const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
     for (const p of d.posts) console.log([p.id, p.at ? fmt.format(new Date(p.at * 1000)) : 'unscheduled', p.openRequest ? 'changes' : p.status, p.type, p.targets.join('+'), p.problems.join(' ') || 'ready'].join(' | '));
   }
-  else { console.log('usage: pc.mjs import <manifest.json> [--dry-run] | requests [client] | answer <post-id> [--image f] [--replace N] [--fb f] [--ig f] [--album name]'); process.exitCode = 1; }
+  else { console.log('usage: pc.mjs import <manifest.json> [--dry-run] | requests [client] | answer <post-id> [--image f] [--replace N] [--keep 1,3,2] [--fb f] [--ig f] [--note text] | note <post-id> --note text'); process.exitCode = 1; }
 } catch (e) { console.error(String(e.message || e)); process.exitCode = 1; }

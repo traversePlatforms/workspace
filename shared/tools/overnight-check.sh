@@ -129,5 +129,14 @@ case "$PF" in *"alert sent"*) say "  info  PROFIT ALERT emailed to Matthew";; *"
 NH=$(tail -1 "$DT/logs-refresh-quarterly.log" 2>/dev/null)
 case "$NH" in *FAILED*|*STOPPED*) bad "new homes refresh: $(printf '%s' "$NH" | cut -c1-160)";; "") ;; *) say "  info  new homes refresh: $(printf '%s' "$NH" | cut -c1-160)";; esac
 
+# 11. Jen's change requests on the Sixfold post calendar (2026-11-16, Matthew: "id rather you just do them for her"): the task "Post calendar
+# requests" answers them every 10 minutes (traverse/post-calendar/tools/request-watch.sh). Shown here: anything it could not do in the last
+# day, and how many requests are open right now.
+PQ="$(cygpath -u "$LOCALAPPDATA")/ProjectBackup/post-requests"
+PN=$(awk -v d="$(date -d yesterday '+%F')" '$1 >= d' "$PQ/needs-person.txt" 2>/dev/null)
+while IFS= read -r l; do [ -n "$l" ] && bad "post calendar request needs a person: $(printf '%s' "$l" | cut -c1-170)"; done <<< "$PN"
+PO=$(timeout 60 node "$REPO/traverse/post-calendar/tools/pc.mjs" requests sixfold 2>/dev/null | node -e 'try{console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).length)}catch(e){console.log("?")}')
+say "  info  Sixfold post requests open: $PO (last answer: $(grep -E ' (done|cannot):' "$PQ/watch.log" 2>/dev/null | tail -1 | cut -c1-120))"
+
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"
