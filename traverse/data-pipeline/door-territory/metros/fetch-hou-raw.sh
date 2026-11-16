@@ -18,7 +18,6 @@ for c in $want; do case $c in
   harris)
     get harris https://download.hcad.org/data/GIS/Parcels.zip
     get harris https://download.hcad.org/data/CAMA/2026/Real_acct_owner.zip
-    get harris https://download.hcad.org/data/CAMA/2026/Real_building_land.zip
     get harris https://download.hcad.org/data/CAMA/2026/Real_jur_exempt.zip
     get harris https://download.hcad.org/data/CAMA/2026/Code_description_real.zip ;;
   fortbend)

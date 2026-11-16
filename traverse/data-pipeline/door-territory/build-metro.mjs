@@ -31,7 +31,7 @@ const LOG = join(HERE, 'logs-metros', metro); mkdirSync(LOG, { recursive: true }
 const FILES = Object.values(M.sources).filter((s) => s.type === 'file');
 const BIG = '--max-old-space-size=12000';
 const STEPS = [
-  ...FILES.map((s) => [`prep-${s.countyName.toLowerCase().replace(/[^a-z]+/g, '')}`, () => ['node', [BIG, s.reader]], 'once']),
+  ...FILES.map((s) => [`prep-${s.countyName.toLowerCase().replace(/[^a-z]+/g, '')}`, () => ['node', [BIG, ...s.reader.split(' ')]], 'once']),
   ...(FILES.length ? [['split', () => ['node', [BIG, 'metros/split-doors.mjs', metro]], 'once']] : []),
   ['doors', (t) => ['node', ['metros/build-doors.mjs', metro, t.key]], 'town'],
   ['areas', (t) => ['node', [BIG, 'build-walklist-pdf.mjs', `${t.key}.csv`, '--no-pdf']], 'town'],

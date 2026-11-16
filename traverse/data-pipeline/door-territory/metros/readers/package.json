@@ -4,6 +4,7 @@
   "type": "module",
   "description": "The metro builder's county file readers (Houston, 16 Nov 2026): shapefile/dbf reading and state-plane reprojection",
   "dependencies": {
+    "gdal3.js": "^2.8.1",
     "proj4": "^2.23.0",
     "shapefile": "^0.6.6"
   }

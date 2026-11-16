@@ -45,7 +45,7 @@ if (S.type === 'file') {
     out.push(['"YES"', csvq(address), csvq(clean(r.city).toUpperCase()), csvq(clean(r.zip).slice(0, 5)), csvq(acres.toFixed(2)), csvq(clean(r.own)), csvq((r.mail || []).map(clean).filter(Boolean).join(', ')),
       csvq(r.hs ? 'homestead: owner lives here' : 'no homestead: owner lives elsewhere'), csvq(r.id), csvq(lat.toFixed(6)), csvq(lon.toFixed(6))].join(','));
     const k = `${lat},${lon}`;
-    extra[k] = { yb: r.yb > 1800 ? r.yb : null, sqft: r.sqft || null, pool: !!r.pool, value: r.val || null, valueYear: r.valYr || null, sold: r.sold || null, hs: !!r.hs };
+    extra[k] = { yb: r.yb > 1800 && r.yb <= new Date().getFullYear() + 1 ? r.yb : null,   /* the rolls carry the odd typo (Galveston: 2204) */ sqft: r.sqft || null, pool: !!r.pool, value: r.val || null, valueYear: r.valYr || null, sold: r.sold || null, hs: !!r.hs };
     lots[k] = r.rings.map((ring) => ring.map(([x, y]) => [+x.toFixed(6), +y.toFixed(6)]));
     if (r.hs) hs++;
   }
