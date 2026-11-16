@@ -880,6 +880,14 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 - [ ] **SX-77 — Leann G. got no aftercare or follow-up email (8 Nov check).** Her lead was added by hand as "other" with no quote or form, so the app does not count her as a 365 customer. **Matthew is asking Jen;** then: send both by hand and/or change the rule.
 
+- [ ] **SX-80 — Matthew: move the Sixfold 365 Google Business Profile off his Surge email onto his Sixfold email (16 Nov).** It is owned by m.sharpe@surgeftw.com today; review alerts land in the Surge inbox (Mike Crook's 5-star review, 16 Nov).
+  1. Signed in as the Surge email: Business Profile → ⋮ → Business Profile settings → People and access → Add → the Sixfold email → role **Owner**.
+  2. Accept the invite from the Sixfold inbox.
+  3. Google only lets someone become **primary owner** after they have been an owner for 7 days. After that week: People and access → Transfer ownership to the Sixfold email.
+  4. Then remove the Surge email, or drop it to Manager.
+
+  With Jen running Sixfold, consider adding contact@365aeration.com (or Jen) as a Manager at the same time.
+
 - [ ] **SX-79 — Matthew: share the "Photo content dump" shared drive with Jen (handover, 16 Nov).** The job photos are copied there every night (YYYY-MM / "date Street, Town", no customer names or house numbers). Drive → Shared drives → Photo content dump → Manage members → add J.McPherson@365aeration.com.
 
 - [ ] **SX-78 — Matthew: ask Brandon for Sixfold's other monthly costs (added 15 Nov).** Insurance, gas, phone, and anything else paid every month that isn't the truck ($1,000), aerator ($325), storage ($414) or trailer card ($500). Once he has the number, I put it in `sixfold-private/profit-costs.json` as `unknownMonthly`. The profit check (Matthew's 5% share) then counts it, and the "you're profitable" email switches on. Until then the alert stays off, so it can't fire on half the costs.
