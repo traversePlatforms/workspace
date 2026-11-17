@@ -11,7 +11,12 @@
 #   4. builds (build-rounds-data promotes; mobile homes and buildings only once every1115/KINDS-READY exists), the layers, the editions;
 #   5. STOPS before any upload if a town of ours has fewer doors than before, or an existing door id went missing;
 #   6. uploads the towns whose door files changed to Sixfold (batches of 8) and each edition (never hail-*).
+# 17 Nov: a re-run keeps the FIRST run's before snapshot ($S/before.keep) and, once that run's build finished ($S/built.ok), resumes at
+# the check without copying back or rebuilding. 16 Nov the three queue runs each re-snapshotted after the first had merged, so they
+# compared new with new ("doors gained 0") and rebuilt with 8 GB heaps three times in an hour. Both markers go at the end of a full run.
 set -u
+exec < /dev/null   # 17 Nov: under the Wi-Fi queue stdin is closed and md5sum then fails ("failed to set file descriptor text/binary mode"), the
+                   # before/after lists came out empty and "changed" counted 0 (same bug as push-edition.sh, 11 Nov)
 # EH_RUN: the run folder under ~/run on the VM (every1115 for the 15 Nov batch; every-<yyyymmdd> for a quarterly refresh, refresh-quarterly.sh)
 RUN=${EH_RUN:-every1115}
 cd "$(dirname "$0")/.." || exit 1
@@ -30,7 +35,10 @@ if [ -z "$LOCAL" ]; then
 $VM "test -f ~/run/$RUN/ehb.vmdone" < /dev/null || stop "ehb is not finished: $($VM 'cat ~/run-status.txt' < /dev/null)"
 fi
 i=0; while [ "$(busy)" != "0" ]; do i=$((i + 1)); [ $i -gt 72 ] && stop "another upload or build has run for 6 hours"; step "another upload/build is running: waiting"; sleep 300; done
+md5list() { (cd "$RD" && md5sum -- *.json | sed 's/ \*/  /' | LC_ALL=C sort -k2) > "$1"; [ "$(wc -l < "$1")" -eq "$(cd "$RD" && ls -- *.json | wc -l)" ] || stop "md5 list $1 incomplete ($(wc -l < "$1") lines)"; }
+RESUME=""; [ -f "$S/before.keep" ] && [ -f "$S/built.ok" ] && RESUME=1
 
+if [ -n "$RESUME" ]; then step "resume: the build of an earlier run finished ($(date -r "$S/built.ok" '+%m-%d %H:%M')); no copy back, no rebuild; checked against the snapshot of $(date -r "$S/before.keep" '+%m-%d %H:%M')"; else
 if [ -n "$LOCAL" ]; then
   [ -f "$EDIR/ehb.done" ] || stop "the laptop measuring ($EDIR) is not finished"
   B=""; W="$EDIR/lists"; T="$(pwd)"
@@ -43,9 +51,11 @@ B="$S/back"; W="$B/$RUN/lists"; T="$B/tv/traverse/data-pipeline/door-territory"
 fi
 mkdir -p every1115/b every1115/marks && cp "$W/summary.tsv" "$W/kinds.json" "$W/new/registered.json" every1115/b/
 
+if [ -f "$S/before.keep" ]; then step "door counts and ids before: kept from the run of $(date -r "$S/before.keep" '+%m-%d %H:%M') (the door files may already hold its merge)"; else
 step "door counts and ids before"
 node -e "const fs=require('fs');const R='$RD';const idx=JSON.parse(fs.readFileSync(R+'/index.json')).regions;const o={};for(const r of idx){const f=R+'/'+r.key+'.json';if(!fs.existsSync(f))continue;const j=JSON.parse(fs.readFileSync(f));o[r.key]=j.areas.flatMap(a=>a.doors.map(d=>d.id))}fs.writeFileSync('$SN/ids-before.json',JSON.stringify(o));console.log('towns',Object.keys(o).length,'doors',Object.values(o).reduce((s,l)=>s+l.length,0))" || stop "could not read the door files"
-(cd "$RD" && md5sum *.json | LC_ALL=C sort -k2) > "$S/md5-before.txt"
+md5list "$S/md5-before.txt"; touch "$S/before.keep"
+fi
 
 step "place the lists"
 n=0; for f in "$W"/add/*-add1115-areas.json "$W"/add/*-bld1115-areas.json; do [ -f "$f" ] && cp "$f" . && n=$((n+1)); done; step "add lists: $n"
@@ -77,6 +87,8 @@ node --max-old-space-size=8192 census/build-census.mjs | tail -1; node --max-old
 node --max-old-space-size=8192 build-others.mjs | tail -3
 (cd roofs && node --max-old-space-size=8192 sample-roofs.mjs --build --all-towns | tail -1 && node --max-old-space-size=8192 photo-index.mjs build --all-towns | tail -1 && node --max-old-space-size=8192 outline-photos.mjs | tail -1)
 (cd solar && node --max-old-space-size=8192 sample-solar.mjs --build --all-towns | tail -1)
+touch "$S/built.ok"
+fi
 
 step "check: no town of ours lost a door, no door id went missing"
 node -e "
@@ -84,14 +96,22 @@ const fs=require('fs');const R='$RD';const before=JSON.parse(fs.readFileSync('$S
 for(const [k,ids] of Object.entries(before)){const f=R+'/'+k+'.json';if(!fs.existsSync(f)){bad.push(k+' gone');continue}const now=new Set(JSON.parse(fs.readFileSync(f)).areas.flatMap(a=>a.doors.map(d=>d.id)));const miss=ids.filter(i=>!now.has(i));if(miss.length)bad.push(k+' -'+miss.length+' ('+miss.slice(0,3).join(' ')+')');gained+=now.size-ids.length}
 const idx=JSON.parse(fs.readFileSync(R+'/index.json')).regions;const hk={th:0,mh:0,b:0};let all=0;for(const r of idx){const f=R+'/'+r.key+'.json';if(!fs.existsSync(f))continue;for(const a of JSON.parse(fs.readFileSync(f)).areas)for(const d of a.doors){all++;if(d.hk)hk[d.hk]++}}
 console.log('doors gained in towns of ours',gained,'| doors now',all,'| kinds',JSON.stringify(hk));if(bad.length){console.log('LOST:',bad.slice(0,20).join('; '));process.exit(1)}" || stop "a town of ours lost doors: nothing uploaded"
-(cd "$RD" && md5sum *.json | LC_ALL=C sort -k2) > "$S/md5-after.txt"
-CH=$(LC_ALL=C join -1 2 -2 2 -a 2 -e none -o '2.2,1.1,2.1' "$S/md5-before.txt" "$S/md5-after.txt" | awk '$2!=$3{print $1}' | sed 's/\.json$//' | grep -vE '^(index|company|shared-towns|hail-.*|.*-lookup)$' | grep -vE '^(census|hailrep|naip|nri|others|pest|photo|roof|solar|wind|year|permit|material|outline|security|lawnmask|com)-' | sort -u)
-KEYS=$(for k in $CH; do node -e "process.exit(JSON.parse(require('fs').readFileSync('$RD/index.json')).regions.some(r=>r.key===process.argv[1])?0:1)" "$k" && echo "$k"; done | sort -u)
+md5list "$S/md5-after.txt"
+# 17 Nov: a changed file counts when its name is a town in the index (the old layer-prefix filter also dropped the town security-widefield)
+CH=$(LC_ALL=C join -1 2 -2 2 -a 2 -e none -o '2.2,1.1,2.1' "$S/md5-before.txt" "$S/md5-after.txt" | awk '$2!=$3{print $1}' | sed 's/\.json$//' | grep -vE '^(index|company|shared-towns|hail-.*|.*-lookup)$' | sort -u)
+KEYS=$(echo "$CH" | node -e "const fs=require('fs');const ks=new Set(JSON.parse(fs.readFileSync('$RD/index.json')).regions.map(r=>r.key));console.log(fs.readFileSync(0,'utf8').split(/\s+/).filter(k=>ks.has(k)).join('\n'))" | sort -u)
 step "towns whose door files changed: $(echo $KEYS | wc -w)"
 [ -n "$KEYS" ] || stop "no town changed"
 (cd ../../app && node ../editions/build-editions.cjs 2>&1 | grep -E "built|rror")
 step "upload to Sixfold"
 set -- $KEYS; while [ $# -gt 0 ]; do batch="$1 ${2:-} ${3:-} ${4:-} ${5:-} ${6:-} ${7:-} ${8:-}"; shift 8 2>/dev/null || shift $#; up6 "$RUN-$(echo $batch | cut -d' ' -f1)-$(date +%Y%m%d)" $batch || stop "Sixfold upload failed at $batch"; done
+# 17 Nov: live md5 read-back of every Sixfold door file sent (upload-towns-sixfold.sh confirms the batch, not the bytes)
+for k in $KEYS; do echo "$k.json"; done | LC_ALL=C sort > "$S/six-files.txt"
+awk 'NR==FNR{w[$1];next} ($2 in w)' "$S/six-files.txt" "$S/md5-after.txt" | LC_ALL=C sort -k2 > "$S/six-want.txt"
+bash /c/Users/SURGEI~1/.ssh/sg.sh trav 'cd ~/www/traverseplatforms.com/sixfold-data/rounds && xargs md5sum | LC_ALL=C sort -k2' < "$S/six-files.txt" > "$S/six-live.txt"
+diff -q "$S/six-want.txt" "$S/six-live.txt" > /dev/null && [ -s "$S/six-want.txt" ] || stop "Sixfold live read-back: $(LC_ALL=C comm -23 "$S/six-want.txt" "$S/six-live.txt" | wc -l) files differ from the build"
+step "Sixfold read-back: MD5 MATCH ($(wc -l < "$S/six-live.txt") door files)"
 RX="^((census|hailrep|naip|nri|others|pest|photo|roof|solar|wind|year|permit|material|outline|security|lawnmask|com)-)?($(echo $KEYS | tr ' ' '|'))\.json\$"
 for d in traverse-yards-data traverse-pest-data traverse-security-data traverse-solar-data traverse-data; do offhot; retry bash ./push-edition.sh "$d" "$RX" || stop "push $d failed"; done
+rm -f "$S/before.keep" "$S/built.ok"
 step "done: commit group1/ group3/ registered.json, town-county.json, town-surveys-extra.json, every1115/b; storm history for the new towns = the g3hail method; roof material pass for the added doors"

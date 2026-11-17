@@ -21,6 +21,9 @@ trap 'rm -f state/runner.pid' EXIT
 log() { echo "$(date '+%m-%d %H:%M:%S') $*" >> logs/queue.log; }
 ssid() { netsh wlan show interfaces 2>/dev/null | tr -d '\r' | awk -F': ' '/^ *SSID/{print $2; exit}'; }
 online() { [ "$(curl -s -m 10 -o /dev/null -w '%{http_code}' https://www.google.com/generate_204)" = "204" ]; }
+# 17 Nov: on battery no pipeline job starts (16 Nov the laptop hibernated on a critical thermal event after three 8 GB rebuilds in an hour,
+# run in a closed backpack off the charger). Win32_Battery BatteryStatus 1 discharging, 4 low, 5 critical; 2 = on AC; no battery = AC.
+on_battery() { case "$(powershell.exe -NoProfile -Command '(Get-CimInstance Win32_Battery).BatteryStatus' < /dev/null 2>/dev/null | tr -d '\r ' | head -1)" in 1|4|5) return 0;; esac; return 1; }
 gis_ok() { [ "$(curl -s -m 20 -o /dev/null -w '%{http_code}' 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0?f=json')" = "200" ]; }
 status() { { echo "$(date '+%Y-%m-%d %H:%M') network: ${NET:-?} | parcel map: ${GIS:-?}"; echo "now: $*"; while IFS='|' read -r id kind title; do
   [ -z "$id" ] || [ "${id:0:1}" = "#" ] && continue
@@ -33,20 +36,23 @@ while true; do
   case "$S" in *iPhone*|*iphone*) GIS="not checked"; status "paused: on the iPhone hotspot"; sleep 120; continue;; esac
   if ! online; then GIS="not checked"; NET="$NET (no internet)"; status "paused: no internet"; sleep 120; continue; fi
   if gis_ok; then GIS="answers"; else GIS="NOT answering from here"; fi
-  # pick: eligible = not done, not parked, parcel jobs only when the map answers. After a unit of the first eligible job, the next
-  # eligible job gets a turn (if there is one); otherwise the first.
-  ELIG=()
+  if on_battery; then BATT=1; [ "${WASBATT:-0}" = 1 ] || log "on battery: waiting (no pipeline job starts until the charger is in)"; WASBATT=1
+  else BATT=0; [ "${WASBATT:-0}" = 1 ] && log "on the charger again"; WASBATT=0; fi
+  # pick: eligible = not done, not parked, parcel jobs only when the map answers, pipeline jobs only on AC. After a unit of the first
+  # eligible job, the next eligible job gets a turn (if there is one); otherwise the first.
+  ELIG=(); declare -A KIND=()
   while IFS='|' read -r id kind title; do
     [ -z "$id" ] || [ "${id:0:1}" = "#" ] && continue
     [ -f "state/$id.done" ] || [ -f "state/$id.failed" ] && continue
     case "$kind" in *parcel*) [ "$GIS" = "answers" ] || continue;; esac
-    ELIG+=("$id")
+    case "$kind" in *pipeline*) [ "$BATT" = 0 ] || continue;; esac
+    ELIG+=("$id"); KIND[$id]="$kind"
   done < queue.txt
   if [ ${#ELIG[@]} -eq 0 ]; then
     ALLDONE=1; PARKED=""; while IFS='|' read -r id kind title; do [ -z "$id" ] || [ "${id:0:1}" = "#" ] && continue; [ -f "state/$id.failed" ] && { PARKED="$PARKED $id"; continue; }; [ -f "state/$id.done" ] || ALLDONE=0; done < queue.txt
     if [ $ALLDONE = 1 ] && [ -z "$PARKED" ]; then status "everything in the queue is done"; log "all done"; exit 0; fi
     if [ $ALLDONE = 1 ]; then status "everything else is done; parked after 3 failures:$PARKED"; log "done except parked:$PARKED"; exit 0; fi
-    status "waiting: nothing can run on this network right now"; sleep 300; continue
+    if [ "$BATT" = 1 ]; then status "on battery: waiting (pipeline jobs start on the charger)"; else status "waiting: nothing can run on this network right now"; fi; sleep 300; continue
   fi
   PICK="${ELIG[0]}"; [ "$LAST" = "${ELIG[0]}" ] && [ ${#ELIG[@]} -gt 1 ] && PICK="${ELIG[1]}"
   STAMP=$(date +%Y%m%d-%H%M%S); OUT="logs/$PICK-$STAMP.log"
@@ -70,6 +76,8 @@ while true; do
     3) rm -f "state/$PICK.fails"; log "end $PICK: one unit done, more left"; echo $(( $(cat "state/$PICK.units" 2>/dev/null || echo 0) + 1 )) > "state/$PICK.units";;
     4) log "end $PICK: stopped (hotspot, network, or an older run still going) - will resume"; sleep 120;;
     *) F=$(( $(cat "state/$PICK.fails" 2>/dev/null || echo 0) + 1 )); echo $F > "state/$PICK.fails"; log "end $PICK: FAILED (exit $RC, $F in a row; log $OUT)"
-       [ $F -ge 3 ] && { touch "state/$PICK.failed"; log "$PICK parked after 3 failures"; }; sleep 60;;
+       [ $F -ge 3 ] && { touch "state/$PICK.failed"; log "$PICK parked after 3 failures"; }
+       # 17 Nov: a failed pipeline job (8 GB rebuilds) waits an hour before its next try, so the laptop cools; others a minute
+       case "${KIND[$PICK]:-}" in *pipeline*) [ $F -lt 3 ] && log "$PICK: heavy job failed, next try in 60 minutes"; [ $F -lt 3 ] && sleep 3600;; *) sleep 60;; esac;;
   esac
 done
