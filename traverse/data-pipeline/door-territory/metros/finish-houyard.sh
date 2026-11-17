@@ -14,7 +14,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 KEY="$HOME/.ssh/azure_yard"; VM=yard@20.91.198.101; STAMP=$(date +%Y%m%d-%H%M)
-T="$LOCALAPPDATA/ProjectBackup/houyard"; mkdir -p "$T"
+T="$(cygpath -u "$LOCALAPPDATA")/ProjectBackup/houyard"; mkdir -p "$T"   # 17 Nov: a C: path made tar read "C:" as a remote host
 ssh -i "$KEY" -o BatchMode=yes "$VM" 'test -f ~/run/fill1031/houyard.vmdone' < /dev/null || { echo "houyard not done on the VM yet"; exit 4; }
 scp -i "$KEY" -o BatchMode=yes "$VM:run/fill1031/houyard-result.tgz" "$T/houyard-result.tgz" < /dev/null
 tar tzf "$T/houyard-result.tgz" > /dev/null
