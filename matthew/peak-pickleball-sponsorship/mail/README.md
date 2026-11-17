@@ -1,0 +1,31 @@
+# Peak outreach email (built 17 Nov 2026)
+
+Hourly batches of plain-text emails from Matthew's Peak Pickleball Outlook mailbox to two lists from the Peak desk: sponsor
+prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sending X amount out each hour until our list is tapped").
+**Nothing has been sent. Each list starts PAUSED; only Matthew's Start on the page sends.**
+
+- **Page:** https://traverseplatforms.com/peak-mail-31dc56/ . The sign-in code is only in `~/.ssh/peak-mail-code.txt` on the laptop.
+- **Source:** `public/` here goes to `public_html/peak-mail-31dc56/`. Private data lives in `~/www/traverseplatforms.com/peak-mail-data/`
+  (0700, never in git): app keys, sealed Microsoft token, hashed code, lists, `events.log`, `run.log`.
+- **Microsoft:** the Entra app "Matthew outreach" in Peak's tenant. It uses delegated `offline_access User.Read Mail.ReadWrite Mail.Send`
+  and redirects to `/peak-mail-31dc56/oauth.php`. If sign-in says *Need admin approval*, Peak's Global admin grants consent once
+  (the page shows how).
+- **Hourly run:** `sixfold-tools/morning-email.php` (the hourly SiteGround cron) starts `cron.php run` in the background. Each run:
+  1. reads the inbox and junk folder for replies and bounce notices. It only reads; it never moves, marks or deletes mail.
+  2. skips anyone the desk has since moved on.
+  3. sends up to the hourly rate (default 12, max 30; 10 on the first sending day), spread over about 55 minutes. Sending runs only
+     inside the window (Mon–Fri 9–4 Colorado time, with holidays off).
+- **Safety:**
+  - Start is refused while:
+    - a template still says DRAFT
+    - Peak's postal address is missing
+    - Microsoft isn't connected
+  - Editing a template, or a re-import that adds people, pauses a running list.
+  - A list pauses itself if its bounces pass 8% after 20 sends.
+  - Both lists pause if Microsoft blocks the mailbox.
+  - Unsubscribed, bounced, STOP and hand-added addresses are never emailed.
+  - No open pixel. Every web address in an email goes through `r.php` so clicks are counted.
+- **Commands (server):** `php cron.php run | stats | import | check | dns`. `setapp` and `setcode` read from a pipe.
+- **Overnight check:** section 12 of `shared/tools/overnight-check.sh` prints `cron.php stats`.
+- **Test:** `node matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`. It mocks Microsoft and uses throwaway data, and
+  sends nothing.

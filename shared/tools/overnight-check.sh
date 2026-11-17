@@ -138,5 +138,11 @@ while IFS= read -r l; do [ -n "$l" ] && bad "post calendar request needs a perso
 PO=$(timeout 60 node "$REPO/traverse/post-calendar/tools/pc.mjs" requests sixfold 2>/dev/null | node -e 'try{console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).length)}catch(e){console.log("?")}')
 say "  info  Sixfold post requests open: $PO (last answer: $(grep -E ' (done|cannot):' "$PQ/watch.log" 2>/dev/null | tail -1 | cut -c1-120))"
 
+# 12. The Peak outreach email (2026-11-17, Matthew: hourly batches from his Peak Outlook to the sponsor and expo lists): one line per list
+# (sent, waiting, replied, bounced, unsubscribed, clicked) and the last hourly run. A Microsoft sign-in that needs reconnecting is a problem.
+# Source: matthew/peak-pickleball-sponsorship/mail/public/cron.php (stats).
+PM=$($SG 'php ~/www/traverseplatforms.com/public_html/peak-mail-31dc56/cron.php stats' < /dev/null 2>/dev/null | tail -1)
+case "$PM" in *"NEEDS RECONNECT"*) bad "$PM";; "") ;; *) say "  info  $PM";; esac
+
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"
