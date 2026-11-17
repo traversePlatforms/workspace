@@ -22,7 +22,7 @@ Folder map and "where does this go" → [README.md](README.md).
 
 **Do not publish, post, or schedule anything to any platform.** Standing instruction as of 2026-08-05, no expiry. Applies to all three entities.
 
-The Blotato MCP server can post to live social accounts. Available for reading account state and preparing content — **not for sending**.
+**Blotato is no longer used** (Matthew, 2026-11-17). Posting runs through his own post calendar (traverse/post-calendar/), where nothing goes out without an approver's tap.
 
 - **Allowed:** writing and revising drafts, saving them to draft files, reading connected account info, preparing payloads for later review.
 - **Not allowed without explicit per-request authorization:** publishing, posting, scheduling, queuing, or any action that puts content in front of an audience now or on a timer. **Scheduling counts as publishing** — it goes out without a further check.
