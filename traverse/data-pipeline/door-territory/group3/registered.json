@@ -1,0 +1,1626 @@
+[
+ {
+  "key": "g3-durango",
+  "label": "Durango",
+  "lat": 37.27088,
+  "lon": -107.88251,
+  "county": "La Plata"
+ },
+ {
+  "key": "g3-bayfield",
+  "label": "Bayfield",
+  "lat": 37.23355,
+  "lon": -107.59436,
+  "county": "La Plata"
+ },
+ {
+  "key": "g3-ignacio",
+  "label": "Ignacio",
+  "lat": 37.1164,
+  "lon": -107.63773,
+  "county": "La Plata"
+ },
+ {
+  "key": "g3-durango-rural",
+  "label": "Durango (rural)",
+  "lat": 37.42648,
+  "lon": -107.92614,
+  "county": "La Plata"
+ },
+ {
+  "key": "g3-bayfield-rural",
+  "label": "Bayfield (rural)",
+  "lat": 37.42695,
+  "lon": -107.64016,
+  "county": "La Plata"
+ },
+ {
+  "key": "g3-durango-southwest-rural",
+  "label": "Durango Southwest (rural)",
+  "lat": 37.10733,
+  "lon": -108.04673,
+  "county": "La Plata"
+ },
+ {
+  "key": "g3-ignacio-rural",
+  "label": "Ignacio (rural)",
+  "lat": 37.10747,
+  "lon": -107.61653,
+  "county": "La Plata"
+ },
+ {
+  "key": "g3-edwards",
+  "label": "Edwards",
+  "lat": 39.60948,
+  "lon": -106.62082,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-vail",
+  "label": "Vail",
+  "lat": 39.63356,
+  "lon": -106.35725,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-gypsum",
+  "label": "Gypsum",
+  "lat": 39.61903,
+  "lon": -106.95658,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-avon",
+  "label": "Avon",
+  "lat": 39.64714,
+  "lon": -106.49999,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-basalt",
+  "label": "Basalt",
+  "lat": 39.36839,
+  "lon": -107.05015,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-el-jebel",
+  "label": "El Jebel",
+  "lat": 39.40631,
+  "lon": -107.09209,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-dotsero",
+  "label": "Dotsero",
+  "lat": 39.64711,
+  "lon": -107.05194,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-minturn-red-cliff-rural",
+  "label": "Minturn-Red Cliff (rural)",
+  "lat": 39.56857,
+  "lon": -106.43096,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-eagle-gypsum-rural",
+  "label": "Eagle-Gypsum (rural)",
+  "lat": 39.67755,
+  "lon": -106.73887,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-basalt-rural",
+  "label": "Basalt (rural)",
+  "lat": 39.44743,
+  "lon": -106.81143,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-rifle",
+  "label": "Rifle",
+  "lat": 39.54148,
+  "lon": -107.78095,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-glenwood-springs",
+  "label": "Glenwood Springs",
+  "lat": 39.53217,
+  "lon": -107.34301,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-carbondale",
+  "label": "Carbondale",
+  "lat": 39.39668,
+  "lon": -107.2154,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-new-castle",
+  "label": "New Castle",
+  "lat": 39.57928,
+  "lon": -107.52636,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-battlement-mesa",
+  "label": "Battlement Mesa",
+  "lat": 39.44585,
+  "lon": -108.01112,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-silt",
+  "label": "Silt",
+  "lat": 39.54801,
+  "lon": -107.64691,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-parachute",
+  "label": "Parachute",
+  "lat": 39.44719,
+  "lon": -108.05281,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-mulford",
+  "label": "Mulford",
+  "lat": 39.40635,
+  "lon": -107.17069,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-chacra",
+  "label": "Chacra",
+  "lat": 39.57746,
+  "lon": -107.45014,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-cattle-creek",
+  "label": "Cattle Creek",
+  "lat": 39.46476,
+  "lon": -107.25827,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-glenwood-springs-rural",
+  "label": "Glenwood Springs (rural)",
+  "lat": 39.7287,
+  "lon": -107.25415,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-new-castle-rural",
+  "label": "New Castle (rural)",
+  "lat": 39.5974,
+  "lon": -107.56732,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-rifle-rural",
+  "label": "Rifle (rural)",
+  "lat": 39.59815,
+  "lon": -107.79379,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-west-garfield-rural",
+  "label": "West Garfield (rural)",
+  "lat": 39.5339,
+  "lon": -108.46614,
+  "county": "Garfield"
+ },
+ {
+  "key": "g3-breckenridge",
+  "label": "Breckenridge",
+  "lat": 39.50172,
+  "lon": -106.04403,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-silverthorne",
+  "label": "Silverthorne",
+  "lat": 39.65713,
+  "lon": -106.08861,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-frisco",
+  "label": "Frisco",
+  "lat": 39.58294,
+  "lon": -106.08774,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-blue-river",
+  "label": "Blue River",
+  "lat": 39.43068,
+  "lon": -106.02751,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-keystone",
+  "label": "Keystone",
+  "lat": 39.59656,
+  "lon": -105.93474,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-dillon",
+  "label": "Dillon",
+  "lat": 39.62309,
+  "lon": -106.03958,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-breckenridge-rural",
+  "label": "Breckenridge (rural)",
+  "lat": 39.5123,
+  "lon": -106.01766,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-silverthorne-rural",
+  "label": "Silverthorne (rural)",
+  "lat": 39.76333,
+  "lon": -106.15385,
+  "county": "Summit"
+ },
+ {
+  "key": "g3-fairplay",
+  "label": "Fairplay",
+  "lat": 39.22455,
+  "lon": -105.99689,
+  "county": "Park"
+ },
+ {
+  "key": "g3-alma",
+  "label": "Alma",
+  "lat": 39.28549,
+  "lon": -106.07099,
+  "county": "Park"
+ },
+ {
+  "key": "g3-fairplay-rural",
+  "label": "Fairplay (rural)",
+  "lat": 39.23914,
+  "lon": -105.80344,
+  "county": "Park"
+ },
+ {
+  "key": "g3-lake-george-rural",
+  "label": "Lake George (rural)",
+  "lat": 38.93124,
+  "lon": -105.65426,
+  "county": "Park"
+ },
+ {
+  "key": "g3-granby",
+  "label": "Granby",
+  "lat": 40.06488,
+  "lon": -105.92365,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-fraser",
+  "label": "Fraser",
+  "lat": 39.93068,
+  "lon": -105.79838,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-winter-park",
+  "label": "Winter Park",
+  "lat": 39.88125,
+  "lon": -105.78005,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-kremmling",
+  "label": "Kremmling",
+  "lat": 40.05693,
+  "lon": -106.3774,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-grand-lake",
+  "label": "Grand Lake",
+  "lat": 40.24828,
+  "lon": -105.82069,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-tabernash",
+  "label": "Tabernash",
+  "lat": 39.98137,
+  "lon": -105.84795,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-hot-sulphur-springs",
+  "label": "Hot Sulphur Springs",
+  "lat": 40.07578,
+  "lon": -106.10325,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-granby-rural",
+  "label": "Granby (rural)",
+  "lat": 40.13593,
+  "lon": -105.8813,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-kremmling-rural",
+  "label": "Kremmling (rural)",
+  "lat": 40.06468,
+  "lon": -106.26672,
+  "county": "Grand"
+ },
+ {
+  "key": "g3-steamboat-springs",
+  "label": "Steamboat Springs",
+  "lat": 40.48417,
+  "lon": -106.83513,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-hayden",
+  "label": "Hayden",
+  "lat": 40.48494,
+  "lon": -107.23998,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-oak-creek",
+  "label": "Oak Creek",
+  "lat": 40.2747,
+  "lon": -106.95891,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-yampa",
+  "label": "Yampa",
+  "lat": 40.15324,
+  "lon": -106.9078,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-steamboat-springs-rural",
+  "label": "Steamboat Springs (rural)",
+  "lat": 40.62788,
+  "lon": -106.88564,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-oak-creek-rural",
+  "label": "Oak Creek (rural)",
+  "lat": 40.26481,
+  "lon": -106.90212,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-hayden-rural",
+  "label": "Hayden (rural)",
+  "lat": 40.61339,
+  "lon": -107.12397,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-yampa-rural",
+  "label": "Yampa (rural)",
+  "lat": 40.07323,
+  "lon": -106.83226,
+  "county": "Routt"
+ },
+ {
+  "key": "g3-ponderosa-park",
+  "label": "Ponderosa Park",
+  "lat": 39.39799,
+  "lon": -104.63448,
+  "county": "Elbert"
+ },
+ {
+  "key": "g3-elizabeth-rural",
+  "label": "Elizabeth (rural)",
+  "lat": 39.34733,
+  "lon": -104.42564,
+  "county": "Elbert"
+ },
+ {
+  "key": "g3-simla-rural",
+  "label": "Simla (rural)",
+  "lat": 39.0795,
+  "lon": -104.01267,
+  "county": "Elbert"
+ },
+ {
+  "key": "g3-agate-rural",
+  "label": "Agate (rural)",
+  "lat": 39.36858,
+  "lon": -103.97449,
+  "county": "Elbert"
+ },
+ {
+  "key": "g3-cortez",
+  "label": "Cortez",
+  "lat": 37.34965,
+  "lon": -108.57935,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-mancos",
+  "label": "Mancos",
+  "lat": 37.34683,
+  "lon": -108.29358,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-dolores",
+  "label": "Dolores",
+  "lat": 37.47416,
+  "lon": -108.50032,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-lewis",
+  "label": "Lewis",
+  "lat": 37.50268,
+  "lon": -108.66276,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-cortez-rural",
+  "label": "Cortez (rural)",
+  "lat": 37.39794,
+  "lon": -108.72347,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-dolores-rural",
+  "label": "Dolores (rural)",
+  "lat": 37.51259,
+  "lon": -108.33234,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-mancos-rural",
+  "label": "Mancos (rural)",
+  "lat": 37.34267,
+  "lon": -108.29646,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-ute-mountain-rural",
+  "label": "Ute Mountain (rural)",
+  "lat": 37.16966,
+  "lon": -108.66804,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-pleasant-view-rural",
+  "label": "Pleasant View (rural)",
+  "lat": 37.47953,
+  "lon": -108.81143,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g3-gunnison",
+  "label": "Gunnison",
+  "lat": 38.55182,
+  "lon": -106.91564,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-crested-butte",
+  "label": "Crested Butte",
+  "lat": 38.86736,
+  "lon": -106.97745,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-mount-crested-butte",
+  "label": "Mount Crested Butte",
+  "lat": 38.90635,
+  "lon": -106.95754,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-pitkin",
+  "label": "Pitkin",
+  "lat": 38.60872,
+  "lon": -106.51494,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-marble",
+  "label": "Marble",
+  "lat": 39.07221,
+  "lon": -107.19071,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-gunnison-rural",
+  "label": "Gunnison (rural)",
+  "lat": 38.72002,
+  "lon": -106.72598,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-crested-butte-rural",
+  "label": "Crested Butte (rural)",
+  "lat": 38.84564,
+  "lon": -106.91647,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-sapinero-rural",
+  "label": "Sapinero (rural)",
+  "lat": 38.44996,
+  "lon": -107.31782,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-somerset-rural",
+  "label": "Somerset (rural)",
+  "lat": 38.96719,
+  "lon": -107.24348,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g3-fort-morgan",
+  "label": "Fort Morgan",
+  "lat": 40.25312,
+  "lon": -103.78724,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-brush",
+  "label": "Brush",
+  "lat": 40.26147,
+  "lon": -103.63398,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-wiggins",
+  "label": "Wiggins",
+  "lat": 40.22847,
+  "lon": -104.06742,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-log-lane-village",
+  "label": "Log Lane Village",
+  "lat": 40.26988,
+  "lon": -103.82903,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-fort-morgan-rural",
+  "label": "Fort Morgan (rural)",
+  "lat": 40.2627,
+  "lon": -103.82725,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-brush-rural",
+  "label": "Brush (rural)",
+  "lat": 40.26225,
+  "lon": -103.62857,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-wiggins-rural",
+  "label": "Wiggins (rural)",
+  "lat": 40.17753,
+  "lon": -104.00679,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-weldona-rural",
+  "label": "Weldona (rural)",
+  "lat": 40.41481,
+  "lon": -104.00698,
+  "county": "Morgan"
+ },
+ {
+  "key": "g3-victor",
+  "label": "Victor",
+  "lat": 38.70927,
+  "lon": -105.14141,
+  "county": "Teller"
+ },
+ {
+  "key": "g3-cripple-creek-rural",
+  "label": "Cripple Creek (rural)",
+  "lat": 38.75303,
+  "lon": -105.13405,
+  "county": "Teller"
+ },
+ {
+  "key": "g3-pagosa-springs",
+  "label": "Pagosa Springs",
+  "lat": 37.26729,
+  "lon": -107.03296,
+  "county": "Archuleta"
+ },
+ {
+  "key": "g3-arboles",
+  "label": "Arboles",
+  "lat": 37.02336,
+  "lon": -107.42006,
+  "county": "Archuleta"
+ },
+ {
+  "key": "g3-pagosa-springs-rural",
+  "label": "Pagosa Springs (rural)",
+  "lat": 37.2077,
+  "lon": -106.86553,
+  "county": "Archuleta"
+ },
+ {
+  "key": "g3-arboles-rural",
+  "label": "Arboles (rural)",
+  "lat": 37.21182,
+  "lon": -107.29729,
+  "county": "Archuleta"
+ },
+ {
+  "key": "g3-sterling",
+  "label": "Sterling",
+  "lat": 40.62277,
+  "lon": -103.1942,
+  "county": "Logan"
+ },
+ {
+  "key": "g3-fleming",
+  "label": "Fleming",
+  "lat": 40.68218,
+  "lon": -102.83975,
+  "county": "Logan"
+ },
+ {
+  "key": "g3-sterling-rural",
+  "label": "Sterling (rural)",
+  "lat": 40.72313,
+  "lon": -103.28983,
+  "county": "Logan"
+ },
+ {
+  "key": "g3-fleming-rural",
+  "label": "Fleming (rural)",
+  "lat": 40.66061,
+  "lon": -102.95933,
+  "county": "Logan"
+ },
+ {
+  "key": "g3-merino-rural",
+  "label": "Merino (rural)",
+  "lat": 40.52991,
+  "lon": -103.40421,
+  "county": "Logan"
+ },
+ {
+  "key": "g3-crook-rural",
+  "label": "Crook (rural)",
+  "lat": 40.89225,
+  "lon": -102.82738,
+  "county": "Logan"
+ },
+ {
+  "key": "g3-peetz-rural",
+  "label": "Peetz (rural)",
+  "lat": 40.9104,
+  "lon": -103.239,
+  "county": "Logan"
+ },
+ {
+  "key": "g3-aspen",
+  "label": "Aspen",
+  "lat": 39.19773,
+  "lon": -106.83188,
+  "county": "Pitkin"
+ },
+ {
+  "key": "g3-snowmass-village",
+  "label": "Snowmass Village",
+  "lat": 39.224,
+  "lon": -106.93903,
+  "county": "Pitkin"
+ },
+ {
+  "key": "g3-snowmass-village-rural",
+  "label": "Snowmass Village (rural)",
+  "lat": 39.18274,
+  "lon": -107.15763,
+  "county": "Pitkin"
+ },
+ {
+  "key": "g3-aspen-rural",
+  "label": "Aspen (rural)",
+  "lat": 39.17168,
+  "lon": -106.70372,
+  "county": "Pitkin"
+ },
+ {
+  "key": "g3-monte-vista",
+  "label": "Monte Vista",
+  "lat": 37.57832,
+  "lon": -106.1483,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g3-south-fork",
+  "label": "South Fork",
+  "lat": 37.66459,
+  "lon": -106.63042,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g3-del-norte",
+  "label": "Del Norte",
+  "lat": 37.67816,
+  "lon": -106.35466,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g3-alpine",
+  "label": "Alpine",
+  "lat": 37.6869,
+  "lon": -106.58454,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g3-del-norte-rural",
+  "label": "Del Norte (rural)",
+  "lat": 37.61729,
+  "lon": -106.46695,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g3-monte-vista-rural",
+  "label": "Monte Vista (rural)",
+  "lat": 37.52486,
+  "lon": -106.17658,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g3-sargent-rural",
+  "label": "Sargent (rural)",
+  "lat": 37.65886,
+  "lon": -106.13959,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g3-upper-bear-creek",
+  "label": "Upper Bear Creek",
+  "lat": 39.63166,
+  "lon": -105.42102,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-georgetown",
+  "label": "Georgetown",
+  "lat": 39.71983,
+  "lon": -105.69472,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-floyd-hill",
+  "label": "Floyd Hill",
+  "lat": 39.72445,
+  "lon": -105.4296,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-upper-witter-gulch",
+  "label": "Upper Witter Gulch",
+  "lat": 39.66175,
+  "lon": -105.42909,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-empire",
+  "label": "Empire",
+  "lat": 39.75997,
+  "lon": -105.67974,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-st-mary-s",
+  "label": "St. Mary's",
+  "lat": 39.8195,
+  "lon": -105.64941,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-downieville-lawson-dumont",
+  "label": "Downieville-Lawson-Dumont",
+  "lat": 39.76825,
+  "lon": -105.6181,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-pine-valley",
+  "label": "Pine Valley",
+  "lat": 39.6902,
+  "lon": -105.41151,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-idaho-springs-rural",
+  "label": "Idaho Springs (rural)",
+  "lat": 39.70896,
+  "lon": -105.56125,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-georgetown-rural",
+  "label": "Georgetown (rural)",
+  "lat": 39.69195,
+  "lon": -105.74501,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g3-silver-cliff",
+  "label": "Silver Cliff",
+  "lat": 38.11857,
+  "lon": -105.39867,
+  "county": "Custer"
+ },
+ {
+  "key": "g3-westcliffe",
+  "label": "Westcliffe",
+  "lat": 38.12915,
+  "lon": -105.468,
+  "county": "Custer"
+ },
+ {
+  "key": "g3-westcliffe-rural",
+  "label": "Westcliffe (rural)",
+  "lat": 38.07744,
+  "lon": -105.4226,
+  "county": "Custer"
+ },
+ {
+  "key": "g3-mountain-village",
+  "label": "Mountain Village",
+  "lat": 37.93223,
+  "lon": -107.85675,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g3-telluride",
+  "label": "Telluride",
+  "lat": 37.92818,
+  "lon": -107.83602,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g3-norwood",
+  "label": "Norwood",
+  "lat": 38.12857,
+  "lon": -108.29218,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g3-placerville",
+  "label": "Placerville",
+  "lat": 38.00632,
+  "lon": -108.03887,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g3-telluride-rural",
+  "label": "Telluride (rural)",
+  "lat": 37.96313,
+  "lon": -107.96598,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g3-norwood-rural",
+  "label": "Norwood (rural)",
+  "lat": 37.98712,
+  "lon": -108.3401,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g3-west-san-miguel-rural",
+  "label": "West San Miguel (rural)",
+  "lat": 38.0179,
+  "lon": -108.68242,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g3-central",
+  "label": "Central",
+  "lat": 39.78322,
+  "lon": -105.49892,
+  "county": "Gilpin"
+ },
+ {
+  "key": "g3-central-city-rural",
+  "label": "Central City (rural)",
+  "lat": 39.84212,
+  "lon": -105.54912,
+  "county": "Gilpin"
+ },
+ {
+  "key": "g3-yuma",
+  "label": "Yuma",
+  "lat": 40.11851,
+  "lon": -102.71012,
+  "county": "Yuma"
+ },
+ {
+  "key": "g3-wray",
+  "label": "Wray",
+  "lat": 40.07894,
+  "lon": -102.22789,
+  "county": "Yuma"
+ },
+ {
+  "key": "g3-yuma-rural",
+  "label": "Yuma (rural)",
+  "lat": 40.0604,
+  "lon": -102.59148,
+  "county": "Yuma"
+ },
+ {
+  "key": "g3-wray-rural",
+  "label": "Wray (rural)",
+  "lat": 40.09446,
+  "lon": -102.2815,
+  "county": "Yuma"
+ },
+ {
+  "key": "g3-idalia-joes-rural",
+  "label": "Idalia-Joes (rural)",
+  "lat": 39.77301,
+  "lon": -102.42637,
+  "county": "Yuma"
+ },
+ {
+  "key": "g3-leadville",
+  "label": "Leadville",
+  "lat": 39.24938,
+  "lon": -106.29372,
+  "county": "Lake"
+ },
+ {
+  "key": "g3-leadville-north",
+  "label": "Leadville North",
+  "lat": 39.25867,
+  "lon": -106.31537,
+  "county": "Lake"
+ },
+ {
+  "key": "g3-twin-lakes",
+  "label": "Twin Lakes",
+  "lat": 39.10317,
+  "lon": -106.3242,
+  "county": "Lake"
+ },
+ {
+  "key": "g3-leadville-rural",
+  "label": "Leadville (rural)",
+  "lat": 39.16837,
+  "lon": -106.37732,
+  "county": "Lake"
+ },
+ {
+  "key": "g3-leadville-north-rural",
+  "label": "Leadville North (rural)",
+  "lat": 39.31414,
+  "lon": -106.32006,
+  "county": "Lake"
+ },
+ {
+  "key": "g3-ouray",
+  "label": "Ouray",
+  "lat": 38.03257,
+  "lon": -107.67301,
+  "county": "Ouray"
+ },
+ {
+  "key": "g3-ridgway",
+  "label": "Ridgway",
+  "lat": 38.15916,
+  "lon": -107.75402,
+  "county": "Ouray"
+ },
+ {
+  "key": "g3-loghill-village",
+  "label": "Loghill Village",
+  "lat": 38.20364,
+  "lon": -107.77276,
+  "county": "Ouray"
+ },
+ {
+  "key": "g3-ouray-rural",
+  "label": "Ouray (rural)",
+  "lat": 38.11239,
+  "lon": -107.82163,
+  "county": "Ouray"
+ },
+ {
+  "key": "g3-meeker",
+  "label": "Meeker",
+  "lat": 40.05063,
+  "lon": -107.89836,
+  "county": "Rio Blanco"
+ },
+ {
+  "key": "g3-rangely",
+  "label": "Rangely",
+  "lat": 40.08701,
+  "lon": -108.78326,
+  "county": "Rio Blanco"
+ },
+ {
+  "key": "g3-meeker-rural",
+  "label": "Meeker (rural)",
+  "lat": 39.95557,
+  "lon": -107.83167,
+  "county": "Rio Blanco"
+ },
+ {
+  "key": "g3-rangely-rural",
+  "label": "Rangely (rural)",
+  "lat": 39.93626,
+  "lon": -108.63391,
+  "county": "Rio Blanco"
+ },
+ {
+  "key": "g3-rico",
+  "label": "Rico",
+  "lat": 37.68915,
+  "lon": -108.0312,
+  "county": "Dolores"
+ },
+ {
+  "key": "g3-dove-creek",
+  "label": "Dove Creek",
+  "lat": 37.76724,
+  "lon": -108.90811,
+  "county": "Dolores"
+ },
+ {
+  "key": "g3-dove-creek-rural",
+  "label": "Dove Creek (rural)",
+  "lat": 37.68301,
+  "lon": -108.87207,
+  "county": "Dolores"
+ },
+ {
+  "key": "g3-rico-rural",
+  "label": "Rico (rural)",
+  "lat": 37.76353,
+  "lon": -108.3443,
+  "county": "Dolores"
+ },
+ {
+  "key": "g3-lake-city-rural",
+  "label": "Lake City (rural)",
+  "lat": 37.78497,
+  "lon": -107.29599,
+  "county": "Hinsdale"
+ },
+ {
+  "key": "g3-silverton",
+  "label": "Silverton",
+  "lat": 37.81007,
+  "lon": -107.66351,
+  "county": "San Juan"
+ },
+ {
+  "key": "g3-silverton-rural",
+  "label": "Silverton (rural)",
+  "lat": 37.80225,
+  "lon": -107.71659,
+  "county": "San Juan"
+ },
+ {
+  "key": "g3-divide-rural",
+  "label": "Teller (rural)",
+  "lat": 38.94221,
+  "lon": -105.17871,
+  "county": "Teller"
+ },
+ {
+  "key": "g3-montrose",
+  "label": "Montrose",
+  "lat": 38.47266,
+  "lon": -107.85402,
+  "county": "Montrose"
+ },
+ {
+  "key": "g3-olathe",
+  "label": "Olathe",
+  "lat": 38.60824,
+  "lon": -107.98512,
+  "county": "Montrose"
+ },
+ {
+  "key": "g3-nucla",
+  "label": "Nucla",
+  "lat": 38.26656,
+  "lon": -108.54831,
+  "county": "Montrose"
+ },
+ {
+  "key": "g3-montrose-rural",
+  "label": "Montrose (rural)",
+  "lat": 38.43331,
+  "lon": -107.84382,
+  "county": "Montrose"
+ },
+ {
+  "key": "g3-olathe-rural",
+  "label": "Olathe (rural)",
+  "lat": 38.49317,
+  "lon": -108.04215,
+  "county": "Montrose"
+ },
+ {
+  "key": "g3-nucla-rural",
+  "label": "Nucla (rural)",
+  "lat": 38.32613,
+  "lon": -108.4989,
+  "county": "Montrose"
+ },
+ {
+  "key": "g3-delta",
+  "label": "Delta",
+  "lat": 38.7584,
+  "lon": -108.08963,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-orchard-city",
+  "label": "Orchard City",
+  "lat": 38.82304,
+  "lon": -107.96871,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-cedaredge",
+  "label": "Cedaredge",
+  "lat": 38.89475,
+  "lon": -107.92639,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-paonia",
+  "label": "Paonia",
+  "lat": 38.87087,
+  "lon": -107.59267,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-hotchkiss",
+  "label": "Hotchkiss",
+  "lat": 38.80085,
+  "lon": -107.70904,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-delta-rural",
+  "label": "Delta (rural)",
+  "lat": 38.77622,
+  "lon": -108.10374,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-cedaredge-rural",
+  "label": "Cedaredge (rural)",
+  "lat": 38.92419,
+  "lon": -108.0028,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-hotchkiss-rural",
+  "label": "Hotchkiss (rural)",
+  "lat": 38.86713,
+  "lon": -107.7223,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-paonia-rural",
+  "label": "Paonia (rural)",
+  "lat": 39.00234,
+  "lon": -107.61495,
+  "county": "Delta"
+ },
+ {
+  "key": "g3-trinidad",
+  "label": "Trinidad",
+  "lat": 37.17888,
+  "lon": -104.48332,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-aguilar",
+  "label": "Aguilar",
+  "lat": 37.40371,
+  "lon": -104.65466,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-trinidad-rural",
+  "label": "Trinidad (rural)",
+  "lat": 37.1807,
+  "lon": -104.42977,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-weston-rural",
+  "label": "Weston (rural)",
+  "lat": 37.17061,
+  "lon": -104.87599,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-aguilar-rural",
+  "label": "Aguilar (rural)",
+  "lat": 37.53595,
+  "lon": -104.58397,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-kim-rural",
+  "label": "Kim (rural)",
+  "lat": 37.32171,
+  "lon": -103.40394,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-branson-rural",
+  "label": "Branson (rural)",
+  "lat": 37.27819,
+  "lon": -103.81941,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-model-rural",
+  "label": "Model (rural)",
+  "lat": 37.4706,
+  "lon": -104.01188,
+  "county": "Las Animas"
+ },
+ {
+  "key": "g3-alamosa",
+  "label": "Alamosa",
+  "lat": 37.47537,
+  "lon": -105.87911,
+  "county": "Alamosa"
+ },
+ {
+  "key": "g3-alamosa-east",
+  "label": "Alamosa East",
+  "lat": 37.47604,
+  "lon": -105.84149,
+  "county": "Alamosa"
+ },
+ {
+  "key": "g3-alamosa-rural",
+  "label": "Alamosa (rural)",
+  "lat": 37.47834,
+  "lon": -105.76246,
+  "county": "Alamosa"
+ },
+ {
+  "key": "g3-mosca-hooper-rural",
+  "label": "Mosca-Hooper (rural)",
+  "lat": 37.635,
+  "lon": -105.74601,
+  "county": "Alamosa"
+ },
+ {
+  "key": "g3-sanford",
+  "label": "Sanford",
+  "lat": 37.25749,
+  "lon": -105.90071,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-antonito",
+  "label": "Antonito",
+  "lat": 37.07472,
+  "lon": -106.01037,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-manassa",
+  "label": "Manassa",
+  "lat": 37.17383,
+  "lon": -105.93731,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-la-jara",
+  "label": "La Jara",
+  "lat": 37.27406,
+  "lon": -105.95656,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-romeo",
+  "label": "Romeo",
+  "lat": 37.17219,
+  "lon": -105.98599,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-la-jara-rural",
+  "label": "La Jara (rural)",
+  "lat": 37.2874,
+  "lon": -105.93467,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-west-conejos-rural",
+  "label": "West Conejos (rural)",
+  "lat": 37.19861,
+  "lon": -106.35663,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-manassa-rural",
+  "label": "Manassa (rural)",
+  "lat": 37.16625,
+  "lon": -105.96715,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-antonito-rural",
+  "label": "Antonito (rural)",
+  "lat": 37.08797,
+  "lon": -105.90939,
+  "county": "Conejos"
+ },
+ {
+  "key": "g3-center",
+  "label": "Center",
+  "lat": 37.75012,
+  "lon": -106.11279,
+  "county": "Saguache"
+ },
+ {
+  "key": "g3-saguache",
+  "label": "Saguache",
+  "lat": 38.08555,
+  "lon": -106.1418,
+  "county": "Saguache"
+ },
+ {
+  "key": "g3-saguache-rural",
+  "label": "Saguache (rural)",
+  "lat": 38.10436,
+  "lon": -106.15002,
+  "county": "Saguache"
+ },
+ {
+  "key": "g3-center-rural",
+  "label": "Center (rural)",
+  "lat": 37.85971,
+  "lon": -106.25159,
+  "county": "Saguache"
+ },
+ {
+  "key": "g3-cochetopa-rural",
+  "label": "Cochetopa (rural)",
+  "lat": 38.18376,
+  "lon": -106.61951,
+  "county": "Saguache"
+ },
+ {
+  "key": "g3-san-luis",
+  "label": "San Luis",
+  "lat": 37.20108,
+  "lon": -105.42205,
+  "county": "Costilla"
+ },
+ {
+  "key": "g3-fort-garland",
+  "label": "Fort Garland",
+  "lat": 37.42828,
+  "lon": -105.43666,
+  "county": "Costilla"
+ },
+ {
+  "key": "g3-blanca-rural",
+  "label": "Blanca (rural)",
+  "lat": 37.46326,
+  "lon": -105.4415,
+  "county": "Costilla"
+ },
+ {
+  "key": "g3-san-luis-rural",
+  "label": "San Luis (rural)",
+  "lat": 37.1791,
+  "lon": -105.46278,
+  "county": "Costilla"
+ },
+ {
+  "key": "g3-akron",
+  "label": "Akron",
+  "lat": 40.15819,
+  "lon": -103.21874,
+  "county": "Washington"
+ },
+ {
+  "key": "g3-otis",
+  "label": "Otis",
+  "lat": 40.14996,
+  "lon": -102.96247,
+  "county": "Washington"
+ },
+ {
+  "key": "g3-akron-rural",
+  "label": "Akron (rural)",
+  "lat": 40.18974,
+  "lon": -103.26112,
+  "county": "Washington"
+ },
+ {
+  "key": "g3-otis-rural",
+  "label": "Otis (rural)",
+  "lat": 40.1925,
+  "lon": -102.93173,
+  "county": "Washington"
+ },
+ {
+  "key": "g3-cope-rural",
+  "label": "Cope (rural)",
+  "lat": 39.7841,
+  "lon": -103.01003,
+  "county": "Washington"
+ },
+ {
+  "key": "g3-woodlin-rural",
+  "label": "Woodlin (rural)",
+  "lat": 39.78364,
+  "lon": -103.46194,
+  "county": "Washington"
+ },
+ {
+  "key": "g3-las-animas",
+  "label": "Las Animas",
+  "lat": 38.07058,
+  "lon": -103.22597,
+  "county": "Bent"
+ },
+ {
+  "key": "g3-las-animas-rural",
+  "label": "Las Animas (rural)",
+  "lat": 38.13696,
+  "lon": -103.21589,
+  "county": "Bent"
+ },
+ {
+  "key": "g3-mcclave-rural",
+  "label": "McClave (rural)",
+  "lat": 38.16479,
+  "lon": -102.95235,
+  "county": "Bent"
+ },
+ {
+  "key": "g3-south-bent-rural",
+  "label": "South Bent (rural)",
+  "lat": 37.86991,
+  "lon": -103.07239,
+  "county": "Bent"
+ },
+ {
+  "key": "g3-city-of-creede",
+  "label": "City of Creede",
+  "lat": 37.84951,
+  "lon": -106.92427,
+  "county": "Mineral"
+ },
+ {
+  "key": "g3-creede-rural",
+  "label": "Creede (rural)",
+  "lat": 37.68367,
+  "lon": -106.91933,
+  "county": "Mineral"
+ },
+ {
+  "key": "g3-julesburg",
+  "label": "Julesburg",
+  "lat": 40.98056,
+  "lon": -102.26645,
+  "county": "Sedgwick"
+ },
+ {
+  "key": "g3-ovid",
+  "label": "Ovid",
+  "lat": 40.96108,
+  "lon": -102.38878,
+  "county": "Sedgwick"
+ },
+ {
+  "key": "g3-julesburg-rural",
+  "label": "Julesburg (rural)",
+  "lat": 40.9427,
+  "lon": -102.43129,
+  "county": "Sedgwick"
+ },
+ {
+  "key": "g3-south-sedgwick-rural",
+  "label": "South Sedgwick (rural)",
+  "lat": 40.8757,
+  "lon": -102.35175,
+  "county": "Sedgwick"
+ },
+ {
+  "key": "g3-eagle",
+  "label": "Eagle",
+  "lat": 39.6422,
+  "lon": -106.81997,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-minturn",
+  "label": "Minturn",
+  "lat": 39.56073,
+  "lon": -106.4,
+  "county": "Eagle"
+ },
+ {
+  "key": "g3-lake-city",
+  "label": "Lake City",
+  "lat": 38.02855,
+  "lon": -107.31077,
+  "county": "Hinsdale"
+ },
+ {
+  "key": "g3-gardner-rural",
+  "label": "Gardner (rural)",
+  "lat": 37.79842,
+  "lon": -105.2478,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-huerfano-other",
+  "label": "Huerfano County (other)",
+  "lat": 37.88147,
+  "lon": -104.94857,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-la-veta",
+  "label": "La Veta",
+  "lat": 37.50991,
+  "lon": -105.00857,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-la-veta-rural",
+  "label": "La Veta (rural)",
+  "lat": 37.49141,
+  "lon": -105.01884,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-walsenburg",
+  "label": "Walsenburg",
+  "lat": 37.63801,
+  "lon": -104.77783,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-walsenburg-rural",
+  "label": "Walsenburg (rural)",
+  "lat": 37.64317,
+  "lon": -104.70086,
+  "county": "Huerfano"
+ }
+]

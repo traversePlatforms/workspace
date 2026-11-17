@@ -1,0 +1,317 @@
+{
+ "adams": {
+  "house-here": 5357,
+  "house-away": 1345,
+  "house-unk": 28,
+  "b-condo": 4,
+  "th-here": 19,
+  "th-away": 3
+ },
+ "arapahoe": {
+  "b-condo": 2504,
+  "th-away": 793,
+  "th-here": 2579,
+  "th-unk": 7,
+  "b-mhp": 5,
+  "mh-here": 12,
+  "mh-away": 2,
+  "house-away": 988,
+  "house-here": 9575,
+  "house-unk": 37,
+  "b-apt": 104
+ },
+ "archuleta": {
+  "house-away": 59,
+  "house-here": 294,
+  "b-condo": 90,
+  "house-unk": 2,
+  "th-away": 47
+ },
+ "boulder": {
+  "house-away": 2268,
+  "b-condo": 839,
+  "house-here": 6379,
+  "house-unk": 23,
+  "th-here": 72
+ },
+ "broomfield": {
+  "th-here": 349,
+  "th-away": 150,
+  "b-condo": 136,
+  "th-unk": 4,
+  "b-apt": 123,
+  "mh-away": 3,
+  "house-away": 5,
+  "house-here": 7,
+  "b-mhp": 3
+ },
+ "clear-creek": {
+  "b-condo": 37,
+  "house-here": 241,
+  "house-away": 69,
+  "th-away": 2
+ },
+ "denver": {
+  "b-condo": 1681,
+  "th-here": 1547,
+  "th-away": 779,
+  "b-apt": 1226,
+  "th-unk": 361,
+  "mh-away": 2,
+  "house-here": 2,
+  "house-away": 3
+ },
+ "dolores": {
+  "house-here": 76,
+  "house-away": 251,
+  "b-condo": 7,
+  "th-here": 1,
+  "th-away": 8
+ },
+ "douglas": {
+  "house-here": 7061,
+  "house-away": 879,
+  "b-condo": 105,
+  "b-mhp": 5,
+  "mh-away": 2,
+  "th-here": 1
+ },
+ "el-paso": {
+  "b-apt": 2139,
+  "house-away": 3996,
+  "house-here": 3815,
+  "b-condo": 623,
+  "th-away": 1431,
+  "th-here": 2173,
+  "b-mhp": 134,
+  "mh-here": 253,
+  "mh-away": 197,
+  "house-unk": 1,
+  "th-unk": 1
+ },
+ "elbert": {
+  "house-here": 971,
+  "house-away": 5,
+  "house-unk": 1
+ },
+ "garfield": {
+  "house-here": 365,
+  "th-away": 49,
+  "house-away": 133,
+  "b-condo": 23,
+  "th-here": 3,
+  "house-unk": 2
+ },
+ "gilpin": {
+  "house-here": 100,
+  "house-away": 31,
+  "b-condo": 1,
+  "th-here": 1
+ },
+ "grand": {
+  "b-condo": 282,
+  "th-away": 273,
+  "house-away": 79,
+  "th-unk": 1,
+  "th-here": 5,
+  "house-here": 373,
+  "house-unk": 2
+ },
+ "gunnison": {
+  "house-away": 212,
+  "house-here": 380,
+  "b-condo": 200,
+  "th-away": 99,
+  "th-here": 4,
+  "house-unk": 1
+ },
+ "hinsdale": {
+  "b-condo": 2,
+  "th-away": 63,
+  "house-away": 22,
+  "b-apt": 1,
+  "house-unk": 4,
+  "th-unk": 2,
+  "b-mhp": 1,
+  "mh-away": 6
+ },
+ "huerfano": {
+  "house-unk": 1547,
+  "house-away": 997,
+  "house-here": 1064,
+  "b-condo": 38,
+  "th-unk": 26,
+  "th-here": 13,
+  "th-away": 12
+ },
+ "jefferson": {
+  "b-condo": 922,
+  "house-here": 6404,
+  "th-away": 485,
+  "house-away": 1221,
+  "b-apt": 1238,
+  "th-here": 1024,
+  "b-mhp": 15,
+  "house-unk": 4,
+  "th-unk": 1
+ },
+ "la-plata": {
+  "house-here": 1239,
+  "b-condo": 6,
+  "house-away": 14
+ },
+ "lake": {
+  "house-here": 42,
+  "b-condo": 9,
+  "b-apt": 12,
+  "th-away": 38,
+  "house-away": 4,
+  "th-here": 3,
+  "b-mhp": 12,
+  "mh-away": 58,
+  "mh-here": 22
+ },
+ "larimer": {
+  "house-here": 2006,
+  "house-away": 355,
+  "mh-here": 21,
+  "b-condo": 119,
+  "mh-away": 38,
+  "b-mhp": 132,
+  "b-apt": 99,
+  "th-here": 1,
+  "th-away": 4
+ },
+ "logan": {
+  "house-away": 43,
+  "th-away": 7,
+  "house-unk": 1,
+  "b-condo": 8,
+  "house-here": 704
+ },
+ "mesa": {
+  "b-condo": 1090,
+  "th-here": 117,
+  "th-away": 151,
+  "house-here": 681,
+  "b-apt": 43,
+  "house-away": 23
+ },
+ "montezuma": {
+  "house-here": 1293,
+  "mh-here": 16,
+  "th-away": 99,
+  "b-mhp": 4,
+  "th-here": 32,
+  "house-away": 22,
+  "b-condo": 19,
+  "mh-away": 4,
+  "th-unk": 4
+ },
+ "morgan": {
+  "house-here": 562,
+  "house-away": 27,
+  "th-away": 31,
+  "th-here": 1,
+  "b-condo": 8
+ },
+ "ouray": {
+  "house-away": 82,
+  "house-here": 381,
+  "b-condo": 3,
+  "house-unk": 1
+ },
+ "park": {
+  "house-here": 605,
+  "th-away": 2,
+  "house-away": 27,
+  "mh-away": 144,
+  "mh-here": 58,
+  "b-mhp": 7,
+  "mh-unk": 2,
+  "b-condo": 4,
+  "th-here": 1
+ },
+ "pitkin": {
+  "b-condo": 603,
+  "house-here": 75,
+  "th-away": 563,
+  "th-here": 550,
+  "b-apt": 13,
+  "th-unk": 2,
+  "house-away": 11,
+  "mh-away": 2,
+  "mh-here": 1
+ },
+ "rio-blanco": {
+  "b-mhp": 13,
+  "house-away": 14,
+  "house-here": 116,
+  "mh-here": 28,
+  "b-apt": 4,
+  "mh-away": 28,
+  "th-here": 1
+ },
+ "rio-grande": {
+  "house-away": 198,
+  "b-condo": 13,
+  "house-unk": 27,
+  "house-here": 111
+ },
+ "routt": {
+  "mh-away": 18,
+  "th-away": 3295,
+  "th-unk": 37,
+  "th-here": 356,
+  "mh-here": 22,
+  "house-away": 53,
+  "b-apt": 45,
+  "house-unk": 2,
+  "b-mhp": 31,
+  "b-condo": 6,
+  "house-here": 843
+ },
+ "san-juan": {
+  "house-here": 5,
+  "mh-here": 22,
+  "b-mhp": 6,
+  "mh-away": 10,
+  "th-away": 1,
+  "house-away": 5
+ },
+ "san-miguel": {
+  "b-condo": 110,
+  "house-here": 304,
+  "th-away": 80,
+  "th-here": 3,
+  "house-unk": 1,
+  "house-away": 5
+ },
+ "sedgwick": {
+  "house-unk": 581,
+  "mh-unk": 8
+ },
+ "summit": {
+  "house-here": 150,
+  "house-away": 196,
+  "b-condo": 687,
+  "th-here": 33,
+  "th-unk": 1,
+  "th-away": 90
+ },
+ "teller": {
+  "house-here": 509,
+  "house-away": 70,
+  "house-unk": 1
+ },
+ "weld": {
+  "house-here": 2690,
+  "house-away": 2543,
+  "th-here": 3
+ },
+ "yuma": {
+  "house-here": 45,
+  "house-away": 177,
+  "b-condo": 2
+ }
+}

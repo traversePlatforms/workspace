@@ -1,0 +1,639 @@
+[
+ {
+  "key": "g3-gardner-rural",
+  "label": "Gardner (rural)",
+  "lat": 37.79842,
+  "lon": -105.2478,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-huerfano-other",
+  "label": "Huerfano County (other)",
+  "lat": 37.88147,
+  "lon": -104.94857,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-la-veta",
+  "label": "La Veta",
+  "lat": 37.50991,
+  "lon": -105.00857,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-la-veta-rural",
+  "label": "La Veta (rural)",
+  "lat": 37.49141,
+  "lon": -105.01884,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-walsenburg",
+  "label": "Walsenburg",
+  "lat": 37.63801,
+  "lon": -104.77783,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g3-walsenburg-rural",
+  "label": "Walsenburg (rural)",
+  "lat": 37.64317,
+  "lon": -104.70086,
+  "county": "Huerfano"
+ },
+ {
+  "key": "g4-adams-other",
+  "label": "Adams County (other)",
+  "lat": 39.95299,
+  "lon": -104.5692,
+  "county": "Adams"
+ },
+ {
+  "key": "g4-arapahoe-other",
+  "label": "Arapahoe County (other)",
+  "lat": 39.60897,
+  "lon": -104.40001,
+  "county": "Arapahoe"
+ },
+ {
+  "key": "g4-archuleta-other",
+  "label": "Archuleta County (other)",
+  "lat": 37.07271,
+  "lon": -106.94268,
+  "county": "Archuleta"
+ },
+ {
+  "key": "g4-bennett",
+  "label": "Bennett",
+  "lat": 39.64788,
+  "lon": -104.46687,
+  "county": "Arapahoe"
+ },
+ {
+  "key": "g4-boulder-other",
+  "label": "Boulder County (other)",
+  "lat": 40.1506,
+  "lon": -105.23562,
+  "county": "Boulder"
+ },
+ {
+  "key": "g4-byers",
+  "label": "Byers",
+  "lat": 39.60191,
+  "lon": -104.20443,
+  "county": "Arapahoe"
+ },
+ {
+  "key": "g4-calhan",
+  "label": "Calhan",
+  "lat": 39.25086,
+  "lon": -104.31289,
+  "county": "Elbert"
+ },
+ {
+  "key": "g4-carr",
+  "label": "Carr",
+  "lat": 40.84907,
+  "lon": -104.95601,
+  "county": "Larimer"
+ },
+ {
+  "key": "g4-castle-rock",
+  "label": "Castle Rock",
+  "lat": 39.29758,
+  "lon": -104.89424,
+  "county": "Douglas"
+ },
+ {
+  "key": "g4-clear-creek-other",
+  "label": "Clear Creek County (other)",
+  "lat": 39.69179,
+  "lon": -105.83573,
+  "county": "Clear Creek"
+ },
+ {
+  "key": "g4-como",
+  "label": "Como",
+  "lat": 39.22345,
+  "lon": -105.86712,
+  "county": "Park"
+ },
+ {
+  "key": "g4-crook",
+  "label": "Crook",
+  "lat": 40.94498,
+  "lon": -102.68906,
+  "county": "Logan"
+ },
+ {
+  "key": "g4-debeque",
+  "label": "Debeque",
+  "lat": 39.30906,
+  "lon": -108.3072,
+  "county": "Garfield"
+ },
+ {
+  "key": "g4-deer-trail",
+  "label": "Deer Trail",
+  "lat": 39.59095,
+  "lon": -104.12502,
+  "county": "Arapahoe"
+ },
+ {
+  "key": "g4-del-norte",
+  "label": "Del Norte",
+  "lat": 37.54097,
+  "lon": -106.41263,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g4-dolores-other",
+  "label": "Dolores County (other)",
+  "lat": 37.75665,
+  "lon": -108.45814,
+  "county": "Dolores"
+ },
+ {
+  "key": "g4-eckley",
+  "label": "Eckley",
+  "lat": 40.07127,
+  "lon": -102.48752,
+  "county": "Yuma"
+ },
+ {
+  "key": "g4-egnar",
+  "label": "Egnar",
+  "lat": 37.92896,
+  "lon": -108.98898,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g4-el-paso-other",
+  "label": "El Paso County (other)",
+  "lat": 38.82527,
+  "lon": -104.25497,
+  "county": "El Paso"
+ },
+ {
+  "key": "g4-elbert",
+  "label": "Elbert",
+  "lat": 39.18487,
+  "lon": -104.5287,
+  "county": "Douglas"
+ },
+ {
+  "key": "g4-elbert-other",
+  "label": "Elbert County (other)",
+  "lat": 39.08484,
+  "lon": -103.99003,
+  "county": "Elbert"
+ },
+ {
+  "key": "g4-elizabeth",
+  "label": "Elizabeth",
+  "lat": 39.47405,
+  "lon": -104.52234,
+  "county": "Elbert"
+ },
+ {
+  "key": "g4-fleming",
+  "label": "Fleming",
+  "lat": 40.6628,
+  "lon": -102.85568,
+  "county": "Logan"
+ },
+ {
+  "key": "g4-fort-morgan",
+  "label": "Fort Morgan",
+  "lat": 40.30781,
+  "lon": -103.79614,
+  "county": "Morgan"
+ },
+ {
+  "key": "g4-franktown",
+  "label": "Franktown",
+  "lat": 39.22776,
+  "lon": -104.73075,
+  "county": "Douglas"
+ },
+ {
+  "key": "g4-garfield-other",
+  "label": "Garfield County (other)",
+  "lat": 39.45051,
+  "lon": -107.71061,
+  "county": "Garfield"
+ },
+ {
+  "key": "g4-glade-park",
+  "label": "Glade Park",
+  "lat": 39.00531,
+  "lon": -108.78783,
+  "county": "Mesa"
+ },
+ {
+  "key": "g4-grand-other",
+  "label": "Grand County (other)",
+  "lat": 40.09146,
+  "lon": -106.41343,
+  "county": "Grand"
+ },
+ {
+  "key": "g4-grover",
+  "label": "Grover",
+  "lat": 40.86841,
+  "lon": -104.22702,
+  "county": "Weld"
+ },
+ {
+  "key": "g4-guffey",
+  "label": "Guffey",
+  "lat": 38.75636,
+  "lon": -105.57702,
+  "county": "Park"
+ },
+ {
+  "key": "g4-gunnison-other",
+  "label": "Gunnison County (other)",
+  "lat": 38.52185,
+  "lon": -106.84901,
+  "county": "Gunnison"
+ },
+ {
+  "key": "g4-gypsum",
+  "label": "Gypsum",
+  "lat": 39.78249,
+  "lon": -107.13877,
+  "county": "Garfield"
+ },
+ {
+  "key": "g4-hartsel",
+  "label": "Hartsel",
+  "lat": 39.02374,
+  "lon": -105.83359,
+  "county": "Park"
+ },
+ {
+  "key": "g4-hayden",
+  "label": "Hayden",
+  "lat": 40.52637,
+  "lon": -107.27703,
+  "county": "Routt"
+ },
+ {
+  "key": "g4-hesperus",
+  "label": "Hesperus",
+  "lat": 37.14312,
+  "lon": -108.11545,
+  "county": "La Plata"
+ },
+ {
+  "key": "g4-hinsdale-other",
+  "label": "Hinsdale County (other)",
+  "lat": 37.99156,
+  "lon": -107.36855,
+  "county": "Hinsdale"
+ },
+ {
+  "key": "g4-idalia",
+  "label": "Idalia",
+  "lat": 39.66479,
+  "lon": -102.18657,
+  "county": "Yuma"
+ },
+ {
+  "key": "g4-ignacio",
+  "label": "Ignacio",
+  "lat": 37.05929,
+  "lon": -107.6603,
+  "county": "La Plata"
+ },
+ {
+  "key": "g4-jasper",
+  "label": "Jasper",
+  "lat": 37.42288,
+  "lon": -106.46858,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g4-jefferson-other",
+  "label": "Jefferson County (other)",
+  "lat": 39.29515,
+  "lon": -105.33781,
+  "county": "Jefferson"
+ },
+ {
+  "key": "g4-kiowa",
+  "label": "Kiowa",
+  "lat": 39.41464,
+  "lon": -104.4016,
+  "county": "Elbert"
+ },
+ {
+  "key": "g4-la-plata-other",
+  "label": "La Plata County (other)",
+  "lat": 37.13942,
+  "lon": -107.96413,
+  "county": "La Plata"
+ },
+ {
+  "key": "g4-laporte",
+  "label": "Laporte",
+  "lat": 40.73505,
+  "lon": -105.20385,
+  "county": "Larimer"
+ },
+ {
+  "key": "g4-larimer-other",
+  "label": "Larimer County (other)",
+  "lat": 40.79164,
+  "lon": -105.5216,
+  "county": "Larimer"
+ },
+ {
+  "key": "g4-larkspur",
+  "label": "Larkspur",
+  "lat": 39.16913,
+  "lon": -104.86113,
+  "county": "Douglas"
+ },
+ {
+  "key": "g4-limon",
+  "label": "Limon",
+  "lat": 39.24441,
+  "lon": -103.80698,
+  "county": "Elbert"
+ },
+ {
+  "key": "g4-littleton",
+  "label": "Littleton",
+  "lat": 39.52362,
+  "lon": -105.06417,
+  "county": "Douglas"
+ },
+ {
+  "key": "g4-livermore",
+  "label": "Livermore",
+  "lat": 40.93243,
+  "lon": -105.33564,
+  "county": "Larimer"
+ },
+ {
+  "key": "g4-logan-other",
+  "label": "Logan County (other)",
+  "lat": 40.71833,
+  "lon": -103.23081,
+  "county": "Logan"
+ },
+ {
+  "key": "g4-mancos",
+  "label": "Mancos",
+  "lat": 37.31093,
+  "lon": -108.25168,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g4-meeker",
+  "label": "Meeker",
+  "lat": 39.9032,
+  "lon": -107.77825,
+  "county": "Rio Blanco"
+ },
+ {
+  "key": "g4-mesa-other",
+  "label": "Mesa County (other)",
+  "lat": 38.99343,
+  "lon": -108.45165,
+  "county": "Mesa"
+ },
+ {
+  "key": "g4-monte-vista",
+  "label": "Monte Vista",
+  "lat": 37.43059,
+  "lon": -106.45051,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g4-montezuma-other",
+  "label": "Montezuma County (other)",
+  "lat": 37.44498,
+  "lon": -108.89357,
+  "county": "Montezuma"
+ },
+ {
+  "key": "g4-montrose",
+  "label": "Montrose",
+  "lat": 38.27227,
+  "lon": -107.87075,
+  "county": "Ouray"
+ },
+ {
+  "key": "g4-morgan-other",
+  "label": "Morgan County (other)",
+  "lat": 40.31608,
+  "lon": -103.5838,
+  "county": "Morgan"
+ },
+ {
+  "key": "g4-new-raymer",
+  "label": "New Raymer",
+  "lat": 40.60314,
+  "lon": -103.84555,
+  "county": "Morgan"
+ },
+ {
+  "key": "g4-norwood",
+  "label": "Norwood",
+  "lat": 38.01173,
+  "lon": -108.2643,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g4-oak-creek",
+  "label": "Oak Creek",
+  "lat": 40.27676,
+  "lon": -107.00061,
+  "county": "Routt"
+ },
+ {
+  "key": "g4-ouray-other",
+  "label": "Ouray County (other)",
+  "lat": 38.0706,
+  "lon": -107.74382,
+  "county": "Ouray"
+ },
+ {
+  "key": "g4-park-other",
+  "label": "Park County (other)",
+  "lat": 39.16399,
+  "lon": -105.70306,
+  "county": "Park"
+ },
+ {
+  "key": "g4-phippsburg",
+  "label": "Phippsburg",
+  "lat": 40.20132,
+  "lon": -107.00797,
+  "county": "Routt"
+ },
+ {
+  "key": "g4-pitkin-other",
+  "label": "Pitkin County (other)",
+  "lat": 39.13758,
+  "lon": -106.82298,
+  "county": "Pitkin"
+ },
+ {
+  "key": "g4-placerville",
+  "label": "Placerville",
+  "lat": 38.00858,
+  "lon": -108.05433,
+  "county": "Ouray"
+ },
+ {
+  "key": "g4-ramah",
+  "label": "Ramah",
+  "lat": 39.2437,
+  "lon": -104.18544,
+  "county": "Elbert"
+ },
+ {
+  "key": "g4-rio-blanco-other",
+  "label": "Rio Blanco County (other)",
+  "lat": 40.01495,
+  "lon": -108.6123,
+  "county": "Rio Blanco"
+ },
+ {
+  "key": "g4-rio-grande-other",
+  "label": "Rio Grande County (other)",
+  "lat": 37.59146,
+  "lon": -106.52565,
+  "county": "Rio Grande"
+ },
+ {
+  "key": "g4-routt-other",
+  "label": "Routt County (other)",
+  "lat": 40.39348,
+  "lon": -106.99923,
+  "county": "Routt"
+ },
+ {
+  "key": "g4-san-juan-other",
+  "label": "San Juan County (other)",
+  "lat": 37.86339,
+  "lon": -107.58425,
+  "county": "San Juan"
+ },
+ {
+  "key": "g4-san-miguel-other",
+  "label": "San Miguel County (other)",
+  "lat": 38.04188,
+  "lon": -108.54996,
+  "county": "San Miguel"
+ },
+ {
+  "key": "g4-sedalia",
+  "label": "Sedalia",
+  "lat": 39.32585,
+  "lon": -105.02882,
+  "county": "Douglas"
+ },
+ {
+  "key": "g4-sedgwick-other",
+  "label": "Sedgwick County (other)",
+  "lat": 40.85906,
+  "lon": -102.3481,
+  "county": "Sedgwick"
+ },
+ {
+  "key": "g4-steamboat-springs",
+  "label": "Steamboat Springs",
+  "lat": 40.54811,
+  "lon": -106.99629,
+  "county": "Routt"
+ },
+ {
+  "key": "g4-sterling",
+  "label": "Sterling",
+  "lat": 40.69763,
+  "lon": -103.3283,
+  "county": "Logan"
+ },
+ {
+  "key": "g4-strasburg",
+  "label": "Strasburg",
+  "lat": 39.58981,
+  "lon": -104.33054,
+  "county": "Arapahoe"
+ },
+ {
+  "key": "g4-summit-other",
+  "label": "Summit County (other)",
+  "lat": 39.83825,
+  "lon": -106.33685,
+  "county": "Summit"
+ },
+ {
+  "key": "g4-teller-other",
+  "label": "Teller County (other)",
+  "lat": 38.89547,
+  "lon": -105.06861,
+  "county": "Teller"
+ },
+ {
+  "key": "g4-weld",
+  "label": "Weld",
+  "lat": 40.30025,
+  "lon": -104.56349,
+  "county": "Weld"
+ },
+ {
+  "key": "g4-weld-other",
+  "label": "Weld County (other)",
+  "lat": 40.24334,
+  "lon": -104.64142,
+  "county": "Weld"
+ },
+ {
+  "key": "g4-wellington",
+  "label": "Wellington",
+  "lat": 40.86042,
+  "lon": -105.0532,
+  "county": "Larimer"
+ },
+ {
+  "key": "g4-woodland-park",
+  "label": "Woodland Park",
+  "lat": 39.1501,
+  "lon": -105.15759,
+  "county": "Douglas"
+ },
+ {
+  "key": "g4-wray",
+  "label": "Wray",
+  "lat": 40.16409,
+  "lon": -102.17796,
+  "county": "Yuma"
+ },
+ {
+  "key": "g4-yampa",
+  "label": "Yampa",
+  "lat": 40.13419,
+  "lon": -106.94657,
+  "county": "Routt"
+ },
+ {
+  "key": "g4-yuma",
+  "label": "Yuma",
+  "lat": 40.25584,
+  "lon": -102.60749,
+  "county": "Yuma"
+ },
+ {
+  "key": "g4-yuma-other",
+  "label": "Yuma County (other)",
+  "lat": 39.84968,
+  "lon": -102.40491,
+  "county": "Yuma"
+ }
+]
