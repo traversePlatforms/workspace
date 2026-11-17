@@ -8065,7 +8065,21 @@ if ($action === 'statspage' && !edition()) {   /* an edition's Stats page: edSta
         foreach ($leads as $l) { if (!$realLead($l) || (string) ($l['qr'] ?? '') !== $pk) continue; $ln++; if (isset($jobOfLead[$l['id']])) { $jn++; $bk += (int) $jobOfLead[$l['id']]['price']; } }
         $s0 = $sc[$pk] ?? []; $qr['pieces'][] = ['key' => $pk, 'label' => $plabel, 'scans' => (int) ($s0['total'] ?? 0), 'week' => (int) ($s0['week'] ?? 0), 'last' => (int) ($s0['last'] ?? 0), 'leads' => $ln, 'jobs' => $jn, 'booked' => $bk];
     }
-    out(['ok' => true, 'qr' => $qr, 'web' => $web, 'today' => $d($today), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
+    /* the daily tally (2026-11-17, Jen: "add this to the stats page"): per day, the last 7 days: new leads by source, texts, calls by result, leads removed.
+       Counts only what is logged on a lead; incoming calls are not recorded by the app. */
+    $tally = []; $TK = ['text' => 'texts', 'msgr' => 'msgs', 'email' => 'emails', 'vm' => 'vm', 'talk' => 'talk', 'none' => 'none'];
+    for ($i = 0; $i < 7; $i++) { $dd = $d((clone $today)->modify('-' . $i . ' days')); $tally[$dd] = ['day' => $dd, 'leads' => 0, 'src' => [], 'texts' => 0, 'msgs' => 0, 'emails' => 0, 'vm' => 0, 'talk' => 0, 'none' => 0, 'removed' => 0, 'why' => []]; }
+    $dayOf = fn($at) => (new DateTime('@' . (int) $at))->setTimezone($tz)->format('Y-m-d');
+    foreach ($leads as $l) if ($realLead($l) && !empty($l['at']) && isset($tally[$dayOf($l['at'])])) { $dk = $dayOf($l['at']); $tally[$dk]['leads']++; $sk = (string) ($l['src'] ?? ''); $tally[$dk]['src'][$sk] = ($tally[$dk]['src'][$sk] ?? 0) + 1; }
+    $tlog = readLines(leadsDir() . '/leadst.log'); $undone = [];
+    foreach ($tlog as $u) if (!empty($u['untry'])) $undone[$u['id'] . '|' . (int) $u['untry']] = true;   /* a try taken back by Undo does not count */
+    foreach ($tlog as $u) {
+        $lx = $leads[$u['id']] ?? null; if (!$lx || !$realLead($lx) || empty($u['at'])) continue;
+        $dk = $dayOf($u['at']); if (!isset($tally[$dk])) continue;
+        if (!empty($u['try']) && empty($undone[$u['id'] . '|' . (int) $u['at']]) && isset($TK[(string) $u['try']])) $tally[$dk][$TK[(string) $u['try']]]++;
+        if (!empty($u['removed'])) { $tally[$dk]['removed']++; $wk = (string) $u['removed']; $tally[$dk]['why'][$wk] = ($tally[$dk]['why'][$wk] ?? 0) + 1; }
+    }
+    out(['ok' => true, 'qr' => $qr, 'web' => $web, 'today' => $d($today), 'tally' => array_values($tally), 'last' => $lw, 'this' => $tw, 'ads' => $adOut, 'adRows' => $ads, 'plans' => ['list' => $plans, 'mrr' => round($mrr, 2)],
          'proj' => ['weeks' => $weeks, 'close' => round($close, 3), 'quoted' => $quoted, 'won' => $won, 'pipe' => $pipe, 'pipeN' => $pipeN, 'groups' => $CR['groups'], 'expected' => $CR['expected']], 'doors' => $doors, 'canEdit' => $role === 'admin']);
 }
 /** the end-of-day reminder (2026-10-21): after 7 pm, once a day, a push to the admins when no one has typed the ad spend today */

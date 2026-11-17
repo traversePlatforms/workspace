@@ -24213,6 +24213,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var c = kpiCard(x[0]); kp.appendChild(c); kpiFill(c, x[1], x[2]);
           if (x[1] === null) { var ga = (j.proj.groups || {}).ads; c.querySelector('b').textContent = ga ? (ga.quoted ? pct(ga.close) : '\u2013') : (j.proj.quoted ? pct(j.proj.close) : '\u2013'); }
         });
+        /* 0. the daily tally (2026-11-17, Jen) */
+        if (j.tally && j.tally.length) {
+          var c0 = card('Day by day', 'new leads, texts, calls and leads removed, from what is logged on a lead'); c0.classList.add('spwide');
+          var tb0 = table(c0, ['Day', 'New leads', 'Texts', 'Calls made', 'Leads removed']);
+          var WHY0 = { notint: 'not interested', noreach: 'could not reach', junk: 'spam or duplicate' };
+          j.tally.forEach(function (t, i) {
+            var cm = t.vm + t.talk + t.none, srcs = Object.keys(t.src).map(function (k) { return (ST_SRC[k] || k) + ' ' + t.src[k]; }).join(', ');
+            tr(tb0, [i === 0 ? 'Today' : i === 1 ? 'Yesterday' : dayName(t.day), [String(t.leads), srcs], String(t.texts + t.msgs), [String(cm), cm ? t.vm + ' voicemail, ' + t.talk + ' talked, ' + t.none + ' no answer' : ''], [String(t.removed), Object.keys(t.why).map(function (k) { return t.why[k] + ' ' + (WHY0[k] || k); }).join(', ')]]);
+          });
+          c0.appendChild(q('p', 'stnote', 'Texts include Facebook messages. Calls are the ones logged on a lead; the app does not record calls that come in unless they were logged as a lead.'));
+        }
         /* 1. last week */
         var c1 = card('Last week', rng(L.from, L.to));
         if (!L.jobs.length) c1.appendChild(q('div', 'msg soft', 'No jobs on the board last week.'));
