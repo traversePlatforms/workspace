@@ -73,25 +73,30 @@ if paths is not None:
         new = [[r - r0, c - c0, v] for r, c, v in cells if (r - r0, c - c0) not in have]
         if new: P[d] = P.get(d, []) + new; sq_added += len(new)
 
-# the towns that already have a file
+# the towns that already have a file. 18 Nov 2026 (the every-home doors: 300+ towns joined at once): one town at a time, counted here and
+# merged again at the write, so no more than one town's hail file is held in memory (the 29 Oct version kept every joined town loaded)
 idx = J(os.path.join(rd, 'index.json'))
 keys = [r['key'] for r in idx.get('regions', [])]
-joined = {}
-for k in keys:
-    lf, bf = os.path.join(rd, 'hail-%s.json' % k), os.path.join(bd, 'hail-%s.json' % k)
-    if not (os.path.exists(lf) and os.path.exists(bf)): continue
-    L, B = J(lf), J(bf)
+
+def join_town(k):
+    L, B = J(os.path.join(rd, 'hail-%s.json' % k)), J(os.path.join(bd, 'hail-%s.json' % k))
     doors = L.setdefault('doors', {}); before = len(doors); ent = 0
     for i, rows in B.get('doors', {}).items():
         cur = doors.get(i, []); have = {e[0] for e in cur}
         add = [e for e in rows if e[0] not in have and e[0] in kept and e[0] <= through]
         if add:
             doors[i] = sorted(cur + add, key=lambda e: e[0], reverse=True); ent += len(add)
-    joined[k] = (L, before, len(doors), ent)
+    return L, before, len(doors), ent
+
+joined = {}
+for k in keys:
+    if not (os.path.exists(os.path.join(rd, 'hail-%s.json' % k)) and os.path.exists(os.path.join(bd, 'hail-%s.json' % k))): continue
+    L, b, a, e = join_town(k); del L
+    joined[k] = (b, a, e)
 
 print('server through %s; storm days %d -> %d (+%d added: %s); towns added to existing days %d, raised %d; map squares +%d'
       % (through, len(hs.get('storms', [])), len(storms), len(added_days), ' '.join(sorted(added_days)[:40]), towns_added, towns_raised, sq_added))
-for k, (L, b, a, e) in joined.items():
+for k, (b, a, e) in joined.items():
     print('  hail-%s: doors with storms %d -> %d (+%d storm entries)' % (k, b, a, e))
 missing = [k for k in keys if not os.path.exists(os.path.join(rd, 'hail-%s.json' % k))]
 print('towns with no hail file on the server (for push-edition.sh): %d' % len(missing))
@@ -106,8 +111,9 @@ print('backed up to ' + bk)
 hs['storms'] = [storms[d] for d in sorted(storms, reverse=True)]
 write(sf, hs)
 if paths is not None: write(pf, paths)
-for k, (L, b, a, e) in joined.items():
-    if e: write(os.path.join(rd, 'hail-%s.json' % k), L)
+for k, (b, a, e) in joined.items():
+    if e:
+        L = join_town(k)[0]; write(os.path.join(rd, 'hail-%s.json' % k), L); del L
 for f in ['hail-storms.json', 'hail-paths.json']:
     if os.path.exists(os.path.join(rd, f)): J(os.path.join(rd, f))   # review 2026-10-30: no hail-paths.json on the server made the check crash after a good merge
 print('merged; json ok')
