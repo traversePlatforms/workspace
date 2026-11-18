@@ -15,6 +15,7 @@
  *
  * The old desk's stages are read into the new ones (SP_LEGACY, XP_LEGACY); its rows are never rewritten. */
 declare(strict_types=1);
+if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }   /* 18 Nov: a code file, never opened on its own */
 date_default_timezone_set('America/Denver');   /* Colorado time: "today" and "this week" are Peak's */
 if (!defined('DATA_DIR')) {
     $deskLocal = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
