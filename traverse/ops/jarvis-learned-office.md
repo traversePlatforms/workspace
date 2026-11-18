@@ -14,3 +14,6 @@ dated entry per ticket that taught something reusable, short, no customer contac
   rounds data folder) goes stale whenever a house is pulled in, and the rebuild needed ~900 MB, over the 768 MB limit, so every search
   answered 500 until it was rebuilt by hand. Fixed by raising the limit inside the rebuild (deploy help-h202611051110161407). If it
   recurs: check search-index.txt age and leftover .tmp files; rebuild with `php -d memory_limit=3G` loading rounds.php and calling searchIndexFile().
+- 2026-11-18 · Jen: "Another service" button missing on Deposit and form page though source had it: deploy-app.sh ships app/dist (minified),
+  which was stale (12:28) because the build step (sync-es, build-editions, minify-page; ~4 min) wasn't re-run after the edit. Always run the
+  build before deploying and grep dist for the change; don't tell her it's her browser until dist is proven current.
