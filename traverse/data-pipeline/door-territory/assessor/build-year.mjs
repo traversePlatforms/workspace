@@ -16,7 +16,7 @@
  *   Boulder  https://bouldercounty.gov/property-and-land/assessor/data-download/  Buildings.csv + Account_Parcels.csv (by strap)
  *   Denver   open data "Real Property Residential Characteristics" via fetch-denver.mjs -> raw/denver/residential.json
  *   node build-year.mjs     writes app/data/rounds/year-<town>.json { doors: { id: { yb, rm?, shape?, mat?, bsf? } } } */
-import { readFileSync, writeFileSync, existsSync, createReadStream } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, createReadStream, readdirSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,6 +41,16 @@ for (const [town, cs] of Object.entries(TC)) {
 }
 const ONLY = (process.argv.find((a) => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
 if (ONLY.length) for (const t of Object.keys(TOWNS)) if (!ONLY.includes(t)) delete TOWNS[t];
+/* 18 Nov 2026 (every home): the homes build-rounds-data promoted from every1115's <town>-add1115-areas.json are in no town CSV, so their
+   parcel numbers come from raw/add-parcels-*.tsv (town, address, parcel, county: the cloud's candidate list, no names). The town CSV's own
+   address wins where both have it. */
+const ADDP = new Map();
+for (const f of existsSync(RAW) ? readdirSync(RAW).filter((n) => /^add-parcels-.*\.tsv$/.test(n)) : []) {
+  for (const l of readFileSync(join(RAW, f), 'utf8').split('\n').slice(1)) {
+    const [t, a, p] = l.split('\t'); if (!t || !a || !p) continue;
+    const m = ADDP.get(t) || ADDP.set(t, new Map()).get(t), k = a.trim().toUpperCase(); if (!m.has(k)) m.set(k, p.trim());
+  }
+}
 const q = (line) => line.replace(/^"|"\s*$/g, '').split('","');
 const lines = async (f, fn) => { const rl = createInterface({ input: createReadStream(f), crlfDelay: Infinity }); for await (const l of rl) if (l) fn(l); };
 
@@ -193,6 +203,7 @@ for (const [town, county] of Object.entries(TOWNS)) {
   const rows = parseCSV(readFileSync(csvF, 'utf8')), h = rows[0];
   const iA = h.indexOf('address'), iP = h.indexOf('parcel');
   const parcelOf = new Map(); for (const r of rows.slice(1)) if (r[iA] && r[iP]) parcelOf.set(r[iA].trim().toUpperCase(), r[iP].trim());
+  for (const [a, p] of ADDP.get(town) || []) if (!parcelOf.has(a)) parcelOf.set(a, p);
   const srcs = (Array.isArray(county) ? county : [county]).map((k) => SRC[k] || new Map()), doors = {};
   const src = { get: (p) => { for (const m of srcs) { const v = m.get(p); if (v) return v; } return undefined; } };
   const d = JSON.parse(readFileSync(doorF, 'utf8'));
