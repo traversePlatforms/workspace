@@ -11,7 +11,9 @@ if (PHP_SAPI !== 'cli') exit;
 @ini_set('memory_limit', '1024M');
 $api = dirname(__DIR__) . '/public_html/api';
 if (empty($argv[1])) {
-    foreach (array_merge([$api . '/rounds.php'], glob($api . '/traverse*-rounds.php') ?: []) as $f) foreach (['admin', 'crew'] as $role) {
+    /* + client installs built from editions/clients/<slug>.json, c-<slug>-rounds.php (2026-11-18: the Houston test install's first load after a
+       deploy took 10 s) */
+    foreach (array_merge([$api . '/rounds.php'], glob($api . '/traverse*-rounds.php') ?: [], glob($api . '/c-*-rounds.php') ?: []) as $f) foreach (['admin', 'crew'] as $role) {
         $t = microtime(true);
         $out = []; @exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__FILE__) . ' ' . escapeshellarg($f) . ' ' . $role . ' 2>&1', $out);
         echo date('Y-m-d H:i'), ' ', basename($f), ' ', $role, ': ', trim(implode(' ', $out)) ?: 'no output', ' (', round(microtime(true) - $t, 1), " s)\n";
@@ -19,7 +21,7 @@ if (empty($argv[1])) {
     exit;
 }
 $f = $argv[1]; $role = $argv[2] ?? '';
-if (!preg_match('#/(rounds|traverse[a-z0-9-]*-rounds)\.php$#', $f)   /* digits: client installs made on the server, traverse-c<8 hex>-rounds.php (2026-10-29) */ || !is_file($f)) { echo "not an install API\n"; exit(1); }
+if (!preg_match('#/(rounds|traverse[a-z0-9-]*-rounds|c-[a-z0-9-]+-rounds)\.php$#', $f)   /* digits: client installs made on the server, traverse-c<8 hex>-rounds.php (2026-10-29) */ || !is_file($f)) { echo "not an install API\n"; exit(1); }
 if (!in_array($role, ['admin', 'crew'], true)) { echo "role must be admin or crew\n"; exit(1); }
 final class SixfoldOut extends Exception { public array $body; public function __construct(array $b) { parent::__construct('out'); $this->body = $b; } }
 define('SIXFOLD_CLI', true);

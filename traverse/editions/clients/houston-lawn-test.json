@@ -10,7 +10,7 @@
   "towns": null,
   "host": "https://traverseplatforms.com",
   "market": "hou",
-  "_about": "Matthew's private test install for the Houston market (16 Nov 2026), before anything is shown to Bryce. Lawn care and aeration only. Billing and texting off; Matthew's super sign-in only (code in ~/.ssh/houston-test-codes.txt). Upload: bash traverse/ops/deploy-client.sh c-houston-lawn-test",
+  "_about": "Matthew's private test install for the Houston market (16 Nov 2026), before anything is shown to Bryce. Lawn care and aeration only. Billing and texting off; Matthew's super sign-in only (code in ~/.ssh/houston-test-codes.txt). Upload: bash traverse/ops/deploy-client.sh c-houston-lawn-test 18 Nov: J.A.R.V.I.S., Priority contacts, the lawn ladder (Bryce's aeration prices, pricing below) and crew pay on; aftercare and the newsletter shown but held (acoff, nloff).",
   "keepAlso": [
     "year"
   ],
@@ -27,7 +27,12 @@
     "security": false,
     "communities": false,
     "firecheck": false,
-    "quote": false
+    "quote": false,
+    "jarvis": true,
+    "priority": true,
+    "ladder": true,
+    "acoff": true,
+    "nloff": true
   },
   "card": {
     "lawn": true,
@@ -108,5 +113,124 @@
       "Leaves or debris"
     ]
   ],
-  "folder": "hl-f98938"
+  "folder": "hl-f98938",
+  "pricing": {
+    "lines": [
+      {
+        "id": "a1",
+        "label": "Core aeration",
+        "unit": "ladder",
+        "rate": 399,
+        "lad": {
+          "sq": 2500,
+          "pow": 0.5,
+          "min": 299,
+          "end": 99
+        },
+        "in": {
+          "good": true,
+          "better": true,
+          "best": true
+        },
+        "qty": 1,
+        "note": "Bryce’s ladder: $299 minimum, $399 at 2,500 sq ft, square-root scaling, …99 steps. Change it to your current prices."
+      },
+      {
+        "id": "a2",
+        "label": "Overseeding (Bermuda or fescue)",
+        "unit": "lawn",
+        "rate": 0,
+        "in": {
+          "good": false,
+          "better": false,
+          "best": false
+        },
+        "qty": 1,
+        "note": "Tick per job; not for St. Augustine. Seed 2 to 4 lb per 1,000 sq ft (3 usual). Set your own price."
+      },
+      {
+        "id": "a3",
+        "label": "Fertilizer",
+        "unit": "lawn",
+        "rate": 0,
+        "in": {
+          "good": false,
+          "better": false,
+          "best": false
+        },
+        "qty": 1,
+        "note": "Set your own price per 1,000 sq ft."
+      }
+    ],
+    "tiers": {
+      "on": false,
+      "pick": "good",
+      "list": {
+        "good": {
+          "name": "Good",
+          "pct": 0,
+          "desc": ""
+        },
+        "better": {
+          "name": "Better",
+          "pct": 0,
+          "desc": ""
+        },
+        "best": {
+          "name": "Best",
+          "pct": 0,
+          "desc": ""
+        }
+      }
+    },
+    "rules": {
+      "min": {
+        "on": true,
+        "amt": 299
+      },
+      "travel": {
+        "on": false,
+        "base": null,
+        "bands": [
+          {
+            "upto": 20,
+            "fee": 0
+          },
+          {
+            "upto": 35,
+            "fee": 50
+          },
+          {
+            "upto": 50,
+            "fee": 100
+          }
+        ],
+        "over": null
+      },
+      "sur": [],
+      "season": [],
+      "sugg": [],
+      "fuel": {
+        "on": false
+      }
+    },
+    "pay": {
+      "on": true,
+      "bands": [
+        {
+          "from": 0,
+          "amt": 40
+        },
+        {
+          "from": 399,
+          "amt": 65
+        },
+        {
+          "from": 499,
+          "amt": 100
+        }
+      ],
+      "note": "Bryce’s rule; more when a job runs long"
+    }
+  }
 }

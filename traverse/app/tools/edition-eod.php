@@ -10,7 +10,7 @@ if (PHP_SAPI !== 'cli') exit;
 @ini_set('memory_limit', '1024M');
 $api = dirname(__DIR__) . '/public_html/api';
 if (empty($argv[1]) || $argv[1] === '--all') {
-    foreach (glob($api . '/traverse*-rounds.php') ?: [] as $f) {
+    foreach (array_merge(glob($api . '/traverse*-rounds.php') ?: [], glob($api . '/c-*-rounds.php') ?: []) as $f) {   /* + client installs c-<slug> (2026-11-18): each sends only if its admin turned it on */
         $t = microtime(true);
         $out = []; @exec(escapeshellarg(PHP_BINARY) . ' -d max_execution_time=240 ' . escapeshellarg(__FILE__) . ' ' . escapeshellarg($f) . ' 2>&1', $out);
         $line = trim(implode(' ', $out)) ?: 'no output';
@@ -20,7 +20,7 @@ if (empty($argv[1]) || $argv[1] === '--all') {
 }
 $f = $argv[1]; $force = in_array('--force', $argv, true);
 /* an edition's API (traverse-<edition>-rounds.php), a client install's (traverse-c<8 hex>-rounds.php), or a test copy's rounds.php */
-if (!preg_match('#/(rounds|traverse[a-z0-9-]*-rounds)\.php$#', $f) || !is_file($f)) { echo "not an install API\n"; exit(1); }
+if (!preg_match('#/(rounds|traverse[a-z0-9-]*-rounds|c-[a-z0-9-]+-rounds)\.php$#', $f) || !is_file($f)) { echo "not an install API\n"; exit(1); }
 set_time_limit(240);
 final class SixfoldOut extends Exception { public array $body; public function __construct(array $b) { parent::__construct('out'); $this->body = $b; } }
 define('SIXFOLD_CLI', true);

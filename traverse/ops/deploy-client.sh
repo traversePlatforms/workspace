@@ -74,4 +74,7 @@ live=$(chk v); want=$(cat "$ST/code/$F/version.txt")
 c=$(chk a); [ "$c" = 401 ] && echo "  api signed out: 401" || { echo "  api answered $c"; bad=1; }
 c=$(chk p); [ "$c" = 200 ] && echo "  page: 200" || { echo "  page answered $c"; bad=1; }
 [ "$(chk r)" = 1 ] && echo "  noindex header: yes" || { echo "  no X-Robots-Tag noindex header"; bad=1; }
+# warm its towns answer now (2026-11-18: the first load after a deploy took 10 s), as admin and crew; the hourly run keeps it warm after
+W=$($SG "cd $SITE && for r in admin crew; do php -d memory_limit=1024M sixfold-tools/regions-warm.php $SITE/public_html/api/$ID-rounds.php \$r 2>&1 | head -c 120; echo; done" 2>/dev/null)
+printf '%s\n' "$W" | sed 's/^/  warm: /'
 [ $bad = 0 ] && echo "deploy $ID: all checks passed" || { echo "deploy $ID: CHECK FAILED"; exit 1; }

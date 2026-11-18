@@ -8,7 +8,11 @@ if (PHP_SAPI !== 'cli') exit;
 final class SixfoldOut extends Exception { public array $body; public function __construct(array $b) { parent::__construct('out'); $this->body = $b; } }
 define('SIXFOLD_CLI', true);
 $_REQUEST = $_GET = ['action' => 'none']; $_SERVER['REQUEST_METHOD'] = 'GET';
-try { require getenv('HOME') . '/www/traverseplatforms.com/public_html/api/' . (in_array('--practice', $argv, true) ? 'sixfold-practice-rounds.php' : 'rounds.php'); }   /* --practice: the practice copy (2 Nov) */ catch (SixfoldOut $e) { }
+/* --install=c-<slug> (2026-11-18, the Houston test install): a client install's own J.A.R.V.I.S. chat (its own help.log), never Sixfold's */
+$hInst = ''; foreach ($argv as $a0) if (preg_match('/^--install=(c-[a-z0-9-]{1,40})$/D', $a0, $m0)) $hInst = $m0[1];
+$hApi = getenv('HOME') . '/www/traverseplatforms.com/public_html/api/' . ($hInst !== '' ? $hInst . '-rounds.php' : (in_array('--practice', $argv, true) ? 'sixfold-practice-rounds.php' : 'rounds.php'));
+if ($hInst !== '' && !is_file($hApi)) { fwrite(STDERR, "no such install: $hInst\n"); exit(2); }
+try { require $hApi; }   /* --practice: the practice copy (2 Nov) */ catch (SixfoldOut $e) { }
 [$id, $status] = [(string) ($argv[1] ?? ''), (string) ($argv[2] ?? 'answered')];
 if (!in_array($status, ['answered', 'matthew', 'working'], true)) { fwrite(STDERR, "status: answered, matthew or working\n"); exit(2); }
 $T = helpAll(); if (!isset($T[$id])) { fwrite(STDERR, "no such ticket\n"); exit(2); }

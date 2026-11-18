@@ -8,7 +8,11 @@ if (PHP_SAPI !== 'cli') exit;
 final class SixfoldOut extends Exception { public array $body; public function __construct(array $b) { parent::__construct('out'); $this->body = $b; } }
 define('SIXFOLD_CLI', true);
 $_REQUEST = $_GET = ['action' => 'none']; $_SERVER['REQUEST_METHOD'] = 'GET';
-try { require getenv('HOME') . '/www/traverseplatforms.com/public_html/api/' . (in_array('--practice', $argv, true) ? 'sixfold-practice-rounds.php' : 'rounds.php'); } catch (SixfoldOut $e) { }
+/* --install=c-<slug> (2026-11-18, the Houston test install): a client install's own J.A.R.V.I.S. chat (its own help.log), never Sixfold's */
+$hInst = ''; foreach ($argv as $a0) if (preg_match('/^--install=(c-[a-z0-9-]{1,40})$/D', $a0, $m0)) $hInst = $m0[1];
+$hApi = getenv('HOME') . '/www/traverseplatforms.com/public_html/api/' . ($hInst !== '' ? $hInst . '-rounds.php' : (in_array('--practice', $argv, true) ? 'sixfold-practice-rounds.php' : 'rounds.php'));
+if ($hInst !== '' && !is_file($hApi)) { fwrite(STDERR, "no such install: $hInst\n"); exit(2); }
+try { require $hApi; } catch (SixfoldOut $e) { }
 [$id, $name] = [(string) ($argv[1] ?? ''), (string) ($argv[2] ?? '')];
 if (!preg_match('/^h[0-9]{14}[0-9a-f]{4}$/D', $id) || !isset(helpAll()[$id])) { fwrite(STDERR, "no such ticket\n"); exit(2); }
 if (!helpFileName($name)) { fwrite(STDERR, "name: letters, digits, dot, dash or underscore, ending .pdf, up to 84 characters\n"); exit(2); }

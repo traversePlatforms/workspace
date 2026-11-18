@@ -15,6 +15,8 @@
 //   folder  written back on the first build (a random name, like the editions'): its address never changes after that
 //   features, card   optional: switches laid over the trade's (and the market's) last, e.g. {"billing": false} for a free test install
 //   alerts  optional: the weather warnings this install shows and pushes, in place of the trade's list
+//   pricing  optional: the install's own starting price list for Setup › Prices, in the price list's shape {lines, tiers, rules, pay}, in place of
+//           the trade's starter (2026-11-18, the Houston test install: Bryce's aeration ladder). The admin edits and saves it; nothing is charged by it
 //   keepAlso optional: side-file kinds the trade's own filter leaves out but this install needs, e.g. ["year"] (year built and house
 //           size, which the quote kit and the house sheet read) for a lawn install (2026-11-16, the Houston test install)
 //
@@ -107,6 +109,7 @@ module.exports = function addClients(EDITIONS) {
         if (Array.isArray(C.alerts)) co.alerts = C.alerts.filter((e) => typeof e === 'string' && e.trim());
         for (const k of ['services', 'extraWork']) if (Array.isArray(C[k])) co[k] = C[k].filter((p) => Array.isArray(p) && p.length >= 2);   /* the work it sells, in place of the trade's */
         if (Array.isArray(C.leadNeeds)) co.leadNeeds = C.leadNeeds.filter((e) => typeof e === 'string' && e.trim());
+        if (C.pricing && typeof C.pricing === 'object' && Array.isArray(C.pricing.lines) && C.pricing.lines.length) co.prcStart = C.pricing;   /* its own starting price list (2026-11-18): Prices shows it until the admin saves; rounds.php prcStartList() */
         return co;
       },
     });

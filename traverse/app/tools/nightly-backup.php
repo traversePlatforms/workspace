@@ -33,6 +33,8 @@ $failed = 0;
 /* + every client install made on the server (2026-10-29): traverse-c<8 hex>-data beside the others; its door files are links to its edition's,
    and only its own logs and settings are read, as for every folder */
 $clients = array_map('basename', glob($site . '/traverse-c[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-data', GLOB_ONLYDIR) ?: []);
+/* + client installs built from editions/clients/<slug>.json (2026-11-18, the Houston test install): c-<slug>-data, its logs and settings only */
+$clients = array_merge($clients, array_map('basename', array_filter(glob($site . '/c-*-data', GLOB_ONLYDIR) ?: [], fn($d) => (bool) preg_match('#/c-[a-z0-9-]{1,40}-data$#', $d))));
 foreach (array_merge(FOLDERS, $clients) as $dir) if (!backupOne($site, $dir)) $failed++;
 exit($failed ? 1 : 0);
 

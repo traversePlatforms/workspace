@@ -50,6 +50,12 @@ const CARE_PH = [
 const CARE_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function careOn(): bool { return edition() && feature('walkdesk'); }
+/* held (2026-11-18, the Houston test install; Matthew on aftercare: "I dont want to add that in yet I would just disable the feature, but leave it
+   there for now that way he knows its an option"; "Monthly newsletter we can wait on but leave the option there"): features.acoff / features.nloff
+   keep the aftercare email / the newsletter on the screens, marked "Available, not turned on", and nothing turns them on or sends them. Every
+   other install: unchanged (neither switch is set). */
+function careHeld(string $part): bool { return $part === 'ac' ? feature('acoff') : ($part === 'nl' ? feature('nloff') : false); }
+const CARE_HELD = 'Available, not turned on for your company yet. Ask Traverse when you want it.';
 function careFile(string $n): string { return DATA_DIR . '/care-' . $n . '.json'; }
 function careJson(string $n): array { $j = json_decode((string) @file_get_contents(careFile($n)), true); return is_array($j) ? $j : []; }
 /** read-change-write one care file under its lock */
@@ -367,7 +373,7 @@ function careSweep(?int $now = null): array {
         }
     }
     /* aftercare after a job is marked done */
-    if ($mailOk && $day && !empty($cfg['ac']['on']) && $left > 0) {
+    if ($mailOk && $day && !empty($cfg['ac']['on']) && !careHeld('ac') && $left > 0) {
         $done = []; $acFails = [];
         foreach ($log as $r) if (($r['kind'] ?? '') === 'ac' && empty($r['test'])) {   /* sent, or failed three times (review 2026-10-31, as the follow-ups) */
             if (!empty($r['ok'])) $done[(string) ($r['job'] ?? '')] = true;
@@ -388,7 +394,7 @@ function careSweep(?int $now = null): array {
         }
     }
     /* newsletter issues approved and due */
-    if ($left > 0) foreach (careNews() as $is) {
+    if ($left > 0 && !careHeld('nl')) foreach (careNews() as $is) {
         $ap = $is['approved'] ?? null; $s = $is['sent'] ?? null; $when = careNlTime((string) $is['send']);
         if (!is_array($ap) || ($ap['h'] ?? '') !== careNlHash($is) || $when === null || $when > $now || (is_array($s) && !empty($s['done']))) continue;
         if (!$mailOk || trim((string) $cfg['nl']['address']) === '') { $out['nlwait'] = !$mailOk ? 'no mailbox' : 'no mailing address'; break; }
@@ -584,7 +590,8 @@ function careAction(): void {
     if ($action === 'carecfg') {
         $ph = []; foreach (CARE_PH as $k => $m) foreach ($m as $p => $d) $ph[$k][] = [$p, $d];
         out(['ok' => true, 'cfg' => $cfg, 'def' => careCfgDefaults(), 'ph' => $ph, 'mail' => mailState() + ['to' => (string) (mailOwnCfg()['user'] ?? '')], 'review' => careReviewLink($cfg), 'companyReview' => function_exists('followupReview') ? followupReview() : '',
-             'counts' => ['optin' => count(careNlRecipients()), 'unsub' => count(nlUnsubs()), 'today' => careSentToday()], 'caps' => ['run' => CARE_RUN_CAP, 'day' => CARE_DAY_CAP]]);
+             'counts' => ['optin' => count(careNlRecipients()), 'unsub' => count(nlUnsubs()), 'today' => careSentToday()], 'caps' => ['run' => CARE_RUN_CAP, 'day' => CARE_DAY_CAP]]
+             + (careHeld('ac') || careHeld('nl') ? ['held' => ['ac' => careHeld('ac'), 'nl' => careHeld('nl'), 'say' => CARE_HELD]] : []));
     }
     if ($action === 'carecfgset') {
         $post(); $part = (string) ($body['part'] ?? '');
@@ -593,7 +600,7 @@ function careAction(): void {
             $c = careCfg($d)[$part];   /* from the file as it is under the lock, not as it was read before it (review 2026-10-31: two admins saving different parts lost one) */
             if ($part === 'nl') { $a = careClean($body['address'] ?? '', 300); if ($a !== '' && mb_strlen($a) < 10) fail('Give the whole mailing address: street (or PO box), town, state and ZIP.'); $c['address'] = $a; }
             else {
-                if (array_key_exists('on', $body)) { $on = !empty($body['on']); if ($on && empty($c['on'])) $c['onAt'] = time(); $c['on'] = $on; }
+                if (array_key_exists('on', $body)) { $on = !empty($body['on']); if ($on && careHeld($part)) fail(CARE_HELD, 403); if ($on && empty($c['on'])) $c['onAt'] = time(); $c['on'] = $on; }
                 if ($part === 'fu') {
                     foreach (['days' => [1, 30, 'The first follow-up: 1 to 30 days after the quote.'], 'gap' => [1, 30, 'Between follow-ups: 1 to 30 days.'], 'max' => [1, 5, 'Up to 5 follow-ups.']] as $k => [$lo, $hi, $say])
                         if (array_key_exists($k, $body)) { $v = $body[$k]; if (!is_numeric($v) || (int) $v != $v || $v < $lo || $v > $hi) fail($say); $c[$k] = (int) $v; }
@@ -622,6 +629,7 @@ function careAction(): void {
     }
     if ($action === 'carepreview' || $action === 'caretest') {
         $post(); $part = (string) ($body['part'] ?? '');
+        if ($action === 'caretest' && careHeld((string) ($body['part'] ?? ''))) fail(CARE_HELD, 403);   /* held: not even a test goes (2026-11-18) */
         if ($action === 'caretest') { if (!mailCfg()) fail('Connect your email first (Setup, Email).'); if (!throttleTake(rateFile('caretest|' . $me), 20, 3600)) fail('That is a lot of tests in an hour.', 429); }
         $to = (string) (mailOwnCfg()['user'] ?? '');
         $sampleL = ['id' => 'w00000000000000sample', 'name' => 'Alex Sample', 'email' => 'alex@example.com', 'phone' => '', 'quote' => ['price' => 1200, 'at' => time() - 2 * 86400, 'items' => [['t' => ucfirst(kitTrade()) . ' work', 'amt' => 1200]]]];
@@ -649,7 +657,7 @@ function careAction(): void {
     if ($action === 'carenews') {
         $nx = (new DateTime('first day of next month 09:00', $tz))->format('Y-m-d H:i');
         out(['ok' => true, 'issues' => array_map('careNlOut', array_reverse(careNews())), 'address' => (string) $cfg['nl']['address'], 'mail' => (bool) mailCfg(), 'to' => (string) (mailOwnCfg()['user'] ?? ''),
-             'recipients' => count(careNlRecipients()), 'unsub' => count(nlUnsubs()), 'templates' => careNlTemplates(), 'nextFirst' => $nx]);
+             'recipients' => count(careNlRecipients()), 'unsub' => count(nlUnsubs()), 'templates' => careNlTemplates(), 'nextFirst' => $nx] + (careHeld('nl') ? ['held' => CARE_HELD] : []));
     }
     if ($action === 'carenewsset') {
         $post(); $id = (string) ($body['id'] ?? '');
@@ -670,6 +678,7 @@ function careAction(): void {
         if (!empty($is['sent'])) fail('This issue has started sending.');
         if ($action === 'carenewsdel') { careNewsEdit(fn($L) => array_filter($L, fn($x) => $x['id'] !== $id)); out(['ok' => true]); }
         $on = !empty($body['on']);
+        if ($on && careHeld('nl')) fail(CARE_HELD, 403);
         if ($on) {
             if (trim((string) $cfg['nl']['address']) === '') fail('Add your postal mailing address first (above). The law (CAN-SPAM) says every newsletter carries it, so nothing goes without it.');
             if (!mailCfg()) fail('Connect your email first (Setup, Email).');
@@ -683,7 +692,7 @@ function careAction(): void {
         out(['ok' => true, 'issue' => careNlOut($x), 'recipients' => count(careNlRecipients())]);
     }
     if ($action === 'carenewstest') {
-        $post(); if (!mailCfg()) fail('Connect your email first (Setup, Email).');
+        $post(); if (careHeld('nl')) fail(CARE_HELD, 403); if (!mailCfg()) fail('Connect your email first (Setup, Email).');
         if (!throttleTake(rateFile('caretest|' . $me), 20, 3600)) fail('That is a lot of tests in an hour.', 429);
         $id = (string) ($body['id'] ?? ''); $is = null; foreach (careNews() as $x) if ($x['id'] === $id) $is = $x; if (!$is) fail('No such issue.', 404);
         $to = (string) (mailOwnCfg()['user'] ?? ''); $r = careSend($to, careNlRender($is, $to, 'Alex Sample', true));

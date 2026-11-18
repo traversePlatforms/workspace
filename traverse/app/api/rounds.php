@@ -165,7 +165,11 @@ function company(): array {
             /* which kinds of home the door lists keep (2026-11-15, the hk door field; see doorHk): {mh: mobile homes, b: apartment and condo
                buildings and mobile home parks}, each true or false; null = every edition mobile homes yes, buildings no. An admin's choice in
                door-who.json comes first. Sixfold 365 (a365) is lawn and yard only: both always false there, whatever is set */
-            'hkShow' => null];
+            'hkShow' => null,
+            /* this install's own starting price list (2026-11-18, the Houston test install: Bryce's aeration ladder), from its client file's
+               "pricing"; used by prcCfg() in place of the trade's starter until the admin saves Prices. null = the trade's starter (every other install).
+               Never sent before sign-in (action company leaves it out) */
+            'prcStart' => null];
     $f = json_decode((string) @file_get_contents(DATA_DIR . '/company.json'), true);
     /* what the client's admin set on the Company screen (2026-10-08): over the built file, never shipped in a data pack */
     $loc = json_decode((string) @file_get_contents(DATA_DIR . '/company-local.json'), true);
@@ -2346,7 +2350,7 @@ if ($action === 'billinghook') {
 
 /* the company's name, mark, colours and lists, for the sign-in screen and everything after (2026-10-04) */
 /* without appUrl (review 2026-10-04): the folder name is what keeps the sign-in page out of sight; only the morning email needs it */
-if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1, '_signAs' => 1])]);   /* the market checked (2026-10-11) */
+if ($action === 'company') out(['ok' => true, 'company' => ['market' => company()['market'] ? market() : null] + array_diff_key(company(), ['appUrl' => 1, 'market' => 1, '_signAs' => 1, 'prcStart' => 1])]);   /* the market checked (2026-10-11) */   /* prcStart: prices are never public (2026-11-18) */
 if ($action === 'zelleqr') {   /* the Zelle QR code (2026-10-30): before sign-in, for the quote and signing pages; served like the logo */
     $zq = zelleQrInfo();
     if (!$zq) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); exit('No QR code.'); }
@@ -9271,7 +9275,7 @@ if ($action === 'practicelog') {
     out(['ok' => true, 'rows' => array_reverse(array_map(fn($r) => array_intersect_key($r, array_flip(['at', 'kind', 'to', 'subject', 'text', 'via', 'method', 'path', 'url', 'amount', 'name', 'from', 'title'])), $rows))]);
 }
 if (in_array($action, ['helplist', 'helpsend', 'helpclose', 'helpfile'], true)) {
-    if (!feature('walkdesk') || empty(company()['a365'])) fail('Not here.', 404);
+    if (!feature('walkdesk') || (empty(company()['a365']) && !feature('jarvis'))) fail('Not here.', 404);   /* + an install with features.jarvis (2026-11-18, the Houston test install: its own chats, its own help.log) */
     if (!desk()) fail('Not allowed.', 403);
     /* 2026-11-15 (the Sixfold handover; Jen becomes an admin): an admin sees the staff's conversations, never the super admin's. Matthew uses
        J.A.R.V.I.S. as his own assistant across all his work, and until today every admin (Brandon, Lance, Shelly T) could open his chats */
@@ -15614,12 +15618,37 @@ if (in_array($action, ['kit', 'kitset', 'kitquote', 'payset', 'squareoauth'], tr
 function prcOn(): bool { return kitOn(); }
 function prcUnits(): array {
     return ['roofsq' => 'per roofing square (100 sq ft of roof)', 'roofft' => 'per sq ft of roof', 'lawn' => 'per 1,000 sq ft of lawn', 'lawnft' => 'per sq ft of lawn',
-            'kw' => 'per kW of solar', 'perim' => 'per foot around the house', 'homeft' => 'per sq ft of home', 'lotk' => 'per 1,000 sq ft of lot', 'visit' => 'per visit', 'each' => 'each', 'flat' => 'flat'];
+            'kw' => 'per kW of solar', 'perim' => 'per foot around the house', 'homeft' => 'per sq ft of home', 'lotk' => 'per 1,000 sq ft of lot', 'visit' => 'per visit', 'each' => 'each', 'flat' => 'flat']
+        + (feature('ladder') ? ['ladder' => 'by lawn size, on a ladder (the price at one lawn size, scaled, with a minimum)'] : []);   /* the Houston test install (2026-11-18) */
+}
+/* the lawn ladder (2026-11-18, the Houston test install; Matthew: "sixfold currently uses bryces measurements and payments ... couldnt we just use
+   that"): Sixfold 365's aeration price, as a price line. The line's rate is the price at the ladder's lawn size (lad.sq); a bigger or smaller lawn
+   scales by (lawn / lad.sq) to the power lad.pow (0.5: the square root, Bryce's), never under lad.min, rounded to "...99" steps (end 99) or whole
+   dollars (end 0). Bryce: $299 minimum, $399 at 2,500 sq ft, so a 22,000 sq ft acre lot lands at $1,199. Only where features.ladder is on. */
+function prcLad($r): array {
+    $L = is_array($r['lad'] ?? null) ? $r['lad'] : [];
+    $n = fn($v, $d, $lo, $hi) => is_numeric($v) ? max($lo, min($hi, (float) $v)) : $d;
+    return ['sq' => (int) round($n($L['sq'] ?? null, 2500, 100, 1000000)), 'pow' => round($n($L['pow'] ?? null, 0.5, 0.1, 1.5), 3), 'min' => (int) round($n($L['min'] ?? null, 0, 0, 100000)), 'end' => (int) ($L['end'] ?? 99) === 0 ? 0 : 99];
+}
+/** a ladder line's price for a lawn of $sq sq ft, with an option's percentage */
+function prcLadAmt(array $r, float $sq, float $pct = 0): int {
+    $L = prcLad($r); if ($sq <= 0) return 0;
+    $x = (float) $r['rate'] * pow($sq / $L['sq'], $L['pow']) * (1 + $pct / 100);
+    $v = $L['end'] === 99 ? (int) (round($x / 100) * 100 - 1) : (int) round($x);
+    return max($L['min'], $v, 0);
+}
+/** the crew's pay by the job's price (2026-11-18, Bryce's rule: a $299 job pays $40, $399 pays $65, $499 and up $100; "adjusted when long"):
+    bands {from, amt}, the highest band the price reaches. Staff only, never on a quote. Off with no bands. */
+function prcPayClean($p): array {
+    $p = is_array($p) ? $p : []; $b = [];
+    foreach (array_slice((array) ($p['bands'] ?? []), 0, 8) as $x) if (is_array($x) && is_numeric($x['from'] ?? null) && is_numeric($x['amt'] ?? null)) $b[] = ['from' => (int) max(0, min(100000, round((float) $x['from']))), 'amt' => (int) max(0, min(100000, round((float) $x['amt'])))];
+    usort($b, fn($a, $c) => $a['from'] <=> $c['from']);
+    return ['on' => !empty($p['on']) && (bool) $b, 'bands' => $b, 'note' => mb_substr(trim((string) ($p['note'] ?? '')), 0, 160)];
 }
 /** the units offered on the price screens: the ones that fit this company's trade (2026-10-30 audit: a roofer was picking from lawn and solar
     units). Every unit in prcUnits() stays valid when saved or imported, so an older line keeps its own; the page adds it to the picker. */
 function prcUnitsShown(): array {
-    $fit = ['roof' => ['roofsq', 'roofft', 'homeft', 'perim'], 'yards' => ['lawn', 'lawnft', 'lotk', 'perim'], 'solar' => ['kw', 'roofsq', 'roofft'], 'pest' => ['homeft', 'perim', 'lotk'], 'security' => ['homeft', 'perim']];
+    $fit = ['roof' => ['roofsq', 'roofft', 'homeft', 'perim'], 'yards' => array_merge(feature('ladder') ? ['ladder'] : [], ['lawn', 'lawnft', 'lotk', 'perim']), 'solar' => ['kw', 'roofsq', 'roofft'], 'pest' => ['homeft', 'perim', 'lotk'], 'security' => ['homeft', 'perim']];
     $t = kitTrade(); if (!isset($fit[$t])) return prcUnits();
     $keep = array_merge($fit[$t], ['visit', 'each', 'flat']);
     return array_filter(prcUnits(), fn($k) => in_array($k, $keep, true), ARRAY_FILTER_USE_KEY);
@@ -15689,7 +15718,7 @@ function prcLine($r, int $i, ?callable $fail = null): ?array {
     $in = is_array($r['in'] ?? null) ? $r['in'] : [];
     return ['id' => preg_match('/^[a-z0-9]{1,12}$/', (string) ($r['id'] ?? '')) ? (string) $r['id'] : 'l' . $i . substr(bin2hex(random_bytes(2)), 0, 3), 'label' => $lab, 'unit' => $u, 'rate' => round((float) $rate, 2),
             'in' => ['good' => !empty($in['good']), 'better' => !empty($in['better']), 'best' => !empty($in['best'])], 'qty' => max(0, min(1000, (int) ($r['qty'] ?? 1))),
-            'note' => mb_substr(trim((string) ($r['note'] ?? '')), 0, 120), 'src' => mb_substr(trim((string) ($r['src'] ?? '')), 0, 300)];
+            'note' => mb_substr(trim((string) ($r['note'] ?? '')), 0, 120), 'src' => mb_substr(trim((string) ($r['src'] ?? '')), 0, 300)] + ($u === 'ladder' ? ['lad' => prcLad($r)] : []);
 }
 function prcFactOk(string $f): bool { return isset(prcFacts()[$f]); }
 /** the rules, cleaned; $fail (the save) refuses what cannot be read, a read just drops it */
@@ -15736,10 +15765,15 @@ function prcTiersClean($T): array {
     if (!$o['on']) $o['pick'] = 'good';
     return $o;
 }
+/** the starting list: this install's own (company.json prcStart, 2026-11-18: the Houston test install), else the trade's */
+function prcStartList(): array {
+    $st = prcStarter(kitTrade()); $own = company()['prcStart'] ?? null;
+    return is_array($own) && !empty($own['lines']) ? array_replace($st, array_intersect_key($own, array_flip(['lines', 'tiers', 'rules', 'kwDefault', 'pay']))) : $st;
+}
 /** the company's price list: saved (pricing.json), else its older Prices and terms lines in this shape, else the trade's starters */
 function prcCfg(): array {
     static $c = null; if ($c !== null) return $c;
-    $j = json_decode((string) @file_get_contents(DATA_DIR . '/pricing.json'), true); $st = prcStarter(kitTrade()); $from = 'starter';
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/pricing.json'), true); $st = prcStartList(); $from = 'starter';
     if (!is_array($j)) {
         $j = $st; $k = kitCfg();
         if ($k['rulesSet']) {   /* the company priced the older screen: its lines carry over, every included line in all three options */
@@ -15751,7 +15785,7 @@ function prcCfg(): array {
     $lines = []; foreach (array_slice((array) ($j['lines'] ?? []), 0, 60) as $i => $r) if ($x = prcLine($r, $i)) $lines[] = $x;
     if (!$lines && $from === 'saved') $lines = $st['lines'];
     $c = ['lines' => $lines, 'tiers' => prcTiersClean($j['tiers'] ?? $st['tiers']), 'rules' => prcRules($j['rules'] ?? $st['rules'], array_column($lines, 'id')),
-          'kwDefault' => is_numeric($j['kwDefault'] ?? null) ? max(0, min(100, (float) $j['kwDefault'])) : 8, 'set' => $from === 'saved', 'from' => $from, 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? '')];
+          'kwDefault' => is_numeric($j['kwDefault'] ?? null) ? max(0, min(100, (float) $j['kwDefault'])) : 8, 'pay' => prcPayClean($j['pay'] ?? ($st['pay'] ?? null)), 'set' => $from === 'saved', 'from' => $from, 'at' => (int) ($j['at'] ?? 0), 'by' => (string) ($j['by'] ?? '')];
     return $c;
 }
 /** the clause library: saved (clauses.json), else the starters with the company's older terms (kit.json) added as its own clauses */
@@ -16012,9 +16046,9 @@ function prcPrice(array $cfg, array $m, array $H, string $tier, array $picks, ar
         $on = array_key_exists('on', $p) ? !empty($p['on']) : (!empty($r['in'][$tk]) || isset($sugg[$r['id']])); if (!$on) continue;
         $qty = ['roofsq' => (float) ($m['sqs'] ?? 0), 'roofft' => (float) ($m['roof'] ?? 0), 'lawn' => (float) ($m['lawn'] ?? 0) / 1000, 'lawnft' => (float) ($m['lawn'] ?? 0), 'kw' => (float) ($m['kw'] ?? 0),
                 'perim' => (float) ($m['perim'] ?? 0), 'homeft' => (float) ($m['home'] ?? 0), 'lotk' => (float) ($m['lot'] ?? 0) / 1000, 'visit' => max(1, (int) ($m['visits'] ?? 1)),
-                'each' => max(0, min(10000, (int) ($p['qty'] ?? $r['qty']))), 'flat' => 1][$r['unit']];
+                'each' => max(0, min(10000, (int) ($p['qty'] ?? $r['qty']))), 'flat' => 1, 'ladder' => (float) ($m['lawn'] ?? 0)][$r['unit']];
         if ($qty <= 0 && $r['unit'] !== 'each') { $need[] = $r['id']; continue; }
-        $amt = (int) round($r['rate'] * $qty * (1 + $pct / 100));
+        $amt = $r['unit'] === 'ladder' ? prcLadAmt($r, $qty, $pct) : (int) round($r['rate'] * $qty * (1 + $pct / 100));   /* the lawn ladder (2026-11-18) */
         if ($amt === 0 && $r['rate'] > 0) continue;
         $items[] = ['id' => $r['id'], 't' => $r['label'], 'amt' => $amt, 'qty' => round($qty, 2), 'unit' => $r['unit']];
     }
@@ -16089,7 +16123,7 @@ function prcKitQuote(array $lead, array $body): array {
 }
 /** what the quote builder needs, in the kit answer: the list, options, rules, units, and the house (facts, measurements) when asked */
 function prcForQuote(array $get): array {
-    $c = prcCfg(); $o = ['lines' => $c['lines'], 'tiers' => $c['tiers'], 'rules' => $c['rules'], 'units' => prcUnitsShown(), 'unitsAll' => prcUnits(), 'facts' => prcFacts(), 'set' => $c['set'], 'from' => $c['from'], 'kwDefault' => $c['kwDefault'],
+    $c = prcCfg(); $o = ['lines' => $c['lines'], 'tiers' => $c['tiers'], 'rules' => $c['rules'], 'units' => prcUnitsShown(), 'unitsAll' => prcUnits(), 'facts' => prcFacts(), 'set' => $c['set'], 'from' => $c['from'], 'kwDefault' => $c['kwDefault'], 'pay' => $c['pay'],
                          'fuelNow' => $c['rules']['fuel']['on'] ? fuelNow($c['rules']['fuel']) : null];   /* the price per gallon the builder's sum uses: the server's own (2026-10-30) */
     $reg = (string) ($get['region'] ?? ''); $hid = (string) ($get['id'] ?? '');
     if ($reg !== '' && $hid !== '') { $hf = houseFacts($reg, $hid); $o['house'] = $hf ? prcHouse($hf) + ['address' => (string) $hf['address'], 'town' => (string) $hf['town']] : null; }
@@ -16343,7 +16377,7 @@ if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget'
     if (!adminOr('set.prices')) fail('Not allowed.', 403);
     if ($action === 'prc') {
         $c = prcCfg(); $k = kitCfg();
-        out(['ok' => true, 'trade' => kitTrade(), 'units' => prcUnitsShown(), 'unitsAll' => prcUnits(), 'facts' => prcFacts(), 'tierKeys' => prcTiers(), 'depositPct' => $k['depositPct'], 'starter' => prcStarter(kitTrade()), 'starterClauses' => prcStarterClauses(kitTrade()),
+        out(['ok' => true, 'trade' => kitTrade(), 'units' => prcUnitsShown(), 'unitsAll' => prcUnits(), 'facts' => prcFacts(), 'tierKeys' => prcTiers(), 'depositPct' => $k['depositPct'], 'starter' => prcStartList(), 'starterClauses' => prcStarterClauses(kitTrade()),
              'lib' => prcClauses(), 'imports' => prcDrafts(), 'ai' => prcAiUse(), 'costsBase' => costsOn() ? costsCfg()['base'] : null, 'fuel' => fuelState()] + $c);
     }
     if ($action === 'prcfuel') {   /* the weekly EIA prices as kept; POST {refresh: true} asks EIA now (at most every 10 minutes) (2026-10-30) */
@@ -16374,7 +16408,8 @@ if (in_array($action, ['prc', 'prcset', 'clauseset', 'prcimport', 'prcimportget'
             $body['rules']['fuel']['base'] = $g;
         }
         $j = ['v' => 1, 'lines' => $lines, 'tiers' => prcTiersClean($body['tiers'] ?? []), 'rules' => prcRules($body['rules'] ?? [], array_column($lines, 'id'), $no),
-              'kwDefault' => is_numeric($body['kwDefault'] ?? null) ? max(0, min(100, (float) $body['kwDefault'])) : 8, 'by' => $me, 'at' => time()];
+              'kwDefault' => is_numeric($body['kwDefault'] ?? null) ? max(0, min(100, (float) $body['kwDefault'])) : 8, 'by' => $me, 'at' => time()]
+             + (array_key_exists('pay', $body) ? ['pay' => prcPayClean($body['pay'])] : (prcCfg()['pay']['bands'] ? ['pay' => prcCfg()['pay']] : []));   /* the crew's pay (2026-11-18): kept when the screen did not send it */
         if (!writeJsonAtomic(DATA_DIR . '/pricing.json', $j)) fail('Could not save that. Try again.', 500);
         /* the older screens keep reading kit.json: its minimum and usual deposit follow this one */
         $k = json_decode((string) @file_get_contents(DATA_DIR . '/kit.json'), true); $k = is_array($k) ? $k : [];
