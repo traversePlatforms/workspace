@@ -13,6 +13,7 @@ REPO="/c/Users/Surge Inc/Desktop/claude test 2"; ST="$LOCALAPPDATA/ProjectBackup
 LOG="$ST/help-watch.log"; SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; LOCK="$ST/running.lock"
 KEY=$(cat /c/Users/SURGEI~1/.ssh/help-poll-key.txt 2>/dev/null); CHECK="https://traverseplatforms.com/api/help-pending.php?k=$KEY"
 MODEL="${HELP_MODEL:-sonnet}"   # Sonnet: quick and light on the plan; HELP_MODEL=opus for a heavier one
+JV_INSTALLS="${JARVIS_INSTALLS:-c-houston-lawn-test}"   # client installs with their own J.A.R.V.I.S. (18 Nov), see one_install
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
 claude_bin() { ls -d "/c/Users/Surge Inc/.vscode/extensions"/anthropic.claude-code-*-win32-*/resources/native-binary/claude.exe 2>/dev/null | sort -V | tail -1; }
 
@@ -184,6 +185,55 @@ $CONV" --tools "" --strict-mcp-config --setting-sources project --model sonnet -
   log "practice $ID: done"
 }
 
+# A client install's own J.A.R.V.I.S. (2026-11-18, the Houston test install; Matthew: "Lets add jarvis"). Its chats are its own help.log
+# (sixfold-tools/help-*.php --install=c-<slug>, help-pending.php?i=c-<slug>), never Sixfold's. The session knows nothing of Sixfold or anyone
+# else: --restricted with only the Read tool, no MCP servers, no settings, the install's own prompt in place of Claude Code's, run from a
+# folder that holds only this ticket's photos (the only files it can open). It cannot change anything; its text is posted as the reply, its
+# first line saying answered or matthew. A cap per install per day (JARVIS_INSTALL_DAY_CAP, default 40) keeps it light on Matthew's plan.
+jv_prompt() { case "$1" in c-houston-lawn-test) echo "$REPO/traverse/ops/jarvis-houston-prompt.md";; *) echo "";; esac; }
+one_install() {
+  local HI="$1" T ID CLAUDE AUD PF W N CF OUT STL BODY CONV PR STS PICS=""
+  [[ "$HI" =~ ^c-[a-z0-9-]{1,40}$ ]] || return 1
+  PF=$(jv_prompt "$HI"); [ -n "$PF" ] && [ -f "$PF" ] || { log "$HI: no prompt file"; return 1; }
+  CLAUDE=$(claude_bin); [ -n "$CLAUDE" ] && [ -f "$CLAUDE" ] || { log "no claude.exe found"; return 1; }
+  T=$($SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-next.php --install=$HI" < /dev/null 2>>"$LOG") || { log "$HI: server not reachable"; return 0; }
+  [ -n "$T" ] || return 0
+  ID=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).id)}catch(e){}})")
+  [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { log "$HI: could not read the ticket"; return 1; }
+  CF="$ST/$HI-sessions-$(date +%F).count"; N=$(cat "$CF" 2>/dev/null || echo 0); [[ "$N" =~ ^[0-9]+$ ]] || N=0
+  if [ "$N" -ge "${JARVIS_INSTALL_DAY_CAP:-40}" ]; then
+    printf "I've answered a great many messages today, so this one goes to Matthew at Traverse. He'll get back to you here." | $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-reply.php $ID matthew --install=$HI" >> "$LOG" 2>&1
+    log "$HI $ID: day cap ($N) reached: passed to Matthew"; return 0
+  fi
+  echo $(( N + 1 )) > "$CF"
+  touch "$LOCK"; log "$HI $ID: session started"
+  W="$ST/inst/$HI/$ID"; rm -rf "$W"; mkdir -p "$W"
+  get_photos "$T" "$ID" > /dev/null
+  for p in "$ST/photos/$ID"/*; do [ -f "$p" ] && cp "$p" "$W/" && PICS="$PICS
+- $(basename "$p")"; done
+  AUD=$(get_audio "$T" "$ID" "--install=$HI")
+  CONV=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const t=JSON.parse(s);console.log(t.conversation.map(m=>m.from+' ('+m.when+'): '+(m.text||'')+((m.photos||[]).length?' [sent '+m.photos.length+' photo(s): '+m.photos.join(', ')+']':'')+((m.audio||[]).length?' [voice note]':'')).join('\n\n'))}catch(e){}})")
+  PR="The chat so far (answer the last message):
+
+$CONV"
+  [ -n "$PICS" ] && PR="$PR
+
+Photos in this conversation, in your working folder (open each with Read):$PICS"
+  [ -n "$AUD" ] && PR="$PR
+
+Voice notes, turned into text:
+$AUD"
+  OUT=$(cd "$W" && timeout 600 "$CLAUDE" -p "$PR" --restricted --tools "Read" --strict-mcp-config --setting-sources project --permission-mode dontAsk \
+        --model "${HELP_MODEL_INSTALL:-sonnet}" --system-prompt "$(cat "$PF")" --output-format text 2>>"$ST/$HI-$ID.err")
+  printf '%s' "$OUT" > "$ST/$HI-$ID.out"
+  STL=$(printf '%s\n' "$OUT" | sed -n '1p' | tr -d '\r'); BODY=$(printf '%s\n' "$OUT" | sed '1d' | sed -e '/./,$!d')
+  STS=answered; case "$STL" in *STATUS:*matthew*|*STATUS:*MATTHEW*) STS=matthew;; *STATUS:*) ;; *) BODY="$OUT";; esac
+  if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then STS=matthew; BODY="I couldn't finish looking into this one, so I've passed it to Matthew at Traverse. He'll get back to you here."; fi
+  printf '%s' "$BODY" | $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-reply.php $ID $STS --install=$HI" >> "$LOG" 2>&1
+  log "$HI $ID: done ($STS)"
+  rm -f "$LOCK"
+}
+
 # a test of the transcription alone (11 Nov): prints the text of one audio file
 if [ "${1:-}" = "--transcribe" ]; then transcribe "${2:?file}" && echo; exit $?; fi
 if [ -f "$LOCK" ]; then
@@ -191,6 +241,7 @@ if [ -f "$LOCK" ]; then
   log "stale lock removed"; rm -f "$LOCK"
 fi
 if [ "${1:-}" = "--once" ]; then [ -f "$ST/pause" ] || one_ticket; exit 0; fi
+if [ "${1:-}" = "--install" ]; then [ -f "$ST/pause" ] || one_install "${2:?install id, c-<slug>}"; exit 0; fi   # one look at a client install's chat (18 Nov)
 # When the quick HTTPS check stops answering a number (9 Nov 2026: SiteGround's bot captcha answered this laptop's address with a 202 HTML
 # page for hours, so the loop saw nothing and no ticket was picked up), the count is read over SSH instead (sixfold-tools/help-next.php
 # --peek, which only looks), every 30 seconds, until HTTPS answers a number again. Logged once each way so it is seen.
@@ -200,7 +251,7 @@ BAD=0; VIA=https
 # to the old fresh look every 30 s until HTTPS answers again. bash sets STREAM_PID and STREAM[0] for the coproc.
 SFAIL=0
 stream_open() {
-  coproc STREAM { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && for i in $(seq 1 720); do L=$(php help-next.php --peek | grep -c "\"waiting\""); P=$(php help-next.php --peek --practice | grep -c "\"waiting\""); echo "$L|$P"; sleep 5; done' < /dev/null 2>>"$LOG"; }
+  coproc STREAM { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && for i in $(seq 1 720); do L=$(php help-next.php --peek | grep -c "\"waiting\""); P=$(php help-next.php --peek --practice | grep -c "\"waiting\""); H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; echo "$L|$P|$H"; sleep 5; done' < /dev/null 2>>"$LOG"; }   # + |H: the client installs (18 Nov)
 }
 stream_close() { [ -n "${STREAM_PID:-}" ] && kill "$STREAM_PID" 2>/dev/null; wait "${STREAM_PID:-}" 2>/dev/null; unset STREAM_PID; }
 stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent for 20 s
@@ -210,7 +261,7 @@ stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent
   while read -r -t 0.2 -u "$fd" x; do line="$x"; done   # skip lines that piled up during a session
   printf '%s' "$line"
 }
-peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
+peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; echo "|"; H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; echo $H; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
 END=$(( $(date +%s) + 3480 ))
 while [ "$(date +%s)" -lt "$END" ]; do
   if [ ! -f "$ST/pause" ]; then
@@ -220,6 +271,8 @@ while [ "$(date +%s)" -lt "$END" ]; do
       if [ "$N" -gt 0 ]; then one_ticket; continue; fi
       P=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&p=1" 2>/dev/null)
       if [[ "$P" =~ ^[0-9]+$ ]] && [ "$P" -gt 0 ]; then one_practice; continue; fi
+      HIT=""; for HI in $JV_INSTALLS; do H=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&i=$HI" 2>/dev/null); if [[ "$H" =~ ^[0-9]+$ ]] && [ "$H" -gt 0 ]; then one_install "$HI"; HIT=1; break; fi; done   # client installs (18 Nov)
+      [ -n "$HIT" ] && continue
     else
       BAD=$(( BAD + 1 ))
       if [ "$BAD" -ge 3 ]; then
@@ -228,13 +281,14 @@ while [ "$(date +%s)" -lt "$END" ]; do
         if [ "$SFAIL" -lt 3 ]; then
           { [ -n "${STREAM_PID:-}" ] && kill -0 "$STREAM_PID" 2>/dev/null; } || { stream_close; [ "$SFAIL" -gt 0 ] && sleep 10; stream_open; }   # a pause before reopening after a drop (review 11 Nov)
           R=$(stream_read) || R=""
-          if [[ "$R" =~ ^[0-9]+\|[0-9]+$ ]]; then SFAIL=0
+          if [[ "$R" =~ ^[0-9]+\|[0-9]+(\|[0-9]+)?$ ]]; then SFAIL=0
           else SFAIL=$(( SFAIL + 1 )); R=""; stream_close; [ "$SFAIL" -ge 3 ] && log "the open SSH connection keeps dropping: back to a fresh SSH look every 30 s"; fi
         fi
         if [ -z "$R" ]; then R=$(peek_ssh); if [ "$SFAIL" -ge 3 ]; then sleep 25; else sleep 5; fi; fi   # never straight round again (cloud review 11 Nov)
-        L="${R%%|*}"; PR="${R##*|}"
+        L="${R%%|*}"; PR=$(printf '%s' "$R" | cut -d'|' -f2); HR=$(printf '%s' "$R" | cut -s -d'|' -f3)
         if [[ "$L" =~ ^[0-9]+$ ]] && [ "$L" -gt 0 ]; then one_ticket; continue; fi
         if [[ "$PR" =~ ^[0-9]+$ ]] && [ "$PR" -gt 0 ]; then one_practice; continue; fi
+        if [[ "$HR" =~ ^[0-9]+$ ]] && [ "$HR" -gt 0 ]; then for HI in $JV_INSTALLS; do one_install "$HI"; done; continue; fi   # client installs (18 Nov)
         continue
       fi
     fi
