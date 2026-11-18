@@ -78,7 +78,7 @@ sort -t$'\t' -k3,3nr -k4,4nr "$S/per-town.tsv" | head -12
 ## 3. build Roofing and Solar
 T="$(cat "$S/keys.txt" "$S/merge.txt" | grep -v '^$' | sort -u)"
 step "build Roofing and Solar"
-for e in roofing solar; do (cd ../../app && nice -n 19 node --max-old-space-size=8192 ../editions/build-editions.cjs $e 2>&1 | grep -E "built|rror" | tail -3) || stop "build-editions $e failed"; done
+for e in roofing solar; do (cd ../../app && nice -n 19 node --max-old-space-size=8192 ../editions/build-editions.cjs $e > "$S/build-$e.out" 2>&1) || { tail -5 "$S/build-$e.out"; stop "build-editions $e failed"; }; grep -E "built|rror" "$S/build-$e.out" | tail -3; done
 
 ## 4. push: exact filter, dry run and count first
 alt() { echo "$*" | tr ' ' '\n' | grep -v '^$' | paste -sd'|'; }
