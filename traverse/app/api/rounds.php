@@ -2647,7 +2647,7 @@ if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && in_array($action, ['digest',
 if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && $action === 'fbpoll') $session = ['n' => 'Command line', 'r' => 'admin', 'c' => ''];
 /* the towns answer built ahead of the first phone (2026-10-29, speed: a new day, a deploy or a settings save made whoever opened the app
    next wait 7-16 s while every town was rebuilt): tools/regions-warm.php asks for it once per kind of viewer, as that role */
-if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE') && in_array($action, ['regions', 'regionsig'], true)) {
+if (PHP_SAPI === 'cli' && defined('SIXFOLD_CLI') && defined('SIXFOLD_WARM_ROLE') && in_array($action, ['regions', 'regionsig', 'regionareas'], true)) {
     $session = ['n' => 'Command line', 'r' => (string) SIXFOLD_WARM_ROLE, 'c' => ''];
 }
 /* "Mark live" (Release to client since 2026-10-29) from the command line (2026-10-27, traverse/ops/billing-mark-live.php): the app is set up, its free days start (2026-11-06) */
@@ -4164,7 +4164,7 @@ if ($isSuper && $vaId !== '' && $action !== 'viewaslist') {
 /* Claude Check only looks (2026-10-26, Matthew: "Make a read-only role"; it was a full admin). By name, as boardHidden() does, so a rename
    can only take rights away. Page loads from this list, plus loading doors and signing out; everything else is refused. */
 if (!$viewing && $realMe === 'Claude Check') {
-    $roOk = ['me', 'signout', 'regions', 'regionsig', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
+    $roOk = ['me', 'signout', 'regions', 'regionsig', 'regionareas', 'area', 'streets', 'search', 'hoursall', 'leads', 'myleads', 'jobs', 'schedview', 'jobday', 'myjobs', 'myschedule',
         'statspage', 'adreport', 'board', 'stats', 'mydoors', 'mystats', 'customers', 'calendar', 'calpeople', 'teams', 'training', 'guidepdf',
         'climate', 'alerts', 'aroundjobs', 'deskwalks', 'deskday', 'walks', 'results', 'quotes', 'others', 'photoget', 'avatarget', 'jobphotoget',
         'accounts', 'flags', 'goals', 'territories', 'terrlist', 'payments', 'a365pricing', 'secmap', 'pestseason', 'stormdays', 'kit', 'billing', 'plantemplates', 'followup', 'followuppreview', 'hours', 'alertlist', 'alertcount', 'tosched', 'nlist', 'nlpreview', 'prc', 'prcfeedback', 'prcimportget', 'prcfuel', 'eodget', 'eodpreview', 'fbleads', 'fbforms', 'perms', 'payways', 'a365terms', 'pwmine'];   /* + Sixfold 365's permissions, pay ways, terms library and email sign-in, read only (2026-10-30) */   /* + the end-of-day email screen, read only (2026-10-30) */   /* kit: the quote kit's prices and setup, read only (2026-10-27); billing: the plan screen, read only (device QA F7, 2026-10-27; checkout and portal stay refused); plantemplates: saved customer plans, read only (2026-10-27) */
@@ -4541,7 +4541,7 @@ const BILL_ADMIN_OK = ['me', 'signout', 'termsaccept', 'company', 'companyset', 
     'cohide', 'cohideset'];   /* + Counties in the town list (TR-47, 2026-10-31) */
 const BILL_TEAM_OK = ['me', 'signout', 'termsaccept'];
 /* what a lock for payment shuts: Traverse's own data, for everyone but the super admin (2026-10-29) */
-const BILL_DATA_SHUT = ['regions', 'regionsig', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'myplaces', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
+const BILL_DATA_SHUT = ['regions', 'regionsig', 'regionareas', 'area', 'streets', 'search', 'houseposs', 'mark', 'mydoors', 'myplaces', 'walk', 'work', 'areaflag', 'note', 'phone', 'email', 'photo', 'photodel', 'photoget',
     'others', 'walkics', 'results', 'money', 'flags', 'sample', 'stats', 'board',   /* not quotes, quoted, result, roofjob: the Pipeline's door bookings are the company's own work */
     'territories', 'terrlist', 'terrsave', 'assign', 'assignmany', 'unassignall', 'doorassign', 'planexport',
     'stormdays', 'stormdoors', 'alerts', 'alertcalls', 'climate', 'secmap', 'seclist', 'secrates', 'pestseason', 'soil', 'firecheck', 'communities', 'parcelat',
@@ -4973,7 +4973,20 @@ if ($action === 'streets') {
     out(['ok' => true, 'region' => $key, 'streets' => $out]);
 }
 
-if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-27, code review item 3): just the answer's signature, so a phone that has the towns skips the 4.7 MB answer when nothing changed; never kept by sw.js */
+/* ---- the towns first, a town's neighbourhoods when it is opened (2026-11-17, speed; Matthew before the Houston install goes to Bryce) ----
+   The towns answer carried every town's neighbourhoods: Sixfold 15.5 MB (2.3 MB sent), Houston 7.4 MB, all of it on the first load.
+     regions&lite=1        the town list: key, label, county, `as` (that town's neighbourhoods' signature) and `t`, the town's totals the
+                           pickers show (n neighbourhoods, total, done, noanswer, booked, due, retry, hot, all3, sc8, left, fu = neighbourhoods
+                           with doors to come back to, wh = neighbourhoods per person assigned, sc = any door scores, bb = the box round the
+                           neighbourhoods' middles, c = their middle and the doors left there); zeros left out. Top level: odds (the same
+                           for every town) and best (the 6 best neighbourhoods with doors left, the desktop home's list without a location).
+     regionareas&region=K  one town's neighbourhoods, exactly as the full answer has them, with its `as`.
+     regions               the full answer, as before (old pages, saved copies, a screen that needs every town at once). Each town carries `as`.
+   One build makes all three: the full answer and the list are kept whole (regions-cache-<kind>[-lite].json), each town's neighbourhoods in
+   town-cache/<town>/areas-<kind>.json, and regions-cache-<kind>-as.json holds every town's `as` under the answer's signature. A town's
+   `as` changes when its own part does, or when the odds' booking rates do (they feed every neighbourhood's odds). regionsig is unchanged:
+   it covers all three. Same towns as the full answer for this kind of viewer (hidden counties, admin-only and hidden towns stay out). */
+if ($action === 'regions' || $action === 'regionsig' || $action === 'regionareas') {   /* regionsig (2026-10-27, code review item 3): just the answer's signature, so a phone that has the towns skips the 4.7 MB answer when nothing changed; never kept by sw.js */
     if (!is_readable(DATA_DIR . '/index.json')) {
         fail('The door lists are not on this server yet. Sign in as admin and open ?action=diag to see where it looked.', 503);
     }
@@ -5011,9 +5024,34 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
         $rc = (string) @file_get_contents($rcache);
         if (strncmp($rc, $rhead, strlen($rhead)) === 0 && substr($rc, -2) === ']}') sendJson('{"ok":true,"sig":"' . $rsig . '","regions":' . substr($rc, strlen($rhead), -1) . ',"cached":true}');
     };
-    $sendKept();
+    $rlite = $action === 'regions' && (string) ($_GET['lite'] ?? '') === '1';
+    $lcache = DATA_DIR . '/regions-cache-' . $rkind . '-lite.json'; $ascache = DATA_DIR . '/regions-cache-' . $rkind . '-as.json';
+    $lhead = '{"sig":"' . $rsig . '",';
+    $sendKeptLite = function () use ($lcache, $lhead, $rsig): void {
+        $rc = (string) @file_get_contents($lcache);
+        if (strncmp($rc, $lhead, strlen($lhead)) === 0 && substr($rc, -2) === ']}') sendJson('{"ok":true,"sig":"' . $rsig . '",' . substr($rc, strlen($lhead), -1) . ',"cached":true}');
+    };
+    $tkey = '';
+    if ($action === 'regionareas') {
+        $tkey = (string) ($_GET['region'] ?? '');
+        if (!preg_match('/^[a-z0-9_-]{1,60}$/D', $tkey) || !isset($tsigs[$tkey])) fail('No such town.', 404);
+    }
+    $townFile = fn(string $k): string => DATA_DIR . '/town-cache/' . $k . '/areas-' . $rkind . '.json';
+    /* one town's neighbourhoods: its `as` from the index kept under this signature, then its file, whole ({"as":...,"areas":[...]}) */
+    $sendKeptTown = function () use ($ascache, $rsig, $tkey, $townFile): void {
+        $ai = json_decode((string) @file_get_contents($ascache), true);
+        if (!is_array($ai) || ($ai['sig'] ?? '') !== $rsig) return;
+        $as = (string) ($ai['as'][$tkey] ?? '');
+        if ($as === '') fail('No such town.', 404);   /* not one of this viewer's towns (hidden, admin-only, or no neighbourhoods) */
+        $tx = (string) @file_get_contents($townFile($tkey)); $th = '{"as":"' . $as . '","areas":';
+        if (strncmp($tx, $th, strlen($th)) === 0 && substr($tx, -2) === ']}') sendJson('{"ok":true,"key":"' . $tkey . '","as":"' . $as . '","areas":' . substr($tx, strlen($th), -1) . ',"cached":true}');
+    };
+    $sendAny = function () use ($action, $rlite, $sendKept, $sendKeptLite, $sendKeptTown): void {
+        if ($action === 'regionareas') $sendKeptTown(); elseif ($rlite) $sendKeptLite(); else $sendKept();
+    };
+    $sendAny();
     $rlock = @fopen(DATA_DIR . '/regions-cache-' . $rkind . '.lock', 'c');
-    if ($rlock && flock($rlock, LOCK_EX)) $sendKept();   /* waited while another phone built it: send that */
+    if ($rlock && flock($rlock, LOCK_EX)) $sendAny();   /* waited while another phone built it: send that */
     $segT = []; $segB = [];                  /* SX-54: conversations and quotes per kind of door, across every town */
     /* the county each town is in, from the funding sheet (one list to keep up to date) */
     $countyOf = (json_decode((string) @file_get_contents(DATA_DIR . '/docs/money.json'), true) ?: [])['counties'] ?? [];
@@ -5129,8 +5167,55 @@ if ($action === 'regions' || $action === 'regionsig') {   /* regionsig (2026-10-
         $rg['odds'] = ['ready' => $ready, 'talked' => $T, 'booked' => $B, 'min' => ODDS_MIN];
     }
     unset($rg);
+    /* each town's `as`, its file, the town list's totals and the best neighbourhoods (2026-11-17, see the top of this block) */
+    if ($ready) { ksort($segT); ksort($segB); }
+    $segSig = $ready ? md5((string) json_encode([$segT, $segB])) : 'n';   /* the booking rates every neighbourhood's odds come from */
+    $asAll = []; $lite = []; $best = [];
+    $bRank = fn(array $a): float => is_numeric($a['sc'] ?? null) ? (float) ($a['sc8'] ?? 0) + (float) $a['sc'] / 100 : 0.0;
+    $aLeft = fn(array $a): int => max(0, (int) ($a['total'] ?? 0) - (int) ($a['done'] ?? 0) - (int) ($a['noanswer'] ?? 0));
+    /* the page's nearBest() order: hoodRank, then best doors, then doors left; ties keep the list's order (JS sort is stable) */
+    $bCmp = fn(array $x, array $y): int => ($bRank($y) <=> $bRank($x)) ?: (((int) ($y['bestN'] ?? 0)) <=> ((int) ($x['bestN'] ?? 0))) ?: ($aLeft($y) <=> $aLeft($x));
+    foreach ($regions as &$rg) {
+        $k = (string) $rg['key'];
+        $as = md5($tsigs[$k] . '|' . $segSig); $rg['as'] = $as; $asAll[$k] = $as;
+        $tf = $townFile($k); $th = '{"as":"' . $as . '","areas":';
+        $fh = @fopen($tf, 'rb'); $old = $fh ? (string) fread($fh, strlen($th)) : ''; if ($fh) fclose($fh);
+        if ($old !== $th && (is_dir(dirname($tf)) || @mkdir(dirname($tf), 0700, true))) writeTextAtomic($tf, $th . json_encode($rg['areas'], JSON_UNESCAPED_SLASHES) . '}');
+        $t = ['n' => count($rg['areas']), 'total' => 0, 'done' => 0, 'noanswer' => 0, 'booked' => 0, 'due' => 0, 'retry' => 0, 'hot' => 0, 'all3' => 0, 'sc8' => 0, 'left' => 0, 'fu' => 0];
+        $wh = []; $sc = false; $bb = null; $cla = 0.0; $clo = 0.0; $cn = 0; $cl = 0;
+        foreach ($rg['areas'] as $a) {
+            foreach (['total', 'done', 'noanswer', 'booked', 'due', 'retry', 'hot', 'all3', 'sc8'] as $f) $t[$f] += (int) ($a[$f] ?? 0);
+            $t['left'] += (int) ($a['total'] ?? 0) - (int) ($a['done'] ?? 0) - (int) ($a['noanswer'] ?? 0);
+            if ((int) ($a['retry'] ?? 0) + (int) ($a['due'] ?? 0) > 0) $t['fu']++;
+            if (($a['who'] ?? '') !== '' && $a['who'] !== null) $wh[(string) $a['who']] = ($wh[(string) $a['who']] ?? 0) + 1;
+            if (is_numeric($a['sc'] ?? null)) $sc = true;
+            if (is_numeric($a['la'] ?? null) && is_numeric($a['lo'] ?? null)) {
+                $la = (float) $a['la']; $lo = (float) $a['lo'];
+                $bb = $bb ? [min($bb[0], $la), min($bb[1], $lo), max($bb[2], $la), max($bb[3], $lo)] : [$la, $lo, $la, $lo];
+                $cla += $la; $clo += $lo; $cn++; $cl += $aLeft($a);
+            }
+            if ($aLeft($a) > 0 && empty($a['nosol'])) {   /* the best 6, kept in order as they come */
+                $i = count($best); while ($i > 0 && $bCmp($best[$i - 1][1], $a) > 0) $i--;
+                if ($i < 6) { array_splice($best, $i, 0, [[$k, $a]]); if (count($best) > 6) array_pop($best); }
+            }
+        }
+        $t = array_filter($t, fn($v) => $v !== 0);
+        if ($wh) $t['wh'] = $wh;
+        if ($sc) $t['sc'] = 1;
+        if ($bb) { $t['bb'] = $bb; $t['c'] = [round($cla / $cn, 4), round($clo / $cn, 4), $cl]; }
+        $lite[] = ['key' => $rg['key'], 'label' => $rg['label'], 'county' => $rg['county']] + (!empty($rg['hid']) ? ['hid' => 1] : []) + ['as' => $as, 't' => (object) $t];
+    }
+    unset($rg);
     $rtxt = (string) json_encode($regions, JSON_UNESCAPED_SLASHES);   /* encoded once, for the file and the answer alike */
     writeTextAtomic($rcache, $rhead . $rtxt . '}');
+    $ltxt = '"lite":1,"odds":' . json_encode(['ready' => $ready, 'talked' => $T, 'booked' => $B, 'min' => ODDS_MIN]) . ',"best":' . json_encode($best, JSON_UNESCAPED_SLASHES) . ',"regions":' . json_encode($lite, JSON_UNESCAPED_SLASHES);
+    writeTextAtomic($lcache, $lhead . $ltxt . '}');
+    writeTextAtomic($ascache, (string) json_encode(['sig' => $rsig, 'as' => (object) $asAll]));
+    if ($action === 'regionareas') {
+        foreach ($regions as $rg) if ($rg['key'] === $tkey) sendJson('{"ok":true,"key":"' . $tkey . '","as":"' . $rg['as'] . '","areas":' . json_encode($rg['areas'], JSON_UNESCAPED_SLASHES) . '}');
+        fail('No such town.', 404);
+    }
+    if ($rlite) sendJson('{"ok":true,"sig":"' . $rsig . '",' . $ltxt . '}');
     sendJson('{"ok":true,"sig":"' . $rsig . '","regions":' . $rtxt . '}');
 }
 

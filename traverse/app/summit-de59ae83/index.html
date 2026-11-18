@@ -3383,7 +3383,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   var TRIM_DOOR = { fire: ['fire'], lawn: ['lawn', 'lawnfix'], trees: ['trees', 'tl'], fc: ['fc'] };      /* door fields: set to null (tl: the search answer's tree level) */
   var TRIM_COUNT = { fire: ['hot', 'vhot'], lawn: ['lawnL', 'lawnM', 'lawnS'], trees: ['treeA', 'treeH'] };       /* summary counts: removed */
-  var TRIM_ACTIONS = { area: 1, regions: 1, search: 1, nearest: 1, mydoors: 1, communities: 1 };
+  var TRIM_ACTIONS = { area: 1, regions: 1, regionareas: 1, search: 1, nearest: 1, mydoors: 1, communities: 1 };
   function trimCard(j) {
     var nul = [], del = [];
     Object.keys(TRIM_DOOR).forEach(function (k) { if (!cardOn(k)) { nul = nul.concat(TRIM_DOOR[k]); del = del.concat(TRIM_COUNT[k] || []); } });
@@ -3478,6 +3478,127 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       for (var i = 0; i < AREA_ZERO.length; i++) if (!(AREA_ZERO[i] in a)) a[AREA_ZERO[i]] = 0;
       for (var k = 0; k < AREA_NULL.length; k++) if (!(AREA_NULL[k] in a)) a[AREA_NULL[k]] = null;
     });
+  }
+  /* ---- the towns first, a town's neighbourhoods when it is needed (2026-11-17, speed; Matthew, before the Houston install goes to Bryce) ----
+     The first load used to bring every town's neighbourhoods (Sixfold 15.5 MB, Houston 7.4 MB). api('regions') now brings the town list
+     (rounds.php regions&lite=1: each town's totals in t, see tsum), and a town's neighbourhoods come with regionareas when it is opened or a
+     screen needs them. They are kept in hand by the town's signature (as): a list that comes again keeps them while that town is unchanged,
+     and marks them _old when it changed (drawn at once, then asked for again, as the full list used to be). sw.js keeps each town's answer,
+     so a town opened once opens with no signal. needAll() is for the few places that need every town at once (Sixfold's office map, a
+     neighbourhood search by name); it asks for the full answer, as before. */
+  S.townMem = {};
+  function townOf(key) { return (S.regions || []).filter(function (x) { return x.key === key; })[0] || null; }
+  function townsIn(action, j) {
+    if (action === 'regionareas') {
+      if (!j.key || !j.areas) return;
+      S.townMem[j.key] = { as: j.as || '', areas: j.areas };
+      (S.regions || []).forEach(function (r) { if (r.key === j.key) { r.areas = j.areas; r._old = false; } });
+      return;
+    }
+    if (j.lite) S.regionsBest = j.best || [];
+    (j.regions || []).forEach(function (r) {
+      if (j.lite) {
+        if (!r.odds && j.odds) r.odds = j.odds;   /* the same for every town, so sent once */
+        var m = S.townMem[r.key];
+        if (m) { r.areas = m.areas; r._old = !r.as || m.as !== r.as; }
+      } else if (r.areas) S.townMem[r.key] = { as: r.as || '', areas: r.areas };
+    });
+  }
+  /** a town's totals: from its neighbourhoods when they are in hand and current (they carry this phone's own counts, keepLeft), else from the list's t */
+  function tsum(r) {
+    var A = r && !r._old ? r.areas : null;
+    if (!A) {
+      var t = (r && r.t) || {};
+      if (!r || (!r.t && r.areas)) return tsum({ areas: r ? r.areas : [] });   /* a list from before (2026-11-17) */
+      return { n: t.n || 0, total: t.total || 0, done: t.done || 0, noanswer: t.noanswer || 0, booked: t.booked || 0, due: t.due || 0, retry: t.retry || 0,
+               hot: t.hot || 0, all3: t.all3 || 0, sc8: t.sc8 || 0, left: t.left || 0, fu: t.fu || 0, wh: t.wh || {}, sc: !!t.sc, bb: t.bb || null, c: t.c || null };
+    }
+    var s = { n: A.length, total: 0, done: 0, noanswer: 0, booked: 0, due: 0, retry: 0, hot: 0, all3: 0, sc8: 0, left: 0, fu: 0, wh: {}, sc: false, bb: null, c: null }, la = 0, lo = 0, np = 0, cl = 0;
+    A.forEach(function (a) {
+      s.total += a.total; s.done += a.done; s.noanswer += a.noanswer || 0; s.booked += a.booked || 0; s.due += a.due || 0; s.retry += a.retry || 0;
+      s.hot += a.hot || 0; s.all3 += a.all3 || 0; s.sc8 += a.sc8 || 0; s.left += a.total - a.done - (a.noanswer || 0);
+      if ((a.retry || 0) + (a.due || 0) > 0) s.fu++;
+      if (a.who) s.wh[a.who] = (s.wh[a.who] || 0) + 1;
+      if (typeof a.sc === 'number') s.sc = true;
+      if (typeof a.la === 'number' && typeof a.lo === 'number') {
+        s.bb = s.bb ? [Math.min(s.bb[0], a.la), Math.min(s.bb[1], a.lo), Math.max(s.bb[2], a.la), Math.max(s.bb[3], a.lo)] : [a.la, a.lo, a.la, a.lo];
+        la += a.la; lo += a.lo; np++; cl += Math.max(0, a.total - a.done - (a.noanswer || 0));
+      }
+    });
+    if (np) s.c = [la / np, lo / np, cl];
+    return s;
+  }
+  /** one town's neighbourhoods, asked for once however many screens want them; resolves with the town (its areas set, or not when there was no signal) */
+  function needTown(key) {
+    var r = townOf(key);
+    if (!r || (r.areas && !r._old)) return Promise.resolve(r);
+    S.townP = S.townP || {};
+    if (S.townP[key]) return S.townP[key];
+    var p = S.townP[key] = api('regionareas', { params: { region: key } }).then(function (j) {
+      delete S.townP[key];
+      if (j && !j.ok && j._status === 404 && /unknown action/i.test(j.error || '')) return needAll().then(function () { return townOf(key); });   /* a server from before 2026-11-17 */
+      if (j && j._status === 401) signinView('Signed out. Enter your code again.');
+      return townOf(key);
+    }, function () { delete S.townP[key]; return townOf(key); });
+    return p;
+  }
+  /** several towns' neighbourhoods, four at a time; most of the towns at once: the full answer instead */
+  function needTowns(keys) {
+    var want = keys.filter(function (k, i) { var r = keys.indexOf(k) === i && townOf(k); return r && (!r.areas || r._old); });
+    if (!want.length) return Promise.resolve();
+    if (want.length > Math.max(12, (S.regions || []).length / 3)) return needAll();
+    var i = 0, lane = function () { return i >= want.length ? Promise.resolve() : needTown(want[i++]).then(lane, lane); };
+    return Promise.all([lane(), lane(), lane(), lane()]);
+  }
+  /** every town's neighbourhoods: the full answer, as the app asked for it before 2026-11-17 */
+  function needAll() {
+    if ((S.regions || []).length && S.regions.every(function (r) { return r.areas && !r._old; })) return Promise.resolve();
+    if (S.allP) return S.allP;
+    S.allP = api('regions', { full: true }).then(function (j) {
+      S.allP = null;
+      if (j && j.ok && j.regions) S.regions = j.regions;
+      else if (j && j._status === 401) signinView('Signed out. Enter your code again.');
+    }, function () { S.allP = null; });
+    return S.allP;
+  }
+  function allIn() { return !!(S.regions || []).length && S.regions.every(function (r) { return r.areas && !r._old; }); }
+  /** for a screen about to draw one town: true when its neighbourhoods are in hand (draw now; from an older list, the fresh ones are asked for
+      and redo() draws again when they land), false when they are not (show the loading state: redo() runs when they land, failed() if they can't) */
+  function townLoad(r, redo, failed) {
+    if (!r) return false;
+    if (r.areas && !r._old) return true;
+    var had = !!r.areas;
+    needTown(r.key).then(function (r2) { if (r2 && r2.areas && !r2._old) redo(r2); else if (!had && failed) failed(); });
+    return had;
+  }
+  /** the loading state while a town's neighbourhoods come (the skeleton rows the neighbourhood screen shows) */
+  function townSkel(box) { for (var i = 0; i < 3; i++) box.appendChild(q('div', 'skel')); }
+  function townNoSignal(box) { box.appendChild(q('div', 'msg', 'No signal, and this town is not saved on this device. Towns open without signal once they have been opened with it. Try again with signal.')); }
+  /** the box round a town's neighbourhoods' middles, as metres from here at the nearest edge (0 inside); null when it has none */
+  function townGap(r, lat, lon) {
+    var b = tsum(r).bb; if (!b) return null;
+    var cl = function (v, a, z) { return v < a ? a : v > z ? z : v; };
+    return gcMetres(lat, lon, cl(lat, b[0], b[2]), cl(lon, b[1], b[3]));
+  }
+  function gcMetres(la1, lo1, la2, lo2) { var R = 6371000, p = Math.PI / 180, dla = (la2 - la1) * p, dlo = (lo2 - lo1) * p, h = Math.sin(dla / 2) * Math.sin(dla / 2) + Math.cos(la1 * p) * Math.cos(la2 * p) * Math.sin(dlo / 2) * Math.sin(dlo / 2); return 2 * R * Math.asin(Math.min(1, Math.sqrt(h))); }
+  /** the towns that can hold a neighbourhood within m metres of a point (their box is that close) */
+  function townsNear(lat, lon, m) { return (S.regions || []).filter(function (r) { var g = townGap(r, lat, lon); return g !== null && g <= m + 50; }).map(function (r) { return r.key; }); }
+  /** the neighbourhood nearest here, in any town: towns in order of how near their box is, each opened only while it could hold a nearer one
+      than found so far. cb({m, key, label}) or cb(null); at once when the towns it needs are in hand, else when they come */
+  function nearestHood(cb) {
+    if (!S.here) return cb(null);
+    var order = (S.regions || []).map(function (r) { return [townGap(r, S.here.lat, S.here.lon), r.key]; }).filter(function (x) { return x[0] !== null; }).sort(function (a, b) { return a[0] - b[0]; });
+    var best = null, i = 0;
+    var step = function () {
+      for (; i < order.length; i++) {
+        if (best && order[i][0] > best.m + 50) break;
+        var r = townOf(order[i][1]); if (!r) continue;
+        if (!r.areas) { var k = order[i][1]; return needTown(k).then(function (r2) { if (!r2 || !r2.areas) i++; step(); }); }   /* no signal for it: on to the next */
+        r.areas.forEach(function (a) { var m = hoodDist(a); if (m !== null && (!best || m < best.m)) best = { m: m, key: r.key, label: r.label }; });
+      }
+      cb(best);
+    };
+    step();
   }
   /* ---- see through their eyes (2026-10-19, Matthew: "tabs ... where i can click office, worker, crew, manager, etc so i can just mess with
      the app through their eyes instead of having to logout and login"). The super admin picks an account; this browser tab then asks the
@@ -3590,6 +3711,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     opts = opts || {};
     var fake = sampleAnswer(action, opts); if (fake) return Promise.resolve(fake);
     var url = API + '?action=' + encodeURIComponent(action);
+    if (action === 'regions' && !opts.full) url += '&lite=1';   /* the town list without the neighbourhoods (2026-11-17); needAll() asks for them all */
     if (opts.params) for (var k in opts.params) url += '&' + k + '=' + encodeURIComponent(opts.params[k]);
     return fetch(url, {
       method: opts.body ? 'POST' : 'GET',
@@ -3607,8 +3729,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (r.status === 401 && j.why === 'elsewhere') S.outWhy = j.error;   /* one device at a time (2026-10-12): say why, on the sign-in screen */
           if (j.why === 'locked') lockHit(j);   /* setup mode or the past-due lock began while the app was open (2026-10-29) */
           if (action === 'regions' && j.ok && j.regions) j.regions.forEach(areaFill);   /* before trimCard, which takes away the parts an edition does not have */
+          if (action === 'regions' && j.ok && j.best) j.best.forEach(function (x) { areaFill({ areas: [x[1]] }); });
+          if (action === 'regionareas' && j.ok && j.areas) areaFill(j);
           if (action === 'regions' && j.ok && j.regions) S.regionsSig = (!fromSaved && j.sig) || '';   /* the answer's signature (2026-10-27): refresh() asks only for it next time; a saved offline copy never counts as current */
           if (TRIM_ACTIONS[action]) trimCard(j);
+          if ((action === 'regions' || action === 'regionareas') && j.ok) townsIn(action, j);   /* each town's neighbourhoods kept in hand by its signature */
           /* every town's name for the alerts (2026-10-07): TOWN_NAME only knew Sixfold's eleven */
           if (action === 'regions' && j.ok && j.regions) j.regions.forEach(function (rg) { if (rg && rg.key && rg.label && !TOWN_NAME[rg.key]) TOWN_NAME[rg.key] = rg.label; });
           if (j.ok && opts.body && action !== 'signin' && action !== 'area') warmArea();
@@ -4291,8 +4416,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function territoryList(host) {
     var draw = function () {
       host.textContent = '';
+      /* the towns holding a neighbourhood given to me (the list's t.wh), their neighbourhoods asked for first (2026-11-17) */
+      var tk = (S.regions || []).filter(function (r) { return tsum(r).wh[S.me]; }).map(function (r) { return r.key; });
+      if (!draw.asked && tk.some(function (k) { var r = townOf(k); return !r.areas || r._old; })) {
+        draw.asked = true; needTowns(tk).then(function () { if (host.isConnected) draw(); });
+        if (tk.some(function (k) { return !townOf(k).areas; })) return;
+      }
       var mine = [];
-      (S.regions || []).forEach(function (r) { (r.areas || []).forEach(function (a) { if (a.who && a.who === S.me) mine.push({ r: r, a: a }); }); });
+      (S.regions || []).forEach(function (r) { if (tsum(r).wh[S.me] || r.areas) (r.areas || []).forEach(function (a) { if (a.who && a.who === S.me) mine.push({ r: r, a: a }); }); });
       if (!mine.length) return;
       host.appendChild(q('h2', 'tgrp', 'Your territories'));
       var g = q('div', 'tgrid');
@@ -4810,7 +4941,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           if (!!S.roofView === o[0]) return;
           S.roofView = o[0];
           try { if (o[0]) localStorage.setItem('doorapp.roofview', '1'); else localStorage.removeItem('doorapp.roofview'); } catch (e) {}
-          S.regions = []; S.doors = []; S.area = null; S.communities = null;   /* fetched again, with or without the hidden parts */
+          S.regions = []; S.doors = []; S.area = null; S.communities = null; S.townMem = {};   /* fetched again, with or without the hidden parts */
           profileView();
           toast(o[0] ? 'Roofing preview on' : 'Back to ' + CO.short, o[0] ? 'This device only: cards show the basics and hail; lawn, trees, fire, money and water are hidden' : pw('Door cards as the crew see them'), null);
         });
@@ -5071,7 +5202,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     S.regions.forEach(function (r) {
       var o = document.createElement('option');
       o.value = r.key;
-      var doors = r.areas.reduce(function (n, a) { return n + (a.total - a.done - (a.noanswer || 0)); }, 0);
+      var doors = tsum(r).left;
       /* on a phone: the town name only (the search button needs the room; the town card shows the count) */
       o.textContent = window.innerWidth < 480 ? r.label : r.label + ' — ' + doors.toLocaleString(LOCALE) + ' to knock';
       if (r.key === S.region) o.selected = true;
@@ -5098,6 +5229,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setBar('town'); renderRegions();
     foot.hidden = false;
     view.textContent = '';
+    /* Nearest on a fresh fix moves to the closest town first (below, before 2026-11-17); the towns that could be closest are asked for first */
+    var pick0 = null; try { pick0 = localStorage.getItem('sixfold.rounds.sort'); } catch (e) {}
+    if (pick0 === 'near' && S.here && S.pickTown) {
+      S.pickTown = false;
+      var reg0 = S.region, sync = true, got = null;
+      var moveTo = function (best) { if (best && best.key !== S.region) { S.region = best.key; S.townNote = 'Showing ' + best.label + ', the closest town to you.'; } };
+      nearestHood(function (best) {
+        if (sync) { got = best || false; return; }
+        if (S.screen !== 'areas' || S.region !== reg0) return;   /* another town was picked meanwhile */
+        moveTo(best); renderAreas();
+      });
+      sync = false;
+      if (got === null) { S.animRegion = null; townSkel(view); return; }
+      if (got && got.key !== S.region) { moveTo(got); return renderAreas(); }
+    }
+    /* this town's neighbourhoods (2026-11-17): drawn when in hand; else the loading rows until they come */
+    if (!townLoad(r, function () { if (S.screen === 'areas' && S.region === r.key) { var y0 = window.scrollY; renderAreas(); window.scrollTo(0, y0); } },
+        function () { if (S.screen === 'areas' && S.region === r.key) { view.textContent = ''; townNoSignal(view); } })) {
+      S.animRegion = null; townSkel(view); return;
+    }
 
     /* town summary (2026-10-01): visited = every door with any mark, misses included */
     var T = r.areas.reduce(function (t, a) { t.t += a.total; t.v += a.done + (a.noanswer || 0); t.b += (a.booked || 0); t.d += (a.due || 0); return t; }, { t: 0, v: 0, b: 0, d: 0 });
@@ -5199,12 +5350,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (!S.here && !S.locating && !S.geoErr) { S.pickTown = true; locate(function () { if (S.screen === 'areas') renderAreas(); }); }
       if (S.locating) view.appendChild(q('div', 'msg', 'Finding where you are\u2026'));
       else if (S.geoErr) view.appendChild(geoMsg());
-      if (S.here && S.pickTown) {
-        S.pickTown = false;
-        var best = null;
-        S.regions.forEach(function (rg) { rg.areas.forEach(function (a) { var m = hoodDist(a); if (m !== null && (!best || m < best.m)) best = { m: m, key: rg.key, label: rg.label }; }); });
-        if (best && best.key !== S.region) { S.region = best.key; S.townNote = 'Showing ' + best.label + ', the closest town to you.'; return renderAreas(); }
-      }
+      /* the move to the closest town is at the top of renderAreas (2026-11-17: it may need towns' neighbourhoods first) */
       if (S.townNote) { view.appendChild(q('div', 'msg', S.townNote)); S.townNote = null; }
       if (S.here) {
         var rf = q('button', 'back'); rf.type = 'button';
@@ -5336,23 +5482,30 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      come-back date has arrived. Built from the counts the town list already has,
      so it costs no extra request. */
   function followups() {
-    var out = { na: 0, due: 0, towns: 0, groups: [] };
+    /* the counts from each town's totals (2026-11-17); the neighbourhoods (groups) from the towns whose neighbourhoods are in hand, and
+       need: the towns with doors to come back to whose neighbourhoods are not, or are from an older list */
+    var out = { na: 0, due: 0, towns: 0, groups: [], need: [], wait: false };
     S.regions.forEach(function (r) {
+      var t = tsum(r); if (!t.fu) return;
+      out.towns++; out.na += t.retry; out.due += t.due;
+      if (!r.areas || r._old) out.need.push(r.key);
+      if (!r.areas) { out.wait = true; return; }
       var areas = r.areas.filter(function (a) { return (a.retry || 0) + (a.due || 0) > 0; });
-      if (!areas.length) return;
-      out.towns++;
-      areas.forEach(function (a) { out.na += a.retry || 0; out.due += a.due || 0; });
-      out.groups.push({ key: r.key, label: r.label, areas: areas });
+      if (areas.length) out.groups.push({ key: r.key, label: r.label, areas: areas });
     });
     return out;
   }
-  function followupView() {
+  function followupView(again) {
     hideToast();
     S.signin = null; S.screen = 'followups';
     foot.hidden = true; setDock(null);
     setBar('back', { title: pw('Doors to come back to'), sub: 'Every town', back: renderAreas, backLabel: 'Back' });
     view.textContent = '';
     var F = followups();
+    if (F.need.length && again !== true) {   /* their neighbourhoods first (2026-11-17) */
+      needTowns(F.need).then(function () { if (S.screen === 'followups') { var y0 = window.scrollY; followupView(true); window.scrollTo(0, y0); } });
+      if (F.wait) { townSkel(view); return; }
+    }
     if (!F.groups.length) { view.appendChild(q('div', 'msg', 'Nothing to come back to. No-answers and come-back dates show up here.')); return; }
     view.appendChild(q('div', 'sub2', pw('Doors back on the list: no-answers after their wait, and Not-now doors on their come-back date. Tap a neighborhood to open it with those doors first.')));
     F.groups.forEach(function (g) {
@@ -5424,7 +5577,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var draw = function () {
       body.textContent = '';
       var list = [];
-      (S.regions || []).forEach(function (r) { (r.areas || []).forEach(function (a) { if (a.who === name) list.push({ r: r, a: a }); }); });
+      (S.regions || []).forEach(function (r) { if (tsum(r).wh[name]) (r.areas || []).forEach(function (a) { if (a.who === name) list.push({ r: r, a: a }); }); });
       list.sort(function (x, y) { return (areaLeft(y.a) ? 1 : 0) - (areaLeft(x.a) ? 1 : 0) || mineSort(x.a, y.a); });
       if (!list.length) {
         body.appendChild(q('div', 'soft', 'No neighborhoods assigned' + (name === S.me ? ' to you' : '') + ' yet.'));
@@ -5444,7 +5597,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         body.appendChild(b);
       });
     };
-    api('regions').then(function (j) { if (j && j.ok) { S.regions = j.regions; draw(); } else { body.textContent = ''; } }).catch(function () { if (S.regions) draw(); else body.textContent = ''; });
+    /* the towns holding their neighbourhoods (the list's t.wh), those towns' neighbourhoods, then the card (2026-11-17) */
+    var theirs = function () { return needTowns((S.regions || []).filter(function (r) { return tsum(r).wh[name]; }).map(function (r) { return r.key; })); };
+    api('regions').then(function (j) { if (j && j.ok) { S.regions = j.regions; return theirs().then(draw); } else { body.textContent = ''; } }).catch(function () { if (S.regions) theirs().then(draw); else body.textContent = ''; });
     return box;
   }
   /* a person's territories on their page (2026-10-20, Matthew: "when she clicks on one of her teams accounts she should be able to assign them
@@ -10997,7 +11152,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      (2026-10-09: with the towns kept ready, a finished neighbourhood read '1 to knock' until the fresh answer landed) */
   function keepLeft() {
     if (!S.area || !S.doors || !S.regions) return;
-    var r = S.regions.filter(function (x) { return x.key === S.region; })[0], a = r && r.areas.filter(function (x) { return x.name === S.area; })[0]; if (!a) return;
+    var r = S.regions.filter(function (x) { return x.key === S.region; })[0], a = r && r.areas && r.areas.filter(function (x) { return x.name === S.area; })[0]; if (!a) return;
     var todo = S.doors.filter(toKnock).length, again = S.doors.filter(function (d) { return !d.cust && d.mark && d.mark.outcome === 'miss' && !backOn(d); }).length;
     a.noanswer = again; a.done = Math.max(0, a.total - todo - again);
   }
@@ -11623,20 +11778,22 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var suggest = function () {
       var v = inp.value.trim().toUpperCase(); sug.textContent = '';
       if (v.length < 2) { sug.hidden = true; return; }
-      var hits = [];
+      var hits = [], all = allIn();
+      if (!all) needAll().then(function () { if (document.body.contains(sug) && inp.value.trim().length >= 2 && findKind() === 'addr' && allIn()) suggest(); });   /* every town's neighbourhoods, for their names (2026-11-17) */
       S.regions.forEach(function (r) {
         if (r.label.toUpperCase().indexOf(v) >= 0) hits.push(['town', r, null]);
-        r.areas.forEach(function (a) { if (a.name.toUpperCase().indexOf(v) >= 0) hits.push(['area', r, a]); });
+        if (all) r.areas.forEach(function (a) { if (a.name.toUpperCase().indexOf(v) >= 0) hits.push(['area', r, a]); });
       });
       hits.slice(0, 8).forEach(function (h) {
         var b = q('button', 'dh-sg'); b.type = 'button';
         b.appendChild(q('b', null, h[0] === 'town' ? h[1].label : h[2].name));
-        b.appendChild(q('small', null, h[0] === 'town' ? 'Town \u00b7 ' + h[1].areas.length + ' neighborhoods' : 'Neighborhood \u00b7 ' + h[1].label + ' \u00b7 ' + areaLeft(h[2]) + ' to knock'));
+        b.appendChild(q('small', null, h[0] === 'town' ? 'Town \u00b7 ' + tsum(h[1]).n + ' neighborhoods' : 'Neighborhood \u00b7 ' + h[1].label + ' \u00b7 ' + areaLeft(h[2]) + ' to knock'));
         b.addEventListener('click', function () { if (h[0] === 'town') { S.region = h[1].key; renderAreas(); } else openHood(h[1].key, h[2].name); });
         sug.appendChild(b);
       });
       var b2 = q('button', 'dh-sg addr'); b2.type = 'button'; b2.appendChild(q('b', null, 'Look up the address \u201c' + inp.value.trim() + '\u201d')); b2.appendChild(q('small', null, pw('Every door in every town')));
       b2.addEventListener('click', function () { S.searchQ = inp.value.trim(); searchView(chooseView); }); sug.appendChild(b2);
+      if (!all) sug.insertBefore(q('small', 'soft', 'Looking through the neighborhoods\u2026'), b2);
       sug.hidden = false;
     };
     inp.addEventListener('input', function () { if (findKind() === 'addr') suggest(); });
@@ -11656,19 +11813,26 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     withRegions(function () {
       if (S.screen !== 'tools' || !document.body.contains(page)) return;
       /* the line under the date: what is left across the towns */
-      var left = 0, at8 = 0; S.regions.forEach(function (r) { r.areas.forEach(function (a) { left += areaLeft(a); at8 += a.sc8 || 0; }); });
+      var left = 0, at8 = 0; S.regions.forEach(function (r) { var t = tsum(r); left += t.left; at8 += t.sc8; });
       sub.textContent += ' \u00b7 ' + S.regions.length + (S.regions.length === 1 ? ' town \u00b7 ' : ' towns \u00b7 ') + left.toLocaleString(LOCALE) + pw(' doors left') + (at8 ? ' \u00b7 ' + at8.toLocaleString(LOCALE) + ' score 8 or more' : '');
+      /* the towns this home shows neighbourhoods from (2026-11-17): yours, the one you left off in and, with a location, those near you;
+         the best overall come with the town list (S.regionsBest) */
+      var last = null; try { last = JSON.parse(localStorage.getItem('sixfold.desk.last') || 'null'); } catch (e) {}
+      var hk = S.regions.filter(function (r) { return tsum(r).wh[S.me]; }).map(function (r) { return r.key; });
+      if (last && last.r) hk.push(last.r);
+      if (S.here) hk = hk.concat(townsNear(S.here.lat, S.here.lon, 25000));
+      needTowns(hk).then(function () {
+      if (S.screen !== 'tools' || !document.body.contains(page)) return;
       /* quick chips */
       var chip = function (label, fn) { var b = q('button', 'dh-chip', label); b.type = 'button'; b.addEventListener('click', fn); chips.appendChild(b); };
-      var all = []; S.regions.forEach(function (r) { r.areas.forEach(function (a) { all.push([r, a]); }); });
-      chip('Best near me', function () { locate(function () { var best = nearBest(all, 1)[0]; if (best) { S.dview = 'bestnear'; openHood(best[0].key, best[1].name); } else renderAreas(); }); });   /* the doors in Best near me order, each with its distance (2026-10-11) */
+      var all = areasInHand();
+      chip('Best near me', function () { locate(function () { nearLoad(function () { var best = nearBest(areasInHand(), 1)[0]; if (best) { S.dview = 'bestnear'; openHood(best[0].key, best[1].name); } else renderAreas(); }); }); });   /* the doors in Best near me order, each with its distance (2026-10-11) */
       if (S.role === 'admin' && feat('hail') && cardOn('hail')) chip('Hit by hail lately', stormView);
       if (all.some(function (x) { return x[1].who === S.me; })) chip('My territories', function () { S.browseMine = true; renderAreas(); });
       var F = followups(); if (F.na + F.due) chip((F.na + F.due) + ' to come back to', followupView);
       if (extra.length) { chips.appendChild(q('span', 'dh-sep')); extra.forEach(function (t) { var b = q('button', 'dh-chip more', t[0]); b.type = 'button'; b.addEventListener('click', function () { window.scrollTo(0, 0); t[1](); }); chips.appendChild(b); }); }
       /* where you left off */
-      var last = null; try { last = JSON.parse(localStorage.getItem('sixfold.desk.last') || 'null'); } catch (e) {}
-      var lr = last && S.regions.filter(function (r) { return r.key === last.r; })[0], la = lr && lr.areas.filter(function (a) { return a.name === last.a; })[0];
+      var lr = last && S.regions.filter(function (r) { return r.key === last.r; })[0], la = lr && lr.areas && lr.areas.filter(function (a) { return a.name === last.a; })[0];
       /* a good place to start is the best neighbourhood; what is assigned has its own card (2026-10-11, Matthew) */
       if (la && !areaLeft(la)) { la = null; last = null; }   /* a finished neighbourhood is not where to pick up (2026-10-26, Matthew: Old Corral Rd, 0 of 1 left) */
       if (!la) { var nb0 = nearBest(all, 1)[0]; if (nb0) { lr = nb0[0]; la = nb0[1]; } }
@@ -11704,6 +11868,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
       var allB = q('button', 'lnk', 'All towns and neighborhoods'); allB.type = 'button'; allB.addEventListener('click', function () { renderAreas(); }); bc.appendChild(allB);
       c3.appendChild(bc);
+      });
       if (!S.here && !S.locating && navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name: 'geolocation' }).then(function (st) { if (st.state === 'granted') locate(function () { if (S.screen === 'tools') chooseView(); }); }).catch(function () {});
     });
     /* your week */
@@ -11740,16 +11905,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* the best neighbourhoods, near here when there is a fix (within about 25 km), else overall; by hoodRank */
   function nearBest(all, n) {
-    var list = all.filter(function (x) { return areaLeft(x[1]) > 0 && !x[1].nosol; });
-    if (S.here) { var near = list.filter(function (x) { var m = hoodDist(x[1]); return m !== null && m <= 25000; }); if (near.length) list = near; }
+    var list = all.filter(function (x) { return areaLeft(x[1]) > 0 && !x[1].nosol; }), near = [];
+    if (S.here) { near = list.filter(function (x) { var m = hoodDist(x[1]); return m !== null && m <= 25000; }); if (near.length) list = near; }
+    if (!near.length && !allIn() && S.regionsBest) return S.regionsBest.map(function (x) { return [townOf(x[0]), x[1]]; }).filter(function (x) { return x[0]; }).slice(0, n);   /* 2026-11-17: the server's nearBest over every town */
     return list.sort(function (x, y) { return hoodRank(y[1]) - hoodRank(x[1]) || (y[1].bestN || 0) - (x[1].bestN || 0) || areaLeft(y[1]) - areaLeft(x[1]); }).slice(0, n);
   }
+  /** every neighbourhood in hand, [town, neighbourhood], in the towns' order */
+  function areasInHand() { var all = []; (S.regions || []).forEach(function (r) { (r.areas || []).forEach(function (a) { all.push([r, a]); }); }); return all; }
+  /** the towns within 25 km of here in hand, for nearBest (2026-11-17), then cb */
+  function nearLoad(cb) { if (!S.here) return cb(); needTowns(townsNear(S.here.lat, S.here.lon, 25000)).then(cb, cb); }
   /** a town in the computer's town column */
   function deskTownBtn(x) {
     var b = q('button', 'db-town' + (x.key === S.region ? ' on' : '')); b.type = 'button'; b.setAttribute('data-town', x.key);
     /* 2026-10-11 (Matthew: the town ratings read too low): a town's average sank under its empty land, so the town shows how many
        doors scoring 8 or more it has left instead; the neighbourhoods keep their scores */
-    b.appendChild(q('span', null, x.label)); var t8 = x.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
+    b.appendChild(q('span', null, x.label)); var t8 = tsum(x).sc8;
     if (t8) { var tc8 = q('span', 'dtc', t8 >= 10000 ? Math.round(t8 / 1000) + 'k' : t8 >= 1000 ? (t8 / 1000).toFixed(1) + 'k' : String(t8)); tc8.title = t8.toLocaleString(LOCALE) + pw(' doors score 8 or more'); b.setAttribute('aria-label', x.label + ': ' + tc8.title); b.appendChild(tc8); }
     b.addEventListener('click', function () { S.region = x.key; S.browseSel = null; renderAreas(); });
     return b;
@@ -11760,7 +11930,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var T = trTree(), many = T.states.length > 1, f = homeFoldGet();
     S.trOpenC = S.trOpenC || {}; if (cur.county) S.trOpenC[cur.county] = 1;
     tl.textContent = '';
-    if (S.regions.some(function (x) { return x.areas.some(function (a) { return a.sc8; }); })) tl.appendChild(q('small', 'db-tlegend', pw('Doors scoring 8+')));
+    if (S.regions.some(function (x) { return tsum(x).sc8 > 0; })) tl.appendChild(q('small', 'db-tlegend', pw('Doors scoring 8+')));
     var bar = function (box, cls, label, n, key, open, data, onTog) {
       var b = q('button', 'db-ctyb ' + cls); b.type = 'button'; b.setAttribute('aria-expanded', String(open)); for (var d in data) b.setAttribute('data-' + d, data[d]);
       b.appendChild(ico('chev', 2.4)); b.appendChild(q('span', null, label)); b.appendChild(q('small', null, n));
@@ -11804,7 +11974,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var ctyOpen = {}; ctyOpen[(S.regions.filter(function (x) { return x.key === S.region; })[0] || {}).county || 'other'] = true;   /* folded by county (2026-10-17): the town on screen keeps its county open */
     var drawTowns = function () {
       tl.textContent = ''; var v = tq.value.trim().toUpperCase(), order = [];
-      if (S.regions.some(function (x) { return x.areas.some(function (a) { return a.sc8; }); })) tl.appendChild(q('small', 'db-tlegend', pw('Doors scoring 8+')));
+      if (S.regions.some(function (x) { return tsum(x).sc8 > 0; })) tl.appendChild(q('small', 'db-tlegend', pw('Doors scoring 8+')));
       S.regions.forEach(function (x) { var k = x.county || 'other'; if (order.indexOf(k) < 0) order.push(k); });
       order.forEach(function (k) {
         var ts = S.regions.filter(function (x) { return (x.county || 'other') === k && (!v || x.label.toUpperCase().indexOf(v) >= 0); }); if (!ts.length) return;
@@ -11815,6 +11985,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       });
     };
     if (trOn()) trDesk(towns, tq, tl); else { tq.addEventListener('input', drawTowns); drawTowns(); }   /* TR-47 (2026-10-31): regions, Yours and the search */
+    /* the town's neighbourhoods (2026-11-17): the towns column is drawn; the middle waits for them when they are not in hand */
+    if (!townLoad(r, function () { if (S.screen === 'areas' && S.region === r.key && deskWide()) { var y0 = window.scrollY; deskBrowse(); window.scrollTo(0, y0); } },
+        function () { if (S.screen === 'areas' && S.region === r.key && document.body.contains(mid)) { mid.textContent = ''; townNoSignal(mid); } })) {
+      mid.appendChild(q('h2', null, r.label)); townSkel(mid); return;
+    }
     /* the town's head and the sort */
     var T = townSum(r), at8 = r.areas.reduce(function (t, a) { return t + (a.sc8 || 0); }, 0);
     var hd = q('div', 'db-head'), ht = q('div');
@@ -11933,7 +12108,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   /* how far the open neighbourhood is from here (2026-10-11, Matthew: after Best near me, where does it say how far?) */
   function hoodAway() {
     if (!S.here || !S.area) return '';
-    var r = (S.regions || []).filter(function (x) { return x.key === S.region; })[0], a = r && r.areas.filter(function (x) { return x.name === S.area; })[0], m = a ? hoodDist(a) : null;
+    var r = (S.regions || []).filter(function (x) { return x.key === S.region; })[0], a = r && r.areas && r.areas.filter(function (x) { return x.name === S.area; })[0], m = a ? hoodDist(a) : null;
     return m === null ? '' : ' \u00b7 ' + distText(m) + ' from you';
   }
   /* ---- tips on the home screen (2026-10-11, Matthew: tips from their own numbers; without numbers, general sales advice) ----
@@ -12179,6 +12354,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     clearInterval(S.officeTick); S.browseMap = null;   /* Fable review 2026-10-09: left behind at sign-out */
     S.desk = null; S.officeMap = null; S.plan = null; S.deskScroll = null; S.deskCardScroll = null;
     S.deskHail = null; S.terr = null;   /* the desk map's hail day and drawn territories (2026-10-09) */
+    S.townMem = {}; S.townP = {}; S.allP = null; S.regionsBest = null;   /* towns' neighbourhoods kept in hand (2026-11-17): another person's, or another role's, are not yours */
   }
   /* the workspace's neighbourhood picker: a town, a search, the neighbourhoods best first */
   function deskPicker() {
@@ -12191,8 +12367,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     box.appendChild(inp);
     var lst = q('div', 'dkp-list'); box.appendChild(lst);
     var r = S.regions.filter(function (x) { return x.key === key; })[0];
+    var asked = false;
     var draw = function () {
       lst.textContent = ''; if (!r) return;
+      if (!r.areas || (r._old && !asked)) {   /* the town's neighbourhoods first (2026-11-17) */
+        if (!asked) { asked = true; needTown(r.key).then(function (r2) { if (r2) r = r2; if (document.body.contains(lst)) draw(); }); }
+        if (!r.areas) { if (asked && !(S.townP || {})[r.key]) townNoSignal(lst); else townSkel(lst); return; }
+      }
       var qv = (inp.value || '').trim().toUpperCase();
       var stz = (S.streets || {})[r.key];
       if (qv && !stz && !(S.streetsAsk || {})[r.key]) {   /* the streets of this town, once, when the search first needs them (2026-10-09) */
@@ -12956,11 +13137,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     montrose: 'Montrose County', delta: 'Delta County', lasanimas: 'Las Animas County', alamosa: 'Alamosa County', conejos: 'Conejos County', saguache: 'Saguache County', costilla: 'Costilla County', washington: 'Washington County', bent: 'Bent County', mineral: 'Mineral County', sedgwick: 'Sedgwick County',
     /* the rest of Colorado's 64 (TR-47, 2026-10-31), so a county the editions add later never shows as Other towns */
     fremont: 'Fremont County', chaffee: 'Chaffee County', jackson: 'Jackson County', moffat: 'Moffat County', phillips: 'Phillips County', kitcarson: 'Kit Carson County', lincoln: 'Lincoln County', cheyenne: 'Cheyenne County', kiowa: 'Kiowa County', crowley: 'Crowley County', otero: 'Otero County', prowers: 'Prowers County', baca: 'Baca County' };
-  function townSum(r) {
-    return r.areas.reduce(function (t, a) {
-      t.total += a.total; t.done += a.done + (a.noanswer || 0); t.left += a.total - a.done - (a.noanswer || 0);
-      t.hot += a.hot || 0; t.booked += a.booked || 0; t.all3 += a.all3 || 0; return t;
-    }, { total: 0, done: 0, left: 0, hot: 0, booked: 0, all3: 0 });
+  function townSum(r) {   /* from tsum (2026-11-17): the town list's totals when the neighbourhoods are not in hand */
+    var t = tsum(r);
+    return { total: t.total, done: t.done + t.noanswer, left: t.left, hot: t.hot, booked: t.booked, all3: t.all3 };
   }
   /* ---- the long town list (TR-47, 2026-10-31, Matthew's tablet test: the editions hold 407 towns and 1.24 million homes, and the County >
      town > neighbourhood list was far too long) ----
@@ -13054,13 +13233,14 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function trMiles(la1, lo1, la2, lo2) { return Math.sqrt(Math.pow((la1 - la2) * 69, 2) + Math.pow((lo1 - lo2) * 69 * Math.cos(la1 * Math.PI / 180), 2)); }
   /** what the search looks through, made on the first letter typed and kept while the towns are the same */
   function trIndex() {
-    if (S._trIx && S._trIx.src === S.regions) return S._trIx;
-    var ix = { src: S.regions, towns: [], hoods: [], counties: {} };
+    var got = S.regions.filter(function (r) { return r.areas; }).length;   /* made again when more towns' neighbourhoods are in hand (2026-11-17) */
+    if (S._trIx && S._trIx.src === S.regions && S._trIx.got === got) return S._trIx;
+    var ix = { src: S.regions, got: got, towns: [], hoods: [], counties: {} };
     S.regions.forEach(function (r) {
       ix.towns.push([r.label.toUpperCase(), r]);
       var c = r.county || 'other'; if (c !== 'other' && !ix.counties[c]) ix.counties[c] = [countyName(c).toUpperCase(), c, 0];
       if (ix.counties[c]) ix.counties[c][2]++;
-      r.areas.forEach(function (a) { ix.hoods.push([String(a.name).toUpperCase(), r, a]); });
+      (r.areas || []).forEach(function (a) { ix.hoods.push([String(a.name).toUpperCase(), r, a]); });
     });
     return (S._trIx = ix);
   }
@@ -13078,14 +13258,17 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (!v || (!digits && v.length < 2)) return false;
     var cls = desk ? 'db-town trr' : 'trr', n = 0;
     var head = function (t) { res.appendChild(q('div', 'trrh', t)); };
-    var town = function (r, sub) { n++; res.appendChild(trRow(cls + ' trtown', r.label, sub || ('Town · ' + countyName(r.county || 'other') + ' · ' + r.areas.length + ' neighborhoods · ' + trNum(r.areas.reduce(function (s, a) { return s + areaLeft(a); }, 0)) + pw(' doors to knock')), function () { S.region = r.key; S.area = null; S.browseSel = null; renderAreas(); window.scrollTo(0, 0); }, { town: r.key })); };
+    var town = function (r, sub) { n++; res.appendChild(trRow(cls + ' trtown', r.label, sub || ('Town · ' + countyName(r.county || 'other') + ' · ' + tsum(r).n + ' neighborhoods · ' + trNum(Math.max(0, tsum(r).left)) + pw(' doors to knock')), function () { S.region = r.key; S.area = null; S.browseSel = null; renderAreas(); window.scrollTo(0, 0); }, { town: r.key })); };
     var hood = function (r, a, pre) { n++; res.appendChild(trRow(cls + ' trhood', a.name, (pre || 'Neighborhood') + ' · ' + r.label + ' · ' + (areaLeft(a) ? trNum(areaLeft(a)) + ' left' : 'Done') + (dayTag(a) && a.who === S.me ? ' · ' + dayTag(a) : ''), function () { openHood(r.key, a.name); }, { town: r.key, hood: a.name })); };
     if (digits) {
       if (v.length !== 5) { res.appendChild(q('div', 'msg', 'Type all 5 digits of the ZIP.')); return true; }
       var z = trZip(v);
       if (!z) { res.appendChild(q('div', 'msg', 'No ZIP ' + v + ' in ' + (TR_STATE[MK().state] || MK().stateName) + '.')); return true; }
       var near = [], byT = {};
-      S.regions.forEach(function (r) { r.areas.forEach(function (a) { if (a.la == null || a.lo == null) return; var m = trMiles(z.lat, z.lon, a.la, a.lo); if (m <= z.r + 0.75) { near.push([m, r, a]); byT[r.key] = byT[r.key] || [r, 0]; byT[r.key][1]++; } }); });
+      var zk = townsNear(z.lat, z.lon, (z.r + 0.75) * 1609.344), zw = zk.filter(function (k) { var r0 = townOf(k); return !r0.areas || r0._old; });
+      if (zw.length && trFind.zip !== v && trFind.zipTried !== v) { trFind.zip = v; needTowns(zk).then(function () { trFind.zip = null; trFind.zipTried = v; if (document.body.contains(res) && String(S.trQ || '').trim().toUpperCase() === v) trFind(S.trQ, res, desk); }); }   /* once per ZIP typed: no signal shows what is in hand */
+      if (zk.some(function (k) { return !townOf(k).areas; }) && trFind.zip === v) { res.appendChild(q('div', 'msg', 'Looking for the neighborhoods near ' + v + '\u2026')); return true; }
+      S.regions.forEach(function (r) { (r.areas || []).forEach(function (a) { if (a.la == null || a.lo == null) return; var m = trMiles(z.lat, z.lon, a.la, a.lo); if (m <= z.r + 0.75) { near.push([m, r, a]); byT[r.key] = byT[r.key] || [r, 0]; byT[r.key][1]++; } }); });
       if (!near.length) { res.appendChild(q('div', 'msg', 'None of your towns are near ZIP ' + v + '.')); return true; }
       near.sort(function (x, y) { return x[0] - y[0]; });
       var tw = Object.keys(byT).map(function (k) { return byT[k]; }).sort(function (x, y) { return y[1] - x[1]; });
@@ -13097,10 +13280,13 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       res.appendChild(q('small', 'trsrc', 'ZIP areas: U.S. Census Bureau. Near the ZIP’s middle, not its exact edge.'));
       return true;
     }
+    var hoodsWait = !allIn();
+    if (hoodsWait && trFind.all !== v && trFind.allTried !== v) { trFind.all = v; needAll().then(function () { trFind.all = null; trFind.allTried = v; if (document.body.contains(res) && String(S.trQ || '').trim().toUpperCase() === v) { var y0 = window.scrollY; trFind(S.trQ, res, desk); window.scrollTo(0, y0); } }); }
     var ix = trIndex(), rk = function (L) { return L.map(function (x) { return [trHit(x[0], v), x]; }).filter(function (x) { return x[0] >= 0; }).sort(function (a, b) { return a[0] - b[0] || a[1][0].localeCompare(b[1][0]); }); };
     var T = rk(ix.towns), H = rk(ix.hoods), C = rk(Object.keys(ix.counties).map(function (k) { return ix.counties[k]; }));
     if (C.length) { head('Counties'); C.slice(0, 3).forEach(function (x) { var c = x[1]; n++; res.appendChild(trRow(cls + ' trcty', countyName(c[1]), c[2] + (c[2] === 1 ? ' town' : ' towns') + ' · show them in the list', function () { trShowCounty(c[1]); }, { county: c[1] })); }); }
     if (T.length) { head('Towns'); T.slice(0, 8).forEach(function (x) { town(x[1][1]); }); if (T.length > 8) res.appendChild(q('small', 'trmore', (T.length - 8) + ' more towns: keep typing.')); }
+    if (hoodsWait && trFind.all === v) { head('Neighborhoods'); res.appendChild(q('small', 'trmore', 'Looking through every neighborhood\u2026')); return true; }
     if (H.length) { head('Neighborhoods'); H.slice(0, 20).forEach(function (x) { hood(x[1][1], x[1][2]); }); if (H.length > 20) res.appendChild(q('small', 'trmore', (H.length - 20) + ' more neighborhoods: keep typing.')); }
     if (!n) res.appendChild(q('div', 'msg', 'No town, neighborhood or county called “' + String(raw).trim() + '”. For an address, use Find an address.'));
     return true;
@@ -13122,7 +13308,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var paint = function () {
       wrap.textContent = '';
       var byKey = {}; S.regions.forEach(function (r) { byKey[r.key] = r; });
-      var mine = []; S.regions.forEach(function (r) { r.areas.forEach(function (a) { if (a.who && a.who === S.me) mine.push([r, a]); }); });
+      /* the towns these come from, their neighbourhoods asked for first (2026-11-17) */
+      var pl0 = (S.trPlaces && S.trPlaces.me === S.me ? S.trPlaces.list : []), l0 = null; try { l0 = JSON.parse(localStorage.getItem('sixfold.desk.last') || 'null'); } catch (e) {}
+      var yk = S.regions.filter(function (r) { return tsum(r).wh[S.me]; }).map(function (r) { return r.key; }).concat(pl0.slice(0, 6).map(function (p) { return p.r; }), l0 && l0.r ? [l0.r] : []).filter(function (k) { return byKey[k]; });
+      var ykw = yk.filter(function (k) { return !byKey[k].areas || byKey[k]._old; }).join(',');
+      if (ykw && paint.asked !== ykw) { paint.asked = ykw; needTowns(yk).then(function () { if (document.body.contains(wrap)) paint(); }); }
+      var mine = []; S.regions.forEach(function (r) { if (tsum(r).wh[S.me]) (r.areas || []).forEach(function (a) { if (a.who && a.who === S.me) mine.push([r, a]); }); });
       mine.sort(function (x, y) { return (areaLeft(y[1]) ? 1 : 0) - (areaLeft(x[1]) ? 1 : 0) || mineSort(x[1], y[1]); });
       var seen = {}; mine.forEach(function (x) { seen[x[0].key + '|' + x[1].name] = 1; });
       var pl = (S.trPlaces && S.trPlaces.me === S.me ? S.trPlaces.list : []).slice(), last = null;
@@ -13130,7 +13321,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (last && last.r && last.a) pl.push({ r: last.r, a: last.a, opened: true });
       var rec = [];
       pl.forEach(function (p) {
-        var r = byKey[p.r], a = r && r.areas.filter(function (y) { return y.name === p.a; })[0], k = p.r + '|' + p.a;
+        var r = byKey[p.r], a = r && r.areas && r.areas.filter(function (y) { return y.name === p.a; })[0], k = p.r + '|' + p.a;
         if (a && !seen[k] && rec.length < (desk ? 2 : 4)) { seen[k] = 1; rec.push([r, a, p]); }   /* the computer's column keeps room for the regions */
       });
       if (!mine.length && !rec.length) { wrap.hidden = true; return; }
@@ -13293,12 +13484,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var p = x.t.total ? x.t.done / x.t.total : 0, fin = x.t.left === 0;
     b.appendChild(ring(48, 5, p, fin ? ico('check', 3) : pctText(p), fin));
     var mid = q('div', 'mid'); mid.appendChild(q('div', 'nm', x.r.label));
-    mid.appendChild(q('div', 'sub', x.r.areas.length + ' neighborhoods · ' + x.t.total.toLocaleString(LOCALE) + pw(' doors')));
+    mid.appendChild(q('div', 'sub', tsum(x.r).n + ' neighborhoods · ' + x.t.total.toLocaleString(LOCALE) + pw(' doors')));
     var chips = q('div', 'chips');
     if (x.t.hot) chips.appendChild(chipEl('hot', 'flame', x.t.hot.toLocaleString(LOCALE) + ' high-risk ' + (x.t.hot === 1 ? 'door' : 'doors') + ' left'));
     if (x.t.all3) chips.appendChild(chipEl('all3', 'check', x.t.all3 + ' with fire, lawn and trees'));
     if (x.t.booked) chips.appendChild(chipEl('bk', 'check', x.t.booked + (x.t.booked === 1 ? ' quote' : ' quotes') + ' booked'));
-    var yours = x.r.areas.filter(function (a) { return a.who && a.who === S.me; }).length;
+    var yours = tsum(x.r).wh[S.me] || 0;
     if (yours) chips.appendChild(chipEl('mine me', 'users', yours + (yours === 1 ? ' neighborhood is yours' : ' neighborhoods are yours')));
     if (chips.children.length) mid.appendChild(chips);
     b.appendChild(mid);
@@ -14057,6 +14248,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var la = q('label', null, 'Neighborhood'); var as = q('select');
     var o0 = q('option', null, 'Whole town'); o0.value = ''; as.appendChild(o0);
     var reg = (S.regions || []).filter(function (r) { return r.key === st.region; })[0];
+    if (reg && (!reg.areas || reg._old) && drawSkip.asked !== reg.key) { drawSkip.asked = reg.key; needTown(reg.key).then(function () { if (S.screen === 'skip' && S.skip.region === reg.key) drawSkip(holder); }); }   /* 2026-11-17 */
     ((reg && reg.areas) || []).forEach(function (a) { var o = q('option', null, a.name + ' · ' + a.total + pw(' doors')); o.value = a.name; as.appendChild(o); });
     as.value = st.area; la.appendChild(as); f.appendChild(la);
     var ll = q('label', null, pw('Doors to look up, at most')); var li = q('input'); li.type = 'number'; li.min = '1'; li.max = '5000'; li.inputMode = 'numeric'; li.value = String(st.limit); ll.appendChild(li); f.appendChild(ll);
@@ -20219,12 +20411,25 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      town, and those within about 15 km in other towns, as a dashed ring at its centre (bigger = more doors left); a tap
      opens it, in the same layout. */
   function hoodRings(map, onOpen) {
-    var cur = S.regions.filter(function (x) { return x.key === S.region; })[0];
-    var here = cur && cur.areas.filter(function (a) { return a.name === S.area; })[0];
-    var c0 = here && typeof here.la === 'number' ? [here.la, here.lo] : null;
+    var c0 = null, region0 = S.region, area0 = S.area;
     var near = function (a) { if (!c0) return false; var dy = (a.la - c0[0]) * 111, dx = (a.lo - c0[1]) * 111 * Math.cos(c0[0] * Math.PI / 180); return dx * dx + dy * dy <= 225; };
-    var ink = darkUI() ? '#ffffff' : '#13294b', grp = L.layerGroup(), n = 0;
-    S.regions.forEach(function (r) {
+    var ink = darkUI() ? '#ffffff' : '#13294b', grp = L.layerGroup(), n = 0, drawn = {};
+    /* the towns' neighbourhoods as they come (2026-11-17): this town's, then the towns whose neighbourhoods can be within 15 km of this one */
+    var fill = function () {
+      var cur = townOf(region0), want = [];
+      var here = cur && cur.areas && cur.areas.filter(function (a) { return a.name === area0; })[0];
+      c0 = here && typeof here.la === 'number' ? [here.la, here.lo] : null;
+      (S.regions || []).forEach(function (r) {
+        if (r.key !== region0) { var g = c0 ? townGap(r, c0[0], c0[1]) : null; if (g === null || g > 15050) return; }
+        if (!r.areas) want.push(r.key); else if (!drawn[r.key]) { drawn[r.key] = true; ringsOf(r); }
+      });
+      return want;
+    };
+    var more = function (round) {
+      var want = fill(); if (!want.length || round > 2) return;
+      needTowns(want).then(function () { if (map.getContainer && document.body.contains(map.getContainer()) && S.region === region0 && S.area === area0) more(round + 1); });
+    };
+    var ringsOf = function (r) {
       r.areas.forEach(function (a) {
         if (typeof a.la !== 'number' || typeof a.lo !== 'number') return;
         if (r.key === S.region && a.name === S.area) return;
@@ -20237,20 +20442,18 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         m.on('click', function (e) { L.DomEvent.stopPropagation(e); onOpen(r.key, a.name); });
         grp.addLayer(m); n++;
       });
-    });
+    };
+    more(0);
     /* zoomed out (2026-10-18, Matthew: the circles weren't showing properly): every town as one bubble sized by the doors left, a tap
        zooms into it; from town level in, the neighbourhood rings as before (far out they piled into blobs) */
     var towns = L.layerGroup();
     S.regions.forEach(function (r) {
-      var pts = (r.areas || []).filter(function (a) { return typeof a.la === 'number' && typeof a.lo === 'number'; });
-      if (!pts.length) return;
-      var la = 0, lo = 0, left = 0;
-      pts.forEach(function (a) { la += a.la; lo += a.lo; left += Math.max(0, (a.total || 0) - (a.done || 0) - (a.noanswer || 0)); });
-      la /= pts.length; lo /= pts.length;
+      var ts = tsum(r); if (!ts.c || !ts.bb) return;   /* 2026-11-17: the middle and the box come with the town list */
+      var la = ts.c[0], lo = ts.c[1], left = ts.c[2], bx = ts.bb;
       var mine = r.key === S.region;
       var tb = L.circleMarker([la, lo], { radius: 10 + Math.min(26, Math.sqrt(left) * 0.12), color: mine ? '#d6400c' : ink, weight: mine ? 3 : 2, fillColor: mine ? '#d6400c' : ink, fillOpacity: 0.18 });
       tb.bindTooltip(q('span', null, r.label + ' \u00b7 ' + left.toLocaleString() + ' to knock \u00b7 tap to zoom in'), { direction: 'top' });
-      tb.on('click', function (e) { L.DomEvent.stopPropagation(e); map.fitBounds(pts.map(function (a) { return [a.la, a.lo]; }), { padding: [30, 30], maxZoom: 13 }); });
+      tb.on('click', function (e) { L.DomEvent.stopPropagation(e); map.fitBounds([[bx[0], bx[1]], [bx[2], bx[3]]], { padding: [30, 30], maxZoom: 13 }); });
       towns.addLayer(tb);
     });
     var fit = function () {
@@ -23568,7 +23771,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   var PLAN_NUM = { score: 1, hail: 1, roof: 1, built: 1, kwh: 1, panels: 1, acres: 1, value: 1 };   /* columns of figures, set to the right */
   function planOk() { return (S.role === 'admin' && !S.viewAs) || mgrOn(); }
   function planTown() { return S.regions.filter(function (x) { return x.key === (S.plan && S.plan.key); })[0] || null; }
-  function planWho(d) { if (d.rep) return d.rep; var r = planTown(), a = r && r.areas.filter(function (x) { return x.name === d._area; })[0]; return a && a.who ? a.who : ''; }
+  function planWho(d) { if (d.rep) return d.rep; var r = planTown(), a = r && r.areas && r.areas.filter(function (x) { return x.name === d._area; })[0]; return a && a.who ? a.who : ''; }
   function planStatus(d) { return d.cust ? 'Customer' : !d.mark ? 'To knock' : backOn(d) ? (d.mark.outcome === 'later' ? 'Due back' : 'Try again') : markName(d.mark); }
   /* the columns: the door, this trade's facts, then where it stands. [key, heading, cell text, sort value, numeric] */
   function planCols() {
@@ -23618,6 +23821,12 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     setDock(null); foot.hidden = true;
     setBar('back', { title: pw('Plan the doors'), sub: r.label, back: function () { S.region = key; renderAreas(); }, backLabel: 'Back' });
     document.body.classList.add('dk-top');
+    /* the town's neighbourhoods first (2026-11-17): the table loads them in its own order */
+    if (!r.areas) {
+      view.textContent = ''; townSkel(view);
+      needTown(key).then(function (r2) { if (S.screen !== 'plan' || S.region !== key) return; if (r2 && r2.areas) planView(key); else { view.textContent = ''; townNoSignal(view); } });
+      return;
+    }
     if (!S.plan || S.plan.key !== key) S.plan = { key: key, rows: [], got: {}, order: planOrder(r), sort: bestTrade() && crewSees() ? ['score', -1] : ['addr', 1], filt: planWhoSaved({ open: true }), sel: {}, people: null, limit: 500 };
     view.textContent = '';
     var P = S.plan;
@@ -23632,7 +23841,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var P = S.plan, want = [], n = 0, r = planTown();
     P.order.forEach(function (a) {
       if (P.got[a] || (want.length && n >= PLAN_CAP)) return;   /* true = loaded, 'loading' = on its way */
-      var ar = r && r.areas.filter(function (x) { return x.name === a; })[0];
+      var ar = r && r.areas && r.areas.filter(function (x) { return x.name === a; })[0];
       want.push(a); n += ar ? ar.total : 0;
     });
     planLoad(want);
@@ -24750,14 +24959,15 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       /* the towns' list loads in the background after sign-in: opened straight from the tools screen, the map can come first,
          so it asks for the list itself (live check 2026-10-09: four editions drew an empty map). The view comes first, then the
          dots and the radar (Leaflet can't place layers on a map with no view). */
-      var withTowns = function (cb) {
-        if (S.regions && S.regions.length) return cb();
-        api('regions').then(function (j) { if (j && j.ok) S.regions = j.regions; cb(); }, function () { cb(); });
+      var withTowns = function (cb) {   /* every neighbourhood is a dot: every town's (2026-11-17: the full answer, after the map's view) */
+        var all = function () { needAll().then(cb, cb); };
+        if (S.regions && S.regions.length) return all();
+        api('regions').then(function (j) { if (j && j.ok) S.regions = j.regions; all(); }, function () { cb(); });
       };
       withTowns(function () {
       if (S.officeMap !== map || !document.body.contains(el)) return;
       var pts = [], scored = !!bestTrade(), list = [];
-      (S.regions || []).forEach(function (r) { r.areas.forEach(function (a) { if (typeof a.la === 'number' && typeof a.lo === 'number') { list.push([r, a]); pts.push([a.la, a.lo]); } }); });
+      (S.regions || []).forEach(function (r) { (r.areas || []).forEach(function (a) { if (typeof a.la === 'number' && typeof a.lo === 'number') { list.push([r, a]); pts.push([a.la, a.lo]); } }); });
       if (S.officeView) map.setView(S.officeView.c, S.officeView.z); else if (pts.length) map.fitBounds(pts, { padding: [20, 20] }); else map.setView(inCO() ? [39.1, -104.85] : MK().centre, 9);   /* the Front Range (the market's middle elsewhere, 2026-11-16) */
       map.on('moveend', function () { var c = map.getCenter(); S.officeView = { c: [c.lat, c.lng], z: map.getZoom() }; });
       setRadar();

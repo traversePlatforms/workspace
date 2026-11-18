@@ -10,7 +10,8 @@
    saved copy answer, marked with an X-Sixfold-Offline header so the page can say so.
 
    What is kept: the page itself, its icons, and the answers to four read-only questions —
-   who am I (me), the towns (regions), the neighbourhoods you have opened (area, the last
+   who am I (me), the towns (regions; since 2026-11-17 the town list, regions&lite=1, and each town's
+   neighbourhoods, regionareas, kept per town), the neighbourhoods you have opened (area, the last
    AREA_MAX of them) and the money sheets. Nothing is kept for any write (the page's own queue
    handles those), for the quote tool's data, or for any answer that wasn't a 200.
    Sign-out deletes the kept answers: they hold names and addresses, and iPads are shared.
@@ -19,7 +20,7 @@
 
    ⚑ Bump SHELL_V when this file changes. The browser re-checks this file on every visit
    (registered with updateViaCache: 'none'); flush SiteGround's cache after uploading it. */
-const SHELL_V = 'rounds-shell-2026-10-27a';
+const SHELL_V = 'rounds-shell-2026-11-17a';
 const API = 'rounds-api';
 /* every install on one domain shares Cache Storage (the Traverse editions sit beside this app on sixfoldcolorado.com): on
    activate, only our own old copies go, never another install's (review 2026-10-06: this used to delete every other cache) */
@@ -28,7 +29,7 @@ const TIMEOUT = 6000;
 const AREA_MAX = 40;
 const MAX_AGE = 7 * 86400 * 1000;
 const SHELL = ['./', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './es.json'];   /* es.json: the Spanish dictionary, out of the page (2026-10-27) */
-const KEEP = /\/api\/rounds\.php\?(?:.*&)?action=(me|regions|area|money|customers|company)(?:&|$)/;   /* customers: admins' list opens with no signal (2026-10-04); company: the install's name and lists */
+const KEEP = /\/api\/rounds\.php\?(?:.*&)?action=(me|regions|regionareas|area|money|customers|company)(?:&|$)/;   /* regionareas: a town opened once opens with no signal (2026-11-17); customers: admins' list opens with no signal (2026-10-04); company: the install's name and lists */
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(SHELL_V).then((c) => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting()));
