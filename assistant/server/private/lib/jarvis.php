@@ -15,10 +15,11 @@ function jvStatus(): array {
     $now = time(); $pushed = (int) ($j['pushedAt'] ?? 0);
     $o = is_array($j['overnight'] ?? null) ? $j['overnight'] : null;
     $over = $o ? ['at' => (int) ($o['at'] ?? 0), 'ok' => max(0, (int) ($o['ok'] ?? 0)), 'problems' => array_values(array_map(fn($p) => jvClean($p, 220), array_slice(array_filter((array) ($o['problems'] ?? []), 'is_string'), 0, 12)))] : null;
-    $builds = [];
+    $builds = []; $hid = jvHidden();
     foreach (array_slice(array_filter((array) ($j['builds'] ?? []), 'is_array'), 0, 20) as $b) {
         $st = in_array($b['state'] ?? '', ['running', 'done', 'failed', 'stopped'], true) ? $b['state'] : 'running';
         $at = (int) ($b['at'] ?? 0);
+        if (($hid[(string) ($b['id'] ?? '')] ?? -1) === $at) continue;   /* checked off by Matthew (18 Nov); any later word from it has a new time and shows again */
         if ($st !== 'running' && $at < $now - 86400) continue;          /* finished ones show for a day */
         if ($st === 'running' && $at < $now - 6 * 3600) $st = 'quiet';   /* no word for 6 hours: say so rather than show it running */
         $pct = isset($b['pct']) && is_numeric($b['pct']) ? max(0, min(100, (int) $b['pct'])) : null;
@@ -29,6 +30,14 @@ function jvStatus(): array {
        dates from my emails in the calendar section"). No invitations from the inboxes. */
     return ['ok' => true, 'now' => $now, 'pushedAt' => $pushed, 'overnight' => $over, 'builds' => $builds,
         'calendar' => jvCalendar()];
+}
+/** finished builds Matthew checked off (18 Nov: "allow me the option to check it off so it doesnt stay on the screen"): id => the build's time */
+function jvHidden(): array { $f = aDataDir() . '/jarvis/hidden-builds.json'; $h = is_file($f) ? json_decode((string) file_get_contents($f), true) : []; return is_array($h) ? $h : []; }
+function jvHide(string $id, int $at): array {
+    if (!preg_match('/^[A-Za-z0-9._-]{1,40}$/', $id) || $at <= 0) return ['ok' => false, 'error' => 'Not a build.'];
+    $h = jvHidden(); $h[$id] = $at; $h = array_slice($h, -60, null, true);
+    $f = aDataDir() . '/jarvis/hidden-builds.json'; @mkdir(dirname($f), 0700, true); file_put_contents($f, json_encode($h), LOCK_EX); @chmod($f, 0600);
+    return ['ok' => true];
 }
 /** the next 7 days of the Traverse inbox's primary calendar (any connected calendar if Traverse has none), cached 5 minutes. Read only. */
 function jvCalendar(): array {

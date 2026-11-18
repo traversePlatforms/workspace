@@ -63,6 +63,7 @@ button.li:hover .lt{color:#fff}
 .more{display:block;font:11px "JetBrains Mono",monospace;color:var(--c);padding:6px 0 0;letter-spacing:.04em;text-align:left}
 .empty{font-size:12.5px;color:var(--mut);padding:4px 0}
 .hint{font-size:12px;color:var(--mut);line-height:1.5}
+.bcheck{margin-top:6px;font:11px "JetBrains Mono",monospace;letter-spacing:.06em;color:var(--c,#3ee8ff);border:1px solid #3ee8ff44;border-radius:4px;padding:3px 8px;background:transparent;cursor:pointer}.bcheck:hover{background:#3ee8ff14}
 .hint a,.hint button{color:var(--c);text-decoration:underline;text-underline-offset:2px}
 /* the collapsible inbox rows (Matthew: "making them collaspable or some structure like that to condense space") */
 .ibr{border:1px solid #3ee8ff1a;background:#3ee8ff06;margin-top:6px}
@@ -501,6 +502,8 @@ button.li:hover .lt{color:#fff}
         add(t, el('span', 'lt', x.name), right); r.appendChild(t);
         var pg = el('div', 'prog'), bar = el('i'); bar.style.width = (x.state === 'done' ? 100 : x.pct || 0) + '%'; pg.appendChild(bar); r.appendChild(pg);
         r.appendChild(el('div', 'ls', (x.steps ? 'step ' + x.step + ' of ' + x.steps + (x.note ? ' · ' : '') : '') + (x.note || '') + ' · ' + ago(x.at)));
+        /* 18 Nov (Matthew): check off a finished one so it leaves the panel, on every device (saved on the server) */
+        if (x.state === 'done' || x.state === 'failed' || x.state === 'quiet') { var ck = btn('✓ Check off', null, 'bcheck', function () { ck.disabled = true; apost('jvbuildhide', { id: x.id, at: x.at }).then(function (j) { if (j.ok) { S.st.builds = S.st.builds.filter(function (y) { return y !== x; }); draw(); } else { ck.disabled = false; toast(j.error || 'Could not check it off.'); } }, function () { ck.disabled = false; toast('No connection.'); }); }); ck.setAttribute('aria-label', 'Check off ' + x.name); r.appendChild(ck); }
         return r;
       });
     },

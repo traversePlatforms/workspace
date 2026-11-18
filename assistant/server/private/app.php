@@ -53,6 +53,7 @@ if ($action === 'home') {
 }
 /* J.A.R.V.I.S., the merged page (2026-11-18): the laptop's pushed status (overnight check, builds) and the calendar placeholder; lib/jarvis.php */
 if ($action === 'jvstatus') out(jvStatus());
+if ($action === 'jvbuildhide') { if (!$isPost) out(['ok' => false], 405); out(jvHide((string) ($body['id'] ?? ''), (int) ($body['at'] ?? 0))); }
 if (!$isPost) out(['ok' => false, 'error' => 'POST needed.'], 405);
 if ($action === 'setup') {   /* keys go in here, never through chat; an empty field leaves the saved one alone */
     jedit('config.json', function ($c) use ($body) {
