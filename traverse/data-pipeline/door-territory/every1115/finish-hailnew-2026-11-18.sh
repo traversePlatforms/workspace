@@ -59,9 +59,14 @@ step "server through $THROUGH; staged points $(( $(stat -c %s "$S/stage.tgz") / 
 ## 3. the cloud stage
 offhot
 Q='~/run/fill1031'; H='~/run/hailfill'
-state=$($VM "cd $H || exit 1; if [ -f $Q/hailnew.vmdone ] && [ \"\$(cat hailnew.tag 2>/dev/null)\" = '$TAG' ]; then echo done; elif grep -q '^hailnew' $Q/stages.txt && [ ! -f $Q/hailnew.vmdone ] && [ ! -f $Q/hailnew.failed ]; then echo queued; else echo start; fi") || stop "cloud machine not reachable"
+# 18 Nov: a cloud run counts when its door points match (the tag's first word); the server's date may have moved on since it was staged
+# (the backfill's own "through" is checked against the server's in step 4). hailwind (wind again with a bigger heap) finishes a hailnew
+# run whose wind step ran out of memory, so a queued hailwind means waiting.
+PEND="{ grep -q '^hailnew' $Q/stages.txt && [ ! -f $Q/hailnew.vmdone ] && [ ! -f $Q/hailnew.failed ]; } || { grep -q '^hailwind' $Q/stages.txt && [ -f $Q/hailwind.sh ] && [ ! -f $Q/hailwind.vmdone ] && [ ! -f $Q/hailwind.failed ]; }"
+DONE="[ -f $Q/hailnew.vmdone ] && [ \"\$(cut -d' ' -f1 $H/hailnew.tag 2>/dev/null)\" = '$SUM' ]"
+state=$($VM "cd $H || exit 1; if $DONE; then echo done; elif $PEND; then echo queued; else echo start; fi") || stop "cloud machine not reachable"
 step "cloud stage: $state"
-if [ "$state" = queued ] && [ "$($VM "cat $H/hailnew-in/tag.txt 2>/dev/null")" != "$TAG" ]; then stop "hailnew is queued or running on the cloud machine with other door points: let it end (or move it aside) first"; fi
+if [ "$state" = queued ] && [ "$($VM "cut -d' ' -f1 $H/hailnew-in/tag.txt 2>/dev/null")" != "$SUM" ]; then stop "hailnew is queued or running on the cloud machine with other door points: let it end (or move it aside) first"; fi
 if [ "$state" = start ]; then
   $VM "test -f $H/hail-backfill-vm.sh && test -d $H/days && test -f $H/hail/backfill-hail.mjs" || stop "~/run/hailfill is not set up on the cloud machine (BACKFILL-HAIL-2026-10-29.md)"
   $VM "mkdir -p $H/hailnew-in && cat > $H/hailnew-in/stage.tgz" < "$S/stage.tgz" || stop "could not send the door points"
@@ -71,14 +76,14 @@ if [ "$state" = start ]; then
 fi
 if [ "$state" = queued ]; then
   fails=0
-  for i in $(seq 1 120); do   # 120 x 3 min: the queue looks every 10 minutes; the 29 Oct statewide run took 13 minutes
+  for i in $(seq 1 240); do   # 240 x 3 min: the queue looks every 10 minutes; hailwind may wait for the stage before it (matnew)
     sleep 180
-    r=$($VM "cd $Q; if [ -f hailnew.vmdone ] && [ \"\$(cat $H/hailnew.tag 2>/dev/null)\" = '$TAG' ]; then echo done; elif [ -f hailnew.failed ]; then echo \"failed: \$(tail -3 hailnew.log | tr '\n' ' ')\"; else echo waiting; fi") || { fails=$((fails+1)); [ $fails -ge 10 ] && stop "cloud machine unreachable for 30 minutes"; continue; }
+    r=$($VM "cd $Q; if $DONE; then echo done; elif $PEND; then echo waiting; else echo \"failed: \$(tail -3 hailnew.log hailwind.log 2>/dev/null | tr '\n' ' ')\"; fi") || { fails=$((fails+1)); [ $fails -ge 10 ] && stop "cloud machine unreachable for 30 minutes"; continue; }
     fails=0
     case "$r" in done) state=done; break;; waiting) ;; *) stop "cloud stage $r";; esac
   done
 fi
-[ "$state" = done ] || stop "cloud stage not done after 6 hours ($state)"
+[ "$state" = done ] || stop "cloud stage not done after 12 hours ($state)"
 step "cloud stage done: $($VM 'cat ~/run-hailfill-status.txt')"
 
 ## 4. copy back the new and merged towns' files, and check them
