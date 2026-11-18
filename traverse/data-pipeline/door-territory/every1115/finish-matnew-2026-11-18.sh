@@ -25,7 +25,7 @@ stop() { echo "$(date +%T) STOP: $*"; exit 1; }
 retry() { "$@" || { sleep 120; "$@"; } || { sleep 300; "$@"; }; }
 offhot() { while netsh wlan show interfaces 2>/dev/null | grep SSID | grep -v BSSID | head -1 | grep -qi iphone; do step "on the iPhone hotspot: waiting"; sleep 120; done; }
 onac() { local i=0; while [ "$(powershell.exe -NoProfile -Command '(Get-CimInstance Win32_Battery).BatteryStatus' 2>/dev/null | tr -d '\r ')" != "2" ]; do i=$((i+1)); [ $i -gt 72 ] && stop "not on AC power for 6 hours"; step "on battery: waiting for AC"; sleep 300; done; }
-busy() { powershell.exe -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='bash.exe'\" | Where-Object { \$_.CommandLine -match 'finish-gap|upload-gap|finish-rent|finish-yardv3|finish-yardgap|finish-every|rebuild-upload-all|refresh-permits|refresh-weekly|deploy-app|push-edition|push-sixfold-side|upload-towns-sixfold|finish-hailnew|prep-matnew' }).Count" 2>/dev/null | tr -d '\r'; }
+busy() { powershell.exe -NoProfile -Command "@(Get-CimInstance Win32_Process -Filter \"Name='bash.exe'\" | Where-Object { \$_.CommandLine -match 'finish-gap|upload-gap|finish-rent|finish-yardv3|finish-yardgap|finish-every|rebuild-upload-all|refresh-permits|refresh-weekly|deploy-app|push-edition|push-sixfold-side|upload-towns-sixfold|finish-hailnew|prep-matnew' -and \$_.CommandLine -notmatch 'Get-CimInstance' }).Count" 2>/dev/null | tr -d '\r'; }
 [ -s "$S/tag.txt" ] && [ -f "$S/year.ok" ] && [ -s "$S/newids.json" ] && [ -s "$S/in/plan.tsv" ] || stop "part 1 has not run (every1115/prep-matnew-2026-11-18.sh)"
 TAG=$(cat "$S/tag.txt"); Q='~/run/fill1031'
 
