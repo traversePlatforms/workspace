@@ -26,10 +26,16 @@
  * clients"): message templates (admins edit them), the call-tries rule (4 tries, then a last message and Not now for 60 days), Priority 5 on
  * Today, duplicate warnings when a company or contact is added, Don't contact per person, a private calendar feed per person, and an
  * end-of-day email to the desk team (OFF until an admin turns it on in More, Settings):
- *   php desk.php eod [--dry-run] [--force]   (the hourly rescan also runs it: it sends once, 6 pm Colorado time, Monday to Friday) */
+ *   php desk.php eod [--dry-run] [--force]   (the hourly rescan also runs it: it sends once, 6 pm Colorado time, Monday to Friday)
+ *
+ * 2026-11-18 (Matthew: "we need a way to edit contacts that we add ... cai added a contact and she spelt the email wrong ... we all do"):
+ * Edit and Remove on every person on a card, both lists, for everyone with a desk login (actions contactedit / contactdel; rows
+ * contactedit / contactdel and xcontactedit / xcontactdel). A person is found by their person key (plus n when two share one). An edit keeps
+ * their Don't contact mark (carried to the new key) and the company's email marks; desk-store.php explains. From the server:
+ *   php desk.php contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by "Name"] */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-18.2';
+const BUILD = '2026-11-18.3';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
@@ -110,7 +116,23 @@ if (PHP_SAPI === 'cli') {
         $r = $cmd === 'emailed' ? deskEmailed($name, $a3, $a4, $a5) : ($cmd === 'replied' ? deskReplied($name, $a3, $a4, $a5) : deskBounced($name, $a3, $a4, $a5));
         $json($r); exit($r['ok'] ? 0 : 1);
     }
-    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller|expo | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note]\n");
+    /* remove one person from a card, from the server (2026-11-18, Matthew's test contact on Coca-Cola): the same row as the card's Remove.
+       --dnc-off also takes off a Don't contact mark that only the test set; --dry-run shows the rows and writes nothing. */
+    if ($cmd === 'contactdel' && in_array($name, ['sponsor', 'expo'], true) && ($argv[3] ?? '') !== '' && ($argv[4] ?? '') !== '') {
+        $bi = array_search('--by', $argv, true); $by = $bi !== false ? clean($argv[$bi + 1] ?? '', 60) : ''; if ($by === '') $by = 'Desk admin';
+        [$cid, $ckey] = [(string) $argv[3], (string) $argv[4]];
+        $res = withLock(function () use ($name, $cid, $ckey, $by, $argv) {
+            sync($name, true); $R = recs($name)[$cid] ?? null; if (!$R) return ['ok' => false, 'error' => 'No such lead.'];
+            $now = time(); $row = contactDelRow($name, $R, $ckey, 0, $by, $now); if (!$row) return ['ok' => false, 'error' => 'No such contact on this card.'];
+            $rows = [];
+            if (in_array('--dnc-off', $argv, true) && isset(($R['dnc'] ?? [])[$ckey])) $rows[] = ['t' => W($name)['T']['dnc'], 'id' => $cid, 'key' => $ckey, 'on' => false, 'why' => '', 'by' => $by, 'at' => $now];
+            $rows[] = $row;
+            if (in_array('--dry-run', $argv, true)) return ['ok' => true, 'dry' => true, 'rows' => $rows];
+            commit($name, $rows); return ['ok' => true, 'rows' => $rows];
+        });
+        $json($res); exit($res['ok'] ? 0 : 1);
+    }
+    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller|expo | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
     exit(1);
 }
 
@@ -172,7 +194,7 @@ function handle(string $action, bool $isPost, array $body): array {
         'xstage' => ['stage', 'expo'], 'xnote' => ['note', 'expo'], 'xnotedel' => ['notedel', 'expo'], 'xnext' => ['next', 'expo'], 'xcontact' => ['contact', 'expo'],
         'xlead' => ['add', 'expo'], 'xdel' => ['del', 'expo'], 'xback' => ['back', 'expo']];
     $BOTH = ['touch', 'touchdel', 'stage', 'owner', 'next', 'note', 'notedel', 'contact', 'add', 'del', 'back', 'tour', 'tourdel', 'tourmove', 'tourout', 'emailed', 'emailreply', 'emailbounce',
-        'dnc', 'templates'];
+        'dnc', 'templates', 'contactedit', 'contactdel'];
     $SPONSOR = ['site', 'scan', 'proposal', 'signed', 'sponsor', 'todo', 'tododone', 'tododel', 'packages', 'pl'];
     $legacy = isset($ALIAS[$action]);
     if ($legacy) { [$op, $w] = $ALIAS[$action]; if ($action === 'status') $body['stage'] = $body['status'] ?? ''; }
@@ -208,7 +230,7 @@ function handle(string $action, bool $isPost, array $body): array {
 function people(string $w, array $R): array {
     $o = []; $dnc = $R['dnc'] ?? [];
     /* each person carries its key (Don't contact and "add the new details to" name it); one marked Don't contact shows no email or phone */
-    $mk = function (array $c, array $p) use ($dnc): array { $k = personKey($c); $p['key'] = $k; if ($k !== '' && isset($dnc[$k])) { $p['dnc'] = $dnc[$k]; $p['email'] = ''; $p['phone'] = ''; } return $p; };
+    $mk = function (array $c, array $p) use ($dnc): array { $k = personKey($c); $p['key'] = $k; if (!empty($c['ed']['by'])) $p['edBy'] = [(string) $c['ed']['by'], (int) ($c['ed']['at'] ?? 0)]; if ($k !== '' && isset($dnc[$k])) { $p['dnc'] = $dnc[$k]; $p['email'] = ''; $p['phone'] = ''; } return $p; };
     foreach (($R['contacts'] ?? []) as $c) {
         if ($w === 'expo') { $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'best' => !empty($c['best']),
             'src' => 'Venue research' . (!empty($c['sdate']) ? ', source dated ' . $c['sdate'] : ''), 'conf' => (string) ($c['conf'] ?? ''), 'estat' => (string) ($c['estat'] ?? ''), 'other' => (string) ($c['other'] ?? ''), 'notes' => (string) ($c['notes'] ?? ''), 'srcs' => (array) ($c['srcs'] ?? [])]); continue; }
@@ -233,6 +255,14 @@ function people(string $w, array $R): array {
         unset($p);
         if (!$hit) $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? $c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'best' => false, 'src' => 'Added on the desk by ' . ($c['by'] ?? 'someone'), 'conf' => '', 'added' => true]);
     }
+    /* everyone so far can be edited or removed on the card (2026-11-18): ed, and kn when two share a key (contactAt() finds them the same way) */
+    $seen = [];
+    foreach ($o as &$p) {
+        $p['ed'] = true; $p['kn'] = $seen[$p['key']] = isset($seen[$p['key']]) ? $seen[$p['key']] + 1 : 0;
+        if (!empty($p['edBy'])) { $p['src'] .= ' · edited by ' . $p['edBy'][0] . ', ' . date('M j', (int) $p['edBy'][1]); }
+        unset($p['edBy']);
+    }
+    unset($p);
     foreach (($R['scan']['hunter']['people'] ?? []) as $c) $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''),
         'best' => false, 'src' => 'Hunter, ' . date('M j', (int) ($R['scan']['hunter']['at'] ?? time())), 'conf' => (int) ($c['conf'] ?? 0) . '%']);
     return $o;
@@ -399,6 +429,48 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
                 if ($d) { http_response_code(409); return ['ok' => false, 'error' => 'That person may already be on the desk.', 'dupes' => array_slice($d, 0, 5)]; }
             }
             commit($w, [['t' => $T['contact'], 'id' => $id, 'contact' => $c, 'by' => $ME, 'at' => $now]]); return ['ok' => true];
+        }
+        /* edit a person on the card (2026-11-18): any field can be corrected or cleared, checked as when they were added (okMail; a name,
+           email or phone left), with the same duplicate warning for a new email, phone or name (keep: save anyway). One row: who, when, the
+           person as the card showed them and as they are now. Someone marked Don't contact keeps their hidden email and phone. */
+        case 'contactedit': {
+            $R = needRec($X, $w, $id); $key = clean($body['key'] ?? '', 200); $n = max(0, (int) ($body['n'] ?? 0));
+            $x = contactAt($R, $key, $n); if (!$x) fail('That contact is not on this card any more. Reload and try again.', 404);
+            $P = people($w, $R + ['scan' => $w === 'sponsor' ? (jread('scans.json', [])[$id] ?? []) : []]); $shown = null;
+            foreach ($P as $p) if (!empty($p['ed']) && $p['key'] === $key && (int) $p['kn'] === $n) $shown = $p;
+            $c = $R[$x[0]][$x[1]]; $dn = !empty($c['dnc']) || isset(($R['dnc'] ?? [])[$key]);
+            $was = contactVals($w, $shown ? ['name' => $shown['name'], 'role' => $shown['role'], 'email' => $shown['email'], 'phone' => $shown['phone'], 'notes' => $shown['notes'] ?? ''] : $c);
+            $nw = $was; $has = fn($f) => array_key_exists($f, $body) && $body[$f] !== null;
+            if ($has('name')) $nw['name'] = clean($body['name'], 80);
+            if ($has('role') || $has('pos')) $nw['role'] = clean($body['role'] ?? $body['pos'], 80);
+            if ($w === 'expo' && $has('notes')) $nw['notes'] = clean($body['notes'], 400);
+            if (!$dn) { if ($has('email')) $nw['email'] = okMail((string) $body['email']); if ($has('phone')) $nw['phone'] = clean($body['phone'], 40); }
+            else { unset($was['email'], $was['phone'], $nw['email'], $nw['phone']); }
+            $em0 = $dn ? (string) ($c['dncEmail'] ?? '') : $nw['email']; $ph0 = $dn ? (string) ($c['dncPhone'] ?? '') : $nw['phone'];
+            if ($nw['name'] === '' && $em0 === '' && $ph0 === '') fail('Give a name, email or phone.');
+            if ($nw === $was) return ['ok' => true, 'same' => true];
+            if (empty($body['keep'])) {
+                $ch = fn($f) => isset($nw[$f]) && strtolower(trim((string) $nw[$f])) !== strtolower(trim((string) ($was[$f] ?? '')));
+                $em = $ch('email') ? strtolower(trim($nw['email'])) : ''; $ph = $ch('phone') ? digits10($nw['phone']) : ''; $nm = $ch('name') ? strtolower(trim($nw['name'])) : ''; $d = [];
+                foreach (contactRefs($R) as $y) {
+                    if ($y[0] === $x[0] && $y[1] === $x[1]) continue; $q = $R[$y[0]][$y[1]]; $why = [];
+                    $qe = strtolower(trim((string) (($q['email'] ?? '') ?: ($q['dncEmail'] ?? '')))); $qp = digits10((string) (($q['phone'] ?? '') ?: ($q['dncPhone'] ?? '')));
+                    if ($em !== '' && $qe === $em) $why[] = 'the same email'; if ($ph !== '' && $qp === $ph) $why[] = 'the same phone';
+                    if ($nm !== '' && strtolower(trim((string) ($q['name'] ?? ''))) === $nm) $why[] = 'the same name';
+                    if ($why) $d[] = ['same' => true, 'key' => $y[2], 'name' => (string) ($q['name'] ?? '') ?: ($qe ?: 'a contact'), 'why' => implode(', ', $why), 'dnc' => isset(($R['dnc'] ?? [])[$y[2]])];
+                }
+                if (!$d && ($em !== '' || $ph !== '')) foreach (dupesOf($X, '', $ph, '', $em, $id) as $z) $d[] = ['same' => false, 'id' => $z['id'], 'name' => $z['name'], 'why' => $z['why'], 'removed' => $z['removed']];
+                if ($d) { http_response_code(409); return ['ok' => false, 'error' => 'That person may already be on the desk.', 'dupes' => array_slice($d, 0, 5)]; }
+            }
+            commit($w, [['t' => $T['contactedit'], 'id' => $id, 'key' => $key, 'n' => $n, 'was' => $was, 'now' => $nw, 'by' => $ME, 'at' => $now0 = time()]]);
+            $A = recs($w)[$id]; $y = null; foreach (contactRefs($A) as $z) if ($z[0] === $x[0]) { $q = $A[$z[0]][$z[1]]; if (($q['ed']['at'] ?? 0) === $now0 && ($q['ed']['by'] ?? '') === $ME) $y = $z; }
+            return ['ok' => true, 'key' => $y ? $y[2] : ''];
+        }
+        /* remove a person from the card (2026-11-18); the log keeps them */
+        case 'contactdel': {
+            $R = needRec($X, $w, $id); $row = contactDelRow($w, $R, clean($body['key'] ?? '', 200), max(0, (int) ($body['n'] ?? 0)), $ME, $now);
+            if (!$row) fail('That contact is not on this card any more. Reload and try again.', 404);
+            commit($w, [$row]); return ['ok' => true];
         }
         /* Don't contact (2026-11-18): this person asked not to be contacted. Their call, text and email buttons go, and the email sender skips
            them. on: false takes it off again. */

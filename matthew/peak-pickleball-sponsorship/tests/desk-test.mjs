@@ -329,6 +329,104 @@ try {
   im = imp(); ok(im.to.includes(usP.email.toLowerCase()), 'and back on the email sender’s list (so the skip above was the flag)');
   ok((await b('dnc', { world: 'sponsor', id: USA.id, key: dk, on: true, why: 'Asked not to be contacted' })).ok, 'marked again (for the screens)');
 
+  console.log('Edit and remove a contact (2026-11-18: both lists, every desk user)');
+  const E1 = NEW[33], E2 = NEW[34];
+  const pOf = (w, id, f) => find(w, id).people.find(f);
+  const rawOf = (w, id) => JSON.parse(execFileSync('php', ['-r', 'define("DATA_DIR", getenv("DESK_DATA")); require getenv("STORE"); $R = recs(getenv("W"))[getenv("ID")]; echo json_encode(["R" => $R, "no" => deskNoContact()]);'], { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), ID: id, W: w } }));
+  const cBody = (key, v) => ({ world: 'sponsor', id: E1.id, key, n: 0, ...v });
+  ok((await b('contact', { world: 'sponsor', id: E1.id, name: 'Casey Typo', role: 'Owner', email: 'casey@exmaple.com', phone: '719-555-0101' })).ok, 'a seller adds a contact with the email spelt wrong');
+  D = await b('data'); let ce = pOf('sponsor', E1.id, (p) => p.name === 'Casey Typo');
+  ok(ce && ce.ed && ce.added && ce.key === 'e:casey@exmaple.com' && ce.kn === 0, 'the card offers Edit on them (their key comes with them)');
+  const logBefore = readFileSync(join(LD, 'events.log'), 'utf8');
+  let ed = await c2('contactedit', cBody(ce.key, { name: 'Casey Typo', role: 'Owner', email: 'casey@example.com', phone: '719-555-0101' }));
+  D = await b('data'); ce = pOf('sponsor', E1.id, (p) => p.name === 'Casey Typo');
+  ok(ed.ok && ed.key === 'e:casey@example.com' && ce.email === 'casey@example.com' && ce.key === 'e:casey@example.com' && /edited by Second Seller/.test(ce.src) && !find('sponsor', E1.id).people.some((p) => p.email === 'casey@exmaple.com'), 'another seller corrects the email: the card shows the new one and says who edited it');
+  const lr = lines('events.log').map((l) => JSON.parse(l)).filter((r) => r.t === 'contactedit').pop();
+  ok(readFileSync(join(LD, 'events.log'), 'utf8').startsWith(logBefore) && lr.by === 'Second Seller' && lr.was.email === 'casey@exmaple.com' && lr.now.email === 'casey@example.com' && lr.at > 0, 'one new log row: who, when, the old email and the new; nothing before it rewritten');
+  let chg = find('sponsor', E1.id).cedits.slice(-1)[0];
+  ok(chg.do === 'edit' && chg.by === 'Second Seller' && chg.chg.length === 1 && chg.chg[0].join('|') === 'email|casey@exmaple.com|casey@example.com', 'the card’s Activity has the change: email, old → new');
+  ed = await b('contactedit', cBody('e:casey@example.com', { name: 'Casey Typo', role: '', email: 'casey@example.com', phone: '' }));
+  D = await b('data'); ce = pOf('sponsor', E1.id, (p) => p.name === 'Casey Typo');
+  ok(ed.ok && ce.role === '' && ce.phone === '' && ce.email === 'casey@example.com', 'a field can be cleared (role and phone taken off)');
+  ok((await b('contactedit', cBody('e:casey@example.com', { email: 'not-an-email' }))).error === 'That email does not look right.' && (await b('contactedit', cBody('e:casey@example.com', { name: '', email: '', phone: '' }))).error === 'Give a name, email or phone.', 'checked as when adding: a bad email, or nothing left, is refused');
+  const nl = lines('events.log').length;
+  ok((await b('contactedit', cBody('e:casey@example.com', { name: 'Casey Typo', role: '', email: 'casey@example.com', phone: '' }))).same && lines('events.log').length === nl, 'saving with nothing changed writes nothing');
+  ok((await b('contactedit', cBody('e:nobody@nowhere.com', { name: 'X' })))._status === 404, 'someone not on the card: refused');
+  ok((await cc('contactedit', cBody('e:casey@example.com', { name: 'X' })))._status === 403 && (await ex('contactedit', cBody('e:casey@example.com', { name: 'X' })))._status === 403 && (await ex('contactdel', cBody('e:casey@example.com', {})))._status === 403, 'Claude Check, and the expo-only account on a sponsor, cannot edit or remove');
+  /* the same duplicate warning as adding */
+  await b('contact', { world: 'sponsor', id: E1.id, name: 'Dana Two', email: 'dana@example.com' });
+  let dw = await b('contactedit', cBody('e:casey@example.com', { name: 'Casey Typo', email: 'DANA@example.com' }));
+  ok(dw._status === 409 && dw.dupes[0].same && /the same email/.test(dw.dupes[0].why) && dw.dupes[0].key === 'e:dana@example.com' && pOf('sponsor', E1.id, (p) => p.name === 'Casey Typo').email === 'casey@example.com', 'a new email already on this card: the duplicate warning, nothing saved');
+  D = await b('data');
+  const OTH = D.sponsor.recs.find((r) => r.id !== E1.id && r.id !== USA.id && r.people.some((p) => p.email && !p.dnc)), oe = OTH.people.find((p) => p.email && !p.dnc).email;
+  dw = await b('contactedit', cBody('e:dana@example.com', { name: 'Dana Two', email: oe }));
+  ok(dw._status === 409 && dw.dupes.some((x) => !x.same && x.id === OTH.id), 'an email at another company: a warning naming that company');
+  ok((await b('contactedit', cBody('e:dana@example.com', { name: 'Dana Two', email: oe, keep: 1 }))).ok, 'Save anyway saves it');
+  ok((await b('contactedit', cBody('e:' + oe.toLowerCase(), { role: 'Office' }))).ok, 'an edit that leaves the email alone does not warn about it again');
+  /* the email sender's marks (they are the company's) and Don't contact survive an edit */
+  php(['emailed', 'sponsor', E1.id, 'casey@example.com', 'Hello from Peak']); php(['replied', 'sponsor', E1.id, 'casey@example.com']); php(['bounced', 'sponsor', E1.id, 'casey@example.com']);
+  D = await b('data'); const t0 = find('sponsor', E1.id).touches.length, st0 = find('sponsor', E1.id).stage;
+  ed = await c2('contactedit', cBody('e:casey@example.com', { name: 'Casey Correct', email: 'casey.c@example.com', role: 'Owner' }));
+  D = await b('data'); const E1r = find('sponsor', E1.id);
+  ok(ed.ok && E1r.touches.length === t0 && E1r.stage === st0 && st0 === 'emailed' && ['sent', 'replied', 'bounced'].every((o) => E1r.touches.some((t) => t.m === 'email' && t.out === o && t.auto)), 'the email sender’s marks (sent, replied, bounced) and the stage stay on the card after the edit');
+  im = imp(); ok(im.err === '' && im.to.includes('casey.c@example.com') && !im.to.includes('casey@exmaple.com') && !im.to.includes('casey@example.com'), 'the email sender’s own import (read only) has the corrected address and neither old one');
+  const ck = 'e:casey.c@example.com';
+  ok((await b('dnc', { world: 'sponsor', id: E1.id, key: ck, on: true, why: 'Asked not to be contacted' })).ok, 'then marked Don’t contact');
+  ed = await c2('contactedit', cBody(ck, { name: 'Casey Correct-Name', role: 'Co-owner', email: 'other@example.com', phone: '719-555-0199' }));
+  D = await b('data'); let cd = pOf('sponsor', E1.id, (p) => p.name === 'Casey Correct-Name'); let rw = rawOf('sponsor', E1.id);
+  ok(ed.ok && cd && cd.dnc && cd.key === ck && cd.email === '' && cd.phone === '' && cd.role === 'Co-owner' && rw.no.includes('casey.c@example.com') && !JSON.stringify(rw.R).includes('other@example.com') && !JSON.stringify(rw.R).includes('719-555-0199'), 'edited while marked Don’t contact: still marked, name and role changed, the hidden email and phone untouched (the typed ones ignored), still on the sender’s no-contact list');
+  im = imp(); ok(!im.to.includes('casey.c@example.com'), 'and still off the email sender’s lists');
+  await b('contact', { world: 'sponsor', id: E1.id, name: 'Pat Nameonly' });
+  ok((await b('dnc', { world: 'sponsor', id: E1.id, key: 'n:pat nameonly', on: true })).ok, 'a person with only a name, marked Don’t contact');
+  ed = await b('contactedit', cBody('n:pat nameonly', { name: 'Pat Nameonly-Fixed' }));
+  D = await b('data'); cd = pOf('sponsor', E1.id, (p) => p.name === 'Pat Nameonly-Fixed'); rw = rawOf('sponsor', E1.id);
+  ok(ed.ok && ed.key === 'n:pat nameonly-fixed' && cd.key === 'n:pat nameonly-fixed' && cd.dnc && rw.R.dnc['n:pat nameonly-fixed'] && !rw.R.dnc['n:pat nameonly'], 'when an edit changes their key, the Don’t contact mark moves with them');
+  /* a researched contact (not added by a person) can be edited too */
+  D = await b('data'); const E3 = [17, 18, 19, 24, 25, 26, 27, 28, 29, 32].map((i) => NEW[i]).map((l) => find('sponsor', l.id)).find((r) => r.people.some((p) => p.ed && !p.added && !p.dnc)) || find('sponsor', E2.id); const rp = E3.people.find((p) => p.ed && !p.added && !p.dnc);
+  if (rp) {
+    ok((await b('contactedit', { world: 'sponsor', id: E3.id, key: rp.key, n: rp.kn, name: rp.name + ' Jr', role: rp.role, email: rp.email, phone: rp.phone })).ok && (await b('data')).sponsor.recs.find((r) => r.id === E3.id).people.some((p) => p.name === rp.name + ' Jr' && /edited by Test Seller/.test(p.src) && !/edited/.test(rp.src)), 'a researched contact can be corrected too, and keeps where it came from');
+    const rk = (await b('data')).sponsor.recs.find((r) => r.id === E3.id).people.find((p) => p.name === rp.name + ' Jr'); await b('contactedit', { world: 'sponsor', id: E3.id, key: rk.key, n: rk.kn, name: rp.name });
+  } else ok(false, 'a researched contact to edit');
+  /* Remove */
+  await b('contact', { world: 'sponsor', id: E1.id, name: 'Remy Remove', email: 'rm@example.com' });
+  const chk0 = JSON.parse(php(['check'])).sponsor.contacts;
+  let rm = await b('contactdel', { world: 'sponsor', id: E1.id, key: 'e:rm@example.com', n: 0 });
+  D = await b('data');
+  ok(rm.ok && !find('sponsor', E1.id).people.some((p) => p.email === 'rm@example.com') && JSON.parse(php(['check'])).sponsor.contacts === chk0 - 1, 'Remove: off the card and out of the counts');
+  ok(find('sponsor', E1.id).cedits.some((c) => c.do === 'del' && c.name === 'Remy Remove' && c.by === 'Test Seller') && lines('events.log').some((l) => l.includes('"t":"contactdel"') && l.includes('Remy Remove')), 'the Activity says who removed whom; the log keeps them');
+  im = imp(); ok(!im.to.includes('rm@example.com'), 'off the email sender’s lists');
+  ok((await b('contact', { world: 'sponsor', id: E2.id, name: 'Remy Elsewhere', email: 'rm@example.com' })).ok, 'and out of the duplicate check (the address can be added elsewhere with no warning)');
+  ok((await b('contactdel', { world: 'sponsor', id: E1.id, key: 'e:rm@example.com', n: 0 }))._status === 404 && (await cc('contactdel', { world: 'sponsor', id: E2.id, key: 'e:rm@example.com', n: 0 }))._status === 403, 'removing someone not there: refused; Claude Check: refused');
+  ok((await b('contactdel', { world: 'sponsor', id: E1.id, key: 'n:pat nameonly-fixed', n: 0 })).ok && rawOf('sponsor', E1.id).R.dnc['n:pat nameonly-fixed'], 'removing someone marked Don’t contact keeps the mark on the record (safer for the email sender)');
+  /* expo: the same */
+  D = await b('data');
+  const usedX = [3, 4, 5, 10, 11, 20, 21].map((i) => xseed.orgs[i].id);
+  const XO = D.expo.recs.find((r) => !usedX.includes(r.id) && r.name !== 'Tri-Lakes Chamber of Commerce' && r.people.some((p) => p.ed && p.email && p.estat && !p.dnc));
+  const xp = XO.people.find((p) => p.ed && p.email && p.estat && !p.dnc);
+  ed = await b('contactedit', { world: 'expo', id: XO.id, key: xp.key, n: xp.kn, name: xp.name, role: 'Events director', email: 'events.fixed@example.org', phone: xp.phone, notes: 'Corrected from their site' });
+  D = await b('data'); const xq = find('expo', XO.id).people.find((p) => p.email === 'events.fixed@example.org');
+  ok(ed.ok && xq && xq.role === 'Events director' && xq.notes === 'Corrected from their site' && !xq.estat && /Venue research/.test(xq.src) && /edited by Test Seller/.test(xq.src), 'expo: a researched contact corrected (email, role, note); the old email status no longer shows');
+  ok(lines('expo-events.log').some((l) => l.includes('"t":"xcontactedit"')) && !lines('events.log').some((l) => l.includes(XO.id)), 'expo edits go in the expo log only');
+  ok((await ex('contactedit', { world: 'expo', id: XO.id, key: xq.key, n: xq.kn, role: 'Events lead' })).ok, 'the expo-only account edits expo contacts');
+  await b('contact', { world: 'expo', id: XO.id, name: 'Expo Remove', email: 'xr@example.org' });
+  rm = await b('contactdel', { world: 'expo', id: XO.id, key: 'e:xr@example.org', n: 0 });
+  D = await b('data');
+  ok(rm.ok && !find('expo', XO.id).people.some((p) => p.email === 'xr@example.org') && lines('expo-events.log').some((l) => l.includes('"t":"xcontactdel"')) && find('expo', XO.id).cedits.some((c) => c.do === 'del'), 'expo: Remove works the same');
+  im = imp(); ok(im.to.includes('events.fixed@example.org') && !im.to.includes(xp.email.toLowerCase()) && !im.to.includes('xr@example.org'), 'the email sender’s expo list has the corrected address, not the old or the removed one');
+  /* from the server: a test contact and the Don't contact it set, taken off in one go */
+  await b('contact', { world: 'sponsor', id: E2.id, name: 'Test,', email: 'Test@test.com', phone: '8032607859', role: 'testghuy' });
+  ok((await b('dnc', { world: 'sponsor', id: E2.id, key: 'e:test@test.com', on: true, why: 'Not the right person' })).ok && rawOf('sponsor', E2.id).no.includes('test@test.com'), 'a test contact marked Don’t contact (as on the live desk)');
+  const n0 = lines('events.log').length;
+  const cdry = JSON.parse(php(['contactdel', 'sponsor', E2.id, 'e:test@test.com', '--dnc-off', '--dry-run', '--by', 'Test Admin']));
+  ok(cdry.ok && cdry.dry && cdry.rows.length === 2 && cdry.rows[0].t === 'dnc' && cdry.rows[0].on === false && cdry.rows[1].t === 'contactdel' && !('email' in cdry.rows[1].was) && lines('events.log').length === n0, 'php desk.php contactdel --dry-run: shows the two rows, writes nothing');
+  const creal = JSON.parse(php(['contactdel', 'sponsor', E2.id, 'e:test@test.com', '--dnc-off', '--by', 'Test Admin']));
+  D = await b('data'); rw = rawOf('sponsor', E2.id);
+  ok(creal.ok && lines('events.log').length === n0 + 2 && !find('sponsor', E2.id).people.some((p) => p.name === 'Test,') && !rw.no.includes('test@test.com') && !(rw.R.dnc || {})['e:test@test.com'] && !JSON.stringify(rw.R.added).includes('test.com'), 'and for real: the test contact and its Don’t contact mark are gone from the card, the record and the sender’s no-contact list');
+  /* the records rebuilt from the logs come out the same */
+  const snap = () => JSON.stringify([find('sponsor', E1.id).people, find('sponsor', E1.id).cedits, find('sponsor', E1.id).dnc, find('sponsor', E2.id).people, find('expo', XO.id).people, find('expo', XO.id).cedits]);
+  D = await b('data'); const s1 = snap(); php(['rebuild']); D = await b('data');
+  ok(snap() === s1, 'php desk.php rebuild gives the same people, changes and Don’t contact marks');
+
   console.log('The end-of-day email (OFF until an admin turns it on)');
   const MAILF = join(LD, 'mail-out.jsonl'), envM = { ...env, DESK_MAIL_FILE: MAILF };
   const eod = (args, now) => execFileSync('php', [join(WEB, 'api/desk.php'), 'eod', ...args], { encoding: 'utf8', env: now ? { ...envM, DESK_NOW: String(now) } : envM });
@@ -659,6 +757,34 @@ try {
   await tab('more'); await sub('ref'); ok(await js(`/Douglas County Fairgrounds/.test(document.querySelector('.xvenues').textContent)`), 'the competing venues table');
   await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(300); await tab('pipe');
   ok((await js(bgSum)) < 120 && await js(`getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()==='#e6781d'`), 'Expo leads in dark mode, glowing Peak orange'); await shot('expo-pipeline-dark.png');
+  /* Edit and Remove on a contact (2026-11-18) */
+  await b('contact', { world: 'sponsor', id: E1.id, name: 'Screen Person', email: 'screen@exmaple.com', phone: '719-555-0177' });
+  await world('sponsor'); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+  ok(await openCo(E1.id, E1.name), 'Edit and Remove on the screen: the card opens');
+  const scSel = (k) => `.detail .ct[data-key="${k}"]`;
+  ok(await js(`(()=>{const c=document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com'))});return !!c&&!!c.querySelector('[data-act="cedit"]')&&!!c.querySelector('[data-act="cdel"]')&&!!c.querySelector('[data-dnc]')})()`), 'each contact has Edit and Remove beside Don’t contact');
+  await click(scSel('e:screen@exmaple.com') + ' [data-act="cedit"]', 300);
+  ok(await js(`(()=>{const f=document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com') + ' .cform')});return !!f&&f.querySelector('[data-f="email"]').value==='screen@exmaple.com'&&f.querySelector('[data-f="phone"]').value==='719-555-0177'&&f.querySelector('[data-f="name"]').value==='Screen Person'})()`), 'Edit opens a form with what the card shows');
+  await shot('contact-edit-desktop.png');
+  await js(`(()=>{const f=document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com') + ' .cform')});f.querySelector('[data-f="email"]').value=${JSON.stringify(oe)};return 1})()`);
+  await click(scSel('e:screen@exmaple.com') + ' [data-act="csave"]', 1000);
+  ok(await js(`(()=>{const d=document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com') + ' .cform .dupbox')});return !!d&&!d.hidden&&/Already on the desk/.test(d.textContent)&&!!d.querySelector('[data-act="ckeep"]')})()`), 'an email already at another company: the duplicate warning, with Save anyway');
+  await js(`(()=>{const f=document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com') + ' .cform')});f.querySelector('[data-f="email"]').value='screen@example.com';f.querySelector('[data-f="phone"]').value='';return 1})()`);
+  await click(scSel('e:screen@exmaple.com') + ' [data-act="csave"]', 1500);
+  ok(await js(`(()=>{const c=document.querySelector(${JSON.stringify(scSel('e:screen@example.com'))});return !!c&&/screen@example\\.com/.test(c.textContent)&&!c.querySelector('a[href^="tel:"]')&&/edited by Test/.test(c.textContent)&&!document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com'))})})()`), 'saved: the corrected email shows, the cleared phone is gone, and it says who edited it');
+  ok(await js(`/Contact edited: Screen Person/.test(document.querySelector('.detail .tl').textContent)&&/Email: screen@exmaple\\.com → screen@example\\.com/.test(document.querySelector('.detail .tl').textContent)&&/Phone: 719-555-0177 → \\(cleared\\)/.test(document.querySelector('.detail .tl').textContent)`), 'the card’s Activity shows each change, old → new');
+  await shot('contact-edited-desktop.png');
+  /* on a phone */
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
+  await click(scSel('e:screen@example.com') + ' [data-act="cedit"]', 300);
+  const pf = await js(`(()=>{const d=document.querySelector('.detail'),f=d.querySelector('.cform'),r=f.getBoundingClientRect(),W=document.documentElement.clientWidth;const sm=[...f.querySelectorAll('.btn'),...d.querySelectorAll('.cacts .lnk')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<36).map(b=>b.textContent);return {wide:d.scrollWidth-d.clientWidth,fits:r.left>=0&&r.right<=W+1,sm}})()`);
+  ok(pf.wide <= 1 && pf.fits && !pf.sm.length, 'on a phone the Edit form fits and Edit, Remove and Save are finger-sized' + (pf.wide <= 1 && pf.fits && !pf.sm.length ? '' : ': ' + JSON.stringify(pf)));
+  await js(`document.querySelector(${JSON.stringify(scSel('e:screen@example.com'))}).scrollIntoView({block:'center'})`); await sleep(150); await shot('contact-edit-phone.png');
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
+  await js(`window.__cf=window.confirm;window.confirm=()=>true`);
+  await click(scSel('e:screen@example.com') + ' [data-act="cdel"]', 1500);
+  await js(`window.confirm=window.__cf`);
+  ok(await js(`!document.querySelector(${JSON.stringify(scSel('e:screen@example.com'))})&&/Contact removed: Screen Person/.test(document.querySelector('.detail .tl').textContent)`), 'Remove (after a confirm): off the card, and the Activity says so');
   /* phone */
   await world('sponsor'); await tab('today');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);

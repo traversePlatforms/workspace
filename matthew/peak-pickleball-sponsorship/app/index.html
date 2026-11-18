@@ -160,6 +160,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 .ct{display:grid;gap:2px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}.ct:last-child{border-bottom:0}.ct small{color:var(--soft)}
 .ct a{color:var(--accInk);word-break:break-all}.ct .links{display:flex;gap:12px;flex-wrap:wrap}
 .ct.dnc>div:first-child b{color:var(--soft)}
+.cacts{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:center;margin-top:2px}.cacts .lnk{font-size:12.5px;display:inline-flex;align-items:center;gap:4px;margin:0!important}.cacts .lnk svg.i{width:13px;height:13px}
+.cform{margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.cform .lab{display:grid;gap:3px;font-size:12.5px;color:var(--soft)}.cform .lab input{color:var(--ink)}.tli .chg{overflow-wrap:anywhere}
+@media (pointer:coarse),(max-width:640px){.cacts .lnk{min-height:36px}}
 .dnctag{display:inline-block;font:700 11.5px var(--sans);padding:1px 8px;border-radius:999px;background:#ac3131;color:#fff;margin-left:6px}
 :root:not([data-theme="light"]) .dnctag{background:#492322;color:#f48080}
 .form{display:grid;gap:8px}.form input,.form textarea,.form select{width:100%;padding:9px 11px;border-radius:9px;background:var(--bg)}
@@ -365,7 +368,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-18.2';
+  var BUILD = '2026-11-18.3';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -409,6 +412,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>', deal: '<path d="M3 12l4-4 4 3 3-3 7 7"/><path d="M14 8h4v4"/>', star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', note: '<path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4"/>', flag: '<path d="M5 21V4h11l-2 4 2 4H5"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>', moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+    pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>', trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
     stop: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>', copy: '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M5 16H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v1"/>'
   };
   var MARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 19.5L9 6.5l3.6 6.2 2.4-3.7 7.5 10.5h-4.2l-3.3-4.7-1.3 2 1.6 2.7h-4L9 13.6l-3.4 5.9z"/></svg>';
@@ -1124,7 +1128,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       if (p.notes) ct.appendChild(linkify(p.notes, el('div', 'xn' + (CAREFUL.test(p.notes) ? ' chk' : ''))));
       ct.appendChild(el('small', null, 'From: ' + p.src + (p.more ? ' · ' + p.more : '')));
       srcLinks(p.srcs, ct);
-      if (p.key) dncLink(r, p, nm, ct);
+      var cb = p.ed ? contactActs(r, p, nm, ct) : null;
+      if (p.key) dncLink(r, p, nm, ct, cb);
       (more || s).appendChild(ct);
     });
     if (!P.length && !r.route && !r.callHow && !r.phone) s.appendChild(el('div', null, 'No contact yet.'));
@@ -1171,7 +1176,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
   /* Don't contact (2026-11-18): a person asked not to be contacted, with the reason; their call, text and email go and the email sender skips them */
   var DNCWHY = ['Asked not to be contacted', 'Not the right person', 'Left the company'];
-  function dncLink(r, p, nm, into) {
+  function dncLink(r, p, nm, into, bar) {
     var b = el('button', 'lnk', p.dnc ? 'Allow contact again' : 'Don’t contact'); b.type = 'button'; b.style.cssText = 'font-size:12.5px;justify-self:start;margin-top:2px'; b.setAttribute('data-dnc', p.dnc ? 'off' : 'on');
     b.addEventListener('click', function () {
       if (p.dnc) { if (confirm('Allow ' + nm + ' to be contacted again?\n\n' + (p.dnc.why || '') + ' (marked by ' + p.dnc.by + ').')) save('dnc', { id: r.id, key: p.key, on: false }, nm + ' can be contacted again'); return; }
@@ -1179,7 +1184,55 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var f = inlineForm(into, 'Don’t contact ' + nm + ': why?', [['why', 'text', DNCWHY[0], 'The reason']], 'Mark Don’t contact', function (v) { save('dnc', { id: r.id, key: p.key, on: true, why: v.why }, 'Marked Don’t contact: ' + nm); });
       var ch = el('div', 'seg'); DNCWHY.forEach(function (y) { var c = el('button', null, y); c.type = 'button'; c.addEventListener('click', function () { f.querySelector('input').value = y; }); ch.appendChild(c); }); f.insertBefore(ch, f.children[1]);
     });
-    into.appendChild(b);
+    (bar || into).appendChild(b);
+  }
+
+  /* edit or remove a person (2026-11-18, Matthew: "cai added a contact and she spelt the email wrong so she needs to be able to edit. we all
+     do"): any field can be corrected or cleared; a new email, phone or name that is already on the desk gets the same warning as adding */
+  var FLD = { name: 'Name', role: 'Role', email: 'Email', phone: 'Phone', notes: 'Note' };
+  function contactActs(r, p, nm, ct) {
+    var bar = el('div', 'cacts');
+    var eb = el('button', 'lnk'); eb.type = 'button'; eb.appendChild(ic('pen')); eb.appendChild(document.createTextNode('Edit')); eb.setAttribute('data-act', 'cedit'); eb.setAttribute('aria-label', 'Edit ' + nm);
+    var rb = el('button', 'lnk'); rb.type = 'button'; rb.appendChild(ic('trash')); rb.appendChild(document.createTextNode('Remove')); rb.setAttribute('data-act', 'cdel'); rb.setAttribute('aria-label', 'Remove ' + nm);
+    bar.appendChild(eb); bar.appendChild(rb); ct.appendChild(bar);
+    eb.addEventListener('click', function () { var o = ct.querySelector('.cform'); if (o) { o.remove(); return; } ct.appendChild(editForm(r, p, nm)); var i = ct.querySelector('.cform input'); if (i) i.focus(); });
+    rb.addEventListener('click', function () {
+      if (!confirm('Remove ' + nm + ' from ' + r.name + '?\n\nThey come off the card and the email lists. The record keeps a note of who they were' + (p.dnc ? ', and they stay on the Don’t contact list.' : '.'))) return;
+      save('contactdel', { id: r.id, key: p.key, n: p.kn || 0 }, 'Removed ' + nm);
+    });
+    return bar;
+  }
+  function editForm(r, p, nm) {
+    var X = isX(), f = el('div', 'form inl cform'); f.appendChild(el('b', null, 'Edit ' + nm)); var I = {};
+    var add = function (k, ph, ty) { var l = el('label', 'lab', FLD[k]), i = el('input'); i.value = p[k] || ''; i.placeholder = ph; if (ty) i.type = ty; i.setAttribute('data-f', k); l.appendChild(i); f.appendChild(l); I[k] = i; };
+    add('name', 'Name'); add('role', X ? 'Role (e.g. Show manager)' : 'Role (e.g. Marketing Director)');
+    if (p.dnc) f.appendChild(el('small', null, 'Their email and phone stay hidden while they are marked Don’t contact.'));
+    else { add('email', 'Email', 'email'); add('phone', 'Phone', 'tel'); }
+    if (X) add('notes', 'Note (where you got it)');
+    f.appendChild(el('small', null, 'Clear a box to take that detail off.'));
+    var dup = el('div', 'dupbox'); dup.hidden = true; f.appendChild(dup);
+    var row = el('div', 'seg'), go = el('button', 'btn small', 'Save changes'), no = el('button', 'btn small ghost', 'Cancel'); go.type = no.type = 'button'; go.setAttribute('data-act', 'csave');
+    row.appendChild(go); row.appendChild(no); f.appendChild(row);
+    no.addEventListener('click', function () { f.remove(); });
+    var send = function (keep) {
+      var b = { id: r.id, key: p.key, n: p.kn || 0 }; Object.keys(I).forEach(function (k) { b[k] = I[k].value.trim(); });
+      if (!b.name && !p.dnc && !b.email && !b.phone) { toast('Give a name, email or phone.'); return; }
+      if (keep) b.keep = 1;
+      save('contactedit', b, 'Saved: ' + (b.name || nm)).then(function (j) {
+        if (j && j.same) toast('Nothing changed.');
+        if (!(j && j._status === 409 && j.dupes)) return;
+        dup.textContent = ''; dup.hidden = false; dup.appendChild(el('b', null, 'Already on the desk?'));
+        j.dupes.forEach(function (x) {
+          var d = el('div', 'dh'); d.appendChild(el('span', null, x.same ? x.name + ' on this card has ' + x.why.replace(/the same/g, 'this') + (x.dnc ? ' (marked Do not contact)' : '') : x.name + ' has ' + x.why.replace(/the same/g, 'this')));
+          if (!x.same) { var op = el('button', 'btn small ghost', 'Open ' + x.name); op.type = 'button'; op.addEventListener('click', function () { var o = rec(x.id); if (o) { S.sel = o.id; draw(); } }); d.appendChild(op); }
+          dup.appendChild(d);
+        });
+        var kb = el('button', 'btn small ghost', 'Save anyway'); kb.type = 'button'; kb.setAttribute('data-act', 'ckeep'); kb.addEventListener('click', function () { send(true); }); dup.appendChild(kb);
+      });
+    };
+    go.addEventListener('click', function () { send(false); });
+    f.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.tagName === 'INPUT') send(false); });
+    return f;
   }
 
   /* ---- send a message (Sixfold's templates, 2026-11-18): one tap fills a text or an email for the situation; Text opens the phone's
@@ -1301,11 +1354,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     (r.touches || []).forEach(function (t) { items.push({ at: t.when, k: 't', t: t }); });
     (r.notes || []).forEach(function (n) { items.push({ at: n.at, k: 'n', n: n }); });
     (r.hist || []).forEach(function (h) { items.push({ at: h.at, k: 's', h: h }); });
+    (r.cedits || []).forEach(function (c) { items.push({ at: c.at, k: 'c', c: c }); });
     items.sort(function (a, b) { return b.at - a.at; });
     var tl = el('div', 'tl'); tl.style.marginTop = '8px'; s.appendChild(tl);
     var lim = S.more['act' + r.id] ? items.length : 10;
     items.slice(0, lim).forEach(function (x) {
-      var tone = x.k === 't' ? touchTone(x.t) : x.k === 'n' ? ['stone', 'note'] : [HUEOF[x.h.to] || 'slate', 'flag'];
+      var tone = x.k === 't' ? touchTone(x.t) : x.k === 'n' ? ['stone', 'note'] : x.k === 'c' ? ['stone', x.c.do === 'del' ? 'trash' : 'pen'] : [HUEOF[x.h.to] || 'slate', 'flag'];
       var it = el('div', 'tli ' + x.k + ' h-' + tone[0]), body = el('div', 'tx'), dot = el('i'); dot.appendChild(ic(tone[1])); it.appendChild(dot); it.appendChild(body);
       if (x.k === 't') {
         body.appendChild(el('b', null, touchName(x.t))); if (x.t.note) body.appendChild(el('div', null, x.t.note));
@@ -1314,6 +1368,11 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       } else if (x.k === 'n') {
         body.appendChild(el('div', null, x.n.note));
         var sm2 = el('small', null, 'Note · ' + x.n.by + ', ' + when(x.n.at) + ' · '), rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.style.fontSize = '12px'; rm.addEventListener('click', function () { if (confirm('Remove this note?')) save('notedel', { id: r.id, nk: x.n.k }, 'Note removed'); }); sm2.appendChild(rm); body.appendChild(sm2);
+      } else if (x.k === 'c') {
+        body.appendChild(el('b', null, (x.c.do === 'del' ? 'Contact removed: ' : 'Contact edited: ') + x.c.name));
+        if (x.c.do === 'del' && x.c.role) body.appendChild(el('div', null, x.c.role));
+        (x.c.chg || []).forEach(function (g) { body.appendChild(el('div', 'chg', (FLD[g[0]] || g[0]) + ': ' + (g[1] || '(blank)') + ' → ' + (g[2] || '(cleared)'))); });
+        body.appendChild(el('small', null, x.c.by + ', ' + when(x.c.at)));
       } else {
         body.appendChild(el('span', null, (x.h.undo ? 'Back to ' : 'Moved to ') + STN(x.h.to) + (x.h.why ? ': ' + x.h.why : ''))); body.appendChild(el('small', null, x.h.by + ', ' + when(x.h.at)));
       }

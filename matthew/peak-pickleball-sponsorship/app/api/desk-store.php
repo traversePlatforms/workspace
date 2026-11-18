@@ -45,7 +45,7 @@ function W(string $w): array {
         'sponsor' => ['log' => 'events.log', 'stages' => SP_STAGES, 'legacy' => SP_LEGACY, 'field' => 'status',
             'T' => ['stage' => 'status', 'note' => 'note', 'notedel' => 'notedel', 'next' => 'next', 'contact' => 'contact', 'add' => 'lead', 'del' => 'leaddel', 'back' => 'leadback',
                 'touch' => 'touch', 'touchdel' => 'touchdel', 'owner' => 'owner', 'tour' => 'tour', 'tourdel' => 'tourdel', 'tourout' => 'tourout', 'tourmove' => 'tourmove',
-                'dnc' => 'dnc', 'templates' => 'templates'],
+                'dnc' => 'dnc', 'templates' => 'templates', 'contactedit' => 'contactedit', 'contactdel' => 'contactdel'],
             /* the order a deal moves in; Not now and Lost sit outside it */
             'path' => ['new', 'called', 'voicemail', 'emailed', 'texted', 'meeting', 'proposal', 'signed'], 'reach' => 5,
             'byMethod' => ['call' => 'called', 'voicemail' => 'voicemail', 'email' => 'emailed', 'text' => 'texted', 'inperson' => 'called', 'linkedin' => 'emailed', 'other' => 'called'],
@@ -53,7 +53,7 @@ function W(string $w): array {
         'expo' => ['log' => 'expo-events.log', 'stages' => XP_STAGES, 'legacy' => XP_LEGACY, 'field' => 'stage',
             'T' => ['stage' => 'xstage', 'note' => 'xnote', 'notedel' => 'xnotedel', 'next' => 'xnext', 'contact' => 'xcontact', 'add' => 'xlead', 'del' => 'xdel', 'back' => 'xback',
                 'touch' => 'xtouch', 'touchdel' => 'xtouchdel', 'owner' => 'xowner', 'tour' => 'xtour', 'tourdel' => 'xtourdel', 'tourout' => 'xtourout', 'tourmove' => 'xtourmove',
-                'dnc' => 'xdnc', 'templates' => 'xtemplates'],
+                'dnc' => 'xdnc', 'templates' => 'xtemplates', 'contactedit' => 'xcontactedit', 'contactdel' => 'xcontactdel'],
             'path' => ['new', 'contacted', 'tour', 'quote', 'booked'], 'reach' => 2,
             'byMethod' => array_fill_keys(array_keys(METHODS), 'contacted'),
             'tourSt' => 'tour', 'propSt' => 'quote', 'winSt' => 'booked', 'done' => ['booked', 'lost']],
@@ -240,6 +240,51 @@ function apply(array &$M, string $w, array $r): void {
             if ($on) $R['dnc'][$key] = $mark; else unset($R['dnc'][$key]);
             unset($R); $dirty($id); return;
         }
+        /* a person edited (2026-11-18): the row carries what the card showed (was) and what it says now; every field is written onto the
+           person's own entry, so "add the new details to" entries for them are folded in (and dropped, so the email sender never reads an old
+           address from one). Someone marked Don't contact keeps their hidden email and phone as they were. When the key changes (a new
+           email, say), their Don't contact mark moves with them. Touches, the email sender's sent, reply and bounce marks and the stage are
+           the company's, so nothing there changes. */
+        case 'contactedit': {
+            if (!$has || !is_array($r['now'] ?? null)) return; $key = (string) ($r['key'] ?? '');
+            $x = contactAt($M['recs'][$id], $key, (int) ($r['n'] ?? 0)); if (!$x) return;
+            $R = &$M['recs'][$id]; $c = &$R[$x[0]][$x[1]]; $new = $r['now'];
+            $dn = !empty($c['dnc']) || isset(($R['dnc'] ?? [])[$key]); $old = contactVals($w, $c);
+            if (array_key_exists('name', $new)) $c['name'] = (string) $new['name'];
+            if (array_key_exists('role', $new)) { if ($w === 'expo' || isset($c['role'])) $c['role'] = (string) $new['role']; if ($w !== 'expo') $c['pos'] = (string) $new['role']; }
+            if ($w === 'expo' && array_key_exists('notes', $new)) $c['notes'] = (string) $new['notes'];
+            if (!$dn) foreach (['email', 'phone'] as $f) if (array_key_exists($f, $new)) $c[$f] = (string) $new[$f];
+            if (strtolower(trim($old['email'])) !== strtolower(trim((string) ($c['email'] ?? '')))) {   /* a new address: the old one's look-up confidence no longer applies */
+                if (is_numeric($c['conf'] ?? null)) unset($c['conf']);
+                if (isset($c['estat'])) $c['estat'] = '';
+            }
+            unset($c['of']); $c['ed'] = ['by' => $by, 'at' => $at];
+            $nk = personKey($c); $nm = (string) ($c['name'] ?? '');
+            $chg = [];
+            foreach (contactVals($w, $c) as $f => $v) { $o = (string) (($r['was'][$f] ?? null) ?? $old[$f]); if ($dn && in_array($f, ['email', 'phone'], true)) continue; if ($o !== $v) $chg[] = [$f, $o, $v]; }
+            unset($c);
+            $R['added'] = array_values(array_filter($R['added'] ?? [], fn($q) => (string) ($q['of'] ?? '') !== $key || empty($q['of'])));
+            if ($nk !== $key && $nk !== '' && isset($R['dnc'][$key])) {
+                $R['dnc'][$nk] = $R['dnc'][$key];
+                $still = false; foreach (contactRefs($R) as $y) if ($y[2] === $key) $still = true;
+                if (!$still) unset($R['dnc'][$key]);
+            }
+            $R['cedits'][] = ['do' => 'edit', 'at' => $at, 'by' => $by, 'name' => $nm !== '' ? $nm : ($old['name'] !== '' ? $old['name'] : 'a contact'), 'chg' => $chg];
+            unset($R); $dirty($id); return;
+        }
+        /* a person removed (2026-11-18): off the card, the email sender's lists and the duplicate checks; the log keeps them. A Don't contact
+           mark stays on the record, so the address stays on the sender's no-contact list. */
+        case 'contactdel': {
+            if (!$has) return; $key = (string) ($r['key'] ?? '');
+            $x = contactAt($M['recs'][$id], $key, (int) ($r['n'] ?? 0)); if (!$x) return;
+            $R = &$M['recs'][$id]; $c = $R[$x[0]][$x[1]];
+            array_splice($R[$x[0]], $x[1], 1);
+            $still = false; foreach (contactRefs($R) as $y) if ($y[2] === $key) $still = true;
+            if (!$still) $R['added'] = array_values(array_filter($R['added'] ?? [], fn($q) => (string) ($q['of'] ?? '') !== $key || empty($q['of'])));
+            $v = contactVals($w, $c);
+            $R['cedits'][] = ['do' => 'del', 'at' => $at, 'by' => $by, 'name' => $v['name'] !== '' ? $v['name'] : 'a contact', 'role' => $v['role']];
+            unset($R); $dirty($id); return;
+        }
         case 'templates': $M['set']['templates'] = is_array($r['templates'] ?? null) ? $r['templates'] : []; $M['sdirty']['templates'] = 1; return;
         case 'packages': $M['set']['packages'] = $r['packages'] ?? []; $M['sdirty']['packages'] = 1; return;
         case 'pl': $M['set']['pl'] = $r['pl'] ?? null; $M['sdirty']['pl'] = 1; return;
@@ -385,6 +430,35 @@ function personKey(array $c): string {
     if ($p !== '') return 'p:' . $p;
     $n = strtolower(trim(preg_replace('/\s+/', ' ', (string) ($c['name'] ?? '')) ?? ''));
     return $n !== '' ? 'n:' . $n : '';
+}
+/* ---- editing and removing a person on a card (2026-11-18, Matthew: "we need a way to edit contacts that we add ... cai added a contact and she
+   spelt the email wrong ... we all do") ----
+   A person is found the way the card lists them: by their person key, and n (0, 1 ...) when two entries on one card share a key. The order is
+   the order people() lists them: the researched contacts, the ones added on the desk, then "add the new details to" entries that found
+   nobody. Hunter's look-up results are not here: they come from a look-up, not from the records. */
+function contactRefs(array $R): array {
+    $o = []; $keys = [];
+    foreach (['contacts', 'added'] as $f) foreach (($R[$f] ?? []) as $i => $c) {
+        if ($f === 'added' && !empty($c['of'])) continue;
+        $k = personKey($c); $o[] = [$f, $i, $k]; $keys[$k] = 1;
+    }
+    foreach (($R['added'] ?? []) as $i => $c) if (!empty($c['of']) && !isset($keys[(string) $c['of']])) $o[] = ['added', $i, personKey($c)];
+    return $o;
+}
+function contactAt(array $R, string $key, int $n): ?array { $m = 0; foreach (contactRefs($R) as $x) if ($x[2] === $key) { if ($m === $n) return $x; $m++; } return null; }
+/* the fields a person can be edited on: name, role (sponsors keep it as pos), email, phone, and the expo note */
+function contactVals(string $w, array $c): array {
+    $v = ['name' => (string) ($c['name'] ?? ''), 'role' => $w === 'expo' ? (string) (($c['role'] ?? '') !== '' ? $c['role'] : ($c['pos'] ?? '')) : (string) (($c['pos'] ?? '') !== '' ? $c['pos'] : ($c['role'] ?? '')), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? '')];
+    if ($w === 'expo') $v['notes'] = (string) ($c['notes'] ?? '');
+    return $v;
+}
+/* the row that removes one person (the page's Remove, and `php desk.php contactdel`); a person marked Don't contact keeps that mark on the
+   card's record, so their address stays on the email sender's no-contact list. Their email and phone are not copied into the row. */
+function contactDelRow(string $w, array $R, string $key, int $n, string $by, int $at): ?array {
+    $x = contactAt($R, $key, $n); if (!$x) return null;
+    $c = $R[$x[0]][$x[1]]; $was = contactVals($w, $c);
+    if (!empty($c['dnc']) || isset(($R['dnc'] ?? [])[$key])) unset($was['email'], $was['phone']);
+    return ['t' => W($w)['T']['contactdel'], 'id' => (string) $R['id'], 'key' => $key, 'n' => $n, 'was' => $was, 'by' => $by, 'at' => $at];
 }
 /* a company name as the duplicate check compares it (Sixfold's lead doubles, 2026-11-18): case, punctuation, "&" and the legal endings
    (Inc, LLC, Co ...) do not make two companies different */
