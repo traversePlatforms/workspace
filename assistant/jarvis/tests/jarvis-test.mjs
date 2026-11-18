@@ -172,7 +172,7 @@ try {
   await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__said=[];window.SpeechSynthesisUtterance=function(t){this.text=t};Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{speak:function(u){if(u.text&&u.text.trim())window.__said.push(u.text)},cancel:function(){},getVoices:function(){return[{name:"Daniel",lang:"en-GB"}]},addEventListener:function(){}}});' });
   await cdp('Page.navigate', { url: PAGE }); await sleep(1500);
   ok((await ev('window.__said.length')) === 0, 'Voice: loading the page never talks');
-  await ev('document.dispatchEvent(new Event("pointerdown"))');   /* the person touching the page, which browsers need before sound */
+  await ev('document.dispatchEvent(new Event("click"))');   /* the person touching the page, which browsers need before sound */
   ok(await ev('!!document.querySelector(".signin input[type=password]")'), 'signed out (with a staff Field app cookie): the sign-in shows');
   ok(await ev('!document.querySelector(".ibr") && !document.body.innerText.includes("Dana")'), 'signed out: no inbox, no email on screen');
   ok(!reqs.some(r => /helplist|outbox-092b0f|desk.php/.test(r)), 'signed out: the page does not even ask the other apps');
@@ -219,7 +219,7 @@ try {
   await click('#p-builds .ph .fold'); await click('#p-cal .ph .fold'); await click('#p-today .ph .fold'); await sleep(200);
   const gc = await ev('getComputedStyle(document.getElementById("app")).gridTemplateColumns');
   ok(/^394px .* 44px$/.test(gc), 'a fully folded side shrinks to its icon strip and the middle widens (' + gc + ')');
-  await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 8000); await sleep(800); await ev('document.dispatchEvent(new Event("pointerdown"))');
+  await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 8000); await sleep(800); await ev('document.dispatchEvent(new Event("click"))');
   ok(await ev('document.querySelector(".ibr[data-inbox=\\"m.sharpe@traverse.example.test\\"]").classList.contains("open") && !document.getElementById("p-team") && !document.getElementById("p-today")'), 'open rows and folded panels are remembered on this device after a reload');
   for (const k of ['team', 'today', 'builds', 'cal']) await click('.rail button[data-panel=' + k + ']');
   await click('.ibr.open .ibh'); await sleep(200);
