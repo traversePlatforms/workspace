@@ -33,7 +33,7 @@ function jvStatus(): array {
 /** the next 7 days of the Traverse inbox's primary calendar (any connected calendar if Traverse has none), cached 5 minutes. Read only. */
 function jvCalendar(): array {
     $acc = null;
-    foreach (jget('accounts.json') as $e => $a) if (!empty($a['cal']) && !empty($a['refresh']) && ($a['on'] ?? true)) { if (!$acc || ($a['label'] ?? '') === 'Traverse') $acc = $a; }
+    foreach (jget('accounts.json') as $e => $a) if (is_array($a) && !empty($a['cal']) && !empty($a['refresh']) && ($a['on'] ?? true)) { if (!$acc || ($a['label'] ?? '') === 'Traverse') $acc = ['email' => (string) $e] + $a; }
     if (!$acc) return ['source' => 'none', 'need' => 'Connect the Traverse calendar to see it here.'];
     $email = (string) $acc['email']; $label = (string) ($acc['label'] ?? $email);
     $cf = aDataDir() . '/jarvis/cal-cache.json';

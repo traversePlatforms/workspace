@@ -69,7 +69,7 @@ if ($action === 'setup') {   /* keys go in here, never through chat; an empty fi
 }
 if ($action === 'connect') {
     if (empty(gClient()['id'])) out(['ok' => false, 'error' => 'Add the Google client in Setup first.']);
-    out(['ok' => true, 'url' => gAuthUrl(!empty($body['cal']))]);
+    out(['ok' => true, 'url' => gAuthUrl(!empty($body['cal']), !empty($body['hub']))]);
 }
 if ($action === 'account') {   /* label, what the inbox is for, sign-off, on or off, or disconnect */
     $email = strtolower((string) ($body['email'] ?? ''));

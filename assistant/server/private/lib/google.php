@@ -32,15 +32,15 @@ function http(string $method, string $url, ?array $form = null, ?array $json = n
     return $j;
 }
 /** where the person goes to say yes; the state ties the answer back to this signed-in session */
-function gAuthUrl(bool $cal = false): string {
+function gAuthUrl(bool $cal = false, bool $hub = false): string {
     aSessionStart();
     $_SESSION['gstate'] = bin2hex(random_bytes(16));
-    $_SESSION['greturn'] = $cal ? 'jarvis/' : '';   /* a calendar connect started on J.A.R.V.I.S. goes back there */
+    $_SESSION['greturn'] = $cal ? ($hub ? 'hub' : 'jarvis/') : '';   /* a calendar connect started on J.A.R.V.I.S. goes back there (inside the hub: the hub, which reopens its last tab) */
     return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query(['client_id' => gClient()['id'], 'redirect_uri' => gRedirect(), 'response_type' => 'code',
         'scope' => G_SCOPES . ($cal ? ' ' . G_CAL_SCOPE : ''), 'access_type' => 'offline', 'prompt' => 'consent select_account', 'include_granted_scopes' => 'true', 'state' => $_SESSION['gstate']]);
 }
 /** where the oauth answer sends the page back to (set by gAuthUrl, used once) */
-function gReturn(): string { aSessionStart(); $r = (string) ($_SESSION['greturn'] ?? ''); unset($_SESSION['greturn']); return $r === 'jarvis/' ? 'jarvis/' : ''; }
+function gReturn(): string { aSessionStart(); $r = (string) ($_SESSION['greturn'] ?? ''); unset($_SESSION['greturn']); return $r === 'hub' ? '../hub-cc1f31de/' : ($r === 'jarvis/' ? 'jarvis/' : ''); }
 /** Google sends the person back here with a code: trade it for tokens, find out which address it is, keep the refresh token */
 function gCallback(string $code, string $state): ?string {
     aSessionStart();

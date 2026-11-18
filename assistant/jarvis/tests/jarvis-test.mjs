@@ -13,7 +13,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const SHOTS = process.env.SHOTS || path.join(REPO, 'assistant', 'jarvis', 'shots');
-const PORT = 8803, GPORT = 8804, CDP = 9241;
+const PORT = +process.env.JT_PORT || 8803, GPORT = +process.env.JT_GPORT || 8804, CDP = +process.env.JT_CDP || 9241;   /* other builders' tests may hold the defaults */
 const R = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-'));   // stands in for ~/www/traverseplatforms.com
 const PUB = path.join(R, 'public_html'), PRIV = path.join(R, 'assistant-private'), DATA = path.join(PRIV, 'data');
 let pass = 0, failN = 0;
@@ -32,7 +32,12 @@ const hash = spawnSync('php', ['-r', 'echo password_hash(stream_get_contents(STD
 mk(path.join(DATA, 'config.json'), JSON.stringify({ passwordHash: hash, googleClientId: 'test-client.apps.googleusercontent.com', googleClientSecret: SECRETS[0], setupCodeHashNote: SECRETS[3], stub: true }));
 const ACCTS = { 'matthew.personal@example.test': 'Personal', 'm.sharpe@traverse.example.test': 'Traverse', 'contact@sixfold.example.test': 'Sixfold / 365', 'm.sharpe@surge.example.test': 'Surge' };
 const accounts = {}; Object.entries(ACCTS).forEach(([e, l]) => { accounts[e] = { label: l, about: l + ' mail', signature: 'Matthew', on: true, refresh: SECRETS[1], access: SECRETS[2], accessUntil: now + 86400, lastCheck: now - 300 }; });
+accounts['m.sharpe@traverse.example.test'].cal = true;   /* 18 Nov: the Traverse calendar is connected; its events come from the 5-minute cache below */
 mk(path.join(DATA, 'accounts.json'), JSON.stringify(accounts));
+{ const d = new Date(), y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0'), t2 = new Date(Date.now() + 86400000), y2 = t2.getFullYear(), m2 = String(t2.getMonth() + 1).padStart(2, '0'), d2 = String(t2.getDate()).padStart(2, '0');
+  mk(path.join(DATA, 'jarvis', 'cal-cache.json'), JSON.stringify({ email: 'm.sharpe@traverse.example.test', at: now, out: { source: 'Traverse', events: [
+    { title: 'Peak meeting with Tyler', start: y + '-' + m + '-' + dd + 'T14:30:00-07:00', end: y + '-' + m + '-' + dd + 'T15:30:00-07:00', allDay: false, where: 'Peak Pickleball' },
+    { title: 'Nolan lunch', start: y2 + '-' + m2 + '-' + d2, end: y2 + '-' + m2 + '-' + d2, allDay: true, where: '' } ] } })); }
 const it = (acct, id, cat, subj, from, minsAgo, draft, prio = 'normal') => ({ acct, id, threadId: 't' + id, from, fromAddr: from.toLowerCase().replace(/\s+/g, '.') + '@client.test', subject: subj, date: now - minsAgo * 60, category: cat, priority: prio, summary: 'Summary of ' + subj, todo: 'Reply', draftId: draft, status: 'open', at: now - minsAgo * 60 });
 const ITEMS = [
   it('m.sharpe@traverse.example.test', 'm1', 'needs_reply', 'Can two of us share one login?', 'Dana Whitlock', 38, 'd1', 'high'),
@@ -223,7 +228,8 @@ try {
   ok(/Peak desk: 6 follow-ups due/.test(today) && /2 late/.test(today), 'Today: Peak desk follow-ups due and late (signed and future ones left out)');
   const builds = await ev('document.getElementById("p-builds").innerText');
   ok(/Roof material/.test(builds) && /68%/.test(builds) && /Yards v3 refresh/.test(builds) && /done/.test(builds) && /2 ACTIVE/i.test(await ev('document.querySelector("#p-builds .ph").innerText')), 'Builds: running ones with progress, finished one done');
-  ok(/not connected yet/i.test(await ev('document.getElementById("p-cal").innerText')) && !/Peak sponsor meeting/.test(await ev('document.getElementById("p-cal").innerText')) && /Connect Traverse calendar/.test(await ev('document.getElementById("p-cal").innerText')), 'Calendar: Traverse calendar only, with Connect; no invitations from the inboxes (18 Nov)');
+  { const cal = await ev('document.getElementById("p-cal").innerText');
+    ok(/Peak meeting with Tyler/.test(cal) && /2:30pm/.test(cal) && /TODAY/.test(cal) && /Nolan lunch/.test(cal) && /all day/i.test(cal) && !/Peak sponsor meeting/.test(cal) && !/not connected/i.test(cal), 'Calendar: events from the Traverse calendar by day, no invitations from the inboxes (18 Nov)'); }
   const team = await ev('document.getElementById("p-team").innerText');
   ok(/Deposit link says/.test(team) && /WORKING/i.test(team) && /NEEDS YOU/i.test(team) && !/Check the Peak expo list/.test(team) && !/Old one/.test(team), 'Team requests: open staff ones with their status (his own and closed ones tucked away)');
   ok(/Houston J\.A\.R\.V\.I\.S\.: sign in to its app once/.test(team), 'Team requests: Houston asks for its own sign-in (not shared)');
