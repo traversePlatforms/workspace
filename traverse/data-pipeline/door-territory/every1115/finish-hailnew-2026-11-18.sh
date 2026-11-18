@@ -128,9 +128,9 @@ console.log('merge pack: added doors with storms '+n+', storm entries '+e)" || s
 (cd "$S/merge" && tar czf - .) | $SG "rm -rf /tmp/hailnew && mkdir -p /tmp/hailnew && tar xzf - -C /tmp/hailnew && cd /tmp/hailnew && python3 merge-storms.py $LIVE /tmp/hailnew --dry" > "$S/merge-dry.txt" || { cat "$S/merge-dry.txt"; stop "merge-storms.py --dry failed"; }
 grep -vE '^  hail-' "$S/merge-dry.txt"; step "towns joined on the server: $(grep -cE '^  hail-' "$S/merge-dry.txt")"
 grep -q "dry run: nothing written" "$S/merge-dry.txt" || stop "merge dry run did not finish"
-$SG "cd /tmp/hailnew && python3 merge-storms.py $LIVE /tmp/hailnew" > "$S/merge.txt" || { cat "$S/merge.txt"; stop "merge-storms.py failed (server files untouched unless it printed 'backed up')"; }
-grep -E "backed up|merged|through" "$S/merge.txt"
-grep -q "merged; json ok" "$S/merge.txt" || stop "merge did not finish cleanly (see the backup it printed)"
+$SG "cd /tmp/hailnew && python3 merge-storms.py $LIVE /tmp/hailnew" > "$S/merge-out.txt" || { cat "$S/merge-out.txt"; stop "merge-storms.py failed (server files untouched unless it printed 'backed up')"; }
+grep -E "backed up|merged|through" "$S/merge-out.txt"
+grep -q "merged; json ok" "$S/merge-out.txt" || stop "merge did not finish cleanly (see the backup it printed)"
 
 ## 6. push to Roofing: hail only where the server has no file; hailrep and wind for the new and merged towns; the two statewide lists
 HAVE=$($SG "cd $LIVE && ls hail-*.json") || stop "could not list the server's hail files"
@@ -163,7 +163,11 @@ grep -qE "MD5 MATCH|: 0 files to send" "$S/push.txt" && grep -q "json ok" "$S/pu
 ## 7. live check on Roofing: a new town's door list shows hail / wind / ground reports
 T=$(node -e "const fs=require('fs');const keys=new Set(fs.readFileSync('$SN/keys.txt','utf8').split(/\s+/).filter(Boolean));let best=null;for(const l of fs.readFileSync('$SN/back/coverage.tsv','utf8').trim().split('\n').slice(1)){const [k,d,h]=l.split('\t');if(keys.has(k)&&+d>=50){const r=+h/+d;if(!best||r>best[1])best=[k,r]}}console.log(best?best[0]:'')")
 [ -n "$T" ] || stop "no new town with 50+ doors to check"
-OUT=$(awk -v t="$T" '$1~/^traverse$/{print $1,$2,t}' "$USERPROFILE/.ssh/claude-check-codes.txt" | $SG "$(cat ./elc2.sh)")
+# 18 Nov: right after the push the server rebuilds its towns answer and the first ask can come back empty: up to 3 tries a minute apart
+for try in 1 2 3; do
+  OUT=$(awk -v t="$T" '$1~/^traverse$/{print $1,$2,t}' "$USERPROFILE/.ssh/claude-check-codes.txt" | $SG "$(cat ./elc2.sh)" 2>&1)
+  echo "$OUT" | grep -qE " (hail|wind|hrep):[1-9]" && break; sleep 60
+done
 echo "$OUT" | grep -E "^traverse " | cut -c1-400
 echo "$OUT" | grep -qE " (hail|wind|hrep):[1-9]" || stop "live check: no hail, wind or ground report on the $T door list"
 
