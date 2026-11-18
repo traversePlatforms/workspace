@@ -6114,7 +6114,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       c.appendChild(sfb);
     }
     if (wdOn() && S.screen === 'pipeline' && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));
-    else if (wdOn() && S.screen === 'pipeline' && l.status === 'quoted' && !l.sign && !l.signed && (adminView() || asOffice())) c.appendChild(callTries(l));   /* quoted: calls, texts and the call-back day still get logged (2026-10-28; Recall since 2026-10-22) */
+    else if (wdOn() && S.screen === 'pipeline' && l.status === 'quoted' && (adminView() || asOffice())) c.appendChild(callTries(l));   /* quoted, form sent or not (18 Nov, Jen: record a text for someone whose form is out): calls, texts and the call-back day still get logged (2026-10-28; Recall since 2026-10-22) */
     else if (feat('walkdesk') && S.screen === 'calendar' && l.owner === S.me && ['new', 'contacted'].indexOf(l.status || 'new') >= 0) c.appendChild(callTries(l));   /* a rep calling the leads handed to them (2026-10-20) */   /* call tries (2026-10-14) */
     if (l.msg) c.appendChild(q('div', 'lmsg', l.msg));
     if (l.notes && l.notes.length) {
@@ -9379,7 +9379,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (l.status === 'won' && !l.signed && !l.confirmed) det.appendChild(q('div', 'qline qyes', 'Won without the form \u00b7 in Customers'));
         else if (l.sign) det.appendChild(signLine(l));
         else det.appendChild(q('div', 'qline', quoteState(l) + money0(l.quote.price) + ' \u00b7 no form sent'));
-        if (!cust && !l.sign && l.status === 'quoted') det.appendChild(callTries(l, function () { load(); }));   /* her calls and texts after the quote (2026-10-28) */
+        if (!cust && l.status === 'quoted') det.appendChild(callTries(l, function () { load(); }));   /* her calls and texts after the quote (2026-10-28) */
         if (l.job) {   /* the job and where its money stands (2026-10-19, Matthew: check before charging) */
           var jl = q('div', 'qline' + (l.job.owed < 1 ? ' qyes' : ''), 'Job ' + dayName(l.job.date) + ' \u00b7 ' + (l.job.price ? money0(l.job.price) + ' \u00b7 ' : '') + l.job.pay + ' \u00b7 ' + l.job.card + (l.job.done === 'done' ? ' \u00b7 done' : l.job.done ? ' \u00b7 not done' : ''));
           det.appendChild(jl);
