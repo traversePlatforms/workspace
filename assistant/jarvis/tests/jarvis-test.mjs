@@ -278,7 +278,9 @@ try {
   await until('!document.getElementById("app").classList.contains("s-think")', 6000);
   ok(reqs.filter(r => /action=chat\b/.test(r)).length === 1, 'one question, one Ask call');
   ok(/ASSISTANT · INSTANT/i.test(await ev('[...document.querySelectorAll(".msg.ai .who")].pop().textContent')) && /Anthropic key/.test(await ev('[...document.querySelectorAll(".msg.ai")].pop().textContent')), 'the answer is labelled Assistant, instant (here: no key, so it says so)');
+  const brainH0 = await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)');
   await click('#brainswitch');
+  ok(Math.abs(await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)') - brainH0) <= 2, 'switching to the desk does not move the screen (18 Nov: the bar grew 112 px)');
   ok(/Answering: J\.A\.R\.V\.I\.S\. desk, sent to your laptop, a few minutes/.test(await ev('document.getElementById("brainlabel").textContent')), 'switched: J.A.R.V.I.S. desk, sent to your laptop, a few minutes');
   reqs.length = 0;
   await ev('document.getElementById("ask").value="Check the Houston lot lines are live"'); await click('.cmdbar .snd');

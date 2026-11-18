@@ -126,11 +126,11 @@ button.li:hover .lt{color:#fff}
 .brain{display:flex;align-items:center;gap:10px;margin-bottom:8px;font:11px "JetBrains Mono",monospace;letter-spacing:.04em;color:var(--mut);min-width:0}
 .brain .bl{display:flex;align-items:center;gap:7px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .brain .bl i{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);flex:none}
-.brain.desk .bl i{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.brain.bdesk .bl i{background:var(--warn);box-shadow:0 0 8px var(--warn)}
 .brain .sw{margin-left:auto;color:var(--c);white-space:nowrap;flex:none;border:1px solid #3ee8ff33;border-radius:999px;padding:3px 10px}
 .brain .sw:hover{background:#3ee8ff10}
 .cmdbar{display:flex;align-items:center;gap:10px;border:1px solid #3ee8ff40;background:#04111bcc;border-radius:14px;padding:8px 8px 8px 16px;box-shadow:0 0 0 4px #3ee8ff08,0 0 40px #3ee8ff12}
-.brain.desk+.cmdbar{border-color:#ffb64855}
+.brain.bdesk+.cmdbar{border-color:#ffb64855}
 .cmdbar input{flex:1;min-width:0;font-size:14px;color:var(--ink);outline:none;padding:6px 0}
 .cmdbar input::placeholder{color:var(--mut)}
 .ib{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:var(--mut);flex:none}
@@ -586,7 +586,7 @@ button.li:hover .lt{color:#fff}
   }
   function paintBrain() {
     if (!brainBar) return;
-    brainBar.className = 'brain' + (S.brain === 'desk' ? ' desk' : ''); brainBar.textContent = '';
+    brainBar.className = 'brain' + (S.brain === 'desk' ? ' bdesk' : '');   /* not 'desk': that is the desktop layout's class (18 Nov: the bar grew 112 px) */ brainBar.textContent = '';
     var l = el('span', 'bl'); add(l, el('i'), 'Answering: ' + BRAINS[S.brain]); l.id = 'brainlabel';
     var lp = laptop();
     if (S.brain === 'desk' && !lp.on) l.appendChild(document.createTextNode(' (' + lp.text.toLowerCase() + ')'));
