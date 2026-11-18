@@ -133,9 +133,9 @@ $(tail -n 150 "$LF")"
   # "on it" note, then the full session as before. Any failure of the quick pass just falls through to the full session.
   if [ "$MM" = 1 ] && [ -z "$PICS" ] && [ -f "$REPO/traverse/ops/jarvis-quick-prompt.md" ] && [ "${JARVIS_QUICK:-1}" = 1 ]; then
     local Q QH QT QS; QS=$(date +%s)
-    Q=$(cd "$REPO" && timeout 90 "$CLAUDE" -p "$PROMPT" --model "${HELP_MODEL_QUICK:-sonnet}" --tools "Read,Grep,Glob" --permission-mode auto \
+    Q=$(cd "$REPO" && printf '%s' "$PROMPT" | timeout 90 "$CLAUDE" -p --model "${HELP_MODEL_QUICK:-sonnet}" --tools "Read,Grep,Glob" --permission-mode auto \
         --add-dir "/c/Users/Matthew sharpe/.claude/projects/c--Users-Matthew-sharpe-Desktop-claude-test-2/memory" \
-        --append-system-prompt "$(cat "$REPO/traverse/ops/jarvis-quick-prompt.md")" --output-format text 2>>"$ST/$ID.quick.err")
+        --append-system-prompt-file "$REPO/traverse/ops/jarvis-quick-prompt.md" --output-format text 2>>"$ST/$ID.quick.err")
     printf '%s\n' "$Q" > "$ST/$ID.quick"
     QH=$(printf '%s\n' "$Q" | sed -n '1{s/[^A-Z]//g;p}'); QT=$(printf '%s\n' "$Q" | sed '1d')
     if [ "$QH" = ANSWER ] && [ -n "$(printf '%s' "$QT" | tr -d '[:space:]')" ]; then
@@ -150,8 +150,10 @@ $(tail -n 150 "$LF")"
 (A quick 'on it' note has already been sent to him. Don't send another progress note unless this will take more than a few minutes.)"
     else log "$ID: quick pass gave no usable answer ($(( $(date +%s) - QS )) s): full session"; fi
   fi
-  local SS; SS=$(date +%s)
-  (cd "$REPO" && "$CLAUDE" -p "$PROMPT" --model "$M" --permission-mode auto --append-system-prompt "$SYS" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
+  # 18 Nov: the prompt goes in on stdin and the instructions from a file. On the command line they hit Windows' 32 KB limit once Jen's
+  # conversation (one thread since 5 Nov) grew long: "Argument list too long", exit 126, and every message bounced to Matthew in 4 s.
+  local SS; SS=$(date +%s); printf '%s' "$SYS" > "$ST/$ID.sys.md"
+  (cd "$REPO" && printf '%s' "$PROMPT" | "$CLAUDE" -p --model "$M" --permission-mode auto --append-system-prompt-file "$ST/$ID.sys.md" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
   # a final reply (answered or matthew) written since the session started; the last log line alone misread a follow-up that arrived after
   # the answer as "no reply" (review 11 Nov). The follow-up itself makes the conversation new again and is picked up next round.
   if ! final_since "$ID" "$SS"; then
@@ -176,9 +178,7 @@ one_practice() {
   local CONV; CONV=$(printf '%s' "$T" | AD="$ST/audio/$ID" node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const t=JSON.parse(s);const fs=require('fs'),vt=a=>{try{return /^a[0-9]{10}[0-9a-f]{6}[.][a-z0-9]+$/.test(a.n||'')?fs.readFileSync(process.env.AD+'/'+a.n+'.txt','utf8').trim():''}catch(e){return ''}};console.log(t.conversation.map(m=>m.from+' ('+m.when+'): '+m.text+((m.photos||[]).length?' [sent '+m.photos.length+' photo'+(m.photos.length>1?'s':'')+']':'')+(m.audio||[]).map(a=>{const x=vt(a);return x?' [voice note: '+x+']':' [sent a voice note]'}).join('')).join('\n\n'))}catch(e){}})")
   log "practice $ID: session started"
   mkdir -p "$PCWD"
-  OUT=$(cd "$PCWD" && "$CLAUDE" -p "The chat so far (answer the last message):
-
-$CONV" --tools "" --strict-mcp-config --setting-sources project --model sonnet --system-prompt "$(cat "$REPO/traverse/ops/help-practice-prompt.md")" --output-format text 2>>"$ST/p-$ID.out")
+  OUT=$(cd "$PCWD" && printf 'The chat so far (answer the last message):\n\n%s' "$CONV" | "$CLAUDE" -p --tools "" --strict-mcp-config --setting-sources project --model sonnet --system-prompt-file "$REPO/traverse/ops/help-practice-prompt.md" --output-format text 2>>"$ST/p-$ID.out")
   [ -n "$OUT" ] || OUT="My apologies, I seem to have lost my train of thought. Could you send that again?"
   printf '%s' "$OUT" > "$ST/p-$ID.reply"
   printf '%s' "$OUT" | $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-reply.php $ID answered --practice" >> "$LOG" 2>&1
@@ -223,8 +223,8 @@ Photos in this conversation, in your working folder (open each with Read):$PICS"
 
 Voice notes, turned into text:
 $AUD"
-  OUT=$(cd "$W" && timeout 600 "$CLAUDE" -p "$PR" --restricted --tools "Read" --strict-mcp-config --setting-sources project --permission-mode dontAsk \
-        --model "${HELP_MODEL_INSTALL:-sonnet}" --system-prompt "$(cat "$PF")" --output-format text 2>>"$ST/$HI-$ID.err")
+  OUT=$(cd "$W" && printf '%s' "$PR" | timeout 600 "$CLAUDE" -p --restricted --tools "Read" --strict-mcp-config --setting-sources project --permission-mode dontAsk \
+        --model "${HELP_MODEL_INSTALL:-sonnet}" --system-prompt-file "$PF" --output-format text 2>>"$ST/$HI-$ID.err")
   printf '%s' "$OUT" > "$ST/$HI-$ID.out"
   STL=$(printf '%s\n' "$OUT" | sed -n '1p' | tr -d '\r'); BODY=$(printf '%s\n' "$OUT" | sed '1d' | sed -e '/./,$!d')
   STS=answered; case "$STL" in *STATUS:*matthew*|*STATUS:*MATTHEW*) STS=matthew;; *STATUS:*) ;; *) BODY="$OUT";; esac
