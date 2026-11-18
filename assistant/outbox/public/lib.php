@@ -173,7 +173,8 @@ function obSixfold(): array {
     $dg = obLines(OB_SXD . '/digest.log'); $ds = []; $df = [];
     foreach ($dg as $r) { if (!empty($r['ok'])) $ds[] = (int) $r['at']; else $df[] = ['at' => (int) $r['at'], 'why' => obStageWords((string) ($r['stage'] ?? ''))]; }
     $items[] = obItem(['id' => 'morning', 'name' => 'Morning email', 'what' => 'Leads to call and walks for the day.', 'who' => 'Contact@SixfoldColorado.com (yours)',
-        'trigger' => 'Every day, the first hourly run after 6 am.', 'on' => true, 'state' => 'on', 'switch' => 'No switch: the hourly cron (sixfold-tools/morning-email.php) sends it. Marker: sixfold-data/digest/last-sent.txt.']
+        'trigger' => 'Every day, the first hourly run after 6 am.', 'on' => true, 'state' => 'on', 'switch' => 'No switch: the hourly cron (sixfold-tools/morning-email.php) sends it. Marker: sixfold-data/digest/last-sent.txt.',
+        'note' => 'A failed morning email is tried again every hour until it goes, so one bad day can count up to 18 failures.']
         + obCount($ds) + obFailCounts($df) + ['fails' => obFails($df)]);
     $eod = ['day' => [[], []], 'week' => [[], []]]; $tests = 0;
     foreach (obLines(OB_SXD . '/eod.log') as $r) {
