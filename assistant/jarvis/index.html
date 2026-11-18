@@ -704,7 +704,14 @@ button.li:hover .lt{color:#fff}
      default. Speaks only after Matthew has tapped or typed on the page (browsers refuse sound before that, and a reload never talks). */
   var SY = window.speechSynthesis || null, sayVoice = null, touched = false;
   S.speak = store('jarvis.speak') !== false;
-  ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () { if (touched || !SY) { touched = true; return; } touched = true; try { SY.speak(new SpeechSynthesisUtterance('')); } catch (e) {} }, true); });
+  /* 18 Nov (Matthew: "not sure if it works on mobile"): a phone only lets a page talk after a real tap, and a touch counts on the finger
+     lifting (touchend/click), not on pointerdown; iPhone Safari also ignores an empty line. So the unlock is a silent space, said on the
+     tap itself, tried on the first few taps until one actually plays (a scroll's touchend doesn't count). */
+  var unlocked = false, tries = 0;
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () {
+    touched = true; if (!SY || unlocked || ev === 'pointerdown' || tries >= 4) return; tries++;
+    try { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.onstart = u.onend = function () { unlocked = true; }; SY.speak(u); } catch (e) {}
+  }, true); });
   function pickVoice() {
     if (!SY) return null; var v = SY.getVoices() || []; if (!v.length) return null;
     var gb = v.filter(function (x) { return /^en[-_]GB/i.test(x.lang); }), en = v.filter(function (x) { return /^en/i.test(x.lang); });
@@ -720,7 +727,7 @@ button.li:hover .lt{color:#fff}
   }
   function say(t) {
     if (!S.speak || !SY || !touched) return; var s = speakable(t); if (!s) return;
-    try { SY.cancel(); var u = new SpeechSynthesisUtterance(s); sayVoice = sayVoice || pickVoice(); if (sayVoice) { u.voice = sayVoice; u.lang = sayVoice.lang; } else u.lang = 'en-GB'; u.rate = 1.02; u.pitch = 0.95; SY.speak(u); } catch (e) {}
+    try { if (SY.speaking || SY.pending) SY.cancel(); var u = new SpeechSynthesisUtterance(s); sayVoice = sayVoice || pickVoice(); if (sayVoice) { u.voice = sayVoice; u.lang = sayVoice.lang; } else u.lang = 'en-GB'; u.rate = 1.02; u.pitch = 0.95; SY.speak(u); } catch (e) {}
   }
   function hush() { if (SY) try { SY.cancel(); } catch (e) {} }
   function pushChat(n) { chatLog.appendChild(n); chatLog.scrollTop = chatLog.scrollHeight; return n; }

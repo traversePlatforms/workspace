@@ -169,7 +169,7 @@ try {
   /* ---- a staff member signed in to the Field app, and nothing else: the page asks for the Assistant's password, shows nothing of his */
   await C('sfr', 'staff');
   /* 18 Nov: a stand-in for the device voice, so read-aloud replies can be counted */
-  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__said=[];window.SpeechSynthesisUtterance=function(t){this.text=t};Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{speak:function(u){if(u.text)window.__said.push(u.text)},cancel:function(){},getVoices:function(){return[{name:"Daniel",lang:"en-GB"}]},addEventListener:function(){}}});' });
+  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__said=[];window.SpeechSynthesisUtterance=function(t){this.text=t};Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{speak:function(u){if(u.text&&u.text.trim())window.__said.push(u.text)},cancel:function(){},getVoices:function(){return[{name:"Daniel",lang:"en-GB"}]},addEventListener:function(){}}});' });
   await cdp('Page.navigate', { url: PAGE }); await sleep(1500);
   ok((await ev('window.__said.length')) === 0, 'Voice: loading the page never talks');
   await ev('document.dispatchEvent(new Event("pointerdown"))');   /* the person touching the page, which browsers need before sound */
