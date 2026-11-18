@@ -578,6 +578,20 @@ async function build(key) {
     write(path.join(E.data, 'rounds', outName), buf);
     copied++; bytes += buf.length;
   }
+  /* a market install's own lot lines (18 Nov 2026, Houston): the county outlines packed by metros/build-lot-files.mjs, for its own towns only,
+     into <data>/rounds/lots/ (rounds.php ownLot). Colorado editions have no market and get nothing here. */
+  if (E.marketGroup) {
+    const LD = path.join(METROS, 'out', 'lots'), lx = path.join(LD, 'index.json');
+    if (fs.existsSync(lx)) {
+      const ix = JSON.parse(fs.readFileSync(lx, 'utf8')), towns = {};
+      for (const r of allRegions) {
+        const n = !notHere.has(r.key) && ix.towns && ix.towns[r.key]; if (!n) continue;
+        towns[r.key] = n;
+        for (let i = 0; i < n; i++) { const b = fs.readFileSync(path.join(LD, `${r.key}-${i}.json.gz`)); write(path.join(E.data, 'rounds', 'lots', `${r.key}-${i}.json.gz`), b); copied++; bytes += b.length; }
+      }
+      if (Object.keys(towns).length) write(path.join(E.data, 'rounds', 'lots', 'index.json'), JSON.stringify(Object.assign({}, ix, { towns })));
+    }
+  }
   if (E.money) {
     const m = JSON.parse(JSON.stringify(money));
     m.links = { googleReview: '' };

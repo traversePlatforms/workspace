@@ -6,6 +6,7 @@
 #   bash traverse/ops/deploy-client.sh c-<slug> --first         once: also its settings, town list, sign-in codes and every door file
 #   bash traverse/ops/deploy-client.sh c-<slug> --data [regex]  changed data files only (push-edition.sh: never company.json, index.json
 #                                                               merged, not replaced), e.g. --data '^hou-' after the Houston lawn finisher
+#   bash traverse/ops/deploy-client.sh c-<slug> --lots          a market install's own lot lines (<id>-data/rounds/lots/, 18 Nov 2026)
 # Build first: (cd traverse/app && node ../editions/build-editions.cjs c-<slug>)   (a full build-editions run builds it too)
 # Sends ONLY that install's files: public_html/<folder>/, public_html/api/c-<slug>-*.php, and with --first/--data its <id>-data and
 # <id>-private beside public_html. Never Sixfold's, an edition's or a shared file. Backup of what it replaces (~/upload-backups/), files renamed
@@ -26,6 +27,29 @@ STAMP=$(date +%Y%m%d-%H%M%S)
 
 if [ "$MODE" = "--data" ]; then   # data only: the changed files, by push-edition.sh (backup, md5, index merge)
   bash "$R/data-pipeline/door-territory/push-edition.sh" "$ID-data" "$ONLY"; exit $?
+fi
+
+# ---- a market install's own lot lines (18 Nov 2026, Houston): <id>-data/rounds/lots/ from metros/build-lot-files.mjs + build-editions.
+#   bash traverse/ops/deploy-client.sh c-<slug> --lots
+# Backup of the old lots folder, then about 8 MB at a time (each tried 3 times, md5 of every placed file), index.json last so the server
+# never names a file that is not there yet; files the new build no longer has are removed after (they are in the backup).
+if [ "$MODE" = "--lots" ]; then
+  RD="$D/$ID-data/rounds"; [ -s "$RD/lots/index.json" ] || { echo "no lots in the build ($RD/lots): run metros/build-lot-files.mjs, then build-editions"; exit 1; }
+  ( cd "$RD" && { find lots -type f ! -name index.json | sort; echo lots/index.json; } > "$ST/lfiles.txt" )
+  echo "$ID lots: $(wc -l < "$ST/lfiles.txt") files, $(( $(cd "$RD" && cat $(cat "$ST/lfiles.txt") | wc -c) / 1048576 )) MB"
+  $SG "mkdir -p $SITE/$ID-data/rounds/lots && cd $SITE/$ID-data/rounds && if [ -n \"\$(ls lots)\" ]; then tar czf ~/upload-backups/before-lots-$ID-$STAMP.tgz lots && echo '  backed up'; else echo '  nothing to back up (new)'; fi" || { echo "backup FAILED"; exit 1; }
+  ( cd "$RD" && awk -v lim=8388608 'BEGIN{n=0;s=0} { cmd="stat -c %s \"" $0 "\""; cmd | getline sz; close(cmd); if (s > 0 && s + sz > lim) { n++; s=0 } s += sz; print > ("'"$ST"'/lchunk-" sprintf("%03d", n)) }' "$ST/lfiles.txt" )
+  for c in "$ST"/lchunk-*; do
+    ( cd "$RD" && while IFS= read -r f; do md5sum "$f"; done < "$c" | sed 's/ \*/  /' | sort -k2 > "$c.want" && tar cf "$c.tar" -T "$c" )
+    for i in 1 2 3; do
+      cat "$c.tar" | $SG "~/bin/safe-extract.sh $SITE/$ID-data/rounds -" | sed 's/ \*/  /' | sort -k2 > "$c.got"
+      diff -q "$c.want" "$c.got" > /dev/null && break
+      echo "  $(basename "$c") try $i did not match"; [ $i = 3 ] && { echo "lots upload FAILED at $(basename "$c")"; exit 1; }; sleep $((i * 30))
+    done
+  done
+  N=$(cat "$ST"/lchunk-*.got | wc -l); echo "  lots MD5 MATCH ($N)"
+  sed 's#^lots/##' "$ST/lfiles.txt" | base64 -w0 | $SG "cd $SITE/$ID-data/rounds/lots && base64 -d > /tmp/lk-$STAMP.txt && ls | grep -vxF -f /tmp/lk-$STAMP.txt | while read f; do rm -f -- \"\$f\"; echo \"  removed old \$f\"; done; rm -f /tmp/lk-$STAMP.txt; du -sh . | sed 's/^/  on the server: /'"
+  exit 0
 fi
 
 # ---- the code: page folder + its own API files

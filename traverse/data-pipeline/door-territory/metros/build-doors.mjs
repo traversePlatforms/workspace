@@ -14,6 +14,7 @@
 //     The lot lines go to metros/out/<town>-lots.json for the lawn measuring (metros/yard-metro.mjs).
 import { readFileSync, writeFileSync, mkdirSync, createReadStream } from 'node:fs'; import { join, dirname } from 'node:path'; import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
+import { areaCentre } from './lot-centre.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..');
 const [metro, townKey] = process.argv.slice(2);
 const M = JSON.parse(readFileSync(join(HERE, metro + '.json'), 'utf8'));
@@ -23,15 +24,8 @@ const clean = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
 const csvq = (s) => '"' + String(s ?? '').replace(/"/g, '""') + '"';
 const out = ['knock,address,city,zip,acres,owner,owner_mailing,why,parcel,lat,lon'];
 const extra = {}; let skipped = 0;
-/* lot size from the outline (equal-area on a local plane: fine for lots), centre = the outline's area-weighted middle */
-function areaCentre(rings, lat0) {
-  const k = Math.cos(lat0 * Math.PI / 180) * 111320, m = 110540; let A = 0, cx = 0, cy = 0;
-  for (const r of rings) for (let i = 0, n = r.length; i < n - 1; i++) {
-    const x1 = r[i][0] * k, y1 = r[i][1] * m, x2 = r[i + 1][0] * k, y2 = r[i + 1][1] * m, c = x1 * y2 - x2 * y1;
-    A += c; cx += (x1 + x2) * c; cy += (y1 + y2) * c;
-  }
-  if (!A) return null; return { sqm: Math.abs(A / 2), lon: cx / (3 * A) / k, lat: cy / (3 * A) / m };
-}
+/* lot size from the outline and the door's point in it: metros/lot-centre.mjs (18 Nov 2026: the old sum here, in whole metres from
+   the equator, put 24% of the Houston dots outside their own lot; metros/fix-points.mjs moved the built towns' points) */
 mkdirSync(join(HERE, 'out'), { recursive: true });
 
 if (S.type === 'file') {

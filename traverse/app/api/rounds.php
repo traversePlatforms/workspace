@@ -234,6 +234,9 @@ function market(): array {
     if (is_int($x['zoom'] ?? null) && $x['zoom'] >= 5 && $x['zoom'] <= 14) $m['zoom'] = $x['zoom'];
     $n = $x['naip'] ?? null;
     if (is_array($n) && preg_match('/^[a-z]{2}$/D', (string) ($n['state'] ?? '')) && preg_match('/^20\d\d$/D', (string) ($n['year'] ?? ''))) $m['naip'] = ['state' => $n['state'], 'year' => (string) $n['year']];
+    /* our own lot lines (18 Nov 2026, Houston): a market whose install carries the county outlines (<data>/lots/, metros/build-lot-files.mjs)
+       answers parcelat from them by door id. Never Colorado (its line comes from the state's parcel map); market.lots false turns it off. */
+    if ($m['key'] !== 'co' && ($x['lots'] ?? null) !== false && defined('DATA_DIR') && is_file(DATA_DIR . '/lots/index.json')) $m['lots'] = true;
     return $m;
 }
 /** the install's clock: Denver for Colorado, the market's zone elsewhere */
@@ -14372,8 +14375,39 @@ if ($action === 'goals') {
    parcel map (gis.colorado.gov) refuses some networks, phone hotspots among them, and then the cards had no line and no framing. Signed-in
    only, Colorado points only, one parcel per point, kept 90 days (a point with no parcel too). */
 const PARCEL_CO = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
+/* a market's own lot lines (18 Nov 2026, Houston: Texas has no working statewide parcel map). The line for one door, by its town and id, from
+   the county outlines packed with the install: <data>/lots/<town>-<n>.json.gz, n = crc32(id) % the town's file count in lots/index.json.
+   Corners in millionths of a degree, each ring [x0, y0, dx1, dy1, ...]; the closing corner is put back here. null = no line for that door,
+   and none either when the door's point (lon, lat) is not on or beside the lot (about 40 m): the same address in another town never draws. */
+function ownLot(string $key, string $id, float $lon, float $lat): ?array {
+    if (!preg_match('/^[a-z0-9-]{1,40}$/D', $key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id) || regionHidden($key) || (adminRegion($key) && ($GLOBALS['role'] ?? '') !== 'admin')) return null;
+    $ix = json_decode((string) @file_get_contents(DATA_DIR . '/lots/index.json'), true);
+    $n = (int) ($ix['towns'][$key] ?? 0); $q = (float) ($ix['q'] ?? 1e6);
+    if ($n < 1 || $q <= 0) return null;
+    $raw = @file_get_contents(DATA_DIR . '/lots/' . $key . '-' . (crc32($id) % $n) . '.json.gz');
+    $raw = $raw !== false ? @gzdecode($raw) : false;
+    $j = $raw !== false ? json_decode($raw, true) : null;
+    $e = is_array($j) ? ($j[$id] ?? null) : null;
+    if (!is_array($e)) return null;
+    $rings = [];
+    foreach ($e as $r) {
+        if (!is_array($r) || count($r) < 6 || count($r) % 2) continue;
+        $x = 0; $y = 0; $pts = [];
+        for ($i = 0, $c = count($r); $i < $c; $i += 2) { $x += (int) $r[$i]; $y += (int) $r[$i + 1]; $pts[] = [round($x / $q, 7), round($y / $q, 7)]; }
+        $pts[] = $pts[0];
+        $rings[] = $pts;
+    }
+    if (!$rings) return null;
+    $all = array_merge(...$rings); $xs = array_column($all, 0); $ys = array_column($all, 1); $pad = 0.0004;
+    if ($lon < min($xs) - $pad || $lon > max($xs) + $pad || $lat < min($ys) - $pad || $lat > max($ys) + $pad) return null;
+    return $rings;
+}
 if ($action === 'parcelat') {
-    if (market()['key'] !== 'co') fail('Not here.', 404);
+    if (market()['key'] !== 'co') {
+        if (empty(market()['lots'])) fail('Not here.', 404);
+        if (!throttleTake(rateFile('parcelat|' . $me), 900, 3600)) fail('Too many lookups for now. Try again in a few minutes.', 429);
+        out(['ok' => true, 'rings' => ownLot((string) ($_GET['region'] ?? ''), (string) ($_GET['id'] ?? ''), (float) ($_GET['lon'] ?? 0), (float) ($_GET['lat'] ?? 0)), 'own' => true]);
+    }
     $lon = (float) ($_GET['lon'] ?? 0); $lat = (float) ($_GET['lat'] ?? 0); $bx = market()['box'];
     if ($lat < $bx[0] || $lat > $bx[2] || $lon < $bx[1] || $lon > $bx[3]) fail('That point is outside the area.');
     $pk = sprintf('%.6f,%.6f', $lon, $lat); $pdir = DATA_DIR . '/parcel-cache'; if (!is_dir($pdir)) @mkdir($pdir, 0700, true);
