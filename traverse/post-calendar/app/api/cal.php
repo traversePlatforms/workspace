@@ -85,6 +85,8 @@ if ($action === 'slots') {
 }
 if ($action === 'requests') out(['ok' => true, 'requests' => array_values(array_filter(pcRequestsOpen(pcState(), (string) ($_GET['client'] ?? '')), fn($r) => inScope((string) $r['client'])))]);
 if ($action === 'pages') { needAdmin(); out(pcPagesView(pcState())); }   /* read-only call to Meta: which Pages and Instagram accounts the token sees */
+/* LinkedIn (2026-11-18): the connection as the page shows it, read from the server's own file; never calls LinkedIn, never a token */
+if ($action === 'listatus') { needAdmin(); $c = needClient(pcState(), (string) ($_GET['client'] ?? '')); if (!pcLiAllowed((string) $c['id'])) fail('LinkedIn is only set up for Surge.', 404); out(['ok' => true, 'li' => pcLiView($c)]); }
 
 if (!$isPost) fail('POST required', 405);
 $id = (string) ($body['id'] ?? '');
@@ -97,8 +99,8 @@ function applyFields(array &$p, array $b, array $S): ?string {
         if ($d === '' && $tm === '') $p['at'] = null;
         else { $at = pcAt($d, $tm); if ($at === null) return 'That date or time does not look right.'; $p['at'] = $at; }
     }
-    if (array_key_exists('targets', $b)) { $t = array_values(array_intersect(['fb', 'ig'], (array) $b['targets'])); $p['targets'] = $t; }
-    foreach (['fb' => 5000, 'ig' => PC_IG_MAX + 200, 'album' => 120, 'note' => 1000] as $k => $max) if (array_key_exists($k, $b)) $p[$k] = $k === 'album' ? pcClean($b[$k], $max) : pcText($b[$k], $max);
+    if (array_key_exists('targets', $b)) { $t = array_values(array_intersect(pcLiAllowed((string) $p['client']) ? ['fb', 'ig', 'li'] : ['fb', 'ig'], (array) $b['targets'])); $p['targets'] = $t; }   /* + LinkedIn for Surge (2026-11-18) */
+    foreach (['fb' => 5000, 'ig' => PC_IG_MAX + 200, 'li' => PC_LI_MAX + 500, 'li_comment' => PC_LI_COMMENT_MAX + 250, 'album' => 120, 'note' => 1000] as $k => $max) if (array_key_exists($k, $b)) $p[$k] = $k === 'album' ? pcClean($b[$k], $max) : pcText($b[$k], $max);
     if (array_key_exists('images', $b)) {   /* reorder, remove or caption the pictures already stored; new ones come through upload */
         $byKey = []; foreach ($p['images'] as $im) $byKey[$im['file'] !== '' ? $im['file'] : $im['url']] = $im;
         $new = [];
@@ -219,7 +221,7 @@ switch ($action) {
         $p = pcMutate(function (array &$S) use ($id, $ME) {
             $p = needPost($S, $id); if ($p['status'] !== 'failed') fail('Only a failed post goes back to draft this way.', 409);
             $p['status'] = 'draft'; $p['approval'] = null; $p['emailed'] = false; $p['errors'] = [];
-            pcLog($p, $ME, 'Back to draft after the failure' . ($p['done'] ? ' (already went: ' . implode(', ', array_map(fn($k) => $k === 'fb' ? 'Facebook' : 'Instagram', array_keys($p['done']))) . '; not sent again)' : ''));
+            pcLog($p, $ME, 'Back to draft after the failure' . ($p['done'] ? ' (already went: ' . implode(', ', array_map(fn($k) => pcPlace((string) $k), array_keys($p['done']))) . '; not sent again)' : ''));
             $S['posts'][$id] = $p; return pcPostView($S, $p);
         });
         out(['ok' => true, 'post' => $p]);
@@ -287,6 +289,21 @@ switch ($action) {
             return pcClientView($c);
         });
         out(['ok' => true, 'client' => $r]);
+    }
+    /* ---- LinkedIn (2026-11-18), Matthew only: start Connect, pick the Page, disconnect. The return from LinkedIn is api/linkedin-oauth.php. ---- */
+    case 'liconnect': {
+        needAdmin(); $c = needClient(pcState(), $id); if (!pcLiAllowed($id)) fail('LinkedIn is only set up for Surge.', 404);
+        $r = pcLiStart($id, $ME); if (isset($r['error'])) fail($r['error'], 409);
+        out(['ok' => true, 'url' => $r['url']]);
+    }
+    case 'lipick': {
+        needAdmin(); needClient(pcState(), $id); if (!pcLiAllowed($id)) fail('LinkedIn is only set up for Surge.', 404);
+        $r = pcLiPick($id, preg_replace('/\D/', '', (string) ($body['org'] ?? '')), $ME); if (isset($r['error'])) fail($r['error'], 409);
+        out(['ok' => true, 'li' => pcLiView(pcState()['clients'][$id])]);
+    }
+    case 'lidisconnect': {
+        needAdmin(); needClient(pcState(), $id); if (!pcLiAllowed($id)) fail('LinkedIn is only set up for Surge.', 404);
+        pcLiDisconnect($id, $ME); out(['ok' => true, 'li' => pcLiView(pcState()['clients'][$id])]);
     }
     case 'clientarchive': {
         needAdmin(); $on = !empty($body['archived']);

@@ -6,6 +6,7 @@
 import http from 'node:http';
 import { spawn, execFile, spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
+const fs_rm = (f) => { try { rmSync(f); } catch {} };
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname, basename } from 'node:path';
 import { deflateSync } from 'node:zlib';
@@ -76,6 +77,58 @@ const graph = http.createServer((req, res) => {
 });
 await new Promise((r) => graph.listen(0, '127.0.0.1', r)); const GPORT = graph.address().port;
 
+/* ---- the LinkedIn stand-in (2026-11-18): OAuth (www.linkedin.com/oauth/v2/), the versioned API (api.linkedin.com/rest/), v2/me, and
+   the image upload host. Records every call; liFail switches refusals on. Its error messages echo the token, to prove they are scrubbed. ---- */
+let licalls = [], liFail = {}, liSeq = 9000, liImg = 0; const liUp = {}; const LIVALID = new Set(['LI-AT-1', 'LI-AT-2']);
+const lisrv = http.createServer((req, res) => {
+  const parts = []; req.on('data', (d) => parts.push(d)); req.on('end', () => {
+    const raw = Buffer.concat(parts); const u = new URL(req.url, 'http://x'); const path = u.pathname.replace(/^\/+/, '');
+    const ct = String(req.headers['content-type'] || ''); let body = null; let q = Object.fromEntries(u.searchParams);
+    if (/json/.test(ct)) { try { body = JSON.parse(raw.toString('utf8')); } catch {} } else if (/x-www-form-urlencoded/.test(ct)) q = { ...q, ...Object.fromEntries(new URLSearchParams(raw.toString('utf8'))) };
+    licalls.push({ m: req.method, path, q, search: u.search, h: req.headers, body, raw });
+    const send = (code, o, hdr = {}) => { res.writeHead(code, { 'Content-Type': 'application/json', ...hdr }); res.end(o === null ? '' : JSON.stringify(o)); };
+    const tok = String(req.headers.authorization || '').replace(/^Bearer /, '');
+    let m;
+    if (path === 'oauth/authorization') { res.writeHead(200, { 'Content-Type': 'text/html' }); return res.end('<p>stand-in LinkedIn consent</p>'); }
+    if (path === 'oauth/accessToken') {
+      if (q.client_id !== 'LI-CLIENT' || q.client_secret !== 'LI-SECRET') return send(401, { error: 'invalid_client', error_description: 'bad client' });
+      if (q.grant_type === 'authorization_code') {
+        if (q.redirect_uri !== ORIGIN + '/' + PUB + '/api/linkedin-oauth.php') return send(400, { error: 'invalid_redirect_uri', error_description: 'redirect uri does not match' });
+        if (q.code === 'GOOD') return send(200, { access_token: 'LI-AT-1', expires_in: 5184000, refresh_token: 'LI-RT-1', refresh_token_expires_in: 31536000, scope: 'r_basicprofile,r_organization_social,rw_organization_admin,w_organization_social' });
+        if (q.code === 'NOPOST') return send(200, { access_token: 'LI-AT-X', expires_in: 5184000, scope: 'r_basicprofile' });
+        return send(400, { error: 'invalid_request', error_description: 'Unable to retrieve access token: authorization code not found' });
+      }
+      if (q.grant_type === 'refresh_token') {
+        if (liFail.refresh || q.refresh_token !== 'LI-RT-1') return send(400, { error: 'invalid_request', error_description: 'The provided authorization grant or refresh token is invalid, expired or revoked' });
+        return send(200, { access_token: 'LI-AT-2', expires_in: 5184000, refresh_token: 'LI-RT-1', refresh_token_expires_in: 26000000 });
+      }
+      return send(400, { error: 'invalid_request', error_description: 'A required parameter "grant_type" is missing' });
+    }
+    if ((m = /^li-up\/(\d+)$/.exec(path)) && req.method === 'PUT') { if (!LIVALID.has(tok)) return send(401, { message: 'upload refused' }); liUp['urn:li:image:IMG' + m[1]] = raw; return send(201, null); }
+    if (!LIVALID.has(tok)) return send(401, { message: 'Invalid access token ' + tok, status: 401, serviceErrorCode: 65600 });
+    if (path.startsWith('rest/') && (req.headers['linkedin-version'] !== '202611' || req.headers['x-restli-protocol-version'] !== '2.0.0')) return send(426, { message: 'version headers missing', status: 426 });
+    if (path === 'v2/me') return send(200, { id: 'abc', localizedFirstName: 'Matt', localizedLastName: 'Sharpe' });
+    if (path === 'rest/organizationAcls' && q.q === 'roleAssignee') return send(200, { elements: [{ organization: 'urn:li:organization:111', role: 'ADMINISTRATOR', state: 'APPROVED', roleAssignee: 'urn:li:person:abc' }, { organizationTarget: 'urn:li:organization:222', role: 'ANALYST', state: 'APPROVED', roleAssignee: 'urn:li:person:abc' }], paging: { count: 10, start: 0 } });
+    if ((m = /^rest\/organizations\/(\d+)$/.exec(path))) return send(200, { id: +m[1], localizedName: m[1] === '111' ? 'Surge Inc' : 'Other Co' });
+    if (path === 'rest/images' && q.action === 'initializeUpload' && req.method === 'POST') { const n = ++liImg; if (!body || body.initializeUploadRequest?.owner !== 'urn:li:organization:111') return send(403, { message: 'not the owner' }); return send(200, { value: { uploadUrl: LIBASE + 'li-up/' + n, image: 'urn:li:image:IMG' + n, uploadUrlExpiresAt: 1 } }); }
+    if ((m = /^rest\/images\/(.+)$/.exec(path)) && req.method === 'GET') { const urn = decodeURIComponent(m[1]); return send(200, { id: urn, status: liUp[urn] ? 'AVAILABLE' : 'WAITING_UPLOAD' }); }
+    if (path === 'rest/posts' && req.method === 'POST') {
+      if (liFail.post) return send(422, { message: 'post refused (token ' + tok + ')', status: 422 });
+      const b = body || {}; if (b.author !== 'urn:li:organization:111' || !b.distribution || b.lifecycleState !== 'PUBLISHED' || b.visibility !== 'PUBLIC') return send(400, { message: 'MISSING_FIELD', status: 400 });
+      const ids = b.content?.media ? [b.content.media.id] : (b.content?.multiImage?.images || []).map((x) => x.id);
+      if (ids.some((i) => !liUp[i])) return send(400, { message: 'image not uploaded', status: 400 });
+      return send(201, null, { 'x-restli-id': 'urn:li:share:' + ++liSeq });
+    }
+    if ((m = /^rest\/socialActions\/([^/]+)\/comments$/.exec(path)) && req.method === 'POST') { if (liFail.comment) return send(403, { message: 'comment refused (token ' + tok + ')', status: 403 }); const id = String(++liSeq); return send(201, { id, object: body && body.object }, { 'x-restli-id': id }); }
+    if (path === 'rest/organizationalEntityShareStatistics') {
+      const sh = (/shares=List\(([^)]*)\)/.exec(u.search) || [])[1] || ''; const urns = sh.split(',').filter(Boolean).map(decodeURIComponent);
+      return send(200, { elements: urns.filter((x) => x !== liFail.noStatsFor).map((x) => ({ organizationalEntity: 'urn:li:organization:111', share: x, totalShareStatistics: { likeCount: 7, commentCount: 2, shareCount: 1, impressionCount: 300, uniqueImpressionsCount: 250, clickCount: 9, engagement: 0.06 } })), paging: { count: 10, start: 0 } });
+    }
+    return send(404, { message: 'stand-in has no answer for ' + req.method + ' ' + path });
+  });
+});
+await new Promise((r) => lisrv.listen(0, '127.0.0.1', r)); const LIBASE = 'http://127.0.0.1:' + lisrv.address().port + '/';
+
 /* ---- the throwaway site ---- */
 const T = mkdtempSync(join(tmpdir(), 'pctest-')); const SITE = join(T, 'site'); const PUB = 'posts-test';
 mkdirSync(join(SITE, 'public_html', PUB, 'media'), { recursive: true });
@@ -87,7 +140,7 @@ writeFileSync(join(SITE, 'post-calendar-data', 'private', 'meta-token.json'), JS
 const MAIL = join(T, 'mail.jsonl');
 const port = 18000 + Math.floor(Math.random() * 2000);
 const ORIGIN = 'http://127.0.0.1:' + port;
-const env = { ...process.env, PC_SITE: SITE, PC_PUBLIC: PUB, PC_ORIGIN: ORIGIN, PC_GRAPH: 'http://127.0.0.1:' + GPORT + '/', PC_POLL_SLEEP: '0', TRAV_MAIL_MOCK: MAIL, PC_RUPLOAD: 'http://127.0.0.1:' + GPORT + '/rup/' };
+const env = { ...process.env, PC_SITE: SITE, PC_PUBLIC: PUB, PC_ORIGIN: ORIGIN, PC_GRAPH: 'http://127.0.0.1:' + GPORT + '/', PC_POLL_SLEEP: '0', TRAV_MAIL_MOCK: MAIL, PC_RUPLOAD: 'http://127.0.0.1:' + GPORT + '/rup/', PC_LI_API: LIBASE + 'rest/', PC_LI_OAUTH: LIBASE + 'oauth/' };
 const php = spawn('php', ['-d', 'upload_max_filesize=2M', '-d', 'post_max_size=8M', '-S', '127.0.0.1:' + port, '-t', join(SITE, 'public_html')], { env, stdio: 'ignore' });
 const runPhp = (args, extra = {}) => new Promise((r) => execFile('php', [join(SITE, 'post-calendar-tools', 'runner.php'), ...args], { env: { ...env, ...extra } }, (e, so, se) => r({ code: e ? e.code : 0, out: so, err: se })));
 const runner = (nowIso) => runPhp([], { PC_NOW: String(Math.floor(Date.parse(nowIso) / 1000)) });
@@ -108,7 +161,7 @@ function client(origin = ORIGIN) {
     j._status = r.status; j._headers = r.headers; return j;
   };
   const up = (id, buf, extra = {}) => { const fd = new FormData(); fd.append('id', id); for (const [k, v] of Object.entries(extra)) fd.append(k, String(v)); fd.append('file', new Blob([buf], { type: 'image/png' }), 'pic.png'); return call('upload', fd); };
-  return { call, up };
+  return { call, up, ck: () => cookie };
 }
 const A = client(), E = client(), X = client();
 const state = () => JSON.parse(readFileSync(join(SITE, 'post-calendar-data', 'state.json'), 'utf8'));
@@ -319,7 +372,7 @@ writeFileSync(join(MD, 'manifest.json'), JSON.stringify([
   { client: 'vaa', targets: ['fb'], image: 'c.png', fb_caption: 'unscheduled one' },
   { brand: 'sixfold', image: 'missing.png', fb_caption: 'bad' },
 ]));
-const tool = (args) => new Promise((res) => execFile('node', [join(ROOT, 'tools', 'pc.mjs'), ...args], { env: { ...process.env, PC_BASE: ORIGIN + '/' + PUB + '/api/cal.php', PC_CODE_FILE: join(T, 'editor-code.txt') } }, (e, so, se) => res({ code: e ? e.code : 0, out: so + se })));
+const tool = (args) => new Promise((res) => execFile('node', [join(ROOT, 'tools', 'pc.mjs'), ...args], { env: { ...process.env, PC_BASE: ORIGIN + '/' + PUB + '/api/cal.php', PC_CODE_FILE: join(T, 'editor-code.txt'), PC_LOADED: join(T, 'loaded.jsonl') } }, (e, so, se) => res({ code: e ? e.code : 0, out: so + se })));
 let t1 = await tool(['import', join(MD, 'manifest.json')]);
 ok(/4 loaded, 0 already there, 1 skipped/.test(t1.out), 'import: 4 loaded, the missing picture skipped');
 ok(!t1.out.includes(EDITOR), 'the tool never prints the code');
@@ -553,12 +606,195 @@ console.log('phone videos: converted or re-packed on the server (2026-11-16)');
   }
 }
 
+console.log('LinkedIn company-page posting and the Surge Facebook hold (2026-11-18)');
+{
+  const PRIV = join(SITE, 'post-calendar-data', 'private');
+  const sv = (dd) => dd.clients.find((c) => c.id === 'surge').li;
+  const NOW = Math.floor(Date.now() / 1000);
+  const iso = (t) => new Date(t * 1000).toISOString();
+  const mt = (t) => { const f = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Denver', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(t * 1000)); const g = (k) => f.find((x) => x.type === k).value; return { date: g('year') + '-' + g('month') + '-' + g('day'), time: g('hour') + ':' + g('minute') }; };
+  const TOK = /LI-AT-|LI-RT-|LI-SECRET/;
+  const mails = () => (existsSync(MAIL) ? readFileSync(MAIL, 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
+
+  /* before the app keys are on the server */
+  let d = await A.call('data', null, '&client=surge');
+  ok(sv(d).state === 'noapp' && d.clients.find((c) => c.id === 'sixfold').li === null, 'no app keys yet: Surge says so; Sixfold has no LinkedIn at all');
+  ok((await A.call('liconnect', { id: 'surge' }))._status === 409, 'Connect LinkedIn refused while the app keys are missing');
+  writeFileSync(join(PRIV, 'linkedin-app.json'), JSON.stringify({ client_id: 'LI-CLIENT', client_secret: 'LI-SECRET' }));
+  /* who may */
+  ok((await E.call('liconnect', { id: 'surge' }))._status === 403 && (await E.call('lipick', { id: 'surge', org: '111' }))._status === 403 && (await E.call('lidisconnect', { id: 'surge' }))._status === 403 && (await E.call('listatus', null, '&client=surge'))._status === 403, 'the editor can neither connect, pick, disconnect nor read the LinkedIn status');
+  ok((await A.call('liconnect', { id: 'sixfold' }))._status === 404, 'LinkedIn is Surge only: Sixfold refused');
+  r = await A.call('create', { client: 'sixfold', targets: ['fb', 'li'], fb: 'x', li: 'x' }); ok(r.ok && state().posts[r.id].targets.join() === 'fb', 'a Sixfold post cannot carry a LinkedIn target (dropped)');
+  licalls = []; d = await A.call('data', null, '&client=surge'); await A.call('listatus', null, '&client=surge'); await A.call('data');
+  ok(licalls.length === 0 && sv(d).state === 'none', 'reading the page and the status calls LinkedIn not at all (pressing nothing changes nothing)');
+
+  /* Connect: the address LinkedIn gets */
+  const start = async () => { const j = await A.call('liconnect', { id: 'surge' }); const u = new URL(j.url); return { j, u, st: u.searchParams.get('state') }; };
+  let s1 = await start(); let sc = s1.u.searchParams.get('scope').split(' ');
+  ok(s1.u.origin + s1.u.pathname === LIBASE + 'oauth/authorization' && s1.u.searchParams.get('response_type') === 'code' && s1.u.searchParams.get('client_id') === 'LI-CLIENT' && s1.u.searchParams.get('redirect_uri') === ORIGIN + '/' + PUB + '/api/linkedin-oauth.php' && /^[0-9a-f]{32}$/.test(s1.st), 'Connect: LinkedIn\'s authorization page with the app id, the registered return address and a fresh state');
+  ok(['w_organization_social', 'r_organization_social', 'rw_organization_admin', 'r_basicprofile'].every((x) => sc.includes(x)) && /scope=[a-z_]+%20/.test(s1.j.url), 'scopes: w_organization_social r_organization_social rw_organization_admin r_basicprofile, space-separated');
+  ok(!s1.j.url.includes('LI-SECRET'), 'the app secret is never in the address');
+  const cb = async (qs, cl = A) => { const rr = await fetch(ORIGIN + '/' + PUB + '/api/linkedin-oauth.php?' + qs, { headers: { Cookie: cl.ck() }, redirect: 'manual' }); return { status: rr.status, html: await rr.text(), h: rr.headers }; };
+  const tokenCalls = () => licalls.filter((x) => x.path === 'oauth/accessToken');
+  /* refused before approval (what LinkedIn does until the Development tier is approved) */
+  licalls = [];
+  r = await cb('error=unauthorized_scope_error&error_description=' + encodeURIComponent('Scope "w_organization_social" is not authorized for your application') + '&state=' + s1.st);
+  ok(r.html.includes('LinkedIn hasn&#039;t approved posting yet') && r.html.includes('w_organization_social') && licalls.length === 0, 'refused before approval: "LinkedIn hasn\'t approved posting yet" with LinkedIn\'s own words; nothing sent to LinkedIn');
+  ok(r.h.get('x-frame-options') === 'DENY' && r.h.get('referrer-policy') === 'no-referrer', 'the return page cannot be framed and leaks no address');
+  d = await A.call('data', null, '&client=surge'); ok(sv(d).state === 'refused' && /hasn't approved posting yet/.test(sv(d).last.text), 'the client setup shows the refusal');
+  r = await cb('code=GOOD&state=' + s1.st); ok(r.status === 400 && tokenCalls().length === 0, 'a state works once: used again, refused, no code swapped');
+  r = await cb('code=GOOD&state=' + 'ab'.repeat(16)); ok(r.status === 400 && tokenCalls().length === 0, 'a state this server never gave: refused');
+  s1 = await start(); r = await cb('error=unauthorized_scope_error&error_description=' + encodeURIComponent('Scope "r_basicprofile" is not authorized for your application') + '&state=' + s1.st);
+  ok(/Press Connect LinkedIn again/.test(r.html) && /an extra, not needed to post/.test(r.html), 'an optional scope refused: said plainly, Connect again');
+  s1 = await start(); sc = s1.u.searchParams.get('scope').split(' ');
+  ok(!sc.includes('r_basicprofile') && sc.includes('w_organization_social'), 'the next Connect leaves the refused extra out');
+  r = await cb('error=user_cancelled_authorize&error_description=x&state=' + s1.st); ok(/Nothing changed/.test(r.html) && /stopped at LinkedIn/.test(r.html), 'cancelled at LinkedIn: nothing changed');
+  fs_rm(join(PRIV, 'linkedin-surge.json'));   /* start clean again, extras asked for */
+  s1 = await start(); r = await cb('code=GOOD&state=' + s1.st, E); ok(r.status === 403 && tokenCalls().length === 0, 'the editor\'s cookie cannot finish a Connect (no code swapped)');
+  r = await cb('code=GOOD&state=' + s1.st, { ck: () => '' }); ok(r.status === 403 && tokenCalls().length === 0, 'no sign-in at all: refused');
+  s1 = await start(); r = await cb('code=NOPOST&state=' + s1.st);
+  ok(r.html.includes('LinkedIn hasn&#039;t approved posting yet') && sv(await A.call('data', null, '&client=surge')).state === 'refused', 'signed in but without permission to post: "hasn\'t approved posting yet", nothing kept');
+  /* success */
+  s1 = await start(); licalls = []; r = await cb('code=GOOD&state=' + s1.st);
+  ok(r.status === 200 && r.html.includes('LinkedIn connected') && r.html.includes('Connected as <b>Matt Sharpe</b>') && r.html.includes('Surge Inc') && /Other Co<small>Analyst \(cannot post for this Page\)/.test(r.html), 'connected: his name, his Pages listed; a Page he cannot post for is shown but not pickable');
+  const tc = tokenCalls()[0];
+  ok(tc && tc.q.grant_type === 'authorization_code' && tc.q.code === 'GOOD' && tc.q.client_secret === 'LI-SECRET' && tc.q.redirect_uri === ORIGIN + '/' + PUB + '/api/linkedin-oauth.php' && /x-www-form-urlencoded/.test(tc.h['content-type']), 'the code is swapped server to server with the app secret (form post)');
+  ok(licalls.filter((x) => x.path.startsWith('rest/')).length >= 3 && licalls.filter((x) => x.path.startsWith('rest/')).every((x) => x.h['linkedin-version'] === '202611' && x.h['x-restli-protocol-version'] === '2.0.0' && x.h.authorization === 'Bearer LI-AT-1'), 'versioned calls carry LinkedIn-Version 202611 and Rest.li 2.0.0');
+  ok(!TOK.test(r.html), 'no token or secret in the return page');
+  const rawConn = readFileSync(join(PRIV, 'linkedin-surge.json'), 'utf8');
+  ok(!/LI-AT-|LI-RT-/.test(rawConn) && /"sealed"/.test(rawConn) && existsSync(join(PRIV, 'linkedin.key')), 'access and refresh tokens kept sealed (encrypted) on the server');
+  d = await A.call('data', null, '&client=surge');
+  ok(sv(d).state === 'pick' && sv(d).member === 'Matt Sharpe' && sv(d).orgs.length === 2 && sv(d).refresh_exp > NOW + 300 * 86400 && !TOK.test(JSON.stringify(d)), 'the page: connected as Matt Sharpe, pick the Page, renewable for a year; no token in the data');
+  ok((await A.call('lipick', { id: 'surge', org: '222' }))._status === 409, 'a Page he cannot post for cannot be picked');
+  r = await A.call('lipick', { id: 'surge', org: '111' }); ok(r.ok && r.li.state === 'ok' && r.li.org_name === 'Surge Inc' && r.li.org_id === '111', 'Surge Inc picked: connected as Matt Sharpe, Surge Inc');
+
+  /* the Surge Facebook hold */
+  const T1 = Math.floor((NOW + 2 * 86400) / 60) * 60;
+  const HB = await mk('surge', { fb: 'approved before the hold', targets: ['fb'], ...mt(T1 + 7200) }); ok((await A.call('approve', { id: HB })).ok, 'a Surge Facebook post approved before the hold');
+  let hr = await runPhp(['hold', 'surge', 'fb,ig', 'Matthew 11 and 18 Nov: Surge Facebook on hold until he has access to the right Surge account']);
+  ok(hr.code === 0 && /1 approved post/.test(hr.out) && state().posts[HB].status === 'draft', 'hold surge fb,ig: on, and the approved Facebook post went back to draft');
+  d = await A.call('data', null, '&client=surge'); const sc0 = d.clients.find((c) => c.id === 'surge');
+  ok(sc0.holds.fb && /on hold until/.test(sc0.holds.fb.why) && sc0.holds.ig && !Object.keys(d.clients.find((c) => c.id === 'sixfold').holds).length, 'the page shows Surge\'s hold; Sixfold has none');
+  r = await A.call('approve', { id: HB }); ok(r._status === 409 && /Facebook is on hold for Surge/.test(r.error), 'a Surge Facebook post cannot be approved while the hold is on');
+  { const fp1 = d.posts.find((p) => p.id === HB).fingerprint; const raw = state(); raw.posts[HB].status = 'approved'; raw.posts[HB].approval = { by: 'behind the page', at: 1, hash: fp1 }; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(raw)); }
+  calls = []; licalls = []; await runner(iso(T1 + 7260));
+  ok(state().posts[HB].status === 'failed' && /Facebook: on hold for Surge/.test(state().posts[HB].error) && calls.length === 0, 'approved behind the page anyway: the runner sends nothing to Meta (not even a look-up) and marks it failed');
+  ok(mails().some((m) => /Surge post failed/.test(m.subject) && /on hold/.test(m.body)), 'and Matthew gets the failure email');
+  ok((await runPhp(['linkedin'])).out.includes('Facebook on hold: Matthew 11 and 18 Nov') && !TOK.test((await runPhp(['linkedin'])).out), 'runner linkedin: state and holds, no tokens');
+
+  /* a LinkedIn text post with a first comment */
+  const LTXT = 'Hiring a sales team (part 1) is its own job. #sales #hiring';
+  const L1 = (await E.call('create', { client: 'surge', targets: ['fb', 'li'], li: LTXT, li_comment: 'More: https://surgeftw.com/', ...mt(T1) })).id;
+  let p1 = (await A.call('data', null, '&client=surge')).posts.find((p) => p.id === L1);
+  ok(p1.targets.join() === 'fb,li' && p1.problems.some((x) => /Facebook is on hold/.test(x)), 'Facebook ticked on a Surge post: blocked by the hold');
+  r = await E.call('edit', { id: L1, targets: ['li'] }); ok(r.post.problems.length === 0, 'LinkedIn only, words alone: ready to approve');
+  r = await E.call('edit', { id: L1, li: 'See https://surgeftw.com now' }); ok(r.post.problems.some((x) => /Links go in the first comment/.test(x)), 'a link in the LinkedIn post: "links go in the first comment"');
+  r = await E.call('edit', { id: L1, li: 'x'.repeat(2990) + '((((((' }); ok(r.post.problems.some((x) => /over 3,000/.test(x)), 'over 3,000 characters once LinkedIn\'s escaping is counted');
+  r = await E.call('edit', { id: L1, li: LTXT, li_comment: 'y'.repeat(1251) }); ok(r.post.problems.some((x) => /first comment is over 1,250/.test(x)), 'a first comment over 1,250 characters');
+  r = await E.call('edit', { id: L1, li_comment: 'More: https://surgeftw.com/' }); ok(r.post.problems.length === 0, 'back to ready');
+  ok((await E.call('approve', { id: L1 }))._status === 403, 'the editor cannot approve a LinkedIn post either');
+  r = await A.call('approve', { id: L1, fingerprint: r.post.fingerprint }); ok(r.ok && r.post.status === 'approved', 'approved, one tap');
+  r = await E.call('edit', { id: L1, li_comment: 'More: https://surgeftw.com/about' }); ok(r.post.status === 'draft', 'changing the first comment drops the approval (it is in the fingerprint)');
+  r = await E.call('edit', { id: L1, li_comment: 'More: https://surgeftw.com/' }); r = await A.call('approve', { id: L1 }); ok(r.ok, 'approved again');
+  calls = []; licalls = []; await runner(iso(T1 - 60)); ok(!licalls.some((x) => x.path === 'rest/posts'), 'nothing sent before its time');
+  licalls = []; await runner(iso(T1 + 60));
+  let q1 = state().posts[L1]; const pc = licalls.find((x) => x.path === 'rest/posts'); const cc = licalls.find((x) => /^rest\/socialActions\//.test(x.path));
+  ok(q1.status === 'published' && /^urn:li:share:\d+$/.test(q1.done.li.id) && q1.done.li.link === 'https://www.linkedin.com/feed/update/' + q1.done.li.id + '/', 'published; the post\'s LinkedIn address recorded');
+  ok(pc && pc.body.author === 'urn:li:organization:111' && pc.body.commentary === 'Hiring a sales team \\(part 1\\) is its own job. #sales #hiring' && pc.body.visibility === 'PUBLIC' && pc.body.distribution.feedDistribution === 'MAIN_FEED' && pc.body.lifecycleState === 'PUBLISHED' && !pc.body.content, 'a text post as urn:li:organization:111; LinkedIn\'s reserved characters escaped, hashtags kept');
+  ok(cc && decodeURIComponent(cc.path) === 'rest/socialActions/' + q1.done.li.id + '/comments' && cc.body.actor === 'urn:li:organization:111' && cc.body.object === q1.done.li.id && cc.body.message.text === 'More: https://surgeftw.com/' && licalls.indexOf(cc) > licalls.indexOf(pc) && q1.done.lic, 'the first comment goes up as the Page, right after the post, with the link');
+  ok(calls.length === 0, 'a LinkedIn-only post never calls Meta');
+  licalls = []; await runner(iso(T1 + 400)); await runner(iso(T1 + 900)); ok(!licalls.some((x) => x.m === 'POST'), 'run again: nothing sent twice');
+  r = await A.call('edit', { id: L1, li: 'too late' }); ok(r._status === 409, 'a published LinkedIn post cannot be edited');
+
+  /* pictures: one (content.media) and a set (content.multiImage) */
+  const L2 = await mk('surge', { targets: ['li'], li: 'One picture.', ...mt(T1 + 3600) });
+  const L3 = await mk('surge', { type: 'photoset', targets: ['li'], li: 'Three pictures.', ...mt(T1 + 3900) }, 3);
+  ok((await A.call('approve', { id: L2 })).ok && (await A.call('approve', { id: L3 })).ok, 'a one-picture and a three-picture LinkedIn post approved');
+  licalls = []; await runner(iso(T1 + 3960));
+  const inits = licalls.filter((x) => x.path === 'rest/images' && x.q.action === 'initializeUpload'), puts = licalls.filter((x) => x.m === 'PUT');
+  const posts2 = licalls.filter((x) => x.path === 'rest/posts');
+  const q2 = state().posts[L2], q3 = state().posts[L3];
+  ok(q2.status === 'published' && q3.status === 'published' && inits.length === 4 && inits.every((x) => x.body.initializeUploadRequest.owner === 'urn:li:organization:111'), 'four pictures registered with the Images API, owned by the Page');
+  ok(puts.length === 4 && puts.every((x) => x.h.authorization === 'Bearer LI-AT-1') && puts[0].raw.equals(readFileSync(join(SITE, 'public_html', PUB, 'media', q2.images[0].file))), 'each picture\'s own bytes PUT to the upload address');
+  ok(licalls.filter((x) => x.m === 'GET' && x.path.startsWith('rest/images/')).length >= 4, 'each picture checked AVAILABLE before the post');
+  ok(posts2.length === 2 && posts2[0].body.content.media.id === 'urn:li:image:IMG' + (liImg - 3) && posts2[1].body.content.multiImage.images.map((x) => x.id).join() === ['IMG' + (liImg - 2), 'IMG' + (liImg - 1), 'IMG' + liImg].map((x) => 'urn:li:image:' + x).join(), 'one picture: content.media; a set: content.multiImage, in order');
+  ok(q3.done.li.pictures === 3, 'the set\'s picture count kept');
+
+  /* a refused post: failed, email, never retried by itself */
+  const L4 = (await E.call('create', { client: 'surge', targets: ['li'], li: 'Refused one.', li_comment: 'link here', ...mt(T1 + 5400) })).id; await A.call('approve', { id: L4 });
+  liFail = { post: true }; licalls = []; const m0 = mails().length; await runner(iso(T1 + 5460)); liFail = {};
+  let q4 = state().posts[L4];
+  ok(q4.status === 'failed' && /LinkedIn: the post was not made: LinkedIn said: post refused/.test(q4.error) && !q4.done.li && !licalls.some((x) => /socialActions/.test(x.path)), 'LinkedIn refuses the post: failed in LinkedIn\'s words, no comment tried');
+  ok(!TOK.test(q4.error) && q4.error.includes('[token]'), 'the token in LinkedIn\'s answer is scrubbed');
+  const fm = mails().slice(m0).filter((m) => /Surge post failed/.test(m.subject));
+  ok(fm.length === 1 && /Where: LinkedIn/.test(fm[0].body) && /First line: Refused one\./.test(fm[0].body) && !TOK.test(fm[0].body), 'one failure email to Matthew, LinkedIn named, no token');
+  licalls = []; await runner(iso(T1 + 5700)); ok(!licalls.some((x) => x.m === 'POST') && mails().length === m0 + 1, 'a failed LinkedIn post is not retried by itself, no second email');
+  /* the post goes, the comment is refused: Back to draft + Approve sends only the comment */
+  const L5 = (await E.call('create', { client: 'surge', targets: ['li'], li: 'Comment refused.', li_comment: 'Link: https://surgeftw.com/', ...mt(T1 + 7000) })).id; await A.call('approve', { id: L5 });
+  liFail = { comment: true }; licalls = []; await runner(iso(T1 + 7060)); liFail = {};
+  let q5 = state().posts[L5];
+  ok(q5.status === 'failed' && q5.done.li && !q5.done.lic && /the post went up \(https:\/\/www\.linkedin\.com\/feed\/update\/urn:li:share:\d+\/\) but the first comment was not added/.test(q5.error), 'the comment refused: failed, the post kept as gone, said plainly');
+  r = await A.call('todraft', { id: L5 }); ok(r.ok && /already went: LinkedIn/.test(state().posts[L5].log.slice(-1)[0].what), 'Back to draft: LinkedIn recorded as gone');
+  await A.call('edit', { id: L5, ...mt(T1 + 8000) }); ok((await A.call('approve', { id: L5 })).ok, 'approved again');
+  licalls = []; await runner(iso(T1 + 8060)); q5 = state().posts[L5];
+  ok(q5.status === 'published' && q5.done.lic && !licalls.some((x) => x.path === 'rest/posts') && licalls.filter((x) => /socialActions/.test(x.path)).length === 1, 'after re-approval only the comment went: the post was not made twice');
+
+  /* numbers: about 2 hours, 1 day, 3 days and 7 days after it went */
+  const L8 = (await E.call('create', { client: 'surge', targets: ['li'], li: 'Numbers post.', ...mt(T1 + 20000) })).id; await A.call('approve', { id: L8 });
+  liFail = { noStatsFor: state().posts[L2].done.li.id };
+  await runner(iso(T1 + 20060)); ok(state().posts[L8].status === 'published', 'a post for the numbers published');
+  { const l2 = state().posts[L2].li_stats; ok(l2 && l2.n === 1 && l2.likes === 0 && l2.impressions === 0 && l2.at, 'a post LinkedIn leaves out of the answer counts 0 (no actions yet)'); }
+  const went = state().posts[L8].done.li.at;
+  licalls = []; await runner(iso(went + 7200 - 120)); ok(!licalls.some((x) => x.path === 'rest/organizationalEntityShareStatistics'), 'no numbers read before 2 hours');
+  licalls = []; await runner(iso(went + 7260));
+  const stc = licalls.find((x) => x.path === 'rest/organizationalEntityShareStatistics');
+  ok(stc && /q=organizationalEntity&organizationalEntity=urn%3Ali%3Aorganization%3A111/.test(stc.search) && stc.search.includes(encodeURIComponent(state().posts[L8].done.li.id)) && stc.h['linkedin-version'] === '202611', 'Page analytics: organizationalEntityShareStatistics for the post, as the Page');
+  let st1 = state().posts[L8].li_stats;
+  ok(st1 && st1.n === 1 && st1.likes === 7 && st1.comments === 2 && st1.shares === 1 && st1.impressions === 300 && st1.clicks === 9 && st1.unique === 250 && st1.at === Math.floor(Date.parse(iso(went + 7260)) / 1000), 'likes, comments, shares, impressions and clicks stored on the post');
+  licalls = []; await runner(iso(went + 9000)); ok(!licalls.some((x) => x.path === 'rest/organizationalEntityShareStatistics'), 'not read again until a day after');
+  await runner(iso(went + 86460)); ok(state().posts[L8].li_stats.n === 2, 'read again a day after');
+  liFail = {};
+  { const pv = (await A.call('data', null, '&client=surge')).posts.find((p) => p.id === L8); ok(pv.li_stats.likes === 7 && !TOK.test(JSON.stringify(pv)), 'the numbers reach the page with the post'); }
+  await runner(iso(went + 4 * 86400)); await runner(iso(went + 8 * 86400)); await runner(iso(went + 9 * 86400));
+  ok(state().posts[L8].li_stats.n === 4, 'four reads in all, then it stops');
+
+  /* the sign-in renews itself with under 7 days left */
+  licalls = []; await runner(iso(NOW + 54 * 86400));
+  const rf = licalls.find((x) => x.path === 'oauth/accessToken');
+  ok(rf && rf.q.grant_type === 'refresh_token' && rf.q.refresh_token === 'LI-RT-1' && rf.q.client_secret === 'LI-SECRET', 'with under 7 days left the runner refreshes the access token by itself');
+  ok(!/LI-AT-|LI-RT-/.test(readFileSync(join(PRIV, 'linkedin-surge.json'), 'utf8')), 'the new token is sealed too');
+  const L6 = (await E.call('create', { client: 'surge', targets: ['li'], li: 'After the refresh.', ...mt(NOW + 54 * 86400 + 3600) })).id; await A.call('approve', { id: L6 });
+  licalls = []; await runner(iso(NOW + 54 * 86400 + 3660));
+  ok(state().posts[L6].status === 'published' && licalls.find((x) => x.path === 'rest/posts').h.authorization === 'Bearer LI-AT-2' && !licalls.some((x) => x.path === 'oauth/accessToken'), 'the next post uses the new token (no second refresh)');
+  /* a refused refresh: Needs reconnecting, one email */
+  liFail = { refresh: true }; const m1 = mails().length; licalls = [];
+  await runner(iso(NOW + 109 * 86400)); await runner(iso(NOW + 109 * 86400 + 300)); liFail = {};
+  d = await A.call('data', null, '&client=surge');
+  ok(sv(d).state === 'reconnect' && /refresh was refused/.test(sv(d).last.text), 'refresh refused: the page says "Needs reconnecting"');
+  const rm = mails().slice(m1).filter((m) => /LinkedIn needs reconnecting for Surge/.test(m.subject));
+  ok(rm.length === 1 && /Connect LinkedIn/.test(rm[0].body) && !TOK.test(rm[0].body), 'one email to Matthew to reconnect, no token');
+  const L7 = (await E.call('create', { client: 'surge', targets: ['li'], li: 'Needs a sign-in.', ...mt(T1 + 9000) })).id;
+  r = await A.call('approve', { id: L7 }); ok(r._status === 409 && /LinkedIn needs reconnecting/.test(r.error), 'a LinkedIn post cannot be approved until it is reconnected');
+
+  /* the laptop loader: a LinkedIn-only manifest item, words alone */
+  writeFileSync(join(MD, 'li.json'), JSON.stringify([{ brand: 'surge', targets: ['li'], ...mt(T1 + 30000), li_caption: 'Loaded for LinkedIn.', li_comment: 'Link: https://surgeftw.com/', note: 'from a manifest' }]));
+  t1 = await tool(['import', join(MD, 'li.json')]);
+  { const lp = Object.values(state().posts).find((p) => p.li === 'Loaded for LinkedIn.'); ok(/1 loaded/.test(t1.out) && lp && lp.targets.join() === 'li' && lp.li_comment === 'Link: https://surgeftw.com/' && lp.status === 'draft' && !lp.images.length, 'pc.mjs import: a LinkedIn-only item loads as a draft with its words and first comment'); }
+  t1 = await tool(['import', join(MD, 'li.json')]); ok(/0 loaded, 1 already there/.test(t1.out), 'imported again: nothing twice');
+  /* nothing secret anywhere */
+  const files = ['state.json', 'events.log', 'runner.log'].map((f) => existsSync(join(SITE, 'post-calendar-data', f)) ? readFileSync(join(SITE, 'post-calendar-data', f), 'utf8') : '');
+  ok(files.every((t) => !TOK.test(t)) && !TOK.test(readFileSync(MAIL, 'utf8')) && !TOK.test(JSON.stringify(await A.call('data', null, '&client=surge'))) && !TOK.test(JSON.stringify(await E.call('data', null, '&client=surge'))), 'no LinkedIn token or secret in the state, the logs, the emails or any page data');
+  /* disconnect */
+  r = await A.call('lidisconnect', { id: 'surge' }); ok(r.ok && r.li.state === 'none' && JSON.parse(readFileSync(join(PRIV, 'linkedin-surge.json'), 'utf8')).conn === null, 'Disconnect: the tokens are deleted from the server');
+  ok((await runPhp(['unhold', 'surge', 'fb,ig'])).code === 0 && !Object.keys(state().clients.surge.holds).length, 'unhold lifts it (Matthew\'s word only, from the server)');
+}
+
 console.log('check (read-only)');
 t1 = await runPhp(['check']);
 ok(/Sixfold 365 \(1418675127985724\) Instagram @365aeration -> sixfold/.test(t1.out) && /Surge Inc \(1323606360836132\) no Instagram -> surge/.test(t1.out) && !/PT-|PIPE-TOKEN/.test(t1.out), 'check lists the Pages, which client holds each, no tokens');
 calls = []; await runPhp(['check']); ok(calls.every((x) => x.m === 'GET'), 'check only reads');
 
-php.kill(); graph.close();
+php.kill(); graph.close(); lisrv.close();
 try { rmSync(T, { recursive: true, force: true }); } catch {}
 console.log(`\n${pass} passed, ${failN} failed`);
 if (failN) { console.log(fails.map((f) => ' - ' + f).join('\n')); process.exitCode = 1; }

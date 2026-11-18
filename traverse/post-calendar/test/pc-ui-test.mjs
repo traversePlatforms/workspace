@@ -3,6 +3,7 @@
  * (no runner here). Signs in, switches clients, opens a post, previews, approves, requests changes, and saves screenshots.
  *   node traverse/post-calendar/test/pc-ui-test.mjs [screenshot-folder] */
 import { spawn, execFile } from 'node:child_process';
+import http from 'node:http';
 import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
@@ -26,7 +27,21 @@ cpSync(join(ROOT, 'app', 'api'), join(SITE, 'public_html', PUB, 'api'), { recurs
 cpSync(join(ROOT, 'server'), join(SITE, 'post-calendar-tools'), { recursive: true });
 mkdirSync(join(SITE, 'post-calendar-data', 'private'), { recursive: true });
 const port = 20000 + Math.floor(Math.random() * 2000), ORIGIN = 'http://127.0.0.1:' + port;
-const env = { ...process.env, PC_SITE: SITE, PC_PUBLIC: PUB, PC_ORIGIN: ORIGIN, PC_GRAPH: 'http://127.0.0.1:9/' };
+/* a LinkedIn stand-in that counts every request (2026-11-18): opening pages must not reach it; only Connect does */
+const lihits = [];
+const lisrv = http.createServer((req, res) => { const parts = []; req.on('data', (d) => parts.push(d)); req.on('end', () => {
+  const u = new URL(req.url, 'http://x'), path = u.pathname.replace(/^\/+/, ''); lihits.push(req.method + ' ' + path);
+  const send = (o) => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
+  if (path === 'oauth/authorization') { res.writeHead(200, { 'Content-Type': 'text/html' }); return res.end('<p>stand-in LinkedIn consent</p>'); }
+  if (path === 'oauth/accessToken') return send({ access_token: 'LI-AT-UI', expires_in: 5184000, refresh_token: 'LI-RT-UI', refresh_token_expires_in: 31536000, scope: 'r_basicprofile,r_organization_social,rw_organization_admin,w_organization_social' });
+  if (path === 'v2/me') return send({ localizedFirstName: 'Matt', localizedLastName: 'Sharpe' });
+  if (path === 'rest/organizationAcls') return send({ elements: [{ organization: 'urn:li:organization:111', role: 'ADMINISTRATOR', state: 'APPROVED' }] });
+  if (path === 'rest/organizations/111') return send({ localizedName: 'Surge Inc' });
+  res.writeHead(404); res.end('{}');
+}); });
+await new Promise((r) => lisrv.listen(0, '127.0.0.1', r)); const LIBASE = 'http://127.0.0.1:' + lisrv.address().port + '/';
+writeFileSync(join(SITE, 'post-calendar-data', 'private', 'linkedin-app.json'), JSON.stringify({ client_id: 'LI-CLIENT', client_secret: 'LI-SECRET' }));
+const env = { ...process.env, PC_SITE: SITE, PC_PUBLIC: PUB, PC_ORIGIN: ORIGIN, PC_GRAPH: 'http://127.0.0.1:9/', PC_LI_API: LIBASE + 'rest/', PC_LI_OAUTH: LIBASE + 'oauth/' };
 const php = spawn('php', ['-S', '127.0.0.1:' + port, '-t', join(SITE, 'public_html')], { env, stdio: 'ignore' });
 const runPhp = (args) => new Promise((r) => execFile('php', [join(SITE, 'post-calendar-tools', 'runner.php'), ...args], { env }, (e, so) => r(so)));
 for (let i = 0; i < 50; i++) { try { await fetch(ORIGIN + '/'); break; } catch { await sleep(100); } }
@@ -43,6 +58,7 @@ const s2 = await call('create', { client: 'sixfold', type: 'photoset', album: 'S
 await up(s2.id, png(1080, 1350, [76, 122, 63])); await up(s2.id, png(1080, 1080, [228, 112, 58]));
 const g1 = await call('create', { client: 'surge', fb: 'Building a sales team is its own job.', targets: ['fb'], date: '2027-11-11', time: '15:00', note: "NEEDS MATTHEW'S REVIEW: loaded from a draft." });
 await up(g1.id, png(1080, 1350, [20, 20, 20]));
+await runPhp(['hold', 'surge', 'fb,ig', 'Matthew 18 Nov: Surge Facebook on hold']);   /* as it is live */
 
 /* ---- Chrome ---- */
 const prof = mkdtempSync(join(tmpdir(), 'pcui-chrome-')); const dport = 9600 + Math.floor(Math.random() * 300);
@@ -56,7 +72,7 @@ const js = async (e) => { const r = await send('Runtime.evaluate', { expression:
 const shot = async (name) => { if (!SHOTS) return; const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }); mkdirSync(SHOTS, { recursive: true }); writeFileSync(join(SHOTS, name + '.png'), Buffer.from(r.data, 'base64')); };
 const click = (sel) => js(`(function(){var e=${sel};if(!e)return false;e.click();return true})()`);
 const byText = (t) => `[].find.call(document.querySelectorAll('button'),function(b){return b.textContent.trim().indexOf(${JSON.stringify(t)})===0&&b.offsetParent!==null})`;
-await send('Runtime.enable'); await send('Page.enable');
+await send('Runtime.enable'); await send('Page.enable'); await send('Network.enable');
 await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
 await send('Page.navigate', { url: ORIGIN + '/' + PUB + '/' }); await sleep(1200);
 ok(await js(`!document.getElementById('signin').hidden`), 'opens on the sign-in');
@@ -144,6 +160,70 @@ await send('Page.navigate', { url: ORIGIN + '/' + PUB + '/' }); await sleep(1200
 ok(await js(`!!document.getElementById('toall') && document.querySelector('.band h1').textContent.indexOf('Surge')>=0`), 'reopened: lands on the remembered client (Surge)');
 await js(`history.back()`); await sleep(800);
 ok(await js(onList), 'reopened: Back reaches the client list');
+/* LinkedIn for Surge (2026-11-18): Connect in Surge's client setup for Matthew; the LinkedIn target and fields on Surge posts; the hold */
+{
+  const hits0 = lihits.length;
+  await click(`document.getElementById('pick')`); await sleep(200);
+  await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent==='Manage clients'})`); await sleep(500);
+  ok(await js(`[].some.call(document.querySelectorAll('.cl small'),function(x){return x.textContent==='LinkedIn: Not connected'}) && [].some.call(document.querySelectorAll('.cl small'),function(x){return x.textContent==='On hold: Facebook and Instagram'})`), 'Clients: Surge shows "LinkedIn: Not connected" and its hold');
+  await click(`document.querySelector('[data-ed="sixfold"]')`); await sleep(500);
+  ok(await js(`!document.getElementById('libox') && document.getElementById('sheet').textContent.indexOf('Connect LinkedIn')<0`), 'Sixfold\'s setup: no LinkedIn at all');
+  await click(`document.getElementById('fback')`); await sleep(400);
+  await click(`document.querySelector('[data-ed="surge"]')`); await sleep(600);
+  ok(await js(`!!document.getElementById('liconnect') && document.getElementById('liconnect').textContent==='Connect LinkedIn' && document.getElementById('lisum').textContent==='Not connected'`), 'Surge\'s setup (Matthew): "Connect LinkedIn", status "Not connected"');
+  ok(await js(`document.getElementById('sheet').textContent.indexOf('On hold: Facebook and Instagram')>=0`), 'Surge\'s setup shows the Facebook/Instagram hold');
+  await shot('14-surge-linkedin-setup');
+  ok(lihits.length === hits0, 'opening the calendar, the client list and Surge\'s setup sent nothing to LinkedIn');
+  /* Connect: a new tab at LinkedIn's authorization page */
+  { /* a real tap (a trusted mouse event), as on the phone: the new tab opens inside the tap, so no pop-up blocker */
+    await js(`document.getElementById('liconnect').scrollIntoView({block:'center'})`); await sleep(200);
+    const b = await js(`(function(){var r=document.getElementById('liconnect').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}})()`);
+    for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, x: b.x, y: b.y, button: 'left', clickCount: 1 });
+    await sleep(1500); }
+  ok(await js(`location.pathname`) === '/' + PUB + '/', 'the calendar stays where it was');
+  const tabs = await (await fetch('http://127.0.0.1:' + dport + '/json')).json();
+  const liTab = tabs.find((x) => x.type === 'page' && x.url.indexOf(LIBASE + 'oauth/authorization?') === 0);
+  ok(!!liTab && /client_id=LI-CLIENT/.test(liTab.url) && /redirect_uri=/.test(liTab.url) && /w_organization_social/.test(liTab.url) && lihits.slice(hits0).filter((x) => !/favicon/.test(x)).join() === 'GET oauth/authorization', 'Connect LinkedIn opens LinkedIn\'s authorization page in a new tab (the only LinkedIn request)');
+  /* LinkedIn's answer, as Matthew's browser would bring it back (his cookie), then pick the Page */
+  const st = liTab && new URL(liTab.url).searchParams.get('state');
+  const cookies = (await send('Network.getAllCookies')) || {}; const pc = (cookies.cookies || []).find((x) => x.name === 'postcal');
+  const back = await fetch(ORIGIN + '/' + PUB + '/api/linkedin-oauth.php?code=GOOD&state=' + st, { headers: { Cookie: 'postcal=' + (pc ? pc.value : '') } }); const bh = await back.text();
+  ok(back.status === 200 && /LinkedIn connected/.test(bh) && !/LI-AT-UI|LI-RT-UI|LI-SECRET/.test(bh), 'the return page: connected, no token');
+  await js(`window.dispatchEvent(new Event('focus'))`); await sleep(700);
+  ok(await js(`document.getElementById('lisum').textContent==='Connected as Matt Sharpe \\u00b7 pick the Page' && !!document.querySelector('[data-lio="111"]')`), 'back on the calendar: "Connected as Matt Sharpe · pick the Page", Surge Inc offered');
+  await click(`document.querySelector('[data-lio="111"]')`); await sleep(700);
+  ok(await js(`document.getElementById('lisum').textContent==='Connected as Matt Sharpe \\u00b7 Surge Inc' && document.getElementById('liconnect').textContent==='Connect LinkedIn again' && !!document.getElementById('lidisc')`), 'Surge Inc picked: "Connected as Matt Sharpe · Surge Inc"');
+  await shot('15-surge-linkedin-connected');
+  await js(`location.reload()`); await sleep(1500);
+  /* a Surge post: LinkedIn target, its words, first comment, preview; Facebook on hold */
+  await click(`document.getElementById('pick')`); await sleep(200);
+  await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent==='Surge'})`); await sleep(800);
+  ok(await js(`document.querySelector('.band .where').textContent.indexOf('LinkedIn: Surge Inc')>=0 && document.querySelector('.band .where').textContent.indexOf('(on hold)')>=0`), 'Surge lane: "LinkedIn: Surge Inc", Facebook on hold');
+  await click(`document.querySelector('.card')`); await sleep(500);
+  ok(await js(`!!document.querySelector('[data-t="li"]') && document.querySelector('[data-t="fb"]').textContent==='Facebook (on hold)' && document.getElementById('sheet').textContent.indexOf('Facebook is on hold for Surge')>=0`), 'Surge post: a LinkedIn button; Facebook marked on hold and listed as the reason it cannot be approved');
+  await click(`document.querySelector('[data-t="fb"]')`); await sleep(200);
+  await click(`document.querySelector('[data-t="li"]')`); await sleep(300);
+  ok(await js(`!!document.getElementById('fli') && !!document.getElementById('flic') && document.querySelector('[data-t="fb"]').disabled`), 'LinkedIn ticked: the LinkedIn post and first comment boxes appear; held Facebook can no longer be ticked');
+  await js(`(function(){var t=document.getElementById('fli');t.value='Building a sales team (part 1). See https://x.test';t.dispatchEvent(new Event('input',{bubbles:true}))})()`); await sleep(150);
+  ok(await js(`/^52 \\/ 3,000 \\(a link: move it to the first comment\\)$/.test(document.getElementById('lic').textContent)`), 'the count uses LinkedIn\'s escaping and flags a link');
+  await click(`document.getElementById('copyli')`); await sleep(150);
+  await js(`(function(){var t=document.getElementById('flic');t.value='More: https://surgeftw.com/';t.dispatchEvent(new Event('input',{bubbles:true}))})()`); await sleep(150);
+  await click(`document.querySelector('[data-pv="li"]')`); await sleep(200);
+  ok(await js(`document.getElementById('pv').textContent.indexOf('Surge Inc')>=0 && document.getElementById('pv').textContent.indexOf('Building a sales team is its own job.')>=0 && !!document.querySelector('#pv a[href="https://surgeftw.com/"]')`), 'LinkedIn preview: as Surge Inc, the words, the first comment with its link');
+  await js(`window.confirm=function(){return true}`); await click(`document.getElementById('save')`); await sleep(800);
+  ok(await js(`!!document.getElementById('approve') && document.getElementById('approve').nextElementSibling.textContent.indexOf('Goes to LinkedIn as shown')>=0`), 'saved: LinkedIn only, ready to approve ("Goes to LinkedIn")');
+  await shot('16-surge-linkedin-post');
+  await click(`document.getElementById('back')`); await sleep(600);
+  ok(lihits.filter((x) => x.indexOf('rest/posts') >= 0 || x.indexOf('images') >= 0).length === 0, 'nothing posted to LinkedIn from the page (only the runner posts)');
+  /* the editor: no client setup, so no Connect */
+  await click(`document.getElementById('pick')`); await sleep(200);
+  await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent==='Sign out'})`); await sleep(700);
+  await js(`document.getElementById('code').value=${JSON.stringify(EDITOR)};document.getElementById('sf').requestSubmit()`); await sleep(1200);
+  await click(`document.getElementById('pick')`); await sleep(200);
+  ok(await js(`[].every.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent!=='Manage clients'}) && document.body.innerText.indexOf('Connect LinkedIn')<0`), 'the editor\'s menu: no Manage clients, no Connect LinkedIn');
+  await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent==='Sign out'})`); await sleep(700);
+  await js(`document.getElementById('code').value=${JSON.stringify(ADMIN)};document.getElementById('sf').requestSubmit()`); await sleep(1200);
+}
 /* a Sixfold-only sign-in (2026-11-16): straight to Sixfold 365, no client switcher, no client setup, Approve, and its posting days */
 await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
 await click(`document.getElementById('pick')`); await sleep(200);
@@ -151,7 +231,7 @@ await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){
 ok(await js(`!document.getElementById('signin').hidden`), 'signed out');
 await js(`document.getElementById('code').value=${JSON.stringify(JEN)};document.getElementById('sf').requestSubmit()`); await sleep(1200);
 ok(await js(`!!document.querySelector('.band h1') && document.querySelector('.band h1').textContent.indexOf('Sixfold 365')>=0 && !document.getElementById('toall')`), 'client sign-in: opens on Sixfold 365 (remembered Surge ignored), no "All clients"');
-{ const t = await js(`document.body.textContent`); const i = t.indexOf('Surge'); ok(t.indexOf('Building a sales team') < 0 && i < 0, 'client sign-in: no Surge anywhere on the page' + (i >= 0 ? ' (found: ...' + t.slice(Math.max(0, i - 60), i + 40) + ')' : '')); }
+{ const t = await js(`document.body.textContent`); const i = t.indexOf('Surge'); ok(t.indexOf('Building a sales team') < 0 && i < 0, 'client sign-in: no Surge anywhere on the page' + (i >= 0 ? ' (found: ...' + t.slice(Math.max(0, i - 60), i + 40) + ')' : '')); ok((await js(`document.body.innerText`)).indexOf('LinkedIn') < 0, 'client sign-in: no LinkedIn anywhere on the page'); }
 await click(`document.getElementById('pick')`); await sleep(200);
 ok(await js(`(function(){var t=[].map.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent});return t.indexOf('Posting days')>=0 && t.indexOf('Manage clients')<0 && !t.some(function(x){return /All clients|Surge|Sixfold/.test(x)})})()`), 'menu: Posting days, no client list, no Manage clients');
 await shot('11-client-menu');
@@ -167,7 +247,7 @@ ok(await js(`document.body.textContent.indexOf('Only his sign-in')<0 && document
 ok(await js(`/\\.mov/.test(document.getElementById('file').accept) && document.body.textContent.indexOf('Phone videos: record in 1080p, under 90 seconds')>=0`), 'a single post takes a phone video (.mov too) and says how to record it');
 await shot('13-client-post');
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
-ws.close(); chrome.kill(); php.kill();
+ws.close(); chrome.kill(); php.kill(); lisrv.close();
 setTimeout(() => { try { rmSync(prof, { recursive: true, force: true }); rmSync(T, { recursive: true, force: true }); } catch {} }, 500);
 console.log(`${pass} passed, ${failN} failed`); if (failN) process.exitCode = 1;
 setTimeout(() => process.exit(), 800);

@@ -88,10 +88,13 @@ function pcLog(array &$p, string $by, string $what): void { $p['log'][] = ['at' 
 function pcFingerprint(array $p): string {
     $t = (array) ($p['targets'] ?? []); sort($t);
     $imgs = array_map(fn($i) => [(string) ($i['file'] ?? ''), (string) ($i['url'] ?? ''), (string) ($i['caption'] ?? '')], (array) ($p['images'] ?? []));
-    return hash('sha256', json_encode([(string) $p['client'], (int) ($p['at'] ?? 0), (string) ($p['type'] ?? 'single'), $t, (string) ($p['fb'] ?? ''), (string) ($p['ig'] ?? ''), (string) ($p['album'] ?? ''), $imgs], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    $a = [(string) $p['client'], (int) ($p['at'] ?? 0), (string) ($p['type'] ?? 'single'), $t, (string) ($p['fb'] ?? ''), (string) ($p['ig'] ?? ''), (string) ($p['album'] ?? ''), $imgs];
+    /* LinkedIn (2026-11-18): its words and first comment count too, added only when there are any, so every post made before keeps its fingerprint */
+    if (in_array('li', $t, true) || (string) ($p['li'] ?? '') !== '' || (string) ($p['li_comment'] ?? '') !== '') $a[] = ['li', (string) ($p['li'] ?? ''), (string) ($p['li_comment'] ?? '')];
+    return hash('sha256', json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 }
 function pcNewPost(string $client, array $f, string $by): array {
-    $p = ['id' => pcId('p'), 'client' => $client, 'type' => 'single', 'status' => 'draft', 'at' => null, 'targets' => ['fb', 'ig'], 'fb' => '', 'ig' => '', 'album' => '',
+    $p = ['id' => pcId('p'), 'client' => $client, 'type' => 'single', 'status' => 'draft', 'at' => null, 'targets' => ['fb', 'ig'], 'fb' => '', 'ig' => '', 'album' => '', 'li' => '', 'li_comment' => '',
           'images' => [], 'note' => '', 'src' => '', 'approval' => null, 'requests' => [], 'done' => [], 'errors' => [], 'error' => '', 'emailed' => false,
           'claimed' => 0, 'log' => [], 'created' => ['by' => $by, 'at' => pcNow()]];
     return array_merge($p, $f);
@@ -133,14 +136,16 @@ function pcProblems(array $S, array $p): array {
     if (!$c || !empty($c['archived'])) $why[] = 'This client is archived.';
     if (!$p['at']) $why[] = 'Pick a date and time.';
     elseif ((int) $p['at'] < pcNow() + 60) $why[] = 'The time has passed. Pick a time in the future.';
-    $t = (array) $p['targets']; if (!$t) $why[] = 'Pick Facebook, Instagram or both.';
+    $t = (array) $p['targets']; if (!$t) $why[] = $c && pcLiAllowed((string) $c['id']) ? 'Pick where it goes.' : 'Pick Facebook, Instagram or both.';
+    foreach (['fb', 'ig'] as $w) if (in_array($w, $t, true) && ($h = pcHeld($c, $w))) $why[] = pcPlace($w) . ' is on hold for ' . $c['name'] . ' (' . $h['why'] . '). Untick it.';
     $n = count((array) $p['images']); $vid = pcHasVideo($p);
+    $liOnly = $t === ['li'];   /* a LinkedIn-only post may be words alone (2026-11-18) */
     if ($p['type'] === 'photoset' && $vid) $why[] = 'A photo set takes pictures only. Make the video its own post.';
     if ($p['type'] === 'photoset') {
         if ($n < 2) $why[] = 'A photo set needs at least 2 pictures.';
         if ($n > 10 && in_array('ig', $t, true)) $why[] = 'An Instagram carousel takes at most 10 pictures.';
         /* no album name needed since 2026-11-16: Facebook gets a photo set as one post with several photos, not an album (see runner.php) */
-    } elseif ($n !== 1) $why[] = 'Add the picture.';
+    } elseif ($n !== 1 && !($liOnly && $n === 0)) $why[] = 'Add the picture.';
     if (in_array('fb', $t, true) && trim((string) $p['fb']) === '') $why[] = 'Write the Facebook caption.';
     if (in_array('ig', $t, true)) {
         if (trim((string) $p['ig']) === '') $why[] = 'Write the Instagram caption.';
@@ -150,6 +155,7 @@ function pcProblems(array $S, array $p): array {
         if ($c && ($c['ig_id'] ?? '') === '') $why[] = 'No Instagram account is assigned to ' . $c['name'] . ' yet (Clients).';
     }
     if ($c && in_array('fb', $t, true) && ($c['page_id'] ?? '') === '') $why[] = 'No Facebook Page is assigned to ' . $c['name'] . ' yet (Clients).';
+    foreach (pcLiProblems($S, $p, $c) as $w) $why[] = $w;
     if (pcOpenRequest($p)) $why[] = 'A change request is still open.';
     return $why;
 }
@@ -485,15 +491,24 @@ function pcPostView(array $S, array $p): array {
     $p['approvedNow'] = $p['status'] === 'approved' && ($p['approval']['hash'] ?? '') === pcFingerprint($p);
     return $p;
 }
-function pcClientView(array $c): array { $c['ownToken'] = ($c['conn'] ?? '') === 'own' && pcClientToken((string) $c['id']) !== ''; return $c; }
+function pcClientView(array $c): array { $c['ownToken'] = ($c['conn'] ?? '') === 'own' && pcClientToken((string) $c['id']) !== ''; $c['li'] = pcLiView($c); $c['holds'] = (object) ($c['holds'] ?? []); return $c; }
 function pcRequestsOpen(array $S, string $client = ''): array {
     $out = [];
     foreach ($S['posts'] as $p) {
         if ($p['status'] === 'removed' || ($client !== '' && $p['client'] !== $client)) continue;
         $r = pcOpenRequest($p); if (!$r) continue;
         $out[] = ['post' => $p['id'], 'client' => $p['client'], 'clientName' => $S['clients'][$p['client']]['name'] ?? $p['client'], 'request' => $r['id'], 'text' => $r['text'], 'by' => $r['by'], 'at' => $r['at'],
-                  'when' => $p['at'] ? pcWall((int) $p['at']) : null, 'type' => $p['type'], 'targets' => $p['targets'], 'fb' => $p['fb'], 'ig' => $p['ig'], 'album' => $p['album'],
+                  'when' => $p['at'] ? pcWall((int) $p['at']) : null, 'type' => $p['type'], 'targets' => $p['targets'], 'fb' => $p['fb'], 'ig' => $p['ig'], 'li' => $p['li'] ?? '', 'li_comment' => $p['li_comment'] ?? '', 'album' => $p['album'],
                   'images' => array_map(fn($i) => ['url' => $i['url'] ?? '', 'caption' => $i['caption'] ?? '', 'w' => $i['w'] ?? null, 'h' => $i['h'] ?? null], (array) $p['images']), 'note' => $p['note'], 'src' => $p['src']];
     }
     return $out;
 }
+
+/** the signed-in account behind this request's cookie, read the same way as api/cal.php (for pages beside it, such as linkedin-oauth.php) */
+function pcSessionMe(): ?array {
+    $ses = pcJread('sessions.json', []); $me = $ses[hash('sha256', (string) ($_COOKIE['postcal'] ?? ''))] ?? null; if (!$me) return null;
+    if (isset($me['acct'])) { $a = pcJread('accounts.json', ['codes' => []])['codes'][$me['acct']] ?? null; if (!$a) return null; $me = ['name' => (string) $a['name'], 'role' => (string) $a['role'], 'clients' => $a['clients'] ?? null]; }
+    return in_array((string) ($me['role'] ?? ''), PC_ROLES, true) ? $me : null;
+}
+
+require __DIR__ . '/linkedin.php';   /* LinkedIn company-page posting and the Facebook/Instagram hold (2026-11-18) */

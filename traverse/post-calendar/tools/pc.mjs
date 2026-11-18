@@ -12,7 +12,8 @@
  *   { "brand": "sixfold" | "surge" | <client id>, "type": "single" | "photoset" (default single),
  *     "date": "YYYY-MM-DD", "time": "15:00" (Mountain; leave both out for "not scheduled yet"), "targets": ["fb", "ig"],
  *     "image": "<path>"  (single; a .mp4 here makes it a video post: Facebook video + Instagram Reel)   or   "images": ["<path>", ...] or [{ "path": "<path>", "caption": "..." }]  (photoset, 2-10),
- *     "fb_caption": "...", "ig_caption": "...", "album": "Facebook album name (photoset)", "note": "shown on the draft only", "key": "optional id" }
+ *     "fb_caption": "...", "ig_caption": "...", "album": "Facebook album name (photoset)", "note": "shown on the draft only", "key": "optional id",
+ *     "li_caption": "...", "li_comment": "first comment, the place for links" (LinkedIn, Surge only; "targets": ["li"]; a LinkedIn-only post may have no image) }
  * Relative image paths are read from the manifest's folder. An item already loaded (same key, or same client, time, pictures and caption)
  * is skipped, so a manifest can be imported again after it grows. Env for tests: PC_BASE (the api address), PC_CODE_FILE. */
 import { readFileSync, existsSync, appendFileSync } from 'node:fs';
@@ -59,7 +60,7 @@ async function importManifest(file, dry, refresh = false) {
     const type = m.type === 'photoset' ? 'photoset' : 'single';
     const pics = (type === 'photoset' ? (m.images || []) : [m.image]).filter(Boolean).map((x) => (typeof x === 'string' ? { path: x } : x)).map((x) => ({ ...x, path: isAbsolute(x.path) ? x.path : join(dir, x.path) }));
     const missing = pics.filter((x) => !existsSync(x.path)).map((x) => x.path);
-    const src = m.key ? 'key:' + m.key : 'manifest:' + createHash('sha1').update([client, m.date || '', m.time || '', type, pics.map((x) => basename(x.path)).join(','), m.fb_caption || m.ig_caption || ''].join('|')).digest('hex').slice(0, 16);
+    const src = m.key ? 'key:' + m.key : 'manifest:' + createHash('sha1').update([client, m.date || '', m.time || '', type, pics.map((x) => basename(x.path)).join(','), m.fb_caption || m.ig_caption || m.li_caption || ''].join('|')).digest('hex').slice(0, 16);
     return { n: n + 1, m, client, type, pics, missing, src };
   });
   let made = 0, skipped = 0, bad = 0, refreshed = 0;
@@ -67,9 +68,9 @@ async function importManifest(file, dry, refresh = false) {
     const label = `#${it.n} ${it.client} ${it.m.date || 'unscheduled'} ${it.m.time || ''}`;
     if (!it.client) { console.log(label + ': no brand/client, skipped'); bad++; continue; }
     if (it.missing.length) { console.log(label + ': picture not found (' + it.missing.join(', ') + '), skipped'); bad++; continue; }
-    if (it.type === 'single' && it.pics.length !== 1) { console.log(label + ': a single post needs one image, skipped'); bad++; continue; }
+    if (it.type === 'single' && it.pics.length !== 1 && !(it.pics.length === 0 && JSON.stringify(it.m.targets || []) === '["li"]')) { console.log(label + ': a single post needs one image, skipped'); bad++; continue; }
     if (dry) { console.log(label + `: would load (${it.type}, ${it.pics.length} picture${it.pics.length === 1 ? '' : 's'}, ${(it.m.targets || []).join('+')})`); continue; }
-    const body = { client: it.client, type: it.type, targets: it.m.targets || ['fb', 'ig'], fb: it.m.fb_caption || '', ig: it.m.ig_caption || '', album: it.m.album || '', note: it.m.note || '', src: it.src };
+    const body = { client: it.client, type: it.type, targets: it.m.targets || ['fb', 'ig'], fb: it.m.fb_caption || '', ig: it.m.ig_caption || '', li: it.m.li_caption || '', li_comment: it.m.li_comment || '', album: it.m.album || '', note: it.m.note || '', src: it.src };
     if (it.m.date && it.m.time) { body.date = it.m.date; body.time = it.m.time; } else body.unscheduled = true;
     const j = await call('create', body);
     if (j.dup && refresh) {   /* already loaded: put up any picture whose bytes changed (same file name, new card) */
@@ -83,7 +84,7 @@ async function importManifest(file, dry, refresh = false) {
         await upload(j.dup, it.pics[i].path, p.images[i] ? { replace: i } : (it.pics[i].caption ? { caption: it.pics[i].caption } : {})); n++;
       }
       /* the words too, when the manifest's differ (the note is never posted; captions and album name as the manifest has them) */
-      const patch = {}; for (const [k, v] of [['fb', body.fb], ['ig', body.ig], ['album', body.album], ['note', body.note]]) if ((p[k] || '') !== (v || '')) patch[k] = v;
+      const patch = {}; for (const [k, v] of [['fb', body.fb], ['ig', body.ig], ['li', body.li], ['li_comment', body.li_comment], ['album', body.album], ['note', body.note]]) if ((p[k] || '') !== (v || '')) patch[k] = v;
       if (Object.keys(patch).length) { await call('edit', { id: j.dup, ...patch }); n++; }
       if (n) { console.log(label + `: refreshed on ${j.dup}` + (Object.keys(patch).length ? ' (' + Object.keys(patch).join(', ') + ' updated)' : '') + ' (still a draft)'); refreshed++; } else { console.log(label + ': already loaded, unchanged'); skipped++; }
       continue;
@@ -92,7 +93,7 @@ async function importManifest(file, dry, refresh = false) {
     for (const x of it.pics) await upload(j.id, x.path, { caption: x.caption || undefined, w: it.m.w, h: it.m.h, sec: it.m.sec });   /* w/h/sec: a video's size when the server can't read it */
     console.log(label + ': loaded as draft ' + j.id); made++;
     /* 16 Nov: what was handed over, so jen-learn.mjs can compare it with what the approver changed and approved */
-    appendFileSync(LOADED, JSON.stringify({ id: j.id, client: body.client || '', date: it.m.date || null, type: body.type, fb: body.fb || '', ig: body.ig || '', pics: it.pics.map((x) => basename(x.path)), note: body.note || '', loaded: new Date().toISOString() }) + '\n');
+    appendFileSync(LOADED, JSON.stringify({ id: j.id, client: body.client || '', date: it.m.date || null, type: body.type, fb: body.fb || '', ig: body.ig || '', li: body.li || '', pics: it.pics.map((x) => basename(x.path)), note: body.note || '', loaded: new Date().toISOString() }) + '\n');
   }
   console.log(`done: ${made} loaded, ${refresh ? refreshed + ' refreshed, ' : ''}${skipped} already there, ${bad} skipped with a problem. Nothing is approved; Matthew approves each post on the calendar.`);
 }
@@ -102,6 +103,8 @@ async function answer(id) {
   if (arg('--fb')) { body.fb = readFileSync(arg('--fb'), 'utf8').trim(); any = true; }
   if (arg('--ig')) { body.ig = readFileSync(arg('--ig'), 'utf8').trim(); any = true; }
   if (arg('--album')) { body.album = arg('--album'); any = true; }
+  if (arg('--li')) { body.li = readFileSync(arg('--li'), 'utf8').trim(); any = true; }   /* LinkedIn words and first comment (2026-11-18) */
+  if (arg('--li-comment')) { body.li_comment = readFileSync(arg('--li-comment'), 'utf8').trim(); any = true; }
   if (arg('--note')) { body.note = arg('--note'); any = true; }   /* what changed, shown on the post (16 Nov) */
   if (arg('--keep')) {   /* 16 Nov: keep these pictures, in this order (1-based, as the post shows them now): removes and reorders */
     const d = await call('data', null, '&client=' + encodeURIComponent(arg('--client') || 'sixfold')); const p = d.posts.find((q) => q.id === id); if (!p) throw new Error('no such post: ' + id);
@@ -114,7 +117,7 @@ async function answer(id) {
     for (let i = 0; i < imgs.length; i++) await upload(id, imgs[i], { replace: rep !== undefined ? Number(rep) + i : undefined, answer: !any && i === imgs.length - 1 ? 'true' : undefined });
   }
   if (any) await call('edit', body);
-  if (!any && !imgs.length) throw new Error('Give --image, --fb, --ig or --album.');
+  if (!any && !imgs.length) throw new Error('Give --image, --fb, --ig, --li, --li-comment or --album.');
   console.log('answered: ' + id + ' is back to draft for the approver to look at');
 }
 async function note(id) {   /* 16 Nov: a note on the post WITHOUT answering the request (e.g. why it could not be done) */

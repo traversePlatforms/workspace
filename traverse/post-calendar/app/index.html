@@ -157,7 +157,12 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   function weekLabel(k) { var d = new Date(k + 'T12:00:00Z'); return 'Week of ' + d.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }); }
   function cur() { return D.clients.filter(function (c) { return c.id === D.client; })[0] || null; }
   function clientCss(c) { document.documentElement.style.setProperty('--client', c ? c.color : '#13294b'); }
-  function tLabel(t) { return t === 'fb' ? 'Facebook' : 'Instagram'; }
+  function tLabel(t) { return { fb: 'Facebook', ig: 'Instagram', li: 'LinkedIn', lic: 'LinkedIn first comment' }[t] || t; }
+  /* LinkedIn (2026-11-18, one client only) and the Facebook/Instagram hold: c.li is the connection as the server shows it (null = no LinkedIn for
+     this client), c.holds the held platforms */
+  function held(c, t) { return !!(c && c.holds && c.holds[t]); }
+  /* LinkedIn's "little" text: the same escaping the server sends, so the count matches what LinkedIn counts */
+  function little(t) { return String(t || '').replace(/#(?=[\p{L}\p{N}])/gu, '\u0001').replace(/[\\|{}@\[\]()<>*_~#]/g, '\\$&').replace(/\u0001/g, '#'); }
   function statusOf(p) { return p.status === 'draft' && p.openRequest ? 'changes' : p.status; }
 
   /* ---- sign-in ---- */
@@ -249,13 +254,14 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     var th = im && isVid(im) ? '<div class="thumb" style="background:#111;color:#fff;display:grid;place-items:center;font-weight:700">&#9654; Video</div>'   /* + video (2026-11-05) */
       : '<div class="thumb"' + (im ? ' style="background-image:url(\'' + esc(im.url) + '\')"' : '') + '>' + (im ? '' : 'No picture') + (p.images.length > 1 ? '<b>' + p.images.length + '</b>' : '') + '</div>';
     var line = (p.fb || p.ig || '').split('\n')[0] || '(no caption yet)';
-    var tags = '<span class="pill s-' + st + '">' + esc(D.statuses[st] || st) + '</span>' + (p.type === 'photoset' ? '<span class="pill">Photo set</span>' : '') + p.targets.map(function (t) { return '<span class="pill">' + (t === 'fb' ? 'FB' : 'IG') + '</span>'; }).join('')
+    var tags = '<span class="pill s-' + st + '">' + esc(D.statuses[st] || st) + '</span>' + (p.type === 'photoset' ? '<span class="pill">Photo set</span>' : '') + p.targets.map(function (t) { return '<span class="pill">' + ({ fb: 'FB', ig: 'IG', li: 'LinkedIn' }[t] || t) + '</span>'; }).join('')
       + (/needs matthew/i.test(p.note || '') && st === 'draft' ? '<span class="pill s-publishing">Needs review</span>' : '');
     var by = p.approval && p.approval.by && ['approved', 'publishing', 'published', 'failed'].indexOf(st) >= 0 ? '<div class="line">Approved by ' + esc(p.approval.by) + '</div>' : '';   /* who approved (2026-11-16: two approvers now) */
     return '<button class="card" data-p="' + esc(p.id) + '">' + th + '<div><div class="when">' + esc(when(p.at)) + '</div><div class="tags">' + tags + '</div><div class="line">' + esc(line) + '</div>' + by + '</div></button>';
   }
   function renderClient(c) {
-    var where = (c.page_id ? 'Facebook: ' + esc(c.page_name || c.page_id) : 'No Facebook Page assigned') + ' &middot; ' + (c.ig_id ? 'Instagram: @' + esc(c.ig_user) : 'No Instagram assigned');
+    var where = (c.page_id ? 'Facebook: ' + esc(c.page_name || c.page_id) : 'No Facebook Page assigned') + (held(c, 'fb') ? ' (on hold)' : '') + ' &middot; ' + (c.ig_id ? 'Instagram: @' + esc(c.ig_user) : 'No Instagram assigned') + (c.ig_id && held(c, 'ig') ? ' (on hold)' : '')
+      + (c.li ? ' &middot; LinkedIn: ' + (c.li.state === 'ok' ? esc(c.li.org_name) : c.li.state === 'reconnect' ? 'needs reconnecting' : c.li.state === 'pick' ? 'pick the Page' : 'not connected') : '');
     var h = (home() ? '' : '<button class="backlink" id="toall">&#8249; All clients</button>') + '<section class="band"><h1><i class="dot" style="background:' + esc(c.color) + '"></i>' + esc(c.name) + (c.archived ? ' <span class="pill">archived</span>' : '') + '</h1><div class="where">' + where + '</div>'
       + (c.rules ? '<details class="rules"><summary>Rules for ' + esc(c.name) + '</summary><p>' + linkify(c.rules) + '</p></details>' : '')
       + (c.archived ? '' : '<div class="acts"><button class="btn small" id="newp">+ New post</button><button class="btn small ghost" id="news">+ New photo set</button>' + (scoped() ? '<button class="btn small ghost" id="days">Posting days</button>' : '') + '</div>') + '</section>';
@@ -293,8 +299,9 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   }
   function linkify(t) { return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
   function newPost(type, at) {
-    var b = { client: D.client, type: type, targets: type === 'photoset' ? ['fb', 'ig'] : ['fb', 'ig'] };
+    var b = { client: D.client, type: type, targets: ['fb', 'ig'] };
     var c = cur(); if (c && !c.ig_id) b.targets = ['fb'];
+    if (c) { b.targets = b.targets.filter(function (t) { return !held(c, t); }); if (c.li) b.targets.push('li'); if (!b.targets.length) b.targets = ['fb']; }
     if (at) { b.date = at.date; b.time = at.time; }
     api('create', b).then(function (j) { return load(D.client).then(function () { openPost(j.id || j.dup); }); }).catch(function (e) { toast(e.message); });
   }
@@ -327,7 +334,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     if (P.status === 'failed') h += '<div class="bad"><b>Did not go out.</b> ' + esc(P.error) + (admin ? '<div class="acts"><button class="btn small" id="todraft">Back to draft</button></div>' : '') + '</div>';
     if (P.approval && P.approval.by && ['publishing', 'published', 'failed'].indexOf(P.status) >= 0) h += '<p class="empty" style="margin:0 0 10px">Approved by ' + esc(P.approval.by) + ', ' + esc(when(P.approval.at)) + '.</p>';
     var done = Object.keys(P.done || {});
-    if (done.length) h += '<div class="box links"><h3>' + (P.status === 'published' ? 'Published' : 'Already went') + '</h3>' + done.map(function (k) { var d = P.done[k]; return '<a href="' + esc(d.link || '#') + '" target="_blank" rel="noopener">' + tLabel(k) + ': ' + esc(d.link || d.id) + '</a>'; }).join('') + '</div>';
+    if (done.length) h += '<div class="box links"><h3>' + (P.status === 'published' ? 'Published' : 'Already went') + '</h3>' + done.map(function (k) { var d = P.done[k]; return k === 'lic' ? '<p class="empty" style="margin:2px 0">LinkedIn first comment: added</p>' : '<a href="' + esc(d.link || '#') + '" target="_blank" rel="noopener">' + tLabel(k) + ': ' + esc(d.link || d.id) + '</a>'; }).join('') + liStats(P) + '</div>';
     if (P.status === 'draft' && !orq) {
       if (P.problems.length) h += '<div class="bad"><b>Before it can be approved:</b><ul>' + P.problems.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
       else if (admin) h += '<div class="box"><button class="btn flag wide" id="approve">Approve for ' + esc(when(P.at)) + '</button><p class="empty" style="margin-top:8px">Goes to ' + P.targets.map(tLabel).join(' and ') + ' as shown in the preview below. Nothing else is approved by this tap.</p></div>';
@@ -337,7 +344,9 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     var dis = ed ? '' : ' disabled';
     h += '<div class="box"><h3>Post</h3>';
     h += '<div class="seg" role="group" aria-label="Type"><button data-type="single" aria-pressed="' + (p.type === 'single') + '"' + dis + '>One picture or video</button><button data-type="photoset" aria-pressed="' + (p.type === 'photoset') + '"' + dis + '>Photo set (several pictures in one post)</button></div>';
-    h += '<label class="f">Where</label><div class="seg" role="group" aria-label="Where"><button data-t="fb" aria-pressed="' + (p.targets.indexOf('fb') >= 0) + '"' + dis + '>Facebook</button><button data-t="ig" aria-pressed="' + (p.targets.indexOf('ig') >= 0) + '"' + dis + '>Instagram' + (c.ig_id ? '' : ' (none assigned)') + '</button></div>';
+    var tb = function (t, label) { var on = p.targets.indexOf(t) >= 0, hd = held(c, t) && !on; return '<button data-t="' + t + '" aria-pressed="' + on + '"' + (dis || (hd ? ' disabled' : '')) + '>' + label + (held(c, t) ? ' (on hold)' : '') + '</button>'; };
+    h += '<label class="f">Where</label><div class="seg" role="group" aria-label="Where">' + tb('fb', 'Facebook') + tb('ig', 'Instagram' + (c.ig_id ? '' : ' (none assigned)')) + (c.li ? tb('li', 'LinkedIn') : '') + '</div>';
+    if (held(c, 'fb') || held(c, 'ig')) h += '<p class="empty">' + ['fb', 'ig'].filter(function (t) { return held(c, t); }).map(tLabel).join(' and ') + ' on hold for ' + esc(c.name) + ': ' + esc((c.holds.fb || c.holds.ig).why) + '</p>';
     var dv = p.at ? dstr(p.at) : '', tv = p.at ? tstr(p.at) : '';
     h += '<label class="f">When <small>(Mountain time)</small></label><div class="row2"><input type="date" id="fdate" value="' + dv + '"' + dis + ' aria-label="Date"><input type="time" id="ftime" value="' + tv + '"' + dis + ' aria-label="Time"></div>';
     if (ed) { var taken = {}; D.posts.forEach(function (q) { if (q.at && q.id !== P.id) taken[q.at] = 1; }); var qs = D.slots.filter(function (s) { return !taken[s.at] && (s.type === p.type); }).slice(0, 4); if (qs.length) h += '<div class="quick">' + qs.map(function (s) { return '<button data-q="' + s.at + '">' + esc(when(s.at).replace(/, \d{4}/, '')) + '</button>'; }).join('') + '</div>'; }
@@ -354,13 +363,17 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     /* no album name field since 2026-11-16: Facebook gets a photo set as one post with all the pictures (Meta refuses this app albums) */
     h += '<label class="f" for="ffb">Facebook caption' + (p.type === 'photoset' ? ' <small>(the post with all the pictures)</small>' : '') + '</label><textarea id="ffb"' + dis + '>' + esc(p.fb) + '</textarea>';
     h += '<label class="f" for="fig">Instagram caption</label><textarea id="fig"' + dis + '>' + esc(p.ig) + '</textarea><div class="count" id="igc"></div>' + (ed ? '<div class="quick"><button id="copyfb">Copy the Facebook caption</button></div>' : '');
+    if (c.li && (p.targets.indexOf('li') >= 0 || p.li || p.li_comment)) {   /* LinkedIn's words and the first comment (the voice rule: links go in the first comment) */
+      h += '<label class="f" for="fli">LinkedIn post <small>(as ' + esc(c.li.org_name || c.name) + '; no links here)</small></label><textarea id="fli"' + dis + '>' + esc(p.li || '') + '</textarea><div class="count" id="lic"></div>' + (ed ? '<div class="quick"><button id="copyli">Copy the Facebook caption</button></div>' : '');
+      h += '<label class="f" for="flic">LinkedIn first comment <small>(optional; posted as the Page right after the post: the place for links)</small></label><textarea id="flic" style="min-height:70px"' + dis + '>' + esc(p.li_comment || '') + '</textarea><div class="count" id="licc"></div>';
+    }
     h += '<label class="f" for="fnote">Note <small>(only here; never posted)</small></label><textarea id="fnote" style="min-height:60px"' + dis + '>' + esc(p.note) + '</textarea></div>';
     /* change request */
     if (admin && ['draft', 'approved', 'changes', 'failed'].indexOf(P.status) >= 0) h += '<div class="box"><h3>Request changes</h3><textarea id="rq" placeholder="What should change in the picture or the words?" style="min-height:80px"></textarea><div class="acts"><button class="btn small" id="rqgo">Send request</button></div><p class="empty">The post cannot be approved until the change comes back.</p></div>';
     var past = (P.requests || []).filter(function (r) { return r.answered; });
     if (past.length) h += '<div class="box"><h3>Earlier requests</h3><ul class="log">' + past.map(function (r) { return '<li>' + esc(r.text) + ' <small>(' + esc(r.by) + ', ' + esc(when(r.at)) + '; ' + (r.answered.how === 'closed' ? 'closed' : 'answered') + ' by ' + esc(r.answered.by) + ')</small></li>'; }).join('') + '</ul></div>';
     /* preview */
-    h += '<div class="box"><h3>Preview</h3><div class="seg" role="group" aria-label="Preview"><button data-pv="fb" aria-pressed="' + (pvWhich === 'fb') + '">Facebook</button><button data-pv="ig" aria-pressed="' + (pvWhich === 'ig') + '">Instagram</button></div><div style="margin-top:10px" id="pv"></div></div>';
+    h += '<div class="box"><h3>Preview</h3><div class="seg" role="group" aria-label="Preview"><button data-pv="fb" aria-pressed="' + (pvWhich === 'fb') + '">Facebook</button><button data-pv="ig" aria-pressed="' + (pvWhich === 'ig') + '">Instagram</button>' + (c.li ? '<button data-pv="li" aria-pressed="' + (pvWhich === 'li') + '">LinkedIn</button>' : '') + '</div><div style="margin-top:10px" id="pv"></div></div>';
     h += '<div class="box"><h3>Log</h3><ul class="log">' + (P.log || []).slice().reverse().slice(0, 20).map(function (l) { return '<li>' + esc(when(l.at)) + ', ' + esc(l.by) + ': ' + esc(l.what) + '</li>'; }).join('') + '</ul></div>';
     h += '</div><div class="savebar" id="savebar" hidden><button class="btn ghost" id="undo">Undo changes</button><button class="btn" id="save">Save' + (P.status === 'approved' ? ' (drops the approval)' : '') + '</button></div>';
     $('sheet').innerHTML = h; wire(); drawPreview(); igCount(); $('savebar').hidden = !dirty; if (dirty && $('approve')) $('approve').disabled = true;
@@ -370,12 +383,23 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   function readFields() {
     if (!canEdit(P)) return;
     var d = $('fdate').value, t = $('ftime').value;
-    W.fb = $('ffb').value; W.ig = $('fig').value; W.note = $('fnote').value; if ($('falbum')) W.album = $('falbum').value;
+    W.fb = $('ffb').value; W.ig = $('fig').value; W.note = $('fnote').value; if ($('fli')) W.li = $('fli').value; if ($('flic')) W.li_comment = $('flic').value; if ($('falbum')) W.album = $('falbum').value;
     W._date = d; W._time = t;
     if (d && t) { /* approximate for the preview only; the server works out the moment in Mountain time */ W._when = d + ' ' + t; }
     document.querySelectorAll('[data-cap]').forEach(function (el) { W.images[+el.getAttribute('data-cap')].caption = el.value; });
   }
-  function igCount() { var n = ($('fig') ? $('fig').value : W.ig).length; if ($('igc')) $('igc').textContent = n + ' / 2,200' + (n > 2200 ? ' (too long)' : ''); }
+  function igCount() {
+    var n = ($('fig') ? $('fig').value : W.ig).length; if ($('igc')) $('igc').textContent = n + ' / 2,200' + (n > 2200 ? ' (too long)' : '');
+    if ($('lic')) { var l = little($('fli').value).length; $('lic').textContent = l + ' / 3,000' + (l > 3000 ? ' (too long)' : '') + (/https?:\/\/|www\./i.test($('fli').value) ? ' (a link: move it to the first comment)' : ''); }
+    if ($('licc')) { var k = $('flic').value.length; $('licc').textContent = k + ' / 1,250' + (k > 1250 ? ' (too long)' : ''); }
+  }
+  /* a published LinkedIn post's numbers, read by the server about 2 hours, 1 day, 3 days and 7 days after it went */
+  function liStats(p) {
+    var s = p.li_stats; if (!p.done || !p.done.li) return '';
+    if (!s || (!s.at && !s.error)) return '<p class="empty" style="margin:6px 0 0">LinkedIn numbers: first read about 2 hours after it went.</p>';
+    var row = s.at ? [s.likes + ' likes', s.comments + ' comments', s.shares + ' shares', s.impressions + ' impressions', s.clicks + ' clicks'].join(' &middot; ') + ' <small>(as of ' + esc(when(s.at)) + ')</small>' : '';
+    return '<p style="margin:8px 0 0"><b>LinkedIn:</b> ' + row + (s.error ? '<br><small>Last read failed: ' + esc(s.error) + '</small>' : '') + '</p>';
+  }
   function wire() {
     var s = $('sheet');
     $('back').onclick = closeSheet;
@@ -389,6 +413,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     s.querySelectorAll('[data-rep]').forEach(function (b) { b.onclick = function () { pickFiles(+b.getAttribute('data-rep')); }; });
     if ($('addpic')) $('addpic').onclick = function () { pickFiles(null); };
     if ($('copyfb')) $('copyfb').onclick = function () { $('fig').value = $('ffb').value; readFields(); igCount(); mark(); };
+    if ($('copyli')) $('copyli').onclick = function () { $('fli').value = $('ffb').value; readFields(); igCount(); mark(); };
     if ($('save')) $('save').onclick = save;
     if ($('undo')) $('undo').onclick = function () { W = JSON.parse(JSON.stringify(P)); dirty = false; drawPost(); };
     if ($('approve')) $('approve').onclick = function () { act('approve', {}); };
@@ -399,7 +424,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   }
   function body() {
     readFields();
-    return { id: P.id, type: W.type, targets: W.targets, fb: W.fb, ig: W.ig, album: W.album, note: W.note, date: $('fdate').value, time: $('ftime').value,
+    return { id: P.id, type: W.type, targets: W.targets, fb: W.fb, ig: W.ig, li: W.li || '', li_comment: W.li_comment || '', album: W.album, note: W.note, date: $('fdate').value, time: $('ftime').value,
       images: W.images.map(function (im) { return { file: im.file || im.url, caption: im.caption || '' }; }) };
   }
   function save() {
@@ -487,6 +512,13 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   function drawPreview() {
     var el = $('pv'); if (!el || !W) return; var c = cur(), p = W, ims = p.images, at = W._date && W._time ? W._date + ' ' + W._time : (p.at ? when(p.at) : '');
     var ini = esc((c.name || '?').charAt(0));
+    if (pvWhich === 'li') {   /* close to LinkedIn's card, not a copy of it */
+      if (p.targets.indexOf('li') < 0) { el.innerHTML = '<p class="empty">Not going to LinkedIn.</p>'; return; }
+      var lg = ims.length > 1 ? '<div class="pvi g2">' + ims.slice(0, 4).map(function (im) { return '<img src="' + esc(im.url) + '" alt="">'; }).join('') + '</div>' : ims[0] && !isVid(ims[0]) ? '<div class="pvi"><img src="' + esc(ims[0].url) + '" alt=""></div>' : '';
+      el.innerHTML = '<div class="pv"><div class="pvh"><div class="pva" style="border-radius:4px">' + ini + '</div><div><b>' + esc((c.li && c.li.org_name) || c.name) + '</b><small>' + esc(at) + '</small></div></div><div class="pvt">' + clip(p.li, 210) + '</div>' + lg
+        + (p.li_comment ? '<div class="pvc" style="border-top:1px solid #dadde1;font-size:13px"><b>' + esc((c.li && c.li.org_name) || c.name) + '</b>' + linkify(p.li_comment) + '</div>' : '') + '</div>';
+      return;
+    }
     if (pvWhich === 'fb') {
       if (p.targets.indexOf('fb') < 0) { el.innerHTML = '<p class="empty">Not going to Facebook.</p>'; return; }
       var g = ims.length > 1 ? '<div class="pvi g2">' + ims.slice(0, 4).map(function (im) { return '<img src="' + esc(im.url) + '" alt="">'; }).join('') + '</div>' : ims[0] ? '<div class="pvi">' + (isVid(ims[0]) ? '<video src="' + esc(ims[0].url) + '" controls playsinline muted preload="metadata" style="display:block;width:100%;max-height:520px;background:#000"></video>' : '<img src="' + esc(ims[0].url) + '" alt="">') + '</div>' : '<p class="empty" style="padding:0 12px 12px">No picture yet</p>';
@@ -509,6 +541,8 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
       h += '<div class="cl" style="--client:' + esc(c.color) + '"><b>' + esc(c.name) + '</b>' + (c.archived ? ' <span class="pill">archived</span>' : '')
         + '<small>' + (c.page_id ? 'Facebook: ' + esc(c.page_name || c.page_id) : 'No Page') + ' &middot; ' + (c.ig_id ? 'Instagram @' + esc(c.ig_user) : 'no Instagram') + ' &middot; ' + (c.conn === 'own' ? 'own Page token' + (c.ownToken ? ' saved' : ' MISSING') : 'through Matthew\'s business') + '</small>'
         + '<small>' + (c.slots || []).map(function (s) { return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][s.d] + ' ' + s.t + (s.type === 'photoset' ? ' (photo set)' : ''); }).join(', ') + '</small>'
+        + (held(c, 'fb') || held(c, 'ig') ? '<small>On hold: ' + ['fb', 'ig'].filter(function (t) { return held(c, t); }).map(tLabel).join(' and ') + '</small>' : '')
+        + (c.li ? '<small>LinkedIn: ' + esc(liLine(c.li)) + '</small>' : '')
         + '<div class="acts"><button class="btn small ghost" data-ed="' + esc(c.id) + '">Edit</button><button class="btn small ghost" data-ar="' + esc(c.id) + '">' + (c.archived ? 'Restore' : 'Archive') + '</button></div></div>';
     });
     h += '<button class="btn wide" id="cadd">+ Add a client</button></div>';
@@ -534,12 +568,15 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
       + '<label class="radio"><input type="radio" name="conn" value="own"' + (c.conn === 'own' ? ' checked' : '') + '><span>With the client\'s own Page access token (kept on the server, never shown again)</span></label>'
       + '<div id="pipe"><label class="f" for="cp">Facebook Page</label><select id="cp"><option value="">Loading the Pages...</option></select><label class="f" for="ci">Instagram account</label><select id="ci"></select></div>'
       + '<div id="own" hidden><label class="f" for="ct">Page access token' + (c.ownToken ? ' <small>(one is saved; paste a new one to replace it)</small>' : '') + '</label><textarea id="ct" style="min-height:70px" autocomplete="off" spellcheck="false"></textarea><label class="radio"><input type="checkbox" id="cig"' + (c.ig_id ? ' checked' : '') + '><span>Also post to the Instagram account linked to that Page</span></label></div>'
+      + (held(c, 'fb') || held(c, 'ig') ? '<div class="req" style="margin-top:12px"><b>On hold: ' + ['fb', 'ig'].filter(function (t) { return held(c, t); }).map(tLabel).join(' and ') + '</b><p>' + esc((c.holds.fb || c.holds.ig).why) + '</p><small>Nothing goes there while it is on. It is lifted on the server, on Matthew\'s word.</small></div>' : '')
+      + (c.li && D.me.role === 'admin' ? '<div id="libox"></div>' : '')
       + '<label class="f">Default posting days and times <small>(Mountain)</small></label><div id="slots"></div><button class="btn small ghost" id="sadd">+ Add a slot</button>'
       + '<label class="f" for="cr">Rules for this client <small>(shown on every draft; a note or a link)</small></label><textarea id="cr">' + esc(c.rules || '') + '</textarea>'
       + '<div class="err" id="cerr"></div><button class="btn wide" id="csave" style="margin-top:8px">Save client</button></div></div>';
     $('sheet').innerHTML = h;
     $('fback').onclick = openClients;
     slotEditor(slots);
+    if ($('libox')) liBox(c);
     function connMode() { var own = document.querySelector('input[name=conn]:checked').value === 'own'; $('pipe').hidden = own; $('own').hidden = !own; }
     document.querySelectorAll('input[name=conn]').forEach(function (r) { r.onchange = connMode; }); connMode();
     var pages = [];
@@ -591,6 +628,40 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
         .catch(function (e) { $('cerr').textContent = e.message; $('dsave').disabled = false; });
     };
   }
+  /* ---- LinkedIn connection (2026-11-18), Matthew only. Reading it never calls LinkedIn; only the buttons do anything. ---- */
+  function liLine(v) {
+    if (!v) return '';
+    if (v.state === 'ok') return 'Connected as ' + (v.member || '?') + ' \u00b7 ' + v.org_name;
+    if (v.state === 'pick') return 'Connected as ' + (v.member || '?') + ' \u00b7 pick the Page';
+    if (v.state === 'reconnect') return 'Needs reconnecting';
+    if (v.state === 'refused') return 'LinkedIn hasn\'t approved posting yet';
+    if (v.state === 'noapp') return 'The app keys are not on the server yet';
+    return 'Not connected';
+  }
+  function dayY(ts) { return new Intl.DateTimeFormat('en-US', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(ts * 1000)); }
+  function liBox(c) {
+    var v = c.li, el = $('libox'); if (!el || !v) return;
+    var h = '<div class="box" style="margin-top:12px;border-left:6px solid #0a66c2"><h3>LinkedIn</h3><p style="margin:0 0 6px;font-weight:700" id="lisum">' + esc(liLine(v)) + '</p>';
+    if (v.state === 'ok' || v.state === 'pick') h += '<p class="empty" style="margin:0">Signed in ' + esc(when(v.at)) + (v.refresh_exp ? '; renews by itself until ' + esc(dayY(v.refresh_exp)) : '; sign-in lasts until ' + esc(dayY(v.access_exp)) + ', then Connect again') + '.</p>';
+    if (v.last && v.last.text && v.state !== 'ok') h += '<p class="' + (v.last.kind === 'refused' || v.last.kind === 'error' || v.last.kind === 'reconnect' ? 'bad' : 'empty') + '" style="margin:8px 0">' + esc(v.last.text) + ' <small>(' + esc(when(v.last.at)) + ')</small></p>';
+    if (v.state === 'pick' || (v.state === 'ok' && (v.orgs || []).length > 1)) h += '<label class="f">Post as</label>' + (v.orgs || []).map(function (o) { return '<button class="btn small ghost" style="display:block;width:100%;text-align:left;margin:0 0 6px" data-lio="' + esc(o.id) + '"' + (o.canPost ? '' : ' disabled') + '>' + esc(o.name) + (v.org_id === o.id ? ' (chosen)' : '') + (o.canPost ? '' : ' (cannot post for it)') + '</button>'; }).join('');
+    if (v.state !== 'noapp') h += '<div class="acts"><button class="btn small" id="liconnect">' + (v.state === 'ok' || v.state === 'pick' ? 'Connect LinkedIn again' : 'Connect LinkedIn') + '</button>' + (v.state === 'ok' || v.state === 'pick' || v.state === 'reconnect' ? '<button class="btn small ghost" id="lidisc">Disconnect</button>' : '') + '</div>'
+      + '<p class="empty">Opens LinkedIn in a new tab. Sign in there as an admin of the Page and allow it; LinkedIn sends you back here to pick the Page.</p>';
+    el.innerHTML = h + '<div class="err" id="lierr"></div></div>';
+    if ($('liconnect')) $('liconnect').onclick = function () {
+      var w = null; try { w = window.open('', '_blank'); } catch (e) {}   /* opened inside the tap, so no pop-up blocker */
+      api('liconnect', { id: c.id }).then(function (j) { if (w) { w.opener = null; w.location.href = j.url; } else { try { window.top.location.href = j.url; } catch (e) { location.href = j.url; } } })
+        .catch(function (e) { if (w) w.close(); $('lierr').textContent = e.message; });
+    };
+    if ($('lidisc')) $('lidisc').onclick = function () { if (!confirm('Disconnect LinkedIn for ' + c.name + '? Its approved LinkedIn posts go back to draft.')) return; api('lidisconnect', { id: c.id }).then(function (j) { c.li = j.li; liBox(c); }).catch(function (e) { $('lierr').textContent = e.message; }); };
+    el.querySelectorAll('[data-lio]').forEach(function (b) { b.onclick = function () { api('lipick', { id: c.id, org: b.getAttribute('data-lio') }).then(function (j) { c.li = j.li; liBox(c); toast('LinkedIn: posting as ' + j.li.org_name); }).catch(function (e) { $('lierr').textContent = e.message; }); }; });
+  }
+  /* back from the LinkedIn tab: read the connection again from the server (no call to LinkedIn) */
+  window.addEventListener('focus', function () {
+    var el = $('libox'); if (!el || $('sheet').hidden) return;
+    var c = D.clients.filter(function (x) { return x.li; })[0]; if (!c) return;
+    api('listatus', null, '&client=' + encodeURIComponent(c.id)).then(function (j) { c.li = j.li; if ($('libox')) liBox(c); }).catch(function () {});
+  });
   function nameOf(id) { var c = D.clients.filter(function (x) { return x.id === id; })[0]; return c ? c.name : id; }
 
   /* a picture full size (2026-11-03, Matthew): tap any picture in a post or its preview; it fills the screen, a second tap shows it at its

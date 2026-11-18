@@ -13,6 +13,10 @@ declare(strict_types=1);
  *   php runner.php removeaccount "Name" [role]   take a sign-in away and sign out its sessions
  *   php runner.php accounts              names, roles and client scopes (never codes)
  *   php runner.php migrate-queue <file>  bring the old social-queue.json posts in, approvals kept (see the end of this file)
+ *   php runner.php hold <client> fb,ig "why"     put Facebook and/or Instagram on hold for a client (2026-11-18): those can't be approved and
+ *                                        the runner never sends to them; approved posts that use them go back to draft
+ *   php runner.php unhold <client> fb,ig  lift it (only on Matthew's word)
+ *   php runner.php linkedin              read-only: each LinkedIn client's connection (state, Page, expiry; never tokens)
  *
  * Once each: a post is claimed ("publishing") under the state lock before any call to Meta, each platform is recorded the moment it goes,
  * a second runner cannot start while one is going (runner.lock), and a post that was published, or left half-way by a runner that died,
@@ -48,7 +52,7 @@ if ($cmd === 'show') {
     $S = pcState();
     foreach ($S['posts'] as $p) {
         if (isset($args[1]) && $p['client'] !== $args[1]) continue;
-        echo implode(' | ', [$p['id'], $p['client'], $p['status'], $p['at'] ? pcWall((int) $p['at']) : 'no time', $p['type'], implode('+', $p['targets']), count($p['images']) . ' pic', mb_substr(strtok((string) ($p['fb'] ?: $p['ig']), "\n") ?: '', 0, 40)]), "\n";
+        echo implode(' | ', [$p['id'], $p['client'], $p['status'], $p['at'] ? pcWall((int) $p['at']) : 'no time', $p['type'], implode('+', $p['targets']), count($p['images']) . ' pic', mb_substr(strtok((string) ($p['fb'] ?: ($p['ig'] ?: ($p['li'] ?? ''))), "\n") ?: '', 0, 40)]), "\n";
     }
     exit(0);
 }
@@ -67,6 +71,24 @@ if ($cmd === 'check') {
     exit(0);
 }
 if ($cmd === 'migrate-queue') exit(pcMigrateQueue((string) ($args[1] ?? '')));
+if ($cmd === 'hold' || $cmd === 'unhold') {
+    $cid = (string) ($args[1] ?? ''); $tg = array_values(array_intersect(['fb', 'ig'], explode(',', (string) ($args[2] ?? '')))); $why = trim((string) ($args[3] ?? ''));
+    if ($cid === '' || !$tg || ($cmd === 'hold' && $why === '')) { fwrite(STDERR, "usage: php runner.php hold <client> fb,ig \"why\"  |  unhold <client> fb,ig\n"); exit(1); }
+    $n = pcSetHold($cid, $tg, $cmd === 'hold' ? $why : null, $cmd === 'hold' ? 'server (hold)' : 'server (unhold)');
+    if ($n < 0) { fwrite(STDERR, "no such client\n"); exit(1); }
+    echo ($cmd === 'hold' ? 'on hold: ' : 'hold lifted: '), $cid, ' ', implode(',', $tg), $cmd === 'hold' ? " ($n approved post(s) back to draft)" : '', "\n"; exit(0);
+}
+if ($cmd === 'linkedin') {   /* what the page shows, never tokens */
+    $S = pcState(); echo 'LinkedIn app keys on the server: ', pcLiApp() ? 'yes' : 'no', "\n";
+    foreach (PC_LI_CLIENTS as $cid) {
+        $c = $S['clients'][$cid] ?? null; if (!$c) continue; $v = pcLiView($c);
+        echo '  ', $c['name'], ': ', $v['state'], ($v['org_name'] !== '' ? ', Page ' . $v['org_name'] . ' (' . $v['org_id'] . ')' : ''),
+            isset($v['member']) ? ', as ' . $v['member'] . ', sign-in to ' . pcWall((int) $v['access_exp'], 'j M Y') . ($v['refresh_exp'] ? ', renewable to ' . pcWall((int) $v['refresh_exp'], 'j M Y') : ', not renewable') : '',
+            $v['last'] ? '; last: ' . $v['last']['text'] : '', "\n";
+        foreach ((array) ($c['holds'] ?? []) as $k => $h) echo '    ', pcPlace((string) $k), ' on hold: ', $h['why'], "\n";
+    }
+    exit(0);
+}
 if ($cmd !== '') { fwrite(STDERR, "unknown command\n"); exit(1); }
 
 /* ---- the run ---- */
@@ -102,11 +124,26 @@ foreach ($mailNow as $id) pcFailMail($id);
 $live = null;
 foreach ($claimed as $id) {
     $S = pcState(); $p = $S['posts'][$id]; $c = $S['clients'][$p['client']];
-    if ($live === null && ($c['conn'] ?? 'pipeline') === 'pipeline') $live = pcPipelinePages();
-    $tg = pcTarget($c, ($c['conn'] ?? 'pipeline') === 'pipeline' ? $live : null);
+    $tg = null;   /* Meta is asked only when a Facebook or Instagram part is really going (2026-11-18: a LinkedIn-only or held post never calls it) */
     $errors = [];
-    foreach (['fb', 'ig'] as $where) {
-        if (!in_array($where, (array) $p['targets'], true) || !empty($p['done'][$where])) continue;
+    $record = function (string $key, array $d) use ($id, $say, $p) {
+        pcMutate(function (array &$S) use ($id, $key, $d) { $q = &$S['posts'][$id]; $q['done'][$key] = $d + ['at' => pcNow()]; pcLog($q, 'runner', pcPlace($key) . ' posted: ' . ($d['link'] ?? $d['id'])); });
+        $say("$id {$p['client']} $key posted " . ($d['link'] ?? $d['id']));
+    };
+    foreach (['fb', 'ig', 'li'] as $where) {
+        if (!in_array($where, (array) $p['targets'], true)) continue;
+        if ($where === 'li') {   /* LinkedIn: the post once, then the first comment once (see linkedin.php) */
+            if (!empty($p['done']['li']) && (trim((string) ($p['li_comment'] ?? '')) === '' || !empty($p['done']['lic']))) continue;
+            $r = pcSendLinkedIn($p, $c, $record);
+            if (!empty($r['error'])) { $errors['li'] = $r['error']; $say("$id {$p['client']} li FAILED " . $r['error']); }
+            continue;
+        }
+        if (!empty($p['done'][$where])) continue;
+        if ($h = pcHeld($c, $where)) { $errors[$where] = 'on hold for ' . $c['name'] . ' (' . $h['why'] . '), so nothing was sent there'; $say("$id {$p['client']} $where HELD, not sent"); continue; }
+        if ($tg === null) {
+            if ($live === null && ($c['conn'] ?? 'pipeline') === 'pipeline') $live = pcPipelinePages();
+            $tg = pcTarget($c, ($c['conn'] ?? 'pipeline') === 'pipeline' ? $live : null);
+        }
         if (isset($tg['error'])) { $errors[$where] = $tg['error']; continue; }
         if ($where === 'ig' && $tg['ig'] === '') { $errors['ig'] = $tg['igWhy']; continue; }
         $r = $where === 'fb' ? pcSendFacebook($p, $tg) : pcSendInstagram($p, $tg);
@@ -120,11 +157,12 @@ foreach ($claimed as $id) {
         $q = &$S['posts'][$id]; $q['errors'] = $errors;
         if (!$errors) { $q['status'] = 'published'; $q['error'] = ''; pcLog($q, 'runner', 'Published'); return false; }
         $q['status'] = 'failed';
-        $q['error'] = implode(' ', array_map(fn($k, $v) => ($k === 'fb' ? 'Facebook' : 'Instagram') . ': ' . $v . '.', array_keys($errors), $errors));
+        $q['error'] = implode(' ', array_map(fn($k, $v) => pcPlace($k) . ': ' . $v . '.', array_keys($errors), $errors));
         pcLog($q, 'runner', 'Failed: ' . $q['error']); return true;
     });
     if ($failed) pcFailMail($id);
 }
+pcLiChores($say);   /* LinkedIn: keep the sign-in fresh, say once when it cannot be, read the numbers of recent posts (2026-11-18) */
 flock($lk, LOCK_UN);
 exit(0);
 
@@ -205,15 +243,15 @@ function pcSendInstagram(array $p, array $tg): array {
 function pcFailMail(string $id): void {
     $S = pcState(); $p = $S['posts'][$id] ?? null; if (!$p || !empty($p['emailed'])) return;
     $c = $S['clients'][$p['client']] ?? ['name' => $p['client']];
-    $went = []; foreach ((array) $p['done'] as $k => $d) $went[] = ($k === 'fb' ? 'Facebook' : 'Instagram') . ' went: ' . ($d['link'] ?: $d['id']);
+    $went = []; foreach ((array) $p['done'] as $k => $d) $went[] = pcPlace((string) $k) . ' went: ' . (($d['link'] ?? '') ?: ($d['id'] ?? ''));
     $text = "A post on the post calendar did not go out as approved.\n\n"
           . 'Client: ' . $c['name'] . "\n" . 'Time: ' . ($p['at'] ? pcWall((int) $p['at']) : '-') . "\n"
-          . 'Where: ' . implode(' and ', array_map(fn($t) => $t === 'fb' ? 'Facebook' : 'Instagram', (array) $p['targets'])) . "\n"
-          . 'First line: ' . (strtok((string) ($p['fb'] ?: $p['ig']), "\n") ?: '-') . "\n\n"
+          . 'Where: ' . implode(' and ', array_map('pcPlace', (array) $p['targets'])) . "\n"
+          . 'First line: ' . (strtok((string) ($p['fb'] ?: ($p['ig'] ?: ($p['li'] ?? ''))), "\n") ?: '-') . "\n\n"
           . 'What happened: ' . $p['error'] . "\n" . ($went ? implode("\n", $went) . "\n" : '') . "\n"
           . "Nothing is retried by itself. To try again: open the post, Back to draft, fix it if needed, Approve. Anything that already went is not sent twice.\n\n"
           . PC_ORIGIN . '/' . PC_PUBLIC . "/\n";
-    $r = pcMail('Post calendar: a ' . $c['name'] . ' post failed', $text);
+    $r = pcMail('Post calendar: a ' . $c['name'] . ' post failed', pcScrub($text));
     pcMutate(function (array &$S) use ($id, $r) { $q = &$S['posts'][$id]; $q['emailed'] = true; pcLog($q, 'runner', $r['ok'] ? 'Emailed Matthew about the failure' : 'Could not email Matthew (' . $r['stage'] . ')'); });
 }
 
