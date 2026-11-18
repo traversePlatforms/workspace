@@ -420,8 +420,13 @@ function dupesOf(array $X, string $name, string $phone, string $site, string $em
    email (the sender's own reading skips them); this list also covers the same address found on a company's website. */
 function deskNoContact(): array {
     $o = [];
-    foreach (['sponsor', 'expo'] as $w) foreach (recs($w) as $R) foreach (array_keys($R['dnc'] ?? []) as $k) if (str_starts_with((string) $k, 'e:')) $o[substr((string) $k, 2)] = 1;
-    return array_keys($o);
+    foreach (['sponsor', 'expo'] as $w) foreach (recs($w) as $R) foreach (deskNoContactOf($R) as $e) $o[$e] = 1;
+    return array_map('strval', array_keys($o));
+}
+/* the same for one record the caller already has (the sender builds its own from seedModel() + apply(), so this writes nothing) */
+function deskNoContactOf(array $R): array {
+    $o = []; foreach (array_keys($R['dnc'] ?? []) as $k) if (str_starts_with((string) $k, 'e:')) $o[] = substr((string) $k, 2);
+    return $o;
 }
 
 /* ---- message templates (Sixfold's, 2026-11-18): plain friendly words, no prices and nothing Peak has not published. Merge fields: {first}
