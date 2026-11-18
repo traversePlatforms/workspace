@@ -1,447 +1,481 @@
-/* Peak Sponsor Desk: the server rules and the screens, against the local server (php -S 127.0.0.1:8790 -t app).
-   Uses the test codes in desk-data-local/; restores the event log at the end.
-   The screens follow the 2026-10-25 sections: Lists, Board, New leads, Peak sponsors, Local businesses, More. */
-import { spawn, execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync } from 'node:fs';
+/* Peak Sponsor Desk tests (2026-11-17 rebuild: two pipelines, touches, owners, follow-ups, the SQLite records, the email link).
+   Each run makes a FRESH copy of desk-data-local in Temp, writes old-desk log rows into it (to migrate), starts its own PHP server on
+   that copy (DESK_DATA), and deletes the copy at the end: nothing in desk-data-local changes, and a run never sees a previous run's data.
+   node tests/desk-test.mjs            the server rules, the migration, the email link, the screens (headless Chrome)
+   node tests/desk-test.mjs --page dist/index.html   the same against the minified page */
+import { spawn, execFileSync, execFile } from 'node:child_process';
+import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync, cpSync, mkdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-/* throwaway Chrome profiles are removed when the script ends (2026-10-25: 10,717 were left in Temp, about 170 GB) */
 const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
-process.on('exit', () => { for (const d of cdpDirs) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..').replace(/\\/g, '/');   /* the folder this test sits in (the laptop move changed the user folder, 2026-11) */
-const LD = ROOT + '/desk-data-local', ORIGIN = 'http://127.0.0.1:8790', API = ORIGIN + '/api/desk.php';
-const code = (f) => readFileSync(join(LD, f), 'utf8').match(/(\d{6})/)[1];
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..').replace(/\\/g, '/');
+const pageArg = process.argv.indexOf('--page'); const PAGE = pageArg > 0 ? process.argv[pageArg + 1] : 'app/index.html';
+/* the fresh copy: the research lists, accounts, scans; logs written below */
+const LD = mkdtempSync(join(tmpdir(), 'peakdesk-')).replace(/\\/g, '/');
+for (const f of ['seed.json', 'expo-seed.json', 'peak-records.json', 'accounts.json', 'scans.json']) if (existsSync(join(ROOT, 'desk-data-local', f))) copyFileSync(join(ROOT, 'desk-data-local', f), join(LD, f));
+/* a web folder: the page under test plus the api */
+const WEB = join(LD, 'web'); mkdirSync(WEB); cpSync(join(ROOT, 'app/api'), join(WEB, 'api'), { recursive: true });
+copyFileSync(join(ROOT, PAGE), join(WEB, 'index.html')); for (const f of ['manifest.json', 'sw.js', 'icon-192.png']) copyFileSync(join(ROOT, 'app', f), join(WEB, f));
+const env = { ...process.env, DESK_DATA: LD };
+process.on('exit', () => { for (const d of cdpDirs.concat([LD])) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
+const code = (f) => readFileSync(join(ROOT, 'desk-data-local', f), 'utf8').match(/(\d{6})/)[1];
 const ADMIN = code('test-admin-code.txt'), SELLER = code('test-seller-code.txt');
-const LOG = join(LD, 'events.log'), log0 = existsSync(LOG) ? readFileSync(LOG, 'utf8') : null;
-/* Expo leads (2026-11-13): their own log, and two accounts made for the test (an expo-only one and the read-only Claude Check), both put back after */
-const XLOG = join(LD, 'expo-events.log'), xlog0 = existsSync(XLOG) ? readFileSync(XLOG, 'utf8') : null;
-const ACC = join(LD, 'accounts.json'), acc0 = readFileSync(ACC, 'utf8');
-const addAccount = (name, role) => execFileSync('php', [join(ROOT, 'app/api/desk.php'), 'addaccount', name, role], { encoding: 'utf8' }).match(/(\d{6})/)[1];
-const SCANS = join(LD, 'scans.json'), scans0 = existsSync(SCANS) ? readFileSync(SCANS, 'utf8') : null;
+const php = (args) => execFileSync('php', [join(WEB, 'api/desk.php'), ...args], { encoding: 'utf8', env });
+const addAccount = (name, role) => php(['addaccount', name, role]).match(/(\d{6})/)[1];
+const json = (f) => JSON.parse(readFileSync(join(LD, f), 'utf8'));
+const lines = (f) => existsSync(join(LD, f)) ? readFileSync(join(LD, f), 'utf8').split('\n').filter(Boolean) : [];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, failN = 0; const ok = (c, m) => { if (c) { pass++; console.log('  ok  ' + m); } else { failN++; console.log('  FAIL ' + m); } };
-function client() { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}) }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; f.ck = () => ck; return f; }
-const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const later = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-let chrome, ws;
+const PORT = 8790 + Math.floor(Math.random() * 400), ORIGIN = `http://127.0.0.1:${PORT}`, API = ORIGIN + '/api/desk.php';
+function client(extra = {}) { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}), ...extra }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; return f; }
+const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const today = () => iso(new Date());
+const later = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
+
+/* ---- the old desk's rows, as on the live server today: Brandon's two "contacted" (29 Oct), plus the other old stages and a reply note
+   the email sender wrote straight into the log ---- */
+const seed = json('seed.json'), xseed = json('expo-seed.json'), precs = existsSync(join(LD, 'peak-records.json')) ? json('peak-records.json').leads : [];
+const NEW = seed.leads.filter((l) => l.list === 'new'), B1 = NEW[5], B2 = NEW[6], OLDT = NEW[7], OLDNO = NEW[8], OLDNOTE = NEW[9];
+const X1 = xseed.orgs[3], X2 = xseed.orgs[4], X3 = xseed.orgs[5];
+const old = [
+  { t: 'status', id: B1.id, status: 'contacted', by: 'Brandon Long', at: 1793294731 },
+  { t: 'status', id: B2.id, status: 'contacted', by: 'Brandon Long', at: 1793295182 },
+  { t: 'status', id: OLDT.id, status: 'toured', by: 'Matthew Sharpe', at: 1793300000 },
+  { t: 'status', id: OLDNO.id, status: 'no', by: 'Matthew Sharpe', at: 1793300100 },
+  { t: 'next', id: OLDT.id, next: { date: '2026-11-01', what: 'old follow-up' }, by: 'Matthew Sharpe', at: 1793300200 },
+  { t: 'note', id: OLDNOTE.id, note: 'Pat replied to the Peak email from Matthew on Nov 17. The reply is in Matthew\'s Peak Outlook.', by: 'Peak email', at: 1793300300 }];
+writeFileSync(join(LD, 'events.log'), old.map((r) => JSON.stringify(r)).join('\n') + '\n');
+writeFileSync(join(LD, 'expo-events.log'), [
+  { t: 'xstage', id: X1.id, stage: 'talking', by: 'Lance', at: 1793300000 }, { t: 'xstage', id: X2.id, stage: 'visit', by: 'Lance', at: 1793300001 },
+  { t: 'xstage', id: X3.id, stage: 'notfit', by: 'Lance', at: 1793300002 }].map((r) => JSON.stringify(r)).join('\n') + '\n');
+const log0 = readFileSync(join(LD, 'events.log'), 'utf8');
+
+let server, chrome, ws;
 try {
+  console.log('Migration (the old desk\u2019s lists and logs into the records)');
+  const chk = JSON.parse(php(['check']));
+  const peakNew = precs.filter((p) => !seed.leads.some((l) => l.id === p.id)).length;
+  ok(chk.sponsor.companies === seed.leads.length + peakNew, `every sponsor company came across: ${chk.sponsor.companies} (${seed.leads.length} researched + ${peakNew} from Peak\u2019s tracker)`);
+  /* contacts: the seed's, plus each tracker email the seed lacked, once */
+  let wantC = 0; const byId = Object.fromEntries(seed.leads.map((l) => [l.id, l.contacts.map((c) => (c.email || '').toLowerCase())]));
+  seed.leads.forEach((l) => { wantC += l.contacts.length; });
+  precs.forEach((p) => { const have = byId[p.id] || []; byId[p.id] = have; (p.contacts || []).forEach((c) => { if (c.email && !have.includes(c.email.toLowerCase())) { wantC++; have.push(c.email.toLowerCase()); } }); });
+  ok(chk.sponsor.contacts === wantC, `every contact came across: ${chk.sponsor.contacts} of ${wantC}`);
+  ok(chk.expo.companies === xseed.orgs.length && chk.expo.contacts === xseed.orgs.reduce((n, o) => n + o.contacts.length, 0), `every expo lead and contact came across: ${chk.expo.companies} organisations, ${chk.expo.contacts} contacts`);
+  ok(chk.sponsor.stages.called === 2 && chk.sponsor.stages.meeting === 1 && chk.sponsor.stages.lost === 1 && chk.expo.stages.contacted === 1 && chk.expo.stages.tour === 1 && chk.expo.stages.lost === 1, 'old stages read as new: Contacted \u2192 Called, Toured \u2192 Meeting / tour booked, No \u2192 Lost; Talking \u2192 Contacted, Site visit \u2192 Tour booked, Not a fit \u2192 Lost');
+  ok(existsSync(join(LD, 'desk.sqlite')) && readFileSync(join(LD, 'events.log'), 'utf8') === log0, 'the records are in desk.sqlite and the old log is not rewritten');
+
   console.log('The server');
+  server = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', WEB], { env, stdio: 'ignore' });
+  for (let i = 0; i < 50; i++) { try { await fetch(ORIGIN + '/manifest.json'); break; } catch { await sleep(100); } }
   const x = client();
   ok((await x('data'))._status === 401, 'signed out: no data');
   ok((await x('signin', { code: '000000' }))._status === 401, 'a wrong code is refused');
   const a = client(), b = client();
   ok((await a('signin', { code: ADMIN })).role === 'admin', 'the admin signs in');
   ok((await b('signin', { code: SELLER })).role === 'seller', 'the seller signs in');
-  const D = await b('data');
-  const L = D.leads.find((l) => l.list === 'new' && l.name === 'Kaiser Permanente');   /* by name: the order changes as contacts are found */
-  ok(D.ok && D.leads.length >= 200 && L && D.leads.find((l) => l.list === 'new' && l.rank === 1) && D.leads.some((l) => l.list === 'renew') && D.leads.some((l) => l.list === 'local'), `the seed loads: ${D.leads.length} leads, #1 ${(D.leads.find((l) => l.list === 'new' && l.rank === 1) || {}).name}, renewals and local businesses`);
-  ok((await b('status', { id: L.id, status: 'contacted' }, false))._status === 400, 'a post without the desk header is refused (a form on another site cannot post)');
-  ok((await b('status', { id: L.id, status: 'contacted' })).ok, 'the seller marks it Contacted');
-  ok((await b('note', { id: L.id, note: '<img src=x onerror=alert(1)> called the front desk' })).ok, 'a note saves');
-  ok((await b('next', { id: L.id, date: later(3), what: 'call back' })).ok, 'a next step saves');
-  ok((await b('contact', { id: L.id, name: 'Pat Test', pos: 'Marketing', email: 'not-an-email' })).error === 'That email does not look right.', 'a bad email is refused');
-  ok((await b('contact', { id: L.id, name: 'Pat Test', pos: 'Marketing', email: 'pat@example.com' })).ok, 'a contact saves');
-  ok((await b('tour', { lead: L.id, date: '2020-01-01', time: '10:00' })).error === 'Pick today or a later day.', 'a tour in the past is refused');
-  const t = await b('tour', { lead: L.id, date: later(2), time: '10:30', who: 'Pat Test' });
-  ok(t.ok, 'a tour books');
-  let D2 = await b('data'); let L2 = D2.leads.find((l) => l.id === L.id);
-  ok(L2.status === 'tour' && L2.notes.length === 1 && L2.next.what === 'call back' && L2.added[0].email === 'pat@example.com' && D2.tours.some((x) => x.tid === t.tid), 'booking the tour moved it to Tour booked; the note, next step and contact are kept');
-  ok((await b('packages', { packages: [{ name: 'Court sponsor', price: 12000, per: 'year' }, { name: 'Title sponsor', price: 24000, per: 'year' }] })).ok, 'the seller can change the packages too (same powers as the admin, 2026-10-21)');
-  const p = await b('proposal', { lead: L.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], to: 'Pat Test, Marketing', note: 'Two courts, one year' });
-  ok(p.ok && p.total === 24500, 'a proposal: 2 courts + a banner = $24,500');
-  D2 = await b('data'); L2 = D2.leads.find((l) => l.id === L.id);
-  ok(L2.status === 'proposal', 'making it moved the lead to Proposal sent');
-  ok((await a('packages', { packages: [{ name: 'Court sponsor', price: 12000, per: 'year' }, { name: 'Title sponsor', price: 24000, per: 'year' }, { name: 'League night', price: 1500, per: 'season' }] })).ok, 'the admin adds a package');
-  ok((await a('lead', { name: 'Kaiser Permanente' })).error === 'That company is already on the list.', 'a company already on the list is not added twice');
-  const nl = await a('lead', { name: 'Test Roofing Co', kind: 'Home services', why: 'test' });
-  ok(nl.ok, 'the admin adds a company');
-  console.log('The 2026-10-24 list');
-  ok((await b('tourmove', { tid: t.tid, date: later(4), time: '14:00' })).ok && (await b('data')).tours.find((x) => x.tid === t.tid).date === later(4), 'a tour moves to another day');
-  ok((await b('tourout', { tid: t.tid, out: 'maybe' })).error === 'Pick how it went.', 'a tour outcome must be Toured or Did not show');
-  let D3 = await b('data'); let nk = D3.leads.find((l) => l.id === L.id).notes[0].k;
-  ok((await b('notedel', { id: L.id, nk })).ok && (await b('data')).leads.find((l) => l.id === L.id).notes.length === 0, 'a note is removed (the log keeps it)');
-  ok((await b('notedel', { id: L.id, nk })).error === 'No such note.', 'removing it twice is refused');
-  await b('note', { id: L.id, note: '<img src=x onerror=alert(1)> called the front desk' });
-  ok((await b('signed', { id: L.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }], start: 'x', months: 12 })).error === 'Pick the start date.', 'signed needs a start date');
-  ok((await b('signed', { id: L.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], start: today(), months: 12, who: 'Pat Test' })).ok, 'a sponsor is marked signed with what they bought');
-  D3 = await b('data'); let L3 = D3.leads.find((l) => l.id === L.id);
-  ok(L3.status === 'signed' && L3.signed.total === 24500 && L3.signed.months === 12, 'signing moved it to Signed: 2 courts + a banner, 12 months');
-  ok((await b('todo', { id: L.id, text: 'Logo on court 7' })).ok, 'a to-do for a signed sponsor');
-  let tk = (await b('data')).leads.find((l) => l.id === L.id).todos[0].k;
-  ok((await b('tododone', { id: L.id, k: tk, done: true })).ok && (await b('data')).leads.find((l) => l.id === L.id).todos[0].done === true, 'the to-do ticks off');
-  ok((await b('todo', { id: L.id, text: 'Monthly report' })).ok, 'a second to-do');
-  ok((await b('pl', { services: [{ name: 'Court sponsor', price: 12000, per: 'year', cost: 1500, costPer: 'year' }, { name: '', price: 5 }], running: [{ name: 'Hosting', amount: 20, per: 'month' }] })).ok, 'profit and loss saves');
-  D3 = await b('data');
-  ok(D3.pl.services.length === 1 && D3.pl.services[0].cost === 1500 && D3.pl.running[0].amount === 20, 'a service without a name is dropped; costs kept');
-  ok(D3.team && Object.keys(D3.team).length >= 2 && !('Claude Check' in D3.team), 'the team list: who can sign in, with what each did');
-  const ABC = D3.leads.find((l) => l.name === 'ABC Family Chiropractic');
-  ok((await b('site', { id: ABC.id, site: 'not a site' })).error === 'That website does not look right.', 'a bad website is refused');
-  const sc = await b('scan', { id: ABC.id });
-  ok(sc.ok && sc.scan.ok && sc.scan.phones.some((p) => p.phone === '(719) 266-6661'), 'looking up ABC Family reads its website: the phone' + (sc.scan && !sc.scan.ok ? ' (' + sc.scan.err + ')' : ''));
-  ok(sc.scan && sc.scan.reg && sc.scan.reg.at > 0 && sc.scan.reg.none === true, 'the state filing is checked too: ABC Family has none under that exact name');
-  const ren = D3.leads.find((l) => l.list === 'renew');
-  ok((await b('scan', { id: ren.id })).error === 'Add their website first.', 'a company with no website asks for one');
-  ok((await b('site', { id: ren.id, site: 'http://127.0.0.1/' })).error === 'That website does not look right.' && (await b('site', { id: ren.id, site: 'localtest.me' })).ok && (await b('scan', { id: ren.id })).scan.err === 'not a public site', 'the server will not read its own or a private address');
-  ok((await b('scan', { id: ABC.id, hunter: true })).error === 'Hunter is not set up here.', 'Hunter is off without its key');
-  ok((await b('tourdel', { tid: t.tid })).ok && !(await b('data')).tours.some((x) => x.tid === t.tid), 'a tour cancels');
-  console.log('Add and remove (2026-10-24)');
-  ok((await b('sponsor', { name: 'Kaiser Permanente', start: today(), months: 12 })).error === 'That company is already on the list.', 'adding a sponsor already on the desk is refused');
-  const sp = await b('sponsor', { name: 'Test Sponsor Co', kind: 'Dentist', cname: 'Sam Test', cpos: 'Owner', cemail: 'sam@example.com', start: today(), months: 6, lines: [] });
-  ok(sp.ok, 'a new sponsor is added in one step');
-  let D4 = await b('data'); let SP = D4.leads.find((l) => l.id === sp.id);
-  ok(SP && SP.status === 'signed' && SP.signed.months === 6 && SP.added[0].email === 'sam@example.com' && SP.list === 'added', 'it is Signed, with its contact and its 6 months');
-  ok((await b('leaddel', { id: sp.id })).ok, 'a sponsor is removed');
-  D4 = await b('data');
-  ok(!D4.leads.some((l) => l.id === sp.id) && D4.removed.some((x) => x.id === sp.id && x.name === 'Test Sponsor Co'), 'it leaves the desk and shows under Removed');
-  ok((await b('note', { id: sp.id, note: 'x' })).error === 'That company was removed. Bring it back first.', 'a removed company takes no changes');
-  ok((await b('lead', { name: 'test sponsor co' })).error === 'That company was removed. Bring it back from Removed companies.', 'adding it again points to Removed companies');
-  ok((await b('leadback', { id: sp.id })).ok && (await b('data')).leads.find((l) => l.id === sp.id).status === 'signed', 'brought back, still Signed');
-  ok((await b('leaddel', { id: sp.id })).ok, 'removed again (for the screens)');
-  const t2 = await b('tour', { lead: ABC.id, date: today(), time: '00:00', who: 'Dr Test' });
-  ok(t2.ok, 'a tour for ABC today');
-  writeFileSync(LOG, readFileSync(LOG, 'utf8') + JSON.stringify({ t: 'tour', tid: 'pasttest01', id: ABC.id, lead: ABC.id, date: later(-2), time: '10:00', who: '', note: '', by: 'Test', at: 1 }) + '\n');   /* a tour two days ago, written straight in: the desk refuses past dates */
-  /* two follow-ups due (yesterday and today) on new leads, for Lists › Follow-ups due */
-  const FU = D.leads.filter((l) => l.list === 'new' && l.id !== L.id && l.status === 'new').slice(0, 2);
-  ok((await b('next', { id: FU[0].id, date: today(), what: 'ring back' })).ok && (await b('next', { id: FU[1].id, date: later(-1), what: 'ring back' })).ok, 'two follow-ups due: one today, one late');
-  /* Expo leads (2026-11-13): their own seed, log, stages and an expo-only account */
-  console.log('Expo leads (2026-11-13)');
+  const SELLER2 = addAccount('Second Seller', 'seller'), c2 = client(); await c2('signin', { code: SELLER2 });
+  let D = await b('data'); const SP = () => D.sponsor, XP = () => D.expo, find = (w, id) => D[w].recs.find((r) => r.id === id);
+  ok(D.ok && D.sponsor.recs.length === chk.sponsor.companies && D.expo.recs.length === chk.expo.companies && D.build, `the data: ${D.sponsor.recs.length} sponsor companies, ${D.expo.recs.length} expo leads, build ${D.build}`);
+  ok(D.sponsor.stages.map((s) => s[1]).join('|') === 'To contact|Called|Left voicemail|Emailed|Texted|Meeting / tour booked|Proposal sent|Signed|Not now|Lost', 'sponsor stages: To contact \u2192 Called \u2192 Left voicemail \u2192 Emailed \u2192 Texted \u2192 Meeting / tour booked \u2192 Proposal sent \u2192 Signed; Not now; Lost');
+  ok(D.expo.stages.map((s) => s[1]).join('|') === 'To contact|Contacted|Tour booked|Quote sent|Booked|Not now|Lost', 'expo stages: To contact \u2192 Contacted \u2192 Tour booked \u2192 Quote sent \u2192 Booked; Not now; Lost');
+  let r1 = find('sponsor', B1.id), r2 = find('sponsor', B2.id);
+  ok(r1.stage === 'called' && r1.last && r1.last.by === 'Brandon Long' && r1.last.when === 1793294731 && r1.last.m === 'other' && r2.last.when === 1793295182 && r1.hist[0].by === 'Brandon Long', 'Brandon\u2019s two (29 Oct) are intact: Called, a touch by Brandon Long at the same minute, in the history');
+  ok(find('sponsor', OLDNO.id).lost.why === 'Said no' && find('expo', X3.id).lost.why === 'Not a fit', 'an old No or Not a fit keeps its reason as Lost');
+  ok(find('sponsor', OLDNOTE.id).notes.some((n) => n.by === 'Peak email' && /replied/.test(n.note)), 'the email sender\u2019s reply note (written straight into the log) shows on the card');
+  ok(D.sponsor.owners.includes('Test Seller') && D.sponsor.owners.includes('Matthew Sharpe') && !D.sponsor.owners.includes('Claude Check'), 'owners are the sellers and admins');
+  const K = NEW.find((l) => l.name === 'Kaiser Permanente') || NEW[0];
+  ok((await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'noanswer' }, false))._status === 400, 'a post without the desk header is refused');
+
+  console.log('Touches move a company along, set an owner, follow-ups');
+  let t = await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'noanswer' });
+  ok(t.ok && t.stage === 'called' && t.owner === 'Test Seller' && t.tries === 1, 'No answer: To contact \u2192 Called; the first person to reach out owns it; 1 try');
+  t = await b('touch', { world: 'sponsor', id: K.id, m: 'voicemail', out: 'left', note: 'asked for Cary' });
+  ok(t.stage === 'voicemail' && t.tries === 2, 'Left voicemail \u2192 Left voicemail; 2 tries in a row');
+  t = await c2('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'noanswer' });
+  ok(t.stage === 'voicemail' && t.owner === 'Test Seller' && t.tries === 3, 'a later call never moves it back, and another seller\u2019s touch leaves the owner; 3 tries');
+  t = await b('touch', { world: 'sponsor', id: K.id, m: 'email', out: 'sent', fu: later(3), fuWhat: 'call Cary' });
+  D = await b('data'); let k1 = find('sponsor', K.id);
+  ok(t.stage === 'emailed' && k1.next.date === later(3) && k1.next.what === 'call Cary' && k1.touches.length === 4 && k1.last.m === 'email', 'Emailed \u2192 Emailed, with the follow-up set; four touches kept, the last an email');
+  t = await b('touch', { world: 'sponsor', id: K.id, m: 'text', out: 'sent' });
+  D = await b('data'); k1 = find('sponsor', K.id);
+  ok(t.stage === 'texted' && k1.next.date === later(3), 'Texted \u2192 Texted; a follow-up ahead is kept when no new one is set');
+  ok((await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked' })).tries === 0, 'Talked resets the tries');
+  await b('next', { world: 'sponsor', id: K.id, date: today(), what: 'due today' });
+  await b('touch', { world: 'sponsor', id: K.id, m: 'linkedin', out: 'sent' });
+  D = await b('data'); k1 = find('sponsor', K.id);
+  ok(k1.next === null && k1.stage === 'texted', 'reaching out clears a follow-up that was due (it is done); LinkedIn does not move a company past Texted');
+  ok((await b('touch', { world: 'sponsor', id: K.id, m: 'fax', out: 'sent' })).error === 'Pick how you reached them.' && (await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'sent' })).error === 'Pick how it went.' && (await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked', fu: '2020-01-01' })).error === 'Pick a follow-up day from today on.' && (await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked', when: 1000 })).error === 'Pick a time in the last 30 days.', 'a wrong method, outcome, past follow-up or old time is refused');
+  const earlier = Math.floor(Date.now() / 1000) - 2 * 86400;
+  ok((await b('touch', { world: 'sponsor', id: K.id, m: 'inperson', out: 'met', when: earlier, note: 'at the chamber lunch' })).ok && (await b('data')).sponsor.recs.find((r) => r.id === K.id).touches.some((x) => x.when === earlier && x.m === 'inperson'), 'a touch can be logged for earlier (met at a lunch two days ago)');
+  /* undo */
+  const U = NEW[12]; t = await b('touch', { world: 'sponsor', id: U.id, m: 'call', out: 'noanswer' });
+  ok(t.stage === 'called' && (await b('touchdel', { world: 'sponsor', id: U.id, k: t.k })).stage === 'new', 'Undo removes the touch and puts the stage back');
+  D = await b('data'); ok(find('sponsor', U.id).touches.length === 0 && lines('events.log').some((l) => l.includes('"touchdel"')), 'the card shows no touch; the log keeps it and the undo');
+  ok((await b('touchdel', { world: 'sponsor', id: U.id, k: t.k }))._status === 404, 'undoing twice is refused');
+  /* owners */
+  ok((await b('owner', { world: 'sponsor', id: U.id, owner: 'Nobody Here' })).error === 'Pick someone on the desk.', 'an owner must be someone on the desk');
+  ok((await b('owner', { world: 'sponsor', id: U.id, owner: 'Second Seller' })).ok && (await b('data')).sponsor.recs.find((r) => r.id === U.id).owner === 'Second Seller', 'an owner is set');
+  ok((await b('owner', { world: 'sponsor', id: U.id, owner: '' })).ok && (await b('data')).sponsor.recs.find((r) => r.id === U.id).owner === '', 'and cleared (Open)');
+  /* stages with what they need */
+  const NN = NEW[13], LL = NEW[14];
+  ok((await b('stage', { world: 'sponsor', id: NN.id, stage: 'notnow' })).error === 'Pick the day to come back to them.', 'Not now needs a day to come back');
+  ok((await b('stage', { world: 'sponsor', id: NN.id, stage: 'notnow', back: later(40), why: 'budget set in January' })).ok, 'Not now with a day and a reason');
+  ok((await b('stage', { world: 'sponsor', id: LL.id, stage: 'lost' })).error === 'Say why it was lost.' && (await b('stage', { world: 'sponsor', id: LL.id, stage: 'lost', why: 'Went with someone else' })).ok, 'Lost needs a reason');
+  D = await b('data');
+  ok(find('sponsor', NN.id).stage === 'notnow' && find('sponsor', NN.id).next.date === later(40) && /budget/.test(find('sponsor', NN.id).next.what) && find('sponsor', LL.id).lost.why === 'Went with someone else', 'Not now sets the follow-up to the day to come back; Lost keeps why');
+  ok((await b('stage', { world: 'sponsor', id: NN.id, stage: 'wrong' })).error === 'Pick a stage.', 'a stage that does not exist is refused');
+  /* tours, proposals, signed */
+  const TT = NEW[15];
+  const tr = await b('tour', { world: 'sponsor', id: TT.id, lead: TT.id, date: later(2), time: '10:30', who: 'Pat' });
+  ok(tr.ok && (await b('data')).sponsor.recs.find((r) => r.id === TT.id).stage === 'meeting', 'a tour booked moves it to Meeting / tour booked');
+  ok((await b('tour', { world: 'sponsor', id: TT.id, date: '2020-01-01', time: '10:00' })).error === 'Pick today or a later day.', 'a tour in the past is refused');
+  ok((await b('tourmove', { world: 'sponsor', tid: tr.tid, date: later(4), time: '14:00' })).ok && (await b('data')).sponsor.tours.find((x) => x.tid === tr.tid).date === later(4), 'a tour moves');
+  ok((await b('tourout', { world: 'sponsor', tid: tr.tid, out: 'toured' })).ok && (await b('data')).sponsor.recs.find((r) => r.id === TT.id).last.out === 'toured', 'They came: logged as an in-person touch (Toured Peak)');
+  ok((await b('packages', { packages: [{ name: 'Court sponsor', price: 12000, per: 'year' }, { name: 'Title sponsor', price: 24000, per: 'year' }] })).ok, 'packages save');
+  const pr = await b('proposal', { world: 'sponsor', lead: TT.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], to: 'Pat, Marketing', note: 'Two courts' });
+  ok(pr.ok && pr.total === 24500 && (await b('data')).sponsor.recs.find((r) => r.id === TT.id).stage === 'proposal', 'a proposal: $24,500, and it moves to Proposal sent');
+  ok((await b('signed', { world: 'sponsor', id: TT.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }], start: 'x', months: 12 })).error === 'Pick the start date.', 'Signed needs a start date');
+  ok((await b('signed', { world: 'sponsor', id: TT.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], start: today(), months: 12, who: 'Pat' })).ok, 'a sponsor is signed');
+  ok((await b('todo', { id: TT.id, text: 'Logo on court 7' })).ok && (await b('pl', { services: [{ name: 'Court sponsor', price: 12000, per: 'year', cost: 1500, costPer: 'year' }], running: [{ name: 'Hosting', amount: 20, per: 'month' }] })).ok, 'to-dos and the P&L save');
+  D = await b('data'); ok(find('sponsor', TT.id).stage === 'signed' && find('sponsor', TT.id).signed.total === 24500 && D.sponsor.pl.services[0].cost === 1500, 'Signed: $24,500, P&L kept');
+  const spn = await b('sponsor', { name: 'Test Sponsor Co', kind: 'Dentist', cname: 'Sam', cemail: 'sam@example.com', start: today(), months: 6, lines: [] });
+  D = await b('data'); ok(spn.ok && find('sponsor', spn.id).stage === 'signed' && find('sponsor', spn.id).list === 'added' && find('sponsor', spn.id).owner === 'Test Seller', 'a new sponsor in one step: Signed, Added on the desk, owned by whoever added it');
+  ok((await b('add', { world: 'sponsor', name: K.name })).error === 'That company is already on the list.', 'a company already on the list is not added twice');
+  /* remove, bring back */
+  ok((await b('del', { world: 'sponsor', id: spn.id })).ok && (await b('touch', { world: 'sponsor', id: spn.id, m: 'call', out: 'talked' }))._status === 409, 'a removed company takes no touch');
+  D = await b('data'); ok(!find('sponsor', spn.id) && D.sponsor.removed.some((r) => r.id === spn.id), 'removed: off the lists, under Removed');
+  ok((await b('back', { world: 'sponsor', id: spn.id })).ok && (await b('data')).sponsor.recs.find((r) => r.id === spn.id).stage === 'signed', 'brought back, still Signed');
+  /* the old action names still work (a page left open from before) */
+  const OLDP = NEW[16];
+  ok((await b('status', { id: OLDP.id, status: 'contacted' })).ok && (await b('data')).sponsor.recs.find((r) => r.id === OLDP.id).stage === 'called', 'old page: status Contacted \u2192 Called');
+
+  console.log('Expo leads: the same treatment');
+  const XA = xseed.orgs[10], XB = xseed.orgs[11];
+  t = await b('touch', { world: 'expo', id: XA.id, m: 'call', out: 'noanswer' });
+  ok(t.ok && t.stage === 'contacted' && t.owner === 'Test Seller', 'a touch moves an expo lead To contact \u2192 Contacted and sets the owner');
+  const xt = await b('tour', { world: 'expo', id: XA.id, date: later(5), time: '11:00', who: 'Show manager' });
+  D = await b('data');
+  ok(xt.ok && find('expo', XA.id).stage === 'tour' && D.expo.tours.some((x) => x.tid === xt.tid) && !D.sponsor.tours.some((x) => x.tid === xt.tid), 'an expo tour: Tour booked, in the expo tours only');
+  ok((await b('stage', { world: 'expo', id: XA.id, stage: 'quote', amount: '$4,500', note: 'two days, main hall' })).ok && (await b('data')).expo.recs.find((r) => r.id === XA.id).quote.amount === 4500, 'Quote sent with the amount');
+  ok((await b('stage', { world: 'expo', id: XA.id, stage: 'booked', date: later(60), amount: 4500 })).ok && (await b('data')).expo.recs.find((r) => r.id === XA.id).booked.date === later(60), 'Booked with the event date');
+  ok((await b('stage', { world: 'expo', id: XB.id, stage: 'notnow', back: later(20) })).ok && (await b('xnote', { id: XB.id, note: 'old page note' })).ok, 'expo Not now; the old xnote action still works');
+  ok((await b('stage', { world: 'expo', id: XB.id, stage: 'meeting' })).error === 'Pick a stage.', 'a sponsor stage is not an expo stage');
+  ok(lines('events.log').every((l) => !l.includes(XA.id)) && lines('expo-events.log').every((l) => !l.includes(K.id)), 'expo rows only in expo-events.log, sponsor rows only in events.log');
+  /* kept from the 13 Nov expo build */
+  D = await b('data');
+  ok(D.expo.questions.length === 10 && D.expo.venues.length >= 8, `the questions for Peak (${D.expo.questions.length}) and competing venues (${D.expo.venues.length}) still come with the expo data`);
+  const TRI = D.expo.recs.find((o) => o.name === 'Tri-Lakes Chamber of Commerce');
+  ok(TRI && TRI.pri === 1 && TRI.people.some((p) => p.name === 'Terri Hayes' && p.estat === 'published' && p.conf === 'high' && p.best && /Venue research/.test(p.src)), 'an expo contact keeps its email status, confidence, best route and where it came from');
+  ok(K && find('sponsor', K.id).people.every((p) => p.src) && D.sponsor.recs.some((r) => r.people.some((p) => /^\d+%$/.test(p.conf))), 'every sponsor contact says where it came from, Hunter ones with their confidence');
+  ok((await b('add', { world: 'expo', name: 'tri-lakes chamber of commerce' })).error === 'That organisation is already in the Expo leads.', 'an expo lead already there is not added twice');
+  const xn = await b('add', { world: 'expo', name: 'Test Expo Promoter', cat: 'Home & garden shows', pri: 1, site: 'example.com', cname: 'Sam Show', email: 'sam@example.com' });
+  D = await b('data'); const xadd = find('expo', xn.id);
+  ok(xn.ok && /^x[0-9a-f]{9}$/.test(xn.id) && xadd.site === 'https://example.com' && xadd.people.some((p) => p.email === 'sam@example.com' && p.added) && xadd.owner === 'Test Seller', 'an expo lead added by hand: its contact, its website, owned by whoever added it');
+  ok((await b('xdel', { id: xn.id })).ok && (await b('touch', { world: 'expo', id: xn.id, m: 'call', out: 'talked' })).error === 'That lead was removed. Bring it back first.' && (await b('xback', { id: xn.id })).ok, 'old expo Remove and Bring back still work; a removed lead takes no touch');
+  ok((await b('xstage', { id: XB.id, stage: 'visit' })).ok && (await b('data')).expo.recs.find((r) => r.id === XB.id).stage === 'tour', 'old page: Site visit booked → Tour booked');
+  ok((await b('del', { world: 'expo', id: xn.id })).ok, 'removed again (for the screens)');
+  await b('contact', { world: 'sponsor', id: K.id, name: 'Pat Test', role: 'Marketing', email: 'pat@example.com' });
+  ok((await b('contact', { world: 'sponsor', id: K.id, name: 'Pat Test', email: 'not-an-email' })).error === 'That email does not look right.', 'a bad email is refused');
+  await b('note', { world: 'sponsor', id: K.id, note: '<img src=x onerror=alert(1)> called the front desk' });
+  ok((await b('site', { id: K.id, site: 'http://127.0.0.1/' })).error === 'That website does not look right.', 'a bad website is refused');
+
+  console.log('Counts per person this week');
+  D = await b('data'); const wk = D.sponsor.week['Test Seller'] || {}, wk2 = D.sponsor.week['Second Seller'] || {};
+  ok(wk.calls === 3 && wk.vms === 1 && wk.emails === 1 && wk.texts === 1 && wk.other === 2 && wk2.calls === 1, `this week: Test Seller ${wk.calls} calls (a voicemail counts as a call), ${wk.emails} email, ${wk.texts} text, ${wk.other} other (LinkedIn, in person); Second Seller ${wk2.calls} call; the undone call is not counted`);
+  ok(wk.tours === 1 && wk.proposals === 1 && wk.signed === 2 && (D.expo.week['Test Seller'] || {}).tours === 2, 'tours, proposals and signed count companies; expo counts are their own');
+  ok(D.sponsor.team['Brandon Long'] && D.sponsor.team['Brandon Long'].other === 2 && !D.sponsor.week['Brandon Long'], 'Brandon\u2019s two count in his all-time numbers, not this week');
+
+  console.log('Roles');
   const EXPO = addAccount('Test Expo', 'expo'), CHECK = addAccount('Claude Check', 'admin');
-  const sponsorPart = (j) => { const { expo, _status, ...rest } = j; return JSON.stringify(rest); };
-  const sp0 = sponsorPart(await b('data')), slog0 = readFileSync(LOG, 'utf8');
-  let XD = (await b('data')).expo;
-  ok(XD && XD.orgs.length === 64 && XD.orgs.reduce((n, o) => n + o.contacts.length, 0) === 80 && XD.questions.length === 10 && XD.venues.length >= 8 && XD.removed.length === 0, `the expo seed loads: ${XD && XD.orgs.length} organisations, ${XD && XD.orgs.reduce((n, o) => n + o.contacts.length, 0)} contacts, ${XD && XD.questions.length} questions for Peak, ${XD && XD.venues.length} venues`);
-  ok(Object.keys(XD.stages).join() === 'new,contacted,talking,visit,proposal,booked,notfit' && XD.orgs.every((o) => o.stage === 'new' && /^x[0-9a-f]{9}$/.test(o.id)), 'seven expo stages, every lead starts at New');
-  const XO = XD.orgs.find((o) => o.name === 'Tri-Lakes Chamber of Commerce'), XO2 = XD.orgs.find((o) => o.name === 'The Expo Pros');
-  ok(XO && XO.pri === 1 && XO.contacts.some((c) => c.name === 'Terri Hayes' && c.estat === 'published' && c.conf === 'high' && c.best) && XO.srcs.length > 0, 'a lead carries its priority, contacts (email status, confidence, best route) and sources');
-  ok((await b('xstage', { id: XO.id, stage: 'nope' })).error === 'Pick a stage.' && (await b('xstage', { id: 'x000000000', stage: 'contacted' }))._status === 404, 'a wrong stage or lead is refused');
-  ok((await b('xstage', { id: XO.id, stage: 'talking' })).ok && (await b('xnote', { id: XO.id, note: '<b>Terri</b> asked for dates' })).ok && (await b('xnext', { id: XO.id, date: today(), what: 'send dates' })).ok, 'stage, note and follow-up save');
-  ok((await b('xcontact', { id: XO.id, name: 'Pat Expo', email: 'nope' })).error === 'That email does not look right.' && (await b('xcontact', { id: XO.id, name: 'Pat Expo', role: 'Events', email: 'pat@example.com' })).ok, 'a contact saves; a bad email is refused');
-  XD = (await b('data')).expo; let xo = XD.orgs.find((o) => o.id === XO.id);
-  ok(xo.stage === 'talking' && xo.notes.length === 1 && xo.next.date === today() && xo.added[0].email === 'pat@example.com' && xo.log.length === 1, 'they come back: Talking, the note, the follow-up, the contact, the history');
-  ok((await b('xnotedel', { id: XO.id, nk: xo.notes[0].k })).ok && (await b('data')).expo.orgs.find((o) => o.id === XO.id).notes.length === 0, 'a note is removed (the log keeps it)');
-  await b('xnote', { id: XO.id, note: '<img src=x onerror=alert(1)> asked for dates' });
-  ok((await b('xlead', { name: 'tri-lakes chamber of commerce' })).error === 'That organisation is already in the Expo leads.', 'an organisation already there is not added twice');
-  const xn = await b('xlead', { name: 'Test Expo Promoter', cat: 'Home & garden shows', pri: 1, events: 'Spring home show', site: 'example.com', cname: 'Sam Show', email: 'sam@example.com' });
-  ok(xn.ok && /^x[0-9a-f]{9}$/.test(xn.id), 'an expo lead is added by hand');
-  XD = (await b('data')).expo; xo = XD.orgs.find((o) => o.id === xn.id);
-  ok(XD.orgs.length === 65 && xo && xo.pri === 1 && xo.stage === 'new' && xo.added[0].name === 'Sam Show' && xo.site === 'https://example.com', 'it is in the Expo leads with its contact');
-  ok((await b('xdel', { id: XO2.id })).ok && (XD = (await b('data')).expo) && !XD.orgs.some((o) => o.id === XO2.id) && XD.removed.some((r) => r.id === XO2.id), 'Remove takes a lead out and lists it under Removed');
-  ok((await b('xnote', { id: XO2.id, note: 'x' })).error === 'That lead was removed. Bring it back first.', 'a removed lead takes no changes');
-  ok((await b('xback', { id: XO2.id })).ok && (await b('data')).expo.orgs.some((o) => o.id === XO2.id), 'Bring back restores it');
-  ok((await b('xdel', { id: xn.id })).ok, 'the hand-added one removed again (for the screens)');
-  /* the sponsor side never sees any of it */
-  ok(sponsorPart(await b('data')) === sp0 && readFileSync(LOG, 'utf8') === slog0, 'the sponsor data and the sponsor log are byte-for-byte the same after all of that');
-  const ids = new Set(XD.orgs.map((o) => o.id)), DS0 = await b('data');
-  ok(!DS0.leads.some((l) => ids.has(l.id)) && !DS0.removed.some((r) => ids.has(r.id)) && DS0.leads.length === JSON.parse(sp0).leads.length, 'no expo lead is among the sponsor leads');
-  /* the expo-only account */
-  const ex = client(), si = await ex('signin', { code: EXPO });
-  ok(si.ok && si.role === 'expo', 'the expo-only account signs in');
+  const ex = client(); ok((await ex('signin', { code: EXPO })).role === 'expo', 'the expo-only account signs in');
   const XJ = await ex('data');
-  ok(XJ.ok && XJ.expo.orgs.length === 65 - 1 && Object.keys(XJ).filter((k) => k !== '_status').sort().join() === 'expo,me,ok', 'its data is the Expo leads and nothing else: no leads, tours, proposals, packages, P&L, team, Peak records');
-  ok(!JSON.stringify(XJ).includes('Kaiser Permanente') && !JSON.stringify(XJ).includes('"peak":'), 'no sponsor or Peak record anywhere in it');
-  const deny = [['status', { id: L.id, status: 'new' }], ['note', { id: L.id, note: 'x' }], ['packages', { packages: [] }], ['pl', { services: [] }], ['scan', { id: ABC.id }], ['lead', { name: 'X' }], ['proposal', { lead: L.id, lines: [] }], ['tour', { lead: L.id, date: today(), time: '10:00' }], ['leaddel', { id: L.id }]];
+  ok(XJ.ok && !XJ.sponsor && XJ.expo.recs.length === D.expo.recs.length && !JSON.stringify(XJ).includes(K.name), 'it gets the Expo leads and nothing of the sponsors\u2019');
+  ok(XJ.expo.owners.includes('Test Expo') && !(await b('data')).sponsor.owners.includes('Test Expo'), 'it can own expo leads, never sponsors');
+  const deny = [['touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked' }], ['stage', { world: 'sponsor', id: K.id, stage: 'new' }], ['owner', { id: K.id, owner: '' }], ['note', { id: K.id, note: 'x' }], ['packages', { packages: [] }], ['pl', { services: [] }], ['scan', { id: K.id, world: 'expo' }], ['proposal', { lead: K.id, world: 'expo', lines: [] }], ['status', { id: K.id, status: 'new' }], ['tour', { id: K.id, date: today(), time: '10:00' }], ['del', { id: K.id }]];
   let denied = 0; for (const [act, body] of deny) if ((await ex(act, body))._status === 403) denied++;
   ok(denied === deny.length, `every sponsor action is refused to it (403 on ${denied} of ${deny.length})`);
-  ok((await ex('xnote', { id: XO.id, note: 'expo account note' })).ok && (await ex('me')).role === 'expo', 'it can work the Expo leads');
-  ok(!('Test Expo' in (await b('data')).team), 'and it is not listed in the sponsor desk’s team');
-  /* Claude Check: reads the Expo leads, saves nothing */
+  ok((await ex('touch', { world: 'expo', id: XB.id, m: 'email', out: 'sent' })).ok, 'it logs touches on expo leads');
   const cc = client(); await cc('signin', { code: CHECK }); const CJ = await cc('data');
-  ok(CJ.ok && CJ.expo.orgs.length === 64 && CJ.leads.length > 0, 'Claude Check reads the Expo leads beside the sponsor desk');
-  ok((await cc('xnote', { id: XO.id, note: 'x' }))._status === 403 && (await cc('xstage', { id: XO.id, stage: 'booked' }))._status === 403 && (await cc('xlead', { name: 'CC Test' }))._status === 403, 'but cannot write to them (403)');
-  await cc('signout', {});
-  /* the screens */
+  ok(CJ.ok && CJ.sponsor.recs.length > 0 && CJ.expo.recs.length > 0, 'Claude Check reads both lists');
+  const ccw = [['touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked' }], ['touch', { world: 'expo', id: XB.id, m: 'call', out: 'talked' }], ['owner', { world: 'sponsor', id: K.id, owner: '' }], ['stage', { world: 'expo', id: XB.id, stage: 'lost', why: 'x' }], ['emailed', { world: 'sponsor', id: K.id, to: 'a@b.co' }]];
+  let ccd = 0; for (const [act, body] of ccw) if ((await cc(act, body))._status === 403) ccd++;
+  ok(ccd === ccw.length, `Claude Check saves nothing (403 on ${ccd} of ${ccw.length})`);
+  ok((await a('touch', { world: 'sponsor', id: NEW[20].id, m: 'call', out: 'talked' })).owner === 'Test Admin', 'the admin works the desk like a seller');
+
+  console.log('The email link (for the Peak email sender)');
+  const KEY = php(['servicekey', 'Peak email']).match(/: ([0-9a-f]{48})/)[1];
+  const sv = client({ 'X-Desk-Key': KEY }), bad = client({ 'X-Desk-Key': 'nope' });
+  const EM = NEW[21], EX = xseed.orgs[20];
+  ok((await bad('emailed', { world: 'sponsor', id: EM.id, to: 'a@example.com' }))._status === 401 && (await x('emailed', { world: 'sponsor', id: EM.id, to: 'a@example.com' }))._status === 401, 'a wrong key, or no key and no sign-in, is refused');
+  let e1 = await sv('emailed', { world: 'sponsor', id: EM.id, to: 'pat@example.com', subject: 'Court sponsorship at Peak', ref: 'msg-1' });
+  D = await b('data'); let em = find('sponsor', EM.id);
+  ok(e1.ok && e1.stage === 'emailed' && em.last.m === 'email' && em.last.by === 'Peak email' && em.last.auto && em.owner === '' && /pat@example.com/.test(em.last.note), 'emailed: To contact \u2192 Emailed, a touch by "Peak email" (automatic) with who it went to; nobody becomes owner');
+  ok((await sv('emailed', { world: 'sponsor', id: EM.id, to: 'pat@example.com', ref: 'msg-1' })).dup === true && (await b('data')).sponsor.recs.find((r) => r.id === EM.id).touches.length === 1, 'the same message again (same ref) is not logged twice');
+  ok((await sv('emailed', { world: 'expo', id: EX.id, to: 'show@example.com', ref: 'msg-2' })).stage === 'contacted', 'an expo lead: To contact \u2192 Contacted');
+  ok((await sv('emailed', { world: 'sponsor', id: 'zzzzzzzzzz', to: 'a@example.com' }))._status === 404 && (await sv('emailed', { world: 'sponsor', id: EM.id, to: 'not-an-email' }))._status === 400, 'a wrong company or address is refused');
+  ok((await sv('emailreply', { world: 'sponsor', id: EM.id, from: 'Pat', note: 'Interested, call me', ref: 'r-1' })).ok, 'emailreply logs the reply');
+  D = await b('data'); em = find('sponsor', EM.id);
+  ok(em.last.out === 'replied' && em.next.date === today() && /replied/.test(em.next.what), 'a reply: a touch (replied) and a follow-up today, so it shows on Today');
+  ok((await sv('touch', { world: 'sponsor', id: EM.id, m: 'call', out: 'talked' }))._status === 401, 'the key only opens the two email actions');
+  const cli = JSON.parse(php(['emailed', 'sponsor', NEW[22].id, 'x@example.com', 'Hello']));
+  ok(cli.ok && cli.stage === 'emailed', 'the same from the command line (php desk.php emailed sponsor <id> <to> [subject])');
+  /* the sender reads the log itself: what it sees must match the desk */
+  const replay = {}; for (const l of lines('events.log')) { const r = JSON.parse(l); if (r.t === 'status') replay[r.id] = r.status; }
+  ok(replay[EM.id] === 'emailed' && replay[K.id] && replay[K.id] !== 'new' && !replay[NEW[30].id], 'the sender\u2019s own reading of events.log sees the stage (Emailed, Texted ...) and skips them; untouched companies stay new to it');
+  ok(lines('events.log').every((l) => { try { JSON.parse(l); return true; } catch { return false; } }), 'every log line is whole JSON');
+
+  console.log('Several people at once');
+  D = await b('data'); const ids = NEW.filter((l) => find('sponsor', l.id).stage === 'new').slice(0, 12).map((l) => l.id);   /* companies nobody has touched yet */
+  const conc = await Promise.all(ids.map((id, i) => new Promise((res) => execFile('php', [join(WEB, 'api/desk.php'), 'emailed', 'sponsor', id, `p${i}@example.com`], { env }, (e, so, se) => res(e ? 'cli err ' + (se || so || e.message).slice(0, 200) : 'ok')))).concat(
+    seed.leads.filter((l) => l.list === 'local').slice(0, 10).map((l, i) => (i % 2 ? b : c2)('touch', { world: 'sponsor', id: l.id, m: 'call', out: 'noanswer' }).then((j) => j.ok ? 'ok' : 'web ' + j._status + ' ' + j.error))));
+  const concBad = conc.filter((x) => x !== 'ok');
+  writeFileSync(join(LD, 'events.log'), JSON.stringify({ t: 'note', id: ids[0], note: 'written by another program meanwhile', by: 'Peak email', at: Math.floor(Date.now() / 1000) }) + '\n', { flag: 'a' });
+  D = await b('data');
+  const missE = ids.filter((id) => find('sponsor', id).stage !== 'emailed'), missC = seed.leads.filter((l) => l.list === 'local').slice(0, 10).filter((l) => find('sponsor', l.id).stage !== 'called').map((l) => l.id + ':' + find('sponsor', l.id).stage);
+  ok(!missE.length && !missC.length, '12 emails from the command line and 10 calls over the web at the same moment: all 22 kept' + (missE.length || missC.length ? ' MISSING ' + JSON.stringify({ missE, missC, concBad }) : ''));
+  ok(find('sponsor', ids[0]).notes.some((n) => /another program/.test(n.note)), 'a row another program appends is read in on the next request');
+  const before = JSON.stringify(D.sponsor.recs.map((r) => [r.id, r.stage, r.owner, r.touches.length, r.notes.length, r.next])) + JSON.stringify(D.expo.recs.map((r) => [r.id, r.stage, r.owner, r.touches.length]));
+  php(['rebuild']); const D2 = await b('data');
+  ok(JSON.stringify(D2.sponsor.recs.map((r) => [r.id, r.stage, r.owner, r.touches.length, r.notes.length, r.next])) + JSON.stringify(D2.expo.recs.map((r) => [r.id, r.stage, r.owner, r.touches.length])) === before, 'php desk.php rebuild (from the lists and the logs) gives exactly the same records');
+  ok(JSON.stringify(D2.sponsor.week) === JSON.stringify(D.sponsor.week), 'and the same counts');
+
+  console.log('Look-ups (reads ABC Family\u2019s own website)');
+  const ABC = D2.sponsor.recs.find((l) => l.name === 'ABC Family Chiropractic');
+  const sc = ABC ? await b('scan', { id: ABC.id }) : {};
+  ok(sc.ok && sc.scan && (sc.scan.ok ? sc.scan.phones.length > 0 : true), 'looking up still works' + (sc.scan && !sc.scan.ok ? ' (site unreadable today: ' + sc.scan.err + ')' : ''));
+  ok((await b('scan', { id: K.id, hunter: true })).error === 'Hunter is not set up here.', 'Hunter is off without its key');
+
+  /* ---- the screens ---- */
   console.log('The screens');
-  const PORT = 9397;
-  chrome = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', `--remote-debugging-port=${PORT}`, `--user-data-dir=${cdpDir()}`, 'about:blank'], { stdio: 'ignore' });
+  const CPORT = 9300 + Math.floor(Math.random() * 300);
+  chrome = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', `--remote-debugging-port=${CPORT}`, `--user-data-dir=${cdpDir()}`, 'about:blank'], { stdio: 'ignore' });
   let k = 0; const pend = new Map(), errors = [];
-  const send = (m, pr = {}) => new Promise((res, rej) => { const i = ++k; pend.set(i, { res, rej }); ws.send(JSON.stringify({ id: i, method: m, params: pr })); });
+  const send = (m, p = {}) => new Promise((res, rej) => { const i = ++k; pend.set(i, { res, rej }); ws.send(JSON.stringify({ id: i, method: m, params: p })); });
   const js = async (e) => (await send('Runtime.evaluate', { expression: e, awaitPromise: true, returnByValue: true })).result?.value;
   const waitFor = async (e, l, ms = 15000) => { for (let i = 0; i < ms; i += 150) { if (await js(e)) return true; await sleep(150); } throw new Error('timeout: ' + l); };
   const shot = async (n) => writeFileSync(join(ROOT, 'tests', n), Buffer.from((await send('Page.captureScreenshot', { format: 'png' })).data, 'base64'));
-  /* the sections (2026-10-25): open one by its tab, a chip under its header, read the rows it lists */
-  const tab = async (t) => { await js(`document.querySelector('.tabs [data-tab="${t}"]').click()`); await sleep(300); };
-  const sub = async (s) => { await js(`document.querySelector('.subchips [data-sub="${s}"]').click()`); await sleep(300); };
+  const click = async (sel, wait = 400) => { const r = await js(`(()=>{const e=document.querySelector(${JSON.stringify(sel)});if(!e)return false;e.click();return true})()`); await sleep(wait); return r; };
+  const clickText = async (sel, re, wait = 500) => { const r = await js(`(()=>{const e=[...document.querySelectorAll(${JSON.stringify(sel)})].find(b=>${re}.test(b.textContent));if(!e)return false;e.click();return true})()`); await sleep(wait); return r; };
+  const tab = (t) => click(`.tabs [data-tab="${t}"]`); const sub = (s) => click(`.subchips [data-sub="${s}"]`);
+  const world = (w) => click(`.world [data-world="${w}"]`);
   const rowIds = () => js(`[...document.querySelectorAll('.list .row')].map(r=>r.getAttribute('data-id'))`);
-  const rowNames = () => js(`[...document.querySelectorAll('.list .row .nm b')].map(b=>b.textContent)`);
-  const tabN = (t) => js(`+document.querySelector('.tabs [data-tab="${t}"] .tn').textContent`);
-  const subN = (s) => js(`+document.querySelector('.subchips [data-sub="${s}"] b').textContent`);
-  const same = (a, b) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
-  const SECOF = (l) => l.list === 'renew' ? 'peak' : l.list === 'new' ? 'new' : 'local';
-  const BOARD = ['contacted', 'tour', 'toured', 'proposal', 'signed'];
-  let tg; for (let i = 0; i < 60 && !tg; i++) { try { tg = (await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json()).find((y) => y.type === 'page'); } catch {} if (!tg) await sleep(200); }
+  const text = () => js(`document.querySelector('main').textContent`);
+  const fits = `document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`;
+  let tg; for (let i = 0; i < 60 && !tg; i++) { try { tg = (await (await fetch(`http://127.0.0.1:${CPORT}/json/list`)).json()).find((y) => y.type === 'page'); } catch {} if (!tg) await sleep(200); }
   ws = new WebSocket(tg.webSocketDebuggerUrl); await new Promise((r) => (ws.onopen = r));
   ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); if (m.method === 'Page.javascriptDialogOpening') send('Page.handleJavaScriptDialog', { accept: true }); if (m.id && pend.has(m.id)) { const q = pend.get(m.id); pend.delete(m.id); m.error ? q.rej(new Error(m.error.message)) : q.res(m.result); } };
   await send('Page.enable'); await send('Runtime.enable');
-  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });   /* a light device, whatever this computer's own setting (the new laptop runs dark, 2026-11) */
-  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
+  await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'light' }] });
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false });
   await send('Page.navigate', { url: ORIGIN + '/' });
   await waitFor(`!!document.querySelector('.signin input')`, 'sign-in');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${SELLER}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
-  await waitFor(`!!document.querySelector('.row')`, 'the first list');
-  ok(await js(`[...document.querySelectorAll('.tabs button .tl')].map(b=>b.textContent).join(',')==='Lists,Board,New leads,Peak sponsors,Local businesses,Expo leads,More'`), 'the tabs: Lists, Board, New leads, Peak sponsors, Local businesses (Matthew\u2019s order), Expo leads (2026-11-13), then More');
-  ok(await js(`document.querySelector('main').dataset.section==='lists'&&document.querySelector('.shead h1').textContent==='Lists'&&document.querySelector('.sdesc').textContent.length>20`), 'it opens on Lists, with a line saying what is in it');
-  /* every section: its header, its line, its count, the companies it should list */
-  let DS = await b('data');
-  const want = { lists: DS.leads.map((l) => l.id), 'new': DS.leads.filter((l) => SECOF(l) === 'new').map((l) => l.id), peak: DS.leads.filter((l) => SECOF(l) === 'peak').map((l) => l.id), local: DS.leads.filter((l) => SECOF(l) === 'local').map((l) => l.id) };
-  const NAMES = { lists: 'Lists', 'new': 'New leads', peak: 'Peak sponsors', local: 'Local businesses' }, got = {};
-  for (const t of ['lists', 'new', 'peak', 'local']) {
-    await tab(t); got[t] = await rowIds();
-    ok(await js(`document.querySelector('main').dataset.section==='${t}'&&document.querySelector('.shead h1').textContent==='${NAMES[t]}'&&!!document.querySelector('.sdesc').textContent&&document.querySelector('.tabs [data-tab="${t}"]').getAttribute('aria-current')==='page'`), `${NAMES[t]} opens with its header and line`);
-    ok(same(got[t], want[t]) && (await tabN(t)) === want[t].length, `${NAMES[t]} lists its ${want[t].length} companies, and its tab says ${want[t].length}`);
-  }
-  ok(DS.leads.every((l) => [got.new, got.peak, got.local].filter((g) => g.includes(l.id)).length === 1) && got.new.length + got.peak.length + got.local.length === got.lists.length, 'no company shows in two of New leads, Peak sponsors and Local businesses; together they are Lists');
-  ok(got.new.includes(L.id) && !got.peak.includes(L.id) && !got.local.includes(L.id), 'Kaiser is under New leads only');
-  await tab('board');
-  ok((await tabN('board')) === DS.leads.filter((l) => BOARD.includes(l.status)).length && await js(`document.querySelector('.shead h1').textContent==='Board'&&document.querySelector('.subchips [data-sub="stages"]').getAttribute('aria-pressed')==='true'`), 'Board opens on its stages; its tab counts the companies past Not contacted');
-  ok((await subN('tours')) === DS.tours.filter((x) => x.date >= today()).length && (await subN('props')) === DS.proposals.length && (await subN('signed')) === DS.leads.filter((l) => l.status === 'signed').length, 'Board\u2019s chips count the tours coming up, the proposals and the signed sponsors');
-  await tab('more');
-  ok(await js(`[...document.querySelectorAll('.subchips button')].map(b=>b.textContent).join(',')==='Report,Profit & loss,Packages,What Peak offers,What we could offer,Look'&&!document.querySelector('.tabs [data-tab="more"] .tn')`), 'More holds the report, profit and loss, packages the two reading pages and the look');
-  /* the look (2026-10-26): More, Look sets Auto / Light / Dark, the Traverse field app's shared key */
-  await js(`[...document.querySelectorAll('.subchips button')].find(b=>b.textContent==='Look').click()`); await sleep(400);
-  const bgSum = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
-  await js(`document.querySelector('[data-look="dark"]').click()`); await sleep(300);
-  ok(await js(`document.documentElement.getAttribute('data-theme')==='dark'&&localStorage.getItem('peakdesk.theme')==='dark'&&localStorage.getItem('sixfold.theme')===null`) && (await js(bgSum)) < 120, 'More, Look: Dark turns the desk dark and saves the desk’s own setting (not the field app’s)');
-  await tab('board'); await sleep(400); await shot('desk-dark-board.png'); await tab('more');
-  await js(`[...document.querySelectorAll('.subchips button')].find(b=>b.textContent==='Look').click()`); await sleep(400);
-  await js(`document.querySelector('[data-look="auto"]').click()`); await sleep(300);
-  ok(await js(`!document.documentElement.hasAttribute('data-theme')&&localStorage.getItem('peakdesk.theme')===null`) && (await js(bgSum)) > 600, 'Look: Auto follows the device again (light here)');
-  /* chips belong to their own section */
-  await tab('new');
-  ok(await js(`!document.querySelector('.subchips')&&!!document.querySelector('.stagechips')&&![...document.querySelectorAll('main button')].some(b=>/^(Board|Removed|Follow-ups due|Active)/.test(b.textContent))`), 'New leads shows its stage chips and none of another section\u2019s');
-  ok(await js(`document.querySelector('.sortby select').value==='reach'`), 'New leads sort the best contact first');
-  await js(`(()=>{const s=document.querySelector('.sortby select');s.value='name';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(150);
-  const nn = await rowNames(); ok(nn.join('|') === [...nn].sort((a, b) => a.localeCompare(b)).join('|'), 'sorted by name on a tap');
-  await js(`(()=>{const s=document.querySelector('.sortby select');s.value='reach';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(150);
-  await js(`[...document.querySelectorAll('.stagechips button')].find(b=>b.dataset.st==='signed').click()`); await sleep(250);
-  ok(same(await rowIds(), [L.id]), 'the Signed stage chip under New leads shows only Kaiser');
-  await tab('peak');
-  ok(await js(`document.querySelector('.stagechips [data-st="all"]').getAttribute('aria-pressed')==='true'`), 'the stage picked under New leads does not carry into Peak sponsors');
-  await tab('new');
-  ok(await js(`document.querySelector('.stagechips [data-st="signed"]').getAttribute('aria-pressed')==='true'`), 'and New leads keeps its own when you come back');
-  await js(`document.querySelector('.stagechips [data-st="all"]').click()`); await sleep(250);
-  /* Lists: search all, follow-ups due, removed */
-  await tab('lists');
-  await js(`(()=>{const q=document.querySelector('.controls .search');q.value='kaiser';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
-  ok(same(await rowIds(), [L.id]) && await js(`/New lead/.test(document.querySelector('.list .row .nm small').textContent)`), 'Lists searches every company and says which list each is on');
-  await js(`(()=>{const q=document.querySelector('.controls .search');q.value='';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
-  await sub('due');
-  const dueWant = DS.leads.filter((l) => l.next && l.next.date && l.next.date <= today() && !['signed', 'no'].includes(l.status));
-  ok(same(await rowIds(), dueWant.map((l) => l.id)) && (await subN('due')) === dueWant.length && dueWant.length >= 2, `Follow-ups due lists the ${dueWant.length} due today or late`);
-  ok((await rowIds())[0] === FU[1].id, 'the late one first');
-  await sub('all');
-  /* the company page (opened from New leads) */
-  await tab('new');
-  await js(`[...document.querySelectorAll('.row')].find(r=>/Kaiser/.test(r.textContent)).click()`); await sleep(300);
-  ok(await js(`!!document.querySelector('.detail')&&/Signed/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)&&/renews/.test(document.querySelector('.detail').textContent)`), 'the company opens beside the list, at Signed, with its renewal date');
-  ok(await js(`[...document.querySelectorAll('.detail .note .lnk')].some(b=>b.textContent==='Remove')&&/History/.test(document.querySelector('.detail').textContent)`), 'notes have a Remove link; status changes sit under History');
-  ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')`), 'a note with HTML in it shows as text, never as a picture or code');
-  ok(await js(`[...document.querySelectorAll('.detail .ct a')].some(a=>a.href==='mailto:pat@example.com')`), 'the contact\u2019s email is a tap-to-email link');
-  await shot('desk-pipeline.png');
-  /* proposal print view */
-  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Proposal \\$24,500/.test(b.textContent)).click()`); await sleep(300);
-  ok(await js(`!!document.querySelector('.paper')&&/Kaiser Permanente/.test(document.querySelector('.paper h1').textContent)&&/\\$24,500/.test(document.querySelector('.paper').textContent)&&/Prepared for Pat Test/.test(document.querySelector('.paper').textContent)`), 'the proposal opens as a clean page: company, Prepared for, $24,500');
-  ok(await js(`[...document.querySelectorAll('.printbar button')].some(b=>/Save as PDF/.test(b.textContent))`), 'with a Save as PDF button');
-  const pdf = await send('Page.printToPDF', { printBackground: true });
-  writeFileSync(join(ROOT, 'tests', 'desk-proposal.pdf'), Buffer.from(pdf.data, 'base64'));
-  ok(pdf.data.length > 5000, 'and it prints to PDF');
-  await js(`[...document.querySelectorAll('.printbar button')].find(b=>/Back/.test(b.textContent)).click()`); await sleep(250);
-  ok(await js(`document.querySelector('main').dataset.section==='new'&&!!document.querySelector('.detail')`), '\u2039 Back returns to the company under New leads');
-  /* the two reading pages, under More */
-  await tab('more'); await sub('offer');
-  ok(await js(`/Court sponsor: .12,000 a year/.test(document.querySelector('main').textContent)&&/Phil Long Ford/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .info').length===5`), 'More \u203a What Peak offers: packages, sponsors, five sections');
-  await sub('better');
-  ok(await js(`/Springs Pickleball/.test(document.querySelector('main table').textContent)&&/Category exclusivity/.test(document.querySelector('main').textContent)&&[...document.querySelectorAll('main .src a')].every(a=>/^https:/.test(a.href))`), 'More \u203a What we could offer: price table, ideas, sources are links');
-  /* report */
-  await sub('report');
-  ok(await js(`/proposals out/.test(document.querySelector('main').textContent)`), 'More \u203a Report shows the numbers');
-  await js(`[...document.querySelectorAll('main .btn')].find(b=>/Open the report/.test(b.textContent)).click()`); await sleep(300);
-  ok(await js(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/Proposals out/.test(document.querySelector('.paper').textContent)&&/Best new leads not contacted yet/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, proposals out, best new leads');
-  const pdf2 = await send('Page.printToPDF', { printBackground: true }); writeFileSync(join(ROOT, 'tests', 'desk-report.pdf'), Buffer.from(pdf2.data, 'base64'));
-  /* the board */
-  await tab('board');
-  ok(await js(`[...document.querySelectorAll('.bhead b')].map(b=>b.textContent).join(',')==='Contacted,Tour booked,Toured,Proposal sent,Signed'`), 'the board: a column for each stage');
-  ok(await js(`(()=>{const c=[...document.querySelectorAll('.bcol')].pop();return /Kaiser Permanente/.test(c.textContent)&&/\\$24,500 a yr/.test(c.querySelector('.bhead').textContent)})()`), 'Kaiser sits under Signed; the column adds up $24,500 a year');
-  ok(await js(`document.querySelectorAll('.bcard').length`) === DS.leads.filter((l) => BOARD.includes(l.status)).length, 'every company past Not contacted is on the board once');
+  await waitFor(`!!document.querySelector('.kpis')`, 'Today');
+  ok(await js(`[...document.querySelectorAll('.world button')].map(b=>b.textContent).join(',')==='Sponsors,Expo leads'&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Pipeline,Companies,Tours & deals,More'`), 'the bar: Sponsors | Expo leads, then Today, Pipeline, Companies, Tours & deals, More');
+  ok(await js(`document.querySelector('main').dataset.section==='today'&&location.hash==='#sponsor/today'`), 'it opens on Today (#sponsor/today)');
+  D = await b('data'); const dueN = D.sponsor.recs.filter((r) => r.next && r.next.date && r.next.date <= today() && !['signed', 'lost'].includes(r.stage)).length;
+  ok(await js(`+document.querySelector('.kpi[data-k="due"] b').textContent`) === dueN && dueN >= 1 && await js(`document.querySelectorAll('[data-blk="due"] .row').length`) === dueN, `Today: follow-ups due (${dueN}), each listed`);
+  ok(await js(`['due','fresh','wait','tours','week'].every(k=>!!document.querySelector('[data-blk="'+k+'"]'))&&/Proposals waiting/.test(document.querySelector('[data-blk="wait"]').textContent)`), 'Today has follow-ups due, to contact next, proposals waiting, tours coming up, this week');
+  ok(await js(`(()=>{const r=[...document.querySelectorAll('[data-blk="week"] tr')].find(r=>/Test Seller/.test(r.textContent));return !!r&&r.children[1].textContent===String(${(D.sponsor.week['Test Seller'] || {}).calls || 0})})()`) && (D.sponsor.week['Test Seller'] || {}).calls >= 3, 'This week shows the seller\u2019s calls');
+  await shot('desk-today.png');
+  /* whose: Mine */
+  await click('.ownbar [data-owner="mine"]');
+  const mineN = D.sponsor.recs.filter((r) => r.owner === 'Test Seller').length;
+  ok(await js(`localStorage.getItem('peakdesk.owner')==='mine'&&/Mine/.test(document.querySelector('.ownbar [aria-pressed="true"]').textContent)&&+document.querySelector('.ownbar [data-owner="mine"] b').textContent===${mineN}`), `Whose: Mine (${mineN}) is kept on this device`);
+  await click('.ownbar [data-owner="all"]');
+  /* Pipeline */
+  await tab('pipe');
+  ok(await js(`document.querySelectorAll('.funnel .fr').length===10&&!document.querySelector('.list')`), 'Pipeline opens on the stages (10, with counts), no list until one is picked');
+  await click('.funnel .fr[data-st="emailed"]');
+  const emailedIds = D.sponsor.recs.filter((r) => r.stage === 'emailed').map((r) => r.id);
+  ok((await rowIds()).length === emailedIds.length && (await rowIds()).every((i) => emailedIds.includes(i)), `the Emailed stage lists its ${emailedIds.length}`);
+  ok(await js(`[...document.querySelectorAll('.list .row .lc')].every(e=>/email/i.test(e.textContent))`), 'each row says how it was last contacted (an email, or their reply)');
+  await click('.stagechips [data-st="new"]');
+  /* a card: log a call */
+  const fresh = await js(`document.querySelector('.list .row').getAttribute('data-id')`);
+  await click('.list .row');
+  ok(await js(`!!document.querySelector('.detail .strip')&&/Not contacted yet/.test(document.querySelector('.detail .strip').textContent)&&/Open/.test(document.querySelector('.detail .ownerpick').selectedOptions[0].textContent)`), 'a card shows its stage, owner (Open), last contact (not yet) and next follow-up');
+  ok(await js(`[...document.querySelectorAll('.detail .qb button')].map(b=>b.textContent).join(',')==='No answer,Left voicemail,Talked,Emailed,Texted,More…'`), 'one-tap buttons: No answer, Left voicemail, Talked, Emailed, Texted, More…');
+  ok(await js(`document.querySelector('.detail .fu [aria-pressed="true"]').dataset.fu==='3'`), 'the follow-up starts at In 3 days (working days)');
+  await js(`(()=>{const n=document.querySelector('.detail .tnote');n.value='front desk took a message';return 1})()`);
+  await click('.detail .qb [data-m="call/noanswer"]', 900);
+  D = await b('data'); let fr0 = find('sponsor', fresh);
+  ok(fr0.stage === 'called' && fr0.owner === 'Test Seller' && fr0.last.note === 'front desk took a message' && fr0.next && fr0.next.date > today(), 'No answer: logged with the note, Called, mine, a follow-up 3 working days out');
+  ok(await js(`/Logged: Called, no answer/.test(document.getElementById('toast').textContent)&&!!document.querySelector('#toast button')`), 'the toast says what was logged and offers Undo');
+  await shot('desk-card-logged.png');
+  await click('#toast button', 900);
+  D = await b('data'); ok(find('sponsor', fresh).stage === 'new' && find('sponsor', fresh).touches.length === 0, 'Undo takes it back to To contact' + (find('sponsor', fresh).stage === 'new' ? '' : ' (now ' + find('sponsor', fresh).stage + ', ' + find('sponsor', fresh).touches.length + ' touches, hist ' + JSON.stringify(find('sponsor', fresh).hist.slice(-1)) + ')'));
+  /* More… */
+  await click('.detail .qb .more');
+  await js(`(()=>{const f=document.querySelector('.detail .inl');const s=f.querySelector('select');s.value='linkedin';s.dispatchEvent(new Event('change'));f.querySelector('textarea').value='connected with the marketing lead';return 1})()`);
+  await clickText('.detail .inl button', '/Log it/', 900);
+  D = await b('data'); ok(find('sponsor', fresh).last.m === 'linkedin' && find('sponsor', fresh).stage === 'emailed', 'More…: LinkedIn, with a note (moves it to Emailed, the written-message stage)');
+  /* contact link prompt */
+  const telOk = await js(`(()=>{const a=document.querySelector('.detail .ct a[href^="tel:"],.detail .callhow a[href^="tel:"]');if(!a)return 'none';a.addEventListener('click',e=>e.preventDefault(),{once:true});a.click();return !document.querySelector('.detail .tprompt').hidden&&/Calling/.test(document.querySelector('.detail .tprompt').textContent)})()`);
+  ok(telOk === true || telOk === 'none', 'tapping a phone number asks how the call went' + (telOk === 'none' ? ' (this company has no phone)' : ''));
+  /* stage: Not now and Lost forms */
+  await click('.detail .stagesec [data-st="notnow"]');
+  ok(await js(`/come back/.test(document.querySelector('.detail .stagesec .inl').textContent)&&document.querySelector('.detail .stagesec .inl input[type=date]').value.length===10`), 'Not now asks for the day to come back');
+  await click('.detail .stagesec [data-st="lost"]');
+  ok(await js(`/Lost: why/.test(document.querySelector('.detail .stagesec .inl').textContent)&&document.querySelectorAll('.detail .stagesec .inl .seg button').length===5`), 'Lost offers five reasons or a typed one');
+  await clickText('.detail .stagesec .inl .seg button', '/Not a fit/', 100); await clickText('.detail .stagesec .inl button', '/Mark Lost/', 900);
+  D = await b('data'); ok(find('sponsor', fresh).stage === 'lost' && find('sponsor', fresh).lost.why === 'Not a fit', 'marked Lost: Not a fit');
+  ok(await js(`/Moved to Lost: Not a fit/.test(document.querySelector('.detail').textContent)&&/connected with the marketing lead/.test(document.querySelector('.detail').textContent)`), 'Activity lists the touches, notes and stage changes');
+  ok(await js(`!document.querySelector('.detail img')`), 'nothing in a card is read as HTML');
+  /* owner: Take it */
+  await click('.detail .close'); await js(`(()=>{const b=document.querySelector('.stagechips [data-st="new"]');if(b&&b.getAttribute('aria-pressed')!=='true')b.click();return 1})()`); await sleep(400); await click('.list .row');
+  const takeId = await js(`document.querySelector('.detail').dataset.id`);
+  await clickText('.detail .strip button', '/Take it/', 900);
+  ok((await b('data')).sponsor.recs.find((r) => r.id === takeId).owner === 'Test Seller', 'Take it makes a company mine');
+  await click('.detail .close');
+  /* board */
+  await click('.controls [data-view="board"]');
+  ok(await js(`[...document.querySelectorAll('.bhead b')].map(b=>b.textContent).join('|')==='Called|Left voicemail|Emailed|Texted|Meeting / tour booked|Proposal sent|Signed|Not now'`), 'Board: a column per stage past To contact');
   await shot('desk-board.png');
-  /* looked up */
-  await js(`[...document.querySelectorAll('.bcard')].find(c=>/ABC Family/.test(c.textContent)).click()`); await sleep(300);
-  ok(await js(`(()=>{const f=document.querySelector('.detail .found');return !!f&&/\\(719\\) 266-6661/.test(f.textContent)&&/Contact page/.test(f.textContent)&&/Look up again/.test(f.textContent)})()`), 'a company shows what its website gave: phone, contact page, Look up again');
-  await shot('desk-lookup.png');
-  /* tours */
-  await sub('tours');
-  ok(await js(`/Today/.test(document.querySelector('main').textContent)&&[...document.querySelectorAll('main button')].some(b=>b.textContent==='Add to my calendar')&&/How did it go\?/.test(document.querySelector('main').textContent)`), 'Board \u203a Tours: today\u2019s tour with Add to my calendar; the past one asks how it went');
-  ok(await js(`location.hash`) === '#board/tours', 'the address keeps the place: #board/tours');
-  await shot('desk-tours.png');
-  await js(`[...document.querySelectorAll('main button')].find(b=>b.textContent==='They came: mark Toured').click()`); await sleep(500);
-  ok(await js(`/Past tours/.test(document.querySelector('main').textContent)&&!!document.querySelector('.pill.o-toured')`), 'marking it Toured files it under Past tours');
-  ok((await b('data')).leads.find((l) => l.name === 'ABC Family Chiropractic').status === 'toured', 'and moves ABC to Toured');
-  await js(`[...document.querySelectorAll('main button')].find(b=>b.textContent==='Open the company').click()`); await sleep(350);
-  ok(await js(`document.querySelector('main').dataset.section==='local'&&/ABC Family/.test(document.querySelector('.detail h2').textContent)&&!!document.querySelector('.list .row.on')`), 'Open the company goes to the section it lives in (Local businesses) with it open');
-  await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
-  ok(await js(`document.querySelector('main').dataset.section==='local'`), 'a reload comes back to the same section');
-  /* signed */
-  await tab('board'); await sub('signed');
-  ok(await js(`/Kaiser Permanente · \\$24,500 a year/.test(document.querySelector('main').textContent)&&/renews/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .todo').length===2&&document.querySelectorAll('main .todo.done').length===1`), 'Board \u203a Signed: Kaiser, $24,500 a year, renewal date, two to-dos with one ticked');
-  await shot('desk-signed.png');
-  /* profit and loss */
-  await tab('more'); await sub('pl');
-  ok(await js(`/\\$10,500 a year \\(88%\\)/.test(document.querySelector('main').textContent)`), 'More \u203a P&L: a court at $12,000 costing $1,500 leaves $10,500 a year (88%)');
-  ok(await js(`/\\$21,260/.test(document.querySelector('.numbers').textContent)&&/No cost entered for: Banner/.test(document.querySelector('.numbers').textContent)`), 'the numbers: $24,500 in, $3,000 to deliver, $240 running = $21,260 profit; flags the banner has no cost');
-  await shot('desk-pl.png');
-  await sub('report');
-  ok(await js(`/Who is on the desk/.test(document.querySelector('main').textContent)`), 'the Report shows who is on the desk and what each did');
-  await sub('pk');
-  ok(await js(`document.querySelectorAll('main .pkrow').length`) === 3, 'More \u203a Packages lists the three packages');
-  /* add a sponsor, remove, bring back */
-  await tab('board'); await sub('signed');
-  await js(`[...document.querySelectorAll('main button')].find(b=>b.textContent==='+ Add a sponsor').click()`); await sleep(250);
-  ok(await js(`!!document.querySelector('.sheet')&&/Add a sponsor/.test(document.querySelector('.sheet h2').textContent)`), 'Signed: + Add a sponsor opens the form');
-  await js(`(()=>{const i=document.querySelector('.sheet input');i.value='kaiser permanente';i.dispatchEvent(new Event('input'));return 1})()`); await sleep(100);
-  ok(await js(`/already on the desk/.test(document.querySelector('.sheet').textContent)`), 'typing a company already on the desk offers to mark that one signed');
-  await js(`(()=>{const i=document.querySelector('.sheet input');i.value='Sheet Sponsor LLC';i.dispatchEvent(new Event('input'));[...document.querySelectorAll('.sheet button')].find(b=>b.textContent==='Add the sponsor').click();return 1})()`); await sleep(700);
-  ok(await js(`!document.querySelector('.sheet')&&/Sheet Sponsor LLC/.test(document.querySelector('main').textContent)`), 'the new sponsor is added and listed under Signed');
-  await shot('desk-add-sponsor.png');
-  await js(`(()=>{const c=[...document.querySelectorAll('main .card')].find(c=>/Sheet Sponsor LLC/.test(c.textContent));[...c.querySelectorAll('button')].find(b=>b.textContent==='Remove').click();return 1})()`); await sleep(700);
-  ok(await js(`!/Sheet Sponsor LLC/.test(document.querySelector('main').textContent)`), 'Remove takes it off the Signed list');
-  await tab('lists'); await sub('removed');
-  ok(await js(`/Sheet Sponsor LLC/.test(document.querySelector('main .list').textContent)&&/Test Sponsor Co/.test(document.querySelector('main .list').textContent)`), 'Lists \u203a Removed lists the removed companies');
-  await js(`(()=>{const r=[...document.querySelectorAll('main .row')].find(r=>/Sheet Sponsor LLC/.test(r.textContent));r.querySelector('button').click();return 1})()`); await sleep(700);
-  ok((await b('data')).leads.some((l) => l.name === 'Sheet Sponsor LLC'), 'Bring back puts it on the desk again');
-  await tab('local'); await sub('added');
-  ok((await rowNames()).includes('Sheet Sponsor LLC') && await js(`document.querySelector('.subchips [data-sub="added"]').getAttribute('aria-pressed')==='true'`), 'a sponsor we added shows under Local businesses \u203a Added on the desk');
-  DS = await b('data');
-  ok((await subN('added')) === DS.leads.filter((l) => l.list === 'added').length && (await subN('local')) === DS.leads.filter((l) => l.list === 'local').length && (await subN('all')) === DS.leads.filter((l) => SECOF(l) === 'local').length, 'Local businesses\u2019 chips: all, from our research, added on the desk, each counted');
-  /* + Add a company, from Local businesses */
-  const NEWCO = 'Reorg Check ' + Array.from({ length: 6 }, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('');
-  await sub('all'); await js(`[...document.querySelectorAll('.shead button')].find(b=>b.textContent==='+ Add a company').click()`); await sleep(200);
-  ok(await js(`!!document.querySelector('.addcard')`), 'Local businesses has + Add a company');
-  await js(`(()=>{const i=document.querySelectorAll('.addcard input');i[0].value='${NEWCO}';i[1].value='Test';[...document.querySelectorAll('.addcard button')].find(b=>b.textContent==='Add').click();return 1})()`); await sleep(800);
-  ok(await js(`document.querySelector('main').dataset.section==='local'&&document.querySelector('.subchips [data-sub="added"]').getAttribute('aria-pressed')==='true'&&/${NEWCO}/.test(document.querySelector('.detail h2').textContent)`), 'the new company opens under Local businesses \u203a Added on the desk');
-  await tab('new'); ok(!(await rowNames()).includes(NEWCO), 'and is not under New leads');
-  /* Peak's own sponsor records (2026-10-25, Nneka's tracker); only when the local records file is there (it is not in git) */
-  if (existsSync(LD + '/peak-records.json')) {
-    const PR = JSON.parse(readFileSync(LD + '/peak-records.json', 'utf8')).leads;
-    await tab('peak');
-    ok((await js(`document.querySelectorAll('.list .row').length`)) === PR.length && (await tabN('peak')) === PR.length, `Peak sponsors lists every sponsor on Peak's tracker (${PR.length}), and its tab says so`);
-    const nAct = PR.filter((e) => /^active/i.test(e.peak[0].status)).length;
-    await sub('Active');
-    ok((await js(`document.querySelectorAll('.list .row').length`)) === nAct && await js(`[...document.querySelectorAll('.list .row')].every(r=>/Active/.test(r.querySelector('.pill').textContent))`) && (await subN('Active')) === nAct, `the Active chip shows the ${nAct} active sponsors`);
-    await sub('all');
-    ok(await js(`/Active/.test(document.querySelector('.list .row .pill').textContent)&&document.querySelector('.sortby select').value==='peak'`), 'active sponsors sort first');
-    await js(`[...document.querySelectorAll('.list .row')].find(r=>/Petrali/.test(r.textContent)).click()`); await sleep(300);
-    ok(await js(`/On Peak’s tracker/.test(document.querySelector('.detail').textContent) && !!document.querySelector('.detail .chk')`), 'a sponsor shows its Peak record and what to check');
-    await shot('desk-peak-sponsor.png');
-    await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
-    await js(`[...document.querySelectorAll('.list .row')].find(r=>/Rally Back/.test(r.textContent)).click()`); await sleep(300);
-    ok((await js(`document.querySelectorAll('.detail .kv').length`)) === 2, 'a sponsor with two agreements shows both (Rally Back: tenant and sponsor)');
-    await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
-  }
-  /* Expo leads on the screen (2026-11-13) */
-  await tab('expo');
-  const XS = (await b('data')).expo, DSn = await b('data');
-  ok(await js(`document.querySelector('.shead h1').textContent==='Expo leads'&&location.hash==='#expo/all'`) && (await tabN('expo')) === XS.orgs.length, `Expo leads opens (#expo/all); its tab says ${XS.orgs.length}`);
-  ok(same(await rowIds(), XS.orgs.map((o) => o.id)), 'it lists exactly the expo organisations, none of the sponsor companies');
-  ok(await js(`document.querySelector('.sortby select').value==='pri'&&(()=>{const p=[...document.querySelectorAll('.list .row .sc')].map(s=>parseInt(s.textContent));return p.every((v,i)=>!i||v>=p[i-1])})()`), 'priority 1 first by default');
-  ok((await tabN('lists')) === DSn.leads.length && (await tabN('board')) === DSn.leads.filter((l) => BOARD.includes(l.status)).length && (await tabN('local')) === DSn.leads.filter((l) => SECOF(l) === 'local').length, 'the sponsor tabs keep their own counts (no expo lead in them)');
-  await js(`document.querySelector('.xprichips [data-x="1"]').click()`); await sleep(250);
-  ok(same(await rowIds(), XS.orgs.filter((o) => o.pri === 1).map((o) => o.id)), `the Priority 1 chip shows the ${XS.orgs.filter((o) => o.pri === 1).length} priority-1 leads`);
-  await js(`document.querySelector('.xprichips [data-x="all"]').click()`); await sleep(250);
-  await js(`document.querySelector('.xstagechips [data-x="talking"]').click()`); await sleep(250);
-  ok(same(await rowIds(), [XO.id]), 'the Talking stage chip shows the Tri-Lakes Chamber only');
-  await js(`document.querySelector('.xstagechips [data-x="all"]').click()`); await sleep(250);
-  await js(`(()=>{const s=document.querySelector('select.xcat');s.value='Bridal & family expos';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(250);
-  ok(same(await rowIds(), XS.orgs.filter((o) => o.cat === 'Bridal & family expos').map((o) => o.id)), 'the category filter shows that category only');
-  await js(`(()=>{const s=document.querySelector('select.xcat');s.value='all';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(250);
-  await js(`(()=>{const q=document.querySelector('.controls .search');q.value='terri hayes';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
-  ok(same(await rowIds(), [XO.id]), 'search finds a lead by its contact’s name');
+  await click('.controls [data-view="stages"]');
+  /* Companies */
+  await tab('list');
+  const secOf = (l) => l.list === 'renew' ? 'peak' : l.list;
+  for (const s of ['new', 'peak', 'local']) { await sub(s); const want = D.sponsor.recs.filter((r) => secOf(r) === s).length; ok((await rowIds()).length === want && await js(`+document.querySelector('.subchips [data-sub="${s}"] b').textContent`) === want, `Companies \u203a ${s}: ${want}`); }
+  await sub('all');
+  await js(`(()=>{const q=document.querySelector('.controls .search');q.value=${JSON.stringify(K.name.toLowerCase())};q.dispatchEvent(new Event('input'));return 1})()`); await sleep(200);
+  ok((await rowIds()).includes(K.id), 'search finds a company');
   await js(`(()=>{const q=document.querySelector('.controls .search');q.value='';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
-  await sub('due');
-  ok(same(await rowIds(), XS.orgs.filter((o) => o.next && o.next.date && o.next.date <= today() && !['booked', 'notfit'].includes(o.stage)).map((o) => o.id)) && (await rowIds()).includes(XO.id), 'Follow-ups due lists the Tri-Lakes Chamber (due today)');
-  await sub('all');
-  await js(`[...document.querySelectorAll('.list .row')].find(r=>r.dataset.id==='${XO.id}').click()`); await sleep(300);
-  ok(await js(`(()=>{const d=document.querySelector('.detail');return !!d&&/Tri-Lakes/.test(d.querySelector('h2').textContent)&&[...d.querySelectorAll('a')].some(a=>a.href.toLowerCase()==='mailto:terri@trilakeschamber.com')&&/published/.test(d.textContent)&&/confidence high/.test(d.textContent)&&/best route/.test(d.textContent)&&[...d.querySelectorAll('a')].some(a=>/^tel:/.test(a.href))})()`), 'a lead opens with its contacts: tap-to-email, tap-to-call, email published, confidence, best route');
-  ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')&&/Their events/.test(document.querySelector('.detail').textContent)&&/Talking/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)`), 'its events, its stage (Talking), and a note with HTML shown as text');
-  await js(`[...document.querySelectorAll('.detail .seg button')].find(b=>b.dataset.x==='visit').click()`); await sleep(700);
-  ok((await b('data')).expo.orgs.find((o) => o.id === XO.id).stage === 'visit' && await js(`/Site visit booked/.test(document.querySelector('.detail .seg button[aria-pressed="true"]').textContent)`), 'tapping Site visit booked saves it and the page stays on the lead');
-  await shot('expo-desktop-light.png');
-  await js(`(()=>{localStorage.setItem('peakdesk.theme','dark');window.__lookApply();return 1})()`); await sleep(300);
-  ok((await js(bgSum)) < 120, 'Expo leads in dark mode'); await shot('expo-desktop-dark.png');
-  await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(200);
-  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
-  await js(`[...document.querySelectorAll('.list .row')].find(r=>/American Consumer Shows/.test(r.textContent)).click()`); await sleep(300);
-  ok(await js(`[...document.querySelectorAll('.detail .xn.chk')].some(n=>/CORRECTION/.test(n.textContent))`), 'a contact note that warns (a correction) shows in the amber box');
-  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200);
-  await sub('ref');
-  ok(await js(`location.hash==='#expo/ref'&&document.querySelectorAll('main .xq li').length===10&&document.querySelectorAll('main .xvenues tr').length>=9&&/Douglas County Fairgrounds/.test(document.querySelector('.xvenues').textContent)&&/\\$40\\/court\\/hour/.test(document.querySelector('.xvenues').textContent)`), 'Questions and venues: the 10 questions for Peak and the competing venues with rates (#expo/ref)');
-  await shot('expo-ref-desktop.png');
-  await sub('removed');
-  ok(await js(`/Test Expo Promoter/.test(document.querySelector('main .list').textContent)`), 'Expo leads › Removed lists the removed lead');
-  await js(`(()=>{const r=[...document.querySelectorAll('main .row')].find(r=>/Test Expo Promoter/.test(r.textContent));r.querySelector('button').click();return 1})()`); await sleep(700);
-  ok((await b('data')).expo.orgs.some((o) => o.id === xn.id), 'Bring back puts it in the Expo leads again');
-  await sub('all');
-  await js(`[...document.querySelectorAll('.shead button')].find(b=>b.textContent==='+ Add an expo lead').click()`); await sleep(200);
-  await js(`(()=>{const i=document.querySelectorAll('.addcard input');i[0].value='Screen Expo Co';i[1].value='Senior expos';[...document.querySelectorAll('.addcard button')].find(b=>b.textContent==='Add').click();return 1})()`); await sleep(800);
-  ok(await js(`document.querySelector('main').dataset.section==='expo'&&/Screen Expo Co/.test(document.querySelector('.detail h2').textContent)`), '+ Add an expo lead adds it and opens it');
-  ok(!(await b('data')).leads.some((l) => l.name === 'Screen Expo Co' || l.name === 'Test Expo Promoter'), 'and it never reaches the sponsor leads');
-  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Remove this lead/.test(b.textContent)).click()`); await sleep(700);
-  ok((await b('data')).expo.removed.some((r) => r.name === 'Screen Expo Co') && !(await js(`!!document.querySelector('.detail')`)), 'Remove this lead takes it out (to Removed)');
-  /* a picture of every section, desktop then phone, for a look at the layout */
-  const SECTIONS = ['lists', 'board', 'new', 'peak', 'local', 'expo', 'more'];
-  const firstChip = async () => { await js(`(()=>{const b=document.querySelector('.subchips button');if(b&&b.getAttribute('aria-pressed')!=='true')b.click();return 1})()`); await sleep(250); };   /* each section as it first opens */
-  for (const t of SECTIONS) { await tab(t); await firstChip(); await js('window.scrollTo(0,0)'); await shot(`reorg-${t}-desktop.png`); }
-  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
-  await tab('lists'); await sleep(200);
-  ok(await js(`[...document.querySelectorAll('.tabs button')].every(b=>{const r=b.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=document.documentElement.clientWidth+1})`), 'on a phone all seven tabs are in view, no swiping');
-  let wide = [];
-  for (const t of SECTIONS) {
-    await tab(t);
-    for (const s of (await js(`[...document.querySelectorAll('.subchips button')].map(b=>b.dataset.sub)`)) || ['']) { if (s) await sub(s); if (!(await js(`document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`))) wide.push(t + (s ? '/' + s : '')); }
-    await firstChip(); await js('window.scrollTo(0,0)'); await shot(`reorg-${t}-phone.png`);
+  await sub('removed'); ok(/Removed/.test(await text()) || (await js(`location.hash`)) === '#sponsor/list/all', 'Removed (or back to all when empty)');
+  /* tours & deals */
+  await tab('deals'); await sub('signed');
+  ok(/Test Sponsor Co/.test(await text()) && /\$24,500 a year/.test(await text()), 'Tours & deals \u203a Signed: the signed sponsors and what they are worth');
+  await sub('props'); ok(/\$24,500/.test(await text()), 'Proposals');
+  await clickText('main .card button', '/Open · save as PDF/', 500);
+  ok(await js(`!!document.querySelector('.paper')&&/sponsorship proposal/.test(document.querySelector('.paper').textContent)`), 'a proposal opens as a page to save as PDF');
+  writeFileSync(join(ROOT, 'tests', 'desk-proposal.pdf'), Buffer.from((await send('Page.printToPDF', { printBackground: true })).data, 'base64'));
+  await clickText('.printbar button', '/Back/', 300);
+  /* more: report */
+  await tab('more'); await sub('report');
+  ok(/Who is on the desk/.test(await text()), 'More \u203a Report with who has done what');
+  await clickText('main .btn', '/Open the report/', 400);
+  ok(await js(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/This week by person/.test(document.querySelector('.paper').textContent)&&/Proposals out/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, the week by person, proposals out');
+  writeFileSync(join(ROOT, 'tests', 'desk-report.pdf'), Buffer.from((await send('Page.printToPDF', { printBackground: true })).data, 'base64'));
+  await clickText('.printbar button', '/Back/', 300);
+  for (const s of ['pl', 'pk', 'offer', 'better']) { await sub(s); }
+  ok(await js(`/What we could offer/.test(document.querySelector('main').textContent)`), 'P&L, Packages, What Peak offers, What we could offer still open');
+  await sub('look'); await click('[data-look="dark"]');
+  const bgSum = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
+  ok((await js(bgSum)) < 120 && await js(`localStorage.getItem('peakdesk.theme')==='dark'`), 'Look: Dark');
+  await tab('today'); await shot('desk-today-dark.png'); await tab('more'); await sub('look'); await click('[data-look="auto"]');
+  /* expo */
+  await world('expo'); await tab('today');
+  ok(await js(`location.hash==='#expo/today'&&/Expo leads/.test(document.querySelector('.shead h1').textContent)&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Pipeline,Organisations,Tours & quotes,More'`), 'Expo leads: the same tabs (Today, Pipeline, Organisations, Tours & quotes, More)');
+  ok(/Quotes waiting/.test(await text()), 'expo Today: quotes waiting on an answer');
+  await tab('pipe');
+  ok(await js(`document.querySelectorAll('.funnel .fr').length===7`), 'expo Pipeline: its 7 stages');
+  await click('.funnel .fr[data-st="new"]'); await click('.list .row');
+  ok(await js(`/Their events/.test(document.querySelector('.detail').textContent)&&document.querySelectorAll('.detail .qb button').length===6`), 'an expo card: their events and the same one-tap buttons');
+  const xid = await js(`document.querySelector('.detail').dataset.id`);
+  await click('.detail .qb [data-m="email/sent"]', 900);
+  ok((await b('data')).expo.recs.find((r) => r.id === xid).stage === 'contacted', 'Emailed on an expo lead: Contacted');
+  await shot('expo-card.png');
+  await click('.detail .close');
+  await tab('list'); ok(await js(`!!document.querySelector('.xprichips')&&!!document.querySelector('select.xcat')`), 'Organisations keeps priority and category filters');
+  await tab('deals'); await sub('quotes'); ok(/Booked/.test(await text()) && new RegExp(XA.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(await text()), 'Tours & quotes \u203a Quotes and bookings');
+  await tab('more'); await sub('ref'); ok(await js(`document.querySelectorAll('main .xq li').length===10`), 'Questions and venues kept');
+  /* kept from the earlier desk: the lists, Peak's tracker, the reading pages, P&L, add / remove / bring back, the expo details */
+  console.log('What the desk already did');
+  await world('sponsor'); await tab('list'); await sub('new');
+  await js(`(()=>{const s=document.querySelector('.sortsel');s.value='name';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(200);
+  const nn = await js(`[...document.querySelectorAll('.list .row .nm b')].map(b=>b.textContent)`); ok(nn.length > 5 && nn.join('|') === [...nn].sort((p, q) => p.localeCompare(q)).join('|'), 'Companies › New leads sort by name on a tap');
+  await click('.xstagechips [data-x="called"]');
+  await sub('local'); ok(await js(`document.querySelector('.xstagechips [data-x="all"]').getAttribute('aria-pressed')==='true'`), 'a stage picked under New leads does not carry into Local businesses');
+  await sub('new'); ok(await js(`document.querySelector('.xstagechips [data-x="called"]').getAttribute('aria-pressed')==='true'`), 'and New leads keeps its own when you come back'); await click('.xstagechips [data-x="all"]');
+  await js(`(()=>{const q=document.querySelector('.controls .search');q.value=${JSON.stringify(K.name.toLowerCase())};q.dispatchEvent(new Event('input'));return 1})()`); await sleep(200); await click('.list .row');
+  ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')&&[...document.querySelectorAll('.detail .ct a')].some(a=>a.href==='mailto:pat@example.com')&&/From: Added on the desk by Test Seller/.test(document.querySelector('.detail').textContent)`), 'a card: a note with HTML shows as text; an added contact is tap-to-email and says who added it');
+  ok(await js(`/Looked up/.test(document.querySelector('.detail').textContent)&&/Tour and proposal/.test(document.querySelector('.detail').textContent)`), 'the card keeps Looked up and Tour and proposal');
+  await click('.detail .close');
+  if (precs.length) {
+    await sub('peak');
+    ok((await rowIds()).length === D.sponsor.recs.filter((r) => r.list === 'renew').length && await js(`/Active/.test(document.querySelector('.list .row .pill').textContent)&&document.querySelector('.sortsel').value==='peak'`), `Companies › Peak sponsors: every sponsor on Peak’s tracker, active first`);
+    await clickText('.list .row', '/Petrali/', 400);
+    ok(await js(`/On Peak’s tracker/.test(document.querySelector('.detail').textContent)&&!!document.querySelector('.detail .chk')`), 'a sponsor shows its Peak record and what to check'); await shot('desk-peak-sponsor.png');
+    await click('.detail .close'); await clickText('.list .row', '/Rally Back/', 400);
+    ok((await js(`document.querySelectorAll('.detail .kv').length`)) === 2, 'a sponsor with two agreements shows both (Rally Back)'); await click('.detail .close');
   }
-  ok(!wide.length, 'on a phone no section or chip scrolls sideways' + (wide.length ? ': ' + wide.join(', ') : ''));
-  await tab('board'); await sub('tours'); await shot('reorg-board-tours-phone.png');
-  ok(await js(`document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`), 'Board \u203a Tours fits a phone');
-  await sub('stages');
-  ok(await js(`document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`), 'the board on a phone: its columns swipe inside, the page does not');
-  await shot('desk-board-phone.png');
-  await tab('new');
-  await js(`document.querySelector('.row').click()`); await sleep(300);
-  ok(await js(`getComputedStyle(document.querySelector('.detail')).position==='fixed'`), 'on a phone a company opens full screen');
-  await shot('desk-phone.png');
-  /* Expo leads on a phone, light and dark */
-  const fits = `document.documentElement.scrollWidth<=document.documentElement.clientWidth+1`;
-  await tab('expo'); await sub('all'); await js('window.scrollTo(0,0)'); await shot('expo-phone-light.png');
-  await js(`[...document.querySelectorAll('.list .row')].find(r=>r.dataset.id==='${XO.id}').click()`); await sleep(300);
-  const xph = await js(`(()=>{const d=document.querySelector('.detail');const small=[...d.querySelectorAll('.seg button,.btn')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<40).map(b=>b.textContent);return {fixed:getComputedStyle(d).position==='fixed',wide:d.scrollWidth-d.clientWidth,small}})()`);
-  ok(xph.fixed && xph.wide <= 1 && !xph.small.length, 'on a phone an expo lead opens full screen, nothing wider than the screen, buttons finger-sized' + (xph.fixed && xph.wide <= 1 && !xph.small.length ? '' : ': ' + JSON.stringify(xph)));
-  await shot('expo-phone-detail.png');
-  await js(`(()=>{localStorage.setItem('peakdesk.theme','dark');window.__lookApply();return 1})()`); await sleep(300); await shot('expo-phone-detail-dark.png');
-  await js(`[...document.querySelectorAll('.detail button')].find(b=>/Close/.test(b.textContent)).click()`); await sleep(200); await js('window.scrollTo(0,0)'); await shot('expo-phone-dark.png');
-  await sub('ref'); ok(await js(fits), 'Questions and venues fits a phone (the table swipes inside)'); await shot('expo-ref-phone-dark.png');
+  await tab('more'); await sub('offer');
+  ok(await js(`/Court sponsor: .12,000 a year/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .info').length===5`), 'More › What Peak offers: five sections');
+  await sub('better'); ok(await js(`/Springs Pickleball/.test(document.querySelector('main table').textContent)&&[...document.querySelectorAll('main .src a')].every(a=>/^https:/.test(a.href))`), 'More › What we could offer: the price table, sources are links');
+  await sub('pl'); ok(await js(`/\\$10,500 a year \\(88%\\)/.test(document.querySelector('main').textContent)&&/\\$21,260/.test(document.querySelector('.numbers').textContent)&&/No cost entered for: Banner/.test(document.querySelector('.numbers').textContent)`), 'More › P&L: $24,500 in, $3,000 to deliver, $240 running = $21,260; flags the banner has no cost');
+  await sub('pk'); ok((await js(`document.querySelectorAll('main .pkrow').length`)) === 2, 'More › Packages lists the packages');
+  await tab('deals'); await sub('tours');
+  ok(await js(`[...document.querySelectorAll('main button')].some(b=>b.textContent==='Add to my calendar')&&/Tours coming up/.test(document.querySelector('main').textContent)`), 'Tours: the tours ahead with Add to my calendar'); await shot('desk-tours.png');
+  await sub('signed'); await clickText('main button', '/\\+ Add a sponsor/', 300);
+  await js(`(()=>{const i=document.querySelector('.sheet input');i.value=${JSON.stringify(K.name.toLowerCase())};i.dispatchEvent(new Event('input'));return 1})()`); await sleep(100);
+  ok(await js(`/already on the desk/.test(document.querySelector('.sheet').textContent)`), '+ Add a sponsor: a company already on the desk is offered instead');
+  await js(`(()=>{const i=document.querySelector('.sheet input');i.value='Sheet Sponsor LLC';i.dispatchEvent(new Event('input'));[...document.querySelectorAll('.sheet button')].find(b=>b.textContent==='Add the sponsor').click();return 1})()`); await sleep(900);
+  ok(await js(`!document.querySelector('.sheet')&&/Sheet Sponsor LLC/.test(document.querySelector('main').textContent)`), 'the new sponsor is listed under Signed'); await shot('desk-signed.png');
+  await js(`(()=>{const c=[...document.querySelectorAll('main .card')].find(c=>/Sheet Sponsor LLC/.test(c.textContent));[...c.querySelectorAll('button')].find(b=>b.textContent==='Remove').click();return 1})()`); await sleep(900);
+  ok(!/Sheet Sponsor LLC/.test(await text()), 'Remove takes it off Signed');
+  await tab('list'); await sub('removed');
+  ok(/Sheet Sponsor LLC/.test(await text()), 'Companies › Removed lists it');
+  await js(`(()=>{const r=[...document.querySelectorAll('main .row')].find(r=>/Sheet Sponsor LLC/.test(r.textContent));r.querySelector('button').click();return 1})()`); await sleep(900);
+  ok((await b('data')).sponsor.recs.some((r) => r.name === 'Sheet Sponsor LLC'), 'Bring back puts it on the desk again');
+  const NEWCO = 'Rebuild Check ' + Math.random().toString(36).slice(2, 8);
+  await clickText('.shead button', '/Add a company/', 200);
+  await js(`(()=>{const i=document.querySelectorAll('.addcard input');i[0].value='${NEWCO}';i[1].value='Test';[...document.querySelectorAll('.addcard button')].find(b=>b.textContent==='Add').click();return 1})()`); await sleep(1000);
+  ok(await js(`location.hash==='#sponsor/list/added'&&new RegExp('${NEWCO}').test(document.querySelector('.detail h2').textContent)`) && (await b('data')).sponsor.recs.find((r) => r.name === NEWCO).owner === 'Test Seller','+ Add a company: it opens under Added on the desk, owned by whoever added it');
+  await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+  ok(await js(`location.hash==='#sponsor/list/added'&&document.querySelector('main').dataset.section==='list'`), 'a reload comes back to the same place');
+  /* expo details */
+  await world('expo'); await tab('list');
+  ok(await js(`document.querySelector('.sortsel').value==='pri'&&(()=>{const p=[...document.querySelectorAll('.list .row .sc')].map(s=>parseInt(s.textContent));return p.length>10&&p.every((v,i)=>!i||v>=p[i-1])})()`), 'Organisations: priority 1 first');
+  await click('.xprichips [data-x="1"]'); D = await b('data');
+  ok((await rowIds()).length === D.expo.recs.filter((o) => o.pri === 1).length, 'the Priority 1 chip shows the priority-1 leads'); await click('.xprichips [data-x="all"]');
+  await js(`(()=>{const s=document.querySelector('select.xcat');s.value='Bridal & family expos';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(300);
+  ok((await rowIds()).length === D.expo.recs.filter((o) => o.cat === 'Bridal & family expos').length && (await rowIds()).length > 0, 'the category filter shows that category only');
+  await js(`(()=>{const s=document.querySelector('select.xcat');s.value='all';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(300);
+  await js(`(()=>{const q=document.querySelector('.controls .search');q.value='terri hayes';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(200);
+  ok(JSON.stringify(await rowIds()) === JSON.stringify([TRI.id]), 'search finds a lead by its contact’s name');
+  await click('.list .row');
+  ok(await js(`(()=>{const d=document.querySelector('.detail');return [...d.querySelectorAll('a')].some(a=>a.href.toLowerCase()==='mailto:terri@trilakeschamber.com')&&/published/.test(d.textContent)&&/confidence high/.test(d.textContent)&&/best route/.test(d.textContent)&&[...d.querySelectorAll('a')].some(a=>/^tel:/.test(a.href))})()`), 'an expo card: tap-to-email, tap-to-call, published, confidence high, best route');
+  await click('.detail .close');
+  await js(`(()=>{const q=document.querySelector('.controls .search');q.value='American Consumer';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(200); await click('.list .row');
+  ok(await js(`[...document.querySelectorAll('.detail .xn.chk')].some(n=>/CORRECTION/.test(n.textContent))`), 'a contact note that warns (a correction) shows in the amber box');
+  await click('.detail .close'); await js(`(()=>{const q=document.querySelector('.controls .search');q.value='';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
+  await sub('removed'); ok(/Test Expo Promoter/.test(await text()), 'Organisations › Removed lists the removed lead');
+  await js(`(()=>{const r=[...document.querySelectorAll('main .row')].find(r=>/Test Expo Promoter/.test(r.textContent));r.querySelector('button').click();return 1})()`); await sleep(900);
+  ok((await b('data')).expo.recs.some((o) => o.name === 'Test Expo Promoter'), 'Bring back puts it in the Expo leads again');
+  await sub('all'); await clickText('.shead button', '/Add an expo lead/', 200);
+  await js(`(()=>{const i=document.querySelectorAll('.addcard input');i[0].value='Screen Expo Co';i[1].value='Senior expos';[...document.querySelectorAll('.addcard button')].find(b=>b.textContent==='Add').click();return 1})()`); await sleep(1000);
+  ok(await js(`/Screen Expo Co/.test(document.querySelector('.detail h2').textContent)`) && !(await b('data')).sponsor.recs.some((r) => r.name === 'Screen Expo Co'), '+ Add an expo lead opens it, and it never reaches the sponsors');
+  await clickText('.detail button', '/Remove this lead/', 900);
+  ok((await b('data')).expo.removed.some((r) => r.name === 'Screen Expo Co'), 'Remove this lead takes it out (to Removed)');
+  await tab('more'); await sub('ref'); ok(await js(`/Douglas County Fairgrounds/.test(document.querySelector('.xvenues').textContent)`), 'the competing venues table');
+  await js(`(()=>{localStorage.setItem('peakdesk.theme','dark');window.__lookApply();return 1})()`); await sleep(300); await tab('pipe');
+  ok((await js(bgSum)) < 120, 'Expo leads in dark mode'); await shot('expo-pipeline-dark.png');
   await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(200);
-  /* the expo-only account in the browser: one tab, the look, nothing of the sponsors' */
+  /* phone */
+  await world('sponsor'); await tab('today');
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
+  ok(await js(`[...document.querySelectorAll('.tabs button,.world button')].every(b=>{const r=b.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=document.documentElement.clientWidth+1})`), 'on a phone the list switch and all five tabs are in view');
+  const wide = [];
+  for (const w of ['sponsor', 'expo']) { await world(w); for (const tb of ['today', 'pipe', 'list', 'deals', 'more']) { await tab(tb); if (!(await js(fits))) wide.push(w + '/' + tb); await shot(`phone-${w}-${tb}.png`); } }
+  ok(!wide.length, 'on a phone nothing scrolls sideways' + (wide.length ? ': ' + wide.join(', ') : ''));
+  await world('sponsor'); await tab('pipe'); await click('.funnel .fr[data-st="new"]'); await click('.list .row');
+  const ph = await js(`(()=>{const d=document.querySelector('.detail');const small=[...d.querySelectorAll('.qb button,.seg button,.btn')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<40).map(b=>b.textContent);return {fixed:getComputedStyle(d).position==='fixed',wide:d.scrollWidth-d.clientWidth,small}})()`);
+  ok(ph.fixed && ph.wide <= 1 && !ph.small.length, 'on a phone a card opens full screen, fits, buttons finger-sized' + (ph.fixed && ph.wide <= 1 && !ph.small.length ? '' : ': ' + JSON.stringify(ph)));
+  await shot('phone-card.png');
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
+  /* the expo-only account in the browser */
   await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${EXPO}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
-  await waitFor(`!!document.querySelector('.shead')`, 'the expo account’s page'); await sub('all'); await waitFor(`!!document.querySelector('.row')`, 'the expo account’s list');
-  ok(await js(`[...document.querySelectorAll('.tabs button .tl')].map(b=>b.textContent).join(',')==='Expo leads'&&document.querySelector('main').dataset.section==='expo'&&/expo leads/.test(document.getElementById('brandSub').textContent)`), 'the expo account sees one tab, Expo leads');
-  ok(await js(`[...document.querySelectorAll('.subchips button')].map(b=>b.dataset.sub).join(',')`) === 'all,due,removed,ref,look', 'with its chips and the Look');
-  const nX = (await ex('data')).expo.orgs.length; ok((await rowIds()).length === nX && nX >= 64, `and the ${nX} expo organisations (the 64 researched, one added in the test)`);
-  await js(`location.hash='#more/report'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
-  ok(await js(`document.querySelector('main').dataset.section==='expo'&&!document.querySelector('.tabs [data-tab="more"]')&&!/Kaiser/.test(document.body.textContent)`), 'an address for a sponsor page still lands on Expo leads');
-  await sub('look'); ok(await js(`!!document.querySelector('[data-look="dark"]')`), 'Look is there for it');
-  await sub('all'); await js('window.scrollTo(0,0)'); await shot('expo-account-phone.png');
-  ok(await js(fits), 'the expo account’s page fits a phone');
-  await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
-  await shot('expo-account-desktop.png');
+  await waitFor(`!!document.querySelector('.shead')`, 'the expo account\u2019s page');
+  const xo = await js(`({hidden:document.getElementById('world').hidden,world:document.querySelector('main').dataset.world,leak:((document.querySelector('main').innerText+' '+document.getElementById('bar').innerText).match(/Kaiser Permanente|Sponsors:[^.]{0,30}|Peak sponsors/)||[''])[0]})`);
+  ok(xo.hidden && xo.world === 'expo' && !xo.leak, 'the expo-only account: no Sponsors switch, the Expo leads only' + (xo.hidden && xo.world === 'expo' && !xo.leak ? '' : ' ' + JSON.stringify(xo)));
+  await js(`location.hash='#sponsor/pipe'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+  ok(await js(`document.querySelector('main').dataset.world==='expo'`), 'a sponsor address still lands on the Expo leads');
   ok(!errors.length, 'no page errors' + (errors.length ? ': ' + errors[0] : ''));
 } catch (e) { failN++; console.log('  FAIL threw: ' + e.stack); }
 finally {
-  try { ws && ws.close(); } catch {} try { chrome && chrome.kill(); } catch {}
-  if (log0 === null) { try { rmSync(LOG); } catch {} } else writeFileSync(LOG, log0);
-  if (scans0 === null) { try { rmSync(SCANS); } catch {} } else writeFileSync(SCANS, scans0);
-  if (xlog0 === null) { try { rmSync(XLOG); } catch {} } else writeFileSync(XLOG, xlog0);
-  writeFileSync(ACC, acc0);
-  try { rmSync(join(LD, 'tries.json')); } catch {}
+  try { ws && ws.close(); } catch {} try { chrome && chrome.kill(); } catch {} try { server && server.kill(); } catch {}
 }
-console.log(`desk ${pass}/${pass + failN}`); process.exit(failN ? 1 : 0);
+console.log(`desk ${pass}/${pass + failN}`); setTimeout(() => process.exit(failN ? 1 : 0), 300);
