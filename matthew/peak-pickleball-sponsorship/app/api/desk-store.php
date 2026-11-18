@@ -44,14 +44,16 @@ function W(string $w): array {
     $C ??= [
         'sponsor' => ['log' => 'events.log', 'stages' => SP_STAGES, 'legacy' => SP_LEGACY, 'field' => 'status',
             'T' => ['stage' => 'status', 'note' => 'note', 'notedel' => 'notedel', 'next' => 'next', 'contact' => 'contact', 'add' => 'lead', 'del' => 'leaddel', 'back' => 'leadback',
-                'touch' => 'touch', 'touchdel' => 'touchdel', 'owner' => 'owner', 'tour' => 'tour', 'tourdel' => 'tourdel', 'tourout' => 'tourout', 'tourmove' => 'tourmove'],
+                'touch' => 'touch', 'touchdel' => 'touchdel', 'owner' => 'owner', 'tour' => 'tour', 'tourdel' => 'tourdel', 'tourout' => 'tourout', 'tourmove' => 'tourmove',
+                'dnc' => 'dnc', 'templates' => 'templates'],
             /* the order a deal moves in; Not now and Lost sit outside it */
             'path' => ['new', 'called', 'voicemail', 'emailed', 'texted', 'meeting', 'proposal', 'signed'], 'reach' => 5,
             'byMethod' => ['call' => 'called', 'voicemail' => 'voicemail', 'email' => 'emailed', 'text' => 'texted', 'inperson' => 'called', 'linkedin' => 'emailed', 'other' => 'called'],
             'tourSt' => 'meeting', 'propSt' => 'proposal', 'winSt' => 'signed', 'done' => ['signed', 'lost']],
         'expo' => ['log' => 'expo-events.log', 'stages' => XP_STAGES, 'legacy' => XP_LEGACY, 'field' => 'stage',
             'T' => ['stage' => 'xstage', 'note' => 'xnote', 'notedel' => 'xnotedel', 'next' => 'xnext', 'contact' => 'xcontact', 'add' => 'xlead', 'del' => 'xdel', 'back' => 'xback',
-                'touch' => 'xtouch', 'touchdel' => 'xtouchdel', 'owner' => 'xowner', 'tour' => 'xtour', 'tourdel' => 'xtourdel', 'tourout' => 'xtourout', 'tourmove' => 'xtourmove'],
+                'touch' => 'xtouch', 'touchdel' => 'xtouchdel', 'owner' => 'xowner', 'tour' => 'xtour', 'tourdel' => 'xtourdel', 'tourout' => 'xtourout', 'tourmove' => 'xtourmove',
+                'dnc' => 'xdnc', 'templates' => 'xtemplates'],
             'path' => ['new', 'contacted', 'tour', 'quote', 'booked'], 'reach' => 2,
             'byMethod' => array_fill_keys(array_keys(METHODS), 'contacted'),
             'tourSt' => 'tour', 'propSt' => 'quote', 'winSt' => 'booked', 'done' => ['booked', 'lost']],
@@ -200,7 +202,7 @@ function apply(array &$M, string $w, array $r): void {
         case 'touch': {
             if (!$has || !is_array($r['touch'] ?? null)) return; $x = $r['touch']; $k = (string) ($r['k'] ?? newKey()); $m = (string) ($x['m'] ?? 'other');
             $T = ['k' => $k, 'at' => $at, 'when' => (int) ($x['when'] ?? $at) ?: $at, 'by' => $by, 'm' => $m, 'out' => (string) ($x['out'] ?? ''), 'note' => (string) ($x['note'] ?? '')];
-            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
+            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
             $M['recs'][$id]['touches'][] = $T; $dirty($id); $act($m, $id, $T['when'], $k); return;
         }
         case 'touchdel': {
@@ -223,6 +225,22 @@ function apply(array &$M, string $w, array $r): void {
         case 'tododone': if (!$has) return; foreach ($M['recs'][$id]['todos'] as &$x) { if ($x['k'] === ($r['k'] ?? '')) $x['done'] = (bool) ($r['done'] ?? false); } unset($x); $dirty($id); return;
         case 'tododel': if (!$has) return; $M['recs'][$id]['todos'] = array_values(array_filter($M['recs'][$id]['todos'], fn($x) => $x['k'] !== ($r['k'] ?? ''))); $dirty($id); return;
         case 'proposal': { $pid = (string) ($r['pid'] ?? ''); if ($pid === '') return; $M['props'][$pid] = $r; $M['pdirty'][$pid] = 1; $act('proposal', (string) ($r['lead'] ?? $id), $at); return; }
+        /* Don't contact (2026-11-18): one person asked not to be contacted. Their email and phone move out of the fields anything reads to
+           reach them (the Peak email sender reads email from contacts and added), into dncEmail / dncPhone, and come back when it is undone */
+        case 'dnc': {
+            if (!$has) return; $key = (string) ($r['key'] ?? ''); if ($key === '') return;
+            $on = !empty($r['on']); $R = &$M['recs'][$id];
+            $mark = ['why' => (string) ($r['why'] ?? ''), 'by' => $by, 'at' => $at];
+            foreach (['contacts', 'added'] as $f) foreach ($R[$f] as &$c) {
+                if (personKey($c) !== $key && (string) ($c['of'] ?? '') !== $key) continue;
+                if ($on) { if (($c['email'] ?? '') !== '') { $c['dncEmail'] = $c['email']; $c['email'] = ''; } if (($c['phone'] ?? '') !== '') { $c['dncPhone'] = $c['phone']; $c['phone'] = ''; } $c['dnc'] = $mark; }
+                else { if (isset($c['dncEmail'])) { $c['email'] = $c['dncEmail']; unset($c['dncEmail']); } if (isset($c['dncPhone'])) { $c['phone'] = $c['dncPhone']; unset($c['dncPhone']); } unset($c['dnc']); }
+            }
+            unset($c);
+            if ($on) $R['dnc'][$key] = $mark; else unset($R['dnc'][$key]);
+            unset($R); $dirty($id); return;
+        }
+        case 'templates': $M['set']['templates'] = is_array($r['templates'] ?? null) ? $r['templates'] : []; $M['sdirty']['templates'] = 1; return;
         case 'packages': $M['set']['packages'] = $r['packages'] ?? []; $M['sdirty']['packages'] = 1; return;
         case 'pl': $M['set']['pl'] = $r['pl'] ?? null; $M['sdirty']['pl'] = 1; return;
     }
@@ -347,6 +365,101 @@ function missCount(array $R): int {
     foreach ($T as $t) { if (in_array($t['out'], ['talked', 'met', 'toured', 'replied'], true)) $n = 0; elseif (in_array($t['out'], ['noanswer', 'left'], true)) $n++; }
     return $n;
 }
+/* Sixfold's call-tries rule (2026-11-18): four tries in a row with no answer, then a last text or email and Not now for 60 days (one tap,
+   never automatic) */
+const TRIES_MAX = 4;
+const TRIES_BACK_DAYS = 60;
+/* the next working day after $day (Saturday and Sunday skipped): where a No answer's follow-up lands */
+function nextBizDay(string $day = '', int $n = 1): string {
+    $t = strtotime(($day !== '' ? $day : date('Y-m-d')) . ' 12:00');
+    while ($n > 0) { $t = strtotime('+1 day', $t); if ((int) date('N', $t) < 6) $n--; }
+    return date('Y-m-d', $t);
+}
+
+/* ---- one person, whoever lists them: the same key for a researched contact, one added on the desk and the email sender ---- */
+function digits10(string $p): string { $d = preg_replace('/\D/', '', $p) ?? ''; if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1); return strlen($d) === 10 ? $d : ''; }
+function personKey(array $c): string {
+    $e = strtolower(trim((string) (($c['email'] ?? '') !== '' ? $c['email'] : ($c['dncEmail'] ?? ''))));
+    if ($e !== '') return 'e:' . $e;
+    $p = digits10((string) (($c['phone'] ?? '') !== '' ? $c['phone'] : ($c['dncPhone'] ?? '')));
+    if ($p !== '') return 'p:' . $p;
+    $n = strtolower(trim(preg_replace('/\s+/', ' ', (string) ($c['name'] ?? '')) ?? ''));
+    return $n !== '' ? 'n:' . $n : '';
+}
+/* a company name as the duplicate check compares it (Sixfold's lead doubles, 2026-11-18): case, punctuation, "&" and the legal endings
+   (Inc, LLC, Co ...) do not make two companies different */
+function normName(string $n): string {
+    $n = strtolower(str_replace(['&', '+'], ' and ', $n));
+    $n = preg_replace('/[^a-z0-9]+/', ' ', $n) ?? '';
+    $n = preg_replace('/\b(the|inc|incorporated|llc|l l c|ltd|limited|co|corp|corporation|company|pllc|pc|lp|llp)\b/', ' ', $n) ?? '';
+    return trim(preg_replace('/\s+/', ' ', $n) ?? '');
+}
+/* a website as its host, and only when the host is the company's own (a Facebook page or a link page is shared by thousands) */
+const SHARED_HOSTS = ['facebook.com', 'm.facebook.com', 'instagram.com', 'linkedin.com', 'linktr.ee', 'google.com', 'sites.google.com', 'business.site', 'yelp.com', 'x.com', 'twitter.com', 'youtube.com', 'tiktok.com', 'wixsite.com', 'squarespace.com', 'godaddysites.com', 'business.google.com'];
+function normSite(string $s): string {
+    $h = strtolower(trim($s)); $h = preg_replace('#^[a-z]+://#', '', $h) ?? ''; $h = preg_replace('#^www\.#', '', $h) ?? ''; $h = explode('/', explode('?', $h)[0])[0];
+    return $h === '' || in_array($h, SHARED_HOSTS, true) || !str_contains($h, '.') ? '' : $h;
+}
+/* every email and phone a company has (its own line, its contacts, Don't-contact ones included) */
+function recEmails(array $R): array { $o = []; foreach (array_merge($R['contacts'] ?? [], $R['added'] ?? []) as $c) { $e = strtolower(trim((string) (($c['email'] ?? '') !== '' ? $c['email'] : ($c['dncEmail'] ?? '')))); if ($e !== '') $o[$e] = 1; } return array_keys($o); }
+function recPhones(array $R): array { $o = []; $p = digits10((string) ($R['phone'] ?? '')); if ($p !== '') $o[$p] = 1; foreach (array_merge($R['contacts'] ?? [], $R['added'] ?? []) as $c) { $p = digits10((string) (($c['phone'] ?? '') !== '' ? $c['phone'] : ($c['dncPhone'] ?? ''))); if ($p !== '') $o[$p] = 1; } return array_map('strval', array_keys($o)); }   /* numeric keys come back as ints */
+/* the companies a new one may already be: [[id, name, why, removed] ...] */
+function dupesOf(array $X, string $name, string $phone, string $site, string $email, string $skip = ''): array {
+    $nn = normName($name); $ph = digits10($phone); $hs = normSite($site); $em = strtolower(trim($email)); $o = [];
+    foreach ($X as $id => $R) {
+        if ((string) $id === $skip) continue; $why = [];
+        if ($nn !== '' && normName((string) ($R['name'] ?? '')) === $nn) $why[] = 'the same name';
+        if ($ph !== '' && in_array($ph, recPhones($R), true)) $why[] = 'the same phone';
+        if ($em !== '' && in_array($em, recEmails($R), true)) $why[] = 'the same email';
+        if ($hs !== '' && normSite((string) ($R['site'] ?? '')) === $hs) $why[] = 'the same website';
+        if ($why) $o[] = ['id' => (string) $id, 'name' => (string) ($R['name'] ?? ''), 'why' => implode(', ', $why), 'removed' => !empty($R['off'])];
+    }
+    return array_slice($o, 0, 5);
+}
+/* for the Peak email sender: the addresses on the desk that asked not to be contacted, both lists. Their contact entries already carry no
+   email (the sender's own reading skips them); this list also covers the same address found on a company's website. */
+function deskNoContact(): array {
+    $o = [];
+    foreach (['sponsor', 'expo'] as $w) foreach (recs($w) as $R) foreach (array_keys($R['dnc'] ?? []) as $k) if (str_starts_with((string) $k, 'e:')) $o[substr((string) $k, 2)] = 1;
+    return array_keys($o);
+}
+
+/* ---- message templates (Sixfold's, 2026-11-18): plain friendly words, no prices and nothing Peak has not published. Merge fields: {first}
+   the contact's first name, {company}, {tour} the next tour booked, {me} the seller's first name. Admins change them in More, Settings. ---- */
+function starterTemplates(string $w): array {
+    $x = $w === 'expo'; $what = $x ? 'holding an event at Peak' : 'sponsoring at Peak';
+    $T = [
+        ['k' => 'first', 'name' => 'First outreach', 'when' => 'new',
+            'text' => 'Hi {first}, this is {me} with Peak Pickleball at Chapel Hills Mall. I\'d like to talk with you about ' . ($x ? 'holding one of {company}\'s events at Peak' : '{company} sponsoring at Peak') . '. Do you have 10 minutes for a call this week?',
+            'subject' => $x ? 'An event space for {company}' : 'Peak Pickleball and {company}',
+            'body' => $x
+                ? "Hi {first},\n\nI'm {me} with Peak Pickleball, the indoor pickleball center at Chapel Hills Mall in Colorado Springs. Along with our 24 courts we host events: the building is about 80,000 square feet over two levels, and in April 2026 it held the Senior Lifestyle Expo with more than 100 vendors.\n\nIf {company} is looking at venues for an upcoming show, I'd be glad to walk you through the space and talk dates. Would a short call or a tour work for you?\n\nThanks,\n{me}\nPeak Pickleball"
+                : "Hi {first},\n\nI'm {me} with Peak Pickleball, the indoor pickleball center at Chapel Hills Mall in Colorado Springs. We have 24 courts on two levels, with open play, leagues, lessons and tournaments.\n\nI'd like to talk with you about {company} sponsoring at Peak. Would you have 15 minutes for a call, or time to come and see the building?\n\nThanks,\n{me}\nPeak Pickleball"],
+        ['k' => 'vm', 'name' => 'After a voicemail', 'when' => 'voicemail',
+            'text' => 'Hi {first}, it\'s {me} from Peak Pickleball. I just left you a voicemail about ' . $what . '. Call or text me back whenever suits you.',
+            'subject' => 'Following up on my voicemail',
+            'body' => "Hi {first},\n\nI just left you a voicemail and wanted to follow up here too. I'm {me} with Peak Pickleball at Chapel Hills Mall, and I'd like to talk with you about " . $what . ".\n\nIs there a good time for a quick call this week?\n\nThanks,\n{me}\nPeak Pickleball"],
+        ['k' => 'tour', 'name' => 'Tour confirmation', 'when' => 'tour',
+            'text' => 'Hi {first}, it\'s {me} from Peak Pickleball confirming your tour on {tour}. We\'re at 1730 Briargate Blvd, at Chapel Hills Mall. Text me if anything changes.',
+            'subject' => 'Your tour of Peak Pickleball: {tour}',
+            'body' => "Hi {first},\n\nThis is to confirm your tour of Peak Pickleball on {tour}. We're at 1730 Briargate Blvd, Colorado Springs, at Chapel Hills Mall.\n\nIf anything changes, just reply or call me. Looking forward to showing you around.\n\nThanks,\n{me}\nPeak Pickleball"],
+        ['k' => 'proposal', 'name' => $x ? 'Quote follow-up' : 'Proposal follow-up', 'when' => $x ? 'quote' : 'proposal',
+            'text' => 'Hi {first}, it\'s {me} at Peak Pickleball. Just checking you got the ' . ($x ? 'quote' : 'proposal') . ' I sent. Happy to answer any questions or change anything in it.',
+            'subject' => ($x ? 'The quote' : 'The proposal') . ' for {company}',
+            'body' => "Hi {first},\n\nI wanted to check that you got the " . ($x ? 'quote for your event' : 'sponsorship proposal') . " I sent. If you have any questions, or would like anything changed, just let me know.\n\nThanks,\n{me}\nPeak Pickleball"],
+        ['k' => 'thanks', 'name' => 'Thank you after a tour', 'when' => 'toured',
+            'text' => 'Hi {first}, thanks for coming to see Peak today. It was good to meet you. Let me know if any questions come up.',
+            'subject' => 'Thanks for visiting Peak',
+            'body' => "Hi {first},\n\nThanks for coming to see Peak Pickleball. It was good to meet you and show you around.\n\nIf any questions come up, just reply here or give me a call, and I'll be in touch about next steps.\n\nThanks,\n{me}\nPeak Pickleball"],
+        ['k' => 'last', 'name' => 'Last try', 'when' => 'tries',
+            'text' => 'Hi {first}, it\'s {me} from Peak Pickleball. I\'ve tried you a few times about ' . $what . ' and don\'t want to be a bother. If now isn\'t the right time, no problem. I\'ll check back later.',
+            'subject' => 'One last note from Peak Pickleball',
+            'body' => "Hi {first},\n\nI've tried to reach you a few times about " . $what . " and don't want to keep filling your inbox. If now isn't the right time, that's no problem at all. I'll check back in a couple of months.\n\nThanks,\n{me}\nPeak Pickleball"],
+    ];
+    return array_map(fn($t) => $t + ['starter' => true], $T);
+}
+function templatesOf(string $w): array { $t = settingOf($w, 'templates', null); return is_array($t) && $t ? $t : starterTemplates($w); }
+
 /* the rows for one touch: the touch, the stage it moves to, the owner if nobody has it, the follow-up (a due follow-up is done once someone
    reaches out, so it is cleared unless a new one is set) */
 function touchRows(string $w, array $R, string $k, array $touch, string $by, bool $canOwn, string $fu, string $fuWhat, int $now): array {

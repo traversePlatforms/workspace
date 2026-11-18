@@ -2,7 +2,9 @@
    Each run makes a FRESH copy of desk-data-local in Temp, writes old-desk log rows into it (to migrate), starts its own PHP server on
    that copy (DESK_DATA), and deletes the copy at the end: nothing in desk-data-local changes, and a run never sees a previous run's data.
    node tests/desk-test.mjs            the server rules, the migration, the email link, the screens (headless Chrome)
-   node tests/desk-test.mjs --page dist/index.html   the same against the minified page */
+   node tests/desk-test.mjs --page dist/index.html   the same against the minified page
+   2026-11-18: plus the facelift (dark default, light mode, contrast measured on every screen) and the Sixfold tools: templates, the tries rule,
+   Priority 5, duplicate warnings, Don't contact (with the email sender's own import), the end-of-day email (off) and the calendar feed. */
 import { spawn, execFileSync, execFile } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync, cpSync, mkdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,7 +18,7 @@ const LD = mkdtempSync(join(tmpdir(), 'peakdesk-')).replace(/\\/g, '/');
 for (const f of ['seed.json', 'expo-seed.json', 'peak-records.json', 'accounts.json', 'scans.json']) if (existsSync(join(ROOT, 'desk-data-local', f))) copyFileSync(join(ROOT, 'desk-data-local', f), join(LD, f));
 /* a web folder: the page under test plus the api */
 const WEB = join(LD, 'web'); mkdirSync(WEB); cpSync(join(ROOT, 'app/api'), join(WEB, 'api'), { recursive: true });
-copyFileSync(join(ROOT, PAGE), join(WEB, 'index.html')); for (const f of ['manifest.json', 'sw.js', 'icon-192.png']) copyFileSync(join(ROOT, 'app', f), join(WEB, f));
+copyFileSync(join(ROOT, PAGE), join(WEB, 'index.html')); for (const f of ['manifest.json', 'sw.js', 'icon-192.png']) copyFileSync(join(ROOT, 'app', f), join(WEB, f)); cpSync(join(ROOT, 'app/fonts'), join(WEB, 'fonts'), { recursive: true });
 const env = { ...process.env, DESK_DATA: LD };
 process.on('exit', () => { for (const d of cdpDirs.concat([LD])) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
 const code = (f) => readFileSync(join(ROOT, 'desk-data-local', f), 'utf8').match(/(\d{6})/)[1];
@@ -248,6 +250,120 @@ try {
   ok(replay[EM.id] === 'emailed' && replay[K.id] && replay[K.id] !== 'new' && !replay[NEW[30].id], 'the sender\u2019s own reading of events.log sees the stage (Emailed, Texted ...) and skips them; untouched companies stay new to it');
   ok(lines('events.log').every((l) => { try { JSON.parse(l); return true; } catch { return false; } }), 'every log line is whole JSON');
 
+  /* ---- 2026-11-18: the Sixfold tools ---- */
+  console.log('Message templates (Sixfold’s)');
+  D = await b('data');
+  const ST6 = D.sponsor.templates, XT6 = D.expo.templates;
+  ok(ST6.length === 6 && ST6.every((t) => t.starter) && ST6.map((t) => t.k).join(',') === 'first,vm,tour,proposal,thanks,last', 'six starter templates for sponsors, marked as starters: first outreach, after a voicemail, tour confirmation, proposal follow-up, thank-you after a tour, last try');
+  ok(XT6.length === 6 && /event/i.test(XT6[0].body) && /80,000 square feet/.test(XT6[0].body) && !/sponsor/i.test(XT6.map((t) => t.text + t.body).join(' ')), 'the expo starters talk about holding an event, not sponsoring');
+  const allTxt = ST6.concat(XT6).map((t) => t.text + ' ' + t.subject + ' ' + t.body).join(' ');
+  ok(!/\$\s?\d|\bprice|\bcost|\bfree\b|largest|only indoor|first group/i.test(allTxt) && (allTxt.match(/\{(\w+)\}/g) || []).every((f) => ['{first}', '{company}', '{tour}', '{me}'].includes(f)), 'no prices, no "largest"/"first group" claims; only the four merge fields');
+  ok(/24 courts on two levels/.test(ST6[0].body) && /Chapel Hills Mall/.test(ST6[0].text) && /\{tour\}/.test(ST6[2].text), 'the starters use the checked facts (24 courts on two levels, Chapel Hills Mall); the tour one carries {tour}');
+  ok((await b('templates', { world: 'sponsor', templates: ST6 }))._status === 403, 'a seller cannot change the templates');
+  const edited = ST6.map((t) => t.k === 'vm' ? { ...t, text: t.text + ' Thanks!' } : t);
+  let tsv = await a('templates', { world: 'sponsor', templates: edited });
+  D = await b('data');
+  ok(tsv.ok && D.sponsor.templates.find((t) => t.k === 'vm').text.endsWith('Thanks!') && !D.sponsor.templates.find((t) => t.k === 'vm').starter && D.sponsor.templates.find((t) => t.k === 'first').starter && D.expo.templates.every((t) => t.starter), 'the admin edits one: it is no longer marked a starter, the others still are, the expo ones untouched');
+  ok((await a('templates', { world: 'sponsor', templates: [{ name: 'Bad', text: 'Hi {first}, it costs {price}' }] })).error === '“Bad” has {price} in it. The fields are {first}, {company}, {tour} and {me}.', 'an unknown merge field is refused');
+  ok((await a('templates', { world: 'sponsor', reset: 1 })).ok && (await b('data')).sponsor.templates.every((t) => t.starter), 'Go back to the starters');
+  const LOC = seed.leads.filter((l) => l.list === 'local'), TP = LOC[12];
+  t = await b('touch', { world: 'sponsor', id: TP.id, m: 'text', out: 'sent', tpl: 'first', note: 'From the template “First outreach”' });
+  D = await b('data');
+  ok(t.ok && find('sponsor', TP.id).last.tpl === 'first' && find('sponsor', TP.id).last.m === 'text' && find('sponsor', TP.id).last.by === 'Test Seller' && (await b('touch', { world: 'sponsor', id: TP.id, m: 'text', out: 'sent', tpl: 'NOT ok!' })).error === 'No such template.', 'a template sent is logged as Texted, from the template, by that person; a bad template key is refused');
+
+  console.log('The call-tries rule (Sixfold’s: 4 tries, then a last message and Not now for 60 days)');
+  ok(D.tries.max === 4 && D.tries.back === 60 && /^\d{4}-\d{2}-\d{2}$/.test(D.nextBiz) && D.nextBiz > today() && ![0, 6].includes(new Date(D.nextBiz + 'T12:00').getDay()), `the desk says 4 tries, 60 days, and the next working day (${D.nextBiz})`);
+  const LOCP = LOC.filter((l) => l.phone), T4 = LOCP[20];
+  for (let i = 0; i < 4; i++) t = await b('touch', { world: 'sponsor', id: T4.id, m: i === 1 ? 'voicemail' : 'call', out: i === 1 ? 'left' : 'noanswer', fu: D.nextBiz });
+  D = await b('data');
+  ok(t.tries === 4 && find('sponsor', T4.id).stage === 'voicemail' && find('sponsor', T4.id).next.date === D.nextBiz, '4 misses in a row (a voicemail counts): 4 tries, and nothing moved it to Not now by itself');
+
+  console.log('Duplicate warnings (Sixfold’s lead doubles)');
+  const DUP = LOC[10];
+  let du = await b('add', { world: 'sponsor', name: DUP.name.toUpperCase() + ', LLC', kind: 'Test' });
+  ok(du._status === 409 && du.dupes.some((x) => x.id === DUP.id && /the same name/.test(x.why)), 'the same name with LLC and other capitals: a warning, nothing added');
+  du = await b('add', { world: 'sponsor', name: 'Totally Different Clinic', phone: '(' + DUP.phone.replace(/\D/g, '').slice(-10, -7) + ') ' + DUP.phone.replace(/\D/g, '').slice(-7, -4) + '-' + DUP.phone.replace(/\D/g, '').slice(-4) });
+  ok(du._status === 409 && du.dupes.some((x) => x.id === DUP.id && /the same phone/.test(x.why)), 'the same phone written another way: a warning');
+  du = await b('add', { world: 'sponsor', name: 'Another Name Again', site: 'http://www.' + DUP.site.replace(/^https?:\/\/(www\.)?/, '') });
+  ok(du._status === 409 && du.dupes.some((x) => x.id === DUP.id && /the same website/.test(x.why)), 'the same website: a warning');
+  const fbp = await b('add', { world: 'sponsor', name: 'Fb Page Co', site: 'https://www.facebook.com/somepage' }); ok(fbp.ok, 'a Facebook page is not counted as the same website');
+  const kb = await b('add', { world: 'sponsor', name: 'Totally Different Clinic', phone: DUP.phone, keep: 1 });
+  D = await b('data');
+  ok(kb.ok && find('sponsor', kb.id) && find('sponsor', kb.id).name === 'Totally Different Clinic', 'Keep both: added anyway');
+  await b('del', { world: 'sponsor', id: kb.id }); await b('del', { world: 'sponsor', id: fbp.id });   /* off the desk again, so the screens below see the same lists */
+  const mg = await b('add', { world: 'sponsor', name: DUP.name + ' Inc', phone: '719-555-0142', site: 'example.org', why: 'met them at the expo', merge: DUP.id });
+  D = await b('data'); const dupR = find('sponsor', DUP.id);
+  ok(mg.ok && mg.merged && mg.id === DUP.id && dupR.people.some((p) => p.phone === '719-555-0142') && dupR.notes.some((n) => /merged into this one: met them at the expo/.test(n.note)) && !D.sponsor.recs.some((r) => r.name === DUP.name + ' Inc'), 'Merge: the new phone and the note go onto the one already there; nothing new is made');
+  ok((await b('add', { world: 'sponsor', name: DUP.name }))._status === 400, 'the very same name is still refused outright');
+  const TRIX = (await b('data')).expo.recs.find((o) => o.name === 'Tri-Lakes Chamber of Commerce');
+  du = await b('add', { world: 'expo', name: 'Some New Expo Org', email: 'TERRI@trilakeschamber.com' });
+  ok(du._status === 409 && du.dupes.some((x) => x.id === TRIX.id && /the same email/.test(x.why)), 'an expo lead with an email already on the desk: a warning');
+  const USA = NEW[31]; D = await b('data');
+  const usP = find('sponsor', USA.id).people.find((p) => p.email && p.phone);
+  du = await b('contact', { world: 'sponsor', id: USA.id, name: 'Someone New', email: usP.email.toUpperCase(), phone: '' });
+  ok(du._status === 409 && du.dupes[0].same && du.dupes[0].key === 'e:' + usP.email.toLowerCase(), 'adding a contact whose email is already on the card: a warning naming them');
+  ok((await b('contact', { world: 'sponsor', id: USA.id, name: '', email: usP.email, phone: '', role: 'Head of Community', of: du.dupes[0].key })).ok, 'Add the new details to them');
+  D = await b('data'); const usP2 = find('sponsor', USA.id).people.find((p) => p.key === 'e:' + usP.email.toLowerCase());
+  ok(find('sponsor', USA.id).people.filter((p) => p.key === usP2.key).length === 1 && /Details added on the desk by Test Seller/.test(usP2.more), 'still one person, the details noted as added on the desk');
+  du = await b('contact', { world: 'sponsor', id: TP.id, name: 'Same Person', email: usP.email });
+  ok(du._status === 409 && du.dupes.some((x) => !x.same && x.id === USA.id), 'the same email at another company: a warning naming that company');
+  ok((await b('contact', { world: 'sponsor', id: TP.id, name: 'Same Person', email: usP.email, keep: 1 })).ok, 'Keep both adds them anyway');
+
+  console.log('Don’t contact (per person; the email sender skips them)');
+  D = await b('data'); const dk = 'e:' + usP.email.toLowerCase();
+  ok((await b('dnc', { world: 'sponsor', id: USA.id, key: 'e:nobody@nowhere.com', on: true }))._status === 404 && (await cc('dnc', { world: 'sponsor', id: USA.id, key: dk, on: true }))._status === 403, 'an unknown person is refused; Claude Check cannot set it');
+  ok((await b('dnc', { world: 'sponsor', id: USA.id, key: dk, on: true, why: 'Asked us not to call' })).ok, 'marked Don’t contact with a reason');
+  D = await b('data'); let dp = find('sponsor', USA.id).people.find((p) => p.key === dk);
+  ok(dp.dnc && dp.dnc.why === 'Asked us not to call' && dp.dnc.by === 'Test Seller' && dp.email === '' && dp.phone === '', 'the card shows the reason and who marked it; their email and phone are not given out');
+  const rawRec = JSON.parse(execFileSync('php', ['-r', 'define("DATA_DIR", getenv("DESK_DATA")); require getenv("STORE"); $R = recs("sponsor")[getenv("ID")]; echo json_encode(["c" => array_values(array_filter(array_merge($R["contacts"], $R["added"]), fn($c) => !empty($c["dnc"]))), "no" => deskNoContact()]);'], { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), ID: USA.id } }));
+  ok(rawRec.c.length >= 1 && rawRec.c.every((c) => c.email === '' && c.dncEmail) && rawRec.no.includes(usP.email.toLowerCase()), 'in the records their entries carry no email (dncEmail keeps it), and deskNoContact() lists the address for the sender');
+  /* the Peak email sender's own import (mail/public/lib.php), read-only against this copy: the address is not on its lists */
+  const MD = mkdtempSync(join(tmpdir(), 'pmdata-')); cdpDirs.push(MD);
+  const imp = () => JSON.parse(execFileSync('php', ['-r', 'require getenv("LIB"); $r = pmImport(["perOrg" => 3, "deskSkip" => false]); $o = []; foreach ($r["lists"] as $k => $ps) foreach ($ps as $p) $o[] = $p["to"]; echo json_encode(["to" => $o, "err" => $r["error"]]);'],
+    { encoding: 'utf8', env: { ...env, LIB: join(ROOT, 'mail/public/lib.php'), PEAK_MAIL_DATA: MD, PEAK_DESK_DATA: LD, PEAK_DESK_STORE: join(WEB, 'api/desk-store.php'), PEAK_MAIL_MX: 'skip' } }));
+  let im = imp();
+  ok(im.err === '' && !im.to.includes(usP.email.toLowerCase()), 'the email sender’s own import (no change to it) leaves them out');
+  ok((await b('dnc', { world: 'sponsor', id: USA.id, key: dk, on: false })).ok, 'Allow contact again');
+  D = await b('data'); dp = find('sponsor', USA.id).people.find((p) => p.key === dk);
+  ok(!dp.dnc && dp.email.toLowerCase() === usP.email.toLowerCase(), 'their email is back on the card');
+  im = imp(); ok(im.to.includes(usP.email.toLowerCase()), 'and back on the email sender’s list (so the skip above was the flag)');
+  ok((await b('dnc', { world: 'sponsor', id: USA.id, key: dk, on: true, why: 'Asked not to be contacted' })).ok, 'marked again (for the screens)');
+
+  console.log('The end-of-day email (OFF until an admin turns it on)');
+  const MAILF = join(LD, 'mail-out.jsonl'), envM = { ...env, DESK_MAIL_FILE: MAILF };
+  const eod = (args, now) => execFileSync('php', [join(WEB, 'api/desk.php'), 'eod', ...args], { encoding: 'utf8', env: now ? { ...envM, DESK_NOW: String(now) } : envM });
+  php(['bounced', 'sponsor', NEW[22].id, 'y@example.com']);
+  const bk = JSON.parse(execFileSync('php', ['-r', 'define("DATA_DIR", getenv("DESK_DATA")); require getenv("STORE"); echo json_encode(deskBooked("sponsor", getenv("ID"), getenv("DAY"), "10:00", "Jordan", "", "Peak email", "book-1"));'], { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), ID: NEW[23].id, DAY: later(3) } }));
+  await b('owner', { world: 'sponsor', id: LOC[11].id, owner: 'Test Seller' }); await b('next', { world: 'sponsor', id: LOC[11].id, date: D.nextBiz, what: 'call about spring' });
+  ok(/not sent: it is off/.test(eod([])) && !existsSync(MAILF), 'off by default: the hourly run sends nothing');
+  const dry = eod(['--dry-run']);
+  ok(/WHO DID WHAT TODAY/.test(dry) && /Test Seller: \d+ calls? \(\d+ voicemails?\), \d+ emails?/.test(dry) && /FOLLOW-UPS DUE/.test(dry) && new RegExp(LOC[11].name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\(call about spring\\)').test(dry), 'what it says: who did what today, the follow-ups due next working day');
+  ok(/FROM THE PEAK EMAIL SENDER TODAY/.test(dry) && /Replies: [1-9]/.test(dry) && /Times booked: 1/.test(dry) && /Bounced: [1-9]/.test(dry) && bk.ok, 'and the replies, bookings and bounces from the email sender');
+  ok((await b('settings', { on: true, to: ['x@example.com'] }))._status === 403 && (await a('settings', { on: true, to: [] })).error === 'Add at least one email before turning it on.' && (await a('settings', { on: false, to: ['not an email'] })).error === '“not an email” does not look like an email.', 'only an admin turns it on, with real emails');
+  ok((await a('eodpreview'))?.text && (await b('eodpreview'))._status === 403 && (await cc('eodpreview')).ok && (await cc('settings', { on: false, to: [] }))._status === 403, 'the preview: admins (Claude Check may look, never save)');
+  ok((await a('settings', { on: true, to: ['team@example.com', 'brandon@example.com'] })).ok && (await a('data')).eod.on && !(await b('data')).eod, 'the admin turns it on for two people; sellers never see the setting');
+  const wd = (h, dow) => { const x = new Date(); x.setHours(h, 5, 0, 0); while (x.getDay() !== dow) x.setDate(x.getDate() + 1); return Math.floor(x.getTime() / 1000); };
+  ok(/not sent: it goes at 6 pm/.test(eod([], wd(17, 3))) && /not sent: it is the weekend/.test(eod([], wd(18, 6))) && !existsSync(MAILF), 'Wednesday 5 pm: not yet; Saturday 6 pm: never');
+  ok(/sent to 2 of 2/.test(eod([], wd(18, 3))) && lines('mail-out.jsonl').length === 2 && /already went/.test(eod([], wd(19, 3))) && lines('mail-out.jsonl').length === 2, 'Wednesday after 6 pm: one email to each, once that day');
+  ok(JSON.parse(lines('mail-out.jsonl')[0]).subject.startsWith('Peak desk, end of day') && /Open the desk: https:\/\/traverseplatforms.com\/peak-desk-28d38d\//.test(JSON.parse(lines('mail-out.jsonl')[0]).body), 'the email itself: subject and a link to the desk');
+  ok((await a('settings', { on: false, to: ['team@example.com'] })).ok && !(await a('data')).eod.on, 'turned off again: it stays off until Matthew turns it on');
+
+  console.log('A calendar feed per person (Sixfold’s)');
+  await b('next', { world: 'sponsor', id: LOC[11].id, date: later(5), what: 'call about spring' });
+  const cl = await b('callink', {}); const feed = async (p, tk) => { const r = await fetch(`${API}?action=calfeed&p=${p}&t=${tk}`); return { s: r.status, ct: r.headers.get('content-type') || '', t: await r.text() }; };
+  let fd = await feed(cl.p, cl.t); D = await b('data');
+  const TTn = find('sponsor', TT.id).name;
+  ok(cl.ok && fd.s === 200 && /text\/calendar/.test(fd.ct) && /^BEGIN:VCALENDAR\r\n/.test(fd.t) && fd.t.includes('\r\nEND:VCALENDAR\r\n'), 'a private link: an iCalendar feed with no sign-in');
+  const unfold = fd.t.replace(/\r\n /g, '');
+  ok(unfold.includes('SUMMARY:Peak tour: ' + TTn.replace(/,/g, '\\,')) && unfold.includes('SUMMARY:Follow up: ' + LOC[11].name.replace(/,/g, '\\,') + ' (call about spring)') && !/@example\.com|\d{3}-\d{4}/.test(unfold.replace(/UID:[^\r]+/g, '')), 'it has my tours and my follow-ups, and no emails or phone numbers');
+  ok((await feed(cl.p, '0'.repeat(32))).s === 404 && (await feed('0'.repeat(12), cl.t)).s === 404, 'a wrong token or person: Not found');
+  const cl2 = await b('callink', { new: 1 });
+  ok(cl2.t !== cl.t && (await feed(cl.p, cl.t)).s === 404 && (await feed(cl2.p, cl2.t)).s === 200, 'a new link: the old one stops working');
+  ok((await cc('callink', {}))._status === 403, 'Claude Check makes no link');
+  const xl = await ex('callink', {}), xf = await feed(xl.p, xl.t);
+  ok(xl.ok && xf.s === 200 && /Follow up \(expo\): /.test(xf.t) && !xf.t.includes(TTn) && !/Peak tour: /.test(xf.t.replace(/Peak tour \(expo\)/g, '')), 'the expo-only account’s feed: expo leads only');
+  await b('owner', { world: 'sponsor', id: LOC[11].id, owner: '' }); await b('next', { world: 'sponsor', id: LOC[11].id, date: '', what: '' });   /* put back for the screens */
+
   console.log('Several people at once');
   D = await b('data'); const ids = NEW.filter((l) => find('sponsor', l.id).stage === 'new').slice(0, 12).map((l) => l.id);   /* companies nobody has touched yet */
   const conc = await Promise.all(ids.map((id, i) => new Promise((res) => execFile('php', [join(WEB, 'api/desk.php'), 'emailed', 'sponsor', id, `p${i}@example.com`], { env }, (e, so, se) => res(e ? 'cli err ' + (se || so || e.message).slice(0, 200) : 'ok')))).concat(
@@ -295,6 +411,10 @@ try {
   await waitFor(`!!document.querySelector('.signin input')`, 'sign-in');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${SELLER}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
   await waitFor(`!!document.querySelector('.kpis')`, 'Today');
+
+  const bgS = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
+  ok(await js(`document.documentElement.dataset.theme==='dark'&&!localStorage.getItem('peakdesk.theme')`) && (await js(bgS)) < 120, 'the facelift: dark is the default (nothing chosen on this device, the device itself set to light)');
+  ok(await js(`(async()=>{await document.fonts.ready;return getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()==='#17a9cd'&&document.fonts.check('800 20px "Golos Text"')})()`), 'Sponsors glow Peak cyan; the Golos Text and Inter fonts load from the desk itself');
   ok(await js(`[...document.querySelectorAll('.world button')].map(b=>b.textContent).join(',')==='Sponsors,Expo leads'&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Pipeline,Companies,Tours & deals,More'`), 'the bar: Sponsors | Expo leads, then Today, Pipeline, Companies, Tours & deals, More');
   ok(await js(`document.querySelector('main').dataset.section==='today'&&location.hash==='#sponsor/today'`), 'it opens on Today (#sponsor/today)');
   D = await b('data'); const dueN = D.sponsor.recs.filter((r) => r.next && r.next.date && r.next.date <= today() && !['signed', 'lost'].includes(r.stage)).length;
@@ -302,6 +422,22 @@ try {
   ok(await js(`['due','fresh','wait','tours','week'].every(k=>!!document.querySelector('[data-blk="'+k+'"]'))&&/Proposals waiting/.test(document.querySelector('[data-blk="wait"]').textContent)`), 'Today has follow-ups due, to contact next, proposals waiting, tours coming up, this week');
   ok(await js(`(()=>{const r=[...document.querySelectorAll('[data-blk="week"] tr')].find(r=>/Test Seller/.test(r.textContent));return !!r&&r.children[1].textContent===String(${(D.sponsor.week['Test Seller'] || {}).calls || 0})})()`) && (D.sponsor.week['Test Seller'] || {}).calls >= 3, 'This week shows the seller\u2019s calls');
   await shot('desk-today.png');
+
+  console.log('Priority 5 (Sixfold’s)');
+  D = await b('data');
+  const p5 = await js(`[...document.querySelectorAll('.p5 .p5b')].map(b=>({id:b.dataset.id,cat:b.dataset.cat,name:b.querySelector('b').textContent}))`);
+  const lateIds = D.sponsor.recs.filter((r) => r.next && r.next.date && r.next.date < today() && !['signed', 'lost'].includes(r.stage)).map((r) => r.id);
+  const CAT = ['late', 'today', 'new', 'wait'];
+  ok(p5.length === 5 && p5.every((x, i) => !i || CAT.indexOf(x.cat) >= CAT.indexOf(p5[i - 1].cat)) && p5.filter((x) => x.cat === 'late').length === Math.min(5, lateIds.length) && p5.filter((x) => x.cat === 'late').every((x) => lateIds.includes(x.id)) && lateIds.length >= 1, `Priority 5 at the top of Today: ${p5.map((x) => x.cat).join(', ')} (late follow-ups first, then due today, then new ones, then waiting longest)`);
+  ok(p5.filter((x) => x.cat === 'new').every((x) => { const r = D.sponsor.recs.find((y) => y.id === x.id); return r.stage === 'new' && !r.last && r.list !== 'renew'; }) && p5.filter((x) => x.cat === 'today').every((x) => D.sponsor.recs.find((y) => y.id === x.id).next.date === today()), 'the due-today ones are due today and the new ones were never reached');
+  let rightCard = 0;
+  for (const x of p5) { await click(`.p5 .p5b[data-id="${x.id}"]`, 450); if (await js(`document.querySelector('.detail').dataset.id===${JSON.stringify(x.id)}&&document.querySelector('.detail h2').textContent===${JSON.stringify(x.name)}`)) rightCard++; await click('.detail .close', 250); }
+  ok(rightCard === 5, `tapping each of the five opens that company’s own card (${rightCard} of 5)`);
+  await click('.p5 .p5b[data-rank="2"]', 450); const p2id = await js(`document.querySelector('.detail').dataset.id`);
+  await click('.detail .qb [data-m="call/talked"]', 1000); await click('.detail .close', 300);
+  const p5n = await js(`[...document.querySelectorAll('.p5 .p5b')].map(b=>b.dataset.id)`); let ok2 = 0;
+  for (const id of p5n) { await click(`.p5 .p5b[data-id="${id}"]`, 400); if (await js(`document.querySelector('.detail').dataset.id===${JSON.stringify(id)}`)) ok2++; await click('.detail .close', 250); }
+  ok(p2id === p5[1].id && ok2 === p5n.length && p5n.length === 5 && !p5n.includes(p2id) === (p5[1].cat !== 'late'), 'after a touch reloads the desk the strip moves on, and every tap still opens the right card (Sixfold’s 16 Nov bug)');
   /* whose: Mine */
   await click('.ownbar [data-owner="mine"]');
   const mineN = D.sponsor.recs.filter((r) => r.owner === 'Test Seller').length;
@@ -324,7 +460,7 @@ try {
   await js(`(()=>{const n=document.querySelector('.detail .tnote');n.value='front desk took a message';return 1})()`);
   await click('.detail .qb [data-m="call/noanswer"]', 900);
   D = await b('data'); let fr0 = find('sponsor', fresh);
-  ok(fr0.stage === 'called' && fr0.owner === 'Test Seller' && fr0.last.note === 'front desk took a message' && fr0.next && fr0.next.date > today(), 'No answer: logged with the note, Called, mine, a follow-up 3 working days out');
+  ok(fr0.stage === 'called' && fr0.owner === 'Test Seller' && fr0.last.note === 'front desk took a message' && fr0.next && fr0.next.date === D.nextBiz, 'No answer: logged with the note, Called, mine, the follow-up the next working day (Sixfold\u2019s rule)');
   ok(await js(`/Logged: Called, no answer/.test(document.getElementById('toast').textContent)&&!!document.querySelector('#toast button')`), 'the toast says what was logged and offers Undo');
   await shot('desk-card-logged.png');
   await click('#toast button', 900);
@@ -383,10 +519,11 @@ try {
   await clickText('.printbar button', '/Back/', 300);
   for (const s of ['pl', 'pk', 'offer', 'better']) { await sub(s); }
   ok(await js(`/What we could offer/.test(document.querySelector('main').textContent)`), 'P&L, Packages, What Peak offers, What we could offer still open');
-  await sub('look'); await click('[data-look="dark"]');
-  const bgSum = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
-  ok((await js(bgSum)) < 120 && await js(`localStorage.getItem('peakdesk.theme')==='dark'`), 'Look: Dark');
-  await tab('today'); await shot('desk-today-dark.png'); await tab('more'); await sub('look'); await click('[data-look="auto"]');
+  await sub('look'); await click('[data-look="light"]');
+  const bgSum = bgS;
+  ok((await js(bgSum)) > 600 && await js(`localStorage.getItem('peakdesk.theme')==='light'`), 'Look: Light');
+  await tab('today'); await shot('desk-today-light.png'); await tab('more'); await sub('look'); await click('[data-look="dark"]');
+  ok((await js(bgSum)) < 120, 'Look: Dark again'); await js(`localStorage.removeItem('peakdesk.theme')`);
   /* expo */
   await world('expo'); await tab('today');
   ok(await js(`location.hash==='#expo/today'&&/Expo leads/.test(document.querySelector('.shead h1').textContent)&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Pipeline,Organisations,Tours & quotes,More'`), 'Expo leads: the same tabs (Today, Pipeline, Organisations, Tours & quotes, More)');
@@ -447,6 +584,54 @@ try {
   ok(await js(`location.hash==='#sponsor/list/added'&&new RegExp('${NEWCO}').test(document.querySelector('.detail h2').textContent)`) && (await b('data')).sponsor.recs.find((r) => r.name === NEWCO).owner === 'Test Seller','+ Add a company: it opens under Added on the desk, owned by whoever added it');
   await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
   ok(await js(`location.hash==='#sponsor/list/added'&&document.querySelector('main').dataset.section==='list'`), 'a reload comes back to the same place');
+
+  console.log('The Sixfold tools on the screen');
+  const openCo = async (id, name) => { await tab('list'); await sub('all'); await js(`(()=>{const q=document.querySelector('.controls .search');q.value=${JSON.stringify(name.toLowerCase())};q.dispatchEvent(new Event('input'));return 1})()`); await sleep(250); await click(`.list .row[data-id="${id}"]`, 500); return js(`document.querySelector('.detail')&&document.querySelector('.detail').dataset.id===${JSON.stringify(id)}`); };
+  D = await b('data'); const usR = find('sponsor', USA.id), usOk = usR.people.find((p) => !p.dnc && p.email && p.phone);
+  ok(await openCo(USA.id, USA.name), 'a card opens from the list');
+  ok(await js(`(()=>{const c=document.querySelector('.detail .ct.dnc[data-key=${JSON.stringify(JSON.stringify(dk)).slice(1, -1)}]');return !!c&&/Do not contact/.test(c.textContent)&&/Asked not to be contacted/.test(c.textContent)&&!c.querySelector('a[href^="tel:"],a[href^="sms:"],a[href^="mailto:"]')&&!!c.querySelector('[data-dnc="off"]')})()`), 'Don’t contact: the person shows the tag and the reason, with no call, text or email links');
+  await click('.detail .tplpick [data-tpl="first"]', 300);
+  ok(await js(`![...document.querySelectorAll('.detail .tplwho option')].some(o=>o.textContent.indexOf(${JSON.stringify(usP.name)})===0)&&document.querySelectorAll('.detail .tplwho option').length>0`), 'and is not offered in Send a message');
+  await js(`(()=>{const s=document.querySelector('.detail .tplwho');const o=[...s.options].find(o=>o.textContent.indexOf(${JSON.stringify(usOk.name)})===0);s.value=o.value;s.dispatchEvent(new Event('change'));return 1})()`); await sleep(150);
+  const tv = await js(`({t:document.querySelector('.detail .tpltext').value,b:document.querySelector('.detail .tplbody').value,s:document.querySelector('.detail .tplsub').value,sms:document.querySelector('.detail [data-send="text"]').getAttribute('href'),mail:document.querySelector('.detail [data-send="email"]').getAttribute('href')})`);
+  const fn = usOk.name.split(' ')[0];
+  ok(tv.t.startsWith('Hi ' + fn + ', this is Test with Peak Pickleball') && tv.b.includes(USA.name) && tv.s === 'Peak Pickleball and ' + USA.name && !/\{/.test(tv.t + tv.b + tv.s), `First outreach, filled in: "${tv.t.slice(0, 60)}…"`);
+  ok(/^sms:\+?\d{7,15}[?&]body=/.test(tv.sms) && decodeURIComponent(tv.sms.split('body=')[1]) === tv.t && tv.mail.startsWith('mailto:' + usOk.email + '?subject=') && decodeURIComponent(tv.mail.split('subject=')[1].split('&')[0]) === tv.s, 'Text opens the phone’s messages with it filled in; Email opens mail with the subject and body');
+  await js(`(()=>{const a=document.querySelector('.detail [data-send="text"]');a.addEventListener('click',e=>e.preventDefault(),{once:true});a.click();return 1})()`); await sleep(1300);
+  D = await b('data'); let ul = find('sponsor', USA.id).last;
+  ok(ul.m === 'text' && ul.out === 'sent' && ul.tpl === 'first' && ul.by === 'Test Seller' && /From the template “First outreach” to /.test(ul.note) && await js(`/Texted from “First outreach”/.test(document.getElementById('toast').textContent)`), 'tapping Text logs it: Texted, from the template, by that person (with Undo)');
+  await click('.detail .tplpick [data-tpl="tour"]', 300);
+  ok(await js(`/needs the tour time/.test(document.querySelector('.detail .tplbox').textContent)&&document.querySelector('.detail [data-send="text"]').classList.contains('off')`), 'Tour confirmation waits for a tour to be booked');
+  await click('.detail .close', 300);
+  /* the tries rule on the card */
+  ok(await openCo(T4.id, T4.name) && await js(`!!document.querySelector('.detail .tries4')&&/4 of 4 tries/.test(document.querySelector('.detail .strip').textContent)`), 'after 4 misses: the card says so, with Send a last text or email and Move to Not now (60 days)');
+  await click('.detail [data-act="lasttry"]', 400);
+  ok(await js(`document.querySelector('.detail .tplpick [data-tpl="last"]').getAttribute('aria-pressed')==='true'&&/tried to reach you a few times|tried you a few times/.test(document.querySelector('.detail .tplbox').textContent+document.querySelector('.detail .tpltext').value)`), 'Send a last text or email opens the Last try template');
+  ok((await b('data')).sponsor.recs.find((r) => r.id === T4.id).stage !== 'notnow', 'nothing moved by itself');
+  await click('.detail [data-act="notnow60"]', 1000);
+  D = await b('data'); const t4r = find('sponsor', T4.id);
+  ok(t4r.stage === 'notnow' && t4r.notnow.back === later(60) && t4r.notnow.why === 'No answer after 4 tries' && t4r.next.date === later(60), 'one tap: Not now, back in 60 days, "No answer after 4 tries"');
+  await click('.detail .close', 300);
+  const T1 = LOCP[21]; await b('touch', { world: 'sponsor', id: T1.id, m: 'call', out: 'noanswer' }); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+  ok(await openCo(T1.id, T1.name) && await js(`/Try 2 of 4: 1 call with no answer/.test(document.querySelector('.detail .touchp').textContent)&&/Try 2 of 4/.test(document.querySelector('.detail .strip').textContent)&&!document.querySelector('.detail .fuhint').hidden`), 'one miss: "Try 2 of 4" on the card');
+  await click('.detail .qb [data-m="call/noanswer"]', 1000);
+  D = await b('data');
+  ok(find('sponsor', T1.id).next.date === D.nextBiz && find('sponsor', T1.id).tries === 2 && await js(`/Try 3 of 4/.test(document.querySelector('.detail .touchp').textContent)`), 'No answer: the follow-up goes to the next working day by itself; now Try 3 of 4');
+  /* duplicates on the screen */
+  const usOther = find('sponsor', USA.id).people.find((p) => !p.dnc && p.email && p.key !== usOk.key) || usOk;
+  ok(await openCo(USA.id, USA.name), 'back on a card');
+  await js(`(()=>{const a=[...document.querySelectorAll('.detail .lnk')].find(b=>b.textContent==='+ Add a contact');a.click();const f=a.nextElementSibling;const i=f.querySelectorAll('input');i[0].value='New Person';i[2].value=${JSON.stringify(usOther.email)};[...f.querySelectorAll('button')].find(b=>b.textContent==='Save contact').click();return 1})()`); await sleep(500);
+  ok(await js(`(()=>{const d=document.querySelector('.detail .dupbox');return !d.hidden&&/already on this card/.test(d.textContent)&&!!d.querySelector('[data-act="mergec"]')&&!!d.querySelector('[data-act="keepc"]')})()`), 'adding a contact already on the card: "already on this card", with Add the new details or Keep both');
+  await click('.detail .dupbox [data-act="mergec"]', 1000);
+  D = await b('data'); ok(find('sponsor', USA.id).people.filter((p) => p.key === usOther.key).length === 1, 'Add the new details: still one person');
+  await click('.detail .close', 300);
+  await clickText('.shead button', '/Add a company/', 250);
+  await js(`(()=>{const i=document.querySelector('.addcard input');i.value=${JSON.stringify(DUP.name.toLowerCase() + ' llc')};i.dispatchEvent(new Event('input'));return 1})()`); await sleep(200);
+  ok(await js(`(()=>{const d=document.querySelector('.addcard .dupbox');return !d.hidden&&/may already be on the desk/.test(d.textContent)&&!!d.querySelector('[data-act="merge"][data-id="${DUP.id}"]')&&!!d.querySelector('[data-act="keep"]')})()`), '+ Add a company: a warning as the name is typed, with Merge or Keep both');
+  await shot('facelift-duplicate-warning.png');
+  await click(`.addcard .dupbox [data-act="merge"][data-id="${DUP.id}"]`, 1200);
+  ok(await js(`document.querySelector('.detail').dataset.id===${JSON.stringify(DUP.id)}`) && !(await b('data')).sponsor.recs.some((r) => r.name === DUP.name.toLowerCase() + ' llc'), 'Merge opens the one already there; nothing new is made');
+  await click('.detail .close', 300);
   /* expo details */
   await world('expo'); await tab('list');
   ok(await js(`document.querySelector('.sortsel').value==='pri'&&(()=>{const p=[...document.querySelectorAll('.list .row .sc')].map(s=>parseInt(s.textContent));return p.length>10&&p.every((v,i)=>!i||v>=p[i-1])})()`), 'Organisations: priority 1 first');
@@ -472,9 +657,8 @@ try {
   await clickText('.detail button', '/Remove this lead/', 900);
   ok((await b('data')).expo.removed.some((r) => r.name === 'Screen Expo Co'), 'Remove this lead takes it out (to Removed)');
   await tab('more'); await sub('ref'); ok(await js(`/Douglas County Fairgrounds/.test(document.querySelector('.xvenues').textContent)`), 'the competing venues table');
-  await js(`(()=>{localStorage.setItem('peakdesk.theme','dark');window.__lookApply();return 1})()`); await sleep(300); await tab('pipe');
-  ok((await js(bgSum)) < 120, 'Expo leads in dark mode'); await shot('expo-pipeline-dark.png');
-  await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(200);
+  await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(300); await tab('pipe');
+  ok((await js(bgSum)) < 120 && await js(`getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()==='#e6781d'`), 'Expo leads in dark mode, glowing Peak orange'); await shot('expo-pipeline-dark.png');
   /* phone */
   await world('sponsor'); await tab('today');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
@@ -487,6 +671,59 @@ try {
   ok(ph.fixed && ph.wide <= 1 && !ph.small.length, 'on a phone a card opens full screen, fits, buttons finger-sized' + (ph.fixed && ph.wide <= 1 && !ph.small.length ? '' : ': ' + JSON.stringify(ph)));
   await shot('phone-card.png');
   await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
+
+  console.log('Settings, My calendar, the look and contrast');
+  await world('sponsor'); await tab('more');
+  ok(await js(`!document.querySelector('.subchips [data-sub="settings"]')&&!!document.querySelector('.subchips [data-sub="cal"]')`), 'a seller sees My calendar but not Settings');
+  await sub('cal'); await click('[data-act="callink"]', 700);
+  ok(await js(`/api\\/desk\\.php\\?action=calfeed&p=[0-9a-f]{12}&t=[0-9a-f]{32}$/.test(document.querySelector('.calurl').value)&&[...document.querySelectorAll('main a')].some(a=>a.href.startsWith('webcal:'))`), 'My calendar: the private link, a Subscribe link for the iPhone, and one for Google');
+  await shot('facelift-my-calendar.png');
+  /* the look: one tap in the bar, kept on this device */
+  await tab('today'); await click('#lookbtn', 300);
+  ok(await js(`document.documentElement.dataset.theme==='light'&&localStorage.getItem('peakdesk.theme')==='light'`) && (await js(bgS)) > 600, 'the sun button: light mode, kept on this device');
+  await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+  ok(await js(`document.documentElement.dataset.theme==='light'`), 'still light after a reload');
+  await tab('more'); await sub('look');
+  ok(await js(`[...document.querySelectorAll('[data-look]')].map(b=>b.dataset.look).join(',')==='dark,light,auto'&&document.querySelector('[data-look="light"]').getAttribute('aria-pressed')==='true'`), 'More › Look: Dark (the default), Light, Match this device');
+  await click('[data-look="dark"]', 300);
+  ok(await js(`document.documentElement.dataset.theme==='dark'`) && (await js(bgS)) < 120, 'back to dark');
+  /* contrast: every piece of text on the screen against what is behind it, 4.5:1 or better */
+  const CONTRAST = `(()=>{const P=s=>{if(!s)return null;let m=s.match(/rgba?\\(([^)]+)\\)/);if(m){const v=m[1].split(/[\\s,\\/]+/).filter(Boolean).map(Number);return [v[0],v[1],v[2],v[3]==null?1:v[3]]}m=s.match(/color\\(srgb ([^)]+)\\)/);if(m){const v=m[1].split(/[\\s\\/]+/).filter(Boolean).map(Number);return [v[0]*255,v[1]*255,v[2]*255,v[3]==null?1:v[3]]}return null};
+    const L=c=>{const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)};return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2])};const over=(t,b)=>{const a=t[3];return [t[0]*a+b[0]*(1-a),t[1]*a+b[1]*(1-a),t[2]*a+b[2]*(1-a),1]};
+    const bgOf=e=>{const ls=[];for(let x=e;x;x=x.parentElement){const c=P(getComputedStyle(x).backgroundColor);if(c&&c[3]>0){ls.push(c);if(c[3]>=1)break}}let b=P(getComputedStyle(document.documentElement).backgroundColor);if(!b||b[3]<1)b=[255,255,255,1];for(let i=ls.length-1;i>=0;i--)b=over(ls[i],b);return b};
+    const bad=[];let n=0;const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    while(w.nextNode()){const t=w.currentNode;if(!t.nodeValue.trim())continue;const e=t.parentElement;if(!e||e.closest('[hidden],.toast,option,select,.paper,a.btn.off,button:disabled'))continue;const r=e.getBoundingClientRect();if(!r.width||!r.height||r.bottom<0||r.top>innerHeight*3)continue;
+      const cs=getComputedStyle(e);if(cs.visibility==='hidden')continue;let op=1;for(let x=e;x;x=x.parentElement)op*=+getComputedStyle(x).opacity;let fg=P(cs.color);fg=[fg[0],fg[1],fg[2],fg[3]*op];const bg=bgOf(e);if(fg[3]<1)fg=over(fg,bg);
+      const A=L(fg),B=L(bg),cr=(Math.max(A,B)+.05)/(Math.min(A,B)+.05);n++;if(cr<4.5)bad.push(t.nodeValue.trim().slice(0,28)+' '+cr.toFixed(2))}
+    return {n,bad:bad.slice(0,6),nb:bad.length}})()`;
+  const looks = {}; const shotsMade = [];
+  for (const [dev, wdt, hgt, mob] of [['desktop', 1440, 900, false], ['phone', 390, 844, true]]) {
+    await send('Emulation.setDeviceMetricsOverride', { width: wdt, height: hgt, deviceScaleFactor: mob ? 2 : 1, mobile: mob }); await sleep(300);
+    for (const mode of ['dark', 'light']) {
+      await js(`(()=>{localStorage.setItem('peakdesk.theme','${mode}');window.__lookApply();return 1})()`); await sleep(250);
+      await world('sponsor'); await tab('today'); await js(`window.scrollTo(0,0)`); await sleep(300);
+      let c = await js(CONTRAST); looks[`${dev}/${mode}/today`] = c; await shot(`facelift-${dev}-${mode}-today.png`); shotsMade.push(`facelift-${dev}-${mode}-today.png`);
+      await tab('pipe'); await sleep(200); c = await js(CONTRAST); looks[`${dev}/${mode}/pipeline`] = c; await shot(`facelift-${dev}-${mode}-pipeline.png`);
+      await click('.controls [data-view="board"]', 400); c = await js(CONTRAST); looks[`${dev}/${mode}/board`] = c; await shot(`facelift-${dev}-${mode}-board.png`); await click('.controls [data-view="stages"]', 300);
+      await tab('today'); await click('.p5 .p5b[data-rank="1"]', 600); c = await js(CONTRAST); looks[`${dev}/${mode}/card`] = c; await shot(`facelift-${dev}-${mode}-card.png`);
+      await js(`(()=>{const b=document.querySelector('.detail .tplpick button');if(b)b.click();const s=document.querySelector('.detail .tplsec');if(s)s.scrollIntoView();return 1})()`); await sleep(300); c = await js(CONTRAST); looks[`${dev}/${mode}/message`] = c; await shot(`facelift-${dev}-${mode}-message.png`);
+      await click('.detail .close', 300);
+      await world('expo'); await tab('today'); await js(`window.scrollTo(0,0)`); await sleep(300); c = await js(CONTRAST); looks[`${dev}/${mode}/expo`] = c; await shot(`facelift-${dev}-${mode}-expo.png`); await world('sponsor');
+    }
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(200);
+  const lowC = Object.entries(looks).filter(([, v]) => v.nb); const nTxt = Object.values(looks).reduce((n, v) => n + v.n, 0);
+  ok(!lowC.length && nTxt > 2000, `contrast 4.5:1 or better on every piece of text measured (${nTxt} across Today, Pipeline, Board, a card, Send a message and Expo; dark and light; desktop and phone)` + (lowC.length ? ': ' + JSON.stringify(lowC.map(([k, v]) => [k, v.nb, v.bad]).slice(0, 4)) : ''));
+  ok(shotsMade.length === 4, 'screenshots for Matthew: tests/facelift-{desktop,phone}-{dark,light}-{today,pipeline,board,card,message,expo}.png');
+  /* an admin: Settings (the end-of-day email, OFF; the templates) */
+  await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
+  await js(`(()=>{const i=document.querySelector('.signin input');i.value='${ADMIN}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
+  await waitFor(`!!document.querySelector('.shead')`, 'the admin’s page'); await world('sponsor'); await tab('more'); await sub('settings');
+  ok(await js(`document.querySelector('[data-set="eod"] [data-eod="off"]').getAttribute('aria-pressed')==='true'&&/6 pm Colorado time, Monday to Friday/.test(document.querySelector('[data-set="eod"]').textContent)`), 'More › Settings (admin): the end-of-day email, Off');
+  ok(await js(`document.querySelectorAll('[data-set="templates"] .tpled').length===6&&[...document.querySelectorAll('[data-set="templates"] .tpled .tag')].filter(t=>t.textContent==='starter').length===6`), 'and the six templates to edit, each marked starter');
+  await click('[data-act="eodpreview"]', 700);
+  ok(await js(`/WHO DID WHAT TODAY/.test(document.querySelector('pre.eodpre').textContent)&&/Not going now: it is off/.test(document.querySelector('pre.eodpre').textContent)`), 'Preview shows today’s email and says it is not going (it is off)');
+  await shot('facelift-settings.png');
   /* the expo-only account in the browser */
   await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${EXPO}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);

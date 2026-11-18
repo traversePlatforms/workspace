@@ -20,10 +20,18 @@
  * The records: php desk.php rebuild | check
  * The Peak email sender (2026-11-17): php desk.php servicekey "Peak email" (prints its key once) | emailed sponsor|expo <id> <to> [subject]
  *   | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note]   (HTTP: actions emailed / emailreply / emailbounce
- *   with the X-Desk-Key header) */
+ *   with the X-Desk-Key header)
+ *
+ * 2026-11-18 (Matthew: "Lets add some stuff to the peak desk that we use in sixfold that works well for us in terms of reaching out to
+ * clients"): message templates (admins edit them), the call-tries rule (4 tries, then a last message and Not now for 60 days), Priority 5 on
+ * Today, duplicate warnings when a company or contact is added, Don't contact per person, a private calendar feed per person, and an
+ * end-of-day email to the desk team (OFF until an admin turns it on in More, Settings):
+ *   php desk.php eod [--dry-run] [--force]   (the hourly rescan also runs it: it sends once, 6 pm Colorado time, Monday to Friday) */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-17.1';
+const BUILD = '2026-11-18.2';
+const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
+const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
 require __DIR__ . '/desk-store.php';
 if (!is_dir(DATA_DIR)) { if ($LOCAL) @mkdir(DATA_DIR, 0770, true); else { http_response_code(500); exit('{"ok":false,"error":"No data folder."}'); } }
@@ -73,7 +81,13 @@ if (PHP_SAPI === 'cli') {
         $sk[keyHash($key)] = ['name' => clean($name, 40), 'at' => time()]; jwrite('service-keys.json', $sk);
         echo "Key for $name: $key\n"; exit(0);
     }
-    if ($cmd === 'rescan') exit(rescanDue(max(1, min(60, (int) ($name ?: 15)))));
+    /* the hourly run: the end-of-day email first (it only sends when it is on and due), then the look-ups */
+    if ($cmd === 'rescan') { try { $e = eodRun(time()); if ($e['sent'] || $e['failed']) echo date('Y-m-d H:i') . ' eod: ' . $e['said'] . "\n"; } catch (Throwable $x) { echo 'eod: ' . $x->getMessage() . "\n"; } exit(rescanDue(max(1, min(60, (int) ($name ?: 15))))); }
+    if ($cmd === 'eod') {
+        $now = ctype_digit((string) getenv('DESK_NOW')) ? (int) getenv('DESK_NOW') : time();   /* the tests pick the hour */
+        if (in_array('--dry-run', $argv, true)) { $m = eodText($now); echo 'Due: ' . (eodDue($now) ?: 'yes') . "\nTo: " . (implode(', ', eodConf()['to']) ?: '(nobody yet)') . "\nSubject: " . $m['subject'] . "\n\n" . $m['text'] . "\n"; exit(0); }
+        $e = eodRun($now, in_array('--force', $argv, true)); echo $e['said'] . "\n"; exit($e['failed'] ? 1 : 0);
+    }
     if ($cmd === 'scan' && $name !== '') {
         $L = recs('sponsor')[$name] ?? null; if (!$L) { fwrite(STDERR, "No such lead.\n"); exit(1); }
         $json(scanAndSave($L, in_array('--hunter', $argv, true) ? 'hunter' : 'site')); exit(0);
@@ -120,6 +134,8 @@ function handle(string $action, bool $isPost, array $body): array {
         $svc = jread('service-keys.json', [])[keyHash($key)] ?? null; if (!$svc) fail('That key did not work.', 401);
         return service($action, $body, (string) $svc['name']);
     }
+    /* a person's calendar (2026-11-18, Sixfold's walk feed): Google and Apple fetch it themselves, so the link carries the person and a token */
+    if ($action === 'calfeed') calFeed((string) ($_GET['p'] ?? ''), (string) ($_GET['t'] ?? ''));
     if ($isPost && ($_SERVER['HTTP_X_DESK'] ?? '') !== '1') fail('Bad request.', 400);   /* a plain form post from another site cannot set this header */
 
     /* ---- sign-in ---- */
@@ -155,37 +171,70 @@ function handle(string $action, bool $isPost, array $body): array {
     $ALIAS = ['status' => ['stage', 'sponsor'], 'lead' => ['add', 'sponsor'], 'leaddel' => ['del', 'sponsor'], 'leadback' => ['back', 'sponsor'],
         'xstage' => ['stage', 'expo'], 'xnote' => ['note', 'expo'], 'xnotedel' => ['notedel', 'expo'], 'xnext' => ['next', 'expo'], 'xcontact' => ['contact', 'expo'],
         'xlead' => ['add', 'expo'], 'xdel' => ['del', 'expo'], 'xback' => ['back', 'expo']];
-    $BOTH = ['touch', 'touchdel', 'stage', 'owner', 'next', 'note', 'notedel', 'contact', 'add', 'del', 'back', 'tour', 'tourdel', 'tourmove', 'tourout', 'emailed', 'emailreply', 'emailbounce'];
+    $BOTH = ['touch', 'touchdel', 'stage', 'owner', 'next', 'note', 'notedel', 'contact', 'add', 'del', 'back', 'tour', 'tourdel', 'tourmove', 'tourout', 'emailed', 'emailreply', 'emailbounce',
+        'dnc', 'templates'];
     $SPONSOR = ['site', 'scan', 'proposal', 'signed', 'sponsor', 'todo', 'tododone', 'tododel', 'packages', 'pl'];
     $legacy = isset($ALIAS[$action]);
     if ($legacy) { [$op, $w] = $ALIAS[$action]; if ($action === 'status') $body['stage'] = $body['status'] ?? ''; }
     else { $op = $action; $w = ($body['world'] ?? '') === 'expo' ? 'expo' : 'sponsor'; }
     if (in_array($op, $SPONSOR, true)) $w = 'sponsor';
     /* the expo-only account (2026-11-13): the Expo leads and nothing else, read or write */
-    if ($ROLE === 'expo' && $action !== 'data' && $w !== 'expo') fail('This account is for the Expo leads only.', 403);
+    if ($ROLE === 'expo' && !in_array($action, ['data', 'callink'], true) && $w !== 'expo') fail('This account is for the Expo leads only.', 403);
 
     if ($action === 'data') return dataOut($ME, $ROLE);
+    /* the end-of-day email as it would go now (admins; read only, so Claude Check may look): nothing is sent */
+    if ($action === 'eodpreview') { if ($ROLE !== 'admin') fail('Only an admin sees this.', 403); $m = eodText(time()); return ['ok' => true, 'subject' => $m['subject'], 'text' => $m['text'], 'due' => eodDue(time()), 'conf' => eodConf()]; }
     if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);   /* read-only check account (2026-10-26): everything below saves */
     if (!$isPost) fail('POST required', 405);
+    /* desk-wide settings (2026-11-18): the end-of-day email, admins only */
+    if ($action === 'settings') {
+        if ($ROLE !== 'admin') fail('Only an admin changes the settings.', 403);
+        $to = []; foreach ((array) ($body['to'] ?? []) as $e) { $e = strtolower(clean($e, 160)); if ($e === '') continue; if (!filter_var($e, FILTER_VALIDATE_EMAIL)) fail('“' . $e . '” does not look like an email.'); $to[$e] = 1; }
+        if (count($to) > 12) fail('Twelve people at most.');
+        $on = !empty($body['on']); if ($on && !$to) fail('Add at least one email before turning it on.');
+        $s = jread('desk-settings.json', []); $s['eod'] = ['on' => $on, 'to' => array_keys($to), 'by' => $ME, 'at' => time()];
+        if (!jwrite('desk-settings.json', $s)) fail('The setting could not be saved.', 500);
+        return ['ok' => true, 'eod' => eodConf()];
+    }
+    /* my calendar link (2026-11-18); new: true makes a new one and the old link stops working */
+    if ($action === 'callink') { $L = calLink($ME, !empty($body['new'])); if (!$L) fail('The link could not be made.', 500); return ['ok' => true] + $L; }
     if (!in_array($op, $BOTH, true) && !in_array($op, $SPONSOR, true)) fail('Unknown action.', 404);
     if (in_array($op, ['emailed', 'emailreply', 'emailbounce'], true)) return service($op, $body + ['world' => $w], $ME);
+    if ($op === 'templates' && $ROLE !== 'admin') fail('Only an admin changes the templates.', 403);
     return withLock(fn() => act($op, $w, $body, $ME, $legacy));
 }
 
 /* ---- what the page gets ---- */
 function people(string $w, array $R): array {
-    $o = [];
+    $o = []; $dnc = $R['dnc'] ?? [];
+    /* each person carries its key (Don't contact and "add the new details to" name it); one marked Don't contact shows no email or phone */
+    $mk = function (array $c, array $p) use ($dnc): array { $k = personKey($c); $p['key'] = $k; if ($k !== '' && isset($dnc[$k])) { $p['dnc'] = $dnc[$k]; $p['email'] = ''; $p['phone'] = ''; } return $p; };
     foreach (($R['contacts'] ?? []) as $c) {
-        if ($w === 'expo') { $o[] = ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'best' => !empty($c['best']),
-            'src' => 'Venue research' . (!empty($c['sdate']) ? ', source dated ' . $c['sdate'] : ''), 'conf' => (string) ($c['conf'] ?? ''), 'estat' => (string) ($c['estat'] ?? ''), 'other' => (string) ($c['other'] ?? ''), 'notes' => (string) ($c['notes'] ?? ''), 'srcs' => (array) ($c['srcs'] ?? [])]; continue; }
+        if ($w === 'expo') { $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'best' => !empty($c['best']),
+            'src' => 'Venue research' . (!empty($c['sdate']) ? ', source dated ' . $c['sdate'] : ''), 'conf' => (string) ($c['conf'] ?? ''), 'estat' => (string) ($c['estat'] ?? ''), 'other' => (string) ($c['other'] ?? ''), 'notes' => (string) ($c['notes'] ?? ''), 'srcs' => (array) ($c['srcs'] ?? [])]); continue; }
         $hc = is_numeric($c['conf'] ?? null);
-        $o[] = ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'best' => !empty($c['pick']),
-            'src' => ($c['from'] ?? '') === 'peak' ? 'Peak’s sponsor tracker' : ($hc ? 'Hunter' : 'Our research'), 'conf' => $hc ? (int) $c['conf'] . '%' : ''];
+        $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'best' => !empty($c['pick']),
+            'src' => ($c['from'] ?? '') === 'peak' ? 'Peak’s sponsor tracker' : ($hc ? 'Hunter' : 'Our research'), 'conf' => $hc ? (int) $c['conf'] . '%' : '']);
     }
-    foreach (($R['added'] ?? []) as $c) $o[] = ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? $c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''),
-        'best' => false, 'src' => 'Added on the desk by ' . ($c['by'] ?? 'someone') . (!empty($c['at']) ? ', ' . date('M j', (int) $c['at']) : ''), 'conf' => '', 'notes' => (string) ($c['notes'] ?? ''), 'added' => true];
-    foreach (($R['scan']['hunter']['people'] ?? []) as $c) $o[] = ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''),
-        'best' => false, 'src' => 'Hunter, ' . date('M j', (int) ($R['scan']['hunter']['at'] ?? time())), 'conf' => (int) ($c['conf'] ?? 0) . '%'];
+    $more = [];
+    foreach (($R['added'] ?? []) as $c) {
+        if (!empty($c['of'])) { $more[] = $c; continue; }   /* "add the new details to" someone already on the card (the duplicate check) */
+        $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? $c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''),
+            'best' => false, 'src' => 'Added on the desk by ' . ($c['by'] ?? 'someone') . (!empty($c['at']) ? ', ' . date('M j', (int) $c['at']) : ''), 'conf' => '', 'notes' => (string) ($c['notes'] ?? ''), 'added' => true]);
+    }
+    foreach ($more as $c) {
+        $hit = false;
+        foreach ($o as &$p) {
+            if ($p['key'] !== $c['of']) continue; $hit = true;
+            $roleF = (string) ($c['role'] ?? '') !== '' ? 'role' : 'pos';
+            foreach (['name' => 'name', 'role' => $roleF, 'email' => 'email', 'phone' => 'phone'] as $to => $from) if (($p[$to] ?? '') === '' && (string) ($c[$from] ?? '') !== '' && (empty($p['dnc']) || !in_array($to, ['email', 'phone'], true))) $p[$to] = (string) $c[$from];
+            $p['more'] = 'Details added on the desk by ' . ($c['by'] ?? 'someone') . (!empty($c['at']) ? ', ' . date('M j', (int) $c['at']) : '');
+        }
+        unset($p);
+        if (!$hit) $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? $c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'best' => false, 'src' => 'Added on the desk by ' . ($c['by'] ?? 'someone'), 'conf' => '', 'added' => true]);
+    }
+    foreach (($R['scan']['hunter']['people'] ?? []) as $c) $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''),
+        'best' => false, 'src' => 'Hunter, ' . date('M j', (int) ($R['scan']['hunter']['at'] ?? time())), 'conf' => (int) ($c['conf'] ?? 0) . '%']);
     return $o;
 }
 function shape(string $w, array $R): array {
@@ -200,10 +249,12 @@ function worldOut(string $w): array {
     foreach ($all as $R) { if (!empty($R['off'])) $removed[] = ['id' => $R['id'], 'name' => $R['name'], 'list' => $R['list'] ?? '', 'cat' => $R['cat'] ?? '', 'stage' => $R['stage'], 'at' => $R['off']['at'], 'by' => $R['off']['by']]; else $live[] = shape($w, $R); }
     $C = W($w); $st = []; foreach ($C['stages'] as $k => $v) $st[] = [$k, $v];
     return ['stages' => $st, 'path' => $C['path'], 'reach' => $C['reach'], 'recs' => $live, 'removed' => $removed, 'tours' => toursOf($w), 'owners' => owners($w),
-        'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'team' => counts($w, 0)];
+        'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
 }
 function dataOut(string $ME, string $ROLE): array {
-    $base = ['ok' => true, 'build' => BUILD, 'me' => ['name' => $ME, 'role' => $ROLE], 'methods' => METHODS, 'outs' => OUTS, 'mouts' => MOUTS, 'today' => date('Y-m-d')];
+    $base = ['ok' => true, 'build' => BUILD, 'me' => ['name' => $ME, 'role' => $ROLE], 'methods' => METHODS, 'outs' => OUTS, 'mouts' => MOUTS, 'today' => date('Y-m-d'),
+        'nextBiz' => nextBizDay(), 'tries' => ['max' => TRIES_MAX, 'back' => TRIES_BACK_DAYS]];
+    if ($ROLE === 'admin') $base['eod'] = eodConf();
     $X = worldOut('expo'); $xs = jread('expo-seed.json', []);
     $X += ['questions' => $xs['questions'] ?? [], 'venues' => $xs['venues'] ?? [], 'venueNote' => $xs['venueNote'] ?? '', 'built' => $xs['built'] ?? '', 'from' => $xs['from'] ?? ''];
     if ($ROLE === 'expo') return $base + ['expo' => $X];   /* the expo account: the Expo leads and nothing of the sponsors' */
@@ -268,8 +319,10 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
             if (!in_array($o, MOUTS[$m], true)) fail('Pick how it went.');
             $when = (int) ($body['when'] ?? 0); if ($when === 0) $when = $now; elseif ($when > $now + 600 || $when < $now - 30 * 86400) fail('Pick a time in the last 30 days.');
             $fu = (string) ($body['fu'] ?? ''); if ($fu !== '' && (!okDay($fu) || $fu < date('Y-m-d'))) fail('Pick a follow-up day from today on.');
-            $k = newKey();
-            commit($w, touchRows($w, $R, $k, ['m' => $m, 'out' => $o, 'note' => clean($body['note'] ?? '', 600), 'when' => $when], $ME, $canOwn, $fu, clean($body['fuWhat'] ?? '', 160), $now));
+            $k = newKey(); $touch = ['m' => $m, 'out' => $o, 'note' => clean($body['note'] ?? '', 600), 'when' => $when];
+            /* sent from a message template (2026-11-18): which one, kept on the touch */
+            $tpl = clean($body['tpl'] ?? '', 40); if ($tpl !== '') { if (!preg_match('/^[a-z0-9-]{1,40}$/', $tpl)) fail('No such template.'); $touch['tpl'] = $tpl; }
+            commit($w, touchRows($w, $R, $k, $touch, $ME, $canOwn, $fu, clean($body['fuWhat'] ?? '', 160), $now));
             $R = recs($w)[$id]; return ['ok' => true, 'k' => $k, 'stage' => $R['stage'], 'owner' => $R['owner'], 'tries' => missCount($R)];
         }
         /* undo a touch: gone from the card (the log keeps it); the stage it moved to goes back if nothing has moved it since */
@@ -323,21 +376,84 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
             commit($w, [['t' => $T['notedel'], 'id' => $id, 'nk' => $nk, 'by' => $ME, 'at' => $now]]); return ['ok' => true];
         }
         case 'contact': {
-            needRec($X, $w, $id);
+            $R = needRec($X, $w, $id);
             $role = clean($body['role'] ?? $body['pos'] ?? '', 80);
             $c = ['name' => clean($body['name'] ?? '', 80), 'email' => okMail((string) ($body['email'] ?? '')), 'phone' => clean($body['phone'] ?? '', 40)];
             $c = $w === 'expo' ? $c + ['role' => $role, 'notes' => clean($body['notes'] ?? '', 400)] : $c + ['pos' => $role];
             if ($c['name'] === '' && $c['email'] === '' && $c['phone'] === '') fail('Give a name, email or phone.');
+            /* Sixfold's doubles (2026-11-18): the same email, phone or name already on this card, or the same email or phone at another company.
+               "Add the new details to" (of: their key) fills in what that person lacks; "Keep both" (keep) adds them anyway. */
+            $P = people($w, $R + ['scan' => $w === 'sponsor' ? (jread('scans.json', [])[$id] ?? []) : []]);
+            $of = clean($body['of'] ?? '', 200);
+            if ($of !== '') { if (!in_array($of, array_column($P, 'key'), true)) fail('That contact is not on this card.', 404); $c['of'] = $of; }
+            elseif (empty($body['keep'])) {
+                $em = strtolower($c['email']); $ph = digits10($c['phone']); $nm = strtolower(trim($c['name'])); $d = [];
+                foreach (array_merge($R['contacts'] ?? [], $R['added'] ?? []) as $q) {
+                    if (!empty($q['of'])) continue; $k = personKey($q); $why = [];
+                    $qe = strtolower(trim((string) (($q['email'] ?? '') ?: ($q['dncEmail'] ?? '')))); $qp = digits10((string) (($q['phone'] ?? '') ?: ($q['dncPhone'] ?? '')));
+                    if ($em !== '' && $qe === $em) $why[] = 'the same email'; if ($ph !== '' && $qp === $ph) $why[] = 'the same phone';
+                    if ($nm !== '' && strtolower(trim((string) ($q['name'] ?? ''))) === $nm) $why[] = 'the same name';
+                    if ($why) { $d[] = ['same' => true, 'key' => $k, 'name' => (string) ($q['name'] ?? '') ?: ($qe ?: 'a contact'), 'why' => implode(', ', $why), 'dnc' => isset(($R['dnc'] ?? [])[$k])]; }
+                }
+                if (!$d && ($em !== '' || $ph !== '')) foreach (dupesOf($X, '', $c['phone'], '', $c['email'], $id) as $x) $d[] = ['same' => false, 'id' => $x['id'], 'name' => $x['name'], 'why' => $x['why'], 'removed' => $x['removed']];
+                if ($d) { http_response_code(409); return ['ok' => false, 'error' => 'That person may already be on the desk.', 'dupes' => array_slice($d, 0, 5)]; }
+            }
             commit($w, [['t' => $T['contact'], 'id' => $id, 'contact' => $c, 'by' => $ME, 'at' => $now]]); return ['ok' => true];
         }
+        /* Don't contact (2026-11-18): this person asked not to be contacted. Their call, text and email buttons go, and the email sender skips
+           them. on: false takes it off again. */
+        case 'dnc': {
+            $R = needRec($X, $w, $id); $key = clean($body['key'] ?? '', 200); $on = !empty($body['on']);
+            $P = people($w, $R + ['scan' => $w === 'sponsor' ? (jread('scans.json', [])[$id] ?? []) : []]);
+            if ($key === '' || (!in_array($key, array_column($P, 'key'), true) && !isset(($R['dnc'] ?? [])[$key]))) fail('No such contact on this card.', 404);
+            if ($on === isset(($R['dnc'] ?? [])[$key])) return ['ok' => true, 'same' => true];
+            $why = clean($body['why'] ?? '', 160); if ($on && $why === '') $why = 'Asked not to be contacted';
+            commit($w, [['t' => $T['dnc'], 'id' => $id, 'key' => $key, 'on' => $on, 'why' => $on ? $why : '', 'by' => $ME, 'at' => $now]]); return ['ok' => true];
+        }
+        /* the message templates (admins; checked in handle): a list, or reset: true for the starters again */
+        case 'templates': {
+            if (!empty($body['reset'])) { commit($w, [['t' => $T['templates'], 'templates' => [], 'by' => $ME, 'at' => $now]]); return ['ok' => true, 'templates' => starterTemplates($w)]; }
+            $ST = []; foreach (starterTemplates($w) as $s) $ST[$s['k']] = $s; $out = []; $seen = [];
+            foreach (array_slice((array) ($body['templates'] ?? []), 0, 20) as $x) {
+                if (!is_array($x)) continue; $nm = clean($x['name'] ?? '', 60); if ($nm === '') continue;
+                $k = preg_replace('/[^a-z0-9-]/', '', strtolower((string) ($x['k'] ?? ''))) ?: substr(preg_replace('/[^a-z0-9]+/', '-', strtolower($nm)) ?? 't', 0, 30);
+                while (isset($seen[$k])) $k .= '-2'; $seen[$k] = 1;
+                $t = ['k' => substr($k, 0, 40), 'name' => $nm, 'when' => in_array($x['when'] ?? '', ['new', 'voicemail', 'tour', 'proposal', 'quote', 'toured', 'tries', ''], true) ? (string) ($x['when'] ?? '') : '',
+                    'text' => mb_substr(trim(str_replace("\r", '', (string) ($x['text'] ?? ''))), 0, 600), 'subject' => clean($x['subject'] ?? '', 160), 'body' => mb_substr(trim(str_replace("\r", '', (string) ($x['body'] ?? ''))), 0, 3000)];
+                if ($t['text'] === '' && $t['body'] === '') fail('“' . $nm . '” needs a text or an email.');
+                if (preg_match_all('/\{([^}]*)\}/', $t['text'] . $t['subject'] . $t['body'], $mm)) foreach ($mm[1] as $f) if (!in_array($f, ['first', 'company', 'tour', 'me'], true)) fail('“' . $nm . '” has {' . $f . '} in it. The fields are {first}, {company}, {tour} and {me}.');
+                $s = $ST[$t['k']] ?? null; $t['starter'] = $s && $s['name'] === $t['name'] && $s['text'] === $t['text'] && $s['subject'] === $t['subject'] && $s['body'] === $t['body'];
+                $out[] = $t;
+            }
+            if (!$out) fail('Keep at least one template.');
+            commit($w, [['t' => $T['templates'], 'templates' => $out, 'by' => $ME, 'at' => $now]]); return ['ok' => true, 'templates' => $out];
+        }
         case 'add': {
+            /* Merge (the duplicate check): what was typed goes onto the company already on the desk, nothing new is made */
+            if (!empty($body['merge'])) {
+                $mid = (string) $body['merge']; $R = needRec($X, $w, $mid); $rows = [];
+                $ph = clean($body['phone'] ?? '', 40); $em = okMail((string) ($body['email'] ?? '')); $cn = clean($body['cname'] ?? '', 80);
+                if (($ph !== '' && !in_array(digits10($ph), recPhones($R), true)) || ($em !== '' && !in_array(strtolower($em), recEmails($R), true)) || ($cn !== '' && $em === '' && $ph === ''))
+                    $rows[] = ['t' => $T['contact'], 'id' => $mid, 'contact' => ['name' => $cn, 'email' => $em, 'phone' => $ph] + ($w === 'expo' ? ['role' => clean($body['crole'] ?? '', 80), 'notes' => ''] : ['pos' => $cn === '' ? 'Phone given when added again' : '']), 'by' => $ME, 'at' => $now];
+                $site = okSite((string) ($body['site'] ?? '')); if ($site !== '' && (string) ($R['site'] ?? '') === '') $rows[] = ['t' => 'site', 'id' => $mid, 'site' => $site, 'by' => $ME, 'at' => $now];
+                $said = array_filter([clean($body['why'] ?? '', 300), clean($body['kind'] ?? $body['cat'] ?? '', 60), clean($body['events'] ?? '', 200)]);
+                $rows[] = ['t' => $T['note'], 'id' => $mid, 'note' => 'Added again as “' . clean($body['name'] ?? '', 100) . '” and merged into this one' . ($said ? ': ' . implode(' · ', $said) : '.'), 'by' => $ME, 'at' => $now];
+                commit($w, $rows); return ['ok' => true, 'id' => $mid, 'merged' => true];
+            }
+            $dupe = function (string $n, string $ph, string $site, string $em) use ($X, $body) {
+                if (!empty($body['keep'])) return null; $d = dupesOf($X, $n, $ph, $site, $em); if (!$d) return null;
+                http_response_code(409); return ['ok' => false, 'error' => 'This may already be on the desk.', 'dupes' => $d];
+            };
             if ($w === 'sponsor') {
-                $sameName(clean($body['name'] ?? '', 100)); $lead = $newLead(); $rows = [['t' => 'lead', 'id' => $lead['id'], 'lead' => $lead, 'by' => $ME, 'at' => $now]];
+                $sameName(clean($body['name'] ?? '', 100));
+                if ($d = $dupe(clean($body['name'] ?? '', 100), clean($body['phone'] ?? '', 40), (string) ($body['site'] ?? ''), '')) return $d;
+                $lead = $newLead(); $rows = [['t' => 'lead', 'id' => $lead['id'], 'lead' => $lead, 'by' => $ME, 'at' => $now]];
                 if ($canOwn) $rows[] = rowOwner($w, $lead['id'], $ME, $ME, $now);
                 commit($w, $rows); return ['ok' => true, 'id' => $lead['id']];
             }
             /* an expo lead added by hand: it lives in the Expo leads only */
             $n = clean($body['name'] ?? '', 100); $sameName($n);
+            if ($d = $dupe($n, clean($body['phone'] ?? '', 40), (string) ($body['site'] ?? ''), (string) ($body['email'] ?? ''))) return $d;
             $site = okSite((string) ($body['site'] ?? '')); if ($site !== '' && !preg_match('#^https?://#i', $site)) $site = 'https://' . $site;
             $em = okMail((string) ($body['email'] ?? '')); $pri = (int) ($body['pri'] ?? 2); if ($pri < 1 || $pri > 3) $pri = 2;
             $nid = 'x' . substr(sha1('expo-added|' . $n . '|' . microtime()), 0, 9);
@@ -463,4 +579,164 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
         }
     }
     fail('Unknown action.', 404); return [];
+}
+
+/* ---- the end-of-day email (2026-11-18, as Sixfold's 8 pm report): who did what today, the follow-ups due on the next working day, and
+   the replies and bookings the Peak email sender brought in. OFF until an admin turns it on and picks who gets it (More, Settings). The
+   hourly run (php desk.php rescan, from the server's hourly cron) sends it once, after 6 pm Colorado time, Monday to Friday. It goes out
+   through the server's own mailbox (desk-mail.php). DESK_MAIL_FILE (command line only) catches it in a file for the tests. ---- */
+function eodConf(): array {
+    $e = jread('desk-settings.json', [])['eod'] ?? [];
+    return ['on' => !empty($e['on']), 'to' => array_values(array_filter((array) ($e['to'] ?? []), 'is_string')), 'by' => (string) ($e['by'] ?? ''), 'at' => (int) ($e['at'] ?? 0),
+        'last' => trim((string) @file_get_contents(DATA_DIR . '/eod-last.txt')), 'hour' => EOD_HOUR];
+}
+/* '' when it should go now, else why not */
+function eodDue(int $now): string {
+    $c = eodConf();
+    if (!$c['on']) return 'it is off';
+    if (!$c['to']) return 'nobody is picked to get it';
+    if ((int) date('N', $now) > 5) return 'it is the weekend';
+    $h = (int) date('G', $now);
+    if ($h < EOD_HOUR) return 'it goes at 6 pm';
+    if ($h >= 23) return 'too late tonight; it goes tomorrow at 6 pm';
+    if ($c['last'] === date('Y-m-d', $now)) return 'today’s already went';
+    return '';
+}
+function eodText(int $now): array {
+    $day = date('Y-m-d', $now); $from = (int) strtotime($day . ' 00:00:00');
+    $tom = nextBizDay($day); $isTom = $tom === date('Y-m-d', (int) strtotime('+1 day', $from));
+    $WN = ['sponsor' => 'Sponsors', 'expo' => 'Expo leads']; $L = []; $all = 0;
+    $L[] = 'Peak desk, end of day: ' . date('l j F', $now);
+    $L[] = '';
+    $L[] = 'WHO DID WHAT TODAY';
+    foreach ($WN as $w => $wn) {
+        $C = counts($w, $from); $rows = [];
+        foreach ($C as $who => $a) {
+            if (in_array($who, ['Peak email', 'Claude Check'], true)) continue;
+            $p = [];
+            if ($a['calls']) $p[] = $a['calls'] . ' call' . ($a['calls'] === 1 ? '' : 's') . ($a['vms'] ? ' (' . $a['vms'] . ' voicemail' . ($a['vms'] === 1 ? '' : 's') . ')' : '');
+            foreach ([['emails', 'email'], ['texts', 'text'], ['other', 'other touch'], ['tours', 'tour'], ['proposals', $w === 'expo' ? 'quote' : 'proposal'], ['signed', $w === 'expo' ? 'booked' : 'signed']] as [$k, $nm])
+                if ($a[$k]) $p[] = $a[$k] . ' ' . ($k === 'signed' ? $nm : $nm . ($a[$k] === 1 ? '' : 's'));
+            if (!$p) continue;
+            $all += $a['calls'] + $a['emails'] + $a['texts'] + $a['other'];
+            $rows[] = '  ' . $who . ': ' . implode(', ', $p);
+        }
+        $L[] = $wn; if (!$rows) $L[] = '  Nothing logged today.'; else array_push($L, ...$rows);
+    }
+    $L[] = '';
+    $L[] = 'FOLLOW-UPS DUE ' . strtoupper(($isTom ? 'tomorrow, ' : '') . date('l j M', (int) strtotime($tom)));
+    $late = [];
+    foreach ($WN as $w => $wn) {
+        $by = []; $n = 0; $late[$w] = 0;
+        foreach (recs($w, false) as $R) {
+            $d = (string) ($R['next']['date'] ?? ''); if ($d === '' || in_array($R['stage'], W($w)['done'], true)) continue;
+            if ($d < $day) $late[$w]++;
+            if ($d !== $tom) continue;
+            $n++; $by[(string) $R['owner'] ?: 'Open (nobody yet)'][] = (string) $R['name'] . ((string) ($R['next']['what'] ?? '') !== '' ? ' (' . $R['next']['what'] . ')' : '');
+        }
+        ksort($by); $L[] = $wn . ($n ? ' (' . $n . ')' : '');
+        if (!$by) $L[] = '  None.'; else foreach ($by as $who => $cs) $L[] = '  ' . $who . ': ' . implode('; ', $cs);
+    }
+    if ($late['sponsor'] || $late['expo']) $L[] = 'Still late from before today: ' . ($late['sponsor'] + $late['expo']) . ' (sponsors ' . $late['sponsor'] . ', expo leads ' . $late['expo'] . ').';
+    $L[] = '';
+    $L[] = 'FROM THE PEAK EMAIL SENDER TODAY';
+    $sent = ['sponsor' => 0, 'expo' => 0]; $rep = []; $bounce = 0; $book = [];
+    foreach ($WN as $w => $wn) {
+        $X = recs($w);
+        foreach ($X as $R) foreach ($R['touches'] ?? [] as $t) {
+            if (($t['by'] ?? '') !== 'Peak email' || (int) $t['when'] < $from) continue;
+            if ($t['out'] === 'sent') $sent[$w]++; elseif ($t['out'] === 'replied') $rep[] = '  ' . $R['name'] . ($w === 'expo' ? ' (expo)' : '') . ': ' . $t['note']; elseif ($t['out'] === 'bounced') $bounce++;
+        }
+        foreach (toursOf($w) as $t) if (!empty($t['auto']) && (int) ($t['at'] ?? 0) >= $from)
+            $book[] = '  ' . (string) (($X[(string) ($t['lead'] ?? '')]['name'] ?? '') ?: 'A company') . ($w === 'expo' ? ' (expo)' : '') . ': ' . date('D j M', (int) strtotime((string) $t['date'])) . ', ' . date('g:i a', (int) strtotime((string) $t['date'] . ' ' . (string) $t['time'])) . ((string) ($t['who'] ?? '') !== '' ? ' · ' . $t['who'] : '');
+    }
+    if (!$sent['sponsor'] && !$sent['expo'] && !$rep && !$book && !$bounce) $L[] = '  Nothing from the sender today.';
+    else {
+        $L[] = '  Emails sent: ' . ($sent['sponsor'] + $sent['expo']) . ' (sponsors ' . $sent['sponsor'] . ', expo leads ' . $sent['expo'] . ')';
+        $L[] = '  Replies: ' . count($rep); array_push($L, ...$rep);
+        $L[] = '  Times booked: ' . count($book); array_push($L, ...$book);
+        if ($bounce) $L[] = '  Bounced: ' . $bounce . ' (the address is dead; find another way in)';
+    }
+    $L[] = '';
+    $L[] = 'Open the desk: ' . DESK_URL;
+    $L[] = 'You get this because an admin picked you in the Peak desk (More, Settings). It goes at 6 pm, Monday to Friday.';
+    return ['subject' => 'Peak desk, end of day ' . date('D j M', $now) . ': ' . $all . ' touch' . ($all === 1 ? '' : 'es'), 'text' => implode("\n", $L)];
+}
+/* one email through the server's own mailbox, in its own process (desk-mail.php) */
+function deskMail(string $to, string $subject, string $body): array {
+    $f = PHP_SAPI === 'cli' ? (string) getenv('DESK_MAIL_FILE') : '';
+    if ($f !== '') { file_put_contents($f, json_encode(['to' => $to, 'subject' => $subject, 'body' => $body], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'test file']; }
+    $p = proc_open([PHP_BINARY, __DIR__ . '/desk-mail.php'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (!is_resource($p)) return ['ok' => false, 'stage' => 'the mail helper did not start'];
+    fwrite($pipes[0], (string) json_encode(['to' => $to, 'subject' => $subject, 'body' => $body])); fclose($pipes[0]);
+    $o = (string) stream_get_contents($pipes[1]); fclose($pipes[1]); fclose($pipes[2]); proc_close($p);
+    $j = json_decode(trim($o), true); return is_array($j) ? $j : ['ok' => false, 'stage' => 'no answer from the mail helper'];
+}
+/* send it when due (or $force: now, if it is on and someone is picked); once a day, under its own lock */
+function eodRun(int $now, bool $force = false): array {
+    $c = eodConf(); $why = $force && $c['on'] && $c['to'] ? '' : eodDue($now);
+    if ($why !== '') return ['sent' => 0, 'failed' => 0, 'said' => 'not sent: ' . $why];
+    $lk = fopen(DATA_DIR . '/eod.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) return ['sent' => 0, 'failed' => 0, 'said' => 'not sent: another run is sending it'];
+    try {
+        if (!$force && ($why = eodDue($now)) !== '') return ['sent' => 0, 'failed' => 0, 'said' => 'not sent: ' . $why];
+        $m = eodText($now); $ok = 0; $bad = [];
+        foreach ($c['to'] as $to) { $r = deskMail($to, $m['subject'], $m['text']); if (!empty($r['ok'])) $ok++; else $bad[] = $to . ' (' . ($r['stage'] ?? '?') . ')'; }
+        if ($ok) file_put_contents(DATA_DIR . '/eod-last.txt', date('Y-m-d', $now));   /* one went: today's is done (a total failure tries again next hour) */
+        $said = 'sent to ' . $ok . ' of ' . count($c['to']) . ($bad ? '; failed: ' . implode(', ', $bad) : '');
+        file_put_contents(DATA_DIR . '/eod.log', date('Y-m-d H:i', $now) . ' ' . $said . "\n", FILE_APPEND | LOCK_EX);
+        return ['sent' => $ok, 'failed' => count($bad), 'said' => $said];
+    } finally { flock($lk, LOCK_UN); fclose($lk); }
+}
+
+/* ---- a person's calendar (2026-11-18, Sixfold's walk feed): a private link per person to subscribe to in Google or Apple Calendar. It
+   carries the tours of the companies they own or booked, and their follow-ups (all-day), 30 days back to four months ahead. The link holds
+   the person's id and a token made from a salt of theirs and the desk's own secret (calfeed.json); "New link" changes the salt and the old
+   link stops working. Somebody no longer on the desk gets nothing. No phone numbers or emails go in it. ---- */
+function calPid(string $name): string { return substr(sha1('peakdesk-cal|' . strtolower(trim($name))), 0, 12); }
+function calTok(string $pid, string $salt, string $secret): string { return substr(hash_hmac('sha256', 'cal|' . $pid . '|' . $salt, $secret), 0, 32); }
+function calLink(string $name, bool $renew): ?array {
+    $lk = fopen(DATA_DIR . '/calfeed.lock', 'c'); if (!$lk) return null; flock($lk, LOCK_EX);
+    try {
+        $all = jread('calfeed.json', []); if (empty($all['secret'])) $all['secret'] = bin2hex(random_bytes(16));
+        $pid = calPid($name);
+        if ($renew || empty($all['p'][$pid]['salt'])) { $all['p'][$pid] = ['name' => $name, 'salt' => bin2hex(random_bytes(8)), 'at' => time()]; if (!jwrite('calfeed.json', $all)) return null; @chmod(DATA_DIR . '/calfeed.json', 0600); }
+        return ['p' => $pid, 't' => calTok($pid, (string) $all['p'][$pid]['salt'], (string) $all['secret']), 'at' => (int) $all['p'][$pid]['at']];
+    } finally { flock($lk, LOCK_UN); fclose($lk); }
+}
+function icsEsc(string $s): string { return str_replace(["\\", ';', ',', "\r", "\n"], ['\\\\', '\\;', '\\,', '', '\\n'], $s); }
+function icsFold(string $line): string { $out = ''; while (strlen($line) > 74) { $cut = 74; while ($cut > 0 && (ord($line[$cut]) & 0xC0) === 0x80) $cut--; $out .= substr($line, 0, $cut) . "\r\n "; $line = substr($line, $cut); } return $out . $line; }
+function calFeed(string $pid, string $tok): void {
+    $nf = function (): void { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo "Not found.\n"; exit; };
+    if (!preg_match('/^[0-9a-f]{12}$/D', $pid) || !preg_match('/^[0-9a-f]{32}$/D', $tok)) $nf();
+    $all = jread('calfeed.json', []); $p = $all['p'][$pid] ?? null;
+    if (!$p || empty($all['secret']) || !hash_equals(calTok($pid, (string) $p['salt'], (string) $all['secret']), $tok)) $nf();
+    $name = (string) $p['name']; $role = null;
+    foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) if (strcasecmp((string) ($a['name'] ?? ''), $name) === 0) $role = (string) ($a['role'] ?? '');
+    if ($role === null) $nf();
+    $from = date('Y-m-d', strtotime('-30 days')); $to = date('Y-m-d', strtotime('+120 days')); $stamp = gmdate('Ymd\THis\Z');
+    $L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Peak Pickleball//Peak desk//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:' . icsEsc('Peak desk · ' . explode(' ', $name)[0]),
+        'X-WR-TIMEZONE:America/Denver', 'REFRESH-INTERVAL;VALUE=DURATION:PT1H', 'X-PUBLISHED-TTL:PT1H'];
+    $ev = function (array $e) use (&$L, $stamp): void { $L[] = 'BEGIN:VEVENT'; $L[] = 'UID:' . $e['uid'] . '@peak-desk'; $L[] = 'DTSTAMP:' . $stamp; foreach ($e['when'] as $x) $L[] = $x; $L[] = 'SUMMARY:' . icsEsc($e['sum']); if (!empty($e['loc'])) $L[] = 'LOCATION:' . icsEsc($e['loc']); $L[] = 'DESCRIPTION:' . icsEsc($e['desc']); $L[] = 'END:VEVENT'; };
+    foreach ($role === 'expo' ? ['expo'] : ['sponsor', 'expo'] as $w) {
+        $X = recs($w); $tag = $w === 'expo' ? ' (expo)' : '';
+        foreach (toursOf($w) as $t) {
+            $R = $X[(string) ($t['lead'] ?? '')] ?? null; $d = (string) ($t['date'] ?? '');
+            if (!$R || !empty($R['off']) || $d < $from || $d > $to || ((string) $R['owner'] !== $name && (string) ($t['by'] ?? '') !== $name) || !okDay($d) || !okTime((string) ($t['time'] ?? ''))) continue;
+            $st = new DateTime($d . ' ' . $t['time'], new DateTimeZone('America/Denver')); $st->setTimezone(new DateTimeZone('UTC'));
+            $ev(['uid' => 'tour-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']), 'when' => ['DTSTART:' . $st->format('Ymd\THis\Z'), 'DURATION:PT1H'], 'sum' => 'Peak tour' . $tag . ': ' . $R['name'],
+                'loc' => 'Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920',
+                'desc' => implode("\n", array_filter([(string) ($t['who'] ?? '') !== '' ? 'Coming: ' . $t['who'] : '', (string) ($t['note'] ?? ''), 'Booked by ' . ($t['by'] ?? 'someone') . '.', !empty($t['out']) ? ($t['out'] === 'toured' ? 'They came.' : 'They did not show.') : '', 'The rest is on the desk: ' . DESK_URL]))]);
+        }
+        foreach ($X as $R) {
+            $d = (string) ($R['next']['date'] ?? '');
+            if (!empty($R['off']) || (string) $R['owner'] !== $name || $d === '' || $d < $from || $d > $to || !okDay($d) || in_array($R['stage'], W($w)['done'], true)) continue;
+            $what = (string) ($R['next']['what'] ?? '');
+            $ev(['uid' => 'fu-' . $w . '-' . preg_replace('/[^a-z0-9]/', '', (string) $R['id']), 'when' => ['DTSTART;VALUE=DATE:' . str_replace('-', '', $d), 'DTEND;VALUE=DATE:' . date('Ymd', (int) strtotime($d . ' +1 day')), 'TRANSP:TRANSPARENT'],
+                'sum' => 'Follow up' . $tag . ': ' . $R['name'] . ($what !== '' && $what !== 'Follow up' ? ' (' . $what . ')' : ''), 'desc' => 'Stage: ' . (W($w)['stages'][$R['stage']] ?? $R['stage']) . '. The rest is on the desk: ' . DESK_URL]);
+        }
+    }
+    $L[] = 'END:VCALENDAR';
+    header('Content-Type: text/calendar; charset=utf-8'); header('Cache-Control: no-cache, private'); header('Content-Disposition: inline; filename="peak-desk.ics"');
+    echo implode("\r\n", array_map('icsFold', $L)) . "\r\n";
+    exit;
 }
