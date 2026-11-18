@@ -286,7 +286,7 @@ try {
   ok(/ASSISTANT · INSTANT/i.test(await ev('[...document.querySelectorAll(".msg.ai .who")].pop().textContent')) && /Anthropic key/.test(await ev('[...document.querySelectorAll(".msg.ai")].pop().textContent')), 'the answer is labelled Assistant, instant (here: no key, so it says so)');
   { await click('#voiceswitch'); const said0 = await ev('window.__said.length'); await click('.chip'); await sleep(300);
     ok(/Voice off/.test(await ev('document.getElementById("voiceswitch").textContent')) && await ev('window.__said.length') === said0, 'Voice: off means silent');
-    await click('#voiceswitch'); }
+    await click('.chip'); await sleep(200); await click('#voiceswitch'); }   /* tap the chip again to close its answer */
   const brainH0 = await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)');
   await click('#brainswitch');
   ok(Math.abs(await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)') - brainH0) <= 2, 'switching to the desk does not move the screen (18 Nov: the bar grew 112 px)');
@@ -321,6 +321,17 @@ try {
   await ev('[...document.querySelectorAll(".chip")].find(c=>/waiting/.test(c.textContent)).click()'); await sleep(400);
   ok(!reqs.some(r => /action=chat\b/.test(r)) && /need a reply/.test(await ev('document.querySelector(".chat").innerText')) && await ev('document.getElementById("app").classList.contains("s-answer")'), 'What\'s waiting? answers from the screen, no model call, answer state');
   await shot('jarvis-desktop-answer');
+  /* 18 Nov: a chip toggles its answer, and another chip replaces it rather than stacking */
+  { const count = re => ev('[...document.querySelectorAll(".chat > *")].filter(n=>' + re + '.test(n.innerText)).length');
+    const tap = re => ev('[...document.querySelectorAll(".chip")].find(c=>' + re + '.test(c.textContent)).click()');
+    await tap('/waiting/'); await sleep(200);   /* close What's waiting? first */
+    await tap('/building/'); await sleep(300);
+    ok(await count('/Roof material/') >= 1 && await ev('document.querySelectorAll(".chip.on").length === 1'), "Chips: What's building? shows its answer, the chip lit");
+    await tap('/building/'); await sleep(300);
+    ok(await count('/Roof material/') === 0 && await ev('document.querySelectorAll(".chip.on").length === 0'), 'Chips: tapped again, the answer closes (no copies)');
+    await tap('/building/'); await sleep(300); await tap('/Team requests/'); await sleep(300);
+    ok(await count('/Roof material/') === 0 && await count('/team request/i') >= 1, 'Chips: another chip replaces the last chip answer');
+    await tap('/Team requests/'); await sleep(200); }
   await click('.ib.mic'); await sleep(150);
   ok(await ev('document.getElementById("app").classList.contains("s-listen") && /Listening/.test(document.querySelector(".slbl").textContent)'), 'the mic: the core listens');
   await sleep(500);
