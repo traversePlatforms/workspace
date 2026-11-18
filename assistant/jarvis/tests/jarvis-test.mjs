@@ -239,6 +239,12 @@ try {
   ok(/Deposit link says/.test(team) && /WORKING/i.test(team) && /NEEDS YOU/i.test(team) && !/Check the Peak expo list/.test(team) && !/Old one/.test(team), 'Team requests: open staff ones with their status (his own and closed ones tucked away)');
   ok(/Houston J\.A\.R\.V\.I\.S\.: sign in to its app once/.test(team), 'Team requests: Houston asks for its own sign-in (not shared)');
   ok(/2 OPEN/i.test(await ev('document.querySelector("#p-team .ph").innerText')), 'Team requests: open count');
+  /* 18 Nov: Check off a team request: it leaves the panel, stays off after a fresh status read, and the staff thread itself is not closed */
+  { const before = await ev('document.querySelectorAll("#p-team .titem").length');
+    await click('#p-team .titem:has([data-ticket="h20261118080000bbbb"]) .tcheck');
+    ok(await until('document.querySelectorAll("#p-team .titem").length === ' + (before - 1)), 'Team requests: Check off takes one off the panel');
+    ok(await ev('fetch("../api.php?action=jvstatus",{credentials:"same-origin"}).then(r=>r.json()).then(j=>Object.keys(j.teamHidden||{}).length===1)'), 'Team requests: the check-off is saved on the server');
+    ok(!reqs.some(r => /helpclose/.test(r)), 'Team requests: checking off never closes the staff chat'); }
   const status = JSON.parse((await (async () => { const r = await ev('fetch("../api.php?action=jvstatus").then(r=>r.text())'); return r; })()));
   ok(!JSON.stringify(status).includes(SECRETS[4]), 'jvstatus passes only its own fields, never what else the file holds');
 

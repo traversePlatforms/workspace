@@ -63,6 +63,7 @@ button.li:hover .lt{color:#fff}
 .more{display:block;font:11px "JetBrains Mono",monospace;color:var(--c);padding:6px 0 0;letter-spacing:.04em;text-align:left}
 .empty{font-size:12.5px;color:var(--mut);padding:4px 0}
 .hint{font-size:12px;color:var(--mut);line-height:1.5}
+.titem{display:flex;align-items:center;gap:6px}.titem>.li{flex:1;min-width:0}.tcheck{flex:none;width:26px;height:26px;border:1px solid #3ee8ff44;border-radius:4px;color:var(--c,#3ee8ff);background:transparent;cursor:pointer;font-size:13px}.tcheck:hover{background:#3ee8ff14}
 .bcheck{margin-top:6px;font:11px "JetBrains Mono",monospace;letter-spacing:.06em;color:var(--c,#3ee8ff);border:1px solid #3ee8ff44;border-radius:4px;padding:3px 8px;background:transparent;cursor:pointer}.bcheck:hover{background:#3ee8ff14}
 .hint a,.hint button{color:var(--c);text-decoration:underline;text-underline-offset:2px}
 /* the collapsible inbox rows (Matthew: "making them collaspable or some structure like that to condense space") */
@@ -372,7 +373,12 @@ button.li:hover .lt{color:#fff}
       .sort(function (a, b) { return ((b.priority === 'high') - (a.priority === 'high')) || b.date - a.date; });
   }
   function drafted() { return items().filter(function (i) { return i.draftId; }).length; }
-  function tickets() { var all = []; DESKS.forEach(function (d) { var t = S.team[d.id]; if (t && t.ok) (t.tickets || []).forEach(function (x) { all.push({ src: d, t: x }); }); }); return all.sort(function (a, b) { return b.t.updated - a.t.updated; }); }
+  /* 18 Nov: a request Matthew checked off is left out until something newer arrives in it (S.st.teamHidden, kept on the server) */
+  function tickets() { var all = [], hid = (S.st && S.st.teamHidden) || {}; DESKS.forEach(function (d) { var t = S.team[d.id]; if (t && t.ok) (t.tickets || []).forEach(function (x) { if ((hid[d.id + ':' + x.id] || 0) >= x.updated) return; all.push({ src: d, t: x }); }); }); return all.sort(function (a, b) { return b.t.updated - a.t.updated; }); }
+  function teamItem(x) {   /* a request row with its Check off */
+    var w = el('div', 'titem'), r = ticketRow(x), ck = btn('✓', null, 'tcheck', function () { ck.disabled = true; apost('jvteamhide', { key: x.src.id + ':' + x.t.id, updated: x.t.updated }).then(function (j) { if (j.ok) { S.st = S.st || {}; S.st.teamHidden = S.st.teamHidden || {}; S.st.teamHidden[x.src.id + ':' + x.t.id] = x.t.updated; draw(); toast('Checked off. It comes back if someone writes in it again.'); } else { ck.disabled = false; toast(j.error || 'Could not check it off.'); } }, function () { ck.disabled = false; toast('No connection.'); }); });
+    ck.title = 'Check off (done)'; ck.setAttribute('aria-label', 'Check off this request'); add(w, r, ck); return w;
+  }
   function teamOpen() { return tickets().filter(function (x) { return x.t.by !== ME && x.t.status !== 'closed'; }); }
   function teamNeedsMe() { return teamOpen().filter(function (x) { return x.t.status === 'matthew'; }); }
   function laptop() { var p = S.st && S.st.pushedAt; if (!p) return { on: false, text: 'Laptop: no word yet' }; var m = Math.round((Date.now() / 1000 - p) / 60); return m <= 45 ? { on: true, text: 'Laptop online', m: m } : { on: false, text: 'Laptop last seen ' + (m < 120 ? m + ' min' : Math.round(m / 60) + ' h') + ' ago', m: m }; }
@@ -461,10 +467,10 @@ button.li:hover .lt{color:#fff}
       var out = [], miss = [];
       DESKS.forEach(function (d) { var t = S.team[d.id]; if (!t) return; if (t._status === 401) miss.push(d); });
       var open = teamOpen(), closed = tickets().filter(function (x) { return x.t.by !== ME && x.t.status === 'closed'; }), mine = tickets().filter(function (x) { return x.t.by === ME; });
-      open.slice(0, 8).forEach(function (x) { out.push(ticketRow(x)); });
+      open.slice(0, 8).forEach(function (x) { out.push(teamItem(x)); });
       if (!open.length && !miss.length) out.push(el('div', 'empty', Object.keys(S.team).length ? 'No open requests from the team.' : 'Looking…'));
       if (closed.length) { out.push(btn((S.closedOpen ? 'Hide' : 'Show') + ' closed (' + closed.length + ')', null, 'more', function () { S.closedOpen = !S.closedOpen; draw(); })); if (S.closedOpen) closed.slice(0, 10).forEach(function (x) { out.push(ticketRow(x)); }); }
-      if (mine.length) { out.push(btn((S.mineOpen ? 'Hide' : 'Show') + ' your desk chats (' + mine.length + ')', null, 'more', function () { S.mineOpen = !S.mineOpen; draw(); })); if (S.mineOpen) mine.slice(0, 10).forEach(function (x) { out.push(ticketRow(x)); }); }
+      if (mine.length) { out.push(btn((S.mineOpen ? 'Hide' : 'Show') + ' your desk chats (' + mine.length + ')', null, 'more', function () { S.mineOpen = !S.mineOpen; draw(); })); if (S.mineOpen) mine.slice(0, 10).forEach(function (x) { out.push(teamItem(x)); }); }
       miss.forEach(function (d) { var h = el('div', 'hint'); add(h, d.name + ' J.A.R.V.I.S.: sign in to its app once on this device, then this fills in. ', btn('Open ' + d.name, null, null, function () { openView('page', d); })); out.push(h); });
       return out;
     },

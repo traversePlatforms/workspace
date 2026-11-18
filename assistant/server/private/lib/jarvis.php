@@ -28,7 +28,7 @@ function jvStatus(): array {
     }
     /* calendar (18 Nov): only the Traverse inbox's own Google Calendar, which Matthew fills himself or asks for ("jarvis shouldnt show the
        dates from my emails in the calendar section"). No invitations from the inboxes. */
-    return ['ok' => true, 'now' => $now, 'pushedAt' => $pushed, 'overnight' => $over, 'builds' => $builds,
+    return ['ok' => true, 'now' => $now, 'pushedAt' => $pushed, 'overnight' => $over, 'builds' => $builds, 'teamHidden' => jvTeamHidden(),
         'calendar' => jvCalendar()];
 }
 /** finished builds Matthew checked off (18 Nov: "allow me the option to check it off so it doesnt stay on the screen"): id => the build's time */
@@ -37,6 +37,15 @@ function jvHide(string $id, int $at): array {
     if (!preg_match('/^[A-Za-z0-9._-]{1,40}$/', $id) || $at <= 0) return ['ok' => false, 'error' => 'Not a build.'];
     $h = jvHidden(); $h[$id] = $at; $h = array_slice($h, -60, null, true);
     $f = aDataDir() . '/jarvis/hidden-builds.json'; @mkdir(dirname($f), 0700, true); file_put_contents($f, json_encode($h), LOCK_EX); @chmod($f, 0600);
+    return ['ok' => true];
+}
+/** team requests Matthew checked off (18 Nov: "I also need a way to check off the team request chats when they are complete"): "<desk>:<ticket>"
+    => the ticket's last update. Only his J.A.R.V.I.S. view: the staff member's chat is not closed, and any newer message shows it again. */
+function jvTeamHidden(): array { $f = aDataDir() . '/jarvis/hidden-team.json'; $h = is_file($f) ? json_decode((string) file_get_contents($f), true) : []; return is_array($h) ? $h : []; }
+function jvTeamHide(string $key, int $upd): array {
+    if (!preg_match('/^[a-z0-9-]{1,40}:h[0-9]{14}[0-9a-f]{4}$/', $key) || $upd <= 0) return ['ok' => false, 'error' => 'Not a team request.'];
+    $h = jvTeamHidden(); unset($h[$key]); $h[$key] = $upd; $h = array_slice($h, -300, null, true);
+    $f = aDataDir() . '/jarvis/hidden-team.json'; @mkdir(dirname($f), 0700, true); file_put_contents($f, json_encode($h), LOCK_EX); @chmod($f, 0600);
     return ['ok' => true];
 }
 /** the next 7 days of the Traverse inbox's primary calendar (any connected calendar if Traverse has none), cached 5 minutes. Read only. */
