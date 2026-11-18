@@ -1,0 +1,9 @@
+# traverseplatforms.com/go/<code>: the tracked links in Prospect Desk emails (2026-11-18). Source traverse/prospect-desk/go/.
+# Every code goes to index.php, which hands it to the desk (prospects-47bfe6/api/desk.php, action=link).
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^([A-Za-z2-7]{9})/?$ index.php?c=$1 [L,QSA]
+</IfModule>
+<IfModule mod_headers.c>
+Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>

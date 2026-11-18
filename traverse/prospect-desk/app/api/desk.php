@@ -86,7 +86,7 @@ function state(): array {
                 }
             } break;
             case 'sent': if (isset($L[$id])) { $L[$id]['sent'][] = ['at' => $r['at'], 'subject' => $r['subject'], 'to' => $r['to']]; if (!in_array('emailed', $L[$id]['reached'], true)) $L[$id]['reached'][] = 'emailed'; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Emailed: ' . $r['subject']]; } break;
-            case 'click': if (isset($L[$id])) { $L[$id]['clicks'] = ($L[$id]['clicks'] ?? 0) + 1; $L[$id]['log'][] = ['at' => $r['at'], 'by' => 'the company', 'what' => 'Clicked ' . (($r['to'] ?? '') === 'demo' ? 'Book a demo' : 'the website') . ' in the email']; } break;   /* 2026-10-30 */
+            case 'click': if (isset($L[$id])) { $L[$id]['clicks'] = ($L[$id]['clicks'] ?? 0) + 1; $L[$id]['log'][] = ['at' => $r['at'], 'by' => 'the company', 'what' => 'Clicked ' . (!empty($r['u']) ? shortUrl((string) $r['u']) : (($r['to'] ?? '') === 'demo' ? 'Book a demo' : 'the website')) . ' in the email']; } break;   /* 2026-10-30; 'u' = the page the tracked link opened (2026-11-18) */
             case 'bounce': if (isset($L[$id])) { $L[$id]['emailOk'] = 'no'; $L[$id]['emailWhy'] = 'the email to ' . ($r['to'] ?? 'it') . ' bounced'; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Email bounced: ' . ($r['to'] ?? '')]; $L[$id]['notes'][] = ['k' => noteKey($r), 'at' => $r['at'], 'by' => 'Bounce log', 'note' => 'Email to ' . ($r['to'] ?? 'them') . ' bounced on ' . date('M j', (int) $r['at']) . '. Do not email this address again; call or message them instead.']; } break;   /* 1 Nov (Matthew): each bounce is also a note on the company, so it shows when he opens it */   /* 31 Oct: a bounce Matthew reports; the address is kept, the desk never emails it again */
             case 'mailbad': if (isset($L[$id]) && strtolower((string) $L[$id]['email']) === strtolower((string) ($r['to'] ?? ''))) { $L[$id]['emailOk'] = 'no'; $L[$id]['emailWhy'] = (string) ($r['why'] ?? 'its domain cannot take mail'); $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Email address taken off: ' . $L[$id]['emailWhy']]; $L[$id]['notes'][] = ['k' => noteKey($r), 'at' => $r['at'], 'by' => $r['by'], 'note' => 'Not emailed: ' . ($r['to'] ?? '') . ' (' . $L[$id]['emailWhy'] . '). Still on the list: call or message them instead.']; } break;   /* 2026-11-07 (Matthew: "drop the emails that dont work but keep them in the prospect list"): the address check before sending; only for the address it checked, so a new email typed in later is clean */
             case 'unsub': if (isset($L[$id])) { $L[$id]['unsub'] = true; $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Asked not to be emailed']; } break;
@@ -107,6 +107,88 @@ function trackLinks(string $html, string $id): string {
     $go = fn($to) => 'https://traverseplatforms.com/prospects-47bfe6/api/desk.php?action=go&amp;id=' . $id . '&amp;to=' . $to . '&amp;t=' . goToken($id, $to);
     return preg_replace_callback('#href="https://traverseplatforms\.com(/demo/?)?/?"#', fn($m) => 'href="' . $go(!empty($m[1]) ? 'demo' : 'home') . '"', $html);
 }
+/* ---- tracked links in every style (2026-11-18, Matthew: "I want tracked links built into the plain traverse prospects emails").
+   Before this only the picture styles' homepage and demo links were counted (action=go above, still answered for emails already
+   sent); 3,067 plain emails in 30 days showed 3 clicks. Now every web address in the words, the signature and the address line, in
+   plain text and in the HTML version alike, becomes a short link on our own domain: https://traverseplatforms.com/go/<code>, one
+   code per company, style and address, the same every time (an HMAC with the desk's secret, so nobody can make one up). The code is
+   written to links.log when the email goes (and for a test); /go/ looks it up, logs a 'click' (or a 'scan' for a mail scanner, by
+   the rule action=go already used), and forwards to the page. Left alone: email addresses (mailto), phone numbers, the unsubscribe
+   link (it must keep working, and a scanner must never unsubscribe anyone), and a bare other-domain name such as a company's own
+   "acme.com" in its name. ---- */
+const LINK_BASE = 'https://traverseplatforms.com/go/';
+const LINK_ALPHA = 'abcdefghijklmnopqrstuvwxyz234567';
+function linkCode(string $id, string $style, string $url): string {
+    $h = hash_hmac('sha256', 'link|' . $id . '|' . $style . '|' . $url, secret(), true); $c = '';
+    for ($i = 0; $i < 9; $i++) $c .= LINK_ALPHA[ord($h[$i]) & 31];
+    return $c;
+}
+/** the address a link in the words opens: a scheme added when it was written bare ("traverseplatforms.com/demo") */
+function linkDest(string $raw): string { $u = preg_match('~^https?://~i', $raw) ? $raw : 'https://' . $raw; return preg_match('~^https?://[^/?#]+$~i', $u) ? $u . '/' : $u; }   /* a bare domain gets its "/" */
+/** a page as people read it: no scheme, no www, no trailing slash */
+function shortUrl(string $u): string { return rtrim((string) preg_replace('~^https?://(www\.)?~i', '', $u), '/'); }
+/** $s with every trackable web address swapped for its /go/ link; $links collects [c, u] (one per address) */
+function trackText(string $s, string $id, string $style, array &$links): string {
+    if ($s === '' || !preg_match('/^[a-z0-9]{6,24}$/', $id)) return $s;
+    return (string) preg_replace_callback('~\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b|\b(?:https?://)?(?:[a-z0-9-]+\.)+(?:com|net|org|us|co|io)(?![a-z0-9-])(?:[/?#][^\s<>()"]*[^\s<>()".,;:!?\'])?~i', function ($m) use ($id, $style, &$links) {
+        $raw = $m[0];
+        if (strpos($raw, '@') !== false) return $raw;   /* an email address: left as it is */
+        if (stripos($raw, 'traverseplatforms.com/go/') !== false || stripos($raw, '/api/desk.php') !== false || stripos($raw, 'action=unsub') !== false) return $raw;   /* already tracked, the unsubscribe link, an old action=go link */
+        $own = (bool) preg_match('~^(https?://)?([a-z0-9-]+\.)*traverseplatforms\.com(?![a-z0-9-])~i', $raw);
+        if (!$own && !preg_match('~^(https?://|www\.)~i', $raw)) return $raw;   /* a bare other domain ("acme.com" in a company name) stays words */
+        $u = linkDest($raw); $c = linkCode($id, $style, $u);
+        $links[$c] = ['c' => $c, 'u' => $u];
+        return LINK_BASE . $c;
+    }, $s);
+}
+/** the codes an email carries, written down before it goes (links.log: one row per code, never twice) */
+function linkSave(string $id, string $style, array $links): void {
+    if (!$links) return;
+    $fh = fopen(DATA_DIR . '/links.log', 'c+'); if (!$fh) return; flock($fh, LOCK_EX);
+    $have = []; while (($l = fgets($fh)) !== false) if (preg_match('/"c":"([a-z2-7]+)"/', $l, $x)) $have[$x[1]] = true;
+    $add = '';
+    foreach ($links as $k) if (!isset($have[$k['c']])) { $add .= json_encode(['c' => $k['c'], 'id' => $id, 's' => $style, 'u' => $k['u'], 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n"; $have[$k['c']] = true; }
+    if ($add !== '') { fseek($fh, 0, SEEK_END); fwrite($fh, $add); }
+    flock($fh, LOCK_UN); fclose($fh);
+}
+function linkFind(string $c): ?array {
+    $fh = @fopen(DATA_DIR . '/links.log', 'r'); if (!$fh) return null; $hit = null; $needle = '"c":"' . $c . '"';
+    while (($l = fgets($fh)) !== false) if (strpos($l, $needle) !== false) { $r = json_decode($l, true); if (is_array($r) && ($r['c'] ?? '') === $c) { $hit = $r; break; } }
+    fclose($fh); return $hit;
+}
+/** when the company was last emailed (0 = never): one pass over the log, without the whole replay */
+function lastSent(string $id): int {
+    $at = 0; $fh = @fopen(DATA_DIR . '/events.log', 'r'); if (!$fh) return 0; $n = '"id":"' . $id . '"';
+    while (($l = fgets($fh)) !== false) if (strpos($l, '"t":"sent"') !== false && strpos($l, $n) !== false) { $r = json_decode($l, true); $at = max($at, (int) ($r['at'] ?? 0)); }
+    fclose($fh); return $at;
+}
+/** a mail scanner rather than a person (2026-10-30 rule from action=go, kept as it was, plus HEAD): within a minute of the email
+    going, no browser name, a known scanner or script, or a HEAD request (link checkers ask for the headers only) */
+function isScan(int $sentAt): bool {
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    return ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD' || ($sentAt && time() - $sentAt < 60) || $ua === ''
+        || (bool) preg_match('/bot|crawler|spider|preview|scanner|safelinks|barracuda|mimecast|proofpoint|urldefense|google-?image|facebookexternalhit|slackbot|curl|wget|python|java\//i', $ua);
+}
+const STYLE_WORDS = ['plain' => 'Plain text', 'map' => 'With map', 'phone' => 'App: phone', 'computer' => 'App: computer', 'both' => 'App: phone + computer', 'earlier' => 'Before 18 Nov'];
+/** the desk's numbers by email style: sent, people who clicked, clicks, scanner hits. Rows from before 18 Nov carry no style: they
+    are one group, whose clicks came only from the picture emails' links (plain links were not tracked then) */
+function clickStats(): array {
+    $G = []; $d30 = time() - 30 * 86400;
+    foreach (logRows() as $r) {
+        $t = (string) ($r['t'] ?? ''); if ($t !== 'sent' && $t !== 'click' && $t !== 'scan') continue;
+        $k = (string) ($t === 'sent' ? ($r['style'] ?? 'earlier') : ($r['s'] ?? 'earlier')); if (!isset(STYLE_WORDS[$k])) $k = 'earlier';
+        $G[$k] ??= ['sent' => 0, 'sent30' => 0, 'clicks' => 0, 'clicks30' => 0, 'people' => [], 'scans' => 0];
+        $at = (int) ($r['at'] ?? 0);
+        if ($t === 'sent') { $G[$k]['sent']++; if ($at >= $d30) $G[$k]['sent30']++; }
+        elseif ($t === 'click') { $G[$k]['clicks']++; if ($at >= $d30) $G[$k]['clicks30']++; $G[$k]['people'][(string) ($r['id'] ?? '')] = true; }
+        else $G[$k]['scans']++;
+    }
+    $out = [];
+    foreach (STYLE_WORDS as $k => $w) if (isset($G[$k])) { $g = $G[$k]; $p = count($g['people']);
+        $out[] = ['style' => $k, 'label' => $w, 'tracked' => $k !== 'earlier', 'sent' => $g['sent'], 'sent30' => $g['sent30'], 'clicks' => $g['clicks'], 'clicks30' => $g['clicks30'], 'people' => $p, 'scans' => $g['scans'],
+                  'rate' => $g['sent'] ? round(100 * $p / $g['sent'], 1) : null]; }
+    return $out;
+}
 function unsubToken(string $id): string { return substr(hash_hmac('sha256', 'unsub|' . $id, secret()), 0, 20); }
 function firstName(string $person): string { $p = preg_split('/\s+/', trim($person)) ?: []; $f = $p[0] ?? ''; return preg_match('/^[A-Za-z][A-Za-z\'-]{1,30}$/', $f) ? $f : ''; }
 /* the name as people say it (2026-10-27, Matthew's review: "Colorado hail map for Verity Roofing LLC"): the register's legal suffix off
@@ -126,19 +208,27 @@ function fill(string $s, array $l): string {
     version with the city's map when there is one ($mapTrade: the template's trade when everyone gets one trade's template) */
 function render(array $l, array $tpl, array $set, string $unsubUrl, string $style = 'plain', ?string $mapTrade = null): array {
     $t = $tpl[$l['trade']] ?? reset($tpl);
-    $main = rtrim(fill((string) $t['body'], $l));
-    $body = $main . "\n\n" . trim((string) $set['signature'])   /* a blank line before the signature */ . ($set['address'] !== '' ? "\n" . trim((string) $set['address']) : '')
-          . "\n\nUnsubscribe: " . $unsubUrl;   /* a plain line, not an apology (Matthew 2026-10-29: "reply no thanks" read as unconfident); the law needs a working opt-out, and this is it */
-    $m = ['id' => $l['id'], 'to' => (string) $l['email'], 'subject' => fill((string) $t['subject'], $l), 'body' => $body, 'style' => 'plain'];
+    $m = ['id' => $l['id'], 'to' => (string) $l['email'], 'subject' => fill((string) $t['subject'], $l), 'body' => '', 'style' => 'plain'];
+    /* the style first (a city with no map, a trade with no picture, goes plain), so each link's code names the style that went */
+    $pic = null;
     if ($style === 'map') {
-        $map = mapFor($mapTrade ?? (string) $l['trade'], (string) ($l['city'] ?? ''));
-        if ($map) { $m['style'] = 'map'; $m['map'] = ['img' => $map['url'], 'text' => $map['text'], 'city' => $map['city']]; $m['html'] = mailHtml($main, $set, $map, $unsubUrl); }
+        $pic = mapFor($mapTrade ?? (string) $l['trade'], (string) ($l['city'] ?? ''));
+        if ($pic) { $m['style'] = 'map'; $m['map'] = ['img' => $pic['url'], 'text' => $pic['text'], 'city' => $pic['city']]; }
         else $m['nomap'] = 'no map for ' . ((string) ($l['city'] ?? '') ?: 'a company with no city') . ': goes plain';
     } elseif (isset(APP_PICS[$style])) {   /* an app picture instead of the map (2026-10-30) */
         $pic = appPic($style, $mapTrade ?? (string) $l['trade']);
-        if ($pic) { $m['style'] = $style; $m['map'] = ['img' => $pic['url'], 'text' => $pic['text'], 'city' => '']; $m['html'] = mailHtml($main, $set, $pic, $unsubUrl); }
+        if ($pic) { $m['style'] = $style; $m['map'] = ['img' => $pic['url'], 'text' => $pic['text'], 'city' => '']; }
         else $m['nomap'] = 'no app picture for ' . (TRADES[$l['trade']] ?? $l['trade']) . ': goes plain';
     }
+    /* every web address tracked (2026-11-18): the words, the signature and the address line; never the unsubscribe line below */
+    $links = []; $id = (string) $l['id'];
+    $main = trackText(rtrim(fill((string) $t['body'], $l)), $id, $m['style'], $links);
+    $sig = trackText(trim((string) $set['signature']), $id, $m['style'], $links);
+    $adr = trackText(trim((string) $set['address']), $id, $m['style'], $links);
+    $m['body'] = $main . "\n\n" . $sig   /* a blank line before the signature */ . ($adr !== '' ? "\n" . $adr : '')
+               . "\n\nUnsubscribe: " . $unsubUrl;   /* a plain line, not an apology (Matthew 2026-10-29: "reply no thanks" read as unconfident); the law needs a working opt-out, and this is it */
+    $m['links'] = array_values($links);
+    if ($pic) $m['html'] = mailHtml($main, ['signature' => $sig, 'address' => $adr] + $set, $pic, $unsubUrl);   /* the same tracked words as the plain part */
     /* a placeholder the template editor let through ({Company}, {name}) would go out as typed (review 2026-10-31) */
     if (preg_match('/\{[a-z]+\}/i', $m['subject'] . "\n" . $m['body'], $ph)) $m['badph'] = $ph[0];
     return $m;
@@ -146,8 +236,8 @@ function render(array $l, array $tpl, array $set, string $unsubUrl, string $styl
 
 /* ---- "With map" (2026-10-30, Matthew: plain text "reads as a phishing scam or a don't-click-that-link type email ... I am fine with
    trying out a halfway"): the same message as a light HTML note beside the exact plain text (multipart/alternative): the Traverse
-   wordmark, the same words, one map of the company's own city from our data, a business signature. No tracking pixel, no click
-   tracking, no shortener: every link is the plain address it shows. The maps are made by tools/build-maps.mjs into ../m/ with their
+   wordmark, the same words, one map of the company's own city from our data, a business signature. No tracking pixel; every link
+   shows the address it opens (since 2026-11-18 that is the tracked /go/ link, the same as in the plain part). The maps are made by tools/build-maps.mjs into ../m/ with their
    captions in m/maps.json (one picture per city and trade family, counts from our files); a city with no map goes plain. The
    pictures are hosted (not attached): a lighter message with no attachment, which Gmail shows inline through its image proxy. ---- */
 const STYLES = ['plain' => 'Plain', 'map' => 'With map', 'phone' => 'App: phone', 'computer' => 'App: computer', 'both' => 'App: phone + computer'];
@@ -320,9 +410,15 @@ function sendQueue(int $max): int {
         if ($l && $why === '' && strncmp((string) ($m['batch'] ?? ''), 'freemap', 7) === 0 && in_array($l['status'] ?? '', ['demo', 'pilot'], true)) $why = 'free map held: ' . STATUSES[$l['status']];
         if ($why !== '') { logAdd(['t' => 'skipped', 'id' => $m['id'], 'why' => $why, 'by' => 'queue', 'at' => time()]); $i--; continue; }   /* a skip costs no send */
         if ($sentN > 0 && $gap) sleep($gap);
-        $r = mailSend($m['to'], $m['subject'], $m['body'], [], trackLinks((string) ($m['html'] ?? ''), (string) $m['id']));   /* links counted (2026-10-30) */   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day. html: queued "With map" (2026-10-30) */
+        /* tracked links (2026-11-18): a message queued before then has bare addresses in its words, wrapped here the same way; the
+           codes are written down before it goes, so every link works the moment it lands */
+        $mst = isset(STYLE_WORDS[(string) ($m['style'] ?? '')]) ? (string) $m['style'] : 'plain'; $links = [];
+        foreach ((array) ($m['links'] ?? []) as $x) if (is_array($x) && isset($x['c'], $x['u'])) $links[(string) $x['c']] = ['c' => (string) $x['c'], 'u' => (string) $x['u']];
+        $mbody = trackText((string) $m['body'], (string) $m['id'], $mst, $links);
+        linkSave((string) $m['id'], $mst, $links);
+        $r = mailSend($m['to'], $m['subject'], $mbody, [], trackLinks((string) ($m['html'] ?? ''), (string) $m['id']));   /* links counted (2026-10-30) */   /* no bulk-mail headers (2026-10-29): Gmail reads them as a newsletter (Promotions tab); they are only required from 5,000+ emails a day. html: queued "With map" (2026-10-30) */
         if ($r['ok']) {
-            logAdd(['t' => 'sent', 'id' => $m['id'], 'to' => $m['to'], 'subject' => $m['subject'], 'by' => $m['by'], 'at' => time()]);
+            logAdd(['t' => 'sent', 'id' => $m['id'], 'to' => $m['to'], 'subject' => $m['subject'], 'style' => $mst, 'links' => count($links), 'by' => $m['by'], 'at' => time()]);
             if ($l['status'] === 'new') logAdd(['t' => 'status', 'id' => $m['id'], 'status' => 'emailed', 'by' => $m['by'], 'at' => time()]);
             $sentN++;
         } else {
@@ -359,17 +455,31 @@ if (PHP_SAPI === 'cli') {
 }
 
 $action = (string) ($_GET['action'] ?? '');
-/* ---- unsubscribe: no sign-in (the link in every email, and the one-click button mail apps show) ---- */
-if ($action === 'go') {   /* a click on the email's homepage or demo link (2026-10-30): log it, then forward at once */
+/* ---- no sign-in: the tracked links and the unsubscribe link in every email ---- */
+if ($action === 'link') {   /* traverseplatforms.com/go/<code> (2026-11-18; go/index.php hands it here): log the click, then forward at once */
+    $c = strtolower((string) ($_GET['c'] ?? ''));
+    $L = preg_match('/^[a-z2-7]{9}$/', $c) ? linkFind($c) : null;
+    $dest = $L ? (string) $L['u'] : GO_TO['home'];   /* an unknown or mistyped code still lands on the homepage */
+    if ($L) {
+        $id = (string) $L['id'];
+        if ($id === 'testmsg') logAdd(['t' => 'testclick', 'c' => $c, 'u' => $dest, 'at' => time()]);   /* a test email's link: works, counts for nobody */
+        else logAdd(['t' => isScan(lastSent($id)) ? 'scan' : 'click', 'id' => $id, 'to' => preg_match('~^https://traverseplatforms\.com/demo/?$~', $dest) ? 'demo' : (preg_match('~^https://traverseplatforms\.com/?$~', $dest) ? 'home' : 'link'),
+                     'u' => $dest, 'c' => $c, 's' => (string) ($L['s'] ?? ''), 'by' => 'the company', 'at' => time()]);
+    }
+    /* our own pages get the same tags as before, with the style, so the site's visitor log can tell them apart */
+    if (preg_match('~^https://([a-z0-9-]+\.)*traverseplatforms\.com(/|$)~i', $dest) && !preg_match('/[?&]utm_source=/', $dest))
+        $dest .= (strpos($dest, '?') === false ? '?' : '&') . 'utm_source=email&utm_medium=prospect&utm_campaign=desk-' . ($L ? preg_replace('/[^a-z]/', '', (string) ($L['s'] ?? '')) : 'unknown');
+    header('Cache-Control: no-store'); header('X-Robots-Tag: noindex'); header('Referrer-Policy: no-referrer');
+    header('Location: ' . $dest, true, 302); exit;
+}
+if ($action === 'go') {   /* a click on a picture email's homepage or demo link (2026-10-30; emails sent before 18 Nov): log it, then forward at once */
     $id = (string) ($_GET['id'] ?? ''); $to = (string) ($_GET['to'] ?? ''); $tk = (string) ($_GET['t'] ?? '');
     $dest = GO_TO[$to] ?? GO_TO['home'];
     if (isset(GO_TO[$to]) && preg_match('/^[a-z0-9]{6,24}$/', $id) && hash_equals(goToken($id, $to), $tk)) {
         $S = state(); $l = $S['leads'][$id] ?? null;
         if ($l) {
             $sentAt = 0; foreach ((array) ($l['sent'] ?? []) as $x) $sentAt = max($sentAt, (int) (is_array($x) ? ($x['at'] ?? 0) : 0));
-            $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
-            $scan = ($sentAt && time() - $sentAt < 60) || $ua === '' || preg_match('/bot|crawler|spider|preview|scanner|safelinks|barracuda|mimecast|proofpoint|urldefense|google-?image|facebookexternalhit|slackbot|curl|wget|python|java\//i', $ua);
-            logAdd(['t' => $scan ? 'scan' : 'click', 'id' => $id, 'to' => $to, 'by' => 'the company', 'at' => time()]);
+            logAdd(['t' => isScan($sentAt) ? 'scan' : 'click', 'id' => $id, 'to' => $to, 'by' => 'the company', 'at' => time()]);
         }
     }
     header('Location: ' . $dest . '?utm_source=email&utm_medium=prospect&utm_campaign=launch', true, 302); exit;
@@ -451,7 +561,7 @@ function queueView(array $S): array {
 if ($action === 'data') {
     $S = state(); $queued = array_flip(array_column(jread('queue.json', []), 'id'));
     $leads = []; foreach ($S['leads'] as $l) { $l['queued'] = isset($queued[$l['id']]); $l['nomail'] = noMail($l); unset($l['log']); $leads[] = $l; }
-    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'trades' => TRADES, 'leads' => $leads, 'templates' => $S['templates'], 'settings' => $S['settings'], 'queue' => queueView($S), 'capMax' => CAP_MAX]);
+    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'trades' => TRADES, 'leads' => $leads, 'templates' => $S['templates'], 'settings' => $S['settings'], 'queue' => queueView($S), 'capMax' => CAP_MAX, 'clickStats' => clickStats()]);
 }
 if ($action === 'history') { $S = state(); $L = needLead($S, (string) ($_GET['id'] ?? '')); out(['ok' => true, 'log' => array_slice(array_reverse($L['log']), 0, 30)]); }
 if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);
@@ -566,6 +676,7 @@ switch ($action) {
         $u = unsubUrl('testmsg'); $m = render($sample, $S['templates'], $S['settings'], $u, $style);
         if (!empty($m['badph'])) fail('The template still has ' . $m['badph'] . ' in it, which the email cannot fill. Fix it in Settings (the placeholders are {company}, {city}, {trade} and {first}).');
         $m['subject'] .= isset(APP_PICS[$m['style']]) ? ' (' . strtolower(STYLES[$m['style']]) . ')' : ($m['style'] === 'map' ? ' (with map)' : ($style === 'map' ? ' (plain: no map for ' . $city . ')' : ' (plain)'));   /* a test says which version it is */
+        linkSave('testmsg', (string) $m['style'], (array) $m['links']);   /* the test's links open the real pages and count for nobody (2026-11-18) */
         $r = mailSend($to, $m['subject'], $m['body'], [], (string) ($m['html'] ?? ''));   /* as the queue sends it: no bulk-mail headers (2026-10-29) */
         logAdd(['t' => 'test', 'to' => $to, 'trade' => $tr, 'style' => $m['style'], 'city' => $city, 'ok' => $r['ok'], 'by' => $ME, 'at' => time()]);
         if (!$r['ok']) fail('The test did not go out (' . $r['stage'] . '): ' . mb_substr((string) $r['error'], 0, 160));

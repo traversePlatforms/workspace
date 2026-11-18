@@ -76,9 +76,10 @@ mk('sixfold-data/digest/profit-monthly.txt', '2026-10');
 
 /* ---- Traverse: the desk, the website, sign-ups ---- */
 const desk = [{ t: 'settings', s: { address: '1 Test St, Englewood, CO 80110', cap: 360 }, by: 'M', at: NOW - 30 * DAY }];
-for (let i = 0; i < 30; i++) desk.push({ t: 'sent', id: 'p' + i, to: 'p' + i + '@x.test', subject: 'Hi', by: 'queue', at: NOW - (i < 5 ? 3600 : 10 * DAY) });
+for (let i = 0; i < 30; i++) desk.push({ t: 'sent', id: 'p' + i, to: 'p' + i + '@x.test', subject: 'Hi', by: 'queue', at: NOW - (i < 5 ? 3600 : 10 * DAY), ...(i < 4 ? { style: 'plain', links: 3 } : {}) });   /* 18 Nov: the first four carry the style, as rows written since then do */
 desk.push({ t: 'bounce', id: 'p1', to: 'p1@x.test', by: 'Bounce log', at: NOW - 9 * DAY }, { t: 'bounce', id: 'p2', to: 'p2@x.test', by: 'Bounce log', at: NOW - 9 * DAY });
 desk.push({ t: 'click', id: 'p3', to: 'home', by: 'the company', at: NOW - 2 * DAY }, { t: 'scan', id: 'p3', to: 'home', by: 'the company', at: NOW - 2 * DAY });
+desk.push({ t: 'click', id: 'p0', to: 'demo', u: 'https://traverseplatforms.com/demo', c: 'abcdefghi', s: 'plain', by: 'the company', at: NOW - 3000 }, { t: 'click', id: 'p0', to: 'home', u: 'https://traverseplatforms.com/', c: 'bcdefghij', s: 'plain', by: 'the company', at: NOW - 2900 }, { t: 'scan', id: 'p1', to: 'home', u: 'https://traverseplatforms.com/', c: 'cdefghijk', s: 'plain', by: 'the company', at: NOW - 3500 });   /* plain tracked links (18 Nov) */
 desk.push({ t: 'unsub', id: 'p4', by: 'the company', at: NOW - DAY }, { t: 'sendfail', id: 'p5', stage: 'to', error: '550 no such user', by: 'queue', at: NOW - 2 * 3600 });
 mk('traverse-prospects-data/events.log', jl(desk));
 mk('traverse-prospects-data/queue.json', JSON.stringify([{ id: 'q1', to: 'q1@x.test', after: NOW - 60 }, { id: 'q2', to: 'q2@x.test', after: NOW + DAY }]));
@@ -143,7 +144,8 @@ try {
   ok(S('eod').d7 === 2 && /1 test copies/.test(S('eod').note), 'end of day: copies counted, the TEST one left out');
   ok(S('week').d7 === 1 && S('week').fail7 === 1, 'Saturday weekly: one sent, one failed');
   ok(/October 2026/.test(S('profit').note), 'profit email: the month from its marker');
-  const dk = X('desk'); ok(dk.today === 5 && dk.d30 === 30 && dk.bounce30 === 2 && dk.click30 === 1 && dk.unsub30 === 1, 'desk: sent today and 30 days, bounces, clicks (scans left out), unsubscribes');
+  const dk = X('desk'); ok(dk.today === 5 && dk.d30 === 30 && dk.bounce30 === 2 && dk.click30 === 3 && dk.unsub30 === 1, 'desk: sent today and 30 days, bounces, clicks (scans left out), unsubscribes');
+  ok(/plain: 1 company clicked of 4 sent \(25%\)/.test(dk.clicks) && /before 18 Nov \(only picture links tracked\): 1 company clicked of 26 sent/.test(dk.clicks) && /2 mail-scanner hits left out/.test(dk.clicks) && dk.scan30 === 2, 'desk: clicks split by style, scanners counted apart (' + dk.clicks + ')');
   ok(dk.waiting === 2 && /2 waiting, 1 due now/.test(dk.state) && dk.on === true, 'desk: queue and due count, hold in the past = sending');
   ok(dk.failToday === 1 && /address was refused/.test(dk.fails[0].why), 'desk: send failure shown');
   ok(dk.opens.startsWith('not tracked'), 'desk: opens are not tracked');

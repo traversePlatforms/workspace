@@ -441,6 +441,19 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     var k = el('div', 'kpis');
     [[Q.waiting, 'waiting to send'], [Q.sentToday + ' of ' + set.cap, 'sent today'], [D.leads.filter(function (l) { return (l.sent || []).length; }).length, 'companies emailed so far']].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
     main.appendChild(k);
+    /* clicks by style (2026-11-18, Matthew: "I want tracked links built into the plain traverse prospects emails") */
+    var CS = D.clickStats || [];
+    if (CS.length) {
+      var cc = el('div', 'card'); cc.setAttribute('data-card', 'clicks'); cc.appendChild(el('h3', null, 'Clicks by email style'));
+      CS.forEach(function (g) {
+        var x = el('div', 'rec'); x.setAttribute('data-style', g.style); x.appendChild(el('b', null, g.label));
+        x.appendChild(document.createTextNode(': ' + g.sent + ' sent (' + g.sent30 + ' in 30 days), ' + g.people + (g.people === 1 ? ' company' : ' companies') + ' clicked' + (g.rate !== null && g.tracked ? ' (' + g.rate + '%)' : '') + ', ' + g.clicks + (g.clicks === 1 ? ' click' : ' clicks')));
+        x.appendChild(el('small', null, ' · ' + g.scans + ' mail-scanner ' + (g.scans === 1 ? 'hit' : 'hits') + ' left out' + (g.tracked ? '' : ' · plain links were not tracked then, only the picture emails’ links')));
+        cc.appendChild(x);
+      });
+      cc.appendChild(el('p', 'help', 'Every web address in an email is a short traverseplatforms.com/go/ link that counts the click and opens the page. The unsubscribe link, email addresses and phone numbers are left as they are. A click within a minute of the email going, or from a mail scanner, is counted apart, not as a person.'));
+      main.appendChild(cc);
+    }
     /* send yourself a test (2026-10-28): one message as a company gets it, to your own inbox, straight away */
     if (D.me && D.me.role === 'admin') {
       var tc = el('div', 'card'); tc.appendChild(el('h3', null, 'Send yourself a test'));
@@ -517,6 +530,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       var sk = Object.keys(j.skipped || {}); if (sk.length) prev.appendChild(el('p', 'soft', 'Left out: ' + sk.map(function (k) { return j.skipped[k] + ' (' + k + ')'; }).join(', ') + '.'));
       var shownN = 30, box = el('div'); prev.appendChild(box);
       if (j.style === 'map') { var nm = j.messages.filter(function (m) { return m.style === 'map'; }).length; prev.appendChild(el('p', 'soft', nm + ' of ' + j.messages.length + ' go with a map; ' + (j.messages.length - nm) + ' go plain (no map for their city).')); }
+      if (j.messages.length) { var nl = (j.messages[0].links || []).length; var tl = el('p', 'soft', 'Tracked links: ' + (nl ? nl + ' in each message (' + j.messages[0].links.map(function (x) { return x.u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); }).join(', ') + '), each a traverseplatforms.com/go/ link of its own. The unsubscribe link is not tracked.' : 'none (these messages have no web address).')); tl.setAttribute('data-links', String(nl)); prev.appendChild(tl); }
       var draw3 = function () { box.textContent = ''; j.messages.slice(0, shownN).forEach(function (m) { var c = el('div', 'msg'); c.appendChild(el('div', 'mh', 'To: ' + m.to)); c.appendChild(el('div', 'ms', m.subject)); mapBits(c, m); c.appendChild(el('pre', null, m.body)); htmlLook(c, m); box.appendChild(c); }); if (j.messages.length > shownN) { var mm = el('button', 'btn ghost small', 'Show ' + Math.min(50, j.messages.length - shownN) + ' more of ' + (j.messages.length - shownN) + ' left'); mm.type = 'button'; mm.addEventListener('click', function () { shownN += 50; draw3(); }); box.appendChild(mm); } };
       draw3();
       var send = el('button', 'btn', 'Queue these ' + j.messages.length + ' emails'); send.type = 'button'; send.style.marginTop = '10px'; send.setAttribute('data-act', 'queue');

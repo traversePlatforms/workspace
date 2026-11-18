@@ -59,8 +59,31 @@ and the caption is repeated as text under it). Tests get "(plain)" or "(with map
   against 66,948 near. The caption uses the stricter count so it matches the picture.
 - After a rebuild, upload `app/m/` (new names carry the date, so emails already sent keep their picture; don't delete old ones).
 
+## Tracked links (2026-11-18)
+
+Matthew: "I want tracked links built into the plain traverse prospects emails". Every web address in an email (the words, the
+signature, the address line), in every style, becomes `https://traverseplatforms.com/go/<code>`: nine letters and digits, one per
+company, style and address, the same every time (an HMAC with the desk's `secret.key`). Email addresses, phone numbers and the
+unsubscribe link are left alone, and so is a bare other-domain name in a company's name. The HTML version carries the same tracked
+words as the plain part.
+
+- **The codes** are written to `links.log` in the data folder when an email goes (and for a test email), never by a preview. A message
+  queued before 18 Nov has its bare addresses wrapped as it goes.
+- **`go/`** (source `traverse/prospect-desk/go/`, live `public_html/go/`): `.htaccess` sends `/go/<code>` to `index.php`, which hands it
+  to `desk.php?action=link`. That looks the code up, logs a `click` (`id`, `u` page, `c` code, `s` style) or a `scan`, and forwards with
+  a 302. Our own pages get `utm_source=email&utm_medium=prospect&utm_campaign=desk-<style>`. An unknown code goes to the homepage and
+  logs nothing. A test email's link logs `testclick`, which counts for nobody.
+- **Scanners:** the rule the picture links already used, plus HEAD: within 60 s of the company's last email, no browser name, a known
+  scanner or script (Safelinks, Barracuda, Mimecast, Proofpoint, curl, python ...), or a HEAD request. Logged as `scan`, never as a person.
+- **Numbers:** `sent` rows now carry `style` and `links`. The Email page's "Clicks by email style" card and Outbox's Traverse card split
+  sent, companies who clicked, clicks and scanner hits by style. Rows from before 18 Nov have no style and are one group: their clicks
+  came only from the picture emails' links (`action=go`, still answered for emails already sent).
+
 ## Tests
 
-Harness (scratchpad `pdtest/desk-test.mjs`): php -S with `DESK_DATA` (throwaway data) and `DESK_MAIL_MOCK` (messages to a file;
-nothing is sent), `DESK_ANYTIME=1` and `DESK_GAP` for the queue. 57/57 on 2026-10-26. Hub with the fourth tab: `ptest/hub-test4.mjs`
-14/14. Node 24's fetch trips on big replies from php -S (it closes the connection): the test talks to the API with node:http.
+`node traverse/prospect-desk/tests/desk-test.mjs` (moved from a session scratchpad on 18 Nov; `DESK_TEST_DIR` for where the throwaway
+copy goes): php -S with `DESK_DATA` (throwaway data) and `DESK_MAIL_MOCK` (messages to a file; nothing is sent), `DESK_ANYTIME=1` and
+`DESK_GAP` for the queue, the page in headless Chrome. 145/145 on 2026-11-18, the tracked links included. Needs the local seed in
+`desk-data-local/`. The sender alone: `php traverse/prospect-desk/tests/desk-queue-test.php` (49). Hub with the fourth tab:
+`ptest/hub-test4.mjs` 14/14. Node 24's fetch trips on big replies from php -S (it closes the connection): the test talks to the API
+with node:http.

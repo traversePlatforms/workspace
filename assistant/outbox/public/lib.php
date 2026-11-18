@@ -218,8 +218,13 @@ const OB_HOLD_FOREVER = 4102444800;   /* 1 Jan 2100: the desk's "held" value */
 const OB_BOUNCE_WARN = 0.05;           /* a desk bounce rate over 5% of the last 30 days' sends (20 or more) is flagged */
 function obDesk(): array {
     $sent = []; $fail = []; $bounce = []; $click = []; $unsub = []; $skip = []; $addr = ''; $cap = 40;
+    /* clicks by style (2026-11-18): since then every link in every desk email is tracked (traverseplatforms.com/go/), and the sent and
+       click rows carry the style; rows from before have none, and their clicks came only from the picture emails' links */
+    $by = []; $d30 = obNow() - 30 * OB_DAY; $scan30 = 0;
     foreach (obLines(OB_DESK . '/events.log', '"t":"') as $r) {
         $t = (string) ($r['t'] ?? ''); $at = (int) ($r['at'] ?? 0);
+        if (($t === 'sent' || $t === 'click') && $at >= $d30) { $k = (string) ($t === 'sent' ? ($r['style'] ?? '') : ($r['s'] ?? '')); $by[$k] ??= ['sent' => 0, 'clicks' => 0, 'people' => []]; if ($t === 'sent') $by[$k]['sent']++; else { $by[$k]['clicks']++; $by[$k]['people'][(string) ($r['id'] ?? '')] = 1; } }
+        if ($t === 'scan' && $at >= $d30) $scan30++;
         switch ($t) {
             case 'sent': $sent[] = $at; break;
             case 'sendfail': $fail[] = ['at' => $at, 'why' => obStageWords((string) ($r['stage'] ?? '')) . (!empty($r['error']) ? ' (' . mb_substr((string) $r['error'], 0, 80) . ')' : '')]; break;
@@ -238,14 +243,23 @@ function obDesk(): array {
     $it = obItem(['id' => 'desk', 'name' => 'Prospect Desk emails', 'what' => 'Your one-to-one emails to prospect companies (roofing, lawn and the other trades), in hourly batches.', 'who' => 'Prospect companies on the desk',
         'trigger' => 'Only what you Queue on the desk; the hourly run sends 15 an hour, at most ' . max(1, min(360, $cap)) . ' a day, 2 minutes apart.', 'on' => !$held && $addr !== '' && $q !== [], 'state' => $state,
         'switch' => 'Prospects desk: Queue and Clear. Hold: traverse-prospects-data/send-after.txt (a time in the future holds everything). Postal address and daily cap: desk Settings.',
-        'waiting' => count($q), 'opens' => 'not tracked (no pixel)', 'clicks' => $k['d30'] . ' in 30 days (only links in picture emails are tracked; plain emails\' links are not)',
+        'waiting' => count($q), 'opens' => 'not tracked (no pixel)', 'clicks' => obDeskClicks($k['d30'], $by, $scan30),
         'note' => 'Last 30 days: ' . $b['d30'] . ' bounced, ' . $u['d30'] . ' unsubscribed, ' . obCount($skip)['d30'] . ' skipped by the desk\'s rules. Replies are not counted here (they are in your Traverse inbox). Last runs: ' . implode(' / ', obTail(OB_DESK . '/send.log', 2)) . '.']
         + $c + obFailCounts($fail) + ['fails' => obFails($fail)]);
-    $it['bounce30'] = $b['d30']; $it['unsub30'] = $u['d30']; $it['click30'] = $k['d30'];
+    $it['bounce30'] = $b['d30']; $it['unsub30'] = $u['d30']; $it['click30'] = $k['d30']; $it['scan30'] = $scan30;
+    $it['clicksByStyle'] = array_map(fn($k, $g) => ['style' => $k === '' ? 'earlier' : $k, 'sent30' => $g['sent'], 'clicks30' => $g['clicks'], 'people30' => count($g['people'])], array_keys($by), array_values($by));
     if ($c['d30'] >= 20 && $b['d30'] / $c['d30'] > OB_BOUNCE_WARN) $it['attention'][] = ['bad', 'Prospect Desk bounces: ' . $b['d30'] . ' of ' . $c['d30'] . ' sent in 30 days (' . round(100 * $b['d30'] / $c['d30'], 1) . '%, over 5%).'];
     if ($it['fail7']) $it['attention'][] = ['bad', 'Prospect Desk: ' . $it['fail7'] . ' could not send in the last 7 days.'];
     if ($q && $held) $it['attention'][] = ['info', 'Prospect Desk: ' . count($q) . ' emails are waiting behind the hold.'];
     return $it;
+}
+/** the card's Clicks line: the total, then each style's companies who clicked of those sent (30 days), then scanners left out */
+function obDeskClicks(int $total, array $by, int $scans): string {
+    $W = ['plain' => 'plain', 'map' => 'with map', 'phone' => 'app: phone', 'computer' => 'app: computer', 'both' => 'app: phone + computer', '' => 'before 18 Nov (only picture links tracked)'];
+    $parts = [];
+    foreach ($W as $k => $w) if (isset($by[$k])) { $g = $by[$k]; $p = count($g['people']);
+        $parts[] = $w . ': ' . $p . ($p === 1 ? ' company' : ' companies') . ' clicked of ' . $g['sent'] . ' sent' . ($k !== '' && $g['sent'] ? ' (' . round(100 * $p / $g['sent'], 1) . '%)' : ''); }
+    return $total . ' in 30 days' . ($parts ? ' (' . implode('; ', $parts) . ')' : '') . '; ' . $scans . ' mail-scanner ' . ($scans === 1 ? 'hit' : 'hits') . ' left out. Every link is tracked since 18 Nov, plain emails too.';
 }
 /** the edition installs (Traverse's apps for client companies): their data folders */
 function obInstalls(): array {
