@@ -23,6 +23,11 @@ cp_if() { [ -f "$1" ] && { mkdir -p "$ST/$2"; cp "$1" "$ST/$2/"; }; return 0; }
 for p in summit tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7; do
   f="$D/$p/es.json"; [ "$p" = summit ] && f="$R/app/summit-de59ae83/es.json"
   [ -s "$f" ] || { echo "MISSING $f: run node i18n/sync-es.cjs and build-editions.cjs first"; exit 1; }; done
+# 18 Nov: refuse a stale build. Jen's 13:16 help-desk fix was committed and "deployed" (all checks passed) without a rebuild, so the old page
+# went up again and she never saw it. The source page or rounds.php edited after the last build = build first.
+SRCP="$R/app/summit-de59ae83/index.html"
+for b in "$R/app/dist/summit-de59ae83/index.html" "$D/tr-cb2e8587/index.html"; do
+  [ -s "$b" ] && [ ! "$SRCP" -nt "$b" ] || { echo "STALE BUILD: the source page is newer than $b. Build first: (cd traverse/app && node i18n/sync-es.cjs && node ../editions/build-editions.cjs && node ../editions/minify-page.cjs)"; exit 1; }; done
 for f in index.html version.txt; do cp_if "$R/app/dist/summit-de59ae83/$f" summit-de59ae83; done
 for f in sw.js es.json; do cp_if "$R/app/summit-de59ae83/$f" summit-de59ae83; done
 for f in rounds.php billing.php square-oauth.php webpush.php; do cp_if "$R/app/api/$f" api; done

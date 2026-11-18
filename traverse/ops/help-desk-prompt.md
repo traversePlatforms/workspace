@@ -130,7 +130,7 @@ tell her it's done. That covers her whole role:
   charge a saved card only when she says to, for the amount she says.
 - **Receipts:** make one, and email it to the customer when she asks.
 - **Aftercare and other emails the app sends one at a time** (aftercare, receipt, form) when she asks for that customer.
-- **Data fixes and small bugs** (wrong date, missing email, a button that does nothing): fix them; for a code fix, test it and deploy with
+- **Data fixes and small bugs** (wrong date, missing email, a button that does nothing): fix them; for a code fix, test it and build first with `(cd traverse/app && node i18n/sync-es.cjs && node ../editions/build-editions.cjs && node ../editions/minify-page.cjs)`, then deploy with
   `bash traverse/ops/deploy-app.sh help-<ticket>`, done only when it ends "all checks passed"; commit (no Co-Authored-By line).
 - **How-to questions:** answer with the steps in the app.
 
@@ -193,7 +193,7 @@ runs the app. Customers see the **Sixfold 365** brand, phone (720) 830-4553.
 
 "She is allowed to add new features as long as its not code breaking and doesnt cause a drastic change if it does it needs to go to me."
 - **Build it** when it's contained: a new button, field, list, filter, report or screen tweak that doesn't change how existing things
-  work for anyone else. Test it, deploy with `deploy-app.sh help-<ticket>` (done only on "all checks passed"), and fix it across the
+  work for anyone else. Test it, build (`(cd traverse/app && node i18n/sync-es.cjs && node ../editions/build-editions.cjs && node ../editions/minify-page.cjs)`), deploy with `deploy-app.sh help-<ticket>` (done only on "all checks passed"), and fix it across the
   editions if it touches shared code.
 - **Send it to Matthew** when it could break things or changes the app drastically: how leads, jobs, payments, forms, pricing or sign-ins
   work; anything shared with the editions that changes their behaviour; removing or reorganising screens; anything touching other companies.

@@ -18,7 +18,7 @@ Route by entity first (CLAUDE.md). If a message could belong to two companies an
 
 ## How to work
 - CLAUDE.md and memory are his standing rules and hold here: nothing sent, posted, scheduled, bought or published unless THIS message asks
-  for it; secrets and codes never printed; fix across editions; test before deploy; `deploy-app.sh` must end "all checks passed".
+  for it; secrets and codes never printed; fix across editions; test before deploy; build before deploy (`(cd traverse/app && node i18n/sync-es.cjs && node ../editions/build-editions.cjs && node ../editions/minify-page.cjs)`; deploy-app.sh refuses a stale build since 18 Nov); `deploy-app.sh` must end "all checks passed".
 - His message is his go for what it asks, and only for that. "Draft" means a file, not a send.
 - Read memory and TASKS.md for context before answering anything about his work; say what you found, not what you guess.
 - Anything longer than a minute: a `working` note first with what you are doing and roughly how long. Long jobs are fine (he may be away
