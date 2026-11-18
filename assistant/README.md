@@ -80,7 +80,7 @@ Matthew: "Yeah I want it them merged together. It will give jarvis application m
   - **02 Team requests:** the Field app's and the Houston install's `helplist`, read with Matthew's own sign-in in each app. A 401 shows "sign in to its app once".
   - **03 Today:** the overnight check comes from `action=jvstatus`. Outbox's sent, waiting and failed come from Outbox's own `api.php?action=state`. Peak desk follow-ups due and late come from the desk's `api/desk.php?action=data`, which is read only.
   - **04 Builds:** `jvstatus`.
-  - **05 Calendar:** a placeholder for now, plus the "calendar" emails.
+  - **05 Calendar (18 Nov):** the Traverse inbox's primary Google Calendar, read only, next 7 days (`jvCalendar()` in `lib/jarvis.php`, cached 5 minutes in `data/jarvis/cal-cache.json`), then the "calendar" emails. Matthew: "it should show my traverse one, which ill add both business and personal items to". **Connect Traverse calendar** posts `connect` with `cal`, which adds `calendar.readonly` to that one sign-in only (other inboxes stay Gmail-only) and returns to `jarvis/`. The account is marked `cal` from Google's granted scopes. Errors shown in the panel: Calendar API off in the Cloud project, or connected without Calendar.
   - **Groceries:** `action=gro`.
 - **Crowding:** the inbox rows fold, and so does "Needs you" (4 shown). Each side panel folds into an icon on its edge, with a count. Folded and open state is kept per device in localStorage (`jarvis.fold`, `jarvis.open`, `jarvis.brain`). On a phone the panels become the Inbox, Team, Today and More tabs.
 - **Laptop status:** `lib/jarvis.php` serves `data/jarvis/status.json` (0600), passing only whitelisted fields. The file is written by `assistant/jarvis/tools/jarvis-status.sh`:

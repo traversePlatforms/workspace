@@ -20,7 +20,7 @@ if ($isPost && !sameOrigin()) out(['ok' => false, 'error' => 'Not from this page
 if ($action === 'oauth') {
     if (!signedIn()) { header('Location: ./?err=' . rawurlencode('Sign in first, then connect.')); exit; }
     $err = isset($_GET['error']) ? 'Google said: ' . (string) $_GET['error'] : gCallback((string) ($_GET['code'] ?? ''), (string) ($_GET['state'] ?? ''));
-    header('Location: ./' . ($err ? '?err=' . rawurlencode($err) : '?connected=1')); exit;
+    $back = gReturn(); header('Location: ./' . $back . ($err ? '?err=' . rawurlencode($err) : '?connected=1')); exit;
 }
 if ($action === 'state') {   /* what the page needs before signing in */
     $c = cfg();
@@ -69,7 +69,7 @@ if ($action === 'setup') {   /* keys go in here, never through chat; an empty fi
 }
 if ($action === 'connect') {
     if (empty(gClient()['id'])) out(['ok' => false, 'error' => 'Add the Google client in Setup first.']);
-    out(['ok' => true, 'url' => gAuthUrl()]);
+    out(['ok' => true, 'url' => gAuthUrl(!empty($body['cal']))]);
 }
 if ($action === 'account') {   /* label, what the inbox is for, sign-off, on or off, or disconnect */
     $email = strtolower((string) ($body['email'] ?? ''));

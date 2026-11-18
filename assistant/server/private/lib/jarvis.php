@@ -25,12 +25,44 @@ function jvStatus(): array {
         $builds[] = ['id' => jvClean($b['id'] ?? '', 40), 'name' => jvClean($b['name'] ?? '', 90), 'state' => $st, 'pct' => $st === 'done' ? 100 : $pct,
             'step' => max(0, (int) ($b['step'] ?? 0)), 'steps' => max(0, (int) ($b['steps'] ?? 0)), 'note' => jvClean($b['note'] ?? '', 140), 'at' => $at];
     }
-    /* calendar: the Assistant's Google sign-in has Gmail only (gmail.modify), no Calendar scope, so there is no calendar to read yet.
-       Until then: the invitations and bookings the sorter filed as "calendar" in his inboxes. */
+    /* calendar (18 Nov): the Traverse inbox's own Google Calendar once Matthew connects it with Calendar (read only); he keeps business
+       and personal items there. Until then, and alongside: the invitations and bookings the sorter filed as "calendar" in his inboxes. */
     $cal = [];
     foreach (jget('items.json') as $it) if (($it['status'] ?? 'open') === 'open' && ($it['category'] ?? '') === 'calendar')
         $cal[] = ['key' => $it['acct'] . ':' . $it['id'], 'acct' => $it['acct'], 'id' => (string) $it['id'], 'threadId' => (string) ($it['threadId'] ?? ''), 'draftId' => $it['draftId'] ?? null, 'subject' => (string) $it['subject'], 'from' => (string) $it['from'], 'date' => (int) $it['date'], 'summary' => (string) ($it['summary'] ?? '')];
     usort($cal, fn($a, $b) => $b['date'] <=> $a['date']);
     return ['ok' => true, 'now' => $now, 'pushedAt' => $pushed, 'overnight' => $over, 'builds' => $builds,
-        'calendar' => ['source' => 'none', 'need' => 'Google Calendar (read only) is not part of the Assistant\'s Google sign-in yet.', 'emails' => array_slice($cal, 0, 6)]];
+        'calendar' => jvCalendar() + ['emails' => array_slice($cal, 0, 6)]];
+}
+/** the next 7 days of the Traverse inbox's primary calendar (any connected calendar if Traverse has none), cached 5 minutes. Read only. */
+function jvCalendar(): array {
+    $acc = null;
+    foreach (jget('accounts.json') as $e => $a) if (!empty($a['cal']) && !empty($a['refresh']) && ($a['on'] ?? true)) { if (!$acc || ($a['label'] ?? '') === 'Traverse') $acc = $a; }
+    if (!$acc) return ['source' => 'none', 'need' => 'Connect the Traverse calendar to see it here.'];
+    $email = (string) $acc['email']; $label = (string) ($acc['label'] ?? $email);
+    $cf = aDataDir() . '/jarvis/cal-cache.json';
+    $c = is_file($cf) ? json_decode((string) file_get_contents($cf), true) : null;
+    if (is_array($c) && ($c['email'] ?? '') === $email && time() - (int) ($c['at'] ?? 0) < 300) return $c['out'];
+    $tz = new DateTimeZone('America/Denver'); $from = new DateTime('today', $tz); $to = (clone $from)->modify('+7 days');
+    $tok = gToken($email);
+    if (!$tok) return ['source' => $label, 'error' => 'The ' . $label . ' calendar needs reconnecting.', 'events' => []];
+    $r = http('GET', 'https://www.googleapis.com/calendar/v3/calendars/primary/events?' . http_build_query(['timeMin' => $from->format(DATE_RFC3339), 'timeMax' => $to->format(DATE_RFC3339),
+        'singleEvents' => 'true', 'orderBy' => 'startTime', 'maxResults' => 40, 'timeZone' => 'America/Denver']), null, null, ['Authorization: Bearer ' . $tok]);
+    if (($r['_status'] ?? 0) !== 200) {
+        $why = (string) ($r['error']['errors'][0]['reason'] ?? $r['error']['status'] ?? '');
+        $msg = in_array($why, ['accessNotConfigured', 'SERVICE_DISABLED'], true) ? 'Google Calendar API is switched off in the Assistant\'s Google Cloud project: turn it on, then wait a minute.'
+            : (in_array($why, ['insufficientPermissions', 'ACCESS_TOKEN_SCOPE_INSUFFICIENT', 'PERMISSION_DENIED'], true) ? 'The ' . $label . ' inbox was connected without Calendar: connect the calendar again.' : 'Google Calendar did not answer (HTTP ' . (int) ($r['_status'] ?? 0) . ').');
+        if (function_exists('alog')) alog('calendar read failed', ['email' => $email, 'status' => (int) ($r['_status'] ?? 0), 'reason' => $why]);
+        return ['source' => $label, 'error' => $msg, 'events' => []];
+    }
+    $ev = [];
+    foreach ((array) ($r['items'] ?? []) as $i) {
+        if (($i['status'] ?? '') === 'cancelled') continue;
+        $all = isset($i['start']['date']) && !isset($i['start']['dateTime']);
+        $ev[] = ['title' => jvClean($i['summary'] ?? '(busy)', 120), 'start' => (string) ($i['start']['dateTime'] ?? $i['start']['date'] ?? ''), 'end' => (string) ($i['end']['dateTime'] ?? $i['end']['date'] ?? ''),
+            'allDay' => $all, 'where' => jvClean($i['location'] ?? '', 80)];
+    }
+    $out = ['source' => $label, 'events' => $ev];
+    @mkdir(dirname($cf), 0700, true); file_put_contents($cf, json_encode(['email' => $email, 'at' => time(), 'out' => $out]), LOCK_EX); @chmod($cf, 0600);
+    return $out;
 }

@@ -5,6 +5,9 @@
 declare(strict_types=1);
 
 const G_SCOPES = 'https://www.googleapis.com/auth/gmail.modify';
+/* 18 Nov (Matthew: "it should show my traverse one, which ill add both business and personal items to"): Calendar, READ ONLY, asked for
+   only when he connects a calendar from J.A.R.V.I.S. (Connect with cal), so the other inboxes stay Gmail-only. */
+const G_CAL_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 
 function gClient(): array {
     $c = cfg();
@@ -28,12 +31,15 @@ function http(string $method, string $url, ?array $form = null, ?array $json = n
     return $j;
 }
 /** where the person goes to say yes; the state ties the answer back to this signed-in session */
-function gAuthUrl(): string {
+function gAuthUrl(bool $cal = false): string {
     aSessionStart();
     $_SESSION['gstate'] = bin2hex(random_bytes(16));
+    $_SESSION['greturn'] = $cal ? 'jarvis/' : '';   /* a calendar connect started on J.A.R.V.I.S. goes back there */
     return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query(['client_id' => gClient()['id'], 'redirect_uri' => gRedirect(), 'response_type' => 'code',
-        'scope' => G_SCOPES, 'access_type' => 'offline', 'prompt' => 'consent select_account', 'include_granted_scopes' => 'true', 'state' => $_SESSION['gstate']]);
+        'scope' => G_SCOPES . ($cal ? ' ' . G_CAL_SCOPE : ''), 'access_type' => 'offline', 'prompt' => 'consent select_account', 'include_granted_scopes' => 'true', 'state' => $_SESSION['gstate']]);
 }
+/** where the oauth answer sends the page back to (set by gAuthUrl, used once) */
+function gReturn(): string { aSessionStart(); $r = (string) ($_SESSION['greturn'] ?? ''); unset($_SESSION['greturn']); return $r === 'jarvis/' ? 'jarvis/' : ''; }
 /** Google sends the person back here with a code: trade it for tokens, find out which address it is, keep the refresh token */
 function gCallback(string $code, string $state): ?string {
     aSessionStart();
@@ -49,7 +55,8 @@ function gCallback(string $code, string $state): ?string {
         $old = $a[$email] ?? [];
         $a[$email] = ['email' => $email, 'label' => $old['label'] ?? accountLabel($email), 'about' => $old['about'] ?? accountAbout($email), 'signature' => $old['signature'] ?? 'Matthew',
             'refresh' => (string) ($t['refresh_token'] ?? ($old['refresh'] ?? '')), 'access' => (string) $t['access_token'], 'accessUntil' => time() + (int) ($t['expires_in'] ?? 3000) - 60,
-            'connected' => $old['connected'] ?? time(), 'lastCheck' => $old['lastCheck'] ?? 0, 'on' => $old['on'] ?? true];
+            'connected' => $old['connected'] ?? time(), 'lastCheck' => $old['lastCheck'] ?? 0, 'on' => $old['on'] ?? true,
+            'cal' => str_contains((string) ($t['scope'] ?? ''), 'auth/calendar') || !empty($old['cal'])];   /* Google lists every granted scope */
         return $a;
     });
     alog('account connected', ['email' => $email]);
