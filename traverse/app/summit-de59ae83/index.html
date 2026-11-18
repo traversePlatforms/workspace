@@ -8253,7 +8253,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     a4.appendChild(ico('route', 2.2)); a4.appendChild(document.createTextNode('Directions')); ct.appendChild(a4);
     c.appendChild(ct);
     if (H && H.lat != null && H.lon != null) {   /* the aerial photo with the property line (2026-10-19, Matthew: "so they have an idea of what they are walking into") */
-      var lot = lotPreview({ id: 'job-' + jb.id, lat: +H.lat, lon: +H.lon, acres: H.acres, address: H.address || jb.addr }); lot.classList.add('joblot'); c.appendChild(lot);
+      var lot = lotPreview({ id: 'job-' + jb.id, lat: +H.lat, lon: +H.lon, acres: H.acres, address: H.address || jb.addr, lotRef: H.region && (H.door || H.id) ? { r: H.region, id: H.door || H.id } : null }); lot.classList.add('joblot'); c.appendChild(lot);
     }
     var facts = q('div', 'dwfacts');
     var fact = function (k, v) { if (!v && v !== 0) return; var r = q('div'); r.appendChild(q('span', null, k)); r.appendChild(q('b', null, v)); facts.appendChild(r); };
@@ -9140,7 +9140,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var ml0 = mapsLink(h); if (ml0) box.appendChild(ml0);   /* map position (2026-10-21) */
     if (h.lat != null) {   /* the 2023 photo with the property line, as on the lead card (Matthew 2026-10-15) */
       var hp = q('div', 'lpmap hpmap'); hp.setAttribute('role', 'img'); hp.setAttribute('aria-label', 'Aerial photo of ' + streetCase(h.address)); box.appendChild(hp);
-      hp.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres }); });
+      hp.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres, lotRef: lotRefOf(h) }); });
       setTimeout(function () { miniAerial(hp, h); }, 0);
     }
     var big = q('div', 'hlawn c-' + E.conf.toLowerCase());
@@ -9281,7 +9281,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     api('leads').then(function (L) {
       var ex = ((L && L.leads) || []).filter(function (l) { return l.status !== 'lost' && ((tel.length === 10 && digits(l.phone).slice(-10) === tel) || (em && String(l.email || '').toLowerCase() === em)); })[0];
       if (ex) { had = true; return api('leadcontact', { body: { id: ex.id, name: Q.name, phone: Q.phone || '', email: Q.email || '' } }).then(function (c) { if (c && !c.ok) throw new Error(c.error || 'Could not update their details.'); if (c && c.changed && c.changed.length) had = 'updated'; return { ok: true, id: ex.id }; }); }   /* what was typed on the quote wins (2026-10-15) */
-      return leadAddKeep({ src: Q.src || 'phone', name: Q.name, phone: Q.phone || '', email: Q.email || '', town: h && h.address ? streetCase(h.address) + (h.town ? ', ' + h.town : '') : '', need: st.pkg === 'aerate' ? 'Aeration' : PKG_NOAER[st.pkg] ? { seed: 'Overseeding', fert: 'Fertilizing', seedfert: 'Overseeding and fertilizing' }[st.pkg] : 'Aeration and overseeding', msg: 'Quoted in the Quick quote' });   /* + 2026-11-09 */
+      return leadAddKeep({ src: Q.src || 'phone', name: Q.name, phone: Q.phone || '', email: Q.email || '', town: h && h.address ? streetCase(h.address) + (h.town ? ', ' + h.town : '') : '', need: st.pkg === 'other' ? (String(st.svc || '').trim() || 'Another service') : st.pkg === 'aerate' ? 'Aeration' : PKG_NOAER[st.pkg] ? { seed: 'Overseeding', fert: 'Fertilizing', seedfert: 'Overseeding and fertilizing' }[st.pkg] : 'Aeration and overseeding', msg: 'Quoted in the Quick quote' });   /* + 2026-11-09 */
     }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'Could not add the lead.');
       id = r.id;
@@ -9298,7 +9298,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var lead = ((L2 && L2.leads) || []).filter(function (l) { return l.id === id; })[0];
       if (!lead) throw new Error('The lead did not come back. Find it in the Pipeline.');
       var pre = { price: st.cur.price, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', sq: st.sq || 0, seedLb: st.cur.seedLb, fertLb: st.cur.fertLb || null, extras: st.cur.extras || [] };
-      S.qqBack = { lead: id, h: { region: h && h.region, id: h && h.id, address: (h && h.address) || '' }, st: { sq: st.sq || 0, pkg: st.pkg, price: st.price != null ? st.price : null, extras: st.extras.map(function (x) { return { t: x.t, p: x.p }; }) }, pre: pre };   /* Back from here returns to this quote, filled in (Matthew 2026-10-15) */
+      S.qqBack = { lead: id, h: { region: h && h.region, id: h && h.id, address: (h && h.address) || '' }, st: { sq: st.sq || 0, pkg: st.pkg, svc: st.pkg === 'other' ? String(st.svc || '').trim() : '', price: st.price != null ? st.price : null, extras: st.extras.map(function (x) { return { t: x.t, p: x.p }; }) }, pre: pre };   /* Back from here returns to this quote, filled in (Matthew 2026-10-15) */
       signSendView(lead, pre);
       toast(had === 'updated' ? 'Using their lead, details updated' : had ? 'Using their lead' : 'Added as a lead', (lead.name || '') + (lead.email ? ' \u00b7 ' + lead.email : '') + ' \u00b7 ' + money0(st.cur.price), null);
     }).catch(function (e) { btn.disabled = false; toast('Not done', (e && e.message) || 'Try again.', null); });
@@ -9808,7 +9808,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     lines.push(co + ' quote, ' + new Date().toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', year: 'numeric' }));
     var who = [Q.name, Q.phone, Q.email].filter(Boolean).join(' \u00b7 '); if (who) lines.push('Customer: ' + who);
     if (h && h.address) lines.push('Address: ' + streetCase(h.address) + (h.town ? ', ' + h.town : ''));
-    lines.push('Service: ' + (st.pkg === 'aerate' || PKG_NOAER[st.pkg] ? JOB_PKG[st.pkg] : 'Aerate, seed & feed'));   /* + seed / fertilize only, seed & feed (2026-11-09) */
+    lines.push('Service: ' + (st.pkg === 'other' ? (String(st.svc || '').trim() || 'Another service') : st.pkg === 'aerate' || PKG_NOAER[st.pkg] ? JOB_PKG[st.pkg] : 'Aerate, seed & feed'));   /* + seed / fertilize only, seed & feed (2026-11-09) */
     if (st.sq) lines.push('Lawn priced at: ' + Number(st.sq).toLocaleString(LOCALE) + ' sq ft' + (E && !E.none ? ' (our estimate ' + Number(E.mid).toLocaleString(LOCALE) + ', likely ' + Number(E.a).toLocaleString(LOCALE) + '\u2013' + Number(E.b).toLocaleString(LOCALE) + ')' : ''));
     lines.push('Price: ' + money0(st.cur.price) + (sm.ladder && sm.ladder !== st.cur.price ? ' (list ' + money0(sm.ladder) + ')' : ''));
     var dep = Math.ceil(st.cur.price / 2); lines.push('Deposit (half): ' + money0(dep) + ' \u00b7 balance on the day: ' + money0(st.cur.price - dep));
@@ -9819,7 +9819,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   function quickCustomerText(h, st) {
     var Q = S.qq || {}, B = leadBrand({ src: 'a365web', name: Q.name }), first = greetName(Q.name), dep = Math.ceil(st.cur.price / 2);
-    return 'Hi' + (first ? ' ' + first : '') + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', ' + pkgLawnSays(st.pkg) + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+    return 'Hi' + (first ? ' ' + first : '') + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (h && h.address ? ' at ' + streetCase(h.address) : '') + ', ' + (st.pkg === 'other' ? (String(st.svc || '').trim() || 'the work we discussed').replace(/^./, function (c) { return c.toLowerCase(); }) : pkgLawnSays(st.pkg)) + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '. To book, we take a ' + money0(dep) + ' deposit and send you a one-page agreement to sign.' + (B.phone ? ' Call or text ' + B.phone + '.' : '');
   }
   /* under Text and Email buttons: what they open, and what to do when that does not work (Matthew 2026-10-15) */
   function sendNote(el) {
@@ -10250,7 +10250,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (l.ask && l.ask.size) row('They said', l.ask.size);
         if (h.lat != null) {
           setTimeout(function () { miniAerial(pic, h); }, 0);   /* once the card is on the page */
-          pic.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres }); });
+          pic.addEventListener('click', function () { aerialView({ address: streetCase(h.address), lat: h.lat, lon: h.lon, acres: h.acres, lotRef: lotRefOf(h) }); });
         } else pic.hidden = true;
     };
     var go = function () {
@@ -10277,7 +10277,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var f = (j.features || []).sort(function (a, b) { return a.properties.gsd - b.properties.gsd; })[0]; if (!f) return;
           L.tileLayer(satItemTiles(f.id), { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
         }).catch(function () {});
-      parcelAt(d.lon, d.lat, MK().parcels).then(function (geo) {
+      parcelAt(d.lon, d.lat, MK().parcels, lotRefOf(d)).then(function (geo) {
         var ll = geo.rings.map(function (ring) { return ring.map(function (p) { return [p[1], p[0]]; }); });
         var poly = L.polygon(ll, { color: '#FFE600', weight: 3, fillColor: '#FFE600', fillOpacity: 0.06, interactive: false }).addTo(map);
         map.fitBounds(poly.getBounds(), { padding: [12, 12], maxZoom: 20 });
@@ -10542,7 +10542,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       if (said) chip('They said', said);
       box.appendChild(basis); box.appendChild(chips);
       var pk = q('div', 'dwlen');
-      [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only'], ['seed', 'Seed only'], ['fert', 'Fertilize only'], ['seedfert', 'Seed & feed']].concat(quick ? [] : [['other', 'Another service']]).forEach(function (o) {   /* + Another service: a custom quote with your own price (2026-10-28), not on the Quick quote */   /* + seed only, fertilize only, seed & feed, each with its own ladder (2026-11-09) */
+      [['full', 'Aerate, seed & feed'], ['aerate', 'Aerate only'], ['seed', 'Seed only'], ['fert', 'Fertilize only'], ['seedfert', 'Seed & feed']].concat([['other', 'Another service']]).forEach(function (o) {   /* + Another service: a custom quote with your own price (2026-10-28); on the Quick quote too since 2026-11-18 (Jen: fall cleanup only) */   /* + seed only, fertilize only, seed & feed, each with its own ladder (2026-11-09) */
         var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(st.pkg === o[0]));
         b.addEventListener('click', function () { st.pkg = o[0]; st.price = null; clearInfl(); [].forEach.call(pk.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); svcL.hidden = st.pkg !== 'other'; if (st.pkg === 'other') setTimeout(function () { if (!svcIn.value) svcIn.focus(); }, 0); paint(); });
         pk.appendChild(b);
@@ -10748,7 +10748,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           var B = leadBrand(lead), first = greetName(lead.name), street = h.address ? streetCase(h.address) : '';
           var is365 = !!(CO.a365 && B.name === CO.a365.name);   /* the page is 365's: only on a 365 message */
           var lk = is365 && lead.quote && lead.quote.link && lead.quote.price === st.cur.price && lead.quote.pkg === st.pkg && lead.quote.link;   /* the customer's quote page, once this price is saved */
-          var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', ' + pkgLawnSays(st.pkg) + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
+          var msg = 'Hi ' + first + ', this is ' + myName() + ' with ' + B.name + '. For your lawn' + (street ? ' at ' + street : '') + ', ' + (st.pkg === 'other' ? (String(st.svc || '').trim() || 'the work we discussed').replace(/^./, function (c) { return c.toLowerCase(); }) : pkgLawnSays(st.pkg)) + ((st.cur.extras || []).length ? ', plus ' + st.cur.extras.map(function (x) { return x.t.charAt(0).toLowerCase() + x.t.slice(1); }).join(' and ') : '') + ' comes to ' + money0(st.cur.price) + '.' + (lk ? (lead.quote.offer ? ' I can put you down for ' + longDay(lead.quote.offer.date) + ', arriving ' + slotSay(lead.quote.offer.slot) + '. Your quote, with one tap to book it: ' : ' Your quote: ') + lk : ' Would you like to get on the schedule?') + (B.phone ? ' Call or text ' + B.phone + '.' : '');
           var row = q('div', 'lcontact');
           var tel = digits(lead.phone);
           var ensure1 = function () {   /* 2026-10-28: logged as given; saved first when this price isn't */
@@ -20449,7 +20449,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (photo || mode() === '0' || !map._container || !document.body.contains(map._container)) return;
         if (!id) { gaveUp = true; paint(); apply(); satNote(map, SAT_NONE); return; }   /* no mosaic for this place (outside the fallback's state, register down): say so, no grey (2026-10-30 audit) */
         photo = L.tileLayer(satMosaicTiles(id),
-          { minZoom: 13, maxNativeZoom: 18, maxZoom: 21, zIndex: 3, attribution: 'USDA NAIP 2023 aerial photos (public domain), Microsoft Planetary Computer' });
+          { minZoom: 13, maxNativeZoom: 18, maxZoom: 21, zIndex: 3, attribution: 'USDA NAIP ' + (MK().naip || MK_CO.naip).year + ' aerial photos (public domain), Microsoft Planetary Computer' });   /* the market's photo year (18 Nov 2026: Houston's is 2022) */
         photo.on('tileloadstart', function () { asked++; });
         photo.on('tileerror', function () { fails++; if (photo && (fails === 15 || (!everLoaded && fails >= 6 && fails >= asked))) { map.removeLayer(photo); photo = null; gaveUp = true; paint(); apply(); satNote(map, SAT_SLOW); toast('Aerial photos are slow right now', 'Showing the street map. Tap Photo to try again.'); } });   /* not remembered (2026-10-18) */
         photo.on('tileload', function () { fails = 0; everLoaded = true; });
@@ -20461,7 +20461,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     };
     ctl.onAdd = function () {
       box = L.DomUtil.create('div', 'leaflet-bar mapsw');
-      [['0', 'Map', 'The street map'], ['2', 'Hybrid', 'The aerial photos with the streets and their names'], ['1', 'Photo', 'The 2023 aerial photos']].forEach(function (x) {
+      [['0', 'Map', 'The street map'], ['2', 'Hybrid', 'The aerial photos with the streets and their names'], ['1', 'Photo', 'The ' + (MK().naip || MK_CO.naip).year + ' aerial photos']].forEach(function (x) {
         if (x[0] === '2' && !hybridOk()) return;
         var b = L.DomUtil.create('button', '', box); b.type = 'button'; b.textContent = x[1]; b.title = x[2]; b.setAttribute('data-m', x[0]);
         b.addEventListener('click', function () { satSet(x[0]); fails = 0; asked = 0; gaveUp = false; satNote(map, null); paint(); apply(); });
@@ -22904,7 +22904,21 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      own elsewhere, one per county: 2026-10-11). Each is an ArcGIS feature layer, asked the same way. */
   /* through our server first (2026-10-20): the state's parcel map refuses some networks (phone hotspots), so the server asks it and keeps the
      answer; straight to the map only if our server cannot answer. "no parcel" from the server is final. */
-  function parcelAt(lon, lat, urls) {
+  /* a market with our own lot lines (18 Nov 2026, Houston: Texas has no working statewide parcel map): the server reads the county outline for
+     the door, by its town and id (MK().lots, from rounds.php market()). Never Colorado. No town or id, no line: the card shows the dot as before. */
+  function lotRefOf(d) {
+    if (!d) return null;
+    if (d.lotRef) return d.lotRef;
+    return d.id && !/^job-/.test(String(d.id)) ? { r: d.region || S.region, id: d.id } : null;
+  }
+  function parcelAt(lon, lat, urls, ref) {
+    if (MK().lots) {
+      if (!S.me || !ref || !ref.r || !ref.id) return Promise.reject(new Error('no parcel'));
+      return api('parcelat', { params: { region: ref.r, id: ref.id, lon: Number(lon).toFixed(6), lat: Number(lat).toFixed(6) } }).then(function (j) {
+        if (j && j.ok && j.rings && j.rings.length) return { rings: j.rings };
+        throw new Error('no parcel');
+      });
+    }
     var viaUs = S.me && urls && urls[0] && urls[0].indexOf('gis.colorado.gov') >= 0
       ? api('parcelat', { params: { lon: Number(lon).toFixed(6), lat: Number(lat).toFixed(6) } }).then(function (j) {
           if (j && j.ok && j.rings && j.rings.length) return { rings: j.rings };
@@ -23044,7 +23058,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           L.tileLayer(satItemTiles(it.id), { maxZoom: 21, maxNativeZoom: 19, minZoom: 12 }).addTo(map);
           got.photo = true; got.year = it.year; say();
         }).catch(function () { got.photo = false; say(); });
-        parcelAt(d.lon, d.lat, MK().parcels).then(function (geo) {
+        parcelAt(d.lon, d.lat, MK().parcels, lotRefOf(d)).then(function (geo) {
           if (LOT !== mine) return;
           var ll = geo.rings.map(function (ring) { return ring.map(function (p) { return [p[1], p[0]]; }); });
           L.polygon(ll, { color: '#000', weight: 5, opacity: 0.5, fill: false, interactive: false }).addTo(map);
@@ -23109,7 +23123,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           st.photo = true; setCap();
         })
         .catch(function () { st.photo = false; setCap(); });
-      parcelAt(d.lon, d.lat, MK().parcels)
+      parcelAt(d.lon, d.lat, MK().parcels, lotRefOf(d))
         .then(function (geo) {
           var ll = geo.rings.map(function (ring) { return ring.map(function (p) { return [p[1], p[0]]; }); });
           L.polygon(ll, { color: '#000', weight: 6, opacity: 0.5, fill: false, interactive: false }).addTo(map);
