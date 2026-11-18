@@ -24,10 +24,28 @@ SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"
 DEST='~/www/traverseplatforms.com/assistant-private/data/jarvis'
 [ -s "$BUILDS" ] || echo '[]' > "$BUILDS"
 
+REPO="${JARVIS_REPO:-/c/Users/Matthew sharpe/Desktop/claude test 2}"
+running_jobs() {   # 18 Nov: data finishers (finish-*.sh) running on this laptop, found by themselves: name <TAB> their log, if one is found
+  local n b log
+  for n in $(ps -ef 2>/dev/null | grep -oE 'finish-[A-Za-z0-9_-]+\.sh' | sort -u); do
+    b="${n%.sh}"; b="${b%-20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]}"
+    log=$(find "$REPO/traverse/data-pipeline" -maxdepth 4 -name "logs-$b*.log" 2>/dev/null | head -1)
+    printf '%s\t%s\n' "$b" "$log"
+  done
+}
 payload() {   # the one file the server keeps
+  running_jobs > "$DIR/auto-jobs.tsv"
   node -e '
-    const fs = require("fs"), [bf, lf] = process.argv.slice(1);
+    const fs = require("fs"), [bf, lf, af] = process.argv.slice(1);
     let builds = []; try { builds = JSON.parse(fs.readFileSync(bf, "utf8")); } catch (e) {}
+    // 18 Nov (Matthew: "why doesnt my jarvis have these builds"): data finishers show up on their own, with their log'"'"'s last line
+    try {
+      for (const row of fs.readFileSync(af, "utf8").split("\n").filter(Boolean)) {
+        const [name, log] = row.split("\t"); let note = "running", at = Math.floor(Date.now() / 1000);
+        if (log) { try { const ls = fs.readFileSync(log, "utf8").trim().split(/\r?\n/); note = (ls[ls.length - 1] || "running").slice(0, 160); at = Math.floor(fs.statSync(log).mtimeMs / 1000); } catch (e) {} }
+        if (!builds.some(b => b.id === "job-" + name)) builds.push({ id: "job-" + name, name: "Data job: " + name.replace(/^finish-/, ""), steps: 0, step: 0, pct: null, note, state: "running", at, auto: true });
+      }
+    } catch (e) {}
     let over = null;
     try {
       const t = fs.readFileSync(lf, "utf8"), st = fs.statSync(lf), lines = t.split(/\r?\n/);
@@ -36,7 +54,7 @@ payload() {   # the one file the server keeps
       over = { at: m ? Math.floor(new Date(m[1].replace(" ", "T") + ":00").getTime() / 1000) : Math.floor(st.mtimeMs / 1000), ok, problems: probs };
     } catch (e) {}
     process.stdout.write(JSON.stringify({ pushedAt: Math.floor(Date.now() / 1000), overnight: over, builds }));
-  ' "$BUILDS" "$LATEST"
+  ' "$BUILDS" "$LATEST" "$DIR/auto-jobs.tsv"
 }
 push() {
   payload | $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" 2>/dev/null | grep -q pushed \
