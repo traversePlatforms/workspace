@@ -25,14 +25,10 @@ function jvStatus(): array {
         $builds[] = ['id' => jvClean($b['id'] ?? '', 40), 'name' => jvClean($b['name'] ?? '', 90), 'state' => $st, 'pct' => $st === 'done' ? 100 : $pct,
             'step' => max(0, (int) ($b['step'] ?? 0)), 'steps' => max(0, (int) ($b['steps'] ?? 0)), 'note' => jvClean($b['note'] ?? '', 140), 'at' => $at];
     }
-    /* calendar (18 Nov): the Traverse inbox's own Google Calendar once Matthew connects it with Calendar (read only); he keeps business
-       and personal items there. Until then, and alongside: the invitations and bookings the sorter filed as "calendar" in his inboxes. */
-    $cal = [];
-    foreach (jget('items.json') as $it) if (($it['status'] ?? 'open') === 'open' && ($it['category'] ?? '') === 'calendar')
-        $cal[] = ['key' => $it['acct'] . ':' . $it['id'], 'acct' => $it['acct'], 'id' => (string) $it['id'], 'threadId' => (string) ($it['threadId'] ?? ''), 'draftId' => $it['draftId'] ?? null, 'subject' => (string) $it['subject'], 'from' => (string) $it['from'], 'date' => (int) $it['date'], 'summary' => (string) ($it['summary'] ?? '')];
-    usort($cal, fn($a, $b) => $b['date'] <=> $a['date']);
+    /* calendar (18 Nov): only the Traverse inbox's own Google Calendar, which Matthew fills himself or asks for ("jarvis shouldnt show the
+       dates from my emails in the calendar section"). No invitations from the inboxes. */
     return ['ok' => true, 'now' => $now, 'pushedAt' => $pushed, 'overnight' => $over, 'builds' => $builds,
-        'calendar' => jvCalendar() + ['emails' => array_slice($cal, 0, 6)]];
+        'calendar' => jvCalendar()];
 }
 /** the next 7 days of the Traverse inbox's primary calendar (any connected calendar if Traverse has none), cached 5 minutes. Read only. */
 function jvCalendar(): array {

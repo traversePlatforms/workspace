@@ -223,7 +223,7 @@ try {
   ok(/Peak desk: 6 follow-ups due/.test(today) && /2 late/.test(today), 'Today: Peak desk follow-ups due and late (signed and future ones left out)');
   const builds = await ev('document.getElementById("p-builds").innerText');
   ok(/Roof material/.test(builds) && /68%/.test(builds) && /Yards v3 refresh/.test(builds) && /done/.test(builds) && /2 ACTIVE/i.test(await ev('document.querySelector("#p-builds .ph").innerText')), 'Builds: running ones with progress, finished one done');
-  ok(/not connected yet/i.test(await ev('document.getElementById("p-cal").innerText')) && /Peak sponsor meeting/.test(await ev('document.getElementById("p-cal").innerText')), 'Calendar: a plain placeholder plus the calendar emails');
+  ok(/not connected yet/i.test(await ev('document.getElementById("p-cal").innerText')) && !/Peak sponsor meeting/.test(await ev('document.getElementById("p-cal").innerText')) && /Connect Traverse calendar/.test(await ev('document.getElementById("p-cal").innerText')), 'Calendar: Traverse calendar only, with Connect; no invitations from the inboxes (18 Nov)');
   const team = await ev('document.getElementById("p-team").innerText');
   ok(/Deposit link says/.test(team) && /WORKING/i.test(team) && /NEEDS YOU/i.test(team) && !/Check the Peak expo list/.test(team) && !/Old one/.test(team), 'Team requests: open staff ones with their status (his own and closed ones tucked away)');
   ok(/Houston J\.A\.R\.V\.I\.S\.: sign in to its app once/.test(team), 'Team requests: Houston asks for its own sign-in (not shared)');

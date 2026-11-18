@@ -5,9 +5,10 @@
 declare(strict_types=1);
 
 const G_SCOPES = 'https://www.googleapis.com/auth/gmail.modify';
-/* 18 Nov (Matthew: "it should show my traverse one, which ill add both business and personal items to"): Calendar, READ ONLY, asked for
-   only when he connects a calendar from J.A.R.V.I.S. (Connect with cal), so the other inboxes stay Gmail-only. */
-const G_CAL_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+/* 18 Nov (Matthew: "it should show my traverse one, which ill add both business and personal items to" ... "i will manually add stuff to
+   my traverse calendar or tell you to do it"): Calendar EVENTS (read, and add when he asks), asked for only when he connects a calendar from
+   J.A.R.V.I.S. (Connect with cal), so the other inboxes stay Gmail-only. Nothing here writes events yet. */
+const G_CAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 
 function gClient(): array {
     $c = cfg();

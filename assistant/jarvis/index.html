@@ -506,7 +506,7 @@ button.li:hover .lt{color:#fff}
     cal: function () {
       var c = S.st && S.st.calendar, out = [];
       if (!c) return el('div', 'empty', 'Looking…');
-      /* 18 Nov: the Traverse calendar (read only), next 7 days; Connect asks Google for Calendar on that inbox and comes back here */
+      /* 18 Nov: the Traverse calendar, next 7 days; Connect asks Google for Calendar events on that inbox and comes back here */
       var cerr = new URLSearchParams(location.search).get('err');
       /* 18 Nov fix: inside the hub's frame Google's sign-in answers 403 (it refuses to be framed), so the whole window goes to Google */
       function connectCal() { apost('connect', { cal: 1 }).then(function (r) { if (!r.ok) { alert(r.error || ('Could not start the connect (' + (r._status || '?') + ').')); return; } try { window.top.location.href = r.url; } catch (e) { var w = window.open(r.url, '_blank'); if (!w) location.href = r.url; } }); }
@@ -527,14 +527,8 @@ button.li:hover .lt{color:#fff}
           var x = el('div', 'lx'); add(x, el('div', 'lt', e.title), e.where ? el('div', 'ls', e.where) : null);
           add(r, w, x); out.push(r);
         });
-        if (c.emails.length) out.push(el('div', 'lm', 'INVITES IN YOUR INBOXES'));
-      } else if (!c.emails.length) out.push(el('div', 'empty', 'No calendar emails waiting.'));
-      c.emails.slice(0, 4).forEach(function (i) {
-        var r = btn(null, null, 'li', function () { openMail(i); });
-        var w = el('div'); w.style.cssText = 'width:52px;flex:none'; add(w, el('div', 'lm', ago(i.date)));
-        var x = el('div', 'lx'); add(x, el('div', 'lt', i.subject), el('div', 'ls', i.from));
-        add(r, w, x); out.push(r);
-      });
+      }
+      /* 18 Nov (Matthew): "jarvis shouldnt show the dates from my emails in the calendar section": only the Traverse calendar shows here */
       return out;
     }
   };
