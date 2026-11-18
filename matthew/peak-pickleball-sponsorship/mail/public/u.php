@@ -5,12 +5,16 @@ declare(strict_types=1);
 require __DIR__ . '/lib.php';
 header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-store'); header('X-Robots-Tag: noindex'); header('Referrer-Policy: no-referrer');
 $rid = (string) ($_GET['r'] ?? ''); $sg = (string) ($_GET['s'] ?? '');
-$to = '';
-if (pmReady() && preg_match('/^[0-9a-f]{10}$/', $rid) && hash_equals(pmSig('u|' . $rid), $sg))
-    foreach ((array) (pmJ('lists.json', ['lists' => []])['lists'] ?? []) as $ps) foreach ($ps as $p) if ($p['rid'] === $rid) { $to = $p['to']; break 2; }
+$pp = pmReady() && preg_match('/^[0-9a-f]{10}$/', $rid) && hash_equals(pmSig('u|' . $rid), $sg) ? pmByRid($rid) : [];
+$to = (string) ($pp['to'] ?? '');
 $post = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
 $S = $to !== '' ? pmState() : null; $already = $S && !empty($S['people'][$to]['unsub']);
-if ($post && $to !== '' && !$already) { pmLog(['t' => 'unsub', 'to' => $to, 'l' => (string) ($S['people'][$to]['list'] ?? ''), 'via' => 'link']); $already = true; }
+if ($post && $to !== '' && !$already) {
+    /* the Peak desk hears of it as a STOP (Not now, or the owner's follow-up); if the desk is down the next hourly run tells it */
+    $row = ['t' => 'unsub', 'to' => $to, 'who' => $pp['person'] !== '' ? $pp['person'] : $to, 'l' => (string) ($S['people'][$to]['list'] ?? $pp['list']), 'via' => 'link', 'at' => pmNow()] + pmDeskTag($pp, 'unsub:' . $rid);
+    pmLog($row); $already = true;
+    pmDeskNow($row, $S['settings']);
+}
 $h = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Peak Pickleball</title>',
      '<body style="margin:0;font:16px/1.5 system-ui,sans-serif;background:#f3f6f4;color:#14231d;display:grid;place-items:center;min-height:100vh;padding:16px;text-align:center"><div style="max-width:420px">';

@@ -108,7 +108,10 @@ function drawPeak(){
   let h='<div class="lead">Peak Pickleball: your outreach emails from your Peak Outlook. Everything here works as it did on its own page: lists, the email, preview, Start and Pause, settings, Connect Microsoft and the numbers.</div>';
   if(P.ready){
     h+='<div class="nums" style="margin:12px 0">'+[['sent today',P.today],['last 7 days',P.d7],['last 30 days',P.d30],['clicks, 30 days',P.clicks30]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>';
-    h+='<p class="note">Opens are not tracked (no pixel). Every link is tracked. Last hourly run: '+esc(P.lastRun||'none yet')+'.</p>';
+    h+=(P.lists||[]).map(l=>{const r=l.rates||{};return '<p class="note"><b>'+esc(l.name)+'</b> ('+esc(l.status)+'): '+l.people+' people at '+l.orgs+' organisations, '+l.queued+' waiting, '+l.sent+' sent'
+      +(l.sent?'. Opened '+r.open+'%, clicked '+r.click+'%, replied '+r.reply+'%, booked '+r.booked+'%, bounced '+r.bounce+'%':'')+'.'
+      +(l.skips&&l.skips.length?' Skipped: '+l.skips.map(x=>esc(x[0])+', '+x[1]).join(' · ')+'.':'')+'</p>'}).join('');
+    h+='<p class="note">Opens are counted with a 1x1 image and are rough: Apple Mail loads it as the email arrives (high), Outlook often blocks it (low). Every link is tracked. Last hourly run: '+esc(P.lastRun||'none yet')+'.</p>';
   }
   h+='<iframe id="pf" title="Peak email" src="peak/?embed=1'+(Q.get('ms')?'&ms='+encodeURIComponent(Q.get('ms')):'')+'"></iframe>';
   h+='<section class="card" style="margin-top:14px"><h2>Where Microsoft comes back to</h2><p class="note">After Connect Microsoft, Microsoft returns to <code>'+esc(R.now)+'</code>, which forwards here. To have it come straight back to Outbox, add <code>'+esc(R.new)+'</code> as a redirect URI in Entra (App registrations, Matthew outreach, Authentication), then switch below. The old one keeps working either way.</p>'

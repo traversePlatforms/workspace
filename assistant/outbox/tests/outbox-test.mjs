@@ -25,6 +25,9 @@ const jl = rows => rows.map(r => JSON.stringify(r)).join('\n') + '\n';
 const as = spawnSync('node', [path.join(REPO, 'assistant', 'outbox', 'tools', 'assemble.mjs'), PUB]);
 ok(as.status === 0, 'assemble ran: ' + as.stderr);
 fs.mkdirSync(path.join(PUB, 'api'), { recursive: true }); fs.writeFileSync(path.join(PUB, 'api', 'config.php'), '<?php return [];');   // the Sixfold website's mail settings exist
+/* the Peak desk's record code, where it is on the server: the sender reads the desk and writes to it through it (2026-11-18) */
+fs.mkdirSync(path.join(PUB, 'peak-desk-28d38d', 'api'), { recursive: true });
+fs.copyFileSync(path.join(REPO, 'matthew', 'peak-pickleball-sponsorship', 'app', 'api', 'desk-store.php'), path.join(PUB, 'peak-desk-28d38d', 'api', 'desk-store.php'));
 
 /* ---- Outbox's data: a sign-in code ---- */
 const CODE = 'OUTBOXTEST12';
@@ -209,6 +212,55 @@ try {
 
   /* 9. private files answer 404 */
   for (const p of ['/outbox-092b0f/lib.php', '/outbox-092b0f/cli.php', '/outbox-092b0f/peak/lib.php', '/outbox-092b0f/peak/site.php', '/outbox-092b0f/peak/cron.php']) { r = await req('GET', p); ok(r.status === 404, p + ' answers 404'); }
+
+  /* 9b. the installed Peak sender and the Peak desk together (2026-11-18), against a stand-in for Microsoft: nothing reaches Microsoft */
+  {
+    const MS = { sent: [] }, MPORT = 8796;
+    const mock = http.createServer((q, s) => { let b = ''; q.on('data', d => b += d); q.on('end', () => {
+      const u = new URL(q.url, 'http://x'), j = (c, o) => { s.writeHead(c, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(o)); };
+      if (/\/oauth2\/v2.0\/token$/.test(u.pathname)) return j(200, { access_token: 'AT-9', refresh_token: 'RT-9', expires_in: 3600 });
+      if (u.pathname === '/graph/v1.0/me/sendMail') { const raw = Buffer.from(b, 'base64').toString('utf8'); MS.sent.push({ to: (raw.match(/^To: (?:.*<)?([^>\r\n]+)>?\r?$/m) || [])[1], mime: /multipart\/alternative/.test(raw) && /Content-Type: text\/html/.test(raw) && /o\.php\?r=/.test(Buffer.from((raw.split('Content-Type: text/html')[1] || '').split('\r\n\r\n')[1] || '', 'base64').toString('utf8')) }); s.writeHead(202); return s.end(); }
+      if (/mailFolders/.test(u.pathname)) return j(200, { value: [] });
+      j(404, { error: { code: 'NotFound' } });
+    }); });
+    await new Promise(r => mock.listen(MPORT, '127.0.0.1', r));
+    try {
+      const PEAK = path.join(PUB, 'outbox-092b0f', 'peak'), RUN = T(2026, 11, 16, 10);   // a Monday, before Outbox's test "today": the sent-today counts below stay as they are
+      const menv = { ...env, PEAK_MAIL_MOCK: 'http://127.0.0.1:' + MPORT, PEAK_MAIL_NOW: String(RUN), PEAK_MAIL_MX: 'skip', PEAK_MAIL_GAP: '0' };
+      /* a connected mailbox (sealed the way oauth.php seals it) */
+      fs.writeFileSync(path.join(R, 'seal.php'), "<?php require getenv('PEAK') . '/lib.php'; pmW('ms.json', ['email' => 'm.sharpe@peakpickleball.us', 'name' => 'Matthew', 'status' => 'ok', 'tok' => pmSeal(['r' => 'RT-1', 'a' => 'AT-1', 'x' => pmNow() + 3000]), 'at' => pmNow(), 'refreshed' => pmNow()]);");
+      ok(spawnSync('php', [path.join(R, 'seal.php')], { env: { ...menv, PEAK } }).status === 0, 'mailbox connected (test seal)');
+      /* the desk: Nneka claimed one company, Lance called another 3 days ago */
+      const seed = JSON.parse(fs.readFileSync(path.join(DESKSRC, 'desk-seed.json'), 'utf8')).leads.filter(l => l.list !== 'renew' && (l.contacts || []).some(c => c.email));
+      const own = seed[0], tch = seed[1];
+      fs.writeFileSync(path.join(R, 'peak-desk-data', 'events.log'), jl([{ t: 'owner', id: own.id, owner: 'Nneka', by: 'Nneka', at: RUN - 3600, v: 2 },
+        { t: 'touch', id: tch.id, k: 'tk00000009', touch: { m: 'call', out: 'noanswer', note: '', when: RUN - 3 * DAY }, by: 'Lance', at: RUN - 3 * DAY, v: 2 }]));
+      const P = (a, b) => req(b === undefined ? 'GET' : 'POST', '/outbox-092b0f/peak/api.php?action=' + a, b, { Cookie: COOKIE, ...(b !== undefined ? { 'X-PM': '1' } : {}) });
+      r = await P('import', {}); const dsp = r.json.diff.sponsors;
+      ok(r.status === 200 && dsp.queued > 20 && dsp.skips.owned === 1 && dsp.skips.touched === 1, 'Bring the lists in again (inside Outbox): ' + dsp.queued + ' sponsors at ' + dsp.orgs + ' organisations; owned 1, touched 1 skipped');
+      const LJ = JSON.parse(fs.readFileSync(path.join(R, 'peak-mail-data', 'lists.json'), 'utf8'));
+      ok(!LJ.lists.sponsors.some(p => p.org === own.id || p.org === tch.id), 'the owned and the recently called company are not on the list');
+      await P('template', { list: 'sponsors', subject: 'Outbox test for {company}', body: 'Hi {first},\n\nA test.\n\nhttps://peakpickleball.us/' });
+      r = await P('start', { list: 'sponsors' }); ok(r.status === 200 && r.json.lists.sponsors.status === 'running', 'sponsors started (test only)');
+      /* the hourly cron, through the old address's pointer as on the server, with the desk failing */
+      const cron = extra => new Promise(res => { const p = spawn('php', [path.join(PUB, 'peak-mail-31dc56', 'cron.php'), 'run'], { env: { ...menv, ...extra } }); let o = ''; p.stdout.on('data', d => o += d); p.on('close', () => res(o)); });
+      let o = await cron({ PEAK_MAIL_DESKFAIL: '1' });
+      ok(MS.sent.length === 10 && MS.sent.every(x => x.mime) && /10 desk updates wait/.test(o), 'desk down: 10 sent anyway (multipart, with the open image), the desk waits: ' + o.trim());
+      r = await api('state'); ok(/10 updates have not reached the Peak desk/.test(r.json.summary.attention.map(a => a.text).join('\n')), 'Outbox flags the desk updates still waiting');
+      o = await cron({ PEAK_MAIL_NOW: String(RUN + 1800) });
+      fs.writeFileSync(path.join(R, 'desk-read.php'), "<?php require getenv('STORE'); echo json_encode(recs('sponsor'));");
+      const D = JSON.parse(spawnSync('php', [path.join(R, 'desk-read.php')], { env: { ...env, STORE: path.join(PUB, 'peak-desk-28d38d', 'api', 'desk-store.php') } }).stdout.toString());
+      const sent = fs.readFileSync(path.join(R, 'peak-mail-data', 'events.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(e => e.t === 'sent');
+      ok(/desk: 10 caught up/.test(o) && MS.sent.length === 10, 'the next run catches the desk up and sends nothing twice: ' + o.trim());
+      ok(sent.length === 10 && sent.every(e => D[e.org] && D[e.org].stage === 'emailed' && D[e.org].touches.filter(t => t.by === 'Peak email').length === 1), 'each company on the live-layout desk: one Emailed touch, stage Emailed');
+      r = await api('state'); const PL = r.json.peak.lists.find(l => l.id === 'sponsors');
+      ok(PL.sent === 10 && PL.people === dsp.queued && PL.skips.some(x => x[0] === 'owned by someone' && x[1] === 1) && PL.skips.some(x => /touched/.test(x[0]) && x[1] === 1) && 'open' in PL.rates, 'Outbox shows the list size, the rates and the skip counts');
+      ok(!/updates have not reached/.test(r.json.summary.attention.map(a => a.text).join('\n')), 'and no desk warning once caught up');
+      r = await req('GET', '/outbox-092b0f/peak/o.php?r=0000000000&s=0'); ok(r.status === 200 && /image\/gif/.test(r.headers['content-type']), 'the open image answers inside Outbox');
+      r = await req('GET', '/outbox-092b0f/peak/b.php?r=0000000000&s=0'); ok(r.status === 200 && /did not work/.test(r.text), 'the book-a-time page answers inside Outbox (a bad link says so)');
+      await P('pause', { list: 'sponsors' });
+    } finally { mock.close(); }
+  }
 
   /* 10. the command line, and signing out */
   const sm = spawnSync('php', [path.join(PUB, 'outbox-092b0f', 'cli.php'), 'summary'], { env }); const smo = sm.stdout.toString();

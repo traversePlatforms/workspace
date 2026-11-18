@@ -25,7 +25,14 @@ prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sendin
   - A list pauses itself if its bounces pass 8% after 20 sends.
   - Both lists pause if Microsoft blocks the mailbox.
   - Unsubscribed, bounced, STOP and hand-added addresses are never emailed.
-  - No open pixel. Every web address in an email goes through `r.php` so clicks are counted.
+  - Every web address in an email goes through `r.php` so clicks are counted.
+- **Opens (18 Nov, a setting, on by default):** each email goes as MIME multipart/alternative: the plain text as before, plus the same words in HTML ending in a 1x1 image from `o.php`. First open, total opens and last open are counted per person; the page shows open, click, reply, bounce and booking rates per list. Opens are rough: Apple Mail loads the image as the email arrives (high), Outlook often blocks images (low). The image slightly lowers inbox placement. Off = plain text only.
+- **Book a time (18 Nov, off until Matthew turns it on):** `{book}` in an email is the person's own link to `b.php`. They pick a tour or call time from the weekly hours in Settings (no calendar is read). A booking is logged (`booked`), goes on the Peak desk as a tour (`deskBooked`, Meeting / tour booked), and Matthew gets a short heads-up through the website's mailbox (`public_html/demo/_lib.php`, as Traverse's own notices). Replies are never moved or hidden: they stay in Matthew's inbox. Start is refused while an email has `{book}` and booking is off.
+- **The Peak desk (18 Nov):** the sender requires the desk's own code (`public_html/peak-desk-28d38d/api/desk-store.php`):
+  - the lists are read through it (the same reading as the desk);
+  - after each send `deskEmailed` (ref = the send's own id, `pm-...`); a reply `deskReplied`, a STOP or unsubscribe `deskReplied(stop)` (Not now, back in 90 days, unless a person owns the company: then the owner gets a follow-up today); a bounce `deskBounced`; a booking `deskBooked`. All by "Peak email".
+  - A desk write that fails never stops or repeats a send. It is logged (`desk` rows) and retried at the start of each hourly run (48 tries, then shown as given up). The page and Outbox say how many are waiting.
+  - **Skipped** (a setting, on by default): a company someone owns (any owner but "Peak email"), or one a person touched in the last 14 days, as well as the desk stages beyond To contact (except Emailed / Contacted set by this sender). The counts are on each list ("Skipped on the desk: owned by someone, 3"), and each company is checked again just before its email.
 - **Commands (server):** `php cron.php run | stats | import | check | dns`. `setapp` and `setcode` read from a pipe.
 - **Overnight check:** section 12 of `shared/tools/overnight-check.sh` prints `cron.php stats`.
 - **Test:** `node matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`. It mocks Microsoft and uses throwaway data, and

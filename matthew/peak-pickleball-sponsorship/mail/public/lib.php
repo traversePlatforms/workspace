@@ -21,8 +21,13 @@ declare(strict_types=1);
  * suppressed (unsubscribed, bounced, replied STOP, added by hand) is ever emailed; no open-tracking pixel; every web address in an email
  * goes through r.php so clicks are counted. Matthew's mailbox is only READ (replies and bounce notices): nothing in it is moved, marked
  * or deleted.
- * Tests: PEAK_MAIL_DATA, PEAK_DESK_DATA, PEAK_MAIL_MOCK (http://127.0.0.1:port stands in for Microsoft), PEAK_MAIL_NOW, PEAK_MAIL_GAP,
- * PEAK_MAIL_MX=skip; honoured only from the command line or PHP's own test server. */
+ * The Peak desk (2026-11-18, Matthew: "Hook the email tool into peak desk"): the desk's own record code (public_html/peak-desk-28d38d/api/
+ * desk-store.php) is required here. The lists are read through it, and every send, reply, STOP, unsubscribe and bounce is put on the
+ * desk card (deskEmailed / deskReplied / deskBounced, by "Peak email"). A desk write that fails never stops or repeats a send: it is logged
+ * and tried again on the next hourly run. Companies someone owns, or a person touched in the last 14 days, are skipped (a setting).
+ * Tests: PEAK_MAIL_DATA, PEAK_DESK_DATA, PEAK_DESK_STORE, PEAK_MAIL_MOCK (http://127.0.0.1:port stands in for Microsoft), PEAK_MAIL_NOW,
+ * PEAK_MAIL_GAP, PEAK_MAIL_MX=skip, PEAK_MAIL_DESKFAIL (any value: every desk write fails); honoured only from the command line or PHP's own
+ * test server. */
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 date_default_timezone_set('America/Denver');
 
@@ -233,11 +238,11 @@ function pmAccess(bool $force = false): array {
     } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
 }
 /** one Graph call with the mailbox's token: [status, decoded body, raw]; a 401 renews the token and tries once more */
-function pmGraph(string $method, string $path, ?array $json = null, array $extra = []): array {
+function pmGraph(string $method, string $path, ?array $json = null, array $extra = [], ?string $mime = null): array {
     $a = pmAccess(); if (!$a['ok']) return [-1, ['error' => ['message' => $a['why']]], '', $a];
     for ($try = 0; $try < 2; $try++) {
-        $h = array_merge(['Authorization: Bearer ' . $a['t'], 'Accept: application/json'], $json !== null ? ['Content-Type: application/json'] : [], $extra);
-        [$s, $b] = pmHttp($method, pmGraphBase() . $path, $h, $json !== null ? (string) json_encode($json, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null);
+        $h = array_merge(['Authorization: Bearer ' . $a['t'], 'Accept: application/json'], $json !== null ? ['Content-Type: application/json'] : ($mime !== null ? ['Content-Type: text/plain'] : []), $extra);
+        [$s, $b] = pmHttp($method, pmGraphBase() . $path, $h, $json !== null ? (string) json_encode($json, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $mime);
         if ($s === 401 && $try === 0) { $a = pmAccess(true); if (!$a['ok']) return [-1, ['error' => ['message' => $a['why']]], '', $a]; continue; }
         return [$s, json_decode($b, true) ?: [], $b, $a];
     }
@@ -256,7 +261,17 @@ function pmDefaults(): array {
             'skip' => ['2026-11-26', '2026-11-27', '2026-12-24', '2026-12-25', '2026-12-31', '2027-01-01'],
             /* Peak's street address, as Peak's own website, CourtReserve and BBB list it (checked 22 Oct and 13 Nov 2026) */
             'address' => 'Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920',
-            'signature' => "Matthew Sharpe\nPeak Pickleball", 'perOrg' => 1, 'deskNotes' => true];
+            'signature' => "Matthew Sharpe\nPeak Pickleball", 'perOrg' => 1,
+            /* deskNotes: put each send, reply and bounce on the Peak desk card. deskSkip (2026-11-18): leave out a company someone owns, or one
+               a person touched in the last PM_TOUCH_DAYS days */
+            'deskNotes' => true, 'deskSkip' => true,
+            /* opens (2026-11-18, Matthew: "track all the analytics ... clicks opens, views"): each email goes as plain text plus the same words
+               in HTML with a 1x1 image from o.php. Off = plain text only, as before. */
+            'opens' => true,
+            /* the "book a time" page (2026-11-18, Matthew: "whatever replies to come to me unless they are just booking things directly"): {book}
+               in an email is a link to b.php, where they pick a time from this weekly pattern (Colorado time). Off until Matthew turns it on. */
+            'book' => ['on' => false, 'kind' => 'tour', 'mins' => 30, 'ahead' => 14, 'notice' => 24,
+                'week' => [2 => ['10:00-12:00', '13:00-16:00'], 3 => ['10:00-12:00', '13:00-16:00'], 4 => ['10:00-12:00', '13:00-16:00']]]];
 }
 /* The starting templates are PLACEHOLDERS ONLY (the real emails are written separately and Matthew approves them). They carry the DRAFT
    marker, and nothing with that marker can be started or sent. */
@@ -274,7 +289,9 @@ function pmState(): array {
     $L = []; foreach (PM_LISTS as $k => $n) $L[$k] = ['status' => 'paused', 'started' => 0, 'by' => '', 'pausedWhy' => '', 'done' => 0];
     $P = [];   /* per address: sent, reply, bounce, unsub, clicks, ... */
     $sup = []; $first = 0; $byDay = []; $recent = [];
-    $p = function (string $to) use (&$P) { $to = strtolower($to); if (!isset($P[$to])) $P[$to] = ['sent' => 0, 'list' => '', 'reply' => 0, 'stop' => false, 'auto' => 0, 'bounce' => 0, 'unsub' => 0, 'clicks' => 0, 'scans' => 0, 'fails' => 0, 'bad' => '']; return $to; };
+    $p = function (string $to) use (&$P) { $to = strtolower($to); if (!isset($P[$to])) $P[$to] = ['sent' => 0, 'list' => '', 'reply' => 0, 'stop' => false, 'auto' => 0, 'bounce' => 0, 'unsub' => 0, 'clicks' => 0, 'scans' => 0, 'fails' => 0, 'bad' => '',
+        'opens' => 0, 'open1' => 0, 'openLast' => 0, 'booked' => null, 'views' => 0]; return $to; };
+    $B = [];   /* bookings by ref, for the slots already taken */
     foreach (pmRows() as $r) {
         $t = (string) ($r['t'] ?? ''); $at = (int) ($r['at'] ?? 0); $to = isset($r['to']) ? strtolower((string) $r['to']) : '';
         switch ($t) {
@@ -291,12 +308,15 @@ function pmState(): array {
             case 'unsub': $k = $p($to); $P[$k]['unsub'] = $P[$k]['unsub'] ?: $at; $sup[$k] = 'unsubscribed'; break;
             case 'click': $k = $p($to); $P[$k]['clicks']++; break;
             case 'scan': $k = $p($to); $P[$k]['scans']++; break;
+            case 'open': $k = $p($to); $P[$k]['opens']++; $P[$k]['open1'] = $P[$k]['open1'] ?: $at; $P[$k]['openLast'] = max($P[$k]['openLast'], $at); break;
+            case 'bookview': $k = $p($to); $P[$k]['views']++; break;
+            case 'booked': $k = $p($to); $P[$k]['booked'] = ['date' => (string) $r['date'], 'time' => (string) $r['time'], 'at' => $at, 'ref' => (string) ($r['dref'] ?? '')]; $B[(string) ($r['dref'] ?? $at)] = $r['date'] . ' ' . $r['time']; break;
             case 'suppress': $sup[$to] = 'added by hand' . (!empty($r['why']) ? ': ' . $r['why'] : ''); break;
             case 'unsuppress': if (($sup[$to] ?? '') !== '' && str_starts_with($sup[$to], 'added by hand')) unset($sup[$to]); break;
         }
     }
-    $set['rate'] = max(1, min(PM_RATE_MAX, (int) $set['rate']));
-    return ['settings' => $set, 'templates' => $tpl, 'lists' => $L, 'people' => $P, 'suppressed' => $sup, 'firstSent' => $first, 'byDay' => $byDay, 'sentTimes' => $recent];
+    $set['rate'] = max(1, min(PM_RATE_MAX, (int) $set['rate'])); $set['book'] = (array) $set['book'] + pmDefaults()['book'];
+    return ['settings' => $set, 'templates' => $tpl, 'lists' => $L, 'people' => $P, 'suppressed' => $sup, 'firstSent' => $first, 'byDay' => $byDay, 'sentTimes' => $recent, 'taken' => array_values($B)];
 }
 /** why an address may not be emailed now ('' = it may) */
 function pmBlocked(array $S, string $to): string {
@@ -342,55 +362,81 @@ function pmCompany(string $n): string {
 /* the town in a street address found on their website: "..., Colorado Springs, CO 80920" (the zip is required, so a street is never taken) */
 function pmTown(string $addr): string { return preg_match('/([A-Z][A-Za-z.\' ]{2,30}),\s*(?:CO|Colorado)\.?\s+\d{5}/', $addr, $m) ? trim($m[1]) : ''; }
 
-/** the Peak desk's sponsor leads, replayed as desk.php does (seed, Peak's own sponsor records, the desk log, the website look-ups) */
-function pmSponsorLeads(): array {
-    $seed = pmDeskJ('seed.json', ['leads' => []]); $L = []; $peakMail = [];
-    foreach (($seed['leads'] ?? []) as $l) if (isset($l['id'])) $L[$l['id']] = $l + ['status' => 'new', 'added' => [], 'signed' => false];
-    foreach ((pmDeskJ('peak-records.json', ['leads' => []])['leads'] ?? []) as $r) {
-        $id = (string) ($r['id'] ?? ''); if ($id === '') continue;
-        if (!isset($L[$id])) $L[$id] = ['id' => $id, 'name' => (string) ($r['name'] ?? ''), 'contacts' => [], 'status' => 'new', 'added' => [], 'signed' => false];
-        $L[$id]['list'] = 'renew';
-        foreach (($r['contacts'] ?? []) as $c) if (!empty($c['email'])) $peakMail[strtolower((string) $c['email'])] = (string) ($r['name'] ?? '');
+/* ---------------------------------------------------------------- the Peak desk (2026-11-18) */
+const PM_BY = 'Peak email';          /* who the desk shows for everything this sender does */
+const PM_TOUCH_DAYS = 14;            /* a company a person touched within this many days is left alone */
+const PM_DESK_TRIES = 48;            /* a desk write is tried this many hours, then given up (and shown) */
+const PM_SKIP = ['removed' => 'removed from the desk', 'sponsor' => 'already a Peak sponsor', 'signed' => 'signed or booked', 'stage' => 'someone is working it',
+    'owned' => 'owned by someone', 'touched' => 'touched by a person in the last ' . PM_TOUCH_DAYS . ' days', 'noemail' => 'no email on file', 'noaddress' => 'no address that can be emailed'];
+/** where the desk's record code is: beside the desk page on the server (the test points it at the repo copy) */
+function pmDeskStore(): string { $e = pmEnv('PEAK_DESK_STORE'); return $e !== '' ? $e : PM_ROOT . '/public_html/peak-desk-28d38d/api/desk-store.php'; }
+/** load the desk's record code, pointed at pmDesk(): '' when it is ready, otherwise why not */
+function pmDeskLoad(): string {
+    static $why = null; if ($why !== null) return $why;
+    if (!function_exists('deskBounced')) {
+        $f = pmDeskStore(); if (!is_file($f)) return $why = 'the desk\'s code is not on the server';
+        if (defined('DATA_DIR') && realpath((string) DATA_DIR) !== realpath(pmDesk())) return $why = 'another desk folder is already open';
+        defined('DATA_DIR') || define('DATA_DIR', pmDesk());
+        try { require_once $f; } catch (Throwable $e) { return $why = 'the desk\'s code did not load (' . mb_substr($e->getMessage(), 0, 100) . ')'; }
     }
-    foreach (pmRows('events.log', pmDesk()) as $r) {
-        $id = (string) ($r['id'] ?? '');
-        switch ((string) ($r['t'] ?? '')) {
-            case 'lead': if (is_array($r['lead'] ?? null)) $L[$id] = $r['lead'] + ['status' => 'new', 'added' => [], 'signed' => false, 'contacts' => []]; break;
-            case 'status': if (isset($L[$id])) $L[$id]['status'] = (string) $r['status']; break;
-            case 'contact': if (isset($L[$id]) && is_array($r['contact'] ?? null)) $L[$id]['added'][] = $r['contact']; break;
-            case 'leaddel': if (isset($L[$id])) $L[$id]['off'] = true; break;
-            case 'leadback': if (isset($L[$id])) unset($L[$id]['off']); break;
-            case 'signed': if (isset($L[$id])) $L[$id]['signed'] = true; break;
-        }
-    }
-    foreach (pmDeskJ('scans.json', []) as $id => $s) if (isset($L[$id]) && is_array($s)) { $L[$id]['scanEmails'] = (array) ($s['emails'] ?? []); $L[$id]['addr'] = (string) ($s['addr'] ?? ''); }
-    return [$L, $peakMail];
+    foreach (['seedModel', 'apply', 'logRows', 'deskEmailed', 'deskReplied', 'deskBounced', 'deskBooked'] as $fn) if (!function_exists($fn)) return $why = 'the desk\'s code is an older version';
+    return $why = '';
 }
-/** the Peak desk's Expo leads, replayed as desk.php's expoState() does */
-function pmExpoOrgs(): array {
-    $seed = pmDeskJ('expo-seed.json', ['orgs' => []]); $O = [];
-    foreach (($seed['orgs'] ?? []) as $o) if (isset($o['id'])) $O[$o['id']] = $o + ['stage' => 'new', 'added' => []];
-    foreach (pmRows('expo-events.log', pmDesk()) as $r) {
-        $id = (string) ($r['id'] ?? '');
-        switch ((string) ($r['t'] ?? '')) {
-            case 'xlead': if (is_array($r['org'] ?? null)) $O[$id] = $r['org'] + ['stage' => 'new', 'added' => [], 'contacts' => []]; break;
-            case 'xstage': if (isset($O[$id])) $O[$id]['stage'] = (string) $r['stage']; break;
-            case 'xcontact': if (isset($O[$id]) && is_array($r['contact'] ?? null)) $O[$id]['added'][] = $r['contact']; break;
-            case 'xdel': if (isset($O[$id])) $O[$id]['off'] = true; break;
-            case 'xback': if (isset($O[$id])) unset($O[$id]['off']); break;
-        }
-    }
-    uasort($O, fn($a, $b) => ((int) ($a['pri'] ?? 9)) <=> ((int) ($b['pri'] ?? 9)));
-    return $O;
+function pmWorld(array $p): string { return ($p['kind'] ?? '') === 'xorg' ? 'expo' : 'sponsor'; }
+/** a world's companies as the desk has them (its research lists plus its log, read with the desk's own code; nothing is written): null when
+    the desk cannot be read. $fresh reads the log again (the hourly run checks each company just before its email). */
+function pmDeskRecs(string $w, bool $fresh = false): ?array {
+    static $c = [];
+    if (!$fresh && array_key_exists($w, $c)) return $c[$w];
+    if (pmDeskLoad() !== '') return null;
+    try { $M = seedModel($w); foreach (logRows(W($w)['log']) as $r) apply($M, $w, $r); $c[$w] = $M['recs']; }
+    catch (Throwable $e) { error_log('peak-mail: desk read failed: ' . $e->getMessage()); $c[$w] = null; }
+    return $c[$w];
 }
-const PM_SPONSOR_STATUS = ['contacted' => 'Contacted', 'tour' => 'Tour booked', 'toured' => 'Toured', 'proposal' => 'Proposal sent', 'signed' => 'Signed', 'notnow' => 'Not now', 'no' => 'No'];
-const PM_EXPO_STAGE = ['contacted' => 'Contacted', 'talking' => 'Talking', 'visit' => 'Site visit booked', 'proposal' => 'Proposal sent', 'booked' => 'Booked', 'notfit' => 'Not a fit'];
-/** both lists as the desk has them now: ['lists' => [list => [person ...]], 'left' => [list => [[name, why] ...]]]. One person per address
-    across both lists (sponsors first); per organisation up to perOrg people are queued, the others are kept as "held". */
-function pmImport(int $perOrg = 1): array {
-    $perOrg = max(1, min(3, $perOrg));
-    $lists = ['sponsors' => [], 'expo' => []]; $left = ['sponsors' => [], 'expo' => []]; $used = [];
-    [$L, $peakMail] = pmSponsorLeads();
+/** true when the company's stage is the one this sender's own email put it in (Emailed; Contacted on expo) */
+function pmOurStage(string $w, array $R): bool {
+    $st = (string) ($R['stage'] ?? ''); if ($st !== ($w === 'expo' ? 'contacted' : 'emailed')) return false;
+    $h = null; foreach ((array) ($R['hist'] ?? []) as $x) if (($x['to'] ?? '') === $st) $h = $x;
+    return $h !== null && ($h['by'] ?? '') === PM_BY;
+}
+/** why a desk company is left off the lists (a PM_SKIP key), '' when it may be emailed */
+function pmCompanySkip(string $w, array $R, array $set, int $now): string {
+    if (!empty($R['off'])) return 'removed';
+    if ($w === 'sponsor' && ($R['list'] ?? '') === 'renew') return 'sponsor';
+    if (!empty($R['signed']) || in_array((string) $R['stage'], ['signed', 'booked'], true)) return 'signed';
+    if ((string) $R['stage'] !== 'new' && !pmOurStage($w, $R)) return 'stage';
+    if (!empty($set['deskSkip'])) {
+        $o = (string) ($R['owner'] ?? ''); if ($o !== '' && $o !== PM_BY) return 'owned';
+        foreach ((array) ($R['touches'] ?? []) as $t) if (($t['by'] ?? '') !== PM_BY && empty($t['auto']) && (int) ($t['when'] ?? 0) >= $now - PM_TOUCH_DAYS * 86400) return 'touched';
+    }
+    return '';
+}
+function pmSkipWhy(string $w, string $code, array $R): string {
+    if ($code === 'stage') { $S = W($w)['stages']; return 'the desk shows ' . ($S[$R['stage']] ?? $R['stage']) . ': someone is already working it'; }
+    if ($code === 'owned') return 'owned by ' . $R['owner'] . ' on the desk';
+    if ($code === 'touched') { $l = null; foreach ((array) ($R['touches'] ?? []) as $t) if (($t['by'] ?? '') !== PM_BY && empty($t['auto']) && (!$l || $t['when'] > $l['when'])) $l = $t; return 'touched by ' . ($l['by'] ?? 'a person') . ' on ' . date('M j', (int) ($l['when'] ?? 0)); }
+    return PM_SKIP[$code] ?? $code;
+}
+/** just before an email: why this person's company should not get it now ('' = send). The desk is read again for this. */
+function pmSkipNow(array $p, array $set): string {
+    $w = pmWorld($p); $all = pmDeskRecs($w, true);
+    if ($all === null) return 'the Peak desk could not be read';
+    $R = $all[$p['org']] ?? null; if (!$R) return 'no longer on the desk';
+    $c = pmCompanySkip($w, $R, $set, pmNow()); return $c === '' ? '' : pmSkipWhy($w, $c, $R);
+}
+
+/** both lists as the desk has them now: ['lists' => [list => [person ...]], 'left' => [list => [[name, why, code] ...]], 'skips' => [list =>
+    [code => n]], 'error' => '']. One person per address across both lists (sponsors first); per organisation up to perOrg people are queued,
+    the others are kept as "held". When the desk cannot be read nobody is queued and 'error' says why. */
+function pmImport(array $set): array {
+    $perOrg = max(1, min(3, (int) ($set['perOrg'] ?? 1))); $now = pmNow();
+    $lists = ['sponsors' => [], 'expo' => []]; $left = ['sponsors' => [], 'expo' => []]; $skips = ['sponsors' => [], 'expo' => []]; $used = [];
+    $SP = pmDeskRecs('sponsor'); $XP = pmDeskRecs('expo');
+    if ($SP === null || $XP === null) return ['lists' => $lists, 'left' => $left, 'skips' => $skips, 'error' => 'The Peak desk could not be read (' . (pmDeskLoad() ?: 'its records did not load') . '), so nobody is queued until it can be.'];
+    $leave = function (string $list, string $name, string $code, string $why) use (&$left, &$skips) { $left[$list][] = ['name' => $name, 'why' => $why, 'code' => $code]; $skips[$list][$code] = ($skips[$list][$code] ?? 0) + 1; };
+    /* the addresses of current Peak sponsors (the Peak sponsors tab): never emailed from either list */
+    $peakMail = [];
+    foreach ($SP as $R) if (($R['list'] ?? '') === 'renew') foreach (array_merge((array) ($R['contacts'] ?? []), (array) ($R['added'] ?? [])) as $c) if (!empty($c['email'])) $peakMail[strtolower((string) $c['email'])] = (string) ($R['name'] ?? '');
     $add = function (string $list, string $org, string $kind, string $company, string $town, array $cands) use (&$lists, &$used, $perOrg, $peakMail): int {
         $n = 0; $seen = [];
         foreach ($cands as $c) {
@@ -408,46 +454,105 @@ function pmImport(int $perOrg = 1): array {
         }
         return $n;
     };
-    foreach ($L as $id => $l) {
-        $name = (string) ($l['name'] ?? ''); $why = '';
-        if (!empty($l['off'])) $why = 'removed from the desk';
-        elseif (($l['list'] ?? '') === 'renew') $why = 'already a Peak sponsor (Peak sponsors tab)';
-        elseif (!empty($l['signed']) || ($l['status'] ?? '') === 'signed') $why = 'signed';
-        elseif (($l['status'] ?? 'new') !== 'new') $why = 'the desk shows ' . (PM_SPONSOR_STATUS[$l['status']] ?? $l['status']) . ': someone is already working it';
+    $scans = pmDeskJ('scans.json', []);
+    foreach ($SP as $id => $R) {
+        $id = (string) $id; $name = (string) ($R['name'] ?? ''); $code = pmCompanySkip('sponsor', $R, $set, $now);
         $c = [];
-        foreach ((array) ($l['contacts'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['pos'] ?? ''), 'pick' => !empty($x['pick']), 'conf' => $x['conf'] ?? null, 'src' => 'desk research', 'guess' => is_numeric($x['conf'] ?? null) && (int) $x['conf'] < 80];
-        foreach ((array) ($l['added'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['pos'] ?? ''), 'pick' => true, 'conf' => 100, 'src' => 'added on the desk', 'guess' => false];
-        foreach ((array) ($l['scanEmails'] ?? []) as $e) if (is_string($e) && $e !== '') $c[] = ['email' => $e, 'name' => '', 'role' => 'on their website', 'pick' => false, 'conf' => 90, 'src' => 'their website', 'guess' => false];
-        if ($why === '' && !$c) $why = 'no email on file';
-        if ($why !== '') { $left['sponsors'][] = ['name' => $name, 'why' => $why]; continue; }
+        foreach ((array) ($R['contacts'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['pos'] ?? ''), 'pick' => !empty($x['pick']), 'conf' => $x['conf'] ?? null, 'src' => 'desk research', 'guess' => is_numeric($x['conf'] ?? null) && (int) $x['conf'] < 80];
+        foreach ((array) ($R['added'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['pos'] ?? $x['role'] ?? ''), 'pick' => true, 'conf' => 100, 'src' => 'added on the desk', 'guess' => false];
+        foreach ((array) ($scans[$id]['emails'] ?? []) as $e) if (is_string($e) && $e !== '') $c[] = ['email' => $e, 'name' => '', 'role' => 'on their website', 'pick' => false, 'conf' => 90, 'src' => 'their website', 'guess' => false];
+        if ($code === '' && !$c) $code = 'noemail';
+        if ($code !== '') { $leave('sponsors', $name, $code, pmSkipWhy('sponsor', $code, $R)); continue; }
         /* who first: the desk's own pick, then a named person over a shared inbox, then the surest address */
         usort($c, fn($a, $b) => [(int) $b['pick'], (int) !pmGeneric((string) $b['email']), (int) ($b['conf'] ?? 75)] <=> [(int) $a['pick'], (int) !pmGeneric((string) $a['email']), (int) ($a['conf'] ?? 75)]);
-        if ($add('sponsors', (string) $id, 'lead', pmCompany($name), pmTown((string) ($l['addr'] ?? '')), $c) === 0) $left['sponsors'][] = ['name' => $name, 'why' => 'no address that can be emailed'];
+        if ($add('sponsors', $id, 'lead', pmCompany($name), pmTown((string) ($scans[$id]['addr'] ?? '')), $c) === 0) $leave('sponsors', $name, 'noaddress', PM_SKIP['noaddress']);
     }
-    foreach (pmExpoOrgs() as $id => $o) {
-        $name = (string) ($o['name'] ?? ''); $why = '';
-        if (!empty($o['off'])) $why = 'removed from the desk';
-        elseif (($o['stage'] ?? 'new') !== 'new') $why = 'the desk shows ' . (PM_EXPO_STAGE[$o['stage']] ?? $o['stage']) . ': someone is already working it';
+    uasort($XP, fn($a, $b) => ((int) ($a['pri'] ?? 9)) <=> ((int) ($b['pri'] ?? 9)));
+    foreach ($XP as $id => $R) {
+        $id = (string) $id; $name = (string) ($R['name'] ?? ''); $code = pmCompanySkip('expo', $R, $set, $now);
         $c = [];
-        foreach ((array) ($o['contacts'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['role'] ?? ''), 'pick' => !empty($x['best']), 'conf' => stripos((string) ($x['estat'] ?? ''), 'published') !== false ? 95 : 70, 'src' => 'desk research', 'guess' => stripos((string) ($x['estat'] ?? ''), 'pattern') !== false || stripos((string) ($x['estat'] ?? ''), 'unverified') !== false];
-        foreach ((array) ($o['added'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['role'] ?? ''), 'pick' => true, 'conf' => 100, 'src' => 'added on the desk', 'guess' => false];
-        if ($why === '' && !$c) $why = 'no email on file';
-        if ($why !== '') { $left['expo'][] = ['name' => $name, 'why' => $why]; continue; }
+        foreach ((array) ($R['contacts'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['role'] ?? ''), 'pick' => !empty($x['best']), 'conf' => stripos((string) ($x['estat'] ?? ''), 'published') !== false ? 95 : 70, 'src' => 'desk research', 'guess' => stripos((string) ($x['estat'] ?? ''), 'pattern') !== false || stripos((string) ($x['estat'] ?? ''), 'unverified') !== false];
+        foreach ((array) ($R['added'] ?? []) as $x) if (!empty($x['email'])) $c[] = ['email' => $x['email'], 'name' => (string) ($x['name'] ?? ''), 'role' => (string) ($x['role'] ?? $x['pos'] ?? ''), 'pick' => true, 'conf' => 100, 'src' => 'added on the desk', 'guess' => false];
+        if ($code === '' && !$c) $code = 'noemail';
+        if ($code !== '') { $leave('expo', $name, $code, pmSkipWhy('expo', $code, $R)); continue; }
         usort($c, fn($a, $b) => [(int) $b['pick'], (int) !pmGeneric((string) $b['email']), (int) $b['conf']] <=> [(int) $a['pick'], (int) !pmGeneric((string) $a['email']), (int) $a['conf']]);
-        if ($add('expo', (string) $id, 'xorg', pmCompany($name), '', $c) === 0) $left['expo'][] = ['name' => $name, 'why' => 'no address that can be emailed'];
+        if ($add('expo', $id, 'xorg', pmCompany($name), '', $c) === 0) $leave('expo', $name, 'noaddress', PM_SKIP['noaddress']);
     }
-    return ['lists' => $lists, 'left' => $left];
+    return ['lists' => $lists, 'left' => $left, 'skips' => $skips, 'error' => ''];
+}
+/** the skip counts in words, biggest first: [["owned by someone", 3], ...] */
+function pmSkipList(array $counts): array { arsort($counts); $o = []; foreach ($counts as $k => $n) $o[] = [PM_SKIP[$k] ?? (string) $k, (int) $n]; return $o; }
+
+/* ---- what the desk is told: each sent / reply / bounce / unsub row carries w (sponsor|expo), org (the desk id) and dref (the ref the desk
+   keeps, so telling it twice is harmless). A 'desk' row records each try. A failed try never touches the send; the next run tries again. */
+function pmDeskTag(array $p, string $ref): array { return ['w' => pmWorld($p), 'org' => (string) $p['org'], 'dref' => $ref]; }
+/** tell the desk about one row: ['ok' => bool, 'final' => bool (no point trying again), 'why' => ...]; never throws */
+function pmDeskPush(array $r): array {
+    try {
+        if (pmEnv('PEAK_MAIL_DESKFAIL') !== '') throw new RuntimeException('the desk did not answer (test)');
+        $l = pmDeskLoad(); if ($l !== '') return ['ok' => false, 'final' => false, 'why' => $l];
+        /* the desk waits on its lock for as long as it takes; the sender waits at most 8 seconds, then leaves it for the next run */
+        $fh = @fopen(pmDesk() . '/desk.lock', 'c'); if (!$fh) return ['ok' => false, 'final' => false, 'why' => 'the desk\'s lock file could not be opened'];
+        $free = false; for ($i = 0; $i < 40 && !($free = flock($fh, LOCK_EX | LOCK_NB)); $i++) usleep(200000);
+        if ($free) flock($fh, LOCK_UN); fclose($fh);
+        if (!$free) return ['ok' => false, 'final' => false, 'why' => 'the desk was busy'];
+        $w = (string) $r['w']; $org = (string) $r['org']; $ref = (string) $r['dref']; $to = (string) ($r['to'] ?? ''); $who = (string) ($r['who'] ?? '') ?: $to;
+        $x = match ((string) ($r['t'] ?? '')) {
+            'sent' => deskEmailed($w, $org, $to, (string) ($r['subject'] ?? ''), PM_BY, $ref, (int) ($r['at'] ?? 0)),
+            'reply' => deskReplied($w, $org, $who, 'the reply is in Matthew\'s Peak Outlook (' . date('M j', (int) ($r['at'] ?? pmNow())) . ')', PM_BY, $ref, !empty($r['stop'])),
+            'unsub' => deskReplied($w, $org, $who, 'used the unsubscribe link in the email (' . date('M j', (int) ($r['at'] ?? pmNow())) . ')', PM_BY, $ref, true),
+            'bounce' => deskBounced($w, $org, $to, '', PM_BY, $ref),
+            'booked' => deskBooked($w, $org, (string) ($r['date'] ?? ''), (string) ($r['time'] ?? ''), trim($who . ($to !== '' && $to !== $who ? ' <' . $to . '>' : '')),
+                'Booked online from the Peak email: ' . (PM_BOOK_KINDS[(string) ($r['kind'] ?? '')] ?? 'Tour of Peak') . ', ' . (int) ($r['mins'] ?? 30) . ' minutes' . (!empty($r['note']) ? '. They wrote: ' . $r['note'] : ''), PM_BY, $ref),
+            default => ['ok' => false, 'code' => 400, 'error' => 'nothing to tell the desk'],
+        };
+        if (!empty($x['ok'])) return ['ok' => true, 'final' => true, 'why' => !empty($x['dup']) ? 'already on the desk' : '', 'stage' => (string) ($x['stage'] ?? '')];
+        return ['ok' => false, 'final' => in_array((int) ($x['code'] ?? 0), [400, 404], true), 'why' => (string) ($x['error'] ?? 'the desk said no')];
+    } catch (Throwable $e) { return ['ok' => false, 'final' => false, 'why' => mb_substr($e->getMessage(), 0, 160)]; }
+}
+/** the rows the desk has not been told about yet, by ref (with how many tries so far) */
+function pmDeskPending(?array $rows = null): array {
+    $jobs = []; $done = []; $tries = [];
+    foreach ($rows ?? pmRows() as $r) {
+        $t = (string) ($r['t'] ?? ''); $k = (string) ($r[$t === 'desk' ? 'ref' : 'dref'] ?? ''); if ($k === '') continue;
+        if ($t === 'desk') { if (!empty($r['ok']) || !empty($r['final'])) $done[$k] = 1; else $tries[$k] = ($tries[$k] ?? 0) + 1; }
+        elseif (in_array($t, ['sent', 'reply', 'bounce', 'unsub', 'booked'], true) && !empty($r['org']) && !empty($r['w'])) $jobs[$k] = $r;
+    }
+    $o = []; foreach ($jobs as $k => $r) if (!isset($done[$k])) $o[$k] = $r + ['tries' => $tries[$k] ?? 0];
+    return $o;
+}
+/** tell the desk about one row now, and log the try: 'ok', 'final' (refused for good, e.g. the company is gone) or 'later'. After one 'later'
+    the rest of this run's rows wait for the next run (no time is lost on a desk that is down). */
+function pmDeskNow(array $r, array $set, int $tries = 0): string {
+    static $down = false;
+    if (empty($set['deskNotes']) || empty($r['dref']) || $down) return 'later';
+    $x = pmDeskPush($r); $final = $x['final'] || (!$x['ok'] && $tries + 1 >= PM_DESK_TRIES);
+    pmLog(['t' => 'desk', 'ref' => (string) $r['dref'], 'op' => (string) $r['t'], 'w' => (string) $r['w'], 'org' => (string) $r['org'], 'ok' => $x['ok'], 'final' => $final,
+        'why' => $x['why'] . (!$x['ok'] && $final && !$x['final'] ? ' (gave up after ' . PM_DESK_TRIES . ' tries)' : '')]);
+    if ($x['ok']) return 'ok';
+    if ($final) return 'final';
+    $down = true; return 'later';
+}
+/** at the start of each run: anything the desk missed, oldest first. A few words for run.log ('' when nothing was waiting). */
+function pmDeskFlush(array $set): string {
+    if (empty($set['deskNotes'])) return '';
+    $p = pmDeskPending(); if (!$p) return '';
+    $ok = 0; foreach ($p as $r) { $x = pmDeskNow($r, $set, (int) $r['tries']); if ($x === 'ok') $ok++; elseif ($x === 'later') break; }
+    $still = count(pmDeskPending());
+    return 'desk: ' . $ok . ' caught up' . ($still ? ', ' . $still . ' still waiting' : '');
 }
 /** import and save; a running list that gains people is paused, so nobody new is emailed without Matthew's Start */
 function pmImportSave(string $by): array {
-    $S = pmState(); $old = pmJ('lists.json', null); $new = pmImport((int) $S['settings']['perOrg']);
-    $out = ['at' => pmNow(), 'lists' => $new['lists'], 'left' => $new['left']]; pmW('lists.json', $out);
+    $S = pmState(); $old = pmJ('lists.json', null); $new = pmImport($S['settings']);
+    if ($new['error'] !== '') return ['error' => $new['error']];   /* the lists already brought in stay as they are */
+    $out = ['at' => pmNow(), 'lists' => $new['lists'], 'left' => $new['left'], 'skips' => $new['skips']]; pmW('lists.json', $out);
     $diff = [];
     foreach (PM_LISTS as $k => $n) {
         $was = []; foreach ((array) ($old['lists'][$k] ?? []) as $p) if ($p['hold'] === '') $was[$p['to']] = 1;
         $now = array_filter($new['lists'][$k], fn($p) => $p['hold'] === '');
         $added = count(array_filter($now, fn($p) => !isset($was[$p['to']])));
-        $diff[$k] = ['queued' => count($now), 'added' => $old ? $added : count($now), 'held' => count($new['lists'][$k]) - count($now), 'left' => count($new['left'][$k])];
+        $diff[$k] = ['queued' => count($now), 'added' => $old ? $added : count($now), 'held' => count($new['lists'][$k]) - count($now), 'left' => count($new['left'][$k]),
+            'orgs' => count(array_unique(array_column($now, 'org'))), 'skips' => $new['skips'][$k]];
         if ($old && $added > 0 && $S['lists'][$k]['status'] === 'running') pmLog(['t' => 'pause', 'l' => $k, 'by' => $by, 'why' => $added . ' new people came in from the Peak desk: check the preview and press Start again']);
     }
     pmLog(['t' => 'import', 'by' => $by, 'counts' => $diff]);
@@ -472,18 +577,46 @@ function pmRender(array $p, array $tpl, array $set, bool $save = false): array {
     $main = rtrim(strtr(pmText($tpl['body'], 8000), $v));
     $links = 0;
     $main = (string) preg_replace_callback('~\bhttps?://[^\s<>()"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($p, $save, &$links) { $links++; return pmTrack($m[0], $p['rid'], $save); }, $main);
+    /* {book}: their own link to the book-a-time page (not sent through r.php: the page counts its own views) */
+    $subject = trim(str_replace('{book}', '', $subject)); $main = str_replace('{book}', pmBookUrl($p['rid']), $main);
     $sig = trim((string) $set['signature']);
     $body = $main . "\n\n" . ($sig !== '' ? $sig . "\n" : '') . trim((string) $set['address'])
           . "\n\nIf you'd rather not hear from me again, reply STOP or use this link: " . pmUnsubUrl($p['rid']);
     $m = ['to' => $p['to'], 'name' => $p['person'], 'subject' => $subject, 'body' => $body, 'links' => $links, 'fallbacks' => $miss];
+    if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']));
     if (preg_match('/\{[a-z_]+\}/i', $subject . "\n" . $main, $ph)) $m['badph'] = $ph[0];
     return $m;
 }
+/** the HTML part: the same words as the plain text, its web addresses as links, and the 1x1 open image at the end */
+function pmHtml(string $text, string $pixel): string {
+    $h = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    $h = (string) preg_replace('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', '<a href="$0">$0</a>', $h);
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#111">'
+        . str_replace("\n", "<br>\n", $h) . '</div><img src="' . htmlspecialchars($pixel, ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px"></body></html>';
+}
+function pmOpenUrl(string $rid): string { return pmBase() . '/o.php?r=' . $rid . '&s=' . pmSig('o|' . $rid); }
+function pmBookUrl(string $rid): string { return pmBase() . '/b.php?r=' . $rid . '&s=' . pmSig('b|' . $rid); }
+/** the person on the lists with this link id, with their list ([] when none) */
+function pmByRid(string $rid): array {
+    foreach ((array) (pmJ('lists.json', ['lists' => []])['lists'] ?? []) as $k => $ps) foreach ($ps as $p) if (($p['rid'] ?? '') === $rid) return $p + ['list' => $k];
+    return [];
+}
+/** the whole email as MIME, plain text first and HTML second (multipart/alternative), for Graph's MIME sendMail */
+function pmMime(array $m): string {
+    $b = 'pm-' . bin2hex(random_bytes(12)); $enc = fn(string $s) => preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s;
+    $to = $m['to']; $nm = trim((string) ($m['name'] ?? '')); if ($nm !== '') $to = $enc(str_replace(['"', '\\'], '', $nm)) . ' <' . $m['to'] . '>';
+    $part = fn(string $type, string $s) => "--$b\r\nContent-Type: $type; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . rtrim(chunk_split(base64_encode($s), 76, "\r\n")) . "\r\n";
+    return "To: $to\r\nSubject: " . $enc((string) $m['subject']) . "\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"$b\"\r\n\r\n"
+        . $part('text/plain', str_replace("\n", "\r\n", (string) $m['body'])) . $part('text/html', (string) $m['html']) . "--$b--\r\n";
+}
 /** send one email from the connected mailbox: ['ok'] or ['ok' => false, 'kind' => server|address|blocked|auth, 'why'] */
 function pmSendOne(array $m): array {
-    $msg = ['message' => ['subject' => $m['subject'], 'body' => ['contentType' => 'Text', 'content' => $m['body']],
-            'toRecipients' => [['emailAddress' => array_filter(['address' => $m['to'], 'name' => $m['name'] ?? ''], 'strlen')]]], 'saveToSentItems' => true];
-    [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', $msg);
+    if (isset($m['html'])) [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', null, [], base64_encode(pmMime($m)));   /* MIME: saved to Sent Items too */
+    else {
+        $msg = ['message' => ['subject' => $m['subject'], 'body' => ['contentType' => 'Text', 'content' => $m['body']],
+                'toRecipients' => [['emailAddress' => array_filter(['address' => $m['to'], 'name' => $m['name'] ?? ''], 'strlen')]]], 'saveToSentItems' => true];
+        [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', $msg);
+    }
     if ($s === 202 || $s === 200) return ['ok' => true];
     if ($s === -1) return ['ok' => false, 'kind' => !empty($a['stop']) ? 'auth' : 'server', 'why' => (string) ($j['error']['message'] ?? 'not connected')];
     $code = (string) ($j['error']['code'] ?? ''); $why = mb_substr(trim($code . ': ' . (string) ($j['error']['message'] ?? '')), 0, 200);
@@ -517,7 +650,7 @@ function pmHourBudget(array $S): int {
 /* ---------------------------------------------------------------- who is next */
 /** the people still to email on a list, in order (only those the desk still lists and nothing blocks) */
 function pmQueue(array $S, string $list, ?array $fresh = null): array {
-    $lj = pmJ('lists.json', ['lists' => []]); $fresh ??= pmImport((int) $S['settings']['perOrg']);
+    $lj = pmJ('lists.json', ['lists' => []]); $fresh ??= pmImport($S['settings']);
     $ok = []; foreach ($fresh['lists'][$list] ?? [] as $p) if ($p['hold'] === '') $ok[$p['to']] = 1;
     $q = [];
     foreach ((array) ($lj['lists'][$list] ?? []) as $p) if ($p['hold'] === '' && isset($ok[$p['to']]) && pmBlocked($S, $p['to']) === '') $q[] = $p;
@@ -531,9 +664,51 @@ function pmStartBlocks(array $S, string $list): array {
     if (!pmAddressOk((string) $S['settings']['address'])) $b[] = 'Peak\'s postal address is missing in Settings (the law wants it in every email).';
     if (pmIsDraft($S['templates'][$list])) $b[] = 'The template is still the DRAFT placeholder. Put the approved email in and save it.';
     if (!str_contains(strtolower((string) $S['templates'][$list]['body']), 'http') ) $b[] = 'The email has no web address, so clicks cannot be counted (add Peak\'s website).';
+    if (str_contains((string) $S['templates'][$list]['body'], '{book}') && (empty($S['settings']['book']['on']) || !pmBookSlots($S, 1))) $b[] = 'The email has a {book} link, but booking is off in Settings (or has no open times).';
     if (!is_file(pmData() . '/lists.json')) $b[] = 'The list has not been brought in from the Peak desk yet.';
     elseif (!pmQueue($S, $list)) $b[] = 'Nobody is waiting on this list.';
     return $b;
+}
+
+/* ---------------------------------------------------------------- the book-a-time page (b.php) */
+const PM_BOOK_KINDS = ['tour' => 'Tour of Peak', 'call' => 'Phone call'];
+/** "Mon 10:00-12:00, 13:00-16:00" lines <-> the weekly pattern [day => ["10:00-12:00", ...]] */
+function pmWeekText(array $w): string { $o = []; foreach (PM_DAYS as $d => $n) if (!empty($w[$d])) $o[] = $n . ' ' . implode(', ', (array) $w[$d]); return implode("\n", $o); }
+function pmWeekParse(string $t): ?array {
+    $w = []; $days = array_flip(array_map('strtolower', PM_DAYS));
+    foreach (preg_split('/\R/', trim($t)) ?: [] as $line) {
+        $line = trim($line); if ($line === '') continue;
+        if (!preg_match('/^([A-Za-z]{3})[a-z]*\s+(.+)$/', $line, $m) || !isset($days[strtolower($m[1])])) return null;
+        foreach (preg_split('/\s*,\s*/', trim($m[2])) ?: [] as $r) {
+            if (!preg_match('/^([01]?\d|2[0-3]):([0-5]\d)\s*-\s*([01]?\d|2[0-3]):([0-5]\d)$/', $r, $x) || (int) $x[1] * 60 + (int) $x[2] >= (int) $x[3] * 60 + (int) $x[4]) return null;
+            $w[$days[strtolower($m[1])]][] = sprintf('%02d:%02d-%02d:%02d', $x[1], $x[2], $x[3], $x[4]);
+        }
+    }
+    return $w;
+}
+/** the open times, soonest first, at most $max: [["2026-11-24", "10:00"], ...] (the weekly pattern, the days off, the notice, minus taken) */
+function pmBookSlots(array $S, int $max = 200): array {
+    $b = $S['settings']['book']; $mins = max(15, min(120, (int) $b['mins'])); $taken = array_flip($S['taken'] ?? []); $o = [];
+    $earliest = pmNow() + max(0, (int) $b['notice']) * 3600; $day0 = strtotime(date('Y-m-d', pmNow()) . ' 00:00');
+    for ($i = 0; $i <= max(1, min(60, (int) $b['ahead'])); $i++) {
+        $d = strtotime('+' . $i . ' days', $day0); $ds = date('Y-m-d', $d);
+        if (in_array($ds, (array) $S['settings']['skip'], true)) continue;
+        foreach ((array) ($b['week'][(int) date('N', $d)] ?? []) as $r) {
+            [$f, $t] = explode('-', $r); $a = strtotime($ds . ' ' . $f); $z = strtotime($ds . ' ' . $t);
+            for ($s = $a; $s + $mins * 60 <= $z; $s += $mins * 60) { if ($s < $earliest || isset($taken[$ds . ' ' . date('H:i', $s)])) continue; $o[] = [$ds, date('H:i', $s)]; if (count($o) >= $max) return $o; }
+        }
+    }
+    return $o;
+}
+/** a short note to Matthew from the server, the way Traverse's own notices go (the website's mailbox, public_html/demo/_lib.php).
+    PEAK_MAIL_NOTIFY (a file) catches it in tests. Never blocks what called it. */
+function pmNotify(string $subject, string $body): array {
+    $f = pmEnv('PEAK_MAIL_NOTIFY');
+    if ($f !== '') { @file_put_contents($f, json_encode(['subject' => $subject, 'body' => $body], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'test']; }
+    $lib = PM_ROOT . '/public_html/demo/_lib.php';
+    if (!is_file($lib)) return ['ok' => false, 'stage' => 'no mail code'];
+    try { require_once $lib; $c = site_config(); $r = send_mail($c, (string) ($c['notify_to'] ?? 'm.sharpe@traverseplatforms.com'), $subject, $body); return ['ok' => (bool) $r['ok'], 'stage' => (string) $r['stage']]; }
+    catch (Throwable $e) { return ['ok' => false, 'stage' => mb_substr($e->getMessage(), 0, 100)]; }
 }
 
 /* ---------------------------------------------------------------- replies and bounce notices (read only) */
@@ -567,17 +742,22 @@ function pmScan(array $S): string {
                     preg_match_all('/[A-Za-z0-9._%+\'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $txt, $em);
                     foreach (array_unique(array_map('strtolower', $em[0])) as $e) {
                         if (!isset($who[$e]) || empty($S['people'][$e]['sent']) || !empty($S['people'][$e]['bounce'])) continue;
-                        pmLog(['t' => 'bounce', 'to' => $e, 'l' => $who[$e]['list'], 'at' => $at]); $S['people'][$e]['bounce'] = $at; $n['bounce']++;
+                        $row = ['t' => 'bounce', 'to' => $e, 'l' => $who[$e]['list'], 'at' => $at] + pmDeskTag($who[$e], 'bounce:' . substr(sha1($id . '|' . $e), 0, 16));
+                        pmLog($row); pmDeskNow($row, $S['settings']); $S['people'][$e]['bounce'] = $at; $n['bounce']++;
                     }
                     continue;
                 }
                 if (!isset($who[$from])) continue;
                 if (pmIsAuto($m)) { pmLog(['t' => 'auto', 'to' => $from, 'l' => $who[$from]['list'], 'at' => $at]); $n['auto']++; continue; }
                 $subj = (string) preg_replace('/^((re|aw|fw|fwd)\s*:\s*)+/i', '', (string) ($m['subject'] ?? ''));
-                $stop = pmIsStop((string) ($m['bodyPreview'] ?? '')) || preg_match('/^\W*(stop|unsubscribe)\W*$/i', $subj);
-                if (!empty($S['people'][$from]['reply']) && !$stop) continue;
-                pmLog(['t' => 'reply', 'to' => $from, 'l' => $who[$from]['list'], 'stop' => (bool) $stop, 'before' => empty($S['people'][$from]['sent']), 'subject' => pmClean($m['subject'] ?? '', 120), 'at' => $at]);
-                if (empty($S['people'][$from]['reply'])) { $n['reply']++; pmDeskNote($S, $who[$from], $stop !== '', $at); }
+                $stop = pmIsStop((string) ($m['bodyPreview'] ?? '')) || (bool) preg_match('/^\W*(stop|unsubscribe)\W*$/i', $subj);
+                $firstReply = empty($S['people'][$from]['reply']);
+                if (!$firstReply && !$stop) continue;
+                /* the desk hears of the first reply, and of a STOP even after an earlier reply (Not now, or the owner's follow-up) */
+                $row = ['t' => 'reply', 'to' => $from, 'who' => $who[$from]['person'] !== '' ? $who[$from]['person'] : $from, 'l' => $who[$from]['list'], 'stop' => $stop, 'before' => empty($S['people'][$from]['sent']),
+                        'subject' => pmClean($m['subject'] ?? '', 120), 'at' => $at] + pmDeskTag($who[$from], 'reply:' . substr(sha1($id), 0, 16));
+                pmLog($row); pmDeskNow($row, $S['settings']);
+                if ($firstReply) $n['reply']++;
                 $S['people'][$from]['reply'] = $at; if ($stop) $n['stop']++;
             }
             $next = (string) ($j['@odata.nextLink'] ?? '');
@@ -588,13 +768,6 @@ function pmScan(array $S): string {
     pmW('scan.json', ['last' => $now, 'seen' => $seen]);
     return 'read mail: ' . $n['reply'] . ' replies (' . $n['stop'] . ' STOP), ' . $n['bounce'] . ' bounces, ' . $n['auto'] . ' auto-replies';
 }
-/** a dated note on the Peak desk card for someone who replied (Settings: on by default); the desk's own append-only logs */
-function pmDeskNote(array $S, array $p, bool $stop, int $at): void {
-    if (empty($S['settings']['deskNotes']) || !is_dir(pmDesk())) return;
-    $note = ($p['person'] !== '' ? $p['person'] : $p['to']) . ' replied to the Peak email from Matthew on ' . date('M j', $at) . ($stop ? ' (asked to stop: not emailed again)' : '') . '. The reply is in Matthew\'s Peak Outlook.';
-    $row = $p['kind'] === 'xorg' ? ['t' => 'xnote', 'id' => $p['org'], 'note' => $note, 'by' => 'Peak email', 'at' => pmNow()] : ['t' => 'note', 'id' => $p['org'], 'note' => $note, 'by' => 'Peak email', 'at' => pmNow()];
-    @file_put_contents(pmDesk() . '/' . ($p['kind'] === 'xorg' ? 'expo-events.log' : 'events.log'), json_encode($row, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
-}
 
 /* ---------------------------------------------------------------- the hourly run */
 function pmRunLine(string $s): void { @file_put_contents(pmData() . '/run.log', date('Y-m-d H:i', pmNow()) . ' ' . $s . "\n", FILE_APPEND | LOCK_EX); echo $s, "\n"; }
@@ -602,9 +775,10 @@ function pmCronRun(): int {
     if (!pmReady()) { echo "no data folder\n"; return 1; }
     $lk = fopen(pmData() . '/run.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) { pmRunLine('another run is still going'); return 0; }
     $S = pmState(); $c = pmConn(); $running = array_keys(array_filter($S['lists'], fn($l) => $l['status'] === 'running'));
-    if (!$c['connected']) { pmRunLine($running ? 'Microsoft is not connected: nothing sent' : 'idle (not connected)'); return 0; }
+    /* first, anything the Peak desk has not heard about yet (it was down, or busy, last time) */
+    $said = []; $d = pmDeskFlush($S['settings']); if ($d !== '') $said[] = $d;
+    if (!$c['connected']) { pmRunLine(implode('; ', array_merge($said, [$running ? 'Microsoft is not connected: nothing sent' : 'idle (not connected)']))); return 0; }
     pmKeepAlive();
-    $said = [];
     if ($S['firstSent'] || $running) $said[] = pmScan($S);
     $S = pmState();
     /* a list whose bounces pass 8% after 20 sends stops itself: a mailbox that keeps hitting dead addresses gets blocked */
@@ -616,7 +790,8 @@ function pmCronRun(): int {
     $S = pmState(); $running = array_keys(array_filter($S['lists'], fn($l) => $l['status'] === 'running'));
     if (!$running) { pmRunLine(implode('; ', array_merge($said, ['no list running']))); return 0; }
     if (!pmInWindow($S['settings'], pmNow())) { pmRunLine(implode('; ', array_merge($said, ['outside the sending window (' . pmWindowText($S['settings']) . ')']))); return 0; }
-    $fresh = pmImport((int) $S['settings']['perOrg']);
+    $fresh = pmImport($S['settings']);
+    if ($fresh['error'] !== '') { pmRunLine(implode('; ', array_merge($said, ['nothing sent: ' . $fresh['error']]))); return 0; }
     $Q = []; foreach ($running as $k) {
         $why = pmStartBlocks($S, $k);
         $why = array_values(array_filter($why, fn($w) => !str_starts_with($w, 'Nobody is waiting')));
@@ -628,7 +803,7 @@ function pmCronRun(): int {
     if (!$Q || $n === 0) { pmRunLine(implode('; ', array_merge($said, [$n === 0 && $Q ? 'this hour\'s ' . $S['settings']['rate'] . ' already went' : 'nothing to send']))); return 0; }
     $gapEnv = pmEnv('PEAK_MAIL_GAP');
     $gap = $gapEnv !== '' ? max(0, (int) $gapEnv) : ($n > 1 ? min(300, intdiv(3300, $n)) : 0);   /* spread over about 55 minutes */
-    $sent = ['sponsors' => 0, 'expo' => 0]; $turn = array_keys($Q); $ti = 0; $stopWhy = ''; $tried = false;
+    $sent = ['sponsors' => 0, 'expo' => 0]; $skipped = 0; $turn = array_keys($Q); $ti = 0; $stopWhy = ''; $tried = false;
     for ($i = 0; $i < $n && $Q; $i++) {
         if ($tried && $gap) sleep($gap);   /* only after an email went (a skipped person costs no wait) */
         $tried = false;
@@ -640,33 +815,50 @@ function pmCronRun(): int {
         $p = null; while ($Q[$k] && $p === null) { $x = array_shift($Q[$k]); if (pmBlocked($S, $x['to']) === '') $p = $x; }
         if (!$Q[$k]) { unset($Q[$k]); $turn = array_keys($Q); }
         if ($p === null) { $i--; if (!$turn) break; continue; }
+        /* the desk again, just before this email: someone may have taken the company on since the run started */
+        if (pmSkipNow($p, $S['settings']) !== '') { $skipped++; $i--; if (!$turn) break; continue; }
         $m = pmRender($p, $S['templates'][$k], $S['settings'], true);
         if (isset($m['badph'])) { pmLog(['t' => 'fail', 'l' => $k, 'to' => $p['to'], 'why' => 'the template has ' . $m['badph'] . ' in it', 'final' => false]); $stopWhy = 'the ' . $k . ' template has ' . $m['badph'] . ' in it'; pmLog(['t' => 'pause', 'l' => $k, 'by' => 'the hourly run', 'why' => $stopWhy]); break; }
+        $sid = 'pm-' . bin2hex(random_bytes(6));   /* this send's own id: the desk keeps it, so telling the desk twice is harmless */
         $r = pmSendOne($m); $tried = true;
-        if ($r['ok']) { pmLog(['t' => 'sent', 'l' => $k, 'to' => $p['to'], 'subject' => $m['subject'], 'by' => $S['lists'][$k]['by']]); $sent[$k]++; continue; }
+        if ($r['ok']) {
+            /* the send is logged first; the desk is told after, and a desk failure only leaves a row for the next run to retry */
+            $row = ['t' => 'sent', 'l' => $k, 'to' => $p['to'], 'subject' => $m['subject'], 'by' => $S['lists'][$k]['by'], 'sid' => $sid, 'html' => isset($m['html']), 'at' => pmNow()] + pmDeskTag($p, $sid);
+            pmLog($row); $sent[$k]++;
+            try { pmDeskNow($row, $S['settings']); } catch (Throwable $e) { error_log('peak-mail: desk after send: ' . $e->getMessage()); }
+            continue;
+        }
         if ($r['kind'] === 'address') { pmLog(['t' => 'fail', 'l' => $k, 'to' => $p['to'], 'why' => $r['why'], 'final' => true]); $i--; continue; }
         if ($r['kind'] === 'other') { pmLog(['t' => 'fail', 'l' => $k, 'to' => $p['to'], 'why' => $r['why'], 'final' => false]); continue; }
         if ($r['kind'] === 'blocked') { foreach (PM_LISTS as $kk => $nn) if ($S['lists'][$kk]['status'] === 'running') pmLog(['t' => 'pause', 'l' => $kk, 'by' => 'the hourly run', 'why' => 'Microsoft refused to send from the mailbox: ' . $r['why']]); $stopWhy = 'Microsoft refused to send (' . $r['why'] . '): both lists paused'; break; }
         $stopWhy = ($r['kind'] === 'auth' ? 'the Microsoft sign-in needs attention: ' : 'Microsoft trouble, trying next hour: ') . $r['why']; break;
     }
-    $said[] = 'sent ' . $sent['sponsors'] . ' sponsors, ' . $sent['expo'] . ' expo' . ($stopWhy !== '' ? ' (stopped: ' . $stopWhy . ')' : '');
+    $dk = !empty($S['settings']['deskNotes']) ? count(pmDeskPending()) : 0;
+    $said[] = 'sent ' . $sent['sponsors'] . ' sponsors, ' . $sent['expo'] . ' expo' . ($skipped ? ' (' . $skipped . ' skipped: the desk moved them on)' : '') . ($dk ? '; ' . $dk . ' desk updates wait for the next run' : '') . ($stopWhy !== '' ? ' (stopped: ' . $stopWhy . ')' : '');
     pmRunLine(implode('; ', $said)); flock($lk, LOCK_UN); return 0;
 }
 
 /* ---------------------------------------------------------------- stats */
 function pmStats(?array $S = null): array {
-    $S ??= pmState(); $lj = pmJ('lists.json', ['lists' => [], 'left' => []]); $fresh = is_file(pmData() . '/lists.json') ? pmImport((int) $S['settings']['perOrg']) : null; $o = [];
+    $S ??= pmState(); $lj = pmJ('lists.json', ['lists' => [], 'left' => []]); $fresh = is_file(pmData() . '/lists.json') ? pmImport($S['settings']) : null; $o = [];
+    $pend = !empty($S['settings']['deskNotes']) ? count(pmDeskPending()) : 0;
     foreach (PM_LISTS as $k => $nm) {
         $ps = (array) ($lj['lists'][$k] ?? []); $on = array_filter($ps, fn($p) => $p['hold'] === '');
         $c = ['people' => count($on), 'held' => count($ps) - count($on), 'left' => count((array) ($lj['left'][$k] ?? [])), 'queued' => $fresh ? count(pmQueue($S, $k, $fresh)) : 0,
-              'sent' => 0, 'replied' => 0, 'bounced' => 0, 'unsubscribed' => 0, 'clicked' => 0, 'clicks' => 0, 'auto' => 0, 'failed' => 0, 'generic' => 0, 'guessed' => 0];
+              'sent' => 0, 'replied' => 0, 'bounced' => 0, 'unsubscribed' => 0, 'clicked' => 0, 'clicks' => 0, 'auto' => 0, 'failed' => 0, 'generic' => 0, 'guessed' => 0,
+              'opened' => 0, 'opens' => 0, 'booked' => 0, 'views' => 0, 'orgs' => count(array_unique(array_column($on, 'org'))),
+              'skips' => pmSkipList((array) ($fresh['skips'][$k] ?? $lj['skips'][$k] ?? [])), 'deskError' => (string) ($fresh['error'] ?? ''), 'deskPending' => $pend];
         foreach ($on as $p) { if (in_array('generic', $p['flags'], true)) $c['generic']++; if (in_array('guessed', $p['flags'], true)) $c['guessed']++; }
         foreach ($S['people'] as $to => $x) {
             if ($x['list'] !== $k && !($x['list'] === '' && in_array($to, array_column($on, 'to'), true))) continue;
             if ($x['sent']) $c['sent']++; if ($x['reply']) $c['replied']++; if ($x['bounce']) $c['bounced']++; if ($x['unsub']) $c['unsubscribed']++;
             if ($x['clicks']) $c['clicked']++; $c['clicks'] += $x['clicks']; if ($x['auto']) $c['auto']++; if ($x['bad'] !== '') $c['failed']++;
+            if ($x['opens']) $c['opened']++; $c['opens'] += $x['opens']; if ($x['booked']) $c['booked']++; if ($x['views']) $c['views']++;
         }
         $st = $S['lists'][$k]['status']; if ($st === 'running' && $c['queued'] === 0 && $c['sent'] > 0) $st = 'done';
+        /* rates, as a share of the emails sent (opens: Apple Mail loads the image for every email, so it reads high; Outlook often blocks it, so low) */
+        $pc = fn(int $n) => $c['sent'] ? round(100 * $n / $c['sent'], 1) : 0;
+        $c['rates'] = ['open' => $pc($c['opened']), 'click' => $pc($c['clicked']), 'reply' => $pc($c['replied']), 'bounce' => $pc($c['bounced']), 'booked' => $pc($c['booked'])];
         $o[$k] = $c + ['status' => $st, 'pausedWhy' => $S['lists'][$k]['pausedWhy']];
     }
     return $o;
@@ -675,7 +867,8 @@ function pmStats(?array $S = null): array {
 function pmStatsLine(): string {
     if (!pmReady()) return 'Peak email: not set up';
     $S = pmState(); $c = pmConn(); $st = pmStats($S); $parts = [];
-    foreach (PM_LISTS as $k => $nm) { $x = $st[$k]; $parts[] = $k . ' ' . strtoupper($x['status']) . ' ' . $x['sent'] . ' sent/' . $x['queued'] . ' waiting, ' . $x['replied'] . ' replied, ' . $x['bounced'] . ' bounced, ' . $x['unsubscribed'] . ' unsub, ' . $x['clicked'] . ' clicked'; }
+    foreach (PM_LISTS as $k => $nm) { $x = $st[$k]; $parts[] = $k . ' ' . strtoupper($x['status']) . ' ' . $x['sent'] . ' sent/' . $x['queued'] . ' waiting, ' . $x['replied'] . ' replied, ' . $x['bounced'] . ' bounced, ' . $x['unsubscribed'] . ' unsub, ' . $x['opened'] . ' opened, ' . $x['clicked'] . ' clicked, ' . $x['booked'] . ' booked'; }
+    $dp = !empty($S['settings']['deskNotes']) ? count(pmDeskPending()) : 0; if ($dp) $parts[] = $dp . ' desk updates waiting';
     $last = ''; $rl = @file(pmData() . '/run.log', FILE_IGNORE_NEW_LINES); if ($rl) $last = ' | last run ' . mb_substr((string) end($rl), 0, 90);
     return 'Peak email: Microsoft ' . ($c['connected'] ? 'connected (' . $c['email'] . ')' : (($c['status'] ?? '') === 'reconnect' ? 'NEEDS RECONNECT' : 'not connected')) . '; ' . implode('; ', $parts) . $last;
 }

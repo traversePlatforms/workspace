@@ -37,7 +37,12 @@ if ($cmd === 'dns') {
 }
 if ($cmd === 'run') exit(pmCronRun());
 if ($cmd === 'stats') { echo pmStatsLine(), "\n"; exit(0); }
-if ($cmd === 'import') { foreach (pmImportSave('command line') as $k => $d) echo $k, ': ', $d['queued'], ' queued, ', $d['held'], ' held, ', $d['left'], ' left out, ', $d['added'], " new\n"; exit(0); }
+if ($cmd === 'import') {
+    $r = pmImportSave('command line'); if (isset($r['error'])) { fwrite(STDERR, $r['error'] . "\n"); exit(1); }
+    foreach ($r as $k => $d) echo $k, ': ', $d['queued'], ' queued at ', $d['orgs'], ' organisations, ', $d['held'], ' held, ', $d['left'], ' left out, ', $d['added'], " new\n",
+        '  skipped: ', implode('; ', array_map(fn($x) => $x[0] . ', ' . $x[1], pmSkipList($d['skips']))) ?: 'none', "\n";
+    exit(0);
+}
 if ($cmd === 'check') {
     $c = pmConn(); $S = pmState();
     echo 'data folder: ', pmReady() ? 'yes' : 'NO', "\n", 'app keys: ', $c['app'] ? 'yes' : 'NO', "\n", 'sign-in code set: ', is_file(pmData() . '/code.hash') ? 'yes' : 'NO', "\n",

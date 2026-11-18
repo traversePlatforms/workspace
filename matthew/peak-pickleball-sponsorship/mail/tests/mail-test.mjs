@@ -27,7 +27,14 @@ fs.writeFileSync(path.join(DESK, 'seed.json'), JSON.stringify(seed));
 fs.copyFileSync(path.join(DESKSRC, 'expo-seed.json'), path.join(DESK, 'expo-seed.json'));
 const withMail = seed.leads.filter(l => l.list !== 'renew' && (l.contacts || []).some(c => c.email));
 const movedLead = withMail[1];   // Brandon moved this one on: it must be left out
-fs.writeFileSync(path.join(DESK, 'events.log'), JSON.stringify({ t: 'status', id: movedLead.id, status: 'tour', by: 'Brandon', at: NOW1 - 86400 }) + '\n');
+/* the skip rules (2026-11-18): claimed but not contacted; a person's call 3 days ago (stage left at To contact); a call 20 days ago */
+const ownedLead = withMail[2], touchedLead = withMail[3], oldTouchLead = withMail[4];
+fs.writeFileSync(path.join(DESK, 'events.log'), [
+  { t: 'status', id: movedLead.id, status: 'tour', by: 'Brandon', at: NOW1 - 86400 },
+  { t: 'owner', id: ownedLead.id, owner: 'Nneka', by: 'Nneka', at: NOW1 - 3600, v: 2 },
+  { t: 'touch', id: touchedLead.id, k: 'tk00000001', touch: { m: 'call', out: 'noanswer', note: '', when: NOW1 - 3 * 86400 }, by: 'Lance', at: NOW1 - 3 * 86400, v: 2 },
+  { t: 'touch', id: oldTouchLead.id, k: 'tk00000002', touch: { m: 'call', out: 'noanswer', note: '', when: NOW1 - 20 * 86400 }, by: 'Lance', at: NOW1 - 20 * 86400, v: 2 },
+].map(r => JSON.stringify(r)).join('\n') + '\n');
 fs.writeFileSync(path.join(DESK, 'peak-records.json'), JSON.stringify({ leads: [] }));
 fs.writeFileSync(path.join(DESK, 'scans.json'), JSON.stringify({}));
 
@@ -36,6 +43,24 @@ const CODE = 'TESTCODE12';
 fs.writeFileSync(path.join(DATA, 'app.json'), JSON.stringify({ client_id: '11111111-2222-3333-4444-555555555555', tenant: '66666666-7777-8888-9999-000000000000', secret: 'mock-secret-not-real' }));
 const hash = spawnSync('php', ['-r', 'echo password_hash(trim(stream_get_contents(STDIN)), PASSWORD_DEFAULT);'], { input: CODE }).stdout.toString();
 fs.writeFileSync(path.join(DATA, 'code.hash'), hash);
+
+/* a MIME email as Graph would take it, in the same shape as the JSON one (Graph keeps a MIME send in Sent Items too) */
+function fromMime(raw) {
+  const head = raw.split('\r\n\r\n')[0], hd = k => (head.match(new RegExp('^' + k + ': (.*)$', 'mi')) || [])[1] || '';
+  const dec = s => s.replace(/=\?UTF-8\?B\?([^?]+)\?=/g, (_, x) => Buffer.from(x, 'base64').toString('utf8'));
+  const bnd = (hd('Content-Type').match(/boundary="([^"]+)"/) || [])[1];
+  const parts = {}; for (const p of raw.split('--' + bnd).slice(1, -1)) { const [ph, ...rest] = p.replace(/^\r\n/, '').split('\r\n\r\n'); const ty = (ph.match(/Content-Type: ([^;\r\n]+)/i) || [])[1]; parts[ty] = Buffer.from(rest.join('').replace(/\s+/g, ''), 'base64').toString('utf8'); }
+  const to = hd('To'), addr = (to.match(/<([^>]+)>/) || [null, to])[1];
+  return { mime: true, saveToSentItems: true, multipart: /multipart\/alternative/.test(hd('Content-Type')), html: parts['text/html'] || '',
+    message: { subject: dec(hd('Subject')), body: { contentType: 'Text', content: (parts['text/plain'] || '').replace(/\r\n/g, '\n') }, toRecipients: [{ emailAddress: { address: addr } }] } };
+}
+/* the Peak desk as its own code reads it (the throwaway copy): both worlds and their tours */
+const STORE = path.resolve(HERE, '..', '..', 'app', 'api', 'desk-store.php');
+const NOTIFY = path.join(TMP, 'notify.jsonl');
+fs.writeFileSync(path.join(TMP, 'desk-read.php'), "<?php define('DATA_DIR', getenv('PEAK_DESK_DATA')); require getenv('PEAK_DESK_STORE'); echo json_encode(['sponsor' => recs('sponsor'), 'expo' => recs('expo'), 'tours' => array_merge(toursOf('sponsor'), toursOf('expo'))]);");
+const desk = () => JSON.parse(spawnSync('php', [path.join(TMP, 'desk-read.php')], { env: { ...process.env, PEAK_DESK_DATA: DESK, PEAK_DESK_STORE: STORE } }).stdout.toString());
+const auto = R => (R.touches || []).filter(t => t.by === 'Peak email');
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
 /* ---- the stand-in for Microsoft ---- */
 const M = { sent: [], calls: [], inbox: [], bodies: {}, sendFail: null, refreshFail: null, tokenN: 0 };
@@ -59,7 +84,8 @@ const mock = http.createServer((req, res) => {
     if (!/^Bearer AT-\d+$/.test(req.headers.authorization || '')) return j(401, { error: { code: 'InvalidAuthenticationToken' } });
     if (req.method === 'GET' && u.pathname === '/graph/v1.0/me') return j(200, { displayName: 'Matthew Sharpe', mail: 'M.Sharpe@PeakPickleball.us', userPrincipalName: 'm.sharpe@peakpickleball.us' });
     if (req.method === 'POST' && u.pathname === '/graph/v1.0/me/sendMail') {
-      const m = JSON.parse(b);
+      /* JSON (plain text only) or MIME (base64, Content-Type text/plain: the plain text plus the HTML part with the open image) */
+      const m = /^text\/plain/.test(req.headers['content-type'] || '') ? fromMime(Buffer.from(b, 'base64').toString('utf8')) : JSON.parse(b);
       if (M.sendFail) { const f = M.sendFail; if (f.once) M.sendFail = null; return j(f.code, { error: { code: f.err, message: f.msg || f.err } }); }
       M.sent.push(m); res.writeHead(202); return res.end();
     }
@@ -74,7 +100,8 @@ const mock = http.createServer((req, res) => {
 });
 await new Promise(r => mock.listen(MPORT, '127.0.0.1', r));
 
-const ENV = { ...process.env, PEAK_MAIL_DATA: DATA, PEAK_DESK_DATA: DESK, PEAK_MAIL_MOCK: 'http://127.0.0.1:' + MPORT, PEAK_MAIL_MX: 'skip', PEAK_MAIL_GAP: '0', PEAK_MAIL_HOST: '127.0.0.1:' + PORT };
+const ENV = { ...process.env, PEAK_MAIL_DATA: DATA, PEAK_DESK_DATA: DESK, PEAK_DESK_STORE: STORE, PEAK_MAIL_NOTIFY: NOTIFY, PEAK_MAIL_MOCK: 'http://127.0.0.1:' + MPORT, PEAK_MAIL_MX: 'skip', PEAK_MAIL_GAP: '0', PEAK_MAIL_HOST: '127.0.0.1:' + PORT };
+delete ENV.PEAK_MAIL_DESKFAIL;
 const srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', PUB], { env: { ...ENV, PEAK_MAIL_NOW: String(NOW1) }, stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 900));
 
@@ -115,7 +142,17 @@ try {
   const L = JSON.parse(fs.readFileSync(path.join(DATA, 'lists.json'), 'utf8'));
   const all = [...L.lists.sponsors, ...L.lists.expo].filter(p => !p.hold);
   ok(new Set(all.map(p => p.to)).size === all.length, 'one person per address across both lists');
-  ok(!L.lists.sponsors.some(p => p.org === movedLead.id && !p.hold) && L.left.sponsors.some(x => x.name === movedLead.name && /Tour booked/.test(x.why)), 'a lead Brandon moved on is left out');
+  ok(!L.lists.sponsors.some(p => p.org === movedLead.id && !p.hold) && L.left.sponsors.some(x => x.name === movedLead.name && /tour booked/i.test(x.why) && x.code === 'stage'), 'a lead Brandon moved on is left out');
+  ok(!L.lists.sponsors.some(p => p.org === ownedLead.id) && L.left.sponsors.some(x => x.name === ownedLead.name && x.code === 'owned' && /Nneka/.test(x.why)), 'a company Nneka claimed (still To contact) is skipped: owned');
+  ok(!L.lists.sponsors.some(p => p.org === touchedLead.id) && L.left.sponsors.some(x => x.name === touchedLead.name && x.code === 'touched' && /Lance/.test(x.why)), 'a company Lance called 3 days ago is skipped: touched in 14 days');
+  ok(L.lists.sponsors.some(p => p.org === oldTouchLead.id && !p.hold), 'a call 20 days ago does not keep a company off');
+  s = (await api('state')).json;
+  const sk = Object.fromEntries(s.lists.sponsors.skips);
+  ok(sk['owned by someone'] === 1 && sk['touched by a person in the last 14 days'] === 1 && imp.diff.sponsors.skips.owned === 1, 'the page shows the skip counts ("owned by someone", 1)');
+  let off = (await api('settings', { s: { deskSkip: false } })).json;
+  ok(off.lists.sponsors.skips.every(x => !/owned|touched/.test(x[0])) && JSON.parse(fs.readFileSync(path.join(DATA, 'lists.json'), 'utf8')).lists.sponsors.some(p => p.org === ownedLead.id && !p.hold), 'the setting off: owned and touched companies come back (re-imported)');
+  off = (await api('settings', { s: { deskSkip: true } })).json;
+  ok(off.settings.deskSkip === true && !JSON.parse(fs.readFileSync(path.join(DATA, 'lists.json'), 'utf8')).lists.sponsors.some(p => p.org === ownedLead.id && !p.hold), 'and on again (the default)');
   const orgs = {}; L.lists.sponsors.filter(p => !p.hold).forEach(p => orgs[p.org] = (orgs[p.org] || 0) + 1);
   ok(Object.values(orgs).every(n => n === 1), 'one person per organisation by default');
   ok(L.lists.sponsors.some(p => p.flags.includes('generic')) || L.lists.expo.some(p => p.flags.includes('generic')), 'generic addresses flagged');
@@ -159,7 +196,7 @@ try {
   /* 5. still blocked by the draft; a real template; preview */
   st = await api('start', { list: 'sponsors' }); ok(st.status === 409 && /DRAFT/.test(st.json.error) && !/not connected/.test(st.json.error), 'still blocked by the DRAFT');
   ok((await api('template', { list: 'sponsors', subject: 'Hi {name}', body: 'x' })).status === 400, 'unknown merge field refused');
-  await api('template', { list: 'sponsors', subject: 'Test subject for {company}', body: 'Hi {first},\n\nTest body for {company} in {town}.\n\nhttps://peakpickleball.us/sponsors' });
+  await api('template', { list: 'sponsors', subject: 'Test subject for {company}', body: 'Hi {first},\n\nTest body for {company} in {town}.\n\nhttps://peakpickleball.us/sponsors\n\nOr pick a time: {book}' });
   await api('template', { list: 'expo', subject: 'Expo test for {company}', body: 'Hi {first},\n\nExpo test.\n\nhttps://peakpickleball.us/' });
   const pv = (await api('preview', undefined, '&list=sponsors')).json;
   ok(pv.messages.length === 3, 'preview shows 3');
@@ -169,19 +206,44 @@ try {
   ok(!/\{(first|company|town)\}/.test(m0.subject + m0.body), 'merge fields filled');
   ok(!/<img|<html/i.test(m0.body), 'plain text, no pixel');
 
+  ok(/\/b\.php\?r=[0-9a-f]{10}&s=[0-9a-f]{12}/.test(m0.body) && !/r\.php[^\s]*b\.php/.test(m0.body), '{book} is their own book-a-time link (not sent through r.php)');
+  ok(m0.html && /<img src="http:\/\/127\.0\.0\.1:8791\/o\.php\?r=[0-9a-f]{10}&amp;s=[0-9a-f]{12}" width="1" height="1"/.test(m0.html) && m0.html.includes('1730 Briargate Blvd'), 'opens on (the default): an HTML twin with the same words and a 1x1 image');
+  st = await api('start', { list: 'sponsors' }); ok(st.status === 409 && /\{book\}/.test(st.json.error), 'Start blocked: {book} in the email while booking is off');
+  ok((await api('settings', { s: { book: { week: 'Tue 10:00-12:00\nWdd 9' } } })).status === 400, 'a weekly pattern that does not read right is refused');
+  s = (await api('settings', { s: { book: { on: true, kind: 'tour', mins: 30, week: 'Wed 10:00-12:00\nThu 10:00-12:00, 13:00-15:00' } } })).json;
+  ok(s.settings.book.on && s.book.open > 0 && s.book.week === 'Wed 10:00-12:00\nThu 10:00-12:00, 13:00-15:00', 'booking on, with the weekly hours (' + s.book.open + ' open times)');
+
   /* 6. Start, then the hourly runs */
   st = await api('start', { list: 'sponsors' }); ok(st.status === 200 && st.json.lists.sponsors.status === 'running', 'sponsors started');
   let out = await cron(T(2026, 11, 17, 8)); ok(/outside the sending window/.test(out) && M.sent.length === 0, '8 am: outside the window');
   out = await cron(NOW1); ok(M.sent.length === 10, 'first day: ramp holds it to 10 (got ' + M.sent.length + ')');
   const g = M.sent[0];
-  ok(g.saveToSentItems === true && g.message.body.contentType === 'Text' && g.message.toRecipients.length === 1, 'sendMail: one person, plain text, saved to Sent Items');
+  ok(g.mime && g.multipart && g.saveToSentItems === true && g.message.toRecipients.length === 1 && /Test body for/.test(g.message.body.content) && /Test body for/.test(g.html) && /o\.php\?r=/.test(g.html) && !/o\.php/.test(g.message.body.content), 'sendMail: one person, multipart (the plain text as before, plus HTML with the open image), saved to Sent Items');
+  /* the desk after the first run: each company emailed has exactly one Emailed touch by "Peak email", and moved To contact -> Emailed */
+  let D = desk(); const ev0 = events(), sent0 = ev0.filter(e => e.t === 'sent');
+  ok(sent0.length === 10 && sent0.every(e => /^pm-[0-9a-f]{12}$/.test(e.sid) && e.dref === e.sid && e.w === 'sponsor' && e.org), 'each send logged with its own send id and the desk company');
+  ok(sent0.every(e => { const R = D.sponsor[e.org]; return R && R.stage === 'emailed' && auto(R).length === 1 && auto(R)[0].ref === e.sid && auto(R)[0].m === 'email' && auto(R)[0].out === 'sent' && R.owner === ''; }), 'a send logs exactly one Emailed touch on the desk and moves the stage; nobody becomes owner');
+  ok(ev0.filter(e => e.t === 'desk' && e.ok).length === 10, 'ten desk updates, all ok');
+  /* the same send told to the desk again (as a retry would): the desk keeps it once */
+  fs.writeFileSync(path.join(TMP, 'push.php'), "<?php require getenv('PUB') . '/lib.php'; echo json_encode(pmDeskPush(json_decode(stream_get_contents(STDIN), true)));");
+  const again = JSON.parse(spawnSync('php', [path.join(TMP, 'push.php')], { input: JSON.stringify(sent0[0]), env: { ...ENV, PUB } }).stdout.toString() || '{}');
+  ok(again.ok && /already/.test(again.why) && auto(desk().sponsor[sent0[0].org]).length === 1, 'a repeated ref is not doubled');
   ok(!M.sent.some(x => /\[DRAFT/.test(x.message.subject)), 'no draft went out');
   ok(M.sent.every(x => L.lists.sponsors.some(p => p.to === x.message.toRecipients[0].emailAddress.address)), 'only sponsors went (expo is paused)');
   out = await cron(NOW1 + 600); ok(/already went/.test(out) && M.sent.length === 10, 'same hour again: nothing more');
   const before = M.tokenN;
-  out = await cron(T(2026, 11, 18, 10)); ok(M.sent.length === 22, 'day two: 12 an hour (total ' + M.sent.length + ')');
+  /* day two with the desk down: the emails still go, once each; the desk is told on the next run */
+  out = await cron(T(2026, 11, 18, 10), 'run', { PEAK_MAIL_DESKFAIL: '1' }); ok(M.sent.length === 22, 'day two: 12 an hour (total ' + M.sent.length + ')');
   ok(M.tokenN > before, 'expired access token renewed from the refresh token');
   ok(!fs.readFileSync(path.join(DATA, 'ms.json'), 'utf8').includes('RT-SECRET'), 'renewed token still sealed');
+  const day2 = events().filter(e => e.t === 'sent').slice(10);
+  D = desk();
+  ok(day2.length === 12 && day2.every(e => D.sponsor[e.org].stage === 'new' && !auto(D.sponsor[e.org]).length) && /12 desk updates wait for the next run/.test(out), 'desk down: all 12 sent anyway, none on the desk yet, and the run says so: ' + out.trim().slice(-90));
+  ok(events().filter(e => e.t === 'desk' && !e.ok).length === 1, 'after the first desk failure the run stops trying (one failed try logged, no time lost)');
+  out = await cron(T(2026, 11, 18, 10, 30));
+  D = desk();
+  ok(/desk: 12 caught up/.test(out) && M.sent.length === 22, 'the next run catches the desk up and sends nothing more this hour: ' + out.trim());
+  ok(day2.every(e => auto(D.sponsor[e.org]).length === 1 && D.sponsor[e.org].stage === 'emailed'), 'a desk failure did not break or repeat a send: each of the 12 has exactly one Emailed touch');
 
   /* 7. a click, a scanner, an unsubscribe */
   /* a day-two email: the test server's clock is day one, so the click is not "within a minute of sending" (a scanner) */
@@ -197,6 +259,37 @@ try {
   const un = M.sent[1].message.body.content.match(/http:\/\/127\.0\.0\.1:8791(\/u\.php\?[^\s]+)/)[1];
   rr = await req('GET', un); ok(rr.status === 200 && /Unsubscribe<\/button>/.test(rr.text) && !events().some(e => e.t === 'unsub'), 'opening the link only shows the button');
   rr = await req('POST', un, ''); ok(/You are unsubscribed/.test(rr.text) && events().some(e => e.t === 'unsub' && e.to === to1), 'the button unsubscribes');
+  const orgOf = to => events().find(e => e.t === 'sent' && e.to === to).org;
+  D = desk(); let R1 = D.sponsor[orgOf(to1)];
+  ok(R1.stage === 'notnow' && /not to be emailed/i.test(R1.notnow.why) && auto(R1).some(t => t.out === 'replied' && /unsubscribe link/.test(t.note)), 'an unsubscribe reaches the desk as a STOP: Not now, with the reason');
+
+  /* 7b. opens: the 1x1 image in the HTML part */
+  const px = M.sent[12].html.match(/http:\/\/127\.0\.0\.1:8791(\/o\.php\?[^"]+)"/)[1].replace(/&amp;/g, '&');
+  rr = await req('GET', px); ok(rr.status === 200 && /image\/gif/.test(rr.headers['content-type']) && /no-store/.test(rr.headers['cache-control']), 'the open image answers as a GIF, never cached');
+  await req('GET', px, undefined, { 'User-Agent': 'Mozilla/5.0 (via ggpht.com GoogleImageProxy)' });
+  rr = await req('GET', px.replace(/s=[0-9a-f]+/, 's=000000000000'));
+  ok(rr.status === 200 && events().filter(e => e.t === 'open').length === 2 && events().filter(e => e.t === 'open' && e.to === to0).length === 2, 'two opens counted for that person; a forged image link counts nothing but still answers');
+  let pp = (await api('people', undefined, '&list=sponsors')).json.people.find(p => p.to === to0);
+  ok(pp.opens === 2 && pp.open1 > 0 && pp.openLast >= pp.open1 && pp.clicks === 1, 'the per-person table: opens (first, last) and clicks');
+
+  /* 7c. the book-a-time page */
+  const to5 = M.sent[5].message.toRecipients[0].emailAddress.address, to6 = M.sent[6].message.toRecipients[0].emailAddress.address;
+  const bk = x => M.sent[x].message.body.content.match(/http:\/\/127\.0\.0\.1:8791(\/b\.php\?[^\s]+)/)[1];
+  rr = await req('GET', bk(5)); const slot = (rr.text.match(/name="slot" value="([^"]+)"/) || [])[1];
+  ok(rr.status === 200 && slot === '2026-11-18 10:30' && /Tour of Peak/.test(rr.text) && events().some(e => e.t === 'bookview' && e.to === to5), 'the page shows the open times (24 hours notice: the first is Wed 10:30) and counts the view: ' + slot);
+  const form = s => 'slot=' + encodeURIComponent(s) + '&name=Pat+Tester&note=' + encodeURIComponent('Bring the sponsor sheet');
+  const FH = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  rr = await req('POST', bk(5), form(slot), FH);
+  ok(/You are booked/.test(rr.text) && /1730 Briargate/.test(rr.text), 'booking a time: confirmed, with Peak\'s address');
+  const bev = events().find(e => e.t === 'booked' && e.to === to5);
+  D = desk(); const tour = D.tours.find(t => t.lead === orgOf(to5));
+  ok(bev && bev.date === '2026-11-18' && bev.time === '10:30' && tour && tour.date === '2026-11-18' && tour.time === '10:30' && tour.by === 'Peak email' && /Pat Tester/.test(tour.who) && /sponsor sheet/.test(tour.note), 'the booking is on the Peak desk as a tour, with the contact and their note');
+  ok(D.sponsor[orgOf(to5)].stage === 'meeting', 'and the company moved to Meeting / tour booked');
+  const nt = fs.existsSync(NOTIFY) ? fs.readFileSync(NOTIFY, 'utf8').trim().split('\n').map(l => JSON.parse(l)) : [];
+  ok(nt.length === 1 && /booked a tour of peak/.test(nt[0].subject) && nt[0].body.includes(to5) && /Peak desk/.test(nt[0].body), 'Matthew gets a short heads-up from the server');
+  rr = await req('POST', bk(6), form(slot), FH); ok(/That time just went/.test(rr.text) && !events().some(e => e.t === 'booked' && e.to === to6), 'the same time for someone else: refused, nothing booked');
+  rr = await req('GET', bk(5)); ok(/You are booked/.test(rr.text), 'opening the link again shows their booking');
+  rr = await req('GET', bk(6)); ok(!rr.text.includes('value="' + slot + '"'), 'a taken time is not offered again');
 
   /* 8. replies, STOP, bounce notices, auto-replies; the mailbox is only read */
   const to2 = M.sent[2].message.toRecipients[0].emailAddress.address, to3 = M.sent[3].message.toRecipients[0].emailAddress.address, to4 = M.sent[4].message.toRecipients[0].emailAddress.address;
@@ -223,8 +316,14 @@ try {
   ok(!M.sent.some(x => x.message.toRecipients[0].emailAddress.address === unsentReplier), '... and never emailed');
   ok(!ev.some(e => e.to === 'someone@else.com'), 'unrelated mail ignored');
   ok(!M.calls.some(c => /^(PATCH|DELETE|PUT)/.test(c) || /\/move|\/copy/.test(c)), 'the mailbox is only read (no PATCH, DELETE, move)');
-  const deskAfter = fs.readFileSync(path.join(DESK, 'events.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
-  ok(deskAfter.filter(r => r.t === 'note' && r.by === 'Peak email').length === 3, 'replies put on the Peak desk as notes (got ' + deskAfter.filter(r => r.t === 'note').length + ')');
+  D = desk();
+  const R2 = D.sponsor[orgOf(to2)], R3 = D.sponsor[orgOf(to3)], R4 = D.sponsor[orgOf(to4)];
+  ok(auto(R2).some(t => t.out === 'replied' && /Outlook/.test(t.note)) && R2.next && R2.next.date === today() && /answer them/.test(R2.next.what) && R2.stage === 'emailed', 'a reply shows on the desk’s Today: a Replied touch and a follow-up today');
+  ok(R3.stage === 'notnow' && auto(R3).some(t => t.out === 'replied' && /not to be emailed/.test(t.note)), 'a STOP reply: the desk marks it Not now (nobody owned it)');
+  ok(auto(R4).some(t => t.out === 'bounced' && t.note.includes(to4)) && R4.stage === 'emailed', 'a bounce: a Bounced touch on the desk, the stage stays');
+  const unsentOrg = L.lists.sponsors.find(p => p.to === unsentReplier).org;
+  ok(auto(D.sponsor[unsentOrg]).some(t => t.out === 'replied') && D.sponsor[unsentOrg].next.date === today(), 'someone who wrote in before being emailed: on the desk too, with a follow-up today');
+  ok(!fs.readFileSync(path.join(DESK, 'events.log'), 'utf8').split('\n').some(l => /"t":"note"/.test(l) && /Peak email/.test(l)), 'no more loose notes written into the desk log: everything goes through the desk’s own code');
   ok(M.sent.length === 34, 'day three: 12 more (total ' + M.sent.length + ')');
   const sentTo = M.sent.map(x => x.message.toRecipients[0].emailAddress.address);
   ok(new Set(sentTo).size === sentTo.length, 'nobody emailed twice');
@@ -233,9 +332,12 @@ try {
 
   /* 9. stats */
   out = await cron(T(2026, 11, 19, 10, 40), 'stats');
-  ok(/Peak email: Microsoft connected \(m\.sharpe@peakpickleball\.us\); sponsors RUNNING 34 sent\/\d+ waiting, 3 replied, 1 bounced, 1 unsub, 1 clicked/.test(out), 'stats line: ' + out.trim());
+  ok(/Peak email: Microsoft connected \(m\.sharpe@peakpickleball\.us\); sponsors RUNNING 34 sent\/\d+ waiting, 3 replied, 1 bounced, 1 unsub, 1 opened, 1 clicked, 1 booked/.test(out), 'stats line: ' + out.trim());
   s = (await api('state')).json;
   ok(s.lists.sponsors.sent === 34 && s.lists.sponsors.replied === 3 && s.lists.sponsors.bounced === 1 && s.lists.sponsors.unsubscribed === 1 && s.lists.sponsors.clicked === 1 && s.lists.sponsors.auto === 1, 'page counts');
+  const rt = s.lists.sponsors.rates;
+  ok(s.lists.sponsors.opened === 1 && s.lists.sponsors.opens === 2 && s.lists.sponsors.booked === 1 && rt.open === 2.9 && rt.click === 2.9 && rt.reply === 8.8 && rt.bounce === 2.9 && rt.booked === 2.9, 'rates per list: opened, clicked, replied, bounced, booked (of 34 sent) ' + JSON.stringify(rt));
+  ok(s.deskPending === 0 && s.lists.sponsors.deskPending === 0, 'nothing waiting for the desk');
   ok(s.suppressedCount === 3, 'suppression: unsubscribed + STOP + bounced');
 
   /* 10. pause; a template edit pauses; an import that adds people pauses */
@@ -252,9 +354,12 @@ try {
 
   /* 11. Brandon moves a queued lead on after the import: skipped at send time */
   const nextUp = JSON.parse(fs.readFileSync(path.join(DATA, 'lists.json'), 'utf8')).lists.sponsors.filter(p => !p.hold && !sentTo.includes(p.to) && p.to !== unsentReplier)[0];
-  fs.appendFileSync(path.join(DESK, 'events.log'), JSON.stringify({ t: 'status', id: nextUp.org, status: 'contacted', by: 'Brandon', at: NOW1 }) + '\n');
+  const nextUp2 = JSON.parse(fs.readFileSync(path.join(DATA, 'lists.json'), 'utf8')).lists.sponsors.filter(p => !p.hold && !sentTo.includes(p.to) && p.to !== unsentReplier && p.org !== nextUp.org)[0];
+  fs.appendFileSync(path.join(DESK, 'events.log'), JSON.stringify({ t: 'status', id: nextUp.org, status: 'contacted', by: 'Brandon', at: NOW1 }) + '\n'
+    + JSON.stringify({ t: 'owner', id: nextUp2.org, owner: 'Cai Silva', by: 'Cai Silva', at: NOW1, v: 2 }) + '\n');
   n0 = M.sent.length; await cron(T(2026, 11, 20, 11));
   ok(M.sent.length > n0 && !M.sent.slice(n0).some(x => x.message.toRecipients[0].emailAddress.address === nextUp.to), 'a lead moved on the desk after import is not emailed');
+  ok(!M.sent.slice(n0).some(x => x.message.toRecipients[0].emailAddress.address === nextUp2.to), 'a company Cai claimed after the import is not emailed (owned)');
 
   /* 12. Microsoft trouble (the sponsors list has run out by now: the expo list carries these) */
   await api('template', { list: 'expo', subject: 'Expo test for {company}', body: 'Hi {first}, https://peakpickleball.us/' });

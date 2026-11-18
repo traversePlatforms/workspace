@@ -57,6 +57,9 @@ function pmWhat(array $r): string {
         'bounce' => 'Bounced: ' . $to . ' (never emailed again)',
         'unsub' => 'Unsubscribed: ' . $to,
         'click' => 'Clicked a link: ' . $to,
+        'booked' => 'Booked a time: ' . $to . ', ' . date('D M j', (int) strtotime((string) ($r['date'] ?? ''))) . ' ' . ($r['time'] ?? '') . ' (on the Peak desk as a tour)',
+        'notify' => empty($r['ok']) ? 'Could not email Matthew the heads-up (' . ($r['stage'] ?? '') . ')' : '',
+        'desk' => empty($r['ok']) ? 'Could not update the Peak desk (' . ($r['why'] ?? '') . ')' . (!empty($r['final']) ? ': given up' : ': the next run tries again') : '',
         'start' => 'Started ' . $l . ' (' . ($r['by'] ?? '') . ')',
         'pause' => 'Paused ' . $l . ' (' . ($r['by'] ?? '') . (!empty($r['why']) ? ': ' . $r['why'] : '') . ')',
         'done' => $l . ' is done: everyone on it has been emailed',
@@ -82,19 +85,21 @@ function pmView(): array {
     return ['ok' => true, 'conn' => pmConn(), 'oauth' => pmJ('oauth-last.json', null), 'settings' => $S['settings'], 'window' => pmWindowText($S['settings']), 'inWindow' => pmInWindow($S['settings'], pmNow()),
         'rampToday' => !empty($S['settings']['ramp']) && (!$first || date('Y-m-d', $first) === $today), 'rampMax' => PM_RAMP, 'rateMax' => PM_RATE_MAX,
         'lists' => $L, 'imported' => (int) ($lj['at'] ?? 0), 'activity' => $act, 'suppressed' => array_slice($sup, 0, 300), 'suppressedCount' => count($sup),
-        'runs' => array_slice($rl, -6), 'dns' => pmJ('dns.json', null), 'adminHelp' => PM_ADMIN_HELP, 'now' => pmNow()];
+        'runs' => array_slice($rl, -6), 'book' => ['week' => pmWeekText((array) $S['settings']['book']['week']), 'kinds' => PM_BOOK_KINDS, 'open' => count(pmBookSlots($S, 500)), 'next' => pmBookSlots($S, 3)],
+        'deskPending' => !empty($S['settings']['deskNotes']) ? count(pmDeskPending()) : 0, 'dns' => pmJ('dns.json', null), 'adminHelp' => PM_ADMIN_HELP, 'now' => pmNow()];
 }
 if ($action === 'state') out(pmView());
 
 if ($action === 'people') {
-    $l = $needList(); $S = pmState(); $lj = pmJ('lists.json', ['lists' => [], 'left' => []]); $fresh = pmImport((int) $S['settings']['perOrg']);
+    $l = $needList(); $S = pmState(); $lj = pmJ('lists.json', ['lists' => [], 'left' => []]); $fresh = pmImport($S['settings']);
     $ok = []; foreach ($fresh['lists'][$l] ?? [] as $p) if ($p['hold'] === '') $ok[$p['to']] = 1;
     $rows = [];
     foreach ((array) ($lj['lists'][$l] ?? []) as $p) {
         $x = $S['people'][$p['to']] ?? null; $b = pmBlocked($S, $p['to']);
         $state = $p['hold'] !== '' ? 'held: ' . $p['hold'] : ($x && $x['sent'] ? 'sent ' . date('M j g:i a', $x['sent']) : ($b !== '' ? $b : (!isset($ok[$p['to']]) ? 'no longer on the desk list' : 'waiting')));
-        $tags = []; if ($x) { if ($x['reply']) $tags[] = 'replied'; if ($x['bounce']) $tags[] = 'bounced'; if ($x['unsub']) $tags[] = 'unsubscribed'; if ($x['clicks']) $tags[] = 'clicked'; if ($x['auto']) $tags[] = 'auto-reply'; }
-        $rows[] = ['to' => $p['to'], 'person' => $p['person'], 'role' => $p['role'], 'company' => $p['company'], 'town' => $p['town'], 'flags' => $p['flags'], 'state' => $state, 'tags' => $tags, 'src' => $p['src'], 'on' => $p['hold'] === ''];
+        $tags = []; if ($x) { if ($x['booked']) $tags[] = 'booked ' . date('M j', (int) strtotime($x['booked']['date'])) . ' ' . $x['booked']['time']; if ($x['reply']) $tags[] = 'replied'; if ($x['bounce']) $tags[] = 'bounced'; if ($x['unsub']) $tags[] = 'unsubscribed'; if ($x['clicks']) $tags[] = 'clicked'; if ($x['auto']) $tags[] = 'auto-reply'; }
+        $rows[] = ['to' => $p['to'], 'person' => $p['person'], 'role' => $p['role'], 'company' => $p['company'], 'town' => $p['town'], 'flags' => $p['flags'], 'state' => $state, 'tags' => $tags, 'src' => $p['src'], 'on' => $p['hold'] === '',
+            'opens' => $x ? $x['opens'] : 0, 'open1' => $x ? $x['open1'] : 0, 'openLast' => $x ? $x['openLast'] : 0, 'clicks' => $x ? $x['clicks'] : 0, 'sent' => $x ? $x['sent'] : 0];
     }
     out(['ok' => true, 'people' => $rows, 'left' => (array) ($lj['left'][$l] ?? [])]);
 }
@@ -124,18 +129,30 @@ switch ($action) {
         if (isset($in['from']) || isset($in['to'])) { $f = (int) ($in['from'] ?? $s['from']); $t = (int) ($in['to'] ?? $s['to']); if ($f < 0 || $t > 24 || $f >= $t) fail('The window must start before it ends (hours 0 to 24).'); $s['from'] = $f; $s['to'] = $t; }
         if (isset($in['ramp'])) $s['ramp'] = (bool) $in['ramp'];
         if (isset($in['deskNotes'])) $s['deskNotes'] = (bool) $in['deskNotes'];
+        if (isset($in['deskSkip'])) $s['deskSkip'] = (bool) $in['deskSkip'];
+        if (isset($in['opens'])) $s['opens'] = (bool) $in['opens'];
+        if (isset($in['book']) && is_array($in['book'])) {
+            $bi = $in['book']; $bk = $s['book'];
+            if (isset($bi['on'])) $bk['on'] = (bool) $bi['on'];
+            if (isset($bi['kind'])) { if (!isset(PM_BOOK_KINDS[$bi['kind']])) fail('Pick a tour or a call.'); $bk['kind'] = (string) $bi['kind']; }
+            if (isset($bi['mins'])) { $v = (int) $bi['mins']; if ($v < 15 || $v > 120) fail('A booking is 15 to 120 minutes.'); $bk['mins'] = $v; }
+            if (isset($bi['ahead'])) { $v = (int) $bi['ahead']; if ($v < 1 || $v > 60) fail('Show 1 to 60 days ahead.'); $bk['ahead'] = $v; }
+            if (isset($bi['notice'])) { $v = (int) $bi['notice']; if ($v < 0 || $v > 168) fail('Notice: 0 to 168 hours.'); $bk['notice'] = $v; }
+            if (isset($bi['week'])) { $wk = pmWeekParse((string) $bi['week']); if ($wk === null) fail('Times look like: Tue 10:00-12:00, 13:00-16:00 (one day a line).'); $bk['week'] = $wk; }
+            $s['book'] = $bk;
+        }
         if (isset($in['perOrg'])) { $p = (int) $in['perOrg']; if ($p < 1 || $p > 3) fail('People per organisation: 1 to 3.'); $s['perOrg'] = $p; }
         if (isset($in['skip'])) { $k = []; foreach ((array) $in['skip'] as $d) { $d = trim((string) $d); if ($d === '') continue; if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) fail('Days off look like 2026-11-26.'); $k[] = $d; } $s['skip'] = array_values(array_unique($k)); }
         if (isset($in['address'])) { $a = pmClean($in['address'], 200); if ($a !== '' && !pmAddressOk($a)) fail('That does not look like a full postal address.'); $s['address'] = $a; }
         if (isset($in['signature'])) $s['signature'] = pmText($in['signature'], 400);
         pmLog(['t' => 'settings', 's' => $s, 'by' => $BY]);
-        if ((int) $s['perOrg'] !== (int) $S['settings']['perOrg'] && is_file(pmData() . '/lists.json')) pmImportSave($BY);   /* who is queued per organisation changed */
+        if (((int) $s['perOrg'] !== (int) $S['settings']['perOrg'] || (bool) $s['deskSkip'] !== (bool) $S['settings']['deskSkip']) && is_file(pmData() . '/lists.json')) pmImportSave($BY);   /* who is queued per organisation changed */
         out(pmView());
     }
     case 'template': {
         $l = $needList(); $sub = pmClean($body['subject'] ?? '', 200); $txt = pmText($body['body'] ?? '', 8000);
         if ($sub === '' || $txt === '') fail('Give the subject and the email.');
-        if (preg_match_all('/\{([a-z_]+)\}/i', $sub . "\n" . $txt, $m)) foreach ($m[1] as $f) if (!in_array($f, ['first', 'company', 'town'], true)) fail('{' . $f . '} is not a merge field. Use {first}, {company} or {town}.');
+        if (preg_match_all('/\{([a-z_]+)\}/i', $sub . "\n" . $txt, $m)) foreach ($m[1] as $f) if (!in_array($f, ['first', 'company', 'town', 'book'], true)) fail('{' . $f . '} is not a merge field. Use {first}, {company}, {town} or {book}.');
         $S = pmState(); pmLog(['t' => 'template', 'l' => $l, 'subject' => $sub, 'body' => $txt, 'by' => $BY]);
         if ($S['lists'][$l]['status'] === 'running') pmLog(['t' => 'pause', 'l' => $l, 'by' => $BY, 'why' => 'the email changed: check the preview and press Start again']);
         out(pmView());
@@ -146,7 +163,7 @@ switch ($action) {
         pmLog(['t' => 'start', 'l' => $l, 'by' => $BY]); out(pmView());
     }
     case 'pause': { $l = $needList(); if (pmState()['lists'][$l]['status'] === 'running') pmLog(['t' => 'pause', 'l' => $l, 'by' => $BY]); out(pmView()); }
-    case 'import': { $d = pmImportSave($BY); out(pmView() + ['diff' => $d]); }
+    case 'import': { $d = pmImportSave($BY); if (isset($d['error'])) fail($d['error'], 503); out(pmView() + ['diff' => $d]); }
     case 'suppress': {
         $a = strtolower(pmClean($body['address'] ?? '', 160)); if (!filter_var($a, FILTER_VALIDATE_EMAIL)) fail('That email does not look right.');
         pmLog(['t' => 'suppress', 'to' => $a, 'why' => pmClean($body['why'] ?? '', 120), 'by' => $BY]); out(pmView());

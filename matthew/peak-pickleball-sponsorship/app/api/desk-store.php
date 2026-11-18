@@ -361,10 +361,11 @@ function touchRows(string $w, array $R, string $k, array $touch, string $by, boo
     return $rows;
 }
 
-/* ---- the Peak email sender's doors (2026-11-17): mark a company Emailed when an email goes out, log a reply ----
-   Three ways in, all the same: these two functions (require this file), `php desk.php emailed|replied ...`, or the HTTP actions
-   `emailed` / `emailreply` with the X-Desk-Key header (php desk.php servicekey "Peak email" makes the key). $ref (the message id) makes a
-   repeat call harmless. A removed company still gets the touch: the email went out. */
+/* ---- the Peak email sender's doors (2026-11-17): mark a company Emailed when an email goes out, log a reply or a bounce ----
+   Three ways in, all the same: these functions (require this file), `php desk.php emailed|replied|bounced ...`, or the HTTP actions
+   `emailed` / `emailreply` / `emailbounce` with the X-Desk-Key header (php desk.php servicekey "Peak email" makes the key). $ref (the
+   sender's own send id, or a message id) makes a repeat call harmless. A removed company still gets the touch: the email went out.
+   Since 2026-11-18 the sender (outbox-092b0f/peak/lib.php) requires this file and calls them straight after each send, reply and bounce. */
 function deskEmailed(string $w, string $id, string $to, string $subject = '', string $by = 'Peak email', string $ref = '', int $when = 0): array {
     W($w); $to = clean($to, 160); $subject = clean($subject, 160); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200);
     if ($to !== '' && !filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'error' => 'That email does not look right.', 'code' => 400];
@@ -381,20 +382,63 @@ function deskEmailed(string $w, string $id, string $to, string $subject = '', st
         return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
     });
 }
-/* a reply: a touch (email, replied) and, unless a follow-up is already set for today or earlier, a follow-up today so it shows on Today */
+/* a reply: a touch (email, replied) and, unless a follow-up is already set for today or earlier, a follow-up today so it shows on Today.
+   $stop (2026-11-18: a STOP reply or the unsubscribe link): no more emails. A company nobody has taken on that is still being reached
+   (To contact .. Texted; expo To contact, Contacted) goes to Not now, back in 90 days, with the reason. One a person owns, or one further
+   along, keeps its stage; its owner gets a follow-up today to see it. */
+const STOP_BACK_DAYS = 90;
 function deskReplied(string $w, string $id, string $from, string $note = '', string $by = 'Peak email', string $ref = '', bool $stop = false): array {
     W($w); $from = clean($from, 160); $note = clean($note, 600); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200);
     return withLock(function () use ($w, $id, $from, $note, $by, $ref, $stop) {
         sync($w, true); $R = recs($w)[$id] ?? null;
         if (!$R) return ['ok' => false, 'error' => 'No such lead.', 'code' => 404];
-        if ($ref !== '') foreach ($R['touches'] as $t) if (($t['ref'] ?? '') === $ref) return ['ok' => true, 'dup' => true, 'k' => $t['k']];
-        $now = time(); $k = newKey();
+        if ($ref !== '') foreach ($R['touches'] as $t) if (($t['ref'] ?? '') === $ref) return ['ok' => true, 'dup' => true, 'k' => $t['k'], 'stage' => $R['stage']];
+        $now = time(); $k = newKey(); $C = W($w);
         $txt = ($from !== '' ? $from . ' replied' : 'They replied') . ($stop ? ' and asked not to be emailed again' : '') . ($note !== '' ? ': ' . $note : '.');
         $touch = ['m' => 'email', 'out' => 'replied', 'note' => $txt, 'when' => $now, 'auto' => 1]; if ($ref !== '') $touch['ref'] = $ref;
         $rows = [rowTouch($w, $id, $k, $touch, $by, $now)];
-        $nd = (string) ($R['next']['date'] ?? '');
-        if (!$stop && !in_array($R['stage'], W($w)['done'], true) && ($nd === '' || $nd > date('Y-m-d'))) $rows[] = rowNext($w, $id, ['date' => date('Y-m-d'), 'what' => 'They replied to the email: answer them'], $by, $now);
+        $nd = (string) ($R['next']['date'] ?? ''); $open = in_array((string) $R['owner'], ['', $by], true);
+        $r = stageRank($w, (string) $R['stage']); $reaching = $r >= 0 && $r < $C['reach'];
+        if ($stop && $open && $reaching) {
+            $back = date('Y-m-d', strtotime('+' . STOP_BACK_DAYS . ' days', $now)); $why = 'Asked not to be emailed again';
+            $rows[] = rowStage($w, $id, 'notnow', $by, $now, ['back' => $back, 'why' => $why, 'tk' => $k]);
+            $rows[] = rowNext($w, $id, ['date' => $back, 'what' => 'Come back to them: ' . $why . ' (no more emails)'], $by, $now);
+        } elseif (!in_array($R['stage'], $C['done'], true) && ($nd === '' || $nd > date('Y-m-d')) && (!$stop || !$open))
+            $rows[] = rowNext($w, $id, ['date' => date('Y-m-d'), 'what' => $stop ? 'They asked not to be emailed again: no more emails' : 'They replied to the email: answer them'], $by, $now);
         commit($w, $rows);
-        return ['ok' => true, 'k' => $k];
+        return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
+    });
+}
+/* a time booked from the email's "book a time" page (2026-11-18): a tour on the desk (a call says so in its note), the company moves to
+   Meeting / tour booked (expo: Tour booked) from anywhere earlier, as a tour booked by hand does. Nobody becomes owner. $ref makes a repeat
+   harmless. */
+function deskBooked(string $w, string $id, string $date, string $time, string $who, string $note = '', string $by = 'Peak email', string $ref = ''): array {
+    W($w); $who = clean($who, 120); $note = clean($note, 400); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200);
+    if (!okDay($date) || !okTime($time)) return ['ok' => false, 'error' => 'Pick a day and a time.', 'code' => 400];
+    return withLock(function () use ($w, $id, $date, $time, $who, $note, $by, $ref) {
+        sync($w, true); $R = recs($w)[$id] ?? null;
+        if (!$R) return ['ok' => false, 'error' => 'No such lead.', 'code' => 404];
+        if ($ref !== '') foreach (toursOf($w) as $t) if (($t['ref'] ?? '') === $ref) return ['ok' => true, 'dup' => true, 'tid' => $t['tid'], 'stage' => $R['stage']];
+        $now = time(); $tid = bin2hex(random_bytes(5)); $C = W($w);
+        $row = ['t' => $C['T']['tour'], 'tid' => $tid, 'id' => $id, 'lead' => $id, 'date' => $date, 'time' => $time, 'who' => $who, 'note' => $note, 'by' => $by, 'at' => $now, 'auto' => 1];
+        if ($ref !== '') $row['ref'] = $ref;
+        $rows = [$row]; $to = forwardTo($w, (string) $R['stage'], $C['tourSt']); if ($to !== '') $rows[] = rowStage($w, $id, $to, $by, $now);
+        commit($w, $rows);
+        return ['ok' => true, 'tid' => $tid, 'stage' => recs($w)[$id]['stage']];
+    });
+}
+/* a bounce (2026-11-18): the email to that address did not arrive. A touch (email, bounced) and nothing else: the stage, the owner and the
+   follow-up stay, so the team sees the address is dead and finds another way in. */
+function deskBounced(string $w, string $id, string $to, string $note = '', string $by = 'Peak email', string $ref = ''): array {
+    W($w); $to = clean($to, 160); $note = clean($note, 400); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200);
+    return withLock(function () use ($w, $id, $to, $note, $by, $ref) {
+        sync($w, true); $R = recs($w)[$id] ?? null;
+        if (!$R) return ['ok' => false, 'error' => 'No such lead.', 'code' => 404];
+        if ($ref !== '') foreach ($R['touches'] as $t) if (($t['ref'] ?? '') === $ref) return ['ok' => true, 'dup' => true, 'k' => $t['k'], 'stage' => $R['stage']];
+        $now = time(); $k = newKey();
+        $touch = ['m' => 'email', 'out' => 'bounced', 'note' => 'The email' . ($to !== '' ? ' to ' . $to : '') . ' bounced: that address does not take mail' . ($note !== '' ? ' (' . $note . ')' : '') . '.', 'when' => $now, 'auto' => 1];
+        if ($to !== '') $touch['to'] = $to; if ($ref !== '') $touch['ref'] = $ref;
+        commit($w, [rowTouch($w, $id, $k, $touch, $by, $now)]);
+        return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
     });
 }

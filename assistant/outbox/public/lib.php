@@ -369,8 +369,13 @@ function obPeak(): array {
         if ($L['status'] === 'paused') $att[] = [$why !== '' && !str_starts_with($why, 'the email changed') ? 'bad' : 'info', $pn . ': paused' . ($why !== '' ? ' (' . $why . ')' : ($S['lists'][$k]['started'] ? '' : ', not started yet')) . ($draft ? '; the email is still a DRAFT' : '') . '.'];
         if ((int) $L['sent'] >= 20 && (int) $L['bounced'] / max(1, (int) $L['sent']) > 0.08) $att[] = ['bad', $pn . ': bounces over 8% (' . $L['bounced'] . ' of ' . $L['sent'] . ').'];
         $items[] = ['id' => $k, 'name' => $nm, 'status' => $L['status'], 'draft' => $draft, 'queued' => (int) $L['queued'], 'sent' => (int) $L['sent'], 'replied' => (int) $L['replied'], 'bounced' => (int) $L['bounced'],
-            'unsubscribed' => (int) $L['unsubscribed'], 'clicked' => (int) $L['clicked'], 'failed' => (int) $L['failed'], 'pausedWhy' => $why];
+            'unsubscribed' => (int) $L['unsubscribed'], 'clicked' => (int) $L['clicked'], 'failed' => (int) $L['failed'], 'pausedWhy' => $why,
+            /* 2026-11-18: list size, opens, bookings, rates, and who the Peak desk link leaves out */
+            'people' => (int) $L['people'], 'orgs' => (int) ($L['orgs'] ?? 0), 'opened' => (int) ($L['opened'] ?? 0), 'booked' => (int) ($L['booked'] ?? 0), 'rates' => (array) ($L['rates'] ?? []), 'skips' => (array) ($L['skips'] ?? [])];
+        if (!empty($L['deskError'])) $att[] = ['bad', $pn . ': ' . $L['deskError']];
     }
+    $dp = (int) ($st['sponsors']['deskPending'] ?? 0);
+    if ($dp) $att[] = ['bad', 'Peak email: ' . $dp . ' updates have not reached the Peak desk yet (the next hourly run tries again).'];
     $dns = pmJ('dns.json', null); if (is_array($dns) && !empty($dns['fix'])) $att[] = ['info', 'Peak email: ' . (string) $dns['fix'][0]];
     $f = obFailCounts($fail);
     if ($f['fail7']) $att[] = ['bad', 'Peak email: ' . $f['fail7'] . ' could not send in the last 7 days.'];

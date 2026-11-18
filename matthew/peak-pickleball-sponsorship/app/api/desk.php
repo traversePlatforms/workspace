@@ -19,7 +19,8 @@
  * Look-ups (2026-10-24): php desk.php rescan [15] (hourly, from the morning-email cron) | scan <lead id> [--hunter]
  * The records: php desk.php rebuild | check
  * The Peak email sender (2026-11-17): php desk.php servicekey "Peak email" (prints its key once) | emailed sponsor|expo <id> <to> [subject]
- *   | replied sponsor|expo <id> <from> [note]   (HTTP: actions emailed / emailreply with the X-Desk-Key header) */
+ *   | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note]   (HTTP: actions emailed / emailreply / emailbounce
+ *   with the X-Desk-Key header) */
 declare(strict_types=1);
 define('DESK', 1);
 const BUILD = '2026-11-17.1';
@@ -90,11 +91,12 @@ if (PHP_SAPI === 'cli') {
         }
         $json($o); exit(0);
     }
-    if (($cmd === 'emailed' || $cmd === 'replied') && in_array($name, ['sponsor', 'expo'], true) && ($argv[3] ?? '') !== '') {
-        $r = $cmd === 'emailed' ? deskEmailed($name, (string) $argv[3], (string) ($argv[4] ?? ''), (string) ($argv[5] ?? '')) : deskReplied($name, (string) $argv[3], (string) ($argv[4] ?? ''), (string) ($argv[5] ?? ''));
+    if (in_array($cmd, ['emailed', 'replied', 'bounced'], true) && in_array($name, ['sponsor', 'expo'], true) && ($argv[3] ?? '') !== '') {
+        [$a3, $a4, $a5] = [(string) $argv[3], (string) ($argv[4] ?? ''), (string) ($argv[5] ?? '')];
+        $r = $cmd === 'emailed' ? deskEmailed($name, $a3, $a4, $a5) : ($cmd === 'replied' ? deskReplied($name, $a3, $a4, $a5) : deskBounced($name, $a3, $a4, $a5));
         $json($r); exit($r['ok'] ? 0 : 1);
     }
-    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller|expo | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note]\n");
+    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller|expo | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note]\n");
     exit(1);
 }
 
@@ -113,7 +115,7 @@ catch (Throwable $e) { error_log('peak desk: ' . $e->getMessage() . ' @' . $e->g
 function handle(string $action, bool $isPost, array $body): array {
     /* the Peak email sender: a key instead of a sign-in (2026-11-17) */
     $key = (string) ($_SERVER['HTTP_X_DESK_KEY'] ?? '');
-    if ($key !== '' && in_array($action, ['emailed', 'emailreply'], true)) {
+    if ($key !== '' && in_array($action, ['emailed', 'emailreply', 'emailbounce'], true)) {
         if (!$isPost) fail('POST required', 405);
         $svc = jread('service-keys.json', [])[keyHash($key)] ?? null; if (!$svc) fail('That key did not work.', 401);
         return service($action, $body, (string) $svc['name']);
@@ -153,7 +155,7 @@ function handle(string $action, bool $isPost, array $body): array {
     $ALIAS = ['status' => ['stage', 'sponsor'], 'lead' => ['add', 'sponsor'], 'leaddel' => ['del', 'sponsor'], 'leadback' => ['back', 'sponsor'],
         'xstage' => ['stage', 'expo'], 'xnote' => ['note', 'expo'], 'xnotedel' => ['notedel', 'expo'], 'xnext' => ['next', 'expo'], 'xcontact' => ['contact', 'expo'],
         'xlead' => ['add', 'expo'], 'xdel' => ['del', 'expo'], 'xback' => ['back', 'expo']];
-    $BOTH = ['touch', 'touchdel', 'stage', 'owner', 'next', 'note', 'notedel', 'contact', 'add', 'del', 'back', 'tour', 'tourdel', 'tourmove', 'tourout', 'emailed', 'emailreply'];
+    $BOTH = ['touch', 'touchdel', 'stage', 'owner', 'next', 'note', 'notedel', 'contact', 'add', 'del', 'back', 'tour', 'tourdel', 'tourmove', 'tourout', 'emailed', 'emailreply', 'emailbounce'];
     $SPONSOR = ['site', 'scan', 'proposal', 'signed', 'sponsor', 'todo', 'tododone', 'tododel', 'packages', 'pl'];
     $legacy = isset($ALIAS[$action]);
     if ($legacy) { [$op, $w] = $ALIAS[$action]; if ($action === 'status') $body['stage'] = $body['status'] ?? ''; }
@@ -166,7 +168,7 @@ function handle(string $action, bool $isPost, array $body): array {
     if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);   /* read-only check account (2026-10-26): everything below saves */
     if (!$isPost) fail('POST required', 405);
     if (!in_array($op, $BOTH, true) && !in_array($op, $SPONSOR, true)) fail('Unknown action.', 404);
-    if ($op === 'emailed' || $op === 'emailreply') return service($op, $body + ['world' => $w], $ME);
+    if (in_array($op, ['emailed', 'emailreply', 'emailbounce'], true)) return service($op, $body + ['world' => $w], $ME);
     return withLock(fn() => act($op, $w, $body, $ME, $legacy));
 }
 
@@ -215,7 +217,8 @@ function service(string $op, array $body, string $by): array {
     $w = ($body['world'] ?? '') === 'expo' ? 'expo' : 'sponsor'; $id = (string) ($body['id'] ?? '');
     $r = $op === 'emailed'
         ? deskEmailed($w, $id, (string) ($body['to'] ?? ''), (string) ($body['subject'] ?? ''), $by, (string) ($body['ref'] ?? ''), (int) ($body['at'] ?? 0))
-        : deskReplied($w, $id, (string) ($body['from'] ?? ''), (string) ($body['note'] ?? ''), $by, (string) ($body['ref'] ?? ''), !empty($body['stop']));
+        : ($op === 'emailbounce' ? deskBounced($w, $id, (string) ($body['to'] ?? ''), (string) ($body['note'] ?? ''), $by, (string) ($body['ref'] ?? ''))
+        : deskReplied($w, $id, (string) ($body['from'] ?? ''), (string) ($body['note'] ?? ''), $by, (string) ($body['ref'] ?? ''), !empty($body['stop'])));
     if (!$r['ok']) fail($r['error'], (int) ($r['code'] ?? 400));
     unset($r['code']); return $r;
 }

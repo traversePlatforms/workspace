@@ -107,7 +107,9 @@ try {
   D = await b('data'); k1 = find('sponsor', K.id);
   ok(k1.next === null && k1.stage === 'texted', 'reaching out clears a follow-up that was due (it is done); LinkedIn does not move a company past Texted');
   ok((await b('touch', { world: 'sponsor', id: K.id, m: 'fax', out: 'sent' })).error === 'Pick how you reached them.' && (await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'sent' })).error === 'Pick how it went.' && (await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked', fu: '2020-01-01' })).error === 'Pick a follow-up day from today on.' && (await b('touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked', when: 1000 })).error === 'Pick a time in the last 30 days.', 'a wrong method, outcome, past follow-up or old time is refused');
-  const earlier = Math.floor(Date.now() / 1000) - 2 * 86400;
+  /* two days ago, but never this week (the week counts below leave it out): on a Tuesday that is Sunday, on a Wednesday it would be Monday */
+  const wk0 = new Date(); wk0.setHours(0, 0, 0, 0); wk0.setDate(wk0.getDate() - ((wk0.getDay() + 6) % 7));
+  const earlier = Math.min(Math.floor(Date.now() / 1000) - 2 * 86400, Math.floor(wk0.getTime() / 1000) - 3600);
   ok((await b('touch', { world: 'sponsor', id: K.id, m: 'inperson', out: 'met', when: earlier, note: 'at the chamber lunch' })).ok && (await b('data')).sponsor.recs.find((r) => r.id === K.id).touches.some((x) => x.when === earlier && x.m === 'inperson'), 'a touch can be logged for earlier (met at a lunch two days ago)');
   /* undo */
   const U = NEW[12]; t = await b('touch', { world: 'sponsor', id: U.id, m: 'call', out: 'noanswer' });
@@ -221,6 +223,26 @@ try {
   ok((await sv('touch', { world: 'sponsor', id: EM.id, m: 'call', out: 'talked' }))._status === 401, 'the key only opens the two email actions');
   const cli = JSON.parse(php(['emailed', 'sponsor', NEW[22].id, 'x@example.com', 'Hello']));
   ok(cli.ok && cli.stage === 'emailed', 'the same from the command line (php desk.php emailed sponsor <id> <to> [subject])');
+  /* STOP and bounces (2026-11-18) */
+  D = await b('data');
+  const ST = NEW.find((l) => { const r = find('sponsor', l.id); return r && r.stage === 'new' && !r.owner && !r.next; }), OWN = NEW[20];   /* one nobody has touched or taken */
+  let so = await sv('emailreply', { world: 'sponsor', id: ST.id, from: 'Sam', note: 'STOP', ref: 'stop-1', stop: true });
+  D = await b('data'); let stc = find('sponsor', ST.id);
+  const cST = so.ok && so.stage === 'notnow' && stc.notnow && stc.notnow.back === later(90) && /not to be emailed/i.test(stc.notnow.why) && stc.next.date === later(90) && stc.last.out === 'replied';
+  ok(cST, 'a STOP from a company nobody has taken: Not now, back in 90 days, with the reason; the touch is kept' + (cST ? '' : ' GOT ' + JSON.stringify({ so, stage: stc.stage, owner: stc.owner, notnow: stc.notnow, next: stc.next, last: stc.last })));
+  ok((await sv('emailreply', { world: 'sponsor', id: ST.id, from: 'Sam', ref: 'stop-1', stop: true })).dup === true, 'the same STOP again (same ref) is not logged twice');
+  so = await sv('emailreply', { world: 'sponsor', id: OWN.id, from: 'Lee', ref: 'stop-2', stop: true });
+  D = await b('data'); stc = find('sponsor', OWN.id);
+  ok(so.ok && stc.stage === 'called' && stc.owner === 'Test Admin' && stc.next && stc.next.date <= today() && /not to be emailed/.test(stc.next.what), 'a STOP on a company a person owns: the stage stays, the owner gets a follow-up today');
+  so = await sv('emailreply', { world: 'expo', id: xseed.orgs[21].id, from: 'Kim', ref: 'stop-3', stop: true });
+  ok(so.ok && so.stage === 'notnow', 'a STOP on an expo lead: Not now too');
+  const BO = NEW[22];
+  let bo = await sv('emailbounce', { world: 'sponsor', id: BO.id, to: 'x@example.com', ref: 'bounce-1' });
+  D = await b('data'); let boc = find('sponsor', BO.id);
+  ok(bo.ok && boc.stage === 'emailed' && boc.last.m === 'email' && boc.last.out === 'bounced' && boc.last.auto && /x@example.com/.test(boc.last.note), 'emailbounce: a Bounced touch (automatic), the stage stays');
+  ok((await sv('emailbounce', { world: 'sponsor', id: BO.id, to: 'x@example.com', ref: 'bounce-1' })).dup === true && (D = await b('data')) && find('sponsor', BO.id).touches.filter((t) => t.out === 'bounced').length === 1, 'the same bounce again (same ref) is not logged twice');
+  const cb = JSON.parse(php(['bounced', 'expo', EX.id, 'show@example.com']));
+  ok(cb.ok && cb.stage === 'contacted', 'the same from the command line (php desk.php bounced expo <id> <to>)');
   /* the sender reads the log itself: what it sees must match the desk */
   const replay = {}; for (const l of lines('events.log')) { const r = JSON.parse(l); if (r.t === 'status') replay[r.id] = r.status; }
   ok(replay[EM.id] === 'emailed' && replay[K.id] && replay[K.id] !== 'new' && !replay[NEW[30].id], 'the sender\u2019s own reading of events.log sees the stage (Emailed, Texted ...) and skips them; untouched companies stay new to it');
