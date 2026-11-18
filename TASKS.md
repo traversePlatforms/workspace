@@ -1348,6 +1348,8 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
 
 - [ ] **TR-59 — Check Google Search Console, Sun 15 Nov (set up 8 Nov).** search.google.com/search-console, signed in as m.sharpe@traverseplatforms.com, property traverseplatforms.com. Look at **Indexing > Pages** (are /, /demo/, /editions/ and the legal pages indexed? any "not indexed" reasons: screenshot to Claude) and **Performance** (searches and clicks). Sitemap https://traverseplatforms.com/sitemap.xml submitted; indexing requested for /, /demo/, /editions/ on 8 Nov. Pages hidden by a stray noindex tag ~1-8 Nov (fixed 8 Nov) may show "Excluded by noindex" for a few days.
 
+- [ ] **TR-61 — Houston test install, ready for Bryce (Matthew 18 Nov: "Lets add jarvis, priority contacts, square or stripe deposits, stats page with ad spend, facebook ads leads flowing straight in the pipeline. Monthly newsletter we can wait on but leave the option there").** BUILT 18 Nov (commits 3f235617, 523c9663), on hl-f98938 only, behind its client file's switches (jarvis, priority, ladder, acoff, nloff) and starting price list (prcStart: Bryce's ladder $299 min / $399 at 2,500 sq ft / power 0.5 / ...99; Overseeding and Fertilizer add-ons "set your own"; crew pay $40 / $65 at $399 / $100 at $499). Aftercare and newsletter shown as "Available, not turned on". Open: (1) Bryce's current prices into Setup › Prices; (2) Bryce connects Square (paste token) or Stripe (restricted key) in Setup › Payments; (3) his Facebook Page: Traverse pastes a token until TR-45 (Meta App Review); (4) end-of-day email recipients when Matthew says; (5) no account for Bryce yet.
+
 ## Personal
 
 - [ ] **P-1 — Tacoma contract.** **✅ The six terms from the 2026-09-29 conversation are now
