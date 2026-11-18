@@ -6989,7 +6989,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       [al, scRow, pr, payRow, payMore, cardRow].forEach(function (x) { x.hidden = true; });
       [].forEach.call(box.querySelectorAll('.dwh'), function (x) { if (/Payment/.test(x.textContent)) x.hidden = true; });
       if (kitOnC()) { pkRow.hidden = true; [].forEach.call(box.querySelectorAll('.dwh'), function (x) { if (/What is included/.test(x.textContent)) x.hidden = true; }); P.pkg = 'job'; if (!S.kit) api('kit').then(function (j) { if (j && j.ok) { S.kit = j; if (typeof paint === 'function') paint(); } }).catch(function () {}); }   /* the quote's own work (2026-10-27) */
-      else chips(pkRow, { full: JOB_PKG.full, aerate: JOB_PKG.aerate, seed: JOB_PKG.seed, fert: JOB_PKG.fert, seedfert: JOB_PKG.seedfert }, function () { return P.pkg === 'aerate' || PKG_NOAER[P.pkg] ? P.pkg : 'full'; }, function (k) { P.pkg = k; });   /* + seed only, fertilize only, seed & feed (2026-11-09) */
+      else chips(pkRow, { full: JOB_PKG.full, aerate: JOB_PKG.aerate, seed: JOB_PKG.seed, fert: JOB_PKG.fert, seedfert: JOB_PKG.seedfert, other: JOB_PKG.other }, function () { return P.pkg === 'aerate' || P.pkg === 'other' || PKG_NOAER[P.pkg] ? P.pkg : 'full'; }, function (k) { P.pkg = k; svcPaint(); });   /* + Another service on the deposit and form page (2026-11-18, Jen: fall cleanup only) */   /* + seed only, fertilize only, seed & feed (2026-11-09) */
       depBox = q('div', 'jdep');
       var pl = q('label', null, 'Price you quoted ($)'); dPrice = q('input'); dPrice.inputMode = 'numeric'; dPrice.maxLength = 6; dPrice.value = P.price || ''; pl.appendChild(dPrice); depBox.appendChild(pl);
       var dl = q('label', null, 'Deposit ($)'), dDep = q('input'); dDep.inputMode = 'numeric'; dDep.maxLength = 6; dl.appendChild(dDep); depBox.appendChild(dl);
@@ -7123,8 +7123,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
         if (sp < 1) { err.textContent = 'Type the price you quoted.'; return; }
         if (P.how !== 'link' && P.how !== 'none' && P.how !== 'optional' && P.how !== 'ways' && takenBtn.getAttribute('aria-pressed') !== 'true') { err.textContent = 'The form goes out only after they said yes and you took the deposit.'; return; }
         if (S.depNow > sp) { err.textContent = 'The deposit cannot be more than the price.'; return; }
+        if (!kitOnC() && P.pkg === 'other' && !svcIn.value.trim()) { err.textContent = 'Say what the service is (for example: Fall cleanup).'; return; }
         sv.disabled = true;
-        api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, nosign: P.nosign ? 1 : 0, pkg: kitOnC() ? 'job' : P.pkg === 'aerate' || PKG_NOAER[P.pkg] ? P.pkg : 'full', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb, extras: pre.extras || qt.extras || [] } }).then(function (j) {
+        api('signsend', { body: { id: lead.id, price: sp, deposit: S.depNow, nosign: P.nosign ? 1 : 0, pkg: kitOnC() ? 'job' : P.pkg === 'aerate' || P.pkg === 'other' || PKG_NOAER[P.pkg] ? P.pkg : 'full', svc: !kitOnC() && P.pkg === 'other' ? svcIn.value.trim() : '', how: P.how, taken: 1, crew: P.crew, date: P.date, slot: P.slot, note: nt.value, sq: pre.sq || (qt.sq || 0), seedLb: pre.seedLb != null ? pre.seedLb : qt.seedLb, fertLb: pre.fertLb != null ? pre.fertLb : qt.fertLb, extras: pre.extras || qt.extras || [] } }).then(function (j) {
           sv.disabled = false;
           if (j._status === 401) return signinView('Signed out. Enter your code again.');
           if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; if (j._status === 409) loadWeek(); return; }

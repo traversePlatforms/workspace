@@ -11098,7 +11098,8 @@ if ($action === 'signsend') {
     $byWays = !$depIn && ($body['how'] ?? '') === 'ways';   /* they pay the deposit on the form another way: Venmo, Cash App, PayPal, Zelle, the company's link (2026-10-29) */
     if (empty($body['taken']) && !$byLink && !$depIn && !$noDep && !$byWays) fail('The form goes out only after they said yes and you took the deposit.');
     $price = (int) ($body['price'] ?? 0); if ($price < 1 || $price > 100000) fail('Give the price you quoted.');
-    $pkg = (string) ($body['pkg'] ?? (kitOn() ? 'job' : 'full')); if (!in_array($pkg, kitOn() ? ['job'] : ['full', 'aerate', 'seed', 'fert', 'seedfert'], true)) fail('Pick what is included.');   /* a kit install: the quoted work (2026-10-27) */   /* + seed only, fertilize only, seed & feed (2026-11-09) */
+    $pkg = (string) ($body['pkg'] ?? (kitOn() ? 'job' : 'full')); if (!in_array($pkg, kitOn() ? ['job'] : ['full', 'aerate', 'seed', 'fert', 'seedfert', 'other'], true)) fail('Pick what is included.');   /* a kit install: the quoted work (2026-10-27) */   /* + other: Another service, named by the office (2026-11-18, Jen: fall cleanup only) */
+    $svc = $pkg === 'other' ? $clean($body['svc'] ?? '', 80) : ''; if ($pkg === 'other' && $svc === '') fail('Say what the service is (for example: Fall cleanup).');   /* + seed only, fertilize only, seed & feed (2026-11-09) */
     $how = $depIn ? (string) $S0['how'] : (string) ($body['how'] ?? ''); if (!in_array($how, ['link', 'square', 'card', 'cash', 'zelle', 'venmo', 'cashapp', 'paypal', 'check', 'other', 'none', 'ways', 'optional'], true)) fail('Say how they paid the deposit.');
     $dep = (int) ceil($price / 2);   /* half the price (Matthew 2026-10-14) */
     if ($depIn) { $dep = (int) $S0['deposit']; if ($dep > $price) fail('The $' . $dep . ' deposit is already ' . ($linkPaid ? 'paid' : 'in') . '; the price cannot be less than that.'); }
@@ -11121,7 +11122,7 @@ if ($action === 'signsend') {
     if ($why = slotFree($crew, $date, $slot, $id, $exJob ? (string) $exJob['id'] : ($reopen ? (string) $reJob['id'] : ''))) fail($why, 409);
     $q0 = is_array($L['quote'] ?? null) ? $L['quote'] : [];
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : ($q0[$k] ?? null);
-    $q = ['price' => $price, 'pkg' => $pkg, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $num('seedLb', 5000), 'fertLb' => $num('fertLb', 5000), 'note' => '', 'sent' => true,
+    $q = ['price' => $price, 'pkg' => $pkg, 'svc' => $svc, 'sq' => (int) ($body['sq'] ?? ($q0['sq'] ?? 0)), 'seedLb' => $pkg === 'other' ? null : $num('seedLb', 5000), 'fertLb' => $pkg === 'other' ? null : $num('fertLb', 5000), 'note' => '', 'sent' => true,
           'offer' => ['crew' => $crew, 'date' => $date, 'slot' => $slot, 'at' => time()]];
     $ex = array_key_exists('extras', $body) ? a365Extras($body['extras']) : ($q0['extras'] ?? []); if ($ex) $q['extras'] = $ex;   /* extra work: on the form's Service line (2026-10-21) */
     if (kitOn() && !empty($q0['items']) && (int) ($q0['price'] ?? 0) === $price) { $q['items'] = $q0['items']; if (isset($q0['measures'])) $q['measures'] = $q0['measures']; }   /* the quote's lines stay on the form while the price is the one quoted (2026-10-27) */
