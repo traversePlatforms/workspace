@@ -146,3 +146,7 @@ case "$PM" in *"NEEDS RECONNECT"*) bad "$PM";; "") ;; *) say "  info  $PM";; esa
 
 say "  => $( [ $BAD = 0 ] && echo 'all fine' || echo "$BAD problem(s)")"
 printf '%s' "$OUT" >> "$LOG"; printf '%s' "$OUT" > "$LATEST"; printf '%s' "$OUT"
+
+# 13. J.A.R.V.I.S. (2026-11-18, the merged page): this run's ok count and PROBLEM lines, and the builds list, go up to the Assistant's private
+# data, so the page's Today panel and "Laptop online" stay current. Source: assistant/jarvis/tools/jarvis-status.sh (one SSH call).
+bash "$REPO/assistant/jarvis/tools/jarvis-status.sh" push >> "$LOG" 2>&1

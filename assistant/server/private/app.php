@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -51,6 +51,8 @@ if ($action === 'home') {
     out(['ok' => true, 'accounts' => $accts, 'items' => $items, 'settings' => settings(), 'spend' => spendSummary(),
         'setup' => ['anthropic' => !empty($c['anthropicKey']), 'google' => !empty($c['googleClientId']) && !empty($c['googleClientSecret']), 'redirect' => gRedirect()]]);
 }
+/* J.A.R.V.I.S., the merged page (2026-11-18): the laptop's pushed status (overnight check, builds) and the calendar placeholder; lib/jarvis.php */
+if ($action === 'jvstatus') out(jvStatus());
 if (!$isPost) out(['ok' => false, 'error' => 'POST needed.'], 405);
 if ($action === 'setup') {   /* keys go in here, never through chat; an empty field leaves the saved one alone */
     jedit('config.json', function ($c) use ($body) {

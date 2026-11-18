@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03060c">
+<title>J.A.R.V.I.S.</title>
+<!-- J.A.R.V.I.S., the merged page (2026-11-18). Matthew: "Yeah I want it them merged together. It will give jarvis application more
+     function other then just the chat feature"; design: "Definitely the halo version of jarvis" (design/mockups-2026-11-18/jarvis-hub.html,
+     direction A); crowding: "focus on changing the inboxes structure vs changing halo ... making them collaspable".
+     Matthew's alone, behind the Assistant's sign-in (it lives in the Assistant's folder and talks to ../api.php). Two brains, always named
+     on the command bar: the Assistant (instant, the API, ../api.php?action=chat, only when he asks) and the J.A.R.V.I.S. desk (a ticket
+     to the Field app's help desk, answered by the session on his laptop in a few minutes). Team requests, Outbox and the Peak desk are read
+     from those apps' own endpoints with their own sign-ins. Nothing on this page sends an email except Send in the reply sheet, after a
+     yes in the confirm. The staff J.A.R.V.I.S. inside the Sixfold and Houston apps is untouched and cannot reach this page. -->
+<style>
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/inter.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 600;font-display:swap;src:url(fonts/jetbrains-mono.woff2) format("woff2")}
+@font-face{font-family:"Rajdhani";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/rajdhani-600.woff2) format("woff2")}
+@font-face{font-family:"Rajdhani";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/rajdhani-700.woff2) format("woff2")}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#03060c;color:#d8f6ff;font:14px/1.45 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,textarea{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid #3ee8ff;outline-offset:2px}
+svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mono{font-family:"JetBrains Mono",monospace}
+
+/* ---- the Halo screen (direction A) ---- */
+.jv{--bg:#03060c;--c:#3ee8ff;--c2:#1fb6d6;--ink:#d8f6ff;--mut:#7fa3b4;--warn:#ffb648;--bad:#ff6b6b;--okc:#4ade80;
+ position:fixed;inset:0;overflow:hidden;color:var(--ink);background:
+ radial-gradient(ellipse 60% 55% at 50% 38%,#0b2a3e 0%,#06121e 45%,transparent 75%),
+ radial-gradient(circle at 50% 120%,#06283a 0,transparent 60%),var(--bg)}
+.jv::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(#3ee8ff0b 1px,transparent 1px),linear-gradient(90deg,#3ee8ff0b 1px,transparent 1px);background-size:40px 40px;-webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 45%,#000 30%,transparent 85%);mask-image:radial-gradient(ellipse 70% 70% at 50% 45%,#000 30%,transparent 85%)}
+.jv::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,#ffffff03 0 1px,transparent 1px 3px)}
+.pnl{position:relative;border:1px solid #3ee8ff1c;padding:14px 16px;
+ background-image:linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),linear-gradient(var(--c),var(--c)),linear-gradient(180deg,#071826d9,#040c15d9);
+ background-size:12px 1px,1px 12px,12px 1px,1px 12px,12px 1px,1px 12px,12px 1px,1px 12px,auto;
+ background-position:0 0,0 0,100% 0,100% 0,0 100%,0 100%,100% 100%,100% 100%,0 0;background-repeat:no-repeat}
+.ph{display:flex;align-items:center;gap:8px;margin-bottom:10px;font:500 11px "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--c)}
+.ph .n{color:#3ee8ffb8}
+.ph .pc{margin-left:auto;color:var(--mut);letter-spacing:.08em;white-space:nowrap}
+.ph .fold{width:22px;height:22px;display:grid;place-items:center;color:var(--mut);border-radius:4px;margin-right:-6px}
+.ph .fold:hover{color:var(--c);background:#3ee8ff10}
+.li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid #3ee8ff12;width:100%;text-align:left}
+.li:first-child{border-top:0}
+button.li:hover .lt{color:#fff}
+.lx{flex:1;min-width:0}
+.lt{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ls{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lm{font:11px "JetBrains Mono",monospace;color:var(--mut);white-space:nowrap}
+.lr{text-align:right;display:grid;gap:4px;justify-items:end;flex:none}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:6px}
+.bdg{font:600 10px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;border-radius:3px;white-space:nowrap;flex:none}
+.bdg.dr{color:var(--c);background:#3ee8ff14;box-shadow:0 0 10px #3ee8ff33}
+.bdg.wk{color:var(--c)}.bdg.nw{color:#a5b4fc}.bdg.nm{color:var(--warn)}.bdg.mu{color:var(--mut)}.bdg.bd{color:var(--bad)}
+.sub{font:500 10px "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin:12px 0 4px;display:flex;align-items:center;gap:8px}
+.sub:first-child{margin-top:0}
+.sub b{color:var(--warn);font-weight:600}
+.more{display:block;font:11px "JetBrains Mono",monospace;color:var(--c);padding:6px 0 0;letter-spacing:.04em;text-align:left}
+.empty{font-size:12.5px;color:var(--mut);padding:4px 0}
+.hint{font-size:12px;color:var(--mut);line-height:1.5}
+.hint a,.hint button{color:var(--c);text-decoration:underline;text-underline-offset:2px}
+/* the collapsible inbox rows (Matthew: "making them collaspable or some structure like that to condense space") */
+.ibr{border:1px solid #3ee8ff1a;background:#3ee8ff06;margin-top:6px}
+.ibr>.ibh{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;text-align:left}
+.ibr>.ibh .nm{font-size:13px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibr>.ibh .ct{font:600 18px/1 Rajdhani,sans-serif;min-width:18px;text-align:right}
+.ibr>.ibh .ct.z{color:var(--mut)}
+.ibr>.ibh .chev{color:var(--mut);transition:transform .15s}
+.ibr.open>.ibh .chev{transform:rotate(90deg);color:var(--c)}
+.ibr>.ibb{display:none;padding:0 10px 6px}
+.ibr.open>.ibb{display:block}
+.ibr .dot{margin-top:0}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 10px}
+.kpi{border:1px solid #3ee8ff1a;padding:8px 10px;background:#3ee8ff06;text-align:left}
+.kv{font:600 26px/1 Rajdhani,sans-serif}
+.kl{font:10px "JetBrains Mono",monospace;letter-spacing:.1em;color:var(--mut);text-transform:uppercase;margin-top:3px}
+.prog{height:4px;border-radius:4px;overflow:hidden;background:#3ee8ff14;margin:7px 0 4px}
+.prog i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--c2),var(--c));box-shadow:0 0 8px var(--c)}
+.okt{color:var(--okc)}
+.top{display:flex;align-items:center;gap:22px;font:11px "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;white-space:nowrap;min-width:0}
+.wm{font:700 22px Rajdhani,sans-serif;letter-spacing:.42em;color:#eafcff;text-shadow:0 0 18px #3ee8ff88}
+.st{display:flex;align-items:center;gap:6px}
+.st i{width:6px;height:6px;border-radius:50%;background:var(--okc);box-shadow:0 0 8px var(--okc)}
+.st.off i{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.top .vw{display:flex;gap:4px;margin-left:auto}
+.top .vw button{width:30px;height:30px;display:grid;place-items:center;border-radius:6px;color:var(--mut);border:1px solid transparent}
+.top .vw button:hover{color:var(--c);border-color:#3ee8ff33;background:#3ee8ff0a}
+.top .clock{color:var(--mut)}
+/* the conversation */
+.chat{display:flex;flex-direction:column;gap:12px;overflow-y:auto;min-height:0;scrollbar-width:none;-webkit-mask-image:linear-gradient(transparent 0,#000 40px);mask-image:linear-gradient(transparent 0,#000 40px)}
+.chat::-webkit-scrollbar{display:none}
+.chat>*{flex:none}
+.chat>.sp{flex:1 1 auto}
+.msg{max-width:88%;font-size:14px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.ai{align-self:flex-start}
+.msg .who{font:500 10px "JetBrains Mono",monospace;letter-spacing:.2em;color:var(--c);margin-bottom:4px;text-transform:uppercase;white-space:nowrap}
+.msg.me{align-self:flex-end;background:#3ee8ff12;border:1px solid #3ee8ff2e;padding:9px 13px;border-radius:14px 14px 2px 14px}
+.msg.bad{color:#ffc9c9}
+.acard{border:1px solid #3ee8ff38;background:linear-gradient(180deg,#0a2232f0,#061522f0);border-radius:10px;padding:14px 16px;box-shadow:0 0 30px #3ee8ff14,inset 0 1px #3ee8ff22;max-width:100%}
+.acard .ah{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;min-width:0}
+.acard .ah>span.t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acard .ah .bdg{margin-left:auto}
+.acard .q{margin:10px 0;padding:10px 12px;border-left:2px solid var(--c);background:#3ee8ff0a;color:#bfe9f5;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.acard .q.w{border-left-color:var(--warn)}
+.acard .meta{font:11px "JetBrains Mono",monospace;color:var(--mut)}
+.acard .rows{margin-top:6px}
+.acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{padding:8px 14px;border-radius:6px;font:600 12px Inter,sans-serif;letter-spacing:.02em;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn.pri{background:var(--c);color:#022231;box-shadow:0 0 18px #3ee8ff66}
+.btn.sec{border:1px solid #3ee8ff55;color:var(--c)}
+.btn.gh{color:var(--mut)}
+.btn.warn{border:1px solid #ffb64866;color:var(--warn)}
+.btn:disabled{opacity:.5;cursor:default}
+.chips{display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;margin-bottom:8px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap;border:1px solid #3ee8ff33;color:#a9e9f7;padding:6px 12px;border-radius:999px;font-size:12px;background:#3ee8ff08;flex:none}
+.chip:hover{background:#3ee8ff14}
+/* which brain answers: always named, plainly */
+.brain{display:flex;align-items:center;gap:10px;margin-bottom:8px;font:11px "JetBrains Mono",monospace;letter-spacing:.04em;color:var(--mut);min-width:0}
+.brain .bl{display:flex;align-items:center;gap:7px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brain .bl i{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);flex:none}
+.brain.desk .bl i{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.brain .sw{margin-left:auto;color:var(--c);white-space:nowrap;flex:none;border:1px solid #3ee8ff33;border-radius:999px;padding:3px 10px}
+.brain .sw:hover{background:#3ee8ff10}
+.cmdbar{display:flex;align-items:center;gap:10px;border:1px solid #3ee8ff40;background:#04111bcc;border-radius:14px;padding:8px 8px 8px 16px;box-shadow:0 0 0 4px #3ee8ff08,0 0 40px #3ee8ff12}
+.brain.desk+.cmdbar{border-color:#ffb64855}
+.cmdbar input{flex:1;min-width:0;font-size:14px;color:var(--ink);outline:none;padding:6px 0}
+.cmdbar input::placeholder{color:var(--mut)}
+.ib{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:var(--mut);flex:none}
+.ib.mic{background:#3ee8ff18;color:var(--c);border:1px solid #3ee8ff55}
+.ib.mic.on{background:var(--c);color:#022231;box-shadow:0 0 20px var(--c)}
+.ib.snd{background:var(--c);color:#022231}
+.ib.snd:disabled{opacity:.45}
+.glink{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);padding:2px 4px}
+.glink b{color:var(--c);font-weight:500}
+.tdots{display:inline-flex;gap:4px;vertical-align:middle}
+.tdots i{width:6px;height:6px;border-radius:50%;background:currentColor;animation:tdot 1.2s infinite}
+.tdots i:nth-child(2){animation-delay:.15s}.tdots i:nth-child(3){animation-delay:.3s}
+.wv{display:inline-flex;align-items:center;gap:3px;height:14px;vertical-align:-2px}
+.wv i{display:block;width:3px;height:100%;border-radius:2px;background:currentColor;animation:bars .9s ease-in-out infinite;transform-origin:center}
+.wv i:nth-child(2n){animation-delay:.12s}.wv i:nth-child(3n){animation-delay:.27s}.wv i:nth-child(5n){animation-delay:.4s}
+@keyframes tdot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinr{to{transform:rotate(-360deg)}}
+@keyframes breathe{0%,100%{opacity:.75;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
+@keyframes ripple{0%{transform:scale(.55);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+@keyframes bars{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+/* the core: breathes when idle, ripples when listening, spins its inner arc when thinking */
+.core{position:relative;display:grid;place-items:center;flex:none}
+.core svg{overflow:visible}
+.core .r-out{transform-origin:center;transform-box:fill-box;animation:spin 60s linear infinite}
+.core .r-mid{transform-origin:center;transform-box:fill-box;animation:spinr 34s linear infinite}
+.core .r-arc{transform-origin:center;transform-box:fill-box;animation:spin 9s linear infinite;opacity:0;transition:opacity .3s}
+.core .glob{animation:breathe 5s ease-in-out infinite}
+.core .rip{transform-origin:center;transform-box:fill-box;opacity:0}
+.core .halo{transition:opacity .4s}
+.s-listen .core .rip{animation:ripple 1.8s ease-out infinite}
+.s-listen .core .rip.b{animation-delay:.6s}.s-listen .core .rip.c{animation-delay:1.2s}
+.s-listen .core .glob{animation-duration:1.4s}
+.s-think .core .r-arc{opacity:1;animation-duration:1.1s}
+.s-think .core .r-out{animation-duration:8s}
+.s-think .core .r-mid{animation-duration:5s}
+.s-think .core .glob{animation-duration:2.2s}
+.s-answer .core .halo{opacity:.9}
+.slbl{text-align:center;font:500 11px "JetBrains Mono",monospace;letter-spacing:.32em;color:var(--c);text-transform:uppercase;position:relative;z-index:1}
+@media (prefers-reduced-motion:reduce){.core *{animation-duration:0s!important;animation-iteration-count:1!important}}
+
+/* ---- desktop ---- */
+.desk{display:grid;grid-template-rows:56px minmax(0,1fr);gap:18px 22px;padding:16px 26px 22px}
+.desk>.top{grid-column:1/-1;border-bottom:1px solid #3ee8ff1c;padding-bottom:12px;position:relative;z-index:1}
+.desk .col{display:flex;gap:10px;min-height:0;position:relative;z-index:1}
+.desk .colL{flex-direction:row}
+.desk .colR{flex-direction:row-reverse}
+.desk .pans{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;overflow-y:auto;scrollbar-width:none;padding-bottom:4px}
+.desk .pans::-webkit-scrollbar{display:none}
+.desk .pans>.pnl{flex:none}
+.rail{width:44px;flex:none;display:flex;flex-direction:column;gap:8px}
+.rail button{position:relative;width:44px;height:44px;display:grid;place-items:center;color:var(--c);border:1px solid #3ee8ff33;background:#071826cc}
+.rail button svg.i{width:18px;height:18px}
+.rail button:hover{background:#3ee8ff14}
+.rail em{position:absolute;top:-6px;right:-6px;font:600 9px Inter;font-style:normal;background:var(--c);color:#022231;border-radius:8px;padding:1px 5px}
+.rail em.w{background:var(--warn)}
+.desk .mid{display:flex;flex-direction:column;min-height:0;min-width:0;position:relative;z-index:1}
+.desk .mid .chat{flex:1;padding:0 30px 14px}
+.desk .mid .cmd{padding:0 30px}
+.desk .mid .core{height:236px}
+
+/* ---- phone ---- */
+.phone{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.phone .hd{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 0;position:relative;z-index:1}
+.phone .wm{font-size:17px;letter-spacing:.34em}
+.phone .core{height:178px;z-index:1}
+.phone .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 12px;z-index:1}
+.phone .tiles .pnl{padding:9px 10px;text-align:left}
+.phone .tiles .kv{font-size:22px}
+.phone .pbody{flex:1;min-height:0;display:flex;flex-direction:column;z-index:1;position:relative}
+.phone .chat{flex:1;gap:10px;padding:0 16px 10px}
+.phone .msg{max-width:94%;font-size:13.5px}
+.phone .cmd{padding:0 12px 8px;z-index:1}
+.phone .pscroll{flex:1;overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.phone .tabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid #3ee8ff1f;padding:8px 6px calc(10px + env(safe-area-inset-bottom));background:#02070dcc;z-index:1;position:relative}
+.phone .tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;font:10px "JetBrains Mono",monospace;letter-spacing:.06em;color:var(--mut);position:relative}
+.phone .tabs button[aria-selected="true"]{color:var(--c)}
+.phone .tabs svg.i{width:20px;height:20px}
+.phone .tabs em{position:absolute;top:-4px;left:50%;margin-left:6px;font:600 9px Inter;background:var(--c);color:#022231;border-radius:8px;padding:0 5px;font-style:normal}
+.phone .ph .fold{display:none}
+.phone .acts .btn{padding:9px 13px}
+.vlist{display:grid;gap:8px}
+.vlist button{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #3ee8ff22;background:#071826cc;text-align:left;font-size:14px}
+.vlist button svg.i{color:var(--c);width:18px;height:18px}
+.vlist button small{display:block;color:var(--mut);font-size:12px}
+
+/* ---- sheets: an email with its reply, a team request with its thread ---- */
+.sheetbg{position:fixed;inset:0;z-index:40;background:#010409c0;backdrop-filter:blur(3px);display:flex;justify-content:center;align-items:flex-start;padding:40px 16px}
+.sheet{width:min(760px,100%);max-height:calc(100vh - 80px);display:flex;flex-direction:column;padding:0}
+.sheet .shd{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #3ee8ff1c}
+.sheet .shd .x{width:34px;height:34px;display:grid;place-items:center;border-radius:8px;color:var(--c);border:1px solid #3ee8ff33;flex:none}
+.sheet .sht{flex:1;min-width:0}
+.sheet .sht b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet .sht span{font:11px "JetBrains Mono",monospace;color:var(--mut)}
+.sheet .shb{overflow-y:auto;padding:14px 16px 18px;display:flex;flex-direction:column;gap:12px}
+.sheet .from{font-size:12.5px;color:var(--mut)}
+.sheet .from b{color:var(--ink);font-weight:500}
+.sheet .sum{font-size:13px;border-left:2px solid var(--c);padding:6px 10px;background:#3ee8ff0a}
+.sheet .txt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;line-height:1.55;color:#cfeef7;max-height:40vh;overflow-y:auto;border:1px solid #3ee8ff14;padding:10px 12px;background:#02080e}
+.sheet label.rl{font:500 10px "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--c)}
+.sheet textarea{width:100%;min-height:170px;resize:vertical;border:1px solid #3ee8ff40;background:#04111b;border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.5;color:var(--ink);outline:none}
+.sheet textarea:focus{border-color:var(--c)}
+.sheet .note{display:flex;gap:8px;flex-wrap:wrap}
+.sheet .note input{flex:1;min-width:180px;border:1px solid #3ee8ff2a;background:#04111b;border-radius:6px;padding:8px 10px;font-size:13px;outline:none}
+.sheet .racts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sheet .racts .said{flex:1;min-width:160px;font-size:12px;color:var(--mut)}
+.sheet .thr{display:flex;flex-direction:column;gap:10px}
+.sheet .tm{max-width:88%;padding:8px 12px;border-radius:12px;font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.sheet .tm.them{align-self:flex-start;border:1px solid #3ee8ff2e;background:#3ee8ff0a}
+.sheet .tm.me{align-self:flex-end;background:#3ee8ff18;border:1px solid #3ee8ff40}
+.sheet .tm small{display:block;font:10px "JetBrains Mono",monospace;color:var(--mut);letter-spacing:.08em;margin-bottom:3px;text-transform:uppercase}
+.sheet .warnline{font-size:12.5px;color:var(--warn);border:1px solid #ffb64844;background:#ffb6480d;padding:8px 10px;border-radius:6px}
+.cfbg{position:fixed;inset:0;z-index:60;background:#010409d0;display:grid;place-items:center;padding:16px}
+.cf{width:min(440px,100%);padding:18px 18px 16px}
+.cf p{font-size:14.5px;line-height:1.5;margin-bottom:14px;white-space:pre-wrap}
+.cf .acts{justify-content:flex-end;margin-top:0}
+.view{position:fixed;inset:0;z-index:30;background:#03060c;display:flex;flex-direction:column}
+.view .vh{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #3ee8ff22;font:500 11px "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--c)}
+.view .vh .x{display:flex;align-items:center;gap:6px;color:var(--c);border:1px solid #3ee8ff33;border-radius:6px;padding:6px 10px}
+.view .vh .ot{margin-left:auto;color:var(--mut);text-decoration:none}
+.view iframe{flex:1;border:0;width:100%;background:#fff}
+.toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:70;background:#071826f2;border:1px solid #3ee8ff55;color:var(--ink);padding:10px 16px;border-radius:10px;font-size:13px;max-width:calc(100% - 32px);box-shadow:0 10px 30px #0008}
+/* sign-in */
+.signin{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;z-index:2}
+.signin form{width:min(360px,100%);display:grid;gap:10px}
+.signin input{border:1px solid #3ee8ff40;background:#04111bcc;border-radius:10px;padding:12px 14px;font-size:15px;outline:none}
+.signin .err{color:#ffc9c9;font-size:13px;min-height:18px;text-align:center}
+@media (max-width:760px){.sheetbg{padding:0}.sheet{max-height:100%;height:100%;width:100%;border:0}.sheet .txt{max-height:none}}
+</style>
+</head>
+<body>
+<div id="app" class="jv s-idle"></div>
+<script>
+(function () {
+  'use strict';
+  /* ------------------------------------------------------------ where things are (all on this site, each with its own sign-in) */
+  var API = '../api.php';                                 /* the Assistant: inboxes, Ask, replies, groceries, the laptop's status */
+  var DESKS = [                                           /* the J.A.R.V.I.S. help desk: the Field app's (Sixfold) and the Houston install's */
+    { id: 'sixfold', name: 'Sixfold', api: '/api/rounds.php', page: '/summit-de59ae83/', home: true },
+    { id: 'houston', name: 'Houston', api: '/api/c-houston-lawn-test-rounds.php', page: '/hl-f98938/' }
+  ];
+  var OUTBOX = '/outbox-092b0f/', PEAK = '/peak-desk-28d38d/';
+  var ME = 'Matthew Sharpe';
+  var BRAINS = { assistant: 'Assistant, instant', desk: 'J.A.R.V.I.S. desk, sent to your laptop, a few minutes' };
+  var STLABEL = { idle: 'Standing by', listen: 'Listening', think: 'Thinking', answer: 'Ready' };
+  var LOW = { receipt: 1, newsletter: 1, promo: 1, spam_risk: 1 };
+
+  /* ------------------------------------------------------------ icons (constant strings only; data never goes through innerHTML) */
+  var P = {
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+    send: '<path d="M4 12l16-8-6 16-2.5-6.5z"/>',
+    inbox: '<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1.5 3h5l1.5-3h5"/>',
+    help: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 10h6"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+    build: '<path d="M14 4l6 6-9 9H5v-6z"/><path d="M12 6l6 6"/>',
+    cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    cart: '<path d="M3 4h2l2.5 11h11L21 8H6.5"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/>',
+    out: '<path d="M4 14l3-8h10l3 8v5H4z"/><path d="M12 3v8M9 8l3 3 3-3"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+    home: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
+    peak: '<path d="M3 19l6-10 4 6 3-4 5 8z"/>',
+    more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+    doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    back: '<path d="M15 6l-6 6 6 6"/>',
+    chev: '<path d="M9 6l6 6-6 6"/>',
+    fold: '<path d="M5 12h14"/>',
+    cog: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+    open: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>',
+    swap: '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>'
+  };
+  function ic(n) { var s = document.createElement('span'); s.style.display = 'contents'; s.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + P[n] + '</svg>'; return s.firstChild; }
+  function el(t, cls, txt) { var e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function add(p) { for (var i = 1; i < arguments.length; i++) { var c = arguments[i]; if (c == null || c === false) continue; if (Array.isArray(c)) c.forEach(function (x) { add(p, x); }); else p.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); } return p; }
+  function btn(label, icon, cls, fn) { var b = el('button', cls || null); b.type = 'button'; if (icon) b.appendChild(ic(icon)); if (label) b.appendChild(document.createTextNode(label)); if (fn) b.addEventListener('click', fn); return b; }
+  function store(k, v) { try { if (v === undefined) { var s = localStorage.getItem(k); return s == null ? null : JSON.parse(s); } localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+  function plural(n, a, b) { return n + ' ' + (n === 1 ? a : (b || a + 's')); }
+  function ago(t) { var s = Math.round(Date.now() / 1000 - t); if (s < 90) return 'now'; if (s < 3600) return Math.round(s / 60) + 'm'; if (s < 86400) return Math.round(s / 3600) + 'h'; return Math.round(s / 86400) + 'd'; }
+  function clock(t) { var d = new Date(t * 1000), h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ':' + (m < 10 ? '0' : '') + m + ' ' + (h < 12 ? 'am' : 'pm'); }
+  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function dayName(ymd) { var p = String(ymd).split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]); return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()]; }
+  function said(box, text) { String(text).split(/\*\*([^*\n]+)\*\*/).forEach(function (part, ix) { box.appendChild(ix % 2 ? el('b', null, part) : document.createTextNode(part)); }); return box; }
+  function oneLine(s, n) { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+  /* ------------------------------------------------------------ talking to the servers */
+  function js(r) { return r.json().catch(function () { return { ok: false, error: 'The server sent nothing readable.' }; }).then(function (j) { j._status = r.status; return j; }); }
+  function aget(action) { return fetch(API + '?action=' + action, { credentials: 'same-origin', cache: 'no-store' }).then(js); }
+  function apost(action, body) { return fetch(API + '?action=' + action, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(js); }
+  function xget(url) { return fetch(url, { credentials: 'same-origin', cache: 'no-store' }).then(js, function () { return { ok: false, error: 'No connection.', _status: 0 }; }); }
+  function xpost(url, body, hdr) { var h = { 'Content-Type': 'application/json' }; for (var k in (hdr || {})) h[k] = hdr[k]; return fetch(url, { method: 'POST', credentials: 'same-origin', headers: h, body: JSON.stringify(body || {}) }).then(js, function () { return { ok: false, error: 'No connection.', _status: 0 }; }); }
+
+  /* ------------------------------------------------------------ state */
+  var app = document.getElementById('app');
+  var S = { home: null, st: null, team: {}, outbox: null, desk: null, gro: null, brain: store('jarvis.brain') === 'desk' ? 'desk' : 'assistant', tab: 'home',
+    fold: store('jarvis.fold') || {}, open: store('jarvis.open') || {}, needsAll: false, closedOpen: false, mineOpen: false, state: 'idle', briefed: false, pending: {} };
+  var phoneMq = window.matchMedia('(max-width: 979px)'), isPhone = phoneMq.matches;
+  var chatLog = el('div', 'chat'); chatLog.setAttribute('aria-live', 'polite'); chatLog.appendChild(el('div', 'sp'));
+  var field, micB, sendB, brainBar, stateLbl, coreBox;
+
+  function setState(s) {
+    S.state = s; app.className = app.className.replace(/\bs-\w+/g, '').trim() + ' s-' + s;
+    if (stateLbl) { stateLbl.textContent = ''; if (s === 'listen') { var w = el('span', 'wv'); for (var i = 0; i < 9; i++) w.appendChild(el('i')); add(stateLbl, w, '  '); } stateLbl.appendChild(document.createTextNode(STLABEL[s])); }
+    clearTimeout(setState.t); if (s === 'answer') setState.t = setTimeout(function () { if (S.state === 'answer') setState('idle'); }, 8000);
+  }
+  function toast(t) { var o = document.querySelector('.toast'); if (o) o.remove(); var e = el('div', 'toast', t); e.setAttribute('role', 'status'); document.body.appendChild(e); setTimeout(function () { e.remove(); }, 4200); }
+
+  /* ------------------------------------------------------------ the core: the mockup's wireframe globe, drawn by one function */
+  var coreN = 0;
+  function coreSvg(s) {
+    var id = 'g' + (++coreN), c = s / 2, R = s * 0.44, g = s * 0.24, lon = '';
+    [0, 1.5, 3, 4.5].forEach(function (b) { lon += '<ellipse cx="' + c + '" cy="' + c + '" rx="' + g + '" ry="' + g + '" fill="none" stroke="#3ee8ff" stroke-opacity=".45" stroke-width="1"><animate attributeName="rx" values="' + g + ';0;' + g + '" dur="6s" begin="-' + b + 's" repeatCount="indefinite"/></ellipse>'; });
+    var lat = [0.35, 0.7, 0.92].map(function (k) { return '<ellipse cx="' + c + '" cy="' + c + '" rx="' + g + '" ry="' + (g * k).toFixed(1) + '" fill="none" stroke="#3ee8ff" stroke-opacity=".22"/>'; }).join('') + '<line x1="' + (c - g) + '" y1="' + c + '" x2="' + (c + g) + '" y2="' + c + '" stroke="#3ee8ff" stroke-opacity=".35"/>';
+    var ticks = '<circle cx="' + c + '" cy="' + c + '" r="' + R + '" fill="none" stroke="#3ee8ff" stroke-opacity=".5" stroke-width="6" stroke-dasharray="1 7.2"/>';
+    var rip = function (k) { return '<circle class="rip' + k + '" cx="' + c + '" cy="' + c + '" r="' + (g * 1.35) + '" fill="none" stroke="#3ee8ff" stroke-width="1.2"/>'; };
+    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 ' + s + ' ' + s + '" aria-hidden="true">' +
+      '<defs><radialGradient id="r' + id + '"><stop offset="0" stop-color="#bff7ff" stop-opacity=".95"/><stop offset=".25" stop-color="#3ee8ff" stop-opacity=".55"/><stop offset=".7" stop-color="#0a6c88" stop-opacity=".18"/><stop offset="1" stop-color="#03060c" stop-opacity="0"/></radialGradient>' +
+      '<filter id="f' + id + '" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="' + (s / 40) + '"/></filter></defs>' +
+      '<circle class="halo" cx="' + c + '" cy="' + c + '" r="' + (g * 1.6) + '" fill="url(#r' + id + ')" opacity=".55"/>' + rip('') + rip(' b') + rip(' c') +
+      '<g class="r-out">' + ticks + '<circle cx="' + c + '" cy="' + c + '" r="' + (R + 10) + '" fill="none" stroke="#3ee8ff" stroke-opacity=".18"/><path d="M' + (c + R + 10) + ' ' + c + 'a' + (R + 10) + ' ' + (R + 10) + ' 0 0 1 -' + ((R + 10) * 0.29) + ' ' + ((R + 10) * 0.71) + '" fill="none" stroke="#3ee8ff" stroke-width="2"/></g>' +
+      '<g class="r-mid"><circle cx="' + c + '" cy="' + c + '" r="' + (R * 0.8) + '" fill="none" stroke="#3ee8ff" stroke-opacity=".28" stroke-dasharray="' + (R * 0.6) + ' ' + (R * 0.2) + '"/></g>' +
+      '<g class="r-arc"><circle cx="' + c + '" cy="' + c + '" r="' + (R * 0.66) + '" fill="none" stroke="#bff7ff" stroke-width="2.5" stroke-dasharray="' + (R * 0.9) + ' ' + (R * 4) + '" stroke-linecap="round"/></g>' +
+      '<ellipse cx="' + c + '" cy="' + c + '" rx="' + (R * 0.95) + '" ry="' + (R * 0.3) + '" fill="none" stroke="#3ee8ff" stroke-opacity=".25" transform="rotate(-18 ' + c + ' ' + c + ')"/>' +
+      '<circle r="3" fill="#bff7ff"><animateMotion dur="7s" repeatCount="indefinite" path="M' + (c - R * 0.95) + ' ' + c + 'a' + (R * 0.95) + ' ' + (R * 0.3) + ' 0 1 0 ' + (R * 1.9) + ' 0a' + (R * 0.95) + ' ' + (R * 0.3) + ' 0 1 0 -' + (R * 1.9) + ' 0"/></circle>' +
+      '<g class="glob" style="transform-origin:' + c + 'px ' + c + 'px">' + lat + lon + '<circle cx="' + c + '" cy="' + c + '" r="' + g + '" fill="none" stroke="#3ee8ff" stroke-opacity=".7"/><circle cx="' + c + '" cy="' + c + '" r="' + (g * 0.22) + '" fill="#dffbff" filter="url(#f' + id + ')"/><circle cx="' + c + '" cy="' + c + '" r="' + (g * 0.1) + '" fill="#fff"/></g></svg>';
+  }
+  function core(size) { var d = el('div', 'core'); d.innerHTML = coreSvg(size); return d; }
+
+  /* ------------------------------------------------------------ what the data says */
+  function accts() {
+    var a = (S.home && S.home.accounts) || [], rank = function (x) { var l = x.label + ' ' + x.email; return /personal|gmail\.com/i.test(l) ? 0 : /traverse/i.test(l) ? 1 : /sixfold|365/i.test(l) ? 2 : /surge/i.test(l) ? 3 : 4; };
+    return a.slice().sort(function (x, y) { return rank(x) - rank(y); });
+  }
+  function colorOf(a) { var l = a ? a.label + ' ' + a.email : ''; return /personal|gmail\.com/i.test(l) ? '#a78bfa' : /traverse/i.test(l) ? '#60a5fa' : /sixfold|365/i.test(l) ? '#f5c542' : /surge/i.test(l) ? '#4abe4a' : '#7fa3b4'; }
+  function acctOf(email) { return accts().filter(function (a) { return a.email === email; })[0] || null; }
+  function items() { return ((S.home && S.home.items) || []).filter(function (i) { return !LOW[i.category]; }); }
+  function needsReply() {
+    return ((S.home && S.home.items) || []).filter(function (i) { return i.category === 'needs_reply'; })
+      .sort(function (a, b) { return ((b.priority === 'high') - (a.priority === 'high')) || b.date - a.date; });
+  }
+  function drafted() { return items().filter(function (i) { return i.draftId; }).length; }
+  function tickets() { var all = []; DESKS.forEach(function (d) { var t = S.team[d.id]; if (t && t.ok) (t.tickets || []).forEach(function (x) { all.push({ src: d, t: x }); }); }); return all.sort(function (a, b) { return b.t.updated - a.t.updated; }); }
+  function teamOpen() { return tickets().filter(function (x) { return x.t.by !== ME && x.t.status !== 'closed'; }); }
+  function teamNeedsMe() { return teamOpen().filter(function (x) { return x.t.status === 'matthew'; }); }
+  function laptop() { var p = S.st && S.st.pushedAt; if (!p) return { on: false, text: 'Laptop: no word yet' }; var m = Math.round((Date.now() / 1000 - p) / 60); return m <= 45 ? { on: true, text: 'Laptop online', m: m } : { on: false, text: 'Laptop last seen ' + (m < 120 ? m + ' min' : Math.round(m / 60) + ' h') + ' ago', m: m }; }
+  function deskDue() {
+    var d = S.desk; if (!d || !d.ok) return null;
+    var today = d.today, out = { due: 0, late: 0, oldest: null, list: [] }, DONE = { sponsor: { signed: 1, lost: 1 }, expo: { booked: 1, lost: 1 } };
+    ['sponsor', 'expo'].forEach(function (w) { ((d[w] && d[w].recs) || []).forEach(function (r) {
+      var nd = r.next && r.next.date; if (!nd || DONE[w][r.stage] || nd > today) return;
+      out.due++; if (nd < today) out.late++;
+      out.list.push({ name: r.name, date: nd, what: (r.next && r.next.what) || '', world: w });
+    }); });
+    out.list.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }); out.oldest = out.list[0] || null;
+    return out;
+  }
+  function outboxSum() {
+    var o = S.outbox; if (!o || !o.ok || !o.summary) return null;
+    var s = function (x) { x = x || {}; return (x.peak || 0) + (x.sixfold || 0) + (x.traverse || 0); };
+    return { sent: s(o.summary.sent), waiting: s(o.summary.waiting), failed: s(o.summary.failed), attention: o.summary.attention || [] };
+  }
+  function groCount() { var g = S.gro; if (!g || !g.ok) return null; return (g.items || []).filter(function (i) { return !i.done; }).length; }
+
+  /* ------------------------------------------------------------ the panels: one body each, shared by desktop and phone */
+  var PANELS = {
+    inbox: { side: 'L', n: '01', t: 'Inbox', icon: 'inbox' },
+    team: { side: 'L', n: '02', t: 'Team requests', icon: 'help' },
+    today: { side: 'R', n: '03', t: 'Today', icon: 'sun' },
+    builds: { side: 'R', n: '04', t: 'Builds running', icon: 'build' },
+    cal: { side: 'R', n: '05', t: 'Calendar', icon: 'cal' }
+  };
+  function panelCount(k) {
+    if (k === 'inbox') return S.home ? items().length + ' waiting · ' + drafted() + ' drafted' : '';
+    if (k === 'team') { var o = teamOpen().length; return o ? o + ' open' : ''; }
+    if (k === 'today') return S.st && S.st.overnight ? 'updated ' + clock(S.st.overnight.at).replace(' ', '') : '';
+    if (k === 'builds') { var b = ((S.st && S.st.builds) || []).filter(function (x) { return x.state === 'running'; }).length; return b ? b + ' active' : ''; }
+    return '';
+  }
+  function railBadge(k) {
+    if (k === 'inbox') { var n = needsReply().length; return n ? [n, ''] : null; }
+    if (k === 'team') { var m = teamNeedsMe().length, o = teamOpen().length; return m ? [m, 'w'] : o ? [o, ''] : null; }
+    if (k === 'today') { var p = S.st && S.st.overnight && S.st.overnight.problems.length; return p ? [p, 'w'] : null; }
+    if (k === 'builds') { var b = ((S.st && S.st.builds) || []).filter(function (x) { return x.state === 'running'; }).length; return b ? [b, ''] : null; }
+    return null;
+  }
+  function panel(k) {
+    var p = PANELS[k], box = el('section', 'pnl'); box.id = 'p-' + k; box.setAttribute('aria-label', p.t);
+    var hd = el('div', 'ph'); add(hd, el('span', 'n', p.n), p.t, el('span', 'pc', panelCount(k)));
+    hd.appendChild(btn(null, 'fold', 'fold', function () { S.fold[k] = true; store('jarvis.fold', S.fold); draw(); })).setAttribute('aria-label', 'Fold ' + p.t + ' into the side');
+    hd.lastChild.title = 'Fold into the side';
+    box.appendChild(hd);
+    add(box, BODY[k]());
+    return box;
+  }
+  var BODY = {
+    inbox: function () {
+      if (!S.home) return el('div', 'empty', 'Opening your inboxes…');
+      var out = [], nr = needsReply(), tm = teamNeedsMe();
+      /* Needs you: what needs a reply, across every inbox, then the team requests waiting on him */
+      var nh = el('div', 'sub'); add(nh, 'Needs you', el('b', null, String(nr.length + tm.length))); out.push(nh);
+      var shown = S.needsAll ? nr : nr.slice(0, 4), nbox = el('div', 'needs');
+      shown.forEach(function (i) { nbox.appendChild(mailRow(i, true)); });
+      tm.slice(0, S.needsAll ? 20 : 2).forEach(function (x) { nbox.appendChild(ticketRow(x)); });
+      if (!nr.length && !tm.length) nbox.appendChild(el('div', 'empty', 'Nothing needs a reply right now.'));
+      out.push(nbox);
+      if (nr.length > 4) out.push(btn(S.needsAll ? 'Show fewer' : 'Show all ' + nr.length, null, 'more', function () { S.needsAll = !S.needsAll; draw(); }));
+      /* the inboxes, one line each until tapped */
+      var ih = el('div', 'sub'); add(ih, 'Inboxes'); out.push(ih);
+      accts().forEach(function (a) {
+        var mine = items().filter(function (i) { return i.acct === a.email; }), dr = mine.filter(function (i) { return i.draftId; }).length;
+        var row = el('div', 'ibr' + (S.open[a.email] ? ' open' : '')); row.setAttribute('data-inbox', a.email);
+        var h = btn(null, null, 'ibh', function () { S.open[a.email] = !S.open[a.email]; store('jarvis.open', S.open); row.classList.toggle('open', !!S.open[a.email]); h.setAttribute('aria-expanded', String(!!S.open[a.email])); });
+        h.setAttribute('aria-expanded', String(!!S.open[a.email]));
+        var d = el('span', 'dot'); d.style.background = colorOf(a); d.style.boxShadow = '0 0 8px ' + colorOf(a) + '88';
+        add(h, d, el('span', 'nm', a.label), a.needsReconnect ? el('span', 'bdg bd', 'Reconnect') : null, dr ? el('span', 'bdg dr', plural(dr, 'draft') + ' ready') : null, el('span', 'ct' + (mine.length ? '' : ' z'), String(mine.length)), ic('chev'));
+        h.lastChild.classList.add('chev');
+        var b = el('div', 'ibb');
+        if (!mine.length) b.appendChild(el('div', 'empty', 'Nothing waiting here.'));
+        mine.sort(function (x, y) { return y.date - x.date; }).slice(0, 12).forEach(function (i) { b.appendChild(mailRow(i, false)); });
+        if (mine.length > 12) b.appendChild(btn('All ' + mine.length + ' in the full inbox', null, 'more', function () { openView('inbox'); }));
+        add(row, h, b); out.push(row);
+      });
+      if (!accts().length) out.push(el('div', 'empty', 'No inbox is connected. Settings, then Connect.'));
+      return out;
+    },
+    team: function () {
+      var out = [], miss = [];
+      DESKS.forEach(function (d) { var t = S.team[d.id]; if (!t) return; if (t._status === 401) miss.push(d); });
+      var open = teamOpen(), closed = tickets().filter(function (x) { return x.t.by !== ME && x.t.status === 'closed'; }), mine = tickets().filter(function (x) { return x.t.by === ME; });
+      open.slice(0, 8).forEach(function (x) { out.push(ticketRow(x)); });
+      if (!open.length && !miss.length) out.push(el('div', 'empty', Object.keys(S.team).length ? 'No open requests from the team.' : 'Looking…'));
+      if (closed.length) { out.push(btn((S.closedOpen ? 'Hide' : 'Show') + ' closed (' + closed.length + ')', null, 'more', function () { S.closedOpen = !S.closedOpen; draw(); })); if (S.closedOpen) closed.slice(0, 10).forEach(function (x) { out.push(ticketRow(x)); }); }
+      if (mine.length) { out.push(btn((S.mineOpen ? 'Hide' : 'Show') + ' your desk chats (' + mine.length + ')', null, 'more', function () { S.mineOpen = !S.mineOpen; draw(); })); if (S.mineOpen) mine.slice(0, 10).forEach(function (x) { out.push(ticketRow(x)); }); }
+      miss.forEach(function (d) { var h = el('div', 'hint'); add(h, d.name + ' J.A.R.V.I.S.: sign in to its app once on this device, then this fills in. ', btn('Open ' + d.name, null, null, function () { openView('page', d); })); out.push(h); });
+      return out;
+    },
+    today: function () {
+      var out = [], o = S.st && S.st.overnight;
+      if (o) {
+        var bad = o.problems.length, r = btn(null, null, 'li', function () { localCheck(); }), d = el('span', 'dot');
+        d.style.background = bad ? 'var(--warn)' : 'var(--okc)'; d.style.boxShadow = '0 0 8px ' + (bad ? 'var(--warn)' : 'var(--okc)');
+        var x = el('div', 'lx'); add(x, el('div', 'lt', bad ? 'Overnight check: ' + plural(bad, 'problem') : 'Overnight check passed'), el('div', 'ls', clock(o.at) + ' · ' + (o.ok) + ' of ' + (o.ok + bad) + ' checks'));
+        add(r, d, x); out.push(r);
+      } else out.push(el('div', 'empty', S.st ? 'The overnight check has not reported here yet.' : 'Looking…'));
+      var ob = outboxSum();
+      if (ob) {
+        var k = el('div', 'kpis');
+        [[ob.sent, 'Sent', ''], [ob.waiting, 'Waiting', ''], [ob.failed, 'Failed', ob.failed ? 'var(--bad)' : '']].forEach(function (v) { var b = btn(null, null, 'kpi', function () { openView('outbox'); }); var kv = el('div', 'kv', String(v[0])); if (v[2]) kv.style.color = v[2]; add(b, kv, el('div', 'kl', v[1])); b.title = 'Outbox, today'; k.appendChild(b); });
+        out.push(k);
+      } else if (S.outbox && S.outbox._status === 401) { var hh = el('div', 'hint'); add(hh, 'Outbox: sign in once on this device. ', btn('Open Outbox', null, null, function () { openView('outbox'); })); out.push(hh); }
+      var dd = deskDue();
+      if (dd) {
+        var pr = btn(null, null, 'li', function () { localPeak(); }), pd = el('span', 'dot'), w = dd.late ? 'var(--warn)' : dd.due ? 'var(--c)' : 'var(--okc)';
+        pd.style.background = w; pd.style.boxShadow = '0 0 8px ' + w;
+        var px = el('div', 'lx'); add(px, el('div', 'lt', 'Peak desk: ' + plural(dd.due, 'follow-up') + ' due'), el('div', 'ls', dd.due ? (dd.late + ' late' + (dd.late && dd.oldest ? ' · oldest since ' + dayName(dd.oldest.date).replace(/ \d+ \w+$/, '') : '')) : 'nothing due today'));
+        add(pr, pd, px); out.push(pr);
+      } else if (S.desk && S.desk._status === 401) { var hp = el('div', 'hint'); add(hp, 'Peak desk: sign in once on this device. ', btn('Open Peak desk', null, null, function () { openView('peak'); })); out.push(hp); }
+      return out;
+    },
+    builds: function () {
+      var b = (S.st && S.st.builds) || [];
+      if (!b.length) return el('div', 'empty', S.st ? 'Nothing building right now.' : 'Looking…');
+      return b.map(function (x) {
+        var r = el('div', 'li'); r.style.display = 'block';
+        var t = el('div'); t.style.cssText = 'display:flex;justify-content:space-between;gap:10px';
+        var right = x.state === 'done' ? el('span', 'lm okt', 'done') : x.state === 'failed' ? el('span', 'lm', 'stopped') : x.state === 'quiet' ? el('span', 'lm', 'quiet 6h+') : el('span', 'lm', x.pct != null ? x.pct + '%' : '…');
+        if (x.state === 'failed') right.style.color = 'var(--bad)';
+        add(t, el('span', 'lt', x.name), right); r.appendChild(t);
+        var pg = el('div', 'prog'), bar = el('i'); bar.style.width = (x.state === 'done' ? 100 : x.pct || 0) + '%'; pg.appendChild(bar); r.appendChild(pg);
+        r.appendChild(el('div', 'ls', (x.steps ? 'step ' + x.step + ' of ' + x.steps + (x.note ? ' · ' : '') : '') + (x.note || '') + ' · ' + ago(x.at)));
+        return r;
+      });
+    },
+    cal: function () {
+      var c = S.st && S.st.calendar, out = [];
+      if (!c) return el('div', 'empty', 'Looking…');
+      out.push(el('div', 'hint', 'Calendar is not connected yet: the Assistant’s Google sign-in has Gmail only. Until it is, here are the invitations and bookings in your inboxes.'));
+      if (!c.emails.length) out.push(el('div', 'empty', 'No calendar emails waiting.'));
+      c.emails.slice(0, 4).forEach(function (i) {
+        var r = btn(null, null, 'li', function () { openMail(i); });
+        var w = el('div'); w.style.cssText = 'width:52px;flex:none'; add(w, el('div', 'lm', ago(i.date)));
+        var x = el('div', 'lx'); add(x, el('div', 'lt', i.subject), el('div', 'ls', i.from));
+        add(r, w, x); out.push(r);
+      });
+      return out;
+    }
+  };
+  function mailRow(i, withInbox) {
+    var a = acctOf(i.acct), r = btn(null, null, 'li', function () { openMail(i); }); r.setAttribute('data-key', i.acct + ':' + i.id);
+    var d = el('span', 'dot'); d.style.background = colorOf(a); d.style.boxShadow = '0 0 8px ' + colorOf(a) + '88';
+    var x = el('div', 'lx'); add(x, el('div', 'lt', i.subject || '(no subject)'), el('div', 'ls', i.from + (withInbox && a ? ' · ' + a.label : '')));
+    var rr = el('div', 'lr'); add(rr, el('span', 'lm', ago(i.date)), i.draftId ? el('span', 'bdg dr', 'Draft ready') : null);
+    add(r, withInbox ? d : null, x, rr); return r;
+  }
+  var STB = { new: ['nw', 'New'], working: ['wk', 'Working'], answered: ['mu', 'Answered'], matthew: ['nm', 'Needs you'], closed: ['mu', 'Closed'] };
+  function ticketRow(x) {
+    var t = x.t, first = (t.msgs || []).filter(function (m) { return m.mine; })[0] || (t.msgs || [])[0] || { text: '' };
+    var r = btn(null, null, 'li', function () { openThread(x); }); r.setAttribute('data-ticket', t.id);
+    var lx = el('div', 'lx'); add(lx, el('div', 'lt', oneLine(first.text || (first.audio && first.audio.length ? 'Voice note' : first.photos && first.photos.length ? 'Photo' : ''), 70)), el('div', 'ls', (t.by === ME ? 'You' : t.by) + ' · ' + x.src.name + ' · ' + ago(t.updated) + ' ago'));
+    var b = STB[t.status] || ['mu', t.status];
+    add(r, lx, el('span', 'bdg ' + b[0], b[1])); return r;
+  }
+
+  /* ------------------------------------------------------------ drawing the screen */
+  function topBar() {
+    var t = el('header', 'top'), lp = laptop(), sp = S.home && S.home.spend;
+    var st = el('span', 'st' + (lp.on ? '' : ' off')); add(st, el('i'), lp.text); st.title = 'From the overnight check, which reports from your laptop every 30 minutes';
+    add(t, el('span', 'wm', 'J.A.R.V.I.S.'), st, S.home ? el('span', null, plural(accts().length, 'inbox', 'inboxes') + ' linked') : null, sp ? el('span', null, 'API $' + sp.usd.toFixed(2) + ' / $' + Math.round(sp.budget)) : null);
+    var vw = el('div', 'vw');
+    [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); vw.appendChild(b); });
+    add(t, vw, el('span', 'clock mono', nowLine()));
+    return t;
+  }
+  function nowLine() { var d = new Date(), h = d.getHours(), m = d.getMinutes(); return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()] + ' · ' + (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; }
+  function cmd() {
+    var w = el('div', 'cmd');
+    var ch = el('div', 'chips');
+    [['What’s waiting?', localWaiting], ['Morning check', localCheck], ['Team requests', localTeam], ['Peak follow-ups', localPeak], ['What’s building?', localBuilds], ['Add to groceries…', function () { field.value = 'Add  to groceries'; field.focus(); field.setSelectionRange(4, 4); if (S.brain === 'desk') setBrain('assistant'); }]]
+      .forEach(function (c) { ch.appendChild(btn(c[0], null, 'chip', c[1])); });
+    brainBar = el('div', 'brain'); brainBar.id = 'brain';
+    var bar = el('form', 'cmdbar'); bar.setAttribute('autocomplete', 'off');
+    field = el('input'); field.type = 'text'; field.id = 'ask'; field.setAttribute('aria-label', 'Ask J.A.R.V.I.S.'); field.setAttribute('enterkeyhint', 'send');
+    micB = btn(null, 'mic', 'ib mic', voice); micB.setAttribute('aria-label', 'Talk (speech to text)'); micB.title = 'Talk: tap, speak, tap again';
+    sendB = btn(null, 'send', 'ib snd'); sendB.type = 'submit'; sendB.setAttribute('aria-label', 'Send');
+    add(bar, field, micB, sendB);
+    bar.addEventListener('submit', function (e) { e.preventDefault(); submit(); });
+    add(w, ch, brainBar, bar); paintBrain();
+    return w;
+  }
+  function paintBrain() {
+    if (!brainBar) return;
+    brainBar.className = 'brain' + (S.brain === 'desk' ? ' desk' : ''); brainBar.textContent = '';
+    var l = el('span', 'bl'); add(l, el('i'), 'Answering: ' + BRAINS[S.brain]); l.id = 'brainlabel';
+    var lp = laptop();
+    if (S.brain === 'desk' && !lp.on) l.appendChild(document.createTextNode(' (' + lp.text.toLowerCase() + ')'));
+    var sw = btn(S.brain === 'desk' ? 'Use the Assistant' : 'Send to the desk', null, 'sw', function () { setBrain(S.brain === 'desk' ? 'assistant' : 'desk'); });
+    sw.id = 'brainswitch';
+    add(brainBar, l, sw);
+    if (field) field.placeholder = S.brain === 'desk' ? (isPhone ? 'For the desk on your laptop' : 'Write it for J.A.R.V.I.S. desk on your laptop (answers in a few minutes)') : (isPhone ? 'Ask, or tap the mic' : 'Ask J.A.R.V.I.S., or tap the mic to talk');
+  }
+  function setBrain(b) { S.brain = b; store('jarvis.brain', b); paintBrain(); }
+
+  function draw() {
+    if (!S.home) return;
+    var keepVal = field ? field.value : '', hadFocus = document.activeElement === field;
+    app.textContent = '';
+    isPhone = phoneMq.matches;
+    if (isPhone) drawPhone(); else drawDesk();
+    if (keepVal) field.value = keepVal; if (hadFocus) field.focus();
+    setState(S.state);
+  }
+  function drawDesk() {
+    app.classList.add('desk'); app.classList.remove('phone');
+    var wide = window.innerWidth >= 1280 ? 340 : 300, cols = [];
+    app.appendChild(topBar());
+    ['L', 'R'].forEach(function (side) {
+      var keys = Object.keys(PANELS).filter(function (k) { return PANELS[k].side === side; });
+      var col = el('aside', 'col col' + side), rail = el('div', 'rail'), pans = el('div', 'pans');
+      keys.forEach(function (k) {
+        if (S.fold[k]) {
+          var b = btn(null, PANELS[k].icon, null, function () { delete S.fold[k]; store('jarvis.fold', S.fold); draw(); }); b.title = PANELS[k].t + ' (open)'; b.setAttribute('aria-label', 'Open ' + PANELS[k].t); b.setAttribute('data-panel', k);
+          var bd = railBadge(k); if (bd) { var em = el('em', bd[1], String(bd[0])); b.appendChild(em); }
+          rail.appendChild(b);
+        } else pans.appendChild(panel(k));
+      });
+      if (side === 'R') { var g = groCount(), gl = btn(null, 'cart', 'glink', function () { openView('groceries'); }); add(gl, ' Groceries · ', el('b', null, g == null ? 'open the list' : g + ' on the list')); if (pans.childNodes.length) pans.appendChild(gl); }
+      var hasR = rail.childNodes.length, hasP = pans.childNodes.length;
+      if (hasR) col.appendChild(rail); if (hasP) col.appendChild(pans);
+      cols.push((hasP ? wide : 0) + (hasR ? 44 + (hasP ? 10 : 0) : 0));
+      col._side = side; app.appendChild(col);
+    });
+    var mid = el('main', 'mid'); coreBox = core(236); stateLbl = el('div', 'slbl'); stateLbl.style.margin = '2px 0 12px';
+    add(mid, coreBox, stateLbl, chatLog, cmd());
+    app.insertBefore(mid, app.children[2]);
+    app.style.gridTemplateColumns = (cols[0] ? cols[0] + 'px ' : '0 ') + 'minmax(0,1fr) ' + (cols[1] ? cols[1] + 'px' : '0');
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+  function drawPhone() {
+    app.classList.add('phone'); app.classList.remove('desk'); app.style.gridTemplateColumns = '';
+    var lp = laptop(), hd = el('div', 'hd'), on = el('span', 'mono');
+    on.style.cssText = 'font-size:10px;letter-spacing:.14em;color:#7fa3b4;display:flex;gap:6px;align-items:center;text-transform:uppercase';
+    var dt = el('i'); dt.style.cssText = 'width:6px;height:6px;border-radius:50%;display:block;background:' + (lp.on ? '#4ade80' : '#ffb648') + ';box-shadow:0 0 8px ' + (lp.on ? '#4ade80' : '#ffb648');
+    add(on, dt, lp.on ? 'Online' : 'Laptop off');
+    add(hd, el('span', 'wm', 'J.A.R.V.I.S.'), on); app.appendChild(hd);
+    var body = el('div', 'pbody');
+    if (S.tab === 'home') {
+      coreBox = core(170); stateLbl = el('div', 'slbl'); stateLbl.style.cssText = 'margin:-4px 0 10px;font-size:10px;letter-spacing:.3em';
+      var dd = deskDue(), tiles = el('div', 'tiles');
+      [[items().length, 'Inbox', 'inbox', ''], [teamOpen().length, 'Team asks', 'team', ''], [dd ? dd.due : '–', 'Peak due', 'peak', dd && dd.late ? '#ffb648' : '']].forEach(function (x) {
+        var b = btn(null, null, 'pnl', function () { if (x[2] === 'peak') localPeak(); else { S.tab = x[2]; draw(); } }); var kv = el('div', 'kv', String(x[0])); if (x[3]) kv.style.color = x[3]; add(b, kv, el('div', 'kl', x[1])); tiles.appendChild(b);
+      });
+      add(app, coreBox, stateLbl, tiles);
+      add(body, chatLog, cmd());
+    } else {
+      stateLbl = null; coreBox = null;
+      var sc = el('div', 'pscroll');
+      if (S.tab === 'inbox') sc.appendChild(panel('inbox'));
+      if (S.tab === 'team') sc.appendChild(panel('team'));
+      if (S.tab === 'today') { sc.appendChild(panel('today')); sc.appendChild(panel('builds')); sc.appendChild(panel('cal')); }
+      if (S.tab === 'more') sc.appendChild(moreList());
+      body.appendChild(sc);
+    }
+    app.appendChild(body);
+    var tabs = el('nav', 'tabs'); tabs.setAttribute('role', 'tablist');
+    [['home', 'Home', 'home', 0], ['inbox', 'Inbox', 'inbox', items().length], ['team', 'Team', 'help', teamOpen().length], ['today', 'Today', 'sun', 0], ['more', 'More', 'more', 0]].forEach(function (t) {
+      var b = btn(null, t[2], null, function () { S.tab = t[0]; draw(); }); b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(S.tab === t[0])); b.setAttribute('data-tab', t[0]);
+      b.appendChild(document.createTextNode(t[1])); if (t[3]) b.appendChild(el('em', null, String(t[3]))); tabs.appendChild(b);
+    });
+    app.appendChild(tabs);
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+  function moreList() {
+    var w = el('div', 'vlist'), g = groCount();
+    [['inbox', 'inbox', 'Full inbox', 'Every email the Assistant sorted, by inbox and kind'], ['cart', 'groceries', 'Groceries', g == null ? 'The shared list' : g + ' on the list'],
+     ['out', 'outbox', 'Outbox', 'Every automatic email, by business'], ['peak', 'peak', 'Peak desk', 'Sponsors and expo leads'], ['cog', 'settings', 'Settings', 'Inboxes, keys, spending']].forEach(function (v) {
+      var b = btn(null, v[0], null, function () { openView(v[1]); }), x = el('span'); add(x, v[2], el('small', null, v[3])); b.appendChild(x); w.appendChild(b);
+    });
+    var nc = btn(null, 'plus', null, function () { apost('chatclear', {}).then(function () { toast('The Assistant starts a new conversation.'); }); }), nx = el('span'); add(nx, 'New Ask conversation', el('small', null, 'The Assistant forgets this chat (your email is untouched)')); nc.appendChild(nx); w.appendChild(nc);
+    return w;
+  }
+
+  /* ------------------------------------------------------------ answers, as cards */
+  function msgAi(text, who) { var m = el('div', 'msg ai'); m.appendChild(el('div', 'who', who || 'J.A.R.V.I.S.')); said(m, text); return pushChat(m); }
+  function msgMe(text) { return pushChat(el('div', 'msg me', text)); }
+  function pushChat(n) { chatLog.appendChild(n); chatLog.scrollTop = chatLog.scrollHeight; return n; }
+  function card(o) {
+    var c = el('div', 'acard'); if (o.id) c.id = o.id;
+    var h = el('div', 'ah'); add(h, o.icon ? ic(o.icon) : null, el('span', 't', o.title), o.badge ? el('span', 'bdg ' + (o.badge[1] || 'dr'), o.badge[0]) : null); c.appendChild(h);
+    if (o.quote) c.appendChild(said(el('div', 'q' + (o.warn ? ' w' : '')), o.quote));
+    if (o.rows) { var rw = el('div', 'rows'); add(rw, o.rows); c.appendChild(rw); }
+    if (o.meta) c.appendChild(el('div', 'meta', o.meta));
+    if (o.acts && o.acts.length) { var a = el('div', 'acts'); o.acts.forEach(function (x) { if (x) a.appendChild(btn(x[0], x[1], 'btn ' + (x[2] || 'sec'), x[3])); }); c.appendChild(a); }
+    return pushChat(c);
+  }
+  function greet() {
+    var hr = new Date().getHours(), tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening', o = S.st && S.st.overnight, n = items().length, nr = needsReply().length, d = drafted();
+    var t = tod + ', Matthew.';
+    if (o) t += o.problems.length ? ' The overnight check found ' + plural(o.problems.length, 'problem') + ' at ' + clock(o.at) + '.' : ' The overnight check passed at ' + clock(o.at) + '.';
+    t += ' ' + (nr ? plural(nr, 'reply', 'replies') + (nr === 1 ? ' is' : ' are') + ' waiting across your inboxes' : 'Nothing is waiting on a reply') + (d ? ' and I’ve drafted ' + d + (d < n ? ', which leaves you the interesting ones.' : '.') : '.');
+    msgAi(t);
+    var parts = [], ob = outboxSum(), dd = deskDue(), to = teamOpen().length, tn = teamNeedsMe().length;
+    if (ob) parts.push('Outbox sent ' + ob.sent + ' today, ' + ob.waiting + ' waiting, ' + ob.failed + ' failed.');
+    if (dd) parts.push('Peak desk has ' + plural(dd.due, 'follow-up') + ' due' + (dd.late ? ', ' + dd.late + ' late.' : '.'));
+    if (to) parts.push(plural(to, 'team request') + ' open' + (tn ? ', ' + tn + ' waiting on you.' : '.'));
+    var b = ((S.st && S.st.builds) || []).filter(function (x) { return x.state === 'running'; }).length; if (b) parts.push(plural(b, 'build') + ' running.');
+    if (parts.length) card({ icon: 'sun', title: 'Right now', badge: ['Briefing', 'wk'], quote: parts.join(' '), acts: [['What’s waiting', 'inbox', 'sec', localWaiting], ob ? ['Open in Outbox', 'out', 'sec', function () { openView('outbox'); }] : null, isPhone ? null : ['Dismiss', null, 'gh', function (e) { e.target.closest('.acard').remove(); }]] });
+    setState('idle');
+  }
+  /* the chips answer from what is already on the screen: no model, no cost */
+  function localWaiting() {
+    var nr = needsReply(), tm = teamNeedsMe();
+    if (!nr.length && !tm.length) { msgAi('Nothing needs a reply right now.'); setState('answer'); return; }
+    msgAi(plural(nr.length, 'email') + ' need a reply' + (tm.length ? ', and ' + plural(tm.length, 'team request') + ' need you' : '') + '. The newest first:');
+    nr.slice(0, 5).forEach(function (i) { var a = acctOf(i.acct); card({ icon: 'doc', title: i.subject || '(no subject)', badge: i.draftId ? ['Draft ready'] : null, quote: i.summary || '', meta: i.from + ' · ' + (a ? a.label : i.acct) + ' · ' + ago(i.date) + ' ago' + (i.draftId ? ' · nothing is sent until you press Send' : ''), acts: [[i.draftId ? 'Review draft' : 'Open and reply', 'doc', 'pri', function () { openMail(i); }], ['Not now', null, 'gh', function (e) { e.target.closest('.acard').remove(); }]] }); });
+    tm.slice(0, 3).forEach(function (x) { teamCard(x); });
+    setState('answer');
+  }
+  function teamCard(x) {
+    var t = x.t, last = (t.msgs || [])[t.msgs.length - 1] || { text: '' }, b = STB[t.status] || ['mu', t.status];
+    card({ icon: 'help', title: t.by + ' · ' + x.src.name, badge: [b[1], b[0]], quote: oneLine(last.text, 260), meta: 'J.A.R.V.I.S. desk · ' + ago(t.updated) + ' ago', acts: [['Open the thread', 'help', 'pri', function () { openThread(x); }], ['Open in the app', 'open', 'sec', function () { openView('page', x.src, t.id); }]] });
+  }
+  function localTeam() {
+    var o = teamOpen();
+    if (!o.length) { msgAi(Object.keys(S.team).length ? 'No open requests from the team.' : 'The team requests are still loading.'); setState('answer'); return; }
+    msgAi(plural(o.length, 'team request') + ' open. J.A.R.V.I.S. desk answers these from your laptop.');
+    o.slice(0, 4).forEach(teamCard); setState('answer');
+  }
+  function localCheck() {
+    var o = S.st && S.st.overnight;
+    if (!o) { msgAi('The overnight check has not reported here yet. It runs on your laptop every 30 minutes.'); setState('answer'); return; }
+    card({ icon: 'check', title: o.problems.length ? 'Overnight check: ' + plural(o.problems.length, 'problem') : 'Overnight check passed', badge: o.problems.length ? ['Look', 'nm'] : ['All fine', 'wk'], warn: !!o.problems.length,
+      quote: o.problems.length ? o.problems.join('\n') : o.ok + ' of ' + o.ok + ' checks fine.', meta: 'Last run ' + clock(o.at) + ' on your laptop · every 30 minutes' });
+    setState('answer');
+  }
+  function localBuilds() {
+    var b = (S.st && S.st.builds) || [];
+    if (!b.length) { msgAi('Nothing is building right now.'); setState('answer'); return; }
+    card({ icon: 'build', title: plural(b.filter(function (x) { return x.state === 'running'; }).length, 'build') + ' running', rows: BODY.builds(), meta: 'From your laptop' });
+    setState('answer');
+  }
+  function localPeak() {
+    var dd = deskDue();
+    if (!dd) { if (S.desk && S.desk._status === 401) card({ icon: 'peak', title: 'Peak desk', quote: 'Sign in to the Peak desk once on this device and its follow-ups show here.', acts: [['Open Peak desk', 'arrow', 'sec', function () { openView('peak'); }]] }); else msgAi('The Peak desk is still loading.'); setState('answer'); return; }
+    var o = dd.oldest, rest = dd.due - 1;
+    card({ icon: 'peak', title: 'Peak desk: ' + plural(dd.due, 'follow-up') + ' due', badge: dd.late ? [dd.late + ' late', 'nm'] : null,
+      quote: o ? 'Oldest is ' + o.name + (o.what ? ' (' + o.what + ')' : '') + ', due ' + dayName(o.date) + (rest > 0 ? '; ' + rest + ' more ' + (rest === 1 ? 'is' : 'are') + ' due.' : '.') : 'Nothing is due today.',
+      acts: [['Open Peak desk', 'arrow', 'sec', function () { openView('peak'); }]] });
+    setState('answer');
+  }
+
+  /* ------------------------------------------------------------ the command bar */
+  function submit() {
+    var t = field.value.trim(); if (!t) { field.focus(); return; }
+    if (rec) try { rec.stop(); } catch (e) {}
+    field.value = '';
+    if (S.brain === 'desk') { deskSend(t); return; }
+    var g = /^add\s+(.+?)\s+to\s+(?:my\s+|the\s+)?(?:grocer(?:y|ies)(?:\s+list)?|shopping\s+list)[.!]?$/i.exec(t);
+    if (g) { msgMe(t); apost('groadd', { text: g[1].split(/\s*,\s*|\s+and\s+/).join('\n') }).then(function (r) { if (r.ok) { S.gro = r; msgAi('Added to the grocery list: ' + g[1] + '. ' + groCount() + ' on the list now.'); draw(); } else msgAi(r.error || 'The list did not take it.'); setState('answer'); }); return; }
+    if (/^(what'?s|what is)\s+waiting\??$/i.test(t)) { msgMe(t); localWaiting(); return; }
+    if (/^(morning|overnight)\s+check\??$/i.test(t)) { msgMe(t); localCheck(); return; }
+    if (/^what'?s\s+building\??$/i.test(t)) { msgMe(t); localBuilds(); return; }
+    askAssistant(t);
+  }
+  var asking = false;
+  function askAssistant(t) {
+    if (asking) { toast('Still answering the last one.'); return; }
+    asking = true; msgMe(t); setState('think'); sendB.disabled = true;
+    var w = el('div', 'msg ai'); add(w, el('div', 'who', 'Assistant · instant')); var dots = el('span', 'tdots'); add(dots, el('i'), el('i'), el('i')); add(w, dots, ' Looking through your inboxes…'); pushChat(w);
+    apost('chat', { text: t }).then(function (r) {
+      asking = false; sendB.disabled = false; w.remove();
+      if (!r.ok) { var e = msgAi(r.error || 'No answer came back.', 'Assistant · instant'); e.classList.add('bad'); setState('idle'); return; }
+      msgAi(r.reply, 'Assistant · instant');
+      (r.actions || []).forEach(function (ac) {
+        if (ac.type !== 'review' || !ac.item) return;
+        var a = acctOf(ac.item.acct);
+        card({ icon: 'doc', title: ac.item.from ? 'Reply to ' + ac.item.from : ac.item.subject, badge: ['Draft ready'], quote: ac.item.subject, meta: (a ? a.label : ac.item.acct) + ' · saved as a Gmail draft · nothing is sent until you press Send',
+          acts: [['Review draft', 'doc', 'pri', function () { openMail(ac.item); }], ['Not now', null, 'gh', function (e) { e.target.closest('.acard').remove(); }]] });
+      });
+      setState('answer'); refresh();
+    }, function () { asking = false; sendB.disabled = false; w.remove(); msgAi('No connection. Try again.', 'Assistant · instant').classList.add('bad'); setState('idle'); });
+  }
+  /* the desk: a ticket to the Field app's J.A.R.V.I.S. as Matthew (his own tickets have no limits and run on Opus); the session on his
+     laptop answers it. Nothing is answered here. */
+  function deskSend(t) {
+    var src = DESKS[0], lp = laptop();
+    msgMe(t); setState('think');
+    xpost(src.api + '?action=helpsend', { text: t, ctx: { screen: 'jarvis' } }).then(function (r) {
+      if (r._status === 401) { card({ icon: 'help', title: 'J.A.R.V.I.S. desk', warn: true, quote: 'Sign in to the Field app once on this device (your own sign-in), then send it again. Your message is below so you can copy it.\n\n' + t, acts: [['Open the Field app', 'open', 'sec', function () { openView('page', src); }]] }); setState('idle'); return; }
+      if (!r.ok || !r.ticket) { msgAi(r.error || 'The desk did not take it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return; }
+      var tk = r.ticket; S.pending[tk.id] = { src: src, seen: (tk.msgs || []).length, at: Date.now() };
+      card({ id: 'dk-' + tk.id, icon: 'help', title: 'Sent to J.A.R.V.I.S. desk', badge: ['On your laptop', 'nm'], quote: 'It usually answers in a few minutes. The answer appears here and in your desk chats.' + (lp.on ? '' : '\n' + lp.text + ': it answers once the laptop is on.'),
+        meta: 'J.A.R.V.I.S. desk · sent to your laptop, a few minutes', acts: [['Open the thread', 'help', 'sec', function () { openThread({ src: src, t: tk }); }]] });
+      setState('idle'); pollDesk();
+    });
+  }
+  function pollDesk() {
+    clearTimeout(pollDesk.t);
+    var ids = Object.keys(S.pending); if (!ids.length) return;
+    pollDesk.t = setTimeout(function () {
+      if (document.hidden) { pollDesk(); return; }
+      loadTeam(DESKS[0]).then(function () {
+        var tl = (S.team.sixfold && S.team.sixfold.tickets) || [];
+        ids.forEach(function (id) {
+          var p = S.pending[id], tk = tl.filter(function (x) { return x.id === id; })[0];
+          if (!tk) { if (Date.now() - p.at > 45 * 60000) delete S.pending[id]; return; }
+          var fresh = (tk.msgs || []).slice(p.seen).filter(function (m) { return !m.mine; });
+          fresh.forEach(function (m) { msgAi(m.text, 'J.A.R.V.I.S. desk · laptop'); });
+          p.seen = (tk.msgs || []).length;
+          if (fresh.length) { setState('answer'); var c = document.getElementById('dk-' + id); if (c) { var bd = c.querySelector('.bdg'); if (bd) { bd.className = 'bdg wk'; bd.textContent = 'Answered'; } } }
+          if (fresh.length && tk.status !== 'new' && tk.status !== 'working') delete S.pending[id];
+          if (Date.now() - p.at > 45 * 60000) delete S.pending[id];
+        });
+        draw(); pollDesk();
+      });
+    }, 15000);
+  }
+  /* voice: the browser's own speech recognition where it has one; typing always works */
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;
+  function voice() {
+    if (!SR) { toast('Voice isn’t available in this browser. Typing always works.'); return; }
+    if (rec) { try { rec.stop(); } catch (e) {} return; }
+    try { rec = new SR(); } catch (e) { toast('Voice could not start here. Typing always works.'); return; }
+    rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+    var base = field.value ? field.value.replace(/\s*$/, ' ') : '';
+    rec.onresult = function (e) { var s = ''; for (var i = 0; i < e.results.length; i++) s += e.results[i][0].transcript; field.value = base + s; };
+    rec.onerror = function (e) { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('The microphone is blocked for this page. Allow it in the browser, or type.'); else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Voice stopped (' + e.error + '). Typing always works.'); };
+    rec.onend = function () { rec = null; micB.classList.remove('on'); if (S.state === 'listen') setState('idle'); field.focus(); };
+    try { rec.start(); micB.classList.add('on'); setState('listen'); } catch (e) { rec = null; toast('Voice could not start here. Typing always works.'); }
+  }
+
+  /* ------------------------------------------------------------ the confirm: the only way a Send goes ahead */
+  function confirmBox(text, yes) {
+    return new Promise(function (res) {
+      var bg = el('div', 'cfbg'); bg.setAttribute('role', 'alertdialog'); bg.setAttribute('aria-modal', 'true'); bg.id = 'confirm';
+      var c = el('div', 'cf pnl'); c.appendChild(el('p', null, text));
+      var a = el('div', 'acts'), done = function (v) { bg.remove(); document.removeEventListener('keydown', k, true); res(v); };
+      var no = btn('Cancel', null, 'btn gh', function () { done(false); }), ok = btn(yes, 'send', 'btn pri', function () { done(true); }); no.id = 'cfno'; ok.id = 'cfyes';
+      var k = function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); done(false); } };
+      document.addEventListener('keydown', k, true);
+      add(a, no, ok); c.appendChild(a); bg.appendChild(c); document.body.appendChild(bg); no.focus();
+    });
+  }
+  function sheet(title, meta) {
+    var bg = el('div', 'sheetbg'); bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true'); bg.id = 'sheet';
+    var sh = el('div', 'sheet pnl'), hd = el('div', 'shd'), x = btn(null, 'back', 'x'); x.setAttribute('aria-label', 'Back');
+    var tt = el('div', 'sht'); add(tt, el('b', null, title), el('span', null, meta)); add(hd, x, tt);
+    var body = el('div', 'shb'); add(sh, hd, body); bg.appendChild(sh);
+    var guard = function () { return true; };   /* true, or a promise of a yes (the confirm) */
+    var force = function () { bg.remove(); document.removeEventListener('keydown', esc); };
+    var close = function () { var g = guard(); if (g === true) force(); else if (g && g.then) g.then(function (y) { if (y) force(); }); };
+    var esc = function (e) { if (e.key === 'Escape' && !e.defaultPrevented && !document.getElementById('confirm')) close(); };
+    x.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); }); document.addEventListener('keydown', esc);
+    var old = document.getElementById('sheet'); if (old) old.remove();
+    document.body.appendChild(bg);
+    return { body: body, close: close, setGuard: function (g) { guard = g; }, force: force };
+  }
+  function gmailUrl(email, frag) { return 'https://accounts.google.com/AccountChooser?Email=' + encodeURIComponent(email) + '&continue=' + encodeURIComponent('https://mail.google.com/mail/?authuser=' + email + '#' + frag); }
+  /* an email in full, its reply, and Send (with the confirm) — the Assistant's own reply sheet, in the Halo look */
+  function openMail(i) {
+    var a = acctOf(i.acct), k = i.acct + ':' + i.id, sh = sheet(i.subject || '(no subject)', (a ? a.label : i.acct) + ' · ' + ago(i.date) + ' ago');
+    sh.body.appendChild(el('div', 'empty', 'Opening the email…'));
+    var dirty = false; sh.setGuard(function () { return !dirty || confirmBox('Close without saving your reply? It stays as it was in Gmail.', 'Close it'); });
+    apost('open', { key: k }).then(function (m) {
+      sh.body.textContent = '';
+      if (!m.ok) { sh.body.appendChild(el('div', 'warnline', m.error || 'Could not open it.')); return; }
+      var f = el('div', 'from'); add(f, 'From: ', el('b', null, m.from), el('br'), 'To: ' + m.to + (m.cc ? ' · Cc: ' + m.cc : '')); sh.body.appendChild(f);
+      if (i.summary) sh.body.appendChild(el('div', 'sum', 'In short: ' + i.summary));
+      sh.body.appendChild(el('div', 'txt', m.text || '(no text)'));
+      var og = el('a', 'btn sec'); og.appendChild(ic('open')); og.appendChild(document.createTextNode('Open in Gmail')); og.href = gmailUrl(i.acct, 'all/' + encodeURIComponent(i.threadId || '')); og.target = '_blank'; og.rel = 'noopener'; og.style.alignSelf = 'flex-start';
+      sh.body.appendChild(og);
+      sh.body.appendChild(el('label', 'rl', 'Reply to ' + m.replyTo));
+      var ta = el('textarea'); ta.id = 'reply'; ta.value = m.draft || ''; ta.placeholder = 'Write your reply, or press Write it for me.'; ta.addEventListener('input', function () { dirty = true; }); sh.body.appendChild(ta);
+      var nr = el('div', 'note'), note = el('input'); note.placeholder = 'Tell it what to say (optional)'; note.setAttribute('aria-label', 'What the reply should say');
+      var wr = btn(m.draft ? 'Rewrite it' : 'Write it for me', 'pen', 'btn sec'); wr.title = 'The Assistant writes it (an API call)'; add(nr, note, wr); sh.body.appendChild(nr);
+      var row = el('div', 'racts'), said = el('div', 'said', m.draft ? 'This is the draft in ' + (a ? a.label : 'that inbox') + '’s Gmail. Nothing is sent until you press Send and say yes.' : 'Nothing is sent until you press Send and say yes.');
+      var sv = btn('Save draft', null, 'btn sec'), sd = btn('Send', 'send', 'btn pri'), dn = btn('Done, take it off', 'check', 'btn gh'); sv.id = 'savedraft'; sd.id = 'send';
+      add(row, said, dn, sv, sd); sh.body.appendChild(row);
+      var busy = function (on) { [wr, sv, sd, dn].forEach(function (b) { b.disabled = on; }); };
+      wr.addEventListener('click', function () { busy(true); said.textContent = 'Writing…'; setState('think');
+        apost('write', { key: k, note: note.value }).then(function (r) { busy(false); setState('idle'); if (!r.ok) { said.textContent = r.error; return; } ta.value = r.text; dirty = true; said.textContent = 'Written. Read it over, change what you like, then save or send.'; ta.focus(); }, function () { busy(false); setState('idle'); said.textContent = 'No connection.'; }); });
+      sv.addEventListener('click', function () { busy(true); said.textContent = 'Saving…';
+        apost('savedraft', { key: k, text: ta.value }).then(function (r) { busy(false); if (!r.ok) { said.textContent = r.error; return; } dirty = false; i.draftId = i.draftId || 'saved'; said.textContent = 'Saved as a draft in ' + (a ? a.label : 'that inbox') + '’s Gmail. Not sent.'; }, function () { busy(false); said.textContent = 'No connection.'; }); });
+      sd.addEventListener('click', function () {
+        if (!ta.value.trim()) { said.textContent = 'The reply is empty.'; return; }
+        confirmBox('Send this reply to ' + m.replyTo + ' from ' + m.inbox + '?', 'Yes, send it').then(function (yes) {
+          if (!yes) { said.textContent = 'Not sent.'; return; }
+          busy(true); said.textContent = 'Sending…';
+          apost('send', { key: k, text: ta.value, confirmed: true }).then(function (r) {
+            busy(false); if (!r.ok) { said.textContent = r.error; return; }
+            dirty = false; sh.force(); toast('Sent to ' + m.replyTo + '. It is in ' + (a ? a.label : 'that inbox') + '’s Gmail Sent.');
+            S.home.items = S.home.items.filter(function (y) { return y.acct + ':' + y.id !== k; }); draw();
+          }, function () { busy(false); said.textContent = 'No connection: not sent.'; });
+        });
+      });
+      dn.addEventListener('click', function () { busy(true); apost('done', { key: k }).then(function () { dirty = false; sh.force(); S.home.items = S.home.items.filter(function (y) { return y.acct + ':' + y.id !== k; }); draw(); }); });
+      if (m.draft) setTimeout(function () { ta.scrollIntoView({ block: 'center' }); }, 60);
+    }, function () { sh.body.textContent = 'No connection.'; });
+  }
+  /* a team request: the conversation, and Matthew's reply into it (the desk on his laptop reads it) */
+  function openThread(x) {
+    var t = x.t, mineT = t.by === ME, b = STB[t.status] || ['mu', t.status];
+    var sh = sheet((mineT ? 'Your desk chat' : t.by) + ' · ' + x.src.name, b[1] + ' · started ' + ago(t.at) + ' ago');
+    var thr = el('div', 'thr');
+    (t.msgs || []).forEach(function (m) {
+      var d = el('div', 'tm ' + (m.mine ? 'me' : 'them')); d.appendChild(el('small', null, (m.mine ? (m.from === ME ? 'You' : m.from) : 'J.A.R.V.I.S.') + ' · ' + ago(m.at) + ' ago'));
+      add(d, m.text || '');
+      (m.photos || []).forEach(function () { d.appendChild(el('div', 'hint', '[a photo: open in the app to see it]')); });
+      (m.audio || []).forEach(function (au) { d.appendChild(el('div', 'hint', 'Voice note' + (au.text ? ': ' + au.text : ''))); });
+      (m.files || []).forEach(function (f) { d.appendChild(el('div', 'hint', 'PDF: ' + f.n + ' (open in the app)')); });
+      thr.appendChild(d);
+    });
+    sh.body.appendChild(thr);
+    sh.body.appendChild(btn('Open in the ' + x.src.name + ' app', 'open', 'btn sec', function () { sh.force(); openView('page', x.src, t.id); })).style.alignSelf = 'flex-start';
+    if (!mineT) sh.body.appendChild(el('div', 'warnline', 'A reply here goes into ' + t.by + '’s J.A.R.V.I.S. chat, marked “Matthew:”, and J.A.R.V.I.S. desk on your laptop reads it and may answer too.'));
+    sh.body.appendChild(el('label', 'rl', mineT ? 'Add to your desk chat' : 'Reply into the thread'));
+    var ta = el('textarea'); ta.id = 'threply'; ta.style.minHeight = '90px'; sh.body.appendChild(ta);
+    var row = el('div', 'racts'), said = el('div', 'said', 'Answered by J.A.R.V.I.S. desk on your laptop, in a few minutes.'), go = btn('Send to the thread', 'send', 'btn pri'); go.id = 'thsend';
+    add(row, said, go); sh.body.appendChild(row);
+    go.addEventListener('click', function () {
+      var text = ta.value.trim(); if (text.length < 3) { said.textContent = 'Write the reply first.'; return; }
+      var ask = mineT ? Promise.resolve(true) : confirmBox('Send this into ' + t.by + '’s J.A.R.V.I.S. chat (' + x.src.name + ')? ' + t.by + ' sees it, and J.A.R.V.I.S. desk reads it.', 'Yes, send it');
+      ask.then(function (yes) {
+        if (!yes) return;
+        go.disabled = true; said.textContent = 'Sending…';
+        xpost(x.src.api + '?action=helpsend', { id: t.id, text: mineT ? text : 'Matthew: ' + text }).then(function (r) {
+          go.disabled = false;
+          if (!r.ok) { said.textContent = r._status === 401 ? 'Sign in to the ' + x.src.name + ' app once on this device first.' : (r.error || 'Not sent.'); return; }
+          sh.force(); toast('In the thread. J.A.R.V.I.S. desk picks it up from your laptop.');
+          if (x.src.home) { S.pending[t.id] = { src: x.src, seen: (r.ticket && r.ticket.msgs || []).length, at: Date.now() }; pollDesk(); }
+          loadTeam(x.src).then(draw);
+        });
+      });
+    });
+  }
+  /* the other pages, inside this one: the Assistant's full inbox, Settings and Groceries; Outbox; the Peak desk; a desk thread */
+  function openView(kind, src, ticket) {
+    var V = { inbox: ['Full inbox', '../'], settings: ['Settings', '../'], groceries: ['Groceries', '../g.html?v=2'], outbox: ['Outbox', OUTBOX], peak: ['Peak desk', PEAK] }[kind];
+    if (kind === 'page') V = [src.name + (ticket ? ' · J.A.R.V.I.S.' : ''), src.page + (ticket ? '?help=' + encodeURIComponent(ticket) : '')];
+    var old = document.getElementById('view'); if (old) old.remove();
+    var v = el('div', 'view'); v.id = 'view';
+    var h = el('div', 'vh'), x = btn('J.A.R.V.I.S.', 'back', 'x', function () { v.remove(); document.removeEventListener('keydown', esc); refresh(); });
+    var ot = el('a', 'ot', 'Open in its own tab'); ot.href = V[1]; ot.target = '_blank'; ot.rel = 'noopener';
+    add(h, x, el('span', null, V[0]), ot);
+    var f = el('iframe'); f.title = V[0]; f.src = V[1]; f.setAttribute('allow', 'microphone; camera; clipboard-write; clipboard-read');
+    if (kind === 'settings') f.addEventListener('load', function () { var tries = 0, go = function () { try { var g = f.contentDocument.querySelector('[aria-label="Settings and inboxes"]'); if (g) { g.click(); return; } } catch (e) { return; } if (++tries < 40) setTimeout(go, 150); }; go(); });
+    var esc = function (e) { if (e.key === 'Escape' && !e.defaultPrevented && !document.getElementById('sheet') && !document.getElementById('confirm')) { v.remove(); document.removeEventListener('keydown', esc); } };
+    document.addEventListener('keydown', esc);
+    add(v, h, f); document.body.appendChild(v);
+  }
+
+  /* ------------------------------------------------------------ loading: plain reads only (no model call on load) */
+  function loadTeam(d) { return xget(d.api + '?action=helplist').then(function (r) { S.team[d.id] = r; }); }
+  function loadSlow() {   /* every 5 minutes: Outbox and the Peak desk read many files, and groceries may ask the store for prices */
+    return Promise.all([
+      xget(OUTBOX + 'api.php?action=state').then(function (r) { S.outbox = r; }),
+      xget(PEAK + 'api/desk.php?action=data').then(function (r) { S.desk = r; }),
+      aget('gro').then(function (r) { S.gro = r; }, function () {})
+    ]);
+  }
+  function refresh() {
+    return Promise.all([aget('home'), aget('jvstatus')]).then(function (r) {
+      if (r[0]._status === 401) { signin(); return; }
+      if (r[0].ok) S.home = r[0]; if (r[1].ok) S.st = r[1];
+      return Promise.all(DESKS.map(loadTeam)).then(draw, draw);
+    }, function () {});
+  }
+  function start() {
+    var first = Promise.all([aget('home'), aget('jvstatus')]).then(function (r) {
+      if (r[0]._status === 401) { signin(); return false; }
+      S.home = r[0].ok ? r[0] : { accounts: [], items: [], spend: null }; if (r[1].ok) S.st = r[1];
+      draw(); return true;
+    });
+    first.then(function (ok) {
+      if (!ok) return;
+      var t = new Promise(function (res) { setTimeout(res, 2500); });
+      Promise.race([Promise.all([Promise.all(DESKS.map(loadTeam)), loadSlow()]), t]).then(function () { draw(); if (!S.briefed) { S.briefed = true; greet(); } });
+      setInterval(function () { if (!document.hidden && !document.getElementById('view')) refresh(); }, 60000);
+      setInterval(function () { if (!document.hidden) loadSlow().then(draw); }, 300000);
+      setInterval(function () { var c = document.querySelector('.top .clock'); if (c) c.textContent = nowLine(); }, 20000);
+    });
+  }
+  function signin() {
+    app.className = 'jv s-idle'; app.textContent = ''; app.style.gridTemplateColumns = '';
+    var w = el('div', 'signin'); w.appendChild(core(isPhone ? 170 : 220)); w.appendChild(el('div', 'wm', 'J.A.R.V.I.S.'));
+    aget('state').then(function (st) {
+      if (st.needsPassword) { var h = el('div', 'hint'); add(h, 'Set the Assistant’s password first, on ', (function () { var a = el('a', null, 'the Assistant page'); a.href = '../'; return a; })(), '.'); w.appendChild(h); return; }
+      var f = el('form'), pw = el('input'); pw.type = 'password'; pw.placeholder = 'The Assistant’s password'; pw.autocomplete = 'current-password'; pw.setAttribute('aria-label', 'Password');
+      var go = btn('Sign in', null, 'btn pri'); go.type = 'submit'; go.style.justifyContent = 'center'; var err = el('div', 'err');
+      add(f, pw, go, err); w.appendChild(f);
+      f.addEventListener('submit', function (e) { e.preventDefault(); go.disabled = true; apost('signin', { password: pw.value }).then(function (j) { go.disabled = false; if (j.ok) { app.textContent = ''; start(); } else err.textContent = j.error || 'That did not work.'; }, function () { go.disabled = false; err.textContent = 'No connection.'; }); });
+      setTimeout(function () { pw.focus(); }, 50);
+    });
+    app.appendChild(w);
+  }
+  var lastPhone = isPhone;
+  window.addEventListener('resize', function () { clearTimeout(window.__rz); window.__rz = setTimeout(function () { if (phoneMq.matches !== lastPhone || !lastPhone) { lastPhone = phoneMq.matches; draw(); } }, 120); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.home) refresh(); });
+  start();
+})();
+</script>
+</body>
+</html>

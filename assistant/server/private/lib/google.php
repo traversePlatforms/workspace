@@ -87,5 +87,10 @@ function gToken(string $email): ?string {
 function gmail(string $email, string $method, string $path, ?array $json = null): array {
     $tok = gToken($email);
     if (!$tok) return ['_status' => 401, 'error' => 'not connected'];
-    return http($method, 'https://gmail.googleapis.com/gmail/v1/users/me/' . ltrim($path, '/'), null, $json, ['Authorization: Bearer ' . $tok]);
+    return http($method, gmailBase() . ltrim($path, '/'), null, $json, ['Authorization: Bearer ' . $tok]);
+}
+/** Gmail's address; PHP's own test server alone may point it at a mock (ASSISTANT_GMAIL_MOCK, assistant/jarvis/tests). Never on the host. */
+function gmailBase(): string {
+    $m = PHP_SAPI === 'cli-server' ? (string) getenv('ASSISTANT_GMAIL_MOCK') : '';
+    return $m !== '' ? rtrim($m, '/') . '/' : 'https://gmail.googleapis.com/gmail/v1/users/me/';
 }

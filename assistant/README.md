@@ -64,3 +64,32 @@ Data files: `config.json` holds the password hash, the Anthropic key, the Google
 
 
 **Caching (27 Oct):** SiteGround's front server hands plain files out with a 6-month cache and skips .htaccess. So `g.html`, `gro-manifest.json` and `index.html` are **chmod 600** on the server. Apache then serves them with "private, no-cache", so an upload shows at once. **Every upload of these files must chmod 600 again** (a new file lands 644).
+
+## J.A.R.V.I.S., the merged page (2026-11-18)
+
+Matthew: "Yeah I want it them merged together. It will give jarvis application more function other then just the chat feature." Design: direction A "Halo" from `design/mockups-2026-11-18/jarvis-hub.html` ("Definitely the halo version"). For Matthew only.
+
+- **Where:** source `assistant/jarvis/` (`index.html` and `fonts/`). It goes up to `public_html/a-e018bb82/jarvis/`, inside the Assistant's folder, so the Assistant's sign-in covers it and it talks to `../api.php`. `index.html` is chmod 600, like the Assistant's. The hub's **J.A.R.V.I.S.** tab opens it. The **Assistant** tab is unchanged and still opens the classic page.
+- **Two brains, always named on the command bar:**
+  - **"Assistant, instant"** is the Ask chat (`action=chat`). It is called only when Matthew sends a question.
+  - **"J.A.R.V.I.S. desk, sent to your laptop, a few minutes"** sends a ticket as Matthew to the Field app's help desk (`/api/rounds.php?action=helpsend`). help-watch on the laptop answers it, and the page polls for the reply.
+  - The chips ("What's waiting?", "Morning check" and so on) and "Add … to groceries" answer from data already on screen. They make no model call.
+- **Sending:** an email goes only through the reply sheet's Send, then a yes in the confirm, then `action=send` with `confirmed`. That is the same as the classic page. A reply into a staff member's J.A.R.V.I.S. thread also asks first, and is marked "Matthew:".
+- **Panels and their sources:**
+  - **01 Inbox:** "Needs you" (needs-a-reply mail across the inboxes, plus team requests waiting on him), then one folding row per inbox with its waiting count and draft badge. Source: `action=home`.
+  - **02 Team requests:** the Field app's and the Houston install's `helplist`, read with Matthew's own sign-in in each app. A 401 shows "sign in to its app once".
+  - **03 Today:** the overnight check comes from `action=jvstatus`. Outbox's sent, waiting and failed come from Outbox's own `api.php?action=state`. Peak desk follow-ups due and late come from the desk's `api/desk.php?action=data`, which is read only.
+  - **04 Builds:** `jvstatus`.
+  - **05 Calendar:** a placeholder for now, plus the "calendar" emails.
+  - **Groceries:** `action=gro`.
+- **Crowding:** the inbox rows fold, and so does "Needs you" (4 shown). Each side panel folds into an icon on its edge, with a count. Folded and open state is kept per device in localStorage (`jarvis.fold`, `jarvis.open`, `jarvis.brain`). On a phone the panels become the Inbox, Team, Today and More tabs.
+- **Laptop status:** `lib/jarvis.php` serves `data/jarvis/status.json` (0600), passing only whitelisted fields. The file is written by `assistant/jarvis/tools/jarvis-status.sh`:
+  - `push` sends the last overnight check's ok count and PROBLEM lines plus the builds list. The overnight check runs it at its end, every 30 minutes, which also makes "Laptop online" true. The page treats anything over 45 minutes old as offline.
+  - `build start|step|pct|done|fail|drop <id> …` is for a builder to call as it goes. Each change is pushed straight away.
+- **Calendar, to switch on later:**
+  1. Turn on the Google Calendar API in the Assistant's Google Cloud project.
+  2. Add the scope `https://www.googleapis.com/auth/calendar.readonly` under Data Access.
+  3. Add it to `G_SCOPES` in `lib/google.php`.
+  4. Reconnect each inbox whose calendar should show.
+  5. Have `jvStatus()` read the next events.
+- **Test:** `node assistant/jarvis/tests/jarvis-test.mjs` runs on a throwaway copy, with a Gmail mock (`ASSISTANT_GMAIL_MOCK`, honoured only by PHP's own test server) and stub apps. It saves screenshots to `assistant/jarvis/shots/`.

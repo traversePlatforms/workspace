@@ -19,7 +19,7 @@ const live = process.env.HUB_URL || '';
 const R = fs.mkdtempSync(path.join(os.tmpdir(), 'hubt-')); let srv = null; const PORT = 8797;
 if (!live) {
   fs.cpSync(HUB, path.join(R, 'hub-cc1f31de'), { recursive: true });
-  for (const p of ['summit-de59ae83', 'a-e018bb82', 'peak-desk-28d38d', 'prospects-47bfe6', 'posts-ab8c57', 'outbox-092b0f']) { fs.mkdirSync(path.join(R, p), { recursive: true }); fs.writeFileSync(path.join(R, p, 'index.html'), '<!doctype html><title>stub ' + p + '</title><p>' + p); }
+  for (const p of ['summit-de59ae83', 'a-e018bb82', 'a-e018bb82/jarvis', 'peak-desk-28d38d', 'prospects-47bfe6', 'posts-ab8c57', 'outbox-092b0f']) { fs.mkdirSync(path.join(R, p), { recursive: true }); fs.writeFileSync(path.join(R, p, 'index.html'), '<!doctype html><title>stub ' + p + '</title><p>' + p); }
   fs.writeFileSync(path.join(R, 'index.html'), '<!doctype html><title>stub site</title>');
   srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', R], { stdio: 'ignore' }); await sleep(800);
 }
