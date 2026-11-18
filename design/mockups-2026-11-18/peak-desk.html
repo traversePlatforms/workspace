@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peak desk facelift: three directions (mockup, 18 Nov 2026)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- review chrome (not part of the design) ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#e9ebee;color:#1d2228;font:14px/1.45 Inter,system-ui,sans-serif}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.rv-top{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:12px 24px;background:#ffffffee;border-bottom:1px solid #d5d9df;backdrop-filter:blur(8px)}
+.rv-top h1{font-size:15px;font-weight:600;margin-right:auto}
+.rv-top h1 small{display:block;font-weight:400;color:#6b7380;font-size:12px}
+.seg{display:flex;gap:2px;background:#eef0f3;border:1px solid #d5d9df;border-radius:10px;padding:3px}
+.seg button{padding:5px 11px;border-radius:7px;color:#4b5361;font-size:13px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:#1d2228;color:#fff}
+.seg-l{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#7a8290;margin-right:6px}
+.grp{display:flex;align-items:center}
+.rv-note{max-width:1400px;margin:16px auto 0;padding:0 24px;color:#3d4450}
+.rv-stage{display:flex;gap:32px;justify-content:center;align-items:flex-start;padding:18px 24px 60px;flex-wrap:wrap}
+.fw .cap{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#7a8290;margin-bottom:8px}
+.fbox{position:relative;overflow:hidden;border-radius:12px;box-shadow:0 0 0 1px #cfd4db,0 24px 60px #0002}
+.fbox.ph{border-radius:44px;box-shadow:0 0 0 10px #1c1f24,0 0 0 11px #3a3f48,0 24px 60px #0003}
+.fbox>.scr{position:absolute;left:0;top:0;transform-origin:0 0}
+body.full{overflow:hidden}
+body.full .rv-top,body.full .rv-note,body.full .cap{display:none}
+body.full .rv-stage{padding:0;display:block}
+body.full .fbox{border-radius:0;box-shadow:none}
+
+/* ---------- design: shared structure ---------- */
+.scr{overflow:hidden;position:relative;background:var(--bg);color:var(--ink);font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+.scr svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.scr h1,.scr h2,.scr h3,.num{font-family:"Golos Text",Inter,sans-serif}
+.sb{display:flex;justify-content:space-between;align-items:center;height:44px;padding:0 26px 0 30px;font:600 15px Inter;flex:none}
+.sb .sbi{display:flex;gap:6px;align-items:center}
+.sb .sbi i{display:block;width:17px;height:10px;border-radius:2px;border:1.5px solid currentColor;position:relative}
+.sb .sbi i::after{content:"";position:absolute;inset:1px;right:5px;background:currentColor;border-radius:1px}
+.sb .sbi b{display:block;width:16px;height:10px;background:currentColor;clip-path:polygon(0 100%,100% 0,100% 100%)}
+/* header */
+.hdr{display:flex;align-items:center;gap:18px;padding:0 24px;height:64px;flex:none;background:var(--hdr);color:var(--hdrInk);position:relative}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .mk{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--acc);color:#fff;flex:none}
+.brand .mk svg{width:22px;height:22px;fill:currentColor;stroke:none}
+.brand b{display:block;font:700 16px "Golos Text";white-space:nowrap}
+.brand small{display:block;font-size:11.5px;opacity:.7;white-space:nowrap}
+.world{display:flex;gap:3px;padding:3px;border-radius:11px;background:var(--wbg)}
+.world span{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--wInk);white-space:nowrap}
+.world span i{width:9px;height:9px;border-radius:50%}
+.world span.on{background:var(--wOn);color:var(--wOnInk);box-shadow:0 1px 3px #0002}
+.nav{display:flex;gap:2px;margin-left:8px}
+.nav span{padding:8px 13px;border-radius:9px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px;color:var(--navInk);white-space:nowrap}
+.nav span em{font-style:normal;font:600 11px Inter;padding:1px 7px;border-radius:9px;background:var(--navBadge);color:var(--navBadgeInk)}
+.nav span.on{background:var(--navOn);color:var(--navOnInk)}
+.hdr .me{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px}
+.av{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font:700 11px Inter;color:#fff;flex:none;letter-spacing:.02em;box-shadow:0 0 0 2px var(--card)}
+.av.sm{width:22px;height:22px;font-size:9.5px}
+.av.lg{width:34px;height:34px;font-size:12.5px}
+.av.none{background:transparent!important;border:1.5px dashed var(--mut);color:var(--mut);box-shadow:none}
+.main{flex:1;min-height:0;overflow:hidden;padding:0 28px 24px}
+/* page head */
+.hero{padding:22px 0 18px}
+.hero .tt{display:flex;align-items:flex-end;gap:16px;margin-bottom:14px}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.hero h1 span{color:var(--accInk)}
+.hero p{color:var(--mut);font-size:13.5px;margin-top:3px}
+.whose{margin-left:auto;display:flex;gap:6px;align-items:center}
+.pill{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill b{font-weight:700}
+.avs{display:flex;margin-left:6px}.avs .av{margin-left:-3px}
+.btnp{padding:9px 15px;border-radius:10px;font-weight:700;font-size:13.5px;background:var(--accDeep);color:#fff;display:inline-flex;gap:7px;align-items:center;white-space:nowrap}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.tile{border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+.tile .tl{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.tile .tv{font:800 40px/1 "Golos Text";letter-spacing:-.03em;margin-top:10px}
+.tile .ts{font-size:13px;margin-top:6px;font-weight:500}
+/* sections */
+.cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+.sec{background:var(--card);border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+.sec>header{display:flex;align-items:center;gap:9px;padding:12px 16px;font:700 15px "Golos Text"}
+.sec>header .hi{width:26px;height:26px;border-radius:8px;display:grid;place-items:center}
+.sec>header b.n{font:700 12px Inter;padding:2px 8px;border-radius:9px}
+.sec>header span.s{font:500 12.5px Inter;color:var(--mut)}
+.sec>header .rt{margin-left:auto;font:600 13px Inter;color:var(--accInk)}
+.row{display:flex;align-items:center;gap:14px;padding:11px 16px;border-top:1px solid var(--line)}
+.row .fit{width:34px;text-align:center;font:800 18px/1 "Golos Text";color:var(--accInk);flex:none}
+.row .fit small{display:block;font:600 9.5px Inter;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.row .rx{flex:1;min-width:0}
+.row .rn{font:700 14.5px "Golos Text";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rs{font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rl{font-size:12.5px;display:flex;align-items:center;gap:6px;margin-top:3px;white-space:nowrap;overflow:hidden}
+.row .rr{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.row .rr .ln{display:flex;align-items:center;gap:8px}
+.tch{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--k);white-space:nowrap}
+.tch .ti{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;background:var(--t);color:var(--k)}
+.tch .ti svg.i{width:12px;height:12px;stroke-width:2.2}
+.stg{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font:700 12px Inter;background:var(--t);color:var(--k);white-space:nowrap}
+.stg i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.due{font:700 12px Inter;white-space:nowrap}
+.due.late{color:var(--lateInk)}
+.due.today{color:var(--accInk)}
+.due.later{color:var(--mut);font-weight:600}
+.bdg{display:inline-flex;padding:2px 8px;border-radius:6px;font:800 10.5px Inter;letter-spacing:.06em;text-transform:uppercase;background:var(--d);color:#fff}
+/* person bars */
+.pp{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line)}
+.pp .pn{width:70px;font-weight:600;font-size:13px}
+.pp .bar{flex:1;display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--chip)}
+.pp .bar i{display:block;height:100%}
+.pp .pt{width:30px;text-align:right;font:700 14px "Golos Text"}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px}
+/* pipeline */
+.funnel{display:flex;height:16px;border-radius:8px;overflow:hidden;gap:2px;margin-bottom:12px}
+.funnel i{display:block;height:100%}
+.stages{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:8px}
+.stages.ex{grid-template-columns:repeat(7,minmax(0,1fr))}
+.st{border-radius:12px;padding:10px 11px;position:relative;overflow:hidden;min-width:0}
+.st .sl{font:700 11.5px Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.st .sl i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c)}
+.st .sv{font:800 26px/1 "Golos Text";margin-top:6px}
+.st .sd{font-size:11px;margin-top:3px;white-space:nowrap}
+.st.sel{outline:2.5px solid var(--c);outline-offset:-2.5px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:12px;margin-top:18px;min-height:0}
+.col{border-radius:var(--r);background:var(--colBg);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.col>header{display:flex;align-items:center;gap:7px;padding:10px 12px;font:700 13px "Golos Text"}
+.col>header b{margin-left:auto;font:700 12px Inter;padding:1px 8px;border-radius:9px}
+.col .cards{display:flex;flex-direction:column;gap:8px;padding:0 8px 10px}
+.kc{background:var(--card);border-radius:10px;padding:10px 11px;border:1px solid var(--line);box-shadow:0 1px 2px #0000000d}
+.kc .kn{font:700 13.5px "Golos Text";line-height:1.25}
+.kc .ks{font-size:11.5px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kc .kf{display:flex;align-items:center;justify-content:space-between;margin-top:9px;gap:6px}
+.kc .kf .tch{font-size:11.5px}
+/* company card */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 560px;gap:18px;min-height:0;height:100%}
+.list{min-height:0;overflow:hidden}
+.cd{background:var(--card);border-radius:var(--r);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.cd .ch{padding:18px 20px 14px;position:relative}
+.cd .ch h2{font-size:23px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.cd .ch p{font-size:13px;color:var(--mut);margin-top:3px}
+.cd .ch .x{position:absolute;right:16px;top:16px;font-weight:600;font-size:13px;color:var(--accInk)}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 20px 14px}
+.fact{border-radius:12px;padding:10px 12px;background:var(--chip);min-width:0}
+.fact .fl{font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.fact .fv{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.logbox{margin:0 20px 14px;border-radius:14px;padding:14px;background:var(--logBg);border:1px solid var(--logLine)}
+.logbox h3{font:800 13px Inter;letter-spacing:.06em;text-transform:uppercase;color:var(--accInk);margin-bottom:10px}
+.note{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;color:var(--mut);font-size:13.5px}
+.fu{display:flex;align-items:center;gap:6px;margin:10px 0 12px;flex-wrap:wrap;font-size:13px;font-weight:600}
+.fu .pill{padding:5px 11px;font-size:12.5px}
+.fu .pill.on{background:var(--accDeep);border-color:var(--accDeep);color:#fff}
+.lbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lb{border-radius:11px;padding:11px 10px;font:700 14px Inter;display:flex;align-items:center;gap:9px;justify-content:center;white-space:nowrap}
+.lb .li{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+.lb .li svg.i{width:15px;height:15px;stroke-width:2.2}
+.stgrid{display:flex;flex-wrap:wrap;gap:6px;padding:0 20px 14px}
+.stgrid .stg{padding:5px 11px;font-size:12.5px;background:transparent;border:1.5px solid var(--t);color:var(--ink)}
+.stgrid .stg.on{background:var(--d);color:#fff;border-color:var(--d)}
+.stgrid .stg.on i{background:#fff}
+.cd h4{font:800 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);padding:4px 20px 8px}
+.tl{padding:0 20px 14px}
+.tli{display:flex;gap:10px;padding:6px 0;font-size:13px;align-items:flex-start}
+.tli .ti{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--t);color:var(--k);flex:none}
+.tli .ti svg.i{width:13px;height:13px;stroke-width:2.2}
+.tli b{font-weight:700}
+.tli .tm{color:var(--mut);font-size:12px}
+.reach{margin:0 20px 16px;padding:12px 14px;border-radius:12px;background:var(--chip);font-size:13px}
+.reach b{display:block;font-size:13.5px}
+/* phone */
+.phone .hdr{height:auto;padding:6px 16px 12px;flex-wrap:wrap;gap:10px}
+.phone .brand b{font-size:15px}
+.phone .world{width:100%}
+.phone .world span{flex:1;justify-content:center;padding:8px 6px}
+.phone .main{padding:0 14px 0;display:flex;flex-direction:column}
+.phone .hero{padding:14px 0 12px}
+.phone .hero h1{font-size:23px}
+.phone .tiles{grid-template-columns:1fr 1fr;gap:10px}
+.phone .tile{padding:12px 13px}
+.phone .tile .tv{font-size:30px;margin-top:6px}
+.phone .tile .tl{font-size:10.5px;letter-spacing:.02em}
+.phone .tile .ts{font-size:12px}
+.phone .row{padding:10px 12px;gap:10px}
+.phone .row .fit{width:26px;font-size:16px}
+.phone .stages{display:flex;gap:8px;overflow:hidden}
+.phone .st{min-width:104px}
+.phone .board{grid-auto-columns:280px;overflow:hidden;margin-top:14px}
+.phone .facts{padding:0 14px 12px;gap:8px}
+.phone .logbox{margin:0 14px 12px;padding:12px}
+.phone .lbs{grid-template-columns:1fr 1fr}
+.phone .lb{justify-content:flex-start;padding:10px}
+.phone .cd{border-radius:0;border:0;margin:0 -14px}
+.phone .cd .ch{padding:6px 14px 12px}
+.phone .cd .ch h2{font-size:21px}
+.phone .stgrid,.phone .tl,.phone .cd h4{padding-left:14px;padding-right:14px}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px 26px;border-top:1px solid var(--line);background:var(--card);flex:none}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:3px;font:600 10.5px Inter;color:var(--mut)}
+.tabbar div.on{color:var(--accInk)}
+.tabbar svg.i{width:21px;height:21px}
+.phead{display:flex;align-items:center;gap:10px;padding:2px 0 8px;font-weight:600;color:var(--accInk);font-size:14px}
+
+/* ================= Direction A: Clubhouse (brand-faithful, light first) ================= */
+.dA{--r:14px}
+.dA.m-light{--bg:#f4f5f6;--card:#fff;--ink:#292823;--mut:#5f6166;--line:#e6e7e9;--chip:#f3f4f5;--colBg:#eceef0;--hdr:#292823;--hdrInk:#fff;--wbg:#ffffff14;--wInk:#d6d6d3;--wOn:#fff;--wOnInk:#292823;--navInk:#d9d9d5;--navOn:#ffffff1c;--navOnInk:#fff;--navBadge:#ffffff22;--navBadgeInk:#fff}
+.dA.m-dark{--bg:#121211;--card:#1d1d1b;--ink:#f1f1ee;--mut:#a4a5a0;--line:#2e2e2b;--chip:#262624;--colBg:#181817;--hdr:#0b0b0a;--hdrInk:#fff;--wbg:#ffffff10;--wInk:#c8c8c4;--wOn:#2a2a27;--wOnInk:#fff;--navInk:#cfcfca;--navOn:#ffffff18;--navOnInk:#fff;--navBadge:#ffffff1c;--navBadgeInk:#fff}
+.dA .hdr::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:4px;background:var(--acc)}
+.dA .main{padding-top:4px}
+.dA .tile{background:var(--card);border:1px solid var(--line);border-top:5px solid var(--c)}
+.dA .tile .tl{color:var(--k)}
+.dA .tile .tv{color:var(--k)}
+.dA .tile .ts{color:var(--mut)}
+.dA .tile .tl .ti{width:22px;height:22px;border-radius:7px;background:var(--t);display:grid;place-items:center}
+.dA .sec>header{background:var(--t);color:var(--k);border-bottom:1px solid var(--line)}
+.dA .sec>header .hi{background:var(--d);color:#fff}
+.dA .sec>header .rt{color:var(--k)}
+.dA .sec>header b.n{background:var(--d);color:#fff}
+.dA .sec>header + .row,.dA .sec>header + .pp{border-top:0}
+.dA .st{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c)}
+.dA .st .sv{color:var(--k)}
+.dA .col>header{background:var(--t);color:var(--k);border-bottom:3px solid var(--c)}
+.dA .col>header b{background:var(--d);color:#fff}
+.dA .col .cards{padding-top:8px}
+.dA .lb{background:var(--card);border:1.5px solid var(--t);color:var(--k)}
+.dA .lb .li{background:var(--d);color:#fff}
+.dA.m-light .logbox{--logBg:color-mix(in srgb,var(--acc) 7%,#fff);--logLine:color-mix(in srgb,var(--acc) 25%,#fff)}
+.dA.m-dark .logbox{--logBg:#232321;--logLine:#34342f}
+
+/* ================= Direction B: Night Session (dark first, neon accents) ================= */
+.dB{--r:12px}
+.dB.m-dark{--bg:#0f0f0e;--card:#1a1a18;--ink:#f3f3ef;--mut:#a3a39d;--line:#2a2a27;--chip:#22221f;--colBg:#151514;--hdr:#0f0f0e;--hdrInk:#fff;--wbg:#1d1d1b;--wInk:#b9b9b3;--wOn:var(--acc);--wOnInk:#0b0b0a;--navInk:#b9b9b3;--navOn:transparent;--navOnInk:#fff;--navBadge:#2a2a27;--navBadgeInk:#e8e8e3}
+.dB.m-light{--bg:#eceae6;--card:#fff;--ink:#161616;--mut:#5d5d58;--line:#dcdad5;--chip:#f2f1ee;--colBg:#e3e1dc;--hdr:#161616;--hdrInk:#fff;--wbg:#262624;--wInk:#c9c9c4;--wOn:var(--acc);--wOnInk:#0b0b0a;--navInk:#c9c9c4;--navOn:transparent;--navOnInk:#fff;--navBadge:#2e2e2b;--navBadgeInk:#eee}
+.dB .hdr{border-bottom:1px solid #ffffff12}
+.dB .nav span.on{box-shadow:inset 0 -3px 0 var(--acc);border-radius:0}
+.dB .brand .mk{background:transparent;border:2px solid var(--acc);color:var(--acc);box-shadow:0 0 18px color-mix(in srgb,var(--acc) 45%,transparent)}
+.dB .hero h1 span{color:var(--acc)}
+.dB.m-light .hero h1 span{color:var(--accInk)}
+.dB .tile{background:var(--card);border:1px solid var(--line)}
+.dB .tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c);box-shadow:0 0 16px var(--c)}
+.dB .tile::after{content:"";position:absolute;right:-40px;bottom:-60px;width:160px;height:160px;border-radius:50%;background:radial-gradient(var(--c),transparent 70%);opacity:.18}
+.dB .tile .tl{color:var(--mut)}
+.dB .tile .tl .ti{color:var(--k)}
+.dB .tile .tv{color:var(--k);font-size:44px}
+.dB .tile .ts{color:var(--mut)}
+.dB .sec>header{border-bottom:1px solid var(--line);position:relative}
+.dB .sec>header::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--c)}
+.dB .sec>header .hi{background:var(--t);color:var(--k)}
+.dB .sec>header b.n{background:var(--t);color:var(--k)}
+.dB .sec>header + .row,.dB .sec>header + .pp{border-top:0}
+.dB .row{border-left:3px solid transparent}
+.dB .row.lt{border-left-color:var(--lateC)}
+.dB .st{background:var(--card);border:1px solid var(--line)}
+.dB .st::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--c)}
+.dB .st .sv{color:var(--k)}
+.dB .col{border:1px solid var(--line)}
+.dB .col>header{border-top:4px solid var(--c);color:var(--k)}
+.dB .col>header b{background:var(--t);color:var(--k)}
+.dB .kc{border-left:3px solid var(--c)}
+.dB .lb{background:var(--t);color:var(--k);border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
+.dB .lb .li{background:var(--c);color:#0b0b0a}
+.dB .logbox{--logBg:var(--chip);--logLine:color-mix(in srgb,var(--acc) 40%,transparent)}
+.dB .btnp{background:var(--acc);color:#0b0b0a}
+.dB .fu .pill.on{background:var(--acc);border-color:var(--acc);color:#0b0b0a}
+.dB .pill.on{background:var(--acc);color:#0b0b0a;border-color:var(--acc)}
+
+/* ================= Direction C: Scoreboard (bold colour bands, solid tiles) ================= */
+.dC{--r:18px}
+.dC.m-light{--bg:#f3f5f7;--card:#fff;--ink:#1b1c1e;--mut:#5c6068;--line:#e4e7eb;--chip:#f1f3f6;--colBg:#e9ecf0;--hdr:transparent;--hdrInk:#fff;--wbg:#00000026;--wInk:#ffffffd9;--wOn:#fff;--wOnInk:#1b1c1e;--navInk:#fff;--navOn:#ffffff2e;--navOnInk:#fff;--navBadge:#00000029;--navBadgeInk:#fff}
+.dC.m-dark{--bg:#0e1013;--card:#181b20;--ink:#f1f3f6;--mut:#a2a8b2;--line:#272b32;--chip:#20242a;--colBg:#14171b;--hdr:transparent;--hdrInk:#fff;--wbg:#00000033;--wInk:#ffffffd9;--wOn:#fff;--wOnInk:#1b1c1e;--navInk:#fff;--navOn:#ffffff26;--navOnInk:#fff;--navBadge:#00000033;--navBadgeInk:#fff}
+.dC .band{background:linear-gradient(120deg,var(--accDeep) 0%,var(--accDeep2) 100%);position:relative;flex:none;overflow:hidden}
+.dC .band::before{content:"";position:absolute;right:-60px;top:-120px;width:520px;height:520px;background:radial-gradient(circle,#ffffff22,transparent 60%)}
+.dC .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:repeating-linear-gradient(115deg,#ffffff0a 0 2px,transparent 2px 22px)}
+.dC .band .hero{color:#fff;padding:14px 28px 22px;position:relative;z-index:1}
+.dC .band .hero h1 span{color:#ffffffc8}
+.dC .band .hero p{color:#fff}
+.dC .band .pill{background:#ffffff24;border-color:#ffffff40;color:#fff}
+.dC .band .pill.on{background:#fff;color:var(--accDeep);border-color:#fff}
+.dC .band .btnp{background:#fff;color:var(--accDeep)}
+.dC .hdr{position:relative;z-index:1}
+.dC .brand .mk{background:#fff;color:var(--accDeep)}
+.dC .tile{background:var(--d);color:#fff;box-shadow:0 10px 24px #00000026}
+
+.dC .tile .tl .ti{width:24px;height:24px;border-radius:8px;background:#ffffff2e;display:grid;place-items:center}
+.dC .tile .tv{font-size:46px;font-weight:900}
+.dC .tile::after{content:"";position:absolute;right:-26px;top:-26px;width:110px;height:110px;border-radius:50%;border:16px solid #ffffff1a}
+.dC .main{padding-top:18px}
+.dC .sec{border:0;box-shadow:0 2px 10px #0000000f}
+.dC .sec>header{background:var(--d);color:#fff}
+.dC .sec>header .hi{background:#ffffff2e;color:#fff}
+.dC .sec>header b.n{background:#fff;color:var(--d)}
+.dC .sec>header span.s{color:#fff;font-weight:500}
+.dC .sec>header .rt{color:#fff}
+.dC .sec>header + .row,.dC .sec>header + .pp{border-top:0}
+.dC .funnel{height:26px;border-radius:13px}
+.dC .st{background:var(--t);color:var(--k)}
+.dC .st.sel{background:var(--d);color:#fff;outline:0}
+.dC .st.sel .sl i{background:#fff}
+.dC .col>header{background:var(--d);color:#fff;border-radius:12px;margin:8px 8px 8px}
+.dC .col>header b{background:#fff;color:var(--d)}
+.dC .kc{border:0;box-shadow:0 1px 3px #0000001a;border-top:4px solid var(--c)}
+.dC .lb{background:var(--d);color:#fff;box-shadow:0 4px 10px color-mix(in srgb,var(--d) 35%,transparent)}
+.dC .lb .li{background:#ffffff2e;color:#fff}
+.dC .logbox{--logBg:var(--chip);--logLine:transparent}
+.dC .phone-band .hero{padding:10px 14px 16px}
+.dC .cd{border:0;box-shadow:0 2px 14px #00000014}
+.dC.phone .cd{box-shadow:none}
+</style>
+</head>
+<body>
+<div class="rv-top">
+  <h1>Peak desk facelift <small>Mockup for review, 18 Nov 2026. Fake companies and numbers. Nothing here is wired up.</small></h1>
+  <div class="grp"><span class="seg-l">Direction</span><div class="seg" id="segD"></div></div>
+  <div class="grp"><span class="seg-l">Screen</span><div class="seg" id="segS"></div></div>
+  <div class="grp"><span class="seg-l">Desk</span><div class="seg" id="segW"></div></div>
+  <div class="grp"><span class="seg-l">Mode</span><div class="seg" id="segM"></div></div>
+  <div class="grp"><span class="seg-l">Show</span><div class="seg" id="segV"></div></div>
+</div>
+<div class="rv-note" id="note"></div>
+<div class="rv-stage" id="stage">
+  <div class="fw" id="fwD"><div class="cap">Desktop, 1440 x 900</div><div class="fbox" id="boxD"><div class="scr" id="scrD" style="width:1440px;height:900px"></div></div></div>
+  <div class="fw" id="fwP"><div class="cap">Phone, 390 x 844</div><div class="fbox ph" id="boxP"><div class="scr" id="scrP" style="width:390px;height:844px"></div></div></div>
+</div>
+<script>
+(function () {
+'use strict';
+/* ---------------- colour maths: every text colour is checked to 4.5:1 ---------------- */
+function rgb(h) { h = h.replace('#', ''); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+function hex(a) { return '#' + a.map(function (v) { return ('0' + Math.round(Math.max(0, Math.min(255, v))).toString(16)).slice(-2); }).join(''); }
+function mix(a, b, t) { var x = rgb(a), y = rgb(b); return hex(x.map(function (v, i) { return v + (y[i] - v) * t; })); }
+function lum(h) { return rgb(h).map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }).reduce(function (s, v, i) { return s + v * [0.2126, 0.7152, 0.0722][i]; }, 0); }
+function cr(a, b) { var A = lum(a), B = lum(b); return (Math.max(A, B) + 0.05) / (Math.min(A, B) + 0.05); }
+function toward(c, end, bg, target) { for (var t = 0; t <= 1.0001; t += 0.02) { var m = mix(c, end, t); if (cr(m, bg) >= target) return m; } return end; }
+/* c = base hue; returns tint (chip fill), ink (text on tint), deep (fill that carries white text) */
+function tone(c, dark, card) {
+  var t = dark ? mix(c, card, 0.78) : mix(c, '#ffffff', 0.86);
+  var k = dark ? toward(c, '#ffffff', t, 5.2) : toward(c, '#000000', t, 5.2);
+  var d = toward(c, '#000000', '#ffffff', 4.6);
+  return { c: c, t: t, k: k, d: d };
+}
+function vars(c) { var o = tone(c, S.m === 'dark', card()); return '--c:' + o.c + ';--t:' + o.t + ';--k:' + o.k + ';--d:' + o.d; }
+window.__contrast = { cr: cr, tone: tone };
+
+/* ---------------- brand (from peakpickleball.us theme CSS, 18 Nov 2026) ---------------- */
+var BRAND = { cyan: '#17a9cd', orange: '#e6781d', charcoal: '#292823', black: '#161616', body: '#434549' };
+var WORLDS = {
+  sp: { n: 'Sponsors', acc: BRAND.cyan, title: 'Peak Sponsor Desk', deep2: '#0b4f66' },
+  ex: { n: 'Expo leads', acc: BRAND.orange, title: 'Peak Expo Desk', deep2: '#7a2f06' }
+};
+/* stage colours: one hue per stage, shared meaning across both desks */
+var HUE = { slate: '#64748b', blue: '#3b82f6', indigo: '#6366f1', violet: '#8b5cf6', teal: '#14b8a6', amber: '#f59e0b', pink: '#ec4899', green: '#22c55e', stone: '#a8a29e', red: '#ef4444' };
+var STAGES = {
+  sp: [['new', 'To contact', 'slate', 197, '+0'], ['called', 'Called', 'blue', 15, '+6'], ['vm', 'Left voicemail', 'indigo', 4, '+3'], ['emailed', 'Emailed', 'violet', 14, '+5'], ['texted', 'Texted', 'teal', 1, '+1'], ['meeting', 'Meeting / tour', 'amber', 3, '+1'], ['proposal', 'Proposal sent', 'pink', 2, '+1'], ['signed', 'Signed', 'green', 2, '+1'], ['notnow', 'Not now', 'stone', 1, ''], ['lost', 'Lost', 'red', 2, '']],
+  ex: [['new', 'To contact', 'slate', 41, ''], ['contacted', 'Contacted', 'blue', 9, '+4'], ['tour', 'Tour booked', 'amber', 2, '+2'], ['quote', 'Quote sent', 'pink', 2, '+1'], ['booked', 'Booked', 'green', 2, '+1'], ['notnow', 'Not now', 'stone', 3, ''], ['lost', 'Lost', 'red', 2, '']]
+};
+var TOUCH = { na: ['No answer', 'slate', 'phx'], vm: ['Left voicemail', 'indigo', 'vm'], tk: ['Talked', 'green', 'ph'], em: ['Emailed', 'violet', 'mail'], tx: ['Texted', 'teal', 'msg'] };
+var OWN = { BR: ['Brandon', '#1d4ed8'], NK: ['Nneka', '#9333ea'], LN: ['Lance', '#0f766e'], CS: ['Cai', '#c2410c'], MS: ['Matthew', '#3f3e38'] };
+
+/* fake companies */
+var CO = {
+  sp: [
+    { n: 'Copperline Physical Therapy', s: 'Local business · Physical therapy · 1.4 mi', st: 'called', o: 'BR', fit: 9, last: ['na', 'Mon 4:10 pm'], due: ['late', 'Mon, Nov 16 · 2 days late'] },
+    { n: 'Larkspur Auto Group', s: 'Local business · Car dealer · 3.0 mi', st: 'emailed', o: 'CS', fit: 8, last: ['em', 'They replied · today'], due: ['today', 'Today'] },
+    { n: 'Granite Line Roofing', s: 'Local business · Home services · 4.2 mi', st: 'vm', o: 'NK', fit: 7, last: ['vm', 'Tue 11:30 am'], due: ['late', 'Tue, Nov 17 · 1 day late'] },
+    { n: 'Monarch Home Lending', s: 'Local business · Mortgage · 2.6 mi', st: 'called', o: 'LN', fit: 7, last: ['tk', 'Talked to the owner · Mon'], due: ['today', 'Today'] },
+    { n: 'Blue Spruce Realty', s: 'Local business · Realtor · 0.8 mi', st: 'texted', o: 'CS', fit: 7, last: ['tx', 'Yesterday 5:45 pm'], due: ['later', 'Fri, Nov 20'] },
+    { n: 'Ridgeview Credit Union', s: 'Peak sponsor list · Credit union', st: 'meeting', o: 'BR', fit: 8, last: ['tk', 'Tour booked Thu 11:00'], due: ['later', 'Thu, Nov 19'] },
+    { n: 'Summit Smile Dental', s: 'Local business · Dental · 1.1 mi', st: 'proposal', o: 'LN', fit: 8, last: ['em', 'Proposal sent Nov 12'], due: ['later', 'Fri, Nov 20'] },
+    { n: 'Northgate Hearing Center', s: 'Local business · Health · 2.2 mi', st: 'new', o: '', fit: 9, last: null, due: null },
+    { n: 'Pinecrest Insurance Group', s: 'Local business · Insurance · 1.9 mi', st: 'new', o: '', fit: 8, last: null, due: null },
+    { n: 'Falcon Ridge Brewing', s: 'Local business · Restaurant · 3.4 mi', st: 'new', o: '', fit: 8, last: null, due: null },
+    { n: 'Cedar & Pine Orthodontics', s: 'Local business · Orthodontist · 2.0 mi', st: 'signed', o: 'BR', fit: 9, last: ['tk', 'Signed Nov 13'], due: null },
+    { n: 'Alpine Glass Works', s: 'Local business · Home services · 5.1 mi', st: 'signed', o: 'NK', fit: 6, last: ['tk', 'Signed Nov 9'], due: null },
+    { n: 'Brightwater Family Dental', s: 'Local business · Dental · 2.8 mi', st: 'emailed', o: 'NK', fit: 7, last: ['em', 'Nov 16'], due: ['today', 'Today'] },
+    { n: 'Stonegate Wealth Partners', s: 'Peak sponsor list · Financial', st: 'called', o: 'LN', fit: 6, last: ['na', 'Tue'], due: ['later', 'Fri, Nov 20'] },
+    { n: 'Kestrel Fitness Supply', s: 'Local business · Retail · 1.6 mi', st: 'vm', o: 'CS', fit: 6, last: ['vm', 'Mon'], due: ['today', 'Today'] },
+    { n: 'Westfield Orthopedics', s: 'Peak sponsor list · Health', st: 'meeting', o: 'LN', fit: 7, last: ['tk', 'Tour booked Fri 9:30'], due: ['later', 'Fri, Nov 20'] },
+    { n: 'Aspen Grove Senior Living', s: 'Local business · Senior living · 2.4 mi', st: 'meeting', o: 'NK', fit: 8, last: ['tk', 'Tour booked Mon 1:00'], due: ['later', 'Mon, Nov 23'] },
+    { n: 'Red Rock Tire & Auto', s: 'Local business · Auto service · 3.7 mi', st: 'proposal', o: 'BR', fit: 7, last: ['em', 'Proposal sent Nov 16'], due: ['later', 'Mon, Nov 23'] },
+    { n: 'Harbor Lane Insurance', s: 'Local business · Insurance · 3.3 mi', st: 'emailed', o: 'BR', fit: 6, last: ['em', 'Nov 13'], due: ['later', 'Fri, Nov 20'] }
+  ],
+  ex: [
+    { n: 'Rampart Youth Volleyball', s: 'Club · Tournament weekend', st: 'tour', o: 'NK', fit: 9, last: ['tk', 'Tour Fri 4:00 pm'], due: ['later', 'Fri, Nov 20'] },
+    { n: 'Gold Hill Corporate Retreats', s: 'Corporate · Team day for 60', st: 'quote', o: 'BR', fit: 8, last: ['em', 'Quote $2,400 sent'], due: ['late', 'Mon, Nov 16 · 2 days late'] },
+    { n: 'Altitude Dance Studio', s: 'Studio · Winter showcase', st: 'contacted', o: 'CS', fit: 7, last: ['vm', 'Tue 2:15 pm'], due: ['today', 'Today'] },
+    { n: 'Cedar Ridge HOA', s: 'Community · Holiday social', st: 'booked', o: 'LN', fit: 8, last: ['tk', 'Booked Dec 12'], due: null },
+    { n: 'Juniper Realty', s: 'Corporate · Client appreciation', st: 'contacted', o: 'CS', fit: 7, last: ['em', 'Nov 17'], due: ['later', 'Thu, Nov 19'] },
+    { n: 'Bright Path Foundation', s: 'Nonprofit · Spring gala', st: 'quote', o: 'NK', fit: 8, last: ['em', 'Quote $1,850 sent Nov 14'], due: ['later', 'Fri, Nov 20'] },
+    { n: 'Kestrel Robotics Club', s: 'School club · Regional meet', st: 'new', o: '', fit: 8, last: null, due: null },
+    { n: 'Mesa Ridge Women\'s Network', s: 'Networking · Monthly mixer', st: 'new', o: '', fit: 7, last: null, due: null },
+    { n: 'Silverline Physio Group', s: 'Corporate · Staff tournament', st: 'tour', o: 'BR', fit: 7, last: ['tk', 'Tour Sat 10:00 am'], due: ['later', 'Sat, Nov 21'] },
+    { n: 'Pikeview Running Club', s: 'Club · Season kickoff', st: 'booked', o: 'LN', fit: 6, last: ['tk', 'Booked Jan 9'], due: null }
+  ]
+};
+var PEOPLE = { sp: [['BR', [4, 2, 5, 3, 1]], ['NK', [3, 2, 2, 4, 0]], ['LN', [2, 1, 3, 2, 1]], ['CS', [1, 1, 2, 3, 2]]], ex: [['NK', [2, 1, 2, 1, 0]], ['BR', [1, 0, 2, 2, 0]], ['CS', [1, 1, 1, 0, 1]], ['LN', [0, 0, 1, 1, 0]]] };
+
+/* ---------------- icons ---------------- */
+var P = {
+  ph: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  phx: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/><path d="M15 3l6 6M21 3l-6 6"/>',
+  vm: '<circle cx="6.5" cy="12" r="3.5"/><circle cx="17.5" cy="12" r="3.5"/><path d="M6.5 15.5h11"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  msg: '<path d="M4 5h16v11H9l-5 4z"/>',
+  more: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  flag: '<path d="M5 21V4h11l-2 4 2 4H5"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  home: '<path d="M4 11l8-7 8 7v9H4z"/>',
+  board: '<rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  deal: '<path d="M3 12l4-4 4 3 3-3 7 7"/><path d="M14 8h4v4"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  pin: '<path d="M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>'
+};
+function ic(n) { return '<svg class="i" viewBox="0 0 24 24">' + P[n] + '</svg>'; }
+var MARK = '<svg viewBox="0 0 24 24"><path d="M1.5 19.5L9 6.5l3.6 6.2 2.4-3.7 7.5 10.5h-4.2l-3.3-4.7-1.3 2 1.6 2.7h-4L9 13.6l-3.4 5.9z"/></svg>';
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+/* ---------------- state ---------------- */
+var S = { d: 'A', s: 'today', w: 'sp', m: 'light', v: 'both', full: '' };
+var DEF_MODE = { A: 'light', B: 'dark', C: 'light' };
+function card() { return { A: { light: '#ffffff', dark: '#1d1d1b' }, B: { light: '#ffffff', dark: '#1a1a18' }, C: { light: '#ffffff', dark: '#181b20' } }[S.d][S.m]; }
+function stg(k) { var a = STAGES[S.w].filter(function (x) { return x[0] === k; })[0]; return a; }
+function stChip(k, extra) { var a = stg(k); return '<span class="stg ' + (extra || '') + '" style="' + vars(HUE[a[2]], S) + '"><i></i>' + a[1] + '</span>'; }
+function touch(k, txt, small) { var t = TOUCH[k]; return '<span class="tch" style="' + vars(HUE[t[1]], S) + '"><span class="ti">' + ic(t[2]) + '</span>' + (small ? '' : t[0]) + '</span>' + (txt ? '<span style="color:var(--mut)">' + (small ? '' : '· ') + esc(txt) + '</span>' : ''); }
+function av(o, cls) { if (!o) return '<span class="av none ' + (cls || '') + '" title="Nobody yet">?</span>'; return '<span class="av ' + (cls || '') + '" style="background:' + OWN[o][1] + '" title="' + OWN[o][0] + '">' + o + '</span>'; }
+function due(d) { if (!d) return ''; return '<span class="due ' + d[0] + '">' + (d[0] === 'late' ? 'Late · ' : d[0] === 'today' ? 'Due today' : 'Next ') + (d[0] === 'late' ? d[1].split(' · ')[0] : d[0] === 'today' ? '' : d[1]) + '</span>'; }
+function row(c, i) {
+  return '<div class="row' + (c.due && c.due[0] === 'late' ? ' lt' : '') + '"><div class="fit num">' + c.fit + '<small>fit</small></div><div class="rx"><div class="rn">' + esc(c.n) + '</div><div class="rs">' + esc(c.s) + '</div>' +
+    (c.last ? '<div class="rl">' + touch(c.last[0], c.last[1]) + '</div>' : '<div class="rl" style="color:var(--mut)">Not contacted yet</div>') + '</div>' +
+    '<div class="rr"><div class="ln">' + stChip(c.st) + av(c.o, 'sm') + '</div>' + due(c.due) + '</div></div>';
+}
+
+/* ---------------- header ---------------- */
+function header(phone) {
+  var W = WORLDS[S.w];
+  var world = '<div class="world">' + ['sp', 'ex'].map(function (k) { return '<span class="' + (S.w === k ? 'on' : '') + '"><i style="background:' + WORLDS[k].acc + '"></i>' + WORLDS[k].n + '</span>'; }).join('') + '</div>';
+  if (phone) return '<div class="hdr"><div class="brand"><span class="mk">' + MARK + '</span><div><b>' + W.title + '</b><small>Peak Pickleball</small></div></div><span style="margin-left:auto">' + av('BR', 'lg') + '</span>' + world + '</div>';
+  var counts = S.w === 'sp' ? { today: 6, pipe: 44, co: 241, deal: 5 } : { today: 2, pipe: 20, co: 61, deal: 4 };
+  var nav = [['today', 'Today', counts.today], ['pipe', 'Pipeline', counts.pipe], ['card', 'Companies', counts.co], ['deal', S.w === 'sp' ? 'Tours & deals' : 'Tours & quotes', counts.deal], ['more', 'More', '']];
+  return '<div class="hdr"><div class="brand"><span class="mk">' + MARK + '</span><div><b>' + W.title + '</b><small>Peak Pickleball · sponsors and expo</small></div></div>' + world +
+    '<div class="nav">' + nav.map(function (n) { return '<span class="' + (S.s === n[0] ? 'on' : '') + '">' + n[1] + (n[2] ? '<em>' + n[2] + '</em>' : '') + '</span>'; }).join('') + '</div>' +
+    '<div class="me">' + av('BR', 'lg') + '<span>Brandon</span></div></div>';
+}
+function whose(phone) {
+  var n = S.w === 'sp' ? [241, 11, 197] : [61, 6, 41];
+  return '<div class="whose"><span class="pill on">Everyone <b>' + n[0] + '</b></span><span class="pill">Mine <b>' + n[1] + '</b></span>' + (phone ? '' : '<span class="pill">Open <b>' + n[2] + '</b></span><span class="avs">' + ['BR', 'NK', 'LN', 'CS'].map(function (o) { return av(o, 'sm'); }).join('') + '</span>') + '</div>';
+}
+function heroWrap(inner, phone) { return S.d === 'C' ? '<div class="band' + (phone ? ' phone-band' : '') + '">' + header(phone).replace('class="hdr"', 'class="hdr"') + inner + '</div>' : header(phone) + '<div class="main" style="flex:none;overflow:visible;padding-bottom:0">' + inner + '</div>'; }
+
+/* ---------------- Today ---------------- */
+function tilesToday(phone) {
+  var sp = S.w === 'sp';
+  var t = [
+    ['Follow-ups due', sp ? '6' : '2', sp ? '2 late · 4 today' : '1 late · 1 today', HUE.red, 'clock'],
+    ['To contact', sp ? '197' : '41', 'nobody reached yet', WORLDS[S.w].acc, 'target'],
+    [sp ? 'Proposals out' : 'Quotes out', '2', sp ? '$11,300 a year waiting' : '$4,250 waiting', HUE.pink, 'doc'],
+    ['Tours coming up', sp ? '3' : '2', sp ? 'next Thu 11:00' : 'next Fri 4:00 pm', HUE.amber, 'cal'],
+    ['This week', sp ? '44' : '17', 'touches logged', HUE.green, 'chart']
+  ];
+  if (phone) t = t.slice(0, 4);
+  return '<div class="tiles">' + t.map(function (x) { return '<div class="tile" style="' + vars(x[3], S) + '"><div class="tl"><span class="ti">' + ic(x[4]) + '</span>' + x[0] + '</div><div class="tv">' + x[1] + '</div><div class="ts">' + x[2] + '</div></div>'; }).join('') + '</div>';
+}
+function secHead(title, n, sub, hue, icn, rt) {
+  return '<header style="' + vars(hue, S) + '"><span class="hi">' + ic(icn) + '</span>' + title + (n ? ' <b class="n">' + n + '</b>' : '') + (sub ? '<span class="s">' + sub + '</span>' : '') + (rt ? '<span class="rt">' + rt + '</span>' : '') + '</header>';
+}
+function people() {
+  var keys = ['na', 'vm', 'tk', 'em', 'tx'];
+  return PEOPLE[S.w].map(function (p) {
+    var tot = p[1].reduce(function (a, b) { return a + b; }, 0);
+    return '<div class="pp">' + av(p[0]) + '<span class="pn">' + OWN[p[0]][0] + '</span><div class="bar">' + p[1].map(function (v, i) { return v ? '<i style="width:' + (v / 16 * 100) + '%;background:' + HUE[TOUCH[keys[i]][1]] + '"></i>' : ''; }).join('') + '</div><span class="pt num">' + tot + '</span></div>';
+  }).join('') + '<div class="legend">' + keys.map(function (k) { return '<span><i style="background:' + HUE[TOUCH[k][1]] + '"></i>' + TOUCH[k][0] + '</span>'; }).join('') + '</div>';
+}
+function today(phone) {
+  var list = CO[S.w];
+  var fu = list.filter(function (c) { return c.due && (c.due[0] === 'late' || c.due[0] === 'today'); });
+  var nx = list.filter(function (c) { return c.st === 'new'; });
+  var tours = list.filter(function (c) { return c.st === 'meeting' || c.st === 'tour'; });
+  var hero = '<div class="hero"><div class="tt"><div><h1>' + WORLDS[S.w].n + ' <span>· Today</span></h1><p>Wednesday, Nov 18 · what to do now, oldest first</p></div>' + (phone ? '' : whose()) + '</div>' + tilesToday(phone) + '</div>';
+  var fuSec = '<section class="sec">' + secHead('Follow-ups due', fu.length, phone ? '' : 'late ones first', HUE.red, 'clock') + fu.map(row).join('') + '</section>';
+  var nxSec = '<section class="sec">' + secHead('To contact next', S.w === 'sp' ? 197 : 41, phone ? '' : 'best route first', WORLDS[S.w].acc, 'target', 'Show all') + nx.map(row).join('') + '</section>';
+  if (phone) return heroWrap(hero, true) + '<div class="main" style="padding-top:' + (S.d === 'C' ? 14 : 0) + 'px"><div class="stack" style="gap:14px">' + fuSec + nxSec + '</div></div>' + tabbar('today');
+  var right = '<div class="stack"><section class="sec">' + secHead('This week by person', S.w === 'sp' ? 44 : 17, 'touches, by type', HUE.green, 'chart') + people() + '</section>' +
+    '<section class="sec">' + secHead('Tours coming up', tours.length, '', HUE.amber, 'cal') + tours.map(row).join('') + '</section></div>';
+  return heroWrap(hero) + '<div class="main"><div class="cols"><div class="stack">' + fuSec + nxSec + '</div>' + right + '</div></div>';
+}
+
+/* ---------------- Pipeline + board ---------------- */
+function stageSummary(phone) {
+  var st = STAGES[S.w], tot = st.reduce(function (a, s) { return a + s[3]; }, 0);
+  var fun = '<div class="funnel">' + st.map(function (s) { return '<i style="flex:' + Math.max(Math.sqrt(s[3]), 1.2).toFixed(2) + ';background:' + HUE[s[2]] + '" title="' + s[1] + '"></i>'; }).join('') + '</div>';
+  return fun + '<div class="stages' + (S.w === 'ex' ? ' ex' : '') + '">' + st.map(function (s, i) {
+    return '<div class="st' + (i === 1 ? ' sel' : '') + '" style="' + vars(HUE[s[2]], S) + '"><div class="sl"><i></i>' + s[1] + '</div><div class="sv">' + s[3] + '</div><div class="sd">' + (s[4] ? s[4] + ' this week' : '&nbsp;') + '</div></div>';
+  }).join('') + '</div>';
+}
+function boardCols(phone) {
+  var st = STAGES[S.w].filter(function (s) { return s[0] !== 'new' && s[0] !== 'notnow' && s[0] !== 'lost'; });
+  var list = CO[S.w];
+  return '<div class="board">' + st.map(function (s) {
+    var cs = list.filter(function (c) { return c.st === s[0]; });
+    return '<div class="col" style="' + vars(HUE[s[2]], S) + '"><header>' + s[1] + '<b>' + s[3] + '</b></header><div class="cards">' + cs.slice(0, 3).map(function (c) {
+      return '<div class="kc" style="' + vars(HUE[s[2]], S) + '"><div class="kn">' + esc(c.n) + '</div><div class="ks">' + esc(c.s.split(' · ').slice(1).join(' · ') || c.s) + '</div><div class="kf">' + (c.last ? touch(c.last[0], '', true) : '') + due(c.due) + av(c.o, 'sm') + '</div></div>';
+    }).join('') + (s[3] > cs.length ? '<div style="text-align:center;font-size:12px;color:var(--mut);padding:2px 0">+ ' + (s[3] - Math.min(cs.length, 3)) + ' more</div>' : '') + '</div></div>';
+  }).join('') + '</div>';
+}
+function pipe(phone) {
+  var hero = '<div class="hero"><div class="tt"><div><h1>' + WORLDS[S.w].n + ' <span>· Pipeline</span></h1><p>' + (phone ? 'Every company by stage' : 'Every company by stage, from To contact to ' + (S.w === 'sp' ? 'Signed' : 'Booked') + '. Pick a stage to work it.') + '</p></div>' + (phone ? '' : '<div class="whose">' + whose().replace('<div class="whose">', '').replace(/<\/div>$/, '') + '<span class="btnp">' + ic('plus') + ' Add a company</span></div>') + '</div>' + stageSummary(phone) + '</div>';
+  if (phone) return heroWrap(hero, true) + '<div class="main">' + boardCols(true) + '</div>' + tabbar('pipe');
+  return heroWrap(hero) + '<div class="main" style="padding-top:0">' + boardCols() + '</div>';
+}
+
+/* ---------------- Company card ---------------- */
+function cardHtml(phone) {
+  var c = S.w === 'sp' ? CO.sp[0] : CO.ex[1];
+  var st = STAGES[S.w];
+  var tl = S.w === 'sp'
+    ? [['na', 'Brandon called, no answer', 'Mon, Nov 16 · 4:10 pm'], ['em', 'Peak email sent: sponsorship intro', 'Thu, Nov 12 · automatic'], ['vm', 'Brandon left a voicemail with the front desk', 'Tue, Nov 10 · 10:05 am']]
+    : [['em', 'Brandon sent the quote: $2,400, Saturday court block', 'Fri, Nov 13 · 2:20 pm'], ['tk', 'Talked to the events lead; 60 people, March', 'Wed, Nov 11 · 9:40 am'], ['vm', 'Left a voicemail', 'Mon, Nov 9 · 3:00 pm']];
+  var lb = ['na', 'vm', 'tk', 'em', 'tx'].map(function (k) { var t = TOUCH[k]; return '<span class="lb" style="' + vars(HUE[t[1]], S) + '"><span class="li">' + ic(t[2]) + '</span>' + t[0] + '</span>'; }).join('') + '<span class="lb" style="' + vars('#78716c', S) + '"><span class="li">' + ic('more') + '</span>More&hellip;</span>';
+  return '<div class="cd">' + (phone ? '<div class="phead" style="padding:10px 14px 0">' + ic('back') + ' Follow-ups due</div>' : '') +
+    '<div class="ch"><h2>' + esc(c.n) + '</h2><p>' + esc(c.s) + ' · fit ' + c.fit + ' of 9</p>' + (phone ? '' : '<span class="x">Close &times;</span>') + '</div>' +
+    '<div class="facts"><div class="fact"><div class="fl">Stage</div><div class="fv">' + stChip(c.st) + '<span style="color:var(--mut);font-weight:500;font-size:12px">since Nov 10</span></div></div>' +
+    '<div class="fact"><div class="fl">Owner</div><div class="fv">' + av(c.o) + OWN[c.o][0] + '</div></div>' +
+    '<div class="fact"><div class="fl">Last contact</div><div class="fv">' + touch(c.last[0], '') + '<span style="color:var(--mut);font-weight:500;font-size:12px">' + (S.w === 'sp' ? 'Mon 4:10 pm' : 'Fri 2:20 pm') + '</span></div></div>' +
+    '<div class="fact"><div class="fl">Next</div><div class="fv"><span class="bdg" style="' + vars(HUE.red, S) + '">Late</span>' + c.due[1].split(' · ')[0] + '</div></div></div>' +
+    '<div class="logbox"><h3>Log a call, email or text</h3><div class="note">Note (optional): who you spoke to, what they said</div>' +
+    '<div class="fu">Follow up <span class="pill on">In 3 days</span><span class="pill">Tomorrow</span><span class="pill">Next week</span>' + (phone ? '' : '<span class="pill">Pick a day</span>') + '</div><div class="lbs">' + lb + '</div></div>' +
+    '<h4>Stage</h4><div class="stgrid">' + st.map(function (s) { return '<span class="stg' + (s[0] === c.st ? ' on' : '') + '" style="' + vars(HUE[s[2]], S) + '"><i></i>' + s[1] + '</span>'; }).join('') + '</div>' +
+    '<h4>History</h4><div class="tl">' + tl.map(function (t) { var x = TOUCH[t[0]]; return '<div class="tli" style="' + vars(HUE[x[1]], S) + '"><span class="ti">' + ic(x[2]) + '</span><div><b>' + x[0] + '</b> · ' + esc(t[1]) + '<div class="tm">' + t[2] + '</div></div></div>'; }).join('') + '</div>' +
+    (phone ? '' : '<div class="reach"><b>How to reach them</b>' + (S.w === 'sp' ? 'Front desk (555) 010-0142 · ask for the clinic manager · events@copperline-pt.example' : 'Events lead (555) 010-0187 · events@goldhill-retreats.example') + '</div>') +
+    '</div>';
+}
+function company(phone) {
+  if (phone) return '<div class="sb" style="color:var(--ink)"><span>9:41</span><span class="sbi"><b></b><i></i></span></div><div class="main" style="overflow:hidden">' + cardHtml(true) + '</div>' + tabbar('card');
+  var rank = function (c) { return c.due ? { late: 0, today: 1, later: 2 }[c.due[0]] : 3; };
+  var list = CO[S.w].filter(function (c) { return c.st !== 'signed' && c.st !== 'booked'; }).sort(function (x, y) { return rank(x) - rank(y) || y.fit - x.fit; }).slice(0, 9);
+  var hero = '<div class="hero" style="padding-bottom:' + (S.d === 'C' ? 22 : 14) + 'px"><div class="tt"><div><h1>' + WORLDS[S.w].n + ' <span>· Companies</span></h1><p>Search, filter, and open a company to log a touch.</p></div>' + whose() + '</div></div>';
+  return heroWrap(hero) + '<div class="main" style="padding-top:' + (S.d === 'C' ? 18 : 0) + 'px"><div class="split"><div class="list"><section class="sec">' + secHead('Companies', S.w === 'sp' ? 241 : 61, 'follow-ups due first, then by fit', WORLDS[S.w].acc, 'list') + list.map(row).join('') + '</section></div>' + cardHtml() + '</div></div>';
+}
+function tabbar(on) { return '<div class="tabbar">' + [['today', 'Today', 'home'], ['pipe', 'Pipeline', 'board'], ['card', 'Companies', 'list'], ['deal', 'Deals', 'deal'], ['more', 'More', 'more']].map(function (t) { return '<div class="' + (t[0] === on ? 'on' : '') + '">' + ic(t[2]) + t[1] + '</div>'; }).join('') + '</div>'; }
+
+/* ---------------- review chrome ---------------- */
+var DIRS = {
+  A: { n: 'A · Clubhouse', note: '<b>Direction A, Clubhouse.</b> Closest to Peak\'s own website. A charcoal top bar (Peak\'s logo colour) with a thick cyan stripe on Sponsors and an orange stripe on Expo. White cards; each section header is tinted in its own colour, so Follow-ups read red, To contact reads cyan, Tours read amber. Tiles carry a coloured top edge and a coloured number. The calmest of the three, light first, with a matching dark mode.' },
+  B: { n: 'B · Night Session', note: '<b>Direction B, Night Session.</b> Dark first, built for long sessions on the phone and laptop. Near-black cards, with Peak cyan or orange as the glowing accent on the active tab, the world switch and the main buttons. Stage colours appear as bright edges: a coloured bar on every tile, section and board column, and a coloured left edge on each board card. The most dramatic; a light mode is included.' },
+  C: { n: 'C · Scoreboard', note: '<b>Direction C, Scoreboard.</b> The loudest. A full-width colour band across the top (Peak cyan for Sponsors, Peak orange for Expo) holds the title and the Today numbers on solid coloured tiles in big type. Section headers are solid colour bars, the funnel is a thick striped bar, and the log buttons are solid colour so No answer, Voicemail, Talked, Emailed and Texted can be told apart at a glance. Sporty, still precise; light and dark.' }
+};
+var SCREENS = { today: 'Today', pipe: 'Pipeline + Board', card: 'Company card' };
+var WLD = { sp: 'Sponsors', ex: 'Expo' };
+var MODES = { light: 'Light', dark: 'Dark' };
+var VIEWS = { both: 'Both', desk: 'Desktop', phone: 'Phone' };
+function readHash() { S.full = ''; var h = location.hash.slice(1); var hadM = /(^|&)m=/.test(h); h.split('&').forEach(function (p) { var kv = p.split('='); if (kv[0] && kv[1] !== undefined) S[kv[0]] = decodeURIComponent(kv[1]); }); if (!hadM) S.m = DEF_MODE[S.d]; }
+function writeHash() { var h = 'd=' + S.d + '&s=' + S.s + '&w=' + S.w + '&m=' + S.m + '&v=' + S.v + (S.full ? '&full=' + S.full : ''); if (location.hash.slice(1) !== h) history.replaceState(null, '', '#' + h); }
+function seg(el, obj, key) {
+  el.innerHTML = Object.keys(obj).map(function (k) { return '<button type="button" data-k="' + k + '" aria-pressed="' + (S[key] === k) + '">' + (obj[k].n || obj[k]) + '</button>'; }).join('');
+  el.onclick = function (e) { var b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.k; if (key === 'd') S.m = DEF_MODE[S.d]; render(); };
+}
+function fit() {
+  var bd = document.getElementById('boxD'), bp = document.getElementById('boxP'), sd = document.getElementById('scrD'), sp = document.getElementById('scrP');
+  if (S.full) {
+    var desk = S.full === 'desk';
+    document.getElementById('fwD').style.display = desk ? '' : 'none'; document.getElementById('fwP').style.display = desk ? 'none' : '';
+    sd.style.transform = sp.style.transform = 'none'; bd.style.width = '1440px'; bd.style.height = '900px'; bp.style.width = '390px'; bp.style.height = '844px'; return;
+  }
+  document.getElementById('fwD').style.display = S.v === 'phone' ? 'none' : ''; document.getElementById('fwP').style.display = S.v === 'desk' ? 'none' : '';
+  var W = document.getElementById('stage').clientWidth - 48;
+  var side = S.v === 'both' && W > 1100;
+  var k = Math.min(1, (side ? W - 450 : W) / 1440);
+  sd.style.transform = 'scale(' + k + ')'; bd.style.width = 1440 * k + 'px'; bd.style.height = 900 * k + 'px';
+  var kp = S.v === 'phone' ? 1 : side ? Math.min(1, 900 * k / 844) : Math.min(1, W / 390);
+  sp.style.transform = 'scale(' + kp + ')'; bp.style.width = 390 * kp + 'px'; bp.style.height = 844 * kp + 'px';
+}
+function paint(el, phone) {
+  var W = WORLDS[S.w];
+  var accDeep = tone(W.acc, false, '#fff').d;
+  var accInk = S.m === 'dark' ? toward(W.acc, '#ffffff', card(), 5.4) : toward(W.acc, '#000000', '#ffffff', 5.4);
+  el.className = 'scr ' + (phone ? 'phone' : 'desk') + ' d' + S.d + ' m-' + S.m;
+  el.style.cssText = el.style.cssText.replace(/--[^;]+;?/g, '') + ';--acc:' + W.acc + ';--accDeep:' + accDeep + ';--accDeep2:' + W.deep2 + ';--accInk:' + accInk + ';--lateC:' + HUE.red + ';--lateInk:' + (S.m === 'dark' ? toward(HUE.red, '#ffffff', card(), 4.5) : toward(HUE.red, '#000000', '#ffffff', 4.5));
+  var f = { today: today, pipe: pipe, card: company }[S.s];
+  var top = phone && S.s !== 'card' ? '<div class="sb" style="color:' + (S.d === 'C' ? '#fff' : S.d === 'A' || S.m === 'dark' || S.d === 'B' ? '#fff' : 'var(--ink)') + ';background:' + (S.d === 'C' ? 'var(--accDeep)' : 'var(--hdr)') + '"><span>9:41</span><span class="sbi"><b></b><i></i></span></div>' : '';
+  el.innerHTML = top + f(phone);
+}
+function render() {
+  writeHash();
+  document.body.classList.toggle('full', !!S.full);
+  seg(document.getElementById('segD'), DIRS, 'd'); seg(document.getElementById('segS'), SCREENS, 's'); seg(document.getElementById('segW'), WLD, 'w'); seg(document.getElementById('segM'), MODES, 'm'); seg(document.getElementById('segV'), VIEWS, 'v');
+  document.getElementById('note').innerHTML = DIRS[S.d].note;
+  paint(document.getElementById('scrD'), false); paint(document.getElementById('scrP'), true);
+  fit();
+}
+readHash(); render();
+window.addEventListener('resize', fit);
+window.addEventListener('hashchange', function () { readHash(); render(); });
+})();
+</script>
+</body>
+</html>
