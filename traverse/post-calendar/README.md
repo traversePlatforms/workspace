@@ -49,11 +49,44 @@ Matthew's approval calendar for the clients' Facebook and Instagram posts, with 
   upload percentage, then "Converting/Preparing the video...". Host limits: upload_max_filesize and post_max_size 256 MB (a 90 s 1080p phone
   clip is about 90 MB). Page note: "Phone videos: record in 1080p, under 90 seconds."
 
+## LinkedIn (Surge only, built 18 Nov 2026)
+
+Matthew, 18 Nov: "I want this connected to my posts app under the surge section. We are going to schedule posts similiar to how we do with
+surge. I am still putting surge facebook on hold until i gain access to the appropriate surge account." Code: `server/linkedin.php`
+(loaded by lib.php) and `app/api/linkedin-oauth.php`.
+
+- **The app:** Surge Inc's own LinkedIn developer app, Community Management API only (Development tier requested 18 Nov). Keys on the
+  laptop in `~/.ssh/surge-linkedin-app.txt` (line 1 client ID, line 2 secret); on the server in `post-calendar-data/private/linkedin-app.json`
+  (chmod 600), sent with `bash tools/linkedin-app.sh push` (`compare` says same/different). Never printed. Optional keys in that file:
+  `version` (LinkedIn-Version, YYYYMM; the code says 202611, bump it before about Nov 2027) and `scopes_extra`.
+- **Connect (Matthew only):** Manage clients > Surge > Connect LinkedIn. Opens LinkedIn in a new tab with scopes `w_organization_social
+  rw_organization_admin r_organization_social r_basicprofile`; LinkedIn returns to `api/linkedin-oauth.php` (registered in the app). That
+  page works only with Matthew's sign-in cookie and a one-use state under 15 minutes old; it swaps the code, reads his name and his Pages
+  (organizationAcls), and he picks Surge Inc. Tokens are sealed (AES-256-GCM, key = `private/linkedin.key` mixed with the app secret) in
+  `private/linkedin-surge.json`. A refusal is said plainly ("LinkedIn hasn't approved posting yet" + LinkedIn's words); if LinkedIn refuses
+  only an extra scope (r_organization_social, r_basicprofile) it is left out next time and he presses Connect again.
+- **Staying signed in:** the runner refreshes the access token when it has under 7 days left (refresh tokens last a year from the first
+  Connect, then Connect again). If it can't, the page says "Needs reconnecting" and Matthew gets one email.
+- **Posts:** target `li` (Surge only), with its own words (`li`, at most 3,000 characters after LinkedIn's little-text escaping, no links)
+  and an optional first comment (`li_comment`, at most 1,250; the place for links, per Surge's voice spec). Words alone, one picture, or a
+  photo set of 2-20 pictures; no video. Same approve, fingerprint, once-only, failure email and Back to draft rules: the post and the first
+  comment are recorded separately, so a refused comment is the only thing tried again. The post's address
+  (linkedin.com/feed/update/urn:li:share:.../) is kept.
+- **Numbers:** likes, comments, shares, impressions and clicks (organizationalEntityShareStatistics), read about 2 hours, 1 day, 3 days and
+  7 days after a post went, shown on the post. Needs Matthew to be a Super admin (ADMINISTRATOR) of the Page.
+- `php runner.php linkedin`: the connection as the page shows it (never tokens).
+
+## Facebook / Instagram hold (18 Nov 2026)
+
+`php runner.php hold <client> fb,ig "why"` / `unhold <client> fb,ig`. A held platform can't be approved (the reason shows on the post),
+approved posts using it go back to draft, and the runner never sends to it or asks Meta about it. **Surge fb,ig is on hold since 18 Nov**
+(Matthew: until he has access to the right Surge account). Lift only on his word.
+
 ## Loading drafts (manifests)
 
 `node traverse/post-calendar/tools/pc.mjs import <manifest.json>` (add `--dry-run` first to see what would load). Each item: `brand`
 ("sixfold", "surge" or a client id), `type` ("single" or "photoset"), `date` + `time` (Mountain; leave both out for "not scheduled yet"),
-`targets`, `image` or `images` (2-10, paths or `{path, caption}`), `fb_caption`, `ig_caption`, `album` (photo sets; kept but not used since 16 Nov), `note`. Everything
+`targets`, `image` or `images` (2-10, paths or `{path, caption}`), `fb_caption`, `ig_caption`, `li_caption` + `li_comment` (LinkedIn), `album` (photo sets; kept but not used since 16 Nov), `note`. Everything
 arrives as an unapproved draft; importing the same manifest again adds nothing twice. `pc.mjs list <client>` shows each post and what still
 blocks its approval; `pc.mjs requests` (or `php runner.php requests` on the server) lists open change requests as JSON; `pc.mjs answer
 <post-id> --image new.png --fb fb.txt --ig ig.txt` sends the new version and puts the post back to draft.
@@ -63,7 +96,8 @@ blocks its approval; `pc.mjs requests` (or `php runner.php requests` on the serv
 - `bash traverse/post-calendar/tools/deploy.sh` (backup to `~/upload-backups/before-postcal-<stamp>.tgz`, rename-into-place, md5 of every
   file); `--check` compares with live and sends nothing. `tools/token.sh compare|push` handles the token without printing it.
 - `node traverse/post-calendar/test/pc-test.mjs`: API and runner against a local stand-in for graph.facebook.com (nothing reaches Meta):
-  208 checks on 16 Nov (the client sign-in and phone-video sections need ffmpeg + ffprobe on PATH, else the video part is skipped).
-  `node traverse/post-calendar/test/pc-ui-test.mjs [shots-folder]`: the page in headless Chrome at phone size, 49 checks on 16 Nov.
+  294 checks on 18 Nov, LinkedIn against a local stand-in for linkedin.com included (the client sign-in and phone-video sections need ffmpeg +
+  ffprobe on PATH, else the video part is skipped).
+  `node traverse/post-calendar/test/pc-ui-test.mjs [shots-folder]`: the page in headless Chrome at phone size, 68 checks on 18 Nov.
 - The old runner (`sixfold-tools/social-queue.php`, queue `sixfold-private/social-queue.json`) is folded in with `php runner.php
   migrate-queue <file>`: approvals kept; the new runner leaves migrated posts alone until the old queue file is retired.
