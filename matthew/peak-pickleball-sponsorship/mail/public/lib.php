@@ -26,9 +26,16 @@ declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 date_default_timezone_set('America/Denver');
 
+/* Where this copy is installed (2026-11-17, Matthew: "attach it to the same url ... call it something else not peak related"). The live
+   copy sits inside Outbox, at public_html/outbox-092b0f/peak/. A site.php beside lib.php there sets PM_PATH, PM_ROOT (the folder that holds
+   peak-mail-data) and the hooks for Outbox's own sign-in (pmSiteSignedIn, pmSiteRedirect, pmSiteHome). Without a site.php (the repo copy,
+   the tests) this is the stand-alone tool at /peak-mail-31dc56/. The old address keeps oauth.php, r.php, u.php and cron.php as one-line
+   pointers to the Outbox copy, so Microsoft's registered redirect and the hourly cron still work. */
+if (is_file(__DIR__ . '/site.php')) require_once __DIR__ . '/site.php';
+defined('PM_PATH') || define('PM_PATH', '/peak-mail-31dc56');
+defined('PM_ROOT') || define('PM_ROOT', dirname(__DIR__, 2));
 const PM_LISTS = ['sponsors' => 'Peak sponsors', 'expo' => 'Expo space rental'];
 const PM_SCOPE = 'offline_access User.Read Mail.ReadWrite Mail.Send';
-const PM_PATH = '/peak-mail-31dc56';
 const PM_ORIGIN = 'https://traverseplatforms.com';
 const PM_RATE_MAX = 30;
 const PM_RAMP = 10;        /* the first sending day: at most 10 an hour, whatever the rate */
@@ -39,8 +46,8 @@ const PM_ADMIN_HELP = 'Peak\'s Global admin signs in at entra.microsoft.com, ope
 /* ---------------------------------------------------------------- where things are */
 function pmTestOk(): bool { return PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server'; }
 function pmEnv(string $k): string { return pmTestOk() ? (string) getenv($k) : ''; }
-function pmData(): string { $e = pmEnv('PEAK_MAIL_DATA'); return $e !== '' ? $e : dirname(__DIR__, 2) . '/peak-mail-data'; }
-function pmDesk(): string { $e = pmEnv('PEAK_DESK_DATA'); return $e !== '' ? $e : dirname(__DIR__, 2) . '/peak-desk-data'; }
+function pmData(): string { $e = pmEnv('PEAK_MAIL_DATA'); return $e !== '' ? $e : PM_ROOT . '/peak-mail-data'; }
+function pmDesk(): string { $e = pmEnv('PEAK_DESK_DATA'); return $e !== '' ? $e : PM_ROOT . '/peak-desk-data'; }
 function pmNow(): int { $e = pmEnv('PEAK_MAIL_NOW'); return ctype_digit($e) ? (int) $e : time(); }
 function pmMock(): string { $m = pmEnv('PEAK_MAIL_MOCK'); return preg_match('#^http://127\.0\.0\.1:\d{2,5}$#D', $m) ? $m : ''; }
 function pmLogin(): string { return pmMock() !== '' ? pmMock() . '/login' : 'https://login.microsoftonline.com'; }
@@ -51,7 +58,12 @@ function pmOrigin(): string {
     return preg_match('/^127\.0\.0\.1:\d{2,5}$/D', $h) ? 'http://' . $h : PM_ORIGIN;
 }
 function pmBase(): string { return pmOrigin() . (pmMock() !== '' ? '' : PM_PATH); }   /* the test server serves this folder at its root */
-function pmRedirect(): string { return pmBase() . '/oauth.php'; }
+/** where Microsoft sends Matthew back: it must be a redirect registered on the Entra app (Outbox chooses between the old and the new one) */
+function pmRedirect(): string { return pmMock() === '' && function_exists('pmSiteRedirect') ? pmSiteRedirect() : pmBase() . '/oauth.php'; }
+/** the folder of that redirect: the short-lived Connect cookie must be sent there */
+function pmCookiePath(): string { return rtrim(str_replace('\\', '/', dirname((string) parse_url(pmRedirect(), PHP_URL_PATH))), '/') . '/'; }
+/** where oauth.php sends Matthew once Microsoft has answered */
+function pmHome(string $kind, string $here): string { return function_exists('pmSiteHome') ? pmSiteHome($kind) : $here . '?ms=' . rawurlencode($kind); }
 
 /* ---------------------------------------------------------------- files */
 function pmReady(): bool { $d = pmData(); if (!is_dir($d)) return false; return true; }

@@ -8,7 +8,7 @@ header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-stor
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Peak email</title>
-<script>try{var t=localStorage.getItem('sixfold.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem('sixfold.theme');if(t)document.documentElement.dataset.theme=t}catch(e){}if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add('embed')</script>
 <style>
 :root{--bg:#f3f6f4;--card:#fff;--ink:#14231d;--soft:#5b6b64;--line:#dbe4df;--brand:#1f5b46;--brand2:#e8f1ec;--warn:#9a5b00;--warnbg:#fff4e0;--bad:#a12a2a;--badbg:#fdeaea;--ok:#1f6b3a;--okbg:#e5f4ea}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1714;--card:#17221e;--ink:#e4ece8;--soft:#9aaba3;--line:#2a3833;--brand:#5fb08f;--brand2:#1d2e27;--warn:#f0b35a;--warnbg:#2c2414;--bad:#f08a8a;--badbg:#2e1818;--ok:#7fd29b;--okbg:#16281d}}
@@ -43,6 +43,7 @@ details summary{cursor:pointer;font-weight:600;font-size:14px;margin:6px 0}
 #signin{max-width:360px;margin:60px auto}.hide{display:none!important}
 .days label{display:inline-flex;align-items:center;gap:4px;margin:0 10px 0 0;color:var(--ink)}.days input{width:auto}
 .tiny{font-size:12px}
+.embed header{display:none}.embed main{padding-top:4px}
 </style>
 </head>
 <body>
@@ -71,6 +72,7 @@ let V=null;
 async function api(action,body,get){
   const o=body===undefined?{credentials:'same-origin'}:{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-PM':'1'},body:JSON.stringify(body)};
   const r=await fetch('api.php?action='+action+(get||''),o); let j={}; try{j=await r.json()}catch(e){j={ok:false,error:'The server did not answer properly.'}}
+  if(j.signin&&j.outbox){flash('Sign in on the Outbox page first.','warn');try{parent.postMessage({outbox:'signin'},location.origin)}catch(e){}throw new Error('signin')}
   if(j.signin){show(false);throw new Error('signin')}
   if(!j.ok)throw new Error(j.error||'Something went wrong.'); return j;
 }
@@ -93,7 +95,8 @@ function drawMs(){
   if(!c.connected)h+='<p class="note tiny">If Microsoft shows <b>Need admin approval</b>: you are not a Peak admin, so the app needs Peak\'s Global admin to approve it once. '+esc(V.adminHelp)+'</p>';
   h+='<div class="row"><button class="main" id="conn"'+(c.app?'':' disabled')+'>'+(c.connected?'Reconnect Microsoft':c.status==='reconnect'?'Reconnect Microsoft':'Connect Microsoft')+'</button>'+(c.email?'<button id="disc">Disconnect</button>':'')+'</div>';
   $('#ms').innerHTML=h; $('#who').textContent=c.connected?'Sending from '+c.email:'Not connected';
-  $('#conn').onclick=async()=>{try{const j=await api('connect',{});location.href=j.url}catch(e){flash(esc(e.message),'bad')}};
+  /* Microsoft's sign-in page will not open inside a frame (Outbox, the hub): there it opens in a new tab and comes back to Outbox */
+  $('#conn').onclick=async()=>{try{const j=await api('connect',{});if(window.top!==window){window.open(j.url,'_blank');flash('Finish the Microsoft sign-in in the new tab. It comes back to Outbox when it is done; then press Reload here.','warn')}else location.href=j.url}catch(e){flash(esc(e.message),'bad')}};
   if($('#disc'))$('#disc').onclick=async()=>{if(!confirm('Disconnect Microsoft? Running lists pause.'))return;try{const j=await api('disconnect',{});flash(esc(j.note),'warn');load()}catch(e){flash(esc(e.message),'bad')}};
 }
 function listCard(k,L){

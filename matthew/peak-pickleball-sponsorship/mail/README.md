@@ -4,8 +4,9 @@ Hourly batches of plain-text emails from Matthew's Peak Pickleball Outlook mailb
 prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sending X amount out each hour until our list is tapped").
 **Nothing has been sent. Each list starts PAUSED; only Matthew's Start on the page sends.**
 
-- **Page:** https://traverseplatforms.com/peak-mail-31dc56/ . The sign-in code is only in `~/.ssh/peak-mail-code.txt` on the laptop.
-- **Source:** `public/` here goes to `public_html/peak-mail-31dc56/`. Private data lives in `~/www/traverseplatforms.com/peak-mail-data/`
+- **Page (since 17 Nov evening): inside Outbox**, https://traverseplatforms.com/outbox-092b0f/ (the Peak section; see `assistant/outbox/README.md`). Outbox's sign-in is the way in; the old Peak code (`~/.ssh/peak-mail-code.txt`) is no longer used. The old address `/peak-mail-31dc56/` forwards to Outbox and keeps `oauth.php` (Microsoft's registered redirect), `r.php`, `u.php` and `cron.php` as pointers to the Outbox copy.
+- **Where this source goes:** `public/` goes up as `public_html/outbox-092b0f/peak/` (built by `assistant/outbox/tools/assemble.mjs`, which adds a `site.php`). Without a `site.php` the same files still work stand-alone at `/peak-mail-31dc56/` (that is how the test runs them).
+- **Data:** private data lives in `~/www/traverseplatforms.com/peak-mail-data/`
   (0700, never in git): app keys, sealed Microsoft token, hashed code, lists, `events.log`, `run.log`.
 - **Microsoft:** the Entra app "Matthew outreach" in Peak's tenant. It uses delegated `offline_access User.Read Mail.ReadWrite Mail.Send`
   and redirects to `/peak-mail-31dc56/oauth.php`. If sign-in says *Need admin approval*, Peak's Global admin grants consent once

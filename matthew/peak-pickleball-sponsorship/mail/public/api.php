@@ -16,8 +16,13 @@ $https = ($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off';
 $path = rtrim(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? PM_PATH . '/api.php'))), '/') . '/';
 $now = pmNow(); $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
 
+/* ---- inside Outbox (2026-11-17) Outbox's own sign-in is the only way in: this copy's code and cookie are not used ---- */
+if (function_exists('pmSiteSignedIn')) {
+    if ($action === 'signin' || $action === 'signout') fail('Sign in and out on the Outbox page.', 403);
+    if (!pmSiteSignedIn()) fail('Sign in to Outbox first.', 401, ['signin' => true, 'outbox' => true]);
+}
 /* ---- sign-in: one code (Matthew's), kept hashed; ten wrong tries in 15 minutes from one place, or 50 in an hour anywhere, pause it ---- */
-if ($action === 'signin') {
+elseif ($action === 'signin') {
     if (!$isPost) fail('POST required', 405);
     $tries = pmJ('tries.json', []); $mine = array_values(array_filter((array) ($tries[$ip] ?? []), fn($t) => $t > $now - 900));
     $all = 0; foreach ($tries as $k => $ts) { $tries[$k] = array_values(array_filter((array) $ts, fn($t) => $t > $now - 3600)); if (!$tries[$k]) unset($tries[$k]); else $all += count($tries[$k]); }
@@ -32,10 +37,12 @@ if ($action === 'signin') {
     setcookie('peakmail', $tok, ['expires' => $now + 365 * 86400, 'path' => $path, 'httponly' => true, 'samesite' => 'Lax', 'secure' => $https]);
     out(['ok' => true]);
 }
-$tok = (string) ($_COOKIE['peakmail'] ?? ''); $ses = pmJ('sessions.json', []); $tokH = $tok !== '' ? hash('sha256', $tok) : '';
-if ($tokH === '' || !isset($ses[$tokH])) fail('Sign in first.', 401, ['signin' => true]);
-if ((int) $ses[$tokH]['last'] < $now - 3600) { $ses[$tokH]['last'] = $now; pmW('sessions.json', $ses); }   /* a rolling year */
-if ($action === 'signout') { unset($ses[$tokH]); pmW('sessions.json', $ses); setcookie('peakmail', '', ['expires' => 1, 'path' => $path]); out(['ok' => true]); }
+if (!function_exists('pmSiteSignedIn')) {
+    $tok = (string) ($_COOKIE['peakmail'] ?? ''); $ses = pmJ('sessions.json', []); $tokH = $tok !== '' ? hash('sha256', $tok) : '';
+    if ($tokH === '' || !isset($ses[$tokH])) fail('Sign in first.', 401, ['signin' => true]);
+    if ((int) $ses[$tokH]['last'] < $now - 3600) { $ses[$tokH]['last'] = $now; pmW('sessions.json', $ses); }   /* a rolling year */
+    if ($action === 'signout') { unset($ses[$tokH]); pmW('sessions.json', $ses); setcookie('peakmail', '', ['expires' => 1, 'path' => $path]); out(['ok' => true]); }
+}
 $BY = 'Matthew Sharpe';
 $needList = function () use ($body): string { $l = (string) ($body['list'] ?? $_GET['list'] ?? ''); if (!isset(PM_LISTS[$l])) fail('Which list?'); return $l; };
 
@@ -101,7 +108,7 @@ if (!$isPost) fail('POST required', 405);
 switch ($action) {
     case 'connect': {
         $r = pmAuthStart($BY); if (isset($r['error'])) fail($r['error'], 500);
-        setcookie(pmCookieName(), $r['cookie'], ['expires' => $now + PM_TTL, 'path' => $path, 'httponly' => true, 'samesite' => 'Lax', 'secure' => $https]);
+        setcookie(pmCookieName(), $r['cookie'], ['expires' => $now + PM_TTL, 'path' => pmCookiePath(), 'httponly' => true, 'samesite' => 'Lax', 'secure' => $https]);   /* sent back to wherever Microsoft returns */
         @unlink(pmData() . '/oauth-last.json');
         out(['ok' => true, 'url' => $r['url']]);
     }
