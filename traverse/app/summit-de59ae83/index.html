@@ -6888,7 +6888,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var SIGN = !!pre.sign;   /* the phone quote said yes (2026-10-14): price, half as deposit, the day, then the one-page form */
     var back = pre.back ? pre.back : SIGN && qqFor(lead) ? quickBack : SIGN && qView() ? function () { quickQuoteView(); } : SIGN ? function () { S.pipeStage = 'call'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : OFFER ? function () { S.pipeStage = 'quoted'; S.pipeSel = 'lead:' + lead.id; S.pipeFocus = lead.id; pipelineView(); } : function () { jobsView(); };
     var who = job ? (job.who || {}) : lead, title = job ? jobName(job) : (lead.name || lead.phone || lead.email || 'Lead');
-    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: SIGN && (qView() || qqFor(lead)) ? 'Quick quote' : SIGN && repOn() ? 'Quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });   /* a sales rep comes from their quote (2026-10-29) */
+    setBar('back', { title: SIGN ? 'Deposit and form' : OFFER ? 'Offer a day' : job ? 'Change the job' : 'Book the job', sub: title, back: back, backLabel: pre.backLabel ? pre.backLabel : SIGN && (qView() || qqFor(lead)) ? 'Quick quote' : SIGN && repOn() ? 'Quote' : OFFER || SIGN ? 'Pipeline' : 'Jobs' });   /* a sales rep comes from their quote (2026-10-29) */
     view.textContent = '';
     var qt = (lead && lead.quote) || {};
     var house = lead && lead.house;
@@ -6898,6 +6898,8 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       pay: { s: 'unpaid' }, card: false, note: (acceptOf(lead) && acceptOf(lead).note) || '', addr: house ? streetCase(house.address) + ', ' + house.town : (lead.town || '')
     };
     if ((OFFER || SIGN) && qt.offer) { P.crew = qt.offer.crew; P.date = qt.offer.date; P.slot = qt.offer.slot; }
+    var HJ = SIGN && !job && lead && lead._job && lead._job.crew ? lead._job : null;   /* booked by hand already (18 Nov 2026, Jen: Daniel): the form is for that day */
+    if (HJ) { P.crew = HJ.crew; P.date = HJ.date; P.slot = HJ.slot; }
     if (SIGN && lead.sign) { P.how = lead.sign.how === 'card' ? 'square' : lead.sign.how; P.note = lead.sign.note || P.note; }
     if (!P.date) { var t = new Date(); t.setDate(t.getDate() + 1); if (t.getDay() === 0) t.setDate(t.getDate() + 1); P.date = isoOf(t); }
     var W = { wk: jobMonday(P.date), data: null };
@@ -6905,6 +6907,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var head = q('div', 'dwfor'); head.appendChild(q('b', null, title));
     head.appendChild(q('div', 'dwsub', [who.need, digits(who.phone).length >= 10 ? fmtPhone(digits(who.phone)) : '', LEAD_SRC[who.src] || ''].filter(Boolean).join(' · ')));
     box.appendChild(head);
+    if (HJ) box.appendChild(q('div', 'qline', 'Booked already: ' + dayName(HJ.date) + ', ' + slotLabel(HJ.slot) + ' with ' + String(HJ.crew).split(' ')[0] + '. The form goes out for that booking. To move the day, change the job on the Jobs board first.'));
     box.appendChild(q('div', 'dwh', 'Who does it'));
     var crewRow = q('div', 'dwwho'); box.appendChild(crewRow);
     box.appendChild(q('div', 'dwh', 'Day'));
@@ -7053,11 +7056,11 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var myLead = lead ? lead.id : job ? job.lead : '';
     function taken(iso, crew, slot) {
       if (!W.data) return null;
-      var t = W.data.jobs.filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && !(job && x.id === job.id); })[0];
+      var t = W.data.jobs.filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && !(job && x.id === job.id) && !(HJ && x.id === HJ.id); })[0];
       if (t) return t;
       var h = (W.data.holds || []).filter(function (x) { return x.date === iso && x.crew === crew && x.slot === slot && x.lead !== myLead; })[0];
       if (!h) { var bk = blockOn(W.data.blocks, iso, crew, slot); if (bk) return { title: 'Off', who: { name: 'Off' + (bk.note ? ': ' + bk.note : '') } }; }   /* blocked off (2026-10-21) */
-      if (!h && !(job && job.crew === crew && job.date === iso && job.slot === slot)) { var ho = hoursOff(W.data.hours, iso, crew, slot); if (ho) return { title: ho, who: { name: ho } }; }   /* outside their work hours (2026-10-27); this job's own time stays */
+      if (!h && !(job && job.crew === crew && job.date === iso && job.slot === slot) && !(HJ && HJ.crew === crew && HJ.date === iso && HJ.slot === slot)) { var ho = hoursOff(W.data.hours, iso, crew, slot); if (ho) return { title: ho, who: { name: ho } }; }   /* outside their work hours (2026-10-27); this job's own time stays */
       return h ? { title: 'Held: ' + h.name, who: { name: 'Held: ' + h.name } } : null;
     }
     function drawStrip() {
@@ -7129,7 +7132,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
           sv.disabled = false;
           if (j._status === 401) return signinView('Signed out. Enter your code again.');
           if (!j.ok) { err.textContent = j.error || 'Not saved. Try again.'; if (j._status === 409) loadWeek(); return; }
-          signSent(lead, j, { price: sp, date: P.date, slot: P.slot }, back);
+          signSent(lead, j, { price: sp, date: P.date, slot: P.slot, backLabel: pre.backLabel }, back);
         }).catch(function () { sv.disabled = false; err.textContent = 'No signal. Nothing was sent; try again.'; });
         return;
       }
@@ -7171,7 +7174,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var QB = qqFor(lead) ? S.qqBack : null;
     if (QB) back = function () { api('leads').then(function (L) { var l2 = ((L && L.leads) || []).filter(function (x) { return x.id === lead.id; })[0]; if (!l2) return quickBack(); signSendView(l2, Object.assign({}, QB.pre, { price: x.price, deposit: j.deposit })); }).catch(function () { toast('No signal', 'Try Back again.', null); }); };   /* back one step, filled in (Matthew 2026-10-15) */
     if (repOn() && !QB) back = calendarView;   /* a sales rep: done, back to their Calendar (2026-10-29) */
-    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : qView() ? 'Quick quote' : repOn() ? 'Calendar' : 'Pipeline' });
+    setBar('back', { title: 'Send the form', sub: lead.name || '', back: back, backLabel: QB ? 'Deposit and form' : x.backLabel ? x.backLabel : qView() ? 'Quick quote' : repOn() ? 'Calendar' : 'Pipeline' });
     view.textContent = '';
     var box = q('div', 'phf dwform jform');
     var B = leadBrand(lead), first = greetName(lead.name), me = myName();
@@ -19209,6 +19212,23 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       bj.addEventListener('click', function () { bj.disabled = true; api('custjob', { body: { id: c.id } }).then(function (j) { bj.disabled = false; if (!j || !j.ok) { toast('Not done', (j && j.error) || 'Try again.', null); return; }
         jobBookView(j.lead, null, { pkg: c.service === 'other' ? 'other' : 'full', price: c.price || '', back: function () { customerView(c.id); } }); }).catch(function () { bj.disabled = false; toast('No signal', 'Try again.', null); }); });
       holder.appendChild(bj);
+    }
+    /* Send a form (18 Nov 2026, Jen: Daniel, a customer first; "+ Book a job" books it but sends them nothing): the same deposit and one-page
+       form as the lead's, Another service and all. Booked already: the form is for that job, its day, price and service filled in. */
+    if (feat('walkdesk') && (CO.a365 || kitOnC()) && (S.role === 'admin' || asOffice())) {
+      var sfm = q('button', 'addlead metaimp', 'Send a form'); sfm.type = 'button';
+      sfm.addEventListener('click', function () { sfm.disabled = true; api('custjob', { body: { id: c.id } }).then(function (j) { sfm.disabled = false; if (!j || !j.ok) { toast('Not done', (j && j.error) || 'Try again.', null); return; }
+        var L = j.lead, jb = j.job || null, toCust = function () { customerView(c.id); };
+        if (L.signed) { toast('They signed already', 'Change the job on the Jobs board instead.', null); return; }
+        L._job = jb;
+        if (kitOnC()) { L._back = toCust; L._backLabel = 'Customer'; kitQuoteView(L); return; }   /* an edition: the form comes from its quote */
+        var lq = L.quote || {};
+        var pre = jb ? { price: jb.price || '', pkg: jb.pkg || 'full', svc: jb.svc || '', seedLb: jb.seedLb, fertLb: jb.fertLb }
+          : lq.price ? { price: lq.price, pkg: lq.pkg, svc: lq.svc || '', sq: lq.sq || 0, seedLb: lq.seedLb, fertLb: lq.fertLb || null }
+          : { pkg: c.service === 'other' ? 'other' : 'full', price: c.price || '' };
+        pre.back = toCust; pre.backLabel = 'Customer';
+        signSendView(L, pre); }).catch(function () { sfm.disabled = false; toast('No signal', 'Try again.', null); }); });
+      holder.appendChild(sfm);
     }
     holder.appendChild(visitForm(c));
     vrows.forEach(function (x) {

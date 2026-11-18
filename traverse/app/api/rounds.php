@@ -3910,7 +3910,8 @@ if ($action === 'a365sign' || $action === 'a365signed' || $action === 'a365savec
     $ex = jobForLead($l['id']);
     if ($ex && !$ex['done']) {
         $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
-        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => depositTaken($S2) > 0 ? ['s' => 'deposit', 'amt' => depositTaken($S2), 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'by' => 'website', 'at' => time()]);
+        $exPay = (string) ($ex['pay']['s'] ?? 'unpaid');   /* money already recorded on the job (one booked by hand, then sent the form: 18 Nov 2026) is kept */
+        if ($exPay !== 'paid' && !($exPay !== 'unpaid' && depositTaken($S2) <= 0)) appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => depositTaken($S2) > 0 ? ['s' => 'deposit', 'amt' => depositTaken($S2), 'how' => payHowOf($S2)] : ['s' => 'unpaid'], 'by' => 'website', 'at' => time()]);
     } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], (string) $l['id']) === null && (string) $o['date'] >= $today0) {
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
@@ -11049,7 +11050,8 @@ function a365BookNoSign(string $lid, string $by): ?string {
     $ex = jobForLead($lid);
     if ($ex && !$ex['done']) {
         $jid = $ex['id']; $had = true; $o = ['crew' => $ex['crew'], 'date' => $ex['date'], 'slot' => $ex['slot']];
-        appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => $pay, 'by' => $by, 'at' => time()]);
+        $exPay = (string) ($ex['pay']['s'] ?? 'unpaid');   /* money already recorded on the job is kept (18 Nov 2026) */
+        if ($exPay !== 'paid' && !($exPay !== 'unpaid' && $dep <= 0)) appendLine(DATA_DIR . '/jobs.log', ['id' => $jid, 'pay' => $pay, 'by' => $by, 'at' => time()]);
     } elseif ($o && slotFree((string) $o['crew'], (string) $o['date'], (string) $o['slot'], $lid) === null && (string) $o['date'] >= $today0) {
         $h = $l['house'] ?? null; $addr = $h ? streetCaseServer((string) $h['address']) . ', ' . streetCaseServer(houseTown($h)) : (string) ($l['town'] ?? '');
         $nj = 'j' . bin2hex(random_bytes(6));
@@ -11118,7 +11120,12 @@ if ($action === 'signsend') {
     if (!jobSlot($slot)) fail('Pick an arrival time.');
     /* booked without a signature already (2026-10-18): the job stays where it is; a new day is set on the Jobs board, as for a signed form */
     $exJob = !empty($L['confirmed']) ? jobForLead($id) : null;
-    if ($exJob && !$exJob['done'] && ($exJob['crew'] !== $crew || $exJob['date'] !== $date || $exJob['slot'] !== $slot)) fail('They are booked already. Change the day on the Jobs board instead.', 409);
+    /* booked by hand with no form (18 Nov 2026, Jen: Daniel, booked from his customer card, "booking that way doesn't send them anything"):
+       the form goes out for that booking. It keeps its day, as a booked-without-signature one does, and signing or paying confirms the same
+       job (a365signed / a365BookNoSign reuse the lead's open job) instead of a second one. */
+    $handJob = !$reopen && empty($L['confirmed']) && empty($L['signed']) ? jobForLead($id) : null; if ($handJob && $handJob['done']) $handJob = null;
+    if ($handJob && !$exJob) $exJob = $handJob;
+    if ($exJob && !$exJob['done'] && ($exJob['crew'] !== $crew || $exJob['date'] !== $date || $exJob['slot'] !== $slot)) fail($handJob ? 'They are booked already: ' . a365Day((string) $exJob['date']) . ', ' . a365Arrive((string) $exJob['slot']) . ' with ' . strtok((string) $exJob['crew'], ' ') . '. The form goes out for that day; to move it, change the job on the Jobs board first.' : 'They are booked already. Change the day on the Jobs board instead.', 409);
     if ($why = slotFree($crew, $date, $slot, $id, $exJob ? (string) $exJob['id'] : ($reopen ? (string) $reJob['id'] : ''))) fail($why, 409);
     $q0 = is_array($L['quote'] ?? null) ? $L['quote'] : [];
     $num = fn($k, $max) => isset($body[$k]) && is_numeric($body[$k]) && (float) $body[$k] >= 0 && (float) $body[$k] <= $max ? round((float) $body[$k], 1) : ($q0[$k] ?? null);
@@ -11152,6 +11159,11 @@ if ($action === 'signsend') {
         appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'confirmed' => null, 'note' => 'Booking reopened for a new form: ' . $was . ' taken off the board.', 'by' => $me, 'at' => time()]);
     }
     if (!appendLine(leadsDir() . '/leadst.log', $row)) fail('Could not save that. Try again.', 500);
+    if ($handJob) {   /* the booked job says what the form says: the price and, on Sixfold, the service (18 Nov 2026) */
+        $jf = []; if ((int) ($handJob['price'] ?? 0) !== $price) $jf['price'] = $price;
+        if (!kitOn() && ((string) ($handJob['pkg'] ?? 'full') !== $pkg || (string) ($handJob['svc'] ?? '') !== $svc)) { $jf['pkg'] = $pkg; $jf['svc'] = $svc; }
+        if ($jf) appendLine(DATA_DIR . '/jobs.log', ['id' => (string) $handJob['id']] + $jf + ['by' => $me, 'at' => time()]);
+    }
     if (!empty($L['confirmed']) && !$reopen) { $A2 = a365Agreement(leadsAll()[$id]); appendLine(leadsDir() . '/leadst.log', ['id' => $id, 'confirmed' => ['facts' => $A2['facts'], 'terms' => $A2['terms'], 'hash' => $A2['hash'], 'version' => A365_SIGN_VERSION] + $L['confirmed'], 'by' => $me, 'at' => time()]); }   /* sent again on purpose: the kept copy follows the new form (2026-10-18) */
     $bookedJob = $nosign && (!$byLink || $depIn) ? a365BookNoSign($id, $me) : null;   /* the deposit is in already: booked now */
     $pn = null; if ($how === 'optional') { try { $pn = payNowFor(leadsAll()[$id], true); } catch (Throwable $e) { error_log('rounds pay now at send: ' . $e->getMessage()); } }   /* booked now: the form's pay link is made here, where a failure shows (2026-11-12) */
@@ -12249,7 +12261,8 @@ if (in_array($action, ['customers', 'customersave', 'custjob', 'customerfrom', '
             $write($cid, ['lead' => $lid]);
         }
         $L0 = leadsAllRaw()[$lid] ?? ['id' => $lid, 'name' => (string) ($c['name'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'town' => (string) ($c['address'] ?? ''), 'src' => 'other', 'status' => 'contacted', 'quote' => null, 'house' => null];
-        out(['ok' => true, 'lead' => $L0]);
+        $J0 = jobForLead($lid); $J0 = $J0 && !$J0['done'] ? array_intersect_key($J0, array_flip(['id', 'crew', 'date', 'slot', 'price', 'pkg', 'svc', 'seedLb', 'fertLb'])) : null;   /* their booked job, for Send a form (18 Nov 2026) */
+        out(['ok' => true, 'lead' => $L0, 'job' => $J0]);
     }
     if ($action === 'customersave') {
         $id = (string) ($body['id'] ?? '');
