@@ -129,6 +129,7 @@ button.li:hover .lt{color:#fff}
 .brain.bdesk .bl i{background:var(--warn);box-shadow:0 0 8px var(--warn)}
 .brain .sw{margin-left:auto;color:var(--c);white-space:nowrap;flex:none;border:1px solid #3ee8ff33;border-radius:999px;padding:3px 10px}
 .brain .sw:hover{background:#3ee8ff10}
+.brain .vo{margin-left:auto}.brain .vo+.sw{margin-left:0}.brain .vo.off{color:var(--mut);border-color:#ffffff22}
 .cmdbar{display:flex;align-items:center;gap:10px;border:1px solid #3ee8ff40;background:#04111bcc;border-radius:14px;padding:8px 8px 8px 16px;box-shadow:0 0 0 4px #3ee8ff08,0 0 40px #3ee8ff12}
 .brain.bdesk+.cmdbar{border-color:#ffb64855}
 .cmdbar input{flex:1;min-width:0;font-size:14px;color:var(--ink);outline:none;padding:6px 0}
@@ -592,7 +593,9 @@ button.li:hover .lt{color:#fff}
     if (S.brain === 'desk' && !lp.on) l.appendChild(document.createTextNode(' (' + lp.text.toLowerCase() + ')'));
     var sw = btn(S.brain === 'desk' ? 'Use the Assistant' : 'Send to the desk', null, 'sw', function () { setBrain(S.brain === 'desk' ? 'assistant' : 'desk'); });
     sw.id = 'brainswitch';
-    add(brainBar, l, sw);
+    var vo = btn(S.speak ? 'Voice on' : 'Voice off', null, 'sw vo' + (S.speak ? '' : ' off'), function () { S.speak = !S.speak; store('jarvis.speak', S.speak); if (!S.speak) hush(); paintBrain(); });
+    vo.id = 'voiceswitch'; vo.title = S.speak ? 'Replies are read aloud. Tap to stop.' : 'Tap to have replies read aloud'; vo.setAttribute('aria-pressed', String(S.speak));
+    add(brainBar, l, vo, sw);
     if (field) field.placeholder = S.brain === 'desk' ? (isPhone ? 'For the desk on your laptop' : 'Write it for J.A.R.V.I.S. desk on your laptop (answers in a few minutes)') : (isPhone ? 'Ask, or tap the mic' : 'Ask J.A.R.V.I.S., or tap the mic to talk');
   }
   function setBrain(b) { S.brain = b; store('jarvis.brain', b); paintBrain(); }
@@ -677,8 +680,32 @@ button.li:hover .lt{color:#fff}
   }
 
   /* ------------------------------------------------------------ answers, as cards */
-  function msgAi(text, who) { var m = el('div', 'msg ai'); m.appendChild(el('div', 'who', who || 'J.A.R.V.I.S.')); said(m, text); return pushChat(m); }
+  function msgAi(text, who) { var m = el('div', 'msg ai'); m.appendChild(el('div', 'who', who || 'J.A.R.V.I.S.')); said(m, text); say(text); return pushChat(m); }
   function msgMe(text) { return pushChat(el('div', 'msg me', text)); }
+  /* 18 Nov (Matthew: "make jarvis speak to me verbally when it responds as well as texts"): the device's own voice (speechSynthesis: free,
+     nothing leaves the device), a British male voice where the device has one. Voice on/off beside the desk switch, kept per device, on by
+     default. Speaks only after Matthew has tapped or typed on the page (browsers refuse sound before that, and a reload never talks). */
+  var SY = window.speechSynthesis || null, sayVoice = null, touched = false;
+  S.speak = store('jarvis.speak') !== false;
+  ['pointerdown', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () { if (touched || !SY) { touched = true; return; } touched = true; try { SY.speak(new SpeechSynthesisUtterance('')); } catch (e) {} }, true); });
+  function pickVoice() {
+    if (!SY) return null; var v = SY.getVoices() || []; if (!v.length) return null;
+    var gb = v.filter(function (x) { return /^en[-_]GB/i.test(x.lang); }), en = v.filter(function (x) { return /^en/i.test(x.lang); });
+    var pref = [/Daniel/i, /UK English Male/i, /Ryan/i, /George/i, /Arthur/i, /Oliver/i, /Thomas/i];
+    for (var i = 0; i < pref.length; i++) { var h = gb.filter(function (x) { return pref[i].test(x.name); })[0] || en.filter(function (x) { return pref[i].test(x.name); })[0]; if (h) return h; }
+    return gb[0] || en[0] || null;
+  }
+  if (SY && SY.addEventListener) SY.addEventListener('voiceschanged', function () { sayVoice = pickVoice(); });
+  function speakable(t) {
+    t = String(t || '').replace(/https?:\/\/\S+/g, 'the link').replace(/[*_`#>]+/g, '').replace(/\s*\n+\s*[-•]\s*/g, '. ').replace(/\s+/g, ' ').trim();
+    if (t.length > 700) { var cut = t.slice(0, 700), k = cut.lastIndexOf('. '); t = (k > 300 ? cut.slice(0, k + 1) : cut) + ' The rest is on screen.'; }
+    return t;
+  }
+  function say(t) {
+    if (!S.speak || !SY || !touched) return; var s = speakable(t); if (!s) return;
+    try { SY.cancel(); var u = new SpeechSynthesisUtterance(s); sayVoice = sayVoice || pickVoice(); if (sayVoice) { u.voice = sayVoice; u.lang = sayVoice.lang; } else u.lang = 'en-GB'; u.rate = 1.02; u.pitch = 0.95; SY.speak(u); } catch (e) {}
+  }
+  function hush() { if (SY) try { SY.cancel(); } catch (e) {} }
   function pushChat(n) { chatLog.appendChild(n); chatLog.scrollTop = chatLog.scrollHeight; return n; }
   function card(o) {
     var c = el('div', 'acard'); if (o.id) c.id = o.id;
@@ -822,6 +849,7 @@ button.li:hover .lt{color:#fff}
     rec.onresult = function (e) { var s = ''; for (var i = 0; i < e.results.length; i++) s += e.results[i][0].transcript; field.value = base + s; };
     rec.onerror = function (e) { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('The microphone is blocked for this page. Allow it in the browser, or type.'); else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Voice stopped (' + e.error + '). Typing always works.'); };
     rec.onend = function () { rec = null; micB.classList.remove('on'); if (S.state === 'listen') setState('idle'); field.focus(); };
+    hush();   /* stop talking before listening, or it hears itself */
     try { rec.start(); micB.classList.add('on'); setState('listen'); } catch (e) { rec = null; toast('Voice could not start here. Typing always works.'); }
   }
 

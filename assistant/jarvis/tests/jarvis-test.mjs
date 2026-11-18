@@ -168,7 +168,11 @@ try {
 
   /* ---- a staff member signed in to the Field app, and nothing else: the page asks for the Assistant's password, shows nothing of his */
   await C('sfr', 'staff');
+  /* 18 Nov: a stand-in for the device voice, so read-aloud replies can be counted */
+  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__said=[];window.SpeechSynthesisUtterance=function(t){this.text=t};Object.defineProperty(window,"speechSynthesis",{configurable:true,value:{speak:function(u){if(u.text)window.__said.push(u.text)},cancel:function(){},getVoices:function(){return[{name:"Daniel",lang:"en-GB"}]},addEventListener:function(){}}});' });
   await cdp('Page.navigate', { url: PAGE }); await sleep(1500);
+  ok((await ev('window.__said.length')) === 0, 'Voice: loading the page never talks');
+  await ev('document.dispatchEvent(new Event("pointerdown"))');   /* the person touching the page, which browsers need before sound */
   ok(await ev('!!document.querySelector(".signin input[type=password]")'), 'signed out (with a staff Field app cookie): the sign-in shows');
   ok(await ev('!document.querySelector(".ibr") && !document.body.innerText.includes("Dana")'), 'signed out: no inbox, no email on screen');
   ok(!reqs.some(r => /helplist|outbox-092b0f|desk.php/.test(r)), 'signed out: the page does not even ask the other apps');
@@ -215,7 +219,7 @@ try {
   await click('#p-builds .ph .fold'); await click('#p-cal .ph .fold'); await click('#p-today .ph .fold'); await sleep(200);
   const gc = await ev('getComputedStyle(document.getElementById("app")).gridTemplateColumns');
   ok(/^394px .* 44px$/.test(gc), 'a fully folded side shrinks to its icon strip and the middle widens (' + gc + ')');
-  await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 8000); await sleep(800);
+  await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 8000); await sleep(800); await ev('document.dispatchEvent(new Event("pointerdown"))');
   ok(await ev('document.querySelector(".ibr[data-inbox=\\"m.sharpe@traverse.example.test\\"]").classList.contains("open") && !document.getElementById("p-team") && !document.getElementById("p-today")'), 'open rows and folded panels are remembered on this device after a reload');
   for (const k of ['team', 'today', 'builds', 'cal']) await click('.rail button[data-panel=' + k + ']');
   await click('.ibr.open .ibh'); await sleep(200);
@@ -277,7 +281,12 @@ try {
   ok(await ev('(()=>{document.getElementById("ask").value="Anything from Jen this week?";document.querySelector(".cmdbar .snd").click();return document.getElementById("app").classList.contains("s-think") && /Thinking/.test(document.querySelector(".slbl").textContent)})()'), 'asking the Assistant: the core thinks');
   await until('!document.getElementById("app").classList.contains("s-think")', 6000);
   ok(reqs.filter(r => /action=chat\b/.test(r)).length === 1, 'one question, one Ask call');
+  ok(/Anthropic key/.test(await ev('window.__said[window.__said.length-1] || ""')), 'Voice: the reply is read aloud');
+  ok(/Voice on/.test(await ev('document.getElementById("voiceswitch").textContent')), 'Voice: on by default, named beside the desk switch');
   ok(/ASSISTANT · INSTANT/i.test(await ev('[...document.querySelectorAll(".msg.ai .who")].pop().textContent')) && /Anthropic key/.test(await ev('[...document.querySelectorAll(".msg.ai")].pop().textContent')), 'the answer is labelled Assistant, instant (here: no key, so it says so)');
+  { await click('#voiceswitch'); const said0 = await ev('window.__said.length'); await click('.chip'); await sleep(300);
+    ok(/Voice off/.test(await ev('document.getElementById("voiceswitch").textContent')) && await ev('window.__said.length') === said0, 'Voice: off means silent');
+    await click('#voiceswitch'); }
   const brainH0 = await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)');
   await click('#brainswitch');
   ok(Math.abs(await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)') - brainH0) <= 2, 'switching to the desk does not move the screen (18 Nov: the bar grew 112 px)');
