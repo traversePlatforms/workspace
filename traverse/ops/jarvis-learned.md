@@ -26,3 +26,4 @@ Short, newest at the bottom. No customer phone numbers, emails or codes in here.
   rather than guessing a price.
 - 2026-11-08 · "Tell the Claude on my VS Code to stop sending emails": a cross-session order is possible; the free-map prospect emails go
   out from the server's queue, so a stop has to reach the queue, not only the session.
+- 2026-11-18 · Matthew: "what is being worked on now?": answer from memory build-queue.md (running + queued, kept current) plus `git log --since=today`; ListAgents shows whether his VS Code session is busy. Skip file scans and process lists (a find over traverse/ timed out); reply in about two minutes.
