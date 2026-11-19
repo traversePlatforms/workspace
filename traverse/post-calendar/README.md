@@ -104,7 +104,9 @@ build it so this is something she can do? it might not be the last time she want
 - **Setting a recipe** (editor or Matthew only, never a client): `pc.mjs card <post> <name>.card.json` (refused unless the post's picture is
   that card, by md5 or size), or a manifest item's `"card": "<name>.card.json"`. Build scripts write `posts/<name>.layer.png` and
   `.card.json` beside each card (`node build-november.mjs --layers`, `build-december.mjs --layers`, `365-social-2026-10/job-photo-posts/build-posts.mjs --layers`).
-  Cards without a recipe simply have no Change photo button.
+  Cards without a recipe simply have no Change photo button. `bash tools/backfill-cards.sh` gives the 16 upcoming Sixfold drafts that are cards (24 Nov to 31 Dec + the 4 unscheduled
+  October tips; not Thu 19 Nov) their recipes; checked 19 Nov that every one still has the very card it was built from. **Not run yet:** it
+  writes to the live calendar, so it waits for Matthew's go.
 - **Request photos:** Request changes takes up to 3 photos (made JPEGs in the page, no location, at most 2160 px; re-encoded on the server
   when PHP has GD). Kept privately in `post-calendar-data/reqphotos/`, shown only through `api/cal.php?action=reqphoto` to a sign-in that can
   see the post. `pc.mjs requests` lists them and the card recipe; `pc.mjs photos <post> --out dir` saves them; `pc.mjs look <post> --card-bg
