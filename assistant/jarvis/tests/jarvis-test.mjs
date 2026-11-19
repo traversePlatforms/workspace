@@ -343,6 +343,15 @@ try {
   const hs2 = fs.readFileSync(path.join(R, 'helpsend.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).pop();
   ok(hs2.id === 'h20261118090000aaaa' && hs2.text === 'Matthew: I will call the customer myself.' && hs2.by === 'Matthew Sharpe', 'Yes: one message into that thread, marked Matthew');
 
+  /* 19 Nov (Matthew: "there no way to dismiss that chat box once its open"): Close on sheets, a dismiss on every card */
+  await click('.rail button[data-panel=brief]').catch(() => {}); await sleep(100);
+  ok(await ev('document.querySelectorAll(".acard").length>0 && [...document.querySelectorAll(".acard")].every(c=>!!c.querySelector(".ah .cx"))'), 'every card in the chat has a dismiss button');
+  const nCards = await ev('document.querySelectorAll(".acard").length'); await ev('[...document.querySelectorAll(".acard")].pop().querySelector(".ah .cx").click()'); await sleep(100);
+  ok(await ev('document.querySelectorAll(".acard").length') === nCards - 1, 'the dismiss button removes that card');
+  await ev('document.querySelector(".acard .acts button")?.click()'); await sleep(300);
+  if (await ev('!!document.getElementById("sheet")')) { await click('#shclose'); await sleep(200); ok(await ev('!document.getElementById("sheet")'), 'a sheet closes with its Close button'); }
+  else ok(await ev('!!document.getElementById("view")') ? (await click('#vclose'), await sleep(200), await ev('!document.getElementById("view")')) : true, 'an opened view closes with its Close button');
+
   /* ================================================================ 10. the chips answer from the screen, and voice */
   reqs.length = 0;
   await ev('[...document.querySelectorAll(".chip")].find(c=>/waiting/.test(c.textContent)).click()'); await sleep(400);

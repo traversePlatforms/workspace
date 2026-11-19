@@ -107,6 +107,11 @@ button.li:hover .lt{color:#fff}
 .acard .ah{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;min-width:0}
 .acard .ah>span.t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acard .ah .bdg{margin-left:auto}
+.acard .ah>span.t{flex:1 1 auto}
+.acard .ah .cx{flex:none;width:26px;height:26px;display:grid;place-items:center;border-radius:6px;color:var(--mut);border:1px solid transparent;margin-left:4px}
+.acard .ah .cx:hover{color:var(--c);border-color:#3ee8ff33}
+.sheet .shd .shclose,.view .vh .vclose{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--c);border:1px solid #3ee8ff33;border-radius:6px;padding:6px 10px;flex:none}
+.view .vh .ot+.vclose{margin-left:12px}
 .acard .q{margin:10px 0;padding:10px 12px;border-left:2px solid var(--c);background:#3ee8ff0a;color:#bfe9f5;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
 .acard .q.w{border-left-color:var(--warn)}
 .acard .meta{font:11px "JetBrains Mono",monospace;color:var(--mut)}
@@ -345,6 +350,7 @@ button.li:hover .lt{color:#fff}
     doc: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     back: '<path d="M15 6l-6 6 6 6"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
     chev: '<path d="M9 6l6 6-6 6"/>',
     fold: '<path d="M5 12h14"/>',
     cog: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
@@ -961,7 +967,7 @@ button.li:hover .lt{color:#fff}
   function pushChat(n) { chatLog.appendChild(n); chatLog.scrollTop = chatLog.scrollHeight; return n; }
   function card(o) {
     var c = el('div', 'acard'); if (o.id) c.id = o.id;
-    var h = el('div', 'ah'); add(h, o.icon ? ic(o.icon) : null, el('span', 't', o.title), o.badge ? el('span', 'bdg ' + (o.badge[1] || 'dr'), o.badge[0]) : null, o.quote && !o.noRemember ? rmbBtn(o.title + ': ' + o.quote) : null); c.appendChild(h);
+    var h = el('div', 'ah'); add(h, o.icon ? ic(o.icon) : null, el('span', 't', o.title), o.badge ? el('span', 'bdg ' + (o.badge[1] || 'dr'), o.badge[0]) : null, o.quote && !o.noRemember ? rmbBtn(o.title + ': ' + o.quote) : null); var cx = btn(null, 'close', 'cx', function () { c.remove(); }); cx.title = 'Dismiss'; cx.setAttribute('aria-label', 'Dismiss'); h.appendChild(cx); c.appendChild(h);
     if (o.quote) c.appendChild(said(el('div', 'q' + (o.warn ? ' w' : '')), o.quote));
     if (o.rows) { var rw = el('div', 'rows'); add(rw, o.rows); c.appendChild(rw); }
     if (o.meta) c.appendChild(el('div', 'meta', o.meta));
@@ -1266,13 +1272,13 @@ button.li:hover .lt{color:#fff}
   function sheet(title, meta) {
     var bg = el('div', 'sheetbg'); bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true'); bg.id = 'sheet';
     var sh = el('div', 'sheet pnl'), hd = el('div', 'shd'), x = btn(null, 'back', 'x'); x.setAttribute('aria-label', 'Back');
-    var tt = el('div', 'sht'); add(tt, el('b', null, title), el('span', null, meta)); add(hd, x, tt);
+    var tt = el('div', 'sht'); add(tt, el('b', null, title), el('span', null, meta)); var cl = btn('Close', 'close', 'shclose'); cl.id = 'shclose'; add(hd, x, tt, cl);
     var body = el('div', 'shb'); add(sh, hd, body); bg.appendChild(sh);
     var guard = function () { return true; };   /* true, or a promise of a yes (the confirm) */
     var force = function () { bg.remove(); document.removeEventListener('keydown', esc); };
     var close = function () { var g = guard(); if (g === true) force(); else if (g && g.then) g.then(function (y) { if (y) force(); }); };
     var esc = function (e) { if (e.key === 'Escape' && !e.defaultPrevented && !document.getElementById('confirm')) close(); };
-    x.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); }); document.addEventListener('keydown', esc);
+    x.addEventListener('click', close); cl.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); }); document.addEventListener('keydown', esc);
     var old = document.getElementById('sheet'); if (old) old.remove();
     document.body.appendChild(bg);
     return { body: body, close: close, setGuard: function (g) { guard = g; }, force: force };
@@ -1363,7 +1369,7 @@ button.li:hover .lt{color:#fff}
     var v = el('div', 'view'); v.id = 'view';
     var h = el('div', 'vh'), x = btn('J.A.R.V.I.S.', 'back', 'x', function () { v.remove(); document.removeEventListener('keydown', esc); refresh(); });
     var ot = el('a', 'ot', 'Open in its own tab'); ot.href = V[1]; ot.target = '_blank'; ot.rel = 'noopener';
-    add(h, x, el('span', null, V[0]), ot);
+    var vc = btn('Close', 'close', 'vclose', function () { v.remove(); document.removeEventListener('keydown', esc); refresh(); }); vc.id = 'vclose'; add(h, x, el('span', null, V[0]), ot, vc);
     var f = el('iframe'); f.title = V[0]; f.src = V[1]; f.setAttribute('allow', 'microphone; camera; clipboard-write; clipboard-read');
     if (kind === 'settings') f.addEventListener('load', function () { var tries = 0, go = function () { try { var g = f.contentDocument.querySelector('[aria-label="Settings and inboxes"]'); if (g) { g.click(); return; } } catch (e) { return; } if (++tries < 40) setTimeout(go, 150); }; go(); });
     var esc = function (e) { if (e.key === 'Escape' && !e.defaultPrevented && !document.getElementById('sheet') && !document.getElementById('confirm')) { v.remove(); document.removeEventListener('keydown', esc); } };
