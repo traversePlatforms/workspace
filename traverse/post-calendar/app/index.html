@@ -112,6 +112,13 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
 .zoom button{position:fixed;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:22px;font-weight:700;width:48px;height:48px;border-radius:50%;cursor:pointer}
 .zoom .zx{top:12px;right:12px}.zoom .zp{left:12px;top:50%;transform:translateY(-50%)}.zoom .zn{right:12px;top:50%;transform:translateY(-50%)}
 .zoom .zc{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);color:#fff;font-size:13px;background:rgba(0,0,0,.5);border-radius:10px;padding:3px 10px}
+/* a designed card's photo (2026-11-19): the card drawn in the page with a photo behind its words; photos on a change request */
+.ced{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.ced .cedb{max-width:520px;margin:0 auto;padding:12px 16px 120px}
+.ced canvas{display:block;width:100%;height:auto;border-radius:10px;touch-action:none;cursor:grab;background:#222;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.ced label{display:flex;align-items:center;gap:10px;font-weight:650;font-size:14px;margin:14px 0 0}.ced label span{width:64px}.ced input[type=range]{flex:1;min-height:36px}
+.rqph{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}.rqph span{position:relative;display:block}.rqph img{width:76px;height:76px;object-fit:cover;border-radius:8px;display:block;background:var(--chip);cursor:zoom-in}
+.rqph button{position:absolute;top:-7px;right:-7px;width:26px;height:26px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-weight:800;line-height:26px;padding:0}
 </style>
 </head>
 <body>
@@ -198,7 +205,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     nav({ client: '' }, true); if (c) nav({ client: c });   /* the list always sits underneath, so Back from the remembered client reaches it */
     load(c).catch(function () {});
   }
-  function hideSheet() { $('sheet').hidden = true; document.body.style.overflow = ''; P = W = null; dirty = false; }
+  function hideSheet() { cardClose(); rqClear(); $('sheet').hidden = true; document.body.style.overflow = ''; P = W = null; dirty = false; }
   window.addEventListener('popstate', function (e) {
     var s = e.state && e.state.pc ? e.state : { client: '' };
     if (!$('sheet').hidden && !s.post && !s.sheet) {
@@ -310,7 +317,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   var P = null, W = null, dirty = false;
   function openPost(id) {
     P = D.posts.filter(function (p) { return p.id === id; })[0]; if (!P) return;
-    W = JSON.parse(JSON.stringify(P)); dirty = false; drawPost();
+    W = JSON.parse(JSON.stringify(P)); dirty = false; rqClear(); drawPost();
     $('sheet').hidden = false; $('sheet').scrollTop = 0; document.body.style.overflow = 'hidden';
     nav({ client: D.client || '', post: id });
   }
@@ -327,7 +334,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     if (c.rules) h += '<details class="rules" style="margin:0 0 12px"><summary>Rules for ' + esc(c.name) + '</summary><p>' + linkify(c.rules) + '</p></details>';
     if (/needs matthew/i.test(P.note || '') && P.status === 'draft') h += '<div class="req"><b>Needs your review.</b><p>' + esc(P.note) + '</p></div>';
     var orq = P.openRequest;
-    if (orq) h += '<div class="req"><b>Change requested</b><p>' + esc(orq.text) + '</p><small>' + esc(orq.by) + ', ' + esc(when(orq.at)) + '</small>' + (admin ? '<div class="acts"><button class="btn small ghost" id="withdraw">Close the request (no new version needed)</button></div>' : '') + '</div>';
+    if (orq) h += '<div class="req"><b>Change requested</b><p>' + esc(orq.text) + '</p>' + rqThumbs(orq) + '<small>' + esc(orq.by) + ', ' + esc(when(orq.at)) + '</small>' + (admin ? '<div class="acts"><button class="btn small ghost" id="withdraw">Close the request (no new version needed)</button></div>' : '') + '</div>';
     /* status and the one action */
     if (P.status === 'approved') h += '<div class="good"><b>Approved</b> by ' + esc(P.approval.by) + ', ' + esc(when(P.approval.at)) + '. It goes out ' + esc(when(P.at)) + '.' + (admin ? '<div class="acts"><button class="btn small ghost" id="unapprove">Unapprove</button></div>' : '') + '</div>';
     if (P.status === 'publishing') h += '<div class="req"><b>Going out now.</b></div>';
@@ -358,6 +365,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
         + (ed ? '<div class="pa">' + (p.type === 'photoset' ? '<button data-mv="' + i + ',-1">&#8593;</button><button data-mv="' + i + ',1">&#8595;</button><button data-rm="' + i + '">Remove</button>' : '') + '<button data-rep="' + i + '">Replace</button></div>' : '') + '</div>';
     });
     h += '</div>' + (ed && (p.type === 'photoset' ? p.images.length < 10 : !p.images.length) ? '<div class="acts"><button class="btn small ghost" id="addpic">+ Add ' + (p.type === 'photoset' ? 'pictures' : 'a picture or video') + '</button></div>' : '')
+      + (ed && hasCard(P) ? '<div class="acts"><button class="btn small" id="cphoto">Change photo</button>' + (P.card.bg ? '<button class="btn small ghost" id="cmove">Move the photo</button>' : '') + (onOrig(P) ? '' : '<button class="btn small ghost" id="corig">Put the original card back</button>') + '</div><p class="empty">A designed card: put your own photo behind its words.</p><input type="file" id="cfile" accept="image/*" hidden>' : '')
       + (ed && p.type === 'single' ? '<p class="empty">Phone videos: record in 1080p, under 90 seconds. A video goes out as a Reel on Facebook and Instagram.</p>' : '')
       + '<input type="file" id="file" accept="image/*' + (p.type === 'photoset' ? '" multiple' : ',video/mp4,video/quicktime,video/x-m4v,.mp4,.mov,.m4v"') + ' hidden>';   /* + mov and m4v, made into an MP4 on the server (2026-11-16) */
     /* no album name field since 2026-11-16: Facebook gets a photo set as one post with all the pictures (Meta refuses this app albums) */
@@ -369,9 +377,12 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     }
     h += '<label class="f" for="fnote">Note <small>(only here; never posted)</small></label><textarea id="fnote" style="min-height:60px"' + dis + '>' + esc(p.note) + '</textarea></div>';
     /* change request */
-    if (admin && ['draft', 'approved', 'changes', 'failed'].indexOf(P.status) >= 0) h += '<div class="box"><h3>Request changes</h3><textarea id="rq" placeholder="What should change in the picture or the words?" style="min-height:80px"></textarea><div class="acts"><button class="btn small" id="rqgo">Send request</button></div><p class="empty">The post cannot be approved until the change comes back.</p></div>';
+    if (admin && ['draft', 'approved', 'changes', 'failed'].indexOf(P.status) >= 0) h += '<div class="box"><h3>Request changes</h3><textarea id="rq" placeholder="What should change in the picture or the words?" style="min-height:80px"></textarea>'
+      + '<div class="rqph" id="rqph">' + RQ.map(function (x, i) { return '<span><img src="' + esc(x.url) + '" alt="Attached photo ' + (i + 1) + '"><button data-rqx="' + i + '" aria-label="Remove this photo">&#10005;</button></span>'; }).join('') + '</div>'
+      + '<div class="acts">' + (RQ.length < 3 ? '<button class="btn small ghost" id="rqadd">Attach photos</button>' : '') + '<button class="btn small" id="rqgo">Send request</button></div><input type="file" id="rqfile" accept="image/*" multiple hidden>'
+      + '<p class="empty">The post cannot be approved until the change comes back. Up to 3 photos, e.g. one to use on the card.</p></div>';
     var past = (P.requests || []).filter(function (r) { return r.answered; });
-    if (past.length) h += '<div class="box"><h3>Earlier requests</h3><ul class="log">' + past.map(function (r) { return '<li>' + esc(r.text) + ' <small>(' + esc(r.by) + ', ' + esc(when(r.at)) + '; ' + (r.answered.how === 'closed' ? 'closed' : 'answered') + ' by ' + esc(r.answered.by) + ')</small></li>'; }).join('') + '</ul></div>';
+    if (past.length) h += '<div class="box"><h3>Earlier requests</h3><ul class="log">' + past.map(function (r) { return '<li>' + esc(r.text) + rqThumbs(r) + ' <small>(' + esc(r.by) + ', ' + esc(when(r.at)) + '; ' + (r.answered.how === 'closed' ? 'closed' : 'answered') + ' by ' + esc(r.answered.by) + ')</small></li>'; }).join('') + '</ul></div>';
     /* preview */
     h += '<div class="box"><h3>Preview</h3><div class="seg" role="group" aria-label="Preview"><button data-pv="fb" aria-pressed="' + (pvWhich === 'fb') + '">Facebook</button><button data-pv="ig" aria-pressed="' + (pvWhich === 'ig') + '">Instagram</button>' + (c.li ? '<button data-pv="li" aria-pressed="' + (pvWhich === 'li') + '">LinkedIn</button>' : '') + '</div><div style="margin-top:10px" id="pv"></div></div>';
     h += '<div class="box"><h3>Log</h3><ul class="log">' + (P.log || []).slice().reverse().slice(0, 20).map(function (l) { return '<li>' + esc(when(l.at)) + ', ' + esc(l.by) + ': ' + esc(l.what) + '</li>'; }).join('') + '</ul></div>';
@@ -403,7 +414,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   function wire() {
     var s = $('sheet');
     $('back').onclick = closeSheet;
-    s.querySelectorAll('input,textarea').forEach(function (el) { if (el.id === 'rq' || el.id === 'file') return; el.addEventListener('input', function () { readFields(); igCount(); mark(); }); });
+    s.querySelectorAll('input,textarea').forEach(function (el) { if (el.id === 'rq' || el.type === 'file') return; el.addEventListener('input', function () { readFields(); igCount(); mark(); }); });
     s.querySelectorAll('[data-type]').forEach(function (b) { b.onclick = function () { readFields(); W.type = b.getAttribute('data-type'); if (W.type === 'single' && W.images.length > 1) W.images = W.images.slice(0, 1); dirty = true; drawPost(); }; });
     s.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { readFields(); var t = b.getAttribute('data-t'), i = W.targets.indexOf(t); if (i >= 0) W.targets.splice(i, 1); else W.targets.push(t); dirty = true; drawPost(); }; });
     s.querySelectorAll('[data-q]').forEach(function (b) { b.onclick = function () { var at = +b.getAttribute('data-q'); $('fdate').value = dstr(at); $('ftime').value = tstr(at); readFields(); mark(); }; });
@@ -420,7 +431,114 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
     if ($('unapprove')) $('unapprove').onclick = function () { act('unapprove', {}); };
     if ($('todraft')) $('todraft').onclick = function () { act('todraft', {}); };
     if ($('withdraw')) $('withdraw').onclick = function () { act('withdraw', {}); };
-    if ($('rqgo')) $('rqgo').onclick = function () { var t = $('rq').value.trim(); if (!t) { toast('Say what should change.'); return; } if (dirty && !confirm('Your unsaved edits will be lost. Send the request anyway?')) return; act('request', { text: t }); };
+    if ($('rqgo')) $('rqgo').onclick = function () {
+      var t = $('rq').value.trim(); if (!t) { toast('Say what should change.'); return; } if (dirty && !confirm('Your unsaved edits will be lost. Send the request anyway?')) return;
+      if (!RQ.length) { act('request', { text: t }); return; }
+      var fd = new FormData(); fd.append('id', P.id); fd.append('text', t); RQ.forEach(function (x, i) { fd.append('photos[]', x.blob, 'photo-' + (i + 1) + '.jpg'); });
+      $('rqgo').disabled = true; toast('Sending the request and photos...', true);
+      api('request', fd).then(function (j) { rqClear(); swap(j.post); toast('Change requested'); }).catch(function (e) { toast(e.message); if ($('rqgo')) $('rqgo').disabled = false; });
+    };
+    /* photos on a change request (2026-11-19): made into JPEGs here (no location data, at most 2160 px), at most 3 */
+    if ($('rqadd')) $('rqadd').onclick = function () {
+      var f = $('rqfile'), keep = $('rq').value; f.value = '';
+      f.onchange = function () {
+        var list = Array.prototype.slice.call(f.files || []).slice(0, 3 - RQ.length); if (!list.length) return;
+        toast('Preparing the photos...', true);
+        Promise.all(list.map(toJpeg)).then(function (blobs) { blobs.forEach(function (b) { RQ.push({ blob: b, url: URL.createObjectURL(b) }); }); $('toast').hidden = true; drawPost(); if ($('rq')) $('rq').value = keep; }).catch(function (e) { toast(e.message); });
+      };
+      f.click();
+    };
+    s.querySelectorAll('[data-rqx]').forEach(function (b) { b.onclick = function () { var keep = $('rq').value, x = RQ.splice(+b.getAttribute('data-rqx'), 1)[0]; if (x) URL.revokeObjectURL(x.url); drawPost(); if ($('rq')) $('rq').value = keep; }; });
+    /* a designed card's photo (2026-11-19) */
+    if ($('cphoto')) $('cphoto').onclick = function () {
+      if (dirty) { toast('Save your changes first.'); return; }
+      var f = $('cfile'); f.value = ''; f.onchange = function () { if (f.files && f.files[0]) cardEdit(f.files[0]); }; f.click();
+    };
+    if ($('cmove')) $('cmove').onclick = function () { if (dirty) { toast('Save your changes first.'); return; } cardEdit(null); };
+    if ($('corig')) $('corig').onclick = function () {
+      if (dirty) { toast('Save your changes first.'); return; }
+      if (!confirm('Put the original card back as the picture?' + (P.status === 'approved' ? ' The approval is dropped and it goes back to draft.' : ''))) return;
+      api('cardorig', { id: P.id }).then(function (j) { swap(j.post); toast('The original card is back'); }).catch(function (e) { toast(e.message); });
+    };
+  }
+  var RQ = [];   /* photos waiting to go with a change request: { blob, url } */
+  function rqClear() { RQ.forEach(function (x) { URL.revokeObjectURL(x.url); }); RQ = []; }
+  function rqThumbs(r) {
+    return r && r.photos && r.photos.length ? '<div class="rqph">' + r.photos.map(function (x, i) { return '<span><img src="' + esc(API + '?action=reqphoto&post=' + encodeURIComponent(P.id) + '&f=' + encodeURIComponent(x.file)) + '" alt="Photo ' + (i + 1) + ' with the request"></span>'; }).join('') + '</div>' : '';
+  }
+
+  /* ---- designed cards: Change photo (2026-11-19, Matthew: Jen "wanted to put her own photo as the background of today's designed post card
+     ... Is there a way we can build it so this is something she can do?"). A card loaded from the laptop can carry a recipe (P.card): its
+     words, badge and shapes as a see-through layer rendered by the same Chrome as the card itself, the box the photo fills, the ground colour
+     and the tint that keeps the words readable. Here the photo is drawn (cover, then the person's zoom and position), the tint over it, the
+     layer on top, and the result goes up through the normal upload as the post's picture: any picture change drops the approval. */
+  function hasCard(p) { return !!(p && p.card && p.card.overlay && p.type === 'single' && !(p.images[0] && isVid(p.images[0]))); }
+  function onOrig(p) { return !p.card.orig || (p.images[0] && p.images[0].file === p.card.orig.file); }
+  function cardBox(card) { var b = card.box || [0, 0, card.w, card.h]; return { x: b[0], y: b[1], w: b[2], h: b[3] }; }
+  function cardLayout(card, iw, ih, pos) {   /* the same sums as pc.mjs (cardLayout) uses on the laptop */
+    var b = cardBox(card), s = Math.max(b.w / iw, b.h / ih) * (pos.zoom || 1), dw = iw * s, dh = ih * s;
+    return { b: b, dx: b.x + (b.w - dw) * pos.x, dy: b.y + (b.h - dh) * pos.y, dw: dw, dh: dh };
+  }
+  function drawCard(cv, card, photo, layer, pos) {
+    if (cv.width !== card.w) cv.width = card.w; if (cv.height !== card.h) cv.height = card.h;
+    var c = cv.getContext('2d'), L = cardLayout(card, photo.naturalWidth || photo.width, photo.naturalHeight || photo.height, pos), t = card.tint || [0, 0, 0];
+    c.fillStyle = card.base || '#000'; c.fillRect(0, 0, card.w, card.h);
+    c.save(); c.beginPath(); c.rect(L.b.x, L.b.y, L.b.w, L.b.h); c.clip(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+    c.drawImage(photo, L.dx, L.dy, L.dw, L.dh);
+    if (pos.dim > 0) { c.fillStyle = 'rgba(' + t[0] + ',' + t[1] + ',' + t[2] + ',' + pos.dim + ')'; c.fillRect(L.b.x, L.b.y, L.b.w, L.b.h); }
+    c.restore(); c.drawImage(layer, 0, 0, card.w, card.h);
+  }
+  function loadImg(src) { return new Promise(function (res, rej) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { rej(new Error('Could not load the card. Check the connection and try again.')); }; im.src = src; }); }
+  var CE = null;   /* the card being changed: { id, card, photo, blob (a new photo, or null when only moving the one it has), layer, pos } */
+  function cardEdit(file, dim) {
+    var card = P.card, id = P.id; toast(file ? 'Preparing the photo...' : 'Opening the card...', true);
+    var ph = file ? toJpeg(file).then(function (blob) { return loadImg(URL.createObjectURL(blob)).then(function (im) { return { im: im, blob: blob }; }); })
+      : loadImg('media/' + encodeURIComponent(card.bg.file)).then(function (im) { return { im: im, blob: null }; });
+    Promise.all([ph, loadImg('media/' + encodeURIComponent(card.overlay.file))]).then(function (r) {   /* media/ beside the page: same origin, so the drawing can be saved */
+      $('toast').hidden = true;
+      var pos = !file && card.pos ? { x: card.pos.x, y: card.pos.y, zoom: card.pos.zoom, dim: card.pos.dim } : { x: 0.5, y: 0.5, zoom: 1, dim: dim != null ? dim : card.dim || 0 };
+      CE = { id: id, card: card, photo: r[0].im, blob: r[0].blob, layer: r[1], pos: pos }; cardEditor();
+    }).catch(function (e) { toast(e.message); });
+  }
+  function cardClose() { var d = $('ced'); if (d) d.remove(); if (CE && CE.photo && /^blob:/.test(CE.photo.src || '')) URL.revokeObjectURL(CE.photo.src); CE = null; }
+  function cardEditor() {
+    var old = $('ced'); if (old) old.remove();
+    var d = document.createElement('div'); d.className = 'ced'; d.id = 'ced'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'Card photo');
+    d.innerHTML = '<div class="sheethead"><button class="btn small ghost" id="cedx">Cancel</button><b>Card photo</b></div><div class="cedb">'
+      + '<canvas id="cedc" aria-label="The card with the photo behind its words"></canvas><p class="empty">Drag the photo to move it. The words stay where they are.</p>'
+      + '<label><span>Zoom</span><input type="range" id="cedz" min="1" max="3" step="0.01" aria-label="Zoom"></label>'
+      + '<label><span>Darker</span><input type="range" id="cedd" min="0" max="0.85" step="0.01" aria-label="Darker"></label>'
+      + '<div class="acts"><button class="btn small ghost" id="cedp">Choose another photo</button><button class="btn small ghost" id="cedr">Centre it</button></div>'
+      + '<p class="empty">' + (P && P.status === 'approved' ? 'Saving changes the picture, so the approval is dropped and the post goes back to draft.' : 'Saving makes this the post\'s picture. It still needs approving before it goes out.') + '</p></div>'
+      + '<div class="savebar"><button class="btn ghost" id="cedc2">Cancel</button><button class="btn" id="ceds">Save the card</button></div><input type="file" id="cedf" accept="image/*" hidden>';
+    document.body.appendChild(d);
+    var cv = $('cedc'), raf = 0, draw = function () { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; if (CE) drawCard(cv, CE.card, CE.photo, CE.layer, CE.pos); }); };
+    drawCard(cv, CE.card, CE.photo, CE.layer, CE.pos);
+    $('cedz').value = CE.pos.zoom; $('cedd').value = CE.pos.dim;
+    $('cedz').oninput = function () { CE.pos.zoom = +this.value; draw(); };
+    $('cedd').oninput = function () { CE.pos.dim = +this.value; draw(); };
+    $('cedr').onclick = function () { CE.pos.x = 0.5; CE.pos.y = 0.5; draw(); };
+    $('cedx').onclick = $('cedc2').onclick = cardClose;
+    $('cedp').onclick = function () { var f = $('cedf'); f.value = ''; f.onchange = function () { if (f.files && f.files[0] && CE) cardEdit(f.files[0], CE.pos.dim); }; f.click(); };
+    var drag = null;   /* the photo follows the finger: x and y are where the photo sits in the room it has to move (0..1) */
+    cv.onpointerdown = function (e) { drag = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (er) {} e.preventDefault(); };
+    cv.onpointermove = function (e) {
+      if (!drag || !CE) return; var k = CE.card.w / (cv.clientWidth || CE.card.w), L = cardLayout(CE.card, CE.photo.naturalWidth || CE.photo.width, CE.photo.naturalHeight || CE.photo.height, CE.pos);
+      var rx = L.b.w - L.dw, ry = L.b.h - L.dh;
+      if (rx < -0.5) CE.pos.x = Math.max(0, Math.min(1, CE.pos.x + (e.clientX - drag.x) * k / rx));
+      if (ry < -0.5) CE.pos.y = Math.max(0, Math.min(1, CE.pos.y + (e.clientY - drag.y) * k / ry));
+      drag = { x: e.clientX, y: e.clientY }; draw();
+    };
+    cv.onpointerup = cv.onpointercancel = function () { drag = null; };
+    $('ceds').onclick = function () {
+      var b = this; b.disabled = true; b.textContent = 'Saving...';
+      var out = document.createElement('canvas'); drawCard(out, CE.card, CE.photo, CE.layer, CE.pos);
+      new Promise(function (res, rej) { out.toBlob(function (x) { x ? res(x) : rej(new Error('Could not draw the card.')); }, 'image/jpeg', 0.92); }).then(function (blob) {
+        var fd = new FormData(); fd.append('id', CE.id); fd.append('file', blob, 'card.jpg'); fd.append('replace', '0');
+        fd.append('cardpos', JSON.stringify(CE.pos)); if (CE.blob) fd.append('cardbg', CE.blob, 'card-photo.jpg');
+        return api('upload', fd);
+      }).then(function (j) { cardClose(); swap(j.post); toast('Card saved. It needs approving before it goes out.'); }).catch(function (e) { toast(e.message); b.disabled = false; b.textContent = 'Save the card'; });
+    };
   }
   function body() {
     readFields();
@@ -682,8 +800,8 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   }
   document.addEventListener('click', function (e) {
     var t = e.target; if (!t || t.tagName !== 'IMG' || !t.closest || zoomEl) return;
-    var box = t.closest('.pics, .pvi, .igimg, .pv'); if (!box) return;
-    var all = [].slice.call(box.querySelectorAll('img')).filter(function (x) { return x.closest('.pics, .pvi, .igimg'); }).map(function (x) { return x.src; });
+    var box = t.closest('.pics, .pvi, .igimg, .pv, .rqph'); if (!box) return;
+    var all = [].slice.call(box.querySelectorAll('img')).filter(function (x) { return x.closest('.pics, .pvi, .igimg, .rqph'); }).map(function (x) { return x.src; });
     var pics = document.querySelector('#sheet .pics'), ps = pics ? [].slice.call(pics.querySelectorAll('img')).map(function (x) { return x.src; }) : [];
     if (ps.length > all.length && ps.indexOf(t.src) >= 0) all = ps;   /* a preview shows four of a photo set: step through every one */
     e.preventDefault(); e.stopPropagation();
@@ -691,6 +809,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   }, true);
   window.addEventListener('keydown', function (e) {
     if (zoomEl) { if (e.key === 'Escape') zoomClose(); else if (e.key === 'ArrowLeft') zoomEl._step(-1); else if (e.key === 'ArrowRight') zoomEl._step(1); return; }
+    if (e.key === 'Escape' && $('ced')) { cardClose(); return; }
     if (e.key === 'Escape' && !$('sheet').hidden && $('back')) closeSheet();
   });
   api('me').then(start).catch(function () {});

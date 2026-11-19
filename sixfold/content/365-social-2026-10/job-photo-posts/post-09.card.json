@@ -1,0 +1,22 @@
+{
+  "tpl": "sixfold-oct",
+  "box": [
+    0,
+    0,
+    1080,
+    1350
+  ],
+  "dim": 0,
+  "title": "Any size yard: Front lawns to acreage.",
+  "src": "sixfold/content/365-social-2026-10/job-photo-posts/build-posts.mjs post-09",
+  "w": 1080,
+  "h": 1350,
+  "base": "#111611",
+  "tint": [
+    17,
+    22,
+    17
+  ],
+  "overlay": "post-09.layer.png",
+  "card": "post-09.png"
+}

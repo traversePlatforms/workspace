@@ -10,9 +10,13 @@
    - posts.md, manifest.json and the two contact sheets are written from the data below, so captions live in one place.
    Job photos, the posts that hold them, the photo sets and the contact sheets are gitignored (./.gitignore). The gitignored inputs (job
    photos, brand pack, sharp) are read from this checkout, or from the main checkout when run inside a worktree.
-     node build-november.mjs [--only 2026-11-10] */
+   - 19 Nov 2026 (Change photo on the posting calendar): every designed post also gets a layer, posts/<name>.layer.png, the same post
+     rendered by the same Chrome with its ground, glow, rings and photo left out (see-through), a light scrim at the top and bottom and
+     stronger shadows under the words; and a recipe, posts/<name>.card.json (where a photo goes, the ground colour, the tint that keeps the
+     words readable). The calendar page draws a person's photo, the tint, then this layer, so the words are exactly the card's.
+     node build-november.mjs [--only 2026-11-10] [--layers  (only the layers and recipes)] */
 import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -154,7 +158,7 @@ const SETS_DATA = [
 ];
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-const shot = (html, png, w, h) => execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--allow-file-access-from-files', '--force-device-scale-factor=1', `--window-size=${w},${h}`, `--screenshot=${png}`, '--virtual-time-budget=4000', pathToFileURL(html).href], { stdio: 'ignore' });
+const shot = (html, png, w, h, clear = false) => execFileSync(CHROME, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--allow-file-access-from-files', '--force-device-scale-factor=1', `--window-size=${w},${h}`, `--screenshot=${png}`, '--virtual-time-budget=4000', ...(clear ? ['--default-background-color=00000000'] : []), pathToFileURL(html).href], { stdio: 'ignore' });   /* clear: a see-through layer (19 Nov) */
 function bg(p) {   /* CSS for the 1080 x 900 picture box of a job-photo post: the photo placed by its crop rectangle */
   const [x, y, w] = p.crop, s = 1080 / w;   /* rectangle w wide, w/1.2 tall, from a 1600 x 1200 photo */
   return `url('${pathToFileURL(photo(...p.job)).href}') ${-x * s}px ${-y * s}px / ${1600 * s}px ${1200 * s}px no-repeat`;
@@ -192,15 +196,18 @@ async function bandFile(p) {
 /* a designed 365 card in the clean-up card's style (../365-cleanup-2026-10/build-cleanup.mjs): green ground, kicker pill and badge, the tip
    as the headline, numbered cream rows for the how-to, an optional gold-ruled note, the source and the phone in the footer. Text and
    simple shapes only, plus an optional real job-photo band. */
-function cardPage(p, band) {
+function cardPage(p, band, photo = false) {   /* photo: the see-through layer for Change photo (19 Nov), laid out as a card with no band */
+  if (photo) band = null;
+  const shade = photo ? 'text-shadow: 0 2px 16px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4);' : '';
   const c = p.card, top = band ? 440 : 250, L = p.head.length;
   const hs = c.big ? 110 : band ? (L <= 30 ? 76 : L <= 46 ? 68 : 60) : (L <= 30 ? 96 : L <= 46 ? 86 : 74);
   const R = band ? { k: 44, d: 27, pad: '24px 34px', i: 64 } : { k: 46, d: 28, pad: '26px 36px', i: 68 };
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face { font-family: Outfit; src: url('${FONTS}/Outfit.ttf'); font-weight: 100 900; }
 @font-face { font-family: DMSans; src: url('${FONTS}/DMSans.ttf'); font-weight: 100 900; }
-* { box-sizing: border-box; margin: 0; } html, body { width: 1080px; height: 1350px; overflow: hidden; background: #2F5D2C; }
+* { box-sizing: border-box; margin: 0; } html, body { width: 1080px; height: 1350px; overflow: hidden; background: ${photo ? 'transparent' : '#2F5D2C'}; }
 body { position: relative; color: #FFF8EC; font-family: DMSans, sans-serif; }
+.scrim { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(20,40,19,.45) 0%, rgba(20,40,19,0) 24%, rgba(20,40,19,0) 70%, rgba(20,40,19,.6) 100%); }
 .leafbg { position: absolute; inset: 0; background: radial-gradient(1200px 700px at 85% -10%, rgba(242,193,78,.18), transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(255,248,236,.08), transparent 60%); }
 .ring { position: absolute; border-radius: 50%; border: 3px solid rgba(242,193,78,.16); }
 .photo { position: absolute; left: 0; right: 0; top: 0; height: ${BAND}px; background: ${band ? `url('${pathToFileURL(band).href}') center / cover no-repeat` : 'none'}; }
@@ -209,8 +216,8 @@ body { position: relative; color: #FFF8EC; font-family: DMSans, sans-serif; }
 .badge { width: 150px; height: 150px; filter: drop-shadow(0 4px 12px rgba(0,0,0,.35)); }
 .kicker { font: 700 28px DMSans, sans-serif; color: #F2C14E; letter-spacing: .08em; text-transform: uppercase; margin-top: 18px; background: rgba(30,61,28,.92); border-radius: 999px; padding: 12px 24px; }
 .main { position: absolute; left: 76px; right: 76px; top: ${top}px; bottom: 200px; display: flex; flex-direction: column; gap: ${band ? 24 : 30}px; justify-content: center; }
-h1 { font: 800 ${hs}px/1.02 Outfit, sans-serif; letter-spacing: -.012em; text-shadow: 0 2px 18px rgba(0,0,0,.25); }
-.sub { font: 500 ${c.big ? 40 : band ? 31 : 34}px/1.38 DMSans, sans-serif; color: #F1EADB; } .sub b { color: #F2C14E; font-weight: 700; }
+h1 { font: 800 ${hs}px/1.02 Outfit, sans-serif; letter-spacing: -.012em; text-shadow: 0 2px 18px rgba(0,0,0,.25); ${shade} }
+.sub { font: 500 ${c.big ? 40 : band ? 31 : 34}px/1.38 DMSans, sans-serif; color: #F1EADB; ${shade} } .sub b { color: #F2C14E; font-weight: 700; }
 .rule { width: 160px; height: 8px; border-radius: 4px; background: #F2C14E; }
 .rows { display: flex; flex-direction: column; gap: ${band ? 16 : 20}px; margin-top: 6px; }
 .row { background: #FFF8EC; color: #1E3D1C; border-radius: 26px; padding: ${R.pad}; display: flex; gap: 26px; align-items: center; }
@@ -218,10 +225,10 @@ h1 { font: 800 ${hs}px/1.02 Outfit, sans-serif; letter-spacing: -.012em; text-sh
 .row .k { font: 800 ${R.k}px/1.05 Outfit, sans-serif; } .row .d { font: 500 ${R.d}px/1.3 DMSans, sans-serif; color: #4C6A48; margin-top: 5px; }
 .note { border: 3px solid #F2C14E; border-radius: 22px; padding: 16px 32px; } .note .k { font: 700 31px DMSans, sans-serif; } .note .d { font: 500 23px DMSans, sans-serif; color: #F1EADB; margin-top: 3px; }
 .foot { position: absolute; left: 76px; right: 76px; bottom: 56px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 2px solid rgba(255,248,236,.25); padding-top: 22px; }
-.foot .q { font: 600 24px/1.34 DMSans, sans-serif; color: #F1EADB; max-width: 540px; }
-.foot .c { text-align: right; } .foot .c b { display: block; font: 800 46px Outfit, sans-serif; color: #F2C14E; } .foot .c span { font: 700 26px DMSans, sans-serif; }
-</style></head><body><div class="leafbg"></div>
-${band ? '<div class="photo"></div>' : '<div class="ring" style="width:620px;height:620px;right:-210px;top:-230px"></div><div class="ring" style="width:420px;height:420px;right:-110px;top:-130px"></div><div class="ring" style="width:520px;height:520px;left:-260px;bottom:120px"></div>'}
+.foot .q { font: 600 24px/1.34 DMSans, sans-serif; color: #F1EADB; max-width: 540px; ${shade} }
+.foot .c { text-align: right; ${shade} } .foot .c b { display: block; font: 800 46px Outfit, sans-serif; color: #F2C14E; } .foot .c span { font: 700 26px DMSans, sans-serif; }
+</style></head><body>${photo ? '<div class="scrim"></div>' : '<div class="leafbg"></div>'}
+${photo ? '' : band ? '<div class="photo"></div>' : '<div class="ring" style="width:620px;height:620px;right:-210px;top:-230px"></div><div class="ring" style="width:420px;height:420px;right:-110px;top:-130px"></div><div class="ring" style="width:520px;height:520px;left:-260px;bottom:120px"></div>'}
 <div class="top"><div class="kicker">${esc(p.kicker)}</div><img class="badge" src="${BADGE}" alt=""></div>
 <div class="main"><h1>${esc(p.head)}</h1>${c.big ? '<div class="rule"></div>' : ''}${c.sub ? `<div class="sub">${c.sub}</div>` : ''}
 ${c.rows?.length ? `<div class="rows">${c.rows.map(([k, d], i) => `<div class="row"><i>${i + 1}</i><div><div class="k">${esc(k)}</div>${d ? `<div class="d">${esc(d)}</div>` : ''}</div></div>`).join('')}</div>` : ''}
@@ -229,13 +236,14 @@ ${c.note ? `<div class="note"><div class="k">${esc(c.note[0])}</div>${c.note[1] 
 <div class="foot"><div class="q">${esc(c.src)}</div><div class="c"><b>${PHONE}</b><span>365aeration.com</span></div></div>
 </body></html>`;
 }
-function page(p) {
+function page(p, photo = false) {   /* photo: the see-through layer (19 Nov): the picture box left empty, the green panel kept */
   const hs = p.head.length <= 30 ? 80 : p.head.length <= 44 ? 70 : 62;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
   @font-face { font-family: Outfit; src: url('${FONTS}/Outfit.ttf'); font-weight: 100 900; }
   @font-face { font-family: DMSans; src: url('${FONTS}/DMSans.ttf'); font-weight: 100 900; }
-  * { box-sizing: border-box; margin: 0; } html, body { width: 1080px; height: 1350px; overflow: hidden; background: #2F5D2C; }
-  .pic { position: absolute; inset: 0 0 auto 0; height: 900px; background: ${bg(p)}; }
+  * { box-sizing: border-box; margin: 0; } html, body { width: 1080px; height: 1350px; overflow: hidden; background: ${photo ? 'transparent' : '#2F5D2C'}; }
+  .pic { position: absolute; inset: 0 0 auto 0; height: 900px; background: ${photo ? 'none' : bg(p)}; }
+  .ground { position: absolute; left: 0; right: 0; top: 900px; bottom: 0; background: #2F5D2C; }
   .fade { position: absolute; left: 0; right: 0; top: 700px; height: 220px; background: linear-gradient(to bottom, rgba(47,93,44,0), #2F5D2C 92%); }
   .badge { position: absolute; top: 40px; left: 40px; width: 176px; height: 176px; filter: drop-shadow(0 6px 18px rgba(0,0,0,.35)); }
   .badge img { width: 100%; height: 100%; }
@@ -246,7 +254,7 @@ function page(p) {
   .foot { margin-top: 32px; display: flex; justify-content: space-between; align-items: center; border-top: 2px solid rgba(255,248,236,.25); padding-top: 22px; font: 700 30px DMSans, sans-serif; }
   .foot b { font: 800 40px Outfit, sans-serif; color: #F2C14E; }
 </style></head><body>
-  <div class="pic"></div><div class="fade"></div>
+  ${photo ? '<div class="ground"></div>' : '<div class="pic"></div>'}<div class="fade"></div>
   <div class="badge"><img src="${BADGE}" alt=""></div>
   <div class="panel"><div class="kicker">${esc(p.kicker)}</div><h1>${esc(p.head)}</h1><div class="sub">${esc(p.sub)}</div>
     <div class="foot"><span>Free quote · call or text</span><b>${PHONE}</b></div></div>
@@ -255,11 +263,21 @@ function page(p) {
 
 const only = (() => { const i = process.argv.indexOf('--only'); return i > 0 ? process.argv[i + 1] : ''; })();
 const postFile = (p) => join(OUT, `${p.date}-${p.slug}.png`);
+const layerFile = (p) => join(OUT, `${p.date}-${p.slug}.layer.png`), recipeFile = (p) => join(OUT, `${p.date}-${p.slug}.card.json`);
+function writeLayer(p) {   /* the see-through layer and the recipe for Change photo (19 Nov) */
+  const html = join(TMP, `${p.date}.layer.html`); writeFileSync(html, p.card ? cardPage(p, null, true) : page(p, true)); shot(html, layerFile(p), 1080, 1350, true);
+  const t = p.card ? { tpl: 'sixfold-card', box: [0, 0, 1080, 1350], dim: 0.5 } : { tpl: 'sixfold-photo', box: [0, 0, 1080, 900], dim: 0 };
+  writeFileSync(recipeFile(p), JSON.stringify({ ...t, title: `${p.kicker}: ${p.head}`, src: `sixfold/content/november-2026/build-november.mjs ${p.date}-${p.slug}`, w: 1080, h: 1350, base: '#2F5D2C', tint: [20, 40, 19], overlay: basename(layerFile(p)), card: basename(postFile(p)) }, null, 2) + '\n');
+}
+if (process.argv.includes('--layers')) {
+  for (const p of POSTS) { if (only && p.date !== only) continue; writeLayer(p); console.log(`layer ${p.date}: ${layerFile(p)}`); }
+  process.exit(0);
+}
 for (const p of POSTS) {
   if (only && p.date !== only) continue;
   const html = join(TMP, `${p.date}.html`);
   writeFileSync(html, p.card ? cardPage(p, await bandFile(p)) : page(p));
-  shot(html, postFile(p), 1080, 1350); console.log(`post ${p.date}: ${postFile(p)}`);
+  shot(html, postFile(p), 1080, 1350); writeLayer(p); console.log(`post ${p.date}: ${postFile(p)}`);
 }
 const setFile = (s, i) => join(SETS, s.date, `${s.date}-${i + 1}.jpg`);
 for (const s of SETS_DATA) {
@@ -290,7 +308,7 @@ const strip = (h) => h.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
 const onIt = (p) => (p.card ? [p.card.sub && `line "${strip(p.card.sub)}"`, ...(p.card.rows || []).map(([k, d], i) => `${i + 1}. "${k}" (${d})`),
   p.card.note && `note "${p.card.note[0]}: ${p.card.note[1]}"`, `footer "${p.card.src}"`].filter(Boolean).join(', ') : `line "${p.sub}"`);
 const manifest = [
-  ...POSTS.map((p) => ({ brand: 'sixfold', type: 'post', date: p.date, time: '15:00', targets: ['fb', 'ig'], image: LIVE(rel(postFile(p))), fb_caption: p.fb, ig_caption: p.ig,
+  ...POSTS.map((p) => ({ brand: 'sixfold', type: 'post', date: p.date, time: '15:00', targets: ['fb', 'ig'], image: LIVE(rel(postFile(p))), card: LIVE(rel(recipeFile(p))), fb_caption: p.fb, ig_caption: p.ig,
     note: `${p.kicker}: ${p.head} ${kind(p)}. No generated imagery. ${p.seasonal} DRAFT: needs Matthew's go.` })),
   ...SETS_DATA.map((s) => ({ brand: 'sixfold', type: 'photoset', date: s.date, time: '14:00', targets: ['fb', 'ig'], images: s.images.map((_, i) => LIVE(rel(setFile(s, i)))), fb_caption: s.fb, ig_caption: s.ig,
     note: `Saturday photo day: ${s.title}. ${s.images.length} real job photos (Facebook album + Instagram carousel), cropped and re-saved without EXIF/GPS; stay local, gitignored. DRAFT: needs Matthew's go.` })),

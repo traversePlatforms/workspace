@@ -8,7 +8,8 @@ import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, rmSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 
 const HERE = dirname(fileURLToPath(import.meta.url)); const ROOT = resolve(HERE, '..'); const SHOTS = process.argv[2] || '';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -66,7 +67,10 @@ const chrome = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['
 let tg; for (let i = 0; i < 40 && !tg; i++) { await sleep(250); try { tg = (await (await fetch('http://127.0.0.1:' + dport + '/json')).json()).find((x) => x.type === 'page'); } catch {} }
 const ws = new WebSocket(tg.webSocketDebuggerUrl); await new Promise((r) => (ws.onopen = r));
 let mid = 0; const pend = new Map(); const errors = [];
-ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id); } if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); };
+ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id); } if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); if (m.method === 'Page.fileChooserOpened') chooser = m.params; };
+let chooser = null;   /* 19 Nov: a file picker the page opened, answered with test files */
+const pickFiles = async (sel, paths) => { chooser = null; await send('Runtime.evaluate', { expression: '(' + sel + ').click()', userGesture: true });   /* a file picker needs a tap, not a script */
+  for (let i = 0; i < 40 && !chooser; i++) await sleep(50); if (!chooser) return false; await send('DOM.setFileInputFiles', { files: paths, backendNodeId: chooser.backendNodeId }); return true; };
 const send = (m, p = {}) => new Promise((res) => { const i = ++mid; pend.set(i, res); ws.send(JSON.stringify({ id: i, method: m, params: p })); });
 const js = async (e) => { const r = await send('Runtime.evaluate', { expression: e, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) { errors.push(r.exceptionDetails.exception?.description || r.exceptionDetails.text); } return r.result?.value; };
 const shot = async (name) => { if (!SHOTS) return; const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }); mkdirSync(SHOTS, { recursive: true }); writeFileSync(join(SHOTS, name + '.png'), Buffer.from(r.data, 'base64')); };
@@ -246,6 +250,68 @@ ok(await js(`!!document.querySelector('.req') || !!document.getElementById('appr
 ok(await js(`document.body.textContent.indexOf('Only his sign-in')<0 && document.body.textContent.indexOf('Ready for Matthew')<0`), 'no "Matthew only" wording');
 ok(await js(`/\\.mov/.test(document.getElementById('file').accept) && document.body.textContent.indexOf('Phone videos: record in 1080p, under 90 seconds')>=0`), 'a single post takes a phone video (.mov too) and says how to record it');
 await shot('13-client-post');
+
+/* Change photo on a designed card, and photos on a change request (2026-11-19), as Jen on a phone */
+{
+  const sharp = createRequire(join(ROOT, '..', '..', 'node_modules', 'x.js'))('sharp');
+  const { composeCard } = await import(pathToFileURL(join(ROOT, 'tools', 'pc.mjs')).href);
+  /* a layer with see-through parts (a cream panel and a gold bar on nothing), a photo with detail (a gradient), as JPEG like a phone's */
+  const LAYER = await sharp({ create: { width: 1080, height: 1350, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: { create: { width: 900, height: 300, channels: 4, background: { r: 255, g: 248, b: 236, alpha: 1 } } }, left: 90, top: 700 }, { input: { create: { width: 400, height: 40, channels: 4, background: { r: 242, g: 193, b: 78, alpha: 0.8 } } }, left: 90, top: 300 }]).png().toBuffer();
+  const grad = Buffer.alloc(1600 * 1200 * 3); for (let y = 0; y < 1200; y++) for (let x = 0; x < 1600; x++) { const o = (y * 1600 + x) * 3; grad[o] = x * 255 / 1600; grad[o + 1] = y * 255 / 1200; grad[o + 2] = (x + y) % 256; }
+  const PHOTO = join(T, 'phone-photo.jpg'); await sharp(grad, { raw: { width: 1600, height: 1200, channels: 3 } }).jpeg({ quality: 92 }).toFile(PHOTO);
+  const recipe = { tpl: 'sixfold-card', title: 'UI card', src: 'test', w: 1080, h: 1350, box: [0, 0, 1080, 1350], base: '#2F5D2C', tint: [20, 40, 19], dim: 0.5 };
+  ck = ''; await call('signin', { code: EDITOR });
+  const s3 = await call('create', { client: 'sixfold', fb: 'A designed card.', ig: 'A designed card.', targets: ['fb', 'ig'], date: '2027-11-16', time: '15:00' });
+  await up(s3.id, png(1080, 1350, [47, 93, 44]));
+  { const fd = new FormData(); fd.append('id', s3.id); fd.append('recipe', JSON.stringify(recipe)); fd.append('overlay', new Blob([LAYER], { type: 'image/png' }), 'layer.png'); const r = await call('cardset', fd); ok(r.ok && r.post.card, 'setup: a card with a recipe'); }
+  await send('Page.setInterceptFileChooserDialog', { enabled: true });
+  await send('Page.reload'); await sleep(1500);
+  await click(`[].find.call(document.querySelectorAll('.card'),function(c){return c.textContent.indexOf('A designed card')>=0})`); await sleep(600);
+  ok(await js(`!!document.getElementById('cphoto') && !document.getElementById('corig') && !document.getElementById('cmove')`), 'a designed card offers Change photo (no "original" button while it is the original)');
+  ok(await pickFiles(`document.getElementById('cphoto')`, [PHOTO]), 'Change photo opens the phone\'s photo picker'); await sleep(1500);
+  ok(await js(`!!document.getElementById('ced') && document.getElementById('cedc').width===1080 && document.getElementById('cedc').height===1350`), 'the card editor opens with the card drawn at full size');
+  /* the page's drawing against the laptop's (pc.mjs composeCard), same layer, photo and place */
+  const dataUrl = await js(`document.getElementById('cedc').toDataURL('image/png')`);
+  const pagePx = await sharp(Buffer.from(dataUrl.split(',')[1], 'base64')).removeAlpha().raw().toBuffer();
+  const nodePx = await sharp(await composeCard(recipe, LAYER, readFileSync(PHOTO), { x: 0.5, y: 0.5, zoom: 1, dim: 0.5 })).removeAlpha().raw().toBuffer();
+  let diff = 0; for (let i = 0; i < pagePx.length; i++) diff += Math.abs(pagePx[i] - nodePx[i]); diff /= pagePx.length;
+  ok(pagePx.length === nodePx.length && diff < 3, 'the page draws the card as the laptop does (mean difference ' + diff.toFixed(2) + ' of 255)');
+  ok(await js(`(function(){var c=document.getElementById('cedc').getContext('2d').getImageData(540,850,1,1).data;return c[0]===255&&c[1]===248&&c[2]===236})()`), 'the card\'s words layer sits on top, exact');
+  await shot('14-card-editor');
+  /* drag the photo right, zoom in, a little darker, save */
+  const box = await js(`(function(){var r=document.getElementById('cedc').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}})()`);
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: box.x, y: box.y, button: 'left', clickCount: 1 });
+  for (let i = 1; i <= 5; i++) await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: box.x + i * 12, y: box.y, button: 'left', buttons: 1 });
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: box.x + 60, y: box.y, button: 'left', clickCount: 1 });
+  await js(`(function(){var z=document.getElementById('cedz');z.value='1.5';z.dispatchEvent(new Event('input'));var d=document.getElementById('cedd');d.value='0.6';d.dispatchEvent(new Event('input'))})()`); await sleep(200);
+  await click(`document.getElementById('ceds')`); await sleep(1500);
+  ok(await js(`!document.getElementById('ced') && !!document.getElementById('corig') && !!document.getElementById('cmove')`), 'saved: the editor closes; Move the photo and Put the original card back appear');
+  let sp = (await call('data&client=sixfold')).posts.find((p) => p.id === s3.id);
+  ok(sp.status === 'draft' && sp.card.bg && sp.card.pos.x < 0.5 && sp.card.pos.zoom === 1.5 && sp.card.pos.dim === 0.6 && sp.images[0].w === 1080 && sp.images[0].h === 1350, 'the server has the new card: dragged right, zoomed, darker, 1080 x 1350, still a draft');
+  ok(sp.log.some((l) => l.by === 'Jen Test' && l.what === 'Card photo changed'), 'the log says Jen changed the card photo');
+  ok(await js(`document.querySelector('.pic img').src.indexOf(${JSON.stringify(sp.images[0].file)})>0`), 'the post shows the new card');
+  await shot('15-card-saved');
+  /* Move the photo: opens on the photo it has, where she left it */
+  await click(`document.getElementById('cmove')`); await sleep(1200);
+  ok(await js(`!!document.getElementById('ced') && document.getElementById('cedz').value==='1.5' && document.getElementById('cedd').value==='0.6'`), 'Move the photo opens with her zoom and darkness');
+  await click(`document.getElementById('cedx')`); await sleep(200); ok(await js(`!document.getElementById('ced')`), 'Cancel closes it, nothing saved');
+  /* the original back */
+  await js(`window.confirm=function(){return true}`); await click(`document.getElementById('corig')`); await sleep(900);
+  sp = (await call('data&client=sixfold')).posts.find((p) => p.id === s3.id);
+  ok(sp.images[0].file === sp.card.orig.file && !sp.card.bg && await js(`!document.getElementById('corig') && !document.getElementById('cmove')`), 'Put the original card back: the first card again');
+  /* a change request with photos */
+  ok(await pickFiles(`document.getElementById('rqadd')`, [PHOTO, PHOTO]), 'Attach photos opens the picker'); await sleep(1500);
+  ok(await js(`document.querySelectorAll('#rqph img').length===2`), 'two photos wait with the request');
+  await click(`document.querySelector('[data-rqx="1"]')`); await sleep(200);
+  ok(await js(`document.querySelectorAll('#rqph img').length===1`), 'she can take one off again');
+  await js(`document.getElementById('rq').value='Use this photo on the card please.'`); await click(`document.getElementById('rqgo')`); await sleep(1200);
+  ok(await js(`!!document.querySelector('.req .rqph img') && document.querySelector('.req .rqph img').src.indexOf('action=reqphoto')>0`), 'the open request shows her photo');
+  await js(`document.querySelector('.req').scrollIntoView()`); for (let i = 0; i < 40 && !(await js(`document.querySelector('.req .rqph img').naturalWidth>0`)); i++) await sleep(100); ok(await js(`document.querySelector('.req .rqph img').naturalWidth>0`), 'and it loads (through the sign-in, not a public address)');
+  sp = (await call('data&client=sixfold')).posts.find((p) => p.id === s3.id);
+  ok(sp.status === 'changes' && sp.openRequest.photos.length === 1 && sp.openRequest.photos[0].w === 1600, 'the server has the request and its photo (made a JPEG at full size, under 2160 px)');
+  await shot('16-request-photo');
+}
 ok(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 ws.close(); chrome.kill(); php.kill(); lisrv.close();
 setTimeout(() => { try { rmSync(prof, { recursive: true, force: true }); rmSync(T, { recursive: true, force: true }); } catch {} }, 500);

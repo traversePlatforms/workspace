@@ -82,6 +82,35 @@ surge. I am still putting surge facebook on hold until i gain access to the appr
 approved posts using it go back to draft, and the runner never sends to it or asks Meta about it. **Surge fb,ig is on hold since 18 Nov**
 (Matthew: until he has access to the right Surge account). Lift only on his word.
 
+## Designed cards: Change photo, and photos on a change request (19 Nov 2026)
+
+Matthew, 19 Nov: Jen "wanted to put her own photo as the background of today's designed post card, and couldn't ... Is there a way we can
+build it so this is something she can do? it might not be the last time she wants to."
+
+- **What she does:** on a designed card, under the picture, **Change photo** opens the phone's photos; the card is drawn in the page with
+  her photo behind its words (drag to move it, Zoom, Darker), then **Save the card** or Cancel. Afterwards **Move the photo** (same photo,
+  new place) and **Put the original card back**. Saving is a normal picture change through `upload`: an approved post drops back to draft
+  (fingerprint rule) and waits for an approver's tap. Matthew can do the same.
+- **The recipe** lives on the post as `card` (not part of the fingerprint): template, the box the photo fills, ground colour, tint and
+  default darkness, the **layer** (the card's words, badge and shapes as a see-through PNG in `media/`), the original card (`orig`), and
+  the photo now behind it (`bg`, in `media/`) with where it sits (`pos`). Files a recipe holds are never deleted as "unused".
+- **Why it matches the local cards:** the layer is rendered by the same Chrome and HTML as the card (the build scripts' `--layers` mode:
+  ground, glow, rings and photo band left out, a light scrim top and bottom, stronger shadows under the words). The page only draws the
+  photo (cover, then zoom and position), a tint, then the layer, so every word is the card's own pixels. Differences from the original PNG
+  are by design (no rings, glow or band; the scrim and shadows) plus JPEG at quality 0.92. `pc.mjs` draws the same way with sharp (mean
+  difference under 3/255 in the UI test).
+- **Templates:** `sixfold-card` (Nov/Dec green cards; full-card photo, tint #142813 at 0.5), `sixfold-photo` (Nov job-photo posts; photo
+  in the top 1080 x 900, no tint), `sixfold-oct` (October job-photo posts; full-card photo under the bottom fade).
+- **Setting a recipe** (editor or Matthew only, never a client): `pc.mjs card <post> <name>.card.json` (refused unless the post's picture is
+  that card, by md5 or size), or a manifest item's `"card": "<name>.card.json"`. Build scripts write `posts/<name>.layer.png` and
+  `.card.json` beside each card (`node build-november.mjs --layers`, `build-december.mjs --layers`, `365-social-2026-10/job-photo-posts/build-posts.mjs --layers`).
+  Cards without a recipe simply have no Change photo button.
+- **Request photos:** Request changes takes up to 3 photos (made JPEGs in the page, no location, at most 2160 px; re-encoded on the server
+  when PHP has GD). Kept privately in `post-calendar-data/reqphotos/`, shown only through `api/cal.php?action=reqphoto` to a sign-in that can
+  see the post. `pc.mjs requests` lists them and the card recipe; `pc.mjs photos <post> --out dir` saves them; `pc.mjs look <post> --card-bg
+  f --card-out f` draws without sending; `pc.mjs answer <post> --card-bg f [--zoom --x --y --dim]` or `--card-orig` answers with the card.
+  The request watcher's prompt says how.
+
 ## Loading drafts (manifests)
 
 `node traverse/post-calendar/tools/pc.mjs import <manifest.json>` (add `--dry-run` first to see what would load). Each item: `brand`
@@ -96,8 +125,8 @@ blocks its approval; `pc.mjs requests` (or `php runner.php requests` on the serv
 - `bash traverse/post-calendar/tools/deploy.sh` (backup to `~/upload-backups/before-postcal-<stamp>.tgz`, rename-into-place, md5 of every
   file); `--check` compares with live and sends nothing. `tools/token.sh compare|push` handles the token without printing it.
 - `node traverse/post-calendar/test/pc-test.mjs`: API and runner against a local stand-in for graph.facebook.com (nothing reaches Meta):
-  294 checks on 18 Nov, LinkedIn against a local stand-in for linkedin.com included (the client sign-in and phone-video sections need ffmpeg +
+  336 checks on 19 Nov (294 on 18 Nov), LinkedIn against a local stand-in for linkedin.com included (the client sign-in and phone-video sections need ffmpeg +
   ffprobe on PATH, else the video part is skipped).
-  `node traverse/post-calendar/test/pc-ui-test.mjs [shots-folder]`: the page in headless Chrome at phone size, 68 checks on 18 Nov.
+  `node traverse/post-calendar/test/pc-ui-test.mjs [shots-folder]`: the page in headless Chrome at phone size, 87 checks on 19 Nov (Change photo and request photos included; 68 on 18 Nov).
 - The old runner (`sixfold-tools/social-queue.php`, queue `sixfold-private/social-queue.json`) is folded in with `php runner.php
   migrate-queue <file>`: approvals kept; the new runner leaves migrated posts alone until the old queue file is retired.

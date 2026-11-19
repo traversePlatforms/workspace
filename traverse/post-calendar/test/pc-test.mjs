@@ -789,6 +789,106 @@ console.log('LinkedIn company-page posting and the Surge Facebook hold (2026-11-
   ok((await runPhp(['unhold', 'surge', 'fb,ig'])).code === 0 && !Object.keys(state().clients.surge.holds).length, 'unhold lifts it (Matthew\'s word only, from the server)');
 }
 
+console.log('designed cards: Change photo, and photos on a change request (2026-11-19)');
+{
+  const MEDIA = join(SITE, 'public_html', PUB, 'media'), REQD = join(SITE, 'post-calendar-data', 'reqphotos');
+  const inMedia = (f) => !!f && existsSync(join(MEDIA, f)); const pcOpen = (p) => (p.requests || []).some((r) => !r.answered);
+  const JC = (await runPhp(['addaccount', 'Jen Cards', 'client', '--clients', 'sixfold', '--code-only'])).out.trim();
+  const J = client(); await J.call('signin', { code: JC });
+  const recipe = { tpl: 'sixfold-card', title: 'Test card', src: 'test', w: 1080, h: 1350, box: [0, 0, 1080, 1350], base: '#2F5D2C', tint: [20, 40, 19], dim: 0.5 };
+  const LAYER = png(1080, 1350);
+  const cardset = (who, id, rec = recipe, layer = LAYER, extra = {}) => { const fd = new FormData(); fd.append('id', id); fd.append('recipe', typeof rec === 'string' ? rec : JSON.stringify(rec)); for (const [k, v] of Object.entries(extra)) fd.append(k, String(v)); fd.append('overlay', new Blob([layer], { type: 'image/png' }), 'layer.png'); return who.call('cardset', fd); };
+  const cardup = (who, id, pos, bg) => { const fd = new FormData(); fd.append('id', id); fd.append('replace', '0'); fd.append('cardpos', JSON.stringify(pos)); fd.append('file', new Blob([png(1080, 1350)], { type: 'image/png' }), 'card.png'); if (bg) fd.append('cardbg', new Blob([bg], { type: 'image/png' }), 'photo.png'); return who.call('upload', fd); };
+  const CP = await mk('sixfold', { fb: 'card words', ig: 'card ig', targets: ['fb', 'ig'], date: '2028-02-08', time: '15:00' });
+  const SGc = await mk('surge', { fb: 'Surge card', targets: ['fb'], date: '2028-02-08', time: '15:00' });
+  const cp0 = state().posts[CP], fp0 = (await A.call('data', null, '&client=sixfold')).posts.find((p) => p.id === CP).fingerprint;
+  /* setting a recipe: the editor or Matthew only, checked, picture and approval untouched */
+  let j = await cardset(J, CP); ok(j._status === 403 && !state().posts[CP].card, 'a client sign-in cannot set up a card recipe');
+  j = await cardset(E, CP, '{"tpl":"Bad Name!"}'); ok(j._status === 400, 'a recipe that does not look right is refused');
+  j = await cardset(E, CP, recipe, png(800, 1000)); ok(j._status === 400 && /size of the card/.test(j.error), 'a layer that is not the card\'s size is refused');
+  j = await cardset(E, CP, recipe, LAYER, { expect_md5: '0'.repeat(32) }); ok(j._status === 409 && !state().posts[CP].card, 'a recipe for a different picture is refused');
+  await A.call('approve', { id: CP, fingerprint: fp0 });
+  j = await cardset(E, CP, recipe, LAYER, { expect_md5: cp0.images[0].md5 });
+  let cp = state().posts[CP];
+  ok(j.ok && cp.card && cp.card.tpl === 'sixfold-card' && cp.card.orig.file === cp0.images[0].file && inMedia(cp.card.overlay.file), 'the editor sets the recipe: the layer stored, the original card remembered');
+  ok(cp.status === 'approved' && j.post.fingerprint === fp0 && cp.images[0].file === cp0.images[0].file, 'setting a recipe changes no picture, no words and no approval');
+  ok((await cardset(A, SGc, recipe)).ok, 'Matthew can set a recipe too (a Surge card)');
+  /* Change photo: a picture change like any other */
+  const BG1 = png(1600, 1200);
+  j = await cardup(J, CP, { x: 0.3, y: 2, zoom: 9, dim: 0.4 }, BG1); cp = state().posts[CP];
+  ok(j.ok && cp.status === 'draft' && !cp.approval && cp.images[0].file !== cp0.images[0].file, 'she saves the card with her photo: the picture is replaced and the approval drops');
+  ok(cp.card.bg && inMedia(cp.card.bg.file) && cp.card.bg.w === 1600 && cp.card.made === cp.images[0].md5, 'the photo is kept with the card');
+  ok(cp.card.pos.x === 0.3 && cp.card.pos.y === 1 && cp.card.pos.zoom === 4 && cp.card.pos.dim === 0.4, 'where the photo sits is kept, inside its limits');
+  ok(inMedia(cp0.images[0].file), 'the original card\'s file stays on the server');
+  ok(cp.log.some((l) => l.by === 'Jen Cards' && l.what === 'Card photo changed') && cp.log.some((l) => /Approval dropped/.test(l.what)), 'the log says who changed the card photo and that the approval dropped');
+  const bg1 = cp.card.bg.file, made1 = cp.images[0].file;
+  j = await cardup(J, CP, { x: 0.5, y: 0.6, zoom: 1.2, dim: 0.5 }); cp = state().posts[CP];
+  ok(j.ok && cp.card.bg.file === bg1 && cp.card.pos.zoom === 1.2 && !inMedia(made1), 'moving the photo keeps it; the card drawn before goes');
+  j = await cardup(J, CP, { x: 0.5, y: 0.5, zoom: 1, dim: 0.5 }, png(1200, 1600)); cp = state().posts[CP];
+  ok(j.ok && cp.card.bg.file !== bg1 && !inMedia(bg1), 'a new photo replaces the old one, and the old photo\'s file goes');
+  const fd0 = new FormData(); fd0.append('id', CP); fd0.append('replace', '0'); fd0.append('cardpos', '{}'); fd0.append('file', new Blob([png(1080, 1350)], { type: 'image/png' }), 'c.png'); fd0.append('cardbg', new Blob([Buffer.from('not a picture')], { type: 'image/png' }), 'x.png');
+  const files0 = readdirSync(MEDIA).length; j = await J.call('upload', fd0); ok(j._status === 400 && /^The photo:/.test(j.error) && readdirSync(MEDIA).length === files0, 'a photo that is not a picture is refused, nothing kept');
+  /* a plain Replace keeps the recipe and the original; then Put the original card back */
+  j = await J.up(CP, png(1080, 1080), { replace: 0 }); ok(j.ok && j.post.card && inMedia(cp0.images[0].file), 'a plain Replace leaves the recipe and the original card');
+  const bg2 = state().posts[CP].card.bg.file, plain = state().posts[CP].images[0].file;
+  await A.call('approve', { id: CP, fingerprint: j.post.fingerprint });
+  j = await J.call('cardorig', { id: CP }); cp = state().posts[CP];
+  ok(j.ok && cp.images[0].file === cp0.images[0].file && cp.card.bg === null && cp.status === 'draft' && !cp.approval, 'Put the original card back: the first card again, back to draft');
+  ok(!inMedia(bg2) && !inMedia(plain) && cp.log.some((l) => l.what === 'Original card put back'), 'the photo and the replaced picture go; the log says so');
+  ok((await J.call('cardorig', { id: CP }))._status === 409, 'the original is already there: refused');
+  /* scope and refusals */
+  ok((await cardup(J, SGc, { x: 0.5 }, BG1))._status === 404 && (await J.call('cardorig', { id: SGc }))._status === 404, 'Change photo on a Surge card: no such post for her');
+  const PNC = await mk('sixfold', { fb: 'plain', ig: 'plain', targets: ['fb', 'ig'], date: '2028-02-10', time: '15:00' });
+  j = await cardup(J, PNC, { x: 0.5 }, BG1); ok(j._status === 409 && /no designed card/.test(j.error), 'a post without a recipe has no Change photo');
+  /* photos on a change request */
+  const rqfd = (id, text, bufs) => { const fd = new FormData(); fd.append('id', id); fd.append('text', text); bufs.forEach((b, i) => fd.append('photos[]', new Blob([b], { type: 'image/png' }), 'p' + i + '.png')); return fd; };
+  j = await J.call('request', rqfd(CP, 'Use my photo as the background', [png(1400, 1050), png(900, 1200)])); cp = state().posts[CP];
+  const rph = cp.requests[cp.requests.length - 1].photos || [];
+  ok(j.ok && cp.status === 'changes' && rph.length === 2 && rph.every((x) => existsSync(join(REQD, x.file)) && !inMedia(x.file)), 'she sends a request with 2 photos: kept privately, not in the public folder');
+  ok(cp.log.some((l) => /\(\+2 photos\)$/.test(l.what)), 'the log counts the photos');
+  let res = await fetch(ORIGIN + '/' + PUB + '/api/cal.php?action=reqphoto&post=' + CP + '&f=' + rph[0].file, { headers: { Cookie: J.ck() } });
+  ok(res.status === 200 && /image\/png/.test(res.headers.get('content-type')) && Buffer.from(await res.arrayBuffer()).length === rph[0].bytes, 'she (and anyone who can see the post) can open a request photo');
+  res = await fetch(ORIGIN + '/' + PUB + '/api/cal.php?action=reqphoto&post=' + CP + '&f=' + rph[0].file); ok(res.status === 401, 'signed out: no request photo');
+  res = await fetch(ORIGIN + '/' + PUB + '/api/cal.php?action=reqphoto&post=' + PNC + '&f=' + rph[0].file, { headers: { Cookie: J.ck() } }); ok(res.status === 404, 'a photo asked for through another post: no such photo');
+  ok(!existsSync(join(SITE, 'public_html', PUB, 'reqphotos')) && !readdirSync(join(SITE, 'public_html', PUB)).some((f) => rph.some((x) => x.file === f)), 'request photos are nowhere under public_html');
+  const rqj = JSON.parse((await runPhp(['requests', 'sixfold'])).out).find((x) => x.post === CP);
+  ok(rqj && rqj.photos.length === 2 && /action=reqphoto&post=/.test(rqj.photos[0].path) && rqj.card && rqj.card.tpl === 'sixfold-card' && rqj.card.hasPhoto === false, 'the open request lists its photos and the card recipe for the watcher');
+  await A.call('request', { id: SGc, text: 'Surge request' });
+  const media1 = readdirSync(MEDIA).length, req1 = existsSync(REQD) ? readdirSync(REQD).length : 0;
+  j = await J.call('request', rqfd(SGc, 'x', [png(400, 400)])); ok(j._status === 404 && readdirSync(REQD).length === req1, 'a request with photos on a Surge post: 404 and no photo kept');
+  j = await J.call('request', rqfd(PNC, 'too many', [png(400, 400), png(400, 400), png(400, 400), png(400, 400)])); ok(j._status === 400 && /at most 3/.test(j.error) && readdirSync(REQD).length === req1, 'more than 3 photos: refused, nothing kept');
+  j = await J.call('request', rqfd(PNC, 'bad', [png(400, 400), Buffer.from('nope')])); ok(j._status === 400 && readdirSync(REQD).length === req1 && readdirSync(MEDIA).length === media1, 'a request photo that is not a picture: refused, nothing kept');
+  ok((await E.call('request', rqfd(PNC, 'x', [png(400, 400)])))._status === 403, 'the editor cannot request changes, photos or not');
+  /* the laptop: pc.mjs photos, answer --card-bg, card, import with a recipe */
+  writeFileSync(join(T, 'editor-code.txt'), EDITOR);
+  const OUTD = join(T, 'reqout');
+  t1 = await tool(['photos', CP, '--out', OUTD]);
+  ok(t1.code === 0 && readdirSync(OUTD).length === 2 && readFileSync(join(OUTD, 'request-photo-1.png')).length === rph[0].bytes, 'pc.mjs photos saves the request\'s photos');
+  writeFileSync(join(T, 'bg.png'), png(1600, 1200));
+  t1 = await tool(['answer', CP, '--card-bg', join(T, 'bg.png'), '--zoom', '1.5', '--x', '0.2', '--dim', '0.6', '--card-out', join(T, 'look.jpg'), '--note', 'Your photo is on the card']); cp = state().posts[CP];
+  ok(t1.code === 0 && cp.status === 'draft' && !pcOpen(cp) && cp.card.bg && cp.card.pos.zoom === 1.5 && cp.card.pos.x === 0.2 && cp.card.pos.dim === 0.6 && cp.note === 'Your photo is on the card', 'pc.mjs answer --card-bg: the card drawn with the photo, the request answered, back to draft' + (t1.code ? ': ' + t1.out : ''));
+  ok(cp.images[0].w === 1080 && cp.images[0].h === 1350 && existsSync(join(T, 'look.jpg')) && cp.card.bg.w === 1600, 'the card is 1080 x 1350; the photo kept as it came, at most 2160 px');
+  { const before = JSON.stringify(state().posts[CP]); t1 = await tool(['look', CP, '--card-bg', 'keep', '--zoom', '2', '--card-out', join(T, 'look2.jpg')]);
+    ok(t1.code === 0 && existsSync(join(T, 'look2.jpg')) && JSON.stringify(state().posts[CP]) === before, 'pc.mjs look draws the card to a file and sends nothing'); }
+  await J.call('request', { id: CP, text: 'Put the old card back' });
+  t1 = await tool(['answer', CP, '--card-orig']); cp = state().posts[CP];
+  ok(t1.code === 0 && cp.images[0].file === cp0.images[0].file && !pcOpen(cp) && cp.status === 'draft', 'pc.mjs answer --card-orig puts the original back and answers');
+  t1 = await tool(['answer', PNC, '--card-bg', join(T, 'bg.png')]); ok(t1.code !== 0 && /not a designed card/.test(t1.out), 'pc.mjs answer --card-bg on a post with no recipe: refused');
+  /* a recipe file, as the build scripts write it, on an existing post (backfill) and through import */
+  writeFileSync(join(MD, 'k.png'), IMG); writeFileSync(join(MD, 'k.layer.png'), LAYER);
+  writeFileSync(join(MD, 'k.card.json'), JSON.stringify({ ...recipe, overlay: 'k.layer.png', card: 'k.png' }));
+  t1 = await tool(['card', PNC, join(MD, 'k.card.json')]); const pn = state().posts[PNC];
+  ok(t1.code === 0 && pn.card && pn.card.orig.file === pn.images[0].file && pn.status === 'draft', 'pc.mjs card sets a recipe on a loaded post (same picture bytes)');
+  writeFileSync(join(MD, 'other.png'), png(1080, 1349)); writeFileSync(join(MD, 'o.card.json'), JSON.stringify({ ...recipe, overlay: 'k.layer.png', card: 'other.png' }));
+  const PNO = await mk('sixfold', { fb: 'o', ig: 'o', targets: ['fb'], date: '2028-02-12', time: '15:00' });
+  t1 = await tool(['card', PNO, join(MD, 'o.card.json')]); ok(t1.code !== 0 && !state().posts[PNO].card, 'pc.mjs card refuses when the post\'s picture is not the recipe\'s card');
+  writeFileSync(join(MD, 'card-manifest.json'), JSON.stringify([{ brand: 'sixfold', date: '2028-02-15', time: '15:00', targets: ['fb', 'ig'], image: 'k.png', card: 'k.card.json', fb_caption: 'imported card', ig_caption: 'imported card' }]));
+  t1 = await tool(['import', join(MD, 'card-manifest.json')]); const ic = Object.values(state().posts).find((p) => p.fb === 'imported card');
+  ok(/1 loaded/.test(t1.out) && ic && ic.card && ic.card.tpl === 'sixfold-card' && ic.status === 'draft', 'import: a manifest item with a recipe loads with Change photo set up');
+  /* nothing approved itself */
+  ok(!Object.values(state().posts).some((p) => [CP, PNC, PNO, ic && ic.id].includes(p.id) && p.status === 'approved'), 'none of these posts is approved by the tools');
+}
+
 console.log('check (read-only)');
 t1 = await runPhp(['check']);
 ok(/Sixfold 365 \(1418675127985724\) Instagram @365aeration -> sixfold/.test(t1.out) && /Surge Inc \(1323606360836132\) no Instagram -> surge/.test(t1.out) && !/PT-|PIPE-TOKEN/.test(t1.out), 'check lists the Pages, which client holds each, no tokens');

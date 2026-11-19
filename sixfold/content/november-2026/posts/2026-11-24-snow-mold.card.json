@@ -1,0 +1,22 @@
+{
+  "tpl": "sixfold-card",
+  "box": [
+    0,
+    0,
+    1080,
+    1350
+  ],
+  "dim": 0.5,
+  "title": "After the snow: Matted, gray patches as the snow melts?",
+  "src": "sixfold/content/november-2026/build-november.mjs 2026-11-24-snow-mold",
+  "w": 1080,
+  "h": 1350,
+  "base": "#2F5D2C",
+  "tint": [
+    20,
+    40,
+    19
+  ],
+  "overlay": "2026-11-24-snow-mold.layer.png",
+  "card": "2026-11-24-snow-mold.png"
+}

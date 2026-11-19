@@ -87,6 +87,14 @@ if ($action === 'requests') out(['ok' => true, 'requests' => array_values(array_
 if ($action === 'pages') { needAdmin(); out(pcPagesView(pcState())); }   /* read-only call to Meta: which Pages and Instagram accounts the token sees */
 /* LinkedIn (2026-11-18): the connection as the page shows it, read from the server's own file; never calls LinkedIn, never a token */
 if ($action === 'listatus') { needAdmin(); $c = needClient(pcState(), (string) ($_GET['client'] ?? '')); if (!pcLiAllowed((string) $c['id'])) fail('LinkedIn is only set up for Surge.', 404); out(['ok' => true, 'li' => pcLiView($c)]); }
+/* a photo attached to a change request (2026-11-19): only to a sign-in that can see the post, and only a photo of one of its requests */
+if ($action === 'reqphoto') {
+    $S = pcState(); $p = needPost($S, (string) ($_GET['post'] ?? '')); $f = (string) ($_GET['f'] ?? ''); $mine = false;
+    foreach ((array) ($p['requests'] ?? []) as $r) foreach ((array) ($r['photos'] ?? []) as $x) if (($x['file'] ?? '') === $f) $mine = true;
+    $path = $mine ? pcReqPhotoPath($f) : null; if (!$path) fail('No such photo.', 404);
+    header('Content-Type: ' . (substr($f, -4) === '.png' ? 'image/png' : 'image/jpeg')); header('Cache-Control: private, max-age=86400'); header('Content-Length: ' . filesize($path));
+    readfile($path); exit;
+}
 
 if (!$isPost) fail('POST required', 405);
 $id = (string) ($body['id'] ?? '');
@@ -158,10 +166,26 @@ switch ($action) {
             fail($big ? 'That file is over the upload limit (' . pcVideoCaps()['uploadMB'] . ' MB). Phone videos: record in 1080p, under 90 seconds.' : 'The picture or video did not arrive. Try again.', $big ? 413 : 400);
         }
         $S0 = pcState(); $p0 = needPost($S0, $id); editable($p0);
+        /* a designed card drawn with a new photo behind its words (2026-11-19): the card as drawn in the page comes as `file`, the photo as
+           `cardbg` (left out when only its place or tint changed), where it sits as `cardpos` */
+        $cardAsk = isset($body['cardpos']) || isset($_FILES['cardbg']); $bg = null;
+        if ($cardAsk) {
+            if (!is_array($p0['card'] ?? null) || $p0['type'] !== 'single') fail('This post has no designed card to put a photo on.', 409);
+            $g = $_FILES['cardbg'] ?? null;
+            if ($g && ($g['error'] ?? 1) === UPLOAD_ERR_OK) { pcStripMeta((string) $g['tmp_name']); $bg = pcStoreImage((string) $g['tmp_name'], (string) ($g['name'] ?? '')); if (isset($bg['error'])) fail('The photo: ' . $bg['error']); }
+            elseif ($g || empty($p0['card']['bg'])) fail('The photo for the card did not arrive. Try again.');
+        }
         $img = pcStoreMedia((string) $f['tmp_name'], (string) ($f['name'] ?? ''), ['w' => $body['w'] ?? 0, 'h' => $body['h'] ?? 0, 'sec' => $body['sec'] ?? 0]); if (isset($img['error'])) fail($img['error']);   /* + video (2026-11-05) */
-        $p = pcMutate(function (array &$S) use ($id, $img, $body, $ME) {
-            $p = needPost($S, $id); editable($p); $before = pcFingerprint($p); $old = null;
+        if ($cardAsk && pcIsVideo($img)) fail('A card is a picture, not a video.');
+        $p = pcMutate(function (array &$S) use ($id, $img, $body, $ME, $cardAsk, $bg) {
+            $p = needPost($S, $id); editable($p); $before = pcFingerprint($p); $old = null; $oldBg = '';
             if (pcIsVideo($img) && $p['type'] !== 'single') fail('A video goes in its own post, not a photo set.');
+            if ($cardAsk) {
+                if (!is_array($p['card'] ?? null) || $p['type'] !== 'single') fail('This post has no designed card to put a photo on.', 409);
+                if ($bg) { $oldBg = (string) ($p['card']['bg']['file'] ?? ''); $p['card']['bg'] = ['file' => $bg['file'], 'url' => $bg['url'], 'w' => $bg['w'], 'h' => $bg['h'], 'md5' => $bg['md5']]; }
+                $p['card']['pos'] = pcCardPos($body['cardpos'] ?? [], $p['card']); $p['card']['made'] = $img['md5'] ?? null;
+                pcLog($p, $ME, $bg ? 'Card photo changed' : 'Card photo moved');
+            }
             $rep = isset($body['replace']) && $body['replace'] !== '' ? (int) $body['replace'] : null;
             if (isset($body['caption'])) $img['caption'] = pcText($body['caption'], 1000);
             if ($p['type'] === 'single') { $old = $p['images'][0] ?? null; $p['images'] = [$img]; }
@@ -171,6 +195,48 @@ switch ($action) {
             afterChange($p, $before, $ME, $body['answer'] ?? null);
             $S['posts'][$id] = $p;
             if ($old) pcDropUnused($S, $p, $old);
+            if ($oldBg !== '') pcDropMediaIfUnused($S, $oldBg);
+            return pcPostView($S, $p);
+        });
+        out(['ok' => true, 'post' => $p]);
+    }
+    case 'cardorig': {   /* "Put the original card back" (2026-11-19): the picture the card was loaded with, a picture change like any other */
+        $p = pcMutate(function (array &$S) use ($id, $body, $ME) {
+            $p = needPost($S, $id); editable($p); $c = $p['card'] ?? null;
+            if (!is_array($c) || empty($c['orig']['file']) || $p['type'] !== 'single') fail('This post has no original card to put back.', 409);
+            if (!is_file(PC_MEDIA_DIR . '/' . $c['orig']['file'])) fail('The original card\'s file is gone.', 409);
+            $old = $p['images'][0] ?? null; if ($old && ($old['file'] ?? '') === $c['orig']['file']) fail('The original card is already the picture.', 409);
+            $before = pcFingerprint($p); $oldBg = (string) ($c['bg']['file'] ?? '');
+            $p['images'] = [['caption' => ''] + $c['orig']]; $p['card']['bg'] = null; $p['card']['pos'] = null; $p['card']['made'] = null;
+            pcLog($p, $ME, 'Original card put back');
+            afterChange($p, $before, $ME, $body['answer'] ?? null);
+            $S['posts'][$id] = $p;
+            if ($old) pcDropUnused($S, $p, $old);
+            if ($oldBg !== '') pcDropMediaIfUnused($S, $oldBg);
+            return pcPostView($S, $p);
+        });
+        out(['ok' => true, 'post' => $p]);
+    }
+    case 'cardset': {   /* the laptop (editor) or Matthew gives a designed card its recipe: multipart id, recipe (JSON), overlay (PNG), [orig=keep], [expect_md5 / expect_bytes] */
+        if ($SCOPE !== null || !in_array($ROLE, ['admin', 'editor'], true)) fail('Only the editor or Matthew sets up a card.', 403);
+        $rec = pcCardRecipe($body['recipe'] ?? ''); if (!$rec) fail('That card recipe does not look right.');
+        $f = $_FILES['overlay'] ?? null; if (!$f || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) fail('The card\'s text layer did not arrive.');
+        $info = @getimagesize((string) $f['tmp_name']);
+        if (($info[2] ?? 0) !== IMAGETYPE_PNG || (int) $info[0] !== $rec['w'] || (int) $info[1] !== $rec['h']) fail('The text layer must be a PNG the size of the card.');
+        $S0 = pcState(); $p0 = needPost($S0, $id); editable($p0);
+        $ov = pcStoreImage((string) $f['tmp_name'], 'card-layer.png'); if (isset($ov['error'])) fail($ov['error']);
+        $p = pcMutate(function (array &$S) use ($id, $body, $ME, $rec, $ov) {
+            $p = needPost($S, $id); editable($p); $im = $p['images'][0] ?? null;
+            if ($p['type'] !== 'single' || !$im || pcIsVideo($im)) fail('A card recipe goes on a post with one picture.', 409);
+            $em = (string) ($body['expect_md5'] ?? ''); $eb = (int) ($body['expect_bytes'] ?? 0);
+            if (($em !== '' && !empty($im['md5']) && $im['md5'] !== $em) || ($em !== '' && empty($im['md5']) && $eb && (int) ($im['bytes'] ?? 0) !== $eb)) fail('This post\'s picture is not the card the recipe was made from.', 409);
+            $old = is_array($p['card'] ?? null) ? $p['card'] : null; $keep = $old && !empty($old['orig']['file']) && ($body['orig'] ?? '') === 'keep';
+            $rec['overlay'] = ['file' => $ov['file'], 'url' => $ov['url'], 'md5' => $ov['md5']];
+            $rec['orig'] = $keep ? $old['orig'] : $im; $rec['bg'] = $keep ? ($old['bg'] ?? null) : null; $rec['pos'] = $keep ? ($old['pos'] ?? null) : null; $rec['made'] = $keep ? ($old['made'] ?? null) : null;
+            $rec['set'] = ['by' => $ME, 'at' => pcNow()];
+            $p['card'] = $rec; pcLog($p, $ME, 'Card set up for Change photo (' . $rec['tpl'] . ')');
+            $S['posts'][$id] = $p;
+            if ($old) foreach (['overlay', 'orig', 'bg'] as $k) if (!empty($old[$k]['file'])) pcDropMediaIfUnused($S, (string) $old[$k]['file']);
             return pcPostView($S, $p);
         });
         out(['ok' => true, 'post' => $p]);
@@ -198,11 +264,24 @@ switch ($action) {
     }
     case 'request': {   /* "Request changes": what to change in the picture or the words; the post cannot be approved until it is answered */
         needApprover(); $text = pcText($body['text'] ?? '', 2000); if ($text === '') fail('Say what should change.');
-        $p = pcMutate(function (array &$S) use ($id, $text, $ME) {
+        /* + 1-3 photos (2026-11-19), multipart photos[]: kept privately, for whoever answers the request (e.g. a new card background) */
+        $photos = []; $fl = $_FILES['photos'] ?? null;
+        if ($multipart && $fl) {
+            $n = is_array($fl['name']) ? count($fl['name']) : 1; if ($n > PC_REQ_PHOTOS) fail('Attach at most ' . PC_REQ_PHOTOS . ' photos.');
+            $S0 = pcState(); $p0 = needPost($S0, $id); if (in_array($p0['status'], ['publishing', 'published'], true)) fail('This post has gone out already.', 409);
+            for ($i = 0; $i < $n; $i++) {
+                $e = is_array($fl['error']) ? $fl['error'][$i] : $fl['error'];
+                if ($e !== UPLOAD_ERR_OK) { foreach ($photos as $x) @unlink(pcDir('reqphotos') . '/' . $x['file']); fail('A photo did not arrive. Try again.'); }
+                $ph = pcStoreReqPhoto((string) (is_array($fl['tmp_name']) ? $fl['tmp_name'][$i] : $fl['tmp_name']), (string) (is_array($fl['name']) ? $fl['name'][$i] : $fl['name']));
+                if (isset($ph['error'])) { foreach ($photos as $x) @unlink(pcDir('reqphotos') . '/' . $x['file']); fail($ph['error']); }
+                $photos[] = $ph;
+            }
+        }
+        $p = pcMutate(function (array &$S) use ($id, $text, $ME, $photos) {
             $p = needPost($S, $id); if (in_array($p['status'], ['publishing', 'published'], true)) fail('This post has gone out already.', 409);
-            $p['requests'][] = ['id' => pcId('r'), 'text' => $text, 'by' => $ME, 'at' => pcNow(), 'answered' => null];
+            $p['requests'][] = ['id' => pcId('r'), 'text' => $text, 'by' => $ME, 'at' => pcNow(), 'answered' => null] + ($photos ? ['photos' => $photos] : []);
             if ($p['status'] === 'approved') pcLog($p, $ME, 'Approval dropped: changes requested');
-            $p['status'] = 'changes'; $p['approval'] = null; pcLog($p, $ME, 'Changes requested: ' . mb_substr($text, 0, 140));
+            $p['status'] = 'changes'; $p['approval'] = null; pcLog($p, $ME, 'Changes requested: ' . mb_substr($text, 0, 140) . ($photos ? ' (+' . count($photos) . ' photo' . (count($photos) > 1 ? 's' : '') . ')' : ''));
             $S['posts'][$id] = $p; return pcPostView($S, $p);
         });
         out(['ok' => true, 'post' => $p]);

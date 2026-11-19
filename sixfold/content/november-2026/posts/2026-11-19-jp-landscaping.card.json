@@ -1,0 +1,22 @@
+{
+  "tpl": "sixfold-photo",
+  "box": [
+    0,
+    0,
+    1080,
+    900
+  ],
+  "dim": 0,
+  "title": "Landscaping: Landscaping, on its own.",
+  "src": "sixfold/content/november-2026/build-november.mjs 2026-11-19-jp-landscaping",
+  "w": 1080,
+  "h": 1350,
+  "base": "#2F5D2C",
+  "tint": [
+    20,
+    40,
+    19
+  ],
+  "overlay": "2026-11-19-jp-landscaping.layer.png",
+  "card": "2026-11-19-jp-landscaping.png"
+}

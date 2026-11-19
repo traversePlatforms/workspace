@@ -1,0 +1,22 @@
+{
+  "tpl": "sixfold-oct",
+  "box": [
+    0,
+    0,
+    1080,
+    1350
+  ],
+  "dim": 0,
+  "title": "On the day: What to expect when we come.",
+  "src": "sixfold/content/365-social-2026-10/job-photo-posts/build-posts.mjs post-08",
+  "w": 1080,
+  "h": 1350,
+  "base": "#111611",
+  "tint": [
+    17,
+    22,
+    17
+  ],
+  "overlay": "post-08.layer.png",
+  "card": "post-08.png"
+}

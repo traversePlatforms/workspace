@@ -1,0 +1,22 @@
+{
+  "tpl": "sixfold-oct",
+  "box": [
+    0,
+    0,
+    1080,
+    1350
+  ],
+  "dim": 0,
+  "title": "Overseeding: Seed goes straight into the holes.",
+  "src": "sixfold/content/365-social-2026-10/job-photo-posts/build-posts.mjs post-03",
+  "w": 1080,
+  "h": 1350,
+  "base": "#111611",
+  "tint": [
+    17,
+    22,
+    17
+  ],
+  "overlay": "post-03.layer.png",
+  "card": "post-03.png"
+}

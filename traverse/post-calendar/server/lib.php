@@ -476,12 +476,74 @@ function pcStoreMedia(string $tmp, string $origName = '', array $said = []): arr
     $head = (string) @file_get_contents($tmp, false, null, 0, 12);
     return in_array(substr($head, 4, 4), ['ftyp', 'wide', 'moov', 'mdat', 'free', 'skip'], true) ? pcStoreVideo($tmp, $origName, $said) : pcStoreImage($tmp, $origName);
 }
-/** a replaced picture's file goes too when nothing else uses it and the post never went anywhere (a published picture stays where Meta saw it) */
+/** a replaced picture's file goes too when nothing else uses it and the post never went anywhere (a published picture stays where Meta saw it).
+ *  Files a card recipe holds (the original card, its text layer, its background photo) stay too (2026-11-19). */
 function pcDropUnused(array $S, array $p, array $old): void {
     $f = (string) ($old['file'] ?? ''); if ($f === '' || !empty($p['done'])) return;
     foreach ($S['posts'] as $q) foreach ((array) $q['images'] as $im) if (($im['file'] ?? '') === $f) return;
+    if (isset(pcCardFiles($S)[$f])) return;
     if (preg_match('/^[0-9a-f]{24}\.(jpg|png|mp4)$/', $f)) @unlink(PC_MEDIA_DIR . '/' . $f);
 }
+
+/* ---- designed cards: "Change photo" (2026-11-19, Matthew: Jen "wanted to put her own photo as the background of today's designed post card
+   ... Is there a way we can build it so this is something she can do? it might not be the last time she wants to.")
+   A designed card (a 365 card made on the laptop by sixfold/content/<month>/build-*.mjs) can carry a recipe, kept on the post as `card`:
+     tpl      which design ("sixfold-card", "sixfold-photo", "sixfold-oct"), title (a label), src (where it was built)
+     w, h     the card's size (1080 x 1350); box [x, y, w, h]: where a photo goes; base: the colour under it
+     overlay  the card's words, badge and shapes as a see-through PNG rendered by the same Chrome and HTML as the card itself, so the page
+              only has to draw the photo, a tint over it (tint [r, g, b] at `dim`, 0..0.9) and this layer on top: the words match the card
+     orig     the picture the card was loaded with ("Put the original card back")
+     bg, pos  the photo now behind the words (a file in media/) and how it sits: x, y (0..1, 0.5 = centred), zoom (1..4), dim
+   The page draws the card in the browser (canvas) and saves it through the normal upload, so it is a picture change like any other: the
+   approval drops and it goes back to draft. The recipe is not part of the fingerprint. Only the editor and Matthew set a recipe (cardset);
+   an approver changes the photo (upload with cardbg/cardpos) and puts the original back (cardorig). */
+function pcCardFiles(array $S): array {
+    $k = [];
+    foreach ($S['posts'] as $q) { $c = $q['card'] ?? null; if (!is_array($c)) continue; foreach (['overlay', 'orig', 'bg'] as $x) if (!empty($c[$x]['file'])) $k[(string) $c[$x]['file']] = 1; }
+    return $k;
+}
+/** a media file no post picture and no card uses any more (a card's old background, an old text layer) */
+function pcDropMediaIfUnused(array $S, string $f): void {
+    if ($f === '' || isset(pcCardFiles($S)[$f])) return;
+    foreach ($S['posts'] as $q) foreach ((array) $q['images'] as $im) if (($im['file'] ?? '') === $f) return;
+    if (preg_match('/^[0-9a-f]{24}\.(jpg|png)$/', $f)) @unlink(PC_MEDIA_DIR . '/' . $f);
+}
+function pcCardPos($raw, array $card): array {
+    $r = is_array($raw) ? $raw : (json_decode((string) $raw, true) ?: []);
+    $n = fn($v, $lo, $hi, $d) => is_numeric($v) ? max($lo, min($hi, (float) $v)) : $d;
+    return ['x' => round($n($r['x'] ?? null, 0, 1, 0.5), 4), 'y' => round($n($r['y'] ?? null, 0, 1, 0.5), 4), 'zoom' => round($n($r['zoom'] ?? null, 1, 4, 1), 4), 'dim' => round($n($r['dim'] ?? null, 0, 0.9, (float) ($card['dim'] ?? 0.5)), 3)];
+}
+/** a recipe as sent by the laptop (cardset), checked field by field; null = not a recipe */
+function pcCardRecipe($raw): ?array {
+    $r = is_array($raw) ? $raw : json_decode((string) $raw, true); if (!is_array($r)) return null;
+    $tpl = (string) ($r['tpl'] ?? ''); if (!preg_match('/^[a-z0-9-]{1,40}$/', $tpl)) return null;
+    $w = (int) ($r['w'] ?? 0); $h = (int) ($r['h'] ?? 0); if ($w < 320 || $h < 320 || $w > 2160 || $h > 2700) return null;
+    $b = array_map('intval', array_values((array) ($r['box'] ?? [0, 0, $w, $h]))); if (count($b) !== 4 || $b[0] < 0 || $b[1] < 0 || $b[2] < 50 || $b[3] < 50 || $b[0] + $b[2] > $w || $b[1] + $b[3] > $h) return null;
+    $base = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($r['base'] ?? '')) ? (string) $r['base'] : '#000000';
+    $tint = array_map(fn($v) => max(0, min(255, (int) $v)), array_slice(array_values((array) ($r['tint'] ?? [0, 0, 0])), 0, 3)); if (count($tint) !== 3) $tint = [0, 0, 0];
+    $dim = max(0.0, min(0.9, (float) ($r['dim'] ?? 0.5)));
+    return ['v' => 1, 'tpl' => $tpl, 'title' => pcClean($r['title'] ?? '', 200), 'src' => pcClean($r['src'] ?? '', 200), 'w' => $w, 'h' => $h, 'box' => $b, 'base' => $base, 'tint' => $tint, 'dim' => round($dim, 3)];
+}
+/** a photo's location and other metadata dropped on the server too, when PHP has GD (the page already sends a fresh JPEG without them) */
+function pcStripMeta(string $path): void {
+    $i = @getimagesize($path); if (($i[2] ?? 0) !== IMAGETYPE_JPEG || !function_exists('imagecreatefromjpeg')) return;
+    $im = @imagecreatefromjpeg($path); if ($im) { @imagejpeg($im, $path, 90); imagedestroy($im); }
+}
+/* ---- photos attached to a change request (2026-11-19): 1-3 per request, kept privately in post-calendar-data/reqphotos/ (never in
+   public_html), shown only through api/cal.php to a sign-in that can see the post, and read by the laptop's request watcher (pc.mjs photos) */
+const PC_REQ_PHOTOS = 3;
+function pcStoreReqPhoto(string $tmp, string $origName = ''): array {
+    $sz = @filesize($tmp); if (!$sz) return ['error' => 'A photo did not arrive.'];
+    if ($sz > 12 * 1024 * 1024) return ['error' => 'A photo is over 12 MB. Save it smaller.'];
+    $info = @getimagesize($tmp); $type = $info[2] ?? 0;
+    if (!in_array($type, [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) return ['error' => 'Attach JPEG or PNG photos.'];
+    pcStripMeta($tmp); $info = @getimagesize($tmp) ?: $info;
+    $name = bin2hex(random_bytes(12)) . ($type === IMAGETYPE_PNG ? '.png' : '.jpg'); $dest = pcDir('reqphotos') . '/' . $name;
+    if (!(is_uploaded_file($tmp) ? move_uploaded_file($tmp, $dest) : copy($tmp, $dest))) return ['error' => 'Could not save the photo.'];
+    @chmod($dest, 0640);
+    return ['file' => $name, 'w' => (int) $info[0], 'h' => (int) $info[1], 'bytes' => (int) filesize($dest), 'name' => pcClean(basename($origName), 80)];
+}
+function pcReqPhotoPath(string $f): ?string { return preg_match('/^[0-9a-f]{24}\.(jpg|png)$/', $f) && is_file(pcDir('reqphotos') . '/' . $f) ? pcDir('reqphotos') . '/' . $f : null; }
 
 /* ---- what the page and the CLI may see of a post and a client (no tokens; nothing else is secret in them) ---- */
 function pcPostView(array $S, array $p): array {
@@ -497,7 +559,9 @@ function pcRequestsOpen(array $S, string $client = ''): array {
     foreach ($S['posts'] as $p) {
         if ($p['status'] === 'removed' || ($client !== '' && $p['client'] !== $client)) continue;
         $r = pcOpenRequest($p); if (!$r) continue;
-        $out[] = ['post' => $p['id'], 'client' => $p['client'], 'clientName' => $S['clients'][$p['client']]['name'] ?? $p['client'], 'request' => $r['id'], 'text' => $r['text'], 'by' => $r['by'], 'at' => $r['at'],
+        $card = is_array($p['card'] ?? null) ? ['tpl' => $p['card']['tpl'], 'title' => $p['card']['title'] ?? '', 'hasPhoto' => !empty($p['card']['bg']), 'box' => $p['card']['box']] : null;   /* + a card recipe and the request's photos (2026-11-19) */
+        $photos = array_map(fn($x) => ['file' => $x['file'], 'w' => $x['w'] ?? null, 'h' => $x['h'] ?? null, 'path' => 'api/cal.php?action=reqphoto&post=' . rawurlencode((string) $p['id']) . '&f=' . rawurlencode((string) $x['file'])], (array) ($r['photos'] ?? []));
+        $out[] = ['post' => $p['id'], 'client' => $p['client'], 'clientName' => $S['clients'][$p['client']]['name'] ?? $p['client'], 'request' => $r['id'], 'text' => $r['text'], 'photos' => $photos, 'card' => $card, 'by' => $r['by'], 'at' => $r['at'],
                   'when' => $p['at'] ? pcWall((int) $p['at']) : null, 'type' => $p['type'], 'targets' => $p['targets'], 'fb' => $p['fb'], 'ig' => $p['ig'], 'li' => $p['li'] ?? '', 'li_comment' => $p['li_comment'] ?? '', 'album' => $p['album'],
                   'images' => array_map(fn($i) => ['url' => $i['url'] ?? '', 'caption' => $i['caption'] ?? '', 'w' => $i['w'] ?? null, 'h' => $i['h'] ?? null], (array) $p['images']), 'note' => $p['note'], 'src' => $p['src']];
     }

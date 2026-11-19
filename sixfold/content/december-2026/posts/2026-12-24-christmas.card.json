@@ -1,0 +1,22 @@
+{
+  "tpl": "sixfold-card",
+  "box": [
+    0,
+    0,
+    1080,
+    1350
+  ],
+  "dim": 0.5,
+  "title": "Merry Christmas: Wishing you a warm, restful Christmas.",
+  "src": "sixfold/content/december-2026/build-december.mjs 2026-12-24-christmas",
+  "w": 1080,
+  "h": 1350,
+  "base": "#2F5D2C",
+  "tint": [
+    20,
+    40,
+    19
+  ],
+  "overlay": "2026-12-24-christmas.layer.png",
+  "card": "2026-12-24-christmas.png"
+}
