@@ -32,16 +32,21 @@
  * Edit and Remove on every person on a card, both lists, for everyone with a desk login (actions contactedit / contactdel; rows
  * contactedit / contactdel and xcontactedit / xcontactdel). A person is found by their person key (plus n when two share one). An edit keeps
  * their Don't contact mark (carried to the new key) and the company's email marks; desk-store.php explains. From the server:
- *   php desk.php contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by "Name"] */
+ *   php desk.php contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by "Name"]
+ *
+ * 2026-11-19 (Matthew: "when for example, cai books a tour ... send an email automatically to that persons email ... so they have an email
+ * notification that they can connect to their calendar"): tour confirmation emails with a calendar invite, sent through the Peak email
+ * sender, OFF until an admin turns them on in More, Settings. tour-mail.php explains (actions tourpreview, tourmail, tourmailset, tourmailtest). */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-18.3';
+const BUILD = '2026-11-19.1';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
 require __DIR__ . '/desk-store.php';
 if (!is_dir(DATA_DIR)) { if ($LOCAL) @mkdir(DATA_DIR, 0770, true); else { http_response_code(500); exit('{"ok":false,"error":"No data folder."}'); } }
 require __DIR__ . '/scan.php';
+require __DIR__ . '/tour-mail.php';   /* tour confirmation emails (2026-11-19) */
 
 function codeHash(string $c): string { return hash('sha256', 'peakdesk|' . $c); }
 function keyHash(string $c): string { return hash('sha256', 'peakdesk-service|' . $c); }
@@ -194,7 +199,7 @@ function handle(string $action, bool $isPost, array $body): array {
         'xstage' => ['stage', 'expo'], 'xnote' => ['note', 'expo'], 'xnotedel' => ['notedel', 'expo'], 'xnext' => ['next', 'expo'], 'xcontact' => ['contact', 'expo'],
         'xlead' => ['add', 'expo'], 'xdel' => ['del', 'expo'], 'xback' => ['back', 'expo']];
     $BOTH = ['touch', 'touchdel', 'stage', 'owner', 'next', 'note', 'notedel', 'contact', 'add', 'del', 'back', 'tour', 'tourdel', 'tourmove', 'tourout', 'emailed', 'emailreply', 'emailbounce',
-        'dnc', 'templates', 'contactedit', 'contactdel'];
+        'dnc', 'templates', 'contactedit', 'contactdel', 'tourmail'];
     $SPONSOR = ['site', 'scan', 'proposal', 'signed', 'sponsor', 'todo', 'tododone', 'tododel', 'packages', 'pl'];
     $legacy = isset($ALIAS[$action]);
     if ($legacy) { [$op, $w] = $ALIAS[$action]; if ($action === 'status') $body['stage'] = $body['status'] ?? ''; }
@@ -205,6 +210,21 @@ function handle(string $action, bool $isPost, array $body): array {
 
     if ($action === 'data') return dataOut($ME, $ROLE);
     /* the end-of-day email as it would go now (admins; read only, so Claude Check may look): nothing is sent */
+    /* a tour confirmation as it would go (2026-11-19): read only, nothing is sent. sample: the Settings preview, with the words being edited */
+    if ($action === 'tourpreview') {
+        if (!empty($body['sample'])) {
+            if ($ROLE !== 'admin') fail('Only an admin sees this.', 403);
+            [$R, $t] = tmSample($ME, strtolower(clean($body['email'] ?? '', 160)));
+        } else {
+            $R = recs($w)[(string) ($body['id'] ?? '')] ?? null; if (!$R || !empty($R['off'])) fail('No such lead.', 404);
+            $d = (string) ($body['date'] ?? ''); $tm = (string) ($body['time'] ?? '');
+            if (!okDay($d) || !okTime($tm)) fail('Pick the day and the time first.');
+            $t = ['date' => $d, 'time' => $tm, 'mins' => tmMins($body['mins'] ?? 30), 'who' => clean($body['who'] ?? '', 120), 'email' => strtolower(clean($body['email'] ?? '', 160)), 'by' => $ME];
+        }
+        $words = null;
+        if ($ROLE === 'admin' && is_array($body['words'] ?? null)) { $words = tmWordsIn($body['words']); $e = tmCheckWords($words); if ($e !== '') fail($e); }
+        return tmPreview($w, $R, $t, $ME, $words);
+    }
     if ($action === 'eodpreview') { if ($ROLE !== 'admin') fail('Only an admin sees this.', 403); $m = eodText(time()); return ['ok' => true, 'subject' => $m['subject'], 'text' => $m['text'], 'due' => eodDue(time()), 'conf' => eodConf()]; }
     if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);   /* read-only check account (2026-10-26): everything below saves */
     if (!$isPost) fail('POST required', 405);
@@ -220,8 +240,45 @@ function handle(string $action, bool $isPost, array $body): array {
     }
     /* my calendar link (2026-11-18); new: true makes a new one and the old link stops working */
     if ($action === 'callink') { $L = calLink($ME, !empty($body['new'])); if (!$L) fail('The link could not be made.', 500); return ['ok' => true] + $L; }
-    if (!in_array($op, $BOTH, true) && !in_array($op, $SPONSOR, true)) fail('Unknown action.', 404);
+    if (!in_array($op, $BOTH, true) && !in_array($op, $SPONSOR, true) && !in_array($action, ['tourmailset', 'tourmailtest'], true)) fail('Unknown action.', 404);
     if (in_array($op, ['emailed', 'emailreply', 'emailbounce'], true)) return service($op, $body + ['world' => $w], $ME);
+    /* tour confirmation emails (2026-11-19): the switch and the wording (admins), a test to an address an admin types, and Retry / Send now */
+    if ($action === 'tourmailset') {
+        if ($ROLE !== 'admin') fail('Only an admin changes the settings.', 403);
+        $s = jread('desk-settings.json', []); $cur = is_array($s['tourmail'] ?? null) ? $s['tourmail'] : []; $now = time();
+        if (!empty($body['reset'])) { unset($cur['words']); $cur['wby'] = $ME; $cur['wat'] = $now; }
+        elseif (is_array($body['words'] ?? null)) {
+            $wd = tmWordsIn($body['words']); $e = tmCheckWords($wd); if ($e !== '') fail($e);
+            if ($wd !== tmConf()['words']) { $cur['words'] = $wd === tmDefaults() ? null : $wd; if ($cur['words'] === null) unset($cur['words']); $cur['wby'] = $ME; $cur['wat'] = $now; }
+        }
+        if (array_key_exists('on', $body)) {
+            $on = !empty($body['on']);
+            if ($on && empty($cur['on'])) { $mb = tmMailbox(); if (!$mb['ok']) fail('It can\'t go on yet: ' . $mb['why'] . '.'); }
+            if ($on !== !empty($cur['on'])) { $cur['on'] = $on; $cur['by'] = $ME; $cur['at'] = $now; }
+        }
+        $s['tourmail'] = $cur; if (!jwrite('desk-settings.json', $s)) fail('The setting could not be saved.', 500);
+        @file_put_contents(DATA_DIR . '/tourmail-settings.log', jline(['at' => $now, 'by' => $ME, 'on' => !empty($cur['on']), 'custom' => isset($cur['words'])]), FILE_APPEND | LOCK_EX);
+        return ['ok' => true, 'tourmail' => tmOut(true)];
+    }
+    if ($action === 'tourmailtest') {
+        if ($ROLE !== 'admin') fail('Only an admin sends a test.', 403);
+        $to = strtolower(clean($body['email'] ?? '', 160)); if (!filter_var($to, FILTER_VALIDATE_EMAIL)) fail('Type the address to send the test to.');
+        $words = is_array($body['words'] ?? null) ? tmWordsIn($body['words']) : null; if ($words !== null && ($e = tmCheckWords($words)) !== '') fail($e);
+        $x = tmTest($w, $ME, $to, $words); if (empty($x['ok'])) fail('The test did not send: ' . ($x['why'] ?? 'no answer') . '.');
+        return ['ok' => true, 'to' => $to];
+    }
+    if ($op === 'tourmail') {
+        $tid = (string) ($body['tid'] ?? ''); $t = tmTourAny($w, $tid); if (!$t) fail('No such tour.', 404);
+        if (!tmConf()['on']) fail('Tour confirmation emails are off.');
+        $st = tmState($t); if (!in_array($st['s'], ['failed', 'stale', 'none'], true)) return ['ok' => true, 'mail' => ['state' => $st['s'] === 'sent' ? 'dup' : $st['s'], 'why' => $st['text'], 'to' => (string) ($t['email'] ?? '')]];
+        if (!empty($t['off']) && !isset($t['tmSent'])) fail('No invite went out for that tour, so there is nothing to cancel.');
+        return ['ok' => true, 'mail' => tmSend($w, $tid, $ME, !empty($t['off']))];
+    }
+    if (in_array($op, ['tour', 'tourmove', 'tourdel'], true)) {
+        $res = withLock(fn() => act($op, $w, $body, $ME, $legacy));
+        if (!empty($res['ok'])) $res['mail'] = tmAfter($op, $w, $op === 'tour' ? (string) $res['tid'] : (string) ($body['tid'] ?? ''), array_key_exists('mail', $body) ? !empty($body['mail']) : null, $ME);
+        return $res;
+    }
     if ($op === 'templates' && $ROLE !== 'admin') fail('Only an admin changes the templates.', 403);
     return withLock(fn() => act($op, $w, $body, $ME, $legacy));
 }
@@ -278,13 +335,14 @@ function worldOut(string $w): array {
     $live = []; $removed = [];
     foreach ($all as $R) { if (!empty($R['off'])) $removed[] = ['id' => $R['id'], 'name' => $R['name'], 'list' => $R['list'] ?? '', 'cat' => $R['cat'] ?? '', 'stage' => $R['stage'], 'at' => $R['off']['at'], 'by' => $R['off']['by']]; else $live[] = shape($w, $R); }
     $C = W($w); $st = []; foreach ($C['stages'] as $k => $v) $st[] = [$k, $v];
-    return ['stages' => $st, 'path' => $C['path'], 'reach' => $C['reach'], 'recs' => $live, 'removed' => $removed, 'tours' => toursOf($w), 'owners' => owners($w),
+    return ['stages' => $st, 'path' => $C['path'], 'reach' => $C['reach'], 'recs' => $live, 'removed' => $removed, 'tours' => array_map(fn($t) => $t + ['tms' => tmState($t)], toursOf($w)), 'tmFailed' => tmFailed($w), 'owners' => owners($w),
         'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
 }
 function dataOut(string $ME, string $ROLE): array {
     $base = ['ok' => true, 'build' => BUILD, 'me' => ['name' => $ME, 'role' => $ROLE], 'methods' => METHODS, 'outs' => OUTS, 'mouts' => MOUTS, 'today' => date('Y-m-d'),
         'nextBiz' => nextBizDay(), 'tries' => ['max' => TRIES_MAX, 'back' => TRIES_BACK_DAYS]];
     if ($ROLE === 'admin') $base['eod'] = eodConf();
+    $base['tourmail'] = tmOut($ROLE === 'admin');
     $X = worldOut('expo'); $xs = jread('expo-seed.json', []);
     $X += ['questions' => $xs['questions'] ?? [], 'venues' => $xs['venues'] ?? [], 'venueNote' => $xs['venueNote'] ?? '', 'built' => $xs['built'] ?? '', 'from' => $xs['from'] ?? ''];
     if ($ROLE === 'expo') return $base + ['expo' => $X];   /* the expo account: the Expo leads and nothing of the sponsors' */
@@ -548,8 +606,10 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
             $R = needRec($X, $w, $id); $d = (string) ($body['date'] ?? ''); $tm = (string) ($body['time'] ?? '');
             if (!okDay($d) || $d < date('Y-m-d')) fail('Pick today or a later day.');
             if (!okTime($tm)) fail('Pick a time.');
-            $tid = bin2hex(random_bytes(5));
-            $rows = [['t' => $T['tour'], 'tid' => $tid, 'id' => $id, 'lead' => $id, 'date' => $d, 'time' => $tm, 'who' => clean($body['who'] ?? '', 120), 'note' => clean($body['note'] ?? '', 400), 'by' => $ME, 'at' => $now]];
+            $tid = bin2hex(random_bytes(5)); $em = strtolower(okMail((string) ($body['email'] ?? '')));
+            /* 2026-11-19: the contact's email, the length (default 30 minutes) and whether a confirmation email was asked for */
+            $rows = [['t' => $T['tour'], 'tid' => $tid, 'id' => $id, 'lead' => $id, 'date' => $d, 'time' => $tm, 'who' => clean($body['who'] ?? '', 120), 'note' => clean($body['note'] ?? '', 400),
+                'email' => $em, 'mins' => tmMins($body['mins'] ?? 30), 'mail' => $em !== '' && !empty($body['mail']) && tmConf()['on'], 'by' => $ME, 'at' => $now]];
             $to = forwardTo($w, (string) $R['stage'], $C['tourSt']); if ($to !== '') $rows[] = rowStage($w, $id, $to, $ME, $now);
             if ($canOwn && (string) $R['owner'] === '') $rows[] = rowOwner($w, $id, $ME, $ME, $now);
             commit($w, $rows); return ['ok' => true, 'tid' => $tid];
@@ -795,7 +855,7 @@ function calFeed(string $pid, string $tok): void {
             $R = $X[(string) ($t['lead'] ?? '')] ?? null; $d = (string) ($t['date'] ?? '');
             if (!$R || !empty($R['off']) || $d < $from || $d > $to || ((string) $R['owner'] !== $name && (string) ($t['by'] ?? '') !== $name) || !okDay($d) || !okTime((string) ($t['time'] ?? ''))) continue;
             $st = new DateTime($d . ' ' . $t['time'], new DateTimeZone('America/Denver')); $st->setTimezone(new DateTimeZone('UTC'));
-            $ev(['uid' => 'tour-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']), 'when' => ['DTSTART:' . $st->format('Ymd\THis\Z'), 'DURATION:PT1H'], 'sum' => 'Peak tour' . $tag . ': ' . $R['name'],
+            $ev(['uid' => 'tour-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']), 'when' => ['DTSTART:' . $st->format('Ymd\THis\Z'), 'DURATION:PT' . (!empty($t['mins']) ? (int) $t['mins'] . 'M' : '1H')], 'sum' => 'Peak tour' . $tag . ': ' . $R['name'],
                 'loc' => 'Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920',
                 'desc' => implode("\n", array_filter([(string) ($t['who'] ?? '') !== '' ? 'Coming: ' . $t['who'] : '', (string) ($t['note'] ?? ''), 'Booked by ' . ($t['by'] ?? 'someone') . '.', !empty($t['out']) ? ($t['out'] === 'toured' ? 'They came.' : 'They did not show.') : '', 'The rest is on the desk: ' . DESK_URL]))]);
         }

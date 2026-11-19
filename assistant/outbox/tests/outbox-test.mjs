@@ -13,7 +13,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');
 const R = fs.mkdtempSync(path.join(os.tmpdir(), 'outbox-'));   // stands in for ~/www/traverseplatforms.com
 const PUB = path.join(R, 'public_html');
-const PORT = 8795;
+const PORT = 18795 + Math.floor(Math.random() * 400);   /* a free port: another tool's local server sometimes holds 8795 */
 const T = (y, mo, d, h, mi = 0) => Math.floor(Date.UTC(y, mo - 1, d, h + 7, mi) / 1000);   // Colorado time in November = UTC-7
 const NOW = T(2026, 11, 17, 15), DAY = 86400;
 let pass = 0, failN = 0;
@@ -40,7 +40,7 @@ ok(fs.existsSync(path.join(R, 'outbox-data', 'code.hash')) && !fs.readFileSync(p
 const DESKSRC = path.join(REPO, 'matthew', 'peak-pickleball-sponsorship', 'data');
 mk('peak-desk-data/seed.json', fs.readFileSync(path.join(DESKSRC, 'desk-seed.json')));
 mk('peak-desk-data/expo-seed.json', fs.readFileSync(path.join(DESKSRC, 'expo-seed.json')));
-mk('peak-desk-data/events.log', ''); mk('peak-desk-data/peak-records.json', '{"leads":[]}'); mk('peak-desk-data/scans.json', '{}');
+mk('peak-desk-data/events.log', ''); mk('peak-desk-data/desk-settings.json', JSON.stringify({ tourmail: { on: false } })); mk('peak-desk-data/peak-records.json', '{"leads":[]}'); mk('peak-desk-data/scans.json', '{}');
 mk('peak-mail-data/app.json', JSON.stringify({ client_id: '11111111-2222-3333-4444-555555555555', tenant: '66666666-7777-8888-9999-000000000000', secret: 'mock-secret-not-real' }));
 mk('peak-mail-data/code.hash', hash('OLDPEAKCODE1'));
 mk('peak-mail-data/events.log', jl([{ t: 'import', by: 'test', at: NOW - 3600 }]));
@@ -168,6 +168,15 @@ try {
   ok(!/end-of-day report has not gone out/.test(att), 'no false alarm: at 3 pm the end of day is not due');
   ok(s.attention[0].level === 'bad', 'problems listed before notes');
   ok(V.peak.ready && V.peak.lists.length === 2 && V.peak.lists.every(l => l.status === 'paused'), 'Peak summary read through the Peak sender itself');
+  /* 3b. tour confirmations from the Peak desk (2026-11-19): counted, and the ones not sent flagged with where to retry */
+  ok(V.peak.tours && V.peak.tours.on === false && V.peak.tours.d30 === 0 && !V.peak.tours.open.length && !/tour confirmation/.test(att), 'tour confirmations: off, none yet, nothing flagged');
+  fs.appendFileSync(path.join(R, 'peak-mail-data/events.log'), jl([
+    { t: 'tourmail', ref: 'tc-a1-0-r', to: 'pat@example.com', method: 'REQUEST', seq: 0, w: 'sponsor', org: 'x1', company: 'Acme', tid: 'a1', by: 'Cai', ok: true, at: NOW - 600 },
+    { t: 'tourmail', ref: 'tc-b2-0-r', to: 'sam@example.com', method: 'REQUEST', seq: 0, w: 'expo', org: 'x2', company: 'Show Co', tid: 'b2', by: 'Lance', ok: false, kind: 'server', why: 'no answer', at: NOW - 300 },
+    { t: 'tourmail', ref: 'test-1', to: 'm@example.com', method: 'REQUEST', seq: 0, w: 'sponsor', tid: 't', by: 'Matthew', ok: true, test: 1, at: NOW - 200 }]));
+  r = await api('state'); const VT = r.json.peak.tours;
+  ok(VT.today === 1 && VT.d30 === 1 && VT.tests === 1 && VT.open.length === 1 && VT.open[0].company === 'Show Co' && r.json.summary.sent.peak === 1, 'tour confirmations: 1 sent today (the test apart), 1 not sent; Peak’s sent today includes it');
+  ok(/Peak desk: 1 tour confirmation not sent\. Retry is on the tour in the Peak desk/.test(r.json.summary.attention.map(a => a.text).join('\n')) && /peak-desk-28d38d\/#sponsor\/deals\/tours/.test(VT.desk), 'the one not sent is flagged, with the desk’s Tours as the place to retry');
 
   /* 4. the bounce limit on the desk */
   fs.appendFileSync(path.join(R, 'traverse-prospects-data/events.log'), jl([1, 2].map(i => ({ t: 'bounce', id: 'p' + (5 + i), to: 'x', by: 'Bounce log', at: NOW - DAY }))));
@@ -264,7 +273,7 @@ try {
 
   /* 10. the command line, and signing out */
   const sm = spawnSync('php', [path.join(PUB, 'outbox-092b0f', 'cli.php'), 'summary'], { env }); const smo = sm.stdout.toString();
-  ok(sm.status === 0 && /^Outbox: sent today 8 \(Peak 0, Sixfold 3, Traverse 5\)/.test(smo) && !smo.includes('NOT-A-REAL'), 'cli summary line');
+  ok(sm.status === 0 && /^Outbox: sent today 9 \(Peak 1, Sixfold 3, Traverse 5\)/.test(smo) && /1 tour confirmation not sent/.test(smo) && !smo.includes('NOT-A-REAL'), 'cli summary line');
   r = await api('signout', {}); ok(r.status === 200, 'sign out');
   r = await api('state'); ok(r.status === 401, 'signed out: refused again');
 } finally {

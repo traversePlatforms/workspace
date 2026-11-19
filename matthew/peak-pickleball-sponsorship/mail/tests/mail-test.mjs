@@ -85,6 +85,7 @@ const mock = http.createServer((req, res) => {
     if (req.method === 'GET' && u.pathname === '/graph/v1.0/me') return j(200, { displayName: 'Matthew Sharpe', mail: 'M.Sharpe@PeakPickleball.us', userPrincipalName: 'm.sharpe@peakpickleball.us' });
     if (req.method === 'POST' && u.pathname === '/graph/v1.0/me/sendMail') {
       /* JSON (plain text only) or MIME (base64, Content-Type text/plain: the plain text plus the HTML part with the open image) */
+      if (/^text\/plain/.test(req.headers['content-type'] || '')) (M.raw ||= []).push(Buffer.from(b, 'base64').toString('utf8'));   /* the whole MIME, as sent (tour confirmations) */
       const m = /^text\/plain/.test(req.headers['content-type'] || '') ? fromMime(Buffer.from(b, 'base64').toString('utf8')) : JSON.parse(b);
       if (M.sendFail) { const f = M.sendFail; if (f.once) M.sendFail = null; return j(f.code, { error: { code: f.err, message: f.msg || f.err } }); }
       M.sent.push(m); res.writeHead(202); return res.end();
@@ -378,6 +379,30 @@ try {
   out = await cron(T(2026, 11, 30, 10)); s = (await api('state')).json;
   ok(M.sent.length === n0 && s.conn.status === 'reconnect' && !s.conn.connected, 'refresh refused: needs reconnect, nothing sent');
   ok((await api('start', { list: 'expo' })).status === 409, 'Start blocked while it needs reconnect');
+
+  /* 13b. tour confirmations from the Peak desk (2026-11-19): one per ref, the invite inside, failures kept for Outbox */
+  M.refreshFail = null; M.sendFail = null;
+  const php = (code, extra = {}) => new Promise(res => { const p = spawn('php', ['-r', 'require getenv("LIB"); ' + code], { env: { ...ENV, LIB: path.join(PUB, 'lib.php'), ...extra } }); let o = ''; p.stdout.on('data', d => o += d); p.stderr.on('data', d => o += d); p.on('close', () => res(o)); });
+  await php('pmW("ms.json", ["email" => "m.sharpe@peakpickleball.us", "name" => "Matthew Sharpe", "status" => "ok", "tok" => pmSeal(["r" => "RT-SECRET-9", "a" => "AT-9", "x" => time() + 3600]), "at" => time(), "refreshed" => time()]); echo "ok";');
+  const tmsg = { ref: 'tc-abc123-0-r', to: 'Pat@Example.com', name: 'Pat Example', subject: 'Confirmed: your visit to Peak Pickleball', text: 'Hi Pat,\n\nWhen: Monday', html: '<p>Hi Pat</p>', ics: 'BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nEND:VCALENDAR\r\n',
+    method: 'REQUEST', w: 'sponsor', org: 'x1', company: 'Acme', tid: 'abc123', seq: 0, by: 'Cai' };
+  const tsend = (m) => php('echo json_encode(pmTourSend(json_decode(getenv("M"), true)));', { M: JSON.stringify(m) }).then(o => { try { return JSON.parse(o); } catch { return { raw: o }; } });
+  n0 = M.sent.length;
+  let tr = await tsend(tmsg); const raw = (M.raw || []).slice(-1)[0] || '';
+  ok(tr.ok && !tr.dup && M.sent.length === n0 + 1, 'tour confirmation: sent once ' + JSON.stringify(tr));
+  ok(/^To: Pat Example <pat@example.com>\r\n/m.test(raw) && /Content-Type: multipart\/mixed/.test(raw) && /Content-Type: multipart\/alternative/.test(raw) && /Content-Type: text\/calendar; charset=UTF-8; method=REQUEST/.test(raw) && /filename="invite.ics"/.test(raw) && !/o\.php|r\.php/.test(raw), 'tour confirmation MIME: text, HTML and text/calendar (method=REQUEST), plus invite.ics; no open image or tracked links');
+  tr = await tsend(tmsg); ok(tr.ok && tr.dup && M.sent.length === n0 + 1, 'the same ref again: not sent twice');
+  M.sendFail = { code: 503, err: 'ServiceUnavailable' };
+  tr = await tsend({ ...tmsg, ref: 'tc-abc123-1-r', seq: 1 }); ok(!tr.ok && tr.kind === 'server' && /Microsoft did not answer/.test(tr.why) && M.sent.length === n0 + 1, 'Microsoft down: not sent, said plainly');
+  let ts = JSON.parse(await php('echo json_encode(pmTourStats());')); ok(ts.sent.length === 1 && ts.open.length === 1 && ts.open[0].company === 'Acme', 'stats for Outbox: 1 sent, 1 not sent');
+  M.sendFail = null; tr = await tsend({ ...tmsg, ref: 'tc-abc123-1-r', seq: 1 }); ts = JSON.parse(await php('echo json_encode(pmTourStats());'));
+  ok(tr.ok && ts.sent.length === 2 && ts.open.length === 0, 'retried: sent, nothing left open');
+  tr = await tsend({ ...tmsg, ref: 'tc-zzz-0-r', to: 'not-an-email' }); ok(!tr.ok && tr.kind === 'address' && M.sent.length === n0 + 2, 'a bad address is refused before Microsoft');
+  tr = await tsend({ ...tmsg, ref: 'test-abc', test: 1, to: 'matthew@example.com' }); ts = JSON.parse(await php('echo json_encode(pmTourStats());'));
+  ok(tr.ok && ts.tests === 1 && ts.sent.length === 2, 'a test from the desk\u2019s Settings is counted apart');
+  ok((await php('echo json_encode([pmIsCalReply(["subject" => "Accepted: Confirmed: your visit"]), pmIsCalReply(["subject" => "Tentative: x"]), pmIsCalReply(["subject" => "Re: Confirmed: your visit"])]);')).trim() === '[true,true,false]', 'a calendar\u2019s Accepted/Tentative answer is not read as a reply; a real reply is');
+  s = (await api('state')).json;
+  ok(s.activity.some(a => /^Tour confirmation sent to pat@example.com \(Acme\), from the Peak desk by Cai$/.test(a.what)) && s.activity.some(a => /^Tour confirmation NOT sent to pat@example.com/.test(a.what)), 'the page\u2019s activity lists them');
 
   /* 13. the address guard */
   ok((await api('settings', { s: { address: '[ADDRESS]' } })).status === 400, 'a placeholder address is refused');

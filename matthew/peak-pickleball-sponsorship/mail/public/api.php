@@ -70,6 +70,8 @@ function pmWhat(array $r): string {
         'disconnected' => 'Microsoft disconnected',
         'mslost' => 'The Microsoft sign-in stopped working: ' . ($r['why'] ?? ''),
         'msadmin' => 'Microsoft asked for Peak\'s admin to approve the app',
+        'tourmail' => (!empty($r['test']) ? 'Test tour confirmation' : (($r['method'] ?? '') === 'CANCEL' ? 'Tour cancellation' : 'Tour confirmation')) . (!empty($r['ok']) ? ' sent to ' : ' NOT sent to ') . $to
+            . ((string) ($r['company'] ?? '') !== '' ? ' (' . $r['company'] . ')' : '') . ', from the Peak desk by ' . ($r['by'] ?? '') . (empty($r['ok']) ? ': ' . ($r['why'] ?? '') : ''),
         'suppress' => 'Added to do-not-email: ' . $to,
         'unsuppress' => 'Taken off do-not-email: ' . $to,
         default => '',

@@ -611,7 +611,8 @@ function pmMime(array $m): string {
 }
 /** send one email from the connected mailbox: ['ok'] or ['ok' => false, 'kind' => server|address|blocked|auth, 'why'] */
 function pmSendOne(array $m): array {
-    if (isset($m['html'])) [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', null, [], base64_encode(pmMime($m)));   /* MIME: saved to Sent Items too */
+    if (isset($m['mime'])) [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', null, [], base64_encode((string) $m['mime']));   /* a whole MIME email made by the caller (tour confirmations) */
+    elseif (isset($m['html'])) [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', null, [], base64_encode(pmMime($m)));   /* MIME: saved to Sent Items too */
     else {
         $msg = ['message' => ['subject' => $m['subject'], 'body' => ['contentType' => 'Text', 'content' => $m['body']],
                 'toRecipients' => [['emailAddress' => array_filter(['address' => $m['to'], 'name' => $m['name'] ?? ''], 'strlen')]]], 'saveToSentItems' => true];
@@ -626,6 +627,70 @@ function pmSendOne(array $m): array {
     if (preg_match('/InvalidRecipients|InvalidRecipient|ErrorInvalidEmail|recipient/i', $code . ' ' . $why)) return ['ok' => false, 'kind' => 'address', 'why' => $why];
     return ['ok' => false, 'kind' => 'other', 'why' => $s . ' ' . $why];
 }
+
+/* ---------------------------------------------------------------- tour confirmations (2026-11-19) */
+/* The Peak desk (api/tour-mail.php) sends a tour confirmation through this mailbox when someone books, moves or cancels a tour with a
+   contact's email (OFF until Matthew turns it on in the desk's Settings). The desk writes the words and the calendar invite; this sends
+   them: one email per ref (tc-<tour>-<version>-<r|c>), checked under a lock against this log, so a retry never sends twice. It is outside
+   the outreach lists, the hourly rate and the sending window (it answers a booking), and carries no open image and no tracked links. Each
+   try is a 'tourmail' row in events.log; Outbox's Peak section counts them. */
+function pmTourRow(string $ref): ?array { $o = null; foreach (pmRows() as $r) if (($r['t'] ?? '') === 'tourmail' && ($r['ref'] ?? '') === $ref && !empty($r['ok'])) $o = $r; return $o; }
+/** the email as MIME: multipart/mixed { multipart/alternative { text, HTML, text/calendar; method }, the invite as invite.ics } */
+function pmTourMime(array $m): string {
+    $enc = fn(string $s) => preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s;
+    $b64 = fn(string $s) => rtrim(chunk_split(base64_encode($s), 76, "\r\n"));
+    $mx = 'pmx-' . bin2hex(random_bytes(10)); $al = 'pma-' . bin2hex(random_bytes(10)); $meth = ($m['method'] ?? '') === 'CANCEL' ? 'CANCEL' : 'REQUEST';
+    $to = (string) $m['to']; $nm = trim(str_replace(['"', '\\', "\r", "\n"], '', (string) ($m['name'] ?? ''))); if ($nm !== '') $to = $enc($nm) . ' <' . $to . '>';
+    $part = fn(string $bd, string $head, string $body) => "--$bd\r\n$head\r\nContent-Transfer-Encoding: base64\r\n\r\n" . $b64($body) . "\r\n";
+    return "To: $to\r\nSubject: " . $enc((string) $m['subject']) . "\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"$mx\"\r\n\r\n"
+        . "--$mx\r\nContent-Type: multipart/alternative; boundary=\"$al\"\r\n\r\n"
+        . $part($al, 'Content-Type: text/plain; charset=UTF-8', str_replace("\n", "\r\n", str_replace("\r", '', (string) $m['text'])))
+        . $part($al, 'Content-Type: text/html; charset=UTF-8', (string) $m['html'])
+        . $part($al, 'Content-Type: text/calendar; charset=UTF-8; method=' . $meth, (string) $m['ics'])
+        . "--$al--\r\n"
+        . $part($mx, 'Content-Type: application/ics; name="invite.ics"' . "\r\n" . 'Content-Disposition: attachment; filename="invite.ics"', (string) $m['ics'])
+        . "--$mx--\r\n";
+}
+/** send one tour confirmation now: ['ok' => true, 'dup' => bool] or ['ok' => false, 'kind' => ..., 'why' => ...]; never throws */
+function pmTourSend(array $m): array {
+    try {
+        if (!pmReady()) return ['ok' => false, 'kind' => 'setup', 'why' => 'the Peak email data folder is missing'];
+        $ref = (string) ($m['ref'] ?? ''); $to = strtolower(trim((string) ($m['to'] ?? '')));
+        if (!preg_match('/^[a-z0-9-]{4,80}$/', $ref)) return ['ok' => false, 'kind' => 'other', 'why' => 'no reference for this email'];
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'kind' => 'address', 'why' => 'that email does not look right'];
+        if (trim((string) ($m['subject'] ?? '')) === '' || trim((string) ($m['text'] ?? '')) === '' || !str_contains((string) ($m['ics'] ?? ''), 'BEGIN:VCALENDAR')) return ['ok' => false, 'kind' => 'other', 'why' => 'the email is incomplete'];
+        $lk = @fopen(pmData() . '/tour.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
+        try {
+            if (pmTourRow($ref)) return ['ok' => true, 'dup' => true];
+            $x = pmSendOne(['to' => $to, 'mime' => pmTourMime(['to' => $to] + $m)]);
+            $row = ['t' => 'tourmail', 'ref' => $ref, 'to' => $to, 'method' => ($m['method'] ?? '') === 'CANCEL' ? 'CANCEL' : 'REQUEST', 'seq' => (int) ($m['seq'] ?? 0),
+                'w' => (string) ($m['w'] ?? ''), 'org' => (string) ($m['org'] ?? ''), 'company' => pmClean($m['company'] ?? '', 100), 'tid' => (string) ($m['tid'] ?? ''), 'by' => pmClean($m['by'] ?? '', 60),
+                'subject' => pmClean($m['subject'] ?? '', 160), 'ok' => !empty($x['ok'])];
+            if (!empty($m['test'])) $row['test'] = 1;
+            if (empty($x['ok'])) { $row['kind'] = (string) ($x['kind'] ?? 'other'); $row['why'] = mb_substr((string) ($x['why'] ?? ''), 0, 200); }
+            pmLog($row);
+            if (!empty($x['ok'])) return ['ok' => true, 'dup' => false];
+            $why = match ($row['kind']) { 'auth' => 'Microsoft refused the sign-in: connect Matthew\'s Peak Outlook again in Outbox (' . $row['why'] . ')', 'blocked' => 'Microsoft is blocking this mailbox from sending (' . $row['why'] . ')',
+                'address' => 'Microsoft refused the address (' . $row['why'] . ')', 'server' => 'Microsoft did not answer just now (' . $row['why'] . '). Try again', default => $row['why'] !== '' ? $row['why'] : 'it did not send' };
+            return ['ok' => false, 'kind' => $row['kind'], 'why' => $why];
+        } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    } catch (Throwable $e) { return ['ok' => false, 'kind' => 'other', 'why' => mb_substr($e->getMessage(), 0, 160)]; }
+}
+/** for Outbox: tour confirmations sent (times), and the ones whose last try failed with no later success for that tour */
+function pmTourStats(?array $rows = null): array {
+    $sent = []; $last = []; $tests = 0;
+    foreach ($rows ?? pmRows() as $r) {
+        if (($r['t'] ?? '') !== 'tourmail') continue;
+        if (!empty($r['test'])) { if (!empty($r['ok'])) $tests++; continue; }
+        if (!empty($r['ok'])) $sent[] = (int) ($r['at'] ?? 0);
+        $k = (string) ($r['w'] ?? '') . '|' . (string) ($r['tid'] ?? ''); $last[$k] = $r;
+    }
+    $open = array_values(array_filter($last, fn($r) => empty($r['ok'])));
+    return ['sent' => $sent, 'tests' => $tests, 'open' => array_map(fn($r) => ['at' => (int) ($r['at'] ?? 0), 'company' => (string) ($r['company'] ?? ''), 'to' => (string) ($r['to'] ?? ''),
+        'method' => (string) ($r['method'] ?? ''), 'why' => (string) ($r['why'] ?? ''), 'by' => (string) ($r['by'] ?? '')], $open)];
+}
+/** a calendar answer to an invite ("Accepted: ...") is not a reply to the outreach */
+function pmIsCalReply(array $m): bool { return (bool) preg_match('/^\s*(accepted|declined|tentative(ly accepted)?|tentative)\s*:/i', (string) ($m['subject'] ?? '')); }
 
 /* ---------------------------------------------------------------- the sending window */
 function pmInWindow(array $set, int $t): bool {
@@ -748,6 +813,7 @@ function pmScan(array $S): string {
                     continue;
                 }
                 if (!isset($who[$from])) continue;
+                if (pmIsCalReply($m)) continue;   /* their calendar answering a tour invite (2026-11-19) */
                 if (pmIsAuto($m)) { pmLog(['t' => 'auto', 'to' => $from, 'l' => $who[$from]['list'], 'at' => $at]); $n['auto']++; continue; }
                 $subj = (string) preg_replace('/^((re|aw|fw|fwd)\s*:\s*)+/i', '', (string) ($m['subject'] ?? ''));
                 $stop = pmIsStop((string) ($m['bodyPreview'] ?? '')) || (bool) preg_match('/^\W*(stop|unsubscribe)\W*$/i', $subj);

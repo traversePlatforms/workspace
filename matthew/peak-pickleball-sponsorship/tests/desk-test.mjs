@@ -4,10 +4,13 @@
    node tests/desk-test.mjs            the server rules, the migration, the email link, the screens (headless Chrome)
    node tests/desk-test.mjs --page dist/index.html   the same against the minified page
    2026-11-18: plus the facelift (dark default, light mode, contrast measured on every screen) and the Sixfold tools: templates, the tries rule,
-   Priority 5, duplicate warnings, Don't contact (with the email sender's own import), the end-of-day email (off) and the calendar feed. */
+   Priority 5, duplicate warnings, Don't contact (with the email sender's own import), the end-of-day email (off) and the calendar feed.
+   2026-11-19: tour confirmation emails, sent through the Peak email sender's own code (mail/public/lib.php) to a stand-in for Microsoft on
+   127.0.0.1: nothing reaches Microsoft and nobody is emailed. */
 import { spawn, execFileSync, execFile } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync, cpSync, mkdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import http from 'node:http';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
@@ -20,7 +23,30 @@ for (const f of ['seed.json', 'expo-seed.json', 'peak-records.json', 'accounts.j
 const WEB = join(LD, 'web'); mkdirSync(WEB); cpSync(join(ROOT, 'app/api'), join(WEB, 'api'), { recursive: true });
 copyFileSync(join(ROOT, PAGE), join(WEB, 'index.html')); for (const f of ['manifest.json', 'sw.js', 'icon-192.png']) copyFileSync(join(ROOT, 'app', f), join(WEB, f)); cpSync(join(ROOT, 'app/fonts'), join(WEB, 'fonts'), { recursive: true });
 const env = { ...process.env, DESK_DATA: LD };
-process.on('exit', () => { for (const d of cdpDirs.concat([LD])) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
+/* tour confirmations (2026-11-19): the Peak email sender's code from the repo, a throwaway mail-data folder "connected" to a stand-in for
+   Microsoft that only records what it is given */
+const MAILD = mkdtempSync(join(tmpdir(), 'pmtour-')).replace(/\\/g, '/');
+writeFileSync(join(MAILD, 'app.json'), JSON.stringify({ client_id: '11111111-2222-3333-4444-555555555555', tenant: '66666666-7777-8888-9999-000000000000', secret: 'mock-secret-not-real' }));
+const GM = { sent: [], calls: 0, fail: null };
+const gmock = http.createServer((req, res) => { let bd = ''; req.on('data', (d) => (bd += d)); req.on('end', () => {
+  const u = new URL(req.url, 'http://x'), j = (c, o) => { res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
+  if (req.method === 'POST' && /\/oauth2\/v2.0\/token$/.test(u.pathname)) return j(200, { access_token: 'AT-2', refresh_token: 'RT-2', expires_in: 3600 });
+  if (!/^Bearer AT-\d+$/.test(req.headers.authorization || '')) return j(401, { error: { code: 'InvalidAuthenticationToken' } });
+  if (req.method === 'POST' && u.pathname === '/graph/v1.0/me/sendMail') { GM.calls++; if (GM.fail) return j(GM.fail.code, { error: { code: GM.fail.err, message: GM.fail.err } }); GM.sent.push(Buffer.from(bd, 'base64').toString('utf8')); res.writeHead(202); return res.end(); }
+  j(404, { error: { code: 'NotFound' } }); }); });
+await new Promise((r) => gmock.listen(0, '127.0.0.1', r));
+Object.assign(env, { DESK_PEAK_MAIL_LIB: join(ROOT, 'mail/public/lib.php'), PEAK_MAIL_DATA: MAILD, PEAK_MAIL_MOCK: 'http://127.0.0.1:' + gmock.address().port });
+const msConnect = (status = 'ok') => execFileSync('php', ['-r', 'require getenv("LIB"); pmW("ms.json", ["email" => "matthewsharpe@peakpickleball.us", "name" => "Matthew Sharpe", "status" => getenv("ST"), "tok" => pmSeal(["r" => "RT-1", "a" => "AT-1", "x" => time() + 3600]), "at" => time(), "refreshed" => time()]); echo "ok";'], { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB, ST: status } });
+msConnect();
+/* one MIME email into its parts (nested multiparts walked; base64 bodies decoded) */
+const mimeParts = (raw) => { const out = []; const walk = (txt) => { const i = txt.indexOf('\r\n\r\n'), head = txt.slice(0, i), body = txt.slice(i + 4); const ct = (head.match(/Content-Type: ([^\r\n]+)/i) || [])[1] || ''; const bm = ct.match(/boundary="([^"]+)"/);
+  if (bm) { for (const p of body.split('--' + bm[1]).slice(1, -1)) walk(p.replace(/^\r\n/, '')); } else out.push({ type: ct.split(';')[0].trim(), ct, head, body: /base64/i.test(head) ? Buffer.from(body.replace(/\s+/g, ''), 'base64').toString('utf8') : body }); };
+  walk(raw); const top = raw.slice(0, raw.indexOf('\r\n\r\n')); const h = (k) => (top.match(new RegExp('^' + k + ': (.*)$', 'mi')) || [])[1] || '';
+  const dec = (x) => x.replace(/=\?UTF-8\?B\?([^?]+)\?=/g, (_, y) => Buffer.from(y, 'base64').toString('utf8'));
+  const p = (t) => out.find((x) => x.type === t) || { body: '', ct: '', head: '' };
+  return { to: h('To'), subject: dec(h('Subject')), top: h('Content-Type'), parts: out, text: p('text/plain').body, html: p('text/html').body, cal: p('text/calendar'), att: p('application/ics') }; };
+const icsGet = (ics, k) => ((ics.replace(/\r\n /g, '').replace(/BEGIN:VTIMEZONE[\s\S]*?END:VTIMEZONE/, '').match(new RegExp('^' + k + '[:;](.*)$', 'm')) || [])[1] || '');
+process.on('exit', () => { try { gmock.close(); } catch {} for (const d of cdpDirs.concat([LD, MAILD])) try { rmSync(d, { recursive: true, force: true, maxRetries: 50, retryDelay: 200 }); } catch {} });
 const code = (f) => readFileSync(join(ROOT, 'desk-data-local', f), 'utf8').match(/(\d{6})/)[1];
 const ADMIN = code('test-admin-code.txt'), SELLER = code('test-seller-code.txt');
 const php = (args) => execFileSync('php', [join(WEB, 'api/desk.php'), ...args], { encoding: 'utf8', env });
@@ -462,6 +488,96 @@ try {
   ok(xl.ok && xf.s === 200 && /Follow up \(expo\): /.test(xf.t) && !xf.t.includes(TTn) && !/Peak tour: /.test(xf.t.replace(/Peak tour \(expo\)/g, '')), 'the expo-only account’s feed: expo leads only');
   await b('owner', { world: 'sponsor', id: LOC[11].id, owner: '' }); await b('next', { world: 'sponsor', id: LOC[11].id, date: '', what: '' });   /* put back for the screens */
 
+  console.log('Tour confirmation emails (OFF until Matthew approves the wording; a stand-in for Microsoft, nothing reaches anyone)');
+  {
+    const TA = LOC[100], TB = LOC[101], TC = LOC[102], TD = LOC[104], XT = xseed.orgs[26];
+    ok((await b('contact', { world: 'sponsor', id: TD.id, name: 'Dee Enn', email: 'dee@example.com' })).ok && (await b('dnc', { world: 'sponsor', id: TD.id, key: 'e:dee@example.com', on: true, why: 'Asked not to be contacted' })).ok, 'a contact marked Don’t contact (for below)');
+    D = await b('data'); const wk0 = (D.sponsor.week['Test Seller'] || {}).emails || 0;
+    ok(D.tourmail && D.tourmail.on === false && !('words' in D.tourmail) && (await a('data')).tourmail.words.body.includes('{address}'), 'off by default; sellers see the switch only, admins the wording too');
+    let r = await b('tour', { world: 'sponsor', id: TA.id, date: later(3), time: '10:30', who: 'Pat Jones', email: 'pat@example.com', mail: true });
+    ok(r.ok && r.mail.state === 'off' && GM.calls === 0, 'while it is off a booking with the tick sends nothing (and says so)');
+    D = await b('data'); let tA = D.sponsor.tours.find((x) => x.tid === r.tid);
+    ok(tA.email === 'pat@example.com' && tA.mins === 30 && tA.mail === false && tA.tms.s === 'none', 'the tour keeps the email and the length (30 minutes by default); no confirmation asked for while off');
+    /* the switch and the wording: admins only, the placeholders kept */
+    ok((await b('tourmailset', { on: true }))._status === 403 && (await cc('tourmailset', { on: true }))._status === 403, 'only an admin turns it on (not a seller, not Claude Check)');
+    const W0 = (await a('data')).tourmail.words;
+    ok((await a('tourmailset', { words: { ...W0, body: W0.body.replace('{date}', 'soon') } })).error === 'The confirmation email must keep {date}: it is the date of the visit.', 'the wording cannot lose {date}');
+    ok(/must keep \{address\}/.test((await a('tourmailset', { words: { ...W0, body: W0.body.replace('{address}', 'here') } })).error) && /must keep \{time\}/.test((await a('tourmailset', { words: { ...W0, cbody: W0.cbody.replace('{time}', '') } })).error), 'nor {address} or {time} (the cancellation keeps {date} and {time})');
+    ok(/has \{price\} in it/.test((await a('tourmailset', { words: { ...W0, subject: 'Your visit {price}' } })).error), 'an unknown field is refused');
+    msConnect('reconnect');
+    ok(/can.t go on yet: Matthew.s Peak Outlook needs to be connected again/.test((await a('tourmailset', { on: true })).error), 'it will not go on while Matthew\u2019s Peak Outlook is not connected');
+    msConnect();
+    ok((await a('tourmailset', { on: true })).tourmail.on === true && (await b('data')).tourmail.on && (await b('data')).tourmail.ready, 'the admin turns it on (the test does it here; live it stays off for Matthew)');
+    /* a booking with the tick: one email, multipart, with the invite */
+    r = await b('tour', { world: 'sponsor', id: TB.id, date: later(4), time: '14:30', who: 'Jamie Polson', email: 'Jamie@Example.com', mail: true });
+    ok(r.ok && r.mail.state === 'sent' && r.mail.to === 'jamie@example.com' && GM.sent.length === 1, 'booked with the tick: sent once, to the address given');
+    let m = mimeParts(GM.sent[0]); const tidB = r.tid, dB = later(4);
+    const longDay = new Date(dB + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    ok(/^Jamie Polson <jamie@example.com>$/.test(m.to) && m.subject === 'Confirmed: your visit to Peak Pickleball, ' + longDay + ' at 2:30 pm' && /multipart\/mixed/.test(m.top), 'To the person, subject "Confirmed: your visit to Peak Pickleball, ' + longDay + ' at 2:30 pm"');
+    ok(m.text.startsWith('Hi Jamie,') && m.text.includes('When: ' + longDay + ', 2:30 pm Mountain time (30 minutes)') && m.text.includes('Where: Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920') && /parking lot off Jamboree Drive/.test(m.text) && m.text.includes("You'll meet: Test Seller") && m.text.includes('(719) 377-4725') && /reply to this email/.test(m.text) && m.text.trim().endsWith('Thanks,\r\nTest Seller\r\nPeak Pickleball'), 'the words: date, time (Mountain), length, address, entrance, who they meet, Peak\u2019s phone, reply to change it, signed by the booker');
+    ok(m.html.includes('2:30 pm Mountain time') && !/<img|<a |r\.php|o\.php/i.test(m.html) && !/https?:\/\//.test(m.text), 'the HTML part is the same words: no open image, no tracked links');
+    const ics = m.cal.body;
+    ok(/method=REQUEST/i.test(m.cal.ct) && /attachment; filename="invite.ics"/.test(m.att.head) && m.att.body === ics, 'a text/calendar part (method=REQUEST) for "Add to calendar", and the same invite attached as invite.ics');
+    ok(icsGet(ics, 'METHOD') === 'REQUEST' && icsGet(ics, 'UID') === 'peak-tour-' + tidB + '@traverseplatforms.com' && icsGet(ics, 'SEQUENCE') === '0' && icsGet(ics, 'DTSTART') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T143000' && icsGet(ics, 'DTEND') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T150000', 'the invite: METHOD:REQUEST, one UID for the tour, SEQUENCE 0, 2:30 to 3:00 pm America/Denver');
+    ok(/BEGIN:VTIMEZONE\r\nTZID:America\/Denver/.test(ics) && /ORGANIZER;CN="Peak Pickleball":mailto:matthewsharpe@peakpickleball.us/.test(ics.replace(/\r\n /g, '')) && /ATTENDEE;CN="Jamie Polson";ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:jamie@example.com/.test(ics.replace(/\r\n /g, '')) && icsGet(ics, 'LOCATION') === 'Peak Pickleball\\, 1730 Briargate Blvd\\, Colorado Springs\\, CO 80920', 'with its time zone, Matthew\u2019s Peak address as organizer, the contact as attendee, the address as location');
+    D = await b('data'); let RB = find('sponsor', TB.id), tB = D.sponsor.tours.find((x) => x.tid === tidB), tch = RB.touches.find((x) => x.tc);
+    ok(tch && tch.m === 'email' && tch.out === 'sent' && tch.by === 'Test Seller (via Peak email)' && /^Emailed: tour confirmation \(/.test(tch.note) && RB.stage === 'meeting', 'on the Activity: "Emailed: tour confirmation" by "Test Seller (via Peak email)"; the stage stays Meeting / tour booked');
+    ok(((D.sponsor.week['Test Seller'] || {}).emails || 0) === wk0 && tB.tms.s === 'sent' && /^Confirmation sent to jamie@example.com/.test(tB.tms.text), 'not counted as the seller\u2019s own email; the tour says it went');
+    /* twice never sends twice */
+    r = await b('tourmail', { world: 'sponsor', tid: tidB });
+    const dupLib = execFileSync('php', ['-r', 'require getenv("LIB"); echo json_encode(pmTourSend(["ref" => getenv("REF"), "to" => "jamie@example.com", "subject" => "x", "text" => "x", "html" => "x", "ics" => "BEGIN:VCALENDAR", "method" => "REQUEST"]));'], { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB, REF: 'tc-' + tidB + '-0-r' } });
+    ok(r.ok && r.mail.state === 'dup' && JSON.parse(dupLib).dup === true && GM.calls === 1, 'a second try is refused by the desk and by the sender\u2019s own log (same booking version): still one email');
+    /* moved: the same UID, SEQUENCE 1 */
+    r = await b('tourmove', { world: 'sponsor', tid: tidB, date: later(5), time: '09:00', mail: true });
+    m = mimeParts(GM.sent[1]);
+    ok(r.mail.state === 'sent' && /^Updated: your visit to Peak Pickleball, /.test(m.subject) && /The time has changed/.test(m.text) && icsGet(m.cal.body, 'UID') === 'peak-tour-' + tidB + '@traverseplatforms.com' && icsGet(m.cal.body, 'SEQUENCE') === '1' && /T090000$/.test(icsGet(m.cal.body, 'DTSTART')), 'moving it sends the new time: "Updated:", same UID, SEQUENCE 1');
+    /* a failure shows on the tour and in the counts; Retry sends it once */
+    GM.fail = { code: 503, err: 'ServiceUnavailable' };
+    r = await b('tourmove', { world: 'sponsor', tid: tidB, date: later(6), time: '11:00', mail: true });
+    D = await b('data'); tB = D.sponsor.tours.find((x) => x.tid === tidB);
+    ok(r.ok && r.mail.state === 'failed' && /Microsoft did not answer/.test(r.mail.why) && tB.tms.s === 'failed' && /^Confirmation not sent: Microsoft did not answer/.test(tB.tms.text) && D.sponsor.tmFailed.some((x) => x.tid === tidB), 'Microsoft down: the move is saved, the tour says "Confirmation not sent: ..." and is listed for Retry');
+    const stats = JSON.parse(execFileSync('php', ['-r', 'require getenv("LIB"); echo json_encode(pmTourStats());'], { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB } }));
+    ok(stats.sent.length === 2 && stats.open.length === 1 && stats.open[0].to === 'jamie@example.com', 'the sender\u2019s log: 2 sent, 1 not sent (Outbox counts these)');
+    GM.fail = null; const c0 = GM.calls;
+    const rr = await Promise.all([b('tourmail', { world: 'sponsor', tid: tidB }), c2('tourmail', { world: 'sponsor', tid: tidB })]);
+    m = mimeParts(GM.sent[GM.sent.length - 1]);
+    ok(rr.every((x) => x.ok) && rr.filter((x) => x.mail.state === 'sent').length === 1 && GM.calls === c0 + 1 && icsGet(m.cal.body, 'SEQUENCE') === '2', 'two people press Retry at once: one email (SEQUENCE 2)');
+    D = await b('data'); ok(D.sponsor.tours.find((x) => x.tid === tidB).tms.s === 'sent' && !D.sponsor.tmFailed.length, 'after the retry: sent, nothing left to retry');
+    /* cancelled: METHOD:CANCEL */
+    r = await b('tourdel', { world: 'sponsor', tid: tidB }); m = mimeParts(GM.sent[GM.sent.length - 1]);
+    ok(r.mail.state === 'sent' && /^Cancelled: your visit/.test(m.subject) && /is cancelled/.test(m.text) && /method=CANCEL/i.test(m.cal.ct) && icsGet(m.cal.body, 'METHOD') === 'CANCEL' && icsGet(m.cal.body, 'STATUS') === 'CANCELLED' && icsGet(m.cal.body, 'SEQUENCE') === '3' && icsGet(m.cal.body, 'UID') === 'peak-tour-' + tidB + '@traverseplatforms.com', 'cancelling it sends METHOD:CANCEL with the same UID, SEQUENCE 3');
+    D = await b('data'); RB = find('sponsor', TB.id);
+    ok(RB.touches.filter((x) => x.tc).length === 4 && RB.touches.filter((x) => x.tc).map((x) => x.note.split(' (')[0]).join('|') === 'Emailed: tour confirmation|Emailed: tour moved, updated invite|Emailed: tour moved, updated invite|Emailed: tour cancellation', 'four on the Activity: confirmation, two updates, the cancellation');
+    /* not ticked, no email, Don't contact */
+    let n0 = GM.calls;
+    r = await b('tour', { world: 'sponsor', id: TC.id, date: later(3), time: '13:00', who: 'Sam', email: 'sam@example.com', mail: false });
+    const r2 = await b('tour', { world: 'sponsor', id: TC.id, date: later(4), time: '13:00', who: 'Sam', email: '', mail: true });
+    const r3 = await b('tour', { world: 'sponsor', id: TD.id, date: later(3), time: '15:00', who: 'Dee Enn', email: 'dee@example.com', mail: true });
+    D = await b('data'); const t3 = D.sponsor.tours.find((x) => x.tid === r3.tid);
+    ok(r.mail.state === 'none' && r2.mail.state === 'blocked' && r2.mail.why === 'no email was given' && GM.calls === n0, 'unticked: nothing sent; no email: nothing sent, and it says so');
+    ok(r3.mail.state === 'blocked' && /is marked Don't contact/.test(r3.mail.why) && GM.calls === n0 && t3.tms.s === 'blocked' && /^Confirmation not sent: .* is marked Don't contact/.test(t3.tms.text), 'a person marked Don\u2019t contact is never sent one, and the card says why');
+    ok((await b('tourmail', { world: 'sponsor', tid: r.tid })).mail.state === 'sent' && GM.calls === n0 + 1, 'Send the confirmation now (a tour booked without the tick)');
+    /* expo */
+    r = await b('tour', { world: 'expo', id: XT.id, date: later(6), time: '10:00', who: 'Show manager', email: 'shows@example.com', mail: true, mins: 60 });
+    m = mimeParts(GM.sent[GM.sent.length - 1]); D = await b('data');
+    ok(r.mail.state === 'sent' && /\(1 hour\)/.test(m.text) && /T110000$/.test(icsGet(m.cal.body, 'DTEND')) && find('expo', XT.id).stage === 'tour' && find('expo', XT.id).touches.some((x) => x.tc), 'expo leads too (Tour booked), with the length chosen (1 hour)');
+    /* the preview sends nothing; the test goes only to the address typed; the wording can change */
+    n0 = GM.calls;
+    const pv = await cc('tourpreview', { world: 'sponsor', id: TA.id, date: later(3), time: '10:30', who: 'Pat Jones', email: 'pat@example.com' });
+    ok(pv.ok && pv.subject.startsWith('Confirmed: your visit') && /Hi Pat,/.test(pv.text) && /METHOD:REQUEST/.test(pv.ics) && pv.can === '' && GM.calls === n0, 'Preview (Claude Check may look): the words and the invite, nothing sent');
+    ok((await b('tourpreview', { world: 'sponsor', id: TD.id, date: later(3), time: '10:30', who: 'x', email: 'dee@example.com' })).can.includes("Don't contact"), 'the preview says when it would not go');
+    ok((await b('tourmailtest', { email: 'me@example.com' }))._status === 403 && GM.calls === n0, 'a seller cannot send a test');
+    const tt = await a('tourmailtest', { email: 'matthew-test@example.com' }); m = mimeParts(GM.sent[GM.sent.length - 1]);
+    ok(tt.ok && GM.calls === n0 + 1 && /^\[Test\] Confirmed: your visit/.test(m.subject) && /matthew-test@example.com/.test(m.to) && /Sample Company|Pat/.test(m.text), 'an admin\u2019s test goes to the address typed only, marked [Test]');
+    const W1 = { ...W0, subject: 'See you at Peak: {date} at {time}' };
+    ok((await a('tourmailset', { words: W1 })).tourmail.custom && (await a('tourpreview', { world: 'sponsor', sample: 1 })).subject.startsWith('See you at Peak: ') && (await a('tourmailset', { reset: 1 })).tourmail.custom === false, 'the wording saves, the preview follows it, and the first wording comes back');
+    /* the log is the record */
+    php(['rebuild']); D = await b('data');
+    ok(D.sponsor.tours.find((x) => x.tid === r3.tid).tms.s === 'blocked' && find('sponsor', TB.id).touches.filter((x) => x.tc).length === 4 && !D.sponsor.tours.some((x) => x.tid === tidB), 'php desk.php rebuild: the same email states and touches');
+    ok(lines('tourmail-settings.log').length >= 3, 'each change of the switch or the wording is logged (tourmail-settings.log)');
+    /* leave it on for the screens; turned off at the end */
+  }
+
   console.log('Several people at once');
   D = await b('data'); const ids = NEW.filter((l) => find('sponsor', l.id).stage === 'new').slice(0, 12).map((l) => l.id);   /* companies nobody has touched yet */
   const conc = await Promise.all(ids.map((id, i) => new Promise((res) => execFile('php', [join(WEB, 'api/desk.php'), 'emailed', 'sponsor', id, `p${i}@example.com`], { env }, (e, so, se) => res(e ? 'cli err ' + (se || so || e.message).slice(0, 200) : 'ok')))).concat(
@@ -798,6 +914,30 @@ try {
   await shot('phone-card.png');
   await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
 
+  console.log('Tour confirmations on the screen');
+  {
+    const TS = LOC[103]; await world('sponsor');
+    ok(await openCo(TS.id, find('sponsor', TS.id).name), 'a card opens');
+    await clickText('.detail button', '/^Book a tour$/', 300);
+    const f = '.detail .tourf';
+    await js(`(()=>{const f=document.querySelector('${f}');const s=f.querySelectorAll('input');s[0].value='${later(5)}';s[1].value='11:00';const e=f.querySelector('[data-tm="email"]');e.value='casey@example.com';e.dispatchEvent(new Event('input'));const w=[...f.querySelectorAll('input')].find(i=>i.placeholder==='Who is coming');w.value='Casey Lee';return 1})()`); await sleep(150);
+    ok(await js(`(()=>{const f=document.querySelector('${f}');const c=f.querySelector('[data-tm="tick"]');return c.checked&&!c.disabled&&/Send a confirmation email to casey@example.com/.test(f.querySelector('.tmtick').textContent)})()`), 'the booking form: "Send a confirmation email to casey@example.com", ticked');
+    await click(`${f} [data-tm="preview"]`, 700);
+    ok(await js(`(()=>{const p=document.querySelector('${f} pre.eodpre');return !!p&&!p.hidden&&/Subject: Confirmed: your visit to Peak Pickleball/.test(p.textContent)&&/Hi Casey,/.test(p.textContent)&&/calendar invite/.test(p.textContent)})()`), 'Preview shows the email before Save');
+    await js(`document.querySelector('${f}').scrollIntoView({block:'center'})`); await sleep(250); await shot('tour-mail-form.png');
+    const n0 = GM.calls; await clickText(`${f} button`, '/^Book the tour$/', 1500);
+    ok(GM.calls === n0 + 1 && await js(`/Tour booked\\. Email sent to casey@example.com/.test(document.getElementById('toast').textContent)`), 'Book the tour: booked, and the toast says the email went');
+    ok(await js(`[...document.querySelectorAll('.detail .tmline')].some(l=>/Confirmation sent to casey@example.com/.test(l.textContent))`), 'the card shows it went');
+    await tab('deals'); await sub('tours');
+    ok(await js(`[...document.querySelectorAll('main .card .tmline')].some(l=>/Confirmation sent to casey@example.com/.test(l.textContent))`), 'and so does the tour on Tours');
+    ok((await a('tourmailset', { on: false })).tourmail.on === false, 'switched off again');
+    await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+    ok(await openCo(TS.id, find('sponsor', TS.id).name), 'the card again');
+    await clickText('.detail button', '/^Book a tour$/', 300);
+    ok(await js(`(()=>{const f=document.querySelector('${f}');const c=f.querySelector('[data-tm="tick"]');return c.disabled&&!c.checked&&/Turns on once Matthew approves the wording/.test(f.querySelector('.tmtick').textContent)})()`), 'while it is off: the tick is disabled, "Turns on once Matthew approves the wording"');
+    await js(`document.querySelector('${f}').scrollIntoView({block:'center'})`); await sleep(250); await shot('tour-mail-form-off.png');
+    await click('.detail .close', 300);
+  }
   console.log('Settings, My calendar, the look and contrast');
   await world('sponsor'); await tab('more');
   ok(await js(`!document.querySelector('.subchips [data-sub="settings"]')&&!!document.querySelector('.subchips [data-sub="cal"]')`), 'a seller sees My calendar but not Settings');
@@ -850,6 +990,11 @@ try {
   await click('[data-act="eodpreview"]', 700);
   ok(await js(`/WHO DID WHAT TODAY/.test(document.querySelector('pre.eodpre').textContent)&&/Not going now: it is off/.test(document.querySelector('pre.eodpre').textContent)`), 'Preview shows today’s email and says it is not going (it is off)');
   await shot('facelift-settings.png');
+  ok(await js(`(()=>{const c=document.querySelector('[data-set="tourmail"]');return !!c&&c.querySelector('[data-tmset="off"]').getAttribute('aria-pressed')==='true'&&/Nothing goes out while it is Off/.test(c.textContent)&&c.querySelector('[data-tmw="body"]').value.includes('{address}')})()`), 'More › Settings: Tour confirmation emails, Off, with the wording to edit');
+  await click('[data-act="tmpreview"]', 700);
+  ok(await js(`/the cancellation/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)&&/BEGIN:VCALENDAR/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)`), 'its Preview: the confirmation, the cancellation and the invite (nothing sent)');
+  await js(`document.querySelector('[data-set="tourmail"]').scrollIntoView()`); await sleep(200); await shot('tour-mail-settings.png');
+  ok((await a('data')).tourmail.on === false, 'the switch is left Off for Matthew');
   /* the expo-only account in the browser */
   await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${EXPO}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);

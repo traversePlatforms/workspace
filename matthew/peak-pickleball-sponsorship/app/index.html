@@ -304,6 +304,8 @@ button.kpi:hover{border-color:var(--c,var(--acc))}
 .tpled .th{display:flex;gap:8px;align-items:center}.tpled .th input{flex:1}
 .tpled input,.tpled textarea{width:100%;padding:8px 10px;border-radius:8px;background:var(--card)}
 .calurl{width:100%;padding:9px 11px;border-radius:9px;background:var(--bg);font-size:13px}
+.tmtick{display:grid;gap:4px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--bg)}.tmtick label{display:flex;gap:8px;align-items:flex-start;font-weight:650;font-size:13.5px}.tmtick input[type=checkbox]{width:auto;margin-top:2px}.tmtick small{color:var(--soft);font-size:12.5px}.tmtick label.off{color:var(--soft)}
+.tmline{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--soft);margin-top:3px}.tmline.bad{color:var(--warn);font-weight:650}.tmline .lnk{font-size:12.5px}
 pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.5 ui-monospace,Consolas,monospace;max-height:420px;overflow:auto;color:var(--ink)}
 /* the print pages: a proposal or a report, saved as PDF from the browser (always light, whatever the desk's look) */
 .paper{background:#fff;color:#111;max-width:820px;margin:0 auto;padding:40px 46px;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.08);font:11pt/1.45 Arial,Helvetica,sans-serif}
@@ -368,7 +370,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-18.3';
+  var BUILD = '2026-11-19.1';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -1340,7 +1342,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var tf = tourForm(r, s, 'Book the tour'); tf.hidden = true; tf.classList.add('tourf');
     var tNo = el('button', 'lnk', 'Mark it ' + STN(TOURST()) + ', no date yet'); tNo.type = 'button'; tNo.addEventListener('click', function () { save('stage', { id: r.id, stage: TOURST() }, 'Marked ' + STN(TOURST())); }); tf.appendChild(tNo);
     bt.addEventListener('click', function () { tf.hidden = !tf.hidden; });
-    W().tours.filter(function (t) { return t.lead === r.id; }).forEach(function (t) { s.appendChild(el('div', 'note', 'Tour ' + fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') + (t.out ? ' · ' + (t.out === 'toured' ? 'they came' : 'did not show') : t.date < today() ? ' · how did it go? (Tours)' : ''))); });
+    W().tours.filter(function (t) { return t.lead === r.id; }).forEach(function (t) { var n = s.appendChild(el('div', 'note', 'Tour ' + fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') + (t.out ? ' · ' + (t.out === 'toured' ? 'they came' : 'did not show') : t.date < today() ? ' · how did it go? (Tours)' : ''))); if (t.date >= today()) { var tl = tmLine(t, r); if (tl) n.appendChild(tl); } });
     if (!X) (W().proposals || []).filter(function (p) { return p.lead === r.id; }).forEach(function (p) { var b = el('button', 'lnk', 'Proposal ' + money(p.total) + ', ' + ago(p.at) + ' ›'); b.type = 'button'; b.addEventListener('click', function () { S.print = { kind: 'proposal', pid: p.pid }; draw(); window.scrollTo(0, 0); }); s.appendChild(el('div')).appendChild(b); });
     return s;
   }
@@ -1577,14 +1579,81 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (!up.length) main.appendChild(el('div', 'empty', 'No tours with a date. Open a card and use Book a tour.'));
     var g0 = '';
     up.forEach(function (t) { var n = daysTo(t.date), g = n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n <= 7 ? 'This week' : 'Later'; if (g !== g0) { g0 = g; main.appendChild(el('div', 'daygrp', g)); } main.appendChild(tourCard(t, 'up')); });
+    var TF = W().tmFailed || [];
+    if (TF.length) {
+      main.appendChild(el('h2', null, 'Confirmation emails not sent'));
+      TF.forEach(function (x) {
+        var c = el('div', 'card'); c.setAttribute('data-tmfail', x.tid); c.appendChild(el('h3', null, (x.off ? 'Cancelled: ' : '') + fmtDay(x.date) + ', ' + fmtTime(x.time) + ' · ' + x.name));
+        c.appendChild(el('small', null, x.state.text));
+        if (TMC().on) { var b = el('button', 'btn small', x.state.s === 'stale' ? 'Send the new time' : 'Retry'); b.type = 'button'; b.setAttribute('data-tm', 'retry'); b.style.marginTop = '8px'; b.addEventListener('click', function () { b.disabled = true; save('tourmail', { tid: x.tid }).then(function (j) { tmToast('', j); }); }); c.appendChild(el('div')).appendChild(b); }
+        main.appendChild(c);
+      });
+    }
     if (ask.length) { main.appendChild(el('h2', null, 'How did it go?')); ask.forEach(function (t) { main.appendChild(tourCard(t, 'ask')); }); }
     if (done.length) { main.appendChild(el('h2', null, 'Past tours')); done.forEach(function (t) { main.appendChild(tourCard(t, 'done')); }); }
   }
   var openRec = function (r) { S.tab = 'list'; S.sub[S.world + 'list'] = isX() ? 'all' : secOf(r); S.st[S.world + 'list' + S.sub[S.world + 'list']] = 'all'; S.print = null; S.sel = r.id; remember(); bar(); draw(); window.scrollTo(0, 0); };
+  /* ---- tour confirmation emails (2026-11-19): OFF until an admin turns them on in More, Settings ---- */
+  var TMC = function () { return (S.data && S.data.tourmail) || { on: false }; };
+  var tmToast = function (head, j) {
+    if (!j || !j.ok) return; var m = j.mail || {}, t = head;
+    if (m.state === 'sent') t += (t ? '. ' : '') + 'Email sent to ' + m.to;
+    else if (m.state === 'dup') t += (t ? '. ' : '') + 'That email had already gone';
+    else if (m.state === 'failed') t += (t ? '. ' : '') + 'Email not sent: ' + m.why;
+    else if (m.state === 'blocked') t += (t ? '. ' : '') + 'No email sent: ' + m.why;
+    if (t) toast(t);
+  };
+  /* the tick: "Send a confirmation email to <address>", ticked when it can go; a Preview of the words and the invite (nothing is sent) */
+  function tmTick(r, read, opt) {
+    opt = opt || {}; var box = el('div', 'tmtick'), lab = el('label'), cb = el('input'), tx = el('span'), hint = el('small'), touched = false; cb.type = 'checkbox'; cb.setAttribute('data-tm', 'tick');
+    lab.appendChild(cb); lab.appendChild(tx); box.appendChild(lab); box.appendChild(hint);
+    cb.addEventListener('change', function () { touched = true; });
+    var row = el('div', 'seg'), pv = el('button', 'lnk', 'Preview the email'), pre = el('pre', 'eodpre'); pv.type = 'button'; pv.setAttribute('data-tm', 'preview'); pre.hidden = true; row.appendChild(pv); box.appendChild(row); box.appendChild(pre);
+    pv.addEventListener('click', function () {
+      var v = read(); if (!v.date || !v.time) { toast('Pick the day and time first.'); return; }
+      api('tourpreview', { world: S.world, id: r.id, date: v.date, time: v.time, mins: v.mins, who: v.who, email: v.email }).then(function (j) {
+        if (!j.ok) { toast(j.error || 'No preview.'); return; }
+        pre.hidden = false; pre.textContent = 'To: ' + (j.to || '(no email)') + '\nFrom: ' + j.from + '\nSubject: ' + j.subject + '\n\n' + j.text + '\n\nAttached: a calendar invite (invite.ics) they can add to their calendar.'
+          + (j.can ? '\n\n(This one would not go: ' + j.can + '.)' : '') + (!j.on ? '\n\n(Tour confirmation emails are off: nothing is sent.)' : '');
+      });
+    });
+    var paint = function () {
+      var c = TMC(), em = (read().email || '').trim(), verb = opt.verb || 'Send a confirmation email';
+      if (!c.on) { cb.disabled = true; cb.checked = false; lab.className = 'off'; tx.textContent = verb + (em ? ' to ' + em : ''); hint.textContent = 'Turns on once Matthew approves the wording.'; return; }
+      if (!em) { cb.disabled = true; cb.checked = false; lab.className = 'off'; tx.textContent = verb; hint.textContent = 'No email for this booking, so no confirmation goes out.'; return; }
+      cb.disabled = false; lab.className = ''; if (!touched) cb.checked = opt.def != null ? !!opt.def : true; tx.textContent = verb + ' to ' + em;
+      hint.textContent = c.ready === false ? 'Peak email can’t send right now (' + (c.why || 'not connected') + '): it would show as not sent, with a Retry.' : 'From Matthew’s Peak Outlook, signed by the person who booked it, with a calendar invite.';
+    };
+    paint();
+    return { node: box, want: function () { return !cb.disabled && cb.checked; }, paint: paint };
+  }
+  /* where a tour's email stands, with Retry / Send now when it can go */
+  function tmLine(t, r) {
+    var st = t.tms || { s: 'none', text: '' }, c = TMC(); if (!st.text) return null;
+    var line = el('div', 'tmline' + (st.s === 'failed' || st.s === 'stale' ? ' bad' : '')); line.setAttribute('data-tms', st.s); line.appendChild(el('span', null, st.text));
+    if (c.on && t.email && ['failed', 'stale', 'none'].indexOf(st.s) >= 0) {
+      var b = el('button', 'lnk', st.s === 'failed' ? 'Retry' : st.s === 'stale' ? 'Send the new time' : 'Send the confirmation now'); b.type = 'button'; b.setAttribute('data-tm', 'retry');
+      b.addEventListener('click', function () { b.disabled = true; save('tourmail', { tid: t.tid }).then(function (j) { tmToast('', j); }); }); line.appendChild(b);
+    }
+    return line;
+  }
   function tourForm(r, into, label) {
     var f = el('div', 'form inl'); var tw = el('div', 'two'), d = el('input'), h = el('input'); d.type = 'date'; d.min = today(); h.type = 'time'; h.step = 900; d.setAttribute('aria-label', 'Tour day'); h.setAttribute('aria-label', 'Tour time'); tw.appendChild(d); tw.appendChild(h); f.appendChild(tw);
-    var who = el('input'); who.placeholder = 'Who is coming'; f.appendChild(who); var nt = el('input'); nt.placeholder = 'Note (optional)'; f.appendChild(nt);
-    var go = el('button', 'btn small', label || 'Book the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tour', { id: r.id, lead: r.id, date: d.value, time: h.value, who: who.value, note: nt.value }, 'Tour booked'); }); f.appendChild(go);
+    var ln = el('select'); ln.setAttribute('aria-label', 'How long'); (TMC().mins || [15, 30, 45, 60, 90, 120]).forEach(function (m) { var o = el('option', null, (m < 60 ? m + ' minutes' : m === 60 ? '1 hour' : m % 60 ? Math.floor(m / 60) + ' hour ' + (m % 60) + ' minutes' : (m / 60) + ' hours') + (m === 30 ? ' (usual)' : '')); o.value = m; ln.appendChild(o); }); ln.value = '30'; f.appendChild(ln);
+    /* who is coming: someone on the card with an email (not marked Don't contact), or typed in */
+    var P = (r.people || []).filter(function (p) { return p.email && !p.dnc; }).sort(function (a, b) { return (b.best ? 1 : 0) - (a.best ? 1 : 0); });
+    var who = el('input'); who.placeholder = 'Who is coming'; var em = el('input'); em.type = 'email'; em.placeholder = 'Their email (for the confirmation)'; em.setAttribute('aria-label', 'Their email'); em.setAttribute('data-tm', 'email');
+    if (P.length) {
+      var pk = el('select'); pk.setAttribute('aria-label', 'Who is coming'); P.forEach(function (p, i) { var o = el('option', null, (p.name || p.email) + (p.name ? ' · ' + p.email : '')); o.value = String(i); pk.appendChild(o); });
+      var o2 = el('option', null, 'Someone else (type below)'); o2.value = ''; pk.appendChild(o2); f.appendChild(pk);
+      var pickP = function () { var p = P[+pk.value]; if (pk.value !== '' && p) { who.value = p.name || ''; em.value = p.email; } else { who.value = ''; em.value = ''; } tick.paint(); };
+      pk.addEventListener('change', pickP);
+    }
+    f.appendChild(who); f.appendChild(em); var nt = el('input'); nt.placeholder = 'Note (optional, only on the desk)'; f.appendChild(nt);
+    var tick = tmTick(r, function () { return { date: d.value, time: h.value, mins: +ln.value, who: who.value, email: em.value }; }); f.appendChild(tick.node);
+    em.addEventListener('input', function () { tick.paint(); });
+    if (P.length) pickP();
+    var go = el('button', 'btn small', label || 'Book the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tour', { id: r.id, lead: r.id, date: d.value, time: h.value, mins: +ln.value, who: who.value, email: em.value.trim(), mail: tick.want(), note: nt.value }).then(function (j) { tmToast('Tour booked', j); }); }); f.appendChild(go);
     into.appendChild(f); return f;
   }
   function needCard(r) {
@@ -1597,7 +1666,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function tourCard(t, mode) {
     var r = rec(t.lead) || { name: 'A removed company', stage: '' }, c = el('div', 'card');
     c.appendChild(el('h3', null, fmtDay(t.date) + ', ' + fmtTime(t.time) + ' · ' + r.name));
-    c.appendChild(el('small', null, [t.who ? 'Coming: ' + t.who : '', t.note, 'booked by ' + t.by].filter(Boolean).join(' · ')));
+    c.appendChild(el('small', null, [t.who ? 'Coming: ' + t.who : '', t.email || '', t.mins ? t.mins + ' min' : '', t.note, 'booked by ' + t.by].filter(Boolean).join(' · ')));
+    if (mode === 'up') { var tl = tmLine(t, r); if (tl) c.appendChild(tl); }
     if (mode === 'done') { var pl = el('span', 'pill o-' + t.out, t.out === 'toured' ? 'Toured' : 'Did not show'); pl.style.marginLeft = '8px'; c.appendChild(pl); }
     var row = el('div', 'seg'); row.style.marginTop = '8px';
     var b = function (txt, fn) { var x = el('button', null, txt); x.type = 'button'; x.addEventListener('click', fn); row.appendChild(x); return x; };
@@ -1611,9 +1681,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       b('Add to my calendar', function () { ics(t, r); });
       var mv = b('Move', function () {
         mv.disabled = true; var f = el('div', 'form inl'); var tw = el('div', 'two'), d = el('input'), h = el('input'); d.type = 'date'; d.min = today(); d.value = t.date; h.type = 'time'; h.step = 900; h.value = t.time; tw.appendChild(d); tw.appendChild(h); f.appendChild(tw);
-        var go = el('button', 'btn small', 'Move the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tourmove', { tid: t.tid, date: d.value, time: h.value }, 'Tour moved'); }); f.appendChild(go); c.appendChild(f);
+        var mt = tmTick(r, function () { return { date: d.value, time: h.value, mins: t.mins || 30, who: t.who || '', email: t.email || '' }; }, { verb: 'Send the new time', def: !!t.mail || t.tmSent != null }); f.appendChild(mt.node);
+        var go = el('button', 'btn small', 'Move the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tourmove', { tid: t.tid, date: d.value, time: h.value, mail: mt.want() }).then(function (j) { tmToast('Tour moved', j); }); }); f.appendChild(go); c.appendChild(f);
       });
-      b('Cancel the tour', function () { if (confirm('Cancel the tour with ' + r.name + '?')) save('tourdel', { tid: t.tid }, 'Tour cancelled'); });
+      b('Cancel the tour', function () { if (confirm('Cancel the tour with ' + r.name + '?' + (TMC().on && t.tmSent != null && t.email ? ' A cancellation email goes to ' + t.email + ' and the calendar invite is withdrawn.' : ''))) save('tourdel', { tid: t.tid }).then(function (j) { tmToast('Tour cancelled', j); }); });
     }
     c.appendChild(row); return c;
   }
@@ -1797,6 +1868,33 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var pre = el('pre', 'eodpre'); pre.hidden = true;
     pv.addEventListener('click', function () { api('eodpreview').then(function (j) { if (!j.ok) { toast(j.error || 'No preview.'); return; } pre.hidden = false; pre.textContent = 'Subject: ' + j.subject + '\n\n' + j.text + '\n\n(' + (j.due ? 'Not going now: ' + j.due : 'Due now: it goes on the next hourly run') + ')'; }); });
     row.appendChild(sv); row.appendChild(pv); f.appendChild(row); f.appendChild(pre);
+    /* tour confirmation emails (2026-11-19): OFF until Matthew approves the wording and turns it on */
+    var TM = S.data.tourmail || {}, c3 = el('div', 'card info'); c3.setAttribute('data-set', 'tourmail'); g.appendChild(c3);
+    c3.appendChild(el('h3', null, 'Tour confirmation emails'));
+    c3.appendChild(el('p', 'soft', 'When someone books a tour with the contact’s email and leaves “Send a confirmation email” ticked, the contact gets this email from Matthew’s Peak Outlook (' + (TM.from || '') + '), signed by the person who booked it, with a calendar invite they can add to their calendar. Moving the tour sends the new time; cancelling it sends a cancellation. Never to anyone marked Don’t contact. Both lists. Nothing goes out while it is Off.'));
+    var ts = { on: !!TM.on }, tseg = el('div', 'seg'); [['off', 'Off'], ['on', 'On']].forEach(function (o) { var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-tmset', o[0]); b.addEventListener('click', function () { ts.on = o[0] === 'on'; tpaint(); }); tseg.appendChild(b); });
+    var tpaint = function () { [].forEach.call(tseg.children, function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-tmset') === 'on') === ts.on)); }); };
+    c3.appendChild(tseg); tpaint();
+    c3.appendChild(el('small', null, (TM.on ? 'On' + (TM.by ? ' since ' + (TM.at ? ago(TM.at) : '') + ', by ' + TM.by : '') + '.' : 'Off.' + (TM.by ? ' Last changed by ' + TM.by + (TM.at ? ', ' + ago(TM.at) : '') + '.' : '')) + (TM.ready === false ? ' Peak email can’t send right now: ' + (TM.why || 'not connected') + '.' : '')));
+    var tf = el('div', 'form'); tf.style.marginTop = '10px'; c3.appendChild(tf);
+    tf.appendChild(el('small', null, 'Fields: {' + (TM.fields || []).join('}, {') + '}. {me} is the full name of the person who booked it. The confirmation must keep {date}, {time} and {address}; the cancellation {date} and {time}. A moved tour sends the confirmation again, its subject starting “Updated:” and a line saying the time has changed.'));
+    var W0 = TM.words || {}, fld = {};
+    [['subject', 'Confirmation: subject', 1], ['body', 'Confirmation: the email', 12], ['csubject', 'Cancellation: subject', 1], ['cbody', 'Cancellation: the email', 7]].forEach(function (x) {
+      tf.appendChild(el('label', 'lab', x[1])); var e = x[2] > 1 ? el('textarea') : el('input'); if (x[2] > 1) e.rows = x[2]; e.value = W0[x[0]] || ''; e.setAttribute('data-tmw', x[0]); tf.appendChild(e); fld[x[0]] = e;
+    });
+    var wv = function () { var o = {}; Object.keys(fld).forEach(function (k) { o[k] = fld[k].value; }); return o; };
+    tf.appendChild(el('small', null, TM.custom ? 'Wording changed by ' + (TM.wby || 'someone') + (TM.wat ? ', ' + ago(TM.wat) : '') + '.' : 'The first wording, as drafted for Matthew to approve.'));
+    var tr = el('div', 'seg'), tsv = el('button', 'btn small', 'Save'), tpv = el('button', null, 'Preview (nothing is sent)'), trs = el('button', 'lnk', 'Go back to the first wording'); [tsv, tpv, trs].forEach(function (b) { b.type = 'button'; tr.appendChild(b); });
+    tsv.setAttribute('data-act', 'tmsave'); tpv.setAttribute('data-act', 'tmpreview');
+    tsv.addEventListener('click', function () { if (ts.on && !TM.on && !confirm('Turn on tour confirmation emails? From now on a booking with an email and the tick sends the email above to that person.')) return; save('tourmailset', { on: ts.on, words: wv() }, ts.on ? 'Tour confirmation emails are on' : 'Tour confirmation emails are off'); });
+    trs.addEventListener('click', function () { if (confirm('Put the first wording back?')) save('tourmailset', { reset: 1 }, 'The first wording is back'); });
+    var tpre = el('pre', 'eodpre'); tpre.hidden = true;
+    tpv.addEventListener('click', function () { api('tourpreview', { world: S.world, sample: 1, words: wv() }).then(function (j) { if (!j.ok) { toast(j.error || 'No preview.'); return; } tpre.hidden = false; tpre.textContent = 'A made-up visit (Sample Company, Pat Example).\n\nFrom: ' + j.from + '\nSubject: ' + j.subject + '\n\n' + j.text + '\n\n---- the cancellation ----\nSubject: ' + j.csubject + '\n\n' + j.ctext + '\n\n---- the calendar invite (invite.ics) ----\n' + j.ics; }); });
+    tf.appendChild(tr); tf.appendChild(tpre);
+    var trow = el('div', 'seg'), tto = el('input'), tgo = el('button', null, 'Send me a test'); tto.type = 'email'; tto.placeholder = 'Your own address, for a test'; tto.setAttribute('data-tm', 'testto'); tto.style.maxWidth = '280px'; tgo.type = 'button'; tgo.setAttribute('data-act', 'tmtest');
+    tgo.addEventListener('click', function () { var a = tto.value.trim(); if (!a) { toast('Type your own address first.'); return; } if (!confirm('Send the made-up visit, with its invite, to ' + a + ' now?')) return; tgo.disabled = true; api('tourmailtest', { world: S.world, email: a, words: wv() }).then(function (j) { tgo.disabled = false; toast(j.ok ? 'Test sent to ' + j.to : (j.error || 'Not sent.')); }); });
+    trow.appendChild(tto); trow.appendChild(tgo); tf.appendChild(trow);
+    tf.appendChild(el('small', null, 'The test goes now, even while this is Off, to the address typed here only. Open it in Gmail or Outlook to see the “Add to calendar” offer before turning this on.'));
     /* the message templates for this list */
     var T = JSON.parse(JSON.stringify(W().templates || [])), c2 = el('div', 'card info'); c2.setAttribute('data-set', 'templates'); g.appendChild(c2);
     c2.appendChild(el('h3', null, 'Message templates: ' + (isX() ? 'Expo leads' : 'Sponsors')));

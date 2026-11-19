@@ -45,7 +45,7 @@ function W(string $w): array {
         'sponsor' => ['log' => 'events.log', 'stages' => SP_STAGES, 'legacy' => SP_LEGACY, 'field' => 'status',
             'T' => ['stage' => 'status', 'note' => 'note', 'notedel' => 'notedel', 'next' => 'next', 'contact' => 'contact', 'add' => 'lead', 'del' => 'leaddel', 'back' => 'leadback',
                 'touch' => 'touch', 'touchdel' => 'touchdel', 'owner' => 'owner', 'tour' => 'tour', 'tourdel' => 'tourdel', 'tourout' => 'tourout', 'tourmove' => 'tourmove',
-                'dnc' => 'dnc', 'templates' => 'templates', 'contactedit' => 'contactedit', 'contactdel' => 'contactdel'],
+                'dnc' => 'dnc', 'templates' => 'templates', 'contactedit' => 'contactedit', 'contactdel' => 'contactdel', 'tourmail' => 'tourmail'],
             /* the order a deal moves in; Not now and Lost sit outside it */
             'path' => ['new', 'called', 'voicemail', 'emailed', 'texted', 'meeting', 'proposal', 'signed'], 'reach' => 5,
             'byMethod' => ['call' => 'called', 'voicemail' => 'voicemail', 'email' => 'emailed', 'text' => 'texted', 'inperson' => 'called', 'linkedin' => 'emailed', 'other' => 'called'],
@@ -53,7 +53,7 @@ function W(string $w): array {
         'expo' => ['log' => 'expo-events.log', 'stages' => XP_STAGES, 'legacy' => XP_LEGACY, 'field' => 'stage',
             'T' => ['stage' => 'xstage', 'note' => 'xnote', 'notedel' => 'xnotedel', 'next' => 'xnext', 'contact' => 'xcontact', 'add' => 'xlead', 'del' => 'xdel', 'back' => 'xback',
                 'touch' => 'xtouch', 'touchdel' => 'xtouchdel', 'owner' => 'xowner', 'tour' => 'xtour', 'tourdel' => 'xtourdel', 'tourout' => 'xtourout', 'tourmove' => 'xtourmove',
-                'dnc' => 'xdnc', 'templates' => 'xtemplates', 'contactedit' => 'xcontactedit', 'contactdel' => 'xcontactdel'],
+                'dnc' => 'xdnc', 'templates' => 'xtemplates', 'contactedit' => 'xcontactedit', 'contactdel' => 'xcontactdel', 'tourmail' => 'xtourmail'],
             'path' => ['new', 'contacted', 'tour', 'quote', 'booked'], 'reach' => 2,
             'byMethod' => array_fill_keys(array_keys(METHODS), 'contacted'),
             'tourSt' => 'tour', 'propSt' => 'quote', 'winSt' => 'booked', 'done' => ['booked', 'lost']],
@@ -202,8 +202,9 @@ function apply(array &$M, string $w, array $r): void {
         case 'touch': {
             if (!$has || !is_array($r['touch'] ?? null)) return; $x = $r['touch']; $k = (string) ($r['k'] ?? newKey()); $m = (string) ($x['m'] ?? 'other');
             $T = ['k' => $k, 'at' => $at, 'when' => (int) ($x['when'] ?? $at) ?: $at, 'by' => $by, 'm' => $m, 'out' => (string) ($x['out'] ?? ''), 'note' => (string) ($x['note'] ?? '')];
-            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
-            $M['recs'][$id]['touches'][] = $T; $dirty($id); $act($m, $id, $T['when'], $k); return;
+            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
+            /* a tour confirmation (tc, 2026-11-19) is on the Activity but is not counted as the booker's own email */
+            $M['recs'][$id]['touches'][] = $T; $dirty($id); if (empty($T['tc'])) $act($m, $id, $T['when'], $k); return;
         }
         case 'touchdel': {
             if (!$has) return; $k = (string) ($r['k'] ?? '');
@@ -215,9 +216,18 @@ function apply(array &$M, string $w, array $r): void {
             $M['tours'][$tid] = $r + ['world' => $w, 'off' => false, 'out' => '']; $M['tours'][$tid]['world'] = $w; $M['tdirty'][$tid] = 1;
             $act('tour', (string) ($r['lead'] ?? $id), $at); return;
         }
-        case 'tourdel': $tid = (string) ($r['tid'] ?? ''); if (isset($M['tours'][$tid])) { $M['tours'][$tid]['off'] = true; $M['tdirty'][$tid] = 1; } return;
+        /* a move or a cancel is a new version of the tour (seq): its calendar invite goes again with a higher SEQUENCE (2026-11-19) */
+        case 'tourdel': $tid = (string) ($r['tid'] ?? ''); if (isset($M['tours'][$tid])) { $M['tours'][$tid]['off'] = true; $M['tours'][$tid]['seq'] = (int) ($M['tours'][$tid]['seq'] ?? 0) + 1; $M['tdirty'][$tid] = 1; } return;
         case 'tourout': $tid = (string) ($r['tid'] ?? ''); if (isset($M['tours'][$tid])) { $M['tours'][$tid]['out'] = (string) ($r['out'] ?? ''); $M['tdirty'][$tid] = 1; } return;
-        case 'tourmove': $tid = (string) ($r['tid'] ?? ''); if (isset($M['tours'][$tid])) { $M['tours'][$tid]['date'] = (string) $r['date']; $M['tours'][$tid]['time'] = (string) $r['time']; $M['tours'][$tid]['out'] = ''; $M['tdirty'][$tid] = 1; } return;
+        case 'tourmove': $tid = (string) ($r['tid'] ?? ''); if (isset($M['tours'][$tid])) { $M['tours'][$tid]['date'] = (string) $r['date']; $M['tours'][$tid]['time'] = (string) $r['time']; $M['tours'][$tid]['out'] = ''; $M['tours'][$tid]['seq'] = (int) ($M['tours'][$tid]['seq'] ?? 0) + 1; $M['tdirty'][$tid] = 1; } return;
+        /* a tour confirmation email tried (tour-mail.php): the last result stays on the tour; tmSent = the last version whose invite went out */
+        case 'tourmail': {
+            $tid = (string) ($r['tid'] ?? ''); if (!isset($M['tours'][$tid])) return;
+            $M['tours'][$tid]['tm'] = ['ok' => !empty($r['ok']), 'seq' => (int) ($r['seq'] ?? 0), 'method' => (string) ($r['method'] ?? 'REQUEST'), 'to' => (string) ($r['to'] ?? ''),
+                'why' => (string) ($r['why'] ?? ''), 'kind' => (string) ($r['kind'] ?? ''), 'by' => $by, 'at' => $at];
+            if (!empty($r['ok']) && ($r['method'] ?? '') === 'REQUEST') $M['tours'][$tid]['tmSent'] = (int) ($r['seq'] ?? 0);
+            $M['tdirty'][$tid] = 1; return;
+        }
         /* sponsors only */
         case 'site': if (!$has) return; $M['recs'][$id]['site'] = (string) ($r['site'] ?? ''); $dirty($id); return;
         case 'signed': if (!$has || !is_array($r['signed'] ?? null)) return; $M['recs'][$id]['signed'] = $r['signed'] + ['by' => $by, 'at' => $at]; $dirty($id); return;

@@ -33,6 +33,13 @@ prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sendin
   - after each send `deskEmailed` (ref = the send's own id, `pm-...`); a reply `deskReplied`, a STOP or unsubscribe `deskReplied(stop)` (Not now, back in 90 days, unless a person owns the company: then the owner gets a follow-up today); a bounce `deskBounced`; a booking `deskBooked`. All by "Peak email".
   - A desk write that fails never stops or repeats a send. It is logged (`desk` rows) and retried at the start of each hourly run (48 tries, then shown as given up). The page and Outbox say how many are waiting.
   - **Skipped** (a setting, on by default): a company someone owns (any owner but "Peak email"), or one a person touched in the last 14 days, as well as the desk stages beyond To contact (except Emailed / Contacted set by this sender). The counts are on each list ("Skipped on the desk: owned by someone, 3"), and each company is checked again just before its email.
+- **Tour confirmations from the Peak desk (19 Nov 2026; OFF until Matthew approves the wording in the desk, More, Settings):**
+  - When someone books, moves or cancels a tour with the contact's email and the box ticked, the desk (`app/api/tour-mail.php`) writes the email and a calendar invite. The .ics has one UID per tour and a SEQUENCE per version, with METHOD:CANCEL on a cancel.
+  - `pmTourSend()` here sends it from this mailbox, once per ref. The check runs under a lock against `events.log` (rows `tourmail`).
+  - It is outside the lists, the hourly rate and the sending window. No open image, no tracked links.
+  - Outbox counts them and flags the ones not sent. Retry is on the tour in the desk.
+  - A calendar's "Accepted:" answer is not read as a reply.
+  - The wording and a sample invite are in `tour-confirmation-DRAFT.md`.
 - **Commands (server):** `php cron.php run | stats | import | check | dns`. `setapp` and `setcode` read from a pipe.
 - **Overnight check:** section 12 of `shared/tools/overnight-check.sh` prints `cron.php stats`.
 - **Test:** `node matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`. It mocks Microsoft and uses throwaway data, and
