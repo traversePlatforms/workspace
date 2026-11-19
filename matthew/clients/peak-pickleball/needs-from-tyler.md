@@ -8,6 +8,7 @@ Made 19 Nov 2026, after the meeting. Nothing on this list has been asked yet. Ma
 3. Whether the website build ($3,000) is part of it.
 
 ## 2. Email (once committed)
+Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role, not Global Administrator. Then Matthew can do items 4 and 6 himself (the shared mailbox, an alias, Send As, sending from an alias, DKIM signing). It still leaves out the GoDaddy DNS records and app approvals (item 5). Cai and the other sellers have no Peak email addresses, so replies come to Matthew until the shared mailbox exists.
 4. **Shared mailbox** "Peak Pickleball" (for example tours@ or partnerships@peakpickleball.us). It's free, with no licence. Give Matthew **Full Access** and **Send As**. Then emails show as from "Peak Pickleball" and the team sees the replies.
 5. **One more approval click** for the "Matthew outreach" app, so it can send from that shared mailbox. Matthew sends the link.
 6. **DKIM** for peakpickleball.us. In Microsoft Defender, turn on DKIM, then add the two CNAME records at the domain's DNS (GoDaddy). Who controls the GoDaddy login? On hold until there's a paid agreement.
