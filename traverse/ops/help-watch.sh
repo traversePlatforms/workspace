@@ -14,6 +14,17 @@ LOG="$ST/help-watch.log"; SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; LOCK="$ST
 KEY=$(cat /c/Users/SURGEI~1/.ssh/help-poll-key.txt 2>/dev/null); CHECK="https://traverseplatforms.com/api/help-pending.php?k=$KEY"
 MODEL="${HELP_MODEL:-sonnet}"   # Sonnet: quick and light on the plan; HELP_MODEL=opus for a heavier one
 JV_INSTALLS="${JARVIS_INSTALLS:-c-houston-lawn-test}"   # client installs with their own J.A.R.V.I.S. (18 Nov), see one_install
+# 19 Nov (Matthew: "go ahead with moving the desk chats off sixfold app completely. Jarvis for me needs to be in stand alone thing entirely"):
+# HIS desk chats are in J.A.R.V.I.S.'s own store on the Assistant's server (assistant-private/lib/desk.php), not in the Sixfold app. The 5 s
+# look asks a-e018bb82/api.php?action=jvdpending with the laptop's key (~/.ssh/jarvis-desk-key.txt, in a header file made at start, never on
+# a command line); the thread comes over SSH (assistant-private/jvdesk.php next) and the session answers with assistant/jarvis/tools/
+# jarvis-reply.sh. Same prompts, models and quick pass as before. Staff tickets (Jen, Brad), the practice copy and the Houston install are
+# unchanged: the Sixfold/Field app path below.
+JD_TOOL='$HOME/www/traverseplatforms.com/assistant-private/jvdesk.php'
+JD_URL="https://traverseplatforms.com/a-e018bb82/api.php?action=jvdpending"
+JD_HDR=""; if [ -s /c/Users/SURGEI~1/.ssh/jarvis-desk-key.txt ]; then
+  JD_HDR=$(mktemp); chmod 600 "$JD_HDR"; printf 'X-Jarvis-Key: %s\n' "$(tr -d '\r\n' < /c/Users/SURGEI~1/.ssh/jarvis-desk-key.txt)" > "$JD_HDR"
+  trap 'rm -f "$JD_HDR"' EXIT; JD_HDRW=$(cygpath -w "$JD_HDR" 2>/dev/null || echo "$JD_HDR"); fi
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
 claude_bin() { ls -d "/c/Users/Surge Inc/.vscode/extensions"/anthropic.claude-code-*-win32-*/resources/native-binary/claude.exe 2>/dev/null | sort -V | tail -1; }
 
@@ -68,10 +79,12 @@ get_audio() {
       fi
       if [ -n "$TXT" ]; then
         printf '%s' "$TXT" > "$OUT/$N.txt"
-        printf '%s' "$TXT" | $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-transcript.php $ID $N $PX" >> "$LOG" 2>&1
+        if [ "$PX" = --jarvis ]; then printf '%s' "$TXT" | $SG "php $JD_TOOL transcript $ID $N" >> "$LOG" 2>&1   # his J.A.R.V.I.S. desk (19 Nov)
+        else printf '%s' "$TXT" | $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-transcript.php $ID $N $PX" >> "$LOG" 2>&1; fi
         log "$ID: voice note $N transcribed in $(( $(date +%s) - T0 )) s"
       else
-        $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-transcript.php $ID $N --failed $PX" < /dev/null >> "$LOG" 2>&1
+        if [ "$PX" = --jarvis ]; then $SG "php $JD_TOOL transcript $ID $N --failed" < /dev/null >> "$LOG" 2>&1
+        else $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-transcript.php $ID $N --failed $PX" < /dev/null >> "$LOG" 2>&1; fi
         log "$ID: voice note $N could not be transcribed"
       fi
     fi
@@ -82,14 +95,23 @@ get_audio() {
 
 # true when a final reply (status answered or matthew) to ticket $1 was written at or after unix time $2 (a few seconds' slack for clocks)
 final_since() {
+  [ "${3:-}" = jarvis ] && { $SG "php $JD_TOOL final-since $1 $2" < /dev/null > /dev/null 2>&1; return $?; }   # his J.A.R.V.I.S. desk (19 Nov)
   local R; R=$($SG "grep '\"id\":\"$1\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | grep '\"t\":\"reply\"'" < /dev/null 2>/dev/null) || return 1
   printf '%s\n' "$R" | SINCE="$2" node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const t=+process.env.SINCE;const ok=s.split('\n').some(l=>{try{const r=JSON.parse(l);return (r.status==='answered'||r.status==='matthew')&&+r.at>=t-5}catch(e){return false}});process.exit(ok?0:1)})"
 }
 
+# one_ticket [jarvis]: the next Sixfold/Field app ticket, or (jarvis) the next thread in Matthew's own J.A.R.V.I.S. desk (19 Nov). The two
+# differ only in where the thread comes from, how the answer goes back (help-reply.sh / jarvis-reply.sh) and the prompt's first line.
 one_ticket() {
-  local T ID PROMPT RC LAST CLAUDE PICS AUD
+  local T ID PROMPT RC LAST CLAUDE PICS AUD DK="${1:-}" RPL="$REPO/traverse/ops/help-reply.sh" AX=""
+  local -x HELP_REPLY_SIXFOLD=1; [ "$DK" = jarvis ] && HELP_REPLY_SIXFOLD=0   # help-reply.sh: a Sixfold-app message is answered in the Sixfold app
   CLAUDE=$(claude_bin); [ -n "$CLAUDE" ] && [ -f "$CLAUDE" ] || { log "no claude.exe found"; return 1; }
-  T=$($SG 'php $HOME/www/traverseplatforms.com/sixfold-tools/help-next.php' < /dev/null 2>>"$LOG") || { log "server not reachable"; return 0; }
+  if [ "$DK" = jarvis ]; then
+    RPL="$REPO/assistant/jarvis/tools/jarvis-reply.sh"; AX="--jarvis"
+    T=$($SG "php $JD_TOOL next" < /dev/null 2>>"$LOG") || { log "jarvis desk: server not reachable"; return 0; }
+  else
+    T=$($SG 'php $HOME/www/traverseplatforms.com/sixfold-tools/help-next.php' < /dev/null 2>>"$LOG") || { log "server not reachable"; return 0; }
+  fi
   [ -n "$T" ] || return 0
   ID=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).id)}catch(e){}})")
   [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { log "could not read the ticket"; return 1; }
@@ -99,13 +121,20 @@ one_ticket() {
   local ONLYM MM=0; ONLYM=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const c=JSON.parse(s).conversation||[];const p=c.filter(m=>!/^(claude|j\.?a\.?r\.?v\.?i\.?s\.?)$/i.test(String(m.from||'').trim()));console.log(p.length&&p.every(m=>m.from==='Matthew Sharpe')?1:0)}catch(e){console.log(0)}})")
   [ "$BY" = "Matthew Sharpe" ] && [ "$ONLYM" = 1 ] && MM=1
   local M="$MODEL"; [ "$MM" = 1 ] && M="${HELP_MODEL_MATTHEW:-opus}"   # Matthew's own messages: app work, the heavier model (2 Nov)
-  touch "$LOCK"; log "$ID: session started ($M, from $BY)"
+  touch "$LOCK"; log "$ID: session started ($M, from $BY${DK:+, J.A.R.V.I.S. desk})"
   PICS=$(get_photos "$T" "$ID")
-  AUD=$(get_audio "$T" "$ID")
+  AUD=$(get_audio "$T" "$ID" $AX)
+  if [ "$DK" = jarvis ]; then
+    PROMPT="A new message in Matthew's J.A.R.V.I.S. desk: his own standalone J.A.R.V.I.S. app, NOT the Sixfold app (since 19 Nov his desk chats live there). Handle it now under the rules in traverse/ops/help-desk-prompt.md and traverse/ops/jarvis-matthew-prompt.md (both appended to your instructions), and reply with assistant/jarvis/tools/jarvis-reply.sh (same options as help-reply.sh: answered|working|matthew, refresh, --pdf). Never help-reply.sh for this thread.
+
+Thread (JSON from the server):
+$T"
+  else
   PROMPT="A new message in the Sixfold app's J.A.R.V.I.S. chat. Handle it now under the rules in traverse/ops/help-desk-prompt.md (also appended to your instructions), and reply with traverse/ops/help-reply.sh.
 
 Ticket (JSON from the server):
 $T"
+  fi
   [ -n "$PICS" ] && PROMPT="$PROMPT
 
 Photos sent in this conversation, copied to this laptop. Look at each one with the Read tool before you answer:
@@ -139,11 +168,11 @@ $(tail -n 150 "$LF")"
     printf '%s\n' "$Q" > "$ST/$ID.quick"
     QH=$(printf '%s\n' "$Q" | sed -n '1{s/[^A-Z]//g;p}'); QT=$(printf '%s\n' "$Q" | sed '1d')
     if [ "$QH" = ANSWER ] && [ -n "$(printf '%s' "$QT" | tr -d '[:space:]')" ]; then
-      printf '%s' "$QT" | bash "$REPO/traverse/ops/help-reply.sh" "$ID" answered >> "$LOG" 2>&1
-      if final_since "$ID" "$QS"; then log "$ID: quick pass answered in $(( $(date +%s) - QS )) s"; rm -f "$LOCK"; return 0; fi
+      printf '%s' "$QT" | bash "$RPL" "$ID" answered >> "$LOG" 2>&1
+      if final_since "$ID" "$QS" "$DK"; then log "$ID: quick pass answered in $(( $(date +%s) - QS )) s"; rm -f "$LOCK"; return 0; fi
       log "$ID: quick answer did not reach the chat: full session"   # review 11 Nov: a dropped SSH left the ticket 'working' for 90 min
     elif [ "$QH" = HANDOFF ] && [ -n "$(printf '%s' "$QT" | tr -d '[:space:]')" ]; then
-      printf '%s' "$QT" | bash "$REPO/traverse/ops/help-reply.sh" "$ID" working >> "$LOG" 2>&1
+      printf '%s' "$QT" | bash "$RPL" "$ID" working >> "$LOG" 2>&1
       log "$ID: quick pass handed off in $(( $(date +%s) - QS )) s"
       PROMPT="$PROMPT
 
@@ -156,8 +185,9 @@ $(tail -n 150 "$LF")"
   (cd "$REPO" && printf '%s' "$PROMPT" | "$CLAUDE" -p --model "$M" --permission-mode auto --append-system-prompt-file "$ST/$ID.sys.md" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
   # a final reply (answered or matthew) written since the session started; the last log line alone misread a follow-up that arrived after
   # the answer as "no reply" (review 11 Nov). The follow-up itself makes the conversation new again and is picked up next round.
-  if ! final_since "$ID" "$SS"; then
-    printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you." | bash "$REPO/traverse/ops/help-reply.sh" "$ID" matthew >> "$LOG" 2>&1
+  if ! final_since "$ID" "$SS" "$DK"; then
+    if [ "$DK" = jarvis ]; then printf "I couldn't finish this one, sir: the session on your laptop ended without a final answer (exit %s). Its notes are on the laptop in ProjectBackup/help/%s.out. Send it again, or look when you're at the computer." "$RC" "$ID" | bash "$RPL" "$ID" matthew >> "$LOG" 2>&1
+    else printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you." | bash "$RPL" "$ID" matthew >> "$LOG" 2>&1; fi
     log "$ID: no final reply from the session (exit $RC): passed to Matthew"
   else log "$ID: done (exit $RC)"; fi
   rm -f "$LOCK"
@@ -245,13 +275,13 @@ if [ "${1:-}" = "--install" ]; then [ -f "$ST/pause" ] || one_install "${2:?inst
 # When the quick HTTPS check stops answering a number (9 Nov 2026: SiteGround's bot captcha answered this laptop's address with a 202 HTML
 # page for hours, so the loop saw nothing and no ticket was picked up), the count is read over SSH instead (sixfold-tools/help-next.php
 # --peek, which only looks), every 30 seconds, until HTTPS answers a number again. Logged once each way so it is seen.
-BAD=0; VIA=https
+BAD=0; VIA=https; JBAD=0
 # 11 Nov (Matthew, the "free fix"): while HTTPS is captcha'd, ONE long SSH connection stays open and the server prints the two counts
 # every 5 s ("L|P"), instead of a fresh SSH login every 30 s. If the stream dies it is reopened; after 3 failures in a row it falls back
 # to the old fresh look every 30 s until HTTPS answers again. bash sets STREAM_PID and STREAM[0] for the coproc.
 SFAIL=0
 stream_open() {
-  coproc STREAM { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && for i in $(seq 1 720); do L=$(php help-next.php --peek | grep -c "\"waiting\""); P=$(php help-next.php --peek --practice | grep -c "\"waiting\""); H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; echo "$L|$P|$H"; sleep 5; done' < /dev/null 2>>"$LOG"; }   # + |H: the client installs (18 Nov)
+  coproc STREAM { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && for i in $(seq 1 720); do L=$(php help-next.php --peek | grep -c "\"waiting\""); P=$(php help-next.php --peek --practice | grep -c "\"waiting\""); H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; J=$(php '"$JD_TOOL"' count 2>/dev/null || echo 0); echo "$L|$P|$H|$J"; sleep 5; done' < /dev/null 2>>"$LOG"; }   # + |H: the client installs (18 Nov); + |J: his J.A.R.V.I.S. desk (19 Nov)
 }
 stream_close() { [ -n "${STREAM_PID:-}" ] && kill "$STREAM_PID" 2>/dev/null; wait "${STREAM_PID:-}" 2>/dev/null; unset STREAM_PID; }
 stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent for 20 s
@@ -261,7 +291,7 @@ stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent
   while read -r -t 0.2 -u "$fd" x; do line="$x"; done   # skip lines that piled up during a session
   printf '%s' "$line"
 }
-peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; echo "|"; H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; echo $H; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
+peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; echo "|"; H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; echo $H; echo "|"; php '"$JD_TOOL"' count 2>/dev/null || echo 0; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
 END=$(( $(date +%s) + 3480 ))
 # 19 Nov (J.A.R.V.I.S. P-8, "Laptop asleep warning"): a heartbeat to the Assistant's server every 5 minutes while this copy runs and the
 # watcher is not paused, so his J.A.R.V.I.S. page can say "Laptop asleep since 6:32 pm: desk requests will run when it wakes". Its own
@@ -276,6 +306,12 @@ while [ "$(date +%s)" -lt "$END" ]; do
     if [[ "$N" =~ ^[0-9]+$ ]]; then
       BAD=0; [ "$VIA" = ssh ] && { log "https check answers again: back to the 5 s poll"; VIA=https; stream_close; SFAIL=0; }
       if [ "$N" -gt 0 ]; then one_ticket; continue; fi
+      # his J.A.R.V.I.S. desk (19 Nov): its own 5 s look with the laptop key; if that does not answer a number, a fresh SSH count every 30 s
+      J=""; [ -n "$JD_HDR" ] && J=$(curl -s -m 8 -A "jarvis-watch/1.0" -H @"$JD_HDRW" "$JD_URL" 2>/dev/null)
+      if [[ "$J" =~ ^[0-9]+$ ]]; then [ "$JBAD" -gt 0 ] && log "jarvis desk: the https look answers again"; JBAD=0
+      else JBAD=$(( JBAD + 1 )); [ "$JBAD" = 1 ] && log "jarvis desk: the https look did not answer a number$([ -z "$JD_HDR" ] && echo ' (no key file)'): an SSH count every 30 s"
+        J=0; [ $(( JBAD % 6 )) = 1 ] && { J=$($SG "php $JD_TOOL count" < /dev/null 2>/dev/null | tr -d '\r\n'); [[ "$J" =~ ^[0-9]+$ ]] || J=0; }; fi
+      if [ "$J" -gt 0 ]; then one_ticket jarvis; continue; fi
       P=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&p=1" 2>/dev/null)
       if [[ "$P" =~ ^[0-9]+$ ]] && [ "$P" -gt 0 ]; then one_practice; continue; fi
       HIT=""; for HI in $JV_INSTALLS; do H=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&i=$HI" 2>/dev/null); if [[ "$H" =~ ^[0-9]+$ ]] && [ "$H" -gt 0 ]; then one_install "$HI"; HIT=1; break; fi; done   # client installs (18 Nov)
@@ -288,12 +324,13 @@ while [ "$(date +%s)" -lt "$END" ]; do
         if [ "$SFAIL" -lt 3 ]; then
           { [ -n "${STREAM_PID:-}" ] && kill -0 "$STREAM_PID" 2>/dev/null; } || { stream_close; [ "$SFAIL" -gt 0 ] && sleep 10; stream_open; }   # a pause before reopening after a drop (review 11 Nov)
           R=$(stream_read) || R=""
-          if [[ "$R" =~ ^[0-9]+\|[0-9]+(\|[0-9]+)?$ ]]; then SFAIL=0
+          if [[ "$R" =~ ^[0-9]+\|[0-9]+(\|[0-9]+){0,2}$ ]]; then SFAIL=0
           else SFAIL=$(( SFAIL + 1 )); R=""; stream_close; [ "$SFAIL" -ge 3 ] && log "the open SSH connection keeps dropping: back to a fresh SSH look every 30 s"; fi
         fi
         if [ -z "$R" ]; then R=$(peek_ssh); if [ "$SFAIL" -ge 3 ]; then sleep 25; else sleep 5; fi; fi   # never straight round again (cloud review 11 Nov)
-        L="${R%%|*}"; PR=$(printf '%s' "$R" | cut -d'|' -f2); HR=$(printf '%s' "$R" | cut -s -d'|' -f3)
+        L="${R%%|*}"; PR=$(printf '%s' "$R" | cut -d'|' -f2); HR=$(printf '%s' "$R" | cut -s -d'|' -f3); JR=$(printf '%s' "$R" | cut -s -d'|' -f4)
         if [[ "$L" =~ ^[0-9]+$ ]] && [ "$L" -gt 0 ]; then one_ticket; continue; fi
+        if [[ "$JR" =~ ^[0-9]+$ ]] && [ "$JR" -gt 0 ]; then one_ticket jarvis; continue; fi   # his J.A.R.V.I.S. desk (19 Nov)
         if [[ "$PR" =~ ^[0-9]+$ ]] && [ "$PR" -gt 0 ]; then one_practice; continue; fi
         if [[ "$HR" =~ ^[0-9]+$ ]] && [ "$HR" -gt 0 ]; then for HI in $JV_INSTALLS; do one_install "$HI"; done; continue; fi   # client installs (18 Nov)
         continue
