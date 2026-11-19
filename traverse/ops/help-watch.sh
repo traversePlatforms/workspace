@@ -263,6 +263,13 @@ stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent
 }
 peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; echo "|"; H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; echo $H; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
 END=$(( $(date +%s) + 3480 ))
+# 19 Nov (J.A.R.V.I.S. P-8, "Laptop asleep warning"): a heartbeat to the Assistant's server every 5 minutes while this copy runs and the
+# watcher is not paused, so his J.A.R.V.I.S. page can say "Laptop asleep since 6:32 pm: desk requests will run when it wakes". Its own
+# background loop, so a long session never stops it; it ends with this copy (a sleeping laptop sends nothing, which is the point).
+( while kill -0 $$ 2>/dev/null; do
+    [ -f "$ST/pause" ] || bash "$REPO/assistant/jarvis/tools/jarvis-status.sh" beat > /dev/null 2>&1
+    for _b in $(seq 60); do kill -0 $$ 2>/dev/null || exit 0; sleep 5; done   # gone within 5 s of this copy, so the next one starts on time
+  done ) < /dev/null > /dev/null 2>&1 &
 while [ "$(date +%s)" -lt "$END" ]; do
   if [ ! -f "$ST/pause" ]; then
     N=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK" 2>/dev/null)
