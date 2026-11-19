@@ -689,6 +689,91 @@ function pmTourStats(?array $rows = null): array {
     return ['sent' => $sent, 'tests' => $tests, 'open' => array_map(fn($r) => ['at' => (int) ($r['at'] ?? 0), 'company' => (string) ($r['company'] ?? ''), 'to' => (string) ($r['to'] ?? ''),
         'method' => (string) ($r['method'] ?? ''), 'why' => (string) ($r['why'] ?? ''), 'by' => (string) ($r['by'] ?? '')], $open)];
 }
+/* ---------------------------------------------------------------- desk emails (2026-11-19) */
+/* A seller writes an email to one prospect on the Peak desk (app/api/desk-email.php, OFF until Matthew turns "Desk emails" on in the desk's
+   Settings) and it goes from this mailbox: the desk writes the words, this sends them, once per ref (dm + 10 hex), checked under a lock
+   against this log (rows 'deskmail'). Outside the outreach lists, the hourly rate and the sending window (a person wrote it and pressed Send).
+   Plain text plus the same words as simple HTML; an open image only when the desk's admin setting asks for one (off by default); the one
+   link that is counted is the booking link, which the desk's booking page counts itself. Reply-To is the seller's own address when they set
+   one, so their replies go to them. */
+function pmDeskRow(string $ref): ?array { $o = null; foreach (pmRows() as $r) if (($r['t'] ?? '') === 'deskmail' && ($r['ref'] ?? '') === $ref && !empty($r['ok'])) $o = $r; return $o; }
+function pmDeskMime(array $m): string {
+    $enc = fn(string $s) => preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s;
+    $b64 = fn(string $s) => rtrim(chunk_split(base64_encode($s), 76, "\r\n"));
+    $al = 'pmd-' . bin2hex(random_bytes(10));
+    $to = (string) $m['to']; $nm = trim(str_replace(['"', '\\', "\r", "\n", '<', '>'], '', (string) ($m['name'] ?? ''))); if ($nm !== '') $to = $enc($nm) . ' <' . $to . '>';
+    $rt = strtolower(trim((string) ($m['replyTo'] ?? ''))); $rtName = trim(str_replace(['"', '\\', "\r", "\n", '<', '>'], '', (string) ($m['replyName'] ?? '')));
+    $head = "To: $to\r\nSubject: " . $enc((string) $m['subject']) . "\r\n";
+    if ($rt !== '' && filter_var($rt, FILTER_VALIDATE_EMAIL)) $head .= 'Reply-To: ' . ($rtName !== '' ? $enc($rtName) . ' ' : '') . '<' . $rt . ">\r\n";
+    $part = fn(string $head, string $body) => "--$al\r\n$head\r\nContent-Transfer-Encoding: base64\r\n\r\n" . $b64($body) . "\r\n";
+    return $head . "MIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"$al\"\r\n\r\n"
+        . $part('Content-Type: text/plain; charset=UTF-8', str_replace("\n", "\r\n", str_replace("\r", '', (string) $m['text'])))
+        . $part('Content-Type: text/html; charset=UTF-8', (string) $m['html'])
+        . "--$al--\r\n";
+}
+/** send one desk email now: ['ok' => true, 'dup' => bool] or ['ok' => false, 'kind' => ..., 'why' => ...]; never throws */
+function pmDeskSend(array $m): array {
+    try {
+        if (!pmReady()) return ['ok' => false, 'kind' => 'setup', 'why' => 'the Peak email data folder is missing'];
+        $ref = (string) ($m['ref'] ?? ''); $to = strtolower(trim((string) ($m['to'] ?? '')));
+        if (!preg_match('/^dm[0-9a-f]{10}$/', $ref)) return ['ok' => false, 'kind' => 'other', 'why' => 'no reference for this email'];
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'kind' => 'address', 'why' => 'that email does not look right'];
+        if (trim((string) ($m['subject'] ?? '')) === '' || trim((string) ($m['text'] ?? '')) === '') return ['ok' => false, 'kind' => 'other', 'why' => 'the email is incomplete'];
+        $S = pmState(); if (isset($S['suppressed'][$to])) return ['ok' => false, 'kind' => 'blocked', 'why' => $to . ' is on the do-not-email list (' . $S['suppressed'][$to] . ')'];
+        $lk = @fopen(pmData() . '/deskmail.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
+        try {
+            if (pmDeskRow($ref)) return ['ok' => true, 'dup' => true];
+            $x = pmSendOne(['to' => $to, 'mime' => pmDeskMime(['to' => $to] + $m)]);
+            $row = ['t' => 'deskmail', 'ref' => $ref, 'to' => $to, 'w' => (string) ($m['w'] ?? ''), 'org' => (string) ($m['org'] ?? ''), 'company' => pmClean($m['company'] ?? '', 100),
+                'by' => pmClean($m['by'] ?? '', 60), 'subject' => pmClean($m['subject'] ?? '', 160), 'ok' => !empty($x['ok'])];
+            if (empty($x['ok'])) { $row['kind'] = (string) ($x['kind'] ?? 'other'); $row['why'] = mb_substr((string) ($x['why'] ?? ''), 0, 200); }
+            pmLog($row);
+            if (!empty($x['ok'])) return ['ok' => true, 'dup' => false];
+            $why = match ($row['kind']) { 'auth' => 'Microsoft refused the sign-in: connect Matthew\'s Peak Outlook again in Outbox (' . $row['why'] . ')', 'blocked' => 'Microsoft is blocking this mailbox from sending (' . $row['why'] . ')',
+                'address' => 'Microsoft refused the address (' . $row['why'] . ')', 'server' => 'Microsoft did not answer just now (' . $row['why'] . '). Try again', default => $row['why'] !== '' ? $row['why'] : 'it did not send' };
+            return ['ok' => false, 'kind' => $row['kind'], 'why' => $why];
+        } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
+    } catch (Throwable $e) { return ['ok' => false, 'kind' => 'other', 'why' => mb_substr($e->getMessage(), 0, 160)]; }
+}
+/** for Outbox: desk emails sent (times), and the ones whose last try failed with no later success */
+function pmDeskMailStats(?array $rows = null): array {
+    $sent = []; $last = [];
+    foreach ($rows ?? pmRows() as $r) {
+        if (($r['t'] ?? '') !== 'deskmail') continue;
+        if (!empty($r['ok'])) $sent[] = (int) ($r['at'] ?? 0);
+        $last[(string) ($r['ref'] ?? '')] = $r;
+    }
+    $open = array_values(array_filter($last, fn($r) => empty($r['ok'])));
+    return ['sent' => $sent, 'open' => array_map(fn($r) => ['at' => (int) ($r['at'] ?? 0), 'company' => (string) ($r['company'] ?? ''), 'to' => (string) ($r['to'] ?? ''),
+        'by' => (string) ($r['by'] ?? ''), 'why' => (string) ($r['why'] ?? '')], $open)];
+}
+/** is an address on this sender's do-not-email list (unsubscribed, bounced, STOP, added by hand): the reason, or '' */
+function pmSuppressedWhy(string $to): string { if (!pmReady()) return ''; $S = pmState(); return (string) ($S['suppressed'][strtolower(trim($to))] ?? ''); }
+
+/* ---- {book} on the Peak desk's booking page (2026-11-19, Matthew: one shared schedule for the whole Peak desk). When the desk's booking
+   code is on this server, b.php sends the person on to the desk's own booking page (app/api/book.php, public at /peak-book/) with a link the
+   desk signs: the same hours, one booking per slot across the whole desk, the tour on the right card. The view is still counted here
+   ('bookview'), and a booking made there is logged here too ('booked'), so this sender's counts and rates stay right. ---- */
+function pmBookLib(): string {
+    static $why = null; if ($why !== null) return $why;
+    if (pmEnv('PEAK_MAIL_BOOK_LEGACY') !== '') return $why = 'the old booking page (test)';
+    $l = pmDeskLoad(); if ($l !== '') return $why = $l;
+    $f = dirname(pmDeskStore()) . '/book-lib.php'; if (!is_file($f)) return $why = 'the desk\'s booking code is not on the server';
+    try { if (!function_exists('bkOutreachUrl')) require_once $f; } catch (Throwable $e) { return $why = 'the desk\'s booking code did not load'; }
+    return $why = function_exists('bkOutreachUrl') ? '' : 'the desk\'s booking code is an older version';
+}
+/** the desk's booking page for this person on the lists ('' when the desk's code is not here: b.php's own page answers) */
+function pmBookDesk(array $p): string {
+    if (pmBookLib() !== '') return '';
+    try { return bkOutreachUrl(['w' => pmWorld($p), 'org' => (string) $p['org'], 'to' => (string) $p['to'], 'n' => (string) ($p['person'] ?? ''), 'c' => (string) ($p['company'] ?? ''), 'l' => (string) ($p['list'] ?? ''), 'r' => (string) ($p['rid'] ?? '')]); }
+    catch (Throwable $e) { return ''; }
+}
+/** can {book} be used in an email now: the desk's Booking links switch and its open times, or (no desk code) this sender's own setting */
+function pmBookReady(array $S): bool {
+    if (pmBookLib() === '') { try { return bkConf()['on'] && (bool) bkSlots(1); } catch (Throwable $e) { return false; } }
+    return !empty($S['settings']['book']['on']) && (bool) pmBookSlots($S, 1);
+}
+
 /** a calendar answer to an invite ("Accepted: ...") is not a reply to the outreach */
 function pmIsCalReply(array $m): bool { return (bool) preg_match('/^\s*(accepted|declined|tentative(ly accepted)?|tentative)\s*:/i', (string) ($m['subject'] ?? '')); }
 
@@ -729,7 +814,7 @@ function pmStartBlocks(array $S, string $list): array {
     if (!pmAddressOk((string) $S['settings']['address'])) $b[] = 'Peak\'s postal address is missing in Settings (the law wants it in every email).';
     if (pmIsDraft($S['templates'][$list])) $b[] = 'The template is still the DRAFT placeholder. Put the approved email in and save it.';
     if (!str_contains(strtolower((string) $S['templates'][$list]['body']), 'http') ) $b[] = 'The email has no web address, so clicks cannot be counted (add Peak\'s website).';
-    if (str_contains((string) $S['templates'][$list]['body'], '{book}') && (empty($S['settings']['book']['on']) || !pmBookSlots($S, 1))) $b[] = 'The email has a {book} link, but booking is off in Settings (or has no open times).';
+    if (str_contains((string) $S['templates'][$list]['body'], '{book}') && !pmBookReady($S)) $b[] = pmBookLib() === '' ? 'The email has a {book} link, but Booking links are off on the Peak desk (More, Settings), or it has no open times.' : 'The email has a {book} link, but booking is off in Settings (or has no open times).';
     if (!is_file(pmData() . '/lists.json')) $b[] = 'The list has not been brought in from the Peak desk yet.';
     elseif (!pmQueue($S, $list)) $b[] = 'Nobody is waiting on this list.';
     return $b;

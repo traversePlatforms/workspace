@@ -485,11 +485,15 @@ function obPeak(): array {
     $ds = json_decode((string) @file_get_contents(obRoot() . '/peak-desk-data/desk-settings.json'), true);
     $tours = obCount($tc['sent']) + ['on' => !empty($ds['tourmail']['on']), 'open' => $tc['open'], 'tests' => (int) $tc['tests'], 'desk' => OB_ORIGIN . '/peak-desk-28d38d/#sponsor/deals/tours'];
     if ($tc['open']) $att[] = ['bad', 'Peak desk: ' . count($tc['open']) . ' tour confirmation' . (count($tc['open']) === 1 ? '' : 's') . ' not sent. Retry is on the tour in the Peak desk (Tours).'];
+    /* desk emails (2026-11-19): written on a card and sent from the Peak desk; the ones whose last try failed (Retry is on the card) */
+    $dc = function_exists('pmDeskMailStats') ? pmDeskMailStats() : ['sent' => [], 'open' => []];
+    $dms = obCount($dc['sent']) + ['on' => !empty($ds['deskmail']['on']), 'open' => $dc['open'], 'book' => !empty($ds['book']['on'])];
+    if ($dc['open']) $att[] = ['bad', 'Peak desk: ' . count($dc['open']) . ' desk email' . (count($dc['open']) === 1 ? '' : 's') . ' not sent. Retry is on the company\'s card in the Peak desk.'];
     return ['ready' => true, 'conn' => ['connected' => (bool) $c['connected'], 'email' => (string) ($c['email'] ?? ''), 'status' => (string) ($c['status'] ?? '')], 'lists' => $items,
         'window' => pmWindowText($S['settings']), 'rate' => (int) $S['settings']['rate'], 'waiting' => $waiting, 'waitingPaused' => $waitingPaused,
         'clicks30' => obCount($click)['d30'], 'bounces30' => obCount($bounce)['d30'], 'unsubs30' => obCount($unsub)['d30'], 'replies30' => obCount($reply)['d30'],
         'fails' => obFails($fail), 'attention' => $att, 'lastRun' => (string) (array_slice(@file(pmData() . '/run.log', FILE_IGNORE_NEW_LINES) ?: [], -1)[0] ?? ''),
-        'redirect' => ['now' => obPeakRedirect(), 'old' => OB_REDIRECT_OLD, 'new' => OB_REDIRECT_NEW, 'choice' => obSettings()['peakReturn']], 'tours' => $tours] + obCount($sent) + $f;
+        'redirect' => ['now' => obPeakRedirect(), 'old' => OB_REDIRECT_OLD, 'new' => OB_REDIRECT_NEW, 'choice' => obSettings()['peakReturn']], 'tours' => $tours, 'deskmails' => $dms] + obCount($sent) + $f;
 }
 
 /* ================================================================ the whole page */
@@ -498,7 +502,7 @@ function obView(): array {
     $att = $P['attention']; foreach ([$X, $T] as $B) { $att = array_merge($att, $B['attention']); foreach ($B['items'] as $it) $att = array_merge($att, $it['attention']); }
     usort($att, fn($a, $b) => ($a[0] === 'bad' ? 0 : 1) <=> ($b[0] === 'bad' ? 0 : 1));
     $sum = fn(array $items, string $k) => array_sum(array_map(fn($i) => (int) ($i[$k] ?? 0), $items));
-    $today = ['peak' => (int) ($P['today'] ?? 0) + (int) ($P['tours']['today'] ?? 0), 'sixfold' => $sum($X['items'], 'today'), 'traverse' => $sum($T['items'], 'today')];
+    $today = ['peak' => (int) ($P['today'] ?? 0) + (int) ($P['tours']['today'] ?? 0) + (int) ($P['deskmails']['today'] ?? 0), 'sixfold' => $sum($X['items'], 'today'), 'traverse' => $sum($T['items'], 'today')];
     $failed = ['peak' => (int) ($P['failToday'] ?? 0), 'sixfold' => $sum($X['items'], 'failToday'), 'traverse' => $sum($T['items'], 'failToday')];
     $wait = ['peak' => (int) ($P['waiting'] ?? 0), 'sixfold' => $sum($X['items'], 'waiting'), 'traverse' => $sum($T['items'], 'waiting')];
     return ['ok' => true, 'now' => obNow(), 'summary' => ['sent' => $today, 'waiting' => $wait, 'waitingPaused' => (int) ($P['waitingPaused'] ?? 0), 'failed' => $failed,

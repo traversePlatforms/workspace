@@ -57,7 +57,7 @@ function pmWhat(array $r): string {
         'bounce' => 'Bounced: ' . $to . ' (never emailed again)',
         'unsub' => 'Unsubscribed: ' . $to,
         'click' => 'Clicked a link: ' . $to,
-        'booked' => 'Booked a time: ' . $to . ', ' . date('D M j', (int) strtotime((string) ($r['date'] ?? ''))) . ' ' . ($r['time'] ?? '') . ' (on the Peak desk as a tour)',
+        'booked' => 'Booked a time: ' . $to . (!empty($r['desk']) ? ' (on the Peak desk\'s booking page)' : '') . ', ' . date('D M j', (int) strtotime((string) ($r['date'] ?? ''))) . ' ' . ($r['time'] ?? '') . ' (on the Peak desk as a tour)',
         'notify' => empty($r['ok']) ? 'Could not email Matthew the heads-up (' . ($r['stage'] ?? '') . ')' : '',
         'desk' => empty($r['ok']) ? 'Could not update the Peak desk (' . ($r['why'] ?? '') . ')' . (!empty($r['final']) ? ': given up' : ': the next run tries again') : '',
         'start' => 'Started ' . $l . ' (' . ($r['by'] ?? '') . ')',
@@ -72,6 +72,7 @@ function pmWhat(array $r): string {
         'msadmin' => 'Microsoft asked for Peak\'s admin to approve the app',
         'tourmail' => (!empty($r['test']) ? 'Test tour confirmation' : (($r['method'] ?? '') === 'CANCEL' ? 'Tour cancellation' : 'Tour confirmation')) . (!empty($r['ok']) ? ' sent to ' : ' NOT sent to ') . $to
             . ((string) ($r['company'] ?? '') !== '' ? ' (' . $r['company'] . ')' : '') . ', from the Peak desk by ' . ($r['by'] ?? '') . (empty($r['ok']) ? ': ' . ($r['why'] ?? '') : ''),
+        'deskmail' => 'Desk email ' . (!empty($r['ok']) ? 'sent to ' : 'NOT sent to ') . $to . ((string) ($r['company'] ?? '') !== '' ? ' (' . $r['company'] . ')' : '') . ', from the Peak desk by ' . ($r['by'] ?? '') . (empty($r['ok']) ? ': ' . ($r['why'] ?? '') : ''),
         'suppress' => 'Added to do-not-email: ' . $to,
         'unsuppress' => 'Taken off do-not-email: ' . $to,
         default => '',

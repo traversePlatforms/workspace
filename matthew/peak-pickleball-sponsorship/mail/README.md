@@ -40,6 +40,10 @@ prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sendin
   - Outbox counts them and flags the ones not sent. Retry is on the tour in the desk.
   - A calendar's "Accepted:" answer is not read as a reply.
   - The wording and a sample invite are in `tour-confirmation-DRAFT.md`.
+- **Desk emails and booking links (19 Nov 2026; both OFF until Matthew turns them on in the desk, More, Settings):**
+  - A seller writes an email on a card (`app/api/desk-email.php`); `pmDeskSend()` here sends it from this mailbox, once per ref (`dm` + 10 hex), with Reply-To the seller's own address if they set one. Rows `deskmail`; Outbox counts them and flags the ones not sent (Retry is on the card). Never to the do-not-email list.
+  - `{book}` now leads to the desk's own booking page (`app/api/book.php`, public at `/peak-book/`): b.php counts the view (`bookview`, `desk: 1`) and sends the person on with a link the desk signs (`pmBookDesk`). One shared schedule for the whole desk; a booking there is logged here as `booked` too, so the rates stay right. Start's `{book}` check follows the desk's Booking links switch.
+  - Wording, the booking page and how to turn them on: `desk-email-and-booking-DRAFT.md`.
 - **Commands (server):** `php cron.php run | stats | import | check | dns`. `setapp` and `setcode` read from a pipe.
 - **Overnight check:** section 12 of `shared/tools/overnight-check.sh` prints `cron.php stats`.
 - **Test:** `node matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`. It mocks Microsoft and uses throwaway data, and

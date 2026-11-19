@@ -22,7 +22,7 @@ if (!defined('DATA_DIR')) {
     $deskOut = dirname(__DIR__, 3) . '/peak-desk-data';
     define('DATA_DIR', getenv('DESK_DATA') ?: (is_dir($deskOut) ? $deskOut : ($deskLocal ? dirname(__DIR__) . '/../desk-data-local' : $deskOut)));
 }
-const STORE_V = 3;   /* bump to rebuild every database from the logs after a change to how rows are read */
+const STORE_V = 4;   /* bump to rebuild every database from the logs after a change to how rows are read (4: desk emails, 2026-11-19) */
 
 /* ---- the stages ---- */
 const SP_STAGES = ['new' => 'To contact', 'called' => 'Called', 'voicemail' => 'Left voicemail', 'emailed' => 'Emailed', 'texted' => 'Texted',
@@ -45,7 +45,7 @@ function W(string $w): array {
         'sponsor' => ['log' => 'events.log', 'stages' => SP_STAGES, 'legacy' => SP_LEGACY, 'field' => 'status',
             'T' => ['stage' => 'status', 'note' => 'note', 'notedel' => 'notedel', 'next' => 'next', 'contact' => 'contact', 'add' => 'lead', 'del' => 'leaddel', 'back' => 'leadback',
                 'touch' => 'touch', 'touchdel' => 'touchdel', 'owner' => 'owner', 'tour' => 'tour', 'tourdel' => 'tourdel', 'tourout' => 'tourout', 'tourmove' => 'tourmove',
-                'dnc' => 'dnc', 'templates' => 'templates', 'contactedit' => 'contactedit', 'contactdel' => 'contactdel', 'tourmail' => 'tourmail'],
+                'dnc' => 'dnc', 'templates' => 'templates', 'contactedit' => 'contactedit', 'contactdel' => 'contactdel', 'tourmail' => 'tourmail', 'dmail' => 'dmail', 'dmailres' => 'dmailres'],
             /* the order a deal moves in; Not now and Lost sit outside it */
             'path' => ['new', 'called', 'voicemail', 'emailed', 'texted', 'meeting', 'proposal', 'signed'], 'reach' => 5,
             'byMethod' => ['call' => 'called', 'voicemail' => 'voicemail', 'email' => 'emailed', 'text' => 'texted', 'inperson' => 'called', 'linkedin' => 'emailed', 'other' => 'called'],
@@ -53,7 +53,7 @@ function W(string $w): array {
         'expo' => ['log' => 'expo-events.log', 'stages' => XP_STAGES, 'legacy' => XP_LEGACY, 'field' => 'stage',
             'T' => ['stage' => 'xstage', 'note' => 'xnote', 'notedel' => 'xnotedel', 'next' => 'xnext', 'contact' => 'xcontact', 'add' => 'xlead', 'del' => 'xdel', 'back' => 'xback',
                 'touch' => 'xtouch', 'touchdel' => 'xtouchdel', 'owner' => 'xowner', 'tour' => 'xtour', 'tourdel' => 'xtourdel', 'tourout' => 'xtourout', 'tourmove' => 'xtourmove',
-                'dnc' => 'xdnc', 'templates' => 'xtemplates', 'contactedit' => 'xcontactedit', 'contactdel' => 'xcontactdel', 'tourmail' => 'xtourmail'],
+                'dnc' => 'xdnc', 'templates' => 'xtemplates', 'contactedit' => 'xcontactedit', 'contactdel' => 'xcontactdel', 'tourmail' => 'xtourmail', 'dmail' => 'xdmail', 'dmailres' => 'xdmailres'],
             'path' => ['new', 'contacted', 'tour', 'quote', 'booked'], 'reach' => 2,
             'byMethod' => array_fill_keys(array_keys(METHODS), 'contacted'),
             'tourSt' => 'tour', 'propSt' => 'quote', 'winSt' => 'booked', 'done' => ['booked', 'lost']],
@@ -93,6 +93,21 @@ function withLock(callable $fn) {
     flock($fh, LOCK_EX); $held = true;
     try { return $fn(); } finally { $held = false; flock($fh, LOCK_UN); fclose($fh); }
 }
+
+/* who can own a company: the sellers and admins (and, for expo leads, the expo-only accounts); never the read-only check account */
+function owners(string $w): array {
+    $o = [];
+    foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) {
+        $n = (string) ($a['name'] ?? ''); $r = (string) ($a['role'] ?? '');
+        if ($n === '' || $n === 'Claude Check') continue;
+        if (in_array($r, ['admin', 'seller'], true) || ($w === 'expo' && $r === 'expo')) $o[$n] = 1;
+    }
+    $o = array_keys($o); sort($o); return $o;
+}
+
+/* calendar text (moved here from desk.php 2026-11-19: the booking page uses them too) */
+function icsEsc(string $s): string { return str_replace(["\\", ';', ',', "\r", "\n"], ['\\\\', '\\;', '\\,', '', '\\n'], $s); }
+function icsFold(string $line): string { $out = ''; while (strlen($line) > 74) { $cut = 74; while ($cut > 0 && (ord($line[$cut]) & 0xC0) === 0x80) $cut--; $out .= substr($line, 0, $cut) . "\r\n "; $line = substr($line, $cut); } return $out . $line; }
 
 /* ---- the database ---- */
 function db(): PDO {
@@ -202,7 +217,7 @@ function apply(array &$M, string $w, array $r): void {
         case 'touch': {
             if (!$has || !is_array($r['touch'] ?? null)) return; $x = $r['touch']; $k = (string) ($r['k'] ?? newKey()); $m = (string) ($x['m'] ?? 'other');
             $T = ['k' => $k, 'at' => $at, 'when' => (int) ($x['when'] ?? $at) ?: $at, 'by' => $by, 'm' => $m, 'out' => (string) ($x['out'] ?? ''), 'note' => (string) ($x['note'] ?? '')];
-            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
+            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc', 'dm'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
             /* a tour confirmation (tc, 2026-11-19) is on the Activity but is not counted as the booker's own email */
             $M['recs'][$id]['touches'][] = $T; $dirty($id); if (empty($T['tc'])) $act($m, $id, $T['when'], $k); return;
         }
@@ -227,6 +242,21 @@ function apply(array &$M, string $w, array $r): void {
                 'why' => (string) ($r['why'] ?? ''), 'kind' => (string) ($r['kind'] ?? ''), 'by' => $by, 'at' => $at];
             if (!empty($r['ok']) && ($r['method'] ?? '') === 'REQUEST') $M['tours'][$tid]['tmSent'] = (int) ($r['seq'] ?? 0);
             $M['tdirty'][$tid] = 1; return;
+        }
+        /* a desk email (2026-11-19, desk-email.php): the words as written (dmail), then each try's result (dmailres). The touch "Emailed"
+           is written only once it went. */
+        case 'dmail': {
+            if (!$has) return; $ref = (string) ($r['ref'] ?? ''); if ($ref === '') return;
+            $x = []; foreach (['to', 'name', 'subject', 'text', 'sig', 'replyto', 'tpl', 'fu', 'fuWhat', 'book'] as $f) if (isset($r[$f])) $x[$f] = $r[$f];
+            $M['recs'][$id]['dmails'][$ref] = $x + ['ref' => $ref, 'by' => $by, 'at' => $at, 'state' => 'sending', 'tries' => 0, 'why' => ''];
+            $dirty($id); return;
+        }
+        case 'dmailres': {
+            $ref = (string) ($r['ref'] ?? ''); if (!$has || !isset($M['recs'][$id]['dmails'][$ref])) return;
+            $d = &$M['recs'][$id]['dmails'][$ref]; $d['tries'] = (int) ($d['tries'] ?? 0) + 1;
+            $d['state'] = !empty($r['ok']) ? 'sent' : 'failed'; $d['why'] = (string) ($r['why'] ?? ''); $d['last'] = ['by' => $by, 'at' => $at];
+            if (!empty($r['ok'])) $d['sentAt'] = $at;
+            unset($d); $dirty($id); return;
         }
         /* sponsors only */
         case 'site': if (!$has) return; $M['recs'][$id]['site'] = (string) ($r['site'] ?? ''); $dirty($id); return;

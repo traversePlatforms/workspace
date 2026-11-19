@@ -178,6 +178,17 @@ try {
   ok(VT.today === 1 && VT.d30 === 1 && VT.tests === 1 && VT.open.length === 1 && VT.open[0].company === 'Show Co' && r.json.summary.sent.peak === 1, 'tour confirmations: 1 sent today (the test apart), 1 not sent; Peak’s sent today includes it');
   ok(/Peak desk: 1 tour confirmation not sent\. Retry is on the tour in the Peak desk/.test(r.json.summary.attention.map(a => a.text).join('\n')) && /peak-desk-28d38d\/#sponsor\/deals\/tours/.test(VT.desk), 'the one not sent is flagged, with the desk’s Tours as the place to retry');
 
+  /* 3c. desk emails from the Peak desk (2026-11-19): counted with Peak's sent today, the ones not sent flagged with where to retry */
+  ok(r.json.peak.deskmails && r.json.peak.deskmails.on === false && r.json.peak.deskmails.book === false && !r.json.peak.deskmails.open.length, 'desk emails: off, booking links off, none yet');
+  fs.appendFileSync(path.join(R, 'peak-mail-data/events.log'), jl([
+    { t: 'deskmail', ref: 'dm0000000001', to: 'robin@example.com', w: 'sponsor', org: 'x1', company: 'Acme', by: 'Cai', subject: 'Following up', ok: true, at: NOW - 500 },
+    { t: 'deskmail', ref: 'dm0000000002', to: 'lee@example.com', w: 'expo', org: 'x2', company: 'Show Co', by: 'Cai', subject: 'Dates', ok: false, kind: 'server', why: 'no answer', at: NOW - 400 },
+    { t: 'deskmail', ref: 'dm0000000003', to: 'kim@example.com', w: 'sponsor', org: 'x3', company: 'Kim Co', by: 'Nneka', subject: 'Hi', ok: false, kind: 'server', why: 'no answer', at: NOW - 300 },
+    { t: 'deskmail', ref: 'dm0000000003', to: 'kim@example.com', w: 'sponsor', org: 'x3', company: 'Kim Co', by: 'Nneka', subject: 'Hi', ok: true, at: NOW - 200 }]));
+  r = await api('state'); const VD = r.json.peak.deskmails;
+  ok(VD.today === 2 && VD.d30 === 2 && VD.open.length === 1 && VD.open[0].company === 'Show Co' && VD.open[0].by === 'Cai' && r.json.summary.sent.peak === 3, 'desk emails: 2 sent today (one after a retry), 1 not sent; Peak\u2019s sent today includes them');
+  ok(/Peak desk: 1 desk email not sent\. Retry is on the company's card in the Peak desk/.test(r.json.summary.attention.map(a => a.text).join('\n')), 'the one not sent is flagged, with the card as the place to retry');
+
   /* 4. the bounce limit on the desk */
   fs.appendFileSync(path.join(R, 'traverse-prospects-data/events.log'), jl([1, 2].map(i => ({ t: 'bounce', id: 'p' + (5 + i), to: 'x', by: 'Bounce log', at: NOW - DAY }))));
   r = await api('state'); ok(/Prospect Desk bounces: 4 of 30/.test(r.json.summary.attention.map(a => a.text).join('\n')), 'desk bounces over 5% are flagged');
@@ -273,7 +284,7 @@ try {
 
   /* 10. the command line, and signing out */
   const sm = spawnSync('php', [path.join(PUB, 'outbox-092b0f', 'cli.php'), 'summary'], { env }); const smo = sm.stdout.toString();
-  ok(sm.status === 0 && /^Outbox: sent today 9 \(Peak 1, Sixfold 3, Traverse 5\)/.test(smo) && /1 tour confirmation not sent/.test(smo) && !smo.includes('NOT-A-REAL'), 'cli summary line');
+  ok(sm.status === 0 && /^Outbox: sent today 11 \(Peak 3, Sixfold 3, Traverse 5\)/.test(smo) && /1 tour confirmation not sent/.test(smo) && /1 desk email not sent/.test(smo) && !smo.includes('NOT-A-REAL'), 'cli summary line');
   r = await api('signout', {}); ok(r.status === 200, 'sign out');
   r = await api('state'); ok(r.status === 401, 'signed out: refused again');
 } finally {

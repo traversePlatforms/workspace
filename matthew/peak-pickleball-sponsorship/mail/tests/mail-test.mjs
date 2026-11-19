@@ -101,7 +101,9 @@ const mock = http.createServer((req, res) => {
 });
 await new Promise(r => mock.listen(MPORT, '127.0.0.1', r));
 
-const ENV = { ...process.env, PEAK_MAIL_DATA: DATA, PEAK_DESK_DATA: DESK, PEAK_DESK_STORE: STORE, PEAK_MAIL_NOTIFY: NOTIFY, PEAK_MAIL_MOCK: 'http://127.0.0.1:' + MPORT, PEAK_MAIL_MX: 'skip', PEAK_MAIL_GAP: '0', PEAK_MAIL_HOST: '127.0.0.1:' + PORT };
+const ENV = { ...process.env, PEAK_MAIL_DATA: DATA, PEAK_DESK_DATA: DESK, PEAK_DESK_STORE: STORE, PEAK_MAIL_NOTIFY: NOTIFY, PEAK_MAIL_MOCK: 'http://127.0.0.1:' + MPORT, PEAK_MAIL_MX: 'skip', PEAK_MAIL_GAP: '0', PEAK_MAIL_HOST: '127.0.0.1:' + PORT,
+  /* b.php's own page throughout (2026-11-19: with the desk's booking code beside the desk's record code, {book} goes to the desk's page; 13c tests that) */
+  PEAK_MAIL_BOOK_LEGACY: '1' };
 delete ENV.PEAK_MAIL_DESKFAIL;
 const srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', PUB], { env: { ...ENV, PEAK_MAIL_NOW: String(NOW1) }, stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 900));
@@ -403,6 +405,33 @@ try {
   ok((await php('echo json_encode([pmIsCalReply(["subject" => "Accepted: Confirmed: your visit"]), pmIsCalReply(["subject" => "Tentative: x"]), pmIsCalReply(["subject" => "Re: Confirmed: your visit"])]);')).trim() === '[true,true,false]', 'a calendar\u2019s Accepted/Tentative answer is not read as a reply; a real reply is');
   s = (await api('state')).json;
   ok(s.activity.some(a => /^Tour confirmation sent to pat@example.com \(Acme\), from the Peak desk by Cai$/.test(a.what)) && s.activity.some(a => /^Tour confirmation NOT sent to pat@example.com/.test(a.what)), 'the page\u2019s activity lists them');
+
+  /* 13c. desk emails from the Peak desk (2026-11-19): once per ref, Reply-To the seller, never to the do-not-email list; {book} to the desk's page */
+  const dsend = (m) => php('echo json_encode(pmDeskSend(json_decode(getenv("M"), true)));', { M: JSON.stringify(m) }).then(o => { try { return JSON.parse(o); } catch { return { raw: o }; } });
+  const dmsg = { ref: 'dm00000000aa', to: 'Robin@Example.com', name: 'Robin Field', subject: 'Following up', text: 'Hi Robin,\n\nThanks,\nCai Silva\nPeak Pickleball', html: '<p>Hi Robin</p>', replyTo: 'cai@example.com', replyName: 'Cai Silva', w: 'sponsor', org: 'x1', company: 'Acme', by: 'Cai Silva' };
+  n0 = M.sent.length; let dr = await dsend(dmsg); const draw = (M.raw || []).slice(-1)[0] || '';
+  ok(dr.ok && !dr.dup && M.sent.length === n0 + 1, 'desk email: sent once ' + JSON.stringify(dr));
+  ok(/^To: Robin Field <robin@example.com>\r\n/m.test(draw) && /^Reply-To: Cai Silva <cai@example.com>\r\n/m.test(draw) && /Content-Type: multipart\/alternative/.test(draw) && !/text\/calendar|o\.php|r\.php/.test(draw) && M.sent[M.sent.length - 1].message.subject === 'Following up', 'to the person, Reply-To the seller, text and HTML, no invite and no tracked links');
+  dr = await dsend(dmsg); ok(dr.ok && dr.dup && M.sent.length === n0 + 1, 'the same ref again: not sent twice');
+  dr = await dsend({ ...dmsg, ref: 'dm00000000ab', replyTo: '' }); ok(dr.ok && !/^Reply-To:/m.test((M.raw || []).slice(-1)[0]), 'no Reply-To when the seller set none (replies come to Matthew)');
+  const unTo = events().find(e => e.t === 'unsub').to; n0 = M.sent.length;
+  dr = await dsend({ ...dmsg, ref: 'dm00000000ac', to: unTo }); ok(!dr.ok && dr.kind === 'blocked' && /do-not-email list \(unsubscribed\)/.test(dr.why) && M.sent.length === n0, 'never to someone on the do-not-email list (they unsubscribed)');
+  M.sendFail = { code: 503, err: 'ServiceUnavailable' }; dr = await dsend({ ...dmsg, ref: 'dm00000000ad' }); M.sendFail = null;
+  ok(!dr.ok && dr.kind === 'server' && /Microsoft did not answer/.test(dr.why), 'Microsoft down: not sent, said plainly');
+  const dst = JSON.parse(await php('echo json_encode(pmDeskMailStats());'));
+  ok(dst.sent.length === 2 && dst.open.length === 1 && dst.open[0].company === 'Acme' && /Microsoft did not answer|ServiceUnavailable/.test(dst.open[0].why), 'stats for Outbox: 2 sent, 1 not sent (the do-not-email one never reached Microsoft) ' + JSON.stringify(dst.open.map(x => x.why)));
+  s = (await api('state')).json;
+  ok(s.activity.some(a => /^Desk email sent to robin@example.com \(Acme\), from the Peak desk by Cai Silva$/.test(a.what)) && s.activity.some(a => /^Desk email NOT sent to robin@example.com/.test(a.what)), 'the page\u2019s activity lists them');
+  const bu = (await php('echo pmBookDesk(["kind" => "org", "org" => "abc", "to" => "pat@example.com", "person" => "Pat", "company" => "Acme", "list" => "sponsors", "rid" => "0123456789"]);', { PEAK_MAIL_BOOK_LEGACY: '', DESK_BOOK_BASE: 'https://example.test/peak-book/' })).trim();
+  ok(/^https:\/\/example\.test\/peak-book\/\?o=[A-Za-z0-9_-]+\.[0-9a-f]{16}$/.test(bu), 'with the desk\u2019s booking code beside it, {book} goes to the desk\u2019s own page: ' + bu.slice(0, 70));
+  {
+    const P2 = PORT + 3, s2 = spawn('php', ['-S', '127.0.0.1:' + P2, '-t', PUB], { env: { ...ENV, PEAK_MAIL_BOOK_LEGACY: '', DESK_BOOK_BASE: 'https://example.test/peak-book/', PEAK_MAIL_NOW: String(NOW1) }, stdio: 'ignore' });
+    await new Promise(r => setTimeout(r, 700));
+    const path7 = bk(7), to7 = M.sent[7].message.toRecipients[0].emailAddress.address;
+    const r7 = await new Promise((res, rej) => { const q = http.request({ host: '127.0.0.1', port: P2, path: path7, method: 'GET', agent: false }, x => { x.resume(); x.on('end', () => res(x)); }); q.on('error', rej); q.end(); });
+    s2.kill();
+    ok(r7.statusCode === 302 && /^https:\/\/example\.test\/peak-book\/\?o=/.test(r7.headers.location || '') && events().some(e => e.t === 'bookview' && e.to === to7 && e.desk === 1), 'b.php sends them on to the desk\u2019s page (the view still counted here)');
+  }
 
   /* 13. the address guard */
   ok((await api('settings', { s: { address: '[ADDRESS]' } })).status === 400, 'a placeholder address is refused');

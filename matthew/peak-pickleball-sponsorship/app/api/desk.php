@@ -36,10 +36,15 @@
  *
  * 2026-11-19 (Matthew: "when for example, cai books a tour ... send an email automatically to that persons email ... so they have an email
  * notification that they can connect to their calendar"): tour confirmation emails with a calendar invite, sent through the Peak email
- * sender, OFF until an admin turns them on in More, Settings. tour-mail.php explains (actions tourpreview, tourmail, tourmailset, tourmailtest). */
+ * sender, OFF until an admin turns them on in More, Settings. tour-mail.php explains (actions tourpreview, tourmail, tourmailset, tourmailtest).
+ *
+ * 2026-11-19 (Matthew for Cai: "a box in the peak desk app ... she can fill it out with whatever she wants to say click send and it will send
+ * it to the prospect" and "they can click a link and book a time slot based on the availability"): Write an email on every card
+ * (desk-email.php: actions dmpreview, dmsend, dmretry, dmset; myset for a person's signature and reply address) and booking links on one
+ * shared schedule (book-lib.php, the public page book.php: actions booklink, bookgeneric, bookset). Both OFF until an admin turns them on. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-19.1';
+const BUILD = '2026-11-19.2';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
@@ -47,6 +52,8 @@ require __DIR__ . '/desk-store.php';
 if (!is_dir(DATA_DIR)) { if ($LOCAL) @mkdir(DATA_DIR, 0770, true); else { http_response_code(500); exit('{"ok":false,"error":"No data folder."}'); } }
 require __DIR__ . '/scan.php';
 require __DIR__ . '/tour-mail.php';   /* tour confirmation emails (2026-11-19) */
+require __DIR__ . '/book-lib.php';    /* booking links on one shared schedule (2026-11-19) */
+require __DIR__ . '/desk-email.php';  /* Write an email on a card (2026-11-19) */
 
 function codeHash(string $c): string { return hash('sha256', 'peakdesk|' . $c); }
 function keyHash(string $c): string { return hash('sha256', 'peakdesk-service|' . $c); }
@@ -55,17 +62,6 @@ function sesDays(string $name): int { return strcasecmp($name, 'Matthew Sharpe')
 function sesCookie(string $tok, string $name, int $now): void {
     setcookie('peakdesk', $tok, ['expires' => $now + sesDays($name) * 86400, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax', 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off']);
 }
-/* who can own a company: the sellers and admins (and, for expo leads, the expo-only accounts); never the read-only check account */
-function owners(string $w): array {
-    $o = [];
-    foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) {
-        $n = (string) ($a['name'] ?? ''); $r = (string) ($a['role'] ?? '');
-        if ($n === '' || $n === 'Claude Check') continue;
-        if (in_array($r, ['admin', 'seller'], true) || ($w === 'expo' && $r === 'expo')) $o[$n] = 1;
-    }
-    $o = array_keys($o); sort($o); return $o;
-}
-
 /* ---- the command line ---- */
 if (PHP_SAPI === 'cli') {
     [$cmd, $name, $role] = [$argv[1] ?? '', $argv[2] ?? '', $argv[3] ?? 'seller'];
@@ -206,7 +202,7 @@ function handle(string $action, bool $isPost, array $body): array {
     else { $op = $action; $w = ($body['world'] ?? '') === 'expo' ? 'expo' : 'sponsor'; }
     if (in_array($op, $SPONSOR, true)) $w = 'sponsor';
     /* the expo-only account (2026-11-13): the Expo leads and nothing else, read or write */
-    if ($ROLE === 'expo' && !in_array($action, ['data', 'callink'], true) && $w !== 'expo') fail('This account is for the Expo leads only.', 403);
+    if ($ROLE === 'expo' && !in_array($action, ['data', 'callink', 'myset', 'booklink'], true) && $w !== 'expo') fail('This account is for the Expo leads only.', 403);
 
     if ($action === 'data') return dataOut($ME, $ROLE);
     /* the end-of-day email as it would go now (admins; read only, so Claude Check may look): nothing is sent */
@@ -225,6 +221,11 @@ function handle(string $action, bool $isPost, array $body): array {
         if ($ROLE === 'admin' && is_array($body['words'] ?? null)) { $words = tmWordsIn($body['words']); $e = tmCheckWords($words); if ($e !== '') fail($e); }
         return tmPreview($w, $R, $t, $ME, $words);
     }
+    /* a desk email as it would go (2026-11-19): read only, nothing is sent */
+    if ($action === 'dmpreview') {
+        $R = recs($w)[(string) ($body['id'] ?? '')] ?? null; if (!$R || !empty($R['off'])) fail('No such lead.', 404);
+        $x = dmPreview($w, $R, $body, $ME); if (empty($x['ok'])) fail($x['error']); return $x;
+    }
     if ($action === 'eodpreview') { if ($ROLE !== 'admin') fail('Only an admin sees this.', 403); $m = eodText(time()); return ['ok' => true, 'subject' => $m['subject'], 'text' => $m['text'], 'due' => eodDue(time()), 'conf' => eodConf()]; }
     if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);   /* read-only check account (2026-10-26): everything below saves */
     if (!$isPost) fail('POST required', 405);
@@ -240,6 +241,35 @@ function handle(string $action, bool $isPost, array $body): array {
     }
     /* my calendar link (2026-11-18); new: true makes a new one and the old link stops working */
     if ($action === 'callink') { $L = calLink($ME, !empty($body['new'])); if (!$L) fail('The link could not be made.', 500); return ['ok' => true] + $L; }
+    /* my signature and reply address for desk emails, and my booking link (2026-11-19) */
+    if ($action === 'myset') { $x = dmMineSave($ME, $body); if (isset($x['error'])) fail($x['error']); return ['ok' => true, 'mine' => $x]; }
+    if ($action === 'booklink') { $L = bkLink($ME, !empty($body['new'])); if (!$L) fail('Only someone who can own companies on the desk has a booking link.', 403); return ['ok' => true] + $L; }
+    /* the desk-wide switches and the shared schedule (admins) */
+    if ($action === 'bookgeneric') { if ($ROLE !== 'admin') fail('Only an admin sees this.', 403); $L = bkGeneric(!empty($body['new'])); if (!$L) fail('The link could not be made.', 500); return ['ok' => true] + $L; }
+    if ($action === 'dmset' || $action === 'bookset') {
+        if ($ROLE !== 'admin') fail('Only an admin changes the settings.', 403);
+        $key = $action === 'dmset' ? 'deskmail' : 'book'; $s = jread('desk-settings.json', []); $cur = is_array($s[$key] ?? null) ? $s[$key] : []; $now = time();
+        if ($action === 'bookset') { $c = bkConfIn($body, bkConf()); if (isset($c['error'])) fail($c['error']); foreach (['week', 'mins', 'notice', 'ahead', 'blocked'] as $k) $cur[$k] = $c[$k]; }
+        if ($action === 'dmset' && array_key_exists('pixel', $body)) $cur['pixel'] = !empty($body['pixel']);
+        if (array_key_exists('on', $body)) {
+            $on = !empty($body['on']);
+            if ($on && empty($cur['on']) && $action === 'dmset') { $mb = tmMailbox(); if (!$mb['ok']) fail('It can\'t go on yet: ' . $mb['why'] . '.'); }
+            if ($on !== !empty($cur['on'])) { $cur['on'] = $on; }
+        }
+        $cur['by'] = $ME; $cur['at'] = $now; $s[$key] = $cur; if (!jwrite('desk-settings.json', $s)) fail('The setting could not be saved.', 500);
+        @file_put_contents(DATA_DIR . '/' . $key . '-settings.log', jline(['at' => $now, 'by' => $ME] + $cur), FILE_APPEND | LOCK_EX);
+        return ['ok' => true, 'deskmail' => dmOut(true, $ME), 'book' => bkOut(true, $ME)];
+    }
+    /* Write an email (2026-11-19): Send, and Retry of one that did not go */
+    if ($action === 'dmsend') {
+        $R = recs($w)[(string) ($body['id'] ?? '')] ?? null; if (!$R || !empty($R['off'])) fail('No such lead.', 404);
+        $x = dmSend($w, $R, $body, $ME); if (empty($x['ok'])) fail($x['error']); return $x;
+    }
+    if ($action === 'dmretry') {
+        $R = recs($w)[(string) ($body['id'] ?? '')] ?? null; $ref = (string) ($body['ref'] ?? ''); if (!$R || !isset($R['dmails'][$ref])) fail('No such email.', 404);
+        if (!dmConf()['on']) fail('Desk emails are off.');
+        return ['ok' => true, 'ref' => $ref] + dmDeliver($w, (string) $R['id'], $ref, $ME);
+    }
     if (!in_array($op, $BOTH, true) && !in_array($op, $SPONSOR, true) && !in_array($action, ['tourmailset', 'tourmailtest'], true)) fail('Unknown action.', 404);
     if (in_array($op, ['emailed', 'emailreply', 'emailbounce'], true)) return service($op, $body + ['world' => $w], $ME);
     /* tour confirmation emails (2026-11-19): the switch and the wording (admins), a test to an address an admin types, and Retry / Send now */
@@ -327,6 +357,8 @@ function people(string $w, array $R): array {
 function shape(string $w, array $R): array {
     $R['touches'] = array_values($R['touches'] ?? []); usort($R['touches'], fn($a, $b) => $a['when'] <=> $b['when']);
     $R['last'] = lastTouch($R); $R['tries'] = missCount($R); $R['people'] = people($w, $R);
+    /* desk emails (2026-11-19): newest first, with how often the booking link in each was opened */
+    if (!empty($R['dmails'])) { $bs = bkStats()['ref']; $R['dmails'] = array_values(array_map(fn($x) => $x + ['views' => (int) ($bs[$x['ref']]['views'] ?? 0), 'opens' => (int) ($bs[$x['ref']]['opens'] ?? 0), 'booked' => (int) ($bs[$x['ref']]['booked'] ?? 0)], $R['dmails'])); usort($R['dmails'], fn($a, $b) => $b['at'] <=> $a['at']); }
     unset($R['log']);
     return $R;
 }
@@ -343,6 +375,7 @@ function dataOut(string $ME, string $ROLE): array {
         'nextBiz' => nextBizDay(), 'tries' => ['max' => TRIES_MAX, 'back' => TRIES_BACK_DAYS]];
     if ($ROLE === 'admin') $base['eod'] = eodConf();
     $base['tourmail'] = tmOut($ROLE === 'admin');
+    $base['deskmail'] = dmOut($ROLE === 'admin', $ME); $base['book'] = bkOut($ROLE === 'admin', $ME);
     $X = worldOut('expo'); $xs = jread('expo-seed.json', []);
     $X += ['questions' => $xs['questions'] ?? [], 'venues' => $xs['venues'] ?? [], 'venueNote' => $xs['venueNote'] ?? '', 'built' => $xs['built'] ?? '', 'from' => $xs['from'] ?? ''];
     if ($ROLE === 'expo') return $base + ['expo' => $X];   /* the expo account: the Expo leads and nothing of the sponsors' */
@@ -835,8 +868,6 @@ function calLink(string $name, bool $renew): ?array {
         return ['p' => $pid, 't' => calTok($pid, (string) $all['p'][$pid]['salt'], (string) $all['secret']), 'at' => (int) $all['p'][$pid]['at']];
     } finally { flock($lk, LOCK_UN); fclose($lk); }
 }
-function icsEsc(string $s): string { return str_replace(["\\", ';', ',', "\r", "\n"], ['\\\\', '\\;', '\\,', '', '\\n'], $s); }
-function icsFold(string $line): string { $out = ''; while (strlen($line) > 74) { $cut = 74; while ($cut > 0 && (ord($line[$cut]) & 0xC0) === 0x80) $cut--; $out .= substr($line, 0, $cut) . "\r\n "; $line = substr($line, $cut); } return $out . $line; }
 function calFeed(string $pid, string $tok): void {
     $nf = function (): void { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo "Not found.\n"; exit; };
     if (!preg_match('/^[0-9a-f]{12}$/D', $pid) || !preg_match('/^[0-9a-f]{32}$/D', $tok)) $nf();

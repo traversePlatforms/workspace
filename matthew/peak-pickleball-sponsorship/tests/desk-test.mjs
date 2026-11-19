@@ -6,7 +6,8 @@
    2026-11-18: plus the facelift (dark default, light mode, contrast measured on every screen) and the Sixfold tools: templates, the tries rule,
    Priority 5, duplicate warnings, Don't contact (with the email sender's own import), the end-of-day email (off) and the calendar feed.
    2026-11-19: tour confirmation emails, sent through the Peak email sender's own code (mail/public/lib.php) to a stand-in for Microsoft on
-   127.0.0.1: nothing reaches Microsoft and nobody is emailed. */
+   127.0.0.1: nothing reaches Microsoft and nobody is emailed.
+   2026-11-19: Write an email on every card and booking links on one shared schedule (the booking page on the same test server). */
 import { spawn, execFileSync, execFile } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync, cpSync, mkdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -56,6 +57,7 @@ const lines = (f) => existsSync(join(LD, f)) ? readFileSync(join(LD, f), 'utf8')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, failN = 0; const ok = (c, m) => { if (c) { pass++; console.log('  ok  ' + m); } else { failN++; console.log('  FAIL ' + m); } };
 const PORT = 8790 + Math.floor(Math.random() * 400), ORIGIN = `http://127.0.0.1:${PORT}`, API = ORIGIN + '/api/desk.php';
+env.DESK_BOOK_BASE = ORIGIN + '/api/book.php';   /* the booking page (2026-11-19) on the test's own server */
 function client(extra = {}) { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}), ...extra }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; return f; }
 const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const today = () => iso(new Date());
@@ -95,7 +97,7 @@ try {
   ok(existsSync(join(LD, 'desk.sqlite')) && readFileSync(join(LD, 'events.log'), 'utf8') === log0, 'the records are in desk.sqlite and the old log is not rewritten');
 
   console.log('The server');
-  server = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', WEB], { env, stdio: 'ignore' });
+  server = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', WEB], { env: { ...env, DESK_MAIL_FILE: join(LD, 'notify-out.jsonl') }, stdio: 'ignore' });   /* the booking heads-ups to Matthew land in a file */
   for (let i = 0; i < 50; i++) { try { await fetch(ORIGIN + '/manifest.json'); break; } catch { await sleep(100); } }
   const x = client();
   ok((await x('data'))._status === 401, 'signed out: no data');
@@ -578,6 +580,150 @@ try {
     /* leave it on for the screens; turned off at the end */
   }
 
+  console.log('Desk emails and booking links (both OFF until Matthew says go; the stand-in for Microsoft, nothing reaches anyone)');
+  {
+    const E1 = LOC[120], E2 = LOC[121], E3 = LOC[122], E4 = LOC[123], XE = xseed.orgs[30], TD = LOC[104];
+    const BKP = ORIGIN + '/api/book.php';
+    const page = async (q, ua = 'Mozilla/5.0 (Windows NT 10.0) Chrome/130') => { const r = await fetch(BKP + q, { headers: { 'User-Agent': ua } }); return { status: r.status, text: await r.text(), ct: r.headers.get('content-type') || '' }; };
+    const slotsOf = (html) => [...html.matchAll(/name="slot" value="([^"]+)"/g)].map((m) => m[1]);
+    const ftOf = (html) => (html.match(/name="ft" value="([0-9a-f]+)"/) || [])[1] || '';
+    const book = async (q, form) => { const p = await page(q); const r = await fetch(BKP + q, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Mozilla/5.0' }, body: new URLSearchParams({ ft: ftOf(p.text), ...form }).toString() }); return r.text(); };
+    const heads = () => lines('notify-out.jsonl').map((l) => JSON.parse(l)).filter((m) => m.to === '@notify');
+    D = await b('data');
+    ok(D.deskmail && D.deskmail.on === false && D.book && D.book.on === false && D.book.hours === 'Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm' && D.book.mins === 30 && D.book.notice === 24 && D.book.ahead === 14 && !D.book.blocked.length, 'both off by default; one shared schedule: Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm, 30 minutes, 24 hours notice, 14 days');
+    ok(!('pixel' in D.deskmail) && D.deskmail.mine.sig === 'Test Seller\nPeak Pickleball' && (await a('data')).book.week === 'Mon 14:00-16:00\nTue 08:00-16:00\nWed 14:00-16:00\nThu 08:00-16:00\nFri 14:00-16:00', 'a seller’s signature starts as their desk name and Peak Pickleball; admins see the hours to edit');
+    ok((await b('contact', { world: 'sponsor', id: E1.id, name: 'Robin Field', email: 'robin@example.com' })).ok && (await b('contact', { world: 'sponsor', id: E2.id, name: 'Avery Stone', email: 'avery@example.com' })).ok && (await b('contact', { world: 'expo', id: XE.id, name: 'Lee Show', email: 'lee@example.com' })).ok, 'contacts with emails (for below)');
+    const msg = { world: 'sponsor', id: E1.id, to: 'robin@example.com', name: 'Robin Field', subject: 'Following up from today', text: 'Hi Robin,\n\nGood to talk today. Pick a time that suits you: {book}\n\nThanks,' };
+    let n0 = GM.calls;
+    let pv = await cc('dmpreview', msg);
+    ok(pv.ok && pv.on === false && pv.book === 'off' && pv.text.startsWith('Hi Robin,') && /Thanks,\nClaude Check\nPeak Pickleball\n\nPeak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920\nIf you'd rather not get emails from Peak, reply and let me know\.$/.test(pv.text) && /book\.php\?m=dm0000000000-/.test(pv.text) && GM.calls === n0, 'Preview (while off; Claude Check may look): the words, the booking link, "Thanks," right above the signature, Peak’s address and an opt-out line; nothing sent');
+    let r = await b('dmsend', msg);
+    ok(r._status === 400 && /Desk emails are off/.test(r.error) && GM.calls === n0, 'while off, Send is refused and nothing goes');
+    ok((await b('dmset', { on: true }))._status === 403 && (await cc('dmset', { on: true }))._status === 403 && (await b('bookset', { on: true }))._status === 403 && (await cc('bookset', { on: true }))._status === 403, 'only an admin turns either on (not a seller, not Claude Check)');
+    const G = await a('bookgeneric', {}), gq = new URL(G.url).search, PL = await b('booklink', {}), pq = new URL(PL.url).search;
+    ok(/\/api\/book\.php\?g=[0-9a-f]{16}$/.test(G.url) && /\/api\/book\.php\?p=[0-9a-f]{12}-[0-9a-f]{16}$/.test(PL.url) && (await b('bookgeneric', {}))._status === 403 && (await cc('booklink', {}))._status === 403, 'a personal link for each desk person, one general link (admins); unguessable');
+    let pg = await page(pq);
+    ok(pg.status === 200 && /Not taking bookings right now/.test(pg.text) && !slotsOf(pg.text).length && /\(719\) 377-4725/.test(pg.text), 'while off, every link answers "Not taking bookings right now"');
+    ok(/That link did not work/.test((await page('?g=0000000000000000')).text) && /That link did not work/.test((await page(pq.replace(/.$/, (c) => (c === '0' ? '1' : '0')))).text) && /That link did not work/.test((await page('')).text), 'a made-up or changed link does not work, and the bare page shows nothing');
+    ok(/do not read right/.test((await a('bookset', { week: 'Tue 8-4' })).error) && /shorter than one meeting/.test((await a('bookset', { week: 'Mon 14:00-14:15' })).error) && /is not a date/.test((await a('bookset', { blocked: 'tomorrow' })).error) && /meeting length/.test((await a('bookset', { mins: 7 })).error), 'hours that don’t read right, a range shorter than a meeting, a bad date or length are refused');
+    msConnect('reconnect'); ok(/can.t go on yet: Matthew.s Peak Outlook needs to be connected again/.test((await a('dmset', { on: true })).error), 'desk emails will not go on while Matthew’s Peak Outlook is not connected'); msConnect();
+    r = await a('dmset', { on: true }); ok(r.ok && r.deskmail.on && (await b('data')).deskmail.on, 'the admin turns desk emails on (the test does it here; live it stays off for Matthew)');
+    r = await b('dmsend', msg); ok(r._status === 400 && /Booking links are off/.test(r.error) && GM.calls === n0, 'an email with {book} is refused while booking links are off');
+    r = await a('bookset', { on: true }); ok(r.ok && r.book.on && r.book.open > 20, 'the admin turns booking links on: ' + r.book.open + ' times open');
+    /* the page: only the shared hours, Mountain time, nothing of the desk */
+    pg = await page(pq); let SL = slotsOf(pg.text);
+    const inHours = (v) => { const [d, t] = v.split(' '), dow = new Date(d + 'T12:00:00').getDay(), hm = +t.slice(0, 2) * 60 + +t.slice(3); return (t.endsWith(':00') || t.endsWith(':30')) && ([1, 3, 5].includes(dow) ? hm >= 840 && hm <= 930 : [2, 4].includes(dow) ? hm >= 480 && hm <= 930 : false); };
+    const minAhead = (v) => (new Date(v.replace(' ', 'T') + ':00').getTime() - Date.now()) / 3600000;
+    D = await b('data'); const busy = D.sponsor.tours.concat(D.expo.tours).map((t) => t.date + ' ' + t.time);
+    ok(pg.status === 200 && SL.length > 20 && SL.every(inHours) && SL.every((v) => minAhead(v) >= 23.9) && SL.every((v) => minAhead(v) <= 15 * 24) && !SL.some((v) => busy.includes(v)), `the page shows only open times in the shared hours, 24 hours ahead or more, within 14 days, none already toured (${SL.length}; first ${SL[0]})`);
+    ok(/with Test Seller/.test(pg.text) && /Mountain time/.test(pg.text) && /1730 Briargate Blvd/.test(pg.text) && /Jamboree Drive/.test(pg.text) && /Company or organisation/.test(pg.text) && /Sponsoring at Peak/.test(pg.text) && !/Kaiser|Robin|Test Seller’s|peak-desk|desk\.php/.test(pg.text.replace(/with Test Seller/g, '')) && /noindex/.test(pg.text), 'Peak-branded: who it is with, Mountain time, the address and entrance; no desk data');
+    /* a booking from a personal link: someone new */
+    const S1 = SL[0]; n0 = GM.calls; const h0 = heads().length;
+    let out = await book(pq, { slot: S1, name: 'Jordan New', email: 'Jordan@NewCo.example', company: 'Brand New Co', topic: 'sponsor', note: 'Bring the sponsor sheet' });
+    D = await b('data'); let NR = D.sponsor.recs.find((x) => x.name === 'Brand New Co'), TN = NR && D.sponsor.tours.find((t) => t.lead === NR.id);
+    ok(/You are booked/.test(out) && /with Test Seller/.test(out) && /on its way to jordan@newco\.example/.test(out) && /Add it to my calendar/.test(out), 'booked: the page says when, with whom, where, and that the confirmation is on its way');
+    ok(NR && NR.why === 'Booked from link' && NR.list === 'added' && NR.stage === 'meeting' && NR.owner === 'Test Seller' && NR.people.some((p) => p.email === 'jordan@newco.example'), 'someone new: a new lead "Booked from link" at Meeting / tour booked, the link’s owner its owner, the person on it');
+    ok(TN && TN.date + ' ' + TN.time === S1 && TN.src === 'link' && TN.host === 'Test Seller' && TN.by === 'Test Seller' && TN.mins === 30 && TN.email === 'jordan@newco.example' && /Bring the sponsor sheet/.test(TN.note), 'the tour: that slot, 30 minutes, from a link, Test Seller its host');
+    let m = mimeParts(GM.sent[GM.sent.length - 1]);
+    ok(GM.calls === n0 + 1 && /jordan@newco\.example/.test(m.to) && /^Confirmed: your visit/.test(m.subject) && m.text.includes("You'll meet: Test Seller") && icsGet(m.cal.body, 'METHOD') === 'REQUEST', 'the tour confirmation and its invite go to them (that switch is on in the test), meeting Test Seller');
+    let hd = heads().slice(h0);
+    ok(hd.length === 1 && /^Peak: Brand New Co booked a visit, .* \(with Test Seller\)$/.test(hd[0].subject) && /Jordan New \(jordan@newco\.example\)/.test(hd[0].body) && /Test Seller’s booking link/.test(hd[0].body) && /a new lead, marked Booked from link/.test(hd[0].body) && /They wrote: Bring the sponsor sheet/.test(hd[0].body), 'Matthew gets a heads-up email (who, when, whose link, new lead, their note)');
+    pg = await page(pq); ok(!slotsOf(pg.text).includes(S1) && slotsOf((await page(gq)).text).indexOf(S1) < 0, 'that time is gone for everyone, from every link');
+    const ics = await page('?ics=' + TN.tid + '-' + (out.match(/\?ics=[0-9a-f]{10}-([0-9a-f]{12})/) || [])[1]);
+    ok(/text\/calendar/.test(ics.ct) && /METHOD:PUBLISH/.test(ics.text) && /DTSTART;TZID=America\/Denver:/.test(ics.text) && (await page('?ics=' + TN.tid + '-000000000000')).status === 404, '"Add it to my calendar" gives the visit as a calendar file (a forged one gives nothing)');
+    out = await book(pq, { slot: slotsOf(pg.text)[0], name: 'Jordan New', email: 'jordan@newco.example', company: 'Brand New Co', topic: 'sponsor' });
+    ok(/You already have a time/.test(out) && D.sponsor.tours.filter((t) => t.email === 'jordan@newco.example').length === 1, 'the same person again: "You already have a time", nothing new booked');
+    /* two people, one slot, the same moment */
+    SL = slotsOf((await page(gq)).text); const S2 = SL[0], ft = ftOf((await page(gq)).text);
+    const two = await Promise.all(['a', 'b'].map((k) => fetch(BKP + gq, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ft, slot: S2, name: 'Racer ' + k, email: 'racer-' + k + '@example.com', company: 'Racer ' + k.toUpperCase() + ' Inc', topic: 'sponsor' }).toString() }).then((x) => x.text())));
+    D = await b('data');
+    ok(two.filter((x) => /You are booked/.test(x)).length === 1 && two.filter((x) => /That time was just taken/.test(x)).length === 1 && D.sponsor.tours.concat(D.expo.tours).filter((t) => t.date + ' ' + t.time === S2).length === 1, 'two people take the same slot at once: one is booked, the other is told it was just taken');
+    const RG = D.sponsor.tours.find((t) => t.date + ' ' + t.time === S2);
+    ok(RG && RG.host === '' && RG.by === 'Booking link' && D.sponsor.recs.find((x) => x.id === RG.lead).owner === '' && /nobody yet/.test(heads().slice(-1)[0].body), 'from the general link: no host, nobody made owner, Matthew’s heads-up says to pick one');
+    /* a tour typed on the desk takes its slot away too; a blocked date has none */
+    const S3 = SL[3]; ok((await b('tour', { world: 'expo', id: XE.id, date: S3.split(' ')[0], time: S3.split(' ')[1], who: 'Lee Show' })).ok && !slotsOf((await page(gq)).text).includes(S3), 'a tour typed on the desk (even on the Expo leads) takes that time away from every link');
+    const dB = SL[SL.length - 1].split(' ')[0];
+    ok((await a('bookset', { blocked: dB })).book.blocked.join() === dB && !slotsOf((await page(gq)).text).some((v) => v.startsWith(dB)) && (await a('bookset', { blocked: '' })).book.blocked.length === 0, 'a blocked date has no times (and comes back when unblocked)');
+    ok((await a('bookset', { week: 'Tue 08:00-09:00', mins: 60 })).book.hours === 'Tue 8:00-9:00 am' && slotsOf((await page(gq)).text).every((v) => new Date(v.split(' ')[0] + 'T12:00:00').getDay() === 2 && v.endsWith('08:00')) && (await a('bookset', { week: D.book.week || 'Mon 14:00-16:00\nTue 08:00-16:00\nWed 14:00-16:00\nThu 08:00-16:00\nFri 14:00-16:00', mins: 30 })).book.hours === 'Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm', 'the admin changes the hours and the length; the page follows; and back');
+    /* an expo organiser from the general link who is already on the Expo leads lands on that card */
+    SL = slotsOf((await page(gq)).text); out = await book(gq, { slot: SL[0], name: 'Pat Organiser', email: 'pat-org@example.com', company: XE.name, topic: 'expo' });
+    D = await b('data'); const XR = find('expo', XE.id);
+    ok(/You are booked/.test(out) && D.expo.tours.some((t) => t.lead === XE.id && t.src === 'link' && t.email === 'pat-org@example.com') && XR.stage === 'tour' && !D.expo.recs.some((x) => x.id !== XE.id && x.name === XE.name), 'someone already on the Expo leads (same name) lands on that card at Tour booked, no double made');
+
+    /* Write an email: sent from Matthew's Peak Outlook, signed by the seller, logged on the card */
+    D = await b('data'); const wk0 = (D.sponsor.week['Test Seller'] || {}).emails || 0; n0 = GM.calls;
+    r = await b('dmsend', { ...msg, fu: later(3), fuWhat: 'see if Robin booked' });
+    m = mimeParts(GM.sent[GM.sent.length - 1]); const ref1 = r.ref;
+    ok(r.ok && r.state === 'sent' && r.to === 'robin@example.com' && GM.calls === n0 + 1 && /^dm[0-9a-f]{10}$/.test(ref1), 'Send: it goes, once');
+    const link1 = (m.text.match(/(http:\/\/127\.0\.0\.1:\d+\/api\/book\.php\?m=dm[0-9a-f]{10}-[0-9a-f]{12})/) || [])[1] || '';
+    ok(/^Robin Field <robin@example.com>$/.test(m.to) && m.subject === 'Following up from today' && /multipart\/alternative/.test(m.top) && m.text.startsWith('Hi Robin,\r\n\r\nGood to talk today. Pick a time that suits you: http') && /Thanks,\r\nTest Seller\r\nPeak Pickleball\r\n\r\nPeak Pickleball, 1730 Briargate Blvd/.test(m.text) && link1, 'to Robin, the subject as typed, the words as typed with the booking link for this email, signed by the seller, Peak’s address under it');
+    ok(m.html.includes('<a href="' + link1 + '">') && !/<img/i.test(m.html) && !/^Reply-To:/m.test(GM.sent[GM.sent.length - 1]) && !m.parts.some((p) => p.type === 'text/calendar'), 'the HTML part is the same words with the link clickable; no open image (off), no Reply-To (replies come to Matthew), no invite');
+    D = await b('data'); let R1 = find('sponsor', E1.id), t1 = R1.touches.find((x) => x.dm === ref1);
+    ok(t1 && t1.m === 'email' && t1.out === 'sent' && t1.by === 'Test Seller' && t1.note === 'Emailed “Following up from today” to Robin Field (robin@example.com) from the desk' && R1.stage === 'emailed' && R1.owner === 'Test Seller' && R1.next.date === later(3) && R1.next.what === 'see if Robin booked', 'on the Activity: Emailed, by the seller; To contact → Emailed; the seller owns it; the follow-up set');
+    ok(((D.sponsor.week['Test Seller'] || {}).emails || 0) === wk0 + 1 && R1.dmails[0].ref === ref1 && R1.dmails[0].state === 'sent' && R1.dmails[0].text === msg.text && R1.dmails[0].book === true, 'counted as the seller’s email this week; the whole email kept on the card');
+    r = await b('dmretry', { world: 'sponsor', id: E1.id, ref: ref1 }); ok(r.ok && r.state === 'dup' && GM.calls === n0 + 1, 'Retry on one that went: nothing sent again');
+    /* the link in that email: filled in for Robin, books onto this card with the seller as host */
+    const mq = new URL(link1).search; pg = await page(mq);
+    ok(/for /.test(pg.text) && pg.text.includes(E1.name.replace(/&/g, '&amp;').replace(/'/g, '&#039;')) && /value="Robin Field"/.test(pg.text) && /value="robin@example.com"/.test(pg.text) && !/Company or organisation/.test(pg.text) && /with Test Seller/.test(pg.text), 'the email’s link: the page knows the company and fills in Robin’s name and email');
+    const ev = lines('book-events.log').map((l) => JSON.parse(l)).filter((x) => x.ref === ref1);
+    ok(ev.length === 1 && ev[0].t === 'view' && ev[0].bot === 1, 'its views are counted (one this soon after sending is taken for a mail scanner, as the Peak email does)');
+    writeFileSync(join(LD, 'book-events.log'), JSON.stringify({ t: 'view', src: 'm', host: 'Test Seller', ref: ref1, bot: 0, at: Math.floor(Date.now() / 1000) }) + '\n', { flag: 'a' });
+    out = await book(mq, { slot: slotsOf(pg.text)[1], name: 'Robin Field', email: 'robin@example.com', note: '' });
+    D = await b('data'); R1 = find('sponsor', E1.id);
+    ok(/You are booked/.test(out) && D.sponsor.tours.some((t) => t.lead === E1.id && t.src === 'link' && t.host === 'Test Seller' && t.from === 'm') && R1.stage === 'meeting' && R1.dmails[0].views === 1 && R1.dmails[0].booked === 1, 'Robin books from it: on this card (Meeting / tour booked), the seller the host; the card shows the link opened once and booked');
+    D = await b('data'); ok(D.book.views >= 1 && D.book.booked >= 2, 'My booking link counts the seller’s visits and bookings: ' + D.book.views + ' and ' + D.book.booked);
+    /* refusals */
+    n0 = GM.calls;
+    ok(/Don't contact/.test((await b('dmsend', { world: 'sponsor', id: TD.id, to: 'dee@example.com', subject: 'Hi', text: 'Hello' })).error) && GM.calls === n0, 'never to someone marked Don’t contact');
+    writeFileSync(join(MAILD, 'events.log'), JSON.stringify({ t: 'unsub', to: 'gone@example.com', at: Math.floor(Date.now() / 1000) }) + '\n', { flag: 'a' });
+    ok(/do-not-email list \(unsubscribed\)/.test((await b('dmsend', { world: 'sponsor', id: E2.id, to: 'gone@example.com', subject: 'Hi', text: 'Hello' })).error) && GM.calls === n0, 'nor to an address on the Peak email do-not-email list (unsubscribed)');
+    ok(/still has \{first\}/.test((await b('dmsend', { world: 'sponsor', id: E2.id, to: 'avery@example.com', subject: 'Hi', text: 'Hi {first},' })).error) && /Write the message/.test((await b('dmsend', { world: 'sponsor', id: E2.id, to: 'avery@example.com', subject: 'Hi', text: ' ' })).error) && /Pick who it goes to/.test((await b('dmsend', { world: 'sponsor', id: E2.id, to: 'nope', subject: 'Hi', text: 'x' })).error), 'an unfilled {field}, an empty message or a bad address is refused');
+    ok((await cc('dmsend', { world: 'sponsor', id: E2.id, to: 'avery@example.com', subject: 'Hi', text: 'Hello' }))._status === 403 && GM.calls === n0, 'Claude Check cannot send');
+    /* my signature and reply address */
+    ok(/does not look right/.test((await b('myset', { sig: 'x', replyto: 'nope' })).error), 'a reply address that is not an email is refused');
+    r = await b('myset', { sig: 'Test Seller\nPeak Pickleball\n(719) 555-0100', replyto: 'Seller@Example.com' });
+    ok(r.ok && r.mine.replyto === 'seller@example.com' && (await b('data')).deskmail.mine.sig.endsWith('(719) 555-0100') && (await c2('data')).deskmail.mine.sig === 'Second Seller\nPeak Pickleball', 'each person’s own signature and reply address (one person’s does not change another’s)');
+    /* a failure stays on the card with Retry; two Retries at once send it once */
+    GM.fail = { code: 503, err: 'ServiceUnavailable' };
+    r = await b('dmsend', { world: 'sponsor', id: E2.id, to: 'avery@example.com', name: 'Avery Stone', subject: 'Dates for a visit', text: 'Hi Avery,\n\nWould next week work?' });
+    D = await b('data'); let R2 = find('sponsor', E2.id);
+    ok(r.ok && r.state === 'failed' && /Microsoft did not answer/.test(r.why) && R2.dmails[0].state === 'failed' && /Microsoft did not answer/.test(R2.dmails[0].why) && !R2.touches.some((x) => x.dm) && R2.stage === 'new', 'Microsoft down: kept on the card as not sent, with why; no touch, the stage stays');
+    const st1 = JSON.parse(execFileSync('php', ['-r', 'require getenv("LIB"); echo json_encode(pmDeskMailStats());'], { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB } }));
+    ok(st1.open.length === 1 && st1.open[0].to === 'avery@example.com' && st1.open[0].by === 'Test Seller', 'the sender’s log has it as not sent (Outbox flags it)');
+    GM.fail = null; n0 = GM.calls;
+    const rr2 = await Promise.all([b('dmretry', { world: 'sponsor', id: E2.id, ref: r.ref }), c2('dmretry', { world: 'sponsor', id: E2.id, ref: r.ref })]);
+    D = await b('data'); R2 = find('sponsor', E2.id); m = mimeParts(GM.sent[GM.sent.length - 1]);
+    ok(rr2.every((x) => x.ok) && GM.calls === n0 + 1 && R2.dmails[0].state === 'sent' && R2.touches.filter((x) => x.dm === r.ref).length === 1 && R2.touches.find((x) => x.dm === r.ref).by === 'Test Seller' && R2.stage === 'emailed', 'two Retries at once: sent once, one touch, by the person who wrote it');
+    ok(/^Reply-To: Test Seller <seller@example.com>\r$/m.test(GM.sent[GM.sent.length - 1]) && m.text.includes('Test Seller\r\nPeak Pickleball\r\n(719) 555-0100'), 'with the reply address set, replies go to the seller; the signature has their phone');
+    /* the expo leads too; the open image only when the admin setting is on */
+    r = await a('dmset', { pixel: true }); ok(r.ok && r.deskmail.pixel === true, 'the admin turns the open image on');
+    r = await c2('dmsend', { world: 'expo', id: XE.id, to: 'lee@example.com', subject: 'Your show at Peak', text: 'Hi Lee,\n\nA few dates for you.' });
+    m = mimeParts(GM.sent[GM.sent.length - 1]); const px = (m.html.match(/<img src="([^"]+)"/) || [])[1] || '';
+    ok(r.state === 'sent' && /book\.php\?px=dm[0-9a-f]{10}-[0-9a-f]{12}$/.test(px.replace(/&amp;/g, '&')), 'expo leads too; with the setting on, the HTML ends in a 1x1 image');
+    const gif = await fetch(px.replace(/&amp;/g, '&')); ok(/image\/gif/.test(gif.headers.get('content-type') || ''), 'the image answers a GIF');
+    D = await b('data'); ok(find('expo', XE.id).dmails[0].opens === 1 && find('expo', XE.id).touches.some((x) => x.dm === r.ref && x.by === 'Second Seller'), 'and the card shows the email opened once');
+    ok((await a('dmset', { pixel: false })).deskmail.pixel === false, 'the open image off again (its default)');
+    /* the Peak email sender's {book}: its own link, signed by the desk, lands on that company's card; the sender hears of it */
+    const ou = execFileSync('php', ['-r', 'require getenv("LIB"); echo pmBookDesk(["kind" => "org", "org" => getenv("ORG"), "to" => "casey3@example.com", "person" => "Casey Three", "company" => getenv("CO"), "list" => "sponsors", "rid" => "0123456789"]);'],
+      { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB, PEAK_DESK_STORE: join(WEB, 'api/desk-store.php'), PEAK_DESK_DATA: LD, ORG: E3.id, CO: E3.name } }).trim();
+    pg = await page(new URL(ou).search);
+    ok(/\?o=[A-Za-z0-9_-]+\.[0-9a-f]{16}$/.test(ou) && /value="Casey Three"/.test(pg.text) && /value="casey3@example.com"/.test(pg.text) && !/Company or organisation/.test(pg.text), 'the Peak email’s {book}: the desk’s page, filled in for that person');
+    out = await book(new URL(ou).search, { slot: slotsOf(pg.text)[2], name: 'Casey Three', email: 'casey3@example.com' });
+    D = await b('data'); const mev = readFileSync(join(MAILD, 'events.log'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+    ok(/You are booked/.test(out) && D.sponsor.tours.some((t) => t.lead === E3.id && t.from === 'o' && t.host === '') && find('sponsor', E3.id).stage === 'meeting' && mev.some((x) => x.t === 'booked' && x.to === 'casey3@example.com' && x.desk === 1 && x.org === E3.id) && mev.some((x) => x.t === 'desk' && x.op === 'booked' && x.ok), 'booked: on that company’s card; the sender logs it as booked (its rates stay right) and does not push it to the desk again');
+    ok(/the Peak email \(\{book\}\)/.test(heads().slice(-1)[0].body), 'Matthew’s heads-up says it came from the Peak email');
+    /* at most 10 tries an hour from one address (this test has used 7) */
+    { const tq = new URL(PL.url).search, f0 = ftOf((await page(tq)).text); const outs = []; for (let i = 0; i < 4; i++) outs.push(await (await fetch(BKP + tq, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ft: f0, slot: '2020-01-01 10:00', name: 'x', email: 'x@example.com', company: 'x' }).toString() })).text());
+      ok(outs.slice(0, 3).every((x) => /That time was just taken/.test(x)) && /Too many tries/.test(outs[3]), 'the page takes at most 10 tries an hour from one address'); }
+    /* the log is the record */
+    const before = JSON.stringify([find('sponsor', E1.id).dmails, find('sponsor', E2.id).touches.length, D.sponsor.tours.filter((t) => t.src === 'link').length]);
+    php(['rebuild']); D = await b('data');
+    ok(JSON.stringify([find('sponsor', E1.id).dmails, find('sponsor', E2.id).touches.length, D.sponsor.tours.filter((t) => t.src === 'link').length]) === before, 'php desk.php rebuild: the same emails, touches and link bookings');
+    ok(lines('deskmail-settings.log').length >= 3 && lines('book-settings.log').length >= 3, 'each change of either switch or the hours is logged');
+    ok(!/RT-|AT-\d|mock-secret/.test(readFileSync(join(LD, 'book-events.log'), 'utf8') + lines('notify-out.jsonl').join('')), 'no token or secret in the booking log or the heads-ups');
+    /* left on for the screens; turned off at the end */
+  }
+
   console.log('Several people at once');
   D = await b('data'); const ids = NEW.filter((l) => find('sponsor', l.id).stage === 'new').slice(0, 12).map((l) => l.id);   /* companies nobody has touched yet */
   const conc = await Promise.all(ids.map((id, i) => new Promise((res) => execFile('php', [join(WEB, 'api/desk.php'), 'emailed', 'sponsor', id, `p${i}@example.com`], { env }, (e, so, se) => res(e ? 'cli err ' + (se || so || e.message).slice(0, 200) : 'ok')))).concat(
@@ -938,6 +1084,55 @@ try {
     await js(`document.querySelector('${f}').scrollIntoView({block:'center'})`); await sleep(250); await shot('tour-mail-form-off.png');
     await click('.detail .close', 300);
   }
+  console.log('Desk emails and booking links on the screen');
+  {
+    const ES = LOC[124]; await world('sponsor');
+    await b('contact', { world: 'sponsor', id: ES.id, name: 'Morgan Lane', email: 'morgan@example.com' }); D = await b('data');
+    await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+    ok(await openCo(ES.id, find('sponsor', ES.id).name), 'a card opens');
+    ok(await js(`!!document.querySelector('.detail .dmsec [data-act="dmopen"]')&&/Write an email/.test(document.querySelector('.detail .dmsec h3').textContent)`), 'every card has Write an email');
+    await click('.detail [data-act="dmopen"]', 300);
+    await js(`(()=>{const s=document.querySelector('.detail .dmto');s.value=[...s.options].find(o=>/morgan@example.com/.test(o.textContent)).value;s.dispatchEvent(new Event('change'));return 1})()`); await sleep(100);
+    ok(await js(`(()=>{const b=document.querySelector('.detail .dmbox');return !b.hidden&&!!b.querySelector('.dmtpl option[value="first"]')&&!!b.querySelector('.dmsub')&&!!b.querySelector('.dmbody')&&!b.querySelector('[data-act="dmsend"]').disabled&&!b.querySelector('[data-act="dmbook"]').disabled&&!!b.querySelector('[data-act="dmpreview"]')&&!!b.querySelector('[data-act="dmcopy"]')&&!!b.querySelector('[data-act="dmmailto"]')})()`), 'the box: To (a contact, or typed), Start from a template, Subject, Message, Insert my booking link, Preview, Send, Copy, Open in my mail app');
+    await js(`(()=>{const s=document.querySelector('.detail .dmtpl');s.value='first';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(150);
+    ok(await js(`(()=>{const b=document.querySelector('.detail .dmbox'),v=b.querySelector('.dmbody').value;return /^Hi Morgan,/.test(v)&&b.querySelector('.dmsub').value.length>3&&/Thanks,$/.test(v.trim())&&!/Peak Pickleball\\s*$/.test(v)})()`), 'a saved template fills it in for Morgan, to change as wanted (its sign-off name left for the signature)');
+    await js(`(()=>{const t=document.querySelector('.detail .dmbody');t.value='Hi Morgan,\\n\\nThanks for the chat today. ';t.selectionStart=t.selectionEnd=t.value.length;t.dispatchEvent(new Event('input'));return 1})()`);
+    await click('.detail [data-act="dmbook"]', 150);
+    ok(await js(`/Thanks for the chat today\\. Pick a time that suits you: \\{book\\}/.test(document.querySelector('.detail .dmbody').value)`), 'Insert my booking link puts it where the cursor is');
+    await click('.detail [data-act="dmpreview"]', 900);
+    ok(await js(`(()=>{const p=document.querySelector('.detail .dmbox pre');return !p.hidden&&/^To: Morgan Lane <morgan@example.com>/.test(p.textContent)&&/Reply-To: seller@example.com/.test(p.textContent)&&/\\[your booking link for this email\\]/.test(p.textContent)&&/Test Seller\\nPeak Pickleball\\n\\(719\\) 555-0100/.test(p.textContent)})()`), 'Preview: to Morgan, Reply-To the seller, the booking link marked, the seller’s signature');
+    await js(`document.querySelector('.detail .dmbox').scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-email-box.png');
+    let n0 = GM.calls; await click('.detail [data-act="dmsend"]', 2000);
+    ok(GM.calls === n0 + 1 && await js(`/Email sent to morgan@example.com/.test(document.getElementById('toast').textContent)`), 'Send (after the confirm): it went, and the toast says so');
+    ok(/Pick a time that suits you: http:\/\/127\.0\.0\.1:\d+\/api\/book\.php\?m=dm/.test(mimeParts(GM.sent[GM.sent.length - 1]).text), 'the email carries the booking link for it');
+    ok(await js(`[...document.querySelectorAll('.detail .tli')].some(i=>/Emailed “/.test(i.textContent)&&!!i.querySelector('.dmline'))`), 'the Activity shows it, with Show the email');
+    await clickText('.detail .dmline button', '/Show the email/', 200);
+    ok(await js(`[...document.querySelectorAll('.detail pre.dmtext')].some(p=>!p.hidden&&/Thanks for the chat today/.test(p.textContent))`), 'Show the email opens the whole email');
+    await js(`[...document.querySelectorAll('.detail .tli')].find(i=>!!i.querySelector('.dmline')).scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-email-activity.png');
+    await click('.detail .close', 300);
+    await tab('today');
+    ok(await js(`(()=>{const b=document.querySelector('[data-blk="linkbooked"]');return !!b&&/Booked from your booking link/.test(b.textContent)&&/Brand New Co/.test(b.textContent)})()`), 'Today: "Booked from your booking link", for the host');
+    await js(`document.querySelector('[data-blk="linkbooked"]').scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-booked-today.png');
+    await tab('deals'); await sub('tours');
+    ok(await js(`[...document.querySelectorAll('main .card')].some(c=>/Brand New Co/.test(c.textContent)&&/Booked from Test Seller’s link/.test(c.textContent))`), 'Tours: the tour says it was booked from the seller’s link');
+    await tab('more'); await sub('mine'); await click('[data-act="booklink"]', 800);
+    ok(await js(`/book\\.php\\?p=[0-9a-f]{12}-[0-9a-f]{16}$/.test(document.querySelector('.bookurl').value)&&document.querySelector('.mysig').value.endsWith('(719) 555-0100')&&document.querySelector('.myreply').value==='seller@example.com'&&/Mon, Wed, Fri 2:00-4:00 pm/.test(document.querySelector('main').textContent)`), 'More › My email & booking link: the link, the shared hours, my signature and reply address');
+    await shot('desk-my-email-booking.png');
+    const BL = await js(`document.querySelector('.bookurl').value`);
+    await send('Page.navigate', { url: BL }); await waitFor(`!!document.querySelector('form [name="slot"]')`, 'booking page'); await sleep(200);
+    ok(await js(`/Book a time with Peak Pickleball/.test(document.body.textContent)&&/with Test Seller/.test(document.body.textContent)`), 'the booking page, as a visitor sees it');
+    await shot('booking-page.png');
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
+    ok(await js(fits), 'the booking page fits a phone'); await shot('booking-page-phone.png');
+    await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false });
+    await send('Page.navigate', { url: ORIGIN + '/' }); await waitFor(`!!document.querySelector('.shead')`, 'back to the desk');
+    ok((await a('dmset', { on: false })).deskmail.on === false && (await a('bookset', { on: false })).book.on === false, 'both switched off again');
+    await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+    ok(await openCo(ES.id, find('sponsor', ES.id).name), 'the card again'); await click('.detail [data-act="dmopen"]', 300);
+    ok(await js(`(()=>{const b=document.querySelector('.detail .dmbox');return b.querySelector('[data-act="dmsend"]').disabled&&/Send turns on once Matthew says go/.test(b.textContent)&&b.querySelector('[data-act="dmbook"]').disabled&&/Booking links turn on once Matthew says go/.test(b.textContent)&&!b.querySelector('[data-act="dmpreview"]').disabled&&!b.querySelector('[data-act="dmcopy"]').disabled})()`), 'while off: Send greyed, "Send turns on once Matthew says go"; Preview, Copy and Open in my mail app still work');
+    await js(`document.querySelector('.detail .dmbox').scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-email-off.png'); await click('.detail .close', 300);
+    ok(/Not taking bookings right now/.test(await (await fetch(BL)).text()), 'and every booking link says "Not taking bookings right now"');
+  }
   console.log('Settings, My calendar, the look and contrast');
   await world('sponsor'); await tab('more');
   ok(await js(`!document.querySelector('.subchips [data-sub="settings"]')&&!!document.querySelector('.subchips [data-sub="cal"]')`), 'a seller sees My calendar but not Settings');
@@ -995,6 +1190,10 @@ try {
   ok(await js(`/the cancellation/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)&&/BEGIN:VCALENDAR/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)`), 'its Preview: the confirmation, the cancellation and the invite (nothing sent)');
   await js(`document.querySelector('[data-set="tourmail"]').scrollIntoView()`); await sleep(200); await shot('tour-mail-settings.png');
   ok((await a('data')).tourmail.on === false, 'the switch is left Off for Matthew');
+  ok(await js(`(()=>{const d=document.querySelector('[data-set="deskmail"]'),k=document.querySelector('[data-set="booking"]');return !!d&&!!k&&d.querySelector('[data-dmset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('[data-bkset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('.bkweek').value==='Mon 14:00-16:00\\nTue 08:00-16:00\\nWed 14:00-16:00\\nThu 08:00-16:00\\nFri 14:00-16:00'&&k.querySelector('.bkmins').value==='30'&&/Nothing|Off/.test(d.textContent)})()`), 'More › Settings: Desk emails Off and Booking links Off, with the shared hours (Mon, Wed, Fri 2-4 pm; Tue, Thu 8 am-4 pm) to edit');
+  await js(`document.querySelector('[data-set="deskmail"]').scrollIntoView()`); await sleep(200); await shot('desk-email-settings.png');
+  await clickText('[data-set="booking"] button', '/Show the general link/', 700); ok(await js(`/book\\.php\\?g=[0-9a-f]{16}$/.test(document.querySelector('.bkgen').value)`), 'and the general link (no host)');
+  { const DA = await a('data'); ok(!DA.deskmail.on && !DA.book.on && !DA.tourmail.on, 'desk emails, booking links and tour confirmations are all left Off for Matthew'); }
   /* the expo-only account in the browser */
   await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${EXPO}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);

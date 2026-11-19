@@ -22,6 +22,8 @@ $page = function (string $title, string $inner) use ($h) {
     exit;
 };
 if (!$p) $page('That link did not work', '<p style="margin:0">Reply to the email and Matthew will set up a time with you.</p>');
+/* 2026-11-19: the Peak desk's booking page takes over when its code is on this server (one schedule for the whole desk); the view is counted here */
+if (($desk = pmBookDesk($p)) !== '') { pmLog(['t' => 'bookview', 'to' => $p['to'], 'l' => $p['list'], 'desk' => 1]); header('Location: ' . $desk, true, 302); exit; }
 $S = pmState(); $B = $S['settings']['book']; $kind = PM_BOOK_KINDS[$B['kind']] ?? 'Tour of Peak'; $mins = (int) $B['mins'];
 $mine = $S['people'][$p['to']]['booked'] ?? null;
 if ($mine) $page('You are booked', '<p style="margin:0">' . $h($kind) . ', ' . $h($when($mine['date'], $mine['time'])) . ' (Colorado time). Matthew has it. To change it, reply to the email.</p>');

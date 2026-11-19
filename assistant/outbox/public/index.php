@@ -140,6 +140,9 @@ function drawPeak(){
     const TC=P.tours||{open:[]};
     h+='<p class="note" data-tours><b>Tour confirmations</b> (from the Peak desk; '+(TC.on?'on':'off until you approve the wording in the desk, More, Settings')+'): '+TC.today+' today, '+TC.d7+' in 7 days, '+TC.d30+' in 30 days'+(TC.tests?' (plus '+TC.tests+' test'+(TC.tests===1?'':'s')+')':'')+'. No open image and no tracked links on these.'
       +(TC.open.length?' <b>Not sent: '+TC.open.length+'</b>. '+TC.open.map(x=>esc((x.method==='CANCEL'?'Cancellation, ':'')+x.company+' ('+x.to+'), '+when(x.at)+': '+x.why)).join(' · ')+'. <a href="'+esc(TC.desk)+'" target="_blank" rel="noopener">Retry on the Peak desk</a>.':'')+'</p>';
+    const DM=P.deskmails||{open:[]};
+    h+='<p class="note" data-deskmails><b>Desk emails</b> (written on a card in the Peak desk, one person at a time; '+(DM.on?'on':'off until you turn them on in the desk, More, Settings')+'; booking links '+(DM.book?'on':'off')+'): '+DM.today+' today, '+DM.d7+' in 7 days, '+DM.d30+' in 30 days. No tracked links but the booking link; no open image unless that setting is on.'
+      +(DM.open.length?' <b>Not sent: '+DM.open.length+'</b>. '+DM.open.map(x=>esc(x.company+' ('+x.to+', by '+x.by+'), '+when(x.at)+': '+x.why)).join(' · ')+'. Retry is on the card in the Peak desk.':'')+'</p>';
     h+='<p class="note">Opens are counted with a 1x1 image and are rough: Apple Mail loads it as the email arrives (high), Outlook often blocks it (low). Every link is tracked. Last hourly run: '+esc(P.lastRun||'none yet')+'.</p>';
   }
   h+='<iframe id="pf" title="Peak email" src="peak/?embed=1'+(Q.get('ms')?'&ms='+encodeURIComponent(Q.get('ms')):'')+'"></iframe>';
