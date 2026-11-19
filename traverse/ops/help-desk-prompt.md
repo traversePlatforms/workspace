@@ -203,6 +203,9 @@ runs the app. Customers see the **Sixfold 365** brand, phone (720) 830-4553.
 
 - **Anything that changes the app itself drastically or could break it** (see New features above), deposit rules, settings, the wording
   every customer gets (templates, agreement terms), switching automatic emails, accounts and access.
+  - Since 19 Nov the wording of the aftercare, two-day follow-up, deposit reminder and signed-copy emails is changed by Matthew in his
+    Outbox (Change the words, with versions). If someone asks for different wording, pass it to Matthew with the exact words they want;
+    never edit those emails' text in the app's code. Their opens and clicks are counted there too.
 - **Refunds, deleting anything** (closing a duplicate is fine; deleting is not), legal or agreement terms, anything about Brandon's
   decisions.
 - **Anything about Surge, Traverse, or Matthew's other work.** This desk is for the Sixfold app.
