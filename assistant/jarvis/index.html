@@ -383,7 +383,7 @@ button.li:hover .lt{color:#fff}
   /* ------------------------------------------------------------ state */
   var app = document.getElementById('app');
   var S = { home: null, st: null, team: {}, outbox: null, desk: null, gro: null, brain: store('jarvis.brain') === 'desk' ? 'desk' : 'assistant', tab: 'home',
-    fold: store('jarvis.fold') || {}, open: store('jarvis.open') || {}, needsAll: false, closedOpen: false, mineOpen: false, state: 'idle', briefed: false, pending: {},
+    fold: Object.assign({ brief: true }, store('jarvis.fold') || {}),   /* 19 Nov: the Morning brief starts folded (Matthew: "if i need a briefing I will ask for it") */ open: store('jarvis.open') || {}, needsAll: false, closedOpen: false, mineOpen: false, state: 'idle', briefed: false, pending: {},
     drive: !!store('jarvis.drive'), relisten: !!store('jarvis.relisten'), notes: {} };
   var phoneMq = window.matchMedia('(max-width: 979px)'), isPhone = phoneMq.matches;
   var chatLog = el('div', 'chat'); chatLog.setAttribute('aria-live', 'polite'); chatLog.appendChild(el('div', 'sp'));
@@ -896,7 +896,7 @@ button.li:hover .lt{color:#fff}
       var sc = el('div', 'pscroll');
       if (S.tab === 'inbox') sc.appendChild(panel('inbox'));
       if (S.tab === 'team') { sc.appendChild(panel('waiting')); sc.appendChild(panel('team')); }
-      if (S.tab === 'today') ['brief', 'today', 'remind', 'cal', 'builds', 'money'].forEach(function (k) { sc.appendChild(panel(k)); });
+      if (S.tab === 'today') ['today', 'remind', 'cal', 'builds', 'money'].forEach(function (k) { sc.appendChild(panel(k)); });
       if (S.tab === 'more') sc.appendChild(moreList());
       body.appendChild(sc);
     }
@@ -969,17 +969,10 @@ button.li:hover .lt{color:#fff}
     return pushChat(c);
   }
   function greet() {
-    var hr = new Date().getHours(), tod = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening', o = S.st && S.st.overnight, n = items().length, nr = needsReply().length, d = drafted();
-    var t = tod + ', Matthew.';
-    if (o) t += o.problems.length ? ' The overnight check found ' + plural(o.problems.length, 'problem') + ' at ' + clock(o.at) + '.' : ' The overnight check passed at ' + clock(o.at) + '.';
-    t += ' ' + (nr ? plural(nr, 'reply', 'replies') + (nr === 1 ? ' is' : ' are') + ' waiting across your inboxes' : 'Nothing is waiting on a reply') + (d ? ' and I’ve drafted ' + d + (d < n ? ', which leaves you the interesting ones.' : '.') : '.');
-    msgAi(t);
-    var parts = [], ob = outboxSum(), dd = deskDue(), to = teamOpen().length, tn = teamNeedsMe().length;
-    if (ob) parts.push('Outbox sent ' + ob.sent + ' today, ' + ob.waiting + ' waiting, ' + ob.failed + ' failed.');
-    if (dd) parts.push('Peak desk has ' + plural(dd.due, 'follow-up') + ' due' + (dd.late ? ', ' + dd.late + ' late.' : '.'));
-    if (to) parts.push(plural(to, 'team request') + ' open' + (tn ? ', ' + tn + ' waiting on you.' : '.'));
-    var b = ((S.st && S.st.builds) || []).filter(function (x) { return x.state === 'running'; }).length; if (b) parts.push(plural(b, 'build') + ' running.');
-    if (parts.length) card({ icon: 'sun', title: 'Right now', badge: ['Briefing', 'wk'], quote: parts.join(' '), acts: [['What’s waiting', 'inbox', 'sec', localWaiting], ob ? ['Open in Outbox', 'out', 'sec', function () { openView('outbox'); }] : null, isPhone ? null : ['Dismiss', null, 'gh', function (e) { e.target.closest('.acard').remove(); }]] });
+    /* 19 Nov (Matthew: "dont have the briefing open up by default if i need a briefing I will ask for it"): a one-line hello only.
+       The summary and the "Right now" card are gone from the opening; Brief me (chip, or say it) gives the full brief. */
+    var hr = new Date().getHours();
+    msgAi((hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', Matthew.');
     setState('idle');
   }
   /* the chips answer from what is already on the screen: no model, no cost */

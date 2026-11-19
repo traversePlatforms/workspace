@@ -201,7 +201,8 @@ try {
   await C('sfr', 'matthew'); await C('outbox', 'ok', '/outbox-092b0f/'); await C('peakdesk', 'tok');
   reqs.length = 0;
   await ev('document.querySelector(".signin input").value=' + JSON.stringify(PASSWORD)); await click('.signin button');
-  ok(await until('!!document.querySelector(".desk .ibr") && document.querySelectorAll(".acard").length>0', 9000), 'signed in: the Halo screen with the inboxes and the briefing');
+  ok(await until('!!document.querySelector(".desk .ibr") && document.querySelectorAll(".msg.ai").length>0', 9000), 'signed in: the Halo screen with the inboxes and a hello');
+  ok(await ev('document.querySelectorAll(".acard").length===0 && /Good (morning|afternoon|evening), Matthew\./.test(document.querySelector(".msg.ai").innerText) && !/overnight check|waiting across|Right now/i.test(document.querySelector(".msg.ai").innerText)'), '19 Nov: opening is a one-line hello, no briefing card');
   await sleep(600);
 
   /* ================================================================ 3. no model call on load; only the expected reads */
@@ -215,7 +216,7 @@ try {
 
   /* ================================================================ 4. the Halo pieces are there */
   ok(await ev('!!document.querySelector(".core svg .glob") && !!document.querySelector(".core .r-arc") && document.querySelectorAll(".core .rip").length===3'), 'the core: globe, inner arc and three ripples');
-  ok(await ev('document.querySelectorAll(".desk .pnl .ph .n").length===9 && [...document.querySelectorAll(".ph .n")].map(n=>n.textContent).sort().join()==="01,02,03,04,05,06,07,08,09"'), 'nine numbered panels, 01 to 09 (19 Nov: Waiting on you, Morning brief, Reminders, Money joined)');
+  ok(await ev('document.querySelectorAll(".desk .pnl .ph .n").length===8 && [...document.querySelectorAll(".ph .n")].map(n=>n.textContent).sort().join()==="01,02,03,05,06,07,08,09" && !!document.querySelector(".rail button[data-panel=brief]")'), 'eight panels open; the Morning brief (04) starts folded into its edge icon (19 Nov: "if i need a briefing I will ask for it")');
   ok(await ev('document.querySelector(".slbl").textContent==="Standing by" && document.getElementById("app").classList.contains("s-idle")'), 'idle state label');
   ok(/Laptop awake/i.test(await ev('document.querySelector(".top").innerText')), 'top bar: laptop awake (from the heartbeat)');
   ok(/API \$23\.40 \/ \$100/.test(await ev('document.querySelector(".top").innerText')), 'top bar: API spend');
@@ -234,7 +235,7 @@ try {
   await click('#p-team .ph .fold'); await sleep(200);
   ok(await ev('!document.getElementById("p-team") && !!document.querySelector(".colL .rail button[data-panel=team]")'), 'a side panel folds into an edge icon');
   ok(await ev('document.querySelector(".colL .rail button[data-panel=team] em").textContent==="1"'), 'the folded icon keeps a count (1 needs you)');
-  for (const k of ['brief', 'today', 'remind', 'cal', 'builds', 'money']) await click('#p-' + k + ' .ph .fold'); await sleep(200);
+  for (const k of ['today', 'remind', 'cal', 'builds', 'money']) await click('#p-' + k + ' .ph .fold'); await sleep(200);
   const gc = await ev('getComputedStyle(document.getElementById("app")).gridTemplateColumns');
   ok(/^394px .* 44px$/.test(gc), 'a fully folded side shrinks to its icon strip and the middle widens (' + gc + ')');
   await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 8000); await sleep(800); await ev('document.dispatchEvent(new Event("click"))');
@@ -504,7 +505,7 @@ try {
   ok(errs.length === 0, 'no script errors in the eight new parts (' + errs.join(' | ') + ')');
 
   /* ---- desktop idle shot: a fresh load */
-  await cdp('Page.reload'); await until('document.querySelectorAll(".acard").length>0', 9000); await sleep(1200);
+  await cdp('Page.reload'); await until('document.querySelectorAll(".msg.ai").length>0', 9000); await sleep(1200);
   await shot('jarvis-desktop-idle');
 
   /* ================================================================ 11. the phone */
@@ -530,7 +531,7 @@ try {
   ok(/Deposit link says/.test(await ev('document.querySelector(".pscroll").innerText')) && await ev('!!document.getElementById("p-waiting")'), 'phone Team tab: Waiting on you, then the team requests');
   ok(await ev('!!document.querySelector(".phone .hd #drivebtn")'), 'phone: Drive is one tap away in the header');
   await click('.tabs button[data-tab=today]'); await sleep(300);
-  ok(await ev('["brief","today","remind","cal","builds","money"].every(k=>!!document.getElementById("p-"+k))'), 'phone Today tab: Brief, Today, Reminders, Calendar, Builds, Money');
+  ok(await ev('["today","remind","cal","builds","money"].every(k=>!!document.getElementById("p-"+k)) && !document.getElementById("p-brief")'), 'phone Today tab: Today, Reminders, Calendar, Builds, Money; no brief panel unless asked (19 Nov)');
   await click('.tabs button[data-tab=more]'); await sleep(300);
   ok(/Full inbox/.test(await ev('document.querySelector(".pscroll").innerText')) && /Groceries/.test(await ev('document.querySelector(".pscroll").innerText')) && /Settings/.test(await ev('document.querySelector(".pscroll").innerText')), 'phone More: the Assistant\'s own pages are reachable');
   await ev('[...document.querySelectorAll(".vlist button")].find(b=>/Full inbox/.test(b.textContent)).click()'); await sleep(1500);
