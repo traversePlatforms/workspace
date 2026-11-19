@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day: Tuesday 17 November 2026</title>
+<!-- Matthew's end-of-day change log. Same layout as Brandon's end-of-day picture. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:13px;line-height:1.42}.page{padding:0 4px 8px}.head{padding:20px 24px}.kpis{margin:14px 0 4px;gap:10px}.kpi{padding:12px 16px}.kpi b{font-size:34px}.kpi small{font-size:12px}h2{font-size:18px;margin:16px 0 8px}.row{padding:8px 16px;grid-template-columns:140px 1fr}.foot{margin-top:18px}}
+@media (max-width:620px){.kpis{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+.page>.sec:last-of-type{margin-bottom:0}.foot{margin-top:12px}
+@media print{.row{padding:6px 16px}h2{margin:12px 0 6px}}
+@media print{body{font-size:12px;line-height:1.36}.row{padding:4px 14px}h2{margin:9px 0 5px;font-size:16px}.kpi{padding:8px 14px}.kpi b{font-size:28px}.head{padding:14px 22px}.head h1{font-size:26px}.foot{margin-top:6px;padding-top:6px;font-size:11px}.row{padding:3px 14px}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="head">
+  <div><div class="tag">End of day</div><h1>Tuesday 17 November 2026</h1><div class="d">Everything we changed today across the apps, sites and data</div></div>
+  <div class="d">Outbox · Peak desk · Houston</div>
+</div>
+<div class="kpis">
+  <div class="kpi"><b>15</b><span>Changes saved</span><small>Commits on the day</small></div>
+  <div class="kpi"><b>1,507,366</b><span>Houston doors measured</span><small>Of 1,566,100; 90 door files match</small></div>
+  <div class="kpi"><b>1</b><span>Outbox</span><small>Every automatic email on one page</small></div>
+  <div class="kpi warn"><b>4</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+<div class="sec">
+<h2>Peak <span class="n">5</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Peak desk</div><div class="v"><span class="pill live">Live</span>Rebuilt as a pipeline for sponsor and expo leads, like Sixfold’s. Cai has a login.</div></div>
+  <div class="row"><div class="k">Peak email</div><div class="v"><span class="pill off">Built, off</span>Hourly sender from your Peak Outlook, sponsor and expo lists. Both lists paused, templates marked DRAFT. Nothing sent.</div></div>
+  <div class="row"><div class="k">Email drafts</div><div class="v"><span class="pill off">Built, off</span>Sponsor and expo drafts written with a fact-check log, for your and Peak’s approval. Nothing loaded into the sender.</div></div>
+  <div class="row"><div class="k">Microsoft app</div><div class="v"><span class="pill off">Built, off</span>The “Matthew outreach” app is registered for your Peak Outlook. Admin consent from Tyler is pending.</div></div>
+  <div class="row"><div class="k">Meeting</div><div class="v"><span class="pill off">Built, off</span>Thu 19 Nov 2:30 pm noted: a paid agreement first; DKIM on hold.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Outbox <span class="n">2</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Outbox</div><div class="v"><span class="pill live">Live</span>Every automated email in one private hub tab with its own sign-in. Peak has full controls; Sixfold and Traverse are read only; Texts is a placeholder. The Peak sender moved in.</div></div>
+  <div class="row"><div class="k">Failed sends</div><div class="v"><span class="pill live">Live</span>The morning email card says failed sends are retried hourly (the 87 in 30 days were the refused password of 14 to 23 Oct).</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Surge and Google <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Surge LinkedIn</div><div class="v"><span class="pill off">Built, off</span>You are Super admin. A Surge-owned LinkedIn developer app is set up and verified; posting permission waits on LinkedIn’s review.</div></div>
+  <div class="row"><div class="k">Google profile</div><div class="v"><span class="pill off">Built, off</span>Owner invite accepted on the Sixfold email. Transfer is allowed after 7 days, on 24 Nov. Jen added as Manager on Google and on Yelp.</div></div>
+  <div class="row"><div class="k">Blotato</div><div class="v"><span class="pill live">Live</span>No longer used; posting runs through the post calendar.</div></div>
+</div>
+</div>
+<div class="sec">
+<h2>Traverse and Sixfold <span class="n">6</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Houston lawn sizes</div><div class="v"><span class="pill live">Live</span>1,507,366 of 1,566,100 doors measured on the Houston test install; 90 door files match.</div></div>
+  <div class="row"><div class="k">Houston test install</div><div class="v"><span class="pill live">Live</span>Texas, lawn and aeration only, for you. No account for Bryce yet.</div></div>
+  <div class="row"><div class="k">Storm history</div><div class="v"><span class="pill live">Live</span>Live on Roofing. Storm and roof data work continues on the cloud machine.</div></div>
+  <div class="row"><div class="k">Every home</div><div class="v"><span class="pill live">Live</span>Live after the finisher’s own checks (Sixfold read-back 419 door files match; five editions match). Finisher fixed for the Wi-Fi queue.</div></div>
+  <div class="row"><div class="k">App first load</div><div class="v"><span class="pill live">Live</span>Town list only; each town’s neighbourhoods load when opened.</div></div>
+  <div class="row"><div class="k">Stats page</div><div class="v"><span class="pill live">Live</span>“Day by day” tally for Jen: new leads by source, texts, calls by result, leads removed, last 7 days.</div></div>
+</div>
+</div>
+<div class="sec wait">
+<h2>Waiting on you <span class="n">4</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Peak meeting</div><div class="v">Thu 19 Nov, 2:30 pm. Settle a paid agreement before more Peak work.</div></div>
+  <div class="row"><div class="k">Tyler</div><div class="v">Microsoft admin consent for the “Matthew outreach” app, and his OK to email in Peak’s name.</div></div>
+  <div class="row"><div class="k">Google profile</div><div class="v">Make the Sixfold email primary owner on 24 Nov.</div></div>
+  <div class="row"><div class="k">Bryce</div><div class="v">No account for him yet on the Houston install.</div></div>
+</div>
+</div>
+</div>
+</body>
+</html>

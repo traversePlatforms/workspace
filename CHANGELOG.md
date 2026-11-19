@@ -8,6 +8,34 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-11-18 (Wednesday)
+
+- **J.A.R.V.I.S. (live):** the Assistant and the desk merged into one page in the Halo design, opened by the hub's J.A.R.V.I.S. tab; Traverse calendar connected (read only); Check off on Builds and Team requests; spoken replies (iPhone too); chip buttons toggle; no screen jump to the desk; one bad panel can't blank the page. 119/119 tests.
+- **Jen's fixes (live):** her long J.A.R.V.I.S. chats were too big for the laptop's command line and her request bounced; fixed, and the update script now refuses a stale build. "Another service" (fall cleanup only) on the Quick quote, the Deposit and form page and a new customer "Send a form".
+- **Peak (live, nothing sent):** desk facelift plus Sixfold's outreach tools; sender wired to the desk (opens on, book-a-time off, lists paused); contacts can be edited and removed; Coca-Cola test contact removed. Meeting Thu 19 Nov 2:30 pm.
+- **Houston (live):** lot lines on every card and aerial view for all 1,566,100 doors, door dots moved onto their lots. Sharper photos not free (H-GAC 6-inch imagery, about $500 a tile or $60,000 for the region): your call.
+- **Roofing and Solar (live):** storm history and roof material for the new Colorado homes; the cloud machine has nothing left before it stops 22 Nov.
+- **Sixfold emails (built, live 19 Nov):** opens and clicks shown in Outbox, wording editable there. Bad Daddy's email to Jamie drafted (tour Tue 24 Nov, 2:30 pm); you send it. Reminders: reMarkable charges 7 Jan 2027; P-7 paid J.A.R.V.I.S. voice, later.
+- **Waiting on you:** Peak meeting; Tyler's admin consent; Jamie's email; the imagery decision; Bryce's prices and branding; Google profile transfer 24 Nov and LinkedIn's review.
+
+## 2026-11-17 (Tuesday)
+
+- **Outbox (live):** every automatic email in one private hub tab (Peak with full controls, Sixfold and Traverse read only).
+- **Peak (nothing sent):** desk rebuilt as a sponsor and expo pipeline, Cai has a login; hourly sender from your Peak Outlook with both lists paused; sponsor and expo drafts written; "Matthew outreach" Microsoft app registered, Tyler's admin consent pending.
+- **Google and LinkedIn:** Sixfold email accepted the owner invite on the Google profile (transfer allowed 24 Nov); Jen added as Manager on Google and Yelp. You are Super admin on Surge LinkedIn; a Surge-owned developer app is set up and verified, posting permission pending LinkedIn's review. Blotato no longer used.
+- **Houston (live):** lawn sizes on the test install, 1,507,366 of 1,566,100 doors; Texas, lawn and aeration only, no account for Bryce yet.
+- **Traverse and Sixfold (live):** storm history live on Roofing; every-home push live after its own checks; app loads the town list first; Day by day tally on Jen's stats page.
+- **Waiting on you:** Peak meeting Thu 19 Nov 2:30 pm; Tyler's consent; Google profile transfer 24 Nov; an account for Bryce.
+
+## 2026-11-16 (Monday)
+
+- **Sixfold handover:** Jen took over (call at 3 pm, one-page call sheet); you no longer approve Sixfold posts. Task list cleaned up; five leads removed.
+- **Posts:** 12 Dec photo set posted to Facebook and Instagram on your go (photo 3 out, "Saturday photo day" out); new December set from 4 new photos; December filled through the 31st as drafts for Jen. Jen has a Sixfold-only post-calendar sign-in; a 10-minute laptop check answers her change requests; Claude drafts each month on the 15th and learns from her edits.
+- **Yelp (live):** listing set up with number, categories, "what makes us unique", service area and photos folder.
+- **Drives and laptop:** two shared drives merged into one "Sixfold" drive shared with Jen; ID photos moved to a personal folder; overheating found, lid sleeps on battery, heavy jobs wait for power, hibernation back on.
+- **Profit email (live):** monthly, your 5% from November, Jen 10% per job she books, Brad 20%. Houston test install created (Texas, lawn and aeration only).
+- **Waiting on you:** accept the Google profile owner invite; TR-36 county emails; Square bank links.
+
 ## 2026-11-15 (Sunday)
 
 - **Sixfold handover to Jen and Brad (live):** all new leads go to Jen from 11:08 MT (Matthew's 59 stay his); end-of-day and weekly reports also go to Jen's address; J.A.R.V.I.S. rules for price changes (no math shown) and contained vs drastic features; job photos copy nightly to the "Photo content dump" shared drive; profit check built into the overnight check; J.A.R.V.I.S. privacy (own chats only, Matthew sees all); Jen's admin account spec written, build in progress for Monday; December newsletter draft due 24 Nov.
