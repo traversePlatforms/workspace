@@ -7,7 +7,7 @@ declare(strict_types=1);
 const G_SCOPES = 'https://www.googleapis.com/auth/gmail.modify';
 /* 18 Nov (Matthew: "it should show my traverse one, which ill add both business and personal items to" ... "i will manually add stuff to
    my traverse calendar or tell you to do it"): Calendar EVENTS (read, and add when he asks), asked for only when he connects a calendar from
-   J.A.R.V.I.S. (Connect with cal), so the other inboxes stay Gmail-only. Nothing here writes events yet. */
+   J.A.R.V.I.S. (Connect with cal), so the other inboxes stay Gmail-only. Since 19 Nov J.A.R.V.I.S. adds reminders as events once the connect granted calendar.events (calWrite). */
 const G_CAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 
 function gClient(): array {
@@ -57,7 +57,9 @@ function gCallback(string $code, string $state): ?string {
         $a[$email] = ['email' => $email, 'label' => $old['label'] ?? accountLabel($email), 'about' => $old['about'] ?? accountAbout($email), 'signature' => $old['signature'] ?? 'Matthew',
             'refresh' => (string) ($t['refresh_token'] ?? ($old['refresh'] ?? '')), 'access' => (string) $t['access_token'], 'accessUntil' => time() + (int) ($t['expires_in'] ?? 3000) - 60,
             'connected' => $old['connected'] ?? time(), 'lastCheck' => $old['lastCheck'] ?? 0, 'on' => $old['on'] ?? true,
-            'cal' => str_contains((string) ($t['scope'] ?? ''), 'auth/calendar') || !empty($old['cal'])];   /* Google lists every granted scope */
+            'cal' => str_contains((string) ($t['scope'] ?? ''), 'auth/calendar') || !empty($old['cal']),
+            /* 19 Nov: events can be ADDED (J.A.R.V.I.S. reminders) only when this connect granted calendar.events itself, not calendar.readonly */
+            'calWrite' => (bool) preg_match('#auth/calendar\.events(\s|$)#', (string) ($t['scope'] ?? '')) || !empty($old['calWrite'])];   /* Google lists every granted scope */
         return $a;
     });
     alog('account connected', ['email' => $email]);

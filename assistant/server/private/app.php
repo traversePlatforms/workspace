@@ -55,6 +55,10 @@ if ($action === 'home') {
 if ($action === 'jvstatus') out(jvStatus());
 if ($action === 'jvteamhide') { if (!$isPost) out(['ok' => false], 405); out(jvTeamHide((string) ($body['key'] ?? ''), (int) ($body['updated'] ?? 0))); }
 if ($action === 'jvbuildhide') { if (!$isPost) out(['ok' => false], 405); out(jvHide((string) ($body['id'] ?? ''), (int) ($body['at'] ?? 0))); }
+/* 19 Nov (P-8): reminders (add, done, undo, snooze, delete) and Matthew's tap on one "Waiting on you" item; lib/jarvis.php */
+if ($action === 'jvremind') { if (!$isPost) out(['ok' => false], 405); out(jvRemAdd((string) ($body['text'] ?? ''), (string) ($body['date'] ?? ''), (string) ($body['time'] ?? ''), is_array($body['money'] ?? null) ? $body['money'] : null, 'page')); }
+if ($action === 'jvremindset') { if (!$isPost) out(['ok' => false], 405); out(jvRemSet((string) ($body['id'] ?? ''), (string) ($body['op'] ?? ''), (int) ($body['days'] ?? 1))); }
+if ($action === 'jvdecide') { if (!$isPost) out(['ok' => false], 405); out(jvDecide($body)); }
 if (!$isPost) out(['ok' => false, 'error' => 'POST needed.'], 405);
 if ($action === 'setup') {   /* keys go in here, never through chat; an empty field leaves the saved one alone */
     jedit('config.json', function ($c) use ($body) {

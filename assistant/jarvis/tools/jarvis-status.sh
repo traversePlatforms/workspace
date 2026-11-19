@@ -15,6 +15,17 @@
 #   bash assistant/jarvis/tools/jarvis-status.sh build list
 #       a builder (a Claude session or a long script) calls these as it goes; each change is pushed straight away (if the server is
 #       out of reach it goes at the next overnight check). Finished builds show for a day; one with no word for 6 hours shows as quiet.
+#   bash assistant/jarvis/tools/jarvis-status.sh beat
+#       19 Nov (P-8): the laptop's heartbeat (one tiny file, beat.txt). help-watch.sh sends it every 5 minutes while it runs, so the page can
+#       say "Laptop asleep since 6:32 pm: desk requests will run when it wakes". Any push counts as a beat too.
+#   bash assistant/jarvis/tools/jarvis-status.sh waiting add <id> <Surge|Sixfold|Traverse|Peak|Personal|Other> "<question>" "<what Approve and Decline do>" ["<where it came from>"]
+#   bash assistant/jarvis/tools/jarvis-status.sh waiting drop <id>        (after a session has acted on his decision)
+#   bash assistant/jarvis/tools/jarvis-status.sh waiting list
+#       19 Nov (P-8): "Waiting on you", the decisions only Matthew can make, kept in assistant/jarvis/waiting.json and pushed straight away.
+#       Each of his taps (Approve or Decline, with a note) covers that one item. Never a social post (the post calendar approves those;
+#       Sixfold posts are Jen's) and never an email or text to send: those are refused here and dropped by the server.
+#   Money (19 Nov): every push also sends the money summary that jarvis-money.mjs keeps (the Spend Ledger's totals, Traverse's Stripe read
+#       only, refreshed at most every 25 minutes). Totals only.
 # Never prints or sends a code, key or token: the overnight report has none (its own rule), and only its counts and PROBLEM lines go.
 set -u
 exec < /dev/null
@@ -33,10 +44,12 @@ running_jobs() {   # 18 Nov: data finishers (finish-*.sh) running on this laptop
     printf '%s\t%s\n' "$b" "$log"
   done
 }
+WAITING="$REPO/assistant/jarvis/waiting.json"
 payload() {   # the one file the server keeps
   running_jobs > "$DIR/auto-jobs.tsv"
+  [ -n "${JARVIS_NO_STRIPE:-}" ] || node "$REPO/assistant/jarvis/tools/jarvis-money.mjs" stripe >/dev/null 2>&1   # read only, at most every 25 min
   node -e '
-    const fs = require("fs"), [bf, lf, af] = process.argv.slice(1);
+    const fs = require("fs"), [bf, lf, af, wf, dir] = process.argv.slice(1);
     let builds = []; try { builds = JSON.parse(fs.readFileSync(bf, "utf8")); } catch (e) {}
     // 18 Nov (Matthew: "why doesnt my jarvis have these builds"): data finishers show up on their own, with their log'"'"'s last line
     try {
@@ -53,8 +66,12 @@ payload() {   # the one file the server keeps
       const m = /^== (\d{4}-\d\d-\d\d \d\d:\d\d)/.exec(lines[0] || "");
       over = { at: m ? Math.floor(new Date(m[1].replace(" ", "T") + ":00").getTime() / 1000) : Math.floor(st.mtimeMs / 1000), ok, problems: probs };
     } catch (e) {}
-    process.stdout.write(JSON.stringify({ pushedAt: Math.floor(Date.now() / 1000), overnight: over, builds }));
-  ' "$BUILDS" "$LATEST" "$DIR/auto-jobs.tsv"
+    // 19 Nov: Waiting on you, and the money totals
+    let waiting = []; try { waiting = JSON.parse(fs.readFileSync(wf, "utf8")); } catch (e) {}
+    const rd = f => { try { return JSON.parse(fs.readFileSync(dir + "/" + f, "utf8")); } catch (e) { return null; } };
+    const money = { ledger: rd("money-ledger.json"), stripe: rd("stripe.json") };
+    process.stdout.write(JSON.stringify({ pushedAt: Math.floor(Date.now() / 1000), overnight: over, builds, waiting, money }));
+  ' "$BUILDS" "$LATEST" "$DIR/auto-jobs.tsv" "$WAITING" "$DIR"
 }
 push() {
   payload | $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" 2>/dev/null | grep -q pushed \
@@ -76,8 +93,37 @@ edit() {   # edit <op> <id> [args...]: the builds list, by node
     fs.writeFileSync(f, JSON.stringify(L, null, 1));
   ' "$BUILDS" "$@"
 }
+beat() {   # 19 Nov: the heartbeat, one line; quiet when the server is out of reach (the next one tries again)
+  $SG "umask 077; mkdir -p $DEST && date +%s > $DEST/beat.txt.tmp && mv -f $DEST/beat.txt.tmp $DEST/beat.txt && echo beat" 2>/dev/null | grep -q beat && echo "jarvis beat sent" || { echo "jarvis beat NOT sent"; return 1; }
+}
+wedit() {   # waiting add|drop: assistant/jarvis/waiting.json, by node
+  node -e '
+    const fs = require("fs"), [f, op, id, co, title, detail, from] = process.argv.slice(1);
+    let L = []; try { L = JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) {}
+    if (op === "drop") { const n = L.length; L = L.filter(w => w.id !== id); if (L.length === n) { console.error("nothing called " + id); process.exit(1); } }
+    else {
+      const C = ["Surge", "Sixfold", "Traverse", "Peak", "Personal", "Other"];
+      if (!/^[a-z0-9][a-z0-9-]{0,39}$/.test(id || "")) { console.error("the id is lower-case letters, digits and dashes"); process.exit(1); }
+      if (!C.includes(co)) { console.error("the company is one of: " + C.join(", ") + " (never guessed, never blended)"); process.exit(1); }
+      if (!title || !detail) { console.error("give the question and what Approve and Decline do"); process.exit(1); }
+      if (/\b(approve|ok|okay|publish|schedule)\b[^.]{0,40}\b(post|posts|caption|reel|story|stories)\b|\bsend (the|this|these|that|an?)\b[^.]{0,20}\b(email|emails|text|texts|newsletter)\b/i.test(title + " " + detail)) {
+        console.error("not here: posts are approved in the post calendar (Sixfold posts by Jen) and emails go out only from Outbox or his own Send"); process.exit(1); }
+      L = L.filter(w => w.id !== id);
+      L.push({ id, title: title.slice(0, 160), detail: detail.slice(0, 400), company: co, from: (from || "").slice(0, 80), kind: "decision", at: Math.floor(Date.now() / 1000) });
+    }
+    fs.writeFileSync(f, JSON.stringify(L, null, 1) + "\n");
+  ' "$WAITING" "$@"
+}
 case "${1:-}" in
   push) push ;;
+  beat) beat ;;
+  waiting)
+    shift; op="${1:-}"
+    case "$op" in
+      list) cat "$WAITING"; echo ;;
+      add|drop) wedit "$@" && push ;;
+      *) echo "usage: jarvis-status.sh waiting add <id> <company> \"<question>\" \"<what Approve and Decline do>\" [\"<from>\"] | drop <id> | list"; exit 1 ;;
+    esac ;;
   build)
     shift; op="${1:-}"; id="${2:-}"
     case "$op" in
@@ -86,5 +132,5 @@ case "${1:-}" in
         shift; edit "$op" "$@" && push ;;
       *) echo "usage: jarvis-status.sh build start|step|pct|done|fail|drop|list <id> ..."; exit 1 ;;
     esac ;;
-  *) echo "usage: jarvis-status.sh push | build ..."; exit 1 ;;
+  *) echo "usage: jarvis-status.sh push | beat | build ... | waiting ..."; exit 1 ;;
 esac
