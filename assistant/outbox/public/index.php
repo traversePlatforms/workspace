@@ -43,6 +43,16 @@ iframe{width:100%;border:1px solid var(--line);border-radius:12px;background:var
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 code{font:13px ui-monospace,Consolas,monospace;background:var(--bg);padding:2px 5px;border-radius:5px;word-break:break-all}
 .flash{background:var(--badbg);color:var(--bad);border-radius:8px;padding:8px 10px;font-size:14px}
+.trk{margin:8px 0 2px;border-top:1px solid var(--line);padding-top:8px}.trk h3{font-size:14px;margin:0 0 4px}
+table.t{border-collapse:collapse;width:100%;font-size:13px;margin:4px 0}table.t th,table.t td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}table.t th{color:var(--soft);font-weight:600}
+.yes{color:var(--ok);font-weight:700}.no{color:var(--soft)}.tag{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--okbg);color:var(--ok);margin-left:4px}
+#ed{position:fixed;inset:0;background:rgba(10,14,20,.55);z-index:50;overflow:auto;padding:18px 10px}#ed .box{max-width:980px;margin:0 auto;background:var(--card);border-radius:14px;padding:16px 18px;border:1px solid var(--line)}
+.warn{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:14px;margin:8px 0}
+.ln{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0}.ln label{margin:0 0 4px;color:var(--ink);font-weight:600}.ln .w{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--offbg);color:var(--soft);margin-left:6px}
+.ln textarea{font:14px system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;min-height:38px;resize:vertical}
+.ln .err{color:var(--bad);font-size:13px;margin-top:3px}.ln .chg{border-color:var(--warn)}.chips{font-size:12px;color:var(--soft);margin-top:3px}.chips code{font-size:12px}
+.edgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.edgrid{grid-template-columns:1fr}}
+iframe.pv{min-height:520px;background:#fff}
 </style>
 </head>
 <body>
@@ -58,6 +68,7 @@ code{font:13px ui-monospace,Consolas,monospace;background:var(--bg);padding:2px 
   <div class="tabs" role="tablist" id="tabs"></div>
   <section id="sec"></section>
 </main>
+<div id="ed" class="hide" role="dialog" aria-modal="true" aria-label="Change the words"></div>
 <script>
 'use strict';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -69,7 +80,7 @@ async function api(action,body){
   const o=body===undefined?{credentials:'same-origin'}:{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-OB':'1'},body:JSON.stringify(body)};
   const r=await fetch('api.php?action='+action,o); let j={}; try{j=await r.json()}catch(e){j={ok:false,error:r.status===202?'The server did not answer (status 202: the host sometimes turns away requests from this network). Try again from another connection.':'The server did not answer properly.'}}
   if(j.signin){show(false);throw new Error('signin')}
-  if(!j.ok)throw new Error(j.error||'Something went wrong.'); return j;
+  if(!j.ok){const er=new Error(j.error||'Something went wrong.');er.errors=j.errors||null;throw er} return j;
 }
 function show(on){$('#signin').classList.toggle('hide',on);$('#app').classList.toggle('hide',!on);$('#out').classList.toggle('hide',!on);$('#reload').classList.toggle('hide',!on)}
 function flash(t){$('#flash').innerHTML=t?'<div class="flash">'+t+'</div>':''}
@@ -100,8 +111,23 @@ function card(it){
   if(it.note)h+='<div class="note">'+esc(it.note)+'</div>';
   if(it.skipped30)h+='<div class="note">'+it.skipped30+' not sent in 30 days (no email on file or unsubscribed).</div>';
   if(it.fails.length)h+='<div class="fails"><b>Failed: '+it.failToday+' today, '+it.fail7+' in 7 days, '+it.fail30+' in 30 days</b><br>'+it.fails.map(f=>esc(when(f.at)+': '+f.why)).join('<br>')+'</div>';
+  if(it.track)h+=trackHtml(it);
+  if(it.editable)h+='<div class="row" style="margin-top:8px"><button data-ed="'+esc(it.id)+'">Change the words</button><span class="note">Opens the wording, a preview and the saved versions.</span></div>';
   h+='<details><summary>Where it is turned on or off</summary><p class="note">'+esc(it.switch)+'</p></details>';
   return h+'</section>';
+}
+const pc=x=>x===null||x===undefined?'-':x+'%', yn=b=>b?'<span class="yes">yes</span>':'<span class="no">no</span>';
+function trackHtml(it){
+  const t=it.track; if(!t.sentAll)return '<div class="trk note">Opens and clicks are counted from the next '+esc(it.name.toLowerCase())+' sent. Nothing counted yet.</div>';
+  let h='<div class="trk"><div class="nums">'+[['sent, 7 days',t.sent7],['sent, 30 days',t.sent30],['opened, 30 days',t.opened30+(t.sent30?' ('+pc(t.openRate30)+')':'')],['clicked, 30 days',t.clicked30+(t.sent30?' ('+pc(t.clickRate30)+')':'')]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>';
+  h+='<p class="note tiny">Opened may include Apple Mail\'s automatic opens (it loads every email as it arrives), so read opens as high. Clicks are the reliable number.</p>';
+  if(t.links30.length)h+='<p class="note">Links clicked, 30 days: '+t.links30.map(l=>esc(l.what)+' '+l.clicks).join(' · ')+'</p>';
+  const vh=it.id==='newsletter'?'Issue':'Wording';
+  h+='<details'+(t.byVersion.length>1?' open':'')+'><summary>By '+vh.toLowerCase()+' ('+t.byVersion.length+')</summary><table class="t"><tr><th>'+vh+'</th><th>Sent</th><th>Opened</th><th>Clicked</th></tr>'
+    +t.byVersion.map(b=>'<tr><td>'+esc(b.label)+(b.active?'<span class="tag">in use</span>':'')+'<br><span class="note tiny">'+esc(when(b.first))+(b.last!==b.first?' to '+esc(when(b.last)):'')+'</span></td><td>'+b.sent+'</td><td>'+b.opened+' ('+pc(b.openRate)+')</td><td>'+b.clicked+' ('+pc(b.clickRate)+')</td></tr>').join('')+'</table></details>';
+  h+='<details><summary>Last '+t.recent.length+' sent</summary><table class="t"><tr><th>Sent</th><th>'+vh+'</th><th>Opened</th><th>Clicked</th></tr>'
+    +t.recent.map(r=>'<tr><td>'+esc(when(r.at))+'</td><td>'+esc(r.v)+'</td><td>'+yn(r.opened)+'</td><td>'+yn(r.clicked)+'</td></tr>').join('')+'</table><p class="note tiny">No names here on purpose: each row is one email to one customer.</p></details>';
+  return h+'</div>';
 }
 function drawPeak(){
   const P=V.peak, R=P.redirect||{};
@@ -126,15 +152,88 @@ function drawBiz(B,lead){
   if(B.bounceScan)h+='<p class="note">Bounce check, last run: '+esc(B.bounceScan)+'</p>';
   h+='<div class="grid" style="margin-top:14px">'+B.items.map(card).join('')+'</div>';
   $('#sec').innerHTML=h;
+  document.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>edOpen(b.dataset.ed));
 }
 function draw(){
   drawTop();
   if(tab==='peak'){if(!peakFrame||!document.body.contains(peakFrame))drawPeak();else drawPeakTop()}
   else{peakFrame=null;
-    if(tab==='sixfold')drawBiz(V.sixfold,'Sixfold 365 (Brandon\'s company, run by Jen). <b>Read only:</b> these come from the Sixfold app, and nothing here changes them. Any change there needs your go.');
+    if(tab==='sixfold')drawBiz(V.sixfold,'Sixfold 365 (Brandon\'s company, run by Jen). These come from the Sixfold app, and nothing here turns one on or off or changes who gets it. <b>One thing you can change here:</b> the words of the four customer emails (Change the words), which go to Jen\'s customers. Opens and clicks of the customer emails are counted from 18 Nov 2026.');
     else if(tab==='traverse')drawBiz(V.traverse,'Traverse (yours): the Prospect Desk, the website, sign-ups and the client apps. <b>Read only</b> in this version.');
     else $('#sec').innerHTML='<section class="card"><h2>Texts</h2><p class="note">'+esc(V.texts.note)+'</p></section>';}
 }
+/* the words of Sixfold's customer emails (2026-11-18): the lines, a preview with a made-up customer, Save, the versions and Put this back.
+   The Sixfold app checks and keeps them; this only shows and sends them. */
+let W=null, edK=null, edLines={}, edSample='a';
+const WHERE={subject:'Subject',email:'In the email',button:'Button',text:'Plain-text copy only'};
+async function edOpen(k){
+  try{W=await api('sxwords')}catch(e){if(e.message!=='signin')flash(esc(e.message));return}
+  const K=W.kinds&&W.kinds[k]; if(!K){flash('That email cannot be changed here.');return}
+  edK=k; edLines=Object.assign({},K.now); edSample=Object.keys(K.samples)[0]||'a';
+  $('#ed').classList.remove('hide'); document.body.style.overflow='hidden'; edDraw(); edPreview();
+}
+function edClose(){$('#ed').classList.add('hide');$('#ed').innerHTML='';document.body.style.overflow='';edK=null}
+function edDraw(){
+  const K=W.kinds[edK], it=(V.sixfold.items.find(i=>i.id===edK)||{}), t=it.track||{byVersion:[]};
+  let h='<div class="box"><div class="row" style="justify-content:space-between"><h2 style="margin:0">'+esc(K.name)+': the words</h2><button id="edx">Close</button></div>';
+  h+='<div class="warn"><b>Jen runs Sixfold: these words go to Jen\'s customers.</b> A save changes every '+esc(K.name.toLowerCase())+' from the next one on: the automatic ones and the ones Jen sends from her app. Nothing is sent now. Each save is logged as "Matthew (Outbox)", and any earlier wording can be put back. Let Jen know when you change one.</div>';
+  h+='<p class="note">Fields in {curly brackets} are filled in for each customer: keep them as they are. Words in [square brackets] become the link. Lines marked "Plain-text copy only" are in the plain version a few mail apps show instead of the designed one. The boxes, buttons, the balance and the agreement itself stay as they are; only the words change.</p>';
+  h+='<div class="edgrid"><div>';
+  for(const [key,L] of Object.entries(K.lines)){
+    const v=edLines[key]??L.def;
+    h+='<div class="ln" data-lnbox="'+key+'"><label for="ln-'+key+'">'+esc(L.label)+'<span class="w">'+esc(WHERE[L.where]||L.where)+'</span></label>'
+      +'<textarea id="ln-'+key+'" data-ln="'+key+'" rows="'+Math.min(4,Math.max(1,Math.ceil(v.length/55)))+'"'+(v!==K.now[key]?' class="chg"':'')+'>'+esc(v)+'</textarea>'
+      +(L.when?'<div class="chips">'+esc(L.when)+'</div>':'')
+      +(L.fields.length?'<div class="chips">Can use: '+L.fields.map(f=>'<code title="'+esc(W.fields[f]||'')+'">{'+f+'}</code>').join(' ')+(L.need.length?' · must keep '+L.need.map(f=>'<code>{'+f+'}</code>').join(' '):'')+'</div>':'')
+      +(L.link?'<div class="chips">Must keep one pair of [square brackets]: the words that become the link.</div>':'')
+      +'<div class="chips" data-defbox="'+key+'"'+(v===L.def?' style="display:none"':'')+'>Built-in: '+esc(L.def)+' <button data-def="'+key+'" style="min-height:0;padding:2px 8px;font-size:12px">Use the built-in words</button></div>'
+      +'<div class="err" data-err="'+key+'"></div></div>';
+  }
+  h+='</div><div><div class="row"><b>Preview</b>'+Object.entries(K.samples).map(([s,l])=>'<button data-smp="'+s+'"'+(s===edSample?' class="main"':'')+'>'+esc(l)+'</button>').join('')+'<button id="edpv">Update the preview</button></div>'
+    +'<p class="note" id="edsubj"></p><iframe class="pv" id="edfr" sandbox="" title="Preview"></iframe><details><summary>Plain-text copy</summary><pre id="edtxt" style="white-space:pre-wrap;font-size:12px"></pre></details>'
+    +'<p class="note tiny">A made-up customer, Alex Sample. A preview\'s links are the plain ones; a real email counts opens and clicks.</p>'
+    +'<label for="ednote">What changed (optional, kept with the version)</label><input id="ednote" maxlength="200">'
+    +'<div class="row" style="margin-top:10px"><button class="main" id="edsave">Save for Jen\'s customers</button><span class="note" id="edmsg"></span></div></div></div>';
+  const stat=v=>(t.byVersion||[]).find(b=>b.v===v);
+  const vs=[{v:'v0',at:0,by:'',note:'The words this email has always had.'}].concat(K.versions.slice().reverse());
+  h+='<h3 style="margin:18px 0 4px;font-size:15px">Versions: compare how each did</h3><table class="t"><tr><th>Version</th><th>Saved</th><th>Sent</th><th>Opened</th><th>Clicked</th><th></th></tr>'
+    +vs.map(x=>{const s=stat(x.v);return '<tr><td>'+(x.v==='v0'?'Built-in words':'Version '+esc(x.v.slice(1)))+(K.active===x.v?'<span class="tag">in use</span>':'')+(x.note?'<br><span class="note tiny">'+esc(x.note)+'</span>':'')+'</td><td>'+(x.at?esc(when(x.at))+(x.by?'<br><span class="note tiny">'+esc(x.by)+'</span>':''):'-')+'</td><td>'+(s?s.sent:0)+'</td><td>'+(s?s.opened+' ('+pc(s.openRate)+')':'-')+'</td><td>'+(s?s.clicked+' ('+pc(s.clickRate)+')':'-')+'</td><td>'+(K.active===x.v?'':'<button data-rv="'+esc(x.v)+'">Put this back</button>')+'</td></tr>'}).join('')+'</table>'
+    +'<p class="note tiny">Opened may include Apple Mail\'s automatic opens. Clicks are the number to compare. Give a wording a few weeks of sends before judging it.</p>';
+  const lg=(W.log||[]).filter(r=>r.kind===edK).slice(-10).reverse();
+  if(lg.length)h+='<details><summary>Changes ('+lg.length+')</summary><p class="note">'+lg.map(r=>esc(when(r.at)+': '+r.by+' '+r.what+' '+(r.v==='v0'?'the built-in words':'version '+String(r.v).slice(1)))).join('<br>')+'</p></details>';
+  $('#ed').innerHTML=h+'</div>';
+  $('#edx').onclick=edClose;
+  document.querySelectorAll('[data-ln]').forEach(a=>a.oninput=()=>{const k=a.dataset.ln;edLines[k]=a.value;a.classList.toggle('chg',a.value!==K.now[k]);const d=document.querySelector('[data-defbox="'+k+'"]');if(d)d.style.display=a.value===K.lines[k].def?'none':''});
+  document.querySelectorAll('[data-def]').forEach(b=>b.onclick=()=>{const k=b.dataset.def,a=$('#ln-'+k);a.value=K.lines[k].def;a.oninput();edPreview()});
+  document.querySelectorAll('[data-smp]').forEach(b=>b.onclick=()=>{edSample=b.dataset.smp;document.querySelectorAll('[data-smp]').forEach(x=>x.classList.toggle('main',x===b));edPreview()});
+  $('#edpv').onclick=edPreview; $('#edsave').onclick=edSave;
+  document.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>edRestore(b.dataset.rv));
+}
+function edErrs(errs){document.querySelectorAll('[data-err]').forEach(d=>{d.textContent=(errs&&errs[d.dataset.err])||''})}
+async function edPreview(){
+  const k=edK;
+  try{const r=await api('sxpreview',{kind:k,lines:edLines,sample:edSample}); if(k!==edK)return;
+    edErrs(r.errors); $('#edsubj').innerHTML='<b>Subject:</b> '+esc(r.subject); $('#edfr').srcdoc=r.html; $('#edtxt').textContent=r.text;
+    $('#edmsg').textContent=r.errors&&Object.keys(r.errors).length?'Lines in red need fixing; the preview uses the words in use for those.':'';
+  }catch(e){if(e.message!=='signin')$('#edmsg').textContent=e.message}
+}
+async function edSave(){
+  const K=W.kinds[edK];
+  if(!confirm('Save these words for the '+K.name.toLowerCase()+'?\n\nJen\'s customers get them from the next one sent. The save is logged, and you can put the old words back any time.'))return;
+  try{const r=await api('sxsave',{kind:edK,lines:edLines,note:$('#ednote').value}); await edReload('Saved. Version '+r.active.slice(1)+' is in use from the next email.')}
+  catch(e){if(e.message==='signin')return; edErrs(e.errors); $('#edmsg').textContent=e.message}
+}
+async function edRestore(v){
+  const K=W.kinds[edK];
+  if(!confirm('Put back '+(v==='v0'?'the built-in words':'version '+v.slice(1))+' for the '+K.name.toLowerCase()+'?\n\nJen\'s customers get those words from the next one sent. This is logged.'))return;
+  try{await api('sxrestore',{kind:edK,v}); await edReload((v==='v0'?'The built-in words are':'Version '+v.slice(1)+' is')+' in use again from the next email.')}
+  catch(e){if(e.message!=='signin')$('#edmsg').textContent=e.message}
+}
+async function edReload(msg){
+  const k=edK; W=await api('sxwords'); try{V=await api('state');draw()}catch(e){}
+  edK=k; edLines=Object.assign({},W.kinds[k].now); edDraw(); await edPreview(); $('#edmsg').textContent=msg;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&edK)edClose()});
 function drawPeakTop(){const n=$('#sec .nums');if(n&&V.peak.ready)n.innerHTML=[['sent today',V.peak.today],['last 7 days',V.peak.d7],['last 30 days',V.peak.d30],['clicks, 30 days',V.peak.clicks30]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')}
 load(); setInterval(()=>{if(!document.hidden&&V)load()},5*60*1000);
 </script>

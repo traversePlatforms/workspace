@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 /* Outbox's API (index.php). Everything needs the sign-in code except signin itself. A POST must carry X-OB: 1 (a form from another site
-   cannot set it). The Sixfold and Traverse sections are read only: there is no action here that changes what they send. The Peak
-   section's controls are the Peak sender's own API (peak/api.php), which takes this sign-in. */
+   cannot set it). The Traverse section is read only. The Sixfold section is read only except for the WORDS of its four customer emails
+   (sxwords, sxpreview, sxsave, sxrestore, 2026-11-18), which the Sixfold app itself checks, keeps in versions and logs; nothing here turns an
+   email on or off or changes who gets it. The Peak section's controls are the Peak sender's own API (peak/api.php), which takes this sign-in. */
 require __DIR__ . '/lib.php';
 header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff'); header('X-Robots-Tag: noindex');
 function out(array $a): never { echo json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE); exit; }
@@ -38,6 +39,19 @@ if ($action === 'signout') {
     setcookie(obCookie(), '', ['expires' => 1, 'path' => OB_PATH . '/']); out(['ok' => true]);
 }
 if ($action === 'state') out(obView());
+/* the words of Sixfold's customer emails (2026-11-18): Outbox asks the Sixfold app, which checks, keeps and uses them (rounds.php a365words*).
+   Only here, with Matthew's sign-in. A save or a put-back changes what Jen's customers get from the next email on, and the app logs who did it. */
+if ($action === 'sxwords') out(obApp('a365words'));
+if (in_array($action, ['sxpreview', 'sxsave', 'sxrestore'], true)) {
+    if (!$isPost) fail('POST required', 405);
+    $kind = (string) ($body['kind'] ?? ''); if (!in_array($kind, OB_SX_EDITABLE, true)) fail('Which email?');
+    $send = ['kind' => $kind, 'by' => 'Matthew (Outbox)'];
+    if ($action === 'sxpreview') $r = obApp('a365wordspreview', $send + ['lines' => (array) ($body['lines'] ?? []), 'sample' => (string) ($body['sample'] ?? 'a')]);
+    elseif ($action === 'sxsave') $r = obApp('a365wordssave', $send + ['lines' => (array) ($body['lines'] ?? []), 'note' => (string) ($body['note'] ?? '')]);
+    else $r = obApp('a365wordsrestore', $send + ['v' => (string) ($body['v'] ?? '')]);
+    if (empty($r['ok'])) { http_response_code(400); out(['ok' => false, 'error' => (string) ($r['error'] ?? 'That did not work.')] + (isset($r['errors']) ? ['errors' => $r['errors']] : [])); }
+    out($r);
+}
 /* which redirect Microsoft returns to after Connect Microsoft: the old registered address, or Outbox's own once Matthew has added it in Entra */
 if ($action === 'peakreturn') {
     if (!$isPost) fail('POST required', 405);

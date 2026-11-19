@@ -31,6 +31,8 @@ for b in "$R/app/dist/summit-de59ae83/index.html" "$D/tr-cb2e8587/index.html"; d
 for f in index.html version.txt; do cp_if "$R/app/dist/summit-de59ae83/$f" summit-de59ae83; done
 for f in sw.js es.json; do cp_if "$R/app/summit-de59ae83/$f" summit-de59ae83; done
 for f in rounds.php billing.php square-oauth.php webpush.php; do cp_if "$R/app/api/$f" api; done
+# Sixfold 365 customer emails' opens and clicks (2026-11-18): the tracker, public_html/m/index.php (source app/mailtrack/), standalone, read by no install but Sixfold
+cp_if "$R/app/mailtrack/index.php" m
 # Sign in with Google / Microsoft for Setup › Email (2026-10-30): the one callback and the library every install's rounds.php loads beside it
 for f in mail-oauth.php mail-oauth-lib.php care-lib.php; do cp_if "$R/app/api/$f" api; done   # + plans and customer emails (care-lib.php, 2026-10-30), loaded the same way
 # the editions' end-of-day email (2026-10-30): the shared drawing every install's rounds.php loads beside it
@@ -86,7 +88,7 @@ bad=0
 # laptop's address with a 202 page, which would have failed every check below after a sound upload. Same checks, same pass rule.
 CHK=$($SG 'U=https://traverseplatforms.com; for p in summit-de59ae83 tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7; do echo "v $p $(curl -s "$U/$p/version.txt?x=$RANDOM" | head -c 40 | tr -d "\r\n")"; done
 for a in rounds traverse-rounds traverse-yards-rounds traverse-solar-rounds traverse-pest-rounds traverse-security-rounds; do echo "a $a $(curl -s -o /dev/null -w "%{http_code}" "$U/api/$a.php?action=leads")"; done
-echo "s $(curl -s -o /dev/null -w "%{http_code}" "$U/api/satcache.php?l=xx&z=1&x=0&y=0")"; echo "j $(curl -s -o /dev/null -w "%{http_code}" "$U/api/jobber-oauth.php")"; echo "h $(curl -s -o /dev/null -w "%{http_code}" "$U/api/jobber-hook.php")"' < /dev/null)
+echo "s $(curl -s -o /dev/null -w "%{http_code}" "$U/api/satcache.php?l=xx&z=1&x=0&y=0")"; echo "m $(curl -s -o /dev/null -w "%{http_code}" "$U/m/?c=0") $(curl -s -o /dev/null -w "%{http_code}:%{content_type}" "$U/m/?o=0")"; echo "j $(curl -s -o /dev/null -w "%{http_code}" "$U/api/jobber-oauth.php")"; echo "h $(curl -s -o /dev/null -w "%{http_code}" "$U/api/jobber-hook.php")"' < /dev/null)
 chk() { printf '%s\n' "$CHK" | awk -v k="$1" -v n="$2" '$1==k && $2==n {print $3}'; }
 for p in summit-de59ae83 $EDS; do
   [ -f "$p/version.txt" ] || continue
@@ -98,6 +100,8 @@ for a in rounds traverse-rounds traverse-yards-rounds traverse-solar-rounds trav
 done
 # the tile cache refuses anything but a Colorado NAIP tile (400), without fetching (TR-52)
 c=$(printf '%s\n' "$CHK" | awk '$1=="s"{print $2}'); [ "$c" = 400 ] || { echo "  api/satcache.php answered $c"; bad=1; }
+# the email tracker: a link it never sent answers 404 (no redirect), a broken open image still answers the image (2026-11-18)
+c=$(printf '%s\n' "$CHK" | awk '$1=="m"{print $2" "$3}'); [ "$c" = "404 200:image/gif" ] || { echo "  m/ (email tracker) answered $c"; bad=1; }
 # Jobber's callback with no state answers 400 in plain words; its webhook refuses a GET (405) (TR-46)
 c=$(printf '%s\n' "$CHK" | awk '$1=="j"{print $2}'); [ "$c" = 400 ] || { echo "  api/jobber-oauth.php answered $c"; bad=1; }
 c=$(printf '%s\n' "$CHK" | awk '$1=="h"{print $2}'); [ "$c" = 405 ] || { echo "  api/jobber-hook.php answered $c"; bad=1; }

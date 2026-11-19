@@ -3645,6 +3645,203 @@ function mailMime(array $c, string $to, string $subject, string $text, string $h
         . '--' . $bd . $eol . 'Content-Type: text/html; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($html), 76, $eol)
         . '--' . $bd . '--' . $eol);
 }
+/* ---- Sixfold 365's customer emails: their words, kept in versions, and opens and clicks (2026-11-18, Matthew: "I think that we also need
+ * to track the analytics for the emails we send out for sixfold. And id also like to see the analytics under each option in the outbox app so
+ * that I can see whats working and make changes if needed in the outbox app.") ----
+ * THE WORDS. Each customer email (aftercare, the 2-day follow-up, the deposit reminder, the signed copy) is cut into its sentences, a365WordsDefs():
+ * the subject, the greeting, each line and button. The boxes, the balance rules, the tips that depend on the package and the record itself (what
+ * was agreed, the terms, who signed) stay in the code; only the words change. The built-in words (v0) are the code's own, so with nothing saved
+ * every email is exactly as before. A change is made only in Outbox (Matthew's sign-in), server to server (action a365words*, with the key in the
+ * private folder's outbox-key.txt); each save is a new version (who, when) in a365-words.json, logged in a365-words.log, and any version (the
+ * built-in words too) can be put back. Merge fields are {name}; a line with a link marks the link's words in [square brackets] (the plain-text
+ * copy shows "words: address"). A save that drops a field a line must carry (the balance, the pay link) or names an unknown one is refused.
+ * Jen's app sends with whatever is active, the automatic sends and her own buttons alike.
+ * OPENS AND CLICKS. A real customer send (never a test, never the practice copy) gets an id (20 hex, random, nothing about the customer in it):
+ * every https web address in it goes through traverseplatforms.com/m/?c=<id>.<n> and a 1x1 image (m/?o=<id>) sits at the end of the HTML.
+ * mail-sends.log keeps the id, the kind, the time, the words' version and the addresses (by number); m/index.php (source traverse/app/mailtrack/)
+ * looks the address up there, logs open / click / scan in mail-events.log and forwards at once. The unsubscribe links, phone and email links
+ * are left alone. Outbox reads both logs. */
+function a365WordsDefs(): array {
+    static $d = null; if ($d !== null) return $d;
+    $P = fn(string $l, string $def, array $f = [], array $o = []) => ['l' => $l, 'd' => $def, 'f' => $f] + $o + ['need' => [], 'link' => false, 'blank' => false, 'where' => 'email', 'q' => false, 'when' => ''];
+    $tip = 'One of the tips. Leave it empty to leave that tip out.';
+    $d = [
+        'aftercare' => ['name' => 'Aftercare email', 'sample' => ['a' => 'A balance with a pay link, aeration and seed', 'b' => 'Paid in full, aeration only'], 'p' => [
+            'subject' => $P('Subject', 'Your lawn after today: a few tips from {company}', ['first_name', 'company'], ['where' => 'subject']),
+            'greeting' => $P('Greeting', 'Hi {first_name},', ['first_name']),
+            'intro' => $P('Opening line', 'Thanks for having us! Your lawn is done. A few tips for the next couple of weeks:', ['first_name', 'company']),
+            'tip_plugs' => $P('Tip: the plugs', 'Leave the plugs on the lawn. They work back into the grass on their own.', [], ['blank' => true, 'when' => 'Jobs with aeration. ' . $tip]),
+            'tip_water' => $P('Tip: watering', 'Give the lawn a good watering soon.', [], ['blank' => true, 'when' => 'Every job. ' . $tip]),
+            'tip_moist' => $P('Tip: new seed, keep it moist', 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.', [], ['blank' => true, 'when' => 'Jobs with seed. ' . $tip]),
+            'tip_deeper' => $P('Tip: new grass, water deeper', 'Once the new grass is up and rooting, water less often but more deeply.', [], ['blank' => true, 'when' => 'Jobs with seed. ' . $tip]),
+            'tip_nomow' => $P('Tip: mowing', 'Don\'t mow for 4 to 7 days.', [], ['blank' => true, 'when' => 'Jobs with seed. ' . $tip]),
+            'tip_fert' => $P('Tip: fertilizer', 'The fertilizer we put down stays active for about 60 days, so don\'t put down any fertilizer or weed killer for 2 months while the seed comes in.', [], ['blank' => true, 'when' => 'Jobs with seed and fertilizer. ' . $tip]),
+            'tip_bag' => $P('Tip: clippings', 'Bag your clippings if you can.', [], ['blank' => true, 'when' => 'Jobs with seed. ' . $tip]),
+            'paid_card' => $P('Paid by the card on file', 'Your {paid_amount} balance went on your {card} ending {last4}, so you are all set.', ['paid_amount', 'card', 'last4', 'first_name'], ['when' => 'When the balance was charged to their saved card.']),
+            'paid' => $P('Nothing owed', 'Your balance is paid. Thank you!', ['first_name'], ['when' => 'When nothing is owed.']),
+            'owed' => $P('Balance owed', 'Your remaining balance is {balance}.', ['balance', 'first_name'], ['need' => ['balance'], 'when' => 'When a balance is owed.']),
+            'pay_button' => $P('Pay button', 'Pay the {balance} balance', ['balance'], ['where' => 'button', 'when' => 'When a balance is owed and there is a pay link. The button always opens the pay link.']),
+            'pay_text' => $P('Pay link (plain-text copy)', '[You can pay it here]', [], ['link' => true, 'where' => 'text', 'when' => 'When a balance is owed and there is a pay link.']),
+            'disclaimer' => $P('Already-paid note', 'If you\'ve already paid, please disregard this.', [], ['when' => 'Under a balance owed.']),
+            'closing' => $P('Closing line', 'Any questions: call or text {phone}.', ['phone', 'company'], ['need' => ['phone']]),
+        ]],
+        'followup' => ['name' => 'Two-day follow-up', 'sample' => ['a' => 'A balance with a pay link, new seed, the crew\'s notes', 'b' => 'Paid in full, no notes'], 'p' => [
+            'subject' => $P('Subject', 'How\'s the lawn, {first_name}?', ['first_name', 'company'], ['where' => 'subject']),
+            'greeting' => $P('Greeting', 'Hi {first_name},', ['first_name']),
+            'opening' => $P('Opening line', 'Thanks again for having us out on {day}. How\'s the lawn looking? If anything doesn\'t look right, just reply to this email.', ['first_name', 'day', 'company', 'crew'], ['q' => true]),
+            'seed' => $P('New seed line', 'Your new seed is in its first couple of weeks. Keep the top of the soil damp and hold off on mowing until the new grass is up.', [], ['blank' => true, 'when' => 'Seeded jobs from the last two weeks. Leave it empty to leave it out.']),
+            'balance' => $P('Balance owed', 'Your remaining balance is {balance}.', ['balance'], ['need' => ['balance'], 'when' => 'When a balance is owed.']),
+            'balance_call' => $P('Balance, no pay link', 'Call or text {phone} to pay it.', ['phone'], ['need' => ['phone'], 'when' => 'When a balance is owed but there is no pay link.']),
+            'pay' => $P('Pay link', '[You can pay it here.]', [], ['link' => true, 'when' => 'When a balance is owed and there is a pay link.']),
+            'disclaimer' => $P('Already-paid note', 'If you\'ve already paid, please disregard this.', [], ['when' => 'After a balance owed.']),
+            'review' => $P('Review line', 'If you have a minute, we\'d appreciate an [honest Google review].', ['company'], ['link' => true, 'q' => true, 'when' => 'Always (the email does not go without the review link).']),
+            'noticed' => $P('Crew notes: first line', '{crew} noticed a few things while he was there:', ['crew'], ['when' => 'When the office wrote the customer\'s version of the crew\'s notes.']),
+            'want' => $P('Crew notes: work they want', 'Work you mentioned wanting', ['crew'], ['when' => 'Before the work the customer mentioned.']),
+            'suggest' => $P('Crew notes: work suggested', 'Work {crew} would suggest', ['crew'], ['when' => 'Before the work the crew suggests.']),
+            'noticed_end' => $P('Crew notes: last line', 'If you\'d like a price on any of it, just reply.', [], ['q' => true, 'when' => 'After the crew\'s notes.']),
+            'offer' => $P('The offer', 'As a thank-you, you get 10% off your next service (mention it when you book). Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control; just reply if you\'d like it. And if you\'d like a spot for spring aeration, just reply "spring".', ['first_name', 'company']),
+            'why' => $P('Why they get it (footer)', 'You are getting this because we worked on your lawn.', ['company'], ['when' => 'The footer, before the unsubscribe link and the mailing address (both always there).']),
+        ]],
+        'deposit' => ['name' => 'Deposit reminder', 'sample' => ['a' => 'A $150 deposit, a week out'], 'p' => [
+            'subject' => $P('Subject', 'Your lawn service is tomorrow: your deposit is still open', ['first_name', 'company', 'deposit'], ['where' => 'subject']),
+            'greeting' => $P('Greeting', 'Hi {first_name},', ['first_name']),
+            'opening' => $P('Opening line', 'We\'re looking forward to servicing your property!', ['first_name', 'company'], ['q' => true]),
+            'appt' => $P('The appointment (plain-text copy)', 'Your appointment: {day}, arrival {arrival}.', ['day', 'arrival'], ['need' => ['day', 'arrival'], 'where' => 'text', 'when' => 'The email itself shows the day and arrival time in a box.']),
+            'lead' => $P('Deposit line', 'Your appointment is tomorrow, and our records show your deposit hasn\'t been paid yet.', ['deposit', 'day']),
+            'ask' => $P('The ask (plain-text copy)', 'Please take care of the {deposit} deposit to hold your spot. It only takes a minute on your form.', ['deposit'], ['where' => 'text']),
+            'deposit_label' => $P('Above the amount', 'Deposit to hold your spot', []),
+            'pay_button' => $P('Pay button', 'Pay my {deposit} deposit', ['deposit'], ['where' => 'button', 'when' => 'The button always opens their form, where they pay.']),
+            'small' => $P('Under the button', 'It only takes a minute on your form. Secure payment through Square.', [], ['blank' => true]),
+            'pay_text' => $P('Pay link (plain-text copy)', '[Pay your deposit here]', [], ['link' => true, 'where' => 'text']),
+            'disclaimer' => $P('Already-paid note', 'If you\'ve already paid, please disregard this.', [], ['q' => true]),
+            'questions' => $P('Questions line', 'Questions? Reply to this email or call or text {phone}.', ['phone'], ['need' => ['phone']]),
+            'thanks' => $P('Sign-off', 'Thank you!', []),
+        ]],
+        'signed' => ['name' => 'Signed agreement copy', 'sample' => ['a' => 'A signed form with a deposit'], 'p' => [
+            'subject' => $P('Subject', 'Your signed agreement with {company}', ['first_name', 'company'], ['where' => 'subject']),
+            'greeting' => $P('Greeting', 'Hi {first_name},', ['first_name']),
+            'intro' => $P('Opening line', 'Thanks for booking with {company}. Here is a copy of the agreement you signed.', ['first_name', 'company']),
+            'view_button' => $P('Button', 'View or print your agreement', [], ['where' => 'button', 'when' => 'The button always opens their signed agreement.']),
+            'view_text' => $P('Agreement link (plain-text copy)', '[View or print it any time]', [], ['link' => true, 'where' => 'text']),
+            'closing' => $P('Closing line', 'Questions or changes: call or text {phone}.', ['phone', 'company'], ['need' => ['phone']]),
+        ]],
+    ];
+    return $d;
+}
+/** what each merge field holds, for the Outbox editor */
+function a365WordsFields(): array {
+    return ['first_name' => 'their first name (left out, with a comma or space before it, when we have none)', 'company' => 'the business name', 'phone' => 'the phone number to call or text',
+        'balance' => 'what they still owe, e.g. $250', 'day' => 'the day, e.g. Monday, November 16', 'crew' => 'the crew lead\'s first name', 'arrival' => 'the arrival time, e.g. 10:00 am to 12:00 pm',
+        'deposit' => 'the deposit, e.g. $150', 'paid_amount' => 'what went on their card, e.g. $250', 'card' => 'the card brand, e.g. Visa', 'last4' => 'the card\'s last 4 digits'];
+}
+/** one line checked: '' when it is fine, else what is wrong, in plain words */
+function a365WordsErr(array $def, string $s): string {
+    if (trim($s) === '') return $def['blank'] ? '' : 'This line cannot be empty.';
+    if (mb_strlen($s) > ($def['where'] === 'subject' ? 150 : 600)) return 'Too long (' . ($def['where'] === 'subject' ? 150 : 600) . ' characters at most).';
+    $left = (string) preg_replace('/\{[a-z][a-z0-9_]*\}/', '', $s);
+    if (str_contains($left, '{') || str_contains($left, '}')) return 'A { or } is not part of a field. Fields look like {first_name}.';
+    preg_match_all('/\{([a-z][a-z0-9_]*)\}/', $s, $m);
+    foreach ($m[1] as $f) if (!in_array($f, $def['f'], true)) return '{' . $f . '} is not a field this line can use' . ($def['f'] ? ' (it can use ' . implode(', ', array_map(fn($x) => '{' . $x . '}', $def['f'])) . ')' : '') . '.';
+    foreach ($def['need'] as $f) if (!in_array($f, $m[1], true)) return 'This line must keep {' . $f . '}.';
+    $nb = preg_match_all('/\[[^\[\]{}]+\]/', $s); $raw = substr_count($s, '[') + substr_count($s, ']');
+    if ($def['link']) { if ($nb !== 1 || $raw !== 2) return 'Put the words that become the link in one pair of [square brackets], e.g. [pay it here]. This line must keep its link.'; }
+    elseif ($raw) return 'Square brackets mark a link, and this line has none. Take the [ ] out.';
+    return '';
+}
+/** a set of lines from Outbox: cleaned (one line each, no control characters), every line of the kind present (the built-in words fill gaps);
+ *  [lines, errors by line] */
+function a365WordsClean(string $kind, array $in): array {
+    $defs = a365WordsDefs()[$kind]['p'] ?? []; $p = []; $err = [];
+    foreach ($defs as $k => $def) {
+        $s = array_key_exists($k, $in) && is_scalar($in[$k]) ? (string) $in[$k] : $def['d'];
+        $s = trim((string) preg_replace('/\s+/u', ' ', (string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $s)));
+        $p[$k] = $s; $e = a365WordsErr($def, $s); if ($e !== '') $err[$k] = $e;
+    }
+    return [$p, $err];
+}
+function a365WordsFile(): string { return DATA_DIR . '/a365-words.json'; }
+function a365WordsLoad(): array {
+    static $c = null; $sig = fileSig(a365WordsFile()); if ($c !== null && $c[0] === $sig && $sig !== '') return $c[1];   /* read once per request, again after a save */
+    $j = json_decode((string) @file_get_contents(a365WordsFile()), true); $o = ['kinds' => is_array($j['kinds'] ?? null) ? $j['kinds'] : []]; $c = [$sig, $o]; return $o;
+}
+/** the words in use for a kind: ['v' => 'v0' (built in) | 'v3' ..., 'p' => line => words]. A saved line that no longer passes its check reads as
+ *  built in. A preview (Outbox) puts its own lines in $GLOBALS['a365WordsTry']. */
+function a365WordsNow(string $kind): array {
+    $defs = a365WordsDefs()[$kind]['p'] ?? []; $p = array_map(fn($x) => $x['d'], $defs);
+    if (isset($GLOBALS['a365WordsTry'][$kind])) { foreach ((array) $GLOBALS['a365WordsTry'][$kind] as $k => $s) if (isset($defs[$k]) && is_string($s) && a365WordsErr($defs[$k], $s) === '') $p[$k] = $s; return ['v' => 'preview', 'p' => $p]; }
+    $K = a365WordsLoad()['kinds'][$kind] ?? []; $a = (string) ($K['active'] ?? 'v0');
+    if ($a !== 'v0') foreach ((array) ($K['versions'] ?? []) as $ver) if (($ver['v'] ?? '') === $a) {
+        foreach ((array) ($ver['p'] ?? []) as $k => $s) if (isset($defs[$k]) && is_string($s) && a365WordsErr($defs[$k], $s) === '') $p[$k] = $s;
+        return ['v' => $a, 'p' => $p];
+    }
+    return ['v' => 'v0', 'p' => $p];
+}
+/** one line filled in: $v the fields' values (plain text), $html for the HTML part ($hv: a field's own HTML, e.g. the phone as a tel link),
+ *  $url the link a [bracketed] part becomes ($style on its <a>). An empty {first_name} goes with the comma or space before it. */
+function a365W(string $kind, string $key, array $v = [], bool $html = false, array $hv = [], string $url = '', string $style = ''): string {
+    $def = a365WordsDefs()[$kind]['p'][$key] ?? null; if (!$def) return '';
+    $tpl = (string) (a365WordsNow($kind)['p'][$key] ?? $def['d']);
+    if (array_key_exists('first_name', $v) && trim((string) $v['first_name']) === '') $tpl = (string) preg_replace('/,?[ \t]*\{first_name\}/', '', $tpl);
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8'); $o = '';
+    foreach (preg_split('/(\{[a-z][a-z0-9_]*\}|\[[^\[\]{}]+\]\.?)/', $tpl, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [] as $part) {
+        if (preg_match('/^\{([a-z][a-z0-9_]*)\}$/D', $part, $m) && array_key_exists($m[1], $v)) { $o .= $html ? ($hv[$m[1]] ?? $e($v[$m[1]])) : (string) $v[$m[1]]; continue; }
+        if (preg_match('/^\[([^\[\]{}]+)\](\.?)$/D', $part, $m)) {
+            if ($url === '') { $o .= $html ? $e($m[1] . $m[2]) : $m[1] . $m[2]; continue; }
+            $o .= $html ? '<a href="' . $e($url) . '"' . ($style !== '' ? ' style="' . $e($style) . '"' : '') . '>' . $e($m[1]) . '</a>' . $m[2] : rtrim($m[1], '.') . ': ' . $url;   /* the plain-text copy: "words: address" */
+            continue;
+        }
+        $o .= $html ? $e($part) : $part;
+    }
+    return $html && $def['q'] ? str_replace('&#039;', '&#39;', $o) : $o;   /* those lines were written with &#39; before: the same bytes */
+}
+/* -- opens and clicks */
+function a365TrackOn(): bool { return !PRACTICE && !empty(company()['a365']); }
+function a365TrackBase(): string { $t = PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server' ? (string) getenv('A365_TRACK_BASE') : ''; return preg_match('#^https?://[a-z0-9.:-]+/[a-z0-9/-]*$#i', $t) ? $t : 'https://traverseplatforms.com/m/'; }   /* the env: the test copy only */
+/** an email's links through the tracker and the open image added: [text, html, id, links]. Only https addresses; never an unsubscribe link,
+ *  never the tracker itself; the same address keeps one number in both parts. */
+function a365Track(string $text, string $html): array {
+    $id = bin2hex(random_bytes(10)); $base = a365TrackBase(); $links = [];
+    $num = function (string $u) use (&$links, $base): ?int {
+        if (!preg_match('#^https://[^\s<>"\'\\\\]{4,1500}$#iD', $u) || str_contains($u, 'action=nlunsub') || str_starts_with($u, $base)) return null;
+        $i = array_search($u, $links, true); if ($i === false) { $links[] = $u; $i = count($links) - 1; } return (int) $i;
+    };
+    $html = (string) preg_replace_callback('/\bhref="([^"]+)"/i', function ($m) use ($num, $base, $id) {
+        $i = $num(html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8')); return $i === null ? $m[0] : 'href="' . htmlspecialchars($base . '?c=' . $id . '.' . $i, ENT_QUOTES, 'UTF-8') . '"';
+    }, $html);
+    $text = (string) preg_replace_callback('~\bhttps://[^\s<>()"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($num, $base, $id) { $i = $num($m[0]); return $i === null ? $m[0] : $base . '?c=' . $id . '.' . $i; }, $text);
+    if ($html !== '') {
+        $img = '<img src="' . htmlspecialchars($base . '?o=' . $id, ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">';
+        $p = strripos($html, '</body>'); $html = $p === false ? $html . $img : substr($html, 0, $p) . $img . substr($html, $p);
+    }
+    return [$text, $html, $id, $links];
+}
+/** a real customer email, counted: the send noted (mail-sends.log) before it goes, so a click never finds nothing; a failed send noted too.
+ *  $meta: v (the words' version, or the newsletter issue), lead, job, issue. Not counted (as before): tests, the practice copy, or when the
+ *  note cannot be written (the links would lead nowhere). */
+function a365SendTracked(string $kind, array $meta, string $to, string $subject, string $text, string $html, array $extra = []): array {
+    if (!a365TrackOn()) return a365Mail($to, $subject, $text, $html, $extra);
+    [$t2, $h2, $id, $links] = a365Track($text, $html);
+    $row = ['t' => 'send', 'id' => $id, 'k' => $kind, 'at' => time(), 'v' => (string) ($meta['v'] ?? 'v0')] + array_filter(['lead' => (string) ($meta['lead'] ?? ''), 'job' => (string) ($meta['job'] ?? ''), 'issue' => (string) ($meta['issue'] ?? '')], 'strlen') + ['links' => $links];
+    if (!appendLine(DATA_DIR . '/mail-sends.log', $row)) return a365Mail($to, $subject, $text, $html, $extra);
+    $r = a365Mail($to, $subject, $t2, $h2, $extra);
+    if (!$r['ok']) appendLine(DATA_DIR . '/mail-sends.log', ['t' => 'fail', 'id' => $id, 'at' => time(), 'stage' => (string) $r['stage']]);
+    return $r + ['track' => $id];
+}
+/** made-up customers for Outbox's preview, one or two per email ($s 'a' or 'b'): [subject, text, html] with the lines being tried */
+function a365WordsSample(string $kind, string $s): array {
+    $tz = new DateTimeZone(appTz()); $day = fn(int $n) => (new DateTime('today', $tz))->modify(($n >= 0 ? '+' : '') . $n . ' days')->format('Y-m-d');
+    $l = ['id' => 'w00000000000000sample', 'name' => 'Alex Sample', 'email' => 'alex@example.com', 'phone' => ''];
+    if ($kind === 'aftercare' || $kind === 'followup') {
+        $j = ['id' => 'jsample000000', 'lead' => $l['id'], 'title' => 'Alex Sample', 'date' => $day(-2), 'crew' => 'Sam Crew', 'price' => 400, 'off' => false, 'done' => ['o' => 'done', 'at' => time() - 2 * 86400],
+              'pkg' => $s === 'b' ? 'aerate' : 'full', 'pay' => $s === 'b' ? ['s' => 'paid'] : ['s' => 'deposit', 'amt' => 150], 'sqlink' => $s === 'b' ? [] : ['amt' => 250, 'url' => 'https://square.link/u/SAMPLE']];
+        if ($kind === 'followup' && $s !== 'b') { $j['fuWant'] = 'Some edging along the front walk.'; $j['fuSuggest'] = 'Overseeding the thin patch by the driveway in spring.'; }
+        return $kind === 'aftercare' ? aftercareBuild($j, $l) : array_slice(followupBuild($j, $l), 0, 3);
+    }
+    if ($kind === 'deposit') { $l += ['quote' => ['offer' => ['date' => $day(7), 'slot' => 's2']], 'sign' => ['deposit' => 150, 'key' => 'sample', 'how' => 'link']]; return depremBuild($l, 'd1'); }
+    $l['sign'] = ['key' => 'sample'];
+    $sg = ['name' => 'Alex Sample', 'at' => time(), 'facts' => [['Customer', 'Alex Sample'], ['Address', '123 Sample St'], ['Work', 'Core aeration and overseeding'], ['Price', '$400'], ['Deposit paid', '$150 (card)'], ['Balance due when the work is done', '$250']], 'terms' => ['The sample terms go here: the real email shows the terms the customer saw.']];
+    return a365SignedBuild($l, $sg);
+}
 /* ---- the install's own email, Setup › Email (2026-10-29, Matthew: email for the editions: the company connects its own address, and the
  * automatic emails can be switched on or off and reworded) ----
  * The admin picks Gmail, Outlook / Microsoft 365 or Other (server and port), types the address, the sender name and an APP PASSWORD (made in
@@ -3799,31 +3996,39 @@ function a365SendSigned(array $l, array $sg, string $by): array {
     if (kitOn()) return kitSendSigned($l, $sg, $by);   /* an edition: its own email, words and switch (2026-10-29) */
     $to = trim((string) ($l['email'] ?? ''));
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'stage' => 'noemail', 'error' => 'No email on the lead.'];
+    $ver = a365WordsNow('signed')['v']; [$subject, $text, $html] = a365SignedBuild($l, $sg);
+    $r = a365SendTracked('signed', ['v' => $ver, 'lead' => (string) $l['id']], $to, $subject, $text, $html);
+    appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $l['id'], 'what' => 'signed', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
+    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
+    return $r + ['to' => $to];
+}
+/** 365's signed copy: [subject, text, html]. The words are a365WordsDefs()['signed'] (Outbox); what was agreed, the terms and the signature are
+ *  the record and always as signed. */
+function a365SignedBuild(array $l, array $sg): array {
     $co = company()['a365']; $name = (string) ($co['name'] ?? (kitOn() ? company()['name'] : '365 Aeration & Seeding')); $ph = a365Phone($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $when = (new DateTime('@' . (int) $sg['at']))->setTimezone(new DateTimeZone(appTz()))->format('F j, Y \a\t g:i a');
     $link = a365SignLink((string) $l['id'], (string) $l['sign']['key']);
     $facts = (array) ($sg['facts'] ?? []); $terms = (array) ($sg['terms'] ?? []);
-    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
-    $text = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks for booking with " . $name . ". Here is a copy of the agreement you signed.\n\n"
+    $e = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); $tel = '<a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>';
+    $v = ['first_name' => $first, 'company' => $name, 'phone' => $ph];
+    $w = fn(string $k, bool $h = false, string $url = '') => a365W('signed', $k, $v, $h, ['phone' => $tel], $url);
+    $text = $w('greeting') . "\n\n" . $w('intro') . "\n\n"
           . implode("\n", array_map(fn($f) => $f[0] . ': ' . $f[1], $facts)) . "\n\n" . implode("\n", array_map(fn($t, $i) => ($i + 1) . '. ' . $t, $terms, array_keys($terms)))
-          . "\n\nSigned electronically by " . $sg['name'] . ' on ' . $when . ".\n\nView or print it any time: " . $link . "\n\nQuestions or changes: call or text " . $ph . ".\n\n" . $name . "\n";
+          . "\n\nSigned electronically by " . $sg['name'] . ' on ' . $when . ".\n\n" . $w('view_text', false, $link) . "\n\n" . $w('closing') . "\n\n" . $name . "\n";
     $rows = implode('', array_map(fn($f) => '<tr><td style="padding:6px 12px 6px 0;color:#5a6858;vertical-align:top">' . $e($f[0]) . '</td><td style="padding:6px 0;font-weight:700">' . $e($f[1]) . '</td></tr>', $facts));
     $lis = implode('', array_map(fn($t) => '<li style="margin:0 0 6px">' . $e($t) . '</li>', $terms));
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
           . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
           . (a365Emails2() ? a365MailHead($name) : '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>')
-          . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for booking with ' . $e($name) . '. Here is a copy of the agreement you signed.</p>'
+          . '<p style="margin:0 0 14px">' . $w('greeting', true) . '</p><p style="margin:0 0 18px">' . $w('intro', true) . '</p>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">What we agreed</div><table style="border-collapse:collapse;font-size:15px">' . $rows . '</table></div>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><div style="font-weight:800;color:#2e5e2c;margin-bottom:8px">The details</div><ol style="margin:0;padding-left:20px;font-size:15px">' . $lis . '</ol></div>'
           . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:16px 18px;margin-bottom:18px"><div style="font-size:22px;font-style:italic;font-weight:700;color:#21451f">' . $e($sg['name']) . '</div><div style="color:#5a6858;font-size:14px;margin-top:4px">Signed electronically on ' . $e($when) . '.</div></div>'
-          . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">View or print your agreement</a></p>'
-          . '<p style="margin:0;color:#5a6858;font-size:14px">Questions or changes: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
+          . '<p style="margin:0 0 14px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">' . $w('view_button', true) . '</a></p>'
+          . '<p style="margin:0;color:#5a6858;font-size:14px">' . $w('closing', true) . '</p>'
           . (a365Emails2() ? a365MailSocial() : '') . '</div></body></html>';
-    $r = a365Mail($to, 'Your signed agreement with ' . $name, $text, $html);
-    appendLine(DATA_DIR . '/a365-mail.log', ['at' => time(), 'lead' => (string) $l['id'], 'what' => 'signed', 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 300)]);
-    appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Signed copy emailed to ' . $to . '.' : 'Signed copy NOT emailed (' . ($r['stage'] === 'config' ? 'the 365 mailbox is not set up yet' : $r['stage']) . ').', 'mailed' => $r['ok'] ? ['to' => $to, 'at' => time()] : null, 'by' => $by, 'at' => time()]);
-    return $r + ['to' => $to];
+    return [$w('subject'), $text, $html];
 }
 /** an edition's signed copy (2026-10-29): from its connected address, its words, its switch; a note on the lead either way, as 365's */
 function kitSendSigned(array $l, array $sg, string $by): array {
@@ -4108,7 +4313,7 @@ function nlSweep(?int $now = null, int $budget = 45): array {
             if (microtime(true) - $t0 > $budget) break 2;
             if (isset($un[$em])) { appendLine($logf, ['id' => $em, 'ok' => false, 'stage' => 'unsubscribed', 'at' => time()]); $done[$em] = true; continue; }
             [$s, $tx, $ht, $hd] = nlRender($is, $em);
-            $r = a365Mail($em, $s, $tx, $ht, $hd);
+            $r = a365SendTracked('newsletter', ['v' => $id, 'issue' => $id], $em, $s, $tx, $ht, $hd);   /* opens and clicks per issue (2026-11-18); the unsubscribe links stay as they are */
             appendLine($logf, ['id' => $em, 'ok' => $r['ok'], 'stage' => $r['stage'], 'at' => time()]); $done[$em] = true; $out['sent'] += $r['ok'] ? 1 : 0;
             if (PHP_SAPI === 'cli' && !getenv('NL_FAST')) usleep(1000000);   /* NL_FAST: the test copy only */   /* about one a second */
         }
@@ -4138,6 +4343,55 @@ if ($action === 'nlunsub') {
        . ($busy ? '<p>Too many requests from your network just now, so this was not saved. Try the link again in an hour, or reply to the email and we will take you off the list.</p>' : ($ok ? '<p>You are unsubscribed. ' . $e($em) . ' will not get our newsletter or offers again.</p><p style="color:#5a6858;font-size:14px">If that was a mistake, reply to any of our emails and we will add you back.</p>' : '<p>This unsubscribe link does not look right. Reply to the email and we will take you off the list.</p>'))
        . '</div></body></html>';
     exit;
+}
+/* ---- Outbox's door into the 365 customer emails' words (2026-11-18, a365WordsDefs above): server to server only, with the key in the private
+   folder's outbox-key.txt, which Outbox reads too; never a browser, never a sign-in here. Sixfold 365 only: not an edition, not the practice copy
+   (no key in its private folder). a365words: every email's lines, the words in use, the saved versions and the log. a365wordspreview: a made-up
+   customer's email with the lines being tried (nothing saved, nothing sent). a365wordssave: a new version, in use from the next email.
+   a365wordsrestore: an earlier version (v0 = the built-in words) back in use. Each save and restore is logged with who (Outbox's sign-in). */
+if (in_array($action, ['a365words', 'a365wordspreview', 'a365wordssave', 'a365wordsrestore'], true)) {
+    $okey = trim((string) @file_get_contents(dirname(__DIR__, 2) . '/sixfold-private/outbox-key.txt'));
+    if (PRACTICE || empty(company()['a365']) || strlen($okey) < 32 || !hash_equals($okey, (string) ($_SERVER['HTTP_X_OUTBOX_KEY'] ?? ''))) fail('Not here.', 404);
+    $defs = a365WordsDefs(); $kind = (string) ($_GET['kind'] ?? ($body['kind'] ?? ''));
+    if ($action === 'a365words') {
+        $L = a365WordsLoad()['kinds']; $o = [];
+        foreach ($defs as $kk => $d) {
+            $now = a365WordsNow($kk);
+            $o[$kk] = ['name' => $d['name'], 'samples' => $d['sample'], 'active' => $now['v'], 'now' => $now['p'],
+                'lines' => array_map(fn($p) => ['label' => $p['l'], 'def' => $p['d'], 'fields' => $p['f'], 'need' => $p['need'], 'link' => $p['link'], 'blank' => $p['blank'], 'where' => $p['where'], 'when' => $p['when']], $d['p']),
+                'versions' => array_map(fn($x) => ['v' => (string) ($x['v'] ?? ''), 'at' => (int) ($x['at'] ?? 0), 'by' => (string) ($x['by'] ?? ''), 'note' => (string) ($x['note'] ?? ''), 'p' => (array) ($x['p'] ?? [])], array_values((array) ($L[$kk]['versions'] ?? [])))];
+        }
+        out(['ok' => true, 'kinds' => $o, 'fields' => a365WordsFields(), 'log' => array_slice(jsonLines(DATA_DIR . '/a365-words.log'), -40)]);
+    }
+    if (!isset($defs[$kind])) fail('Which email?', 404);
+    if (!$isPost) fail('POST required', 405);
+    $wby = mb_substr(trim((string) preg_replace('/[^\p{L}\p{N} ().,\'-]/u', '', (string) ($body['by'] ?? ''))), 0, 60) ?: 'Outbox';
+    if ($action === 'a365wordspreview') {
+        [$wp, $werr] = a365WordsClean($kind, (array) ($body['lines'] ?? []));
+        $smp = (string) ($body['sample'] ?? 'a'); if (!isset($defs[$kind]['sample'][$smp])) $smp = 'a';
+        $GLOBALS['a365WordsTry'] = [$kind => $wp]; [$ws, $wt, $wh] = a365WordsSample($kind, $smp); unset($GLOBALS['a365WordsTry']);
+        out(['ok' => true, 'subject' => $ws, 'text' => $wt, 'html' => $wh, 'errors' => (object) $werr]);
+    }
+    $wf = a365WordsFile(); $wlk = @fopen($wf . '.lock', 'c'); if (!$wlk || !flock($wlk, LOCK_EX)) fail('Could not save that. Try again.', 500);
+    $wall = a365WordsLoad(); $K = (array) ($wall['kinds'][$kind] ?? []); $K += ['active' => 'v0', 'versions' => []]; $was = (string) $K['active'];
+    $wnope = function (string $m, array $more = []) use ($wlk) { flock($wlk, LOCK_UN); out(['ok' => false, 'error' => $m] + $more, 400); };
+    if ($action === 'a365wordssave') {
+        [$wp, $werr] = a365WordsClean($kind, (array) ($body['lines'] ?? []));
+        if ($werr) $wnope('Some lines need fixing first. Nothing was saved.', ['errors' => $werr]);
+        if ($wp === a365WordsNow($kind)['p']) $wnope('Nothing changed: these are the words in use now.');
+        $n = 1; foreach ((array) $K['versions'] as $x) $n = max($n, (int) substr((string) ($x['v'] ?? 'v0'), 1) + 1);
+        $wv = 'v' . $n; $K['versions'][] = ['v' => $wv, 'at' => time(), 'by' => $wby, 'note' => mb_substr(trim((string) preg_replace('/\s+/u', ' ', (string) ($body['note'] ?? ''))), 0, 200), 'p' => $wp];
+    } else {
+        $wv = (string) ($body['v'] ?? '');
+        if ($wv !== 'v0' && !in_array($wv, array_column((array) $K['versions'], 'v'), true)) $wnope('There is no such version.');
+        if ($wv === $was) $wnope('That version is the one in use already.');
+    }
+    $K['active'] = $wv; $wall['kinds'][$kind] = $K;
+    $wok = writeJsonAtomic($wf, $wall);
+    if ($wok) appendLine(DATA_DIR . '/a365-words.log', ['at' => time(), 'by' => $wby, 'kind' => $kind, 'what' => $action === 'a365wordssave' ? 'saved' : 'put back', 'v' => $wv, 'was' => $was]);
+    flock($wlk, LOCK_UN);
+    if (!$wok) fail('Could not save that. Try again.', 500);
+    out(['ok' => true, 'active' => $wv]);
 }
 if ($action === 'synchook') syncHookSession();   /* Sync from another system: the install's secret link for Zapier, Make or any app (2026-10-30); answered further down */
 /* everything past here needs a session */
@@ -8430,32 +8684,41 @@ function jobAftercare(string $jid, string $why, bool $again = false, bool $byHan
         return $r + ['to' => $to];
     };
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
+    $ver = a365WordsNow('aftercare')['v']; [$subject, $text, $html] = aftercareBuild($j, $l);
+    return $rec(a365SendTracked('aftercare', ['v' => $ver, 'lead' => (string) $j['lead'], 'job' => $jid], $to, $subject, $text, $html));
+}
+/** the aftercare email: [subject, text, html]. The words are a365WordsDefs()['aftercare'] (Outbox edits them); the built-in ones are the words
+ *  this email always had, so with nothing saved it is the same email to the byte. */
+function aftercareBuild(array $j, array $l): array {
     $co = company()['a365']; $name = (string) ($co['name'] ?? (kitOn() ? company()['name'] : '365 Aeration & Seeding')); $ph = a365Phone($l);
     $first = ucfirst(strtolower((string) (preg_split('/\s+/', trim((string) ($l['name'] ?? '')))[0] ?? '')));
     $owed = jobOwedNow($j); $cg = $j['sqcharge'] ?? null; $link = (int) ($j['sqlink']['amt'] ?? 0) === $owed ? (string) ($j['sqlink']['url'] ?? '') : '';   /* a link only for the amount owed now (1 Nov night) */
-    $disc = 'If you\'ve already paid, please disregard this.';   /* 1 Nov night (Matthew): a payment can land after the email goes */
+    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8'); $tel = '<a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>';
+    $v = ['first_name' => $first, 'company' => $name, 'phone' => $ph, 'balance' => '$' . $owed, 'paid_amount' => $cg ? '$' . (int) $cg['amt'] : '', 'card' => $cg ? ((string) ($cg['brand'] ?? '') ?: 'card') : '', 'last4' => $cg ? (string) ($cg['last4'] ?? '') : ''];
+    $w = fn(string $k, bool $h = false, string $url = '') => a365W('aftercare', $k, $v, $h, ['phone' => $tel], $url);
+    $disc = $w('disclaimer');   /* 1 Nov night (Matthew): a payment can land after the email goes */
     $jp = (string) ($j['pkg'] ?? 'full');   /* seed only, fertilize only, seed & feed (2026-11-09): no plugs without aeration; the seed tips when seed went down */
-    $tips = a365PkgAerates($jp) ? ['Leave the plugs on the lawn. They work back into the grass on their own.', 'Give the lawn a good watering soon.'] : ['Give the lawn a good watering soon.'];
-    if (a365PkgSeeds($jp)) { $tips[] = 'While the new seed comes up, water lightly and often enough to keep the soil surface moist. That can take up to two weeks.'; $tips[] = 'Once the new grass is up and rooting, water less often but more deeply.';
+    $tips = a365PkgAerates($jp) ? [$w('tip_plugs'), $w('tip_water')] : [$w('tip_water')];
+    if (a365PkgSeeds($jp)) { $tips[] = $w('tip_moist'); $tips[] = $w('tip_deeper');
         /* the three in Jen's aftercare that the email lacked (2026-11-01, Matthew: "add the three mission pieces that are in jens aftercare to our
            aftercare"); the same words as afParts on the page (Randy's practice wins on mowing, fertilizer and clippings) */
-        $tips[] = 'Don\'t mow for 4 to 7 days.'; if (a365PkgFeeds($jp)) $tips[] = 'The fertilizer we put down stays active for about 60 days, so don\'t put down any fertilizer or weed killer for 2 months while the seed comes in.'; $tips[] = 'Bag your clippings if you can.'; }
-    $bal = $cg && $owed < 1 ? 'Your $' . (int) $cg['amt'] . ' balance went on your ' . ((string) ($cg['brand'] ?? '') ?: 'card') . ' ending ' . (string) ($cg['last4'] ?? '') . ', so you are all set.'
-         : ($owed < 1 ? 'Your balance is paid. Thank you!' : 'Your remaining balance is $' . $owed . '.' . ($link !== '' ? ' You can pay it here: ' . $link : ''));
-    $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
-    $text = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks for having us! Your lawn is done. A few tips for the next couple of weeks:\n\n"
-          . implode("\n", array_map(fn($t) => '- ' . $t, $tips)) . "\n\n" . $bal . ($owed > 0 && !$cg ? ' ' . $disc : '') . "\n\nAny questions: call or text " . $ph . ".\n\n" . $name . "\n";
+        $tips[] = $w('tip_nomow'); if (a365PkgFeeds($jp)) $tips[] = $w('tip_fert'); $tips[] = $w('tip_bag'); }
+    $tips = array_values(array_filter($tips, fn($t) => $t !== ''));   /* a tip emptied in Outbox is left out */
+    $owedLine = $w('owed');
+    $bal = $cg && $owed < 1 ? $w('paid_card') : ($owed < 1 ? $w('paid') : $owedLine . ($link !== '' ? ' ' . $w('pay_text', false, $link) : ''));
+    $text = $w('greeting') . "\n\n" . $w('intro') . "\n\n"
+          . implode("\n", array_map(fn($t) => '- ' . $t, $tips)) . "\n\n" . $bal . ($owed > 0 && !$cg ? ' ' . $disc : '') . "\n\n" . $w('closing') . "\n\n" . $name . "\n";
     $html = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c">'
           . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">'
           . (a365Emails2() ? a365MailHead($name) : '<div style="font-size:20px;font-weight:800;color:#21451f;margin-bottom:14px">' . $e($name) . '</div>')
-          . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 18px">Thanks for having us! Your lawn is done. A few tips for the next couple of weeks:</p>'
+          . '<p style="margin:0 0 14px">' . $w('greeting', true) . '</p><p style="margin:0 0 18px">' . $w('intro', true) . '</p>'
           . '<div style="background:#fff;border:1px solid #dfe6da;border-radius:14px;padding:16px 18px;margin-bottom:14px"><ul style="margin:0;padding-left:20px;font-size:15px">' . implode('', array_map(fn($t) => '<li style="margin:0 0 8px">' . $e($t) . '</li>', $tips)) . '</ul></div>'
-          . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin-bottom:18px;font-size:15px">' . $e($cg || $owed < 1 || $link === '' ? $bal : 'Your remaining balance is $' . $owed . '.') . '</div>'
-          . ($owed > 0 && $link !== '' ? '<p style="margin:0 0 8px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">Pay the $' . $owed . ' balance</a></p>' : '')
+          . '<div style="background:#eef6ea;border:1px solid #cfe3c6;border-radius:14px;padding:14px 18px;margin-bottom:18px;font-size:15px">' . $e($cg || $owed < 1 || $link === '' ? $bal : $owedLine) . '</div>'
+          . ($owed > 0 && $link !== '' ? '<p style="margin:0 0 8px"><a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px">' . $w('pay_button', true) . '</a></p>' : '')
           . ($owed > 0 && !$cg ? '<p style="margin:0 0 18px;color:#5a6858;font-size:13px">' . $e($disc) . '</p>' : '')
-          . '<p style="margin:0;color:#5a6858;font-size:14px">Any questions: call or text <a href="tel:' . $e(preg_replace('/\D/', '', $ph)) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
+          . '<p style="margin:0;color:#5a6858;font-size:14px">' . $w('closing', true) . '</p>'
           . (a365Emails2() ? a365MailSocial() : '') . '</div></body></html>';
-    return $rec(a365Mail($to, 'Your lawn after today: a few tips from ' . $name, $text, $html));
+    return [$w('subject'), $text, $html];
 }
 /* ---- the follow-up email, two days after a job (2026-10-27, Matthew: "all of our customers that we have done jobs for needs to get an email
  * from us 2 days after weve completed the job that has a way for them to leave us reviews. Brad is also going to add in the notes what extra
@@ -8526,36 +8789,38 @@ function followupBuild(array $j, array $l): array {
     $fresh = (string) ($j['date'] ?? '') >= (new DateTime('-14 days', new DateTimeZone(appTz())))->format('Y-m-d');   /* a past customer's job (the one-time send): no new-seed line (1 Nov night); 'Jen sent the details by text' dropped for everyone 3 Nov (Matthew: she may not text them at all now aftercare is automatic) */
     $seeded = $fresh && a365PkgSeeds((string) ($j['pkg'] ?? 'full'));   /* + seed only, seed & feed (2026-11-09) */
     $owed = jobOwedNow($j); $plink = $owed > 0 && (int) ($j['sqlink']['amt'] ?? 0) === $owed ? (string) ($j['sqlink']['url'] ?? '') : '';
-    $balLine = $owed > 0 ? 'Your remaining balance is ' . fuMoney($owed) . '.' . ($plink !== '' ? '' : ' Call or text ' . $ph . ' to pay it.') : '';
-    $disc = 'If you\'ve already paid, please disregard this.';
+    /* the words: a365WordsDefs()['followup'] (Outbox edits them; the built-in ones are these emails' own) */
+    $v = ['first_name' => $first, 'company' => $name, 'phone' => $ph, 'day' => $day, 'crew' => $crew, 'balance' => fuMoney($owed)];
+    $w = fn(string $k, bool $h = false, string $url = '') => a365W('followup', $k, $v, $h, [], $url);
+    $balLine = $owed > 0 ? $w('balance') . ($plink !== '' ? '' : ' ' . $w('balance_call')) : '';
+    $disc = $w('disclaimer');
     $to = trim((string) ($l['email'] ?? '')); $un = nlUnsubUrl(filter_var($to, FILTER_VALIDATE_EMAIL) ? $to : 'you@example.com'); $addr = nlAddress();
-    $why = 'You are getting this because we worked on your lawn.';
-    $noted = []; if ($want !== '') $noted[] = ['Work you mentioned wanting', $want]; if ($sug !== '') $noted[] = ['Work ' . $crew . ' would suggest', $sug];
-    $seedLine = 'Your new seed is in its first couple of weeks. Keep the top of the soil damp and hold off on mowing until the new grass is up.';
+    $why = $w('why');
+    $noted = []; if ($want !== '') $noted[] = [$w('want'), $want]; if ($sug !== '') $noted[] = [$w('suggest'), $sug];
+    $seedLine = $w('seed'); $seeded = $seeded && $seedLine !== '';   /* emptied in Outbox: left out */
     /* 2 Nov (Matthew, "option 2 ... as much into inbox as i can"): a personal note, the way a person types it. Gmail put the designed version
        (band, boxes, buttons, offer blocks, List-Unsubscribe) in Promotions; the aftercare and deposit reminder landed in the inbox. */
-    $offer = 'As a thank-you, you get 10% off your next service (mention it when you book). Our monthly plan brings us back every 6 to 8 weeks for seeding, fertilizer and weed control; just reply if you\'d like it' . '. And if you\'d like a spot for spring aeration, just reply "spring".';
+    $offer = $w('offer');
     /* the text version */
-    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nThanks again for having us out on " . $day . ". How's the lawn looking? If anything doesn't look right, just reply to this email.\n\n";
+    $t = $w('greeting') . "\n\n" . $w('opening') . "\n\n";
     if ($seeded) $t .= $seedLine . "\n\n";
-    if ($balLine !== '') $t .= $balLine . ($plink !== '' ? ' You can pay it here: ' . $plink : '') . ' ' . $disc . "\n\n";
-    if ($rv !== '') $t .= "If you have a minute, we'd appreciate an honest Google review: " . $rv . "\n\n";
-    if ($noted) $t .= $crew . " noticed a few things while he was there:\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\nIf you'd like a price on any of it, just reply.\n\n";
+    if ($balLine !== '') $t .= $balLine . ($plink !== '' ? ' ' . $w('pay', false, $plink) : '') . ' ' . $disc . "\n\n";
+    if ($rv !== '') $t .= $w('review', false, $rv) . "\n\n";
+    if ($noted) $t .= $w('noticed') . "\n" . implode("\n", array_map(fn($n) => '- ' . $n[0] . ': ' . $n[1], $noted)) . "\n" . $w('noticed_end') . "\n\n";
     $t .= $offer . "\n\nThanks,\n" . $name . "\n" . $ph . "\n\n--\n" . $why . " Unsubscribe: " . $un . "\n" . $addr . "\n";
     /* the HTML version: plain paragraphs and plain links, nothing else */
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8'); $tel = preg_replace('/\D/', '', $ph);
     $p = fn($x) => '<p style="margin:0 0 14px">' . $x . '</p>';
-    $a = fn($u, $txt) => '<a href="' . $e($u) . '">' . $e($txt) . '</a>';
     $h = '<!doctype html><html><body style="margin:0;font-family:Arial,Helvetica,sans-serif;color:#222;font-size:15px;line-height:1.5"><div style="max-width:600px;padding:8px 4px">'
-       . $p('Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',') . $p('Thanks again for having us out on ' . $e($day) . '. How&#39;s the lawn looking? If anything doesn&#39;t look right, just reply to this email.');
+       . $p($w('greeting', true)) . $p($w('opening', true));
     if ($seeded) $h .= $p($e($seedLine));
-    if ($balLine !== '') $h .= $p($e($balLine) . ($plink !== '' ? ' ' . $a($plink, 'You can pay it here.') : '') . ' ' . $e($disc));
-    if ($rv !== '') $h .= $p('If you have a minute, we&#39;d appreciate an ' . $a($rv, 'honest Google review') . '.');
-    if ($noted) $h .= $p($e($crew) . ' noticed a few things while he was there:<br>' . implode('<br>', array_map(fn($n) => '- ' . $e($n[0]) . ': ' . nl2br($e($n[1])), $noted)) . '<br>If you&#39;d like a price on any of it, just reply.');
+    if ($balLine !== '') $h .= $p($e($balLine) . ($plink !== '' ? ' ' . $w('pay', true, $plink) : '') . ' ' . $e($disc));
+    if ($rv !== '') $h .= $p($w('review', true, $rv));
+    if ($noted) $h .= $p($w('noticed', true) . '<br>' . implode('<br>', array_map(fn($n) => '- ' . $e($n[0]) . ': ' . nl2br($e($n[1])), $noted)) . '<br>' . $w('noticed_end', true));
     $h .= $p($e($offer)) . $p('Thanks,<br>' . $e($name) . '<br><a href="tel:' . $e($tel) . '">' . $e($ph) . '</a>')
        . '<p style="margin:24px 0 0;color:#777;font-size:12px">' . $e($why) . ' <a href="' . $e($un) . '" style="color:#777">Unsubscribe</a><br>' . nl2br($e($addr)) . '</p>'
        . '</div></body></html>';
-    return ['How\'s the lawn' . ($first !== '' ? ', ' . $first : '') . '?', $t, $h, []];
+    return [$w('subject'), $t, $h, []];
 }
 /** send one job's follow-up email (the 5-minute job, or Send now). Records it on the job, the lead and the customer; a failure alerts the office. */
 function jobFollowup(string $jid, string $why, bool $byHand = false): array {
@@ -8583,7 +8848,7 @@ function jobFollowup(string $jid, string $why, bool $byHand = false): array {
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
     if (isset(nlUnsubs()[strtolower($to)])) return $rec(['ok' => false, 'stage' => 'unsub', 'error' => 'They unsubscribed from our emails.']);   /* one list with the newsletter (31 Oct) */
     [$subject, $text, $html, $hd] = followupBuild($j, $l);
-    return $rec(a365Mail($to, $subject, $text, $html, $hd));
+    return $rec(a365SendTracked('followup', ['v' => a365WordsNow('followup')['v'], 'lead' => (string) $j['lead'], 'job' => $jid], $to, $subject, $text, $html, $hd));
 }
 /** the 5-minute job's part (metapoll): every job whose follow-up is due, 9 am to 6 pm, at most ten a run; a failure tries again after an hour, three times */
 function followupSweep(?int $now = null): array {
@@ -8658,25 +8923,30 @@ function depremBuild(array $l, string $kind): array {
     $day = (new DateTime((string) ($o['date'] ?? 'today') . ' 12:00', new DateTimeZone(appTz())))->format('l, F j'); $arr = depremArrive((string) ($o['slot'] ?? ''));
     $link = a365SignLink((string) $l['id'], (string) ($l['sign']['key'] ?? '')); $tel = preg_replace('/\D/', '', $ph);
     $tomorrow = $kind === 'd1';
-    $subject = $tomorrow ? 'Your lawn service is tomorrow: your deposit is still open' : 'Reminder: your deposit for ' . (new DateTime((string) ($o['date'] ?? 'today') . ' 12:00', new DateTimeZone(appTz())))->format('l') . '\'s lawn service';
-    $lead = $tomorrow ? 'Your appointment is tomorrow, and our records show your deposit hasn\'t been paid yet.' : 'Our records show your deposit hasn\'t been paid yet.';
-    $ask = 'Please take care of the $' . $dep . ' deposit to hold your spot. It only takes a minute on your form.';
-    $t = 'Hi' . ($first !== '' ? ' ' . $first : '') . ",\n\nWe're looking forward to servicing your property!\n\nYour appointment: " . $day . ', arrival ' . $arr . ".\n\n" . $lead . ' ' . $ask . "\n\nPay your deposit here: " . $link . "\nIf you've already paid, please disregard this."
-       . "\n\nQuestions? Reply to this email or call or text " . $ph . ".\n\nThank you!\n" . $name . "\n" . $ph . ($web !== '' ? ' · ' . $web : '') . "\n";
+    /* the words: a365WordsDefs()['deposit'] (Outbox edits them; the built-in ones are this email's own); the subject and deposit line are the
+       day-before reminder's, the only one sent since 1 Nov (d2 keeps its own two lines) */
+    $vv = ['first_name' => $first, 'company' => $name, 'phone' => $ph, 'deposit' => '$' . $dep, 'day' => $day, 'arrival' => $arr];
+    $telA = '<a href="tel:' . htmlspecialchars((string) $tel, ENT_QUOTES, 'UTF-8') . '" style="color:#2e5e2c">' . htmlspecialchars($ph, ENT_QUOTES, 'UTF-8') . '</a>';
+    $w = fn(string $k, bool $h = false, string $url = '') => a365W('deposit', $k, $vv, $h, ['phone' => $telA], $url);
+    $subject = $tomorrow ? $w('subject') : 'Reminder: your deposit for ' . (new DateTime((string) ($o['date'] ?? 'today') . ' 12:00', new DateTimeZone(appTz())))->format('l') . '\'s lawn service';
+    $lead = $tomorrow ? $w('lead') : 'Our records show your deposit hasn\'t been paid yet.';
+    $ask = $w('ask'); $small = $w('small', true);
+    $t = $w('greeting') . "\n\n" . $w('opening') . "\n\n" . $w('appt') . "\n\n" . $lead . ' ' . $ask . "\n\n" . $w('pay_text', false, $link) . "\n" . $w('disclaimer')
+       . "\n\n" . $w('questions') . "\n\n" . $w('thanks') . "\n" . $name . "\n" . $ph . ($web !== '' ? ' · ' . $web : '') . "\n";
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
     $h = '<!doctype html><html><body style="margin:0;background:#fdf8ee;font-family:Arial,Helvetica,sans-serif;color:#1d2a1c;font-size:15px;line-height:1.5">'
        . '<div style="max-width:600px;margin:0 auto;padding:24px 18px">' . a365MailHead($name)
-       . '<p style="margin:0 0 14px">Hi' . ($first !== '' ? ' ' . $e($first) : '') . ',</p><p style="margin:0 0 16px">We&#39;re looking forward to servicing your property!</p>'
+       . '<p style="margin:0 0 14px">' . $w('greeting', true) . '</p><p style="margin:0 0 16px">' . $w('opening', true) . '</p>'
        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e4dfcf;border-left:5px solid #2e5e2c;border-radius:12px;margin:0 0 16px"><tr><td style="padding:14px 18px">'
        . '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#5a6858;margin:0 0 4px">' . ($tomorrow ? 'Tomorrow' : 'Your appointment') . '</div>'
        . '<div style="font-size:20px;font-weight:800;color:#21451f;line-height:1.25">' . $e($day) . '</div><div style="font-size:15px;color:#33402f;margin-top:2px">Arrival ' . $e($arr) . '</div></td></tr></table>'
        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fff4e6" style="background:#fff4e6;border:1px solid #f1cfa6;border-radius:12px;margin:0 0 18px"><tr><td align="center" style="padding:18px 18px 16px">'
        . '<div style="font-size:15px;color:#33402f;margin:0 0 6px">' . $e($lead) . '</div>'
-       . '<div style="font-size:13px;color:#5a6858;margin:0">Deposit to hold your spot</div><div style="font-size:30px;font-weight:800;color:#21451f;margin:0 0 12px">$' . $dep . '</div>'
-       . '<a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#ffffff;text-decoration:none;font-weight:800;font-size:16px;padding:13px 26px;border-radius:999px">Pay my $' . $dep . ' deposit</a>'
-       . '<div style="font-size:12px;color:#5a6858;margin:10px 0 0">It only takes a minute on your form. Secure payment through Square.</div><div style="font-size:12px;color:#5a6858;margin:6px 0 0">If you&#39;ve already paid, please disregard this.</div></td></tr></table>'
-       . '<p style="margin:0 0 6px">Questions? Reply to this email or call or text <a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>.</p>'
-       . '<p style="margin:0 0 4px">Thank you!</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' . ($web !== '' ? ' · ' . $e($web) : '') . '</p>'
+       . '<div style="font-size:13px;color:#5a6858;margin:0">' . $w('deposit_label', true) . '</div><div style="font-size:30px;font-weight:800;color:#21451f;margin:0 0 12px">$' . $dep . '</div>'
+       . '<a href="' . $e($link) . '" style="display:inline-block;background:#2e5e2c;color:#ffffff;text-decoration:none;font-weight:800;font-size:16px;padding:13px 26px;border-radius:999px">' . $w('pay_button', true) . '</a>'
+       . ($small !== '' ? '<div style="font-size:12px;color:#5a6858;margin:10px 0 0">' . $small . '</div>' : '') . '<div style="font-size:12px;color:#5a6858;margin:6px 0 0">' . $w('disclaimer', true) . '</div></td></tr></table>'
+       . '<p style="margin:0 0 6px">' . $w('questions', true) . '</p>'
+       . '<p style="margin:0 0 4px">' . $w('thanks', true) . '</p><p style="margin:0;color:#5a6858;font-size:14px">' . $e($name) . '<br><a href="tel:' . $e($tel) . '" style="color:#2e5e2c">' . $e($ph) . '</a>' . ($web !== '' ? ' · ' . $e($web) : '') . '</p>'
        . a365MailSocial() . '</div></body></html>';
     return [$subject, $t, $h];
 }
@@ -8695,7 +8965,7 @@ function depremSend(string $id, string $kind): array {
     };
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return $rec(['ok' => false, 'stage' => 'noemail', 'error' => 'No email address for them.']);
     [$s, $t, $h] = depremBuild($l, $kind);
-    return $rec(a365Mail($to, $s, $t, $h));
+    return $rec(a365SendTracked('deposit', ['v' => $kind === 'd1' ? a365WordsNow('deposit')['v'] : 'v0', 'lead' => $id], $to, $s, $t, $h));
 }
 /** the 5-minute job's part: every reminder whose time has come, 10 am to 6 pm, at most ten a run; a failure tries again after an hour, 3 times */
 function depremSweep(?int $now = null): array {

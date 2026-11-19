@@ -11,7 +11,9 @@ declare(strict_types=1);
  *   public_html/outbox-092b0f/peak/   the Peak outreach sender (source matthew/peak-pickleball-sponsorship/mail/public/) + site.php
  *   public_html/peak-mail-31dc56/     the old address: index.php forwards here; oauth.php, r.php, u.php, cron.php point at peak/
  *   outbox-data/ (0700, beside public_html, never in git)  code.hash, sessions.json, tries.json, settings.json
- * The Sixfold and Traverse sections only READ the senders' own logs and switch files; nothing here can change what they send.
+ * The Sixfold and Traverse sections only READ the senders' own logs and switch files; nothing here turns an email on or off or changes who
+ * gets it. One exception (2026-11-18): the words of Sixfold's four customer emails, edited here and kept by the Sixfold app (obApp, rounds.php
+ * a365words*), with opens and clicks read from its mail-sends.log and mail-events.log.
  * Tests: OUTBOX_NOW (a fixed clock), honoured only from the command line or PHP's own test server. */
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 date_default_timezone_set('America/Denver');
@@ -117,6 +119,101 @@ function obSxFromLog(array $L, string $k, array $item): array {
     $x = $L[$k] ?? ['sent' => [], 'fail' => [], 'skip' => []];
     return obItem($item + obCount($x['sent']) + obFailCounts($x['fail']) + ['fails' => obFails($x['fail']), 'skipped30' => obCount($x['skip'])['d30']]);
 }
+/* ---- Sixfold's opens, clicks and words (2026-11-18, Matthew: "I think that we also need to track the analytics for the emails we send out for
+   sixfold. And id also like to see the analytics under each option in the outbox app so that I can see whats working and make changes if needed
+   in the outbox app"). The app keeps every counted customer send in mail-sends.log (id, kind, time, the words' version or the newsletter issue,
+   the links by number) and m/index.php logs each open, click and mail-scanner visit in mail-events.log; both are read here, never written.
+   Opens are rough (Apple Mail loads the image as the email arrives, so opens run high; some mail apps block images, so they run low); clicks are
+   the number to trust. No customer is named: a send shows its day, its version and whether it was opened or clicked. */
+const OB_SX_TRACKED = ['aftercare', 'followup', 'deposit', 'signed', 'newsletter'];
+const OB_SX_EDITABLE = ['aftercare', 'followup', 'deposit', 'signed'];
+/** what a link in a Sixfold email is, from its address only (the address itself is never shown: a form link carries the customer's own key) */
+function obLinkWhat(string $u): string {
+    $h = strtolower((string) parse_url($u, PHP_URL_HOST)); $p = (string) parse_url($u, PHP_URL_PATH);
+    if (preg_match('/(^|\.)square\.(link|site)$|squareup\.com$/', $h)) return 'pay link (Square)';
+    if (preg_match('/(^|\.)365aeration\.com$/', $h) && str_starts_with($p, '/sign')) return 'their form (sign or pay)';
+    if (preg_match('/(^|\.)365aeration\.com$/', $h)) return 'the website';
+    if (preg_match('/g\.page$|google\.[a-z.]+$|goo\.gl$/', $h)) return 'Google review';
+    if (preg_match('/facebook\.com$/', $h)) return 'Facebook';
+    if (preg_match('/instagram\.com$/', $h)) return 'Instagram';
+    return $h !== '' ? $h : 'a link';
+}
+function obPct(int $a, int $b): ?float { return $b > 0 ? round(100 * $a / $b, 1) : null; }
+/** per kind: sends, opens, clicks (30 days and all), each version's numbers, the links clicked, the last sends */
+function obSxTrack(): array {
+    $sends = []; $failed = [];
+    foreach (obLines(OB_SX . '/mail-sends.log') as $r) {
+        $t = (string) ($r['t'] ?? ''); $id = (string) ($r['id'] ?? ''); if ($id === '') continue;
+        if ($t === 'send' && in_array((string) ($r['k'] ?? ''), OB_SX_TRACKED, true)) $sends[$id] = ['k' => (string) $r['k'], 'at' => (int) ($r['at'] ?? 0), 'v' => (string) ($r['v'] ?? 'v0'), 'links' => (array) ($r['links'] ?? [])];
+        elseif ($t === 'fail') $failed[$id] = true;
+    }
+    foreach ($failed as $id => $_) unset($sends[$id]);
+    $ev = [];
+    foreach (obLines(OB_SX . '/mail-events.log') as $r) {
+        $id = (string) ($r['id'] ?? ''); if (!isset($sends[$id])) continue; $t = (string) ($r['t'] ?? '');
+        $ev[$id] ??= ['open' => 0, 'click' => 0, 'scan' => 0, 'firstOpen' => 0, 'links' => []];
+        if ($t === 'open') { $ev[$id]['open']++; if (!$ev[$id]['firstOpen']) $ev[$id]['firstOpen'] = (int) ($r['at'] ?? 0); }
+        elseif ($t === 'click') { $ev[$id]['click']++; $n = (int) ($r['n'] ?? -1); $ev[$id]['links'][$n] = ($ev[$id]['links'][$n] ?? 0) + 1; }
+        elseif ($t === 'scan') $ev[$id]['scan']++;
+    }
+    $words = (array) (obRead(OB_SX . '/a365-words.json', [])['kinds'] ?? []); $nl = (array) (obRead(OB_SX . '/newsletter.json', [])['issues'] ?? []);
+    $label = function (string $k, string $v) use ($words, $nl): string {
+        if ($k === 'newsletter') { foreach ($nl as $is) if ((string) ($is['id'] ?? '') === $v) return '"' . mb_substr((string) ($is['subject'] ?? ''), 0, 60) . '"'; return 'issue ' . $v; }
+        if ($v === 'v0') return 'Built-in words';
+        foreach ((array) ($words[$k]['versions'] ?? []) as $x) if ((string) ($x['v'] ?? '') === $v) return 'Version ' . substr($v, 1) . ' (saved ' . date('M j', (int) ($x['at'] ?? 0)) . ((string) ($x['by'] ?? '') !== '' ? ' by ' . $x['by'] : '') . ')';
+        return 'Version ' . substr($v, 1);
+    };
+    $n = obNow(); $out = [];
+    foreach (OB_SX_TRACKED as $k) $out[$k] = ['since' => 0, 'sent7' => 0, 'sent30' => 0, 'opened30' => 0, 'clicked30' => 0, 'scans30' => 0, 'sentAll' => 0, 'openedAll' => 0, 'clickedAll' => 0,
+        'active' => $k === 'newsletter' ? '' : (string) ($words[$k]['active'] ?? 'v0'), 'byVersion' => [], 'links30' => [], 'recent' => []];
+    uasort($sends, fn($a, $b) => $a['at'] <=> $b['at']);
+    foreach ($sends as $id => $s) {
+        $o = &$out[$s['k']]; $e = $ev[$id] ?? ['open' => 0, 'click' => 0, 'scan' => 0, 'links' => []]; $op = $e['open'] > 0; $cl = $e['click'] > 0; $in30 = $s['at'] >= $n - 30 * OB_DAY;
+        if (!$o['since']) $o['since'] = $s['at'];
+        $o['sentAll']++; $o['openedAll'] += (int) $op; $o['clickedAll'] += (int) $cl;
+        if ($s['at'] >= $n - 7 * OB_DAY) $o['sent7']++;
+        if ($in30) { $o['sent30']++; $o['opened30'] += (int) $op; $o['clicked30'] += (int) $cl; $o['scans30'] += $e['scan'];
+            foreach ($e['links'] as $ln => $c) { $w = obLinkWhat((string) ($s['links'][$ln] ?? '')); $o['links30'][$w] = ($o['links30'][$w] ?? 0) + $c; } }
+        $o['byVersion'][$s['v']] ??= ['v' => $s['v'], 'label' => $label($s['k'], $s['v']), 'sent' => 0, 'opened' => 0, 'clicked' => 0, 'first' => $s['at'], 'last' => 0];
+        $b = &$o['byVersion'][$s['v']]; $b['sent']++; $b['opened'] += (int) $op; $b['clicked'] += (int) $cl; $b['last'] = $s['at']; unset($b);
+        $o['recent'][] = ['at' => $s['at'], 'v' => $label($s['k'], $s['v']), 'opened' => $op, 'clicked' => $cl];
+        unset($o);
+    }
+    foreach ($out as $k => &$o) {
+        $o['openRate30'] = obPct($o['opened30'], $o['sent30']); $o['clickRate30'] = obPct($o['clicked30'], $o['sent30']);
+        $o['openRateAll'] = obPct($o['openedAll'], $o['sentAll']); $o['clickRateAll'] = obPct($o['clickedAll'], $o['sentAll']);
+        foreach ($o['byVersion'] as &$b) { $b['openRate'] = obPct($b['opened'], $b['sent']); $b['clickRate'] = obPct($b['clicked'], $b['sent']); $b['active'] = $k !== 'newsletter' && $b['v'] === $o['active']; } unset($b);
+        $o['byVersion'] = array_values(array_reverse($o['byVersion']));
+        arsort($o['links30']); $o['links30'] = array_map(fn($w, $c) => ['what' => $w, 'clicks' => $c], array_keys($o['links30']), array_values($o['links30']));
+        $o['recent'] = array_slice(array_reverse($o['recent']), 0, $k === 'newsletter' ? 5 : 10);
+    }
+    unset($o);
+    return $out;
+}
+/** the Opens and Clicks lines on a card */
+function obTrackWords(array $t, string $k): array {
+    if (!$t['sentAll']) return ['not counted yet: counting started with the next one sent', 'not counted yet: counting started with the next one sent'];
+    $since = ' since ' . date('M j', $t['since']);
+    $op = $t['sent30'] ? $t['opened30'] . ' of ' . $t['sent30'] . ' opened in 30 days (' . $t['openRate30'] . '%)' : 'none sent in 30 days';
+    $cl = $t['sent30'] ? $t['clicked30'] . ' of ' . $t['sent30'] . ' clicked in 30 days (' . $t['clickRate30'] . '%)' : 'none sent in 30 days';
+    return [$op . '; ' . $t['openedAll'] . ' of ' . $t['sentAll'] . $since . '. May include Apple Mail\'s automatic opens, so read it as high.',
+            $cl . '; ' . $t['clickedAll'] . ' of ' . $t['sentAll'] . $since . '.' . ($t['scans30'] ? ' ' . $t['scans30'] . ' mail-scanner ' . ($t['scans30'] === 1 ? 'visit' : 'visits') . ' left out.' : '')];
+}
+/** a call to the Sixfold app for the email words (server to server, with the key both read from the private folder): the answer, or ['ok' => false, 'error'] */
+function obApp(string $action, ?array $body = null): array {
+    $key = trim((string) @file_get_contents(obRoot() . '/sixfold-private/outbox-key.txt'));
+    if (strlen($key) < 32) return ['ok' => false, 'error' => 'Outbox cannot reach the Sixfold app yet (its key is not on the server).'];
+    $api = obTestOk() && getenv('OUTBOX_APP_API') ? (string) getenv('OUTBOX_APP_API') : OB_ORIGIN . '/api/rounds.php';   /* the env: the test copy only */
+    if (!function_exists('curl_init')) return ['ok' => false, 'error' => 'The server has no curl.'];
+    $c = curl_init($api . '?action=' . rawurlencode($action));
+    $h = ['X-Outbox-Key: ' . $key, 'Content-Type: application/json', 'User-Agent: Outbox'];
+    curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 25, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_HTTPHEADER => $h]
+        + ($body === null ? [] : [CURLOPT_POST => true, CURLOPT_POSTFIELDS => (string) json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]));
+    $s = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); curl_close($c);
+    $j = is_string($s) ? json_decode($s, true) : null;
+    if (!is_array($j)) return ['ok' => false, 'error' => 'The Sixfold app did not answer (' . ($code ?: 'no connection') . '). Try again in a minute.'];
+    return $j;
+}
 function obSixfold(): array {
     $box = obA365Box(); $L = obA365Log(); $items = [];
     $boxText = !$box['set'] ? 'the 365 mailbox is NOT set up, so nothing can send' : ($box['dry'] ? 'DRY RUN: the 365 mailbox only writes to a log, nothing really sends' : '');
@@ -197,6 +294,10 @@ function obSixfold(): array {
         'note' => $pm !== '' ? 'Last one was for ' . date('F Y', (int) strtotime($pm . '-01')) . '. There is no send log on the server, so failures show only in the laptop\'s overnight log.' : 'None sent yet.']
         + obCount($pt ? [$pt] : []));
 
+    /* opens, clicks, versions and the last sends under each customer email (2026-11-18) */
+    $TR = obSxTrack();
+    foreach ($items as &$it) if (isset($TR[$it['id']])) { [$it['opens'], $it['clicks']] = obTrackWords($TR[$it['id']], $it['id']); $it['track'] = $TR[$it['id']]; $it['editable'] = in_array($it['id'], OB_SX_EDITABLE, true); }
+    unset($it);
     foreach ($items as &$it) {
         if ($boxText !== '' && in_array($it['id'], ['aftercare', 'followup', 'deposit', 'signed', 'newsletter'], true)) $it['attention'][] = ['bad', 'Sixfold ' . $it['name'] . ': ' . $boxText . '.'];
         if ($it['fail7']) $it['attention'][] = ['bad', 'Sixfold ' . $it['name'] . ': ' . $it['fail7'] . ' failed in the last 7 days.'];
